@@ -78,7 +78,23 @@ def callback():
 
 if __name__ == "__main__":
     print("-" * 30)
-    print("LINE Webhook Server 啟動中...")
+    # LINE 機器人金鑰 (使用安全容逃機制)
+    TOKEN = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN', '')
+    SECRET = os.environ.get('LINE_CHANNEL_SECRET', '')
+
+    try:
+        if TOKEN and SECRET:
+            line_bot_api = LineBotApi(TOKEN)
+            handler = WebhookHandler(SECRET)
+            print("✅ LINE API 連線模組載入成功。")
+        else:
+            line_bot_api = None
+            handler = None
+            print("⚠️ 警告: 金鑰尚未設定，LINE 通知功能將暫時關閉。")
+    except Exception as e:
+        line_bot_api = None
+        handler = None
+        print(f"❌ LINE 初始化失敗: {e}")
     print("Port: 5000 | Endpoint: /callback")
     print("-" * 30)
     app.run(port=5000)
