@@ -19,32 +19,8 @@ def run_webhook():
     except Exception as e:
         print(f"Webhook 啟動失敗: {e}")
 
-def main():
-    feed = DataFeed(symbol='BTC/USDT')
-    
-    # 資料庫初始化容逃保護
-    try:
-        storage = Storage()
-    except Exception as e:
-        print(f"資料庫連結警告: {e}")
-        storage = None
-    
-    # 建立自適應預測大腦
-    predictor = MLPredictor()
-    
-    # 強制對齊虧損基線 (-43.87)
-    last_pnl = -43.87
-    trader = PaperTrader(initial_cumulative_pnl=last_pnl)
-    
-    print("-" * 40)
-    print("🚀 BTCUSDT AI 自適應系統 (穩定版) 啟動中...")
-    print("-" * 40)
-
-    # 🚀 在新執行緒 (Thread) 中跑 LINE Webhook
-    web_thread = threading.Thread(target=run_webhook)
-    web_thread.daemon = True
-    web_thread.start()
-
+def trading_loop(trader, predictor, feed, storage):
+    print("📈 背景交易監控執行緒已啟動...")
     # 首次開機進行訓練 (輕量化 500 根)
     try:
         init_data = calculate_all(feed.fetch_ohlcv(timeframe='1m', limit=500))
@@ -101,6 +77,35 @@ def main():
         except Exception as e:
             print(f"[{datetime.now().strftime('%H:%M:%S')}] 出錯: {e}")
             time.sleep(10)
+
+def main():
+    feed = DataFeed(symbol='BTC/USDT')
+    
+    # 資料庫初始化容逃保護
+    try:
+        storage = Storage()
+    except Exception as e:
+        print(f"資料庫連結警告: {e}")
+        storage = None
+    
+    # 建立自適應預測大腦
+    predictor = MLPredictor()
+    
+    # 強制對齊虧損基線 (-43.87)
+    last_pnl = -43.87
+    trader = PaperTrader(initial_cumulative_pnl=last_pnl)
+    
+    print("-" * 40)
+    print("🚀 BTCUSDT AI 自適應系統 (穩定版) 啟動中...")
+    print("-" * 40)
+
+    # 🚀 啟動背景交易監控執行緒
+    trading_thread = threading.Thread(target=trading_loop, args=(trader, predictor, feed, storage))
+    trading_thread.daemon = True
+    trading_thread.start()
+
+    # 🚀 主執行緒：執行 Webhook (讓 Render 秒速抓到埠位)
+    run_webhook()
 
 if __name__ == "__main__":
     main()
