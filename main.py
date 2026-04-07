@@ -38,19 +38,19 @@ def main():
 
     while True:
         try:
-            # 1. 抓取 Binance 1m 資料
-            df = feed.fetch_ohlcv(limit=100)
+            # 1. 抓取多維度時間框架 (MTF)
+            df_1m = calculate_all(feed.fetch_ohlcv(timeframe='1m', limit=100))
+            df_15m = calculate_all(feed.fetch_ohlcv(timeframe='15m', limit=50))
+            df_1h = calculate_all(feed.fetch_ohlcv(timeframe='1h', limit=50))
             
-            # 2. 計算指標 (MA20, RSI, MACD)
-            df = calculate_all(df)
-            latest = df.iloc[-1]
-            price = latest['close']
+            latest_1m = df_1m.iloc[-1]
+            price = latest_1m['close']
             
-            # 3. 檢查策略訊號
-            signal = check_signal(df)
+            # 2. 三維時空共振策略判定
+            signal = check_signal(df_1m, df_15m, df_1h)
             
-            # 記錄訊號與指標狀態至 SQLite
-            storage.log_signal(signal, price, latest['RSI'], latest['MACD'])
+            # 記錄訊號
+            storage.log_signal(signal, price, latest_1m['RSI'], latest_1m['MACD'])
             
             # 4. 模擬執行與交易通知
             trade_report = trader.execute(signal, price, storage)
