@@ -65,3 +65,13 @@ class Storage:
         count, total_pnl = cursor.fetchone()
         return count or 0, total_pnl or 0.0
 
+    def get_last_summary(self):
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute("SELECT cumulative_pnl FROM trades ORDER BY id DESC LIMIT 1")
+            res = cursor.fetchone()
+            return res[0] if res else 0
+        except Exception:
+            return 0
+
+
