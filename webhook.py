@@ -4,6 +4,7 @@ import requests
 from storage import Storage
 from datafeed import DataFeed
 from indicators import calculate_all
+from sensors import NewsScanner, MacroScanner
 
 app = Flask(__name__)
 
@@ -38,77 +39,65 @@ def get_coin_prediction(symbol):
 
 @app.route("/callback", methods=['POST'])
 def callback():
-    body = request.get_data(as_text=True)
-    signature = request.headers.get('X-Line-Signature')
-    
-    events = request.json.get('events', [])
-    for event in events:
-        if event['type'] == 'message' and event['message']['type'] == 'text':
-            user_msg = event['message']['text']
-            reply_token = event['replyToken']
-            
-            storage = Storage()
-            report = ""
-
-            if "今日報表" in user_msg:
-                pnl, count = storage.get_range_summary(days=1)
-                report = f"📊 【今日戰績報告】\n💰 淨損益: ${pnl:,.2f}\n🔄 交易次數: {count} 次\n📅 期別: 24 小時內"
-            
-            elif "三天報表" in user_msg:
-                pnl, count = storage.get_range_summary(days=3)
-                report = f"🗓 【三日循環報告】\n💰 淨損益: ${pnl:,.2f}\n🔄 交易次數: {count} 次\n📅 期別: 72 小時內"
+    try:
+        events = request.json.get('events', [])
+        for event in events:
+            if event['type'] == 'message' and event['message']['type'] == 'text':
+                user_msg = event['message']['text']
+                reply_token = event['replyToken']
                 
-            elif "一周報表" in user_msg or "一週報表" in user_msg:
-                pnl, count = storage.get_range_summary(days=7)
-                report = f"週 【週度勝率報告】\n💰 淨損益: ${pnl:,.2f}\n🔄 交易次數: {count} 次\n📅 期別: 7 天內"
+                storage = Storage()
+                report = ""
 
-            elif "一月報表" in user_msg:
-                pnl, count = storage.get_range_summary(days=30)
-                report = f"月 【月度累積報告】\n💰 淨損益: ${pnl:,.2f}\n🔄 交易次數: {count} 次\n📅 期別: 30 天內"
-
-            elif "總體報表" in user_msg or "從頭到尾" in user_msg:
-                pnl, count = storage.get_lifetime_summary()
-                # 初始偏移校正
-                final_pnl = pnl - 43.87 # 包含之前的手動記錄
-                report = (f"🏆 【全週期：終極結算】\n"
-                          f"💰 總淨損益: ${final_pnl:,.2f}\n"
-                          f"🔄 總交易次數: {count} 次\n"
-                          f"🛡️ 狀態: 24/7 全天候監控中")
-
-            elif "市場快報" in user_msg or "行情" in user_msg:
-                eth = get_coin_prediction("ETH/USDT")
-                pepe = get_coin_prediction("PEPE/USDT")
-                xaut = get_coin_prediction("XAUT/USDT") # 黃金
-                report = f"🌍 【全資產市場掃描】\n\n{eth}\n\n{pepe}\n\n{xaut}\n\n⚠️ 注: 預測僅供參考，量化系統專注於 BTC 交易。"
-
-            elif "持倉" in user_msg or "部位" in user_msg:
-                active = storage.get_active_pos()
-                if active and active[2] != "NONE":
-                    symbol = active[1]
-                    pos_type = "🟢 多單 (Long)" if active[2] == "LONG" else "🔴 空單 (Short)"
-                    entry_price = active[3]
-                    qty = active[4]
+                if "今日報表" in user_msg:
+                    pnl, count = storage.get_range_summary(days=1)
+                    report = f"📊 【今日戰績報告】\n💰 淨損益: ${pnl:,.2f}\n🔄 交易次數: {count} 次\n📅 期別: 24 小時內"
+                
+                elif "三天報表" in user_msg:
+                    pnl, count = storage.get_range_summary(days=3)
+                    report = f"🗓 【三日循環報告】\n💰 淨損益: ${pnl:,.2f}\n🔄 交易次數: {count} 次\n📅 期別: 72 小時內"
+                
+                elif "市場快報" in user_msg or "行情" in user_msg:
+                    # 抓取幣種預測
+                    eth = get_coin_prediction("ETH/USDT")
+                    pepe = get_coin_prediction("PEPE/USDT")
+                    xaut = get_coin_prediction("XAUT/USDT")
                     
-                    # 抓取即時價格計算浮盈
-                    feed = DataFeed(symbol='BTC/USDT')
-                    try:
+                    # 抓取即時新聞與全球情緒
+                    news = NewsScanner()
+                    macro = MacroScanner()
+                    news_score = news.fetch_latest_sentiment()
+                    fng_score = macro.get_sentiment_score()
+                    
+                    fng_text = "😱 恐懼" if fng_score < 0.4 else "🤩 貪婪" if fng_score > 0.6 else "😐 中性"
+                    news_text = "🔥 利多頻傳" if news_score > 0.6 else "❄️ 情緒低迷" if news_score < 0.4 else "☁️ 消息平淡"
+                    
+                    report = (f"🌍 【全資產市場大數據】\n\n"
+                              f"📰 新聞現狀: {news_text} ({news_score:.2f})\n"
+                              f"🧠 全球情緒: {fng_text} ({int(fng_score*100)})\n"
+                              f"------------------\n"
+                              f"{eth}\n\n"
+                              f"{pepe}\n\n"
+                              f"{xaut}\n\n"
+                              f"⚠️ 注: 內部 AI 已根據此數據自動調整 BTC 交易強度。")
+
+                elif "持倉" in user_msg:
+                    active = storage.get_active_pos()
+                    if active and active[2] != "NONE":
+                        entry_price = active[3]; qty = active[4]
+                        feed = DataFeed(symbol='BTC/USDT')
                         df = feed.fetch_ohlcv(timeframe='1m', limit=1)
                         current_price = df.iloc[-1]['close']
                         pnl = (current_price - entry_price) * qty if active[2] == "LONG" else (entry_price - current_price) * qty
-                        report = (f"🔍 【即時持倉透視】\n"
-                                  f"🔹 方向: {pos_type}\n"
-                                  f"🔹 進場價格: ${entry_price:,.2f}\n"
-                                  f"🔹 目前現價: ${current_price:,.2f}\n"
-                                  f"🔹 倉位大小: {qty:.4f}\n"
-                                  f"💰 浮動盈虧: ${pnl:,.2f}")
-                    except:
-                        report = f"🔍 【持倉資訊】\n進場價: ${entry_price:,.2f}\n方向: {pos_type}\n(即時報價獲取中...)"
-                else:
-                    report = "🔍 目前空手觀望中，雷達持續掃描進場點 (No Active Positions)。"
+                        report = (f"🔍 【即時持倉】\n🔹 方向: {active[2]}\n🔹 進場: ${entry_price:,.2f}\n"
+                                  f"🔹 現價: ${current_price:,.2f}\n💰 浮盈: ${pnl:,.2f}")
+                    else:
+                        report = "🔍 目前空手，雷達掃描中。"
 
-            if report:
-                send_line_reply(reply_token, report)
-
+                if report:
+                    send_line_reply(reply_token, report)
+    except:
+        pass
     return 'OK'
 
 if __name__ == "__main__":
