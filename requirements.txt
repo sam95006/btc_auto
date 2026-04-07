@@ -3,5 +3,4 @@ pandas
 flask
 requests
 schedule
-scikit-learn
 numpy
