@@ -20,54 +20,49 @@ def run_webhook():
         print(f"Webhook 啟動失敗: {e}")
 
 def trading_loop(trader, predictor, feed, storage, macro, whale, news):
-    print("🚀 【BTC 終極獵手：超感官精準版】 啟動中 (MTF + AI + Whale + RSS + OI)...")
-    
-    # 初始化 OI 追蹤
+    print("🚀 【BTC 終極獵手：全資產精英版】 啟動中 (Tokyo Zero-Latency Node)...")
     prev_oi = feed.get_open_interest()
     
-    # 期初訓練
     init_data = calculate_all(feed.fetch_ohlcv(timeframe='1m', limit=500))
     predictor.train(init_data)
 
     while True:
         try:
-            # 1. 抓取技術面
+            # 1. 抓取多維數據
             df_1m = calculate_all(feed.fetch_ohlcv(timeframe='1m', limit=100))
             df_15m = calculate_all(feed.fetch_ohlcv(timeframe='15m', limit=50))
             df_1h = calculate_all(feed.fetch_ohlcv(timeframe='1h', limit=50))
             
-            # 2. 外部感測 (情緒+巨鯨+新聞)
             fng_score = macro.get_sentiment_score()
             whale_ratio = whale.get_whale_move(feed.exchange)
             news_score = news.fetch_latest_sentiment()
+            tech_pulse = macro.get_tech_stock_pulse() # NVIDIA 連動
             
-            # 3. 期貨槓桿動態 (OI Delta + Funding)
             current_oi = feed.get_open_interest()
             oi_delta = (current_oi - prev_oi) / prev_oi if prev_oi > 0 else 0
             prev_oi = current_oi
             fr = feed.get_funding_rate()
             
-            # 4. AI 信心評分
             latest_bar = df_1m.iloc[-1]
             ml_prob = predictor.predict_prob(latest_bar, funding_rate=fr)
             
-            # 5. 【終極精準矩陣】 引入槓桿壓力
-            # 當 OI Delta 大漲且價格暴漲 -> 代表槓桿在拼命追多，爆倉風險極高。
-            signal = check_signal(df_1m, df_15m, df_1h, ml_prob=ml_prob, whale_ratio=whale_ratio, news_score=news_score, oi_delta=oi_delta)
+            # 5. 【終極融合信號】 (加入科技連動與超級買入判定)
+            signal = check_signal(df_1m, df_15m, df_1h, ml_prob=ml_prob, whale_ratio=whale_ratio, 
+                                  news_score=news_score, oi_delta=oi_delta, tech_pulse=tech_pulse)
             
             price = latest_bar['close']
             atr = latest_bar['ATR']
             
-            # 6. 執行決策 (自適應斷路器 + 狀態持久化)
+            # 6. 執行決策
             trade_report = trader.execute(signal, price, storage, ml_prob=ml_prob, atr=atr)
             
             if trade_report:
                 send_line(trade_report)
                 print(f"[{datetime.now().strftime('%H:%M:%S')}] {trade_report}")
             else:
-                # 包含 OI Delta 的詳細狀態日誌
+                # 終極状态日誌
                 status = (f"[{datetime.now().strftime('%H:%M:%S')}] P:${price:,.2f} | "
-                          f"OI:{oi_delta:+.2%} | AI:{ml_prob:.1%} | News:{news_score:.2f}")
+                          f"AI:{ml_prob:.1%} | NWS:{news_score:.2f} | TCH:{tech_pulse:.2f}x")
                 print(status)
 
             time.sleep(60)

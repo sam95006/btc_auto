@@ -5,22 +5,37 @@ import feedparser
 
 class MacroScanner:
     def __init__(self):
-        # 宏觀情緒改為「恐懼與貪婪指數」 (100% 免費)
+        # 1. 恐懼與貪婪指數 (全球幣圈心跳)
         self.fear_greed_url = "https://api.alternative.me/fng/"
+        # 2. NVIDIA (輝達) & NASDAQ 即時情報 (美股領先指標)
+        # 使用 Yahoo Finance RSS 作為免費數據源
+        self.nvda_rss = "https://finance.yahoo.com/rss/headline?s=NVDA"
 
     def get_sentiment_score(self):
         try:
-            # 抓取全球情緒
             response = requests.get(self.fear_greed_url).json()
             fng_value = int(response['data'][0]['value'])
-            
-            # 將 0-100 轉化為我們系統用的 0-1
-            # 越高代表越貪婪 (看漲信心可稍微修正)
-            score = fng_value / 100.0
-            print(f"📊 [全球情緒] 恐懼貪婪指數: {fng_value} (Score: {score:.2f})")
-            return score
+            return fng_value / 100.0
         except:
             return 0.5
+
+    def get_tech_stock_pulse(self):
+        # 掃描 NVIDIA 與美股科技板塊情緒
+        try:
+            feed = feedparser.parse(self.nvda_rss)
+            bullish_keywords = ['surge', 'growth', 'buy', 'up', 'beat', 'rally', 'ai', 'gain']
+            score = 0
+            for entry in feed.entries[:5]: # 掃描前 5 則 NVDA 重大新聞
+                title = entry.title.lower()
+                for word in bullish_keywords:
+                    if word in title: score += 1
+            
+            # 科技連動係數 (1.0 代表正常，高於 1.0 代表美股助攻)
+            pulse = 1.0 + (score * 0.05) 
+            print(f"📡 [美股科技連動] NVDA 情緒加成: {pulse:.2f}x")
+            return min(1.3, pulse)
+        except:
+            return 1.0
 
 class WhaleWatcher:
     def __init__(self, symbol='BTCUSDT'):
@@ -28,7 +43,6 @@ class WhaleWatcher:
 
     def get_whale_move(self, exchange):
         try:
-            # 掃描幣安深度圖 (巨鯨大單偵測)
             orderbook = exchange.fetch_order_book(self.symbol, limit=20)
             bids = sum([b[1] for b in orderbook['bids']])
             asks = sum([a[1] for a in orderbook['asks']])
@@ -39,7 +53,6 @@ class WhaleWatcher:
 
 class NewsScanner:
     def __init__(self):
-        # 使用 Google News Bitcoin RSS (免費且免 Key)
         self.rss_url = "https://news.google.com/rss/search?q=bitcoin+crypto+when:1h&hl=en-US&gl=US&ceid=US:en"
         self.bull_keywords = ['etf', 'adoption', 'surge', 'bull', 'gain', 'buy', 'pump', 'growth', 'record', 'safe']
         self.bear_keywords = ['hack', 'crash', 'dump', 'fud', 'scam', 'crackdown', 'regulation', 'sell', 'drop', 'ban']
@@ -49,30 +62,17 @@ class NewsScanner:
             feed = feedparser.parse(self.rss_url)
             total_score = 0
             count = 0
-            headlines = []
-            
-            for entry in feed.entries[:10]: # 檢查最近 10 則新聞
+            for entry in feed.entries[:10]:
                 title = entry.title.lower()
-                headlines.append(entry.title)
-                
-                # 簡單關鍵字情緒評分
                 score = 0
                 for word in self.bull_keywords:
                     if word in title: score += 1
                 for word in self.bear_keywords:
                     if word in title: score -= 1
-                
                 total_score += score
                 count += 1
-            
-            # 歸一化分數為 -1 到 1，然後轉為 0-1 的信心係數
             avg_score = (total_score / count) if count > 0 else 0
-            sentiment_final = 0.5 + (avg_score * 0.1) # 略微影響，防止新聞雜訊過大
-            sentiment_final = max(0, min(1, sentiment_final))
-            
-            print(f"📰 [新聞情緒] 掃描最近 {count} 則新聞。初步信心係數: {sentiment_final:.2f}")
-            # print(f"最新標題: {headlines[0][:50]}...")
-            return sentiment_final
-        except Exception as e:
-            print(f"❌ 新聞掃描出錯: {e}")
+            sentiment_final = 0.5 + (avg_score * 0.1)
+            return max(0, min(1, sentiment_final))
+        except:
             return 0.5
