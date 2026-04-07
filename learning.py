@@ -1,26 +1,41 @@
 import pandas as pd
 import numpy as np
+from sklearn.ensemble import RandomForestClassifier
 
 class MLPredictor:
     def __init__(self):
-        # 輕量化權重權衡預測器 (不需要外部套件)
-        self.weights = {'RSI': 0.25, 'MACD': 0.25, 'RV': 0.3, 'STD': 0.2}
-        self.is_trained = True
+        # 建立專業級隨機森林模型
+        self.model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
+        self.is_trained = False
 
     def train(self, df):
-        # 自適應調整：根據最近的趨勢強弱，調整權重 (簡化版 AI)
-        print("AI 大腦（輕量化版）已啟動：自適應環境掃描完成。")
-        return True
+        try:
+            # 準備訓練數據
+            # 特徵 (Features): RSI, MACD, RV, ATR, etc.
+            X = df[['RSI', 'MACD', 'RV']].values
+            
+            # 目標 (Label): 如果下一根收盤價是漲的 ( > 0)，則標記為 1 (買入信心)
+            y = (df['close'].shift(-1) > df['close']).astype(int).values
+            
+            # 移除最後一行 (因為沒有下一根價格可對照)
+            X = X[:-1]
+            y = y[:-1]
+            
+            if len(X) > 50:
+                self.model.fit(X, y)
+                self.is_trained = True
+                print(f"✅ AI 專業大腦訓練完成。樣本數: {len(X)}")
+        except Exception as e:
+            print(f"❌ AI 訓練發生錯誤: {e}")
 
     def predict_prob(self, latest_data):
-        # 使用權重權衡法計算信心機率
-        # 1. RSI 動能 (越低賣壓越大, 越高買盤越強)
-        rsi_score = latest_data['RSI'] / 100.0
-        # 2. RV 巨鯨動能 (超過 1.3 代表爆量)
-        rv_score = min(latest_data['RV'] / 2.0, 1.0)
-        # 3. MACD 方向
-        macd_score = 1.0 if latest_data['MACD'] > 0 else 0.0
+        if not self.is_trained:
+            return 0.5
         
-        # 權衡總分 (0-1)
-        prob = (rsi_score * 0.3) + (rv_score * 0.4) + (macd_score * 0.3)
-        return prob
+        try:
+            features = np.array([[latest_data['RSI'], latest_data['MACD'], latest_data['RV']]])
+            # 取得「看漲」的機率
+            probs = self.model.predict_proba(features)
+            return probs[0][1] # 返回 Index 1 (即標籤為 1, 漲的機率)
+        except:
+            return 0.5
