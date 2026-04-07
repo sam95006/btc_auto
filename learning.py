@@ -1,52 +1,43 @@
 import pandas as pd
-import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-from strategy import calculate_rsi, calculate_sma
+import numpy as np
 
 class MLPredictor:
     def __init__(self):
-        self.model = RandomForestClassifier(n_estimators=100, random_state=42)
+        # 初始化隨機森林模型：平衡快速訓練與準確度
+        self.model = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42)
         self.is_trained = False
 
-    def prepare_features(self, df):
-        # Create features
-        df = df.copy()
-        df['rsi'] = calculate_rsi(df)
-        df['sma_20'] = calculate_sma(df, 20)
-        df['sma_50'] = calculate_sma(df, 50)
-        df['price_change'] = df['close'].pct_change()
-        
-        # Target: 1 if price goes UP in next 5 periods, 0 otherwise
-        df['target'] = (df['close'].shift(-5) > df['close']).astype(int)
-        
-        # Clean data
-        df = df.dropna()
-        X = df[['rsi', 'sma_20', 'sma_50', 'price_change']]
-        y = df['target']
-        return X, y
-
     def train(self, df):
+        """
+        利用過去的 K 線數據與後續漲跌進行「自我學習」
+        """
         if len(df) < 100:
-            print("Not enough data to train ML model yet (need >100 rows).")
-            return
-            
-        X, y = self.prepare_features(df)
-        self.model.fit(X, y)
-        self.is_trained = True
-        print(f"ML Model trained on {len(df)} rows.")
+            return False
+        
+        # 標記：如果未來 5 根 K 線內漲超過 0.5% 則標記為成功 (1), 否則為 0
+        df['target'] = (df['close'].shift(-5) > df['close'] * 1.005).astype(int)
+        
+        # 特徵工程：使用我們最強的指標作為輸入
+        features = ['RSI', 'MACD', 'RV', 'STD']
+        X = df[features].iloc[:-5].dropna()
+        y = df['target'].loc[X.index]
+        
+        if len(X) > 50:
+            self.model.fit(X, y)
+            self.is_trained = True
+            print("AI 大腦訓練完成: 已學習最新市場動態。")
+            return True
+        return False
 
-    def predict_signal(self, current_df):
+    def predict_prob(self, latest_data):
+        """
+        預測當前訊號成功的機率
+        """
         if not self.is_trained:
-            return None # Fallback to standard strategy
-
-        X, _ = self.prepare_features(current_df)
-        if len(X) == 0: return None
+            return 0.5  # 未訓練前預設中立
         
-        last_features = X.iloc[-1].values.reshape(1, -1)
-        prob = self.model.predict_proba(last_features)[0][1] # Probability of UP
-        
-        print(f"ML Confidence: {prob:.2f}")
-        
-        if prob > 0.7: return 'BUY'
-        if prob < 0.3: return 'SELL'
-        return 'HOLD'
+        features = ['RSI', 'MACD', 'RV', 'STD']
+        X_test = pd.DataFrame([latest_data[features]])
+        prob = self.model.predict_proba(X_test)[0][1]
+        return prob
