@@ -12,22 +12,32 @@ from datetime import datetime
 import os
 
 def run_webhook():
-    port = int(os.environ.get('PORT', 8080))
-    print(f"啟動 Webhook 服務監聽 (Port {port})...")
-    webhook_app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+    try:
+        port = int(os.environ.get('PORT', 8080))
+        print(f"啟動 Webhook 服務 (Port {port})...")
+        webhook_app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+    except Exception as e:
+        print(f"Webhook 啟動失敗: {e}")
 
 def main():
     feed = DataFeed(symbol='BTC/USDT')
-    storage = Storage()
+    
+    # 資料庫初始化容逃保護
+    try:
+        storage = Storage()
+    except Exception as e:
+        print(f"資料庫連結警告: {e}")
+        storage = None
+    
+    # 建立自適應預測大腦
     predictor = MLPredictor()
     
-    # 強制對齊目前的實際虧損數據 (結帳校正)
+    # 強制對齊虧損基線 (-43.87)
     last_pnl = -43.87
     trader = PaperTrader(initial_cumulative_pnl=last_pnl)
     
     print("-" * 40)
-    print("🚀 BTCUSDT 自適應 AI 交易系統開機...")
-    print(f"繼承歷史損益: ${last_pnl:,.2f}")
+    print("🚀 BTCUSDT AI 自適應系統 (穩定版) 啟動中...")
     print("-" * 40)
 
     # 🚀 在新執行緒 (Thread) 中跑 LINE Webhook
@@ -59,8 +69,13 @@ def main():
             latest_1m = df_1m.iloc[-1]
             price = latest_1m['close']
             
-            # 記錄
-            storage.log_signal(signal, price, latest_1m['RSI'], latest_1m['MACD'])
+            # --- 安全存儲記錄 ---
+            if storage:
+                try:
+                    storage.log_signal(signal, price, latest_1m['RSI'], latest_1m['MACD'])
+                except:
+                    pass
+                    
             trade_report = trader.execute(signal, price, storage)
             
             if trade_report:
