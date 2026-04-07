@@ -68,17 +68,30 @@ class Storage:
         return count or 0, total_pnl or 0.0
 
     def get_range_summary(self, days=1):
+        # 獲取指定天數內的結算數據
         cursor = self.conn.cursor()
         since = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d %H:%M:%S')
-        # 統計指定天數內所有結單平倉的損益
-        cursor.execute("""
-            SELECT COUNT(*), SUM(pnl) 
-            FROM trades 
-            WHERE timestamp >= ? 
-            AND type IN ('SELL', 'SELL_LONG', 'COVER_SHORT', 'TSL_LONG_EXIT', 'TSL_SHORT_EXIT', 'REMEDY_SELL', 'REMEDY_COVER')
-        """, (since,))
-        count, total_pnl = cursor.fetchone()
-        return count or 0, total_pnl or 0.0
+        
+        # 1. 統計總損益
+        cursor.execute("SELECT SUM(pnl) FROM trades WHERE timestamp >= ? AND type LIKE '%EXIT%'", (since,))
+        res_pnl = cursor.fetchone()
+        pnl = res_pnl[0] if res_pnl[0] else 0.0
+        
+        # 2. 統計總交易次數 (僅算平倉動作)
+        cursor.execute("SELECT COUNT(*) FROM trades WHERE timestamp >= ? AND type LIKE '%EXIT%'", (since,))
+        res_count = cursor.fetchone()
+        count = res_count[0] if res_count else 0
+        
+        return pnl, count
+
+    def get_lifetime_summary(self):
+        # 從盤古開天闢地以來的總數據
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT SUM(pnl), COUNT(*) FROM trades WHERE type LIKE '%EXIT%'")
+        res = cursor.fetchone()
+        pnl = res[0] if res[0] else 0.0
+        count = res[1] if res[1] else 0
+        return pnl, count
 
     def get_total_summary(self):
         cursor = self.conn.cursor()
