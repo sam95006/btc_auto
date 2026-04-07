@@ -1,8 +1,11 @@
 import sqlite3
 from datetime import datetime, timedelta
 
+import os
+
 class Storage:
-    def __init__(self, db_name="trading.db"):
+    def __init__(self, db_name="data/trading.db"):
+        os.makedirs(os.path.dirname(db_name), exist_ok=True)
         self.conn = sqlite3.connect(db_name, check_same_thread=False)
         self.init_db()
 
