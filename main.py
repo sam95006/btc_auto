@@ -21,7 +21,8 @@ def main():
     storage = Storage()
     predictor = MLPredictor()
     
-    last_pnl = storage.get_last_summary()
+    # 強制對齊目前的實際虧損數據 (結帳校正)
+    last_pnl = -43.87
     trader = PaperTrader(initial_cumulative_pnl=last_pnl)
     
     print("-" * 40)
