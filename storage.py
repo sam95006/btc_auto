@@ -66,6 +66,30 @@ class Storage:
         count, total_pnl = cursor.fetchone()
         return count or 0, total_pnl or 0.0
 
+    def get_range_summary(self, days=1):
+        cursor = self.conn.cursor()
+        since = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d %H:%M:%S')
+        # 統計指定天數內所有結單平倉的損益
+        cursor.execute("""
+            SELECT COUNT(*), SUM(pnl) 
+            FROM trades 
+            WHERE timestamp >= ? 
+            AND type IN ('SELL', 'SELL_LONG', 'COVER_SHORT', 'TSL_LONG_EXIT', 'TSL_SHORT_EXIT', 'REMEDY_SELL', 'REMEDY_COVER')
+        """, (since,))
+        count, total_pnl = cursor.fetchone()
+        return count or 0, total_pnl or 0.0
+
+    def get_total_summary(self):
+        cursor = self.conn.cursor()
+        # 統計這份資料庫開天闢地以來的所有結算
+        cursor.execute("""
+            SELECT COUNT(*), SUM(pnl) 
+            FROM trades 
+            WHERE type IN ('SELL', 'SELL_LONG', 'COVER_SHORT', 'TSL_LONG_EXIT', 'TSL_SHORT_EXIT', 'REMEDY_SELL', 'REMEDY_COVER')
+        """,)
+        count, total_pnl = cursor.fetchone()
+        return count or 0, total_pnl or 0.0
+
     def get_last_summary(self):
         cursor = self.conn.cursor()
         try:
@@ -74,5 +98,3 @@ class Storage:
             return res[0] if res else 0
         except Exception:
             return 0
-
-
