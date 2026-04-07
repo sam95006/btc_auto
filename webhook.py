@@ -81,6 +81,31 @@ def callback():
                 xaut = get_coin_prediction("XAUT/USDT") # 黃金
                 report = f"🌍 【全資產市場掃描】\n\n{eth}\n\n{pepe}\n\n{xaut}\n\n⚠️ 注: 預測僅供參考，量化系統專注於 BTC 交易。"
 
+            elif "持倉" in user_msg or "部位" in user_msg:
+                active = storage.get_active_pos()
+                if active and active[2] != "NONE":
+                    symbol = active[1]
+                    pos_type = "🟢 多單 (Long)" if active[2] == "LONG" else "🔴 空單 (Short)"
+                    entry_price = active[3]
+                    qty = active[4]
+                    
+                    # 抓取即時價格計算浮盈
+                    feed = DataFeed(symbol='BTC/USDT')
+                    try:
+                        df = feed.fetch_ohlcv(timeframe='1m', limit=1)
+                        current_price = df.iloc[-1]['close']
+                        pnl = (current_price - entry_price) * qty if active[2] == "LONG" else (entry_price - current_price) * qty
+                        report = (f"🔍 【即時持倉透視】\n"
+                                  f"🔹 方向: {pos_type}\n"
+                                  f"🔹 進場價格: ${entry_price:,.2f}\n"
+                                  f"🔹 目前現價: ${current_price:,.2f}\n"
+                                  f"🔹 倉位大小: {qty:.4f}\n"
+                                  f"💰 浮動盈虧: ${pnl:,.2f}")
+                    except:
+                        report = f"🔍 【持倉資訊】\n進場價: ${entry_price:,.2f}\n方向: {pos_type}\n(即時報價獲取中...)"
+                else:
+                    report = "🔍 目前空手觀望中，雷達持續掃描進場點 (No Active Positions)。"
+
             if report:
                 send_line_reply(reply_token, report)
 

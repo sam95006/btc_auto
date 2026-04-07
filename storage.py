@@ -20,15 +20,30 @@ class Storage:
             cumulative_pnl REAL
         )''')
         # 訊號紀錄
-        cursor.execute('''CREATE TABLE IF NOT EXISTS signals (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            signal TEXT,
-            price REAL,
-            rsi REAL,
-            macd REAL
-        )''')
+        # 交易歷史表
+        cursor.execute('''CREATE TABLE IF NOT EXISTS trades
+                         (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                          timestamp TEXT, type TEXT, price REAL, qty REAL, pnl REAL, total_pnl REAL)''')
+        # 當前持倉表 (用於 LINE 即時查詢)
+        cursor.execute('''CREATE TABLE IF NOT EXISTS active_pos
+                         (id INTEGER PRIMARY KEY, symbol TEXT, type TEXT, entry_price REAL, qty REAL, trailing_high REAL)''')
         self.conn.commit()
+
+    def update_active_pos(self, symbol, pos_type, price, qty, trailing_high=0):
+        # 如果 qty 為 0 代表平倉，清除該項目
+        cursor = self.conn.cursor()
+        if qty == 0:
+            cursor.execute("DELETE FROM active_pos WHERE symbol = ?", (symbol,))
+        else:
+            # 覆蓋或插入持倉
+            cursor.execute("REPLACE INTO active_pos (id, symbol, type, entry_price, qty, trailing_high) VALUES (1, ?, ?, ?, ?, ?)", 
+                           (symbol, pos_type, price, qty, trailing_high))
+        self.conn.commit()
+
+    def get_active_pos(self):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM active_pos WHERE id = 1")
+        return cursor.fetchone()
 
     def log_signal(self, signal, price, rsi, macd):
         cursor = self.conn.cursor()
