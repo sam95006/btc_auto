@@ -40,41 +40,39 @@ def callback():
             user_msg = event['message']['text'].strip()
             reply_token = event['replyToken']
             
-            # 關鍵字判定
+            # 關鍵字判定與強健回傳
             user_text = user_msg
             title = ""
-            count = 0
-            pnl = 0.0
             
-            if "今日報表" in user_text:
-                count, pnl = storage.get_today_summary()
-                title = "📊 今日交易報表"
-            elif "三天報表" in user_text:
-                count, pnl = storage.get_range_summary(days=3)
-                title = "📉 三天累積報表"
-            elif "本週報表" in user_text:
-                count, pnl = storage.get_range_summary(days=7)
-                title = "📅 本週累積報表"
-            elif "本月報表" in user_text:
-                count, pnl = storage.get_range_summary(days=30)
-                title = "🗓️ 本月累積報表"
-            elif "總體報表" in user_text:
-                count, pnl = storage.get_total_summary()
-                title = "📈 全球總結算報表"
-            
-            if title:
-                # 基礎本金假設校正 (讓報表更好讀)
-                initial_capital = 10000.0
-                current_balance = initial_capital + pnl - 43.87 # 包含今日之前的虧損偏移
+            try:
+                if "今日報表" in user_text:
+                    count, pnl = storage.get_today_summary()
+                    title = "📊 今日交易報表"
+                elif "三天報表" in user_text:
+                    count, pnl = storage.get_range_summary(days=3)
+                    title = "📉 三天累積報表"
+                elif "本週報表" in user_text:
+                    count, pnl = storage.get_range_summary(days=7)
+                    title = "📅 本週累積報表"
+                elif "本月報表" in user_text:
+                    count, pnl = storage.get_range_summary(days=30)
+                    title = "🗓️ 本月累積報表"
+                elif "總體報表" in user_text:
+                    count, pnl = storage.get_total_summary()
+                    title = "📈 全球總結算報表"
                 
-                report = (f"{title}\n"
-                         f"------------------\n"
-                         f"✅ 結算次數: {count} 次\n"
-                         f"💰 累積損益: ${pnl:,.2f}\n"
-                         f"🏦 目前餘額: ${current_balance:,.2f}\n"
-                         f"🤖 運作環境: Render AI Cloud")
-                
-                reply_line(reply_token, report)
+                if title:
+                    initial_capital = 10000.0
+                    current_balance = initial_capital + pnl - 43.87
+                    report = (f"{title}\n"
+                             f"------------------\n"
+                             f"✅ 結算次數: {count} 次\n"
+                             f"💰 累積損益: ${pnl:,.2f}\n"
+                             f"🏦 目前餘額: ${current_balance:,.2f}\n"
+                             f"🤖 運作環境: Render AI Cloud")
+                    reply_line(reply_token, report)
+            except Exception as e:
+                reply_line(reply_token, f"⚠️ 報表結算發生意外: {e}")
                 
     return 'OK'
 

@@ -1,5 +1,6 @@
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
+import os
 
 class Storage:
     def __init__(self, db_name="trading.db"):
