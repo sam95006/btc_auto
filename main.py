@@ -45,9 +45,9 @@ def main():
     web_thread.daemon = True
     web_thread.start()
 
-    # 首次開機進行訓練
+    # 首次開機進行訓練 (輕量化 500 根)
     try:
-        init_data = calculate_all(feed.fetch_ohlcv(timeframe='1m', limit=1000))
+        init_data = calculate_all(feed.fetch_ohlcv(timeframe='1m', limit=500))
         predictor.train(init_data)
     except Exception as e:
         print(f"初期訓練失敗: {e}")
