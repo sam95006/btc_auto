@@ -82,8 +82,22 @@ def main():
     fed = FedScanner()
     pol = PoliticalScanner()
     
-    trader = PaperTrader(initial_cumulative_pnl=-43.87)
+    initial_pnl = 0.0
+    active_pos = None
+    if storage:
+        initial_pnl, _ = storage.get_lifetime_summary()
+        active_pos = storage.get_active_pos()
+        
+    trader = PaperTrader(initial_cumulative_pnl=initial_pnl)
     
+    # 從資料庫中還原中斷前的持倉狀態
+    if active_pos:
+        trader.entry_price = active_pos[3]
+        trader.position = active_pos[4]
+        if "LONG" in active_pos[2]:
+            trader.trailing_high = active_pos[5]
+        else:
+            trader.trailing_low = active_pos[5]
     trading_thread = threading.Thread(target=trading_loop, args=(trader, predictor, feed, storage, macro, whale, news, fed, pol))
     trading_thread.daemon = True
     trading_thread.start()

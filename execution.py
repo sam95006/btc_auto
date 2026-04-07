@@ -28,7 +28,7 @@ class PaperTrader:
                 if storage:
                     storage.log_trade("EXIT_LONG", current_price, abs(self.position), pnl, self.cumulative_pnl)
                     storage.update_active_pos("BTC", "NONE", 0, 0)
-                report = f"✅ 【多單精確平倉】\n🔹 出場點位: ${current_price:,.2f}\n🔸 進場點位: ${self.entry_price:,.2f}\n💰 單筆盈虧: ${pnl:,.2f}"
+                report = f"✅ 【多單精確平倉】\n🔹 出場點位: ${current_price:,.2f}\n🔸 進場點位: ${self.entry_price:,.2f}\n💰 單筆盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n🏦 剩餘可用本金: {self.cash:,.2f} U"
                 self.position = 0
 
         elif self.position < 0:
@@ -43,7 +43,7 @@ class PaperTrader:
                 if storage:
                     storage.log_trade("EXIT_SHORT", current_price, abs(self.position), pnl, self.cumulative_pnl)
                     storage.update_active_pos("BTC", "NONE", 0, 0)
-                report = f"✅ 【空單精確平倉】\n🔹 出場點位: ${current_price:,.2f}\n🔸 進場點位: ${self.entry_price:,.2f}\n💰 單筆盈虧: ${pnl:,.2f}"
+                report = f"✅ 【空單精確平倉】\n🔹 出場點位: ${current_price:,.2f}\n🔸 進場點位: ${self.entry_price:,.2f}\n💰 單筆盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n🏦 剩餘可用本金: {self.cash:,.2f} U"
                 self.position = 0
 
         # --- 2. 雙擎開倉邏輯 ---

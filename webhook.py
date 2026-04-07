@@ -78,31 +78,41 @@ def callback():
                         reply_message(reply_token, "📭 目前空倉，系統正在埋伏下一個完美點位。")
                     else:
                         sym, t, ep, qty, th = pos[1], pos[2], pos[3], pos[4], pos[5]
-                        reply_message(reply_token, f"🟢 【目前持倉狀態】\n類別: {t}\n數量: {qty:.4f}\n進場點: ${ep:,.2f}\n追蹤高點: ${th:,.2f}")
+                        invested_u = ep * qty
+                        reply_message(reply_token, f"🟢 【目前持倉狀態】\n類別: {t}\n進場點: ${ep:,.2f}\n部位規模: {invested_u:,.2f} U\n追蹤防線: ${th:,.2f}")
                 
                 elif "今日" in user_msg or "一天" in user_msg:
                     pnl, cnt = storage.get_range_summary(1)
+                    tot_pnl, _ = storage.get_lifetime_summary()
+                    remained_u = 10000 + tot_pnl
                     recent_trades = storage.get_latest_trades(3)
-                    trade_str = "\n".join([f"[{tr[0][-5:]}] 進: ${tr[1]:.0f} | 出: ${tr[2]:.0f} | 盈虧: ${tr[3]:.0f}" for tr in recent_trades])
-                    reply_message(reply_token, f"📊 【24H 戰情中心】\n已平倉盈虧: ${pnl:,.2f}\n交易次數: {cnt} 次\n\n【最近交易紀錄】\n{trade_str}")
+                    trade_str = "\n".join([f"[{tr[0][-5:]}] 進: ${tr[1]:.0f} | 出: ${tr[2]:.0f} | 盈虧: {'+' if tr[3]>0 else ''}{tr[3]:.2f} U" for tr in recent_trades])
+                    reply_message(reply_token, f"📊 【24H 戰情中心】\n已平倉盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n交易次數: {cnt} 次\n🏦 剩餘總額: {remained_u:,.2f} U\n\n【最近交易紀錄】\n{trade_str}")
                     
                 elif "三天" in user_msg:
                     pnl, cnt = storage.get_range_summary(3)
-                    reply_message(reply_token, f"📊 【3天戰情】\n已平倉盈虧: ${pnl:,.2f}\n交易次數: {cnt} 次")
+                    tot_pnl, _ = storage.get_lifetime_summary()
+                    remained_u = 10000 + tot_pnl
+                    reply_message(reply_token, f"📊 【3天戰情】\n已平倉盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n交易次數: {cnt} 次\n🏦 剩餘總額: {remained_u:,.2f} U")
                     
                 elif "一週" in user_msg or "一周" in user_msg:
                     pnl, cnt = storage.get_range_summary(7)
+                    tot_pnl, _ = storage.get_lifetime_summary()
+                    remained_u = 10000 + tot_pnl
                     recent_trades = storage.get_latest_trades(5)
-                    trade_str = "\n".join([f"[{tr[0][-5:]}] 進: ${tr[1]:.0f} | 出: ${tr[2]:.0f} | 盈虧: ${tr[3]:.0f}" for tr in recent_trades])
-                    reply_message(reply_token, f"📊 【週報 7天戰情】\n已平倉盈虧: ${pnl:,.2f}\n交易次數: {cnt} 次\n\n【最近 5 筆交易】\n{trade_str}")
+                    trade_str = "\n".join([f"[{tr[0][-5:]}] 進: ${tr[1]:.0f} | 出: ${tr[2]:.0f} | 盈虧: {'+' if tr[3]>0 else ''}{tr[3]:.2f} U" for tr in recent_trades])
+                    reply_message(reply_token, f"📊 【週報 7天戰情】\n已平倉盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n交易次數: {cnt} 次\n🏦 剩餘總額: {remained_u:,.2f} U\n\n【最近 5 筆交易】\n{trade_str}")
                     
                 elif "一月" in user_msg or "一個月" in user_msg:
                     pnl, cnt = storage.get_range_summary(30)
-                    reply_message(reply_token, f"📊 【月報 30天戰情】\n總結盈虧: ${pnl:,.2f}\n交易次數: {cnt} 次")
+                    tot_pnl, _ = storage.get_lifetime_summary()
+                    remained_u = 10000 + tot_pnl
+                    reply_message(reply_token, f"📊 【月報 30天戰情】\n總結盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n交易次數: {cnt} 次\n🏦 剩餘總額: {remained_u:,.2f} U")
 
                 elif "總共" in user_msg or "總額" in user_msg:
                     pnl, cnt = storage.get_lifetime_summary()
-                    reply_message(reply_token, f"🏦 【歷史總決算】\n生涯累積盈虧: ${pnl:,.2f}\n總發射次數: {cnt} 次")
+                    remained_u = 10000 + pnl
+                    reply_message(reply_token, f"🏦 【歷史總決算】\n生涯累積盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n總發射次數: {cnt} 次\n🏦 剩餘總額: {remained_u:,.2f} U")
 
                 # --- 宏觀情報系列 ---
                 elif "快報" in user_msg or "行情" in user_msg:
