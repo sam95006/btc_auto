@@ -3,7 +3,7 @@ from datetime import datetime
 
 class Storage:
     def __init__(self, db_name="trading.db"):
-        self.conn = sqlite3.connect(db_name)
+        self.conn = sqlite3.connect(db_name, check_same_thread=False)
         self.create_tables()
 
     def create_tables(self):
