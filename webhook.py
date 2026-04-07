@@ -37,6 +37,10 @@ def get_coin_prediction(symbol):
     except:
         return f"💎 {symbol}: 目前數據獲取中..."
 
+@app.route("/", methods=['GET'])
+def health_check():
+    return "🚀 【BTC 終極獵手：東京精英版】 系統運作中！請對接 /callback URL。", 200
+
 @app.route("/callback", methods=['POST'])
 def callback():
     try:
