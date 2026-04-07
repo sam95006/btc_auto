@@ -4,46 +4,67 @@ class PaperTrader:
         self.position = 0          # 負數代表「做空 (Short)」, 正數代表「做多 (Long)」
         self.entry_price = 0
         self.cumulative_pnl = initial_cumulative_pnl
+        # 追蹤止損參數
+        self.highest_price = 0
+        self.lowest_price = 999999
+        self.trailing_percent = 0.015 # 1.5% 追蹤回徹則平倉
 
     def execute(self, signal, current_price, storage):
         report = ""
         
-        # 1. 偵測到「做多」訊號 (且目前沒開多單)
-        if signal == "BUY" and self.position <= 0:
-            # 如果目前有「空單」，先平倉空單
-            if self.position < 0:
-                pnl = (self.entry_price - current_price) * abs(self.position)
-                self.cash += (self.entry_price * abs(self.position)) + pnl
-                self.cumulative_pnl += pnl
-                storage.log_trade("COVER_SHORT", current_price, abs(self.position), pnl, self.cumulative_pnl)
-                report += f"⏬ [空單平倉] 獲利: ${pnl:,.2f} | "
+        # --- 追蹤止利/止損邏輯 (動能補救) ---
+        if self.position > 0: # 多單中
+            self.highest_price = max(self.highest_price, current_price)
+            # 如果價格從最高點回落超過 1.5% -> 強制出場鎖利
+            if current_price < self.highest_price * (1 - self.trailing_percent):
+                return self._exit_position(current_price, storage, "TSL_LONG_EXIT")
+        
+        elif self.position < 0: # 空單中
+            self.lowest_price = min(self.lowest_price, current_price)
+            # 如果價格從最低點回升超過 1.5% -> 強制出場鎖利/止損
+            if current_price > self.lowest_price * (1 + self.trailing_percent):
+                return self._exit_position(current_price, storage, "TSL_SHORT_EXIT")
 
-            # 開啟新多單
-            buy_amount = (self.cash * 0.98) / current_price  # 留2%緩衝
+        # --- 訊號執行與反向補救邏輯 ---
+        if signal == "BUY" and self.position <= 0:
+            if self.position < 0:
+                report += self._exit_position(current_price, storage, "REMEDY_COVER")
+            
+            buy_amount = (self.cash * 0.98) / current_price
             self.position = buy_amount
             self.entry_price = current_price
+            self.highest_price = current_price
             self.cash -= (self.position * current_price)
             storage.log_trade("BUY_LONG", current_price, self.position, 0, self.cumulative_pnl)
-            report += f"🚀 [模擬多單] 價格: ${current_price:,.2f} | 數量: {self.position:.6f}"
+            report += f"🚀 [模擬多單進場] 價格: ${current_price:,.2f}"
             return report
 
-        # 2. 偵測到「做空」訊號 (且目前沒開空單)
         elif signal == "SELL" and self.position >= 0:
-            # 如果目前有「多單」，先平倉多單
             if self.position > 0:
-                pnl = (current_price - self.entry_price) * self.position
-                self.cash += (self.position * current_price)
-                self.cumulative_pnl += pnl
-                storage.log_trade("SELL_LONG", current_price, self.position, pnl, self.cumulative_pnl)
-                report += f"✔️ [多單平倉] 獲利: ${pnl:,.2f} | "
-
-            # 開啟新空單 (模擬開空)
+                report += self._exit_position(current_price, storage, "REMEDY_SELL")
+            
             short_amount = (self.cash * 0.98) / current_price
-            self.position = -short_amount  # 表示空單
+            self.position = -short_amount
             self.entry_price = current_price
-            # 自留現金 100% 作為保證金模擬，實際上 cash 先扣除模擬金額
+            self.lowest_price = current_price
             storage.log_trade("OPEN_SHORT", current_price, abs(self.position), 0, self.cumulative_pnl)
-            report += f"🔻 [模擬空單] 價格: ${current_price:,.2f} | 數量: {abs(self.position):.6f}"
+            report += f"🔻 [模擬空單進場] 價格: ${current_price:,.2f}"
             return report
 
         return None
+
+    def _exit_position(self, current_price, storage, exit_type):
+        if self.position > 0:
+            pnl = (current_price - self.entry_price) * self.position
+            self.cash += (self.position * current_price)
+        else:
+            pnl = (self.entry_price - current_price) * abs(self.position)
+            self.cash += (self.entry_price * abs(self.position)) + pnl
+            
+        self.cumulative_pnl += pnl
+        storage.log_trade(exit_type, current_price, abs(self.position), pnl, self.cumulative_pnl)
+        old_pos = self.position
+        self.position = 0
+        self.entry_price = 0
+        status = "獲利" if pnl > 0 else "補救/虧損"
+        return f"🏁 [{exit_type}] {status}: ${pnl:,.2f} | "

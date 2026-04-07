@@ -56,11 +56,12 @@ class Storage:
     def get_today_summary(self):
         cursor = self.conn.cursor()
         today = datetime.now().strftime('%Y-%m-%d')
-        # 統計今天結算的總損益 (只看賣出單的 pnl)
+        # 統計今天所有「結單平倉」類型的總損益
         cursor.execute("""
             SELECT COUNT(*), SUM(pnl) 
             FROM trades 
-            WHERE timestamp LIKE ? AND type = 'SELL'
+            WHERE timestamp LIKE ? 
+            AND type IN ('SELL', 'SELL_LONG', 'COVER_SHORT', 'TSL_LONG_EXIT', 'TSL_SHORT_EXIT', 'REMEDY_SELL', 'REMEDY_COVER')
         """, (f"{today}%",))
         count, total_pnl = cursor.fetchone()
         return count or 0, total_pnl or 0.0
