@@ -9,10 +9,13 @@ from notifier import send_line
 from webhook import app as webhook_app  # 導入剛剛建立的 Webhook 伺服器
 from datetime import datetime
 
+import os
+
 def run_webhook():
-    # 讓 Webhook 跑在背景，Port 8080 適合雲端環境
-    print("啟動 Webhook 服務監聽 (Port 8080)...")
-    webhook_app.run(host='0.0.0.0', port=8080, debug=False, use_reloader=False)
+    # 讓 Webhook 跑在背景，支援 Render 自動分配的 PORT
+    port = int(os.environ.get('PORT', 8080))
+    print(f"啟動 Webhook 服務監聽 (Port {port})...")
+    webhook_app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
 def main():
     feed = DataFeed(symbol='BTC/USDT')
