@@ -28,4 +28,13 @@ def calculate_all(df):
     df['Vol_MA20'] = df['volume'].rolling(window=20).mean()
     df['RV'] = df['volume'] / df['Vol_MA20']
     
+    # 5. ATR (真實平均幅度) - 用於波動率止損
+    high_low = df['high'] - df['low']
+    high_close = np.abs(df['high'] - df['close'].shift())
+    low_close = np.abs(df['low'] - df['close'].shift())
+    tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+    df['ATR'] = tr.rolling(window=14).mean()
+    
+    # 清理殘留資料
+    df.dropna(inplace=True)
     return df
