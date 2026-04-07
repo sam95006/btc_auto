@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 import os
+import feedparser
 
 class MacroScanner:
     def __init__(self):
@@ -36,4 +37,42 @@ class WhaleWatcher:
         except:
             return 1.0
 
-# 清除舊的 NewsAI，合併到 MacroScanner 中
+class NewsScanner:
+    def __init__(self):
+        # 使用 Google News Bitcoin RSS (免費且免 Key)
+        self.rss_url = "https://news.google.com/rss/search?q=bitcoin+crypto+when:1h&hl=en-US&gl=US&ceid=US:en"
+        self.bull_keywords = ['etf', 'adoption', 'surge', 'bull', 'gain', 'buy', 'pump', 'growth', 'record', 'safe']
+        self.bear_keywords = ['hack', 'crash', 'dump', 'fud', 'scam', 'crackdown', 'regulation', 'sell', 'drop', 'ban']
+
+    def fetch_latest_sentiment(self):
+        try:
+            feed = feedparser.parse(self.rss_url)
+            total_score = 0
+            count = 0
+            headlines = []
+            
+            for entry in feed.entries[:10]: # 檢查最近 10 則新聞
+                title = entry.title.lower()
+                headlines.append(entry.title)
+                
+                # 簡單關鍵字情緒評分
+                score = 0
+                for word in self.bull_keywords:
+                    if word in title: score += 1
+                for word in self.bear_keywords:
+                    if word in title: score -= 1
+                
+                total_score += score
+                count += 1
+            
+            # 歸一化分數為 -1 到 1，然後轉為 0-1 的信心係數
+            avg_score = (total_score / count) if count > 0 else 0
+            sentiment_final = 0.5 + (avg_score * 0.1) # 略微影響，防止新聞雜訊過大
+            sentiment_final = max(0, min(1, sentiment_final))
+            
+            print(f"📰 [新聞情緒] 掃描最近 {count} 則新聞。初步信心係數: {sentiment_final:.2f}")
+            # print(f"最新標題: {headlines[0][:50]}...")
+            return sentiment_final
+        except Exception as e:
+            print(f"❌ 新聞掃描出錯: {e}")
+            return 0.5

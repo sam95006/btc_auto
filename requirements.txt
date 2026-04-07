@@ -3,5 +3,5 @@ pandas
 flask
 requests
 schedule
-numpy
 scikit-learn
+feedparser
