@@ -1,41 +1,34 @@
 import sqlite3
 from datetime import datetime, timedelta
-import os
 
 class Storage:
     def __init__(self, db_name="trading.db"):
         self.conn = sqlite3.connect(db_name, check_same_thread=False)
-        self.create_tables()
+        self.init_db()
 
-    def create_tables(self):
+    def init_db(self):
         cursor = self.conn.cursor()
-        # 交易紀錄：單筆損益、累積損益
-        cursor.execute('''CREATE TABLE IF NOT EXISTS trades (
+        cursor.execute('''CREATE TABLE IF NOT EXISTS daily_pnl (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            type TEXT,
-            price REAL,
-            amount REAL,
-            pnl REAL,
+            date TEXT UNIQUE,
+            daily_pnl REAL,
             cumulative_pnl REAL
         )''')
-        # 訊號紀錄
-        # 交易歷史表
+        
+        # 升級: 加入 entry_price 以利精確報表追蹤
         cursor.execute('''CREATE TABLE IF NOT EXISTS trades
                          (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                          timestamp TEXT, type TEXT, price REAL, qty REAL, pnl REAL, total_pnl REAL)''')
-        # 當前持倉表 (用於 LINE 即時查詢)
+                          timestamp TEXT, type TEXT, entry_price REAL, exit_price REAL, qty REAL, pnl REAL, total_pnl REAL)''')
+        
         cursor.execute('''CREATE TABLE IF NOT EXISTS active_pos
                          (id INTEGER PRIMARY KEY, symbol TEXT, type TEXT, entry_price REAL, qty REAL, trailing_high REAL)''')
         self.conn.commit()
 
     def update_active_pos(self, symbol, pos_type, price, qty, trailing_high=0):
-        # 如果 qty 為 0 代表平倉，清除該項目
         cursor = self.conn.cursor()
         if qty == 0:
             cursor.execute("DELETE FROM active_pos WHERE symbol = ?", (symbol,))
         else:
-            # 覆蓋或插入持倉
             cursor.execute("REPLACE INTO active_pos (id, symbol, type, entry_price, qty, trailing_high) VALUES (1, ?, ?, ?, ?, ?)", 
                            (symbol, pos_type, price, qty, trailing_high))
         self.conn.commit()
@@ -45,85 +38,42 @@ class Storage:
         cursor.execute("SELECT * FROM active_pos WHERE id = 1")
         return cursor.fetchone()
 
-    def log_signal(self, signal, price, rsi, macd):
+    def log_trade(self, type_str, exit_price, qty, pnl, total_pnl):
+        # 如果是 EXIT，我們需要找倒最近一次的 ENTRY 價位
         cursor = self.conn.cursor()
-        cursor.execute("INSERT INTO signals (timestamp, signal, price, rsi, macd) VALUES (?, ?, ?, ?, ?)",
-                       (datetime.now().isoformat(), signal, price, rsi, macd))
+        entry_price = 0.0
+        if "EXIT" in type_str:
+            cursor.execute("SELECT entry_price FROM trades WHERE type LIKE 'ENTRY%' ORDER BY id DESC LIMIT 1")
+            res = cursor.fetchone()
+            if res: entry_price = res[0]
+        else: 
+            # 如果是 ENTRY，entry 價格就是 current_price 傳進來的 (這裡在參數裡用 exit_price 暫代)
+            entry_price = exit_price 
+
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute("INSERT INTO trades (timestamp, type, entry_price, exit_price, qty, pnl, total_pnl) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                       (now_str, type_str, entry_price, exit_price, qty, pnl, total_pnl))
         self.conn.commit()
 
-    def log_trade(self, t_type, price, amount, pnl, cum_pnl):
+    def get_range_summary(self, days):
         cursor = self.conn.cursor()
-        cursor.execute("INSERT INTO trades (timestamp, type, price, amount, pnl, cumulative_pnl) VALUES (?, ?, ?, ?, ?, ?)",
-                       (datetime.now().isoformat(), t_type, price, amount, pnl, cum_pnl))
-        self.conn.commit()
-
-    def get_today_trades(self):
-        cursor = self.conn.cursor()
-        today = datetime.now().strftime('%Y-%m-%d')
-        # 查詢今天所有的買賣明細
-        cursor.execute("""
-            SELECT type, price, pnl, timestamp 
-            FROM trades 
-            WHERE timestamp LIKE ? 
-            ORDER BY id ASC
-        """, (f"{today}%",))
-        return cursor.fetchall()
-
-    def get_today_summary(self):
-        cursor = self.conn.cursor()
-        today = datetime.now().strftime('%Y-%m-%d')
-        # 統計今天所有「結單平倉」類型的總損益
-        cursor.execute("""
-            SELECT COUNT(*), SUM(pnl) 
-            FROM trades 
-            WHERE timestamp LIKE ? 
-            AND type IN ('SELL', 'SELL_LONG', 'COVER_SHORT', 'TSL_LONG_EXIT', 'TSL_SHORT_EXIT', 'REMEDY_SELL', 'REMEDY_COVER')
-        """, (f"{today}%",))
-        count, total_pnl = cursor.fetchone()
-        return count or 0, total_pnl or 0.0
-
-    def get_range_summary(self, days=1):
-        # 獲取指定天數內的結算數據
-        cursor = self.conn.cursor()
-        since = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d %H:%M:%S')
-        
-        # 1. 統計總損益
-        cursor.execute("SELECT SUM(pnl) FROM trades WHERE timestamp >= ? AND type LIKE '%EXIT%'", (since,))
-        res_pnl = cursor.fetchone()
-        pnl = res_pnl[0] if res_pnl[0] else 0.0
-        
-        # 2. 統計總交易次數 (僅算平倉動作)
-        cursor.execute("SELECT COUNT(*) FROM trades WHERE timestamp >= ? AND type LIKE '%EXIT%'", (since,))
-        res_count = cursor.fetchone()
-        count = res_count[0] if res_count else 0
-        
-        return pnl, count
-
-    def get_lifetime_summary(self):
-        # 從盤古開天闢地以來的總數據
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT SUM(pnl), COUNT(*) FROM trades WHERE type LIKE '%EXIT%'")
+        time_limit = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
+        # 僅計算平倉的損益
+        cursor.execute("SELECT SUM(pnl), COUNT(id) FROM trades WHERE timestamp > ? AND type LIKE '%EXIT%'", (time_limit,))
         res = cursor.fetchone()
         pnl = res[0] if res[0] else 0.0
         count = res[1] if res[1] else 0
         return pnl, count
 
-    def get_total_summary(self):
+    def get_lifetime_summary(self):
         cursor = self.conn.cursor()
-        # 統計這份資料庫開天闢地以來的所有結算
-        cursor.execute("""
-            SELECT COUNT(*), SUM(pnl) 
-            FROM trades 
-            WHERE type IN ('SELL', 'SELL_LONG', 'COVER_SHORT', 'TSL_LONG_EXIT', 'TSL_SHORT_EXIT', 'REMEDY_SELL', 'REMEDY_COVER')
-        """,)
-        count, total_pnl = cursor.fetchone()
-        return count or 0, total_pnl or 0.0
+        cursor.execute("SELECT SUM(pnl), COUNT(id) FROM trades WHERE type LIKE '%EXIT%'")
+        res = cursor.fetchone()
+        pnl = res[0] if res[0] else 0.0
+        count = res[1] if res[1] else 0
+        return pnl, count
 
-    def get_last_summary(self):
+    def get_latest_trades(self, limit=3):
         cursor = self.conn.cursor()
-        try:
-            cursor.execute("SELECT cumulative_pnl FROM trades ORDER BY id DESC LIMIT 1")
-            res = cursor.fetchone()
-            return res[0] if res else 0
-        except Exception:
-            return 0
+        cursor.execute("SELECT type, entry_price, exit_price, pnl, timestamp FROM trades WHERE type LIKE '%EXIT%' ORDER BY id DESC LIMIT ?", (limit,))
+        return cursor.fetchall()

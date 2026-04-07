@@ -37,6 +37,50 @@ class MacroScanner:
         except:
             return 1.0
 
+class FedScanner:
+    def __init__(self):
+        # 聯準會與總體經濟新聞
+        self.rss_url = "https://news.google.com/rss/search?q=Federal+Reserve+interest+rate+inflation&hl=en-US&gl=US&ceid=US:en"
+        self.dovish_words = ['cut', 'pause', 'dovish', 'easing', 'drop', 'lower']
+        self.hawkish_words = ['hike', 'hawkish', 'raise', 'inflation', 'hot', 'tightening']
+
+    def get_sentiment(self):
+        try:
+            feed = feedparser.parse(self.rss_url)
+            score = 0
+            for entry in feed.entries[:5]:
+                title = entry.title.lower()
+                for w in self.dovish_words:
+                    if w in title: score += 1
+                for w in self.hawkish_words:
+                    if w in title: score -= 1
+            # 大於 0 為鴿派 (放水，利多幣圈)，低於 0 為鷹派 (收水，利空幣圈)
+            final_score = 0.5 + (score * 0.1)
+            return max(0, min(1, final_score))
+        except:
+            return 0.5
+
+class PoliticalScanner:
+    def __init__(self):
+        self.rss_url = "https://news.google.com/rss/search?q=crypto+regulation+SEC+ban+legal+geopolitics&hl=en-US&gl=US&ceid=US:en"
+        self.positive_words = ['approve', 'win', 'support', 'legal', 'clarity']
+        self.negative_words = ['sue', 'ban', 'crackdown', 'illegal', 'war', 'reject']
+
+    def get_sentiment(self):
+        try:
+            feed = feedparser.parse(self.rss_url)
+            score = 0
+            for entry in feed.entries[:5]:
+                title = entry.title.lower()
+                for w in self.positive_words:
+                    if w in title: score += 1
+                for w in self.negative_words:
+                    if w in title: score -= 1
+            final_score = 0.5 + (score * 0.1)
+            return max(0, min(1, final_score))
+        except:
+            return 0.5
+
 class WhaleWatcher:
     def __init__(self, symbol='BTCUSDT'):
         self.symbol = symbol
