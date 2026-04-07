@@ -20,7 +20,12 @@ def run_webhook():
         print(f"Webhook 啟動失敗: {e}")
 
 def trading_loop(trader, predictor, feed, storage, macro, whale, news):
-    print("🚀 【BTC 終極獵手：全知新聞版】 啟動中 (F&G + Whale + RSS News)...")
+    print("🚀 【BTC 終極獵手：超感官精準版】 啟動中 (MTF + AI + Whale + RSS + OI)...")
+    
+    # 初始化 OI 追蹤
+    prev_oi = feed.get_open_interest()
+    
+    # 期初訓練
     init_data = calculate_all(feed.fetch_ohlcv(timeframe='1m', limit=500))
     predictor.train(init_data)
 
@@ -31,20 +36,24 @@ def trading_loop(trader, predictor, feed, storage, macro, whale, news):
             df_15m = calculate_all(feed.fetch_ohlcv(timeframe='15m', limit=50))
             df_1h = calculate_all(feed.fetch_ohlcv(timeframe='1h', limit=50))
             
-            # 2. 抓取外部感測面 (情緒 + 巨鯨 + 新聞)
+            # 2. 外部感測 (情緒+巨鯨+新聞)
             fng_score = macro.get_sentiment_score()
             whale_ratio = whale.get_whale_move(feed.exchange)
             news_score = news.fetch_latest_sentiment()
             
-            # 3. 資金費率
+            # 3. 期貨槓桿動態 (OI Delta + Funding)
+            current_oi = feed.get_open_interest()
+            oi_delta = (current_oi - prev_oi) / prev_oi if prev_oi > 0 else 0
+            prev_oi = current_oi
             fr = feed.get_funding_rate()
             
             # 4. AI 信心評分
             latest_bar = df_1m.iloc[-1]
             ml_prob = predictor.predict_prob(latest_bar, funding_rate=fr)
             
-            # 5. 【終極融合信號】 (加入新聞分數)
-            signal = check_signal(df_1m, df_15m, df_1h, ml_prob=ml_prob, whale_ratio=whale_ratio, news_score=news_score)
+            # 5. 【終極精準矩陣】 引入槓桿壓力
+            # 當 OI Delta 大漲且價格暴漲 -> 代表槓桿在拼命追多，爆倉風險極高。
+            signal = check_signal(df_1m, df_15m, df_1h, ml_prob=ml_prob, whale_ratio=whale_ratio, news_score=news_score, oi_delta=oi_delta)
             
             price = latest_bar['close']
             atr = latest_bar['ATR']
@@ -56,9 +65,9 @@ def trading_loop(trader, predictor, feed, storage, macro, whale, news):
                 send_line(trade_report)
                 print(f"[{datetime.now().strftime('%H:%M:%S')}] {trade_report}")
             else:
-                # 定時日誌輸出
+                # 包含 OI Delta 的詳細狀態日誌
                 status = (f"[{datetime.now().strftime('%H:%M:%S')}] P:${price:,.2f} | "
-                          f"AI:{ml_prob:.1%} | News:{news_score:.2f} | Whale:{whale_ratio:.2f}")
+                          f"OI:{oi_delta:+.2%} | AI:{ml_prob:.1%} | News:{news_score:.2f}")
                 print(status)
 
             time.sleep(60)
@@ -76,15 +85,13 @@ def main():
     whale = WhaleWatcher()
     news = NewsScanner()
     
-    # 以前的累積損益 (繼承狀態)
     trader = PaperTrader(initial_cumulative_pnl=-43.87)
     
-    # 啟動背景監控執行緒
     trading_thread = threading.Thread(target=trading_loop, args=(trader, predictor, feed, storage, macro, whale, news))
     trading_thread.daemon = True
     trading_thread.start()
 
-    run_webhook() # 主執行緒運行 Webhook
+    run_webhook()
 
 if __name__ == "__main__":
     main()
