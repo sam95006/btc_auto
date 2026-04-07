@@ -20,6 +20,11 @@ def reply_line(reply_token, text):
     }
     requests.post(url, headers=headers, data=json.dumps(data))
 
+@app.route("/")
+def home():
+    # Render 健康檢查端點
+    return "BTC Bot is Online and Operating 24/7!"
+
 @app.route("/callback", methods=['POST'])
 def callback():
     # 接收 LINE Webhook 訊息
