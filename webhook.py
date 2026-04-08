@@ -17,10 +17,12 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 LINE_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN')
 LINE_SECRET = os.getenv('LINE_CHANNEL_SECRET')
 if not LINE_TOKEN or not LINE_SECRET:
-    logging.error('缺少 LINE_CHANNEL_ACCESS_TOKEN 或 LINE_CHANNEL_SECRET 環境變數，服務無法啟動')
-    raise SystemExit('環境變數未設定，請在 Zeabur 設定頁面加入')
-line_bot_api = LineBotApi(LINE_TOKEN)
-handler = WebhookHandler(LINE_SECRET)
+    logging.warning('⚠️ 缺少 LINE 環境變數，Webhook 將以模擬模式啟動。')
+    line_bot_api = None
+    handler = None
+else:
+    line_bot_api = LineBotApi(LINE_TOKEN)
+    handler = WebhookHandler(LINE_SECRET)
 
 storage = Storage()
 macro = MacroScanner()
@@ -31,7 +33,10 @@ pol = PoliticalScanner()
 MONITOR_LIST = ['BTC', 'ETH', 'SOL', 'PEPE']
 
 def reply_message(token, text):
-    line_bot_api.reply_message(token, TextSendMessage(text=text))
+    if line_bot_api:
+        line_bot_api.reply_message(token, TextSendMessage(text=text))
+    else:
+        print(f"【模擬發送 LINE】: {text}")
 
 def help_message():
     return "可用指令:\n1. 持倉/部位 - 查看當前持倉\n2. 今日/一天 - 查看24小時報表\n3. 快報/行情 - 查看全球金融雷達\n請輸入關鍵字以獲取相應資訊。"

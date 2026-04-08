@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 import os
 
 class Storage:
-    def __init__(self, db_name="data/trading.db"):
-        os.makedirs(os.path.dirname(db_name), exist_ok=True)
+    def __init__(self, db_name="trading.db"):
+        # 直接使用根目錄，確保在 Zeabur/Heroku 等環境中具備寫入權限
         self.conn = sqlite3.connect(db_name, check_same_thread=False)
         self.init_db()
 
