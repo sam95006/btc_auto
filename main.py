@@ -8,7 +8,7 @@ from storage import Storage
 from notifier import send_line
 from webhook import app as webhook_app
 from learning import MLPredictor
-from sensors import MacroScanner, WhaleWatcher, NewsScanner, FedScanner, PoliticalScanner
+from sensors import MacroScanner, WhaleWatcher, NewsScanner, FedScanner, PoliticalScanner, TradingViewScanner
 from datetime import datetime
 import os
 
@@ -22,12 +22,12 @@ def run_webhook():
     except Exception as e:
         print(f"Webhook 啟動失敗: {e}")
 
-def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news, fed, pol):
-    print(f"🚀 【BTC+ETH+SOL 聯合獵手行動】 啟動中 ...")
+def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news, fed, pol, tv_scanners):
+    print(f"🚀 【全方位全知系統】 啟動中 ...")
     
     # 初始化數據
     for sym in MONITOR_SYMBOLS:
-        print(f"⌛ 正在初始化 {sym} 數據與 AI 訓練...")
+        print(f"⌛ 正在初始化 {sym} 數據...")
         df = calculate_all(feed_manager[sym].fetch_ohlcv(timeframe='1m', limit=500))
         predictor.train(df)
 
@@ -35,24 +35,26 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
 
     while True:
         try:
-            # 輪詢監控的幣種
             for sym in MONITOR_SYMBOLS:
                 feed = feed_manager[sym]
                 trader = traders[sym]
                 whale = whales[sym]
+                tv = tv_scanners[sym]
                 
-                # 獲取多維數據 (1m, 15m)
+                # 抓取多維數據
                 df_1m = calculate_all(feed.fetch_ohlcv(timeframe='1m', limit=100))
                 df_15m = calculate_all(feed.fetch_ohlcv(timeframe='15m', limit=50))
                 df_1h = calculate_all(feed.fetch_ohlcv(timeframe='1h', limit=50))
                 
-                # 宏觀與籌碼
-                fng_score = macro.get_sentiment_score()
-                whale_ratio = whale.get_whale_move(feed.exchange)
-                news_score = news.fetch_latest_sentiment()
-                fed_score = fed.get_sentiment()
-                pol_score = pol.get_sentiment()
+                # 獲取 TradingView 的綜合看漲/看跌分數
+                tv_score = tv.get_sentiment()
                 
+                # 巨鯨動態 (Orderbook Imbalance)
+                whale_ratio = whale.get_whale_move(feed.exchange)
+                
+                # 宏觀與新聞
+                news_score = news.fetch_latest_sentiment()
+                # 資金流動性
                 current_oi = feed.get_open_interest()
                 oi_delta = (current_oi - prev_oi[sym]) / prev_oi[sym] if prev_oi[sym] > 0 else 0
                 prev_oi[sym] = current_oi
@@ -63,12 +65,11 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
                 price = latest_bar['close']
                 atr = latest_bar['ATR']
                 
-                # 策略評估 (Scalper & Sniper)
-                scalper_signal = check_signal_scalper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, funding_rate=fr)
-                # sniper 暫時也餵進去
-                sniper_signal = "HOLD" 
+                # 策略評估 (整合 TV 分數)
+                scalper_signal = check_signal_scalper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, funding_rate=fr, tv_score=tv_score)
+                sniper_signal = check_signal_sniper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, 1.1, 0.6, 0.6, funding_rate=fr, tv_score=tv_score)
                 
-                # 執行下單
+                # 執行
                 report = trader.execute(scalper_signal, sniper_signal, price, storage, atr=atr)
                 
                 if report:
@@ -76,9 +77,9 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
                     send_line(tag + "\n" + report)
                     print(f"[{datetime.now().strftime('%H:%M:%S')}] {tag} {report}")
 
-            time.sleep(40) # 縮短輪詢間隔，增加對 1m 線的捕捉速度
+            time.sleep(30) # 為了 PEPE 與極短線，再次縮短輪詢間隔
         except Exception as e:
-            print(f"聯合監控異常: {e}")
+            print(f"監控異常: {e}")
             time.sleep(10)
 
 def main():
@@ -89,24 +90,19 @@ def main():
     fed = FedScanner()
     pol = PoliticalScanner()
 
-    # 初始化各幣種的專屬物件
     feed_manager = {}
     traders = {}
     whales = {}
-    
-    initial_pnl, _ = storage.get_lifetime_summary()
+    tv_scanners = {}
     
     for sym in MONITOR_SYMBOLS:
         feed_manager[sym] = DataFeed(symbol=sym)
-        
-        # 依照規則設定每日次數限制
         limit = 10 if "BTC" in sym else 999
-        # 四分天下：每隻幣分配 2500 U 專款專用
         traders[sym] = PaperTrader(symbol=sym, initial_cash=2500, max_daily_trades=limit)
-        
         whales[sym] = WhaleWatcher(symbol=sym.replace('/',''))
+        tv_scanners[sym] = TradingViewScanner(symbol=sym)
 
-    trading_thread = threading.Thread(target=trading_loop, args=(traders, predictor, feed_manager, storage, macro, whales, news, fed, pol))
+    trading_thread = threading.Thread(target=trading_loop, args=(traders, predictor, feed_manager, storage, macro, whales, news, fed, pol, tv_scanners))
     trading_thread.daemon = True
     trading_thread.start()
 
