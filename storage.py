@@ -35,6 +35,17 @@ class Storage:
                           win_loss TEXT,
                           market_context TEXT)''')
         
+        # 🔧 數據庫遷移: 確保舊表有 win_loss 列
+        try:
+            cursor.execute("PRAGMA table_info(trades)")
+            columns = [col[1] for col in cursor.fetchall()]
+            if 'win_loss' not in columns:
+                print("⚠️ 數據庫遷移: 添加 win_loss 列到 trades 表...")
+                cursor.execute("ALTER TABLE trades ADD COLUMN win_loss TEXT DEFAULT 'BREAK'")
+                self.conn.commit()
+        except Exception as e:
+            print(f"⚠️ 數據庫遷移檢查失敗: {e}")
+        
         cursor.execute('''CREATE TABLE IF NOT EXISTS active_pos
                          (id INTEGER PRIMARY KEY, symbol TEXT, type TEXT, entry_price REAL, qty REAL, trailing_high REAL)''')
         
@@ -178,16 +189,34 @@ class Storage:
         cursor = self.conn.cursor()
         time_limit = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
         
-        cursor.execute("""SELECT 
-                          COUNT(*) as total_trades,
-                          COUNT(CASE WHEN win_loss = 'WIN' THEN 1 END) as win_count,
-                          COUNT(CASE WHEN win_loss = 'LOSS' THEN 1 END) as loss_count,
-                          SUM(pnl) as total_pnl,
-                          AVG(pnl) as avg_pnl,
-                          MAX(pnl) as max_pnl,
-                          MIN(pnl) as min_pnl
-                         FROM trades WHERE symbol = ? AND timestamp > ?""",
-                       (symbol, time_limit))
+        # 先檢查 win_loss 列是否存在
+        cursor.execute("PRAGMA table_info(trades)")
+        columns = [col[1] for col in cursor.fetchall()]
+        has_win_loss = 'win_loss' in columns
+        
+        if has_win_loss:
+            cursor.execute("""SELECT 
+                              COUNT(*) as total_trades,
+                              COUNT(CASE WHEN win_loss = 'WIN' THEN 1 END) as win_count,
+                              COUNT(CASE WHEN win_loss = 'LOSS' THEN 1 END) as loss_count,
+                              SUM(pnl) as total_pnl,
+                              AVG(pnl) as avg_pnl,
+                              MAX(pnl) as max_pnl,
+                              MIN(pnl) as min_pnl
+                             FROM trades WHERE symbol = ? AND timestamp > ? AND pnl != 0""",
+                           (symbol, time_limit))
+        else:
+            # 舊表: 用 pnl > 0 判斷勝負
+            cursor.execute("""SELECT 
+                              COUNT(*) as total_trades,
+                              COUNT(CASE WHEN pnl > 0 THEN 1 END) as win_count,
+                              COUNT(CASE WHEN pnl < 0 THEN 1 END) as loss_count,
+                              SUM(pnl) as total_pnl,
+                              AVG(pnl) as avg_pnl,
+                              MAX(pnl) as max_pnl,
+                              MIN(pnl) as min_pnl
+                             FROM trades WHERE symbol = ? AND timestamp > ? AND pnl != 0""",
+                           (symbol, time_limit))
         
         row = cursor.fetchone()
         if row:

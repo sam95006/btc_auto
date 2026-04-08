@@ -121,9 +121,9 @@ class QueryAnalyzer:
             try:
                 today_trades = storage.get_today_trades(sym)
                 if today_trades:
-                    daily_pnl = sum(t.get('pnl', 0) for t in today_trades)
-                    daily_wins = sum(1 for t in today_trades if t.get('win_loss') == 'WIN')
-                    daily_losses = sum(1 for t in today_trades if t.get('win_loss') == 'LOSS')
+                    daily_pnl = sum(t.get('pnl', 0) for t in today_trades if t.get('pnl', 0) != 0)
+                    daily_wins = sum(1 for t in today_trades if t.get('win_loss', 'BREAK') == 'WIN')
+                    daily_losses = sum(1 for t in today_trades if t.get('win_loss', 'BREAK') == 'LOSS')
                     
                     grand_pnl += daily_pnl
                     total_trades += len(today_trades)
@@ -182,13 +182,13 @@ class QueryAnalyzer:
             return f"❌ 暫無 {symbol} 的交易數據"
         
         report = f"📊 【{symbol} 7日性能分析】\n"
-        report += f"總交易: {perf['total_trades']} 筆\n"
-        report += f"勝負: {perf['wins']}勝 {perf['losses']}敗\n"
-        report += f"勝率: {perf['win_rate']}\n"
-        report += f"累計盈虧: {perf['total_pnl']:+.1f} U\n"
-        report += f"平均盈虧: {perf['avg_pnl']:+.1f} U/筆\n"
-        report += f"最大盈利: {perf['max_pnl']:+.1f} U\n"
-        report += f"最大虧損: {perf['min_pnl']:+.1f} U\n"
+        report += f"總交易: {perf.get('total_trades', 0)} 筆\n"
+        report += f"勝負: {perf.get('wins', 0)}勝 {perf.get('losses', 0)}敗\n"
+        report += f"勝率: {perf.get('win_rate', '0%')}\n"
+        report += f"累計盈虧: {perf.get('total_pnl', 0):+.1f} U\n"
+        report += f"平均盈虧: {perf.get('avg_pnl', 0):+.1f} U/筆\n"
+        report += f"最大盈利: {perf.get('max_pnl', 0):+.1f} U\n"
+        report += f"最大虧損: {perf.get('min_pnl', 0):+.1f} U\n"
         
         return report
     
