@@ -88,17 +88,20 @@ class PaperTrader:
 
         # --- 2. 開倉判定 ---
         if self.position == 0:
-            # 次數檢查
-            if self.trades_today >= self.max_daily_trades:
-                return "" # 超過今日限額，不出聲
+            # 次數檢查 (如果是 Sniper 指號則無視限額，強行開單)
+            is_sniper = True if sniper_signal == "SUPER_BUY" else False
+            if self.trades_today >= self.max_daily_trades and not is_sniper:
+                return "" # Scalper 已滿額，且不是 Sniper 信號，則不出聲
 
-            if sniper_signal == "SUPER_BUY" or scalper_signal == "BUY_SCALP":
-                qty = (self.cash * 0.4) / current_price # 每隻幣動用自己的 40% 資金
+            if is_sniper or scalper_signal == "BUY_SCALP":
+                qty = (self.cash * 0.4) / current_price 
                 self.position = qty
                 self.entry_price = current_price
                 self.trailing_high = current_price
                 self.has_partial_tp = False
                 self.trades_today += 1
+                
+                tag = "【狙擊手特權開單】" if is_sniper and self.trades_today > self.max_daily_trades else "【正規開多進場】"
                 if storage: 
                     storage.update_active_pos(self.symbol, "LONG", current_price, qty, current_price)
                     storage.log_trade(f"ENTRY_LONG_{self.symbol}", current_price, qty, 0, self.cumulative_pnl)
