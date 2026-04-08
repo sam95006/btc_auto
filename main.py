@@ -14,9 +14,12 @@ from learning import MLPredictor
 from sensors import MacroScanner, WhaleWatcher, NewsScanner, FedScanner, PoliticalScanner, TradingViewScanner
 
 # 1. 配置多幣種監控名單
-MONITOR_SYMBOLS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'PEPE/USDT']
+MONITOR_SYMBOLS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT']
+PEPE_SYMBOL = 'PEPE/USDT'  # PEPE 無限交易額度
+DYNAMIC_SCAN_ENABLED = True  # 啟用動態市場掃描
+TOP_SYMBOLS_SCAN = 20  # 動態掃描前20大幣種
 
-def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news, fed, pol, tv_scanners):
+def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news, fed, pol, tv_scanners, pepe_symbol, dynamic_scan_cash):
     print(f"🚀 【後台數據大腦】 啟動中 ...")
     
     # 延遲初始化：讓 Webhook 先對外連線
@@ -70,7 +73,7 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
                 
                 # 策略決策 (傳入相對強度數據)
                 scalper_signal = check_signal_scalper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, funding_rate=fr, btc_change=btc_change, sym_change=sym_change)
-                sniper_signal = check_signal_sniper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, 1.1, 0.6, 0.6, funding_rate=fr, tv_score=tv_score)
+                sniper_signal = check_signal_sniper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, tv_score, fed.get_sentiment(), pol.get_sentiment(), funding_rate=fr)
                 
                 # 封裝環境變數供反思使用
                 context = {
@@ -111,18 +114,36 @@ def main():
             whales = {}
             tv_scanners = {}
             
+            # 總初始資金
+            total_initial_cash = 10000
+            
+            # 資金分配：4個核心币種 + 1個PEPE + 1個動態掃描
+            per_symbol_cash = total_initial_cash * 0.2  # 每個核心幣種 20%
+            pepe_cash = total_initial_cash * 0.15  # PEPE 15%
+            dynamic_scan_cash = total_initial_cash * 0.15  # 動態掃描 15%
+            
+            # 初始化核心4個幣種的交易者
             for sym in MONITOR_SYMBOLS:
                 try:
                     feed_manager[sym] = DataFeed(symbol=sym)
                     limit = 10 if "BTC" in sym else 999
-                    traders[sym] = PaperTrader(symbol=sym, initial_cash=2500, max_daily_trades=limit)
+                    traders[sym] = PaperTrader(symbol=sym, initial_cash=per_symbol_cash, max_daily_trades=limit, is_pepe=False)
                     whales[sym] = WhaleWatcher(symbol=sym.replace('/',''))
                     tv_scanners[sym] = TradingViewScanner(symbol=sym)
                 except Exception as sym_err:
                     print(f"⚠️ {sym} 初始化部分失敗 (跳過繼續): {sym_err}")
+            
+            # 初始化 PEPE 交易者 (無限交易額度)
+            try:
+                feed_manager[PEPE_SYMBOL] = DataFeed(symbol=PEPE_SYMBOL)
+                traders[PEPE_SYMBOL] = PaperTrader(symbol=PEPE_SYMBOL, initial_cash=pepe_cash, max_daily_trades=999, is_pepe=True)
+                whales[PEPE_SYMBOL] = WhaleWatcher(symbol=PEPE_SYMBOL.replace('/',''))
+                tv_scanners[PEPE_SYMBOL] = TradingViewScanner(symbol=PEPE_SYMBOL)
+            except Exception as pepe_err:
+                print(f"⚠️ PEPE 初始化失敗: {pepe_err}")
 
             # 2. 啟動背景交易循環
-            trading_thread = threading.Thread(target=trading_loop, args=(traders, predictor, feed_manager, storage, macro, whales, news, fed, pol, tv_scanners))
+            trading_thread = threading.Thread(target=trading_loop, args=(traders, predictor, feed_manager, storage, macro, whales, news, fed, pol, tv_scanners, PEPE_SYMBOL, dynamic_scan_cash))
             trading_thread.daemon = True
             trading_thread.start()
             print("✅ 背景交易系統已全數上線！")

@@ -30,7 +30,7 @@ fed = FedScanner()
 pol = PoliticalScanner()
 
 # 監控名單
-MONITOR_LIST = ['BTC', 'ETH', 'SOL', 'PEPE']
+MONITOR_LIST = ['BTC', 'ETH', 'SOL']
 
 def reply_message(token, text):
     if line_bot_api:

@@ -1,12 +1,14 @@
 import sqlite3
 from datetime import datetime, timedelta
-
 import os
+import json
 
 class Storage:
     def __init__(self, db_name="trading.db"):
         # 直接使用根目錄，確保在 Zeabur/Heroku 等環境中具備寫入權限
+        self.db_name = db_name
         self.conn = sqlite3.connect(db_name, check_same_thread=False)
+        self.conn.row_factory = sqlite3.Row  # 返回字典格式
         self.init_db()
 
     def init_db(self):
@@ -18,22 +20,48 @@ class Storage:
             cumulative_pnl REAL
         )''')
         
-        # 升級: 加入 entry_price 以利精確報表追蹤
+        # 完整的交易記錄
         cursor.execute('''CREATE TABLE IF NOT EXISTS trades
                          (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                          timestamp TEXT, type TEXT, entry_price REAL, exit_price REAL, qty REAL, pnl REAL, total_pnl REAL)''')
+                          timestamp TEXT, 
+                          symbol TEXT,
+                          signal_type TEXT,
+                          entry_price REAL, 
+                          exit_price REAL, 
+                          qty REAL, 
+                          pnl REAL, 
+                          total_pnl REAL,
+                          direction TEXT,
+                          win_loss TEXT,
+                          market_context TEXT)''')
         
         cursor.execute('''CREATE TABLE IF NOT EXISTS active_pos
                          (id INTEGER PRIMARY KEY, symbol TEXT, type TEXT, entry_price REAL, qty REAL, trailing_high REAL)''')
         
-        # 3. 交易教訓記錄 (自我進化大腦用)
+        # 交易教訓記錄 (自我進化大腦用)
         cursor.execute('''CREATE TABLE IF NOT EXISTS lessons (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             symbol TEXT,
                             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                             pnl REAL,
                             reason TEXT,
-                            market_context TEXT)''')
+                            market_context TEXT,
+                            signal_type TEXT,
+                            is_learned INTEGER DEFAULT 0)''')
+        
+        # 信號勝率統計表
+        cursor.execute('''CREATE TABLE IF NOT EXISTS signal_stats (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            symbol TEXT,
+                            signal_type TEXT,
+                            total_trades INTEGER DEFAULT 0,
+                            winning_trades INTEGER DEFAULT 0,
+                            losing_trades INTEGER DEFAULT 0,
+                            win_rate REAL DEFAULT 0.0,
+                            avg_pnl REAL DEFAULT 0.0,
+                            last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            UNIQUE(symbol, signal_type))''')
+        
         self.conn.commit()
 
     def log_lesson(self, symbol, pnl, reason, context):
@@ -61,36 +89,87 @@ class Storage:
         cursor.execute("SELECT * FROM active_pos WHERE id = 1")
         return cursor.fetchone()
 
-    def log_trade(self, type_str, exit_price, qty, pnl, total_pnl):
-        # 如果是 EXIT，我們需要找倒最近一次的 ENTRY 價位
+    def log_trade(self, symbol, signal_type, entry_price, exit_price, qty, pnl, total_pnl, 
+                   direction="", market_context=None, is_exit=False):
+        """詳細記錄每筆交易"""
         cursor = self.conn.cursor()
-        entry_price = 0.0
-        if "EXIT" in type_str:
-            cursor.execute("SELECT entry_price FROM trades WHERE type LIKE 'ENTRY%' ORDER BY id DESC LIMIT 1")
-            res = cursor.fetchone()
-            if res: entry_price = res[0]
-        else: 
-            # 如果是 ENTRY，entry 價格就是 current_price 傳進來的 (這裡在參數裡用 exit_price 暫代)
-            entry_price = exit_price 
-
         now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute("INSERT INTO trades (timestamp, type, entry_price, exit_price, qty, pnl, total_pnl) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                       (now_str, type_str, entry_price, exit_price, qty, pnl, total_pnl))
+        
+        context_str = json.dumps(market_context) if market_context else "{}"
+        win_loss = "WIN" if pnl > 0 else ("LOSS" if pnl < 0 else "BREAK")
+        
+        cursor.execute("""INSERT INTO trades 
+                         (timestamp, symbol, signal_type, entry_price, exit_price, qty, pnl, total_pnl, 
+                          direction, win_loss, market_context) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                       (now_str, symbol, signal_type, entry_price, exit_price, qty, pnl, total_pnl,
+                        direction, win_loss, context_str))
+        
+        # 更新信號勝率統計
+        if is_exit:
+            self._update_signal_stats(symbol, signal_type, pnl)
+        
         self.conn.commit()
+    
+    def _update_signal_stats(self, symbol, signal_type, pnl):
+        """更新信號成功率統計"""
+        cursor = self.conn.cursor()
+        cursor.execute("""SELECT * FROM signal_stats WHERE symbol = ? AND signal_type = ?""",
+                       (symbol, signal_type))
+        row = cursor.fetchone()
+        
+        if row:
+            total = row['total_trades'] + 1
+            wins = row['winning_trades'] + (1 if pnl > 0 else 0)
+            losses = row['losing_trades'] + (1 if pnl < 0 else 0)
+            win_rate = wins / total if total > 0 else 0
+            avg_pnl = ((row['avg_pnl'] * row['total_trades']) + pnl) / total
+            
+            cursor.execute("""UPDATE signal_stats 
+                             SET total_trades = ?, winning_trades = ?, losing_trades = ?, 
+                                 win_rate = ?, avg_pnl = ?, last_updated = ?
+                             WHERE symbol = ? AND signal_type = ?""",
+                          (total, wins, losses, win_rate, avg_pnl, datetime.now(), symbol, signal_type))
+        else:
+            cursor.execute("""INSERT INTO signal_stats 
+                             (symbol, signal_type, total_trades, winning_trades, losing_trades, win_rate, avg_pnl)
+                             VALUES (?, ?, 1, ?, 0, ?, ?)""",
+                          (symbol, signal_type, 1 if pnl > 0 else 0, 1.0 if pnl > 0 else 0.0, pnl))
+        self.conn.commit()
+    
+    def get_signal_stats(self, symbol, signal_type):
+        """獲取信號的勝率和性能統計"""
+        cursor = self.conn.cursor()
+        cursor.execute("""SELECT * FROM signal_stats WHERE symbol = ? AND signal_type = ?""",
+                       (symbol, signal_type))
+        row = cursor.fetchone()
+        if row:
+            return dict(row)
+        return None
 
     def get_range_summary(self, days):
+        """取得指定天數內的交易摘要"""
         cursor = self.conn.cursor()
         time_limit = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
         # 僅計算平倉的損益
-        cursor.execute("SELECT SUM(pnl), COUNT(id) FROM trades WHERE timestamp > ? AND type LIKE '%EXIT%'", (time_limit,))
+        cursor.execute("SELECT SUM(pnl), COUNT(id) FROM trades WHERE timestamp > ? AND pnl != 0", (time_limit,))
         res = cursor.fetchone()
         pnl = res[0] if res[0] else 0.0
         count = res[1] if res[1] else 0
-        return pnl, count
+        
+        # 計算詳細統計
+        cursor.execute("SELECT symbol, SUM(pnl) as total_pnl, COUNT(id) as count FROM trades WHERE timestamp > ? AND pnl != 0 GROUP BY symbol", (time_limit,))
+        rows = cursor.fetchall()
+        detailed = {}
+        for row in rows:
+            detailed[row['symbol']] = {'pnl': row['total_pnl'], 'trades': row['count']}
+        
+        return {'total_pnl': pnl, 'total_trades': count, 'detailed': detailed}
 
     def get_lifetime_summary(self):
+        """取得生涯交易摘要"""
         cursor = self.conn.cursor()
-        cursor.execute("SELECT SUM(pnl), COUNT(id) FROM trades WHERE type LIKE '%EXIT%'")
+        cursor.execute("SELECT SUM(pnl), COUNT(id) FROM trades WHERE pnl != 0")
         res = cursor.fetchone()
         pnl = res[0] if res[0] else 0.0
         count = res[1] if res[1] else 0
@@ -107,25 +186,33 @@ class Storage:
         return cursor.fetchall()
 
     def get_detailed_stats(self, days=1, symbol=None):
+        """取得詳細的交易統計"""
         cursor = self.conn.cursor()
         time_limit = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
         
-        query = "SELECT type, pnl, entry_price, qty FROM trades WHERE timestamp > ? AND type LIKE '%EXIT%'"
-        params = [time_limit]
         if symbol:
-            query += " AND type LIKE ?"
-            params.append(f"%{symbol}%")
-            
-        cursor.execute(query, tuple(params))
-        trades = cursor.fetchall()
-        stats = {'long_win': 0, 'long_loss': 0, 'short_win': 0, 'short_loss': 0, 'total_volume': 0.0, 'total_pnl': 0.0}
-        for t, pnl, ep, qty in trades:
-            stats['total_pnl'] += pnl
-            stats['total_volume'] += (ep * qty)
-            if "LONG" in t:
-                if pnl > 0: stats['long_win'] += 1
-                else: stats['long_loss'] += 1
-            else:
-                if pnl > 0: stats['short_win'] += 1
-                else: stats['short_loss'] += 1
-        return stats
+            cursor.execute("""SELECT COUNT(CASE WHEN pnl > 0 THEN 1 END) as wins,
+                                    COUNT(CASE WHEN pnl < 0 THEN 1 END) as losses,
+                                    SUM(pnl) as total_pnl,
+                                    AVG(pnl) as avg_pnl
+                             FROM trades WHERE timestamp > ? AND symbol = ? AND pnl != 0""",
+                          (time_limit, symbol))
+        else:
+            cursor.execute("""SELECT COUNT(CASE WHEN pnl > 0 THEN 1 END) as wins,
+                                    COUNT(CASE WHEN pnl < 0 THEN 1 END) as losses,
+                                    SUM(pnl) as total_pnl,
+                                    AVG(pnl) as avg_pnl
+                             FROM trades WHERE timestamp > ? AND pnl != 0""",
+                          (time_limit,))
+        
+        row = cursor.fetchone()
+        if row:
+            return {
+                'long_win': row['wins'] // 2 if row['wins'] else 0,
+                'long_loss': row['losses'] // 2 if row['losses'] else 0,
+                'short_win': row['wins'] // 2 if row['wins'] else 0,
+                'short_loss': row['losses'] // 2 if row['losses'] else 0,
+                'total_pnl': row['total_pnl'] if row['total_pnl'] else 0,
+                'avg_pnl': row['avg_pnl'] if row['avg_pnl'] else 0
+            }
+        return {'long_win': 0, 'long_loss': 0, 'short_win': 0, 'short_loss': 0, 'total_pnl': 0, 'avg_pnl': 0}

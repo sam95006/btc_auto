@@ -1,7 +1,57 @@
 from datetime import datetime
 
+class DailyTradeTarget:
+    """每日交易目標追蹤"""
+    def __init__(self, symbol, target_trades=15, min_winning_trades=12):
+        self.symbol = symbol
+        self.target_trades = target_trades
+        self.min_winning_trades = min_winning_trades
+        self.trades_today = 0
+        self.winning_trades = 0
+        self.losing_trades = 0
+        self.last_day = datetime.now().day
+    
+    def reset_if_new_day(self):
+        """新的一天時重置計數器"""
+        if datetime.now().day != self.last_day:
+            self.trades_today = 0
+            self.winning_trades = 0
+            self.losing_trades = 0
+            self.last_day = datetime.now().day
+    
+    def record_trade(self, pnl):
+        """記錄交易結果"""
+        self.trades_today += 1
+        if pnl > 0:
+            self.winning_trades += 1
+        elif pnl < 0:
+            self.losing_trades += 1
+    
+    def get_win_rate(self):
+        """獲得勝率"""
+        if self.trades_today == 0:
+            return 0.0
+        return self.winning_trades / self.trades_today
+    
+    def is_target_met(self):
+        """檢查是否達到日交易目標"""
+        return self.trades_today >= self.target_trades and self.winning_trades >= self.min_winning_trades
+    
+    def get_status(self):
+        """獲得今日交易狀態"""
+        return {
+            'symbol': self.symbol,
+            'trades_today': self.trades_today,
+            'winning_trades': self.winning_trades,
+            'losing_trades': self.losing_trades,
+            'win_rate': self.get_win_rate(),
+            'target_trades': self.target_trades,
+            'min_winning_trades': self.min_winning_trades,
+            'target_met': self.is_target_met()
+        }
+
 class PaperTrader:
-    def __init__(self, symbol="BTC", initial_cash=2500, max_daily_trades=999):
+    def __init__(self, symbol="BTC", initial_cash=2500, max_daily_trades=999, is_pepe=False):
         self.symbol = symbol.replace("/USDT", "")
         self.cash = initial_cash
         self.position = 0
@@ -19,9 +69,38 @@ class PaperTrader:
         # 移動回撤 (Trailing Drawdown) 參數
         self.pnl_high_water_mark = 0 # 今日盈虧最高點
         self.max_drawdown_allowed = 300 # 容許從最高點回撤 300U
+        
+        # 勝率過濾参數
+        self.min_win_rate_to_trade = 0.60  # 最低勝率閾值 60%
+        self.min_trades_for_stats = 5  # 最少需要5筆交易才能參考勝率
+        
+        # 每日交易目標
+        self.is_pepe = is_pepe
+        if is_pepe:
+            # PEPE 無限交易，但要達到 90% 勝率
+            self.daily_target = DailyTradeTarget(symbol, target_trades=999, min_winning_trades=9)
+        else:
+            # 其他幣種每日15筆交易，12筆以上盈利
+            self.daily_target = DailyTradeTarget(symbol, target_trades=15, min_winning_trades=12)
+
+    def _update_daily_target(self):
+        """更新並檢查每日交易目標"""
+        self.daily_target.reset_if_new_day()
+
+    def _record_trade_result(self, pnl):
+        """記錄交易結果到每日目標"""
+        self.daily_target.record_trade(pnl)
+
+    def _get_daily_status(self):
+        """獲得今日交易狀態"""
+        return self.daily_target.get_status()
 
     def execute(self, scalper_signal, sniper_signal, current_price, storage=None, atr=0, context=None):
         report = ""
+        
+        # 更新每日交易目標
+        self._update_daily_target()
+        
         now = datetime.now()
         if now.day != self.last_trade_day:
             self.trades_today = 0
@@ -65,6 +144,9 @@ class PaperTrader:
                 
                 if storage: storage.log_trade(f"EXIT_LONG_{self.symbol}", current_price, abs(self.position), pnl, self.cumulative_pnl)
                 
+                # 記錄到每日交易目標
+                self._record_trade_result(pnl)
+                
                 report = (f"✅ 【平倉通報 | TRADE CLOSED】\n─────────────────\n"
                           f"🪙 幣種: {self.symbol} (多單離場)\n📍 出場: ${current_price:,.2f}\n📉 盈虧: {pnl:+.1f} U" + reflection)
                 self.position = 0
@@ -99,6 +181,9 @@ class PaperTrader:
                     reflection = ref_engine.analyze_loss(self.symbol, pnl, self.entry_price, current_price, "SHORT", context)
 
                 if storage: storage.log_trade(f"EXIT_SHORT_{self.symbol}", current_price, abs(self.position), pnl, self.cumulative_pnl)
+                
+                # 記錄到每日交易目標
+                self._record_trade_result(pnl)
                 
                 report = (f"✅ 【平倉通報 | TRADE CLOSED】\n─────────────────\n"
                           f"🪙 幣種: {self.symbol} (空單離場)\n📍 出場: ${current_price:,.2f}\n📉 盈虧: {pnl:+.1f} U" + reflection)
