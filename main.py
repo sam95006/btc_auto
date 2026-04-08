@@ -98,8 +98,12 @@ def main():
     
     for sym in MONITOR_SYMBOLS:
         feed_manager[sym] = DataFeed(symbol=sym)
-        # 資金分配：每個幣種共享模擬本金，但獨立管理倉位
-        traders[sym] = PaperTrader(initial_cumulative_pnl=initial_pnl)
+        
+        # 依照規則設定每日次數限制
+        limit = 10 if "BTC" in sym else 999
+        # 四分天下：每隻幣分配 2500 U 專款專用
+        traders[sym] = PaperTrader(symbol=sym, initial_cash=2500, max_daily_trades=limit)
+        
         whales[sym] = WhaleWatcher(symbol=sym.replace('/',''))
 
     trading_thread = threading.Thread(target=trading_loop, args=(traders, predictor, feed_manager, storage, macro, whales, news, fed, pol))

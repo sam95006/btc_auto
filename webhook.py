@@ -1,175 +1,89 @@
-from flask import Flask, request, abort
-import requests
-import json
 import os
 import ccxt
+import pandas as pd
+from flask import Flask, request, abort
+from linebot import LineBotApi, WebhookHandler
+from linebot.exceptions import InvalidSignatureError
+from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from sensors import MacroScanner, FedScanner, PoliticalScanner
 from storage import Storage
-from sensors import MacroScanner, WhaleWatcher, NewsScanner, FedScanner, PoliticalScanner
 
 app = Flask(__name__)
+
+# 配置 LINE
+line_bot_api = LineBotApi(os.getenv('LINE_CHANNEL_ACCESS_TOKEN', 'YOUR_TOKEN'))
+handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET', 'YOUR_SECRET'))
+
 storage = Storage()
 macro = MacroScanner()
 fed = FedScanner()
 pol = PoliticalScanner()
 
-# LINE Messaging API Keys
-CHANNEL_ACCESS_TOKEN = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN', '')
-CHANNEL_SECRET = os.environ.get('LINE_CHANNEL_SECRET', '')
+# 監控名單
+MONITOR_LIST = ['BTC', 'ETH', 'SOL', 'PEPE']
 
-def reply_message(reply_token, text):
-    url = "https://api.line.me/v2/bot/message/reply"
-    headers = {
-        "Authorization": f"Bearer {CHANNEL_ACCESS_TOKEN}",
-        "Content-Type": "application/json"
-    }
-    data = {
-        "replyToken": reply_token,
-        "messages": [{"type": "text", "text": text}]
-    }
-    requests.post(url, headers=headers, data=json.dumps(data))
-
-def get_crypto_price(symbol):
-    try:
-        exchange = ccxt.binance()
-        ticker = exchange.fetch_ticker(symbol)
-        return f"💎 {symbol.replace('/USDT', '')}: ${ticker['last']:,.2f}"
-    except:
-        return f"💎 {symbol}: 目前數據獲取中..."
-
-def get_hot_coins():
-    try:
-        exchange = ccxt.binance()
-        markets = exchange.fetch_tickers()
-        # 過濾 USDT 交易對並依據 24 小時漲幅排序
-        usdt_pairs = {k: v for k, v in markets.items() if k.endswith('/USDT') and v['percentage'] is not None}
-        sorted_pairs = sorted(usdt_pairs.items(), key=lambda x: x[1]['percentage'], reverse=True)
-        
-        reco = []
-        for pair, data in sorted_pairs:
-            # 排除一些小市值或有風險的幣種 (簡單用交易量過濾)
-            if data['quoteVolume'] > 50000000: # 交易量大於 50M USDT
-                reco.append(f"🔥 {pair.replace('/USDT', '')}: 漲幅 {data['percentage']:.2f}% | 價格: ${data['last']:,.4f}")
-            if len(reco) >= 3:
-                break
-        if len(reco) == 0: return "目前市場無明顯動能強勢幣種。"
-        return "\n".join(reco)
-    except:
-        return "🔥 強勢幣種推薦: 數據獲取中..."
-
-@app.route("/", methods=['GET'])
-def health_check():
-    return "🚀 【BTC 終極獵手：Sovereign Global Macro Edition】 系統運作中！請對接 /callback URL。", 200
+def reply_message(token, text):
+    line_bot_api.reply_message(token, TextSendMessage(text=text))
 
 @app.route("/callback", methods=['POST'])
 def callback():
+    signature = request.headers['X-Line-Signature']
+    body = request.get_data(as_text=True)
     try:
-        body = request.get_data(as_text=True)
-        events = json.loads(body)['events']
-        
-        for event in events:
-            if event['type'] == 'message' and event['message']['type'] == 'text':
-                user_msg = event['message']['text'].lower()
-                reply_token = event['replyToken']
-                
-                # --- 報表系列 ---
-                if "持倉" in user_msg or "部位" in user_msg:
-                    pos = storage.get_active_pos()
-                    if not pos:
-                        reply_message(reply_token, "📭 目前空倉，系統正在埋伏下一個完美點位。")
-                    else:
-                        sym, t, ep, qty, th = pos[1], pos[2], pos[3], pos[4], pos[5]
-                        invested_u = ep * qty
-                        category = "比特幣多單" if "LONG" in t else ("比特幣空單" if "SHORT" in t else "偵測中")
-                        # 簡單推算目標價 (進場價 + 1.5% 左右)
-                        tp = ep * 1.015 if "LONG" in t else ep * 0.985
-                        reply_message(reply_token, f"🟢 【目前持倉狀態】\n類別: {category}\n進場點: ${ep:,.2f}\n下單金額: {invested_u:,.2f} U\n目標價: ${tp:,.2f}\n🛡️ 追蹤高/低點: ${th:,.2f}")
-                
-                elif "今日" in user_msg or "一天" in user_msg:
-                    pnl, cnt = storage.get_range_summary(1)
-                    tot_pnl, _ = storage.get_lifetime_summary()
-                    detail = storage.get_detailed_stats(1)
-                    remained_u = 10000 + tot_pnl
-                    reply_message(reply_token, (
-                        f"📊 【24H 戰情中心】\n"
-                        f"下單總金額: {detail['total_volume']:,.2f} U\n"
-                        f"已平倉盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n"
-                        f"交易次數: {cnt} 次\n"
-                        f"多單: {detail['long_win']}盈 {detail['long_loss']}虧\n"
-                        f"空單: {detail['short_win']}盈 {detail['short_loss']}虧\n\n"
-                        f"🏦 剩餘總額: {remained_u:,.2f} U"
-                    ))
-                    
-                elif "三天" in user_msg:
-                    pnl, cnt = storage.get_range_summary(3)
-                    tot_pnl, _ = storage.get_lifetime_summary()
-                    remained_u = 10000 + tot_pnl
-                    reply_message(reply_token, f"📊 【3天戰情】\n已平倉盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n交易次數: {cnt} 次\n🏦 剩餘總額: {remained_u:,.2f} U")
-                    
-                elif "一週" in user_msg or "一周" in user_msg:
-                    pnl, cnt = storage.get_range_summary(7)
-                    tot_pnl, _ = storage.get_lifetime_summary()
-                    remained_u = 10000 + tot_pnl
-                    recent_trades = storage.get_latest_trades(5)
-                    trade_str = "\n".join([f"[{tr[0][-5:]}] 進: ${tr[1]:.0f} | 出: ${tr[2]:.0f} | 盈虧: {'+' if tr[3]>0 else ''}{tr[3]:.2f} U" for tr in recent_trades])
-                    reply_message(reply_token, f"📊 【週報 7天戰情】\n已平倉盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n交易次數: {cnt} 次\n🏦 剩餘總額: {remained_u:,.2f} U\n\n【最近 5 筆交易】\n{trade_str}")
-                    
-                elif "一月" in user_msg or "一個月" in user_msg:
-                    pnl, cnt = storage.get_range_summary(30)
-                    tot_pnl, _ = storage.get_lifetime_summary()
-                    remained_u = 10000 + tot_pnl
-                    reply_message(reply_token, f"📊 【月報 30天戰情】\n總結盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n交易次數: {cnt} 次\n🏦 剩餘總額: {remained_u:,.2f} U")
+        handler.handle(body, signature)
+    except InvalidSignatureError:
+        abort(400)
+    return 'OK'
 
-                elif "總共" in user_msg or "總額" in user_msg:
-                    pnl, cnt = storage.get_lifetime_summary()
-                    remained_u = 10000 + pnl
-                    reply_message(reply_token, f"🏦 【歷史總決算】\n生涯累積盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n總發射次數: {cnt} 次\n🏦 剩餘總額: {remained_u:,.2f} U")
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    user_msg = event.message.text
+    reply_token = event.reply_token
 
-                # --- 宏觀情報系列 ---
-                elif "快報" in user_msg or "行情" in user_msg:
-                    fng = macro.get_sentiment_score()
-                    fed_s = fed.get_sentiment()
-                    pol_s = pol.get_sentiment()
-                    
-                    # 獲取趨勢情緒 (使用與策略一致的邏輯)
-                    exchange = ccxt.binance()
-                    ohlcv_1h = exchange.fetch_ohlcv('BTC/USDT', timeframe='1h', limit=50)
-                    from indicators import calculate_all
-                    import pandas as pd
-                    df_h = calculate_all(pd.DataFrame(ohlcv_1h, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume']))
-                    rsi_h = df_h.iloc[-1]['RSI']
-                    trend_status = "🌕 強勢多頭 (禁止做空模式)" if rsi_h > 55 else "⚖️ 震盪盤整 (雙向捕捉模式)"
-
-                    tech_str = "科技連動: 強勁 🚀" if macro.get_tech_stock_pulse() > 1.1 else "科技連動: 正常 ⚖️"
-                    fed_str = "聯準會: 鴿派 (利多) 🕊️" if fed_s > 0.55 else ("聯準會: 鷹派 (利空) 🦅" if fed_s < 0.45 else "聯準會: 觀望 ⚖️")
-                    pol_str = "地緣政治: 樂觀 🌍" if pol_s > 0.55 else ("地緣政治: 緊張 ⚠️" if pol_s < 0.45 else "地緣政治: 平穩 ⚖️")
-
-                    reply_text = (
-                        "📡 【全球金融與加密雷達】\n"
-                        f"📈 當前趨勢: {trend_status}\n"
-                        f"📊 恐懼貪婪指數: {fng*100:.0f}/100\n"
-                        f"📌 {tech_str}\n"
-                        f"📌 {fed_str}\n"
-                        f"📌 {pol_str}\n\n"
-                        "=== 📌 核心追蹤資產 ===\n"
-                        f"{get_crypto_price('BTC/USDT')}\n"
-                        f"{get_crypto_price('ETH/USDT')}\n"
-                        f"{get_crypto_price('SOL/USDT')}\n"
-                        f"{get_crypto_price('BNB/USDT')}\n"
-                        f"{get_crypto_price('XRP/USDT')}\n"
-                        f"{get_crypto_price('PEPE/USDT')}\n\n"
-                        "=== 🔮 每週AI強勢動能推薦 ===\n"
-                        f"{get_hot_coins()}"
-                    )
-                    reply_message(reply_token, reply_text)
-                
+    try:
+        # --- 權威戰報系統 ---
+        if "持倉" in user_msg or "部位" in user_msg:
+            all_pos = storage.get_all_active_pos()
+            pos_map = {p[1]: p for p in all_pos} # 依照幣種索引
+            
+            report = "🟢 【當前多路軍團持倉狀態】\n"
+            for sym in MONITOR_LIST:
+                if sym in pos_map:
+                    p = pos_map[sym]
+                    report += f"\n🪙 {sym}: 已持倉\n進場: ${p[3]:,.2f} | 規模: {p[3]*p[4]:,.1f} U\n"
                 else:
-                    reply_message(reply_token, "🤖 收到指令。支援查詢：\n1.「持倉」\n2.「今日/三天/一週/一月/總共」(附帶精確點位與次數)\n3.「快報」(含6大幣種與全球政經分析、本週強勢推薦)")
-        
-        return "OK", 200
+                    report += f"\n🪙 {sym}: 📭 目前空倉埋伏中..."
+            reply_message(reply_token, report)
+
+        elif "今日" in user_msg or "一天" in user_msg:
+            report = "📊 【24H 四軍聯合作戰中心】\n"
+            grand_pnl = 0
+            
+            for sym in MONITOR_LIST:
+                detail = storage.get_detailed_stats(1, symbol=sym)
+                pnl = detail['total_pnl']
+                grand_pnl += pnl
+                report += (f"\n🔥 {sym} 戰況:\n"
+                           f"已平倉: {pnl:+.1f} U | 出戰 {sum([detail['long_win'], detail['long_loss'], detail['short_win'], detail['short_loss']])} 次\n"
+                           f"多單 {detail['long_win']}勝 {detail['long_loss']}敗 | 空單 {detail['short_win']}勝 {detail['short_loss']}敗\n")
+            
+            total_remained = 10000 + grand_pnl
+            report += f"\n💰 【全局總計】\n累計總盈虧: {grand_pnl:+.2f} U\n🏦 總資產估值: {total_remained:,.2f} U"
+            reply_message(reply_token, report)
+
+        elif "快報" in user_msg or "行情" in user_msg:
+            fng = macro.get_sentiment_score()
+            fed_s = fed.get_sentiment()
+            pol_s = pol.get_sentiment()
+            report = (f"📡 【全球金融雷達】\n"
+                      f"📊 恐懼貪婪: {fng*100:.0f}/100\n"
+                      f"🕊️ 聯準會感測: {fed_s:.2f} (鴿 > 0.5)\n"
+                      f"🌍 地緣政治感測: {pol_s:.2f}\n"
+                      "⚡ 市場動能正常，獵手待命中。")
+            reply_message(reply_token, report)
+
     except Exception as e:
-        print(f"Webhook Error: {e}")
-        return "Internal Error", 500
+        print(f"Webhook 報表錯誤: {e}")
 
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 8080))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=5000)
