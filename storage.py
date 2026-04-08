@@ -296,3 +296,38 @@ class Storage:
                 'avg_pnl': row['avg_pnl'] if row['avg_pnl'] else 0
             }
         return {'long_win': 0, 'long_loss': 0, 'short_win': 0, 'short_loss': 0, 'total_pnl': 0, 'avg_pnl': 0}
+    
+    def get_symbol_trades(self, symbol, days=7):
+        """
+        【為 PerformanceOptimizer 獲取交易】
+        返回過去 N 天特定幣種的所有交易
+        每筆交易返回 (id, timestamp, symbol, signal_type, entry_price, pnl, ...)
+        """
+        cursor = self.conn.cursor()
+        time_limit = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
+        
+        cursor.execute("""SELECT 
+                          id, timestamp, symbol, signal_type, entry_price, 
+                          exit_price, qty, pnl, total_pnl, direction, win_loss, market_context
+                         FROM trades 
+                         WHERE symbol = ? AND timestamp > ? AND pnl != 0
+                         ORDER BY timestamp DESC""",
+                       (symbol, time_limit))
+        
+        rows = cursor.fetchall()
+        # 轉換為列表格式，便於 PerformanceOptimizer 遍歷
+        trades = []
+        for row in rows:
+            trades.append((
+                row['id'],
+                row['timestamp'],
+                row['symbol'],
+                row['signal_type'],
+                row['entry_price'],
+                row['pnl'],  # 重要: pnl 在位置 5
+                row['direction'],
+                row['win_loss'],
+                row['market_context']
+            ))
+        
+        return trades

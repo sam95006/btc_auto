@@ -82,6 +82,106 @@ class PaperTrader:
         else:
             # 其他幣種每日15筆交易，12筆以上盈利
             self.daily_target = DailyTradeTarget(symbol, target_trades=15, min_winning_trades=12)
+    
+    def multi_timeframe_confirmation(self, m1_rsi, m15_rsi, h1_ema, current_price, direction="LONG"):
+        """
+        【多時間框架確認】
+        返回交易信心值 (0.0-1.0)
+        """
+        confidence = 0.5
+        
+        if direction == "LONG":
+            # 1min RSI < 30 (超賣)
+            if m1_rsi < 30:
+                confidence += 0.2
+            # 15min RSI < 40 (弱勢)
+            if m15_rsi < 40:
+                confidence += 0.2
+            # 1hour 價格在 EMA200 上方 (上升趨勢)
+            if current_price > h1_ema:
+                confidence += 0.1
+        
+        elif direction == "SHORT":
+            # 1min RSI > 70 (超買)
+            if m1_rsi > 70:
+                confidence += 0.2
+            # 15min RSI > 60 (強勢)
+            if m15_rsi > 60:
+                confidence += 0.2
+            # 1hour 價格在 EMA200 下方 (下降趨勢)
+            if current_price < h1_ema:
+                confidence += 0.1
+        
+        return min(confidence, 1.0)
+    
+    def dynamic_position_sizing(self, signal_confidence, base_size=0.4, risk_per_trade=0.02):
+        """
+        【動態頭寸調整】
+        根據信號置信度調整頭寸大小
+        signal_confidence: 0.5-1.0
+        Returns: 頭寸倍數 (0.2x - 0.8x)
+        """
+        # 映射置信度到頭寸倍數
+        # 0.5 → 0.2x, 0.75 → 0.5x, 1.0 → 0.8x
+        position_multiplier = 0.2 + (signal_confidence - 0.5) * 1.2
+        position_multiplier = max(0.2, min(0.8, position_multiplier))
+        
+        position_size = base_size * (position_multiplier / 0.4)
+        return position_size
+    
+    def advanced_trailing_exit(self, current_price, entry_price, direction="LONG"):
+        """
+        【高級追蹤止盈】
+        3 層止盈機制:
+        • +1.0% 賣出 50%
+        • +1.5% 賣出 30%  
+        • +2.0% 全部出場
+        """
+        roi = (current_price - entry_price) / entry_price if direction == "LONG" else (entry_price - current_price) / entry_price
+        
+        exit_actions = []
+        
+        if roi >= 0.020:  # 2% 利潤
+            exit_actions.append({
+                'action': 'FULL_EXIT',
+                'pct': 100,
+                'roi': roi
+            })
+        elif roi >= 0.015:  # 1.5% 利潤
+            exit_actions.append({
+                'action': 'PARTIAL_EXIT',
+                'pct': 30,
+                'roi': roi
+            })
+        elif roi >= 0.010:  # 1.0% 利潤
+            exit_actions.append({
+                'action': 'PARTIAL_EXIT',
+                'pct': 50,
+                'roi': roi
+            })
+        
+        return exit_actions
+    
+    def calculate_win_rate_filtered_signal(self, base_signal_strength, historical_win_rate, min_required_rate=0.60):
+        """
+        【勝率過濾決策】
+        如果歷史勝率低於閾值，著手降低信號強度
+        """
+        
+        if historical_win_rate < min_required_rate:
+            # 低於閾值：減弱信號
+            filtered_strength = base_signal_strength * 0.5
+            return {
+                'take_signal': False,
+                'reason': f'❌ 勝率過低 ({historical_win_rate:.1%} < {min_required_rate:.1%})',
+                'adjusted_strength': filtered_strength
+            }
+        
+        return {
+            'take_signal': True,
+            'reason': f'✅ 勝率達標 ({historical_win_rate:.1%})',
+            'adjusted_strength': base_signal_strength
+        }
 
     def _update_daily_target(self):
         """更新並檢查每日交易目標"""
@@ -225,7 +325,5 @@ class PaperTrader:
                 if storage: storage.log_trade(f"EN_SHORT_{self.symbol}", current_price, qty, 0, self.cumulative_pnl)
                 report = (f"❄️ 【開倉通報 | SHORT ENTRY】\n─────────────────\n"
                           f"🪙 幣種: {self.symbol}\n📍 價格: ${current_price:,.4f}\n🧠 AI 信心: {(1-context.get('ml_prob', 1))*100:.0f}%\n🛡️ 風險: ATR 保護中")
-
-        return report
 
         return report

@@ -72,8 +72,16 @@ class QueryAnalyzer:
             return 'pnl'
         
         # 全市場雷達
-        if any(word in query_lower for word in ['雷達', '市場', '行情', 'market', 'radar']):
+        if any(word in query_lower for word in ['雷達', '行情', 'market', 'radar']):
             return 'market_radar'
+        
+        # 優化參數
+        if any(word in query_lower for word in ['優化', '參數', 'optimize', 'params']):
+            return 'optimization'
+        
+        # 市場制度
+        if any(word in query_lower for word in ['制度', '趨勢', '制度', 'regime', 'trend']):
+            return 'market_regime'
         
         # 幫助
         if any(word in query_lower for word in ['幫助', '說明', '指令', 'help']):
@@ -220,12 +228,63 @@ class QueryAnalyzer:
 • "市場雷達" / "行情" → 查看全球金融雷達
 • "盈虧" / "今日利潤" → 查看盈虧情況
 
+⚙️ AI 優化：
+• "優化參數" / "BTC 優化" → 查看自學習優化參數
+• "市場制度" / "制度分析" → 查看市場制度檢測
+
 💡 提示：
 • 支持自然語言提問
 • 可組合多個關鍵詞
 • 系統會自動理解您的意圖"""
         
         return help_text
+    
+    @staticmethod
+    def handle_optimization_params(symbol='BTC/USDT'):
+        """處理優化參數查詢"""
+        try:
+            from performance_optimizer import PerformanceOptimizer
+            optimizer = PerformanceOptimizer(storage)
+            report = optimizer.generate_optimization_report(symbol)
+            return report
+        except Exception as e:
+            return f"❌ 無法獲取優化參數: {str(e)}"
+    
+    @staticmethod
+    def handle_market_regime(symbol='BTC/USDT'):
+        """處理市場制度查詢"""
+        try:
+            # 嘗試獲取最近的 1h 數據
+            exchange = ccxt.binance({'enableRateLimit': True})
+            
+            # 取得 1h K 線
+            ohlcv = exchange.fetch_ohlcv(symbol, '1h', limit=50)
+            df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+            df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+            
+            from market_regime_detector import MarketRegimeDetector
+            detector = MarketRegimeDetector()
+            regime_name, regime_score, description = detector.detect_regime(df, symbol)
+            
+            guidance = detector.get_trading_guidance(regime_name)
+            
+            report = f"""📊 【{symbol} 市場制度分析】
+╔════════════════════╗
+🎯 制度: {regime_name}
+📈 分數: {regime_score:.2f}/1.0
+📝 描述: {description}
+
+╚════════════════════╝
+📋 交易建議:
+• 操作: {guidance['action']}
+• 頭寸: {guidance['position_size']:.1%}
+• 停損: {guidance['stop_loss_atr']:.1f}x ATR
+• 止盈: {guidance['take_profit']:.1f}x ATR
+
+✅ 現在是 {guidance['action']} 的時刻！"""
+            return report
+        except Exception as e:
+            return f"❌ 無法檢測市場制度: {str(e)}"
 
 def help_message():
     return QueryAnalyzer.handle_help()
@@ -285,6 +344,22 @@ if handler:
                 response = QueryAnalyzer.handle_daily_report()  # 盈虧就是今日報表
             elif intent == 'market_radar':
                 response = QueryAnalyzer.handle_market_radar()
+            elif intent == 'optimization':
+                # 自動偵測幣種或使用 BTC
+                symbol = 'BTC/USDT'
+                for sym in MONITOR_LIST:
+                    if sym in user_msg.upper():
+                        symbol = f'{sym}/USDT'
+                        break
+                response = QueryAnalyzer.handle_optimization_params(symbol)
+            elif intent == 'market_regime':
+                # 自動偵測幣種或使用 BTC
+                symbol = 'BTC/USDT'
+                for sym in MONITOR_LIST:
+                    if sym in user_msg.upper():
+                        symbol = f'{sym}/USDT'
+                        break
+                response = QueryAnalyzer.handle_market_regime(symbol)
             elif intent == 'help':
                 response = QueryAnalyzer.handle_help()
             elif intent.startswith('query_'):

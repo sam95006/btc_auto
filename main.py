@@ -5,13 +5,15 @@ import sys
 from datetime import datetime
 from datafeed import DataFeed
 from indicators import calculate_all
-from strategy import check_signal_scalper, check_signal_sniper
+from strategy import check_signal_scalper, check_signal_sniper, get_support_resistance_levels
 from execution import PaperTrader
 from storage import Storage
 from notifier import send_line
 from webhook import app as webhook_app
-from learning import MLPredictor
+from learning import AdaptiveMLPredictor
 from sensors import MacroScanner, WhaleWatcher, NewsScanner, FedScanner, PoliticalScanner, TradingViewScanner
+from performance_optimizer import PerformanceOptimizer
+from market_regime_detector import MarketRegimeDetector
 
 # 1. 配置多幣種監控名單
 MONITOR_SYMBOLS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT']
@@ -21,6 +23,11 @@ TOP_SYMBOLS_SCAN = 20  # 動態掃描前20大幣種
 
 def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news, fed, pol, tv_scanners, pepe_symbol, dynamic_scan_cash):
     print(f"🚀 【後台數據大腦】 啟動中 ...")
+    
+    # 初始化優化系統
+    optimizer = PerformanceOptimizer(storage)
+    regime_detector = MarketRegimeDetector(storage)
+    optimization_counter = 0  # 每 7 分鐘優化一次 (14 個 30 秒週期)
     
     # 延遲初始化：讓 Webhook 先對外連線
     time.sleep(5) 
@@ -37,6 +44,8 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
 
     while True:
         try:
+            optimization_counter += 1
+            
             for sym in MONITOR_SYMBOLS:
                 feed = feed_manager[sym]
                 trader = traders[sym]
@@ -47,6 +56,22 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
                 df_1m = calculate_all(feed.fetch_ohlcv(timeframe='1m', limit=100))
                 df_15m = calculate_all(feed.fetch_ohlcv(timeframe='15m', limit=50))
                 df_1h = calculate_all(feed.fetch_ohlcv(timeframe='1h', limit=50))
+                
+                # 🧠 定期優化參數 (每 7 分鐘一次)
+                if optimization_counter % 14 == 0:
+                    optimized_params = optimizer.optimize_parameters(sym, lookback_days=7)
+                else:
+                    optimized_params = optimizer.get_optimal_params(sym, use_cache=True)
+                
+                # 🌍 市場制度檢測
+                regime_info = regime_detector.detect_regime(df_1h, sym)
+                regime_name, regime_score, regime_desc = regime_info
+                
+                # 根據市場制度調整參數
+                adjusted_params = optimizer.adjust_for_market_regime(optimized_params, {
+                    'regime': regime_name,
+                    'volatility': df_1m['close'].pct_change().std()
+                })
                 
                 # 綜合感測器調研
                 tv_score = tv.get_sentiment()
@@ -67,21 +92,62 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
                 sym_change = (sym_24h_df.iloc[-1]['close'] - sym_24h_df.iloc[0]['close']) / sym_24h_df.iloc[0]['close'] if not sym_24h_df.empty else 0
 
                 latest_bar = df_1m.iloc[-1]
-                ml_prob = predictor.predict_prob(latest_bar, funding_rate=fr)
+                
+                # 🤖 自適應 ML 預測 (使用自學習的參數)
+                ml_predictor = AdaptiveMLPredictor(storage)
+                ml_prob = ml_predictor.predict_prob(latest_bar, funding_rate=fr, market_context={
+                    'rsi': latest_bar.get('RSI', 50),
+                    'volatility': df_1m['close'].pct_change().std(),
+                    'ema200': df_1h.iloc[-1].get('EMA200', latest_bar['close'])
+                })
+                
                 price = latest_bar['close']
                 atr = latest_bar['ATR']
                 
-                # 策略決策 (傳入相對強度數據)
-                scalper_signal = check_signal_scalper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, funding_rate=fr, btc_change=btc_change, sym_change=sym_change)
-                sniper_signal = check_signal_sniper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, tv_score, fed.get_sentiment(), pol.get_sentiment(), funding_rate=fr)
+                # 支撐/阻力識別
+                support_zone, resistance_zone = get_support_resistance_levels(df_1h, period=20)
+                
+                # 📊 多時間框架確認機制
+                m1_rsi = latest_bar.get('RSI', 50)
+                m15_rsi = df_15m.iloc[-1].get('RSI', 50)
+                h1_ema = df_1h.iloc[-1].get('EMA200', price)
+                
+                # 策略決策 (傳入市場制度、優化參數、多時間框架信息)
+                scalper_signal = check_signal_scalper(
+                    df_1m, df_15m, df_1h, 
+                    ml_prob, whale_ratio, news_score, oi_delta, 
+                    funding_rate=fr, btc_change=btc_change, sym_change=sym_change,
+                    market_regime={'regime': regime_name, 'volatility': df_1m['close'].pct_change().std()},
+                    optimized_params=adjusted_params
+                )
+                
+                sniper_signal = check_signal_sniper(
+                    df_1m, df_15m, df_1h, 
+                    ml_prob, whale_ratio, news_score, oi_delta, 
+                    tv_score, fed.get_sentiment(), pol.get_sentiment(),
+                    funding_rate=fr,
+                    market_regime={'regime': regime_name},
+                    optimized_params=adjusted_params
+                )
+                
+                # 📈 動態頭寸調整
+                base_signal_confidence = 0.75 if scalper_signal in ["BUY_SCALP", "SELL_SCALP"] else 0.5
+                signal_confidence = trader.multi_timeframe_confirmation(m1_rsi, m15_rsi, h1_ema, price, 
+                                                                        direction="LONG" if scalper_signal == "BUY_SCALP" else "SHORT")
+                
+                position_size = trader.dynamic_position_sizing(signal_confidence, base_size=0.4)
                 
                 # 封裝環境變數供反思使用
                 context = {
-                    'rsi': latest_bar.get('RSI', 50),
-                    'ema200': latest_bar.get('EMA_200', price),
+                    'rsi': m1_rsi,
+                    'ema200': h1_ema,
                     'atr': atr,
                     'ml_prob': ml_prob,
-                    'volatility': df_1m['close'].std()
+                    'volatility': df_1m['close'].pct_change().std(),
+                    'regime': regime_name,
+                    'signal_confidence': signal_confidence,
+                    'support': support_zone.get('primary', 0),
+                    'resistance': resistance_zone.get('primary', 0)
                 }
                 
                 # 執行引擎扣板機
@@ -91,6 +157,11 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
                     tag = f"【{sym.replace('/USDT','')}】"
                     send_line(tag + "\n" + report)
                     print(f"[{datetime.now().strftime('%H:%M:%S')}] {tag} {report}")
+                    
+                    # 📊 市場制度信息 (定期報告)
+                    if optimization_counter % 14 == 0:
+                        regime_report = f"📡 市場制度: {regime_name} ({regime_score:.1%}) | {regime_desc}"
+                        print(f"[{datetime.now().strftime('%H:%M:%S')}] {regime_report}")
 
             time.sleep(30)
         except Exception as e:
@@ -103,7 +174,7 @@ def main():
         try:
             print("⏳ 正在背景初始化交易核心與感測器...")
             storage = Storage()
-            predictor = MLPredictor()
+            predictor = AdaptiveMLPredictor(storage)  # 使用自適應 ML 預測器
             macro = MacroScanner()
             news = NewsScanner()
             fed = FedScanner()
