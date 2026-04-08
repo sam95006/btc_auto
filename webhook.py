@@ -45,6 +45,10 @@ def help_message():
 def home():
     return "BTC Bot is running!"
 
+@app.route("/health")
+def health():
+    return {"status": "healthy"}, 200
+
 @app.route("/callback", methods=['POST'])
 def callback():
     signature = request.headers['X-Line-Signature']

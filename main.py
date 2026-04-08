@@ -94,19 +94,6 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
             time.sleep(10)
 
 def main():
-    # 1. 立即啟動 Webhook 監聽 (優先對外，防止 Zeabur 502)
-    def run_webhook():
-        try:
-            port = int(os.environ.get('PORT', 8080))
-            print(f"🚀 Webhook 正在啟動於 Port {port} ...")
-            webhook_app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
-        except Exception as e:
-            print(f"❌ Webhook 嚴重崩潰: {e}")
-
-    webhook_thread = threading.Thread(target=run_webhook)
-    webhook_thread.daemon = True
-    webhook_thread.start()
-
     # 🚨 延後初始化: 將所有連線 API 的動作移到背景執行緒
     def async_init():
         try:
@@ -146,9 +133,10 @@ def main():
     init_thread.daemon = True
     init_thread.start()
 
-    # 主線程進入無限監控循環 (防止進程結束)
-    while True:
-        time.sleep(10)
+    # 讓主線程運行 Flask 應用
+    port = int(os.environ.get('PORT', 8080))
+    print(f"🚀 啟動 Flask 應用於 Port {port} ...")
+    webhook_app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
 if __name__ == "__main__":
     main()
