@@ -8,12 +8,13 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from sensors import MacroScanner, FedScanner, PoliticalScanner
 import logging
 from storage import Storage
+import re
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # 配置 LINE
-# 取得 LINE Bot 必要的環境變數，若未設定則直接退出並記錄錯誤
 LINE_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN')
 LINE_SECRET = os.getenv('LINE_CHANNEL_SECRET')
 if not LINE_TOKEN or not LINE_SECRET:
@@ -30,7 +31,7 @@ fed = FedScanner()
 pol = PoliticalScanner()
 
 # 監控名單
-MONITOR_LIST = ['BTC', 'ETH', 'SOL']
+MONITOR_LIST = ['BTC', 'ETH', 'SOL', 'PEPE']
 
 def reply_message(token, text):
     if line_bot_api:
@@ -38,8 +39,196 @@ def reply_message(token, text):
     else:
         print(f"【模擬發送 LINE】: {text}")
 
+class QueryAnalyzer:
+    """AI 查詢分析器 - 理解用戶意圖並返回相應數據"""
+    
+    @staticmethod
+    def analyze_query(query):
+        """分析用戶查詢意圖"""
+        query_lower = query.lower()
+        
+        # 持倉相關
+        if any(word in query_lower for word in ['持倉', '部位', '倉位', '入場', 'position']):
+            return 'position'
+        
+        # 今日報表
+        if any(word in query_lower for word in ['今日', '一天', '今天', '日報', 'daily']):
+            return 'daily_report'
+        
+        # 勝率相關
+        if any(word in query_lower for word in ['勝率', '成功', '成績', 'win rate', 'accuracy']):
+            return 'win_rate'
+        
+        # 信號評估
+        if any(word in query_lower for word in ['最佳', '最好', '最差', '排名', 'best', 'worst', 'signal']):
+            return 'signal_ranking'
+        
+        # 幣種性能
+        if any(word in query_lower for word in ['性能', '表現', '績效', 'performance']):
+            return 'performance'
+        
+        # 盈虧相關
+        if any(word in query_lower for word in ['盈虧', '虧損', '利潤', 'pnl', 'profit']):
+            return 'pnl'
+        
+        # 全市場雷達
+        if any(word in query_lower for word in ['雷達', '市場', '行情', 'market', 'radar']):
+            return 'market_radar'
+        
+        # 幫助
+        if any(word in query_lower for word in ['幫助', '說明', '指令', 'help']):
+            return 'help'
+        
+        # 提取幣種名稱
+        symbol_match = re.search(r'(BTC|ETH|SOL|PEPE)', query_upper := query.upper())
+        if symbol_match:
+            return f'query_{symbol_match.group(1)}'
+        
+        return 'unknown'
+    
+    @staticmethod
+    def handle_position_query():
+        """處理持倉查詢"""
+        all_pos = storage.get_all_active_pos()
+        pos_map = {p[1]: p for p in all_pos}
+        
+        report = "🟢 【當前多路軍團持倉狀態】\n"
+        for sym in MONITOR_LIST:
+            if sym in pos_map:
+                p = pos_map[sym]
+                report += f"\n🪙 {sym}: 已持倉\n進場: ${p[3]:,.2f} | 規模: {p[3]*p[4]:,.1f} U\n"
+            else:
+                report += f"\n🪙 {sym}: 📭 目前空倉埋伏中..."
+        
+        return report
+    
+    @staticmethod
+    def handle_daily_report():
+        """處理每日報表"""
+        report = "📊 【24H 交易戰報中心】\n"
+        grand_pnl = 0
+        total_trades = 0
+        
+        for sym in MONITOR_LIST:
+            try:
+                today_trades = storage.get_today_trades(sym)
+                if today_trades:
+                    daily_pnl = sum(t.get('pnl', 0) for t in today_trades)
+                    daily_wins = sum(1 for t in today_trades if t.get('win_loss') == 'WIN')
+                    daily_losses = sum(1 for t in today_trades if t.get('win_loss') == 'LOSS')
+                    
+                    grand_pnl += daily_pnl
+                    total_trades += len(today_trades)
+                    
+                    win_rate = (daily_wins / len(today_trades) * 100) if today_trades else 0
+                    report += (f"\n🔥 {sym}:\n"
+                              f"交易: {len(today_trades)} 筆 | 勝: {daily_wins} 敗: {daily_losses}\n"
+                              f"勝率: {win_rate:.1f}% | 盈虧: {daily_pnl:+.1f} U\n")
+            except Exception as e:
+                logging.error(f"Error processing {sym}: {e}")
+        
+        report += f"\n💰 【全日總計】\n總交易: {total_trades} 筆\n累計盈虧: {grand_pnl:+.2f} U"
+        return report
+    
+    @staticmethod
+    def handle_win_rate_query():
+        """處理勝率查詢"""
+        report = "📈 【信號勝率榜單】\n"
+        stats = storage.get_all_signal_stats()
+        
+        if not stats:
+            return "暫無交易數據"
+        
+        sorted_stats = sorted(stats, key=lambda x: x['win_rate'], reverse=True)[:5]
+        
+        for stat in sorted_stats:
+            report += (f"\n{stat['signal_type']} ({stat['symbol']}):\n"
+                      f"勝率: {stat['win_rate']*100:.1f}%\n"
+                      f"交易: {stat['total_trades']} 筆 | 盈: {stat['avg_pnl']:+.1f}U/筆\n")
+        
+        return report
+    
+    @staticmethod
+    def handle_signal_ranking():
+        """處理信號排名"""
+        best = storage.get_best_signals(7)
+        worst = storage.get_worst_signals(7)
+        
+        report = "🏆 【7日信號排行榜】\n"
+        report += "\n⭐ 【最佳信號 TOP 5】\n"
+        for i, sig in enumerate(best[:5], 1):
+            report += f"{i}. {sig['signal_type']} ({sig['symbol']}): {sig['win_rate']*100:.1f}%\n"
+        
+        report += "\n💥 【最差信號 TOP 5】\n"
+        for i, sig in enumerate(worst[:5], 1):
+            report += f"{i}. {sig['signal_type']} ({sig['symbol']}): {sig['win_rate']*100:.1f}%\n"
+        
+        return report
+    
+    @staticmethod
+    def handle_symbol_performance(symbol):
+        """處理幣種性能查詢"""
+        perf = storage.get_symbol_performance(symbol, 7)
+        
+        if not perf:
+            return f"❌ 暫無 {symbol} 的交易數據"
+        
+        report = f"📊 【{symbol} 7日性能分析】\n"
+        report += f"總交易: {perf['total_trades']} 筆\n"
+        report += f"勝負: {perf['wins']}勝 {perf['losses']}敗\n"
+        report += f"勝率: {perf['win_rate']}\n"
+        report += f"累計盈虧: {perf['total_pnl']:+.1f} U\n"
+        report += f"平均盈虧: {perf['avg_pnl']:+.1f} U/筆\n"
+        report += f"最大盈利: {perf['max_pnl']:+.1f} U\n"
+        report += f"最大虧損: {perf['min_pnl']:+.1f} U\n"
+        
+        return report
+    
+    @staticmethod
+    def handle_market_radar():
+        """處理市場雷達"""
+        fng = macro.get_sentiment_score()
+        fed_s = fed.get_sentiment()
+        pol_s = pol.get_sentiment()
+        
+        report = (f"📡 【全球金融雷達】\n"
+                 f"📊 恐懼貪婪: {fng*100:.0f}/100\n"
+                 f"🕊️ 聯準會感測: {fed_s:.2f} (鴿派 > 0.5)\n"
+                 f"🌍 地緣政治感測: {pol_s:.2f}\n"
+                 f"⚡ 市場動能: 正常監控中\n")
+        
+        return report
+    
+    @staticmethod
+    def handle_help():
+        """返回幫助信息"""
+        help_text = """🤖 【AI 交易機器人 - 使用指南】
+
+💬 您可以詢問以下問題：
+
+📊 數據查詢：
+• "我的持倉是什麼?" / "部位" → 查看當前持倉
+• "今日報表" / "今天績效" → 查看24小時交易戰報
+• "BTC 性能" / "ETH 表現" → 查看幣種7日性能
+• "勝率" / "成功率" → 查看信號勝率排行
+
+🏆 排名分析：
+• "最佳信號" / "哪些信號最好" → 查看最佳信號
+• "最差信號" / "問題信號" → 查看表現不佳的信號
+
+📈 市場分析：
+• "市場雷達" / "行情" → 查看全球金融雷達
+• "盈虧" / "今日利潤" → 查看盈虧情況
+
+💡 提示：
+• 支持自然語言提問
+• 可組合多個關鍵詞
+• 系統會自動理解您的意圖"""
+        
+        return help_text
+
 def help_message():
-    return "可用指令:\n1. 持倉/部位 - 查看當前持倉\n2. 今日/一天 - 查看24小時報表\n3. 快報/行情 - 查看全球金融雷達\n請輸入關鍵字以獲取相應資訊。"
+    return QueryAnalyzer.handle_help()
 
 @app.route("/")
 def home():
@@ -72,52 +261,43 @@ if handler:
         reply_token = event.reply_token
 
         try:
-            # --- 權威戰報系統 ---
-            if "持倉" in user_msg or "部位" in user_msg:
-                all_pos = storage.get_all_active_pos()
-                pos_map = {p[1]: p for p in all_pos} # 依照幣種索引
-                
-                report = "🟢 【當前多路軍團持倉狀態】\n"
+            # 使用 AI 分析器理解用戶意圖
+            intent = QueryAnalyzer.analyze_query(user_msg)
+            response = ""
+            
+            if intent == 'position':
+                response = QueryAnalyzer.handle_position_query()
+            elif intent == 'daily_report':
+                response = QueryAnalyzer.handle_daily_report()
+            elif intent == 'win_rate':
+                response = QueryAnalyzer.handle_win_rate_query()
+            elif intent == 'signal_ranking':
+                response = QueryAnalyzer.handle_signal_ranking()
+            elif intent == 'performance':
+                # 自動偵測幣種
                 for sym in MONITOR_LIST:
-                    if sym in pos_map:
-                        p = pos_map[sym]
-                        report += f"\n🪙 {sym}: 已持倉\n進場: ${p[3]:,.2f} | 規模: {p[3]*p[4]:,.1f} U\n"
-                    else:
-                        report += f"\n🪙 {sym}: 📭 目前空倉埋伏中..."
-                reply_message(reply_token, report)
-
-            elif "今日" in user_msg or "一天" in user_msg:
-                report = "📊 【24H 四軍聯合作戰中心】\n"
-                grand_pnl = 0
-                
-                for sym in MONITOR_LIST:
-                    detail = storage.get_detailed_stats(1, symbol=sym)
-                    pnl = detail['total_pnl']
-                    grand_pnl += pnl
-                    report += (f"\n🔥 {sym} 戰況:\n"
-                               f"已平倉: {pnl:+.1f} U | 出戰 {sum([detail['long_win'], detail['long_loss'], detail['short_win'], detail['short_loss']])} 次\n"
-                               f"多單 {detail['long_win']}勝 {detail['long_loss']}敗 | 空單 {detail['short_win']}勝 {detail['short_loss']}敗\n")
-                
-                total_remained = 10000 + grand_pnl
-                report += f"\n💰 【全局總計】\n累計總盈虧: {grand_pnl:+.2f} U\n🏦 總資產估值: {total_remained:,.2f} U"
-                reply_message(reply_token, report)
-
-            elif "快報" in user_msg or "行情" in user_msg:
-                fng = macro.get_sentiment_score()
-                fed_s = fed.get_sentiment()
-                pol_s = pol.get_sentiment()
-                report = (f"📡 【全球金融雷達】\n"
-                          f"📊 恐懼貪婪: {fng*100:.0f}/100\n"
-                          f"🕊️ 聯準會感測: {fed_s:.2f} (鴿 > 0.5)\n"
-                          f"🌍 地緣政治感測: {pol_s:.2f}\n"
-                          "⚡ 市場動能正常，獵手待命中。")
-                reply_message(reply_token, report)
-
-            # 若未匹配任何指令，回覆說明訊息
+                    if sym in user_msg.upper():
+                        response = QueryAnalyzer.handle_symbol_performance(sym)
+                        break
+                else:
+                    response = "請指定要查詢的幣種 (BTC/ETH/SOL/PEPE)"
+            elif intent == 'pnl':
+                response = QueryAnalyzer.handle_daily_report()  # 盈虧就是今日報表
+            elif intent == 'market_radar':
+                response = QueryAnalyzer.handle_market_radar()
+            elif intent == 'help':
+                response = QueryAnalyzer.handle_help()
+            elif intent.startswith('query_'):
+                symbol = intent.replace('query_', '')
+                response = QueryAnalyzer.handle_symbol_performance(symbol)
             else:
-                reply_message(reply_token, help_message())
+                response = help_message()
+            
+            reply_message(reply_token, response)
+            
         except Exception as e:
-            print(f"Webhook 報表錯誤: {e}")
+            logging.error(f"Webhook 處理錯誤: {e}")
+            reply_message(reply_token, f"❌ 系統錯誤: {str(e)}")
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 8080))

@@ -146,6 +146,86 @@ class Storage:
         if row:
             return dict(row)
         return None
+    
+    def get_all_signal_stats(self, symbol=None):
+        """獲取所有信號統計"""
+        cursor = self.conn.cursor()
+        if symbol:
+            cursor.execute("""SELECT * FROM signal_stats WHERE symbol = ? ORDER BY win_rate DESC""", (symbol,))
+        else:
+            cursor.execute("""SELECT * FROM signal_stats ORDER BY win_rate DESC""")
+        
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows] if rows else []
+    
+    def get_today_trades(self, symbol=None):
+        """獲取今日交易"""
+        cursor = self.conn.cursor()
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        if symbol:
+            cursor.execute("""SELECT * FROM trades WHERE symbol = ? AND timestamp LIKE ? ORDER BY timestamp DESC""",
+                          (symbol, f"{today}%"))
+        else:
+            cursor.execute("""SELECT * FROM trades WHERE timestamp LIKE ? ORDER BY timestamp DESC""",
+                          (f"{today}%",))
+        
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows] if rows else []
+    
+    def get_symbol_performance(self, symbol, days=7):
+        """獲取幣種性能統計"""
+        cursor = self.conn.cursor()
+        time_limit = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
+        
+        cursor.execute("""SELECT 
+                          COUNT(*) as total_trades,
+                          COUNT(CASE WHEN win_loss = 'WIN' THEN 1 END) as win_count,
+                          COUNT(CASE WHEN win_loss = 'LOSS' THEN 1 END) as loss_count,
+                          SUM(pnl) as total_pnl,
+                          AVG(pnl) as avg_pnl,
+                          MAX(pnl) as max_pnl,
+                          MIN(pnl) as min_pnl
+                         FROM trades WHERE symbol = ? AND timestamp > ?""",
+                       (symbol, time_limit))
+        
+        row = cursor.fetchone()
+        if row:
+            total = row['total_trades']
+            wins = row['win_count']
+            win_rate = (wins / total * 100) if total > 0 else 0
+            return {
+                'symbol': symbol,
+                'total_trades': total,
+                'wins': wins,
+                'losses': row['loss_count'],
+                'win_rate': f"{win_rate:.1f}%",
+                'total_pnl': row['total_pnl'] if row['total_pnl'] else 0,
+                'avg_pnl': row['avg_pnl'] if row['avg_pnl'] else 0,
+                'max_pnl': row['max_pnl'] if row['max_pnl'] else 0,
+                'min_pnl': row['min_pnl'] if row['min_pnl'] else 0
+            }
+        return None
+    
+    def get_best_signals(self, days=7):
+        """獲取最佳表現的信號"""
+        cursor = self.conn.cursor()
+        cursor.execute("""SELECT * FROM signal_stats 
+                         WHERE last_updated > datetime('now', '-' || ? || ' days')
+                         ORDER BY win_rate DESC LIMIT 10""", (days,))
+        
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows] if rows else []
+    
+    def get_worst_signals(self, days=7):
+        """獲取最差表現的信號"""
+        cursor = self.conn.cursor()
+        cursor.execute("""SELECT * FROM signal_stats 
+                         WHERE last_updated > datetime('now', '-' || ? || ' days')
+                         ORDER BY win_rate ASC LIMIT 10""", (days,))
+        
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows] if rows else []
 
     def get_range_summary(self, days):
         """取得指定天數內的交易摘要"""
