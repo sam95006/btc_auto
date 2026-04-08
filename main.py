@@ -107,17 +107,27 @@ def main():
         whales[sym] = WhaleWatcher(symbol=sym.replace('/',''))
         tv_scanners[sym] = TradingViewScanner(symbol=sym)
 
-    # 2. 啟動背景交易線程
+    # 2. 立即啟動 Webhook 監聽 (優先對外，解決 Zeabur 502)
+    def run_webhook():
+        try:
+            port = int(os.environ.get('PORT', 8080))
+            webhook_app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+        except Exception as e:
+            print(f"Webhook 啟動失敗: {e}")
+
+    webhook_thread = threading.Thread(target=run_webhook)
+    webhook_thread.daemon = True
+    webhook_thread.start()
+
+    # 3. 延遲啟動背景交易線程，給 Webhook 穩定的時間
+    time.sleep(2) 
     trading_thread = threading.Thread(target=trading_loop, args=(traders, predictor, feed_manager, storage, macro, whales, news, fed, pol, tv_scanners))
     trading_thread.daemon = True
     trading_thread.start()
 
-    # 3. 立即啟動 Webhook 監聽 (優先對外)
-    try:
-        port = int(os.environ.get('PORT', 8080))
-        webhook_app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
-    except Exception as e:
-        print(f"Webhook 啟動失敗: {e}")
+    print("✅ 所有系統已同步就緒，進入監控循環...")
+    while True:
+        time.sleep(1)
 
 if __name__ == "__main__":
     main()
