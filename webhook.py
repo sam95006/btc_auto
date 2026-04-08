@@ -120,12 +120,22 @@ def callback():
                     fed_s = fed.get_sentiment()
                     pol_s = pol.get_sentiment()
                     
+                    # 獲取趨勢情緒 (使用與策略一致的邏輯)
+                    exchange = ccxt.binance()
+                    ohlcv_1h = exchange.fetch_ohlcv('BTC/USDT', timeframe='1h', limit=50)
+                    from indicators import calculate_all
+                    import pandas as pd
+                    df_h = calculate_all(pd.DataFrame(ohlcv_1h, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume']))
+                    rsi_h = df_h.iloc[-1]['RSI']
+                    trend_status = "🌕 強勢多頭 (禁止做空模式)" if rsi_h > 55 else "⚖️ 震盪盤整 (雙向捕捉模式)"
+
                     tech_str = "科技連動: 強勁 🚀" if macro.get_tech_stock_pulse() > 1.1 else "科技連動: 正常 ⚖️"
                     fed_str = "聯準會: 鴿派 (利多) 🕊️" if fed_s > 0.55 else ("聯準會: 鷹派 (利空) 🦅" if fed_s < 0.45 else "聯準會: 觀望 ⚖️")
                     pol_str = "地緣政治: 樂觀 🌍" if pol_s > 0.55 else ("地緣政治: 緊張 ⚠️" if pol_s < 0.45 else "地緣政治: 平穩 ⚖️")
 
                     reply_text = (
                         "📡 【全球金融與加密雷達】\n"
+                        f"📈 當前趨勢: {trend_status}\n"
                         f"📊 恐懼貪婪指數: {fng*100:.0f}/100\n"
                         f"📌 {tech_str}\n"
                         f"📌 {fed_str}\n"
