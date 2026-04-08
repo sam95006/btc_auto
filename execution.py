@@ -19,22 +19,22 @@ class PaperTrader:
         # --- 1. 平倉與分批獲利邏輯 (多單) ---
         if self.position > 0:
             roi = (current_price - self.entry_price) / self.entry_price
-            # [分批獲利 30%]: 獲利達標先出一半
-            if roi > 0.03 and not self.has_partial_tp:
+            # [極短線分批獲利 1.5%]: 給予 10x 槓桿 context，約獲利 15% U
+            if roi > 0.015 and not self.has_partial_tp:
                 pnl = (current_price - self.entry_price) * (self.position / 2)
                 self.cash += (self.entry_price * (self.position / 2)) + pnl
                 self.cumulative_pnl += pnl
                 self.position /= 2
                 self.has_partial_tp = True
-                report = f"💰 【!!獲利達標!! 出貨一半】\n📍 離場點: ${current_price:,.2f} | 盈虧: +{pnl:,.2f} U\n🛡️ 剩餘倉位已設為「成本價保護」。"
+                report = f"💰 【極短線獲利：出貨 50%】\n📍 點位: ${current_price:,.2f} | 盈虧: +{pnl:,.2f} U"
                 if storage: storage.log_trade("PARTIAL_EXIT_LONG", current_price, abs(self.position), pnl, self.cumulative_pnl)
             
             self.trailing_high = max(self.trailing_high, current_price)
             if storage: storage.update_active_pos("BTC", "LONG", self.entry_price, self.position, self.trailing_high)
             
-            # 若已分批獲利，止損鎖死在成本價
+            # [快速離場]: 如果獲利達 2.5% 或觸發保本止損
             real_sl = self.entry_price if self.has_partial_tp else self.entry_price * (1 - atr_sl_pct)
-            if current_price < real_sl or current_price < self.trailing_high * (1 - atr_sl_pct * 0.5):
+            if roi > 0.025 or current_price < real_sl or current_price < self.trailing_high * (1 - atr_sl_pct * 0.5):
                 pnl = (current_price - self.entry_price) * self.position
                 self.cash += (self.entry_price * self.position) + pnl
                 self.cumulative_pnl += pnl
@@ -43,35 +43,31 @@ class PaperTrader:
                     storage.update_active_pos("BTC", "NONE", 0, 0)
                 
                 # 計算盈虧率
-                pnl_rate = (current_price - self.entry_price) / self.entry_price * 100
-                invested_u = self.entry_price * self.position
-                report = (f"✅ 【多單精確平倉】\n"
-                          f"🔹 出場點位: ${current_price:,.2f}\n"
-                          f"🔸 進場點位: ${self.entry_price:,.2f}\n"
-                          f"💰 下單金額: {invested_u:,.2f} U\n"
-                          f"📉 單筆盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n"
-                          f"📊 盈虧率: {pnl_rate:+.2f}%\n"
-                          f"🏦 剩餘可用本金: {self.cash:,.2f} U")
+                pnl_rate = roi * 100
+                report = (f"✅ 【結算離場】\n"
+                          f"🔹 出場: ${current_price:,.2f}\n"
+                          f"📉 盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U | {pnl_rate:+.2f}%\n"
+                          f"🏦 餘額: {self.cash:,.2f} U")
                 self.position = 0
                 self.has_partial_tp = False
 
         # --- 2. 平倉與分批獲利邏輯 (空單) ---
         elif self.position < 0:
             roi = (self.entry_price - current_price) / self.entry_price
-            if roi > 0.03 and not self.has_partial_tp:
+            if roi > 0.015 and not self.has_partial_tp:
                 pnl = (self.entry_price - current_price) * (abs(self.position) / 2)
                 self.cash += (self.entry_price * (abs(self.position) / 2)) + pnl
                 self.cumulative_pnl += pnl
                 self.position /= 2
                 self.has_partial_tp = True
-                report = f"💰 【!!做空獲利達標!!】\n📍 離場點: ${current_price:,.2f} | 盈虧: +{pnl:,.2f} U\n🛡️ 剩餘空單保護中..."
+                report = f"💰 【極短線獲利：出貨 50%】\n📍 點位: ${current_price:,.2f} | 盈虧: +{pnl:,.2f} U"
                 if storage: storage.log_trade("PARTIAL_EXIT_SHORT", current_price, abs(self.position), pnl, self.cumulative_pnl)
             
             self.trailing_low = min(self.trailing_low, current_price)
             if storage: storage.update_active_pos("BTC", "SHORT", self.entry_price, abs(self.position), self.trailing_low)
             
             real_sl = self.entry_price if self.has_partial_tp else self.entry_price * (1 + atr_sl_pct)
-            if current_price > real_sl or current_price > self.trailing_low * (1 + atr_sl_pct * 0.5):
+            if roi > 0.025 or current_price > real_sl or current_price > self.trailing_low * (1 + atr_sl_pct * 0.5):
                 pnl = (self.entry_price - current_price) * abs(self.position)
                 self.cash += (self.entry_price * abs(self.position)) + pnl
                 self.cumulative_pnl += pnl
@@ -80,15 +76,11 @@ class PaperTrader:
                     storage.update_active_pos("BTC", "NONE", 0, 0)
                 
                 # 計算盈虧率
-                pnl_rate = (self.entry_price - current_price) / self.entry_price * 100
-                invested_u = self.entry_price * abs(self.position)
-                report = (f"✅ 【空單精確平倉】\n"
-                          f"🔹 出場點位: ${current_price:,.2f}\n"
-                          f"🔸 進場點位: ${self.entry_price:,.2f}\n"
-                          f"💰 下單金額: {invested_u:,.2f} U\n"
-                          f"📉 單筆盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n"
-                          f"📊 盈虧率: {pnl_rate:+.2f}%\n"
-                          f"🏦 剩餘可用本金: {self.cash:,.2f} U")
+                pnl_rate = roi * 100
+                report = (f"✅ 【結算離場】\n"
+                          f"🔹 出場: ${current_price:,.2f}\n"
+                          f"📉 盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U | {pnl_rate:+.2f}%\n"
+                          f"🏦 餘額: {self.cash:,.2f} U")
                 self.position = 0
                 self.has_partial_tp = False
 
