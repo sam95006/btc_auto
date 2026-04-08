@@ -55,13 +55,20 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
                 prev_oi[sym] = current_oi
                 fr = feed.get_funding_rate()
                 
+                # 計算相對強度與波動率所需的數據
+                btc_df = feed_manager['BTC/USDT'].fetch_ohlcv(timeframe='1h', limit=24)
+                btc_change = (btc_df.iloc[-1]['close'] - btc_df.iloc[0]['close']) / btc_df.iloc[0]['close'] if not btc_df.empty else 0
+                
+                sym_24h_df = feed.fetch_ohlcv(timeframe='1h', limit=24)
+                sym_change = (sym_24h_df.iloc[-1]['close'] - sym_24h_df.iloc[0]['close']) / sym_24h_df.iloc[0]['close'] if not sym_24h_df.empty else 0
+
                 latest_bar = df_1m.iloc[-1]
                 ml_prob = predictor.predict_prob(latest_bar, funding_rate=fr)
                 price = latest_bar['close']
                 atr = latest_bar['ATR']
                 
-                # 策略決策
-                scalper_signal = check_signal_scalper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, funding_rate=fr, tv_score=tv_score)
+                # 策略決策 (傳入相對強度數據)
+                scalper_signal = check_signal_scalper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, funding_rate=fr, btc_change=btc_change, sym_change=sym_change)
                 sniper_signal = check_signal_sniper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, 1.1, 0.6, 0.6, funding_rate=fr, tv_score=tv_score)
                 
                 # 封裝環境變數供反思使用

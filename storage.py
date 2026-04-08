@@ -42,6 +42,11 @@ class Storage:
                        (symbol, pnl, reason, context))
         self.conn.commit()
 
+    def get_recent_lessons(self, symbol, limit=10):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM lessons WHERE symbol = ? ORDER BY timestamp DESC LIMIT ?", (symbol, limit))
+        return cursor.fetchall()
+
     def update_active_pos(self, symbol, pos_type, price, qty, trailing_high=0):
         cursor = self.conn.cursor()
         if qty == 0:

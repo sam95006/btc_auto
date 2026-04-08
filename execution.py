@@ -15,6 +15,10 @@ class PaperTrader:
         self.max_daily_trades = max_daily_trades
         self.trades_today = 0
         self.last_trade_day = datetime.now().day
+        
+        # 移動回撤 (Trailing Drawdown) 參數
+        self.pnl_high_water_mark = 0 # 今日盈虧最高點
+        self.max_drawdown_allowed = 300 # 容許從最高點回撤 300U
 
     def execute(self, scalper_signal, sniper_signal, current_price, storage=None, atr=0, context=None):
         report = ""
@@ -22,9 +26,12 @@ class PaperTrader:
         if now.day != self.last_trade_day:
             self.trades_today = 0
             self.last_trade_day = now.day
+            self.pnl_high_water_mark = 0 
 
-        if self.cumulative_pnl < self.max_daily_drawdown:
-            return f"🆘 [{self.symbol}] 觸發斷路器，暫停交易。"
+        self.pnl_high_water_mark = max(self.pnl_high_water_mark, self.cumulative_pnl)
+        
+        if self.cumulative_pnl < (self.pnl_high_water_mark - self.max_drawdown_allowed):
+            return f"🆘 【系統警告 | 風控觸發】\n{self.symbol} 已達移動回撤上限，暫停當前交易。"
 
         atr_sl_pct = max(0.012, (atr * 2.0) / current_price) if atr > 0 else 0.012
         
@@ -37,8 +44,9 @@ class PaperTrader:
                 self.cumulative_pnl += pnl
                 self.position /= 2
                 self.has_partial_tp = True
-                report = f"💰 【{self.symbol} 獲利 50% 出貨】\n📍 點位: ${current_price:,.2f} | 盈虧: +{pnl:,.2f} U"
-                if storage: storage.log_trade(f"PARTIAL_EXIT_LONG_{self.symbol}", current_price, abs(self.position), pnl, self.cumulative_pnl)
+                report = (f"💰 【獲利通報 | PARTIAL TP】\n─────────────────\n"
+                          f"🪙 幣種: {self.symbol} (50% 出貨)\n📍 價格: ${current_price:,.2f}\n📈 盈虧: +{pnl:,.1f} U")
+                if storage: storage.log_trade(f"PT_LONG_{self.symbol}", current_price, abs(self.position), pnl, self.cumulative_pnl)
             
             self.trailing_high = max(self.trailing_high, current_price)
             if storage: storage.update_active_pos(self.symbol, "LONG", self.entry_price, self.position, self.trailing_high)
@@ -53,13 +61,12 @@ class PaperTrader:
                 if pnl < 0 and context:
                     from learning import ReflectionEngine
                     ref_engine = ReflectionEngine(storage)
-                    reflection = "\n" + ref_engine.analyze_loss(self.symbol, pnl, self.entry_price, current_price, "LONG", context)
+                    reflection = ref_engine.analyze_loss(self.symbol, pnl, self.entry_price, current_price, "LONG", context)
                 
-                if storage:
-                    storage.log_trade(f"EXIT_LONG_{self.symbol}", current_price, abs(self.position), pnl, self.cumulative_pnl)
-                    storage.update_active_pos(self.symbol, "NONE", 0, 0)
+                if storage: storage.log_trade(f"EXIT_LONG_{self.symbol}", current_price, abs(self.position), pnl, self.cumulative_pnl)
                 
-                report = f"✅ 【{self.symbol} 多單離場】\n🔹 出場: ${current_price:,.2f}\n📉 盈虧: {pnl:+.1f} U" + reflection
+                report = (f"✅ 【平倉通報 | TRADE CLOSED】\n─────────────────\n"
+                          f"🪙 幣種: {self.symbol} (多單離場)\n📍 出場: ${current_price:,.2f}\n📉 盈虧: {pnl:+.1f} U" + reflection)
                 self.position = 0
                 self.has_partial_tp = False
 
@@ -72,8 +79,9 @@ class PaperTrader:
                 self.cumulative_pnl += pnl
                 self.position /= 2
                 self.has_partial_tp = True
-                report = f"💰 【{self.symbol} 空單獲利出貨】\n📍 點位: ${current_price:,.2f}"
-                if storage: storage.log_trade(f"PARTIAL_EXIT_SHORT_{self.symbol}", current_price, abs(self.position), pnl, self.cumulative_pnl)
+                report = (f"💰 【獲利通報 | PARTIAL TP】\n─────────────────\n"
+                          f"🪙 幣種: {self.symbol} (50% 出貨)\n📍 價格: ${current_price:,.2f}")
+                if storage: storage.log_trade(f"PT_SHORT_{self.symbol}", current_price, abs(self.position), pnl, self.cumulative_pnl)
             
             self.trailing_low = min(self.trailing_low, current_price)
             if storage: storage.update_active_pos(self.symbol, "SHORT", self.entry_price, abs(self.position), self.trailing_low)
@@ -88,21 +96,28 @@ class PaperTrader:
                 if pnl < 0 and context:
                     from learning import ReflectionEngine
                     ref_engine = ReflectionEngine(storage)
-                    reflection = "\n" + ref_engine.analyze_loss(self.symbol, pnl, self.entry_price, current_price, "SHORT", context)
+                    reflection = ref_engine.analyze_loss(self.symbol, pnl, self.entry_price, current_price, "SHORT", context)
 
-                if storage:
-                    storage.log_trade(f"EXIT_SHORT_{self.symbol}", current_price, abs(self.position), pnl, self.cumulative_pnl)
-                    storage.update_active_pos(self.symbol, "NONE", 0, 0)
+                if storage: storage.log_trade(f"EXIT_SHORT_{self.symbol}", current_price, abs(self.position), pnl, self.cumulative_pnl)
                 
-                report = f"✅ 【{self.symbol} 空單離場】\n🔹 出場: ${current_price:,.2f}\n📉 盈虧: {pnl:+.1f} U" + reflection
+                report = (f"✅ 【平倉通報 | TRADE CLOSED】\n─────────────────\n"
+                          f"🪙 幣種: {self.symbol} (空單離場)\n📍 出場: ${current_price:,.2f}\n📉 盈虧: {pnl:+.1f} U" + reflection)
                 self.position = 0
                 self.has_partial_tp = False
 
-        # --- 3. 開倉判定 ---
+        # --- 3. 開倉判定 (加入 AI 反思比對) ---
         if self.position == 0:
             is_sniper = True if sniper_signal == "SUPER_BUY" else False
             if self.trades_today >= self.max_daily_trades and not is_sniper:
                 return "" 
+
+            # AI 反思比對 (防錯)
+            if context and storage:
+                from learning import ReflectionEngine
+                ref_engine = ReflectionEngine(storage)
+                is_danger, reason = ref_engine.is_similar_to_failed_trade(self.symbol, context)
+                if is_danger:
+                    return f"🛡️ 【AI 攔截 | REFLECTION】\n{self.symbol} 當前環境與歷史虧損案例極度相似，已自動取消進場以規避風險。\n過去原因: {reason}"
 
             if is_sniper or scalper_signal == "BUY_SCALP":
                 qty = (self.cash * 0.4) / current_price 
@@ -111,10 +126,9 @@ class PaperTrader:
                 self.trailing_high = current_price
                 self.has_partial_tp = False
                 self.trades_today += 1
-                if storage: 
-                    storage.update_active_pos(self.symbol, "LONG", current_price, qty, current_price)
-                    storage.log_trade(f"ENTRY_LONG_{self.symbol}", current_price, qty, 0, self.cumulative_pnl)
-                report = f"🎯 【{self.symbol} 正規進場開多】\n📍 ${current_price:,.4f}"
+                if storage: storage.log_trade(f"EN_LONG_{self.symbol}", current_price, qty, 0, self.cumulative_pnl)
+                report = (f"🎯 【開倉通報 | LONG ENTRY】\n─────────────────\n"
+                          f"🪙 幣種: {self.symbol}\n📍 價格: ${current_price:,.4f}\n🧠 AI 信心: {context.get('ml_prob', 0)*100:.0f}%\n🛡️ 風險: ATR 保護中")
 
             elif scalper_signal == "SELL_SCALP":
                 qty = (self.cash * 0.4) / current_price
@@ -123,9 +137,10 @@ class PaperTrader:
                 self.trailing_low = current_price
                 self.has_partial_tp = False
                 self.trades_today += 1
-                if storage: 
-                    storage.update_active_pos(self.symbol, "SHORT", current_price, qty, current_price)
-                    storage.log_trade(f"ENTRY_SHORT_{self.symbol}", current_price, qty, 0, self.cumulative_pnl)
-                report = f"❄️ 【{self.symbol} 正規進場開空】\n📍 ${current_price:,.4f}"
+                if storage: storage.log_trade(f"EN_SHORT_{self.symbol}", current_price, qty, 0, self.cumulative_pnl)
+                report = (f"❄️ 【開倉通報 | SHORT ENTRY】\n─────────────────\n"
+                          f"🪙 幣種: {self.symbol}\n📍 價格: ${current_price:,.4f}\n🧠 AI 信心: {(1-context.get('ml_prob', 1))*100:.0f}%\n🛡️ 風險: ATR 保護中")
+
+        return report
 
         return report
