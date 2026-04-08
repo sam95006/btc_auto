@@ -61,6 +61,23 @@ class WhaleWatcher:
         except:
             return 1.0
 
+class NewsScanner:
+    """
+    新聞情感掃描器：分析加密新聞與事件情感
+    """
+    def __init__(self):
+        pass
+    
+    def fetch_latest_sentiment(self):
+        """
+        獲取最新新聞情感分數 (0-1)
+        """
+        try:
+            # 簡化版：模擬新聞情感
+            return 0.55
+        except:
+            return 0.5
+
 # --- 舊有的 RSS 感測器保持不變 ---
 class MacroScanner:
     def get_sentiment_score(self): return 0.6

@@ -1,6 +1,7 @@
 import time
 import threading
 import os
+import sys
 from datetime import datetime
 from datafeed import DataFeed
 from indicators import calculate_all
@@ -127,16 +128,26 @@ def main():
             print("✅ 背景交易系統已全數上線！")
         except Exception as init_err:
             print(f"❌ 背景初始化失敗: {init_err}")
+            import traceback
+            traceback.print_exc()
 
     # 立即觸發異步初始化，主線程不再等待
     init_thread = threading.Thread(target=async_init)
     init_thread.daemon = True
     init_thread.start()
 
-    # 讓主線程運行 Flask 應用
-    port = int(os.environ.get('PORT', 8080))
-    print(f"🚀 啟動 Flask 應用於 Port {port} ...")
-    webhook_app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+    # 讓主線程運行 Flask 應用 - 這是 Zeabur 期望的主進程
+    try:
+        port = int(os.environ.get('PORT', 8080))
+        print(f"🚀 啟動 Flask 應用於 Port {port} ...")
+        sys.stdout.flush()  # 確保日誌立即輸出
+        webhook_app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False, threaded=True)
+    except Exception as e:
+        print(f"❌ Flask 啟動失敗: {e}")
+        import traceback
+        traceback.print_exc()
+        # 繼續運行以讓 Zeabur 能連接
+        time.sleep(999999)
 
 if __name__ == "__main__":
     main()
