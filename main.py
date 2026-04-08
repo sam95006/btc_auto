@@ -13,7 +13,7 @@ from datetime import datetime
 import os
 
 # 1. 配置多幣種監控名單
-MONITOR_SYMBOLS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT']
+MONITOR_SYMBOLS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'PEPE/USDT']
 
 def run_webhook():
     try:
