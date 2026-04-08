@@ -25,6 +25,21 @@ class Storage:
         
         cursor.execute('''CREATE TABLE IF NOT EXISTS active_pos
                          (id INTEGER PRIMARY KEY, symbol TEXT, type TEXT, entry_price REAL, qty REAL, trailing_high REAL)''')
+        
+        # 3. 交易教訓記錄 (自我進化大腦用)
+        cursor.execute('''CREATE TABLE IF NOT EXISTS lessons (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            symbol TEXT,
+                            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            pnl REAL,
+                            reason TEXT,
+                            market_context TEXT)''')
+        self.conn.commit()
+
+    def log_lesson(self, symbol, pnl, reason, context):
+        cursor = self.conn.cursor()
+        cursor.execute("INSERT INTO lessons (symbol, pnl, reason, market_context) VALUES (?, ?, ?, ?)",
+                       (symbol, pnl, reason, context))
         self.conn.commit()
 
     def update_active_pos(self, symbol, pos_type, price, qty, trailing_high=0):

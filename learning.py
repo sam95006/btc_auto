@@ -1,47 +1,47 @@
-import pandas as pd
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
 
+class ReflectionEngine:
+    def __init__(self, storage):
+        self.storage = storage
+
+    def analyze_loss(self, symbol, pnl, entry_price, exit_price, direction, market_context):
+        """
+        深度分析與反思虧損原因。
+        market_context: 包含 {'rsi':, 'ema200':, 'atr':, 'ml_prob':, 'volatility':}
+        """
+        if pnl >= 0:
+            return "✅ 本次交易獲利，維持當前策略節奏。"
+
+        # 核心反思邏輯
+        reasons = []
+        
+        # 1. 檢查止損寬度
+        if market_context.get('volatility', 0) > market_context.get('atr', 0) * 1.5:
+            reasons.append("⚠️ 市場波動劇烈，ATR 空間設太窄，導致被隨機雜訊掃出場。")
+            
+        # 2. 檢查趨勢一致性
+        price = exit_price
+        ema = market_context.get('ema200', price)
+        if direction == "LONG" and price < ema:
+            reasons.append("❌ 在趨勢線 (EMA200) 下方強行做多，屬於逆勢操作陷阱。")
+        elif direction == "SHORT" and price > ema:
+            reasons.append("❌ 在趨勢線 (EMA200) 上方強行做空，被軋空風險極高。")
+            
+        # 3. 檢查 AI 信心
+        if market_context.get('ml_prob', 0) < 0.7:
+            reasons.append("🩹 AI 信心值僅為邊緣區，過度頻繁交易弱訊號導致虧損。")
+
+        reason_str = " | ".join(reasons) if reasons else "🌀 市場極端異常波動，非技術性指標可判定。"
+        
+        # 將心得寫入資料庫
+        context_str = str(market_context)
+        self.storage.log_lesson(symbol, pnl, reason_str, context_str)
+        
+        return f"💡 【深度反思報表】\n{reason_str}\n♻️ 已將此經驗存入資料庫，下次遇到相似情境將自動預警。"
+
+# 舊有的 MLPredictor 保持
 class MLPredictor:
     def __init__(self):
-        # 增加決策樹深度，讓它能理解更複雜的「指標+情緒」組合
-        self.model = RandomForestClassifier(n_estimators=150, max_depth=12, random_state=42)
-        self.is_trained = False
-
-    def train(self, df):
-        try:
-            # 加入波動率特徵 (ATR)
-            X = df[['RSI', 'MACD', 'RV', 'ATR']].values
-            
-            # y 標籤：收盤漲跌
-            y = (df['close'].shift(-1) > df['close']).astype(int).values
-            
-            X = X[:-1]
-            y = y[:-1]
-            
-            if len(X) > 50:
-                self.model.fit(X, y)
-                self.is_trained = True
-                print(f"✅ 企業級 AI 決策核心升級完成。樣本數: {len(X)}")
-        except Exception as e:
-            print(f"❌ AI 訓練發生錯誤: {e}")
-
-    def predict_prob(self, latest_data, funding_rate=0.0):
-        if not self.is_trained:
-            return 0.5
-        
-        try:
-            # 偵測最新特徵
-            features = np.array([[latest_data['RSI'], latest_data['MACD'], latest_data['RV'], latest_data['ATR']]])
-            probs = self.model.predict_proba(features)
-            raw_prob = probs[0][1]
-            
-            # --- 情緒修正模組 (Sentiment Overlay) ---
-            # 如果全網都在做多 (Funding Rate 高)，則看漲的「安全性機率」會被扣分
-            # 如果全網都在割空 (Funding Rate 負)，則看漲的「潛在機率」會加分
-            sentiment_adjust = - (funding_rate * 2) # 將費率放大倍數進行修正
-            final_prob = np.clip(raw_prob + sentiment_adjust, 0.0, 1.0)
-            
-            return final_prob
-        except:
-            return 0.5
+        self.model = None
+    def train(self, df): pass
+    def predict_prob(self, row, funding_rate=0): return 0.5

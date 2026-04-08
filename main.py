@@ -69,8 +69,17 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
                 scalper_signal = check_signal_scalper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, funding_rate=fr, tv_score=tv_score)
                 sniper_signal = check_signal_sniper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, 1.1, 0.6, 0.6, funding_rate=fr, tv_score=tv_score)
                 
+                # [反思數據收集]: 收集目前的市場環境，供複盤使用
+                context = {
+                    'rsi': latest_bar.get('RSI', 50),
+                    'ema200': latest_bar.get('EMA_200', price),
+                    'atr': atr,
+                    'ml_prob': ml_prob,
+                    'volatility': df_1m['close'].std()
+                }
+                
                 # 執行
-                report = trader.execute(scalper_signal, sniper_signal, price, storage, atr=atr)
+                report = trader.execute(scalper_signal, sniper_signal, price, storage, atr=atr, context=context)
                 
                 if report:
                     tag = f"【{sym.replace('/USDT','')}】"
