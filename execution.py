@@ -41,7 +41,17 @@ class PaperTrader:
                 if storage:
                     storage.log_trade("EXIT_LONG", current_price, abs(self.position), pnl, self.cumulative_pnl)
                     storage.update_active_pos("BTC", "NONE", 0, 0)
-                report = f"✅ 【多單結算離場】\n🔹 出場: ${current_price:,.2f} | 盈虧: {pnl:,.2f} U\n🏦 餘額: {self.cash:,.2f} U"
+                
+                # 計算盈虧率
+                pnl_rate = (current_price - self.entry_price) / self.entry_price * 100
+                invested_u = self.entry_price * self.position
+                report = (f"✅ 【多單精確平倉】\n"
+                          f"🔹 出場點位: ${current_price:,.2f}\n"
+                          f"🔸 進場點位: ${self.entry_price:,.2f}\n"
+                          f"💰 下單金額: {invested_u:,.2f} U\n"
+                          f"📉 單筆盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n"
+                          f"📊 盈虧率: {pnl_rate:+.2f}%\n"
+                          f"🏦 剩餘可用本金: {self.cash:,.2f} U")
                 self.position = 0
                 self.has_partial_tp = False
 
@@ -68,7 +78,17 @@ class PaperTrader:
                 if storage:
                     storage.log_trade("EXIT_SHORT", current_price, abs(self.position), pnl, self.cumulative_pnl)
                     storage.update_active_pos("BTC", "NONE", 0, 0)
-                report = f"✅ 【空單結算離場】\n🔹 出場: ${current_price:,.2f} | 盈虧: {pnl:,.2f} U\n🏦 餘額: {self.cash:,.2f} U"
+                
+                # 計算盈虧率
+                pnl_rate = (self.entry_price - current_price) / self.entry_price * 100
+                invested_u = self.entry_price * abs(self.position)
+                report = (f"✅ 【空單精確平倉】\n"
+                          f"🔹 出場點位: ${current_price:,.2f}\n"
+                          f"🔸 進場點位: ${self.entry_price:,.2f}\n"
+                          f"💰 下單金額: {invested_u:,.2f} U\n"
+                          f"📉 單筆盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n"
+                          f"📊 盈虧率: {pnl_rate:+.2f}%\n"
+                          f"🏦 剩餘可用本金: {self.cash:,.2f} U")
                 self.position = 0
                 self.has_partial_tp = False
 

@@ -79,15 +79,25 @@ def callback():
                     else:
                         sym, t, ep, qty, th = pos[1], pos[2], pos[3], pos[4], pos[5]
                         invested_u = ep * qty
-                        reply_message(reply_token, f"🟢 【目前持倉狀態】\n類別: {t}\n進場點: ${ep:,.2f}\n部位規模: {invested_u:,.2f} U\n追蹤防線: ${th:,.2f}")
+                        category = "比特幣多單" if "LONG" in t else ("比特幣空單" if "SHORT" in t else "偵測中")
+                        # 簡單推算目標價 (進場價 + 1.5% 左右)
+                        tp = ep * 1.015 if "LONG" in t else ep * 0.985
+                        reply_message(reply_token, f"🟢 【目前持倉狀態】\n類別: {category}\n進場點: ${ep:,.2f}\n下單金額: {invested_u:,.2f} U\n目標價: ${tp:,.2f}\n🛡️ 追蹤高/低點: ${th:,.2f}")
                 
                 elif "今日" in user_msg or "一天" in user_msg:
                     pnl, cnt = storage.get_range_summary(1)
                     tot_pnl, _ = storage.get_lifetime_summary()
+                    detail = storage.get_detailed_stats(1)
                     remained_u = 10000 + tot_pnl
-                    recent_trades = storage.get_latest_trades(3)
-                    trade_str = "\n".join([f"[{tr[0][-5:]}] 進: ${tr[1]:.0f} | 出: ${tr[2]:.0f} | 盈虧: {'+' if tr[3]>0 else ''}{tr[3]:.2f} U" for tr in recent_trades])
-                    reply_message(reply_token, f"📊 【24H 戰情中心】\n已平倉盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n交易次數: {cnt} 次\n🏦 剩餘總額: {remained_u:,.2f} U\n\n【最近交易紀錄】\n{trade_str}")
+                    reply_message(reply_token, (
+                        f"📊 【24H 戰情中心】\n"
+                        f"下單總金額: {detail['total_volume']:,.2f} U\n"
+                        f"已平倉盈虧: {'+' if pnl>0 else ''}{pnl:,.2f} U\n"
+                        f"交易次數: {cnt} 次\n"
+                        f"多單: {detail['long_win']}盈 {detail['long_loss']}虧\n"
+                        f"空單: {detail['short_win']}盈 {detail['short_loss']}虧\n\n"
+                        f"🏦 剩餘總額: {remained_u:,.2f} U"
+                    ))
                     
                 elif "三天" in user_msg:
                     pnl, cnt = storage.get_range_summary(3)

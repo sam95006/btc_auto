@@ -80,3 +80,19 @@ class Storage:
         cursor = self.conn.cursor()
         cursor.execute("SELECT type, entry_price, exit_price, pnl, timestamp FROM trades WHERE type LIKE '%EXIT%' ORDER BY id DESC LIMIT ?", (limit,))
         return cursor.fetchall()
+
+    def get_detailed_stats(self, days=1):
+        cursor = self.conn.cursor()
+        time_limit = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute("SELECT type, pnl, entry_price, qty FROM trades WHERE timestamp > ? AND type LIKE '%EXIT%'", (time_limit,))
+        trades = cursor.fetchall()
+        stats = {'long_win': 0, 'long_loss': 0, 'short_win': 0, 'short_loss': 0, 'total_volume': 0.0}
+        for t, pnl, ep, qty in trades:
+            stats['total_volume'] += (ep * qty)
+            if "LONG" in t:
+                if pnl > 0: stats['long_win'] += 1
+                else: stats['long_loss'] += 1
+            else:
+                if pnl > 0: stats['short_win'] += 1
+                else: stats['short_loss'] += 1
+        return stats
