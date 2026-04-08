@@ -37,8 +37,17 @@ def calculate_all(df):
     
     # 清理殘留資料
     df.dropna(inplace=True)
-    # 5. 支撐與壓力感知 (昨日高低點)
-    df['DailyHigh'] = df['high'].rolling(window=1440).max() # 一天 1440 分鐘
+    # 5. 趨勢與波動核心 (世界級標配)
+    df['EMA200'] = df['close'].ewm(span=200, adjust=False).mean()
+    
+    # 布林帶 (Bollinger Bands)
+    basis = df['close'].rolling(window=20).mean()
+    dev = 2 * df['close'].rolling(window=20).std()
+    df['BB_Upper'] = basis + dev
+    df['BB_Lower'] = basis - dev
+    
+    # 6. 支撐與壓力感知 (昨日高低點)
+    df['DailyHigh'] = df['high'].rolling(window=1440).max()
     df['DailyLow'] = df['low'].rolling(window=1440).min()
     
     return df
