@@ -1,8 +1,11 @@
 ccxt
 pandas
+numpy
 flask
 requests
 schedule
 scikit-learn
 feedparser
 tradingview-ta
+beautifulsoup4
+line-bot-sdk
