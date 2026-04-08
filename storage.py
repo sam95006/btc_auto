@@ -5,13 +5,115 @@ import json
 
 class Storage:
     def __init__(self, db_name="trading.db"):
-        # 直接使用根目錄，確保在 Zeabur/Heroku 等環境中具備寫入權限
-        self.db_name = db_name
-        self.conn = sqlite3.connect(db_name, check_same_thread=False)
-        self.conn.row_factory = sqlite3.Row  # 返回字典格式
+        """
+        初始化存儲系統 - 所有交易、學習、失敗數據都保存到 Zeabur 持久硬碟
+        
+        數據持久化路徑優先級：
+        1. /app/data ← Zeabur 持久硬碟（最優選擇）
+        2. /data     ← Zeabur 備用持久卷
+        3. ./        ← 本地開發環境
+        """
+        
+        # 【Zeabur 持久硬碟】優先使用 /app/data
+        zeabur_disk_path = "/app/data"
+        zeabur_volume_path = "/data"
+        local_path = os.getcwd()
+        
+        # 檢測可用的持久化路徑
+        if os.path.exists(zeabur_disk_path) and os.access(zeabur_disk_path, os.W_OK):
+            base_path = zeabur_disk_path
+            storage_type = "Zeabur 持久硬碟 (/app/data)"
+        elif os.path.exists(zeabur_volume_path) and os.access(zeabur_volume_path, os.W_OK):
+            base_path = zeabur_volume_path
+            storage_type = "Zeabur 持久卷 (/data)"
+        else:
+            base_path = local_path
+            storage_type = "本地開發環境"
+        
+        # 確保目錄存在
+        try:
+            os.makedirs(base_path, exist_ok=True)
+        except Exception as e:
+            print(f"⚠️ 目錄創建失敗: {e}")
+            base_path = local_path
+        
+        # 完整路徑
+        self.db_path = os.path.join(base_path, db_name)
+        print(f"""
+╔════════════════════════════════════════╗
+  🗄️  數據持久化系統
+╚════════════════════════════════════════╝
+📍 存儲類型: {storage_type}
+📍 數據庫路徑: {self.db_path}
+📊 用途: 交易記錄 + AI 學習 + 失敗分析
+""")
+        
+        # 連接數據庫 (自動創建)
+        try:
+            self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
+            self.conn.row_factory = sqlite3.Row  # 返回字典格式
+            print(f"✅ 數據庫連接成功")
+        except Exception as e:
+            print(f"❌ 數據庫連接失敗: {e}")
+            raise
+        
         self.init_db()
 
-    def init_db(self):
+    def backup_database(self):
+        """
+        自動備份數據庫到時間戳文件
+        用途: 防止誤刪或損壞，允許回滾
+        """
+        try:
+            backup_dir = os.path.dirname(self.db_path)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_path = os.path.join(backup_dir, f"trading_backup_{timestamp}.db")
+            
+            # SQLite 備份方法
+            backup_conn = sqlite3.connect(backup_path)
+            self.conn.backup(backup_conn)
+            backup_conn.close()
+            
+            print(f"✅ 數據庫備份成功: {backup_path}")
+            return backup_path
+        except Exception as e:
+            print(f"⚠️ 數據庫備份失敗: {e}")
+            return None
+    
+    def verify_database_integrity(self):
+        """驗證數據庫完整性"""
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute("PRAGMA integrity_check")
+            result = cursor.fetchone()[0]
+            
+            if result == "ok":
+                print(f"✅ 數據庫完整性檢查通過")
+                return True
+            else:
+                print(f"❌ 數據庫損壞: {result}")
+                return False
+        except Exception as e:
+            print(f"⚠️ 完整性檢查失敗: {e}")
+            return False
+    
+    def close(self):
+        """安全關閉數據庫連接"""
+        try:
+            self.conn.commit()
+            self.conn.close()
+            print("✅ 數據庫已安全關閉")
+        except Exception as e:
+            print(f"⚠️ 關閉數據庫時出錯: {e}")
+
+    def __del__(self):
+        """析構時確保數據庫被安全保存"""
+        try:
+            if hasattr(self, 'conn'):
+                self.conn.commit()
+                self.conn.close()
+        except:
+            pass
         cursor = self.conn.cursor()
         cursor.execute('''CREATE TABLE IF NOT EXISTS daily_pnl (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

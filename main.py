@@ -173,7 +173,28 @@ def main():
     def async_init():
         try:
             print("⏳ 正在背景初始化交易核心與感測器...")
+            
+            # 🔧 數據庫初始化與安全檢查
+            print("\n【📊 數據庫初始化】")
             storage = Storage()
+            
+            # 驗證數據庫完整性
+            if not storage.verify_database_integrity():
+                print("⚠️ 警告: 數據庫完整性檢查失敗，將基於現有數據繼續運行")
+            
+            # 自動備份
+            backup_path = storage.backup_database()
+            if backup_path:
+                print(f"✅ 歷史成交記錄已備份，可恢復")
+            
+            # 查詢並顯示歷史統計
+            lifetime_pnl, lifetime_trades = storage.get_lifetime_summary()
+            print(f"\n【📈 歷史累計統計】")
+            print(f"✅ 生涯交易總筆數: {lifetime_trades if lifetime_trades else 0}")
+            print(f"✅ 生涯累計盈虧: ${lifetime_pnl if lifetime_pnl else 0:+.2f}")
+            print(f"✅ 歷史學習資料: 已保留")
+            print()
+            
             predictor = AdaptiveMLPredictor(storage)  # 使用自適應 ML 預測器
             macro = MacroScanner()
             news = NewsScanner()
