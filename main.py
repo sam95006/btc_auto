@@ -94,47 +94,61 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
             time.sleep(10)
 
 def main():
-    # 1. 核心實體初始化 (極速)
-    storage = Storage()
-    predictor = MLPredictor()
-    macro = MacroScanner()
-    news = NewsScanner()
-    fed = FedScanner()
-    pol = PoliticalScanner()
-
-    feed_manager = {}
-    traders = {}
-    whales = {}
-    tv_scanners = {}
-    
-    for sym in MONITOR_SYMBOLS:
-        feed_manager[sym] = DataFeed(symbol=sym)
-        limit = 10 if "BTC" in sym else 999
-        traders[sym] = PaperTrader(symbol=sym, initial_cash=2500, max_daily_trades=limit)
-        whales[sym] = WhaleWatcher(symbol=sym.replace('/',''))
-        tv_scanners[sym] = TradingViewScanner(symbol=sym)
-
-    # 2. 立即啟動 Webhook 監聽 (優先對外，解決 Zeabur 502)
+    # 1. 立即啟動 Webhook 監聽 (優先對外，防止 Zeabur 502)
     def run_webhook():
         try:
             port = int(os.environ.get('PORT', 8080))
+            print(f"🚀 Webhook 正在啟動於 Port {port} ...")
             webhook_app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
         except Exception as e:
-            print(f"Webhook 啟動失敗: {e}")
+            print(f"❌ Webhook 嚴重崩潰: {e}")
 
     webhook_thread = threading.Thread(target=run_webhook)
     webhook_thread.daemon = True
     webhook_thread.start()
 
-    # 3. 延遲啟動背景交易線程，給 Webhook 穩定的時間
-    time.sleep(2) 
-    trading_thread = threading.Thread(target=trading_loop, args=(traders, predictor, feed_manager, storage, macro, whales, news, fed, pol, tv_scanners))
-    trading_thread.daemon = True
-    trading_thread.start()
+    # 🚨 延後初始化: 將所有連線 API 的動作移到背景執行緒
+    def async_init():
+        try:
+            print("⏳ 正在背景初始化交易核心與感測器...")
+            storage = Storage()
+            predictor = MLPredictor()
+            macro = MacroScanner()
+            news = NewsScanner()
+            fed = FedScanner()
+            pol = PoliticalScanner()
 
-    print("✅ 所有系統已同步就緒，進入監控循環...")
+            feed_manager = {}
+            traders = {}
+            whales = {}
+            tv_scanners = {}
+            
+            for sym in MONITOR_SYMBOLS:
+                try:
+                    feed_manager[sym] = DataFeed(symbol=sym)
+                    limit = 10 if "BTC" in sym else 999
+                    traders[sym] = PaperTrader(symbol=sym, initial_cash=2500, max_daily_trades=limit)
+                    whales[sym] = WhaleWatcher(symbol=sym.replace('/',''))
+                    tv_scanners[sym] = TradingViewScanner(symbol=sym)
+                except Exception as sym_err:
+                    print(f"⚠️ {sym} 初始化部分失敗 (跳過繼續): {sym_err}")
+
+            # 2. 啟動背景交易循環
+            trading_thread = threading.Thread(target=trading_loop, args=(traders, predictor, feed_manager, storage, macro, whales, news, fed, pol, tv_scanners))
+            trading_thread.daemon = True
+            trading_thread.start()
+            print("✅ 背景交易系統已全數上線！")
+        except Exception as init_err:
+            print(f"❌ 背景初始化失敗: {init_err}")
+
+    # 立即觸發異步初始化，主線程不再等待
+    init_thread = threading.Thread(target=async_init)
+    init_thread.daemon = True
+    init_thread.start()
+
+    # 主線程進入無限監控循環 (防止進程結束)
     while True:
-        time.sleep(1)
+        time.sleep(10)
 
 if __name__ == "__main__":
     main()
