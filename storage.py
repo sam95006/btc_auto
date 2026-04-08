@@ -96,24 +96,9 @@ class Storage:
         except Exception as e:
             print(f"⚠️ 完整性檢查失敗: {e}")
             return False
-    
-    def close(self):
-        """安全關閉數據庫連接"""
-        try:
-            self.conn.commit()
-            self.conn.close()
-            print("✅ 數據庫已安全關閉")
-        except Exception as e:
-            print(f"⚠️ 關閉數據庫時出錯: {e}")
 
-    def __del__(self):
-        """析構時確保數據庫被安全保存"""
-        try:
-            if hasattr(self, 'conn'):
-                self.conn.commit()
-                self.conn.close()
-        except:
-            pass
+    def init_db(self):
+        """初始化資料表與遷移邏輯"""
         cursor = self.conn.cursor()
         cursor.execute('''CREATE TABLE IF NOT EXISTS daily_pnl (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -121,8 +106,7 @@ class Storage:
             daily_pnl REAL,
             cumulative_pnl REAL
         )''')
-        
-        # 完整的交易記錄
+
         cursor.execute('''CREATE TABLE IF NOT EXISTS trades
                          (id INTEGER PRIMARY KEY AUTOINCREMENT,
                           timestamp TEXT, 
@@ -136,22 +120,33 @@ class Storage:
                           direction TEXT,
                           win_loss TEXT,
                           market_context TEXT)''')
-        
-        # 🔧 數據庫遷移: 確保舊表有 win_loss 列
+
+        # 🔧 數據庫遷移: 確保舊表包含必要的欄位
         try:
             cursor.execute("PRAGMA table_info(trades)")
-            columns = [col[1] for col in cursor.fetchall()]
-            if 'win_loss' not in columns:
-                print("⚠️ 數據庫遷移: 添加 win_loss 列到 trades 表...")
-                cursor.execute("ALTER TABLE trades ADD COLUMN win_loss TEXT DEFAULT 'BREAK'")
-                self.conn.commit()
+            existing_columns = {col[1] for col in cursor.fetchall()}
+            required_columns = {
+                'symbol': 'TEXT DEFAULT ""',
+                'signal_type': 'TEXT DEFAULT ""',
+                'entry_price': 'REAL DEFAULT 0',
+                'exit_price': 'REAL DEFAULT 0',
+                'qty': 'REAL DEFAULT 0',
+                'pnl': 'REAL DEFAULT 0',
+                'total_pnl': 'REAL DEFAULT 0',
+                'direction': 'TEXT DEFAULT ""',
+                'win_loss': 'TEXT DEFAULT "BREAK"',
+                'market_context': 'TEXT DEFAULT "{}"'
+            }
+            for col_name, col_def in required_columns.items():
+                if col_name not in existing_columns:
+                    print(f"⚠️ 數據庫遷移: 添加缺失欄位 {col_name} 到 trades 表...")
+                    cursor.execute(f"ALTER TABLE trades ADD COLUMN {col_name} {col_def}")
         except Exception as e:
             print(f"⚠️ 數據庫遷移檢查失敗: {e}")
-        
+
         cursor.execute('''CREATE TABLE IF NOT EXISTS active_pos
                          (id INTEGER PRIMARY KEY, symbol TEXT, type TEXT, entry_price REAL, qty REAL, trailing_high REAL)''')
-        
-        # 交易教訓記錄 (自我進化大腦用)
+
         cursor.execute('''CREATE TABLE IF NOT EXISTS lessons (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             symbol TEXT,
@@ -161,8 +156,7 @@ class Storage:
                             market_context TEXT,
                             signal_type TEXT,
                             is_learned INTEGER DEFAULT 0)''')
-        
-        # 信號勝率統計表
+
         cursor.execute('''CREATE TABLE IF NOT EXISTS signal_stats (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             symbol TEXT,
@@ -174,8 +168,27 @@ class Storage:
                             avg_pnl REAL DEFAULT 0.0,
                             last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
                             UNIQUE(symbol, signal_type))''')
-        
+
         self.conn.commit()
+
+    def close(self):
+        """安全關閉數據庫連接"""
+        try:
+            if hasattr(self, 'conn') and self.conn:
+                self.conn.commit()
+                self.conn.close()
+                print("✅ 數據庫已安全關閉")
+        except Exception as e:
+            print(f"⚠️ 關閉數據庫時出錯: {e}")
+
+    def __del__(self):
+        """析構時確保數據庫被安全保存"""
+        try:
+            if hasattr(self, 'conn') and self.conn:
+                self.conn.commit()
+                self.conn.close()
+        except Exception:
+            pass
 
     def log_lesson(self, symbol, pnl, reason, context):
         cursor = self.conn.cursor()
@@ -388,7 +401,7 @@ class Storage:
 
     def get_latest_trades(self, limit=3):
         cursor = self.conn.cursor()
-        cursor.execute("SELECT type, entry_price, exit_price, pnl, timestamp FROM trades WHERE type LIKE '%EXIT%' ORDER BY id DESC LIMIT ?", (limit,))
+        cursor.execute("SELECT signal_type, entry_price, exit_price, pnl, timestamp FROM trades WHERE signal_type LIKE '%EXIT%' ORDER BY id DESC LIMIT ?", (limit,))
         return cursor.fetchall()
 
     def get_all_active_pos(self):
