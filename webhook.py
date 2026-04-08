@@ -36,6 +36,10 @@ def reply_message(token, text):
 def help_message():
     return "可用指令:\n1. 持倉/部位 - 查看當前持倉\n2. 今日/一天 - 查看24小時報表\n3. 快報/行情 - 查看全球金融雷達\n請輸入關鍵字以獲取相應資訊。"
 
+@app.route("/")
+def home():
+    return "BTC Bot is running!"
+
 @app.route("/callback", methods=['POST'])
 def callback():
     signature = request.headers['X-Line-Signature']
@@ -100,4 +104,5 @@ def handle_message(event):
         print(f"Webhook 報表錯誤: {e}")
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port)
