@@ -1,51 +1,60 @@
-def check_signal_scalper(df_1m, df_15m, df_1h, ml_prob=0.5, whale_ratio=1.0, news_score=0.5, oi_delta=0.0):
+def check_signal_scalper(df_1m, df_15m, df_1h, ml_prob=0.5, whale_ratio=1.0, news_score=0.5, oi_delta=0.0, funding_rate=0.01):
     """
-    【高頻突擊部隊】: 優化版 - 增加趨勢過濾，防止在強漲勢中逆勢做空。
+    【高頻突擊部隊】: 增加支撐壓力支撐與資金費率偵測。
     """
     last_1m = df_1m.iloc[-1]
     last_15m = df_15m.iloc[-1]
     last_1h = df_1h.iloc[-1]
     
-    # 趨勢判定：如果 1小時 RSI > 55，代表大趨勢向上，禁止做空
-    trend_up = True if last_1h['RSI'] > 55 else False
+    # 趨勢與關鍵位判定
+    rsi_h = last_1h['RSI']
+    trend_up = True if rsi_h > 55 else False
+    
+    # 🔑 加入昨日高低點意識
+    daily_high = last_1m['DailyHigh']
+    daily_low = last_1m['DailyLow']
+    curr_price = last_1m['close']
+    
+    # [資金費率陷阱]: 如果 FR > 0.04% 代表多頭過熱，禁止追多
+    funding_danger = True if funding_rate > 0.04 else False
+    
+    # [做多過濾]: 不在昨日高點附近追多，除非強勢突破
+    near_resistance = True if (daily_high - curr_price) / curr_price < 0.005 else False
     
     technical_buy = (last_1m['RSI'] < 45 and last_15m['RSI'] < 50)
-    # 做空條件更嚴格：RSI 要極高且大趨勢不能向上
-    technical_sell = (last_1m['RSI'] > 75 and last_15m['RSI'] > 70 and not trend_up)
-    
-    leverage_danger = True if oi_delta > 0.04 else False
-    news_danger = True if news_score < 0.3 else False
-    
-    if not (news_danger or leverage_danger):
+    # 做多條件：AI看多 + 不是高位追漲 + 費率安全
+    if not funding_danger and not (near_resistance and rsi_h > 65):
         if technical_buy and ml_prob > 0.65:
             return "BUY_SCALP"
             
-    # 做空信心門檻從 0.4 下修到 0.2 (代表 AI 判定極度看空才做)
+    # [做空條件]: AI極度看空 + 大趨勢向下 + RSI極高
+    technical_sell = (last_1m['RSI'] > 75 and last_15m['RSI'] > 70 and not trend_up)
     if technical_sell and ml_prob < 0.2:
         return "SELL_SCALP"
         
     return "HOLD"
 
-def check_signal_sniper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, tech_pulse, fed_score, pol_score):
+def check_signal_sniper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, tech_pulse, fed_score, pol_score, funding_rate=0.01):
     """
-    【極限狙擊部隊】: 必須勝率 > 0.8，且宏觀(Fed+政治)、新聞、巨鯨全部達成共振。
+    【極限狙擊部隊】: 加入宏觀、費率與關鍵點位共振。
     """
     last_1m = df_1m.iloc[-1]
     last_15m = df_15m.iloc[-1]
     last_1h = df_1h.iloc[-1]
     
+    curr_price = last_1m['close']
+    daily_low = last_1m['DailyLow']
+    
+    # 狙擊手專屬條件：在「昨日低點」附近且 AI 信心爆表
+    near_support = True if (curr_price - daily_low) / daily_low < 0.008 else False
+    
     technical_buy = (last_1m['RSI'] < 40 and last_15m['RSI'] < 45 and last_1h['RSI'] < 50)
+    macro_safe = True if (fed_score > 0.5 and pol_score > 0.5 and news_score > 0.5) else False
     
-    leverage_danger = True if oi_delta > 0.02 else False
-    whale_power = True if whale_ratio > 1.3 else False
-    
-    # 宏觀沒有利空 (包含政治、聯準會、新聞)
-    macro_safe = True if (fed_score > 0.4 and pol_score > 0.4 and news_score > 0.4) else False
-    tech_boost = True if tech_pulse > 1.1 else False
-
-    if not leverage_danger and macro_safe:
-        # 當機器學習勝率極高，且巨鯨進場、美股助攻時，火力全開
-        if ml_prob > 0.8 and whale_power and tech_boost and technical_buy:
+    # [資金費率檢查] 狙擊手絕不參與多頭派對末端
+    if funding_rate < 0.03 and macro_safe:
+        # 特別條件：如果是在強支撐區 (昨日低位) + AI > 0.8 + 巨鯨進場 = 全力開火
+        if ml_prob > 0.8 and whale_ratio > 1.2 and near_support:
             return "SUPER_BUY"
-    
+            
     return "HOLD"

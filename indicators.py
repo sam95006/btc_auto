@@ -37,4 +37,8 @@ def calculate_all(df):
     
     # 清理殘留資料
     df.dropna(inplace=True)
+    # 5. 支撐與壓力感知 (昨日高低點)
+    df['DailyHigh'] = df['high'].rolling(window=1440).max() # 一天 1440 分鐘
+    df['DailyLow'] = df['low'].rolling(window=1440).min()
+    
     return df

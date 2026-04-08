@@ -50,9 +50,9 @@ def trading_loop(trader, predictor, feed, storage, macro, whale, news, fed, pol)
             price = latest_bar['close']
             atr = latest_bar['ATR']
             
-            # 5. 【雙軌共振信號】 
-            scalper_signal = check_signal_scalper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta)
-            sniper_signal = check_signal_sniper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, tech_pulse, fed_score, pol_score)
+            # 5. 【雙軌共振信號: 增加 資金費率 與 SR 位意識】
+            scalper_signal = check_signal_scalper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, funding_rate=fr)
+            sniper_signal = check_signal_sniper(df_1m, df_15m, df_1h, ml_prob, whale_ratio, news_score, oi_delta, tech_pulse, fed_score, pol_score, funding_rate=fr)
             
             # 6. 執行決策
             trade_report = trader.execute(scalper_signal, sniper_signal, price, storage, atr=atr)
