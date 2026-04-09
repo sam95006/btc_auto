@@ -35,9 +35,10 @@ PEPE_SYMBOL = 'PEPE/USDT'
 # --- [自癒監察官] 全局狀態監控 ---
 AGENT_HEALTH = {} 
 
-def update_heartbeat(symbol, status="OK"):
+def update_heartbeat(symbol, status="OK", mode="BATTLE"):
     AGENT_HEALTH[symbol] = {
         'status': status,
+        'mode': mode,
         'last_heartbeat': time.time(),
         'time_str': datetime.now().strftime("%H:%M:%S")
     }
@@ -52,27 +53,36 @@ def agent_worker(symbol, trader, predictor, feed, storage, macro, whale, news, f
     
     while True:
         try:
-            # 1. [自癒檢查] 每次啟動或重啟先對接資料庫恢復狀態
+            # 1. [自癒檢查] 對接資料庫並恢復狀態
             trader.load_active_position()
-            update_heartbeat(symbol, "OK")
             
-            # 2. 抓取技術面數據
+            # --- [能量守護 & 全球情緒感知] ---
             df_data = feed.fetch_ohlcv(timeframe='1m', limit=100)
             if not df_data:
                 time.sleep(10)
                 continue
-                
+            
+            # A. 波動率判定 (Eco-Mode)
+            range_pct = (df_data['high'].iloc[-5:].max() - df_data['low'].iloc[-5:].min()) / df_data['close'].iloc[-1]
+            if range_pct < 0.002:
+                sleep_time, mode = 120, "ECO"
+            else:
+                sleep_time, mode = 30, "BATTLE"
+
+            # B. 巨鯨警戒判定
+            whale_score = whale.get_whale_move(feed.exchange) if whale else 1.0
+            storage.save_global_config(f"WHALE_{symbol}", str(whale_score))
+            if whale_score > 3.5:
+                storage.save_global_config("GLOBAL_ALERT", "RED")
+            
+            update_heartbeat(symbol, "OK", mode)
+            
             df_1m = calculate_all(df_data)
             df_15m = calculate_all(feed.fetch_ohlcv(timeframe='15m', limit=50))
-            
             current_price = float(df_1m.iloc[-1]['close'])
             storage.save_global_config(f"PRICE_{symbol}", str(current_price))
             
-            # 3. [雷達對接] 獲取巨鯨動向
-            whale_score = whale.get_whale_move(feed.exchange) if whale else 1.0
-            storage.save_global_config(f"WHALE_{symbol}", str(whale_score))
-            
-            # 4. AI 智能拍板
+            # C. AI 決策與執行
             ml_prob = predictor.predict(df_1m) if predictor else 0.5
             team_signal, team_conf = chiefs[symbol].make_final_decision(df_1m, df_15m, {
                 'ml_prob': ml_prob,
@@ -83,22 +93,13 @@ def agent_worker(symbol, trader, predictor, feed, storage, macro, whale, news, f
             if team_signal == "BUY": scalper_signal = "BUY_SCALP"
             elif team_signal == "SELL": scalper_signal = "SELL_SCALP"
 
-            # 5. 執行引擎 (內建持倉管理)
-            context = {
-                'rsi': df_1m.iloc[-1].get('RSI', 50),
-                'ml_prob': ml_prob,
-                'rv': df_1m.iloc[-1].get('RV', 1.0),
-                'whale_score': whale_score
-            }
-            
-            report = trader.execute(scalper_signal, "HOLD", current_price, storage=storage, atr=df_1m.iloc[-1].get('ATR', 0), context=context)
+            report = trader.execute(scalper_signal, "HOLD", current_price, storage=storage, atr=df_1m.iloc[-1].get('ATR', 0), 
+                                    context={'rsi': df_1m.iloc[-1].get('RSI', 50), 'ml_prob': ml_prob, 'whale_score': whale_score})
             
             if report:
-                tag = f"【{symbol.replace('/USDT','')}】"
-                send_line(tag + "\n" + report)
+                send_line(f"【{symbol}】\n" + report)
             
-            update_heartbeat(symbol, "OK")
-            time.sleep(30)
+            time.sleep(sleep_time)
             
         except Exception as e:
             print(f"🆘 【{symbol} 分隊異常】: {e} | 即將執行精準自癒重啟...")

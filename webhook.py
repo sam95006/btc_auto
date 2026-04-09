@@ -66,10 +66,13 @@ def api_stats():
         radar_opps = json.loads(storage.get_global_config('RADAR_OPPS', '[]'))
         whale_score = storage.get_global_config('WHALE_BTC/USDT', '1.0')
         treasury_cash = storage.get_global_config("TREASURY_CASH", "1000.0")
+        global_alert = storage.get_global_config("GLOBAL_ALERT", "NORMAL")
         
         debts = {}
+        thoughts = {}
         for sym in ['BTC', 'ETH', 'SOL', 'XAUT', 'PEPE', 'SPECIAL']:
             debts[sym] = storage.get_global_config(f"DEBT_{sym}/USDT" if '/' not in sym and sym != 'SPECIAL' else f"DEBT_{sym}", "0.0")
+            thoughts[sym] = storage.get_global_config(f"THOUGHT_{sym}/USDT" if '/' not in sym and sym != 'SPECIAL' else f"THOUGHT_{sym}", "待台中...")
 
         # --- 市場開閉盤邏輯 ---
         now_tpe = now + timedelta(hours=8)
@@ -102,6 +105,8 @@ def api_stats():
             "agent_health": getattr(app, 'agent_status', {}),
             "prices": prices,
             "debts": debts,
+            "thoughts": thoughts,
+            "global_alert": global_alert,
             "treasury_cash": treasury_cash,
             "positions": positions,
             "radar_opps": radar_opps,

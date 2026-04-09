@@ -85,6 +85,8 @@ class PaperTrader:
         self.cash = initial_cash
         self.debt_to_treasury = 0 # 向中央金庫的借款額
         self.leverage = 1.0 # AI 動態控制的槓桿
+        self.last_thought = "🛰️ 正在掃描星際信號，待台中..." # 語義述職內容
+        self.global_risk_level = 0 # 全球風險等級 (0-10)
         
         self.is_pepe = is_pepe
         self.is_special_fund = (symbol == "SPECIAL")
@@ -432,11 +434,17 @@ class PaperTrader:
             if self.cash < 100:
                 self.request_loan_if_needed(storage)
 
-            # AI 信心與槓桿決定
+            # --- [AI 語義述職] 心理決策模擬 ---
             conf = context.get('ml_prob', 0.5)
-            # 桿槓邏輯: 根據信心值自動調整 1x ~ 5x (模擬合約)
-            self.leverage = 1.0 + (max(0, conf - 0.5) * 8) 
-            self.leverage = min(5.0, self.leverage) 
+            risk_alert = storage.get_global_config("GLOBAL_ALERT", "NORMAL")
+            
+            if risk_alert == "RED":
+                self.last_thought = "🏮 [全城警報] 市場發生劇烈震盪或巨鯨大舉拋售，我已將槓桿壓制在 1x 並提高止損寬度。"
+                self.leverage = 1.0
+            else:
+                self.leverage = 1.0 + (max(0, conf - 0.5) * 8) 
+                self.leverage = min(5.0, self.leverage) 
+                self.last_thought = f"📈 信心指數 {conf*100:.0f}%，目前盤勢符合我的多頭策略，決定以 {self.leverage:.1f}x 槓桿出擊。"
 
             if is_sniper or scalper_signal == "BUY_SCALP":
                 # 指令: 均分為十等分，固定為初始預算的 10%
@@ -472,9 +480,19 @@ class PaperTrader:
                 self.has_partial_tp = False
                 self.trades_today += 1
                 self.save_active_position("SHORT", current_price, qty)
+                self.last_thought = f"📉 信心指數 {(1-conf)*100:.0f}%，判斷空頭趨勢成形，執行 {self.leverage:.1f}x 槓桿做空。"
                 report = (f"❄️ 【特工出擊 | SHORT】\n─────────────────\n"
                           f"🪙 幣種: {self.symbol} | 槓桿: {self.leverage:.1f}x\n📍 價格: ${current_price:,.4f}\n"
                           f"💰 保證金: ${invest_amt:,.1f} U | 名義價值: ${invest_amt*self.leverage:,.1f} U\n"
                           f"🏦 餘額: ${self.cash:,.1f} U | 欠款: ${self.debt_to_treasury:.1f} U")
 
+        else:
+            # 觀望模式下的述職
+            if context.get('ml_prob', 0.5) > 0.45 and context.get('ml_prob', 0.5) < 0.55:
+                self.last_thought = "💤 市場方向不明，我決定進入潛伏狀態，節省電力與記憶體。"
+            else:
+                self.last_thought = "🔎 正觀察技術形態，若突破重要壓力位將立即行動。"
+        
+        # 保存心聲到全局，供 3D UI 讀取
+        if storage: storage.save_global_config(f"THOUGHT_{self.symbol}", self.last_thought)
         return report
