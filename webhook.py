@@ -370,7 +370,22 @@ def api_agent(symbol):
         decision = storage.get_global_config(f'LAST_CHIEF_DECISION_{symbol}', f"{symbol} 首席分析師正在重新評估全球流動性，準備提出新戰略。")
         wallet = float(storage.get_global_config(f'WALLET_{symbol}', 1000.0))
         all_pos = storage.get_all_active_pos()
-        is_active = any(p[1] == symbol for p in all_pos)
+        
+        active_pos = None
+        for p in all_pos:
+            if p[1] == symbol:
+                entry_price = float(p[3])
+                qty = float(p[4])
+                current_price = float(storage.get_global_config(f'PRICE_{symbol}', entry_price))
+                pnl = (current_price - entry_price) * abs(qty) if p[2] == "LONG" else (entry_price - current_price) * abs(qty)
+                active_pos = {
+                    "type": p[2],
+                    "entry_price": entry_price,
+                    "current_price": current_price,
+                    "qty": abs(qty),
+                    "floating_pnl": pnl
+                }
+                break
         
         today_trades = storage.get_today_trades(symbol)
         daily_pnl = sum(t.get('pnl', 0) for t in today_trades if t.get('pnl', 0) != 0) if today_trades else 0
@@ -378,7 +393,8 @@ def api_agent(symbol):
         return jsonify({
             "decision": decision,
             "wallet": wallet,
-            "current_pos": is_active,
+            "current_pos": active_pos is not None,
+            "pos_details": active_pos,
             "summary": {"total_pnl": daily_pnl}
         })
     except Exception as e:

@@ -73,19 +73,20 @@ class NewsScanner:
         
     def fetch_real_news(self):
         """
-        從公開 API 獲取全球最新區塊鏈/財經短報
+        利用 Google News RSS 抓取全球最新區塊鏈/財經短報 (絕對穩定)
         """
+        import xml.etree.ElementTree as ET
         try:
-            url = "https://min-api.cryptocompare.com/data/v2/news/?lang=EN"
+            url = "https://news.google.com/rss/search?q=bitcoin+OR+cryptocurrency+when:24h&hl=en-US&gl=US&ceid=US:en"
             response = requests.get(url, timeout=5)
-            data = response.json()
-            if data.get('Data'):
-                news_list = data['Data'][:3] # 取最新 3 條
-                headlines = " ⚡ ".join([f"[{n['source_info']['name']}] {n['title']}" for n in news_list])
+            root = ET.fromstring(response.content)
+            items = root.findall('./channel/item')[:3] # 取最新 3 條
+            if items:
+                headlines = " ⚡ ".join([item.find('title').text.split(' - ')[0] for item in items])
                 return headlines
-            return "目前暫無最新重大新聞。"
+            return "目前市場無重大突發新聞。"
         except Exception as e:
-            return "無法連線全球新聞網絡..."
+            return f"全球新聞大樓連線異常: Google RSS 資料流拒絕..."
 
 class MacroScanner:
     def get_sentiment_score(self): 

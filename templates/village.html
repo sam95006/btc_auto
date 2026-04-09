@@ -451,11 +451,31 @@
             document.getElementById('m-body').innerHTML = `讀取中...`;
             document.getElementById('modal-overlay').style.display = 'flex';
             fetch(`/api/agent/${id}`).then(r => r.json()).then(data => {
+                
+                let posHtml = '';
+                if(data.current_pos && data.pos_details) {
+                    const pd = data.pos_details;
+                    const pnlColor = pd.floating_pnl >= 0 ? '#10b981' : '#ef4444';
+                    posHtml = `
+                    <div class="data-card" style="border-left: 5px solid ${pd.type === 'LONG'? '#10b981':'#ef4444'}; margin-top:15px; background: ${pd.type === 'LONG'? '#f0fdf4':'#fef2f2'}; border-color: ${pd.type === 'LONG'? '#10b981':'#ef4444'};">
+                        <div style="font-size:12px; font-weight:900; color:${pd.type === 'LONG'? '#166534':'#991b1b'};">現役作戰任務: ${pd.type}</div>
+                        <div style="display:flex; justify-content:space-between; margin-top:8px;">
+                            <div style="font-size:14px; font-weight:800; color:#334155;">作戰均價: $${pd.entry_price.toFixed(2)}</div>
+                            <div style="font-size:14px; font-weight:800; color:#334155;">彈藥數量: ${pd.qty.toFixed(4)}</div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-top:8px;">
+                            <div style="font-size:14px; font-weight:800; color:#334155;">目標現價: $${pd.current_price.toFixed(2)}</div>
+                            <div style="font-size:18px; font-weight:900; color:${pnlColor};">浮動盈虧: ${formatCurrency(pd.floating_pnl)}</div>
+                        </div>
+                    </div>`;
+                }
+
                 document.getElementById('m-body').innerHTML = `
                     <div class="data-card">
                         <div style="font-size:12px; color:#64748b; font-weight:800;">組長 AI 避險指令與反思日誌</div>
                         <p style="font-weight:700; color:#1e293b; line-height:1.6;">"${data.decision}"</p>
                     </div>
+                    ${posHtml}
                     <div style="display:flex; gap:15px; flex-wrap:wrap;">
                         <div class="data-card" style="flex:1; min-width: 120px;">
                             <div style="font-size:12px; color:#64748b; font-weight:800;">團隊支配金庫</div>
