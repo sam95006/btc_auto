@@ -63,24 +63,41 @@ class WhaleWatcher:
 
 class NewsScanner:
     """
-    新聞情感掃描器：分析加密新聞與事件情感
+    新聞情感掃描器：即時抓取全球加密貨幣新聞頭條
     """
     def __init__(self):
         pass
     
     def fetch_latest_sentiment(self):
+        return 0.55 # 暫時保留給舊有邏輯
+        
+    def fetch_real_news(self):
         """
-        獲取最新新聞情感分數 (0-1)
+        從公開 API 獲取全球最新區塊鏈/財經短報
         """
         try:
-            # 簡化版：模擬新聞情感
-            return 0.55
-        except:
-            return 0.5
+            url = "https://min-api.cryptocompare.com/data/v2/news/?lang=EN"
+            response = requests.get(url, timeout=5)
+            data = response.json()
+            if data.get('Data'):
+                news_list = data['Data'][:3] # 取最新 3 條
+                headlines = " ⚡ ".join([f"[{n['source_info']['name']}] {n['title']}" for n in news_list])
+                return headlines
+            return "目前暫無最新重大新聞。"
+        except Exception as e:
+            return "無法連線全球新聞網絡..."
 
-# --- 舊有的 RSS 感測器保持不變 ---
 class MacroScanner:
-    def get_sentiment_score(self): return 0.6
+    def get_sentiment_score(self): 
+        """獲取真實恐懼貪婪指數"""
+        try:
+            res = requests.get("https://api.alternative.me/fng/?limit=1", timeout=5)
+            data = res.json()
+            fng = int(data['data'][0]['value'])
+            return fng / 100.0 # 轉換為 0-1
+        except:
+            return 0.6
+    
     def get_tech_stock_pulse(self): return 1.05
 
 class FedScanner:

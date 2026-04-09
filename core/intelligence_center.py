@@ -30,16 +30,22 @@ class IntelligenceCenter:
         new_bias = (news_score * 0.3) + (stock_score * 0.4) + (fed_score * 0.3)
         self.global_bias = new_bias
         
-        # 5. 產生宏觀分析文字
+        # 5. 抓取真實新聞頭條並整合進宏觀報告
+        try:
+            from sensors.sensors import NewsScanner
+            real_news = NewsScanner().fetch_real_news()
+        except:
+            real_news = "無法獲取即時路透社數據。"
+            
         bias_desc = "中立"
-        if new_bias > 0.65: bias_desc = "🚀 宏觀樂觀 (利好資產)"
-        elif new_bias < 0.35: bias_desc = "💀 宏觀悲觀 (避險啟動)"
+        if new_bias > 0.65: bias_desc = "🚀 宏觀樂觀 (利好避險資產)"
+        elif new_bias < 0.35: bias_desc = "💀 宏觀悲觀 (現金為王)"
         
-        self.macro_report = f"【今日宏觀解讀】: {bias_desc} | 美股聯動: {stock_score:.2f} | 聯準會情緒: {fed_score:.2f}"
+        self.macro_report = f"【今日重點快訊】: {real_news}\n\n【宏觀量化指標】: {bias_desc} | 美股聯動: {stock_score:.2f} | 聯準會預期: {fed_score:.2f}"
         
         # 寫入共享存儲
         if self.storage:
-            self.storage.save_global_config('GLOBAL_BIAS', new_bias)
+            self.storage.save_global_config('GLOBAL_BIAS', str(new_bias))
             self.storage.save_global_config('MACRO_REPORT', self.macro_report)
             
         return self.global_bias
