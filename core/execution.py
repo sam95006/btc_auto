@@ -76,6 +76,7 @@ class PaperTrader:
         
         # 每日交易目標
         self.is_pepe = is_pepe
+        self.cash_usage_pct = 0.4 # 預設使用 40% 資金，由組長聲望動態調整
         if is_pepe:
             # PEPE 無限交易，但要達到 90% 勝率
             self.daily_target = DailyTradeTarget(symbol, target_trades=999, min_winning_trades=9)
@@ -356,7 +357,7 @@ class PaperTrader:
                     return f"🛡️ 【AI 攔截 | REFLECTION】\n{self.symbol} 當前環境與歷史虧損案例極度相似，已自動取消進場以規避風險。\n過去原因: {reason}"
 
             if is_sniper or scalper_signal == "BUY_SCALP":
-                qty = (self.cash * 0.4) / current_price 
+                qty = (self.cash * self.cash_usage_pct) / current_price 
                 self.position = qty
                 self.entry_price = current_price
                 self.trailing_high = current_price
@@ -367,7 +368,7 @@ class PaperTrader:
                           f"🪙 幣種: {self.symbol}\n📍 價格: ${current_price:,.4f}\n🧠 AI 信心: {context.get('ml_prob', 0)*100:.0f}%\n🛡️ 風險: ATR 保護中")
 
             elif scalper_signal == "SELL_SCALP":
-                qty = (self.cash * 0.4) / current_price
+                qty = (self.cash * self.cash_usage_pct) / current_price
                 self.position = -qty
                 self.entry_price = current_price
                 self.trailing_low = current_price

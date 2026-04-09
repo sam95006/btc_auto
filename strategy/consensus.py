@@ -35,7 +35,7 @@ class ExpertAgent:
         return "HOLD", 0.5
 
 class ChiefAnalyst:
-    """首席交易員 (組長): 負責統整專家團隊建議並拍板下單"""
+    """首席交易員 (組長): 負責統整專家團隊建議，具備達爾文權重系統 (根據績效調整話語權)"""
     def __init__(self, symbol, storage):
         self.symbol = symbol
         self.storage = storage
@@ -46,10 +46,35 @@ class ChiefAnalyst:
             'guard': ExpertAgent("Guard", "RISK_GUARD", symbol, storage)
         }
         self.decision_log = []
+        self.prestige_score = 1.0 # 初始聲望為 1.0
+
+    def _calculate_prestige(self):
+        """達爾文機制: 根據最近兩天的績效計算組長聲望"""
+        try:
+            perf = self.storage.get_symbol_performance(self.symbol, days=2)
+            if not perf or perf.get('total_trades', 0) < 3:
+                return 1.0
+            
+            pnl = perf.get('total_pnl', 0)
+            win_rate = float(perf.get('win_rate', '50%').replace('%','')) / 100
+            
+            # 聲望公式: 1.0(底薪) + 績效加成 (封頂 2.0, 底限 0.5)
+            # 賺錢且勝率高 -> 聲望上升；賠錢 -> 聲望降為 0.5 (觀察期)
+            if pnl > 0:
+                score = 1.0 + (pnl / 100) + (win_rate - 0.5)
+            else:
+                score = 0.5 # 進入冷靜期
+                
+            return max(0.5, min(2.0, score))
+        except:
+            return 1.0
 
     def make_final_decision(self, df_1m, df_15m, global_context):
-        """組長拍板流程"""
+        """組長拍板流程: 包含聲望與資金權重"""
+        self.prestige_score = self._calculate_prestige()
+        
         votes = {}
+        # ... (專家投票邏輯保持不變) ...
         for name, agent in self.team.items():
             vote, confidence = agent.analyze(df_1m, df_15m, global_context)
             votes[name] = {"vote": vote, "conf": confidence}

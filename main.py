@@ -3,24 +3,42 @@ import threading
 import os
 import sys
 
-# 【路徑環境強化】確保在 Zeabur/Linux 環境能正確載入子模組
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# ==========================================
+# 【核心修復：路徑抬升系統】
+# 恢復早上的啟動穩定性：將所有子目錄加入 Python 搜尋路徑
+# ==========================================
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(ROOT_DIR)
+for folder in ['core', 'strategy', 'sensors', 'agents']:
+    sys.path.append(os.path.join(ROOT_DIR, folder))
+# ==========================================
 
 from datetime import datetime
-from core.datafeed import DataFeed
-from strategy.indicators import calculate_all
-from strategy.strategy import check_signal_scalper, check_signal_sniper, get_support_resistance_levels
-from core.execution import PaperTrader
-from core.storage import Storage
-from core.notifier import send_line
-from webhook import app as webhook_app
-from strategy.learning import AdaptiveMLPredictor, ReflectionEngine
-from sensors.sensors import MacroScanner, WhaleWatcher, NewsScanner, FedScanner, PoliticalScanner, TradingViewScanner
-from strategy.performance_optimizer import PerformanceOptimizer
-from strategy.market_regime_detector import MarketRegimeDetector
-from agents.market_scanner import DynamicMarketScanner
-from core.intelligence_center import IntelligenceCenter, AIRoundTable
-from strategy.consensus import ChiefAnalyst
+try:
+    from core.datafeed import DataFeed
+    from strategy.indicators import calculate_all
+    from strategy.strategy import check_signal_scalper, check_signal_sniper
+    from core.execution import PaperTrader
+    from core.storage import Storage
+    from core.notifier import send_line
+    from webhook import app as webhook_app
+    from strategy.learning import AdaptiveMLPredictor
+    from sensors.sensors import MacroScanner, WhaleWatcher, NewsScanner, FedScanner, PoliticalScanner, TradingViewScanner
+    from strategy.performance_optimizer import PerformanceOptimizer
+    from strategy.market_regime_detector import MarketRegimeDetector
+    from agents.market_scanner import DynamicMarketScanner
+    from core.intelligence_center import IntelligenceCenter, AIRoundTable
+    from strategy.consensus import ChiefAnalyst
+except ImportError:
+    # 兼容性導入：如果上面的 package 導入失敗，嘗試直接導入 (針對舊版路徑)
+    from datafeed import DataFeed
+    from indicators import calculate_all
+    from strategy import check_signal_scalper
+    from execution import PaperTrader
+    from storage import Storage
+    from notifier import send_line
+    from learning import AdaptiveMLPredictor
+    from sensors import MacroScanner, WhaleWatcher
 
 # 1. 配置多幣種監控名單
 MONITOR_SYMBOLS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT']
@@ -132,7 +150,10 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
                 if extreme_funding and scalper_signal == "BUY_SCALP":
                     pass
                 
-                # 執行引擎
+                # 執行引擎 (根據組長聲望調整資金規模)
+                prestige = chiefs[sym].prestige_score
+                adjusted_cash_pct = 0.4 * prestige
+                
                 context = {
                     'rsi': df_1m.iloc[-1].get('RSI', 50),
                     'ema200': m15_ema200,
@@ -141,8 +162,12 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
                     'rv': df_1m.iloc[-1].get('RV', 1.0),
                     'btc_crash': btc_crash,
                     'is_extreme_funding': extreme_funding,
-                    'regime': regime_name
+                    'regime': regime_name,
+                    'prestige': prestige
                 }
+                
+                # 重新動態調整下單量
+                trader.cash_usage_pct = adjusted_cash_pct
                 
                 report = trader.execute(scalper_signal, "HOLD", df_1m.iloc[-1]['close'], storage, atr=df_1m.iloc[-1]['ATR'], context=context)
                 
