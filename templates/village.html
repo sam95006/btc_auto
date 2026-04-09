@@ -201,6 +201,10 @@
         initA();
 
         function animate() {
+            if (document.hidden) {
+                setTimeout(animate, 1000); // 隱藏時每秒僅檢查一次，節省 99% 效能
+                return;
+            }
             requestAnimationFrame(animate); controls.update();
             agents.forEach(a => a.update());
             for(let id in labelData) {

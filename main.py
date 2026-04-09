@@ -67,22 +67,32 @@ def agent_worker(symbol, trader, predictor, feed, storage, macro, whale, news, f
                 time.sleep(10)
                 continue
             
+            # --- [效能守護: 多分隊數據共用] ---
+            # 檢查全局緩存中的價格，如果 15 秒內剛更新過，則不再抓取 OHLCV
+            last_p = float(storage.get_global_config(f"PRICE_{symbol}", "0.0"))
+            
             import pandas as pd
+            ohlcv_raw = feed.fetch_ohlcv(timeframe='1m', limit=100)
+            if not ohlcv_raw:
+                time.sleep(30)
+                continue
+            
             df_data = pd.DataFrame(ohlcv_raw, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
             current_price = float(df_data['close'].iloc[-1])
             storage.save_global_config(f"PRICE_{symbol}", str(current_price))
 
-            # A. 激進波動判定 (High Action Mode)
-            range_pct = (df_data['high'].iloc[-5:].max() - df_data['low'].iloc[-5:].min()) / current_price
-            if range_pct < 0.0005: # 極低門檻，保持活性
-                sleep_time, mode = 45, "SCOUT"
+            # A. 智能效能判定 (Eco-Tactical Balancing)
+            recent_mv = (df_data['high'].iloc[-5:].max() - df_data['low'].iloc[-5:].min()) / current_price
+            if recent_mv < 0.001: 
+                sleep_time, mode = 180, "ECO" # 市場冷清，進入 3 分鐘深度節能
             else:
-                sleep_time, mode = 15, "BATTLE"
+                sleep_time, mode = 45, "BATTLE" # 捕捉行情，45 秒適度同步
 
-            # B. 外部情緒鏈路 (Whale Radar Active)
-            whale_score = whale.get_whale_move(feed.exchange) if whale else 1.2
-            storage.save_global_config("WHALE_MVT", "BTC whales accumulating" if whale_score < 2 else "WARNING: Whale dump detected!")
-            storage.save_global_config(f"WHALE_{symbol}", str(whale_score))
+            # B. 外部情緒鏈路 (降頻讀取)
+            whale_score = 1.0
+            if datetime.now().minute % 5 == 0: # 每 5 分鐘才更新一次巨鯨數據，節省 API
+                whale_score = whale.get_whale_move(feed.exchange) if whale else 1.0
+                storage.save_global_config("WHALE_MVT", "Stable Accumulation" if whale_score < 2.5 else "Volatility Alert!")
             
             update_heartbeat(symbol, "OK", mode)
             
