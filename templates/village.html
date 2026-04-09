@@ -3,180 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metropolis v6.5 | SimCity Edition</title>
+    <title>Metropolis v6.7 | SimCity Masterpiece</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
-        :root { --primary: #0284c7; --gold: #d97706; --ok: #16a34a; --err: #dc2626; --bg-sky: #87ceeb; --glass: rgba(255, 255, 255, 0.9); }
-        body { margin: 0; padding: 0; overflow: hidden; font-family: 'Outfit', sans-serif; background: var(--bg-sky); color: #1e293b; }
+        :root { --sim-blue: #0ea5e9; --sim-green: #22c55e; --sim-yellow: #f59e0b; --sim-bg: #e2e8f0; --sim-white: rgba(255, 255, 255, 0.95); }
+        body { margin: 0; padding: 0; overflow: hidden; font-family: 'Outfit', sans-serif; background: #87ceeb; color: #1e293b; }
 
-        /* HUD 固定層 */
+        /* 消滅賽博，回歸經典模擬 UI */
         #hud-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 200; }
         
         .sim-panel { 
-            position: relative; pointer-events: auto; background: var(--glass); 
-            border: 2px solid #0284c7; border-radius: 12px;
-            padding: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            backdrop-filter: blur(5px);
+            position: relative; pointer-events: auto; background: var(--sim-white); 
+            border-radius: 25px; padding: 22px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border: 4px solid white;
         }
         
-        #left-stack { position: absolute; top: 25px; left: 25px; display: flex; flex-direction: column; gap: 15px; }
-        #right-stack { position: absolute; top: 25px; right: 25px; display: flex; flex-direction: column; gap: 15px; }
-        #bottom-stack { position: absolute; bottom: 85px; right: 25px; width: 220px; }
+        #left-stack { position: absolute; top: 30px; left: 30px; display: flex; flex-direction: column; gap: 20px; }
+        #right-stack { position: absolute; top: 30px; right: 30px; display: flex; flex-direction: column; gap: 20px; }
+        #bottom-stack { position: absolute; bottom: 80px; right: 30px; width: 220px; }
 
         .price-label { 
-            position: absolute; color: white; font-size: 11px; font-weight: 800; pointer-events: none;
-            background: #0284c7; padding: 4px 10px; border-radius: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            position: absolute; background: white; color: #0284c7; padding: 6px 14px; 
+            border-radius: 15px; font-size: 13px; font-weight: 900; pointer-events: none; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 2px solid #bae6fd;
+            white-space: nowrap; transition: 0.1s;
         }
 
         #news-ticker { 
             position: fixed; bottom: 0; left: 0; width: 100%; background: #0c4a6e; 
-            color: white; padding: 10px 0; z-index: 300; border-top: 4px solid #fbbf24;
+            color: #ffffff; padding: 12px 0; z-index: 300; border-top: 5px solid #fbbf24;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
         }
-        .ticker { font-family: monospace; font-size: 14px; font-weight: 900; }
+        .ticker { font-size: 15px; font-weight: 900; letter-spacing: 1px; }
 
-        /* 圓桌會議 Pill */
-        .mt-pill { 
-            padding: 6px 12px; border-radius: 8px; background: #e2e8f0; color: #64748b; 
-            font-size: 11px; font-weight: 900; cursor: pointer; transition: 0.2s; border: none;
+        .btn-sim {
+            padding: 8px 15px; border-radius: 12px; border: none; background: #f1f5f9; 
+            color: #475569; font-weight: 800; cursor: pointer; transition: 0.2s;
         }
-        .mt-pill:hover { background: #0284c7; color: white; }
-        .mt-pill.active { background: #0284c7; color: white; box-shadow: 0 0 10px rgba(2,132,199,0.5); }
-
-        .status-tag { font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; }
-        .tag-ok { background: #dcfce7; color: #166534; }
-        .tag-err { background: #fee2e2; color: #991b1b; }
+        .btn-sim:hover { background: var(--sim-blue); color: white; }
+        
+        .status-pill { font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 10px; }
+        .active-ok { background: #dcfce7; color: #166534; }
+        .active-err { background: #fee2e2; color: #991b1b; }
     </style>
 </head>
 <body>
     <div id="webgl-container" style="position: absolute; width:100%; height:100%; cursor: grab;"></div>
-    <div id="label-container" style="position: absolute; width:100%; height:100%; pointer-events: none; z-index: 5;"></div>
+    <div id="label-container" style="position: absolute; width:100%; height:100%; pointer-events: none; z-index: 50;"></div>
 
     <div id="hud-container">
         <div id="left-stack">
             <div class="sim-panel" style="width: 320px;">
-                <div style="font-size: 11px; font-weight:900; color:var(--primary); letter-spacing:2px; margin-bottom:12px;">COMMANDER HUB v6.5</div>
+                <div style="font-size: 12px; font-weight:900; color:var(--sim-blue); margin-bottom:15px; text-transform:uppercase; letter-spacing:1px;">🏙️ SIM METROPOLIS v6.7</div>
                 
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px; border-bottom:1px solid #e2e8f0; padding-bottom:6px;">
-                    <span>🇹🇼 台股大盤</span>
-                    <span style="font-weight:900;"><span id="taiex-idx" style="color:#0284c7;">20,000</span> <small id="taiex-status" style="font-size:9px; color:#64748b;">已收盤</small></span>
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+                    <span style="font-weight:700;">台股指數</span>
+                    <span id="taiex-idx" style="font-weight:900; color:var(--sim-blue);">--</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                    <span>🇺🇸 標普 500</span>
-                    <span style="font-weight:900;"><span id="sp500-idx" style="color:#0284c7;">5,100</span> <small id="sp500-status" style="font-size:9px; color:#64748b;">開盤中</small></span>
+                <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                    <span style="font-weight:700;">標普 500</span>
+                    <span id="sp500-idx" style="font-weight:900; color:var(--sim-blue);">--</span>
                 </div>
                 
-                <div style="background:#f0f9ff; padding:15px; border-radius:10px; border:2px solid #bae6fd;">
-                    <div style="font-size:10px; color:#0369a1; font-weight:800;">中央銀行放款儲備</div>
-                    <div style="font-size:26px; font-weight:900; color:#0c4a6e;">1000.0 <small style="font-size:12px;">USDT</small></div>
+                <div style="background:#f0fdf4; padding:18px; border-radius:20px; border:3px solid #bbf7d0;">
+                    <div style="font-size:11px; color:#166534; font-weight:800; margin-bottom:5px;">中央銀行金庫儲備</div>
+                    <div style="font-size:30px; font-weight:900; color:#14532d;">1000.0 <small style="font-size:14px;">USDT</small></div>
                 </div>
             </div>
 
             <div class="sim-panel" style="width: 320px;">
-                <div style="font-size:10px; font-weight:900; color:#b45309; margin-bottom:10px;">🏛️ 圓桌會議紀錄 (點擊時段查看回顧)</div>
-                <div id="mt-slots" style="display:flex; gap:8px; margin-bottom:12px;">
-                    <button class="mt-pill" onclick="showLog('00:00')">00:00</button>
-                    <button class="mt-pill" onclick="showLog('06:00')">06:00</button>
-                    <button class="mt-pill" onclick="showLog('12:00')">12:00</button>
-                    <button class="mt-pill" onclick="showLog('18:00')">18:00</button>
+                <div style="font-size:11px; font-weight:900; color:#b45309; margin-bottom:12px;">🏛️ 圓桌會議方略</div>
+                <div id="mt-slots" style="display:flex; gap:10px; margin-bottom:15px;">
+                    <button class="btn-sim" onclick="showLog('00:00')">00:00</button>
+                    <button class="btn-sim" onclick="showLog('06:00')">06:00</button>
+                    <button class="btn-sim" onclick="showLog('12:00')">12:00</button>
+                    <button class="btn-sim" onclick="showLog('18:00')">18:00</button>
                 </div>
-                <div id="rt-log" style="font-size:12px; color:#334155; line-height:1.6; background:white; padding:12px; border-radius:8px; border:1px solid #e2e8f0; height:60px; overflow-y:auto;">對接同步中...</div>
+                <div id="rt-log" style="font-size:13px; color:#334155; line-height:1.6; background:white; padding:15px; border-radius:15px; border:1px solid #e2e8f0; height:70px; overflow-y:auto;">市長你好，數據同步中...</div>
             </div>
         </div>
 
         <div id="right-stack">
-            <div class="sim-panel" style="width: 240px; text-align:right;">
-                <div style="font-size:10px; color:#64748b; font-weight:900;">全部分隊累計盈虧</div>
-                <div id="rev-all" style="font-size:32px; font-weight:900; color:#b45309;">+0.0 U</div>
-                <div id="daily-debrief" style="margin-top:10px; font-size:11px; color:#0284c7; line-height:1.4; font-weight:700;">數據分析中...</div>
+            <div class="sim-panel" style="width: 250px; text-align:right;">
+                <div style="font-size:11px; color:var(--sim-blue); font-weight:900;">全城總累計收益</div>
+                <div id="rev-all" style="font-size:35px; font-weight:900; color:var(--sim-yellow);">+0.0 U</div>
+                <div id="daily-debrief" style="margin-top:10px; font-size:12px; color:#64748b; font-weight:700; background:#f8fafc; padding:10px; border-radius:10px;">日報生成中...</div>
             </div>
         </div>
 
         <div id="bottom-stack" class="sim-panel">
-            <div style="font-size:10px; font-weight:900; margin-bottom:10px; color:#64748b;">分隊引擎監視器</div>
+            <div style="font-size:11px; font-weight:900; margin-bottom:12px; color:#64748b;">分隊特工狀態儀</div>
             <div id="agent-list"></div>
         </div>
     </div>
 
-    <div id="news-ticker"><div id="global-ticker" class="ticker" style="padding:0 20px;">📡 即時情報總站數據傳輸中...</div></div>
+    <div id="news-ticker"><div id="global-ticker" class="ticker" style="padding:0 20px;">📡 即時情報同步中... </div></div>
 
-    <div id="modal-overlay" onclick="this.style.display='none'"><div id="modal-box" style="background:white; border-radius:20px; padding:30px; width:400px; color:#1e293b;" onclick="event.stopPropagation()">
-        <h3 id="m-title" style="margin:0; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">詳情</h3>
-        <div id="m-body" style="margin-top:20px;"></div>
-        <button onclick="document.getElementById('modal-overlay').style.display='none'" style="width:100%; margin-top:20px; padding:15px; border:none; background:#0284c7; color:white; border-radius:10px; font-weight:900; cursor:pointer;">返回城市</button>
+    <div id="modal-overlay" onclick="this.style.display='none'"><div id="modal-box" style="background:white; border-radius:30px; padding:35px; width:450px; color:#1e293b; box-shadow: 0 40px 100px rgba(0,0,0,0.2);" onclick="event.stopPropagation()">
+        <h3 id="m-title" style="margin:0; border-bottom:3px solid #f1f5f9; padding-bottom:20px; font-size:24px;">🏢 城市物件</h3>
+        <div id="m-body" style="margin-top:25px;"></div>
+        <button onclick="document.getElementById('modal-overlay').style.display='none'" style="width:100%; margin-top:25px; padding:18px; border:none; background:var(--sim-blue); color:white; border-radius:20px; font-weight:900; cursor:pointer; font-size:16px;">回城巡視</button>
     </div></div>
 
     <script>
         const scene = new THREE.Scene(); scene.background = new THREE.Color(0x87ceeb);
-        const camera = new THREE.PerspectiveCamera(40, window.innerWidth/window.innerHeight, 1, 4000);
-        camera.position.set(700, 700, 700);
+        const camera = new THREE.PerspectiveCamera(38, window.innerWidth/window.innerHeight, 1, 5000);
+        camera.position.set(800, 800, 800);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight); renderer.shadowMap.enabled = true;
         document.getElementById('webgl-container').appendChild(renderer.domElement);
         const controls = new THREE.OrbitControls(camera, renderer.domElement); 
-        controls.enableDamping = true; controls.maxPolarAngle = Math.PI / 2.1;
+        controls.enableDamping = true; controls.maxPolarAngle = Math.PI / 2.2;
 
-        // 模擬城市地圖組件
-        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-        const sun = new THREE.DirectionalLight(0xffffff, 1.0); sun.position.set(200, 600, 200); sun.castShadow = true; scene.add(sun);
+        // --- 模擬城市 100% 景觀 ---
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const sun = new THREE.DirectionalLight(0xffffff, 1.0); sun.position.set(200, 600, 400); sun.castShadow = true;
+        sun.shadow.mapSize.width = 2048; sun.shadow.mapSize.height = 2048; scene.add(sun);
         
-        // 1. 翠綠草地
-        const ground = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), new THREE.MeshStandardMaterial({color: 0x7cfc00}));
+        // 1. 翠綠草皮
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.MeshStandardMaterial({color: 0x55aa55}));
         ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
-        // 2. 蔚藍河流
-        const river = new THREE.Mesh(new THREE.PlaneGeometry(2000, 300), new THREE.MeshStandardMaterial({color: 0x1e90ff, transparent:true, opacity:0.8}));
-        river.rotation.x = -Math.PI/2; river.position.set(0, 0.5, -600); scene.add(river);
-        // 3. 網格模擬街道
-        const grid = new THREE.GridHelper(2000, 40, 0xffffff, 0xffffff); grid.position.y = 0.2; scene.add(grid);
+        // 2. 蔚藍大河
+        const river = new THREE.Mesh(new THREE.PlaneGeometry(3000, 400), new THREE.MeshStandardMaterial({color: 0x4488ff, transparent:true, opacity:0.9}));
+        river.rotation.x = -Math.PI/2; river.position.set(0, 1, -800); scene.add(river);
+        // 3. 亮白色街道
+        const grid = new THREE.GridHelper(2000, 40, 0xaaaaaa, 0xaaaaaa); grid.position.y = 0.5; scene.add(grid);
+        // 4. 灰藍色主幹道
+        const mainRoad = new THREE.Mesh(new THREE.PlaneGeometry(2000, 80), new THREE.MeshStandardMaterial({color: 0x444444}));
+        mainRoad.rotation.x = -Math.PI/2; mainRoad.position.y = 1.1; scene.add(mainRoad);
 
         const buildings = {}; const bObjs = []; const labelData = {};
         function addB(id, name, color, h, x, z) {
             const grp = new THREE.Group(); grp.position.set(x, 0, z);
-            const body = new THREE.Mesh(new THREE.BoxGeometry(60, h, 60), new THREE.MeshStandardMaterial({ color, roughness:0.2 }));
+            // 模擬城市風格大樓 (彩色幾何)
+            const body = new THREE.Mesh(new THREE.BoxGeometry(70, h, 70), new THREE.MeshStandardMaterial({ color, roughness:0.1 }));
             body.position.y = h/2; body.castShadow = true; grp.add(body);
-            // 屋頂造型
-            const roof = new THREE.Mesh(new THREE.CylinderGeometry(20, 30, 10, 4), new THREE.MeshStandardMaterial({color: 0xffffff}));
-            roof.position.y = h + 5; roof.rotation.y = Math.PI/4; grp.add(roof);
+            // 屋頂造型 (經典藍/白頂)
+            const roof = new THREE.Mesh(new THREE.CylinderGeometry(20, 35, 15, 4), new THREE.MeshStandardMaterial({color: 0xffffff}));
+            roof.position.y = h + 7; roof.rotation.y = Math.PI/4; grp.add(roof);
+            // 加入小樹
+            for(let i=0; i<3; i++) {
+                const tree = new THREE.Group();
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 8), new THREE.MeshStandardMaterial({color: 0x5e3a00}));
+                trunk.position.y = 4; tree.add(trunk);
+                const leaves = new THREE.Mesh(new THREE.SphereGeometry(6, 8, 8), new THREE.MeshStandardMaterial({color: 0x22c55e}));
+                leaves.position.y = 12; tree.add(leaves);
+                tree.position.set(45 + i*15, 0, 45 + i*10); grp.add(tree);
+            }
             scene.add(grp); buildings[id] = grp; body.userData = { id, name }; bObjs.push(body);
             const lbl = document.createElement('div'); lbl.className = 'price-label';
             document.getElementById('label-container').appendChild(lbl);
-            labelData[id] = { el: lbl, obj: grp, h: h+10 };
+            labelData[id] = { el: lbl, obj: grp, h: h+15 };
         }
 
-        addB('BTC', 'BTC 指揮塔', 0x334155, 180, -300, -300);
-        addB('ETH', 'ETH 研發部', 0x475569, 140, 300, -300);
-        addB('SOL', 'SOL 交易站', 0x1e293b, 110, -300, 300);
-        addB('XAUT', 'XAUT 金庫', 0xd97706, 120, 600, 0); 
-        addB('PEPE', 'PEPE 特遣隊', 0x166534, 90, 300, 300);
-        addB('TREASURY', '大金庫 (放款中)', 0x78350f, 100, 0, 0);
-        
-        addB('NEWS', '新聞轉播塔', 0x0c4a6e, 220, 0, 600);
-        addB('SPECIAL', '雷達掃描部 (100U)', 0x475569, 210, -600, 0);
+        addB('BTC', 'BTC 分析中心', 0x3b82f6, 200, -350, -350);
+        addB('ETH', 'ETH 智能部隊', 0xd946ef, 160, 350, -350);
+        addB('SOL', 'SOL 快速響應', 0x2dd4bf, 140, -350, 350);
+        addB('XAUT', 'XAUT 黃金儲備', 0xf97316, 170, 600, 350); 
+        addB('PEPE', 'PEPE 迷因部隊', 0x22c55e, 100, 350, 350);
+        addB('TREASURY', '中央大金庫 (1000U)', 0xca8a04, 130, 0, 0);
+        addB('NEWS', '都市放送塔', 0xef4444, 250, 0, -600);
+        addB('SPECIAL', '雷達掃描部 (100U)', 0x64748b, 230, -600, 0);
 
-        // --- 小人系統 ---
+        // --- 樂活小人系統 ---
         const agents = [];
         class Agent {
             constructor(team, color, base) {
                 this.g = new THREE.Group();
-                const b = new THREE.Mesh(new THREE.CapsuleGeometry(3, 8), new THREE.MeshStandardMaterial({color}));
-                b.position.y = 7; this.g.add(b);
-                this.g.position.set(base.x + (Math.random()-0.5)*150, 0, base.z + (Math.random()-0.5)*150);
+                const body = new THREE.Mesh(new THREE.CapsuleGeometry(3, 7), new THREE.MeshStandardMaterial({color}));
+                body.position.y = 7; this.g.add(body);
+                const head = new THREE.Mesh(new THREE.SphereGeometry(3, 8), new THREE.MeshStandardMaterial({color: 0xffdbac}));
+                head.position.y = 13; this.g.add(head);
+                this.g.position.set(base.x + (Math.random()-0.5)*180, 0, base.z + (Math.random()-0.5)*180);
                 scene.add(this.g); this.base = base; this.target = new THREE.Vector3().copy(this.g.position);
             }
             update() {
-                if(this.g.position.distanceTo(this.target) < 5) {
-                    this.target.set(this.base.x + (Math.random()-0.5)*200, 0, this.base.z + (Math.random()-0.5)*200);
+                if(this.g.position.distanceTo(this.target) < 10) {
+                    this.target.set(this.base.x + (Math.random()-0.5)*250, 0, this.base.z + (Math.random()-0.5)*250);
                 } else {
                     const d = new THREE.Vector3().subVectors(this.target, this.g.position).normalize();
-                    this.g.position.addScaledVector(d, 0.6);
+                    this.g.position.addScaledVector(d, 0.7);
                     this.g.lookAt(this.target.x, 0, this.target.z);
+                    this.g.rotation.x = Math.sin(Date.now()*0.015)*0.1; 
                 }
             }
         }
         function initA() {
             Object.keys(buildings).forEach(id => {
-                for(let i=0; i<3; i++) agents.push(new Agent(id, buildings[id].children[0].material.color, buildings[id].position));
+                const c = buildings[id].children[0].material.color;
+                for(let i=0; i<4; i++) agents.push(new Agent(id, c, buildings[id].position));
             });
         }
         initA();
@@ -187,8 +205,7 @@
             for(let id in labelData) {
                 const vec = new THREE.Vector3().setFromMatrixPosition(labelData[id].obj.matrixWorld);
                 vec.y = labelData[id].h + 10; vec.project(camera);
-                const x = (vec.x * 0.5 + 0.5) * window.innerWidth;
-                const y = (-(vec.y * 0.5 - 0.5) * window.innerHeight);
+                const x = (vec.x * 0.5 + 0.5) * window.innerWidth; const y = (-(vec.y * 0.5 - 0.5) * window.innerHeight);
                 labelData[id].el.style.left = x + 'px'; labelData[id].el.style.top = y + 'px';
                 labelData[id].el.style.display = (vec.z < 1 && x > 0 && x < window.innerWidth) ? 'block' : 'none';
             }
@@ -198,9 +215,9 @@
 
         window.meetingData = {};
         function showLog(time) {
-            document.querySelectorAll('.mt-pill').forEach(p => p.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById('rt-log').innerText = window.meetingData[time] || "該時段尚未召開會議或無數據。";
+            document.querySelectorAll('.btn-sim').forEach(p => p.style.background = '#f1f5f9');
+            event.target.style.background = '#0ea5e9'; event.target.style.color = 'white';
+            document.getElementById('rt-log').innerText = window.meetingData[time] || "會議日誌同步中...";
         }
 
         async function sync() {
@@ -208,32 +225,21 @@
                 const r = await fetch('/api/stats'); const d = await r.json();
                 document.getElementById('rev-all').innerText = `${d.total_pnl.toFixed(1)} U`;
                 document.getElementById('daily-debrief').innerText = d.daily_debrief;
-                document.getElementById('taiex-idx').innerText = d.taiex_info.index;
-                document.getElementById('taiex-status').innerText = d.taiex_info.status;
-                document.getElementById('sp500-idx').innerText = d.sp500_info.index;
-                document.getElementById('sp500-status').innerText = d.sp500_info.status;
+                document.getElementById('taiex-idx').innerText = `${d.taiex_info.index} (${d.taiex_info.status})`;
+                document.getElementById('sp500-idx').innerText = `${d.sp500_info.index} (${d.sp500_info.status})`;
                 
                 window.meetingData = d.meeting_logs;
-                // 自動亮起目前時段
-                const nowH = new Date().getHours();
-                const slots = ["00:00", "06:00", "12:00", "18:00"];
-                let cur = "00:00"; 
-                slots.forEach(s => { if(nowH >= parseInt(s)) cur = s; });
-                if(!document.querySelector('.mt-pill.active')) {
-                    document.querySelectorAll('.mt-pill').forEach(p => { if(p.innerText === cur) p.click(); });
-                }
-
                 const aList = document.getElementById('agent-list'); aList.innerHTML = '';
                 ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XAUT/USDT', 'PEPE/USDT', 'SPECIAL'].forEach(s => {
                     const h = d.agent_health[s] || { status: 'OFFLINE' };
-                    const tag = h.status === 'OK' ? '<span class="status-tag tag-ok">運作中</span>' : '<span class="status-tag tag-err">失聯中</span>';
-                    aList.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:11px;"><span>${s}</span>${tag}</div>`;
+                    const tag = h.status === 'OK' ? '<span class="status-pill active-ok">運行中</span>' : '<span class="status-pill active-err">失聯中</span>';
+                    aList.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;"><span>${s}</span>${tag}</div>`;
                 });
                 
                 for(let id in labelData) {
                     if(id === 'NEWS') { labelData[id].el.innerText = "情報播報塔"; continue; }
-                    if(id === 'TREASURY') { labelData[id].el.innerText = `金庫餘額: ${d.team_accounts['TREASURY'].cash.toFixed(1)} U`; continue; }
-                    if(id === 'SPECIAL') { labelData[id].el.innerText = `雷達站: ${d.team_accounts['SPECIAL'].cash.toFixed(1)} U`; continue; }
+                    if(id === 'TREASURY') { labelData[id].el.innerText = `城市金庫: ${d.team_accounts['TREASURY'].cash.toFixed(1)} U`; continue; }
+                    if(id === 'SPECIAL') { labelData[id].el.innerText = `雷達掃描: ${d.team_accounts['SPECIAL'].cash.toFixed(1)} U`; continue; }
                     const p = d.prices[id]; if(p && p != "0.0") labelData[id].el.innerText = `${id}: $${parseFloat(p).toLocaleString()}`;
                 }
                 window.liveData = d;
@@ -242,7 +248,7 @@
         setInterval(sync, 4000); sync();
 
         window.addEventListener('click', e => {
-            if(e.target.closest('.sim-panel') || e.target.closest('.mt-pill')) return;
+            if(e.target.closest('.sim-panel') || e.target.closest('.btn-sim')) return;
             const ray = new THREE.Raycaster(); const mouse = new THREE.Vector2((e.clientX/window.innerWidth)*2-1, -(e.clientY/window.innerHeight)*2+1);
             ray.setFromCamera(mouse, camera);
             const hits = ray.intersectObjects(bObjs);
@@ -250,30 +256,26 @@
                 const ud = hits[0].object.userData;
                 const mTitle = document.getElementById('m-title');
                 const mBody = document.getElementById('m-body');
-                
                 if(ud.id === 'NEWS') {
-                    mTitle.innerText = `📡 新聞情報總站 (分類播報)`;
+                    mTitle.innerText = `📡 ${ud.name}`;
                     mBody.innerHTML = `<div style="display:flex; gap:10px; margin-bottom:15px;">
-                        <button onclick="loadNews('intl')" style="flex:1; padding:10px; border-radius:8px; border:1px solid #0284c7; background:none; cursor:pointer;">全球金融</button>
-                        <button onclick="loadNews('crypto')" style="flex:1; padding:10px; border-radius:8px; border:1px solid #0284c7; background:none; cursor:pointer;">加密貨幣</button>
-                        <button onclick="loadNews('fed')" style="flex:1; padding:10px; border-radius:8px; border:1px solid #0284c7; background:none; cursor:pointer;">聯準會動態</button>
-                    </div><div id="news-content" style="background:#f1f5f9; padding:15px; border-radius:10px; font-size:13px; max-height:250px; overflow-y:auto;">請選擇分類...</div>`;
-                    loadNews('intl'); // 預設加載
+                        <button class="btn-sim" onclick="loadNews('intl')">全球金融</button>
+                        <button class="btn-sim" onclick="loadNews('crypto')">虛擬貨幣</button>
+                    </div><div id="news-content" style="background:#f1f5f9; padding:20px; border-radius:20px; font-size:14px; max-height:200px; overflow-y:auto;">市長請選擇頻道...</div>`;
+                    loadNews('intl');
                 } else if(ud.id === 'SPECIAL') {
-                    mTitle.innerText = `🐳 巨鯨巡邏站 (分隊資金: 100U)`;
-                    mBody.innerHTML = `<div style="background:#0c4a6e; color:#7cfc00; padding:20px; border-radius:15px; font-family:monospace; border:2px solid #38bdf8;">
-                        <div style="font-size:12px; border-bottom:1px solid rgba(124,252,0,0.3); padding-bottom:10px; margin-bottom:10px;">[ 雷達掃描結果 ]</div>
-                        <div style="font-size:16px; font-weight:900;">${window.liveData?.whale_mvt || '掃描中...'}</div>
-                        <div style="margin-top:20px; font-size:11px; opacity:0.8;">各項數據對比歷史均值: ${window.liveData?.whale_score || '1.0'}x</div>
+                    mTitle.innerText = `🐳 ${ud.name}`;
+                    mBody.innerHTML = `<div style="background:#0c4a6e; color:#7cfc00; padding:25px; border-radius:20px; font-family:monospace; border:4px solid #38bdf8;">
+                        <div style="font-size:12px; border-bottom:1px solid rgba(124,252,0,0.3); padding-bottom:10px; margin-bottom:15px;">[ 掃描到巨鯨動向 ]</div>
+                        <div style="font-size:18px; font-weight:900;">${window.liveData?.whale_mvt || '雷達掃描中...'}</div>
                     </div>`;
                 } else {
                     const acc = window.liveData?.team_accounts[ud.id + '/USDT'] || window.liveData?.team_accounts[ud.id] || {cash:300, initial:300};
                     mTitle.innerText = `🛡️ ${ud.name}`;
-                    mBody.innerHTML = `<div style="background:#f8fafc; padding:20px; border-radius:15px; border:1px solid #e2e8f0;">
-                        <div style="display:flex; justify-content:space-between; font-weight:900;"><span>當前資本額</span><span>${acc.cash.toFixed(1)} U</span></div>
-                        <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:#64748b;"><span>啟始預算</span><span>${acc.initial} U</span></div>
-                        <div style="margin-top:15px; font-size:14px; font-weight:700; color:#0284c7; border-top:2px solid #f1f5f9; padding-top:10px;">[ 特工想法 ]</div>
-                        <div style="font-size:13px; color:#1e293b; margin-top:5px;">${window.liveData?.thoughts[ud.id] || '特工在崗位上全神貫注...'}</div>
+                    mBody.innerHTML = `<div style="background:#f8fafc; padding:25px; border-radius:20px; border:2px solid #f1f5f9;">
+                        <div style="display:flex; justify-content:space-between; font-weight:900; font-size:16px;"><span>當前資本</span><span>${acc.cash.toFixed(1)} U</span></div>
+                        <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:13px; color:#64748b;"><span>啟始配置</span><span>${acc.initial} U</span></div>
+                        <div style="margin-top:15px; font-size:14px; color:#1e293b; border-top:1px solid #e2e8f0; padding-top:15px;">${window.liveData?.thoughts[ud.id] || '特工正在分析盤勢...'}</div>
                     </div>`;
                 }
                 document.getElementById('modal-overlay').style.display = 'flex';
@@ -281,14 +283,11 @@
         });
 
         async function loadNews(type) {
-            const content = document.getElementById('news-content');
-            content.innerText = "衛星訊號接收中...";
+            const content = document.getElementById('news-content'); content.innerText = "讀取中...";
             try {
                 const r = await fetch('/api/news'); const d = await r.json();
-                let list = d.intl_news;
-                if(type === 'crypto') list = d.crypto_news;
-                if(type === 'fed') list = d.fed_news;
-                content.innerHTML = list.map(n => `<div style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px dashed #cbd5e1;">• ${n}</div>`).join('');
+                let list = (type === 'crypto') ? d.crypto_news : d.intl_news;
+                content.innerHTML = list.map(n => `<div style="margin-bottom:10px;">🏙️ ${n}</div>`).join('');
             } catch(e) { content.innerText = "讀取失敗。"; }
         }
     </script>
