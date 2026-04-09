@@ -39,8 +39,8 @@ macro = MacroScanner()
 fed = FedScanner()
 pol = PoliticalScanner()
 
-# 監控名單
-MONITOR_LIST = ['BTC', 'ETH', 'SOL', 'PEPE']
+# 幣種監控清單 (新增 XAUT 黃金團隊)
+MONITOR_LIST = ['BTC', 'ETH', 'SOL', 'PEPE', 'XAUT']
 
 def reply_message(token, text):
     if line_bot_api:
@@ -97,7 +97,7 @@ class QueryAnalyzer:
             return 'help'
         
         # 提取幣種名稱
-        symbol_match = re.search(r'(BTC|ETH|SOL|PEPE)', query_upper := query.upper())
+        symbol_match = re.search(r'(BTC|ETH|SOL|PEPE|XAUT)', query_upper := query.upper())
         if symbol_match:
             return f'query_{symbol_match.group(1)}'
         
@@ -330,12 +330,19 @@ def api_stats():
                 'qty': p[4]
             })
 
+        # 獲取台北時間
+        from datetime import datetime
+        import pytz
+        tpe_tz = pytz.timezone('Asia/Taipei')
+        now_tpe = datetime.now(tpe_tz)
+        
         return jsonify({
-            'total_pnl': total_pnl,
-            'total_trades': total_trades,
+            "total_pnl": total_pnl,
+            "positions": pos_list,
+            "macro_report": macro_report,
+            "tpe_time": now_tpe.strftime("%H:%M"),
+            "is_night": now_tpe.hour >= 18 or now_tpe.hour < 6,
             'global_bias': global_bias,
-            'macro_report': macro_report,
-            'positions': pos_list,
             'tv_sentiment': {
                 'BTC': TradingViewScanner('BTC/USDT').get_sentiment(),
                 'ETH': TradingViewScanner('ETH/USDT').get_sentiment(),
