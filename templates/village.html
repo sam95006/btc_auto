@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metropolis v5.2 | Ultimate Restored Edition</title>
+    <title>Metropolis v6.0 | Elite Battle Royale</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
-        :root { --primary: #0ea5e9; --gold: #f59e0b; --ok: #10b981; --err: #ef4444; }
+        :root { --primary: #0ea5e9; --gold: #fde047; --ok: #10b981; --err: #ef4444; }
         body { margin: 0; padding: 0; overflow: hidden; font-family: 'Outfit', sans-serif; background: #020617; }
         
         #hud-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
@@ -37,7 +37,6 @@
         @keyframes scroll { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
 
         .market-index { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; font-weight:900;}
-        .mkt-status { font-size: 11px; color: #94a3b8; font-weight: 700; text-align:right;}
     </style>
 </head>
 <body id="main-body">
@@ -46,179 +45,127 @@
 
     <div id="hud-container">
         <div id="left-stack">
-            <div id="command-center" class="panel-box" style="width: 320px;">
-                <div style="font-size: 11px; font-weight:900; color:#94a3b8; letter-spacing:2px; margin-bottom:12px;">ULTIMATE COMMAND v5.2</div>
-                <div id="alarm-banner" style="display:none; background:var(--err); color:white; padding:10px; border-radius:10px; font-weight:900; text-align:center; font-size:12px; margin-bottom:15px; border: 2px solid #f87171;">🏮 警告：市場偵測到異常活動！</div>
+            <div id="command-center" class="panel-box" style="width: 330px;">
+                <div style="font-size: 11px; font-weight:900; color:#94a3b8; letter-spacing:2px; margin-bottom:12px;">SUPREME COMMAND v6.0</div>
+                <div id="alarm-banner" style="display:none; background:var(--err); color:white; padding:10px; border-radius:10px; font-weight:900; text-align:center; font-size:12px; margin-bottom:15px;">🏮 全城進入紅色警戒！</div>
                 
-                <!-- 大盤指數復原 -->
-                <div class="market-index">
-                    <span>🇹🇼 台股大盤</span>
-                    <div>
-                        <div id="taiex-status" class="mkt-status" style="color:var(--primary);">讀取中...</div>
-                    </div>
-                </div>
-                <div class="market-index" style="border-bottom:none; padding-bottom:0;">
-                    <span>🇺🇸 美股標普 500</span>
-                    <div>
-                        <div id="sp500-status" class="mkt-status" style="color:var(--gold);">讀取中...</div>
-                    </div>
+                <div class="market-index"><span>🇹🇼 台股大盤</span><div id="taiex-status" style="font-size:11px; color:var(--primary);">--</div></div>
+                <div class="market-index" style="border:none;"><span>🇺🇸 標普 500</span><div id="sp500-status" style="font-size:11px; color:var(--gold);">--</div></div>
+
+                <div style="margin-top:10px; background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; border:1px dashed rgba(255,255,255,0.2);">
+                    <div style="font-size:10px; color:#94a3b8; margin-bottom:5px;">📰 今日戰果日報</div>
+                    <div id="daily-debrief" style="font-size:13px; font-weight:800; color:var(--gold); line-height:1.5;">正在由 AI 生成日報...</div>
                 </div>
 
-                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:900; color:#cbd5e1; margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
-                    <span>台北: <span id="clock-tpe">--:--:--</span></span>
-                    <span>紐約: <span id="clock-ny">--:--:--</span></span>
-                </div>
-                <div style="margin-top:15px; padding:12px; background:rgba(14, 165, 233, 0.1); border-radius:12px; border:1px solid rgba(14, 165, 233, 0.3);">
-                    <div style="font-size:11px; color:#7dd3fc; margin-bottom:5px;">🏦 中央銀行總備付金</div>
-                    <div id="curr-treasury" style="font-size:24px; font-weight:900; color:#38bdf8;">1000.0 U</div>
+                <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:900; color:#cbd5e1; margin-top:12px; border-top:1px solid rgba(255,255,255,0.1); padding-top:12px;">
+                    <span>台北: <span id="clock-tpe">--:--</span></span>
+                    <span>紐約: <span id="clock-ny">--:--</span></span>
                 </div>
             </div>
 
-            <div id="round-table" class="panel-box" style="width: 320px; border-left: 8px solid var(--gold);">
-                <div style="font-size:11px; font-weight:900; color:var(--gold); margin-bottom:12px; letter-spacing:1px;">🏛️ 頂級圓桌組長會議</div>
-                <div id="mt-list" style="display:flex; gap:8px; margin-bottom:12px;"></div>
-                <div id="rt-log" style="background:rgba(245, 158, 11, 0.05); padding:15px; border-radius:12px; font-size:13px; color:#fde047; line-height:1.6; font-weight:700; border:1px solid rgba(245, 158, 11, 0.2);">
-                    正在建立全城加密鏈路，準備開會紀錄...
-                </div>
+            <div id="round-table" class="panel-box" style="width: 330px; border-left: 8px solid var(--gold);">
+                <div style="font-size:11px; font-weight:900; color:var(--gold); margin-bottom:12px;">🏛️ 圓桌決策共識</div>
+                <div id="mt-list" style="display:flex; gap:6px; margin-bottom:12px;"></div>
+                <div id="rt-log" style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px; font-size:13px; color:#fde047; line-height:1.6; font-weight:700;">同步資訊中...</div>
             </div>
         </div>
 
         <div id="right-stack">
             <div id="revenue-center" class="panel-box" style="width: 260px; text-align:right;">
-                <div style="font-size:11px; font-weight:900; color:#94a3b8;">指揮部總收益回饋</div>
+                <div style="font-size:11px; font-weight:900; color:#94a3b8;">指揮部總收益</div>
                 <div id="rev-all" style="font-size:35px; font-weight:900; color:var(--gold);">+0.0 U</div>
                 <div style="font-size:16px; font-weight:800; color:var(--ok);">今日盈虧: <span id="rev-today">+0.0</span></div>
             </div>
         </div>
 
-        <div id="bottom-stack" class="panel-box" style="width: 280px; background: rgba(15, 23, 42, 0.95);">
-            <div style="font-size:11px; font-weight:900; margin-bottom:10px; color:#94a3b8;">特工座標 & 能量狀態</div>
+        <div id="bottom-stack" class="panel-box" style="width: 280px;">
+            <div style="font-size:11px; font-weight:900; margin-bottom:10px; color:#94a3b8;">特工能量監控</div>
             <div id="agent-list"></div>
         </div>
     </div>
 
-    <div id="news-ticker"><div class="ticker-wrap"><div class="ticker" id="global-ticker">📡 全球金融媒體對接中... 📡</div></div></div>
+    <div id="news-ticker"><div class="ticker-wrap"><div class="ticker" id="global-ticker">📡 全球金融傳感器對接中... 📡</div></div></div>
 
     <div id="modal-overlay" onclick="this.style.display='none'"><div id="modal-box" onclick="event.stopPropagation()">
-        <h2 id="m-title" style="margin:0; font-size:26px; color:#0f172a;">分隊戰報詳情</h2>
+        <h2 id="m-title" style="margin:0; font-size:26px;">分隊日誌</h2>
         <div id="m-body" style="margin-top:25px;"></div>
-        <button onclick="document.getElementById('modal-overlay').style.display='none'" style="width:100%; margin-top:30px; padding:18px; border:none; background:var(--primary); color:white; border-radius:15px; font-weight:900; cursor:pointer; font-size:16px;">關閉回報</button>
+        <button onclick="document.getElementById('modal-overlay').style.display='none'" style="width:100%; margin-top:30px; padding:18px; border:none; background:var(--primary); color:white; border-radius:15px; font-weight:900; cursor:pointer;">關閉</button>
     </div></div>
 
     <script>
         const scene = new THREE.Scene(); scene.background = new THREE.Color(0x020617);
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 1, 5000);
         camera.position.set(450, 480, 450); 
-        
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.getElementById('webgl-canvas-container').appendChild(renderer.domElement);
-
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true; controls.dampingFactor = 0.04;
-        controls.maxPolarAngle = Math.PI / 2.2;
+        controls.enableDamping = true; 
         
         scene.add(new THREE.AmbientLight(0xffffff, 0.5));
         const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
         dirLight.position.set(200, 600, 150); dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 4096; dirLight.shadow.mapSize.height = 4096;
         scene.add(dirLight);
 
-        const grid = new THREE.GridHelper(3000, 40, 0x1e293b, 0x0f172a); 
-        grid.position.y = 0.1; scene.add(grid);
-        
-        const ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.MeshStandardMaterial({color:0x020617, metalness:0.3, roughness:0.8}));
+        const grid = new THREE.GridHelper(3000, 40, 0x1e293b, 0x0f172a); scene.add(grid);
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.MeshStandardMaterial({color:0x020617}));
         ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
 
-        const buildings = []; const labelData = {};
+        // 皇冠模型 (Ace Crown)
+        const crownGroup = new THREE.Group();
+        const crownBase = new THREE.Mesh(new THREE.TorusGeometry(18, 2, 8, 20), new THREE.MeshStandardMaterial({color: 0xfde047, emissive: 0xfde047, emissiveIntensity: 2}));
+        crownGroup.add(crownBase);
+        for(let i=0; i<4; i++){
+            const spike = new THREE.Mesh(new THREE.ConeGeometry(5, 12, 4), new THREE.MeshStandardMaterial({color:0xfde047}));
+            spike.position.set(Math.cos(i*Math.PI/2)*18, 6, Math.sin(i*Math.PI/2)*18);
+            crownGroup.add(spike);
+        }
+        crownGroup.position.set(0, -100, 0); // 初始隱藏
+        scene.add(crownGroup);
+
+        const buildings = {}; const bObjs = []; const labelData = {};
         function addB(id, name, color, h, x, z) {
             const group = new THREE.Group(); group.position.set(x, 0, z);
-            const bMat = new THREE.MeshStandardMaterial({ color, metalness: 0.8, roughness: 0.1 });
-            const body = new THREE.Mesh(new THREE.BoxGeometry(40, h, 40), bMat); 
+            const body = new THREE.Mesh(new THREE.BoxGeometry(40, h, 40), new THREE.MeshStandardMaterial({ color, metalness: 0.8 }));
             body.position.y = h/2; body.castShadow = true; group.add(body);
-            const roof = new THREE.Mesh(new THREE.CylinderGeometry(15, 15, 8, 4), new THREE.MeshStandardMaterial({color:0xffffff, emissive:0x0ea5e9, emissiveIntensity:0.8}));
-            roof.position.y = h; roof.rotation.y = Math.PI/4; group.add(roof);
-            group.userData = { id, name }; scene.add(group); buildings.push(body); body.userData = group.userData;
+            const roof = new THREE.Mesh(new THREE.CylinderGeometry(15, 15, 8, 4), new THREE.MeshStandardMaterial({color:0xffffff, emissive:0x0ea5e9}));
+            roof.position.y = h; group.add(roof);
+            group.userData = { id, name }; scene.add(group); 
+            buildings[id] = group; bObjs.push(body); body.userData = group.userData;
             const lbl = document.createElement('div'); lbl.className = 'price-label';
-            lbl.innerText = `${name}: 同步中...`;
             document.getElementById('label-container').appendChild(lbl);
             labelData[id] = { element: lbl, object: group, height: h };
         }
 
-        addB('BTC', 'BTC 指揮總部', 0x1e293b, 120, -120, -120);
-        addB('ETH', 'ETH 核心大廈', 0x334155, 95, 120, -120);
-        addB('SOL', 'SOL 高頻站台', 0x0f172a, 75, -120, 120);
-        addB('XAUT', 'XAUT 黃金部門', 0xf59e0b, 100, 200, -120);
-        addB('PEPE', 'PEPE 特遣中心', 0x14532d, 55, 120, 120);
-        addB('TREASURY', '中央大金庫', 0x92400e, 65, 0, 0);
+        addB('BTC', 'BTC 總部', 0x1e293b, 120, -120, -120);
+        addB('ETH', 'ETH 核心', 0x334155, 95, 120, -120);
+        addB('SOL', 'SOL 站台', 0x0f172a, 75, -120, 120);
+        addB('XAUT', 'XAUT 黃金', 0xf59e0b, 100, 200, -120);
+        addB('PEPE', 'PEPE 特遣', 0x14532d, 55, 120, 120);
+        addB('TREASURY', '中央金庫', 0x92400e, 65, 0, 0);
 
-        // 新增：新聞總站
         const newsGroup = new THREE.Group(); newsGroup.position.set(250, 0, 0);
-        const newsH = 140;
-        const newsBody = new THREE.Mesh(new THREE.BoxGeometry(60, newsH, 60), new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness:0.9 }));
-        newsBody.position.y = newsH/2; newsBody.castShadow = true; newsGroup.add(newsBody);
-        newsGroup.userData = { id: 'NEWS', name: '全球新聞與巨鯨情報中心' };
-        scene.add(newsGroup); buildings.push(newsBody); newsBody.userData = newsGroup.userData;
-        const lblNews = document.createElement('div'); lblNews.className = 'price-label';
-        lblNews.innerText = `新聞與情報中心`;
-        document.getElementById('label-container').appendChild(lblNews);
-        labelData['NEWS'] = { element: lblNews, object: newsGroup, height: newsH };
+        const nwBody = new THREE.Mesh(new THREE.BoxGeometry(60, 140, 60), new THREE.MeshStandardMaterial({ color: 0x0f172a }));
+        nwBody.position.y = 70; newsGroup.add(nwBody); scene.add(newsGroup); bObjs.push(nwBody); nwBody.userData = {id: 'NEWS', name: '新聞總站'};
+        labelData['NEWS'] = { element: document.createElement('div'), object: newsGroup, height: 140 };
+        labelData['NEWS'].element.className = 'price-label'; labelData['NEWS'].element.innerText = '新聞總站'; 
+        document.getElementById('label-container').appendChild(labelData['NEWS'].element);
 
-        // 新增：雷達站 (特別資金分隊 100U 置於其中)
         const radarGroup = new THREE.Group(); radarGroup.position.set(-250, 0, -250);
-        const towerH = 160;
-        const towerBody = new THREE.Mesh(new THREE.CylinderGeometry(10, 25, towerH, 8), new THREE.MeshStandardMaterial({ color: 0x475569 }));
-        towerBody.position.y = towerH/2; towerBody.castShadow = true; radarGroup.add(towerBody);
-        const dish = new THREE.Mesh(new THREE.BoxGeometry(60, 5, 15), new THREE.MeshStandardMaterial({ color: 0x0ea5e9, emissive: 0x0ea5e9, emissiveIntensity: 1.0 }));
-        dish.position.y = towerH + 10; radarGroup.add(dish);
-        radarGroup.userData = { id: 'SPECIAL', name: '雷達站 (特別資金分隊 100U)' };
-        scene.add(radarGroup); buildings.push(towerBody); towerBody.userData = radarGroup.userData;
-        const lblRadar = document.createElement('div'); lblRadar.className = 'price-label';
-        lblRadar.innerText = `特別分隊 (雷達站): 同步中...`;
-        document.getElementById('label-container').appendChild(lblRadar);
-        labelData['SPECIAL'] = { element: lblRadar, object: radarGroup, height: towerH, dish: dish };
-
-        // 資訊精靈動畫系統 (從新聞站飛向各分區)
-        const particles = [];
-        const particleGeo = new THREE.SphereGeometry(3, 8, 8);
-        const particleMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
-        
-        function spawnParticle() {
-            if(particles.length > 30) return;
-            const p = new THREE.Mesh(particleGeo, particleMat);
-            p.position.set(newsGroup.position.x, newsH, newsGroup.position.z);
-            const targets = ['BTC', 'ETH', 'SOL', 'XAUT', 'PEPE', 'SPECIAL'];
-            const tId = targets[Math.floor(Math.random()*targets.length)];
-            p.userData = { target: labelData[tId].object, speed: 1.5 + Math.random()*2 };
-            scene.add(p); particles.push(p);
-        }
-        setInterval(spawnParticle, 1500);
+        const rdBody = new THREE.Mesh(new THREE.CylinderGeometry(10, 25, 160, 8), new THREE.MeshStandardMaterial({ color: 0x475569 }));
+        rdBody.position.y = 80; radarGroup.add(rdBody); scene.add(radarGroup); bObjs.push(rdBody); radarGroup.userData = {id: 'SPECIAL', name: '雷達特遣部隊'};
+        labelData['SPECIAL'] = { element: document.createElement('div'), object: radarGroup, height: 160 };
+        labelData['SPECIAL'].element.className = 'price-label'; document.getElementById('label-container').appendChild(labelData['SPECIAL'].element);
 
         function animate() {
             requestAnimationFrame(animate); controls.update();
-            if(labelData['SPECIAL'].dish) labelData['SPECIAL'].dish.rotation.y += 0.03;
-
-            // 更新精靈動畫
-            for(let i=particles.length-1; i>=0; i--) {
-                const p = particles[i];
-                const targetPos = new THREE.Vector3(p.userData.target.position.x, 20, p.userData.target.position.z);
-                const dir = targetPos.clone().sub(p.position);
-                if(dir.length() < 10) {
-                    scene.remove(p);
-                    particles.splice(i, 1);
-                } else {
-                    dir.normalize().multiplyScalar(p.userData.speed);
-                    p.position.add(dir);
-                }
-            }
-
+            crownGroup.rotation.y += 0.05;
+            crownGroup.position.y = Math.sin(Date.now()*0.005)*5 + crownGroup.userData.baseY;
             for(let id in labelData) {
                 const vec = new THREE.Vector3(labelData[id].object.position.x, labelData[id].height + 35, labelData[id].object.position.z);
                 vec.project(camera);
-                const x = (vec.x*0.5+0.5)*window.innerWidth;
-                const y = (-(vec.y*0.5-0.5)*window.innerHeight);
+                const x = (vec.x*0.5+0.5)*window.innerWidth; const y = (-(vec.y*0.5-0.5)*window.innerHeight);
                 labelData[id].element.style.left = x + 'px'; labelData[id].element.style.top = y + 'px';
                 labelData[id].element.style.display = (vec.z < 1 && x > 0 && x < window.innerWidth) ? 'block' : 'none';
             }
@@ -229,53 +176,36 @@
         async function sync() {
             try {
                 const r = await fetch('/api/stats'); const d = await r.json();
-                document.getElementById('curr-treasury').innerText = `${parseFloat(d.treasury_cash || 1000).toFixed(1)} U`;
-                document.getElementById('rev-all').innerText = `${d.total_pnl >=0?'+':''}${d.total_pnl.toFixed(1)} U`;
-                document.getElementById('rev-today').innerText = `${d.today_pnl >=0?'+':''}${d.today_pnl.toFixed(1)}`;
+                document.getElementById('rev-all').innerText = `${d.total_pnl.toFixed(1)} U`;
+                document.getElementById('rev-today').innerText = `${d.today_pnl.toFixed(1)}`;
                 document.getElementById('clock-tpe').innerText = d.tpe_time; document.getElementById('clock-ny').innerText = d.ny_time;
                 document.getElementById('rt-log').innerText = d.round_table_log;
-                
-                // 更新大盤
+                document.getElementById('daily-debrief').innerText = d.daily_debrief;
                 document.getElementById('taiex-status').innerText = `${d.taiex_info.status} | ${d.taiex_info.countdown}`;
                 document.getElementById('sp500-status').innerText = `${d.sp500_info.status} | ${d.sp500_info.countdown}`;
-
-                const mtList = document.getElementById('mt-list'); mtList.innerHTML = '';
-                (d.meetings || []).forEach(m => {
-                    const cls = m.status === '已完成' ? 'meeting-pill pill-done' : 'meeting-pill';
-                    mtList.innerHTML += `<div class="${cls}">${m.time}</div>`;
-                });
-
-                if(d.global_alert === 'RED') document.getElementById('main-body').className = 'alarm-red';
-                else document.getElementById('main-body').className = '';
-
-                // 更新狀態綠/紅燈指令
+                if(d.ace_agent && buildings[d.ace_agent]) {
+                    const b = buildings[d.ace_agent]; crownGroup.position.x = b.position.x; crownGroup.position.z = b.position.z;
+                    crownGroup.userData.baseY = labelData[d.ace_agent].height + 15;
+                }
                 const aList = document.getElementById('agent-list'); aList.innerHTML = '';
                 ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XAUT/USDT', 'PEPE/USDT', 'SPECIAL'].forEach(s => {
                     const h = d.agent_health[s] || { status: 'OFFLINE', mode: '?' };
                     const lC = h.status === 'OK' ? 'light-ok' : 'light-err';
-                    aList.innerHTML += `<div class="agent-status-row" style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>${s}</span><span><span style="font-size:10px; color:#64748b; margin-right:8px;">${h.mode||'BATTLE'}</span><div class="${lC}" style="display:inline-block; vertical-align:middle; width:12px; height:12px; border-radius:50%;"></div></span></div>`;
+                    aList.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>${s}</span><div class="${lC}" style="width:12px; height:12px; border-radius:50%;"></div></div>`;
                 });
-
                 for(let id in labelData) {
                     if (id === 'NEWS') continue;
                     const p = d.prices[id === 'TREASURY' ? 'BTC' : (id === 'SPECIAL' ? 'BTC' : id)];
-                    const labelName = id === 'SPECIAL' ? '特別分隊 (雷達站)' : id;
-                    if(p && !isNaN(p) && p != "0.0") {
-                        labelData[id].element.innerText = `${labelName}: $${parseFloat(p).toLocaleString()}`;
-                    } else if (p === "非數值") {
-                        labelData[id].element.innerText = `${labelName}: 同步中...`;
-                    }
+                    if(p && !isNaN(p) && p != "0.0") labelData[id].element.innerText = `${id}: $${parseFloat(p).toLocaleString()}`;
                 }
                 window.liveData = d;
             } catch(e) {}
         }
         setInterval(sync, 4000); sync();
-
-        // 獨立抓取新聞
         async function fetchNews() {
             try {
                 const r = await fetch('/api/news'); const d = await r.json();
-                document.getElementById('global-ticker').innerText = [...d.crypto_news.slice(0,4), ...d.intl_news.slice(0,3)].join(' ✦ ');
+                document.getElementById('global-ticker').innerText = [...d.crypto_news.slice(0,3), ...d.intl_news.slice(0,3)].join(' ✦ ');
             } catch(e){}
         }
         setInterval(fetchNews, 60000); fetchNews();
@@ -284,76 +214,20 @@
             if(e.target.closest('.panel-box')) return;
             const ray = new THREE.Raycaster(); const mouse = new THREE.Vector2((e.clientX/window.innerWidth)*2-1, -(e.clientY/window.innerHeight)*2+1);
             ray.setFromCamera(mouse, camera);
-            const hits = ray.intersectObjects(buildings);
+            const hits = ray.intersectObjects(bObjs);
             if(hits.length > 0) {
                 const ud = hits[0].object.userData;
-                let bodyHtml = "";
-
-                if (ud.id === 'NEWS') {
-                    bodyHtml = `<div style="background:#f8fafc; padding:20px; border-radius:20px;">
-                        <h3 style="color:var(--primary); margin-top:0;">📡 全球資訊匯流中</h3>
-                        <p style="color:#64748b; font-size:14px;">此大樓每分鐘採集國際新聞、聯準會消息與巨鯨軌跡，並透過資訊精靈發送至各分局供 AI 決策參考。</p>
-                        <div style="font-size:12px; color:#475569; margin-top:10px;">目前巨鯨危險指數: ${window.liveData?.whale_score || 1.0}</div>
-                    </div>`;
-                } else if (ud.id === 'SPECIAL') {
-                    const acc = window.liveData?.team_accounts['SPECIAL'] || {cash:100, initial:100};
-                    const opps = window.liveData?.radar_opps || ['掃描中...'];
-                    bodyHtml = `
-                    <div style="background:#f8fafc; padding:20px; border-radius:20px; border:1px solid #e2e8f0; margin-bottom:20px;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                            <span style="color:#64748b;">特別資金空閒額度</span>
-                            <span style="font-weight:900; color:var(--primary); font-size:18px;">${acc.cash.toFixed(1)} / 100.0 U</span>
-                        </div>
-                        <div style="margin-top:15px; padding:10px; background:#fff7ed; border-radius:10px;">
-                            <span style="color:#9a3412; font-weight:900; font-size:12px;">🏹 雷達鎖定目標:</span>
-                            <div style="color:#f59e0b; font-weight:800; margin-top:5px;">${opps.join(', ')}</div>
-                        </div>
-                        <div style="font-size:11px; color:#94a3b8; text-align:right; margin-top:10px;">模式: 現貨或合約槓桿狙擊</div>
-                    </div>`;
-                } else {
-                    const acc = window.liveData?.team_accounts[ud.id + '/USDT'] || window.liveData?.team_accounts[ud.id] || {cash:300, initial:300};
-                    const pos = (window.liveData?.positions || []).find(p => p.symbol.includes(ud.id));
-                    const pnl = pos ? pos.pnl : 0;
-                    const initial_inv = acc.initial * 0.1;
-                    const total = acc.cash + (pos ? (initial_inv + pnl) : 0);
-                    
-                    let posHtml = pos ? `<div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span style="color:#64748b;">持倉金額 (${pos.type=='LONG'?'多':'空'})</span><span style="font-weight:900;">${initial_inv.toFixed(1)} U</span></div>` : `<div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span style="color:#64748b;">目前持倉</span><span style="font-weight:900;">空倉中</span></div>`;
-                    
-                    let thought = window.liveData?.thoughts[ud.id] || "等待述職...";
-
-                    bodyHtml = `
-                        <div style="background:#f8fafc; padding:20px; border-radius:20px; border:1px solid #e2e8f0; margin-bottom:15px;">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                                <span style="color:#64748b;">可用空閒資金</span>
-                                <span style="font-weight:900; color:var(--primary); font-size:18px;">${acc.cash.toFixed(1)} U</span>
-                            </div>
-                            ${posHtml}
-                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                                <span style="color:#64748b;">浮動盈利/虧損</span>
-                                <span style="font-weight:900; color:${pnl >=0 ? 'var(--ok)':'var(--err)'}; font-size:18px;">${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)} U</span>
-                            </div>
-                            <div style="font-size:11px; color:#94a3b8; text-align:right; margin-top:5px;">模式: 現貨或合約槓桿作戰 (x1~x5)</div>
-                        </div>
-                        <div style="background:#fffbeb; padding:15px; border-radius:15px; border-left:5px solid var(--gold); margin-bottom:15px;">
-                            <div style="font-weight:900; color:var(--gold); font-size:12px;">🗣️ 特工心聲 (Last Thought)</div>
-                            <div style="margin-top:8px; font-size:13px; color:#92400e; line-height:1.5;">${thought}</div>
-                        </div>
-                        <div style="background:#0f172a; color:white; padding:15px; border-radius:15px; display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-weight:800; font-size:14px; color:#94a3b8;">分隊資產總值</span>
-                            <span style="font-size:22px; font-weight:900; color:var(--gold);">${total.toFixed(1)} U</span>
-                        </div>
-                    `;
-                }
-
+                const acc = window.liveData?.team_accounts[ud.id + '/USDT'] || window.liveData?.team_accounts[ud.id] || {cash:300, initial:300};
+                const pos = (window.liveData?.positions || []).find(p => p.symbol.includes(ud.id));
+                const pnl = pos ? pos.pnl : 0;
                 document.getElementById('m-title').innerText = `🛡️ ${ud.name}`;
-                document.getElementById('m-body').innerHTML = bodyHtml;
+                document.getElementById('m-body').innerHTML = `<div style="background:#f8fafc; padding:20px; border-radius:20px;">
+                    <div style="display:flex; justify-content:space-between;"><span>可用現金</span><span style="font-weight:900;">${acc.cash.toFixed(1)} U</span></div>
+                    <div style="display:flex; justify-content:space-between; margin-top:10px;"><span>累計浮動盈虧</span><span style="font-weight:900; color:var(--ok);">${pnl >=0?'+':''}${pnl.toFixed(2)} U</span></div>
+                    <div style="margin-top:10px; font-size:12px; color:#94a3b8;">${window.liveData?.thoughts[ud.id] || ''}</div>
+                </div>`;
                 document.getElementById('modal-overlay').style.display = 'flex';
             }
-        });
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
         });
     </script>
 </body>

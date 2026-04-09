@@ -451,6 +451,10 @@ class PaperTrader:
             if self.cash < 100:
                 self.request_loan_if_needed(storage)
 
+            # [大都會 v6.0] 圓桌會議風險乘數與預算縮放
+            risk_mult = float(storage.get_global_config("GLOBAL_RISK_MULTIPLIER", "1.0")) if storage else 1.0
+            invest_amt = (self.initial_budget * 0.1) * risk_mult
+
             # --- [AI 語義述職] 心理決策模擬 ---
             conf = context.get('ml_prob', 0.5)
             risk_alert = storage.get_global_config("GLOBAL_ALERT", "NORMAL")
@@ -461,16 +465,12 @@ class PaperTrader:
             else:
                 self.leverage = 1.0 + (max(0, conf - 0.5) * 8) 
                 self.leverage = min(5.0, self.leverage) 
-                self.last_thought = f"📈 信心指數 {conf*100:.0f}%，目前盤勢符合我的多頭策略，決定以 {self.leverage:.1f}x 槓桿出擊。"
+                self.last_thought = f"📈 信心指數 {conf*100:.0f}%，目前盤勢符合我的操作策略，決定以 {self.leverage:.1f}x 槓桿出擊。"
 
             if is_sniper or scalper_signal == "BUY_SCALP":
-                # 指令: 均分為十等分，固定為初始預算的 10%
-                invest_amt = self.initial_budget * 0.1 
-                
                 if self.cash < invest_amt:
                     return f"⚠️ 【分隊資金告急】{self.symbol} 現金餘額不足執行單次出擊。"
                 
-                # 考慮槓桿的數量 (合約模式)
                 qty = (invest_amt * self.leverage) / current_price 
                 self.cash -= invest_amt
                 self.position = qty
@@ -480,12 +480,11 @@ class PaperTrader:
                 self.trades_today += 1
                 self.save_active_position("LONG", current_price, qty)
                 report = (f"🏹 【特工出擊 | LONG】\n─────────────────\n"
-                          f"🛡️ 特工: {self.symbol} | 槓桿: {self.leverage:.1f}x\n📍 價格: ${current_price:,.4f}\n"
+                          f"🛡️ 特工: {self.symbol} | 槓桿: {self.leverage:.1f}x (風險係數: {risk_mult})\n📍 價格: ${current_price:,.4f}\n"
                           f"💰 保證金: ${invest_amt:,.1f} U | 名義價值: ${invest_amt*self.leverage:,.1f} U\n"
                           f"🏦 餘額: ${self.cash:,.1f} U | 欠款: ${self.debt_to_treasury:.1f} U")
 
             elif scalper_signal == "SELL_SCALP":
-                invest_amt = self.initial_budget * 0.1
                 if self.cash < invest_amt:
                     return f"⚠️ 【分隊資金告急】{self.symbol} 現金餘額不足。"
                 
@@ -497,7 +496,7 @@ class PaperTrader:
                 self.has_partial_tp = False
                 self.trades_today += 1
                 self.save_active_position("SHORT", current_price, qty)
-                self.last_thought = f"📉 信心指數 {(1-conf)*100:.0f}%，判斷空頭趨勢成形，執行 {self.leverage:.1f}x 槓桿做空。"
+                self.last_thought = f"📉 信心指數 {(1-conf)*100:.0f}%，判斷空頭趨勢成形，執行 {self.leverage:.1f}x 槓桿做空 (風險係數: {risk_mult})。"
                 report = (f"❄️ 【特工出擊 | SHORT】\n─────────────────\n"
                           f"🪙 幣種: {self.symbol} | 槓桿: {self.leverage:.1f}x\n📍 價格: ${current_price:,.4f}\n"
                           f"💰 保證金: ${invest_amt:,.1f} U | 名義價值: ${invest_amt*self.leverage:,.1f} U\n"

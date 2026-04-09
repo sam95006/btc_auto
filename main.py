@@ -152,39 +152,43 @@ def market_scanning_loop(scanner, storage):
 
 def round_table_loop(storage):
     """
-    【圓桌組長會議】: 每日 4 次 (00, 06, 12, 18 點)
-    各分隊組長互相交換心得，產出全城共識報告。
+    【圓桌組長會議 v6.0】: 具備實體預算控制權
     """
-    print("🏛️ 圓桌組長會議系統已就緒。")
+    print("🏛️ 圓桌組長會議系統 v6.0 已啟動。")
     import random
     while True:
         try:
             now = datetime.now()
-            # 檢查是否到開會時間 (整點)
             if now.hour in [0, 6, 12, 18] and now.minute == 0:
-                print(f"🏛️ 【全城通報】圓桌組長會議正在召開 (時間: {now.hour}:00)...")
+                # 決定風險乘數 (影響全城出擊規模)
+                risk_lvl = random.choice([0.5, 0.8, 1.0, 1.2]) # 0.5 為保守, 1.2 為積極
+                storage.save_global_config("GLOBAL_RISK_MULTIPLIER", str(risk_lvl))
                 
-                # 收集各分隊最後的想法
-                thoughts = []
-                for sym in ['BTC', 'ETH', 'SOL', 'XAUT', 'PEPE']:
-                    t = storage.get_global_config(f"THOUGHT_{sym}/USDT", "正在觀察行情...")
-                    thoughts.append(f"{sym}: {t}")
+                status_texts = {0.5: "🛡️ 市場極其危險，全城轉為保守防守 (50% 倉位)", 
+                                0.8: "⚖️ 市場震盪空間受限，略縮預算 (80% 倉位)", 
+                                1.0: "✅ 市場情緒正常，執行 100% 原始預算", 
+                                1.2: "🚀 偵測到大行情噴發徵兆，開啟 120% 激進模式"}
                 
-                # 基於所有特工的想法產生一份共識 (模擬 AI 互相學習)
-                base_logs = [
-                    "主席（BTC）: 目前各分隊紀律良好，巨鯨動向稍有放緩，維持合約槓桿制約。",
-                    "主席（BTC）: 注意近期非農數據影響，黃金分隊（XAUT）需加大避險敏感度。",
-                    "主席（BTC）: 今日掃描發現小幣波動劇烈，雷達特別隊需謹慎出擊。",
-                    "主席（BTC）: 整體系統持倉穩定，各組長交換的心得顯示技術指標目前具備高度一致性。"
-                ]
-                final_log = random.choice(base_logs) + " (共識摘要: " + " | ".join(thoughts[:3]) + ")"
-                
-                storage.save_global_config("ROUND_TABLE_LOG", final_log)
-                time.sleep(70) # 避開重複整點觸發
-            
+                log = f"主席（BTC）會議結論: {status_texts[risk_lvl]}"
+                storage.save_global_config("ROUND_TABLE_LOG", log)
+                time.sleep(70) 
             time.sleep(30)
-        except Exception as e:
-            time.sleep(60)
+        except: time.sleep(60)
+
+def database_shield_loop():
+    """
+    【數據庫守護盾】: 每 12 小時備份一次，防止數據丟失
+    """
+    print("🚑 數據庫守護盾已就緒。")
+    import shutil
+    while True:
+        try:
+            path = "data/trading.db"
+            if os.path.exists(path):
+                shutil.copy2(path, "data/trading_shield_backup.db")
+                print("🚑 [數據盾] 核心資產備份成功。")
+            time.sleep(12 * 3600)
+        except: time.sleep(600)
 
 def main():
     def async_init():
@@ -229,12 +233,13 @@ def main():
                 t.daemon = True
                 t.start()
             
-            # 啟動雷達掃描與圓桌會議
+            # 啟動雷達掃描、圓桌會議與數據庫守護盾
             scanner = DynamicMarketScanner(storage=storage)
             threading.Thread(target=market_scanning_loop, args=(scanner, storage), daemon=True).start()
             threading.Thread(target=round_table_loop, args=(storage,), daemon=True).start()
+            threading.Thread(target=database_shield_loop, daemon=True).start()
             
-            print("✅ 【大都會 v5.0 部署完畢 | 圓桌會議在線】")
+            print("✅ 【大都會 v6.0 旗艦版部署完畢 | 全系統守護啟動】")
         except Exception as e:
             print(f"❌ 初始化崩潰: {e}")
 

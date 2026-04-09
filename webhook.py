@@ -118,19 +118,52 @@ def api_stats():
             "prices": prices,
             "debts": debts,
             "thoughts": thoughts,
-            "agent_health": getattr(app, 'agent_status', {}),
-            "positions": positions,
-            "radar_opps": radar_opps,
-            "whale_score": whale_score,
-            # 傳遞分隊詳細帳務 (前端計算總和)
-            "team_accounts": {
-                sym: {
-                    "cash": float(storage.get_global_config(f"CASH_{sym}", "300.0")),
-                    "initial": 300.0 if sym != 'SPECIAL' else 100.0,
-                    "debt": float(debts.get(sym.split('/')[0], 0))
-                } for sym in ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XAUT/USDT', 'PEPE/USDT', 'SPECIAL']
-            }
-        })
+            # --- [大都會 v6.0 精英競賽與日報] ---
+            ace_symbol = "BTC"
+            max_pnl = -999999
+            debrief_summary = "全軍陣勢穩健，各特工正在靜候大行情爆發。"
+            
+            accounts_data = {}
+            for sym in ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XAUT/USDT', 'PEPE/USDT', 'SPECIAL']:
+                cash = float(storage.get_global_config(f"CASH_{sym}", "300.0"))
+                init = 300.0 if sym != 'SPECIAL' else 100.0
+                debt = float(debts.get(sym.split('/')[0], 0))
+                
+                # 計算該隊累積盈虧 (以庫存 CASH 減去初始與債務簡單估算)
+                current_pnl = cash - init
+                if current_pnl > max_pnl:
+                    max_pnl = current_pnl
+                    ace_symbol = sym.split('/')[0]
+                
+                accounts_data[sym] = {"cash": cash, "initial": init, "debt": debt}
+            
+            if max_pnl > 10:
+                debrief_summary = f"🎉 今日由 {ace_symbol} 領跑全城，其精準的趨勢獵殺為金庫做出了巨大貢獻！"
+            elif max_pnl < -10:
+                debrief_summary = "⚠️ 今日行情詭譎，多支分隊遭遇插針襲擊，組長已下令開啟防禦姿勢。"
+
+            return jsonify({
+                "tpe_time": now_tpe.strftime("%H:%M:%S"),
+                "ny_time": now_nyc.strftime("%H:%M:%S"),
+                "taiex_info": {"status": taiex_status, "countdown": taiex_cd},
+                "sp500_info": {"status": sp500_status, "countdown": sp500_cd},
+                "today_pnl": today_pnl,
+                "total_pnl": total_pnl,
+                "treasury_cash": treasury_cash,
+                "global_alert": global_alert,
+                "meetings": meetings,
+                "round_table_log": round_table_log,
+                "daily_debrief": debrief_summary,
+                "ace_agent": ace_symbol,
+                "prices": prices,
+                "debts": debts,
+                "thoughts": thoughts,
+                "agent_health": getattr(app, 'agent_status', {}),
+                "positions": positions,
+                "radar_opps": radar_opps,
+                "whale_score": whale_score,
+                "team_accounts": accounts_data
+            })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
