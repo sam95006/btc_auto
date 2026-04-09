@@ -134,6 +134,42 @@ def market_scanning_loop(scanner, storage):
             print(f"⚠️ 雷達掃描故障: {e}")
             time.sleep(60)
 
+def round_table_loop(storage):
+    """
+    【圓桌組長會議】: 每日 4 次 (00, 06, 12, 18 點)
+    各分隊組長互相交換心得，產出全城共識報告。
+    """
+    print("🏛️ 圓桌組長會議系統已就緒。")
+    import random
+    while True:
+        try:
+            now = datetime.now()
+            # 檢查是否到開會時間 (整點)
+            if now.hour in [0, 6, 12, 18] and now.minute == 0:
+                print(f"🏛️ 【全城通報】圓桌組長會議正在召開 (時間: {now.hour}:00)...")
+                
+                # 收集各分隊最後的想法
+                thoughts = []
+                for sym in ['BTC', 'ETH', 'SOL', 'XAUT', 'PEPE']:
+                    t = storage.get_global_config(f"THOUGHT_{sym}/USDT", "正在觀察行情...")
+                    thoughts.append(f"{sym}: {t}")
+                
+                # 基於所有特工的想法產生一份共識 (模擬 AI 互相學習)
+                base_logs = [
+                    "主席（BTC）: 目前各分隊紀律良好，巨鯨動向稍有放緩，維持合約槓桿制約。",
+                    "主席（BTC）: 注意近期非農數據影響，黃金分隊（XAUT）需加大避險敏感度。",
+                    "主席（BTC）: 今日掃描發現小幣波動劇烈，雷達特別隊需謹慎出擊。",
+                    "主席（BTC）: 整體系統持倉穩定，各組長交換的心得顯示技術指標目前具備高度一致性。"
+                ]
+                final_log = random.choice(base_logs) + " (共識摘要: " + " | ".join(thoughts[:3]) + ")"
+                
+                storage.save_global_config("ROUND_TABLE_LOG", final_log)
+                time.sleep(70) # 避開重複整點觸發
+            
+            time.sleep(30)
+        except Exception as e:
+            time.sleep(60)
+
 def main():
     def async_init():
         try:
@@ -162,13 +198,12 @@ def main():
             
             # 2. 初始化特別資金分隊 (100U)
             traders[SPECIAL_SYMBOL] = PaperTrader(symbol=SPECIAL_SYMBOL, initial_cash=100.0)
-            whales[SPECIAL_SYMBOL] = WhaleWatcher(symbol="BTC") # 特別隊參考大盤
+            whales[SPECIAL_SYMBOL] = WhaleWatcher(symbol="BTC") 
             
             chiefs = {sym: ChiefAnalyst(sym, storage) for sym in all_target_syms + [SPECIAL_SYMBOL]}
 
-            # 3. 部署所有特工 (含特別隊)
+            # 3. 部署所有特工指令
             for sym in all_target_syms + [SPECIAL_SYMBOL]:
-                # 特別隊可能需要不同的 feed，此處先複用 BTC feed
                 target_feed = feed_manager.get(sym, feed_manager['BTC/USDT'])
                 t = threading.Thread(
                     target=agent_worker, 
@@ -178,13 +213,12 @@ def main():
                 t.daemon = True
                 t.start()
             
-            # 啟動雷達掃描 (特別資金隊伍的核心)
+            # 啟動雷達掃描與圓桌會議
             scanner = DynamicMarketScanner(storage=storage)
-            t_scan = threading.Thread(target=market_scanning_loop, args=(scanner, storage))
-            t_scan.daemon = True
-            t_scan.start()
+            threading.Thread(target=market_scanning_loop, args=(scanner, storage), daemon=True).start()
+            threading.Thread(target=round_table_loop, args=(storage,), daemon=True).start()
             
-            print("✅ 【金融大改革部署完畢 | 借貸系統在線】")
+            print("✅ 【大都會 v5.0 部署完畢 | 圓桌會議在線】")
         except Exception as e:
             print(f"❌ 初始化崩潰: {e}")
 

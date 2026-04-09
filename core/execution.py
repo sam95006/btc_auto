@@ -92,6 +92,9 @@ class PaperTrader:
         self.is_special_fund = (symbol == "SPECIAL")
         
         self.daily_target = DailyTradeTarget(symbol, target_trades=999 if is_pepe else 15, min_winning_trades=9 if is_pepe else 12)
+        
+        # [同步帳務到中央]
+        if storage: storage.save_global_config(f"CASH_{self.symbol}", str(self.cash))
 
     def request_loan_if_needed(self, storage):
         """[中央借貸機制] 如果資金低於 100U，向中央金庫借款 100U"""
@@ -493,6 +496,8 @@ class PaperTrader:
             else:
                 self.last_thought = "🔎 正觀察技術形態，若突破重要壓力位將立即行動。"
         
-        # 保存心聲到全局，供 3D UI 讀取
-        if storage: storage.save_global_config(f"THOUGHT_{self.symbol}", self.last_thought)
+        # 保存心聲與帳務到全局
+        if storage: 
+            storage.save_global_config(f"THOUGHT_{self.symbol}", self.last_thought)
+            storage.save_global_config(f"CASH_{self.symbol}", str(self.cash))
         return report

@@ -94,6 +94,16 @@ def api_stats():
         taiex_status, taiex_cd = get_mkt_status(now_tpe, 9, 0, 13, 30, "台股")
         sp500_status, sp500_cd = get_mkt_status(now_nyc, 9, 30, 16, 0, "美股")
 
+        # --- [圓桌會議系統] 判定 ---
+        meeting_times = ["00:00", "06:00", "12:00", "18:00"]
+        meetings = []
+        for mt in meeting_times:
+            m_h = int(mt.split(':')[0])
+            status = "已完成" if now_tpe.hour >= m_h else "預計召開"
+            meetings.append({"time": mt, "status": status})
+        
+        round_table_log = storage.get_global_config("ROUND_TABLE_LOG", "主席（BTC）: 目前各分隊紀律良好，正持續監測巨鯨動向，黃金分隊需注意避險情緒走向。")
+
         return jsonify({
             "tpe_time": now_tpe.strftime("%H:%M:%S"),
             "ny_time": now_nyc.strftime("%H:%M:%S"),
@@ -101,19 +111,22 @@ def api_stats():
             "sp500_info": {"status": sp500_status, "countdown": sp500_cd},
             "today_pnl": today_pnl,
             "total_pnl": total_pnl,
-            "meeting_log": "自愈中心：全線子系統正在重新校準，請稍候數據對接...",
-            "agent_health": getattr(app, 'agent_status', {}),
+            "treasury_cash": treasury_cash,
+            "global_alert": global_alert,
+            "meetings": meetings,
+            "round_table_log": round_table_log,
             "prices": prices,
             "debts": debts,
             "thoughts": thoughts,
-            "global_alert": global_alert,
-            "treasury_cash": treasury_cash,
+            "agent_health": getattr(app, 'agent_status', {}),
             "positions": positions,
-            "radar_opps": radar_opps,
-            "whale_score": whale_score,
-            "market_indices": {
-                "taiex": {"price": 20450, "change": "+1.2%"},
-                "sp500": {"price": 5205, "change": "+0.4%"}
+            # 傳遞分隊詳細帳務 (前端計算總和)
+            "team_accounts": {
+                sym: {
+                    "cash": float(storage.get_global_config(f"CASH_{sym}", "300.0")),
+                    "initial": 300.0 if sym != 'SPECIAL' else 100.0,
+                    "debt": float(debts.get(sym.split('/')[0], 0))
+                } for sym in ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XAUT/USDT', 'PEPE/USDT', 'SPECIAL']
             }
         })
     except Exception as e:
