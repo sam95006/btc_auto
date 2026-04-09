@@ -108,14 +108,26 @@ def agent_worker(symbol, trader, predictor, feed, storage, macro, whale, news, f
 
 def market_scanning_loop(scanner, storage):
     """
-    【全市場偵照中心】: 定期掃描幣安前 20 大幣種，尋找符合條件的標的並公佈在雷達塔。
+    【全市場偵照中心 | 硬體自律版】: 
+    1. 定期執行磁碟自檢 (守住 80% 紅線)
+    2. 根據 PNL 獲利階梯動態調整掃描效能
     """
-    print("🔎 市場偵照雷達啟動中...")
+    print("🔎 市場偵照雷達 (硬體自律模式) 啟動中...")
     while True:
         try:
-            opportunities = scanner.scan_market(limit=20)
+            # A. [硬體自律] 磁碟清理總動員
+            storage.check_and_cleanup_disk()
+            
+            # B. [獎勵制度] 獲取當前效能階梯
+            tier = storage.get_performance_tier()
+            scan_limit = 10 if tier == "SEED" else (20 if tier == "GROWTH" else 50)
+            
+            print(f"📡 當前 AI 效能階梯: {tier} | 掃描寬度: {scan_limit}")
+            
+            opportunities = scanner.scan_market(limit=scan_limit)
             opp_summary = [o['symbol'] for o in opportunities]
             storage.save_global_config('RADAR_OPPS', json.dumps(opp_summary))
+            
             time.sleep(600)
         except Exception as e:
             print(f"⚠️ 雷達掃描故障: {e}")

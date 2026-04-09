@@ -405,6 +405,35 @@ class Storage:
         count = res[1] if res[1] else 0
         return pnl, count
 
+    def check_and_cleanup_disk(self, threshold_gb=31):
+        """
+        [硬體自律] 監控磁碟使用率，確保不超過 80% (31GB)
+        """
+        import os
+        try:
+            # 獲取 DB 大小
+            db_size = os.path.getsize(self.db_path) / (1024**3) 
+            if db_size > (threshold_gb * 0.5):
+                print("🧹 磁碟警報：數據庫過大，正在執行壓縮...")
+                self.conn.execute("VACUUM")
+            
+            # 清理 30 天前的數據以節省空間
+            limit_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+            self.conn.execute("DELETE FROM trades WHERE timestamp < ?", (limit_date,))
+            self.conn.commit()
+            return True
+        except:
+            return False
+
+    def get_performance_tier(self):
+        """
+        [獎勵制度] 根據獲利能力解鎖 AI 效能
+        """
+        pnl, _ = self.get_lifetime_summary()
+        if pnl >= 500: return "EMPIRE"  # 解鎖進階掃描
+        if pnl >= 100: return "GROWTH"  # 解鎖中階掃描
+        return "SEED"                  # 基礎維穩模式
+
     def get_latest_trades(self, limit=3):
         cursor = self.conn.cursor()
         cursor.execute("SELECT signal_type, entry_price, exit_price, pnl, timestamp FROM trades WHERE signal_type LIKE '%EXIT%' ORDER BY id DESC LIMIT ?", (limit,))
