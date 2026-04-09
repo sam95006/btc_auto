@@ -85,17 +85,30 @@ def api_stats():
         taiex_status, taiex_cd = get_mkt_status(now_tpe, 9, 0, 13, 30)
         sp500_status, sp500_cd = get_mkt_status(now_nyc, 9, 30, 16, 0)
 
-        # --- [精英競賽與日報計算] ---
+        # --- [精英競賽與金庫校準] ---
         ace_symbol = "BTC"
         max_pnl = -999999
         accounts_data = {}
-        for sym in ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XAUT/USDT', 'PEPE/USDT', 'SPECIAL']:
+        # 標準分隊
+        for sym in ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XAUT/USDT', 'PEPE/USDT']:
             cash = float(storage.get_global_config(f"CASH_{sym}", "300.0"))
-            init = 300.0 if sym != 'SPECIAL' else 100.0
-            debt = float(debts.get(sym.split('/')[0], 0))
+            init = 300.0
+            debt = float(storage.get_global_config(f"DEBT_{sym}", "0.0"))
             current_pnl = cash - init
             if current_pnl > max_pnl: max_pnl, ace_symbol = current_pnl, sym.split('/')[0]
             accounts_data[sym] = {"cash": cash, "initial": init, "debt": debt}
+        
+        # 特殊物件 (金庫與雷達)
+        accounts_data['TREASURY'] = {
+            "cash": float(storage.get_global_config("TREASURY_CASH", "1000.0")),
+            "initial": 1000.0,
+            "debt": 0.0
+        }
+        accounts_data['SPECIAL'] = {
+            "cash": float(storage.get_global_config("CASH_SPECIAL", "100.0")),
+            "initial": 100.0,
+            "debt": 0.0
+        }
         
         debrief_summary = f"🎉 今日由 {ace_symbol} 領跑全城，趨勢捕捉非常精準！" if max_pnl > 10 else "全軍陣勢穩健，各特工正在靜候大行情爆發。"
         if max_pnl < -10: debrief_summary = "⚠️ 今日行情詭譎，組長已下令開啟防禦姿勢避開插針。"

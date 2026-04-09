@@ -218,8 +218,16 @@
                     aList.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:11px;"><span>${s}</span><div class="${h.status==='OK'?'light-ok':'light-err'}" style="width:10px; height:10px; border-radius:50%; margin-top:2px;"></div></div>`;
                 });
                 for(let id in labelData) {
-                    if(id === 'NEWS') continue;
-                    const p = d.prices[id==='SPECIAL'? 'BTC' : (id==='TREASURY'? 'BTC' : id)];
+                    if(id === 'NEWS') {
+                        labelData[id].el.innerText = "新聞情報總站";
+                        continue;
+                    }
+                    if(id === 'TREASURY') {
+                        const tCash = window.liveData?.team_accounts['TREASURY']?.cash || 1000.0;
+                        labelData[id].el.innerText = `中央金庫: ${tCash.toFixed(1)} U`;
+                        continue;
+                    }
+                    const p = d.prices[id==='SPECIAL'? 'BTC' : id];
                     if(p && p != "0.0") labelData[id].el.innerText = `${id}: $${parseFloat(p).toLocaleString()}`;
                 }
                 window.liveData = d;
@@ -228,19 +236,27 @@
         setInterval(sync, 4000); sync();
 
         window.addEventListener('click', e => {
-            if(e.target.closest('.panel-box')) return;
+            if(e.target.closest('.game-panel')) return;
             const ray = new THREE.Raycaster(); const mouse = new THREE.Vector2((e.clientX/window.innerWidth)*2-1, -(e.clientY/window.innerHeight)*2+1);
             ray.setFromCamera(mouse, camera);
             const hits = ray.intersectObjects(bObjs);
             if(hits.length > 0) {
                 const ud = hits[0].object.userData;
-                const acc = window.liveData?.team_accounts[ud.id + '/USDT'] || window.liveData?.team_accounts[ud.id] || {cash:300, initial:300};
-                document.getElementById('m-title').innerText = `🛡️ ${ud.name}`;
-                document.getElementById('m-body').innerHTML = `<div style="background:#f1f5f9; padding:20px; border-radius:15px;">
-                    <div style="display:flex; justify-content:space-between; font-weight:900;"><span>當前團隊資金</span><span>${acc.cash.toFixed(1)} U</span></div>
-                    <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:#64748b;"><span>預算配置</span><span>${acc.initial} U</span></div>
-                    <div style="margin-top:15px; font-size:13px; color:#1e293b; border-top:1px solid #e2e8f0; padding-top:10px;">${window.liveData?.thoughts[ud.id] || '特工正在休整中...'}</div>
-                </div>`;
+                if(ud.id === 'NEWS') {
+                    document.getElementById('m-title').innerText = `📡 ${ud.name}`;
+                    document.getElementById('m-body').innerHTML = `<div style="background:#f1f5f9; padding:20px; border-radius:15px;">
+                        <p>正在監聽全球財經 RSS 衛星信號...</p>
+                        <p style="font-size:12px; color:#64748b;">本站不持有資金，專職情報實時播報。</p>
+                    </div>`;
+                } else {
+                    const acc = window.liveData?.team_accounts[ud.id + '/USDT'] || window.liveData?.team_accounts[ud.id] || {cash:300, initial:300};
+                    document.getElementById('m-title').innerText = `🛡️ ${ud.name}`;
+                    document.getElementById('m-body').innerHTML = `<div style="background:#f1f5f9; padding:20px; border-radius:15px;">
+                        <div style="display:flex; justify-content:space-between; font-weight:900;"><span>當前團隊資金</span><span>${acc.cash.toFixed(1)} U</span></div>
+                        <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:#64748b;"><span>預算配置</span><span>${acc.initial} U</span></div>
+                        <div style="margin-top:15px; font-size:13px; color:#1e293b; border-top:1px solid #e2e8f0; padding-top:10px;">${window.liveData?.thoughts[ud.id] || '特工正在休整中...'}</div>
+                    </div>`;
+                }
                 document.getElementById('modal-overlay').style.display = 'flex';
             }
         });
