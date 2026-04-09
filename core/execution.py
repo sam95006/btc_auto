@@ -312,10 +312,6 @@ class PaperTrader:
             # 2. RSI 極度超買 > 80 
             # 3. 跌破追蹤止損 (回撤超過 0.5 * ATR)
             # --- [智能追蹤止盈 (Trailing Stop)] ---
-            # 如果當前獲利超過 1%，開始啟動追蹤止盈，止損位跟隨價格
-            sl = self.entry_price * (1 - atr_sl_pct)
-            if roi > 0.015: # 當獲利超過 1.5% 時啟動
-            # --- [智能追蹤止盈 (Trailing Stop)] ---
             # 當獲利超過 1.5% 時，止損線跟隨價格在 0.8% 處鎖定
             sl_base = self.entry_price * (1 - atr_sl_pct)
             if roi > 0.015:
