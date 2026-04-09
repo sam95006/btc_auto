@@ -57,10 +57,13 @@ def agent_worker(symbol, trader, predictor, feed, storage, macro, whale, news, f
             trader.load_active_position()
             
             # --- [能量守護 & 全球情緒感知] ---
-            df_data = feed.fetch_ohlcv(timeframe='1m', limit=100)
-            if not df_data:
+            ohlcv_raw = feed.fetch_ohlcv(timeframe='1m', limit=100)
+            if not ohlcv_raw:
                 time.sleep(10)
                 continue
+            
+            import pandas as pd
+            df_data = pd.DataFrame(ohlcv_raw, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
             
             # A. 波動率判定 (Eco-Mode)
             range_pct = (df_data['high'].iloc[-5:].max() - df_data['low'].iloc[-5:].min()) / df_data['close'].iloc[-1]
