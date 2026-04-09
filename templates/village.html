@@ -125,17 +125,66 @@
         bObjs.push(rdBody); labelData['SPECIAL'] = { el: document.createElement('div'), obj: rdGrp, h: 200 };
         labelData['SPECIAL'].el.className = 'price-label'; document.getElementById('label-container').appendChild(labelData['SPECIAL'].el);
 
+        // --- [AI 特工小人系統 v6.3] ---
+        const agents = [];
+        class DigitalAgent {
+            constructor(teamId, color, basePos) {
+                this.group = new THREE.Group();
+                // 頭部
+                const head = new THREE.Mesh(new THREE.SphereGeometry(3, 8, 8), new THREE.MeshStandardMaterial({color: 0xffdbac}));
+                head.position.y = 12; this.group.add(head);
+                // 身體
+                const body = new THREE.Mesh(new THREE.BoxGeometry(5, 8, 3), new THREE.MeshStandardMaterial({color}));
+                body.position.y = 6; this.group.add(body);
+                
+                this.group.position.set(basePos.x + (Math.random()-0.5)*80, 0, basePos.z + (Math.random()-0.5)*80);
+                scene.add(this.group);
+                this.basePos = basePos;
+                this.target = new THREE.Vector3().copy(this.group.position);
+                this.wait = 0;
+            }
+            update() {
+                if (this.wait > 0) { this.wait--; return; }
+                const dist = this.group.position.distanceTo(this.target);
+                if (dist < 2) {
+                    this.wait = Math.random() * 100 + 50;
+                    this.target.set(this.basePos.x + (Math.random()-0.5)*120, 0, this.basePos.z + (Math.random()-0.5)*120);
+                } else {
+                    const dir = new THREE.Vector3().subVectors(this.target, this.group.position).normalize();
+                    this.group.position.addScaledVector(dir, 0.5);
+                    this.group.lookAt(this.target.x, 0, this.target.z);
+                    this.group.rotation.x = Math.sin(Date.now()*0.01)*0.1; // 走路擺動
+                }
+            }
+        }
+
+        function initAgents() {
+            Object.keys(buildings).forEach(id => {
+                const count = (id === 'TREASURY') ? 2 : 4;
+                const color = buildings[id].children[0].material.color;
+                for(let i=0; i<count; i++) agents.push(new DigitalAgent(id, color, buildings[id].position));
+            });
+        }
+        
         function animate() {
-            requestAnimationFrame(animate); controls.update();
+            requestAnimationFrame(animate);
+            controls.update();
+            agents.forEach(a => a.update());
+
             for(let id in labelData) {
                 const vec = new THREE.Vector3().setFromMatrixPosition(labelData[id].obj.matrixWorld);
-                vec.y = labelData[id].h + 20; vec.project(camera);
-                const x = (vec.x * 0.5 + 0.5) * window.innerWidth; const y = (-(vec.y * 0.5 - 0.5) * window.innerHeight);
-                labelData[id].el.style.left = x + 'px'; labelData[id].el.style.top = y + 'px';
+                vec.y = labelData[id].h + 20; 
+                vec.project(camera);
+                const x = (vec.x * 0.5 + 0.5) * window.innerWidth; 
+                const y = (-(vec.y * 0.5 - 0.5) * window.innerHeight);
+                labelData[id].el.style.left = x + 'px'; 
+                labelData[id].el.style.top = y + 'px';
                 labelData[id].el.style.display = (vec.z < 1 && x > 0 && x < window.innerWidth) ? 'block' : 'none';
             }
             renderer.render(scene, camera);
         }
+        
+        initAgents();
         animate();
 
         async function sync() {
