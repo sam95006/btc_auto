@@ -136,44 +136,54 @@ def market_scanning_loop(scanner, storage):
 def main():
     def async_init():
         try:
-            print("⏳ 啟動終極初始化...")
+            print("⏳ 啟動大改革初始化任務...")
             storage = Storage()
-            predictors = {sym: AdaptiveMLPredictor(storage=storage) for sym in MONITOR_SYMBOLS + [PEPE_SYMBOL]}
             
+            # --- [金融改革] 資金分配初始化 ---
+            MONITOR_SYMBOLS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XAUT/USDT']
+            PEPE_SYMBOL = 'PEPE/USDT'
+            SPECIAL_SYMBOL = 'SPECIAL'
+            
+            storage.save_global_config("TREASURY_CASH", "1000.0")
+            
+            all_target_syms = MONITOR_SYMBOLS + [PEPE_SYMBOL]
+            
+            predictors = {sym: AdaptiveMLPredictor(storage=storage) for sym in all_target_syms + [SPECIAL_SYMBOL]}
             macro, news, fed, pol = MacroScanner(), NewsScanner(), FedScanner(), PoliticalScanner()
             feed_manager, traders, whales, tv_scanners = {}, {}, {}, {}
             
-            total_cash = 10000
-            per_cash = total_cash * 0.2
-            
-            for sym in MONITOR_SYMBOLS + [PEPE_SYMBOL]:
+            # 1. 初始化核心分隊 (每隊 300U)
+            for sym in all_target_syms:
                 feed_manager[sym] = DataFeed(symbol=sym)
-                traders[sym] = PaperTrader(symbol=sym, initial_cash=per_cash, is_pepe=(sym == PEPE_SYMBOL))
+                traders[sym] = PaperTrader(symbol=sym, initial_cash=300.0, is_pepe=(sym == PEPE_SYMBOL))
                 whales[sym] = WhaleWatcher(symbol=sym.replace('/',''))
                 tv_scanners[sym] = TradingViewScanner(symbol=sym)
             
-            # 建立特工共識小組
-            all_syms = MONITOR_SYMBOLS + [PEPE_SYMBOL]
-            chiefs = {sym: ChiefAnalyst(sym, storage) for sym in all_syms}
+            # 2. 初始化特別資金分隊 (100U)
+            traders[SPECIAL_SYMBOL] = PaperTrader(symbol=SPECIAL_SYMBOL, initial_cash=100.0)
+            whales[SPECIAL_SYMBOL] = WhaleWatcher(symbol="BTC") # 特別隊參考大盤
+            
+            chiefs = {sym: ChiefAnalyst(sym, storage) for sym in all_target_syms + [SPECIAL_SYMBOL]}
 
-            # 啟動特工多執行緒（自癒模式）
-            for sym in all_syms:
+            # 3. 部署所有特工 (含特別隊)
+            for sym in all_target_syms + [SPECIAL_SYMBOL]:
+                # 特別隊可能需要不同的 feed，此處先複用 BTC feed
+                target_feed = feed_manager.get(sym, feed_manager['BTC/USDT'])
                 t = threading.Thread(
                     target=agent_worker, 
-                    args=(sym, traders[sym], predictors.get(sym), feed_manager[sym], storage, macro, whales.get(sym), news, fed, pol, tv_scanners.get(sym), chiefs),
+                    args=(sym, traders[sym], predictors.get(sym), target_feed, storage, macro, whales.get(sym), news, fed, pol, tv_scanners.get(sym), chiefs),
                     name=f"Agent-{sym}"
                 )
                 t.daemon = True
                 t.start()
-                print(f"✅ {sym} 特工分隊已部署...")
             
-            # 啟動雷達掃描
+            # 啟動雷達掃描 (特別資金隊伍的核心)
             scanner = DynamicMarketScanner(storage=storage)
             t_scan = threading.Thread(target=market_scanning_loop, args=(scanner, storage))
             t_scan.daemon = True
             t_scan.start()
             
-            print("✅ 【全球作戰體系佈防完畢 | 自癒系統在線】")
+            print("✅ 【金融大改革部署完畢 | 借貸系統在線】")
         except Exception as e:
             print(f"❌ 初始化崩潰: {e}")
 

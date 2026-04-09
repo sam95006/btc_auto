@@ -62,9 +62,14 @@ def api_stats():
             p = storage.get_global_config(f"PRICE_{sym}", "0.0")
             prices[sym.split('/')[0]] = p
         
-        # 獲取雷達與巨鯨數據
+        # 獲取雷達、巨鯨、金庫與債務數據
         radar_opps = json.loads(storage.get_global_config('RADAR_OPPS', '[]'))
         whale_score = storage.get_global_config('WHALE_BTC/USDT', '1.0')
+        treasury_cash = storage.get_global_config("TREASURY_CASH", "1000.0")
+        
+        debts = {}
+        for sym in ['BTC', 'ETH', 'SOL', 'XAUT', 'PEPE', 'SPECIAL']:
+            debts[sym] = storage.get_global_config(f"DEBT_{sym}/USDT" if '/' not in sym and sym != 'SPECIAL' else f"DEBT_{sym}", "0.0")
 
         # --- 市場開閉盤邏輯 ---
         now_tpe = now + timedelta(hours=8)
@@ -96,6 +101,8 @@ def api_stats():
             "meeting_log": "自愈中心：全線子系統正在重新校準，請稍候數據對接...",
             "agent_health": getattr(app, 'agent_status', {}),
             "prices": prices,
+            "debts": debts,
+            "treasury_cash": treasury_cash,
             "positions": positions,
             "radar_opps": radar_opps,
             "whale_score": whale_score,

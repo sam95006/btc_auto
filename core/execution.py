@@ -80,15 +80,44 @@ class PaperTrader:
         self.min_win_rate_to_trade = 0.60  # 最低勝率閾值 60%
         self.min_trades_for_stats = 5  # 最少需要5筆交易才能參考勝率
         
-        # 每日交易目標
+        # --- [金融改革] 借貸與預算系統 ---
+        self.initial_budget = initial_cash
+        self.cash = initial_cash
+        self.debt_to_treasury = 0 # 向中央金庫的借款額
+        self.leverage = 1.0 # AI 動態控制的槓桿
+        
         self.is_pepe = is_pepe
-        self.cash_usage_pct = 0.1 # 預設使用 10% 資金 (十等分下單)
-        if is_pepe:
-            # PEPE 無限交易，但要達到 90% 勝率
-            self.daily_target = DailyTradeTarget(symbol, target_trades=999, min_winning_trades=9)
-        else:
-            # 其他幣種每日15筆交易，12筆以上盈利
-            self.daily_target = DailyTradeTarget(symbol, target_trades=15, min_winning_trades=12)
+        self.is_special_fund = (symbol == "SPECIAL")
+        
+        self.daily_target = DailyTradeTarget(symbol, target_trades=999 if is_pepe else 15, min_winning_trades=9 if is_pepe else 12)
+
+    def request_loan_if_needed(self, storage):
+        """[中央借貸機制] 如果資金低於 100U，向中央金庫借款 100U"""
+        if self.cash < 100:
+            loan_amt = 100
+            treasury_cash = float(storage.get_global_config("TREASURY_CASH", "1000"))
+            if treasury_cash >= loan_amt:
+                # 執行借款
+                self.cash += loan_amt
+                self.debt_to_treasury += loan_amt
+                storage.save_global_config("TREASURY_CASH", str(treasury_cash - loan_amt))
+                storage.save_global_config(f"DEBT_{self.symbol}", str(self.debt_to_treasury))
+                print(f"🏦 【中央借貸通報】 {self.symbol} 獲准撥款 {loan_amt} U，目前欠款: {self.debt_to_treasury} U")
+                return True
+        return False
+
+    def auto_repay_loan(self, pnl, storage):
+        """[還款機制] 獲利時優先撥出 50% 償還借款"""
+        if self.debt_to_treasury > 0 and pnl > 0:
+            repay_amt = min(self.debt_to_treasury, pnl * 0.5) # 分期還款 (獲利的 50%)
+            self.debt_to_treasury -= repay_amt
+            self.cash -= repay_amt
+            
+            treasury_cash = float(storage.get_global_config("TREASURY_CASH", "1000"))
+            storage.save_global_config("TREASURY_CASH", str(treasury_cash + repay_amt))
+            storage.save_global_config(f"DEBT_{self.symbol}", str(self.debt_to_treasury))
+            return repay_amt
+        return 0
     
 
     def load_active_position(self):
@@ -314,9 +343,13 @@ class PaperTrader:
                 
                 self._record_trade_result(pnl)
                 
+                # [自癒還款] 獲利時先還中央
+                repaid = self.auto_repay_loan(pnl, storage)
+                repay_msg = f"\n💸 分期還款至中央: {repaid:.1f} U (剩餘欠款: {self.debt_to_treasury:.1f} U)" if repaid > 0 else ""
+                
                 report = (f"✅ 【特工凱旋回鎮 | {exit_reason}】\n─────────────────\n"
                           f"🛡️ 特工: {self.symbol}\n📍 出場: ${current_price:,.4f}\n"
-                          f"📉 最終盈虧: {pnl:+.1f} U\n🏦 團隊剩餘金庫: ${self.cash:,.1f}" + reflection)
+                          f"📉 最終盈虧: {pnl:+.1f} U\n🏦 實收現金: ${self.cash:,.1f}" + repay_msg + reflection)
                 self.clear_active_position()
                 self.position = 0
                 self.has_partial_tp = False
@@ -377,36 +410,43 @@ class PaperTrader:
                 
                 self._record_trade_result(pnl)
                 
+                # [自癒還款] 獲利時先還中央
+                repaid = self.auto_repay_loan(pnl, storage)
+                repay_msg = f"\n💸 分期還款至中央: {repaid:.1f} U (剩餘欠款: {self.debt_to_treasury:.1f} U)" if repaid > 0 else ""
+
                 report = (f"✅ 【平倉通報 | {exit_reason}】\n─────────────────\n"
                           f"🪙 幣種: {self.symbol}\n📍 出場: ${current_price:,.4f}\n"
-                          f"📉 最終盈虧: {pnl:+.1f} U\n🏦 團隊剩餘金庫: ${self.cash:,.1f}" + reflection)
+                          f"📉 最終盈虧: {pnl:+.1f} U\n🏦 實收現金: ${self.cash:,.1f}" + repay_msg + reflection)
                 self.clear_active_position()
                 self.position = 0
                 self.has_partial_tp = False
 
 
-        # --- 3. 開倉判定 (加入 AI 反思比對) ---
+        # --- 3. 開倉判定 ---
         if self.position == 0:
             is_sniper = True if sniper_signal == "SUPER_BUY" else False
             if self.trades_today >= self.max_daily_trades and not is_sniper:
                 return "" 
 
-            # AI 反思比對 (防錯)
-            if context and storage:
-                from learning import ReflectionEngine
-                ref_engine = ReflectionEngine(storage)
-                is_danger, reason = ref_engine.is_similar_to_failed_trade(self.symbol, context)
-                if is_danger:
-                    return f"🛡️ 【AI 攔截 | REFLECTION】\n{self.symbol} 當前環境與歷史虧損案例極度相似，已自動取消進場以規避風險。\n過去原因: {reason}"
+            # [中央借貸檢查] 入場前若沒錢，向組長申請撥款
+            if self.cash < 100:
+                self.request_loan_if_needed(storage)
+
+            # AI 信心與槓桿決定
+            conf = context.get('ml_prob', 0.5)
+            # 桿槓邏輯: 根據信心值自動調整 1x ~ 5x (模擬合約)
+            self.leverage = 1.0 + (max(0, conf - 0.5) * 8) 
+            self.leverage = min(5.0, self.leverage) 
 
             if is_sniper or scalper_signal == "BUY_SCALP":
-                # 市長最高指令: 1000U 分成 10 份，固定每單 100U
-                invest_amt = max(100.0, self.initial_budget * 0.1) 
+                # 指令: 均分為十等分，固定為初始預算的 10%
+                invest_amt = self.initial_budget * 0.1 
                 
                 if self.cash < invest_amt:
-                    return f"⚠️ 【金庫告急】{self.symbol} 剩餘資金 ${self.cash:.1f} 不足以支付最小單位 $100 的出擊任務。"
+                    return f"⚠️ 【分隊資金告急】{self.symbol} 現金餘額不足執行單次出擊。"
                 
-                qty = invest_amt / current_price 
+                # 考慮槓桿的數量 (合約模式)
+                qty = (invest_amt * self.leverage) / current_price 
                 self.cash -= invest_amt
                 self.position = qty
                 self.entry_price = current_price
@@ -414,20 +454,17 @@ class PaperTrader:
                 self.has_partial_tp = False
                 self.trades_today += 1
                 self.save_active_position("LONG", current_price, qty)
-                if storage: storage.log_trade(f"EN_LONG_{self.symbol}", current_price, qty, 0, self.cumulative_pnl)
-                report = (f"🏹 【特工出擊任務 | LONG MISSION】\n─────────────────\n"
-                          f"🛡️ 特工: {self.symbol}\n📍 目標價: ${current_price:,.4f}\n"
-                          f"💰 本次投入: ${invest_amt:,.1f} U (固定 10% 倉位)\n🏦 剩餘金庫: ${self.cash:,.1f} U\n"
-                          f"🧠 組長信心: {context.get('ml_prob', 0)*100:.0f}%")
+                report = (f"🏹 【特工出擊 | LONG】\n─────────────────\n"
+                          f"🛡️ 特工: {self.symbol} | 槓桿: {self.leverage:.1f}x\n📍 價格: ${current_price:,.4f}\n"
+                          f"💰 保證金: ${invest_amt:,.1f} U | 名義價值: ${invest_amt*self.leverage:,.1f} U\n"
+                          f"🏦 餘額: ${self.cash:,.1f} U | 欠款: ${self.debt_to_treasury:.1f} U")
 
             elif scalper_signal == "SELL_SCALP":
-                # 市長最高指令: 定額 100U 下單
-                invest_amt = max(100.0, self.initial_budget * 0.1)
-                
+                invest_amt = self.initial_budget * 0.1
                 if self.cash < invest_amt:
-                    return f"⚠️ 【金庫告急】{self.symbol} 剩餘資金 ${self.cash:.1f} 不足以支付最小單位 $100 的出擊任務。"
+                    return f"⚠️ 【分隊資金告急】{self.symbol} 現金餘額不足。"
                 
-                qty = invest_amt / current_price
+                qty = (invest_amt * self.leverage) / current_price
                 self.cash -= invest_amt
                 self.position = -qty
                 self.entry_price = current_price
@@ -435,10 +472,9 @@ class PaperTrader:
                 self.has_partial_tp = False
                 self.trades_today += 1
                 self.save_active_position("SHORT", current_price, qty)
-                if storage: storage.log_trade(f"EN_SHORT_{self.symbol}", current_price, qty, 0, self.cumulative_pnl)
-                report = (f"❄️ 【特工出擊任務 | SHORT MISSION】\n─────────────────\n"
-                          f"🪙 幣種: {self.symbol}\n📍 價格: ${current_price:,.4f}\n"
-                          f"💰 本次投入: ${invest_amt:,.1f} U (固定 10% 倉位)\n🏦 剩餘金庫: ${self.cash:,.1f} U\n"
-                          f"🧠 AI 信心: {(1-context.get('ml_prob', 1))*100:.0f}%")
+                report = (f"❄️ 【特工出擊 | SHORT】\n─────────────────\n"
+                          f"🪙 幣種: {self.symbol} | 槓桿: {self.leverage:.1f}x\n📍 價格: ${current_price:,.4f}\n"
+                          f"💰 保證金: ${invest_amt:,.1f} U | 名義價值: ${invest_amt*self.leverage:,.1f} U\n"
+                          f"🏦 餘額: ${self.cash:,.1f} U | 欠款: ${self.debt_to_treasury:.1f} U")
 
         return report
