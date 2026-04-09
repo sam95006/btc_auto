@@ -8,62 +8,79 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
-        :root { --primary: #38bdf8; --gold: #fbbf24; --ok: #22c55e; --err: #f43f5e; --bg: #0f172a; }
-        body { margin: 0; padding: 0; overflow: hidden; font-family: 'Outfit', sans-serif; background: var(--bg); }
+        :root { --primary: #00f2ff; --gold: #ffd700; --ok: #00ff9d; --err: #ff0055; --bg: #050a14; --glass: rgba(10, 20, 40, 0.85); }
+        body { margin: 0; padding: 0; overflow: hidden; font-family: 'Outfit', sans-serif; background: var(--bg); color: white; }
+
+        /* 全息掃描線疊層 */
+        #hologram-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0.1) 1px, transparent 2px); pointer-events: none; z-index: 100; opacity: 0.3; }
         
-        /* HUD 固定層：確保 pointer-events: none 不會擋住 3D 操作 */
-        #hud-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-        .panel-box { background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(10px); border-radius: 20px; padding: 18px; border: 1px solid rgba(255,255,255,0.1); pointer-events: auto; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #hud-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 200; }
         
-        #left-stack { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 12px; }
-        #right-stack { position: absolute; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 12px; }
-        #bottom-stack { position: absolute; bottom: 50px; right: 20px; }
+        .game-panel { 
+            position: relative; pointer-events: auto; background: var(--glass); 
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            clip-path: polygon(0 0, 90% 0, 100% 20px, 100% 100%, 10px 100%, 0 90%);
+            padding: 20px; box-shadow: inset 0 0 20px rgba(0, 242, 255, 0.1), 0 10px 40px rgba(0,0,0,0.8);
+            backdrop-filter: blur(15px);
+        }
+        .game-panel::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--primary);
+        }
+        
+        #left-stack { position: absolute; top: 30px; left: 30px; display: flex; flex-direction: column; gap: 20px; }
+        #right-stack { position: absolute; top: 30px; right: 30px; display: flex; flex-direction: column; gap: 20px; }
+        #bottom-stack { position: absolute; bottom: 80px; right: 30px; width: 240px; }
 
-        .price-label { position: absolute; background: rgba(15, 23, 42, 0.95); color: white; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 800; pointer-events: none; border-left: 4px solid var(--primary); white-space: nowrap; transition: 0.1s; }
-        .light-ok { background-color: var(--ok); box-shadow: 0 0 10px var(--ok); }
-        .light-err { background-color: var(--err); box-shadow: 0 0 10px var(--err); }
+        .price-label { 
+            position: absolute; color: var(--primary); font-size: 11px; font-weight: 900; pointer-events: none;
+            text-shadow: 0 0 10px var(--primary); background: rgba(0,0,0,0.7); padding: 4px 10px;
+            border: 1px solid var(--primary); clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%);
+        }
 
-        #news-ticker { position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; color: #020617; padding: 6px 0; border-top: 3px solid var(--primary); z-index: 20; }
-        .ticker { display: inline-block; animation: scroll 60s linear infinite; font-weight: 900; font-size: 13px; }
-        @keyframes scroll { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
+        #news-ticker { 
+            position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.9); 
+            border-top: 2px solid var(--primary); padding: 10px 0; z-index: 300;
+        }
+        .ticker { color: var(--primary); font-family: 'Courier New', monospace; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; }
 
-        #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 100; pointer-events: auto; }
-        #modal-box { background: #f8fafc; border-radius: 25px; padding: 30px; width: 450px; color: #0f172a; }
+        @keyframes pulse-glow { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        .ace-tag { position: absolute; top: -40px; left: 50%; transform: translateX(-50%); color: var(--gold); font-size: 24px; animation: pulse-glow 1s infinite; }
     </style>
 </head>
 <body>
+    <div id="hologram-overlay"></div>
     <div id="webgl-container" style="position: absolute; width:100%; height:100%; cursor: grab;"></div>
     <div id="label-container" style="position: absolute; width:100%; height:100%; pointer-events: none; z-index: 5;"></div>
 
     <div id="hud-container">
         <div id="left-stack">
-            <div class="panel-box" style="width: 280px; border-top: 5px solid var(--primary);">
-                <div style="font-size: 10px; font-weight:900; color:#94a3b8; letter-spacing:1px; margin-bottom:10px;">ULTIMATE COMMAND v6.1</div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>🇹🇼 台股</span><span id="taiex-status" style="color:var(--primary);">同步中</span></div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px;"><span>🇺🇸 標普</span><span id="sp500-status" style="color:var(--gold);">同步中</span></div>
+            <div class="game-panel" style="width: 320px;">
+                <div style="font-size: 11px; font-weight:900; color:var(--primary); letter-spacing:3px; margin-bottom:15px; border-bottom:1px solid rgba(0,242,255,0.2); padding-bottom:8px;">TACTICAL COMMAND v6.4</div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span><small>INDEX</small> TAIEX</span><span id="taiex-status" style="color:var(--primary); font-family:monospace;">SCANNING...</span></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:20px;"><span><small>INDEX</small> S&P 500</span><span id="sp500-status" style="color:var(--gold); font-family:monospace;">SCANNING...</span></div>
                 
-                <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">
-                    <div style="font-size:10px; color:#64748b; margin-bottom:4px;">中央銀行預備金</div>
-                    <div style="font-size:22px; font-weight:900; color:var(--primary);">1000.0 U</div>
+                <div style="background:rgba(0,242,255,0.05); padding:15px; border-radius:4px; border-left:4px solid var(--primary);">
+                    <div style="font-size:10px; color:var(--primary); opacity:0.6; margin-bottom:6px;">CENTRAL TREASURY RESERVE</div>
+                    <div style="font-size:28px; font-weight:900; color:var(--primary); letter-spacing:-1px;">1000.0 <small style="font-size:14px;">USDT</small></div>
                 </div>
             </div>
 
-            <div class="panel-box" style="width: 280px;">
-                <div style="font-size:10px; font-weight:900; color:var(--gold); margin-bottom:8px;">🏛️ 圓桌會議日誌</div>
-                <div id="rt-log" style="font-size:12px; color:#cbd5e1; line-height:1.6;">等待通報...</div>
+            <div class="game-panel" style="width: 320px;">
+                <div style="font-size:10px; font-weight:900; color:var(--gold); margin-bottom:12px; letter-spacing:1px;">🛡️ ROUND TABLE CONSENSUS</div>
+                <div id="rt-log" style="font-size:13px; color:#fff; line-height:1.7; font-weight:600; font-family:monospace; background:rgba(255,255,255,0.03); padding:12px;">ESTABLISHING UPLINK...</div>
             </div>
         </div>
 
         <div id="right-stack">
-            <div class="panel-box" style="width: 220px; text-align:right;">
-                <div style="font-size:10px; color:#94a3b8;">指揮部總盈虧</div>
-                <div id="rev-all" style="font-size:28px; font-weight:900; color:var(--gold);">+0.0 U</div>
-                <div id="daily-debrief" style="margin-top:10px; font-size:11px; color:#94a3b8; line-height:1.4;">日報生成中...</div>
+            <div class="game-panel" style="width: 240px; text-align:right;">
+                <div style="font-size:10px; color:var(--primary); opacity:0.8;">NET REVENUE</div>
+                <div id="rev-all" style="font-size:32px; font-weight:900; color:var(--gold);">+0.0 U</div>
+                <div id="daily-debrief" style="margin-top:15px; font-size:12px; color:var(--primary); line-height:1.5; font-style:italic;">ANALYZING BATTLE...</div>
             </div>
         </div>
 
-        <div id="bottom-stack" class="panel-box" style="width: 180px;">
-            <div style="font-size:10px; font-weight:900; margin-bottom:8px; color:#94a3b8;">特工狀態</div>
+        <div id="bottom-stack" class="game-panel">
+            <div style="font-size:10px; font-weight:900; margin-bottom:12px; color:var(--primary); letter-spacing:1px;">AGENT STATUS</div>
             <div id="agent-list"></div>
         </div>
     </div>
