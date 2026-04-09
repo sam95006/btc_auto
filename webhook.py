@@ -115,7 +115,7 @@ def api_news():
             url = f"https://news.google.com/rss/search?q={query}&hl=zh-TW&gl=TW&ceid=TW:zh-Hant"
             resp = requests.get(url, timeout=5)
             root = ET.fromstring(resp.content)
-            return [item.find('title').text.split(' - ')[0] for item in root.findall('./channel/item')[:5]]
+            return [item.find('title').text.split(' - ')[0] for item in root.findall('./channel/item')[:10]]
         except: return ["📡 衛星信號對應中..."]
 
     return jsonify({

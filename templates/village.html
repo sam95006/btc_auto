@@ -289,19 +289,24 @@
                     </div>`;
                 } else if (ud.id === 'NEWS') {
                     fetch('/api/news').then(r => r.json()).then(nd => {
-                        document.getElementById('m-body').innerHTML = `<div style="background:#f8fafc; padding:15px; border-radius:15px; border-left:5px solid var(--primary);">
-                            <div style="font-weight:900; color:var(--primary);">🔴 LIVE 財經衛星</div>
-                            ${nd.intl_news.map(n => `<div style="font-size:13px; margin:5px 0;">📰 ${n}</div>`).join('')}
+                        const allNews = [
+                            ...nd.crypto_news.map(n => `<div style="font-size:13px; margin:5px 0; color:#0e7490;">🔵 [加密網] ${n}</div>`),
+                            ...nd.intl_news.map(n => `<div style="font-size:13px; margin:5px 0;">📰 [全球] ${n}</div>`),
+                            ...nd.fed_news.map(n => `<div style="font-size:13px; margin:5px 0; color:#b45309;">🏛️ [聯準會] ${n}</div>`)
+                        ];
+                        document.getElementById('m-body').innerHTML = `<div style="background:#f8fafc; padding:15px; border-radius:15px; border-left:5px solid var(--primary); max-height:400px; overflow-y:auto;">
+                            <div style="font-weight:900; color:var(--primary); margin-bottom:10px;">🔴 全球金融衛星直播中</div>
+                            ${allNews.slice(0, 15).join('')}
                         </div>`;
                     });
-                    bodyHtml = `<div style="text-align:center; padding:20px;">正在接收衛星編碼...</div>`;
+                    bodyHtml = `<div style="text-align:center; padding:20px;">正在接收衛星加密信號...</div>`;
                 } else {
                     const price = window.liveData?.prices[ud.id];
                     const priceStr = (price && price != "0.0") ? `$${parseFloat(price).toLocaleString()}` : "📡 數據連線中...";
                     bodyHtml = `<div style="background:#f1f5f9; padding:20px; border-radius:15px;">
                         <div style="font-size:12px; color:#64748b;">該分隊實時報價</div>
                         <div style="font-size:32px; font-weight:900; color:var(--primary);">${priceStr}</div>
-                        <div style="margin-top:10px; font-size:12px;">運行狀態: <span style="color:var(--ok); font-weight:800;">[自癒系統監控中]</span></div>
+                        <div style="margin-top:10px; font-size:12px;">運行狀態: <span style="color:#10b981; font-weight:800;">[自癒系統監控中]</span></div>
                     </div>`;
                 }
                 document.getElementById('m-title').innerText = ud.name;
