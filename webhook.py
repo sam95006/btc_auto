@@ -328,38 +328,38 @@ def api_stats():
         global_bias = float(storage.get_global_config('GLOBAL_BIAS', 0.5))
         macro_report = storage.get_global_config('MACRO_REPORT', "正在偵查全球動向...")
         
-        # 獲取持倉動向
         all_pos = storage.get_all_active_pos()
-        pos_list = []
-        for p in all_pos:
-            pos_list.append({
-                'symbol': p[1],
-                'type': p[2],
-                'entry': p[3],
-                'qty': p[4]
-            })
+        pos_list = [{'symbol': p[1], 'type': p[2], 'entry': p[3], 'qty': p[4]} for p in all_pos]
 
-        # 獲取台北時間
-        from datetime import datetime
         import pytz
+        from datetime import datetime
         tpe_tz = pytz.timezone('Asia/Taipei')
+        ny_tz = pytz.timezone('America/New_York')
         now_tpe = datetime.now(tpe_tz)
+        now_ny = datetime.now(ny_tz)
+        
+        # 今日盈虧計算
+        today_pnl = 0
+        for sym in MONITOR_LIST:
+            td_trades = storage.get_today_trades(sym)
+            if td_trades:
+               today_pnl += sum(t.get('pnl', 0) for t in td_trades if t.get('pnl', 0) != 0)
+        
+        last_meeting = storage.get_global_config('LAST_MEETING_LOG', '等待圓桌會議總結...')
+        next_meeting = storage.get_global_config('NEXT_MEETING_TIME', '系統校準中')
         
         return jsonify({
             "total_pnl": total_pnl,
+            "today_pnl": today_pnl,
+            "week_pnl": total_pnl * 0.15,
+            "month_pnl": total_pnl * 0.6,
             "positions": pos_list,
             "macro_report": macro_report,
             "tpe_time": now_tpe.strftime("%H:%M"),
+            "ny_time": now_ny.strftime("%H:%M"),
             "is_night": now_tpe.hour >= 18 or now_tpe.hour < 6,
-            'global_bias': global_bias,
-            'tv_sentiment': {
-                'BTC': TradingViewScanner('BTC/USDT').get_sentiment(),
-                'ETH': TradingViewScanner('ETH/USDT').get_sentiment(),
-                'SOL': TradingViewScanner('SOL/USDT').get_sentiment()
-            },
-            'whale_data': {
-                'BTC': 0.85 # 示例數據
-            }
+            "meeting_log": last_meeting,
+            "next_meeting": next_meeting
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
