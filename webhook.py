@@ -82,33 +82,40 @@ def api_stats():
             rem = start - curr if curr < start else (24*60 - curr) + start
             return "已休市", f"{rem//60:02d}:{rem%60:02d} 後開盤"
 
+        # --- [市場指數即時化] ---
         taiex_status, taiex_cd = get_mkt_status(now_tpe, 9, 0, 13, 30)
         sp500_status, sp500_cd = get_mkt_status(now_nyc, 9, 30, 16, 0)
+        # 模擬即時大盤點數 (實際可用爬蟲獲取)
+        taiex_idx = f"{20000 + (now_tpe.second % 100):,}"
+        sp500_idx = f"{5100 + (now_nyc.second % 50):,}"
 
-        # --- [精英競賽與金庫校準] ---
+        # --- [圓桌會議分時紀錄] ---
+        meeting_slots = ["00:00", "06:00", "12:00", "18:00"]
+        meeting_logs = {}
+        for slot in meeting_slots:
+            log = storage.get_global_config(f"RT_LOG_{slot}", f"主席（BTC）: {slot} 會議結論執行中，全城分隊戰略部署完畢。")
+            meeting_logs[slot] = log
+        
+        # 預設顯示最近一次會議
+        last_slot = "00:00"
+        for s in meeting_slots:
+            if now_tpe.hour >= int(s.split(':')[0]): last_slot = s
+        round_table_log = meeting_logs[last_slot]
+
+        # --- [精準資金校準] ---
         ace_symbol = "BTC"
         max_pnl = -999999
         accounts_data = {}
-        # 標準分隊
         for sym in ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XAUT/USDT', 'PEPE/USDT']:
             cash = float(storage.get_global_config(f"CASH_{sym}", "300.0"))
             init = 300.0
             debt = float(storage.get_global_config(f"DEBT_{sym}", "0.0"))
+            accounts_data[sym] = {"cash": cash, "initial": init, "debt": debt}
             current_pnl = cash - init
             if current_pnl > max_pnl: max_pnl, ace_symbol = current_pnl, sym.split('/')[0]
-            accounts_data[sym] = {"cash": cash, "initial": init, "debt": debt}
         
-        # 特殊物件 (金庫與雷達)
-        accounts_data['TREASURY'] = {
-            "cash": float(storage.get_global_config("TREASURY_CASH", "1000.0")),
-            "initial": 1000.0,
-            "debt": 0.0
-        }
-        accounts_data['SPECIAL'] = {
-            "cash": float(storage.get_global_config("CASH_SPECIAL", "100.0")),
-            "initial": 100.0,
-            "debt": 0.0
-        }
+        accounts_data['TREASURY'] = {"cash": float(storage.get_global_config("TREASURY_CASH", "1000.0")), "initial": 1000.0, "debt": 0.0}
+        accounts_data['SPECIAL'] = {"cash": float(storage.get_global_config("CASH_SPECIAL", "100.0")), "initial": 100.0, "debt": 0.0}
         
         debrief_summary = f"🎉 今日由 {ace_symbol} 領跑全城，趨勢捕捉非常精準！" if max_pnl > 10 else "全軍陣勢穩健，各特工正在靜候大行情爆發。"
         if max_pnl < -10: debrief_summary = "⚠️ 今日行情詭譎，組長已下令開啟防禦姿勢避開插針。"
@@ -126,13 +133,14 @@ def api_stats():
         return jsonify({
             "tpe_time": now_tpe.strftime("%H:%M:%S"),
             "ny_time": now_nyc.strftime("%H:%M:%S"),
-            "taiex_info": {"status": taiex_status, "countdown": taiex_cd},
-            "sp500_info": {"status": sp500_status, "countdown": sp500_cd},
+            "taiex_info": {"status": taiex_status, "countdown": taiex_cd, "index": taiex_idx},
+            "sp500_info": {"status": sp500_status, "countdown": sp500_cd, "index": sp500_idx},
             "today_pnl": today_pnl,
             "total_pnl": total_pnl,
             "treasury_cash": treasury_cash,
             "global_alert": global_alert,
             "meetings": meetings,
+            "meeting_logs": meeting_logs,
             "round_table_log": round_table_log,
             "daily_debrief": debrief_summary,
             "ace_agent": ace_symbol,
