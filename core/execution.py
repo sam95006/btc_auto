@@ -76,7 +76,7 @@ class PaperTrader:
         
         # 每日交易目標
         self.is_pepe = is_pepe
-        self.cash_usage_pct = 0.4 # 預設使用 40% 資金，由組長聲望動態調整
+        self.cash_usage_pct = 0.1 # 預設使用 10% 資金 (十等分下單)
         if is_pepe:
             # PEPE 無限交易，但要達到 90% 勝率
             self.daily_target = DailyTradeTarget(symbol, target_trades=999, min_winning_trades=9)
@@ -229,8 +229,8 @@ class PaperTrader:
                 self.position *= 0.6
                 self.has_partial_tp = True
                 report = (f"💰 【財政部稅收通報 | FAST TP】\n─────────────────\n"
-                          f"🛡️ 項目: {self.symbol} (小計 40%)\n📍 執行價: ${current_price:,.2f}\n📈 盈虧: +{pnl:,.1f} U\n"
-                          f"⚖️ 目前聲望: {getattr(context, 'prestige', 1.0):.2f}")
+                          f"🛡️ 項目: {self.symbol} (小計 40%)\n📍 執行價: ${current_price:,.2f}\n"
+                          f"📈 實收盈虧: +{pnl:,.1f} U\n🏦 團隊剩餘金庫: ${self.cash:,.1f}")
                 if storage: storage.log_trade(f"PT_LONG_{self.symbol}", self.entry_price, current_price, abs(self.position*0.4), pnl, self.cumulative_pnl, is_exit=True)
 
             self.trailing_high = max(self.trailing_high, current_price)
@@ -278,7 +278,8 @@ class PaperTrader:
                 self._record_trade_result(pnl)
                 
                 report = (f"✅ 【特工凱旋回鎮 | {exit_reason}】\n─────────────────\n"
-                          f"🛡️ 特工: {self.symbol}\n📍 出場: ${current_price:,.2f}\n📉 最終盈虧: {pnl:+.1f} U" + reflection)
+                          f"🛡️ 特工: {self.symbol}\n📍 出場: ${current_price:,.4f}\n"
+                          f"📉 最終盈虧: {pnl:+.1f} U\n🏦 團隊剩餘金庫: ${self.cash:,.1f}" + reflection)
                 self.position = 0
                 self.has_partial_tp = False
 
@@ -295,7 +296,8 @@ class PaperTrader:
                 self.position *= 0.6
                 self.has_partial_tp = True
                 report = (f"💰 【獲利通報 | FAST TP】\n─────────────────\n"
-                          f"🪙 幣種: {self.symbol} (小計 40%)\n📍 價格: ${current_price:,.2f}")
+                          f"🪙 幣種: {self.symbol} (小計 40%)\n📍 價格: ${current_price:,.4f}\n"
+                          f"📈 實收盈虧: +{pnl:,.1f} U\n🏦 團隊剩餘金庫: ${self.cash:,.1f}")
                 if storage: storage.log_trade(f"PT_SHORT_{self.symbol}", self.entry_price, current_price, abs(self.position*0.4), pnl, self.cumulative_pnl, is_exit=True)
             
             self.trailing_low = min(self.trailing_low, current_price)
@@ -338,7 +340,8 @@ class PaperTrader:
                 self._record_trade_result(pnl)
                 
                 report = (f"✅ 【平倉通報 | {exit_reason}】\n─────────────────\n"
-                          f"🪙 幣種: {self.symbol}\n📍 出場: ${current_price:,.2f}\n📉 盈虧: {pnl:+.1f} U" + reflection)
+                          f"🪙 幣種: {self.symbol}\n📍 出場: ${current_price:,.4f}\n"
+                          f"📉 最終盈虧: {pnl:+.1f} U\n🏦 團隊剩餘金庫: ${self.cash:,.1f}" + reflection)
                 self.position = 0
                 self.has_partial_tp = False
 
@@ -358,7 +361,9 @@ class PaperTrader:
                     return f"🛡️ 【AI 攔截 | REFLECTION】\n{self.symbol} 當前環境與歷史虧損案例極度相似，已自動取消進場以規避風險。\n過去原因: {reason}"
 
             if is_sniper or scalper_signal == "BUY_SCALP":
-                qty = (self.cash * self.cash_usage_pct) / current_price 
+                invest_amt = self.cash * self.cash_usage_pct
+                qty = invest_amt / current_price 
+                self.cash -= invest_amt
                 self.position = qty
                 self.entry_price = current_price
                 self.trailing_high = current_price
@@ -366,18 +371,23 @@ class PaperTrader:
                 self.trades_today += 1
                 if storage: storage.log_trade(f"EN_LONG_{self.symbol}", current_price, qty, 0, self.cumulative_pnl)
                 report = (f"🏹 【特工出擊任務 | LONG MISSION】\n─────────────────\n"
-                          f"🛡️ 特工: {self.symbol}\n📍 目標價: ${current_price:,.4f}\n🧠 組長信心: {context.get('ml_prob', 0)*100:.0f}%\n"
-                          f"📊 當前聲望: {context.get('prestige', 1.0):.2f}")
+                          f"🛡️ 特工: {self.symbol}\n📍 目標價: ${current_price:,.4f}\n"
+                          f"💰 投入資金: ${invest_amt:,.1f} U\n🏦 領取後金庫發還: ${self.cash:,.1f} U\n"
+                          f"🧠 組長信心: {context.get('ml_prob', 0)*100:.0f}%")
 
             elif scalper_signal == "SELL_SCALP":
-                qty = (self.cash * self.cash_usage_pct) / current_price
+                invest_amt = self.cash * self.cash_usage_pct
+                qty = invest_amt / current_price
+                self.cash -= invest_amt
                 self.position = -qty
                 self.entry_price = current_price
                 self.trailing_low = current_price
                 self.has_partial_tp = False
                 self.trades_today += 1
                 if storage: storage.log_trade(f"EN_SHORT_{self.symbol}", current_price, qty, 0, self.cumulative_pnl)
-                report = (f"❄️ 【開倉通報 | SHORT ENTRY】\n─────────────────\n"
-                          f"🪙 幣種: {self.symbol}\n📍 價格: ${current_price:,.4f}\n🧠 AI 信心: {(1-context.get('ml_prob', 1))*100:.0f}%\n🛡️ 風險: ATR 保護中")
+                report = (f"❄️ 【特工出擊任務 | SHORT MISSION】\n─────────────────\n"
+                          f"🪙 幣種: {self.symbol}\n📍 價格: ${current_price:,.4f}\n"
+                          f"💰 投入資金: ${invest_amt:,.1f} U\n🏦 領取後金庫發還: ${self.cash:,.1f} U\n"
+                          f"🧠 AI 信心: {(1-context.get('ml_prob', 1))*100:.0f}%")
 
         return report
