@@ -78,7 +78,8 @@ class NewsScanner:
         import xml.etree.ElementTree as ET
         try:
             url = "https://news.google.com/rss/search?q=bitcoin+OR+cryptocurrency+when:24h&hl=en-US&gl=US&ceid=US:en"
-            response = requests.get(url, timeout=5)
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"}
+            response = requests.get(url, headers=headers, timeout=5)
             root = ET.fromstring(response.content)
             items = root.findall('./channel/item')[:3] # 取最新 3 條
             if items:

@@ -420,11 +420,6 @@ def api_treasury():
              total_fund += wallet
              allocations.append({'symbol': sym, 'wallet': wallet})
              
-        # 加入 PEPE 
-        pepe_wallet = float(storage.get_global_config(f'WALLET_PEPE/USDT', 1000.0))
-        total_fund += pepe_wallet
-        allocations.append({'symbol': 'PEPE/USDT', 'wallet': pepe_wallet})
-        
         return jsonify({
              'total_fund': total_fund,
              'allocations': allocations,
@@ -443,12 +438,15 @@ def api_news():
     def fetch_rss(query):
         try:
             url = f"https://news.google.com/rss/search?q={query}&hl=en-TW&gl=TW&ceid=TW:zh-Hant"
-            resp = requests.get(url, timeout=5)
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"}
+            resp = requests.get(url, headers=headers, timeout=5)
             root = ET.fromstring(resp.content)
             items = root.findall('./channel/item')[:5]
+            if not items:
+                return ["目前無突發震盪新聞"]
             return [item.find('title').text.split(' - ')[0] for item in items]
-        except:
-            return ["無法取得資料"]
+        except Exception as e:
+            return [f"正在繞過通訊封鎖重新連線..."]
 
     intl_news = fetch_rss("Global+Economy+OR+Finance")
     crypto_news = fetch_rss("bitcoin+OR+cryptocurrency")

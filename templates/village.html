@@ -269,22 +269,44 @@
             const group = new THREE.Group();
             group.position.set(opts.x, 0, opts.z);
             
-            const base = new THREE.Mesh(new THREE.BoxGeometry(12, 2, 12), new THREE.MeshStandardMaterial({ color: 0xcbd5e1 }));
-            base.position.y = 1; base.castShadow = true; base.receiveShadow = true;
+            // 強化基座底盤，增加金屬反光感
+            const base = new THREE.Mesh(new THREE.BoxGeometry(16, 3, 16), new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.9, roughness: 0.4 }));
+            base.position.y = 1.5; base.castShadow = true; base.receiveShadow = true;
             group.add(base);
 
-            const bMat = new THREE.MeshStandardMaterial({ 
-                color: opts.color, map: createWindowTexture(opts.windowColor || '#ffffff'),
-                roughness: 0.2, metalness: 0.6, emissive: opts.windowColor || '#000000', emissiveIntensity: 0.1
-            });
-            const mesh = new THREE.Mesh(new THREE.BoxGeometry(10, opts.h, 10), bMat);
-            mesh.position.y = opts.h/2 + 2; mesh.castShadow = true; mesh.receiveShadow = true;
+            let mesh;
+            
+            // 新增: 針對 SCANNER 建造「立體矩陣鐵塔」
+            if (opts.id === 'SCANNER') {
+                const cMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 1.0, roughness: 0.1, wireframe: true, wireframeLinewidth: 2 });
+                mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 8, opts.h, 8), cMat);
+                mesh.position.y = opts.h/2 + 3;
+                
+                // 鐵塔頂端高亮信號燈
+                const lightMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xef4444, emissiveIntensity: 3.0 });
+                const light = new THREE.Mesh(new THREE.SphereGeometry(2, 16, 16), lightMat);
+                light.position.y = opts.h + 3;
+                group.add(light);
+            } else {
+                // 普通大樓強化質感
+                const bMat = new THREE.MeshStandardMaterial({ 
+                    color: opts.color, map: createWindowTexture(opts.windowColor || '#ffffff'),
+                    roughness: 0.1, metalness: 0.5, emissive: opts.windowColor || '#000000', emissiveIntensity: 0.15
+                });
+                mesh = new THREE.Mesh(new THREE.BoxGeometry(13, opts.h, 13), bMat);
+                mesh.position.y = opts.h/2 + 3; 
+            }
+            
+            mesh.castShadow = true; mesh.receiveShadow = true;
             
             // 賦予點擊身分
             mesh.userData = { id: opts.id, name: opts.name, type: opts.type };
             clickableObjects.push(mesh);
-            group.add(mesh);
+            // 放寬點擊範圍，將基座也納入點擊
+            base.userData = mesh.userData;
+            clickableObjects.push(base);
 
+            group.add(mesh);
             scene.add(group);
             return { group, mesh, data: opts };
         }
