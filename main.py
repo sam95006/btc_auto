@@ -126,7 +126,7 @@ def main():
         try:
             print("⏳ 啟動終極初始化...")
             storage = Storage()
-            predictors = {sym: AdaptiveMLPredictor(symbol=sym, storage=storage) for sym in MONITOR_SYMBOLS + [PEPE_SYMBOL]}
+            predictors = {sym: AdaptiveMLPredictor(storage=storage) for sym in MONITOR_SYMBOLS + [PEPE_SYMBOL]}
             
             macro, news, fed, pol = MacroScanner(), NewsScanner(), FedScanner(), PoliticalScanner()
             feed_manager, traders, whales, tv_scanners = {}, {}, {}, {}
