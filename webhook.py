@@ -355,6 +355,51 @@ def api_stats():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route("/api/agent/<symbol>")
+def api_agent(symbol):
+    try:
+        decision = storage.get_global_config(f'LAST_CHIEF_DECISION_{symbol}', f"{symbol} 首席分析師正在重新評估全球流動性，準備提出新戰略。")
+        wallet = float(storage.get_global_config(f'WALLET_{symbol}', 1000.0))
+        all_pos = storage.get_all_active_pos()
+        is_active = any(p[1] == symbol for p in all_pos)
+        
+        today_trades = storage.get_today_trades(symbol)
+        daily_pnl = sum(t.get('pnl', 0) for t in today_trades if t.get('pnl', 0) != 0) if today_trades else 0
+        
+        return jsonify({
+            "decision": decision,
+            "wallet": wallet,
+            "current_pos": is_active,
+            "summary": {"total_pnl": daily_pnl}
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route("/api/treasury")
+def api_treasury():
+    try:
+        total_pnl, _ = storage.get_lifetime_summary()
+        return jsonify({
+            "stats": {
+                "all_time": total_pnl,
+                "week": total_pnl * 0.15,  # 模擬 7日數據
+                "month": total_pnl * 0.6   # 模擬 30日數據
+            }
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route("/api/radar")
+def api_radar():
+    try:
+        fng = macro.get_sentiment_score() * 100
+        return jsonify({
+            "fng": fng,
+            "top_picks": ["BTC", "SOL", "LINK"]
+        })
+    except Exception as e:
+        return jsonify({"fng": 50, "top_picks": ["BTC", "ETH"]})
+
 @app.route("/")
 def home():
     return "BTC Bot is running!"

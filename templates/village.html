@@ -12,8 +12,6 @@
         :root {
             --primary: #00d2ff;
             --gold: #ffcc00;
-            --panel-bg: rgba(255, 255, 255, 0.95);
-            --night-bg: #020617;
         }
 
         body, html {
@@ -22,32 +20,31 @@
             font-family: 'Outfit', sans-serif; transition: background 2s;
         }
 
-        /* 📱 手機自適應容器 */
         #webgl-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        /* 🏰 頂部 HUD (市長與金庫) */
+        /* HUD */
         #hud-top {
             position: absolute; top: 0; left: 0; width: 100%; padding: 20px;
             display: flex; justify-content: space-between; z-index: 100; pointer-events: none;
+            box-sizing: border-box;
         }
         .header-box {
-            background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
-            border-radius: 40px; padding: 10px 25px; pointer-events: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 2px solid white;
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+            border-radius: 40px; padding: 12px 25px; pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 2px solid white;
             display: flex; align-items: center; gap: 15px; color: #1e293b;
+            cursor: default;
         }
 
-        /* 📊 右側「團隊戰況回報」自適應小窗 */
         #squad-panel {
             position: absolute; right: 20px; top: 100px; width: 220px;
-            background: rgba(255,255,255,0.9); border-radius: 20px; padding: 20px;
+            background: rgba(255,255,255,0.95); border-radius: 20px; padding: 20px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.1); pointer-events: auto;
-            z-index: 100; border: 1px solid rgba(255,255,255,0.5);
+            z-index: 100; border: 2px solid white;
         }
         .squad-item { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 700; font-size: 13px; }
         .squad-status { color: #64748b; font-size: 11px; }
 
-        /* 📡 底部 TradingView 情報流 */
         #news-ticker {
             position: absolute; bottom: 0; left: 0; width: 100%;
             background: rgba(15, 23, 42, 0.95); color: white; padding: 12px 0;
@@ -57,224 +54,480 @@
         .ticker { display: inline-block; animation: ticker 40s linear infinite; font-weight: 700; font-size: 14px; }
         @keyframes ticker { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
 
-        /* 🏡 建築標籤 */
-        .poi-label {
-            position: absolute; background: white; border: 2.5px solid var(--primary);
-            color: #0f172a; padding: 6px 15px; border-radius: 12px;
-            font-size: 13px; font-weight: 900; cursor: pointer; pointer-events: auto;
-            transform: translate(-50%, -100%); transition: all 0.2s;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1); z-index: 50;
+        /* Raycaster Tooltip */
+        #tooltip {
+            position: absolute; background: rgba(0,0,0,0.8); color: white;
+            padding: 8px 15px; border-radius: 10px; font-size: 14px; font-weight: 700;
+            pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 300;
+            transform: translate(-50%, -150%);
+            border: 2px solid var(--primary);
         }
 
         /* 彈窗 */
         #modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 5000;
-            pointer-events: auto; backdrop-filter: blur(10px);
+            background: rgba(15, 23, 42, 0.6); display: none; justify-content: center; align-items: center; z-index: 5000;
+            pointer-events: auto; backdrop-filter: blur(8px);
         }
-        #modal-box { background: white; width: 90%; max-width: 450px; border-radius: 35px; padding: 35px; }
+        #modal-box { 
+            background: white; width: 90%; max-width: 500px; border-radius: 30px; padding: 35px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3); position: relative;
+            animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes slideUp { from { transform: translateY(50px) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; }}
+        .data-card { background: #f8fafc; border-radius: 20px; padding: 20px; margin-top: 15px; border-left: 5px solid var(--primary); }
 
-        /* 📱 手機優化：當寬度小於 768px */
+        #instructions {
+            position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
+            background: rgba(255,255,255,0.8); padding: 5px 20px; border-radius: 20px;
+            font-size: 12px; font-weight: 700; color: #1e293b; z-index: 100;
+        }
+
         @media (max-width: 768px) {
-            #squad-panel { display: none; } /* 手機端隱藏戰況窗以節省空間 */
+            #squad-panel { display: none; }
             .header-box { padding: 8px 15px; font-size: 12px; }
             .header-box div div:last-child { font-size: 12px !important; }
-            #news-ticker { padding: 8px 0; font-size: 12px; }
         }
     </style>
 </head>
 <body>
     <div id="webgl-container"></div>
+    <div id="tooltip">Town HQ</div>
 
     <div id="hud-top">
         <div class="header-box">
             <div style="font-size: 24px;">🤵</div>
             <div>
-                <div style="font-size: 9px; font-weight: 800; color: #64748b;">TPE TIME: <span id="clock">--:--</span></div>
-                <div id="status-msg" style="font-size: 14px; font-weight: 900;">市長，城鎮同步中</div>
+                <div style="font-size: 10px; font-weight: 800; color: #64748b;">TPE TIME: <span id="clock">--:--</span></div>
+                <div id="status-msg" style="font-size: 15px; font-weight: 900;">市長，城鎮同步中</div>
             </div>
         </div>
         <div class="header-box" style="border-right: 4px solid var(--gold);">
             <div style="text-align: right;">
-                <div style="font-size: 9px; font-weight: 800; color: #64748b;">TOTAL REVENUE</div>
+                <div style="font-size: 10px; font-weight: 800; color: #64748b;">TOTAL REVENUE</div>
                 <div style="font-size: 18px; font-weight: 900; color: #059669;" id="total-pnl">$0.00 U</div>
             </div>
             <div style="font-size: 24px;">💰</div>
         </div>
     </div>
 
-    <!-- 右側戰況總覽 -->
     <div id="squad-panel">
         <div style="font-size: 11px; font-weight: 900; color: #94a3b8; margin-bottom: 20px; letter-spacing: 1px;">SQUAD STATUS</div>
-        <div id="squad-list">
-            <!-- 動態填充 -->
-        </div>
+        <div id="squad-list"></div>
     </div>
+
+    <div id="instructions">🖱️ 左鍵轉動視角 | 滾輪縮放 | 點擊建築物開啟報表</div>
 
     <div id="news-ticker">
-        <div class="ticker-wrap">
-            <div class="ticker" id="global-ticker">
-                [LIVE INTEL] 正在連線 TRADINGVIEW 財經串流... 聯準會預測數據更新中... 地緣政治風險回報預警...
-            </div>
-        </div>
+        <div class="ticker-wrap"><div class="ticker" id="global-ticker">[LIVE INTEL] 正在連線 TRADINGVIEW 財經串流... 載入中...</div></div>
     </div>
 
-    <div id="labels-container"></div>
-
-    <div id="modal-overlay">
-        <div id="modal-box">
-            <h2 id="m-title" style="margin:0; font-weight:900;">數據回報</h2>
+    <!-- 報表彈窗 -->
+    <div id="modal-overlay" onclick="closeModal(event)">
+        <div id="modal-box" onclick="event.stopPropagation()">
+            <h2 id="m-title" style="margin:0; font-weight:900; font-size: 24px; color: #0f172a;">數據回報</h2>
             <div id="m-body"></div>
-            <button onclick="closeModal()" style="width:100%; margin-top:25px; padding:15px; border-radius:20px; border:none; background:var(--primary); color:white; font-weight:900;">回到指揮中心</button>
+            <button onclick="closeModal(null, true)" style="width:100%; margin-top:25px; padding:15px; border-radius:20px; border:none; background:var(--primary); color:white; font-weight:900; font-size:16px; cursor:pointer;">確認</button>
         </div>
     </div>
 
     <script>
-        // --- 1. Three.js & 環境系統 ---
+        // --- 1. Three.js 場景與光影 ---
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x87ceeb);
-        scene.fog = new THREE.Fog(0x87ceeb, 50, 300);
+        scene.fog = new THREE.Fog(0x87ceeb, 80, 250);
 
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.set(90, 100, 120);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.getElementById('webgl-container').appendChild(renderer.domElement);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
-        camera.position.set(80, 80, 100);
+        controls.maxPolarAngle = Math.PI / 2.2;
+        controls.minDistance = 30;
+        controls.maxDistance = 200;
 
-        const ambient = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambient);
-        const sun = new THREE.DirectionalLight(0xffffff, 1.0);
-        sun.position.set(50, 100, 50); sun.castShadow = true;
-        scene.add(sun);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const sunLight = new THREE.DirectionalLight(0xfffff0, 1.2);
+        sunLight.position.set(100, 150, 50);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.set(2048, 2048);
+        sunLight.shadow.camera.near = 10;
+        sunLight.shadow.camera.far = 300;
+        sunLight.shadow.camera.left = -100;
+        sunLight.shadow.camera.right = 100;
+        sunLight.shadow.camera.top = 100;
+        sunLight.shadow.camera.bottom = -100;
+        sunLight.shadow.bias = -0.001;
+        scene.add(sunLight);
 
-        // 地形
-        const ground = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), new THREE.MeshStandardMaterial({ color: 0x55aa55 }));
+        // --- 2. 創建高品質材質與紋理 (無需外部圖檔) ---
+        function createWindowTexture(color) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#1e293b'; // 建築底色
+            ctx.fillRect(0, 0, 128, 128);
+            ctx.fillStyle = color; // 窗戶光
+            for (let x = 8; x < 128; x += 20) {
+                for (let y = 8; y < 128; y += 20) {
+                    if (Math.random() > 0.3) {
+                        ctx.shadowColor = color; ctx.shadowBlur = 4;
+                        ctx.fillRect(x, y, 10, 14);
+                        ctx.shadowBlur = 0;
+                    } else {
+                        ctx.fillStyle = '#0f172a';
+                        ctx.fillRect(x, y, 10, 14);
+                        ctx.fillStyle = color;
+                    }
+                }
+            }
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+            tex.repeat.set(2, 4);
+            return tex;
+        }
+
+        function createLawnTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#4ade80'; ctx.fillRect(0,0,512,512);
+            for(let i=0; i<4000; i++) {
+                ctx.fillStyle = Math.random()>0.5 ? '#22c55e' : '#166534';
+                ctx.fillRect(Math.random()*512, Math.random()*512, 2, 2);
+            }
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+            tex.repeat.set(20, 20);
+            return tex;
+        }
+        const lawnMat = new THREE.MeshStandardMaterial({ map: createLawnTexture(), roughness: 1 });
+
+        // --- 3. 建設城市地貌 ---
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), lawnMat);
         ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true;
         scene.add(ground);
 
-        // 建築物列表 (新增 XAUT)
-        const buildings = [
-            { id: 'BTC', name: 'BTC 摩天站', color: 0x3b82f6, h: 35, x: -30, z: -30 },
-            { id: 'ETH', name: 'ETH 工事台', color: 0x8b5cf6, h: 25, x: 20, z: -25 },
-            { id: 'SOL', name: 'SOL 觀察台', color: 0x10b981, h: 20, x: -30, z: 30 },
-            { id: 'PEPE', name: '🐸 PEPE 基地', color: 0x22c55e, h: 12, x: 30, z: 30 },
-            { id: 'XAUT', name: '🌕 黃金聖殿', color: 0xfacc15, h: 28, x: 0, z: -45 }, // 新增黃金
-            { id: 'TREASURY', name: '中央金庫', color: 0xf59e0b, h: 25, x: 0, z: 0 },
-            { id: 'NEWS', name: '情報中心', color: 0x64748b, h: 18, x: 0, z: 40 }
+        // 柏油馬路十字網格
+        const ashpaltMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.9, metalness: 0.1 });
+        const rd1 = new THREE.Mesh(new THREE.PlaneGeometry(200, 16), ashpaltMat);
+        rd1.rotation.x = -Math.PI / 2; rd1.position.y = 0.1; rd1.receiveShadow = true; scene.add(rd1);
+        const rd2 = new THREE.Mesh(new THREE.PlaneGeometry(16, 200), ashpaltMat);
+        rd2.rotation.x = -Math.PI / 2; rd2.position.y = 0.1; rd2.receiveShadow = true; scene.add(rd2);
+
+        // --- 4. 建設高品質互動大樓 ---
+        const clickableObjects = [];
+        
+        function createBuilding(opts) {
+            const group = new THREE.Group();
+            group.position.set(opts.x, 0, opts.z);
+            
+            // 底座
+            const baseGeo = new THREE.BoxGeometry(10, 2, 10);
+            const baseMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1 });
+            const base = new THREE.Mesh(baseGeo, baseMat);
+            base.position.y = 1; base.castShadow = true; base.receiveShadow = true;
+            group.add(base);
+
+            // 主建築 (帶窗戶紋理)
+            const bGeo = new THREE.BoxGeometry(8, opts.h, 8);
+            const winTex = createWindowTexture(opts.windowColor || '#ffffff');
+            const bMat = new THREE.MeshStandardMaterial({ 
+                color: opts.color, map: winTex, roughness: 0.2, metalness: 0.6,
+                emissive: opts.windowColor || '#000000', emissiveIntensity: 0.1
+            });
+            const mesh = new THREE.Mesh(bGeo, bMat);
+            mesh.position.y = opts.h/2 + 2; mesh.castShadow = true; mesh.receiveShadow = true;
+            group.add(mesh);
+
+            // 樓頂裝飾
+            if(opts.type === 'scanner') {
+                const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 8), new THREE.MeshStandardMaterial({color:0xff0000}));
+                antenna.position.y = opts.h + 6; antenna.castShadow = true;
+                group.add(antenna);
+            } else {
+                const roof = new THREE.Mesh(new THREE.BoxGeometry(6, 1, 6), new THREE.MeshStandardMaterial({color:0x475569}));
+                roof.position.y = opts.h + 2.5; roof.castShadow = true;
+                group.add(roof);
+            }
+
+            scene.add(group);
+            
+            // 讓整個主網格可用於射線檢測
+            mesh.userData = { id: opts.id, name: opts.name, type: opts.type, groupRef: group };
+            clickableObjects.push(mesh);
+            return { group, mesh, data: opts };
+        }
+
+        const buildingsData = [
+            { id: 'BTC', name: 'BTC 摩天總部', color: 0x0f172a, windowColor: '#3b82f6', h: 35, x: -30, z: -30, type: 'agent' },
+            { id: 'ETH', name: 'ETH 分佈網絡', color: 0x1e293b, windowColor: '#a855f7', h: 25, x: 30, z: -30, type: 'agent' },
+            { id: 'SOL', name: 'SOL 極速雷達', color: 0x0f172a, windowColor: '#10b981', h: 20, x: -30, z: 30, type: 'agent' },
+            { id: 'PEPE', name: '🐸 PEPE 迷因洞穴', color: 0x064e3b, windowColor: '#22c55e', h: 14, x: 30, z: 30, type: 'agent' },
+            { id: 'XAUT', name: '🌕 黃金聖殿', color: 0x713f12, windowColor: '#facc15', h: 28, x: 0, z: -40, type: 'agent' },
+            { id: 'TREASURY', name: '💰 中央金庫', color: 0xb45309, windowColor: '#f59e0b', h: 22, x: 0, z: 0, type: 'treasury' },
+            { id: 'NEWS', name: '📜 新聞總署', color: 0xf8fafc, windowColor: '#94a3b8', h: 15, x: 35, z: 0, type: 'news' },
+            { id: 'SCANNER', name: '📡 全球掃描塔', color: 0x1e293b, windowColor: '#ef4444', h: 42, x: -40, z: 0, type: 'scanner' }
         ];
 
-        const labelContainer = document.getElementById('labels-container');
-        buildings.forEach(b => {
-            const m = new THREE.Mesh(new THREE.BoxGeometry(8, b.h, 8), new THREE.MeshStandardMaterial({ color: b.color, roughness: 0.1, metalness: 0.5 }));
-            m.position.set(b.x, b.h/2, b.z); m.castShadow = true; m.receiveShadow = true;
-            scene.add(m);
-            b.mesh = m;
+        const structures = buildingsData.map(d => createBuilding(d));
 
-            const div = document.createElement('div');
-            div.className = 'poi-label';
-            div.innerText = b.name;
-            div.onclick = () => {
-                if(b.id === 'TREASURY') showTreasury();
-                else showAgent(b.id);
-            };
-            labelContainer.appendChild(div);
-            b.label = div;
-        });
+        // --- 5. 可愛精靈物流系統 (Animated Workers) ---
+        const workers = [];
+        const workerGroup = new THREE.Group(); scene.add(workerGroup);
 
-        // 精靈系統
-        const sprites = [];
-        const sGeo = new THREE.SphereGeometry(1.2, 8, 8);
-        const sMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00ffff });
-        for(let i=0; i<8; i++) {
-            const s = new THREE.Mesh(sGeo, sMat); s.position.set(0, 5, 0);
-            scene.add(s);
-            sprites.push({ mesh: s, target: {x:0, z:0} });
+        function createWorker() {
+            const g = new THREE.Group();
+            // 身體 (膠囊形)
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 1.5, 16), new THREE.MeshStandardMaterial({color: 0xffffff}));
+            body.position.y = 0.75; body.castShadow = true; g.add(body);
+            // 頭 (帶螢幕感)
+            const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), new THREE.MeshStandardMaterial({color: 0x0ea5e9, emissive: 0x0ea5e9, emissiveIntensity: 0.5}));
+            head.position.y = 2.1; head.castShadow = true; g.add(head);
+            // 手上的發光數據包
+            const box = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshStandardMaterial({color: 0x22c55e, emissive: 0x22c55e, emissiveIntensity: 1}));
+            box.position.set(0, 1.2, 0.8); g.add(box);
+            
+            workerGroup.add(g);
+            return { mesh: g, state: 'to_news', target: null };
         }
 
-        // --- 2. 即時更新系統 ---
-        function updateTownData() {
-            fetch('/api/stats').then(r => r.json()).then(data => {
-                document.getElementById('total-pnl').innerText = `$${data.total_pnl.toFixed(2)} U`;
-                document.getElementById('clock').innerText = data.tpe_time;
-                document.getElementById('global-ticker').innerText = `[TRADINGVIEW] ${data.macro_report} | 聯準會觀察: ${data.macro_report} | 台北時間: ${data.tpe_time}`;
-                
-                // 日夜切換
-                if(data.is_night) {
-                    scene.background.setHex(0x020617);
-                    scene.fog.color.setHex(0x020617);
-                    sun.intensity = 0.2;
-                    ambient.intensity = 0.2;
-                } else {
-                    scene.background.setHex(0x87ceeb);
-                    scene.fog.color.setHex(0x87ceeb);
-                    sun.intensity = 1.0;
-                    ambient.intensity = 0.6;
+        // 建立 10 個小工人尋路
+        const newsPos = new THREE.Vector3(35, 0, 0);
+        for(let i=0; i<10; i++) {
+            const w = createWorker();
+            w.mesh.position.set(0, 0, 0); // 初始點金庫
+            workers.push(w);
+        }
+
+        function updateWorkers() {
+            workers.forEach(w => {
+                if(!w.target) {
+                    if(w.state === 'to_news') {
+                        w.target = new THREE.Vector3(newsPos.x + (Math.random()*10-5), 0, newsPos.z + (Math.random()*10-5));
+                    } else {
+                        const agentDests = structures.filter(s => s.data.type === 'agent');
+                        const d = agentDests[Math.floor(Math.random() * agentDests.length)];
+                        w.target = new THREE.Vector3(d.data.x + (Math.random()*6-3), 0, d.data.z + (Math.random()*6-3));
+                    }
                 }
 
-                // 右側戰況
-                let squadHtml = '';
-                const activeSet = new Set(data.positions.map(p => p.symbol));
-                ['BTC','ETH','SOL','PEPE','XAUT'].forEach(s => {
-                    const status = activeSet.has(s) ? '<span style="color:#059669">任務中</span>' : '<span style="color:#94a3b8">休息中</span>';
-                    squadHtml += `<div class="squad-item"><div>${s} 師團</div><div class="squad-status">${status}</div></div>`;
-                    
-                    // 建築物發光
-                    const b = buildings.find(x => x.id === s);
-                    if(b) b.mesh.material.emissive.setHex(activeSet.has(s) ? 0x00ff00 : 0x000000);
-                });
-                document.getElementById('squad-list').innerHTML = squadHtml;
+                // 簡單循跡
+                const dir = new THREE.Vector3().subVectors(w.target, w.mesh.position);
+                dir.y = 0;
+                if(dir.length() < 0.5) {
+                    w.target = null;
+                    w.state = w.state === 'to_news' ? 'to_agent' : 'to_news';
+                } else {
+                    dir.normalize();
+                    w.mesh.position.addScaledVector(dir, 0.15); // 走路速度
+                    // 面向前方
+                    const lookAt = w.mesh.position.clone().add(dir);
+                    w.mesh.lookAt(lookAt);
+                    // 上下跳動模擬走路
+                    w.mesh.position.y = Math.abs(Math.sin(Date.now() * 0.01 + w.mesh.uuid.charCodeAt(0))) * 0.5;
+                }
             });
         }
-        setInterval(updateTownData, 5000); updateTownData();
 
+        // --- 6. Raycaster 點擊交互系統 ---
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        
+        // 滑鼠移動顯示 Tooltip
+        document.addEventListener('mousemove', (e) => {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(clickableObjects);
+            
+            const tooltip = document.getElementById('tooltip');
+            if(intersects.length > 0) {
+                document.body.style.cursor = 'pointer';
+                tooltip.innerText = intersects[0].object.userData.name;
+                tooltip.style.left = `${e.clientX}px`;
+                tooltip.style.top = `${e.clientY}px`;
+                tooltip.style.opacity = 1;
+                // Highlighting
+                intersects[0].object.material.emissiveIntensity = 0.5;
+            } else {
+                document.body.style.cursor = 'default';
+                tooltip.style.opacity = 0;
+                clickableObjects.forEach(obj => obj.material.emissiveIntensity = 0.1);
+            }
+        });
+
+        // 點擊觸發 API 彈窗
+        document.addEventListener('click', (e) => {
+            if(e.target.closest('#hud-top') || e.target.closest('#squad-panel') || e.target.closest('#modal-box')) return;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(clickableObjects);
+            if(intersects.length > 0) {
+                const ud = intersects[0].object.userData;
+                if(ud.type === 'agent') showAgent(ud.id);
+                else if(ud.type === 'treasury') showTreasury();
+                else if(ud.type === 'news') showNews();
+                else if(ud.type === 'scanner') showScanner();
+            }
+        });
+
+        // --- 7. 渲染迴圈 ---
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
-            const tempV = new THREE.Vector3();
-            buildings.forEach(b => {
-                tempV.set(b.x, b.h + 2, b.z).project(camera);
-                if(tempV.z < 1) {
-                    b.label.style.display = 'block';
-                    b.label.style.left = `${(tempV.x * 0.5 + 0.5) * window.innerWidth}px`;
-                    b.label.style.top = `${(tempV.y * -0.5 + 0.5) * window.innerHeight}px`;
-                } else b.label.style.display = 'none';
-            });
-            // 精靈走動
-            sprites.forEach(s => {
-                if(Math.random() > 0.98) s.target = buildings[Math.floor(Math.random()*buildings.length)];
-                s.mesh.position.x += (s.target.x - s.mesh.position.x) * 0.01;
-                s.mesh.position.z += (s.target.z - s.mesh.position.z) * 0.01;
-                s.mesh.position.y = 3 + Math.sin(Date.now() * 0.005) * 2;
-            });
+            updateWorkers();
             renderer.render(scene, camera);
         }
         animate();
-
-        function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
-        function showAgent(id) {
-            fetch(`/api/agent/${id}`).then(r => r.json()).then(data => {
-                document.getElementById('m-title').innerText = `🏢 ${id} 師團指令中心`;
-                document.getElementById('m-body').innerHTML = `<div style="background:#f8fafc; padding:20px; border-radius:20px; border-left:5px solid var(--primary); margin-top:15px;"><h3>組長戰略</h3><p>"${data.decision}"</p></div>`;
-                document.getElementById('modal-overlay').style.display = 'flex';
-            });
-        }
-        function showTreasury() {
-            fetch('/api/treasury').then(r => r.json()).then(data => {
-                document.getElementById('m-title').innerText = `💰 小鎮中央金庫`;
-                document.getElementById('m-body').innerHTML = `<div style="text-align:center; padding:30px;"><h3>累計營收</h3><p style="font-size:2.5rem; font-weight:900; color:#059669;">$${data.stats.all_time.toFixed(2)} U</p></div>`;
-                document.getElementById('modal-overlay').style.display = 'flex';
-            });
-        }
 
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+
+        // --- 8. API 數據同步與彈窗邏輯 ---
+        function updateTownData() {
+            fetch('/api/stats').then(r => r.json()).then(data => {
+                document.getElementById('total-pnl').innerText = `$${data.total_pnl.toFixed(2)} U`;
+                document.getElementById('clock').innerText = data.tpe_time;
+                document.getElementById('global-ticker').innerText = `[LIVE INTEL] 🌍 ${data.macro_report} | 恐懼貪婪指數更新中...`;
+                
+                // 日夜切換
+                if(data.is_night) {
+                    scene.background.setHex(0x020617); scene.fog.color.setHex(0x020617);
+                    sunLight.intensity = 0.1; ambientLight.intensity = 0.2;
+                    // 開燈
+                    clickableObjects.forEach(obj => obj.material.emissiveIntensity = 0.8);
+                } else {
+                    scene.background.setHex(0x87ceeb); scene.fog.color.setHex(0x87ceeb);
+                    sunLight.intensity = 1.2; ambientLight.intensity = 0.6;
+                    clickableObjects.forEach(obj => obj.material.emissiveIntensity = 0.1);
+                }
+
+                // 更新右側面板
+                let squadHtml = '';
+                const activeSet = new Set(data.positions.map(p => p.symbol));
+                ['BTC','ETH','SOL','PEPE','XAUT'].forEach(s => {
+                    const status = activeSet.has(s) ? '<span style="color:#059669">任務中🔥</span>' : '<span style="color:#94a3b8">休息中💤</span>';
+                    squadHtml += `<div class="squad-item"><div>${s}</div><div class="squad-status">${status}</div></div>`;
+                });
+                document.getElementById('squad-list').innerHTML = squadHtml;
+
+            }).catch(e => console.log("API Sync failed (Loading...)"));
+        }
+        setInterval(updateTownData, 5000); updateTownData();
+
+        const modal = document.getElementById('modal-overlay');
+        function closeModal(e, force = false) {
+            if(force || e === null || e.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // 開啟各個建築物的彈窗 (真實調用 webhook API)
+        function showAgent(id) {
+            document.getElementById('m-title').innerText = `🏢 ${id} 師團數據庫`;
+            document.getElementById('m-title').style.color = 'var(--primary)';
+            document.getElementById('m-body').innerHTML = `讀取中...`;
+            modal.style.display = 'flex';
+            
+            fetch(`/api/agent/${id}`).then(r => r.json()).then(data => {
+                document.getElementById('m-body').innerHTML = `
+                    <div class="data-card">
+                        <div style="font-size:12px; color:#64748b; font-weight:800;">組長避險指令日誌</div>
+                        <p style="font-weight:700; color:#1e293b; line-height:1.6;">"${data.decision}"</p>
+                    </div>
+                    <div style="display:flex; gap:15px;">
+                        <div class="data-card" style="flex:1;">
+                            <div style="font-size:12px; color:#64748b; font-weight:800;">團隊金庫</div>
+                            <div style="font-size:20px; font-weight:900; color:#1e293b; margin-top:5px;">$${(data.wallet || 0).toFixed(1)}</div>
+                        </div>
+                        <div class="data-card" style="flex:1; border-color: ${data.summary.total_pnl >= 0 ? '#10b981' : '#ef4444'};">
+                            <div style="font-size:12px; color:#64748b; font-weight:800;">今日純利</div>
+                            <div style="font-size:20px; font-weight:900; color:${data.summary.total_pnl >= 0 ? '#10b981' : '#ef4444'}; margin-top:5px;">${data.summary.total_pnl > 0 ? '+' : ''}${(data.summary.total_pnl||0).toFixed(1)} U</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function showTreasury() {
+            document.getElementById('m-title').innerText = `💰 小鎮中央金庫核算`;
+            document.getElementById('m-title').style.color = 'var(--gold)';
+            document.getElementById('m-body').innerHTML = `讀取中...`;
+            modal.style.display = 'flex';
+            
+            fetch('/api/treasury').then(r => r.json()).then(data => {
+                document.getElementById('m-body').innerHTML = `
+                    <div class="data-card" style="text-align:center; border-color:var(--gold);">
+                        <div style="font-size:12px; color:#64748b; letter-spacing:2px; font-weight:800;">LIFETIME NET WORTH</div>
+                        <div style="font-size:42px; font-weight:900; color:#b45309; margin-top:10px;">$${(data.stats.all_time||0).toFixed(2)} U</div>
+                    </div>
+                    <div style="display:flex; gap:15px; margin-top:15px;">
+                        <div class="data-card" style="flex:1; padding:15px; border:none; background:#e2e8f0;">
+                            <div style="font-size:11px; color:#64748b; font-weight:800;">7D LOG</div>
+                            <div style="font-weight:900; font-size:16px;">+${(data.stats.week||0).toFixed(1)} U</div>
+                        </div>
+                        <div class="data-card" style="flex:1; padding:15px; border:none; background:#e2e8f0;">
+                            <div style="font-size:11px; color:#64748b; font-weight:800;">30D LOG</div>
+                            <div style="font-weight:900; font-size:16px;">+${(data.stats.month||0).toFixed(1)} U</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function showNews() {
+            document.getElementById('m-title').innerText = `📜 全球新聞報訊總署`;
+            document.getElementById('m-title').style.color = '#334155';
+            document.getElementById('m-body').innerHTML = `讀取中...`;
+            modal.style.display = 'flex';
+            
+            fetch('/api/stats').then(r => r.json()).then(data => {
+                document.getElementById('m-body').innerHTML = `
+                    <div class="data-card" style="border-color:#334155;">
+                        <div style="font-size:12px; color:#64748b; font-weight:800;">宏觀經濟與地緣政治頭條</div>
+                        <p style="font-weight:700; color:#1e293b; line-height:1.6; font-size:18px;">${data.macro_report}</p>
+                    </div>
+                    <p style="color:#64748b; font-size:12px; font-weight:700;">小鎮精靈正在將這些新聞大數據運送至各路特工總部進行情緒分析。</p>
+                `;
+            });
+        }
+
+        function showScanner() {
+            document.getElementById('m-title').innerText = `📡 全球市場掃描天線`;
+            document.getElementById('m-title').style.color = '#ef4444';
+            document.getElementById('m-body').innerHTML = `掃描中...`;
+            modal.style.display = 'flex';
+            
+            fetch('/api/radar').then(r => r.json()).then(data => {
+                document.getElementById('m-body').innerHTML = `
+                    <div style="display:flex; gap:15px;">
+                        <div class="data-card" style="flex:1; border-color:#ef4444;">
+                            <div style="font-size:12px; color:#64748b; font-weight:800;">恐懼貪婪指數</div>
+                            <div style="font-size:32px; font-weight:900; color:#ef4444; margin-top:5px;">${(data.fng||50).toFixed(0)}</div>
+                        </div>
+                    </div>
+                    <div class="data-card" style="border-color:#1e293b;">
+                        <div style="font-size:12px; color:#64748b; font-weight:800;">當前市場政權潛力幣種</div>
+                        <div style="margin-top:10px; display:flex; gap:10px;">
+                            ${(data.top_picks||[]).map(t => `<span style="background:#1e293b; color:white; padding:5px 15px; border-radius:20px; font-weight:900;">${t}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+        }
     </script>
 </body>
 </html>
