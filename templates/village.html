@@ -6,6 +6,7 @@
     <title>Metropolis v6.7 | SimCity Masterpiece</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
         :root { --sim-blue: #0ea5e9; --sim-green: #22c55e; --sim-yellow: #f59e0b; --sim-bg: #e2e8f0; --sim-white: rgba(255, 255, 255, 0.95); }
@@ -253,9 +254,16 @@
             ray.setFromCamera(mouse, camera);
             const hits = ray.intersectObjects(bObjs);
             if(hits.length > 0) {
-                const ud = hits[0].object.userData;
+                const intersect = hits[0];
+                const ud = intersect.object.userData;
                 const mTitle = document.getElementById('m-title');
                 const mBody = document.getElementById('m-body');
+                
+                // 1. [遊戲級視角轉移]
+                const bPos = intersect.object.parent.position;
+                gsap.to(camera.position, { x: bPos.x + 150, y: 150, z: bPos.z + 150, duration: 1, ease: "power2.inOut" });
+                gsap.to(controls.target, { x: bPos.x, y: 20, z: bPos.z, duration: 1, ease: "power2.inOut" });
+
                 if(ud.id === 'NEWS') {
                     mTitle.innerText = `📡 ${ud.name}`;
                     mBody.innerHTML = `<div style="display:flex; gap:10px; margin-bottom:15px;">
@@ -266,19 +274,24 @@
                 } else if(ud.id === 'SPECIAL') {
                     mTitle.innerText = `🐳 ${ud.name}`;
                     mBody.innerHTML = `<div style="background:#0c4a6e; color:#7cfc00; padding:25px; border-radius:20px; font-family:monospace; border:4px solid #38bdf8;">
-                        <div style="font-size:12px; border-bottom:1px solid rgba(124,252,0,0.3); padding-bottom:10px; margin-bottom:15px;">[ 掃描到巨鯨動向 ]</div>
+                        <div style="font-size:12px; border-bottom:1px solid rgba(124,252,0,0.3); padding-bottom:10px; margin-bottom:15px;">[ 掃描到特大巨鯨動向 ]</div>
                         <div style="font-size:18px; font-weight:900;">${window.liveData?.whale_mvt || '雷達掃描中...'}</div>
                     </div>`;
                 } else {
                     const acc = window.liveData?.team_accounts[ud.id + '/USDT'] || window.liveData?.team_accounts[ud.id] || {cash:300, initial:300};
                     mTitle.innerText = `🛡️ ${ud.name}`;
                     mBody.innerHTML = `<div style="background:#f8fafc; padding:25px; border-radius:20px; border:2px solid #f1f5f9;">
-                        <div style="display:flex; justify-content:space-between; font-weight:900; font-size:16px;"><span>當前資本</span><span>${acc.cash.toFixed(1)} U</span></div>
-                        <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:13px; color:#64748b;"><span>啟始配置</span><span>${acc.initial} U</span></div>
-                        <div style="margin-top:15px; font-size:14px; color:#1e293b; border-top:1px solid #e2e8f0; padding-top:15px;">${window.liveData?.thoughts[ud.id] || '特工正在分析盤勢...'}</div>
+                        <div style="display:flex; justify-content:space-between; font-weight:900; font-size:16px;"><span>當前資本額</span><span>${acc.cash.toFixed(1)} U</span></div>
+                        <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:13px; color:#64748b;"><span>預算配置</span><span>${acc.initial} U</span></div>
+                        <div style="margin-top:15px; font-size:14px; color:#1e293b; border-top:1px solid #e2e8f0; padding-top:15px;">${window.liveData?.thoughts[ud.id] || '特工正在全力監控幣安鏈路...'}</div>
                     </div>`;
                 }
-                document.getElementById('modal-overlay').style.display = 'flex';
+                
+                // 2. [模擬城市級回彈動畫]
+                const overlay = document.getElementById('modal-overlay');
+                const box = document.getElementById('modal-box');
+                overlay.style.display = 'flex';
+                gsap.fromTo(box, { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "elastic.out(1, 0.6)" });
             }
         });
 
