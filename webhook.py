@@ -120,6 +120,8 @@ def api_stats():
             "thoughts": thoughts,
             "agent_health": getattr(app, 'agent_status', {}),
             "positions": positions,
+            "radar_opps": radar_opps,
+            "whale_score": whale_score,
             # 傳遞分隊詳細帳務 (前端計算總和)
             "team_accounts": {
                 sym: {
