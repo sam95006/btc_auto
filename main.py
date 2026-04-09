@@ -2,6 +2,10 @@ import time
 import threading
 import os
 import sys
+
+# 【路徑環境強化】確保在 Zeabur/Linux 環境能正確載入子模組
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from datetime import datetime
 from core.datafeed import DataFeed
 from strategy.indicators import calculate_all
@@ -16,6 +20,7 @@ from strategy.performance_optimizer import PerformanceOptimizer
 from strategy.market_regime_detector import MarketRegimeDetector
 from agents.market_scanner import DynamicMarketScanner
 from core.intelligence_center import IntelligenceCenter, AIRoundTable
+from strategy.consensus import ChiefAnalyst
 
 # 1. 配置多幣種監控名單
 MONITOR_SYMBOLS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT']
@@ -30,6 +35,11 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
     optimizer = PerformanceOptimizer(storage)
     regime_detector = MarketRegimeDetector(storage)
     intel_center = IntelligenceCenter(storage)
+    
+    # 建立各幣種的專家團隊組長
+    chiefs = {sym: ChiefAnalyst(sym, storage) for sym in MONITOR_SYMBOLS}
+    chiefs[PEPE_SYMBOL] = ChiefAnalyst(PEPE_SYMBOL, storage)
+    
     # 此時 predictors 尚未在 trading_loop 範圍內定義，我們改用傳入的 active_predictors
     roundtable = AIRoundTable(traders, active_predictors, storage) 
     
@@ -102,21 +112,19 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
                     'volatility': df_1m['close'].pct_change().std()
                 })
                 
-                # 🤖 幣種專屬 ML 預測
-                ml_prob = symbol_predictor.predict_prob(df_1m.iloc[-1], funding_rate=fr, market_context={
-                    'rsi': df_1m.iloc[-1].get('RSI', 50),
-                    'volatility': df_1m['close'].pct_change().std(),
-                    'ema200': m15_ema200
+                # 🤖 團隊共識決策 (替代原本的單一策略調用)
+                global_bias = float(storage.get_global_config('GLOBAL_BIAS', 0.5))
+                team_signal, team_conf = chiefs[sym].make_final_decision(df_1m, df_15m, {
+                    'global_bias': global_bias,
+                    'whale_score': whale.get_whale_move(feed.exchange),
+                    'ml_prob': ml_prob,
+                    'regime': regime_name
                 })
                 
-                # 策略決策
-                scalper_signal = check_signal_scalper(
-                    df_1m, df_15m, df_1h, 
-                    ml_prob, whale.get_whale_move(feed.exchange), news.fetch_latest_sentiment(), 0, 
-                    funding_rate=fr, btc_change=0, sym_change=0,
-                    market_regime={'regime': regime_name, 'volatility': df_1m['close'].pct_change().std()},
-                    optimized_params=adjusted_params
-                )
+                # 最終下單信號 (組長拍板)
+                scalper_signal = "HOLD"
+                if team_signal == "BUY": scalper_signal = "BUY_SCALP"
+                elif team_signal == "SELL": scalper_signal = "SELL_SCALP"
                 
                 # 【防禦邏輯介入】
                 if btc_crash and scalper_signal == "BUY_SCALP":

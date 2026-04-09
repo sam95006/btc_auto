@@ -1,7 +1,13 @@
 import os
+import sys
+
+# 【路徑環境強化】
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import ccxt
 import pandas as pd
 from flask import Flask, request, abort, render_template, jsonify
+from flask_cors import CORS
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
@@ -14,6 +20,7 @@ import re
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
+CORS(app)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # 配置 LINE
@@ -316,7 +323,15 @@ def api_stats():
             'total_trades': total_trades,
             'global_bias': global_bias,
             'macro_report': macro_report,
-            'positions': pos_list
+            'positions': pos_list,
+            'tv_sentiment': {
+                'BTC': TradingViewScanner('BTC/USDT').get_sentiment(),
+                'ETH': TradingViewScanner('ETH/USDT').get_sentiment(),
+                'SOL': TradingViewScanner('SOL/USDT').get_sentiment()
+            },
+            'whale_data': {
+                'BTC': 0.85 # 示例數據
+            }
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -398,7 +413,7 @@ if handler:
                 symbol = intent.replace('query_', '')
                 response = QueryAnalyzer.handle_symbol_performance(symbol)
             else:
-                response = help_message()
+                response = QueryAnalyzer.handle_help()
             
             reply_message(reply_token, response)
             
