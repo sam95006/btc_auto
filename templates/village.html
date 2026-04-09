@@ -497,12 +497,54 @@
             document.getElementById('m-body').innerHTML = `讀取中...`;
             document.getElementById('modal-overlay').style.display = 'flex';
             fetch('/api/treasury').then(r => r.json()).then(data => {
+                
+                let allocHtml = '<div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">';
+                data.allocations.forEach(a => {
+                    allocHtml += `<div style="background:#f1f5f9; padding:8px 12px; border-radius:10px; font-size:12px; font-weight:800; border-left:3px solid var(--gold);"><span style="color:#64748b;">${a.symbol.replace('/USDT','')}</span> $${a.wallet.toFixed(0)}</div>`;
+                });
+                allocHtml += '</div>';
+
+                let logsHtml = '<div style="margin-top:20px; max-height:250px; overflow-y:auto; padding-right:10px;">';
+                if(data.logs && data.logs.length > 0) {
+                    data.logs.forEach(l => {
+                        const pnlColor = l.pnl >= 0 ? '#10b981' : '#ef4444';
+                        const typeText = l.signal_type.includes('LONG') ? '做多' : '做空';
+                        const rate = l.entry_price > 0 ? ((l.exit_price - l.entry_price) / l.entry_price * 100) : 0;
+                        const finalRate = l.signal_type.includes('SHORT') ? -rate : rate;
+                        logsHtml += `
+                        <div style="background:#f8fafc; border-left:4px solid ${pnlColor}; padding:10px; margin-bottom:10px; border-radius:10px;">
+                            <div style="display:flex; justify-content:space-between; font-size:11px; color:#64748b; font-weight:800;">
+                                <span>${l.timestamp}</span><span>${l.symbol.replace('/USDT','')} ${typeText}</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-top:5px; align-items:center;">
+                                <div style="font-size:13px; font-weight:800; color:#334155;">進 $${l.entry_price.toFixed(1)} ➔ 出 $${l.exit_price.toFixed(1)}</div>
+                                <div style="text-align:right;">
+                                    <div style="font-size:16px; font-weight:900; color:${pnlColor};">${formatCurrency(l.pnl)}</div>
+                                    <div style="font-size:11px; font-weight:800; color:${pnlColor};">${finalRate > 0 ? '+' : ''}${finalRate.toFixed(2)}%</div>
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+                } else {
+                    logsHtml += '<div style="font-size:13px; color:#94a3b8; font-weight:800; text-align:center;">尚無交易紀錄</div>';
+                }
+                logsHtml += '</div>';
+
                 document.getElementById('m-body').innerHTML = `
-                    <div class="data-card" style="text-align:center; border-color:var(--gold);">
-                        <div style="font-size:12px; color:#64748b; letter-spacing:2px; font-weight:800;">LIFETIME NET WORTH (生涯淨值)</div>
-                        <div style="font-size:42px; font-weight:900; color:#b45309; margin-top:10px;">$${(data.stats.all_time||0).toFixed(2)} U</div>
+                    <div style="display:flex; gap:15px; margin-top:15px;">
+                        <div class="data-card" style="flex:1; text-align:center; border-color:var(--gold); margin-top:0;">
+                            <div style="font-size:11px; color:#64748b; font-weight:800;">全鎮總資金池 (TOTAL FUNDS)</div>
+                            <div style="font-size:28px; font-weight:900; color:#b45309; margin-top:5px;">$${(data.total_fund||0).toFixed(1)}</div>
+                        </div>
+                        <div class="data-card" style="flex:1; text-align:center; border-color:#0ea5e9; margin-top:0;">
+                            <div style="font-size:11px; color:#64748b; font-weight:800;">生涯淨收益 (LIFETIME PNL)</div>
+                            <div style="font-size:28px; font-weight:900; color:#0ea5e9; margin-top:5px;">${formatCurrency(data.stats.all_time||0)}</div>
+                        </div>
                     </div>
-                    <p style="color:#64748b; font-size:12px; font-weight:700; margin-top: 15px;">※ 每日 4 次的 AI 領袖反思會議將在此中央建築舉行，並即時通報於左側看板。</p>
+                    <div style="margin-top:20px; font-size:13px; font-weight:900; color:#1e293b;">📊 各師團預算配額</div>
+                    ${allocHtml}
+                    <div style="margin-top:20px; font-size:13px; font-weight:900; color:#1e293b;">📜 近期金庫收支紀錄</div>
+                    ${logsHtml}
                 `;
             });
         }
@@ -511,12 +553,24 @@
             document.getElementById('m-title').innerText = `📜 全球新聞報訊總署`;
             document.getElementById('m-body').innerHTML = `視窗正在拉取全球資料...`;
             document.getElementById('modal-overlay').style.display = 'flex';
-            fetch('/api/stats').then(r => r.json()).then(data => {
+            fetch('/api/news').then(r => r.json()).then(data => {
+                
+                const buildList = (arr) => arr.map(i => `<li style="margin-bottom:8px; line-height:1.4;">${i}</li>`).join('');
+                
                 document.getElementById('m-body').innerHTML = `
-                    <div class="data-card" style="border-color:#334155;">
-                        <p style="font-weight:700; color:#1e293b; line-height:1.6; font-size:16px;">${data.macro_report.replace(/\n/g, '<br>')}</p>
+                    <div class="data-card" style="border-color:#334155; margin-top:15px; padding:15px; max-height:400px; overflow-y:auto;">
+                        <div style="font-size:14px; font-weight:900; color:#1e293b; border-bottom:2px solid #e2e8f0; padding-bottom:5px; margin-bottom:10px;">📉 TradingView 量化感測</div>
+                        <ul style="font-size:13px; font-weight:700; color:#475569; padding-left:20px; margin-top:0;">${buildList(data.tv_status)}</ul>
+                        
+                        <div style="font-size:14px; font-weight:900; color:#b45309; border-bottom:2px solid #e2e8f0; padding-bottom:5px; margin-bottom:10px; margin-top:15px;">🏛️ 聯準會 (FED) 經濟動向</div>
+                        <ul style="font-size:13px; font-weight:700; color:#475569; padding-left:20px; margin-top:0;">${buildList(data.fed_news)}</ul>
+                        
+                        <div style="font-size:14px; font-weight:900; color:#2563eb; border-bottom:2px solid #e2e8f0; padding-bottom:5px; margin-bottom:10px; margin-top:15px;">🌍 國際政經重大快訊</div>
+                        <ul style="font-size:13px; font-weight:700; color:#475569; padding-left:20px; margin-top:0;">${buildList(data.intl_news)}</ul>
+                        
+                        <div style="font-size:14px; font-weight:900; color:#059669; border-bottom:2px solid #e2e8f0; padding-bottom:5px; margin-bottom:10px; margin-top:15px;">🪙 全球加密貨幣動態</div>
+                        <ul style="font-size:13px; font-weight:700; color:#475569; padding-left:20px; margin-top:0;">${buildList(data.crypto_news)}</ul>
                     </div>
-                    <p style="color:#64748b; font-size:12px; font-weight:700;">情報精靈正不間斷搬運資料給各團隊進行多空過濾。</p>
                 `;
             });
         }

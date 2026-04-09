@@ -403,16 +403,68 @@ def api_agent(symbol):
 @app.route("/api/treasury")
 def api_treasury():
     try:
-        total_pnl, _ = storage.get_lifetime_summary()
+        from core.storage import Storage
+        cursor = storage.conn.cursor()
+        cursor.execute("SELECT symbol, signal_type, entry_price, exit_price, pnl, qty, timestamp FROM trades WHERE signal_type LIKE '%EXIT%' ORDER BY id DESC LIMIT 15")
+        recent_logs = [dict(row) for row in cursor.fetchall()]
+        
+        total_fund = 0
+        allocations = []
+        for sym in MONITOR_LIST:
+             wallet = float(storage.get_global_config(f'WALLET_{sym}', 1000.0))
+             total_fund += wallet
+             allocations.append({'symbol': sym, 'wallet': wallet})
+             
+        # 加入 PEPE 
+        pepe_wallet = float(storage.get_global_config(f'WALLET_PEPE/USDT', 1000.0))
+        total_fund += pepe_wallet
+        allocations.append({'symbol': 'PEPE/USDT', 'wallet': pepe_wallet})
+        
         return jsonify({
-            "stats": {
-                "all_time": total_pnl,
-                "week": total_pnl * 0.15,  # 模擬 7日數據
-                "month": total_pnl * 0.6   # 模擬 30日數據
-            }
+             'total_fund': total_fund,
+             'allocations': allocations,
+             'logs': recent_logs,
+             'stats': {'all_time': storage.get_lifetime_summary()[0]}
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route("/api/news")
+def api_news():
+    import xml.etree.ElementTree as ET
+    import requests
+    from sensors.sensors import TradingViewScanner
+    
+    def fetch_rss(query):
+        try:
+            url = f"https://news.google.com/rss/search?q={query}&hl=en-TW&gl=TW&ceid=TW:zh-Hant"
+            resp = requests.get(url, timeout=5)
+            root = ET.fromstring(resp.content)
+            items = root.findall('./channel/item')[:5]
+            return [item.find('title').text.split(' - ')[0] for item in items]
+        except:
+            return ["無法取得資料"]
+
+    intl_news = fetch_rss("Global+Economy+OR+Finance")
+    crypto_news = fetch_rss("bitcoin+OR+cryptocurrency")
+    fed_news = fetch_rss("Federal+Reserve+Interest+Rate")
+
+    tv_status = []
+    for sym in ['BTC', 'ETH', 'SOL']:
+        tv = TradingViewScanner(sym + 'USDT')
+        try:
+             ans = tv.handler.get_analysis()
+             tv_status.append(f"【{sym}】: {ans.summary['RECOMMENDATION']} (買: {ans.summary['BUY']}, 賣: {ans.summary['SELL']})")
+        except:
+             tv_status.append(f"【{sym}】: 中立")
+
+    return jsonify({
+        "intl_news": intl_news,
+        "crypto_news": crypto_news,
+        "fed_news": fed_news,
+        "tv_status": tv_status
+    })
+
 
 @app.route("/api/radar")
 def api_radar():
