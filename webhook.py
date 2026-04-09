@@ -113,23 +113,32 @@ class QueryAnalyzer:
         report += "─────────────────\n"
         
         for sym in MONITOR_LIST:
-            # 獲取該團隊的達爾文數據
             prestige = float(storage.get_global_config(f'PRESTIGE_{sym}', 1.0))
             wallet = float(storage.get_global_config(f'WALLET_{sym}', 1000.0))
             reason = storage.get_global_config(f'LAST_CHIEF_DECISION_{sym}', "正在掃描流體力學數據...")
             
             if sym in pos_map:
                 p = pos_map[sym]
-                # 簡單計算浮動盈虧 (這部分如果是模擬交易，通常由執行端計算後存入)
-                floating_pnl = 0 # 示例：實際環境應由 execution.py 定期更新到 storage
+                entry_price = float(p[3])
+                qty = float(p[4])
+                pos_type = p[2]
+                
+                # 從最新儲存的 Binance 即時報價計算真實浮盈
+                current_price = float(storage.get_global_config(f'PRICE_{sym}', entry_price))
+                if pos_type == "LONG":
+                    floating_pnl = (current_price - entry_price) * abs(qty)
+                else:
+                    floating_pnl = (entry_price - current_price) * abs(qty)
+                
                 report += f"\n🪙 {sym} 師團：【🔥 持倉中】\n"
-                report += f"💰 團隊金庫: {wallet:.1f} U (權重 {prestige:.12}x)\n"
-                report += f"📍 任務規模: {p[3]*p[4]:,.1f} U | 均價: {p[3]:,.1f}\n"
-                report += f"📈 即時浮盈: {floating_pnl:+.1f} U\n"
+                report += f"💰 團隊金庫: {wallet:.1f} U (權重 {prestige:.2f}x)\n"
+                report += f"📍 任務規模: {entry_price * abs(qty):,.1f} U | 均價: {entry_price:,.1f}\n"
+                report += f"📊 幣安現價: {current_price:,.1f}\n"
+                report += f"📉 即時浮盈: {floating_pnl:+.1f} U\n"
             else:
                 report += f"\n🪙 {sym} 師團：【🛡️ 埋伏等待】\n"
                 report += f"💰 團隊金庫: {wallet:.1f} U (權重 {prestige:.2f}x)\n"
-                report += f"📜 戰略理由: {reason[:20]}...\n"
+                report += f"📜 戰略理由: {reason[:25]}...\n"
         
         report += "\n─────────────────\n"
         total_cash, _ = storage.get_lifetime_summary()

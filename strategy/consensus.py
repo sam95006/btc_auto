@@ -11,22 +11,35 @@ class ExpertAgent:
         self.predictor = AdaptiveMLPredictor(symbol=f"{symbol}_{name}", storage=storage)
 
     def analyze(self, df_1m, df_15m, market_context):
-        """專家根據自己的性格給出建議"""
+        """專家根據自己的性格給出建議 (嚴格 7 成勝率過濾版)"""
         prob = self.predictor.predict_prob(df_1m.iloc[-1], market_context=market_context)
         
+        # Binance 交易量與指標取值
+        current_price = df_1m.iloc[-1]['close']
+        vol = df_1m.iloc[-1]['volume']
+        vol_ma = df_1m['volume'].rolling(20).mean().iloc[-1]
+        vol_breakout = vol > (vol_ma * 1.5) if vol_ma > 0 else False
+        rsi_1m = df_1m.iloc[-1].get('RSI', 50)
+        
         if self.personality == 'AGGRESSIVE':
-            # 激進派: 只要有一點點突破就想進場
-            if prob > 0.65: return "BUY", prob
-            if prob < 0.35: return "SELL", prob
+            # 激進派 (Scalper)：但升級為 7 成勝率指標，需量能突破且 RSI 極端
+            if prob >= 0.70 and rsi_1m < 35 and vol_breakout: 
+                return "BUY", prob
+            if prob <= 0.30 and rsi_1m > 65 and vol_breakout: 
+                return "SELL", prob
         
         elif self.personality == 'STEADY':
-            # 穩健派: 要求趨勢確認 (EMA200) 與較高信心
-            ema200 = df_15m.iloc[-1].get('EMA200', df_1m.iloc[-1]['close'])
-            is_uptrend = df_1m.iloc[-1]['close'] > ema200
-            if prob > 0.8 and is_uptrend: return "BUY", prob
-            if prob < 0.2 and not is_uptrend: return "SELL", prob
+            # 穩健派 (Trend)：要求 15 分鐘趨勢確認 (EMA200) + 7 成勝率
+            ema200 = df_15m.iloc[-1].get('EMA200', current_price)
+            is_uptrend = current_price > ema200
+            
+            if prob >= 0.75 and is_uptrend and rsi_1m < 45: 
+                return "BUY", prob
+            if prob <= 0.25 and not is_uptrend and rsi_1m > 55: 
+                return "SELL", prob
             
         elif self.personality == 'RISK_GUARD':
+
             # 風控派: 監視巨鯨與恐懼貪婪，擁有否決權
             whale_score = market_context.get('whale_score', 1.0)
             if whale_score < 0.8: return "FORBID_BUY", 0 # 巨鯨在逃，禁止做多

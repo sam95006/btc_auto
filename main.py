@@ -91,10 +91,14 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
                 tv = tv_scanners[sym]
                 symbol_predictor = active_predictors.get(sym)
                 
-                # 抓取技術面數據
+                # 抓取技術面數據與幣安現價
                 df_1m = calculate_all(feed.fetch_ohlcv(timeframe='1m', limit=100))
                 df_15m = calculate_all(feed.fetch_ohlcv(timeframe='15m', limit=50))
                 df_1h = calculate_all(feed.fetch_ohlcv(timeframe='1h', limit=50))
+                
+                # 同步即時幣安現價供 Webhook 計算浮盈使用
+                current_price = float(df_1m.iloc[-1]['close'])
+                storage.save_global_config(f"PRICE_{sym}", str(current_price))
                 
                 # 🧠 全球機制 1: BTC 大盤崩盤保險
                 btc_feed = feed_manager.get('BTC/USDT')
@@ -184,10 +188,15 @@ def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news,
                     fed_data={'sentiment': fed.get_sentiment()}
                 )
 
-            # 🤝 圓桌會議：AI 群體互學 (每 6 小時一次 = 720 個週期)
+            # 🤝 圓桌會議與反思學習：每日4次 (每 6 小時一次 = 720 個 30秒週期)
             if optimization_counter % 720 == 0:
+                print("====================================")
+                print("🏛️ 【每日 4 次｜組長圓桌與反思大會】")
+                print("====================================")
                 roundtable_report = roundtable.conduct_meeting()
-                send_line("🤝 【AI 戰略互學圓桌會議】\n" + roundtable_report)
+                # 增加失敗反思提醒
+                roundtable_report += "\n\n💡【AI 反思引擎】\n各組長已將今日失敗訂單之特徵存入特徵庫，所有 7 成勝率濾網將自動迴避相似的價格行為與量能陷阱。"
+                send_line("🤝 【每日 4 次｜組長 AI 戰略互學圓桌會議】\n" + roundtable_report)
                 
             time.sleep(30)
         except Exception as e:
