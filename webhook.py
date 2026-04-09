@@ -105,17 +105,35 @@ class QueryAnalyzer:
     
     @staticmethod
     def handle_position_query():
-        """處理持倉查詢"""
+        """處理持倉與團隊資產透視查詢"""
         all_pos = storage.get_all_active_pos()
         pos_map = {p[1]: p for p in all_pos}
         
-        report = "🟢 【當前多路軍團持倉狀態】\n"
+        report = "🏦 【小鎮軍事與資產透視中心】\n"
+        report += "─────────────────\n"
+        
         for sym in MONITOR_LIST:
+            # 獲取該團隊的達爾文數據
+            prestige = float(storage.get_global_config(f'PRESTIGE_{sym}', 1.0))
+            wallet = float(storage.get_global_config(f'WALLET_{sym}', 1000.0))
+            reason = storage.get_global_config(f'LAST_CHIEF_DECISION_{sym}', "正在掃描流體力學數據...")
+            
             if sym in pos_map:
                 p = pos_map[sym]
-                report += f"\n🪙 {sym}: 已持倉\n進場: ${p[3]:,.2f} | 規模: {p[3]*p[4]:,.1f} U\n"
+                # 簡單計算浮動盈虧 (這部分如果是模擬交易，通常由執行端計算後存入)
+                floating_pnl = 0 # 示例：實際環境應由 execution.py 定期更新到 storage
+                report += f"\n🪙 {sym} 師團：【🔥 持倉中】\n"
+                report += f"💰 團隊金庫: {wallet:.1f} U (權重 {prestige:.12}x)\n"
+                report += f"📍 任務規模: {p[3]*p[4]:,.1f} U | 均價: {p[3]:,.1f}\n"
+                report += f"📈 即時浮盈: {floating_pnl:+.1f} U\n"
             else:
-                report += f"\n🪙 {sym}: 📭 目前空倉埋伏中..."
+                report += f"\n🪙 {sym} 師團：【🛡️ 埋伏等待】\n"
+                report += f"💰 團隊金庫: {wallet:.1f} U (權重 {prestige:.2f}x)\n"
+                report += f"📜 戰略理由: {reason[:20]}...\n"
+        
+        report += "\n─────────────────\n"
+        total_cash, _ = storage.get_lifetime_summary()
+        report += f"🏛️ 小鎮資產淨值: {total_cash:+.2f} U"
         
         return report
     
