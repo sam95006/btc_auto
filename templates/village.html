@@ -3,311 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Trading Engine | Three.js Edition</title>
+    <title>AI City Builder | 2026 模擬城市終極版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
+
+        :root {
+            --primary: #00d2ff;
+            --gold: #ffcc00;
+            --green: #4ade80;
+            --panel-bg: rgba(255, 255, 255, 0.9);
+        }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background: #020617; font-family: 'Montserrat', sans-serif;
-            color: white; user-select: none;
+            overflow: hidden; background: #87ceeb;
+            font-family: 'Outfit', sans-serif; user-select: none;
         }
 
         #webgl-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        /* 遊戲級 UI HUD */
-        #hud-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
+        /* 遊戲級 HUD */
+        #hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
         
-        .hud-panel {
-            position: absolute; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px 25px;
-            pointer-events: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            display: flex; align-items: center; gap: 15px; border-top: 3px solid #00f3ff;
+        .hud-bubble {
+            position: absolute; background: var(--panel-bg); backdrop-filter: blur(10px);
+            border-radius: 40px; padding: 12px 25px; pointer-events: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 2px solid white;
+            display: flex; align-items: center; gap: 15px; color: #1e293b;
         }
 
-        #top-left { top: 20px; left: 20px; }
-        #top-right { top: 20px; right: 20px; border-top-color: #f59e0b; }
+        #top-left { top: 25px; left: 25px; }
+        #top-right { top: 25px; right: 25px; }
 
-        /* 3D 浮動標籤 */
         .poi-label {
-            position: absolute; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(4px);
-            border: 1px solid #334155; color: #fff; padding: 8px 16px; border-radius: 8px;
-            font-size: 12px; font-weight: 700; cursor: pointer; pointer-events: auto;
-            transform: translate(-50%, -50%); transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            position: absolute; background: white; border: 2px solid var(--primary);
+            color: #1e293b; padding: 6px 12px; border-radius: 12px;
+            font-size: 13px; font-weight: 900; cursor: pointer; pointer-events: auto;
+            transform: translate(-50%, -100%); transition: transform 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
-        .poi-label:hover { border-color: #00f3ff; transform: translate(-50%, -50%) scale(1.1); }
-        .poi-title { color: #00f3ff; font-weight: 900; }
-        .poi-status { font-size: 10px; color: #94a3b8; }
-        
-        /* 彈窗 UI */
+        .poi-label:hover { transform: translate(-50%, -105%) scale(1.1); }
+
+        /* 沉浸彈窗 */
         #modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999;
-            pointer-events: auto;
+            background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 5000;
+            pointer-events: auto; backdrop-filter: blur(5px);
         }
         #modal-content {
-            background: #0f172a; border: 1px solid #334155; width: 450px;
-            border-radius: 16px; padding: 30px; box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            position: relative;
+            background: white; width: 85%; max-width: 500px; border-radius: 30px;
+            padding: 30px; box-shadow: 0 30px 60px rgba(0,0,0,0.2); position: relative;
+            animation: slideIn 0.3s ease-out;
         }
-        .modal-close { position: absolute; top: 20px; right: 20px; cursor: pointer; color: #94a3b8; font-size: 20px; }
-        .modal-close:hover { color: white; }
-        .card { background: #1e293b; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #00f3ff; }
+        @keyframes slideIn { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal-close { position: absolute; top: 25px; right: 25px; cursor: pointer; font-size: 24px; color: #94a3b8; }
+        .data-card { background: #f8fafc; border-radius: 20px; padding: 20px; margin-top: 15px; }
         
-        .loading-text { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); color: #64748b; font-size: 12px; letter-spacing: 2px; }
+        #instructions { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); color: white; background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 20px; font-size: 12px; }
     </style>
 </head>
 <body>
-    <!-- 3D 渲染層 -->
     <div id="webgl-container"></div>
-
-    <!-- UI 前景層 -->
-    <div id="hud-layer">
-        <div class="hud-panel" id="top-left">
-            <div style="font-size: 30px;">🎮</div>
+    <div id="hud">
+        <div class="hud-bubble" id="top-left">
+            <div style="font-size: 28px;">🤵</div>
             <div>
-                <div style="font-size: 10px; color: #94a3b8; letter-spacing: 1px;">MAYOR DASHBOARD</div>
-                <div style="font-size: 16px; font-weight: 900; color: white;">AI City Engine v7</div>
-                <div style="font-size: 11px; color: #34d399; margin-top: 2px;" id="global-status">Systems Norminal</div>
+                <div style="font-size: 11px; font-weight: 900; color: #64748b;">CITY MAYOR</div>
+                <div style="font-size: 16px; font-weight: 900; color: #0f172a;" id="status-text">一切運行順利</div>
             </div>
         </div>
 
-        <div class="hud-panel" id="top-right">
+        <div class="hud-bubble" id="top-right">
             <div style="text-align: right;">
-                <div style="font-size: 10px; color: #94a3b8; letter-spacing: 1px;">GLOBAL TREASURY</div>
-                <div style="font-size: 20px; font-weight: 900; color: #f59e0b;" id="total-pnl">Loading...</div>
+                <div style="font-size: 11px; font-weight: 900; color: #64748b;">GLOBAL REVENUE</div>
+                <div style="font-size: 20px; font-weight: 900; color: #059669;" id="total-pnl">$0.00 U</div>
             </div>
-            <div style="font-size: 30px;">🏦</div>
+            <div style="font-size: 28px;">🏦</div>
         </div>
 
-        <!-- 動態生成的 3D DOM 標籤追蹤點 -->
-        <div id="poi-container"></div>
-        
-        <div class="loading-text">DRAG TO ROTATE SCENE · SCROLL TO ZOOM</div>
+        <div id="labels-container"></div>
+        <div id="instructions">拖拽旋轉視角 · 點擊建築查看報表</div>
     </div>
 
-    <!-- 詳情彈窗 -->
     <div id="modal-overlay">
         <div id="modal-content">
-            <div class="modal-close" onclick="closeModal()">✖</div>
-            <h2 id="m-title" style="margin: 0 0 5px 0; color: white; font-weight: 900;">HQ</h2>
-            <div style="color: #94a3b8; font-size: 12px; margin-bottom: 20px;">Intel Report</div>
+            <div class="modal-close" onclick="closeModal()">✕</div>
+            <h2 id="m-title" style="margin: 0; font-size: 1.5rem; font-weight: 900;">建築資訊</h2>
             <div id="m-body"></div>
         </div>
     </div>
 
     <script>
-        // --- 1. Three.js 核心初始化 ---
-        const container = document.getElementById('webgl-container');
+        // --- 1. Three.js 世界構建：陽光明亮風 ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x020617);
-        scene.fog = new THREE.FogExp2(0x020617, 0.015);
+        scene.background = new THREE.Color(0x87ceeb); // 蔚藍天空
+        scene.fog = new THREE.Fog(0x87ceeb, 50, 200);
 
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
-        camera.position.set(40, 50, 60);
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 500);
+        camera.position.set(60, 60, 80);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(window.devicePixelRatio);
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        container.appendChild(renderer.domElement);
+        document.getElementById('webgl-container').appendChild(renderer.domElement);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.maxPolarAngle = Math.PI / 2 - 0.05; // 不要潛入地下
-        controls.minDistance = 20;
-        controls.maxDistance = 150;
+        controls.maxPolarAngle = Math.PI / 2.1;
 
-        // --- 2. 光影設定 (模擬城市高質感外觀) ---
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-        scene.add(ambientLight);
+        // 次世代光影
+        const skyLight = new THREE.HemisphereLight(0xffffff, 0x081708, 0.8);
+        scene.add(skyLight);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-        dirLight.position.set(50, 100, -50);
-        dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 2048;
-        dirLight.shadow.mapSize.height = 2048;
-        dirLight.shadow.camera.near = 0.5;
-        dirLight.shadow.camera.far = 200;
-        dirLight.shadow.camera.left = -50;
-        dirLight.shadow.camera.right = 50;
-        dirLight.shadow.camera.top = 50;
-        dirLight.shadow.camera.bottom = -50;
-        scene.add(dirLight);
+        const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        sunLight.position.set(50, 100, 50);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.set(2048, 2048);
+        scene.add(sunLight);
 
-        const pointLight = new THREE.PointLight(0x00f3ff, 2, 50);
-        pointLight.position.set(0, 10, 0);
-        scene.add(pointLight);
+        // --- 2. 地貌細節：SimCity 質感 ---
+        // 基礎草地
+        const groundGeo = new THREE.PlaneGeometry(1000, 1000);
+        const groundMat = new THREE.MeshStandardMaterial({ color: 0x55aa55 });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
 
-        // --- 3. 創建城市地形與建築 ---
-        // 基礎地板
-        const planeGeo = new THREE.PlaneGeometry(300, 300);
-        const planeMat = new THREE.MeshStandardMaterial({ 
-            color: 0x0f172a, roughness: 0.1, metalness: 0.5 
-        });
-        const plane = new THREE.Mesh(planeGeo, planeMat);
-        plane.rotation.x = -Math.PI / 2;
-        plane.receiveShadow = true;
-        scene.add(plane);
+        // 市中心區塊 (灰色水泥)
+        const cityGeo = new THREE.PlaneGeometry(100, 100);
+        const cityMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8 });
+        const cityPlate = new THREE.Mesh(cityGeo, cityMat);
+        cityPlate.rotation.x = -Math.PI / 2;
+        cityPlate.position.y = 0.1;
+        cityPlate.receiveShadow = true;
+        scene.add(cityPlate);
 
-        // 發光網格 (科技線條感)
-        const gridHelper = new THREE.GridHelper(300, 60, 0x1e293b, 0x0f172a);
-        gridHelper.position.y = 0.1;
-        scene.add(gridHelper);
+        // 馬路系統
+        const roadMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
+        const roadH = new THREE.Mesh(new THREE.PlaneGeometry(100, 10), roadMat);
+        roadH.rotation.x = -Math.PI / 2;
+        roadH.position.y = 0.2;
+        scene.add(roadH);
 
-        // 隨機構建背城景 (裝飾物)
-        const cityMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.7, metalness: 0.2 });
-        const bgGroup = new THREE.Group();
-        for(let i=0; i<150; i++) {
-            const h = 2 + Math.random() * 8;
-            const w = 1 + Math.random() * 3;
-            const geo = new THREE.BoxGeometry(w, h, w);
-            const mesh = new THREE.Mesh(geo, cityMat);
-            const r = 25 + Math.random() * 40;
-            const theta = Math.random() * Math.PI * 2;
-            mesh.position.set(r * Math.cos(theta), h/2, r * Math.sin(theta));
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            bgGroup.add(mesh);
-        }
-        scene.add(bgGroup);
+        const roadV = new THREE.Mesh(new THREE.PlaneGeometry(10, 100), roadMat);
+        roadV.rotation.x = -Math.PI / 2;
+        roadV.position.y = 0.2;
+        scene.add(roadV);
 
-        // API 核心建築物列表
-        const pois = [
-            { id: 'BTC', name: 'BTC 總司令部', type: 'agent', color: 0x00d2ff, height: 18, pos: new THREE.Vector3(-10, 0, -10) },
-            { id: 'ETH', name: 'ETH 分析中心', type: 'agent', color: 0xa855f7, height: 12, pos: new THREE.Vector3(15, 0, -5) },
-            { id: 'SOL', name: 'SOL 雷達站', type: 'agent', color: 0x22c55e, height: 10, pos: new THREE.Vector3(-5, 0, 15) },
-            { id: 'TREASURY', name: '小鎮金庫大樓', type: 'treasury', color: 0xf59e0b, height: 15, pos: new THREE.Vector3(0, 0, 0) }
+        // --- 3. 建築物資料對應 ---
+        const buildings = [
+            { id: 'BTC', name: 'BTC 摩天中心', color: 0x3b82f6, h: 25, x: -20, z: -20 },
+            { id: 'ETH', name: 'ETH 工事坊', color: 0xa855f7, h: 18, x: 25, z: -15 },
+            { id: 'SOL', name: 'SOL 觀察台', color: 0x10b981, h: 15, x: -20, z: 25 },
+            { id: 'TREASURY', name: '中央金庫', color: 0xf59e0b, h: 20, x: 0, z: 0 }
         ];
 
-        const buildingMeshes = {};
-        const poiContainer = document.getElementById('poi-container');
-
-        // 創建主要建築物與懸浮標籤
-        pois.forEach(poi => {
-            // 3D 模型
-            const geo = new THREE.BoxGeometry(4, poi.height, 4);
-            const mat = new THREE.MeshStandardMaterial({ 
-                color: poi.color, transparent: true, opacity: 0.85, 
-                roughness: 0.1, metalness: 0.8,
-                emissive: poi.color, emissiveIntensity: 0.2
-            });
+        const labelContainer = document.getElementById('labels-container');
+        buildings.forEach(b => {
+            // 創建高品質 3D 建築
+            const geo = new THREE.BoxGeometry(6, b.h, 6);
+            const mat = new THREE.MeshStandardMaterial({ color: b.color, roughness: 0.1, metalness: 0.5 });
             const mesh = new THREE.Mesh(geo, mat);
-            mesh.position.copy(poi.pos);
-            mesh.position.y = poi.height / 2; // 模型中心對齊地面
+            mesh.position.set(b.x, b.h/2, b.z);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
             scene.add(mesh);
-            buildingMeshes[poi.id] = mesh;
+            b.mesh = mesh;
 
-            // HTML 標籤
-            const label = document.createElement('div');
-            label.className = 'poi-label';
-            label.id = `label-${poi.id}`;
-            label.innerHTML = `
-                <div class="poi-title" style="color: #${poi.color.toString(16).padStart(6, '0')}">${poi.name}</div>
-                <div class="poi-status" id="status-${poi.id}">STANDBY</div>
-            `;
-            label.onclick = () => {
-                if(poi.type === 'agent') showAgent(poi.id);
-                else showTreasury();
+            // 創建標籤
+            const div = document.createElement('div');
+            div.className = 'poi-label';
+            div.id = `label-${b.id}`;
+            div.innerText = b.name;
+            div.onclick = () => {
+                if(b.id === 'TREASURY') showTreasury();
+                else showAgent(b.id);
             };
-            poiContainer.appendChild(label);
-            poi.element = label;
+            labelContainer.appendChild(div);
+            b.label = div;
         });
 
-        // --- 4. 渲染迴圈與 3D <-> 2D 座標投射 ---
+        // --- 4. 渲染迴圈與座標映射 ---
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
 
-            // 更新 HTML 標籤在畫面上的座標
             const tempV = new THREE.Vector3();
-            pois.forEach(poi => {
-                tempV.copy(poi.pos);
-                tempV.y += poi.height + 2; // 浮在建築物頂端
+            buildings.forEach(b => {
+                tempV.set(b.x, b.h + 2, b.z); // 標籤浮在頂部
                 tempV.project(camera);
+                
+                const x = (tempV.x * 0.5 + 0.5) * window.innerWidth;
+                const y = (tempV.y * -0.5 + 0.5) * window.innerHeight;
 
-                // 計算 2D 螢幕座標
-                const x = (tempV.x *  .5 + .5) * window.innerWidth;
-                const y = (tempV.y * -.5 + .5) * window.innerHeight;
-
-                // 若在相機後方則隱藏
-                if(tempV.z > 1) {
-                    poi.element.style.display = 'none';
+                if (tempV.z < 1) {
+                    b.label.style.display = 'block';
+                    b.label.style.left = `${x}px`;
+                    b.label.style.top = `${y}px`;
                 } else {
-                    poi.element.style.display = 'flex';
-                    poi.element.style.left = `${x}px`;
-                    poi.element.style.top = `${y}px`;
+                    b.label.style.display = 'none';
                 }
             });
-
-            // 背景城市緩慢旋轉
-            bgGroup.rotation.y += 0.0005;
 
             renderer.render(scene, camera);
         }
         animate();
 
-        // 響應視窗大小
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-
-        // --- 5. 數據交互系統 (與後端橋接) ---
-        function updateStats() {
+        // --- 5. 數據交互系統 ---
+        function updateData() {
             fetch('/api/stats').then(r => r.json()).then(data => {
                 document.getElementById('total-pnl').innerText = `$${data.total_pnl.toFixed(2)} U`;
-                document.getElementById('global-status').innerText = data.macro_report;
-                
-                // 動態改變 3D 標籤狀態
-                pois.forEach(poi => {
-                    if(poi.type === 'agent') {
-                        const statusEl = document.getElementById(`status-${poi.id}`);
-                        const isActive = data.positions.some(p => p.symbol === poi.id);
-                        statusEl.innerText = isActive ? '🔥 MISSION ALIVE' : '🛡️ ON STANDBY';
-                        statusEl.style.color = isActive ? '#22c55e' : '#94a3b8';
-                        // 讓建築物發光
-                        if(isActive) buildingMeshes[poi.id].material.emissiveIntensity = 0.6;
-                        else buildingMeshes[poi.id].material.emissiveIntensity = 0.2;
-                    }
-                });
-            }).catch(e => console.log("API Waiting"));
-        }
-        setInterval(updateStats, 5000); 
-        updateStats();
+                // 動態反應天氣或狀態
+                const activeCount = data.positions.length;
+                document.getElementById('status-text').innerText = activeCount > 0 ? `目前有 ${activeCount} 組特工出擊中` : `小鎮目前安靜祥和`;
 
-        // 顯示彈窗
+                // 讓出入任務的建築物高亮
+                buildings.forEach(b => {
+                    const isActive = data.positions.some(p => p.symbol === b.id);
+                    if(isActive) b.mesh.material.emissive.setHex(0x55ff55);
+                    else b.mesh.material.emissive.setHex(0x000000);
+                });
+            }).catch(e => console.log("API Syncing..."));
+        }
+        setInterval(updateData, 5000); updateData();
+
         const modal = document.getElementById('modal-overlay');
         function closeModal() { modal.style.display = 'none'; }
 
-        function showAgent(name) {
-            document.getElementById('m-title').innerText = `${name} COMMAND HQ`;
-            fetch(`/api/agent/${name}`).then(r => r.json()).then(data => {
-                const wallet = 1000 + (data.summary.total_pnl || 0); // 模擬金庫
+        function showAgent(id) {
+            document.getElementById('m-title').innerText = `🏢 ${id} 指揮部報表`;
+            fetch(`/api/agent/${id}`).then(r => r.json()).then(data => {
                 document.getElementById('m-body').innerHTML = `
-                    <div class="card">
-                        <div style="font-size:10px; color:#94a3b8;">STRATEGIC DECISION</div>
-                        <div style="font-size:14px; font-weight:700; margin-top:5px; line-height:1.4;">"${data.decision}"</div>
+                    <div class="data-card">
+                        <div style="font-size: 11px; color: #64748b; font-weight: 800;">首席分析師指令</div>
+                        <div style="margin-top: 10px; font-weight: 700; color: #1e293b; line-height: 1.5;">"${data.decision}"</div>
                     </div>
-                    <div style="display:flex; gap:15px;">
-                        <div class="card" style="flex:1;">
-                            <div style="font-size:10px; color:#94a3b8;">TEAM WALLET</div>
-                            <div style="font-size:24px; font-weight:900; color:#00f3ff; margin-top:5px;">$${wallet.toFixed(1)}</div>
+                    <div style="display: flex; gap: 15px;">
+                        <div class="data-card" style="flex: 1;">
+                            <div style="font-size: 11px; color: #64748b; font-weight: 800;">當前盈虧</div>
+                            <div style="font-size: 24px; font-weight: 900; color: #10b981; margin-top: 5px;">${data.summary.total_pnl.toFixed(2)} U</div>
                         </div>
-                        <div class="card" style="flex:1; border-color:#f59e0b;">
-                            <div style="font-size:10px; color:#94a3b8;">TODAY PROFIT</div>
-                            <div style="font-size:24px; font-weight:900; color:#f59e0b; margin-top:5px;">${data.summary.total_pnl.toFixed(1)} U</div>
+                        <div class="data-card" style="flex: 1;">
+                            <div style="font-size: 11px; color: #64748b; font-weight: 800;">任務狀態</div>
+                            <div style="font-size: 20px; font-weight: 900; color: #3b82f6; margin-top: 5px;">${data.current_pos ? '執行任務中' : '待田中'}</div>
                         </div>
                     </div>
                 `;
@@ -316,16 +265,12 @@
         }
 
         function showTreasury() {
-            document.getElementById('m-title').innerText = `GLOBAL TREASURY MINT`;
+            document.getElementById('m-title').innerText = `💰 小鎮中央金庫`;
             fetch('/api/treasury').then(r => r.json()).then(data => {
                 document.getElementById('m-body').innerHTML = `
-                    <div class="card" style="text-align:center; padding:30px; border-color:#f59e0b;">
-                        <div style="font-size:12px; color:#94a3b8; letter-spacing:2px;">LIFETIME NET PROFIT</div>
-                        <div style="font-size:42px; font-weight:900; color:#f59e0b; margin-top:10px;">$${data.stats.all_time.toFixed(2)} USD</div>
-                    </div>
-                    <div style="display:flex; gap:15px; margin-top:15px;">
-                        <div class="card" style="flex:1;"><div style="font-size:10px; color:#94a3b8;">7D LOG</div><div style="font-weight:bold">${data.stats.week.toFixed(2)} U</div></div>
-                        <div class="card" style="flex:1;"><div style="font-size:10px; color:#94a3b8;">30D LOG</div><div style="font-weight:bold">${data.stats.month.toFixed(2)} U</div></div>
+                    <div class="data-card" style="text-align: center;">
+                        <div style="font-size: 12px; color: #64748b; font-weight: 800; letter-spacing: 2px;">LIFETIME NET WORTH</div>
+                        <div style="font-size: 42px; font-weight: 900; color: #f59e0b; margin-top: 10px;">$${data.stats.all_time.toFixed(2)} U</div>
                     </div>
                 `;
                 modal.style.display = 'flex';
