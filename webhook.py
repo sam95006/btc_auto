@@ -52,17 +52,52 @@ def api_stats():
             pnl = (current_p - r['entry_price']) * r['qty'] if r['type'] == 'LONG' else (r['entry_price'] - current_p) * r['qty']
             positions.append({'symbol': sym, 'pnl': pnl, 'type': r['type'], 'price': current_p})
             
-        now = datetime.utcnow()
-        now_tpe = now + timedelta(hours=8)
-        now_nyc = now - timedelta(hours=4)
+        # --- [大盤觀測系統: 台北 vs 紐約] ---
+        now_utc = datetime.utcnow()
+        now_tpe = now_utc + timedelta(hours=8)
+        now_nyc = now_utc - timedelta(hours=4) # 目前為夏令時間 (EDT)
+
+        def get_market_info(n, open_h, open_m, close_h, close_m):
+            curr_min = n.hour * 60 + n.minute
+            start_min = open_h * 60 + open_m
+            end_min = close_h * 60 + close_m
+            
+            if n.weekday() >= 5: # 週末
+                days_to_mon = 7 - n.weekday()
+                rem_min = (days_to_mon * 1440) + start_min - curr_min
+                return "休市中 (週末)", f"{rem_min//1440}天 { (rem_min%1440)//60:02d}:{(rem_min%60):02d} 後開盤"
+                
+            if start_min <= curr_min < end_min: # 盤中
+                rem_min = end_min - curr_min
+                return "盤中交易中", f"{rem_min//60:02d}:{rem_min%60:02d} 後收盤"
+            else: # 盤後或盤前
+                if curr_min >= end_min: # 已收盤，計算到明天開盤
+                    rem_min = (1440 - curr_min) + start_min
+                else: # 盤前
+                    rem_min = start_min - curr_min
+                return "已收盤", f"{rem_min//60:02d}:{rem_min%60:02d} 後開盤"
+
+        taiex_status, taiex_cd = get_market_info(now_tpe, 9, 0, 13, 30)
+        sp500_status, sp500_cd = get_market_info(now_nyc, 9, 30, 16, 0)
         
-        # 獲取幣安即時價格
+        # 指數模擬: 隨時間跳動 (真實點數模擬)
+        t_base, s_base = 20350, 5210
+        taiex_idx = f"{t_base + (now_tpe.second % 30) - 15 + (now_tpe.minute % 10):,.2f}"
+        sp500_idx = f"{s_base + (now_nyc.second % 20) - 10 + (now_nyc.minute % 5):,.2f}"
+
+        # --- [圓桌會議分時紀錄] ---
+        meeting_slots = ["00:00", "06:00", "12:00", "18:00"]
+        meeting_logs = {}
+        for slot in meeting_slots:
+            log = storage.get_global_config(f"RT_LOG_{slot}", f"主席（BTC）: {slot} 會議結論執行中，全城分隊戰略部署完畢。")
+            meeting_logs[slot] = log
+        
+        # --- [大會戰數據讀取] ---
         prices = {}
         for sym in ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'PEPE/USDT']:
             p = storage.get_global_config(f"PRICE_{sym}", "0.0")
             prices[sym.split('/')[0]] = p
         
-        # 數據讀取
         radar_opps = json.loads(storage.get_global_config('RADAR_OPPS', '[]'))
         whale_score = storage.get_global_config('WHALE_BTC/USDT', '1.0')
         treasury_cash = storage.get_global_config("TREASURY_CASH", "1000.0")
@@ -72,37 +107,18 @@ def api_stats():
         thoughts = {}
         for sym in ['BTC', 'ETH', 'SOL', 'XAUT', 'PEPE', 'SPECIAL']:
             debts[sym] = storage.get_global_config(f"DEBT_{sym}/USDT" if '/' not in sym and sym != 'SPECIAL' else f"DEBT_{sym}", "0.0")
-            thoughts[sym] = storage.get_global_config(f"THOUGHT_{sym}/USDT" if '/' not in sym and sym != 'SPECIAL' else f"THOUGHT_{sym}", "正在觀察行情...")
+            thoughts[sym] = storage.get_global_config(f"THOUGHT_{sym}/USDT" if '/' not in sym and sym != 'SPECIAL' else f"THOUGHT_{sym}", "正在監控幣安鏈路...")
 
-        # --- 市場狀態 ---
-        def get_mkt_status(n, open_h, open_m, close_h, close_m):
-            if n.weekday() >= 5: return "休市中 (週末)", "--:--"
-            curr, start, end = n.hour * 60 + n.minute, open_h * 60 + open_m, close_h * 60 + close_m
-            if start <= curr < end: return "盤中交易", f"{ (end-curr)//60:02d}:{(end-curr)%60:02d} 後收盤"
-            rem = start - curr if curr < start else (24*60 - curr) + start
-            return "已休市", f"{rem//60:02d}:{rem%60:02d} 後開盤"
+        meeting_times = ["00:00", "06:00", "12:00", "18:00"]
+        meetings = [{"time": mt, "status": ("已完成" if now_tpe.hour >= int(mt.split(':')[0]) else "預計召開")} for mt in meeting_times]
 
-        # --- [市場指數即時化] ---
-        taiex_status, taiex_cd = get_mkt_status(now_tpe, 9, 0, 13, 30)
-        sp500_status, sp500_cd = get_mkt_status(now_nyc, 9, 30, 16, 0)
-        # 模擬即時大盤點數 (實際可用爬蟲獲取)
-        taiex_idx = f"{20000 + (now_tpe.second % 100):,}"
-        sp500_idx = f"{5100 + (now_nyc.second % 50):,}"
-
-        # --- [圓桌會議分時紀錄] ---
-        meeting_slots = ["00:00", "06:00", "12:00", "18:00"]
-        meeting_logs = {}
-        for slot in meeting_slots:
-            log = storage.get_global_config(f"RT_LOG_{slot}", f"主席（BTC）: {slot} 會議結論執行中，全城分隊戰略部署完畢。")
-            meeting_logs[slot] = log
+        # --- [燈號心跳] ---
+        health_data = {}
+        for s in ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XAUT/USDT', 'PEPE/USDT', 'SPECIAL']:
+            st = storage.get_global_config(f"HEALTH_{s}", "ERR")
+            health_data[s] = {"status": "OK" if st == "OK" else "OFFLINE"}
         
-        # 預設顯示最近一次會議
-        last_slot = "00:00"
-        for s in meeting_slots:
-            if now_tpe.hour >= int(s.split(':')[0]): last_slot = s
-        round_table_log = meeting_logs[last_slot]
-
-        # --- [精準資金校準] ---
+        # --- [精準資金校準與精英競賽] ---
         ace_symbol = "BTC"
         max_pnl = -999999
         accounts_data = {}
@@ -117,19 +133,13 @@ def api_stats():
         accounts_data['TREASURY'] = {"cash": float(storage.get_global_config("TREASURY_CASH", "1000.0")), "initial": 1000.0, "debt": 0.0}
         accounts_data['SPECIAL'] = {"cash": float(storage.get_global_config("CASH_SPECIAL", "100.0")), "initial": 100.0, "debt": 0.0}
         
+        # 決定日報摘要與最新會議日誌
         debrief_summary = f"🎉 今日由 {ace_symbol} 領跑全城，趨勢捕捉非常精準！" if max_pnl > 10 else "全軍陣勢穩健，各特工正在靜候大行情爆發。"
-        if max_pnl < -10: debrief_summary = "⚠️ 今日行情詭譎，組長已下令開啟防禦姿勢避開插針。"
-
-        # --- [燈號心跳] ---
-        health_data = {}
-        for s in ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XAUT/USDT', 'PEPE/USDT', 'SPECIAL']:
-            st = storage.get_global_config(f"HEALTH_{s}", "ERR")
-            health_data[s] = {"status": "OK" if st == "OK" else "OFFLINE"}
-
-        meeting_times = ["00:00", "06:00", "12:00", "18:00"]
-        meetings = [{"time": mt, "status": ("已完成" if now_tpe.hour >= int(mt.split(':')[0]) else "預計召開")} for mt in meeting_times]
-        round_table_log = storage.get_global_config("ROUND_TABLE_LOG", "主席（BTC）: 目前各分隊紀律良好。")
-
+        last_slot = "00:00"
+        for s in ["00:00", "06:00", "12:00", "18:00"]:
+            if now_tpe.hour >= int(s.split(':')[0]): last_slot = s
+        round_table_log = meeting_logs[last_slot]
+        
         return jsonify({
             "tpe_time": now_tpe.strftime("%H:%M:%S"),
             "ny_time": now_nyc.strftime("%H:%M:%S"),
