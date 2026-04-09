@@ -169,6 +169,10 @@ class Storage:
                             last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
                             UNIQUE(symbol, signal_type))''')
 
+        cursor.execute('''CREATE TABLE IF NOT EXISTS global_config (
+                            key TEXT PRIMARY KEY,
+                            value TEXT)''')
+
         self.conn.commit()
 
     def close(self):
@@ -475,3 +479,25 @@ class Storage:
             ))
         
         return trades
+
+    def save_global_config(self, key, value):
+        """保存全局配置/全局變數"""
+        cursor = self.conn.cursor()
+        cursor.execute("REPLACE INTO global_config (key, value) VALUES (?, ?)", (key, str(value)))
+        self.conn.commit()
+
+    def get_global_config(self, key, default=None):
+        """讀取全局配置/全局變數"""
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT value FROM global_config WHERE key = ?", (key,))
+        row = cursor.fetchone()
+        return row[0] if row else default
+
+    def get_agent_history(self, symbol, limit=5):
+        """獲取特定幣種的近期交易歷史與背景"""
+        cursor = self.conn.cursor()
+        cursor.execute("""SELECT timestamp, signal_type, pnl, market_context FROM trades 
+                         WHERE symbol LIKE ? AND pnl != 0 
+                         ORDER BY id DESC LIMIT ?""", (f"%{symbol}%", limit))
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows]

@@ -1,13 +1,15 @@
 import os
 import ccxt
 import pandas as pd
-from flask import Flask, request, abort
+from flask import Flask, request, abort, render_template, jsonify
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
-from sensors import MacroScanner, FedScanner, PoliticalScanner
+from core.storage import Storage
+from sensors.sensors import MacroScanner, WhaleWatcher, NewsScanner, FedScanner, PoliticalScanner, TradingViewScanner
+from strategy.market_regime_detector import MarketRegimeDetector
+from strategy.performance_optimizer import PerformanceOptimizer
 import logging
-from storage import Storage
 import re
 from datetime import datetime, timedelta
 
@@ -286,8 +288,38 @@ class QueryAnalyzer:
         except Exception as e:
             return f"❌ 無法檢測市場制度: {str(e)}"
 
-def help_message():
-    return QueryAnalyzer.handle_help()
+@app.route("/dashboard")
+def dashboard():
+    return render_template("village.html")
+
+@app.route("/api/stats")
+def api_stats():
+    """提供給 UI 介面的即時成績單數據"""
+    try:
+        total_pnl, total_trades = storage.get_lifetime_summary()
+        global_bias = float(storage.get_global_config('GLOBAL_BIAS', 0.5))
+        macro_report = storage.get_global_config('MACRO_REPORT', "正在偵查全球動向...")
+        
+        # 獲取持倉動向
+        all_pos = storage.get_all_active_pos()
+        pos_list = []
+        for p in all_pos:
+            pos_list.append({
+                'symbol': p[1],
+                'type': p[2],
+                'entry': p[3],
+                'qty': p[4]
+            })
+
+        return jsonify({
+            'total_pnl': total_pnl,
+            'total_trades': total_trades,
+            'global_bias': global_bias,
+            'macro_report': macro_report,
+            'positions': pos_list
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route("/")
 def home():

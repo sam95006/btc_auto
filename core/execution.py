@@ -212,26 +212,55 @@ class PaperTrader:
         if self.cumulative_pnl < (self.pnl_high_water_mark - self.max_drawdown_allowed):
             return f"🆘 【系統警告 | 風控觸發】\n{self.symbol} 已達移動回撤上限，暫停當前交易。"
 
-        atr_sl_pct = max(0.012, (atr * 2.0) / current_price) if atr > 0 else 0.012
+        atr_sl_pct = max(0.008, (atr * 1.5) / current_price) if atr > 0 else 0.010
         
         # --- 1. 平倉與反思邏輯 (多單) ---
         if self.position > 0:
             roi = (current_price - self.entry_price) / self.entry_price
-            if roi > 0.015 and not self.has_partial_tp:
-                pnl = (current_price - self.entry_price) * (self.position / 2)
-                self.cash += (self.entry_price * (self.position / 2)) + pnl
-                self.cumulative_pnl += pnl
-                self.position /= 2
-                self.has_partial_tp = True
-                report = (f"💰 【獲利通報 | PARTIAL TP】\n─────────────────\n"
-                          f"🪙 幣種: {self.symbol} (50% 出貨)\n📍 價格: ${current_price:,.2f}\n📈 盈虧: +{pnl:,.1f} U")
-                if storage: storage.log_trade(f"PT_LONG_{self.symbol}", current_price, abs(self.position), pnl, self.cumulative_pnl)
+            current_rsi = context.get('rsi', 50) if context else 50
             
+            # 【動態止盈】: 階梯式出場
+            # 第一階段: 0.8% 且 RSI > 65 -> 出 40% (保本)
+            if roi > 0.008 and current_rsi > 65 and not self.has_partial_tp:
+                pnl = (current_price - self.entry_price) * (self.position * 0.4)
+                self.cash += (self.entry_price * (self.position * 0.4)) + pnl
+                self.cumulative_pnl += pnl
+                self.position *= 0.6
+                self.has_partial_tp = True
+                report = (f"💰 【獲利通報 | FAST TP】\n─────────────────\n"
+                          f"🪙 幣種: {self.symbol} (小計 40%)\n📍 價格: ${current_price:,.2f}\n📈 盈虧: +{pnl:,.1f} U")
+                if storage: storage.log_trade(f"PT_LONG_{self.symbol}", self.entry_price, current_price, abs(self.position*0.4), pnl, self.cumulative_pnl, is_exit=True)
+
             self.trailing_high = max(self.trailing_high, current_price)
             if storage: storage.update_active_pos(self.symbol, "LONG", self.entry_price, self.position, self.trailing_high)
             
-            real_sl = self.entry_price if self.has_partial_tp else self.entry_price * (1 - atr_sl_pct)
-            if roi > 0.025 or current_price < real_sl or current_price < self.trailing_high * (1 - atr_sl_pct * 0.5):
+            # 【出場觸發點】: 
+            # 1. 強制止盈 1.8% 
+            # 2. RSI 極度超買 > 80 
+            # 3. 跌破追蹤止損 (回撤超過 0.5 * ATR)
+            # 4. 基礎止損 (ATR 保護)
+            real_sl = self.entry_price * 1.002 if self.has_partial_tp else self.entry_price * (1 - atr_sl_pct)
+            
+            # 獲取量能數據 (靈活變換的核心)
+            relative_vol = context.get('rv', 1.0) if context else 1.0
+            
+            should_exit = False
+            exit_reason = ""
+            
+            if roi > 0.018: 
+                should_exit, exit_reason = True, "🎯 強制止盈"
+            elif current_rsi > 80:
+                should_exit, exit_reason = True, "🔥 RSI 超買"
+            elif roi > 0.005 and relative_vol > 3.5:
+                should_exit, exit_reason = True, "🚀 爆量見頂"
+            elif abs(roi) < 0.003 and relative_vol < 0.4:
+                should_exit, exit_reason = True, "💤 量能枯竭"
+            elif current_price < real_sl:
+                should_exit, exit_reason = True, "🛡️ 觸及止損"
+            elif current_price < self.trailing_high * (1 - atr_sl_pct * 0.4):
+                should_exit, exit_reason = True, "📉 追蹤滑落"
+
+            if should_exit:
                 pnl = (current_price - self.entry_price) * self.position
                 self.cash += (self.entry_price * self.position) + pnl
                 self.cumulative_pnl += pnl
@@ -242,34 +271,56 @@ class PaperTrader:
                     ref_engine = ReflectionEngine(storage)
                     reflection = ref_engine.analyze_loss(self.symbol, pnl, self.entry_price, current_price, "LONG", context)
                 
-                if storage: storage.log_trade(f"EXIT_LONG_{self.symbol}", current_price, abs(self.position), pnl, self.cumulative_pnl)
+                if storage: storage.log_trade(f"EXIT_LONG_{self.symbol}", self.entry_price, current_price, abs(self.position), pnl, self.cumulative_pnl, is_exit=True)
                 
-                # 記錄到每日交易目標
                 self._record_trade_result(pnl)
                 
-                report = (f"✅ 【平倉通報 | TRADE CLOSED】\n─────────────────\n"
-                          f"🪙 幣種: {self.symbol} (多單離場)\n📍 出場: ${current_price:,.2f}\n📉 盈虧: {pnl:+.1f} U" + reflection)
+                report = (f"✅ 【平倉通報 | {exit_reason}】\n─────────────────\n"
+                          f"🪙 幣種: {self.symbol}\n📍 出場: ${current_price:,.2f}\n📉 盈虧: {pnl:+.1f} U" + reflection)
                 self.position = 0
                 self.has_partial_tp = False
 
         # --- 2. 平倉與反思邏輯 (空單) ---
         elif self.position < 0:
             roi = (self.entry_price - current_price) / self.entry_price
-            if roi > 0.015 and not self.has_partial_tp:
-                pnl = (self.entry_price - current_price) * (abs(self.position) / 2)
-                self.cash += (self.entry_price * (abs(self.position) / 2)) + pnl
+            current_rsi = context.get('rsi', 50) if context else 50
+            
+            # 【動態止盈】: 階梯式出場
+            if roi > 0.008 and current_rsi < 35 and not self.has_partial_tp:
+                pnl = (self.entry_price - current_price) * (abs(self.position) * 0.4)
+                self.cash += (self.entry_price * (abs(self.position) * 0.4)) + pnl
                 self.cumulative_pnl += pnl
-                self.position /= 2
+                self.position *= 0.6
                 self.has_partial_tp = True
-                report = (f"💰 【獲利通報 | PARTIAL TP】\n─────────────────\n"
-                          f"🪙 幣種: {self.symbol} (50% 出貨)\n📍 價格: ${current_price:,.2f}")
-                if storage: storage.log_trade(f"PT_SHORT_{self.symbol}", current_price, abs(self.position), pnl, self.cumulative_pnl)
+                report = (f"💰 【獲利通報 | FAST TP】\n─────────────────\n"
+                          f"🪙 幣種: {self.symbol} (小計 40%)\n📍 價格: ${current_price:,.2f}")
+                if storage: storage.log_trade(f"PT_SHORT_{self.symbol}", self.entry_price, current_price, abs(self.position*0.4), pnl, self.cumulative_pnl, is_exit=True)
             
             self.trailing_low = min(self.trailing_low, current_price)
             if storage: storage.update_active_pos(self.symbol, "SHORT", self.entry_price, abs(self.position), self.trailing_low)
             
-            real_sl = self.entry_price if self.has_partial_tp else self.entry_price * (1 + atr_sl_pct)
-            if roi > 0.025 or current_price > real_sl or current_price > self.trailing_low * (1 + atr_sl_pct * 0.5):
+            real_sl = self.entry_price * 0.998 if self.has_partial_tp else self.entry_price * (1 + atr_sl_pct)
+            
+            # 獲取量能數據
+            relative_vol = context.get('rv', 1.0) if context else 1.0
+            
+            should_exit = False
+            exit_reason = ""
+            
+            if roi > 0.018:
+                should_exit, exit_reason = True, "🎯 強制止盈"
+            elif current_rsi < 20:
+                should_exit, exit_reason = True, "🔥 RSI 超賣"
+            elif roi > 0.005 and relative_vol > 3.5:
+                should_exit, exit_reason = True, "🚀 爆量見底"
+            elif abs(roi) < 0.003 and relative_vol < 0.4:
+                should_exit, exit_reason = True, "💤 量能枯竭"
+            elif current_price > real_sl:
+                should_exit, exit_reason = True, "🛡️ 觸及止損"
+            elif current_price > self.trailing_low * (1 + atr_sl_pct * 0.4):
+                should_exit, exit_reason = True, "📉 追蹤滑落"
+
+            if should_exit:
                 pnl = (self.entry_price - current_price) * abs(self.position)
                 self.cash += (self.entry_price * abs(self.position)) + pnl
                 self.cumulative_pnl += pnl
@@ -280,15 +331,15 @@ class PaperTrader:
                     ref_engine = ReflectionEngine(storage)
                     reflection = ref_engine.analyze_loss(self.symbol, pnl, self.entry_price, current_price, "SHORT", context)
 
-                if storage: storage.log_trade(f"EXIT_SHORT_{self.symbol}", current_price, abs(self.position), pnl, self.cumulative_pnl)
+                if storage: storage.log_trade(f"EXIT_SHORT_{self.symbol}", self.entry_price, current_price, abs(self.position), pnl, self.cumulative_pnl, is_exit=True)
                 
-                # 記錄到每日交易目標
                 self._record_trade_result(pnl)
                 
-                report = (f"✅ 【平倉通報 | TRADE CLOSED】\n─────────────────\n"
-                          f"🪙 幣種: {self.symbol} (空單離場)\n📍 出場: ${current_price:,.2f}\n📉 盈虧: {pnl:+.1f} U" + reflection)
+                report = (f"✅ 【平倉通報 | {exit_reason}】\n─────────────────\n"
+                          f"🪙 幣種: {self.symbol}\n📍 出場: ${current_price:,.2f}\n📉 盈虧: {pnl:+.1f} U" + reflection)
                 self.position = 0
                 self.has_partial_tp = False
+
 
         # --- 3. 開倉判定 (加入 AI 反思比對) ---
         if self.position == 0:
