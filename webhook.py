@@ -142,6 +142,12 @@ def api_stats():
             elif max_pnl < -10:
                 debrief_summary = "⚠️ 今日行情詭譎，多支分隊遭遇插針襲擊，組長已下令開啟防禦姿勢。"
 
+            # --- [大都會 v6.1 燈號與資金校準] ---
+            health_data = {}
+            for s in ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XAUT/USDT', 'PEPE/USDT', 'SPECIAL']:
+                st = storage.get_global_config(f"HEALTH_{s}", "ERR")
+                health_data[s] = {"status": "OK" if st == "OK" else "OFFLINE"}
+
             return jsonify({
                 "tpe_time": now_tpe.strftime("%H:%M:%S"),
                 "ny_time": now_nyc.strftime("%H:%M:%S"),
@@ -158,7 +164,7 @@ def api_stats():
                 "prices": prices,
                 "debts": debts,
                 "thoughts": thoughts,
-                "agent_health": getattr(app, 'agent_status', {}),
+                "agent_health": health_data,
                 "positions": positions,
                 "radar_opps": radar_opps,
                 "whale_score": whale_score,

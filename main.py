@@ -53,7 +53,12 @@ def agent_worker(symbol, trader, predictor, feed, storage, macro, whale, news, f
     
     while True:
         try:
-            # 1. [自癒檢查] 對接資料庫並恢復狀態
+            # --- [大都會自癒心跳] ---
+            storage.save_global_config(f"HEALTH_{symbol}", "OK")
+            storage.save_global_config(f"LAST_ACT_{symbol}", datetime.now().strftime("%H:%M:%S"))
+            
+            # --- [數據初始化] ---
+            predictor.load_model()
             trader.load_active_position()
             
             # --- [能量守護 & 全球情緒感知] ---
