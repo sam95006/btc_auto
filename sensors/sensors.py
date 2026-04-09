@@ -108,20 +108,42 @@ class FedScanner:
 class PoliticalScanner:
     def get_sentiment(self): return 0.5
     
-class MarketScanner:
-    def get_indices(self):
-        import requests
-        def fetch(tk):
-            try:
-                url = f"https://query2.finance.yahoo.com/v8/finance/chart/{tk}?interval=1d&range=2d"
-                h = {"User-Agent": "Mozilla/5.0"}
-                r = requests.get(url, headers=h, timeout=5).json()
-                prices = r['chart']['result'][0]['indicators']['quote'][0]['close']
-                prices = [p for p in prices if p is not None]
-                if len(prices) >= 2:
-                    c, p = prices[-1], prices[-2]
-                    return {"price": c, "diff": c-p, "pct": ((c-p)/p)*100}
-                return {"price": prices[0] if prices else 0, "diff": 0, "pct": 0}
-            except Exception as e:
-                return {"price": 0, "diff": 0, "pct": 0}
-        return {"sp500": fetch("^GSPC"), "taiex": fetch("^TWII")}
+class MarketSentimentScanner:
+    """
+    市場情緒掃描儀：監控資金費率 (Funding Rate) 與 多空人數比 (Long/Short Ratio)。
+    這對於判斷市場是否過熱、是否會發生『連環爆倉』極其關鍵。
+    """
+    def __init__(self, symbol="BTCUSDT"):
+        self.symbol = symbol.replace("/", "").upper()
+
+    def get_funding_sentiment(self, exchange):
+        """
+        獲取資金費率情緒分數。
+        費率過高 (正值) 代表多頭過熱，可能發生多殺多。
+        費率過低 (負值) 代表空頭過熱，可能發生軋空。
+        """
+        try:
+            # 獲取永續合約資金費率 (模擬 ccxt 調用)
+            fr = exchange.fetch_funding_rate(self.symbol)
+            rate = fr['fundingRate']
+            
+            # 正常範圍 -0.01% ~ 0.01%
+            if rate > 0.0003: return 0.2 # 多頭太擁擠，極度危險
+            if rate < -0.0003: return 0.8 # 空頭太擁擠，有利反彈
+            return 0.5
+        except:
+            return 0.5
+
+    def get_long_short_ratio(self, exchange):
+        """
+        獲取大戶多空比。
+        """
+        try:
+            # 獲取大戶持倉比 (假設 ccxt 支持或模擬數據)
+            ratio_data = exchange.fetch_ohlcv_v2_ls_ratio(self.symbol) # 模擬高效調用
+            ratio = ratio_data[-1][1] # 取最新比率
+            if ratio > 2.0: return 0.3 # 散戶瘋狂做多，警惕砸盤
+            if ratio < 0.5: return 0.7 # 散戶瘋狂做空，警惕拉升
+            return 0.5
+        except:
+            return 0.5

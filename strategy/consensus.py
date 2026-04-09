@@ -105,12 +105,24 @@ class ChiefAnalyst:
             self._log_decision(final_action, f"團隊共識達成: {final_action}")
             return final_action, avg_conf
             
-        # 3. 如果意見分歧，組長查看全球偏向 (Global Bias) 做最後決定
+        # 3. 檢查市場情緒 (黑科技權重)
+        funding = global_context.get('funding_sentiment', 0.5)
+        ls_ratio = global_context.get('ls_ratio', 0.5)
+        
+        # 情緒攔截邏輯: 如果資金費率極端，禁止追漲殺跌
+        if funding < 0.3 and votes['scalper']['vote'] == "BUY":
+            self._log_decision("HOLD", "情緒攔截: 資金費率過高，多頭擁擠禁止進場")
+            return "HOLD", 0.5
+        if funding > 0.7 and votes['scalper']['vote'] == "SELL":
+            self._log_decision("HOLD", "情緒攔截: 資金費率過低，空頭擁擠禁止進場")
+            return "HOLD", 0.5
+
+        # 4. 如果意見分歧，組長查看全球偏向 (Global Bias) 做最後決定
         global_bias = global_context.get('global_bias', 0.5)
-        if votes['scalper']['vote'] == "BUY" and global_bias > 0.6:
+        if votes['scalper']['vote'] == "BUY" and global_bias > 0.6 and funding >= 0.4:
             self._log_decision("BUY", "組長依據全球偏向支持激進進場")
             return "BUY", votes['scalper']['conf']
-            
+        
         return "HOLD", 0.5
 
     def _log_decision(self, action, reason):

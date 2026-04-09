@@ -72,9 +72,14 @@ def agent_worker(symbol, trader, predictor, feed, storage, macro, whale, news, f
             else:
                 sleep_time, mode = 30, "BATTLE"
 
-            # B. 巨鯨警戒判定
+            # B. 外部情緒鏈路 (Sentiment & Whales)
+            sentiment_scanner = MarketSentimentScanner(symbol=symbol)
+            funding_score = sentiment_scanner.get_funding_sentiment(feed.exchange)
+            ls_score = sentiment_scanner.get_long_short_ratio(feed.exchange)
+            
             whale_score = whale.get_whale_move(feed.exchange) if whale else 1.0
             storage.save_global_config(f"WHALE_{symbol}", str(whale_score))
+            
             if whale_score > 3.5:
                 storage.save_global_config("GLOBAL_ALERT", "RED")
             
@@ -87,10 +92,18 @@ def agent_worker(symbol, trader, predictor, feed, storage, macro, whale, news, f
             
             # C. AI 決策與執行
             ml_prob = predictor.predict(df_1m) if predictor else 0.5
-            team_signal, team_conf = chiefs[symbol].make_final_decision(df_1m, df_15m, {
+            
+            global_context = {
                 'ml_prob': ml_prob,
-                'whale_score': whale_score
-            })
+                'whale_score': whale_score,
+                'news_sentiment': news.fetch_latest_sentiment() if news else 0.5,
+                'fng_score': macro.get_sentiment_score() if macro else 0.5,
+                'funding_sentiment': funding_score,
+                'ls_ratio': ls_score,
+                'global_bias': 0.6
+            }
+            
+            team_signal, team_conf = chiefs[symbol].make_final_decision(df_1m, df_15m, global_context)
             
             scalper_signal = "HOLD"
             if team_signal == "BUY": scalper_signal = "BUY_SCALP"

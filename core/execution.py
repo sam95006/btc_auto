@@ -311,8 +311,19 @@ class PaperTrader:
             # 1. 強制止盈 1.8% 
             # 2. RSI 極度超買 > 80 
             # 3. 跌破追蹤止損 (回撤超過 0.5 * ATR)
-            # 4. 基礎止損 (ATR 保護)
-            real_sl = self.entry_price * 1.002 if self.has_partial_tp else self.entry_price * (1 - atr_sl_pct)
+            # --- [智能追蹤止盈 (Trailing Stop)] ---
+            # 如果當前獲利超過 1%，開始啟動追蹤止盈，止損位跟隨價格
+            sl = self.entry_price * (1 - atr_sl_pct)
+            if roi > 0.015: # 當獲利超過 1.5% 時啟動
+            # --- [智能追蹤止盈 (Trailing Stop)] ---
+            # 當獲利超過 1.5% 時，止損線跟隨價格在 0.8% 處鎖定
+            sl_base = self.entry_price * (1 - atr_sl_pct)
+            if roi > 0.015:
+                new_stop = current_price * 0.992
+                if new_stop > sl_base: sl_base = new_stop
+            
+            # 4. 檢查止盈 (Take Profit)
+            real_sl = self.entry_price * 1.002 if self.has_partial_tp else sl_base
             
             # 獲取量能數據 (靈活變換的核心)
             relative_vol = context.get('rv', 1.0) if context else 1.0
@@ -379,7 +390,14 @@ class PaperTrader:
             self.trailing_low = min(self.trailing_low, current_price)
             if storage: storage.update_active_pos(self.symbol, "SHORT", self.entry_price, abs(self.position), self.trailing_low)
             
-            real_sl = self.entry_price * 0.998 if self.has_partial_tp else self.entry_price * (1 + atr_sl_pct)
+            # --- [智能追蹤止盈 (Trailing Stop)] ---
+            # 空單獲利 > 1.5% 時，止損線跟隨在現價上方 0.8% 處鎖定
+            sl_base = self.entry_price * (1 + atr_sl_pct)
+            if roi > 0.015:
+                new_stop = current_price * 1.008
+                if new_stop < sl_base: sl_base = new_stop
+
+            real_sl = self.entry_price * 0.998 if self.has_partial_tp else sl_base
             
             # 獲取量能數據
             relative_vol = context.get('rv', 1.0) if context else 1.0
