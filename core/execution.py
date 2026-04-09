@@ -90,21 +90,6 @@ class PaperTrader:
             # 其他幣種每日15筆交易，12筆以上盈利
             self.daily_target = DailyTradeTarget(symbol, target_trades=15, min_winning_trades=12)
     
-    def multi_timeframe_confirmation(self, m1_rsi, m15_rsi, h1_ema, current_price, direction="LONG"):
-        """
-        【多時間框架確認】
-        返回交易信心值 (0.0-1.0)
-        """
-        confidence = 0.5
-        
-        if direction == "LONG":
-            # 1min RSI < 30 (超賣)
-            if m1_rsi < 30:
-                confidence += 0.2
-            # 15min RSI < 40 (弱勢)
-            if m15_rsi < 40:
-                confidence += 0.1
-        return confidence
 
     def load_active_position(self):
         """[自癒功能] 從資料庫讀取之前的持倉狀態"""
@@ -134,7 +119,23 @@ class PaperTrader:
         try:
             self.db.update_active_pos(self.symbol, None, 0, 0)
         except Exception as e:
-            print(f"⚠️ {self.symbol} 清除持倉失敗: {e}")   # 1hour 價格在 EMA200 上方 (上升趨勢)
+            print(f"⚠️ {self.symbol} 清除持倉失敗: {e}")
+
+    def multi_timeframe_confirmation(self, m1_rsi, m15_rsi, h1_ema, current_price, direction="LONG"):
+        """
+        【多時間框架確認】
+        返回交易信心值 (0.0-1.0)
+        """
+        confidence = 0.5
+        
+        if direction == "LONG":
+            # 1min RSI < 30 (超賣)
+            if m1_rsi < 30:
+                confidence += 0.2
+            # 15min RSI < 40 (弱勢)
+            if m15_rsi < 40:
+                confidence += 0.1
+            # 1hour 價格在 EMA200 上方 (上升趨勢)
             if current_price > h1_ema:
                 confidence += 0.1
         
