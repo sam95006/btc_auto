@@ -66,12 +66,34 @@ def api_stats():
         radar_opps = json.loads(storage.get_global_config('RADAR_OPPS', '[]'))
         whale_score = storage.get_global_config('WHALE_BTC/USDT', '1.0')
 
+        # --- 市場開閉盤邏輯 ---
+        now_tpe = now + timedelta(hours=8)
+        now_nyc = now - timedelta(hours=4) # 夏令時間
+        
+        def get_mkt_status(n, open_h, open_m, close_h, close_m, name):
+            if n.weekday() >= 5: return "休市中 (週末)", "--:--"
+            curr = n.hour * 60 + n.minute
+            start = open_h * 60 + open_m
+            end = close_h * close_m
+            if start <= curr < end:
+                rem = end - curr
+                return "盤中交易", f"{rem//60:02d}:{rem%60:02d} 後收盤"
+            else:
+                if curr < start: rem = start - curr
+                else: rem = (24*60 - curr) + start
+                return "已休市", f"{rem//60:02d}:{rem%60:02d} 後開盤"
+
+        taiex_status, taiex_cd = get_mkt_status(now_tpe, 9, 0, 13, 30, "台股")
+        sp500_status, sp500_cd = get_mkt_status(now_nyc, 9, 30, 16, 0, "美股")
+
         return jsonify({
-            "tpe_time": tpe,
-            "ny_time": ny,
+            "tpe_time": now_tpe.strftime("%H:%M:%S"),
+            "ny_time": now_nyc.strftime("%H:%M:%S"),
+            "taiex_info": {"status": taiex_status, "countdown": taiex_cd},
+            "sp500_info": {"status": sp500_status, "countdown": sp500_cd},
             "today_pnl": today_pnl,
             "total_pnl": total_pnl,
-            "meeting_log": "自愈中心：全線子系統已重新對齊，各分隊持倉自動修復完成。",
+            "meeting_log": "自愈中心：全線子系統正在重新校準，請稍候數據對接...",
             "agent_health": getattr(app, 'agent_status', {}),
             "prices": prices,
             "positions": positions,

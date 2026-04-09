@@ -65,23 +65,28 @@
 
     <div id="hud-top">
         <div id="left-panel" class="panel-box" style="width: 320px;">
-            <div style="font-size: 11px; font-weight: 900; color: #94a3b8; margin-bottom: 12px; letter-spacing: 1px;">STRATEGIC COMMAND</div>
+            <div style="font-size: 11px; font-weight: 900; color: #94a3b8; margin-bottom: 12px; letter-spacing: 1px;">策略指揮中心 | STRATEGIC COMMAND</div>
             <div class="market-card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-weight:900;">🇹🇼 TAIEX</span>
+                    <span style="font-weight:900;">🇹🇼 台灣加權指數</span>
                     <span id="tw-price" class="ticker-price">20,450</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
-                    <span style="font-weight:900;">🇺🇸 S&P 500</span>
+                <div id="taiex-status" style="font-size:11px; color:var(--primary); font-weight:800; margin-top:4px;">讀取中...</div>
+                
+                <hr style="border:0.5px solid #e2e8f0; margin:10px 0;">
+                
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-weight:900;">🇺🇸 標準普爾 500</span>
                     <span id="us-price" class="ticker-price">5,205</span>
                 </div>
+                <div id="sp500-status" style="font-size:11px; color:var(--gold); font-weight:800; margin-top:4px;">讀取中...</div>
             </div>
-            <div style="display:flex; justify-content:space-between; font-size:12px; color:#64748b; font-weight:800;">
-                <span>TPE: <span id="clock-tpe">--:--</span></span>
-                <span>NYC: <span id="clock-ny">--:--</span></span>
+            <div style="display:flex; justify-content:space-between; font-size:12px; color:#64748b; font-weight:800; margin-top:10px;">
+                <span>台北時間: <span id="clock-tpe">--:--:--</span></span>
+                <span>紐約時間: <span id="clock-ny">--:--:--</span></span>
             </div>
             <div id="meeting-log" style="margin-top:15px; font-size:11px; color:var(--primary); font-weight:700; line-height:1.4;">
-                [AI 自癒系統] 初始化連線中...
+                [AI 自癒系統] 正在重新建立數據連結...
             </div>
         </div>
 
@@ -233,16 +238,18 @@
                 
                 document.getElementById('clock-tpe').innerText = d.tpe_time;
                 document.getElementById('clock-ny').innerText = d.ny_time;
-                document.getElementById('rev-all').innerText = (d.total_pnl >= 0 ? '+' : '-') + Math.abs(d.total_pnl).toFixed(1) + ' U';
+                document.getElementById('taiex-status').innerText = `${d.taiex_info.status} | ${d.taiex_info.countdown}`;
+                document.getElementById('sp500-status').innerText = `${d.sp500_info.status} | ${d.sp500_info.countdown}`;
+
+                document.getElementById('rev-all').innerText = (d.total_pnl >= 0 ? '收益: +' : '收益: -') + Math.abs(d.total_pnl).toFixed(1) + ' U';
                 document.getElementById('rev-today').innerText = (d.today_pnl >= 0 ? '+' : '-') + Math.abs(d.today_pnl).toFixed(1);
-                document.getElementById('meeting-log').innerText = d.meeting_log;
                 
                 // 更新代理健康
                 const agentList = document.getElementById('agent-list');
                 agentList.innerHTML = '';
                 const h = d.agent_health || {};
                 ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'PEPE/USDT'].forEach(sym => {
-                    const status = h[sym] ? h[sym].status : 'OFFLINE';
+                    const status = h[sym] ? h[sym].status : '連線中...';
                     const lightClass = status === 'OK' ? 'light-ok' : 'light-err';
                     agentList.innerHTML += `<div class="agent-status-row"><span>${sym}</span><div class="status-light ${lightClass}"></div></div>`;
                 });
@@ -250,7 +257,11 @@
                 // 更新標籤價格
                 for(let id in labelData) {
                     const price = d.prices[id === 'TREASURY' ? 'BTC' : id];
-                    if(price) labelData[id].element.innerText = id + ': $' + parseFloat(price).toLocaleString();
+                    if(price && price != "0.0") {
+                        labelData[id].element.innerText = id + ': $' + parseFloat(price).toLocaleString();
+                    } else {
+                        labelData[id].element.innerText = id + ': 數據對接中...';
+                    }
                 }
 
                 document.getElementById('pos-summary').innerHTML = d.positions.map(p => `<div>🔥 ${p.symbol}: ${p.pnl.toFixed(1)}U</div>`).join('') || '偵測中...';
@@ -285,11 +296,12 @@
                     });
                     bodyHtml = `<div style="text-align:center; padding:20px;">正在接收衛星編碼...</div>`;
                 } else {
-                    const price = window.liveData?.prices[ud.id] || '...';
+                    const price = window.liveData?.prices[ud.id];
+                    const priceStr = (price && price != "0.0") ? `$${parseFloat(price).toLocaleString()}` : "📡 數據連線中...";
                     bodyHtml = `<div style="background:#f1f5f9; padding:20px; border-radius:15px;">
-                        <div style="font-size:12px; color:#64748b;">實時價格</div>
-                        <div style="font-size:32px; font-weight:900; color:var(--primary);">$${parseFloat(price).toLocaleString()}</div>
-                        <div style="margin-top:10px; font-size:12px;">狀態: <span style="color:var(--ok); font-weight:800;">[自癒監控中]</span></div>
+                        <div style="font-size:12px; color:#64748b;">該分隊實時報價</div>
+                        <div style="font-size:32px; font-weight:900; color:var(--primary);">${priceStr}</div>
+                        <div style="margin-top:10px; font-size:12px;">運行狀態: <span style="color:var(--ok); font-weight:800;">[自癒系統監控中]</span></div>
                     </div>`;
                 }
                 document.getElementById('m-title').innerText = ud.name;
