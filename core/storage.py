@@ -206,17 +206,19 @@ class Storage:
         return cursor.fetchall()
 
     def update_active_pos(self, symbol, pos_type, price, qty, trailing_high=0):
+        """更新活躍持倉，用於斷線重啟接回"""
         cursor = self.conn.cursor()
         if qty == 0:
             cursor.execute("DELETE FROM active_pos WHERE symbol = ?", (symbol,))
         else:
-            cursor.execute("REPLACE INTO active_pos (id, symbol, type, entry_price, qty, trailing_high) VALUES (1, ?, ?, ?, ?, ?)", 
+            cursor.execute("INSERT OR REPLACE INTO active_pos (symbol, type, entry_price, qty, trailing_high) VALUES (?, ?, ?, ?, ?)", 
                            (symbol, pos_type, price, qty, trailing_high))
         self.conn.commit()
 
-    def get_active_pos(self):
+    def get_active_pos_by_symbol(self, symbol):
+        """根據幣種獲取活躍持倉"""
         cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM active_pos WHERE id = 1")
+        cursor.execute("SELECT * FROM active_pos WHERE symbol = ?", (symbol,))
         return cursor.fetchone()
 
     def log_trade(self, symbol, signal_type, entry_price, exit_price, qty, pnl, total_pnl, 

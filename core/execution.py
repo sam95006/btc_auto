@@ -51,9 +51,10 @@ class DailyTradeTarget:
         }
 
 class PaperTrader:
-    def __init__(self, symbol="BTC", initial_cash=2500, max_daily_trades=999, is_pepe=False):
+    def __init__(self, symbol="BTC", initial_cash=1000, max_daily_trades=999, is_pepe=False):
         self.symbol = symbol.replace("/USDT", "")
         self.cash = initial_cash
+        self.initial_budget = initial_cash # 紀錄初始資金
         self.position = 0
         self.entry_price = 0
         self.cumulative_pnl = 0
@@ -65,6 +66,11 @@ class PaperTrader:
         self.max_daily_trades = max_daily_trades
         self.trades_today = 0
         self.last_trade_day = datetime.now().day
+        
+        # --- [自癒核心] 從資料庫恢復持倉 ---
+        from core.storage import Storage
+        self.db = Storage()
+        self.load_active_position()
         
         # 移動回撤 (Trailing Drawdown) 參數
         self.pnl_high_water_mark = 0 # 今日盈虧最高點
@@ -97,8 +103,38 @@ class PaperTrader:
                 confidence += 0.2
             # 15min RSI < 40 (弱勢)
             if m15_rsi < 40:
-                confidence += 0.2
-            # 1hour 價格在 EMA200 上方 (上升趨勢)
+                confidence += 0.1
+        return confidence
+
+    def load_active_position(self):
+        """[自癒功能] 從資料庫讀取之前的持倉狀態"""
+        try:
+            pos = self.db.get_active_pos_by_symbol(self.symbol)
+            if pos:
+                self.position = 1 if pos['type'] == 'LONG' else -1
+                self.entry_price = pos['entry_price']
+                self.qty = pos['qty']
+                self.trailing_high = pos['trailing_high']
+                print(f"🔄 【自癒修復】 {self.symbol} 已恢復持倉: {pos['type']} @ {self.entry_price}")
+            else:
+                self.position = 0
+                self.entry_price = 0
+        except Exception as e:
+            print(f"⚠️ {self.symbol} 恢復持倉失敗: {e}")
+
+    def save_active_position(self, p_type, price, qty):
+        """[監察功能] 開倉或更新進度時同步至資料庫"""
+        try:
+            self.db.update_active_pos(self.symbol, p_type, price, qty, self.trailing_high)
+        except Exception as e:
+            print(f"⚠️ {self.symbol} 儲存持倉失敗: {e}")
+
+    def clear_active_position(self):
+        """[監察功能] 平倉後清除紀錄"""
+        try:
+            self.db.update_active_pos(self.symbol, None, 0, 0)
+        except Exception as e:
+            print(f"⚠️ {self.symbol} 清除持倉失敗: {e}")   # 1hour 價格在 EMA200 上方 (上升趨勢)
             if current_price > h1_ema:
                 confidence += 0.1
         
@@ -280,6 +316,7 @@ class PaperTrader:
                 report = (f"✅ 【特工凱旋回鎮 | {exit_reason}】\n─────────────────\n"
                           f"🛡️ 特工: {self.symbol}\n📍 出場: ${current_price:,.4f}\n"
                           f"📉 最終盈虧: {pnl:+.1f} U\n🏦 團隊剩餘金庫: ${self.cash:,.1f}" + reflection)
+                self.clear_active_position()
                 self.position = 0
                 self.has_partial_tp = False
 
@@ -342,6 +379,7 @@ class PaperTrader:
                 report = (f"✅ 【平倉通報 | {exit_reason}】\n─────────────────\n"
                           f"🪙 幣種: {self.symbol}\n📍 出場: ${current_price:,.4f}\n"
                           f"📉 最終盈虧: {pnl:+.1f} U\n🏦 團隊剩餘金庫: ${self.cash:,.1f}" + reflection)
+                self.clear_active_position()
                 self.position = 0
                 self.has_partial_tp = False
 
@@ -361,7 +399,12 @@ class PaperTrader:
                     return f"🛡️ 【AI 攔截 | REFLECTION】\n{self.symbol} 當前環境與歷史虧損案例極度相似，已自動取消進場以規避風險。\n過去原因: {reason}"
 
             if is_sniper or scalper_signal == "BUY_SCALP":
-                invest_amt = self.cash * self.cash_usage_pct
+                # 市長最高指令: 1000U 分成 10 份，固定每單 100U
+                invest_amt = max(100.0, self.initial_budget * 0.1) 
+                
+                if self.cash < invest_amt:
+                    return f"⚠️ 【金庫告急】{self.symbol} 剩餘資金 ${self.cash:.1f} 不足以支付最小單位 $100 的出擊任務。"
+                
                 qty = invest_amt / current_price 
                 self.cash -= invest_amt
                 self.position = qty
@@ -369,14 +412,20 @@ class PaperTrader:
                 self.trailing_high = current_price
                 self.has_partial_tp = False
                 self.trades_today += 1
+                self.save_active_position("LONG", current_price, qty)
                 if storage: storage.log_trade(f"EN_LONG_{self.symbol}", current_price, qty, 0, self.cumulative_pnl)
                 report = (f"🏹 【特工出擊任務 | LONG MISSION】\n─────────────────\n"
                           f"🛡️ 特工: {self.symbol}\n📍 目標價: ${current_price:,.4f}\n"
-                          f"💰 投入資金: ${invest_amt:,.1f} U\n🏦 領取後金庫發還: ${self.cash:,.1f} U\n"
+                          f"💰 本次投入: ${invest_amt:,.1f} U (固定 10% 倉位)\n🏦 剩餘金庫: ${self.cash:,.1f} U\n"
                           f"🧠 組長信心: {context.get('ml_prob', 0)*100:.0f}%")
 
             elif scalper_signal == "SELL_SCALP":
-                invest_amt = self.cash * self.cash_usage_pct
+                # 市長最高指令: 定額 100U 下單
+                invest_amt = max(100.0, self.initial_budget * 0.1)
+                
+                if self.cash < invest_amt:
+                    return f"⚠️ 【金庫告急】{self.symbol} 剩餘資金 ${self.cash:.1f} 不足以支付最小單位 $100 的出擊任務。"
+                
                 qty = invest_amt / current_price
                 self.cash -= invest_amt
                 self.position = -qty
@@ -384,10 +433,11 @@ class PaperTrader:
                 self.trailing_low = current_price
                 self.has_partial_tp = False
                 self.trades_today += 1
+                self.save_active_position("SHORT", current_price, qty)
                 if storage: storage.log_trade(f"EN_SHORT_{self.symbol}", current_price, qty, 0, self.cumulative_pnl)
                 report = (f"❄️ 【特工出擊任務 | SHORT MISSION】\n─────────────────\n"
                           f"🪙 幣種: {self.symbol}\n📍 價格: ${current_price:,.4f}\n"
-                          f"💰 投入資金: ${invest_amt:,.1f} U\n🏦 領取後金庫發還: ${self.cash:,.1f} U\n"
+                          f"💰 本次投入: ${invest_amt:,.1f} U (固定 10% 倉位)\n🏦 剩餘金庫: ${self.cash:,.1f} U\n"
                           f"🧠 AI 信心: {(1-context.get('ml_prob', 1))*100:.0f}%")
 
         return report

@@ -2,22 +2,18 @@ import time
 import threading
 import os
 import sys
+from datetime import datetime
 
 # ==========================================
 # 【核心修復：路徑抬升系統】
-# 恢復早上的啟動穩定性：將所有子目錄加入 Python 搜尋路徑
-# ==========================================
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(ROOT_DIR)
 for folder in ['core', 'strategy', 'sensors', 'agents']:
     sys.path.append(os.path.join(ROOT_DIR, folder))
-# ==========================================
 
-from datetime import datetime
 try:
     from core.datafeed import DataFeed
     from strategy.indicators import calculate_all
-    from strategy.strategy import check_signal_scalper, check_signal_sniper
     from core.execution import PaperTrader
     from core.storage import Storage
     from core.notifier import send_line
@@ -29,326 +25,155 @@ try:
     from agents.market_scanner import DynamicMarketScanner
     from core.intelligence_center import IntelligenceCenter, AIRoundTable
     from strategy.consensus import ChiefAnalyst
-except ImportError:
-    # 兼容性導入：如果上面的 package 導入失敗，嘗試直接導入 (針對舊版路徑)
-    from datafeed import DataFeed
-    from indicators import calculate_all
-    from strategy import check_signal_scalper
-    from execution import PaperTrader
-    from storage import Storage
-    from notifier import send_line
-    from learning import AdaptiveMLPredictor
-    from sensors import MacroScanner, WhaleWatcher
+except ImportError as e:
+    print(f"❌ 導入失敗: {e}")
 
-# 1. 配置多幣種監控名單
+# 1. 配置監控名單
 MONITOR_SYMBOLS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT']
-PEPE_SYMBOL = 'PEPE/USDT'  # PEPE 無限交易額度
-DYNAMIC_SCAN_ENABLED = True  # 啟用動態市場掃描
-TOP_SYMBOLS_SCAN = 20  # 動態掃描前20大幣種
+PEPE_SYMBOL = 'PEPE/USDT'
 
-def trading_loop(traders, predictor, feed_manager, storage, macro, whales, news, fed, pol, tv_scanners, pepe_symbol, dynamic_scan_cash):
-    print(f"🚀 【後台數據大腦】 啟動中 ...")
-    
-    # 初始化核心系統
-    optimizer = PerformanceOptimizer(storage)
-    regime_detector = MarketRegimeDetector(storage)
-    intel_center = IntelligenceCenter(storage)
-    
-    # 建立各幣種的專家團隊組長
-    chiefs = {sym: ChiefAnalyst(sym, storage) for sym in MONITOR_SYMBOLS}
-    chiefs[PEPE_SYMBOL] = ChiefAnalyst(PEPE_SYMBOL, storage)
-    
-    # 此時 predictors 尚未在 trading_loop 範圍內定義，我們改用傳入的 active_predictors
-    roundtable = AIRoundTable(traders, active_predictors, storage) 
-    
-    optimization_counter = 0 
-    
-    # 延遲初始化：讓 Webhook 先對外連線
-    time.sleep(5) 
-    
-    # 初始化預設預測器 (避免在循環中引用未定義變量)
-    active_predictors = {sym: AdaptiveMLPredictor(symbol=sym, storage=storage) for sym in MONITOR_SYMBOLS}
-    active_predictors[pepe_symbol] = AdaptiveMLPredictor(symbol=pepe_symbol, storage=storage)
+# --- [自癒監察官] 全局狀態監控 ---
+AGENT_HEALTH = {} 
 
-    for sym in MONITOR_SYMBOLS:
-        try:
-            print(f"⌛ 正在初始化 {sym} 情報...")
-            df = calculate_all(feed_manager[sym].fetch_ohlcv(timeframe='1m', limit=500))
-            active_predictors[sym].train(df)
-        except Exception as e:
-            print(f"⚠️ {sym} 初始化失敗: {e}")
+def update_heartbeat(symbol, status="OK"):
+    AGENT_HEALTH[symbol] = {
+        'status': status,
+        'last_heartbeat': time.time(),
+        'time_str': datetime.now().strftime("%H:%M:%S")
+    }
+    webhook_app.agent_status = AGENT_HEALTH
 
-    prev_oi = {sym: 0 for sym in MONITOR_SYMBOLS}
-
+def agent_worker(symbol, trader, predictor, feed, storage, macro, whale, news, fed, pol, tv, chiefs):
+    """
+    【特工獨立作戰單元】: 每個師團獨立運作，具備強大自癒能力。
+    當發現異常會自動休眠後重啟，並從資料庫恢復持倉繼續作戰。
+    """
+    print(f"🕵️ 【特工分隊啟動】: {symbol} 派遣完成。")
+    
     while True:
         try:
-            optimization_counter += 1
+            # 1. [自癒檢查] 每次啟動或重啟先對接資料庫恢復狀態
+            trader.load_active_position()
+            update_heartbeat(symbol, "OK")
             
-            for sym in MONITOR_SYMBOLS:
-                feed = feed_manager[sym]
-                trader = traders[sym]
-                whale = whales[sym]
-                tv = tv_scanners[sym]
-                symbol_predictor = active_predictors.get(sym)
+            # 2. 抓取技術面數據
+            df_data = feed.fetch_ohlcv(timeframe='1m', limit=100)
+            if not df_data:
+                time.sleep(10)
+                continue
                 
-                # 抓取技術面數據與幣安現價
-                df_1m = calculate_all(feed.fetch_ohlcv(timeframe='1m', limit=100))
-                df_15m = calculate_all(feed.fetch_ohlcv(timeframe='15m', limit=50))
-                df_1h = calculate_all(feed.fetch_ohlcv(timeframe='1h', limit=50))
-                
-                # 同步即時幣安現價供 Webhook 計算浮盈使用
-                current_price = float(df_1m.iloc[-1]['close'])
-                storage.save_global_config(f"PRICE_{sym}", str(current_price))
-                
-                # 🧠 全球機制 1: BTC 大盤崩盤保險
-                btc_feed = feed_manager.get('BTC/USDT')
-                btc_crash = False
-                if btc_feed and sym != 'BTC/USDT':
-                    btc_1m = btc_feed.fetch_ohlcv(timeframe='1m', limit=5)
-                    if not btc_1m.empty and len(btc_1m) >= 2:
-                        btc_change = (btc_1m.iloc[-1]['close'] - btc_1m.iloc[0]['close']) / btc_1m.iloc[0]['close']
-                        if btc_change < -0.005: 
-                            btc_crash = True
-
-                # 🧠 全球機制 2: 15m 趨勢過濾 (EMA共振)
-                m15_ema200 = df_15m.iloc[-1].get('EMA200', df_1m.iloc[-1]['close'])
-                m15_trend_up = df_1m.iloc[-1]['close'] > m15_ema200
-
-                # 🧠 全球機制 3: 資金費率陷阱逃頂
-                fr = feed.get_funding_rate()
-                extreme_funding = fr > 0.0004 # 資金費率過高，多頭危險
-                
-                # 🧠 定期優化參數 (每 7 分鐘一次)
-                if optimization_counter % 14 == 0:
-                    optimized_params = optimizer.optimize_parameters(sym, lookback_days=7)
-                else:
-                    optimized_params = optimizer.get_optimal_params(sym, use_cache=True)
-                
-                # 🌍 市場制度檢測
-                regime_info = regime_detector.detect_regime(df_1h, sym)
-                regime_name, regime_score, regime_desc = regime_info
-                
-                # 根據市場制度調整參數
-                adjusted_params = optimizer.adjust_for_market_regime(optimized_params, {
-                    'regime': regime_name,
-                    'volatility': df_1m['close'].pct_change().std()
-                })
-                
-                # 🤖 團隊共識決策 (替代原本的單一策略調用)
-                global_bias = float(storage.get_global_config('GLOBAL_BIAS', 0.5))
-                team_signal, team_conf = chiefs[sym].make_final_decision(df_1m, df_15m, {
-                    'global_bias': global_bias,
-                    'whale_score': whale.get_whale_move(feed.exchange),
-                    'ml_prob': ml_prob,
-                    'regime': regime_name
-                })
-                
-                # 最終下單信號 (組長拍板)
-                scalper_signal = "HOLD"
-                if team_signal == "BUY": scalper_signal = "BUY_SCALP"
-                elif team_signal == "SELL": scalper_signal = "SELL_SCALP"
-                
-                # 【防禦邏輯介入】
-                if btc_crash and scalper_signal == "BUY_SCALP":
-                    scalper_signal = "HOLD" # 大盤跳水，暫停做多
-                if extreme_funding and scalper_signal == "BUY_SCALP":
-                    pass
-                
-                # 執行引擎 (根據組長聲望調整資金規模)
-                prestige = chiefs[sym].prestige_score
-                adjusted_cash_pct = 0.4 * prestige
-                
-                context = {
-                    'rsi': df_1m.iloc[-1].get('RSI', 50),
-                    'ema200': m15_ema200,
-                    'trend_15m': "UP" if m15_trend_up else "DOWN",
-                    'ml_prob': ml_prob,
-                    'rv': df_1m.iloc[-1].get('RV', 1.0),
-                    'btc_crash': btc_crash,
-                    'is_extreme_funding': extreme_funding,
-                    'regime': regime_name,
-                    'prestige': prestige
-                }
-                
-                # 重新動態調整下單量
-                trader.cash_usage_pct = adjusted_cash_pct
-                
-                report = trader.execute(scalper_signal, "HOLD", df_1m.iloc[-1]['close'], storage, atr=df_1m.iloc[-1]['ATR'], context=context)
-                
-                if report:
-                    tag = f"【{sym.replace('/USDT','')}】"
-                    send_line(tag + "\n" + report)
-                    print(f"[{datetime.now().strftime('%H:%M:%S')}] {tag} {report}")
+            df_1m = calculate_all(df_data)
+            df_15m = calculate_all(feed.fetch_ohlcv(timeframe='15m', limit=50))
             
-            # 🧠 靈魂更新：全域情報數據更新 (每 5 分鐘一次)
-            if optimization_counter % 10 == 0:
-                intel_center.update_global_intelligence(
-                    news_data={'sentiment': news.fetch_latest_sentiment()},
-                    stock_data={'change_pct': macro.get_tech_stock_pulse() - 1.0}, # 轉化為百分比變化
-                    fed_data={'sentiment': fed.get_sentiment()}
-                )
+            current_price = float(df_1m.iloc[-1]['close'])
+            storage.save_global_config(f"PRICE_{symbol}", str(current_price))
+            
+            # 3. [雷達對接] 獲取巨鯨動向
+            whale_score = whale.get_whale_move(feed.exchange) if whale else 1.0
+            storage.save_global_config(f"WHALE_{symbol}", str(whale_score))
+            
+            # 4. AI 智能拍板
+            ml_prob = predictor.predict(df_1m) if predictor else 0.5
+            team_signal, team_conf = chiefs[symbol].make_final_decision(df_1m, df_15m, {
+                'ml_prob': ml_prob,
+                'whale_score': whale_score
+            })
+            
+            scalper_signal = "HOLD"
+            if team_signal == "BUY": scalper_signal = "BUY_SCALP"
+            elif team_signal == "SELL": scalper_signal = "SELL_SCALP"
 
-            # 🤝 圓桌會議與反思學習：每日4次 (每 6 小時一次 = 720 個 30秒週期)
-            if optimization_counter % 720 == 0:
-                print("====================================")
-                print("🏛️ 【每日 4 次｜組長圓桌與反思大會】")
-                print("====================================")
-                roundtable_report = roundtable.conduct_meeting()
-                # 增加失敗反思提醒
-                roundtable_report += "\n\n💡【AI 反思引擎】\n各組長已將今日失敗訂單之特徵存入特徵庫，所有 7 成勝率濾網將自動迴避相似的價格行為與量能陷阱。"
-                send_line("🤝 【每日 4 次｜組長 AI 戰略互學圓桌會議】\n" + roundtable_report)
-                
+            # 5. 執行引擎 (內建持倉管理)
+            context = {
+                'rsi': df_1m.iloc[-1].get('RSI', 50),
+                'ml_prob': ml_prob,
+                'rv': df_1m.iloc[-1].get('RV', 1.0),
+                'whale_score': whale_score
+            }
+            
+            report = trader.execute(scalper_signal, "HOLD", current_price, storage=storage, atr=df_1m.iloc[-1].get('ATR', 0), context=context)
+            
+            if report:
+                tag = f"【{symbol.replace('/USDT','')}】"
+                send_line(tag + "\n" + report)
+            
+            update_heartbeat(symbol, "OK")
             time.sleep(30)
+            
         except Exception as e:
-            print(f"運行異常: {e}")
-            time.sleep(10)
+            print(f"🆘 【{symbol} 分隊異常】: {e} | 即將執行精準自癒重啟...")
+            update_heartbeat(symbol, "RESTARTING")
+            time.sleep(15) 
+            continue
 
-def market_scanning_loop(scanner, traders, feed_manager, storage, predictors, dynamic_scan_cash):
+def market_scanning_loop(scanner, storage):
     """
-    【動態監控大腦】: 隨時掃描市場符合條件的幣種並執行試探性下單
+    【全市場偵照中心】: 定期掃描幣安前 20 大幣種，尋找符合條件的標的並公佈在雷達塔。
     """
-    print("🔎 動態市場監控系統啟動...")
+    print("🔎 市場偵照雷達啟動中...")
     while True:
         try:
-            # 1. 執行市場掃描 (排除已有核心幣種)
-            qualified = scanner.scan_market(limit=TOP_SYMBOLS_SCAN)
-            
-            # 2. 獲取評分最高的機會進行試探
-            opportunities = scanner.get_top_opportunities(limit=2)
-            
-            for opp in opportunities:
-                symbol = opp['symbol']
-                
-                # 如果還沒有這個幣種的交易員，且掃描幣種數量尚未超過限制
-                if symbol not in traders and len(traders) < 10:
-                    print(f"🎯 發現潛在標的 {symbol}，準備進行彈性下單測試...")
-                    
-                    # 初始化該幣種的 DataFeed
-                    feed_manager[symbol] = DataFeed(symbol=symbol)
-                    
-                    # 使用彈性資金分配的小部分進行測試 (分配約 1/3 的動態資金)
-                    test_cash = dynamic_scan_cash / 3
-                    
-                    # 建立試探性交易員
-                    traders[symbol] = PaperTrader(
-                        symbol=symbol, 
-                        initial_cash=test_cash, 
-                        max_daily_trades=5, 
-                        is_pepe=False
-                    )
-                    
-                    # 發送通知
-                    send_line(f"🚀 【動態發現】\n掃描器發現符合條件幣種: {symbol}\n評分: {opp['scores']}\n已撥入試探資金: ${test_cash:.2f}")
-
-            # 每 5 分鐘掃描一次，避免過於頻繁
-            time.sleep(300) 
+            opportunities = scanner.scan_market(limit=20)
+            opp_summary = [o['symbol'] for o in opportunities]
+            storage.save_global_config('RADAR_OPPS', json.dumps(opp_summary))
+            time.sleep(600)
         except Exception as e:
-            print(f"❌ 掃描循環異常: {e}")
+            print(f"⚠️ 雷達掃描故障: {e}")
             time.sleep(60)
 
 def main():
-    # 🚨 延後初始化: 將所有連線 API 的動作移到背景執行緒
     def async_init():
         try:
-            print("⏳ 正在背景初始化交易核心與感測器...")
-            
-            # 🔧 數據庫初始化與安全檢查
-            print("\n【📊 數據庫初始化】")
+            print("⏳ 啟動終極初始化...")
             storage = Storage()
+            predictors = {sym: AdaptiveMLPredictor(symbol=sym, storage=storage) for sym in MONITOR_SYMBOLS + [PEPE_SYMBOL]}
             
-            # 驗證數據庫完整性
-            if not storage.verify_database_integrity():
-                print("⚠️ 警告: 數據庫完整性檢查失敗，將基於現有數據繼續運行")
+            macro, news, fed, pol = MacroScanner(), NewsScanner(), FedScanner(), PoliticalScanner()
+            feed_manager, traders, whales, tv_scanners = {}, {}, {}, {}
             
-            # 自動備份
-            backup_path = storage.backup_database()
-            if backup_path:
-                print(f"✅ 歷史成交記錄已備份，可恢復")
+            total_cash = 10000
+            per_cash = total_cash * 0.2
             
-            # 查詢並顯示歷史統計
-            lifetime_pnl, lifetime_trades = storage.get_lifetime_summary()
-            print(f"\n【📈 歷史累計統計】")
-            print(f"✅ 生涯交易總筆數: {lifetime_trades if lifetime_trades else 0}")
-            print(f"✅ 生涯累計盈虧: ${lifetime_pnl if lifetime_pnl else 0:+.2f}")
-            print(f"✅ 歷史學習資料: 已保留")
-            print()
+            for sym in MONITOR_SYMBOLS + [PEPE_SYMBOL]:
+                feed_manager[sym] = DataFeed(symbol=sym)
+                traders[sym] = PaperTrader(symbol=sym, initial_cash=per_cash, is_pepe=(sym == PEPE_SYMBOL))
+                whales[sym] = WhaleWatcher(symbol=sym.replace('/',''))
+                tv_scanners[sym] = TradingViewScanner(symbol=sym)
             
-            # 所有幣種共用同一個大腦數據庫，但擁有獨立的預測器
-            predictors = {sym: AdaptiveMLPredictor(symbol=sym, storage=storage) for sym in MONITOR_SYMBOLS}
-            predictors[PEPE_SYMBOL] = AdaptiveMLPredictor(symbol=PEPE_SYMBOL, storage=storage)
+            # 建立特工共識小組
+            all_syms = MONITOR_SYMBOLS + [PEPE_SYMBOL]
+            chiefs = {sym: ChiefAnalyst(sym, storage) for sym in all_syms}
 
-            macro = MacroScanner()
-            news = NewsScanner()
-            fed = FedScanner()
-            pol = PoliticalScanner()
-
-            feed_manager = {}
-            traders = {}
-            whales = {}
-            tv_scanners = {}
+            # 啟動特工多執行緒（自癒模式）
+            for sym in all_syms:
+                t = threading.Thread(
+                    target=agent_worker, 
+                    args=(sym, traders[sym], predictors.get(sym), feed_manager[sym], storage, macro, whales.get(sym), news, fed, pol, tv_scanners.get(sym), chiefs),
+                    name=f"Agent-{sym}"
+                )
+                t.daemon = True
+                t.start()
+                print(f"✅ {sym} 特工分隊已部署...")
             
-            # 總初始資金
-            total_initial_cash = 10000
-            
-            # 資金分配
-            per_symbol_cash = total_initial_cash * 0.2
-            pepe_cash = total_initial_cash * 0.15
-            dynamic_scan_cash = total_initial_cash * 0.15
-            
-            # 初始化核心幣種
-            for sym in MONITOR_SYMBOLS:
-                try:
-                    feed_manager[sym] = DataFeed(symbol=sym)
-                    traders[sym] = PaperTrader(symbol=sym, initial_cash=per_symbol_cash, is_pepe=False)
-                    whales[sym] = WhaleWatcher(symbol=sym.replace('/',''))
-                    tv_scanners[sym] = TradingViewScanner(symbol=sym)
-                    predictors[sym] = AdaptiveMLPredictor(symbol=sym, storage=storage) # 專屬學習器
-                except Exception as sym_err:
-                    print(f"⚠️ {sym} 初始化部分失敗: {sym_err}")
-            
-            # 初始化 PEPE 交易者 (無限交易額度)
-            try:
-                feed_manager[PEPE_SYMBOL] = DataFeed(symbol=PEPE_SYMBOL)
-                traders[PEPE_SYMBOL] = PaperTrader(symbol=PEPE_SYMBOL, initial_cash=pepe_cash, max_daily_trades=999, is_pepe=True)
-                whales[PEPE_SYMBOL] = WhaleWatcher(symbol=PEPE_SYMBOL.replace('/',''))
-                tv_scanners[PEPE_SYMBOL] = TradingViewScanner(symbol=PEPE_SYMBOL)
-            except Exception as pepe_err:
-                print(f"⚠️ PEPE 初始化失敗: {pepe_err}")
-
-            # 2. 啟動背景交易循環
-            trading_thread = threading.Thread(target=trading_loop, args=(traders, predictors, feed_manager, storage, macro, whales, news, fed, pol, tv_scanners, PEPE_SYMBOL, dynamic_scan_cash))
-            trading_thread.daemon = True
-            trading_thread.start()
-
-            # 3. 啟動市場掃描循環
+            # 啟動雷達掃描
             scanner = DynamicMarketScanner(storage=storage)
-            scanning_thread = threading.Thread(target=market_scanning_loop, args=(scanner, traders, feed_manager, storage, predictors, dynamic_scan_cash))
-            scanning_thread.daemon = True
-            scanning_thread.start()
+            t_scan = threading.Thread(target=market_scanning_loop, args=(scanner, storage))
+            t_scan.daemon = True
+            t_scan.start()
+            
+            print("✅ 【全球作戰體系佈防完畢 | 自癒系統在線】")
+        except Exception as e:
+            print(f"❌ 初始化崩潰: {e}")
 
-            print("✅ 背景交易與掃描系統已全數上線！")
-        except Exception as init_err:
-            print(f"❌ 背景初始化失敗: {init_err}")
-            import traceback
-            traceback.print_exc()
+    init_t = threading.Thread(target=async_init)
+    init_t.daemon = True
+    init_t.start()
 
-    # 立即觸發異步初始化，主線程不再等待
-    init_thread = threading.Thread(target=async_init)
-    init_thread.daemon = True
-    init_thread.start()
-
-    # 讓主線程運行 Flask 應用 - 這是 Zeabur 期望的主進程
     try:
         port = int(os.environ.get('PORT', 8080))
-        print(f"🚀 啟動 Flask 應用於 Port {port} ...")
-        sys.stdout.flush()  # 確保日誌立即輸出
         webhook_app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False, threaded=True)
     except Exception as e:
-        print(f"❌ Flask 啟動失敗: {e}")
-        import traceback
-        traceback.print_exc()
-        # 繼續運行以讓 Zeabur 能連接
-        time.sleep(999999)
+        print(f"❌ 系統啟動失敗: {e}")
 
 if __name__ == "__main__":
     main()
