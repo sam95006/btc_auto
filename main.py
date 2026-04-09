@@ -69,24 +69,20 @@ def agent_worker(symbol, trader, predictor, feed, storage, macro, whale, news, f
             
             import pandas as pd
             df_data = pd.DataFrame(ohlcv_raw, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-            
-            # A. 波動率判定 (Eco-Mode)
-            range_pct = (df_data['high'].iloc[-5:].max() - df_data['low'].iloc[-5:].min()) / df_data['close'].iloc[-1]
-            if range_pct < 0.002:
-                sleep_time, mode = 120, "ECO"
-            else:
-                sleep_time, mode = 30, "BATTLE"
+            current_price = float(df_data['close'].iloc[-1])
+            storage.save_global_config(f"PRICE_{symbol}", str(current_price))
 
-            # B. 外部情緒鏈路 (Sentiment & Whales)
-            sentiment_scanner = MarketSentimentScanner(symbol=symbol)
-            funding_score = sentiment_scanner.get_funding_sentiment(feed.exchange)
-            ls_score = sentiment_scanner.get_long_short_ratio(feed.exchange)
-            
-            whale_score = whale.get_whale_move(feed.exchange) if whale else 1.0
+            # A. 激進波動判定 (High Action Mode)
+            range_pct = (df_data['high'].iloc[-5:].max() - df_data['low'].iloc[-5:].min()) / current_price
+            if range_pct < 0.0005: # 極低門檻，保持活性
+                sleep_time, mode = 45, "SCOUT"
+            else:
+                sleep_time, mode = 15, "BATTLE"
+
+            # B. 外部情緒鏈路 (Whale Radar Active)
+            whale_score = whale.get_whale_move(feed.exchange) if whale else 1.2
+            storage.save_global_config("WHALE_MVT", "BTC whales accumulating" if whale_score < 2 else "WARNING: Whale dump detected!")
             storage.save_global_config(f"WHALE_{symbol}", str(whale_score))
-            
-            if whale_score > 3.5:
-                storage.save_global_config("GLOBAL_ALERT", "RED")
             
             update_heartbeat(symbol, "OK", mode)
             

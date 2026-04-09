@@ -248,16 +248,49 @@
             const hits = ray.intersectObjects(bObjs);
             if(hits.length > 0) {
                 const ud = hits[0].object.userData;
-                const acc = window.liveData?.team_accounts[ud.id + '/USDT'] || window.liveData?.team_accounts[ud.id] || {cash:300, initial:300};
-                document.getElementById('m-title').innerText = `🏢 ${ud.name}`;
-                document.getElementById('m-body').innerHTML = `<div style="background:#f8fafc; padding:20px; border-radius:15px; border:1px solid #e2e8f0;">
-                    <div style="display:flex; justify-content:space-between; font-weight:900;"><span>當前資本額</span><span>${acc.cash.toFixed(1)} U</span></div>
-                    <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:#64748b;"><span>啟始預算</span><span>${acc.initial} U</span></div>
-                    <div style="margin-top:15px; font-size:13px; color:#1e293b; border-top:2px solid #f1f5f9; padding-top:10px;">${window.liveData?.thoughts[ud.id] || '特工在崗位上全神貫注...'}</div>
-                </div>`;
+                const mTitle = document.getElementById('m-title');
+                const mBody = document.getElementById('m-body');
+                
+                if(ud.id === 'NEWS') {
+                    mTitle.innerText = `📡 新聞情報總站 (分類播報)`;
+                    mBody.innerHTML = `<div style="display:flex; gap:10px; margin-bottom:15px;">
+                        <button onclick="loadNews('intl')" style="flex:1; padding:10px; border-radius:8px; border:1px solid #0284c7; background:none; cursor:pointer;">全球金融</button>
+                        <button onclick="loadNews('crypto')" style="flex:1; padding:10px; border-radius:8px; border:1px solid #0284c7; background:none; cursor:pointer;">加密貨幣</button>
+                        <button onclick="loadNews('fed')" style="flex:1; padding:10px; border-radius:8px; border:1px solid #0284c7; background:none; cursor:pointer;">聯準會動態</button>
+                    </div><div id="news-content" style="background:#f1f5f9; padding:15px; border-radius:10px; font-size:13px; max-height:250px; overflow-y:auto;">請選擇分類...</div>`;
+                    loadNews('intl'); // 預設加載
+                } else if(ud.id === 'SPECIAL') {
+                    mTitle.innerText = `🐳 巨鯨巡邏站 (分隊資金: 100U)`;
+                    mBody.innerHTML = `<div style="background:#0c4a6e; color:#7cfc00; padding:20px; border-radius:15px; font-family:monospace; border:2px solid #38bdf8;">
+                        <div style="font-size:12px; border-bottom:1px solid rgba(124,252,0,0.3); padding-bottom:10px; margin-bottom:10px;">[ 雷達掃描結果 ]</div>
+                        <div style="font-size:16px; font-weight:900;">${window.liveData?.whale_mvt || '掃描中...'}</div>
+                        <div style="margin-top:20px; font-size:11px; opacity:0.8;">各項數據對比歷史均值: ${window.liveData?.whale_score || '1.0'}x</div>
+                    </div>`;
+                } else {
+                    const acc = window.liveData?.team_accounts[ud.id + '/USDT'] || window.liveData?.team_accounts[ud.id] || {cash:300, initial:300};
+                    mTitle.innerText = `🛡️ ${ud.name}`;
+                    mBody.innerHTML = `<div style="background:#f8fafc; padding:20px; border-radius:15px; border:1px solid #e2e8f0;">
+                        <div style="display:flex; justify-content:space-between; font-weight:900;"><span>當前資本額</span><span>${acc.cash.toFixed(1)} U</span></div>
+                        <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:#64748b;"><span>啟始預算</span><span>${acc.initial} U</span></div>
+                        <div style="margin-top:15px; font-size:14px; font-weight:700; color:#0284c7; border-top:2px solid #f1f5f9; padding-top:10px;">[ 特工想法 ]</div>
+                        <div style="font-size:13px; color:#1e293b; margin-top:5px;">${window.liveData?.thoughts[ud.id] || '特工在崗位上全神貫注...'}</div>
+                    </div>`;
+                }
                 document.getElementById('modal-overlay').style.display = 'flex';
             }
         });
+
+        async function loadNews(type) {
+            const content = document.getElementById('news-content');
+            content.innerText = "衛星訊號接收中...";
+            try {
+                const r = await fetch('/api/news'); const d = await r.json();
+                let list = d.intl_news;
+                if(type === 'crypto') list = d.crypto_news;
+                if(type === 'fed') list = d.fed_news;
+                content.innerHTML = list.map(n => `<div style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px dashed #cbd5e1;">• ${n}</div>`).join('');
+            } catch(e) { content.innerText = "讀取失敗。"; }
+        }
     </script>
 </body>
 </html>

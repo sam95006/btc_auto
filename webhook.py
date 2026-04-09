@@ -144,6 +144,7 @@ def api_stats():
             "round_table_log": round_table_log,
             "daily_debrief": debrief_summary,
             "ace_agent": ace_symbol,
+            "whale_mvt": storage.get_global_config("WHALE_MVT", "正在掃描大戶錢包流向..."),
             "prices": prices,
             "debts": debts,
             "thoughts": thoughts,
