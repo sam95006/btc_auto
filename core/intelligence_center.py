@@ -30,18 +30,24 @@ class IntelligenceCenter:
         new_bias = (news_score * 0.3) + (stock_score * 0.4) + (fed_score * 0.3)
         self.global_bias = new_bias
         
-        # 5. 抓取真實新聞頭條並整合進宏觀報告
+        # 5. 抓取真實新聞頭條與大盤數據並整合進宏觀報告
         try:
-            from sensors.sensors import NewsScanner
+            from sensors.sensors import NewsScanner, MarketScanner
             real_news = NewsScanner().fetch_real_news()
-        except:
-            real_news = "無法獲取即時路透社數據。"
+            idx = MarketScanner().get_indices()
+            sp = idx.get('sp500', {})
+            tw = idx.get('taiex', {})
+            mar_str = f"美S&P500: {sp.get('price',0):.2f}({sp.get('pct',0):+.2f}%) | 台指TWII: {tw.get('price',0):.2f}({tw.get('pct',0):+.2f}%)"
+        except Exception as e:
+            real_news = "無法獲取即時新聞數據。"
+            mar_str = f"大盤資料異常"
             
         bias_desc = "中立"
         if new_bias > 0.65: bias_desc = "🚀 宏觀樂觀 (利好避險資產)"
         elif new_bias < 0.35: bias_desc = "💀 宏觀悲觀 (現金為王)"
         
-        self.macro_report = f"【今日重點快訊】: {real_news}\n\n【宏觀量化指標】: {bias_desc} | 美股聯動: {stock_score:.2f} | 聯準會預期: {fed_score:.2f}"
+        self.macro_report = f"【今日時事】: {real_news}\n【股市連動】: {mar_str}\n【宏觀量化】: {bias_desc} | 美股聯動: {stock_score:.2f} | 聯準會預期: {fed_score:.2f}"
+        
         
         # 寫入共享存儲
         if self.storage:

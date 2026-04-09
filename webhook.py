@@ -352,6 +352,12 @@ def api_stats():
         cursor.execute("SELECT id, symbol, signal_type, entry_price, exit_price, pnl, timestamp FROM trades ORDER BY id DESC LIMIT 4")
         live_trades = [dict(row) for row in cursor.fetchall()]
         
+        try:
+            from sensors.sensors import MarketScanner
+            market_indices = MarketScanner().get_indices()
+        except:
+            market_indices = {"sp500":{}, "taiex":{}}
+        
         return jsonify({
             "total_pnl": total_pnl,
             "today_pnl": today_pnl,
@@ -359,12 +365,13 @@ def api_stats():
             "month_pnl": total_pnl * 0.6,
             "positions": pos_list,
             "macro_report": macro_report,
-            "tpe_time": now_tpe.strftime("%H:%M"),
-            "ny_time": now_ny.strftime("%H:%M"),
+            "tpe_time": now_tpe.strftime("%H:%M:%S"),
+            "ny_time": now_ny.strftime("%H:%M:%S"),
             "is_night": now_tpe.hour >= 18 or now_tpe.hour < 6,
             "meeting_log": last_meeting,
             "next_meeting": next_meeting,
-            "live_trades": live_trades
+            "live_trades": live_trades,
+            "market_indices": market_indices
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500

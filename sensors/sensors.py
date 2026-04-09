@@ -107,3 +107,21 @@ class FedScanner:
 
 class PoliticalScanner:
     def get_sentiment(self): return 0.5
+    
+class MarketScanner:
+    def get_indices(self):
+        import requests
+        def fetch(tk):
+            try:
+                url = f"https://query2.finance.yahoo.com/v8/finance/chart/{tk}?interval=1d&range=2d"
+                h = {"User-Agent": "Mozilla/5.0"}
+                r = requests.get(url, headers=h, timeout=5).json()
+                prices = r['chart']['result'][0]['indicators']['quote'][0]['close']
+                prices = [p for p in prices if p is not None]
+                if len(prices) >= 2:
+                    c, p = prices[-1], prices[-2]
+                    return {"price": c, "diff": c-p, "pct": ((c-p)/p)*100}
+                return {"price": prices[0] if prices else 0, "diff": 0, "pct": 0}
+            except Exception as e:
+                return {"price": 0, "diff": 0, "pct": 0}
+        return {"sp500": fetch("^GSPC"), "taiex": fetch("^TWII")}
