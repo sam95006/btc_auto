@@ -228,8 +228,9 @@ class PaperTrader:
                 self.cumulative_pnl += pnl
                 self.position *= 0.6
                 self.has_partial_tp = True
-                report = (f"💰 【獲利通報 | FAST TP】\n─────────────────\n"
-                          f"🪙 幣種: {self.symbol} (小計 40%)\n📍 價格: ${current_price:,.2f}\n📈 盈虧: +{pnl:,.1f} U")
+                report = (f"💰 【財政部稅收通報 | FAST TP】\n─────────────────\n"
+                          f"🛡️ 項目: {self.symbol} (小計 40%)\n📍 執行價: ${current_price:,.2f}\n📈 盈虧: +{pnl:,.1f} U\n"
+                          f"⚖️ 目前聲望: {getattr(context, 'prestige', 1.0):.2f}")
                 if storage: storage.log_trade(f"PT_LONG_{self.symbol}", self.entry_price, current_price, abs(self.position*0.4), pnl, self.cumulative_pnl, is_exit=True)
 
             self.trailing_high = max(self.trailing_high, current_price)
@@ -276,8 +277,8 @@ class PaperTrader:
                 
                 self._record_trade_result(pnl)
                 
-                report = (f"✅ 【平倉通報 | {exit_reason}】\n─────────────────\n"
-                          f"🪙 幣種: {self.symbol}\n📍 出場: ${current_price:,.2f}\n📉 盈虧: {pnl:+.1f} U" + reflection)
+                report = (f"✅ 【特工凱旋回鎮 | {exit_reason}】\n─────────────────\n"
+                          f"🛡️ 特工: {self.symbol}\n📍 出場: ${current_price:,.2f}\n📉 最終盈虧: {pnl:+.1f} U" + reflection)
                 self.position = 0
                 self.has_partial_tp = False
 
@@ -364,8 +365,9 @@ class PaperTrader:
                 self.has_partial_tp = False
                 self.trades_today += 1
                 if storage: storage.log_trade(f"EN_LONG_{self.symbol}", current_price, qty, 0, self.cumulative_pnl)
-                report = (f"🎯 【開倉通報 | LONG ENTRY】\n─────────────────\n"
-                          f"🪙 幣種: {self.symbol}\n📍 價格: ${current_price:,.4f}\n🧠 AI 信心: {context.get('ml_prob', 0)*100:.0f}%\n🛡️ 風險: ATR 保護中")
+                report = (f"🏹 【特工出擊任務 | LONG MISSION】\n─────────────────\n"
+                          f"🛡️ 特工: {self.symbol}\n📍 目標價: ${current_price:,.4f}\n🧠 組長信心: {context.get('ml_prob', 0)*100:.0f}%\n"
+                          f"📊 當前聲望: {context.get('prestige', 1.0):.2f}")
 
             elif scalper_signal == "SELL_SCALP":
                 qty = (self.cash * self.cash_usage_pct) / current_price
