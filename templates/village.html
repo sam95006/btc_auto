@@ -415,6 +415,14 @@
         });
 
         function formatCurrency(val) { return val >= 0 ? `+$${val.toFixed(1)}` : `-$${Math.abs(val).toFixed(1)}`; }
+        
+        function formatPrice(val) {
+            if (!val || val === 0) return "0.00";
+            const absVal = Math.abs(val);
+            if (absVal >= 1000) return val.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1});
+            if (absVal >= 1) return val.toLocaleString(undefined, {minimumFractionDigits: 3, maximumFractionDigits: 3});
+            return val.toFixed(8).replace(/0+$/, '').replace(/\.$/, ''); // 小幣精準度去除贅字
+        }
 
         let lastReportedTradeId = null;
 
@@ -472,7 +480,7 @@
                         const isExit = tr.signal_type.includes('EXIT');
                         const actionColor = isExit ? (tr.pnl >= 0 ? '#10b981' : '#ef4444') : '#0ea5e9';
                         const actionText = isExit ? (tr.pnl >= 0 ? '獲利平倉' : '止損撤離') : (tr.signal_type.includes('LONG') ? '佈署多單' : '佈署空單');
-                        const pnlText = isExit ? (tr.pnl >= 0 ? `+${tr.pnl.toFixed(1)}U` : `${tr.pnl.toFixed(1)}U`) : `@ $${tr.entry_price.toFixed(1)}`;
+                        const pnlText = isExit ? (tr.pnl >= 0 ? `+${tr.pnl.toFixed(1)}U` : `${tr.pnl.toFixed(1)}U`) : `@ $${formatPrice(tr.entry_price)}`;
                         
                         feedHtml += `
                         <div style="margin-bottom:8px; background:#f8fafc; padding:8px 12px; border-radius:10px; border-left:4px solid ${actionColor}; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
@@ -492,7 +500,7 @@
                         const isExit = latestTr.signal_type.includes('EXIT');
                         const actionColor = isExit ? (latestTr.pnl >= 0 ? '#10b981' : '#ef4444') : '#0ea5e9';
                         const actionText = isExit ? (latestTr.pnl >= 0 ? '獲利平倉' : '止損撤離') : (latestTr.signal_type.includes('LONG') ? '佈署多單' : '佈署空單');
-                        const pnlText = isExit ? `結算 ${latestTr.pnl >= 0 ? '+' : ''}${latestTr.pnl.toFixed(1)} U` : `進場價 $${latestTr.entry_price.toFixed(0)}`;
+                        const pnlText = isExit ? `結算 ${latestTr.pnl >= 0 ? '+' : ''}${latestTr.pnl.toFixed(1)} U` : `進場價 $${formatPrice(latestTr.entry_price)}`;
                         showToast(`🔔 ${latestTr.symbol.replace('/USDT','')} ${actionText} | ${pnlText}`, actionColor);
                     }
                     lastReportedTradeId = latestTr.id;
@@ -529,11 +537,11 @@
                     <div class="data-card" style="border-left: 5px solid ${pd.type === 'LONG'? '#10b981':'#ef4444'}; margin-top:15px; background: ${pd.type === 'LONG'? '#f0fdf4':'#fef2f2'}; border-color: ${pd.type === 'LONG'? '#10b981':'#ef4444'};">
                         <div style="font-size:12px; font-weight:900; color:${pd.type === 'LONG'? '#166534':'#991b1b'};">現役作戰任務: ${pd.type}</div>
                         <div style="display:flex; justify-content:space-between; margin-top:8px;">
-                            <div style="font-size:14px; font-weight:800; color:#334155;">作戰均價: $${pd.entry_price.toFixed(2)}</div>
+                            <div style="font-size:14px; font-weight:800; color:#334155;">作戰均價: $${formatPrice(pd.entry_price)}</div>
                             <div style="font-size:14px; font-weight:800; color:#334155;">彈藥數量: ${pd.qty.toFixed(4)}</div>
                         </div>
                         <div style="display:flex; justify-content:space-between; margin-top:8px;">
-                            <div style="font-size:14px; font-weight:800; color:#334155;">目標現價: $${pd.current_price.toFixed(2)}</div>
+                            <div style="font-size:14px; font-weight:800; color:#334155;">目標現價: $${formatPrice(pd.current_price)}</div>
                             <div style="font-size:18px; font-weight:900; color:${pnlColor};">浮動盈虧: ${formatCurrency(pd.floating_pnl)}</div>
                         </div>
                     </div>`;
@@ -586,7 +594,7 @@
                                 <span>${l.timestamp}</span><span>${l.symbol.replace('/USDT','')} ${typeText}</span>
                             </div>
                             <div style="display:flex; justify-content:space-between; margin-top:5px; align-items:center;">
-                                <div style="font-size:13px; font-weight:800; color:#334155;">進 $${l.entry_price.toFixed(1)} ➔ 出 $${l.exit_price.toFixed(1)}</div>
+                                <div style="font-size:13px; font-weight:800; color:#334155;">進 $${formatPrice(l.entry_price)} ➔ 出 $${formatPrice(l.exit_price)}</div>
                                 <div style="text-align:right;">
                                     <div style="font-size:16px; font-weight:900; color:${pnlColor};">${formatCurrency(l.pnl)}</div>
                                     <div style="font-size:11px; font-weight:800; color:${pnlColor};">${finalRate > 0 ? '+' : ''}${finalRate.toFixed(2)}%</div>
