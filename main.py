@@ -202,67 +202,54 @@ def database_shield_loop():
         except: time.sleep(600)
 
 def main():
-    def async_init():
-        try:
-            print("⏳ 啟動大改革初始化任務...")
-            storage = Storage()
-            
-            # --- [金融改革] 資金分配初始化 ---
-            MONITOR_SYMBOLS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XAUT/USDT']
-            PEPE_SYMBOL = 'PEPE/USDT'
-            SPECIAL_SYMBOL = 'SPECIAL'
-            
-            storage.save_global_config("TREASURY_CASH", "1000.0")
-            
-            all_target_syms = MONITOR_SYMBOLS + [PEPE_SYMBOL]
-            
-            predictors = {sym: AdaptiveMLPredictor(storage=storage) for sym in all_target_syms + [SPECIAL_SYMBOL]}
-            macro, news, fed, pol = MacroScanner(), NewsScanner(), FedScanner(), PoliticalScanner()
-            feed_manager, traders, whales, tv_scanners = {}, {}, {}, {}
-            
-            # 1. 初始化核心分隊 (每隊 300U)
-            for sym in all_target_syms:
-                feed_manager[sym] = DataFeed(symbol=sym)
-                traders[sym] = PaperTrader(symbol=sym, initial_cash=300.0, is_pepe=(sym == PEPE_SYMBOL))
-                whales[sym] = WhaleWatcher(symbol=sym.replace('/',''))
-                tv_scanners[sym] = TradingViewScanner(symbol=sym)
-            
-            # 2. 初始化特別資金分隊 (100U)
-            traders[SPECIAL_SYMBOL] = PaperTrader(symbol=SPECIAL_SYMBOL, initial_cash=100.0)
-            whales[SPECIAL_SYMBOL] = WhaleWatcher(symbol="BTC") 
-            
-            chiefs = {sym: ChiefAnalyst(sym, storage) for sym in all_target_syms + [SPECIAL_SYMBOL]}
-
-            # 3. 部署所有特工指令
-            for sym in all_target_syms + [SPECIAL_SYMBOL]:
-                target_feed = feed_manager.get(sym, feed_manager['BTC/USDT'])
-                t = threading.Thread(
-                    target=agent_worker, 
-                    args=(sym, traders[sym], predictors.get(sym), target_feed, storage, macro, whales.get(sym), news, fed, pol, tv_scanners.get(sym), chiefs),
-                    name=f"Agent-{sym}"
-                )
-                t.daemon = True
-                t.start()
-            
-            # 啟動雷達掃描、圓桌會議與數據庫守護盾
-            scanner = DynamicMarketScanner(storage=storage)
-            threading.Thread(target=market_scanning_loop, args=(scanner, storage), daemon=True).start()
-            threading.Thread(target=round_table_loop, args=(storage,), daemon=True).start()
-            threading.Thread(target=database_shield_loop, daemon=True).start()
-            
-            print("✅ 【大都會 v6.0 旗艦版部署完畢 | 全系統守護啟動】")
-        except Exception as e:
-            print(f"❌ 初始化崩潰: {e}")
-
-    init_t = threading.Thread(target=async_init)
-    init_t.daemon = True
-    init_t.start()
-
     try:
+        print("⏳ Metropolis 指揮部啟動中...")
+        # 1. 核心持久化系統
+        storage_engine = Storage()
+        
+        # 2. 核心數據鏈路
+        macro, news, fed, pol, tv = MacroScanner(), NewsScanner(), FedScanner(), PoliticalScanner(), TradingViewScanner('BTC/USDT')
+        whale = WhaleWatcher('BTC')
+        
+        # 3. 分隊配置
+        MONITOR_SYMBOLS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XAUT/USDT', 'PEPE/USDT']
+        SPECIAL_SYMBOL = 'SPECIAL'
+        all_syms = MONITOR_SYMBOLS + [SPECIAL_SYMBOL]
+        
+        # 4. 初始化分析師
+        chiefs = {sym.split('/')[0]: ChiefAnalyst(sym, storage_engine) for sym in all_syms}
+        
+        print(f"📡 正在派遣 {len(all_syms)} 支特工分隊...")
+        
+        for sym in all_syms:
+            feed = DataFeed(symbol=sym)
+            predictor = AdaptiveMLPredictor(storage=storage_engine)
+            init_cash = 100.0 if sym == SPECIAL_SYMBOL else 300.0
+            trader = PaperTrader(symbol=sym, initial_cash=init_cash, is_pepe=('PEPE' in sym))
+            
+            t = threading.Thread(
+                target=agent_worker,
+                args=(sym, trader, predictor, feed, storage_engine, macro, whale, news, fed, pol, tv, chiefs),
+                daemon=True
+            )
+            t.start()
+            time.sleep(1)
+        
+        # 5. 啟動守護進程
+        scanner = DynamicMarketScanner(storage=storage_engine)
+        threading.Thread(target=market_scanning_loop, args=(scanner, storage_engine), daemon=True).start()
+        threading.Thread(target=round_table_loop, args=(storage_engine,), daemon=True).start()
+        threading.Thread(target=database_shield_loop, daemon=True).start()
+        
+        print("✅ 【Metropolis 旗艦版 | 全系統上線】")
+        
+        # 6. 啟動 Webhook
         port = int(os.environ.get('PORT', 8080))
         webhook_app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False, threaded=True)
+        
     except Exception as e:
         print(f"❌ 系統啟動失敗: {e}")
+        time.sleep(10)
 
 if __name__ == "__main__":
     main()
