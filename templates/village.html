@@ -98,6 +98,20 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.1); pointer-events: none;
         }
 
+        /* 系統推播 Toast */
+        #toast-container {
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; gap: 10px; z-index: 9999; pointer-events: none;
+        }
+        .toast {
+            background: rgba(15, 23, 42, 0.95); color: white; padding: 12px 20px; border-radius: 12px;
+            font-size: 14px; font-weight: 800; box-shadow: 0 10px 30px rgba(0,0,0,0.4); border-left: 5px solid var(--primary);
+            animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), toastOut 0.5s ease-in forwards 4s;
+        }
+        @keyframes toastIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes toastOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-20px); opacity: 0; } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
         /* 手機 RWD */
         @media (max-width: 768px) {
             #hud-top { flex-direction: column; gap: 10px; }
@@ -125,6 +139,15 @@
             <div class="meeting-title">🏛️ 每日四次 | 組長圓桌會議</div>
             <div class="time-row" style="margin-top: 5px; margin-bottom: 0;">下次會議時間 <span id="next-meeting" style="font-size: 12px; color: #10b981;">解析中</span></div>
             <div class="meeting-text" id="meeting-log">等待首次會議數據同步...</div>
+
+            <!-- 動態交易視窗 -->
+            <div style="margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                <div style="font-size: 11px; font-weight: 900; color: #f43f5e; letter-spacing: 1px; display: flex; justify-content: space-between;">
+                    <span>🚀 現場戰鬥通報 (LIVE OP)</span>
+                    <span style="animation: pulse 1s infinite;">🔴</span>
+                </div>
+                <div id="live-trade-feed" style="margin-top: 10px;"></div>
+            </div>
         </div>
 
         <!-- 右側：完全財務報表 -->
@@ -156,6 +179,8 @@
     </div>
 
     <div id="instructions">🖱️ 滑鼠拖曳轉角 / 📱 手機觸控點擊大樓查看詳情</div>
+
+    <div id="toast-container"></div>
 
     <div id="news-ticker">
         <div class="ticker-wrap"><div class="ticker" id="global-ticker">[LIVE INTEL] 正在連線 TRADINGVIEW 財經串流...</div></div>
@@ -391,6 +416,17 @@
 
         function formatCurrency(val) { return val >= 0 ? `+$${val.toFixed(1)}` : `-$${Math.abs(val).toFixed(1)}`; }
 
+        let lastReportedTradeId = null;
+
+        function showToast(msg, color) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.style.borderLeftColor = color;
+            t.innerHTML = msg;
+            document.getElementById('toast-container').appendChild(t);
+            setTimeout(() => { if(t.parentNode) t.remove(); }, 4500);
+        }
+
         function updateTownData() {
             fetch('/api/stats').then(r => r.json()).then(data => {
                 // UI 時間與報表更新
@@ -428,6 +464,39 @@
                     squadHtml += `<div class="squad-item"><div>${s}</div><div>${status}</div></div>`;
                 });
                 document.getElementById('squad-list').innerHTML = squadHtml;
+
+                // Live Trades Feed
+                if(data.live_trades && data.live_trades.length > 0) {
+                    let feedHtml = '';
+                    data.live_trades.forEach(tr => {
+                        const isExit = tr.signal_type.includes('EXIT');
+                        const actionColor = isExit ? (tr.pnl >= 0 ? '#10b981' : '#ef4444') : '#0ea5e9';
+                        const actionText = isExit ? (tr.pnl >= 0 ? '獲利平倉' : '止損撤離') : (tr.signal_type.includes('LONG') ? '佈署多單' : '佈署空單');
+                        const pnlText = isExit ? (tr.pnl >= 0 ? `+${tr.pnl.toFixed(1)}U` : `${tr.pnl.toFixed(1)}U`) : `@ $${tr.entry_price.toFixed(1)}`;
+                        
+                        feedHtml += `
+                        <div style="margin-bottom:8px; background:#f8fafc; padding:8px 12px; border-radius:10px; border-left:4px solid ${actionColor}; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                            <div style="display:flex; justify-content:space-between; font-size:10px; color:#64748b; font-weight:800;">
+                                <span>${tr.timestamp.split(' ')[1]}</span> <span>${tr.symbol.replace('/USDT','')}</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:900; color:#1e293b; margin-top:3px;">
+                                <span>${actionText}</span> <span style="color:${actionColor}">${pnlText}</span>
+                            </div>
+                        </div>`;
+                    });
+                    document.getElementById('live-trade-feed').innerHTML = feedHtml;
+
+                    // Push Notification Toast
+                    const latestTr = data.live_trades[0];
+                    if(lastReportedTradeId !== null && latestTr.id > lastReportedTradeId) {
+                        const isExit = latestTr.signal_type.includes('EXIT');
+                        const actionColor = isExit ? (latestTr.pnl >= 0 ? '#10b981' : '#ef4444') : '#0ea5e9';
+                        const actionText = isExit ? (latestTr.pnl >= 0 ? '獲利平倉' : '止損撤離') : (latestTr.signal_type.includes('LONG') ? '佈署多單' : '佈署空單');
+                        const pnlText = isExit ? `結算 ${latestTr.pnl >= 0 ? '+' : ''}${latestTr.pnl.toFixed(1)} U` : `進場價 $${latestTr.entry_price.toFixed(0)}`;
+                        showToast(`🔔 ${latestTr.symbol.replace('/USDT','')} ${actionText} | ${pnlText}`, actionColor);
+                    }
+                    lastReportedTradeId = latestTr.id;
+                }
 
             }).catch(e => console.log("API Sync failed..."));
         }

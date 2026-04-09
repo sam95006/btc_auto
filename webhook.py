@@ -348,6 +348,10 @@ def api_stats():
         last_meeting = storage.get_global_config('LAST_MEETING_LOG', '等待圓桌會議總結...')
         next_meeting = storage.get_global_config('NEXT_MEETING_TIME', '系統校準中')
         
+        cursor = storage.conn.cursor()
+        cursor.execute("SELECT id, symbol, signal_type, entry_price, exit_price, pnl, timestamp FROM trades ORDER BY id DESC LIMIT 4")
+        live_trades = [dict(row) for row in cursor.fetchall()]
+        
         return jsonify({
             "total_pnl": total_pnl,
             "today_pnl": today_pnl,
@@ -359,7 +363,8 @@ def api_stats():
             "ny_time": now_ny.strftime("%H:%M"),
             "is_night": now_tpe.hour >= 18 or now_tpe.hour < 6,
             "meeting_log": last_meeting,
-            "next_meeting": next_meeting
+            "next_meeting": next_meeting,
+            "live_trades": live_trades
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
