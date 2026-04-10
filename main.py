@@ -58,7 +58,6 @@ def agent_worker(symbol, trader, predictor, feed, storage, macro, whale, news, f
             storage.save_global_config(f"LAST_ACT_{symbol}", datetime.now().strftime("%H:%M:%S"))
             
             # --- [數據初始化] ---
-            predictor.load_model()
             trader.load_active_position()
             
             # --- [能量守護 & 全球情緒感知] ---
@@ -102,7 +101,7 @@ def agent_worker(symbol, trader, predictor, feed, storage, macro, whale, news, f
             storage.save_global_config(f"PRICE_{symbol}", str(current_price))
             
             # C. AI 決策與執行
-            ml_prob = predictor.predict(df_1m) if predictor else 0.5
+            ml_prob = predictor.predict_prob(df_1m.iloc[-1]) if predictor else 0.5
             
             global_context = {
                 'ml_prob': ml_prob,
