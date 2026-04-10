@@ -13,8 +13,8 @@ class DataFeed:
         
         # 【幣種映射修正】: 處理 Binance 不支援或名稱不同的幣種
         symbol_map = {
-            'XAUT/USDT': 'PAXG/USDT', # 幣安使用 PAXG 作為黃金對接
-            'SPECIAL': 'BTC/USDT'      # 特別任務隊暫時以 BTC 為掃描基準
+            'XAUT/USDT': 'XAU/USDT', # 指向幣安真實黃金交易對
+            'SPECIAL': 'BTC/USDT'    # 特別任務隊暫時以 BTC 為掃描基準
         }
         self.symbol = symbol_map.get(symbol, symbol)
         self.clean_symbol = self.symbol.replace("/", "")
