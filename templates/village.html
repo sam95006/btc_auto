@@ -227,28 +227,57 @@
 
         async function sync() {
             try {
-                const r = await fetch('/api/stats'); const d = await r.json();
-                document.getElementById('rev-all').innerText = `${d.total_pnl.toFixed(1)} U`;
-                document.getElementById('daily-debrief').innerText = d.daily_debrief;
-                document.getElementById('taiex-idx').innerText = `${d.taiex_info.index} (${d.taiex_info.status})`;
-                document.getElementById('sp500-idx').innerText = `${d.sp500_info.index} (${d.sp500_info.status})`;
+                const r = await fetch('/api/stats'); 
+                const d = await r.json();
+                if (d.error) {
+                    console.log("API Error:", d.error);
+                    return;
+                }
                 
-                window.meetingData = d.meeting_logs;
-                const aList = document.getElementById('agent-list'); aList.innerHTML = '';
-                ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'XAUT/USDT', 'PEPE/USDT', 'SPECIAL'].forEach(s => {
-                    const h = d.agent_health[s] || { status: 'OFFLINE' };
-                    const tag = h.status === 'OK' ? '<span class="status-pill active-ok">運行中</span>' : '<span class="status-pill active-err">失聯中</span>';
-                    aList.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;"><span>${s}</span>${tag}</div>`;
-                });
+                // 1. 頂部看板更新 (加入防崩潰檢查)
+                if(d.total_pnl !== undefined) {
+                    document.getElementById('rev-all').innerText = `${parseFloat(d.total_pnl).toFixed(1)} U`;
+                }
+                if(d.daily_debrief) document.getElementById('daily-debrief').innerText = d.daily_debrief;
                 
+                if(d.taiex_info) {
+                    document.getElementById('taiex-idx').innerText = `${d.taiex_info.index || '--'} (${d.taiex_info.status || '同步中'})`;
+                }
+                if(d.sp500_info) {
+                    document.getElementById('sp500-idx').innerText = `${d.sp500_info.index || '--'} (${d.sp500_info.status || '同步中'})`;
+                }
+                
+                // 2. 特工與會議
+                window.meetingData = d.meeting_logs || {};
+                const aList = document.getElementById('agent-list'); 
+                if(aList && d.agent_health) {
+                    aList.innerHTML = '';
+                    Object.keys(d.agent_health).forEach(s => {
+                        const h = d.agent_health[s];
+                        const tag = h.status === 'OK' ? '<span class="status-pill active-ok">運行中</span>' : '<span class="status-pill active-err">失聯中</span>';
+                        aList.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;"><span>${s}</span>${tag}</div>`;
+                    });
+                }
+                
+                // 3. 3D 標籤更新
                 for(let id in labelData) {
+                    if(!d.team_accounts || !d.prices) break;
                     if(id === 'NEWS') { labelData[id].el.innerText = "情報播報塔"; continue; }
-                    if(id === 'TREASURY') { labelData[id].el.innerText = `城市金庫: ${d.team_accounts['TREASURY'].cash.toFixed(1)} U`; continue; }
-                    if(id === 'SPECIAL') { labelData[id].el.innerText = `雷達掃描: ${d.team_accounts['SPECIAL'].cash.toFixed(1)} U`; continue; }
-                    const p = d.prices[id]; if(p && p != "0.0") labelData[id].el.innerText = `${id}: $${parseFloat(p).toLocaleString()}`;
+                    if(id === 'TREASURY' && d.team_accounts['TREASURY']) { 
+                        labelData[id].el.innerText = `城市金庫: ${parseFloat(d.team_accounts['TREASURY'].cash).toFixed(1)} U`; 
+                        continue; 
+                    }
+                    if(id === 'SPECIAL' && d.team_accounts['SPECIAL']) { 
+                        labelData[id].el.innerText = `雷達掃描: ${parseFloat(d.team_accounts['SPECIAL'].cash).toFixed(1)} U`; 
+                        continue; 
+                    }
+                    const p = d.prices[id]; 
+                    if(p && p != "0.0") labelData[id].el.innerText = `${id}: $${parseFloat(p).toLocaleString()}`;
                 }
                 window.liveData = d;
-            } catch(e) {}
+            } catch(e) {
+                console.error("Metropolis Sync Crash:", e);
+            }
         }
         setInterval(sync, 4000); sync();
 
