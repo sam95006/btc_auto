@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Metropolis v6.7 | SimCity Masterpiece</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r136/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&display=swap');
@@ -131,95 +131,61 @@
     </div></div>
 
     <script>
+        window.onerror = function(msg, url, line) {
+            document.getElementById('global-ticker').innerText = `⚠️ 系統故障: ${msg} | LOC: ${line}`;
+            return false;
+        };
+
         const scene = new THREE.Scene(); 
         scene.background = new THREE.Color(0x87ceeb);
-        scene.fog = new THREE.FogExp2(0x87ceeb, 0.0001); // 加入大氣霧化感
+        scene.fog = new THREE.FogExp2(0x87ceeb, 0.0001);
 
         const camera = new THREE.PerspectiveCamera(38, window.innerWidth/window.innerHeight, 1, 10000);
         camera.position.set(900, 900, 900);
         
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setClearColor(0x87ceeb, 1); // 強制背景色防止全黑
+        renderer.setClearColor(0x87ceeb, 1);
         renderer.setSize(window.innerWidth, window.innerHeight); 
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.getElementById('webgl-container').appendChild(renderer.domElement);
         
         const controls = new THREE.OrbitControls(camera, renderer.domElement); 
-        controls.enableDamping = true; controls.maxPolarAngle = Math.PI / 2.1;
+        controls.enableDamping = true;
 
-        // --- 點亮 Metropolis 核心燈光 ---
-        scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-        const sun = new THREE.DirectionalLight(0xffffff, 1.2); 
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const sun = new THREE.DirectionalLight(0xffffff, 1.1); 
         sun.position.set(400, 800, 400); sun.castShadow = true;
-        sun.shadow.mapSize.width = 1024; sun.shadow.mapSize.height = 1024;
         scene.add(sun);
         
-        // 1. 基礎草坪 (強化視覺質感)
-        const ground = new THREE.Mesh(new THREE.PlaneGeometry(5000, 5000), new THREE.MeshStandardMaterial({color: 0x4ade80, roughness: 0.8}));
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(5000, 5000), new THREE.MeshStandardMaterial({color: 0x4ade80, roughness: 0.9}));
         ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
-        // 2. 蔚藍大河
-        const river = new THREE.Mesh(new THREE.PlaneGeometry(3000, 400), new THREE.MeshStandardMaterial({color: 0x4488ff, transparent:true, opacity:0.9}));
-        river.rotation.x = -Math.PI/2; river.position.set(0, 1, -800); scene.add(river);
-        // 3. 亮白色街道
-        const grid = new THREE.GridHelper(2000, 40, 0xaaaaaa, 0xaaaaaa); grid.position.y = 0.5; scene.add(grid);
-        // 4. 灰藍色主幹道
-        // 4. 灰藍色主幹道
-        const mainRoad = new THREE.Mesh(new THREE.PlaneGeometry(2000, 80), new THREE.MeshStandardMaterial({color: 0x444444}));
-        mainRoad.rotation.x = -Math.PI/2; mainRoad.position.y = 1.1; scene.add(mainRoad);
+        
+        const river = new THREE.Mesh(new THREE.PlaneGeometry(5000, 300), new THREE.MeshStandardMaterial({color: 0x0ea5e9, transparent:true, opacity:0.8}));
+        river.rotation.x = -Math.PI/2; river.position.set(0, 1.2, -900); scene.add(river);
 
-        // --- 模擬城市：程序化紋理與大氣建模 ---
-        function createBuildingTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 64; canvas.height = 128;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,64,128);
-            ctx.fillStyle = '#334155'; // 窗戶顏色
-            for(let y=10; y<128; y+=15) {
-                for(let x=8; x<64; x+=14) { ctx.fillRect(x, y, 8, 8); }
-            }
-            const txt = new THREE.CanvasTexture(canvas);
-            txt.wrapS = THREE.RepeatWrapping; txt.wrapT = THREE.RepeatWrapping;
-            return txt;
-        }
-        const bTex = createBuildingTexture();
+        const grid = new THREE.GridHelper(2000, 40, 0xaaaaaa, 0xaaaaaa); grid.position.y = 0.5; scene.add(grid);
+
+        // --- 建築生成系統 ---
+        const bTex = (function() {
+            const canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 128;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,64,128);
+            ctx.fillStyle = '#334155';
+            for(let y=10; y<128; y+=15) { for(let x=8; x<64; x+=14) { ctx.fillRect(x, y, 8, 8); } }
+            const txt = new THREE.CanvasTexture(canvas); txt.wrapS = txt.wrapT = THREE.RepeatWrapping; return txt;
+        })();
 
         const buildings = {}; const bObjs = []; const labelData = {};
         function addB(id, name, color, h, x, z) {
             const grp = new THREE.Group(); grp.position.set(x, 0, z);
-            
-            // 1. 建築主體 (帶窗戶紋理)
-            const mat = new THREE.MeshStandardMaterial({ 
-                color: color, 
-                map: bTex, 
-                roughness: 0.3,
-                metalness: 0.2
-            });
+            const mat = new THREE.MeshStandardMaterial({ color: color, map: bTex, roughness: 0.3 });
             const body = new THREE.Mesh(new THREE.BoxGeometry(65, h, 65), mat);
-            body.position.y = h/2; body.castShadow = true; body.receiveShadow = true;
-            body.userData = { id, name }; bObjs.push(body); grp.add(body);
+            body.position.y = h/2; body.castShadow = true; body.userData = { id, name }; bObjs.push(body); grp.add(body);
             
-            // 2. 修飾性屋頂
-            const roofPlate = new THREE.Mesh(new THREE.BoxGeometry(75, 5, 75), new THREE.MeshStandardMaterial({color: 0xffffff}));
-            roofPlate.position.y = h; grp.add(roofPlate);
-            
-            const tower = new THREE.Mesh(new THREE.CylinderGeometry(5, 15, 30, 4), new THREE.MeshStandardMaterial({color: 0xffffff}));
-            tower.position.y = h + 15; tower.rotation.y = Math.PI/4; grp.add(tower);
-
-            // 3. 園藝景觀
-            for(let i=0; i<3; i++) {
-                const tree = new THREE.Group();
-                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 8), new THREE.MeshStandardMaterial({color: 0x5e3a00}));
-                trunk.position.y = 4; tree.add(trunk);
-                const leaves = new THREE.Mesh(new THREE.SphereGeometry(7, 8, 8), new THREE.MeshStandardMaterial({color: 0x22c55e}));
-                leaves.position.y = 12; tree.add(leaves);
-                tree.position.set(45 + i*15, 0, 45 + i*10); grp.add(tree);
-            }
+            const roof = new THREE.Mesh(new THREE.BoxGeometry(75, 5, 75), new THREE.MeshStandardMaterial({color: 0xffffff}));
+            roof.position.y = h; grp.add(roof);
             
             scene.add(grp); buildings[id] = grp;
-            
-            // 彈跳出場動畫
-            gsap.from(grp.scale, { y: 0, duration: 1.5, ease: "elastic.out(1, 0.5)" });
+            gsap.from(grp.scale, { y: 0, duration: 1.2, ease: "back.out(1.7)" });
             
             const lbl = document.createElement('div'); lbl.className = 'price-label';
             document.getElementById('label-container').appendChild(lbl);
@@ -231,34 +197,28 @@
         addB('SOL', 'SOL 快速響應', 0x2dd4bf, 150, -350, 350);
         addB('XAUT', 'XAUT 黃金儲備', 0xf97316, 170, 600, 350); 
         addB('PEPE', 'PEPE 迷因部隊', 0x22c55e, 110, 350, 350);
-        addB('TREASURY', '中央大金庫 (1000U)', 0xca8a04, 140, 0, 0);
+        addB('TREASURY', '中央大金庫', 0xca8a04, 140, 0, 0);
         addB('NEWS', '都市放送塔', 0xef4444, 280, 0, -650);
-        addB('SPECIAL', '雷達掃描部 (100U)', 0x64748b, 240, -650, 0);
+        addB('SPECIAL', '雷達掃描部', 0x64748b, 240, -650, 0);
 
-        // --- 自然元素更新 ---
-        const riverMat = new THREE.MeshStandardMaterial({color: 0x0ea5e9, transparent:true, opacity:0.8, roughness: 0.1});
-        const river = new THREE.Mesh(new THREE.PlaneGeometry(5000, 300), riverMat);
-        river.rotation.x = -Math.PI/2; river.position.set(0, 1.2, -900); scene.add(river);
-
-        // --- 樂活市民系統 ---
         const agents = [];
         class Agent {
             constructor(team, color, base) {
                 this.g = new THREE.Group();
-                const body = new THREE.Mesh(new THREE.CapsuleGeometry(3, 8), new THREE.MeshStandardMaterial({color}));
-                body.position.y = 8; body.castShadow = true; this.g.add(body);
-                const head = new THREE.Mesh(new THREE.SphereGeometry(3, 8), new THREE.MeshStandardMaterial({color: 0xffdbac}));
-                head.position.y = 15; this.g.add(head);
-                this.g.position.set(base.x + (Math.random()-0.5)*150, 0, base.z + (Math.random()-0.5)*150);
+                const body = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 8), new THREE.MeshStandardMaterial({color}));
+                body.position.y = 4; this.g.add(body);
+                const head = new THREE.Mesh(new THREE.SphereGeometry(3.5, 8, 8), new THREE.MeshStandardMaterial({color: 0xffdbac}));
+                head.position.y = 10; this.g.add(head);
+                this.g.position.set(base.x + (Math.random()-0.5)*150, 0.5, base.z + (Math.random()-0.5)*150);
                 scene.add(this.g); this.base = base; this.target = new THREE.Vector3().copy(this.g.position);
             }
             update() {
                 if(this.g.position.distanceTo(this.target) < 15) {
-                    this.target.set(this.base.x + (Math.random()-0.5)*250, 0, this.base.z + (Math.random()-0.5)*250);
+                    this.target.set(this.base.x + (Math.random()-0.5)*250, 0.5, this.base.z + (Math.random()-0.5)*250);
                 } else {
                     const d = new THREE.Vector3().subVectors(this.target, this.g.position).normalize();
                     this.g.position.addScaledVector(d, 0.8);
-                    this.g.lookAt(this.target.x, 0, this.target.z);
+                    this.g.lookAt(this.target.x, 0.5, this.target.z);
                     this.g.rotation.x = Math.sin(Date.now()*0.01)*0.05; 
                 }
             }
@@ -272,15 +232,12 @@
         initA();
 
         function animate() {
-            if (document.hidden) {
-                setTimeout(animate, 1000); // 隱藏時每秒僅檢查一次，節省 99% 效能
-                return;
-            }
+            if (document.hidden) { setTimeout(animate, 1000); return; }
             requestAnimationFrame(animate); controls.update();
             agents.forEach(a => a.update());
             for(let id in labelData) {
                 const vec = new THREE.Vector3().setFromMatrixPosition(labelData[id].obj.matrixWorld);
-                vec.y = labelData[id].h + 10; vec.project(camera);
+                vec.y = labelData[id].h; vec.project(camera);
                 const x = (vec.x * 0.5 + 0.5) * window.innerWidth; const y = (-(vec.y * 0.5 - 0.5) * window.innerHeight);
                 labelData[id].el.style.left = x + 'px'; labelData[id].el.style.top = y + 'px';
                 labelData[id].el.style.display = (vec.z < 1 && x > 0 && x < window.innerWidth) ? 'block' : 'none';
@@ -290,67 +247,40 @@
         animate();
 
         window.meetingData = {};
-        function showLog(time) {
-            document.querySelectorAll('.btn-sim').forEach(p => p.style.background = '#f1f5f9');
-            event.target.style.background = '#0ea5e9'; event.target.style.color = 'white';
-            document.getElementById('rt-log').innerText = window.meetingData[time] || "會議日誌同步中...";
+        function showMeeting(hour) {
+            const time = hour < 10 ? `0${hour}:00` : `${hour}:00`;
+            document.querySelectorAll('.btn-sim').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('daily-debrief').innerText = window.meetingData[time] || "會議日誌同步中...";
         }
 
         async function sync() {
             try {
-                const r = await fetch('/api/stats'); 
-                const d = await r.json();
-                if (d.error) {
-                    console.log("API Error:", d.error);
-                    return;
-                }
-                
-                // 1. 頂部看板更新 (加入防崩潰檢查)
-                if(d.total_pnl !== undefined) {
-                    document.getElementById('rev-all').innerText = `${parseFloat(d.total_pnl).toFixed(1)} U`;
-                }
-                if(d.daily_debrief) document.getElementById('daily-debrief').innerText = d.daily_debrief;
-                
-                if(d.taiex_info) {
-                    document.getElementById('taiex-idx').innerText = `${d.taiex_info.index || '--'} (${d.taiex_info.status || '同步中'})`;
-                }
-                if(d.sp500_info) {
-                    document.getElementById('sp500-idx').innerText = `${d.sp500_info.index || '--'} (${d.sp500_info.status || '同步中'})`;
-                }
-                
-                // 2. 特工與會議
+                const r = await fetch('/api/stats'); const d = await r.json();
+                if(d.total_pnl !== undefined) document.getElementById('rev-all').innerText = `${parseFloat(d.total_pnl).toFixed(1)} U`;
+                if(d.taiex_info) document.getElementById('taiex-idx').innerText = d.taiex_info.index || '--';
+                if(d.sp500_info) document.getElementById('sp500-idx').innerText = d.sp500_info.index || '--';
                 window.meetingData = d.meeting_logs || {};
+                
                 const aList = document.getElementById('agent-list'); 
                 if(aList && d.agent_health) {
                     aList.innerHTML = '';
                     Object.keys(d.agent_health).forEach(s => {
                         const h = d.agent_health[s];
-                        const tag = h.status === 'OK' ? '<span class="status-pill active-ok">運行中</span>' : '<span class="status-pill active-err">失聯中</span>';
+                        const tag = h.status === 'OK' ? '<span class="status-pill active-ok">RUNNING</span>' : '<span class="status-pill active-err">OFFLINE</span>';
                         aList.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;"><span>${s}</span>${tag}</div>`;
                     });
                 }
-                
-                // 3. 3D 標籤更新
                 for(let id in labelData) {
                     if(!d.team_accounts || !d.prices) break;
-                    if(id === 'NEWS') { labelData[id].el.innerText = "情報播報塔"; continue; }
-                    if(id === 'TREASURY' && d.team_accounts['TREASURY']) { 
-                        labelData[id].el.innerText = `城市金庫: ${parseFloat(d.team_accounts['TREASURY'].cash).toFixed(1)} U`; 
-                        continue; 
-                    }
-                    if(id === 'SPECIAL' && d.team_accounts['SPECIAL']) { 
-                        labelData[id].el.innerText = `雷達掃描: ${parseFloat(d.team_accounts['SPECIAL'].cash).toFixed(1)} U`; 
-                        continue; 
-                    }
+                    if(id === 'TREASURY' && d.team_accounts['TREASURY']) { labelData[id].el.innerText = `城市金庫: ${parseFloat(d.team_accounts['TREASURY'].cash).toFixed(1)} U`; continue; }
                     const p = d.prices[id]; 
                     if(p && p != "0.0") labelData[id].el.innerText = `${id}: $${parseFloat(p).toLocaleString()}`;
                 }
                 window.liveData = d;
-            } catch(e) {
-                console.error("Metropolis Sync Crash:", e);
-            }
+            } catch(e) { console.error(e); }
         }
-        setInterval(sync, 4000); sync();
+        setInterval(sync, 5000); sync();
 
         window.addEventListener('click', e => {
             if(e.target.closest('.sim-panel') || e.target.closest('.btn-sim')) return;
@@ -358,55 +288,14 @@
             ray.setFromCamera(mouse, camera);
             const hits = ray.intersectObjects(bObjs);
             if(hits.length > 0) {
-                const intersect = hits[0];
-                const ud = intersect.object.userData;
-                const mTitle = document.getElementById('m-title');
-                const mBody = document.getElementById('m-body');
-                
-                // 1. [遊戲級視角轉移]
-                const bPos = intersect.object.parent.position;
-                gsap.to(camera.position, { x: bPos.x + 150, y: 150, z: bPos.z + 150, duration: 1, ease: "power2.inOut" });
-                gsap.to(controls.target, { x: bPos.x, y: 20, z: bPos.z, duration: 1, ease: "power2.inOut" });
-
-                if(ud.id === 'NEWS') {
-                    mTitle.innerText = `📡 ${ud.name}`;
-                    mBody.innerHTML = `<div style="display:flex; gap:10px; margin-bottom:15px;">
-                        <button class="btn-sim" onclick="loadNews('intl')">全球金融</button>
-                        <button class="btn-sim" onclick="loadNews('crypto')">虛擬貨幣</button>
-                    </div><div id="news-content" style="background:#f1f5f9; padding:20px; border-radius:20px; font-size:14px; max-height:200px; overflow-y:auto;">市長請選擇頻道...</div>`;
-                    loadNews('intl');
-                } else if(ud.id === 'SPECIAL') {
-                    mTitle.innerText = `🐳 ${ud.name}`;
-                    mBody.innerHTML = `<div style="background:#0c4a6e; color:#7cfc00; padding:25px; border-radius:20px; font-family:monospace; border:4px solid #38bdf8;">
-                        <div style="font-size:12px; border-bottom:1px solid rgba(124,252,0,0.3); padding-bottom:10px; margin-bottom:15px;">[ 掃描到特大巨鯨動向 ]</div>
-                        <div style="font-size:18px; font-weight:900;">${window.liveData?.whale_mvt || '雷達掃描中...'}</div>
-                    </div>`;
-                } else {
-                    const acc = window.liveData?.team_accounts[ud.id + '/USDT'] || window.liveData?.team_accounts[ud.id] || {cash:300, initial:300};
-                    mTitle.innerText = `🛡️ ${ud.name}`;
-                    mBody.innerHTML = `<div style="background:#f8fafc; padding:25px; border-radius:20px; border:2px solid #f1f5f9;">
-                        <div style="display:flex; justify-content:space-between; font-weight:900; font-size:16px;"><span>當前資本額</span><span>${acc.cash.toFixed(1)} U</span></div>
-                        <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:13px; color:#64748b;"><span>預算配置</span><span>${acc.initial} U</span></div>
-                        <div style="margin-top:15px; font-size:14px; color:#1e293b; border-top:1px solid #e2e8f0; padding-top:15px;">${window.liveData?.thoughts[ud.id] || '特工正在全力監控幣安鏈路...'}</div>
-                    </div>`;
-                }
-                
-                // 2. [模擬城市級回彈動畫]
-                const overlay = document.getElementById('modal-overlay');
-                const box = document.getElementById('modal-box');
-                overlay.style.display = 'flex';
-                gsap.fromTo(box, { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "elastic.out(1, 0.6)" });
+                const ud = hits[0].object.userData;
+                const modal = document.getElementById('modal-overlay');
+                document.getElementById('m-title').innerText = `🏢 ${ud.name}`;
+                document.getElementById('m-body').innerHTML = `<p>市長，這是 ${ud.name}。目前的運作效率維持在 98%。數據持續流入中。</p>`;
+                modal.style.display = 'flex';
+                gsap.from("#modal-box", { scale: 0.8, opacity: 0, duration: 0.4 });
             }
         });
-
-        async function loadNews(type) {
-            const content = document.getElementById('news-content'); content.innerText = "讀取中...";
-            try {
-                const r = await fetch('/api/news'); const d = await r.json();
-                let list = (type === 'crypto') ? d.crypto_news : d.intl_news;
-                content.innerHTML = list.map(n => `<div style="margin-bottom:10px;">🏙️ ${n}</div>`).join('');
-            } catch(e) { content.innerText = "讀取失敗。"; }
-        }
     </script>
 </body>
 </html>
