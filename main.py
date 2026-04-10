@@ -150,6 +150,19 @@ def round_table_loop(storage):
             time.sleep(30)
         except: time.sleep(60)
 
+def database_shield_loop():
+    """【數據庫守護盾】: 每 12 小時備份一次，防止數據丟失"""
+    import shutil
+    print("🚑 數據庫守護盾已啟動。")
+    while True:
+        try:
+            path = "data/trading.db"
+            if os.path.exists(path):
+                shutil.copy2(path, "data/trading_shield_backup.db")
+                print("🚑 [數據盾] 核心資產備份成功。")
+            time.sleep(12 * 3600)
+        except: time.sleep(600)
+
 def main():
     try:
         print("⏳ Metropolis 指揮部啟動中...")
