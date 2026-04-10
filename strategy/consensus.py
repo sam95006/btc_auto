@@ -8,7 +8,7 @@ class ExpertAgent:
         self.personality = personality # 'AGGRESSIVE', 'STEADY', 'RISK_GUARD'
         self.symbol = symbol
         self.storage = storage
-        self.predictor = AdaptiveMLPredictor(symbol=f"{symbol}_{name}", storage=storage)
+        self.predictor = AdaptiveMLPredictor(storage=storage)
 
     def analyze(self, df_1m, df_15m, market_context):
         """專家根據自己的性格給出建議 (嚴格 7 成勝率過濾版)"""
