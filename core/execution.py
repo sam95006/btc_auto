@@ -94,7 +94,8 @@ class PaperTrader:
         self.daily_target = DailyTradeTarget(symbol, target_trades=999 if is_pepe else 15, min_winning_trades=9 if is_pepe else 12)
         
         # [同步帳務到中央]
-        if storage: storage.save_global_config(f"CASH_{self.symbol}", str(self.cash))
+        if hasattr(self, "db"): 
+            self.db.save_global_config(f"CASH_{self.symbol}", str(self.cash))
 
     def request_loan_if_needed(self, storage):
         """[中央借貸機制] 如果資金低於 100U，向中央金庫借款 100U"""
