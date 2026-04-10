@@ -110,22 +110,32 @@
     </div></div>
 
     <script>
-        const scene = new THREE.Scene(); scene.background = new THREE.Color(0x87ceeb);
-        const camera = new THREE.PerspectiveCamera(38, window.innerWidth/window.innerHeight, 1, 5000);
-        camera.position.set(800, 800, 800);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight); renderer.shadowMap.enabled = true;
-        document.getElementById('webgl-container').appendChild(renderer.domElement);
-        const controls = new THREE.OrbitControls(camera, renderer.domElement); 
-        controls.enableDamping = true; controls.maxPolarAngle = Math.PI / 2.2;
+        const scene = new THREE.Scene(); 
+        scene.background = new THREE.Color(0x87ceeb);
+        scene.fog = new THREE.FogExp2(0x87ceeb, 0.0001); // 加入大氣霧化感
 
-        // --- 模擬城市 100% 景觀 ---
-        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-        const sun = new THREE.DirectionalLight(0xffffff, 1.0); sun.position.set(200, 600, 400); sun.castShadow = true;
-        sun.shadow.mapSize.width = 2048; sun.shadow.mapSize.height = 2048; scene.add(sun);
+        const camera = new THREE.PerspectiveCamera(38, window.innerWidth/window.innerHeight, 1, 10000);
+        camera.position.set(900, 900, 900);
         
-        // 1. 翠綠草皮
-        const ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.MeshStandardMaterial({color: 0x55aa55}));
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setClearColor(0x87ceeb, 1); // 強制背景色防止全黑
+        renderer.setSize(window.innerWidth, window.innerHeight); 
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.getElementById('webgl-container').appendChild(renderer.domElement);
+        
+        const controls = new THREE.OrbitControls(camera, renderer.domElement); 
+        controls.enableDamping = true; controls.maxPolarAngle = Math.PI / 2.1;
+
+        // --- 點亮 Metropolis 核心燈光 ---
+        scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+        const sun = new THREE.DirectionalLight(0xffffff, 1.2); 
+        sun.position.set(400, 800, 400); sun.castShadow = true;
+        sun.shadow.mapSize.width = 1024; sun.shadow.mapSize.height = 1024;
+        scene.add(sun);
+        
+        // 1. 基礎草坪 (強化視覺質感)
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(5000, 5000), new THREE.MeshStandardMaterial({color: 0x4ade80, roughness: 0.8}));
         ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
         // 2. 蔚藍大河
         const river = new THREE.Mesh(new THREE.PlaneGeometry(3000, 400), new THREE.MeshStandardMaterial({color: 0x4488ff, transparent:true, opacity:0.9}));
