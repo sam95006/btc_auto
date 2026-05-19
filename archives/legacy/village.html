@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS COMMAND | 終極指揮前哨</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;900&family=Noto+Sans+TC:wght@300;700&display=swap');
+        
+        /* [🎨 定調：深空藍底 + 冰藍霓虹 + 純白幾何] */
+        body { margin: 0; padding: 0; overflow: hidden; background: #0A1628; font-family: 'Outfit', 'Noto Sans TC', sans-serif; color: #fff; }
+        
+        /* [⚙️ 四、UI 疊飾層 - 指位精確、拒絕遮擋] */
+        #ui-overlay { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1000; padding: 35px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        /* 頂部資產列 (1,700U 總額 / 1,000U 準備金) */
+        .asset-hud { background: rgba(10, 22, 40, 0.85); backdrop-filter: blur(25px); border: 1px solid rgba(79, 216, 255, 0.3); border-radius: 2px; padding: 25px 50px; display: flex; gap: 70px; pointer-events: auto; box-shadow: 0 50px 100px rgba(0,0,0,0.7); }
+        .hud-label { font-size: 11px; color: #4FD8FF; letter-spacing: 5px; font-weight: 700; text-transform: uppercase; }
+        .hud-val { font-size: 42px; font-weight: 900; color: #fff; text-shadow: 0 0 25px rgba(79,216,255,0.6); }
+
+        .bottom-shelf { display: flex; justify-content: space-between; align-items: flex-end; }
+        .log-panel { width: 450px; height: 180px; background: rgba(0,0,0,0.5); border-left: 4px solid #4FD8FF; padding: 25px; pointer-events: auto; overflow-y: auto; font-size: 11px; color: #8fa1ab; line-height: 1.8; }
+        
+        /* 🚨 緊急狀態燈 */
+        .alert-lamp { width: 100px; height: 100px; background: #1a1a1a; border-radius: 50%; border: 4px solid #333; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #444; cursor: pointer; pointer-events: auto; transition: 0.3s; }
+        .alert-lamp.active { background: #FF3B5C; border-color: #fff; color: #fff; box-shadow: 0 0 60px #FF3B5C; animation: alert-pulse 1s infinite; }
+
+        /* [🗺️ 3D 向量標籤] */
+        .v-tag { position: absolute; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; pointer-events: auto; cursor: pointer; transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .v-tag:hover { transform: translate(-50%, -110%) scale(1.15); }
+        .v-tag-content { background: #fff; color: #0A1628; padding: 8px 18px; font-size: 12px; font-weight: 900; letter-spacing: 3px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
+        .v-tag-line { width: 2px; height: 50px; background: #4FD8FF; box-shadow: 0 0 15px #4FD8FF; }
+
+        /* [🎬 三、中控室視窗] */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5,10,20,0.98); z-index: 10001; }
+        .modal-card { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 1450px; height: 880px; background: #fff; display: flex; overflow: hidden; box-shadow: 0 0 250px #000; }
+        #modal-3d-view { flex: 1; background: #eef4f8; position: relative; }
+        .modal-info { width: 480px; background: #fff; padding: 65px; color: #111; overflow-y: auto; border-left: 1px solid #eee; display: flex; flex-direction: column; }
+        
+        .ai-seat-card { display: flex; align-items: center; gap: 20px; padding: 22px 0; border-bottom: 1px solid #f2f2f2; }
+        .ai-seat-icon { width: 45px; height: 45px; background: #0A1628; color: #4FD8FF; display: flex; align-items: center; justify-content: center; font-weight: 900; border-radius: 4px; }
+
+        #boot-loader { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:50000; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        .boot-bar { width: 500px; height: 2px; background: rgba(255,255,255,0.05); margin-top: 50px; }
+        .boot-fill { width: 0%; height: 100%; background: #4FD8FF; box-shadow: 0 0 30px #4FD8FF; transition: 0.6s; }
+
+        @keyframes alert-pulse { 0% { filter: brightness(0.8); } 50% { filter: brightness(1.5); } 100% { filter: brightness(0.8); } }
+    </style>
+</head>
+<body>
+    <div id="boot-loader">
+        <div style="font-size: 36px; font-weight: 900; color: #fff; letter-spacing: 30px; text-shadow: 0 0 40px rgba(79, 216, 255, 0.4);">NEXUS COMMAND</div>
+        <div style="color: #4FD8FF; font-size: 11px; margin-top: 20px; letter-spacing: 8px;">UPLINKING ALPHA-7 SYSTEM</div>
+        <div class="boot-bar"><div id="boot-fill" class="boot-fill"></div></div>
+    </div>
+
+    <div id="canvas-container" style="position:fixed; width:100%; height:100%; z-index:-1;"></div>
+    
+    <div id="ui-overlay">
+        <div class="asset-hud">
+            <div class="item">
+                <div class="hud-label">Total Fleet Capital</div>
+                <div class="hud-val" id="t-cap">1,700 U</div>
+            </div>
+            <div class="item">
+                <div class="hud-label">Reserve Pool</div>
+                <div class="hud-val" style="font-size: 24px;">1,000 U</div>
+            </div>
+            <div class="item" style="margin-left: auto; text-align: right;">
+                <div class="hud-label">Tactical Timeline</div>
+                <div class="hud-val" id="timer" style="color: #fbbf24; font-size: 32px;">00:00:00</div>
+            </div>
+        </div>
+
+        <div class="bottom-shelf">
+            <div class="log-panel" id="log-feed"></div>
+            <div class="alert-lamp" id="alert-trigger" onclick="toggleAlert()">ALERT</div>
+        </div>
+    </div>
+
+    <div id="tags-layer" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:500;"></div>
+
+    <div id="bridge-modal" class="modal">
+        <div style="position:absolute; top:35px; right:45px; font-size:50px; color:#4FD8FF; cursor:pointer;" onclick="closeModal()">×</div>
+        <div class="modal-card">
+            <div id="modal-3d-view"></div>
+            <div class="modal-info">
+                <div style="font-size: 28px; font-weight: 900; letter-spacing: 6px; color: #111;" id="m-header">BRIDGE_ACTIVE</div>
+                <div style="font-size: 11px; color: #4FD8FF; margin-top: 5px; font-weight: 900;" id="m-sub">MISSION_CYCLE_PENDING</div>
+                <div id="m-crew-slots" style="margin-top: 40px;"></div>
+                <div style="margin-top: auto; padding-top: 40px; border-top: 1px dashed #eee; font-size: 11px; opacity: 0.5;">
+                    SYSTEM_CORE: NEXUS_V14.1<br>AUTHENTICATION: BINGX_DIRECT
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scene, camera, renderer, controls;
+        const ships = {}, tags = {}, interactives = [];
+        let raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
+
+        // Modal Scene
+        let mScene, mCamera, mRenderer, mAgents = [];
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0A1628);
+            scene.fog = new THREE.Fog(0x0A1628, 1000, 35000);
+            
+            // [視角：2.5D Isometric 等角視圖]
+            const aspect = window.innerWidth / window.innerHeight;
+            const d = 1600;
+            camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 100000);
+            camera.position.set(3000, 3000, 3000); 
+            camera.lookAt(0,0,0);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio || 1);
+            renderer.shadowMap.enabled = true;
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+            const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+            sun.position.set(1000, 6000, 1000);
+            sun.castShadow = true;
+            scene.add(sun);
+
+            createEnvironmentalAssets();
+
+            // [場景：依照藍圖佈局]
+            // HQ MOTHERPORT (中央核心)
+            createAsset('HQ', 'NEXUS MOTHERPORT', 0, 0, 0, 2.0, 0xFFFFFF);
+            
+            // FLEETS (BTC, ETH, SOL, PEPE)
+            createFleet('BTC', 1400, 800, 0xF7931A); // 金橙
+            createFleet('ETH', -1400, -800, 0x8A7FFF); // 紫
+            createFleet('SOL', -1400, 800, 0x4FD8FF); // 藍紫漸層
+            createFleet('PEPE', 1400, -800, 0x00FF88); // 綠
+
+            // SATELLITES
+            createSat('RADAR', 'RADAR OUTPOST', 2600, 1200, -2500);
+            createSat('NEWS', 'NEWS NEXUS', -2600, 1200, 1500);
+
+            // Connective Beams
+            drawBeam(0,0,0, 1400,0,800, 0x4FD8FF);
+            drawBeam(0,0,0, -1400,0,-800, 0x8A7FFF);
+
+            document.addEventListener('pointerdown', (e) => {
+                pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+                pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(pointer, camera);
+                const hits = raycaster.intersectObjects(interactives, true);
+                if(hits.length > 0) {
+                    let o = hits[0].object; while(o && !o.userData.id) o = o.parent;
+                    if(o) openModal(o.userData.id);
+                }
+            });
+
+            initModalSystem();
+            animate();
+            runBootSequence();
+        }
+
+        function createEnvironmentalAssets() {
+            // Saturn + 星空
+            const sg = new THREE.BufferGeometry();
+            const sp = []; for(let i=0; i<6000; i++) sp.push((Math.random()-0.5)*70000, (Math.random()-0.5)*70000, (Math.random()-0.5)*70000);
+            sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
+            scene.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 2.5 })));
+            
+            const saturn = new THREE.Mesh(new THREE.SphereGeometry(3000, 32, 32), new THREE.MeshPhongMaterial({ color: 0x1a4a8c }));
+            saturn.position.set(-10000, 4000, -15000);
+            const ring = new THREE.Mesh(new THREE.TorusGeometry(4500, 150, 2, 64), new THREE.MeshBasicMaterial({ color: 0x4FD8FF, transparent: true, opacity: 0.15 }));
+            ring.rotation.x = Math.PI/2.1; saturn.add(ring);
+            scene.add(saturn);
+        }
+
+        function createHumanoid(col = 0x4FD8FF) {
+            const g = new THREE.Group();
+            const mat = new THREE.MeshLambertMaterial({ color: col });
+            const head = new THREE.Mesh(new THREE.BoxGeometry(22,22,22), new THREE.MeshLambertMaterial({ color: 0xffffff })); head.position.y = 85; g.add(head);
+            const body = new THREE.Mesh(new THREE.BoxGeometry(34,48,24), mat); body.position.y = 50; g.add(body);
+            const legs = new THREE.Mesh(new THREE.BoxGeometry(28,32,18), mat); legs.position.y = 16; g.add(legs);
+            return g;
+        }
+
+        function createAsset(id, name, x, z, y, sc, col) {
+            const g = new THREE.Group(); g.position.set(x, y, z); g.scale.set(sc, sc, sc); g.userData = { id, name };
+            const m = new THREE.MeshLambertMaterial({ color: col, flatShading: true });
+            const tower = new THREE.Mesh(new THREE.CylinderGeometry(150, 220, 500, 8), m); tower.castShadow=true; g.add(tower);
+            // Crystal Foundation
+            for(let i=0; i<8; i++){
+                const cry = new THREE.Mesh(new THREE.OctahedronGeometry(130, 0), m);
+                cry.position.set(Math.sin(i)*120, -350 - i*35, Math.cos(i)*110);
+                cry.scale.set(0.6, 2.5, 0.6); g.add(cry);
+            }
+            scene.add(g); ships[id] = g; interactives.push(g);
+            renderCallout(id, name);
+        }
+
+        function createFleet(id, x, z, col) {
+            const g = new THREE.Group(); g.position.set(x, 0, z); g.userData = { id, name: id + ' FLEET BASE' };
+            const m = new THREE.MeshLambertMaterial({ color: 0xffffff });
+            const base = new THREE.Mesh(new THREE.BoxGeometry(350, 70, 350), m); base.castShadow=true; g.add(base);
+            const beam = new THREE.Mesh(new THREE.BoxGeometry(320, 5, 320), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.4 }));
+            beam.position.y = 40; g.add(beam);
+            scene.add(g); ships[id] = g; interactives.push(g);
+            renderCallout(id, id + '_FLEET');
+        }
+
+        function createSat(id, name, x, y, z) {
+            const g = new THREE.Group(); g.position.set(x, y, z); g.userData = { id, name };
+            const m = new THREE.MeshLambertMaterial({ color: 0xffffff });
+            const hub = new THREE.Mesh(new THREE.CylinderGeometry(90, 90, 300, 8), m); hub.rotation.z = Math.PI/2; g.add(hub);
+            const wingGeo = new THREE.CircleGeometry(180, 6);
+            const wingMat = new THREE.MeshBasicMaterial({ color: 0x4FD8FF, wireframe: true, side: THREE.DoubleSide });
+            for(let i=0; i<4; i++){
+                const w = new THREE.Mesh(wingGeo, wingMat);
+                w.position.set((i < 2 ? 300 : -300), (i % 2 === 0 ? 100 : -100), (i < 2 ? 150 : -150));
+                w.rotation.y = Math.PI/2; g.add(w);
+            }
+            scene.add(g); ships[id] = g; interactives.push(g);
+            renderCallout(id, name);
+        }
+
+        function drawBeam(x1,y1,z1, x2,y2,z2, col) {
+            const v1 = new THREE.Vector3(x1,y1,z1), v2 = new THREE.Vector3(x2,y2,z2);
+            const l = new THREE.Mesh(new THREE.BoxGeometry(15, 15, v1.distanceTo(v2)), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.3 }));
+            l.position.copy(v1.clone().lerp(v2, 0.5)); l.lookAt(v2); scene.add(l);
+        }
+
+        function renderCallout(id, name) {
+            const d = document.createElement('div'); d.className = 'v-tag';
+            d.innerHTML = `<div class="v-tag-content">${name}</div><div class="v-tag-line"></div>`;
+            d.onclick = () => openModal(id);
+            document.getElementById('tags-layer').appendChild(d);
+            tags[id] = { el: d, obj: ships[id] };
+        }
+
+        function initModalSystem() {
+            const c = document.getElementById('modal-3d-view');
+            mScene = new THREE.Scene(); mScene.background = new THREE.Color(0xf0f5f9);
+            mCamera = new THREE.PerspectiveCamera(40, c.clientWidth/c.clientHeight, 1, 10000);
+            mCamera.position.set(650, 500, 650);
+            mRenderer = new THREE.WebGLRenderer({ antialias: true });
+            mRenderer.setSize(c.clientWidth, c.clientHeight);
+            c.appendChild(mRenderer.domElement);
+            mScene.add(new THREE.AmbientLight(0xffffff, 1.2));
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const t = Date.now() * 0.001;
+            if(controls) controls.update();
+
+            for(let id in ships) {
+                const s = ships[id];
+                if(id === 'RADAR' || id === 'NEWS') { s.rotation.y += 0.01; s.position.y += Math.sin(t+id.length)*0.5; }
+                else { s.position.y = Math.sin(t + id.length)*7; }
+            }
+
+            if(document.getElementById('bridge-modal').style.display === 'block') {
+                mAgents.forEach((a, i) => { a.position.y = Math.abs(Math.sin(t*5+i))*25; a.rotation.y = Math.sin(t*3)*0.3; });
+                mRenderer.render(mScene, mCamera);
+            }
+
+            for(let id in tags) {
+                const vec = new THREE.Vector3().setFromMatrixPosition(tags[id].obj.matrixWorld).project(camera);
+                const el = tags[id].el;
+                el.style.left = (vec.x * .5 + .5) * window.innerWidth + 'px';
+                el.style.top = (-(vec.y * .5 - .5) * window.innerHeight) + 'px';
+                el.style.display = vec.z < 1 ? 'block' : 'none';
+            }
+            renderer.render(scene, camera);
+        }
+
+        function openModal(id) {
+            document.getElementById('bridge-modal').style.display = 'block';
+            const slots = document.getElementById('m-crew-slots'); slots.innerHTML = "";
+            const head = document.getElementById('m-header');
+            const sub = document.getElementById('m-sub');
+
+            while(mScene.children.length > 1) mScene.remove(mScene.children[mScene.children.length-1]);
+            mAgents = [];
+
+            if(id === 'HQ') {
+                head.innerText = 'HQ ROUNDTABLE CHAMBER'; sub.innerText = 'SESSION_0.1_COMPLIANCE';
+                const roles = ['指揮官', '匯報A', '匯報B', '調度A', '調度B', '借貸官', '盈虧官'];
+                const colors = [0xFFD700, 0x4FD8FF, 0x4FD8FF, 0x999999, 0x999999, 0xFF3B5C, 0x00FF88];
+                roles.forEach((r, i) => {
+                    const p = createHumanoid(colors[i]); const a = (i/7)*Math.PI*2;
+                    p.position.set(Math.cos(a)*220, 0, Math.sin(a)*220); mScene.add(p); mAgents.push(p);
+                    addSlot(slots, r, `HQ_UNIT_${i+1}`);
+                });
+            } else if (['BTC','ETH','SOL','PEPE'].includes(id)) {
+                head.innerText = id + ' COMMAND BRIDGE'; sub.innerText = 'FLEET_UPLINK_STABLE';
+                for(let i=0; i<14; i++) {
+                    const p = createHumanoid(id==='PEPE'?0x00FF88:0x4FD8FF);
+                    p.position.set((i-6.5)*90, 0, (i%2==0?110:-110)); mScene.add(p); mAgents.push(p);
+                }
+                addSlot(slots, 'FLEET COMMANDER', `${id}_01`);
+                addSlot(slots, 'QUAN TRADER', `${id}_02`);
+            } else {
+                head.innerText = id + ' FACILITY'; sub.innerText = 'REMOTE_SYNC_ON';
+                for(let i=0; i<5; i++) {
+                    const p = createHumanoid(0x4FD8FF); p.position.set((i-2)*120, 0, 0); mScene.add(p); mAgents.push(p);
+                    addSlot(slots, 'MONITOR_AI', `${id}_OP_${i+1}`);
+                }
+            }
+            
+            const c = document.getElementById('modal-3d-view');
+            mRenderer.setSize(c.clientWidth, c.clientHeight);
+            mCamera.aspect = c.clientWidth/c.clientHeight; mCamera.updateProjectionMatrix();
+        }
+
+        function addSlot(p, role, id) {
+            const d = document.createElement('div'); d.className = 'ai-seat-card';
+            d.innerHTML = `<div class="ai-seat-icon">AI</div><div><div style="font-weight:900;">${role}</div><div style="font-size:10px; color:#999;">${id}</div></div>`;
+            p.appendChild(d);
+        }
+
+        function closeModal() { document.getElementById('bridge-modal').style.display = 'none'; }
+        
+        function toggleAlert() {
+            const b = document.getElementById('alert-trigger'); b.classList.toggle('active');
+            scene.background = new THREE.Color(b.classList.contains('active') ? 0x1a0000 : 0x0A1628);
+            Log(b.classList.contains('active') ? "!!! EMERGENCY PULSE DETECTED !!!" : "SYSTEM STABILIZED.");
+        }
+
+        async function syncData() {
+            try {
+                const r = await fetch('/api/stats'); const d = await r.json();
+                document.getElementById('t-cap').innerText = `${parseFloat(d.today_pnl||0).toFixed(2)} U`;
+            } catch(e) {}
+            setTimeout(syncData, 4000);
+        }
+
+        function runBootSequence() {
+            let p = 0; const iv = setInterval(() => {
+                p += 5; document.getElementById('boot-fill').style.width = p + '%';
+                if(p >= 100) { clearInterval(iv); document.getElementById('boot-loader').style.display = 'none'; }
+            }, 60);
+            setInterval(() => { document.getElementById('timer').innerText = new Date().toLocaleTimeString(); }, 1000);
+            syncData();
+            Log("NEXUS BATTLEPORT ONLINE."); Log("UPLINK COMPLETED.");
+        }
+
+        function Log(m) {
+            const b = document.getElementById('log-feed'); const d = document.createElement('div');
+            d.innerHTML = `<span style="color:#4FD8FF;">[${new Date().toLocaleTimeString()}]</span> ${m}`;
+            b.prepend(d); if(b.children.length > 20) b.lastChild.remove();
+        }
+
+        window.addEventListener('load', init);
+        window.addEventListener('resize', () => {
+            const aspect = window.innerWidth / window.innerHeight;
+            const d = 1600;
+            camera.left = -d * aspect; camera.right = d * aspect; camera.top = d; camera.bottom = -d;
+            camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

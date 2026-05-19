@@ -7,3 +7,4 @@ beautifulsoup4
 tradingview-ta
 python-dotenv
 requests
+flask-sock
