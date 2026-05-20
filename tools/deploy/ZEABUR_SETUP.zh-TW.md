@@ -14,14 +14,31 @@
 
 ---
 
-## 二、NEXUS 需要兩個服務
+## 二、Web 與 Worker（二選一即可）
+
+### 方案 A：只開一個 Zeabur 服務（推薦新手）
+
+Zeabur 只部署 **web** 時，程式會偵測 Zeabur 注入的 `ZEABUR_SERVICE_ID` / `ZEABUR_PROJECT_ID` 等變數，**自動在同一容器內啟動內嵌 worker 執行緒**，負責連幣安與寫入 `trading.db` 快照。此時儀表板不會再顯示「工作節點離線」。
+
+- 若使用 **Gunicorn 且 worker 數 > 1**，請改為 `-w 1`，或改設 `NEXUS_EMBEDDED_WORKER=1` 才啟用內嵌（避免多進程重複下單）。
+- 若你**另外**開了獨立 worker 服務，請在 **web** 服務加上 `NEXUS_WEB_ONLY=1`，關閉內嵌 worker，只讓獨立 worker 跑交易迴圈（避免雙迴圈重複下單）。
+
+### 方案 B：Web + Worker 兩個服務
 
 | 服務 | 啟動方式 | 作用 |
 |------|----------|------|
-| **web** | 預設（`app.py` / Gunicorn） | 儀表板 + API |
-| **worker** | `python -m backend.worker.runner` | 交易引擎（必開） |
+| **web** | 預設（`app.py` / Gunicorn） | 儀表板 + API（請設 `NEXUS_WEB_ONLY=1`） |
+| **worker** | `python -m backend.worker.runner` | 交易引擎 |
 
 兩個服務請使用 **同一個 Git repo**（`sam95006/btc_auto`），環境變數盡量複製相同。
+
+### 診斷 API（不含機密）
+
+部署後在瀏覽器開：
+
+`https://你的網域/api/nexus/connectivity`
+
+可看到：`testnet_credentials_missing`、`embedded_worker_started`、`snapshot_system_health` 等，用來確認是缺金鑰還是沒跑 worker。
 
 ---
 
@@ -42,8 +59,9 @@
 ```env
 NEXUS_DATA_DIR=/data
 NEXUS_RUNTIME_DB=trading.db
-ZEABUR=1
 ```
+
+（不必手動設 `ZEABUR=1`；Zeabur 會注入 `ZEABUR_SERVICE_ID` 等，程式會辨識。）
 
 ### 3. 從本機匯出狀態再上傳
 
@@ -70,9 +88,10 @@ python tools/deploy/nexus_state_sync.py export
 ## 四、部署成功檢查清單
 
 - [ ] Zeabur 系統健康 9/9 正常
-- [ ] web 服務 `/health` 回 `{"status":"ok"}`
-- [ ] worker 服務日誌有 `[nexus]` / tick 相關輸出
-- [ ] web + worker 共用 `/data` Volume
+- [ ] web 服務 `/health` 回 `{"status":"ok"}`，且單服務時 `embedded_worker` 為 `true`
+- [ ] `/api/nexus/connectivity` 中 `testnet_credentials_missing` 為空陣列
+- [ ] 若用獨立 worker：其日誌有 tick / sync；若用內嵌：web 日誌有 `NEXUS embedded worker thread started`
+- [ ] web（與獨立 worker 若有）共用 `/data` Volume
 - [ ] `NEXUS_TRADING_MODE=binance_testnet`
 - [ ] 儀表板頂部資金與 testnet 帳戶一致
 

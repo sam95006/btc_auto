@@ -13,6 +13,9 @@ from backend.coordination.station_chat_log import StationChatLog
 from backend.coordination.station_dialogue_service import StationDialogueService
 from backend.services.runtime_store import runtime_store
 from backend.services.layout_store import layout_store
+from backend.trading.trading_mode import get_trading_mode, require_testnet_credentials
+from backend.core.data_paths import resolve_runtime_db_path
+from backend.runtime.embed_flags import embedded_worker_error, embedded_worker_started
 
 
 _dialogue = None
@@ -29,6 +32,33 @@ def register_nexus_routes(app):
     @app.route("/nexus")
     def nexus_dashboard():
         return send_file(Path(app.root_path) / "templates" / "nexus_command.html")
+
+    @app.route("/api/nexus/connectivity")
+    def nexus_connectivity():
+        """Safe diagnostics for cloud vs local (no secrets)."""
+        mode = get_trading_mode()
+        missing = require_testnet_credentials() if mode == "binance_testnet" else []
+        snap = runtime_store.load_snapshot()
+        system = snap.get("system") or {}
+        binance_sync = snap.get("binance_sync") or {}
+        return jsonify(
+            {
+                "trading_mode": mode,
+                "testnet_credentials_missing": missing,
+                "runtime_db_path": resolve_runtime_db_path(),
+                "embedded_worker_started": embedded_worker_started,
+                "embedded_worker_error": embedded_worker_error,
+                "snapshot_system_health": system.get("system_health"),
+                "snapshot_worker_module": (system.get("module_health") or {}).get("worker"),
+                "binance_sync_status": binance_sync.get("sync_status"),
+                "hints": [
+                    "If snapshot_system_health is WORKER_OFFLINE and embedded_worker_started is false, "
+                    "set NEXUS_EMBEDDED_WORKER=1 or deploy on Zeabur (auto-detects ZEABUR_* IDs).",
+                    "If testnet_credentials_missing is non-empty, add the four BINANCE_*_TESTNET_* keys in Zeabur Variables.",
+                    "For the same DB as local, mount a volume at NEXUS_DATA_DIR and import a state bundle (see tools/deploy/ZEABUR_SETUP.zh-TW.md).",
+                ],
+            }
+        )
 
     @app.route("/api/nexus/state")
     def nexus_state():
