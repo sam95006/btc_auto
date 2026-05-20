@@ -4,6 +4,8 @@
 
 若看到 **「9 個系統元件中有 4 個異常」**（`nats`、`fluent-bit`、`vector-aggregator`、`zeabur-kube-watch`），這是 **Zeabur 平台本身壞掉**，不是 NEXUS 程式碼問題。此時重啟 App 也無法正常部署。
 
+**若「部署失敗」但伺服器健康：**到該次部署 → **Build Logs / Runtime Logs** 查看錯誤。常見原因已處理：專案已改為在 `zbpack.json` 指定 `"version": "3.11"`（勿再用 Heroku 風格的 `runtime.txt`），且 `Procfile` 使用 `$PORT` 以利 zbpack 展開。
+
 請依序操作：
 
 1. 點截圖中的 **「重裝 Zeabur 服務」**（橘色按鈕）
