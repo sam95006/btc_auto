@@ -1,5 +1,6 @@
 {
   "python": {
-    "entry": "app.py"
+    "entry": "app.py",
+    "version": "3.11"
   }
 }
