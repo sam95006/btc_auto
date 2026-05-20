@@ -1,3 +1,4 @@
+import os
 import signal
 import sys
 import time
@@ -50,10 +51,19 @@ def main():
         time.sleep(1)
 
 
+def _cloud_runtime():
+    return bool(
+        os.getenv("ZEABUR")
+        or os.getenv("ZEABUR_ENVIRONMENT")
+        or os.getenv("KUBERNETES_SERVICE_HOST")
+    )
+
+
 if __name__ == "__main__":
-    try:
-        _single_instance = SingleInstanceGuard("nexus_worker").acquire()
-    except SingleInstanceError as exc:
-        raise SystemExit(str(exc))
+    if not _cloud_runtime():
+        try:
+            _single_instance = SingleInstanceGuard("nexus_worker").acquire()
+        except SingleInstanceError as exc:
+            raise SystemExit(str(exc))
     main()
 
