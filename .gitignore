@@ -16,3 +16,4 @@ node_modules/
 .cursor/
 trading.db
 .DS_Store
+archives/state_bundles/

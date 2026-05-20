@@ -2,6 +2,8 @@ import json
 from copy import deepcopy
 from pathlib import Path
 
+from backend.core.data_paths import resolve_layout_path
+
 
 DEFAULT_LAYOUT = {
     "version": 1,
@@ -9,7 +11,7 @@ DEFAULT_LAYOUT = {
     "panels": {},
 }
 
-LAYOUT_PATH = Path(__file__).resolve().parents[2] / "static" / "nexus" / "layout_overrides.json"
+LAYOUT_PATH = resolve_layout_path()
 
 
 def _normalize_payload(payload):

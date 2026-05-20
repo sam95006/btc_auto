@@ -17,9 +17,12 @@ def _now():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
+from backend.core.data_paths import resolve_runtime_db_path
+
+
 class RuntimeStateStore:
     def __init__(self, db_path=None):
-        self.db_path = db_path or os.getenv("NEXUS_RUNTIME_DB", "trading.db")
+        self.db_path = resolve_runtime_db_path(db_path)
         self._lock = threading.RLock()
         self._conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=30.0)
         self._conn.row_factory = sqlite3.Row
