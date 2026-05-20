@@ -10,14 +10,22 @@ class PnlTracker:
         }
         unrealized_by_fleet = {fleet: 0.0 for fleet in realized_by_fleet}
         for pos in self.position_manager.all_positions():
-            unrealized_by_fleet[pos["fleet"]] += pos.get("unrealized_pnl", 0.0)
+            fleet = str(pos.get("fleet") or "").strip().upper()
+            if not fleet:
+                continue
+            unrealized_by_fleet.setdefault(fleet, 0.0)
+            unrealized_by_fleet[fleet] += float(pos.get("unrealized_pnl", 0.0) or 0.0)
 
+        all_fleets = sorted(set(realized_by_fleet.keys()) | set(unrealized_by_fleet.keys()))
         fleets = {}
-        for fleet in realized_by_fleet:
+        for fleet in all_fleets:
             fleets[fleet] = {
-                "realized": round(realized_by_fleet[fleet], 4),
-                "unrealized": round(unrealized_by_fleet[fleet], 4),
-                "total": round(realized_by_fleet[fleet] + unrealized_by_fleet[fleet], 4),
+                "realized": round(float(realized_by_fleet.get(fleet, 0.0) or 0.0), 4),
+                "unrealized": round(float(unrealized_by_fleet.get(fleet, 0.0) or 0.0), 4),
+                "total": round(
+                    float(realized_by_fleet.get(fleet, 0.0) or 0.0) + float(unrealized_by_fleet.get(fleet, 0.0) or 0.0),
+                    4,
+                ),
             }
 
         total_realized = sum(item["realized"] for item in fleets.values())

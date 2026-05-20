@@ -31,7 +31,9 @@ class FleetScoreEngine:
         gross_profit = sum(max(0.0, float(item.get("pnl", 0.0))) for item in closes)
         gross_loss = abs(sum(min(0.0, float(item.get("pnl", 0.0))) for item in closes))
         profit_factor = gross_profit / gross_loss if gross_loss > 0 else (2.0 if gross_profit > 0 else 1.0)
-        today_pnl = capital_snapshot["fleets"][fleet]["realized_pnl"]
+        fleets_cap = dict(capital_snapshot.get("fleets") or {})
+        acct = fleets_cap.get(fleet) or {"realized_pnl": 0.0, "allocated": 0.0, "available": 0.0, "frozen": 0.0}
+        today_pnl = float(acct.get("realized_pnl", 0.0) or 0.0)
         loan_pressure = 0.0
         loan_item = loan_snapshot.get(fleet, {})
         if loan_item:
