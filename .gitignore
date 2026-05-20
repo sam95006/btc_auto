@@ -17,3 +17,4 @@ node_modules/
 trading.db
 .DS_Store
 archives/state_bundles/
+archives/scratch/

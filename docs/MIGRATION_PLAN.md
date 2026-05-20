@@ -26,9 +26,7 @@ This plan does **not** move files yet. It identifies where things should go late
 | `TARGET_STRUCTURE.md` | `docs/TARGET_STRUCTURE.md` | Support | Yes | Low | LOW | 後續搬移 |
 | `MIGRATION_PLAN.md` | `docs/MIGRATION_PLAN.md` | Support | Yes | Low | LOW | 後續搬移 |
 | `NEXUS_MASTER.md` | `docs/NEXUS_MASTER.md` | Support | Yes | Low | LOW | 後續搬移 |
-| `DEPLOY_NOW.bat` | `tools/deploy/DEPLOY_NOW.bat` | No active runtime | Likely yes | Low | LOW | 後續搬移 |
-| `FIX_DEPLOY.bat` | `tools/deploy/FIX_DEPLOY.bat` | No active runtime | Likely yes | Low | LOW | 後續搬移 |
-| `fix_versions.ps1` | `tools/deploy/fix_versions.ps1` | No active runtime | Likely yes | Low | LOW | 後續搬移 |
+| `DEPLOY_NOW.bat` / `FIX_DEPLOY.bat` / `fix_versions.ps1` | removed | — | — | — | LOW | 已刪除（舊 Metropolis 流程，易誤傷 repo） |
 
 ## Runtime directories
 
@@ -46,7 +44,7 @@ This plan does **not** move files yet. It identifies where things should go late
 
 | Current location | Suggested new location | Active runtime | Direct move | Needs import/path changes | Risk | Suggested action |
 |---|---|---:|---:|---:|---|---|
-| `legacy/` | `archives/legacy/` | No confirmed | Yes | No known active imports | LOW | 歸檔 |
+| `legacy/` | `archives/legacy/` | Removed from repo | — | — | LOW | 已自 Git 移除（舊版非 NEXUS）；本地備份請自行保留 |
 | `scratch/` | `archives/scratch/` | No active runtime | Yes | `scratch/start_local_server.py` may need operator awareness only | LOW | 歸檔 |
 | `_cleanup_candidate/` | `archives/cleanup_candidate/` | No active runtime | Yes | No | LOW | 歸檔 |
 | `shared/` | `archives/shared/` or keep as `shared/` until understood | No confirmed | Probably | Unknown future references | MEDIUM | 人工判斷 |

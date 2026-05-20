@@ -96,7 +96,7 @@ btc_bot/
 - `tools/local/`
   - Local launch helpers such as `start_local_server.py` after future migration.
 - `tools/deploy/`
-  - Deployment scripts such as `DEPLOY_NOW.bat`, `FIX_DEPLOY.bat`, `fix_versions.ps1`.
+  - Zeabur / 部署：`tools/deploy/ZEABUR_SETUP.zh-TW.md`、`nexus_state_sync.py`、`check_env_parity.py`。
 - `tools/cleanup/`
   - Cleanup helpers or reports if needed in future.
 
@@ -105,10 +105,8 @@ btc_bot/
   - All project documentation and planning markdown should eventually live here.
 
 ### Legacy / archive
-- `archives/legacy/`
-  - Historical system code that is not part of active runtime.
 - `archives/scratch/`
-  - Disposable screenshots, DOM dumps, local debug outputs, temporary browser profiles.
+  - Disposable screenshots, DOM dumps, local debug outputs, temporary browser profiles. **Gitignored** — do not commit.
 - `archives/cleanup_candidate/`
   - Temporary quarantine area for future conservative cleanup passes.
 

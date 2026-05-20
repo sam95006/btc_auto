@@ -83,6 +83,14 @@ python tools/deploy/nexus_state_sync.py export
 
 複製本地 `.env` 到 Zeabur（**不要** commit 到 Git）。至少包含 `.env.example` 中所有 `NEXUS_*`、`BINANCE_*`、`GROQ_*` 變數。
 
+本機可先跑（**不會印出金鑰內容**，只顯示 SET / MISSING）：
+
+```powershell
+python tools/deploy/check_env_parity.py
+```
+
+Zeabur 控制台變數補齊後，雲端與本地對幣安的後端行為才會一致。
+
 ---
 
 ## 四、部署成功檢查清單
