@@ -1,5 +1,6 @@
 import hashlib
 
+from config.fleet_routing_config import validate_futures_open_route
 from config.leverage_config import MAX_SYSTEM_LEVERAGE, MIN_FUTURES_LEVERAGE
 from backend.trading.order_idempotency_guard import OrderIdempotencyGuard
 
@@ -89,6 +90,9 @@ class BinanceExecutionRouter:
         self._check_permission(fleet, "futures")
         risk_context = risk_context or {}
         symbol = str(symbol_override or self.futures_engine.client.resolve_symbol(fleet)).upper()
+        allowed_route, route_reason = validate_futures_open_route(fleet, symbol)
+        if not allowed_route:
+            raise ExecutionPermissionError(route_reason)
         signal_hash = self._strategy_signal_hash(
             fleet,
             symbol,

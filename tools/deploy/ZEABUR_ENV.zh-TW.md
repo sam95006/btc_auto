@@ -31,7 +31,13 @@
 
 部署後請確認 `/api/nexus/connectivity` 的 `embedded_worker_started` 為 `true`，且 `decision_summary.live_position_count` 與 Binance 模擬盤持倉數一致。
 
-## 艦隊與 RADAR（選幣僅 RADAR）
+## 艦隊與 RADAR（四艦隊固定 + 其餘僅雷達站）
+
+**路由規則（程式強制）**：
+- **BTC / ETH / SOL / PEPE** 艦隊：只開/管這四種合約
+- **RADAR 雷達站**：XRP、BNB、DOGE 等其餘幣種的開倉與持倉顯示
+
+## 艦隊與 RADAR 參數
 
 | 變數 | 建議值 |
 |------|--------|

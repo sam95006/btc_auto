@@ -17,6 +17,7 @@ from config.validation_config import (
     VALIDATION_MIN_APPROVAL_SCORE,
 )
 from backend.trading.decision_quality_engine import DecisionQualityValidationEngine
+from config.fleet_routing_config import validate_futures_open_route
 from config.market_data_config import (
     LIQUIDATION_CRITICAL_DISTANCE_PCT,
     SIMULATION_MAX_BASIS_ABS_BPS,
@@ -367,6 +368,26 @@ class TradeValidationPipeline:
         proposal = dict(proposal or {})
         market_context = market_context or {}
         truth_status = truth_status or {}
+        if str(proposal.get("market_type") or "futures").lower() == "futures":
+            route_ok, route_reason = validate_futures_open_route(
+                proposal.get("fleet"),
+                proposal.get("symbol") or proposal.get("symbol_override"),
+            )
+            if not route_ok:
+                return {
+                    "approved": False,
+                    "reason": route_reason,
+                    "approval_score": 0.0,
+                    "stages": {
+                        "fleet_routing": {
+                            "stage": "fleet_routing",
+                            "approved": False,
+                            "score": 0.0,
+                            "reason": route_reason,
+                        }
+                    },
+                    "reject_layer": "fleet_routing",
+                }
         portfolio_status = portfolio_status or {}
         growth_context = growth_context or {}
         growth_directives = dict(growth_context.get("growth_directives") or {})

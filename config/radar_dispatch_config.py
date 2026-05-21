@@ -8,13 +8,5 @@ RADAR_MIN_MARGIN = float(os.getenv("NEXUS_RADAR_MIN_MARGIN", "20"))
 RADAR_MAX_LEVERAGE = float(os.getenv("NEXUS_RADAR_MAX_LEVERAGE", "15"))
 RADAR_COOLDOWN_SECONDS = int(float(os.getenv("NEXUS_RADAR_COOLDOWN_SECONDS", "120")))
 
-# Core fleet symbols — RADAR won't duplicate these (handled by main fleets)
-CORE_FLEET_SYMBOLS = frozenset(
-    {
-        "BTCUSDT",
-        "ETHUSDT",
-        "SOLUSDT",
-        "1000PEPEUSDT",
-        "PEPEUSDT",
-    }
-)
+# Re-export from single routing source of truth
+from config.fleet_routing_config import CORE_FLEET_SYMBOLS, CORE_FLEETS  # noqa: F401

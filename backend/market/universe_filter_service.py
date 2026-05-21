@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from config.fleet_routing_config import CORE_FLEET_SYMBOLS, normalize_symbol
 from config.universe_config import (
     RADAR_UNIVERSE_MAX_SYMBOLS,
     RADAR_UNIVERSE_MIN_NOTIONAL,
@@ -15,7 +16,11 @@ class UniverseFilterService:
         self.min_notional = float(min_notional or RADAR_UNIVERSE_MIN_NOTIONAL)
 
     def resolve_scan_symbols(self, futures_client=None):
-        static = list(TOP_LIQUIDITY_SYMBOLS)[: self.max_symbols]
+        static = [
+            symbol
+            for symbol in (normalize_symbol(item) for item in TOP_LIQUIDITY_SYMBOLS)
+            if symbol not in CORE_FLEET_SYMBOLS
+        ][: self.max_symbols]
         if not futures_client or not getattr(futures_client, "is_configured", lambda: False)():
             return static
 
@@ -26,8 +31,8 @@ class UniverseFilterService:
 
         ranked = []
         for item in tickers:
-            symbol = str(item.get("symbol") or "").upper()
-            if not symbol.endswith("USDT"):
+            symbol = normalize_symbol(item.get("symbol"))
+            if not symbol.endswith("USDT") or symbol in CORE_FLEET_SYMBOLS:
                 continue
             quote_volume = float(item.get("quoteVolume") or item.get("quote_volume") or 0.0)
             if quote_volume < self.min_notional:

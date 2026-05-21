@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 from datetime import datetime
 
+from config.fleet_routing_config import CORE_FLEET_SYMBOLS, normalize_symbol
 from config.radar_config import (
     RADAR_MAX_CANDIDATES,
     RADAR_MAX_WHALE_NOTES,
@@ -46,6 +47,9 @@ class RadarMarketScanService:
         board = []
         whale_watch = []
         for symbol in self.symbols:
+            symbol = normalize_symbol(symbol)
+            if symbol in CORE_FLEET_SYMBOLS:
+                continue
             context = self.market_context_service.build_symbol_context(symbol, {})
             if not context:
                 continue

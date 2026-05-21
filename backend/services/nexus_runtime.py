@@ -53,7 +53,8 @@ from backend.decision.meeting_notes_resolver import resolve_meeting_notes
 from backend.analytics.setup_performance_tracker import SetupPerformanceTracker
 from backend.trading.radar_dispatch_service import RadarDispatchService
 from backend.analytics.walk_forward_evaluator import WalkForwardEvaluator
-from config.radar_dispatch_config import CORE_FLEET_SYMBOLS, RADAR_MAX_OPEN_POSITIONS
+from config.fleet_routing_config import fleet_for_exchange_position
+from config.radar_dispatch_config import RADAR_MAX_OPEN_POSITIONS
 from backend.trading.trading_mode import get_trading_mode
 from backend.coordination.station_chat_log import StationChatLog
 from backend.coordination.station_dialogue_service import StationDialogueService
@@ -385,23 +386,6 @@ class NexusRuntime:
         for channel in ("WORLD", fleet if fleet in {"BTC", "ETH", "SOL", "PEPE", "RADAR"} else "HQ", "RISK"):
             self.station_chat_log.add(channel, "風控反思", msg, source="虧損反思", importance="WARNING")
         self.station_chats = self.station_chat_log.recent_grouped()
-
-    def _fleet_for_futures_symbol(self, symbol, core_symbol_map):
-        symbol = str(symbol or "").upper()
-        if symbol in core_symbol_map:
-            return core_symbol_map[symbol]
-        core_reverse = {
-            "BTCUSDT": "BTC",
-            "ETHUSDT": "ETH",
-            "SOLUSDT": "SOL",
-            "PEPEUSDT": "PEPE",
-            "1000PEPEUSDT": "PEPE",
-        }
-        if symbol in core_reverse:
-            return core_reverse[symbol]
-        if symbol in CORE_FLEET_SYMBOLS:
-            return core_reverse.get(symbol, "RADAR")
-        return "RADAR"
 
     def refresh_live_exchange_state(self, force=False, min_interval_sec=4.0):
         """Refresh Binance spot/futures balances and positions (web-safe, throttled)."""
@@ -2154,7 +2138,7 @@ class NexusRuntime:
                 pnl = float(item.get("unRealizedProfit", 0.0) or 0.0)
                 unrealized += pnl
                 position_update_time = max(position_update_time, int(item.get("updateTime") or 0))
-                fleet = self._fleet_for_futures_symbol(symbol, symbol_map)
+                fleet = fleet_for_exchange_position(symbol, symbol_map)
                 side = "BUY" if position_amt > 0 else "SELL"
                 positions.append(
                     {
@@ -2405,7 +2389,7 @@ class NexusRuntime:
         for symbol in sorted(symbols_to_sync):
             if not symbol:
                 continue
-            fleet = self._fleet_for_futures_symbol(symbol, symbol_map)
+            fleet = fleet_for_exchange_position(symbol, symbol_map)
             try:
                 orders = self.futures_client.get_all_orders(symbol, limit=50) or []
             except Exception:
