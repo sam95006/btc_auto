@@ -2,7 +2,7 @@
 import { fetchLayoutConfig, fetchNexusState } from "./api_client.js?v=20260503a";
 import { renderTopStatusBar } from "./components/ui_top_status_bar.js?v=20260510b";
 import { renderAlertPanel } from "./components/ui_alert_panel.js?v=20260510a";
-import { renderChatDock } from "./components/ui_chat_dock.js?v=20260521a";
+import { renderChatDock } from "./components/ui_chat_dock.js?v=20260521c";
 import { renderMeetingLogPanel } from "./components/ui_meeting_log_panel.js?v=20260520a";
 import { renderMeetingDock } from "./components/ui_meeting_dock.js?v=20260510b";
 import { buildMainOverviewPage } from "./scenes/scene_main_hq.js?v=20260510b";
@@ -248,8 +248,12 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-function showError(message) {
+function clearBootErrors() {
   document.querySelectorAll(".boot-error").forEach((node) => node.remove());
+}
+
+function showError(message) {
+  clearBootErrors();
   document.body.insertAdjacentHTML("beforeend", `<div class="boot-error">${escapeHtml(message)}</div>`);
 }
 
@@ -458,6 +462,7 @@ function renderApp(state) {
     renderSubModal(state);
     // Temporarily skip persisted panel layout during UI recovery.
     // Old saved coordinates were pushing working panels off-screen.
+    clearBootErrors();
   } catch (error) {
     showError(`UI render failed: ${error?.message || String(error)}`);
   }

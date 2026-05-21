@@ -22,6 +22,31 @@ class RadarLlmBridgeTests(unittest.TestCase):
         self.assertEqual(proposals[0]["symbol"], "XRPUSDT")
         self.assertNotIn(proposals[0]["symbol"], CORE_FLEET_SYMBOLS)
 
+    def test_merge_prefers_llm_symbol_over_scan_order(self):
+        bridge = RadarLlmProposalBridge(RadarDispatchService(), llm_gateway=None)
+        scan = {
+            "candidates": [
+                {
+                    "symbol": "DOGEUSDT",
+                    "candidate_score": 80,
+                    "candidate_side": "LONG",
+                    "reason": "healthy_structure",
+                }
+            ]
+        }
+        llm_proposals = [
+            {
+                "symbol": "XRPUSDT",
+                "candidate_side": "LONG",
+                "candidate_score": 72,
+                "reason": "llm_radar_proposal",
+            }
+        ]
+        merged = bridge.merge_with_scan_candidates(scan, llm_proposals)
+        symbols = [item["symbol"] for item in merged]
+        self.assertEqual(symbols[0], "XRPUSDT")
+        self.assertIn("DOGEUSDT", symbols)
+
 
 if __name__ == "__main__":
     unittest.main()

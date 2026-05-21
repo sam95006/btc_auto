@@ -1,5 +1,5 @@
-import { sendStationChat } from "../api_client.js?v=20260521a";
-import { buildStationConversation, escapeHtml, normalizeText, translateStation } from "../utils/presentation.js?v=20260521a";
+import { sendStationChat } from "../api_client.js?v=20260521c";
+import { buildStationConversation, escapeHtml, normalizeText, translateStation } from "../utils/presentation.js?v=20260521c";
 
 const CHANNELS = ["WORLD", "HQ", "BTC", "ETH", "SOL", "PEPE", "RADAR", "NEWS", "RISK"];
 const CHANNEL_SHORT = { WORLD: "世界", HQ: "HQ", BTC: "BTC", ETH: "ETH", SOL: "SOL", PEPE: "PEPE", RADAR: "雷達", NEWS: "新聞", RISK: "風控" };
@@ -77,7 +77,7 @@ function bindChatEvents(root, uiState, updateUiState) {
   });
 }
 
-function mountChatShell(root, state, uiState) {
+function mountChatShell(root, state, uiState, updateUiState) {
   const activeStation = uiState.activeStation || "WORLD";
   const minimized = Boolean(uiState.minimized);
   const rows = buildStationConversation(state, activeStation).slice(-28);
@@ -132,7 +132,7 @@ export function renderChatDock(root, state, uiState, updateUiState) {
     const input = root.querySelector("[data-chat-input]");
     const saved = input?.value || "";
     const focused = document.activeElement === input;
-    mountChatShell(root, state, uiState);
+    mountChatShell(root, state, uiState, updateUiState);
     const nextInput = root.querySelector("[data-chat-input]");
     if (nextInput && saved) {
       nextInput.value = saved;

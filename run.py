@@ -7,7 +7,7 @@ except Exception:
     def load_dotenv():
         return False
 
-from flask import Flask, jsonify, send_file
+from flask import Flask, jsonify, request, send_file
 from backend.api.server import register_nexus_routes
 from backend.core.env_loader import load_env_file
 from backend.runtime.single_instance_guard import SingleInstanceError, SingleInstanceGuard
@@ -28,6 +28,14 @@ except TradingModeSafetyError as exc:
 
 app = Flask(__name__)
 register_nexus_routes(app)
+
+
+@app.after_request
+def _nexus_static_cache_control(response):
+    """Avoid stale ES module bundles after deploy (Zeabur CDN/browser 304)."""
+    if request.path.startswith("/static/nexus/"):
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+    return response
 _single_instance = None
 
 
@@ -37,6 +45,17 @@ def _truthy_env(name: str) -> bool:
 
 def _running_under_gunicorn() -> bool:
     return "gunicorn" in (os.environ.get("SERVER_SOFTWARE", "") or "").lower()
+
+
+def _gunicorn_worker_count() -> int:
+    for key in ("WEB_CONCURRENCY", "GUNICORN_WORKERS"):
+        raw = (os.getenv(key) or "").strip()
+        if raw:
+            try:
+                return max(1, int(raw))
+            except ValueError:
+                pass
+    return 1
 
 
 def _looks_like_zeabur_runtime() -> bool:
@@ -62,9 +81,9 @@ def _should_start_embedded_nexus_worker() -> bool:
     if _truthy_env("NEXUS_EMBEDDED_WORKER"):
         return True
     if _looks_like_zeabur_runtime():
-        # Gunicorn with multiple workers would fork duplicate runtimes; require explicit opt-in.
+        # Gunicorn with multiple workers would fork duplicate runtimes; single-worker is safe.
         if _running_under_gunicorn() and not _truthy_env("NEXUS_EMBEDDED_WORKER"):
-            return False
+            return _gunicorn_worker_count() <= 1
         return True
     return False
 

@@ -1798,6 +1798,12 @@ class NexusRuntime:
                 self.state_manager.update_fleet(fleet, status="ERROR", last_signal="ERROR", last_reason=str(exc))
                 self._append_alert("WARNING", f"{fleet} order failed: {exc}")
 
+    def _radar_trade_candidates(self):
+        return self.radar_llm_bridge.merge_with_scan_candidates(
+            self.radar_scan,
+            getattr(self, "_radar_llm_proposals", []) or [],
+        )
+
     def _run_radar_dispatch(self, prices, market_contexts, truth_status=None):
         futures_ready = truth_status.get("futures_ready_for_ai", False) if truth_status else True
         if not futures_ready:
@@ -1846,7 +1852,7 @@ class NexusRuntime:
         if len(open_symbols) >= RADAR_MAX_OPEN_POSITIONS:
             return
 
-        for candidate in self.radar_dispatch.eligible_candidates(self.radar_scan):
+        for candidate in self._radar_trade_candidates():
             symbol = str(candidate.get("symbol") or "").upper()
             if symbol in open_symbols:
                 continue
@@ -2591,7 +2597,8 @@ class NexusRuntime:
             "radar_dispatch": {
                 "enabled": bool(getattr(self.radar_dispatch, "FLEET", "RADAR")),
                 "open_positions": self.position_manager.get_by_fleet("RADAR"),
-                "eligible_candidates": self.radar_dispatch.eligible_candidates(self.radar_scan),
+                "eligible_candidates": self._radar_trade_candidates(),
+                "llm_proposals": list(getattr(self, "_radar_llm_proposals", []) or [])[:8],
                 "radar_budget_available": round(float(self.ledger.radar_available()), 4),
             },
             "analytics": {
