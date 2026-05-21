@@ -3,7 +3,7 @@ import math
 import random
 import time
 from datetime import datetime
-from urllib.parse import quote, urlencode
+from urllib.parse import quote
 from urllib.request import Request, urlopen
 from zoneinfo import ZoneInfo
 
@@ -18,6 +18,18 @@ class MarketPriceFeedService:
         "nasdaq": "^IXIC",
         "gold": "GC=F",
     }
+
+    STOOQ_SYMBOLS = {
+        "spx": "^spx",
+        "dji": "^dji",
+        "nasdaq": "^ndq",
+        "gold": "gc.f",
+    }
+
+    YAHOO_HOSTS = (
+        "https://query2.finance.yahoo.com/v8/finance/chart/",
+        "https://query1.finance.yahoo.com/v8/finance/chart/",
+    )
 
     MARKET_LABELS = {
         "twii": "台股加權",
@@ -36,6 +48,7 @@ class MarketPriceFeedService:
             "PEPE": 0.000008,
         }
         self.last_prices = {}
+        self._index_cache = {}
         self.last_market_overview = self._market_overview_fallback()
 
     def _mock_price(self, fleet):
@@ -46,7 +59,7 @@ class MarketPriceFeedService:
 
     def fetch_public_prices(self):
         encoded_symbols = json.dumps(list(SUPPORTED_SYMBOLS.values()), separators=(",", ":"))
-        query = urlencode({"symbols": encoded_symbols})
+        query = f"symbols={quote(encoded_symbols)}"
         url = f"https://api.binance.com/api/v3/ticker/price?{query}"
         try:
             raw_response = urlopen(url, timeout=5).read().decode("utf-8")
@@ -102,6 +115,11 @@ class MarketPriceFeedService:
 
         return "--"
 
+    def _direction_from_change(self, change):
+        if change is None or abs(change) < 1e-9:
+            return "平"
+        return "漲" if change > 0 else "跌"
+
     def _market_overview_fallback(self):
         taipei_now = datetime.now(ZoneInfo("Asia/Taipei"))
         eastern_now = datetime.now(ZoneInfo("America/New_York"))
@@ -126,52 +144,122 @@ class MarketPriceFeedService:
         }
 
     def _fetch_yahoo_chart(self, symbol):
-        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{quote(symbol, safe='=')}"
-        request = Request(url, headers={"User-Agent": "Mozilla/5.0"})
-        with urlopen(request, timeout=6) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-        meta = ((payload.get("chart") or {}).get("result") or [{}])[0].get("meta") or {}
-        price = meta.get("regularMarketPrice")
-        previous_close = meta.get("previousClose")
-        if price is None:
-            raise ValueError(f"missing regularMarketPrice for {symbol}")
+        last_error = None
+        for host in self.YAHOO_HOSTS:
+            url = f"{host}{quote(symbol, safe='=')}"
+            request = Request(url, headers={"User-Agent": "Mozilla/5.0 (NEXUS Market Feed)"})
+            try:
+                with urlopen(request, timeout=8) as response:
+                    payload = json.loads(response.read().decode("utf-8"))
+            except Exception as exc:
+                last_error = exc
+                continue
+            meta = ((payload.get("chart") or {}).get("result") or [{}])[0].get("meta") or {}
+            price = meta.get("regularMarketPrice")
+            previous_close = meta.get("previousClose") or meta.get("chartPreviousClose")
+            if price is None:
+                last_error = ValueError(f"missing regularMarketPrice for {symbol}")
+                continue
 
-        change = None
-        change_pct = None
-        if previous_close not in (None, 0):
-            change = float(price) - float(previous_close)
-            change_pct = (change / float(previous_close)) * 100.0
+            change = None
+            change_pct = None
+            if previous_close not in (None, 0):
+                change = float(price) - float(previous_close)
+                change_pct = (change / float(previous_close)) * 100.0
 
+            return {
+                "price": float(price),
+                "change": None if change is None else round(change, 4),
+                "change_pct": None if change_pct is None else round(change_pct, 3),
+                "market_time": meta.get("regularMarketTime"),
+                "quote_source": "yahoo_chart",
+            }
+        raise last_error or ValueError(f"yahoo fetch failed for {symbol}")
+
+    def _fetch_stooq_quote(self, symbol):
+        url = f"https://stooq.pl/q/l/?s={quote(symbol, safe='')}&f=sd2t2ohlcv&h&e=csv"
+        request = Request(url, headers={"User-Agent": "Mozilla/5.0 (NEXUS Market Feed)"})
+        with urlopen(request, timeout=8) as response:
+            lines = [line.strip() for line in response.read().decode("utf-8").splitlines() if line.strip()]
+        if len(lines) < 2:
+            raise ValueError(f"stooq empty response for {symbol}")
+        parts = lines[-1].split(",")
+        if len(parts) < 7:
+            raise ValueError(f"stooq malformed row for {symbol}")
+        if parts[1] in {"B/D", "N/D", ""} or parts[6] in {"B/D", "N/D", ""}:
+            raise ValueError(f"stooq missing quote for {symbol}")
+
+        close = float(parts[6])
+        open_price = float(parts[3])
+        change = close - open_price
+        change_pct = (change / open_price) * 100.0 if open_price else None
         return {
-            "price": float(price),
-            "change": None if change is None else round(change, 4),
+            "price": close,
+            "change": round(change, 4),
             "change_pct": None if change_pct is None else round(change_pct, 3),
-            "market_time": meta.get("regularMarketTime"),
+            "market_time": parts[1] if len(parts) > 1 else None,
+            "quote_source": "stooq",
         }
+
+    def _fetch_index_quote(self, key, yahoo_symbol):
+        errors = []
+        for fetcher, symbol in (
+            (self._fetch_yahoo_chart, yahoo_symbol),
+            (self._fetch_stooq_quote, self.STOOQ_SYMBOLS.get(key)),
+        ):
+            if not symbol:
+                continue
+            try:
+                return fetcher(symbol)
+            except Exception as exc:
+                errors.append(str(exc))
+                continue
+        cached = self._index_cache.get(key)
+        if cached and cached.get("price") is not None:
+            cached = dict(cached)
+            cached["quote_source"] = f"{cached.get('quote_source', 'cache')}_stale"
+            return cached
+        if errors:
+            raise ValueError("; ".join(errors[-2:]))
+        raise ValueError(f"no quote providers for {key}")
+
+    def seed_index_cache(self, indices):
+        if not isinstance(indices, dict):
+            return
+        for key, payload in indices.items():
+            if isinstance(payload, dict) and payload.get("price") is not None:
+                self._index_cache[key] = dict(payload)
 
     def fetch_market_overview(self):
         overview = self._market_overview_fallback()
         taipei_now = datetime.now(ZoneInfo("Asia/Taipei"))
         eastern_now = datetime.now(ZoneInfo("America/New_York"))
-        try:
-            for key, symbol in self.MARKET_SYMBOLS.items():
-                data = self._fetch_yahoo_chart(symbol)
+        sources = set()
+        for key, symbol in self.MARKET_SYMBOLS.items():
+            try:
+                data = self._fetch_index_quote(key, symbol)
                 change = data.get("change")
-                if change is None or abs(change) < 1e-9:
-                    direction = "平"
-                else:
-                    direction = "漲" if change > 0 else "跌"
-                overview["indices"][key].update(
-                    {
-                        **data,
-                        "label": self.MARKET_LABELS[key],
-                        "direction": direction,
-                        "session_status": self._session_status(key, taipei_now, eastern_now),
-                    }
-                )
-            overview["source"] = "yahoo_chart"
-        except Exception:
-            pass
+                payload = {
+                    **data,
+                    "label": self.MARKET_LABELS[key],
+                    "direction": self._direction_from_change(change),
+                    "session_status": self._session_status(key, taipei_now, eastern_now),
+                }
+                overview["indices"][key].update(payload)
+                self._index_cache[key] = dict(payload)
+                sources.add(data.get("quote_source", "unknown"))
+            except Exception:
+                cached = self._index_cache.get(key)
+                if cached:
+                    overview["indices"][key].update(
+                        {
+                            **cached,
+                            "label": self.MARKET_LABELS[key],
+                            "session_status": self._session_status(key, taipei_now, eastern_now),
+                        }
+                    )
+                    sources.add("cache_stale")
+        overview["source"] = "+".join(sorted(sources)) if sources else "fallback"
         self.last_market_overview = overview
         return overview
 

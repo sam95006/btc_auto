@@ -1,4 +1,4 @@
-import { escapeHtml, normalizeText } from "../utils/presentation.js?v=20260510a";
+import { escapeHtml, normalizeText } from "../utils/presentation.js?v=20260521c";
 import { getLayoutHotspots } from "../layout_state.js?v=20260503a";
 
 const HQ_HOTSPOTS = [
@@ -18,8 +18,35 @@ function latestMeeting(state) {
   return Array.isArray(state.meetings) && state.meetings.length ? state.meetings[0] : null;
 }
 
+function meetingAlerts(state, limit = 5) {
+  const meetings = Array.isArray(state.meetings) ? state.meetings : [];
+  return meetings.slice(0, limit).map((meeting) => {
+    const conclusion = meeting?.conclusion || {};
+    const meetingType = String(meeting?.type || "");
+    const slot = meeting?.slot || String(meeting?.time || "").slice(11, 16) || "會議";
+    return {
+      time: meeting?.time || meeting?.created_at || "--",
+      level: meetingType === "EMERGENCY_ROUND_TABLE" ? "ALERT_RED" : "INFO",
+      summary:
+        conclusion.summary ||
+        meeting?.summary ||
+        `${slot} 圓桌會議已完成，目前沒有摘要文字。`,
+      source: "meeting",
+    };
+  });
+}
+
 function latestAlerts(state, limit = 3) {
-  return Array.isArray(state.alerts) ? state.alerts.slice(0, limit) : [];
+  const runtimeAlerts = Array.isArray(state.alerts) ? state.alerts : [];
+  const merged = [];
+  const seen = new Set();
+  for (const item of [...runtimeAlerts, ...meetingAlerts(state, 6)]) {
+    const key = `${item.time || ""}|${item.summary || ""}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(item);
+  }
+  return merged.slice(0, limit);
 }
 
 function compactList(items) {
@@ -41,13 +68,20 @@ function compactList(items) {
 
 function marketLine(index) {
   if (!index) return "-- / -- / 休市";
-  const price = Number(index.price || 0);
-  const changePct = Number(index.change_pct || 0);
-  const direction = index.direction || (changePct > 0 ? "漲" : changePct < 0 ? "跌" : "平");
   const session = index.session_status || "休市";
+  const hasPrice = index.price != null && Number.isFinite(Number(index.price)) && Number(index.price) > 0;
+  const hasChange = index.change_pct != null && Number.isFinite(Number(index.change_pct));
   const decimals = index.label === "黃金" ? 1 : 2;
-  const priceText = price ? price.toFixed(decimals) : "--";
-  const changeText = Number.isFinite(changePct) ? `${changePct > 0 ? "+" : ""}${changePct.toFixed(2)}%` : "--";
+  const priceText = hasPrice ? Number(index.price).toFixed(decimals) : "--";
+  let direction = index.direction || "--";
+  let changeText = "--";
+  if (hasChange) {
+    const changePct = Number(index.change_pct);
+    direction = changePct > 0 ? "漲" : changePct < 0 ? "跌" : "平";
+    changeText = `${changePct > 0 ? "+" : ""}${changePct.toFixed(2)}%`;
+  } else if (!hasPrice) {
+    direction = "--";
+  }
   return `${priceText} / ${direction}${changeText} / ${session}`;
 }
 

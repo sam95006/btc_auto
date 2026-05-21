@@ -265,7 +265,11 @@ class NexusRuntime:
             self.latest_prices = {}
             self.latest_news = list(snapshot.get("news", []))
             self.meetings = [self._normalize_meeting_record(item) for item in list(snapshot.get("meetings", []))]
-            self.alerts = []
+            self.alerts = list(snapshot.get("alerts", []))[:80]
+            stored_overview = snapshot.get("market_overview") or {}
+            if isinstance(stored_overview, dict) and stored_overview.get("indices"):
+                self.market_overview = stored_overview
+                self.price_feed.seed_index_cache(stored_overview.get("indices") or {})
             self.station_briefings = snapshot.get("station_briefings", {}) or self.station_briefings
             analytics = snapshot.get("analytics", {})
             self._previous_prices = dict(analytics.get("previous_prices", {}))
@@ -759,11 +763,12 @@ class NexusRuntime:
         self._pause_reason = "NEWS"
         self._news_pause_until = time.time() + int(os.getenv("NEXUS_NEWS_PAUSE_SECONDS", "900"))
         self._append_alert("ALERT_RED", f"重大事件警報：{_clean_display_text(major.get('summary'), '市場出現重大風險事件。')}")
-        meeting = self._create_structured_news_meeting(major)
+        meeting = self._normalize_meeting_record(self._create_structured_news_meeting(major))
         self.meetings.insert(0, meeting)
         self.meetings = self.meetings[:40]
         runtime_store.append_meeting(meeting)
         self._save_round_table_memory(meeting)
+        self._append_meeting_alert(meeting)
         try:
             self.meeting_broadcaster.broadcast(meeting)
         except Exception:
@@ -795,10 +800,16 @@ class NexusRuntime:
                 if "固定圓桌會議完成" in existing_summary:
                     continue
                 self.meetings = [item for item in self.meetings if item.get("meeting_id") != meeting_id]
-            self.meetings.insert(0, self._normalize_meeting_record(meeting))
+            meeting = self._normalize_meeting_record(meeting)
+            self.meetings.insert(0, meeting)
             self.meetings = sorted(self.meetings, key=lambda item: item.get("time", ""), reverse=True)[:40]
             runtime_store.append_meeting(meeting)
             self._save_round_table_memory(meeting)
+            self._append_meeting_alert(meeting)
+
+        if len(self.alerts) < 2 and self.meetings:
+            for item in self.meetings[:4]:
+                self._append_meeting_alert(item)
 
     def _create_news_meeting(self, major_news):
         summary = _clean_display_text(
@@ -2252,6 +2263,19 @@ class NexusRuntime:
             return
         self.alerts.insert(0, payload)
         self.alerts = self.alerts[:80]
+
+    def _append_meeting_alert(self, meeting):
+        meeting = self._normalize_meeting_record(meeting or {})
+        meeting_type = str(meeting.get("type") or "")
+        slot = meeting.get("slot") or (str(meeting.get("time") or "")[-5:] or "會議")
+        conclusion = meeting.get("conclusion") or {}
+        summary = _clean_display_text(
+            conclusion.get("summary") or meeting.get("summary"),
+            "圓桌會議已完成，請查看會議紀錄。",
+        )
+        level = "ALERT_RED" if meeting_type == "EMERGENCY_ROUND_TABLE" else "INFO"
+        prefix = "緊急圓桌" if meeting_type == "EMERGENCY_ROUND_TABLE" else f"{slot} 圓桌"
+        self._append_alert(level, f"[{prefix}] {summary}")
 
     def _spot_positions_snapshot(self):
         spot_account = getattr(self, "_last_spot_account", {"holdings": []})
