@@ -69,6 +69,14 @@ class SpotTruthService:
                 }
             )
 
+        usdt_total = 0.0
+        usdc_total = 0.0
+        for row in truth_assets:
+            if row.get("asset") == "USDT":
+                usdt_total = float(row.get("total", 0.0) or 0.0)
+            elif row.get("asset") == "USDC":
+                usdc_total = float(row.get("total", 0.0) or 0.0)
+
         if self.truth_mode == "full_visible_holdings":
             spot_total = stable_total + holdings_total
         else:
@@ -81,6 +89,8 @@ class SpotTruthService:
             "truth_assets": truth_assets,
             "stable_total": round(stable_total, 8),
             "stable_free": round(stable_free, 8),
+            "usdt_total": round(usdt_total, 8),
+            "usdc_total": round(usdc_total, 8),
             "spot_total": round(spot_total, 8),
             "visible_holdings": holdings,
             "visible_holdings_total": round(holdings_total, 8),

@@ -37,7 +37,12 @@ export function renderTopStatusBar(root, state) {
 
   const totalPnl = Number(pnl.exchange_unrealized_pnl ?? pnl.total_pnl ?? 0);
   const futuresUnrealized = Number(capital.futures_unrealized_pnl || pnl.exchange_unrealized_pnl || 0);
-  const futuresWallet = Number(capital.futures_exchange_wallet_balance || capital.futures_wallet_total || 0);
+  const spotStable = Number(capital.spot_stable_total || capital.spot_total || 0);
+  const spotUsdt = Number(capital.spot_usdt_total || 0);
+  const spotUsdc = Number(capital.spot_usdc_total || 0);
+  const futuresWallet = Number(
+    capital.futures_wallet_display || capital.futures_exchange_wallet_balance || capital.futures_wallet_total || 0,
+  );
   const futuresEquity = Number(capital.futures_exchange_margin_balance || capital.futures_total || 0);
   const tradeCount = Number(decision.trade_count || 0);
   const livePositions = Number(decision.live_position_count || 0);
@@ -49,8 +54,8 @@ export function renderTopStatusBar(root, state) {
   root.innerHTML = `
     <div class="status-board">
       <div class="status-primary-grid status-primary-grid--compact">
-        ${card("總資產", formatMoney(capital.total), "全站帳戶合計")}
-        ${card("現貨資金", formatMoney(capital.spot_total), "HQ Spot 帳戶")}
+        ${card("總資產", formatMoney(capital.total), "現貨穩定幣 + 合約權益")}
+        ${card("現貨資金", formatMoney(spotStable), `USDT ${formatMoney(spotUsdt)} / USDC ${formatMoney(spotUsdc)}`)}
         ${card("合約資金", formatMoney(futuresEquity), `錢包 ${formatMoney(futuresWallet)} / 未實現 ${formatMoney(futuresUnrealized)}`, toneClass(futuresUnrealized))}
         ${card("未實現損益", formatMoney(futuresUnrealized), dualTime, toneClass(futuresUnrealized))}
         ${card("系統狀態", systemLabel, systemMeta, system.trading_paused ? "bad" : "good")}

@@ -37,6 +37,18 @@
 - **BTC / ETH / SOL / PEPE** 艦隊：只開/管這四種合約
 - **RADAR 雷達站**：XRP、BNB、DOGE 等其餘幣種的開倉與持倉顯示
 
+## 現貨顯示（與 Binance App 對齊）
+
+| 變數 | 建議值 |
+|------|--------|
+| `NEXUS_HQ_SPOT_TRUTH_MODE` | `stable_only` |
+| `NEXUS_HQ_SPOT_TRUTH_STABLE_ASSETS` | `USDT,USDC` |
+
+頂部「現貨資金」= **USDT + USDC 合計**（不含 testnet 空投的其他幣）。  
+合約資金 = Binance `totalMarginBalance`（權益），括號內為錢包餘額。
+
+部署後請對照：`/api/nexus/connectivity` → `binance_balances`。
+
 ## 艦隊與 RADAR 參數
 
 | 變數 | 建議值 |

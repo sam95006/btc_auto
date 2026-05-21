@@ -51,9 +51,16 @@ def register_nexus_routes(app):
         """Safe diagnostics for cloud vs local (no secrets)."""
         mode = get_trading_mode()
         missing = require_testnet_credentials() if mode == "binance_testnet" else []
+        try:
+            from backend.services.nexus_runtime import nexus_runtime
+
+            nexus_runtime.refresh_live_exchange_state()
+        except Exception as exc:
+            print(f"[api] connectivity refresh failed: {exc}")
         snap = runtime_store.load_snapshot()
         system = snap.get("system") or {}
         binance_sync = snap.get("binance_sync") or {}
+        capital = snap.get("capital") or {}
         return jsonify(
             {
                 "trading_mode": mode,
@@ -64,6 +71,14 @@ def register_nexus_routes(app):
                 "snapshot_system_health": system.get("system_health"),
                 "snapshot_worker_module": (system.get("module_health") or {}).get("worker"),
                 "binance_sync_status": binance_sync.get("sync_status"),
+                "binance_balances": {
+                    "spot_usdt": capital.get("spot_usdt_total"),
+                    "spot_usdc": capital.get("spot_usdc_total"),
+                    "spot_stable_total": capital.get("spot_stable_total"),
+                    "futures_wallet": capital.get("futures_exchange_wallet_balance"),
+                    "futures_equity": capital.get("futures_exchange_margin_balance"),
+                    "futures_unrealized": capital.get("futures_unrealized_pnl"),
+                },
                 "hints": [
                     "If snapshot_system_health is WORKER_OFFLINE and embedded_worker_started is false, "
                     "set NEXUS_EMBEDDED_WORKER=1 or deploy on Zeabur (auto-detects ZEABUR_* IDs).",

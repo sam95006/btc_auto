@@ -2016,8 +2016,10 @@ class NexusRuntime:
                 "stable_free": round(stable_free, 8),
                 "stable_total": round(stable_total, 8),
                 "usdt_free": float(balances.get("USDT", {}).get("free", 0.0) or 0.0),
-                "usdt_total": float(balances.get("USDT", {}).get("free", 0.0) or 0.0) + float(balances.get("USDT", {}).get("locked", 0.0) or 0.0),
-                "spot_total": round(spot_total, 4),
+                "usdt_total": float(truth_view.get("usdt_total", 0.0) or 0.0),
+                "usdc_total": float(truth_view.get("usdc_total", 0.0) or 0.0),
+                "spot_total": round(float(truth_view.get("stable_total", spot_total) or 0.0), 4),
+                "spot_stable_total": round(float(truth_view.get("stable_total", stable_total) or 0.0), 4),
                 "holdings": holdings,
                 "truth_scope": truth_view.get("truth_mode", HQ_SPOT_TRUTH_MODE),
                 "truth_assets": list(truth_view.get("truth_assets", [])),
@@ -2160,6 +2162,7 @@ class NexusRuntime:
                 )
             exchange_wallet_balance = _safe_float(account_info.get("totalWalletBalance"))
             exchange_margin_balance = _safe_float(account_info.get("totalMarginBalance"))
+            display_wallet_balance = exchange_wallet_balance if exchange_wallet_balance > 0 else wallet_total
             mobile_wallet_balance = wallet_total
             mobile_margin_balance = wallet_total + unrealized
             stable_margin_balance = stable_wallet_total + unrealized
@@ -2168,6 +2171,7 @@ class NexusRuntime:
                 unrealized = account_unrealized
                 mobile_margin_balance = wallet_total + unrealized
                 stable_margin_balance = stable_wallet_total + unrealized
+            display_margin_balance = exchange_margin_balance if exchange_margin_balance > 0 else (display_wallet_balance + unrealized)
             available_balance = _safe_float(account_info.get("availableBalance")) or stable_available_total or available
             balance_assets = sorted(balance_assets, key=lambda item: item.get("asset", ""))
             positions = sorted(positions, key=lambda item: item.get("symbol", ""))
@@ -2185,12 +2189,12 @@ class NexusRuntime:
             self._last_binance_sync["futures"] = sync_snapshot.to_dict()
             self.state_manager.set_module_health("futures_sync", "ONLINE")
             return {
-                "wallet_total": round(mobile_wallet_balance, 4),
-                "margin_total": round(mobile_margin_balance, 4),
+                "wallet_total": round(display_wallet_balance, 4),
+                "margin_total": round(display_margin_balance, 4),
                 "mobile_wallet_balance": round(mobile_wallet_balance, 4),
                 "mobile_margin_balance": round(mobile_margin_balance, 4),
-                "wallet_balance": round(mobile_wallet_balance, 4),
-                "margin_balance": round(mobile_margin_balance, 4),
+                "wallet_balance": round(display_wallet_balance, 4),
+                "margin_balance": round(display_margin_balance, 4),
                 "stable_wallet_total": round(stable_wallet_total, 4),
                 "stable_margin_balance": round(stable_margin_balance, 4),
                 "collateral_total": round(collateral_total, 4),
@@ -2459,17 +2463,27 @@ class NexusRuntime:
             {"wallet_total": 0.0, "margin_total": 0.0, "available_balance": 0.0, "unrealized_pnl": 0.0, "positions": []},
         )
 
-        spot_total = float(spot_account.get("spot_total", 0.0) or 0.0)
+        spot_stable_total = float(
+            spot_account.get("spot_stable_total", spot_account.get("stable_total", spot_account.get("spot_total", 0.0))) or 0.0
+        )
+        spot_usdt_total = float(spot_account.get("usdt_total", 0.0) or 0.0)
+        spot_usdc_total = float(spot_account.get("usdc_total", 0.0) or 0.0)
         if self.futures_client.is_configured():
-            futures_total = float(
-                futures_account.get("exchange_margin_balance")
-                or futures_account.get("margin_total")
+            futures_wallet = float(
+                futures_account.get("exchange_wallet_balance")
                 or futures_account.get("wallet_total", 0.0)
                 or 0.0
             )
+            futures_total = float(
+                futures_account.get("exchange_margin_balance")
+                or futures_account.get("margin_total")
+                or futures_wallet
+                or 0.0
+            )
         else:
-            futures_total = float(futures_account.get("margin_total", futures_account.get("wallet_total", 0.0)) or 0.0)
-        combined_total = round(spot_total + futures_total, 4)
+            futures_wallet = float(futures_account.get("wallet_total", 0.0) or 0.0)
+            futures_total = float(futures_account.get("margin_total", futures_wallet) or 0.0)
+        combined_total = round(spot_stable_total + futures_total, 4)
         if self.futures_client.is_configured():
             combined_orders = (self.hq_spot_orders + self.futures_live_orders)[:160]
             combined_trades = (self.hq_spot_trades + self.futures_live_trades)[:160]
@@ -2487,8 +2501,12 @@ class NexusRuntime:
 
         capital = {
             "total": combined_total,
-            "spot_total": round(spot_total, 4),
+            "spot_total": round(spot_stable_total, 4),
+            "spot_stable_total": round(spot_stable_total, 4),
+            "spot_usdt_total": round(spot_usdt_total, 4),
+            "spot_usdc_total": round(spot_usdc_total, 4),
             "futures_total": round(futures_total, 4),
+            "futures_wallet_display": round(futures_wallet, 4),
             "futures_wallet_total": round(float(futures_account.get("wallet_total", 0.0) or 0.0), 4),
             "futures_mobile_wallet_balance": round(float(futures_account.get("mobile_wallet_balance", 0.0) or 0.0), 4),
             "futures_mobile_margin_balance": round(float(futures_account.get("mobile_margin_balance", 0.0) or 0.0), 4),
@@ -2645,7 +2663,9 @@ class NexusRuntime:
             "meetings": [self._normalize_meeting_record(item) for item in self.meetings],
             "events": self.event_bus.recent(limit=80),
             "daily_report": {
-                "spot_total": round(spot_total, 4),
+                "spot_total": round(spot_stable_total, 4),
+                "spot_usdt_total": round(spot_usdt_total, 4),
+                "spot_usdc_total": round(spot_usdc_total, 4),
                 "futures_total": round(futures_total, 4),
                 "futures_account_total_pnl": futures_account_total_pnl,
                 "combined_total": combined_total,
