@@ -75,6 +75,12 @@ def register_nexus_routes(app):
 
     @app.route("/api/nexus/state")
     def nexus_state():
+        try:
+            from backend.services.nexus_runtime import nexus_runtime
+
+            nexus_runtime.refresh_live_exchange_state()
+        except Exception as exc:
+            print(f"[api] live exchange refresh failed: {exc}")
         return jsonify(runtime_store.load_snapshot())
 
     @app.route("/api/nexus/wallet")
@@ -193,6 +199,12 @@ def register_nexus_routes(app):
         def nexus_ws(ws):
             last_sent = None
             while True:
+                try:
+                    from backend.services.nexus_runtime import nexus_runtime
+
+                    nexus_runtime.refresh_live_exchange_state()
+                except Exception as exc:
+                    print(f"[ws] live exchange refresh failed: {exc}")
                 snapshot = runtime_store.load_snapshot()
                 payload = {"snapshot": snapshot}
                 encoded = json.dumps(payload, ensure_ascii=False)

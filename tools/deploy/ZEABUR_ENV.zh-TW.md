@@ -25,8 +25,11 @@
 | 變數 | 建議值 |
 |------|--------|
 | `NEXUS_EMBEDDED_WORKER` | `1` |
+| `WEB_CONCURRENCY` | `1`（避免 Gunicorn 多 worker 重複跑交易迴圈） |
 
 若開 **獨立 worker 服務**，web 加 `NEXUS_WEB_ONLY=1`，worker 不要設此項。
+
+部署後請確認 `/api/nexus/connectivity` 的 `embedded_worker_started` 為 `true`，且 `decision_summary.live_position_count` 與 Binance 模擬盤持倉數一致。
 
 ## 艦隊與 RADAR（選幣僅 RADAR）
 

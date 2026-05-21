@@ -81,9 +81,6 @@ def _should_start_embedded_nexus_worker() -> bool:
     if _truthy_env("NEXUS_EMBEDDED_WORKER"):
         return True
     if _looks_like_zeabur_runtime():
-        # Gunicorn with multiple workers would fork duplicate runtimes; single-worker is safe.
-        if _running_under_gunicorn() and not _truthy_env("NEXUS_EMBEDDED_WORKER"):
-            return _gunicorn_worker_count() <= 1
         return True
     return False
 

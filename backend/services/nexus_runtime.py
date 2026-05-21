@@ -53,7 +53,7 @@ from backend.decision.meeting_notes_resolver import resolve_meeting_notes
 from backend.analytics.setup_performance_tracker import SetupPerformanceTracker
 from backend.trading.radar_dispatch_service import RadarDispatchService
 from backend.analytics.walk_forward_evaluator import WalkForwardEvaluator
-from config.radar_dispatch_config import RADAR_MAX_OPEN_POSITIONS
+from config.radar_dispatch_config import CORE_FLEET_SYMBOLS, RADAR_MAX_OPEN_POSITIONS
 from backend.trading.trading_mode import get_trading_mode
 from backend.coordination.station_chat_log import StationChatLog
 from backend.coordination.station_dialogue_service import StationDialogueService
@@ -232,6 +232,8 @@ class NexusRuntime:
         self._bootstrapped = False
         self._previous_prices = {}
         self._thread = None
+        self._exchange_refresh_lock = threading.RLock()
+        self._last_exchange_refresh_at = 0.0
         self._stop = threading.Event()
         self._manual_pause = False
         self._pause_reason = None
@@ -383,6 +385,56 @@ class NexusRuntime:
         for channel in ("WORLD", fleet if fleet in {"BTC", "ETH", "SOL", "PEPE", "RADAR"} else "HQ", "RISK"):
             self.station_chat_log.add(channel, "風控反思", msg, source="虧損反思", importance="WARNING")
         self.station_chats = self.station_chat_log.recent_grouped()
+
+    def _fleet_for_futures_symbol(self, symbol, core_symbol_map):
+        symbol = str(symbol or "").upper()
+        if symbol in core_symbol_map:
+            return core_symbol_map[symbol]
+        core_reverse = {
+            "BTCUSDT": "BTC",
+            "ETHUSDT": "ETH",
+            "SOLUSDT": "SOL",
+            "PEPEUSDT": "PEPE",
+            "1000PEPEUSDT": "PEPE",
+        }
+        if symbol in core_reverse:
+            return core_reverse[symbol]
+        if symbol in CORE_FLEET_SYMBOLS:
+            return core_reverse.get(symbol, "RADAR")
+        return "RADAR"
+
+    def refresh_live_exchange_state(self, force=False, min_interval_sec=4.0):
+        """Refresh Binance spot/futures balances and positions (web-safe, throttled)."""
+        now = time.time()
+        if not force and (now - float(self._last_exchange_refresh_at or 0.0)) < min_interval_sec:
+            return False
+        if not (self.spot_client.is_configured() or self.futures_client.is_configured()):
+            return False
+        with self._exchange_refresh_lock:
+            now = time.time()
+            if not force and (now - float(self._last_exchange_refresh_at or 0.0)) < min_interval_sec:
+                return False
+            prices = self.price_feed.get_prices()
+            self.latest_prices = dict(prices)
+            if self.spot_client.is_configured():
+                self._last_spot_account = self._sync_spot_account(prices)
+            if self.futures_client.is_configured():
+                futures_account = self._sync_futures_account(prices)
+                self._last_futures_account = futures_account
+                self._sync_futures_activity()
+                self._apply_live_capital_plan(futures_account)
+                self._synchronize_live_futures_state(futures_account)
+            self.market_overview = self.price_feed.get_market_overview()
+            self._last_binance_sync["last_sync_time"] = int(time.time() * 1000)
+            self._last_exchange_refresh_at = time.time()
+            runtime_store.save_snapshot(
+                self.snapshot(),
+                worker_pid=os.getpid(),
+                worker_status="ONLINE",
+                writer="exchange_refresh",
+                single_instance=False,
+            )
+            return True
 
     def start(self):
         if self._thread and self._thread.is_alive():
@@ -2095,16 +2147,14 @@ class NexusRuntime:
             unrealized = 0.0
             position_update_time = 0
             for item in self.futures_client.get_all_position_risk():
-                symbol = item.get("symbol")
-                if symbol not in symbol_map:
-                    continue
+                symbol = str(item.get("symbol") or "").upper()
                 position_amt = float(item.get("positionAmt", 0.0) or 0.0)
                 if abs(position_amt) < 1e-12:
                     continue
                 pnl = float(item.get("unRealizedProfit", 0.0) or 0.0)
                 unrealized += pnl
                 position_update_time = max(position_update_time, int(item.get("updateTime") or 0))
-                fleet = symbol_map[symbol]
+                fleet = self._fleet_for_futures_symbol(symbol, symbol_map)
                 side = "BUY" if position_amt > 0 else "SELL"
                 positions.append(
                     {
@@ -2347,8 +2397,15 @@ class NexusRuntime:
         symbol_map = {self.futures_client.resolve_symbol(fleet): fleet for fleet in FLEETS}
         live_orders = []
         live_trades = []
+        symbols_to_sync = set(symbol_map.keys())
+        futures_account = getattr(self, "_last_futures_account", {}) or {}
+        for position in futures_account.get("positions", []) or []:
+            symbols_to_sync.add(str(position.get("symbol") or "").upper())
 
-        for symbol, fleet in symbol_map.items():
+        for symbol in sorted(symbols_to_sync):
+            if not symbol:
+                continue
+            fleet = self._fleet_for_futures_symbol(symbol, symbol_map)
             try:
                 orders = self.futures_client.get_all_orders(symbol, limit=50) or []
             except Exception:
@@ -2419,7 +2476,15 @@ class NexusRuntime:
         )
 
         spot_total = float(spot_account.get("spot_total", 0.0) or 0.0)
-        futures_total = float(futures_account.get("margin_total", futures_account.get("wallet_total", 0.0)) or 0.0)
+        if self.futures_client.is_configured():
+            futures_total = float(
+                futures_account.get("exchange_margin_balance")
+                or futures_account.get("margin_total")
+                or futures_account.get("wallet_total", 0.0)
+                or 0.0
+            )
+        else:
+            futures_total = float(futures_account.get("margin_total", futures_account.get("wallet_total", 0.0)) or 0.0)
         combined_total = round(spot_total + futures_total, 4)
         if self.futures_client.is_configured():
             combined_orders = (self.hq_spot_orders + self.futures_live_orders)[:160]
@@ -2432,7 +2497,9 @@ class NexusRuntime:
         spot_trade_count = len(spot_account.get("trade_history", []) or [])
         true_recent_trade_count = futures_fill_count + spot_trade_count
         configured_futures_baseline = _safe_float(os.getenv("NEXUS_FUTURES_BASELINE_CAPITAL", "11800"))
-        futures_account_total_pnl = round(futures_total - configured_futures_baseline, 4)
+        exchange_unrealized = round(float(futures_account.get("unrealized_pnl", 0.0) or 0.0), 4)
+        strategy_live_pnl = round(float(pnl.get("total_realized", 0.0) or 0.0) + exchange_unrealized, 4)
+        futures_account_total_pnl = strategy_live_pnl if self.futures_client.is_configured() else round(futures_total - configured_futures_baseline, 4)
 
         capital = {
             "total": combined_total,
@@ -2506,6 +2573,14 @@ class NexusRuntime:
                         current_status["last_signal"] = "HOLD"
                         current_status["last_reason"] = "no_live_position"
 
+            radar_live = [item for item in all_positions if item.get("fleet") == "RADAR" and item.get("market_type") == "futures"]
+            if radar_live:
+                radar_position = radar_live[0]
+                system_snapshot.setdefault("fleet_status", {}).setdefault("RADAR", {})
+                system_snapshot["fleet_status"]["RADAR"]["status"] = "TRADING"
+                system_snapshot["fleet_status"]["RADAR"]["last_signal"] = radar_position.get("side", "HOLD")
+                system_snapshot["fleet_status"]["RADAR"]["last_reason"] = f"binance_live:{radar_position.get('symbol', '')}"
+
         fleet_data = {}
         for fleet in FLEETS:
             live_positions = live_positions_by_fleet.get(fleet, [])[0:1] if self.futures_client.is_configured() else [item for item in all_positions if item.get("fleet") == fleet]
@@ -2569,9 +2644,11 @@ class NexusRuntime:
             "positions": all_positions,
             "pnl": {
                 **pnl,
-                "total_unrealized": round(float(pnl.get("total_unrealized", 0.0) or 0.0) + float(futures_account.get("unrealized_pnl", 0.0) or 0.0), 4),
-                "strategy_total_pnl": round(float(pnl.get("total_realized", 0.0) or 0.0) + float(futures_account.get("unrealized_pnl", 0.0) or 0.0), 4),
+                "total_unrealized": exchange_unrealized if self.futures_client.is_configured() else round(float(pnl.get("total_unrealized", 0.0) or 0.0), 4),
+                "strategy_total_pnl": strategy_live_pnl,
                 "total_pnl": futures_account_total_pnl,
+                "exchange_unrealized_pnl": exchange_unrealized,
+                "baseline_gap_pnl": round(futures_total - configured_futures_baseline, 4),
             },
             "orders": combined_orders,
             "trades": combined_trades,
@@ -2596,6 +2673,11 @@ class NexusRuntime:
                 "runtime_mode": self.trading_mode,
                 "hq_spot_enabled": self.spot_client.is_configured(),
                 "futures_enabled": self.futures_client.is_configured(),
+                "exchange_synced_at": int(self._last_binance_sync.get("last_sync_time") or 0),
+                "live_position_count": len(futures_account.get("positions", []) or []),
+                "exchange_position_symbols": [
+                    str(item.get("symbol") or "") for item in (futures_account.get("positions", []) or [])
+                ],
                 "order_count": len(combined_orders),
                 "trade_count": true_recent_trade_count,
                 "active_positions": len(all_positions),
