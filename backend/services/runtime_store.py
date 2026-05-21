@@ -174,6 +174,72 @@ class RuntimeStateStore:
                 )
                 """
             )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS nexus_decision_traces (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    trace_json TEXT NOT NULL
+                )
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS nexus_learning_reviews (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    review_json TEXT NOT NULL
+                )
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS nexus_applied_learning (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    fleet TEXT,
+                    strategy_key TEXT,
+                    patch_json TEXT NOT NULL,
+                    applied_at TEXT NOT NULL
+                )
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS nexus_trade_proposals (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    proposal_json TEXT NOT NULL
+                )
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS nexus_strategy_versions (
+                    version_id TEXT PRIMARY KEY,
+                    version_json TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                )
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS nexus_strategy_rotation_suggestions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    suggestion_json TEXT NOT NULL
+                )
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS nexus_shadow_sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    session_json TEXT NOT NULL
+                )
+                """
+            )
             self._conn.commit()
 
     def default_snapshot(self):
@@ -705,6 +771,193 @@ class RuntimeStateStore:
             cursor = self._conn.cursor()
             cursor.execute("SELECT memory_json FROM nexus_round_table_decision_memory ORDER BY timestamp DESC LIMIT ?", (limit,))
             return [json.loads(row["memory_json"]) for row in cursor.fetchall()]
+
+    def append_decision_trace(self, record):
+        def operation(cursor):
+            cursor.execute(
+                "INSERT INTO nexus_decision_traces (timestamp, trace_json) VALUES (?, ?)",
+                (record.get("timestamp", _now()), json.dumps(record, ensure_ascii=False)),
+            )
+        self._run_write(operation)
+
+    def recent_decision_traces(self, limit=100):
+        with self._lock:
+            cursor = self._conn.cursor()
+            cursor.execute(
+                "SELECT trace_json FROM nexus_decision_traces ORDER BY id DESC LIMIT ?",
+                (limit,),
+            )
+            return [json.loads(row["trace_json"]) for row in cursor.fetchall()]
+
+    def append_learning_review(self, item):
+        def operation(cursor):
+            cursor.execute(
+                "INSERT INTO nexus_learning_reviews (timestamp, status, review_json) VALUES (?, ?, ?)",
+                (
+                    item.get("timestamp", _now()),
+                    item.get("status", "draft"),
+                    json.dumps(item, ensure_ascii=False),
+                ),
+            )
+            return cursor.lastrowid
+
+        return self._run_write(operation)
+
+    def update_learning_review_status(self, review_id, status, note=""):
+        def operation(cursor):
+            cursor.execute("SELECT review_json FROM nexus_learning_reviews WHERE id=?", (review_id,))
+            row = cursor.fetchone()
+            if not row:
+                return
+            payload = json.loads(row["review_json"])
+            payload["status"] = status
+            payload["review_note"] = note
+            cursor.execute(
+                "UPDATE nexus_learning_reviews SET status=?, review_json=? WHERE id=?",
+                (status, json.dumps(payload, ensure_ascii=False), review_id),
+            )
+
+        self._run_write(operation)
+
+    def recent_learning_reviews(self, limit=50, status=None):
+        with self._lock:
+            cursor = self._conn.cursor()
+            if status:
+                cursor.execute(
+                    """
+                    SELECT id, review_json FROM nexus_learning_reviews
+                    WHERE status=? ORDER BY id DESC LIMIT ?
+                    """,
+                    (status, limit),
+                )
+            else:
+                cursor.execute(
+                    "SELECT id, review_json FROM nexus_learning_reviews ORDER BY id DESC LIMIT ?",
+                    (limit,),
+                )
+            items = []
+            for row in cursor.fetchall():
+                try:
+                    payload = json.loads(row["review_json"])
+                    payload["id"] = row["id"]
+                    items.append(payload)
+                except Exception:
+                    pass
+            return items
+
+    def upsert_applied_learning_patch(self, patch):
+        def operation(cursor):
+            cursor.execute(
+                """
+                INSERT INTO nexus_applied_learning (fleet, strategy_key, patch_json, applied_at)
+                VALUES (?, ?, ?, ?)
+                """,
+                (
+                    patch.get("fleet"),
+                    patch.get("strategy_key"),
+                    json.dumps(patch, ensure_ascii=False),
+                    patch.get("applied_at", _now()),
+                ),
+            )
+
+        self._run_write(operation)
+
+    def list_applied_learning_patches(self, limit=50):
+        with self._lock:
+            cursor = self._conn.cursor()
+            cursor.execute(
+                "SELECT patch_json FROM nexus_applied_learning ORDER BY id DESC LIMIT ?",
+                (limit,),
+            )
+            return [json.loads(row["patch_json"]) for row in cursor.fetchall()]
+
+    def applied_learning_for_fleet(self, fleet, strategy_key=None):
+        fleet = str(fleet or "").upper()
+        patches = self.list_applied_learning_patches(limit=200)
+        matched = []
+        for patch in patches:
+            if str(patch.get("fleet") or "").upper() != fleet:
+                continue
+            if strategy_key and patch.get("strategy_key") not in (strategy_key, None):
+                continue
+            matched.append(patch)
+        return matched
+
+    def append_trade_proposal(self, proposal):
+        def operation(cursor):
+            cursor.execute(
+                "INSERT INTO nexus_trade_proposals (timestamp, proposal_json) VALUES (?, ?)",
+                (proposal.get("timestamp", _now()), json.dumps(proposal, ensure_ascii=False)),
+            )
+
+        self._run_write(operation)
+
+    def recent_trade_proposals(self, limit=50):
+        with self._lock:
+            cursor = self._conn.cursor()
+            cursor.execute(
+                "SELECT proposal_json FROM nexus_trade_proposals ORDER BY id DESC LIMIT ?",
+                (limit,),
+            )
+            return [json.loads(row["proposal_json"]) for row in cursor.fetchall()]
+
+    def register_strategy_version(self, version):
+        def operation(cursor):
+            cursor.execute(
+                """
+                INSERT OR REPLACE INTO nexus_strategy_versions (version_id, version_json, created_at)
+                VALUES (?, ?, ?)
+                """,
+                (
+                    version.get("version_id"),
+                    json.dumps(version, ensure_ascii=False),
+                    version.get("created_at", _now()),
+                ),
+            )
+
+        self._run_write(operation)
+
+    def list_strategy_versions(self):
+        with self._lock:
+            cursor = self._conn.cursor()
+            cursor.execute("SELECT version_json FROM nexus_strategy_versions ORDER BY created_at DESC")
+            return [json.loads(row["version_json"]) for row in cursor.fetchall()]
+
+    def append_strategy_rotation_suggestion(self, suggestion):
+        def operation(cursor):
+            cursor.execute(
+                "INSERT INTO nexus_strategy_rotation_suggestions (timestamp, suggestion_json) VALUES (?, ?)",
+                (suggestion.get("timestamp", _now()), json.dumps(suggestion, ensure_ascii=False)),
+            )
+
+        self._run_write(operation)
+
+    def recent_strategy_rotation_suggestions(self, limit=20):
+        with self._lock:
+            cursor = self._conn.cursor()
+            cursor.execute(
+                "SELECT suggestion_json FROM nexus_strategy_rotation_suggestions ORDER BY id DESC LIMIT ?",
+                (limit,),
+            )
+            return [json.loads(row["suggestion_json"]) for row in cursor.fetchall()]
+
+    def append_shadow_session(self, entry):
+        def operation(cursor):
+            cursor.execute(
+                "INSERT INTO nexus_shadow_sessions (timestamp, session_json) VALUES (?, ?)",
+                (entry.get("timestamp", _now()), json.dumps(entry, ensure_ascii=False)),
+            )
+
+        self._run_write(operation)
+
+    def recent_shadow_sessions(self, limit=50):
+        with self._lock:
+            cursor = self._conn.cursor()
+            cursor.execute(
+                "SELECT session_json FROM nexus_shadow_sessions ORDER BY id DESC LIMIT ?",
+                (limit,),
+            )
+            return [json.loads(row["session_json"]) for row in cursor.fetchall()]
 
 
 runtime_store = RuntimeStateStore()

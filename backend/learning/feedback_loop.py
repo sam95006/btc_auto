@@ -392,6 +392,29 @@ class LearningFeedbackLoop:
         guidance["strategy_adaptation"] = adaptation
         guidance["adaptive_mode"] = adaptation.get("mode", "normal")
         guidance["strategy_review_required"] = bool(adaptation.get("review_required"))
+
+        applied_patches = self.runtime_store.applied_learning_for_fleet(fleet_key, strategy_key)
+        for patch in applied_patches[:5]:
+            extra_penalty = float(patch.get("confidence_penalty", 0.0) or 0.0)
+            if extra_penalty:
+                guidance["confidence_penalty"] = round(
+                    min(0.45, float(guidance.get("confidence_penalty", 0.0) or 0.0) + extra_penalty),
+                    4,
+                )
+            leverage_cap = patch.get("leverage_cap")
+            if leverage_cap is not None:
+                guidance["leverage_cap"] = (
+                    min(guidance.get("leverage_cap"), leverage_cap)
+                    if guidance.get("leverage_cap") is not None
+                    else leverage_cap
+                )
+            pos_mult = patch.get("position_size_multiplier")
+            if pos_mult:
+                guidance["position_size_multiplier"] = round(
+                    min(float(guidance.get("position_size_multiplier", 1.0) or 1.0), float(pos_mult)),
+                    4,
+                )
+        guidance["applied_learning_patches"] = len(applied_patches)
         return guidance
 
     def build_strategy_adaptation_snapshot(self, market_contexts=None):

@@ -22,6 +22,7 @@ def task_refresh_seconds():
         "reflection": int(os.getenv("NEXUS_LLM_REFRESH_REFLECTION_SECONDS", "90")),
         "agent": int(os.getenv("NEXUS_LLM_REFRESH_AGENT_SECONDS", "40")),
         "chat": int(os.getenv("NEXUS_LLM_REFRESH_CHAT_SECONDS", "0")),
+        "radar_proposal": int(os.getenv("NEXUS_LLM_REFRESH_RADAR_PROPOSAL_SECONDS", "35")),
     }
 
 
@@ -45,6 +46,7 @@ def task_model_defaults():
         "agent": os.getenv("NEXUS_LLM_MODEL_AGENT", "Meta-Llama-3.1-405B-Instruct"),
         "agent_fallback": os.getenv("NEXUS_LLM_MODEL_AGENT_FALLBACK", "Meta-Llama-3.1-70B-Instruct"),
         "chat": os.getenv("NEXUS_LLM_MODEL_CHAT", "llama-3.3-70b-versatile"),
+        "radar_proposal": os.getenv("NEXUS_LLM_MODEL_RADAR_PROPOSAL", os.getenv("NEXUS_LLM_MODEL_TRADE_PROPOSAL", "llama-3.3-70b-versatile")),
     }
 
 MODEL_FALLBACKS = {
@@ -72,4 +74,4 @@ PROVIDER_LABELS = {
     "sambanova": "sambanova",
 }
 
-ALLOWED_TASKS = {"news", "radar", "roundtable", "reflection", "agent", "chat"}
+ALLOWED_TASKS = {"news", "radar", "radar_proposal", "roundtable", "reflection", "agent", "chat"}

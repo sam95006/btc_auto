@@ -19,6 +19,7 @@ from .prompt_templates import (
     build_chat_prompt,
     build_news_prompt,
     build_radar_prompt,
+    build_radar_proposal_prompt,
     build_reflection_prompt,
     build_roundtable_prompt,
 )
@@ -46,6 +47,8 @@ class LLMGateway:
             return build_news_prompt(payload)
         if task == "radar":
             return build_radar_prompt(payload)
+        if task == "radar_proposal":
+            return build_radar_proposal_prompt(payload)
         if task == "roundtable":
             return build_roundtable_prompt(payload)
         if task == "reflection":

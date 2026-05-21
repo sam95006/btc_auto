@@ -15,7 +15,7 @@ from backend.services.runtime_store import runtime_store
 from backend.services.layout_store import layout_store
 from backend.trading.trading_mode import get_trading_mode, require_testnet_credentials
 from backend.core.data_paths import resolve_runtime_db_path
-from backend.runtime.embed_flags import embedded_worker_error, embedded_worker_started
+import backend.runtime.embed_flags as embed_flags
 
 
 _dialogue = None
@@ -59,8 +59,8 @@ def register_nexus_routes(app):
                 "trading_mode": mode,
                 "testnet_credentials_missing": missing,
                 "runtime_db_path": resolve_runtime_db_path(),
-                "embedded_worker_started": embedded_worker_started,
-                "embedded_worker_error": embedded_worker_error,
+                "embedded_worker_started": embed_flags.embedded_worker_started,
+                "embedded_worker_error": embed_flags.embedded_worker_error,
                 "snapshot_system_health": system.get("system_health"),
                 "snapshot_worker_module": (system.get("module_health") or {}).get("worker"),
                 "binance_sync_status": binance_sync.get("sync_status"),
@@ -113,6 +113,30 @@ def register_nexus_routes(app):
     def nexus_layout_save():
         payload = request.json or {}
         return jsonify(layout_store.save(payload))
+
+    @app.route("/api/nexus/decision-traces")
+    def nexus_decision_traces():
+        return jsonify({"items": runtime_store.recent_decision_traces(limit=200)})
+
+    @app.route("/api/nexus/learning-reviews")
+    def nexus_learning_reviews():
+        snap = runtime_store.load_snapshot()
+        return jsonify((snap.get("learning_status") or {}).get("learning_reviews") or {})
+
+    @app.route("/api/nexus/proposals")
+    def nexus_proposals():
+        return jsonify({"items": runtime_store.recent_trade_proposals(limit=100)})
+
+    @app.route("/api/nexus/governance-status")
+    def nexus_governance_status():
+        snap = runtime_store.load_snapshot()
+        return jsonify(snap.get("upgrade_pipeline") or {})
+
+    @app.route("/api/nexus/performance-report")
+    def nexus_performance_report():
+        from tools.research.performance_report import build_performance_report
+
+        return jsonify(build_performance_report(runtime_store))
 
     @app.route("/api/nexus/loss-review")
     def nexus_loss_review():

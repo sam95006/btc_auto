@@ -30,6 +30,10 @@ from backend.news.news_analysis_engine import NewsAnalysisEngine
 from backend.news.event_normalization_service import EventNormalizationService
 from backend.news.news_ingestion_service import NewsIngestionService
 from backend.learning.feedback_loop import LearningFeedbackLoop
+from backend.governance.upgrade_pipeline import UpgradePipeline
+from backend.governance.radar_llm_proposal_bridge import RadarLlmProposalBridge
+from backend.analytics.daily_ops_reporter import should_broadcast, format_report as format_daily_ops_report
+from config.daily_report_config import DAILY_REPORT_ENABLED
 from backend.risk.risk_control_engine import RiskControlEngine
 from backend.portfolio import PortfolioGovernor
 from backend.services.runtime_store import runtime_store
@@ -172,9 +176,13 @@ class NexusRuntime:
         self.capital_growth_guard = CapitalGrowthGuard()
         self.walk_forward_evaluator = WalkForwardEvaluator()
         self.radar_dispatch = RadarDispatchService()
+        self.radar_llm_bridge = RadarLlmProposalBridge(self.radar_dispatch, self.llm_gateway)
+        self._radar_llm_proposals = []
+        self._last_daily_report_key = None
         self.growth_status = {}
         self.signal_memory_engine = decision_quality_engine.signal_memory_engine
         self.event_normalizer = EventNormalizationService()
+        self.upgrade_pipeline = UpgradePipeline(runtime_store, learning_feedback=self.learning_feedback)
         self.strategy_engines = {
             fleet: BaseFleetStrategyEngine(
                 fleet,
@@ -406,6 +414,7 @@ class NexusRuntime:
             time.sleep(tick_seconds)
 
     def tick(self):
+        self.upgrade_pipeline.begin_tick()
         self._process_commands()
         prices = self.price_feed.get_prices()
         self.latest_prices = dict(prices)
@@ -465,8 +474,11 @@ class NexusRuntime:
         self.truth_layer_status = truth_status
         self._last_account_sync_status = account_sync_status
         calibration_snapshot = self.learning_feedback.build_calibration_snapshot()
+        radar_symbols = self.upgrade_pipeline.resolve_radar_symbols(self.futures_client)
+        self.radar_market_scan_service.symbols = tuple(radar_symbols)
         self.radar_scan = self.radar_market_scan_service.scan()
         self.radar_state = dict(self.radar_scan or {})
+        self._radar_llm_proposals = self.radar_llm_bridge.fetch_proposals(self.radar_scan, self.truth_layer_status)
         self.whale_state = {
             "generated_at": self.radar_scan.get("generated_at", _now()),
             "watch": list(self.radar_scan.get("whale_watch", []) or []),
@@ -592,6 +604,14 @@ class NexusRuntime:
             },
             "station_learning_exchange": dict(self.station_learning_exchange or {}),
         }
+        reflection_llm = llm_bundle.get("reflection") or {}
+        if isinstance(reflection_llm, dict):
+            self.upgrade_pipeline.on_llm_reflection({**deterministic_reflection, **reflection_llm})
+        self.agent_advisory["radar_llm_proposals"] = {
+            "count": len(getattr(self, "_radar_llm_proposals", []) or []),
+            "items": list(getattr(self, "_radar_llm_proposals", []) or [])[:6],
+        }
+        self._maybe_broadcast_daily_ops_report(calibration_snapshot)
         try:
             self.station_dialogue.maybe_refresh_channels(self._dialogue_snapshot())
             self.station_chats = self.station_chat_log.recent_grouped()
@@ -621,6 +641,7 @@ class NexusRuntime:
             raw_items = self.news_ingestion.latest(limit=24)
             self.latest_news = self.news_analysis.analyze(raw_items)
             self.normalized_events = self.event_normalizer.normalize(self.latest_news)
+            self.upgrade_pipeline.on_news(self.normalized_events)
             self.state_manager.set_module_health("news", "ONLINE")
             self._refresh_station_briefings()
             self._maybe_pause_for_major_news()
@@ -954,6 +975,51 @@ class NexusRuntime:
             }
         )
 
+    def _maybe_broadcast_daily_ops_report(self, calibration_snapshot=None):
+        if not DAILY_REPORT_ENABLED:
+            return
+        now = nexus_now()
+        ok, key = should_broadcast(now, self._last_daily_report_key)
+        if not ok:
+            return
+        walk_forward = self.walk_forward_evaluator.evaluate(runtime_store.recent_trade_results(limit=160))
+        upgrade_status = self.upgrade_pipeline.build_status(
+            walk_forward_status=walk_forward,
+            learning_status={"calibration_snapshot": calibration_snapshot or {}},
+        )
+        message = format_daily_ops_report(runtime_store, walk_forward=walk_forward, upgrade_status=upgrade_status)
+        for channel in ("WORLD", "RADAR", "RISK", "HQ"):
+            self.station_chat_log.add(channel, "戰報中心", message, source="daily_ops_report", importance="INFO")
+        self._last_daily_report_key = key
+        self.station_chats = self.station_chat_log.recent_grouped()
+
+    def _govern_trade_validation(self, request, validation, market_context):
+        request = dict(request or {})
+        fleet = str(request.get("fleet") or "").upper()
+        strategy_key = request.get("strategy_key") or f"{fleet.lower()}_adaptive_strategy"
+        guidance = self.learning_feedback.get_strategy_guidance(
+            fleet,
+            strategy_key,
+            (market_context or {}).get("market_regime", "normal"),
+            market_context=market_context or {},
+        )
+        governed, _trace = self.upgrade_pipeline.govern_validation(
+            request,
+            validation,
+            portfolio_status=self.portfolio_status,
+            learning_guidance=guidance,
+        )
+        self._record_validation_event(
+            {
+                **governed,
+                "symbol": request.get("symbol"),
+                "fleet": fleet,
+                "timestamp": _now(),
+            }
+        )
+        self._append_decision_audit(request, governed, market_context or {})
+        return governed
+
     def _record_trade_result(self, result, context=None):
         payload = dict(result)
         payload.setdefault("timestamp", _now())
@@ -974,7 +1040,9 @@ class NexusRuntime:
                 context,
                 payload.get("pnl", 0.0),
             )
-        return self.learning_feedback.record_trade_result(payload, context=context or {})
+        result, recommendation = self.learning_feedback.record_trade_result(payload, context=context or {})
+        self.upgrade_pipeline.on_trade_result(result, recommendation)
+        return result
 
     def _record_validation_event(self, validation_event):
         payload = dict(validation_event or {})
@@ -999,6 +1067,7 @@ class NexusRuntime:
             "disabled_patterns": disabled_patterns,
             "calibration_snapshot": self.learning_feedback.build_calibration_snapshot(),
             "strategy_adaptation": self.learning_feedback.build_strategy_adaptation_snapshot(self.market_context or {}),
+            "learning_reviews": self.upgrade_pipeline.learning_reviews.status_snapshot(),
         }
 
     def _build_validation_status(self):
@@ -1666,7 +1735,7 @@ class NexusRuntime:
                 portfolio_status=self.portfolio_status,
                 growth_context=growth_context,
             )
-            self._append_decision_audit(request, validation, market_contexts.get(fleet, {}))
+            validation = self._govern_trade_validation(request, validation, market_contexts.get(fleet, {}))
             if not validation.get("approved"):
                 self.state_manager.update_fleet(fleet, status="BLOCKED", last_signal="REJECTED", last_reason=f"validation:{validation.get('reason')}")
                 continue
@@ -1807,7 +1876,7 @@ class NexusRuntime:
                 portfolio_status=self.portfolio_status,
                 growth_context=growth_context,
             )
-            self._append_decision_audit(request, validation, alt_context)
+            validation = self._govern_trade_validation(request, validation, alt_context)
             if not validation.get("approved"):
                 continue
             allowed, risk_reason = self.risk_engine.validate_order(request)
@@ -2546,6 +2615,13 @@ class NexusRuntime:
             "radar_scan": dict(self.radar_scan or {}),
             "portfolio_status": dict(self.portfolio_status or {}),
             "station_learning_exchange": dict(self.station_learning_exchange or {}),
+            "upgrade_pipeline": self.upgrade_pipeline.build_status(
+                walk_forward_status=walk_forward_status,
+                learning_status=learning_status,
+                recent_trades=combined_trades,
+            ),
+            "event_registry": self.upgrade_pipeline.event_registry.snapshot(),
+            "decision_traces": runtime_store.recent_decision_traces(limit=50),
         }
 
 

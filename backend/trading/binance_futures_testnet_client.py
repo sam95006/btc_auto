@@ -83,6 +83,10 @@ class BinanceFuturesTestnetClient:
     def get_book_ticker(self, symbol):
         return self._public_request("GET", "/fapi/v1/ticker/bookTicker", {"symbol": symbol})
 
+    def fetch_24h_tickers(self):
+        data = self._public_request("GET", "/fapi/v1/ticker/24hr")
+        return data if isinstance(data, list) else []
+
     def get_premium_index(self, symbol):
         return self._public_request("GET", "/fapi/v1/premiumIndex", {"symbol": symbol})
 

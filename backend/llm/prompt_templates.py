@@ -120,6 +120,29 @@ def build_chat_prompt(payload: dict):
     ]
 
 
+def build_radar_proposal_prompt(payload: dict):
+    system = (
+        "You are NEXUS Radar Outpost coin selector. ONLY propose altcoin futures trades outside "
+        "core fleet symbols (BTC/ETH/SOL/PEPE). Core fleets are handled elsewhere — never propose them. "
+        "Pick at most 2 symbols from the provided candidates/board with clear rationale."
+    )
+    schema = (
+        '{"radar_orders": [{"symbol": str, "side": "BUY|SELL", "confidence": float, "rationale": str}], '
+        '"skip_reason": str}'
+    )
+    user = {
+        "task": "radar_coin_selection",
+        "core_fleet_symbols": payload.get("core_fleet_symbols", []),
+        "candidates": payload.get("candidates", []),
+        "market_board": payload.get("market_board", [])[:12],
+        "truth_layer_status": payload.get("truth_layer_status", {}),
+    }
+    return [
+        {"role": "system", "content": system},
+        {"role": "user", "content": json.dumps({"instruction": _json_instruction(schema), "input": user}, ensure_ascii=False)},
+    ]
+
+
 def build_agent_prompt(payload: dict):
     system = (
         "You are the NEXUS structured discussion orchestrator. Convert multi-agent proposals into a ranked, "

@@ -5,7 +5,8 @@
 - Phase 0.1 is `Secret Security Foundation` only.
 - Phase 0.2 is `Security Wiring Cleanup` only.
 - Phase 0.3 is `Security Verification Freeze` only.
-- Do not move into Phase 1 or beyond without explicit approval.
+- **Phase 8 (Upgrade Track P0-P3)** is approved for autonomous-trading infrastructure only (see `docs/NEXUS_UPGRADE_ROADMAP_V1.md`). LLM must not bypass risk/execution governance; core fleet strategy engine files remain protected unless explicitly approved.
+- Do not move into other Phase 1+ legacy scopes without explicit approval.
 
 ## Hard Boundaries
 - Do not modify trading logic, strategy logic, order execution logic, or leverage rules.
@@ -68,3 +69,8 @@
 - Secret leak scan passes.
 - Phase 0 tests pass.
 - Phase 0 may be frozen only after all above checks pass.
+
+## Phase 8 Scope (P0-P3 Upgrade Track)
+- Allowed additions under `backend/governance/`, `backend/decision/decision_trace_store.py`, `backend/learning/learning_review_queue.py`, `backend/autonomy/`, `backend/monitoring/`, `backend/news/event_registry.py`, `backend/market/universe_filter_service.py`, `tools/research/performance_report.py`, `tests/test_upgrade_pipeline.py`, minimal wiring in `nexus_runtime.py`, `runtime_store.py`, `server.py`, `config/universe_config.py`, `config/autonomy_config.py`.
+- Allowed behavior: proposal → governance → trace → execute; learning review queue with optional auto-apply via `NEXUS_LEARNING_AUTO_APPLY`; expanded RADAR universe; performance report API.
+- Still forbidden: unconstrained LLM direct order submission; rewriting core `fleet_*_strategy_engine.py` without approval; deleting production config except user-requested scratch cleanup under `archives/scratch/`.
