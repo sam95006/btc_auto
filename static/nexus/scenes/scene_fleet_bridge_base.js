@@ -6,7 +6,7 @@ import {
   renderRejects,
   renderStationOverviewCards,
   renderTrades,
-} from "./scene_helpers.js?v=20260510a";
+} from "./scene_helpers.js?v=20260521f";
 import { escapeHtml, normalizeText, translateSignal, translateStatus } from "../utils/presentation.js?v=20260510a";
 import { getLayoutHotspots } from "../layout_state.js?v=20260503a";
 

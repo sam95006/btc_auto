@@ -47,7 +47,8 @@ export function renderTopStatusBar(root, state) {
   const tradeCount = Number(decision.trade_count || 0);
   const livePositions = Number(decision.live_position_count || 0);
   const systemLabel = system.trading_paused ? "暫停中" : "運行中";
-  const linkLabel = transport.connected ? "Binance 已同步" : "資料連線中斷";
+  const capitalSource = capital.source === "binance_rest" ? "Binance 已同步" : "等待 Binance 同步";
+  const linkLabel = transport.connected ? capitalSource : "資料連線中斷";
   const systemMeta = `${linkLabel} / 持倉 ${livePositions} / 成交 ${tradeCount} 筆`;
   const dualTime = `台北 ${shortTime(times.taipei || system.current_time)} | 美東 ${shortTime(times.eastern)}`;
 

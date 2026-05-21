@@ -61,6 +61,8 @@ def register_nexus_routes(app):
         system = snap.get("system") or {}
         binance_sync = snap.get("binance_sync") or {}
         capital = snap.get("capital") or {}
+        binance_spot = capital.get("binance_spot") or {}
+        binance_futures = capital.get("binance_futures") or {}
         return jsonify(
             {
                 "trading_mode": mode,
@@ -71,19 +73,22 @@ def register_nexus_routes(app):
                 "snapshot_system_health": system.get("system_health"),
                 "snapshot_worker_module": (system.get("module_health") or {}).get("worker"),
                 "binance_sync_status": binance_sync.get("sync_status"),
+                "capital_source": capital.get("source", ""),
                 "binance_balances": {
-                    "spot_usdt": capital.get("spot_usdt_total"),
-                    "spot_usdc": capital.get("spot_usdc_total"),
-                    "spot_stable_total": capital.get("spot_stable_total"),
-                    "futures_wallet": capital.get("futures_exchange_wallet_balance"),
-                    "futures_equity": capital.get("futures_exchange_margin_balance"),
-                    "futures_unrealized": capital.get("futures_unrealized_pnl"),
+                    "spot_usdt": binance_spot.get("usdt_total", capital.get("spot_usdt_total")),
+                    "spot_usdc": binance_spot.get("usdc_total", capital.get("spot_usdc_total")),
+                    "spot_stable_total": binance_spot.get("stable_total", capital.get("spot_stable_total")),
+                    "futures_wallet": binance_futures.get("wallet_balance", capital.get("futures_exchange_wallet_balance")),
+                    "futures_equity": binance_futures.get("margin_balance", capital.get("futures_exchange_margin_balance")),
+                    "futures_unrealized": binance_futures.get("unrealized_pnl", capital.get("futures_unrealized_pnl")),
+                    "futures_available": binance_futures.get("available_balance", capital.get("futures_available_balance")),
+                    "combined_total": capital.get("total"),
                 },
                 "hints": [
                     "If snapshot_system_health is WORKER_OFFLINE and embedded_worker_started is false, "
                     "set NEXUS_EMBEDDED_WORKER=1 or deploy on Zeabur (auto-detects ZEABUR_* IDs).",
                     "If testnet_credentials_missing is non-empty, add the four BINANCE_*_TESTNET_* keys in Zeabur Variables.",
-                    "For the same DB as local, mount a volume at NEXUS_DATA_DIR and import a state bundle (see tools/deploy/ZEABUR_SETUP.zh-TW.md).",
+                    "For the same DB as local, mount a volume at NEXUS_DATA_DIR and import a state bundle (see docs/NEXUS_GUIDE.zh-TW.md).",
                 ],
             }
         )

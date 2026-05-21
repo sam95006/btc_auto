@@ -89,6 +89,9 @@ function renderCompactOverview(state) {
   const capital = state.capital || {};
   const pnl = state.pnl || {};
   const loans = state.loans || {};
+  const internal = capital.internal_allocation || {};
+  const binanceSpot = capital.binance_spot || {};
+  const binanceFutures = capital.binance_futures || {};
   const totalLoans = Object.values(loans).reduce((sum, item) => sum + Number(item?.principal || 0), 0);
   return `
     <section class="hq-side-card">
@@ -98,11 +101,13 @@ function renderCompactOverview(state) {
       </header>
       ${compactList([
         ["總資產", money(capital.total)],
-        ["HQ 準備金", money(capital.hq_reserve)],
-        ["艦隊部署資金", money(capital.active_total)],
-        ["雷達資金", money(capital.radar_budget)],
+        ["現貨 USDT", money(binanceSpot.usdt_total ?? capital.spot_usdt_total)],
+        ["現貨 USDC", money(binanceSpot.usdc_total ?? capital.spot_usdc_total)],
+        ["合約權益", money(binanceFutures.margin_balance ?? capital.futures_total)],
+        ["合約錢包", money(binanceFutures.wallet_balance ?? capital.futures_wallet_display)],
+        ["未實現", money(pnl.exchange_unrealized_pnl ?? pnl.total_pnl)],
+        ["內部準備金", money(internal.hq_reserve ?? 0)],
         ["借款總額", money(totalLoans)],
-        ["總損益", money(pnl.total_pnl)],
       ])}
     </section>
   `;

@@ -1,0 +1,37 @@
+# Python / editor
+venv/
+.venv/
+node_modules/
+.git/
+.cursor/
+.vscode/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+
+# Secrets & local runtime (Zeabur uses Volume at /data)
+.env
+.env.*
+!.env.example
+data/
+logs/
+*.log
+trading.db*
+*.db
+*.db-*
+
+# Never deploy: archives, scratch, local bundles
+archives/
+scratch/
+
+# Documentation & offline tools
+docs/
+tools/research/
+ROOT_STRUCTURE.md
+AGENTS.md
+
+# Tests
+tests/
+
+# Unused static tree
+assets/

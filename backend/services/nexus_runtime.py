@@ -47,6 +47,7 @@ from backend.trading.paper_order_execution_engine import PaperOrderExecutionEngi
 from backend.trading.paper_position_manager import PaperPositionManager
 from backend.trading.pnl_tracker import PnlTracker
 from backend.trading.trade_validation_pipeline import TradeValidationPipeline
+from backend.trading.exchange_capital_view import build_ui_capital, futures_equity_from_account
 from backend.trading.decision_quality_engine import DecisionQualityValidationEngine
 from backend.risk.capital_growth_guard import CapitalGrowthGuard
 from backend.decision.meeting_notes_resolver import resolve_meeting_notes
@@ -530,7 +531,7 @@ class NexusRuntime:
             radar_scan=self.radar_scan,
             learning_snapshot=calibration_snapshot,
         )
-        futures_total = float(futures_account.get("margin_total", futures_account.get("wallet_total", 0.0)) or 0.0)
+        futures_total = futures_equity_from_account(futures_account)
         self.growth_status = self.capital_growth_guard.evaluate(futures_total)
         self._apply_live_capital_plan(futures_account)
         self._synchronize_live_futures_state(futures_account)
@@ -660,7 +661,14 @@ class NexusRuntime:
 
     def _dialogue_snapshot(self):
         system_snapshot = self.state_manager.snapshot()
-        ledger_capital = self.ledger.snapshot()
+        spot_account = getattr(self, "_last_spot_account", {}) or {}
+        futures_account = getattr(self, "_last_futures_account", {}) or {}
+        exchange_capital = build_ui_capital(
+            spot_account,
+            futures_account,
+            futures_configured=self.futures_client.is_configured(),
+            spot_configured=self.spot_client.is_configured(),
+        )
         return {
             "system": {
                 "alert_level": system_snapshot.get("alert_level", "NORMAL"),
@@ -668,8 +676,10 @@ class NexusRuntime:
                 "fleet_status": dict(system_snapshot.get("fleet_status", {})),
             },
             "capital": {
-                "total": float(ledger_capital.get("total", 0.0) or 0.0),
-                "hq_reserve": float(ledger_capital.get("hq_reserve", 0.0) or 0.0),
+                "total": float(exchange_capital.get("total", 0.0) or 0.0),
+                "spot_total": float(exchange_capital.get("spot_total", 0.0) or 0.0),
+                "futures_total": float(exchange_capital.get("futures_total", 0.0) or 0.0),
+                "source": "binance_rest",
             },
             "news": list(self.latest_news or []),
             "whale": dict(self.whale_state or {}),
@@ -1234,7 +1244,9 @@ class NexusRuntime:
         }
 
     def _apply_live_capital_plan(self, futures_account):
-        futures_total = float(futures_account.get("margin_total", futures_account.get("wallet_total", 0.0)) or 0.0)
+        if not self.futures_client.is_configured():
+            return
+        futures_total = futures_equity_from_account(futures_account)
         if futures_total <= 0:
             return
 
@@ -2172,7 +2184,16 @@ class NexusRuntime:
                 mobile_margin_balance = wallet_total + unrealized
                 stable_margin_balance = stable_wallet_total + unrealized
             display_margin_balance = exchange_margin_balance if exchange_margin_balance > 0 else (display_wallet_balance + unrealized)
-            available_balance = _safe_float(account_info.get("availableBalance")) or stable_available_total or available
+            available_balance = _safe_float(account_info.get("availableBalance"))
+            exchange_account = {
+                "totalWalletBalance": exchange_wallet_balance,
+                "totalMarginBalance": exchange_margin_balance,
+                "totalUnrealizedProfit": unrealized,
+                "availableBalance": available_balance,
+                "totalMaintMargin": _safe_float(account_info.get("totalMaintMargin")),
+                "totalInitialMargin": _safe_float(account_info.get("totalInitialMargin")),
+                "maxWithdrawAmount": _safe_float(account_info.get("maxWithdrawAmount")),
+            }
             balance_assets = sorted(balance_assets, key=lambda item: item.get("asset", ""))
             positions = sorted(positions, key=lambda item: item.get("symbol", ""))
             update_time = current_sync_ms
@@ -2198,8 +2219,9 @@ class NexusRuntime:
                 "stable_wallet_total": round(stable_wallet_total, 4),
                 "stable_margin_balance": round(stable_margin_balance, 4),
                 "collateral_total": round(collateral_total, 4),
-                "exchange_wallet_balance": round(exchange_wallet_balance or mobile_wallet_balance, 4),
-                "exchange_margin_balance": round(exchange_margin_balance or mobile_margin_balance, 4),
+                "exchange_wallet_balance": round(exchange_wallet_balance, 4),
+                "exchange_margin_balance": round(exchange_margin_balance, 4),
+                "exchange_account": exchange_account,
                 "available_balance": round(available_balance, 4),
                 "unrealized_pnl": round(unrealized, 4),
                 "positions": positions,
@@ -2463,27 +2485,18 @@ class NexusRuntime:
             {"wallet_total": 0.0, "margin_total": 0.0, "available_balance": 0.0, "unrealized_pnl": 0.0, "positions": []},
         )
 
-        spot_stable_total = float(
-            spot_account.get("spot_stable_total", spot_account.get("stable_total", spot_account.get("spot_total", 0.0))) or 0.0
+        exchange_capital = build_ui_capital(
+            spot_account,
+            futures_account,
+            futures_configured=self.futures_client.is_configured(),
+            spot_configured=self.spot_client.is_configured(),
         )
-        spot_usdt_total = float(spot_account.get("usdt_total", 0.0) or 0.0)
-        spot_usdc_total = float(spot_account.get("usdc_total", 0.0) or 0.0)
-        if self.futures_client.is_configured():
-            futures_wallet = float(
-                futures_account.get("exchange_wallet_balance")
-                or futures_account.get("wallet_total", 0.0)
-                or 0.0
-            )
-            futures_total = float(
-                futures_account.get("exchange_margin_balance")
-                or futures_account.get("margin_total")
-                or futures_wallet
-                or 0.0
-            )
-        else:
-            futures_wallet = float(futures_account.get("wallet_total", 0.0) or 0.0)
-            futures_total = float(futures_account.get("margin_total", futures_wallet) or 0.0)
-        combined_total = round(spot_stable_total + futures_total, 4)
+        spot_stable_total = float(exchange_capital.get("spot_stable_total", 0.0) or 0.0)
+        spot_usdt_total = float(exchange_capital.get("spot_usdt_total", 0.0) or 0.0)
+        spot_usdc_total = float(exchange_capital.get("spot_usdc_total", 0.0) or 0.0)
+        futures_wallet = float(exchange_capital.get("futures_wallet_display", 0.0) or 0.0)
+        futures_total = float(exchange_capital.get("futures_total", 0.0) or 0.0)
+        combined_total = float(exchange_capital.get("total", 0.0) or 0.0)
         if self.futures_client.is_configured():
             combined_orders = (self.hq_spot_orders + self.futures_live_orders)[:160]
             combined_trades = (self.hq_spot_trades + self.futures_live_trades)[:160]
@@ -2495,46 +2508,35 @@ class NexusRuntime:
         spot_trade_count = len(spot_account.get("trade_history", []) or [])
         true_recent_trade_count = futures_fill_count + spot_trade_count
         configured_futures_baseline = _safe_float(os.getenv("NEXUS_FUTURES_BASELINE_CAPITAL", "11800"))
-        exchange_unrealized = round(float(futures_account.get("unrealized_pnl", 0.0) or 0.0), 4)
-        strategy_live_pnl = round(float(pnl.get("total_realized", 0.0) or 0.0) + exchange_unrealized, 4)
-        futures_account_total_pnl = strategy_live_pnl if self.futures_client.is_configured() else round(futures_total - configured_futures_baseline, 4)
+        exchange_unrealized = round(float(exchange_capital.get("futures_unrealized_pnl", 0.0) or 0.0), 4)
+        futures_account_total_pnl = exchange_unrealized if self.futures_client.is_configured() else 0.0
 
         capital = {
-            "total": combined_total,
-            "spot_total": round(spot_stable_total, 4),
-            "spot_stable_total": round(spot_stable_total, 4),
-            "spot_usdt_total": round(spot_usdt_total, 4),
-            "spot_usdc_total": round(spot_usdc_total, 4),
-            "futures_total": round(futures_total, 4),
-            "futures_wallet_display": round(futures_wallet, 4),
-            "futures_wallet_total": round(float(futures_account.get("wallet_total", 0.0) or 0.0), 4),
+            **exchange_capital,
+            "futures_wallet_total": round(futures_wallet, 4),
             "futures_mobile_wallet_balance": round(float(futures_account.get("mobile_wallet_balance", 0.0) or 0.0), 4),
             "futures_mobile_margin_balance": round(float(futures_account.get("mobile_margin_balance", 0.0) or 0.0), 4),
-            "futures_wallet_balance": round(float(futures_account.get("wallet_balance", 0.0) or 0.0), 4),
-            "futures_margin_balance": round(float(futures_account.get("margin_balance", 0.0) or 0.0), 4),
+            "futures_wallet_balance": round(futures_wallet, 4),
+            "futures_margin_balance": round(futures_total, 4),
             "futures_stable_wallet_total": round(float(futures_account.get("stable_wallet_total", 0.0) or 0.0), 4),
             "futures_stable_margin_balance": round(float(futures_account.get("stable_margin_balance", 0.0) or 0.0), 4),
             "futures_collateral_total": round(float(futures_account.get("collateral_total", 0.0) or 0.0), 4),
-            "futures_exchange_wallet_balance": round(float(futures_account.get("exchange_wallet_balance", 0.0) or 0.0), 4),
-            "futures_exchange_margin_balance": round(float(futures_account.get("exchange_margin_balance", 0.0) or 0.0), 4),
             "futures_baseline_capital": round(configured_futures_baseline, 4),
             "futures_account_total_pnl": futures_account_total_pnl,
-            "spot_usdt_total": round(float(spot_account.get("usdt_total", 0.0) or 0.0), 4),
             "spot_usdt_free": round(float(spot_account.get("usdt_free", 0.0) or 0.0), 4),
-            "spot_stable_total": round(float(spot_account.get("stable_total", 0.0) or 0.0), 4),
-            "spot_stable_free": round(float(spot_account.get("stable_free", 0.0) or 0.0), 4),
+            "internal_allocation": {
+                "hq_reserve": round(float(ledger_capital.get("hq_reserve", 0.0) or 0.0), 4),
+                "radar_budget": round(float(ledger_capital.get("radar_budget", 0.0) or 0.0), 4),
+                "active_total": round(float(ledger_capital.get("active_total", 0.0) or 0.0), 4),
+                "source": "internal_ledger",
+            },
             "spot_truth_scope": str(spot_account.get("truth_scope") or HQ_SPOT_TRUTH_MODE),
             "spot_truth_assets": list(spot_account.get("truth_assets", [])),
             "spot_allowed_assets": list(spot_account.get("allowed_assets", [])),
             "spot_excluded_assets_count": int(spot_account.get("excluded_assets_count", 0) or 0),
             "spot_holdings_total": round(float(spot_account.get("holdings_total", 0.0) or 0.0), 4),
             "spot_truth_warning": str(spot_account.get("truth_warning") or ""),
-            "hq_reserve": round(float(ledger_capital.get("hq_reserve", 0.0) or 0.0), 4),
-            "radar_budget": round(float(ledger_capital.get("radar_budget", 0.0) or 0.0), 4),
-            "active_total": round(float(ledger_capital.get("active_total", 0.0) or 0.0), 4),
             "realized_pnl": round(float(pnl.get("total_realized", 0.0) or 0.0), 4),
-            "futures_unrealized_pnl": round(float(futures_account.get("unrealized_pnl", 0.0) or 0.0), 4),
-            "futures_available_balance": round(float(futures_account.get("available_balance", 0.0) or 0.0), 4),
             "spot_holdings": spot_account.get("holdings", []),
             "futures_positions": futures_account.get("positions", []),
             "futures_balance_assets": futures_account.get("balance_assets", []),
@@ -2646,11 +2648,10 @@ class NexusRuntime:
             "positions": all_positions,
             "pnl": {
                 **pnl,
-                "total_unrealized": exchange_unrealized if self.futures_client.is_configured() else round(float(pnl.get("total_unrealized", 0.0) or 0.0), 4),
-                "strategy_total_pnl": strategy_live_pnl,
+                "source": "binance_futures_rest" if self.futures_client.is_configured() else "internal",
+                "total_unrealized": exchange_unrealized,
                 "total_pnl": futures_account_total_pnl,
                 "exchange_unrealized_pnl": exchange_unrealized,
-                "baseline_gap_pnl": round(futures_total - configured_futures_baseline, 4),
             },
             "orders": combined_orders,
             "trades": combined_trades,
@@ -2669,8 +2670,8 @@ class NexusRuntime:
                 "futures_total": round(futures_total, 4),
                 "futures_account_total_pnl": futures_account_total_pnl,
                 "combined_total": combined_total,
-                "hq_reserve": capital["hq_reserve"],
-                "radar_budget": capital["radar_budget"],
+                "hq_reserve": (capital.get("internal_allocation") or {}).get("hq_reserve", 0.0),
+                "radar_budget": (capital.get("internal_allocation") or {}).get("radar_budget", 0.0),
                 "updated_at": _now(),
             },
             "decision_summary": {

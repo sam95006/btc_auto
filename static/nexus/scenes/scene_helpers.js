@@ -273,11 +273,17 @@ export function renderQuickStats(state, station) {
   if (station === "HQ") {
     const capital = state.capital || {};
     const pnl = state.pnl || {};
+    const internal = capital.internal_allocation || {};
+    const spot = capital.binance_spot || {};
+    const futures = capital.binance_futures || {};
+    const unrealized = pnl.exchange_unrealized_pnl ?? pnl.total_pnl ?? 0;
     return `
       <div class="quick-stats-grid">
         <div><span>總資產</span><strong>${formatUnit(capital.total)}</strong></div>
-        <div><span>HQ 準備金</span><strong>${formatUnit(capital.hq_reserve)}</strong></div>
-        <div><span>總損益</span><strong>${formatUnit(pnl.total_pnl)}</strong></div>
+        <div><span>現貨 USDT/USDC</span><strong>${formatUnit(spot.stable_total ?? capital.spot_stable_total)}</strong></div>
+        <div><span>合約權益</span><strong>${formatUnit(futures.margin_balance ?? capital.futures_total)}</strong></div>
+        <div><span>未實現</span><strong>${formatUnit(unrealized)}</strong></div>
+        <div><span>內部準備金</span><strong>${formatUnit(internal.hq_reserve ?? 0)}</strong></div>
       </div>
     `;
   }

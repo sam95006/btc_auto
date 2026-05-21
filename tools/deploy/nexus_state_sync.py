@@ -49,7 +49,7 @@ def _snapshot_db_file(db_path: Path, dest_path: Path) -> bool:
 def export_bundle(output_dir: Path | None = None) -> Path:
     db_path = Path(resolve_runtime_db_path())
     layout_path = Path(resolve_layout_path())
-    out_dir = output_dir or (ROOT / "archives" / "state_bundles")
+    out_dir = output_dir or (ROOT / "data" / "state_bundles")
     out_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     bundle_path = out_dir / f"nexus_state_{stamp}.zip"

@@ -1,4 +1,4 @@
-import { renderConversation, renderStationOverviewCards } from "./scene_helpers.js?v=20260510a";
+import { renderConversation, renderStationOverviewCards } from "./scene_helpers.js?v=20260521f";
 import { escapeHtml, normalizeText } from "../utils/presentation.js?v=20260510a";
 import { getLayoutHotspots } from "../layout_state.js?v=20260503a";
 

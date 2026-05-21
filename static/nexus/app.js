@@ -1,12 +1,12 @@
 ﻿import { startStateStore, subscribe, getState } from "./state_store.js?v=20260503a";
 import { fetchLayoutConfig, fetchNexusState } from "./api_client.js?v=20260503a";
-import { renderTopStatusBar } from "./components/ui_top_status_bar.js?v=20260521e";
+import { renderTopStatusBar } from "./components/ui_top_status_bar.js?v=20260521f";
 import { renderAlertPanel } from "./components/ui_alert_panel.js?v=20260510a";
 import { renderChatDock } from "./components/ui_chat_dock.js?v=20260521c";
 import { renderMeetingLogPanel } from "./components/ui_meeting_log_panel.js?v=20260520a";
 import { renderMeetingDock } from "./components/ui_meeting_dock.js?v=20260510b";
 import { buildMainOverviewPage } from "./scenes/scene_main_hq.js?v=20260510b";
-import { buildHqPage, getHqModalContent } from "./scenes/scene_hq_roundtable.js?v=20260521c";
+import { buildHqPage, getHqModalContent } from "./scenes/scene_hq_roundtable.js?v=20260521f";
 import { buildFleetPage, getFleetModalContent } from "./scenes/scene_fleet_bridge_base.js?v=20260510b";
 import { buildRadarPage, getRadarModalContent } from "./scenes/scene_radar_outpost.js?v=20260510b";
 import { buildNewsPage, getNewsModalContent } from "./scenes/scene_news_nexus.js?v=20260510b";
