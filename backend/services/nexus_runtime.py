@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 
 from backend.core.env_loader import load_env_file
+from backend.core.time_utils import nexus_now
 from backend.core.event_bus import EventBus
 from backend.core.system_state_manager import SystemStateManager
 from backend.agents import AdvisoryServices
@@ -271,7 +272,8 @@ class NexusRuntime:
         conclusion = dict(record.get("conclusion") or {})
         if meeting_type == "SCHEDULED_ROUND_TABLE":
             time_value = str(record.get("time") or "")
-            slot = time_value[11:16] if len(time_value) >= 16 else ""
+            slot = str(record.get("slot") or "") or (time_value[11:16] if len(time_value) >= 16 else "")
+            record["slot"] = slot
             record["summary"] = f"{slot} 固定圓桌會議" if slot else _clean_display_text(record.get("summary"), "固定圓桌會議")
             summary_text = _clean_display_text(conclusion.get("summary"), "")
             if not summary_text or (slot and summary_text.count(slot) > 1) or "固定圓桌會議完成" not in summary_text:
@@ -313,6 +315,7 @@ class NexusRuntime:
         station_learning_exchange = dict(self.station_learning_exchange or {})
         return {
             "meeting_id": meeting_id,
+            "slot": slot,
             "time": f"{date_part} {slot}:00",
             "created_at": _now(),
             "type": "SCHEDULED_ROUND_TABLE",
@@ -335,17 +338,39 @@ class NexusRuntime:
         event_type = event["type"]
         payload = event.get("payload", {})
         if event_type in {"trade_opened", "trade_closed"}:
-            runtime_store.append_station_chat(
-                {
-                    "timestamp": _now(),
-                    "station": payload.get("order", payload.get("trade", {})).get("fleet", "HQ"),
-                    "speaker": "SYSTEM",
-                    "message": f"{event_type}: {payload}",
-                    "source": "runtime",
-                    "importance": "INFO",
-                }
-            )
+            trade = payload.get("trade") or payload.get("order") or {}
+            fleet = str(trade.get("fleet") or "HQ").upper()
+            pnl = float(trade.get("pnl", 0.0) or 0.0)
+            if event_type == "trade_closed" and pnl < 0:
+                self._broadcast_loss_reflection(trade, fleet, pnl)
+            else:
+                runtime_store.append_station_chat(
+                    {
+                        "timestamp": _now(),
+                        "station": fleet,
+                        "speaker": "SYSTEM",
+                        "message": f"{event_type}: {trade.get('symbol', '')} pnl={pnl:.4f}",
+                        "source": "runtime",
+                        "importance": "INFO",
+                    }
+                )
             self.station_chats = self.station_chat_log.recent_grouped()
+
+    def _broadcast_loss_reflection(self, trade, fleet, pnl):
+        learning = self._build_learning_status()
+        recs = learning.get("latest_recommendations", []) or []
+        rec_text = recs[0].get("recommendation") if recs and isinstance(recs[0], dict) else ""
+        if not rec_text and recs:
+            rec_text = str(recs[0])
+        symbol = trade.get("symbol", fleet)
+        reason = trade.get("reason") or trade.get("exit_reason") or "unknown"
+        msg = (
+            f"虧損平倉 {symbol}：{pnl:.2f}U。原因：{reason}。"
+            f"{' 學習建議：' + str(rec_text)[:200] if rec_text else ' 已寫入學習紀錄，風控將收緊。'}"
+        )
+        for channel in ("WORLD", fleet if fleet in {"BTC", "ETH", "SOL", "PEPE", "RADAR"} else "HQ", "RISK"):
+            self.station_chat_log.add(channel, "風控反思", msg, source="虧損反思", importance="WARNING")
+        self.station_chats = self.station_chat_log.recent_grouped()
 
     def start(self):
         if self._thread and self._thread.is_alive():
@@ -725,7 +750,11 @@ class NexusRuntime:
         self.station_briefings = self.meeting_broadcaster.load_all() or self.station_briefings
 
     def _ensure_fixed_roundtables(self):
-        now = datetime.now()
+        stored = runtime_store.recent_meetings(limit=40)
+        if stored:
+            self.meetings = [self._normalize_meeting_record(item) for item in stored]
+
+        now = nexus_now()
         today = now.strftime("%Y-%m-%d")
         existing = {item.get("meeting_id"): item for item in self.meetings}
 

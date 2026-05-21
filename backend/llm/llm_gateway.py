@@ -16,6 +16,7 @@ from config.llm_config import (
 from .groq_client import GroqLLMClient
 from .prompt_templates import (
     build_agent_prompt,
+    build_chat_prompt,
     build_news_prompt,
     build_radar_prompt,
     build_reflection_prompt,
@@ -51,6 +52,8 @@ class LLMGateway:
             return build_reflection_prompt(payload)
         if task == "agent":
             return build_agent_prompt(payload)
+        if task == "chat":
+            return build_chat_prompt(payload)
         raise ValueError(f"unsupported_task:{task}")
 
     def _client_for_task(self, task: str):

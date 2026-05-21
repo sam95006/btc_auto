@@ -19,12 +19,25 @@ from backend.runtime.embed_flags import embedded_worker_error, embedded_worker_s
 
 
 _dialogue = None
+_llm_gateway = None
+
+
+def _llm_gateway_instance():
+    global _llm_gateway
+    if _llm_gateway is None:
+        try:
+            from backend.llm import LLMGateway
+
+            _llm_gateway = LLMGateway()
+        except Exception:
+            _llm_gateway = False
+    return _llm_gateway if _llm_gateway is not False else None
 
 
 def _dialogue_service():
     global _dialogue
     if _dialogue is None:
-        _dialogue = StationDialogueService(StationChatLog(runtime_store))
+        _dialogue = StationDialogueService(StationChatLog(runtime_store), llm_gateway=_llm_gateway_instance())
     return _dialogue
 
 
@@ -100,6 +113,27 @@ def register_nexus_routes(app):
     def nexus_layout_save():
         payload = request.json or {}
         return jsonify(layout_store.save(payload))
+
+    @app.route("/api/nexus/loss-review")
+    def nexus_loss_review():
+        """Recent losing trades + learning recommendations (no secrets) for Zeabur review."""
+        snap = runtime_store.load_snapshot()
+        trade_results = runtime_store.recent_trade_results(limit=120)
+        losses = [item for item in trade_results if float(item.get("pnl", 0.0) or 0.0) < 0][:40]
+        learning = snap.get("learning_status", {}) or {}
+        reflection = (snap.get("agent_advisory", {}) or {}).get("reflection", {})
+        return jsonify(
+            {
+                "generated_at": snap.get("system", {}).get("current_time"),
+                "loss_trades": losses,
+                "failure_patterns": learning.get("failure_patterns", []),
+                "latest_recommendations": learning.get("latest_recommendations", []),
+                "reflection_summary": reflection.get("summary") or reflection.get("machine_summary"),
+                "strategy_adaptation": (learning.get("strategy_adaptation") or {}).get("strategies", {}),
+                "decision_audit": runtime_store.recent_decision_audit(limit=40),
+                "hint": "Download trading.db via NEXUS_DATA_DIR volume or: python tools/deploy/nexus_state_sync.py export",
+            }
+        )
 
     @app.route("/api/nexus/chat", methods=["POST"])
     def nexus_chat():

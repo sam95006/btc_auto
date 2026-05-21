@@ -21,6 +21,7 @@ def task_refresh_seconds():
         "roundtable": int(os.getenv("NEXUS_LLM_REFRESH_ROUNDTABLE_SECONDS", "60")),
         "reflection": int(os.getenv("NEXUS_LLM_REFRESH_REFLECTION_SECONDS", "90")),
         "agent": int(os.getenv("NEXUS_LLM_REFRESH_AGENT_SECONDS", "40")),
+        "chat": int(os.getenv("NEXUS_LLM_REFRESH_CHAT_SECONDS", "0")),
     }
 
 
@@ -31,6 +32,7 @@ def task_provider_defaults():
         "roundtable": os.getenv("NEXUS_LLM_PROVIDER_ROUNDTABLE", "groq_secondary"),
         "reflection": os.getenv("NEXUS_LLM_PROVIDER_REFLECTION", "groq_secondary"),
         "agent": os.getenv("NEXUS_LLM_PROVIDER_AGENT", "sambanova"),
+        "chat": os.getenv("NEXUS_LLM_PROVIDER_CHAT", "groq_primary"),
     }
 
 
@@ -42,6 +44,7 @@ def task_model_defaults():
         "reflection": os.getenv("NEXUS_LLM_MODEL_REFLECTION", "mixtral-8x7b-32768"),
         "agent": os.getenv("NEXUS_LLM_MODEL_AGENT", "Meta-Llama-3.1-405B-Instruct"),
         "agent_fallback": os.getenv("NEXUS_LLM_MODEL_AGENT_FALLBACK", "Meta-Llama-3.1-70B-Instruct"),
+        "chat": os.getenv("NEXUS_LLM_MODEL_CHAT", "llama-3.3-70b-versatile"),
     }
 
 MODEL_FALLBACKS = {
@@ -69,4 +72,4 @@ PROVIDER_LABELS = {
     "sambanova": "sambanova",
 }
 
-ALLOWED_TASKS = {"news", "radar", "roundtable", "reflection", "agent"}
+ALLOWED_TASKS = {"news", "radar", "roundtable", "reflection", "agent", "chat"}

@@ -17,7 +17,11 @@ function meetingTypeLabel(type) {
 }
 
 function findMeetingBySlot(meetings, slot) {
-  const matches = meetings.filter((item) => String(item?.time || "").slice(11, 16) === slot);
+  const matches = meetings.filter((item) => {
+    if (String(item?.slot || "") === slot) return true;
+    const time = String(item?.time || "");
+    return time.slice(11, 16) === slot || time.includes(` ${slot}:`) || time.startsWith(`${slot}:`);
+  });
   if (!matches.length) return null;
   return [...matches].sort((a, b) => String(b.time || "").localeCompare(String(a.time || "")))[0];
 }

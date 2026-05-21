@@ -96,6 +96,30 @@ def build_reflection_prompt(payload: dict):
     ]
 
 
+def build_chat_prompt(payload: dict):
+    system = (
+        "You are a NEXUS station officer replying to the commander in Traditional Chinese (繁體中文). "
+        "Be concise (2-4 sentences), actionable, and grounded only in the provided snapshot. "
+        "Never invent balances, prices, or positions. If data is missing, say what you need."
+    )
+    schema = '{"reply": str, "importance": "INFO|WARNING|HIGH"}'
+    user = {
+        "task": "station_chat_reply",
+        "channel": payload.get("channel"),
+        "player_message": payload.get("player_message"),
+        "alert_level": payload.get("alert_level"),
+        "trading_paused": payload.get("trading_paused"),
+        "capital_total": payload.get("capital_total"),
+        "fleet_status": payload.get("fleet_status"),
+        "growth_mode": payload.get("growth_mode"),
+        "latest_news_headline": payload.get("latest_news_headline"),
+    }
+    return [
+        {"role": "system", "content": system},
+        {"role": "user", "content": json.dumps({"instruction": _json_instruction(schema), "input": user}, ensure_ascii=False)},
+    ]
+
+
 def build_agent_prompt(payload: dict):
     system = (
         "You are the NEXUS structured discussion orchestrator. Convert multi-agent proposals into a ranked, "

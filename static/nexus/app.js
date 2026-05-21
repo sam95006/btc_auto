@@ -2,7 +2,7 @@
 import { fetchLayoutConfig, fetchNexusState } from "./api_client.js?v=20260503a";
 import { renderTopStatusBar } from "./components/ui_top_status_bar.js?v=20260510b";
 import { renderAlertPanel } from "./components/ui_alert_panel.js?v=20260510a";
-import { renderChatDock } from "./components/ui_chat_dock.js?v=20260520a";
+import { renderChatDock } from "./components/ui_chat_dock.js?v=20260521a";
 import { renderMeetingLogPanel } from "./components/ui_meeting_log_panel.js?v=20260520a";
 import { renderMeetingDock } from "./components/ui_meeting_dock.js?v=20260510b";
 import { buildMainOverviewPage } from "./scenes/scene_main_hq.js?v=20260510b";
