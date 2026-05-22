@@ -31,9 +31,10 @@ NEXUS 是 **Binance 測試網** 上的指揮艦隊系統：
 | 項目 | API | 欄位 |
 |------|-----|------|
 | 現貨 USDT/USDC | `GET /api/v3/account` | 各資產 `free + locked` |
-| 合約錢包 / 權益 | `GET /fapi/v2/account` | `totalWalletBalance`、`totalMarginBalance` |
+| **U 本位** 保證金 / 錢包 | `GET /fapi/v2/account`（`demo-fapi.binance.com`） | `totalMarginBalance`、`totalWalletBalance` |
 | 未實現 | 同上 | `totalUnrealizedProfit` |
-| **總資產** | — | 現貨穩定幣合計 + 合約權益 |
+| **總資產** | — | 現貨 USDT/USDC + **U 本位保證金餘額** |
+| **幣本位合約** | 不接入 | App 另一分頁，**永不計入** |
 
 實作：`backend/trading/exchange_capital_view.py` → `nexus_runtime.snapshot()`。
 

@@ -69,6 +69,8 @@ def register_nexus_routes(app):
                 "trading_mode": mode,
                 "testnet_credentials_missing": missing,
                 "account_binding": account_binding,
+                "futures_scope": "usdt_m",
+                "coin_margined_included": False,
                 "runtime_db_path": resolve_runtime_db_path(),
                 "embedded_worker_started": embed_flags.embedded_worker_started,
                 "embedded_worker_error": embed_flags.embedded_worker_error,

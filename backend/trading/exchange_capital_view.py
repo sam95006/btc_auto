@@ -108,7 +108,9 @@ def build_futures_capital_from_binance(futures_account: dict | None) -> Dict[str
 
     return {
         "source": "binance_futures_rest",
-        "display_scope": "fapi_v2_account_summary",
+        "display_scope": "usdt_m_fapi_v2_account_summary",
+        "market_type": "USDT_M",
+        "coin_margined_included": False,
         "wallet_balance": round(wallet, 4),
         "stable_wallet_total": round(stable_wallet, 4),
         "margin_balance": round(equity, 4),
@@ -141,7 +143,9 @@ def build_ui_capital(
 
     return {
         "source": "binance_rest",
-        "display_scope": "spot_usdt_usdc_plus_futures_margin_balance",
+        "display_scope": "spot_usdt_usdc_plus_usdt_m_margin_balance",
+        "coin_margined_included": False,
+        "futures_market_scope": "usdt_m",
         "total": combined,
         "spot_total": spot_stable,
         "spot_stable_total": spot_stable,
@@ -166,11 +170,15 @@ def build_account_binding_status(spot_client, futures_client) -> Dict[str, Any]:
     spot_fp = api_key_fingerprint(getattr(spot_client, "api_key", ""))
     futures_fp = api_key_fingerprint(getattr(futures_client, "api_key", ""))
     mismatch = bool(spot_fp and futures_fp and spot_fp != futures_fp)
+    futures_base = getattr(futures_client, "base_url", getattr(futures_client, "BASE_URL", ""))
     return {
         "spot_api_key_fp": spot_fp,
         "futures_api_key_fp": futures_fp,
         "same_api_key_pair": spot_fp == futures_fp if (spot_fp and futures_fp) else None,
         "accounts_mismatch": mismatch,
         "spot_base_url": getattr(spot_client, "base_url", ""),
-        "futures_base_url": getattr(futures_client, "base_url", getattr(futures_client, "BASE_URL", "")),
+        "futures_base_url": futures_base,
+        "futures_scope": "usdt_m",
+        "coin_margined_included": False,
+        "futures_base_url_is_usdt_m_demo": "demo-fapi.binance.com" in str(futures_base),
     }

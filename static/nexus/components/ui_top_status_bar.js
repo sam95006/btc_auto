@@ -51,9 +51,6 @@ export function renderTopStatusBar(root, state) {
   const futuresEquity = Number(
     binanceFutures.margin_balance ?? capital.futures_exchange_margin_balance ?? 0,
   );
-  const futuresStableWallet = Number(
-    binanceFutures.stable_wallet_total ?? capital.futures_stable_wallet_total ?? 0,
-  );
   const binding = capital.account_binding || {};
   const accountsMismatch = Boolean(binding.accounts_mismatch);
   const tradeCount = Number(decision.trade_count || 0);
@@ -69,12 +66,12 @@ export function renderTopStatusBar(root, state) {
   root.innerHTML = `
     <div class="status-board">
       <div class="status-primary-grid status-primary-grid--compact">
-        ${card("總資產", formatMoney(capital.total), "USDT+USDC 現貨 + 合約權益 (testnet)")}
+        ${card("總資產", formatMoney(capital.total), "現貨 USDT/USDC + U本位保證金餘額 (不含幣本位)")}
         ${card("現貨穩定幣", formatMoney(spotStable), `USDT ${formatMoney(spotUsdt)} / USDC ${formatMoney(spotUsdc)}`)}
         ${card(
-          "合約權益",
+          "U本位保證金",
           formatMoney(futuresEquity),
-          `穩定幣錢包 ${formatMoney(futuresStableWallet)} / 錢包 ${formatMoney(futuresWallet)} / 未實現 ${formatMoney(futuresUnrealized)}`,
+          `錢包餘額 ${formatMoney(futuresWallet)} / 未實現 ${formatMoney(futuresUnrealized)}`,
           toneClass(futuresUnrealized),
         )}
         ${card("未實現損益", formatMoney(futuresUnrealized), dualTime, toneClass(futuresUnrealized))}

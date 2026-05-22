@@ -120,7 +120,9 @@ def main() -> int:
             indent=2,
         ))
 
-    print("\nIf these numbers differ from Binance App, the App is likely a different account or network (mainnet vs testnet).")
+    print("\nNote: NEXUS only queries USDT-M (U本位) demo-fapi — coin-margined (幣本位/dapi) is NEVER included.")
+    print("App tabs: compare 'U本位合約' margin balance to futures_equity; ignore '幣本位合約' tab.")
+    print("If U本位 in App (~9277) differs from futures_equity here, regenerate API keys from the SAME demo account.")
     return 0
 
 
