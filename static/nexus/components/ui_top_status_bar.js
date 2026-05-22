@@ -51,12 +51,19 @@ export function renderTopStatusBar(root, state) {
   const futuresEquity = Number(
     binanceFutures.margin_balance ?? capital.futures_exchange_margin_balance ?? 0,
   );
+  const futuresStableWallet = Number(
+    binanceFutures.stable_wallet_total ?? capital.futures_stable_wallet_total ?? 0,
+  );
+  const binding = capital.account_binding || {};
+  const accountsMismatch = Boolean(binding.accounts_mismatch);
   const tradeCount = Number(decision.trade_count || 0);
   const livePositions = Number(decision.live_position_count || 0);
   const systemLabel = system.trading_paused ? "暫停中" : "運行中";
   const capitalSource = capital.source === "binance_rest" ? "Binance 已同步" : "等待 Binance 同步";
   const linkLabel = transport.connected ? capitalSource : "資料連線中斷";
-  const systemMeta = `${linkLabel} / 持倉 ${livePositions} / 成交 ${tradeCount} 筆`;
+  const mismatchNote = accountsMismatch ? " / 現貨與合約 API 為不同帳戶" : "";
+  const holdingsNote = spotHoldings > 0 ? ` / 持倉幣估值 ${formatMoney(spotHoldings)} 不計入` : "";
+  const systemMeta = `${linkLabel}${mismatchNote} / 持倉 ${livePositions} / 成交 ${tradeCount} 筆${holdingsNote}`;
   const dualTime = `台北 ${shortTime(times.taipei || system.current_time)} | 美東 ${shortTime(times.eastern)}`;
 
   root.innerHTML = `
@@ -64,7 +71,12 @@ export function renderTopStatusBar(root, state) {
       <div class="status-primary-grid status-primary-grid--compact">
         ${card("總資產", formatMoney(capital.total), "USDT+USDC 現貨 + 合約權益 (testnet)")}
         ${card("現貨穩定幣", formatMoney(spotStable), `USDT ${formatMoney(spotUsdt)} / USDC ${formatMoney(spotUsdc)}`)}
-        ${card("合約權益", formatMoney(futuresEquity), `錢包 ${formatMoney(futuresWallet)} / 未實現 ${formatMoney(futuresUnrealized)}`, toneClass(futuresUnrealized))}
+        ${card(
+          "合約權益",
+          formatMoney(futuresEquity),
+          `穩定幣錢包 ${formatMoney(futuresStableWallet)} / 錢包 ${formatMoney(futuresWallet)} / 未實現 ${formatMoney(futuresUnrealized)}`,
+          toneClass(futuresUnrealized),
+        )}
         ${card("未實現損益", formatMoney(futuresUnrealized), dualTime, toneClass(futuresUnrealized))}
         ${card("系統狀態", systemLabel, systemMeta, system.trading_paused ? "bad" : "good")}
       </div>

@@ -61,7 +61,18 @@ GET /api/nexus/connectivity
 - `binance_balances` 與 Binance App 一致
 - `embedded_worker_started` = `true`（單服務 Zeabur）
 
-若數字仍不對，多半是 **Zeabur 上的 API Key 不是手機 App 同一個 testnet 帳戶**。
+若數字仍不對，請先查 `/api/nexus/connectivity` 的 `account_binding`：
+
+- `accounts_mismatch: true` → **現貨 API 金鑰與合約 API 金鑰是兩個不同 testnet 帳戶**（儀表板數字對「金鑰綁定的帳戶」是正確的，但不會等於 App 某一個畫面）
+- 請到 [Spot Testnet](https://testnet.binance.vision/) 與 [Futures Demo](https://demo.binance.com/) 分別用兩組金鑰登入對帳
+
+本機可跑（不印金鑰）：
+
+```powershell
+python tools/deploy/diagnose_binance_balances.py
+```
+
+若要與手機 App 一致：在 Zeabur 填入 **與 App 同一 testnet 帳戶** 產生的四把金鑰；現貨與合約建議用**同一帳戶**配對的金鑰。
 
 ### 清除舊的本地快取資金
 

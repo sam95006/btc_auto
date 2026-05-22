@@ -2,9 +2,17 @@
 
 from __future__ import annotations
 
+import hashlib
 from typing import Any, Dict, Tuple
 
 TREASURY_STABLE_ASSETS = ("USDT", "USDC")
+
+
+def api_key_fingerprint(api_key: str) -> str:
+    raw = (api_key or "").strip()
+    if not raw:
+        return ""
+    return hashlib.sha256(raw.encode()).hexdigest()[:12]
 
 
 def _safe_float(value) -> float:
@@ -19,6 +27,14 @@ def _balance_total(balances: dict, asset: str) -> float:
     if not isinstance(payload, dict):
         return 0.0
     return _safe_float(payload.get("free")) + _safe_float(payload.get("locked"))
+
+
+def _sum_futures_stable_assets(balance_assets: list) -> float:
+    total = 0.0
+    for row in balance_assets or []:
+        if str(row.get("asset", "")).upper() in TREASURY_STABLE_ASSETS:
+            total += _safe_float(row.get("balance"))
+    return total
 
 
 def treasury_totals_from_balances(balances: dict | None) -> Tuple[float, float, float]:
@@ -84,12 +100,17 @@ def build_futures_capital_from_binance(futures_account: dict | None) -> Dict[str
     if not available:
         available = _safe_float(futures_account.get("available_balance"))
 
+    stable_wallet = _safe_float(futures_account.get("stable_wallet_total"))
+    if not stable_wallet:
+        stable_wallet = _sum_futures_stable_assets(futures_account.get("balance_assets") or [])
+
     using_exchange_summary = bool(exchange.get("totalMarginBalance") or exchange.get("totalWalletBalance"))
 
     return {
         "source": "binance_futures_rest",
         "display_scope": "fapi_v2_account_summary",
         "wallet_balance": round(wallet, 4),
+        "stable_wallet_total": round(stable_wallet, 4),
         "margin_balance": round(equity, 4),
         "unrealized_pnl": round(unrealized, 4),
         "available_balance": round(available, 4),
@@ -134,7 +155,22 @@ def build_ui_capital(
         "futures_exchange_margin_balance": futures["margin_balance"],
         "futures_unrealized_pnl": futures["unrealized_pnl"],
         "futures_available_balance": futures["available_balance"],
+        "futures_stable_wallet_total": futures.get("stable_wallet_total", 0.0),
         "futures_using_exchange_summary": futures.get("using_exchange_summary", False),
         "binance_spot": spot,
         "binance_futures": futures,
+    }
+
+
+def build_account_binding_status(spot_client, futures_client) -> Dict[str, Any]:
+    spot_fp = api_key_fingerprint(getattr(spot_client, "api_key", ""))
+    futures_fp = api_key_fingerprint(getattr(futures_client, "api_key", ""))
+    mismatch = bool(spot_fp and futures_fp and spot_fp != futures_fp)
+    return {
+        "spot_api_key_fp": spot_fp,
+        "futures_api_key_fp": futures_fp,
+        "same_api_key_pair": spot_fp == futures_fp if (spot_fp and futures_fp) else None,
+        "accounts_mismatch": mismatch,
+        "spot_base_url": getattr(spot_client, "base_url", ""),
+        "futures_base_url": getattr(futures_client, "base_url", getattr(futures_client, "BASE_URL", "")),
     }

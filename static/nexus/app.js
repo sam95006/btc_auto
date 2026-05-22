@@ -1,6 +1,6 @@
 ﻿import { startStateStore, subscribe, getState } from "./state_store.js?v=20260503a";
 import { fetchLayoutConfig, fetchNexusState } from "./api_client.js?v=20260503a";
-import { renderTopStatusBar } from "./components/ui_top_status_bar.js?v=20260522a";
+import { renderTopStatusBar } from "./components/ui_top_status_bar.js?v=20260522b";
 import { renderAlertPanel } from "./components/ui_alert_panel.js?v=20260510a";
 import { renderChatDock } from "./components/ui_chat_dock.js?v=20260521c";
 import { renderMeetingLogPanel } from "./components/ui_meeting_log_panel.js?v=20260520a";

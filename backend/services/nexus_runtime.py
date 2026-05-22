@@ -47,7 +47,11 @@ from backend.trading.paper_order_execution_engine import PaperOrderExecutionEngi
 from backend.trading.paper_position_manager import PaperPositionManager
 from backend.trading.pnl_tracker import PnlTracker
 from backend.trading.trade_validation_pipeline import TradeValidationPipeline
-from backend.trading.exchange_capital_view import build_ui_capital, futures_equity_from_account
+from backend.trading.exchange_capital_view import (
+    build_account_binding_status,
+    build_ui_capital,
+    futures_equity_from_account,
+)
 from backend.trading.decision_quality_engine import DecisionQualityValidationEngine
 from backend.risk.capital_growth_guard import CapitalGrowthGuard
 from backend.decision.meeting_notes_resolver import resolve_meeting_notes
@@ -2511,8 +2515,11 @@ class NexusRuntime:
         exchange_unrealized = round(float(exchange_capital.get("futures_unrealized_pnl", 0.0) or 0.0), 4)
         futures_account_total_pnl = exchange_unrealized if self.futures_client.is_configured() else 0.0
 
+        account_binding = build_account_binding_status(self.spot_client, self.futures_client)
+
         capital = {
             **exchange_capital,
+            "account_binding": account_binding,
             "futures_wallet_total": round(futures_wallet, 4),
             "futures_mobile_wallet_balance": round(float(futures_account.get("mobile_wallet_balance", 0.0) or 0.0), 4),
             "futures_mobile_margin_balance": round(float(futures_account.get("mobile_margin_balance", 0.0) or 0.0), 4),

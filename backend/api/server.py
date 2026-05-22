@@ -63,10 +63,12 @@ def register_nexus_routes(app):
         capital = snap.get("capital") or {}
         binance_spot = capital.get("binance_spot") or {}
         binance_futures = capital.get("binance_futures") or {}
+        account_binding = capital.get("account_binding") or {}
         return jsonify(
             {
                 "trading_mode": mode,
                 "testnet_credentials_missing": missing,
+                "account_binding": account_binding,
                 "runtime_db_path": resolve_runtime_db_path(),
                 "embedded_worker_started": embed_flags.embedded_worker_started,
                 "embedded_worker_error": embed_flags.embedded_worker_error,
@@ -89,6 +91,13 @@ def register_nexus_routes(app):
                     "set NEXUS_EMBEDDED_WORKER=1 or deploy on Zeabur (auto-detects ZEABUR_* IDs).",
                     "If testnet_credentials_missing is non-empty, add the four BINANCE_*_TESTNET_* keys in Zeabur Variables.",
                     "For the same DB as local, mount a volume at NEXUS_DATA_DIR and import a state bundle (see docs/NEXUS_GUIDE.zh-TW.md).",
+                    (
+                        "account_binding.accounts_mismatch is true: spot and futures API keys belong to different "
+                        "Binance testnet accounts. Dashboard totals are correct for the keys in Zeabur env, but may "
+                        "not match a single Binance App screen. Use keys from the same testnet account."
+                        if account_binding.get("accounts_mismatch")
+                        else ""
+                    ),
                 ],
             }
         )
