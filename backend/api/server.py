@@ -54,10 +54,10 @@ def register_nexus_routes(app):
         try:
             from backend.services.nexus_runtime import nexus_runtime
 
-            nexus_runtime.refresh_live_exchange_state()
+            nexus_runtime.refresh_live_exchange_state(force=True)
         except Exception as exc:
             print(f"[api] connectivity refresh failed: {exc}")
-        snap = runtime_store.load_snapshot()
+        snap = nexus_runtime.snapshot()
         system = snap.get("system") or {}
         binance_sync = snap.get("binance_sync") or {}
         capital = snap.get("capital") or {}
@@ -98,10 +98,20 @@ def register_nexus_routes(app):
         try:
             from backend.services.nexus_runtime import nexus_runtime
 
-            nexus_runtime.refresh_live_exchange_state()
+            nexus_runtime.refresh_live_exchange_state(force=True)
         except Exception as exc:
             print(f"[api] live exchange refresh failed: {exc}")
-        return jsonify(runtime_store.load_snapshot())
+        snap = nexus_runtime.snapshot()
+        try:
+            runtime_store.save_snapshot(
+                snap,
+                worker_status="ONLINE",
+                writer="api_state",
+                single_instance=False,
+            )
+        except Exception as exc:
+            print(f"[api] snapshot persist failed: {exc}")
+        return jsonify(snap)
 
     @app.route("/api/nexus/wallet")
     def nexus_wallet():

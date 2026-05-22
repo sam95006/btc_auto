@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
+
+TREASURY_STABLE_ASSETS = ("USDT", "USDC")
 
 
 def _safe_float(value) -> float:
@@ -19,28 +21,34 @@ def _balance_total(balances: dict, asset: str) -> float:
     return _safe_float(payload.get("free")) + _safe_float(payload.get("locked"))
 
 
+def treasury_totals_from_balances(balances: dict | None) -> Tuple[float, float, float]:
+    """USDT/USDC free+locked only — never sum other spot assets into treasury."""
+    balances = balances or {}
+    usdt = _balance_total(balances, "USDT")
+    usdc = _balance_total(balances, "USDC")
+    return usdt, usdc, usdt + usdc
+
+
 def build_spot_capital_from_binance(spot_account: dict | None) -> Dict[str, Any]:
     """Spot treasury from Binance Spot testnet `GET /api/v3/account` balances."""
     spot_account = spot_account or {}
     balances = spot_account.get("balances") or {}
 
-    usdt_total = _safe_float(spot_account.get("usdt_total"))
-    usdc_total = _safe_float(spot_account.get("usdc_total"))
-    if not usdt_total and balances:
-        usdt_total = _balance_total(balances, "USDT")
-    if not usdc_total and balances:
-        usdc_total = _balance_total(balances, "USDC")
-
-    stable_total = _safe_float(spot_account.get("spot_stable_total") or spot_account.get("stable_total"))
-    if not stable_total:
+    if balances:
+        usdt_total, usdc_total, stable_total = treasury_totals_from_balances(balances)
+    else:
+        usdt_total = _safe_float(spot_account.get("usdt_total"))
+        usdc_total = _safe_float(spot_account.get("usdc_total"))
         stable_total = usdt_total + usdc_total
 
     return {
         "source": "binance_spot_rest",
+        "display_scope": "usdt_usdc_treasury_only",
         "usdt_total": round(usdt_total, 4),
         "usdc_total": round(usdc_total, 4),
         "stable_total": round(stable_total, 4),
         "stable_free": round(_safe_float(spot_account.get("stable_free")), 4),
+        "holdings_total": round(_safe_float(spot_account.get("holdings_total")), 4),
         "update_time": int(spot_account.get("update_time") or 0),
         "sync_status": str(spot_account.get("sync_status") or ""),
         "sync_error": str(spot_account.get("sync_error") or ""),
@@ -52,40 +60,40 @@ def futures_equity_from_account(futures_account: dict | None) -> float:
     futures_account = futures_account or {}
     exchange = futures_account.get("exchange_account") or {}
     equity = _safe_float(exchange.get("totalMarginBalance"))
-    if not equity:
-        equity = _safe_float(futures_account.get("exchange_margin_balance"))
-    if not equity:
-        equity = _safe_float(futures_account.get("margin_total"))
-    return equity
+    if equity:
+        return equity
+    return _safe_float(futures_account.get("exchange_margin_balance"))
 
 
 def build_futures_capital_from_binance(futures_account: dict | None) -> Dict[str, Any]:
-    """Futures equity from Binance USDT-M `GET /fapi/v2/account` summary fields."""
+    """Futures equity from Binance USDT-M `GET /fapi/v2/account` summary fields only."""
     futures_account = futures_account or {}
     exchange = futures_account.get("exchange_account") or {}
 
     wallet = _safe_float(exchange.get("totalWalletBalance"))
+    equity = _safe_float(exchange.get("totalMarginBalance"))
+    unrealized = _safe_float(exchange.get("totalUnrealizedProfit"))
+    available = _safe_float(exchange.get("availableBalance"))
+
     if not wallet:
         wallet = _safe_float(futures_account.get("exchange_wallet_balance"))
-
-    equity = _safe_float(exchange.get("totalMarginBalance"))
     if not equity:
         equity = _safe_float(futures_account.get("exchange_margin_balance"))
-
-    unrealized = _safe_float(exchange.get("totalUnrealizedProfit"))
     if not unrealized:
         unrealized = _safe_float(futures_account.get("unrealized_pnl"))
-
-    available = _safe_float(exchange.get("availableBalance"))
     if not available:
         available = _safe_float(futures_account.get("available_balance"))
 
+    using_exchange_summary = bool(exchange.get("totalMarginBalance") or exchange.get("totalWalletBalance"))
+
     return {
         "source": "binance_futures_rest",
+        "display_scope": "fapi_v2_account_summary",
         "wallet_balance": round(wallet, 4),
         "margin_balance": round(equity, 4),
         "unrealized_pnl": round(unrealized, 4),
         "available_balance": round(available, 4),
+        "using_exchange_summary": using_exchange_summary,
         "update_time": int(futures_account.get("update_time") or 0),
         "sync_status": str(futures_account.get("sync_status") or ""),
         "sync_error": str(futures_account.get("sync_error") or ""),
@@ -100,7 +108,7 @@ def build_ui_capital(
     spot_configured: bool = True,
 ) -> Dict[str, Any]:
     """
-    Capital block for dashboard — every displayed total comes from Binance REST.
+    Capital block for dashboard — treasury totals from Binance REST only.
     Internal ledger allocations are intentionally excluded from `total`.
     """
     spot = build_spot_capital_from_binance(spot_account if spot_configured else {})
@@ -112,18 +120,21 @@ def build_ui_capital(
 
     return {
         "source": "binance_rest",
+        "display_scope": "spot_usdt_usdc_plus_futures_margin_balance",
         "total": combined,
         "spot_total": spot_stable,
         "spot_stable_total": spot_stable,
         "spot_usdt_total": spot["usdt_total"],
         "spot_usdc_total": spot["usdc_total"],
         "spot_stable_free": spot["stable_free"],
+        "spot_holdings_total": spot["holdings_total"],
         "futures_total": futures_equity,
         "futures_wallet_display": futures["wallet_balance"],
         "futures_exchange_wallet_balance": futures["wallet_balance"],
         "futures_exchange_margin_balance": futures["margin_balance"],
         "futures_unrealized_pnl": futures["unrealized_pnl"],
         "futures_available_balance": futures["available_balance"],
+        "futures_using_exchange_summary": futures.get("using_exchange_summary", False),
         "binance_spot": spot,
         "binance_futures": futures,
     }

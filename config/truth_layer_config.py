@@ -23,9 +23,10 @@ HQ_SPOT_VISIBLE_HOLDINGS = _csv_env("NEXUS_HQ_SPOT_VISIBLE_HOLDINGS", ("BTC", "E
 # Optional HQ treasury scope to avoid mixing unrelated spot-testnet balances into
 # the HQ treasury view. This does not fabricate balances; it only limits which
 # assets are considered part of the HQ spot truth scope.
+# Treasury display counts USDT/USDC only; visible holdings stay in spot_holdings_total.
 HQ_SPOT_ALLOWED_ASSETS = _csv_env(
     "NEXUS_HQ_SPOT_ALLOWED_ASSETS",
-    HQ_SPOT_TRUTH_STABLE_ASSETS + HQ_SPOT_VISIBLE_HOLDINGS,
+    HQ_SPOT_TRUTH_STABLE_ASSETS,
 )
 
 # AI truth layer guard controls.
