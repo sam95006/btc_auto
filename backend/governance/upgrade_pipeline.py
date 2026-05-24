@@ -7,7 +7,7 @@ from backend.governance.trade_proposal_service import TradeProposalService
 from backend.learning.learning_review_queue import LearningReviewQueue
 from backend.market.universe_filter_service import UniverseFilterService
 from backend.monitoring.execution_quality_monitor import ExecutionQualityMonitor
-from backend.news.event_registry import EventRegistry
+from config.autonomy_config import NEXUS_AUTONOMY_LEVEL, NEXUS_LEARNING_AUTO_APPLY, NEXUS_SHADOW_MODE
 
 
 class UpgradePipeline:
@@ -69,7 +69,7 @@ class UpgradePipeline:
         learning_status = learning_status or {}
         return {
             "event_registry": self._event_registry_snapshot or self.event_registry.snapshot(),
-            "learning_reviews": self.learning_reviews.status_snapshot(),
+            "learning_reviews": self.learning_reviews.status_snapshot(recent_trades=recent_trades),
             "trade_proposals": self.trade_proposals.recent(limit=15),
             "decision_traces": self.runtime_store.recent_decision_traces(limit=20),
             "shadow_mode": self.shadow_mode.snapshot(),

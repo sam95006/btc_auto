@@ -1,12 +1,15 @@
 import os
 
+from config.growth_mode_config import BOLD_TESTNET_ENABLED
+
 
 def _env_flag(name: str, default: str = "0") -> bool:
     return str(os.getenv(name, default)).strip().lower() in {"1", "true", "yes", "on"}
 
 
 def llm_enabled() -> bool:
-    return _env_flag("NEXUS_LLM_ENABLE", "0")
+    default = "1" if BOLD_TESTNET_ENABLED else "0"
+    return _env_flag("NEXUS_LLM_ENABLE", default)
 
 GROQ_CHAT_COMPLETIONS_URL = "https://api.groq.com/openai/v1/chat/completions"
 SAMBANOVA_CHAT_COMPLETIONS_URL = "https://api.sambanova.ai/v1/chat/completions"

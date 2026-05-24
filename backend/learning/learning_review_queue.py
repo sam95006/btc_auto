@@ -82,6 +82,8 @@ class LearningReviewQueue:
             "leverage_cap": recommendation.get("recommended_leverage_cap"),
             "disabled_pattern": recommendation.get("disabled_pattern_candidate"),
             "applied_at": _now(),
+            "baseline_trade_count": int(recommendation.get("baseline_trade_count") or 0),
+            "baseline_realized_pnl": float(recommendation.get("baseline_realized_pnl") or 0.0),
         }
         self.runtime_store.upsert_applied_learning_patch(patch)
         if review_id:
@@ -94,7 +96,34 @@ class LearningReviewQueue:
             applied.append(self.apply_item(item))
         return applied
 
-    def status_snapshot(self, limit=30):
+    def evaluate_patch_outcomes(self, recent_trades=None):
+        patches = self.runtime_store.list_applied_learning_patches(limit=20)
+        trades = list(recent_trades or [])
+        outcomes = []
+        for patch in patches[:12]:
+            fleet = str(patch.get("fleet") or "").upper()
+            fleet_trades = [
+                item
+                for item in trades
+                if str(item.get("fleet") or "").upper() == fleet
+            ][-20:]
+            wins = sum(1 for item in fleet_trades if float(item.get("pnl", 0.0) or 0.0) > 0)
+            losses = sum(1 for item in fleet_trades if float(item.get("pnl", 0.0) or 0.0) < 0)
+            net_pnl = round(sum(float(item.get("pnl", 0.0) or 0.0) for item in fleet_trades), 4)
+            outcomes.append(
+                {
+                    "fleet": fleet or None,
+                    "applied_at": patch.get("applied_at"),
+                    "recent_trades": len(fleet_trades),
+                    "wins": wins,
+                    "losses": losses,
+                    "net_pnl": net_pnl,
+                    "effective": (wins > losses) if fleet_trades else None,
+                }
+            )
+        return outcomes
+
+    def status_snapshot(self, limit=30, recent_trades=None):
         items = self.runtime_store.recent_learning_reviews(limit=limit)
         counts = {status: 0 for status in self.STATUSES}
         for item in items:
@@ -106,4 +135,5 @@ class LearningReviewQueue:
             "counts": counts,
             "recent": items[:15],
             "applied_patches": self.runtime_store.list_applied_learning_patches(limit=20),
+            "patch_outcomes": self.evaluate_patch_outcomes(recent_trades=recent_trades),
         }

@@ -64,10 +64,14 @@ export function renderTopStatusBar(root, state) {
   const linkLabel = transport.connected ? capitalSource : "資料連線中斷";
   const mismatchNote = accountsMismatch ? " / 現貨與合約 API 為不同帳戶" : "";
   const holdingsNote = spotHoldings > 0 ? ` / 持倉幣估值 ${formatMoney(spotHoldings)} 不計入` : "";
+  const health = state.trading_health || {};
+  const healthScore = Number(health.overall_score || 0);
+  const healthGrade = health.grade || "--";
+  const healthNote = healthScore >= 80 ? `AI 健康 ${healthScore.toFixed(0)} (${healthGrade})` : `AI 強化中 ${healthScore.toFixed(0)} (${healthGrade})`;
   const liveSync = state.live_sync || {};
   const syncNote = liveSync.updated_at ? ` / 資料 ${shortTime(liveSync.updated_at)}` : "";
   const worldNote = liveSync.news_count ? ` / 全球新聞 ${liveSync.news_count} 則` : "";
-  const systemMeta = `${linkLabel}${syncNote}${worldNote}${mismatchNote} / 持倉 ${livePositions}${positionNote} / 成交 ${tradeCount} 筆${holdingsNote}`;
+  const systemMeta = `${linkLabel}${syncNote}${worldNote} / ${healthNote}${mismatchNote} / 持倉 ${livePositions}${positionNote} / 成交 ${tradeCount} 筆${holdingsNote}`;
   const dualTime = `台北 ${shortTime(times.taipei || system.current_time)} | 美東 ${shortTime(times.eastern)}`;
 
   root.innerHTML = `

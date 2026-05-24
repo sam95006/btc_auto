@@ -8,6 +8,14 @@ from urllib.request import Request, urlopen
 from zoneinfo import ZoneInfo
 
 from backend.config.capital_config import SUPPORTED_SYMBOLS
+from config.growth_mode_config import BOLD_TESTNET_ENABLED
+
+
+def _prefer_futures_prices():
+    raw = __import__("os").getenv("NEXUS_PRICE_SOURCE")
+    if raw:
+        return str(raw).strip().lower() in {"futures", "testnet", "binance_futures"}
+    return BOLD_TESTNET_ENABLED
 
 
 class MarketPriceFeedService:
@@ -58,6 +66,44 @@ class MarketPriceFeedService:
         noise = random.uniform(-0.0025, 0.0025)
         return max(base * (1 + wave + noise), 0.00000001)
 
+    def fetch_futures_prices(self, futures_client, fleets=None):
+        if not futures_client or not getattr(futures_client, "is_configured", lambda: False)():
+            return {}
+        fleets = fleets or list(SUPPORTED_SYMBOLS.keys())
+        try:
+            tickers = futures_client.fetch_24h_tickers()
+        except Exception:
+            tickers = []
+        by_symbol = {
+            str(item.get("symbol") or "").upper(): item
+            for item in (tickers or [])
+            if isinstance(item, dict)
+        }
+        prices = {}
+        for fleet in fleets:
+            symbol = futures_client.resolve_symbol(fleet)
+            row = by_symbol.get(symbol)
+            mark = 0.0
+            source = "binance_futures_testnet"
+            if row:
+                mark = float(row.get("lastPrice") or row.get("weightedAvgPrice") or 0.0)
+            if mark <= 0:
+                try:
+                    premium = futures_client.get_premium_index(symbol)
+                    mark = float(premium.get("markPrice") or 0.0)
+                    source = "binance_futures_mark"
+                except Exception:
+                    mark = 0.0
+            if mark <= 0:
+                continue
+            prices[fleet] = {
+                "symbol": symbol,
+                "price": mark,
+                "time": datetime.now().isoformat(timespec="milliseconds"),
+                "source": source,
+            }
+        return prices
+
     def fetch_public_prices(self):
         encoded_symbols = json.dumps(list(SUPPORTED_SYMBOLS.values()), separators=(",", ":"))
         query = f"symbols={quote(encoded_symbols)}"
@@ -78,8 +124,12 @@ class MarketPriceFeedService:
         except Exception:
             return {}
 
-    def get_prices(self):
-        prices = self.fetch_public_prices()
+    def get_prices(self, futures_client=None):
+        prices = {}
+        if _prefer_futures_prices() and futures_client is not None:
+            prices = self.fetch_futures_prices(futures_client)
+        if not prices:
+            prices = self.fetch_public_prices()
         for fleet in SUPPORTED_SYMBOLS:
             if fleet not in prices:
                 prices[fleet] = {

@@ -174,8 +174,31 @@ style.textContent = `
     bottom: 18px !important;
     top: auto !important;
     left: auto !important;
-    width: 260px !important;
+    width: min(280px, calc(100vw - 36px)) !important;
     z-index: 150 !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    padding: 12px 14px !important;
+  }
+  #alert-panel .alert-health {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    font-size: 11px !important;
+    color: rgba(220, 239, 245, 0.88) !important;
+  }
+  #alert-panel .alert-health strong {
+    font-size: 16px !important;
+    color: #eefaff !important;
+  }
+  #alert-panel .alert-health-grade.good { color: #2ff7a3 !important; }
+  #alert-panel .alert-health-grade.ok { color: #8fe8ff !important; }
+  #alert-panel .alert-health-grade.warn { color: #ffd06b !important; }
+  #alert-panel .alert-health-grade.bad { color: #ff6b8f !important; }
+  #alert-panel .alert-health-tip {
+    opacity: 0.82 !important;
+    line-height: 1.35 !important;
   }
   #meeting-log-panel.is-minimized,
   #meeting-log-panel .rt-fab { pointer-events: auto !important; }

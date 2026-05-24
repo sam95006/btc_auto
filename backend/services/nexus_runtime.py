@@ -21,6 +21,7 @@ from backend.config.capital_config import (
 )
 from backend.fleets.base_strategy_engine import BaseFleetStrategyEngine
 from backend.fleets.signal_fusion_engine import SignalFusionEngine
+from backend.monitoring.trading_health_service import TradingHealthService
 from backend.market.market_price_feed_service import MarketPriceFeedService
 from backend.market.market_context_service import MarketContextService
 from backend.market.radar_market_scan_service import RadarMarketScanService
@@ -157,6 +158,7 @@ class NexusRuntime:
         self.learning_feedback = LearningFeedbackLoop(runtime_store)
         self.signal_fusion = SignalFusionEngine()
         self.price_feed = MarketPriceFeedService()
+        self.trading_health = TradingHealthService()
         self.news_ingestion = NewsIngestionService(refresh_seconds=NEWS_REFRESH_SECONDS)
         self.news_analysis = NewsAnalysisEngine()
         self.meeting_broadcaster = MeetingMemoryBroadcaster()
@@ -425,7 +427,7 @@ class NexusRuntime:
             now = time.time()
             if not force and (now - float(self._last_exchange_refresh_at or 0.0)) < min_interval_sec:
                 return False
-            prices = self.price_feed.get_prices()
+            prices = self.price_feed.get_prices(self.futures_client)
             self.latest_prices = dict(prices)
             if self.spot_client.is_configured():
                 self._last_spot_account = self._sync_spot_account(prices)
@@ -450,7 +452,7 @@ class NexusRuntime:
             return True
 
     def _sync_live_market_and_world_state(self, force=False, writer="live_refresh"):
-        prices = self.latest_prices or self.price_feed.get_prices()
+        prices = self.latest_prices or self.price_feed.get_prices(self.futures_client)
         self.latest_prices = dict(prices)
         self.market_overview = self.price_feed.get_market_overview(
             max_age_seconds=GLOBAL_INDEX_REFRESH_SECONDS,
@@ -520,7 +522,7 @@ class NexusRuntime:
     def tick(self):
         self.upgrade_pipeline.begin_tick()
         self._process_commands()
-        prices = self.price_feed.get_prices()
+        prices = self.price_feed.get_prices(self.futures_client)
         self.latest_prices = dict(prices)
         self.market_overview = self.price_feed.get_market_overview(max_age_seconds=GLOBAL_INDEX_REFRESH_SECONDS)
         self.position_manager.update_unrealized(prices)
@@ -536,7 +538,7 @@ class NexusRuntime:
         self._sync_futures_activity()
         # Refresh prices after the heavier sync steps so downstream AI/risk/execution
         # logic evaluates against the newest Binance values available in this tick.
-        prices = self.price_feed.get_prices()
+        prices = self.price_feed.get_prices(self.futures_client)
         self.latest_prices = dict(prices)
         self.market_overview = self.price_feed.get_market_overview(max_age_seconds=GLOBAL_INDEX_REFRESH_SECONDS)
         self._last_binance_sync["last_sync_time"] = max(
@@ -2810,7 +2812,7 @@ class NexusRuntime:
             for fleet in FLEETS
         }
 
-        return {
+        snapshot_payload = {
             "system": system_snapshot,
             "capital": capital,
             "loans": self.loan_manager.snapshot(),
@@ -2911,6 +2913,11 @@ class NexusRuntime:
             "decision_traces": runtime_store.recent_decision_traces(limit=50),
             "live_sync": dict(self._live_sync_status or {}),
         }
+        snapshot_payload["trading_health"] = self.trading_health.build_report(
+            snapshot_payload,
+            runtime_store=runtime_store,
+        )
+        return snapshot_payload
 
 
 nexus_runtime = NexusRuntime()
