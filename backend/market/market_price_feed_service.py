@@ -40,6 +40,7 @@ class MarketPriceFeedService:
     }
 
     def __init__(self):
+        self._last_overview_at = 0.0
         self._mock_anchor = {
             "BTC": 64000.0,
             "ETH": 3200.0,
@@ -263,5 +264,16 @@ class MarketPriceFeedService:
         self.last_market_overview = overview
         return overview
 
-    def get_market_overview(self):
-        return self.fetch_market_overview()
+    def get_market_overview(self, max_age_seconds=0, force=False):
+        now = time.time()
+        if (
+            not force
+            and max_age_seconds > 0
+            and self.last_market_overview
+            and self._last_overview_at
+            and (now - self._last_overview_at) < max_age_seconds
+        ):
+            return self.last_market_overview
+        overview = self.fetch_market_overview()
+        self._last_overview_at = time.time()
+        return overview

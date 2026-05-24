@@ -16,6 +16,7 @@ from backend.services.layout_store import layout_store
 from backend.trading.trading_mode import get_trading_mode, require_testnet_credentials
 from backend.core.data_paths import resolve_runtime_db_path
 import backend.runtime.embed_flags as embed_flags
+from config.live_sync_config import WS_PUSH_INTERVAL_SECONDS
 
 
 _dialogue = None
@@ -292,6 +293,6 @@ def register_nexus_routes(app):
                     last_sent = encoded
                 else:
                     ws.send(json.dumps({"heartbeat": True}, ensure_ascii=False))
-                time.sleep(2)
+                time.sleep(WS_PUSH_INTERVAL_SECONDS)
     else:
         print("[nexus] flask-sock not installed; REST polling remains available.")

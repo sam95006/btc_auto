@@ -1,7 +1,9 @@
 import { connectNexusSocket, fetchNexusState } from "./api_client.js";
 
+const POLL_INTERVAL_MS = 2000;
+const WS_SAFETY_POLL_MS = 10000;
+
 const listeners = new Set();
-let state = null;
 let socket = null;
 let reconnectTimer = null;
 let pollingTimer = null;
@@ -139,6 +141,13 @@ export async function startStateStore() {
 
   pollingTimer = window.setInterval(() => {
     const socketOpen = socket && socket.readyState === WebSocket.OPEN;
-    if (!socketOpen) refreshFromRest("poll");
-  }, 5000);
+    if (!socketOpen) {
+      refreshFromRest("poll");
+      return;
+    }
+    const lastRestAt = transport.lastRestAt ? new Date(transport.lastRestAt).getTime() : 0;
+    if (!lastRestAt || Date.now() - lastRestAt > WS_SAFETY_POLL_MS) {
+      refreshFromRest("safety");
+    }
+  }, POLL_INTERVAL_MS);
 }

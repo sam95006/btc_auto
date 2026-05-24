@@ -3,7 +3,7 @@ import threading
 import time
 import hashlib
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from backend.core.env_loader import load_env_file
@@ -34,6 +34,12 @@ from backend.governance.upgrade_pipeline import UpgradePipeline
 from backend.governance.radar_llm_proposal_bridge import RadarLlmProposalBridge
 from backend.analytics.daily_ops_reporter import should_broadcast, format_report as format_daily_ops_report
 from config.daily_report_config import DAILY_REPORT_ENABLED
+from config.live_sync_config import (
+    EXCHANGE_REFRESH_MIN_SECONDS,
+    GLOBAL_INDEX_REFRESH_SECONDS,
+    LIVE_REFRESH_RADAR,
+    NEWS_REFRESH_SECONDS,
+)
 from backend.risk.risk_control_engine import RiskControlEngine
 from backend.portfolio import PortfolioGovernor
 from backend.services.runtime_store import runtime_store
@@ -82,7 +88,7 @@ STABLE_ASSETS = {"USDT", "USDC", "FDUSD", "TUSD", "USDP", "DAI", "USD1", "RLUSD"
 
 
 def _now():
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return nexus_now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def _short_fingerprint(parts):
@@ -151,7 +157,7 @@ class NexusRuntime:
         self.learning_feedback = LearningFeedbackLoop(runtime_store)
         self.signal_fusion = SignalFusionEngine()
         self.price_feed = MarketPriceFeedService()
-        self.news_ingestion = NewsIngestionService()
+        self.news_ingestion = NewsIngestionService(refresh_seconds=NEWS_REFRESH_SECONDS)
         self.news_analysis = NewsAnalysisEngine()
         self.meeting_broadcaster = MeetingMemoryBroadcaster()
         self.llm_gateway = LLMGateway()
@@ -241,6 +247,8 @@ class NexusRuntime:
         self._thread = None
         self._exchange_refresh_lock = threading.RLock()
         self._last_exchange_refresh_at = 0.0
+        self._last_news_sync_at = 0.0
+        self._live_sync_status = {}
         self._stop = threading.Event()
         self._manual_pause = False
         self._pause_reason = None
@@ -331,19 +339,29 @@ class NexusRuntime:
             latest_news.get("summary_zh") or latest_news.get("summary"),
             "目前沒有重大新增事件，維持原有觀察節奏。",
         )
-        date_part = meeting_id.split("_")[1] if "_" in meeting_id else datetime.now().strftime("%Y-%m-%d")
+        date_part = meeting_id.split("_")[1] if "_" in meeting_id else nexus_now().strftime("%Y-%m-%d")
         portfolio_status = dict(self.portfolio_status or {})
         station_learning_exchange = dict(self.station_learning_exchange or {})
+        fleet_status = dict((self.state_manager.snapshot() or {}).get("fleet_status", {}))
+        trading_fleets = [
+            fleet
+            for fleet in FLEETS
+            if str(fleet_status.get(fleet, "")).upper() in {"TRADING", "ACTIVE", "BUSY"}
+        ]
+        live_line = f"更新 {nexus_now().strftime('%Y-%m-%d %H:%M')} Taipei"
+        if trading_fleets:
+            live_line += f"，交易中：{', '.join(trading_fleets)}"
         return {
             "meeting_id": meeting_id,
             "slot": slot,
             "time": f"{date_part} {slot}:00",
             "created_at": _now(),
+            "updated_at": _now(),
             "type": "SCHEDULED_ROUND_TABLE",
             "summary": f"{slot} 固定圓桌會議",
             "participants": [{"station": station, "speaker": station} for station in ["HQ", "NEWS", "RADAR", *FLEETS]],
             "conclusion": {
-                "summary": f"{slot} 固定圓桌會議完成，重點摘要：{summary}",
+                "summary": f"{slot} 固定圓桌會議完成（{live_line}）。重點摘要：{summary}",
                 "next_6h_focus": _meeting_focus_defaults("scheduled"),
                 "fleet_restrictions": dict(portfolio_status.get("fleet_restrictions", {})),
                 "capital_adjustments": dict(portfolio_status.get("capital_adjustments", {})),
@@ -393,13 +411,16 @@ class NexusRuntime:
             self.station_chat_log.add(channel, "風控反思", msg, source="虧損反思", importance="WARNING")
         self.station_chats = self.station_chat_log.recent_grouped()
 
-    def refresh_live_exchange_state(self, force=False, min_interval_sec=4.0):
-        """Refresh Binance spot/futures balances and positions (web-safe, throttled)."""
+    def refresh_live_exchange_state(self, force=False, min_interval_sec=None):
+        """Refresh Binance, prices, global news/indices, and roundtables (web-safe, throttled)."""
+        if min_interval_sec is None:
+            min_interval_sec = EXCHANGE_REFRESH_MIN_SECONDS
         now = time.time()
         if not force and (now - float(self._last_exchange_refresh_at or 0.0)) < min_interval_sec:
             return False
         if not (self.spot_client.is_configured() or self.futures_client.is_configured()):
-            return False
+            self._sync_live_market_and_world_state(force=force, writer="live_refresh")
+            return True
         with self._exchange_refresh_lock:
             now = time.time()
             if not force and (now - float(self._last_exchange_refresh_at or 0.0)) < min_interval_sec:
@@ -416,7 +437,7 @@ class NexusRuntime:
                 self._synchronize_live_futures_state(futures_account)
                 futures_total = futures_equity_from_account(futures_account)
                 self.growth_status = self.capital_growth_guard.evaluate(futures_total)
-            self.market_overview = self.price_feed.get_market_overview()
+            self._sync_live_market_and_world_state(force=force, writer="exchange_refresh")
             self._last_binance_sync["last_sync_time"] = int(time.time() * 1000)
             self._last_exchange_refresh_at = time.time()
             runtime_store.save_snapshot(
@@ -427,6 +448,41 @@ class NexusRuntime:
                 single_instance=False,
             )
             return True
+
+    def _sync_live_market_and_world_state(self, force=False, writer="live_refresh"):
+        prices = self.latest_prices or self.price_feed.get_prices()
+        self.latest_prices = dict(prices)
+        self.market_overview = self.price_feed.get_market_overview(
+            max_age_seconds=GLOBAL_INDEX_REFRESH_SECONDS,
+            force=force,
+        )
+        self.position_manager.update_unrealized(prices)
+        if force or self._news_refresh_due():
+            self._sync_news()
+        else:
+            self._maybe_sync_news_for_meetings(min_interval_sec=NEWS_REFRESH_SECONDS)
+        self._ensure_fixed_roundtables()
+        if LIVE_REFRESH_RADAR and self.futures_client.is_configured():
+            self.radar_scan = self.radar_market_scan_service.scan()
+            self.radar_state = dict(self.radar_scan or {})
+            self.whale_state = {
+                "generated_at": self.radar_scan.get("generated_at", _now()),
+                "watch": list(self.radar_scan.get("whale_watch", []) or []),
+                "candidates": list(self.radar_scan.get("candidates", []) or []),
+            }
+        price_sources = {fleet: (data or {}).get("source") for fleet, data in prices.items() if isinstance(data, dict)}
+        self._live_sync_status = {
+            "updated_at": _now(),
+            "updated_at_ms": int(time.time() * 1000),
+            "writer": writer,
+            "binance_sync_ms": int(self._last_binance_sync.get("last_sync_time") or 0),
+            "news_sync_at": float(self._last_news_sync_at or 0.0),
+            "news_count": len(self.latest_news or []),
+            "event_count": len(self.normalized_events or []),
+            "price_sources": price_sources,
+            "index_source": (self.market_overview or {}).get("source"),
+            "radar_enabled": bool(LIVE_REFRESH_RADAR and self.futures_client.is_configured()),
+        }
 
     def start(self):
         if self._thread and self._thread.is_alive():
@@ -466,7 +522,7 @@ class NexusRuntime:
         self._process_commands()
         prices = self.price_feed.get_prices()
         self.latest_prices = dict(prices)
-        self.market_overview = self.price_feed.get_market_overview()
+        self.market_overview = self.price_feed.get_market_overview(max_age_seconds=GLOBAL_INDEX_REFRESH_SECONDS)
         self.position_manager.update_unrealized(prices)
         self._sync_news()
 
@@ -482,7 +538,7 @@ class NexusRuntime:
         # logic evaluates against the newest Binance values available in this tick.
         prices = self.price_feed.get_prices()
         self.latest_prices = dict(prices)
-        self.market_overview = self.price_feed.get_market_overview()
+        self.market_overview = self.price_feed.get_market_overview(max_age_seconds=GLOBAL_INDEX_REFRESH_SECONDS)
         self._last_binance_sync["last_sync_time"] = max(
             int(spot_account.get("update_time") or 0),
             int(futures_account.get("update_time") or 0),
@@ -659,6 +715,26 @@ class NexusRuntime:
             "count": len(getattr(self, "_radar_llm_proposals", []) or []),
             "items": list(getattr(self, "_radar_llm_proposals", []) or [])[:6],
         }
+        self._finalize_scheduled_roundtables(
+            deterministic_round,
+            llm_bundle.get("roundtable", {}),
+        )
+        self._live_sync_status = {
+            "updated_at": _now(),
+            "updated_at_ms": int(time.time() * 1000),
+            "writer": "nexus_worker",
+            "binance_sync_ms": int(self._last_binance_sync.get("last_sync_time") or 0),
+            "news_sync_at": float(self._last_news_sync_at or 0.0),
+            "news_count": len(self.latest_news or []),
+            "event_count": len(self.normalized_events or []),
+            "price_sources": {
+                fleet: (data or {}).get("source")
+                for fleet, data in (self.latest_prices or {}).items()
+                if isinstance(data, dict)
+            },
+            "index_source": (self.market_overview or {}).get("source"),
+            "radar_enabled": bool(LIVE_REFRESH_RADAR and self.futures_client.is_configured()),
+        }
         self._maybe_broadcast_daily_ops_report(calibration_snapshot)
         try:
             self.station_dialogue.maybe_refresh_channels(self._dialogue_snapshot())
@@ -700,12 +776,25 @@ class NexusRuntime:
             self.normalized_events = self.event_normalizer.normalize(self.latest_news)
             self.upgrade_pipeline.on_news(self.normalized_events)
             self.state_manager.set_module_health("news", "ONLINE")
+            self._last_news_sync_at = time.time()
             self._refresh_station_briefings()
             self._maybe_pause_for_major_news()
         except Exception as exc:
             self.state_manager.set_module_health("news", f"ERROR: {exc}")
             self.normalized_events = []
             self._append_alert("WARNING", f"新聞同步失敗：{exc}")
+
+    def _maybe_sync_news_for_meetings(self, min_interval_sec=None):
+        if min_interval_sec is None:
+            min_interval_sec = NEWS_REFRESH_SECONDS
+        last = float(getattr(self, "_last_news_sync_at", 0.0) or 0.0)
+        if self.latest_news and (time.time() - last) < min_interval_sec:
+            return
+        self._sync_news()
+
+    def _news_refresh_due(self):
+        last = float(getattr(self, "_last_news_sync_at", 0.0) or 0.0)
+        return (time.time() - last) >= NEWS_REFRESH_SECONDS
 
     def _refresh_station_briefings(self):
         latest = self.latest_news[0] if self.latest_news else {}
@@ -848,14 +937,12 @@ class NexusRuntime:
             meeting = self._build_scheduled_roundtable(meeting_id, slot, latest_news)
             current = existing.get(meeting_id)
             if current:
-                normalized_current = self._normalize_meeting_record(current)
-                existing_summary = str(normalized_current.get("conclusion", {}).get("summary", "") or "")
-                if "固定圓桌會議完成" in existing_summary:
-                    continue
+                meeting["created_at"] = current.get("created_at") or meeting.get("created_at") or _now()
                 self.meetings = [item for item in self.meetings if item.get("meeting_id") != meeting_id]
             meeting = self._normalize_meeting_record(meeting)
+            meeting["updated_at"] = _now()
             self.meetings.insert(0, meeting)
-            self.meetings = sorted(self.meetings, key=lambda item: item.get("time", ""), reverse=True)[:40]
+            self.meetings = self._prune_meeting_list(self.meetings)
             runtime_store.append_meeting(meeting)
             self._save_round_table_memory(meeting)
             self._append_meeting_alert(meeting)
@@ -863,6 +950,61 @@ class NexusRuntime:
         if len(self.alerts) < 2 and self.meetings:
             for item in self.meetings[:4]:
                 self._append_meeting_alert(item)
+
+    def _prune_meeting_list(self, meetings):
+        now = nexus_now()
+        today = now.strftime("%Y-%m-%d")
+        cutoff = (now.date() - timedelta(days=14)).isoformat()
+        kept = []
+        for item in meetings or []:
+            meeting_type = str(item.get("type") or "").upper()
+            time_prefix = str(item.get("time") or "")[:10]
+            if meeting_type == "SCHEDULED_ROUND_TABLE":
+                if time_prefix >= today:
+                    kept.append(item)
+                continue
+            if meeting_type == "EMERGENCY_ROUND_TABLE" and time_prefix >= cutoff:
+                kept.append(item)
+        return sorted(kept, key=lambda item: item.get("time", ""), reverse=True)[:40]
+
+    def _finalize_scheduled_roundtables(self, roundtable_payload, llm_roundtable=None):
+        self._ensure_fixed_roundtables()
+        self._enrich_today_scheduled_meetings(roundtable_payload, llm_roundtable)
+
+    def _enrich_today_scheduled_meetings(self, roundtable_payload, llm_roundtable=None):
+        if not roundtable_payload and not llm_roundtable:
+            return
+        today = nexus_now().strftime("%Y-%m-%d")
+        llm_output = {}
+        if isinstance(llm_roundtable, dict):
+            llm_output = llm_roundtable.get("output") or {}
+        llm_summary = ""
+        if isinstance(llm_output, dict):
+            llm_summary = str(llm_output.get("meeting_summary") or "").strip()
+        machine = str((roundtable_payload or {}).get("machine_summary") or "").strip()
+        risk_level = str((roundtable_payload or {}).get("risk_level") or "NORMAL").strip()
+
+        for idx, meeting in enumerate(list(self.meetings)):
+            meeting_id = str(meeting.get("meeting_id", ""))
+            if not meeting_id.startswith(f"scheduled_{today}_"):
+                continue
+            conclusion = dict(meeting.get("conclusion") or {})
+            base = str(conclusion.get("summary") or meeting.get("summary") or "")
+            if "｜AI：" in base:
+                base = base.split("｜AI：", 1)[0].rstrip()
+            extras = []
+            if machine:
+                extras.append(machine[:160])
+            if llm_summary:
+                extras.append(llm_summary[:220])
+            if extras:
+                conclusion["summary"] = f"{base}｜AI：{' '.join(extras)[:380]}"
+            conclusion["risk_level"] = risk_level
+            if roundtable_payload and roundtable_payload.get("fleet_restrictions"):
+                conclusion["fleet_restrictions"] = dict(roundtable_payload.get("fleet_restrictions", {}))
+            updated = self._normalize_meeting_record({**meeting, "conclusion": conclusion, "updated_at": _now()})
+            self.meetings[idx] = updated
+            runtime_store.append_meeting(updated)
 
     def _create_news_meeting(self, major_news):
         summary = _clean_display_text(
@@ -2767,6 +2909,7 @@ class NexusRuntime:
             ),
             "event_registry": self.upgrade_pipeline.event_registry.snapshot(),
             "decision_traces": runtime_store.recent_decision_traces(limit=50),
+            "live_sync": dict(self._live_sync_status or {}),
         }
 
 

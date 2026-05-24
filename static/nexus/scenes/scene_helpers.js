@@ -245,11 +245,19 @@ export function renderRoleMatrix(state, station) {
   `;
 }
 
+function findMeetingBySlot(meetings, slot) {
+  const matches = meetings.filter((item) => {
+    if (String(item?.slot || "") === slot) return true;
+    const time = String(item?.time || "");
+    return time.slice(11, 16) === slot || time.includes(` ${slot}:`) || time.startsWith(`${slot}:`);
+  });
+  if (!matches.length) return null;
+  return [...matches].sort((a, b) => String(b.time || "").localeCompare(String(a.time || "")))[0];
+}
+
 export function renderMeetingSummary(state, slot = null) {
   const meetings = Array.isArray(state.meetings) ? state.meetings : [];
-  const meeting = slot
-    ? meetings.find((item) => String(item.time || "").slice(11, 16) === slot) || null
-    : getLatestMeeting(state);
+  const meeting = slot ? findMeetingBySlot(meetings, slot) : getLatestMeeting(state);
 
   if (!meeting) {
     return `<p class="panel-empty">目前沒有會議結果。</p>`;
