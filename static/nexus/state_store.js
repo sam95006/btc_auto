@@ -4,6 +4,7 @@ const POLL_INTERVAL_MS = 2000;
 const WS_SAFETY_POLL_MS = 10000;
 
 const listeners = new Set();
+let state = null;
 let socket = null;
 let reconnectTimer = null;
 let pollingTimer = null;
