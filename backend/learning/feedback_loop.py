@@ -1,3 +1,4 @@
+import os
 from collections import Counter, defaultdict
 from datetime import datetime
 from backend.learning.strategy_adaptation_engine import StrategyAdaptationEngine
@@ -9,6 +10,7 @@ from config.learning_config import (
     FAILURE_FOCUS_BLOCK_MAP,
     HIGH_LEVERAGE_FAILURE_THRESHOLD,
     HIGH_LEVERAGE_PENALTY_STEP,
+    LEARNING_HARD_PAUSE_ENABLED,
     LOSS_RATE_PENALTY_THRESHOLD,
     MAX_CONFIDENCE_PENALTY,
     MAX_HIGH_LEVERAGE_PENALTY,
@@ -16,6 +18,7 @@ from config.learning_config import (
     SYMBOL_COOLDOWN_SECONDS,
     SYMBOL_COOLDOWN_WINDOW,
 )
+from config.growth_mode_config import BOLD_TESTNET_ENABLED
 
 
 def _now():
@@ -188,7 +191,7 @@ class LearningFeedbackLoop:
 
         leverage_cap = None
         if consecutive_losses >= CONSECUTIVE_LOSS_HARD_BLOCK:
-            leverage_cap = 0
+            leverage_cap = 0 if LEARNING_HARD_PAUSE_ENABLED else 3
         elif consecutive_losses >= CONSECUTIVE_LOSS_SOFT_BLOCK:
             leverage_cap = 3
         elif any(item.get("failure_reason") == "over_leverage" for item in recent[:5]):
@@ -415,6 +418,14 @@ class LearningFeedbackLoop:
                     4,
                 )
         guidance["applied_learning_patches"] = len(applied_patches)
+        bold_testnet = str(os.getenv("NEXUS_BOLD_TESTNET", "") or "").strip().lower() in {"1", "true", "yes", "on"}
+        if bold_testnet and guidance.get("pause_new_entries"):
+            guidance["pause_new_entries"] = False
+            guidance["regime_blocked"] = False
+            cap = guidance.get("leverage_cap")
+            if cap is None or float(cap or 0) <= 0:
+                guidance["leverage_cap"] = 10
+            guidance["learning_guard_mode"] = "bold_testnet_soft"
         return guidance
 
     def build_strategy_adaptation_snapshot(self, market_contexts=None):

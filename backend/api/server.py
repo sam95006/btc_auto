@@ -64,6 +64,18 @@ def register_nexus_routes(app):
         binance_spot = capital.get("binance_spot") or {}
         binance_futures = capital.get("binance_futures") or {}
         account_binding = capital.get("account_binding") or {}
+        decision = snap.get("decision_summary") or {}
+        live_positions = [
+            {
+                "fleet": item.get("fleet"),
+                "symbol": item.get("symbol"),
+                "side": item.get("side"),
+                "quantity": item.get("quantity"),
+                "unrealized_pnl": item.get("unrealized_pnl"),
+            }
+            for item in (snap.get("positions") or [])
+            if str(item.get("market_type") or "") == "futures"
+        ]
         return jsonify(
             {
                 "trading_mode": mode,
@@ -78,6 +90,9 @@ def register_nexus_routes(app):
                 "snapshot_worker_module": (system.get("module_health") or {}).get("worker"),
                 "binance_sync_status": binance_sync.get("sync_status"),
                 "capital_source": capital.get("source", ""),
+                "live_position_count": int(decision.get("live_position_count") or len(live_positions)),
+                "exchange_position_symbols": list(decision.get("exchange_position_symbols") or []),
+                "live_positions": live_positions,
                 "binance_balances": {
                     "spot_usdt": binance_spot.get("usdt_total", capital.get("spot_usdt_total")),
                     "spot_usdc": binance_spot.get("usdc_total", capital.get("spot_usdc_total")),
@@ -93,6 +108,13 @@ def register_nexus_routes(app):
                     "set NEXUS_EMBEDDED_WORKER=1 or deploy on Zeabur (auto-detects ZEABUR_* IDs).",
                     "If testnet_credentials_missing is non-empty, add the four BINANCE_*_TESTNET_* keys in Zeabur Variables.",
                     "For the same DB as local, mount a volume at NEXUS_DATA_DIR and import a state bundle (see docs/NEXUS_GUIDE.zh-TW.md).",
+                    (
+                        "live_position_count is 0 but Binance App shows open positions: Zeabur "
+                        "BINANCE_FUTURES_TESTNET_* keys likely belong to a different Demo account. "
+                        "Regenerate keys on the same U本位 Demo account as the App and redeploy."
+                        if not live_positions and not missing
+                        else ""
+                    ),
                     (
                         "account_binding.accounts_mismatch is true: spot and futures API keys belong to different "
                         "Binance testnet accounts. Dashboard totals are correct for the keys in Zeabur env, but may "
@@ -131,6 +153,13 @@ def register_nexus_routes(app):
 
     @app.route("/api/nexus/positions")
     def nexus_positions():
+        try:
+            from backend.services.nexus_runtime import nexus_runtime
+
+            nexus_runtime.refresh_live_exchange_state(force=True)
+            return jsonify(nexus_runtime.snapshot().get("positions", []))
+        except Exception as exc:
+            print(f"[api] positions refresh failed: {exc}")
         return jsonify(runtime_store.load_snapshot().get("positions", []))
 
     @app.route("/api/nexus/trades")
@@ -240,13 +269,22 @@ def register_nexus_routes(app):
         def nexus_ws(ws):
             last_sent = None
             while True:
+                snapshot = None
                 try:
                     from backend.services.nexus_runtime import nexus_runtime
 
                     nexus_runtime.refresh_live_exchange_state()
+                    snapshot = nexus_runtime.snapshot()
+                    runtime_store.save_snapshot(
+                        snapshot,
+                        worker_status="ONLINE",
+                        writer="ws_push",
+                        single_instance=False,
+                    )
                 except Exception as exc:
                     print(f"[ws] live exchange refresh failed: {exc}")
-                snapshot = runtime_store.load_snapshot()
+                if snapshot is None:
+                    snapshot = runtime_store.load_snapshot()
                 payload = {"snapshot": snapshot}
                 encoded = json.dumps(payload, ensure_ascii=False)
                 if encoded != last_sent:

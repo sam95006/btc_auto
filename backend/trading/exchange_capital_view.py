@@ -55,6 +55,31 @@ def _futures_asset_row(futures_account: dict | None, asset: str) -> Dict[str, An
     return {}
 
 
+def futures_unrealized_from_positions(futures_account: dict | None) -> float:
+    """Sum open-position unrealized PnL from Binance positionRisk sync."""
+    total = 0.0
+    for row in (futures_account or {}).get("positions") or []:
+        total += _safe_float(row.get("unrealized_pnl"))
+    return round(total, 4)
+
+
+def resolve_futures_display_unrealized(futures_account: dict | None, treasury_unrealized: float) -> float:
+    """
+    USDT treasury row can show 0 cross_unrealized while open positions still have PnL.
+    Prefer position sum, then account totalUnrealizedProfit, then treasury row.
+    """
+    futures_account = futures_account or {}
+    position_unrealized = futures_unrealized_from_positions(futures_account)
+    account_unrealized = _safe_float(futures_account.get("unrealized_pnl"))
+    exchange = futures_account.get("exchange_account") or {}
+    summary_unrealized = _safe_float(exchange.get("totalUnrealizedProfit"))
+    candidates = [treasury_unrealized, position_unrealized, account_unrealized, summary_unrealized]
+    nonzero = [value for value in candidates if abs(value) > 1e-8]
+    if not nonzero:
+        return round(float(treasury_unrealized or 0.0), 4)
+    return round(max(nonzero, key=abs), 4)
+
+
 def _futures_usdt_asset_capital(futures_account: dict | None) -> Dict[str, float]:
     """
     USDT row from `GET /fapi/v2/balance` — matches Binance Demo「資產列表」USDT 列，

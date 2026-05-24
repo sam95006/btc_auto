@@ -57,12 +57,14 @@ export function renderTopStatusBar(root, state) {
   const accountsMismatch = Boolean(binding.accounts_mismatch);
   const tradeCount = Number(decision.trade_count || 0);
   const livePositions = Number(decision.live_position_count || 0);
+  const positionSymbols = (decision.exchange_position_symbols || []).filter(Boolean);
+  const positionNote = positionSymbols.length ? ` / ${positionSymbols.join(", ")}` : "";
   const systemLabel = system.trading_paused ? "暫停中" : "運行中";
   const capitalSource = capital.source === "binance_rest" ? "Binance 已同步" : "等待 Binance 同步";
   const linkLabel = transport.connected ? capitalSource : "資料連線中斷";
   const mismatchNote = accountsMismatch ? " / 現貨與合約 API 為不同帳戶" : "";
   const holdingsNote = spotHoldings > 0 ? ` / 持倉幣估值 ${formatMoney(spotHoldings)} 不計入` : "";
-  const systemMeta = `${linkLabel}${mismatchNote} / 持倉 ${livePositions} / 成交 ${tradeCount} 筆${holdingsNote}`;
+  const systemMeta = `${linkLabel}${mismatchNote} / 持倉 ${livePositions}${positionNote} / 成交 ${tradeCount} 筆${holdingsNote}`;
   const dualTime = `台北 ${shortTime(times.taipei || system.current_time)} | 美東 ${shortTime(times.eastern)}`;
 
   root.innerHTML = `

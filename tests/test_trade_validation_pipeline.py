@@ -186,6 +186,9 @@ class TradeValidationPipelineTests(unittest.TestCase):
         self.assertIn("learning_guidance", result)
 
     def test_portfolio_blocks_same_side_concentration(self):
+        import os
+
+        os.environ["NEXUS_BOLD_TESTNET"] = "0"
         portfolio_status = {
             "fleet_restrictions": {
                 "BTC": {
@@ -194,6 +197,7 @@ class TradeValidationPipelineTests(unittest.TestCase):
                     "leverage_cap": None,
                 }
             },
+            "fleet_exposures": {"BTC": {"notional": 500.0}},
             "same_side_concentration": 0.82,
             "correlation_concentration": 0.40,
             "reserve_action": "hold",
@@ -212,8 +216,12 @@ class TradeValidationPipelineTests(unittest.TestCase):
         self.assertFalse(result["approved"])
         self.assertEqual(result["stages"]["portfolio"]["reason"], "same_side_concentration_too_high")
         self.assertEqual(result["reason"], "same_side_concentration_too_high")
+        os.environ["NEXUS_BOLD_TESTNET"] = "1"
 
     def test_portfolio_blocks_when_reserve_increase_and_utilization_full(self):
+        import os
+
+        os.environ["NEXUS_BOLD_TESTNET"] = "0"
         portfolio_status = {
             "fleet_restrictions": {
                 "BTC": {
@@ -222,6 +230,7 @@ class TradeValidationPipelineTests(unittest.TestCase):
                     "leverage_cap": 10,
                 }
             },
+            "fleet_exposures": {"BTC": {"notional": 500.0}},
             "same_side_concentration": 0.50,
             "correlation_concentration": 0.35,
             "reserve_action": "increase_reserve",
@@ -240,7 +249,38 @@ class TradeValidationPipelineTests(unittest.TestCase):
         self.assertFalse(result["approved"])
         self.assertEqual(result["stages"]["portfolio"]["reason"], "portfolio_reserve_increase_block")
         self.assertEqual(result["reason"], "portfolio_reserve_increase_block")
+        os.environ["NEXUS_BOLD_TESTNET"] = "1"
 
+    def test_bold_testnet_allows_new_fleet_when_book_is_same_side_heavy(self):
+        import os
+
+        os.environ["NEXUS_BOLD_TESTNET"] = "1"
+        portfolio_status = {
+            "fleet_restrictions": {
+                "SOL": {"allowed_new_entries": True},
+            },
+            "fleet_exposures": {
+                "ETH": {"notional": 500.0},
+                "RADAR": {"notional": 100.0},
+            },
+            "same_side_concentration": 0.95,
+            "correlation_concentration": 0.70,
+            "reserve_action": "increase_reserve",
+            "notional_utilization": 1.05,
+            "hedge_recommendations": [],
+        }
+        proposal = {**self.base_proposal, "fleet": "SOL", "symbol": "SOLUSDT"}
+        result = self.pipeline.evaluate(
+            proposal,
+            market_context=self.healthy_context,
+            truth_status=self.healthy_truth,
+            recent_orders=[],
+            recent_trades=[],
+            portfolio_status=portfolio_status,
+            growth_context=self.growth_context,
+        )
+        self.assertTrue(result["approved"])
+        self.assertEqual(result["stages"]["portfolio"]["reason"], "bold_testnet_fleet_diversification_allowed")
 
 
 if __name__ == "__main__":

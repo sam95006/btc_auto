@@ -113,6 +113,22 @@ class ExchangeCapitalViewTests(unittest.TestCase):
         self.assertEqual((usdt, usdc, total), (3.0, 0.0, 3.0))
         _reload_capital_modules(None)
 
+    def test_resolve_futures_display_unrealized_prefers_position_sum(self):
+        view = _reload_capital_modules("USDT")
+        unrealized = view.resolve_futures_display_unrealized(
+            {
+                "unrealized_pnl": 0.0,
+                "exchange_account": {"totalUnrealizedProfit": 0.0},
+                "positions": [
+                    {"unrealized_pnl": 19.96},
+                    {"unrealized_pnl": 20.78},
+                ],
+            },
+            treasury_unrealized=0.0,
+        )
+        self.assertEqual(unrealized, 40.74)
+        _reload_capital_modules(None)
+
     def test_futures_equity_usdt_row_when_usdt_only(self):
         view = _reload_capital_modules("USDT")
         try:

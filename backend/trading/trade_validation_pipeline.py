@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from collections import Counter
 from datetime import datetime, timedelta
 
@@ -35,6 +36,10 @@ def _safe_float(value):
         return float(value or 0.0)
     except Exception:
         return 0.0
+
+
+def _bold_testnet_enabled() -> bool:
+    return str(os.getenv("NEXUS_BOLD_TESTNET", "") or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _safe_int(value):
@@ -331,6 +336,18 @@ class PortfolioValidationEngine:
             approved = True
             reason = "caution:hedge_recommended"
             score = 0.48
+
+        if _bold_testnet_enabled() and not approved:
+            fleet_exposure = dict((portfolio_status.get("fleet_exposures") or {}).get(fleet, {}))
+            fleet_notional = _safe_float(fleet_exposure.get("notional"))
+            if fleet_notional <= 0 and reason in {
+                "same_side_concentration_too_high",
+                "correlated_group_concentration_too_high",
+                "portfolio_reserve_increase_block",
+            }:
+                approved = True
+                reason = "bold_testnet_fleet_diversification_allowed"
+                score = max(score, 0.52)
 
         return {
             "stage": "portfolio",

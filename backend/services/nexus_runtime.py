@@ -51,6 +51,7 @@ from backend.trading.exchange_capital_view import (
     build_account_binding_status,
     build_ui_capital,
     futures_equity_from_account,
+    resolve_futures_display_unrealized,
 )
 from backend.trading.decision_quality_engine import DecisionQualityValidationEngine
 from backend.risk.capital_growth_guard import CapitalGrowthGuard
@@ -413,6 +414,8 @@ class NexusRuntime:
                 self._sync_futures_activity()
                 self._apply_live_capital_plan(futures_account)
                 self._synchronize_live_futures_state(futures_account)
+                futures_total = futures_equity_from_account(futures_account)
+                self.growth_status = self.capital_growth_guard.evaluate(futures_total)
             self.market_overview = self.price_feed.get_market_overview()
             self._last_binance_sync["last_sync_time"] = int(time.time() * 1000)
             self._last_exchange_refresh_at = time.time()
@@ -2525,7 +2528,11 @@ class NexusRuntime:
         spot_trade_count = len(spot_account.get("trade_history", []) or [])
         true_recent_trade_count = futures_fill_count + spot_trade_count
         configured_futures_baseline = _safe_float(os.getenv("NEXUS_FUTURES_BASELINE_CAPITAL", "11800"))
-        exchange_unrealized = round(float(exchange_capital.get("futures_unrealized_pnl", 0.0) or 0.0), 4)
+        treasury_unrealized = round(float(exchange_capital.get("futures_unrealized_pnl", 0.0) or 0.0), 4)
+        exchange_unrealized = resolve_futures_display_unrealized(futures_account, treasury_unrealized)
+        exchange_capital["futures_unrealized_pnl"] = exchange_unrealized
+        if exchange_capital.get("binance_futures"):
+            exchange_capital["binance_futures"]["unrealized_pnl"] = exchange_unrealized
         futures_account_total_pnl = exchange_unrealized if self.futures_client.is_configured() else 0.0
 
         account_binding = build_account_binding_status(self.spot_client, self.futures_client)
