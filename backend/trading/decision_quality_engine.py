@@ -1,4 +1,5 @@
 from backend.analytics.setup_performance_tracker import SetupPerformanceTracker
+from config.growth_mode_config import BOLD_MIN_QUALITY, BOLD_TESTNET_ENABLED
 from backend.decision.entry_quality_filter import EntryQualityFilter
 from backend.decision.fleet_score_engine import FleetScoreEngine
 from backend.decision.setup_classifier import SetupClassifier
@@ -103,6 +104,8 @@ class DecisionQualityValidationEngine:
         setup_stats = self.setup_tracker.get_stats(fleet, setup_type, regime)
 
         min_quality = float(growth_directives.get("min_quality_score", 0.65) or 0.65)
+        if BOLD_TESTNET_ENABLED:
+            min_quality = min(min_quality, BOLD_MIN_QUALITY)
         approved = bool(quality.get("approved")) and fleet_metrics.get("state") not in {"PAUSED"}
         reason = quality.get("reject_reason") or "decision_quality_ok"
         score = round(

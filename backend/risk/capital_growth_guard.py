@@ -1,4 +1,5 @@
 from config.growth_mode_config import (
+    BOLD_MIN_QUALITY,
     BOLD_TESTNET_ENABLED,
     CAPITAL_FLOOR,
     DAILY_A_PLUS_QUALITY,
@@ -77,13 +78,16 @@ class CapitalGrowthGuard:
             position_multiplier = 0.85
             allow_aggressive = False
         elif equity < CAPITAL_FLOOR + floor_buffer:
-            mode = "FLOOR_GUARD"
-            min_quality = FLOOR_GUARD_MIN_QUALITY
-            min_approval = max(GROWTH_MIN_APPROVAL, 0.60)
-            min_win_rate = max(GROWTH_MIN_WIN_RATE, 0.45)
-            max_leverage = FLOOR_GUARD_MAX_LEVERAGE
-            position_multiplier = 0.9
-            allow_aggressive = False
+            if BOLD_TESTNET_ENABLED and equity >= CAPITAL_FLOOR:
+                mode = "GROWTH"
+            else:
+                mode = "FLOOR_GUARD"
+                min_quality = FLOOR_GUARD_MIN_QUALITY
+                min_approval = max(GROWTH_MIN_APPROVAL, 0.60)
+                min_win_rate = max(GROWTH_MIN_WIN_RATE, 0.45)
+                max_leverage = FLOOR_GUARD_MAX_LEVERAGE
+                position_multiplier = 0.9
+                allow_aggressive = False
 
         if daily_pnl < 0:
             mode = "DAILY_DEFENSE" if mode == "GROWTH" else f"{mode}+DAILY_DEFENSE"
@@ -106,6 +110,12 @@ class CapitalGrowthGuard:
         progress_to_target = 0.0
         if GROWTH_TARGET > CAPITAL_FLOOR:
             progress_to_target = max(0.0, min(1.0, (equity - CAPITAL_FLOOR) / (GROWTH_TARGET - CAPITAL_FLOOR)))
+
+        if BOLD_TESTNET_ENABLED:
+            min_quality = min(min_quality, BOLD_MIN_QUALITY)
+            if equity >= CAPITAL_FLOOR:
+                allow_aggressive = True
+                position_multiplier = max(position_multiplier, 0.95)
 
         status = {
             "mode": mode,

@@ -180,9 +180,15 @@ class SimulationValidationEngine:
             reason = "funding_dislocation"
             score = 0.12
         elif basis_abs_bps >= SIMULATION_MAX_BASIS_ABS_BPS:
-            approved = False
-            reason = "basis_dislocation"
-            score = 0.12
+            fleet = str(proposal.get("fleet") or "").upper()
+            if _bold_testnet_enabled() and fleet == "RADAR":
+                approved = True
+                reason = "caution:basis_dislocation_bold_radar"
+                score = 0.45
+            else:
+                approved = False
+                reason = "basis_dislocation"
+                score = 0.12
         elif liquidation_risk == "critical" or (
             liquidation_distance_pct and liquidation_distance_pct <= LIQUIDATION_CRITICAL_DISTANCE_PCT
         ):
@@ -324,7 +330,7 @@ class PortfolioValidationEngine:
             approved = False
             reason = "portfolio_reserve_increase_block"
             score = 0.12
-        elif same_side_concentration >= 0.78:
+        elif same_side_concentration >= (0.95 if _bold_testnet_enabled() else 0.78):
             approved = False
             reason = "same_side_concentration_too_high"
             score = 0.16
@@ -340,7 +346,14 @@ class PortfolioValidationEngine:
         if _bold_testnet_enabled() and not approved:
             fleet_exposure = dict((portfolio_status.get("fleet_exposures") or {}).get(fleet, {}))
             fleet_notional = _safe_float(fleet_exposure.get("notional"))
-            if fleet_notional <= 0 and reason in {
+            proposal_side = str(proposal.get("side") or "BUY").upper()
+            dominant_side = str(portfolio_status.get("dominant_side") or "").upper()
+            hedge_side = "BUY" if dominant_side == "SHORT" else "SELL"
+            if proposal_side == hedge_side and reason == "same_side_concentration_too_high":
+                approved = True
+                reason = "bold_testnet_hedge_allowed"
+                score = max(score, 0.55)
+            elif fleet_notional <= 0 and reason in {
                 "same_side_concentration_too_high",
                 "correlated_group_concentration_too_high",
                 "portfolio_reserve_increase_block",
@@ -445,19 +458,20 @@ class TradeValidationPipeline:
             4,
         )
         learning_block_reason = None
-        if learning_guidance.get("pause_new_entries"):
+        bold_testnet = _bold_testnet_enabled()
+        if learning_guidance.get("pause_new_entries") and not bold_testnet:
             approved = False
             learning_block_reason = "learning_pause_due_to_recent_losses"
-        elif learning_guidance.get("regime_blocked"):
+        elif learning_guidance.get("regime_blocked") and not bold_testnet:
             approved = False
             learning_block_reason = "learning_regime_blocked"
         else:
             symbol = str(proposal.get("symbol") or "")
             symbol_cooldown = dict(learning_guidance.get("symbol_cooldown", {}) or {})
-            if bool((symbol_cooldown.get(symbol) or {}).get("active")):
+            if bool((symbol_cooldown.get(symbol) or {}).get("active")) and not bold_testnet:
                 approved = False
                 learning_block_reason = "learning_symbol_cooldown"
-            else:
+            elif not bold_testnet:
                 failure_flags = set(learning_guidance.get("failure_focus_flags", []) or [])
                 if "low_liquidity" in failure_flags and str(market_context.get("liquidity_status") or "healthy").lower() != "healthy":
                     approved = False

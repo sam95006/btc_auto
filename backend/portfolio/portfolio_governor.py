@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from datetime import datetime
 
 from config.portfolio_config import (
@@ -18,6 +16,7 @@ from config.portfolio_config import (
 
 
 from backend.trading.exchange_capital_view import futures_equity_from_account
+from config.growth_mode_config import BOLD_TESTNET_ENABLED
 
 
 def _safe_float(value):
@@ -69,6 +68,7 @@ class PortfolioGovernor:
 
         utilization = total_notional / margin_balance if margin_balance else 0.0
         side_concentration = max(side_totals.values()) / total_notional if total_notional > 0 else 0.0
+        dominant_side = "LONG" if side_totals["LONG"] >= side_totals["SHORT"] else "SHORT"
         correlation_concentration = (
             max(correlation_groups.values()) / total_notional if total_notional > 0 and correlation_groups else 0.0
         )
@@ -105,6 +105,23 @@ class PortfolioGovernor:
                 reasons.append("same_side_concentration_too_high")
             if correlation_concentration >= MAX_CORRELATED_GROUP_SHARE:
                 reasons.append("correlated_group_concentration_too_high")
+
+            fleet_notional = _safe_float((exposures.get(fleet) or {}).get("notional"))
+            if BOLD_TESTNET_ENABLED and fleet_notional <= 0:
+                reasons = [
+                    reason
+                    for reason in reasons
+                    if reason
+                    not in {
+                        "same_side_concentration_too_high",
+                        "correlated_group_concentration_too_high",
+                        "portfolio_utilization_too_high",
+                    }
+                ]
+                allowed = exposure_share < MAX_SINGLE_FLEET_SHARE and regime not in {
+                    "liquidation_risk",
+                    "thin_liquidity",
+                }
 
             symbol = context.get("symbol")
             radar_candidate = candidate_bias.get(symbol, {})
@@ -155,6 +172,7 @@ class PortfolioGovernor:
             "total_open_notional": round(total_notional, 4),
             "notional_utilization": round(utilization, 4),
             "same_side_concentration": round(side_concentration, 4),
+            "dominant_side": dominant_side,
             "correlation_concentration": round(correlation_concentration, 4),
             "reserve_action": reserve_action,
             "side_totals": {key: round(value, 4) for key, value in side_totals.items()},

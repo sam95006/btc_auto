@@ -158,6 +158,9 @@ class TradeValidationPipelineTests(unittest.TestCase):
         self.assertEqual(result["stages"]["simulation"]["reason"], "liquidation_pressure_too_high")
 
     def test_learning_guidance_can_block_symbol_after_repeated_losses(self):
+        import os
+
+        os.environ["NEXUS_BOLD_TESTNET"] = "0"
         base = datetime.now()
         for idx in range(3):
             self.learning.record_trade_result(
@@ -184,6 +187,7 @@ class TradeValidationPipelineTests(unittest.TestCase):
         self.assertFalse(result["approved"])
         self.assertEqual(result["reason"], "learning_symbol_cooldown")
         self.assertIn("learning_guidance", result)
+        os.environ["NEXUS_BOLD_TESTNET"] = "1"
 
     def test_portfolio_blocks_same_side_concentration(self):
         import os
