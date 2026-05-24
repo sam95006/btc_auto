@@ -129,13 +129,16 @@ def register_nexus_routes(app):
 
     @app.route("/api/nexus/state")
     def nexus_state():
+        snap = None
         try:
             from backend.services.nexus_runtime import nexus_runtime
 
             nexus_runtime.refresh_live_exchange_state(force=True)
+            snap = nexus_runtime.snapshot()
         except Exception as exc:
             print(f"[api] live exchange refresh failed: {exc}")
-        snap = nexus_runtime.snapshot()
+        if snap is None:
+            snap = runtime_store.load_snapshot()
         try:
             runtime_store.save_snapshot(
                 snap,
