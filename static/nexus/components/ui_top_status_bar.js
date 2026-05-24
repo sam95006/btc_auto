@@ -39,8 +39,10 @@ export function renderTopStatusBar(root, state) {
   const futuresUnrealized = Number(capital.futures_unrealized_pnl || pnl.exchange_unrealized_pnl || 0);
   const binanceSpot = capital.binance_spot || {};
   const binanceFutures = capital.binance_futures || {};
+  const treasuryAssets = capital.treasury_assets || binanceSpot.treasury_assets || ["USDT"];
+  const usdtOnly = treasuryAssets.length === 1 && treasuryAssets[0] === "USDT";
   const spotStable = Number(
-    binanceSpot.stable_total ?? capital.spot_stable_total ?? 0,
+    binanceSpot.stable_total ?? capital.spot_stable_total ?? capital.spot_usdt_total ?? 0,
   );
   const spotUsdt = Number(binanceSpot.usdt_total ?? capital.spot_usdt_total ?? 0);
   const spotUsdc = Number(binanceSpot.usdc_total ?? capital.spot_usdc_total ?? 0);
@@ -66,12 +68,16 @@ export function renderTopStatusBar(root, state) {
   root.innerHTML = `
     <div class="status-board">
       <div class="status-primary-grid status-primary-grid--compact">
-        ${card("總資產", formatMoney(capital.total), "現貨 USDT/USDC + U本位保證金餘額 (不含幣本位)")}
-        ${card("現貨穩定幣", formatMoney(spotStable), `USDT ${formatMoney(spotUsdt)} / USDC ${formatMoney(spotUsdc)}`)}
+        ${card("總資產", formatMoney(capital.total), usdtOnly ? "僅 USDT（不含 USDC/BTC/幣本位）" : "現貨 + U本位")}
         ${card(
-          "U本位保證金",
+          usdtOnly ? "現貨 USDT" : "現貨穩定幣",
+          formatMoney(spotStable),
+          usdtOnly ? `可用於現貨交易` : `USDT ${formatMoney(spotUsdt)} / USDC ${formatMoney(spotUsdc)}`,
+        )}
+        ${card(
+          "U本位 USDT",
           formatMoney(futuresEquity),
-          `錢包餘額 ${formatMoney(futuresWallet)} / 未實現 ${formatMoney(futuresUnrealized)}`,
+          `錢包 ${formatMoney(futuresWallet)} / 未實現 ${formatMoney(futuresUnrealized)}`,
           toneClass(futuresUnrealized),
         )}
         ${card("未實現損益", formatMoney(futuresUnrealized), dualTime, toneClass(futuresUnrealized))}

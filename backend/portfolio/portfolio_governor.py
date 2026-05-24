@@ -17,6 +17,9 @@ from config.portfolio_config import (
 )
 
 
+from backend.trading.exchange_capital_view import futures_equity_from_account
+
+
 def _safe_float(value):
     try:
         return float(value or 0.0)
@@ -36,7 +39,8 @@ class PortfolioGovernor:
         learning_snapshot = learning_snapshot or {}
 
         positions = list(futures_account.get("positions", []) or [])
-        margin_balance = max(_safe_float(futures_account.get("margin_total")), 1.0)
+        treasury_margin = futures_equity_from_account(futures_account)
+        margin_balance = max(treasury_margin, _safe_float(futures_account.get("margin_total")), 1.0)
         exposures = {}
         total_notional = 0.0
         side_totals = {"LONG": 0.0, "SHORT": 0.0}

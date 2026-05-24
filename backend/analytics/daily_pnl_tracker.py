@@ -39,13 +39,27 @@ class DailyPnlTracker:
         equity = float(equity or 0.0)
         today = datetime.now().strftime("%Y-%m-%d")
         if self._day != today or self._start_equity <= 0:
-            self._day = today
-            self._start_equity = equity
-            self._peak_equity = equity
-            self._save()
+            if equity > 0:
+                self._day = today
+                self._start_equity = equity
+                self._peak_equity = equity
+                self._save()
         elif equity > self._peak_equity:
             self._peak_equity = equity
             self._save()
+
+        if equity <= 0 and self._start_equity > 0:
+            return {
+                "day": self._day or today,
+                "start_equity": round(self._start_equity, 4),
+                "current_equity": 0.0,
+                "peak_equity": round(self._peak_equity, 4),
+                "daily_pnl": 0.0,
+                "daily_pnl_pct": 0.0,
+                "is_positive_day": True,
+                "equity_sync_missing": True,
+            }
+
         daily_pnl = equity - self._start_equity
         daily_pnl_pct = daily_pnl / self._start_equity if self._start_equity > 0 else 0.0
         return {

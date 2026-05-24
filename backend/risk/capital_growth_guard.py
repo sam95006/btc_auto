@@ -29,6 +29,30 @@ class CapitalGrowthGuard:
 
     def evaluate(self, futures_equity):
         equity = float(futures_equity or 0.0)
+        if equity <= 0:
+            status = {
+                "mode": "SYNC_WAIT",
+                "block_new_entries": False,
+                "block_reason": "",
+                "min_quality_score": round(GROWTH_MIN_QUALITY, 4),
+                "min_approval_score": round(GROWTH_MIN_APPROVAL, 4),
+                "min_win_rate": round(GROWTH_MIN_WIN_RATE, 4),
+                "max_leverage": round(GROWTH_MAX_LEVERAGE, 4),
+                "position_multiplier": round(GROWTH_POSITION_BOOST if BOLD_TESTNET_ENABLED else 1.0, 4),
+                "allow_aggressive": bool(BOLD_TESTNET_ENABLED),
+                "capital_floor": round(CAPITAL_FLOOR, 4),
+                "growth_target": round(GROWTH_TARGET, 4),
+                "futures_equity": 0.0,
+                "above_floor": False,
+                "progress_to_floor": 0.0,
+                "progress_to_target": 0.0,
+                "daily": self.daily_tracker.update(equity),
+                "daily_target_usd": 0.0,
+                "daily_target_hit": False,
+            }
+            self.last_status = status
+            return status
+
         daily = self.daily_tracker.update(equity)
         daily_pnl = float(daily.get("daily_pnl", 0.0) or 0.0)
         daily_pnl_pct = float(daily.get("daily_pnl_pct", 0.0) or 0.0)

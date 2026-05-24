@@ -27,7 +27,8 @@ def ensure_r_exit_state(position):
     state = dict(position.get("r_exit_state") or {})
     margin = float(position.get("margin", 0.0) or 0.0)
     quantity = float(position.get("quantity", 0.0) or 0.0)
-    if not state or not state.get("risk_r_usd"):
+    init_margin = float(state.get("initial_margin", 0.0) or 0.0)
+    if not state or not state.get("risk_r_usd") or (margin > 0 and init_margin < margin * 0.2):
         state = build_r_exit_state(margin, quantity)
     state.setdefault("initial_quantity", quantity)
     state.setdefault("initial_margin", margin)

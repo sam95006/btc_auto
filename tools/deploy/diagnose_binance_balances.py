@@ -18,6 +18,7 @@ load_env_file()
 
 from backend.trading.binance_futures_testnet_client import BinanceFuturesTestnetClient
 from backend.trading.binance_spot_testnet_client import BinanceSpotTestnetClient
+from config.capital_display_config import TREASURY_DISPLAY_ASSETS
 from backend.trading.exchange_capital_view import build_ui_capital, treasury_totals_from_balances
 
 
@@ -42,6 +43,7 @@ def main() -> int:
     spot = BinanceSpotTestnetClient()
     futures = BinanceFuturesTestnetClient()
 
+    print(f"=== Treasury scope: {','.join(TREASURY_DISPLAY_ASSETS)} ===")
     print("=== API endpoints ===")
     print(f"spot_base_url: {spot.base_url}")
     print(f"futures_base_url: {futures.base_url}")

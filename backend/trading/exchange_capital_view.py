@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from typing import Any, Dict, Tuple
 
-TREASURY_STABLE_ASSETS = ("USDT", "USDC")
+from config.capital_display_config import TREASURY_DISPLAY_ASSETS
 
 
 def api_key_fingerprint(api_key: str) -> str:
@@ -29,37 +29,72 @@ def _balance_total(balances: dict, asset: str) -> float:
     return _safe_float(payload.get("free")) + _safe_float(payload.get("locked"))
 
 
-def _sum_futures_stable_assets(balance_assets: list) -> float:
-    total = 0.0
-    for row in balance_assets or []:
-        if str(row.get("asset", "")).upper() in TREASURY_STABLE_ASSETS:
-            total += _safe_float(row.get("balance"))
-    return total
+def _treasury_assets() -> tuple[str, ...]:
+    return tuple(str(asset).upper() for asset in TREASURY_DISPLAY_ASSETS if asset)
 
 
-def treasury_totals_from_balances(balances: dict | None) -> Tuple[float, float, float]:
-    """USDT/USDC free+locked only — never sum other spot assets into treasury."""
+def treasury_totals_from_balances(
+    balances: dict | None,
+    assets: tuple[str, ...] | None = None,
+) -> Tuple[float, float, float]:
+    """Sum configured treasury assets only (default USDT)."""
     balances = balances or {}
-    usdt = _balance_total(balances, "USDT")
-    usdc = _balance_total(balances, "USDC")
-    return usdt, usdc, usdt + usdc
+    assets = assets or _treasury_assets()
+    usdt = _balance_total(balances, "USDT") if "USDT" in assets else 0.0
+    usdc = _balance_total(balances, "USDC") if "USDC" in assets else 0.0
+    stable = sum(_balance_total(balances, asset) for asset in assets)
+    return usdt, usdc, stable
+
+
+def _futures_asset_row(futures_account: dict | None, asset: str) -> Dict[str, Any]:
+    futures_account = futures_account or {}
+    target = str(asset or "USDT").upper()
+    for row in futures_account.get("balance_assets") or []:
+        if str(row.get("asset", "")).upper() == target:
+            return row
+    return {}
+
+
+def _futures_usdt_asset_capital(futures_account: dict | None) -> Dict[str, float]:
+    """
+    USDT row from `GET /fapi/v2/balance` — matches Binance Demo「資產列表」USDT 列，
+    not the account-wide USD total that includes USDC/BTC.
+    """
+    row = _futures_asset_row(futures_account, "USDT")
+    wallet = _safe_float(row.get("balance"))
+    cross_wallet = _safe_float(row.get("cross_wallet_balance")) or wallet
+    unrealized = _safe_float(row.get("cross_unrealized_pnl"))
+    margin = cross_wallet + unrealized
+    if not margin and wallet:
+        margin = wallet + unrealized
+    available = _safe_float(row.get("available_balance"))
+    return {
+        "wallet_balance": round(wallet, 4),
+        "margin_balance": round(margin, 4),
+        "unrealized_pnl": round(unrealized, 4),
+        "available_balance": round(available, 4),
+    }
 
 
 def build_spot_capital_from_binance(spot_account: dict | None) -> Dict[str, Any]:
     """Spot treasury from Binance Spot testnet `GET /api/v3/account` balances."""
     spot_account = spot_account or {}
     balances = spot_account.get("balances") or {}
+    assets = _treasury_assets()
 
     if balances:
-        usdt_total, usdc_total, stable_total = treasury_totals_from_balances(balances)
+        usdt_total, usdc_total, stable_total = treasury_totals_from_balances(balances, assets)
     else:
-        usdt_total = _safe_float(spot_account.get("usdt_total"))
-        usdc_total = _safe_float(spot_account.get("usdc_total"))
+        usdt_total = _safe_float(spot_account.get("usdt_total")) if "USDT" in assets else 0.0
+        usdc_total = _safe_float(spot_account.get("usdc_total")) if "USDC" in assets else 0.0
         stable_total = usdt_total + usdc_total
+
+    scope = "usdt_only" if assets == ("USDT",) else "treasury_" + "_".join(assets).lower()
 
     return {
         "source": "binance_spot_rest",
-        "display_scope": "usdt_usdc_treasury_only",
+        "display_scope": scope,
+        "treasury_assets": list(assets),
         "usdt_total": round(usdt_total, 4),
         "usdc_total": round(usdc_total, 4),
         "stable_total": round(stable_total, 4),
@@ -72,7 +107,11 @@ def build_spot_capital_from_binance(spot_account: dict | None) -> Dict[str, Any]
 
 
 def futures_equity_from_account(futures_account: dict | None) -> float:
-    """USDT-M account equity from Binance `fapi/v2/account` summary fields."""
+    """Futures treasury equity for configured assets (default USDT asset row only)."""
+    assets = _treasury_assets()
+    if assets == ("USDT",):
+        return _futures_usdt_asset_capital(futures_account)["margin_balance"]
+
     futures_account = futures_account or {}
     exchange = futures_account.get("exchange_account") or {}
     equity = _safe_float(exchange.get("totalMarginBalance"))
@@ -82,10 +121,33 @@ def futures_equity_from_account(futures_account: dict | None) -> float:
 
 
 def build_futures_capital_from_binance(futures_account: dict | None) -> Dict[str, Any]:
-    """Futures equity from Binance USDT-M `GET /fapi/v2/account` summary fields only."""
+    """Futures capital — USDT-only mode uses per-asset USDT row, not whole-account USD total."""
     futures_account = futures_account or {}
-    exchange = futures_account.get("exchange_account") or {}
+    assets = _treasury_assets()
 
+    if assets == ("USDT",):
+        usdt_capital = _futures_usdt_asset_capital(futures_account)
+        return {
+            "source": "binance_futures_rest",
+            "display_scope": "usdt_asset_row_only",
+            "market_type": "USDT_M",
+            "coin_margined_included": False,
+            "treasury_assets": ["USDT"],
+            "wallet_balance": usdt_capital["wallet_balance"],
+            "margin_balance": usdt_capital["margin_balance"],
+            "unrealized_pnl": usdt_capital["unrealized_pnl"],
+            "available_balance": usdt_capital["available_balance"],
+            "account_total_margin_balance": round(
+                _safe_float((futures_account.get("exchange_account") or {}).get("totalMarginBalance")),
+                4,
+            ),
+            "using_exchange_summary": False,
+            "update_time": int(futures_account.get("update_time") or 0),
+            "sync_status": str(futures_account.get("sync_status") or ""),
+            "sync_error": str(futures_account.get("sync_error") or ""),
+        }
+
+    exchange = futures_account.get("exchange_account") or {}
     wallet = _safe_float(exchange.get("totalWalletBalance"))
     equity = _safe_float(exchange.get("totalMarginBalance"))
     unrealized = _safe_float(exchange.get("totalUnrealizedProfit"))
@@ -100,23 +162,17 @@ def build_futures_capital_from_binance(futures_account: dict | None) -> Dict[str
     if not available:
         available = _safe_float(futures_account.get("available_balance"))
 
-    stable_wallet = _safe_float(futures_account.get("stable_wallet_total"))
-    if not stable_wallet:
-        stable_wallet = _sum_futures_stable_assets(futures_account.get("balance_assets") or [])
-
-    using_exchange_summary = bool(exchange.get("totalMarginBalance") or exchange.get("totalWalletBalance"))
-
     return {
         "source": "binance_futures_rest",
         "display_scope": "usdt_m_fapi_v2_account_summary",
         "market_type": "USDT_M",
         "coin_margined_included": False,
+        "treasury_assets": list(assets),
         "wallet_balance": round(wallet, 4),
-        "stable_wallet_total": round(stable_wallet, 4),
         "margin_balance": round(equity, 4),
         "unrealized_pnl": round(unrealized, 4),
         "available_balance": round(available, 4),
-        "using_exchange_summary": using_exchange_summary,
+        "using_exchange_summary": bool(exchange.get("totalMarginBalance") or exchange.get("totalWalletBalance")),
         "update_time": int(futures_account.get("update_time") or 0),
         "sync_status": str(futures_account.get("sync_status") or ""),
         "sync_error": str(futures_account.get("sync_error") or ""),
@@ -132,7 +188,7 @@ def build_ui_capital(
 ) -> Dict[str, Any]:
     """
     Capital block for dashboard — treasury totals from Binance REST only.
-    Internal ledger allocations are intentionally excluded from `total`.
+    Default: USDT only (excludes USDC/BTC from totals; matches Demo 資產列表 USDT 列).
     """
     spot = build_spot_capital_from_binance(spot_account if spot_configured else {})
     futures = build_futures_capital_from_binance(futures_account if futures_configured else {})
@@ -141,9 +197,13 @@ def build_ui_capital(
     futures_equity = futures["margin_balance"] if futures_configured else 0.0
     combined = round(spot_stable + futures_equity, 4)
 
+    assets = _treasury_assets()
+    scope = "usdt_only_treasury" if assets == ("USDT",) else "multi_asset_treasury"
+
     return {
         "source": "binance_rest",
-        "display_scope": "spot_usdt_usdc_plus_usdt_m_margin_balance",
+        "display_scope": scope,
+        "treasury_assets": list(assets),
         "coin_margined_included": False,
         "futures_market_scope": "usdt_m",
         "total": combined,
@@ -159,7 +219,7 @@ def build_ui_capital(
         "futures_exchange_margin_balance": futures["margin_balance"],
         "futures_unrealized_pnl": futures["unrealized_pnl"],
         "futures_available_balance": futures["available_balance"],
-        "futures_stable_wallet_total": futures.get("stable_wallet_total", 0.0),
+        "futures_account_total_margin": futures.get("account_total_margin_balance"),
         "futures_using_exchange_summary": futures.get("using_exchange_summary", False),
         "binance_spot": spot,
         "binance_futures": futures,
@@ -179,6 +239,7 @@ def build_account_binding_status(spot_client, futures_client) -> Dict[str, Any]:
         "spot_base_url": getattr(spot_client, "base_url", ""),
         "futures_base_url": futures_base,
         "futures_scope": "usdt_m",
+        "treasury_assets": list(_treasury_assets()),
         "coin_margined_included": False,
         "futures_base_url_is_usdt_m_demo": "demo-fapi.binance.com" in str(futures_base),
     }

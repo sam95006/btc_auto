@@ -2142,6 +2142,8 @@ class NexusRuntime:
                             "asset": asset,
                             "balance": round(raw_balance, 8),
                             "available_balance": round(raw_available, 8),
+                            "cross_wallet_balance": round(_safe_float(item.get("crossWalletBalance")), 8),
+                            "cross_unrealized_pnl": round(_safe_float(item.get("crossUnPnl")), 8),
                             "value_usd": round(asset_balance_value, 8),
                         }
                     )
@@ -2158,6 +2160,14 @@ class NexusRuntime:
                 position_update_time = max(position_update_time, int(item.get("updateTime") or 0))
                 fleet = fleet_for_exchange_position(symbol, symbol_map)
                 side = "BUY" if position_amt > 0 else "SELL"
+                leverage = max(_safe_float(item.get("leverage")) or 1.0, 1.0)
+                margin = _safe_float(item.get("isolatedMargin"))
+                if margin <= 0:
+                    margin = _safe_float(item.get("positionInitialMargin"))
+                if margin <= 0:
+                    notional = abs(_safe_float(item.get("notional")))
+                    if notional > 0 and leverage > 0:
+                        margin = notional / leverage
                 positions.append(
                     {
                         "fleet": fleet,
@@ -2168,8 +2178,8 @@ class NexusRuntime:
                         "entry_price": float(item.get("entryPrice", 0.0) or 0.0),
                         "mark_price": float(item.get("markPrice", 0.0) or 0.0),
                         "unrealized_pnl": pnl,
-                        "leverage": float(item.get("leverage", 1.0) or 1.0),
-                        "margin": float(item.get("isolatedMargin", 0.0) or 0.0),
+                        "leverage": leverage,
+                        "margin": round(margin, 6),
                         "liquidation_price": float(item.get("liquidationPrice", 0.0) or 0.0),
                         "margin_ratio": float(item.get("maintMargin", 0.0) or 0.0),
                         "margin_type": str(item.get("marginType", "isolated")).lower(),
@@ -2376,6 +2386,8 @@ class NexusRuntime:
             except Exception:
                 opened_at = _now()
         for position in futures_account.get("positions", []):
+            fleet = str(position.get("fleet") or "").upper()
+            capital_pool = "radar" if fleet == "RADAR" else "fleet"
             items.append(
                 {
                     "id": f"live_{position.get('fleet', 'FUT')}_{position.get('symbol', 'UNKNOWN')}",
@@ -2392,6 +2404,7 @@ class NexusRuntime:
                     "unrealized_pnl": float(position.get("unrealized_pnl", 0.0) or 0.0),
                     "reason": "binance_live_position",
                     "market_type": "futures",
+                    "capital_pool": capital_pool,
                     "margin_type": position.get("margin_type", "isolated"),
                     "position_side": position.get("position_side", "BOTH"),
                     "execution_source": "binance_futures_testnet",

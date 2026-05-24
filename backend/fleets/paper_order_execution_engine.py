@@ -14,14 +14,18 @@ class PaperOrderExecutionEngine:
         self.orders = []
         self.trades = []
 
+    def _is_radar_pool(self, fleet, capital_pool=None):
+        pool = str(capital_pool or "").strip().lower()
+        return pool == "radar" or str(fleet or "").upper() == "RADAR"
+
     def _freeze_margin(self, fleet, margin, note, capital_pool="fleet"):
-        if capital_pool == "radar":
+        if self._is_radar_pool(fleet, capital_pool):
             self.ledger.freeze_radar(margin, note)
         else:
             self.ledger.freeze(fleet, margin, note)
 
     def _release_margin(self, position, margin, pnl, note):
-        if position.get("capital_pool") == "radar":
+        if self._is_radar_pool(position.get("fleet"), position.get("capital_pool")):
             self.ledger.release_radar(margin, pnl, note)
         else:
             self.ledger.release(position["fleet"], margin, pnl, note)

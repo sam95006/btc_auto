@@ -43,7 +43,11 @@ class InternalCapitalLedger:
 
     def release(self, fleet, margin, pnl=0.0, note="paper position closed"):
         with self._lock:
-            account = self.fleets[fleet]
+            fleet_key = str(fleet or "").upper()
+            if fleet_key == "RADAR":
+                self.release_radar(margin, pnl, note)
+                return
+            account = self.fleets[fleet_key]
             account["frozen"] = max(0.0, account["frozen"] - margin)
             account["available"] += margin + pnl
             account["realized_pnl"] += pnl
@@ -104,6 +108,8 @@ class InternalCapitalLedger:
 
     def sync_live_futures_margins(self, margin_by_fleet):
         with self._lock:
+            radar_margin = round(float(margin_by_fleet.get("RADAR", 0.0) or 0.0), 6)
+            self.radar_frozen = round(min(radar_margin, self.radar_budget + radar_margin), 6)
             for fleet, account in self.fleets.items():
                 allocated = float(account.get("allocated", 0.0) or 0.0)
                 live_margin = round(float(margin_by_fleet.get(fleet, 0.0) or 0.0), 6)
