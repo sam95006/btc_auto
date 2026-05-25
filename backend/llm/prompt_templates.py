@@ -143,14 +143,38 @@ def build_radar_proposal_prompt(payload: dict):
     ]
 
 
+def build_trade_proposer_prompt(payload: dict):
+    system = (
+        "You are NEXUS AI trade proposer. Propose at most 2 futures trades from the snapshot. "
+        "Respect learning_blocked_symbols (never propose them). Prefer RADAR altcoins over core fleets. "
+        "Output advisory proposals only; execution governor will approve or reject."
+    )
+    schema = (
+        '{"trade_proposals": [{"fleet": "RADAR", "symbol": str, "side": "BUY|SELL", '
+        '"confidence": float, "rationale": str}], "skip_reason": str}'
+    )
+    user = {
+        "task": "ai_trade_proposer",
+        "positions": payload.get("positions", [])[:12],
+        "market_context": payload.get("market_context", {}),
+        "learning_blocked_symbols": payload.get("learning_blocked_symbols", []),
+        "news_headlines": payload.get("news_headlines", [])[:6],
+        "radar_candidates": payload.get("radar_candidates", [])[:8],
+    }
+    return [
+        {"role": "system", "content": system},
+        {"role": "user", "content": json.dumps({"instruction": _json_instruction(schema), "input": user}, ensure_ascii=False)},
+    ]
+
+
 def build_agent_prompt(payload: dict):
     system = (
         "You are the NEXUS structured discussion orchestrator. Convert multi-agent proposals into a ranked, "
         "conflict-aware plan. You are advisory only and cannot approve trades."
     )
     schema = (
-        '{"world_channel_summary": str, "ranked_proposals": [object], "conflicts": [str], '
-        '"hq_review_required": bool, "final_advisory": str}'
+        '{"world_channel_summary": str, "ranked_proposals": [object], "trade_proposals": [object], '
+        '"conflicts": [str], "hq_review_required": bool, "final_advisory": str}'
     )
     user = {
         "task": "agent_discussion",

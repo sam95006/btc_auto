@@ -205,4 +205,33 @@ python tools/deploy/nexus_state_sync.py import path\to\bundle.zip --data-dir /da
 
 ---
 
-*最後更新：2026-05-21*
+## 8. 成熟度五維雷達（唯一評分標準）
+
+自 2026-05 起，**只使用一套分數**：`maturity_radar`（每維 0–100，目標 **≥ 80**）。
+
+| 維度 | 英文鍵 | 衡量內容 |
+|------|--------|----------|
+| 基礎設施 | `infrastructure` | Worker、Binance 同步、always-on、資料新鮮度 |
+| 自動執行 | `auto_execution` | 未暫停、Autonomy≥2、核准/成交、audit 樣本 |
+| 風控治理 | `risk_control` | Validation、decision_audit、治理 trace |
+| 學習閉環 | `learning` | auto_apply、校準、patch、虧損/黑名單 |
+| AI 主導 | `ai_led` | LLM 就緒、AI 提案鏈、圓桌綁執行、trade_proposals |
+
+API：`GET /api/nexus/maturity-radar`  
+Snapshot 欄位：`maturity_radar`（UI 警報面板會顯示五維百分比）。
+
+建議環境（五維衝 80+）：
+
+```env
+NEXUS_EMBEDDED_WORKER=1
+NEXUS_ALWAYS_ON_TRADING=1
+NEXUS_AI_LED_TRADING=1
+NEXUS_LLM_ENABLE=1
+NEXUS_LEARNING_AUTO_APPLY=1
+NEXUS_AUTONOMY_LEVEL=2
+NEXUS_SHADOW_MODE=0
+```
+
+---
+
+*最後更新：2026-05-24*

@@ -22,6 +22,8 @@ from backend.config.capital_config import (
 from backend.fleets.base_strategy_engine import BaseFleetStrategyEngine
 from backend.fleets.signal_fusion_engine import SignalFusionEngine
 from backend.monitoring.trading_health_service import TradingHealthService
+from backend.monitoring.maturity_radar_service import MaturityRadarService
+from backend.governance.ai_trade_proposer import AiTradeProposer
 from backend.market.market_price_feed_service import MarketPriceFeedService
 from backend.market.market_context_service import MarketContextService
 from backend.market.radar_market_scan_service import RadarMarketScanService
@@ -165,6 +167,7 @@ class NexusRuntime:
         self.signal_fusion = SignalFusionEngine()
         self.price_feed = MarketPriceFeedService()
         self.trading_health = TradingHealthService()
+        self.maturity_radar = MaturityRadarService()
         self.news_ingestion = NewsIngestionService(refresh_seconds=NEWS_REFRESH_SECONDS)
         self.news_analysis = NewsAnalysisEngine()
         self.meeting_broadcaster = MeetingMemoryBroadcaster()
@@ -204,6 +207,11 @@ class NexusRuntime:
         self.signal_memory_engine = decision_quality_engine.signal_memory_engine
         self.event_normalizer = EventNormalizationService()
         self.upgrade_pipeline = UpgradePipeline(runtime_store, learning_feedback=self.learning_feedback)
+        self.ai_trade_proposer = AiTradeProposer(
+            llm_gateway=self.llm_gateway,
+            trade_proposal_service=self.upgrade_pipeline.trade_proposals,
+        )
+        self._meeting_execution_directives = {"blocked_fleets": [], "forbidden_actions": []}
         self.strategy_engines = {
             fleet: BaseFleetStrategyEngine(
                 fleet,
@@ -622,6 +630,7 @@ class NexusRuntime:
             self._bootstrap_live_activity(prices, spot_account, self.truth_layer_status)
             self._run_hq_spot_strategy(prices, spot_account, self.truth_layer_status)
             self._run_fleet_strategies(prices, market_contexts, self.truth_layer_status)
+            self._run_ai_led_proposals(prices, market_contexts, self.truth_layer_status)
             self._run_radar_dispatch(prices, market_contexts, self.truth_layer_status)
             symbol_prices = self._build_symbol_prices(prices)
             self.position_manager.update_unrealized(prices, symbol_prices=symbol_prices)
@@ -724,7 +733,9 @@ class NexusRuntime:
         }
         reflection_llm = llm_bundle.get("reflection") or {}
         if isinstance(reflection_llm, dict):
-            self.upgrade_pipeline.on_llm_reflection({**deterministic_reflection, **reflection_llm})
+            llm_output = reflection_llm.get("output") if isinstance(reflection_llm.get("output"), dict) else {}
+            self.upgrade_pipeline.on_llm_reflection({**deterministic_reflection, **llm_output, **reflection_llm})
+        self._meeting_execution_directives = self._build_meeting_execution_directives(llm_bundle)
         self.agent_advisory["radar_llm_proposals"] = {
             "count": len(getattr(self, "_radar_llm_proposals", []) or []),
             "items": list(getattr(self, "_radar_llm_proposals", []) or [])[:6],
@@ -1157,6 +1168,140 @@ class NexusRuntime:
                     symbol_prices["1000PEPEUSDT"] = px
         return symbol_prices
 
+    def _build_meeting_execution_directives(self, llm_bundle=None):
+        notes = self._resolve_meeting_notes()
+        blocked_fleets = set()
+        for fleet, restriction in dict(notes.get("fleet_restrictions") or {}).items():
+            if isinstance(restriction, dict) and not restriction.get("allowed_new_entries", True):
+                blocked_fleets.add(str(fleet).upper())
+        for meeting in list(self.meetings or [])[:6]:
+            conclusion = dict(meeting.get("conclusion") or {})
+            for desk in list(conclusion.get("disabled_desks") or []):
+                blocked_fleets.add(str(desk).upper())
+            risk_level = str(conclusion.get("risk_level") or meeting.get("risk_level") or "").upper()
+            if risk_level in {"RED", "HIGH", "CRITICAL", "ALERT_RED"}:
+                blocked_fleets.add("RADAR")
+        llm_bundle = llm_bundle or {}
+        round_llm = llm_bundle.get("roundtable") or {}
+        round_output = round_llm.get("output") if isinstance(round_llm.get("output"), dict) else round_llm
+        if isinstance(round_output, dict):
+            for desk in list(round_output.get("disabled_desks") or []):
+                blocked_fleets.add(str(desk).upper())
+        return {
+            "blocked_fleets": sorted(blocked_fleets),
+            "forbidden_actions": list(notes.get("forbidden_actions") or [])[:12],
+            "source_meeting_id": notes.get("source_meeting_id"),
+        }
+
+    def _fleet_blocked_by_meeting(self, fleet):
+        fleet = str(fleet or "").upper()
+        return fleet in set(self._meeting_execution_directives.get("blocked_fleets") or [])
+
+    def _run_ai_led_proposals(self, prices, market_contexts, truth_status=None):
+        if self._manual_pause or self._fleet_blocked_by_meeting("RADAR"):
+            return
+        growth_directives = dict(self.growth_status or {})
+        if growth_directives.get("block_new_entries"):
+            return
+        guidance = self.learning_feedback.get_strategy_guidance(
+            "RADAR",
+            "ai_led_trade_proposer",
+            "radar_alt",
+            market_context=market_contexts.get("RADAR", {}) if isinstance(market_contexts, dict) else {},
+        )
+        blocked = set(guidance.get("blocked_symbols") or [])
+        agent = self.agent_advisory.get("multi_agent") or {}
+        agent_output = agent.get("proposal_output") or (agent.get("llm_discussion") or {}).get("output") or {}
+        context = {
+            "radar_llm_items": getattr(self, "_radar_llm_proposals", []) or [],
+            "agent_output": agent_output,
+            "positions": self.position_manager.get_by_fleet("RADAR"),
+            "market_context": market_contexts.get("RADAR", {}) if isinstance(market_contexts, dict) else {},
+            "blocked_symbols": sorted(blocked),
+            "news_headlines": [
+                (item.get("headline") or item.get("summary") or "")[:120]
+                for item in (self.latest_news or [])[:6]
+            ],
+            "radar_scan": self.radar_scan,
+        }
+        symbol_prices = self._build_symbol_prices(prices)
+        for request in self.ai_trade_proposer.collect_proposals(context):
+            if self.upgrade_pipeline.trade_proposals:
+                self.upgrade_pipeline.trade_proposals.create_from_request(
+                    request,
+                    proposer=request.get("proposer", "llm_proposer"),
+                    rationale=request.get("ai_rationale"),
+                )
+            self._try_execute_futures_request(request, symbol_prices, market_contexts, truth_status, guidance)
+
+    def _try_execute_futures_request(self, request, symbol_prices, market_contexts, truth_status, learning_guidance=None):
+        request = dict(request or {})
+        fleet = str(request.get("fleet") or "RADAR").upper()
+        symbol = str(request.get("symbol") or request.get("symbol_override") or "").upper().replace("/", "")
+        if not symbol or self._fleet_blocked_by_meeting(fleet):
+            return False
+        if fleet == "RADAR" and learning_guidance:
+            if not self.radar_dispatch.can_open_symbol(symbol, learning_guidance=learning_guidance):
+                return False
+        current = float(symbol_prices.get(symbol, 0.0) or 0.0)
+        if current <= 0:
+            return False
+        alt_context = (
+            market_contexts.get(fleet, {})
+            if fleet != "RADAR"
+            else (self.market_context_service.build_symbol_context(symbol, self.latest_prices) or {})
+        )
+        signal = {"action": request.get("side", "HOLD"), "confidence": request.get("adjusted_confidence", 0.5), "reason": request.get("reason")}
+        growth_context = self._build_growth_context(fleet, signal, alt_context, request)
+        validation = self.validation_pipeline.evaluate(
+            request,
+            market_context=alt_context,
+            truth_status=truth_status or {},
+            recent_orders=self.futures_live_orders if self.futures_client.is_configured() else self.execution_engine.recent_orders(limit=120),
+            recent_trades=self.futures_live_trades if self.futures_client.is_configured() else self.execution_engine.recent_trades(limit=120),
+            portfolio_status=self.portfolio_status,
+            growth_context=growth_context,
+        )
+        validation = self._govern_trade_validation(request, validation, alt_context)
+        self._append_decision_audit(request, validation, alt_context, decision_source=request.get("decision_source", "ai_led"))
+        if not validation.get("approved"):
+            return False
+        allowed, _risk_reason = self.risk_engine.validate_order(request)
+        if not allowed:
+            return False
+        execution_engine = self.execution_router.futures_engine if self.execution_router else self.execution_engine
+        try:
+            if self.execution_router:
+                self.execution_router.route_futures_order(
+                    fleet=fleet,
+                    side=request["side"],
+                    price=current,
+                    margin=request["margin"],
+                    reason=request.get("reason"),
+                    confidence_score=request.get("adjusted_confidence", 0.0),
+                    market_regime=alt_context.get("market_regime", "normal"),
+                    risk_context=alt_context,
+                    symbol_override=symbol if fleet == "RADAR" else None,
+                    capital_pool=request.get("capital_pool", "radar" if fleet == "RADAR" else "fleet"),
+                )
+            else:
+                execution_engine.market_order(
+                    fleet=fleet,
+                    side=request["side"],
+                    price=current,
+                    margin=request["margin"],
+                    leverage=request.get("leverage", 5),
+                    reason=request.get("reason"),
+                    symbol_override=symbol if fleet == "RADAR" else None,
+                    capital_pool=request.get("capital_pool", "radar"),
+                )
+            if fleet == "RADAR":
+                self.radar_dispatch.mark_open(symbol)
+            return True
+        except Exception as exc:
+            self._append_alert("WARNING", f"AI-led order failed {symbol}: {exc}")
+            return False
+
     def _resolve_meeting_notes(self):
         return resolve_meeting_notes(self.meetings, runtime_store)
 
@@ -1180,8 +1325,9 @@ class NexusRuntime:
             "audits": runtime_store.recent_decision_audit(limit=80),
         }
 
-    def _append_decision_audit(self, proposal, validation, market_context, order_id=None):
+    def _append_decision_audit(self, proposal, validation, market_context, order_id=None, decision_source=None):
         decision_quality = dict((validation.get("stages") or {}).get("decision_quality") or {})
+        source = decision_source or proposal.get("decision_source") or proposal.get("proposer") or "rule_engine"
         runtime_store.append_decision_audit(
             {
                 "timestamp": _now(),
@@ -1200,6 +1346,8 @@ class NexusRuntime:
                 "position_size": proposal.get("margin", 0.0),
                 "leverage": proposal.get("leverage", 0.0),
                 "order_id": order_id,
+                "decision_source": source,
+                "proposer": proposal.get("proposer") or source,
             }
         )
 
@@ -1855,6 +2003,9 @@ class NexusRuntime:
                         last_reason=f"growth_guard:{growth_directives.get('block_reason', 'blocked')}",
                     )
         for fleet in FLEETS:
+            if self._fleet_blocked_by_meeting(fleet):
+                self.state_manager.update_fleet(fleet, status="BLOCKED", last_signal="HOLD", last_reason="meeting_execution_block")
+                continue
             current = float(prices.get(fleet, {}).get("price", 0.0) or 0.0)
             previous = float(self._previous_prices.get(fleet, current) or current)
             signal = self.signal_fusion.fuse(
@@ -2085,6 +2236,8 @@ class NexusRuntime:
 
         if growth_directives.get("block_new_entries"):
             return
+        if self._fleet_blocked_by_meeting("RADAR"):
+            return
 
         radar_guidance = self.learning_feedback.get_strategy_guidance(
             "RADAR",
@@ -2129,6 +2282,8 @@ class NexusRuntime:
                 growth_context=growth_context,
             )
             validation = self._govern_trade_validation(request, validation, alt_context)
+            request["decision_source"] = request.get("decision_source") or "radar_scan"
+            self._append_decision_audit(request, validation, alt_context, decision_source=request["decision_source"])
             if not validation.get("approved"):
                 continue
             allowed, risk_reason = self.risk_engine.validate_order(request)
@@ -2966,11 +3121,24 @@ class NexusRuntime:
             "event_registry": self.upgrade_pipeline.event_registry.snapshot(),
             "decision_traces": runtime_store.recent_decision_traces(limit=50),
             "live_sync": dict(self._live_sync_status or {}),
+            "meeting_execution_directives": dict(self._meeting_execution_directives or {}),
         }
         snapshot_payload["trading_health"] = self.trading_health.build_report(
             snapshot_payload,
             runtime_store=runtime_store,
         )
+        try:
+            from backend.runtime.embed_flags import embedded_worker_error, embedded_worker_started
+        except Exception:
+            embedded_worker_started = False
+            embedded_worker_error = None
+        snapshot_payload["maturity_radar"] = self.maturity_radar.build_report(
+            snapshot_payload,
+            runtime_store=runtime_store,
+            embedded_worker_started=embedded_worker_started,
+            embedded_worker_error=embedded_worker_error,
+        )
+        snapshot_payload["trading_health"]["maturity_radar"] = snapshot_payload["maturity_radar"]
         return snapshot_payload
 
 

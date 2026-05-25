@@ -180,6 +180,18 @@ def register_nexus_routes(app):
     def nexus_audit():
         return jsonify({"items": runtime_store.recent_decision_audit(limit=200)})
 
+    @app.route("/api/nexus/maturity-radar")
+    def nexus_maturity_radar():
+        try:
+            from backend.services.nexus_runtime import nexus_runtime
+
+            snap = nexus_runtime.snapshot()
+            return jsonify(snap.get("maturity_radar") or {})
+        except Exception as exc:
+            print(f"[api] maturity radar failed: {exc}")
+        snap = runtime_store.load_snapshot()
+        return jsonify(snap.get("maturity_radar") or {})
+
     @app.route("/api/nexus/trading-health")
     def nexus_trading_health():
         try:
