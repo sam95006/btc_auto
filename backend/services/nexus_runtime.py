@@ -68,7 +68,7 @@ from backend.analytics.setup_performance_tracker import SetupPerformanceTracker
 from backend.trading.radar_dispatch_service import RadarDispatchService
 from backend.analytics.walk_forward_evaluator import WalkForwardEvaluator
 from config.fleet_routing_config import fleet_for_exchange_position
-from config.radar_dispatch_config import RADAR_MAX_OPEN_POSITIONS
+from config.runtime_config import always_on_trading_enabled, tick_seconds
 from backend.trading.trading_mode import get_trading_mode
 from backend.coordination.station_chat_log import StationChatLog
 from backend.coordination.station_dialogue_service import StationDialogueService
@@ -613,6 +613,10 @@ class NexusRuntime:
         if self._manual_pause:
             level = "ALERT_RED" if self._news_pause_active else "WARNING"
             self.state_manager.set_alert(level, emergency=self._news_pause_active, trading_paused=True)
+            self._run_fleet_strategies(prices, market_contexts, self.truth_layer_status, exits_only=True)
+            self._run_radar_dispatch(prices, market_contexts, self.truth_layer_status, exits_only=True)
+            symbol_prices = self._build_symbol_prices(prices)
+            self.position_manager.update_unrealized(prices, symbol_prices=symbol_prices)
         else:
             self.state_manager.clear_alert()
             self._bootstrap_live_activity(prices, spot_account, self.truth_layer_status)
@@ -910,6 +914,14 @@ class NexusRuntime:
             return
 
         self._last_major_news_id = major.get("id")
+        summary = _clean_display_text(major.get("summary"), "市場出現重大風險事件。")
+        if always_on_trading_enabled():
+            self._append_alert("ALERT_RED", f"重大事件警報（24/7 模式不中斷交易）：{summary}")
+            meeting = self._normalize_meeting_record(self._create_structured_news_meeting(major))
+            self.meetings.insert(0, meeting)
+            self._append_meeting_alert(meeting)
+            return
+
         self._news_pause_active = True
         self._manual_pause = True
         self._pause_reason = "NEWS"
@@ -1827,7 +1839,7 @@ class NexusRuntime:
             context={},
         )
 
-    def _run_fleet_strategies(self, prices, market_contexts, truth_status=None):
+    def _run_fleet_strategies(self, prices, market_contexts, truth_status=None, exits_only=False):
         futures_ready = truth_status.get("futures_ready_for_ai", False) if truth_status else True
         portfolio_restrictions = dict((self.portfolio_status or {}).get("fleet_restrictions", {}) or {})
         portfolio_capital_plans = dict((self.portfolio_status or {}).get("capital_adjustments", {}) or {})
@@ -1899,6 +1911,11 @@ class NexusRuntime:
                 )
                 if closed_trade.get("event") == "CLOSE":
                     self.state_manager.update_fleet(fleet, status="EXITED", last_signal=signal["action"], last_reason=closed_trade.get("reason"))
+
+            if exits_only:
+                if self.position_manager.get_by_fleet(fleet):
+                    self.state_manager.update_fleet(fleet, status="TRADING", last_signal=signal["action"], last_reason=signal["reason"])
+                continue
 
             if self.position_manager.get_by_fleet(fleet):
                 self.state_manager.update_fleet(fleet, status="TRADING", last_signal=signal["action"], last_reason=signal["reason"])
@@ -2022,7 +2039,7 @@ class NexusRuntime:
             getattr(self, "_radar_llm_proposals", []) or [],
         )
 
-    def _run_radar_dispatch(self, prices, market_contexts, truth_status=None):
+    def _run_radar_dispatch(self, prices, market_contexts, truth_status=None, exits_only=False):
         futures_ready = truth_status.get("futures_ready_for_ai", False) if truth_status else True
         if not futures_ready:
             return
@@ -2062,6 +2079,9 @@ class NexusRuntime:
                     },
                     context={"setup_type": "radar_dispatch", "market_regime": "radar_alt"},
                 )
+
+        if exits_only:
+            return
 
         if growth_directives.get("block_new_entries"):
             return
@@ -2879,6 +2899,8 @@ class NexusRuntime:
             },
             "decision_summary": {
                 "runtime_mode": self.trading_mode,
+                "always_on_trading": always_on_trading_enabled(),
+                "tick_seconds": tick_seconds(),
                 "hq_spot_enabled": self.spot_client.is_configured(),
                 "futures_enabled": self.futures_client.is_configured(),
                 "exchange_synced_at": int(self._last_binance_sync.get("last_sync_time") or 0),
