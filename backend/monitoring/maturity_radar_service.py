@@ -5,6 +5,7 @@ import time
 
 from config.autonomy_config import NEXUS_AUTONOMY_LEVEL, NEXUS_SHADOW_MODE
 from config.ai_trading_config import AI_LED_PRIMARY_MODE, AI_LED_TRADING_ENABLED
+from config.compound_capital_config import COMPOUND_REINVEST_ENABLED, MATURITY_TARGET_SCORE
 from config.runtime_config import always_on_trading_enabled
 
 
@@ -30,11 +31,19 @@ class MaturityRadarService:
         "ai_led": "AI 主導",
     }
 
-    def build_report(self, snapshot, runtime_store=None, embedded_worker_started=False, embedded_worker_error=None):
+    def build_report(
+        self,
+        snapshot,
+        runtime_store=None,
+        embedded_worker_started=False,
+        embedded_worker_error=None,
+        ops_health=None,
+    ):
         snapshot = dict(snapshot or {})
         system = dict(snapshot.get("system") or {})
         truth = dict(snapshot.get("truth_layer_status") or {})
         growth = dict(snapshot.get("growth_mode") or {})
+        compound = dict(snapshot.get("compound_capital") or growth.get("compound") or {})
         llm = dict(snapshot.get("llm_status") or {})
         live_sync = dict(snapshot.get("live_sync") or {})
         learning = dict(snapshot.get("learning_status") or {})
@@ -42,6 +51,9 @@ class MaturityRadarService:
         decision = dict(snapshot.get("decision_summary") or {})
         meeting_directives = dict(snapshot.get("meeting_execution_directives") or {})
         capital = dict(snapshot.get("capital") or {})
+        ops_health = dict(ops_health or snapshot.get("ops_health") or {})
+        position_ai = dict(snapshot.get("position_ai") or {})
+        strategy_evolution = dict(snapshot.get("strategy_evolution") or {})
 
         audits = []
         validations = []
@@ -88,10 +100,13 @@ class MaturityRadarService:
                 capital=capital,
                 live_sync=live_sync,
                 decision=decision,
+                ops_health=ops_health,
+                compound=compound,
             ),
             "auto_execution": self._score_auto_execution(
                 system=system,
                 growth=growth,
+                compound=compound,
                 approval_rate=approval_rate,
                 approved_count=approved,
                 decision=decision,
@@ -102,12 +117,15 @@ class MaturityRadarService:
                 audits=audits,
                 upgrade=upgrade,
                 blocked_symbols=blocked_symbols,
+                growth=growth,
             ),
             "learning": self._score_learning(
                 learning_reviews=learning_reviews,
                 trade_results=trade_results,
                 blocked_symbols=blocked_symbols,
                 learning=learning,
+                calibration=calibration,
+                compound=compound,
             ),
             "ai_led": self._score_ai_led(
                 llm=llm,
@@ -117,6 +135,8 @@ class MaturityRadarService:
                 agent_advisory=snapshot.get("agent_advisory") or {},
                 decision=decision,
                 upgrade=upgrade,
+                position_ai=position_ai,
+                strategy_evolution=strategy_evolution,
             ),
         }
 
@@ -147,34 +167,49 @@ class MaturityRadarService:
                 "learning_auto_apply": bool(learning_reviews.get("auto_apply")),
                 "ai_led_trading": AI_LED_TRADING_ENABLED,
                 "ai_led_primary": AI_LED_PRIMARY_MODE,
+                "compound_reinvest": bool(compound.get("enabled") or COMPOUND_REINVEST_ENABLED),
+                "daily_positive_day": bool((growth.get("daily") or {}).get("is_positive_day")),
             },
-            "recommendations": self._recommendations(scores),
+            "recommendations": self._recommendations(scores, target_score=MATURITY_TARGET_SCORE),
         }
 
-    def _score_infrastructure(self, embedded_worker_started, embedded_worker_error, truth, capital, live_sync, decision):
+    def _score_infrastructure(self, embedded_worker_started, embedded_worker_error, truth, capital, live_sync, decision, ops_health=None, compound=None):
+        ops_health = dict(ops_health or {})
+        compound = dict(compound or {})
+        data_dir = str(os.getenv("NEXUS_DATA_DIR", "") or "").strip()
         checks = [
             bool(embedded_worker_started) and not embedded_worker_error,
             bool(truth.get("futures_ready_for_ai")),
             str(capital.get("source") or "") == "binance_rest",
             bool(decision.get("futures_enabled")) or bool(truth.get("futures_ready_for_ai")),
             self._sync_fresh(live_sync),
+            float(ops_health.get("slo_score", 0) or 0) >= 80 or not ops_health,
+            bool(data_dir) or bool(os.getenv("NEXUS_EMBEDDED_WORKER", "")),
+            bool(compound.get("enabled") or COMPOUND_REINVEST_ENABLED),
+            float(compound.get("live_futures_equity", 0) or capital.get("futures_margin_balance", 0) or 0) > 0,
         ]
         if always_on_trading_enabled():
             checks.append(True)
         return round(sum(1 for item in checks if item) / max(len(checks), 1) * 100, 1)
 
-    def _score_auto_execution(self, system, growth, approval_rate, approved_count, decision, audits):
+    def _score_auto_execution(self, system, growth, approval_rate, approved_count, decision, audits, compound=None):
+        compound = dict(compound or {})
+        daily = dict(growth.get("daily") or {})
         checks = [
             not bool(system.get("trading_paused")),
-            not bool(growth.get("block_new_entries")),
+            not bool(growth.get("block_new_entries")) or bool(growth.get("profit_lock_active")),
             int(NEXUS_AUTONOMY_LEVEL or 1) >= 2 and not NEXUS_SHADOW_MODE,
             approval_rate >= 0.05 or approved_count >= 2 or int(decision.get("trade_count") or 0) >= 1,
             int(decision.get("live_position_count") or 0) >= 0,
             len(audits) >= 1,
+            bool(compound.get("enabled")),
+            float(compound.get("deployable_pool", 0) or 0) > 0 or float(growth.get("futures_equity", 0) or 0) > 0,
+            bool(daily.get("compound_reinvest")) or bool(compound.get("reinvest_base_equity")),
         ]
         return round(sum(1 for item in checks if item) / len(checks) * 100, 1)
 
-    def _score_risk_control(self, validations, audits, upgrade, blocked_symbols):
+    def _score_risk_control(self, validations, audits, upgrade, blocked_symbols, growth=None):
+        growth = dict(growth or {})
         traces = list(upgrade.get("decision_traces") or [])
         checks = [
             len(validations) >= 1,
@@ -182,26 +217,36 @@ class MaturityRadarService:
             any(not item.get("approved") for item in audits),
             any(item.get("approved") for item in audits),
             len(traces) >= 3 or len(validations) >= 15,
-            len(blocked_symbols) >= 0,
+            bool(growth.get("daily_positive_mode")) or bool(growth.get("compound_reinvest")),
+            bool(growth.get("daily_max_loss_guard")),
+            bool(growth.get("profit_lock_active")) or bool(growth.get("daily_target_hit")),
         ]
-        if blocked_symbols:
-            checks[-1] = True
         return round(sum(1 for item in checks if item) / len(checks) * 100, 1)
 
-    def _score_learning(self, learning_reviews, trade_results, blocked_symbols, learning):
-        calibration = learning.get("calibration_snapshot") or {}
-        failures = [item for item in trade_results if item.get("win_loss") == "LOSS"]
+    def _score_learning(self, learning_reviews, trade_results, blocked_symbols, learning, calibration=None, compound=None):
+        calibration = calibration or learning.get("calibration_snapshot") or {}
+        has_liquidation_lesson = any(
+            item.get("failure_reason") == "exchange_liquidation" for item in trade_results
+        )
+        symbol_lessons = False
+        for adj in (calibration.get("fleet_adjustments") or {}).values():
+            if isinstance(adj, dict) and adj.get("symbol_lessons"):
+                symbol_lessons = True
         checks = [
             bool(learning_reviews.get("auto_apply")),
             bool((calibration.get("fleet_adjustments") or {})),
             isinstance(learning_reviews.get("counts"), dict),
             isinstance(learning_reviews.get("patch_outcomes"), list),
             int(learning.get("trade_journal_count") or 0) >= 1 or len(trade_results) >= 1,
-            bool(blocked_symbols) or any(item.get("failure_reason") for item in trade_results),
+            has_liquidation_lesson or symbol_lessons or any(item.get("failure_reason") for item in trade_results),
+            bool((compound or {}).get("enabled")),
+            bool((compound or {}).get("reinvest_base_equity")),
         ]
         return round(sum(1 for item in checks if item) / len(checks) * 100, 1)
 
-    def _score_ai_led(self, llm, llm_proposer_audits, llm_proposals, meeting_directives, agent_advisory, decision, upgrade):
+    def _score_ai_led(self, llm, llm_proposer_audits, llm_proposals, meeting_directives, agent_advisory, decision, upgrade, position_ai=None, strategy_evolution=None):
+        position_ai = dict(position_ai or {})
+        strategy_evolution = dict(strategy_evolution or {})
         llm_ready = bool(llm.get("enabled")) and (
             bool(llm.get("providers_ready"))
             or any(item.get("configured") for item in (llm.get("providers") or {}).values())
@@ -220,6 +265,8 @@ class MaturityRadarService:
             or int(radar_llm.get("count") or 0) >= 1
             or bool(llm.get("last_ok_task"))
             or AI_LED_PRIMARY_MODE,
+            bool(position_ai.get("reviewed_at")),
+            bool(strategy_evolution.get("walk_forward_ready") or strategy_evolution.get("evolution_mode")),
         ]
         return round(sum(1 for item in checks if item) / len(checks) * 100, 1)
 
@@ -230,8 +277,12 @@ class MaturityRadarService:
         return (time.time() * 1000 - updated_ms) < 120_000
 
     def _grade(self, score):
-        if score >= 85:
+        if score >= 95:
+            return "A+"
+        if score >= 90:
             return "A"
+        if score >= 85:
+            return "A-"
         if score >= 80:
             return "B+"
         if score >= 75:
@@ -240,11 +291,11 @@ class MaturityRadarService:
             return "C"
         return "D"
 
-    def _recommendations(self, scores):
+    def _recommendations(self, scores, target_score=80.0):
         tips = []
         for key, label in self.LABELS.items():
             value = float(scores.get(key, 0) or 0)
-            if value >= 80:
+            if value >= float(target_score):
                 continue
             if key == "infrastructure":
                 tips.append(f"{label}未達80%：確認 NEXUS_EMBEDDED_WORKER=1 與 Binance 金鑰。")

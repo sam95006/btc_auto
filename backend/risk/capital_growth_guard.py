@@ -1,3 +1,8 @@
+from config.compound_capital_config import (
+    COMPOUND_REINVEST_ENABLED,
+    DAILY_POSITIVE_MODE,
+    LOCK_PROFIT_AFTER_DAILY_TARGET,
+)
 from config.growth_mode_config import (
     BOLD_MIN_QUALITY,
     BOLD_TESTNET_ENABLED,
@@ -104,6 +109,22 @@ class CapitalGrowthGuard:
         daily_target = equity * DAILY_PNL_TARGET_PCT
         daily_target_hit = daily_pnl >= daily_target > 0
 
+        if DAILY_POSITIVE_MODE and daily_pnl < 0 and not daily_target_hit:
+            if not block_new_entries and daily_pnl_pct <= -(DAILY_MAX_LOSS_PCT * 0.35):
+                min_quality = max(min_quality, DAILY_A_PLUS_QUALITY)
+                position_multiplier = min(position_multiplier, 0.65)
+                allow_aggressive = False
+            if daily_pnl_pct <= -(DAILY_MAX_LOSS_PCT * 0.15):
+                block_new_entries = True
+                block_reason = block_reason or "daily_positive_mode_defense"
+
+        if LOCK_PROFIT_AFTER_DAILY_TARGET and daily_target_hit:
+            block_new_entries = True
+            block_reason = block_reason or "daily_target_locked_for_compound"
+            mode = "PROFIT_LOCK"
+            position_multiplier = min(position_multiplier, 0.5)
+            allow_aggressive = False
+
         progress_to_floor = 0.0
         if equity < CAPITAL_FLOOR:
             progress_to_floor = max(0.0, min(1.0, equity / CAPITAL_FLOOR))
@@ -136,6 +157,10 @@ class CapitalGrowthGuard:
             "daily": daily,
             "daily_target_usd": round(daily_target, 4),
             "daily_target_hit": daily_target_hit,
+            "compound_reinvest": bool(COMPOUND_REINVEST_ENABLED),
+            "daily_positive_mode": bool(DAILY_POSITIVE_MODE),
+            "daily_max_loss_guard": True,
+            "profit_lock_active": bool(LOCK_PROFIT_AFTER_DAILY_TARGET and daily_target_hit),
         }
         self.last_status = status
         return status

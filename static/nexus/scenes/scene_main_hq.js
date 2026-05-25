@@ -20,7 +20,10 @@ function renderMap(state) {
         ${nodes.map((node) => {
           const livePosition = (state.positions || []).find((item) => item.fleet === node.id && String(item.id || "").startsWith("live_"));
           const fleetStatus = state.system?.fleet_status?.[node.id];
-          const signal = translateSignal(livePosition?.side || fleetStatus?.last_signal || "HOLD");
+          const positionSide = livePosition
+            ? (Number(livePosition.signed_quantity ?? livePosition.quantity ?? 0) > 0 ? "LONG" : "SHORT")
+            : (fleetStatus?.last_signal || "HOLD");
+          const signal = translateSignal(positionSide);
           const status = translateStatus(
             livePosition
               ? "TRADING"

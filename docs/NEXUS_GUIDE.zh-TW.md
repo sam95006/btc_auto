@@ -22,6 +22,15 @@ NEXUS 是 **Binance 測試網** 上的指揮艦隊系統：
 
 設定見 `config/fleet_routing_config.py`。
 
+### 聊天室緊急指令：整體平倉
+
+在任一頻道（建議 **世界** 或 **風控**）輸入下列文字，系統會**立即**向 Binance U 本位下 `reduceOnly` 市價單，平掉所有合約持倉（不經 LLM 確認）：
+
+- `整體平倉`、`全部平倉`、`全平`、`全部清倉`
+- 英文：`close all`、`flatten all`
+
+回覆會顯示成功/失敗筆數。亦可透過 API：`POST /api/nexus/control`，`{"command":"CLOSE_ALL_POSITIONS"}`。
+
 ---
 
 ## 2. 資金顯示：只跟 Binance 測試帳戶綁定
@@ -207,14 +216,14 @@ python tools/deploy/nexus_state_sync.py import path\to\bundle.zip --data-dir /da
 
 ## 8. 成熟度五維雷達（唯一評分標準）
 
-自 2026-05 起，**只使用一套分數**：`maturity_radar`（每維 0–100，目標 **≥ 80**）。
+自 2026-05 起，**只使用一套分數**：`maturity_radar`（每維 0–100，目標 **≥ 80**，進階營運 **≥ 90**）。
 
 | 維度 | 英文鍵 | 衡量內容 |
 |------|--------|----------|
 | 基礎設施 | `infrastructure` | Worker、Binance 同步、always-on、資料新鮮度 |
 | 自動執行 | `auto_execution` | 未暫停、Autonomy≥2、核准/成交、audit 樣本 |
 | 風控治理 | `risk_control` | Validation、decision_audit、治理 trace |
-| 學習閉環 | `learning` | auto_apply、校準、patch、虧損/黑名單 |
+| 學習閉環 | `learning` | auto_apply、校準、patch、強平冷卻＋`symbol_lessons`（非永久黑名單） |
 | AI 主導 | `ai_led` | LLM 就緒、AI 提案鏈、圓桌綁執行、trade_proposals |
 
 API：`GET /api/nexus/maturity-radar`  
@@ -235,6 +244,28 @@ NEXUS_SHADOW_MODE=0
 ```
 
 `NEXUS_AI_LED_PRIMARY=1`：新倉只走 AI 提案鏈（規則引擎僅管平倉）；`NEXUS_AI_LED_CORE_FLEETS=1`：BTC/ETH/SOL/PEPE 也可由 AI 提案下單。
+
+強平後行為（預設）：`NEXUS_LIQUIDATION_PERMANENT_BLACKLIST=0` → 僅冷卻數小時，再進場需更高信心與較低槓桿（`symbol_lessons`）。  
+品質門檻（務實，非保證獲利）：`NEXUS_MIN_TRADE_CONFIDENCE`、`NEXUS_QUALITY_GATE_ENABLED`。  
+營運 SLO：`ops_health`；可選 `NEXUS_OPS_WEBHOOK_URL` 發送 degraded 告警。
+
+### 每日復投與正報酬防禦
+
+- `NEXUS_COMPOUND_REINVEST=1`：每日開盤權益 = 昨日收盤權益（`logs/growth_daily_state.json`，Zeabur 請放 `/data/logs`）。
+- `NEXUS_DAILY_POSITIVE_MODE=1`：日內虧損擴大時收緊／暫停新倉。
+- `NEXUS_LOCK_PROFIT_AFTER_DAILY_TARGET=1`：達日目標後鎖利（`PROFIT_LOCK`），避免獲利回吐。
+- Snapshot：`compound_capital`、`growth_mode.daily`、`growth_mode.compound`。
+
+```env
+NEXUS_COMPOUND_REINVEST=1
+NEXUS_DAILY_POSITIVE_MODE=1
+NEXUS_LOCK_PROFIT_AFTER_DAILY_TARGET=1
+NEXUS_DAILY_PNL_TARGET_PCT=0.003
+NEXUS_MATURITY_TARGET_SCORE=90
+NEXUS_DATA_DIR=/data
+```
+
+**無法保證**每日正報酬；系統目標是復投 + 虧損日防禦 + 達標鎖利。
 
 ---
 

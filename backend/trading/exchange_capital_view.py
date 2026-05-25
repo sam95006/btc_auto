@@ -152,21 +152,32 @@ def build_futures_capital_from_binance(futures_account: dict | None) -> Dict[str
 
     if assets == ("USDT",):
         usdt_capital = _futures_usdt_asset_capital(futures_account)
+        exchange = futures_account.get("exchange_account") or {}
+        exchange_wallet = _safe_float(exchange.get("totalWalletBalance"))
+        exchange_margin = _safe_float(exchange.get("totalMarginBalance"))
+        exchange_available = _safe_float(exchange.get("availableBalance"))
+        exchange_unrealized = _safe_float(exchange.get("totalUnrealizedProfit"))
+        wallet_balance = exchange_wallet if exchange_wallet > 0 else usdt_capital["wallet_balance"]
+        margin_balance = exchange_margin if exchange_margin > 0 else usdt_capital["margin_balance"]
+        available_balance = exchange_available if exchange_available > 0 else usdt_capital["available_balance"]
+        unrealized_pnl = (
+            exchange_unrealized
+            if abs(exchange_unrealized) > 1e-8
+            else resolve_futures_display_unrealized(futures_account, usdt_capital["unrealized_pnl"])
+        )
         return {
             "source": "binance_futures_rest",
             "display_scope": "usdt_asset_row_only",
             "market_type": "USDT_M",
             "coin_margined_included": False,
             "treasury_assets": ["USDT"],
-            "wallet_balance": usdt_capital["wallet_balance"],
-            "margin_balance": usdt_capital["margin_balance"],
-            "unrealized_pnl": usdt_capital["unrealized_pnl"],
-            "available_balance": usdt_capital["available_balance"],
-            "account_total_margin_balance": round(
-                _safe_float((futures_account.get("exchange_account") or {}).get("totalMarginBalance")),
-                4,
-            ),
-            "using_exchange_summary": False,
+            "wallet_balance": round(wallet_balance, 4),
+            "usdt_asset_wallet_balance": usdt_capital["wallet_balance"],
+            "margin_balance": round(margin_balance, 4),
+            "unrealized_pnl": round(unrealized_pnl, 4),
+            "available_balance": round(available_balance, 4),
+            "account_total_margin_balance": round(exchange_margin, 4),
+            "using_exchange_summary": bool(exchange_margin or exchange_wallet),
             "update_time": int(futures_account.get("update_time") or 0),
             "sync_status": str(futures_account.get("sync_status") or ""),
             "sync_error": str(futures_account.get("sync_error") or ""),

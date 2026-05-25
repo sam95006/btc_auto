@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from backend.learning.feedback_loop import LearningFeedbackLoop
 from backend.learning.liquidation_tracker import LiquidationTracker
+from backend.learning.learning_review_queue import LearningReviewQueue
 from backend.trading.radar_dispatch_service import RadarDispatchService
 from backend.trading.trade_validation_pipeline import TradeValidationPipeline
 
@@ -39,42 +40,33 @@ class LiquidationLearningTests(unittest.TestCase):
     def test_liquidation_trade_records_and_blocks_symbol(self):
         store = _MemoryStore()
         feedback = LearningFeedbackLoop(store)
+        queue = LearningReviewQueue(store)
         recorded = []
 
         def record_fn(result, context=None):
             payload, recommendation = feedback.record_trade_result(result, context=context or {})
             recorded.append(payload)
             if recommendation:
-                store.upsert_applied_learning_patch(
-                    {
-                        "fleet": recommendation.get("fleet"),
-                        "strategy_key": recommendation.get("strategy_key"),
-                        "blacklisted_symbol": recommendation.get("blacklist_candidate"),
-                    }
-                )
+                queue.apply_item({"id": "liq-1", "recommendation": recommendation})
             return payload
 
         tracker = LiquidationTracker()
-        tracker.reconcile(
-            [],
-            [
-                {
-                    "id": "live_trade_RADAR_99",
-                    "fleet": "RADAR",
-                    "symbol": "DOGEUSDT",
-                    "side": "SELL",
-                    "pnl": -17.92,
-                    "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                }
-            ],
-            MagicMock(is_configured=lambda: False),
-            record_fn,
-        )
+        tracker._last_positions = {
+            "DOGEUSDT": {
+                "symbol": "DOGEUSDT",
+                "fleet": "RADAR",
+                "unrealized_pnl": -17.92,
+                "margin": 12.0,
+                "side": "SELL",
+            }
+        }
+        tracker.reconcile([], [], MagicMock(is_configured=lambda: False), record_fn)
 
         self.assertEqual(len(recorded), 1)
         self.assertEqual(recorded[0]["failure_reason"], "exchange_liquidation")
         guidance = feedback.get_strategy_guidance("RADAR", "radar_market_scan_strategy", "radar_alt")
-        self.assertIn("DOGEUSDT", guidance.get("blocked_symbols", []))
+        self.assertNotIn("DOGEUSDT", guidance.get("blocked_symbols", []))
+        self.assertIn("DOGEUSDT", guidance.get("symbol_lessons", {}))
         self.assertTrue(guidance["symbol_cooldown"]["DOGEUSDT"]["active"])
 
         pipeline = TradeValidationPipeline(store, feedback)

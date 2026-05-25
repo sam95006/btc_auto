@@ -47,12 +47,16 @@ export function renderTopStatusBar(root, state) {
   const spotUsdt = Number(binanceSpot.usdt_total ?? capital.spot_usdt_total ?? 0);
   const spotUsdc = Number(binanceSpot.usdc_total ?? capital.spot_usdc_total ?? 0);
   const spotHoldings = Number(capital.spot_holdings_total ?? binanceSpot.holdings_total ?? 0);
+  const futuresAvailable = Number(
+    binanceFutures.available_balance ?? capital.futures_available_balance ?? 0,
+  );
   const futuresWallet = Number(
     binanceFutures.wallet_balance ?? capital.futures_exchange_wallet_balance ?? capital.futures_wallet_display ?? 0,
   );
   const futuresEquity = Number(
-    binanceFutures.margin_balance ?? capital.futures_exchange_margin_balance ?? 0,
+    binanceFutures.margin_balance ?? capital.futures_exchange_margin_balance ?? capital.futures_total ?? 0,
   );
+  const usdtAssetWallet = Number(binanceFutures.usdt_asset_wallet_balance ?? 0);
   const binding = capital.account_binding || {};
   const accountsMismatch = Boolean(binding.accounts_mismatch);
   const tradeCount = Number(decision.trade_count || 0);
@@ -74,6 +78,7 @@ export function renderTopStatusBar(root, state) {
   const systemMeta = `${linkLabel}${syncNote}${worldNote} / ${healthNote}${mismatchNote} / 持倉 ${livePositions}${positionNote} / 成交 ${tradeCount} 筆${holdingsNote}`;
   const dualTime = `台北 ${shortTime(times.taipei || system.current_time)} | 美東 ${shortTime(times.eastern)}`;
 
+  root.dataset.scrollKey = "top-status-bar";
   root.innerHTML = `
     <div class="status-board">
       <div class="status-primary-grid status-primary-grid--compact">
@@ -84,9 +89,9 @@ export function renderTopStatusBar(root, state) {
           usdtOnly ? `可用於現貨交易` : `USDT ${formatMoney(spotUsdt)} / USDC ${formatMoney(spotUsdc)}`,
         )}
         ${card(
-          "U本位 USDT",
-          formatMoney(futuresEquity),
-          `錢包 ${formatMoney(futuresWallet)} / 未實現 ${formatMoney(futuresUnrealized)}`,
+          "U本位錢包",
+          formatMoney(futuresWallet || futuresEquity),
+          `可用 ${formatMoney(futuresAvailable)} / 權益 ${formatMoney(futuresEquity)} / 未實現 ${formatMoney(futuresUnrealized)}`,
           toneClass(futuresUnrealized),
         )}
         ${card("未實現損益", formatMoney(futuresUnrealized), dualTime, toneClass(futuresUnrealized))}

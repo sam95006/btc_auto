@@ -4,6 +4,11 @@ import os
 from collections import Counter
 from datetime import datetime, timedelta
 
+from config.quality_gates_config import (
+    MIN_TRADE_CONFIDENCE,
+    QUALITY_GATE_ENABLED,
+    TARGET_WIN_RATE,
+)
 from config.validation_config import (
     BACKTEST_MAX_ALLOWED_RECENT_LOSSES,
     BACKTEST_MAX_NEGATIVE_AVG_PNL,
@@ -31,11 +36,11 @@ def _now():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
-def _safe_float(value):
+def _safe_float(value, default=0.0):
     try:
-        return float(value or 0.0)
+        return float(value if value is not None else default)
     except Exception:
-        return 0.0
+        return float(default)
 
 
 def _bold_testnet_enabled() -> bool:
@@ -50,6 +55,40 @@ def _hard_learning_block(symbol, learning_guidance):
     cooldown = dict(learning_guidance.get("symbol_cooldown") or {}).get(symbol) or {}
     if cooldown.get("active") and cooldown.get("reason") == "exchange_liquidation":
         return True, "learning_liquidation_cooldown"
+    return False, None
+
+
+def _symbol_lesson_gate(symbol, proposal, learning_guidance):
+    symbol = str(symbol or "").upper()
+    lesson = dict((learning_guidance.get("symbol_lessons") or {}).get(symbol) or {})
+    if not lesson:
+        return False, None
+    confidence = _safe_float(proposal.get("confidence_score") or proposal.get("confidence"))
+    min_confidence = _safe_float(lesson.get("min_confidence"), MIN_TRADE_CONFIDENCE)
+    if confidence and confidence < min_confidence:
+        return True, "learning_symbol_lesson_low_confidence"
+    leverage = _safe_float(proposal.get("leverage") or proposal.get("final_leverage"))
+    cap = lesson.get("leverage_cap")
+    if cap is not None and leverage and leverage > _safe_float(cap):
+        return True, "learning_symbol_lesson_leverage_cap"
+    return False, None
+
+
+def _quality_gate_block(proposal, growth_directives, recent_trades):
+    if not QUALITY_GATE_ENABLED:
+        return False, None
+    trades = list(recent_trades or [])[:40]
+    if len(trades) < 8:
+        return False, None
+    wins = sum(1 for item in trades if _safe_float(item.get("pnl")) > 0)
+    win_rate = wins / max(len(trades), 1)
+    confidence = _safe_float(proposal.get("confidence_score") or proposal.get("confidence"))
+    min_conf = _safe_float(growth_directives.get("min_trade_confidence"), MIN_TRADE_CONFIDENCE)
+    target_wr = _safe_float(growth_directives.get("min_win_rate"), TARGET_WIN_RATE)
+    if win_rate < target_wr * 0.85 and confidence < min_conf:
+        return True, "quality_gate_low_confidence_after_weak_window"
+    if confidence and confidence < min_conf:
+        return True, "quality_gate_min_confidence"
     return False, None
 
 
@@ -472,9 +511,21 @@ class TradeValidationPipeline:
         bold_testnet = _bold_testnet_enabled()
         symbol = str(proposal.get("symbol") or "").upper()
         hard_block, hard_reason = _hard_learning_block(symbol, learning_guidance)
+        lesson_block, lesson_reason = _symbol_lesson_gate(symbol, proposal, learning_guidance)
+        quality_block, quality_reason = _quality_gate_block(
+            proposal,
+            growth_directives,
+            recent_trades,
+        )
         if hard_block:
             approved = False
             learning_block_reason = hard_reason
+        elif lesson_block:
+            approved = False
+            learning_block_reason = lesson_reason
+        elif quality_block:
+            approved = False
+            learning_block_reason = quality_reason
         elif learning_guidance.get("pause_new_entries") and not bold_testnet:
             approved = False
             learning_block_reason = "learning_pause_due_to_recent_losses"

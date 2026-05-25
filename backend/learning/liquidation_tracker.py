@@ -101,7 +101,6 @@ class LiquidationTracker:
             close_key = f"closed:{symbol}"
             if close_key in self._processed_close_keys:
                 continue
-            self._processed_close_keys.add(close_key)
             pnl = _safe_float(previous.get("unrealized_pnl"))
             if pnl >= 0:
                 margin = _safe_float(previous.get("margin"))

@@ -129,8 +129,17 @@ class LearningFeedbackLoop:
             "strategy_confidence_adjustment": adjustment,
             "disabled_pattern_candidate": result.get("failure_reason"),
             "blacklist_candidate": result.get("symbol")
-            if result.get("failure_reason") in {"low_liquidity", "exchange_liquidation"}
+            if result.get("failure_reason") == "low_liquidity"
             else None,
+            "symbol_lesson_candidate": (
+                {
+                    "symbol": result.get("symbol"),
+                    "lesson": "avoid_repeat_liquidation",
+                    "failure_reason": "exchange_liquidation",
+                }
+                if result.get("failure_reason") == "exchange_liquidation"
+                else None
+            ),
             "recommended_leverage_cap": 10 if leverage >= 50 else 20 if leverage >= 20 else None,
             "confidence_penalty_suggestion": abs(adjustment),
             "position_size_multiplier_suggestion": 0.8 if leverage >= 20 or confidence >= 0.85 else 0.92,
@@ -444,10 +453,16 @@ class LearningFeedbackLoop:
                     4,
                 )
         guidance["applied_learning_patches"] = len(applied_patches)
+        symbol_lessons = {}
+        for patch in applied_patches:
+            lesson = patch.get("symbol_lesson")
+            if isinstance(lesson, dict) and lesson.get("symbol"):
+                sym = str(lesson["symbol"]).upper()
+                merged = dict(symbol_lessons.get(sym) or {})
+                merged.update(lesson)
+                symbol_lessons[sym] = merged
+        guidance["symbol_lessons"] = symbol_lessons
         blocked_symbols = set()
-        for symbol, payload in symbol_cooldown.items():
-            if payload.get("active"):
-                blocked_symbols.add(str(symbol).upper())
         for patch in applied_patches:
             blacklisted = patch.get("blacklisted_symbol")
             if blacklisted:

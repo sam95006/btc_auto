@@ -350,6 +350,28 @@
       opacity: 1;
     }
 
+    .decision-strip {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(8, 20, 38, 0.82);
+      border: 1px solid rgba(79, 216, 255, 0.14);
+      max-height: 180px;
+      overflow: auto;
+    }
+    .decision-strip header {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 8px;
+    }
+    .decision-strip header strong { font-size: 12px; color: #9fdcff; }
+    .decision-strip header small { font-size: 10px; color: rgba(255,255,255,0.55); }
+    .decision-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+    .decision-row { font-size: 11px; display: flex; flex-direction: column; gap: 2px; }
+    .decision-row.ok small { color: #6fe7a8; }
+    .decision-row.block small { color: #ff8da0; }
+
     .log-panel-header {
       position: sticky;
       top: 0;

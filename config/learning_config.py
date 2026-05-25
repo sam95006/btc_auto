@@ -20,6 +20,16 @@ def _env_bool(name: str, default: bool) -> bool:
     return str(raw).strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _env_float(name: str, default: float) -> float:
+    raw = os.getenv(name)
+    if raw is None or not str(raw).strip():
+        return float(default)
+    try:
+        return float(str(raw).strip())
+    except Exception:
+        return float(default)
+
+
 # Testnet bold mode: learning shrinks size/leverage instead of hard-pausing all entries.
 LEARNING_HARD_PAUSE_ENABLED = _env_bool(
     "NEXUS_LEARNING_HARD_PAUSE",
@@ -41,8 +51,13 @@ SYMBOL_COOLDOWN_SECONDS = _env_int(
 )
 LIQUIDATION_SYMBOL_COOLDOWN_SECONDS = _env_int(
     "NEXUS_LIQUIDATION_SYMBOL_COOLDOWN_SECONDS",
-    6 * 60 * 60,
+    4 * 60 * 60,
 )
+# Strong liquidations: temporary pause + stricter re-entry rules, NOT permanent symbol blacklist.
+LIQUIDATION_PERMANENT_BLACKLIST = _env_bool("NEXUS_LIQUIDATION_PERMANENT_BLACKLIST", False)
+LIQUIDATION_REENTRY_MIN_CONFIDENCE = _env_float("NEXUS_LIQUIDATION_REENTRY_MIN_CONFIDENCE", 0.72)
+LIQUIDATION_REENTRY_LEVERAGE_CAP = _env_int("NEXUS_LIQUIDATION_REENTRY_LEVERAGE_CAP", 5)
+LIQUIDATION_REENTRY_SIZE_MULT = _env_float("NEXUS_LIQUIDATION_REENTRY_SIZE_MULT", 0.55)
 HIGH_LEVERAGE_FAILURE_THRESHOLD = 20
 HIGH_LEVERAGE_PENALTY_STEP = 0.03
 MAX_HIGH_LEVERAGE_PENALTY = 0.15

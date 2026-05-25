@@ -1,7 +1,8 @@
 import { escapeHtml } from "../utils/presentation.js?v=20260525a";
 
 function gradeTone(grade) {
-  if (grade === "A") return "good";
+  if (grade === "A+" || grade === "A") return "good";
+  if (grade === "A-") return "good";
   if (grade === "B") return "ok";
   if (grade === "C") return "warn";
   return "bad";
@@ -20,7 +21,16 @@ export function renderAlertPanel(root, state) {
   const approval = Number((health.approval_rate || 0) * 100).toFixed(1);
   const topReject = (health.top_reject_reasons || [])[0];
   const rejectNote = topReject ? `${topReject.label || topReject.reason} ×${topReject.count}` : "無主要拒單";
-  const tip = (radar.recommendations || health.recommendations || [])[0] || "AI 與 Binance 同步正常";
+  const compound = state.compound_capital || (state.growth_mode || {}).compound || {};
+  const daily = (state.growth_mode || {}).daily || {};
+  const compoundNote = compound.enabled
+    ? `復投基準 ${Number(compound.reinvest_base_equity || daily.reinvest_base_equity || 0).toFixed(0)} · 今日 ${daily.is_positive_day ? "正" : "負"}${Number(daily.daily_pnl || 0).toFixed(2)}`
+    : "";
+  const target90 = radar.target_90_all_dimensions ? " · 五維≥90" : "";
+  const tip =
+    compoundNote ||
+    (radar.recommendations || health.recommendations || [])[0] ||
+    "AI 與 Binance 同步正常";
   const dims = radar.dimensions || {};
   const labels = radar.dimension_labels || {};
   const dimRows = Object.keys(dims)

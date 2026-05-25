@@ -3,6 +3,13 @@ from __future__ import annotations
 import os
 from datetime import datetime
 
+from config.learning_config import (
+    LIQUIDATION_PERMANENT_BLACKLIST,
+    LIQUIDATION_REENTRY_LEVERAGE_CAP,
+    LIQUIDATION_REENTRY_MIN_CONFIDENCE,
+    LIQUIDATION_REENTRY_SIZE_MULT,
+)
+
 def _env_bool(name, default=False):
     raw = os.getenv(name)
     if raw is None:
@@ -73,6 +80,22 @@ class LearningReviewQueue:
         item = dict(item or {})
         review_id = item.get("id")
         recommendation = dict(item.get("recommendation") or {})
+        failure = recommendation.get("disabled_pattern_candidate")
+        symbol = recommendation.get("symbol")
+        symbol_lesson = None
+        blacklisted_symbol = recommendation.get("blacklist_candidate")
+        if failure == "exchange_liquidation":
+            symbol_lesson = {
+                "symbol": symbol,
+                "lesson": "avoid_repeat_liquidation",
+                "min_confidence": LIQUIDATION_REENTRY_MIN_CONFIDENCE,
+                "leverage_cap": LIQUIDATION_REENTRY_LEVERAGE_CAP,
+                "position_size_multiplier": LIQUIDATION_REENTRY_SIZE_MULT,
+            }
+            if LIQUIDATION_PERMANENT_BLACKLIST:
+                blacklisted_symbol = symbol
+            else:
+                blacklisted_symbol = None
         patch = {
             "fleet": recommendation.get("fleet"),
             "strategy_key": recommendation.get("strategy_key"),
@@ -80,20 +103,17 @@ class LearningReviewQueue:
             "confidence_penalty": abs(float(recommendation.get("strategy_confidence_adjustment", 0.02) or 0.02)),
             "position_size_multiplier": recommendation.get("position_size_multiplier_suggestion", 0.92),
             "leverage_cap": recommendation.get("recommended_leverage_cap"),
-            "disabled_pattern": recommendation.get("disabled_pattern_candidate"),
-            "blacklisted_symbol": recommendation.get("blacklist_candidate")
-            or (
-                recommendation.get("symbol")
-                if recommendation.get("disabled_pattern_candidate") == "exchange_liquidation"
-                else None
-            ),
+            "disabled_pattern": failure,
+            "blacklisted_symbol": blacklisted_symbol,
+            "symbol_lesson": symbol_lesson,
             "applied_at": _now(),
             "baseline_trade_count": int(recommendation.get("baseline_trade_count") or 0),
             "baseline_realized_pnl": float(recommendation.get("baseline_realized_pnl") or 0.0),
         }
         self.runtime_store.upsert_applied_learning_patch(patch)
-        if review_id:
-            self.runtime_store.update_learning_review_status(review_id, "applied", "auto_apply")
+        updater = getattr(self.runtime_store, "update_learning_review_status", None)
+        if review_id and callable(updater):
+            updater(review_id, "applied", "auto_apply")
         return patch
 
     def process_pending(self, limit=20):

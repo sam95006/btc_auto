@@ -4,6 +4,7 @@ import time
 import hashlib
 import re
 from datetime import datetime, timedelta
+from uuid import uuid4
 from pathlib import Path
 
 from backend.core.env_loader import load_env_file
@@ -23,7 +24,10 @@ from backend.fleets.base_strategy_engine import BaseFleetStrategyEngine
 from backend.fleets.signal_fusion_engine import SignalFusionEngine
 from backend.monitoring.trading_health_service import TradingHealthService
 from backend.monitoring.maturity_radar_service import MaturityRadarService
+from backend.monitoring.ops_health_service import OpsHealthService
 from backend.governance.ai_trade_proposer import AiTradeProposer
+from backend.governance.ai_position_manager import AiPositionManager
+from backend.learning.strategy_evolution_service import StrategyEvolutionService
 from backend.market.market_price_feed_service import MarketPriceFeedService
 from backend.market.market_context_service import MarketContextService
 from backend.market.radar_market_scan_service import RadarMarketScanService
@@ -65,6 +69,7 @@ from backend.trading.exchange_capital_view import (
 )
 from backend.trading.decision_quality_engine import DecisionQualityValidationEngine
 from backend.risk.capital_growth_guard import CapitalGrowthGuard
+from backend.wallet.compound_capital_service import CompoundCapitalService
 from backend.decision.meeting_notes_resolver import resolve_meeting_notes
 from backend.analytics.setup_performance_tracker import SetupPerformanceTracker
 from backend.trading.radar_dispatch_service import RadarDispatchService
@@ -169,6 +174,11 @@ class NexusRuntime:
         self.price_feed = MarketPriceFeedService()
         self.trading_health = TradingHealthService()
         self.maturity_radar = MaturityRadarService()
+        self.ops_health = OpsHealthService()
+        self.strategy_evolution = StrategyEvolutionService()
+        self.ai_position_manager = AiPositionManager()
+        self._force_immediate_tick = False
+        self._last_ops_status = None
         self.news_ingestion = NewsIngestionService(refresh_seconds=NEWS_REFRESH_SECONDS)
         self.news_analysis = NewsAnalysisEngine()
         self.meeting_broadcaster = MeetingMemoryBroadcaster()
@@ -199,6 +209,7 @@ class NexusRuntime:
             decision_quality_engine=decision_quality_engine,
         )
         self.capital_growth_guard = CapitalGrowthGuard()
+        self.compound_capital = CompoundCapitalService()
         self.walk_forward_evaluator = WalkForwardEvaluator()
         self.radar_dispatch = RadarDispatchService()
         self.radar_llm_bridge = RadarLlmProposalBridge(self.radar_dispatch, self.llm_gateway)
@@ -538,7 +549,9 @@ class NexusRuntime:
                 self.state_manager.set_module_health("worker", f"ERROR: {exc}")
                 self.state_manager.set_module_health("runtime", f"ERROR: {exc}")
                 print(f"[nexus_runtime] tick failed: {exc}")
-            time.sleep(tick_seconds)
+            sleep_seconds = 0.35 if self._force_immediate_tick else tick_seconds
+            self._force_immediate_tick = False
+            time.sleep(sleep_seconds)
 
     def tick(self):
         self.upgrade_pipeline.begin_tick()
@@ -620,6 +633,29 @@ class NexusRuntime:
         )
         futures_total = futures_equity_from_account(futures_account)
         self.growth_status = self.capital_growth_guard.evaluate(futures_total)
+        walk_forward_status = self.walk_forward_evaluator.evaluate(runtime_store.recent_trade_results(limit=160))
+        rotation = self.upgrade_pipeline.strategy_versions.suggest_rotation(
+            walk_forward_status,
+            {"calibration_snapshot": calibration_snapshot},
+        )
+        self.growth_status = self.strategy_evolution.evolve_growth_directives(
+            self.growth_status,
+            walk_forward_status=walk_forward_status,
+            rotation=rotation,
+            recent_trades=runtime_store.recent_trade_results(limit=80),
+        )
+        self._compound_capital_status = self.compound_capital.build_snapshot(
+            futures_total,
+            daily_payload=self.growth_status.get("daily"),
+            growth_status=self.growth_status,
+        )
+        self.growth_status["compound"] = dict(self._compound_capital_status)
+        self._strategy_evolution_status = {
+            "evolution_mode": self.growth_status.get("evolution_mode", "hold"),
+            "recent_win_rate": self.growth_status.get("recent_win_rate"),
+            "rotation": rotation,
+            "walk_forward_ready": bool(walk_forward_status.get("ready")),
+        }
         self._apply_live_capital_plan(futures_account)
         self._synchronize_live_futures_state(futures_account)
         self._ensure_fixed_roundtables()
@@ -650,6 +686,7 @@ class NexusRuntime:
             )
             symbol_prices = self._build_symbol_prices(prices)
             self.position_manager.update_unrealized(prices, symbol_prices=symbol_prices)
+            self._apply_position_ai_actions(prices, market_contexts)
 
         if self.futures_client.is_configured():
             emergency, reason = False, ""
@@ -1271,6 +1308,70 @@ class NexusRuntime:
                 )
             self._try_execute_futures_request(request, symbol_prices, market_contexts, truth_status)
 
+    def _apply_position_ai_actions(self, prices, market_contexts):
+        if not self.futures_client.is_configured() or self._manual_pause:
+            return
+        positions = self.position_manager.all_positions()
+        if not positions:
+            self._last_position_ai_review = {}
+            return
+        review = self.ai_position_manager.review_positions(
+            positions,
+            market_contexts=market_contexts,
+            llm_gateway=self.llm_gateway,
+        )
+        self._last_position_ai_review = dict(review or {})
+        for action in list(review.get("actions") or []):
+            symbol = str(action.get("symbol") or "").upper()
+            fleet = str(action.get("fleet") or "").upper()
+            if not symbol or not fleet:
+                continue
+            position = next(
+                (item for item in positions if str(item.get("symbol") or "").upper() == symbol),
+                None,
+            )
+            if not position:
+                continue
+            engine = self.strategy_engines.get(fleet)
+            if not engine:
+                continue
+            price = float(
+                (prices.get(fleet) or {}).get("price")
+                or position.get("mark_price")
+                or 0.0
+            )
+            if price <= 0:
+                continue
+            reason = f"ai_position_{action.get('reason', 'action')}"
+            act = str(action.get("action") or "")
+            if act == "take_partial_profit":
+                fraction = float(action.get("fraction") or 0.3)
+                trade = engine.execution_engine.reduce_position(
+                    position["id"], fraction, price, reason=reason
+                )
+            elif act == "reduce":
+                trade = engine.execution_engine.reduce_position(position["id"], 0.5, price, reason=reason)
+            elif act == "reduce_or_close":
+                trade = engine.execution_engine.close_position(position["id"], price, reason=reason)
+            else:
+                trade = None
+            if trade:
+                self._record_trade_result(
+                    {
+                        "order_id": trade.get("id"),
+                        "symbol": trade.get("symbol"),
+                        "market_type": trade.get("market_type", "futures"),
+                        "fleet": fleet,
+                        "entry_price": trade.get("entry_price"),
+                        "exit_price": trade.get("exit_price"),
+                        "pnl": trade.get("pnl"),
+                        "exit_reason": trade.get("reason"),
+                        "exit_class": trade.get("exit_class", "ai_exit"),
+                        "strategy_key": f"{fleet.lower()}_adaptive_strategy",
+                    },
+                    context=market_contexts.get(fleet, {}) or {},
+                )
+
     def _try_execute_futures_request(self, request, symbol_prices, market_contexts, truth_status, learning_guidance=None):
         request = dict(request or {})
         fleet = str(request.get("fleet") or "RADAR").upper()
@@ -1463,6 +1564,9 @@ class NexusRuntime:
             )
         result, recommendation = self.learning_feedback.record_trade_result(payload, context=context or {})
         self.upgrade_pipeline.on_trade_result(result, recommendation)
+        if str(result.get("failure_reason") or "") == "exchange_liquidation":
+            self._force_immediate_tick = True
+            self._append_alert("ALERT_RED", f"強平學習：{result.get('symbol')} 進入冷卻，非永久黑名單。")
         return result
 
     def _record_validation_event(self, validation_event):
@@ -1676,6 +1780,219 @@ class NexusRuntime:
         }
         return contexts
 
+    def flatten_all_positions(self, reason="manual_flatten_all", source="chat", trigger_text=""):
+        """Force-close all open USDT-M futures positions on Binance (reduce-only market)."""
+        outcome = {
+            "ok": True,
+            "reason": reason,
+            "source": source,
+            "trigger_text": str(trigger_text or "")[:120],
+            "closed": [],
+            "failed": [],
+            "skipped": [],
+        }
+        try:
+            self.refresh_live_exchange_state(force=True)
+        except Exception as exc:
+            outcome["sync_warning"] = str(exc)
+
+        futures_positions = self._collect_futures_positions_for_flatten()
+        if not futures_positions:
+            if source != "player_chat":
+                self._broadcast_flatten_chat(outcome)
+            return outcome
+
+        prices = self.latest_prices or {}
+        for position in futures_positions:
+            symbol = str(position.get("symbol") or "").upper()
+            fleet = str(position.get("fleet") or "RADAR").upper()
+            side = str(position.get("side") or "").upper()
+            pos_id = position.get("id") or f"live_{fleet}_{symbol}"
+            qty = float(position.get("quantity", 0.0) or 0.0)
+            if qty <= 0 or side not in {"BUY", "SELL"}:
+                outcome["skipped"].append({"symbol": symbol, "reason": "empty_or_hold"})
+                continue
+
+            price = float(position.get("mark_price", 0.0) or 0.0)
+            if price <= 0:
+                price = float((prices.get(fleet) or {}).get("price", 0.0) or 0.0)
+            if price <= 0 and self.futures_client.is_configured():
+                try:
+                    ticker = self.futures_client.get_book_ticker(symbol)
+                    price = float(ticker.get("bidPrice") or ticker.get("askPrice") or 0.0)
+                except Exception:
+                    price = 0.0
+            if price <= 0:
+                outcome["failed"].append({"symbol": symbol, "fleet": fleet, "error": "no_mark_price"})
+                continue
+
+            record = dict(position)
+            record["id"] = pos_id
+            with self.position_manager._lock:
+                self.position_manager.positions[pos_id] = record
+
+            close_reason = f"{reason}:{source}"
+            try:
+                trade = self.execution_engine.close_position(pos_id, price, reason=close_reason)
+            except Exception as exc:
+                trade = None
+                outcome["failed"].append({"symbol": symbol, "fleet": fleet, "error": str(exc)})
+
+            if trade:
+                outcome["closed"].append(
+                    {
+                        "symbol": trade.get("symbol", symbol),
+                        "fleet": trade.get("fleet", fleet),
+                        "side": trade.get("side", side),
+                        "pnl": trade.get("pnl"),
+                        "external_order_id": trade.get("external_order_id"),
+                    }
+                )
+                self._record_trade_result(
+                    {
+                        "order_id": trade.get("id"),
+                        "symbol": trade.get("symbol", symbol),
+                        "market_type": "futures",
+                        "fleet": fleet,
+                        "entry_price": trade.get("entry_price"),
+                        "exit_price": trade.get("exit_price"),
+                        "pnl": trade.get("pnl"),
+                        "exit_reason": trade.get("reason"),
+                        "exit_class": "manual_flatten",
+                        "strategy_key": f"{fleet.lower()}_adaptive_strategy",
+                    },
+                    context={},
+                )
+                continue
+
+            direct = self._close_exchange_futures_position_direct(symbol, side, qty, price, close_reason)
+            if direct.get("ok"):
+                outcome["closed"].append(direct)
+                with self.position_manager._lock:
+                    self.position_manager.positions.pop(pos_id, None)
+            else:
+                outcome["failed"].append(
+                    {"symbol": symbol, "fleet": fleet, "error": direct.get("error") or "close_failed"}
+                )
+
+        self._flatten_exchange_futures_leftovers(outcome, reason=f"{reason}:{source}")
+        try:
+            self.refresh_live_exchange_state(force=True)
+        except Exception:
+            pass
+
+        outcome["ok"] = bool(outcome["closed"]) or (not outcome["failed"] and not futures_positions)
+        self._force_immediate_tick = True
+        if source != "player_chat":
+            self._broadcast_flatten_chat(outcome)
+        return outcome
+
+    def _collect_futures_positions_for_flatten(self):
+        items = []
+        seen = set()
+        for position in self.position_manager.all_positions():
+            if str(position.get("market_type", "futures")) != "futures":
+                continue
+            symbol = str(position.get("symbol") or "").upper()
+            qty = float(position.get("quantity", 0.0) or 0.0)
+            if qty <= 0 or not symbol:
+                continue
+            key = (symbol, str(position.get("side") or "").upper())
+            if key in seen:
+                continue
+            seen.add(key)
+            items.append(position)
+
+        if items or not self.futures_client.is_configured():
+            return items
+
+        futures_account = getattr(self, "_last_futures_account", {}) or {}
+        for position in self._live_futures_positions_snapshot(futures_account):
+            symbol = str(position.get("symbol") or "").upper()
+            qty = float(position.get("quantity", 0.0) or 0.0)
+            if qty <= 0 or not symbol:
+                continue
+            key = (symbol, str(position.get("side") or "").upper())
+            if key in seen:
+                continue
+            seen.add(key)
+            items.append(position)
+        return items
+
+    def _close_exchange_futures_position_direct(self, symbol, side, quantity, price, reason):
+        if not self.futures_client.is_configured():
+            return {"ok": False, "error": "futures_not_configured"}
+        close_side = "SELL" if side == "BUY" else "BUY"
+        qty = self.futures_client.normalize_quantity(symbol, quantity)
+        if qty <= 0:
+            return {"ok": False, "error": "invalid_quantity"}
+        external_id = f"nexus_flatten_{uuid4().hex[:16]}"
+        try:
+            order = self.futures_client.place_market_order(
+                symbol=symbol,
+                side=close_side,
+                quantity=qty,
+                reduce_only=True,
+                client_order_id=external_id,
+            )
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+        fill_price = self.futures_client.extract_fill_price(order, fallback_price=price)
+        return {
+            "ok": True,
+            "symbol": symbol,
+            "side": side,
+            "quantity": qty,
+            "exit_price": fill_price,
+            "external_order_id": order.get("orderId"),
+            "reason": reason,
+            "execution_source": "binance_futures_direct_flatten",
+        }
+
+    def _flatten_exchange_futures_leftovers(self, outcome, reason="flatten_leftover"):
+        if not self.futures_client.is_configured():
+            return
+        closed_symbols = {str(item.get("symbol") or "").upper() for item in outcome.get("closed") or []}
+        symbol_map = {self.futures_client.resolve_symbol(fleet): fleet for fleet in FLEETS}
+        try:
+            risks = self.futures_client.get_all_position_risk() or []
+        except Exception as exc:
+            outcome.setdefault("sync_warning", str(exc))
+            return
+
+        for item in risks:
+            symbol = str(item.get("symbol") or "").upper()
+            position_amt = float(item.get("positionAmt", 0.0) or 0.0)
+            if abs(position_amt) < 1e-12 or symbol in closed_symbols:
+                continue
+            side = "BUY" if position_amt > 0 else "SELL"
+            qty = abs(position_amt)
+            price = float(item.get("markPrice", 0.0) or 0.0)
+            fleet = fleet_for_exchange_position(symbol, symbol_map)
+            direct = self._close_exchange_futures_position_direct(symbol, side, qty, price, reason)
+            if direct.get("ok"):
+                outcome["closed"].append(direct)
+                closed_symbols.add(symbol)
+            else:
+                outcome["failed"].append({"symbol": symbol, "fleet": fleet, "error": direct.get("error")})
+
+    def _broadcast_flatten_chat(self, outcome):
+        from backend.coordination.chat_command_handler import format_flatten_reply
+
+        message = format_flatten_reply(outcome)
+        importance = "HIGH" if outcome.get("failed") else "WARNING"
+        runtime_store.append_station_chat(
+            {
+                "timestamp": _now(),
+                "station": "RISK",
+                "speaker": "風控中心主任",
+                "message": message,
+                "source": "整體平倉",
+                "importance": importance,
+            }
+        )
+        self.station_chats = self.station_chat_log.recent_grouped()
+
     def _process_commands(self):
         commands = runtime_store.claim_pending_commands(limit=20)
         for item in commands:
@@ -1693,6 +2010,13 @@ class NexusRuntime:
                     self._news_pause_until = 0.0
                     self.state_manager.clear_alert()
                     result = {"ok": True, "command": command}
+                elif command in {"CLOSE_ALL_POSITIONS", "FLATTEN_ALL", "CLOSE_ALL"}:
+                    payload = item.get("payload") or {}
+                    result = self.flatten_all_positions(
+                        reason=f"control:{command}",
+                        source="control_api",
+                        trigger_text=str(payload.get("note") or command),
+                    )
                 else:
                     result = {"ok": False, "error": f"unsupported command: {command}"}
                 runtime_store.complete_command(item["id"], result=result, ok=result.get("ok", False))
@@ -3059,6 +3383,13 @@ class NexusRuntime:
         validation_status = self._build_validation_status()
         account_sync_status = self._last_account_sync_status or self._build_account_sync_status()
         walk_forward_status = self.walk_forward_evaluator.evaluate(runtime_store.recent_trade_results(limit=160))
+        position_ai = dict(getattr(self, "_last_position_ai_review", {}) or {})
+        if not position_ai and all_positions:
+            position_ai = self.ai_position_manager.review_positions(
+                all_positions,
+                market_contexts=getattr(self, "market_context", {}) or {},
+                llm_gateway=self.llm_gateway,
+            )
         leverage_status = {
             fleet: (live_positions_by_fleet.get(fleet, [{}])[0].get("leverage_status") if live_positions_by_fleet.get(fleet) else None)
             for fleet in FLEETS
@@ -3131,6 +3462,7 @@ class NexusRuntime:
             },
             "decision_audit": runtime_store.recent_decision_audit(limit=100),
             "growth_mode": dict(self.growth_status or {}),
+            "compound_capital": dict(getattr(self, "_compound_capital_status", {}) or {}),
             "radar_dispatch": {
                 "enabled": bool(getattr(self.radar_dispatch, "FLEET", "RADAR")),
                 "open_positions": self.position_manager.get_by_fleet("RADAR"),
@@ -3168,21 +3500,32 @@ class NexusRuntime:
             "decision_traces": runtime_store.recent_decision_traces(limit=50),
             "live_sync": dict(self._live_sync_status or {}),
             "meeting_execution_directives": dict(self._meeting_execution_directives or {}),
+            "strategy_evolution": dict(getattr(self, "_strategy_evolution_status", {}) or {}),
+            "position_ai": position_ai,
         }
-        snapshot_payload["trading_health"] = self.trading_health.build_report(
-            snapshot_payload,
-            runtime_store=runtime_store,
-        )
         try:
             from backend.runtime.embed_flags import embedded_worker_error, embedded_worker_started
         except Exception:
             embedded_worker_started = False
             embedded_worker_error = None
+        ops_report = self.ops_health.build_report(
+            snapshot_payload,
+            embedded_worker_started=embedded_worker_started,
+            embedded_worker_error=embedded_worker_error,
+        )
+        snapshot_payload["ops_health"] = ops_report
+        self.ops_health.maybe_alert(ops_report, previous_status=self._last_ops_status)
+        self._last_ops_status = ops_report.get("status")
+        snapshot_payload["trading_health"] = self.trading_health.build_report(
+            snapshot_payload,
+            runtime_store=runtime_store,
+        )
         snapshot_payload["maturity_radar"] = self.maturity_radar.build_report(
             snapshot_payload,
             runtime_store=runtime_store,
             embedded_worker_started=embedded_worker_started,
             embedded_worker_error=embedded_worker_error,
+            ops_health=ops_report,
         )
         snapshot_payload["trading_health"]["maturity_radar"] = snapshot_payload["maturity_radar"]
         return snapshot_payload

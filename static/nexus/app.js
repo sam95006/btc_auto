@@ -1,9 +1,10 @@
 ﻿import { startStateStore, subscribe, getState } from "./state_store.js?v=20260524b";
 import { fetchLayoutConfig, fetchNexusState } from "./api_client.js?v=20260503a";
-import { renderTopStatusBar } from "./components/ui_top_status_bar.js?v=20260524a";
+import { renderTopStatusBar } from "./components/ui_top_status_bar.js?v=20260525c";
 import { renderAlertPanel } from "./components/ui_alert_panel.js?v=20260510a";
 import { renderChatDock } from "./components/ui_chat_dock.js?v=20260521c";
 import { renderMeetingLogPanel } from "./components/ui_meeting_log_panel.js?v=20260520a";
+import { renderDecisionStrip } from "./components/ui_decision_panel.js?v=20260524a";
 import { renderMeetingDock } from "./components/ui_meeting_dock.js?v=20260510b";
 import { buildMainOverviewPage } from "./scenes/scene_main_hq.js?v=20260510b";
 import { buildHqPage, getHqModalContent } from "./scenes/scene_hq_roundtable.js?v=20260521f";
@@ -437,6 +438,7 @@ function renderHomeScene(state) {
 function renderHomeLeft(state) {
   if (!rootRefs.left) return;
   renderMeetingLogPanel(rootRefs.left, state, homeUiState, updateMeetingUiState);
+  renderDecisionStrip(rootRefs.left, state);
 }
 
 function renderHomeRight(state) {

@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import time
 
+from backend.coordination.chat_command_handler import detect_chat_command, format_flatten_reply
 from backend.coordination.station_conversation_engine import StationConversationEngine
 
 
@@ -40,6 +41,29 @@ class StationDialogueService:
             self.chat_log.add(channel_key, speaker, text, source="玩家輸入", importance="INFO"),
         ]
 
+        command = detect_chat_command(text)
+        if command == "flatten_all":
+            flatten_result = self._execute_flatten_all(text)
+            reply = format_flatten_reply(flatten_result)
+            importance = "HIGH" if flatten_result.get("failed") else "WARNING"
+            captain = CHANNEL_CAPTAIN.get(channel_key, "風控中心主任")
+            stored.append(
+                self.chat_log.add(
+                    channel_key,
+                    captain,
+                    reply,
+                    source="系統執行",
+                    importance=importance,
+                )
+            )
+            return {
+                "ok": True,
+                "channel": channel_key,
+                "messages": stored,
+                "command": command,
+                "flatten": flatten_result,
+            }
+
         llm_rows = self._llm_player_reply(channel_key, text, snapshot)
         if llm_rows:
             for row in llm_rows:
@@ -64,6 +88,19 @@ class StationDialogueService:
                     )
                 )
         return {"ok": True, "channel": channel_key, "messages": stored}
+
+    def _execute_flatten_all(self, text):
+        from backend.services.nexus_runtime import nexus_runtime
+
+        try:
+            nexus_runtime.refresh_live_exchange_state(force=True)
+        except Exception:
+            pass
+        return nexus_runtime.flatten_all_positions(
+            reason="chat_flatten_all",
+            source="player_chat",
+            trigger_text=str(text or "")[:120],
+        )
 
     def _llm_player_reply(self, channel_key, text, snapshot):
         if not self.llm_gateway or not getattr(self.llm_gateway, "enabled", lambda: False)():
