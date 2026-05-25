@@ -42,6 +42,17 @@ def _bold_testnet_enabled() -> bool:
     return str(os.getenv("NEXUS_BOLD_TESTNET", "") or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _hard_learning_block(symbol, learning_guidance):
+    symbol = str(symbol or "").upper()
+    blocked = {str(item).upper() for item in (learning_guidance.get("blocked_symbols") or [])}
+    if symbol in blocked:
+        return True, "learning_symbol_blacklisted"
+    cooldown = dict(learning_guidance.get("symbol_cooldown") or {}).get(symbol) or {}
+    if cooldown.get("active") and cooldown.get("reason") == "exchange_liquidation":
+        return True, "learning_liquidation_cooldown"
+    return False, None
+
+
 def _safe_int(value):
     try:
         return int(value or 0)
@@ -459,14 +470,18 @@ class TradeValidationPipeline:
         )
         learning_block_reason = None
         bold_testnet = _bold_testnet_enabled()
-        if learning_guidance.get("pause_new_entries") and not bold_testnet:
+        symbol = str(proposal.get("symbol") or "").upper()
+        hard_block, hard_reason = _hard_learning_block(symbol, learning_guidance)
+        if hard_block:
+            approved = False
+            learning_block_reason = hard_reason
+        elif learning_guidance.get("pause_new_entries") and not bold_testnet:
             approved = False
             learning_block_reason = "learning_pause_due_to_recent_losses"
         elif learning_guidance.get("regime_blocked") and not bold_testnet:
             approved = False
             learning_block_reason = "learning_regime_blocked"
         else:
-            symbol = str(proposal.get("symbol") or "")
             symbol_cooldown = dict(learning_guidance.get("symbol_cooldown", {}) or {})
             if bool((symbol_cooldown.get(symbol) or {}).get("active")) and not bold_testnet:
                 approved = False

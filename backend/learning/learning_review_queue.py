@@ -81,6 +81,12 @@ class LearningReviewQueue:
             "position_size_multiplier": recommendation.get("position_size_multiplier_suggestion", 0.92),
             "leverage_cap": recommendation.get("recommended_leverage_cap"),
             "disabled_pattern": recommendation.get("disabled_pattern_candidate"),
+            "blacklisted_symbol": recommendation.get("blacklist_candidate")
+            or (
+                recommendation.get("symbol")
+                if recommendation.get("disabled_pattern_candidate") == "exchange_liquidation"
+                else None
+            ),
             "applied_at": _now(),
             "baseline_trade_count": int(recommendation.get("baseline_trade_count") or 0),
             "baseline_realized_pnl": float(recommendation.get("baseline_realized_pnl") or 0.0),

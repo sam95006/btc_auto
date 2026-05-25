@@ -72,6 +72,14 @@ class BinanceFuturesTestnetClient:
         params = {"symbol": symbol, "limit": int(limit)}
         return self._signed_request("GET", "/fapi/v1/userTrades", params)
 
+    def get_income_history(self, symbol=None, income_type=None, limit=50):
+        params = {"limit": int(limit)}
+        if symbol:
+            params["symbol"] = str(symbol).upper()
+        if income_type:
+            params["incomeType"] = str(income_type)
+        return self._signed_request("GET", "/fapi/v1/income", params)
+
     def get_funding_rate_history(self, symbol, limit=20):
         params = {"symbol": symbol, "limit": int(limit)}
         return self._public_request("GET", "/fapi/v1/fundingRate", params)

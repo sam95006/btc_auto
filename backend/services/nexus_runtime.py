@@ -31,6 +31,7 @@ from backend.news.news_analysis_engine import NewsAnalysisEngine
 from backend.news.event_normalization_service import EventNormalizationService
 from backend.news.news_ingestion_service import NewsIngestionService
 from backend.learning.feedback_loop import LearningFeedbackLoop
+from backend.learning.liquidation_tracker import LiquidationTracker
 from backend.governance.upgrade_pipeline import UpgradePipeline
 from backend.governance.radar_llm_proposal_bridge import RadarLlmProposalBridge
 from backend.analytics.daily_ops_reporter import should_broadcast, format_report as format_daily_ops_report
@@ -156,6 +157,7 @@ class NexusRuntime:
         self.pnl_tracker = PnlTracker(self.ledger, self.position_manager)
         self.risk_engine = RiskControlEngine(self.ledger, self.pnl_tracker)
         self.learning_feedback = LearningFeedbackLoop(runtime_store)
+        self.liquidation_tracker = LiquidationTracker()
         self.signal_fusion = SignalFusionEngine()
         self.price_feed = MarketPriceFeedService()
         self.trading_health = TradingHealthService()
@@ -435,6 +437,7 @@ class NexusRuntime:
                 futures_account = self._sync_futures_account(prices)
                 self._last_futures_account = futures_account
                 self._sync_futures_activity()
+                self._reconcile_liquidation_losses(futures_account)
                 self._apply_live_capital_plan(futures_account)
                 self._synchronize_live_futures_state(futures_account)
                 futures_total = futures_equity_from_account(futures_account)
@@ -536,6 +539,7 @@ class NexusRuntime:
         spot_account = self._sync_spot_account(prices)
         futures_account = self._sync_futures_account(prices)
         self._sync_futures_activity()
+        self._reconcile_liquidation_losses(futures_account)
         # Refresh prices after the heavier sync steps so downstream AI/risk/execution
         # logic evaluates against the newest Binance values available in this tick.
         prices = self.price_feed.get_prices(self.futures_client)
@@ -2058,6 +2062,13 @@ class NexusRuntime:
         if growth_directives.get("block_new_entries"):
             return
 
+        radar_guidance = self.learning_feedback.get_strategy_guidance(
+            "RADAR",
+            "radar_market_scan_strategy",
+            "radar_alt",
+            market_context=market_contexts.get("RADAR", {}) if isinstance(market_contexts, dict) else {},
+        )
+
         open_symbols = {str(item.get("symbol") or "").upper().replace("/", "") for item in self.position_manager.get_by_fleet("RADAR")}
         if len(open_symbols) >= RADAR_MAX_OPEN_POSITIONS:
             return
@@ -2066,7 +2077,7 @@ class NexusRuntime:
             symbol = str(candidate.get("symbol") or "").upper()
             if symbol in open_symbols:
                 continue
-            if not self.radar_dispatch.can_open_symbol(symbol):
+            if not self.radar_dispatch.can_open_symbol(symbol, learning_guidance=radar_guidance):
                 continue
             current = float(symbol_prices.get(symbol, 0.0) or 0.0)
             if current <= 0:
@@ -2078,6 +2089,7 @@ class NexusRuntime:
                 alt_context,
                 self.ledger,
                 growth_directives=growth_directives,
+                learning_guidance=radar_guidance,
             )
             if not request:
                 continue
@@ -2450,6 +2462,17 @@ class NexusRuntime:
                 f"{asset}:{round(_safe_float(item.get('free')), 8)}:{round(_safe_float(item.get('locked')), 8)}"
             )
         return _short_fingerprint(parts)
+
+    def _reconcile_liquidation_losses(self, futures_account):
+        if not self.futures_client.is_configured():
+            return
+        live_positions = self._live_futures_positions_snapshot(futures_account)
+        self.liquidation_tracker.reconcile(
+            live_positions,
+            getattr(self, "futures_live_trades", []) or [],
+            self.futures_client,
+            self._record_trade_result,
+        )
 
     def _synchronize_live_futures_state(self, futures_account):
         if not self.futures_client.is_configured():

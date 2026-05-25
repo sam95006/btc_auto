@@ -37,9 +37,20 @@ class RadarDispatchService:
             eligible.append(item)
         return eligible[:RADAR_MAX_OPEN_POSITIONS]
 
-    def build_open_request(self, candidate, price, market_context, ledger, growth_directives=None):
+    def build_open_request(self, candidate, price, market_context, ledger, growth_directives=None, learning_guidance=None):
         growth_directives = growth_directives or {}
-        if growth_directives.get("block_new_entries"):
+        learning_guidance = learning_guidance or {}
+        if growth_directives.get("block_new_entries") or learning_guidance.get("pause_new_entries"):
+            return None
+        symbol = str(candidate.get("symbol") or "").upper()
+        blocked = {str(item).upper() for item in (learning_guidance.get("blocked_symbols") or [])}
+        if symbol in blocked:
+            return None
+        cooldown = dict(learning_guidance.get("symbol_cooldown") or {}).get(symbol) or {}
+        if cooldown.get("active"):
+            return None
+        leverage_cap = learning_guidance.get("leverage_cap")
+        if leverage_cap is not None and float(leverage_cap or 0) <= 0:
             return None
         available = float(ledger.radar_available())
         if available < RADAR_MIN_MARGIN:
@@ -49,7 +60,14 @@ class RadarDispatchService:
         margin = min(margin, available * 0.35)
         side = "BUY" if candidate.get("candidate_side") == "LONG" else "SELL"
         confidence = min(0.95, 0.45 + score / 200.0)
+        min_confidence = float(learning_guidance.get("min_confidence_threshold", 0.35) or 0.35)
+        if confidence < min_confidence:
+            return None
         leverage = min(RADAR_MAX_LEVERAGE, float(growth_directives.get("max_leverage", RADAR_MAX_LEVERAGE) or RADAR_MAX_LEVERAGE))
+        if learning_guidance.get("leverage_cap") is not None:
+            leverage = min(leverage, float(learning_guidance.get("leverage_cap") or RADAR_MAX_LEVERAGE))
+        pos_mult = float(learning_guidance.get("position_size_multiplier", 1.0) or 1.0)
+        margin = round(margin * max(0.35, min(1.0, pos_mult)), 4)
         symbol = str(candidate.get("symbol") or "").upper()
         return {
             "fleet": self.FLEET,
@@ -69,8 +87,20 @@ class RadarDispatchService:
             "market_regime": market_context.get("market_regime", "normal"),
         }
 
-    def can_open_symbol(self, symbol):
+    def can_open_symbol(self, symbol, learning_guidance=None):
         symbol = str(symbol or "").upper()
+        learning_guidance = learning_guidance or {}
+        blocked = {str(item).upper() for item in (learning_guidance.get("blocked_symbols") or [])}
+        if symbol in blocked:
+            return False
+        cooldown = dict(learning_guidance.get("symbol_cooldown") or {}).get(symbol) or {}
+        if cooldown.get("active"):
+            return False
+        if learning_guidance.get("pause_new_entries"):
+            return False
+        leverage_cap = learning_guidance.get("leverage_cap")
+        if leverage_cap is not None and float(leverage_cap or 0) <= 0:
+            return False
         last = float(self._last_open_at.get(symbol, 0.0) or 0.0)
         return (time.time() - last) >= RADAR_COOLDOWN_SECONDS
 

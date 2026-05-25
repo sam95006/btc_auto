@@ -14,6 +14,7 @@ from config.learning_config import (
     LOSS_RATE_PENALTY_THRESHOLD,
     MAX_CONFIDENCE_PENALTY,
     MAX_HIGH_LEVERAGE_PENALTY,
+    LIQUIDATION_SYMBOL_COOLDOWN_SECONDS,
     SYMBOL_COOLDOWN_LOSS_COUNT,
     SYMBOL_COOLDOWN_SECONDS,
     SYMBOL_COOLDOWN_WINDOW,
@@ -52,6 +53,7 @@ class FailureAnalyzer:
         "take_profit_too_late",
         "confidence_overestimated",
         "false_signal_high_leverage",
+        "exchange_liquidation",
         "unknown",
     )
 
@@ -99,7 +101,10 @@ class LearningFeedbackLoop:
         pnl = float(payload.get("pnl", 0.0) or 0.0)
         payload["win_loss"] = "WIN" if pnl > 0 else "LOSS" if pnl < 0 else "FLAT"
         if payload["win_loss"] == "LOSS":
-            payload["failure_reason"] = self.failure_analyzer.classify_loss(payload, context=context)
+            payload["failure_reason"] = payload.get("failure_reason") or self.failure_analyzer.classify_loss(
+                payload,
+                context=context,
+            )
         self.runtime_store.append_trade_result(payload)
         recommendation = self.build_recommendation(payload, context=context)
         if recommendation:
@@ -123,7 +128,9 @@ class LearningFeedbackLoop:
             "signal_weight_adjustment": adjustment,
             "strategy_confidence_adjustment": adjustment,
             "disabled_pattern_candidate": result.get("failure_reason"),
-            "blacklist_candidate": result.get("symbol") if result.get("failure_reason") == "low_liquidity" else None,
+            "blacklist_candidate": result.get("symbol")
+            if result.get("failure_reason") in {"low_liquidity", "exchange_liquidation"}
+            else None,
             "recommended_leverage_cap": 10 if leverage >= 50 else 20 if leverage >= 20 else None,
             "confidence_penalty_suggestion": abs(adjustment),
             "position_size_multiplier_suggestion": 0.8 if leverage >= 20 or confidence >= 0.85 else 0.92,
@@ -236,6 +243,25 @@ class LearningFeedbackLoop:
                 "active": active,
                 "latest_loss_at": recent_symbol_losses[0].get("timestamp"),
                 "reason": "repeated_symbol_losses",
+            }
+
+        for item in items:
+            if item.get("win_loss") != "LOSS" or item.get("failure_reason") != "exchange_liquidation":
+                continue
+            symbol = str(item.get("symbol") or "").upper()
+            if not symbol:
+                continue
+            latest_ts = _parse_timestamp(item.get("timestamp"))
+            if latest_ts is None:
+                continue
+            age_seconds = (now - latest_ts).total_seconds()
+            if age_seconds > LIQUIDATION_SYMBOL_COOLDOWN_SECONDS:
+                continue
+            symbol_cooldown[symbol] = {
+                "loss_count": max(int((symbol_cooldown.get(symbol) or {}).get("loss_count", 0) or 0), 1),
+                "active": True,
+                "latest_loss_at": item.get("timestamp"),
+                "reason": "exchange_liquidation",
             }
 
         return {
@@ -418,6 +444,15 @@ class LearningFeedbackLoop:
                     4,
                 )
         guidance["applied_learning_patches"] = len(applied_patches)
+        blocked_symbols = set()
+        for symbol, payload in symbol_cooldown.items():
+            if payload.get("active"):
+                blocked_symbols.add(str(symbol).upper())
+        for patch in applied_patches:
+            blacklisted = patch.get("blacklisted_symbol")
+            if blacklisted:
+                blocked_symbols.add(str(blacklisted).upper())
+        guidance["blocked_symbols"] = sorted(blocked_symbols)
         bold_testnet = str(os.getenv("NEXUS_BOLD_TESTNET", "") or "").strip().lower() in {"1", "true", "yes", "on"}
         if bold_testnet and guidance.get("pause_new_entries"):
             guidance["pause_new_entries"] = False
