@@ -86,7 +86,10 @@ class TradingHealthService:
         )
 
         llm_enabled = bool(llm.get("enabled"))
-        llm_ready = llm_enabled and bool(llm.get("providers_ready"))
+        llm_ready = llm_enabled and (
+            bool(llm.get("providers_ready"))
+            or any(item.get("configured") for item in (llm.get("providers") or {}).values())
+        )
 
         dimensions = {
             "price_alignment": self._score(futures_aligned, 0.55),

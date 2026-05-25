@@ -4,6 +4,12 @@ import os
 
 from config.radar_dispatch_config import CORE_FLEET_SYMBOLS, RADAR_MAX_LEVERAGE, RADAR_MIN_MARGIN
 from config.fleet_routing_config import validate_futures_open_route
+from config.ai_trading_config import (
+    AI_LED_INCLUDE_CORE_FLEETS,
+    AI_LED_MIN_CONFIDENCE,
+    AI_LED_PRIMARY_MODE,
+    AI_LED_TRADING_ENABLED,
+)
 
 
 def _env_bool(name, default=True):
@@ -26,8 +32,10 @@ class AiTradeProposer:
     def __init__(self, llm_gateway=None, trade_proposal_service=None):
         self.llm_gateway = llm_gateway
         self.trade_proposal_service = trade_proposal_service
-        self.enabled = _env_bool("NEXUS_AI_LED_TRADING", True)
-        self.min_confidence = _safe_float(os.getenv("NEXUS_AI_LED_MIN_CONFIDENCE", "0.52"), 0.52)
+        self.enabled = AI_LED_TRADING_ENABLED
+        self.primary_mode = AI_LED_PRIMARY_MODE
+        self.include_core_fleets = AI_LED_INCLUDE_CORE_FLEETS
+        self.min_confidence = AI_LED_MIN_CONFIDENCE
 
     def collect_proposals(self, context):
         if not self.enabled:
@@ -36,7 +44,29 @@ class AiTradeProposer:
         proposals.extend(self._from_radar_llm(context.get("radar_llm_items") or []))
         proposals.extend(self._from_agent_output(context.get("agent_output") or {}))
         proposals.extend(self._from_llm_task(context))
-        return self._dedupe(proposals)[: int(os.getenv("NEXUS_AI_PROPOSAL_MAX_PER_TICK", "3") or 3)]
+        if self.include_core_fleets:
+            proposals.extend(self._from_core_fleet_context(context))
+        return self._dedupe(proposals)[: int(os.getenv("NEXUS_AI_PROPOSAL_MAX_PER_TICK", "5") or 5)]
+
+    def _from_core_fleet_context(self, context):
+        rows = []
+        fleets = context.get("core_fleets") or {}
+        for fleet, data in fleets.items():
+            fleet = str(fleet).upper()
+            if fleet == "RADAR":
+                continue
+            symbol = str(data.get("symbol") or "").upper()
+            signal = data.get("signal") or {}
+            action = str(signal.get("action") or "HOLD").upper()
+            if action not in {"BUY", "SELL"}:
+                continue
+            confidence = _safe_float(signal.get("confidence", 0.5))
+            if confidence < self.min_confidence:
+                continue
+            row = self._build_request(symbol, action, confidence, "llm_core_signal", signal.get("reason"), fleet=fleet)
+            if row:
+                rows.append(row)
+        return rows
 
     def _from_radar_llm(self, items):
         rows = []
@@ -119,7 +149,7 @@ class AiTradeProposer:
         route_ok, _reason = validate_futures_open_route(fleet, symbol)
         if not route_ok:
             return None
-        margin = max(RADAR_MIN_MARGIN, 12.0 + confidence * 20.0)
+        margin = max(RADAR_MIN_MARGIN, 12.0 + confidence * 20.0) if fleet == "RADAR" else max(20.0, 15.0 + confidence * 25.0)
         return {
             "fleet": fleet,
             "symbol": symbol,

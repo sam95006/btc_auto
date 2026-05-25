@@ -30,6 +30,8 @@ from .sambanova_client import SambaNovaLLMClient
 class LLMGateway:
     def __init__(self):
         self._cache = {}
+        self._last_ok_task = None
+        self._last_ok_at = 0.0
         self._clients = {
             "groq_primary": GroqLLMClient(PROVIDER_KEY_ENV["groq_primary"], endpoint=PROVIDER_ENDPOINTS["groq_primary"]),
             "groq_secondary": GroqLLMClient(PROVIDER_KEY_ENV["groq_secondary"], endpoint=PROVIDER_ENDPOINTS["groq_secondary"]),
@@ -111,8 +113,32 @@ class LLMGateway:
         if result["status"] != "ok" and fallback_output is not None:
             result["status"] = "fallback"
             result["output"] = fallback_output
+        if result.get("status") in {"ok", "fallback"}:
+            self._last_ok_task = task
+            self._last_ok_at = time.time()
         self._cache[cache_key] = {"created_at": time.time(), "result": result}
         return result
+
+    def providers_ready(self) -> bool:
+        if not self.enabled():
+            return False
+        return any(client.is_configured() for client in self._clients.values())
+
+    def warmup(self):
+        if not self.providers_ready():
+            return {"status": "disabled", "reason": "no_provider"}
+        return self.run_task(
+            "trade_proposer",
+            {
+                "positions": [],
+                "market_context": {},
+                "learning_blocked_symbols": [],
+                "news_headlines": [],
+                "radar_candidates": [],
+                "warmup": True,
+            },
+            fallback_output={"trade_proposals": [], "skip_reason": "warmup"},
+        )
 
     def status_snapshot(self):
         provider_status = {}
@@ -123,6 +149,9 @@ class LLMGateway:
             }
         return {
             "enabled": self.enabled(),
+            "providers_ready": self.providers_ready(),
+            "last_ok_task": self._last_ok_task,
+            "last_ok_at": int(self._last_ok_at * 1000) if self._last_ok_at else 0,
             "providers": provider_status,
             "routes": task_provider_defaults(),
             "models": task_model_defaults(),

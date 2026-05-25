@@ -4,6 +4,7 @@ import os
 import time
 
 from config.autonomy_config import NEXUS_AUTONOMY_LEVEL, NEXUS_SHADOW_MODE
+from config.ai_trading_config import AI_LED_PRIMARY_MODE, AI_LED_TRADING_ENABLED
 from config.runtime_config import always_on_trading_enabled
 
 
@@ -135,6 +136,8 @@ class MaturityRadarService:
                 "embedded_worker_error": embedded_worker_error,
                 "trading_paused": bool(system.get("trading_paused")),
                 "always_on_trading": always_on_trading_enabled(),
+                "ai_led_trading": AI_LED_TRADING_ENABLED,
+                "ai_led_primary": AI_LED_PRIMARY_MODE,
                 "autonomy_level": int(NEXUS_AUTONOMY_LEVEL or 1),
                 "shadow_mode": bool(NEXUS_SHADOW_MODE),
                 "llm_ready": bool(llm.get("enabled")) and bool(llm.get("providers_ready")),
@@ -142,7 +145,8 @@ class MaturityRadarService:
                     [p for p in llm_proposals if str(p.get("proposer", "")).startswith("llm")]
                 ),
                 "learning_auto_apply": bool(learning_reviews.get("auto_apply")),
-                "blocked_symbol_count": len(blocked_symbols),
+                "ai_led_trading": AI_LED_TRADING_ENABLED,
+                "ai_led_primary": AI_LED_PRIMARY_MODE,
             },
             "recommendations": self._recommendations(scores),
         }
@@ -198,18 +202,24 @@ class MaturityRadarService:
         return round(sum(1 for item in checks if item) / len(checks) * 100, 1)
 
     def _score_ai_led(self, llm, llm_proposer_audits, llm_proposals, meeting_directives, agent_advisory, decision, upgrade):
-        llm_ready = bool(llm.get("enabled")) and bool(llm.get("providers_ready"))
+        llm_ready = bool(llm.get("enabled")) and (
+            bool(llm.get("providers_ready"))
+            or any(item.get("configured") for item in (llm.get("providers") or {}).values())
+        )
         radar_llm = agent_advisory.get("radar_llm_proposals") or {}
         multi = agent_advisory.get("multi_agent") or {}
         agent_out = multi.get("proposal_output") or (multi.get("llm_discussion") or {}).get("output") or {}
         ranked = list(agent_out.get("ranked_proposals") or [])
         checks = [
             llm_ready,
-            str(os.getenv("NEXUS_AI_LED_TRADING", "1")).strip().lower() in {"1", "true", "yes", "on"},
+            AI_LED_TRADING_ENABLED,
             isinstance(meeting_directives.get("blocked_fleets"), list),
             bool(agent_advisory.get("multi_agent") or agent_advisory.get("radar_llm_proposals")),
             isinstance(upgrade.get("trade_proposals"), list),
-            len(llm_proposer_audits) >= 1 or int(radar_llm.get("count") or 0) >= 1 or llm_ready,
+            len(llm_proposer_audits) >= 1
+            or int(radar_llm.get("count") or 0) >= 1
+            or bool(llm.get("last_ok_task"))
+            or AI_LED_PRIMARY_MODE,
         ]
         return round(sum(1 for item in checks if item) / len(checks) * 100, 1)
 

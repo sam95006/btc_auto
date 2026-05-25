@@ -70,6 +70,7 @@ from backend.analytics.setup_performance_tracker import SetupPerformanceTracker
 from backend.trading.radar_dispatch_service import RadarDispatchService
 from backend.analytics.walk_forward_evaluator import WalkForwardEvaluator
 from config.fleet_routing_config import fleet_for_exchange_position
+from config.ai_trading_config import AI_LED_PRIMARY_MODE, AI_LED_TRADING_ENABLED
 from config.runtime_config import always_on_trading_enabled, tick_seconds
 from backend.trading.trading_mode import get_trading_mode
 from backend.coordination.station_chat_log import StationChatLog
@@ -505,6 +506,11 @@ class NexusRuntime:
         if self._thread and self._thread.is_alive():
             return
         self.account_sync.start()
+        if AI_LED_TRADING_ENABLED and self.llm_gateway.enabled():
+            try:
+                self.llm_gateway.warmup()
+            except Exception as exc:
+                print(f"[nexus_runtime] llm warmup skipped: {exc}")
         self._thread = threading.Thread(target=self._loop, daemon=True, name="nexus-runtime")
         self._thread.start()
 
@@ -629,9 +635,19 @@ class NexusRuntime:
             self.state_manager.clear_alert()
             self._bootstrap_live_activity(prices, spot_account, self.truth_layer_status)
             self._run_hq_spot_strategy(prices, spot_account, self.truth_layer_status)
-            self._run_fleet_strategies(prices, market_contexts, self.truth_layer_status)
+            self._run_fleet_strategies(
+                prices,
+                market_contexts,
+                self.truth_layer_status,
+                exits_only=AI_LED_PRIMARY_MODE,
+            )
             self._run_ai_led_proposals(prices, market_contexts, self.truth_layer_status)
-            self._run_radar_dispatch(prices, market_contexts, self.truth_layer_status)
+            self._run_radar_dispatch(
+                prices,
+                market_contexts,
+                self.truth_layer_status,
+                exits_only=AI_LED_PRIMARY_MODE,
+            )
             symbol_prices = self._build_symbol_prices(prices)
             self.position_manager.update_unrealized(prices, symbol_prices=symbol_prices)
 
@@ -1198,31 +1214,52 @@ class NexusRuntime:
         return fleet in set(self._meeting_execution_directives.get("blocked_fleets") or [])
 
     def _run_ai_led_proposals(self, prices, market_contexts, truth_status=None):
-        if self._manual_pause or self._fleet_blocked_by_meeting("RADAR"):
+        if not AI_LED_TRADING_ENABLED or self._manual_pause:
             return
         growth_directives = dict(self.growth_status or {})
         if growth_directives.get("block_new_entries"):
             return
-        guidance = self.learning_feedback.get_strategy_guidance(
+        meeting_notes = self._resolve_meeting_notes()
+        core_fleets = {}
+        for fleet in FLEETS:
+            if self._fleet_blocked_by_meeting(fleet):
+                continue
+            current = float(prices.get(fleet, {}).get("price", 0.0) or 0.0)
+            previous = float(self._previous_prices.get(fleet, current) or current)
+            signal = self.signal_fusion.fuse(
+                fleet=fleet,
+                price_now=current,
+                price_prev=previous,
+                news_items=self.latest_news,
+                alert_level=self.state_manager.snapshot().get("alert_level", "NORMAL"),
+                market_context=market_contexts.get(fleet, {}),
+                meeting_notes=meeting_notes,
+            )
+            core_fleets[fleet] = {
+                "symbol": self.futures_client.resolve_symbol(fleet),
+                "signal": signal,
+            }
+        radar_guidance = self.learning_feedback.get_strategy_guidance(
             "RADAR",
             "ai_led_trade_proposer",
             "radar_alt",
             market_context=market_contexts.get("RADAR", {}) if isinstance(market_contexts, dict) else {},
         )
-        blocked = set(guidance.get("blocked_symbols") or [])
+        blocked = set(radar_guidance.get("blocked_symbols") or [])
         agent = self.agent_advisory.get("multi_agent") or {}
         agent_output = agent.get("proposal_output") or (agent.get("llm_discussion") or {}).get("output") or {}
         context = {
             "radar_llm_items": getattr(self, "_radar_llm_proposals", []) or [],
             "agent_output": agent_output,
-            "positions": self.position_manager.get_by_fleet("RADAR"),
-            "market_context": market_contexts.get("RADAR", {}) if isinstance(market_contexts, dict) else {},
+            "positions": self.position_manager.all_positions(),
+            "market_context": market_contexts,
             "blocked_symbols": sorted(blocked),
             "news_headlines": [
                 (item.get("headline") or item.get("summary") or "")[:120]
                 for item in (self.latest_news or [])[:6]
             ],
             "radar_scan": self.radar_scan,
+            "core_fleets": core_fleets,
         }
         symbol_prices = self._build_symbol_prices(prices)
         for request in self.ai_trade_proposer.collect_proposals(context):
@@ -1232,7 +1269,7 @@ class NexusRuntime:
                     proposer=request.get("proposer", "llm_proposer"),
                     rationale=request.get("ai_rationale"),
                 )
-            self._try_execute_futures_request(request, symbol_prices, market_contexts, truth_status, guidance)
+            self._try_execute_futures_request(request, symbol_prices, market_contexts, truth_status)
 
     def _try_execute_futures_request(self, request, symbol_prices, market_contexts, truth_status, learning_guidance=None):
         request = dict(request or {})
@@ -1240,8 +1277,16 @@ class NexusRuntime:
         symbol = str(request.get("symbol") or request.get("symbol_override") or "").upper().replace("/", "")
         if not symbol or self._fleet_blocked_by_meeting(fleet):
             return False
-        if fleet == "RADAR" and learning_guidance:
+        learning_guidance = learning_guidance or self.learning_feedback.get_strategy_guidance(
+            fleet,
+            request.get("strategy_key") or f"{fleet.lower()}_adaptive_strategy",
+            (market_contexts.get(fleet, {}) or {}).get("market_regime", "normal"),
+            market_context=market_contexts.get(fleet, {}) or {},
+        )
+        if fleet == "RADAR":
             if not self.radar_dispatch.can_open_symbol(symbol, learning_guidance=learning_guidance):
+                return False
+            if symbol in set(learning_guidance.get("blocked_symbols") or []):
                 return False
         current = float(symbol_prices.get(symbol, 0.0) or 0.0)
         if current <= 0:
@@ -3055,7 +3100,8 @@ class NexusRuntime:
             "decision_summary": {
                 "runtime_mode": self.trading_mode,
                 "always_on_trading": always_on_trading_enabled(),
-                "tick_seconds": tick_seconds(),
+                "ai_led_trading": AI_LED_TRADING_ENABLED,
+                "ai_led_primary": AI_LED_PRIMARY_MODE,
                 "hq_spot_enabled": self.spot_client.is_configured(),
                 "futures_enabled": self.futures_client.is_configured(),
                 "exchange_synced_at": int(self._last_binance_sync.get("last_sync_time") or 0),

@@ -150,7 +150,7 @@ def build_trade_proposer_prompt(payload: dict):
         "Output advisory proposals only; execution governor will approve or reject."
     )
     schema = (
-        '{"trade_proposals": [{"fleet": "RADAR", "symbol": str, "side": "BUY|SELL", '
+        '{"trade_proposals": [{"fleet": "RADAR|BTC|ETH|SOL|PEPE", "symbol": str, "side": "BUY|SELL", '
         '"confidence": float, "rationale": str}], "skip_reason": str}'
     )
     user = {
