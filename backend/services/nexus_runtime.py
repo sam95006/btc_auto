@@ -158,6 +158,10 @@ class NexusRuntime:
         self.risk_engine = RiskControlEngine(self.ledger, self.pnl_tracker)
         self.learning_feedback = LearningFeedbackLoop(runtime_store)
         self.liquidation_tracker = LiquidationTracker()
+        for item in runtime_store.recent_trade_results(limit=80):
+            symbol = str(item.get("symbol") or "").upper()
+            if symbol:
+                self.liquidation_tracker._watch_symbol(symbol)
         self.signal_fusion = SignalFusionEngine()
         self.price_feed = MarketPriceFeedService()
         self.trading_health = TradingHealthService()
@@ -2596,6 +2600,11 @@ class NexusRuntime:
         live_trades = []
         symbols_to_sync = set(symbol_map.keys())
         futures_account = getattr(self, "_last_futures_account", {}) or {}
+        symbols_to_sync.update(self.liquidation_tracker.watched_symbols())
+        for item in runtime_store.recent_trade_results(limit=80):
+            symbol = str(item.get("symbol") or "").upper()
+            if symbol:
+                symbols_to_sync.add(symbol)
         for position in futures_account.get("positions", []) or []:
             symbols_to_sync.add(str(position.get("symbol") or "").upper())
 

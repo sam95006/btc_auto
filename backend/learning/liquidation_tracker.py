@@ -21,6 +21,15 @@ class LiquidationTracker:
         self._last_positions = {}
         self._processed_trade_ids = set()
         self._processed_close_keys = set()
+        self._watched_symbols = set()
+
+    def watched_symbols(self):
+        return set(self._watched_symbols)
+
+    def _watch_symbol(self, symbol):
+        symbol = str(symbol or "").upper()
+        if symbol:
+            self._watched_symbols.add(symbol)
 
     def reconcile(self, live_positions, live_trades, futures_client, record_trade_result):
         self._ingest_live_trades(live_trades, record_trade_result)
@@ -84,6 +93,7 @@ class LiquidationTracker:
             qty = abs(_safe_float(position.get("quantity") or position.get("signed_quantity")))
             if symbol and qty > 1e-12:
                 current[symbol] = position
+                self._watch_symbol(symbol)
 
         for symbol, previous in self._last_positions.items():
             if symbol in current:
@@ -117,6 +127,7 @@ class LiquidationTracker:
         symbol = str(trade.get("symbol") or "").upper()
         if not symbol:
             return
+        self._watch_symbol(symbol)
         close_key = f"closed:{symbol}"
         if close_key in self._processed_close_keys and str(trade.get("id") or "").startswith("closed:"):
             return
