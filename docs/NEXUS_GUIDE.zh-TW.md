@@ -300,6 +300,26 @@ API：`GET /api/nexus/monthly-revenue`、`/api/nexus/decision-funnel`、`/api/ne
 | UI 報 `updateUIState` | 清瀏覽器快取，確認 `app.js?v=` 為最新 |
 | worker 離線 | Zeabur 設 `NEXUS_EMBEDDED_WORKER=1`、`WEB_CONCURRENCY=1` |
 | 重啟後聊天/會議不見 | 掛 `/data` Volume |
+| `data/` 充滿 `trading_backup_*.db` | 現行 NEXUS 不讀這些檔；先 `--dry-run` 再 prune（見下） |
+
+### 資料目錄瘦身（不影響後端功能）
+
+**保留：** `trading.db`、`layout_overrides.json`、執行中的 `trading.db-wal` / `trading.db-shm`  
+**可刪：** `trading_backup_YYYYMMDD_*.db`（建議只留最新 1～2 個）、`trading_shield_backup.db`、舊 `logs/*.log`
+
+```bash
+# 預覽將刪除的備份
+python tools/deploy/prune_data_backups.py --dry-run
+
+# 只留最新 2 個 backup，並刪 shield 備份與舊 log
+python tools/deploy/prune_data_backups.py --keep 2 --shield --logs
+
+# 完全重置 DB（會從 Binance 重同步，稽核/會議本地紀錄會清空）
+python tools/deploy/purge_runtime.py --logs --bundles
+```
+
+Zeabur Volume 掛在 `NEXUS_DATA_DIR=/data` 時，在容器或本機對同一目錄執行即可。  
+本機 `venv/`、`__pycache__/` 不在 Git 內，可刪除後用 `pip install -r requirements.txt` 重建以縮小雲端同步體積。
 
 ---
 
