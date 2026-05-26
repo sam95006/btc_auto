@@ -40,6 +40,14 @@ class P0P2RevenuePipelineTests(unittest.TestCase):
     def test_kill_switch_daily_loss(self):
         report = KillSwitchService().evaluate(growth_status={"daily_max_loss_hit": True})
         self.assertTrue(report.get("triggered"))
+        self.assertTrue(report.get("should_pause"))
+
+    def test_kill_switch_validation_choke_warn_only(self):
+        events = [{"approved": False} for _ in range(80)]
+        report = KillSwitchService().evaluate(validation_events=events)
+        self.assertTrue(report.get("triggered"))
+        self.assertFalse(report.get("should_pause"))
+        self.assertEqual(report.get("action"), "warn_only")
 
     def test_rotation_hold_under_revenue_growth(self):
         svc = StrategyEvolutionService()

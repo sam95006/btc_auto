@@ -6,6 +6,7 @@ from config.kill_switch_config import (
     KILL_SWITCH_AUTO_FLATTEN,
     KILL_SWITCH_ENABLED,
     KILL_SWITCH_MAX_CONSECUTIVE_LOSSES,
+    KILL_SWITCH_PAUSE_ON_VALIDATION_CHOKE,
     KILL_SWITCH_SYNC_STALE_SEC,
     KILL_SWITCH_VALIDATION_BLOCK_RATE,
 )
@@ -82,14 +83,22 @@ class KillSwitchService:
             reasons.append("consecutive_losses")
 
         triggered = bool(reasons)
+        pause_reasons = list(reasons)
+        if not KILL_SWITCH_PAUSE_ON_VALIDATION_CHOKE:
+            pause_reasons = [item for item in pause_reasons if item != "validation_choke"]
+
         action = "pause_trading"
         if triggered and KILL_SWITCH_AUTO_FLATTEN and "daily_max_loss" in reasons:
             action = "pause_and_flatten"
+        elif triggered and not pause_reasons:
+            action = "warn_only"
 
         return {
             "triggered": triggered,
+            "should_pause": bool(pause_reasons),
             "action": action if triggered else "none",
             "reasons": reasons,
+            "pause_reasons": pause_reasons,
             "reason": ",".join(reasons),
             "checks": checks,
         }

@@ -577,10 +577,7 @@ class NexusRuntime:
         self.position_manager.update_unrealized(prices)
         self._sync_news()
 
-        if self._manual_pause and not self._news_pause_active:
-            self._manual_pause = False
-            self._pause_reason = None
-            self._news_pause_until = 0.0
+        self._maybe_auto_resume_from_validation_choke()
 
         spot_account = self._sync_spot_account(prices)
         futures_account = self._sync_futures_account(prices)
@@ -1413,6 +1410,18 @@ class NexusRuntime:
                     context=market_contexts.get(fleet, {}) or {},
                 )
 
+    def _maybe_auto_resume_from_validation_choke(self):
+        if self._news_pause_active:
+            return
+        if not self._manual_pause:
+            return
+        reason = str(self._pause_reason or self.growth_status.get("kill_switch_reason") or "")
+        if "validation_choke" not in reason:
+            return
+        self._manual_pause = False
+        self._pause_reason = None
+        self.growth_status.pop("kill_switch_reason", None)
+
     def _apply_kill_switch(self, futures_account):
         if not self.futures_client.is_configured():
             return
@@ -1429,12 +1438,25 @@ class NexusRuntime:
         self.growth_status["kill_switch"] = report
         if not report.get("triggered"):
             return
+        if report.get("action") == "already_paused":
+            if "validation_choke" in str(report.get("reason") or ""):
+                self._maybe_auto_resume_from_validation_choke()
+            return
         reason = str(report.get("reason") or "kill_switch")
+        pause_reasons = list(report.get("pause_reasons") or [])
+        if not report.get("should_pause", True) or not pause_reasons:
+            self.growth_status["kill_switch_warning"] = reason
+            if "validation_choke" in str(reason):
+                self._append_alert("WARNING", f"驗證拒絕率偏高（未暫停交易）: {reason}")
+            return
+        pause_reason = ",".join(pause_reasons) or reason
         self._manual_pause = True
-        self._pause_reason = reason
-        self.growth_status["kill_switch_reason"] = reason
-        self.state_manager.set_alert("ALERT_RED", emergency=True, trading_paused=True)
-        self._append_alert("ALERT_RED", f"Kill-switch: {reason}")
+        self._pause_reason = pause_reason
+        self.growth_status["kill_switch_reason"] = pause_reason
+        critical = any(token in pause_reason for token in ("daily_max_loss", "consecutive_losses", "exchange_sync_stale"))
+        level = "ALERT_RED" if critical else "WARNING"
+        self.state_manager.set_alert(level, emergency=critical, trading_paused=True)
+        self._append_alert(level, f"Kill-switch: {pause_reason}")
         if report.get("action") == "pause_and_flatten":
             try:
                 self.flatten_all_positions(reason=f"kill_switch:{reason}", source="kill_switch")
@@ -3291,7 +3313,6 @@ class NexusRuntime:
         ledger_capital = self.ledger.snapshot()
         pnl = self.pnl_tracker.snapshot()
         system_snapshot = self.state_manager.snapshot()
-        # Expose pause + gate reasons to the dashboard (no secrets).
         system_snapshot["pause_reason"] = self._pause_reason
         system_snapshot["manual_pause"] = bool(self._manual_pause)
         system_snapshot["news_pause_active"] = bool(self._news_pause_active)

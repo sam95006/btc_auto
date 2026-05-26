@@ -3,6 +3,7 @@ from config.compound_capital_config import (
     DAILY_POSITIVE_MODE,
     LOCK_PROFIT_AFTER_DAILY_TARGET,
 )
+from config.revenue_target_config import REVENUE_GROWTH_MODE
 from config.growth_mode_config import (
     BOLD_MIN_QUALITY,
     BOLD_TESTNET_ENABLED,
@@ -114,11 +115,12 @@ class CapitalGrowthGuard:
                 min_quality = max(min_quality, DAILY_A_PLUS_QUALITY)
                 position_multiplier = min(position_multiplier, 0.65)
                 allow_aggressive = False
-            if daily_pnl_pct <= -(DAILY_MAX_LOSS_PCT * 0.15):
+            defense_block_pct = DAILY_MAX_LOSS_PCT * (0.85 if REVENUE_GROWTH_MODE else 0.15)
+            if daily_pnl_pct <= -defense_block_pct:
                 block_new_entries = True
                 block_reason = block_reason or "daily_positive_mode_defense"
 
-        if LOCK_PROFIT_AFTER_DAILY_TARGET and daily_target_hit:
+        if LOCK_PROFIT_AFTER_DAILY_TARGET and daily_target_hit and not REVENUE_GROWTH_MODE:
             block_new_entries = True
             block_reason = block_reason or "daily_target_locked_for_compound"
             mode = "PROFIT_LOCK"

@@ -9,11 +9,13 @@ from config.quality_gates_config import (
     QUALITY_GATE_ENABLED,
     TARGET_WIN_RATE,
 )
+from config.revenue_target_config import REVENUE_GROWTH_MODE
 from config.validation_config import (
     BACKTEST_MAX_ALLOWED_RECENT_LOSSES,
     BACKTEST_MAX_NEGATIVE_AVG_PNL,
     BACKTEST_MIN_SAMPLE_SIZE,
     BACKTEST_MIN_WIN_RATE,
+    PAPER_BOOTSTRAP_SKIP_BLOCKS,
     PAPER_MAX_RECENT_EXECUTION_ERRORS,
     PAPER_MAX_RECENT_VALIDATION_BLOCKS,
     PAPER_VALIDATION_WINDOW_SECONDS,
@@ -312,18 +314,24 @@ class PaperTradeValidationEngine:
                 execution_errors += 1
 
         recent_loss_trades = 0
+        recent_closes = 0
         for item in recent_trades:
             if str(item.get("fleet") or "").upper() != fleet:
                 continue
             if symbol and str(item.get("symbol") or "") != symbol:
                 continue
+            if str(item.get("event") or "").upper() == "CLOSE":
+                recent_closes += 1
             if _safe_float(item.get("pnl")) < 0:
                 recent_loss_trades += 1
 
         approved = True
         reason = "paper_execution_ok"
         score = 0.68
-        if recent_blocks >= PAPER_MAX_RECENT_VALIDATION_BLOCKS:
+        block_limit = PAPER_MAX_RECENT_VALIDATION_BLOCKS
+        if PAPER_BOOTSTRAP_SKIP_BLOCKS and recent_closes == 0:
+            block_limit = max(block_limit, block_limit * 3)
+        if recent_blocks >= block_limit:
             approved = False
             reason = "recent_validation_blocks_too_many"
             score = 0.1
@@ -372,6 +380,7 @@ class PortfolioValidationEngine:
         approved = True
         reason = "portfolio_governance_ok"
         score = 0.7
+        same_side_limit = 0.95 if _bold_testnet_enabled() else (0.88 if REVENUE_GROWTH_MODE else 0.78)
         if restrictions and not restrictions.get("allowed_new_entries", True):
             approved = False
             reason = "portfolio_governor_block"
@@ -380,7 +389,7 @@ class PortfolioValidationEngine:
             approved = False
             reason = "portfolio_reserve_increase_block"
             score = 0.12
-        elif same_side_concentration >= (0.95 if _bold_testnet_enabled() else 0.78):
+        elif same_side_concentration >= same_side_limit:
             approved = False
             reason = "same_side_concentration_too_high"
             score = 0.16
@@ -393,9 +402,11 @@ class PortfolioValidationEngine:
             reason = "caution:hedge_recommended"
             score = 0.48
 
-        if _bold_testnet_enabled() and not approved:
+        relax_portfolio = _bold_testnet_enabled() or REVENUE_GROWTH_MODE
+        if relax_portfolio and not approved:
             fleet_exposure = dict((portfolio_status.get("fleet_exposures") or {}).get(fleet, {}))
             fleet_notional = _safe_float(fleet_exposure.get("notional"))
+            utilization = _safe_float(portfolio_status.get("notional_utilization"))
             proposal_side = str(proposal.get("side") or "BUY").upper()
             dominant_side = str(portfolio_status.get("dominant_side") or "").upper()
             hedge_side = "BUY" if dominant_side == "SHORT" else "SELL"
@@ -403,7 +414,7 @@ class PortfolioValidationEngine:
                 approved = True
                 reason = "bold_testnet_hedge_allowed"
                 score = max(score, 0.55)
-            elif fleet_notional <= 0 and reason in {
+            elif (fleet_notional <= 0 or utilization < 0.12) and reason in {
                 "same_side_concentration_too_high",
                 "correlated_group_concentration_too_high",
                 "portfolio_reserve_increase_block",

@@ -99,7 +99,7 @@ class TradeValidationPipelineTests(unittest.TestCase):
         self.assertEqual(result["stages"]["simulation"]["reason"], "truth_layer_not_fresh")
 
     def test_paper_trade_blocks_repeat_validation_failures(self):
-        for idx in range(4):
+        for idx in range(30):
             self.store.append_trade_validation_event(
                 {
                     "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -114,7 +114,14 @@ class TradeValidationPipelineTests(unittest.TestCase):
             market_context=self.healthy_context,
             truth_status=self.healthy_truth,
             recent_orders=[],
-            recent_trades=[],
+            recent_trades=[
+                {
+                    "fleet": "BTC",
+                    "symbol": "BTCUSDT",
+                    "event": "CLOSE",
+                    "pnl": 1.0,
+                }
+            ],
             growth_context=self.growth_context,
         )
         self.assertFalse(result["approved"])
@@ -202,14 +209,16 @@ class TradeValidationPipelineTests(unittest.TestCase):
                 }
             },
             "fleet_exposures": {"BTC": {"notional": 500.0}},
-            "same_side_concentration": 0.82,
+            "same_side_concentration": 0.92,
+            "dominant_side": "LONG",
             "correlation_concentration": 0.40,
             "reserve_action": "hold",
             "notional_utilization": 0.55,
             "hedge_recommendations": [],
         }
+        proposal = {**self.base_proposal, "side": "BUY"}
         result = self.pipeline.evaluate(
-            self.base_proposal,
+            proposal,
             market_context=self.healthy_context,
             truth_status=self.healthy_truth,
             recent_orders=[],

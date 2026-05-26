@@ -22,7 +22,7 @@ export function renderRevenueKpi(root, state) {
   if (!host) {
     host = document.createElement("div");
     host.className = "revenue-kpi-host";
-    root.prepend(host);
+    root.appendChild(host);
   }
   host.dataset.scrollKey = "revenue-kpi";
   host.innerHTML = `

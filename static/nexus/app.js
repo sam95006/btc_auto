@@ -111,19 +111,107 @@ style.textContent = `
     position: fixed !important;
     left: 14px !important;
     top: 96px !important;
-    width: min(300px, calc(100vw - 28px)) !important;
-    max-height: min(34vh, 280px) !important;
+    width: min(320px, calc(100vw - 28px)) !important;
+    max-height: calc(100vh - 220px) !important;
     padding: 0 !important;
     z-index: 150 !important;
     pointer-events: auto !important;
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
+    overflow: hidden !important;
   }
+  #meeting-log-panel .left-command-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    max-height: calc(100vh - 220px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 2px !important;
+    scrollbar-width: thin !important;
+  }
+  #meeting-log-panel .left-mount-roundtable .rt-panel,
+  #meeting-log-panel .revenue-kpi,
+  #meeting-log-panel .decision-strip {
+    border-radius: 14px !important;
+    border: 1px solid rgba(79, 216, 255, 0.22) !important;
+    background: linear-gradient(180deg, rgba(6, 16, 30, 0.94), rgba(4, 10, 20, 0.88)) !important;
+    backdrop-filter: blur(14px) !important;
+  }
+  #meeting-log-panel .revenue-kpi {
+    padding: 10px 12px !important;
+    flex-shrink: 0 !important;
+  }
+  #meeting-log-panel .revenue-kpi header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: baseline !important;
+    gap: 8px !important;
+    margin-bottom: 8px !important;
+  }
+  #meeting-log-panel .revenue-kpi header strong { font-size: 13px !important; color: #eefaff !important; }
+  #meeting-log-panel .revenue-kpi header small { font-size: 10px !important; color: rgba(173,213,229,0.75) !important; }
+  #meeting-log-panel .revenue-kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px 10px !important;
+  }
+  #meeting-log-panel .revenue-kpi-grid span { font-size: 10px !important; color: rgba(173,213,229,0.72) !important; display: block !important; }
+  #meeting-log-panel .revenue-kpi-grid strong { font-size: 14px !important; color: #eefaff !important; }
+  #meeting-log-panel .revenue-kpi.good .revenue-kpi-grid strong { color: #2ff7a3 !important; }
+  #meeting-log-panel .revenue-kpi.bad .revenue-kpi-grid strong { color: #ff6b8f !important; }
+  #meeting-log-panel .revenue-kpi-meta { margin: 8px 0 0 !important; font-size: 10px !important; line-height: 1.4 !important; color: rgba(173,213,229,0.78) !important; }
+  #meeting-log-panel .decision-strip {
+    padding: 10px 12px !important;
+    flex-shrink: 0 !important;
+    max-height: min(28vh, 240px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+  #meeting-log-panel .decision-strip header {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    margin-bottom: 6px !important;
+  }
+  #meeting-log-panel .decision-strip header strong { font-size: 13px !important; color: #eefaff !important; }
+  #meeting-log-panel .decision-strip header small { font-size: 10px !important; color: rgba(173,213,229,0.75) !important; line-height: 1.35 !important; }
+  #meeting-log-panel .decision-diagnosis {
+    margin: 0 0 6px !important;
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+    background: rgba(255, 208, 107, 0.12) !important;
+    border: 1px solid rgba(255, 208, 107, 0.28) !important;
+    color: #ffd06b !important;
+    font-size: 10px !important;
+    line-height: 1.4 !important;
+  }
+  #meeting-log-panel .decision-list {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-y: auto !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+  }
+  #meeting-log-panel .decision-row {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    padding: 5px 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+    font-size: 11px !important;
+    color: #eefaff !important;
+  }
+  #meeting-log-panel .decision-row small { font-size: 10px !important; color: rgba(173,213,229,0.72) !important; }
+  #meeting-log-panel .decision-row.block span { color: #ff9db5 !important; }
+  #meeting-log-panel .left-mount-roundtable { flex-shrink: 0 !important; }
   #meeting-log-panel .rt-panel {
     display: flex !important;
     flex-direction: column !important;
-    max-height: min(34vh, 280px) !important;
+    max-height: min(32vh, 260px) !important;
     border-radius: 14px !important;
     border: 1px solid rgba(79, 216, 255, 0.22) !important;
     background: linear-gradient(180deg, rgba(6, 16, 30, 0.94), rgba(4, 10, 20, 0.88)) !important;
@@ -156,7 +244,7 @@ style.textContent = `
   #meeting-log-panel .rt-slot.active { border-color: rgba(79,216,255,0.5) !important; background: rgba(79,216,255,0.14) !important; }
   #meeting-log-panel .rt-slot b { font-size: 12px !important; color: #fff !important; display: block !important; }
   #meeting-log-panel .rt-slot span { font-size: 10px !important; opacity: 0.7 !important; }
-  #meeting-log-panel .rt-body { padding: 0 10px 10px !important; overflow-y: auto !important; max-height: calc(min(34vh, 280px) - 118px) !important; }
+  #meeting-log-panel .rt-body { padding: 0 10px 10px !important; overflow-y: auto !important; max-height: calc(min(32vh, 260px) - 118px) !important; }
   #meeting-log-panel .rt-body-title { font-size: 11px !important; color: rgba(173,213,229,0.85) !important; margin: 4px 0 6px !important; }
   #meeting-log-panel .rt-summary p { margin: 0 !important; font-size: 12px !important; line-height: 1.45 !important; color: #eefaff !important; }
   #meeting-log-panel .rt-summary-meta { display: flex !important; gap: 8px !important; margin-bottom: 6px !important; font-size: 10px !important; color: rgba(173,213,229,0.75) !important; }
@@ -436,10 +524,28 @@ function renderHomeScene(state) {
   bindOpenPageHandlers(rootRefs.main);
 }
 
+function ensureLeftCommandStack(root) {
+  let stack = root.querySelector(".left-command-stack");
+  if (stack) return stack;
+  stack = document.createElement("div");
+  stack.className = "left-command-stack";
+  stack.innerHTML = `
+    <div class="left-mount-revenue"></div>
+    <div class="left-mount-roundtable"></div>
+    <div class="left-mount-decision"></div>
+  `;
+  root.appendChild(stack);
+  return stack;
+}
+
 function renderHomeLeft(state) {
   if (!rootRefs.left) return;
-  renderMeetingLogPanel(rootRefs.left, state, homeUiState, updateMeetingUiState);
-  renderDecisionStrip(rootRefs.left, state);
+  const stack = ensureLeftCommandStack(rootRefs.left);
+  renderRevenueKpi(stack.querySelector(".left-mount-revenue"), state);
+  const roundtableMount = stack.querySelector(".left-mount-roundtable");
+  renderMeetingLogPanel(roundtableMount, state, homeUiState, updateMeetingUiState);
+  rootRefs.left.classList.toggle("is-minimized", Boolean(homeUiState.roundTableMinimized));
+  renderDecisionStrip(stack.querySelector(".left-mount-decision"), state);
 }
 
 function renderHomeRight(state) {
