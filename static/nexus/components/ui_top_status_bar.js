@@ -32,6 +32,7 @@ export function renderTopStatusBar(root, state) {
   const pnl = state.pnl || {};
   const system = state.system || {};
   const decision = state.decision_summary || {};
+  const monthly = state.monthly_revenue || {};
   const overview = state.market_overview || {};
   const times = overview.times || {};
 
@@ -95,6 +96,12 @@ export function renderTopStatusBar(root, state) {
           toneClass(futuresUnrealized),
         )}
         ${card("未實現損益", formatMoney(futuresUnrealized), dualTime, toneClass(futuresUnrealized))}
+        ${card(
+          "月營收進度",
+          `${Number(monthly.progress_pct || 0).toFixed(1)}%`,
+          `目標 ${formatMoney(monthly.target_usd)} / 淨 ${formatMoney(monthly.realized_pnl_net)}`,
+          toneClass(monthly.realized_pnl_net),
+        )}
         ${card("系統狀態", systemLabel, systemMeta, system.trading_paused ? "bad" : "good")}
       </div>
     </div>

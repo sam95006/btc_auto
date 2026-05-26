@@ -6,6 +6,7 @@ from config.quality_gates_config import (
     TARGET_WIN_RATE,
     WALK_FORWARD_MIN_WIN_RATE,
 )
+from config.revenue_target_config import REVENUE_GROWTH_MODE
 
 
 def _safe_float(value, default=0.0):
@@ -71,7 +72,11 @@ class StrategyEvolutionService:
             directives["position_multiplier"] = min(_safe_float(directives.get("position_multiplier"), 1.0), 0.78)
             directives["evolution_mode"] = "rotation_tighten"
         elif rec == "pause_rotation":
-            directives["evolution_mode"] = "rotation_paused"
+            if REVENUE_GROWTH_MODE:
+                directives["evolution_mode"] = "rotation_hold"
+                directives["position_multiplier"] = min(_safe_float(directives.get("position_multiplier"), 1.0), 0.92)
+            else:
+                directives["evolution_mode"] = "rotation_paused"
 
         if QUALITY_GATE_ENABLED and len(trades) >= 10:
             wins = sum(1 for item in trades if _safe_float(item.get("pnl")) > 0)
@@ -83,7 +88,10 @@ class StrategyEvolutionService:
             )
             if win_rate < TARGET_WIN_RATE * 0.8:
                 directives["block_reason"] = directives.get("block_reason") or "quality_gate_weak_window"
-                directives["block_new_entries"] = bool(directives.get("block_new_entries")) or win_rate < 0.35
+                if not REVENUE_GROWTH_MODE:
+                    directives["block_new_entries"] = bool(directives.get("block_new_entries")) or win_rate < 0.35
+                elif win_rate < 0.25:
+                    directives["block_new_entries"] = True
 
         directives["strategy_evolution_applied"] = True
         return directives

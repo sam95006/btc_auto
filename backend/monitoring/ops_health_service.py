@@ -21,12 +21,19 @@ class OpsHealthService:
         maturity = dict(snapshot.get("maturity_radar") or {})
 
         sync_fresh = self._sync_fresh(live_sync)
+        monthly = dict(snapshot.get("monthly_revenue") or {})
+        funnel = dict(snapshot.get("decision_funnel") or {})
+        kill = dict((snapshot.get("growth_mode") or {}).get("kill_switch") or {})
         checks = {
             "worker_online": bool(embedded_worker_started) and not embedded_worker_error,
             "not_trading_paused": not bool(system.get("trading_paused")),
             "exchange_sync_fresh": sync_fresh,
             "futures_configured": bool(decision.get("futures_enabled")),
             "maturity_target_met": bool(maturity.get("target_80_all_dimensions")),
+            "futures_only_mode": bool(snapshot.get("futures_only_trading")),
+            "monthly_revenue_tracking": bool(monthly.get("month")),
+            "decision_funnel_active": bool(funnel.get("stages")),
+            "kill_switch_clear": not bool(kill.get("triggered")),
         }
         passed = sum(1 for item in checks.values() if item)
         total = len(checks)

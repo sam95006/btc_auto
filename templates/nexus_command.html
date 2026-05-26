@@ -371,6 +371,23 @@
     .decision-row { font-size: 11px; display: flex; flex-direction: column; gap: 2px; }
     .decision-row.ok small { color: #6fe7a8; }
     .decision-row.block small { color: #ff8da0; }
+    .decision-diagnosis { font-size: 10px; color: rgba(255,220,120,0.9); margin: 0 0 8px; line-height: 1.4; }
+
+    .revenue-kpi {
+      margin-bottom: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(12, 28, 52, 0.9);
+      border: 1px solid rgba(120, 200, 255, 0.2);
+    }
+    .revenue-kpi.good { border-color: rgba(80, 220, 140, 0.45); }
+    .revenue-kpi.bad { border-color: rgba(255, 120, 120, 0.4); }
+    .revenue-kpi header { margin-bottom: 8px; }
+    .revenue-kpi header strong { font-size: 12px; color: #b8e8ff; }
+    .revenue-kpi header small { font-size: 10px; color: rgba(255,255,255,0.5); }
+    .revenue-kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; font-size: 11px; }
+    .revenue-kpi-grid strong { color: #e8f4ff; font-size: 13px; }
+    .revenue-kpi-meta { font-size: 10px; color: rgba(255,255,255,0.55); margin: 8px 0 0; line-height: 1.35; }
 
     .log-panel-header {
       position: sticky;
@@ -1716,7 +1733,7 @@
     </div>
   </div>
 
-  <script type="module" src="/static/nexus/app.js?v=20260524a"></script>
+  <script type="module" src="/static/nexus/app.js?v=20260526a"></script>
 </body>
 </html>
 

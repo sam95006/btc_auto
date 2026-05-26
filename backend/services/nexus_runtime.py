@@ -23,11 +23,18 @@ from backend.config.capital_config import (
 from backend.fleets.base_strategy_engine import BaseFleetStrategyEngine
 from backend.fleets.signal_fusion_engine import SignalFusionEngine
 from backend.monitoring.trading_health_service import TradingHealthService
+from backend.monitoring.execution_quality_monitor import ExecutionQualityMonitor
 from backend.monitoring.maturity_radar_service import MaturityRadarService
 from backend.monitoring.ops_health_service import OpsHealthService
 from backend.governance.ai_trade_proposer import AiTradeProposer
 from backend.governance.ai_position_manager import AiPositionManager
 from backend.learning.strategy_evolution_service import StrategyEvolutionService
+from backend.analytics.monthly_revenue_tracker import MonthlyRevenueTracker
+from backend.analytics.revenue_plan_service import RevenuePlanService
+from backend.monitoring.decision_funnel_service import DecisionFunnelService
+from backend.monitoring.kill_switch_service import KillSwitchService
+from backend.autonomy.rule_signal_bridge import RuleSignalBridge
+from config.revenue_target_config import FUTURES_DEPLOY_FRACTION, FUTURES_ONLY_TRADING
 from backend.market.market_price_feed_service import MarketPriceFeedService
 from backend.market.market_context_service import MarketContextService
 from backend.market.radar_market_scan_service import RadarMarketScanService
@@ -176,6 +183,11 @@ class NexusRuntime:
         self.maturity_radar = MaturityRadarService()
         self.ops_health = OpsHealthService()
         self.strategy_evolution = StrategyEvolutionService()
+        self.monthly_revenue = MonthlyRevenueTracker()
+        self.revenue_plan = RevenuePlanService()
+        self.decision_funnel = DecisionFunnelService()
+        self.kill_switch = KillSwitchService()
+        self.rule_signal_bridge = RuleSignalBridge()
         self.ai_position_manager = AiPositionManager()
         self._force_immediate_tick = False
         self._last_ops_status = None
@@ -669,8 +681,11 @@ class NexusRuntime:
             self.position_manager.update_unrealized(prices, symbol_prices=symbol_prices)
         else:
             self.state_manager.clear_alert()
-            self._bootstrap_live_activity(prices, spot_account, self.truth_layer_status)
-            self._run_hq_spot_strategy(prices, spot_account, self.truth_layer_status)
+            if not FUTURES_ONLY_TRADING:
+                self._bootstrap_live_activity(prices, spot_account, self.truth_layer_status)
+                self._run_hq_spot_strategy(prices, spot_account, self.truth_layer_status)
+            else:
+                self._bootstrapped = True
             self._run_fleet_strategies(
                 prices,
                 market_contexts,
@@ -687,6 +702,8 @@ class NexusRuntime:
             symbol_prices = self._build_symbol_prices(prices)
             self.position_manager.update_unrealized(prices, symbol_prices=symbol_prices)
             self._apply_position_ai_actions(prices, market_contexts)
+
+        self._apply_kill_switch(futures_account)
 
         if self.futures_client.is_configured():
             emergency, reason = False, ""
@@ -1299,12 +1316,33 @@ class NexusRuntime:
             "core_fleets": core_fleets,
         }
         symbol_prices = self._build_symbol_prices(prices)
-        for request in self.ai_trade_proposer.collect_proposals(context):
+        deployable = float(
+            (getattr(self, "_compound_capital_status", None) or self.growth_status.get("compound") or {}).get(
+                "deployable_pool", 0.0
+            )
+            or 0.0
+        )
+        requests = list(self.ai_trade_proposer.collect_proposals(context))
+        if self.rule_signal_bridge.enabled():
+            requests.extend(
+                self.rule_signal_bridge.collect_proposals(
+                    prices,
+                    market_contexts=market_contexts,
+                    positions=context.get("positions"),
+                    deployable_pool=deployable,
+                )
+            )
+        seen = set()
+        for request in requests:
+            key = (str(request.get("fleet")), str(request.get("symbol")), str(request.get("side")))
+            if key in seen:
+                continue
+            seen.add(key)
             if self.upgrade_pipeline.trade_proposals:
                 self.upgrade_pipeline.trade_proposals.create_from_request(
                     request,
                     proposer=request.get("proposer", "llm_proposer"),
-                    rationale=request.get("ai_rationale"),
+                    rationale=request.get("ai_rationale") or request.get("reason"),
                 )
             self._try_execute_futures_request(request, symbol_prices, market_contexts, truth_status)
 
@@ -1371,6 +1409,34 @@ class NexusRuntime:
                     },
                     context=market_contexts.get(fleet, {}) or {},
                 )
+
+    def _apply_kill_switch(self, futures_account):
+        if not self.futures_client.is_configured():
+            return
+        trade_results = runtime_store.recent_trade_results(limit=80)
+        live_sync = dict(getattr(self, "_live_sync_status", {}) or {})
+        live_sync.setdefault("updated_at_ms", int(self._last_binance_sync.get("last_sync_time") or 0))
+        report = self.kill_switch.evaluate(
+            growth_status=self.growth_status,
+            validation_events=runtime_store.recent_trade_validation_events(limit=80),
+            live_sync=live_sync,
+            trading_paused=bool(self.state_manager.snapshot().get("trading_paused")),
+            trade_results=trade_results,
+        )
+        self.growth_status["kill_switch"] = report
+        if not report.get("triggered"):
+            return
+        reason = str(report.get("reason") or "kill_switch")
+        self._manual_pause = True
+        self._pause_reason = reason
+        self.growth_status["kill_switch_reason"] = reason
+        self.state_manager.set_alert("ALERT_RED", emergency=True, trading_paused=True)
+        self._append_alert("ALERT_RED", f"Kill-switch: {reason}")
+        if report.get("action") == "pause_and_flatten":
+            try:
+                self.flatten_all_positions(reason=f"kill_switch:{reason}", source="kill_switch")
+            except Exception as exc:
+                self._append_alert("WARNING", f"Kill-switch flatten failed: {exc}")
 
     def _try_execute_futures_request(self, request, symbol_prices, market_contexts, truth_status, learning_guidance=None):
         request = dict(request or {})
@@ -1718,8 +1784,12 @@ class NexusRuntime:
         if futures_total <= 0:
             return
 
-        reserve = futures_total * FUTURES_RESERVE_RATIO
-        deployable = max(futures_total - reserve, 0.0)
+        if FUTURES_ONLY_TRADING:
+            deployable = max(futures_total * float(FUTURES_DEPLOY_FRACTION), 0.0)
+            reserve = max(futures_total - deployable, 0.0)
+        else:
+            reserve = futures_total * FUTURES_RESERVE_RATIO
+            deployable = max(futures_total - reserve, 0.0)
         fleet_allocations = {
             fleet: round(deployable * FLEET_ALLOCATION_WEIGHTS.get(fleet, 0.0), 4)
             for fleet in FLEETS
@@ -3528,6 +3598,42 @@ class NexusRuntime:
             ops_health=ops_report,
         )
         snapshot_payload["trading_health"]["maturity_radar"] = snapshot_payload["maturity_radar"]
+
+        trade_results_db = runtime_store.recent_trade_results(limit=400)
+        futures_equity = float(
+            (snapshot_payload.get("compound_capital") or {}).get("live_futures_equity")
+            or capital.get("futures_margin_balance")
+            or 0.0
+        )
+        daily = dict((snapshot_payload.get("growth_mode") or {}).get("daily") or {})
+        start_eq = float(daily.get("start_equity") or daily.get("reinvest_base_equity") or futures_equity)
+        snapshot_payload["monthly_revenue"] = self.monthly_revenue.build_report(
+            futures_equity,
+            trade_results=trade_results_db,
+            start_equity=start_eq,
+        )
+        snapshot_payload["revenue_plan"] = self.revenue_plan.build_plan(
+            snapshot_payload["monthly_revenue"],
+            compound_capital=snapshot_payload.get("compound_capital"),
+            maturity_radar=snapshot_payload.get("maturity_radar"),
+        )
+        snapshot_payload["decision_funnel"] = self.decision_funnel.build_report(
+            audits=runtime_store.recent_decision_audit(limit=200),
+            validations=runtime_store.recent_trade_validation_events(limit=200),
+            proposals=runtime_store.recent_trade_proposals(limit=100),
+            trade_results=trade_results_db,
+            decision_traces=runtime_store.recent_decision_traces(limit=50),
+        )
+        exec_quality = self.execution_quality_monitor.evaluate(
+            recent_trades=combined_trades,
+            validation_events=runtime_store.recent_trade_validation_events(limit=120),
+        )
+        gross = float((snapshot_payload["monthly_revenue"] or {}).get("realized_pnl_gross") or 0.0)
+        fees = float((snapshot_payload["monthly_revenue"] or {}).get("fees_usd") or 0.0)
+        exec_quality["fee_to_gross_ratio"] = round(fees / gross, 4) if gross > 0 else 0.0
+        exec_quality["futures_only_mode"] = FUTURES_ONLY_TRADING
+        snapshot_payload["execution_quality"] = exec_quality
+        snapshot_payload["futures_only_trading"] = FUTURES_ONLY_TRADING
         return snapshot_payload
 
 

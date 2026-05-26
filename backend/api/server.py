@@ -242,6 +242,47 @@ def register_nexus_routes(app):
 
         return jsonify(build_performance_report(runtime_store))
 
+    @app.route("/api/nexus/monthly-revenue")
+    def nexus_monthly_revenue():
+        try:
+            from backend.services.nexus_runtime import nexus_runtime
+
+            return jsonify(nexus_runtime.snapshot().get("monthly_revenue") or {})
+        except Exception as exc:
+            print(f"[api] monthly revenue failed: {exc}")
+        return jsonify(runtime_store.load_snapshot().get("monthly_revenue") or {})
+
+    @app.route("/api/nexus/revenue-plan")
+    def nexus_revenue_plan():
+        try:
+            from backend.services.nexus_runtime import nexus_runtime
+
+            snap = nexus_runtime.snapshot()
+            return jsonify(snap.get("revenue_plan") or {})
+        except Exception as exc:
+            print(f"[api] revenue plan failed: {exc}")
+        return jsonify(runtime_store.load_snapshot().get("revenue_plan") or {})
+
+    @app.route("/api/nexus/decision-funnel")
+    def nexus_decision_funnel():
+        try:
+            from backend.services.nexus_runtime import nexus_runtime
+
+            return jsonify(nexus_runtime.snapshot().get("decision_funnel") or {})
+        except Exception as exc:
+            print(f"[api] decision funnel failed: {exc}")
+        from backend.monitoring.decision_funnel_service import DecisionFunnelService
+
+        return jsonify(
+            DecisionFunnelService().build_report(
+                audits=runtime_store.recent_decision_audit(limit=200),
+                validations=runtime_store.recent_trade_validation_events(limit=200),
+                proposals=runtime_store.recent_trade_proposals(limit=100),
+                trade_results=runtime_store.recent_trade_results(limit=200),
+                decision_traces=runtime_store.recent_decision_traces(limit=50),
+            )
+        )
+
     @app.route("/api/nexus/loss-review")
     def nexus_loss_review():
         """Recent losing trades + learning recommendations (no secrets) for Zeabur review."""

@@ -15,6 +15,9 @@ export function renderDecisionStrip(root, state) {
   const traces = list(state.decision_traces || [], 3);
   const evolution = state.strategy_evolution || {};
   const positionAi = state.position_ai || {};
+  const funnel = state.decision_funnel || {};
+  const stages = funnel.stages || {};
+  const topRejects = (funnel.top_reject_reasons || []).slice(0, 3);
 
   const rows = audits
     .map((item) => {
@@ -36,6 +39,13 @@ export function renderDecisionStrip(root, state) {
       : "no traces yet";
   const evoMode = escapeHtml(evolution.evolution_mode || evolution.mode || "hold");
   const posActions = Number((positionAi.actions || []).length || 0);
+  const funnelNote = stages.proposals
+    ? `漏斗 提案${stages.proposals}→核准${stages.audit_approved || 0}→成交${stages.executed_futures_closes || 0}`
+    : "漏斗待樣本";
+  const rejectNote = topRejects.length
+    ? ` · 拒絕 ${escapeHtml(topRejects.map((r) => r.reason).join(", "))}`
+    : "";
+  const diagnosis = funnel.diagnosis ? `<p class="decision-diagnosis">${escapeHtml(funnel.diagnosis)}</p>` : "";
 
   let host = root.querySelector(".decision-strip-host");
   if (!host) {
@@ -48,8 +58,9 @@ export function renderDecisionStrip(root, state) {
     <div class="decision-strip">
       <header>
         <strong>決策稽核</strong>
-        <small>${traceNote} · 演化 ${evoMode} · 管倉 ${posActions}</small>
+        <small>${traceNote} · 演化 ${evoMode} · ${funnelNote}${rejectNote} · 管倉 ${posActions}</small>
       </header>
+      ${diagnosis}
       <ul class="decision-list">${rows || "<li class='decision-row'>尚無決策樣本</li>"}</ul>
     </div>
   `;
