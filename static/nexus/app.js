@@ -37,6 +37,7 @@ const homeUiState = {
   selectedMeetingSlot: "12:00",
   roundTableMinimized: true,
   leftTab: "decision",
+  leftCollapsed: false,
 };
 
 const chatUiState = {
@@ -57,14 +58,15 @@ const style = document.createElement("style");
 style.textContent = `
   #top-status-bar.top-status-bar {
     display: grid !important;
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-    gap: 10px !important;
-    padding: 12px 16px !important;
-    left: 292px !important;
-    right: 300px !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+    left: 268px !important;
+    right: 288px !important;
     width: auto !important;
     max-width: none !important;
     transform: none !important;
+    flex-wrap: nowrap !important;
     background: rgba(5, 16, 30, 0.88) !important;
     border: 1px solid rgba(79, 216, 255, 0.16) !important;
     border-radius: 26px !important;
@@ -79,9 +81,10 @@ style.textContent = `
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
-    min-height: 82px !important;
-    padding: 12px 14px !important;
-    gap: 6px !important;
+    min-height: 68px !important;
+    min-width: 0 !important;
+    padding: 8px 10px !important;
+    gap: 4px !important;
     border-radius: 16px !important;
     background: rgba(255,255,255,0.03) !important;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05) !important;
@@ -92,12 +95,22 @@ style.textContent = `
     white-space: nowrap !important;
   }
   #top-status-bar .status-card strong {
-    font-size: 22px !important;
+    font-size: 17px !important;
     color: #eefaff !important;
     white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  #top-status-bar .status-card--system small {
+    white-space: normal !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    line-height: 1.3 !important;
+    max-height: 2.6em !important;
   }
   #top-status-bar .status-card small {
-    font-size: 11px !important;
+    font-size: 10px !important;
     color: rgba(173, 213, 229, 0.78) !important;
     white-space: nowrap !important;
     overflow: hidden !important;
@@ -114,9 +127,9 @@ style.textContent = `
   #meeting-log-panel.meeting-log-panel {
     position: fixed !important;
     left: 12px !important;
-    top: 118px !important;
-    width: min(272px, calc(100vw - 24px)) !important;
-    max-height: min(340px, calc(100vh - 280px)) !important;
+    top: 108px !important;
+    width: min(248px, calc(100vw - 24px)) !important;
+    max-height: min(300px, calc(100vh - 268px)) !important;
     padding: 0 !important;
     z-index: 120 !important;
     pointer-events: auto !important;
@@ -241,6 +254,17 @@ style.textContent = `
   }
   #meeting-log-panel .decision-row small { font-size: 10px !important; color: rgba(173,213,229,0.72) !important; }
   #meeting-log-panel .decision-row.block span { color: #ff9db5 !important; }
+  #meeting-log-panel .decision-more-btn {
+    margin-top: 6px !important;
+    width: 100% !important;
+    border: 1px solid rgba(79,216,255,0.25) !important;
+    border-radius: 8px !important;
+    background: rgba(79,216,255,0.08) !important;
+    color: #8fe8ff !important;
+    font-size: 10px !important;
+    padding: 5px !important;
+    cursor: pointer !important;
+  }
   #meeting-log-panel .left-mount-roundtable { flex-shrink: 0 !important; }
   #meeting-log-panel .rt-panel {
     display: flex !important;
@@ -284,6 +308,22 @@ style.textContent = `
   #meeting-log-panel .rt-focus { margin: 8px 0 0 !important; padding-left: 16px !important; font-size: 11px !important; }
   #meeting-log-panel .rt-empty { font-size: 12px !important; color: rgba(173,213,229,0.75) !important; margin: 0 !important; }
   #meeting-log-panel.is-minimized { max-height: none !important; width: auto !important; }
+  #meeting-log-panel.is-collapsed .left-command-stack { display: none !important; }
+  #meeting-log-panel .left-collapse-btn {
+    position: absolute !important;
+    right: -4px !important;
+    top: -4px !important;
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 50% !important;
+    border: 1px solid rgba(79,216,255,0.35) !important;
+    background: rgba(6,16,30,0.95) !important;
+    color: #8fe8ff !important;
+    font-size: 12px !important;
+    cursor: pointer !important;
+    z-index: 3 !important;
+  }
+  #meeting-log-panel.is-collapsed .left-collapse-btn { position: relative !important; right: auto !important; top: auto !important; }
   #meeting-log-panel .rt-fab {
     position: relative !important; width: 72px !important; height: 72px !important; border: none !important;
     background: transparent !important; cursor: pointer !important; padding: 0 !important;
@@ -585,6 +625,22 @@ function ensureLeftCommandStack(root) {
 
 function renderHomeLeft(state) {
   if (!rootRefs.left) return;
+  rootRefs.left.classList.toggle("is-collapsed", Boolean(homeUiState.leftCollapsed));
+  let collapseBtn = rootRefs.left.querySelector(".left-collapse-btn");
+  if (!collapseBtn) {
+    collapseBtn = document.createElement("button");
+    collapseBtn.type = "button";
+    collapseBtn.className = "left-collapse-btn";
+    collapseBtn.title = "收合/展開左側面板";
+    rootRefs.left.appendChild(collapseBtn);
+  }
+  collapseBtn.textContent = homeUiState.leftCollapsed ? "▶" : "◀";
+  collapseBtn.onclick = () => {
+    homeUiState.leftCollapsed = !homeUiState.leftCollapsed;
+    renderApp(getState());
+  };
+  if (homeUiState.leftCollapsed) return;
+
   const stack = ensureLeftCommandStack(rootRefs.left);
   const tab = homeUiState.leftTab || "decision";
   stack.querySelectorAll(".left-tab-btn").forEach((btn) => {

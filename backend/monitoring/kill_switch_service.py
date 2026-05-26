@@ -6,6 +6,7 @@ from config.kill_switch_config import (
     KILL_SWITCH_AUTO_FLATTEN,
     KILL_SWITCH_ENABLED,
     KILL_SWITCH_MAX_CONSECUTIVE_LOSSES,
+    KILL_SWITCH_PAUSE_ON_SYNC_STALE,
     KILL_SWITCH_PAUSE_ON_VALIDATION_CHOKE,
     KILL_SWITCH_SYNC_STALE_SEC,
     KILL_SWITCH_VALIDATION_BLOCK_RATE,
@@ -86,6 +87,8 @@ class KillSwitchService:
         pause_reasons = list(reasons)
         if not KILL_SWITCH_PAUSE_ON_VALIDATION_CHOKE:
             pause_reasons = [item for item in pause_reasons if item != "validation_choke"]
+        if not KILL_SWITCH_PAUSE_ON_SYNC_STALE:
+            pause_reasons = [item for item in pause_reasons if item != "exchange_sync_stale"]
 
         action = "pause_trading"
         if triggered and KILL_SWITCH_AUTO_FLATTEN and "daily_max_loss" in reasons:

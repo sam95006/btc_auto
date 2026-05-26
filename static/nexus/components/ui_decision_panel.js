@@ -46,9 +46,22 @@ export function renderDecisionStrip(root, state, options = {}) {
   const rejectNote = topRejects.length
     ? ` · 拒絕 ${escapeHtml(topRejects.map((r) => r.reason).join(", "))}`
     : "";
-  const diagnosisText = funnel.diagnosis ? String(funnel.diagnosis) : "";
+  const system = state.system || {};
+  const paused = Boolean(system.trading_paused);
+  const pauseReason = String(system.pause_reason || "").trim();
+  const blockReason = String(system.block_reason || "").trim();
+  let diagnosisText = "";
+  if (paused) {
+    diagnosisText = pauseReason
+      ? `交易暫停：${pauseReason}`
+      : "交易暫停中（請在聊天輸入「恢復交易」或檢查 Zeabur env）";
+  } else if (system.block_new_entries && blockReason) {
+    diagnosisText = `運行中但擋新倉：${blockReason}`;
+  } else if (funnel.diagnosis) {
+    diagnosisText = String(funnel.diagnosis);
+  }
   const diagnosis = diagnosisText
-    ? `<p class="decision-diagnosis">${escapeHtml(compact ? diagnosisText.slice(0, 120) : diagnosisText)}</p>`
+    ? `<p class="decision-diagnosis">${escapeHtml(compact ? diagnosisText.slice(0, 140) : diagnosisText)}</p>`
     : "";
 
   let host = root.querySelector(".decision-strip-host");
@@ -66,8 +79,14 @@ export function renderDecisionStrip(root, state, options = {}) {
       </header>
       ${diagnosis}
       <ul class="decision-list">${rows || "<li class='decision-row'>尚無決策樣本</li>"}</ul>
+      ${compact && audits.length > 2 ? `<button type="button" class="decision-more-btn" data-decision-expand>展開更多</button>` : ""}
     </div>
   `;
+  if (compact) {
+    host.querySelector("[data-decision-expand]")?.addEventListener("click", () => {
+      renderDecisionStrip(root, state, { compact: false });
+    });
+  }
 }
 
 function list(value, limit) {

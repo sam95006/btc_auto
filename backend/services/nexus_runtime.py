@@ -716,6 +716,8 @@ class NexusRuntime:
             self._apply_position_ai_actions(prices, market_contexts)
 
         self._apply_kill_switch(futures_account)
+        if not self._manual_pause and not self._news_pause_active:
+            self.state_manager.clear_alert()
 
         if self.futures_client.is_configured():
             emergency, reason = False, ""
@@ -1431,8 +1433,9 @@ class NexusRuntime:
             "recent_validation",
             "kill_switch",
             "validation",
+            "exchange_sync_stale",
         )
-        critical_tokens = ("daily_max_loss", "news", "manual", "emergency", "exchange_sync_stale")
+        critical_tokens = ("daily_max_loss", "news", "manual", "emergency")
         if not force:
             if any(token in reason for token in critical_tokens):
                 return
@@ -1465,7 +1468,7 @@ class NexusRuntime:
             growth_status=self.growth_status,
             validation_events=runtime_store.recent_trade_validation_events(limit=80),
             live_sync=live_sync,
-            trading_paused=bool(self.state_manager.snapshot().get("trading_paused")),
+            trading_paused=bool(self._manual_pause or self._news_pause_active),
             trade_results=trade_results,
         )
         self.growth_status["kill_switch"] = report
@@ -1473,7 +1476,7 @@ class NexusRuntime:
             return
         if report.get("action") == "already_paused":
             reason_text = str(report.get("reason") or "").lower()
-            if "validation_choke" in reason_text or "validation" in reason_text:
+            if any(token in reason_text for token in ("validation_choke", "validation", "exchange_sync_stale")):
                 self._ensure_trading_resumed(force=True)
             return
         reason = str(report.get("reason") or "kill_switch")
@@ -3348,6 +3351,15 @@ class NexusRuntime:
         system_snapshot["news_pause_until_epoch"] = float(self._news_pause_until or 0.0)
         system_snapshot["block_new_entries"] = bool((self.growth_status or {}).get("block_new_entries"))
         system_snapshot["block_reason"] = str((self.growth_status or {}).get("block_reason") or "")
+        ks = dict((self.growth_status or {}).get("kill_switch") or {})
+        if ks:
+            system_snapshot["kill_switch_status"] = {
+                "triggered": bool(ks.get("triggered")),
+                "action": ks.get("action"),
+                "reason": ks.get("reason"),
+                "should_pause": ks.get("should_pause"),
+                "checks": ks.get("checks"),
+            }
         spot_account = getattr(self, "_last_spot_account", {"spot_total": 0.0, "holdings": [], "balances": {}})
         futures_account = getattr(
             self,

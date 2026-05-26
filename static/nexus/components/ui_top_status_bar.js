@@ -14,12 +14,12 @@ function toneClass(value) {
   return "";
 }
 
-function card(label, value, meta = "", tone = "") {
+function card(label, value, meta = "", tone = "", extraClass = "") {
   return `
-    <article class="status-card status-card--primary ${tone}">
+    <article class="status-card status-card--primary ${extraClass} ${tone}">
       <span>${label}</span>
       <strong>${value}</strong>
-      <small>${meta}</small>
+      <small title="${meta.replace(/"/g, "&quot;")}">${meta}</small>
     </article>
   `;
 }
@@ -76,11 +76,17 @@ export function renderTopStatusBar(root, state) {
   const health = state.trading_health || {};
   const healthScore = Number(health.overall_score || 0);
   const healthGrade = health.grade || "--";
-  const healthNote = healthScore >= 80 ? `AI 健康 ${healthScore.toFixed(0)} (${healthGrade})` : `AI 強化中 ${healthScore.toFixed(0)} (${healthGrade})`;
   const liveSync = state.live_sync || {};
-  const syncNote = liveSync.updated_at ? ` / 資料 ${shortTime(liveSync.updated_at)}` : "";
-  const worldNote = liveSync.news_count ? ` / 全球新聞 ${liveSync.news_count} 則` : "";
-  const systemMeta = `${linkLabel}${syncNote}${worldNote}${pauseNote}${gateNote} / ${healthNote}${mismatchNote} / 持倉 ${livePositions}${positionNote} / 成交 ${tradeCount} 筆${holdingsNote}`;
+  const syncNote = liveSync.updated_at ? `資料 ${shortTime(liveSync.updated_at)}` : "";
+  const systemMetaShort = [
+    linkLabel,
+    syncNote,
+    system.trading_paused && pauseReason ? `原因 ${pauseReason}` : "",
+    !system.trading_paused && gateReason ? `擋倉 ${gateReason}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const systemMetaFull = `${systemMetaShort} · 持倉 ${livePositions} · 成交 ${tradeCount} · AI ${healthScore.toFixed(0)}(${healthGrade})${mismatchNote}${holdingsNote}`;
   const dualTime = `台北 ${shortTime(times.taipei || system.current_time)} | 美東 ${shortTime(times.eastern)}`;
 
   root.dataset.scrollKey = "top-status-bar";
@@ -106,7 +112,13 @@ export function renderTopStatusBar(root, state) {
           `目標 ${formatMoney(monthly.target_usd)} / 淨 ${formatMoney(monthly.realized_pnl_net)}`,
           toneClass(monthly.realized_pnl_net),
         )}
-        ${card("系統狀態", systemLabel, systemMeta, system.trading_paused ? "bad" : "good")}
+        ${card(
+          "系統狀態",
+          systemLabel,
+          systemMetaShort || systemMetaFull,
+          system.trading_paused ? "bad" : system.block_new_entries ? "" : "good",
+          "status-card--system",
+        )}
       </div>
     </div>
   `;

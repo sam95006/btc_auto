@@ -49,6 +49,15 @@ class P0P2RevenuePipelineTests(unittest.TestCase):
         self.assertFalse(report.get("should_pause"))
         self.assertEqual(report.get("action"), "warn_only")
 
+    def test_kill_switch_sync_stale_warn_only_by_default(self):
+        import time
+
+        report = KillSwitchService().evaluate(
+            live_sync={"updated_at_ms": int((time.time() - 600) * 1000)},
+        )
+        self.assertTrue(report.get("triggered"))
+        self.assertFalse(report.get("should_pause"))
+
     def test_rotation_hold_under_revenue_growth(self):
         svc = StrategyEvolutionService()
         out = svc.evolve_growth_directives({}, rotation={"recommendation": "pause_rotation"}, recent_trades=[])
