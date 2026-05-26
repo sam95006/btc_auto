@@ -128,8 +128,8 @@ style.textContent = `
     position: fixed !important;
     left: 12px !important;
     top: 108px !important;
-    width: min(248px, calc(100vw - 24px)) !important;
-    max-height: min(300px, calc(100vh - 268px)) !important;
+    width: min(380px, calc(100vw - 24px)) !important;
+    max-height: min(520px, calc(100vh - 200px)) !important;
     padding: 0 !important;
     z-index: 120 !important;
     pointer-events: auto !important;
@@ -183,7 +183,7 @@ style.textContent = `
   #meeting-log-panel .left-tab-panels {
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    max-height: min(250px, calc(100vh - 340px)) !important;
+    max-height: min(420px, calc(100vh - 260px)) !important;
     padding: 10px !important;
     scrollbar-width: thin !important;
   }
@@ -381,11 +381,21 @@ style.textContent = `
     padding: 5px !important;
     cursor: pointer !important;
   }
-  #meeting-log-panel .left-mount-roundtable { flex-shrink: 0 !important; }
+  #meeting-log-panel .left-mount-roundtable {
+    flex: 1 1 auto !important;
+    min-height: 280px !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  #meeting-log-panel .left-tab-panel[data-left-tab="roundtable"]:not([hidden]) {
+    min-height: 300px !important;
+  }
   #meeting-log-panel .rt-panel {
     display: flex !important;
     flex-direction: column !important;
-    max-height: min(260px, calc(100vh - 360px)) !important;
+    flex: 1 1 auto !important;
+    min-height: 280px !important;
+    max-height: min(400px, calc(100vh - 260px)) !important;
     overflow: hidden !important;
     border: none !important;
     background: transparent !important;
@@ -416,9 +426,15 @@ style.textContent = `
   #meeting-log-panel .rt-slot.active { border-color: rgba(79,216,255,0.5) !important; background: rgba(79,216,255,0.14) !important; }
   #meeting-log-panel .rt-slot b { font-size: 12px !important; color: #fff !important; display: block !important; }
   #meeting-log-panel .rt-slot span { font-size: 10px !important; opacity: 0.7 !important; }
-  #meeting-log-panel .rt-body { padding: 0 10px 10px !important; overflow-y: auto !important; max-height: calc(min(32vh, 260px) - 118px) !important; }
-  #meeting-log-panel .rt-body-title { font-size: 11px !important; color: rgba(173,213,229,0.85) !important; margin: 4px 0 6px !important; }
-  #meeting-log-panel .rt-summary p { margin: 0 !important; font-size: 12px !important; line-height: 1.45 !important; color: #eefaff !important; }
+  #meeting-log-panel .rt-body {
+    padding: 0 12px 12px !important;
+    overflow-y: auto !important;
+    flex: 1 1 auto !important;
+    min-height: 160px !important;
+    max-height: none !important;
+  }
+  #meeting-log-panel .rt-body-title { font-size: 12px !important; color: rgba(173,213,229,0.85) !important; margin: 6px 0 8px !important; }
+  #meeting-log-panel .rt-summary p { margin: 0 !important; font-size: 13px !important; line-height: 1.55 !important; color: #eefaff !important; }
   #meeting-log-panel .rt-summary-meta { display: flex !important; gap: 8px !important; margin-bottom: 6px !important; font-size: 10px !important; color: rgba(173,213,229,0.75) !important; }
   #meeting-log-panel .rt-badge { padding: 2px 6px !important; border-radius: 999px !important; background: rgba(79,216,255,0.16) !important; color: #8fe8ff !important; }
   #meeting-log-panel .rt-focus { margin: 8px 0 0 !important; padding-left: 16px !important; font-size: 11px !important; }
