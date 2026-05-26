@@ -65,12 +65,16 @@ class StrategyEvolutionService:
 
         rec = str(rotation.get("recommendation") or "hold")
         if rec == "tighten_guards":
-            directives["min_win_rate"] = max(
-                _safe_float(directives.get("min_win_rate"), TARGET_WIN_RATE),
-                TARGET_WIN_RATE,
-            )
-            directives["position_multiplier"] = min(_safe_float(directives.get("position_multiplier"), 1.0), 0.78)
-            directives["evolution_mode"] = "rotation_tighten"
+            if REVENUE_GROWTH_MODE:
+                directives["evolution_mode"] = "rotation_hold"
+                directives["position_multiplier"] = min(_safe_float(directives.get("position_multiplier"), 1.0), 0.9)
+            else:
+                directives["min_win_rate"] = max(
+                    _safe_float(directives.get("min_win_rate"), TARGET_WIN_RATE),
+                    TARGET_WIN_RATE,
+                )
+                directives["position_multiplier"] = min(_safe_float(directives.get("position_multiplier"), 1.0), 0.78)
+                directives["evolution_mode"] = "rotation_tighten"
         elif rec == "pause_rotation":
             if REVENUE_GROWTH_MODE:
                 directives["evolution_mode"] = "rotation_hold"

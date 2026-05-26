@@ -29,7 +29,7 @@ class StrategyEvolutionQualityTests(unittest.TestCase):
         blocked, reason = _quality_gate_block(
             {"confidence_score": 0.4},
             {"min_trade_confidence": 0.68},
-            [{"pnl": -1}] * 10,
+            [{"pnl": -1, "event": "CLOSE"}] * 10,
         )
         self.assertTrue(blocked)
         self.assertIn("quality_gate", reason)

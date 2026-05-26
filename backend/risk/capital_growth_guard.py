@@ -3,7 +3,11 @@ from config.compound_capital_config import (
     DAILY_POSITIVE_MODE,
     LOCK_PROFIT_AFTER_DAILY_TARGET,
 )
-from config.revenue_target_config import REVENUE_GROWTH_MODE
+from config.revenue_target_config import (
+    EXPLORATION_MIN_APPROVAL_SCORE,
+    EXPLORATION_MIN_QUALITY,
+    REVENUE_GROWTH_MODE,
+)
 from config.growth_mode_config import (
     BOLD_MIN_QUALITY,
     BOLD_TESTNET_ENABLED,
@@ -139,6 +143,10 @@ class CapitalGrowthGuard:
             if equity >= CAPITAL_FLOOR:
                 allow_aggressive = True
                 position_multiplier = max(position_multiplier, 0.95)
+
+        if REVENUE_GROWTH_MODE:
+            min_quality = min(min_quality, EXPLORATION_MIN_QUALITY)
+            min_approval = min(min_approval, EXPLORATION_MIN_APPROVAL_SCORE)
 
         status = {
             "mode": mode,

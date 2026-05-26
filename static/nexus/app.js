@@ -4,7 +4,7 @@ import { renderTopStatusBar } from "./components/ui_top_status_bar.js?v=20260526
 import { renderAlertPanel } from "./components/ui_alert_panel.js?v=20260510a";
 import { renderChatDock } from "./components/ui_chat_dock.js?v=20260521c";
 import { renderMeetingLogPanel } from "./components/ui_meeting_log_panel.js?v=20260520a";
-import { renderDecisionStrip } from "./components/ui_decision_panel.js?v=20260526e";
+import { renderDecisionStrip } from "./components/ui_decision_panel.js?v=20260526f";
 import { renderRevenueKpi } from "./components/ui_revenue_kpi.js?v=20260526a";
 import { renderMeetingDock } from "./components/ui_meeting_dock.js?v=20260510b";
 import { buildMainOverviewPage } from "./scenes/scene_main_hq.js?v=20260510b";
@@ -279,6 +279,69 @@ style.textContent = `
     color: #ffd06b !important;
   }
   #meeting-log-panel .decision-diagnosis { display: none !important; }
+  #meeting-log-panel .decision-strip-head { gap: 6px !important; }
+  #meeting-log-panel .decision-strip-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+  #meeting-log-panel .decision-live-dot {
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 0 8px currentColor !important;
+  }
+  #meeting-log-panel .decision-live-dot--ok { background: #2ff7a3 !important; color: #2ff7a3 !important; }
+  #meeting-log-panel .decision-live-dot--warn { background: #ffd06b !important; color: #ffd06b !important; }
+  #meeting-log-panel .decision-live-dot--pause { background: #ff6b8f !important; color: #ff6b8f !important; }
+  #meeting-log-panel .decision-funnel-bar {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px 8px !important;
+    margin: 0 0 10px !important;
+    padding: 8px !important;
+    border-radius: 10px !important;
+    background: rgba(79,216,255,0.06) !important;
+    border: 1px solid rgba(79,216,255,0.12) !important;
+  }
+  #meeting-log-panel .decision-funnel-step {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+  }
+  #meeting-log-panel .decision-funnel-step span {
+    font-size: 9px !important;
+    color: rgba(173,213,229,0.72) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+  }
+  #meeting-log-panel .decision-funnel-step strong {
+    font-size: 12px !important;
+    color: #eefaff !important;
+  }
+  #meeting-log-panel .decision-funnel-track {
+    height: 4px !important;
+    border-radius: 999px !important;
+    background: rgba(255,255,255,0.08) !important;
+    overflow: hidden !important;
+  }
+  #meeting-log-panel .decision-funnel-track i {
+    display: block !important;
+    height: 100% !important;
+    border-radius: inherit !important;
+    background: linear-gradient(90deg, rgba(79,216,255,0.5), rgba(79,216,255,0.95)) !important;
+    min-width: 4px !important;
+  }
+  #meeting-log-panel .decision-funnel-track--exec {
+    background: linear-gradient(90deg, rgba(47,247,163,0.5), rgba(47,247,163,0.95)) !important;
+  }
+  #meeting-log-panel .decision-chip--reject {
+    border-color: rgba(255,107,143,0.35) !important;
+    background: rgba(255,107,143,0.1) !important;
+    color: #ffc0d0 !important;
+  }
   #meeting-log-panel .decision-list {
     list-style: none !important;
     margin: 0 !important;

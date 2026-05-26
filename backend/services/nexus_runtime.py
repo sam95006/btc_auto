@@ -34,7 +34,12 @@ from backend.analytics.revenue_plan_service import RevenuePlanService
 from backend.monitoring.decision_funnel_service import DecisionFunnelService
 from backend.monitoring.kill_switch_service import KillSwitchService
 from backend.autonomy.rule_signal_bridge import RuleSignalBridge
-from config.revenue_target_config import FUTURES_DEPLOY_FRACTION, FUTURES_ONLY_TRADING
+from config.revenue_target_config import (
+    EXPLORATION_MIN_QUALITY,
+    FUTURES_DEPLOY_FRACTION,
+    FUTURES_ONLY_TRADING,
+    REVENUE_GROWTH_MODE,
+)
 from backend.market.market_price_feed_service import MarketPriceFeedService
 from backend.market.market_context_service import MarketContextService
 from backend.market.radar_market_scan_service import RadarMarketScanService
@@ -662,12 +667,14 @@ class NexusRuntime:
             walk_forward_status,
             {"calibration_snapshot": calibration_snapshot},
         )
+        recent_trades = runtime_store.recent_trade_results(limit=80)
         self.growth_status = self.strategy_evolution.evolve_growth_directives(
             self.growth_status,
             walk_forward_status=walk_forward_status,
             rotation=rotation,
-            recent_trades=runtime_store.recent_trade_results(limit=80),
+            recent_trades=recent_trades,
         )
+        self._apply_revenue_exploration_overrides(recent_trades)
         self._compound_capital_status = self.compound_capital.build_snapshot(
             futures_total,
             daily_payload=self.growth_status.get("daily"),
@@ -1423,6 +1430,34 @@ class NexusRuntime:
                     },
                     context=market_contexts.get(fleet, {}) or {},
                 )
+
+    def _apply_revenue_exploration_overrides(self, recent_trades=None):
+        """Loosen entry blocks when revenue track has few/no live closes (bootstrap sampling)."""
+        if not REVENUE_GROWTH_MODE:
+            return
+        trades = list(recent_trades or [])
+        closes = [item for item in trades if str(item.get("event") or "").upper() == "CLOSE"]
+        critical_blocks = {
+            "daily_loss_limit_reached",
+            "daily_max_loss",
+            "daily_positive_mode_defense",
+            "profit_lock_active",
+            "daily_target_locked_for_compound",
+        }
+        block_reason = str(self.growth_status.get("block_reason") or "").strip().lower()
+        if block_reason in critical_blocks:
+            return
+        if len(closes) < 3:
+            self.growth_status["block_new_entries"] = False
+            if block_reason in {"", "quality_gate_weak_window", "rotation_tighten"}:
+                self.growth_status.pop("block_reason", None)
+            self.growth_status["min_quality_score"] = min(
+                float(self.growth_status.get("min_quality_score", 0.65) or 0.65),
+                EXPLORATION_MIN_QUALITY,
+            )
+            mode = str(self.growth_status.get("evolution_mode") or "")
+            if mode in {"rotation_tighten", "tighten_guards"}:
+                self.growth_status["evolution_mode"] = "exploration_sample"
 
     def _ensure_trading_resumed(self, force=False):
         if self._news_pause_active and not force:

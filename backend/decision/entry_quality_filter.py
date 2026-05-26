@@ -1,5 +1,17 @@
 class EntryQualityFilter:
-    def evaluate(self, fleet, side, market_context, signal, setup_type, adjusted_confidence, fleet_metrics, memory_check, meeting_notes=None):
+    def evaluate(
+        self,
+        fleet,
+        side,
+        market_context,
+        signal,
+        setup_type,
+        adjusted_confidence,
+        fleet_metrics,
+        memory_check,
+        meeting_notes=None,
+        min_approved_quality=0.65,
+    ):
         reasons = []
         quality = float(adjusted_confidence or 0.0)
         meeting_notes = meeting_notes or {}
@@ -62,7 +74,8 @@ class EntryQualityFilter:
             quality -= 0.3
 
         quality = max(0.0, min(1.0, quality))
-        approved = quality >= 0.65
+        threshold = max(0.42, float(min_approved_quality or 0.65))
+        approved = quality >= threshold
         position_mode = "high" if quality > 0.85 else "normal" if quality > 0.75 else "small" if approved else "reject"
         reject_reason = reasons[0] if not approved and reasons else ""
 

@@ -1,5 +1,7 @@
 import os
 
+from config.revenue_target_config import REVENUE_GROWTH_MODE
+
 
 def _env_float(name: str, default: float) -> float:
     raw = os.getenv(name)
@@ -20,6 +22,6 @@ def _env_bool(name: str, default: bool) -> bool:
 
 # Aspirational targets — used to tighten gates when recent performance is weak (not a profit guarantee).
 TARGET_WIN_RATE = _env_float("NEXUS_TARGET_WIN_RATE", 0.65)
-MIN_TRADE_CONFIDENCE = _env_float("NEXUS_MIN_TRADE_CONFIDENCE", 0.68)
+MIN_TRADE_CONFIDENCE = _env_float("NEXUS_MIN_TRADE_CONFIDENCE", 0.52 if REVENUE_GROWTH_MODE else 0.68)
 QUALITY_GATE_ENABLED = _env_bool("NEXUS_QUALITY_GATE_ENABLED", True)
 WALK_FORWARD_MIN_WIN_RATE = _env_float("NEXUS_WALK_FORWARD_MIN_WIN_RATE", 0.45)

@@ -9,6 +9,7 @@ from config.ai_trading_config import (
     AI_LED_MIN_CONFIDENCE,
     AI_LED_PRIMARY_MODE,
     AI_LED_TRADING_ENABLED,
+    AI_PROPOSAL_MAX_PER_TICK,
 )
 
 
@@ -46,7 +47,7 @@ class AiTradeProposer:
         proposals.extend(self._from_llm_task(context))
         if self.include_core_fleets:
             proposals.extend(self._from_core_fleet_context(context))
-        return self._dedupe(proposals)[: int(os.getenv("NEXUS_AI_PROPOSAL_MAX_PER_TICK", "5") or 5)]
+        return self._dedupe(proposals)[: max(1, int(AI_PROPOSAL_MAX_PER_TICK or 5))]
 
     def _from_core_fleet_context(self, context):
         rows = []

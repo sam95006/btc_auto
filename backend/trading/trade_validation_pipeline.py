@@ -80,6 +80,9 @@ def _quality_gate_block(proposal, growth_directives, recent_trades):
     if not QUALITY_GATE_ENABLED:
         return False, None
     trades = list(recent_trades or [])[:40]
+    closes = [item for item in trades if str(item.get("event") or "").upper() == "CLOSE"]
+    if REVENUE_GROWTH_MODE and len(closes) < 3:
+        return False, None
     if len(trades) < 8:
         return False, None
     wins = sum(1 for item in trades if _safe_float(item.get("pnl")) > 0)
