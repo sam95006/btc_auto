@@ -333,12 +333,16 @@
       position: fixed;
       left: 14px;
       top: 96px;
-      bottom: auto;
+      bottom: 78px;
       z-index: 150;
       pointer-events: auto;
       background: transparent;
       border: none;
       padding: 0;
+      width: min(420px, calc(100vw - 28px));
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .meeting-log-panel .sidebar-block--fill {
@@ -356,7 +360,7 @@
       border-radius: 14px;
       background: rgba(8, 20, 38, 0.82);
       border: 1px solid rgba(79, 216, 255, 0.14);
-      max-height: 180px;
+      max-height: 160px;
       overflow: auto;
     }
     .decision-strip header {
@@ -388,6 +392,17 @@
     .revenue-kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; font-size: 11px; }
     .revenue-kpi-grid strong { color: #e8f4ff; font-size: 13px; }
     .revenue-kpi-meta { font-size: 10px; color: rgba(255,255,255,0.55); margin: 8px 0 0; line-height: 1.35; }
+
+    /* Keep the left panels readable on smaller screens */
+    @media (max-width: 980px) {
+      .meeting-log-panel {
+        top: 84px;
+        bottom: 90px;
+        width: min(460px, calc(100vw - 18px));
+        left: 9px;
+      }
+      .decision-strip { max-height: 140px; }
+    }
 
     .log-panel-header {
       position: sticky;

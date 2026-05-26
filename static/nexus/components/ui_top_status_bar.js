@@ -65,6 +65,10 @@ export function renderTopStatusBar(root, state) {
   const positionSymbols = (decision.exchange_position_symbols || []).filter(Boolean);
   const positionNote = positionSymbols.length ? ` / ${positionSymbols.join(", ")}` : "";
   const systemLabel = system.trading_paused ? "暫停中" : "運行中";
+  const pauseReason = String(system.pause_reason || "").trim();
+  const gateReason = String(system.block_reason || "").trim();
+  const pauseNote = system.trading_paused && pauseReason ? ` / 原因 ${pauseReason}` : "";
+  const gateNote = gateReason ? ` / 擋新倉 ${gateReason}` : "";
   const capitalSource = capital.source === "binance_rest" ? "Binance 已同步" : "等待 Binance 同步";
   const linkLabel = transport.connected ? capitalSource : "資料連線中斷";
   const mismatchNote = accountsMismatch ? " / 現貨與合約 API 為不同帳戶" : "";
@@ -76,7 +80,7 @@ export function renderTopStatusBar(root, state) {
   const liveSync = state.live_sync || {};
   const syncNote = liveSync.updated_at ? ` / 資料 ${shortTime(liveSync.updated_at)}` : "";
   const worldNote = liveSync.news_count ? ` / 全球新聞 ${liveSync.news_count} 則` : "";
-  const systemMeta = `${linkLabel}${syncNote}${worldNote} / ${healthNote}${mismatchNote} / 持倉 ${livePositions}${positionNote} / 成交 ${tradeCount} 筆${holdingsNote}`;
+  const systemMeta = `${linkLabel}${syncNote}${worldNote}${pauseNote}${gateNote} / ${healthNote}${mismatchNote} / 持倉 ${livePositions}${positionNote} / 成交 ${tradeCount} 筆${holdingsNote}`;
   const dualTime = `台北 ${shortTime(times.taipei || system.current_time)} | 美東 ${shortTime(times.eastern)}`;
 
   root.dataset.scrollKey = "top-status-bar";

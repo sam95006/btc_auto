@@ -3291,6 +3291,13 @@ class NexusRuntime:
         ledger_capital = self.ledger.snapshot()
         pnl = self.pnl_tracker.snapshot()
         system_snapshot = self.state_manager.snapshot()
+        # Expose pause + gate reasons to the dashboard (no secrets).
+        system_snapshot["pause_reason"] = self._pause_reason
+        system_snapshot["manual_pause"] = bool(self._manual_pause)
+        system_snapshot["news_pause_active"] = bool(self._news_pause_active)
+        system_snapshot["news_pause_until_epoch"] = float(self._news_pause_until or 0.0)
+        system_snapshot["block_new_entries"] = bool((self.growth_status or {}).get("block_new_entries"))
+        system_snapshot["block_reason"] = str((self.growth_status or {}).get("block_reason") or "")
         spot_account = getattr(self, "_last_spot_account", {"spot_total": 0.0, "holdings": [], "balances": {}})
         futures_account = getattr(
             self,
