@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import time
+from datetime import datetime, timedelta
 
 from config.kill_switch_config import (
     KILL_SWITCH_AUTO_FLATTEN,
+    KILL_SWITCH_CONSECUTIVE_LOSS_MIN_USD,
     KILL_SWITCH_ENABLED,
     KILL_SWITCH_MAX_CONSECUTIVE_LOSSES,
+    KILL_SWITCH_PAUSE_ON_CONSECUTIVE_LOSSES,
     KILL_SWITCH_PAUSE_ON_SYNC_STALE,
     KILL_SWITCH_PAUSE_ON_VALIDATION_CHOKE,
     KILL_SWITCH_SYNC_STALE_SEC,
     KILL_SWITCH_VALIDATION_BLOCK_RATE,
 )
+from config.revenue_target_config import REVENUE_GROWTH_MODE
 
 
 def _safe_float(value, default=0.0):
@@ -18,6 +22,38 @@ def _safe_float(value, default=0.0):
         return float(value or default)
     except Exception:
         return float(default)
+
+
+def _parse_ts(value):
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"):
+        try:
+            return datetime.strptime(raw[:19], fmt)
+        except Exception:
+            continue
+    return None
+
+
+def _consecutive_loss_streak(trades, min_loss_usd=0.5, window_hours=48):
+    cutoff = datetime.now() - timedelta(hours=max(1, int(window_hours or 48)))
+    streak = 0
+    for item in trades:
+        if str(item.get("market_type") or "futures") != "futures":
+            continue
+        event = str(item.get("event") or "").upper()
+        if event and event not in {"CLOSE", "LIVE"}:
+            continue
+        ts = _parse_ts(item.get("timestamp"))
+        if ts and ts < cutoff:
+            break
+        pnl = _safe_float(item.get("pnl"))
+        if pnl <= -abs(min_loss_usd):
+            streak += 1
+        elif pnl > abs(min_loss_usd):
+            break
+    return streak
 
 
 class KillSwitchService:
@@ -89,6 +125,8 @@ class KillSwitchService:
             pause_reasons = [item for item in pause_reasons if item != "validation_choke"]
         if not KILL_SWITCH_PAUSE_ON_SYNC_STALE:
             pause_reasons = [item for item in pause_reasons if item != "exchange_sync_stale"]
+        if not KILL_SWITCH_PAUSE_ON_CONSECUTIVE_LOSSES:
+            pause_reasons = [item for item in pause_reasons if item != "consecutive_losses"]
 
         action = "pause_trading"
         if triggered and KILL_SWITCH_AUTO_FLATTEN and "daily_max_loss" in reasons:

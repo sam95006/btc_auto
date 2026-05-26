@@ -4,7 +4,7 @@ import { renderTopStatusBar } from "./components/ui_top_status_bar.js?v=20260526
 import { renderAlertPanel } from "./components/ui_alert_panel.js?v=20260510a";
 import { renderChatDock } from "./components/ui_chat_dock.js?v=20260521c";
 import { renderMeetingLogPanel } from "./components/ui_meeting_log_panel.js?v=20260520a";
-import { renderDecisionStrip } from "./components/ui_decision_panel.js?v=20260526a";
+import { renderDecisionStrip } from "./components/ui_decision_panel.js?v=20260526e";
 import { renderRevenueKpi } from "./components/ui_revenue_kpi.js?v=20260526a";
 import { renderMeetingDock } from "./components/ui_meeting_dock.js?v=20260510b";
 import { buildMainOverviewPage } from "./scenes/scene_main_hq.js?v=20260510b";
@@ -142,29 +142,38 @@ style.textContent = `
     display: flex !important;
     flex-direction: column !important;
     gap: 0 !important;
-    max-height: min(340px, calc(100vh - 280px)) !important;
+    max-height: min(320px, calc(100vh - 268px)) !important;
     overflow: hidden !important;
-    border-radius: 14px !important;
-    border: 1px solid rgba(79, 216, 255, 0.2) !important;
-    background: linear-gradient(180deg, rgba(6, 16, 30, 0.92), rgba(4, 10, 20, 0.9)) !important;
-    backdrop-filter: blur(14px) !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(79, 216, 255, 0.28) !important;
+    background: linear-gradient(165deg, rgba(8, 22, 42, 0.94), rgba(4, 10, 22, 0.92)) !important;
+    backdrop-filter: blur(18px) saturate(1.2) !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255,255,255,0.06) !important;
   }
-  #meeting-log-panel .left-tab-bar {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 4px !important;
-    padding: 8px 8px 6px !important;
+  #meeting-log-panel .left-panel-toolbar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 10px 10px 8px !important;
     border-bottom: 1px solid rgba(255,255,255,0.08) !important;
     flex-shrink: 0 !important;
   }
+  #meeting-log-panel .left-tab-bar {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+  }
   #meeting-log-panel .left-tab-btn {
-    border: 1px solid rgba(255,255,255,0.08) !important;
-    border-radius: 8px !important;
+    flex: 1 1 0 !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 10px !important;
     background: rgba(255,255,255,0.04) !important;
     color: rgba(200,230,245,0.78) !important;
     font-size: 11px !important;
-    padding: 6px 4px !important;
+    padding: 7px 6px !important;
     cursor: pointer !important;
+    transition: background 0.15s ease, border-color 0.15s ease !important;
   }
   #meeting-log-panel .left-tab-btn.active {
     border-color: rgba(79,216,255,0.45) !important;
@@ -174,8 +183,8 @@ style.textContent = `
   #meeting-log-panel .left-tab-panels {
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    max-height: min(290px, calc(100vh - 330px)) !important;
-    padding: 8px !important;
+    max-height: min(250px, calc(100vh - 340px)) !important;
+    padding: 10px !important;
     scrollbar-width: thin !important;
   }
   #meeting-log-panel .left-tab-panel[hidden] { display: none !important; }
@@ -210,31 +219,66 @@ style.textContent = `
   #meeting-log-panel .revenue-kpi.bad .revenue-kpi-grid strong { color: #ff6b8f !important; }
   #meeting-log-panel .revenue-kpi-meta { margin: 8px 0 0 !important; font-size: 10px !important; line-height: 1.4 !important; color: rgba(173,213,229,0.78) !important; }
   #meeting-log-panel .decision-strip {
-    padding: 8px 10px !important;
+    padding: 0 !important;
     flex-shrink: 0 !important;
     max-height: none !important;
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
+    border: none !important;
+    background: transparent !important;
   }
   #meeting-log-panel .decision-strip header {
     display: flex !important;
     flex-direction: column !important;
-    gap: 2px !important;
-    margin-bottom: 6px !important;
+    gap: 4px !important;
+    margin-bottom: 8px !important;
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid rgba(79,216,255,0.12) !important;
   }
-  #meeting-log-panel .decision-strip header strong { font-size: 13px !important; color: #eefaff !important; }
-  #meeting-log-panel .decision-strip header small { font-size: 10px !important; color: rgba(173,213,229,0.75) !important; line-height: 1.35 !important; }
-  #meeting-log-panel .decision-diagnosis {
-    margin: 0 0 6px !important;
-    padding: 6px 8px !important;
-    border-radius: 8px !important;
-    background: rgba(255, 208, 107, 0.12) !important;
-    border: 1px solid rgba(255, 208, 107, 0.28) !important;
-    color: #ffd06b !important;
+  #meeting-log-panel .decision-strip header strong {
+    font-size: 14px !important;
+    color: #eefaff !important;
+    letter-spacing: 0.04em !important;
+  }
+  #meeting-log-panel .decision-strip header small {
     font-size: 10px !important;
-    line-height: 1.4 !important;
+    color: rgba(173,213,229,0.78) !important;
+    line-height: 1.45 !important;
   }
+  #meeting-log-panel .decision-meta-chips {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    margin-top: 2px !important;
+  }
+  #meeting-log-panel .decision-chip {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+    border-radius: 999px !important;
+    border: 1px solid rgba(79,216,255,0.22) !important;
+    background: rgba(79,216,255,0.1) !important;
+    color: rgba(200,235,255,0.88) !important;
+  }
+  #meeting-log-panel .decision-status-banner {
+    margin: 0 0 8px !important;
+    padding: 8px 10px !important;
+    border-radius: 10px !important;
+    font-size: 11px !important;
+    line-height: 1.45 !important;
+    border: 1px solid transparent !important;
+  }
+  #meeting-log-panel .decision-status-banner--pause {
+    background: rgba(255, 107, 143, 0.14) !important;
+    border-color: rgba(255, 107, 143, 0.35) !important;
+    color: #ffc0d0 !important;
+  }
+  #meeting-log-panel .decision-status-banner--warn {
+    background: rgba(255, 208, 107, 0.12) !important;
+    border-color: rgba(255, 208, 107, 0.28) !important;
+    color: #ffd06b !important;
+  }
+  #meeting-log-panel .decision-diagnosis { display: none !important; }
   #meeting-log-panel .decision-list {
     list-style: none !important;
     margin: 0 !important;
@@ -246,11 +290,20 @@ style.textContent = `
   #meeting-log-panel .decision-row {
     display: flex !important;
     flex-direction: column !important;
-    gap: 2px !important;
-    padding: 5px 0 !important;
-    border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+    gap: 3px !important;
+    padding: 7px 8px 7px 10px !important;
+    margin-bottom: 5px !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    border-left: 3px solid rgba(79,216,255,0.45) !important;
+    background: rgba(0,0,0,0.18) !important;
     font-size: 11px !important;
     color: #eefaff !important;
+  }
+  #meeting-log-panel .decision-row.ok { border-left-color: rgba(47,247,163,0.55) !important; }
+  #meeting-log-panel .decision-row.block {
+    border-left-color: rgba(255,107,143,0.7) !important;
+    background: rgba(255,107,143,0.08) !important;
   }
   #meeting-log-panel .decision-row small { font-size: 10px !important; color: rgba(173,213,229,0.72) !important; }
   #meeting-log-panel .decision-row.block span { color: #ff9db5 !important; }
@@ -310,20 +363,34 @@ style.textContent = `
   #meeting-log-panel.is-minimized { max-height: none !important; width: auto !important; }
   #meeting-log-panel.is-collapsed .left-command-stack { display: none !important; }
   #meeting-log-panel .left-collapse-btn {
-    position: absolute !important;
-    right: -4px !important;
-    top: -4px !important;
-    width: 22px !important;
-    height: 22px !important;
-    border-radius: 50% !important;
-    border: 1px solid rgba(79,216,255,0.35) !important;
-    background: rgba(6,16,30,0.95) !important;
-    color: #8fe8ff !important;
-    font-size: 12px !important;
+    flex: 0 0 34px !important;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(79,216,255,0.32) !important;
+    background: rgba(79,216,255,0.1) !important;
+    color: #b8ecff !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
     cursor: pointer !important;
-    z-index: 3 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    transition: background 0.15s ease, transform 0.15s ease !important;
   }
-  #meeting-log-panel.is-collapsed .left-collapse-btn { position: relative !important; right: auto !important; top: auto !important; }
+  #meeting-log-panel .left-collapse-btn:hover {
+    background: rgba(79,216,255,0.2) !important;
+    transform: scale(1.04) !important;
+  }
+  #meeting-log-panel.is-collapsed {
+    width: auto !important;
+    max-height: none !important;
+    padding: 4px !important;
+  }
+  #meeting-log-panel.is-collapsed .left-collapse-btn {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35) !important;
+  }
   #meeting-log-panel .rt-fab {
     position: relative !important; width: 72px !important; height: 72px !important; border: none !important;
     background: transparent !important; cursor: pointer !important; padding: 0 !important;
@@ -602,11 +669,14 @@ function ensureLeftCommandStack(root) {
   stack = document.createElement("div");
   stack.className = "left-command-stack";
   stack.innerHTML = `
-    <nav class="left-tab-bar" aria-label="左側資訊分頁">
-      <button type="button" class="left-tab-btn" data-left-tab="revenue">營收</button>
-      <button type="button" class="left-tab-btn" data-left-tab="roundtable">圓桌</button>
-      <button type="button" class="left-tab-btn" data-left-tab="decision">決策</button>
-    </nav>
+    <div class="left-panel-toolbar">
+      <nav class="left-tab-bar" aria-label="左側資訊分頁">
+        <button type="button" class="left-tab-btn" data-left-tab="revenue">營收</button>
+        <button type="button" class="left-tab-btn" data-left-tab="roundtable">圓桌</button>
+        <button type="button" class="left-tab-btn" data-left-tab="decision">決策</button>
+      </nav>
+      <button type="button" class="left-collapse-btn" data-left-collapse title="收合左側面板" aria-label="收合左側面板">‹</button>
+    </div>
     <div class="left-tab-panels">
       <div class="left-tab-panel left-mount-revenue" data-left-tab="revenue"></div>
       <div class="left-tab-panel left-mount-roundtable" data-left-tab="roundtable"></div>
@@ -625,23 +695,37 @@ function ensureLeftCommandStack(root) {
 
 function renderHomeLeft(state) {
   if (!rootRefs.left) return;
-  rootRefs.left.classList.toggle("is-collapsed", Boolean(homeUiState.leftCollapsed));
-  let collapseBtn = rootRefs.left.querySelector(".left-collapse-btn");
-  if (!collapseBtn) {
-    collapseBtn = document.createElement("button");
-    collapseBtn.type = "button";
-    collapseBtn.className = "left-collapse-btn";
-    collapseBtn.title = "收合/展開左側面板";
-    rootRefs.left.appendChild(collapseBtn);
-  }
-  collapseBtn.textContent = homeUiState.leftCollapsed ? "▶" : "◀";
-  collapseBtn.onclick = () => {
-    homeUiState.leftCollapsed = !homeUiState.leftCollapsed;
-    renderApp(getState());
-  };
-  if (homeUiState.leftCollapsed) return;
-
   const stack = ensureLeftCommandStack(rootRefs.left);
+  rootRefs.left.classList.toggle("is-collapsed", Boolean(homeUiState.leftCollapsed));
+  const collapseBtn = stack.querySelector("[data-left-collapse]") || rootRefs.left.querySelector(".left-collapse-btn");
+  if (collapseBtn) {
+    collapseBtn.textContent = homeUiState.leftCollapsed ? "›" : "‹";
+    collapseBtn.title = homeUiState.leftCollapsed ? "展開左側面板" : "收合左側面板";
+    collapseBtn.onclick = () => {
+      homeUiState.leftCollapsed = !homeUiState.leftCollapsed;
+      renderApp(getState());
+    };
+  }
+  if (homeUiState.leftCollapsed) {
+    stack.style.display = "none";
+    let expandBtn = rootRefs.left.querySelector(".left-collapse-btn--solo");
+    if (!expandBtn) {
+      expandBtn = document.createElement("button");
+      expandBtn.type = "button";
+      expandBtn.className = "left-collapse-btn left-collapse-btn--solo";
+      expandBtn.setAttribute("aria-label", "展開左側面板");
+      rootRefs.left.appendChild(expandBtn);
+    }
+    expandBtn.textContent = "›";
+    expandBtn.title = "展開左側面板";
+    expandBtn.onclick = () => {
+      homeUiState.leftCollapsed = false;
+      renderApp(getState());
+    };
+    return;
+  }
+  stack.style.display = "";
+  rootRefs.left.querySelector(".left-collapse-btn--solo")?.remove();
   const tab = homeUiState.leftTab || "decision";
   stack.querySelectorAll(".left-tab-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.getAttribute("data-left-tab") === tab);

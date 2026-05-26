@@ -1,12 +1,23 @@
-import { escapeHtml } from "../utils/presentation.js?v=20260525a";
+import { escapeHtml } from "../utils/presentation.js?v=20260526e";
 
 function sourceLabel(item) {
-  return (
-    item.decision_source ||
-    item.proposer ||
-    item.source ||
-    "system"
-  );
+  return item.decision_source || item.proposer || item.source || "system";
+}
+
+function pauseReasonLabel(reason) {
+  const key = String(reason || "").trim().toLowerCase();
+  const map = {
+    consecutive_losses: "連續虧損達風控上限（已改為警示，可恢復交易）",
+    validation_choke: "驗證拒絕率過高",
+    exchange_sync_stale: "交易所同步延遲",
+    daily_max_loss: "日損上限",
+    manual: "手動暫停",
+    news: "新聞熔斷",
+  };
+  for (const [token, label] of Object.entries(map)) {
+    if (key.includes(token)) return label;
+  }
+  return reason || "未知原因";
 }
 
 export function renderDecisionStrip(root, state, options = {}) {
@@ -28,7 +39,7 @@ export function renderDecisionStrip(root, state, options = {}) {
       const source = escapeHtml(String(sourceLabel(item)));
       const reason = escapeHtml(item.reject_reason || item.reason || (ok ? "approved" : "blocked"));
       return `<li class="decision-row ${ok ? "ok" : "block"}">
-        <span>${fleet} ${symbol}</span>
+        <span>${fleet} · ${symbol}</span>
         <small>${source} · ${reason}</small>
       </li>`;
     })
@@ -41,28 +52,39 @@ export function renderDecisionStrip(root, state, options = {}) {
   const evoMode = escapeHtml(evolution.evolution_mode || evolution.mode || "hold");
   const posActions = Number((positionAi.actions || []).length || 0);
   const funnelNote = stages.proposals
-    ? `漏斗 提案${stages.proposals}→核准${stages.audit_approved || 0}→成交${stages.executed_futures_closes || 0}`
+    ? `提案 ${stages.proposals} → 核准 ${stages.audit_approved || 0} → 成交 ${stages.executed_futures_closes || 0}`
     : "漏斗待樣本";
-  const rejectNote = topRejects.length
-    ? ` · 拒絕 ${escapeHtml(topRejects.map((r) => r.reason).join(", "))}`
-    : "";
+
   const system = state.system || {};
   const paused = Boolean(system.trading_paused);
   const pauseReason = String(system.pause_reason || "").trim();
   const blockReason = String(system.block_reason || "").trim();
-  let diagnosisText = "";
+
+  let statusBanner = "";
   if (paused) {
-    diagnosisText = pauseReason
-      ? `交易暫停：${pauseReason}`
-      : "交易暫停中（請在聊天輸入「恢復交易」或檢查 Zeabur env）";
+    statusBanner = `<div class="decision-status-banner decision-status-banner--pause">⏸ ${escapeHtml(
+      pauseReasonLabel(pauseReason),
+    )}</div>`;
   } else if (system.block_new_entries && blockReason) {
-    diagnosisText = `運行中但擋新倉：${blockReason}`;
-  } else if (funnel.diagnosis) {
-    diagnosisText = String(funnel.diagnosis);
+    statusBanner = `<div class="decision-status-banner decision-status-banner--warn">⚠ 運行中但擋新倉：${escapeHtml(
+      blockReason,
+    )}</div>`;
+  } else if (funnel.diagnosis && !paused) {
+    statusBanner = `<div class="decision-status-banner decision-status-banner--warn">${escapeHtml(
+      compact ? String(funnel.diagnosis).slice(0, 120) : funnel.diagnosis,
+    )}</div>`;
   }
-  const diagnosis = diagnosisText
-    ? `<p class="decision-diagnosis">${escapeHtml(compact ? diagnosisText.slice(0, 140) : diagnosisText)}</p>`
-    : "";
+
+  const chips = [
+    `<span class="decision-chip">${funnelNote}</span>`,
+    `<span class="decision-chip">演化 ${evoMode}</span>`,
+    `<span class="decision-chip">管倉 ${posActions}</span>`,
+  ];
+  if (topRejects.length) {
+    chips.push(
+      `<span class="decision-chip">拒絕 ${escapeHtml(topRejects.map((r) => r.reason).join(", "))}</span>`,
+    );
+  }
 
   let host = root.querySelector(".decision-strip-host");
   if (!host) {
@@ -72,14 +94,15 @@ export function renderDecisionStrip(root, state, options = {}) {
   }
   host.dataset.scrollKey = "decision-strip";
   host.innerHTML = `
-    <div class="decision-strip">
+    <div class="decision-strip decision-strip--premium">
       <header>
         <strong>決策稽核</strong>
-        <small>${traceNote} · 演化 ${evoMode} · ${funnelNote}${rejectNote} · 管倉 ${posActions}</small>
+        <small>${traceNote}</small>
+        <div class="decision-meta-chips">${chips.join("")}</div>
       </header>
-      ${diagnosis}
+      ${statusBanner}
       <ul class="decision-list">${rows || "<li class='decision-row'>尚無決策樣本</li>"}</ul>
-      ${compact && audits.length > 2 ? `<button type="button" class="decision-more-btn" data-decision-expand>展開更多</button>` : ""}
+      ${compact && audits.length > 2 ? `<button type="button" class="decision-more-btn" data-decision-expand>展開更多紀錄</button>` : ""}
     </div>
   `;
   if (compact) {

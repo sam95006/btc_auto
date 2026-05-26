@@ -58,6 +58,24 @@ class P0P2RevenuePipelineTests(unittest.TestCase):
         self.assertTrue(report.get("triggered"))
         self.assertFalse(report.get("should_pause"))
 
+    def test_kill_switch_consecutive_losses_warn_only_by_default(self):
+        from datetime import datetime
+
+        trades = []
+        for idx in range(6):
+            trades.append(
+                {
+                    "market_type": "futures",
+                    "event": "CLOSE",
+                    "pnl": -2.0,
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                }
+            )
+        report = KillSwitchService().evaluate(trade_results=trades)
+        self.assertTrue(report.get("triggered"))
+        self.assertFalse(report.get("should_pause"))
+        self.assertIn("consecutive_losses", report.get("reasons") or [])
+
     def test_rotation_hold_under_revenue_growth(self):
         svc = StrategyEvolutionService()
         out = svc.evolve_growth_directives({}, rotation={"recommendation": "pause_rotation"}, recent_trades=[])

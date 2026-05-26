@@ -1434,6 +1434,7 @@ class NexusRuntime:
             "kill_switch",
             "validation",
             "exchange_sync_stale",
+            "consecutive_losses",
         )
         critical_tokens = ("daily_max_loss", "news", "manual", "emergency")
         if not force:
@@ -1476,7 +1477,10 @@ class NexusRuntime:
             return
         if report.get("action") == "already_paused":
             reason_text = str(report.get("reason") or "").lower()
-            if any(token in reason_text for token in ("validation_choke", "validation", "exchange_sync_stale")):
+            if any(
+                token in reason_text
+                for token in ("validation_choke", "validation", "exchange_sync_stale", "consecutive_losses")
+            ):
                 self._ensure_trading_resumed(force=True)
             return
         reason = str(report.get("reason") or "kill_switch")
@@ -1490,7 +1494,7 @@ class NexusRuntime:
         self._manual_pause = True
         self._pause_reason = pause_reason
         self.growth_status["kill_switch_reason"] = pause_reason
-        critical = any(token in pause_reason for token in ("daily_max_loss", "consecutive_losses", "exchange_sync_stale"))
+        critical = any(token in pause_reason for token in ("daily_max_loss", "exchange_sync_stale"))
         level = "ALERT_RED" if critical else "WARNING"
         self.state_manager.set_alert(level, emergency=critical, trading_paused=True)
         self._append_alert(level, f"Kill-switch: {pause_reason}")
