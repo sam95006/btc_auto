@@ -34,6 +34,8 @@ from backend.analytics.revenue_plan_service import RevenuePlanService
 from backend.monitoring.decision_funnel_service import DecisionFunnelService
 from backend.monitoring.kill_switch_service import KillSwitchService
 from backend.autonomy.rule_signal_bridge import RuleSignalBridge
+from backend.autonomy.strategy_proposal_hub import StrategyProposalHub
+from backend.risk.monthly_drawdown_guard import MonthlyDrawdownGuard
 from config.revenue_target_config import (
     EXPLORATION_MIN_QUALITY,
     FUTURES_DEPLOY_FRACTION,
@@ -196,6 +198,8 @@ class NexusRuntime:
         self.decision_funnel = DecisionFunnelService()
         self.kill_switch = KillSwitchService()
         self.rule_signal_bridge = RuleSignalBridge()
+        self.strategy_proposal_hub = StrategyProposalHub()
+        self.monthly_drawdown_guard = MonthlyDrawdownGuard()
         self.ai_position_manager = AiPositionManager()
         self._force_immediate_tick = False
         self._last_ops_status = None
@@ -662,6 +666,11 @@ class NexusRuntime:
         )
         futures_total = futures_equity_from_account(futures_account)
         self.growth_status = self.capital_growth_guard.evaluate(futures_total)
+        monthly_risk = self.monthly_drawdown_guard.evaluate(futures_total)
+        self.growth_status["monthly_risk"] = dict(monthly_risk or {})
+        if monthly_risk.get("block_new_entries"):
+            self.growth_status["block_new_entries"] = True
+            self.growth_status["block_reason"] = monthly_risk.get("block_reason") or "monthly_max_drawdown"
         walk_forward_status = self.walk_forward_evaluator.evaluate(runtime_store.recent_trade_results(limit=160))
         rotation = self.upgrade_pipeline.strategy_versions.suggest_rotation(
             walk_forward_status,
@@ -1353,12 +1362,24 @@ class NexusRuntime:
                     deployable_pool=deployable,
                 )
             )
+        requests.extend(
+            self.strategy_proposal_hub.collect_proposals(
+                prices,
+                market_contexts=market_contexts,
+                positions=context.get("positions"),
+                deployable_pool=deployable,
+            )
+        )
         seen = set()
         for request in requests:
             key = (str(request.get("fleet")), str(request.get("symbol")), str(request.get("side")))
             if key in seen:
                 continue
             seen.add(key)
+            request = self.strategy_proposal_hub.scale_proposal(
+                request,
+                market_contexts,
+            )
             if self.upgrade_pipeline.trade_proposals:
                 self.upgrade_pipeline.trade_proposals.create_from_request(
                     request,
@@ -1443,6 +1464,7 @@ class NexusRuntime:
             "daily_positive_mode_defense",
             "profit_lock_active",
             "daily_target_locked_for_compound",
+            "monthly_max_drawdown",
         }
         block_reason = str(self.growth_status.get("block_reason") or "").strip().lower()
         if block_reason in critical_blocks:
@@ -3682,6 +3704,7 @@ class NexusRuntime:
             "live_sync": dict(self._live_sync_status or {}),
             "meeting_execution_directives": dict(self._meeting_execution_directives or {}),
             "strategy_evolution": dict(getattr(self, "_strategy_evolution_status", {}) or {}),
+            "strategy_modules": self.strategy_proposal_hub.status_snapshot(),
             "position_ai": position_ai,
         }
         try:
