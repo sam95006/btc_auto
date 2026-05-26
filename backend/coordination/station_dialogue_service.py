@@ -64,6 +64,27 @@ class StationDialogueService:
                 "flatten": flatten_result,
             }
 
+        if command == "resume_trading":
+            resume_result = self._execute_resume_trading(text)
+            reply = "已恢復自動交易，並清除驗證阻擋累積。" if resume_result.get("ok") else "恢復交易失敗，請稍後再試。"
+            captain = CHANNEL_CAPTAIN.get(channel_key, "總部指揮官")
+            stored.append(
+                self.chat_log.add(
+                    channel_key,
+                    captain,
+                    reply,
+                    source="系統執行",
+                    importance="INFO",
+                )
+            )
+            return {
+                "ok": True,
+                "channel": channel_key,
+                "messages": stored,
+                "command": command,
+                "resume": resume_result,
+            }
+
         llm_rows = self._llm_player_reply(channel_key, text, snapshot)
         if llm_rows:
             for row in llm_rows:
@@ -101,6 +122,11 @@ class StationDialogueService:
             source="player_chat",
             trigger_text=str(text or "")[:120],
         )
+
+    def _execute_resume_trading(self, text):
+        from backend.services.nexus_runtime import nexus_runtime
+
+        return nexus_runtime.resume_trading(source="player_chat")
 
     def _llm_player_reply(self, channel_key, text, snapshot):
         if not self.llm_gateway or not getattr(self.llm_gateway, "enabled", lambda: False)():

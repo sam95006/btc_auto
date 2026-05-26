@@ -332,9 +332,14 @@ class PaperTradeValidationEngine:
         if PAPER_BOOTSTRAP_SKIP_BLOCKS and recent_closes == 0:
             block_limit = max(block_limit, block_limit * 3)
         if recent_blocks >= block_limit:
-            approved = False
-            reason = "recent_validation_blocks_too_many"
-            score = 0.1
+            if REVENUE_GROWTH_MODE:
+                approved = True
+                reason = "recent_validation_blocks_caution"
+                score = 0.42
+            else:
+                approved = False
+                reason = "recent_validation_blocks_too_many"
+                score = 0.1
         elif execution_errors >= PAPER_MAX_RECENT_EXECUTION_ERRORS:
             approved = False
             reason = "recent_execution_errors_too_many"

@@ -9,9 +9,10 @@ function sourceLabel(item) {
   );
 }
 
-export function renderDecisionStrip(root, state) {
+export function renderDecisionStrip(root, state, options = {}) {
   if (!root) return;
-  const audits = list(state.decision_audit || [], 6);
+  const compact = Boolean(options.compact);
+  const audits = list(state.decision_audit || [], compact ? 3 : 6);
   const traces = list(state.decision_traces || [], 3);
   const evolution = state.strategy_evolution || {};
   const positionAi = state.position_ai || {};
@@ -45,7 +46,10 @@ export function renderDecisionStrip(root, state) {
   const rejectNote = topRejects.length
     ? ` · 拒絕 ${escapeHtml(topRejects.map((r) => r.reason).join(", "))}`
     : "";
-  const diagnosis = funnel.diagnosis ? `<p class="decision-diagnosis">${escapeHtml(funnel.diagnosis)}</p>` : "";
+  const diagnosisText = funnel.diagnosis ? String(funnel.diagnosis) : "";
+  const diagnosis = diagnosisText
+    ? `<p class="decision-diagnosis">${escapeHtml(compact ? diagnosisText.slice(0, 120) : diagnosisText)}</p>`
+    : "";
 
   let host = root.querySelector(".decision-strip-host");
   if (!host) {

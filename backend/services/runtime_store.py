@@ -766,6 +766,22 @@ class RuntimeStateStore:
             cursor.execute("SELECT validation_json FROM nexus_trade_validation_events ORDER BY id DESC LIMIT ?", (limit,))
             return [json.loads(row["validation_json"]) for row in cursor.fetchall()]
 
+    def prune_trade_validation_events(self, keep_limit=80):
+        keep_limit = max(10, int(keep_limit or 80))
+
+        def operation(cursor):
+            cursor.execute("SELECT id FROM nexus_trade_validation_events ORDER BY id DESC LIMIT ?", (keep_limit,))
+            keep_ids = [int(row["id"]) for row in cursor.fetchall()]
+            if not keep_ids:
+                return
+            placeholders = ",".join("?" for _ in keep_ids)
+            cursor.execute(
+                f"DELETE FROM nexus_trade_validation_events WHERE id NOT IN ({placeholders})",
+                keep_ids,
+            )
+
+        self._run_write(operation)
+
     def recent_round_table_decision_memory(self, limit=40):
         with self._lock:
             cursor = self._conn.cursor()

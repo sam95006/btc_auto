@@ -22,6 +22,22 @@ _FLATTEN_EN = (
     "flatten all positions",
 )
 
+_RESUME_ZH = (
+    "恢復交易",
+    "繼續交易",
+    "解除暫停",
+    "取消暫停",
+    "開始交易",
+    "恢復運行",
+)
+
+_RESUME_EN = (
+    "resume trading",
+    "resume trade",
+    "unpause",
+    "start trading",
+)
+
 
 def _compact(text: str) -> str:
     return re.sub(r"\s+", "", str(text or "").strip())
@@ -43,6 +59,14 @@ def detect_chat_command(message: str) -> Optional[str]:
     for phrase in _FLATTEN_EN:
         if lower == phrase or lower.startswith(phrase):
             return "flatten_all"
+
+    for phrase in _RESUME_ZH:
+        if compact == phrase or phrase in compact:
+            return "resume_trading"
+
+    for phrase in _RESUME_EN:
+        if lower == phrase or lower.startswith(phrase):
+            return "resume_trading"
 
     return None
 

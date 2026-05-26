@@ -4,8 +4,9 @@ function money(value) {
   return `${Number(value || 0).toFixed(2)}U`;
 }
 
-export function renderRevenueKpi(root, state) {
+export function renderRevenueKpi(root, state, options = {}) {
   if (!root) return;
+  const compact = Boolean(options.compact);
   const monthly = state.monthly_revenue || {};
   const plan = state.revenue_plan || {};
   const target = Number(monthly.target_usd || 0);
@@ -25,7 +26,20 @@ export function renderRevenueKpi(root, state) {
     root.appendChild(host);
   }
   host.dataset.scrollKey = "revenue-kpi";
-  host.innerHTML = `
+  host.innerHTML = compact
+    ? `
+    <div class="revenue-kpi revenue-kpi--compact ${tone}">
+      <header>
+        <strong>月營收</strong>
+        <small>${money(equity)} 池</small>
+      </header>
+      <p class="revenue-kpi-meta">
+        目標 ${money(target)} · 淨 ${money(net)} · ${progress.toFixed(1)}% · 差 ${money(remaining)}
+        · 成交 ${Number(monthly.trade_count || 0)} 筆
+      </p>
+    </div>
+  `
+    : `
     <div class="revenue-kpi ${tone}">
       <header>
         <strong>合約月營收目標</strong>

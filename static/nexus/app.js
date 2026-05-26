@@ -36,6 +36,7 @@ const homeUiState = {
   activeMeeting: "12:00",
   selectedMeetingSlot: "12:00",
   roundTableMinimized: true,
+  leftTab: "decision",
 };
 
 const chatUiState = {
@@ -59,8 +60,11 @@ style.textContent = `
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
     gap: 10px !important;
     padding: 12px 16px !important;
-    width: min(calc(100vw - 420px), 1180px) !important;
-    max-width: min(calc(100vw - 420px), 1180px) !important;
+    left: 292px !important;
+    right: 300px !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
     background: rgba(5, 16, 30, 0.88) !important;
     border: 1px solid rgba(79, 216, 255, 0.16) !important;
     border-radius: 26px !important;
@@ -109,12 +113,12 @@ style.textContent = `
   }
   #meeting-log-panel.meeting-log-panel {
     position: fixed !important;
-    left: 14px !important;
-    top: 96px !important;
-    width: min(320px, calc(100vw - 28px)) !important;
-    max-height: calc(100vh - 220px) !important;
+    left: 12px !important;
+    top: 118px !important;
+    width: min(272px, calc(100vw - 24px)) !important;
+    max-height: min(340px, calc(100vh - 280px)) !important;
     padding: 0 !important;
-    z-index: 150 !important;
+    z-index: 120 !important;
     pointer-events: auto !important;
     background: transparent !important;
     border: none !important;
@@ -124,23 +128,53 @@ style.textContent = `
   #meeting-log-panel .left-command-stack {
     display: flex !important;
     flex-direction: column !important;
-    gap: 8px !important;
-    max-height: calc(100vh - 220px) !important;
+    gap: 0 !important;
+    max-height: min(340px, calc(100vh - 280px)) !important;
+    overflow: hidden !important;
+    border-radius: 14px !important;
+    border: 1px solid rgba(79, 216, 255, 0.2) !important;
+    background: linear-gradient(180deg, rgba(6, 16, 30, 0.92), rgba(4, 10, 20, 0.9)) !important;
+    backdrop-filter: blur(14px) !important;
+  }
+  #meeting-log-panel .left-tab-bar {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 4px !important;
+    padding: 8px 8px 6px !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+    flex-shrink: 0 !important;
+  }
+  #meeting-log-panel .left-tab-btn {
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 8px !important;
+    background: rgba(255,255,255,0.04) !important;
+    color: rgba(200,230,245,0.78) !important;
+    font-size: 11px !important;
+    padding: 6px 4px !important;
+    cursor: pointer !important;
+  }
+  #meeting-log-panel .left-tab-btn.active {
+    border-color: rgba(79,216,255,0.45) !important;
+    background: rgba(79,216,255,0.16) !important;
+    color: #eefaff !important;
+  }
+  #meeting-log-panel .left-tab-panels {
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    padding-right: 2px !important;
+    max-height: min(290px, calc(100vh - 330px)) !important;
+    padding: 8px !important;
     scrollbar-width: thin !important;
   }
+  #meeting-log-panel .left-tab-panel[hidden] { display: none !important; }
   #meeting-log-panel .left-mount-roundtable .rt-panel,
   #meeting-log-panel .revenue-kpi,
   #meeting-log-panel .decision-strip {
-    border-radius: 14px !important;
-    border: 1px solid rgba(79, 216, 255, 0.22) !important;
-    background: linear-gradient(180deg, rgba(6, 16, 30, 0.94), rgba(4, 10, 20, 0.88)) !important;
-    backdrop-filter: blur(14px) !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(79, 216, 255, 0.16) !important;
+    background: rgba(4, 12, 24, 0.55) !important;
   }
   #meeting-log-panel .revenue-kpi {
-    padding: 10px 12px !important;
+    padding: 8px 10px !important;
     flex-shrink: 0 !important;
   }
   #meeting-log-panel .revenue-kpi header {
@@ -163,9 +197,9 @@ style.textContent = `
   #meeting-log-panel .revenue-kpi.bad .revenue-kpi-grid strong { color: #ff6b8f !important; }
   #meeting-log-panel .revenue-kpi-meta { margin: 8px 0 0 !important; font-size: 10px !important; line-height: 1.4 !important; color: rgba(173,213,229,0.78) !important; }
   #meeting-log-panel .decision-strip {
-    padding: 10px 12px !important;
+    padding: 8px 10px !important;
     flex-shrink: 0 !important;
-    max-height: min(28vh, 240px) !important;
+    max-height: none !important;
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
@@ -211,12 +245,10 @@ style.textContent = `
   #meeting-log-panel .rt-panel {
     display: flex !important;
     flex-direction: column !important;
-    max-height: min(32vh, 260px) !important;
-    border-radius: 14px !important;
-    border: 1px solid rgba(79, 216, 255, 0.22) !important;
-    background: linear-gradient(180deg, rgba(6, 16, 30, 0.94), rgba(4, 10, 20, 0.88)) !important;
-    backdrop-filter: blur(14px) !important;
+    max-height: min(260px, calc(100vh - 360px)) !important;
     overflow: hidden !important;
+    border: none !important;
+    background: transparent !important;
   }
   #meeting-log-panel .rt-header {
     display: flex !important;
@@ -294,8 +326,8 @@ style.textContent = `
   #meeting-log-panel .rt-fab { pointer-events: auto !important; }
   #meeting-dock.dock-host.meeting-host { display: none !important; }
   #chat-dock.dock-host.chat-host {
-    position: fixed !important; left: 14px !important; bottom: 14px !important;
-    width: min(520px, calc(100vw - 28px)) !important; z-index: 130 !important; pointer-events: auto !important;
+    position: fixed !important; left: 12px !important; bottom: 14px !important;
+    width: min(460px, calc(100vw - 320px)) !important; z-index: 110 !important; pointer-events: auto !important;
   }
   #chat-dock .game-chat-panel {
     display: flex !important; flex-direction: column !important;
@@ -530,22 +562,49 @@ function ensureLeftCommandStack(root) {
   stack = document.createElement("div");
   stack.className = "left-command-stack";
   stack.innerHTML = `
-    <div class="left-mount-revenue"></div>
-    <div class="left-mount-roundtable"></div>
-    <div class="left-mount-decision"></div>
+    <nav class="left-tab-bar" aria-label="左側資訊分頁">
+      <button type="button" class="left-tab-btn" data-left-tab="revenue">營收</button>
+      <button type="button" class="left-tab-btn" data-left-tab="roundtable">圓桌</button>
+      <button type="button" class="left-tab-btn" data-left-tab="decision">決策</button>
+    </nav>
+    <div class="left-tab-panels">
+      <div class="left-tab-panel left-mount-revenue" data-left-tab="revenue"></div>
+      <div class="left-tab-panel left-mount-roundtable" data-left-tab="roundtable"></div>
+      <div class="left-tab-panel left-mount-decision" data-left-tab="decision"></div>
+    </div>
   `;
   root.appendChild(stack);
+  stack.querySelector(".left-tab-bar")?.addEventListener("click", (event) => {
+    const btn = event.target.closest("[data-left-tab]");
+    if (!btn) return;
+    homeUiState.leftTab = btn.getAttribute("data-left-tab") || "decision";
+    renderApp(getState());
+  });
   return stack;
 }
 
 function renderHomeLeft(state) {
   if (!rootRefs.left) return;
   const stack = ensureLeftCommandStack(rootRefs.left);
-  renderRevenueKpi(stack.querySelector(".left-mount-revenue"), state);
+  const tab = homeUiState.leftTab || "decision";
+  stack.querySelectorAll(".left-tab-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.getAttribute("data-left-tab") === tab);
+  });
+  stack.querySelectorAll(".left-tab-panel").forEach((panel) => {
+    const active = panel.getAttribute("data-left-tab") === tab;
+    panel.hidden = !active;
+  });
+  const revenueMount = stack.querySelector(".left-mount-revenue");
   const roundtableMount = stack.querySelector(".left-mount-roundtable");
-  renderMeetingLogPanel(roundtableMount, state, homeUiState, updateMeetingUiState);
-  rootRefs.left.classList.toggle("is-minimized", Boolean(homeUiState.roundTableMinimized));
-  renderDecisionStrip(stack.querySelector(".left-mount-decision"), state);
+  const decisionMount = stack.querySelector(".left-mount-decision");
+  if (tab === "revenue") renderRevenueKpi(revenueMount, state, { compact: true });
+  if (tab === "roundtable") {
+    renderMeetingLogPanel(roundtableMount, state, { ...homeUiState, roundTableMinimized: false }, updateMeetingUiState);
+    rootRefs.left.classList.remove("is-minimized");
+  } else {
+    rootRefs.left.classList.toggle("is-minimized", Boolean(homeUiState.roundTableMinimized));
+  }
+  if (tab === "decision") renderDecisionStrip(decisionMount, state, { compact: true });
 }
 
 function renderHomeRight(state) {

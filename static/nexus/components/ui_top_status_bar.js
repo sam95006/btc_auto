@@ -64,7 +64,7 @@ export function renderTopStatusBar(root, state) {
   const livePositions = Number(decision.live_position_count || 0);
   const positionSymbols = (decision.exchange_position_symbols || []).filter(Boolean);
   const positionNote = positionSymbols.length ? ` / ${positionSymbols.join(", ")}` : "";
-  const systemLabel = system.trading_paused ? "暫停中" : "運行中";
+  const systemLabel = system.trading_paused ? "暫停中" : system.block_new_entries ? "運行·控倉" : "運行中";
   const pauseReason = String(system.pause_reason || "").trim();
   const gateReason = String(system.block_reason || "").trim();
   const pauseNote = system.trading_paused && pauseReason ? ` / 原因 ${pauseReason}` : "";

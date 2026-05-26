@@ -308,6 +308,7 @@ class NexusRuntime:
         }
         self.event_bus.subscribe("*", self._on_event)
         self._hydrate_from_store()
+        self._validation_prune_counter = 0
 
     def _hydrate_from_store(self):
         snapshot = runtime_store.load_snapshot()
@@ -531,6 +532,11 @@ class NexusRuntime:
     def start(self):
         if self._thread and self._thread.is_alive():
             return
+        try:
+            runtime_store.prune_trade_validation_events(keep_limit=60)
+        except Exception as exc:
+            print(f"[nexus_runtime] validation prune skipped: {exc}")
+        self._ensure_trading_resumed(force=True)
         self.account_sync.start()
         if AI_LED_TRADING_ENABLED and self.llm_gateway.enabled():
             try:
@@ -577,7 +583,13 @@ class NexusRuntime:
         self.position_manager.update_unrealized(prices)
         self._sync_news()
 
-        self._maybe_auto_resume_from_validation_choke()
+        self._ensure_trading_resumed()
+        self._validation_prune_counter = int(getattr(self, "_validation_prune_counter", 0) or 0) + 1
+        if self._validation_prune_counter % 45 == 0:
+            try:
+                runtime_store.prune_trade_validation_events(keep_limit=80)
+            except Exception:
+                pass
 
         spot_account = self._sync_spot_account(prices)
         futures_account = self._sync_futures_account(prices)
@@ -1410,17 +1422,38 @@ class NexusRuntime:
                     context=market_contexts.get(fleet, {}) or {},
                 )
 
-    def _maybe_auto_resume_from_validation_choke(self):
-        if self._news_pause_active:
+    def _ensure_trading_resumed(self, force=False):
+        if self._news_pause_active and not force:
             return
-        if not self._manual_pause:
-            return
-        reason = str(self._pause_reason or self.growth_status.get("kill_switch_reason") or "")
-        if "validation_choke" not in reason:
-            return
+        reason = str(self._pause_reason or self.growth_status.get("kill_switch_reason") or "").lower()
+        soft_tokens = (
+            "validation_choke",
+            "recent_validation",
+            "kill_switch",
+            "validation",
+        )
+        critical_tokens = ("daily_max_loss", "news", "manual", "emergency", "exchange_sync_stale")
+        if not force:
+            if any(token in reason for token in critical_tokens):
+                return
+            if self._manual_pause and not any(token in reason for token in soft_tokens):
+                return
         self._manual_pause = False
         self._pause_reason = None
         self.growth_status.pop("kill_switch_reason", None)
+        if not self._news_pause_active:
+            self.state_manager.clear_alert()
+
+    def resume_trading(self, source="manual"):
+        self._news_pause_active = False
+        self._news_pause_until = 0.0
+        try:
+            runtime_store.prune_trade_validation_events(keep_limit=50)
+        except Exception:
+            pass
+        self._ensure_trading_resumed(force=True)
+        self._append_alert("INFO", f"交易已恢復（{source}）")
+        return {"ok": True, "source": source, "trading_paused": False}
 
     def _apply_kill_switch(self, futures_account):
         if not self.futures_client.is_configured():
@@ -1439,8 +1472,9 @@ class NexusRuntime:
         if not report.get("triggered"):
             return
         if report.get("action") == "already_paused":
-            if "validation_choke" in str(report.get("reason") or ""):
-                self._maybe_auto_resume_from_validation_choke()
+            reason_text = str(report.get("reason") or "").lower()
+            if "validation_choke" in reason_text or "validation" in reason_text:
+                self._ensure_trading_resumed(force=True)
             return
         reason = str(report.get("reason") or "kill_switch")
         pause_reasons = list(report.get("pause_reasons") or [])
@@ -2099,12 +2133,7 @@ class NexusRuntime:
                     self.state_manager.set_alert("WARNING", emergency=False, trading_paused=True)
                     result = {"ok": True, "command": command}
                 elif command == "RESUME_TRADING":
-                    self._manual_pause = False
-                    self._pause_reason = None
-                    self._news_pause_active = False
-                    self._news_pause_until = 0.0
-                    self.state_manager.clear_alert()
-                    result = {"ok": True, "command": command}
+                    result = {**self.resume_trading(source="control_api"), "command": command}
                 elif command in {"CLOSE_ALL_POSITIONS", "FLATTEN_ALL", "CLOSE_ALL"}:
                     payload = item.get("payload") or {}
                     result = self.flatten_all_positions(

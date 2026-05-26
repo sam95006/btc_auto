@@ -13,9 +13,10 @@ export function renderAlertPanel(root, state) {
   const health = state.trading_health || {};
   const radar = state.maturity_radar || health.maturity_radar || {};
   const paused = Boolean(system.trading_paused);
+  const blocked = Boolean(system.block_new_entries);
   const title = "系統狀態";
-  const detail = paused ? "暫停中" : "運行中";
-  const tone = paused ? "warn active" : "healthy";
+  const detail = paused ? "暫停中" : blocked ? "運行中·控倉" : "運行中";
+  const tone = paused ? "warn active" : blocked ? "warn" : "healthy";
   const score = Number(radar.overall_score || health.overall_score || 0);
   const grade = radar.grade || health.grade || "--";
   const approval = Number((health.approval_rate || 0) * 100).toFixed(1);
