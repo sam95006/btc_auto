@@ -180,6 +180,9 @@ class NexusRuntime:
         self.signal_fusion = SignalFusionEngine()
         self.price_feed = MarketPriceFeedService()
         self.trading_health = TradingHealthService()
+        # Execution-quality metrics are computed from recent trades + validation events.
+        # Keep it as a lightweight monitor so tick() can always proceed.
+        self.execution_quality_monitor = ExecutionQualityMonitor(runtime_store)
         self.maturity_radar = MaturityRadarService()
         self.ops_health = OpsHealthService()
         self.strategy_evolution = StrategyEvolutionService()
