@@ -190,8 +190,11 @@ class TradeValidationPipelineTests(unittest.TestCase):
                 },
                 context={"strategy_key": "btc_adaptive_strategy", "market_regime": "normal"},
             )
+        low_confidence = dict(self.base_proposal)
+        low_confidence["adjusted_confidence"] = 0.40
+        low_confidence["raw_confidence"] = 0.40
         result = self.pipeline.evaluate(
-            self.base_proposal,
+            low_confidence,
             market_context=self.healthy_context,
             truth_status=self.healthy_truth,
             recent_orders=[],

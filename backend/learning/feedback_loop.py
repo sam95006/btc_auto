@@ -20,6 +20,7 @@ from config.learning_config import (
     SYMBOL_COOLDOWN_WINDOW,
 )
 from config.growth_mode_config import BOLD_TESTNET_ENABLED
+from config.revenue_target_config import REVENUE_GROWTH_MODE
 
 
 def _now():
@@ -469,13 +470,13 @@ class LearningFeedbackLoop:
                 blocked_symbols.add(str(blacklisted).upper())
         guidance["blocked_symbols"] = sorted(blocked_symbols)
         bold_testnet = str(os.getenv("NEXUS_BOLD_TESTNET", "") or "").strip().lower() in {"1", "true", "yes", "on"}
-        if bold_testnet and guidance.get("pause_new_entries"):
+        if (bold_testnet or REVENUE_GROWTH_MODE) and guidance.get("pause_new_entries"):
             guidance["pause_new_entries"] = False
             guidance["regime_blocked"] = False
             cap = guidance.get("leverage_cap")
             if cap is None or float(cap or 0) <= 0:
                 guidance["leverage_cap"] = 10
-            guidance["learning_guard_mode"] = "bold_testnet_soft"
+            guidance["learning_guard_mode"] = "revenue_soft" if REVENUE_GROWTH_MODE else "bold_testnet_soft"
         return guidance
 
     def build_strategy_adaptation_snapshot(self, market_contexts=None):

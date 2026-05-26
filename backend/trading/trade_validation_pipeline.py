@@ -11,6 +11,7 @@ from config.quality_gates_config import (
 )
 from config.revenue_target_config import REVENUE_GROWTH_MODE
 from config.validation_config import (
+    BACKTEST_CONFIDENT_OVERRIDE,
     BACKTEST_MAX_ALLOWED_RECENT_LOSSES,
     BACKTEST_MAX_NEGATIVE_AVG_PNL,
     BACKTEST_MIN_SAMPLE_SIZE,
@@ -49,6 +50,18 @@ def _bold_testnet_enabled() -> bool:
     return str(os.getenv("NEXUS_BOLD_TESTNET", "") or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _learning_relaxed() -> bool:
+    return _bold_testnet_enabled() or REVENUE_GROWTH_MODE
+
+
+def _proposal_confidence(proposal) -> float:
+    return _safe_float(
+        proposal.get("confidence_score")
+        or proposal.get("adjusted_confidence")
+        or proposal.get("confidence")
+    )
+
+
 def _hard_learning_block(symbol, learning_guidance):
     symbol = str(symbol or "").upper()
     blocked = {str(item).upper() for item in (learning_guidance.get("blocked_symbols") or [])}
@@ -56,6 +69,8 @@ def _hard_learning_block(symbol, learning_guidance):
         return True, "learning_symbol_blacklisted"
     cooldown = dict(learning_guidance.get("symbol_cooldown") or {}).get(symbol) or {}
     if cooldown.get("active") and cooldown.get("reason") == "exchange_liquidation":
+        if _learning_relaxed():
+            return False, None
         return True, "learning_liquidation_cooldown"
     return False, None
 
@@ -165,15 +180,27 @@ class BacktestValidationEngine:
         approved = True
         reason = "historical_edge_ok"
         score = 0.55 + (win_rate - 0.5) * 0.6
+        confidence = _proposal_confidence(proposal)
         if trade_count >= BACKTEST_MIN_SAMPLE_SIZE:
             if win_rate < min_win_rate and avg_pnl <= BACKTEST_MAX_NEGATIVE_AVG_PNL:
-                approved = False
-                reason = "historical_edge_too_weak"
-                score = 0.2
+                severe_edge = win_rate < (0.22 if REVENUE_GROWTH_MODE else min_win_rate * 0.5)
+                if REVENUE_GROWTH_MODE and confidence >= BACKTEST_CONFIDENT_OVERRIDE and not severe_edge:
+                    approved = True
+                    reason = "historical_edge_caution"
+                    score = max(score, 0.5)
+                else:
+                    approved = False
+                    reason = "historical_edge_too_weak"
+                    score = 0.2
             elif recent_losses >= BACKTEST_MAX_ALLOWED_RECENT_LOSSES:
-                approved = False
-                reason = "recent_loss_streak"
-                score = 0.15
+                if REVENUE_GROWTH_MODE and confidence >= BACKTEST_CONFIDENT_OVERRIDE:
+                    approved = True
+                    reason = "recent_loss_streak_caution"
+                    score = max(score, 0.48)
+                else:
+                    approved = False
+                    reason = "recent_loss_streak"
+                    score = 0.15
         else:
             reason = "history_sample_small"
             score = max(score, 0.53)
@@ -527,7 +554,7 @@ class TradeValidationPipeline:
             4,
         )
         learning_block_reason = None
-        bold_testnet = _bold_testnet_enabled()
+        relaxed_learning = _learning_relaxed()
         symbol = str(proposal.get("symbol") or "").upper()
         hard_block, hard_reason = _hard_learning_block(symbol, learning_guidance)
         lesson_block, lesson_reason = _symbol_lesson_gate(symbol, proposal, learning_guidance)
@@ -545,18 +572,22 @@ class TradeValidationPipeline:
         elif quality_block:
             approved = False
             learning_block_reason = quality_reason
-        elif learning_guidance.get("pause_new_entries") and not bold_testnet:
+        elif learning_guidance.get("pause_new_entries") and not relaxed_learning:
             approved = False
             learning_block_reason = "learning_pause_due_to_recent_losses"
-        elif learning_guidance.get("regime_blocked") and not bold_testnet:
+        elif learning_guidance.get("regime_blocked") and not relaxed_learning:
             approved = False
             learning_block_reason = "learning_regime_blocked"
         else:
             symbol_cooldown = dict(learning_guidance.get("symbol_cooldown", {}) or {})
-            if bool((symbol_cooldown.get(symbol) or {}).get("active")) and not bold_testnet:
+            cooldown_active = bool((symbol_cooldown.get(symbol) or {}).get("active"))
+            if cooldown_active and not relaxed_learning:
                 approved = False
                 learning_block_reason = "learning_symbol_cooldown"
-            elif not bold_testnet:
+            elif cooldown_active and relaxed_learning and _proposal_confidence(proposal) < BACKTEST_CONFIDENT_OVERRIDE:
+                approved = False
+                learning_block_reason = "learning_symbol_cooldown"
+            elif not relaxed_learning:
                 failure_flags = set(learning_guidance.get("failure_focus_flags", []) or [])
                 if "low_liquidity" in failure_flags and str(market_context.get("liquidity_status") or "healthy").lower() != "healthy":
                     approved = False

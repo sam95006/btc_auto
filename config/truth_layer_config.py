@@ -1,5 +1,7 @@
 import os
 
+from config.revenue_target_config import REVENUE_GROWTH_MODE
+
 
 def _csv_env(name: str, default: tuple[str, ...]) -> tuple[str, ...]:
     raw = str(os.getenv(name, "") or "").strip()
@@ -30,6 +32,8 @@ HQ_SPOT_ALLOWED_ASSETS = _csv_env(
 )
 
 # AI truth layer guard controls.
-MAX_DEGRADED_CONTEXTS_FOR_FUTURES_AI = 2
+MAX_DEGRADED_CONTEXTS_FOR_FUTURES_AI = int(
+    os.getenv("NEXUS_MAX_DEGRADED_CONTEXTS", "4" if REVENUE_GROWTH_MODE else "2") or (4 if REVENUE_GROWTH_MODE else 2)
+)
 REQUIRE_SPOT_STREAM_FOR_AI = False
 REQUIRE_FUTURES_STREAM_FOR_AI = False

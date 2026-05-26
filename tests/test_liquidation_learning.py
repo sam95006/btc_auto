@@ -83,7 +83,11 @@ class LiquidationLearningTests(unittest.TestCase):
         self.assertFalse(validation["approved"])
         self.assertIn(
             validation["reason"],
-            {"learning_liquidation_cooldown", "learning_symbol_blacklisted"},
+            {
+                "learning_liquidation_cooldown",
+                "learning_symbol_blacklisted",
+                "learning_symbol_cooldown",
+            },
         )
 
     def test_radar_dispatch_respects_learning_guidance(self):

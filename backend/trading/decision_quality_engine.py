@@ -123,7 +123,9 @@ class DecisionQualityValidationEngine:
         if float(quality.get("quality_score", 0.0) or 0.0) < min_quality:
             approved = False
             reason = "quality_below_growth_threshold"
-        if setup_stats.get("blocked"):
+        if setup_stats.get("blocked") and not (
+            REVENUE_GROWTH_MODE and float(quality.get("quality_score", 0.0) or 0.0) >= min_quality
+        ):
             approved = False
             reason = "setup_expectancy_too_low"
         if fleet_metrics.get("state") == "PAUSED":

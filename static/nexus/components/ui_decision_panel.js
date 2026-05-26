@@ -37,6 +37,12 @@ function rejectReasonLabel(reason) {
     growth_guard_block: "成長護欄",
     decision_quality_ok: "通過",
     approved: "通過",
+    historical_edge_too_weak: "歷史優勢不足",
+    historical_edge_caution: "歷史偏弱（高信心放行）",
+    recent_loss_streak: "連虧紀錄",
+    recent_loss_streak_caution: "連虧中（高信心試單）",
+    learning_liquidation_cooldown: "強平冷卻",
+    learning_symbol_cooldown: "標的冷卻",
   };
   for (const [token, label] of Object.entries(map)) {
     if (key.includes(token)) return label;

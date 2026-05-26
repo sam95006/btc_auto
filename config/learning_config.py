@@ -1,6 +1,7 @@
 import os
 
 from config.growth_mode_config import BOLD_TESTNET_ENABLED
+from config.revenue_target_config import REVENUE_GROWTH_MODE
 
 
 def _env_int(name: str, default: int) -> int:
@@ -55,7 +56,10 @@ LIQUIDATION_SYMBOL_COOLDOWN_SECONDS = _env_int(
 )
 # Strong liquidations: temporary pause + stricter re-entry rules, NOT permanent symbol blacklist.
 LIQUIDATION_PERMANENT_BLACKLIST = _env_bool("NEXUS_LIQUIDATION_PERMANENT_BLACKLIST", False)
-LIQUIDATION_REENTRY_MIN_CONFIDENCE = _env_float("NEXUS_LIQUIDATION_REENTRY_MIN_CONFIDENCE", 0.72)
+LIQUIDATION_REENTRY_MIN_CONFIDENCE = _env_float(
+    "NEXUS_LIQUIDATION_REENTRY_MIN_CONFIDENCE",
+    0.58 if REVENUE_GROWTH_MODE else 0.72,
+)
 LIQUIDATION_REENTRY_LEVERAGE_CAP = _env_int("NEXUS_LIQUIDATION_REENTRY_LEVERAGE_CAP", 5)
 LIQUIDATION_REENTRY_SIZE_MULT = _env_float("NEXUS_LIQUIDATION_REENTRY_SIZE_MULT", 0.55)
 HIGH_LEVERAGE_FAILURE_THRESHOLD = 20
