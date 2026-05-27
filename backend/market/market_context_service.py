@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from backend.market.technical_context_service import TechnicalContextService
 from config.market_data_config import (
     CONTEXT_SLIPPAGE_NOTIONAL,
     DEFAULT_BOOK_LIMIT,
@@ -48,9 +49,14 @@ def _freshness_bucket(age_ms, threshold_ms):
 
 
 class MarketContextService:
-    def __init__(self, spot_client=None, futures_client=None):
+    def __init__(self, spot_client=None, futures_client=None, technical_context_service=None):
         self.spot_client = spot_client
         self.futures_client = futures_client
+        self.technical_context_service = technical_context_service or TechnicalContextService(futures_client)
+
+    def begin_technical_tick(self):
+        if self.technical_context_service:
+            self.technical_context_service.begin_tick()
 
     def build_futures_contexts(self, fleet_symbol_map, prices, futures_account=None):
         contexts = {}
@@ -73,12 +79,31 @@ class MarketContextService:
     def build_symbol_context(self, symbol, price_payload=None, position_payload=None, fleet=None):
         if not (self.futures_client and self.futures_client.is_configured()):
             return {}
-        return self._build_single_futures_context(
+        position_payload = dict(position_payload or {})
+        signed_qty = _safe_float(position_payload.get("signed_quantity"))
+        position_side = "LONG" if signed_qty > 0 else "SHORT" if signed_qty < 0 else None
+        context = self._build_single_futures_context(
             fleet or symbol,
             symbol,
             price_payload or {},
-            position_payload or {},
+            position_payload,
         )
+        return self._merge_technical_context(context, symbol, position_side=position_side)
+
+    def _merge_technical_context(self, context, symbol, position_side=None):
+        if not context or not self.technical_context_service:
+            return context
+        technical = self.technical_context_service.analyze(symbol, position_side=position_side) or {}
+        flat = dict(technical.get("flat") or {})
+        intervals = dict(technical.get("intervals") or {})
+        if not flat and not intervals:
+            return context
+        merged = dict(context)
+        if intervals:
+            merged["technical"] = intervals
+        if flat:
+            merged.update(flat)
+        return merged
 
     def build_truth_layer_status(self, prices, spot_account, futures_account, account_sync_status, market_contexts):
         now_ms = int(datetime.now().timestamp() * 1000)

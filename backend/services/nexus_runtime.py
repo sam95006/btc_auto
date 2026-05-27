@@ -620,6 +620,7 @@ class NexusRuntime:
         self._last_binance_sync["sync_status"] = "connected" if self.spot_client.is_configured() or self.futures_client.is_configured() else "disconnected"
         self._last_binance_sync["errors"] = [err for err in [spot_account.get("sync_error"), futures_account.get("sync_error")] if err]
         heuristic_contexts = self._build_market_contexts(prices)
+        self.market_context_service.begin_technical_tick()
         exchange_contexts = self.market_context_service.build_futures_contexts(
             {fleet: self.futures_client.resolve_symbol(fleet) for fleet in FLEETS},
             prices,
@@ -655,6 +656,8 @@ class NexusRuntime:
         self.radar_market_scan_service.symbols = tuple(radar_symbols)
         self.radar_scan = self.radar_market_scan_service.scan()
         self.radar_state = dict(self.radar_scan or {})
+        self._enrich_market_contexts_with_symbols(market_contexts, futures_account, prices)
+        self.market_context = market_contexts
         self._radar_llm_proposals = self.radar_llm_bridge.fetch_proposals(self.radar_scan, self.truth_layer_status)
         self.whale_state = {
             "generated_at": self.radar_scan.get("generated_at", _now()),
@@ -2122,6 +2125,52 @@ class NexusRuntime:
                 "RADAR": RADAR_ALLOCATION_WEIGHT,
             },
         }
+
+    def _enrich_market_contexts_with_symbols(self, market_contexts, futures_account, prices):
+        if not self.futures_client.is_configured():
+            return
+        positions_by_symbol = {
+            str(item.get("symbol") or "").upper(): dict(item)
+            for item in ((futures_account or {}).get("positions") or [])
+            if item.get("symbol")
+        }
+        symbols = set()
+        for fleet in FLEETS:
+            symbols.add(self.futures_client.resolve_symbol(fleet))
+        for symbol, payload in positions_by_symbol.items():
+            if abs(float(payload.get("signed_quantity") or payload.get("quantity") or 0.0)):
+                symbols.add(symbol)
+        radar = self.radar_scan or {}
+        for row in list(radar.get("candidates") or []) + list(radar.get("whale_watch") or []):
+            symbols.add(str(row.get("symbol") or "").upper())
+        fleet_by_symbol = {
+            self.futures_client.resolve_symbol(fleet): fleet for fleet in FLEETS
+        }
+        for symbol in symbols:
+            if not symbol:
+                continue
+            sym = str(symbol).upper()
+            fleet = fleet_by_symbol.get(sym, sym)
+            price_payload = prices.get(fleet, {}) if fleet in FLEETS else {}
+            if not price_payload:
+                for candidate in FLEETS:
+                    if self.futures_client.resolve_symbol(candidate) == sym:
+                        price_payload = prices.get(candidate, {})
+                        fleet = candidate
+                        break
+            context = self.market_context_service.build_symbol_context(
+                sym,
+                price_payload=price_payload,
+                position_payload=positions_by_symbol.get(sym, {}),
+                fleet=fleet,
+            )
+            if context:
+                market_contexts[sym] = context
+                if fleet in FLEETS:
+                    market_contexts[fleet] = {
+                        **dict(market_contexts.get(fleet) or {}),
+                        **context,
+                    }
 
     def _build_market_contexts(self, prices):
         btc_now = float(prices.get("BTC", {}).get("price", 0.0) or 0.0)

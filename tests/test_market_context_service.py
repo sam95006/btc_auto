@@ -22,6 +22,15 @@ class _FakeFuturesClient:
     def get_open_interest(self, symbol):
         return {"openInterest": "250000"}
 
+    def get_klines(self, symbol, interval="5m", limit=100):
+        rows = []
+        price = 100.0
+        for idx in range(40):
+            close = price + 0.2
+            rows.append([0, str(price), str(close + 0.1), str(price - 0.1), str(close), "1200", 0, 0, 0, 0, 0, 0])
+            price = close
+        return rows
+
 
 class MarketContextServiceTests(unittest.TestCase):
     def test_build_futures_context_contains_extended_perception_fields(self):
@@ -44,6 +53,9 @@ class MarketContextServiceTests(unittest.TestCase):
             "oi_notional_status",
             "liquidation_distance_pct",
             "liquidation_risk",
+            "technical_ready",
+            "rsi_14",
+            "trend_bias",
         ):
             self.assertIn(key, payload)
 

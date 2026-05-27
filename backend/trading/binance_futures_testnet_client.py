@@ -101,6 +101,15 @@ class BinanceFuturesTestnetClient:
     def get_open_interest(self, symbol):
         return self._public_request("GET", "/fapi/v1/openInterest", {"symbol": symbol})
 
+    def get_klines(self, symbol, interval="5m", limit=100):
+        params = {
+            "symbol": str(symbol).upper(),
+            "interval": str(interval),
+            "limit": int(limit),
+        }
+        data = self._public_request("GET", "/fapi/v1/klines", params)
+        return data if isinstance(data, list) else []
+
     def create_listen_key(self):
         data = self._signed_request("POST", "/fapi/v1/listenKey", params={}, signed=False)
         return str(data.get("listenKey") or "")
