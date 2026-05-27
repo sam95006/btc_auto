@@ -36,6 +36,7 @@ from backend.monitoring.kill_switch_service import KillSwitchService
 from backend.autonomy.rule_signal_bridge import RuleSignalBridge
 from backend.autonomy.strategy_proposal_hub import StrategyProposalHub
 from backend.risk.monthly_drawdown_guard import MonthlyDrawdownGuard
+from backend.trading.radar_dispatch_service import RadarDispatchService
 from config.revenue_target_config import (
     EXPLORATION_MIN_QUALITY,
     FUTURES_DEPLOY_FRACTION,
@@ -1854,6 +1855,10 @@ class NexusRuntime:
     def _record_trade_result(self, result, context=None):
         payload = dict(result)
         payload.setdefault("timestamp", _now())
+        if not payload.get("event") and (
+            payload.get("exit_reason") or payload.get("exit_price") or payload.get("exit_class")
+        ):
+            payload["event"] = "CLOSE"
         context = context or {}
         fleet = str(payload.get("fleet") or "").upper()
         setup_type = payload.get("setup_type") or context.get("setup_type")
@@ -3526,7 +3531,14 @@ class NexusRuntime:
 
             for trade in trades:
                 raw_time = int(trade.get("time") or 0)
-                event_time = datetime.fromtimestamp(raw_time / 1000).strftime("%Y-%m-%d %H:%M:%S") if raw_time else _now()
+                tzinfo = getattr(nexus_now(), "tzinfo", None)
+                if raw_time:
+                    if tzinfo is not None:
+                        event_time = datetime.fromtimestamp(raw_time / 1000, tz=tzinfo).strftime("%Y-%m-%d %H:%M:%S")
+                    else:
+                        event_time = datetime.fromtimestamp(raw_time / 1000).strftime("%Y-%m-%d %H:%M:%S")
+                else:
+                    event_time = _now()
                 live_trades.append(
                     {
                         "id": f"live_trade_{fleet}_{trade.get('id')}",
@@ -3539,6 +3551,7 @@ class NexusRuntime:
                         "pnl": _safe_float(trade.get("realizedPnl")),
                         "commission": _safe_float(trade.get("commission")),
                         "time": event_time,
+                        "timestamp": event_time,
                         "reason": "binance_live_trade",
                         "market_type": "futures",
                         "execution_source": "binance_futures_testnet",
@@ -3577,6 +3590,37 @@ class NexusRuntime:
             {"wallet_total": 0.0, "margin_total": 0.0, "available_balance": 0.0, "unrealized_pnl": 0.0, "positions": []},
         )
 
+        def _normalize_trade_for_revenue(item: dict) -> dict:
+            """Normalize trade rows so monthly revenue KPI can count them."""
+
+            payload = dict(item or {})
+            payload.setdefault("market_type", "futures")
+            ts = payload.get("timestamp")
+            if not (isinstance(ts, str) and len(ts) >= 7 and ts[:4].isdigit() and ts[4] == "-" and ts[6] == "-"):
+                raw_time = payload.get("time")
+                if isinstance(raw_time, str) and len(raw_time) >= 7 and raw_time[:4].isdigit() and raw_time[4] == "-" and raw_time[6] == "-":
+                    payload["timestamp"] = raw_time
+                else:
+                    try:
+                        epoch = float(raw_time or 0.0)
+                        if epoch > 10_000_000_000:
+                            epoch = epoch / 1000.0
+                        tzinfo = getattr(nexus_now(), "tzinfo", None)
+                        if tzinfo is not None:
+                            payload["timestamp"] = datetime.fromtimestamp(epoch, tz=tzinfo).strftime("%Y-%m-%d %H:%M:%S")
+                        else:
+                            payload["timestamp"] = datetime.fromtimestamp(epoch).strftime("%Y-%m-%d %H:%M:%S")
+                    except Exception:
+                        payload.setdefault("timestamp", _now())
+
+            event = str(payload.get("event") or "").upper()
+            if event not in {"CLOSE", "LIVE"}:
+                if payload.get("exit_reason") or payload.get("exit_price") or payload.get("exit_class"):
+                    payload["event"] = "CLOSE"
+                elif str(payload.get("market_type") or "futures") == "futures":
+                    payload["event"] = "LIVE"
+            return payload
+
         exchange_capital = build_ui_capital(
             spot_account,
             futures_account,
@@ -3595,6 +3639,10 @@ class NexusRuntime:
         else:
             combined_orders = (self.hq_spot_orders + self.execution_engine.recent_orders(limit=120))[:160]
             combined_trades = (self.hq_spot_trades + self.execution_engine.recent_trades(limit=120))[:160]
+
+        combined_trades = [
+            _normalize_trade_for_revenue(item) if isinstance(item, dict) else item for item in (combined_trades or [])
+        ]
         active_plan = ledger_capital.get("fleets", {})
         futures_fill_count = len(futures_account.get("fills", []) or [])
         spot_trade_count = len(spot_account.get("trade_history", []) or [])
@@ -3885,22 +3933,28 @@ class NexusRuntime:
         trade_results_db = runtime_store.recent_trade_results(limit=400)
         # UI revenue KPI should reflect real exchange fills even when local trade_results
         # has not yet recorded CLOSE/LIVE rows (e.g. after deploy/restart).
-        merged_trade_results = list(trade_results_db)
+        merged_trade_results = [
+            _normalize_trade_for_revenue(item) if isinstance(item, dict) else item for item in list(trade_results_db)
+        ]
         try:
-            seen_ids = {str(item.get("id") or "") for item in merged_trade_results if item.get("id")}
+            seen_ids = {str(item.get("id") or item.get("order_id") or "") for item in merged_trade_results if item.get("id") or item.get("order_id")}
             for item in list(combined_trades or [])[:240]:
                 if str(item.get("market_type") or "futures") != "futures":
                     continue
-                if str(item.get("event") or "").upper() not in {"LIVE", "CLOSE"}:
+                norm = _normalize_trade_for_revenue(item) if isinstance(item, dict) else item
+                if str(norm.get("event") or "").upper() not in {"LIVE", "CLOSE"}:
                     continue
-                _id = str(item.get("id") or "")
+                _id = str(norm.get("id") or norm.get("order_id") or "")
                 if _id and _id in seen_ids:
                     continue
-                merged_trade_results.append(item)
+                merged_trade_results.append(norm)
                 if _id:
                     seen_ids.add(_id)
         except Exception:
-            merged_trade_results = list(trade_results_db) or list(combined_trades or [])
+            merged_trade_results = [
+                _normalize_trade_for_revenue(item) if isinstance(item, dict) else item
+                for item in (list(trade_results_db) or list(combined_trades or []))
+            ]
         futures_equity = float(
             (snapshot_payload.get("compound_capital") or {}).get("live_futures_equity")
             or capital.get("futures_margin_balance")

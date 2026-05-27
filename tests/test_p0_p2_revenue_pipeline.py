@@ -27,6 +27,26 @@ class P0P2RevenuePipelineTests(unittest.TestCase):
         report = MonthlyRevenueTracker().build_report(3000.0, trade_results=trades)
         self.assertGreaterEqual(report["realized_pnl_net"], 12.0)
 
+    def test_monthly_ignores_exit_without_close_event(self):
+        """Raw DB rows from AI exits often omit event=CLOSE; runtime normalizes before KPI."""
+        trades = [
+            {
+                "market_type": "futures",
+                "pnl": -0.04,
+                "commission": 0.2,
+                "exit_reason": "ai_position_liquidation_pressure",
+                "timestamp": report_month(),
+            }
+        ]
+        report = MonthlyRevenueTracker().build_report(3000.0, trade_results=trades)
+        self.assertEqual(report["trade_count"], 0)
+
+        normalized = dict(trades[0])
+        normalized["event"] = "CLOSE"
+        report2 = MonthlyRevenueTracker().build_report(3000.0, trade_results=[normalized])
+        self.assertEqual(report2["trade_count"], 1)
+        self.assertLess(report2["realized_pnl_net"], 0)
+
     def test_revenue_plan_stages(self):
         monthly = {"target_usd": 1000, "realized_pnl_net": 50, "current_futures_equity": 3000}
         plan = RevenuePlanService().build_plan(monthly)
