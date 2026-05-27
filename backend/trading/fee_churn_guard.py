@@ -94,8 +94,6 @@ class FeeChurnGuard:
             liq_risk = str((action.get("market_context") or {}).get("liquidation_risk") or "").lower()
             if AI_LIQ_EXIT_REQUIRES_CRITICAL and liq_risk != "critical":
                 return False, "fee_churn_liq_not_critical"
-        if reason == "technical_regime_change" and unrealized > 0:
-            return True, None
         if abs(unrealized) < AI_EXIT_MIN_ABS_PNL_USD and reason in {
             "liquidation_pressure",
             "profit_lock_near_liquidation_band",

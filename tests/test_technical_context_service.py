@@ -1,6 +1,6 @@
 import unittest
 
-from backend.governance.ai_position_manager import AiPositionManager
+from backend.governance.ai_exit_planner import AiExitPlanner
 from backend.market.technical_context_service import TechnicalContextService
 
 
@@ -74,26 +74,33 @@ class TechnicalContextServiceTests(unittest.TestCase):
         self.assertEqual(flat.get("trend_bias"), "bearish")
 
 
-class AiPositionManagerTechnicalExitTests(unittest.TestCase):
-    def test_long_position_triggers_regime_exit_when_score_high(self):
-        manager = AiPositionManager()
-        action = manager._evaluate_one(
+class AiExitPlannerAdvisoryTests(unittest.TestCase):
+    def test_exit_planner_includes_tp_advisory_when_technical_fields_present(self):
+        planner = AiExitPlanner()
+        payload = planner.plan_for_position(
             {
                 "symbol": "ETHUSDT",
                 "fleet": "ETH",
-                "side": "LONG",
-                "margin": 100.0,
+                "side": "BUY",
+                "entry_price": 100.0,
+                "mark_price": 105.0,
+                "quantity": 1.0,
+                "margin": 50.0,
                 "unrealized_pnl": 5.0,
+                "r_exit_state": {"risk_r_usd": 5.0},
             },
-            {
-                "technical_exit_score": 0.72,
+            market_context={
+                "atr_14": 1.2,
                 "trend_bias": "bearish",
+                "technical_exit_score": 0.72,
                 "regime_change": True,
             },
         )
-        self.assertIsNotNone(action)
-        self.assertEqual(action.get("reason"), "technical_regime_change")
-        self.assertIn(action.get("action"), {"reduce_or_close", "take_partial_profit"})
+        self.assertIsNotNone(payload)
+        self.assertIn("tp_advisory", payload)
+        advisory = payload.get("tp_advisory") or {}
+        self.assertIn("suggested_tp_levels", advisory)
+        self.assertTrue(len(advisory.get("suggested_tp_levels") or []) >= 2)
 
 
 if __name__ == "__main__":

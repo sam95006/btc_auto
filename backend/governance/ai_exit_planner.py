@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from config.exit_config import RISK_PCT, STOP_R, TP_LADDER
+from backend.governance.ai_tp_band_planner import AiTpBandPlanner
 
 
 def _safe_float(value, default=0.0):
@@ -12,6 +13,9 @@ def _safe_float(value, default=0.0):
 
 class AiExitPlanner:
     """Compute TP1–TP3 target prices from entry, size, and R ladder (for UI + monitoring)."""
+
+    def __init__(self):
+        self.tp_band_planner = AiTpBandPlanner()
 
     def plan_for_position(self, position, market_context=None):
         position = dict(position or {})
@@ -49,7 +53,7 @@ class AiExitPlanner:
                 }
             )
 
-        return {
+        payload = {
             "symbol": str(position.get("symbol") or "").upper(),
             "fleet": str(position.get("fleet") or "").upper(),
             "side": side,
@@ -62,6 +66,10 @@ class AiExitPlanner:
             "execution_mode": "nexus_tick_r_exit",
             "note": "Binance 介面 TP/SL 欄位為空屬正常；由 NEXUS 每 tick 監控 R 止盈並下 reduceOnly 單。",
         }
+        advisory = self.tp_band_planner.suggest(position, market_context=market_context)
+        if advisory:
+            payload["tp_advisory"] = advisory
+        return payload
 
     def plan_all(self, positions, market_contexts=None):
         market_contexts = market_contexts or {}

@@ -18,11 +18,6 @@ import os
 
 from backend.governance.ai_exit_planner import AiExitPlanner
 from config.fee_churn_config import AI_LIQ_EXIT_REQUIRES_CRITICAL
-from config.technical_context_config import (
-    REGIME_EXIT_ENABLED,
-    REGIME_EXIT_MIN_PNL_PCT,
-    REGIME_EXIT_MIN_SCORE,
-)
 
 
 def _env_float(name, default):
@@ -110,33 +105,4 @@ class AiPositionManager:
                 "reason": "news_conflict",
                 "confidence": 0.65,
             }
-        if REGIME_EXIT_ENABLED and pnl_pct >= REGIME_EXIT_MIN_PNL_PCT:
-            tech_score = _safe_float(market_context.get("technical_exit_score"))
-            regime_change = bool(market_context.get("regime_change"))
-            side = str(position.get("side") or "").upper()
-            trend_bias = str(market_context.get("trend_bias") or "neutral").lower()
-            position_conflict = (side == "LONG" and trend_bias == "bearish") or (
-                side == "SHORT" and trend_bias == "bullish"
-            )
-            if tech_score >= REGIME_EXIT_MIN_SCORE and position_conflict:
-                return {
-                    "symbol": symbol,
-                    "fleet": fleet,
-                    "action": "reduce_or_close",
-                    "urgency": "medium",
-                    "reason": "technical_regime_change",
-                    "confidence": min(0.9, 0.55 + tech_score * 0.35),
-                    "market_context": market_context,
-                }
-            if regime_change and pnl_pct >= REGIME_EXIT_MIN_PNL_PCT * 1.5:
-                return {
-                    "symbol": symbol,
-                    "fleet": fleet,
-                    "action": "take_partial_profit",
-                    "urgency": "low",
-                    "reason": "technical_regime_change",
-                    "confidence": 0.68,
-                    "fraction": 0.35,
-                    "market_context": market_context,
-                }
         return None
