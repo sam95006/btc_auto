@@ -34,13 +34,15 @@ class RadarMarketScanServiceTests(unittest.TestCase):
         service = RadarMarketScanService(
             futures_client=_StubFuturesClient(),
             market_context_service=_StubMarketContextService(),
-            symbols=("BTCUSDT", "ETHUSDT"),
+            symbols=("BTCUSDT", "DOGEUSDT"),
             cache_seconds=1,
         )
         snapshot = service.scan()
         self.assertEqual(snapshot["scan_status"], "ok")
         self.assertTrue(snapshot["candidates"])
-        self.assertIn("whale_watch", snapshot)
+        self.assertTrue(snapshot["whale_watch"])
+        symbols = {item["symbol"] for item in snapshot["whale_watch"]}
+        self.assertIn("BTCUSDT", symbols)
 
 
 if __name__ == "__main__":

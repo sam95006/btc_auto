@@ -927,6 +927,78 @@ class NexusRuntime:
         last = float(getattr(self, "_last_news_sync_at", 0.0) or 0.0)
         return (time.time() - last) >= NEWS_REFRESH_SECONDS
 
+    def _build_radar_briefing(self, base_notes):
+        scan = dict(self.radar_scan or {})
+        whale_rows = list(scan.get("whale_watch") or [])
+        candidates = list(scan.get("candidates") or [])
+        if whale_rows:
+            top = whale_rows[0]
+            summary = (
+                f"巨鯨動態：{top.get('symbol')} {top.get('summary')} "
+                f"(訂單簿 {top.get('bias', 'balanced')}, 資金費率 {float(top.get('funding_rate') or 0) * 100:.3f}%)。"
+            )
+        elif candidates:
+            top = candidates[0]
+            summary = (
+                f"雷達掃描：{top.get('symbol')} 結構分 {top.get('candidate_score')} "
+                f"方向 {top.get('candidate_side', 'WATCH')}。"
+            )
+        else:
+            summary = "雷達掃描中，尚未偵測到巨鯨級訂單簿／資金費率異常。"
+        watchlist = [str(item.get("symbol") or "").replace("USDT", "") for item in whale_rows[:4] if item.get("symbol")]
+        if not watchlist:
+            watchlist = ["SOL", "PEPE", "BNB", "DOGE"]
+        return {
+            **base_notes,
+            "summary": summary,
+            "meeting_type": "RADAR_SCAN",
+            "station_instructions": [
+                "監控巨鯨、資金流與異常成交（合約訂單簿，非新聞牆）。",
+                "特別關注高資金費率與訂單簿失衡標的。",
+            ],
+            "fleet_instructions": [],
+            "forbidden_actions": [],
+            "watchlist": watchlist,
+            "risk_notes": [],
+            "radar_scan_status": scan.get("scan_status", "idle"),
+            "whale_watch_count": len(whale_rows),
+        }
+
+    def _build_funding_snapshot(self, market_contexts=None):
+        rows = []
+        for fleet, ctx in dict(market_contexts or self.market_context or {}).items():
+            if not isinstance(ctx, dict):
+                continue
+            symbol = str(ctx.get("symbol") or "").upper()
+            if not symbol:
+                continue
+            rows.append(
+                {
+                    "fleet": fleet,
+                    "symbol": symbol,
+                    "funding_rate": round(float(ctx.get("funding_rate") or 0.0), 8),
+                    "basis_bps": round(float(ctx.get("basis_bps") or 0.0), 4),
+                    "mark_price": round(float(ctx.get("mark_price") or 0.0), 8),
+                }
+            )
+        for item in list((self.radar_scan or {}).get("market_board") or [])[:20]:
+            symbol = str(item.get("symbol") or "").upper()
+            if not symbol or any(row.get("symbol") == symbol for row in rows):
+                continue
+            rows.append(
+                {
+                    "fleet": "RADAR",
+                    "symbol": symbol,
+                    "funding_rate": round(float(item.get("funding_rate") or 0.0), 8),
+                    "basis_bps": round(float(item.get("basis_bps") or 0.0), 4),
+                    "mark_price": round(float(item.get("mark_price") or 0.0), 8),
+                }
+            )
+        return {
+            "generated_at": (self.radar_scan or {}).get("generated_at") or _now(),
+            "rows": rows,
+        }
+
     def _refresh_station_briefings(self):
         latest = self.latest_news[0] if self.latest_news else {}
         latest_text = _clean_display_text(
@@ -963,14 +1035,7 @@ class NexusRuntime:
                 "watchlist": watch_assets,
                 "risk_notes": [],
             },
-            "RADAR": {
-                **base_notes,
-                "station_instructions": ["監控巨鯨、資金流與異常成交。", "特別關注 SOL / PEPE 等高波動標的是否出現反向異動。"],
-                "fleet_instructions": [],
-                "forbidden_actions": [],
-                "watchlist": ["SOL", "PEPE", "BTC"],
-                "risk_notes": [],
-            },
+            "RADAR": self._build_radar_briefing(base_notes),
         }
 
         for fleet in FLEETS:
@@ -3813,7 +3878,7 @@ class NexusRuntime:
             "market_overview": self.market_overview,
             "news": self.latest_news,
             "whale": self.whale_state,
-            "funding": {},
+            "funding": self._build_funding_snapshot(self.market_context),
             "alerts": list(self.alerts),
             "meetings": [self._normalize_meeting_record(item) for item in self.meetings],
             "events": self.event_bus.recent(limit=80),

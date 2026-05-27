@@ -1,5 +1,6 @@
 import { escapeHtml, normalizeText, translateImpact } from "../utils/presentation.js?v=20260510a";
 import { getLayoutHotspots } from "../layout_state.js?v=20260503a";
+import { newsByBucket } from "./station_hotspot_content.js?v=20260528a";
 
 const NEWS_HOTSPOTS = [
   { id: "macro", label: "宏觀數據牆", x: 0.1, y: 0.22, w: 0.24, h: 0.3, section: "macro" },
@@ -10,24 +11,12 @@ const NEWS_HOTSPOTS = [
   { id: "ai_center", label: "AI 反思中心", x: 0.38, y: 0.6, w: 0.24, h: 0.26, section: "reflection" },
 ];
 
-const MACRO_KEYWORDS = ["cpi", "pce", "gdp", "inflation", "jobs", "treasury", "tariff", "macro", "yield"];
-const FED_KEYWORDS = ["fed", "fomc", "powell", "rate", "sec", "etf", "chair", "policy", "federal reserve"];
-
 function textBody(item) {
   return normalizeText(item.summary_zh || item.summary || item.title_zh || item.title, "目前沒有可顯示的新聞摘要。");
 }
 
-function inferBucket(item) {
-  const explicit = String(item.bucket || "").toLowerCase();
-  if (explicit) return explicit;
-  const haystack = `${item.category || ""} ${item.title || ""} ${item.summary || ""}`.toLowerCase();
-  if (FED_KEYWORDS.some((word) => haystack.includes(word))) return "fed";
-  if (MACRO_KEYWORDS.some((word) => haystack.includes(word))) return "macro";
-  return "crypto";
-}
-
 function byBucket(news, bucket) {
-  return news.filter((item) => inferBucket(item) === bucket);
+  return newsByBucket(news, bucket);
 }
 
 function renderNewsFeedHtml(news, emptyText = "目前沒有資料。") {
@@ -113,12 +102,18 @@ export function getNewsModalContent(state, section) {
     return renderNewsFeedHtml(news.filter((item) => item.impact === "HIGH"), "目前沒有重大情報。");
   }
   if (section === "discussion") {
+    const macroHeadline = byBucket(news, "macro")[0];
+    const fedHeadline = byBucket(news, "fed")[0];
+    const cryptoHeadline = byBucket(news, "crypto")[0];
     const grouped = [
-      `宏觀數據：${byBucket(news, "macro").length} 則`,
-      `聯準會 / 政策：${byBucket(news, "fed").length} 則`,
-      `加密新聞：${byBucket(news, "crypto").length} 則`,
+      `宏觀數據：${byBucket(news, "macro").length} 則${macroHeadline ? ` · ${textBody(macroHeadline).slice(0, 72)}` : ""}`,
+      `聯準會 / 政策：${byBucket(news, "fed").length} 則${fedHeadline ? ` · ${textBody(fedHeadline).slice(0, 72)}` : ""}`,
+      `加密新聞：${byBucket(news, "crypto").length} 則${cryptoHeadline ? ` · ${textBody(cryptoHeadline).slice(0, 72)}` : ""}`,
     ];
-    return `<ul class="panel-list">${grouped.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+    return `
+      <p style="color:rgba(255,255,255,0.45);font-size:11px;margin:0 0 8px;">全球 RSS 分類摘要（與雷達站市場掃描無關）</p>
+      <ul class="panel-list">${grouped.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    `;
   }
   if (section === "reflection") {
     const briefing = state.station_briefings?.NEWS || {};

@@ -48,16 +48,16 @@ class RadarMarketScanService:
         whale_watch = []
         for symbol in self.symbols:
             symbol = normalize_symbol(symbol)
-            if symbol in CORE_FLEET_SYMBOLS:
-                continue
             context = self.market_context_service.build_symbol_context(symbol, {})
             if not context:
                 continue
-            candidate = self._to_candidate(context)
-            board.append(candidate)
             whale_note = self._to_whale_note(context)
             if whale_note:
                 whale_watch.append(whale_note)
+            if symbol in CORE_FLEET_SYMBOLS:
+                continue
+            candidate = self._to_candidate(context)
+            board.append(candidate)
 
         candidates = sorted(
             [item for item in board if item["candidate_score"] > 0],

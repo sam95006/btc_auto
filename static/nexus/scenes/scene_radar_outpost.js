@@ -1,4 +1,5 @@
-import { renderConversation, renderStationOverviewCards } from "./scene_helpers.js?v=20260521f";
+import { renderConversation } from "./scene_helpers.js?v=20260528a";
+import { renderRadarFundingHtml, renderRadarWhaleHtml } from "./station_hotspot_content.js?v=20260528a";
 import { escapeHtml, normalizeText } from "../utils/presentation.js?v=20260510a";
 import { getLayoutHotspots } from "../layout_state.js?v=20260503a";
 
@@ -27,6 +28,9 @@ function renderStationHtml(state) {
     )
     .join("");
 
+  const whaleCount = (state.radar_scan?.whale_watch || state.whale?.watch || []).length;
+  const scanStatus = state.radar_scan?.scan_status || "idle";
+
   return `
     <div class="station-page">
       <div class="station-main-area">
@@ -34,13 +38,13 @@ function renderStationHtml(state) {
         <div class="station-hotspot-layer">${hotspotHtml}</div>
       </div>
       <aside class="station-right-sidebar">
-        ${buildRightSidebar(state)}
+        ${buildRightSidebar(state, whaleCount, scanStatus)}
       </aside>
     </div>
   `;
 }
 
-function buildRightSidebar(state) {
+function buildRightSidebar(state, whaleCount, scanStatus) {
   const alerts = (state.alerts || []).slice(0, 4);
   const alertsHtml = alerts.length
     ? alerts
@@ -50,9 +54,18 @@ function buildRightSidebar(state) {
         .join("")
     : `<p style="color:rgba(255,255,255,0.4);font-size:12px;">目前沒有新的雷達警報。</p>`;
 
+  const topWhale = (state.radar_scan?.whale_watch || [])[0];
+  const whaleLine = topWhale
+    ? `${topWhale.symbol} · ${normalizeText(topWhale.summary, "異常")}`
+    : "尚未偵測到巨鯨級異常";
+
   return `
     <p class="station-sidebar-title">RADAR 雷達站</p>
-    <div class="station-stat-row"><dt>站點狀態</dt><dd>在線監控</dd></div>
+    <div class="station-stat-row"><dt>掃描狀態</dt><dd>${escapeHtml(scanStatus)}</dd></div>
+    <div class="station-stat-row"><dt>巨鯨動態</dt><dd>${whaleCount} 檔</dd></div>
+    <div class="station-stat-row"><dt>候選標的</dt><dd>${(state.radar_scan?.candidates || []).length} 檔</dd></div>
+    <p class="station-sidebar-title" style="margin-top:8px;">最新巨鯨</p>
+    <p style="font-size:12px;line-height:1.55;color:rgba(238,250,255,0.82);">${escapeHtml(whaleLine)}</p>
     <p class="station-sidebar-title" style="margin-top:8px;">最新警報</p>
     ${alertsHtml}
   `;
@@ -60,7 +73,7 @@ function buildRightSidebar(state) {
 
 export function getRadarModalContent(state, section) {
   if (section === "whale") {
-    return renderStationOverviewCards(state, "WHALE") || `<p style="color:rgba(255,255,255,0.4);">目前沒有巨鯨監控資料。</p>`;
+    return renderRadarWhaleHtml(state);
   }
   if (section === "alerts") {
     const alerts = (state.alerts || []).slice(0, 15);
@@ -72,7 +85,7 @@ export function getRadarModalContent(state, section) {
       .join("");
   }
   if (section === "funding") {
-    return renderStationOverviewCards(state, "FUNDING") || `<p style="color:rgba(255,255,255,0.4);">目前沒有資金費率摘要。</p>`;
+    return renderRadarFundingHtml(state);
   }
   if (section === "reports") {
     return renderConversation(state, "RADAR", 10) || `<p style="color:rgba(255,255,255,0.4);">目前沒有站內通訊紀錄。</p>`;
@@ -83,7 +96,7 @@ export function getRadarModalContent(state, section) {
 export function buildRadarPage(state) {
   return {
     title: "雷達站",
-    description: "集中監看巨鯨、警報、資金費率與雷達通訊。",
+    description: "集中監看巨鯨、警報、資金費率與雷達通訊（資料來自合約市場掃描，非新聞牆）。",
     stationHtml: renderStationHtml(state),
   };
 }

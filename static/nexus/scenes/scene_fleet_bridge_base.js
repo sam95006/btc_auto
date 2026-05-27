@@ -4,9 +4,9 @@ import {
   renderConversation,
   renderPositions,
   renderRejects,
-  renderStationOverviewCards,
   renderTrades,
-} from "./scene_helpers.js?v=20260521f";
+} from "./scene_helpers.js?v=20260528a";
+import { renderFleetReportHtml } from "./station_hotspot_content.js?v=20260528a";
 import { escapeHtml, normalizeText, translateSignal, translateStatus } from "../utils/presentation.js?v=20260510a";
 import { getLayoutHotspots } from "../layout_state.js?v=20260503a";
 
@@ -132,7 +132,7 @@ export function getFleetModalContent(state, fleet, section) {
     return renderConversation(state, fleet, 12);
   }
   if (section === "reports") {
-    return renderStationOverviewCards(state, fleet);
+    return renderFleetReportHtml(state, fleet);
   }
   return `<p style="color:rgba(255,255,255,0.42);">目前沒有可顯示的內容。</p>`;
 }
