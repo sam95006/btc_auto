@@ -1,8 +1,10 @@
+import os
 import shutil
 import tempfile
 import unittest
 from datetime import datetime, timedelta
 from pathlib import Path
+from unittest.mock import patch
 
 from backend.services.runtime_store import RuntimeStateStore
 from backend.learning.feedback_loop import LearningFeedbackLoop
@@ -11,6 +13,8 @@ from backend.trading.trade_validation_pipeline import TradeValidationPipeline
 
 class TradeValidationPipelineTests(unittest.TestCase):
     def setUp(self):
+        self._sandbox_env = patch.dict(os.environ, {"NEXUS_TESTNET_SANDBOX": "0"}, clear=False)
+        self._sandbox_env.start()
         self.temp_dir = Path(tempfile.mkdtemp(prefix="nexus_validation_pipeline_"))
         self.store = RuntimeStateStore(str(self.temp_dir / "validation.db"))
         self.learning = LearningFeedbackLoop(self.store)
@@ -44,6 +48,7 @@ class TradeValidationPipelineTests(unittest.TestCase):
         }
 
     def tearDown(self):
+        self._sandbox_env.stop()
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def _record_loss(self, idx, pnl=-5.0):

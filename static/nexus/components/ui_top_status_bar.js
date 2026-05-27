@@ -63,7 +63,11 @@ export function renderTopStatusBar(root, state) {
   const tradeCount = Number(decision.trade_count || 0);
   const livePositions = Number(decision.live_position_count || 0);
   const positionSymbols = (decision.exchange_position_symbols || []).filter(Boolean);
-  const positionNote = positionSymbols.length ? ` / ${positionSymbols.join(", ")}` : "";
+  const positionNote = positionSymbols.length
+    ? ` / 持倉 ${livePositions} · ${positionSymbols.join(", ")}`
+    : livePositions > 0
+      ? ` / 持倉 ${livePositions}`
+      : " / 無持倉（未實現 0 屬正常）";
   const systemLabel = system.trading_paused ? "暫停中" : system.block_new_entries ? "運行·控倉" : "運行中";
   const pauseReason = String(system.pause_reason || "").trim();
   const gateReason = String(system.block_reason || "").trim();

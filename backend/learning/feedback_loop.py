@@ -21,6 +21,7 @@ from config.learning_config import (
 )
 from config.growth_mode_config import BOLD_TESTNET_ENABLED
 from config.revenue_target_config import REVENUE_GROWTH_MODE
+from config.testnet_sandbox_config import TESTNET_SANDBOX_ENABLED
 
 
 def _now():
@@ -477,6 +478,16 @@ class LearningFeedbackLoop:
             if cap is None or float(cap or 0) <= 0:
                 guidance["leverage_cap"] = 10
             guidance["learning_guard_mode"] = "revenue_soft" if REVENUE_GROWTH_MODE else "bold_testnet_soft"
+        from backend.trading.sandbox_mode import sandbox_active
+
+        if sandbox_active():
+            guidance["pause_new_entries"] = False
+            guidance["regime_blocked"] = False
+            guidance["symbol_cooldown"] = {}
+            guidance["blocked_symbols"] = []
+            guidance["failure_focus_flags"] = []
+            guidance["symbol_lessons"] = {}
+            guidance["learning_guard_mode"] = "testnet_sandbox"
         return guidance
 
     def build_strategy_adaptation_snapshot(self, market_contexts=None):

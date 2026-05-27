@@ -1,6 +1,7 @@
 import os
 
 from config.growth_mode_config import BOLD_TESTNET_ENABLED
+from config.testnet_sandbox_config import SANDBOX_FORCE_LIVE_EXECUTE, TESTNET_SANDBOX_ENABLED
 
 
 def _env_bool(name, default=False):
@@ -12,6 +13,8 @@ def _env_bool(name, default=False):
 
 _default_autonomy = 2 if BOLD_TESTNET_ENABLED else 1
 _default_shadow = not BOLD_TESTNET_ENABLED
+if TESTNET_SANDBOX_ENABLED and SANDBOX_FORCE_LIVE_EXECUTE:
+    _default_shadow = False
 
 NEXUS_AUTONOMY_LEVEL = int(os.getenv("NEXUS_AUTONOMY_LEVEL", str(_default_autonomy)) or _default_autonomy)
 NEXUS_LEARNING_AUTO_APPLY = _env_bool("NEXUS_LEARNING_AUTO_APPLY", BOLD_TESTNET_ENABLED)

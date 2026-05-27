@@ -10,6 +10,13 @@ from config.quality_gates_config import (
     TARGET_WIN_RATE,
 )
 from config.revenue_target_config import REVENUE_GROWTH_MODE
+from backend.trading.sandbox_mode import sandbox_active, sandbox_min_approval_score, sandbox_min_confidence
+from config.testnet_sandbox_config import (
+    SANDBOX_MIN_CONFIDENCE,
+    SANDBOX_SKIP_BACKTEST_HISTORY_BLOCKS,
+    SANDBOX_SKIP_LIQUIDATION_COOLDOWN,
+    SANDBOX_SKIP_SYMBOL_COOLDOWN,
+)
 from config.validation_config import (
     BACKTEST_CONFIDENT_OVERRIDE,
     BACKTEST_MAX_ALLOWED_RECENT_LOSSES,
@@ -54,6 +61,10 @@ def _learning_relaxed() -> bool:
     return _bold_testnet_enabled() or REVENUE_GROWTH_MODE
 
 
+def _sandbox_mode() -> bool:
+    return sandbox_active()
+
+
 def _proposal_confidence(proposal) -> float:
     return _safe_float(
         proposal.get("confidence_score")
@@ -68,10 +79,15 @@ def _hard_learning_block(symbol, learning_guidance):
     if symbol in blocked:
         return True, "learning_symbol_blacklisted"
     cooldown = dict(learning_guidance.get("symbol_cooldown") or {}).get(symbol) or {}
-    if cooldown.get("active") and cooldown.get("reason") == "exchange_liquidation":
-        if _learning_relaxed():
+    if cooldown.get("active"):
+        if _sandbox_mode() and SANDBOX_SKIP_SYMBOL_COOLDOWN:
             return False, None
-        return True, "learning_liquidation_cooldown"
+        if cooldown.get("reason") == "exchange_liquidation":
+            if _sandbox_mode() and SANDBOX_SKIP_LIQUIDATION_COOLDOWN:
+                return False, None
+            if _learning_relaxed():
+                return False, None
+            return True, "learning_liquidation_cooldown"
     return False, None
 
 
@@ -181,10 +197,16 @@ class BacktestValidationEngine:
         reason = "historical_edge_ok"
         score = 0.55 + (win_rate - 0.5) * 0.6
         confidence = _proposal_confidence(proposal)
-        if trade_count >= BACKTEST_MIN_SAMPLE_SIZE:
+        if _sandbox_mode() and SANDBOX_SKIP_BACKTEST_HISTORY_BLOCKS and confidence >= SANDBOX_MIN_CONFIDENCE:
+            approved = True
+            reason = "sandbox_backtest_bootstrap"
+            score = max(score, 0.58)
+        elif trade_count >= BACKTEST_MIN_SAMPLE_SIZE:
             if win_rate < min_win_rate and avg_pnl <= BACKTEST_MAX_NEGATIVE_AVG_PNL:
                 severe_edge = win_rate < (0.22 if REVENUE_GROWTH_MODE else min_win_rate * 0.5)
-                if REVENUE_GROWTH_MODE and confidence >= BACKTEST_CONFIDENT_OVERRIDE and not severe_edge:
+                if (_sandbox_mode() and SANDBOX_SKIP_BACKTEST_HISTORY_BLOCKS) or (
+                    REVENUE_GROWTH_MODE and confidence >= BACKTEST_CONFIDENT_OVERRIDE and not severe_edge
+                ):
                     approved = True
                     reason = "historical_edge_caution"
                     score = max(score, 0.5)
@@ -193,7 +215,9 @@ class BacktestValidationEngine:
                     reason = "historical_edge_too_weak"
                     score = 0.2
             elif recent_losses >= BACKTEST_MAX_ALLOWED_RECENT_LOSSES:
-                if REVENUE_GROWTH_MODE and confidence >= BACKTEST_CONFIDENT_OVERRIDE:
+                if (_sandbox_mode() and SANDBOX_SKIP_BACKTEST_HISTORY_BLOCKS) or (
+                    REVENUE_GROWTH_MODE and confidence >= BACKTEST_CONFIDENT_OVERRIDE
+                ):
                     approved = True
                     reason = "recent_loss_streak_caution"
                     score = max(score, 0.48)
@@ -518,6 +542,10 @@ class TradeValidationPipeline:
         growth_context = growth_context or {}
         growth_directives = dict(growth_context.get("growth_directives") or {})
         min_approval_score = float(growth_directives.get("min_approval_score", VALIDATION_MIN_APPROVAL_SCORE) or VALIDATION_MIN_APPROVAL_SCORE)
+        if _sandbox_mode():
+            min_approval_score = min(min_approval_score, sandbox_min_approval_score())
+            growth_directives = dict(growth_directives)
+            growth_directives["min_approval_score"] = min_approval_score
         learning_guidance = {}
         if self.learning_feedback:
             learning_guidance = self.learning_feedback.get_strategy_guidance(
@@ -566,7 +594,7 @@ class TradeValidationPipeline:
         if hard_block:
             approved = False
             learning_block_reason = hard_reason
-        elif lesson_block:
+        elif lesson_block and not (_sandbox_mode() and _proposal_confidence(proposal) >= SANDBOX_MIN_CONFIDENCE):
             approved = False
             learning_block_reason = lesson_reason
         elif quality_block:
@@ -581,7 +609,9 @@ class TradeValidationPipeline:
         else:
             symbol_cooldown = dict(learning_guidance.get("symbol_cooldown", {}) or {})
             cooldown_active = bool((symbol_cooldown.get(symbol) or {}).get("active"))
-            if cooldown_active and not relaxed_learning:
+            if cooldown_active and _sandbox_mode() and SANDBOX_SKIP_SYMBOL_COOLDOWN:
+                pass
+            elif cooldown_active and not relaxed_learning:
                 approved = False
                 learning_block_reason = "learning_symbol_cooldown"
             elif cooldown_active and relaxed_learning and _proposal_confidence(proposal) < BACKTEST_CONFIDENT_OVERRIDE:

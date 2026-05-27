@@ -43,6 +43,13 @@ function rejectReasonLabel(reason) {
     recent_loss_streak_caution: "連虧中（高信心試單）",
     learning_liquidation_cooldown: "強平冷卻",
     learning_symbol_cooldown: "標的冷卻",
+    validated_for_execution: "已通過驗證",
+    sandbox_backtest_bootstrap: "沙盒試單",
+    fee_churn_margin_too_small: "單筆太小",
+    fee_churn_notional_too_small: "名義值不足",
+    fee_churn_symbol_reopen_cooldown: "平倉冷卻中",
+    fee_churn_expected_edge_too_small: "預期獲利不足付手續費",
+    daily_loss_limit_reached: "日損上限",
   };
   for (const [token, label] of Object.entries(map)) {
     if (key.includes(token)) return label;

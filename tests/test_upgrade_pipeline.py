@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from backend.governance.execution_governor import ExecutionGovernor
 from backend.governance.trade_proposal_service import TradeProposalService
@@ -68,13 +69,14 @@ class UpgradePipelineTests(unittest.TestCase):
         self.assertEqual(len(svc.recent(limit=5)), 1)
 
     def test_execution_governor_blocks_learning_pause(self):
-        gov = ExecutionGovernor(shadow_mode_enabled=False)
-        out = gov.evaluate(
-            {"fleet": "BTC"},
-            {"approved": True, "reason": "ok"},
-            learning_guidance={"pause_new_entries": True},
-        )
-        self.assertFalse(out.get("approved"))
+        with patch.dict(os.environ, {"NEXUS_TESTNET_SANDBOX": "0"}, clear=False):
+            gov = ExecutionGovernor(shadow_mode_enabled=False)
+            out = gov.evaluate(
+                {"fleet": "BTC"},
+                {"approved": True, "reason": "ok"},
+                learning_guidance={"pause_new_entries": True},
+            )
+            self.assertFalse(out.get("approved"))
 
 
 if __name__ == "__main__":

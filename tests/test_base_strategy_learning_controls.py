@@ -1,4 +1,6 @@
+import os
 import unittest
+from unittest.mock import patch
 
 from backend.fleets.base_strategy_engine import BaseFleetStrategyEngine
 
@@ -39,6 +41,13 @@ class _FakeLearningFeedback:
 
 
 class BaseStrategyLearningControlsTests(unittest.TestCase):
+    def setUp(self):
+        self._sandbox_env = patch.dict(os.environ, {"NEXUS_TESTNET_SANDBOX": "0"}, clear=False)
+        self._sandbox_env.start()
+
+    def tearDown(self):
+        self._sandbox_env.stop()
+
     def test_symbol_cooldown_blocks_new_request(self):
         engine = BaseFleetStrategyEngine(
             "BTC",

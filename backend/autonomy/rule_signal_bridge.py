@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 
+from config.fee_churn_config import MIN_MARGIN_USD
 from config.fleet_routing_config import validate_futures_open_route
 from config.multi_timeframe_config import MTF_ENTRY_LOOKBACK_TICKS, MTF_TREND_LOOKBACK_TICKS, MULTI_TIMEFRAME_ENABLED
 from config.radar_dispatch_config import RADAR_MAX_LEVERAGE, RADAR_MIN_MARGIN
@@ -99,7 +100,11 @@ class RuleSignalBridge:
             ok_route, _ = validate_futures_open_route(route_fleet, symbol)
             if not ok_route and fleet in {"BTC", "ETH", "SOL", "PEPE"}:
                 continue
-            margin = max(RADAR_MIN_MARGIN, min(deployable_pool * 0.06, 45.0)) if route_fleet == "RADAR" else max(20.0, min(deployable_pool * 0.08, 55.0))
+            margin = (
+                max(MIN_MARGIN_USD, RADAR_MIN_MARGIN, min(deployable_pool * 0.06, 55.0))
+                if route_fleet == "RADAR"
+                else max(MIN_MARGIN_USD, 20.0, min(deployable_pool * 0.08, 65.0))
+            )
             if margin <= 0:
                 continue
 

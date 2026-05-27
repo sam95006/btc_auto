@@ -64,6 +64,29 @@ class StationDialogueService:
                 "flatten": flatten_result,
             }
 
+        if command == "reset_testnet_sandbox":
+            reset_result = self._execute_reset_testnet_sandbox(text)
+            from backend.coordination.chat_command_handler import format_reset_sandbox_reply
+
+            reply = format_reset_sandbox_reply(reset_result) if reset_result.get("ok") else "重置測試沙盒失敗，請稍後再試。"
+            captain = CHANNEL_CAPTAIN.get(channel_key, "總部指揮官")
+            stored.append(
+                self.chat_log.add(
+                    channel_key,
+                    captain,
+                    reply,
+                    source="系統執行",
+                    importance="INFO",
+                )
+            )
+            return {
+                "ok": True,
+                "channel": channel_key,
+                "messages": stored,
+                "command": command,
+                "reset_sandbox": reset_result,
+            }
+
         if command == "resume_trading":
             resume_result = self._execute_resume_trading(text)
             reply = "已恢復自動交易，並清除驗證阻擋累積。" if resume_result.get("ok") else "恢復交易失敗，請稍後再試。"
@@ -127,6 +150,11 @@ class StationDialogueService:
         from backend.services.nexus_runtime import nexus_runtime
 
         return nexus_runtime.resume_trading(source="player_chat")
+
+    def _execute_reset_testnet_sandbox(self, text):
+        from backend.services.nexus_runtime import nexus_runtime
+
+        return nexus_runtime.reset_testnet_sandbox(source="player_chat", clear_loss_history=True)
 
     def _llm_player_reply(self, channel_key, text, snapshot):
         if not self.llm_gateway or not getattr(self.llm_gateway, "enabled", lambda: False)():

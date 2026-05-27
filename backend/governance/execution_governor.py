@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import os
 import uuid
 from datetime import datetime
 
+from backend.trading.sandbox_mode import sandbox_active
 from config.autonomy_config import NEXUS_AUTONOMY_LEVEL, NEXUS_SHADOW_MODE
 
 
@@ -27,13 +29,13 @@ class ExecutionGovernor:
         reject_layer = None
         why_not = []
 
-        if approved and learning_guidance.get("pause_new_entries"):
+        if approved and learning_guidance.get("pause_new_entries") and not sandbox_active():
             approved = False
             reason = "learning_pause_new_entries"
             reject_layer = "learning_guard"
             why_not.append("consecutive_loss_pause")
 
-        if approved and learning_guidance.get("regime_blocked"):
+        if approved and learning_guidance.get("regime_blocked") and not sandbox_active():
             approved = False
             reason = "learning_regime_blocked"
             reject_layer = "learning_guard"
@@ -48,7 +50,11 @@ class ExecutionGovernor:
             why_not.append("fleet_restricted_by_portfolio")
 
         shadow_only = False
-        if self.shadow_mode_enabled and self.autonomy_level < 2:
+        if (
+            self.shadow_mode_enabled
+            and self.autonomy_level < 2
+            and not (sandbox_active() and SANDBOX_FORCE_LIVE_EXECUTE)
+        ):
             shadow_only = True
             if approved:
                 why_not.append("shadow_mode_blocks_live_execution")

@@ -86,7 +86,7 @@ from backend.risk.capital_growth_guard import CapitalGrowthGuard
 from backend.wallet.compound_capital_service import CompoundCapitalService
 from backend.decision.meeting_notes_resolver import resolve_meeting_notes
 from backend.analytics.setup_performance_tracker import SetupPerformanceTracker
-from backend.trading.radar_dispatch_service import RadarDispatchService
+from backend.trading.fee_churn_guard import get_fee_churn_guard
 from backend.analytics.walk_forward_evaluator import WalkForwardEvaluator
 from config.fleet_routing_config import fleet_for_exchange_position
 from config.ai_trading_config import AI_LED_PRIMARY_MODE, AI_LED_TRADING_ENABLED
@@ -202,6 +202,7 @@ class NexusRuntime:
         self.monthly_drawdown_guard = MonthlyDrawdownGuard()
         self.ai_position_manager = AiPositionManager()
         self._force_immediate_tick = False
+        self._sandbox_startup_done = False
         self._last_ops_status = None
         self.news_ingestion = NewsIngestionService(refresh_seconds=NEWS_REFRESH_SECONDS)
         self.news_analysis = NewsAnalysisEngine()
@@ -236,6 +237,7 @@ class NexusRuntime:
         self.compound_capital = CompoundCapitalService()
         self.walk_forward_evaluator = WalkForwardEvaluator()
         self.radar_dispatch = RadarDispatchService()
+        self.fee_churn_guard = get_fee_churn_guard()
         self.radar_llm_bridge = RadarLlmProposalBridge(self.radar_dispatch, self.llm_gateway)
         self._radar_llm_proposals = []
         self._last_daily_report_key = None
@@ -684,6 +686,9 @@ class NexusRuntime:
             recent_trades=recent_trades,
         )
         self._apply_revenue_exploration_overrides(recent_trades)
+        self._apply_testnet_sandbox_overrides(recent_trades)
+        if not self._sandbox_startup_done:
+            self._maybe_bootstrap_testnet_sandbox()
         self._compound_capital_status = self.compound_capital.build_snapshot(
             futures_total,
             daily_payload=self.growth_status.get("daily"),
@@ -1425,13 +1430,26 @@ class NexusRuntime:
             reason = f"ai_position_{action.get('reason', 'action')}"
             act = str(action.get("action") or "")
             if act == "take_partial_profit":
+                action_ctx = {**action, "market_context": market_contexts.get(fleet, {}) or {}}
+                if not self.fee_churn_guard.allow_ai_exit(position, action_ctx)[0]:
+                    continue
                 fraction = float(action.get("fraction") or 0.3)
                 trade = engine.execution_engine.reduce_position(
                     position["id"], fraction, price, reason=reason
                 )
+                if trade:
+                    self.fee_churn_guard.mark_partial_exit(position["id"])
             elif act == "reduce":
+                action_ctx = {**action, "market_context": market_contexts.get(fleet, {}) or {}}
+                if not self.fee_churn_guard.allow_ai_exit(position, action_ctx)[0]:
+                    continue
                 trade = engine.execution_engine.reduce_position(position["id"], 0.5, price, reason=reason)
+                if trade:
+                    self.fee_churn_guard.mark_partial_exit(position["id"])
             elif act == "reduce_or_close":
+                action_ctx = {**action, "market_context": market_contexts.get(fleet, {}) or {}}
+                if not self.fee_churn_guard.allow_ai_exit(position, action_ctx)[0]:
+                    continue
                 trade = engine.execution_engine.close_position(position["id"], price, reason=reason)
             else:
                 trade = None
@@ -1451,6 +1469,58 @@ class NexusRuntime:
                     },
                     context=market_contexts.get(fleet, {}) or {},
                 )
+
+    def _apply_testnet_sandbox_overrides(self, recent_trades=None):
+        """Unblock testnet trial trading: learning cooldowns, weak-window growth gates, shadow execution."""
+        from backend.trading.sandbox_mode import (
+            sandbox_active,
+            sandbox_min_approval_score,
+            sandbox_min_confidence,
+            sandbox_relax_growth_blocks,
+        )
+
+        if not sandbox_active():
+            return
+        soft_block_reasons = {
+            "",
+            "quality_gate_weak_window",
+            "rotation_tighten",
+            "monthly_max_drawdown",
+            "rotation_hold",
+        }
+        critical_blocks = {"daily_loss_limit_reached", "daily_max_loss", "monthly_max_drawdown"}
+        block_reason = str(self.growth_status.get("block_reason") or "").strip().lower()
+        if block_reason in critical_blocks:
+            return
+        if sandbox_relax_growth_blocks() and block_reason in soft_block_reasons:
+            self.growth_status["block_new_entries"] = False
+            self.growth_status.pop("block_reason", None)
+        monthly = dict(self.growth_status.get("monthly_risk") or {})
+        if sandbox_relax_growth_blocks() and monthly.get("block_new_entries") and not monthly.get("breached"):
+            self.growth_status["block_new_entries"] = False
+        self.growth_status["min_approval_score"] = min(
+            float(self.growth_status.get("min_approval_score", 0.55) or 0.55),
+            sandbox_min_approval_score(),
+        )
+        self.growth_status["min_trade_confidence"] = min(
+            float(self.growth_status.get("min_trade_confidence", 0.55) or 0.55),
+            sandbox_min_confidence(),
+        )
+        mode = str(self.growth_status.get("evolution_mode") or "")
+        if mode in {"rotation_tighten", "tighten_guards"}:
+            self.growth_status["evolution_mode"] = "sandbox_explore"
+
+    def _maybe_bootstrap_testnet_sandbox(self):
+        from backend.trading.sandbox_mode import sandbox_active
+        from config.testnet_sandbox_config import SANDBOX_AUTO_RESET_ON_STARTUP
+
+        self._sandbox_startup_done = True
+        if not sandbox_active() or not SANDBOX_AUTO_RESET_ON_STARTUP:
+            return
+        try:
+            self.reset_testnet_sandbox(source="sandbox_startup", clear_loss_history=True)
+        except Exception:
+            pass
 
     def _apply_revenue_exploration_overrides(self, recent_trades=None):
         """Loosen entry blocks when revenue track has few/no live closes (bootstrap sampling)."""
@@ -1515,6 +1585,42 @@ class NexusRuntime:
         self._ensure_trading_resumed(force=True)
         self._append_alert("INFO", f"交易已恢復（{source}）")
         return {"ok": True, "source": source, "trading_paused": False}
+
+    def reset_testnet_sandbox(self, source="manual", clear_loss_history=True):
+        """Clear validation backlog + learning loss history for testnet trial trading."""
+        from backend.trading.sandbox_mode import sandbox_active
+
+        removed_losses = 0
+        if clear_loss_history:
+            try:
+                removed_losses = int(runtime_store.clear_negative_trade_results() or 0)
+            except Exception:
+                removed_losses = 0
+        try:
+            runtime_store.prune_trade_validation_events(keep_limit=15)
+        except Exception:
+            pass
+        try:
+            runtime_store.prune_rejected_decision_audits(keep_limit=20)
+        except Exception:
+            pass
+        try:
+            self.learning_feedback._calibration_cache = {"snapshot": None, "expires_at": 0.0}
+        except Exception:
+            pass
+        self._apply_testnet_sandbox_overrides()
+        resume = self.resume_trading(source=source)
+        self._append_alert(
+            "INFO",
+            f"測試網沙盒已重置（清除虧損紀錄 {removed_losses} 筆，sandbox={sandbox_active()}）",
+        )
+        return {
+            "ok": True,
+            "source": source,
+            "removed_loss_trades": removed_losses,
+            "sandbox_enabled": bool(sandbox_active()),
+            "resume": resume,
+        }
 
     def _apply_kill_switch(self, futures_account):
         if not self.futures_client.is_configured():
@@ -1600,6 +1706,20 @@ class NexusRuntime:
         validation = self._govern_trade_validation(request, validation, alt_context)
         self._append_decision_audit(request, validation, alt_context, decision_source=request.get("decision_source", "ai_led"))
         if not validation.get("approved"):
+            return False
+        churn_ok, churn_reason = self.fee_churn_guard.allow_open(request)
+        if not churn_ok:
+            self._append_decision_audit(
+                request,
+                {
+                    **validation,
+                    "approved": False,
+                    "reason": churn_reason,
+                    "reject_layer": "fee_churn_guard",
+                },
+                alt_context,
+                decision_source=request.get("decision_source", "ai_led"),
+            )
             return False
         allowed, _risk_reason = self.risk_engine.validate_order(request)
         if not allowed:
@@ -1753,6 +1873,11 @@ class NexusRuntime:
             )
         result, recommendation = self.learning_feedback.record_trade_result(payload, context=context or {})
         self.upgrade_pipeline.on_trade_result(result, recommendation)
+        event = str(payload.get("event") or result.get("event") or "").upper()
+        if event in {"CLOSE", "LIVE"} or payload.get("exit_reason") or payload.get("exit_price"):
+            symbol = str(payload.get("symbol") or result.get("symbol") or "").upper()
+            if symbol:
+                self.fee_churn_guard.mark_symbol_closed(symbol)
         if str(result.get("failure_reason") or "") == "exchange_liquidation":
             self._force_immediate_tick = True
             self._append_alert("ALERT_RED", f"強平學習：{result.get('symbol')} 進入冷卻，非永久黑名單。")
@@ -2683,6 +2808,16 @@ class NexusRuntime:
                 self.state_manager.update_fleet(fleet, status="BLOCKED", last_signal="REJECTED", last_reason=f"validation:{validation.get('reason')}")
                 continue
 
+            churn_ok, churn_reason = self.fee_churn_guard.allow_open(request)
+            if not churn_ok:
+                self.state_manager.update_fleet(
+                    fleet,
+                    status="BLOCKED",
+                    last_signal="REJECTED",
+                    last_reason=f"fee_churn:{churn_reason}",
+                )
+                continue
+
             allowed, risk_reason = self.risk_engine.validate_order(request)
             if not allowed:
                 self.state_manager.update_fleet(fleet, status="BLOCKED", last_signal="REJECTED", last_reason=risk_reason)
@@ -2842,6 +2977,20 @@ class NexusRuntime:
             request["decision_source"] = request.get("decision_source") or "radar_scan"
             self._append_decision_audit(request, validation, alt_context, decision_source=request["decision_source"])
             if not validation.get("approved"):
+                continue
+            churn_ok, churn_reason = self.fee_churn_guard.allow_open(request)
+            if not churn_ok:
+                self._append_decision_audit(
+                    request,
+                    {
+                        **validation,
+                        "approved": False,
+                        "reason": churn_reason,
+                        "reject_layer": "fee_churn_guard",
+                    },
+                    alt_context,
+                    decision_source=request.get("decision_source", "radar_scan"),
+                )
                 continue
             allowed, risk_reason = self.risk_engine.validate_order(request)
             if not allowed:
@@ -3734,6 +3883,24 @@ class NexusRuntime:
         snapshot_payload["trading_health"]["maturity_radar"] = snapshot_payload["maturity_radar"]
 
         trade_results_db = runtime_store.recent_trade_results(limit=400)
+        # UI revenue KPI should reflect real exchange fills even when local trade_results
+        # has not yet recorded CLOSE/LIVE rows (e.g. after deploy/restart).
+        merged_trade_results = list(trade_results_db)
+        try:
+            seen_ids = {str(item.get("id") or "") for item in merged_trade_results if item.get("id")}
+            for item in list(combined_trades or [])[:240]:
+                if str(item.get("market_type") or "futures") != "futures":
+                    continue
+                if str(item.get("event") or "").upper() not in {"LIVE", "CLOSE"}:
+                    continue
+                _id = str(item.get("id") or "")
+                if _id and _id in seen_ids:
+                    continue
+                merged_trade_results.append(item)
+                if _id:
+                    seen_ids.add(_id)
+        except Exception:
+            merged_trade_results = list(trade_results_db) or list(combined_trades or [])
         futures_equity = float(
             (snapshot_payload.get("compound_capital") or {}).get("live_futures_equity")
             or capital.get("futures_margin_balance")
@@ -3743,7 +3910,7 @@ class NexusRuntime:
         start_eq = float(daily.get("start_equity") or daily.get("reinvest_base_equity") or futures_equity)
         snapshot_payload["monthly_revenue"] = self.monthly_revenue.build_report(
             futures_equity,
-            trade_results=trade_results_db,
+            trade_results=merged_trade_results,
             start_equity=start_eq,
         )
         snapshot_payload["revenue_plan"] = self.revenue_plan.build_plan(
@@ -3755,7 +3922,7 @@ class NexusRuntime:
             audits=runtime_store.recent_decision_audit(limit=200),
             validations=runtime_store.recent_trade_validation_events(limit=200),
             proposals=runtime_store.recent_trade_proposals(limit=100),
-            trade_results=trade_results_db,
+            trade_results=merged_trade_results,
             decision_traces=runtime_store.recent_decision_traces(limit=50),
         )
         exec_quality = self.execution_quality_monitor.evaluate(

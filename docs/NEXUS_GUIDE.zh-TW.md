@@ -311,6 +311,7 @@ API：`GET /api/nexus/monthly-revenue`、`/api/nexus/decision-funnel`、`/api/ne
 | worker 離線 | Zeabur 設 `NEXUS_EMBEDDED_WORKER=1`、`WEB_CONCURRENCY=1` |
 | 重啟後聊天/會議不見 | 掛 `/data` Volume |
 | `data/` 充滿 `trading_backup_*.db` | 現行 NEXUS 不讀這些檔；先 `--dry-run` 再 prune（見下） |
+| 決策拒絕：標的冷卻／歷史劣勢／連虧／強平冷卻 | 見下方「測試網試單」；COMMS 輸入 **清除冷卻** |
 
 ### 資料目錄瘦身（不影響後端功能）
 
@@ -330,6 +331,50 @@ python tools/deploy/purge_runtime.py --logs --bundles
 
 Zeabur Volume 掛在 `NEXUS_DATA_DIR=/data` 時，在容器或本機對同一目錄執行即可。  
 本機 `venv/`、`__pycache__/` 不在 Git 內，可刪除後用 `pip install -r requirements.txt` 重建以縮小雲端同步體積。
+
+### 測試網試單（排除四種拒絕原因）
+
+決策稽核若顯示 **標的冷卻 · 歷史優勢不足 · 連虧紀錄 · 強平冷卻**，代表學習層／回測層在擋試單。請在 **Binance Testnet** 使用：
+
+```env
+NEXUS_BOLD_TESTNET=1
+NEXUS_TESTNET_SANDBOX=1
+NEXUS_SANDBOX_MIN_CONFIDENCE=0.38
+NEXUS_SANDBOX_MIN_APPROVAL_SCORE=0.38
+NEXUS_SANDBOX_AUTO_RESET=1
+NEXUS_SANDBOX_FORCE_LIVE=1
+NEXUS_SHADOW_MODE=0
+NEXUS_AI_LED_TRADING=1
+NEXUS_EMBEDDED_WORKER=1
+NEXUS_REVENUE_GROWTH_MODE=1
+NEXUS_LEARNING_SYMBOL_COOLDOWN_SECONDS=600
+NEXUS_LIQUIDATION_SYMBOL_COOLDOWN_SECONDS=600
+```
+
+重啟後會自動執行一次沙盒重置。亦可手動在 COMMS（世界頻道）輸入：
+
+1. **清除冷卻** — 清驗證累積 + 虧損紀錄 + 拒絕稽核 + 恢復交易  
+2. **恢復交易** — 若仍顯示暫停  
+
+沙盒模式會放寬上述四項，但仍保留：模擬滑點、日損、**月回撤 10%**、極端行情。  
+**上線真實帳戶前請設 `NEXUS_TESTNET_SANDBOX=0` 並關閉 `NEXUS_BOLD_TESTNET`。**
+
+### 防手續費空轉（高頻小虧損）
+
+若 Binance 帳本出現大量 `-0.06U` 等微小已實現損益 + 手續費，代表倉位太小或平倉過快。建議：
+
+```env
+NEXUS_FEE_CHURN_GUARD=1
+NEXUS_MIN_MARGIN_USD=45
+NEXUS_MIN_HOLD_SECONDS=180
+NEXUS_SYMBOL_REOPEN_COOLDOWN_SEC=300
+NEXUS_RULE_SIGNAL_INTERVAL_SEC=120
+```
+
+- 單筆保證金與名義值過小會被拒絕開倉（`fee_churn_*`）。
+- AI 強平壓力平倉僅在 **critical** 且持倉超過最短時間才執行。
+- 部分止盈需覆蓋約 **3.5× 往返手續費** 才會觸發。
+- 畫面「未實現 0」在**無持倉**時屬正常，不是同步錯誤。
 
 ---
 

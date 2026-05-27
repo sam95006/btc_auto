@@ -45,18 +45,19 @@ class DecisionFunnelService:
             reason = str(item.get("reason") or item.get("stage") or "validation_block").strip()
             reject_counter[reason.split(":")[0][:80]] += 1
 
-        futures_closes = [
+        futures_events = [
             item
             for item in trade_results
             if str(item.get("market_type") or "futures") == "futures"
-            and str(item.get("event") or "").upper() in {"CLOSE", "LIVE"}
+            and str(item.get("event") or "").upper() in {"OPEN", "CLOSE", "LIVE"}
         ]
+        futures_closes = [item for item in futures_events if str(item.get("event") or "").upper() in {"CLOSE", "LIVE"}]
         wins = sum(1 for item in futures_closes if _safe_float(item.get("pnl")) > 0)
 
         top_rejects = [{"reason": reason, "count": count} for reason, count in reject_counter.most_common(8)]
 
         proposal_count = len(proposals) or max(len(audits), len(validations))
-        executed = len(futures_closes)
+        executed = len(futures_events)
 
         return {
             "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -68,7 +69,8 @@ class DecisionFunnelService:
                 "audits": len(audits),
                 "audit_approved": audit_approved,
                 "audit_blocked": audit_blocked,
-                "executed_futures_closes": executed,
+                "executed_futures_closes": len(futures_closes),
+                "executed_futures_events": executed,
                 "decision_traces": len(traces),
             },
             "conversion": {
@@ -83,7 +85,7 @@ class DecisionFunnelService:
         }
 
     def _diagnose(self, top_rejects, audits, validations, executed):
-        if executed >= 5:
+        if executed >= 1:
             return "已有成交樣本，持續觀察費後淨利與月目標進度。"
         if not audits and not validations:
             return "管線無樣本：確認 NEXUS_EMBEDDED_WORKER=1、NEXUS_SHADOW_MODE=0、LLM 與 Binance 合約金鑰。"

@@ -76,6 +76,13 @@ class RExitEngine:
             if state.get(done_key):
                 continue
             if pnl_r >= float(level["r"]):
+                fraction = float(level["fraction"])
+                if fraction < 1.0:
+                    from backend.trading.fee_churn_guard import get_fee_churn_guard
+
+                    ok, _reason = get_fee_churn_guard().allow_r_partial(position, unrealized)
+                    if not ok:
+                        continue
                 exit_action = {
                     "type": "partial" if level["fraction"] < 1.0 else "full",
                     "fraction": float(level["fraction"]),

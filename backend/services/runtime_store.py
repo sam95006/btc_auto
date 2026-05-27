@@ -615,6 +615,41 @@ class RuntimeStateStore:
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
 
+    def prune_rejected_decision_audits(self, keep_limit=25):
+        """Drop blocked audit rows so UI funnel reflects current sandbox state."""
+
+        keep_limit = max(5, int(keep_limit or 25))
+
+        def operation(cursor):
+            cursor.execute(
+                """
+                SELECT id FROM nexus_decision_audit
+                WHERE COALESCE(approved, 0) = 1
+                ORDER BY id DESC
+                LIMIT ?
+                """,
+                (keep_limit,),
+            )
+            keep_approved = [int(row["id"]) for row in cursor.fetchall()]
+            cursor.execute(
+                """
+                DELETE FROM nexus_decision_audit
+                WHERE COALESCE(approved, 0) = 0
+                """
+            )
+            if keep_approved:
+                placeholders = ",".join("?" for _ in keep_approved)
+                cursor.execute(
+                    f"""
+                    DELETE FROM nexus_decision_audit
+                    WHERE COALESCE(approved, 0) = 1
+                      AND id NOT IN ({placeholders})
+                    """,
+                    keep_approved,
+                )
+
+        self._run_write(operation)
+
     def append_meeting(self, meeting):
         def operation(cursor):
             cursor.execute(
@@ -765,6 +800,27 @@ class RuntimeStateStore:
             cursor = self._conn.cursor()
             cursor.execute("SELECT validation_json FROM nexus_trade_validation_events ORDER BY id DESC LIMIT ?", (limit,))
             return [json.loads(row["validation_json"]) for row in cursor.fetchall()]
+
+    def clear_negative_trade_results(self):
+        """Remove loss rows so backtest/learning cooldown stops blocking testnet trials."""
+
+        def operation(cursor):
+            cursor.execute("SELECT id, result_json FROM nexus_trade_results")
+            delete_ids = []
+            for row in cursor.fetchall():
+                try:
+                    payload = json.loads(row["result_json"])
+                except Exception:
+                    continue
+                if float(payload.get("pnl") or 0.0) < 0:
+                    delete_ids.append(int(row["id"]))
+            if not delete_ids:
+                return 0
+            placeholders = ",".join("?" for _ in delete_ids)
+            cursor.execute(f"DELETE FROM nexus_trade_results WHERE id IN ({placeholders})", delete_ids)
+            return len(delete_ids)
+
+        return self._run_write(operation) or 0
 
     def prune_trade_validation_events(self, keep_limit=80):
         keep_limit = max(10, int(keep_limit or 80))

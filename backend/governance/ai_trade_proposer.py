@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 
+from config.fee_churn_config import MIN_MARGIN_USD
 from config.radar_dispatch_config import CORE_FLEET_SYMBOLS, RADAR_MAX_LEVERAGE, RADAR_MIN_MARGIN
 from config.fleet_routing_config import validate_futures_open_route
 from config.ai_trading_config import (
@@ -150,7 +151,11 @@ class AiTradeProposer:
         route_ok, _reason = validate_futures_open_route(fleet, symbol)
         if not route_ok:
             return None
-        margin = max(RADAR_MIN_MARGIN, 12.0 + confidence * 20.0) if fleet == "RADAR" else max(20.0, 15.0 + confidence * 25.0)
+        margin = (
+            max(MIN_MARGIN_USD, RADAR_MIN_MARGIN, 12.0 + confidence * 20.0)
+            if fleet == "RADAR"
+            else max(MIN_MARGIN_USD, 20.0, 15.0 + confidence * 25.0)
+        )
         return {
             "fleet": fleet,
             "symbol": symbol,

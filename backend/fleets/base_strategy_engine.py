@@ -112,7 +112,9 @@ class BaseFleetStrategyEngine:
             return None
         symbol = f"{self.fleet}USDT"
         symbol_cooldown = dict(guidance.get("symbol_cooldown", {}) or {})
-        if bool((symbol_cooldown.get(symbol) or {}).get("active")):
+        from backend.trading.sandbox_mode import sandbox_active
+
+        if bool((symbol_cooldown.get(symbol) or {}).get("active")) and not sandbox_active():
             self.last_reason = "learning_symbol_cooldown"
             return None
         failure_flags = set(guidance.get("failure_focus_flags", []) or [])
@@ -206,13 +208,18 @@ class BaseFleetStrategyEngine:
             return []
 
         trades = []
+        trade = None
         if exit_action["type"] == "partial":
+            from backend.trading.fee_churn_guard import get_fee_churn_guard
+
             trade = self.execution_engine.reduce_position(
                 position["id"],
                 exit_action["fraction"],
                 price,
                 reason=exit_action["reason"],
             )
+            if trade:
+                get_fee_churn_guard().mark_partial_exit(position["id"])
         else:
             trade = self.execution_engine.close_position(position["id"], price, reason=exit_action["reason"])
 

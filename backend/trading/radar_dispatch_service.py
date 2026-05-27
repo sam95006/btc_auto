@@ -1,5 +1,6 @@
 import time
 
+from backend.trading.sandbox_mode import sandbox_active
 from config.radar_dispatch_config import (
     CORE_FLEET_SYMBOLS,
     RADAR_AUTO_TRADE_ENABLED,
@@ -40,11 +41,13 @@ class RadarDispatchService:
     def build_open_request(self, candidate, price, market_context, ledger, growth_directives=None, learning_guidance=None):
         growth_directives = growth_directives or {}
         learning_guidance = learning_guidance or {}
-        if growth_directives.get("block_new_entries") or learning_guidance.get("pause_new_entries"):
+        if growth_directives.get("block_new_entries") or (
+            learning_guidance.get("pause_new_entries") and not sandbox_active()
+        ):
             return None
         symbol = str(candidate.get("symbol") or "").upper()
         blocked = {str(item).upper() for item in (learning_guidance.get("blocked_symbols") or [])}
-        if symbol in blocked:
+        if symbol in blocked and not sandbox_active():
             return None
         cooldown = dict(learning_guidance.get("symbol_cooldown") or {}).get(symbol) or {}
         if cooldown.get("active"):
@@ -94,9 +97,9 @@ class RadarDispatchService:
         if symbol in blocked:
             return False
         cooldown = dict(learning_guidance.get("symbol_cooldown") or {}).get(symbol) or {}
-        if cooldown.get("active"):
+        if cooldown.get("active") and not sandbox_active():
             return False
-        if learning_guidance.get("pause_new_entries"):
+        if learning_guidance.get("pause_new_entries") and not sandbox_active():
             return False
         leverage_cap = learning_guidance.get("leverage_cap")
         if leverage_cap is not None and float(leverage_cap or 0) <= 0:

@@ -17,6 +17,7 @@ def _safe_float(value, default=0.0):
 import os
 
 from backend.governance.ai_exit_planner import AiExitPlanner
+from config.fee_churn_config import AI_LIQ_EXIT_REQUIRES_CRITICAL
 
 
 def _env_float(name, default):
@@ -66,7 +67,9 @@ class AiPositionManager:
         liq_risk = str(market_context.get("liquidation_risk") or "").lower()
         fleet = str(position.get("fleet") or "")
 
-        if liq_risk == "critical" or (liq_dist and liq_dist <= 3.5):
+        if liq_risk == "critical" or (
+            not AI_LIQ_EXIT_REQUIRES_CRITICAL and liq_dist and liq_dist <= 3.5
+        ):
             return {
                 "symbol": symbol,
                 "fleet": fleet,

@@ -38,6 +38,22 @@ _RESUME_EN = (
     "start trading",
 )
 
+_RESET_SANDBOX_ZH = (
+    "清除冷卻",
+    "清除標的冷卻",
+    "重置測試",
+    "測試模式",
+    "重置沙盒",
+    "清除學習冷卻",
+)
+
+_RESET_SANDBOX_EN = (
+    "reset sandbox",
+    "clear cooldown",
+    "clear cooldowns",
+    "testnet reset",
+)
+
 
 def _compact(text: str) -> str:
     return re.sub(r"\s+", "", str(text or "").strip())
@@ -68,6 +84,14 @@ def detect_chat_command(message: str) -> Optional[str]:
         if lower == phrase or lower.startswith(phrase):
             return "resume_trading"
 
+    for phrase in _RESET_SANDBOX_ZH:
+        if compact == phrase or phrase in compact:
+            return "reset_testnet_sandbox"
+
+    for phrase in _RESET_SANDBOX_EN:
+        if lower == phrase or lower.startswith(phrase):
+            return "reset_testnet_sandbox"
+
     return None
 
 
@@ -97,3 +121,12 @@ def format_flatten_reply(result: dict) -> str:
     if sync_warning:
         parts.append(f"；同步警告：{sync_warning}")
     return "".join(parts)
+
+
+def format_reset_sandbox_reply(result: dict) -> str:
+    removed = int(result.get("removed_loss_trades") or 0)
+    sandbox = "開啟" if result.get("sandbox_enabled") else "關閉"
+    return (
+        f"已重置測試網沙盒：清除虧損紀錄 {removed} 筆、驗證阻擋已精簡，沙盒模式{sandbox}。"
+        " 標的冷卻／歷史劣勢／連虧／強平冷卻在 testnet 將放寬（信心≥0.42）。"
+    )
