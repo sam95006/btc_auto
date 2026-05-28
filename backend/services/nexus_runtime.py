@@ -551,6 +551,13 @@ class NexusRuntime:
             print(f"[nexus_runtime] validation prune skipped: {exc}")
         self._ensure_trading_resumed(force=True)
         self.account_sync.start()
+        # On startup, immediately refresh exchange state and evaluate exits for any
+        # existing live positions (do not wait for the first scheduled tick).
+        try:
+            self.refresh_live_exchange_state(force=True)
+        except Exception as exc:
+            print(f"[nexus_runtime] startup exchange refresh skipped: {exc}")
+        self._force_immediate_tick = True
         if AI_LED_TRADING_ENABLED and self.llm_gateway.enabled():
             try:
                 self.llm_gateway.warmup()
@@ -593,7 +600,8 @@ class NexusRuntime:
         prices = self.price_feed.get_prices(self.futures_client)
         self.latest_prices = dict(prices)
         self.market_overview = self.price_feed.get_market_overview(max_age_seconds=GLOBAL_INDEX_REFRESH_SECONDS)
-        self.position_manager.update_unrealized(prices)
+        symbol_prices = self._build_symbol_prices(prices)
+        self.position_manager.update_unrealized(prices, symbol_prices=symbol_prices)
         self._sync_news()
 
         self._ensure_trading_resumed()
