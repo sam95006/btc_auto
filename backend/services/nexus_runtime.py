@@ -513,7 +513,8 @@ class NexusRuntime:
             max_age_seconds=GLOBAL_INDEX_REFRESH_SECONDS,
             force=force,
         )
-        self.position_manager.update_unrealized(prices)
+        symbol_prices = self._build_symbol_prices(prices)
+        self.position_manager.update_unrealized(prices, symbol_prices=symbol_prices)
         if force or self._news_refresh_due():
             self._sync_news()
         else:

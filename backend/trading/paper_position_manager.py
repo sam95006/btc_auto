@@ -74,10 +74,12 @@ class PaperPositionManager:
                 fleet = pos.get("fleet")
                 symbol = str(pos.get("symbol") or "").upper()
                 price = None
-                if fleet and fleet in prices:
-                    price = prices.get(fleet, {}).get("price")
-                if not price and symbol in symbol_prices:
+                # Prefer symbol-level prices (mark/bid-ask derived) when available.
+                # Fleet price feed can be stale or differ from the exchange mark price.
+                if symbol and symbol in symbol_prices:
                     price = symbol_prices.get(symbol)
+                if not price and fleet and fleet in prices:
+                    price = prices.get(fleet, {}).get("price")
                 if not price:
                     continue
                 side_factor = 1 if pos["side"] == "BUY" else -1
