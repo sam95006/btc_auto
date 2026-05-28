@@ -2821,10 +2821,15 @@ class NexusRuntime:
             )
 
             engine = self.strategy_engines[fleet]
+            # Even when truth layer is degraded, still allow exit management to prevent liquidations.
             if not futures_ready:
                 self.state_manager.update_fleet(fleet, status="DEGRADED", last_signal="HOLD", last_reason="truth_layer_not_ready")
-                continue
-            exit_trades = engine.manage_position_exits(signal, current)
+                exit_trades = engine.manage_position_exits(
+                    {"action": "HOLD", "confidence": 0.0, "reason": "truth_layer_degraded_exit_check"},
+                    current,
+                )
+            else:
+                exit_trades = engine.manage_position_exits(signal, current)
             for closed_trade in exit_trades:
                 close_context = dict(market_contexts.get(fleet, {}))
                 close_context["setup_type"] = self.validation_pipeline.decision_quality_engine.setup_classifier.classify(
@@ -3894,6 +3899,52 @@ class NexusRuntime:
                 "briefing": self.station_briefings.get(fleet, {}),
             }
 
+        # Diagnostics: expose R-exit thresholds per open position so users can verify stop/TP evaluation.
+        position_exit_diagnostics = []
+        try:
+            from config.exit_config import RISK_PCT, STOP_R, TP_LADDER
+
+            for pos in list(all_positions or [])[:24]:
+                margin = float(pos.get("margin", 0.0) or 0.0)
+                unrealized = float(pos.get("unrealized_pnl", 0.0) or 0.0)
+                qty = float(pos.get("quantity", 0.0) or 0.0)
+                entry = float(pos.get("entry_price", 0.0) or 0.0)
+                side = str(pos.get("side") or "BUY").upper()
+                risk_r_usd = max(margin * float(RISK_PCT), 1e-6)
+                pnl_r = unrealized / risk_r_usd if risk_r_usd > 0 else 0.0
+                stop_usd = -float(STOP_R) * risk_r_usd
+                sign = 1.0 if side == "BUY" else -1.0
+                tp_prices = []
+                if entry > 0 and qty > 0:
+                    for spec in TP_LADDER:
+                        target_r = float(spec.get("r", 0.0) or 0.0)
+                        move_usd = target_r * risk_r_usd
+                        tp_prices.append(
+                            {
+                                "tag": str(spec.get("tag") or ""),
+                                "r": round(target_r, 4),
+                                "target_price": round(entry + sign * (move_usd / qty), 8),
+                                "fraction": float(spec.get("fraction", 0.0) or 0.0),
+                            }
+                        )
+                position_exit_diagnostics.append(
+                    {
+                        "fleet": str(pos.get("fleet") or ""),
+                        "symbol": str(pos.get("symbol") or ""),
+                        "side": side,
+                        "margin": round(margin, 6),
+                        "unrealized_pnl": round(unrealized, 6),
+                        "risk_r_usd": round(risk_r_usd, 6),
+                        "pnl_r": round(pnl_r, 4),
+                        "stop_r": float(STOP_R),
+                        "stop_usd": round(stop_usd, 6),
+                        "stop_triggered": bool(unrealized <= stop_usd),
+                        "tp_targets": tp_prices,
+                    }
+                )
+        except Exception:
+            position_exit_diagnostics = []
+
         learning_status = self._build_learning_status()
         validation_status = self._build_validation_status()
         account_sync_status = self._last_account_sync_status or self._build_account_sync_status()
@@ -3958,6 +4009,7 @@ class NexusRuntime:
                 "order_count": len(combined_orders),
                 "trade_count": true_recent_trade_count,
                 "active_positions": len(all_positions),
+                "position_exit_diagnostics": position_exit_diagnostics,
                 "last_trade": combined_trades[0] if combined_trades else None,
                 "account_consistency": {
                     "spot_base_url": getattr(self.spot_client, "base_url", ""),
