@@ -4569,6 +4569,9 @@ class NexusRuntime:
             embedded_worker_error=embedded_worker_error,
         )
         snapshot_payload["ops_health"] = ops_report
+        snapshot_payload["external_market_intel"] = self.external_market_intel.snapshot()
+        snapshot_payload["research_gate"] = dict(self._research_gate_status or {})
+        snapshot_payload["regime"] = self.regime_classifier.snapshot()
         self.ops_health.maybe_alert(ops_report, previous_status=self._last_ops_status)
         self._last_ops_status = ops_report.get("status")
         snapshot_payload["trading_health"] = self.trading_health.build_report(

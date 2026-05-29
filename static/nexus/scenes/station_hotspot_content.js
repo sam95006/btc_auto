@@ -1,4 +1,5 @@
 import { escapeHtml, normalizeText } from "../utils/presentation.js?v=20260510a";
+import { buildMarketIntelRows, renderMarketIntelList } from "../utils/market_intel_presentation.js?v=20260529a";
 
 const FLEET_SYMBOL_KEYWORDS = {
   BTC: ["bitcoin", "btc"],
@@ -163,6 +164,10 @@ export function renderFleetReportHtml(state, fleet) {
         .join("")
     : `<li style="color:rgba(255,255,255,0.4);">目前沒有與 ${escapeHtml(fleet)} 直接相關的全球新聞。</li>`;
 
+  const globalRows = buildMarketIntelRows(state).filter((row) =>
+    ["fear_greed", "regime", "research_gate", "netflow", "long_short"].includes(row.key),
+  );
+
   return `
     <div style="display:grid;gap:10px;">
       <div class="station-stat-row"><dt>艦隊狀態</dt><dd>${escapeHtml(normalizeText(sys.status, "NORMAL"))}</dd></div>
@@ -170,6 +175,10 @@ export function renderFleetReportHtml(state, fleet) {
       <div class="station-stat-row"><dt>合約標的</dt><dd>${escapeHtml(normalizeText(ctx.symbol, "--"))}</dd></div>
       <div class="station-stat-row"><dt>資金費率</dt><dd>${(Number(ctx.funding_rate || 0) * 100).toFixed(4)}%</dd></div>
       <div class="station-stat-row"><dt>市場結構</dt><dd>${escapeHtml(normalizeText(ctx.market_regime, "normal"))}</dd></div>
+      <div class="station-stat-row"><dt>體制 AI</dt><dd>${escapeHtml(normalizeText(ctx.market_regime_ai, "—"))}</dd></div>
+      <div class="station-stat-row"><dt>情緒</dt><dd>${escapeHtml(normalizeText(ctx.fear_greed_classification || ctx.sentiment_regime, "—"))}</dd></div>
+      <p class="station-sidebar-title" style="margin-top:6px;">全域宏觀</p>
+      ${renderMarketIntelList(globalRows, 5)}
       <p style="font-size:11px;color:rgba(255,255,255,0.45);margin:4px 0 0;">${escapeHtml(normalizeText(sys.last_reason, ""))}</p>
       <p class="station-sidebar-title" style="margin-top:8px;">${escapeHtml(fleet)} 相關全球新聞</p>
       <ul class="panel-list" style="padding-left:0;list-style:none;">${newsBlock}</ul>

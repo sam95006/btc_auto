@@ -1,3 +1,5 @@
+import { buildMarketIntelRows, pickResearchGate } from "../utils/market_intel_presentation.js?v=20260529a";
+
 function formatMoney(value) {
   return `${Number(value || 0).toFixed(2)}U`;
 }
@@ -82,9 +84,21 @@ export function renderTopStatusBar(root, state) {
   const healthGrade = health.grade || "--";
   const liveSync = state.live_sync || {};
   const syncNote = liveSync.updated_at ? `資料 ${shortTime(liveSync.updated_at)}` : "";
+  const intelRows = buildMarketIntelRows(state);
+  const fearRow = intelRows.find((row) => row.key === "fear_greed");
+  const regimeRow = intelRows.find((row) => row.key === "regime");
+  const research = pickResearchGate(state);
+  const macroNote = [
+    fearRow && fearRow.value !== "—" ? `F&G ${fearRow.value}` : "",
+    regimeRow && regimeRow.value !== "—" ? `體制 ${regimeRow.value}` : "",
+    research.research_pass === false ? "研究×" : research.research_pass === true ? "研究✓" : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const systemMetaShort = [
     linkLabel,
     syncNote,
+    macroNote,
     system.trading_paused && pauseReason ? `原因 ${pauseReason}` : "",
     !system.trading_paused && gateReason ? `擋倉 ${gateReason}` : "",
   ]

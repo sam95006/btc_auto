@@ -2,6 +2,12 @@ import { renderConversation } from "./scene_helpers.js?v=20260528a";
 import { renderRadarFundingHtml, renderRadarWhaleHtml } from "./station_hotspot_content.js?v=20260528a";
 import { escapeHtml, normalizeText } from "../utils/presentation.js?v=20260510a";
 import { getLayoutHotspots } from "../layout_state.js?v=20260503a";
+import {
+  mergeAlertsForDisplay,
+  renderMarketIntelList,
+  buildMarketIntelRows,
+  renderExternalAlertChips,
+} from "../utils/market_intel_presentation.js?v=20260529a";
 
 const RADAR_HOTSPOTS = [
   { id: "whale", label: "巨鯨監控", x: 0.1, y: 0.3, w: 0.22, h: 0.3, section: "whale" },
@@ -45,7 +51,7 @@ function renderStationHtml(state) {
 }
 
 function buildRightSidebar(state, whaleCount, scanStatus) {
-  const alerts = (state.alerts || []).slice(0, 4);
+  const alerts = mergeAlertsForDisplay(state, 6);
   const alertsHtml = alerts.length
     ? alerts
         .map(
@@ -53,6 +59,9 @@ function buildRightSidebar(state, whaleCount, scanStatus) {
         )
         .join("")
     : `<p style="color:rgba(255,255,255,0.4);font-size:12px;">目前沒有新的雷達警報。</p>`;
+  const intelRows = buildMarketIntelRows(state).filter((row) =>
+    ["fear_greed", "long_short", "liquidations", "netflow", "spot_premium"].includes(row.key),
+  );
 
   const topWhale = (state.radar_scan?.whale_watch || [])[0];
   const whaleLine = topWhale
@@ -66,6 +75,10 @@ function buildRightSidebar(state, whaleCount, scanStatus) {
     <div class="station-stat-row"><dt>候選標的</dt><dd>${(state.radar_scan?.candidates || []).length} 檔</dd></div>
     <p class="station-sidebar-title" style="margin-top:8px;">最新巨鯨</p>
     <p style="font-size:12px;line-height:1.55;color:rgba(238,250,255,0.82);">${escapeHtml(whaleLine)}</p>
+    <p class="station-sidebar-title" style="margin-top:8px;">宏觀濾網</p>
+    ${renderMarketIntelList(intelRows, 5)}
+    <p class="station-sidebar-title" style="margin-top:8px;">外部警報</p>
+    <div class="market-intel-chips" style="margin-bottom:8px;">${renderExternalAlertChips(state, 5)}</div>
     <p class="station-sidebar-title" style="margin-top:8px;">最新警報</p>
     ${alertsHtml}
   `;
@@ -76,13 +89,20 @@ export function getRadarModalContent(state, section) {
     return renderRadarWhaleHtml(state);
   }
   if (section === "alerts") {
-    const alerts = (state.alerts || []).slice(0, 15);
-    if (!alerts.length) return `<p style="color:rgba(255,255,255,0.4);">目前沒有新的雷達警報。</p>`;
-    return alerts
-      .map(
-        (a) => `<div class="station-alert-row"><b>${escapeHtml(a.time || "--")}</b>${escapeHtml(normalizeText(a.summary || "警報"))}</div>`,
-      )
-      .join("");
+    const alerts = mergeAlertsForDisplay(state, 15);
+    const chips = renderExternalAlertChips(state, 10);
+    const alertRows = alerts.length
+      ? alerts
+          .map(
+            (a) => `<div class="station-alert-row"><b>${escapeHtml(a.time || "--")}</b>${escapeHtml(normalizeText(a.summary || "警報"))}</div>`,
+          )
+          .join("")
+      : `<p style="color:rgba(255,255,255,0.4);">目前沒有新的雷達警報。</p>`;
+    return `
+      <p class="station-sidebar-title">外部資料源</p>
+      <div class="market-intel-chips" style="margin-bottom:10px;">${chips}</div>
+      ${alertRows}
+    `;
   }
   if (section === "funding") {
     return renderRadarFundingHtml(state);

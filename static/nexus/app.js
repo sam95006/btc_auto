@@ -1,16 +1,16 @@
 ﻿import { startStateStore, subscribe, getState } from "./state_store.js?v=20260524b";
 import { fetchLayoutConfig, fetchNexusState } from "./api_client.js?v=20260503a";
-import { renderTopStatusBar } from "./components/ui_top_status_bar.js?v=20260527a";
-import { renderAlertPanel } from "./components/ui_alert_panel.js?v=20260510a";
+import { renderTopStatusBar } from "./components/ui_top_status_bar.js?v=20260529a";
+import { renderAlertPanel } from "./components/ui_alert_panel.js?v=20260529a";
 import { renderChatDock } from "./components/ui_chat_dock.js?v=20260521c";
 import { renderMeetingLogPanel } from "./components/ui_meeting_log_panel.js?v=20260520a";
-import { renderDecisionStrip } from "./components/ui_decision_panel.js?v=20260527a";
+import { renderDecisionStrip } from "./components/ui_decision_panel.js?v=20260529a";
 import { renderRevenueKpi } from "./components/ui_revenue_kpi.js?v=20260526a";
 import { renderMeetingDock } from "./components/ui_meeting_dock.js?v=20260510b";
 import { buildMainOverviewPage } from "./scenes/scene_main_hq.js?v=20260510b";
-import { buildHqPage, getHqModalContent } from "./scenes/scene_hq_roundtable.js?v=20260521f";
-import { buildFleetPage, getFleetModalContent } from "./scenes/scene_fleet_bridge_base.js?v=20260528a";
-import { buildRadarPage, getRadarModalContent } from "./scenes/scene_radar_outpost.js?v=20260528a";
+import { buildHqPage, getHqModalContent } from "./scenes/scene_hq_roundtable.js?v=20260529a";
+import { buildFleetPage, getFleetModalContent } from "./scenes/scene_fleet_bridge_base.js?v=20260529a";
+import { buildRadarPage, getRadarModalContent } from "./scenes/scene_radar_outpost.js?v=20260529a";
 import { buildNewsPage, getNewsModalContent } from "./scenes/scene_news_nexus.js?v=20260528a";
 import { escapeHtml } from "./utils/presentation.js?v=20260510b";
 import { initHotspotEditor, getIsEditMode } from "./components/hotspot_editor.js?v=20260503a";
@@ -576,6 +576,67 @@ style.textContent = `
     font-size: 12px;
     line-height: 1.5;
   }
+  .market-intel-list {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: grid !important;
+    gap: 6px !important;
+  }
+  .market-intel-row {
+    display: grid !important;
+    grid-template-columns: minmax(72px, 38%) 1fr !important;
+    gap: 2px 8px !important;
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    font-size: 11px !important;
+  }
+  .market-intel-row span { color: rgba(173,213,229,0.78) !important; }
+  .market-intel-row strong { color: #eefaff !important; font-size: 12px !important; grid-column: 2 !important; }
+  .market-intel-row em {
+    grid-column: 1 / -1 !important;
+    font-style: normal !important;
+    font-size: 10px !important;
+    color: rgba(143,190,210,0.65) !important;
+  }
+  .market-intel-row.good { border-color: rgba(47,247,163,0.28) !important; }
+  .market-intel-row.warn { border-color: rgba(255,208,107,0.28) !important; }
+  .market-intel-row.bad { border-color: rgba(255,107,143,0.35) !important; }
+  .market-intel-chips {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    margin-top: 6px !important;
+  }
+  .market-intel-chips--compact { margin-top: 4px !important; }
+  .market-intel-chip {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+    border-radius: 999px !important;
+    border: 1px solid rgba(79,216,255,0.22) !important;
+    background: rgba(79,216,255,0.1) !important;
+    color: rgba(200,235,255,0.9) !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .market-intel-chip--bad {
+    border-color: rgba(255,107,143,0.35) !important;
+    background: rgba(255,107,143,0.12) !important;
+    color: #ffc0d0 !important;
+  }
+  .market-intel-chip--warn {
+    border-color: rgba(255,208,107,0.3) !important;
+    background: rgba(255,208,107,0.1) !important;
+    color: #ffe2a8 !important;
+  }
+  .market-intel-chip--muted { opacity: 0.55 !important; }
+  .market-intel-empty { font-size: 11px !important; color: rgba(173,213,229,0.65) !important; margin: 0 !important; }
+  #alert-panel .market-intel-chips { max-height: 42px !important; overflow: hidden !important; }
+  .hq-mini-panel--intel .market-intel-list { max-height: 180px !important; overflow-y: auto !important; }
 `;
 document.head.appendChild(style);
 

@@ -1,4 +1,9 @@
 import { escapeHtml } from "../utils/presentation.js?v=20260525a";
+import {
+  buildMarketIntelRows,
+  pickResearchGate,
+  renderExternalAlertChips,
+} from "../utils/market_intel_presentation.js?v=20260529a";
 
 function gradeTone(grade) {
   if (grade === "A+" || grade === "A") return "good";
@@ -28,10 +33,26 @@ export function renderAlertPanel(root, state) {
     ? `復投基準 ${Number(compound.reinvest_base_equity || daily.reinvest_base_equity || 0).toFixed(0)} · 今日 ${daily.is_positive_day ? "正" : "負"}${Number(daily.daily_pnl || 0).toFixed(2)}`
     : "";
   const target90 = radar.target_90_all_dimensions ? " · 五維≥90" : "";
+  const research = pickResearchGate(state);
+  const intelRows = buildMarketIntelRows(state);
+  const fearRow = intelRows.find((row) => row.key === "fear_greed");
+  const regimeRow = intelRows.find((row) => row.key === "regime");
+  const researchNote =
+    research.research_pass === false
+      ? `研究閘道：未通過 (${research.reason || "—"})`
+      : research.research_pass === true
+        ? "研究閘道：通過"
+        : "";
+  const sentimentNote = fearRow && fearRow.value !== "—" ? `情緒 ${fearRow.value}` : "";
+  const regimeNote = regimeRow && regimeRow.value !== "—" ? `體制 ${regimeRow.value}` : "";
   const tip =
     compoundNote ||
+    researchNote ||
+    sentimentNote ||
+    regimeNote ||
     (radar.recommendations || health.recommendations || [])[0] ||
     "AI 與 Binance 同步正常";
+  const alertChips = renderExternalAlertChips(state, 3);
   const dims = radar.dimensions || {};
   const labels = radar.dimension_labels || {};
   const dimRows = Object.keys(dims)
@@ -53,6 +74,7 @@ export function renderAlertPanel(root, state) {
       <small class="alert-health-grade ${gradeTone(grade)}">成熟度 ${score.toFixed(0)} · ${escapeHtml(grade)}</small>
       <div class="maturity-radar-dims">${dimRows}</div>
       <small>核准率 ${approval}% · ${escapeHtml(rejectNote)}</small>
+      <div class="market-intel-chips market-intel-chips--compact">${alertChips}</div>
       <small class="alert-health-tip">${escapeHtml(tip)}</small>
     </div>
   `;

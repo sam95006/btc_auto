@@ -1,4 +1,5 @@
 import { escapeHtml } from "../utils/presentation.js?v=20260526f";
+import { pickResearchGate, pickRegime, pickExternalIntel } from "../utils/market_intel_presentation.js?v=20260529a";
 
 function sourceLabel(item) {
   return item.decision_source || item.proposer || item.source || "system";
@@ -139,10 +140,31 @@ export function renderDecisionStrip(root, state, options = {}) {
     )}</div>`;
   }
 
+  const research = pickResearchGate(state);
+  const regime = pickRegime(state);
+  const intel = pickExternalIntel(state);
+  const researchChip =
+    research.research_pass === false
+      ? `<span class="decision-chip decision-chip--reject">研究未過</span>`
+      : research.research_pass === true
+        ? `<span class="decision-chip">研究通過</span>`
+        : "";
+  const regimeChip = regime.label
+    ? `<span class="decision-chip ${regime.label === "HIGH_RISK_MACRO" ? "decision-chip--reject" : ""}">體制 ${escapeHtml(regime.label)}</span>`
+    : "";
+  const fear = intel.fear_greed || {};
+  const sentimentChip =
+    fear.value != null
+      ? `<span class="decision-chip">F&G ${escapeHtml(String(fear.value))}</span>`
+      : "";
+
   const chips = [
     `<span class="decision-chip">演化 ${evoMode}</span>`,
     `<span class="decision-chip">管倉 ${posActions}</span>`,
-  ];
+    researchChip,
+    regimeChip,
+    sentimentChip,
+  ].filter(Boolean);
   if (topRejects.length) {
     chips.push(
       `<span class="decision-chip decision-chip--reject">拒絕 ${escapeHtml(

@@ -1,5 +1,12 @@
 import { escapeHtml, normalizeText } from "../utils/presentation.js?v=20260521c";
 import { getLayoutHotspots } from "../layout_state.js?v=20260503a";
+import {
+  mergeAlertsForDisplay,
+  renderMarketIntelList,
+  buildMarketIntelRows,
+  renderMarketIntelSection,
+  renderExternalAlertChips,
+} from "../utils/market_intel_presentation.js?v=20260529a";
 
 const HQ_HOTSPOTS = [
   { id: "overview", label: "總覽", x: 0.15, y: 0.2, w: 0.22, h: 0.26, section: "overview" },
@@ -37,10 +44,9 @@ function meetingAlerts(state, limit = 5) {
 }
 
 function latestAlerts(state, limit = 3) {
-  const runtimeAlerts = Array.isArray(state.alerts) ? state.alerts : [];
   const merged = [];
   const seen = new Set();
-  for (const item of [...runtimeAlerts, ...meetingAlerts(state, 6)]) {
+  for (const item of [...mergeAlertsForDisplay(state, 8), ...meetingAlerts(state, 6)]) {
     const key = `${item.time || ""}|${item.summary || ""}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -119,6 +125,7 @@ function renderClockAndMarket(state) {
   const indices = overview.indices || {};
   const decision = state.decision_summary || {};
   const transport = state.transport || {};
+  const intelRows = buildMarketIntelRows(state);
 
   return `
     <section class="hq-side-card hq-side-card--split">
@@ -135,26 +142,33 @@ function renderClockAndMarket(state) {
             ["成交筆數", String(Number(decision.trade_count || 0))],
           ])}
         </div>
-        <div class="hq-mini-panel">
+        <div class="hq-mini-panel hq-mini-panel--intel">
           <header>
-            <span>市場快照</span>
-            <strong>外部市場</strong>
+            <span>加密情報</span>
+            <strong>鏈上 · 情緒 · 衍生品</strong>
           </header>
-          ${compactList([
-            ["台股加權", marketLine(indices.twii)],
-            ["標普 500", marketLine(indices.spx)],
-            ["道瓊工業", marketLine(indices.dji)],
-            ["那斯達克", marketLine(indices.nasdaq)],
-            ["黃金", marketLine(indices.gold)],
-          ])}
+          ${renderMarketIntelList(intelRows.slice(0, 5), 5)}
         </div>
+      </div>
+      <div class="hq-mini-panel" style="margin-top:8px;">
+        <header>
+          <span>傳統市場</span>
+          <strong>全球指數</strong>
+        </header>
+        ${compactList([
+          ["台股加權", marketLine(indices.twii)],
+          ["標普 500", marketLine(indices.spx)],
+          ["道瓊工業", marketLine(indices.dji)],
+          ["那斯達克", marketLine(indices.nasdaq)],
+          ["黃金", marketLine(indices.gold)],
+        ])}
       </div>
     </section>
   `;
 }
 
-function renderAlertCards(state) {
-  const rows = latestAlerts(state, 3);
+function renderAlertCards(state, limit = 3) {
+  const rows = latestAlerts(state, limit);
   if (!rows.length) {
     return `<div class="hq-side-empty">目前沒有新的警報。</div>`;
   }
@@ -194,8 +208,15 @@ function renderRightSidebar(state) {
       ${renderClockAndMarket(state)}
       <section class="hq-side-card">
         <header>
+          <span>外部風險</span>
+          <strong>資料源警報</strong>
+        </header>
+        <div class="market-intel-chips">${renderExternalAlertChips(state, 8)}</div>
+      </section>
+      <section class="hq-side-card">
+        <header>
           <span>最新警報</span>
-          <strong>會議警示</strong>
+          <strong>會議與系統</strong>
         </header>
         <div class="hq-alert-list">${renderAlertCards(state)}</div>
       </section>
@@ -251,7 +272,13 @@ function renderStationHtml(state) {
 
 export function getHqModalContent(state, activeModal) {
   if (activeModal === "risk") {
-    return `<div class="hq-alert-list">${renderAlertCards(state)}</div>`;
+    return `
+      ${renderMarketIntelSection(state, { title: "風險情報總覽", subtitle: "HQ 風險板" })}
+      <section class="hq-side-card" style="margin-top:10px;">
+        <header><span>警報</span><strong>會議 · 外部 · 系統</strong></header>
+        <div class="hq-alert-list">${renderAlertCards(state, 8)}</div>
+      </section>
+    `;
   }
   if (activeModal === "reports") {
     return renderDecisionCard(state);
