@@ -562,17 +562,7 @@ class NexusRuntime:
         except Exception as exc:
             print(f"[nexus_runtime] startup exchange refresh skipped: {exc}")
         if self.futures_client.is_configured():
-            try:
-                self._futures_trading_access = self.futures_client.validate_trading_access("ETHUSDT")
-                access = self._futures_trading_access
-                print(
-                    "[nexus_runtime] futures trading access: "
-                    f"ok={access.get('ok')} can_trade={access.get('can_trade')} "
-                    f"hedge={access.get('dual_side_position')} base={access.get('base_url')}"
-                )
-            except Exception as exc:
-                self._futures_trading_access = {"ok": False, "error": str(exc)}
-                print(f"[nexus_runtime] futures trading access check skipped: {exc}")
+            self._refresh_futures_trading_access("ETHUSDT")
         try:
             self._evaluate_startup_position_exits()
         except Exception as exc:
@@ -713,7 +703,46 @@ class NexusRuntime:
                 f"exits={result['exits_triggered']} "
                 f"errors={len(result['errors'])}"
             )
+        if result.get("errors") and not self._futures_write_allowed():
+            self._alert_futures_write_blocked("startup_exit_check")
         return result
+
+    def _refresh_futures_trading_access(self, symbol="ETHUSDT"):
+        try:
+            self._futures_trading_access = self.futures_client.validate_trading_access(symbol)
+            access = self._futures_trading_access or {}
+            post_probe = access.get("write_post_probe") or {}
+            print(
+                "[nexus_runtime] futures trading access: "
+                f"ok={access.get('ok')} can_trade={access.get('can_trade')} "
+                f"write_post={post_probe.get('ok')} hedge={access.get('dual_side_position')} "
+                f"base={access.get('base_url')}"
+            )
+            if not self._futures_write_allowed():
+                self._alert_futures_write_blocked("startup")
+        except Exception as exc:
+            self._futures_trading_access = {"ok": False, "error": str(exc)}
+            print(f"[nexus_runtime] futures trading access check skipped: {exc}")
+
+    def _futures_write_allowed(self):
+        access = getattr(self, "_futures_trading_access", None) or {}
+        post_probe = access.get("write_post_probe") or {}
+        if post_probe:
+            return bool(post_probe.get("ok"))
+        return bool(access.get("ok"))
+
+    def _alert_futures_write_blocked(self, source="runtime"):
+        post_probe = (getattr(self, "_futures_trading_access", None) or {}).get("write_post_probe") or {}
+        error = str(post_probe.get("error") or "")
+        summary = (
+            "【合約 API 無法下單】NEXUS 已讀到持倉並完成止損評估，但 Binance Demo 拒絕所有平倉/下單請求"
+            f"（{error or '-1109 Invalid account'}）。"
+            "這不是「沒偵測到庫存」：請到 demo.binance.com 重建 API 金鑰（勾選 Reading + Futures），"
+            "Secret 貼到 BINANCE_FUTURES_TESTNET_SECRET_KEY 後 Redeploy；"
+            "或先在 App 手動平倉 ETH。"
+        )
+        self._append_alert("ALERT_RED", summary)
+        print(f"[nexus_runtime] futures write blocked ({source}): {error or '-1109'}")
 
     def _attempt_emergency_position_close(self, fleet, position, price, reason="emergency_close"):
         symbol = str(position.get("symbol") or "").upper()
@@ -4225,6 +4254,10 @@ class NexusRuntime:
                 "active_positions": len(all_positions),
                 "position_exit_diagnostics": position_exit_diagnostics,
                 "startup_exit_check": dict(getattr(self, "_startup_exit_check", None) or {}),
+                "futures_trading_access": dict(getattr(self, "_futures_trading_access", None) or {}),
+                "futures_write_allowed": self._futures_write_allowed()
+                if self.futures_client.is_configured()
+                else None,
                 "last_tick_error": getattr(self, "_last_tick_error", None),
                 "external_market_intel": self.external_market_intel.snapshot(),
                 "last_trade": combined_trades[0] if combined_trades else None,
