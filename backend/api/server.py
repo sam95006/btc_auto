@@ -106,6 +106,12 @@ def register_nexus_routes(app):
                 "startup_exit_check": startup_exit_check,
                 "position_exit_diagnostics": decision.get("position_exit_diagnostics") or [],
                 "futures_write_probe": futures_write_probe,
+                "external_market_intel": decision.get("external_market_intel")
+                or (
+                    nexus_runtime.external_market_intel.snapshot()
+                    if getattr(nexus_runtime, "external_market_intel", None)
+                    else {}
+                ),
                 "binance_balances": {
                     "spot_usdt": binance_spot.get("usdt_total", capital.get("spot_usdt_total")),
                     "spot_usdc": binance_spot.get("usdc_total", capital.get("spot_usdc_total")),

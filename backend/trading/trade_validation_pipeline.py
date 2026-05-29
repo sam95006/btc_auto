@@ -269,6 +269,10 @@ class SimulationValidationEngine:
             approved = False
             reason = f"market_regime_blocked:{market_regime}"
             score = 0.1
+        elif market_context.get("coingecko_liquidity_ok") is False:
+            approved = False
+            reason = "coingecko_low_liquidity"
+            score = 0.16
         elif liquidity_status != "healthy" or top5_notional < SIMULATION_MIN_TOP5_NOTIONAL:
             approved = False
             reason = "insufficient_liquidity"

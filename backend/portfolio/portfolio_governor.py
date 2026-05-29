@@ -91,6 +91,12 @@ class PortfolioGovernor:
             learning = fleet_learning.get(fleet, {})
             aggression_multiplier = _safe_float(learning.get("aggression_multiplier") or 1.0)
             leverage_cap = learning.get("leverage_cap")
+            alt_mult = _safe_float(context.get("alt_leverage_multiplier") or 1.0)
+            if alt_mult > 0 and alt_mult < 1.0 and fleet not in {"BTC"}:
+                if leverage_cap is None:
+                    leverage_cap = round(20.0 * alt_mult, 2)
+                else:
+                    leverage_cap = round(min(float(leverage_cap), 20.0) * alt_mult, 2)
 
             allowed = True
             reasons = []

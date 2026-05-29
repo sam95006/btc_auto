@@ -45,6 +45,7 @@ from config.revenue_target_config import (
 )
 from backend.market.market_price_feed_service import MarketPriceFeedService
 from backend.market.market_context_service import MarketContextService
+from backend.market.external_market_intel_service import ExternalMarketIntelService
 from backend.market.radar_market_scan_service import RadarMarketScanService
 from backend.market.spot_truth_service import SpotTruthService
 from backend.market.truth_layer_guard import TruthLayerGuard
@@ -217,6 +218,7 @@ class NexusRuntime:
         self.spot_client = BinanceSpotTestnetClient()
         self.futures_client = BinanceFuturesTestnetClient()
         self.market_context_service = MarketContextService(self.spot_client, self.futures_client)
+        self.external_market_intel = ExternalMarketIntelService()
         self.radar_market_scan_service = RadarMarketScanService(self.futures_client, self.market_context_service)
         self.spot_truth_service = SpotTruthService(
             truth_mode=HQ_SPOT_TRUTH_MODE,
@@ -760,6 +762,20 @@ class NexusRuntime:
         self._last_account_sync_status = account_sync_status
         calibration_snapshot = self.learning_feedback.build_calibration_snapshot()
         radar_symbols = self.upgrade_pipeline.resolve_radar_symbols(self.futures_client)
+        try:
+            external_radar = self.external_market_intel.top_radar_symbols(self.futures_client)
+            if external_radar:
+                merged_radar = []
+                seen_radar = set()
+                for symbol in list(external_radar) + list(radar_symbols):
+                    sym = str(symbol or "").upper()
+                    if not sym or sym in seen_radar:
+                        continue
+                    seen_radar.add(sym)
+                    merged_radar.append(sym)
+                radar_symbols = merged_radar
+        except Exception:
+            pass
         self.radar_market_scan_service.symbols = tuple(radar_symbols)
         self.radar_scan = self.radar_market_scan_service.scan()
         self.radar_state = dict(self.radar_scan or {})
@@ -779,6 +795,10 @@ class NexusRuntime:
         )
         futures_total = futures_equity_from_account(futures_account)
         self.growth_status = self.capital_growth_guard.evaluate(futures_total)
+        try:
+            self.growth_status = self.external_market_intel.apply_growth_directives(self.growth_status)
+        except Exception:
+            pass
         monthly_risk = self.monthly_drawdown_guard.evaluate(futures_total)
         self.growth_status["monthly_risk"] = dict(monthly_risk or {})
         if monthly_risk.get("block_new_entries"):
@@ -2566,6 +2586,11 @@ class NexusRuntime:
         if not self.spot_client.is_configured():
             self.state_manager.set_module_health("hq_spot", "DISABLED")
             return
+        ext_alerts = list(((self.growth_status or {}).get("external_market_intel") or {}).get("alerts") or [])
+        if any("btc_exchange_inflow_spike" in item for item in ext_alerts):
+            self.state_manager.set_module_health("hq_spot", "CAUTION")
+            self.state_manager.update_fleet("HQ", status="MONITORING", last_signal="HOLD", last_reason="cryptoquant_whale_inflow")
+            return
         if truth_status and not truth_status.get("spot_ready_for_ai", truth_status.get("fresh_for_ai", False)):
             self.state_manager.set_module_health("hq_spot", "DEGRADED")
             return
@@ -4123,6 +4148,7 @@ class NexusRuntime:
                 "position_exit_diagnostics": position_exit_diagnostics,
                 "startup_exit_check": dict(getattr(self, "_startup_exit_check", None) or {}),
                 "last_tick_error": getattr(self, "_last_tick_error", None),
+                "external_market_intel": self.external_market_intel.snapshot(),
                 "last_trade": combined_trades[0] if combined_trades else None,
                 "account_consistency": {
                     "spot_base_url": getattr(self.spot_client, "base_url", ""),
