@@ -13,6 +13,10 @@ def llm_enabled() -> bool:
 
 GROQ_CHAT_COMPLETIONS_URL = "https://api.groq.com/openai/v1/chat/completions"
 SAMBANOVA_CHAT_COMPLETIONS_URL = "https://api.sambanova.ai/v1/chat/completions"
+CEREBRAS_CHAT_COMPLETIONS_URL = os.getenv(
+    "CEREBRAS_CHAT_COMPLETIONS_URL",
+    "https://api.cerebras.ai/v1/chat/completions",
+).strip()
 
 DEFAULT_TIMEOUT_SECONDS = int(os.getenv("NEXUS_LLM_TIMEOUT_SECONDS", "12"))
 DEFAULT_MAX_COMPLETION_TOKENS = int(os.getenv("NEXUS_LLM_MAX_COMPLETION_TOKENS", "700"))
@@ -38,7 +42,7 @@ def task_provider_defaults():
         "radar": os.getenv("NEXUS_LLM_PROVIDER_RADAR", "groq_primary"),
         "roundtable": os.getenv("NEXUS_LLM_PROVIDER_ROUNDTABLE", "groq_secondary"),
         "reflection": os.getenv("NEXUS_LLM_PROVIDER_REFLECTION", "groq_secondary"),
-        "agent": os.getenv("NEXUS_LLM_PROVIDER_AGENT", "sambanova"),
+        "agent": os.getenv("NEXUS_LLM_PROVIDER_AGENT", "groq_primary"),
         "chat": os.getenv("NEXUS_LLM_PROVIDER_CHAT", "groq_primary"),
         "trade_proposer": os.getenv("NEXUS_LLM_PROVIDER_TRADE_PROPOSER", "groq_primary"),
         "regime_classifier": os.getenv("NEXUS_LLM_PROVIDER_REGIME", "groq_secondary"),
@@ -52,8 +56,8 @@ def task_model_defaults():
         "radar": os.getenv("NEXUS_LLM_MODEL_RADAR", "llama-3.3-70b-specdec"),
         "roundtable": os.getenv("NEXUS_LLM_MODEL_ROUNDTABLE", "mixtral-8x7b-32768"),
         "reflection": os.getenv("NEXUS_LLM_MODEL_REFLECTION", "mixtral-8x7b-32768"),
-        "agent": os.getenv("NEXUS_LLM_MODEL_AGENT", "Meta-Llama-3.1-405B-Instruct"),
-        "agent_fallback": os.getenv("NEXUS_LLM_MODEL_AGENT_FALLBACK", "Meta-Llama-3.1-70B-Instruct"),
+        "agent": os.getenv("NEXUS_LLM_MODEL_AGENT", "llama-3.3-70b"),
+        "agent_fallback": os.getenv("NEXUS_LLM_MODEL_AGENT_FALLBACK", "llama3.1-8b"),
         "chat": os.getenv("NEXUS_LLM_MODEL_CHAT", "llama-3.3-70b-versatile"),
         "radar_proposal": os.getenv("NEXUS_LLM_MODEL_RADAR_PROPOSAL", os.getenv("NEXUS_LLM_MODEL_TRADE_PROPOSAL", "llama-3.3-70b-versatile")),
         "trade_proposer": os.getenv("NEXUS_LLM_MODEL_TRADE_PROPOSER", "llama-3.3-70b-versatile"),
@@ -64,26 +68,30 @@ def task_model_defaults():
 MODEL_FALLBACKS = {
     "llama-3.3-70b-specdec": ["llama-3.3-70b-versatile", "openai/gpt-oss-120b"],
     "mixtral-8x7b-32768": ["llama-3.3-70b-versatile", "openai/gpt-oss-120b"],
-    "Meta-Llama-3.1-405B-Instruct": ["Meta-Llama-3.3-70B-Instruct", "DeepSeek-V3.1"],
-    "Meta-Llama-3.1-70B-Instruct": ["Meta-Llama-3.3-70B-Instruct", "DeepSeek-V3.1"],
+    "llama-3.3-70b": ["llama3.1-8b", "gpt-oss-120b"],
+    "Meta-Llama-3.1-405B-Instruct": ["llama-3.3-70b", "Meta-Llama-3.3-70B-Instruct"],
+    "Meta-Llama-3.1-70B-Instruct": ["llama-3.3-70b", "Meta-Llama-3.3-70B-Instruct"],
 }
 
 PROVIDER_KEY_ENV = {
     "groq_primary": "GROQ_API_KEY_PRIMARY",
     "groq_secondary": "GROQ_API_KEY_SECONDARY",
     "sambanova": "SAMBANOVA_API_KEY",
+    "cerebras": "CEREBRAS_API_KEY",
 }
 
 PROVIDER_ENDPOINTS = {
     "groq_primary": GROQ_CHAT_COMPLETIONS_URL,
     "groq_secondary": GROQ_CHAT_COMPLETIONS_URL,
     "sambanova": SAMBANOVA_CHAT_COMPLETIONS_URL,
+    "cerebras": CEREBRAS_CHAT_COMPLETIONS_URL,
 }
 
 PROVIDER_LABELS = {
     "groq_primary": "groq",
     "groq_secondary": "groq",
     "sambanova": "sambanova",
+    "cerebras": "cerebras",
 }
 
 ALLOWED_TASKS = {

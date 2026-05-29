@@ -26,6 +26,7 @@ from .prompt_templates import (
     build_regime_classifier_prompt,
     build_trade_proposer_prompt,
 )
+from .cerebras_client import CerebrasLLMClient
 from .sambanova_client import SambaNovaLLMClient
 
 
@@ -38,6 +39,7 @@ class LLMGateway:
             "groq_primary": GroqLLMClient(PROVIDER_KEY_ENV["groq_primary"], endpoint=PROVIDER_ENDPOINTS["groq_primary"]),
             "groq_secondary": GroqLLMClient(PROVIDER_KEY_ENV["groq_secondary"], endpoint=PROVIDER_ENDPOINTS["groq_secondary"]),
             "sambanova": SambaNovaLLMClient(PROVIDER_KEY_ENV["sambanova"], endpoint=PROVIDER_ENDPOINTS["sambanova"]),
+            "cerebras": CerebrasLLMClient(PROVIDER_KEY_ENV["cerebras"], endpoint=PROVIDER_ENDPOINTS["cerebras"]),
         }
 
     def enabled(self) -> bool:

@@ -171,7 +171,7 @@ class TradingHealthService:
         if dimensions.get("price_alignment", 0) < 0.8:
             tips.append("價格來源尚未完全對齊 Testnet，請確認 BINANCE_FUTURES 已設定。")
         if not llm.get("enabled"):
-            tips.append("開啟 NEXUS_LLM_ENABLE=1 並設定 GROQ/SAMBANOVA API key，AI 顧問才會常態參與。")
+            tips.append("開啟 NEXUS_LLM_ENABLE=1 並設定 GROQ/CEREBRAS/SAMBANOVA API key，AI 顧問才會常態參與。")
         elif not llm.get("providers_ready"):
             tips.append("LLM 已啟用但 provider 未就緒，請檢查 API key 與 Zeabur 環境變數。")
         if growth.get("block_new_entries"):

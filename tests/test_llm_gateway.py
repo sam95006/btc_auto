@@ -46,9 +46,15 @@ class LLMGatewayTests(unittest.TestCase):
 
     def test_returns_disabled_when_provider_not_configured(self):
         gateway = LLMGateway()
-        gateway._clients["sambanova"] = _FakeClient(configured=False)
+        gateway._clients["groq_primary"] = _FakeClient(configured=False)
+        gateway._clients["groq_secondary"] = _FakeClient(configured=False)
+        gateway._clients["cerebras"] = _FakeClient(configured=False)
         with patch("backend.llm.llm_gateway.llm_enabled", return_value=True):
-            result = gateway.run_task("agent", {"world_channel": []})
+            with patch(
+                "backend.llm.llm_gateway.task_provider_defaults",
+                return_value={"agent": "cerebras"},
+            ):
+                result = gateway.run_task("agent", {"world_channel": []})
         self.assertEqual(result["status"], "disabled")
         self.assertEqual(result["reason"], "provider_not_configured")
 

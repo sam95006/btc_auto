@@ -232,6 +232,9 @@ BINANCE_SPOT_TESTNET_API_SECRET=你的_spot_secret
 # --- LLM ---
 NEXUS_LLM_ENABLE=1
 GROQ_API_KEY=你的_groq_key
+CEREBRAS_API_KEY=你的_cerebras_key
+NEXUS_LLM_PROVIDER_AGENT=cerebras
+NEXUS_LLM_MODEL_AGENT=llama-3.3-70b
 SAMBANOVA_API_KEY=你的_sambanova_key
 
 # --- P0：合約專用 + 提高成交 ---
