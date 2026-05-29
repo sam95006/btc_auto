@@ -203,6 +203,8 @@ class NexusRuntime:
         self.monthly_drawdown_guard = MonthlyDrawdownGuard()
         self.ai_position_manager = AiPositionManager()
         self._force_immediate_tick = False
+        self._last_tick_error = None
+        self._startup_exit_check = {}
         self._sandbox_startup_done = False
         self._last_ops_status = None
         self.news_ingestion = NewsIngestionService(refresh_seconds=NEWS_REFRESH_SECONDS)
@@ -557,6 +559,10 @@ class NexusRuntime:
             self.refresh_live_exchange_state(force=True)
         except Exception as exc:
             print(f"[nexus_runtime] startup exchange refresh skipped: {exc}")
+        try:
+            self._evaluate_startup_position_exits()
+        except Exception as exc:
+            print(f"[nexus_runtime] startup position exit check skipped: {exc}")
         self._force_immediate_tick = True
         if AI_LED_TRADING_ENABLED and self.llm_gateway.enabled():
             try:
@@ -565,6 +571,96 @@ class NexusRuntime:
                 print(f"[nexus_runtime] llm warmup skipped: {exc}")
         self._thread = threading.Thread(target=self._loop, daemon=True, name="nexus-runtime")
         self._thread.start()
+
+    def _evaluate_startup_position_exits(self):
+        """Evaluate R-exit on existing Binance positions immediately after startup."""
+        result = {
+            "ran_at": _now(),
+            "positions_checked": 0,
+            "exits_triggered": 0,
+            "errors": [],
+            "details": [],
+        }
+        if not self.futures_client.is_configured():
+            result["skipped"] = "futures_not_configured"
+            self._startup_exit_check = result
+            return result
+
+        prices = self.price_feed.get_prices(self.futures_client)
+        self.latest_prices = dict(prices)
+        futures_account = dict(getattr(self, "_last_futures_account", None) or {})
+        if not futures_account.get("positions"):
+            futures_account = self._sync_futures_account(prices)
+            self._last_futures_account = futures_account
+        sync_error = str(futures_account.get("sync_error") or "")
+        if sync_error:
+            result["errors"].append(sync_error)
+        self._synchronize_live_futures_state(futures_account)
+        symbol_prices = self._build_symbol_prices(prices)
+        self.position_manager.update_unrealized(prices, symbol_prices=symbol_prices)
+
+        for fleet in FLEETS:
+            positions = self.position_manager.get_by_fleet(fleet)
+            if not positions:
+                continue
+            result["positions_checked"] += 1
+            position = positions[0]
+            current = float(
+                symbol_prices.get(str(position.get("symbol") or "").upper())
+                or (prices.get(fleet) or {}).get("price", 0.0)
+                or position.get("mark_price", 0.0)
+                or 0.0
+            )
+            engine = self.strategy_engines[fleet]
+            try:
+                exit_trades = engine.manage_position_exits(
+                    {"action": "HOLD", "confidence": 0.0, "reason": "startup_exit_check"},
+                    current,
+                )
+                if exit_trades:
+                    result["exits_triggered"] += len(exit_trades)
+                    for trade in exit_trades:
+                        result["details"].append(
+                            {
+                                "fleet": fleet,
+                                "symbol": trade.get("symbol"),
+                                "status": "closed",
+                                "reason": trade.get("reason"),
+                                "exit_class": trade.get("exit_class"),
+                            }
+                        )
+                else:
+                    from config.exit_config import RISK_PCT, STOP_R
+
+                    margin = float(position.get("margin", 0.0) or 0.0)
+                    unrealized = float(position.get("unrealized_pnl", 0.0) or 0.0)
+                    risk_r_usd = max(margin * float(RISK_PCT), 1e-6)
+                    pnl_r = unrealized / risk_r_usd if risk_r_usd > 0 else 0.0
+                    result["details"].append(
+                        {
+                            "fleet": fleet,
+                            "symbol": position.get("symbol"),
+                            "status": "hold",
+                            "unrealized_pnl": round(unrealized, 4),
+                            "pnl_r": round(pnl_r, 4),
+                            "stop_r": float(STOP_R),
+                            "stop_triggered": bool(pnl_r <= -float(STOP_R)),
+                        }
+                    )
+            except Exception as exc:
+                message = f"{fleet}: {exc}"
+                result["errors"].append(message)
+                print(f"[nexus_runtime] startup exit check failed: {message}")
+
+        self._startup_exit_check = result
+        if result["positions_checked"]:
+            print(
+                "[nexus_runtime] startup exit check: "
+                f"checked={result['positions_checked']} "
+                f"exits={result['exits_triggered']} "
+                f"errors={len(result['errors'])}"
+            )
+        return result
 
     def stop(self):
         self._stop.set()
@@ -587,6 +683,7 @@ class NexusRuntime:
                     single_instance=True,
                 )
             except Exception as exc:
+                self._last_tick_error = str(exc)
                 self.state_manager.set_module_health("worker", f"ERROR: {exc}")
                 self.state_manager.set_module_health("runtime", f"ERROR: {exc}")
                 print(f"[nexus_runtime] tick failed: {exc}")
@@ -595,6 +692,7 @@ class NexusRuntime:
             time.sleep(sleep_seconds)
 
     def tick(self):
+        self._last_tick_error = None
         self.upgrade_pipeline.begin_tick()
         self._process_commands()
         prices = self.price_feed.get_prices(self.futures_client)
@@ -2830,14 +2928,19 @@ class NexusRuntime:
 
             engine = self.strategy_engines[fleet]
             # Even when truth layer is degraded, still allow exit management to prevent liquidations.
-            if not futures_ready:
-                self.state_manager.update_fleet(fleet, status="DEGRADED", last_signal="HOLD", last_reason="truth_layer_not_ready")
-                exit_trades = engine.manage_position_exits(
-                    {"action": "HOLD", "confidence": 0.0, "reason": "truth_layer_degraded_exit_check"},
-                    current,
-                )
-            else:
-                exit_trades = engine.manage_position_exits(signal, current)
+            try:
+                if not futures_ready:
+                    self.state_manager.update_fleet(fleet, status="DEGRADED", last_signal="HOLD", last_reason="truth_layer_not_ready")
+                    exit_trades = engine.manage_position_exits(
+                        {"action": "HOLD", "confidence": 0.0, "reason": "truth_layer_degraded_exit_check"},
+                        current,
+                    )
+                else:
+                    exit_trades = engine.manage_position_exits(signal, current)
+            except Exception as exc:
+                exit_trades = []
+                print(f"[nexus_runtime] exit check failed for {fleet}: {exc}")
+                self._append_alert("WARNING", f"{fleet} exit check failed: {exc}")
             for closed_trade in exit_trades:
                 close_context = dict(market_contexts.get(fleet, {}))
                 close_context["setup_type"] = self.validation_pipeline.decision_quality_engine.setup_classifier.classify(
@@ -4018,6 +4121,8 @@ class NexusRuntime:
                 "trade_count": true_recent_trade_count,
                 "active_positions": len(all_positions),
                 "position_exit_diagnostics": position_exit_diagnostics,
+                "startup_exit_check": dict(getattr(self, "_startup_exit_check", None) or {}),
+                "last_tick_error": getattr(self, "_last_tick_error", None),
                 "last_trade": combined_trades[0] if combined_trades else None,
                 "account_consistency": {
                     "spot_base_url": getattr(self.spot_client, "base_url", ""),

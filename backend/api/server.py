@@ -66,6 +66,8 @@ def register_nexus_routes(app):
         binance_futures = capital.get("binance_futures") or {}
         account_binding = capital.get("account_binding") or {}
         decision = snap.get("decision_summary") or {}
+        last_tick_error = decision.get("last_tick_error") or getattr(nexus_runtime, "_last_tick_error", None)
+        startup_exit_check = decision.get("startup_exit_check") or getattr(nexus_runtime, "_startup_exit_check", None) or {}
         live_positions = [
             {
                 "fleet": item.get("fleet"),
@@ -94,6 +96,9 @@ def register_nexus_routes(app):
                 "live_position_count": int(decision.get("live_position_count") or len(live_positions)),
                 "exchange_position_symbols": list(decision.get("exchange_position_symbols") or []),
                 "live_positions": live_positions,
+                "last_tick_error": last_tick_error,
+                "startup_exit_check": startup_exit_check,
+                "position_exit_diagnostics": decision.get("position_exit_diagnostics") or [],
                 "binance_balances": {
                     "spot_usdt": binance_spot.get("usdt_total", capital.get("spot_usdt_total")),
                     "spot_usdc": binance_spot.get("usdc_total", capital.get("spot_usdc_total")),
@@ -117,10 +122,26 @@ def register_nexus_routes(app):
                         else ""
                     ),
                     (
-                        "account_binding.accounts_mismatch is true: spot and futures API keys belong to different "
-                        "Binance testnet accounts. Dashboard totals are correct for the keys in Zeabur env, but may "
-                        "not match a single Binance App screen. Use keys from the same testnet account."
-                        if account_binding.get("accounts_mismatch")
+                        "account_binding.keys_distinct is true: spot/futures API keys are different strings (this is normal). "
+                        "If balances or open positions don't match what you see in the Binance App, the keys may still point to "
+                        "a different testnet account than the App you are viewing. Re-generate the four testnet keys from the same "
+                        "account (Spot Testnet + Futures Demo) and redeploy."
+                        if account_binding.get("keys_distinct") is True
+                        else ""
+                    ),
+                    (
+                        "last_tick_error contains -1109: the worker can READ balances/positions but a signed "
+                        "Futures call (often place_order on exit) is rejected. On demo.binance.com regenerate "
+                        "BINANCE_FUTURES_TESTNET_* with Futures trading enabled, redeploy, or use chat 整體平倉."
+                        if last_tick_error and "-1109" in str(last_tick_error)
+                        else ""
+                    ),
+                    (
+                        f"startup_exit_check ran: checked={startup_exit_check.get('positions_checked', 0)} "
+                        f"exits={startup_exit_check.get('exits_triggered', 0)} "
+                        f"errors={len(startup_exit_check.get('errors') or [])}. "
+                        "See position_exit_diagnostics for stop/TP thresholds."
+                        if startup_exit_check.get("ran_at")
                         else ""
                     ),
                 ],

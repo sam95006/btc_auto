@@ -265,13 +265,16 @@ def build_ui_capital(
 def build_account_binding_status(spot_client, futures_client) -> Dict[str, Any]:
     spot_fp = api_key_fingerprint(getattr(spot_client, "api_key", ""))
     futures_fp = api_key_fingerprint(getattr(futures_client, "api_key", ""))
-    mismatch = bool(spot_fp and futures_fp and spot_fp != futures_fp)
+    keys_distinct = bool(spot_fp and futures_fp and spot_fp != futures_fp)
     futures_base = getattr(futures_client, "base_url", getattr(futures_client, "BASE_URL", ""))
     return {
         "spot_api_key_fp": spot_fp,
         "futures_api_key_fp": futures_fp,
-        "same_api_key_pair": spot_fp == futures_fp if (spot_fp and futures_fp) else None,
-        "accounts_mismatch": mismatch,
+        # Spot and Futures keys are typically different strings even for the same Binance account.
+        # We can safely report fingerprints and endpoints, but we cannot infer "different accounts"
+        # solely from key equality.
+        "accounts_mismatch": None,
+        "keys_distinct": keys_distinct if (spot_fp and futures_fp) else None,
         "spot_base_url": getattr(spot_client, "base_url", ""),
         "futures_base_url": futures_base,
         "futures_scope": "usdt_m",

@@ -73,8 +73,9 @@ GET /api/nexus/connectivity
 
 若數字仍不對，請先查 `/api/nexus/connectivity` 的 `account_binding`：
 
-- `accounts_mismatch: true` → **現貨 API 金鑰與合約 API 金鑰是兩個不同 testnet 帳戶**（儀表板數字對「金鑰綁定的帳戶」是正確的，但不會等於 App 某一個畫面）
-- 請到 [Spot Testnet](https://testnet.binance.vision/) 與 [Futures Demo](https://demo.binance.com/) 分別用兩組金鑰登入對帳
+- `spot_api_key_fp` / `futures_api_key_fp`：金鑰指紋（不含明文金鑰）
+- `keys_distinct: true`：代表 spot / futures 的 API key 字串不同（**這是正常現象**，不能用來判定「不同帳戶」）
+- 若你看到的 Binance App（或網頁）帳戶與儀表板資金/持倉不一致，最常見原因仍是：**Zeabur 變數裡的四把金鑰不是同一個你正在看的 testnet 帳戶**。請到 [Spot Testnet](https://testnet.binance.vision/) 與 [Futures Demo](https://demo.binance.com/) 用「同一組帳號」分別重建對應金鑰後再部署。
 
 本機可跑（不印金鑰）：
 
@@ -82,7 +83,7 @@ GET /api/nexus/connectivity
 python tools/deploy/diagnose_binance_balances.py
 ```
 
-若要與手機 App 一致：在 Zeabur 填入 **與 App 同一 testnet 帳戶** 產生的四把金鑰；現貨與合約建議用**同一帳戶**配對的金鑰。
+若要與手機 App 一致：在 Zeabur 填入 **與 App 同一個 testnet 帳戶** 產生的四把金鑰（Spot Testnet + Futures Demo），再 Redeploy。
 
 ### 清除舊的本地快取資金
 
