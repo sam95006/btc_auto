@@ -32,7 +32,9 @@ from config.validation_config import (
     SIMULATION_MIN_TOP5_NOTIONAL,
     VALIDATION_MIN_APPROVAL_SCORE,
 )
+from backend.analytics.kline_backtest_engine import KlineBacktestEngine
 from backend.trading.decision_quality_engine import DecisionQualityValidationEngine
+from config.backtest_config import RESEARCH_GATE_BLOCK_WHEN_FAIL, RESEARCH_GATE_ENABLED
 from config.fleet_routing_config import validate_futures_open_route
 from config.market_data_config import (
     LIQUIDATION_CRITICAL_DISTANCE_PCT,
@@ -500,10 +502,11 @@ class PortfolioValidationEngine:
 
 
 class TradeValidationPipeline:
-    def __init__(self, runtime_store, learning_feedback=None, decision_quality_engine=None):
+    def __init__(self, runtime_store, learning_feedback=None, decision_quality_engine=None, futures_client=None):
         self.runtime_store = runtime_store
         self.learning_feedback = learning_feedback
         self.backtest_engine = BacktestValidationEngine(runtime_store)
+        self.kline_research_engine = KlineBacktestEngine(futures_client=futures_client)
         self.simulation_engine = SimulationValidationEngine()
         self.paper_engine = PaperTradeValidationEngine(runtime_store)
         self.portfolio_engine = PortfolioValidationEngine()
@@ -559,6 +562,9 @@ class TradeValidationPipeline:
                 market_context=market_context,
             )
         backtest = self.backtest_engine.evaluate(proposal, market_context=market_context, growth_directives=growth_directives)
+        symbol = str(proposal.get("symbol") or proposal.get("symbol_override") or "").upper()
+        side = str(proposal.get("side") or "BUY").upper()
+        kline_research = self.kline_research_engine.evaluate(symbol, side)
         simulation = self.simulation_engine.evaluate(proposal, market_context=market_context, truth_status=truth_status)
         paper_trade = self.paper_engine.evaluate(proposal, recent_orders=recent_orders, recent_trades=recent_trades)
         portfolio = self.portfolio_engine.evaluate(proposal, portfolio_status=portfolio_status)
@@ -569,20 +575,24 @@ class TradeValidationPipeline:
         )
         stages = {
             "backtest": backtest,
+            "kline_research": kline_research,
             "simulation": simulation,
             "paper_trade": paper_trade,
             "portfolio": portfolio,
             "decision_quality": decision_quality,
         }
         approved = all(stage.get("approved") for stage in stages.values())
+        if RESEARCH_GATE_ENABLED and RESEARCH_GATE_BLOCK_WHEN_FAIL and not kline_research.get("approved"):
+            approved = False
         approval_score = round(
             (
                 _safe_float(backtest.get("score"))
+                + _safe_float(kline_research.get("score"))
                 + _safe_float(simulation.get("score"))
                 + _safe_float(paper_trade.get("score"))
                 + _safe_float(portfolio.get("score"))
                 + _safe_float(decision_quality.get("score"))
-            ) / 5.0,
+            ) / 6.0,
             4,
         )
         learning_block_reason = None

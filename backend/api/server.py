@@ -289,7 +289,49 @@ def register_nexus_routes(app):
     def nexus_performance_report():
         from backend.analytics.performance_report import build_performance_report
 
-        return jsonify(build_performance_report(runtime_store))
+        research_gate = {}
+        try:
+            from backend.services.nexus_runtime import nexus_runtime
+
+            research_gate = dict(getattr(nexus_runtime, "_research_gate_status", None) or {})
+        except Exception:
+            pass
+        return jsonify(build_performance_report(runtime_store, research_gate=research_gate))
+
+    @app.route("/api/nexus/research-gate")
+    def nexus_research_gate():
+        try:
+            from backend.services.nexus_runtime import nexus_runtime
+
+            return jsonify(dict(getattr(nexus_runtime, "_research_gate_status", None) or {}))
+        except Exception as exc:
+            return jsonify({"enabled": False, "error": str(exc)}), 500
+
+    @app.route("/api/nexus/webhook/tradingview", methods=["POST"])
+    def nexus_tradingview_webhook():
+        from backend.api.tradingview_webhook import parse_tradingview_payload
+
+        payload = request.json or {}
+        ok, proposal, reason = parse_tradingview_payload(payload)
+        if not ok or not proposal:
+            return jsonify({"ok": False, "error": reason}), 400
+        try:
+            from backend.services.nexus_runtime import nexus_runtime
+
+            executed = nexus_runtime.ingest_external_proposal(proposal)
+            return jsonify({"ok": True, "reason": reason, "executed": bool(executed), "proposal": proposal})
+        except AttributeError:
+            return jsonify(
+                {
+                    "ok": True,
+                    "reason": reason,
+                    "executed": False,
+                    "proposal": proposal,
+                    "hint": "Proposal parsed; wire nexus_runtime.ingest_external_proposal for auto-trade.",
+                }
+            )
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 500
 
     @app.route("/api/nexus/monthly-revenue")
     def nexus_monthly_revenue():

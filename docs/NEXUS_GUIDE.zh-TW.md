@@ -135,6 +135,9 @@ python run.py
 | 連線 / worker | `GET /api/nexus/connectivity` |
 | 治理 | `GET /api/nexus/governance-status` |
 | 績效 CLI | `python tools/research/performance_report.py` |
+| K 線研究 / 研究閘道 | `python tools/research/backtest_runner.py --symbol BTCUSDT --full` |
+| 研究閘道 API | `GET /api/nexus/research-gate` |
+| TradingView Webhook | `POST /api/nexus/webhook/tradingview`（需 `NEXUS_TRADINGVIEW_WEBHOOK_SECRET`） |
 | 環境變數 | `python tools/deploy/check_env_parity.py` |
 
 ---

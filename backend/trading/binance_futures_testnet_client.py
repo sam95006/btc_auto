@@ -277,6 +277,36 @@ class BinanceFuturesTestnetClient:
             params["newClientOrderId"] = client_order_id
         return self._signed_request("POST", "/fapi/v1/order", params)
 
+    def place_limit_order(
+        self,
+        symbol,
+        side,
+        quantity,
+        price,
+        *,
+        reduce_only=False,
+        client_order_id=None,
+        position_side=None,
+        omit_position_side=False,
+        time_in_force="GTC",
+    ):
+        params = {
+            "symbol": str(symbol).upper(),
+            "side": str(side).upper(),
+            "type": "LIMIT",
+            "quantity": self._format_decimal(quantity),
+            "price": self._format_decimal(price),
+            "timeInForce": str(time_in_force or "GTC").upper(),
+            "reduceOnly": "true" if reduce_only else "false",
+        }
+        if not omit_position_side:
+            ps = str(position_side or "").upper()
+            if ps:
+                params["positionSide"] = ps
+        if client_order_id:
+            params["newClientOrderId"] = client_order_id
+        return self._signed_request("POST", "/fapi/v1/order", params)
+
     def test_market_order(self, symbol, side, quantity, reduce_only=False, position_side=None, omit_position_side=False):
         params = {
             "symbol": str(symbol).upper(),

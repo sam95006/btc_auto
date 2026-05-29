@@ -79,6 +79,18 @@ class LearningReviewQueue:
 
     def apply_item(self, item):
         item = dict(item or {})
+        from config.backtest_config import RESEARCH_GATE_REQUIRE_FOR_LEARNING
+
+        if RESEARCH_GATE_REQUIRE_FOR_LEARNING:
+            from backend.analytics.research_gate_service import ResearchGateService
+
+            gate = ResearchGateService().build_status(self.runtime_store.recent_trade_results(limit=160))
+            if not gate.get("learning_auto_apply_allowed", True):
+                review_id = item.get("id")
+                updater = getattr(self.runtime_store, "update_learning_review_status", None)
+                if review_id and callable(updater):
+                    updater(review_id, "rejected", f"research_gate:{gate.get('reason')}")
+                return None
         review_id = item.get("id")
         recommendation = dict(item.get("recommendation") or {})
         failure = recommendation.get("disabled_pattern_candidate")

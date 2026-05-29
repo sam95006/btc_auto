@@ -136,6 +136,7 @@ class BinanceExecutionRouter:
             raise ExecutionPermissionError("final_leverage_above_system_cap")
         self.futures_engine.client.set_margin_type_isolated(symbol)
         self.futures_engine.client.set_leverage(symbol, final_leverage)
+        expected_slippage_bps = float(risk_context.get("worst_slippage_bps") or 0.0)
         order, position = self.futures_engine.market_order(
             fleet=fleet,
             side=side,
@@ -145,6 +146,8 @@ class BinanceExecutionRouter:
             reason=reason,
             symbol_override=symbol,
             capital_pool=capital_pool,
+            expected_slippage_bps=expected_slippage_bps,
+            prefer_limit=risk_context.get("prefer_limit"),
         )
         order["leverage_status"] = dict(leverage_plan)
         position["leverage_status"] = dict(leverage_plan)

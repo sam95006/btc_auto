@@ -5,6 +5,13 @@ from uuid import uuid4
 from backend.fleets.paper_order_execution_engine import PaperOrderExecutionEngine
 from backend.trading.binance_futures_testnet_client import BinanceFuturesTestnetClient
 from backend.trading.r_exit_engine import build_r_exit_state
+from config.execution_enhancements_config import (
+    LIMIT_ORDER_FALLBACK_MARKET,
+    LIMIT_ORDER_OFFSET_BPS,
+    LIMIT_ORDERS_ENABLED,
+    TCA_ENABLED,
+    TCA_MAX_SLIPPAGE_BPS,
+)
 
 
 class BinanceTestnetExecutionEngine(PaperOrderExecutionEngine):
@@ -12,6 +19,29 @@ class BinanceTestnetExecutionEngine(PaperOrderExecutionEngine):
         super().__init__(ledger, position_manager, event_bus)
         self.client = client or BinanceFuturesTestnetClient()
         self.source = "binance_futures_testnet"
+
+    def _tca_fields(self, reference_price, fill_price, expected_slippage_bps=None):
+        if not TCA_ENABLED or reference_price <= 0 or fill_price <= 0:
+            return {}
+        side_slip_bps = abs(fill_price - reference_price) / reference_price * 10000.0
+        expected = float(expected_slippage_bps or 0.0)
+        return {
+            "expected_slippage_bps": round(expected, 4),
+            "actual_slippage_bps": round(side_slip_bps, 4),
+            "tca_delta_bps": round(side_slip_bps - expected, 4),
+            "tca_exceeded": bool(expected > 0 and side_slip_bps > max(expected * 1.5, TCA_MAX_SLIPPAGE_BPS)),
+        }
+
+    def _limit_price(self, symbol, side, reference_price):
+        book = self.client.get_book_ticker(symbol)
+        bid = float(book.get("bidPrice") or reference_price or 0.0)
+        ask = float(book.get("askPrice") or reference_price or 0.0)
+        offset = LIMIT_ORDER_OFFSET_BPS / 10000.0
+        if str(side).upper() == "BUY":
+            base = bid or reference_price
+            return base * (1.0 - offset)
+        base = ask or reference_price
+        return base * (1.0 + offset)
 
     def market_order(
         self,
@@ -23,6 +53,8 @@ class BinanceTestnetExecutionEngine(PaperOrderExecutionEngine):
         reason="strategy signal",
         symbol_override=None,
         capital_pool="fleet",
+        expected_slippage_bps=None,
+        prefer_limit=None,
     ):
         if side not in ("BUY", "SELL"):
             raise ValueError("side must be BUY or SELL")
@@ -39,15 +71,36 @@ class BinanceTestnetExecutionEngine(PaperOrderExecutionEngine):
         self.client.set_margin_type_isolated(symbol)
         self.client.set_leverage(symbol, leverage)
         external_id = f"nexus_{fleet.lower()}_{uuid4().hex[:20]}"
-        external_order = self.client.place_market_order(
-            symbol=symbol,
-            side=side,
-            quantity=quantity,
-            client_order_id=external_id,
-        )
+        use_limit = LIMIT_ORDERS_ENABLED if prefer_limit is None else bool(prefer_limit)
+        order_type = "MARKET"
+        external_order = None
+        if use_limit:
+            limit_price = self._limit_price(symbol, side, price)
+            try:
+                external_order = self.client.place_limit_order(
+                    symbol=symbol,
+                    side=side,
+                    quantity=quantity,
+                    price=limit_price,
+                    client_order_id=external_id,
+                )
+                order_type = "LIMIT"
+            except Exception:
+                external_order = None
+        if external_order is None:
+            if use_limit and not LIMIT_ORDER_FALLBACK_MARKET:
+                raise ValueError(f"{symbol} limit order failed and fallback disabled")
+            external_order = self.client.place_market_order(
+                symbol=symbol,
+                side=side,
+                quantity=quantity,
+                client_order_id=external_id,
+            )
+            order_type = "MARKET"
         fill_price = self.client.extract_fill_price(external_order, fallback_price=price)
         executed_quantity = float(external_order.get("executedQty") or quantity)
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        tca = self._tca_fields(price, fill_price, expected_slippage_bps=expected_slippage_bps)
 
         self._freeze_margin(fleet, margin, "binance testnet market order margin", capital_pool=capital_pool)
 
@@ -57,7 +110,7 @@ class BinanceTestnetExecutionEngine(PaperOrderExecutionEngine):
             "fleet": fleet,
             "symbol": symbol,
             "side": side,
-            "type": "MARKET",
+            "type": order_type,
             "price": round(fill_price, 10),
             "margin": round(margin, 6),
             "leverage": leverage,
@@ -68,6 +121,7 @@ class BinanceTestnetExecutionEngine(PaperOrderExecutionEngine):
             "external_order_id": external_order.get("orderId"),
             "external_client_order_id": external_order.get("clientOrderId", external_id),
             "capital_pool": capital_pool,
+            **tca,
         }
         position = {
             "id": f"pos_{uuid4().hex[:10]}",
@@ -87,6 +141,7 @@ class BinanceTestnetExecutionEngine(PaperOrderExecutionEngine):
             "market_type": "futures",
             "capital_pool": capital_pool,
             "r_exit_state": build_r_exit_state(margin, executed_quantity),
+            **tca,
         }
         self.orders.insert(0, order)
         self.trades.insert(0, {**order, "event": "OPEN"})

@@ -1,6 +1,11 @@
 from __future__ import annotations
 
 from config.exit_config import RISK_PCT, STOP_R, TP_LADDER
+from config.execution_enhancements_config import (
+    TRAILING_ACTIVATION_R,
+    TRAILING_CALLBACK_R,
+    TRAILING_EXIT_ADVISORY,
+)
 from backend.governance.ai_tp_band_planner import AiTpBandPlanner
 
 
@@ -69,6 +74,14 @@ class AiExitPlanner:
         advisory = self.tp_band_planner.suggest(position, market_context=market_context)
         if advisory:
             payload["tp_advisory"] = advisory
+        if TRAILING_EXIT_ADVISORY and pnl_r >= TRAILING_ACTIVATION_R:
+            payload["trailing_advisory"] = {
+                "active": True,
+                "activation_r": TRAILING_ACTIVATION_R,
+                "callback_r": TRAILING_CALLBACK_R,
+                "lock_r": round(max(TRAILING_ACTIVATION_R - TRAILING_CALLBACK_R, 0.0), 4),
+                "note": "Advisory only; R-exit engine remains primary.",
+            }
         return payload
 
     def plan_all(self, positions, market_contexts=None):

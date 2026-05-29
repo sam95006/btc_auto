@@ -95,6 +95,7 @@ from backend.wallet.compound_capital_service import CompoundCapitalService
 from backend.decision.meeting_notes_resolver import resolve_meeting_notes
 from backend.analytics.setup_performance_tracker import SetupPerformanceTracker
 from backend.trading.fee_churn_guard import get_fee_churn_guard
+from backend.analytics.research_gate_service import ResearchGateService
 from backend.analytics.walk_forward_evaluator import WalkForwardEvaluator
 from config.fleet_routing_config import fleet_for_exchange_position
 from config.ai_trading_config import AI_LED_PRIMARY_MODE, AI_LED_TRADING_ENABLED
@@ -252,10 +253,16 @@ class NexusRuntime:
             runtime_store,
             self.learning_feedback,
             decision_quality_engine=decision_quality_engine,
+            futures_client=self.futures_client,
         )
         self.capital_growth_guard = CapitalGrowthGuard()
         self.compound_capital = CompoundCapitalService()
         self.walk_forward_evaluator = WalkForwardEvaluator()
+        self.research_gate_service = ResearchGateService(
+            futures_client=self.futures_client,
+            walk_forward_evaluator=self.walk_forward_evaluator,
+        )
+        self._research_gate_status = {}
         self.radar_dispatch = RadarDispatchService()
         self.fee_churn_guard = get_fee_churn_guard()
         self.radar_llm_bridge = RadarLlmProposalBridge(self.radar_dispatch, self.llm_gateway)
@@ -959,6 +966,9 @@ class NexusRuntime:
             self.growth_status["block_new_entries"] = True
             self.growth_status["block_reason"] = monthly_risk.get("block_reason") or "monthly_max_drawdown"
         walk_forward_status = self.walk_forward_evaluator.evaluate(runtime_store.recent_trade_results(limit=160))
+        self._research_gate_status = self.research_gate_service.build_status(
+            runtime_store.recent_trade_results(limit=160),
+        )
         rotation = self.upgrade_pipeline.strategy_versions.suggest_rotation(
             walk_forward_status,
             {"calibration_snapshot": calibration_snapshot},
@@ -980,11 +990,16 @@ class NexusRuntime:
             growth_status=self.growth_status,
         )
         self.growth_status["compound"] = dict(self._compound_capital_status)
+        self.growth_status["research_gate"] = dict(self._research_gate_status or {})
+        if self._research_gate_status.get("block_new_entries"):
+            self.growth_status["block_new_entries"] = True
+            self.growth_status["block_reason"] = f"research_gate:{self._research_gate_status.get('reason', 'blocked')}"
         self._strategy_evolution_status = {
             "evolution_mode": self.growth_status.get("evolution_mode", "hold"),
             "recent_win_rate": self.growth_status.get("recent_win_rate"),
             "rotation": rotation,
             "walk_forward_ready": bool(walk_forward_status.get("ready")),
+            "research_pass": bool(self._research_gate_status.get("research_pass")),
         }
         self._apply_live_capital_plan(futures_account)
         self._synchronize_live_futures_state(futures_account)
@@ -2065,6 +2080,30 @@ class NexusRuntime:
             "spot" if spot_order else "futures",
         )
         return False
+
+    def ingest_external_proposal(self, proposal):
+        """TradingView / external signal entry — same validation chain as AI-led."""
+        if self._manual_pause or not self.futures_client.is_configured():
+            return False
+        proposal = dict(proposal or {})
+        symbol = str(proposal.get("symbol") or proposal.get("symbol_override") or "").upper()
+        fleet = str(proposal.get("fleet") or "RADAR").upper()
+        price = float(proposal.get("price") or (self.latest_prices or {}).get(symbol, 0.0) or 0.0)
+        if price <= 0 or not symbol:
+            return False
+        proposal["price"] = price
+        if float(proposal.get("margin") or 0.0) <= 0:
+            proposal["margin"] = max(20.0, float(os.getenv("NEXUS_MIN_MARGIN_USD", "45") or 45))
+        ctx = self.market_context_service.build_symbol_context(symbol, (self.latest_prices or {}).get(symbol), fleet=fleet)
+        market_contexts = dict(self.market_context or {})
+        market_contexts[fleet] = {**(market_contexts.get(fleet) or {}), **ctx}
+        market_contexts[symbol] = ctx
+        return self._try_execute_futures_request(
+            proposal,
+            self.latest_prices or {},
+            market_contexts,
+            self.truth_layer_status or {},
+        )
 
     def _try_execute_futures_request(self, request, symbol_prices, market_contexts, truth_status, learning_guidance=None):
         request = dict(request or {})
