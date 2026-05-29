@@ -68,6 +68,12 @@ def register_nexus_routes(app):
         decision = snap.get("decision_summary") or {}
         last_tick_error = decision.get("last_tick_error") or getattr(nexus_runtime, "_last_tick_error", None)
         startup_exit_check = decision.get("startup_exit_check") or getattr(nexus_runtime, "_startup_exit_check", None) or {}
+        futures_write_probe = {}
+        try:
+            if nexus_runtime.futures_client.is_configured():
+                futures_write_probe = nexus_runtime.futures_client.probe_write_access("ETHUSDT")
+        except Exception as exc:
+            futures_write_probe = {"ok": False, "error": str(exc)}
         live_positions = [
             {
                 "fleet": item.get("fleet"),
@@ -99,6 +105,7 @@ def register_nexus_routes(app):
                 "last_tick_error": last_tick_error,
                 "startup_exit_check": startup_exit_check,
                 "position_exit_diagnostics": decision.get("position_exit_diagnostics") or [],
+                "futures_write_probe": futures_write_probe,
                 "binance_balances": {
                     "spot_usdt": binance_spot.get("usdt_total", capital.get("spot_usdt_total")),
                     "spot_usdc": binance_spot.get("usdc_total", capital.get("spot_usdc_total")),
@@ -130,10 +137,17 @@ def register_nexus_routes(app):
                         else ""
                     ),
                     (
-                        "last_tick_error contains -1109: the worker can READ balances/positions but a signed "
-                        "Futures call (often place_order on exit) is rejected. On demo.binance.com regenerate "
-                        "BINANCE_FUTURES_TESTNET_* with Futures trading enabled, redeploy, or use chat 整體平倉."
+                        "last_tick_error contains -1109: read works but Futures WRITE (order/leverageBracket) fails. "
+                        "This is NOT missing 'Enable Futures' on the key — usually Zeabur BINANCE_FUTURES_TESTNET_SECRET_KEY "
+                        "is wrong/outdated (re-copy Secret when creating the key), or base URL is not https://demo-fapi.binance.com. "
+                        "Check futures_write_probe in this JSON."
                         if last_tick_error and "-1109" in str(last_tick_error)
+                        else ""
+                    ),
+                    (
+                        "futures_write_probe failed: same -1109 on signed write endpoints. Re-create API key+Secret on "
+                        "demo.binance.com, set BINANCE_FUTURES_TESTNET_API_KEY and BINANCE_FUTURES_TESTNET_SECRET_KEY in Zeabur, redeploy."
+                        if futures_write_probe and not futures_write_probe.get("ok")
                         else ""
                     ),
                     (

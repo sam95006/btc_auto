@@ -103,12 +103,14 @@ class BinanceTestnetExecutionEngine(PaperOrderExecutionEngine):
         symbol = position["symbol"]
         quantity = self.client.normalize_quantity(symbol, position["quantity"])
         external_id = f"nexus_close_{position['fleet'].lower()}_{uuid4().hex[:16]}"
+        position_side = position.get("position_side") or position.get("positionSide")
         external_order = self.client.place_market_order(
             symbol=symbol,
             side=close_side,
             quantity=quantity,
             reduce_only=True,
             client_order_id=external_id,
+            position_side=position_side,
         )
 
         closed = self.position_manager.close_position(position_id)
@@ -157,12 +159,14 @@ class BinanceTestnetExecutionEngine(PaperOrderExecutionEngine):
 
         close_side = "SELL" if position["side"] == "BUY" else "BUY"
         external_id = f"nexus_partial_{position['fleet'].lower()}_{uuid4().hex[:16]}"
+        position_side = position.get("position_side") or position.get("positionSide")
         external_order = self.client.place_market_order(
             symbol=position["symbol"],
             side=close_side,
             quantity=close_qty,
             reduce_only=True,
             client_order_id=external_id,
+            position_side=position_side,
         )
         fill_price = self.client.extract_fill_price(external_order, fallback_price=price)
         executed_qty = float(external_order.get("executedQty") or close_qty)

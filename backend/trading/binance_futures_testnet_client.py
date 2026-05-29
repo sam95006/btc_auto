@@ -22,13 +22,27 @@ class BinanceTestnetError(RuntimeError):
     pass
 
 
+def _resolve_futures_testnet_secret(explicit=None) -> str:
+    if explicit:
+        return str(explicit).strip()
+    for env_key in (
+        "BINANCE_FUTURES_TESTNET_SECRET_KEY",
+        "BINANCE_FUTURES_TESTNET_API_SECRET",
+        "BINANCE_FUTURES_TESTNET_SECRET",
+    ):
+        value = os.getenv(env_key, "").strip()
+        if value:
+            return value
+    return ""
+
+
 class BinanceFuturesTestnetClient:
     BASE_URL = "https://demo-fapi.binance.com"
     WS_BASE_URL = "wss://fstream.binancefuture.com/ws"
 
     def __init__(self, api_key=None, api_secret=None, timeout=15):
         self.api_key = (api_key or os.getenv("BINANCE_FUTURES_TESTNET_API_KEY", "")).strip()
-        self.api_secret = (api_secret or os.getenv("BINANCE_FUTURES_TESTNET_SECRET_KEY", "")).strip()
+        self.api_secret = _resolve_futures_testnet_secret(api_secret)
         self.timeout = timeout
         self._exchange_info = None
         self.base_url = os.getenv("BINANCE_FUTURES_BASE_URL", self.BASE_URL).strip().rstrip("/")
@@ -198,7 +212,15 @@ class BinanceFuturesTestnetClient:
                 return {"symbol": symbol, "marginType": "ISOLATED", "unchanged": True}
             raise
 
-    def place_market_order(self, symbol, side, quantity, reduce_only=False, client_order_id=None):
+    def place_market_order(
+        self,
+        symbol,
+        side,
+        quantity,
+        reduce_only=False,
+        client_order_id=None,
+        position_side=None,
+    ):
         params = {
             "symbol": symbol,
             "side": side,
@@ -207,9 +229,20 @@ class BinanceFuturesTestnetClient:
             "reduceOnly": "true" if reduce_only else "false",
             "newOrderRespType": "RESULT",
         }
+        ps = str(position_side or "").upper()
+        if ps and ps != "BOTH":
+            params["positionSide"] = ps
         if client_order_id:
             params["newClientOrderId"] = client_order_id
         return self._signed_request("POST", "/fapi/v1/order", params)
+
+    def probe_write_access(self, symbol="ETHUSDT"):
+        """Signed write-path probe without placing orders (for connectivity diagnostics)."""
+        try:
+            self.get_symbol_leverage_bracket(symbol, estimated_notional=100.0)
+            return {"ok": True, "probe": "leverageBracket", "symbol": symbol}
+        except BinanceTestnetError as exc:
+            return {"ok": False, "probe": "leverageBracket", "symbol": symbol, "error": str(exc)}
 
     def get_position_risk(self, symbol):
         positions = self._signed_request("GET", "/fapi/v2/positionRisk", {"symbol": symbol})
