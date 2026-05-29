@@ -36,12 +36,27 @@ class ConfidenceMatrixPipelineTests(unittest.TestCase):
 
     @patch("backend.risk.dynamic_asset_allocator.HARD_MAX_LEVERAGE", 100.0)
     @patch("backend.risk.dynamic_asset_allocator.ABSOLUTE_MAX_LEVERAGE", 100.0)
+    @patch("backend.risk.dynamic_asset_allocator.HARD_MAX_MARGIN_USD", 500.0)
     def test_allocator_confidence_table_btc_100x(self, *_mocks):
         alloc = DynamicAssetAllocator()
-        result = alloc.allocate(95, fleet="BTC", available_balance=10000)
+        result = alloc.allocate(95, fleet="BTC", available_balance=10000, deployable_pool=3000)
         self.assertEqual(result["leverage_mode"], "confidence_table")
+        self.assertEqual(result["margin_mode"], "confidence_table")
         self.assertGreaterEqual(result["leverage"], 50)
         self.assertLessEqual(result["leverage"], 100)
+        self.assertGreaterEqual(result["margin"], 60)
+        self.assertGreaterEqual(result["notional_usd"], 3000)
+
+    @patch("backend.risk.dynamic_asset_allocator.HARD_MAX_LEVERAGE", 100.0)
+    @patch("backend.risk.dynamic_asset_allocator.ABSOLUTE_MAX_LEVERAGE", 100.0)
+    @patch("backend.risk.dynamic_asset_allocator.HARD_MAX_MARGIN_USD", 500.0)
+    def test_allocator_margin_scales_with_score(self, *_mocks):
+        alloc = DynamicAssetAllocator()
+        low = alloc.allocate(55, fleet="BTC", available_balance=5000)
+        high = alloc.allocate(95, fleet="BTC", available_balance=5000)
+        self.assertLess(low["margin"], high["margin"])
+        self.assertLess(low["notional_usd"], high["notional_usd"])
+        self.assertGreater(high["notional_usd"], low["notional_usd"] * 3)
 
     def test_pipeline_applies_matrix(self):
         blocklist = DynamicBlocklist()
