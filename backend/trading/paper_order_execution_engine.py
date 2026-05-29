@@ -51,6 +51,15 @@ class MixedTestnetExecutionEngine:
             return None
         return self._engine_for_fleet(position["fleet"]).close_position(position_id, price, reason)
 
+    def reduce_position(self, position_id, close_fraction, price, reason="r_exit_partial"):
+        position = self.position_manager.positions.get(position_id)
+        if not position:
+            return None
+        engine = self._engine_for_fleet(position["fleet"])
+        if not hasattr(engine, "reduce_position"):
+            return None
+        return engine.reduce_position(position_id, close_fraction, price, reason=reason)
+
     def recent_orders(self, limit=80):
         return self.paper.recent_orders(limit)
 

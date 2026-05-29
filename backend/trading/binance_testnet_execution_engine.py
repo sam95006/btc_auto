@@ -99,19 +99,14 @@ class BinanceTestnetExecutionEngine(PaperOrderExecutionEngine):
         if not position:
             return None
 
-        close_side = "SELL" if position["side"] == "BUY" else "BUY"
-        symbol = position["symbol"]
-        quantity = self.client.normalize_quantity(symbol, position["quantity"])
+        symbol = str(position["symbol"]).upper()
         external_id = f"nexus_close_{position['fleet'].lower()}_{uuid4().hex[:16]}"
-        position_side = position.get("position_side") or position.get("positionSide")
-        external_order = self.client.place_market_order(
-            symbol=symbol,
-            side=close_side,
-            quantity=quantity,
-            reduce_only=True,
-            client_order_id=external_id,
-            position_side=position_side,
-        )
+        live = self.client.fetch_open_position(symbol)
+        if live:
+            position = dict(position)
+            position["quantity"] = self.client.normalize_quantity(symbol, live["quantity"])
+            position["position_side"] = live.get("position_side", position.get("position_side"))
+        external_order = self.client.close_open_position_market(symbol, client_order_id=external_id)
 
         closed = self.position_manager.close_position(position_id)
         if not closed:
@@ -157,16 +152,26 @@ class BinanceTestnetExecutionEngine(PaperOrderExecutionEngine):
         if close_qty <= 0:
             return None
 
+        symbol = str(position["symbol"]).upper()
         close_side = "SELL" if position["side"] == "BUY" else "BUY"
         external_id = f"nexus_partial_{position['fleet'].lower()}_{uuid4().hex[:16]}"
-        position_side = position.get("position_side") or position.get("positionSide")
+        live = self.client.fetch_open_position(symbol)
+        position_side = None
+        omit_position_side = True
+        if live:
+            position_side = live.get("position_side")
+        if self.client.get_dual_side_position():
+            omit_position_side = False
+            if str(position_side or "").upper() in {"", "BOTH"}:
+                position_side = "LONG" if position["side"] == "BUY" else "SHORT"
         external_order = self.client.place_market_order(
-            symbol=position["symbol"],
+            symbol=symbol,
             side=close_side,
             quantity=close_qty,
             reduce_only=True,
             client_order_id=external_id,
             position_side=position_side,
+            omit_position_side=omit_position_side,
         )
         fill_price = self.client.extract_fill_price(external_order, fallback_price=price)
         executed_qty = float(external_order.get("executedQty") or close_qty)
@@ -208,4 +213,7 @@ class BinanceTestnetExecutionEngine(PaperOrderExecutionEngine):
             raise ValueError("Binance futures testnet credentials are not configured")
         if os.getenv("BINANCE_TESTNET_VALIDATE_ON_BOOT", "0").strip() in {"1", "true", "TRUE"}:
             client.validate_credentials()
+            access = client.validate_trading_access()
+            if not access.get("ok"):
+                raise ValueError(f"Binance futures trading access check failed: {access}")
         return cls(ledger, position_manager, event_bus, client=client)

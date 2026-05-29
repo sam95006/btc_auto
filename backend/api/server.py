@@ -69,11 +69,16 @@ def register_nexus_routes(app):
         last_tick_error = decision.get("last_tick_error") or getattr(nexus_runtime, "_last_tick_error", None)
         startup_exit_check = decision.get("startup_exit_check") or getattr(nexus_runtime, "_startup_exit_check", None) or {}
         futures_write_probe = {}
+        futures_trading_access = getattr(nexus_runtime, "_futures_trading_access", None) or {}
         try:
             if nexus_runtime.futures_client.is_configured():
-                futures_write_probe = nexus_runtime.futures_client.probe_write_access("ETHUSDT")
+                futures_trading_access = nexus_runtime.futures_client.validate_trading_access("ETHUSDT")
+                futures_write_probe = futures_trading_access.get("write_probe") or nexus_runtime.futures_client.probe_write_access(
+                    "ETHUSDT"
+                )
         except Exception as exc:
             futures_write_probe = {"ok": False, "error": str(exc)}
+            futures_trading_access = {"ok": False, "error": str(exc)}
         live_positions = [
             {
                 "fleet": item.get("fleet"),
@@ -106,6 +111,7 @@ def register_nexus_routes(app):
                 "startup_exit_check": startup_exit_check,
                 "position_exit_diagnostics": decision.get("position_exit_diagnostics") or [],
                 "futures_write_probe": futures_write_probe,
+                "futures_trading_access": futures_trading_access,
                 "external_market_intel": decision.get("external_market_intel")
                 or (
                     nexus_runtime.external_market_intel.snapshot()

@@ -22,15 +22,24 @@ class BinanceTestnetError(RuntimeError):
     pass
 
 
+def _clean_credential(value) -> str:
+    if value is None:
+        return ""
+    text = str(value).strip()
+    if len(text) >= 2 and text[0] == text[-1] and text[0] in "\"'":
+        text = text[1:-1].strip()
+    return text.replace("\ufeff", "").replace("\r", "").replace("\n", "")
+
+
 def _resolve_futures_testnet_secret(explicit=None) -> str:
     if explicit:
-        return str(explicit).strip()
+        return _clean_credential(explicit)
     for env_key in (
         "BINANCE_FUTURES_TESTNET_SECRET_KEY",
         "BINANCE_FUTURES_TESTNET_API_SECRET",
         "BINANCE_FUTURES_TESTNET_SECRET",
     ):
-        value = os.getenv(env_key, "").strip()
+        value = _clean_credential(os.getenv(env_key, ""))
         if value:
             return value
     return ""
@@ -41,16 +50,22 @@ class BinanceFuturesTestnetClient:
     WS_BASE_URL = "wss://fstream.binancefuture.com/ws"
 
     def __init__(self, api_key=None, api_secret=None, timeout=15):
-        self.api_key = (api_key or os.getenv("BINANCE_FUTURES_TESTNET_API_KEY", "")).strip()
+        self.api_key = _clean_credential(api_key or os.getenv("BINANCE_FUTURES_TESTNET_API_KEY", ""))
         self.api_secret = _resolve_futures_testnet_secret(api_secret)
         self.timeout = timeout
         self._exchange_info = None
-        self.base_url = os.getenv("BINANCE_FUTURES_BASE_URL", self.BASE_URL).strip().rstrip("/")
-        self.ws_base_url = os.getenv("BINANCE_FUTURES_WS_BASE_URL", self.WS_BASE_URL).strip().rstrip("/")
+        self._dual_side_position = None
+        self.base_url = _clean_credential(os.getenv("BINANCE_FUTURES_BASE_URL", self.BASE_URL)).rstrip("/")
+        self.ws_base_url = _clean_credential(os.getenv("BINANCE_FUTURES_WS_BASE_URL", self.WS_BASE_URL)).rstrip("/")
         self.rate_limit_guard = BinanceRateLimitGuard()
 
     def is_configured(self):
         return bool(self.api_key and self.api_secret)
+
+    def api_key_fingerprint(self):
+        if not self.api_key:
+            return ""
+        return hashlib.sha256(self.api_key.encode("utf-8")).hexdigest()[:12]
 
     def resolve_symbol(self, fleet):
         env_key = f"BINANCE_FUTURES_TESTNET_SYMBOL_{fleet.upper()}"
@@ -220,29 +235,153 @@ class BinanceFuturesTestnetClient:
         reduce_only=False,
         client_order_id=None,
         position_side=None,
+        omit_position_side=False,
     ):
         params = {
-            "symbol": symbol,
-            "side": side,
+            "symbol": str(symbol).upper(),
+            "side": str(side).upper(),
             "type": "MARKET",
             "quantity": self._format_decimal(quantity),
             "reduceOnly": "true" if reduce_only else "false",
             "newOrderRespType": "RESULT",
         }
-        ps = str(position_side or "").upper()
-        if ps and ps != "BOTH":
-            params["positionSide"] = ps
+        if not omit_position_side:
+            ps = str(position_side or "").upper()
+            if ps and ps != "BOTH":
+                params["positionSide"] = ps
         if client_order_id:
             params["newClientOrderId"] = client_order_id
         return self._signed_request("POST", "/fapi/v1/order", params)
 
-    def probe_write_access(self, symbol="ETHUSDT"):
-        """Signed write-path probe without placing orders (for connectivity diagnostics)."""
+    def get_dual_side_position(self):
+        if self._dual_side_position is not None:
+            return self._dual_side_position
+        data = self._signed_request("GET", "/fapi/v1/positionSide/dual")
+        self._dual_side_position = bool(data.get("dualSidePosition"))
+        return self._dual_side_position
+
+    def fetch_open_position(self, symbol):
+        symbol = str(symbol or "").upper()
+        for item in self.get_all_position_risk():
+            if str(item.get("symbol") or "").upper() != symbol:
+                continue
+            position_amt = float(item.get("positionAmt", 0.0) or 0.0)
+            if abs(position_amt) < 1e-12:
+                continue
+            return {
+                "symbol": symbol,
+                "position_amt": position_amt,
+                "position_side": str(item.get("positionSide") or "BOTH").upper(),
+                "entry_price": float(item.get("entryPrice", 0.0) or 0.0),
+                "mark_price": float(item.get("markPrice", 0.0) or 0.0),
+                "quantity": abs(position_amt),
+            }
+        return None
+
+    def close_open_position_market(self, symbol, client_order_id=None):
+        """Close an open futures position using live positionRisk and hedge/one-way retries."""
+        live = self.fetch_open_position(symbol)
+        if not live:
+            raise BinanceTestnetError(f"No open position for {symbol}")
+
+        position_amt = float(live["position_amt"])
+        quantity = self.normalize_quantity(symbol, abs(position_amt))
+        if quantity <= 0:
+            raise BinanceTestnetError(f"{symbol} close quantity is zero after normalization")
+
+        close_side = "SELL" if position_amt > 0 else "BUY"
+        exchange_ps = str(live.get("position_side") or "BOTH").upper()
+        hedge_mode = self.get_dual_side_position()
+
+        attempts = []
+        if hedge_mode:
+            hedge_ps = exchange_ps if exchange_ps in {"LONG", "SHORT"} else ("LONG" if position_amt > 0 else "SHORT")
+            attempts.append({"position_side": hedge_ps, "omit_position_side": False})
+            alt_ps = "SHORT" if hedge_ps == "LONG" else "LONG"
+            if alt_ps != hedge_ps:
+                attempts.append({"position_side": alt_ps, "omit_position_side": False})
+        else:
+            attempts.append({"position_side": None, "omit_position_side": True})
+            if exchange_ps in {"LONG", "SHORT"}:
+                attempts.append({"position_side": exchange_ps, "omit_position_side": False})
+
+        last_exc = None
+        for index, attempt in enumerate(attempts):
+            order_id = client_order_id
+            if order_id and index > 0:
+                order_id = f"{order_id[:20]}_{index}"
+            try:
+                return self.place_market_order(
+                    symbol=symbol,
+                    side=close_side,
+                    quantity=quantity,
+                    reduce_only=True,
+                    client_order_id=order_id,
+                    position_side=attempt.get("position_side"),
+                    omit_position_side=bool(attempt.get("omit_position_side")),
+                )
+            except BinanceTestnetError as exc:
+                last_exc = exc
+                message = str(exc)
+                if "-1109" not in message and "-4061" not in message and "-2019" not in message:
+                    raise
+        raise last_exc or BinanceTestnetError(f"Unable to close {symbol}")
+
+    def validate_trading_access(self, symbol="ETHUSDT"):
+        result = {
+            "configured": self.is_configured(),
+            "base_url": self.base_url,
+            "api_key_fingerprint": self.api_key_fingerprint(),
+            "symbol": str(symbol).upper(),
+        }
+        if not self.is_configured():
+            result["ok"] = False
+            result["error"] = "credentials_missing"
+            return result
         try:
-            self.get_symbol_leverage_bracket(symbol, estimated_notional=100.0)
-            return {"ok": True, "probe": "leverageBracket", "symbol": symbol}
+            account = self.get_account_information()
+            result["can_trade"] = bool(account.get("canTrade", True))
+            result["can_deposit"] = bool(account.get("canDeposit", True))
+            result["dual_side_position"] = self.get_dual_side_position()
+            live = self.fetch_open_position(symbol)
+            result["has_open_position"] = bool(live)
+            if live:
+                result["live_position_side"] = live.get("position_side")
+                result["live_position_amt"] = live.get("position_amt")
         except BinanceTestnetError as exc:
-            return {"ok": False, "probe": "leverageBracket", "symbol": symbol, "error": str(exc)}
+            result["ok"] = False
+            result["read_error"] = str(exc)
+            return result
+
+        write_probe = self.probe_write_access(symbol)
+        result["write_probe"] = write_probe
+        result["ok"] = bool(result.get("can_trade", True)) and bool(write_probe.get("ok"))
+        return result
+
+    def probe_write_access(self, symbol="ETHUSDT"):
+        """Connectivity probe: account trade flag + position mode (no orders placed)."""
+        try:
+            account = self.get_account_information()
+            can_trade = bool(account.get("canTrade", True))
+            dual = self.get_dual_side_position()
+            return {
+                "ok": can_trade,
+                "probe": "account_can_trade",
+                "symbol": str(symbol).upper(),
+                "can_trade": can_trade,
+                "dual_side_position": dual,
+                "api_key_fingerprint": self.api_key_fingerprint(),
+                "base_url": self.base_url,
+            }
+        except BinanceTestnetError as exc:
+            return {
+                "ok": False,
+                "probe": "account_can_trade",
+                "symbol": str(symbol).upper(),
+                "error": str(exc),
+                "api_key_fingerprint": self.api_key_fingerprint(),
+                "base_url": self.base_url,
+            }
 
     def get_position_risk(self, symbol):
         positions = self._signed_request("GET", "/fapi/v2/positionRisk", {"symbol": symbol})

@@ -70,6 +70,10 @@ GET /api/nexus/connectivity
 - `capital_source` = `"binance_rest"`
 - `binance_balances` 與 Binance App 一致
 - `embedded_worker_started` = `true`（單服務 Zeabur）
+- `futures_trading_access.ok` = `true`，且 `dual_side_position` 與 Binance App 的持倉模式一致（單向 / 雙向）
+- 啟動後 `startup_exit_check` 會立即檢查既有合約持倉；若 R 止損觸發但一般平倉失敗，會自動以交易所即時 `positionRisk` 重試平倉
+
+若 `last_tick_error` 含 `-1109`：讀取成功但下單失敗，請在 Zeabur 重新複製 **Secret**（建立金鑰時只顯示一次），確認 `BINANCE_FUTURES_BASE_URL=https://demo-fapi.binance.com`，並檢查 `futures_trading_access`。
 
 若數字仍不對，請先查 `/api/nexus/connectivity` 的 `account_binding`：
 

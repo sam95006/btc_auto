@@ -561,6 +561,18 @@ class NexusRuntime:
             self.refresh_live_exchange_state(force=True)
         except Exception as exc:
             print(f"[nexus_runtime] startup exchange refresh skipped: {exc}")
+        if self.futures_client.is_configured():
+            try:
+                self._futures_trading_access = self.futures_client.validate_trading_access("ETHUSDT")
+                access = self._futures_trading_access
+                print(
+                    "[nexus_runtime] futures trading access: "
+                    f"ok={access.get('ok')} can_trade={access.get('can_trade')} "
+                    f"hedge={access.get('dual_side_position')} base={access.get('base_url')}"
+                )
+            except Exception as exc:
+                self._futures_trading_access = {"ok": False, "error": str(exc)}
+                print(f"[nexus_runtime] futures trading access check skipped: {exc}")
         try:
             self._evaluate_startup_position_exits()
         except Exception as exc:
@@ -638,21 +650,48 @@ class NexusRuntime:
                     unrealized = float(position.get("unrealized_pnl", 0.0) or 0.0)
                     risk_r_usd = max(margin * float(RISK_PCT), 1e-6)
                     pnl_r = unrealized / risk_r_usd if risk_r_usd > 0 else 0.0
-                    result["details"].append(
-                        {
-                            "fleet": fleet,
-                            "symbol": position.get("symbol"),
-                            "status": "hold",
-                            "unrealized_pnl": round(unrealized, 4),
-                            "pnl_r": round(pnl_r, 4),
-                            "stop_r": float(STOP_R),
-                            "stop_triggered": bool(pnl_r <= -float(STOP_R)),
-                        }
-                    )
+                    stop_triggered = bool(pnl_r <= -float(STOP_R))
+                    detail = {
+                        "fleet": fleet,
+                        "symbol": position.get("symbol"),
+                        "status": "hold",
+                        "unrealized_pnl": round(unrealized, 4),
+                        "pnl_r": round(pnl_r, 4),
+                        "stop_r": float(STOP_R),
+                        "stop_triggered": stop_triggered,
+                    }
+                    result["details"].append(detail)
+                    if stop_triggered:
+                        emergency = self._attempt_emergency_position_close(
+                            fleet,
+                            position,
+                            current,
+                            reason="startup_stop_r",
+                        )
+                        if emergency:
+                            result["exits_triggered"] += 1
+                            detail["status"] = "emergency_closed"
+                            detail["emergency"] = emergency
             except Exception as exc:
                 message = f"{fleet}: {exc}"
                 result["errors"].append(message)
                 print(f"[nexus_runtime] startup exit check failed: {message}")
+                emergency = self._attempt_emergency_position_close(
+                    fleet,
+                    position,
+                    current,
+                    reason="startup_exit_error",
+                )
+                if emergency:
+                    result["exits_triggered"] += 1
+                    result["details"].append(
+                        {
+                            "fleet": fleet,
+                            "symbol": position.get("symbol"),
+                            "status": "emergency_closed",
+                            "emergency": emergency,
+                        }
+                    )
 
         self._startup_exit_check = result
         if result["positions_checked"]:
@@ -663,6 +702,31 @@ class NexusRuntime:
                 f"errors={len(result['errors'])}"
             )
         return result
+
+    def _attempt_emergency_position_close(self, fleet, position, price, reason="emergency_close"):
+        symbol = str(position.get("symbol") or "").upper()
+        if not symbol or not self.futures_client.is_configured():
+            return None
+        try:
+            order = self.futures_client.close_open_position_market(
+                symbol,
+                client_order_id=f"nexus_emg_{str(fleet).lower()}_{uuid4().hex[:12]}",
+            )
+            try:
+                self.refresh_live_exchange_state(force=True)
+            except Exception:
+                pass
+            return {
+                "fleet": fleet,
+                "symbol": symbol,
+                "reason": reason,
+                "price": float(price or 0.0),
+                "external_order_id": order.get("orderId"),
+                "status": order.get("status"),
+            }
+        except Exception as exc:
+            print(f"[nexus_runtime] emergency close failed {fleet}/{symbol}: {exc}")
+            return None
 
     def stop(self):
         self._stop.set()
