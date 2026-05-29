@@ -225,7 +225,10 @@ class NexusRuntime:
         self.spot_client = BinanceSpotTestnetClient()
         self.futures_client = BinanceFuturesTestnetClient()
         self.market_context_service = MarketContextService(self.spot_client, self.futures_client)
-        self.external_market_intel = MarketIntelCache()
+        self.external_market_intel = MarketIntelCache(
+            futures_client=self.futures_client,
+            spot_client=self.spot_client,
+        )
         self.dynamic_blocklist = DynamicBlocklist()
         self.regime_classifier = RegimeClassifierService(llm_gateway=self.llm_gateway)
         self.post_trade_postmortem = PostTradePostMortemEngine(
@@ -2549,6 +2552,8 @@ class NexusRuntime:
         btc_ctx = dict((market_contexts or {}).get("BTC") or {})
         intel = self.external_market_intel.snapshot() if getattr(self, "external_market_intel", None) else {}
         cq = intel.get("cryptoquant") or {}
+        fear_greed = intel.get("fear_greed") or {}
+        binance_macro = intel.get("binance_macro") or {}
         payload = {
             "btc_trend": btc_ctx.get("trend_bias"),
             "btc_atr_pct": btc_ctx.get("atr_pct"),
@@ -2556,6 +2561,12 @@ class NexusRuntime:
             "external_alerts": intel.get("alerts") or [],
             "external_oi_stress": bool(cq.get("oi_stress")),
             "external_whale_dump_alert": bool(cq.get("whale_dump_alert")),
+            "external_netflow_bearish": bool(cq.get("netflow_bearish")),
+            "fear_greed_value": fear_greed.get("value"),
+            "fear_greed_extreme_fear": bool(fear_greed.get("extreme_fear")),
+            "fear_greed_extreme_greed": bool(fear_greed.get("extreme_greed")),
+            "btc_liquidation_stress": bool(binance_macro.get("liquidation_stress")),
+            "btc_long_crowded": bool(binance_macro.get("long_crowded")),
             "major_news_event": any(
                 str(item.get("impact") or "").upper() in {"HIGH", "CRITICAL"}
                 for item in (self.normalized_events or [])[:12]

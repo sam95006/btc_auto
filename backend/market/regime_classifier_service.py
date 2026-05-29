@@ -71,13 +71,19 @@ class RegimeClassifierService:
         alerts = list(payload.get("external_alerts") or [])
         oi_stress = bool(payload.get("external_oi_stress"))
         whale = bool(payload.get("external_whale_dump_alert"))
+        netflow_bearish = bool(payload.get("external_netflow_bearish"))
+        liquidation_stress = bool(payload.get("btc_liquidation_stress"))
+        extreme_fear = bool(payload.get("fear_greed_extreme_fear"))
+        extreme_greed = bool(payload.get("fear_greed_extreme_greed"))
         major_news = bool(payload.get("major_news_event"))
         btc_change = _safe_float(payload.get("btc_change_24h"))
         atr_pct = _safe_float(payload.get("btc_atr_pct"))
         trend = str(payload.get("btc_trend") or "neutral").lower()
 
-        if oi_stress or whale or major_news:
+        if oi_stress or whale or netflow_bearish or liquidation_stress or major_news:
             return {"label": "HIGH_RISK_MACRO", "confidence": 0.85, "reason": "external_risk"}
+        if extreme_fear or extreme_greed:
+            return {"label": "HIGH_RISK_MACRO", "confidence": 0.78, "reason": "sentiment_extreme"}
         if trend == "bullish" and btc_change > 0.01 and atr_pct >= 0.008:
             return {"label": "TREND_BULL", "confidence": 0.75, "reason": "btc_trend_up"}
         if atr_pct < 0.006 and abs(btc_change) < 0.008:

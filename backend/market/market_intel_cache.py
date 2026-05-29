@@ -14,12 +14,22 @@ logger = logging.getLogger(__name__)
 
 class MarketIntelCache:
     """
-    Polls CoinGecko / CMC / CryptoQuant on a daemon thread.
+    Polls CoinGecko / CMC / CryptoQuant / Fear&Greed / Binance macro on a daemon thread.
     Trading code must only call snapshot(), apply_to_contexts(), etc.
     """
 
-    def __init__(self, intel_service: Optional[ExternalMarketIntelService] = None, poll_seconds: float = 60.0):
-        self._intel = intel_service or ExternalMarketIntelService()
+    def __init__(
+        self,
+        intel_service: Optional[ExternalMarketIntelService] = None,
+        poll_seconds: float = 60.0,
+        *,
+        futures_client=None,
+        spot_client=None,
+    ):
+        self._intel = intel_service or ExternalMarketIntelService(
+            futures_client=futures_client,
+            spot_client=spot_client,
+        )
         self._poll_seconds = max(15.0, float(poll_seconds or 60.0))
         self._stop = threading.Event()
         self._thread: Optional[threading.Thread] = None
@@ -43,6 +53,9 @@ class MarketIntelCache:
         self._stop.set()
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=timeout)
+
+    def set_exchange_clients(self, futures_client=None, spot_client=None) -> None:
+        self._intel.set_exchange_clients(futures_client=futures_client, spot_client=spot_client)
 
     def refresh_now(self) -> Dict[str, Any]:
         snap = self._intel.refresh()

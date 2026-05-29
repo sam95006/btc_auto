@@ -139,6 +139,18 @@ python run.py
 | 研究閘道 API | `GET /api/nexus/research-gate` |
 | TradingView Webhook | `POST /api/nexus/webhook/tradingview`（需 `NEXUS_TRADINGVIEW_WEBHOOK_SECRET`） |
 | 環境變數 | `python tools/deploy/check_env_parity.py` |
+| 外部市場情報 | `GET /api/nexus/connectivity` → `external_market_intel`（含 fear_greed、binance_macro） |
+
+### 外部數據源（已接入）
+
+| 來源 | 內容 | 金鑰 |
+|------|------|------|
+| Binance 合約/現貨 | 訂單簿、資金費、OI、K 線、清算、多空比、現貨溢價 | Testnet API |
+| CoinGecko | 市值排名、24h 成交量、流動性篩選 | `COINGECKO_API_KEY` |
+| CoinMarketCap | BTC 市佔、總市值 | `COINMARKETCAP_API_KEY` |
+| CryptoQuant | 交易所流入/流出/淨流、槓桿壓力 | `CRYPTOQUANT_API_KEY` |
+| Alternative.me | Fear & Greed 指數 | 無 |
+| Binance `/futures/data` | 全球多空帳戶比、主動買賣比、OI 變化、近 1h 清算 | 公開端點 |
 
 ---
 

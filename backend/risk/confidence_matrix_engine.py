@@ -102,6 +102,12 @@ class ConfidenceMatrixEngine:
         if not ctx.get("external_whale_dump_alert"):
             score += 10.0
             breakdown["no_whale_dump"] = 10
+        if not ctx.get("external_netflow_bearish"):
+            score += 5.0
+            breakdown["netflow_ok"] = 5
+        if not ctx.get("btc_liquidation_stress"):
+            score += 5.0
+            breakdown["no_liq_stress"] = 5
 
         funding = _safe_float(ctx.get("funding_rate"))
         if side == "BUY" and funding <= 0:
@@ -134,6 +140,19 @@ class ConfidenceMatrixEngine:
             base = 26.0 if side == "BUY" else 12.0
         else:
             base = 12.0
+
+        fg = int(_safe_float(ctx.get("fear_greed_value"), 50.0))
+        if ctx.get("fear_greed_extreme_greed") and side == "BUY":
+            base = max(0.0, base - 8.0)
+            breakdown["extreme_greed_long_penalty"] = 8
+        if ctx.get("fear_greed_extreme_fear") and side == "SELL":
+            base = max(0.0, base - 6.0)
+            breakdown["extreme_fear_short_penalty"] = 6
+        if ctx.get("fear_greed_extreme_fear") and side == "BUY":
+            base += 4.0
+            breakdown["extreme_fear_long_boost"] = 4
+        if 20 <= fg <= 80:
+            breakdown["fear_greed_neutral"] = fg
 
         penalty = min(POSTMORTEM_MACRO_PENALTY, max(0.0, float(macro_penalty or 0.0)))
         score = max(0.0, base - penalty)

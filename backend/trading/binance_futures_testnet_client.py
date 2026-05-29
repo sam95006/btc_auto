@@ -132,6 +132,17 @@ class BinanceFuturesTestnetClient:
     def get_open_interest(self, symbol):
         return self._public_request("GET", "/fapi/v1/openInterest", {"symbol": symbol})
 
+    def get_futures_market_data(self, metric: str, **params):
+        """Public USD-M metrics under /futures/data/* (long/short, taker, OI hist)."""
+        path = f"/futures/data/{str(metric or '').strip().lstrip('/')}"
+        return self._public_request("GET", path, params or None)
+
+    def get_recent_liquidation_orders(self, symbol, limit=50, start_time=None):
+        params = {"symbol": str(symbol).upper(), "limit": int(limit)}
+        if start_time:
+            params["startTime"] = int(start_time)
+        return self._public_request("GET", "/fapi/v1/allForceOrders", params)
+
     def get_klines(self, symbol, interval="5m", limit=100):
         params = {
             "symbol": str(symbol).upper(),

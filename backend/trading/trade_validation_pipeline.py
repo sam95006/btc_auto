@@ -35,6 +35,7 @@ from config.validation_config import (
 from backend.analytics.kline_backtest_engine import KlineBacktestEngine
 from backend.trading.decision_quality_engine import DecisionQualityValidationEngine
 from config.backtest_config import RESEARCH_GATE_BLOCK_WHEN_FAIL, RESEARCH_GATE_ENABLED
+from config.external_market_config import BLOCK_EXTREME_FEAR_SHORTS, BLOCK_EXTREME_GREED_LONGS
 from config.fleet_routing_config import validate_futures_open_route
 from config.market_data_config import (
     LIQUIDATION_CRITICAL_DISTANCE_PCT,
@@ -271,6 +272,22 @@ class SimulationValidationEngine:
             approved = False
             reason = f"market_regime_blocked:{market_regime}"
             score = 0.1
+        elif (
+            BLOCK_EXTREME_GREED_LONGS
+            and market_context.get("fear_greed_extreme_greed")
+            and str(proposal.get("side") or "").upper() in {"BUY", "LONG"}
+        ):
+            approved = False
+            reason = "extreme_greed_blocks_long"
+            score = 0.14
+        elif (
+            BLOCK_EXTREME_FEAR_SHORTS
+            and market_context.get("fear_greed_extreme_fear")
+            and str(proposal.get("side") or "").upper() in {"SELL", "SHORT"}
+        ):
+            approved = False
+            reason = "extreme_fear_blocks_short"
+            score = 0.14
         elif market_context.get("coingecko_liquidity_ok") is False:
             approved = False
             reason = "coingecko_low_liquidity"
