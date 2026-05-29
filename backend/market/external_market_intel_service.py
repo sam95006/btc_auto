@@ -75,7 +75,7 @@ class ExternalMarketIntelService:
         return dict(self._last_snapshot or {})
 
     def top_radar_symbols(self, futures_client=None, limit: int = 50) -> List[str]:
-        intel = self._last_snapshot or self.refresh()
+        intel = self._last_snapshot or {}
         coingecko = intel.get("coingecko") or {}
         symbols = [normalize_symbol(item) for item in (coingecko.get("symbols") or [])]
         merged: List[str] = []

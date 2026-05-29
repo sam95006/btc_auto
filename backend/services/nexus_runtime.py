@@ -45,7 +45,13 @@ from config.revenue_target_config import (
 )
 from backend.market.market_price_feed_service import MarketPriceFeedService
 from backend.market.market_context_service import MarketContextService
-from backend.market.external_market_intel_service import ExternalMarketIntelService
+from backend.market.market_intel_cache import MarketIntelCache
+from backend.market.regime_classifier_service import RegimeClassifierService
+from backend.learning.dynamic_blocklist import DynamicBlocklist
+from backend.learning.post_trade_postmortem_engine import PostTradePostMortemEngine
+from backend.risk.confidence_sizing_pipeline import ConfidenceSizingPipeline
+from backend.trading.market_neutral_funding_engine import MarketNeutralFundingEngine
+from config.regime_config import REGIME_REFRESH_SECONDS
 from backend.market.radar_market_scan_service import RadarMarketScanService
 from backend.market.spot_truth_service import SpotTruthService
 from backend.market.truth_layer_guard import TruthLayerGuard
@@ -218,7 +224,16 @@ class NexusRuntime:
         self.spot_client = BinanceSpotTestnetClient()
         self.futures_client = BinanceFuturesTestnetClient()
         self.market_context_service = MarketContextService(self.spot_client, self.futures_client)
-        self.external_market_intel = ExternalMarketIntelService()
+        self.external_market_intel = MarketIntelCache()
+        self.dynamic_blocklist = DynamicBlocklist()
+        self.regime_classifier = RegimeClassifierService(llm_gateway=self.llm_gateway)
+        self.post_trade_postmortem = PostTradePostMortemEngine(
+            llm_gateway=self.llm_gateway,
+            blocklist=self.dynamic_blocklist,
+        )
+        self.confidence_sizing_pipeline = ConfidenceSizingPipeline(blocklist=self.dynamic_blocklist)
+        self.market_neutral_engine = MarketNeutralFundingEngine()
+        self._last_regime_refresh_at = 0.0
         self.radar_market_scan_service = RadarMarketScanService(self.futures_client, self.market_context_service)
         self.spot_truth_service = SpotTruthService(
             truth_mode=HQ_SPOT_TRUTH_MODE,
@@ -573,6 +588,18 @@ class NexusRuntime:
                 self.llm_gateway.warmup()
             except Exception as exc:
                 print(f"[nexus_runtime] llm warmup skipped: {exc}")
+        try:
+            self.external_market_intel.start(bootstrap=True)
+        except Exception as exc:
+            print(f"[nexus_runtime] market_intel_cache start skipped: {exc}")
+        try:
+            self.upgrade_pipeline.start_background_services()
+        except Exception as exc:
+            print(f"[nexus_runtime] upgrade_pipeline background start skipped: {exc}")
+        try:
+            self.regime_classifier.start(bootstrap=True)
+        except Exception as exc:
+            print(f"[nexus_runtime] regime_classifier start skipped: {exc}")
         self._thread = threading.Thread(target=self._loop, daemon=True, name="nexus-runtime")
         self._thread.start()
 
@@ -772,6 +799,20 @@ class NexusRuntime:
     def stop(self):
         self._stop.set()
         self.account_sync.stop()
+        try:
+            self.external_market_intel.stop()
+        except Exception:
+            pass
+        try:
+            runtime_store.save_snapshot(
+                self.snapshot(),
+                worker_pid=os.getpid(),
+                worker_status="STOPPED",
+                writer="nexus_worker_stop",
+                flush_now=True,
+            )
+        except Exception:
+            pass
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=5)
 
@@ -885,6 +926,14 @@ class NexusRuntime:
         self.radar_scan = self.radar_market_scan_service.scan()
         self.radar_state = dict(self.radar_scan or {})
         self._enrich_market_contexts_with_symbols(market_contexts, futures_account, prices)
+        try:
+            market_contexts = self.external_market_intel.apply_to_contexts(market_contexts)
+        except Exception:
+            pass
+        try:
+            self._refresh_regime_if_due(market_contexts, futures_account)
+        except Exception:
+            pass
         self.market_context = market_contexts
         self._radar_llm_proposals = self.radar_llm_bridge.fetch_proposals(self.radar_scan, self.truth_layer_status)
         self.whale_state = {
@@ -1638,6 +1687,12 @@ class NexusRuntime:
         blocked = set(radar_guidance.get("blocked_symbols") or [])
         agent = self.agent_advisory.get("multi_agent") or {}
         agent_output = agent.get("proposal_output") or (agent.get("llm_discussion") or {}).get("output") or {}
+        deployable = float(
+            (getattr(self, "_compound_capital_status", None) or self.growth_status.get("compound") or {}).get(
+                "deployable_pool", 0.0
+            )
+            or 0.0
+        )
         context = {
             "radar_llm_items": getattr(self, "_radar_llm_proposals", []) or [],
             "agent_output": agent_output,
@@ -1650,14 +1705,9 @@ class NexusRuntime:
             ],
             "radar_scan": self.radar_scan,
             "core_fleets": core_fleets,
+            "deployable_pool": deployable,
         }
         symbol_prices = self._build_symbol_prices(prices)
-        deployable = float(
-            (getattr(self, "_compound_capital_status", None) or self.growth_status.get("compound") or {}).get(
-                "deployable_pool", 0.0
-            )
-            or 0.0
-        )
         requests = list(self.ai_trade_proposer.collect_proposals(context))
         if self.rule_signal_bridge.enabled():
             requests.extend(
@@ -1676,12 +1726,37 @@ class NexusRuntime:
                 deployable_pool=deployable,
             )
         )
+        held_symbols = {
+            str(item.get("symbol") or "").upper()
+            for item in (context.get("positions") or [])
+            if item.get("symbol")
+        }
+        requests.extend(
+            self.market_neutral_engine.collect_proposals(
+                market_contexts,
+                total_equity=self._futures_available_balance(),
+                held_symbols=held_symbols,
+            )
+        )
         seen = set()
         for request in requests:
             key = (str(request.get("fleet")), str(request.get("symbol")), str(request.get("side")))
             if key in seen:
                 continue
             seen.add(key)
+            if (
+                self.market_neutral_engine.pause_radar_directional()
+                and str(request.get("fleet") or "").upper() == "RADAR"
+                and request.get("strategy_key") != "market_neutral_funding"
+            ):
+                continue
+            if self.dynamic_blocklist.is_symbol_blocked(str(request.get("symbol") or "")):
+                continue
+            request = self._apply_confidence_sizing_pipeline(
+                request,
+                market_contexts,
+                deployable_pool=deployable,
+            )
             request = self.strategy_proposal_hub.scale_proposal(
                 request,
                 market_contexts,
@@ -1968,10 +2043,38 @@ class NexusRuntime:
             except Exception as exc:
                 self._append_alert("WARNING", f"Kill-switch flatten failed: {exc}")
 
+    def _execute_market_neutral_request(self, request, symbol_prices, market_contexts, truth_status):
+        request = dict(request or {})
+        symbol = str(request.get("symbol") or "").upper()
+        price = float(symbol_prices.get(symbol, 0.0) or 0.0)
+        margin = float(request.get("margin") or 0.0)
+        if not symbol or price <= 0 or margin <= 0 or not self.execution_router:
+            return False
+        spot_order, futures_order = self.market_neutral_engine.execute_hedge(
+            self.execution_router,
+            symbol,
+            price,
+            margin,
+        )
+        if spot_order and futures_order:
+            return True
+        self.market_neutral_engine.emergency_flatten_one_leg(
+            self.execution_router,
+            symbol,
+            price,
+            "spot" if spot_order else "futures",
+        )
+        return False
+
     def _try_execute_futures_request(self, request, symbol_prices, market_contexts, truth_status, learning_guidance=None):
         request = dict(request or {})
+        if str(request.get("side") or "").upper() == "NEUTRAL_HEDGE":
+            return self._execute_market_neutral_request(request, symbol_prices, market_contexts, truth_status)
         fleet = str(request.get("fleet") or "RADAR").upper()
         symbol = str(request.get("symbol") or request.get("symbol_override") or "").upper().replace("/", "")
+        if self.dynamic_blocklist.is_symbol_blocked(symbol):
+            return False
+        request = self._apply_confidence_sizing_pipeline(request, market_contexts)
         if not symbol or self._fleet_blocked_by_meeting(fleet):
             return False
         learning_guidance = learning_guidance or self.learning_feedback.get_strategy_guidance(
@@ -2140,6 +2243,8 @@ class NexusRuntime:
             validation,
             portfolio_status=self.portfolio_status,
             learning_guidance=guidance,
+            regime_state=self.regime_classifier.snapshot(),
+            dynamic_blocklist=self.dynamic_blocklist,
         )
         self._record_validation_event(
             {
@@ -2179,6 +2284,17 @@ class NexusRuntime:
         result, recommendation = self.learning_feedback.record_trade_result(payload, context=context or {})
         self.upgrade_pipeline.on_trade_result(result, recommendation)
         event = str(payload.get("event") or result.get("event") or "").upper()
+        if event == "CLOSE" and float(payload.get("pnl", 0.0) or 0.0) < 0:
+            try:
+                ctx_snap = dict(context or {})
+                ctx_snap["market_regime_ai"] = (self.regime_classifier.snapshot() or {}).get("label")
+                diagnosis = self.post_trade_postmortem.on_trade_close(
+                    {**payload, "confidence_matrix": payload.get("confidence_matrix")},
+                    ctx_snap,
+                )
+                payload["post_mortem"] = diagnosis
+            except Exception as exc:
+                print(f"[nexus_runtime] post_mortem skipped: {exc}")
         if event in {"CLOSE", "LIVE"} or payload.get("exit_reason") or payload.get("exit_price"):
             symbol = str(payload.get("symbol") or result.get("symbol") or "").upper()
             if symbol:
@@ -2357,6 +2473,69 @@ class NexusRuntime:
                 "RADAR": RADAR_ALLOCATION_WEIGHT,
             },
         }
+
+    def _futures_available_balance(self, futures_account=None) -> float:
+        account = futures_account or getattr(self, "_last_futures_account", None) or {}
+        return float(futures_equity_from_account(account) or 0.0)
+
+    def _apply_confidence_sizing_pipeline(
+        self,
+        request,
+        market_contexts,
+        *,
+        deployable_pool: float = 0.0,
+        futures_account=None,
+    ):
+        if not request:
+            return request
+        fleet = str(request.get("fleet") or "").upper()
+        symbol = str(request.get("symbol") or request.get("symbol_override") or fleet).upper()
+        ctx = (market_contexts or {}).get(fleet) or (market_contexts or {}).get(symbol) or {}
+        try:
+            return self.confidence_sizing_pipeline.apply(
+                dict(request),
+                market_context=ctx,
+                market_contexts=market_contexts,
+                regime_state=self.regime_classifier.snapshot(),
+                deployable_pool=deployable_pool,
+                available_balance=self._futures_available_balance(futures_account),
+            )
+        except Exception:
+            return request
+
+    def _refresh_regime_if_due(self, market_contexts, futures_account):
+        now = time.time()
+        if now - float(getattr(self, "_last_regime_refresh_at", 0.0) or 0.0) < REGIME_REFRESH_SECONDS:
+            return self.regime_classifier.snapshot()
+        btc_ctx = dict((market_contexts or {}).get("BTC") or {})
+        intel = self.external_market_intel.snapshot() if getattr(self, "external_market_intel", None) else {}
+        cq = intel.get("cryptoquant") or {}
+        payload = {
+            "btc_trend": btc_ctx.get("trend_bias"),
+            "btc_atr_pct": btc_ctx.get("atr_pct"),
+            "btc_change_24h": btc_ctx.get("price_change_15m"),
+            "external_alerts": intel.get("alerts") or [],
+            "external_oi_stress": bool(cq.get("oi_stress")),
+            "external_whale_dump_alert": bool(cq.get("whale_dump_alert")),
+            "major_news_event": any(
+                str(item.get("impact") or "").upper() in {"HIGH", "CRITICAL"}
+                for item in (self.normalized_events or [])[:12]
+                if isinstance(item, dict)
+            ),
+        }
+        state = self.regime_classifier.refresh(payload)
+        self._last_regime_refresh_at = now
+        label = state.get("label", "CHOP_RNG")
+        for key, ctx in list((market_contexts or {}).items()):
+            if isinstance(ctx, dict):
+                ctx["market_regime_ai"] = label
+        if isinstance(self.growth_status, dict):
+            self.growth_status["market_regime_ai"] = label
+            self.growth_status["regime_classifier"] = state
+            if self.market_neutral_engine.pause_radar_directional():
+                self.growth_status["pause_radar_directional"] = True
+                self.growth_status.setdefault("block_reason", "market_neutral_active")
+        return state
 
     def _enrich_market_contexts_with_symbols(self, market_contexts, futures_account, prices):
         if not self.futures_client.is_configured():
@@ -3159,6 +3338,13 @@ class NexusRuntime:
             if growth_leverage_cap is not None:
                 request["leverage"] = min(float(request["leverage"]), float(growth_leverage_cap))
 
+            request = self._apply_confidence_sizing_pipeline(
+                request,
+                market_contexts,
+                deployable_pool=float((self.growth_status or {}).get("deployable_pool", 0.0) or 0.0),
+                futures_account=futures_account,
+            )
+
             request["symbol"] = self.futures_client.resolve_symbol(fleet)
             request["market_type"] = "futures"
             growth_context = self._build_growth_context(fleet, signal, market_contexts.get(fleet, {}), request)
@@ -3330,6 +3516,7 @@ class NexusRuntime:
             )
             if not request:
                 continue
+            request = self._apply_volatility_position_sizing(request, alt_context, market_contexts)
             signal = self.radar_dispatch.build_signal_from_candidate(candidate)
             growth_context = self._build_growth_context("RADAR", signal, alt_context, request)
             validation = self.validation_pipeline.evaluate(

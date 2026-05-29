@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import os
 
-from config.fee_churn_config import MIN_MARGIN_USD
-from config.radar_dispatch_config import CORE_FLEET_SYMBOLS, RADAR_MAX_LEVERAGE, RADAR_MIN_MARGIN
+from config.radar_dispatch_config import CORE_FLEET_SYMBOLS
 from config.fleet_routing_config import validate_futures_open_route
 from config.ai_trading_config import (
     AI_LED_INCLUDE_CORE_FLEETS,
@@ -48,7 +47,7 @@ class AiTradeProposer:
         proposals.extend(self._from_llm_task(context))
         if self.include_core_fleets:
             proposals.extend(self._from_core_fleet_context(context))
-        return self._dedupe(proposals)[: max(1, int(AI_PROPOSAL_MAX_PER_TICK or 5))]
+        return [row for row in self._dedupe(proposals)[: max(1, int(AI_PROPOSAL_MAX_PER_TICK or 5))] if row]
 
     def _from_core_fleet_context(self, context):
         rows = []
@@ -151,18 +150,11 @@ class AiTradeProposer:
         route_ok, _reason = validate_futures_open_route(fleet, symbol)
         if not route_ok:
             return None
-        margin = (
-            max(MIN_MARGIN_USD, RADAR_MIN_MARGIN, 12.0 + confidence * 20.0)
-            if fleet == "RADAR"
-            else max(MIN_MARGIN_USD, 20.0, 15.0 + confidence * 25.0)
-        )
-        return {
+        proposal = {
             "fleet": fleet,
             "symbol": symbol,
             "symbol_override": symbol,
             "side": side,
-            "margin": round(margin, 4),
-            "leverage": round(min(RADAR_MAX_LEVERAGE, 5 + confidence * 10), 2),
             "reason": f"ai_led:{source}:{symbol}",
             "raw_confidence": round(confidence, 4),
             "adjusted_confidence": round(confidence, 4),
@@ -173,6 +165,7 @@ class AiTradeProposer:
             "proposer": source,
             "ai_rationale": str(rationale or "")[:280],
         }
+        return proposal
 
     def _dedupe(self, proposals):
         seen = set()

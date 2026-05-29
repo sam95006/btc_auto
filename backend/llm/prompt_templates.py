@@ -187,3 +187,42 @@ def build_agent_prompt(payload: dict):
         {"role": "system", "content": system},
         {"role": "user", "content": json.dumps({"instruction": _json_instruction(schema), "input": user}, ensure_ascii=False)},
     ]
+
+
+def build_regime_classifier_prompt(payload: dict):
+    system = (
+        "You are NEXUS market regime classifier. Choose exactly one label for crypto risk-on context. "
+        "Labels: CHOP_RNG (range/chop), TREND_BULL (risk-on trend), HIGH_RISK_MACRO (elevated macro/liquidity risk)."
+    )
+    schema = '{"market_regime": "CHOP_RNG|TREND_BULL|HIGH_RISK_MACRO", "rationale": str}'
+    return [
+        {"role": "system", "content": system},
+        {
+            "role": "user",
+            "content": json.dumps(
+                {"instruction": _json_instruction(schema), "input": payload},
+                ensure_ascii=False,
+            ),
+        },
+    ]
+
+
+def build_post_mortem_prompt(payload: dict):
+    system = (
+        "You are NEXUS post-trade risk coach. Diagnose losing trades. "
+        "Return tactical_loss only when the environment made the trade structurally poor."
+    )
+    schema = (
+        '{"is_tactical_loss": bool, "toxic_features": [str], "action_recommendation": '
+        '"BLOCK_STRATEGY|MONITOR", "target_symbol": str, "block_duration_minutes": int, "rationale": str}'
+    )
+    return [
+        {"role": "system", "content": system},
+        {
+            "role": "user",
+            "content": json.dumps(
+                {"instruction": _json_instruction(schema), "input": payload},
+                ensure_ascii=False,
+            ),
+        },
+    ]

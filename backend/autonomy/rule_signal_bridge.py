@@ -115,6 +115,7 @@ class RuleSignalBridge:
                     "side": side,
                     "margin": round(margin, 4),
                     "leverage": min(RADAR_MAX_LEVERAGE, 12.0),
+                    "raw_confidence": round(confidence, 4),
                     "adjusted_confidence": round(confidence, 4),
                     "reason": f"rule_signal_mtf:{side.lower()}:{round(entry_move * 100, 3)}pct",
                     "decision_source": "rule_signal_bridge",

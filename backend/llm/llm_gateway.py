@@ -22,6 +22,8 @@ from .prompt_templates import (
     build_radar_proposal_prompt,
     build_reflection_prompt,
     build_roundtable_prompt,
+    build_post_mortem_prompt,
+    build_regime_classifier_prompt,
     build_trade_proposer_prompt,
 )
 from .sambanova_client import SambaNovaLLMClient
@@ -62,6 +64,10 @@ class LLMGateway:
             return build_chat_prompt(payload)
         if task == "trade_proposer":
             return build_trade_proposer_prompt(payload)
+        if task == "regime_classifier":
+            return build_regime_classifier_prompt(payload)
+        if task == "post_mortem":
+            return build_post_mortem_prompt(payload)
         raise ValueError(f"unsupported_task:{task}")
 
     def _client_for_task(self, task: str):

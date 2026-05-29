@@ -18,6 +18,7 @@ def _now():
 
 
 from backend.core.data_paths import resolve_runtime_db_path
+from backend.services.live_snapshot_cache import LiveSnapshotCache
 
 
 class RuntimeStateStore:
@@ -30,7 +31,18 @@ class RuntimeStateStore:
         self._conn.execute("PRAGMA synchronous=NORMAL")
         self._conn.execute("PRAGMA busy_timeout=30000")
         self._write_lock_path = f"{self.db_path}.snapshot.lock"
+        self._live_snapshot = LiveSnapshotCache()
+        self._snapshot_flush_seconds = max(
+            5.0, float(os.getenv("NEXUS_SNAPSHOT_FLUSH_SECONDS", "15") or 15)
+        )
+        self._snapshot_last_flush_at = 0.0
         self._init_db()
+        try:
+            loaded = self._load_snapshot_from_db()
+            if loaded:
+                self._live_snapshot.put(loaded)
+        except Exception:
+            pass
 
     def _run_write(self, operation):
         last_error = None
@@ -455,30 +467,60 @@ class RuntimeStateStore:
                 pass
             fh.close()
 
-    def save_snapshot(self, snapshot, worker_pid=None, worker_status="ONLINE", writer=None, single_instance=False):
+    def _load_snapshot_from_db(self):
+        with self._lock:
+            cursor = self._conn.cursor()
+            cursor.execute("SELECT snapshot_json FROM nexus_runtime_state WHERE id = 1")
+            row = cursor.fetchone()
+            if not row:
+                return self.default_snapshot()
+            try:
+                snapshot = json.loads(row["snapshot_json"])
+                return self._merge_snapshot_defaults(snapshot, self.default_snapshot())
+            except Exception:
+                return self.default_snapshot()
+
+    def save_snapshot(
+        self,
+        snapshot,
+        worker_pid=None,
+        worker_status="ONLINE",
+        writer=None,
+        single_instance=False,
+        flush_now=False,
+    ):
         writer = writer or f"pid:{worker_pid or os.getpid()}"
+        payload_snapshot = copy.deepcopy(snapshot or {})
+        system_block = dict(payload_snapshot.get("system", {}))
+        module_health = dict(system_block.get("module_health", {}))
+        module_health["worker"] = worker_status
+        system_block["module_health"] = module_health
+        payload_snapshot["system"] = system_block
+        runtime_block = dict(payload_snapshot.get("runtime", {}))
+        runtime_block.update(
+            {
+                "single_instance": bool(single_instance),
+                "last_writer": writer,
+                "updated_at": _now(),
+            }
+        )
+        payload_snapshot["runtime"] = runtime_block
+        self._live_snapshot.put(payload_snapshot)
+
+        now = time.time()
+        should_flush = bool(flush_now) or (now - self._snapshot_last_flush_at) >= self._snapshot_flush_seconds
+        if not should_flush:
+            return
 
         def operation(cursor):
             cursor.execute("SELECT snapshot_version FROM nexus_runtime_state WHERE id = 1")
             row = cursor.fetchone()
             next_version = int((row["snapshot_version"] if row and row["snapshot_version"] is not None else 0) or 0) + 1
-            payload_snapshot = copy.deepcopy(snapshot or {})
-            system_block = dict(payload_snapshot.get("system", {}))
-            module_health = dict(system_block.get("module_health", {}))
-            module_health["worker"] = worker_status
-            system_block["module_health"] = module_health
-            payload_snapshot["system"] = system_block
-            runtime_block = dict(payload_snapshot.get("runtime", {}))
-            runtime_block.update(
-                {
-                    "single_instance": bool(single_instance),
-                    "snapshot_version": next_version,
-                    "last_writer": writer,
-                    "updated_at": _now(),
-                }
-            )
-            payload_snapshot["runtime"] = runtime_block
-            payload = json.dumps(payload_snapshot, ensure_ascii=False)
+            db_snapshot = copy.deepcopy(payload_snapshot)
+            db_runtime = dict(db_snapshot.get("runtime", {}))
+            db_runtime["snapshot_version"] = next_version
+            db_snapshot["runtime"] = db_runtime
+            payload = json.dumps(db_snapshot, ensure_ascii=False)
             cursor.execute(
                 """
                 INSERT INTO nexus_runtime_state (id, snapshot_json, updated_at, worker_pid, worker_status, snapshot_version, last_writer)
@@ -496,19 +538,13 @@ class RuntimeStateStore:
 
         with self._write_guard():
             self._run_write(operation)
+        self._snapshot_last_flush_at = now
 
     def load_snapshot(self):
-        with self._lock:
-            cursor = self._conn.cursor()
-            cursor.execute("SELECT snapshot_json FROM nexus_runtime_state WHERE id = 1")
-            row = cursor.fetchone()
-            if not row:
-                return self.default_snapshot()
-            try:
-                snapshot = json.loads(row["snapshot_json"])
-                return self._merge_snapshot_defaults(snapshot, self.default_snapshot())
-            except Exception:
-                return self.default_snapshot()
+        cached = self._live_snapshot.get()
+        if cached is not None:
+            return self._merge_snapshot_defaults(cached, self.default_snapshot())
+        return self._load_snapshot_from_db()
 
     def enqueue_command(self, command, payload=None):
         payload = payload or {}
@@ -851,6 +887,23 @@ class RuntimeStateStore:
                 (record.get("timestamp", _now()), json.dumps(record, ensure_ascii=False)),
             )
         self._run_write(operation)
+
+    def append_decision_traces_batch(self, records):
+        rows = [dict(item or {}) for item in (records or []) if item]
+        if not rows:
+            return 0
+
+        def operation(cursor):
+            cursor.executemany(
+                "INSERT INTO nexus_decision_traces (timestamp, trace_json) VALUES (?, ?)",
+                [
+                    (row.get("timestamp", _now()), json.dumps(row, ensure_ascii=False))
+                    for row in rows
+                ],
+            )
+            return len(rows)
+
+        return self._run_write(operation) or 0
 
     def recent_decision_traces(self, limit=100):
         with self._lock:

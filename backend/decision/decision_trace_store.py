@@ -11,8 +11,13 @@ def _now():
 class DecisionTraceStore:
     """P0 decision trace: who proposed, validation stages, regime, outcome."""
 
-    def __init__(self, runtime_store):
+    def __init__(self, runtime_store, batched_writer=None):
         self.runtime_store = runtime_store
+        self._batched_writer = batched_writer
+
+    def start_background_flush(self):
+        if self._batched_writer is not None:
+            self._batched_writer.start()
 
     def record(
         self,
@@ -46,5 +51,8 @@ class DecisionTraceStore:
             "order_id": order_id,
             "why_not": validation.get("why_not"),
         }
-        self.runtime_store.append_decision_trace(record)
+        if self._batched_writer is not None:
+            self._batched_writer.enqueue(record)
+        else:
+            self.runtime_store.append_decision_trace(record)
         return record

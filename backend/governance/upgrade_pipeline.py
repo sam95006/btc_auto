@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from backend.autonomy import ShadowModeService, StrategyVersionRegistry
+from backend.decision.batched_decision_trace_writer import BatchedDecisionTraceWriter
 from backend.decision.decision_trace_store import DecisionTraceStore
+from backend.governance.autonomy_bounds_guard import clamp_trade_proposal
 from backend.governance.execution_governor import ExecutionGovernor
 from backend.governance.trade_proposal_service import TradeProposalService
 from backend.learning.learning_review_queue import LearningReviewQueue
@@ -19,7 +21,8 @@ class UpgradePipeline:
         self.learning_feedback = learning_feedback
         self.event_registry = EventRegistry()
         self.universe_filter = UniverseFilterService()
-        self.decision_trace = DecisionTraceStore(runtime_store)
+        self._trace_batch_writer = BatchedDecisionTraceWriter(runtime_store)
+        self.decision_trace = DecisionTraceStore(runtime_store, batched_writer=self._trace_batch_writer)
         self.learning_reviews = LearningReviewQueue(runtime_store)
         self.execution_governor = ExecutionGovernor()
         self.trade_proposals = TradeProposalService(runtime_store)
@@ -38,12 +41,26 @@ class UpgradePipeline:
     def begin_tick(self):
         self.trade_proposals.begin_tick()
 
-    def govern_validation(self, proposal, validation, portfolio_status=None, learning_guidance=None):
+    def start_background_services(self):
+        self.decision_trace.start_background_flush()
+
+    def govern_validation(
+        self,
+        proposal,
+        validation,
+        portfolio_status=None,
+        learning_guidance=None,
+        regime_state=None,
+        dynamic_blocklist=None,
+    ):
+        proposal, _bounds_warnings = clamp_trade_proposal(dict(proposal or {}))
         governed = self.execution_governor.evaluate(
             proposal,
             validation,
             portfolio_status=portfolio_status,
             learning_guidance=learning_guidance,
+            regime_state=regime_state,
+            dynamic_blocklist=dynamic_blocklist,
         )
         self.trade_proposals.create_from_request(proposal, proposer=proposal.get("proposer", "fleet_engine"))
         trace = self.decision_trace.record(

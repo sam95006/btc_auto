@@ -41,6 +41,7 @@ class UpgradePipelineTests(unittest.TestCase):
         validation = {"approved": True, "reason": "ok", "stages": {}}
         governed, trace = self.pipeline.govern_validation(proposal, validation)
         self.assertTrue(governed.get("trace_id"))
+        self.pipeline._trace_batch_writer.flush()
         traces = self.store.recent_decision_traces(limit=5)
         self.assertEqual(traces[0]["trace_id"], trace["trace_id"])
 

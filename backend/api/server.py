@@ -181,7 +181,7 @@ def register_nexus_routes(app):
         try:
             from backend.services.nexus_runtime import nexus_runtime
 
-            nexus_runtime.refresh_live_exchange_state(force=True)
+            nexus_runtime.refresh_live_exchange_state(force=False, min_interval_sec=8)
             snap = nexus_runtime.snapshot()
         except Exception as exc:
             print(f"[api] live exchange refresh failed: {exc}")
@@ -193,6 +193,7 @@ def register_nexus_routes(app):
                 worker_status="ONLINE",
                 writer="api_state",
                 single_instance=False,
+                flush_now=True,
             )
         except Exception as exc:
             print(f"[api] snapshot persist failed: {exc}")

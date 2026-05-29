@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from datetime import datetime
 
+from backend.governance.autonomy_bounds_guard import clamp_learning_patch
 from config.learning_config import (
     LIQUIDATION_PERMANENT_BLACKLIST,
     LIQUIDATION_REENTRY_LEVERAGE_CAP,
@@ -110,6 +111,7 @@ class LearningReviewQueue:
             "baseline_trade_count": int(recommendation.get("baseline_trade_count") or 0),
             "baseline_realized_pnl": float(recommendation.get("baseline_realized_pnl") or 0.0),
         }
+        patch, _warnings = clamp_learning_patch(patch)
         self.runtime_store.upsert_applied_learning_patch(patch)
         updater = getattr(self.runtime_store, "update_learning_review_status", None)
         if review_id and callable(updater):
