@@ -149,11 +149,12 @@ def register_nexus_routes(app):
                         else ""
                     ),
                     (
-                        "last_tick_error contains -1109: read works but Futures WRITE (order/leverageBracket) fails. "
-                        "This is NOT missing 'Enable Futures' on the key — usually Zeabur BINANCE_FUTURES_TESTNET_SECRET_KEY "
-                        "is wrong/outdated (re-copy Secret when creating the key), or base URL is not https://demo-fapi.binance.com. "
-                        "Check futures_write_probe in this JSON."
-                        if last_tick_error and "-1109" in str(last_tick_error)
+                        "futures_trading_access.write_post_probe.ok is false with -1109: "
+                        "your Futures Demo key can READ positions but Binance rejects all signed POST trade calls. "
+                        "This is not a NEXUS bug. Recreate the key on https://demo.binance.com → API Management, "
+                        "enable Reading + Spot/Margin + Futures, paste Secret into BINANCE_FUTURES_TESTNET_SECRET_KEY, redeploy. "
+                        "Local check: python tools/deploy/verify_binance_futures_write.py"
+                        if (futures_trading_access.get("write_post_probe") or {}).get("ok") is False
                         else ""
                     ),
                     (
@@ -285,7 +286,7 @@ def register_nexus_routes(app):
 
     @app.route("/api/nexus/performance-report")
     def nexus_performance_report():
-        from tools.research.performance_report import build_performance_report
+        from backend.analytics.performance_report import build_performance_report
 
         return jsonify(build_performance_report(runtime_store))
 

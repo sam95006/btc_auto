@@ -394,6 +394,7 @@ class BinanceFuturesTestnetClient:
 
         write_probe = self.probe_write_access(symbol)
         result["write_probe"] = write_probe
+        result["write_post_probe"] = self.probe_write_post_access(symbol)
         try:
             if live:
                 close_side = "SELL" if float(live["position_amt"]) > 0 else "BUY"
@@ -418,9 +419,39 @@ class BinanceFuturesTestnetClient:
             result["order_test"] = {"ok": False, "error": str(exc)}
 
         result["ok"] = bool(result.get("can_trade", True)) and bool(write_probe.get("ok"))
+        post_probe = result.get("write_post_probe") or {}
+        if post_probe.get("ok") is False:
+            result["ok"] = False
         if result.get("order_test") and result["order_test"].get("ok") is False:
             result["ok"] = False
         return result
+
+    def probe_write_post_access(self, symbol="ETHUSDT"):
+        """Real signed POST probe. order/test alone is not sufficient on Binance Demo."""
+        symbol = str(symbol or "ETHUSDT").upper()
+        try:
+            self.set_margin_type_isolated(symbol)
+            return {
+                "ok": True,
+                "probe": "marginType_post",
+                "symbol": symbol,
+                "note": "signed POST accepted",
+            }
+        except BinanceTestnetError as exc:
+            message = str(exc)
+            hint = ""
+            if "-1109" in message:
+                hint = (
+                    "Binance Demo rejected all signed POST trade calls. "
+                    "Recreate API key on demo.binance.com with Futures permission enabled."
+                )
+            return {
+                "ok": False,
+                "probe": "marginType_post",
+                "symbol": symbol,
+                "error": message,
+                "hint": hint,
+            }
 
     def probe_write_access(self, symbol="ETHUSDT"):
         """Connectivity probe: account trade flag + position mode (no orders placed)."""

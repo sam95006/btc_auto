@@ -18,7 +18,7 @@ def should_broadcast(now, last_key):
 
 
 def format_report(runtime_store, walk_forward=None, upgrade_status=None):
-    from tools.research.performance_report import build_performance_report
+    from backend.analytics.performance_report import build_performance_report
 
     perf = build_performance_report(runtime_store)
     walk_forward = walk_forward or {}
