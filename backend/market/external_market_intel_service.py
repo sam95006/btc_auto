@@ -80,10 +80,22 @@ class ExternalMarketIntelService:
         symbols = [normalize_symbol(item) for item in (coingecko.get("symbols") or [])]
         merged: List[str] = []
         seen = set()
-        for symbol in symbols:
+        tradable = set()
+        if futures_client and getattr(futures_client, "is_tradable_symbol", None):
+            try:
+                tradable = futures_client.tradable_symbols()
+            except Exception:
+                tradable = set()
+
+        def _accept(symbol: str) -> bool:
             if not symbol.endswith("USDT") or symbol in CORE_FLEET_SYMBOLS:
-                continue
-            if symbol in seen:
+                return False
+            if tradable and symbol not in tradable:
+                return False
+            return True
+
+        for symbol in symbols:
+            if not _accept(symbol) or symbol in seen:
                 continue
             seen.add(symbol)
             merged.append(symbol)
@@ -94,7 +106,7 @@ class ExternalMarketIntelService:
             try:
                 for item in futures_client.fetch_24h_tickers() or []:
                     symbol = normalize_symbol(item.get("symbol"))
-                    if symbol.endswith("USDT") and symbol not in CORE_FLEET_SYMBOLS and symbol not in seen:
+                    if _accept(symbol) and symbol not in seen:
                         seen.add(symbol)
                         merged.append(symbol)
                     if len(merged) >= limit:

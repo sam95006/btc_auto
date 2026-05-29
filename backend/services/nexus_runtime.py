@@ -613,19 +613,71 @@ class NexusRuntime:
         symbol_prices = self._build_symbol_prices(prices)
         self.position_manager.update_unrealized(prices, symbol_prices=symbol_prices)
 
-        for fleet in FLEETS:
-            positions = self.position_manager.get_by_fleet(fleet)
-            if not positions:
+        from config.exit_config import RISK_PCT, STOP_R
+
+        live_rows = list(futures_account.get("positions") or [])
+        if not live_rows:
+            self._startup_exit_check = result
+            return result
+
+        for live in live_rows:
+            fleet = str(live.get("fleet") or "RADAR").upper()
+            symbol = str(live.get("symbol") or "").upper()
+            if not symbol:
                 continue
             result["positions_checked"] += 1
-            position = positions[0]
+            positions = self.position_manager.get_by_fleet(fleet)
+            position = positions[0] if positions else {
+                "id": f"live_{fleet}_{symbol}",
+                "fleet": fleet,
+                "symbol": symbol,
+                "side": live.get("side", "BUY"),
+                "quantity": live.get("quantity", 0.0),
+                "margin": live.get("margin", 0.0),
+                "unrealized_pnl": live.get("unrealized_pnl", 0.0),
+                "mark_price": live.get("mark_price", 0.0),
+                "position_side": live.get("position_side", "BOTH"),
+            }
             current = float(
-                symbol_prices.get(str(position.get("symbol") or "").upper())
+                symbol_prices.get(symbol)
                 or (prices.get(fleet) or {}).get("price", 0.0)
                 or position.get("mark_price", 0.0)
+                or live.get("mark_price", 0.0)
                 or 0.0
             )
-            engine = self.strategy_engines[fleet]
+            margin = float(position.get("margin", 0.0) or live.get("margin", 0.0) or 0.0)
+            unrealized = float(position.get("unrealized_pnl", 0.0) or live.get("unrealized_pnl", 0.0) or 0.0)
+            risk_r_usd = max(margin * float(RISK_PCT), 1e-6)
+            pnl_r = unrealized / risk_r_usd if risk_r_usd > 0 else 0.0
+            stop_triggered = bool(pnl_r <= -float(STOP_R))
+            detail = {
+                "fleet": fleet,
+                "symbol": symbol,
+                "status": "hold",
+                "unrealized_pnl": round(unrealized, 4),
+                "pnl_r": round(pnl_r, 4),
+                "stop_r": float(STOP_R),
+                "stop_triggered": stop_triggered,
+                "inventory_source": "binance_live",
+            }
+            result["details"].append(detail)
+
+            if stop_triggered:
+                emergency = self._attempt_emergency_position_close(
+                    fleet,
+                    position,
+                    current,
+                    reason="startup_inventory_stop_r",
+                )
+                if emergency:
+                    result["exits_triggered"] += 1
+                    detail["status"] = "emergency_closed"
+                    detail["emergency"] = emergency
+                    continue
+
+            engine = self.strategy_engines.get(fleet)
+            if not engine:
+                continue
             try:
                 exit_trades = engine.manage_position_exits(
                     {"action": "HOLD", "confidence": 0.0, "reason": "startup_exit_check"},
@@ -633,65 +685,25 @@ class NexusRuntime:
                 )
                 if exit_trades:
                     result["exits_triggered"] += len(exit_trades)
+                    detail["status"] = "closed"
                     for trade in exit_trades:
-                        result["details"].append(
-                            {
-                                "fleet": fleet,
-                                "symbol": trade.get("symbol"),
-                                "status": "closed",
-                                "reason": trade.get("reason"),
-                                "exit_class": trade.get("exit_class"),
-                            }
-                        )
-                else:
-                    from config.exit_config import RISK_PCT, STOP_R
-
-                    margin = float(position.get("margin", 0.0) or 0.0)
-                    unrealized = float(position.get("unrealized_pnl", 0.0) or 0.0)
-                    risk_r_usd = max(margin * float(RISK_PCT), 1e-6)
-                    pnl_r = unrealized / risk_r_usd if risk_r_usd > 0 else 0.0
-                    stop_triggered = bool(pnl_r <= -float(STOP_R))
-                    detail = {
-                        "fleet": fleet,
-                        "symbol": position.get("symbol"),
-                        "status": "hold",
-                        "unrealized_pnl": round(unrealized, 4),
-                        "pnl_r": round(pnl_r, 4),
-                        "stop_r": float(STOP_R),
-                        "stop_triggered": stop_triggered,
-                    }
-                    result["details"].append(detail)
-                    if stop_triggered:
-                        emergency = self._attempt_emergency_position_close(
-                            fleet,
-                            position,
-                            current,
-                            reason="startup_stop_r",
-                        )
-                        if emergency:
-                            result["exits_triggered"] += 1
-                            detail["status"] = "emergency_closed"
-                            detail["emergency"] = emergency
+                        detail["reason"] = trade.get("reason")
+                        detail["exit_class"] = trade.get("exit_class")
             except Exception as exc:
                 message = f"{fleet}: {exc}"
                 result["errors"].append(message)
                 print(f"[nexus_runtime] startup exit check failed: {message}")
-                emergency = self._attempt_emergency_position_close(
-                    fleet,
-                    position,
-                    current,
-                    reason="startup_exit_error",
-                )
-                if emergency:
-                    result["exits_triggered"] += 1
-                    result["details"].append(
-                        {
-                            "fleet": fleet,
-                            "symbol": position.get("symbol"),
-                            "status": "emergency_closed",
-                            "emergency": emergency,
-                        }
+                if stop_triggered:
+                    emergency = self._attempt_emergency_position_close(
+                        fleet,
+                        position,
+                        current,
+                        reason="startup_exit_error",
                     )
+                    if emergency:
+                        result["exits_triggered"] += 1
+                        detail["status"] = "emergency_closed"
+                        detail["emergency"] = emergency
 
         self._startup_exit_check = result
         if result["positions_checked"]:
@@ -2341,6 +2353,8 @@ class NexusRuntime:
             if not symbol:
                 continue
             sym = str(symbol).upper()
+            if getattr(self.futures_client, "is_tradable_symbol", None) and not self.futures_client.is_tradable_symbol(sym):
+                continue
             fleet = fleet_by_symbol.get(sym, sym)
             price_payload = prices.get(fleet, {}) if fleet in FLEETS else {}
             if not price_payload:

@@ -14,18 +14,7 @@ from config.external_market_config import (
 )
 
 
-def _symbol_from_id(coin_id: str) -> str:
-    mapping = {
-        "bitcoin": "BTCUSDT",
-        "ethereum": "ETHUSDT",
-        "solana": "SOLUSDT",
-        "pepe": "PEPEUSDT",
-        "1000pepe": "1000PEPEUSDT",
-    }
-    coin_id = str(coin_id or "").lower()
-    if coin_id in mapping:
-        return mapping[coin_id]
-    return f"{coin_id.upper()}USDT" if coin_id else ""
+from backend.market.binance_futures_symbol_map import coingecko_row_to_binance_symbol
 
 
 class CoinGeckoMarketService:
@@ -69,8 +58,8 @@ class CoinGeckoMarketService:
             by_symbol: Dict[str, Dict[str, Any]] = {}
             symbols: List[str] = []
             for row in rows:
-                symbol = _symbol_from_id(row.get("id") or row.get("symbol"))
-                if not symbol.endswith("USDT"):
+                symbol = coingecko_row_to_binance_symbol(row)
+                if not symbol or not symbol.endswith("USDT"):
                     continue
                 volume = float(row.get("total_volume") or 0.0)
                 market_cap = float(row.get("market_cap") or 0.0)

@@ -48,7 +48,12 @@ class RadarMarketScanService:
         whale_watch = []
         for symbol in self.symbols:
             symbol = normalize_symbol(symbol)
-            context = self.market_context_service.build_symbol_context(symbol, {})
+            if getattr(self.futures_client, "is_tradable_symbol", None) and not self.futures_client.is_tradable_symbol(symbol):
+                continue
+            try:
+                context = self.market_context_service.build_symbol_context(symbol, {})
+            except Exception:
+                continue
             if not context:
                 continue
             whale_note = self._to_whale_note(context)

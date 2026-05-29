@@ -36,7 +36,7 @@ class BinanceFuturesCloseTests(unittest.TestCase):
         kwargs = client.place_market_order.call_args.kwargs
         self.assertEqual(kwargs["side"], "SELL")
         self.assertTrue(kwargs["reduce_only"])
-        self.assertTrue(kwargs["omit_position_side"])
+        self.assertEqual(kwargs.get("position_side"), "BOTH")
 
     def test_close_open_position_hedge_mode_retries(self):
         client = BinanceFuturesTestnetClient(api_key="k", api_secret="s")

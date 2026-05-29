@@ -79,6 +79,9 @@ class MarketContextService:
     def build_symbol_context(self, symbol, price_payload=None, position_payload=None, fleet=None):
         if not (self.futures_client and self.futures_client.is_configured()):
             return {}
+        symbol = str(symbol or "").upper()
+        if getattr(self.futures_client, "is_tradable_symbol", None) and not self.futures_client.is_tradable_symbol(symbol):
+            return {}
         position_payload = dict(position_payload or {})
         signed_qty = _safe_float(position_payload.get("signed_quantity"))
         position_side = "LONG" if signed_qty > 0 else "SHORT" if signed_qty < 0 else None

@@ -55,6 +55,8 @@ class BinanceFuturesTestnetClient:
         self.timeout = timeout
         self._exchange_info = None
         self._dual_side_position = None
+        self._tradable_symbols = None
+        self._time_offset_ms = None
         self.base_url = _clean_credential(os.getenv("BINANCE_FUTURES_BASE_URL", self.BASE_URL)).rstrip("/")
         self.ws_base_url = _clean_credential(os.getenv("BINANCE_FUTURES_WS_BASE_URL", self.WS_BASE_URL)).rstrip("/")
         self.rate_limit_guard = BinanceRateLimitGuard()
@@ -157,6 +159,26 @@ class BinanceFuturesTestnetClient:
             self._exchange_info = self._public_request("GET", "/fapi/v1/exchangeInfo")
         return self._exchange_info
 
+    def tradable_symbols(self):
+        if self._tradable_symbols is None:
+            info = self.get_exchange_info()
+            self._tradable_symbols = {
+                str(item.get("symbol") or "").upper()
+                for item in info.get("symbols", [])
+                if item.get("status") == "TRADING" and item.get("contractType") == "PERPETUAL"
+            }
+        return set(self._tradable_symbols)
+
+    def is_tradable_symbol(self, symbol):
+        symbol = str(symbol or "").upper()
+        if not symbol:
+            return False
+        return symbol in self.tradable_symbols()
+
+    def filter_tradable_symbols(self, symbols):
+        tradable = self.tradable_symbols()
+        return [str(item).upper() for item in (symbols or []) if str(item).upper() in tradable]
+
     def get_symbol_info(self, symbol):
         info = self.get_exchange_info()
         for item in info.get("symbols", []):
@@ -236,6 +258,7 @@ class BinanceFuturesTestnetClient:
         client_order_id=None,
         position_side=None,
         omit_position_side=False,
+        use_result_resp=True,
     ):
         params = {
             "symbol": str(symbol).upper(),
@@ -243,15 +266,30 @@ class BinanceFuturesTestnetClient:
             "type": "MARKET",
             "quantity": self._format_decimal(quantity),
             "reduceOnly": "true" if reduce_only else "false",
-            "newOrderRespType": "RESULT",
         }
+        if use_result_resp:
+            params["newOrderRespType"] = "RESULT"
         if not omit_position_side:
             ps = str(position_side or "").upper()
-            if ps and ps != "BOTH":
+            if ps:
                 params["positionSide"] = ps
         if client_order_id:
             params["newClientOrderId"] = client_order_id
         return self._signed_request("POST", "/fapi/v1/order", params)
+
+    def test_market_order(self, symbol, side, quantity, reduce_only=False, position_side=None, omit_position_side=False):
+        params = {
+            "symbol": str(symbol).upper(),
+            "side": str(side).upper(),
+            "type": "MARKET",
+            "quantity": self._format_decimal(quantity),
+            "reduceOnly": "true" if reduce_only else "false",
+        }
+        if not omit_position_side:
+            ps = str(position_side or "").upper()
+            if ps:
+                params["positionSide"] = ps
+        return self._signed_request("POST", "/fapi/v1/order/test", params)
 
     def get_dual_side_position(self):
         if self._dual_side_position is not None:
@@ -296,14 +334,14 @@ class BinanceFuturesTestnetClient:
         attempts = []
         if hedge_mode:
             hedge_ps = exchange_ps if exchange_ps in {"LONG", "SHORT"} else ("LONG" if position_amt > 0 else "SHORT")
-            attempts.append({"position_side": hedge_ps, "omit_position_side": False})
+            attempts.append({"position_side": hedge_ps, "omit_position_side": False, "reduce_only": True, "result_resp": False})
             alt_ps = "SHORT" if hedge_ps == "LONG" else "LONG"
-            if alt_ps != hedge_ps:
-                attempts.append({"position_side": alt_ps, "omit_position_side": False})
+            attempts.append({"position_side": alt_ps, "omit_position_side": False, "reduce_only": True, "result_resp": False})
         else:
-            attempts.append({"position_side": None, "omit_position_side": True})
-            if exchange_ps in {"LONG", "SHORT"}:
-                attempts.append({"position_side": exchange_ps, "omit_position_side": False})
+            attempts.append({"position_side": "BOTH", "omit_position_side": False, "reduce_only": True, "result_resp": False})
+            attempts.append({"position_side": None, "omit_position_side": True, "reduce_only": True, "result_resp": False})
+            attempts.append({"position_side": "BOTH", "omit_position_side": False, "reduce_only": False, "result_resp": False})
+            attempts.append({"position_side": None, "omit_position_side": True, "reduce_only": False, "result_resp": False})
 
         last_exc = None
         for index, attempt in enumerate(attempts):
@@ -315,15 +353,16 @@ class BinanceFuturesTestnetClient:
                     symbol=symbol,
                     side=close_side,
                     quantity=quantity,
-                    reduce_only=True,
+                    reduce_only=bool(attempt.get("reduce_only", True)),
                     client_order_id=order_id,
                     position_side=attempt.get("position_side"),
                     omit_position_side=bool(attempt.get("omit_position_side")),
+                    use_result_resp=bool(attempt.get("result_resp", False)),
                 )
             except BinanceTestnetError as exc:
                 last_exc = exc
                 message = str(exc)
-                if "-1109" not in message and "-4061" not in message and "-2019" not in message:
+                if "-1109" not in message and "-4061" not in message and "-2019" not in message and "-4164" not in message:
                     raise
         raise last_exc or BinanceTestnetError(f"Unable to close {symbol}")
 
@@ -355,7 +394,32 @@ class BinanceFuturesTestnetClient:
 
         write_probe = self.probe_write_access(symbol)
         result["write_probe"] = write_probe
+        try:
+            if live:
+                close_side = "SELL" if float(live["position_amt"]) > 0 else "BUY"
+                qty = self.normalize_quantity(symbol, abs(float(live["position_amt"])))
+                hedge_mode = bool(result.get("dual_side_position"))
+                test_kwargs = {
+                    "symbol": symbol,
+                    "side": close_side,
+                    "quantity": qty,
+                    "reduce_only": True,
+                }
+                if hedge_mode:
+                    test_kwargs["position_side"] = live.get("position_side")
+                else:
+                    test_kwargs["position_side"] = "BOTH"
+                    test_kwargs["omit_position_side"] = False
+                self.test_market_order(**test_kwargs)
+                result["order_test"] = {"ok": True}
+            else:
+                result["order_test"] = {"ok": True, "skipped": "no_open_position"}
+        except BinanceTestnetError as exc:
+            result["order_test"] = {"ok": False, "error": str(exc)}
+
         result["ok"] = bool(result.get("can_trade", True)) and bool(write_probe.get("ok"))
+        if result.get("order_test") and result["order_test"].get("ok") is False:
+            result["ok"] = False
         return result
 
     def probe_write_access(self, symbol="ETHUSDT"):
@@ -408,14 +472,27 @@ class BinanceFuturesTestnetClient:
             url = f"{url}?{query}"
         return self._send_request(method, url, headers={})
 
+    def _ensure_time_offset(self):
+        if self._time_offset_ms is not None:
+            return
+        try:
+            server = int(self.get_server_time())
+            self._time_offset_ms = server - int(time.time() * 1000)
+        except Exception:
+            self._time_offset_ms = 0
+
+    def _timestamp_ms(self):
+        self._ensure_time_offset()
+        return int(time.time() * 1000) + int(self._time_offset_ms or 0)
+
     def _signed_request(self, method, path, params=None, signed=True):
         if not self.is_configured():
             raise BinanceTestnetError("Binance futures testnet credentials are not configured")
 
         payload = dict(params or {})
         if signed:
-            payload["timestamp"] = int(time.time() * 1000)
-            payload["recvWindow"] = int(os.getenv("BINANCE_TESTNET_RECV_WINDOW", "5000"))
+            payload["timestamp"] = self._timestamp_ms()
+            payload["recvWindow"] = int(os.getenv("BINANCE_TESTNET_RECV_WINDOW", "10000"))
             query = urlencode(payload, doseq=True)
             signature = hmac.new(self.api_secret.encode("utf-8"), query.encode("utf-8"), hashlib.sha256).hexdigest()
             signed_query = f"{query}&signature={signature}"
