@@ -1,4 +1,6 @@
+import os
 import unittest
+from unittest.mock import patch
 
 from backend.learning.dynamic_blocklist import DynamicBlocklist
 from backend.risk.confidence_matrix_engine import ConfidenceMatrixEngine
@@ -23,12 +25,23 @@ class ConfidenceMatrixPipelineTests(unittest.TestCase):
         self.assertGreaterEqual(result["confidence_score"], 40)
         self.assertLessEqual(result["confidence_score"], 100)
 
-    def test_allocator_tiers(self):
+    @patch("backend.risk.dynamic_asset_allocator.HARD_MAX_LEVERAGE", 100.0)
+    @patch("backend.risk.dynamic_asset_allocator.ABSOLUTE_MAX_LEVERAGE", 100.0)
+    def test_allocator_tiers(self, *_mocks):
         alloc = DynamicAssetAllocator()
         low = alloc.allocate(65, fleet="RADAR", available_balance=1000)
         high = alloc.allocate(90, fleet="RADAR", available_balance=1000)
         self.assertLess(low["margin"], high["margin"])
         self.assertLess(low["leverage"], high["leverage"])
+
+    @patch("backend.risk.dynamic_asset_allocator.HARD_MAX_LEVERAGE", 100.0)
+    @patch("backend.risk.dynamic_asset_allocator.ABSOLUTE_MAX_LEVERAGE", 100.0)
+    def test_allocator_confidence_table_btc_100x(self, *_mocks):
+        alloc = DynamicAssetAllocator()
+        result = alloc.allocate(95, fleet="BTC", available_balance=10000)
+        self.assertEqual(result["leverage_mode"], "confidence_table")
+        self.assertGreaterEqual(result["leverage"], 50)
+        self.assertLessEqual(result["leverage"], 100)
 
     def test_pipeline_applies_matrix(self):
         blocklist = DynamicBlocklist()

@@ -125,11 +125,13 @@ class RiskControlEngine:
                 "reason": cap["reason"],
             }
 
+        growth_cap = int(risk_context.get("growth_max_leverage") or MAX_SYSTEM_LEVERAGE)
         final_leverage = min(
             int(proposed["proposed_leverage"]),
             int(MAX_SYSTEM_LEVERAGE),
             int(symbol_max_leverage),
             int(cap["risk_cap_leverage"]),
+            max(MIN_FUTURES_LEVERAGE, growth_cap),
         )
         if final_leverage < MIN_FUTURES_LEVERAGE:
             return {

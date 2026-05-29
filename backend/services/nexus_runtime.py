@@ -2138,6 +2138,10 @@ class NexusRuntime:
             if fleet != "RADAR"
             else (self.market_context_service.build_symbol_context(symbol, self.latest_prices) or {})
         )
+        growth_directives = dict(self.growth_status or {})
+        if growth_directives.get("max_leverage") is not None:
+            alt_context = dict(alt_context)
+            alt_context["growth_max_leverage"] = growth_directives.get("max_leverage")
         signal = {"action": request.get("side", "HOLD"), "confidence": request.get("adjusted_confidence", 0.5), "reason": request.get("reason")}
         growth_context = self._build_growth_context(fleet, signal, alt_context, request)
         validation = self.validation_pipeline.evaluate(

@@ -1,5 +1,15 @@
-MIN_FUTURES_LEVERAGE = 3
-MAX_SYSTEM_LEVERAGE = 100
+import os
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)) or default)
+    except Exception:
+        return default
+
+
+MIN_FUTURES_LEVERAGE = _env_int("NEXUS_MIN_FUTURES_LEVERAGE", 3)
+MAX_SYSTEM_LEVERAGE = _env_int("NEXUS_MAX_SYSTEM_LEVERAGE", 100)
 
 CONFIDENCE_LEVERAGE_TABLE = [
     {"min": 0.35, "max": 0.50, "leverage": 3},
