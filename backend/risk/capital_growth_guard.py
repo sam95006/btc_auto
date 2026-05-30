@@ -9,7 +9,9 @@ from config.revenue_target_config import (
     REVENUE_GROWTH_MODE,
 )
 from config.growth_mode_config import (
+    BOLD_DAILY_DEFENSE_MIN_POSITION_MULT,
     BOLD_MIN_QUALITY,
+    BOLD_TESTNET_CAPITAL_FLOOR,
     BOLD_TESTNET_ENABLED,
     CAPITAL_FLOOR,
     DAILY_A_PLUS_QUALITY,
@@ -29,6 +31,7 @@ from config.growth_mode_config import (
     RECOVERY_MIN_APPROVAL,
     RECOVERY_MIN_QUALITY,
     RECOVERY_MIN_WIN_RATE,
+    RECOVERY_POSITION_MULTIPLIER,
 )
 from backend.analytics.daily_pnl_tracker import DailyPnlTracker
 
@@ -68,6 +71,9 @@ class CapitalGrowthGuard:
         daily_pnl = float(daily.get("daily_pnl", 0.0) or 0.0)
         daily_pnl_pct = float(daily.get("daily_pnl_pct", 0.0) or 0.0)
         floor_buffer = CAPITAL_FLOOR * FLOOR_BUFFER_PCT
+        effective_floor = CAPITAL_FLOOR
+        if BOLD_TESTNET_ENABLED:
+            effective_floor = min(CAPITAL_FLOOR, BOLD_TESTNET_CAPITAL_FLOOR)
 
         mode = "GROWTH"
         block_new_entries = False
@@ -79,16 +85,16 @@ class CapitalGrowthGuard:
         position_multiplier = GROWTH_POSITION_BOOST if BOLD_TESTNET_ENABLED else 1.0
         allow_aggressive = BOLD_TESTNET_ENABLED
 
-        if equity < CAPITAL_FLOOR:
+        if equity < effective_floor:
             mode = "RECOVERY"
             min_quality = RECOVERY_MIN_QUALITY
             min_approval = RECOVERY_MIN_APPROVAL
             min_win_rate = RECOVERY_MIN_WIN_RATE
             max_leverage = RECOVERY_MAX_LEVERAGE
-            position_multiplier = 0.85
-            allow_aggressive = False
-        elif equity < CAPITAL_FLOOR + floor_buffer:
-            if BOLD_TESTNET_ENABLED and equity >= CAPITAL_FLOOR:
+            position_multiplier = RECOVERY_POSITION_MULTIPLIER
+            allow_aggressive = bool(BOLD_TESTNET_ENABLED)
+        elif equity < effective_floor + floor_buffer:
+            if BOLD_TESTNET_ENABLED and equity >= effective_floor:
                 mode = "GROWTH"
             else:
                 mode = "FLOOR_GUARD"
@@ -103,7 +109,10 @@ class CapitalGrowthGuard:
             mode = "DAILY_DEFENSE" if mode == "GROWTH" else f"{mode}+DAILY_DEFENSE"
             min_quality = max(min_quality, DAILY_DEFENSE_QUALITY)
             min_approval = max(min_approval, 0.64)
-            position_multiplier = min(position_multiplier, 0.75)
+            defense_mult = 0.75
+            if BOLD_TESTNET_ENABLED:
+                defense_mult = max(defense_mult, BOLD_DAILY_DEFENSE_MIN_POSITION_MULT)
+            position_multiplier = min(position_multiplier, defense_mult)
             allow_aggressive = False
             if daily_pnl_pct <= -DAILY_MAX_LOSS_PCT:
                 block_new_entries = True
@@ -117,7 +126,10 @@ class CapitalGrowthGuard:
         if DAILY_POSITIVE_MODE and daily_pnl < 0 and not daily_target_hit:
             if not block_new_entries and daily_pnl_pct <= -(DAILY_MAX_LOSS_PCT * 0.35):
                 min_quality = max(min_quality, DAILY_A_PLUS_QUALITY)
-                position_multiplier = min(position_multiplier, 0.65)
+                shrink_mult = 0.65
+                if BOLD_TESTNET_ENABLED:
+                    shrink_mult = max(shrink_mult, BOLD_DAILY_DEFENSE_MIN_POSITION_MULT)
+                position_multiplier = min(position_multiplier, shrink_mult)
                 allow_aggressive = False
             defense_block_pct = DAILY_MAX_LOSS_PCT * (0.85 if REVENUE_GROWTH_MODE else 0.15)
             if daily_pnl_pct <= -defense_block_pct:
@@ -132,17 +144,17 @@ class CapitalGrowthGuard:
             allow_aggressive = False
 
         progress_to_floor = 0.0
-        if equity < CAPITAL_FLOOR:
-            progress_to_floor = max(0.0, min(1.0, equity / CAPITAL_FLOOR))
+        if equity < effective_floor:
+            progress_to_floor = max(0.0, min(1.0, equity / effective_floor))
         progress_to_target = 0.0
         if GROWTH_TARGET > CAPITAL_FLOOR:
             progress_to_target = max(0.0, min(1.0, (equity - CAPITAL_FLOOR) / (GROWTH_TARGET - CAPITAL_FLOOR)))
 
         if BOLD_TESTNET_ENABLED:
             min_quality = min(min_quality, BOLD_MIN_QUALITY)
-            if equity >= CAPITAL_FLOOR:
+            if equity >= effective_floor:
                 allow_aggressive = True
-                position_multiplier = max(position_multiplier, 0.95)
+                position_multiplier = max(position_multiplier, GROWTH_POSITION_BOOST if mode == "GROWTH" else RECOVERY_POSITION_MULTIPLIER)
 
         if REVENUE_GROWTH_MODE:
             min_quality = min(min_quality, EXPLORATION_MIN_QUALITY)
@@ -161,7 +173,7 @@ class CapitalGrowthGuard:
             "capital_floor": round(CAPITAL_FLOOR, 4),
             "growth_target": round(GROWTH_TARGET, 4),
             "futures_equity": round(equity, 4),
-            "above_floor": equity >= CAPITAL_FLOOR,
+            "above_floor": equity >= effective_floor,
             "progress_to_floor": round(progress_to_floor, 4),
             "progress_to_target": round(progress_to_target, 4),
             "daily": daily,

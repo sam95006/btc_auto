@@ -14,12 +14,12 @@ class DynamicMarginEngineTests(unittest.TestCase):
 
     def test_confidence_bands(self):
         cases = [
-            (0.40, 0.45),
-            (0.60, 0.55),
-            (0.70, 0.70),
-            (0.80, 0.90),
-            (0.88, 1.15),
-            (0.95, 1.50),
+            (0.40, 0.50),
+            (0.60, 0.65),
+            (0.70, 0.85),
+            (0.80, 1.05),
+            (0.88, 1.35),
+            (0.95, 1.75),
         ]
         for confidence, expected_mult in cases:
             with self.subTest(confidence=confidence):

@@ -25,7 +25,7 @@ from config.confidence_matrix_config import (
     USE_CONFIDENCE_MARGIN_TABLE,
 )
 from config.fee_churn_config import MIN_MARGIN_USD
-from config.leverage_config import FLEET_LEVERAGE_CAPS, FLEET_MARGIN_CAPS, MAX_SYSTEM_LEVERAGE, MAX_SYSTEM_MARGIN_USD
+from config.leverage_config import FLEET_LEVERAGE_CAPS, FLEET_MARGIN_CAPS, MARGIN_AGGRESSION_MULT, MAX_SYSTEM_LEVERAGE, MAX_SYSTEM_MARGIN_USD
 
 
 def _safe_float(value, default=0.0) -> float:
@@ -116,6 +116,8 @@ class DynamicAssetAllocator:
             base = max(base, pool_base)
 
         margin = base * margin_mult
+        if MARGIN_AGGRESSION_MULT > 1.0:
+            margin *= MARGIN_AGGRESSION_MULT
         fleet_cap = float(FLEET_MARGIN_CAPS.get(fleet, MAX_SYSTEM_MARGIN_USD))
         system_cap = min(float(HARD_MAX_MARGIN_USD), float(MAX_SYSTEM_MARGIN_USD), fleet_cap)
         margin = min(margin, system_cap)

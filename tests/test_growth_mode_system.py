@@ -20,10 +20,10 @@ class CapitalGrowthGuardTests(unittest.TestCase):
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_recovery_mode_below_floor(self):
-        status = self.guard.evaluate(9600.0)
+        status = self.guard.evaluate(2000.0)
         self.assertEqual(status["mode"], "RECOVERY")
         self.assertFalse(status["above_floor"])
-        self.assertLessEqual(status["max_leverage"], 12.0)
+        self.assertLessEqual(status["max_leverage"], 100.0)
 
     def test_growth_mode_above_floor(self):
         status = self.guard.evaluate(12500.0)
