@@ -1761,11 +1761,27 @@ class NexusRuntime:
         }
         symbol_prices = self._build_symbol_prices(prices)
         flex_requests = list(self.ai_flexible_evaluator.collect_trade_proposals(context))
+        fallback_used = None
+        if not flex_requests and AI_FLEX_PRIMARY_MODE and self.ai_flexible_evaluator.entry_enabled:
+            flex_requests = list(self.ai_trade_proposer.collect_proposals(context))
+            fallback_used = "trade_proposer"
+        if not flex_requests and AI_FLEX_PRIMARY_MODE and self.ai_flexible_evaluator.entry_enabled:
+            flex_requests = list(
+                self.rule_signal_bridge.collect_proposals(
+                    prices,
+                    market_contexts=market_contexts,
+                    positions=context.get("positions"),
+                    deployable_pool=deployable,
+                )
+            ) if self.rule_signal_bridge.enabled() else []
+            if flex_requests:
+                fallback_used = "rule_signal_bridge"
         self._last_ai_flex_eval = {
             "enabled": self.ai_flexible_evaluator.entry_enabled,
             "primary_mode": AI_FLEX_PRIMARY_MODE,
             "proposal_count": len(flex_requests),
             "proposals": flex_requests[:6],
+            "fallback_used": fallback_used,
         }
         if AI_FLEX_PRIMARY_MODE and self.ai_flexible_evaluator.entry_enabled:
             requests = flex_requests
@@ -1827,6 +1843,43 @@ class NexusRuntime:
                 )
             self._try_execute_futures_request(request, symbol_prices, market_contexts, truth_status)
 
+    def _futures_execution_engine(self):
+        if self.execution_router:
+            return self.execution_router.futures_engine
+        return self.execution_engine
+
+    def _execute_managed_position_action(self, position, action, price, market_contexts):
+        position = dict(position or {})
+        action = dict(action or {})
+        symbol = str(position.get("symbol") or "").upper()
+        fleet = str(position.get("fleet") or "RADAR").upper()
+        from config.fleet_routing_config import core_fleet_for_symbol
+
+        exec_fleet = core_fleet_for_symbol(symbol) or fleet
+        strategy_engine = self.strategy_engines.get(exec_fleet)
+        execution_engine = strategy_engine.execution_engine if strategy_engine else self._futures_execution_engine()
+        reason = f"ai_position_{action.get('reason', 'action')}"
+        act = str(action.get("action") or "")
+        fleet_ctx = exec_fleet if exec_fleet in (market_contexts or {}) else fleet
+        action_ctx = {**action, "market_context": (market_contexts or {}).get(fleet_ctx, {}) or {}}
+        if not self.fee_churn_guard.allow_ai_exit(position, action_ctx)[0]:
+            return None
+        if act == "take_partial_profit":
+            return execution_engine.reduce_position(
+                position["id"],
+                float(action.get("fraction") or 0.3),
+                price,
+                reason=reason,
+            )
+        if act == "reduce":
+            trade = execution_engine.reduce_position(position["id"], 0.5, price, reason=reason)
+            if trade:
+                self.fee_churn_guard.mark_partial_exit(position["id"])
+            return trade
+        if act == "reduce_or_close":
+            return execution_engine.close_position(position["id"], price, reason=reason)
+        return None
+
     def _apply_position_ai_actions(self, prices, market_contexts, symbol_prices=None):
         if not self.futures_client.is_configured() or self._manual_pause:
             return
@@ -1871,7 +1924,7 @@ class NexusRuntime:
         for action in flex_actions + fallback_actions:
             symbol = str(action.get("symbol") or "").upper()
             fleet = str(action.get("fleet") or "").upper()
-            if not symbol or not fleet:
+            if not symbol:
                 continue
             position = next(
                 (item for item in positions if str(item.get("symbol") or "").upper() == symbol),
@@ -1879,9 +1932,8 @@ class NexusRuntime:
             )
             if not position:
                 continue
-            engine = self.strategy_engines.get(fleet)
-            if not engine:
-                continue
+            if not fleet:
+                fleet = str(position.get("fleet") or "RADAR").upper()
             price = float(
                 symbol_prices.get(symbol)
                 or position.get("mark_price")
@@ -1890,32 +1942,9 @@ class NexusRuntime:
             )
             if price <= 0:
                 continue
-            reason = f"ai_position_{action.get('reason', 'action')}"
-            act = str(action.get("action") or "")
-            if act == "take_partial_profit":
-                action_ctx = {**action, "market_context": market_contexts.get(fleet, {}) or {}}
-                if not self.fee_churn_guard.allow_ai_exit(position, action_ctx)[0]:
-                    continue
-                fraction = float(action.get("fraction") or 0.3)
-                trade = engine.execution_engine.reduce_position(
-                    position["id"], fraction, price, reason=reason
-                )
-                if trade:
-                    self.fee_churn_guard.mark_partial_exit(position["id"])
-            elif act == "reduce":
-                action_ctx = {**action, "market_context": market_contexts.get(fleet, {}) or {}}
-                if not self.fee_churn_guard.allow_ai_exit(position, action_ctx)[0]:
-                    continue
-                trade = engine.execution_engine.reduce_position(position["id"], 0.5, price, reason=reason)
-                if trade:
-                    self.fee_churn_guard.mark_partial_exit(position["id"])
-            elif act == "reduce_or_close":
-                action_ctx = {**action, "market_context": market_contexts.get(fleet, {}) or {}}
-                if not self.fee_churn_guard.allow_ai_exit(position, action_ctx)[0]:
-                    continue
-                trade = engine.execution_engine.close_position(position["id"], price, reason=reason)
-            else:
-                trade = None
+            trade = self._execute_managed_position_action(position, action, price, market_contexts)
+            if trade and str(action.get("action") or "") == "take_partial_profit":
+                self.fee_churn_guard.mark_partial_exit(position["id"])
             if trade:
                 self._record_trade_result(
                     {
@@ -2478,7 +2507,7 @@ class NexusRuntime:
             if AI_FLEX_EXIT_PRIMARY:
                 pnl = _safe_float(position.get("unrealized_pnl"))
                 flex_symbols = getattr(self, "_ai_flex_exit_symbols", set()) or set()
-                if pnl > 0 and symbol not in flex_symbols:
+                if pnl > 0 and symbol in flex_symbols:
                     continue
             current = float(
                 symbol_prices.get(symbol)

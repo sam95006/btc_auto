@@ -6,9 +6,11 @@ from typing import Any, Dict, List, Optional
 
 from config.ai_flexible_eval_config import (
     AI_FLEX_AUTO_PROFIT_ENABLED,
+    AI_FLEX_AUTO_PROFIT_PCT,
     AI_FLEX_EVAL_ENABLED,
     AI_FLEX_EXIT_ENABLED,
     AI_FLEX_EXIT_MIN_CONFIDENCE,
+    AI_FLEX_HEURISTIC_FALLBACK,
     AI_FLEX_MAX_LEVERAGE,
     AI_FLEX_MAX_PROPOSALS,
     AI_FLEX_MIN_CONFIDENCE,
@@ -135,7 +137,76 @@ class AiFlexibleEvaluator:
             proposal = self._parse_trade_proposal(item)
             if proposal:
                 rows.append(proposal)
+        if not rows and AI_FLEX_HEURISTIC_FALLBACK:
+            rows = self.collect_heuristic_proposals(context)
         return rows
+
+    def collect_heuristic_proposals(self, context: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Signal/radar fallback when LLM returns nothing."""
+        context = dict(context or {})
+        rows: List[Dict[str, Any]] = []
+        blocked = {str(item).upper() for item in (context.get("blocked_symbols") or [])}
+        held = {
+            str(item.get("symbol") or "").upper()
+            for item in (context.get("positions") or [])
+            if isinstance(item, dict) and item.get("symbol")
+        }
+        for fleet, data in dict(context.get("core_fleets") or {}).items():
+            if not isinstance(data, dict):
+                continue
+            symbol = str(data.get("symbol") or "").upper()
+            signal = dict(data.get("signal") or {})
+            action = str(signal.get("action") or "HOLD").upper()
+            confidence = _safe_float(signal.get("confidence"))
+            if action not in {"BUY", "SELL"} or confidence < AI_FLEX_MIN_CONFIDENCE:
+                continue
+            if symbol in blocked or symbol in held:
+                continue
+            proposal = self._parse_trade_proposal(
+                {
+                    "fleet": str(fleet).upper(),
+                    "symbol": symbol,
+                    "side": action,
+                    "confidence": confidence,
+                    "leverage": round(min(AI_FLEX_MAX_LEVERAGE, max(5.0, confidence * 50)), 1),
+                    "margin_pct_deployable": round(min(0.15, max(0.04, confidence * 0.12)), 4),
+                    "rationale": str(signal.get("reason") or "heuristic_core_signal")[:200],
+                }
+            )
+            if proposal:
+                proposal["decision_source"] = "ai_flex_heuristic"
+                proposal["proposer"] = "ai_flex_heuristic"
+                rows.append(proposal)
+        for item in list((context.get("radar_scan") or {}).get("candidates") or [])[:6]:
+            if not isinstance(item, dict):
+                continue
+            symbol = str(item.get("symbol") or "").upper().replace("/", "")
+            score_raw = item.get("score", item.get("candidate_score", 0))
+            confidence = _safe_float(score_raw, 0.0)
+            if confidence > 1.0:
+                confidence = confidence / 100.0
+            if confidence < AI_FLEX_MIN_CONFIDENCE or not symbol:
+                continue
+            if symbol in blocked or symbol in held:
+                continue
+            side_raw = str(item.get("side") or item.get("candidate_side") or "LONG").upper()
+            side = "BUY" if side_raw in {"LONG", "BUY"} else "SELL"
+            proposal = self._parse_trade_proposal(
+                {
+                    "fleet": "RADAR",
+                    "symbol": symbol,
+                    "side": side,
+                    "confidence": confidence,
+                    "leverage": round(min(AI_FLEX_MAX_LEVERAGE, max(8.0, confidence * 45)), 1),
+                    "margin_pct_deployable": round(min(0.12, max(0.03, confidence * 0.10)), 4),
+                    "rationale": "heuristic_radar_candidate",
+                }
+            )
+            if proposal:
+                proposal["decision_source"] = "ai_flex_heuristic"
+                proposal["proposer"] = "ai_flex_heuristic"
+                rows.append(proposal)
+        return rows[: max(1, AI_FLEX_MAX_PROPOSALS)]
 
     def _parse_trade_proposal(self, item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         symbol = str(item.get("symbol") or "").upper().replace("/", "")
@@ -284,8 +355,12 @@ class AiFlexibleEvaluator:
             if not symbol:
                 continue
             pnl = _safe_float(item.get("unrealized_pnl"))
-            if pnl >= SANDBOX_TP_ABS_USD:
-                fraction = 1.0 if pnl >= SANDBOX_TP_ABS_USD * 2 else 0.5
+            pnl_pct = self._pnl_pct_on_margin(item)
+            hit_abs_tp = SANDBOX_ABS_EXIT_ENABLED and pnl >= SANDBOX_TP_ABS_USD
+            hit_abs_sl = SANDBOX_ABS_EXIT_ENABLED and pnl <= -SANDBOX_SL_ABS_USD
+            hit_pct_tp = pnl > 0 and pnl_pct >= AI_FLEX_AUTO_PROFIT_PCT
+            if hit_abs_tp or hit_pct_tp:
+                fraction = 1.0 if (hit_abs_tp and pnl >= SANDBOX_TP_ABS_USD * 2) or pnl_pct >= AI_FLEX_AUTO_PROFIT_PCT * 2 else 0.5
                 action = "reduce_or_close" if fraction >= 1.0 else "take_partial_profit"
                 actions.append(
                     {
@@ -294,12 +369,12 @@ class AiFlexibleEvaluator:
                         "action": action,
                         "fraction": fraction,
                         "confidence": 0.88,
-                        "reason": f"ai_auto_profit_target:{round(pnl, 2)}u",
+                        "reason": f"ai_auto_profit:{round(pnl, 2)}u:{round(pnl_pct, 1)}pct",
                         "source": "ai_flex_auto_profit",
                         "urgency": "high",
                     }
                 )
-            elif pnl <= -SANDBOX_SL_ABS_USD:
+            elif hit_abs_sl:
                 actions.append(
                     {
                         "symbol": symbol,

@@ -94,7 +94,41 @@ class AiFlexibleEvaluatorTests(unittest.TestCase):
         self.assertIn("ETHUSDT", symbols)
         self.assertNotIn("BTCUSDT", symbols)
 
-    def test_fee_churn_allows_high_confidence_flex_exit_before_min_hold(self):
+    def test_heuristic_fallback_when_llm_empty(self):
+        evaluator = AiFlexibleEvaluator(llm_gateway=_FakeGateway({}))
+        rows = evaluator.collect_trade_proposals(
+            {
+                "core_fleets": {
+                    "BTC": {
+                        "symbol": "BTCUSDT",
+                        "signal": {"action": "BUY", "confidence": 0.72, "reason": "momentum"},
+                    }
+                },
+                "positions": [],
+                "blocked_symbols": [],
+                "radar_scan": {},
+            }
+        )
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["proposer"], "ai_flex_heuristic")
+
+    def test_auto_profit_pct_exit(self):
+        evaluator = AiFlexibleEvaluator(llm_gateway=_FakeGateway({}))
+        actions = evaluator.evaluate_exit_actions(
+            [
+                {
+                    "symbol": "SOLUSDT",
+                    "fleet": "SOL",
+                    "unrealized_pnl": 6.0,
+                    "margin": 40,
+                    "leverage": 10,
+                }
+            ],
+            market_contexts={"SOL": {}},
+        )
+        self.assertEqual(len(actions), 1)
+        self.assertEqual(actions[0]["source"], "ai_flex_auto_profit")
+
         guard = FeeChurnGuard()
         position = {
             "id": "p1",
