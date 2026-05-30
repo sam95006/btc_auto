@@ -16,6 +16,7 @@ from config.fee_churn_config import (
     MIN_SYMBOL_REOPEN_SECONDS,
     R_EXIT_MIN_NET_PROFIT_USD,
 )
+from config.ai_flexible_eval_config import AI_FLEX_EXIT_MIN_CONFIDENCE
 from config.sandbox_exit_config import (
     SANDBOX_MIN_HOLD_SECONDS,
     SANDBOX_MIN_PARTIAL_PROFIT_USD,
@@ -110,6 +111,10 @@ class FeeChurnGuard:
         reason = str(action.get("reason") or "")
         unrealized = _safe_float(position.get("unrealized_pnl"))
         age = _position_age_seconds(position)
+        if str(action.get("source") or "") in {"ai_flex_exit", "ai_flex_auto_profit"}:
+            confidence = _safe_float(action.get("confidence"))
+            if confidence >= AI_FLEX_EXIT_MIN_CONFIDENCE:
+                return True, None
         if age < self._min_hold_seconds():
             return False, "fee_churn_min_hold_not_met"
         if reason == "liquidation_pressure":

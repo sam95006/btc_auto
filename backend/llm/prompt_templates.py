@@ -207,6 +207,57 @@ def build_regime_classifier_prompt(payload: dict):
     ]
 
 
+def build_flex_trade_eval_prompt(payload: dict):
+    system = (
+        "You are NEXUS full-auto trade evaluator. Synthesize wallet capital, deployable_pool, regime, "
+        "fear/greed, funding/OI stress, radar candidates, core fleet signals, open positions, and "
+        "per-symbol market context. For each proposal you MUST set leverage (integer 2-100) and either "
+        "margin_usd (absolute USDT margin) OR margin_pct_deployable (fraction of deployable_pool 0.03-0.20). "
+        "Higher confidence + stronger edge → higher leverage and margin within caps. "
+        "Never invent prices. Respect blocked_symbols. Output advisory only."
+    )
+    schema = (
+        '{"trade_proposals": [{"fleet": "RADAR|BTC|ETH|SOL|PEPE", "symbol": str, "side": "BUY|SELL", '
+        '"confidence": float, "score": float, "leverage": float, "margin_usd": float, '
+        '"margin_pct_deployable": float, "rationale": str, "edge_summary": str, "risk_flags": [str]}], '
+        '"market_read": str, "skip_reason": str}'
+    )
+    return [
+        {"role": "system", "content": system},
+        {
+            "role": "user",
+            "content": json.dumps(
+                {"instruction": _json_instruction(schema), "input": payload},
+                ensure_ascii=False,
+            ),
+        },
+    ]
+
+
+def build_flex_exit_eval_prompt(payload: dict):
+    system = (
+        "You are NEXUS full-auto exit manager. For each open futures position decide HOLD, PARTIAL, or CLOSE. "
+        "Actively take profit when unrealized_pnl reaches profit_targets.take_profit_usd or edge fades. "
+        "Cut loss when thesis breaks or pnl below -profit_targets.stop_loss_usd. "
+        "Use pnl_pct_on_margin, leverage, regime shift, and external intel. Never invent prices."
+    )
+    schema = (
+        '{"exit_actions": [{"symbol": str, "fleet": str, "decision": "HOLD|PARTIAL|CLOSE", '
+        '"fraction": float, "confidence": float, "urgency": "low|medium|high", "reason": str}], '
+        '"portfolio_read": str}'
+    )
+    return [
+        {"role": "system", "content": system},
+        {
+            "role": "user",
+            "content": json.dumps(
+                {"instruction": _json_instruction(schema), "input": payload},
+                ensure_ascii=False,
+            ),
+        },
+    ]
+
+
 def build_post_mortem_prompt(payload: dict):
     system = (
         "You are NEXUS post-trade risk coach. Diagnose losing trades. "

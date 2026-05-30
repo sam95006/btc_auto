@@ -35,6 +35,7 @@ from backend.monitoring.decision_funnel_service import DecisionFunnelService
 from backend.monitoring.kill_switch_service import KillSwitchService
 from backend.autonomy.rule_signal_bridge import RuleSignalBridge
 from backend.autonomy.strategy_proposal_hub import StrategyProposalHub
+from backend.autonomy.ai_flexible_evaluator import AiFlexibleEvaluator
 from backend.risk.monthly_drawdown_guard import MonthlyDrawdownGuard
 from backend.trading.r_exit_engine import ensure_r_exit_state
 from config.sandbox_exit_config import (
@@ -113,6 +114,7 @@ from backend.analytics.research_gate_service import ResearchGateService
 from backend.analytics.walk_forward_evaluator import WalkForwardEvaluator
 from config.fleet_routing_config import fleet_for_exchange_position
 from config.ai_trading_config import AI_LED_PRIMARY_MODE, AI_LED_TRADING_ENABLED
+from config.ai_flexible_eval_config import AI_FLEX_EXIT_PRIMARY, AI_FLEX_MAX_LEVERAGE, AI_FLEX_PRIMARY_MODE
 from config.runtime_config import always_on_trading_enabled, tick_seconds
 from backend.trading.trading_mode import get_trading_mode
 from backend.coordination.station_chat_log import StationChatLog
@@ -293,6 +295,10 @@ class NexusRuntime:
             llm_gateway=self.llm_gateway,
             trade_proposal_service=self.upgrade_pipeline.trade_proposals,
         )
+        self.ai_flexible_evaluator = AiFlexibleEvaluator(llm_gateway=self.llm_gateway)
+        self._last_ai_flex_eval = {}
+        self._last_ai_flex_exit_eval = {}
+        self._ai_flex_exit_symbols = set()
         self._meeting_execution_directives = {"blocked_fleets": [], "forbidden_actions": []}
         self.strategy_engines = {
             fleet: BaseFleetStrategyEngine(
@@ -1057,8 +1063,8 @@ class NexusRuntime:
             )
             symbol_prices = self._build_symbol_prices(prices)
             self.position_manager.update_unrealized(prices, symbol_prices=symbol_prices)
+            self._apply_position_ai_actions(prices, market_contexts, symbol_prices=symbol_prices)
             self._run_unified_position_exits(prices, market_contexts)
-            self._apply_position_ai_actions(prices, market_contexts)
 
         self._apply_kill_switch(futures_account)
         if not self._manual_pause and not self._news_pause_active:
@@ -1746,38 +1752,54 @@ class NexusRuntime:
             "core_fleets": core_fleets,
             "deployable_pool": deployable,
             "wallet_intel": dict(self.growth_status.get("wallet_intel") or {}),
+            "external_market_intel": self.external_market_intel.snapshot()
+            if getattr(self, "external_market_intel", None)
+            else {},
+            "regime_state": self.regime_classifier.snapshot(),
+            "growth_status": dict(self.growth_status or {}),
+            "learning_guidance_summary": dict(radar_guidance or {}),
         }
         symbol_prices = self._build_symbol_prices(prices)
-        requests = list(self.ai_trade_proposer.collect_proposals(context))
-        if self.rule_signal_bridge.enabled():
+        flex_requests = list(self.ai_flexible_evaluator.collect_trade_proposals(context))
+        self._last_ai_flex_eval = {
+            "enabled": self.ai_flexible_evaluator.entry_enabled,
+            "primary_mode": AI_FLEX_PRIMARY_MODE,
+            "proposal_count": len(flex_requests),
+            "proposals": flex_requests[:6],
+        }
+        if AI_FLEX_PRIMARY_MODE and self.ai_flexible_evaluator.entry_enabled:
+            requests = flex_requests
+        else:
+            requests = flex_requests + list(self.ai_trade_proposer.collect_proposals(context))
+            if self.rule_signal_bridge.enabled():
+                requests.extend(
+                    self.rule_signal_bridge.collect_proposals(
+                        prices,
+                        market_contexts=market_contexts,
+                        positions=context.get("positions"),
+                        deployable_pool=deployable,
+                    )
+                )
             requests.extend(
-                self.rule_signal_bridge.collect_proposals(
+                self.strategy_proposal_hub.collect_proposals(
                     prices,
                     market_contexts=market_contexts,
                     positions=context.get("positions"),
                     deployable_pool=deployable,
                 )
             )
-        requests.extend(
-            self.strategy_proposal_hub.collect_proposals(
-                prices,
-                market_contexts=market_contexts,
-                positions=context.get("positions"),
-                deployable_pool=deployable,
+            held_symbols = {
+                str(item.get("symbol") or "").upper()
+                for item in (context.get("positions") or [])
+                if item.get("symbol")
+            }
+            requests.extend(
+                self.market_neutral_engine.collect_proposals(
+                    market_contexts,
+                    total_equity=self._futures_available_balance(),
+                    held_symbols=held_symbols,
+                )
             )
-        )
-        held_symbols = {
-            str(item.get("symbol") or "").upper()
-            for item in (context.get("positions") or [])
-            if item.get("symbol")
-        }
-        requests.extend(
-            self.market_neutral_engine.collect_proposals(
-                market_contexts,
-                total_equity=self._futures_available_balance(),
-                held_symbols=held_symbols,
-            )
-        )
         seen = set()
         for request in requests:
             key = (str(request.get("fleet")), str(request.get("symbol")), str(request.get("side")))
@@ -1805,20 +1827,48 @@ class NexusRuntime:
                 )
             self._try_execute_futures_request(request, symbol_prices, market_contexts, truth_status)
 
-    def _apply_position_ai_actions(self, prices, market_contexts):
+    def _apply_position_ai_actions(self, prices, market_contexts, symbol_prices=None):
         if not self.futures_client.is_configured() or self._manual_pause:
             return
         positions = self.position_manager.all_positions()
         if not positions:
             self._last_position_ai_review = {}
+            self._last_ai_flex_exit_eval = {}
             return
+        symbol_prices = dict(symbol_prices or self._build_symbol_prices(prices))
+        flex_actions = []
+        if self.ai_flexible_evaluator.exit_enabled:
+            flex_actions = self.ai_flexible_evaluator.evaluate_exit_actions(
+                positions,
+                market_contexts=market_contexts,
+                wallet_intel=dict(self.growth_status.get("wallet_intel") or {}),
+                external_market_intel=self.external_market_intel.snapshot()
+                if getattr(self, "external_market_intel", None)
+                else {},
+                regime_state=self.regime_classifier.snapshot(),
+            )
+            self._last_ai_flex_exit_eval = {
+                "enabled": True,
+                "primary_mode": AI_FLEX_EXIT_PRIMARY,
+                "action_count": len(flex_actions),
+                "actions": flex_actions[:8],
+            }
+            self._ai_flex_exit_symbols = {
+                str(item.get("symbol") or "").upper() for item in flex_actions if item.get("symbol")
+            }
         review = self.ai_position_manager.review_positions(
             positions,
             market_contexts=market_contexts,
             llm_gateway=self.llm_gateway,
         )
         self._last_position_ai_review = dict(review or {})
-        for action in list(review.get("actions") or []):
+        handled_symbols = {str(item.get("symbol") or "").upper() for item in flex_actions}
+        fallback_actions = [
+            item
+            for item in list(review.get("actions") or [])
+            if str(item.get("symbol") or "").upper() not in handled_symbols
+        ]
+        for action in flex_actions + fallback_actions:
             symbol = str(action.get("symbol") or "").upper()
             fleet = str(action.get("fleet") or "").upper()
             if not symbol or not fleet:
@@ -1833,8 +1883,9 @@ class NexusRuntime:
             if not engine:
                 continue
             price = float(
-                (prices.get(fleet) or {}).get("price")
+                symbol_prices.get(symbol)
                 or position.get("mark_price")
+                or (prices.get(fleet) or {}).get("price", 0.0)
                 or 0.0
             )
             if price <= 0:
@@ -2424,6 +2475,11 @@ class NexusRuntime:
         for position in list(self.position_manager.all_positions()):
             fleet = str(position.get("fleet") or "RADAR").upper()
             symbol = str(position.get("symbol") or "").upper().replace("/", "")
+            if AI_FLEX_EXIT_PRIMARY:
+                pnl = _safe_float(position.get("unrealized_pnl"))
+                flex_symbols = getattr(self, "_ai_flex_exit_symbols", set()) or set()
+                if pnl > 0 and symbol not in flex_symbols:
+                    continue
             current = float(
                 symbol_prices.get(symbol)
                 or position.get("mark_price", 0.0)
@@ -2748,6 +2804,21 @@ class NexusRuntime:
             deployable_pool=self._resolve_deployable_pool(),
             futures_account=futures_account,
         )
+        deployable = self._resolve_deployable_pool()
+        growth = dict(self.growth_status or {})
+        max_lev = growth.get("max_leverage") or AI_FLEX_MAX_LEVERAGE
+        request = self.ai_flexible_evaluator.apply_ai_sizing(
+            request,
+            deployable_pool=deployable,
+            max_leverage=_safe_float(max_lev) or None,
+        )
+        margin_pct = _safe_float(request.get("margin_pct_deployable"))
+        if margin_pct > 0 and deployable > 0 and request.get("sizing_source") != "ai_flex_llm":
+            flex_margin = round(deployable * min(0.25, max(0.02, margin_pct)), 4)
+            if request.get("margin") is not None:
+                request["margin"] = round(max(float(request["margin"]), flex_margin), 4)
+            else:
+                request["margin"] = flex_margin
         growth = dict(self.growth_status or {})
         if request.get("growth_position_multiplier") is None:
             combined_mult = float(extra_margin_multiplier or 1.0) * float(growth.get("position_multiplier", 1.0) or 1.0)
@@ -2767,7 +2838,7 @@ class NexusRuntime:
             )
         except Exception:
             pass
-        request["sizing_pipeline_revision"] = "v2-deployable-radar-fix"
+        request["sizing_pipeline_revision"] = "v3-ai-flex-full-auto"
         return request
 
     def _refresh_regime_if_due(self, market_contexts, futures_account):
@@ -4787,6 +4858,8 @@ class NexusRuntime:
             "strategy_evolution": dict(getattr(self, "_strategy_evolution_status", {}) or {}),
             "strategy_modules": self.strategy_proposal_hub.status_snapshot(),
             "position_ai": position_ai,
+            "ai_flexible_eval": dict(getattr(self, "_last_ai_flex_eval", {}) or {}),
+            "ai_flexible_exit": dict(getattr(self, "_last_ai_flex_exit_eval", {}) or {}),
         }
         try:
             from backend.runtime.embed_flags import embedded_worker_error, embedded_worker_started

@@ -31,6 +31,8 @@ def task_refresh_seconds():
         "chat": int(os.getenv("NEXUS_LLM_REFRESH_CHAT_SECONDS", "0")),
         "radar_proposal": int(os.getenv("NEXUS_LLM_REFRESH_RADAR_PROPOSAL_SECONDS", "35")),
         "trade_proposer": int(os.getenv("NEXUS_LLM_REFRESH_TRADE_PROPOSER_SECONDS", "20")),
+        "flex_trade_eval": int(os.getenv("NEXUS_LLM_REFRESH_FLEX_TRADE_SECONDS", "18")),
+        "flex_exit_eval": int(os.getenv("NEXUS_LLM_REFRESH_FLEX_EXIT_SECONDS", "15")),
         "regime_classifier": int(os.getenv("NEXUS_LLM_REFRESH_REGIME_SECONDS", "1800")),
         "post_mortem": int(os.getenv("NEXUS_LLM_REFRESH_POST_MORTEM_SECONDS", "0")),
     }
@@ -45,6 +47,8 @@ def task_provider_defaults():
         "agent": os.getenv("NEXUS_LLM_PROVIDER_AGENT", "groq_primary"),
         "chat": os.getenv("NEXUS_LLM_PROVIDER_CHAT", "groq_primary"),
         "trade_proposer": os.getenv("NEXUS_LLM_PROVIDER_TRADE_PROPOSER", "groq_primary"),
+        "flex_trade_eval": os.getenv("NEXUS_LLM_PROVIDER_FLEX_TRADE", "groq_primary"),
+        "flex_exit_eval": os.getenv("NEXUS_LLM_PROVIDER_FLEX_EXIT", "groq_primary"),
         "regime_classifier": os.getenv("NEXUS_LLM_PROVIDER_REGIME", "groq_secondary"),
         "post_mortem": os.getenv("NEXUS_LLM_PROVIDER_POST_MORTEM", "groq_secondary"),
     }
@@ -61,6 +65,8 @@ def task_model_defaults():
         "chat": os.getenv("NEXUS_LLM_MODEL_CHAT", "llama-3.3-70b-versatile"),
         "radar_proposal": os.getenv("NEXUS_LLM_MODEL_RADAR_PROPOSAL", os.getenv("NEXUS_LLM_MODEL_TRADE_PROPOSAL", "llama-3.3-70b-versatile")),
         "trade_proposer": os.getenv("NEXUS_LLM_MODEL_TRADE_PROPOSER", "llama-3.3-70b-versatile"),
+        "flex_trade_eval": os.getenv("NEXUS_LLM_MODEL_FLEX_TRADE", "llama-3.3-70b-versatile"),
+        "flex_exit_eval": os.getenv("NEXUS_LLM_MODEL_FLEX_EXIT", "llama-3.3-70b-versatile"),
         "regime_classifier": os.getenv("NEXUS_LLM_MODEL_REGIME", "mixtral-8x7b-32768"),
         "post_mortem": os.getenv("NEXUS_LLM_MODEL_POST_MORTEM", "mixtral-8x7b-32768"),
     }
@@ -103,6 +109,8 @@ ALLOWED_TASKS = {
     "agent",
     "chat",
     "trade_proposer",
+    "flex_trade_eval",
+    "flex_exit_eval",
     "regime_classifier",
     "post_mortem",
 }

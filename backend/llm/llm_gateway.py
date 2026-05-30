@@ -22,6 +22,8 @@ from .prompt_templates import (
     build_radar_proposal_prompt,
     build_reflection_prompt,
     build_roundtable_prompt,
+    build_flex_exit_eval_prompt,
+    build_flex_trade_eval_prompt,
     build_post_mortem_prompt,
     build_regime_classifier_prompt,
     build_trade_proposer_prompt,
@@ -66,6 +68,10 @@ class LLMGateway:
             return build_chat_prompt(payload)
         if task == "trade_proposer":
             return build_trade_proposer_prompt(payload)
+        if task == "flex_trade_eval":
+            return build_flex_trade_eval_prompt(payload)
+        if task == "flex_exit_eval":
+            return build_flex_exit_eval_prompt(payload)
         if task == "regime_classifier":
             return build_regime_classifier_prompt(payload)
         if task == "post_mortem":
