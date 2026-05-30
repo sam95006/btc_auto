@@ -1005,6 +1005,10 @@ class NexusRuntime:
             "research_pass": bool(self._research_gate_status.get("research_pass")),
         }
         self._apply_live_capital_plan(futures_account)
+        pool = float((self.radar_state or {}).get("deployable_pool", 0.0) or 0.0)
+        if pool <= 0:
+            pool = float((self._compound_capital_status or {}).get("deployable_pool", 0.0) or 0.0)
+        self.growth_status["deployable_pool"] = round(pool, 4)
         self._synchronize_live_futures_state(futures_account)
         self._ensure_fixed_roundtables()
 
@@ -1770,11 +1774,7 @@ class NexusRuntime:
                 continue
             if self.dynamic_blocklist.is_symbol_blocked(str(request.get("symbol") or "")):
                 continue
-            request = self._apply_confidence_sizing_pipeline(
-                request,
-                market_contexts,
-                deployable_pool=deployable,
-            )
+            request = self._finalize_request_sizing(request, market_contexts)
             request = self.strategy_proposal_hub.scale_proposal(
                 request,
                 market_contexts,
@@ -2116,7 +2116,7 @@ class NexusRuntime:
         symbol = str(request.get("symbol") or request.get("symbol_override") or "").upper().replace("/", "")
         if self.dynamic_blocklist.is_symbol_blocked(symbol):
             return False
-        request = self._apply_confidence_sizing_pipeline(request, market_contexts)
+        request = self._finalize_request_sizing(request, market_contexts)
         if not symbol or self._fleet_blocked_by_meeting(fleet):
             return False
         learning_guidance = learning_guidance or self.learning_feedback.get_strategy_guidance(
@@ -2524,6 +2524,15 @@ class NexusRuntime:
         account = futures_account or getattr(self, "_last_futures_account", None) or {}
         return float(futures_equity_from_account(account) or 0.0)
 
+    def _resolve_deployable_pool(self) -> float:
+        pool = float((self.radar_state or {}).get("deployable_pool", 0.0) or 0.0)
+        if pool > 0:
+            return pool
+        pool = float((getattr(self, "_compound_capital_status", None) or {}).get("deployable_pool", 0.0) or 0.0)
+        if pool > 0:
+            return pool
+        return float((self.growth_status or {}).get("deployable_pool", 0.0) or 0.0)
+
     def _apply_confidence_sizing_pipeline(
         self,
         request,
@@ -2537,17 +2546,55 @@ class NexusRuntime:
         fleet = str(request.get("fleet") or "").upper()
         symbol = str(request.get("symbol") or request.get("symbol_override") or fleet).upper()
         ctx = (market_contexts or {}).get(fleet) or (market_contexts or {}).get(symbol) or {}
+        pool = float(deployable_pool or 0.0) or self._resolve_deployable_pool()
         try:
             return self.confidence_sizing_pipeline.apply(
                 dict(request),
                 market_context=ctx,
                 market_contexts=market_contexts,
                 regime_state=self.regime_classifier.snapshot(),
-                deployable_pool=deployable_pool,
+                deployable_pool=pool,
                 available_balance=self._futures_available_balance(futures_account),
             )
         except Exception:
             return request
+
+    def _finalize_request_sizing(
+        self,
+        request,
+        market_contexts,
+        *,
+        futures_account=None,
+        extra_margin_multiplier: float = 1.0,
+    ):
+        request = dict(request or {})
+        request = self._apply_confidence_sizing_pipeline(
+            request,
+            market_contexts,
+            deployable_pool=self._resolve_deployable_pool(),
+            futures_account=futures_account,
+        )
+        growth = dict(self.growth_status or {})
+        if request.get("growth_position_multiplier") is None:
+            combined_mult = float(extra_margin_multiplier or 1.0) * float(growth.get("position_multiplier", 1.0) or 1.0)
+            if combined_mult != 1.0 and request.get("margin") is not None:
+                request["margin"] = round(float(request["margin"]) * combined_mult, 4)
+                request["growth_position_multiplier"] = round(combined_mult, 4)
+        max_lev = growth.get("max_leverage")
+        if max_lev is not None and request.get("leverage") is not None:
+            request["leverage"] = min(float(request["leverage"]), float(max_lev))
+        try:
+            from backend.governance.autonomy_bounds_guard import clamp_trade_proposal, validate_proposal_bounds
+
+            request, _ = clamp_trade_proposal(request)
+            request, _ = validate_proposal_bounds(
+                request,
+                available_balance=self._futures_available_balance(futures_account),
+            )
+        except Exception:
+            pass
+        request["sizing_pipeline_revision"] = "v2-deployable-radar-fix"
+        return request
 
     def _refresh_regime_if_due(self, market_contexts, futures_account):
         now = time.time()
@@ -3386,18 +3433,16 @@ class NexusRuntime:
             }
 
             growth_multiplier = float(growth_directives.get("position_multiplier", 1.0) or 1.0)
-            if growth_multiplier != 1.0:
-                request["margin"] = round(float(request["margin"]) * growth_multiplier, 4)
             growth_leverage_cap = growth_directives.get("max_leverage")
-            if growth_leverage_cap is not None:
-                request["leverage"] = min(float(request["leverage"]), float(growth_leverage_cap))
 
-            request = self._apply_confidence_sizing_pipeline(
+            request = self._finalize_request_sizing(
                 request,
                 market_contexts,
-                deployable_pool=float((self.growth_status or {}).get("deployable_pool", 0.0) or 0.0),
                 futures_account=futures_account,
+                extra_margin_multiplier=capital_multiplier,
             )
+            if capital_plan.get("leverage_cap") is not None:
+                request["leverage"] = min(float(request["leverage"]), float(capital_plan.get("leverage_cap") or request["leverage"]))
 
             request["symbol"] = self.futures_client.resolve_symbol(fleet)
             request["market_type"] = "futures"
@@ -3570,7 +3615,11 @@ class NexusRuntime:
             )
             if not request:
                 continue
-            request = self._apply_volatility_position_sizing(request, alt_context, market_contexts)
+            request = self._finalize_request_sizing(
+                request,
+                market_contexts,
+                futures_account=getattr(self, "_last_futures_account", None),
+            )
             signal = self.radar_dispatch.build_signal_from_candidate(candidate)
             growth_context = self._build_growth_context("RADAR", signal, alt_context, request)
             validation = self.validation_pipeline.evaluate(
@@ -3605,6 +3654,9 @@ class NexusRuntime:
             if not allowed:
                 continue
             try:
+                if growth_directives.get("max_leverage") is not None:
+                    alt_context = dict(alt_context)
+                    alt_context["growth_max_leverage"] = growth_directives.get("max_leverage")
                 if self.execution_router:
                     order, _position = self.execution_router.route_futures_order(
                         fleet="RADAR",

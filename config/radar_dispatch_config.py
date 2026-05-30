@@ -5,7 +5,7 @@ RADAR_MIN_CANDIDATE_SCORE = float(os.getenv("NEXUS_RADAR_MIN_CANDIDATE_SCORE", "
 RADAR_MAX_OPEN_POSITIONS = int(float(os.getenv("NEXUS_RADAR_MAX_OPEN_POSITIONS", "3")))
 RADAR_MARGIN_PCT_OF_BUDGET = float(os.getenv("NEXUS_RADAR_MARGIN_PCT_OF_BUDGET", "0.18"))
 RADAR_MIN_MARGIN = float(os.getenv("NEXUS_RADAR_MIN_MARGIN", "20"))
-RADAR_MAX_LEVERAGE = float(os.getenv("NEXUS_RADAR_MAX_LEVERAGE", "15"))
+RADAR_MAX_LEVERAGE = float(os.getenv("NEXUS_RADAR_MAX_LEVERAGE", "50"))
 RADAR_COOLDOWN_SECONDS = int(float(os.getenv("NEXUS_RADAR_COOLDOWN_SECONDS", "120")))
 
 # Re-export from single routing source of truth

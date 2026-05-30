@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from config.compound_capital_config import COMPOUND_REINVEST_ENABLED
-from backend.config.capital_config import FUTURES_RESERVE_RATIO
+from config.revenue_target_config import FUTURES_DEPLOY_FRACTION
 
 
 def _safe_float(value, default=0.0):
@@ -22,7 +22,7 @@ class CompoundCapitalService:
         yesterday_close = _safe_float(daily.get("yesterday_close_equity"))
         if start_equity <= 0 and equity > 0:
             start_equity = equity
-        deployable_pool = max(equity * (1.0 - float(FUTURES_RESERVE_RATIO)), 0.0) if equity > 0 else 0.0
+        deployable_pool = max(equity * float(FUTURES_DEPLOY_FRACTION), 0.0) if equity > 0 else 0.0
         reinvest_base = start_equity if COMPOUND_REINVEST_ENABLED and start_equity > 0 else equity
         growth_factor = (equity / reinvest_base) if reinvest_base > 0 and equity > 0 else 1.0
         return {
@@ -31,7 +31,7 @@ class CompoundCapitalService:
             "yesterday_close_equity": round(yesterday_close, 4) if yesterday_close > 0 else None,
             "live_futures_equity": round(equity, 4),
             "deployable_pool": round(deployable_pool, 4),
-            "reserve_ratio": round(float(FUTURES_RESERVE_RATIO), 4),
+            "deploy_fraction": round(float(FUTURES_DEPLOY_FRACTION), 4),
             "growth_factor_vs_day_open": round(growth_factor, 4),
             "day": daily.get("day"),
             "is_positive_day": bool(daily.get("is_positive_day")),
