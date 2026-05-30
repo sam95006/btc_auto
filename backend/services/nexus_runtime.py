@@ -37,7 +37,18 @@ from backend.autonomy.rule_signal_bridge import RuleSignalBridge
 from backend.autonomy.strategy_proposal_hub import StrategyProposalHub
 from backend.risk.monthly_drawdown_guard import MonthlyDrawdownGuard
 from backend.trading.r_exit_engine import ensure_r_exit_state
-from config.sandbox_exit_config import SIMULATION_EVAL_EQUITY, SIMULATION_SIZING_ENABLED
+from config.sandbox_exit_config import (
+    SANDBOX_MIN_HOLD_SECONDS,
+    SANDBOX_MIN_PARTIAL_PROFIT_USD,
+    SANDBOX_RELAX_EXIT_GUARDS,
+)
+from config.wallet_baseline_config import (
+    FUTURES_BASELINE_CAPITAL,
+    SIMULATION_EVAL_EQUITY,
+    SIMULATION_SIZING_ENABLED,
+    SPOT_BASELINE_CAPITAL,
+    USE_LIVE_WALLET_FOR_SIZING,
+)
 from backend.trading.sandbox_mode import sandbox_active
 from config.revenue_target_config import (
     EXPLORATION_MIN_QUALITY,
@@ -90,6 +101,7 @@ from backend.trading.exchange_capital_view import (
     build_ui_capital,
     futures_equity_from_account,
     resolve_futures_display_unrealized,
+    treasury_totals_from_balances,
 )
 from backend.trading.decision_quality_engine import DecisionQualityValidationEngine
 from backend.risk.capital_growth_guard import CapitalGrowthGuard
@@ -522,8 +534,11 @@ class NexusRuntime:
                 self._sync_futures_activity()
                 self._reconcile_liquidation_losses(futures_account)
                 self._apply_live_capital_plan(futures_account)
+                self._sync_wallet_intel(futures_account, getattr(self, "_last_spot_account", None))
                 self._synchronize_live_futures_state(futures_account)
-                futures_total = futures_equity_from_account(futures_account)
+                futures_total = float(futures_equity_from_account(futures_account) or 0.0)
+                if futures_total <= 0:
+                    futures_total = float(FUTURES_BASELINE_CAPITAL)
                 self.growth_status = self.capital_growth_guard.evaluate(futures_total)
             self._sync_live_market_and_world_state(force=force, writer="exchange_refresh")
             self._last_binance_sync["last_sync_time"] = int(time.time() * 1000)
@@ -959,7 +974,9 @@ class NexusRuntime:
             radar_scan=self.radar_scan,
             learning_snapshot=calibration_snapshot,
         )
-        futures_total = futures_equity_from_account(futures_account)
+        futures_total = float(futures_equity_from_account(futures_account) or 0.0)
+        if futures_total <= 0:
+            futures_total = float(FUTURES_BASELINE_CAPITAL)
         self.growth_status = self.capital_growth_guard.evaluate(futures_total)
         try:
             self.growth_status = self.external_market_intel.apply_growth_directives(self.growth_status)
@@ -1007,10 +1024,7 @@ class NexusRuntime:
             "research_pass": bool(self._research_gate_status.get("research_pass")),
         }
         self._apply_live_capital_plan(futures_account)
-        pool = float((self.radar_state or {}).get("deployable_pool", 0.0) or 0.0)
-        if pool <= 0:
-            pool = float((self._compound_capital_status or {}).get("deployable_pool", 0.0) or 0.0)
-        self.growth_status["deployable_pool"] = round(pool, 4)
+        self._sync_wallet_intel(futures_account, spot_account)
         self._synchronize_live_futures_state(futures_account)
         self._ensure_fixed_roundtables()
 
@@ -1731,6 +1745,7 @@ class NexusRuntime:
             "radar_scan": self.radar_scan,
             "core_fleets": core_fleets,
             "deployable_pool": deployable,
+            "wallet_intel": dict(self.growth_status.get("wallet_intel") or {}),
         }
         symbol_prices = self._build_symbol_prices(prices)
         requests = list(self.ai_trade_proposer.collect_proposals(context))
@@ -2600,7 +2615,9 @@ class NexusRuntime:
     def _apply_live_capital_plan(self, futures_account):
         if not self.futures_client.is_configured():
             return
-        futures_total = futures_equity_from_account(futures_account)
+        futures_total = float(futures_equity_from_account(futures_account) or 0.0)
+        if futures_total <= 0:
+            futures_total = float(FUTURES_BASELINE_CAPITAL)
         if futures_total <= 0:
             return
 
@@ -2619,18 +2636,62 @@ class NexusRuntime:
         self.radar_state = {
             "budget": round(radar_budget, 4),
             "deployable_pool": round(deployable, 4),
+            "futures_equity": round(futures_total, 4),
             "weights": {
                 **{fleet: FLEET_ALLOCATION_WEIGHTS.get(fleet, 0.0) for fleet in FLEETS},
                 "RADAR": RADAR_ALLOCATION_WEIGHT,
             },
+            "fleet_budgets": fleet_allocations,
         }
+
+    def _sync_wallet_intel(self, futures_account=None, spot_account=None):
+        """Publish live spot/futures balances for UI + AI allocation (5000U baseline fallback)."""
+        futures_account = dict(futures_account or getattr(self, "_last_futures_account", None) or {})
+        spot_account = dict(spot_account or getattr(self, "_last_spot_account", None) or {})
+        live_futures = float(futures_equity_from_account(futures_account) or 0.0)
+        spot_balances = spot_account.get("balances") or {}
+        spot_usdt, spot_usdc, spot_stable = treasury_totals_from_balances(spot_balances)
+        if spot_stable <= 0:
+            spot_stable = float(spot_account.get("stable_total", 0.0) or spot_account.get("usdt_free", 0.0) or 0.0)
+        live_spot = float(spot_stable or 0.0)
+
+        sizing_futures = live_futures if live_futures > 0 else float(FUTURES_BASELINE_CAPITAL)
+        sizing_spot = live_spot if live_spot > 0 else float(SPOT_BASELINE_CAPITAL)
+        deployable = float((self.radar_state or {}).get("deployable_pool", 0.0) or 0.0)
+        if deployable <= 0 and sizing_futures > 0:
+            deployable = sizing_futures * float(FUTURES_DEPLOY_FRACTION)
+
+        ledger = self.ledger.snapshot()
+        wallet_intel = {
+            "spot_usdt": round(spot_usdt, 4),
+            "spot_usdc": round(spot_usdc, 4),
+            "spot_stable_total": round(sizing_spot, 4),
+            "spot_live_total": round(live_spot, 4),
+            "futures_equity": round(sizing_futures, 4),
+            "futures_live_equity": round(live_futures, 4),
+            "deployable_pool": round(deployable, 4),
+            "sizing_source": "live_binance" if live_futures > 0 else "baseline_fallback",
+            "spot_baseline_usd": round(float(SPOT_BASELINE_CAPITAL), 4),
+            "futures_baseline_usd": round(float(FUTURES_BASELINE_CAPITAL), 4),
+            "fleet_budgets": dict((self.radar_state or {}).get("fleet_budgets") or {}),
+            "fleet_weights": dict((self.radar_state or {}).get("weights") or {}),
+            "radar_budget": round(float(ledger.get("radar_budget", 0.0) or 0.0), 4),
+            "hq_reserve": round(float(ledger.get("hq_reserve", 0.0) or 0.0), 4),
+            "updated_at": _now(),
+        }
+        self.growth_status["wallet_intel"] = wallet_intel
+        self.growth_status["deployable_pool"] = round(deployable, 4)
+        self.growth_status["futures_equity"] = round(sizing_futures, 4)
+        return wallet_intel
 
     def _futures_available_balance(self, futures_account=None) -> float:
         account = futures_account or getattr(self, "_last_futures_account", None) or {}
-        balance = float(futures_equity_from_account(account) or 0.0)
-        if sandbox_active() and SIMULATION_SIZING_ENABLED:
-            balance = max(balance, float(SIMULATION_EVAL_EQUITY))
-        return balance
+        live = float(futures_equity_from_account(account) or 0.0)
+        if live > 0:
+            return live
+        if USE_LIVE_WALLET_FOR_SIZING and SIMULATION_SIZING_ENABLED:
+            return float(FUTURES_BASELINE_CAPITAL or SIMULATION_EVAL_EQUITY)
+        return live
 
     def _resolve_deployable_pool(self) -> float:
         pool = float((self.radar_state or {}).get("deployable_pool", 0.0) or 0.0)
@@ -2640,10 +2701,10 @@ class NexusRuntime:
         if pool > 0:
             return pool
         pool = float((self.growth_status or {}).get("deployable_pool", 0.0) or 0.0)
-        if sandbox_active() and SIMULATION_SIZING_ENABLED and pool <= 0:
-            from config.revenue_target_config import FUTURES_DEPLOY_FRACTION
-
-            pool = float(SIMULATION_EVAL_EQUITY) * float(FUTURES_DEPLOY_FRACTION)
+        if pool > 0:
+            return pool
+        if USE_LIVE_WALLET_FOR_SIZING and SIMULATION_SIZING_ENABLED:
+            return float(FUTURES_BASELINE_CAPITAL or SIMULATION_EVAL_EQUITY) * float(FUTURES_DEPLOY_FRACTION)
         return pool
 
     def _apply_confidence_sizing_pipeline(
@@ -4416,7 +4477,7 @@ class NexusRuntime:
         futures_fill_count = len(futures_account.get("fills", []) or [])
         spot_trade_count = len(spot_account.get("trade_history", []) or [])
         true_recent_trade_count = futures_fill_count + spot_trade_count
-        configured_futures_baseline = _safe_float(os.getenv("NEXUS_FUTURES_BASELINE_CAPITAL", "11800"))
+        configured_futures_baseline = _safe_float(os.getenv("NEXUS_FUTURES_BASELINE_CAPITAL", "5000"))
         treasury_unrealized = round(float(exchange_capital.get("futures_unrealized_pnl", 0.0) or 0.0), 4)
         exchange_unrealized = resolve_futures_display_unrealized(futures_account, treasury_unrealized)
         exchange_capital["futures_unrealized_pnl"] = exchange_unrealized
