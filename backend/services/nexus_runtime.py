@@ -36,7 +36,9 @@ from backend.monitoring.kill_switch_service import KillSwitchService
 from backend.autonomy.rule_signal_bridge import RuleSignalBridge
 from backend.autonomy.strategy_proposal_hub import StrategyProposalHub
 from backend.risk.monthly_drawdown_guard import MonthlyDrawdownGuard
-from backend.trading.radar_dispatch_service import RadarDispatchService
+from backend.trading.r_exit_engine import ensure_r_exit_state
+from config.sandbox_exit_config import SIMULATION_EVAL_EQUITY, SIMULATION_SIZING_ENABLED
+from backend.trading.sandbox_mode import sandbox_active
 from config.revenue_target_config import (
     EXPLORATION_MIN_QUALITY,
     FUTURES_DEPLOY_FRACTION,
@@ -1041,6 +1043,7 @@ class NexusRuntime:
             )
             symbol_prices = self._build_symbol_prices(prices)
             self.position_manager.update_unrealized(prices, symbol_prices=symbol_prices)
+            self._run_unified_position_exits(prices, market_contexts)
             self._apply_position_ai_actions(prices, market_contexts)
 
         self._apply_kill_switch(futures_account)
@@ -2341,6 +2344,7 @@ class NexusRuntime:
                 payload["post_mortem"] = diagnosis
             except Exception as exc:
                 print(f"[nexus_runtime] post_mortem skipped: {exc}")
+            self._trigger_immediate_loss_learning(payload, recommendation, context or {})
         if event in {"CLOSE", "LIVE"} or payload.get("exit_reason") or payload.get("exit_price"):
             symbol = str(payload.get("symbol") or result.get("symbol") or "").upper()
             if symbol:
@@ -2349,6 +2353,107 @@ class NexusRuntime:
             self._force_immediate_tick = True
             self._append_alert("ALERT_RED", f"強平學習：{result.get('symbol')} 進入冷卻，非永久黑名單。")
         return result
+
+    def _trigger_immediate_loss_learning(self, trade, recommendation=None, context=None):
+        trade = dict(trade or {})
+        fleet = str(trade.get("fleet") or "RADAR").upper()
+        symbol = str(trade.get("symbol") or "")
+        pnl = float(trade.get("pnl", 0.0) or 0.0)
+        if pnl >= 0:
+            return
+        exit_reason = trade.get("exit_reason") or trade.get("reason") or "unknown"
+        rec = dict(recommendation or {})
+        if not rec:
+            rec = {
+                "fleet": fleet,
+                "recommendation": (
+                    f"虧損 {pnl:.2f}U @ {symbol}（{exit_reason}）。"
+                    "testnet 反思：提高同 setup 進場門檻、縮小倉位或暫停該 symbol。"
+                ),
+                "signal_weight_adjustment": -0.04,
+                "strategy_confidence_adjustment": -0.05,
+                "position_size_multiplier": 0.88,
+                "leverage_cap": 50,
+                "recommendation_only": False,
+                "source": "loss_reflection",
+            }
+        try:
+            self.upgrade_pipeline.on_llm_reflection(
+                {
+                    "loss_count": 1,
+                    "top_failure_patterns": [str(exit_reason)],
+                    "latest_recommendations_by_fleet": {
+                        fleet: {
+                            "recommendation": rec.get("recommendation"),
+                            "summary": rec.get("recommendation"),
+                            "signal_weight_adjustment": rec.get("signal_weight_adjustment", -0.04),
+                            "strategy_confidence_adjustment": rec.get("strategy_confidence_adjustment", -0.05),
+                        }
+                    },
+                    "calibration_snapshot": {
+                        "symbol": symbol,
+                        "pnl": pnl,
+                        "market_regime": (context or {}).get("market_regime"),
+                        "simulation_mode": sandbox_active(),
+                    },
+                }
+            )
+        except Exception as exc:
+            print(f"[nexus_runtime] immediate loss learning skipped: {exc}")
+
+    def _run_unified_position_exits(self, prices, market_contexts):
+        if not self.futures_client.is_configured():
+            return
+        symbol_prices = self._build_symbol_prices(prices)
+        execution_engine = self.execution_router.futures_engine if self.execution_router else self.execution_engine
+        for position in list(self.position_manager.all_positions()):
+            fleet = str(position.get("fleet") or "RADAR").upper()
+            symbol = str(position.get("symbol") or "").upper().replace("/", "")
+            current = float(
+                symbol_prices.get(symbol)
+                or position.get("mark_price", 0.0)
+                or (prices.get(fleet) or {}).get("price", 0.0)
+                or 0.0
+            )
+            if current <= 0:
+                continue
+            position = ensure_r_exit_state(dict(position))
+            self.position_manager.update_position(position["id"], position)
+            signal = {"action": "HOLD", "confidence": 0.0, "reason": "unified_exit_pass"}
+            trades = []
+            if fleet == "RADAR":
+                trades = self.radar_dispatch.manage_position_exits(
+                    position,
+                    current,
+                    signal=signal,
+                    execution_engine=execution_engine,
+                    position_manager=self.position_manager,
+                )
+            else:
+                engine = self.strategy_engines.get(fleet)
+                if engine:
+                    trades = engine.manage_position_exits(signal, current)
+            for trade in trades or []:
+                ctx = dict(market_contexts.get(fleet, {}) or {})
+                ctx["setup_type"] = trade.get("setup_type") or ctx.get("setup_type") or "live_exit"
+                self._record_trade_result(
+                    {
+                        "order_id": trade.get("id"),
+                        "symbol": trade.get("symbol"),
+                        "market_type": trade.get("market_type", "futures"),
+                        "fleet": fleet,
+                        "entry_price": trade.get("entry_price"),
+                        "exit_price": trade.get("exit_price"),
+                        "pnl": trade.get("pnl"),
+                        "exit_reason": trade.get("reason"),
+                        "exit_class": trade.get("exit_class"),
+                        "pnl_r": trade.get("pnl_r"),
+                        "strategy_key": trade.get("strategy_key") or f"{fleet.lower()}_adaptive_strategy",
+                        "side": trade.get("side"),
+                        "event": trade.get("event", "CLOSE"),
+                    },
+                    context=ctx,
+                )
 
     def _record_validation_event(self, validation_event):
         payload = dict(validation_event or {})
@@ -2522,7 +2627,10 @@ class NexusRuntime:
 
     def _futures_available_balance(self, futures_account=None) -> float:
         account = futures_account or getattr(self, "_last_futures_account", None) or {}
-        return float(futures_equity_from_account(account) or 0.0)
+        balance = float(futures_equity_from_account(account) or 0.0)
+        if sandbox_active() and SIMULATION_SIZING_ENABLED:
+            balance = max(balance, float(SIMULATION_EVAL_EQUITY))
+        return balance
 
     def _resolve_deployable_pool(self) -> float:
         pool = float((self.radar_state or {}).get("deployable_pool", 0.0) or 0.0)
@@ -2531,7 +2639,12 @@ class NexusRuntime:
         pool = float((getattr(self, "_compound_capital_status", None) or {}).get("deployable_pool", 0.0) or 0.0)
         if pool > 0:
             return pool
-        return float((self.growth_status or {}).get("deployable_pool", 0.0) or 0.0)
+        pool = float((self.growth_status or {}).get("deployable_pool", 0.0) or 0.0)
+        if sandbox_active() and SIMULATION_SIZING_ENABLED and pool <= 0:
+            from config.revenue_target_config import FUTURES_DEPLOY_FRACTION
+
+            pool = float(SIMULATION_EVAL_EQUITY) * float(FUTURES_DEPLOY_FRACTION)
+        return pool
 
     def _apply_confidence_sizing_pipeline(
         self,
@@ -4033,8 +4146,8 @@ class NexusRuntime:
             margin_by_fleet[fleet] = margin_by_fleet.get(fleet, 0.0) + float(position.get("margin", 0.0) or 0.0)
 
         self.ledger.sync_live_futures_margins(margin_by_fleet)
-        previous_states = {
-            str(item.get("symbol") or "").upper(): dict(item.get("r_exit_state") or {})
+        previous_positions = {
+            str(item.get("symbol") or "").upper(): dict(item)
             for item in self.position_manager.all_positions()
         }
         with self.position_manager._lock:
@@ -4042,8 +4155,15 @@ class NexusRuntime:
             for position in live_positions:
                 record = dict(position)
                 symbol = str(record.get("symbol") or "").upper()
-                if symbol in previous_states and previous_states[symbol]:
-                    record["r_exit_state"] = previous_states[symbol]
+                prev = previous_positions.get(symbol) or {}
+                if prev.get("opened_at"):
+                    record["opened_at"] = prev["opened_at"]
+                elif not record.get("opened_at"):
+                    record["opened_at"] = _now()
+                if prev.get("r_exit_state"):
+                    record["r_exit_state"] = prev["r_exit_state"]
+                else:
+                    record = ensure_r_exit_state(record)
                 merged[record["id"]] = record
             self.position_manager.positions = merged
 
@@ -4094,20 +4214,13 @@ class NexusRuntime:
 
     def _live_futures_positions_snapshot(self, futures_account):
         items = []
-        opened_at = _now()
-        update_time = int(futures_account.get("update_time") or 0)
-        if update_time:
-            try:
-                opened_at = datetime.fromtimestamp(update_time / 1000).strftime("%Y-%m-%d %H:%M:%S")
-            except Exception:
-                opened_at = _now()
         for position in futures_account.get("positions", []):
             fleet = str(position.get("fleet") or "").upper()
             capital_pool = "radar" if fleet == "RADAR" else "fleet"
             items.append(
                 {
                     "id": f"live_{position.get('fleet', 'FUT')}_{position.get('symbol', 'UNKNOWN')}",
-                    "opened_at": opened_at,
+                    "opened_at": _now(),
                     "fleet": position.get("fleet"),
                     "symbol": position.get("symbol"),
                     "side": position.get("side", "HOLD"),

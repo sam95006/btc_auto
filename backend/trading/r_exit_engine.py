@@ -5,6 +5,12 @@ from config.exit_config import (
     STOP_R,
     TP_LADDER,
 )
+from config.sandbox_exit_config import (
+    SANDBOX_ABS_EXIT_ENABLED,
+    SANDBOX_SL_ABS_USD,
+    SANDBOX_TP_ABS_USD,
+)
+from backend.trading.sandbox_mode import sandbox_active
 
 
 def build_r_exit_state(margin, quantity):
@@ -53,6 +59,22 @@ class RExitEngine:
         action = str(signal.get("action", "HOLD")).upper()
         confidence = float(signal.get("confidence", 0.0) or 0.0)
         side = str(position.get("side", "BUY")).upper()
+
+        if sandbox_active() and SANDBOX_ABS_EXIT_ENABLED:
+            if unrealized >= float(SANDBOX_TP_ABS_USD):
+                return {
+                    "type": "full",
+                    "reason": "sandbox_abs_take_profit",
+                    "exit_class": "take_profit",
+                    "pnl_r": round(pnl_r, 4),
+                }
+            if unrealized <= -float(SANDBOX_SL_ABS_USD):
+                return {
+                    "type": "full",
+                    "reason": "sandbox_abs_stop_loss",
+                    "exit_class": "stop_loss",
+                    "pnl_r": round(pnl_r, 4),
+                }
 
         if pnl_r <= -STOP_R:
             return {

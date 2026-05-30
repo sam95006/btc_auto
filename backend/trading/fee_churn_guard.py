@@ -16,6 +16,12 @@ from config.fee_churn_config import (
     MIN_SYMBOL_REOPEN_SECONDS,
     R_EXIT_MIN_NET_PROFIT_USD,
 )
+from config.sandbox_exit_config import (
+    SANDBOX_MIN_HOLD_SECONDS,
+    SANDBOX_MIN_PARTIAL_PROFIT_USD,
+    SANDBOX_RELAX_EXIT_GUARDS,
+)
+from backend.trading.sandbox_mode import sandbox_active
 
 
 def _safe_float(value, default=0.0):
@@ -50,6 +56,22 @@ class FeeChurnGuard:
     def __init__(self):
         self._last_close_at: dict[str, float] = {}
         self._last_partial_at: dict[str, float] = {}
+
+    def _min_hold_seconds(self) -> float:
+        if sandbox_active() and SANDBOX_RELAX_EXIT_GUARDS:
+            return float(SANDBOX_MIN_HOLD_SECONDS)
+        return float(MIN_HOLD_SECONDS_BEFORE_EXIT)
+
+    def _min_partial_profit_usd(self, margin, leverage) -> float:
+        if sandbox_active() and SANDBOX_RELAX_EXIT_GUARDS:
+            return max(
+                float(SANDBOX_MIN_PARTIAL_PROFIT_USD),
+                estimate_round_trip_fee_usd(margin, leverage) * 1.2,
+            )
+        return max(
+            R_EXIT_MIN_NET_PROFIT_USD,
+            estimate_round_trip_fee_usd(margin, leverage) * FEE_EDGE_MULTIPLIER,
+        )
 
     def allow_open(self, proposal) -> tuple[bool, str | None]:
         if not FEE_CHURN_GUARD_ENABLED:
@@ -88,7 +110,7 @@ class FeeChurnGuard:
         reason = str(action.get("reason") or "")
         unrealized = _safe_float(position.get("unrealized_pnl"))
         age = _position_age_seconds(position)
-        if age < MIN_HOLD_SECONDS_BEFORE_EXIT:
+        if age < self._min_hold_seconds():
             return False, "fee_churn_min_hold_not_met"
         if reason == "liquidation_pressure":
             liq_risk = str((action.get("market_context") or {}).get("liquidation_risk") or "").lower()
@@ -109,7 +131,7 @@ class FeeChurnGuard:
         if unrealized <= 0:
             return False, "fee_churn_partial_requires_profit"
         age = _position_age_seconds(position)
-        if age < MIN_HOLD_SECONDS_BEFORE_EXIT:
+        if age < self._min_hold_seconds():
             return False, "fee_churn_min_hold_not_met"
         pos_id = str(position.get("id") or "")
         last_partial = float(self._last_partial_at.get(pos_id, 0.0) or 0.0)
@@ -117,10 +139,7 @@ class FeeChurnGuard:
             return False, "fee_churn_partial_cooldown"
         margin = _safe_float(position.get("margin"))
         leverage = max(_safe_float(position.get("leverage"), 1.0), 1.0)
-        min_profit = max(
-            R_EXIT_MIN_NET_PROFIT_USD,
-            estimate_round_trip_fee_usd(margin, leverage) * FEE_EDGE_MULTIPLIER,
-        )
+        min_profit = self._min_partial_profit_usd(margin, leverage)
         if unrealized < min_profit:
             return False, "fee_churn_partial_profit_below_fees"
         return True, None

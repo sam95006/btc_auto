@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from backend.trading.r_exit_engine import RExitEngine, build_r_exit_state
 
@@ -6,6 +7,11 @@ from backend.trading.r_exit_engine import RExitEngine, build_r_exit_state
 class RExitEngineTests(unittest.TestCase):
     def setUp(self):
         self.engine = RExitEngine()
+        self._sandbox_patch = patch("backend.trading.r_exit_engine.sandbox_active", return_value=False)
+        self._sandbox_patch.start()
+
+    def tearDown(self):
+        self._sandbox_patch.stop()
 
     def _position(self, unrealized, tp1=False, tp2=False, stop_at_be=False):
         return {
