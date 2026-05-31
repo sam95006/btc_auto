@@ -56,12 +56,36 @@ export function getPanelTargets() {
   return PANEL_TARGETS.slice();
 }
 
+function hasMeaningfulPanelLayout(saved) {
+  if (!saved || typeof saved !== "object") return false;
+  return ["left", "top", "right", "bottom", "width", "height"].some(
+    (key) => String(saved[key] || "").trim(),
+  );
+}
+
+export function resetPanelLayout(root = document) {
+  PANEL_TARGETS.forEach(({ selector }) => {
+    const element = root.querySelector(selector);
+    if (!element) return;
+    element.style.position = "";
+    element.style.left = "";
+    element.style.top = "";
+    element.style.right = "";
+    element.style.bottom = "";
+    element.style.width = "";
+    element.style.height = "";
+    element.style.transform = "";
+    element.style.margin = "";
+  });
+}
+
 export function applySavedPanelLayout(root = document) {
   const panelLayout = runtimeLayout.panels || {};
   PANEL_TARGETS.forEach(({ key, selector }) => {
     const element = root.querySelector(selector);
     const saved = panelLayout[key];
     if (!element || !saved || typeof saved !== "object") return;
+    if (!hasMeaningfulPanelLayout(saved)) return;
     if (saved.position) element.style.position = saved.position;
     if (saved.left) element.style.left = saved.left;
     if (saved.top) element.style.top = saved.top;

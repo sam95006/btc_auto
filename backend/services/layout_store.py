@@ -20,10 +20,21 @@ def _normalize_payload(payload):
         if isinstance(payload.get("hotspots"), dict):
             base["hotspots"] = payload["hotspots"]
         if isinstance(payload.get("panels"), dict):
-            base["panels"] = payload["panels"]
+            base["panels"] = _sanitize_panels(payload["panels"])
         if isinstance(payload.get("version"), int):
             base["version"] = payload["version"]
     return base
+
+
+def _sanitize_panels(panels):
+    """Drop panel entries that only set position without coordinates (breaks UI)."""
+    cleaned = {}
+    for key, saved in dict(panels or {}).items():
+        if not isinstance(saved, dict):
+            continue
+        if any(str(saved.get(field) or "").strip() for field in ("left", "top", "right", "bottom", "width", "height")):
+            cleaned[key] = saved
+    return cleaned
 
 
 class LayoutStore:

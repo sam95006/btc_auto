@@ -14,7 +14,7 @@ import { buildRadarPage, getRadarModalContent } from "./scenes/scene_radar_outpo
 import { buildNewsPage, getNewsModalContent } from "./scenes/scene_news_nexus.js?v=20260528a";
 import { escapeHtml } from "./utils/presentation.js?v=20260510b";
 import { initHotspotEditor, getIsEditMode } from "./components/hotspot_editor.js?v=20260503a";
-import { applySavedPanelLayout, setRuntimeLayout } from "./layout_state.js?v=20260503a";
+import { resetPanelLayout, setRuntimeLayout } from "./layout_state.js?v=20260531a";
 
 const rootRefs = {
   top: document.getElementById("top-status-bar"),
@@ -920,8 +920,18 @@ function renderModal(state) {
   renderSubModal(state);
 }
 
+function renderBootShell() {
+  if (rootRefs.top && !rootRefs.top.innerHTML.trim()) {
+    rootRefs.top.innerHTML = `<div class="status-card"><span>系統狀態</span><strong>連線中…</strong><small>正在載入 NEXUS 快照</small></div>`;
+  }
+}
+
 function renderApp(state) {
-  if (!state) return;
+  resetPanelLayout();
+  if (!state) {
+    renderBootShell();
+    return;
+  }
   try {
     renderTopStatusBar(rootRefs.top, state);
     renderAlertPanel(rootRefs.alert, state);
@@ -987,5 +997,5 @@ window.setTimeout(async () => {
   } catch (error) {
     showError(`UI fallback failed: ${error?.message || String(error)}`);
   }
-}, 1200);
+}, 5000);
 

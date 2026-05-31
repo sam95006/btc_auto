@@ -15,7 +15,11 @@ function renderMap(state) {
   const nodes = getLayoutHotspots("MAIN", MAP_NODES);
   return `
     <div class="scene-stage-frame home-stage-frame" style="position:relative;width:100%;max-width:1536px;margin:0 auto;overflow:visible;">
-      <img class="scene-stage-art" src="/static/nexus/assets/nexus_overview.png" style="width:100%;height:auto;display:block;" alt="Nexus Overview" />
+      <img class="scene-stage-art" src="/static/nexus/assets/nexus_overview.png" style="width:100%;height:auto;display:block;" alt="Nexus Overview" onerror="this.style.display='none';this.parentElement.querySelector('.missing-art')?.removeAttribute('hidden');" />
+      <div class="missing-art" hidden>
+        <b>主地圖載入中</b>
+        <span>若長時間空白，請重新整理或等待部署完成</span>
+      </div>
       <div class="scene-stage-hotspots" style="z-index:10;position:absolute;inset:0;">
         ${nodes.map((node) => {
           const livePosition = (state.positions || []).find((item) => item.fleet === node.id && String(item.id || "").startsWith("live_"));
