@@ -129,6 +129,23 @@ class AiFlexibleEvaluatorTests(unittest.TestCase):
         self.assertEqual(len(actions), 1)
         self.assertEqual(actions[0]["source"], "ai_flex_auto_profit")
 
+    def test_stale_position_profit_exit(self):
+        evaluator = AiFlexibleEvaluator(llm_gateway=_FakeGateway({}))
+        actions = evaluator._auto_profit_exit_candidates(
+            [
+                {
+                    "symbol": "ETHUSDT",
+                    "fleet": "ETH",
+                    "unrealized_pnl": 6.0,
+                    "margin": 80,
+                    "leverage": 10,
+                    "opened_at": "2000-01-01 00:00:00",
+                }
+            ]
+        )
+        self.assertEqual(len(actions), 1)
+        self.assertIn("ai_auto_profit", actions[0]["reason"])
+
         guard = FeeChurnGuard()
         position = {
             "id": "p1",

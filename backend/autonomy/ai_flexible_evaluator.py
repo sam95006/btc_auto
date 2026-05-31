@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from config.ai_flexible_eval_config import (
@@ -15,6 +17,9 @@ from config.ai_flexible_eval_config import (
     AI_FLEX_MAX_PROPOSALS,
     AI_FLEX_MIN_CONFIDENCE,
     AI_FLEX_SIZING_FROM_LLM,
+    AI_FLEX_STALE_EXIT_HOURS,
+    AI_FLEX_STALE_FLAT_EXIT_HOURS,
+    AI_FLEX_STALE_MIN_PROFIT_USD,
 )
 from config.fleet_routing_config import validate_futures_open_route
 from config.sandbox_exit_config import (
@@ -29,6 +34,18 @@ def _safe_float(value, default=0.0) -> float:
         return float(value or default)
     except Exception:
         return default
+
+
+def _position_age_hours(position: Dict[str, Any]) -> float:
+    opened = str(position.get("opened_at") or "").strip()
+    if not opened:
+        return 0.0
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"):
+        try:
+            return max(0.0, (time.time() - datetime.strptime(opened[:19], fmt).timestamp()) / 3600.0)
+        except Exception:
+            continue
+    return 0.0
 
 
 def _compact_context(ctx: Optional[Dict[str, Any]]) -> Dict[str, Any]:
@@ -356,11 +373,16 @@ class AiFlexibleEvaluator:
                 continue
             pnl = _safe_float(item.get("unrealized_pnl"))
             pnl_pct = self._pnl_pct_on_margin(item)
+            age_h = _position_age_hours(item)
             hit_abs_tp = SANDBOX_ABS_EXIT_ENABLED and pnl >= SANDBOX_TP_ABS_USD
             hit_abs_sl = SANDBOX_ABS_EXIT_ENABLED and pnl <= -SANDBOX_SL_ABS_USD
             hit_pct_tp = pnl > 0 and pnl_pct >= AI_FLEX_AUTO_PROFIT_PCT
-            if hit_abs_tp or hit_pct_tp:
+            hit_stale_profit = age_h >= AI_FLEX_STALE_EXIT_HOURS and pnl >= AI_FLEX_STALE_MIN_PROFIT_USD
+            hit_stale_flat = age_h >= AI_FLEX_STALE_FLAT_EXIT_HOURS and abs(pnl) < AI_FLEX_STALE_MIN_PROFIT_USD
+            if hit_abs_tp or hit_pct_tp or hit_stale_profit:
                 fraction = 1.0 if (hit_abs_tp and pnl >= SANDBOX_TP_ABS_USD * 2) or pnl_pct >= AI_FLEX_AUTO_PROFIT_PCT * 2 else 0.5
+                if hit_stale_profit and not hit_abs_tp and pnl_pct < AI_FLEX_AUTO_PROFIT_PCT:
+                    fraction = 0.5
                 action = "reduce_or_close" if fraction >= 1.0 else "take_partial_profit"
                 actions.append(
                     {
@@ -369,12 +391,12 @@ class AiFlexibleEvaluator:
                         "action": action,
                         "fraction": fraction,
                         "confidence": 0.88,
-                        "reason": f"ai_auto_profit:{round(pnl, 2)}u:{round(pnl_pct, 1)}pct",
+                        "reason": f"ai_auto_profit:{round(pnl, 2)}u:{round(pnl_pct, 1)}pct:{round(age_h, 1)}h",
                         "source": "ai_flex_auto_profit",
                         "urgency": "high",
                     }
                 )
-            elif hit_abs_sl:
+            elif hit_abs_sl or hit_stale_flat:
                 actions.append(
                     {
                         "symbol": symbol,
@@ -382,7 +404,11 @@ class AiFlexibleEvaluator:
                         "action": "reduce_or_close",
                         "fraction": 1.0,
                         "confidence": 0.85,
-                        "reason": f"ai_auto_stop_loss:{round(pnl, 2)}u",
+                        "reason": (
+                            f"ai_auto_stop_loss:{round(pnl, 2)}u"
+                            if hit_abs_sl
+                            else f"ai_stale_flat_exit:{round(age_h, 1)}h"
+                        ),
                         "source": "ai_flex_auto_profit",
                         "urgency": "high",
                     }
