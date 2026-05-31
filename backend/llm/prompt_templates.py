@@ -208,13 +208,24 @@ def build_regime_classifier_prompt(payload: dict):
 
 
 def build_flex_trade_eval_prompt(payload: dict):
+    pure = bool(payload.get("pure_ai_mode"))
     system = (
-        "You are NEXUS full-auto trade evaluator. Synthesize wallet capital, deployable_pool, regime, "
-        "fear/greed, funding/OI stress, radar candidates, core fleet signals, open positions, and "
-        "per-symbol market context. For each proposal you MUST set leverage (integer 2-100) and either "
-        "margin_usd (absolute USDT margin) OR margin_pct_deployable (fraction of deployable_pool 0.03-0.20). "
-        "Higher confidence + stronger edge → higher leverage and margin within caps. "
-        "Never invent prices. Respect blocked_symbols. Output advisory only."
+        "You are NEXUS pure AI futures trader on Binance testnet. "
+        + (
+            "You are the SOLE decision maker — no rule engine follows you. "
+            "Read wallet, deployable_pool, regime, fear/greed, funding/OI, radar candidates, "
+            "core signals, open positions, per-symbol context. "
+            "Pick 1-2 highest-edge trades. MUST set leverage (10-100) and margin_usd OR margin_pct_deployable "
+            "for meaningful notional (target large PnL, not micro scalps). "
+            if pure
+            else
+            "Synthesize wallet capital, deployable_pool, regime, fear/greed, funding/OI stress, "
+            "radar candidates, core fleet signals, open positions, and per-symbol market context. "
+            "For each proposal you MUST set leverage (integer 2-100) and either "
+            "margin_usd (absolute USDT margin) OR margin_pct_deployable (fraction of deployable_pool 0.03-0.20). "
+            "Higher confidence + stronger edge → higher leverage and margin within caps. "
+        )
+        + "Never invent prices. Respect blocked_symbols. Output JSON only."
     )
     schema = (
         '{"trade_proposals": [{"fleet": "RADAR|BTC|ETH|SOL|PEPE", "symbol": str, "side": "BUY|SELL", '
@@ -235,12 +246,22 @@ def build_flex_trade_eval_prompt(payload: dict):
 
 
 def build_flex_exit_eval_prompt(payload: dict):
-    system = (
-        "You are NEXUS full-auto exit manager. For each open futures position decide HOLD, PARTIAL, or CLOSE. "
-        "Actively take profit when unrealized_pnl reaches profit_targets.take_profit_usd or edge fades. "
-        "Cut loss when thesis breaks or pnl below -profit_targets.stop_loss_usd. "
-        "Use pnl_pct_on_margin, leverage, regime shift, and external intel. Never invent prices."
-    )
+    pure = bool(payload.get("pure_ai_mode"))
+    if pure:
+        system = (
+            "You are NEXUS pure AI exit manager on Binance testnet. "
+            "You are the SOLE exit decision maker. For EVERY open position output PARTIAL or CLOSE "
+            "when profit is meaningful or thesis breaks; HOLD only if strong edge remains. "
+            "Do not leave stale positions open without reason. "
+            "Use pnl_pct_on_margin, leverage, regime, external intel. Never invent prices."
+        )
+    else:
+        system = (
+            "You are NEXUS full-auto exit manager. For each open futures position decide HOLD, PARTIAL, or CLOSE. "
+            "Actively take profit when unrealized_pnl reaches profit_targets.take_profit_usd or edge fades. "
+            "Cut loss when thesis breaks or pnl below -profit_targets.stop_loss_usd. "
+            "Use pnl_pct_on_margin, leverage, regime shift, and external intel. Never invent prices."
+        )
     schema = (
         '{"exit_actions": [{"symbol": str, "fleet": str, "decision": "HOLD|PARTIAL|CLOSE", '
         '"fraction": float, "confidence": float, "urgency": "low|medium|high", "reason": str}], '

@@ -1,5 +1,8 @@
+import os
 import unittest
 from unittest.mock import MagicMock
+
+os.environ["NEXUS_PURE_AI_MODE"] = "0"
 
 from backend.autonomy.ai_flexible_evaluator import AiFlexibleEvaluator
 from backend.trading.fee_churn_guard import FeeChurnGuard

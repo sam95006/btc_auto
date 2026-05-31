@@ -36,6 +36,7 @@ from backend.monitoring.kill_switch_service import KillSwitchService
 from backend.autonomy.rule_signal_bridge import RuleSignalBridge
 from backend.autonomy.strategy_proposal_hub import StrategyProposalHub
 from backend.autonomy.ai_flexible_evaluator import AiFlexibleEvaluator
+from backend.autonomy.pure_ai_orchestrator import PureAiOrchestrator
 from backend.risk.monthly_drawdown_guard import MonthlyDrawdownGuard
 from backend.trading.sandbox_mode import sandbox_active
 from backend.trading.r_exit_engine import ensure_r_exit_state
@@ -116,6 +117,12 @@ from backend.analytics.walk_forward_evaluator import WalkForwardEvaluator
 from config.fleet_routing_config import fleet_for_exchange_position
 from config.ai_trading_config import AI_LED_PRIMARY_MODE, AI_LED_TRADING_ENABLED
 from config.ai_flexible_eval_config import AI_FLEX_EXIT_PRIMARY, AI_FLEX_MAX_LEVERAGE, AI_FLEX_PRIMARY_MODE
+from config.pure_ai_trading_config import (
+    pure_ai_active,
+    pure_ai_bypass_fee_churn,
+    pure_ai_bypass_growth_blocks,
+    pure_ai_bypass_validation,
+)
 from config.runtime_config import always_on_trading_enabled, tick_seconds
 from backend.trading.trading_mode import get_trading_mode
 from backend.coordination.station_chat_log import StationChatLog
@@ -297,6 +304,8 @@ class NexusRuntime:
             trade_proposal_service=self.upgrade_pipeline.trade_proposals,
         )
         self.ai_flexible_evaluator = AiFlexibleEvaluator(llm_gateway=self.llm_gateway)
+        self.pure_ai_orchestrator = PureAiOrchestrator(llm_gateway=self.llm_gateway)
+        self._last_pure_ai_cycle = {}
         self._last_ai_flex_eval = {}
         self._last_ai_flex_exit_eval = {}
         self._ai_flex_exit_symbols = set()
@@ -1051,23 +1060,28 @@ class NexusRuntime:
                 self._run_hq_spot_strategy(prices, spot_account, self.truth_layer_status)
             else:
                 self._bootstrapped = True
-            self._run_fleet_strategies(
-                prices,
-                market_contexts,
-                self.truth_layer_status,
-                exits_only=AI_LED_PRIMARY_MODE and not sandbox_active(),
-            )
-            self._run_ai_led_proposals(prices, market_contexts, self.truth_layer_status)
-            self._run_radar_dispatch(
-                prices,
-                market_contexts,
-                self.truth_layer_status,
-                exits_only=AI_LED_PRIMARY_MODE and not sandbox_active(),
-            )
-            symbol_prices = self._build_symbol_prices(prices)
-            self.position_manager.update_unrealized(prices, symbol_prices=symbol_prices)
-            self._apply_position_ai_actions(prices, market_contexts, symbol_prices=symbol_prices)
-            self._run_unified_position_exits(prices, market_contexts)
+            if pure_ai_active():
+                symbol_prices = self._build_symbol_prices(prices)
+                self.position_manager.update_unrealized(prices, symbol_prices=symbol_prices)
+                self._run_pure_ai_trading_cycle(prices, market_contexts, self.truth_layer_status, symbol_prices)
+            else:
+                self._run_fleet_strategies(
+                    prices,
+                    market_contexts,
+                    self.truth_layer_status,
+                    exits_only=AI_LED_PRIMARY_MODE and not sandbox_active(),
+                )
+                self._run_ai_led_proposals(prices, market_contexts, self.truth_layer_status)
+                self._run_radar_dispatch(
+                    prices,
+                    market_contexts,
+                    self.truth_layer_status,
+                    exits_only=AI_LED_PRIMARY_MODE and not sandbox_active(),
+                )
+                symbol_prices = self._build_symbol_prices(prices)
+                self.position_manager.update_unrealized(prices, symbol_prices=symbol_prices)
+                self._apply_position_ai_actions(prices, market_contexts, symbol_prices=symbol_prices)
+                self._run_unified_position_exits(prices, market_contexts)
 
         self._apply_kill_switch(futures_account)
         if not self._manual_pause and not self._news_pause_active:
@@ -1700,22 +1714,7 @@ class NexusRuntime:
         fleet = str(fleet or "").upper()
         return fleet in set(self._meeting_execution_directives.get("blocked_fleets") or [])
 
-    def _run_ai_led_proposals(self, prices, market_contexts, truth_status=None):
-        if not AI_LED_TRADING_ENABLED or self._manual_pause:
-            return
-        growth_directives = dict(self.growth_status or {})
-        if growth_directives.get("block_new_entries"):
-            self._last_entry_pipeline = {
-                "blocked": True,
-                "block_reason": str(growth_directives.get("block_reason") or "block_new_entries"),
-                "deployable_pool": float(
-                    (getattr(self, "_compound_capital_status", None) or growth_directives.get("compound") or {}).get(
-                        "deployable_pool", 0.0
-                    )
-                    or 0.0
-                ),
-            }
-            return
+    def _build_ai_trading_context(self, prices, market_contexts):
         meeting_notes = self._resolve_meeting_notes()
         core_fleets = {}
         for fleet in FLEETS:
@@ -1751,7 +1750,7 @@ class NexusRuntime:
             )
             or 0.0
         )
-        context = {
+        return {
             "radar_llm_items": getattr(self, "_radar_llm_proposals", []) or [],
             "agent_output": agent_output,
             "positions": self.position_manager.all_positions(),
@@ -1771,7 +1770,93 @@ class NexusRuntime:
             "regime_state": self.regime_classifier.snapshot(),
             "growth_status": dict(self.growth_status or {}),
             "learning_guidance_summary": dict(radar_guidance or {}),
+        }, deployable
+
+    def _run_pure_ai_trading_cycle(self, prices, market_contexts, truth_status, symbol_prices):
+        if self._manual_pause or not AI_LED_TRADING_ENABLED:
+            return
+        if pure_ai_bypass_growth_blocks():
+            self.growth_status["block_new_entries"] = False
+            self.growth_status.pop("block_reason", None)
+        context, deployable = self._build_ai_trading_context(prices, market_contexts)
+        cycle = self.pure_ai_orchestrator.run_cycle(context)
+        self._last_pure_ai_cycle = dict(cycle or {})
+        executed_entries = 0
+        for request in list(cycle.get("entry_proposals") or []):
+            if self._try_execute_futures_request(request, symbol_prices, market_contexts, truth_status):
+                executed_entries += 1
+        self._last_entry_pipeline = {
+            "mode": "pure_ai",
+            "candidates": len(cycle.get("entry_proposals") or []),
+            "executed": executed_entries,
+            "deployable_pool": deployable,
+            "block_new_entries": bool((self.growth_status or {}).get("block_new_entries")),
         }
+        positions = self.position_manager.all_positions()
+        self._ai_flex_exit_executed_symbols = set()
+        for action in list(cycle.get("exit_actions") or []):
+            symbol = str(action.get("symbol") or "").upper()
+            if not symbol:
+                continue
+            position = next(
+                (item for item in positions if str(item.get("symbol") or "").upper() == symbol),
+                None,
+            )
+            if not position:
+                continue
+            fleet = str(action.get("fleet") or position.get("fleet") or "RADAR").upper()
+            price = float(
+                symbol_prices.get(symbol)
+                or position.get("mark_price")
+                or (prices.get(fleet) or {}).get("price", 0.0)
+                or 0.0
+            )
+            if price <= 0:
+                continue
+            trade = self._execute_managed_position_action(position, action, price, market_contexts)
+            if trade and str(action.get("action") or "") == "take_partial_profit":
+                self.fee_churn_guard.mark_partial_exit(position["id"])
+            if trade:
+                self._ai_flex_exit_executed_symbols.add(symbol)
+                self._record_trade_result(
+                    {
+                        "order_id": trade.get("id"),
+                        "symbol": trade.get("symbol"),
+                        "market_type": trade.get("market_type", "futures"),
+                        "fleet": fleet,
+                        "entry_price": trade.get("entry_price"),
+                        "exit_price": trade.get("exit_price"),
+                        "pnl": trade.get("pnl"),
+                        "exit_reason": trade.get("reason"),
+                        "exit_class": trade.get("exit_class", "pure_ai_exit"),
+                        "strategy_key": "pure_ai_trader",
+                    },
+                    context=market_contexts.get(fleet, {}) or {},
+                )
+        self._last_ai_flex_exit_eval = {
+            "enabled": True,
+            "mode": "pure_ai",
+            "action_count": len(cycle.get("exit_actions") or []),
+            "actions": list(cycle.get("exit_actions") or [])[:8],
+        }
+
+    def _run_ai_led_proposals(self, prices, market_contexts, truth_status=None):
+        if not AI_LED_TRADING_ENABLED or self._manual_pause:
+            return
+        growth_directives = dict(self.growth_status or {})
+        if growth_directives.get("block_new_entries"):
+            self._last_entry_pipeline = {
+                "blocked": True,
+                "block_reason": str(growth_directives.get("block_reason") or "block_new_entries"),
+                "deployable_pool": float(
+                    (getattr(self, "_compound_capital_status", None) or growth_directives.get("compound") or {}).get(
+                        "deployable_pool", 0.0
+                    )
+                    or 0.0
+                ),
+            }
+            return
+        context, deployable = self._build_ai_trading_context(prices, market_contexts)
         symbol_prices = self._build_symbol_prices(prices)
         flex_requests = list(self.ai_flexible_evaluator.collect_trade_proposals(context))
         fallback_used = None
@@ -2235,13 +2320,14 @@ class NexusRuntime:
         request = self._finalize_request_sizing(request, market_contexts)
         if not symbol or self._fleet_blocked_by_meeting(fleet):
             return False
+        is_pure_ai = str(request.get("decision_source") or "").startswith(("pure_ai", "ai_flex"))
         learning_guidance = learning_guidance or self.learning_feedback.get_strategy_guidance(
             fleet,
             request.get("strategy_key") or f"{fleet.lower()}_adaptive_strategy",
             (market_contexts.get(fleet, {}) or {}).get("market_regime", "normal"),
             market_context=market_contexts.get(fleet, {}) or {},
         )
-        if fleet == "RADAR":
+        if fleet == "RADAR" and not (pure_ai_bypass_validation() and is_pure_ai):
             if not self.radar_dispatch.can_open_symbol(symbol, learning_guidance=learning_guidance):
                 return False
             if symbol in set(learning_guidance.get("blocked_symbols") or []):
@@ -2260,20 +2346,31 @@ class NexusRuntime:
             alt_context["growth_max_leverage"] = growth_directives.get("max_leverage")
         signal = {"action": request.get("side", "HOLD"), "confidence": request.get("adjusted_confidence", 0.5), "reason": request.get("reason")}
         growth_context = self._build_growth_context(fleet, signal, alt_context, request)
-        validation = self.validation_pipeline.evaluate(
-            request,
-            market_context=alt_context,
-            truth_status=truth_status or {},
-            recent_orders=self.futures_live_orders if self.futures_client.is_configured() else self.execution_engine.recent_orders(limit=120),
-            recent_trades=self.futures_live_trades if self.futures_client.is_configured() else self.execution_engine.recent_trades(limit=120),
-            portfolio_status=self.portfolio_status,
-            growth_context=growth_context,
-        )
-        validation = self._govern_trade_validation(request, validation, alt_context)
+        if pure_ai_bypass_validation() and is_pure_ai:
+            validation = {
+                "approved": True,
+                "approval_score": float(request.get("adjusted_confidence") or 0.72),
+                "reason": "pure_ai_testnet_fast_path",
+                "stages": {},
+            }
+        else:
+            validation = self.validation_pipeline.evaluate(
+                request,
+                market_context=alt_context,
+                truth_status=truth_status or {},
+                recent_orders=self.futures_live_orders if self.futures_client.is_configured() else self.execution_engine.recent_orders(limit=120),
+                recent_trades=self.futures_live_trades if self.futures_client.is_configured() else self.execution_engine.recent_trades(limit=120),
+                portfolio_status=self.portfolio_status,
+                growth_context=growth_context,
+            )
+            validation = self._govern_trade_validation(request, validation, alt_context)
         self._append_decision_audit(request, validation, alt_context, decision_source=request.get("decision_source", "ai_led"))
         if not validation.get("approved"):
             return False
-        churn_ok, churn_reason = self.fee_churn_guard.allow_open(request)
+        if pure_ai_bypass_fee_churn() and is_pure_ai:
+            churn_ok, churn_reason = True, None
+        else:
+            churn_ok, churn_reason = self.fee_churn_guard.allow_open(request)
         if not churn_ok:
             self._append_decision_audit(
                 request,
@@ -4921,6 +5018,8 @@ class NexusRuntime:
             "ai_flexible_eval": dict(getattr(self, "_last_ai_flex_eval", {}) or {}),
             "ai_flexible_exit": dict(getattr(self, "_last_ai_flex_exit_eval", {}) or {}),
             "entry_pipeline": dict(getattr(self, "_last_entry_pipeline", {}) or {}),
+            "pure_ai_trader": dict(getattr(self, "_last_pure_ai_cycle", {}) or {}),
+            "pure_ai_enabled": pure_ai_active(),
         }
         try:
             from backend.runtime.embed_flags import embedded_worker_error, embedded_worker_started

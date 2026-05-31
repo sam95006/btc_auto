@@ -22,6 +22,7 @@ from config.ai_flexible_eval_config import (
     AI_FLEX_STALE_MIN_PROFIT_USD,
 )
 from config.fleet_routing_config import validate_futures_open_route
+from config.pure_ai_trading_config import PURE_AI_LLM_ONLY, pure_ai_active
 from config.sandbox_exit_config import (
     SANDBOX_ABS_EXIT_ENABLED,
     SANDBOX_SL_ABS_USD,
@@ -143,6 +144,8 @@ class AiFlexibleEvaluator:
         if not self.entry_enabled or not self._llm_enabled():
             return []
         snapshot = self.build_snapshot(context)
+        if context.get("pure_ai_mode"):
+            snapshot["pure_ai_mode"] = True
         result = self.llm_gateway.run_task("flex_trade_eval", snapshot, fallback_output={})
         output = result.get("output") if isinstance(result.get("output"), dict) else result
         if not isinstance(output, dict):
@@ -154,7 +157,7 @@ class AiFlexibleEvaluator:
             proposal = self._parse_trade_proposal(item)
             if proposal:
                 rows.append(proposal)
-        if not rows and AI_FLEX_HEURISTIC_FALLBACK:
+        if not rows and AI_FLEX_HEURISTIC_FALLBACK and not (pure_ai_active() and PURE_AI_LLM_ONLY):
             rows = self.collect_heuristic_proposals(context)
         return rows
 
@@ -308,6 +311,7 @@ class AiFlexibleEvaluator:
         wallet_intel: Optional[Dict[str, Any]] = None,
         external_market_intel: Optional[Dict[str, Any]] = None,
         regime_state: Optional[Dict[str, Any]] = None,
+        pure_ai_mode: bool = False,
     ) -> List[Dict[str, Any]]:
         if not self.exit_enabled:
             return []
@@ -318,6 +322,7 @@ class AiFlexibleEvaluator:
         llm_actions: List[Dict[str, Any]] = []
         if self._llm_enabled():
             payload = {
+                "pure_ai_mode": bool(pure_ai_mode),
                 "wallet_intel": dict(wallet_intel or {}),
                 "regime": dict(regime_state or {}),
                 "external_market_intel": dict(external_market_intel or {}),
@@ -363,6 +368,8 @@ class AiFlexibleEvaluator:
         return round((pnl / margin) * 100.0, 2)
 
     def _auto_profit_exit_candidates(self, positions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        if pure_ai_active() and PURE_AI_LLM_ONLY:
+            return []
         if not AI_FLEX_AUTO_PROFIT_ENABLED or not SANDBOX_ABS_EXIT_ENABLED:
             return []
         actions = []
