@@ -33,5 +33,5 @@ AGENTS.md
 # Tests
 tests/
 
-# Unused static tree
-assets/
+# Unused repo-root assets only (keep static/nexus/assets for Console artwork)
+/assets/
