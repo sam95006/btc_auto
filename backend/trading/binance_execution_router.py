@@ -131,9 +131,8 @@ class BinanceExecutionRouter:
         )
         final_leverage = int(leverage_plan["final_leverage"])
         forced = int(risk_context.get("pure_ai_force_leverage") or 0)
-        if forced >= MIN_FUTURES_LEVERAGE and final_leverage < MIN_FUTURES_LEVERAGE:
-            symbol_cap = int(risk_context.get("symbol_max_leverage") or forced)
-            final_leverage = min(forced, symbol_cap)
+        if forced >= MIN_FUTURES_LEVERAGE:
+            final_leverage = max(final_leverage, min(forced, int(MAX_SYSTEM_LEVERAGE)))
         if final_leverage < MIN_FUTURES_LEVERAGE:
             raise ExecutionPermissionError("final_leverage_below_minimum")
         if final_leverage > MAX_SYSTEM_LEVERAGE:

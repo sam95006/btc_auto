@@ -144,8 +144,8 @@ class RiskControlEngine:
                 from config.pure_ai_trading_config import pure_ai_active
 
                 if pure_ai_active():
-                    symbol_max = int(risk_context.get("symbol_max_leverage") or MAX_SYSTEM_LEVERAGE)
-                    final_leverage = min(forced, symbol_max, int(MAX_SYSTEM_LEVERAGE))
+                    # Testnet bracket tiers may report 1x for small notionals; honor proposal leverage.
+                    final_leverage = min(forced, int(MAX_SYSTEM_LEVERAGE))
                     if final_leverage >= MIN_FUTURES_LEVERAGE:
                         return {
                             "confidence_score": float(confidence_score or 0.0),
