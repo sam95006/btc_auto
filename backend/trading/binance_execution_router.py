@@ -116,23 +116,33 @@ class BinanceExecutionRouter:
         )
         if not allowed:
             raise ExecutionPermissionError(f"duplicate_order_blocked:{fingerprint}")
-        proposed = self.dynamic_leverage_engine.calculate_proposed_leverage(confidence_score)
-        estimated_notional = float(margin or 0.0) * max(MIN_FUTURES_LEVERAGE, float(proposed.get("proposed_leverage") or MIN_FUTURES_LEVERAGE))
-        bracket = self.futures_engine.client.get_symbol_leverage_bracket(symbol, estimated_notional=estimated_notional)
         risk_context = dict(risk_context)
-        risk_context["symbol_max_leverage"] = int(bracket.get("initialLeverage") or MAX_SYSTEM_LEVERAGE)
-        leverage_plan = self.risk_engine.calculate_final_leverage(
-            symbol=symbol,
-            fleet=fleet,
-            confidence_score=confidence_score,
-            market_regime=market_regime,
-            risk_context=risk_context,
-            estimated_notional=estimated_notional,
-        )
-        final_leverage = int(leverage_plan["final_leverage"])
         forced = int(risk_context.get("pure_ai_force_leverage") or 0)
+        proposed = self.dynamic_leverage_engine.calculate_proposed_leverage(confidence_score)
+        est_lev = forced if forced >= MIN_FUTURES_LEVERAGE else float(proposed.get("proposed_leverage") or MIN_FUTURES_LEVERAGE)
+        estimated_notional = float(margin or 0.0) * max(float(MIN_FUTURES_LEVERAGE), est_lev)
+        bracket = self.futures_engine.client.get_symbol_leverage_bracket(symbol, estimated_notional=estimated_notional)
+        risk_context["symbol_max_leverage"] = int(bracket.get("initialLeverage") or MAX_SYSTEM_LEVERAGE)
         if forced >= MIN_FUTURES_LEVERAGE:
-            final_leverage = max(final_leverage, min(forced, int(MAX_SYSTEM_LEVERAGE)))
+            final_leverage = min(forced, int(MAX_SYSTEM_LEVERAGE))
+            leverage_plan = {
+                "confidence_score": float(confidence_score or 0.0),
+                "proposed_leverage": forced,
+                "symbol_max_leverage": risk_context["symbol_max_leverage"],
+                "risk_cap_leverage": final_leverage,
+                "final_leverage": int(final_leverage),
+                "reason": "pure_ai_forced_leverage",
+            }
+        else:
+            leverage_plan = self.risk_engine.calculate_final_leverage(
+                symbol=symbol,
+                fleet=fleet,
+                confidence_score=confidence_score,
+                market_regime=market_regime,
+                risk_context=risk_context,
+                estimated_notional=estimated_notional,
+            )
+            final_leverage = int(leverage_plan.get("final_leverage") or 0)
         if final_leverage < MIN_FUTURES_LEVERAGE:
             raise ExecutionPermissionError("final_leverage_below_minimum")
         if final_leverage > MAX_SYSTEM_LEVERAGE:
