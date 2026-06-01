@@ -156,11 +156,13 @@ def _short_fingerprint(parts):
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:12]
 
 
-def _safe_float(value):
+def _safe_float(value, default=0.0):
     try:
-        return float(value or 0.0)
+        if value is None:
+            return float(default)
+        return float(value)
     except Exception:
-        return 0.0
+        return float(default)
 
 
 def _clean_display_text(text, fallback=""):
@@ -2401,7 +2403,9 @@ class NexusRuntime:
                 if symbol in blocked:
                     self._last_execute_reject_reason = "symbol_blocked"
                     return False
-            if symbol in set(learning_guidance.get("blocked_symbols") or []):
+            blocked_learning = set(learning_guidance.get("blocked_symbols") or [])
+            if symbol in blocked_learning and not (is_pure_ai and pure_ai_bypass_validation()):
+                self._last_execute_reject_reason = "learning_symbol_blocked"
                 return False
         if is_pure_ai:
             from backend.autonomy.pure_ai_execution import resolve_execution_price
