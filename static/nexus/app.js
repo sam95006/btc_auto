@@ -1,20 +1,21 @@
-﻿import { startStateStore, subscribe, getState } from "./state_store.js?v=20260524b";
-import { fetchLayoutConfig, fetchNexusState } from "./api_client.js?v=20260503a";
-import { renderTopStatusBar } from "./components/ui_top_status_bar.js?v=20260529a";
-import { renderAlertPanel } from "./components/ui_alert_panel.js?v=20260529a";
-import { renderChatDock } from "./components/ui_chat_dock.js?v=20260521c";
-import { renderMeetingLogPanel } from "./components/ui_meeting_log_panel.js?v=20260520a";
-import { renderDecisionStrip } from "./components/ui_decision_panel.js?v=20260529a";
-import { renderRevenueKpi } from "./components/ui_revenue_kpi.js?v=20260526a";
-import { renderMeetingDock } from "./components/ui_meeting_dock.js?v=20260510b";
-import { buildMainOverviewPage } from "./scenes/scene_main_hq.js?v=20260510b";
-import { buildHqPage, getHqModalContent } from "./scenes/scene_hq_roundtable.js?v=20260529a";
-import { buildFleetPage, getFleetModalContent } from "./scenes/scene_fleet_bridge_base.js?v=20260529a";
-import { buildRadarPage, getRadarModalContent } from "./scenes/scene_radar_outpost.js?v=20260529a";
-import { buildNewsPage, getNewsModalContent } from "./scenes/scene_news_nexus.js?v=20260528a";
-import { escapeHtml } from "./utils/presentation.js?v=20260510b";
-import { initHotspotEditor, getIsEditMode } from "./components/hotspot_editor.js?v=20260503a";
-import { resetPanelLayout, setRuntimeLayout } from "./layout_state.js?v=20260531a";
+﻿import { startStateStore, subscribe, getState } from "./state_store.js?v=20260601a";
+import { fetchLayoutConfig, fetchNexusState } from "./api_client.js?v=20260601a";
+import { renderTopStatusBar } from "./components/ui_top_status_bar.js?v=20260601a";
+import { renderAlertPanel } from "./components/ui_alert_panel.js?v=20260601a";
+import { renderChatDock } from "./components/ui_chat_dock.js?v=20260601a";
+import { renderMeetingLogPanel } from "./components/ui_meeting_log_panel.js?v=20260601a";
+import { renderDecisionStrip } from "./components/ui_decision_panel.js?v=20260601a";
+import { renderPureAiPanel } from "./components/ui_pure_ai_panel.js?v=20260601a";
+import { renderRevenueKpi } from "./components/ui_revenue_kpi.js?v=20260601a";
+import { renderMeetingDock } from "./components/ui_meeting_dock.js?v=20260601a";
+import { buildMainOverviewPage } from "./scenes/scene_main_hq.js?v=20260601a";
+import { buildHqPage, getHqModalContent } from "./scenes/scene_hq_roundtable.js?v=20260601a";
+import { buildFleetPage, getFleetModalContent } from "./scenes/scene_fleet_bridge_base.js?v=20260601a";
+import { buildRadarPage, getRadarModalContent } from "./scenes/scene_radar_outpost.js?v=20260601a";
+import { buildNewsPage, getNewsModalContent } from "./scenes/scene_news_nexus.js?v=20260601a";
+import { escapeHtml } from "./utils/presentation.js?v=20260601a";
+import { initHotspotEditor, getIsEditMode } from "./components/hotspot_editor.js?v=20260601a";
+import { resetPanelLayout, setRuntimeLayout } from "./layout_state.js?v=20260601a";
 
 const rootRefs = {
   top: document.getElementById("top-status-bar"),
@@ -36,7 +37,7 @@ const homeUiState = {
   activeMeeting: "12:00",
   selectedMeetingSlot: "12:00",
   roundTableMinimized: true,
-  leftTab: "decision",
+  leftTab: "pureai",
   leftCollapsed: false,
 };
 
@@ -637,6 +638,64 @@ style.textContent = `
   .market-intel-empty { font-size: 11px !important; color: rgba(173,213,229,0.65) !important; margin: 0 !important; }
   #alert-panel .market-intel-chips { max-height: 42px !important; overflow: hidden !important; }
   .hq-mini-panel--intel .market-intel-list { max-height: 180px !important; overflow-y: auto !important; }
+  .pure-ai-panel {
+    display: grid !important;
+    gap: 10px !important;
+    padding: 4px 2px 8px !important;
+  }
+  .pure-ai-head h3 { margin: 6px 0 4px !important; font-size: 15px !important; color: #eefaff !important; }
+  .pure-ai-explainer { margin: 0 !important; font-size: 11px !important; line-height: 1.5 !important; color: rgba(173,213,229,0.82) !important; }
+  .pure-ai-badge {
+    display: inline-block !important;
+    padding: 4px 10px !important;
+    border-radius: 999px !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.6px !important;
+    border: 1px solid rgba(79,216,255,0.35) !important;
+    background: rgba(79,216,255,0.12) !important;
+    color: #8fe4ff !important;
+  }
+  .pure-ai-badge.is-live { border-color: rgba(47,247,163,0.55) !important; background: rgba(47,247,163,0.16) !important; color: #2ff7a3 !important; }
+  .pure-ai-badge.is-off { border-color: rgba(255,107,143,0.4) !important; background: rgba(255,107,143,0.12) !important; color: #ffc0d0 !important; }
+  .pure-ai-metrics {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+  .pure-ai-metrics div {
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+  }
+  .pure-ai-metrics span { display: block !important; font-size: 9px !important; color: rgba(173,213,229,0.72) !important; }
+  .pure-ai-metrics strong { font-size: 12px !important; color: #eefaff !important; }
+  .pure-ai-section h4 { margin: 0 0 6px !important; font-size: 11px !important; color: rgba(200,235,255,0.88) !important; }
+  .pure-ai-checks, .pure-ai-proposals { list-style: none !important; margin: 0 !important; padding: 0 !important; display: grid !important; gap: 4px !important; }
+  .pure-ai-check, .pure-ai-proposal, .pure-ai-empty {
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+    background: rgba(4,12,24,0.55) !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    font-size: 11px !important;
+  }
+  .pure-ai-check.ok { border-color: rgba(47,247,163,0.25) !important; }
+  .pure-ai-check.bad { border-color: rgba(255,107,143,0.35) !important; }
+  .pure-ai-check small, .pure-ai-proposal small { display: block !important; margin-top: 2px !important; color: rgba(173,213,229,0.7) !important; font-size: 10px !important; }
+  .pure-ai-proposal strong { color: #8fe4ff !important; margin-right: 6px !important; }
+  .pure-ai-foot { display: flex !important; flex-direction: column !important; gap: 6px !important; font-size: 10px !important; color: rgba(173,213,229,0.72) !important; }
+  .pure-ai-foot a { color: #4fd8ff !important; text-decoration: none !important; }
+  .decision-pure-ai-banner {
+    margin: 0 0 8px !important;
+    padding: 8px 10px !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(47,247,163,0.35) !important;
+    background: rgba(47,247,163,0.08) !important;
+    font-size: 11px !important;
+    line-height: 1.45 !important;
+    color: #d8ffe8 !important;
+  }
 `;
 document.head.appendChild(style);
 
@@ -805,12 +864,13 @@ function renderHomeScene(state) {
 
 function ensureLeftCommandStack(root) {
   let stack = root.querySelector(".left-command-stack");
-  if (stack) return stack;
-  stack = document.createElement("div");
-  stack.className = "left-command-stack";
-  stack.innerHTML = `
+  if (!stack) {
+    stack = document.createElement("div");
+    stack.className = "left-command-stack";
+    stack.innerHTML = `
     <div class="left-panel-toolbar">
       <nav class="left-tab-bar" aria-label="左側資訊分頁">
+        <button type="button" class="left-tab-btn" data-left-tab="pureai">Pure AI</button>
         <button type="button" class="left-tab-btn" data-left-tab="revenue">營收</button>
         <button type="button" class="left-tab-btn" data-left-tab="roundtable">圓桌</button>
         <button type="button" class="left-tab-btn" data-left-tab="decision">決策</button>
@@ -818,18 +878,29 @@ function ensureLeftCommandStack(root) {
       <button type="button" class="left-collapse-btn" data-left-collapse title="收合左側面板" aria-label="收合左側面板">‹</button>
     </div>
     <div class="left-tab-panels">
+      <div class="left-tab-panel left-mount-pureai" data-left-tab="pureai"></div>
       <div class="left-tab-panel left-mount-revenue" data-left-tab="revenue"></div>
       <div class="left-tab-panel left-mount-roundtable" data-left-tab="roundtable"></div>
       <div class="left-tab-panel left-mount-decision" data-left-tab="decision"></div>
     </div>
   `;
-  root.appendChild(stack);
-  stack.querySelector(".left-tab-bar")?.addEventListener("click", (event) => {
-    const btn = event.target.closest("[data-left-tab]");
-    if (!btn) return;
-    homeUiState.leftTab = btn.getAttribute("data-left-tab") || "decision";
-    renderApp(getState());
-  });
+    root.appendChild(stack);
+    stack.querySelector(".left-tab-bar")?.addEventListener("click", (event) => {
+      const btn = event.target.closest("[data-left-tab]");
+      if (!btn) return;
+      homeUiState.leftTab = btn.getAttribute("data-left-tab") || "pureai";
+      renderApp(getState());
+    });
+    return stack;
+  }
+  if (!stack.querySelector('[data-left-tab="pureai"]')) {
+    const bar = stack.querySelector(".left-tab-bar");
+    const panels = stack.querySelector(".left-tab-panels");
+    if (bar && panels) {
+      bar.insertAdjacentHTML("afterbegin", `<button type="button" class="left-tab-btn" data-left-tab="pureai">Pure AI</button>`);
+      panels.insertAdjacentHTML("afterbegin", `<div class="left-tab-panel left-mount-pureai" data-left-tab="pureai"></div>`);
+    }
+  }
   return stack;
 }
 
@@ -866,7 +937,7 @@ function renderHomeLeft(state) {
   }
   stack.style.display = "";
   rootRefs.left.querySelector(".left-collapse-btn--solo")?.remove();
-  const tab = homeUiState.leftTab || "decision";
+  const tab = homeUiState.leftTab || (state?.pure_ai_enabled ? "pureai" : "decision");
   stack.querySelectorAll(".left-tab-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.getAttribute("data-left-tab") === tab);
   });
@@ -874,9 +945,11 @@ function renderHomeLeft(state) {
     const active = panel.getAttribute("data-left-tab") === tab;
     panel.hidden = !active;
   });
+  const pureAiMount = stack.querySelector(".left-mount-pureai");
   const revenueMount = stack.querySelector(".left-mount-revenue");
   const roundtableMount = stack.querySelector(".left-mount-roundtable");
   const decisionMount = stack.querySelector(".left-mount-decision");
+  if (tab === "pureai") renderPureAiPanel(pureAiMount, state);
   if (tab === "revenue") renderRevenueKpi(revenueMount, state, { compact: true });
   if (tab === "roundtable") {
     renderMeetingLogPanel(roundtableMount, state, { ...homeUiState, roundTableMinimized: false }, updateMeetingUiState);

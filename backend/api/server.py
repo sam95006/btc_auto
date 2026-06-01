@@ -12,6 +12,8 @@ except Exception:
 from backend.coordination.station_chat_log import StationChatLog
 from backend.coordination.station_dialogue_service import StationDialogueService
 from backend.services.runtime_store import runtime_store
+from backend.autonomy.pure_ai_status import build_pure_ai_status
+from backend.services.console_assets import verify_console_assets
 from backend.services.layout_store import layout_store
 from backend.trading.trading_mode import get_trading_mode, require_testnet_credentials
 from backend.core.data_paths import resolve_runtime_db_path
@@ -257,6 +259,16 @@ def register_nexus_routes(app):
     def nexus_daily_report():
         snap = runtime_store.load_snapshot()
         return jsonify(snap.get("daily_report", {}))
+
+    @app.route("/api/nexus/pure-ai-status")
+    def nexus_pure_ai_status():
+        """Verifiable Pure AI mode — proves LLM pipeline is active (not a separate external API)."""
+        try:
+            from backend.services.nexus_runtime import nexus_runtime
+
+            return jsonify(build_pure_ai_status(nexus_runtime))
+        except Exception as exc:
+            return jsonify({"active": False, "error": str(exc)}), 500
 
     @app.route("/api/nexus/layout")
     def nexus_layout():

@@ -173,6 +173,11 @@ export function renderDecisionStrip(root, state, options = {}) {
     );
   }
 
+  const pureAi = Boolean(state.pure_ai_enabled);
+  const pureBanner = pureAi
+    ? `<div class="decision-pure-ai-banner">🤖 Pure AI 全自動：進出場由 LLM flex_trade_eval / flex_exit_eval 決策（非圓桌、非規則引擎）。左側「Pure AI」分頁可驗證。</div>`
+    : "";
+
   let host = root.querySelector(".decision-strip-host");
   if (!host) {
     host = document.createElement("div");
@@ -190,6 +195,7 @@ export function renderDecisionStrip(root, state, options = {}) {
         <small>${traceNote}</small>
         <div class="decision-meta-chips">${chips.join("")}</div>
       </header>
+      ${pureBanner}
       ${hasFunnel ? funnelBar(stages) : ""}
       ${statusBanner}
       <ul class="decision-list">${rows || "<li class='decision-row decision-row--empty'>尚無決策樣本</li>"}</ul>

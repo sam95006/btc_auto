@@ -35,3 +35,5 @@ tests/
 
 # Unused repo-root assets only (keep static/nexus/assets for Console artwork)
 /assets/
+!static/nexus/assets/
+!static/nexus/assets/**

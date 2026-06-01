@@ -35,18 +35,14 @@
       font-family: "Outfit", "Noto Sans TC", sans-serif;
       color: var(--white);
       background:
-        linear-gradient(rgba(4, 10, 20, 0.42), rgba(4, 10, 20, 0.8)),
-        url("/static/nexus/assets/nexus_overview.png") center / cover no-repeat,
-        linear-gradient(45deg, #081320, #0a1a2e),
-        var(--bg);
+        radial-gradient(ellipse 80% 60% at 50% 45%, rgba(18, 55, 82, 0.45), transparent),
+        linear-gradient(165deg, #0a1a2e 0%, #071320 48%, #040a14 100%);
     }
 
     body.alert-active {
       background:
-        linear-gradient(rgba(64, 12, 20, 0.42), rgba(4, 10, 20, 0.84)),
-        url("/static/nexus/assets/nexus_overview.png") center / cover no-repeat,
-        linear-gradient(45deg, #081320, #0a1a2e),
-        var(--bg);
+        radial-gradient(ellipse 80% 60% at 50% 45%, rgba(64, 12, 20, 0.35), transparent),
+        linear-gradient(165deg, #1a0a12 0%, #071320 55%, #040a14 100%);
     }
 
     button, input, textarea {
@@ -1735,7 +1731,7 @@
     </div>
   </div>
 
-  <script type="module" src="/static/nexus/app.js?v=20260531a"></script>
+  <script type="module" src="/static/nexus/app.js?v=20260601a"></script>
 </body>
 </html>
 

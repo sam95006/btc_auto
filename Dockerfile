@@ -26,6 +26,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+RUN test -f static/nexus/assets/nexus_overview.png && test -f static/nexus/assets/hq_roundtable.png
 
 ENV PORT=8080
 EXPOSE 8080

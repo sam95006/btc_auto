@@ -12,6 +12,7 @@ from backend.api.server import register_nexus_routes
 from backend.core.env_loader import load_env_file
 from backend.runtime.single_instance_guard import SingleInstanceError, SingleInstanceGuard
 from backend.security.secret_manager import initialize_security_foundation
+from backend.services.console_assets import verify_console_assets
 from backend.trading.trading_mode import TradingModeSafetyError, get_trading_mode, require_testnet_credentials
 
 load_dotenv()
@@ -28,6 +29,12 @@ except TradingModeSafetyError as exc:
 
 app = Flask(__name__)
 register_nexus_routes(app)
+
+_asset_check = verify_console_assets(app.root_path)
+if _asset_check.get("ok"):
+    print(f"[startup] Console artwork OK ({_asset_check.get('present_count')} files)")
+else:
+    print(f"[startup] WARNING missing console artwork: {_asset_check.get('missing')}")
 
 
 @app.after_request
@@ -113,13 +120,17 @@ def dashboard():
 @app.route("/health")
 def health():
     from backend.runtime.embed_flags import embedded_worker_error, embedded_worker_started
+    from config.pure_ai_trading_config import pure_ai_active
 
+    assets = verify_console_assets(app.root_path)
     return jsonify(
         {
-            "status": "ok",
+            "status": "ok" if assets.get("ok") else "degraded",
             "service": "nexus-web",
             "embedded_worker": embedded_worker_started,
             "embedded_worker_error": embedded_worker_error,
+            "pure_ai_enabled": pure_ai_active(),
+            "console_assets": assets,
         }
     )
 

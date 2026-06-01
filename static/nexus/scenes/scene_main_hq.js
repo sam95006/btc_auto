@@ -1,5 +1,5 @@
 import { escapeHtml, translateSignal, translateStatus } from "../utils/presentation.js?v=20260510a";
-import { getLayoutHotspots } from "../layout_state.js?v=20260503a";
+import { getLayoutHotspots } from "../layout_state.js?v=20260601a";
 
 const MAP_NODES = [
   { id: "HQ", label: "NEXUS 母港", x: 0.5, y: 0.478, w: 0.13, h: 0.346 },

@@ -37,6 +37,7 @@ from backend.autonomy.rule_signal_bridge import RuleSignalBridge
 from backend.autonomy.strategy_proposal_hub import StrategyProposalHub
 from backend.autonomy.ai_flexible_evaluator import AiFlexibleEvaluator
 from backend.autonomy.pure_ai_orchestrator import PureAiOrchestrator
+from backend.autonomy.pure_ai_status import build_pure_ai_status
 from backend.risk.monthly_drawdown_guard import MonthlyDrawdownGuard
 from backend.trading.sandbox_mode import sandbox_active
 from backend.trading.r_exit_engine import ensure_r_exit_state
@@ -5020,6 +5021,7 @@ class NexusRuntime:
             "entry_pipeline": dict(getattr(self, "_last_entry_pipeline", {}) or {}),
             "pure_ai_trader": dict(getattr(self, "_last_pure_ai_cycle", {}) or {}),
             "pure_ai_enabled": pure_ai_active(),
+            "pure_ai_status": build_pure_ai_status(self),
         }
         try:
             from backend.runtime.embed_flags import embedded_worker_error, embedded_worker_started

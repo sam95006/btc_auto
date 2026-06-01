@@ -18,6 +18,8 @@ trading.db
 .DS_Store
 archives/
 scratch/
-assets/
+/assets/
+!/static/nexus/assets/
+!/static/nexus/assets/**
 *.db-journal
 tools/deploy/*.ps1

@@ -95,7 +95,13 @@ export function renderTopStatusBar(root, state) {
   ]
     .filter(Boolean)
     .join(" · ");
+  const pureAi = Boolean(state.pure_ai_enabled);
+  const pipeline = state.entry_pipeline || {};
+  const pureMeta = pureAi
+    ? `Pure AI · ${pipeline.mode || "pure_ai"} · 提案 ${Number(state.pure_ai_trader?.entry_count ?? pipeline.candidates ?? 0)}`
+    : "";
   const systemMetaShort = [
+    pureMeta,
     linkLabel,
     syncNote,
     macroNote,
