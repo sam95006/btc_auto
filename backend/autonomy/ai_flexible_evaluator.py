@@ -147,15 +147,21 @@ class AiFlexibleEvaluator:
         snapshot = self.build_snapshot(context)
         if context.get("pure_ai_mode"):
             snapshot["pure_ai_mode"] = True
+            snapshot["trader_directive"] = str(context.get("trader_directive") or "")
         result = self.llm_gateway.run_task("flex_trade_eval", snapshot, fallback_output={})
         output = result.get("output") if isinstance(result.get("output"), dict) else result
         if not isinstance(output, dict):
             return []
+        min_conf = AI_FLEX_MIN_CONFIDENCE
+        if context.get("pure_ai_mode"):
+            from config.pure_ai_trading_config import PURE_AI_MIN_CONFIDENCE
+
+            min_conf = min(AI_FLEX_MIN_CONFIDENCE, PURE_AI_MIN_CONFIDENCE)
         rows = []
         for item in list(output.get("trade_proposals") or [])[: max(1, AI_FLEX_MAX_PROPOSALS)]:
             if not isinstance(item, dict):
                 continue
-            proposal = self._parse_trade_proposal(item)
+            proposal = self._parse_trade_proposal(item, min_confidence=min_conf)
             if proposal:
                 rows.append(proposal)
         if not rows and AI_FLEX_HEURISTIC_FALLBACK and not (pure_ai_active() and PURE_AI_LLM_ONLY):
@@ -229,13 +235,14 @@ class AiFlexibleEvaluator:
                 rows.append(proposal)
         return rows[: max(1, AI_FLEX_MAX_PROPOSALS)]
 
-    def _parse_trade_proposal(self, item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _parse_trade_proposal(self, item: Dict[str, Any], min_confidence: Optional[float] = None) -> Optional[Dict[str, Any]]:
         symbol = str(item.get("symbol") or "").upper().replace("/", "")
         side = str(item.get("side") or "BUY").upper()
         if side not in {"BUY", "SELL"}:
             side = "BUY" if side == "LONG" else "SELL"
         confidence = _safe_float(item.get("confidence"))
-        if not symbol or confidence < AI_FLEX_MIN_CONFIDENCE:
+        floor = _safe_float(min_confidence, AI_FLEX_MIN_CONFIDENCE) if min_confidence is not None else AI_FLEX_MIN_CONFIDENCE
+        if not symbol or confidence < floor:
             return None
         fleet = str(item.get("fleet") or "RADAR").upper()
         route_ok, _reason = validate_futures_open_route(fleet, symbol)

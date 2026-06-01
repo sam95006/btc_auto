@@ -25,6 +25,27 @@ class PureAiOrchestratorTests(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["source"], "pure_ai_safety")
 
+    def test_pyramid_add_on_winning_position(self):
+        orchestrator = PureAiOrchestrator(llm_gateway=None)
+        context = {
+            "deployable_pool": 4000.0,
+            "positions": [
+                {
+                    "symbol": "BTCUSDT",
+                    "fleet": "BTC",
+                    "side": "BUY",
+                    "margin": 100.0,
+                    "unrealized_pnl": 20.0,
+                    "leverage": 20,
+                }
+            ],
+        }
+        rows = orchestrator._collect_pyramid_adds(context, existing=[])
+        self.assertEqual(len(rows), 1)
+        self.assertTrue(rows[0].get("pyramid_add"))
+        self.assertEqual(rows[0]["side"], "BUY")
+        self.assertEqual(rows[0]["symbol"], "BTCUSDT")
+
 
 if __name__ == "__main__":
     unittest.main()

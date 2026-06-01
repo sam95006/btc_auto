@@ -31,7 +31,7 @@ def task_refresh_seconds():
         "chat": int(os.getenv("NEXUS_LLM_REFRESH_CHAT_SECONDS", "0")),
         "radar_proposal": int(os.getenv("NEXUS_LLM_REFRESH_RADAR_PROPOSAL_SECONDS", "35")),
         "trade_proposer": int(os.getenv("NEXUS_LLM_REFRESH_TRADE_PROPOSER_SECONDS", "20")),
-        "flex_trade_eval": int(os.getenv("NEXUS_LLM_REFRESH_FLEX_TRADE_SECONDS", "18")),
+        "flex_trade_eval": int(os.getenv("NEXUS_LLM_REFRESH_FLEX_TRADE_SECONDS", "8")),
         "flex_exit_eval": int(os.getenv("NEXUS_LLM_REFRESH_FLEX_EXIT_SECONDS", "15")),
         "regime_classifier": int(os.getenv("NEXUS_LLM_REFRESH_REGIME_SECONDS", "1800")),
         "post_mortem": int(os.getenv("NEXUS_LLM_REFRESH_POST_MORTEM_SECONDS", "0")),

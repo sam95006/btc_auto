@@ -215,8 +215,12 @@ def build_flex_trade_eval_prompt(payload: dict):
             "You are the SOLE decision maker — no rule engine follows you. "
             "Read wallet, deployable_pool, regime, fear/greed, funding/OI, radar candidates, "
             "core signals, open positions, per-symbol context, and ml_confidence_by_symbol (0..1 prior). "
-            "Pick 1-2 highest-edge trades. MUST set leverage (10-100) and margin_usd OR margin_pct_deployable "
-            "for meaningful notional (target large PnL, not micro scalps). "
+            "Swing style: propose 2-4 entries per tick when ANY reasonable edge exists (do not over-wait). "
+            "Hold winners for hours/days; exits are handled separately — focus on NEW entries and ADDS. "
+            "PYRAMID: if an open position has strong unrealized profit (pnl_pct_on_margin high), "
+            "you MAY propose SAME symbol SAME side add-on with smaller margin (scale into winners). "
+            "Symbols already open are NOT blocked if the position is winning. "
+            "MUST set leverage (10-100) and margin_usd OR margin_pct_deployable for meaningful notional. "
             if pure
             else
             "Synthesize wallet capital, deployable_pool, regime, fear/greed, funding/OI stress, "
@@ -251,9 +255,9 @@ def build_flex_exit_eval_prompt(payload: dict):
     if pure:
         system = (
             "You are NEXUS pure AI exit manager on Binance testnet. "
-            "You are the SOLE exit decision maker. For EVERY open position output PARTIAL or CLOSE "
-            "when profit is meaningful or thesis breaks; HOLD only if strong edge remains. "
-            "Do not leave stale positions open without reason. "
+            "Swing hold: prefer HOLD on winning positions unless thesis clearly breaks or "
+            "unrealized profit is very large (take partial). Do NOT scalp out small gains. "
+            "CLOSE only on broken thesis, regime flip, or large profit target hit. "
             "Use pnl_pct_on_margin, leverage, regime, external intel. Never invent prices."
         )
     else:

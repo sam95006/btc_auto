@@ -12,6 +12,11 @@ from config.pure_ai_trading_config import (
     PURE_AI_LLM_ONLY,
     PURE_AI_MAX_PROPOSALS_PER_TICK,
     PURE_AI_MIN_MARGIN_USD,
+    PURE_AI_PYRAMID_ENABLED,
+    PURE_AI_PYRAMID_MARGIN_MULT,
+    PURE_AI_PYRAMID_MAX_ADDS,
+    PURE_AI_PYRAMID_MIN_PNL_PCT,
+    PURE_AI_PYRAMID_MIN_PNL_USD,
     PURE_AI_STALE_SAFETY_HOURS,
     PURE_AI_TARGET_NOTIONAL_USD,
     pure_ai_active,
@@ -40,8 +45,9 @@ class PureAiOrchestrator:
         context = dict(context or {})
         context["pure_ai_mode"] = True
         context["trader_directive"] = (
-            "TESTNET pure AI trader: read ALL data, pick best edge, size for meaningful PnL. "
-            "Set leverage 10-100x and margin for target notional. Exit proactively on profit or broken thesis."
+            "TESTNET pure AI swing trader: open frequently when edge exists; hold winners for hours/days. "
+            "Scale into SAME symbol SAME direction when unrealized profit is strong (pyramid winners). "
+            "Do not exit early just because of small profit — only exit on broken thesis or large realized target."
         )
         entries = self._collect_entries(context)
         exits = self._collect_exits(context)
@@ -74,8 +80,67 @@ class PureAiOrchestrator:
             proposal["proposer"] = "pure_ai_trader"
             proposal["strategy_key"] = "pure_ai_trader"
             sized.append(proposal)
-        filtered, _gate = self.debate_gate.filter_entries(sized, context)
+        pyramid = self._collect_pyramid_adds(context, sized)
+        combined = sized + pyramid
+        filtered, _gate = self.debate_gate.filter_entries(combined, context)
         return filtered
+
+    def _collect_pyramid_adds(
+        self,
+        context: Dict[str, Any],
+        existing: List[Dict[str, Any]],
+    ) -> List[Dict[str, Any]]:
+        """Add to winning positions in the same direction (scale into profit)."""
+        if not PURE_AI_PYRAMID_ENABLED:
+            return []
+        existing_symbols = {str(item.get("symbol") or "").upper() for item in existing}
+        deployable = _safe_float(context.get("deployable_pool"))
+        rows: List[Dict[str, Any]] = []
+        for item in list(context.get("positions") or []):
+            if not isinstance(item, dict):
+                continue
+            symbol = str(item.get("symbol") or "").upper()
+            if not symbol or symbol in existing_symbols:
+                continue
+            pnl = _safe_float(item.get("unrealized_pnl"))
+            margin = _safe_float(item.get("margin"))
+            if margin <= 0:
+                continue
+            pnl_pct = round((pnl / margin) * 100.0, 2)
+            if pnl_pct < PURE_AI_PYRAMID_MIN_PNL_PCT and pnl < PURE_AI_PYRAMID_MIN_PNL_USD:
+                continue
+            side = str(item.get("side") or "").upper()
+            if side in {"LONG", "BUY"}:
+                side = "BUY"
+            elif side in {"SHORT", "SELL"}:
+                side = "SELL"
+            else:
+                qty = _safe_float(item.get("signed_quantity") or item.get("quantity"))
+                side = "BUY" if qty >= 0 else "SELL"
+            fleet = str(item.get("fleet") or "RADAR").upper()
+            proposal = self.apply_aggressive_sizing(
+                {
+                    "fleet": fleet,
+                    "symbol": symbol,
+                    "side": side,
+                    "adjusted_confidence": min(0.92, 0.62 + pnl_pct / 200.0),
+                    "rationale": f"pyramid_winner:+{pnl_pct:.1f}%_on_margin_${pnl:.1f}",
+                },
+                deployable_pool=deployable,
+            )
+            proposal["margin"] = round(
+                max(PURE_AI_MIN_MARGIN_USD * 0.75, _safe_float(proposal.get("margin")) * PURE_AI_PYRAMID_MARGIN_MULT),
+                4,
+            )
+            proposal["decision_source"] = "pure_ai_pyramid"
+            proposal["proposer"] = "pure_ai_pyramid"
+            proposal["strategy_key"] = "pure_ai_trader"
+            proposal["pyramid_add"] = True
+            proposal["pyramid_pnl_pct"] = pnl_pct
+            rows.append(proposal)
+            if len(rows) >= max(1, PURE_AI_PYRAMID_MAX_ADDS):
+                break
+        return rows
 
     def _collect_exits(self, context: Dict[str, Any]) -> List[Dict[str, Any]]:
         positions = list(context.get("positions") or [])

@@ -863,7 +863,13 @@ function renderHomeScene(state) {
 }
 
 function ensureLeftCommandStack(root) {
+  root.querySelector(".left-boot-shell")?.remove();
   let stack = root.querySelector(".left-command-stack");
+  const needsRebuild = !stack || !stack.querySelector(".left-tab-bar") || !stack.querySelector(".left-tab-panels");
+  if (needsRebuild) {
+    if (stack) stack.remove();
+    stack = null;
+  }
   if (!stack) {
     stack = document.createElement("div");
     stack.className = "left-command-stack";
@@ -1006,7 +1012,7 @@ function renderBootShell() {
     rootRefs.main.innerHTML = `<div class="reference-scene"><div class="missing-art"><b>NEXUS Console</b><span>載入中…若超過 10 秒仍空白請重新整理</span></div></div>`;
   }
   if (rootRefs.left && !rootRefs.left.querySelector(".left-command-stack")) {
-    rootRefs.left.innerHTML = `<div class="left-command-stack" style="padding:12px;color:rgba(238,250,255,0.8);">Pure AI 面板載入中…</div>`;
+    rootRefs.left.innerHTML = `<div class="left-boot-shell" style="padding:12px;color:rgba(238,250,255,0.8);">Pure AI 面板載入中…</div>`;
   }
 }
 

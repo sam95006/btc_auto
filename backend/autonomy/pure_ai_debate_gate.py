@@ -13,6 +13,8 @@ import os
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
+from config.pure_ai_trading_config import PURE_AI_DEBATE_GATE
+
 
 def _env_bool(name: str, default: bool) -> bool:
     raw = os.getenv(name)
@@ -37,7 +39,7 @@ class PureAiDebateGate:
 
     @property
     def enabled(self) -> bool:
-        return _env_bool("NEXUS_PURE_AI_DEBATE_GATE", True)
+        return bool(PURE_AI_DEBATE_GATE)
 
     def last_snapshot(self) -> Dict[str, Any]:
         return dict(self._last_snapshot or {})
