@@ -35,7 +35,8 @@ export function renderPureAiPanel(root, state) {
   const active = Boolean(state.pure_ai_enabled ?? status.active);
   const operational = Boolean(status.operational);
   const checks = Array.isArray(status.verification_checks) ? status.verification_checks : [];
-  const cycle = status.last_cycle || state.pure_ai_trader || {};
+  // Prefer runtime cycle from snapshot (includes extra HQ fields like hq_debate).
+  const cycle = state.pure_ai_trader || status.last_cycle || {};
   const pipeline = status.pipeline || state.entry_pipeline || {};
   const llm = status.llm || {};
   const debate = cycle.hq_debate || {};

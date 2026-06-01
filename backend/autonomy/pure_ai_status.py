@@ -103,6 +103,7 @@ def build_pure_ai_status(runtime) -> Dict[str, Any]:
             "deployable_pool": cycle.get("deployable_pool"),
             "entry_proposals": list(cycle.get("entry_proposals") or [])[:4],
             "exit_actions": list(cycle.get("exit_actions") or [])[:4],
+            "hq_debate": dict(cycle.get("hq_debate") or {}),
         },
         "flex_exit_eval": {
             "mode": flex_exit.get("mode"),
