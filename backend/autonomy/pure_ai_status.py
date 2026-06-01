@@ -39,6 +39,18 @@ def build_pure_ai_status(runtime) -> Dict[str, Any]:
     llm = dict(llm_status or {})
     cycle = dict(getattr(runtime, "_last_pure_ai_cycle", None) or {})
     pipeline = dict(getattr(runtime, "_last_entry_pipeline", None) or {})
+    try:
+        from backend.services.runtime_store import runtime_store
+
+        persisted = runtime_store.load_snapshot() or {}
+        if not cycle.get("timestamp"):
+            cycle = dict(persisted.get("pure_ai_trader") or cycle)
+        if not pipeline.get("mode"):
+            pipeline = dict(
+                persisted.get("entry_pipeline") or cycle.get("entry_pipeline") or pipeline
+            )
+    except Exception:
+        pass
     flex_exit = dict(getattr(runtime, "_last_ai_flex_exit_eval", None) or {})
     models = dict(llm.get("models") or {})
 
