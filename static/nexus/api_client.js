@@ -22,8 +22,12 @@ export function normalizeNexusSnapshot(payload) {
 export async function fetchNexusState() {
   const response = await fetch("/api/nexus/state", { cache: "no-store" });
   if (!response.ok) throw new Error(`state request failed: ${response.status}`);
-  const payload = await response.json();
-  return normalizeNexusSnapshot(payload);
+  const raw = await response.text();
+  try {
+    return normalizeNexusSnapshot(JSON.parse(raw));
+  } catch (error) {
+    throw new Error(`state JSON parse failed: ${error?.message || String(error)}`);
+  }
 }
 
 export async function sendStationChat(channel, message, speaker = "指揮官") {

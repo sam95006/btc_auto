@@ -9,7 +9,7 @@ try:
 except Exception:
     Sock = None
 
-from backend.coordination.station_chat_log import StationChatLog
+from backend.core.json_safe import sanitize_for_json
 from backend.coordination.station_dialogue_service import StationDialogueService
 from backend.services.runtime_store import runtime_store
 from backend.autonomy.pure_ai_status import build_pure_ai_status
@@ -199,7 +199,7 @@ def register_nexus_routes(app):
             )
         except Exception as exc:
             print(f"[api] snapshot persist failed: {exc}")
-        return jsonify(snap)
+        return jsonify(sanitize_for_json(snap or {}))
 
     @app.route("/api/nexus/wallet")
     def nexus_wallet():
@@ -457,7 +457,7 @@ def register_nexus_routes(app):
                     print(f"[ws] live exchange refresh failed: {exc}")
                 if snapshot is None:
                     snapshot = runtime_store.load_snapshot()
-                payload = {"snapshot": snapshot}
+                payload = {"snapshot": sanitize_for_json(snapshot)}
                 encoded = json.dumps(payload, ensure_ascii=False)
                 if encoded != last_sent:
                     ws.send(encoded)

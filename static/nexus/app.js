@@ -1,5 +1,5 @@
 ﻿import { startStateStore, subscribe, getState } from "./state_store.js?v=20260601a";
-import { fetchLayoutConfig, fetchNexusState } from "./api_client.js?v=20260601a";
+import { fetchLayoutConfig, fetchNexusState } from "./api_client.js?v=20260601b";
 import { renderTopStatusBar } from "./components/ui_top_status_bar.js?v=20260601a";
 import { renderAlertPanel } from "./components/ui_alert_panel.js?v=20260601a";
 import { renderChatDock } from "./components/ui_chat_dock.js?v=20260601a";
@@ -994,10 +994,23 @@ function renderModal(state) {
 }
 
 function renderBootShell() {
-  if (rootRefs.top && !rootRefs.top.innerHTML.trim()) {
-    rootRefs.top.innerHTML = `<div class="status-card"><span>系統狀態</span><strong>連線中…</strong><small>正在載入 NEXUS 快照</small></div>`;
+  if (rootRefs.top) {
+    rootRefs.top.innerHTML = `
+      <div class="status-board">
+        <div class="status-primary-grid status-primary-grid--compact">
+          <article class="status-card status-card--primary"><span>系統狀態</span><strong>連線中…</strong><small>正在載入 NEXUS 快照</small></article>
+        </div>
+      </div>`;
+  }
+  if (rootRefs.main && !rootRefs.main.innerHTML.trim()) {
+    rootRefs.main.innerHTML = `<div class="reference-scene"><div class="missing-art"><b>NEXUS Console</b><span>載入中…若超過 10 秒仍空白請重新整理</span></div></div>`;
+  }
+  if (rootRefs.left && !rootRefs.left.querySelector(".left-command-stack")) {
+    rootRefs.left.innerHTML = `<div class="left-command-stack" style="padding:12px;color:rgba(238,250,255,0.8);">Pure AI 面板載入中…</div>`;
   }
 }
+
+renderBootShell();
 
 function renderApp(state) {
   resetPanelLayout();
