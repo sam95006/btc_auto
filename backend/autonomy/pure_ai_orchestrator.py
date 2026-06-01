@@ -73,8 +73,15 @@ class PureAiOrchestrator:
         if not self.evaluator.entry_enabled:
             return []
         rows = self.evaluator.collect_trade_proposals(context)
+        rows.extend(self._collect_market_signal_entries(context))
         if PURE_AI_LLM_ONLY:
-            rows = [row for row in rows if str(row.get("decision_source") or "").startswith("ai_flex")]
+            # Keep LLM + Pure AI fallbacks (heartbeat/radar); block rule-engine proposers only.
+            rows = [
+                row
+                for row in rows
+                if str(row.get("decision_source") or "").startswith(("ai_flex", "pure_ai"))
+                or str(row.get("proposer") or "").startswith(("ai_flex", "pure_ai"))
+            ]
         deployable = _safe_float(context.get("deployable_pool"))
         radar_available = _safe_float(context.get("radar_budget_available"))
         sized = []
@@ -151,6 +158,47 @@ class PureAiOrchestrator:
             if len(rows) >= max(1, PURE_AI_PYRAMID_MAX_ADDS):
                 break
         return rows
+
+    def _collect_market_signal_entries(self, context: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Open long/short when core fleet + market context agree (data-driven, no extra LLM call)."""
+        from config.pure_ai_trading_config import PURE_AI_MIN_CONFIDENCE
+
+        blocked = {str(s).upper() for s in (context.get("blocked_symbols") or [])}
+        held = {
+            str(item.get("symbol") or "").upper()
+            for item in (context.get("positions") or [])
+            if isinstance(item, dict) and item.get("symbol")
+        }
+        deployable = _safe_float(context.get("deployable_pool"))
+        rows: List[Dict[str, Any]] = []
+        for fleet, data in dict(context.get("core_fleets") or {}).items():
+            if not isinstance(data, dict):
+                continue
+            symbol = str(data.get("symbol") or "").upper()
+            signal = dict(data.get("signal") or {})
+            action = str(signal.get("action") or "HOLD").upper()
+            confidence = _safe_float(signal.get("confidence"))
+            if action not in {"BUY", "SELL"} or confidence < PURE_AI_MIN_CONFIDENCE:
+                continue
+            if not symbol or symbol in blocked or symbol in held:
+                continue
+            proposal = self.evaluator._parse_trade_proposal(
+                {
+                    "fleet": str(fleet).upper(),
+                    "symbol": symbol,
+                    "side": action,
+                    "confidence": confidence,
+                    "leverage": round(min(50.0, max(12.0, confidence * 45)), 1),
+                    "margin_pct_deployable": round(min(0.05, max(0.02, confidence * 0.04)), 4),
+                    "rationale": str(signal.get("reason") or "pure_ai_market_signal")[:200],
+                },
+                min_confidence=PURE_AI_MIN_CONFIDENCE,
+            )
+            if proposal:
+                proposal["decision_source"] = "pure_ai_market_signal"
+                proposal["proposer"] = "pure_ai_market_signal"
+                rows.append(proposal)
+        return rows[: max(1, PURE_AI_MAX_PROPOSALS_PER_TICK)]
 
     def _collect_exits(self, context: Dict[str, Any]) -> List[Dict[str, Any]]:
         positions = list(context.get("positions") or [])

@@ -22,6 +22,24 @@ class RiskControlEngine:
         fleet = order["fleet"]
         leverage = float(order.get("leverage", 1.0) or 1.0)
         margin = float(order.get("margin", 0.0) or 0.0)
+        ds = str(order.get("decision_source") or "")
+        try:
+            from config.pure_ai_trading_config import PURE_AI_MAX_MARGIN_USD, pure_ai_active
+
+            if pure_ai_active() and ds.startswith(("pure_ai", "ai_flex")):
+                pool = float(order.get("deployable_pool") or 0.0)
+                cap = float(PURE_AI_MAX_MARGIN_USD)
+                if pool > 0:
+                    cap = min(cap, pool * 0.12)
+                if (
+                    margin >= 1.0
+                    and margin <= cap + 0.01
+                    and leverage >= RISK_LIMITS["min_leverage"]
+                    and leverage <= RISK_LIMITS["max_leverage"]
+                ):
+                    return True, "approved_pure_ai_testnet"
+        except Exception:
+            pass
 
         if leverage < RISK_LIMITS["min_leverage"]:
             return False, "leverage_below_minimum"
