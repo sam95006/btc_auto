@@ -38,6 +38,8 @@ export function renderPureAiPanel(root, state) {
   const cycle = status.last_cycle || state.pure_ai_trader || {};
   const pipeline = status.pipeline || state.entry_pipeline || {};
   const llm = status.llm || {};
+  const debate = cycle.hq_debate || {};
+  const perf = (state.analytics || {}).performance_report_summary || {};
   const proposals = list(cycle.entry_proposals || [], 4);
   const exits = list(cycle.exit_actions || [], 4);
 
@@ -65,6 +67,27 @@ export function renderPureAiPanel(root, state) {
         <div><span>可部署資金</span><strong>${Number(cycle.deployable_pool ?? pipeline.deployable_pool ?? 0).toFixed(0)}U</strong></div>
         <div><span>LLM</span><strong>${llm.enabled ? escapeHtml(llm.flex_trade_model || "online") : "offline"}</strong></div>
         <div><span>更新</span><strong>${fmtTime(cycle.timestamp)}</strong></div>
+      </section>
+
+      <section class="pure-ai-section">
+        <h4>總站多代理辯論門（Bull/Bear/Risk）</h4>
+        <ul class="pure-ai-checks">
+          <li class="pure-ai-check ${debate.enabled ? "ok" : "bad"}">
+            <span>${debate.enabled ? "✓" : "✗"} 辯論門 ${debate.enabled ? "已啟用" : "未啟用"}</span>
+            <small>保留 ${Number(debate.kept ?? 0)} / 退回 ${Number(debate.rejected ?? 0)}</small>
+          </li>
+        </ul>
+      </section>
+
+      <section class="pure-ai-section">
+        <h4>績效指標（Sharpe/DD/勝率等）</h4>
+        <ul class="pure-ai-checks">
+          <li class="pure-ai-check ${perf.ready ? "ok" : "bad"}">
+            <span>${perf.ready ? "✓" : "✗"} 報表 ${perf.ready ? "已就緒" : "樣本不足"}</span>
+            <small>樣本 ${escapeHtml(String(perf.sample_size ?? 0))} · 勝率 ${escapeHtml(String(perf.win_rate ?? "—"))} · MaxDD ${escapeHtml(String(perf.max_drawdown ?? "—"))}</small>
+          </li>
+        </ul>
+        <a href="/api/nexus/performance-report" target="_blank" rel="noopener">完整績效 JSON ↗</a>
       </section>
 
       <section class="pure-ai-section">

@@ -132,6 +132,7 @@ class AiFlexibleEvaluator:
             "news_headlines": list(context.get("news_headlines") or [])[:8],
             "blocked_symbols": list(context.get("blocked_symbols") or [])[:20],
             "learning_guidance_summary": dict(context.get("learning_guidance_summary") or {}),
+            "ml_confidence_by_symbol": dict(context.get("ml_confidence_by_symbol") or {}),
             "sizing_guidance": {
                 "use_llm_leverage_and_margin": AI_FLEX_SIZING_FROM_LLM,
                 "margin_pct_range": [0.03, 0.20],

@@ -307,6 +307,8 @@ class NexusRuntime:
         self.ai_flexible_evaluator = AiFlexibleEvaluator(llm_gateway=self.llm_gateway)
         self.pure_ai_orchestrator = PureAiOrchestrator(llm_gateway=self.llm_gateway)
         self._last_pure_ai_cycle = {}
+        self._last_performance_report = {}
+        self._last_performance_report_at = 0.0
         self._last_ai_flex_eval = {}
         self._last_ai_flex_exit_eval = {}
         self._ai_flex_exit_symbols = set()
@@ -1751,12 +1753,20 @@ class NexusRuntime:
             )
             or 0.0
         )
+        ml_confidence = {}
+        try:
+            from backend.analytics.ml_confidence_service import MlConfidenceAssist
+
+            ml_confidence = MlConfidenceAssist(runtime_store).build_symbol_priors(limit=280)
+        except Exception:
+            ml_confidence = {}
         return {
             "radar_llm_items": getattr(self, "_radar_llm_proposals", []) or [],
             "agent_output": agent_output,
             "positions": self.position_manager.all_positions(),
             "market_context": market_contexts,
             "blocked_symbols": sorted(blocked),
+            "ml_confidence_by_symbol": ml_confidence,
             "news_headlines": [
                 (item.get("headline") or item.get("summary") or "")[:120]
                 for item in (self.latest_news or [])[:6]
@@ -2611,6 +2621,35 @@ class NexusRuntime:
             )
         except Exception as exc:
             print(f"[nexus_runtime] immediate loss learning skipped: {exc}")
+
+    def _performance_report_summary(self):
+        """Cached KPI summary for UI (avoid heavy recompute per refresh)."""
+        try:
+            now = float(time.time())
+            if self._last_performance_report and (now - float(self._last_performance_report_at or 0.0)) < 60.0:
+                return dict(self._last_performance_report)
+
+            from backend.analytics.performance_report import build_performance_report
+
+            report = build_performance_report(
+                runtime_store,
+                limit=260,
+                research_gate=getattr(self, "_research_gate_status", {}) or {},
+            )
+            summary = {
+                "generated_at": report.get("generated_at"),
+                "ready": report.get("ready"),
+                "sample_size": report.get("sample_size"),
+                "win_rate": report.get("win_rate"),
+                "profit_factor": report.get("profit_factor"),
+                "max_drawdown": report.get("max_drawdown"),
+                "total_pnl": report.get("total_pnl"),
+            }
+            self._last_performance_report = dict(summary)
+            self._last_performance_report_at = now
+            return dict(summary)
+        except Exception:
+            return dict(self._last_performance_report or {})
 
     def _run_unified_position_exits(self, prices, market_contexts):
         if not self.futures_client.is_configured():
@@ -4987,6 +5026,7 @@ class NexusRuntime:
                 "previous_prices": dict(self._previous_prices),
                 "walk_forward": walk_forward_status,
                 "setup_performance": self.setup_performance_tracker.export_state(),
+                "performance_report_summary": self._performance_report_summary(),
             },
             "fleet_data": fleet_data,
             "station_chats": self.station_chats,

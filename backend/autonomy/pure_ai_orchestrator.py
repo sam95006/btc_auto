@@ -6,6 +6,7 @@ import time
 from typing import Any, Dict, List, Optional
 
 from backend.autonomy.ai_flexible_evaluator import AiFlexibleEvaluator, _position_age_hours, _safe_float
+from backend.autonomy.pure_ai_debate_gate import PureAiDebateGate
 from config.pure_ai_trading_config import (
     PURE_AI_DEFAULT_LEVERAGE,
     PURE_AI_LLM_ONLY,
@@ -28,6 +29,7 @@ class PureAiOrchestrator:
 
     def __init__(self, llm_gateway=None):
         self.evaluator = AiFlexibleEvaluator(llm_gateway=llm_gateway)
+        self.debate_gate = PureAiDebateGate(llm_gateway=llm_gateway)
         self._last_cycle: Dict[str, Any] = {}
 
     @property
@@ -51,6 +53,7 @@ class PureAiOrchestrator:
             "entry_count": len(entries),
             "exit_count": len(exits),
             "deployable_pool": _safe_float(context.get("deployable_pool")),
+            "hq_debate": self.debate_gate.last_snapshot(),
         }
         return dict(self._last_cycle)
 
@@ -71,7 +74,8 @@ class PureAiOrchestrator:
             proposal["proposer"] = "pure_ai_trader"
             proposal["strategy_key"] = "pure_ai_trader"
             sized.append(proposal)
-        return sized
+        filtered, _gate = self.debate_gate.filter_entries(sized, context)
+        return filtered
 
     def _collect_exits(self, context: Dict[str, Any]) -> List[Dict[str, Any]]:
         positions = list(context.get("positions") or [])

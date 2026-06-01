@@ -214,13 +214,14 @@ def build_flex_trade_eval_prompt(payload: dict):
         + (
             "You are the SOLE decision maker — no rule engine follows you. "
             "Read wallet, deployable_pool, regime, fear/greed, funding/OI, radar candidates, "
-            "core signals, open positions, per-symbol context. "
+            "core signals, open positions, per-symbol context, and ml_confidence_by_symbol (0..1 prior). "
             "Pick 1-2 highest-edge trades. MUST set leverage (10-100) and margin_usd OR margin_pct_deployable "
             "for meaningful notional (target large PnL, not micro scalps). "
             if pure
             else
             "Synthesize wallet capital, deployable_pool, regime, fear/greed, funding/OI stress, "
             "radar candidates, core fleet signals, open positions, and per-symbol market context. "
+            "Also read ml_confidence_by_symbol (0..1 prior). "
             "For each proposal you MUST set leverage (integer 2-100) and either "
             "margin_usd (absolute USDT margin) OR margin_pct_deployable (fraction of deployable_pool 0.03-0.20). "
             "Higher confidence + stronger edge → higher leverage and margin within caps. "

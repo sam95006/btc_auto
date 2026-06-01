@@ -118,6 +118,31 @@ python run.py
 
 ---
 
+## 4. 高優先能力（已加入）：「各別艦隊 vs 總站 HQ」
+
+下列四項是你指定的高優先缺口，已全部接進系統；並且明確劃分在「總站 HQ」或「各別艦隊」：
+
+1. **多代理辯論/驗證（Bull/Bear/Risk）**：**總站 HQ**  
+   - 位置：`backend/autonomy/pure_ai_debate_gate.py` → `backend/autonomy/pure_ai_orchestrator.py`  
+   - 行為：Pure AI 進場提案先經過辯論門（可硬性 veto 或僅附帶衝突標記），再送進下單管線。
+   - 開關：`NEXUS_PURE_AI_DEBATE_GATE=1`（預設開啟）
+
+2. **PnL 驅動自我演化（post-mortem / reflection → 自動套用）**：**總站 HQ**  
+   - 位置：`backend/services/nexus_runtime.py` + `backend/learning/learning_review_queue.py`  
+   - 行為：虧損 trade 會觸發 post-mortem 與 learning review；可用 `NEXUS_LEARNING_AUTO_APPLY=1` 自動套用（仍會經過研究門檻/防呆 clamp）。
+
+3. **ML 適應式「信心輔助」（FreqAI 風格的 prior，不取代 LLM）**：**總站 HQ**  
+   - 位置：`backend/analytics/ml_confidence_service.py` → 注入 `ml_confidence_by_symbol` 給 LLM snapshot  
+   - 行為：從近期 trade 結果建立 symbol-level prior（0..1），供 LLM 在挑標的/方向時參考，避免在近期明顯失敗的標的反覆追單。
+
+4. **正式績效指標（勝率、MaxDD、Profit Factor…）**：**總站 HQ**  
+   - API：`GET /api/nexus/performance-report`（完整報表）  
+   - UI：Pure AI 面板會顯示 KPI 摘要（快取 60 秒），並提供完整 JSON 連結。
+
+以上四項全部屬於「總站 HQ」能力：它們在 Pure AI 管線/學習/分析層運作，不會改動任何 `fleet_*_strategy_engine.py` 的艦隊策略邏輯。
+
+---
+
 ## 4. 本機啟動
 
 ```powershell

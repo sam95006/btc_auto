@@ -31,10 +31,13 @@ PURE_AI_TARGET_NOTIONAL_USD = _env_float("NEXUS_PURE_AI_TARGET_NOTIONAL_USD", 12
 PURE_AI_DEFAULT_LEVERAGE = _env_float("NEXUS_PURE_AI_DEFAULT_LEVERAGE", 25.0)
 PURE_AI_MAX_PROPOSALS_PER_TICK = int(_env_float("NEXUS_PURE_AI_MAX_PROPOSALS", 2))
 PURE_AI_STALE_SAFETY_HOURS = _env_float("NEXUS_PURE_AI_STALE_SAFETY_HOURS", 12.0)
+PURE_AI_DEBATE_GATE = _env_bool("NEXUS_PURE_AI_DEBATE_GATE", True)
+PURE_AI_DEBATE_HARD_VETO = _env_bool("NEXUS_PURE_AI_DEBATE_HARD_VETO", False)
 
 
 def pure_ai_active() -> bool:
-    return bool(PURE_AI_MODE)
+    # Read env dynamically so tests can toggle after module import.
+    return bool(_env_bool("NEXUS_PURE_AI_MODE", False))
 
 
 def pure_ai_bypass_validation() -> bool:
