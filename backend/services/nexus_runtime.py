@@ -2352,15 +2352,19 @@ class NexusRuntime:
     def _try_execute_futures_request(self, request, symbol_prices, market_contexts, truth_status, learning_guidance=None):
         self._last_execute_reject_reason = None
         request = dict(request or {})
+        is_pure_ai = str(request.get("decision_source") or "").startswith(("pure_ai", "ai_flex"))
         if str(request.get("side") or "").upper() == "NEUTRAL_HEDGE":
             return self._execute_market_neutral_request(request, symbol_prices, market_contexts, truth_status)
         fleet = str(request.get("fleet") or "RADAR").upper()
         symbol = str(request.get("symbol") or request.get("symbol_override") or "").upper().replace("/", "")
         if self.dynamic_blocklist.is_symbol_blocked(symbol):
-            self._last_execute_reject_reason = "symbol_blocked"
-            return False
+            from config.pure_ai_trading_config import PURE_AI_PREFERRED_SYMBOLS
+
+            preferred = {str(s).upper() for s in PURE_AI_PREFERRED_SYMBOLS}
+            if not (is_pure_ai and symbol in preferred):
+                self._last_execute_reject_reason = "symbol_blocked"
+                return False
         request = self._finalize_request_sizing(request, market_contexts)
-        is_pure_ai = str(request.get("decision_source") or "").startswith(("pure_ai", "ai_flex"))
         if is_pure_ai:
             from backend.autonomy.pure_ai_execution import prepare_pure_ai_execution_request, resolve_execution_price
 
@@ -2425,10 +2429,25 @@ class NexusRuntime:
             if fleet != "RADAR"
             else (self.market_context_service.build_symbol_context(symbol, self.latest_prices) or {})
         )
+        alt_context = dict(alt_context or {})
         growth_directives = dict(self.growth_status or {})
         if growth_directives.get("max_leverage") is not None:
-            alt_context = dict(alt_context)
             alt_context["growth_max_leverage"] = growth_directives.get("max_leverage")
+        if is_pure_ai:
+            from config.leverage_config import MIN_FUTURES_LEVERAGE
+            from config.pure_ai_trading_config import PURE_AI_DEFAULT_LEVERAGE
+
+            req_lev = int(
+                max(
+                    MIN_FUTURES_LEVERAGE,
+                    float(request.get("leverage") or PURE_AI_DEFAULT_LEVERAGE),
+                )
+            )
+            alt_context["pure_ai_force_leverage"] = req_lev
+            alt_context["growth_max_leverage"] = max(
+                int(alt_context.get("growth_max_leverage") or 0),
+                req_lev,
+            )
         signal = {"action": request.get("side", "HOLD"), "confidence": request.get("adjusted_confidence", 0.5), "reason": request.get("reason")}
         growth_context = self._build_growth_context(fleet, signal, alt_context, request)
         if pure_ai_bypass_validation() and is_pure_ai:

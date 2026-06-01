@@ -138,6 +138,25 @@ class RiskControlEngine:
 
     def calculate_final_leverage(self, symbol, fleet, confidence_score, market_regime, risk_context=None, estimated_notional=0.0):
         risk_context = risk_context or {}
+        forced = int(risk_context.get("pure_ai_force_leverage") or 0)
+        if forced >= MIN_FUTURES_LEVERAGE:
+            try:
+                from config.pure_ai_trading_config import pure_ai_active
+
+                if pure_ai_active():
+                    symbol_max = int(risk_context.get("symbol_max_leverage") or MAX_SYSTEM_LEVERAGE)
+                    final_leverage = min(forced, symbol_max, int(MAX_SYSTEM_LEVERAGE))
+                    if final_leverage >= MIN_FUTURES_LEVERAGE:
+                        return {
+                            "confidence_score": float(confidence_score or 0.0),
+                            "proposed_leverage": forced,
+                            "symbol_max_leverage": symbol_max,
+                            "risk_cap_leverage": final_leverage,
+                            "final_leverage": int(final_leverage),
+                            "reason": "pure_ai_forced_leverage",
+                        }
+            except Exception:
+                pass
         proposed = self.dynamic_leverage_engine.calculate_proposed_leverage(confidence_score)
         if not proposed["allowed"]:
             return {
