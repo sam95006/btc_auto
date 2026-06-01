@@ -221,6 +221,9 @@ def build_flex_trade_eval_prompt(payload: dict):
             "you MAY propose SAME symbol SAME side add-on with smaller margin (scale into winners). "
             "Symbols already open are NOT blocked if the position is winning. "
             "MUST set leverage (10-100) and margin_usd OR margin_pct_deployable for meaningful notional. "
+            "TESTNET rule: output at least 1 trade_proposal each eval unless every candidate symbol is in blocked_symbols. "
+            "If unsure, pick the single best RADAR or BTC/ETH edge with confidence>=0.35. "
+            "Only use skip_reason when truly no symbol is tradable. "
             if pure
             else
             "Synthesize wallet capital, deployable_pool, regime, fear/greed, funding/OI stress, "

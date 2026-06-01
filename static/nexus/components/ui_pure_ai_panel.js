@@ -40,6 +40,8 @@ export function renderPureAiPanel(root, state) {
   const pipeline = status.pipeline || state.entry_pipeline || {};
   const llm = status.llm || {};
   const debate = cycle.hq_debate || {};
+  const entryEval = cycle.entry_eval || {};
+  const cfg = status.config_summary || {};
   const perf = (state.analytics || {}).performance_report_summary || {};
   const proposals = list(cycle.entry_proposals || [], 4);
   const exits = list(cycle.exit_actions || [], 4);
@@ -71,11 +73,25 @@ export function renderPureAiPanel(root, state) {
       </section>
 
       <section class="pure-ai-section">
+        <h4>進場 LLM 診斷（flex_trade_eval）</h4>
+        <ul class="pure-ai-checks">
+          <li class="pure-ai-check ${Number(entryEval.parsed_proposal_count ?? cycle.entry_count ?? 0) > 0 ? "ok" : "bad"}">
+            <span>${Number(entryEval.parsed_proposal_count ?? 0) > 0 ? "✓" : "✗"} 解析提案 ${Number(entryEval.parsed_proposal_count ?? 0)} 筆</span>
+            <small>LLM 原始 ${Number(entryEval.raw_proposal_count ?? 0)} 筆 · 門檻 ${escapeHtml(String(entryEval.min_confidence_used ?? cfg.min_confidence ?? "—"))}</small>
+          </li>
+          <li class="pure-ai-check ${entryEval.fallback_used ? "ok" : ""}">
+            <span>備援 ${escapeHtml(String(entryEval.fallback_used || "無"))}</span>
+            <small>${escapeHtml(String(entryEval.skip_reason || entryEval.market_read || "—")).slice(0, 120)}</small>
+          </li>
+        </ul>
+      </section>
+
+      <section class="pure-ai-section">
         <h4>總站多代理辯論門（Bull/Bear/Risk）</h4>
         <ul class="pure-ai-checks">
-          <li class="pure-ai-check ${debate.enabled ? "ok" : "bad"}">
-            <span>${debate.enabled ? "✓" : "✗"} 辯論門 ${debate.enabled ? "已啟用" : "未啟用"}</span>
-            <small>保留 ${Number(debate.kept ?? 0)} / 退回 ${Number(debate.rejected ?? 0)}</small>
+          <li class="pure-ai-check ${debate.enabled ? "ok" : "ok"}">
+            <span>${debate.enabled ? "✓ 辯論門 已啟用" : "✓ 辯論門 已關閉（提高成交率）"}</span>
+            <small>保留 ${Number(debate.kept ?? 0)} / 退回 ${Number(debate.rejected ?? 0)} · NEXUS_PURE_AI_DEBATE_GATE=${cfg.debate_gate ? "1" : "0"}</small>
           </li>
         </ul>
       </section>

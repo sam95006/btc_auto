@@ -6,12 +6,14 @@ import os
 from typing import Any, Dict, List
 
 from config.pure_ai_trading_config import (
+    PURE_AI_DEBATE_GATE,
     PURE_AI_DEFAULT_LEVERAGE,
     PURE_AI_LLM_ONLY,
-    PURE_AI_MAX_PROPOSALS_PER_TICK,
     PURE_AI_MIN_MARGIN_USD,
-    PURE_AI_STALE_SAFETY_HOURS,
+    PURE_AI_RADAR_FALLBACK,
     PURE_AI_TARGET_NOTIONAL_USD,
+    _env_bool,
+    _env_float,
     pure_ai_active,
     pure_ai_bypass_fee_churn,
     pure_ai_bypass_growth_blocks,
@@ -104,6 +106,7 @@ def build_pure_ai_status(runtime) -> Dict[str, Any]:
             "entry_proposals": list(cycle.get("entry_proposals") or [])[:4],
             "exit_actions": list(cycle.get("exit_actions") or [])[:4],
             "hq_debate": dict(cycle.get("hq_debate") or {}),
+            "entry_eval": dict(cycle.get("entry_eval") or {}),
         },
         "flex_exit_eval": {
             "mode": flex_exit.get("mode"),
@@ -128,8 +131,11 @@ def build_pure_ai_status(runtime) -> Dict[str, Any]:
             "min_margin_usd": PURE_AI_MIN_MARGIN_USD,
             "target_notional_usd": PURE_AI_TARGET_NOTIONAL_USD,
             "default_leverage": PURE_AI_DEFAULT_LEVERAGE,
-            "max_proposals_per_tick": PURE_AI_MAX_PROPOSALS_PER_TICK,
-            "stale_safety_hours": PURE_AI_STALE_SAFETY_HOURS,
+            "max_proposals_per_tick": int(_env_float("NEXUS_PURE_AI_MAX_PROPOSALS", 4)),
+            "stale_safety_hours": _env_float("NEXUS_PURE_AI_STALE_SAFETY_HOURS", 24.0),
+            "min_confidence": _env_float("NEXUS_PURE_AI_MIN_CONFIDENCE", 0.22),
+            "debate_gate": bool(PURE_AI_DEBATE_GATE),
+            "radar_fallback": bool(PURE_AI_RADAR_FALLBACK),
         },
         "verification_checks": checks,
         "pnl_disclaimer": (

@@ -70,6 +70,7 @@ class AiFlexibleEvaluator:
 
     def __init__(self, llm_gateway=None):
         self.llm_gateway = llm_gateway
+        self._last_entry_eval: Dict[str, Any] = {}
 
     @property
     def entry_enabled(self) -> bool:
@@ -142,7 +143,12 @@ class AiFlexibleEvaluator:
         }
 
     def collect_trade_proposals(self, context: Dict[str, Any]) -> List[Dict[str, Any]]:
-        if not self.entry_enabled or not self._llm_enabled():
+        self._last_entry_eval = {"timestamp": int(time.time() * 1000)}
+        if not self.entry_enabled:
+            self._last_entry_eval.update({"status": "disabled", "reason": "entry_disabled"})
+            return []
+        if not self._llm_enabled():
+            self._last_entry_eval.update({"status": "disabled", "reason": "llm_offline"})
             return []
         snapshot = self.build_snapshot(context)
         if context.get("pure_ai_mode"):
@@ -151,21 +157,103 @@ class AiFlexibleEvaluator:
         result = self.llm_gateway.run_task("flex_trade_eval", snapshot, fallback_output={})
         output = result.get("output") if isinstance(result.get("output"), dict) else result
         if not isinstance(output, dict):
+            self._last_entry_eval.update(
+                {
+                    "status": str(result.get("status") or "bad_output"),
+                    "reason": "invalid_llm_output",
+                    "llm_error": result.get("error"),
+                }
+            )
             return []
         min_conf = AI_FLEX_MIN_CONFIDENCE
         if context.get("pure_ai_mode"):
             from config.pure_ai_trading_config import PURE_AI_MIN_CONFIDENCE
 
             min_conf = min(AI_FLEX_MIN_CONFIDENCE, PURE_AI_MIN_CONFIDENCE)
+        raw_items = list(output.get("trade_proposals") or [])[: max(1, AI_FLEX_MAX_PROPOSALS)]
         rows = []
-        for item in list(output.get("trade_proposals") or [])[: max(1, AI_FLEX_MAX_PROPOSALS)]:
+        rejected_low_conf = 0
+        for item in raw_items:
             if not isinstance(item, dict):
                 continue
             proposal = self._parse_trade_proposal(item, min_confidence=min_conf)
             if proposal:
                 rows.append(proposal)
+            else:
+                rejected_low_conf += 1
+        fallback_used = None
+        if not rows and context.get("pure_ai_mode"):
+            from config.pure_ai_trading_config import PURE_AI_RADAR_FALLBACK
+
+            if PURE_AI_RADAR_FALLBACK:
+                rows = self._pure_ai_radar_fallback(context, min_confidence=min_conf)
+                if rows:
+                    fallback_used = "radar"
         if not rows and AI_FLEX_HEURISTIC_FALLBACK and not (pure_ai_active() and PURE_AI_LLM_ONLY):
             rows = self.collect_heuristic_proposals(context)
+            if rows:
+                fallback_used = "heuristic"
+        self._last_entry_eval.update(
+            {
+                "status": str(result.get("status") or "unknown"),
+                "cache_hit": bool(result.get("cache_hit")),
+                "provider": result.get("provider"),
+                "model": result.get("model"),
+                "skip_reason": output.get("skip_reason") or output.get("market_read"),
+                "market_read": output.get("market_read"),
+                "raw_proposal_count": len(raw_items),
+                "parsed_proposal_count": len(rows),
+                "rejected_low_confidence": rejected_low_conf,
+                "min_confidence_used": min_conf,
+                "fallback_used": fallback_used,
+            }
+        )
+        return rows
+
+    def _pure_ai_radar_fallback(self, context: Dict[str, Any], min_confidence: float) -> List[Dict[str, Any]]:
+        """When LLM returns empty, take top RADAR candidate so testnet keeps trading."""
+        blocked = {str(s).upper() for s in (context.get("blocked_symbols") or [])}
+        radar = dict(context.get("radar_scan") or {})
+        candidates = list(radar.get("candidates") or [])
+        rows: List[Dict[str, Any]] = []
+        for item in sorted(
+            candidates,
+            key=lambda row: _safe_float(
+                (row or {}).get("score", (row or {}).get("candidate_score")),
+                0.0,
+            ),
+            reverse=True,
+        )[:6]:
+            if not isinstance(item, dict):
+                continue
+            symbol = str(item.get("symbol") or "").upper().replace("/", "")
+            score_raw = item.get("score", item.get("candidate_score", 0))
+            confidence = _safe_float(score_raw, 0.0)
+            if confidence > 1.0:
+                confidence = confidence / 100.0
+            confidence = max(confidence, min_confidence + 0.02)
+            if not symbol or symbol in blocked or confidence < min_confidence:
+                continue
+            side_raw = str(item.get("side") or item.get("candidate_side") or "LONG").upper()
+            side = "BUY" if side_raw in {"LONG", "BUY"} else "SELL"
+            proposal = self._parse_trade_proposal(
+                {
+                    "fleet": "RADAR",
+                    "symbol": symbol,
+                    "side": side,
+                    "confidence": confidence,
+                    "leverage": round(min(AI_FLEX_MAX_LEVERAGE, max(12.0, confidence * 40)), 1),
+                    "margin_pct_deployable": round(min(0.12, max(0.04, confidence * 0.08)), 4),
+                    "rationale": "pure_ai_radar_fallback_top_candidate",
+                },
+                min_confidence=min_confidence,
+            )
+            if proposal:
+                proposal["decision_source"] = "ai_flex_radar_fallback"
+                proposal["proposer"] = "ai_flex_radar_fallback"
+                rows.append(proposal)
+            if len(rows) >= 2:
+                break
         return rows
 
     def collect_heuristic_proposals(self, context: Dict[str, Any]) -> List[Dict[str, Any]]:

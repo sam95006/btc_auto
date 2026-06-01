@@ -60,6 +60,7 @@ class PureAiOrchestrator:
             "exit_count": len(exits),
             "deployable_pool": _safe_float(context.get("deployable_pool")),
             "hq_debate": self.debate_gate.last_snapshot(),
+            "entry_eval": dict(getattr(self.evaluator, "_last_entry_eval", None) or {}),
         }
         return dict(self._last_cycle)
 
