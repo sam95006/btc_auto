@@ -31,6 +31,24 @@ class RiskControlEngine:
 
         if str(fleet).upper() == "RADAR" or order.get("capital_pool") == "radar":
             available = float(self.ledger.radar_available())
+            ds = str(order.get("decision_source") or "")
+            try:
+                from config.pure_ai_trading_config import PURE_AI_MAX_MARGIN_USD, pure_ai_active
+
+                if pure_ai_active() and ds.startswith(("pure_ai", "ai_flex")):
+                    pool = float(order.get("deployable_pool") or 0.0)
+                    cap = float(PURE_AI_MAX_MARGIN_USD)
+                    if available > 0:
+                        cap = min(cap, available * 1.02)
+                    if pool > 0:
+                        cap = min(cap, pool * 0.12)
+                    if margin > cap + 0.01:
+                        return False, "insufficient_radar_budget"
+                    if margin < 1.0:
+                        return False, "radar_margin_invalid"
+                    return True, "approved"
+            except Exception:
+                pass
             if margin > available:
                 return False, "insufficient_radar_budget"
             if margin < 1.0:

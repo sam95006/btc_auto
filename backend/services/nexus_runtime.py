@@ -1781,7 +1781,14 @@ class NexusRuntime:
             "regime_state": self.regime_classifier.snapshot(),
             "growth_status": dict(self.growth_status or {}),
             "learning_guidance_summary": dict(radar_guidance or {}),
+            "radar_budget_available": round(float(self.ledger.radar_available()), 4),
+            "tradable_symbols": self._pure_ai_tradable_symbols(),
         }, deployable
+
+    def _pure_ai_tradable_symbols(self):
+        from backend.autonomy.pure_ai_execution import tradable_symbol_set
+
+        return sorted(tradable_symbol_set(getattr(self, "futures_client", None)))
 
     def _run_pure_ai_trading_cycle(self, prices, market_contexts, truth_status, symbol_prices):
         if self._manual_pause or not AI_LED_TRADING_ENABLED:
@@ -1789,20 +1796,40 @@ class NexusRuntime:
         if pure_ai_bypass_growth_blocks():
             self.growth_status["block_new_entries"] = False
             self.growth_status.pop("block_reason", None)
+        self._pure_ai_tick_seq = int(getattr(self, "_pure_ai_tick_seq", 0) or 0) + 1
         context, deployable = self._build_ai_trading_context(prices, market_contexts)
+        context["pure_ai_tick_seq"] = self._pure_ai_tick_seq
+        context["pure_ai_last_entry_at"] = float(getattr(self, "_pure_ai_last_execute_at", 0.0) or 0.0)
         cycle = self.pure_ai_orchestrator.run_cycle(context)
-        self._last_pure_ai_cycle = dict(cycle or {})
         executed_entries = 0
+        rejections = []
         for request in list(cycle.get("entry_proposals") or []):
-            if self._try_execute_futures_request(request, symbol_prices, market_contexts, truth_status):
+            req = dict(request or {})
+            req["deployable_pool"] = deployable
+            if self._try_execute_futures_request(req, symbol_prices, market_contexts, truth_status):
                 executed_entries += 1
+                self._pure_ai_last_execute_at = time.time()
+            else:
+                rejections.append(
+                    {
+                        "symbol": req.get("symbol"),
+                        "side": req.get("side"),
+                        "margin": req.get("margin"),
+                        "leverage": req.get("leverage"),
+                        "reason": self._last_execute_reject_reason,
+                    }
+                )
         self._last_entry_pipeline = {
             "mode": "pure_ai",
             "candidates": len(cycle.get("entry_proposals") or []),
             "executed": executed_entries,
             "deployable_pool": deployable,
+            "radar_budget_available": round(float(self.ledger.radar_available()), 4),
+            "rejections": rejections[:6],
             "block_new_entries": bool((self.growth_status or {}).get("block_new_entries")),
         }
+        self._last_pure_ai_cycle = dict(cycle or {})
+        self._last_pure_ai_cycle["entry_pipeline"] = dict(self._last_entry_pipeline)
         positions = self.position_manager.all_positions()
         self._ai_flex_exit_executed_symbols = set()
         for action in list(cycle.get("exit_actions") or []):
@@ -2321,17 +2348,41 @@ class NexusRuntime:
         )
 
     def _try_execute_futures_request(self, request, symbol_prices, market_contexts, truth_status, learning_guidance=None):
+        self._last_execute_reject_reason = None
         request = dict(request or {})
         if str(request.get("side") or "").upper() == "NEUTRAL_HEDGE":
             return self._execute_market_neutral_request(request, symbol_prices, market_contexts, truth_status)
         fleet = str(request.get("fleet") or "RADAR").upper()
         symbol = str(request.get("symbol") or request.get("symbol_override") or "").upper().replace("/", "")
         if self.dynamic_blocklist.is_symbol_blocked(symbol):
+            self._last_execute_reject_reason = "symbol_blocked"
             return False
         request = self._finalize_request_sizing(request, market_contexts)
-        if not symbol or self._fleet_blocked_by_meeting(fleet):
-            return False
         is_pure_ai = str(request.get("decision_source") or "").startswith(("pure_ai", "ai_flex"))
+        if is_pure_ai:
+            from backend.autonomy.pure_ai_execution import prepare_pure_ai_execution_request, resolve_execution_price
+
+            request = prepare_pure_ai_execution_request(
+                request,
+                deployable_pool=float(request.get("deployable_pool") or self._resolve_deployable_pool() or 0.0),
+                radar_available=float(self.ledger.radar_available() or 0.0),
+                futures_client=getattr(self, "futures_client", None),
+            )
+            block = request.get("_execution_block")
+            if block:
+                self._last_execute_reject_reason = str(block)
+                return False
+        from config.pure_ai_trading_config import pure_ai_bypass_meeting_blocks
+
+        if not symbol:
+            self._last_execute_reject_reason = "missing_symbol"
+            return False
+        if self._fleet_blocked_by_meeting(fleet) and not (is_pure_ai and pure_ai_bypass_meeting_blocks()):
+            self._last_execute_reject_reason = "meeting_blocked_fleet"
+            return False
+        if is_pure_ai and not self._futures_write_allowed():
+            self._last_execute_reject_reason = "futures_write_not_allowed"
+            return False
         learning_guidance = learning_guidance or self.learning_feedback.get_strategy_guidance(
             fleet,
             request.get("strategy_key") or f"{fleet.lower()}_adaptive_strategy",
@@ -2339,12 +2390,31 @@ class NexusRuntime:
             market_context=market_contexts.get(fleet, {}) or {},
         )
         if fleet == "RADAR" and not (pure_ai_bypass_validation() and is_pure_ai):
-            if not self.radar_dispatch.can_open_symbol(symbol, learning_guidance=learning_guidance):
+            from config.pure_ai_trading_config import pure_ai_bypass_radar_cooldown
+
+            skip_cooldown = is_pure_ai and pure_ai_bypass_radar_cooldown()
+            if not skip_cooldown and not self.radar_dispatch.can_open_symbol(symbol, learning_guidance=learning_guidance):
+                self._last_execute_reject_reason = "radar_cooldown_or_blocked"
                 return False
+            if skip_cooldown:
+                blocked = {str(item).upper() for item in (learning_guidance.get("blocked_symbols") or [])}
+                if symbol in blocked:
+                    self._last_execute_reject_reason = "symbol_blocked"
+                    return False
             if symbol in set(learning_guidance.get("blocked_symbols") or []):
                 return False
-        current = float(symbol_prices.get(symbol, 0.0) or 0.0)
+        if is_pure_ai:
+            from backend.autonomy.pure_ai_execution import resolve_execution_price
+
+            current = resolve_execution_price(
+                symbol,
+                symbol_prices,
+                futures_client=getattr(self, "futures_client", None),
+            )
+        else:
+            current = float(symbol_prices.get(symbol, 0.0) or 0.0)
         if current <= 0:
+            self._last_execute_reject_reason = "price_unavailable"
             return False
         alt_context = (
             market_contexts.get(fleet, {})
@@ -2377,6 +2447,7 @@ class NexusRuntime:
             validation = self._govern_trade_validation(request, validation, alt_context)
         self._append_decision_audit(request, validation, alt_context, decision_source=request.get("decision_source", "ai_led"))
         if not validation.get("approved"):
+            self._last_execute_reject_reason = str(validation.get("reason") or "validation_rejected")
             return False
         if pure_ai_bypass_fee_churn() and is_pure_ai:
             churn_ok, churn_reason = True, None
@@ -2394,9 +2465,22 @@ class NexusRuntime:
                 alt_context,
                 decision_source=request.get("decision_source", "ai_led"),
             )
+            self._last_execute_reject_reason = str(churn_reason or "fee_churn_blocked")
             return False
-        allowed, _risk_reason = self.risk_engine.validate_order(request)
+        allowed, risk_reason = self.risk_engine.validate_order(request)
+        if not allowed and is_pure_ai:
+            deployable = float(request.get("deployable_pool") or 0.0)
+            margin = float(request.get("margin") or 0.0)
+            radar_cap = float(request.get("radar_budget_available") or self.ledger.radar_available() or 0.0)
+            deploy_cap = deployable * 0.12 if deployable > 0 else 0.0
+            if margin > 0 and (
+                (deploy_cap > 0 and margin <= deploy_cap + 0.01)
+                or (radar_cap > 0 and margin <= radar_cap + 0.01)
+            ):
+                allowed = True
+                risk_reason = "approved_pure_ai_cap_override"
         if not allowed:
+            self._last_execute_reject_reason = str(risk_reason or "risk_rejected")
             return False
         execution_engine = self.execution_router.futures_engine if self.execution_router else self.execution_engine
         try:
@@ -2428,6 +2512,7 @@ class NexusRuntime:
                 self.radar_dispatch.mark_open(symbol)
             return True
         except Exception as exc:
+            self._last_execute_reject_reason = str(exc)[:120]
             self._append_alert("WARNING", f"AI-led order failed {symbol}: {exc}")
             return False
 
@@ -2994,7 +3079,16 @@ class NexusRuntime:
             max_leverage=_safe_float(max_lev) or None,
         )
         margin_pct = _safe_float(request.get("margin_pct_deployable"))
-        if margin_pct > 0 and deployable > 0 and request.get("sizing_source") != "ai_flex_llm":
+        pure_ai_sized = (
+            str(request.get("sizing_source") or "") == "pure_ai_aggressive"
+            or str(request.get("decision_source") or "").startswith(("pure_ai", "ai_flex_radar_fallback"))
+        )
+        if (
+            margin_pct > 0
+            and deployable > 0
+            and request.get("sizing_source") != "ai_flex_llm"
+            and not pure_ai_sized
+        ):
             flex_margin = round(deployable * min(0.25, max(0.02, margin_pct)), 4)
             if request.get("margin") is not None:
                 request["margin"] = round(max(float(request["margin"]), flex_margin), 4)
@@ -3009,16 +3103,20 @@ class NexusRuntime:
         max_lev = growth.get("max_leverage")
         if max_lev is not None and request.get("leverage") is not None:
             request["leverage"] = min(float(request["leverage"]), float(max_lev))
-        try:
-            from backend.governance.autonomy_bounds_guard import clamp_trade_proposal, validate_proposal_bounds
+        pure_ai_sized = str(request.get("decision_source") or "").startswith(
+            ("pure_ai", "ai_flex")
+        ) or str(request.get("sizing_source") or "") == "pure_ai_aggressive"
+        if not pure_ai_sized:
+            try:
+                from backend.governance.autonomy_bounds_guard import clamp_trade_proposal, validate_proposal_bounds
 
-            request, _ = clamp_trade_proposal(request)
-            request, _ = validate_proposal_bounds(
-                request,
-                available_balance=self._futures_available_balance(futures_account),
-            )
-        except Exception:
-            pass
+                request, _ = clamp_trade_proposal(request)
+                request, _ = validate_proposal_bounds(
+                    request,
+                    available_balance=self._futures_available_balance(futures_account),
+                )
+            except Exception:
+                pass
         request["sizing_pipeline_revision"] = "v3-ai-flex-full-auto"
         return self._ensure_min_trade_size(request)
 

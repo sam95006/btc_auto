@@ -107,6 +107,14 @@ def build_pure_ai_status(runtime) -> Dict[str, Any]:
             "exit_actions": list(cycle.get("exit_actions") or [])[:4],
             "hq_debate": dict(cycle.get("hq_debate") or {}),
             "entry_eval": dict(cycle.get("entry_eval") or {}),
+            "entry_pipeline": dict(cycle.get("entry_pipeline") or pipeline),
+        },
+        "entry_execution": {
+            "candidates": pipeline.get("candidates", 0),
+            "executed": pipeline.get("executed", 0),
+            "radar_budget_available": pipeline.get("radar_budget_available"),
+            "rejections": list(pipeline.get("rejections") or [])[:6],
+            "block_new_entries": bool(pipeline.get("block_new_entries")),
         },
         "flex_exit_eval": {
             "mode": flex_exit.get("mode"),
@@ -136,6 +144,9 @@ def build_pure_ai_status(runtime) -> Dict[str, Any]:
             "min_confidence": _env_float("NEXUS_PURE_AI_MIN_CONFIDENCE", 0.22),
             "debate_gate": bool(PURE_AI_DEBATE_GATE),
             "radar_fallback": bool(PURE_AI_RADAR_FALLBACK),
+            "fast_scan": _env_bool("NEXUS_PURE_AI_FAST_SCAN", True),
+            "llm_refresh_seconds": int(_env_float("NEXUS_PURE_AI_LLM_REFRESH_SECONDS", 3)),
+            "heuristic_heartbeat": _env_bool("NEXUS_PURE_AI_HEURISTIC_HEARTBEAT", True),
         },
         "verification_checks": checks,
         "pnl_disclaimer": (

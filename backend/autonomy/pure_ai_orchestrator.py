@@ -10,8 +10,10 @@ from backend.autonomy.pure_ai_debate_gate import PureAiDebateGate
 from config.pure_ai_trading_config import (
     PURE_AI_DEFAULT_LEVERAGE,
     PURE_AI_LLM_ONLY,
+    PURE_AI_MAX_MARGIN_USD,
     PURE_AI_MAX_PROPOSALS_PER_TICK,
     PURE_AI_MIN_MARGIN_USD,
+    PURE_AI_RADAR_MARGIN_CAP_FRAC,
     PURE_AI_PYRAMID_ENABLED,
     PURE_AI_PYRAMID_MARGIN_MULT,
     PURE_AI_PYRAMID_MAX_ADDS,
@@ -74,9 +76,14 @@ class PureAiOrchestrator:
         if PURE_AI_LLM_ONLY:
             rows = [row for row in rows if str(row.get("decision_source") or "").startswith("ai_flex")]
         deployable = _safe_float(context.get("deployable_pool"))
+        radar_available = _safe_float(context.get("radar_budget_available"))
         sized = []
         for row in rows[: max(1, PURE_AI_MAX_PROPOSALS_PER_TICK)]:
-            proposal = self.apply_aggressive_sizing(dict(row), deployable_pool=deployable)
+            proposal = self.apply_aggressive_sizing(
+                dict(row),
+                deployable_pool=deployable,
+                radar_available=radar_available,
+            )
             proposal["decision_source"] = "pure_ai_trader"
             proposal["proposer"] = "pure_ai_trader"
             proposal["strategy_key"] = "pure_ai_trader"
@@ -96,6 +103,7 @@ class PureAiOrchestrator:
             return []
         existing_symbols = {str(item.get("symbol") or "").upper() for item in existing}
         deployable = _safe_float(context.get("deployable_pool"))
+        radar_available = _safe_float(context.get("radar_budget_available"))
         rows: List[Dict[str, Any]] = []
         for item in list(context.get("positions") or []):
             if not isinstance(item, dict):
@@ -128,6 +136,7 @@ class PureAiOrchestrator:
                     "rationale": f"pyramid_winner:+{pnl_pct:.1f}%_on_margin_${pnl:.1f}",
                 },
                 deployable_pool=deployable,
+                radar_available=radar_available,
             )
             proposal["margin"] = round(
                 max(PURE_AI_MIN_MARGIN_USD * 0.75, _safe_float(proposal.get("margin")) * PURE_AI_PYRAMID_MARGIN_MULT),
@@ -194,7 +203,12 @@ class PureAiOrchestrator:
         return rows
 
     @staticmethod
-    def apply_aggressive_sizing(proposal: Dict[str, Any], *, deployable_pool: float) -> Dict[str, Any]:
+    def apply_aggressive_sizing(
+        proposal: Dict[str, Any],
+        *,
+        deployable_pool: float,
+        radar_available: float = 0.0,
+    ) -> Dict[str, Any]:
         proposal = dict(proposal or {})
         confidence = _safe_float(
             proposal.get("adjusted_confidence") or proposal.get("raw_confidence"),
@@ -208,11 +222,22 @@ class PureAiOrchestrator:
         if margin <= 0 and margin_pct > 0 and deployable_pool > 0:
             margin = deployable_pool * margin_pct
         if margin <= 0:
-            margin = max(PURE_AI_MIN_MARGIN_USD, deployable_pool * 0.06 if deployable_pool > 0 else PURE_AI_MIN_MARGIN_USD)
-        notional = margin * leverage
-        if notional < PURE_AI_TARGET_NOTIONAL_USD:
-            margin = (PURE_AI_TARGET_NOTIONAL_USD / max(leverage, 1.0)) + 1.0
+            margin = max(PURE_AI_MIN_MARGIN_USD, deployable_pool * 0.04 if deployable_pool > 0 else PURE_AI_MIN_MARGIN_USD)
+
+        max_margin = PURE_AI_MAX_MARGIN_USD
+        if deployable_pool > 0:
+            max_margin = min(max_margin, deployable_pool * 0.05)
+        if radar_available > 0:
+            max_margin = min(max_margin, radar_available * PURE_AI_RADAR_MARGIN_CAP_FRAC)
+
+        target_margin = PURE_AI_TARGET_NOTIONAL_USD / max(leverage, 1.0)
+        margin = min(max(margin, PURE_AI_MIN_MARGIN_USD), max_margin, target_margin + 1.0)
+        margin = max(PURE_AI_MIN_MARGIN_USD, min(margin, max_margin))
+
         proposal["leverage"] = round(min(100.0, max(2.0, leverage)), 2)
-        proposal["margin"] = round(max(PURE_AI_MIN_MARGIN_USD, margin), 4)
+        proposal["margin"] = round(margin, 4)
+        proposal["deployable_pool"] = round(deployable_pool, 4)
+        proposal["radar_budget_available"] = round(radar_available, 4)
         proposal["sizing_source"] = "pure_ai_aggressive"
+        proposal.pop("margin_pct_deployable", None)
         return proposal

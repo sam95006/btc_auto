@@ -67,6 +67,7 @@ export function renderPureAiPanel(root, state) {
         <div><span>管線</span><strong>${escapeHtml(String(pipeline.mode || "—"))}</strong></div>
         <div><span>本輪提案</span><strong>${Number(cycle.entry_count ?? pipeline.candidates ?? 0)}</strong></div>
         <div><span>本輪成交</span><strong>${Number(pipeline.executed ?? 0)}</strong></div>
+        <div><span>雷達預算</span><strong>${Number(pipeline.radar_budget_available ?? cfg.radar_budget ?? 0).toFixed(0)}U</strong></div>
         <div><span>可部署資金</span><strong>${Number(cycle.deployable_pool ?? pipeline.deployable_pool ?? 0).toFixed(0)}U</strong></div>
         <div><span>LLM</span><strong>${llm.enabled ? escapeHtml(llm.flex_trade_model || "online") : "offline"}</strong></div>
         <div><span>更新</span><strong>${fmtTime(cycle.timestamp)}</strong></div>
@@ -115,6 +116,7 @@ export function renderPureAiPanel(root, state) {
       <section class="pure-ai-section">
         <h4>最新進場提案（LLM → pure_ai_trader）</h4>
         <ul class="pure-ai-proposals">${proposals.map(proposalRow).join("") || "<li class='pure-ai-empty'>本輪 LLM 尚未提案（可能觀望或限流）</li>"}</ul>
+        ${Array.isArray(pipeline.rejections) && pipeline.rejections.length ? `<p class="pure-ai-explainer">未成交：${pipeline.rejections.map((r) => `${escapeHtml(r.symbol || "?")} (${escapeHtml(r.reason || "—")})`).join(" · ")}</p>` : ""}
       </section>
 
       <section class="pure-ai-section">

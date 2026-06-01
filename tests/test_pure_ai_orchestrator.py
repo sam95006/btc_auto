@@ -4,11 +4,20 @@ from backend.autonomy.pure_ai_orchestrator import PureAiOrchestrator
 
 
 class PureAiOrchestratorTests(unittest.TestCase):
-    def test_aggressive_sizing_meets_target_notional(self):
-        proposal = {"adjusted_confidence": 0.7}
-        sized = PureAiOrchestrator.apply_aggressive_sizing(proposal, deployable_pool=5000)
-        self.assertGreaterEqual(float(sized["margin"]) * float(sized["leverage"]), 1200.0)
+    def test_aggressive_sizing_caps_margin_and_strips_pct(self):
+        proposal = {
+            "adjusted_confidence": 0.7,
+            "margin_pct_deployable": 0.08,
+        }
+        sized = PureAiOrchestrator.apply_aggressive_sizing(
+            proposal,
+            deployable_pool=5000,
+            radar_available=450.0,
+        )
+        self.assertNotIn("margin_pct_deployable", sized)
+        self.assertLessEqual(float(sized["margin"]), 120.0)
         self.assertGreaterEqual(float(sized["leverage"]), 10.0)
+        self.assertEqual(sized.get("sizing_source"), "pure_ai_aggressive")
 
     def test_stale_safety_exit_after_hours(self):
         orchestrator = PureAiOrchestrator(llm_gateway=None)

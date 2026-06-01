@@ -23,6 +23,16 @@ class _FakeGateway:
 
 
 class AiFlexibleEvaluatorTests(unittest.TestCase):
+    def setUp(self):
+        self._prev_pure_ai = os.environ.get("NEXUS_PURE_AI_MODE")
+        os.environ["NEXUS_PURE_AI_MODE"] = "0"
+
+    def tearDown(self):
+        if self._prev_pure_ai is None:
+            os.environ.pop("NEXUS_PURE_AI_MODE", None)
+        else:
+            os.environ["NEXUS_PURE_AI_MODE"] = self._prev_pure_ai
+
     def test_collect_trade_proposals_parses_leverage_and_margin(self):
         gateway = _FakeGateway(
             {
@@ -96,6 +106,33 @@ class AiFlexibleEvaluatorTests(unittest.TestCase):
         symbols = {item["symbol"] for item in actions}
         self.assertIn("ETHUSDT", symbols)
         self.assertNotIn("BTCUSDT", symbols)
+
+    def test_pure_ai_liquid_heartbeat_when_llm_and_radar_empty(self):
+        from unittest.mock import patch
+
+        os.environ["NEXUS_PURE_AI_MODE"] = "1"
+        try:
+            evaluator = AiFlexibleEvaluator(llm_gateway=_FakeGateway({}))
+            with patch("config.pure_ai_trading_config.PURE_AI_RADAR_FALLBACK", False), patch(
+                "config.pure_ai_trading_config.PURE_AI_REQUIRE_MIN_PROPOSALS", True
+            ), patch("config.pure_ai_trading_config.PURE_AI_HEURISTIC_HEARTBEAT", False):
+                rows = evaluator.collect_trade_proposals(
+                {
+                    "pure_ai_mode": True,
+                    "deployable_pool": 3000,
+                    "positions": [],
+                    "blocked_symbols": [],
+                    "radar_scan": {"candidates": []},
+                    "tradable_symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT"],
+                    "core_fleets": {},
+                    "market_context": {},
+                }
+                )
+            self.assertGreaterEqual(len(rows), 1)
+            self.assertEqual(rows[0].get("proposer"), "pure_ai_liquid_heartbeat")
+            self.assertEqual(evaluator._last_entry_eval.get("fallback_used"), "liquid_heartbeat")
+        finally:
+            os.environ["NEXUS_PURE_AI_MODE"] = "0"
 
     def test_heuristic_fallback_when_llm_empty(self):
         evaluator = AiFlexibleEvaluator(llm_gateway=_FakeGateway({}))

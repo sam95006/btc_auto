@@ -88,9 +88,20 @@ class LLMGateway:
         if not self.enabled():
             return {"status": "disabled", "reason": "llm_disabled", "task": task, "output": fallback_output or {}}
 
-        fingerprint = self._fingerprint(payload)
-        cache_key = f"{task}:{fingerprint}"
         refresh_after = task_refresh_seconds().get(task, 60)
+        cache_payload = dict(payload or {})
+        if task == "flex_trade_eval" and cache_payload.get("pure_ai_mode"):
+            try:
+                from config.pure_ai_trading_config import pure_ai_llm_refresh_seconds
+
+                pure_refresh = pure_ai_llm_refresh_seconds()
+                if pure_refresh > 0:
+                    refresh_after = min(refresh_after, pure_refresh)
+                    cache_payload["eval_bucket"] = int(time.time() // refresh_after)
+            except Exception:
+                pass
+        fingerprint = self._fingerprint(cache_payload)
+        cache_key = f"{task}:{fingerprint}"
         cached = self._cache.get(cache_key)
         if cached and (time.time() - cached["created_at"]) < refresh_after:
             return {**cached["result"], "cache_hit": True}

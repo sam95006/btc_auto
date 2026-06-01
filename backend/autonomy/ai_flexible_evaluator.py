@@ -154,6 +154,15 @@ class AiFlexibleEvaluator:
         if context.get("pure_ai_mode"):
             snapshot["pure_ai_mode"] = True
             snapshot["trader_directive"] = str(context.get("trader_directive") or "")
+            snapshot["tick_seq"] = int(context.get("pure_ai_tick_seq") or 0)
+            try:
+                from config.pure_ai_trading_config import pure_ai_llm_refresh_seconds
+
+                refresh = pure_ai_llm_refresh_seconds()
+                if refresh > 0:
+                    snapshot["eval_bucket"] = int(time.time() // refresh)
+            except Exception:
+                pass
         result = self.llm_gateway.run_task("flex_trade_eval", snapshot, fallback_output={})
         output = result.get("output") if isinstance(result.get("output"), dict) else result
         if not isinstance(output, dict):
@@ -183,12 +192,24 @@ class AiFlexibleEvaluator:
                 rejected_low_conf += 1
         fallback_used = None
         if not rows and context.get("pure_ai_mode"):
-            from config.pure_ai_trading_config import PURE_AI_RADAR_FALLBACK
+            from config.pure_ai_trading_config import (
+                PURE_AI_HEURISTIC_HEARTBEAT,
+                PURE_AI_RADAR_FALLBACK,
+                PURE_AI_REQUIRE_MIN_PROPOSALS,
+            )
 
             if PURE_AI_RADAR_FALLBACK:
                 rows = self._pure_ai_radar_fallback(context, min_confidence=min_conf)
                 if rows:
                     fallback_used = "radar"
+            if not rows and PURE_AI_REQUIRE_MIN_PROPOSALS:
+                rows = self._pure_ai_liquid_heartbeat(context, min_confidence=min_conf)
+                if rows:
+                    fallback_used = "liquid_heartbeat"
+            if not rows and PURE_AI_HEURISTIC_HEARTBEAT:
+                rows = self.collect_heuristic_proposals(context)[:3]
+                if rows:
+                    fallback_used = "heuristic_heartbeat"
         if not rows and AI_FLEX_HEURISTIC_FALLBACK and not (pure_ai_active() and PURE_AI_LLM_ONLY):
             rows = self.collect_heuristic_proposals(context)
             if rows:
@@ -210,20 +231,89 @@ class AiFlexibleEvaluator:
         )
         return rows
 
+    def _pure_ai_liquid_heartbeat(self, context: Dict[str, Any], min_confidence: float) -> List[Dict[str, Any]]:
+        """Guaranteed liquid entries when LLM + radar both return nothing (testnet activity)."""
+        from config.pure_ai_trading_config import (
+            PURE_AI_DEFAULT_LEVERAGE,
+            PURE_AI_HEARTBEAT_SYMBOLS_MAX,
+            PURE_AI_PREFERRED_SYMBOLS,
+        )
+
+        blocked = {str(s).upper() for s in (context.get("blocked_symbols") or [])}
+        tradable = {str(s).upper() for s in (context.get("tradable_symbols") or PURE_AI_PREFERRED_SYMBOLS)}
+        held = {
+            str(item.get("symbol") or "").upper()
+            for item in (context.get("positions") or [])
+            if isinstance(item, dict) and item.get("symbol")
+        }
+        preferred = [s for s in PURE_AI_PREFERRED_SYMBOLS if s and s not in blocked and s in tradable]
+        if not preferred:
+            return []
+        rotate = int(time.time() // 45) % max(1, len(preferred))
+        rows: List[Dict[str, Any]] = []
+        for offset in range(min(PURE_AI_HEARTBEAT_SYMBOLS_MAX, len(preferred))):
+            symbol = preferred[(rotate + offset) % len(preferred)]
+            if symbol in held:
+                continue
+            side = self._infer_heartbeat_side(symbol, context)
+            confidence = max(min_confidence + 0.03, 0.26)
+            from config.fleet_routing_config import core_fleet_for_symbol, is_core_symbol
+
+            fleet = core_fleet_for_symbol(symbol) or "RADAR" if is_core_symbol(symbol) else "RADAR"
+            proposal = self._parse_trade_proposal(
+                {
+                    "fleet": fleet,
+                    "symbol": symbol,
+                    "side": side,
+                    "confidence": confidence,
+                    "leverage": round(min(AI_FLEX_MAX_LEVERAGE, max(15.0, PURE_AI_DEFAULT_LEVERAGE)), 1),
+                    "margin_pct_deployable": 0.03,
+                    "rationale": "pure_ai_liquid_heartbeat",
+                },
+                min_confidence=min_confidence,
+            )
+            if proposal:
+                proposal["decision_source"] = "pure_ai_liquid_heartbeat"
+                proposal["proposer"] = "pure_ai_liquid_heartbeat"
+                rows.append(proposal)
+        return rows
+
+    @staticmethod
+    def _infer_heartbeat_side(symbol: str, context: Dict[str, Any]) -> str:
+        symbol = str(symbol or "").upper()
+        for data in dict(context.get("core_fleets") or {}).values():
+            if not isinstance(data, dict):
+                continue
+            if str(data.get("symbol") or "").upper() != symbol:
+                continue
+            action = str((data.get("signal") or {}).get("action") or "").upper()
+            if action in {"BUY", "SELL"}:
+                return action
+        markets = dict(context.get("market_context") or {})
+        ctx = markets.get(symbol) if isinstance(markets.get(symbol), dict) else {}
+        bias = str(ctx.get("bias") or ctx.get("trend") or ctx.get("market_regime") or "").lower()
+        if bias in {"bear", "down", "short", "sell", "risk_off"}:
+            return "SELL"
+        return "BUY"
+
     def _pure_ai_radar_fallback(self, context: Dict[str, Any], min_confidence: float) -> List[Dict[str, Any]]:
         """When LLM returns empty, take top RADAR candidate so testnet keeps trading."""
+        from config.pure_ai_trading_config import PURE_AI_PREFERRED_SYMBOLS, PURE_AI_RADAR_FALLBACK_MAX
+
         blocked = {str(s).upper() for s in (context.get("blocked_symbols") or [])}
+        tradable = {str(s).upper() for s in (context.get("tradable_symbols") or PURE_AI_PREFERRED_SYMBOLS)}
         radar = dict(context.get("radar_scan") or {})
         candidates = list(radar.get("candidates") or [])
+        preferred = {str(s).upper() for s in PURE_AI_PREFERRED_SYMBOLS if str(s).upper() in tradable}
+
+        def _score(row: Any) -> float:
+            return _safe_float((row or {}).get("score", (row or {}).get("candidate_score")), 0.0)
+
+        ranked = sorted(candidates, key=_score, reverse=True)
+        liquid_first = [row for row in ranked if str((row or {}).get("symbol") or "").upper() in preferred]
+        ordered = liquid_first + [row for row in ranked if row not in liquid_first]
         rows: List[Dict[str, Any]] = []
-        for item in sorted(
-            candidates,
-            key=lambda row: _safe_float(
-                (row or {}).get("score", (row or {}).get("candidate_score")),
-                0.0,
-            ),
-            reverse=True,
-        )[:6]:
+        for item in ordered[:8]:
             if not isinstance(item, dict):
                 continue
             symbol = str(item.get("symbol") or "").upper().replace("/", "")
@@ -232,7 +322,7 @@ class AiFlexibleEvaluator:
             if confidence > 1.0:
                 confidence = confidence / 100.0
             confidence = max(confidence, min_confidence + 0.02)
-            if not symbol or symbol in blocked or confidence < min_confidence:
+            if not symbol or symbol in blocked or symbol not in tradable or confidence < min_confidence:
                 continue
             side_raw = str(item.get("side") or item.get("candidate_side") or "LONG").upper()
             side = "BUY" if side_raw in {"LONG", "BUY"} else "SELL"
@@ -243,7 +333,7 @@ class AiFlexibleEvaluator:
                     "side": side,
                     "confidence": confidence,
                     "leverage": round(min(AI_FLEX_MAX_LEVERAGE, max(12.0, confidence * 40)), 1),
-                    "margin_pct_deployable": round(min(0.12, max(0.04, confidence * 0.08)), 4),
+                    "margin_pct_deployable": round(min(0.05, max(0.02, confidence * 0.04)), 4),
                     "rationale": "pure_ai_radar_fallback_top_candidate",
                 },
                 min_confidence=min_confidence,
@@ -252,7 +342,7 @@ class AiFlexibleEvaluator:
                 proposal["decision_source"] = "ai_flex_radar_fallback"
                 proposal["proposer"] = "ai_flex_radar_fallback"
                 rows.append(proposal)
-            if len(rows) >= 2:
+            if len(rows) >= max(1, PURE_AI_RADAR_FALLBACK_MAX):
                 break
         return rows
 

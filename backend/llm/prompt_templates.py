@@ -222,8 +222,9 @@ def build_flex_trade_eval_prompt(payload: dict):
             "Symbols already open are NOT blocked if the position is winning. "
             "MUST set leverage (10-100) and margin_usd OR margin_pct_deployable for meaningful notional. "
             "TESTNET rule: output at least 1 trade_proposal each eval unless every candidate symbol is in blocked_symbols. "
-            "If unsure, pick the single best RADAR or BTC/ETH edge with confidence>=0.35. "
-            "Only use skip_reason when truly no symbol is tradable. "
+            "If unsure, pick the single best RADAR or BTC/ETH edge with confidence>=0.25. "
+            "Empty trade_proposals is NOT allowed on testnet — always output at least one. "
+            "Only use skip_reason when every symbol is in blocked_symbols. "
             if pure
             else
             "Synthesize wallet capital, deployable_pool, regime, fear/greed, funding/OI stress, "
