@@ -9,6 +9,7 @@ from backend.autonomy.ai_flexible_evaluator import AiFlexibleEvaluator, _positio
 from backend.autonomy.pure_ai_debate_gate import PureAiDebateGate
 from config.pure_ai_trading_config import (
     PURE_AI_DEFAULT_LEVERAGE,
+    PURE_AI_MAX_LEVERAGE,
     PURE_AI_LLM_ONLY,
     PURE_AI_MAX_MARGIN_USD,
     PURE_AI_MAX_PROPOSALS_PER_TICK,
@@ -204,8 +205,12 @@ class PureAiOrchestrator:
         positions = list(context.get("positions") or [])
         if not positions or not self.evaluator.exit_enabled:
             return []
-        if PURE_AI_LLM_ONLY:
-            actions = self.evaluator.evaluate_exit_actions(
+        from backend.autonomy.pure_ai_hard_exit import collect_pure_ai_hard_exits, merge_exit_actions_prefer_hard
+
+        hard = collect_pure_ai_hard_exits(positions)
+        soft: List[Dict[str, Any]] = []
+        if self._llm_enabled_for_exits():
+            soft = self.evaluator.evaluate_exit_actions(
                 positions,
                 market_contexts=context.get("market_context"),
                 wallet_intel=context.get("wallet_intel"),
@@ -213,16 +218,17 @@ class PureAiOrchestrator:
                 regime_state=context.get("regime_state"),
                 pure_ai_mode=True,
             )
-            actions = [a for a in actions if str(a.get("source") or "") == "ai_flex_exit"]
-            actions.extend(self._stale_safety_exits(positions, existing=actions))
-            return actions
-        return self.evaluator.evaluate_exit_actions(
-            positions,
-            market_contexts=context.get("market_context"),
-            wallet_intel=context.get("wallet_intel"),
-            external_market_intel=context.get("external_market_intel"),
-            regime_state=context.get("regime_state"),
-        )
+            if PURE_AI_LLM_ONLY:
+                soft = [a for a in soft if str(a.get("source") or "") == "ai_flex_exit"]
+        merged = merge_exit_actions_prefer_hard(hard, soft)
+        merged.extend(self._stale_safety_exits(positions, existing=merged))
+        return merged
+
+    def _llm_enabled_for_exits(self) -> bool:
+        try:
+            return bool(self.evaluator._llm_enabled())
+        except Exception:
+            return False
 
     @staticmethod
     def _stale_safety_exits(positions: List[Dict[str, Any]], existing: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -282,7 +288,7 @@ class PureAiOrchestrator:
         margin = min(max(margin, PURE_AI_MIN_MARGIN_USD), max_margin, target_margin + 1.0)
         margin = max(PURE_AI_MIN_MARGIN_USD, min(margin, max_margin))
 
-        proposal["leverage"] = round(min(100.0, max(2.0, leverage)), 2)
+        proposal["leverage"] = round(min(PURE_AI_MAX_LEVERAGE, 100.0, max(2.0, leverage)), 2)
         proposal["margin"] = round(margin, 4)
         proposal["deployable_pool"] = round(deployable_pool, 4)
         proposal["radar_budget_available"] = round(radar_available, 4)

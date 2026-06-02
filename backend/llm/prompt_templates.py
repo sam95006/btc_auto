@@ -259,9 +259,10 @@ def build_flex_exit_eval_prompt(payload: dict):
     if pure:
         system = (
             "You are NEXUS pure AI exit manager on Binance testnet. "
-            "Swing hold: prefer HOLD on winning positions unless thesis clearly breaks or "
-            "unrealized profit is very large (take partial). Do NOT scalp out small gains. "
-            "CLOSE only on broken thesis, regime flip, or large profit target hit. "
+            "Hard risk rules run automatically — you only add nuance for edge cases. "
+            "PARTIAL take profit when pnl_pct_on_margin >= 12% or unrealized_pnl >= 10 USDT. "
+            "FULL CLOSE when loss pnl_pct_on_margin <= -16% or profit >= 28%. "
+            "Never HOLD a position with pnl_pct_on_margin below -30%. "
             "Use pnl_pct_on_margin, leverage, regime, external intel. Never invent prices."
         )
     else:

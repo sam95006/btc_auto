@@ -2435,12 +2435,15 @@ class NexusRuntime:
             alt_context["growth_max_leverage"] = growth_directives.get("max_leverage")
         if is_pure_ai:
             from config.leverage_config import MIN_FUTURES_LEVERAGE
-            from config.pure_ai_trading_config import PURE_AI_DEFAULT_LEVERAGE
+            from config.pure_ai_trading_config import PURE_AI_DEFAULT_LEVERAGE, PURE_AI_MAX_LEVERAGE
 
             req_lev = int(
                 max(
                     MIN_FUTURES_LEVERAGE,
-                    float(request.get("leverage") or PURE_AI_DEFAULT_LEVERAGE),
+                    min(
+                        PURE_AI_MAX_LEVERAGE,
+                        float(request.get("leverage") or PURE_AI_DEFAULT_LEVERAGE),
+                    ),
                 )
             )
             alt_context["pure_ai_force_leverage"] = req_lev

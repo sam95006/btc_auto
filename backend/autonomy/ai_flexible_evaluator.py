@@ -554,8 +554,6 @@ class AiFlexibleEvaluator:
         return round((pnl / margin) * 100.0, 2)
 
     def _auto_profit_exit_candidates(self, positions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        if pure_ai_active() and PURE_AI_LLM_ONLY:
-            return []
         if not AI_FLEX_AUTO_PROFIT_ENABLED or not SANDBOX_ABS_EXIT_ENABLED:
             return []
         actions = []

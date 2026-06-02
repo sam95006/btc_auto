@@ -111,7 +111,14 @@ class FeeChurnGuard:
         reason = str(action.get("reason") or "")
         unrealized = _safe_float(position.get("unrealized_pnl"))
         age = _position_age_seconds(position)
-        if str(action.get("source") or "") in {"ai_flex_exit", "ai_flex_auto_profit", "pure_ai_safety"}:
+        if str(action.get("source") or "") in {
+            "ai_flex_exit",
+            "ai_flex_auto_profit",
+            "pure_ai_safety",
+            "pure_ai_hard_exit",
+        }:
+            if str(action.get("source") or "") == "pure_ai_hard_exit" or str(action.get("urgency") or "") == "critical":
+                return True, None
             confidence = _safe_float(action.get("confidence"))
             if confidence >= AI_FLEX_EXIT_MIN_CONFIDENCE:
                 return True, None
