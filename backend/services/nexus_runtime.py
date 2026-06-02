@@ -1771,6 +1771,22 @@ class NexusRuntime:
             ml_confidence = MlConfidenceAssist(runtime_store).build_symbol_priors(limit=280)
         except Exception:
             ml_confidence = {}
+        # Ensure market_context includes per-symbol contexts for the Pure AI universe
+        # so LLM + heuristics can reason over the same tradable candidates.
+        try:
+            for symbol in list(self._pure_ai_tradable_symbols() or [])[:22]:
+                if symbol in market_contexts and isinstance(market_contexts.get(symbol), dict):
+                    continue
+                ctx = self.market_context_service.build_symbol_context(
+                    symbol,
+                    (self.latest_prices or {}).get(symbol) or {},
+                    fleet=str(core_fleets.get(symbol, {}).get("symbol") or "RADAR"),
+                )
+                if ctx:
+                    market_contexts[symbol] = ctx
+        except Exception:
+            pass
+
         return {
             "radar_llm_items": getattr(self, "_radar_llm_proposals", []) or [],
             "agent_output": agent_output,

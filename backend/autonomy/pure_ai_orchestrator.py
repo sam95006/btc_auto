@@ -15,6 +15,11 @@ from backend.autonomy.pure_ai_position_policy import (
 )
 from config.pure_ai_trading_config import (
     PURE_AI_DEFAULT_LEVERAGE,
+    PURE_AI_DYNAMIC_LEVERAGE_MAX,
+    PURE_AI_DYNAMIC_LEVERAGE_MIN,
+    PURE_AI_DYNAMIC_MAX_MARGIN_PCT,
+    PURE_AI_DYNAMIC_MAX_MARGIN_USD,
+    PURE_AI_DYNAMIC_SIZING,
     PURE_AI_MAX_LEVERAGE,
     PURE_AI_LLM_ONLY,
     PURE_AI_MAX_ENTRIES_PER_TICK,
@@ -206,7 +211,12 @@ class PureAiOrchestrator:
         return rows
 
     def _collect_market_signal_entries(self, context: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Open long/short when core fleet + market context agree (data-driven, no extra LLM call)."""
+        """
+        Regime switching entries (no extra LLM call):
+        - Trend regime: follow EMA bias + volume confirmation
+        - Range regime: mean reversion using RSI extremes
+        - High-risk macro: suppress entries (handled upstream by gates; we also avoid adding here)
+        """
         from config.pure_ai_trading_config import PURE_AI_MIN_CONFIDENCE
 
         blocked = {str(s).upper() for s in (context.get("blocked_symbols") or [])}
@@ -217,32 +227,73 @@ class PureAiOrchestrator:
         }
         deployable = _safe_float(context.get("deployable_pool"))
         rows: List[Dict[str, Any]] = []
-        for fleet, data in dict(context.get("core_fleets") or {}).items():
-            if not isinstance(data, dict):
-                continue
-            symbol = str(data.get("symbol") or "").upper()
-            signal = dict(data.get("signal") or {})
-            action = str(signal.get("action") or "HOLD").upper()
-            confidence = _safe_float(signal.get("confidence"))
-            if action not in {"BUY", "SELL"} or confidence < PURE_AI_MIN_CONFIDENCE:
-                continue
+        markets = dict(context.get("market_context") or {})
+        regime = str((context.get("regime_state") or {}).get("label") or "").upper()
+        if "HIGH_RISK" in regime or "ALERT" in regime:
+            return []
+
+        universe = [str(s).upper() for s in (context.get("tradable_symbols") or [])][:24]
+        for symbol in universe:
             if not symbol or symbol in blocked or symbol in held:
                 continue
+            ctx = markets.get(symbol) if isinstance(markets.get(symbol), dict) else {}
+            if not ctx:
+                continue
+            # Basic market quality gate
+            if str(ctx.get("liquidity_status") or "healthy") != "healthy":
+                continue
+            if str(ctx.get("spread_status") or "normal") != "normal":
+                continue
+            if str(ctx.get("slippage_risk") or "normal") != "normal":
+                continue
+
+            trend_bias = str(ctx.get("trend_bias") or "neutral").lower()
+            volume_ok = bool(ctx.get("volume_confirmed"))
+            rsi = _safe_float(ctx.get("rsi_14"), 50.0)
+            trend_strength = abs(_safe_float(ctx.get("trend_strength"), 0.0))
+            vol_pct = _safe_float(ctx.get("volatility_percentile"), 0.5)
+
+            # Determine regime: trend vs range
+            is_trend = (trend_bias in {"bullish", "bearish"}) and volume_ok and trend_strength >= 0.004 and vol_pct >= 0.15
+            is_range = (trend_bias == "neutral" or trend_strength < 0.0025) and 0.10 <= vol_pct <= 0.85
+
+            side = None
+            reason = ""
+            confidence = 0.0
+            if is_trend:
+                side = "BUY" if trend_bias == "bullish" else "SELL"
+                confidence = 0.18 + min(0.55, trend_strength * 40.0) + (0.08 if volume_ok else 0.0)
+                reason = f"regime_trend:{trend_bias}:str{round(trend_strength,4)}"
+            elif is_range:
+                if rsi <= 33:
+                    side = "BUY"
+                    confidence = 0.16 + min(0.35, (33 - rsi) / 40.0)
+                    reason = f"regime_range:mr_buy:rsi{round(rsi,1)}"
+                elif rsi >= 67:
+                    side = "SELL"
+                    confidence = 0.16 + min(0.35, (rsi - 67) / 40.0)
+                    reason = f"regime_range:mr_sell:rsi{round(rsi,1)}"
+            if side not in {"BUY", "SELL"} or confidence < PURE_AI_MIN_CONFIDENCE:
+                continue
+
+            from config.fleet_routing_config import core_fleet_for_symbol, is_core_symbol
+
+            fleet = core_fleet_for_symbol(symbol) or ("RADAR" if not is_core_symbol(symbol) else "RADAR")
             proposal = self.evaluator._parse_trade_proposal(
                 {
-                    "fleet": str(fleet).upper(),
+                    "fleet": fleet,
                     "symbol": symbol,
-                    "side": action,
-                    "confidence": confidence,
-                    "leverage": round(min(50.0, max(12.0, confidence * 45)), 1),
-                    "margin_pct_deployable": round(min(0.05, max(0.02, confidence * 0.04)), 4),
-                    "rationale": str(signal.get("reason") or "pure_ai_market_signal")[:200],
+                    "side": side,
+                    "confidence": round(confidence, 4),
+                    "leverage": round(min(100.0, max(20.0, 20.0 + confidence * 90.0)), 1),
+                    "margin_pct_deployable": round(min(0.10, max(0.03, confidence * 0.07)), 4),
+                    "rationale": reason[:200],
                 },
                 min_confidence=PURE_AI_MIN_CONFIDENCE,
             )
             if proposal:
-                proposal["decision_source"] = "pure_ai_market_signal"
-                proposal["proposer"] = "pure_ai_market_signal"
+                proposal["decision_source"] = "pure_ai_regime_switch"
+                proposal["proposer"] = "pure_ai_regime_switch"
                 rows.append(proposal)
         return rows[: max(1, PURE_AI_MAX_PROPOSALS_PER_TICK)]
 
@@ -316,6 +367,11 @@ class PureAiOrchestrator:
         leverage = _safe_float(proposal.get("ai_flex_leverage") or proposal.get("leverage"))
         if leverage <= 0:
             leverage = min(100.0, max(10.0, PURE_AI_DEFAULT_LEVERAGE * max(0.85, confidence)))
+        # Optional: confidence-based leverage scaling (20–100x) for testnet experimentation.
+        if PURE_AI_DYNAMIC_SIZING:
+            lo = max(2.0, float(PURE_AI_DYNAMIC_LEVERAGE_MIN))
+            hi = max(lo, float(PURE_AI_DYNAMIC_LEVERAGE_MAX))
+            leverage = lo + max(0.0, min(1.0, confidence)) * (hi - lo)
         margin = _safe_float(proposal.get("margin") or proposal.get("ai_flex_margin_usd"))
         margin_pct = _safe_float(proposal.get("margin_pct_deployable"))
         if margin <= 0 and margin_pct > 0 and deployable_pool > 0:
@@ -324,8 +380,11 @@ class PureAiOrchestrator:
             margin = max(PURE_AI_MIN_MARGIN_USD, deployable_pool * 0.04 if deployable_pool > 0 else PURE_AI_MIN_MARGIN_USD)
 
         max_margin = PURE_AI_MAX_MARGIN_USD
+        if PURE_AI_DYNAMIC_SIZING:
+            max_margin = max(max_margin, float(PURE_AI_DYNAMIC_MAX_MARGIN_USD))
         if deployable_pool > 0:
-            max_margin = min(max_margin, deployable_pool * 0.05)
+            pool_cap = deployable_pool * (float(PURE_AI_DYNAMIC_MAX_MARGIN_PCT) if PURE_AI_DYNAMIC_SIZING else 0.05)
+            max_margin = min(max_margin, pool_cap)
         if radar_available > 0:
             max_margin = min(max_margin, radar_available * PURE_AI_RADAR_MARGIN_CAP_FRAC)
 
