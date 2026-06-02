@@ -249,7 +249,15 @@ class BinanceFuturesTestnetClient:
 
     def set_leverage(self, symbol, leverage):
         exchange_leverage = max(1, int(round(float(leverage))))
-        return self._signed_request("POST", "/fapi/v1/leverage", {"symbol": symbol, "leverage": exchange_leverage})
+        try:
+            return self._signed_request("POST", "/fapi/v1/leverage", {"symbol": symbol, "leverage": exchange_leverage})
+        except BinanceTestnetError as exc:
+            # Binance demo error -4161: cannot reduce leverage in isolated mode with open positions.
+            # This is non-fatal for our system: proceed with existing leverage.
+            message = str(exc)
+            if "-4161" in message or "Leverage reduction is not supported" in message:
+                return {"symbol": str(symbol).upper(), "leverage": exchange_leverage, "unchanged": True, "note": "skip_reduce_leverage"}
+            raise
 
     def set_margin_type_isolated(self, symbol):
         try:
