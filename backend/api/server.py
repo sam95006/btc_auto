@@ -293,19 +293,23 @@ def register_nexus_routes(app):
 
     @app.route("/api/nexus/performance-report")
     def nexus_performance_report():
-        from backend.analytics.performance_report import build_performance_report
-
-        research_gate = {}
         try:
-            from backend.services.nexus_runtime import nexus_runtime
+            from backend.analytics.performance_report import build_performance_report
 
-            research_gate = dict(getattr(nexus_runtime, "_research_gate_status", None) or {})
-        except Exception:
-            pass
-        try:
+            research_gate = {}
+            try:
+                from backend.services.nexus_runtime import nexus_runtime
+
+                research_gate = dict(getattr(nexus_runtime, "_research_gate_status", None) or {})
+            except Exception:
+                research_gate = {}
+
             return jsonify(build_performance_report(runtime_store, research_gate=research_gate))
         except Exception as exc:
-            return jsonify({"ok": False, "error": str(exc)}), 500
+            # Fall back to the cached summary embedded in the last snapshot.
+            snap = runtime_store.load_snapshot() or {}
+            summary = ((snap.get("analytics") or {}).get("performance_report_summary") or {}) if isinstance(snap, dict) else {}
+            return jsonify({"ok": False, "error": str(exc), "summary": summary}), 200
 
     @app.route("/api/nexus/research-gate")
     def nexus_research_gate():
