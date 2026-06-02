@@ -179,27 +179,21 @@ def register_nexus_routes(app):
 
     @app.route("/api/nexus/state")
     def nexus_state():
-        snap = None
-        try:
-            from backend.services.nexus_runtime import nexus_runtime
+        """Fast path: serve worker-maintained snapshot from memory/DB (no blocking rebuild)."""
+        snap = runtime_store.load_snapshot() or {}
+        meta = runtime_store.live_snapshot_meta()
+        if not meta.get("has_data"):
+            try:
+                from backend.services.nexus_runtime import nexus_runtime
 
-            nexus_runtime.refresh_live_exchange_state(force=False, min_interval_sec=8)
-            snap = nexus_runtime.snapshot()
-        except Exception as exc:
-            print(f"[api] live exchange refresh failed: {exc}")
-        if snap is None:
-            snap = runtime_store.load_snapshot()
-        try:
-            runtime_store.save_snapshot(
-                snap,
-                worker_status="ONLINE",
-                writer="api_state",
-                single_instance=False,
-                flush_now=True,
-            )
-        except Exception as exc:
-            print(f"[api] snapshot persist failed: {exc}")
-        return jsonify(sanitize_for_json(snap or {}))
+                thread = getattr(nexus_runtime, "_thread", None)
+                worker_alive = bool(thread and thread.is_alive())
+                if not worker_alive:
+                    nexus_runtime.refresh_live_exchange_state(force=False, min_interval_sec=30)
+                    snap = runtime_store.load_snapshot() or snap
+            except Exception as exc:
+                print(f"[api] cold-start snapshot refresh failed: {exc}")
+        return jsonify(sanitize_for_json(snap))
 
     @app.route("/api/nexus/wallet")
     def nexus_wallet():
@@ -441,22 +435,7 @@ def register_nexus_routes(app):
         def nexus_ws(ws):
             last_sent = None
             while True:
-                snapshot = None
-                try:
-                    from backend.services.nexus_runtime import nexus_runtime
-
-                    nexus_runtime.refresh_live_exchange_state()
-                    snapshot = nexus_runtime.snapshot()
-                    runtime_store.save_snapshot(
-                        snapshot,
-                        worker_status="ONLINE",
-                        writer="ws_push",
-                        single_instance=False,
-                    )
-                except Exception as exc:
-                    print(f"[ws] live exchange refresh failed: {exc}")
-                if snapshot is None:
-                    snapshot = runtime_store.load_snapshot()
+                snapshot = runtime_store.load_snapshot() or {}
                 payload = {"snapshot": sanitize_for_json(snapshot)}
                 encoded = json.dumps(payload, ensure_ascii=False)
                 if encoded != last_sent:

@@ -19,14 +19,28 @@ export function normalizeNexusSnapshot(payload) {
   };
 }
 
-export async function fetchNexusState() {
-  const response = await fetch("/api/nexus/state", { cache: "no-store" });
-  if (!response.ok) throw new Error(`state request failed: ${response.status}`);
-  const raw = await response.text();
+export async function fetchNexusState(timeoutMs = 12000) {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return normalizeNexusSnapshot(JSON.parse(raw));
+    const response = await fetch("/api/nexus/state", {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`state request failed: ${response.status}`);
+    const raw = await response.text();
+    try {
+      return normalizeNexusSnapshot(JSON.parse(raw));
+    } catch (error) {
+      throw new Error(`state JSON parse failed: ${error?.message || String(error)}`);
+    }
   } catch (error) {
-    throw new Error(`state JSON parse failed: ${error?.message || String(error)}`);
+    if (error?.name === "AbortError") {
+      throw new Error(`state request timed out after ${timeoutMs}ms`);
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timer);
   }
 }
 

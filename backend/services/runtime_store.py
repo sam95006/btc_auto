@@ -546,6 +546,9 @@ class RuntimeStateStore:
             return self._merge_snapshot_defaults(cached, self.default_snapshot())
         return self._load_snapshot_from_db()
 
+    def live_snapshot_meta(self):
+        return dict(self._live_snapshot.meta())
+
     def enqueue_command(self, command, payload=None):
         payload = payload or {}
 
