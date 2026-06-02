@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional
 
 from backend.learning.dynamic_blocklist import DynamicBlocklist
 from config.confidence_matrix_config import POSTMORTEM_MACRO_PENALTY
+from config.pure_ai_trading_config import PURE_AI_POST_LOSS_COOLDOWN_MINUTES, pure_ai_respect_learning
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,22 @@ class PostTradePostMortemEngine:
 
         context_snapshot = dict(context_snapshot or {})
         diagnosis = self._diagnose(trade, context_snapshot)
+        is_pure_ai = str(trade.get("strategy_key") or "") == "pure_ai_trader"
+        if is_pure_ai and pure_ai_respect_learning() and not diagnosis.get("is_tactical_loss"):
+            symbol = str(trade.get("symbol") or "").upper()
+            minutes = max(1, int(PURE_AI_POST_LOSS_COOLDOWN_MINUTES))
+            diagnosis = {
+                **diagnosis,
+                "is_tactical_loss": True,
+                "target_symbol": symbol or trade.get("symbol"),
+                "block_duration_minutes": minutes,
+                "action_recommendation": "PURE_AI_LOSS_COOLDOWN",
+                "source": str(diagnosis.get("source") or "rules") + "+pure_ai_loss",
+                "rationale": (
+                    diagnosis.get("rationale")
+                    or f"Pure AI loss on {symbol}; cooldown {minutes}m to avoid repeat entry."
+                ),
+            }
         if diagnosis.get("is_tactical_loss"):
             symbol = str(diagnosis.get("target_symbol") or trade.get("symbol") or "").upper()
             minutes = int(diagnosis.get("block_duration_minutes") or 120)
@@ -47,6 +64,12 @@ class PostTradePostMortemEngine:
 
         diagnosis["timestamp"] = _now()
         diagnosis["order_id"] = trade.get("id") or trade.get("order_id")
+        if is_pure_ai:
+            side = str(trade.get("side") or "").upper()
+            if side not in {"BUY", "SELL"}:
+                qty = _safe_float(trade.get("signed_quantity") or trade.get("quantity"))
+                side = "BUY" if qty >= 0 else "SELL"
+            diagnosis["avoid_side"] = side
         return diagnosis
 
     def _diagnose(self, trade: Dict[str, Any], ctx: Dict[str, Any]) -> Dict[str, Any]:

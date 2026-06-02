@@ -1742,11 +1742,20 @@ class NexusRuntime:
             }
         radar_guidance = self.learning_feedback.get_strategy_guidance(
             "RADAR",
-            "ai_led_trade_proposer",
+            "pure_ai_trader",
             "radar_alt",
             market_context=market_contexts.get("RADAR", {}) if isinstance(market_contexts, dict) else {},
         )
         blocked = set(radar_guidance.get("blocked_symbols") or [])
+        pure_ai_learning: Dict[str, Any] = {}
+        try:
+            from backend.autonomy.pure_ai_position_policy import build_pure_ai_learning_context
+            from backend.services.runtime_store import runtime_store
+
+            pure_ai_learning = build_pure_ai_learning_context(runtime_store, radar_guidance)
+            blocked.update(str(s).upper() for s in (pure_ai_learning.get("blocked_symbols") or []))
+        except Exception:
+            pure_ai_learning = {}
         agent = self.agent_advisory.get("multi_agent") or {}
         agent_output = agent.get("proposal_output") or (agent.get("llm_discussion") or {}).get("output") or {}
         deployable = float(
@@ -1783,6 +1792,10 @@ class NexusRuntime:
             "regime_state": self.regime_classifier.snapshot(),
             "growth_status": dict(self.growth_status or {}),
             "learning_guidance_summary": dict(radar_guidance or {}),
+            "symbol_lessons": dict(pure_ai_learning.get("symbol_lessons") or radar_guidance.get("symbol_lessons") or {}),
+            "recent_pure_ai_losses": list(pure_ai_learning.get("recent_pure_ai_losses") or []),
+            "learning_lessons_text": str(pure_ai_learning.get("learning_lessons_text") or ""),
+            "pure_ai_pyramid_last_at": dict(getattr(self, "_pure_ai_pyramid_last_at", {}) or {}),
             "radar_budget_available": round(float(self.ledger.radar_available()), 4),
             "tradable_symbols": self._pure_ai_tradable_symbols(),
         }, deployable
@@ -1811,6 +1824,12 @@ class NexusRuntime:
             if self._try_execute_futures_request(req, symbol_prices, market_contexts, truth_status):
                 executed_entries += 1
                 self._pure_ai_last_execute_at = time.time()
+                if req.get("pyramid_add"):
+                    symbol = str(req.get("symbol") or "").upper()
+                    if symbol:
+                        pyramid_at = dict(getattr(self, "_pure_ai_pyramid_last_at", {}) or {})
+                        pyramid_at[symbol] = time.time()
+                        self._pure_ai_pyramid_last_at = pyramid_at
             else:
                 rejections.append(
                     {
@@ -1832,6 +1851,7 @@ class NexusRuntime:
         }
         self._last_pure_ai_cycle = dict(cycle or {})
         self._last_pure_ai_cycle["entry_pipeline"] = dict(self._last_entry_pipeline)
+        self._last_pure_ai_cycle["learning_lessons_text"] = str(context.get("learning_lessons_text") or "")
         positions = self.position_manager.all_positions()
         self._ai_flex_exit_executed_symbols = set()
         for action in list(cycle.get("exit_actions") or []):
@@ -2666,6 +2686,7 @@ class NexusRuntime:
         self.upgrade_pipeline.on_trade_result(result, recommendation)
         event = str(payload.get("event") or result.get("event") or "").upper()
         if event == "CLOSE" and float(payload.get("pnl", 0.0) or 0.0) < 0:
+            diagnosis = {}
             try:
                 ctx_snap = dict(context or {})
                 ctx_snap["market_regime_ai"] = (self.regime_classifier.snapshot() or {}).get("label")
@@ -2676,6 +2697,7 @@ class NexusRuntime:
                 payload["post_mortem"] = diagnosis
             except Exception as exc:
                 print(f"[nexus_runtime] post_mortem skipped: {exc}")
+            self._apply_pure_ai_loss_lesson(payload, diagnosis)
             self._trigger_immediate_loss_learning(payload, recommendation, context or {})
         if event in {"CLOSE", "LIVE"} or payload.get("exit_reason") or payload.get("exit_price"):
             symbol = str(payload.get("symbol") or result.get("symbol") or "").upper()
@@ -2685,6 +2707,47 @@ class NexusRuntime:
             self._force_immediate_tick = True
             self._append_alert("ALERT_RED", f"強平學習：{result.get('symbol')} 進入冷卻，非永久黑名單。")
         return result
+
+    def _apply_pure_ai_loss_lesson(self, trade, diagnosis=None):
+        from config.pure_ai_trading_config import pure_ai_respect_learning
+
+        if not pure_ai_respect_learning():
+            return
+        trade = dict(trade or {})
+        if str(trade.get("strategy_key") or "") != "pure_ai_trader":
+            return
+        symbol = str(trade.get("symbol") or "").upper()
+        pnl = float(trade.get("pnl", 0.0) or 0.0)
+        if not symbol or pnl >= 0:
+            return
+        side = str(trade.get("side") or "").upper()
+        if side not in {"BUY", "SELL"}:
+            qty = float(trade.get("signed_quantity") or trade.get("quantity") or 0.0)
+            side = "BUY" if qty >= 0 else "SELL"
+        diagnosis = dict(diagnosis or trade.get("post_mortem") or {})
+        lesson_text = str(
+            diagnosis.get("rationale") or trade.get("exit_reason") or trade.get("reason") or "pure_ai_loss"
+        )[:180]
+        try:
+            from backend.services.runtime_store import runtime_store
+
+            runtime_store.upsert_applied_learning_patch(
+                {
+                    "fleet": "RADAR",
+                    "strategy_key": "pure_ai_trader",
+                    "confidence_penalty": 0.06,
+                    "position_size_multiplier": 0.90,
+                    "symbol_lesson": {
+                        "symbol": symbol,
+                        "avoid_side": side,
+                        "lesson": lesson_text,
+                        "min_confidence": 0.40,
+                    },
+                    "applied_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                }
+            )
+        except Exception as exc:
+            print(f"[nexus_runtime] pure_ai loss lesson skipped: {exc}")
 
     def _trigger_immediate_loss_learning(self, trade, recommendation=None, context=None):
         trade = dict(trade or {})

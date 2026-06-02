@@ -57,6 +57,11 @@ PURE_AI_PYRAMID_MARGIN_MULT = _env_float("NEXUS_PURE_AI_PYRAMID_MARGIN_MULT", 0.
 PURE_AI_PYRAMID_MAX_ADDS = int(_env_float("NEXUS_PURE_AI_PYRAMID_MAX_ADDS", 2))
 PURE_AI_RADAR_FALLBACK = _env_bool("NEXUS_PURE_AI_RADAR_FALLBACK", True)
 PURE_AI_REQUIRE_MIN_PROPOSALS = _env_bool("NEXUS_PURE_AI_REQUIRE_MIN_PROPOSALS", True)
+PURE_AI_MAX_ENTRIES_PER_TICK = int(_env_float("NEXUS_PURE_AI_MAX_ENTRIES_PER_TICK", 2))
+PURE_AI_MAX_PYRAMID_PER_TICK = int(_env_float("NEXUS_PURE_AI_MAX_PYRAMID_PER_TICK", 1))
+PURE_AI_PYRAMID_COOLDOWN_SECONDS = int(_env_float("NEXUS_PURE_AI_PYRAMID_COOLDOWN_SECONDS", 120))
+PURE_AI_RESPECT_LEARNING = _env_bool("NEXUS_PURE_AI_RESPECT_LEARNING", True)
+PURE_AI_POST_LOSS_COOLDOWN_MINUTES = int(_env_float("NEXUS_PURE_AI_POST_LOSS_COOLDOWN_MINUTES", 45))
 # Prefer liquid testnet symbols when radar fallback fires (avoids illiquid scan noise).
 PURE_AI_PREFERRED_SYMBOLS = tuple(
     s.strip().upper()
@@ -94,6 +99,10 @@ def pure_ai_bypass_meeting_blocks() -> bool:
 
 def pure_ai_bypass_radar_cooldown() -> bool:
     return pure_ai_active() and PURE_AI_BYPASS_RADAR_COOLDOWN and sandbox_active()
+
+
+def pure_ai_respect_learning() -> bool:
+    return pure_ai_active() and PURE_AI_RESPECT_LEARNING
 
 
 def pure_ai_llm_refresh_seconds() -> int:

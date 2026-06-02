@@ -9,15 +9,23 @@ from config.pure_ai_trading_config import (
     PURE_AI_DEBATE_GATE,
     PURE_AI_DEFAULT_LEVERAGE,
     PURE_AI_LLM_ONLY,
+    PURE_AI_MAX_ENTRIES_PER_TICK,
+    PURE_AI_MAX_PYRAMID_PER_TICK,
     PURE_AI_MIN_MARGIN_USD,
+    PURE_AI_PYRAMID_COOLDOWN_SECONDS,
     PURE_AI_RADAR_FALLBACK,
+    PURE_AI_RESPECT_LEARNING,
+    PURE_AI_SL_PCT_ON_MARGIN,
     PURE_AI_TARGET_NOTIONAL_USD,
+    PURE_AI_TP_FULL_PCT,
+    PURE_AI_TP_PARTIAL_PCT,
     _env_bool,
     _env_float,
     pure_ai_active,
     pure_ai_bypass_fee_churn,
     pure_ai_bypass_growth_blocks,
     pure_ai_bypass_validation,
+    pure_ai_respect_learning,
 )
 from backend.trading.sandbox_mode import sandbox_active
 
@@ -119,6 +127,11 @@ def build_pure_ai_status(runtime) -> Dict[str, Any]:
             "exit_actions": list(cycle.get("exit_actions") or [])[:4],
             "hq_debate": dict(cycle.get("hq_debate") or {}),
             "entry_eval": dict(cycle.get("entry_eval") or {}),
+            "position_policy": dict(cycle.get("position_policy") or {}),
+            "learning_lessons_text": str(
+                (getattr(runtime, "_last_pure_ai_cycle", None) or {}).get("learning_lessons_text")
+                or ""
+            )[:240],
             "entry_pipeline": dict(cycle.get("entry_pipeline") or pipeline),
         },
         "entry_execution": {
@@ -159,6 +172,13 @@ def build_pure_ai_status(runtime) -> Dict[str, Any]:
             "fast_scan": _env_bool("NEXUS_PURE_AI_FAST_SCAN", True),
             "llm_refresh_seconds": int(_env_float("NEXUS_PURE_AI_LLM_REFRESH_SECONDS", 3)),
             "heuristic_heartbeat": _env_bool("NEXUS_PURE_AI_HEURISTIC_HEARTBEAT", True),
+            "respect_learning": pure_ai_respect_learning(),
+            "max_entries_per_tick": PURE_AI_MAX_ENTRIES_PER_TICK,
+            "max_pyramid_per_tick": PURE_AI_MAX_PYRAMID_PER_TICK,
+            "pyramid_cooldown_seconds": PURE_AI_PYRAMID_COOLDOWN_SECONDS,
+            "tp_partial_pct": PURE_AI_TP_PARTIAL_PCT,
+            "tp_full_pct": PURE_AI_TP_FULL_PCT,
+            "sl_pct_on_margin": PURE_AI_SL_PCT_ON_MARGIN,
         },
         "verification_checks": checks,
         "pnl_disclaimer": (

@@ -122,6 +122,24 @@ class LearningFeedbackLoop:
         confidence = float(result.get("confidence_score", 0.0) or context.get("confidence_score", 0.0) or 0.0)
         strategy_key = result.get("strategy_key") or context.get("strategy_key") or "unknown_strategy"
         adjustment = -0.05 if leverage >= 20 or confidence >= 0.85 else -0.02
+        is_pure_ai = strategy_key == "pure_ai_trader" or str(result.get("decision_source") or "").startswith(
+            ("pure_ai", "ai_flex")
+        )
+        symbol_lesson_candidate = None
+        if result.get("failure_reason") == "exchange_liquidation":
+            symbol_lesson_candidate = {
+                "symbol": result.get("symbol"),
+                "lesson": "avoid_repeat_liquidation",
+                "failure_reason": "exchange_liquidation",
+            }
+        elif is_pure_ai:
+            symbol_lesson_candidate = {
+                "symbol": result.get("symbol"),
+                "side": result.get("side"),
+                "lesson": f"avoid_repeat_after_{result.get('failure_reason') or 'loss'}",
+                "failure_reason": result.get("failure_reason"),
+                "exit_reason": result.get("exit_reason") or result.get("exit_class"),
+            }
         return {
             "timestamp": result.get("timestamp"),
             "symbol": result.get("symbol"),
@@ -133,20 +151,12 @@ class LearningFeedbackLoop:
             "blacklist_candidate": result.get("symbol")
             if result.get("failure_reason") == "low_liquidity"
             else None,
-            "symbol_lesson_candidate": (
-                {
-                    "symbol": result.get("symbol"),
-                    "lesson": "avoid_repeat_liquidation",
-                    "failure_reason": "exchange_liquidation",
-                }
-                if result.get("failure_reason") == "exchange_liquidation"
-                else None
-            ),
+            "symbol_lesson_candidate": symbol_lesson_candidate,
             "recommended_leverage_cap": 10 if leverage >= 50 else 20 if leverage >= 20 else None,
             "confidence_penalty_suggestion": abs(adjustment),
             "position_size_multiplier_suggestion": 0.8 if leverage >= 20 or confidence >= 0.85 else 0.92,
             "review_priority": "high" if leverage >= 20 or confidence >= 0.85 else "normal",
-            "recommendation_only": True,
+            "recommendation_only": not is_pure_ai,
         }
 
     def _consecutive_losses(self, items):
@@ -479,8 +489,9 @@ class LearningFeedbackLoop:
                 guidance["leverage_cap"] = 10
             guidance["learning_guard_mode"] = "revenue_soft" if REVENUE_GROWTH_MODE else "bold_testnet_soft"
         from backend.trading.sandbox_mode import sandbox_active
+        from config.pure_ai_trading_config import pure_ai_respect_learning
 
-        if sandbox_active():
+        if sandbox_active() and not pure_ai_respect_learning():
             guidance["pause_new_entries"] = False
             guidance["regime_blocked"] = False
             guidance["symbol_cooldown"] = {}
@@ -488,6 +499,10 @@ class LearningFeedbackLoop:
             guidance["failure_focus_flags"] = []
             guidance["symbol_lessons"] = {}
             guidance["learning_guard_mode"] = "testnet_sandbox"
+        elif sandbox_active() and pure_ai_respect_learning():
+            guidance["pause_new_entries"] = False
+            guidance["regime_blocked"] = False
+            guidance["learning_guard_mode"] = "pure_ai_learning_active"
         return guidance
 
     def build_strategy_adaptation_snapshot(self, market_contexts=None):

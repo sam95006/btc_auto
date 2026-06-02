@@ -58,7 +58,7 @@ class PureAiOrchestratorTests(unittest.TestCase):
 
         orchestrator = PureAiOrchestrator(llm_gateway=None)
         orchestrator.evaluator = _Eval()
-        rows = orchestrator._collect_entries(
+        rows, _policy = orchestrator._collect_entries(
             {
                 "deployable_pool": 4000.0,
                 "radar_budget_available": 400.0,
@@ -82,6 +82,8 @@ class PureAiOrchestratorTests(unittest.TestCase):
                     "margin": 100.0,
                     "unrealized_pnl": 20.0,
                     "leverage": 20,
+                    "entry_price": 100.0,
+                    "mark_price": 101.5,
                 }
             ],
         }

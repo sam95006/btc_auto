@@ -132,10 +132,22 @@ def _exit_row(
     }
 
 
-def merge_exit_actions_prefer_hard(
+def _exit_priority(item: Dict[str, Any]) -> int:
+    urgency = str(item.get("urgency") or "medium").lower()
+    rank = {"critical": 40, "high": 30, "medium": 20, "low": 10}.get(urgency, 15)
+    if str(item.get("source") or "") == "pure_ai_hard_exit":
+        rank += 5
+    fraction = _safe_float(item.get("fraction"), 0.0)
+    if str(item.get("action") or "") == "reduce_or_close" and fraction >= 0.99:
+        rank += 2
+    return rank
+
+
+def merge_exit_actions_flexible(
     hard: List[Dict[str, Any]],
     others: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
+    """Merge LLM soft exits with mandatory hard exits — higher urgency wins per symbol."""
     by_symbol: Dict[str, Dict[str, Any]] = {}
     for item in list(others or []):
         symbol = str(item.get("symbol") or "").upper()
@@ -143,6 +155,16 @@ def merge_exit_actions_prefer_hard(
             by_symbol[symbol] = item
     for item in list(hard or []):
         symbol = str(item.get("symbol") or "").upper()
-        if symbol:
+        if not symbol:
+            continue
+        prev = by_symbol.get(symbol)
+        if not prev or _exit_priority(item) >= _exit_priority(prev):
             by_symbol[symbol] = item
     return list(by_symbol.values())
+
+
+def merge_exit_actions_prefer_hard(
+    hard: List[Dict[str, Any]],
+    others: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    return merge_exit_actions_flexible(hard, others)
