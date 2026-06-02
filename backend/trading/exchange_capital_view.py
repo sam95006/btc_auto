@@ -6,6 +6,7 @@ import hashlib
 from typing import Any, Dict, Tuple
 
 from config.capital_display_config import TREASURY_DISPLAY_ASSETS
+from config.revenue_target_config import FUTURES_ONLY_TRADING
 
 
 def api_key_fingerprint(api_key: str) -> str:
@@ -231,14 +232,15 @@ def build_ui_capital(
 
     spot_stable = spot["stable_total"] if spot_configured else 0.0
     futures_equity = futures["margin_balance"] if futures_configured else 0.0
-    combined = round(spot_stable + futures_equity, 4)
+    # Most users operate U本位合約 testnet only; spot testnet balances can be unrelated.
+    combined = round(futures_equity if FUTURES_ONLY_TRADING else (spot_stable + futures_equity), 4)
 
     assets = _treasury_assets()
     scope = "usdt_only_treasury" if assets == ("USDT",) else "multi_asset_treasury"
 
     return {
         "source": "binance_rest",
-        "display_scope": scope,
+        "display_scope": ("futures_only_total" if FUTURES_ONLY_TRADING else scope),
         "treasury_assets": list(assets),
         "coin_margined_included": False,
         "futures_market_scope": "usdt_m",

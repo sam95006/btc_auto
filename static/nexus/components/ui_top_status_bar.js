@@ -44,6 +44,7 @@ export function renderTopStatusBar(root, state) {
   const binanceFutures = capital.binance_futures || {};
   const treasuryAssets = capital.treasury_assets || binanceSpot.treasury_assets || ["USDT"];
   const usdtOnly = treasuryAssets.length === 1 && treasuryAssets[0] === "USDT";
+  const futuresOnly = Boolean(state.futures_only_trading) || capital.display_scope === "futures_only_total";
   const spotStable = Number(
     binanceSpot.stable_total ?? capital.spot_stable_total ?? capital.spot_usdt_total ?? 0,
   );
@@ -117,7 +118,15 @@ export function renderTopStatusBar(root, state) {
   root.innerHTML = `
     <div class="status-board">
       <div class="status-primary-grid status-primary-grid--compact">
-        ${card("總資產", formatMoney(capital.total), usdtOnly ? "僅 USDT（不含 USDC/BTC/幣本位）" : "現貨 + U本位")}
+        ${card(
+          "總資產",
+          formatMoney(capital.total),
+          futuresOnly
+            ? "U本位合約權益（不含現貨 testnet）"
+            : usdtOnly
+              ? "僅 USDT（不含 USDC/BTC/幣本位）"
+              : "現貨 + U本位",
+        )}
         ${card(
           usdtOnly ? "現貨 USDT" : "現貨穩定幣",
           formatMoney(spotStable),
