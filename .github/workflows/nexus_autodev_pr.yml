@@ -1,0 +1,111 @@
+name: nexus-autodev-pr
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *" # every 6 hours
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: nexus-autodev-pr
+  cancel-in-progress: false
+
+jobs:
+  propose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install requests
+
+      - name: Compute tuning proposal
+        id: tune
+        env:
+          NEXUS_BASE_URL: ${{ secrets.NEXUS_BASE_URL }}
+          NEXUS_AUTODEV_MIN_SAMPLE: "30"
+          NEXUS_AUTODEV_TARGET_WIN_RATE: "0.80"
+        run: |
+          python tools/autodev/strategy_optimizer.py "${NEXUS_BASE_URL:-https://btc-auto-bot-2026.zeabur.app}" > tuning.json
+          cat tuning.json
+
+      - name: Patch .env.example if needed
+        id: patch
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import re
+          
+          data = json.loads(Path("tuning.json").read_text(encoding="utf-8"))
+          updates = data.get("updates") or {}
+          if not updates:
+              print("has_changes=false")
+              Path("has_changes.txt").write_text("false")
+              raise SystemExit(0)
+          
+          path = Path(".env.example")
+          text = path.read_text(encoding="utf-8")
+          pat = re.compile(r"^([A-Z0-9_]+)=(.*)$")
+          out = []
+          seen = set()
+          for line in text.splitlines():
+              m = pat.match(line.strip())
+              if m and m.group(1) in updates:
+                  key = m.group(1)
+                  out.append(f"{key}={updates[key]}")
+                  seen.add(key)
+              else:
+                  out.append(line)
+                  if m:
+                      seen.add(m.group(1))
+          missing = [k for k in updates.keys() if k not in seen]
+          if missing:
+              out.append("")
+              out.append("# Autodev suggested tuning")
+              for k in missing:
+                  out.append(f"{k}={updates[k]}")
+          new = "\n".join(out) + ("\n" if text.endswith("\n") else "")
+          changed = new != text
+          if changed:
+              path.write_text(new, encoding="utf-8")
+          Path("has_changes.txt").write_text("true" if changed else "false")
+          print("has_changes=" + ("true" if changed else "false"))
+          PY
+          if [ -n "${GITHUB_OUTPUT:-}" ]; then
+            echo "has_changes=$(cat has_changes.txt)" >> "$GITHUB_OUTPUT"
+          fi
+        shell: bash
+
+      - name: Create Pull Request
+        if: ${{ steps.patch.outputs.has_changes == 'true' }}
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: "Autodev: tune Pure AI parameters for win-rate"
+          commit-message: "Autodev: tune Pure AI parameters"
+          branch: "autodev/tuning"
+          delete-branch: true
+          body: |
+            ## Summary
+            This PR was generated automatically by `nexus-autodev-pr`.
+            It proposes bounded Pure AI parameter changes (env example only) based on recent performance metrics.
+            
+            ## Safety
+            - No trading/execution logic changed.
+            - Only `.env.example` is modified; deployment still uses Zeabur variables.
+            
+            ## Next
+            - Review and merge to apply in the next redeploy cycle.
+
