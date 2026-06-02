@@ -5,11 +5,11 @@ from __future__ import annotations
 from datetime import datetime
 
 
-def _safe_float(value):
+def _safe_float(value, default=0.0):
     try:
-        return float(value or 0.0)
+        return float(value if value is not None else default)
     except Exception:
-        return 0.0
+        return float(default)
 
 
 def _now():

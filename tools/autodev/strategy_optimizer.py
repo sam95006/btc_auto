@@ -23,6 +23,10 @@ DEFAULT_BASE_URL = os.getenv("NEXUS_BASE_URL", "https://btc-auto-bot-2026.zeabur
 MIN_SAMPLE = int(float(os.getenv("NEXUS_AUTODEV_MIN_SAMPLE", "30")))
 TARGET_WIN_RATE = float(os.getenv("NEXUS_AUTODEV_TARGET_WIN_RATE", "0.80"))
 
+# User goal: daily target and max intraday drawdown (used for guardrail env suggestions).
+DAILY_TARGET_PCT = float(os.getenv("NEXUS_AUTODEV_DAILY_TARGET_PCT", "0.10"))
+DAILY_MAX_LOSS_PCT = float(os.getenv("NEXUS_AUTODEV_DAILY_MAX_LOSS_PCT", "0.05"))
+
 
 @dataclass
 class Fetch:
@@ -114,11 +118,19 @@ def propose_tuning(perf: Dict[str, Any], monthly: Dict[str, Any]) -> Dict[str, A
     net = _safe_float(monthly.get("realized_pnl_net"))
     progress = _safe_float(monthly.get("progress_pct"))
 
-    # Default (no-op) if insufficient sample.
-    if sample < MIN_SAMPLE:
-        return {}
+    # Always suggest daily guardrail targets (PR-friendly; actual Zeabur vars still need update).
+    updates: Dict[str, Any] = {
+        "NEXUS_COMPOUND_REINVEST": 1,
+        "NEXUS_DAILY_PNL_TARGET_PCT": round(_clamp(DAILY_TARGET_PCT, 0.001, 0.20), 3),
+        "NEXUS_DAILY_MAX_LOSS_PCT": round(_clamp(DAILY_MAX_LOSS_PCT, 0.005, 0.10), 3),
+        "NEXUS_DAILY_POSITIVE_MODE": 1,
+        # Profit lock is ignored when REVENUE_GROWTH_MODE=1, but keep it enabled for safety in other modes.
+        "NEXUS_LOCK_PROFIT_AFTER_DAILY_TARGET": 1,
+    }
 
-    updates: Dict[str, Any] = {}
+    # Default (no-op) if insufficient sample for strategy tuning.
+    if sample < MIN_SAMPLE:
+        return updates
 
     # If win rate is far from target, trade less aggressively.
     if win_rate < TARGET_WIN_RATE:
