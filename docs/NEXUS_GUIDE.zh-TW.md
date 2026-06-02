@@ -113,8 +113,42 @@ python run.py
 | `tests/` | 自動測試 | ❌ `.dockerignore` |
 | `docs/` | 本文件 | ❌ |
 | `tools/deploy/` | 部署/清理腳本 | ❌（僅本機） |
+| `tools/autodev/` | 自動化迭代（抓線上狀態 → 測試 → 部署 → 再驗證） | ❌（僅本機） |
 | `archives/`、`scratch/` | 歷史/暫存 | ❌ 勿提交 Git |
 | `logs/`、`data/`、`trading.db` | 本機狀態 | ❌ Volume 另掛 |
+
+---
+
+## 4. Cursor 全自動化迭代（C：維運 + 策略演化）
+
+> 目標：把「出錯 → 修復 → 部署 → 驗證」變成可重複的一鍵流程。  
+> 注意：本機腳本 **不會印出任何金鑰/secret**，只讀取 Zeabur 的公開 API 回傳。
+
+### 4.1 一鍵自動迭代（建議日常使用）
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/autodev/auto_iterate.ps1
+```
+
+流程包含：
+
+- 先抓線上狀態（`/api/nexus/state`、`/api/nexus/pure-ai-status`）並做基本異常判斷
+- 跑一組「Pure AI 快速測試」當作 gate
+- 上傳 `.env` 並 redeploy Zeabur
+- 再抓一次線上狀態確認恢復
+
+### 4.2 只做線上狀態偵錯（不部署）
+
+```powershell
+python tools/autodev/triage_remote.py https://btc-auto-bot-2026.zeabur.app
+```
+
+常見可直接定位的問題：
+
+- Worker crash / last_tick_error
+- snapshot 太慢（UI 卡載入）
+- `capital.source != binance_rest`（尚未完成 Binance 同步）
+- Pure AI 不 operational
 
 ---
 
