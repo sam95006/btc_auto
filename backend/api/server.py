@@ -302,7 +302,10 @@ def register_nexus_routes(app):
             research_gate = dict(getattr(nexus_runtime, "_research_gate_status", None) or {})
         except Exception:
             pass
-        return jsonify(build_performance_report(runtime_store, research_gate=research_gate))
+        try:
+            return jsonify(build_performance_report(runtime_store, research_gate=research_gate))
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 500
 
     @app.route("/api/nexus/research-gate")
     def nexus_research_gate():
