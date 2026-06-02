@@ -62,13 +62,15 @@ PURE_AI_MAX_PYRAMID_PER_TICK = int(_env_float("NEXUS_PURE_AI_MAX_PYRAMID_PER_TIC
 PURE_AI_PYRAMID_COOLDOWN_SECONDS = int(_env_float("NEXUS_PURE_AI_PYRAMID_COOLDOWN_SECONDS", 120))
 PURE_AI_RESPECT_LEARNING = _env_bool("NEXUS_PURE_AI_RESPECT_LEARNING", True)
 PURE_AI_POST_LOSS_COOLDOWN_MINUTES = int(_env_float("NEXUS_PURE_AI_POST_LOSS_COOLDOWN_MINUTES", 45))
+PURE_AI_UNIVERSE_MAX_SYMBOLS = int(_env_float("NEXUS_PURE_AI_UNIVERSE_MAX_SYMBOLS", 20))
 # Prefer liquid testnet symbols when radar fallback fires (avoids illiquid scan noise).
 PURE_AI_PREFERRED_SYMBOLS = tuple(
     s.strip().upper()
     for s in (
         os.getenv(
             "NEXUS_PURE_AI_PREFERRED_SYMBOLS",
-            "BTCUSDT,ETHUSDT,SOLUSDT,BNBUSDT,XRPUSDT,DOGEUSDT,AVAXUSDT,LINKUSDT",
+            # Default includes core fleets first: BTC/ETH/SOL/PEPE.
+            "BTCUSDT,ETHUSDT,SOLUSDT,1000PEPEUSDT,BNBUSDT,XRPUSDT,DOGEUSDT,AVAXUSDT,LINKUSDT",
         )
         or ""
     ).split(",")

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Dict, Optional, Set
 
 from backend.autonomy.pure_ai_orchestrator import PureAiOrchestrator
-from config.pure_ai_trading_config import PURE_AI_MAX_MARGIN_USD, PURE_AI_PREFERRED_SYMBOLS
+from config.pure_ai_trading_config import PURE_AI_MAX_MARGIN_USD, PURE_AI_PREFERRED_SYMBOLS, PURE_AI_UNIVERSE_MAX_SYMBOLS
 
 
 def _safe_float(value, default: float = 0.0) -> float:
@@ -16,16 +16,33 @@ def _safe_float(value, default: float = 0.0) -> float:
 
 
 def tradable_symbol_set(futures_client) -> Set[str]:
+    """
+    Tradable set used for last-mile remapping.
+    Prefer the runtime-provided universe (via futures_client ticker filter) but fall back to preferred symbols.
+    """
+    base = list(PURE_AI_PREFERRED_SYMBOLS)
     if futures_client is None:
-        return set(PURE_AI_PREFERRED_SYMBOLS)
+        return set(base)
     try:
         if hasattr(futures_client, "is_configured") and not futures_client.is_configured():
-            return set(PURE_AI_PREFERRED_SYMBOLS)
+            return set(base)
+        # If available, use top liquidity list from exchange to widen symbol choices.
+        if hasattr(futures_client, "fetch_24h_tickers"):
+            from backend.market.universe_filter_service import UniverseFilterService
+
+            svc = UniverseFilterService(max_symbols=50)
+            universe = svc.resolve_pure_ai_universe(
+                futures_client=futures_client,
+                radar_scan={},
+                max_symbols=int(PURE_AI_UNIVERSE_MAX_SYMBOLS),
+                include_core_first=True,
+            )
+            base = list(universe or base)
         if hasattr(futures_client, "filter_tradable_symbols"):
-            return set(futures_client.filter_tradable_symbols(list(PURE_AI_PREFERRED_SYMBOLS)))
+            return set(futures_client.filter_tradable_symbols(list(base)))
     except Exception:
-        pass
-    return set(PURE_AI_PREFERRED_SYMBOLS)
+        return set(base)
+    return set(base)
 
 
 def remap_to_tradable_symbol(symbol: str, tradable: Set[str]) -> Optional[str]:

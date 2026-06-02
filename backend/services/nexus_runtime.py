@@ -1801,9 +1801,22 @@ class NexusRuntime:
         }, deployable
 
     def _pure_ai_tradable_symbols(self):
-        from backend.autonomy.pure_ai_execution import tradable_symbol_set
+        """
+        Pure AI universe (max N):
+        - Core fleets (BTC/ETH/SOL/PEPE) always first
+        - Then RADAR scan candidates / liquidity-ranked symbols
+        """
+        from backend.market.universe_filter_service import UniverseFilterService
+        from config.pure_ai_trading_config import PURE_AI_UNIVERSE_MAX_SYMBOLS
 
-        return sorted(tradable_symbol_set(getattr(self, "futures_client", None)))
+        service = UniverseFilterService(max_symbols=50)
+        universe = service.resolve_pure_ai_universe(
+            futures_client=getattr(self, "futures_client", None),
+            radar_scan=getattr(self, "radar_scan", None) or {},
+            max_symbols=int(PURE_AI_UNIVERSE_MAX_SYMBOLS),
+            include_core_first=True,
+        )
+        return [str(s).upper() for s in (universe or [])]
 
     def _run_pure_ai_trading_cycle(self, prices, market_contexts, truth_status, symbol_prices):
         if self._manual_pause or not AI_LED_TRADING_ENABLED:
