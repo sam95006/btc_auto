@@ -175,6 +175,15 @@ Workflow：`.github/workflows/nexus_cloud_maintainer.yml`
 
 若偵測到 worker error、last_tick_error、或 state request latency 過高，會自動執行 Zeabur redeploy。
 
+## 6. 合併後自動部署到 Zeabur（GitHub Actions）
+
+Workflow：`.github/workflows/nexus_deploy_zeabur_on_main.yml`
+
+- 觸發：`main` 分支有變更（backend/config/static/templates/.env.example/workflows）或手動 `workflow_dispatch`
+- 動作：執行 `zeabur deploy`（使用 repo secrets：`ZEABUR_TOKEN`、`ZEABUR_PROJECT_ID`、`ZEABUR_SERVICE_ID`）
+
+這樣 `nexus-autodev-pr` 產生的 PR **一合併到 main**，會自動部署到 Zeabur。
+
 
 ## 4. 高優先能力（已加入）：「各別艦隊 vs 總站 HQ」
 

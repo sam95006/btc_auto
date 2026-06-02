@@ -1,0 +1,46 @@
+name: nexus-deploy-zeabur-on-main
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - "backend/**"
+      - "config/**"
+      - "static/**"
+      - "templates/**"
+      - ".env.example"
+      - ".github/workflows/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nexus-deploy-zeabur-on-main
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Zeabur CLI
+        run: npm i -g zeabur
+
+      - name: Deploy to Zeabur
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          ZEABUR_SERVICE_ID: ${{ secrets.ZEABUR_SERVICE_ID }}
+        run: |
+          if [ -z "$ZEABUR_TOKEN" ] || [ -z "$ZEABUR_PROJECT_ID" ] || [ -z "$ZEABUR_SERVICE_ID" ]; then
+            echo "Missing ZEABUR_* secrets. Abort deploy."
+            exit 1
+          fi
+          zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$ZEABUR_SERVICE_ID" -i=false
+
