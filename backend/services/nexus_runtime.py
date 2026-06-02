@@ -2417,6 +2417,18 @@ class NexusRuntime:
         if is_pure_ai:
             from backend.autonomy.pure_ai_execution import prepare_pure_ai_execution_request, resolve_execution_price
 
+            # Avoid Binance error -4161: cannot reduce leverage in isolated mode with open positions.
+            try:
+                pos = next(
+                    (p for p in (self.position_manager.all_positions() or []) if str(p.get("symbol") or "").upper() == symbol),
+                    None,
+                )
+                current_lev = float((pos or {}).get("leverage") or 0.0)
+                if current_lev > 0 and float(request.get("leverage") or 0.0) > 0:
+                    request["leverage"] = max(float(request.get("leverage") or 0.0), current_lev)
+            except Exception:
+                pass
+
             request = prepare_pure_ai_execution_request(
                 request,
                 deployable_pool=float(request.get("deployable_pool") or self._resolve_deployable_pool() or 0.0),
