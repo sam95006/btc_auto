@@ -152,6 +152,30 @@ python tools/autodev/triage_remote.py https://btc-auto-bot-2026.zeabur.app
 
 ---
 
+## 5. 雲端自動維運（GitHub Actions）
+
+> 目標：不用開 Cursor，也能在雲端每 5 分鐘自動檢查 Zeabur 上的 NEXUS；卡住/報錯就自動 redeploy。  
+> 策略演化（learning auto-apply）仍在 Zeabur runtime 內執行；Actions 負責「維運與復原」。
+
+### 5.1 啟用方式
+
+Workflow：`.github/workflows/nexus_cloud_maintainer.yml`
+
+在 GitHub repo 設定 Secrets：
+
+- `NEXUS_BASE_URL`：例如 `https://btc-auto-bot-2026.zeabur.app`
+- `ZEABUR_TOKEN`
+- `ZEABUR_PROJECT_ID`
+- `ZEABUR_SERVICE_ID`
+
+啟用後，每 5 分鐘會跑：
+
+- `GET /api/nexus/state`
+- `GET /api/nexus/pure-ai-status`
+
+若偵測到 worker error、last_tick_error、或 state request latency 過高，會自動執行 Zeabur redeploy。
+
+
 ## 4. 高優先能力（已加入）：「各別艦隊 vs 總站 HQ」
 
 下列四項是你指定的高優先缺口，已全部接進系統；並且明確劃分在「總站 HQ」或「各別艦隊」：

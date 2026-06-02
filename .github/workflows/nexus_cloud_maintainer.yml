@@ -1,0 +1,64 @@
+name: nexus-cloud-maintainer
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nexus-cloud-maintainer
+  cancel-in-progress: false
+
+jobs:
+  maintain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps (requests)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install requests
+
+      - name: Remote health triage
+        id: triage
+        env:
+          NEXUS_BASE_URL: ${{ secrets.NEXUS_BASE_URL }}
+          NEXUS_MAINT_MAX_STATE_MS: "12000"
+          NEXUS_MAINT_REDEPLOY_ON_TICK_ERROR: "1"
+        run: |
+          python tools/autodev/cloud_maintainer.py "${NEXUS_BASE_URL:-https://btc-auto-bot-2026.zeabur.app}"
+
+      - name: Setup Node for Zeabur CLI
+        if: steps.triage.outputs.want_redeploy == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Zeabur CLI
+        if: steps.triage.outputs.want_redeploy == 'true'
+        run: npm i -g zeabur
+
+      - name: Redeploy Zeabur service
+        if: steps.triage.outputs.want_redeploy == 'true'
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          ZEABUR_SERVICE_ID: ${{ secrets.ZEABUR_SERVICE_ID }}
+        run: |
+          if [ -z "$ZEABUR_TOKEN" ] || [ -z "$ZEABUR_PROJECT_ID" ] || [ -z "$ZEABUR_SERVICE_ID" ]; then
+            echo "Missing ZEABUR_* secrets. Skip redeploy."
+            exit 0
+          fi
+          zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$ZEABUR_SERVICE_ID" -i=false
+
