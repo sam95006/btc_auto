@@ -218,6 +218,27 @@ class RuntimeStateStore:
             )
             cursor.execute(
                 """
+                CREATE TABLE IF NOT EXISTS nexus_reflection_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    fleet TEXT,
+                    symbol TEXT,
+                    strategy_key TEXT,
+                    reflection_json TEXT NOT NULL
+                )
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS nexus_micro_validation_state (
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    state_json TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+                """
+            )
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS nexus_trade_proposals (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp TEXT NOT NULL,
@@ -785,6 +806,15 @@ class RuntimeStateStore:
             )
         self._run_write(operation)
 
+    def recent_reflection_records(self, limit=50):
+        with self._lock:
+            cursor = self._conn.cursor()
+            cursor.execute(
+                "SELECT reflection_json FROM nexus_reflection_records ORDER BY id DESC LIMIT ?",
+                (limit,),
+            )
+            return [json.loads(row["reflection_json"]) for row in cursor.fetchall()]
+
     def append_signal_weight_recommendation(self, recommendation):
         def operation(cursor):
             cursor.execute(
@@ -1086,6 +1116,35 @@ class RuntimeStateStore:
                 (limit,),
             )
             return [json.loads(row["session_json"]) for row in cursor.fetchall()]
+
+    def load_micro_validation_state(self):
+        with self._lock:
+            cursor = self._conn.cursor()
+            cursor.execute("SELECT state_json FROM nexus_micro_validation_state WHERE id=1")
+            row = cursor.fetchone()
+            if not row:
+                return {}
+            try:
+                return json.loads(row["state_json"] or "{}")
+            except Exception:
+                return {}
+
+    def save_micro_validation_state(self, state):
+        payload = dict(state or {})
+
+        def operation(cursor):
+            cursor.execute(
+                """
+                INSERT INTO nexus_micro_validation_state (id, state_json, updated_at)
+                VALUES (1, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    state_json=excluded.state_json,
+                    updated_at=excluded.updated_at
+                """,
+                (json.dumps(payload, ensure_ascii=False), payload.get("updated_at") or _now()),
+            )
+
+        self._run_write(operation)
 
 
 runtime_store = RuntimeStateStore()

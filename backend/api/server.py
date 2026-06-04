@@ -264,6 +264,111 @@ def register_nexus_routes(app):
         except Exception as exc:
             return jsonify({"active": False, "error": str(exc)}), 500
 
+    @app.route("/api/nexus/hemostasis-status")
+    def nexus_hemostasis_status():
+        try:
+            from config.hemostasis_config import defensive_mode_active, fleet_burst_enabled, radar_dispatch_entries_allowed
+            from config.leverage_config import MAX_SYSTEM_LEVERAGE
+            from backend.services.nexus_runtime import nexus_runtime
+
+            growth = dict(getattr(nexus_runtime, "growth_status", None) or {})
+            return jsonify(
+                {
+                    "defensive_mode": defensive_mode_active(),
+                    "block_new_entries": bool(growth.get("block_new_entries")),
+                    "block_reason": str(growth.get("block_reason") or ""),
+                    "radar_dispatch_entries_allowed": radar_dispatch_entries_allowed(),
+                    "fleet_burst_enabled": fleet_burst_enabled(),
+                    "fleet_anti_burst": dict(getattr(nexus_runtime, "_fleet_burst_status", None) or {}),
+                    "max_system_leverage": int(MAX_SYSTEM_LEVERAGE),
+                }
+            )
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 500
+
+    @app.route("/api/nexus/trade-results")
+    def nexus_trade_results():
+        limit = min(500, max(1, int(request.args.get("limit", 50))))
+        symbol = str(request.args.get("symbol") or "").upper()
+        items = runtime_store.recent_trade_results(limit=limit)
+        if symbol:
+            items = [row for row in items if str(row.get("symbol") or "").upper() == symbol]
+        return jsonify({"items": items, "count": len(items), "limit": limit})
+
+    @app.route("/api/nexus/reflection-records")
+    def nexus_reflection_records():
+        limit = min(500, max(1, int(request.args.get("limit", 50))))
+        symbol = str(request.args.get("symbol") or "").upper()
+        items = runtime_store.recent_reflection_records(limit=limit)
+        if symbol:
+            items = [row for row in items if str(row.get("symbol") or "").upper() == symbol]
+        return jsonify({"items": items, "count": len(items), "limit": limit})
+
+    @app.route("/api/nexus/applied-learning-patches")
+    def nexus_applied_learning_patches():
+        limit = min(500, max(1, int(request.args.get("limit", 50))))
+        fleet = str(request.args.get("fleet") or "").upper()
+        symbol = str(request.args.get("symbol") or "").upper()
+        items = runtime_store.list_applied_learning_patches(limit=limit)
+        if fleet:
+            items = [row for row in items if str(row.get("fleet") or "").upper() == fleet]
+        if symbol:
+            items = [
+                row
+                for row in items
+                if str((row.get("symbol_lesson") or {}).get("symbol") or "").upper() == symbol
+            ]
+        return jsonify({"items": items, "count": len(items), "limit": limit})
+
+    @app.route("/api/nexus/micro-validation/status")
+    def nexus_micro_validation_status():
+        """Read-only Phase 3.0 session state (arm remains CLI-only)."""
+        try:
+            from config.micro_validation_config import (
+                MICRO_VALIDATION_ALLOW_REARM,
+                MICRO_VALIDATION_MAX_HOLD_MIN,
+                MICRO_VALIDATION_MAX_LEVERAGE,
+                MICRO_VALIDATION_MAX_MARGIN_USD,
+                MICRO_VALIDATION_REQUIRE_REFLECTION,
+                MICRO_VALIDATION_SIDE,
+                MICRO_VALIDATION_SL_USD,
+                MICRO_VALIDATION_SYMBOL,
+                MICRO_VALIDATION_TP_ENABLED,
+                MICRO_VALIDATION_TP_USD,
+                micro_validation_active,
+            )
+            from backend.validation.micro_entry_guard import get_micro_entry_guard
+
+            guard = get_micro_entry_guard()
+            session = guard.snapshot()
+            verification = dict(session.get("verification") or {})
+            report = dict(session.get("report") or {})
+            return jsonify(
+                {
+                    "enabled": micro_validation_active(),
+                    "config": {
+                        "symbol": MICRO_VALIDATION_SYMBOL,
+                        "side": MICRO_VALIDATION_SIDE,
+                        "max_margin_usd": MICRO_VALIDATION_MAX_MARGIN_USD,
+                        "max_leverage": MICRO_VALIDATION_MAX_LEVERAGE,
+                        "sl_usd": MICRO_VALIDATION_SL_USD,
+                        "tp_enabled": MICRO_VALIDATION_TP_ENABLED,
+                        "tp_usd": MICRO_VALIDATION_TP_USD,
+                        "max_hold_min": MICRO_VALIDATION_MAX_HOLD_MIN,
+                        "require_reflection": MICRO_VALIDATION_REQUIRE_REFLECTION,
+                        "allow_rearm": MICRO_VALIDATION_ALLOW_REARM,
+                    },
+                    "session": session,
+                    "verification": verification,
+                    "report": report,
+                    "arm_executed": str(session.get("state") or "IDLE").upper()
+                    in {"ARMED", "ENTRY_SENT", "POSITION_OPEN", "EXIT_PENDING", "VERIFYING", "COMPLETED"}
+                    or bool(session.get("entry_consumed")),
+                }
+            )
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 500
+
     @app.route("/api/nexus/layout")
     def nexus_layout():
         return jsonify(layout_store.load())
