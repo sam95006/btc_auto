@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-import os
 import uuid
 from datetime import datetime
 
 from backend.trading.sandbox_mode import sandbox_active
 from config.autonomy_config import NEXUS_AUTONOMY_LEVEL, NEXUS_SHADOW_MODE
+from config.micro_validation_config import (
+    is_micro_governance_live_exception,
+    is_micro_regime_governance_exception,
+    is_micro_validation_entry,
+)
 from config.testnet_sandbox_config import SANDBOX_FORCE_LIVE_EXECUTE
 
 
@@ -40,13 +44,13 @@ class ExecutionGovernor:
         reject_layer = None
         why_not = []
 
-        if approved and learning_guidance.get("pause_new_entries") and not sandbox_active():
+        if approved and learning_guidance.get("pause_new_entries") and not sandbox_active() and not is_micro_validation_entry(proposal):
             approved = False
             reason = "learning_pause_new_entries"
             reject_layer = "learning_guard"
             why_not.append("consecutive_loss_pause")
 
-        if approved and learning_guidance.get("regime_blocked") and not sandbox_active():
+        if approved and learning_guidance.get("regime_blocked") and not sandbox_active() and not is_micro_validation_entry(proposal):
             approved = False
             reason = "learning_regime_blocked"
             reject_layer = "learning_guard"
@@ -67,6 +71,7 @@ class ExecutionGovernor:
             approved
             and regime_label == "HIGH_RISK_MACRO"
             and strategy_key != "market_neutral_funding"
+            and not is_micro_regime_governance_exception(proposal)
         ):
             approved = False
             reason = "regime_high_risk_macro"
@@ -109,17 +114,25 @@ class ExecutionGovernor:
             self.shadow_mode_enabled
             and self.autonomy_level < 2
             and not (sandbox_active() and SANDBOX_FORCE_LIVE_EXECUTE)
+            and not is_micro_governance_live_exception(proposal)
         ):
             shadow_only = True
             if approved:
                 why_not.append("shadow_mode_blocks_live_execution")
+                if not reject_layer:
+                    reject_layer = "shadow_mode"
+                    reason = "shadow_mode_blocks_live_execution"
+
+        effective_reject_layer = reject_layer or validation.get("reject_layer")
+        effective_reason = reason if effective_reject_layer else validation.get("reason", reason)
 
         return {
             **validation,
             "trace_id": trace_id,
             "approved": approved and not shadow_only,
+            "reason": effective_reason,
             "governance_reason": reason,
-            "reject_layer": reject_layer or validation.get("reject_layer"),
+            "reject_layer": effective_reject_layer,
             "why_not": why_not or validation.get("why_not"),
             "shadow_only": shadow_only,
             "autonomy_level": self.autonomy_level,
