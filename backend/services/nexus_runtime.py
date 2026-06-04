@@ -77,6 +77,12 @@ from backend.news.event_normalization_service import EventNormalizationService
 from backend.news.news_ingestion_service import NewsIngestionService
 from backend.learning.feedback_loop import LearningFeedbackLoop
 from backend.learning.liquidation_tracker import LiquidationTracker
+from config.micro_validation_config import is_micro_validation_entry
+from backend.validation.micro_entry_guard import get_micro_entry_guard
+from backend.validation.micro_sizing import (
+    apply_final_micro_sizing_clamp,
+    resolve_micro_exchange_min_notional,
+)
 from backend.governance.upgrade_pipeline import UpgradePipeline
 from backend.governance.radar_llm_proposal_bridge import RadarLlmProposalBridge
 from backend.analytics.daily_ops_reporter import should_broadcast, format_report as format_daily_ops_report
@@ -316,6 +322,9 @@ class NexusRuntime:
         self._ai_flex_exit_symbols = set()
         self._ai_flex_exit_executed_symbols = set()
         self._last_entry_pipeline = {}
+        self._micro_validation_arm_pending = False
+        self._last_micro_validation_arm_result = {}
+        self._last_micro_validation_report = {}
         self._meeting_execution_directives = {"blocked_fleets": [], "forbidden_actions": []}
         self.strategy_engines = {
             fleet: BaseFleetStrategyEngine(
@@ -1039,6 +1048,7 @@ class NexusRuntime:
         if self._research_gate_status.get("block_new_entries"):
             self.growth_status["block_new_entries"] = True
             self.growth_status["block_reason"] = f"research_gate:{self._research_gate_status.get('reason', 'blocked')}"
+        self._apply_hemostasis_directives()
         self._strategy_evolution_status = {
             "evolution_mode": self.growth_status.get("evolution_mode", "hold"),
             "recent_win_rate": self.growth_status.get("recent_win_rate"),
@@ -1050,6 +1060,14 @@ class NexusRuntime:
         self._sync_wallet_intel(futures_account, spot_account)
         self._synchronize_live_futures_state(futures_account)
         self._ensure_fixed_roundtables()
+        symbol_prices = self._build_symbol_prices(prices)
+        self.position_manager.update_unrealized(prices, symbol_prices=symbol_prices)
+        if getattr(self, "_micro_validation_arm_pending", False):
+            self._micro_validation_arm_pending = False
+            self._last_micro_validation_arm_result = self._execute_micro_validation_arm(
+                prices, market_contexts, symbol_prices
+            )
+        self._run_micro_validation_tick(prices, market_contexts, symbol_prices)
 
         if self._manual_pause:
             level = "ALERT_RED" if self._news_pause_active else "WARNING"
@@ -1834,6 +1852,16 @@ class NexusRuntime:
         )
         return [str(s).upper() for s in (universe or [])]
 
+    def _apply_hemostasis_directives(self):
+        from config.hemostasis_config import defensive_mode_active
+
+        self.growth_status = dict(self.growth_status or {})
+        if defensive_mode_active():
+            self.growth_status["block_new_entries"] = True
+            self.growth_status["block_reason"] = "defensive_mode_止血_暫停Futures新開倉"
+            self.growth_status["defensive_mode"] = True
+            self.growth_status["defensive_mode_message"] = "防禦模式：只允許停損、減倉、平倉"
+
     def _run_pure_ai_trading_cycle(self, prices, market_contexts, truth_status, symbol_prices):
         if self._manual_pause or not AI_LED_TRADING_ENABLED:
             return
@@ -1847,7 +1875,19 @@ class NexusRuntime:
         cycle = self.pure_ai_orchestrator.run_cycle(context)
         executed_entries = 0
         rejections = []
+        block_entries = bool((self.growth_status or {}).get("block_new_entries"))
+        if get_micro_entry_guard().should_block_ai_entries():
+            block_entries = True
         for request in list(cycle.get("entry_proposals") or []):
+            if block_entries:
+                rejections.append(
+                    {
+                        "symbol": request.get("symbol"),
+                        "side": request.get("side"),
+                        "reason": (self.growth_status or {}).get("block_reason") or "block_new_entries",
+                    }
+                )
+                continue
             req = dict(request or {})
             req["deployable_pool"] = deployable
             if self._try_execute_futures_request(req, symbol_prices, market_contexts, truth_status):
@@ -2401,6 +2441,7 @@ class NexusRuntime:
     def _try_execute_futures_request(self, request, symbol_prices, market_contexts, truth_status, learning_guidance=None):
         self._last_execute_reject_reason = None
         request = dict(request or {})
+        is_micro = is_micro_validation_entry(request)
         is_pure_ai = str(request.get("decision_source") or "").startswith(("pure_ai", "ai_flex"))
         if str(request.get("side") or "").upper() == "NEUTRAL_HEDGE":
             return self._execute_market_neutral_request(request, symbol_prices, market_contexts, truth_status)
@@ -2410,10 +2451,33 @@ class NexusRuntime:
             from config.pure_ai_trading_config import PURE_AI_PREFERRED_SYMBOLS
 
             preferred = {str(s).upper() for s in PURE_AI_PREFERRED_SYMBOLS}
-            if not (is_pure_ai and symbol in preferred):
+            if not (is_pure_ai and symbol in preferred) and not is_micro:
                 self._last_execute_reject_reason = "symbol_blocked"
                 return False
+        if is_micro:
+            guard = get_micro_entry_guard()
+            ok, micro_reason = guard.validate_request(request)
+            if not ok:
+                self._last_execute_reject_reason = micro_reason
+                return False
+            request = guard.clamp_request(request)
+            symbol = str(request.get("symbol") or request.get("symbol_override") or "").upper().replace("/", "")
+            fleet = str(request.get("fleet") or fleet).upper()
         request = self._finalize_request_sizing(request, market_contexts)
+        if is_micro:
+            exchange_min_notional, _fallback_reason = resolve_micro_exchange_min_notional(
+                self.futures_client,
+                symbol,
+            )
+            request, sizing_err = apply_final_micro_sizing_clamp(
+                request,
+                min_notional_usd=exchange_min_notional,
+            )
+            if sizing_err:
+                get_micro_entry_guard().fail(sizing_err)
+                self._last_execute_reject_reason = sizing_err
+                return False
+            request = get_micro_entry_guard().clamp_request(request)
         if is_pure_ai:
             from backend.autonomy.pure_ai_execution import prepare_pure_ai_execution_request, resolve_execution_price
 
@@ -2444,7 +2508,7 @@ class NexusRuntime:
         if not symbol:
             self._last_execute_reject_reason = "missing_symbol"
             return False
-        if self._fleet_blocked_by_meeting(fleet) and not (is_pure_ai and pure_ai_bypass_meeting_blocks()):
+        if self._fleet_blocked_by_meeting(fleet) and not (is_pure_ai and pure_ai_bypass_meeting_blocks()) and not is_micro:
             self._last_execute_reject_reason = "meeting_blocked_fleet"
             return False
         if is_pure_ai and not self._futures_write_allowed():
@@ -2514,6 +2578,16 @@ class NexusRuntime:
             )
         signal = {"action": request.get("side", "HOLD"), "confidence": request.get("adjusted_confidence", 0.5), "reason": request.get("reason")}
         growth_context = self._build_growth_context(fleet, signal, alt_context, request)
+        if is_micro:
+            growth_directives = dict(growth_context.get("growth_directives") or {})
+            growth_directives["block_new_entries"] = False
+            growth_directives["block_reason"] = ""
+            growth_directives["max_leverage"] = min(
+                float(growth_directives.get("max_leverage") or 999),
+                float(request.get("leverage") or 5),
+            )
+            growth_context["growth_directives"] = growth_directives
+            alt_context["growth_max_leverage"] = request.get("leverage", 5)
         if pure_ai_bypass_validation() and is_pure_ai:
             validation = {
                 "approved": True,
@@ -2597,6 +2671,37 @@ class NexusRuntime:
                 )
             if fleet == "RADAR":
                 self.radar_dispatch.mark_open(symbol)
+            if is_micro:
+                guard = get_micro_entry_guard()
+                guard.mark_entry_sent()
+                position = next(
+                    (
+                        p
+                        for p in (self.position_manager.all_positions() or [])
+                        if str(p.get("symbol") or "").upper() == symbol
+                    ),
+                    None,
+                )
+                if position:
+                    guard.mark_position_open(str(position.get("id") or ""))
+                self._record_trade_result(
+                    {
+                        "event": "OPEN",
+                        "symbol": symbol,
+                        "fleet": fleet,
+                        "side": request.get("side"),
+                        "margin": request.get("margin"),
+                        "leverage": request.get("leverage"),
+                        "entry_price": float((position or {}).get("entry_price") or current),
+                        "pnl": 0.0,
+                        "strategy_key": request.get("strategy_key"),
+                        "decision_source": request.get("decision_source"),
+                        "position_id": (position or {}).get("id"),
+                        "timestamp": _now(),
+                        "market_type": "futures",
+                    },
+                    context=alt_context,
+                )
             return True
         except Exception as exc:
             self._last_execute_reject_reason = str(exc)[:120]
@@ -3614,6 +3719,114 @@ class NexusRuntime:
         )
         self.station_chats = self.station_chat_log.recent_grouped()
 
+    def _execute_micro_validation_arm(self, prices, market_contexts, symbol_prices):
+        guard = get_micro_entry_guard()
+        try:
+            if not guard.can_arm():
+                return {"ok": False, "error": guard.last_error or "cannot_arm"}
+            guard.arm()
+            request = guard.build_entry_request()
+            symbol = str(request.get("symbol") or "").upper()
+            existing = [
+                p
+                for p in (self.position_manager.all_positions() or [])
+                if str(p.get("symbol") or "").upper() == symbol
+            ]
+            if existing:
+                guard.fail("existing_position_blocks_micro_entry")
+                return {"ok": False, "error": "existing_position_blocks_micro_entry"}
+            ok = self._try_execute_futures_request(
+                request,
+                symbol_prices,
+                market_contexts,
+                self.truth_layer_status or {},
+            )
+            if ok:
+                return {"ok": True, "symbol": symbol, "session_id": guard.snapshot().get("session_id")}
+            reason = self._last_execute_reject_reason or "entry_rejected"
+            guard.fail(reason)
+            return {"ok": False, "error": reason}
+        except Exception as exc:
+            guard.fail(str(exc)[:200])
+            return {"ok": False, "error": str(exc)[:200]}
+
+    def _run_micro_validation_tick(self, prices, market_contexts, symbol_prices):
+        guard = get_micro_entry_guard()
+        if not guard.session_in_progress() and str(guard.snapshot().get("state") or "") not in {"VERIFYING"}:
+            return
+        state = str(guard.snapshot().get("state") or "").upper()
+        symbol = str(guard.snapshot().get("symbol") or "").upper()
+        fleet = str(guard.snapshot().get("fleet") or "ETH").upper()
+        positions = [
+            p for p in (self.position_manager.all_positions() or []) if str(p.get("symbol") or "").upper() == symbol
+        ]
+        position = positions[0] if positions else None
+        if state in {"ENTRY_SENT", "ARMED"} and position:
+            guard.mark_position_open(str(position.get("id") or ""))
+            state = "POSITION_OPEN"
+        execution_engine = self.execution_router.futures_engine if self.execution_router else self.execution_engine
+        if state in {"ENTRY_SENT", "POSITION_OPEN"} and position:
+            current = float(
+                symbol_prices.get(symbol)
+                or position.get("mark_price", 0.0)
+                or (prices.get(fleet) or {}).get("price", 0.0)
+                or 0.0
+            )
+            if current > 0:
+                exit_action = guard.evaluate_exit(position)
+                if exit_action:
+                    guard.mark_exit_pending()
+                    reason = str(exit_action.get("reason") or "micro_validation_exit")
+                    try:
+                        if exit_action.get("type") == "partial" and guard.snapshot().get("allow_partial"):
+                            trade = execution_engine.reduce_position(
+                                position["id"],
+                                float(exit_action.get("fraction") or 0.5),
+                                current,
+                                reason=reason,
+                            )
+                        else:
+                            trade = execution_engine.close_position(position["id"], current, reason=reason)
+                    except Exception as exc:
+                        guard.fail(f"exit_failed:{exc}")
+                        return
+                    if trade:
+                        ctx = dict(market_contexts.get(fleet, {}) or {})
+                        ctx["setup_type"] = "micro_validation_p30"
+                        trade = dict(trade or {})
+                        self._record_trade_result(
+                            {
+                                "event": "CLOSE",
+                                "order_id": trade.get("id"),
+                                "position_id": trade.get("position_id") or position.get("id"),
+                                "symbol": trade.get("symbol") or symbol,
+                                "fleet": fleet,
+                                "side": trade.get("side") or position.get("side"),
+                                "entry_price": trade.get("entry_price"),
+                                "exit_price": trade.get("exit_price"),
+                                "pnl": trade.get("pnl"),
+                                "exit_reason": trade.get("reason") or reason,
+                                "exit_class": exit_action.get("exit_class"),
+                                "strategy_key": "micro_validation_p30",
+                                "decision_source": "micro_validation_p30",
+                                "leverage": trade.get("leverage") or position.get("leverage"),
+                                "timestamp": trade.get("time") or _now(),
+                                "market_type": "futures",
+                            },
+                            context=ctx,
+                        )
+                        guard.mark_verifying()
+        if str(guard.snapshot().get("state") or "").upper() == "VERIFYING":
+            if position and float(position.get("quantity") or 0.0) > 0:
+                return
+            verification = guard.verify_chain(runtime_store)
+            report = guard.complete(verification)
+            self._last_micro_validation_report = report
+            self._append_alert(
+                "INFO" if verification.get("passed") else "WARNING",
+                f"Micro Validation {'PASS' if verification.get('passed') else 'FAIL'}: {symbol}",
+            )
+
     def _process_commands(self):
         commands = runtime_store.claim_pending_commands(limit=20)
         for item in commands:
@@ -3633,6 +3846,9 @@ class NexusRuntime:
                         source="control_api",
                         trigger_text=str(payload.get("note") or command),
                     )
+                elif command == "MICRO_VALIDATION_ARM":
+                    self._micro_validation_arm_pending = True
+                    result = {"ok": True, "command": command, "status": "queued_for_next_tick"}
                 else:
                     result = {"ok": False, "error": f"unsupported command: {command}"}
                 runtime_store.complete_command(item["id"], result=result, ok=result.get("ok", False))
