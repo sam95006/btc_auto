@@ -806,6 +806,26 @@ class RuntimeStateStore:
             )
         self._run_write(operation)
 
+    def append_reflection_record(self, record):
+        payload = dict(record or {})
+
+        def operation(cursor):
+            cursor.execute(
+                """
+                INSERT INTO nexus_reflection_records (timestamp, fleet, symbol, strategy_key, reflection_json)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    payload.get("timestamp", _now()),
+                    str(payload.get("fleet") or ""),
+                    str(payload.get("symbol") or ""),
+                    str(payload.get("strategy_key") or ""),
+                    json.dumps(payload, ensure_ascii=False),
+                ),
+            )
+
+        self._run_write(operation)
+
     def recent_reflection_records(self, limit=50):
         with self._lock:
             cursor = self._conn.cursor()

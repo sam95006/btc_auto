@@ -2843,7 +2843,9 @@ class NexusRuntime:
                 payload["post_mortem"] = diagnosis
             except Exception as exc:
                 print(f"[nexus_runtime] post_mortem skipped: {exc}")
-            self._apply_pure_ai_loss_lesson(payload, diagnosis)
+            self._apply_reflection_lesson(payload, diagnosis)
+            if diagnosis:
+                self._persist_reflection_record(payload, diagnosis)
             self._trigger_immediate_loss_learning(payload, recommendation, context or {})
         if event in {"CLOSE", "LIVE"} or payload.get("exit_reason") or payload.get("exit_price"):
             symbol = str(payload.get("symbol") or result.get("symbol") or "").upper()
@@ -2854,46 +2856,82 @@ class NexusRuntime:
             self._append_alert("ALERT_RED", f"強平學習：{result.get('symbol')} 進入冷卻，非永久黑名單。")
         return result
 
-    def _apply_pure_ai_loss_lesson(self, trade, diagnosis=None):
-        from config.pure_ai_trading_config import pure_ai_respect_learning
-
-        if not pure_ai_respect_learning():
-            return
+    def _apply_reflection_lesson(self, trade, diagnosis=None):
         trade = dict(trade or {})
-        if str(trade.get("strategy_key") or "") != "pure_ai_trader":
-            return
         symbol = str(trade.get("symbol") or "").upper()
         pnl = float(trade.get("pnl", 0.0) or 0.0)
         if not symbol or pnl >= 0:
             return
+        fleet = str(trade.get("fleet") or "RADAR").upper()
+        strategy_key = str(trade.get("strategy_key") or f"{fleet.lower()}_adaptive_strategy")
         side = str(trade.get("side") or "").upper()
         if side not in {"BUY", "SELL"}:
             qty = float(trade.get("signed_quantity") or trade.get("quantity") or 0.0)
             side = "BUY" if qty >= 0 else "SELL"
         diagnosis = dict(diagnosis or trade.get("post_mortem") or {})
+        if not diagnosis or diagnosis.get("skipped"):
+            return
+        penalty = 0.08 if diagnosis.get("is_tactical_loss") else 0.06
         lesson_text = str(
-            diagnosis.get("rationale") or trade.get("exit_reason") or trade.get("reason") or "pure_ai_loss"
+            diagnosis.get("rationale") or trade.get("exit_reason") or trade.get("reason") or "loss_reflection"
         )[:180]
         try:
-            from backend.services.runtime_store import runtime_store
-
             runtime_store.upsert_applied_learning_patch(
                 {
-                    "fleet": "RADAR",
-                    "strategy_key": "pure_ai_trader",
-                    "confidence_penalty": 0.06,
-                    "position_size_multiplier": 0.90,
+                    "fleet": fleet,
+                    "strategy_key": strategy_key,
+                    "confidence_penalty": penalty,
+                    "position_size_multiplier": 0.88,
                     "symbol_lesson": {
                         "symbol": symbol,
-                        "avoid_side": side,
+                        "avoid_side": str(diagnosis.get("avoid_side") or side).upper(),
                         "lesson": lesson_text,
-                        "min_confidence": 0.40,
+                        "confidence_penalty_next_time": penalty,
+                        "mistake_category": diagnosis.get("action_recommendation") or "loss_repeat",
                     },
                     "applied_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 }
             )
         except Exception as exc:
-            print(f"[nexus_runtime] pure_ai loss lesson skipped: {exc}")
+            print(f"[nexus_runtime] reflection lesson skipped: {exc}")
+
+    def _persist_reflection_record(self, trade, diagnosis=None):
+        trade = dict(trade or {})
+        diagnosis = dict(diagnosis or trade.get("post_mortem") or {})
+        if not diagnosis or diagnosis.get("skipped"):
+            return
+        side = str(trade.get("side") or "").upper()
+        if side not in {"BUY", "SELL"}:
+            qty = float(trade.get("signed_quantity") or trade.get("quantity") or 0.0)
+            side = "BUY" if qty >= 0 else "SELL"
+        pnl = float(trade.get("pnl", 0.0) or 0.0)
+        record = {
+            "trade_id": trade.get("order_id") or trade.get("id"),
+            "position_id": trade.get("position_id"),
+            "fleet": trade.get("fleet"),
+            "symbol": trade.get("symbol"),
+            "direction": side,
+            "result": "win" if pnl > 0 else "loss" if pnl < 0 else "breakeven",
+            "main_reason": diagnosis.get("action_recommendation") or trade.get("failure_reason"),
+            "mistake_category": diagnosis.get("action_recommendation") or trade.get("failure_reason"),
+            "market_condition": trade.get("market_regime"),
+            "was_add_position": bool(trade.get("pyramid_add")),
+            "was_high_leverage": float(trade.get("final_leverage") or trade.get("leverage") or 0.0) >= 20,
+            "leverage": float(trade.get("final_leverage") or trade.get("leverage") or 0.0),
+            "confidence_at_entry": float(trade.get("confidence_score") or 0.0),
+            "improvement_suggestion": diagnosis.get("rationale") or "",
+            "confidence_penalty_next_time": 0.08 if diagnosis.get("is_tactical_loss") else 0.06,
+            "post_mortem": diagnosis,
+            "timestamp": trade.get("timestamp") or _now(),
+            "strategy_key": trade.get("strategy_key"),
+        }
+        try:
+            runtime_store.append_reflection_record(record)
+        except Exception as exc:
+            print(f"[nexus_runtime] reflection record skipped: {exc}")
+
+    def _apply_pure_ai_loss_lesson(self, trade, diagnosis=None):
+        self._apply_reflection_lesson(trade, diagnosis)
 
     def _trigger_immediate_loss_learning(self, trade, recommendation=None, context=None):
         trade = dict(trade or {})
