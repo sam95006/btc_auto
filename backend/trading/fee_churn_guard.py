@@ -23,6 +23,7 @@ from config.sandbox_exit_config import (
     SANDBOX_RELAX_EXIT_GUARDS,
 )
 from backend.trading.sandbox_mode import sandbox_active
+from config.micro_validation_config import is_micro_fee_churn_exception
 
 
 def _safe_float(value, default=0.0):
@@ -78,6 +79,8 @@ class FeeChurnGuard:
         if not FEE_CHURN_GUARD_ENABLED:
             return True, None
         proposal = dict(proposal or {})
+        if is_micro_fee_churn_exception(proposal):
+            return True, None
         symbol = str(proposal.get("symbol") or proposal.get("symbol_override") or "").upper()
         margin = _safe_float(proposal.get("margin"))
         leverage = max(_safe_float(proposal.get("leverage"), 1.0), 1.0)
