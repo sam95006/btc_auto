@@ -6,6 +6,7 @@ import { renderChatDock } from "./components/ui_chat_dock.js?v=20260601a";
 import { renderMeetingLogPanel } from "./components/ui_meeting_log_panel.js?v=20260601a";
 import { renderDecisionStrip } from "./components/ui_decision_panel.js?v=20260601a";
 import { renderPureAiPanel } from "./components/ui_pure_ai_panel.js?v=20260601a";
+import { renderEatiPanel, prefetchEatiSnapshot } from "./components/ui_eati_panel.js?v=20260609a";
 import { renderRevenueKpi } from "./components/ui_revenue_kpi.js?v=20260601a";
 import { renderMeetingDock } from "./components/ui_meeting_dock.js?v=20260601a";
 import { buildMainOverviewPage } from "./scenes/scene_main_hq.js?v=20260601a";
@@ -686,6 +687,90 @@ style.textContent = `
   .pure-ai-proposal strong { color: #8fe4ff !important; margin-right: 6px !important; }
   .pure-ai-foot { display: flex !important; flex-direction: column !important; gap: 6px !important; font-size: 10px !important; color: rgba(173,213,229,0.72) !important; }
   .pure-ai-foot a { color: #4fd8ff !important; text-decoration: none !important; }
+  .eati-panel {
+    display: grid !important;
+    gap: 10px !important;
+    padding: 4px 2px 8px !important;
+  }
+  .eati-head h3 { margin: 6px 0 4px !important; font-size: 15px !important; color: #eefaff !important; }
+  .eati-explainer { margin: 0 !important; font-size: 11px !important; line-height: 1.5 !important; color: rgba(173,213,229,0.82) !important; }
+  .eati-unavailable {
+    margin: 8px 0 !important;
+    padding: 10px !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(255,107,143,0.35) !important;
+    background: rgba(255,107,143,0.1) !important;
+    color: #ffc0d0 !important;
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+  }
+  .eati-badge {
+    display: inline-block !important;
+    padding: 4px 10px !important;
+    border-radius: 999px !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px !important;
+    border: 1px solid rgba(147,112,255,0.45) !important;
+    background: rgba(147,112,255,0.14) !important;
+    color: #d4c4ff !important;
+  }
+  .eati-badge.is-off { border-color: rgba(255,107,143,0.4) !important; background: rgba(255,107,143,0.12) !important; color: #ffc0d0 !important; }
+  .eati-badge.is-readonly { border-color: rgba(79,216,255,0.35) !important; background: rgba(79,216,255,0.12) !important; color: #8fe4ff !important; }
+  .eati-metrics {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+  .eati-metrics div {
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+  }
+  .eati-metrics span { display: block !important; font-size: 9px !important; color: rgba(173,213,229,0.72) !important; }
+  .eati-metrics strong { font-size: 12px !important; color: #eefaff !important; }
+  .eati-section h4 { margin: 0 0 6px !important; font-size: 11px !important; color: rgba(200,235,255,0.88) !important; }
+  .eati-phase-list, .eati-warnings {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: grid !important;
+    gap: 4px !important;
+  }
+  .eati-phase-row, .eati-warnings li {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+    background: rgba(4,12,24,0.55) !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    font-size: 11px !important;
+  }
+  .eati-phase-row.is-ok { border-color: rgba(47,247,163,0.22) !important; }
+  .eati-phase-row.is-warn { border-color: rgba(255,208,107,0.28) !important; }
+  .eati-phase-row strong { color: #8fe4ff !important; font-size: 10px !important; text-align: right !important; }
+  .eati-safety-badges { display: flex !important; flex-wrap: wrap !important; gap: 6px !important; }
+  .eati-safety-badge {
+    padding: 4px 8px !important;
+    border-radius: 999px !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.4px !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+  }
+  .eati-safety-badge.is-deny {
+    border-color: rgba(47,247,163,0.35) !important;
+    background: rgba(47,247,163,0.1) !important;
+    color: #2ff7a3 !important;
+  }
+  .eati-safety-badge.is-ok {
+    border-color: rgba(79,216,255,0.3) !important;
+    background: rgba(79,216,255,0.1) !important;
+    color: #8fe4ff !important;
+  }
+  .eati-foot { display: flex !important; flex-direction: column !important; gap: 4px !important; font-size: 10px !important; color: rgba(173,213,229,0.72) !important; }
   .decision-pure-ai-banner {
     margin: 0 0 8px !important;
     padding: 8px 10px !important;
@@ -880,6 +965,7 @@ function ensureLeftCommandStack(root) {
         <button type="button" class="left-tab-btn" data-left-tab="revenue">營收</button>
         <button type="button" class="left-tab-btn" data-left-tab="roundtable">圓桌</button>
         <button type="button" class="left-tab-btn" data-left-tab="decision">決策</button>
+        <button type="button" class="left-tab-btn" data-left-tab="eati">EATI</button>
       </nav>
       <button type="button" class="left-collapse-btn" data-left-collapse title="收合左側面板" aria-label="收合左側面板">‹</button>
     </div>
@@ -888,6 +974,7 @@ function ensureLeftCommandStack(root) {
       <div class="left-tab-panel left-mount-revenue" data-left-tab="revenue"></div>
       <div class="left-tab-panel left-mount-roundtable" data-left-tab="roundtable"></div>
       <div class="left-tab-panel left-mount-decision" data-left-tab="decision"></div>
+      <div class="left-tab-panel left-mount-eati" data-left-tab="eati"></div>
     </div>
   `;
     root.appendChild(stack);
@@ -905,6 +992,14 @@ function ensureLeftCommandStack(root) {
     if (bar && panels) {
       bar.insertAdjacentHTML("afterbegin", `<button type="button" class="left-tab-btn" data-left-tab="pureai">Pure AI</button>`);
       panels.insertAdjacentHTML("afterbegin", `<div class="left-tab-panel left-mount-pureai" data-left-tab="pureai"></div>`);
+    }
+  }
+  if (!stack.querySelector('[data-left-tab="eati"]')) {
+    const bar = stack.querySelector(".left-tab-bar");
+    const panels = stack.querySelector(".left-tab-panels");
+    if (bar && panels) {
+      bar.insertAdjacentHTML("beforeend", `<button type="button" class="left-tab-btn" data-left-tab="eati">EATI</button>`);
+      panels.insertAdjacentHTML("beforeend", `<div class="left-tab-panel left-mount-eati" data-left-tab="eati"></div>`);
     }
   }
   return stack;
@@ -955,7 +1050,9 @@ function renderHomeLeft(state) {
   const revenueMount = stack.querySelector(".left-mount-revenue");
   const roundtableMount = stack.querySelector(".left-mount-roundtable");
   const decisionMount = stack.querySelector(".left-mount-decision");
+  const eatiMount = stack.querySelector(".left-mount-eati");
   if (tab === "pureai") renderPureAiPanel(pureAiMount, state);
+  if (tab === "eati") renderEatiPanel(eatiMount, { onUpdate: () => renderApp(getState()) });
   if (tab === "revenue") renderRevenueKpi(revenueMount, state, { compact: true });
   if (tab === "roundtable") {
     renderMeetingLogPanel(roundtableMount, state, { ...homeUiState, roundTableMinimized: false }, updateMeetingUiState);
@@ -1074,6 +1171,8 @@ fetchLayoutConfig()
   .catch((error) => {
     showError(`Layout bootstrap failed: ${error?.message || String(error)}`);
   });
+
+prefetchEatiSnapshot().catch(() => {});
 
 window.setTimeout(async () => {
   if (getState()) return;

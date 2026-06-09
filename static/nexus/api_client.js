@@ -71,6 +71,29 @@ export async function saveLayoutConfig(layout) {
   return response.json();
 }
 
+export async function fetchEatiStatusSnapshot(timeoutMs = 8000) {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch("/static/nexus/eati_status_snapshot.json", {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`eati snapshot failed: ${response.status}`);
+    const raw = await response.text();
+    const payload = JSON.parse(raw);
+    if (!payload || typeof payload !== "object") throw new Error("invalid snapshot");
+    return payload;
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error(`eati snapshot timed out after ${timeoutMs}ms`);
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
 export function connectNexusSocket({ onSnapshot, onError, onOpen, onClose }) {
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
   const socket = new WebSocket(`${protocol}://${window.location.host}/ws/nexus`);

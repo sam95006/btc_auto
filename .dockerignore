@@ -26,7 +26,23 @@ scratch/
 
 # Documentation & offline tools
 docs/
+docs/archive/
+docs/evidence/
 tools/research/
+
+# EATI research bulk (regeneratable; use eati_status_snapshot.json for UI later)
+data/external_alpha/raw/
+data/external_alpha/normalized/market_data/
+data/external_alpha/archive/
+data/external_alpha/quarantine/
+data/external_alpha/backtests/
+data/external_alpha/paper_tests/
+data/external_alpha/reports/
+
+# Build / cache noise
+.pytest_cache/
+.cache/
+*.zip
 ROOT_STRUCTURE.md
 AGENTS.md
 
