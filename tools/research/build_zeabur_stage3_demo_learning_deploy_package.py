@@ -132,7 +132,6 @@ ZEABURIGNORE = """__pycache__/
 *.secret
 *.db
 trading.db
-/data/
 logs/
 exports/
 *.zip
