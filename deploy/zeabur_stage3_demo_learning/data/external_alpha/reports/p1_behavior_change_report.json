@@ -1,0 +1,434 @@
+{
+  "record_type": "p1_behavior_change_report",
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-06-22T04:07:10Z",
+  "scope": "offline_evidence_only",
+  "production_promotion_allowed": false,
+  "p1_behavior_change_pass": true,
+  "missing": [],
+  "evidence_sessions_used": [
+    "micro_1780904667",
+    "micro_tb2_retry7_20260622"
+  ],
+  "session_analysis": [
+    {
+      "session_id": "micro_1780904667",
+      "evidence_path": "docs/evidence/20260608_micro_1780904667",
+      "close_pnl": -0.138,
+      "loss_closed_loop": true,
+      "reflection_created": true,
+      "patch_created": true,
+      "confidence_penalty": 0.08,
+      "position_size_multiplier": 0.88,
+      "patch_applied_at": "2026-06-08 08:15:35",
+      "join_close_to_reflection": true,
+      "next_decision_impact_status": "not_observed",
+      "p1_ladder_in_bundle": false
+    },
+    {
+      "session_id": "micro_tb2_retry7_20260622",
+      "evidence_path": "docs/evidence/20260622_micro_tb2_retry7_20260622",
+      "close_pnl": -0.19494,
+      "loss_closed_loop": true,
+      "reflection_created": true,
+      "patch_created": true,
+      "confidence_penalty": 0.08,
+      "position_size_multiplier": 0.88,
+      "patch_applied_at": "2026-06-22 10:18:00",
+      "join_close_to_reflection": true,
+      "next_decision_impact_status": null,
+      "p1_ladder_in_bundle": null
+    }
+  ],
+  "loss_patches_found": [
+    {
+      "session_id": "micro_1780904667",
+      "close_pnl": -0.138,
+      "confidence_penalty": 0.08,
+      "position_size_multiplier": 0.88,
+      "patch_applied_at": "2026-06-08 08:15:35",
+      "join_close_to_reflection": true
+    },
+    {
+      "session_id": "micro_tb2_retry7_20260622",
+      "close_pnl": -0.19494,
+      "confidence_penalty": 0.08,
+      "position_size_multiplier": 0.88,
+      "patch_applied_at": "2026-06-22 10:18:00",
+      "join_close_to_reflection": true
+    }
+  ],
+  "downstream_behavior_links_found": [
+    {
+      "artifact_type": "paper_signal",
+      "signal_id": "paper_micro_1780904667_20260608T074412_20260609_b3b495",
+      "generated_at_utc": "2026-06-09T03:23:11Z",
+      "paper_action": "would_skip",
+      "would_enter": false,
+      "skip_reason": "public_trader_complete_record_ratio=0 and context_similarity unavailable",
+      "confidence_adjustment_suggestion_report_only": -0.03,
+      "nexus_own_feature_snapshot": {
+        "nexus_recent_pnl": -0.138,
+        "nexus_recent_loss_count": 1,
+        "nexus_last_confidence_penalty": 0.08,
+        "nexus_position_size_multiplier": 0.88,
+        "nexus_last_reflection_reason": "micro_validation_max_hold exit with small loss",
+        "nexus_patch_exists": true,
+        "nexus_tier_b_reference_flag": true
+      },
+      "matches": [
+        "nexus_patch_exists",
+        "confidence_penalty_propagated",
+        "position_size_multiplier_propagated",
+        "confidence_adjustment_negative"
+      ],
+      "source_session_id": "micro_1780904667"
+    },
+    {
+      "artifact_type": "paper_signal",
+      "signal_id": "paper_micro_1780904667_20260608T074412_20260610_9c33d5",
+      "generated_at_utc": "2026-06-09T05:39:56Z",
+      "paper_action": "would_skip",
+      "would_enter": false,
+      "skip_reason": "public_trader_complete_record_ratio=0 and context_similarity unavailable",
+      "confidence_adjustment_suggestion_report_only": -0.03,
+      "nexus_own_feature_snapshot": {
+        "nexus_recent_pnl": -0.138,
+        "nexus_recent_loss_count": 1,
+        "nexus_last_confidence_penalty": 0.08,
+        "nexus_position_size_multiplier": 0.88,
+        "nexus_last_reflection_reason": "micro_validation_max_hold exit with small loss",
+        "nexus_patch_exists": true,
+        "nexus_tier_b_reference_flag": true
+      },
+      "matches": [
+        "nexus_patch_exists",
+        "confidence_penalty_propagated",
+        "position_size_multiplier_propagated",
+        "confidence_adjustment_negative"
+      ],
+      "source_session_id": "micro_1780904667"
+    },
+    {
+      "artifact_type": "paper_signal",
+      "signal_id": "paper_micro_1780904667_20260608T074412_20260611_336e7d",
+      "generated_at_utc": "2026-06-09T05:46:10Z",
+      "paper_action": "would_skip",
+      "would_enter": false,
+      "skip_reason": "public_trader_complete_record_ratio=0 and context_similarity unavailable",
+      "confidence_adjustment_suggestion_report_only": -0.03,
+      "nexus_own_feature_snapshot": {
+        "nexus_recent_pnl": -0.138,
+        "nexus_recent_loss_count": 1,
+        "nexus_last_confidence_penalty": 0.08,
+        "nexus_position_size_multiplier": 0.88,
+        "nexus_last_reflection_reason": "micro_validation_max_hold exit with small loss",
+        "nexus_patch_exists": true,
+        "nexus_tier_b_reference_flag": true
+      },
+      "matches": [
+        "nexus_patch_exists",
+        "confidence_penalty_propagated",
+        "position_size_multiplier_propagated",
+        "confidence_adjustment_negative"
+      ],
+      "source_session_id": "micro_1780904667"
+    },
+    {
+      "artifact_type": "paper_signal",
+      "signal_id": "paper_micro_1780904667_20260608T074412_20260612_0efd8b",
+      "generated_at_utc": "2026-06-11T08:09:50Z",
+      "paper_action": "would_enter",
+      "would_enter": true,
+      "skip_reason": null,
+      "confidence_adjustment_suggestion_report_only": 0.0,
+      "nexus_own_feature_snapshot": {
+        "nexus_recent_pnl": -0.138,
+        "nexus_recent_loss_count": 1,
+        "nexus_last_confidence_penalty": 0.08,
+        "nexus_position_size_multiplier": 0.88,
+        "nexus_last_reflection_reason": "micro_validation_max_hold exit with small loss",
+        "nexus_patch_exists": true,
+        "nexus_tier_b_reference_flag": true
+      },
+      "matches": [
+        "nexus_patch_exists",
+        "confidence_penalty_propagated",
+        "position_size_multiplier_propagated"
+      ],
+      "source_session_id": "micro_1780904667"
+    },
+    {
+      "artifact_type": "paper_signal",
+      "signal_id": "paper_micro_1780904667_20260608T074412_20260613_877a31",
+      "generated_at_utc": "2026-06-11T08:14:18Z",
+      "paper_action": "would_enter",
+      "would_enter": true,
+      "skip_reason": null,
+      "confidence_adjustment_suggestion_report_only": 0.0,
+      "nexus_own_feature_snapshot": {
+        "nexus_recent_pnl": -0.138,
+        "nexus_recent_loss_count": 1,
+        "nexus_last_confidence_penalty": 0.08,
+        "nexus_position_size_multiplier": 0.88,
+        "nexus_last_reflection_reason": "micro_validation_max_hold exit with small loss",
+        "nexus_patch_exists": true,
+        "nexus_tier_b_reference_flag": true
+      },
+      "matches": [
+        "nexus_patch_exists",
+        "confidence_penalty_propagated",
+        "position_size_multiplier_propagated"
+      ],
+      "source_session_id": "micro_1780904667"
+    },
+    {
+      "artifact_type": "paper_signal",
+      "signal_id": "paper_micro_1780904667_20260608T074412_20260614_e11378",
+      "generated_at_utc": "2026-06-11T08:25:46Z",
+      "paper_action": "would_enter",
+      "would_enter": true,
+      "skip_reason": null,
+      "confidence_adjustment_suggestion_report_only": 0.0,
+      "nexus_own_feature_snapshot": {
+        "nexus_recent_pnl": -0.138,
+        "nexus_recent_loss_count": 1,
+        "nexus_last_confidence_penalty": 0.08,
+        "nexus_position_size_multiplier": 0.88,
+        "nexus_last_reflection_reason": "micro_validation_max_hold exit with small loss",
+        "nexus_patch_exists": true,
+        "nexus_tier_b_reference_flag": true
+      },
+      "matches": [
+        "nexus_patch_exists",
+        "confidence_penalty_propagated",
+        "position_size_multiplier_propagated"
+      ],
+      "source_session_id": "micro_1780904667"
+    },
+    {
+      "artifact_type": "paper_signal",
+      "signal_id": "paper_micro_1780904667_20260608T074412_20260615_6a8df9",
+      "generated_at_utc": "2026-06-11T08:25:50Z",
+      "paper_action": "would_enter",
+      "would_enter": true,
+      "skip_reason": null,
+      "confidence_adjustment_suggestion_report_only": 0.0,
+      "nexus_own_feature_snapshot": {
+        "nexus_recent_pnl": -0.138,
+        "nexus_recent_loss_count": 1,
+        "nexus_last_confidence_penalty": 0.08,
+        "nexus_position_size_multiplier": 0.88,
+        "nexus_last_reflection_reason": "micro_validation_max_hold exit with small loss",
+        "nexus_patch_exists": true,
+        "nexus_tier_b_reference_flag": true
+      },
+      "matches": [
+        "nexus_patch_exists",
+        "confidence_penalty_propagated",
+        "position_size_multiplier_propagated"
+      ],
+      "source_session_id": "micro_1780904667"
+    },
+    {
+      "artifact_type": "paper_signal",
+      "signal_id": "paper_micro_1780904667_20260608T074412_20260616_8580ba",
+      "generated_at_utc": "2026-06-11T08:25:53Z",
+      "paper_action": "would_enter",
+      "would_enter": true,
+      "skip_reason": null,
+      "confidence_adjustment_suggestion_report_only": 0.0,
+      "nexus_own_feature_snapshot": {
+        "nexus_recent_pnl": -0.138,
+        "nexus_recent_loss_count": 1,
+        "nexus_last_confidence_penalty": 0.08,
+        "nexus_position_size_multiplier": 0.88,
+        "nexus_last_reflection_reason": "micro_validation_max_hold exit with small loss",
+        "nexus_patch_exists": true,
+        "nexus_tier_b_reference_flag": true
+      },
+      "matches": [
+        "nexus_patch_exists",
+        "confidence_penalty_propagated",
+        "position_size_multiplier_propagated"
+      ],
+      "source_session_id": "micro_1780904667"
+    },
+    {
+      "artifact_type": "paper_signal",
+      "signal_id": "paper_micro_1780904667_20260608T074412_20260617_61853a",
+      "generated_at_utc": "2026-06-11T08:25:56Z",
+      "paper_action": "would_enter",
+      "would_enter": true,
+      "skip_reason": null,
+      "confidence_adjustment_suggestion_report_only": 0.0,
+      "nexus_own_feature_snapshot": {
+        "nexus_recent_pnl": -0.138,
+        "nexus_recent_loss_count": 1,
+        "nexus_last_confidence_penalty": 0.08,
+        "nexus_position_size_multiplier": 0.88,
+        "nexus_last_reflection_reason": "micro_validation_max_hold exit with small loss",
+        "nexus_patch_exists": true,
+        "nexus_tier_b_reference_flag": true
+      },
+      "matches": [
+        "nexus_patch_exists",
+        "confidence_penalty_propagated",
+        "position_size_multiplier_propagated"
+      ],
+      "source_session_id": "micro_1780904667"
+    },
+    {
+      "artifact_type": "paper_signal",
+      "signal_id": "paper_micro_1780904667_20260608T074412_20260618_81dc00",
+      "generated_at_utc": "2026-06-11T08:26:00Z",
+      "paper_action": "would_enter",
+      "would_enter": true,
+      "skip_reason": null,
+      "confidence_adjustment_suggestion_report_only": 0.0,
+      "nexus_own_feature_snapshot": {
+        "nexus_recent_pnl": -0.138,
+        "nexus_recent_loss_count": 1,
+        "nexus_last_confidence_penalty": 0.08,
+        "nexus_position_size_multiplier": 0.88,
+        "nexus_last_reflection_reason": "micro_validation_max_hold exit with small loss",
+        "nexus_patch_exists": true,
+        "nexus_tier_b_reference_flag": true
+      },
+      "matches": [
+        "nexus_patch_exists",
+        "confidence_penalty_propagated",
+        "position_size_multiplier_propagated"
+      ],
+      "source_session_id": "micro_1780904667"
+    },
+    {
+      "artifact_type": "paper_signal",
+      "signal_id": "paper_micro_1780904667_20260608T074412_20260619_e2a24e",
+      "generated_at_utc": "2026-06-11T08:26:03Z",
+      "paper_action": "would_enter",
+      "would_enter": true,
+      "skip_reason": null,
+      "confidence_adjustment_suggestion_report_only": 0.0,
+      "nexus_own_feature_snapshot": {
+        "nexus_recent_pnl": -0.138,
+        "nexus_recent_loss_count": 1,
+        "nexus_last_confidence_penalty": 0.08,
+        "nexus_position_size_multiplier": 0.88,
+        "nexus_last_reflection_reason": "micro_validation_max_hold exit with small loss",
+        "nexus_patch_exists": true,
+        "nexus_tier_b_reference_flag": true
+      },
+      "matches": [
+        "nexus_patch_exists",
+        "confidence_penalty_propagated",
+        "position_size_multiplier_propagated"
+      ],
+      "source_session_id": "micro_1780904667"
+    },
+    {
+      "artifact_type": "paper_signal",
+      "signal_id": "paper_micro_1780904667_20260608T074412_20260620_dd28a4",
+      "generated_at_utc": "2026-06-11T08:26:07Z",
+      "paper_action": "would_enter",
+      "would_enter": true,
+      "skip_reason": null,
+      "confidence_adjustment_suggestion_report_only": 0.0,
+      "nexus_own_feature_snapshot": {
+        "nexus_recent_pnl": -0.138,
+        "nexus_recent_loss_count": 1,
+        "nexus_last_confidence_penalty": 0.08,
+        "nexus_position_size_multiplier": 0.88,
+        "nexus_last_reflection_reason": "micro_validation_max_hold exit with small loss",
+        "nexus_patch_exists": true,
+        "nexus_tier_b_reference_flag": true
+      },
+      "matches": [
+        "nexus_patch_exists",
+        "confidence_penalty_propagated",
+        "position_size_multiplier_propagated"
+      ],
+      "source_session_id": "micro_1780904667"
+    },
+    {
+      "artifact_type": "paper_signal",
+      "signal_id": "paper_micro_1780904667_20260608T074412_20260621_1a70e8",
+      "generated_at_utc": "2026-06-11T08:26:11Z",
+      "paper_action": "would_enter",
+      "would_enter": true,
+      "skip_reason": null,
+      "confidence_adjustment_suggestion_report_only": 0.0,
+      "nexus_own_feature_snapshot": {
+        "nexus_recent_pnl": -0.138,
+        "nexus_recent_loss_count": 1,
+        "nexus_last_confidence_penalty": 0.08,
+        "nexus_position_size_multiplier": 0.88,
+        "nexus_last_reflection_reason": "micro_validation_max_hold exit with small loss",
+        "nexus_patch_exists": true,
+        "nexus_tier_b_reference_flag": true
+      },
+      "matches": [
+        "nexus_patch_exists",
+        "confidence_penalty_propagated",
+        "position_size_multiplier_propagated"
+      ],
+      "source_session_id": "micro_1780904667"
+    },
+    {
+      "artifact_type": "paper_signal",
+      "signal_id": "paper_micro_1780904667_20260608T074412_20260622_339752",
+      "generated_at_utc": "2026-06-11T09:03:47Z",
+      "paper_action": "would_enter",
+      "would_enter": true,
+      "skip_reason": null,
+      "confidence_adjustment_suggestion_report_only": 0.0,
+      "nexus_own_feature_snapshot": {
+        "nexus_recent_pnl": -0.138,
+        "nexus_recent_loss_count": 1,
+        "nexus_last_confidence_penalty": 0.08,
+        "nexus_position_size_multiplier": 0.88,
+        "nexus_last_reflection_reason": "micro_validation_max_hold exit with small loss",
+        "nexus_patch_exists": true,
+        "nexus_tier_b_reference_flag": true
+      },
+      "matches": [
+        "nexus_patch_exists",
+        "confidence_penalty_propagated",
+        "position_size_multiplier_propagated"
+      ],
+      "source_session_id": "micro_1780904667"
+    }
+  ],
+  "behavior_changes_detected": [
+    "micro_1780904667:paper_lane_propagates_penalty_0.08_and_multiplier_0.88_on_14_post_patch_signals"
+  ],
+  "sources": {
+    "paper_signals": "data/external_alpha/paper_tests/eati_paper_signals_all.jsonl",
+    "phase9_review": "data/external_alpha/reports/phase9_production_promotion_review.json",
+    "eati_status_snapshot": "static/nexus/eati_status_snapshot.json",
+    "promotion_dossier": "docs/promotion/20260622_micro_1780904667",
+    "evidence_dirs": [
+      "docs/evidence/20260608_micro_1780904667",
+      "docs/evidence/20260622_micro_tb2_retry7_20260622"
+    ]
+  },
+  "phase9_context": {
+    "review_id": "promo_review_20260622_5e05d43f",
+    "triggered_reject_rules": [
+      "R11",
+      "R12",
+      "R19"
+    ],
+    "tier_b_session_count": 2
+  },
+  "eati_snapshot_context": {
+    "generated_at_utc": "2026-06-11T08:26:16Z",
+    "production_promotion_allowed": false
+  },
+  "r11_status": "clear",
+  "notes": [
+    "Honest offline audit — no hand-written PASS.",
+    "Paper-lane feature propagation counts only when patch values match post-patch artifacts.",
+    "retry7 patch has no post-patch paper/decision artifact in current evidence set."
+  ]
+}

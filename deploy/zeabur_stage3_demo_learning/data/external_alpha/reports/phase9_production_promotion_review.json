@@ -1,0 +1,286 @@
+{
+  "record_type": "production_promotion_review",
+  "schema_version": "1.0",
+  "review_metadata": {
+    "review_id": "promo_review_20260622_88992487",
+    "generated_at_utc": "2026-06-22T06:06:01Z",
+    "reviewed_candidate_ids": [
+      "micro_candidate_micro_1780904667_4b07cce3"
+    ],
+    "reviewed_paper_signal_ids": [
+      "paper_micro_1780904667_20260608T074412_20260609_b3b495",
+      "paper_micro_1780904667_20260608T074412_20260610_9c33d5",
+      "paper_micro_1780904667_20260608T074412_20260611_336e7d",
+      "paper_micro_1780904667_20260608T074412_20260612_0efd8b",
+      "paper_micro_1780904667_20260608T074412_20260613_877a31",
+      "paper_micro_1780904667_20260608T074412_20260614_e11378",
+      "paper_micro_1780904667_20260608T074412_20260615_6a8df9",
+      "paper_micro_1780904667_20260608T074412_20260616_8580ba",
+      "paper_micro_1780904667_20260608T074412_20260617_61853a",
+      "paper_micro_1780904667_20260608T074412_20260618_81dc00",
+      "paper_micro_1780904667_20260608T074412_20260619_e2a24e",
+      "paper_micro_1780904667_20260608T074412_20260620_dd28a4",
+      "paper_micro_1780904667_20260608T074412_20260621_1a70e8",
+      "paper_micro_1780904667_20260608T074412_20260622_339752"
+    ],
+    "reviewed_alignment_report_ids": [
+      "align_micro_1780904667_c7e4ad6d",
+      "align_micro_1780904667_3393316c",
+      "align_micro_1780904667_0ff16639",
+      "align_micro_1780904667_6d4d72f9",
+      "align_micro_1780904667_4394b4cf"
+    ],
+    "reviewed_evidence_session_ids": [
+      "micro_1780904667",
+      "micro_tb2_retry7_20260622"
+    ],
+    "production_promotion_allowed": false,
+    "phase": "external_alpha_phase9",
+    "scope": "offline_review_template_only",
+    "promotion_dossier_path": "docs/promotion/20260622_micro_1780904667",
+    "promotion_dossier_assembled": true
+  },
+  "current_candidate_status": {
+    "candidate_id": "micro_candidate_micro_1780904667_4b07cce3",
+    "candidate_status": "eligible_for_operator_review",
+    "micro_validation_allowed": false,
+    "arm_allowed": false,
+    "active_blockers": [],
+    "active_blocker_count": 0,
+    "hard_safety_status": "pass",
+    "reason_not_ready": "All gate checks passed — operator written GO still required before any micro validation",
+    "paper_signal_count": 14,
+    "paper_action_counts": {
+      "would_skip": 3,
+      "would_enter": 11
+    },
+    "would_enter_count": 11,
+    "alignment_score": 0.625,
+    "alignment_verdict": "aligned",
+    "public_trader_complete_record_ratio": 0.5,
+    "context_similarity_score": 0.9835,
+    "tier_b_session_count": 2,
+    "p1_behavior_change_evidence": true,
+    "p2_performance_evidence": true,
+    "eati_phase_docs_reviewed": [
+      "NEXUS_EXTERNAL_ALPHA_PHASE9_PRODUCTION_PROMOTION_REVIEW.md"
+    ],
+    "promotion_dossier_assembled": true,
+    "promotion_dossier_path": "docs/promotion/20260622_micro_1780904667"
+  },
+  "minimum_promotion_criteria": {
+    "paper_test_min_days": 14,
+    "paper_signal_min_count": 14,
+    "paper_would_enter_min_count": 3,
+    "paper_skip_reason_coverage": true,
+    "micro_validation_tier_b_min_count": 2,
+    "independent_market_weeks_required": 4,
+    "out_of_sample_required": true,
+    "walk_forward_fold_min_count": 3,
+    "fake_learning_red_flags_allowed": 0,
+    "max_drawdown_cap": 0.15,
+    "evidence_bundle_required": true,
+    "operator_written_go_required": true,
+    "rollback_plan_required": true,
+    "kill_switch_required": true,
+    "public_trader_complete_record_ratio_min": 0.5,
+    "context_similarity_score_min": 0.5,
+    "candidate_status_required": "eligible_for_operator_review"
+  },
+  "automatic_reject_rules": [
+    {
+      "rule_id": "R01",
+      "description": "Single paper signal only"
+    },
+    {
+      "rule_id": "R02",
+      "description": "Only would_skip signals (no would_enter paper entries)"
+    },
+    {
+      "rule_id": "R03",
+      "description": "public_trader complete_record_ratio = 0"
+    },
+    {
+      "rule_id": "R04",
+      "description": "context_similarity_score missing"
+    },
+    {
+      "rule_id": "R05",
+      "description": "external trader ROI / rank / followers used as label"
+    },
+    {
+      "rule_id": "R06",
+      "description": "market_reaction_* numeric leakage in decision-time features"
+    },
+    {
+      "rule_id": "R07",
+      "description": "missing evidence bundle"
+    },
+    {
+      "rule_id": "R08",
+      "description": "missing reflection"
+    },
+    {
+      "rule_id": "R09",
+      "description": "missing applied patch"
+    },
+    {
+      "rule_id": "R10",
+      "description": "missing confidence_penalty"
+    },
+    {
+      "rule_id": "R11",
+      "description": "no P1 behavior-change evidence"
+    },
+    {
+      "rule_id": "R12",
+      "description": "no P2 performance evidence"
+    },
+    {
+      "rule_id": "R13",
+      "description": "any production_forbidden violation"
+    },
+    {
+      "rule_id": "R14",
+      "description": "any private API / exchange write path in research pipeline"
+    },
+    {
+      "rule_id": "R15",
+      "description": "any attempt to bypass operator approval"
+    },
+    {
+      "rule_id": "R16",
+      "description": "candidate_status not eligible_for_operator_review"
+    },
+    {
+      "rule_id": "R17",
+      "description": "micro_validation_tier_b count below minimum"
+    },
+    {
+      "rule_id": "R18",
+      "description": "paper test duration below minimum days"
+    },
+    {
+      "rule_id": "R19",
+      "description": "out-of-sample or walk-forward evidence missing"
+    },
+    {
+      "rule_id": "R20",
+      "description": "fake_learning_red_flags > 0"
+    }
+  ],
+  "current_verdict": {
+    "verdict": "production_promotion_denied",
+    "production_promotion_allowed": false,
+    "micro_1780904667_production_ready": false,
+    "phase7_phase8_production_ready": false,
+    "triggered_reject_rules": [],
+    "reasons": [],
+    "operator_go_status": "not_requested",
+    "promotion_next_step": "Continue EATI research lane; re-run gate when criteria met"
+  },
+  "promotion_dossier": {
+    "path": "docs/promotion/20260622_micro_1780904667",
+    "validation": {
+      "dossier_path": "docs/promotion/20260622_micro_1780904667",
+      "path_exists": true,
+      "min_files_present": true,
+      "files_missing": [],
+      "content_valid": true,
+      "valid": true,
+      "failures": [],
+      "reason": "",
+      "tier_b_session_ids": [
+        "micro_1780904667",
+        "micro_tb2_retry7_20260622"
+      ]
+    }
+  },
+  "oos_walkforward": {
+    "path": "data/external_alpha/reports/oos_walkforward_report.json",
+    "validation": {
+      "valid": true,
+      "reason": "",
+      "failures": [],
+      "r19_status": "clear_candidate",
+      "fold_count": 3,
+      "path": "data/external_alpha/reports/oos_walkforward_report.json"
+    }
+  },
+  "promotion_dossier_template": {
+    "root_pattern": "docs/promotion/YYYYMMDD_<strategy_id>/",
+    "files": [
+      "PROMOTION_REVIEW.md",
+      "evidence_manifest.json",
+      "paper_test_summary.json",
+      "micro_validation_sessions.json",
+      "p1_behavior_change_report.json",
+      "p2_performance_report.json",
+      "risk_review.json",
+      "rollback_plan.md",
+      "operator_go.md"
+    ]
+  },
+  "operator_rollback_kill_switch": {
+    "operator_approval": {
+      "required": true,
+      "format": "Signed operator_go.md in promotion dossier with date, strategy_id, scope, expiry",
+      "bypass_forbidden": true
+    },
+    "rollback_plan": {
+      "required": true,
+      "minimum_contents": [
+        "Pre-promotion config snapshot hash",
+        "Steps to revert allowlist / strategy binding",
+        "Maximum rollback window (minutes)",
+        "Verification command after rollback"
+      ]
+    },
+    "kill_switch": {
+      "required": true,
+      "minimum_contents": [
+        "Immediate ARM disable procedure",
+        "Fleet / Radar isolation steps",
+        "Confidence freeze flag",
+        "Operator notification channel"
+      ]
+    },
+    "external_trader_pollution_prevention": [
+      "External trader ROI/rank/followers never used as training labels",
+      "market_reaction_* numeric values excluded from decision-time features",
+      "public_trader snapshots require verified source_url before promotion review",
+      "EATI signals remain production_forbidden until dossier + operator GO complete",
+      "Separate research lane from nexus_runtime until explicit promotion wiring approved"
+    ]
+  },
+  "safety_checklist": {
+    "no_production_write": true,
+    "no_runtime_import": true,
+    "no_confidence_write": true,
+    "no_live_signal": true,
+    "no_exchange_api_write": true,
+    "no_private_key_usage": true,
+    "no_allowlist_env_creation": true,
+    "no_deploy": true,
+    "no_arm": true,
+    "no_reset": true,
+    "no_reflection_learning_governance_risk_modification": true,
+    "notes": "Phase 9 builder is offline documentation only; no production side effects."
+  },
+  "sources": {
+    "micro_candidate": "data/external_alpha/micro_candidates/micro_candidate_micro_1780904667.json",
+    "paper_signals": "data/external_alpha/paper_tests/eati_paper_signals_all.jsonl",
+    "phase7_report": "data/external_alpha/reports/phase7_paper_test_report.json",
+    "phase8_report": "data/external_alpha/reports/phase8_micro_candidate_gate_report.json",
+    "alignment_report": "data/external_alpha/reports/alignment_report_micro_1780904667.json",
+    "promotion_dossier": "docs/promotion/20260622_micro_1780904667",
+    "promotion_dossier_inventory": "data/external_alpha/reports/promotion_dossier_inventory.json",
+    "oos_walkforward_report": "data/external_alpha/reports/oos_walkforward_report.json"
+  },
+  "allowed_usage": [
+    "production_promotion_review",
+    "research_only",
+    "production_forbidden"
+  ],
+  "notes": "Offline promotion review template — NOT a production promotion authorization."
+}

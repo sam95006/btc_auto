@@ -1,0 +1,256 @@
+{
+  "record_type": "oos_walkforward_report",
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-06-22T06:00:00Z",
+  "scope": "offline_evidence_only",
+  "production_promotion_allowed": false,
+  "production_go_status": "not_requested",
+  "operator_go_required": true,
+  "oos_walkforward_pass": true,
+  "r19_status": "clear_candidate",
+  "missing": [],
+  "oos_split": {
+    "in_sample_range": {
+      "start_run_date": "2026-06-09",
+      "end_run_date": "2026-06-15",
+      "run_dates": [
+        "2026-06-09",
+        "2026-06-10",
+        "2026-06-11",
+        "2026-06-12",
+        "2026-06-13",
+        "2026-06-14",
+        "2026-06-15"
+      ],
+      "signal_count": 7
+    },
+    "out_of_sample_range": {
+      "start_run_date": "2026-06-16",
+      "end_run_date": "2026-06-22",
+      "run_dates": [
+        "2026-06-16",
+        "2026-06-17",
+        "2026-06-18",
+        "2026-06-19",
+        "2026-06-20",
+        "2026-06-21",
+        "2026-06-22"
+      ],
+      "signal_count": 7
+    },
+    "split_reason": "Chronological holdout on accumulation run_date shards after micro_1780904667 loss patch; first half in-sample calibration reference, second half OOS validation.",
+    "patch_reference_applied_at": "2026-06-08 08:15:35",
+    "leakage_guard": {
+      "temporal_run_date_holdout": true,
+      "validation_after_training_dates": true,
+      "market_reaction_values_excluded": true,
+      "shared_feature_asof_utc": [
+        "2026-06-08T07:44:00Z"
+      ],
+      "shared_signal_time_utc": [
+        "2026-06-08T07:44:12Z"
+      ],
+      "caveat": "All paper shards share one feature_asof_utc / signal_time_utc anchor; OOS split is on run_date accumulation windows only — not independent market-time features."
+    }
+  },
+  "oos_holdout_metrics": {
+    "signal_count": 7,
+    "would_enter_count": 7,
+    "would_skip_count": 0,
+    "risk_adjustment_applied": true,
+    "average_position_size_multiplier": 0.88,
+    "average_confidence_penalty": 0.08,
+    "uncontrolled_entry_count": 0
+  },
+  "walk_forward_folds": [
+    {
+      "fold_id": "wf_fold_1",
+      "train_window": {
+        "start_run_date": "2026-06-09",
+        "end_run_date": "2026-06-11",
+        "run_dates": [
+          "2026-06-09",
+          "2026-06-10",
+          "2026-06-11"
+        ]
+      },
+      "validation_window": {
+        "start_run_date": "2026-06-12",
+        "end_run_date": "2026-06-14",
+        "run_dates": [
+          "2026-06-12",
+          "2026-06-13",
+          "2026-06-14"
+        ]
+      },
+      "train_metrics": {
+        "signal_count": 3,
+        "would_enter_count": 0,
+        "would_skip_count": 3,
+        "risk_adjustment_applied": true,
+        "average_position_size_multiplier": 0.88,
+        "average_confidence_penalty": 0.08,
+        "uncontrolled_entry_count": 0
+      },
+      "validation_metrics": {
+        "signal_count": 3,
+        "would_enter_count": 3,
+        "would_skip_count": 0,
+        "risk_adjustment_applied": true,
+        "average_position_size_multiplier": 0.88,
+        "average_confidence_penalty": 0.08,
+        "uncontrolled_entry_count": 0
+      }
+    },
+    {
+      "fold_id": "wf_fold_2",
+      "train_window": {
+        "start_run_date": "2026-06-09",
+        "end_run_date": "2026-06-14",
+        "run_dates": [
+          "2026-06-09",
+          "2026-06-10",
+          "2026-06-11",
+          "2026-06-12",
+          "2026-06-13",
+          "2026-06-14"
+        ]
+      },
+      "validation_window": {
+        "start_run_date": "2026-06-15",
+        "end_run_date": "2026-06-17",
+        "run_dates": [
+          "2026-06-15",
+          "2026-06-16",
+          "2026-06-17"
+        ]
+      },
+      "train_metrics": {
+        "signal_count": 6,
+        "would_enter_count": 3,
+        "would_skip_count": 3,
+        "risk_adjustment_applied": true,
+        "average_position_size_multiplier": 0.88,
+        "average_confidence_penalty": 0.08,
+        "uncontrolled_entry_count": 0
+      },
+      "validation_metrics": {
+        "signal_count": 3,
+        "would_enter_count": 3,
+        "would_skip_count": 0,
+        "risk_adjustment_applied": true,
+        "average_position_size_multiplier": 0.88,
+        "average_confidence_penalty": 0.08,
+        "uncontrolled_entry_count": 0
+      }
+    },
+    {
+      "fold_id": "wf_fold_3",
+      "train_window": {
+        "start_run_date": "2026-06-09",
+        "end_run_date": "2026-06-17",
+        "run_dates": [
+          "2026-06-09",
+          "2026-06-10",
+          "2026-06-11",
+          "2026-06-12",
+          "2026-06-13",
+          "2026-06-14",
+          "2026-06-15",
+          "2026-06-16",
+          "2026-06-17"
+        ]
+      },
+      "validation_window": {
+        "start_run_date": "2026-06-18",
+        "end_run_date": "2026-06-20",
+        "run_dates": [
+          "2026-06-18",
+          "2026-06-19",
+          "2026-06-20"
+        ]
+      },
+      "train_metrics": {
+        "signal_count": 9,
+        "would_enter_count": 6,
+        "would_skip_count": 3,
+        "risk_adjustment_applied": true,
+        "average_position_size_multiplier": 0.88,
+        "average_confidence_penalty": 0.08,
+        "uncontrolled_entry_count": 0
+      },
+      "validation_metrics": {
+        "signal_count": 3,
+        "would_enter_count": 3,
+        "would_skip_count": 0,
+        "risk_adjustment_applied": true,
+        "average_position_size_multiplier": 0.88,
+        "average_confidence_penalty": 0.08,
+        "uncontrolled_entry_count": 0
+      }
+    }
+  ],
+  "fold_count": 3,
+  "folds_summary": [
+    {
+      "fold_id": "wf_fold_1",
+      "validation_signal_count": 3,
+      "validation_would_enter_count": 3,
+      "risk_adjustment_applied": true,
+      "avg_multiplier": 0.88
+    },
+    {
+      "fold_id": "wf_fold_2",
+      "validation_signal_count": 3,
+      "validation_would_enter_count": 3,
+      "risk_adjustment_applied": true,
+      "avg_multiplier": 0.88
+    },
+    {
+      "fold_id": "wf_fold_3",
+      "validation_signal_count": 3,
+      "validation_would_enter_count": 3,
+      "risk_adjustment_applied": true,
+      "avg_multiplier": 0.88
+    }
+  ],
+  "leakage_guard_passed": true,
+  "post_patch_risk_logic_tracked": true,
+  "uncontrolled_entry_found": false,
+  "uncontrolled_entry_count": 0,
+  "p1_context": {
+    "p1_behavior_change_pass": true
+  },
+  "p2_context": {
+    "p2_performance_pass": true
+  },
+  "phase8_context": {
+    "candidate_status": null,
+    "phase8_passed": false
+  },
+  "phase9_context": {
+    "review_id": "promo_review_20260622_8161439f",
+    "prior_triggered_reject_rules": [
+      "R19"
+    ]
+  },
+  "sources": {
+    "paper_signals": "data/external_alpha/paper_tests/eati_paper_signals_all.jsonl",
+    "accumulation_tracker": "data/external_alpha/reports/eati_14day_accumulation_tracker.json",
+    "p1_behavior_change_report": "data/external_alpha/reports/p1_behavior_change_report.json",
+    "p2_performance_report": "data/external_alpha/reports/p2_performance_report.json",
+    "phase8_report": "data/external_alpha/reports/phase8_micro_candidate_gate_report.json",
+    "phase9_review": "data/external_alpha/reports/phase9_production_promotion_review.json",
+    "promotion_dossier": "docs/promotion/20260622_micro_1780904667",
+    "evidence_dirs": [
+      "docs/evidence/20260608_micro_1780904667",
+      "docs/evidence/20260622_micro_tb2_retry7_20260622"
+    ]
+  },
+  "notes": [
+    "Honest offline audit — no hand-written PASS.",
+    "Walk-forward uses expanding run_date windows on 14-day paper accumulation shards.",
+    "Shared feature_asof_utc is documented; this is research-lane OOS not live market OOS.",
+    "Does not authorize production promotion or operator GO."
+  ]
+}

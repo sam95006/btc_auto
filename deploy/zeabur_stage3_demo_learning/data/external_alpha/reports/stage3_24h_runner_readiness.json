@@ -1,0 +1,28 @@
+{
+  "record_type": "stage3_24h_runner_readiness",
+  "schema_version": "1.0",
+  "phase": "D",
+  "generated_at_utc": "2026-06-25T00:00:00Z",
+  "startup_mode": "runner",
+  "operator_go_24h_env": "OPERATOR_GO_STAGE3_24H_RUNNER",
+  "duration_minutes_target": 1440,
+  "max_orders_per_day": 6,
+  "max_margin_usd": 20,
+  "max_leverage": 3,
+  "max_open_positions": 1,
+  "entrypoint_dual_mode": true,
+  "background_script": "/app/run_stage3_24h_demo_learning_background.sh",
+  "status_reader": "tools/research/read_stage3_24h_status.py",
+  "bundle_exporter": "tools/research/export_stage3_24h_learning_bundle.py",
+  "output_dir": "/data/stage3_demo_learning",
+  "bybit_mainnet_allowed": false,
+  "real_money": false,
+  "production_service_touched": false,
+  "btc_auto_touched": false,
+  "runner_started_24h": false,
+  "notes": [
+    "Set Zeabur STAGE3_STARTUP_MODE=runner and OPERATOR_GO_STAGE3_24H_RUNNER=true.",
+    "Set OPERATOR_GO_STAGE3_C1_DEMO_ORDER=false for 24h auto-start.",
+    "Dockerfile defaults STAGE3_STARTUP_MODE=idle until Zeabur vars override."
+  ]
+}

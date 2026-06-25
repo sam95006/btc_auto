@@ -1,0 +1,300 @@
+{
+  "record_type": "p2_performance_report",
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-06-22T05:53:43Z",
+  "scope": "offline_evidence_only",
+  "production_promotion_allowed": false,
+  "p2_performance_pass": true,
+  "missing": [],
+  "residual_evidence_gaps": [
+    "micro_tb2_retry7_20260622:no_post_patch_paper_lane_artifacts"
+  ],
+  "evidence_sessions_used": [
+    "micro_1780904667",
+    "micro_tb2_retry7_20260622"
+  ],
+  "p1_context": {
+    "p1_behavior_change_pass": true,
+    "path": "data/external_alpha/reports/p1_behavior_change_report.json"
+  },
+  "tier_b_loss_session_analysis": [
+    {
+      "session_id": "micro_1780904667",
+      "evidence_path": "docs/evidence/20260608_micro_1780904667",
+      "close_pnl": -0.138,
+      "confidence_penalty": 0.08,
+      "position_size_multiplier": 0.88,
+      "patch_applied_at": "2026-06-08 08:15:35",
+      "checks": {
+        "close_pnl_negative": true,
+        "reflection_created": true,
+        "patch_created": true,
+        "confidence_penalty_positive": true,
+        "position_size_multiplier_below_one": true,
+        "tier_b_pass": true
+      },
+      "valid_loss_patch": true
+    },
+    {
+      "session_id": "micro_tb2_retry7_20260622",
+      "evidence_path": "docs/evidence/20260622_micro_tb2_retry7_20260622",
+      "close_pnl": -0.19494,
+      "confidence_penalty": 0.08,
+      "position_size_multiplier": 0.88,
+      "patch_applied_at": "2026-06-22 10:18:00",
+      "checks": {
+        "close_pnl_negative": true,
+        "reflection_created": true,
+        "patch_created": true,
+        "confidence_penalty_positive": true,
+        "position_size_multiplier_below_one": true,
+        "tier_b_pass": true
+      },
+      "valid_loss_patch": true
+    }
+  ],
+  "loss_patches_found": [
+    {
+      "session_id": "micro_1780904667",
+      "close_pnl": -0.138,
+      "confidence_penalty": 0.08,
+      "position_size_multiplier": 0.88,
+      "patch_applied_at": "2026-06-08 08:15:35"
+    },
+    {
+      "session_id": "micro_tb2_retry7_20260622",
+      "close_pnl": -0.19494,
+      "confidence_penalty": 0.08,
+      "position_size_multiplier": 0.88,
+      "patch_applied_at": "2026-06-22 10:18:00"
+    }
+  ],
+  "post_patch_paper_lane": {
+    "earliest_patch_applied_at": "2026-06-08 08:15:35",
+    "post_patch_signals_analyzed": 14,
+    "signals_with_conservative_sizing": 14,
+    "average_position_size_multiplier": 0.88,
+    "average_confidence_penalty": 0.08,
+    "average_confidence_adjustment_report_only": -0.0064,
+    "pre_patch_baseline": {
+      "position_size_multiplier": 1.0,
+      "confidence_penalty": 0.0
+    },
+    "post_patch_adjusted_sizing": {
+      "position_size_multiplier": 0.88,
+      "confidence_penalty": 0.08
+    },
+    "estimated_risk_reduction": 0.12,
+    "signals": [
+      {
+        "signal_id": "paper_micro_1780904667_20260608T074412_20260609_b3b495",
+        "generated_at_utc": "2026-06-09T03:23:11Z",
+        "paper_action": "would_skip",
+        "would_enter": false,
+        "position_size_multiplier": 0.88,
+        "confidence_penalty": 0.08,
+        "confidence_adjustment_suggestion_report_only": -0.03,
+        "production_forbidden": true,
+        "is_live_signal": false,
+        "exchange_write_allowed": false
+      },
+      {
+        "signal_id": "paper_micro_1780904667_20260608T074412_20260610_9c33d5",
+        "generated_at_utc": "2026-06-09T05:39:56Z",
+        "paper_action": "would_skip",
+        "would_enter": false,
+        "position_size_multiplier": 0.88,
+        "confidence_penalty": 0.08,
+        "confidence_adjustment_suggestion_report_only": -0.03,
+        "production_forbidden": true,
+        "is_live_signal": false,
+        "exchange_write_allowed": false
+      },
+      {
+        "signal_id": "paper_micro_1780904667_20260608T074412_20260611_336e7d",
+        "generated_at_utc": "2026-06-09T05:46:10Z",
+        "paper_action": "would_skip",
+        "would_enter": false,
+        "position_size_multiplier": 0.88,
+        "confidence_penalty": 0.08,
+        "confidence_adjustment_suggestion_report_only": -0.03,
+        "production_forbidden": true,
+        "is_live_signal": false,
+        "exchange_write_allowed": false
+      },
+      {
+        "signal_id": "paper_micro_1780904667_20260608T074412_20260612_0efd8b",
+        "generated_at_utc": "2026-06-11T08:09:50Z",
+        "paper_action": "would_enter",
+        "would_enter": true,
+        "position_size_multiplier": 0.88,
+        "confidence_penalty": 0.08,
+        "confidence_adjustment_suggestion_report_only": 0.0,
+        "production_forbidden": true,
+        "is_live_signal": false,
+        "exchange_write_allowed": false
+      },
+      {
+        "signal_id": "paper_micro_1780904667_20260608T074412_20260613_877a31",
+        "generated_at_utc": "2026-06-11T08:14:18Z",
+        "paper_action": "would_enter",
+        "would_enter": true,
+        "position_size_multiplier": 0.88,
+        "confidence_penalty": 0.08,
+        "confidence_adjustment_suggestion_report_only": 0.0,
+        "production_forbidden": true,
+        "is_live_signal": false,
+        "exchange_write_allowed": false
+      },
+      {
+        "signal_id": "paper_micro_1780904667_20260608T074412_20260614_e11378",
+        "generated_at_utc": "2026-06-11T08:25:46Z",
+        "paper_action": "would_enter",
+        "would_enter": true,
+        "position_size_multiplier": 0.88,
+        "confidence_penalty": 0.08,
+        "confidence_adjustment_suggestion_report_only": 0.0,
+        "production_forbidden": true,
+        "is_live_signal": false,
+        "exchange_write_allowed": false
+      },
+      {
+        "signal_id": "paper_micro_1780904667_20260608T074412_20260615_6a8df9",
+        "generated_at_utc": "2026-06-11T08:25:50Z",
+        "paper_action": "would_enter",
+        "would_enter": true,
+        "position_size_multiplier": 0.88,
+        "confidence_penalty": 0.08,
+        "confidence_adjustment_suggestion_report_only": 0.0,
+        "production_forbidden": true,
+        "is_live_signal": false,
+        "exchange_write_allowed": false
+      },
+      {
+        "signal_id": "paper_micro_1780904667_20260608T074412_20260616_8580ba",
+        "generated_at_utc": "2026-06-11T08:25:53Z",
+        "paper_action": "would_enter",
+        "would_enter": true,
+        "position_size_multiplier": 0.88,
+        "confidence_penalty": 0.08,
+        "confidence_adjustment_suggestion_report_only": 0.0,
+        "production_forbidden": true,
+        "is_live_signal": false,
+        "exchange_write_allowed": false
+      },
+      {
+        "signal_id": "paper_micro_1780904667_20260608T074412_20260617_61853a",
+        "generated_at_utc": "2026-06-11T08:25:56Z",
+        "paper_action": "would_enter",
+        "would_enter": true,
+        "position_size_multiplier": 0.88,
+        "confidence_penalty": 0.08,
+        "confidence_adjustment_suggestion_report_only": 0.0,
+        "production_forbidden": true,
+        "is_live_signal": false,
+        "exchange_write_allowed": false
+      },
+      {
+        "signal_id": "paper_micro_1780904667_20260608T074412_20260618_81dc00",
+        "generated_at_utc": "2026-06-11T08:26:00Z",
+        "paper_action": "would_enter",
+        "would_enter": true,
+        "position_size_multiplier": 0.88,
+        "confidence_penalty": 0.08,
+        "confidence_adjustment_suggestion_report_only": 0.0,
+        "production_forbidden": true,
+        "is_live_signal": false,
+        "exchange_write_allowed": false
+      },
+      {
+        "signal_id": "paper_micro_1780904667_20260608T074412_20260619_e2a24e",
+        "generated_at_utc": "2026-06-11T08:26:03Z",
+        "paper_action": "would_enter",
+        "would_enter": true,
+        "position_size_multiplier": 0.88,
+        "confidence_penalty": 0.08,
+        "confidence_adjustment_suggestion_report_only": 0.0,
+        "production_forbidden": true,
+        "is_live_signal": false,
+        "exchange_write_allowed": false
+      },
+      {
+        "signal_id": "paper_micro_1780904667_20260608T074412_20260620_dd28a4",
+        "generated_at_utc": "2026-06-11T08:26:07Z",
+        "paper_action": "would_enter",
+        "would_enter": true,
+        "position_size_multiplier": 0.88,
+        "confidence_penalty": 0.08,
+        "confidence_adjustment_suggestion_report_only": 0.0,
+        "production_forbidden": true,
+        "is_live_signal": false,
+        "exchange_write_allowed": false
+      },
+      {
+        "signal_id": "paper_micro_1780904667_20260608T074412_20260621_1a70e8",
+        "generated_at_utc": "2026-06-11T08:26:11Z",
+        "paper_action": "would_enter",
+        "would_enter": true,
+        "position_size_multiplier": 0.88,
+        "confidence_penalty": 0.08,
+        "confidence_adjustment_suggestion_report_only": 0.0,
+        "production_forbidden": true,
+        "is_live_signal": false,
+        "exchange_write_allowed": false
+      },
+      {
+        "signal_id": "paper_micro_1780904667_20260608T074412_20260622_339752",
+        "generated_at_utc": "2026-06-11T09:03:47Z",
+        "paper_action": "would_enter",
+        "would_enter": true,
+        "position_size_multiplier": 0.88,
+        "confidence_penalty": 0.08,
+        "confidence_adjustment_suggestion_report_only": 0.0,
+        "production_forbidden": true,
+        "is_live_signal": false,
+        "exchange_write_allowed": false
+      }
+    ]
+  },
+  "safety_verification": {
+    "all_paper_production_forbidden": true,
+    "no_live_paper_signals": true,
+    "no_exchange_write_on_paper": true,
+    "tracker_production_forbidden": true,
+    "quarantine_count_ok": true,
+    "phase9_production_promotion_denied": true,
+    "no_uncontrolled_production_live_real_money": true
+  },
+  "performance_or_risk_improvements_detected": [
+    "tier_b_loss_patches=2",
+    "post_patch_paper_signals=14",
+    "avg_position_size_multiplier=0.88_below_baseline_1.0",
+    "avg_confidence_penalty=0.08_applied",
+    "estimated_notional_risk_reduction=0.12",
+    "conservative_sizing_signals=14"
+  ],
+  "r12_status": "clear",
+  "sources": {
+    "p1_behavior_change_report": "data/external_alpha/reports/p1_behavior_change_report.json",
+    "paper_signals": "data/external_alpha/paper_tests/eati_paper_signals_all.jsonl",
+    "accumulation_tracker": "data/external_alpha/reports/eati_14day_accumulation_tracker.json",
+    "phase9_review": "data/external_alpha/reports/phase9_production_promotion_review.json",
+    "promotion_dossier": "docs/promotion/20260622_micro_1780904667",
+    "evidence_dirs": [
+      "docs/evidence/20260608_micro_1780904667",
+      "docs/evidence/20260622_micro_tb2_retry7_20260622"
+    ]
+  },
+  "phase9_context": {
+    "review_id": "promo_review_20260622_67609613",
+    "triggered_reject_rules": [
+      "R12",
+      "R19"
+    ]
+  },
+  "notes": [
+    "Honest offline audit — no hand-written PASS.",
+    "Risk reduction is estimated from paper-lane position_size_multiplier vs baseline 1.0.",
+    "retry7 patch post-close has no paper-lane follow-up in current 14-day accumulation window."
+  ]
+}

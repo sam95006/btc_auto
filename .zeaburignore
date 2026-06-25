@@ -1,13 +1,49 @@
-# Zeabur upload slim — exclude local research bulk (see NEXUS_SPACE_CLEANUP_AND_DEPLOY_SLIM_REPORT.md)
-data/
-data/external_alpha/
+# Zeabur Stage 2 Bybit Shadow Runner — deploy exclusions
+# Recommended upload root: deploy/zeabur_stage2_shadow/ (clean allowlist package)
+# Do NOT upload full repo; use manifest at data/external_alpha/reports/zeabur_deploy_package_manifest.json
+
+# --- Secrets (never upload) ---
+.env
+.env.*
+*.secret
+*.key
+*.pem
+**/credentials.json
+**/*_credentials.json
+
+# --- Local evidence / promotion (preserve locally, exclude from Zeabur) ---
+docs/evidence/
+docs/promotion/
+docs/NEXUS_EXTERNAL_ALPHA_PHASE9_PRODUCTION_PROMOTION_REVIEW.md
+docs/archive/
+
+# --- Old phase / operator reports (boot evidence copied via deploy package only) ---
+data/external_alpha/reports/phase*.json
+data/external_alpha/reports/p1_behavior_change_report.json
+data/external_alpha/reports/p2_performance_report.json
+data/external_alpha/reports/oos_walkforward_report.json
+data/external_alpha/reports/operator_go_readiness_audit.json
+data/external_alpha/paper_tests/
+
+# --- Runtime-generated (use /data volume on Zeabur) ---
 logs/
+logs/*.log
+exports/
+exports/*.zip
+data/external_alpha/shadow/
+data/external_alpha/reports/stage2_daily_audit.json
+data/external_alpha/reports/stage2_stop_conditions.json
+data/external_alpha/reports/stage2_risk_snapshot.json
+data/external_alpha/reports/stage2_evidence_manifest.json
+
+# --- Production / backend bulk (not needed for shadow runner) ---
+backend/
+frontend/
+static/
+app.py
+gunicorn.conf.py
 archives/
 scratch/
-docs/
-docs/archive/
-docs/evidence/
-tools/research/
 tests/
 venv/
 .venv/
@@ -22,12 +58,23 @@ __pycache__/
 .cache/
 *.log
 *.zip
-/assets/
-!static/nexus/assets/
-!static/nexus/assets/**
-.env
-.env.*
-!.env.example
-trading.db*
 *.db
 *.db-*
+trading.db*
+assets/
+
+# --- Full research tree (use deploy/zeabur_stage2_shadow allowlist instead) ---
+tools/research/
+!tools/research/run_bybit_shadow_runner.py
+!tools/research/export_shadow_runner_log_bundle.py
+!tools/research/bybit_shadow_runner_common.py
+!tools/research/check_zeabur_shadow_env.py
+
+# --- Full data tree except readiness/status in deploy package ---
+data/
+!data/external_alpha/
+data/external_alpha/*
+!data/external_alpha/reports/
+data/external_alpha/reports/*
+!data/external_alpha/reports/zeabur_stage2_shadow_readiness.json
+!data/external_alpha/reports/zeabur_stage2_shadow_status.json

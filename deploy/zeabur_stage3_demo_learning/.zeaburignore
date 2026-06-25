@@ -1,0 +1,16 @@
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+.env
+.env.*
+*.key
+*.pem
+*.secret
+*.db
+trading.db
+/data/
+logs/
+exports/
+*.zip
+data/external_alpha/stage3_demo_learning/
+data/external_alpha/stage3_demo_learning/**
