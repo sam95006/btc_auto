@@ -47,6 +47,13 @@ RECONCILIATION_FIELDS = (
 
 MANUAL_REVIEW_GAP_THRESHOLD = 0.05
 
+PATCH_ACTIONS = (
+    "risk_reduce",
+    "block_reentry",
+    "cooldown",
+    "manual_review_required",
+)
+
 
 def _to_float(raw: Any) -> float:
     try:
@@ -140,8 +147,43 @@ def append_jsonl(path: Path, row: Dict[str, Any]) -> None:
         fh.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
-def setup_key(symbol: str, side: str, regime: str, failure_reason: str) -> str:
-    return f"{symbol.upper()}|{side.upper()}|{regime}|{failure_reason}"
+def setup_key(
+    symbol: str,
+    side: str,
+    regime: str,
+    failure_reason: str,
+    decision_source: str = "controlled_demo_order",
+) -> str:
+    return f"{symbol.upper()}|{side.upper()}|{regime}|{decision_source}|{failure_reason}"
+
+
+def _read_jsonl_rows(path: Path) -> List[Dict[str, Any]]:
+    if not path.is_file():
+        return []
+    rows: List[Dict[str, Any]] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line:
+            rows.append(json.loads(line))
+    return rows
+
+
+def _cooldown_active(patch: Dict[str, Any]) -> bool:
+    until = patch.get("cooldown_until_utc")
+    if not until:
+        return False
+    try:
+        text = str(until).strip()
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+        from datetime import datetime, timezone
+
+        end = datetime.fromisoformat(text)
+        if end.tzinfo is None:
+            end = end.replace(tzinfo=timezone.utc)
+        return datetime.now(timezone.utc) < end.astimezone(timezone.utc)
+    except ValueError:
+        return False
 
 
 @dataclass
@@ -194,9 +236,46 @@ class Stage3LearningLoop:
         self.state = LearningState()
         self.stop = StopConditionMonitor()
         self._paths = {name: output_dir / name for name in OUTPUT_FILES}
+        self._hydrate_from_disk()
 
     def path(self, name: str) -> Path:
         return self._paths[name]
+
+    def _hydrate_from_disk(self) -> None:
+        patch_path = self.path("applied_learning_patches.jsonl")
+        for row in _read_jsonl_rows(patch_path):
+            key = row.get("setup_key")
+            if not key:
+                key = setup_key(
+                    str(row.get("symbol") or ""),
+                    str(row.get("side") or ""),
+                    str(row.get("regime") or ""),
+                    str(row.get("failure_reason") or ""),
+                    str(row.get("decision_source") or "controlled_demo_order"),
+                )
+            self.state.patches[key] = row
+            hits = int(row.get("hit_count") or 0)
+            if hits > 0:
+                self.state.loss_setups[key] = max(self.state.loss_setups.get(key, 0), hits)
+
+        for trade in _read_jsonl_rows(self.path("trade_results.jsonl")):
+            if float(trade.get("close_pnl") or 0) < 0:
+                key = trade.get("setup_key")
+                if key:
+                    self.state.loss_setups[key] = self.state.loss_setups.get(key, 0) + 1
+            if trade.get("repeated_mistake_detected"):
+                self.state.stats["repeated_mistake_detected_count"] += 1
+            if trade.get("repeated_mistake_blocked"):
+                self.state.stats["repeated_mistake_blocked_count"] += 1
+
+    def _choose_patch_action(self, loss_count: int, *, severe_gap: bool = False) -> str:
+        if severe_gap:
+            return "manual_review_required"
+        if loss_count <= 1:
+            return "risk_reduce"
+        if loss_count == 2:
+            return "block_reentry"
+        return "cooldown"
 
     def evaluate_same_setup(
         self,
@@ -205,10 +284,12 @@ class Stage3LearningLoop:
         side: str,
         regime: str,
         failure_reason: str,
+        decision_source: str = "controlled_demo_order",
     ) -> Dict[str, Any]:
-        key = setup_key(symbol, side, regime, failure_reason)
+        key = setup_key(symbol, side, regime, failure_reason, decision_source)
         patch = self.state.patches.get(key)
-        repeated = key in self.state.loss_setups
+        loss_count = int(self.state.loss_setups.get(key, 0))
+        repeated = loss_count >= 1
         result = {
             "setup_key": key,
             "repeated_mistake_detected": repeated,
@@ -217,19 +298,54 @@ class Stage3LearningLoop:
             "confidence": self.state.confidence,
             "position_size": self.state.position_size,
             "patch_applied_to_next_decision": False,
+            "patch_action": patch.get("action") if patch else None,
+            "loss_count_before": loss_count,
         }
-        if repeated and patch:
-            result["repeated_mistake_detected"] = True
-            self.state.stats["repeated_mistake_detected_count"] += 1
-            action = patch.get("action", "block")
-            if action == "block":
-                result["repeated_mistake_blocked"] = True
+        if not repeated or not patch:
+            return result
+
+        result["repeated_mistake_detected"] = True
+        self.state.stats["repeated_mistake_detected_count"] += 1
+        action = str(patch.get("action") or "risk_reduce")
+        if action == "block":
+            action = "block_reentry"
+
+        if action == "risk_reduce" and loss_count >= 1:
+            result["skip_trade"] = True
+            result["repeated_mistake_blocked"] = True
+            result["patch_action"] = "block_reentry"
+            self.state.stats["repeated_mistake_blocked_count"] += 1
+            patch["blocked_count"] = int(patch.get("blocked_count") or 0) + 1
+            patch["last_used_at_utc"] = utc_now_iso()
+            return result
+
+        if action in {"block_reentry", "manual_review_required"}:
+            result["skip_trade"] = True
+            result["repeated_mistake_blocked"] = True
+            self.state.stats["repeated_mistake_blocked_count"] += 1
+            patch["blocked_count"] = int(patch.get("blocked_count") or 0) + 1
+            patch["last_used_at_utc"] = utc_now_iso()
+            return result
+
+        if action == "cooldown":
+            if _cooldown_active(patch):
                 result["skip_trade"] = True
+                result["repeated_mistake_blocked"] = True
                 self.state.stats["repeated_mistake_blocked_count"] += 1
+                patch["blocked_count"] = int(patch.get("blocked_count") or 0) + 1
             else:
-                result["confidence"] = patch.get("confidence_after", self.state.confidence)
-                result["position_size"] = patch.get("position_size_after", self.state.position_size)
+                result["confidence"] = float(patch.get("confidence_after") or self.state.confidence)
+                result["position_size"] = float(patch.get("position_size_after") or self.state.position_size)
                 result["patch_applied_to_next_decision"] = True
+            patch["last_used_at_utc"] = utc_now_iso()
+            return result
+
+        result["confidence"] = float(patch.get("confidence_after") or self.state.confidence)
+        result["position_size"] = float(patch.get("position_size_after") or self.state.position_size)
+        result["patch_applied_to_next_decision"] = True
+        self.state.confidence = result["confidence"]
+        self.state.position_size = result["position_size"]
+        patch["last_used_at_utc"] = utc_now_iso()
         return result
 
     def record_loss_reflection_patch(
@@ -242,12 +358,18 @@ class Stage3LearningLoop:
     ) -> Dict[str, Any]:
         symbol = trade["symbol"]
         side = trade["side"]
-        key = setup_key(symbol, side, regime, failure_reason)
+        decision_source = str(trade.get("decision_source") or "controlled_demo_order")
+        key = setup_key(symbol, side, regime, failure_reason, decision_source)
         conf_before = float(trade.get("confidence_before", self.state.confidence))
         size_before = float(trade.get("position_size_before", self.state.position_size))
         conf_after, size_after = self.state.reduce_after_loss()
-        self.state.loss_setups[key] = self.state.loss_setups.get(key, 0) + 1
+        loss_count = self.state.loss_setups.get(key, 0) + 1
+        self.state.loss_setups[key] = loss_count
         self.state.stats["loss_trade_count"] += 1
+        severe_gap = bool(trade.get("requires_manual_review")) or str(
+            trade.get("reconciliation_status") or ""
+        ) in {"gap_detected", "orphan_impact_suspected"}
+        patch_action = self._choose_patch_action(loss_count, severe_gap=severe_gap)
 
         reflection = {
             "reflection_id": str(uuid.uuid4()),
@@ -268,6 +390,8 @@ class Stage3LearningLoop:
         }
         append_jsonl(self.path("reflection_records.jsonl"), reflection)
 
+        confidence_penalty = round(max(0.0, conf_before - conf_after), 6)
+        size_multiplier = round(conf_after / conf_before, 6) if conf_before else 1.0
         patch = {
             "patch_id": str(uuid.uuid4()),
             "decision_id": decision_id,
@@ -276,11 +400,25 @@ class Stage3LearningLoop:
             "side": side,
             "regime": regime,
             "failure_reason": failure_reason,
-            "action": "block",
+            "decision_source": decision_source,
+            "action": patch_action,
             "confidence_after": conf_after,
             "position_size_after": size_after,
+            "confidence_penalty": confidence_penalty,
+            "size_multiplier": size_multiplier,
             "created_at_utc": utc_now_iso(),
+            "last_used_at_utc": utc_now_iso(),
+            "hit_count": loss_count,
+            "blocked_count": int(self.state.patches.get(key, {}).get("blocked_count") or 0),
+            "cooldown_until_utc": None,
+            "evidence_session_id": decision_id,
         }
+        if patch_action == "cooldown":
+            from datetime import datetime, timedelta, timezone
+
+            patch["cooldown_until_utc"] = (
+                datetime.now(timezone.utc) + timedelta(minutes=30)
+            ).replace(microsecond=0).isoformat().replace("+00:00", "Z")
         self.state.patches[key] = patch
         append_jsonl(self.path("applied_learning_patches.jsonl"), patch)
 

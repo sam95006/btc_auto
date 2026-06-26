@@ -16,7 +16,7 @@ from tools.research.bybit_demo_client import (
     OrderIntent,
 )
 from tools.research.bybit_demo_learning_common import utc_now_iso, write_json
-from tools.research.stage3_learning_loop import Stage3LearningLoop, append_jsonl, build_balance_reconciliation
+from tools.research.stage3_learning_loop import Stage3LearningLoop, append_jsonl, build_balance_reconciliation, setup_key
 
 
 def _f(raw: Any) -> float:
@@ -39,6 +39,94 @@ def _stop_price(entry: float, qty: float, side: str, stop_loss_max_usd: float) -
     return entry + delta
 
 
+def _blocked_demo_session_report(
+    *,
+    loop: Stage3LearningLoop,
+    snapshot: Dict[str, Any],
+    side: str,
+    regime: str,
+    failure_reason: str,
+    decision_source: str,
+    eval_result: Dict[str, Any],
+    entry_price: float,
+    max_orders: int,
+) -> Dict[str, Any]:
+    decision_id = str(uuid.uuid4())
+    decision = {
+        "decision_id": decision_id,
+        "scenario": "phase_c_demo_order_blocked",
+        "symbol": DEFAULT_SYMBOL,
+        "side": side,
+        "regime": regime,
+        "failure_reason": failure_reason,
+        "decision_source": decision_source,
+        "action": "blocked_repeated_mistake",
+        "demo_order_sent": False,
+        "confidence": eval_result.get("confidence"),
+        "position_size": eval_result.get("position_size"),
+        "last_price": entry_price,
+        "balance_snapshot_id": snapshot.get("snapshot_id"),
+        "account_total_equity": snapshot.get("total_equity"),
+        "account_available_balance": snapshot.get("available_balance"),
+        "account_wallet_balance": snapshot.get("wallet_balance"),
+        "balance_read_ok": snapshot.get("balance_read_ok"),
+        "recorded_at_utc": utc_now_iso(),
+        **eval_result,
+    }
+    append_jsonl(loop.path("decisions.jsonl"), decision)
+    signal_id = f"sig-blocked-{uuid.uuid4().hex[:8]}"
+    trade = loop.build_trade_record(
+        decision_id=decision_id,
+        signal_id=signal_id,
+        order_id="blocked-no-order",
+        symbol=DEFAULT_SYMBOL,
+        side=side,
+        entry_price=0,
+        exit_price=0,
+        close_pnl=0,
+        exit_reason="repeated_mistake_blocked",
+        confidence_before=float(eval_result.get("confidence") or loop.state.confidence),
+        confidence_after=float(eval_result.get("confidence") or loop.state.confidence),
+        position_size_before=float(eval_result.get("position_size") or loop.state.position_size),
+        position_size_after=float(eval_result.get("position_size") or loop.state.position_size),
+        reflection_created=False,
+        patch_created=False,
+        patch_applied_to_next_decision=bool(eval_result.get("patch_applied_to_next_decision")),
+        repeated_mistake_detected=bool(eval_result.get("repeated_mistake_detected")),
+        repeated_mistake_blocked=True,
+    )
+    trade["trade_result_id"] = str(uuid.uuid4())
+    trade["setup_key"] = eval_result.get("setup_key") or setup_key(
+        DEFAULT_SYMBOL, side, regime, failure_reason, decision_source
+    )
+    trade["decision_source"] = decision_source
+    trade["demo_order_sent"] = False
+    trade["position_closed"] = True
+    append_jsonl(loop.path("trade_results.jsonl"), trade)
+    return {
+        "record_type": "stage3_demo_order_session_report",
+        "generated_at_utc": utc_now_iso(),
+        "phase": "C+2",
+        "demo_order_session_started": True,
+        "demo_order_sent": False,
+        "blocked_repeated_mistake": True,
+        "orders_placed": 0,
+        "max_orders": max_orders,
+        "symbol": DEFAULT_SYMBOL,
+        "side": side,
+        "position_closed": True,
+        "open_positions_after": 0,
+        "decision_id": decision_id,
+        "trade_result_id": trade.get("trade_result_id"),
+        "mainnet": False,
+        "real_money": False,
+        "reconciliation_status": "not_applicable_blocked",
+        "requires_manual_review": False,
+        "run_reconciliation": False,
+        "per_trade_reconciliation": False,
+    }
+
+
 def run_demo_order_micro_session(
     *,
     loop: Stage3LearningLoop,
@@ -54,6 +142,7 @@ def run_demo_order_micro_session(
 ) -> Dict[str, Any]:
     regime = "phase_c_micro_session"
     failure_reason = "controlled_demo_order"
+    decision_source = "controlled_demo_order"
     conf_before = loop.state.confidence
     size_before = loop.state.position_size
     margin_usd = min(margin_usd, MAX_MARGIN_USD, float(snapshot.get("max_allowed_margin") or MAX_MARGIN_USD))
@@ -63,6 +152,27 @@ def run_demo_order_micro_session(
     ticker = client.fetch_ticker(DEFAULT_SYMBOL)
     entry_price = float(ticker.get("lastPrice") or 0)
     side = _decide_side(ticker)
+
+    eval_result = loop.evaluate_same_setup(
+        symbol=DEFAULT_SYMBOL,
+        side=side,
+        regime=regime,
+        failure_reason=failure_reason,
+        decision_source=decision_source,
+    )
+    if eval_result.get("skip_trade"):
+        return _blocked_demo_session_report(
+            loop=loop,
+            snapshot=snapshot,
+            side=side,
+            regime=regime,
+            failure_reason=failure_reason,
+            decision_source=decision_source,
+            eval_result=eval_result,
+            entry_price=entry_price,
+            max_orders=max_orders,
+        )
+
     notional = margin_usd * leverage
     qty = notional / max(entry_price, 1e-9)
     stop = _stop_price(entry_price, qty, side, stop_loss_max_usd)
@@ -75,6 +185,7 @@ def run_demo_order_micro_session(
         "side": side,
         "regime": regime,
         "failure_reason": failure_reason,
+        "decision_source": decision_source,
         "action": "demo_order",
         "confidence": conf_before,
         "position_size": size_before,
@@ -193,6 +304,8 @@ def run_demo_order_micro_session(
         repeated_mistake_blocked=False,
     )
     trade["trade_result_id"] = str(uuid.uuid4())
+    trade["setup_key"] = setup_key(DEFAULT_SYMBOL, side, regime, failure_reason, decision_source)
+    trade["decision_source"] = decision_source
     trade["position_closed"] = open_after == 0
     trade["demo_order_sent"] = True
     trade.update(reconciliation)

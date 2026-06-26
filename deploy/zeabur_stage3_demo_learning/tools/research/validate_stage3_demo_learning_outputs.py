@@ -34,6 +34,7 @@ def validate(
     *,
     require_balance: bool | None = None,
     require_demo_order: bool = False,
+    require_24h_run: bool = False,
 ) -> Dict[str, Any]:
     out = output_dir or resolve_output_dir()
     audit = json.loads((out / "runner_audit.json").read_text(encoding="utf-8")) if (out / "runner_audit.json").is_file() else {}
@@ -44,6 +45,8 @@ def validate(
     errors: List[str] = []
     for name in OUTPUT_FILES:
         if not (out / name).is_file():
+            if require_24h_run and name == "demo_order_session_report.json" and audit.get("session_reports"):
+                continue
             errors.append(f"missing_file:{name}")
 
     decisions = _read_jsonl(out / "decisions.jsonl")
@@ -165,15 +168,84 @@ def validate(
 
     stop_triggered = list(stop.get("triggered") or [])
     balance_read_failed_count = sum(1 for s in snapshots if not s.get("balance_read_ok"))
+    requires_manual_review = False
+    validator_mode = "default"
+
+    if require_24h_run:
+        validator_mode = "24h"
+        max_orders_cap = int(audit.get("max_orders") or 6)
+        orders_sent = int(audit.get("orders_sent") or len(real_orders))
+        if orders_sent < 0 or orders_sent > max_orders_cap:
+            errors.append(f"orders_sent_out_of_range:0..{max_orders_cap}_got_{orders_sent}")
+        orders_closed = sum(1 for t in trades if t.get("position_closed") is True and t.get("demo_order_sent"))
+        if orders_sent > 0 and orders_closed != orders_sent:
+            errors.append(f"orders_closed_mismatch:sent_{orders_sent}_closed_{orders_closed}")
+        session_reports_list = list(audit.get("session_reports") or [])
+        open_after = audit.get("open_positions_after")
+        if open_after is None and session_reports_list:
+            for sr in reversed(session_reports_list):
+                if sr.get("open_positions_after") is not None:
+                    open_after = sr.get("open_positions_after")
+                    break
+        if open_after is None and session_report:
+            open_after = session_report.get("open_positions_after")
+        if open_after is None and orders_sent == 0:
+            open_after = 0
+        if open_after not in (0, None):
+            errors.append(f"open_positions_after_expected_0_got_{open_after}")
+        mainnet_detected = any(
+            bool(x)
+            for x in (
+                audit.get("mainnet"),
+                latest_snapshot.get("mainnet_detected"),
+                *(o.get("mainnet") for o in real_orders),
+            )
+        )
+        real_money_detected = any(
+            bool(x)
+            for x in (
+                audit.get("real_money"),
+                latest_snapshot.get("real_money_detected"),
+                *(o.get("real_money") for o in real_orders),
+            )
+        )
+        production_detected = "btc_auto_production_touched" in stop_triggered
+        if mainnet_detected:
+            errors.append("mainnet_detected")
+        if real_money_detected:
+            errors.append("real_money_detected")
+        if production_detected:
+            errors.append("production_detected")
+        if stop_triggered:
+            errors.append(f"stop_conditions_triggered:{stop_triggered}")
+        if loss_without_reflection:
+            errors.append(f"loss_without_reflection_count:{len(loss_without_reflection)}")
+        for t in loss_trades:
+            if not t.get("patch_created"):
+                errors.append(f"loss_without_patch:{t.get('decision_id')}")
+        for sr in session_reports_list:
+            if sr.get("reconciliation_status") in {"gap_detected", "orphan_impact_suspected"}:
+                requires_manual_review = True
+        for t in trades:
+            if t.get("reconciliation_status") in {"gap_detected", "orphan_impact_suspected"}:
+                requires_manual_review = True
+        if session_report.get("reconciliation_status") in {"gap_detected", "orphan_impact_suspected"}:
+            requires_manual_review = True
 
     passed = not errors
+    if require_24h_run and passed and requires_manual_review:
+        passed = True
     result = {
         "record_type": "stage3_demo_learning_output_validation",
         "generated_at_utc": utc_now_iso(),
         "output_dir": str(out),
         "mode": mode,
+        "validator_mode": validator_mode,
         "require_balance": require_balance,
         "require_demo_order": require_demo_order,
+        "require_24h_run": require_24h_run,
+        "requires_manual_review": requires_manual_review,
+        "validator_passed": passed,
         "demo_order_sent": demo_order_sent,
         "position_closed": position_closed,
         "open_positions_after": open_positions_after,
@@ -206,7 +278,19 @@ def validate(
     }
     if session_report:
         for fld in RECONCILIATION_FIELDS:
-            result[fld] = session_report.get(fld)
+            if fld == "requires_manual_review":
+                result[fld] = bool(requires_manual_review or session_report.get(fld))
+            else:
+                result[fld] = session_report.get(fld)
+    if require_24h_run and audit:
+        result["orders_sent"] = audit.get("orders_sent")
+        result["max_orders_per_day"] = audit.get("max_orders")
+        result["run_reconciliation"] = any(
+            sr.get("run_reconciliation") is not None for sr in (audit.get("session_reports") or [])
+        )
+        result["per_trade_reconciliation"] = any(
+            t.get("per_trade_reconciliation") is not None for t in trades
+        )
     return result
 
 
@@ -215,11 +299,20 @@ def main() -> int:
     parser.add_argument("--output-dir", default="")
     parser.add_argument("--require-balance", action="store_true")
     parser.add_argument("--require-demo-order", action="store_true")
+    parser.add_argument("--require-24h-run", action="store_true")
+    parser.add_argument("--mode", choices=["24h", "c1"], default="")
     parser.add_argument("--no-require-balance", action="store_true")
     args = parser.parse_args()
     out = Path(args.output_dir) if args.output_dir else None
     require_balance = True if args.require_balance else False if args.no_require_balance else None
-    result = validate(out, require_balance=require_balance, require_demo_order=args.require_demo_order)
+    require_24h = args.require_24h_run or args.mode == "24h"
+    require_demo = args.require_demo_order and not require_24h
+    result = validate(
+        out,
+        require_balance=require_balance,
+        require_demo_order=require_demo,
+        require_24h_run=require_24h,
+    )
     write_json(
         READINESS_REPORT,
         {

@@ -1363,16 +1363,16 @@ pollStage3Status();
 window.setTimeout(async () => {
   if (getState()) return;
   try {
-    const snapshot = await fetchNexusState();
+    const payload = await fetchStage3Status();
+    stage3UiState.payload = payload;
     renderApp({
-      ...snapshot,
       transport: {
         connected: true,
-        source: "boot-fallback",
+        source: "stage3-boot-fallback",
       },
     });
-  } catch (error) {
-    showError(`UI fallback failed: ${error?.message || String(error)}`);
+  } catch (_error) {
+    // Stage 3 read-only UI: no legacy /api/nexus/state required.
   }
 }, 5000);
 

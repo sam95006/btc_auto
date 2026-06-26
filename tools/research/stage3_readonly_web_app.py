@@ -29,6 +29,8 @@ def _port() -> int:
 @app.before_request
 def _read_only_guard():
     if request.method != "GET":
+        if request.path in {"/api/nexus/state", "/api/nexus/status", "/api/nexus/snapshot"}:
+            return jsonify({"read_only": True, "error": "method_not_allowed"}), 405
         if request.path.startswith("/api/nexus/stage3/"):
             return jsonify({"read_only": True, "error": "method_not_allowed"}), 405
         if request.path.startswith("/api/"):
@@ -45,6 +47,29 @@ def _nexus_static_cache_control(response):
 @app.route("/health")
 def health():
     return jsonify({"ok": True, "service": "stage3-readonly-web", "read_only": True})
+
+
+def _legacy_compat_payload() -> dict:
+    from backend.monitoring.stage3_status_service import build_stage3_context
+
+    try:
+        stage3 = build_stage3_context()
+    except Exception as exc:
+        stage3 = {"read_only": True, "error": str(exc), "data_available": False}
+    return {
+        "ok": True,
+        "read_only": True,
+        "mode": "stage3_demo_learning",
+        "legacy_compat": True,
+        "stage3": stage3,
+    }
+
+
+@app.route("/api/nexus/state")
+@app.route("/api/nexus/status")
+@app.route("/api/nexus/snapshot")
+def nexus_legacy_compat():
+    return jsonify(_legacy_compat_payload())
 
 
 @app.route("/")

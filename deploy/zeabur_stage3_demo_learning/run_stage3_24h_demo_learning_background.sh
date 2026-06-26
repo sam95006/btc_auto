@@ -55,7 +55,7 @@ RUNNER_RC=$?
 python tools/research/read_stage3_24h_status.py --write runner_exit_code="$RUNNER_RC" status=validating
 
 VALIDATOR_RC=0
-if python tools/research/validate_stage3_demo_learning_outputs.py --require-balance --require-demo-order; then
+if python tools/research/validate_stage3_demo_learning_outputs.py --require-balance --require-24h-run; then
   VALIDATOR_RC=0
 else
   VALIDATOR_RC=$?

@@ -269,6 +269,7 @@ def _try_same_setup_reentry(
         side=side,
         regime=regime,
         failure_reason=failure_reason,
+        decision_source="controlled_demo_order",
     )
     decision_id = _record_decision(
         loop,
@@ -435,10 +436,14 @@ def run_loop(
     session_report: Dict[str, Any] = {}
     session_reports: List[Dict[str, Any]] = []
     orders_sent = 0
+    observe_ticks_after_orders_full = 0
+    orders_full_at_utc: str | None = None
+    runner_phase = "RUNNING"
+    run_completed_at_utc: str | None = None
 
     if mode == "demo-order" and is_24h:
         balance_before: float | None = None
-        while time.time() < end and orders_sent < max_orders and not loop.stop.should_stop:
+        while time.time() < end and not loop.stop.should_stop:
             snapshot = _fetch_balance_snapshot(client, loop)
             latest_snapshot = snapshot
             tick += 1
@@ -446,7 +451,8 @@ def run_loop(
                 balance_before = float(snapshot.get("available_balance") or 0)
             if not _evaluate_balance_stops(snapshot, loop):
                 break
-            if client.count_open_positions() > 0:
+            open_positions = client.count_open_positions()
+            if open_positions > 0:
                 ticker = client.fetch_ticker()
                 _record_decision(
                     loop,
@@ -455,6 +461,7 @@ def run_loop(
                         "symbol": "ETHUSDT",
                         "action": "observe_open_position",
                         "tick": tick,
+                        "runner_phase": runner_phase,
                         "last_price": float(ticker.get("lastPrice") or 0),
                     },
                     snapshot,
@@ -468,12 +475,20 @@ def run_loop(
                     poll_interval_seconds=poll_interval_seconds,
                     duration_minutes=min(10.0, max(1.0, (end - time.time()) / 60.0)),
                 )
-                orders_sent += 1
                 session_reports.append(session_report)
-                actions.append(f"demo_order_micro_session_{orders_sent}")
+                if session_report.get("demo_order_sent"):
+                    orders_sent += 1
+                    actions.append(f"demo_order_micro_session_{orders_sent}")
+                    if orders_sent >= max_orders and orders_full_at_utc is None:
+                        orders_full_at_utc = utc_now_iso()
+                        runner_phase = "OBSERVING_AFTER_MAX_ORDERS"
+                elif session_report.get("blocked_repeated_mistake"):
+                    actions.append("blocked_repeated_mistake")
                 if loop.stop.should_stop:
                     break
             else:
+                runner_phase = "OBSERVING_AFTER_MAX_ORDERS"
+                observe_ticks_after_orders_full += 1
                 ticker = client.fetch_ticker()
                 _record_decision(
                     loop,
@@ -482,6 +497,8 @@ def run_loop(
                         "symbol": "ETHUSDT",
                         "action": "observe_only",
                         "tick": tick,
+                        "runner_phase": runner_phase,
+                        "observe_ticks_after_orders_full": observe_ticks_after_orders_full,
                         "last_price": float(ticker.get("lastPrice") or 0),
                     },
                     snapshot,
@@ -489,14 +506,20 @@ def run_loop(
             if time.time() >= end:
                 break
             time.sleep(poll_interval_seconds)
+        run_completed_at_utc = utc_now_iso()
         try:
             from tools.research.read_stage3_24h_status import write_status
 
             write_status(
                 orders_sent=orders_sent,
                 run_started=True,
+                run_completed=True,
                 duration_minutes_target=duration_minutes,
                 max_orders_per_day=max_orders,
+                observe_ticks_after_orders_full=observe_ticks_after_orders_full,
+                orders_full_at_utc=orders_full_at_utc,
+                run_completed_at_utc=run_completed_at_utc,
+                runner_phase=runner_phase,
             )
         except Exception:
             pass
@@ -553,16 +576,19 @@ def run_loop(
                 break
             time.sleep(poll_interval_seconds)
 
+    elapsed_minutes = round((time.time() - started) / 60.0, 4)
     audit = {
         "record_type": "stage3_demo_learning_runner_audit",
         "generated_at_utc": utc_now_iso(),
         "phase": "D" if is_24h else ("C+2" if mode == "demo-order" else ("B" if mode == "dry-run" else "A")),
         "mode": mode,
         "duration_minutes": duration_minutes,
+        "elapsed_minutes": elapsed_minutes,
         "poll_interval_seconds": poll_interval_seconds,
         "tick_count": tick,
         "max_orders": max_orders,
         "orders_sent": orders_sent,
+        "run_completed": True,
         "strict_env_passed": strict.get("strict_env_passed"),
         "operator_go_present": demo_order_operator_go_present(),
         "operator_go_24h_present": operator_go_24h_present(),
@@ -594,6 +620,15 @@ def run_loop(
         },
         "balance_read_failed": loop.state.stats.get("balance_read_failed_count", 0) > 0,
     }
+    if is_24h:
+        audit.update(
+            {
+                "observe_ticks_after_orders_full": observe_ticks_after_orders_full,
+                "orders_full_at_utc": orders_full_at_utc,
+                "run_completed_at_utc": run_completed_at_utc,
+                "runner_phase": runner_phase,
+            }
+        )
     loop.write_audit(audit)
     loop.write_stop_conditions()
     return audit
