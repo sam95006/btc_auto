@@ -1,6 +1,6 @@
 {
   "record_type": "stage3_github_auto_24h_startup_safety_report",
-  "generated_at_utc": "2026-06-25T06:29:13Z",
+  "generated_at_utc": "2026-06-25T06:34:56Z",
   "github_auto_24h_startup_safe": true,
   "preflight_passed": true,
   "clean_baseline_passed": true,
@@ -28,7 +28,7 @@
   "preflight": {
     "record_type": "stage3_24h_runner_preflight",
     "phase": "D",
-    "generated_at_utc": "2026-06-25T06:29:13Z",
+    "generated_at_utc": "2026-06-25T06:34:56Z",
     "preflight_passed": true,
     "preflight_errors": [],
     "clean_baseline_passed": true,

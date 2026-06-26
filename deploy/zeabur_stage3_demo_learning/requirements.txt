@@ -1,1 +1,2 @@
-# Stage 3 demo learning — stdlib for env gate; runner deps TBD
+flask>=3.0,<4
+gunicorn>=22.0,<24

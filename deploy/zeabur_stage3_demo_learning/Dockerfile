@@ -26,12 +26,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     REQUIRE_MAX_HOLD=true \
     REQUIRE_REFLECTION_ON_LOSS=true \
     REQUIRE_PATCH_BEFORE_NEXT_SAME_SETUP=true \
-    ZEABUR_PRODUCTION_RUNNER_ALLOWED=false
+    ZEABUR_PRODUCTION_RUNNER_ALLOWED=false \
+    PORT=8080
 
 WORKDIR /app
-RUN mkdir -p /data/data/external_alpha/demo_learning /data/logs /data/exports
+RUN mkdir -p /data/data/external_alpha/demo_learning /data/logs /data/exports /data/stage3_demo_learning
 
 COPY . .
 RUN chmod +x entrypoint.sh run_stage3_demo_order_background.sh run_stage3_24h_demo_learning_background.sh
-# STAGE3_STARTUP_MODE=idle by default; set runner + OPERATOR_GO on Zeabur for 24h
+EXPOSE 8080
+# STAGE3_STARTUP_MODE=idle: read-only Web UI; runner mode spawns 24h runner then same UI
 CMD ["/bin/sh", "./entrypoint.sh"]

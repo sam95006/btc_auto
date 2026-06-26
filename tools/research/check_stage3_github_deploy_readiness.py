@@ -338,7 +338,12 @@ def _entrypoint_flags() -> Tuple[bool, bool]:
             "preflight_stage3_24h_runner.py",
         )
     )
-    idle = "sleep infinity" in text or 'STAGE3_STARTUP_MODE=idle' in text or 'STAGE3_STARTUP_MODE:-idle' in text
+    idle = (
+        "sleep infinity" in text
+        or "stage3_readonly_web_app.py" in text
+        or 'STAGE3_STARTUP_MODE=idle' in text
+        or 'STAGE3_STARTUP_MODE:-idle' in text
+    )
     return starts_runner, idle
 
 

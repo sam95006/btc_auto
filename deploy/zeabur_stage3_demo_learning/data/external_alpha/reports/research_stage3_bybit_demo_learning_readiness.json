@@ -1,7 +1,7 @@
 {
   "record_type": "research_stage3_bybit_demo_learning_readiness",
   "schema_version": "1.0",
-  "generated_at_utc": "2026-06-25T06:20:35Z",
+  "generated_at_utc": "2026-06-26T03:12:10Z",
   "scope": "bybit_demo_testnet_learning_only",
   "service_name": "nexus-stage3-bybit-demo-learning",
   "research_only": true,

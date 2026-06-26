@@ -1,0 +1,60 @@
+{
+  "scene": "btc_bridge",
+  "slots": [
+    {
+      "id": "captain_center",
+      "role": "captain",
+      "fleet": "btc",
+      "x": 0.52,
+      "y": 0.52,
+      "scale": 1.15,
+      "zIndex": 30,
+      "state": "working",
+      "animationProfile": "captain"
+    },
+    {
+      "id": "operator_left",
+      "role": "operator",
+      "fleet": "btc",
+      "x": 0.28,
+      "y": 0.55,
+      "scale": 0.95,
+      "zIndex": 20,
+      "state": "idle",
+      "animationProfile": "operator_left"
+    },
+    {
+      "id": "operator_right",
+      "role": "operator",
+      "fleet": "btc",
+      "x": 0.75,
+      "y": 0.55,
+      "scale": 0.95,
+      "zIndex": 20,
+      "state": "idle",
+      "animationProfile": "operator_right"
+    },
+    {
+      "id": "analyst_center",
+      "role": "analyst",
+      "fleet": "btc",
+      "x": 0.52,
+      "y": 0.75,
+      "scale": 0.9,
+      "zIndex": 15,
+      "state": "idle",
+      "animationProfile": "analyst_center"
+    },
+    {
+      "id": "operator_rear",
+      "role": "operator",
+      "fleet": "btc",
+      "x": 0.5,
+      "y": 0.34,
+      "scale": 0.82,
+      "zIndex": 10,
+      "state": "idle",
+      "animationProfile": "operator"
+    }
+  ]
+}

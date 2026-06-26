@@ -1,0 +1,87 @@
+{
+  "snapshot_version": "1.0",
+  "generated_at_utc": "2026-06-11T08:26:16Z",
+  "mode": "local_research_only",
+  "cloud_deployed": false,
+  "production_connected": false,
+  "production_impact": "none",
+  "master_doc_available": false,
+  "eati_status": {
+    "phase1": "accepted",
+    "phase2": "accepted",
+    "phase3": "accepted",
+    "phase4": "accepted",
+    "phase5": "accepted",
+    "phase6": "accepted",
+    "phase7": "accepted",
+    "phase8": "needs_more_paper_data",
+    "phase9": "production_promotion_denied"
+  },
+  "paper_accumulation": {
+    "current_day_index": 14,
+    "required_days": 14,
+    "total_paper_signals": 14,
+    "required_signals": 14,
+    "would_enter_count": 11,
+    "required_would_enter": 3,
+    "would_skip_count": 3,
+    "observe_count": 0,
+    "context_similarity_score": 0.9835,
+    "quarantine_count": 0,
+    "phase8_rerun_eligible": true,
+    "production_promotion_allowed": false,
+    "last_accepted_day": 3,
+    "last_run_date": "2026-06-11",
+    "distinct_run_dates": [
+      "2026-06-09",
+      "2026-06-10",
+      "2026-06-11",
+      "2026-06-12",
+      "2026-06-13",
+      "2026-06-14",
+      "2026-06-15",
+      "2026-06-16",
+      "2026-06-17",
+      "2026-06-18",
+      "2026-06-19",
+      "2026-06-20",
+      "2026-06-21",
+      "2026-06-22"
+    ],
+    "targets_remaining": {
+      "days": 0,
+      "signals": 0,
+      "would_enter": 0
+    }
+  },
+  "safety": {
+    "is_live_trading": false,
+    "arm_allowed": false,
+    "micro_validation_allowed": false,
+    "production_promotion_allowed": false,
+    "exchange_write_allowed": false,
+    "private_api_required": false,
+    "nexus_runtime_connected": false,
+    "production_forbidden": true
+  },
+  "warnings": [
+    "not_live_trading",
+    "local_research_only",
+    "eati_not_deployed_to_zeabur",
+    "ui_read_only_snapshot",
+    "master_doc_unavailable"
+  ],
+  "sources": {
+    "tracker_id": "eati_accum_17b48266db4e",
+    "signal_count_verified": 14,
+    "read_paths": [
+      "data/external_alpha/reports/eati_14day_accumulation_tracker.json",
+      "data/external_alpha/paper_tests/eati_paper_signals_all.jsonl",
+      "data/external_alpha/reports/phase8_micro_candidate_gate_report.json",
+      "data/external_alpha/reports/phase9_production_promotion_review.json",
+      "data/external_alpha/reports/eati_day1_manual_run_report.json",
+      "data/external_alpha/reports/eati_day2_manual_run_report.json",
+      "data/external_alpha/reports/eati_day3_manual_run_report.json"
+    ]
+  }
+}

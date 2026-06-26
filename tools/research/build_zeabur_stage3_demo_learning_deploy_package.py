@@ -39,8 +39,13 @@ BASE_ALLOWLIST = [
     "tools/research/preflight_stage3_24h_runner.py",
     "tools/research/read_stage3_24h_status.py",
     "tools/research/export_stage3_24h_learning_bundle.py",
+    "tools/research/stage3_readonly_web_app.py",
     "tools/research/__init__.py",
     "tools/__init__.py",
+    "backend/__init__.py",
+    "backend/monitoring/__init__.py",
+    "backend/monitoring/stage3_status_service.py",
+    "templates/nexus_command.html",
     "data/external_alpha/reports/research_stage3_bybit_demo_learning_readiness.json",
     "data/external_alpha/reports/stage3_demo_learning_runner_readiness.json",
     "data/external_alpha/reports/stage3_c3_background_supervisor_readiness.json",
@@ -70,7 +75,6 @@ FORBIDDEN_FRAGMENTS = (
     "docs/evidence",
     "docs/promotion",
     ".env",
-    "backend/",
     "frontend/",
     "exports/",
     "logs/",
@@ -108,20 +112,64 @@ ENV PYTHONDONTWRITEBYTECODE=1 \\
     REQUIRE_MAX_HOLD=true \\
     REQUIRE_REFLECTION_ON_LOSS=true \\
     REQUIRE_PATCH_BEFORE_NEXT_SAME_SETUP=true \\
-    ZEABUR_PRODUCTION_RUNNER_ALLOWED=false
+    ZEABUR_PRODUCTION_RUNNER_ALLOWED=false \\
+    PORT=8080
 
 WORKDIR /app
-RUN mkdir -p /data/data/external_alpha/demo_learning /data/logs /data/exports
+RUN mkdir -p /data/data/external_alpha/demo_learning /data/logs /data/exports /data/stage3_demo_learning
 
 COPY . .
 RUN chmod +x entrypoint.sh run_stage3_demo_order_background.sh run_stage3_24h_demo_learning_background.sh
-# STAGE3_STARTUP_MODE=idle by default; set runner + OPERATOR_GO on Zeabur for 24h
+EXPOSE 8080
+# STAGE3_STARTUP_MODE=idle: read-only Web UI; runner mode spawns 24h runner then same UI
 CMD ["/bin/sh", "./entrypoint.sh"]
 """
 
-PROCfile = "worker: sh entrypoint.sh\n"
+PROCfile = "web: sh entrypoint.sh\n"
 
-REQUIREMENTS = "# Stage 3 demo learning — stdlib for env gate; runner deps TBD\n"
+STAGE3_ENTRYPOINT_SH = """#!/bin/sh
+set -e
+set -u
+
+cd /app 2>/dev/null || cd "$(dirname "$0")"
+
+if [ -f STAGE3_DEPLOY_VERSION.json ]; then
+  python -c "import json; d=json.load(open('STAGE3_DEPLOY_VERSION.json', encoding='utf-8')); print('STAGE3_DEPLOY_VERSION'); print('commit=%s' % d.get('commit', 'unknown')); print('contains_24h_runner=%s' % str(d.get('contains_24h_runner', False)).lower()); print('contains_web_ui=%s' % str(d.get('contains_web_ui', False)).lower())"
+fi
+
+python tools/research/check_bybit_demo_learning_env.py --strict-env --no-check-package --no-load-local-env
+
+MODE="${STAGE3_STARTUP_MODE:-idle}"
+echo "stage3 strict-env passed; STAGE3_STARTUP_MODE=${MODE}"
+
+if [ "$MODE" = "runner" ]; then
+  if [ "${OPERATOR_GO_STAGE3_24H_RUNNER:-false}" != "true" ]; then
+    echo "OPERATOR_GO_STAGE3_24H_RUNNER required for STAGE3_STARTUP_MODE=runner"
+    exit 1
+  fi
+  if ! python tools/research/preflight_stage3_24h_runner.py --no-load-local-env; then
+    echo "preflight_stage3_24h_runner failed"
+    exit 1
+  fi
+  sh /app/run_stage3_24h_demo_learning_background.sh
+  echo "24h demo learning runner spawned; starting read-only web UI"
+fi
+
+if [ "$MODE" = "idle" ]; then
+  echo "Stage 3 idle web mode: starting read-only UI"
+fi
+
+if [ "$MODE" != "idle" ] && [ "$MODE" != "runner" ]; then
+  echo "unknown STAGE3_STARTUP_MODE=${MODE}"
+  exit 1
+fi
+
+exec python tools/research/stage3_readonly_web_app.py
+"""
+
+REQUIREMENTS = """flask>=3.0,<4
+gunicorn>=22.0,<24
+"""
 RUNTIME = "python-3.11.0\n"
 STAGE3_BRANCH = "stage3-demo-learning"
 VERSION_JSON_NAME = "STAGE3_DEPLOY_VERSION.json"
@@ -163,8 +211,9 @@ def _write_deploy_version() -> Dict[str, Any]:
         "branch": STAGE3_BRANCH,
         "commit": _git_value(["rev-parse", "HEAD"]),
         "deploy_package": "deploy/zeabur_stage3_demo_learning",
-        "startup_mode_expected": "runner",
+        "startup_mode_expected": "idle",
         "contains_24h_runner": True,
+        "contains_web_ui": True,
         "created_at_utc": utc_now_iso(),
     }
     write_json(DEPLOY_ROOT / VERSION_JSON_NAME, payload)
@@ -178,6 +227,22 @@ def _copy(rel: str) -> None:
         raise FileNotFoundError(rel)
     dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(src, dst)
+
+
+def _copy_tree(rel_dir: str) -> List[str]:
+    src_root = ROOT / rel_dir
+    if not src_root.is_dir():
+        raise FileNotFoundError(rel_dir)
+    copied: List[str] = []
+    for path in src_root.rglob("*"):
+        if not path.is_file():
+            continue
+        rel = str(path.relative_to(ROOT)).replace("\\", "/")
+        if "__pycache__" in rel or rel.endswith(".pyc"):
+            continue
+        _copy(rel)
+        copied.append(rel)
+    return copied
 
 
 def _scan_secrets(root: Path) -> List[str]:
@@ -205,20 +270,32 @@ def _contains_forbidden(files: List[str]) -> List[str]:
 
 
 def build_package() -> Dict[str, Any]:
-    bg_script_path = DEPLOY_ROOT / "run_stage3_demo_order_background.sh"
+    script_dir = ROOT / "deploy" / "zeabur_stage3_demo_learning"
+    bg_script_path = script_dir / "run_stage3_demo_order_background.sh"
+    h24_script_path = script_dir / "run_stage3_24h_demo_learning_background.sh"
+    entrypoint_path = script_dir / "entrypoint.sh"
     bg_script = bg_script_path.read_text(encoding="utf-8") if bg_script_path.is_file() else ""
-    h24_script_path = DEPLOY_ROOT / "run_stage3_24h_demo_learning_background.sh"
     h24_script = h24_script_path.read_text(encoding="utf-8") if h24_script_path.is_file() else ""
-    entrypoint_path = DEPLOY_ROOT / "entrypoint.sh"
-    entrypoint_script = entrypoint_path.read_text(encoding="utf-8") if entrypoint_path.is_file() else ""
+    entrypoint_script = STAGE3_ENTRYPOINT_SH
+    if entrypoint_path.is_file():
+        entrypoint_script = entrypoint_path.read_text(encoding="utf-8")
 
     if DEPLOY_ROOT.is_dir():
         try:
             shutil.rmtree(DEPLOY_ROOT)
-        except PermissionError:
-            for p in DEPLOY_ROOT.rglob("*"):
-                if p.is_file():
-                    p.unlink(missing_ok=True)
+        except OSError:
+            for path in sorted(DEPLOY_ROOT.rglob("*"), reverse=True):
+                if path.is_file():
+                    path.unlink(missing_ok=True)
+                elif path.is_dir():
+                    try:
+                        path.rmdir()
+                    except OSError:
+                        pass
+            try:
+                DEPLOY_ROOT.rmdir()
+            except OSError:
+                pass
     DEPLOY_ROOT.mkdir(parents=True, exist_ok=True)
 
     allowlist = sorted(set(BASE_ALLOWLIST + BOOT_EVIDENCE + [
@@ -235,6 +312,8 @@ def build_package() -> Dict[str, Any]:
             "runtime.txt",
             ".zeaburignore",
             "tools/__init__.py",
+            "backend/__init__.py",
+            "backend/monitoring/__init__.py",
         }:
             continue
         try:
@@ -243,11 +322,27 @@ def build_package() -> Dict[str, Any]:
         except FileNotFoundError:
             missing.append(rel)
 
+    try:
+        static_files = _copy_tree("static/nexus")
+        copied.extend(static_files)
+    except FileNotFoundError:
+        missing.append("static/nexus/**")
+
     tools_init = DEPLOY_ROOT / "tools" / "__init__.py"
     tools_init.parent.mkdir(parents=True, exist_ok=True)
     if not tools_init.is_file():
         tools_init.write_text("# tools package (Stage 3 demo learning deploy)\n", encoding="utf-8")
     copied.append("tools/__init__.py")
+
+    backend_init = DEPLOY_ROOT / "backend" / "__init__.py"
+    backend_init.parent.mkdir(parents=True, exist_ok=True)
+    if not backend_init.is_file():
+        backend_init.write_text('"""NEXUS backend package."""\n', encoding="utf-8")
+    monitoring_init = DEPLOY_ROOT / "backend" / "monitoring" / "__init__.py"
+    monitoring_init.parent.mkdir(parents=True, exist_ok=True)
+    if not monitoring_init.is_file():
+        monitoring_init.write_text('"""Monitoring helpers."""\n', encoding="utf-8")
+    copied.extend(["backend/__init__.py", "backend/monitoring/__init__.py"])
 
     (DEPLOY_ROOT / "Dockerfile").write_text(DOCKERFILE, encoding="utf-8")
     (DEPLOY_ROOT / "Procfile").write_text(PROCfile, encoding="utf-8")
@@ -307,7 +402,7 @@ def build_package() -> Dict[str, Any]:
         "notes": [
             "Secrets via Zeabur Variables: BYBIT_DEMO_API_KEY / BYBIT_DEMO_API_SECRET only.",
             "Legacy BYBIT_M0_API_KEY / BYBIT_M0_API_SECRET must be absent.",
-            "Boot: strict-env then STAGE3_STARTUP_MODE=idle (default) or runner with OPERATOR_GO_STAGE3_24H_RUNNER.",
+            "Boot: strict-env then STAGE3_STARTUP_MODE=idle (read-only Web UI) or runner with OPERATOR_GO_STAGE3_24H_RUNNER.",
             "Do not touch btc-auto production service.",
         ],
     }
