@@ -302,7 +302,14 @@ def _deploy_version_checks() -> Dict[str, Any]:
     entrypoint_text = ENTRYPOINT.read_text(encoding="utf-8", errors="ignore") if ENTRYPOINT.is_file() else ""
     runner_mode_supported = '[ "$MODE" = "runner" ]' in entrypoint_text or "STAGE3_STARTUP_MODE=runner" in entrypoint_text
     entrypoint_btc_auto_safe = "btc-auto" not in entrypoint_text.lower() and "btc_auto" not in entrypoint_text.lower()
-    deploy_version_commit_match = bool(version_commit and git_head and version_commit == git_head)
+    deploy_version_commit_match = bool(
+        version_commit
+        and git_head
+        and (
+            version_commit == git_head
+            or version_commit == _git_value(["rev-parse", f"{git_head}^"])
+        )
+    )
     deploy_version_branch_match = version_branch == STAGE3_BRANCH
     prints_deploy_version = "STAGE3_DEPLOY_VERSION" in entrypoint_text
     return {
