@@ -168,6 +168,12 @@ def _read_jsonl_rows(path: Path) -> List[Dict[str, Any]]:
     return rows
 
 
+def _make_dedup_key(setup_key: str, patch: Dict[str, Any]) -> str:
+    patch_id = str(patch.get("patch_id") or "")
+    cooldown = str(patch.get("cooldown_until_utc") or "")
+    return f"{setup_key}|{patch_id}|{cooldown}"
+
+
 def _cooldown_active(patch: Dict[str, Any]) -> bool:
     until = patch.get("cooldown_until_utc")
     if not until:
@@ -192,11 +198,14 @@ class LearningState:
     position_size: float = 18.0
     patches: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     loss_setups: Dict[str, int] = field(default_factory=dict)
+    block_dedup_keys_counted: set = field(default_factory=set)
     stats: Dict[str, int] = field(default_factory=lambda: {
         "loss_trade_count": 0,
         "loss_without_reflection_count": 0,
         "repeated_mistake_detected_count": 0,
         "repeated_mistake_blocked_count": 0,
+        "blocked_ticks_count": 0,
+        "skipped_ticks_count": 0,
         "balance_read_failed_count": 0,
     })
 
@@ -263,10 +272,68 @@ class Stage3LearningLoop:
                 key = trade.get("setup_key")
                 if key:
                     self.state.loss_setups[key] = self.state.loss_setups.get(key, 0) + 1
+
+        blocked_ticks = 0
+        detected_events = 0
+        blocked_events = 0
+        for trade in _read_jsonl_rows(self.path("trade_results.jsonl")):
+            if trade.get("blocked_tick_counted") or trade.get("repeated_mistake_blocked"):
+                blocked_ticks += 1
+            if not trade.get("repeated_mistake_blocked"):
+                continue
+            dedup_key = trade.get("dedup_key")
+            if not dedup_key:
+                dedup_key = _make_dedup_key(
+                    str(trade.get("setup_key") or ""),
+                    {
+                        "patch_id": trade.get("patch_id"),
+                        "cooldown_until_utc": trade.get("cooldown_until_utc"),
+                    },
+                )
+            if "blocked_event_counted" in trade:
+                if not trade.get("blocked_event_counted"):
+                    continue
+            elif dedup_key in self.state.block_dedup_keys_counted:
+                continue
+            self.state.block_dedup_keys_counted.add(dedup_key)
+            blocked_events += 1
             if trade.get("repeated_mistake_detected"):
-                self.state.stats["repeated_mistake_detected_count"] += 1
-            if trade.get("repeated_mistake_blocked"):
-                self.state.stats["repeated_mistake_blocked_count"] += 1
+                detected_events += 1
+        self.state.stats["blocked_ticks_count"] = blocked_ticks
+        self.state.stats["repeated_mistake_detected_count"] = detected_events
+        self.state.stats["repeated_mistake_blocked_count"] = blocked_events
+
+    def _apply_block_dedup(
+        self,
+        *,
+        key: str,
+        patch: Dict[str, Any],
+        result: Dict[str, Any],
+        patch_action: str | None = None,
+    ) -> None:
+        dedup_key = _make_dedup_key(key, patch)
+        now = utc_now_iso()
+        result["setup_key"] = key
+        result["patch_id"] = str(patch.get("patch_id") or "")
+        result["dedup_key"] = dedup_key
+        result["cooldown_until_utc"] = patch.get("cooldown_until_utc")
+        result["last_blocked_at_utc"] = now
+        result["blocked_tick_counted"] = True
+        result["skip_trade"] = True
+        result["repeated_mistake_blocked"] = True
+        result["repeated_mistake_detected"] = True
+        if patch_action:
+            result["patch_action"] = patch_action
+        self.state.stats["blocked_ticks_count"] = self.state.stats.get("blocked_ticks_count", 0) + 1
+        if dedup_key not in self.state.block_dedup_keys_counted:
+            self.state.block_dedup_keys_counted.add(dedup_key)
+            self.state.stats["repeated_mistake_detected_count"] += 1
+            self.state.stats["repeated_mistake_blocked_count"] += 1
+            result["blocked_event_counted"] = True
+            patch["blocked_count"] = int(patch.get("blocked_count") or 0) + 1
+        else:
+            result["blocked_event_counted"] = False
+        patch["last_used_at_utc"] = now
 
     def _choose_patch_action(self, loss_count: int, *, severe_gap: bool = False) -> str:
         if severe_gap:
@@ -304,40 +371,26 @@ class Stage3LearningLoop:
         if not repeated or not patch:
             return result
 
-        result["repeated_mistake_detected"] = True
-        self.state.stats["repeated_mistake_detected_count"] += 1
         action = str(patch.get("action") or "risk_reduce")
         if action == "block":
             action = "block_reentry"
 
         if action == "risk_reduce" and loss_count >= 1:
-            result["skip_trade"] = True
-            result["repeated_mistake_blocked"] = True
-            result["patch_action"] = "block_reentry"
-            self.state.stats["repeated_mistake_blocked_count"] += 1
-            patch["blocked_count"] = int(patch.get("blocked_count") or 0) + 1
-            patch["last_used_at_utc"] = utc_now_iso()
+            self._apply_block_dedup(key=key, patch=patch, result=result, patch_action="block_reentry")
             return result
 
         if action in {"block_reentry", "manual_review_required"}:
-            result["skip_trade"] = True
-            result["repeated_mistake_blocked"] = True
-            self.state.stats["repeated_mistake_blocked_count"] += 1
-            patch["blocked_count"] = int(patch.get("blocked_count") or 0) + 1
-            patch["last_used_at_utc"] = utc_now_iso()
+            self._apply_block_dedup(key=key, patch=patch, result=result, patch_action=action)
             return result
 
         if action == "cooldown":
             if _cooldown_active(patch):
-                result["skip_trade"] = True
-                result["repeated_mistake_blocked"] = True
-                self.state.stats["repeated_mistake_blocked_count"] += 1
-                patch["blocked_count"] = int(patch.get("blocked_count") or 0) + 1
+                self._apply_block_dedup(key=key, patch=patch, result=result, patch_action=action)
             else:
                 result["confidence"] = float(patch.get("confidence_after") or self.state.confidence)
                 result["position_size"] = float(patch.get("position_size_after") or self.state.position_size)
                 result["patch_applied_to_next_decision"] = True
-            patch["last_used_at_utc"] = utc_now_iso()
+                patch["last_used_at_utc"] = utc_now_iso()
             return result
 
         result["confidence"] = float(patch.get("confidence_after") or self.state.confidence)

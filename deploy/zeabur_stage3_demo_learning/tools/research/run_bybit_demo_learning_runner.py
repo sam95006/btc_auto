@@ -306,6 +306,17 @@ def _try_same_setup_reentry(
             repeated_mistake_detected=eval_result["repeated_mistake_detected"],
             repeated_mistake_blocked=bool(eval_result["skip_trade"]),
         )
+        for fld in (
+            "setup_key",
+            "patch_id",
+            "dedup_key",
+            "blocked_event_counted",
+            "blocked_tick_counted",
+            "last_blocked_at_utc",
+            "cooldown_until_utc",
+        ):
+            if fld in eval_result:
+                blocked_trade[fld] = eval_result[fld]
         _record_trade(loop, blocked_trade)
         return blocked_trade
     return eval_result

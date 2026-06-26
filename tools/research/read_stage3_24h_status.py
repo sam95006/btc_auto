@@ -90,8 +90,18 @@ def build_summary(*, validator_passed: bool = False) -> Dict[str, Any]:
 
     loss_trades = [t for t in trades if float(t.get("close_pnl") or 0) < 0]
     loss_without_reflection = [t for t in loss_trades if not t.get("reflection_created")]
-    repeated_detected = [t for t in trades if t.get("repeated_mistake_detected")]
-    repeated_blocked = [t for t in trades if t.get("repeated_mistake_blocked")]
+    stats = audit.get("stats") or {}
+    repeated_detected_count = int(
+        stats.get("repeated_mistake_detected_count")
+        if stats.get("repeated_mistake_detected_count") is not None
+        else len([t for t in trades if t.get("repeated_mistake_detected")])
+    )
+    repeated_blocked_count = int(
+        stats.get("repeated_mistake_blocked_count")
+        if stats.get("repeated_mistake_blocked_count") is not None
+        else len([t for t in trades if t.get("repeated_mistake_blocked")])
+    )
+    blocked_ticks_count = int(stats.get("blocked_ticks_count") or 0)
 
     balance_before = session.get("account_balance_before")
     balance_after = session.get("account_balance_after")
@@ -108,7 +118,9 @@ def build_summary(*, validator_passed: bool = False) -> Dict[str, Any]:
         balance_delta = 0.0
 
     total_close_pnl = round(sum(float(t.get("close_pnl") or 0) for t in trades), 6)
-    orders_closed = sum(1 for t in trades if t.get("position_closed"))
+    orders_closed = sum(
+        1 for t in trades if t.get("position_closed") and t.get("demo_order_sent")
+    )
 
     summary = {
         "record_type": "stage3_24h_summary",
@@ -131,8 +143,10 @@ def build_summary(*, validator_passed: bool = False) -> Dict[str, Any]:
         "applied_learning_patches_count": len(patches),
         "loss_trade_count": len(loss_trades),
         "loss_without_reflection_count": len(loss_without_reflection),
-        "repeated_mistake_detected_count": len(repeated_detected),
-        "repeated_mistake_blocked_count": len(repeated_blocked),
+        "repeated_mistake_detected_count": repeated_detected_count,
+        "repeated_mistake_blocked_count": repeated_blocked_count,
+        "blocked_ticks_count": blocked_ticks_count,
+        "skipped_ticks_count": int(stats.get("skipped_ticks_count") or 0),
         "stop_conditions_triggered": list(stop.get("triggered") or audit.get("stop_triggered") or []),
         "validator_passed": validator_passed,
         "mainnet_detected": False,

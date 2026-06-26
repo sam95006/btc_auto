@@ -93,7 +93,7 @@ def _blocked_demo_session_report(
         patch_created=False,
         patch_applied_to_next_decision=bool(eval_result.get("patch_applied_to_next_decision")),
         repeated_mistake_detected=bool(eval_result.get("repeated_mistake_detected")),
-        repeated_mistake_blocked=True,
+        repeated_mistake_blocked=bool(eval_result.get("repeated_mistake_blocked")),
     )
     trade["trade_result_id"] = str(uuid.uuid4())
     trade["setup_key"] = eval_result.get("setup_key") or setup_key(
@@ -102,6 +102,16 @@ def _blocked_demo_session_report(
     trade["decision_source"] = decision_source
     trade["demo_order_sent"] = False
     trade["position_closed"] = True
+    for fld in (
+        "patch_id",
+        "dedup_key",
+        "blocked_event_counted",
+        "blocked_tick_counted",
+        "last_blocked_at_utc",
+        "cooldown_until_utc",
+    ):
+        if fld in eval_result:
+            trade[fld] = eval_result[fld]
     append_jsonl(loop.path("trade_results.jsonl"), trade)
     return {
         "record_type": "stage3_demo_order_session_report",

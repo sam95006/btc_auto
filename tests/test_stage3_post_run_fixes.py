@@ -12,6 +12,44 @@ from unittest.mock import MagicMock, patch
 ROOT = Path(__file__).resolve().parents[1]
 
 
+class Stage3RepeatedGateDedupTests(unittest.TestCase):
+    def test_same_setup_10_polls_counts_one_blocked_event(self) -> None:
+        from tools.research.stage3_learning_loop import Stage3LearningLoop, setup_key
+
+        with tempfile.TemporaryDirectory() as tmp:
+            loop = Stage3LearningLoop(Path(tmp))
+            symbol, side, regime = "ETHUSDT", "BUY", "range_low"
+            failure_reason = "stop_loss_hit"
+            decision_source = "controlled_demo_order"
+            loop.record_loss_reflection_patch(
+                decision_id="d1",
+                trade={
+                    "symbol": symbol,
+                    "side": side,
+                    "decision_source": decision_source,
+                    "confidence_before": 0.8,
+                    "position_size_before": 10.0,
+                    "close_pnl": -2.0,
+                    "signal_id": "s1",
+                    "order_id": "o1",
+                },
+                regime=regime,
+                failure_reason=failure_reason,
+            )
+            for _ in range(10):
+                result = loop.evaluate_same_setup(
+                    symbol=symbol,
+                    side=side,
+                    regime=regime,
+                    failure_reason=failure_reason,
+                    decision_source=decision_source,
+                )
+                self.assertTrue(result["skip_trade"])
+            self.assertEqual(loop.state.stats["repeated_mistake_blocked_count"], 1)
+            self.assertEqual(loop.state.stats["repeated_mistake_detected_count"], 1)
+            self.assertEqual(loop.state.stats["blocked_ticks_count"], 10)
+
+
 class Stage3PatchSemanticsTests(unittest.TestCase):
     def test_first_loss_risk_reduce_second_attempt_blocked(self) -> None:
         from tools.research.stage3_learning_loop import Stage3LearningLoop, setup_key
