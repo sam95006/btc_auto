@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Dict, List
@@ -122,6 +123,9 @@ PROCfile = "worker: sh entrypoint.sh\n"
 
 REQUIREMENTS = "# Stage 3 demo learning — stdlib for env gate; runner deps TBD\n"
 RUNTIME = "python-3.11.0\n"
+STAGE3_BRANCH = "stage3-demo-learning"
+VERSION_JSON_NAME = "STAGE3_DEPLOY_VERSION.json"
+
 ZEABURIGNORE = """__pycache__/
 **/__pycache__/
 .pytest_cache/
@@ -138,6 +142,33 @@ exports/
 data/external_alpha/stage3_demo_learning/
 data/external_alpha/stage3_demo_learning/**
 """
+
+
+def _git_value(args: List[str]) -> str:
+    proc = subprocess.run(
+        ["git", *args],
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if proc.returncode != 0:
+        return ""
+    return (proc.stdout or "").strip()
+
+
+def _write_deploy_version() -> Dict[str, Any]:
+    payload = {
+        "branch": STAGE3_BRANCH,
+        "commit": _git_value(["rev-parse", "HEAD"]),
+        "deploy_package": "deploy/zeabur_stage3_demo_learning",
+        "startup_mode_expected": "runner",
+        "contains_24h_runner": True,
+        "created_at_utc": utc_now_iso(),
+    }
+    write_json(DEPLOY_ROOT / VERSION_JSON_NAME, payload)
+    return payload
 
 
 def _copy(rel: str) -> None:
@@ -239,6 +270,9 @@ def build_package() -> Dict[str, Any]:
         (DEPLOY_ROOT / "run_stage3_24h_demo_learning_background.sh").write_bytes(normalized24.encode("utf-8"))
         copied.append("run_stage3_24h_demo_learning_background.sh")
 
+    deploy_version = _write_deploy_version()
+    copied.append(VERSION_JSON_NAME)
+
     package_files = sorted(
         str(p.relative_to(DEPLOY_ROOT)).replace("\\", "/")
         for p in DEPLOY_ROOT.rglob("*")
@@ -262,6 +296,7 @@ def build_package() -> Dict[str, Any]:
         "env_file_in_deploy_package": env_in_package,
         "forbidden_fragments_detected": forbidden_hits,
         "package_ready": not missing and not secret_hits and not env_in_package and not forbidden_hits,
+        "deploy_version": deploy_version,
         "deploy_triggered": False,
         "runner_started": False,
         "production_service_touched": False,

@@ -4,6 +4,10 @@ set -u
 
 cd /app 2>/dev/null || cd "$(dirname "$0")"
 
+if [ -f STAGE3_DEPLOY_VERSION.json ]; then
+  python -c "import json; d=json.load(open('STAGE3_DEPLOY_VERSION.json', encoding='utf-8')); print('STAGE3_DEPLOY_VERSION'); print('commit=%s' % d.get('commit', 'unknown')); print('contains_24h_runner=%s' % str(d.get('contains_24h_runner', False)).lower())"
+fi
+
 python tools/research/check_bybit_demo_learning_env.py --strict-env --no-check-package --no-load-local-env
 
 MODE="${STAGE3_STARTUP_MODE:-idle}"

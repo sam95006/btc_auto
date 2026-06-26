@@ -20,6 +20,9 @@ REPORT_PATH = ROOT / "data/external_alpha/reports/stage3_github_deploy_readiness
 DEPLOY_ROOT = ROOT / "deploy/zeabur_stage3_demo_learning"
 ZEABUR_ROOT = "deploy/zeabur_stage3_demo_learning"
 ENTRYPOINT = DEPLOY_ROOT / "entrypoint.sh"
+VERSION_JSON = DEPLOY_ROOT / "STAGE3_DEPLOY_VERSION.json"
+H24_SCRIPT = DEPLOY_ROOT / "run_stage3_24h_demo_learning_background.sh"
+STAGE3_BRANCH = "stage3-demo-learning"
 
 FORBIDDEN_GIT_PATTERNS = (
     ".env",
@@ -226,6 +229,15 @@ def glob_match(path: str, pattern: str) -> bool:
     return fnmatch(path, pattern.replace("**/", ""))
 
 
+def _is_runtime_stage3_artifact(rel: str) -> bool:
+    norm = rel.replace("\\", "/")
+    if norm.startswith(f"{ZEABUR_ROOT}/"):
+        return False
+    if "reports" in norm:
+        return False
+    return "/stage3_demo_learning/" in norm or norm.endswith("/stage3_demo_learning")
+
+
 def _safe_files_to_add() -> List[str]:
     safe: List[str] = []
     if DEPLOY_ROOT.is_dir():
@@ -267,6 +279,44 @@ def _safe_files_to_add() -> List[str]:
             for p in reports.glob(pattern):
                 safe.append(str(p.relative_to(ROOT)).replace("\\", "/"))
     return sorted(set(safe))
+
+
+def _git_head() -> str:
+    code, out = _run(["git", "rev-parse", "HEAD"])
+    return out.strip() if code == 0 else ""
+
+
+def _deploy_version_checks() -> Dict[str, Any]:
+    git_head = _git_head()
+    has_version_file = VERSION_JSON.is_file()
+    version_commit = ""
+    version_branch = ""
+    if has_version_file:
+        try:
+            data = json.loads(VERSION_JSON.read_text(encoding="utf-8"))
+            version_commit = str(data.get("commit") or "").strip()
+            version_branch = str(data.get("branch") or "").strip()
+        except json.JSONDecodeError:
+            has_version_file = False
+    has_24h_script = H24_SCRIPT.is_file()
+    entrypoint_text = ENTRYPOINT.read_text(encoding="utf-8", errors="ignore") if ENTRYPOINT.is_file() else ""
+    runner_mode_supported = '[ "$MODE" = "runner" ]' in entrypoint_text or "STAGE3_STARTUP_MODE=runner" in entrypoint_text
+    entrypoint_btc_auto_safe = "btc-auto" not in entrypoint_text.lower() and "btc_auto" not in entrypoint_text.lower()
+    deploy_version_commit_match = bool(version_commit and git_head and version_commit == git_head)
+    deploy_version_branch_match = version_branch == STAGE3_BRANCH
+    prints_deploy_version = "STAGE3_DEPLOY_VERSION" in entrypoint_text
+    return {
+        "deploy_version_file_present": has_version_file,
+        "deploy_version_commit": version_commit,
+        "deploy_version_branch": version_branch,
+        "github_latest_commit": git_head,
+        "deploy_version_commit_match": deploy_version_commit_match,
+        "deploy_version_branch_match": deploy_version_branch_match,
+        "deploy_package_has_24h_script": has_24h_script,
+        "entrypoint_runner_mode_supported": runner_mode_supported,
+        "entrypoint_btc_auto_safe": entrypoint_btc_auto_safe,
+        "entrypoint_prints_deploy_version": prints_deploy_version,
+    }
 
 
 def _entrypoint_flags() -> Tuple[bool, bool]:
@@ -321,11 +371,10 @@ def run_check(*, rebuild: bool = True) -> Dict[str, Any]:
     secret_file_tracked = any(
         t.endswith((".key", ".pem", ".secret")) for t in tracked
     )
-    data_artifacts_tracked = any(
-        "stage3_demo_learning" in t and "reports" not in t for t in tracked
-    )
+    data_artifacts_tracked = any(_is_runtime_stage3_artifact(t) for t in tracked)
 
     starts_runner, idle_keepalive = _entrypoint_flags()
+    version_checks = _deploy_version_checks()
 
     gitignore_updated = _gitignore_has(
         [".env", ".env.*", "*.key", "*.pem", "*.secret", "stage3_demo_learning"]
@@ -335,12 +384,21 @@ def run_check(*, rebuild: bool = True) -> Dict[str, Any]:
     )
 
     secret_scan_passed = not secret_findings
+    deploy_version_ready = (
+        version_checks["deploy_version_file_present"]
+        and version_checks["deploy_version_commit_match"]
+        and version_checks["deploy_package_has_24h_script"]
+        and version_checks["entrypoint_runner_mode_supported"]
+        and version_checks["entrypoint_btc_auto_safe"]
+        and version_checks["entrypoint_prints_deploy_version"]
+    )
     github_ready = (
         secret_scan_passed
         and not env_tracked
         and not secret_file_tracked
         and not data_artifacts_tracked
         and deploy_package_ready
+        and deploy_version_ready
         and starts_runner
         and idle_keepalive
         and not forbidden_tracked
@@ -362,6 +420,8 @@ def run_check(*, rebuild: bool = True) -> Dict[str, Any]:
         "zeabur_branch_recommended": "stage3-demo-learning",
         "entrypoint_starts_runner": starts_runner,
         "entrypoint_idle_keepalive": idle_keepalive,
+        "deploy_version_ready": deploy_version_ready,
+        **version_checks,
         "gitignore_updated": gitignore_updated,
         "zeaburignore_updated": zeaburignore_updated,
         "env_gitignored": _git_check_ignore(".env"),
