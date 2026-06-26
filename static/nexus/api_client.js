@@ -94,6 +94,28 @@ export async function fetchEatiStatusSnapshot(timeoutMs = 8000) {
   }
 }
 
+export async function fetchStage3Status(timeoutMs = 8000) {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch("/api/nexus/stage3/status", {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`stage3 status failed: ${response.status}`);
+    const payload = await response.json();
+    if (!payload || typeof payload !== "object") throw new Error("invalid stage3 status");
+    return payload;
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error(`stage3 status timed out after ${timeoutMs}ms`);
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
 export function connectNexusSocket({ onSnapshot, onError, onOpen, onClose }) {
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
   const socket = new WebSocket(`${protocol}://${window.location.host}/ws/nexus`);

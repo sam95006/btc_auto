@@ -1,15 +1,18 @@
-﻿import { startStateStore, subscribe, getState } from "./state_store.js?v=20260601b";
-import { fetchLayoutConfig, fetchNexusState } from "./api_client.js?v=20260601b";
+﻿import { startStateStore, subscribe, getState } from "./state_store.js?v=20260626b";
+import { fetchLayoutConfig, fetchNexusState, fetchStage3Status } from "./api_client.js?v=20260626a";
+import { renderStage3TopStatusBar } from "./components/ui_stage3_top_status_bar.js?v=20260626a";
+import { renderStage3AlertPanel } from "./components/ui_stage3_alert_panel.js?v=20260626a";
 import { renderTopStatusBar } from "./components/ui_top_status_bar.js?v=20260601a";
 import { renderAlertPanel } from "./components/ui_alert_panel.js?v=20260601a";
 import { renderChatDock } from "./components/ui_chat_dock.js?v=20260601a";
 import { renderMeetingLogPanel } from "./components/ui_meeting_log_panel.js?v=20260601a";
 import { renderDecisionStrip } from "./components/ui_decision_panel.js?v=20260601a";
 import { renderPureAiPanel } from "./components/ui_pure_ai_panel.js?v=20260601a";
+import { renderStage3Panel, prefetchStage3Status } from "./components/ui_stage3_panel.js?v=20260626a";
 import { renderEatiPanel, prefetchEatiSnapshot } from "./components/ui_eati_panel.js?v=20260609a";
 import { renderRevenueKpi } from "./components/ui_revenue_kpi.js?v=20260601a";
 import { renderMeetingDock } from "./components/ui_meeting_dock.js?v=20260601a";
-import { buildMainOverviewPage } from "./scenes/scene_main_hq.js?v=20260601a";
+import { buildMainOverviewPage } from "./scenes/scene_main_hq.js?v=20260626a";
 import { buildHqPage, getHqModalContent } from "./scenes/scene_hq_roundtable.js?v=20260601a";
 import { buildFleetPage, getFleetModalContent } from "./scenes/scene_fleet_bridge_base.js?v=20260601a";
 import { buildRadarPage, getRadarModalContent } from "./scenes/scene_radar_outpost.js?v=20260601a";
@@ -38,7 +41,7 @@ const homeUiState = {
   activeMeeting: "12:00",
   selectedMeetingSlot: "12:00",
   roundTableMinimized: true,
-  leftTab: "pureai",
+  leftTab: "stage3",
   leftCollapsed: false,
 };
 
@@ -50,6 +53,15 @@ const chatUiState = {
 const meetingUiState = {
   minimized: false,
 };
+
+const stage3UiState = {
+  payload: null,
+  error: null,
+};
+
+function getStage3Payload() {
+  return stage3UiState.payload;
+}
 
 const modalState = {
   page: null,
@@ -781,6 +793,136 @@ style.textContent = `
     line-height: 1.45 !important;
     color: #d8ffe8 !important;
   }
+  .stage3-top-status-bar.good .status-card.stage3-card.good strong,
+  .stage3-alert-panel.good strong { color: #2ff7a3 !important; }
+  .stage3-top-status-bar.idle .status-card,
+  .stage3-alert-panel.idle { border-color: rgba(79,216,255,0.28) !important; }
+  .stage3-top-status-bar.ok .status-card,
+  .stage3-alert-panel.ok { border-color: rgba(238,250,255,0.22) !important; }
+  .stage3-top-status-bar.bad .status-card,
+  .stage3-alert-panel.bad { border-color: rgba(255,59,92,0.35) !important; }
+  .stage3-top-status-bar.warn .status-card,
+  .stage3-alert-panel.warn { border-color: rgba(255,208,107,0.35) !important; }
+  .stage3-card-grid {
+    display: grid !important;
+    gap: 4px !important;
+    margin-top: 4px !important;
+  }
+  .stage3-metric {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    font-size: 10px !important;
+  }
+  .stage3-metric span { color: rgba(173,213,229,0.72) !important; }
+  .stage3-metric strong {
+    color: #eefaff !important;
+    font-size: 10px !important;
+    text-align: right !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 58% !important;
+  }
+  .stage3-deploy-strip {
+    grid-column: 1 / -1 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px 14px !important;
+    padding: 6px 4px 0 !important;
+    border-top: 1px solid rgba(255,255,255,0.06) !important;
+    margin-top: 4px !important;
+  }
+  .stage3-deploy-strip small { font-size: 10px !important; color: rgba(173,213,229,0.78) !important; }
+  .stage3-safety-badges { display: flex !important; flex-wrap: wrap !important; gap: 6px !important; margin: 4px 0 !important; }
+  .stage3-safety-badge {
+    padding: 4px 8px !important;
+    border-radius: 999px !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+  }
+  .stage3-safety-badge.is-deny {
+    border-color: rgba(47,247,163,0.35) !important;
+    background: rgba(47,247,163,0.1) !important;
+    color: #2ff7a3 !important;
+  }
+  .stage3-safety-badge.is-ok {
+    border-color: rgba(255,107,143,0.35) !important;
+    background: rgba(255,107,143,0.1) !important;
+    color: #ffc0d0 !important;
+  }
+  .stage3-alert-metrics {
+    display: grid !important;
+    gap: 3px !important;
+    margin: 6px 0 !important;
+  }
+  .stage3-alert-metrics small { font-size: 10px !important; color: rgba(173,213,229,0.82) !important; }
+  .stage3-panel {
+    display: grid !important;
+    gap: 10px !important;
+    padding: 4px 2px 8px !important;
+  }
+  .stage3-head h3 { margin: 6px 0 4px !important; font-size: 15px !important; color: #eefaff !important; }
+  .stage3-explainer { margin: 0 !important; font-size: 11px !important; line-height: 1.5 !important; color: rgba(173,213,229,0.82) !important; }
+  .stage3-badge {
+    display: inline-block !important;
+    padding: 4px 10px !important;
+    border-radius: 999px !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px !important;
+    border: 1px solid rgba(79,216,255,0.35) !important;
+    background: rgba(79,216,255,0.12) !important;
+    color: #8fe4ff !important;
+  }
+  .stage3-badge.is-off { border-color: rgba(255,107,143,0.4) !important; background: rgba(255,107,143,0.12) !important; color: #ffc0d0 !important; }
+  .stage3-unavailable {
+    margin: 8px 0 !important;
+    padding: 10px !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(255,107,143,0.35) !important;
+    background: rgba(255,107,143,0.1) !important;
+    color: #ffc0d0 !important;
+    font-size: 11px !important;
+  }
+  .stage3-section h4 { margin: 0 0 6px !important; font-size: 11px !important; color: rgba(200,235,255,0.88) !important; }
+  .stage3-phase.good { color: #2ff7a3 !important; }
+  .stage3-phase.idle, .stage3-phase.ok { color: #8fe4ff !important; }
+  .stage3-phase.bad { color: #ff6b8f !important; }
+  .stage3-phase.warn { color: #ffd06b !important; }
+  .stage3-metrics {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+  .stage3-metrics .stage3-metric {
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .stage3-metrics .stage3-metric strong { max-width: 100% !important; text-align: left !important; }
+  .stage3-event-list, .stage3-log-list {
+    list-style: none !important;
+    margin: 0 0 8px !important;
+    padding: 0 !important;
+    display: grid !important;
+    gap: 4px !important;
+  }
+  .stage3-event-list li, .stage3-log-line {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+    background: rgba(4,12,24,0.55) !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    font-size: 10px !important;
+  }
+  .stage3-foot { display: flex !important; flex-direction: column !important; gap: 4px !important; font-size: 10px !important; color: rgba(173,213,229,0.72) !important; }
 `;
 document.head.appendChild(style);
 
@@ -847,7 +989,7 @@ function openSubModal(page, section, label = "") {
 }
 
 function getPageConfig(page, state) {
-  if (!page || page === "MAIN") return buildMainOverviewPage(state, homeUiState);
+  if (!page || page === "MAIN") return buildMainOverviewPage(state, homeUiState, getStage3Payload());
   if (page === "HQ") return buildHqPage(state);
   if (page === "RADAR") return buildRadarPage(state);
   if (page === "NEWS") return buildNewsPage(state);
@@ -942,7 +1084,7 @@ function renderSubModal(state) {
 
 function renderHomeScene(state) {
   if (!rootRefs.main) return;
-  const page = buildMainOverviewPage(state, homeUiState);
+  const page = buildMainOverviewPage(state, homeUiState, getStage3Payload());
   rootRefs.main.innerHTML = `<div class="reference-scene">${page.center}</div>`;
   bindOpenPageHandlers(rootRefs.main);
 }
@@ -961,7 +1103,8 @@ function ensureLeftCommandStack(root) {
     stack.innerHTML = `
     <div class="left-panel-toolbar">
       <nav class="left-tab-bar" aria-label="左側資訊分頁">
-        <button type="button" class="left-tab-btn" data-left-tab="pureai">Pure AI</button>
+        <button type="button" class="left-tab-btn" data-left-tab="stage3">Stage 3</button>
+        <button type="button" class="left-tab-btn" data-left-tab="pureai">Legacy Pure AI</button>
         <button type="button" class="left-tab-btn" data-left-tab="revenue">營收</button>
         <button type="button" class="left-tab-btn" data-left-tab="roundtable">圓桌</button>
         <button type="button" class="left-tab-btn" data-left-tab="decision">決策</button>
@@ -970,6 +1113,7 @@ function ensureLeftCommandStack(root) {
       <button type="button" class="left-collapse-btn" data-left-collapse title="收合左側面板" aria-label="收合左側面板">‹</button>
     </div>
     <div class="left-tab-panels">
+      <div class="left-tab-panel left-mount-stage3" data-left-tab="stage3"></div>
       <div class="left-tab-panel left-mount-pureai" data-left-tab="pureai"></div>
       <div class="left-tab-panel left-mount-revenue" data-left-tab="revenue"></div>
       <div class="left-tab-panel left-mount-roundtable" data-left-tab="roundtable"></div>
@@ -981,16 +1125,24 @@ function ensureLeftCommandStack(root) {
     stack.querySelector(".left-tab-bar")?.addEventListener("click", (event) => {
       const btn = event.target.closest("[data-left-tab]");
       if (!btn) return;
-      homeUiState.leftTab = btn.getAttribute("data-left-tab") || "pureai";
+      homeUiState.leftTab = btn.getAttribute("data-left-tab") || "stage3";
       renderApp(getState());
     });
     return stack;
+  }
+  if (!stack.querySelector('[data-left-tab="stage3"]')) {
+    const bar = stack.querySelector(".left-tab-bar");
+    const panels = stack.querySelector(".left-tab-panels");
+    if (bar && panels) {
+      bar.insertAdjacentHTML("afterbegin", `<button type="button" class="left-tab-btn" data-left-tab="stage3">Stage 3</button>`);
+      panels.insertAdjacentHTML("afterbegin", `<div class="left-tab-panel left-mount-stage3" data-left-tab="stage3"></div>`);
+    }
   }
   if (!stack.querySelector('[data-left-tab="pureai"]')) {
     const bar = stack.querySelector(".left-tab-bar");
     const panels = stack.querySelector(".left-tab-panels");
     if (bar && panels) {
-      bar.insertAdjacentHTML("afterbegin", `<button type="button" class="left-tab-btn" data-left-tab="pureai">Pure AI</button>`);
+      bar.insertAdjacentHTML("afterbegin", `<button type="button" class="left-tab-btn" data-left-tab="pureai">Legacy Pure AI</button>`);
       panels.insertAdjacentHTML("afterbegin", `<div class="left-tab-panel left-mount-pureai" data-left-tab="pureai"></div>`);
     }
   }
@@ -1038,7 +1190,7 @@ function renderHomeLeft(state) {
   }
   stack.style.display = "";
   rootRefs.left.querySelector(".left-collapse-btn--solo")?.remove();
-  const tab = homeUiState.leftTab || (state?.pure_ai_enabled ? "pureai" : "decision");
+  const tab = homeUiState.leftTab || "stage3";
   stack.querySelectorAll(".left-tab-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.getAttribute("data-left-tab") === tab);
   });
@@ -1046,11 +1198,13 @@ function renderHomeLeft(state) {
     const active = panel.getAttribute("data-left-tab") === tab;
     panel.hidden = !active;
   });
+  const stage3Mount = stack.querySelector(".left-mount-stage3");
   const pureAiMount = stack.querySelector(".left-mount-pureai");
   const revenueMount = stack.querySelector(".left-mount-revenue");
   const roundtableMount = stack.querySelector(".left-mount-roundtable");
   const decisionMount = stack.querySelector(".left-mount-decision");
   const eatiMount = stack.querySelector(".left-mount-eati");
+  if (tab === "stage3") renderStage3Panel(stage3Mount, getStage3Payload(), { onUpdate: refreshStage3Ui });
   if (tab === "pureai") renderPureAiPanel(pureAiMount, state);
   if (tab === "eati") renderEatiPanel(eatiMount, { onUpdate: () => renderApp(getState()) });
   if (tab === "revenue") renderRevenueKpi(revenueMount, state, { compact: true });
@@ -1109,11 +1263,16 @@ function renderBootShell() {
     rootRefs.main.innerHTML = `<div class="reference-scene"><div class="missing-art"><b>NEXUS Console</b><span>載入中…若超過 10 秒仍空白請重新整理</span></div></div>`;
   }
   if (rootRefs.left && !rootRefs.left.querySelector(".left-command-stack")) {
-    rootRefs.left.innerHTML = `<div class="left-boot-shell" style="padding:12px;color:rgba(238,250,255,0.8);">Pure AI 面板載入中…</div>`;
+    rootRefs.left.innerHTML = `<div class="left-boot-shell" style="padding:12px;color:rgba(238,250,255,0.8);">Stage 3 面板載入中…</div>`;
   }
 }
 
 renderBootShell();
+
+function refreshStage3Ui(payload) {
+  if (payload) stage3UiState.payload = payload;
+  renderApp(getState());
+}
 
 function renderApp(state) {
   resetPanelLayout();
@@ -1122,8 +1281,14 @@ function renderApp(state) {
     return;
   }
   try {
-    renderTopStatusBar(rootRefs.top, state);
-    renderAlertPanel(rootRefs.alert, state);
+    const stage3 = getStage3Payload();
+    if (stage3) {
+      renderStage3TopStatusBar(rootRefs.top, stage3);
+      renderStage3AlertPanel(rootRefs.alert, stage3);
+    } else {
+      renderTopStatusBar(rootRefs.top, state);
+      renderAlertPanel(rootRefs.alert, state);
+    }
     renderChatDock(rootRefs.bottom, state, chatUiState, updateChatUiState);
     renderHomeScene(state);
     renderHomeLeft(state);
@@ -1173,6 +1338,27 @@ fetchLayoutConfig()
   });
 
 prefetchEatiSnapshot().catch(() => {});
+
+async function pollStage3Status() {
+  try {
+    const payload = await fetchStage3Status();
+    stage3UiState.payload = payload;
+    stage3UiState.error = null;
+    if (getState()) renderApp(getState());
+  } catch (error) {
+    stage3UiState.error = error;
+  }
+}
+
+prefetchStage3Status()
+  .then((payload) => {
+    stage3UiState.payload = payload;
+    if (getState()) renderApp(getState());
+  })
+  .catch(() => {});
+
+window.setInterval(pollStage3Status, 3000);
+pollStage3Status();
 
 window.setTimeout(async () => {
   if (getState()) return;

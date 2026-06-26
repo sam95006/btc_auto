@@ -369,6 +369,64 @@ def register_nexus_routes(app):
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc)}), 500
 
+    @app.route("/api/nexus/stage3/status")
+    def nexus_stage3_status():
+        """Read-only Stage 3 Bybit demo learning runner status for UI."""
+        try:
+            from backend.monitoring.stage3_status_service import build_stage3_context
+
+            return jsonify(build_stage3_context())
+        except Exception as exc:
+            return jsonify({"read_only": True, "error": str(exc), "data_available": False}), 500
+
+    @app.route("/api/nexus/stage3/summary")
+    def nexus_stage3_summary():
+        try:
+            from backend.monitoring.stage3_status_service import build_stage3_summary
+
+            return jsonify(build_stage3_summary())
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
+    @app.route("/api/nexus/stage3/account")
+    def nexus_stage3_account():
+        try:
+            from backend.monitoring.stage3_status_service import build_stage3_account
+
+            return jsonify(build_stage3_account())
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
+    @app.route("/api/nexus/stage3/trades")
+    def nexus_stage3_trades():
+        limit = min(500, max(1, int(request.args.get("limit", 50))))
+        try:
+            from backend.monitoring.stage3_status_service import build_stage3_trades
+
+            return jsonify(build_stage3_trades(limit=limit))
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
+    @app.route("/api/nexus/stage3/learning")
+    def nexus_stage3_learning():
+        limit = min(500, max(1, int(request.args.get("limit", 50))))
+        try:
+            from backend.monitoring.stage3_status_service import build_stage3_learning
+
+            return jsonify(build_stage3_learning(limit=limit))
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
+    @app.route("/api/nexus/stage3/log-tail")
+    def nexus_stage3_log_tail():
+        lines = min(200, max(1, int(request.args.get("lines", 80))))
+        try:
+            from backend.monitoring.stage3_status_service import build_stage3_log_tail
+
+            return jsonify(build_stage3_log_tail(lines=lines))
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
+
     @app.route("/api/nexus/layout")
     def nexus_layout():
         return jsonify(layout_store.load())
