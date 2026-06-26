@@ -119,6 +119,7 @@ WORKDIR /app
 RUN mkdir -p /data/data/external_alpha/demo_learning /data/logs /data/exports /data/stage3_demo_learning
 
 COPY . .
+RUN pip install --no-cache-dir -r requirements.txt
 RUN chmod +x entrypoint.sh run_stage3_demo_order_background.sh run_stage3_24h_demo_learning_background.sh
 EXPOSE 8080
 # STAGE3_STARTUP_MODE=idle: read-only Web UI; runner mode spawns 24h runner then same UI
