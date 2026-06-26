@@ -389,7 +389,7 @@ def _prepare_output_dir(output_dir: Path, *, fresh: bool) -> None:
 
 
 def _is_24h_run(max_orders: int) -> bool:
-    return operator_go_24h_present() and max_orders > 1
+    return operator_go_24h_present() and max_orders >= 1
 
 
 def run_loop(
@@ -655,7 +655,7 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.mode == "demo-order":
-        if operator_go_24h_present() and args.max_orders > 1:
+        if operator_go_24h_present():
             pass
         elif not operator_go_present():
             print(
