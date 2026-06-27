@@ -1,0 +1,298 @@
+"""Stage 4 AI Decision Agent — dry-run proposals with patch retrieval (no orders)."""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import uuid
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from tools.research.bybit_demo_learning_common import MAX_MARGIN_USD, utc_now_iso, write_json
+from tools.research.stage3_learning_loop import append_jsonl, resolve_output_dir, setup_key
+from tools.research.stage4_risk_supervisor import Stage4RiskSupervisor, safety_constraints_from_env
+
+ROOT = Path(__file__).resolve().parents[2]
+MOCK_MODEL_NAME = "mock_ai_decision_agent"
+DEFAULT_DECISION_SOURCE = "mock_ai_decision_agent"
+
+REQUIRED_DECISION_FIELDS = (
+    "decision_id",
+    "created_at_utc",
+    "decision_source",
+    "mode",
+    "model_name",
+    "prompt_hash",
+    "symbol",
+    "candidate_side",
+    "final_action",
+    "confidence",
+    "position_size_suggestion",
+    "market_context",
+    "account_context",
+    "retrieved_patches",
+    "why_enter",
+    "why_skip",
+    "side_reason",
+    "confidence_reason",
+    "risk_notes",
+    "safety_constraints",
+    "risk_supervisor_result",
+    "final_decision",
+    "order_sent",
+)
+
+
+def resolve_stage4_output_dir() -> Path:
+    custom = os.environ.get("STAGE4_OUTPUT_DIR", "").strip()
+    if custom:
+        out = Path(custom)
+    else:
+        nexus = os.environ.get("NEXUS_DATA_DIR", "").strip()
+        if nexus:
+            out = Path(nexus) / "stage4_ai_decisions"
+        else:
+            out = ROOT / "data" / "external_alpha" / "stage4_ai_decisions"
+    out.mkdir(parents=True, exist_ok=True)
+    return out
+
+
+def resolve_stage3_learning_dir() -> Path:
+    custom = os.environ.get("STAGE3_OUTPUT_DIR", "").strip()
+    if custom:
+        return Path(custom)
+    return resolve_output_dir()
+
+
+def _read_jsonl(path: Path) -> List[Dict[str, Any]]:
+    if not path.is_file():
+        return []
+    rows: List[Dict[str, Any]] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line:
+            rows.append(json.loads(line))
+    return rows
+
+
+class Stage4PatchRetriever:
+    """JSONL retrieval by symbol / side / setup_key / failure_reason."""
+
+    def __init__(self, stage3_dir: Optional[Path] = None) -> None:
+        self.stage3_dir = stage3_dir or resolve_stage3_learning_dir()
+
+    def retrieve(
+        self,
+        *,
+        symbol: str,
+        side: str,
+        regime: str = "unknown",
+        failure_reason: str = "",
+        limit: int = 5,
+    ) -> List[Dict[str, Any]]:
+        patches = _read_jsonl(self.stage3_dir / "applied_learning_patches.jsonl")
+        sym = symbol.upper()
+        side_u = side.upper()
+        key_hint = setup_key(sym, side_u, regime, failure_reason or "controlled_demo_order")
+        matched: List[Dict[str, Any]] = []
+        for row in reversed(patches):
+            row_sym = str(row.get("symbol") or "").upper()
+            row_side = str(row.get("side") or "").upper()
+            row_key = str(row.get("setup_key") or "")
+            if row_sym == sym and (not side_u or side_u == "NONE" or row_side == side_u):
+                matched.append(row)
+            elif key_hint and row_key == key_hint:
+                matched.append(row)
+            elif row_sym == sym:
+                matched.append(row)
+            if len(matched) >= limit:
+                break
+        return matched[:limit]
+
+    def recent_trades(self, *, symbol: str, limit: int = 5) -> List[Dict[str, Any]]:
+        trades = _read_jsonl(self.stage3_dir / "trade_results.jsonl")
+        sym = symbol.upper()
+        return [t for t in reversed(trades) if str(t.get("symbol", "")).upper() == sym][:limit]
+
+    def recent_reflections(self, limit: int = 5) -> List[Dict[str, Any]]:
+        rows = _read_jsonl(self.stage3_dir / "reflection_records.jsonl")
+        return list(reversed(rows))[:limit]
+
+
+class Stage4AIDecisionAgent:
+    """Deterministic mock AI for dry-run; clearly marked is_mock_ai=true."""
+
+    def __init__(
+        self,
+        *,
+        model_name: str = MOCK_MODEL_NAME,
+        is_mock_ai: bool = True,
+        retriever: Optional[Stage4PatchRetriever] = None,
+        supervisor: Optional[Stage4RiskSupervisor] = None,
+    ) -> None:
+        self.model_name = model_name
+        self.is_mock_ai = is_mock_ai
+        self.retriever = retriever or Stage4PatchRetriever()
+        self.supervisor = supervisor or Stage4RiskSupervisor()
+        self.decision_source = DEFAULT_DECISION_SOURCE if is_mock_ai else "ai_decision_agent"
+
+    def _prompt_payload(
+        self,
+        *,
+        symbol: str,
+        market_context: Dict[str, Any],
+        account_context: Dict[str, Any],
+        patches: List[Dict[str, Any]],
+        recent_trades: List[Dict[str, Any]],
+    ) -> str:
+        payload = {
+            "symbol": symbol,
+            "market": market_context,
+            "account": {k: account_context.get(k) for k in ("available_balance", "total_equity", "balance_read_ok")},
+            "patch_count": len(patches),
+            "recent_trade_count": len(recent_trades),
+        }
+        return json.dumps(payload, sort_keys=True, ensure_ascii=False)
+
+    def _mock_proposal(
+        self,
+        *,
+        symbol: str,
+        market_context: Dict[str, Any],
+        patches: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        last = float(market_context.get("last_price") or 0)
+        prev = float(market_context.get("prev_price_24h") or last)
+        change_pct = ((last - prev) / prev * 100.0) if prev else 0.0
+        regime = "trend_up" if change_pct > 0.1 else "trend_down" if change_pct < -0.1 else "range"
+
+        veto_patch = next(
+            (p for p in patches if str(p.get("action")) in {"block_reentry", "manual_review_required"}),
+            None,
+        )
+        if veto_patch:
+            return {
+                "candidate_side": str(veto_patch.get("side") or "BUY").upper(),
+                "final_action": "enter",
+                "confidence": 0.55,
+                "position_size_suggestion": min(12.0, MAX_MARGIN_USD),
+                "regime": regime,
+                "why_enter": "Mock AI would re-enter same setup despite prior loss pattern.",
+                "why_skip": "",
+                "side_reason": f"Prior side from patch {veto_patch.get('side')}",
+                "confidence_reason": "Moderate confidence before supervisor patch veto.",
+                "risk_notes": [f"active_patch_action={veto_patch.get('action')}"],
+            }
+
+        if abs(change_pct) < 0.05:
+            return {
+                "candidate_side": "NONE",
+                "final_action": "skip",
+                "confidence": 0.25,
+                "position_size_suggestion": 0.0,
+                "regime": regime,
+                "why_enter": "",
+                "why_skip": "Flat 24h move; mock AI skips low-edge range.",
+                "side_reason": "No directional edge in mock regime classifier.",
+                "confidence_reason": "Confidence below trade threshold due to flat market.",
+                "risk_notes": ["low_volatility_skip"],
+            }
+
+        side = "BUY" if change_pct >= 0 else "SELL"
+        conf = min(0.72, 0.45 + abs(change_pct) * 0.05)
+        return {
+            "candidate_side": side,
+            "final_action": "enter",
+            "confidence": round(conf, 4),
+            "position_size_suggestion": min(MAX_MARGIN_USD, 14.0 + abs(change_pct)),
+            "regime": regime,
+            "why_enter": f"Mock AI sees {regime} with 24h change {change_pct:.3f}%.",
+            "why_skip": "",
+            "side_reason": f"Side follows short-term demo signal ({side}).",
+            "confidence_reason": f"Scaled confidence from abs(change_pct)={abs(change_pct):.3f}.",
+            "risk_notes": ["mock_ai_dry_run_only"],
+        }
+
+    def decide(
+        self,
+        *,
+        symbol: str,
+        mode: str = "dry_run",
+        market_context: Dict[str, Any],
+        account_context: Dict[str, Any],
+        open_positions: int = 0,
+    ) -> Dict[str, Any]:
+        patches = self.retriever.retrieve(symbol=symbol, side="NONE", limit=5)
+        recent_trades = self.retriever.recent_trades(symbol=symbol, limit=3)
+        prompt_text = self._prompt_payload(
+            symbol=symbol,
+            market_context=market_context,
+            account_context=account_context,
+            patches=patches,
+            recent_trades=recent_trades,
+        )
+        prompt_hash = hashlib.sha256(prompt_text.encode("utf-8")).hexdigest()[:16]
+        proposal = self._mock_proposal(symbol=symbol, market_context=market_context, patches=patches)
+
+        supervisor_result = self.supervisor.evaluate(
+            proposal=proposal,
+            account_context=account_context,
+            retrieved_patches=patches,
+            open_positions=open_positions,
+        )
+        sr = supervisor_result.to_dict()
+        final_decision = sr["final_decision"]
+        final_action = "skip" if final_decision == "skip" else proposal.get("final_action", "skip")
+
+        if not sr.get("approved") and final_decision == "skip" and not proposal.get("why_skip"):
+            proposal["why_skip"] = sr.get("veto_reason") or "Risk supervisor veto."
+            proposal["why_enter"] = ""
+
+        row = {
+            "decision_id": str(uuid.uuid4()),
+            "created_at_utc": utc_now_iso(),
+            "decision_source": self.decision_source,
+            "mode": mode,
+            "model_name": self.model_name,
+            "is_mock_ai": self.is_mock_ai,
+            "fallback_model_name": self.model_name if self.is_mock_ai else None,
+            "prompt_hash": prompt_hash,
+            "symbol": symbol.upper(),
+            "candidate_side": proposal.get("candidate_side", "NONE"),
+            "final_action": final_action,
+            "confidence": proposal.get("confidence", 0),
+            "position_size_suggestion": proposal.get("position_size_suggestion", 0),
+            "market_context": market_context,
+            "account_context": account_context,
+            "retrieved_patches": patches,
+            "active_patch_count": len(patches),
+            "patch_applied_before_decision": bool(patches),
+            "recent_trades": recent_trades,
+            "why_enter": proposal.get("why_enter", ""),
+            "why_skip": proposal.get("why_skip", ""),
+            "side_reason": proposal.get("side_reason", ""),
+            "confidence_reason": proposal.get("confidence_reason", ""),
+            "risk_notes": proposal.get("risk_notes", []),
+            "reasoning_summary": proposal.get("why_enter") or proposal.get("why_skip") or "",
+            "regime": proposal.get("regime", "unknown"),
+            "safety_constraints": safety_constraints_from_env(),
+            "risk_supervisor_result": sr,
+            "final_decision": final_decision,
+            "order_sent": False,
+        }
+        return row
+
+
+def write_decision(output_dir: Path, decision: Dict[str, Any]) -> None:
+    append_jsonl(output_dir / "ai_decisions.jsonl", decision)
+    append_jsonl(
+        output_dir / "risk_supervisor_decisions.jsonl",
+        {
+            "decision_id": decision["decision_id"],
+            "created_at_utc": decision["created_at_utc"],
+            "symbol": decision["symbol"],
+            "risk_supervisor_result": decision["risk_supervisor_result"],
+            "final_decision": decision["final_decision"],
+            "order_sent": False,
+        },
+    )
