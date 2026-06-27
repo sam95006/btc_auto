@@ -75,9 +75,10 @@ def run_dry_run(
     symbols: List[str],
     mode: str = "dry_run",
     output_dir: Path | None = None,
+    use_real_llm: bool = False,
 ) -> Dict[str, Any]:
     out = output_dir or resolve_stage4_output_dir()
-    agent = Stage4AIDecisionAgent()
+    agent = Stage4AIDecisionAgent(use_real_llm=use_real_llm)
     started = time.time()
     end = started + duration_minutes * 60.0
     decisions: List[Dict[str, Any]] = []
@@ -117,6 +118,8 @@ def run_dry_run(
         "output_dir": str(out),
         "model_name": agent.model_name,
         "is_mock_ai": agent.is_mock_ai,
+        "real_llm_used": agent.real_llm_used,
+        "fallback_to_mock": agent.fallback_to_mock,
         "all_order_sent_false": all(not d.get("order_sent") for d in decisions),
         "decisions": [{"decision_id": d["decision_id"], "symbol": d["symbol"], "final_decision": d["final_decision"]} for d in decisions],
     }
@@ -131,6 +134,7 @@ def main() -> int:
     parser.add_argument("--symbols", default="ETHUSDT,BTCUSDT")
     parser.add_argument("--mode", default="dry_run")
     parser.add_argument("--fast-test", action="store_true", help="Single tick, no sleep")
+    parser.add_argument("--use-real-llm", action="store_true")
     parser.add_argument("--output-dir", default="")
     args = parser.parse_args()
 
@@ -145,6 +149,7 @@ def main() -> int:
         symbols=symbols,
         mode=args.mode,
         output_dir=out,
+        use_real_llm=args.use_real_llm,
     )
 
     from tools.research.validate_stage4_ai_decision_outputs import validate  # noqa: E402

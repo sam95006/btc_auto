@@ -41,6 +41,8 @@ def validate(output_dir: Path | None = None) -> Dict[str, Any]:
     for i, d in enumerate(decisions):
         for fld in REQUIRED_DECISION_FIELDS:
             if fld not in d:
+                if fld == "real_llm_used" and d.get("is_mock_ai") and str(d.get("model_name") or "") == "mock_ai_decision_agent":
+                    continue
                 errors.append(f"decision_{i}_missing_field:{fld}")
         if d.get("order_sent") is not False:
             errors.append(f"decision_{i}_order_sent_not_false")
@@ -57,6 +59,12 @@ def validate(output_dir: Path | None = None) -> Dict[str, Any]:
             errors.append(f"decision_{i}_missing_why_enter_or_why_skip")
         if not d.get("confidence_reason"):
             errors.append(f"decision_{i}_missing_confidence_reason")
+        if "real_llm_used" not in d:
+            legacy_mock = d.get("is_mock_ai") and str(d.get("model_name") or "") == "mock_ai_decision_agent"
+            if not legacy_mock:
+                errors.append(f"decision_{i}_missing_real_llm_used")
+        if d.get("is_mock_ai") and d.get("real_llm_used"):
+            errors.append(f"decision_{i}_mock_and_real_llm_conflict")
         if not d.get("risk_supervisor_result"):
             errors.append(f"decision_{i}_missing_risk_supervisor_result")
         patches = d.get("retrieved_patches") or []
@@ -73,6 +81,8 @@ def validate(output_dir: Path | None = None) -> Dict[str, Any]:
         "decision_count": len(decisions),
         "supervisor_decision_count": len(supervisor_rows),
         "all_order_sent_false": all(d.get("order_sent") is False for d in decisions) if decisions else False,
+        "real_llm_used": any(d.get("real_llm_used") for d in decisions) if decisions else False,
+        "fallback_to_mock": any(d.get("fallback_to_mock") for d in decisions) if decisions else False,
     }
 
 

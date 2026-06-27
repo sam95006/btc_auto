@@ -1,15 +1,16 @@
-"""Stage 4 AI Decision Agent — dry-run proposals with patch retrieval (no orders)."""
+"""Stage 4 AI Decision Agent — mock or real LLM dry-run (no orders)."""
 from __future__ import annotations
 
 import hashlib
 import json
-import os
 import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from tools.research.bybit_demo_learning_common import MAX_MARGIN_USD, utc_now_iso, write_json
+from tools.research.bybit_demo_learning_common import MAX_MARGIN_USD, utc_now_iso
 from tools.research.stage3_learning_loop import append_jsonl, resolve_output_dir, setup_key
+from tools.research.stage4_decision_schema import parse_llm_decision
+from tools.research.stage4_prompt_builder import build_decision_prompt, prompt_fingerprint
 from tools.research.stage4_risk_supervisor import Stage4RiskSupervisor, safety_constraints_from_env
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -40,24 +41,37 @@ REQUIRED_DECISION_FIELDS = (
     "risk_supervisor_result",
     "final_decision",
     "order_sent",
+    "real_llm_used",
 )
 
 
 def resolve_stage4_output_dir() -> Path:
+    import os
+
     custom = os.environ.get("STAGE4_OUTPUT_DIR", "").strip()
     if custom:
         out = Path(custom)
-    else:
-        nexus = os.environ.get("NEXUS_DATA_DIR", "").strip()
-        if nexus:
-            out = Path(nexus) / "stage4_ai_decisions"
-        else:
-            out = ROOT / "data" / "external_alpha" / "stage4_ai_decisions"
+        out.mkdir(parents=True, exist_ok=True)
+        return out
+    nexus = os.environ.get("NEXUS_DATA_DIR", "").strip()
+    if nexus:
+        candidate = Path(nexus) / "stage4_ai_decisions"
+        try:
+            candidate.mkdir(parents=True, exist_ok=True)
+            test = candidate / ".write_probe"
+            test.write_text("ok", encoding="utf-8")
+            test.unlink(missing_ok=True)
+            return candidate
+        except OSError:
+            pass
+    out = ROOT / "data" / "external_alpha" / "stage4_ai_decisions"
     out.mkdir(parents=True, exist_ok=True)
     return out
 
 
 def resolve_stage3_learning_dir() -> Path:
+    import os
+
     custom = os.environ.get("STAGE3_OUTPUT_DIR", "").strip()
     if custom:
         return Path(custom)
@@ -120,39 +134,45 @@ class Stage4PatchRetriever:
 
 
 class Stage4AIDecisionAgent:
-    """Deterministic mock AI for dry-run; clearly marked is_mock_ai=true."""
+    """Mock or real LLM proposals for dry-run; Risk Supervisor always runs after."""
 
     def __init__(
         self,
         *,
         model_name: str = MOCK_MODEL_NAME,
         is_mock_ai: bool = True,
+        use_real_llm: bool = False,
         retriever: Optional[Stage4PatchRetriever] = None,
         supervisor: Optional[Stage4RiskSupervisor] = None,
+        llm_client: Optional[Any] = None,
     ) -> None:
-        self.model_name = model_name
-        self.is_mock_ai = is_mock_ai
+        self.use_real_llm = use_real_llm
+        self.real_llm_used = False
+        self.fallback_to_mock = False
+        self.llm_client = llm_client
         self.retriever = retriever or Stage4PatchRetriever()
         self.supervisor = supervisor or Stage4RiskSupervisor()
-        self.decision_source = DEFAULT_DECISION_SOURCE if is_mock_ai else "ai_decision_agent"
 
-    def _prompt_payload(
-        self,
-        *,
-        symbol: str,
-        market_context: Dict[str, Any],
-        account_context: Dict[str, Any],
-        patches: List[Dict[str, Any]],
-        recent_trades: List[Dict[str, Any]],
-    ) -> str:
-        payload = {
-            "symbol": symbol,
-            "market": market_context,
-            "account": {k: account_context.get(k) for k in ("available_balance", "total_equity", "balance_read_ok")},
-            "patch_count": len(patches),
-            "recent_trade_count": len(recent_trades),
-        }
-        return json.dumps(payload, sort_keys=True, ensure_ascii=False)
+        if use_real_llm:
+            from tools.research.stage4_llm_client import Stage4LLMClient
+
+            self.llm_client = llm_client or Stage4LLMClient(load_env=True)
+            avail = self.llm_client.availability()
+            if avail.get("real_llm_available"):
+                self.is_mock_ai = False
+                self.real_llm_used = True
+                self.model_name = str(avail.get("model_name") or model_name)
+                self.decision_source = "ai_decision_agent"
+            else:
+                self.is_mock_ai = True
+                self.real_llm_used = False
+                self.fallback_to_mock = True
+                self.model_name = MOCK_MODEL_NAME
+                self.decision_source = DEFAULT_DECISION_SOURCE
+        else:
+            self.model_name = model_name
+            self.is_mock_ai = is_mock_ai
+            self.decision_source = DEFAULT_DECISION_SOURCE if is_mock_ai else "ai_decision_agent"
 
     def _mock_proposal(
         self,
@@ -213,6 +233,39 @@ class Stage4AIDecisionAgent:
             "risk_notes": ["mock_ai_dry_run_only"],
         }
 
+    def _llm_proposal(
+        self,
+        *,
+        symbol: str,
+        market_context: Dict[str, Any],
+        account_context: Dict[str, Any],
+        patches: List[Dict[str, Any]],
+        recent_trades: List[Dict[str, Any]],
+        recent_reflections: List[Dict[str, Any]],
+        open_positions: int,
+    ) -> tuple[Dict[str, Any], str, bool, str]:
+        constraints = safety_constraints_from_env()
+        messages = build_decision_prompt(
+            symbol=symbol,
+            market_context=market_context,
+            account_context=account_context,
+            retrieved_patches=patches,
+            recent_trade_results=recent_trades,
+            recent_reflections=recent_reflections,
+            safety_constraints=constraints,
+            current_open_positions=open_positions,
+        )
+        prompt_hash = prompt_fingerprint(messages)
+        result = self.llm_client.complete_json(messages)
+        parsed = result.get("parsed") or {}
+        proposal, ok, err = parse_llm_decision(parsed, symbol=symbol)
+        if not ok or result.get("status") != "ok":
+            proposal["parse_error"] = True
+            proposal["why_skip"] = err or result.get("error") or "llm_parse_failed"
+            sr_pre = {"approved": False, "veto_reason": proposal["why_skip"]}
+            return proposal, prompt_hash, False, result.get("error") or err
+        return proposal, prompt_hash, True, ""
+
     def decide(
         self,
         *,
@@ -224,15 +277,32 @@ class Stage4AIDecisionAgent:
     ) -> Dict[str, Any]:
         patches = self.retriever.retrieve(symbol=symbol, side="NONE", limit=5)
         recent_trades = self.retriever.recent_trades(symbol=symbol, limit=3)
-        prompt_text = self._prompt_payload(
-            symbol=symbol,
-            market_context=market_context,
-            account_context=account_context,
-            patches=patches,
-            recent_trades=recent_trades,
-        )
-        prompt_hash = hashlib.sha256(prompt_text.encode("utf-8")).hexdigest()[:16]
-        proposal = self._mock_proposal(symbol=symbol, market_context=market_context, patches=patches)
+        recent_reflections = self.retriever.recent_reflections(limit=3)
+        parse_error = False
+        llm_parse_ok = True
+
+        if self.real_llm_used and self.llm_client:
+            proposal, prompt_hash, llm_parse_ok, _ = self._llm_proposal(
+                symbol=symbol,
+                market_context=market_context,
+                account_context=account_context,
+                patches=patches,
+                recent_trades=recent_trades,
+                recent_reflections=recent_reflections,
+                open_positions=open_positions,
+            )
+            parse_error = not llm_parse_ok or bool(proposal.get("parse_error"))
+        else:
+            payload = json.dumps(
+                {
+                    "symbol": symbol,
+                    "market": market_context,
+                    "patches": len(patches),
+                },
+                sort_keys=True,
+            )
+            prompt_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+            proposal = self._mock_proposal(symbol=symbol, market_context=market_context, patches=patches)
 
         supervisor_result = self.supervisor.evaluate(
             proposal=proposal,
@@ -240,6 +310,12 @@ class Stage4AIDecisionAgent:
             retrieved_patches=patches,
             open_positions=open_positions,
         )
+        if parse_error:
+            supervisor_result.approved = False
+            supervisor_result.final_decision = "skip"
+            supervisor_result.veto_reason = proposal.get("why_skip") or "parse_error"
+            supervisor_result.action = "force_skip"
+
         sr = supervisor_result.to_dict()
         final_decision = sr["final_decision"]
         final_action = "skip" if final_decision == "skip" else proposal.get("final_action", "skip")
@@ -255,7 +331,9 @@ class Stage4AIDecisionAgent:
             "mode": mode,
             "model_name": self.model_name,
             "is_mock_ai": self.is_mock_ai,
-            "fallback_model_name": self.model_name if self.is_mock_ai else None,
+            "real_llm_used": self.real_llm_used,
+            "fallback_to_mock": self.fallback_to_mock,
+            "fallback_model_name": MOCK_MODEL_NAME if self.fallback_to_mock else None,
             "prompt_hash": prompt_hash,
             "symbol": symbol.upper(),
             "candidate_side": proposal.get("candidate_side", "NONE"),
@@ -265,16 +343,21 @@ class Stage4AIDecisionAgent:
             "market_context": market_context,
             "account_context": account_context,
             "retrieved_patches": patches,
+            "recent_trade_results": recent_trades,
+            "recent_reflections": recent_reflections,
             "active_patch_count": len(patches),
             "patch_applied_before_decision": bool(patches),
-            "recent_trades": recent_trades,
+            "current_open_positions": open_positions,
             "why_enter": proposal.get("why_enter", ""),
             "why_skip": proposal.get("why_skip", ""),
             "side_reason": proposal.get("side_reason", ""),
             "confidence_reason": proposal.get("confidence_reason", ""),
             "risk_notes": proposal.get("risk_notes", []),
+            "patch_awareness": proposal.get("patch_awareness", ""),
+            "uncertainty": proposal.get("uncertainty", ""),
             "reasoning_summary": proposal.get("why_enter") or proposal.get("why_skip") or "",
             "regime": proposal.get("regime", "unknown"),
+            "parse_error": parse_error,
             "safety_constraints": safety_constraints_from_env(),
             "risk_supervisor_result": sr,
             "final_decision": final_decision,
@@ -291,6 +374,8 @@ def write_decision(output_dir: Path, decision: Dict[str, Any]) -> None:
             "decision_id": decision["decision_id"],
             "created_at_utc": decision["created_at_utc"],
             "symbol": decision["symbol"],
+            "real_llm_used": decision.get("real_llm_used"),
+            "parse_error": decision.get("parse_error"),
             "risk_supervisor_result": decision["risk_supervisor_result"],
             "final_decision": decision["final_decision"],
             "order_sent": False,

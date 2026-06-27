@@ -34,7 +34,85 @@ class Stage4SchemaTests(unittest.TestCase):
             self.assertTrue(decision.get("prompt_hash"))
             self.assertFalse(decision.get("order_sent"))
             self.assertTrue(decision.get("is_mock_ai"))
+            self.assertFalse(decision.get("real_llm_used"))
             self.assertEqual(decision.get("model_name"), "mock_ai_decision_agent")
+
+
+class Stage4LLMSchemaTests(unittest.TestCase):
+    def test_valid_llm_json_parse(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        raw = {
+            "final_action": "skip",
+            "symbol": "ETHUSDT",
+            "candidate_side": "NONE",
+            "confidence": 0.4,
+            "why_enter": "",
+            "why_skip": "No edge",
+            "side_reason": "Flat",
+            "confidence_reason": "Low conviction",
+            "risk_notes": [],
+            "patch_awareness": "",
+            "uncertainty": "medium",
+            "requires_manual_review": False,
+        }
+        proposal, ok, err = parse_llm_decision(raw, symbol="ETHUSDT")
+        self.assertTrue(ok, err)
+        self.assertEqual(proposal["final_action"], "skip")
+
+    def test_malformed_llm_json_forces_skip(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        proposal, ok, err = parse_llm_decision({}, symbol="ETHUSDT")
+        self.assertFalse(ok)
+        self.assertEqual(proposal["final_action"], "skip")
+        self.assertTrue(proposal.get("parse_error"))
+
+    def test_agent_malformed_llm_response_skips(self) -> None:
+        class FakeLLM:
+            def availability(self):
+                return {"real_llm_available": True, "model_name": "test-model"}
+
+            def complete_json(self, messages):
+                return {"status": "error", "parsed": {}, "error": "bad_json", "raw_text": "not json"}
+
+        agent = Stage4AIDecisionAgent(use_real_llm=False, llm_client=FakeLLM())
+        agent.real_llm_used = True
+        agent.is_mock_ai = False
+        agent.model_name = "test-model"
+        agent.decision_source = "ai_decision_agent"
+        decision = agent.decide(
+            symbol="ETHUSDT",
+            market_context={"last_price": 3250, "prev_price_24h": 3200},
+            account_context={"available_balance": 5000},
+        )
+        self.assertFalse(decision.get("order_sent"))
+        self.assertEqual(decision.get("final_decision"), "skip")
+        self.assertTrue(decision.get("parse_error"))
+        self.assertFalse(decision["risk_supervisor_result"]["approved"])
+
+    def test_real_llm_unavailable_falls_back_to_mock(self) -> None:
+        with patch(
+            "tools.research.stage4_llm_client.Stage4LLMClient._resolve_config",
+            return_value=None,
+        ):
+            agent = Stage4AIDecisionAgent(use_real_llm=True)
+        self.assertTrue(agent.fallback_to_mock)
+        self.assertTrue(agent.is_mock_ai)
+        self.assertFalse(agent.real_llm_used)
+
+    def test_mock_and_real_llm_flags_not_confused(self) -> None:
+        mock_agent = Stage4AIDecisionAgent(use_real_llm=False)
+        self.assertTrue(mock_agent.is_mock_ai)
+        self.assertFalse(mock_agent.real_llm_used)
+        decision = mock_agent.decide(
+            symbol="ETHUSDT",
+            market_context={"last_price": 3250, "prev_price_24h": 3200},
+            account_context={"available_balance": 5000},
+        )
+        self.assertTrue(decision.get("is_mock_ai"))
+        self.assertFalse(decision.get("real_llm_used"))
+        self.assertFalse(decision.get("is_mock_ai") and decision.get("real_llm_used"))
 
 
 class Stage4RiskSupervisorTests(unittest.TestCase):

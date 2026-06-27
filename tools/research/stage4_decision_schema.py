@@ -1,0 +1,96 @@
+"""Stage 4 LLM decision output schema and parsing."""
+from __future__ import annotations
+
+from typing import Any, Dict, List, Tuple
+
+LLM_DECISION_FIELDS = (
+    "final_action",
+    "symbol",
+    "candidate_side",
+    "confidence",
+    "why_enter",
+    "why_skip",
+    "side_reason",
+    "confidence_reason",
+    "risk_notes",
+    "patch_awareness",
+    "uncertainty",
+    "requires_manual_review",
+)
+
+VALID_ACTIONS = frozenset({"enter", "skip"})
+VALID_SIDES = frozenset({"BUY", "SELL", "NONE"})
+
+
+def _as_float(raw: Any, default: float = 0.0) -> float:
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return default
+
+
+def _as_list(raw: Any) -> List[Any]:
+    return list(raw) if isinstance(raw, list) else []
+
+
+def parse_llm_decision(raw: Dict[str, Any], *, symbol: str) -> Tuple[Dict[str, Any], bool, str]:
+    """Return (proposal, parse_ok, parse_error)."""
+    if not raw or not isinstance(raw, dict):
+        return skip_proposal(symbol, "empty_llm_response"), False, "empty_llm_response"
+
+    missing = [f for f in LLM_DECISION_FIELDS if f not in raw]
+    if missing:
+        return skip_proposal(symbol, f"missing_fields:{','.join(missing)}"), False, f"missing_fields:{','.join(missing)}"
+
+    action = str(raw.get("final_action") or "skip").strip().lower()
+    if action not in VALID_ACTIONS:
+        return skip_proposal(symbol, f"invalid_final_action:{action}"), False, f"invalid_final_action:{action}"
+
+    side = str(raw.get("candidate_side") or "NONE").strip().upper()
+    if side not in VALID_SIDES:
+        return skip_proposal(symbol, f"invalid_candidate_side:{side}"), False, f"invalid_candidate_side:{side}"
+
+    conf = _as_float(raw.get("confidence"))
+    if conf < 0 or conf > 1:
+        return skip_proposal(symbol, "confidence_out_of_range"), False, "confidence_out_of_range"
+
+    sym = str(raw.get("symbol") or symbol).upper()
+    proposal = {
+        "final_action": action,
+        "symbol": sym,
+        "candidate_side": side,
+        "confidence": round(conf, 4),
+        "why_enter": str(raw.get("why_enter") or ""),
+        "why_skip": str(raw.get("why_skip") or ""),
+        "side_reason": str(raw.get("side_reason") or ""),
+        "confidence_reason": str(raw.get("confidence_reason") or ""),
+        "risk_notes": [str(x) for x in _as_list(raw.get("risk_notes"))],
+        "patch_awareness": str(raw.get("patch_awareness") or ""),
+        "uncertainty": str(raw.get("uncertainty") or ""),
+        "requires_manual_review": bool(raw.get("requires_manual_review")),
+        "position_size_suggestion": 0.0,
+    }
+    if action == "enter" and side != "NONE":
+        from tools.research.bybit_demo_learning_common import MAX_MARGIN_USD
+
+        proposal["position_size_suggestion"] = round(min(MAX_MARGIN_USD, MAX_MARGIN_USD * conf), 4)
+    return proposal, True, ""
+
+
+def skip_proposal(symbol: str, reason: str) -> Dict[str, Any]:
+    return {
+        "final_action": "skip",
+        "symbol": symbol.upper(),
+        "candidate_side": "NONE",
+        "confidence": 0.0,
+        "why_enter": "",
+        "why_skip": reason,
+        "side_reason": "",
+        "confidence_reason": "Parse or validation failed; forced skip.",
+        "risk_notes": ["parse_error"],
+        "patch_awareness": "",
+        "uncertainty": reason,
+        "requires_manual_review": True,
+        "position_size_suggestion": 0.0,
+        "parse_error": True,
+    }

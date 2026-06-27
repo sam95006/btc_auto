@@ -51,7 +51,22 @@ Risk Supervisor hard-vetoes unsafe env and active `block_reentry` / `manual_revi
 - JSONL patch retrieval (no VectorDB)
 - Local dry-run only — no Zeabur 24h runner
 
-## Phase 4.1 (future)
+## Phase 4.1 (this round)
+
+- Real LLM via `stage4_llm_client.py` (Groq / OpenAI / Anthropic / Gemini / Ollama / Cerebras)
+- Blocked: DeepSeek, Qwen, ChatGLM, and other China-origin model name patterns
+- Structured JSON output enforced by `stage4_decision_schema.py`
+- Prompt builder: `stage4_prompt_builder.py`
+- Flow: LLM → Risk Supervisor → `final_decision` → `order_sent=false`
+- `--use-real-llm` on dry-run runner; honest `fallback_to_mock=true` if no key
+
+Run locally:
+
+```bash
+python tools/research/run_stage4_ai_decision_dry_run.py --duration-minutes 30 --poll-interval-seconds 60 --symbols ETHUSDT,BTCUSDT --mode dry-run --use-real-llm
+```
+
+## Phase 4.2 (future)
 
 - Wire real LLM with `is_mock_ai=false`
 - Integrate with Stage 3 demo-order path behind `decision_source=ai_decision_agent`
