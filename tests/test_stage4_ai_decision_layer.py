@@ -302,6 +302,50 @@ class Stage4DryRunIntegrationTests(unittest.TestCase):
             finally:
                 os.environ.pop("STAGE4_OUTPUT_DIR", None)
 
+    def test_output_dir_wires_llm_debug_log(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            from tools.research.run_stage4_ai_decision_dry_run import run_dry_run
+
+            ok_payload = {
+                "choices": [
+                    {
+                        "message": {
+                            "content": (
+                                '{"final_action":"skip","symbol":"ETHUSDT","candidate_side":"NONE",'
+                                '"confidence":0.0,"why_enter":"","why_skip":"wired debug test",'
+                                '"side_reason":"","confidence_reason":"test","risk_notes":[],'
+                                '"patch_awareness":"","uncertainty":"","requires_manual_review":false}'
+                            )
+                        },
+                        "finish_reason": "stop",
+                    }
+                ]
+            }
+            with patch(
+                "tools.research.run_stage4_ai_decision_dry_run._fetch_market",
+                return_value={"last_price": 3250, "prev_price_24h": 3200, "symbol": "ETHUSDT"},
+            ), patch(
+                "tools.research.run_stage4_ai_decision_dry_run._fetch_account",
+                return_value={"available_balance": 5000, "balance_read_ok": True, "open_positions": 0},
+            ), patch(
+                "tools.research.stage4_llm_client.Stage4LLMClient._http_post",
+                return_value=(200, ok_payload),
+            ), patch.dict(os.environ, {"GROQ_API_KEY_PRIMARY": "test-key-local-only"}, clear=False):
+                run_dry_run(
+                    duration_minutes=0.01,
+                    poll_interval_seconds=0,
+                    symbols=["ETHUSDT"],
+                    output_dir=out,
+                    use_real_llm=True,
+                )
+            debug_path = out / "llm_client_debug.jsonl"
+            self.assertTrue(debug_path.is_file(), "llm_client_debug.jsonl missing from --output-dir")
+            debug_text = debug_path.read_text(encoding="utf-8")
+            self.assertNotIn("test-key-local-only", debug_text)
+            self.assertIn('"success": true', debug_text)
+            self.assertFalse(os.environ.get("STAGE4_OUTPUT_DIR"), "env should be restored after run")
+
 
 class Stage4ResponseParserTests(unittest.TestCase):
     def test_plain_json_parse_ok(self) -> None:

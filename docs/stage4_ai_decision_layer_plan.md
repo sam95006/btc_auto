@@ -59,6 +59,11 @@ Risk Supervisor hard-vetoes unsafe env and active `block_reentry` / `manual_revi
 - `check_stage4_llm_provider.py`: minimal health probe
 - Dry-run logs: `stage4_30m_dry_run.log` / `stage4_short_run.log` under output dir
 
+## Phase 4.2 (this round)
+
+- Zeabur Stage 3 container read-only real LLM dry-run (no orders)
+- `--output-dir` syncs `STAGE4_OUTPUT_DIR` so `llm_client_debug.jsonl` co-locates with decisions
+
 Health check:
 
 ```bash

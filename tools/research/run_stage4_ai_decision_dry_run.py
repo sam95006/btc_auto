@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, Iterator, List, Optional
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -22,6 +24,25 @@ from tools.research.stage4_ai_decision_agent import (  # noqa: E402
 )
 
 READINESS = ROOT / "data/external_alpha/reports/stage4_ai_decision_dry_run_readiness.json"
+
+
+@contextmanager
+def _stage4_output_dir_env(output_dir: Optional[Path]) -> Iterator[Optional[Path]]:
+    """Sync --output-dir to STAGE4_OUTPUT_DIR for LLM debug + default path resolution."""
+    if output_dir is None:
+        yield None
+        return
+    resolved = output_dir.expanduser().resolve()
+    resolved.mkdir(parents=True, exist_ok=True)
+    previous = os.environ.get("STAGE4_OUTPUT_DIR")
+    os.environ["STAGE4_OUTPUT_DIR"] = str(resolved)
+    try:
+        yield resolved
+    finally:
+        if previous is None:
+            os.environ.pop("STAGE4_OUTPUT_DIR", None)
+        else:
+            os.environ["STAGE4_OUTPUT_DIR"] = previous
 
 
 def _resolve_run_log_path(output_dir: Path, duration_minutes: float) -> Path:
@@ -90,7 +111,28 @@ def run_dry_run(
     output_dir: Path | None = None,
     use_real_llm: bool = False,
 ) -> Dict[str, Any]:
-    out = output_dir or resolve_stage4_output_dir()
+    with _stage4_output_dir_env(output_dir) as synced:
+        out = synced or resolve_stage4_output_dir()
+        return _run_dry_run_inner(
+            duration_minutes=duration_minutes,
+            poll_interval_seconds=poll_interval_seconds,
+            symbols=symbols,
+            mode=mode,
+            output_dir=out,
+            use_real_llm=use_real_llm,
+        )
+
+
+def _run_dry_run_inner(
+    *,
+    duration_minutes: float,
+    poll_interval_seconds: float,
+    symbols: List[str],
+    mode: str,
+    output_dir: Path,
+    use_real_llm: bool,
+) -> Dict[str, Any]:
+    out = output_dir
     log_path = _resolve_run_log_path(out, duration_minutes)
     agent = Stage4AIDecisionAgent(use_real_llm=use_real_llm)
     _append_run_log(
