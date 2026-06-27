@@ -51,7 +51,21 @@ Risk Supervisor hard-vetoes unsafe env and active `block_reentry` / `manual_revi
 - JSONL patch retrieval (no VectorDB)
 - Local dry-run only — no Zeabur 24h runner
 
-## Phase 4.1 (this round)
+## Phase 4.1a (this round)
+
+- Root cause of 30m empty responses: Groq HTTP 403 (Cloudflare 1010) when `User-Agent` header missing
+- `stage4_llm_client.py`: User-Agent, retries/backoff, `llm_client_debug.jsonl`, GROQ secondary key fallback
+- `stage4_response_parser.py`: content extraction + markdown/tool-call JSON parsing
+- `check_stage4_llm_provider.py`: minimal health probe
+- Dry-run logs: `stage4_30m_dry_run.log` / `stage4_short_run.log` under output dir
+
+Health check:
+
+```bash
+python tools/research/check_stage4_llm_provider.py --provider groq --model llama-3.3-70b-versatile
+```
+
+## Phase 4.1 (previous)
 
 - Real LLM via `stage4_llm_client.py` (Groq / OpenAI / Anthropic / Gemini / Ollama / Cerebras)
 - Blocked: DeepSeek, Qwen, ChatGLM, and other China-origin model name patterns

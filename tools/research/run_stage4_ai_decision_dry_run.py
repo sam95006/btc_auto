@@ -24,6 +24,19 @@ from tools.research.stage4_ai_decision_agent import (  # noqa: E402
 READINESS = ROOT / "data/external_alpha/reports/stage4_ai_decision_dry_run_readiness.json"
 
 
+def _resolve_run_log_path(output_dir: Path, duration_minutes: float) -> Path:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    name = "stage4_30m_dry_run.log" if duration_minutes >= 5 else "stage4_short_run.log"
+    return output_dir / name
+
+
+def _append_run_log(log_path: Path, message: str) -> None:
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    line = f"{utc_now_iso()} {message}\n"
+    with log_path.open("a", encoding="utf-8") as fh:
+        fh.write(line)
+
+
 def _fetch_market(symbol: str) -> Dict[str, Any]:
     try:
         client = BybitDemoClient("dry-run", allow_demo_order=False)
@@ -78,7 +91,13 @@ def run_dry_run(
     use_real_llm: bool = False,
 ) -> Dict[str, Any]:
     out = output_dir or resolve_stage4_output_dir()
+    log_path = _resolve_run_log_path(out, duration_minutes)
     agent = Stage4AIDecisionAgent(use_real_llm=use_real_llm)
+    _append_run_log(
+        log_path,
+        f"START mode={mode} duration_minutes={duration_minutes} symbols={','.join(symbols)} "
+        f"use_real_llm={use_real_llm} model={agent.model_name}",
+    )
     started = time.time()
     end = started + duration_minutes * 60.0
     decisions: List[Dict[str, Any]] = []
@@ -99,6 +118,11 @@ def run_dry_run(
             )
             write_decision(out, decision)
             decisions.append(decision)
+            _append_run_log(
+                log_path,
+                f"TICK={tick} symbol={decision.get('symbol')} final={decision.get('final_decision')} "
+                f"parse_error={decision.get('parse_error')} order_sent={decision.get('order_sent')}",
+            )
         if duration_minutes <= 0.05:
             break
         if time.time() >= end:
@@ -121,9 +145,14 @@ def run_dry_run(
         "real_llm_used": agent.real_llm_used,
         "fallback_to_mock": agent.fallback_to_mock,
         "all_order_sent_false": all(not d.get("order_sent") for d in decisions),
+        "run_log_path": str(log_path),
         "decisions": [{"decision_id": d["decision_id"], "symbol": d["symbol"], "final_decision": d["final_decision"]} for d in decisions],
     }
     write_json(out / "stage4_ai_decision_summary.json", summary)
+    _append_run_log(
+        log_path,
+        f"END decision_count={len(decisions)} tick_count={tick} all_order_sent_false={summary['all_order_sent_false']}",
+    )
     return summary
 
 

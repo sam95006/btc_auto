@@ -36,23 +36,26 @@ def _as_list(raw: Any) -> List[Any]:
 def parse_llm_decision(raw: Dict[str, Any], *, symbol: str) -> Tuple[Dict[str, Any], bool, str]:
     """Return (proposal, parse_ok, parse_error)."""
     if not raw or not isinstance(raw, dict):
-        return skip_proposal(symbol, "empty_llm_response"), False, "empty_llm_response"
+        return skip_proposal(symbol, "empty_llm_response", "empty_llm_response"), False, "empty_llm_response"
 
     missing = [f for f in LLM_DECISION_FIELDS if f not in raw]
     if missing:
-        return skip_proposal(symbol, f"missing_fields:{','.join(missing)}"), False, f"missing_fields:{','.join(missing)}"
+        err = f"missing_fields:{','.join(missing)}"
+        return skip_proposal(symbol, err, "missing_fields"), False, err
 
     action = str(raw.get("final_action") or "skip").strip().lower()
     if action not in VALID_ACTIONS:
-        return skip_proposal(symbol, f"invalid_final_action:{action}"), False, f"invalid_final_action:{action}"
+        err = f"invalid_final_action:{action}"
+        return skip_proposal(symbol, err, "invalid_final_action"), False, err
 
     side = str(raw.get("candidate_side") or "NONE").strip().upper()
     if side not in VALID_SIDES:
-        return skip_proposal(symbol, f"invalid_candidate_side:{side}"), False, f"invalid_candidate_side:{side}"
+        err = f"invalid_candidate_side:{side}"
+        return skip_proposal(symbol, err, "invalid_candidate_side"), False, err
 
     conf = _as_float(raw.get("confidence"))
     if conf < 0 or conf > 1:
-        return skip_proposal(symbol, "confidence_out_of_range"), False, "confidence_out_of_range"
+        return skip_proposal(symbol, "confidence_out_of_range", "confidence_out_of_range"), False, "confidence_out_of_range"
 
     sym = str(raw.get("symbol") or symbol).upper()
     proposal = {
@@ -77,7 +80,7 @@ def parse_llm_decision(raw: Dict[str, Any], *, symbol: str) -> Tuple[Dict[str, A
     return proposal, True, ""
 
 
-def skip_proposal(symbol: str, reason: str) -> Dict[str, Any]:
+def skip_proposal(symbol: str, reason: str, parse_error_type: str = "parse_error") -> Dict[str, Any]:
     return {
         "final_action": "skip",
         "symbol": symbol.upper(),
@@ -93,4 +96,7 @@ def skip_proposal(symbol: str, reason: str) -> Dict[str, Any]:
         "requires_manual_review": True,
         "position_size_suggestion": 0.0,
         "parse_error": True,
+        "parse_error_type": parse_error_type,
+        "raw_content_empty": parse_error_type in {"empty_llm_response", "content_empty"},
+        "order_sent": False,
     }

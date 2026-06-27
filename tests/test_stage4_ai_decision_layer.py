@@ -73,7 +73,7 @@ class Stage4LLMSchemaTests(unittest.TestCase):
             def availability(self):
                 return {"real_llm_available": True, "model_name": "test-model"}
 
-            def complete_json(self, messages):
+            def complete_json(self, messages, prompt_hash=""):
                 return {"status": "error", "parsed": {}, "error": "bad_json", "raw_text": "not json"}
 
         agent = Stage4AIDecisionAgent(use_real_llm=False, llm_client=FakeLLM())
@@ -273,6 +273,242 @@ class Stage4DryRunIntegrationTests(unittest.TestCase):
                 self.assertTrue(v["passed"], v.get("errors"))
             finally:
                 os.environ.pop("STAGE4_OUTPUT_DIR", None)
+
+    def test_dry_run_log_path_auto_created(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            os.environ["STAGE4_OUTPUT_DIR"] = str(out)
+            try:
+                from tools.research.run_stage4_ai_decision_dry_run import run_dry_run
+
+                with patch(
+                    "tools.research.run_stage4_ai_decision_dry_run._fetch_market",
+                    return_value={"last_price": 3250, "prev_price_24h": 3200, "symbol": "ETHUSDT"},
+                ), patch(
+                    "tools.research.run_stage4_ai_decision_dry_run._fetch_account",
+                    return_value={"available_balance": 5000, "balance_read_ok": True, "open_positions": 0},
+                ):
+                    summary = run_dry_run(
+                        duration_minutes=0.01,
+                        poll_interval_seconds=0,
+                        symbols=["ETHUSDT"],
+                        output_dir=out,
+                    )
+                log_path = Path(summary["run_log_path"])
+                self.assertTrue(log_path.is_file())
+                text = log_path.read_text(encoding="utf-8")
+                self.assertIn("START", text)
+                self.assertIn("END", text)
+            finally:
+                os.environ.pop("STAGE4_OUTPUT_DIR", None)
+
+
+class Stage4ResponseParserTests(unittest.TestCase):
+    def test_plain_json_parse_ok(self) -> None:
+        from tools.research.stage4_response_parser import parse_llm_response_text
+
+        parsed, ok, err = parse_llm_response_text('{"final_action":"skip","confidence":0.1}')
+        self.assertTrue(ok, err)
+        self.assertEqual(parsed["final_action"], "skip")
+
+    def test_markdown_json_code_block_parse_ok(self) -> None:
+        from tools.research.stage4_response_parser import parse_llm_response_text
+
+        text = '```json\n{"final_action":"skip","candidate_side":"NONE","confidence":0.0}\n```'
+        parsed, ok, err = parse_llm_response_text(text)
+        self.assertTrue(ok, err)
+        self.assertEqual(parsed["candidate_side"], "NONE")
+
+    def test_malformed_json_skip(self) -> None:
+        from tools.research.stage4_response_parser import parse_llm_response_text
+
+        parsed, ok, err = parse_llm_response_text("not-json-at-all")
+        self.assertFalse(ok)
+        self.assertEqual(parsed, {})
+        self.assertTrue(err)
+
+    def test_missing_choices_path_empty(self) -> None:
+        from tools.research.stage4_response_parser import extract_openai_compat_content
+
+        content, path, finish = extract_openai_compat_content({"choices": []})
+        self.assertEqual(content, "")
+        self.assertEqual(path, "choices[missing]")
+        self.assertIsNone(finish)
+
+
+class Stage4LLMClientTests(unittest.TestCase):
+    def test_empty_llm_response_skips(self) -> None:
+        class EmptyLLM:
+            def complete_json(self, messages, prompt_hash=""):
+                return {
+                    "status": "error",
+                    "error": "content_empty",
+                    "error_type": "content_empty",
+                    "parsed": {},
+                    "raw_text": "",
+                    "raw_content_empty": True,
+                }
+
+        agent = Stage4AIDecisionAgent(use_real_llm=False, llm_client=EmptyLLM())
+        agent.real_llm_used = True
+        agent.is_mock_ai = False
+        agent.model_name = "test-model"
+        agent.decision_source = "ai_decision_agent"
+        decision = agent.decide(
+            symbol="ETHUSDT",
+            market_context={"last_price": 3250, "prev_price_24h": 3200},
+            account_context={"available_balance": 5000},
+        )
+        self.assertFalse(decision.get("order_sent"))
+        self.assertEqual(decision.get("final_decision"), "skip")
+        self.assertTrue(decision.get("parse_error"))
+
+    def test_rate_limit_retry_then_skip(self) -> None:
+        class FlakyLLM:
+            def availability(self):
+                return {"real_llm_available": True}
+
+            def complete_json(self, messages, prompt_hash=""):
+                return {
+                    "status": "error",
+                    "error": "content_empty",
+                    "error_type": "content_empty",
+                    "parsed": {},
+                    "raw_text": "",
+                    "raw_content_empty": True,
+                }
+
+        agent = Stage4AIDecisionAgent(use_real_llm=False, llm_client=FlakyLLM())
+        agent.real_llm_used = True
+        agent.is_mock_ai = False
+        agent.model_name = "test-model"
+        agent.decision_source = "ai_decision_agent"
+        decision = agent.decide(
+            symbol="ETHUSDT",
+            market_context={"last_price": 3250, "prev_price_24h": 3200},
+            account_context={"available_balance": 5000},
+        )
+        self.assertFalse(decision.get("order_sent"))
+
+    def test_client_retries_rate_limit_then_ok(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            os.environ["STAGE4_OUTPUT_DIR"] = str(Path(tmp))
+            try:
+                from tools.research.stage4_llm_client import Stage4LLMClient, Stage4LLMConfig
+                import urllib.error
+
+                client = Stage4LLMClient(load_env=False)
+                client.config = Stage4LLMConfig(
+                    provider="groq",
+                    model="llama-3.3-70b-versatile",
+                    api_key_env="GROQ_API_KEY_PRIMARY",
+                    endpoint="https://api.groq.com/openai/v1/chat/completions",
+                )
+                client.available = True
+                calls = {"n": 0}
+
+                def fake_post(url, headers, payload):
+                    calls["n"] += 1
+                    if calls["n"] == 1:
+                        raise urllib.error.HTTPError(url, 429, "rate", hdrs=None, fp=None)
+                    return (
+                        200,
+                        {
+                            "choices": [
+                                {
+                                    "message": {
+                                        "content": '{"final_action":"skip","symbol":"ETHUSDT","candidate_side":"NONE","confidence":0.0,"why_enter":"","why_skip":"ok","side_reason":"","confidence_reason":"","risk_notes":[],"patch_awareness":"","uncertainty":"","requires_manual_review":false}'
+                                    },
+                                    "finish_reason": "stop",
+                                }
+                            ]
+                        },
+                    )
+
+                with patch.object(client, "_http_post", side_effect=fake_post):
+                    with patch.dict(os.environ, {"GROQ_API_KEY_PRIMARY": "test-key"}):
+                        result = client.complete_json([{"role": "user", "content": "hi"}], prompt_hash="retry")
+                self.assertEqual(result.get("status"), "ok")
+                self.assertGreaterEqual(calls["n"], 2)
+            finally:
+                os.environ.pop("STAGE4_OUTPUT_DIR", None)
+
+    def test_debug_log_excludes_api_key(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            os.environ["STAGE4_OUTPUT_DIR"] = str(Path(tmp))
+            try:
+                from tools.research.stage4_llm_client import append_debug_log
+
+                append_debug_log(
+                    {
+                        "error_message_safe": "Authorization Bearer sk-testsecret123456789",
+                        "raw_content_excerpt": "api_key=supersecret",
+                    }
+                )
+                log_path = Path(tmp) / "llm_client_debug.jsonl"
+                text = log_path.read_text(encoding="utf-8")
+                self.assertNotIn("sk-testsecret123456789", text)
+                self.assertNotIn("supersecret", text)
+                self.assertIn("[REDACTED]", text)
+            finally:
+                os.environ.pop("STAGE4_OUTPUT_DIR", None)
+
+    def test_missing_choices_writes_diagnostic(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            os.environ["STAGE4_OUTPUT_DIR"] = str(Path(tmp))
+            try:
+                from tools.research.stage4_llm_client import Stage4LLMClient, Stage4LLMConfig
+
+                client = Stage4LLMClient(load_env=False)
+                client.config = Stage4LLMConfig(
+                    provider="groq",
+                    model="llama-3.3-70b-versatile",
+                    api_key_env="GROQ_API_KEY_PRIMARY",
+                    endpoint="https://api.groq.com/openai/v1/chat/completions",
+                )
+                client.available = True
+                client.timeout = 5
+                client.max_tokens = 50
+                with patch.object(client, "_http_post", return_value=(200, {"choices": []})):
+                    result = client.complete_json([{"role": "user", "content": "hi"}], prompt_hash="abc")
+                self.assertEqual(result.get("error_type"), "content_empty")
+                log_text = (Path(tmp) / "llm_client_debug.jsonl").read_text(encoding="utf-8")
+                self.assertIn("abc", log_text)
+            finally:
+                os.environ.pop("STAGE4_OUTPUT_DIR", None)
+
+
+class Stage4ProviderHealthTests(unittest.TestCase):
+    def test_provider_health_check_parse_ok(self) -> None:
+        from tools.research.check_stage4_llm_provider import run_health_check
+
+        fake_result = {
+            "status": "ok",
+            "provider": "groq",
+            "model": "llama-3.3-70b-versatile",
+            "http_status": 200,
+            "raw_content_length": 120,
+            "parsed": {
+                "final_action": "skip",
+                "symbol": "ETHUSDT",
+                "candidate_side": "NONE",
+                "confidence": 0.0,
+                "why_enter": "",
+                "why_skip": "health_check",
+                "side_reason": "",
+                "confidence_reason": "health_check",
+                "risk_notes": [],
+                "patch_awareness": "",
+                "uncertainty": "",
+                "requires_manual_review": False,
+            },
+        }
+        with patch("tools.research.check_stage4_llm_provider.Stage4LLMClient") as mock_cls:
+            mock_cls.return_value.availability.return_value = {"real_llm_available": True}
+            mock_cls.return_value.complete_json.return_value = fake_result
+            report = run_health_check(provider="groq", model="llama-3.3-70b-versatile")
+        self.assertTrue(report["provider_health_check_passed"])
+        self.assertTrue(report["json_parse_ok"])
 
 
 if __name__ == "__main__":

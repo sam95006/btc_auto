@@ -256,14 +256,16 @@ class Stage4AIDecisionAgent:
             current_open_positions=open_positions,
         )
         prompt_hash = prompt_fingerprint(messages)
-        result = self.llm_client.complete_json(messages)
+        result = self.llm_client.complete_json(messages, prompt_hash=prompt_hash)
         parsed = result.get("parsed") or {}
         proposal, ok, err = parse_llm_decision(parsed, symbol=symbol)
         if not ok or result.get("status") != "ok":
+            err_type = result.get("parse_error_type") or result.get("error_type") or err or "llm_parse_failed"
             proposal["parse_error"] = True
+            proposal["parse_error_type"] = err_type
+            proposal["raw_content_empty"] = bool(result.get("raw_content_empty"))
             proposal["why_skip"] = err or result.get("error") or "llm_parse_failed"
-            sr_pre = {"approved": False, "veto_reason": proposal["why_skip"]}
-            return proposal, prompt_hash, False, result.get("error") or err
+            return proposal, prompt_hash, False, err or result.get("error") or err
         return proposal, prompt_hash, True, ""
 
     def decide(
@@ -358,6 +360,8 @@ class Stage4AIDecisionAgent:
             "reasoning_summary": proposal.get("why_enter") or proposal.get("why_skip") or "",
             "regime": proposal.get("regime", "unknown"),
             "parse_error": parse_error,
+            "parse_error_type": proposal.get("parse_error_type"),
+            "raw_content_empty": proposal.get("raw_content_empty"),
             "safety_constraints": safety_constraints_from_env(),
             "risk_supervisor_result": sr,
             "final_decision": final_decision,

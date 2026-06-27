@@ -1,14 +1,26 @@
-"""Stage 4 LLM client — trusted non-China providers only; dry-run decisions."""
+"""Stage 4 LLM client — trusted non-China providers; dry-run decisions."""
 from __future__ import annotations
 
 import json
 import os
 import re
+import time
 import urllib.error
 import urllib.request
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+from tools.research.bybit_demo_learning_common import utc_now_iso
+from tools.research.stage4_response_parser import (
+    extract_anthropic_content,
+    extract_gemini_content,
+    extract_ollama_content,
+    extract_openai_compat_content,
+    parse_llm_response_text,
+    safe_excerpt,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -32,6 +44,16 @@ DEFAULT_MODELS = {
     "cerebras": os.environ.get("STAGE4_LLM_MODEL", "llama-3.3-70b"),
 }
 
+RETRYABLE_HTTP = frozenset({408, 429, 500, 502, 503, 504})
+MAX_RETRIES = 2
+BACKOFF_SECONDS = (1.0, 2.5)
+
+HTTP_HEADERS_BASE = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "User-Agent": "Mozilla/5.0 NEXUS-Stage4/1.0",
+}
+
 
 def _load_local_env() -> None:
     env_path = ROOT / ".env"
@@ -52,15 +74,38 @@ def _model_allowed(model: str) -> bool:
     return not BLOCKED_MODEL_PATTERNS.search(model or "")
 
 
-def _http_post_json(url: str, headers: Dict[str, str], payload: Dict[str, Any], timeout: int) -> Dict[str, Any]:
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode("utf-8"),
-        headers=headers,
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+def resolve_debug_log_path() -> Path:
+    import os as _os
+
+    custom = _os.environ.get("STAGE4_OUTPUT_DIR", "").strip()
+    if custom:
+        out = Path(custom)
+    else:
+        nexus = _os.environ.get("NEXUS_DATA_DIR", "").strip()
+        if nexus:
+            candidate = Path(nexus) / "stage4_ai_decisions"
+            try:
+                candidate.mkdir(parents=True, exist_ok=True)
+                probe = candidate / ".write_probe"
+                probe.write_text("ok", encoding="utf-8")
+                probe.unlink(missing_ok=True)
+                out = candidate
+            except OSError:
+                out = ROOT / "data" / "external_alpha" / "stage4_ai_decisions"
+        else:
+            out = ROOT / "data" / "external_alpha" / "stage4_ai_decisions"
+    out.mkdir(parents=True, exist_ok=True)
+    return out / "llm_client_debug.jsonl"
+
+
+def append_debug_log(row: Dict[str, Any]) -> None:
+    safe_row = dict(row)
+    for key in ("error_message_safe", "raw_content_excerpt", "error"):
+        if key in safe_row and safe_row[key]:
+            safe_row[key] = safe_excerpt(str(safe_row[key]))
+    path = resolve_debug_log_path()
+    with path.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(safe_row, ensure_ascii=False) + "\n")
 
 
 @dataclass
@@ -77,16 +122,25 @@ class Stage4LLMClient:
     def __init__(self, *, provider: str = "", model: str = "", load_env: bool = True) -> None:
         if load_env:
             _load_local_env()
-        self.timeout = int(os.environ.get("NEXUS_LLM_TIMEOUT_SECONDS", "12"))
+        self.timeout = int(os.environ.get("NEXUS_LLM_TIMEOUT_SECONDS", "20"))
         self.max_tokens = int(os.environ.get("NEXUS_LLM_MAX_COMPLETION_TOKENS", "700"))
         self.config = self._resolve_config(provider=provider, model=model)
         self.available = self.config is not None and self._provider_ready(self.config)
 
     def _resolve_config(self, *, provider: str, model: str) -> Optional[Stage4LLMConfig]:
         explicit = (provider or os.environ.get("STAGE4_LLM_PROVIDER", "auto")).strip().lower()
+        provider_defaults = {
+            "groq": ("GROQ_API_KEY_PRIMARY", OPENAI_COMPAT_URLS["groq"]),
+            "openai": ("OPENAI_API_KEY", OPENAI_COMPAT_URLS["openai"]),
+            "anthropic": ("ANTHROPIC_API_KEY", "https://api.anthropic.com/v1/messages"),
+            "gemini": ("GOOGLE_API_KEY", "https://generativelanguage.googleapis.com/v1beta/models"),
+            "cerebras": ("CEREBRAS_API_KEY", "https://api.cerebras.ai/v1/chat/completions"),
+            "ollama": ("", ""),
+        }
         candidates: List[Tuple[str, str, str, str]] = []
         if explicit != "auto":
-            candidates.append((explicit, model, "", ""))
+            key_env, endpoint = provider_defaults.get(explicit, ("", ""))
+            candidates.append((explicit, model, key_env, endpoint))
         else:
             for prov, key_env, endpoint in (
                 ("groq", "GROQ_API_KEY_PRIMARY", OPENAI_COMPAT_URLS["groq"]),
@@ -133,57 +187,239 @@ class Stage4LLMClient:
             "reason": "",
         }
 
-    def complete_json(self, messages: List[Dict[str, str]]) -> Dict[str, Any]:
+    def complete_json(
+        self,
+        messages: List[Dict[str, str]],
+        *,
+        prompt_hash: str = "",
+    ) -> Dict[str, Any]:
         if not self.available or not self.config:
-            return {"status": "error", "error": "llm_unavailable", "parsed": {}, "raw_text": ""}
+            return self._error_result("llm_unavailable", error_type="llm_unavailable")
 
         cfg = self.config
-        try:
-            if cfg.provider in {"groq", "openai", "cerebras"}:
-                return self._openai_compat(cfg, messages)
-            if cfg.provider == "anthropic":
-                return self._anthropic(cfg, messages)
-            if cfg.provider == "gemini":
-                return self._gemini(cfg, messages)
-            if cfg.provider == "ollama":
-                return self._ollama(cfg, messages)
-        except Exception as exc:
-            return {"status": "error", "error": str(exc)[:200], "parsed": {}, "raw_text": ""}
-        return {"status": "error", "error": "unsupported_provider", "parsed": {}, "raw_text": ""}
+        key_chain = self._api_key_chain(cfg)
+        last_result: Dict[str, Any] = self._error_result("no_attempt", error_type="no_attempt")
 
-    def _openai_compat(self, cfg: Stage4LLMConfig, messages: List[Dict[str, str]]) -> Dict[str, Any]:
-        url = cfg.endpoint
-        if cfg.provider == "cerebras":
-            url = cfg.endpoint
-        key = os.environ.get(cfg.api_key_env, "")
+        for key_env in key_chain:
+            for attempt in range(MAX_RETRIES + 1):
+                started = time.perf_counter()
+                request_id = str(uuid.uuid4())
+                try:
+                    if cfg.provider in {"groq", "openai", "cerebras"}:
+                        result = self._openai_compat(cfg, messages, key_env=key_env)
+                    elif cfg.provider == "anthropic":
+                        result = self._anthropic(cfg, messages, key_env=key_env)
+                    elif cfg.provider == "gemini":
+                        result = self._gemini(cfg, messages, key_env=key_env)
+                    elif cfg.provider == "ollama":
+                        result = self._ollama(cfg, messages)
+                    else:
+                        result = self._error_result("unsupported_provider", error_type="unsupported_provider")
+
+                    latency_ms = int((time.perf_counter() - started) * 1000)
+                    result["latency_ms"] = latency_ms
+                    result["retry_count"] = attempt
+                    result["request_id"] = request_id
+                    result["prompt_hash"] = prompt_hash
+
+                    self._write_debug_row(cfg, prompt_hash, request_id, result, attempt, latency_ms)
+
+                    if result.get("status") == "ok":
+                        return result
+
+                    err_type = str(result.get("error_type") or "")
+                    if err_type in {"http_forbidden", "http_unauthorized", "json_decode_error"}:
+                        last_result = result
+                        break
+                    if attempt < MAX_RETRIES and self._retryable(result):
+                        time.sleep(BACKOFF_SECONDS[min(attempt, len(BACKOFF_SECONDS) - 1)])
+                        continue
+                    last_result = result
+                    break
+                except urllib.error.HTTPError as exc:
+                    latency_ms = int((time.perf_counter() - started) * 1000)
+                    body = exc.read().decode("utf-8", errors="replace")[:500]
+                    result = self._error_result(
+                        f"http_{exc.code}",
+                        error_type=self._http_error_type(exc.code),
+                        http_status=exc.code,
+                        error_message_safe=safe_excerpt(body),
+                        raw_text="",
+                        latency_ms=latency_ms,
+                        retry_count=attempt,
+                        request_id=request_id,
+                        prompt_hash=prompt_hash,
+                    )
+                    self._write_debug_row(cfg, prompt_hash, request_id, result, attempt, latency_ms)
+                    if attempt < MAX_RETRIES and exc.code in RETRYABLE_HTTP:
+                        time.sleep(BACKOFF_SECONDS[min(attempt, len(BACKOFF_SECONDS) - 1)])
+                        last_result = result
+                        continue
+                    last_result = result
+                    if exc.code in {401, 403}:
+                        break
+                except TimeoutError:
+                    latency_ms = int((time.perf_counter() - started) * 1000)
+                    result = self._error_result(
+                        "timeout",
+                        error_type="timeout",
+                        latency_ms=latency_ms,
+                        retry_count=attempt,
+                        request_id=request_id,
+                        prompt_hash=prompt_hash,
+                    )
+                    self._write_debug_row(cfg, prompt_hash, request_id, result, attempt, latency_ms)
+                    if attempt < MAX_RETRIES:
+                        time.sleep(BACKOFF_SECONDS[min(attempt, len(BACKOFF_SECONDS) - 1)])
+                        last_result = result
+                        continue
+                    last_result = result
+                except Exception as exc:
+                    latency_ms = int((time.perf_counter() - started) * 1000)
+                    result = self._error_result(
+                        str(exc)[:200],
+                        error_type="network_error",
+                        latency_ms=latency_ms,
+                        retry_count=attempt,
+                        request_id=request_id,
+                        prompt_hash=prompt_hash,
+                    )
+                    self._write_debug_row(cfg, prompt_hash, request_id, result, attempt, latency_ms)
+                    last_result = result
+                    break
+
+        return last_result
+
+    def _api_key_chain(self, cfg: Stage4LLMConfig) -> List[str]:
+        if cfg.provider == "groq":
+            keys = []
+            for env_name in ("GROQ_API_KEY_PRIMARY", "GROQ_API_KEY_SECONDARY"):
+                if os.environ.get(env_name):
+                    keys.append(env_name)
+            return keys or [cfg.api_key_env]
+        return [cfg.api_key_env] if cfg.api_key_env else [""]
+
+    @staticmethod
+    def _retryable(result: Dict[str, Any]) -> bool:
+        err_type = str(result.get("error_type") or "")
+        code = int(result.get("http_status") or 0)
+        return err_type in {"timeout", "rate_limit", "server_error", "network_error"} or code in RETRYABLE_HTTP
+
+    @staticmethod
+    def _http_error_type(code: int) -> str:
+        if code == 429:
+            return "rate_limit"
+        if code in {401, 403}:
+            return "http_forbidden" if code == 403 else "http_unauthorized"
+        if code >= 500:
+            return "server_error"
+        return f"http_{code}"
+
+    @staticmethod
+    def _error_result(error: str, *, error_type: str = "", **extra: Any) -> Dict[str, Any]:
+        row = {
+            "status": "error",
+            "error": error,
+            "error_type": error_type or error,
+            "parsed": {},
+            "raw_text": "",
+            "raw_content_length": 0,
+            "raw_content_empty": True,
+            "http_status": extra.get("http_status"),
+            "finish_reason": None,
+            "response_path_used": "",
+        }
+        row.update(extra)
+        return row
+
+    def _http_post(
+        self,
+        url: str,
+        headers: Dict[str, str],
+        payload: Dict[str, Any],
+    ) -> Tuple[int, Dict[str, Any]]:
+        merged = {**HTTP_HEADERS_BASE, **headers}
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers=merged,
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+            status = int(getattr(resp, "status", None) or resp.getcode() or 200)
+            body = json.loads(resp.read().decode("utf-8"))
+            return status, body
+
+    def _finalize_content(
+        self,
+        cfg: Stage4LLMConfig,
+        *,
+        content: str,
+        response_path: str,
+        finish_reason: Optional[str],
+        http_status: int,
+    ) -> Dict[str, Any]:
+        parsed, ok, parse_error_type = parse_llm_response_text(content)
+        raw_len = len(content or "")
+        base = {
+            "provider": cfg.provider,
+            "model": cfg.model,
+            "raw_text": content,
+            "parsed": parsed if ok else {},
+            "raw_content_length": raw_len,
+            "raw_content_empty": raw_len == 0,
+            "finish_reason": finish_reason,
+            "response_path_used": response_path,
+            "http_status": http_status,
+            "parse_error_type": parse_error_type if not ok else None,
+        }
+        if raw_len == 0:
+            return self._error_result("content_empty", error_type="content_empty", **base)
+        if not ok:
+            return self._error_result(
+                parse_error_type or "json_parse_failed",
+                error_type=parse_error_type or "json_parse_failed",
+                **base,
+            )
+        return {"status": "ok", "error": "", "error_type": None, **base}
+
+    def _openai_compat(
+        self,
+        cfg: Stage4LLMConfig,
+        messages: List[Dict[str, str]],
+        *,
+        key_env: str,
+    ) -> Dict[str, Any]:
+        key = os.environ.get(key_env, "")
         payload = {
             "model": cfg.model,
             "messages": messages,
             "temperature": 0.2,
+            "max_tokens": self.max_tokens,
             "max_completion_tokens": self.max_tokens,
             "response_format": {"type": "json_object"},
         }
-        raw = _http_post_json(
-            url,
-            {
-                "Authorization": f"Bearer {key}",
-                "Content-Type": "application/json",
-            },
+        status, raw = self._http_post(
+            cfg.endpoint,
+            {"Authorization": f"Bearer {key}"},
             payload,
-            self.timeout,
         )
-        content = (((raw.get("choices") or [{}])[0].get("message") or {}).get("content")) or "{}"
-        parsed = self._parse_json(content)
-        return {
-            "status": "ok" if parsed else "error",
-            "provider": cfg.provider,
-            "model": cfg.model,
-            "raw_text": content,
-            "parsed": parsed,
-            "error": "" if parsed else "json_parse_failed",
-        }
+        content, path, finish = extract_openai_compat_content(raw)
+        return self._finalize_content(
+            cfg,
+            content=content,
+            response_path=path,
+            finish_reason=finish,
+            http_status=status,
+        )
 
-    def _anthropic(self, cfg: Stage4LLMConfig, messages: List[Dict[str, str]]) -> Dict[str, Any]:
+    def _anthropic(
+        self,
+        cfg: Stage4LLMConfig,
+        messages: List[Dict[str, str]],
+        *,
+        key_env: str,
+    ) -> Dict[str, Any]:
         system = next((m["content"] for m in messages if m.get("role") == "system"), "")
         user_parts = [m["content"] for m in messages if m.get("role") == "user"]
         payload = {
@@ -192,48 +428,46 @@ class Stage4LLMClient:
             "system": system,
             "messages": [{"role": "user", "content": "\n".join(user_parts)}],
         }
-        raw = _http_post_json(
+        status, raw = self._http_post(
             cfg.endpoint,
             {
-                "x-api-key": os.environ.get(cfg.api_key_env, ""),
+                "x-api-key": os.environ.get(key_env, ""),
                 "anthropic-version": "2023-06-01",
-                "Content-Type": "application/json",
             },
             payload,
-            self.timeout,
         )
-        blocks = raw.get("content") or []
-        content = next((b.get("text") for b in blocks if b.get("type") == "text"), "{}")
-        parsed = self._parse_json(content)
-        return {
-            "status": "ok" if parsed else "error",
-            "provider": cfg.provider,
-            "model": cfg.model,
-            "raw_text": content,
-            "parsed": parsed,
-            "error": "" if parsed else "json_parse_failed",
-        }
+        content, path, finish = extract_anthropic_content(raw)
+        return self._finalize_content(
+            cfg,
+            content=content,
+            response_path=path,
+            finish_reason=finish,
+            http_status=status,
+        )
 
-    def _gemini(self, cfg: Stage4LLMConfig, messages: List[Dict[str, str]]) -> Dict[str, Any]:
-        key = os.environ.get(cfg.api_key_env, "")
+    def _gemini(
+        self,
+        cfg: Stage4LLMConfig,
+        messages: List[Dict[str, str]],
+        *,
+        key_env: str,
+    ) -> Dict[str, Any]:
+        key = os.environ.get(key_env, "")
         prompt = "\n".join(m["content"] for m in messages)
         url = f"{cfg.endpoint}/{cfg.model}:generateContent?key={key}"
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"responseMimeType": "application/json"},
         }
-        raw = _http_post_json(url, {"Content-Type": "application/json"}, payload, self.timeout)
-        parts = (((raw.get("candidates") or [{}])[0].get("content") or {}).get("parts") or [])
-        content = parts[0].get("text") if parts else "{}"
-        parsed = self._parse_json(content)
-        return {
-            "status": "ok" if parsed else "error",
-            "provider": cfg.provider,
-            "model": cfg.model,
-            "raw_text": content,
-            "parsed": parsed,
-            "error": "" if parsed else "json_parse_failed",
-        }
+        status, raw = self._http_post(url, {}, payload)
+        content, path, finish = extract_gemini_content(raw)
+        return self._finalize_content(
+            cfg,
+            content=content,
+            response_path=path,
+            finish_reason=finish,
+            http_status=status,
+        )
 
     def _ollama(self, cfg: Stage4LLMConfig, messages: List[Dict[str, str]]) -> Dict[str, Any]:
         url = f"{cfg.endpoint.rstrip('/')}/api/chat"
@@ -243,21 +477,43 @@ class Stage4LLMClient:
             "stream": False,
             "format": "json",
         }
-        raw = _http_post_json(url, {"Content-Type": "application/json"}, payload, self.timeout)
-        content = (raw.get("message") or {}).get("content") or "{}"
-        parsed = self._parse_json(content)
-        return {
-            "status": "ok" if parsed else "error",
-            "provider": cfg.provider,
-            "model": cfg.model,
-            "raw_text": content,
-            "parsed": parsed,
-            "error": "" if parsed else "json_parse_failed",
-        }
+        status, raw = self._http_post(url, {}, payload)
+        content, path, finish = extract_ollama_content(raw)
+        return self._finalize_content(
+            cfg,
+            content=content,
+            response_path=path,
+            finish_reason=finish,
+            http_status=status,
+        )
 
-    @staticmethod
-    def _parse_json(text: str) -> Dict[str, Any]:
-        from backend.llm.structured_output_parser import parse_json_content
-
-        parsed = parse_json_content(text)
-        return parsed if isinstance(parsed, dict) else {}
+    def _write_debug_row(
+        self,
+        cfg: Stage4LLMConfig,
+        prompt_hash: str,
+        request_id: str,
+        result: Dict[str, Any],
+        retry_count: int,
+        latency_ms: int,
+    ) -> None:
+        raw_text = str(result.get("raw_text") or "")
+        append_debug_log(
+            {
+                "created_at_utc": utc_now_iso(),
+                "provider": cfg.provider,
+                "model_name": cfg.model,
+                "request_id": request_id,
+                "prompt_hash": prompt_hash,
+                "http_status": result.get("http_status"),
+                "success": result.get("status") == "ok",
+                "error_type": result.get("error_type"),
+                "error_message_safe": safe_excerpt(str(result.get("error") or result.get("error_message_safe") or "")),
+                "raw_content_length": result.get("raw_content_length", len(raw_text)),
+                "raw_content_empty": bool(result.get("raw_content_empty", not raw_text)),
+                "raw_content_excerpt": safe_excerpt(raw_text),
+                "finish_reason": result.get("finish_reason"),
+                "latency_ms": latency_ms,
+                "retry_count": retry_count,
+                "response_path_used": result.get("response_path_used") or "",
+            }
+        )
