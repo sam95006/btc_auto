@@ -65,6 +65,27 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 2. On failure: log + write fail summary; **do not** start background dry-run.
 3. On success: start background real-LLM dry-run.
 
+### Strict-env read-only exception (Stage 4.2b)
+
+When all of the following hold:
+
+- `STAGE3_STARTUP_MODE=idle`
+- `STAGE4_DRY_RUN_ONLY=true`
+- `STAGE4_ORDER_ALLOWED=false`
+- `STAGE4_REQUIRE_REAL_LLM=true`
+- `STAGE4_ALLOW_MOCK_FALLBACK=false`
+- `OPERATOR_GO_STAGE3_24H_RUNNER=false`
+
+`check_bybit_demo_learning_env.py` allows read-only safety values:
+
+- `PAPER_ONLY=true`
+- `BYBIT_SHADOW_MODE=true`
+- `BYBIT_ORDER_ALLOWED=false`
+- `EXCHANGE_WRITE_ALLOWED=false`
+- `PRIVATE_ORDER_ENDPOINT_BLOCKED=true` (required)
+
+Still hard-fails if `REAL_MONEY`, `LIVE_TRADING`, `BYBIT_MAINNET_ALLOWED`, or `PRODUCTION_PROMOTION_ALLOWED` are true, or if runner/order flags are unsafe.
+
 ### Safety invariants (unchanged)
 
 - No orders sent in dry-run mode.

@@ -693,6 +693,82 @@ class Stage4RealLLMGuardTests(unittest.TestCase):
         self.assertEqual(report.get("groq_key_env_used"), "GROQ_API_KEY_PRIMARY")
 
 
+class Stage4StrictEnvReadonlyTests(unittest.TestCase):
+    def _stage4_readonly_env(self) -> dict[str, str]:
+        return {
+            "STAGE3_STARTUP_MODE": "idle",
+            "OPERATOR_GO_STAGE3_24H_RUNNER": "false",
+            "STAGE4_DRY_RUN_ONLY": "true",
+            "STAGE4_ORDER_ALLOWED": "false",
+            "STAGE4_REQUIRE_REAL_LLM": "true",
+            "STAGE4_ALLOW_MOCK_FALLBACK": "false",
+            "PRIVATE_ORDER_ENDPOINT_BLOCKED": "true",
+            "PAPER_ONLY": "true",
+            "BYBIT_SHADOW_MODE": "true",
+            "BYBIT_ORDER_ALLOWED": "false",
+            "EXCHANGE_WRITE_ALLOWED": "false",
+            "RESEARCH_ONLY": "true",
+            "BYBIT_DEMO_LEARNING_MODE": "true",
+            "BYBIT_ORDER_SCOPE": "demo_or_testnet_only",
+            "BYBIT_MAINNET_ALLOWED": "false",
+            "BYBIT_M0_BASE_URL": "https://api-demo.bybit.com",
+            "EXCHANGE_WRITE_SCOPE": "bybit_demo_or_testnet_only",
+            "REAL_MONEY": "false",
+            "LIVE_TRADING": "false",
+            "PRODUCTION_PROMOTION_ALLOWED": "false",
+            "ARM_ALLOWED": "false",
+            "MAX_MARGIN_USD": "20",
+            "MAX_LEVERAGE": "3",
+            "MAX_OPEN_POSITIONS": "1",
+            "REQUIRE_STOP_LOSS": "true",
+            "REQUIRE_MAX_HOLD": "true",
+            "REQUIRE_REFLECTION_ON_LOSS": "true",
+            "REQUIRE_PATCH_BEFORE_NEXT_SAME_SETUP": "true",
+            "NEXUS_DATA_DIR": "/data",
+            "BYBIT_DEMO_API_KEY": "test-demo-key",
+            "BYBIT_DEMO_API_SECRET": "test-demo-secret",
+        }
+
+    def test_stage4_readonly_allows_write_blocked_env(self) -> None:
+        from tools.research.check_bybit_demo_learning_env import run_strict_check
+
+        with patch.dict(os.environ, self._stage4_readonly_env(), clear=True), patch(
+            "tools.research.check_bybit_demo_learning_env.evidence_chain_ok",
+            return_value=True,
+        ), patch(
+            "tools.research.check_bybit_demo_learning_env.run_strict_check.__defaults__",
+            None,
+        ):
+            result = run_strict_check(load_local_env=False, check_package=False)
+        self.assertTrue(result["strict_env_passed"], result.get("strict_env_errors"))
+
+    def test_stage4_readonly_fails_without_require_real_llm(self) -> None:
+        from tools.research.check_bybit_demo_learning_env import run_strict_check
+
+        env = self._stage4_readonly_env()
+        env["STAGE4_REQUIRE_REAL_LLM"] = "false"
+        with patch.dict(os.environ, env, clear=True), patch(
+            "tools.research.check_bybit_demo_learning_env.evidence_chain_ok",
+            return_value=True,
+        ):
+            result = run_strict_check(load_local_env=False, check_package=False)
+        self.assertFalse(result["strict_env_passed"])
+        # Without REQUIRE_REAL_LLM, read-only exception is inactive → normal strict rules apply
+        self.assertIn("env_not_true:BYBIT_ORDER_ALLOWED", result["strict_env_errors"])
+
+    def test_stage4_readonly_fails_when_runner_enabled(self) -> None:
+        from tools.research.check_bybit_demo_learning_env import run_strict_check
+
+        env = self._stage4_readonly_env()
+        env["OPERATOR_GO_STAGE3_24H_RUNNER"] = "true"
+        with patch.dict(os.environ, env, clear=True), patch(
+            "tools.research.check_bybit_demo_learning_env.evidence_chain_ok",
+            return_value=True,
+        ):
+            result = run_strict_check(load_local_env=False, check_package=False)
+        self.assertFalse(result["strict_env_passed"])
+
+
 class Stage4ProviderHealthTests(unittest.TestCase):
     def test_provider_health_check_parse_ok(self) -> None:
         from tools.research.check_stage4_llm_provider import run_health_check
