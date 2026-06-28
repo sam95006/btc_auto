@@ -3,7 +3,15 @@ from __future__ import annotations
 
 import os
 import time
-from typing import Optional
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
+
+
+def _utc_iso_from_monotonic(target_mono: float) -> str:
+    if target_mono <= 0:
+        return ""
+    delta = target_mono - time.monotonic()
+    return datetime.fromtimestamp(time.time() + delta, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 class Stage4LLMRateGate:
@@ -44,6 +52,11 @@ class Stage4LLMRateGate:
     def in_backoff(self) -> bool:
         return time.monotonic() < self._backoff_until
 
+    def seconds_since_last_call(self) -> float:
+        if not self._last_call_at:
+            return 0.0
+        return max(0.0, time.monotonic() - self._last_call_at)
+
     def seconds_until_ready(self) -> float:
         now = time.monotonic()
         wait_backoff = max(0.0, self._backoff_until - now)
@@ -51,14 +64,17 @@ class Stage4LLMRateGate:
         wait_gap = max(0.0, min_gap - (now - self._last_call_at)) if self._last_call_at else 0.0
         return max(wait_backoff, wait_gap)
 
-    def acquire(self) -> bool:
-        """Return True if an LLM call may proceed now."""
+    def block_reason(self) -> str:
+        """Why acquire() would fail: backoff_active_skip or local_rate_gate_skip."""
         if self.in_backoff():
-            return False
+            return "backoff_active_skip"
         min_gap = self.min_interval_seconds()
         if self._last_call_at and (time.monotonic() - self._last_call_at) < min_gap:
-            return False
-        return True
+            return "local_rate_gate_skip"
+        return ""
+
+    def acquire(self) -> bool:
+        return not self.block_reason()
 
     def record_call_start(self) -> None:
         self._last_call_at = time.monotonic()
@@ -69,3 +85,12 @@ class Stage4LLMRateGate:
 
     def record_success(self) -> None:
         self._last_call_at = time.monotonic()
+
+    def status_dict(self) -> Dict[str, Any]:
+        return {
+            "seconds_since_last_llm_call": round(self.seconds_since_last_call(), 1),
+            "required_wait_seconds": round(self.seconds_until_ready(), 1),
+            "backoff_until_utc": _utc_iso_from_monotonic(self._backoff_until),
+            "in_backoff": self.in_backoff(),
+            "block_reason": self.block_reason(),
+        }

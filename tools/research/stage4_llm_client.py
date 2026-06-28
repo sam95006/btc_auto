@@ -86,13 +86,32 @@ class ProviderRateLimited(Exception):
         symbol: str = "",
         retry_count: int = 0,
         reason: str = "provider_rate_limited",
+        event_type: str = "",
+        call_kind: str = "decision",
+        gate_status: Dict[str, Any] | None = None,
+        http_status: int | None = None,
     ) -> None:
         self.provider = provider
         self.model_name = model_name
         self.symbol = symbol
         self.retry_count = retry_count
         self.reason = reason
+        self.event_type = event_type or _reason_to_event_type(reason)
+        self.call_kind = call_kind
+        self.gate_status = gate_status or {}
+        self.http_status = http_status
         super().__init__(reason)
+
+
+def _reason_to_event_type(reason: str) -> str:
+    mapping = {
+        "rate_limit": "provider_http_429",
+        "rate_limit_gate": "local_rate_gate_skip",
+        "backoff_active_skip": "backoff_active_skip",
+        "local_rate_gate_skip": "local_rate_gate_skip",
+        "empty_llm_response": "provider_quota_exhausted",
+    }
+    return mapping.get(reason, "provider_rate_limited")
 
 
 class RealLLMRequiredError(RuntimeError):
@@ -303,20 +322,26 @@ class Stage4LLMClient:
         prompt_hash: str = "",
         symbol: str = "",
         use_rate_gate: bool = True,
+        call_kind: str = "decision",
     ) -> Dict[str, Any]:
         if not self.available or not self.config:
             return self._error_result("llm_unavailable", error_type="llm_unavailable")
 
         cfg = self.config
         gate = Stage4LLMRateGate.shared()
-        if use_rate_gate and not gate.acquire():
-            return self._error_result(
-                "rate_limit_gate_blocked",
-                error_type="rate_limit_gate",
-                provider=cfg.provider,
-                model=cfg.model,
-                symbol=symbol,
-            )
+        if use_rate_gate:
+            block = gate.block_reason()
+            if block:
+                status = gate.status_dict()
+                return self._error_result(
+                    "rate_limit_gate_blocked",
+                    error_type=block,
+                    provider=cfg.provider,
+                    model=cfg.model,
+                    symbol=symbol,
+                    call_kind=call_kind,
+                    **status,
+                )
 
         if use_rate_gate:
             gate.record_call_start()
@@ -345,6 +370,7 @@ class Stage4LLMClient:
                     result["retry_count"] = attempt
                     result["request_id"] = request_id
                     result["prompt_hash"] = prompt_hash
+                    result["call_kind"] = call_kind
 
                     self._write_debug_row(cfg, prompt_hash, request_id, result, attempt, latency_ms)
 
@@ -445,7 +471,13 @@ class Stage4LLMClient:
     def is_rate_limited_result(result: Dict[str, Any]) -> bool:
         err_type = str(result.get("error_type") or "")
         code = int(result.get("http_status") or 0)
-        return err_type in {"rate_limit", "rate_limit_gate"} or code == 429
+        gate_types = {
+            "rate_limit",
+            "rate_limit_gate",
+            "local_rate_gate_skip",
+            "backoff_active_skip",
+        }
+        return err_type in gate_types or code == 429
 
     @staticmethod
     def _http_error_type(code: int) -> str:
@@ -657,5 +689,6 @@ class Stage4LLMClient:
                 "latency_ms": latency_ms,
                 "retry_count": retry_count,
                 "response_path_used": result.get("response_path_used") or "",
+                "call_kind": result.get("call_kind") or "decision",
             }
         )

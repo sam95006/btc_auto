@@ -67,7 +67,38 @@ def run_health_check(*, provider: str, model: str) -> dict:
             ),
         },
     ]
-    result = client.complete_json(messages, prompt_hash="health_check")
+    result = client.complete_json(messages, prompt_hash="health_check", call_kind="healthcheck")
+    err_type = str(result.get("error_type") or "")
+    if err_type in {"local_rate_gate_skip", "backoff_active_skip"}:
+        from tools.research.stage4_system_events import append_system_event
+
+        append_system_event(
+            {
+                "event_type": "healthcheck_skipped_by_gate",
+                "provider": provider,
+                "model_name": model,
+                "reason": err_type,
+                "call_kind": "healthcheck",
+                "seconds_since_last_llm_call": result.get("seconds_since_last_llm_call"),
+                "required_wait_seconds": result.get("required_wait_seconds"),
+                "backoff_until_utc": result.get("backoff_until_utc"),
+                "action": "skip_healthcheck_no_fail",
+                "order_sent": False,
+            }
+        )
+        return {
+            "provider_health_check_passed": True,
+            "healthcheck_skipped_by_gate": True,
+            "provider": provider,
+            "model_name": model,
+            "http_status": None,
+            "raw_content_length": 0,
+            "json_parse_ok": False,
+            "required_fields_present": False,
+            "error": None,
+            "error_type": err_type,
+            **key_status,
+        }
     parsed = result.get("parsed") or {}
     proposal, ok, err = parse_llm_decision(parsed, symbol="ETHUSDT")
     required_present = all(parsed.get(k) is not None for k in HEALTH_FIELDS) if parsed else False

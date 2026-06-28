@@ -1269,7 +1269,13 @@ class Stage46aContextGuardTests(unittest.TestCase):
                 )
                 from tools.research.run_stage4_ai_decision_dry_run import run_dry_run
 
-                with patch.object(agent_mod, "Stage4AIDecisionAgent", return_value=SkippingAgent()):
+                with patch.object(agent_mod, "Stage4AIDecisionAgent", return_value=SkippingAgent()), patch(
+                    "tools.research.run_stage4_ai_decision_dry_run._fetch_market",
+                    return_value={"symbol": "ETHUSDT", "last_price": 3000},
+                ), patch(
+                    "tools.research.run_stage4_ai_decision_dry_run._fetch_account",
+                    return_value={"available_balance": 5000, "open_positions": 0},
+                ):
                     summary = run_dry_run(
                         duration_minutes=0.01,
                         poll_interval_seconds=0,
@@ -1299,6 +1305,93 @@ class Stage46aContextGuardTests(unittest.TestCase):
             self.assertNotIn("api_key", blob.lower())
 
 
+class Stage46cRateLimitDiagnosisTests(unittest.TestCase):
+    def test_gate_block_reason_backoff_vs_local(self) -> None:
+        from tools.research.stage4_rate_limit_gate import Stage4LLMRateGate
+        import time as _time
+
+        Stage4LLMRateGate.reset_shared()
+        gate = Stage4LLMRateGate.shared()
+        gate.record_rate_limit(backoff_seconds=60)
+        self.assertEqual(gate.block_reason(), "backoff_active_skip")
+        Stage4LLMRateGate.reset_shared()
+        gate2 = Stage4LLMRateGate.shared()
+        gate2.record_call_start()
+        _time.sleep(0.01)
+        with patch.dict(os.environ, {"STAGE4_LLM_MIN_INTERVAL_SECONDS": "9999"}, clear=False):
+            gate3 = Stage4LLMRateGate.shared()
+            self.assertEqual(gate3.block_reason(), "local_rate_gate_skip")
+
+    def test_skipped_tick_event_type_http_429(self) -> None:
+        from tools.research.stage4_llm_client import ProviderRateLimited
+        from tools.research.run_stage4_ai_decision_dry_run import _record_skipped_tick, _empty_run_stats
+
+        with tempfile.TemporaryDirectory() as tmp:
+            os.environ["STAGE4_OUTPUT_DIR"] = str(Path(tmp))
+            try:
+                exc = ProviderRateLimited(
+                    provider="groq",
+                    model_name="llama-3.3-70b-versatile",
+                    symbol="ETHUSDT",
+                    reason="rate_limit",
+                    http_status=429,
+                )
+                stats = _empty_run_stats()
+                _record_skipped_tick(exc=exc, tick=1, stats=stats)
+                row = json.loads((Path(tmp) / "stage4_system_events.jsonl").read_text().strip())
+                self.assertEqual(row["event_type"], "provider_http_429")
+                self.assertEqual(row["http_status"], 429)
+            finally:
+                os.environ.pop("STAGE4_OUTPUT_DIR", None)
+
+    def test_analyze_46b_style_debug_log(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            debug_rows = [
+                {"created_at_utc": "2026-06-28T16:05:48Z", "http_status": 429, "error_type": "rate_limit", "success": False, "call_kind": "decision"},
+                {"created_at_utc": "2026-06-28T16:30:52Z", "http_status": 200, "error_type": None, "success": True, "call_kind": "decision"},
+            ]
+            (out / "llm_client_debug.jsonl").write_text("\n".join(json.dumps(r) for r in debug_rows) + "\n", encoding="utf-8")
+            (out / "stage4_system_events.jsonl").write_text(
+                json.dumps({"event_type": "provider_rate_limited", "reason": "rate_limit", "created_at_utc": "2026-06-28T16:05:48Z"})
+                + "\n",
+                encoding="utf-8",
+            )
+            (out / "stage4_ai_decision_summary.json").write_text(
+                json.dumps({"poll_interval_seconds": 300, "provider_rate_limit_count": 5, "skipped_tick_count": 5}),
+                encoding="utf-8",
+            )
+            from tools.research.analyze_stage4_rate_limit_events import analyze_rate_limit_events
+
+            report = analyze_rate_limit_events(out)
+            self.assertGreaterEqual(report["debug_http_429_count"], 1)
+            self.assertEqual(report["debug_success_count"], 1)
+            self.assertIn("suggested_poll_interval_seconds", report)
+
+    def test_healthcheck_skipped_by_gate_does_not_fail(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            os.environ["STAGE4_OUTPUT_DIR"] = str(Path(tmp))
+            try:
+                with patch("tools.research.check_stage4_llm_provider.Stage4LLMClient") as mock_cls:
+                    inst = mock_cls.return_value
+                    inst.availability.return_value = {"real_llm_available": True}
+                    inst.complete_json.return_value = {
+                        "status": "error",
+                        "error_type": "backoff_active_skip",
+                        "seconds_since_last_llm_call": 10,
+                        "required_wait_seconds": 80,
+                        "backoff_until_utc": "2026-06-28T17:00:00Z",
+                    }
+                    from tools.research.check_stage4_llm_provider import run_health_check
+
+                    report = run_health_check(provider="groq", model="llama-3.3-70b-versatile")
+                    self.assertTrue(report.get("provider_health_check_passed"))
+                    self.assertTrue(report.get("healthcheck_skipped_by_gate"))
+            finally:
+                os.environ.pop("STAGE4_OUTPUT_DIR", None)
+
+
+class Stage4StrictEnvReadonlyTests(unittest.TestCase):
     def _stage4_readonly_env(self) -> dict[str, str]:
         return {
             "STAGE3_STARTUP_MODE": "idle",

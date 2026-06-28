@@ -158,20 +158,36 @@ def _record_skipped_tick(
     stats: Dict[str, int],
 ) -> None:
     stats["skipped_tick_count"] += 1
-    if exc.reason in {"provider_rate_limited", "rate_limit", "rate_limit_gate", "empty_llm_response"}:
+    rate_like = {
+        "provider_rate_limited",
+        "rate_limit",
+        "rate_limit_gate",
+        "local_rate_gate_skip",
+        "backoff_active_skip",
+        "empty_llm_response",
+        "provider_http_429",
+    }
+    if exc.reason in rate_like or exc.event_type in rate_like:
         stats["provider_rate_limit_count"] += 1
     else:
         stats["provider_error_count"] += 1
+    gate = exc.gate_status or {}
     append_system_event(
         {
-            "event_type": "provider_rate_limited",
+            "event_type": exc.event_type or "provider_rate_limited",
             "provider": exc.provider,
             "model_name": exc.model_name,
             "symbol": exc.symbol,
             "tick_time_utc": utc_now_iso(),
+            "tick_index": tick,
             "tick_number": tick,
             "retry_count": exc.retry_count,
             "reason": exc.reason,
+            "call_kind": exc.call_kind,
+            "http_status": exc.http_status,
+            "seconds_since_last_llm_call": gate.get("seconds_since_last_llm_call"),
+            "required_wait_seconds": gate.get("required_wait_seconds"),
+            "backoff_until_utc": gate.get("backoff_until_utc"),
             "action": "skip_tick_no_decision",
             "order_sent": False,
         }
@@ -397,6 +413,8 @@ def _run_dry_run_inner(
             model = os.environ.get("STAGE4_LLM_MODEL", "llama-3.3-70b-versatile").strip()
             health = run_health_check(provider=provider, model=model)
             provider_health_check_passed = bool(health.get("provider_health_check_passed"))
+            if health.get("healthcheck_skipped_by_gate"):
+                provider_health_check_passed = True
             if not provider_health_check_passed:
                 failed = str(health.get("error") or "provider_health_check_failed")
                 if health.get("error_type") == "rate_limit":

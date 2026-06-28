@@ -272,12 +272,23 @@ class Stage4AIDecisionAgent:
         from tools.research.stage4_llm_client import ProviderRateLimited, Stage4LLMClient
 
         if Stage4LLMClient.is_rate_limited_result(result):
+            err_type = str(result.get("error_type") or "provider_rate_limited")
             raise ProviderRateLimited(
-                provider=str(result.get("provider") or self.model_name),
+                provider=str(
+                    result.get("provider")
+                    or getattr(getattr(self.llm_client, "config", None), "provider", None)
+                    or "unknown"
+                ),
                 model_name=str(result.get("model") or self.model_name),
                 symbol=symbol.upper(),
                 retry_count=int(result.get("retry_count") or 0),
-                reason=str(result.get("error_type") or "provider_rate_limited"),
+                reason=err_type,
+                http_status=int(result.get("http_status") or 0) or None,
+                gate_status={
+                    "seconds_since_last_llm_call": result.get("seconds_since_last_llm_call"),
+                    "required_wait_seconds": result.get("required_wait_seconds"),
+                    "backoff_until_utc": result.get("backoff_until_utc"),
+                },
             )
         parsed = result.get("parsed") or {}
         proposal, ok, err = parse_llm_decision(parsed, symbol=symbol)

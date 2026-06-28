@@ -80,6 +80,12 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 - Dry-run `finally` + SIGTERM handler always writes `stage4_ai_decision_summary.json` and bundle export.
 - Seed import order: deploy → RUNNING → seed import → context check PASS → set dry-run minutes → restart.
 
+### Stage 4.6c — Rate-limit diagnosis
+
+- Granular system events: `provider_http_429`, `local_rate_gate_skip`, `backoff_active_skip`, `healthcheck_skipped_by_gate`.
+- `analyze_stage4_rate_limit_events.py`: diagnosis report with `can_rerun_now` and suggested poll interval.
+- Health check shares rate gate; gate-blocked health check does not fail dry-run startup.
+
 ### Stage 4.4 — Regime + Stage3 context wiring (read-only)
 
 - Kline-derived regime: `trend|range|volatile|unknown` with `regime_reason`, `trend_strength`, `volatility_level`.
