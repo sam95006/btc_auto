@@ -74,7 +74,7 @@ class Stage4LLMSchemaTests(unittest.TestCase):
             def availability(self):
                 return {"real_llm_available": True, "model_name": "test-model"}
 
-            def complete_json(self, messages, prompt_hash=""):
+            def complete_json(self, messages, prompt_hash="", **kwargs):
                 return {"status": "error", "parsed": {}, "error": "bad_json", "raw_text": "not json"}
 
         agent = Stage4AIDecisionAgent(use_real_llm=False, llm_client=FakeLLM())
@@ -396,7 +396,7 @@ class Stage4LLMClientTests(unittest.TestCase):
 
     def test_empty_llm_response_skips(self) -> None:
         class EmptyLLM:
-            def complete_json(self, messages, prompt_hash=""):
+            def complete_json(self, messages, prompt_hash="", **kwargs):
                 return {
                     "status": "error",
                     "error": "content_empty",
@@ -411,21 +411,21 @@ class Stage4LLMClientTests(unittest.TestCase):
         agent.is_mock_ai = False
         agent.model_name = "test-model"
         agent.decision_source = "ai_decision_agent"
-        decision = agent.decide(
-            symbol="ETHUSDT",
-            market_context={"last_price": 3250, "prev_price_24h": 3200},
-            account_context={"available_balance": 5000},
-        )
-        self.assertFalse(decision.get("order_sent"))
-        self.assertEqual(decision.get("final_decision"), "skip")
-        self.assertTrue(decision.get("parse_error"))
+        from tools.research.stage4_llm_client import ProviderRateLimited
+
+        with self.assertRaises(ProviderRateLimited):
+            agent.decide(
+                symbol="ETHUSDT",
+                market_context={"last_price": 3250, "prev_price_24h": 3200},
+                account_context={"available_balance": 5000},
+            )
 
     def test_rate_limit_retry_then_skip(self) -> None:
         class FlakyLLM:
             def availability(self):
                 return {"real_llm_available": True}
 
-            def complete_json(self, messages, prompt_hash=""):
+            def complete_json(self, messages, prompt_hash="", **kwargs):
                 return {
                     "status": "error",
                     "error": "content_empty",
@@ -440,20 +440,24 @@ class Stage4LLMClientTests(unittest.TestCase):
         agent.is_mock_ai = False
         agent.model_name = "test-model"
         agent.decision_source = "ai_decision_agent"
-        decision = agent.decide(
-            symbol="ETHUSDT",
-            market_context={"last_price": 3250, "prev_price_24h": 3200},
-            account_context={"available_balance": 5000},
-        )
-        self.assertFalse(decision.get("order_sent"))
+        from tools.research.stage4_llm_client import ProviderRateLimited
+
+        with self.assertRaises(ProviderRateLimited):
+            agent.decide(
+                symbol="ETHUSDT",
+                market_context={"last_price": 3250, "prev_price_24h": 3200},
+                account_context={"available_balance": 5000},
+            )
 
     def test_client_retries_rate_limit_then_ok(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             os.environ["STAGE4_OUTPUT_DIR"] = str(Path(tmp))
             try:
                 from tools.research.stage4_llm_client import Stage4LLMClient, Stage4LLMConfig
+                from tools.research.stage4_rate_limit_gate import Stage4LLMRateGate
                 import urllib.error
 
+                Stage4LLMRateGate.reset_shared()
                 client = Stage4LLMClient(load_env=False)
                 client.config = Stage4LLMConfig(
                     provider="groq",
@@ -467,7 +471,7 @@ class Stage4LLMClientTests(unittest.TestCase):
                 def fake_post(url, headers, payload):
                     calls["n"] += 1
                     if calls["n"] == 1:
-                        raise urllib.error.HTTPError(url, 429, "rate", hdrs=None, fp=None)
+                        raise urllib.error.HTTPError(url, 503, "server", hdrs=None, fp=None)
                     return (
                         200,
                         {
@@ -515,7 +519,9 @@ class Stage4LLMClientTests(unittest.TestCase):
             os.environ["STAGE4_OUTPUT_DIR"] = str(Path(tmp))
             try:
                 from tools.research.stage4_llm_client import Stage4LLMClient, Stage4LLMConfig
+                from tools.research.stage4_rate_limit_gate import Stage4LLMRateGate
 
+                Stage4LLMRateGate.reset_shared()
                 client = Stage4LLMClient(load_env=False)
                 client.config = Stage4LLMConfig(
                     provider="groq",
@@ -964,6 +970,181 @@ class Stage44RegimeContextTests(unittest.TestCase):
         self.assertIn("stage3_context_available", decision)
         self.assertFalse(decision["stage3_context_available"])
         self.assertEqual(decision["recent_trade_results_count"], 0)
+
+
+class Stage45RateLimitTests(unittest.TestCase):
+    def test_429_raises_provider_rate_limited_no_decision_row(self) -> None:
+        from tools.research.stage4_llm_client import ProviderRateLimited
+
+        class RateLimitLLM:
+            config = type("C", (), {"provider": "groq"})()
+
+            def complete_json(self, messages, prompt_hash="", symbol="", use_rate_gate=True):
+                return {
+                    "status": "error",
+                    "error_type": "rate_limit",
+                    "http_status": 429,
+                    "retry_count": 0,
+                    "parsed": {},
+                    "raw_content_empty": True,
+                    "provider": "groq",
+                    "model": "test-model",
+                }
+
+        agent = Stage4AIDecisionAgent(use_real_llm=False, llm_client=RateLimitLLM())
+        agent.real_llm_used = True
+        agent.is_mock_ai = False
+        agent.model_name = "test-model"
+        with self.assertRaises(ProviderRateLimited):
+            agent.decide(
+                symbol="ETHUSDT",
+                market_context={"last_price": 3250, "data_quality": "ok", "kline_data_quality": "ok"},
+                account_context={"available_balance": 5000},
+            )
+
+    def test_runner_skipped_tick_writes_system_event_not_decision(self) -> None:
+        from tools.research.stage4_llm_client import ProviderRateLimited
+        from tools.research.run_stage4_ai_decision_dry_run import run_dry_run
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            os.environ["STAGE4_OUTPUT_DIR"] = str(out)
+            try:
+                def _raise_rate_limit(**kwargs):
+                    raise ProviderRateLimited(
+                        provider="groq",
+                        model_name="test-model",
+                        symbol=kwargs.get("symbol", "ETHUSDT"),
+                        retry_count=0,
+                    )
+
+                with patch(
+                    "tools.research.run_stage4_ai_decision_dry_run._fetch_market",
+                    return_value={"last_price": 3250, "data_quality": "ok", "kline_data_quality": "ok", "symbol": "ETHUSDT"},
+                ), patch(
+                    "tools.research.run_stage4_ai_decision_dry_run._fetch_account",
+                    return_value={"available_balance": 5000, "open_positions": 0},
+                ), patch(
+                    "tools.research.stage4_ai_decision_agent.Stage4AIDecisionAgent.decide",
+                    side_effect=_raise_rate_limit,
+                ), patch(
+                    "tools.research.run_stage4_ai_decision_dry_run.require_real_llm_enabled",
+                    return_value=False,
+                ):
+                    summary = run_dry_run(
+                        duration_minutes=0.01,
+                        poll_interval_seconds=0,
+                        symbols=["ETHUSDT"],
+                        output_dir=out,
+                        use_real_llm=True,
+                    )
+                self.assertEqual(summary.get("decision_count"), 0)
+                self.assertGreaterEqual(summary.get("skipped_tick_count", 0), 1)
+                self.assertFalse((out / "ai_decisions.jsonl").is_file())
+                self.assertTrue((out / "stage4_system_events.jsonl").is_file())
+            finally:
+                os.environ.pop("STAGE4_OUTPUT_DIR", None)
+
+    def test_validator_require_real_llm_fails_on_parse_error(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            write_decision(
+                out,
+                {
+                    "decision_id": "d1",
+                    "created_at_utc": "2026-01-01T00:00:00Z",
+                    "decision_source": "ai_decision_agent",
+                    "mode": "dry_run",
+                    "model_name": "llama-3.3-70b-versatile",
+                    "is_mock_ai": False,
+                    "real_llm_used": True,
+                    "fallback_to_mock": False,
+                    "prompt_hash": "abc",
+                    "symbol": "ETHUSDT",
+                    "candidate_side": "NONE",
+                    "final_action": "skip",
+                    "confidence": 0.0,
+                    "position_size_suggestion": 0,
+                    "market_context": {"symbol": "ETHUSDT", "data_quality": "ok"},
+                    "account_context": {"available_balance": 5000},
+                    "retrieved_patches": [],
+                    "why_enter": "",
+                    "why_skip": "empty",
+                    "side_reason": "test",
+                    "confidence_reason": "test",
+                    "risk_notes": [],
+                    "parse_error": True,
+                    "parse_error_type": "rate_limit",
+                    "raw_content_empty": True,
+                    "safety_constraints": {},
+                    "risk_supervisor_result": {"approved": False, "final_decision": "skip"},
+                    "final_decision": "skip",
+                    "order_sent": False,
+                },
+            )
+            (out / "llm_client_debug.jsonl").write_text('{"success": false}\n', encoding="utf-8")
+            (out / "stage4_ai_decision_summary.json").write_text(
+                json.dumps({"dry_run_completed": True, "real_successful_llm_decision_count": 0}),
+                encoding="utf-8",
+            )
+            from tools.research.validate_stage4_ai_decision_outputs import validate
+
+            result = validate(out, require_real_llm=True)
+            self.assertFalse(result["passed"])
+            self.assertTrue(any("parse_error" in e for e in result["errors"]))
+
+    def test_validator_fails_when_no_successful_llm_decisions(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / "llm_client_debug.jsonl").write_text('{"success": true}\n', encoding="utf-8")
+            (out / "stage4_ai_decision_summary.json").write_text(
+                json.dumps({"dry_run_completed": True, "skipped_tick_count": 2}),
+                encoding="utf-8",
+            )
+            from tools.research.validate_stage4_ai_decision_outputs import validate
+
+            result = validate(out, require_real_llm=True)
+            self.assertFalse(result["passed"])
+            self.assertIn("real_successful_llm_decision_count_zero", result["errors"])
+
+    def test_import_stage3_context_seed_creates_jsonl(self) -> None:
+        from tools.research.stage4_context_summary import import_stage3_context_seed, load_stage3_context
+
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp) / "src"
+            src.mkdir()
+            trade = src / "trade_results.jsonl"
+            trade.write_text(
+                json.dumps({"symbol": "ETHUSDT", "side": "BUY", "close_pnl": -0.1}) + "\n",
+                encoding="utf-8",
+            )
+            target = Path(tmp) / "stage3"
+            result = import_stage3_context_seed(trade, target_dir=target, overwrite=True)
+            self.assertTrue(result.get("success"))
+            ctx = load_stage3_context(target, symbol="ETHUSDT")
+            self.assertTrue(ctx["stage3_context_available"])
+            self.assertEqual(ctx["recent_trade_results_count"], 1)
+
+    def test_system_event_log_excludes_api_key(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            os.environ["STAGE4_OUTPUT_DIR"] = str(Path(tmp))
+            try:
+                from tools.research.stage4_system_events import append_system_event
+
+                append_system_event(
+                    {
+                        "event_type": "provider_rate_limited",
+                        "provider": "groq",
+                        "model_name": "test",
+                        "symbol": "ETHUSDT",
+                        "action": "skip_tick_no_decision",
+                        "order_sent": False,
+                    }
+                )
+                text = (Path(tmp) / "stage4_system_events.jsonl").read_text(encoding="utf-8")
+                self.assertNotIn("gsk_", text)
+            finally:
+                os.environ.pop("STAGE4_OUTPUT_DIR", None)
 
 
 class Stage4StrictEnvReadonlyTests(unittest.TestCase):

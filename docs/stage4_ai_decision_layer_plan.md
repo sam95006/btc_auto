@@ -65,6 +65,14 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 2. On failure: log + write fail summary; **do not** start background dry-run.
 3. On success: start background real-LLM dry-run.
 
+### Stage 4.5 — Provider rate limit + Stage3 seed context
+
+- `Stage4LLMRateGate`: min interval + backoff after 429; shared by health check and decisions.
+- 429 / gate block → `ProviderRateLimited` → `stage4_system_events.jsonl` skipped tick (no fake decision).
+- `STAGE4_LIGHT_PREFLIGHT=true` (default): key check only, no extra LLM health call.
+- `STAGE4_POLL_INTERVAL_SECONDS` default 120; `STAGE4_SYMBOL_GAP_SECONDS` default 5.
+- Validator `--require-real-llm`: requires `parse_error_count=0`, `real_successful_llm_decision_count>0`.
+
 ### Stage 4.4 — Regime + Stage3 context wiring (read-only)
 
 - Kline-derived regime: `trend|range|volatile|unknown` with `regime_reason`, `trend_strength`, `volatility_level`.

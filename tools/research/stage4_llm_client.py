@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from tools.research.bybit_demo_learning_common import utc_now_iso
+from tools.research.stage4_rate_limit_gate import Stage4LLMRateGate
 from tools.research.stage4_response_parser import (
     extract_anthropic_content,
     extract_gemini_content,
@@ -53,8 +54,8 @@ def _first_env_key(names: Tuple[str, ...]) -> str:
             return name
     return ""
 
-RETRYABLE_HTTP = frozenset({408, 429, 500, 502, 503, 504})
-MAX_RETRIES = 2
+RETRYABLE_HTTP = frozenset({408, 500, 502, 503, 504})
+MAX_RETRIES = 1
 BACKOFF_SECONDS = (1.0, 2.5)
 
 HTTP_HEADERS_BASE = {
@@ -72,6 +73,26 @@ def _bridge_groq_env_aliases() -> None:
         os.environ["GROQ_API_KEY_PRIMARY"] = groq
     elif primary and not groq:
         os.environ["GROQ_API_KEY"] = primary
+
+
+class ProviderRateLimited(Exception):
+    """LLM provider returned 429 or local rate gate blocked the call."""
+
+    def __init__(
+        self,
+        *,
+        provider: str,
+        model_name: str,
+        symbol: str = "",
+        retry_count: int = 0,
+        reason: str = "provider_rate_limited",
+    ) -> None:
+        self.provider = provider
+        self.model_name = model_name
+        self.symbol = symbol
+        self.retry_count = retry_count
+        self.reason = reason
+        super().__init__(reason)
 
 
 class RealLLMRequiredError(RuntimeError):
@@ -280,11 +301,26 @@ class Stage4LLMClient:
         messages: List[Dict[str, str]],
         *,
         prompt_hash: str = "",
+        symbol: str = "",
+        use_rate_gate: bool = True,
     ) -> Dict[str, Any]:
         if not self.available or not self.config:
             return self._error_result("llm_unavailable", error_type="llm_unavailable")
 
         cfg = self.config
+        gate = Stage4LLMRateGate.shared()
+        if use_rate_gate and not gate.acquire():
+            return self._error_result(
+                "rate_limit_gate_blocked",
+                error_type="rate_limit_gate",
+                provider=cfg.provider,
+                model=cfg.model,
+                symbol=symbol,
+            )
+
+        if use_rate_gate:
+            gate.record_call_start()
+
         key_chain = self._api_key_chain(cfg)
         last_result: Dict[str, Any] = self._error_result("no_attempt", error_type="no_attempt")
 
@@ -313,9 +349,16 @@ class Stage4LLMClient:
                     self._write_debug_row(cfg, prompt_hash, request_id, result, attempt, latency_ms)
 
                     if result.get("status") == "ok":
+                        if use_rate_gate:
+                            gate.record_success()
                         return result
 
                     err_type = str(result.get("error_type") or "")
+                    if err_type == "rate_limit":
+                        if use_rate_gate:
+                            gate.record_rate_limit()
+                        last_result = result
+                        break
                     if err_type in {"http_forbidden", "http_unauthorized", "json_decode_error"}:
                         last_result = result
                         break
@@ -327,9 +370,10 @@ class Stage4LLMClient:
                 except urllib.error.HTTPError as exc:
                     latency_ms = int((time.perf_counter() - started) * 1000)
                     body = exc.read().decode("utf-8", errors="replace")[:500]
+                    err_type = self._http_error_type(exc.code)
                     result = self._error_result(
                         f"http_{exc.code}",
-                        error_type=self._http_error_type(exc.code),
+                        error_type=err_type,
                         http_status=exc.code,
                         error_message_safe=safe_excerpt(body),
                         raw_text="",
@@ -339,6 +383,11 @@ class Stage4LLMClient:
                         prompt_hash=prompt_hash,
                     )
                     self._write_debug_row(cfg, prompt_hash, request_id, result, attempt, latency_ms)
+                    if exc.code == 429:
+                        if use_rate_gate:
+                            gate.record_rate_limit()
+                        last_result = result
+                        break
                     if attempt < MAX_RETRIES and exc.code in RETRYABLE_HTTP:
                         time.sleep(BACKOFF_SECONDS[min(attempt, len(BACKOFF_SECONDS) - 1)])
                         last_result = result
@@ -388,7 +437,15 @@ class Stage4LLMClient:
     def _retryable(result: Dict[str, Any]) -> bool:
         err_type = str(result.get("error_type") or "")
         code = int(result.get("http_status") or 0)
-        return err_type in {"timeout", "rate_limit", "server_error", "network_error"} or code in RETRYABLE_HTTP
+        if err_type == "rate_limit" or code == 429:
+            return False
+        return err_type in {"timeout", "server_error", "network_error"} or code in RETRYABLE_HTTP
+
+    @staticmethod
+    def is_rate_limited_result(result: Dict[str, Any]) -> bool:
+        err_type = str(result.get("error_type") or "")
+        code = int(result.get("http_status") or 0)
+        return err_type in {"rate_limit", "rate_limit_gate"} or code == 429
 
     @staticmethod
     def _http_error_type(code: int) -> str:

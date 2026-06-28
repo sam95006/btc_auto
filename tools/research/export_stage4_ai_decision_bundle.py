@@ -21,6 +21,7 @@ BUNDLE_FILES = (
     "ai_decisions.jsonl",
     "risk_supervisor_decisions.jsonl",
     "llm_client_debug.jsonl",
+    "stage4_system_events.jsonl",
     "stage4_ai_decision_summary.json",
     "stage4_30m_dry_run.log",
     "stage4_short_run.log",

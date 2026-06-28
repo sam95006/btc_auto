@@ -41,6 +41,8 @@ BASE_ALLOWLIST = [
     "tools/research/export_stage3_24h_learning_bundle.py",
     "tools/research/stage3_readonly_web_app.py",
     "tools/research/stage4_llm_client.py",
+    "tools/research/stage4_rate_limit_gate.py",
+    "tools/research/stage4_system_events.py",
     "tools/research/stage4_response_parser.py",
     "tools/research/stage4_ai_decision_agent.py",
     "tools/research/stage4_risk_supervisor.py",
@@ -186,7 +188,7 @@ if [ "$MODE" = "idle" ]; then
         echo "Stage 4 cloud dry-run: ${STAGE4_CLOUD_DRY_RUN_MINUTES}m -> $STAGE4_OUT (background, no orders)"
         python tools/research/run_stage4_ai_decision_dry_run.py \
           --duration-minutes "${STAGE4_CLOUD_DRY_RUN_MINUTES}" \
-          --poll-interval-seconds 60 \
+          --poll-interval-seconds "${STAGE4_POLL_INTERVAL_SECONDS:-120}" \
           --symbols ETHUSDT,BTCUSDT \
           --mode dry-run \
           --use-real-llm \

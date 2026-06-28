@@ -268,11 +268,32 @@ class Stage4AIDecisionAgent:
             stage3_context=stage3_context,
         )
         prompt_hash = prompt_fingerprint(messages)
-        result = self.llm_client.complete_json(messages, prompt_hash=prompt_hash)
+        result = self.llm_client.complete_json(messages, prompt_hash=prompt_hash, symbol=symbol)
+        from tools.research.stage4_llm_client import ProviderRateLimited, Stage4LLMClient
+
+        if Stage4LLMClient.is_rate_limited_result(result):
+            raise ProviderRateLimited(
+                provider=str(result.get("provider") or self.model_name),
+                model_name=str(result.get("model") or self.model_name),
+                symbol=symbol.upper(),
+                retry_count=int(result.get("retry_count") or 0),
+                reason=str(result.get("error_type") or "provider_rate_limited"),
+            )
         parsed = result.get("parsed") or {}
         proposal, ok, err = parse_llm_decision(parsed, symbol=symbol)
         if not ok or result.get("status") != "ok":
             err_type = result.get("parse_error_type") or result.get("error_type") or err or "llm_parse_failed"
+            raw_nonempty = bool(str(result.get("raw_text") or "").strip())
+            if (
+                err_type in {"content_empty", "empty_llm_response"} or bool(result.get("raw_content_empty"))
+            ) and not raw_nonempty:
+                raise ProviderRateLimited(
+                    provider=str(getattr(getattr(self.llm_client, "config", None), "provider", None) or "unknown"),
+                    model_name=self.model_name,
+                    symbol=symbol.upper(),
+                    retry_count=int(result.get("retry_count") or 0),
+                    reason="empty_llm_response",
+                )
             proposal["parse_error"] = True
             proposal["parse_error_type"] = err_type
             proposal["raw_content_empty"] = bool(result.get("raw_content_empty"))

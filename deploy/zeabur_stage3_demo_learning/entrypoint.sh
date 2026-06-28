@@ -42,7 +42,7 @@ if [ "$MODE" = "idle" ]; then
         echo "Stage 4 cloud dry-run: ${STAGE4_CLOUD_DRY_RUN_MINUTES}m -> $STAGE4_OUT (background, no orders)"
         python tools/research/run_stage4_ai_decision_dry_run.py \
           --duration-minutes "${STAGE4_CLOUD_DRY_RUN_MINUTES}" \
-          --poll-interval-seconds 60 \
+          --poll-interval-seconds "${STAGE4_POLL_INTERVAL_SECONDS:-120}" \
           --symbols ETHUSDT,BTCUSDT \
           --mode dry-run \
           --use-real-llm \
@@ -53,7 +53,7 @@ if [ "$MODE" = "idle" ]; then
       echo "Stage 4 cloud dry-run: ${STAGE4_CLOUD_DRY_RUN_MINUTES}m -> $STAGE4_OUT (background, no orders)"
       python tools/research/run_stage4_ai_decision_dry_run.py \
         --duration-minutes "${STAGE4_CLOUD_DRY_RUN_MINUTES}" \
-        --poll-interval-seconds 60 \
+        --poll-interval-seconds "${STAGE4_POLL_INTERVAL_SECONDS:-120}" \
         --symbols ETHUSDT,BTCUSDT \
         --mode dry-run \
         --use-real-llm \

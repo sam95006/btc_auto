@@ -24,13 +24,43 @@ from tools.research.stage4_ai_decision_agent import (  # noqa: E402
     write_decision,
 )
 from tools.research.stage4_llm_client import (  # noqa: E402
+    ProviderRateLimited,
     RealLLMRequiredError,
+    groq_key_configured,
     mock_fallback_allowed,
     real_llm_preflight,
     require_real_llm_enabled,
 )
+from tools.research.stage4_system_events import append_system_event  # noqa: E402
 
 READINESS = ROOT / "data/external_alpha/reports/stage4_ai_decision_dry_run_readiness.json"
+
+
+def _env_float(name: str, default: float) -> float:
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return default
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return default
+
+
+def _default_poll_interval_seconds() -> float:
+    return _env_float("STAGE4_POLL_INTERVAL_SECONDS", 120.0)
+
+
+def _symbol_gap_seconds() -> float:
+    return _env_float("STAGE4_SYMBOL_GAP_SECONDS", 5.0)
+
+
+def _light_preflight_enabled() -> bool:
+    raw = os.environ.get("STAGE4_LIGHT_PREFLIGHT", "").strip().lower()
+    if raw in {"", "1", "true", "yes", "on"}:
+        return True
+    if raw in {"0", "false", "no", "off"}:
+        return False
+    return True
 
 
 @contextmanager
@@ -65,6 +95,45 @@ def _append_run_log(log_path: Path, message: str) -> None:
         fh.write(line)
 
 
+def _empty_run_stats() -> Dict[str, int]:
+    return {
+        "skipped_tick_count": 0,
+        "provider_rate_limit_count": 0,
+        "provider_error_count": 0,
+        "parse_error_count": 0,
+        "empty_response_count": 0,
+        "real_successful_llm_decision_count": 0,
+        "effective_decision_count": 0,
+    }
+
+
+def _record_skipped_tick(
+    *,
+    exc: ProviderRateLimited,
+    tick: int,
+    stats: Dict[str, int],
+) -> None:
+    stats["skipped_tick_count"] += 1
+    if exc.reason in {"provider_rate_limited", "rate_limit", "rate_limit_gate", "empty_llm_response"}:
+        stats["provider_rate_limit_count"] += 1
+    else:
+        stats["provider_error_count"] += 1
+    append_system_event(
+        {
+            "event_type": "provider_rate_limited",
+            "provider": exc.provider,
+            "model_name": exc.model_name,
+            "symbol": exc.symbol,
+            "tick_time_utc": utc_now_iso(),
+            "tick_number": tick,
+            "retry_count": exc.retry_count,
+            "reason": exc.reason,
+            "action": "skip_tick_no_decision",
+            "order_sent": False,
+        }
+    )
+
+
 def _write_fail_summary(
     out: Path,
     *,
@@ -75,12 +144,14 @@ def _write_fail_summary(
     mode: str,
     use_real_llm: bool,
     log_path: Path | None = None,
+    stats: Dict[str, int] | None = None,
 ) -> Dict[str, Any]:
     log_path = log_path or _resolve_run_log_path(out, duration_minutes)
+    stats = stats or _empty_run_stats()
     summary = {
         "record_type": "stage4_ai_decision_summary",
         "generated_at_utc": utc_now_iso(),
-        "phase": "4",
+        "phase": "4.5",
         "mode": mode,
         "duration_minutes": duration_minutes,
         "poll_interval_seconds": poll_interval_seconds,
@@ -103,6 +174,7 @@ def _write_fail_summary(
         "provider_health_check_passed": False,
         "run_log_path": str(log_path),
         "decisions": [],
+        **stats,
     }
     write_json(out / "stage4_ai_decision_summary.json", summary)
     _append_run_log(
@@ -211,6 +283,7 @@ def _run_dry_run_inner(
 ) -> Dict[str, Any]:
     out = output_dir
     log_path = _resolve_run_log_path(out, duration_minutes)
+    stats = _empty_run_stats()
 
     ok, reason, fail_summary = preflight_real_llm(
         use_real_llm=use_real_llm,
@@ -231,28 +304,48 @@ def _run_dry_run_inner(
             mode=mode,
             use_real_llm=use_real_llm,
             log_path=log_path,
+            stats=stats,
         )
 
     provider_health_check_passed: bool | None = None
     if use_real_llm and require_real_llm_enabled():
-        from tools.research.check_stage4_llm_provider import run_health_check
+        if _light_preflight_enabled():
+            provider_health_check_passed = groq_key_configured()
+            if not provider_health_check_passed:
+                return _write_fail_summary(
+                    out,
+                    failed_reason="missing_real_llm_key",
+                    duration_minutes=duration_minutes,
+                    poll_interval_seconds=poll_interval_seconds,
+                    symbols=symbols,
+                    mode=mode,
+                    use_real_llm=use_real_llm,
+                    log_path=log_path,
+                    stats=stats,
+                )
+        else:
+            from tools.research.check_stage4_llm_provider import run_health_check
 
-        provider = os.environ.get("STAGE4_LLM_PROVIDER", "groq").strip().lower() or "groq"
-        model = os.environ.get("STAGE4_LLM_MODEL", "llama-3.3-70b-versatile").strip()
-        health = run_health_check(provider=provider, model=model)
-        provider_health_check_passed = bool(health.get("provider_health_check_passed"))
-        if not provider_health_check_passed:
-            failed = str(health.get("error") or "provider_health_check_failed")
-            return _write_fail_summary(
-                out,
-                failed_reason=failed,
-                duration_minutes=duration_minutes,
-                poll_interval_seconds=poll_interval_seconds,
-                symbols=symbols,
-                mode=mode,
-                use_real_llm=use_real_llm,
-                log_path=log_path,
-            )
+            provider = os.environ.get("STAGE4_LLM_PROVIDER", "groq").strip().lower() or "groq"
+            model = os.environ.get("STAGE4_LLM_MODEL", "llama-3.3-70b-versatile").strip()
+            health = run_health_check(provider=provider, model=model)
+            provider_health_check_passed = bool(health.get("provider_health_check_passed"))
+            if not provider_health_check_passed:
+                failed = str(health.get("error") or "provider_health_check_failed")
+                if health.get("error_type") == "rate_limit":
+                    stats["provider_rate_limit_count"] += 1
+                    stats["skipped_tick_count"] += 1
+                return _write_fail_summary(
+                    out,
+                    failed_reason=failed,
+                    duration_minutes=duration_minutes,
+                    poll_interval_seconds=poll_interval_seconds,
+                    symbols=symbols,
+                    mode=mode,
+                    use_real_llm=use_real_llm,
+                    log_path=log_path,
+                    stats=stats,
+                )
 
     try:
         agent = Stage4AIDecisionAgent(use_real_llm=use_real_llm)
@@ -266,6 +359,7 @@ def _run_dry_run_inner(
             mode=mode,
             use_real_llm=use_real_llm,
             log_path=log_path,
+            stats=stats,
         )
 
     if use_real_llm and not mock_fallback_allowed(use_real_llm=True) and (
@@ -280,12 +374,14 @@ def _run_dry_run_inner(
             mode=mode,
             use_real_llm=use_real_llm,
             log_path=log_path,
+            stats=stats,
         )
 
+    symbol_gap = _symbol_gap_seconds()
     _append_run_log(
         log_path,
         f"START mode={mode} duration_minutes={duration_minutes} symbols={','.join(symbols)} "
-        f"use_real_llm={use_real_llm} model={agent.model_name}",
+        f"use_real_llm={use_real_llm} model={agent.model_name} poll={poll_interval_seconds} gap={symbol_gap}",
     )
     started = time.time()
     end = started + duration_minutes * 60.0
@@ -296,15 +392,37 @@ def _run_dry_run_inner(
         tick += 1
         account = _fetch_account()
         open_positions = int(account.get("open_positions") or 0)
-        for symbol in symbols:
+        for idx, symbol in enumerate(symbols):
             market = _fetch_market(symbol)
-            decision = agent.decide(
-                symbol=symbol,
-                mode=mode,
-                market_context=market,
-                account_context=account,
-                open_positions=open_positions,
-            )
+            try:
+                decision = agent.decide(
+                    symbol=symbol,
+                    mode=mode,
+                    market_context=market,
+                    account_context=account,
+                    open_positions=open_positions,
+                )
+            except ProviderRateLimited as exc:
+                _record_skipped_tick(exc=exc, tick=tick, stats=stats)
+                _append_run_log(
+                    log_path,
+                    f"TICK={tick} SKIPPED symbol={symbol} reason={exc.reason} order_sent=false",
+                )
+                if idx < len(symbols) - 1 and symbol_gap > 0:
+                    time.sleep(symbol_gap)
+                continue
+
+            if decision.get("parse_error"):
+                stats["parse_error_count"] += 1
+                if decision.get("raw_content_empty") or decision.get("parse_error_type") in {
+                    "content_empty",
+                    "empty_llm_response",
+                }:
+                    stats["empty_response_count"] += 1
+            else:
+                stats["real_successful_llm_decision_count"] += 1
+                stats["effective_decision_count"] += 1
+
             write_decision(out, decision)
             decisions.append(decision)
             _append_run_log(
@@ -312,6 +430,9 @@ def _run_dry_run_inner(
                 f"TICK={tick} symbol={decision.get('symbol')} final={decision.get('final_decision')} "
                 f"parse_error={decision.get('parse_error')} order_sent={decision.get('order_sent')}",
             )
+            if idx < len(symbols) - 1 and symbol_gap > 0:
+                time.sleep(symbol_gap)
+
         if duration_minutes <= 0.05:
             break
         if time.time() >= end:
@@ -321,7 +442,7 @@ def _run_dry_run_inner(
     summary = {
         "record_type": "stage4_ai_decision_summary",
         "generated_at_utc": utc_now_iso(),
-        "phase": "4",
+        "phase": "4.5",
         "mode": mode,
         "duration_minutes": duration_minutes,
         "poll_interval_seconds": poll_interval_seconds,
@@ -341,11 +462,14 @@ def _run_dry_run_inner(
         "provider_health_check_passed": provider_health_check_passed,
         "run_log_path": str(log_path),
         "decisions": [{"decision_id": d["decision_id"], "symbol": d["symbol"], "final_decision": d["final_decision"]} for d in decisions],
+        **stats,
     }
     write_json(out / "stage4_ai_decision_summary.json", summary)
     _append_run_log(
         log_path,
-        f"END decision_count={len(decisions)} tick_count={tick} all_order_sent_false={summary['all_order_sent_false']}",
+        f"END decision_count={len(decisions)} effective={stats['effective_decision_count']} "
+        f"skipped={stats['skipped_tick_count']} rate_limit={stats['provider_rate_limit_count']} "
+        f"parse_errors={stats['parse_error_count']} order_sent_count=0",
     )
 
     try:
@@ -367,7 +491,7 @@ def _run_dry_run_inner(
 def main() -> int:
     parser = argparse.ArgumentParser(description="Stage 4 AI decision dry-run (no orders)")
     parser.add_argument("--duration-minutes", type=float, default=30.0)
-    parser.add_argument("--poll-interval-seconds", type=float, default=60.0)
+    parser.add_argument("--poll-interval-seconds", type=float, default=-1.0)
     parser.add_argument("--symbols", default="ETHUSDT,BTCUSDT")
     parser.add_argument("--mode", default="dry_run")
     parser.add_argument("--fast-test", action="store_true", help="Single tick, no sleep")
@@ -379,7 +503,9 @@ def main() -> int:
     symbols = [s.strip().upper() for s in args.symbols.split(",") if s.strip()]
     out = Path(args.output_dir) if args.output_dir else None
     duration = 0.01 if args.fast_test else args.duration_minutes
-    poll = 0.0 if args.fast_test else args.poll_interval_seconds
+    poll = 0.0 if args.fast_test else (
+        args.poll_interval_seconds if args.poll_interval_seconds >= 0 else _default_poll_interval_seconds()
+    )
 
     if args.preflight_only:
         ok, reason, summary = preflight_real_llm(
@@ -406,7 +532,7 @@ def main() -> int:
 
     from tools.research.validate_stage4_ai_decision_outputs import validate  # noqa: E402
 
-    validation = validate(out or resolve_stage4_output_dir())
+    validation = validate(out or resolve_stage4_output_dir(), require_real_llm=args.use_real_llm)
     write_json(
         READINESS,
         {
