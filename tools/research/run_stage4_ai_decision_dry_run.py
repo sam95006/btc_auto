@@ -148,7 +148,14 @@ def _empty_run_stats() -> Dict[str, int]:
         "empty_response_count": 0,
         "real_successful_llm_decision_count": 0,
         "effective_decision_count": 0,
+        "fallback_used_count": 0,
     }
+
+
+def _aggregate_run_provider_stats(decisions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    from tools.research.validate_stage4_ai_decision_outputs import _aggregate_provider_stats
+
+    return _aggregate_provider_stats(decisions)
 
 
 def _record_skipped_tick(
@@ -482,7 +489,7 @@ def _run_dry_run_inner(
         summary = {
             "record_type": "stage4_ai_decision_summary",
             "generated_at_utc": utc_now_iso(),
-            "phase": "4.6",
+            "phase": "4.7",
             "mode": mode,
             "duration_minutes": duration_minutes,
             "poll_interval_seconds": poll_interval_seconds,
@@ -505,8 +512,12 @@ def _run_dry_run_inner(
                 {"decision_id": d["decision_id"], "symbol": d["symbol"], "final_decision": d["final_decision"]}
                 for d in decisions
             ],
+            **_aggregate_run_provider_stats(decisions),
             **stats,
         }
+        chain_client = getattr(agent, "llm_client", None)
+        if chain_client is not None and hasattr(chain_client, "chain_status"):
+            summary.update(chain_client.chain_status())
         write_json(out / "stage4_ai_decision_summary.json", summary)
         _append_run_log(
             log_path,
@@ -571,6 +582,8 @@ def _run_dry_run_inner(
                 else:
                     stats["real_successful_llm_decision_count"] += 1
                     stats["effective_decision_count"] += 1
+                    if decision.get("fallback_used"):
+                        stats["fallback_used_count"] += 1
 
                 write_decision(out, decision)
                 decisions.append(decision)

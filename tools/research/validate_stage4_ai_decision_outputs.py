@@ -20,12 +20,37 @@ from tools.research.stage4_ai_decision_agent import (  # noqa: E402
     resolve_stage4_output_dir,
 )
 
+ALLOWED_REAL_PROVIDERS = frozenset({"groq", "cerebras", "openai", "anthropic", "gemini"})
+
 READINESS = ROOT / "data/external_alpha/reports/stage4_ai_decision_validation.json"
 
 SECRET_PATTERNS = (
     re.compile(r"gsk_[A-Za-z0-9]{20,}"),
     re.compile(r"sk-[A-Za-z0-9]{20,}"),
 )
+
+
+def _aggregate_provider_stats(decisions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    provider_success: Dict[str, int] = {}
+    fallback_reason_distribution: Dict[str, int] = {}
+    fallback_used_count = 0
+    mock_fallback_attempt_count = 0
+    for d in decisions:
+        if d.get("is_mock_ai") or d.get("fallback_to_mock"):
+            mock_fallback_attempt_count += 1
+        if d.get("fallback_used"):
+            fallback_used_count += 1
+            reason = str(d.get("fallback_reason") or "unknown")
+            fallback_reason_distribution[reason] = fallback_reason_distribution.get(reason, 0) + 1
+        if d.get("real_llm_used") and not d.get("parse_error") and not d.get("is_mock_ai"):
+            prov = str(d.get("provider") or "unknown")
+            provider_success[prov] = provider_success.get(prov, 0) + 1
+    return {
+        "provider_success_distribution": provider_success,
+        "fallback_used_count": fallback_used_count,
+        "fallback_reason_distribution": fallback_reason_distribution,
+        "mock_fallback_attempt_count": mock_fallback_attempt_count,
+    }
 
 
 def _read_jsonl(path: Path) -> List[Dict[str, Any]]:
@@ -124,6 +149,17 @@ def _apply_require_real_llm_checks(
     if real_count == 0 and metrics["real_successful_llm_decision_count"] <= 0:
         errors.append("real_llm_used_count_zero")
 
+    for i, d in enumerate(decisions):
+        if d.get("is_mock_ai"):
+            errors.append(f"decision_{i}_is_mock_ai_true")
+        prov = str(d.get("provider") or "")
+        if prov and prov not in ALLOWED_REAL_PROVIDERS:
+            errors.append(f"decision_{i}_provider_not_allowed:{prov}")
+
+    provider_stats = _aggregate_provider_stats(decisions)
+    if provider_stats["mock_fallback_attempt_count"] > 0:
+        errors.append("mock_fallback_attempt_count_gt_zero")
+
     provider_ok = summary.get("provider_health_check_passed")
     if provider_ok is False and _env_light_preflight() is False:
         errors.append("provider_health_check_failed")
@@ -187,6 +223,7 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
     real_count = sum(1 for d in decisions if d.get("real_llm_used"))
     mock_count = sum(1 for d in decisions if d.get("is_mock_ai"))
     order_sent_count = sum(1 for d in decisions if d.get("order_sent"))
+    provider_stats = _aggregate_provider_stats(decisions)
 
     passed = not errors
     return {
@@ -208,6 +245,7 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
         "failed_reason": summary.get("failed_reason"),
         "debug_log_has_api_key": _debug_log_has_api_key(out),
         **metrics,
+        **provider_stats,
     }
 
 

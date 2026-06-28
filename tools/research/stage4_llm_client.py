@@ -147,7 +147,10 @@ def groq_key_configured() -> bool:
 
 
 def groq_key_status() -> Dict[str, Any]:
+    from tools.research.stage4_provider_chain import dedupe_groq_api_keys
+
     _bridge_groq_env_aliases()
+    dedup = dedupe_groq_api_keys()
     used = _first_env_key(GROQ_KEY_ENVS)
     present_names = [name for name in GROQ_KEY_ENVS if os.environ.get(name)]
     return {
@@ -155,6 +158,9 @@ def groq_key_status() -> Dict[str, Any]:
         "groq_key_present": bool(present_names),
         "groq_key_env_used": used or None,
         "groq_key_env_count": len(present_names),
+        "provider_chain_deduped": dedup.get("provider_chain_deduped"),
+        "deduped_provider_key_count": dedup.get("deduped_provider_key_count"),
+        "groq_key_fingerprints": dedup.get("groq_key_fingerprints"),
     }
 
 
@@ -163,15 +169,16 @@ def real_llm_preflight(*, use_real_llm: bool, provider: str = "", model: str = "
         return True, ""
     if mock_fallback_allowed(use_real_llm=True):
         return True, ""
-    if not groq_key_configured():
+    from tools.research.stage4_provider_chain import Stage4ProviderChainClient, provider_key_configured, resolve_provider_chain
+
+    chain = resolve_provider_chain()
+    if not any(provider_key_configured(p) for p in chain):
         return False, "missing_real_llm_key"
-    prov = (provider or os.environ.get("STAGE4_LLM_PROVIDER", "groq") or "groq").strip().lower()
-    mdl = (model or os.environ.get("STAGE4_LLM_MODEL", "") or "").strip()
-    client = Stage4LLMClient(provider=prov, model=mdl, load_env=True)
+    client = Stage4ProviderChainClient(load_env=True)
     avail = client.availability()
-    if not avail.get("real_llm_available"):
-        return False, str(avail.get("reason") or "no_allowed_provider_configured")
-    return True, ""
+    if avail.get("real_llm_available"):
+        return True, ""
+    return False, str(avail.get("reason") or "missing_real_llm_key")
 
 
 def _load_local_env() -> None:
@@ -328,6 +335,19 @@ class Stage4LLMClient:
             return self._error_result("llm_unavailable", error_type="llm_unavailable")
 
         cfg = self.config
+        from tools.research.stage4_provider_chain import Stage4ProviderCircuitBreaker
+
+        circuit = Stage4ProviderCircuitBreaker.shared()
+        if circuit.is_open(cfg.provider):
+            return self._error_result(
+                "provider_circuit_breaker_open",
+                error_type="provider_circuit_breaker_open",
+                provider=cfg.provider,
+                model=cfg.model,
+                symbol=symbol,
+                call_kind=call_kind,
+            )
+
         gate = Stage4LLMRateGate.shared()
         if use_rate_gate:
             block = gate.block_reason()
@@ -381,6 +401,7 @@ class Stage4LLMClient:
 
                     err_type = str(result.get("error_type") or "")
                     if err_type == "rate_limit":
+                        circuit.trip(cfg.provider)
                         if use_rate_gate:
                             gate.record_rate_limit()
                         last_result = result
@@ -410,6 +431,7 @@ class Stage4LLMClient:
                     )
                     self._write_debug_row(cfg, prompt_hash, request_id, result, attempt, latency_ms)
                     if exc.code == 429:
+                        circuit.trip(cfg.provider)
                         if use_rate_gate:
                             gate.record_rate_limit()
                         last_result = result
@@ -455,7 +477,9 @@ class Stage4LLMClient:
 
     def _api_key_chain(self, cfg: Stage4LLMConfig) -> List[str]:
         if cfg.provider == "groq":
-            keys = [name for name in GROQ_KEY_ENVS if os.environ.get(name)]
+            from tools.research.stage4_provider_chain import deduped_groq_key_envs
+
+            keys = deduped_groq_key_envs()
             return keys or ([cfg.api_key_env] if cfg.api_key_env else [])
         return [cfg.api_key_env] if cfg.api_key_env else [""]
 
@@ -476,6 +500,7 @@ class Stage4LLMClient:
             "rate_limit_gate",
             "local_rate_gate_skip",
             "backoff_active_skip",
+            "provider_circuit_breaker_open",
         }
         return err_type in gate_types or code == 429
 

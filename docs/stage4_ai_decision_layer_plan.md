@@ -86,6 +86,15 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 - `analyze_stage4_rate_limit_events.py`: diagnosis report with `can_rerun_now` and suggested poll interval.
 - Health check shares rate gate; gate-blocked health check does not fail dry-run startup.
 
+### Stage 4.7 — Secondary real LLM provider fallback
+
+- `STAGE4_LLM_PROVIDER_CHAIN=groq,cerebras` with `STAGE4_ALLOW_SECONDARY_REAL_LLM_FALLBACK=true`.
+- Groq duplicate key dedup (PRIMARY/SECONDARY/legacy); per-provider circuit breaker on HTTP 429.
+- `Stage4ProviderChainClient`: Groq 429 → Cerebras real fallback (never mock).
+- Decision log: `provider`, `provider_chain`, `provider_attempts`, `fallback_used`, `fallback_reason`.
+- Summary: `provider_chain_deduped`, `deduped_provider_key_count`, `provider_success_distribution`.
+- Validator `--require-real-llm`: rejects mock fallback; validates allowed real providers.
+
 ### Stage 4.4 — Regime + Stage3 context wiring (read-only)
 
 - Kline-derived regime: `trend|range|volatile|unknown` with `regime_reason`, `trend_strength`, `volatility_level`.

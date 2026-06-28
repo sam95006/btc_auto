@@ -10,10 +10,13 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from typing import Any, Dict
+
 ROOT = Path(__file__).resolve().parents[1]
 
 from tools.research.bybit_demo_client import BybitDemoClient
 from tools.research.stage4_ai_decision_agent import (
+    MOCK_MODEL_NAME,
     REQUIRED_DECISION_FIELDS,
     Stage4AIDecisionAgent,
     Stage4PatchRetriever,
@@ -559,8 +562,25 @@ class Stage4RealLLMGuardTests(unittest.TestCase):
                 "STAGE4_REQUIRE_REAL_LLM": "true",
                 "STAGE4_ALLOW_MOCK_FALLBACK": "false",
             }
-            env.update({k: v for k, v in os.environ.items() if k not in ("GROQ_API_KEY", "GROQ_API_KEY_PRIMARY", "GROQ_API_KEY_SECONDARY")})
-            with patch.dict(os.environ, env, clear=True):
+            env.update(
+                {
+                    k: v
+                    for k, v in os.environ.items()
+                    if k
+                    not in (
+                        "GROQ_API_KEY",
+                        "GROQ_API_KEY_PRIMARY",
+                        "GROQ_API_KEY_SECONDARY",
+                        "CEREBRAS_API_KEY",
+                        "OPENAI_API_KEY",
+                        "ANTHROPIC_API_KEY",
+                        "GOOGLE_API_KEY",
+                    )
+                }
+            )
+            with patch.dict(os.environ, env, clear=True), patch(
+                "tools.research.stage4_llm_client._load_local_env"
+            ):
                 from tools.research.run_stage4_ai_decision_dry_run import run_dry_run
 
                 summary = run_dry_run(
@@ -1389,6 +1409,332 @@ class Stage46cRateLimitDiagnosisTests(unittest.TestCase):
                     self.assertTrue(report.get("healthcheck_skipped_by_gate"))
             finally:
                 os.environ.pop("STAGE4_OUTPUT_DIR", None)
+
+
+class Stage47ProviderChainTests(unittest.TestCase):
+    def _valid_parsed(self) -> Dict[str, Any]:
+        return {
+            "final_action": "skip",
+            "symbol": "ETHUSDT",
+            "candidate_side": "NONE",
+            "confidence": 0.52,
+            "decision_intent": "watch",
+            "why_enter": "",
+            "why_skip": "Wait",
+            "side_reason": "Flat",
+            "confidence_reason": "Moderate",
+            "risk_notes": [],
+            "patch_awareness": "",
+            "uncertainty": "medium",
+            "requires_manual_review": False,
+        }
+
+    def test_dedupe_groq_duplicate_primary_secondary(self) -> None:
+        from tools.research.stage4_provider_chain import dedupe_groq_api_keys, deduped_groq_key_envs
+
+        with patch.dict(
+            os.environ,
+            {
+                "GROQ_API_KEY_PRIMARY": "same-test-key-value",
+                "GROQ_API_KEY_SECONDARY": "same-test-key-value",
+                "GROQ_API_KEY": "same-test-key-value",
+            },
+            clear=False,
+        ):
+            status = dedupe_groq_api_keys()
+            self.assertTrue(status["provider_chain_deduped"])
+            self.assertEqual(status["deduped_provider_key_count"], 1)
+            self.assertEqual(len(deduped_groq_key_envs()), 1)
+            self.assertEqual(len(status["groq_key_fingerprints"]), 1)
+
+    def test_groq_429_triggers_secondary_real_provider(self) -> None:
+        from tools.research.stage4_provider_chain import Stage4ProviderChainClient, Stage4ProviderCircuitBreaker
+
+        Stage4ProviderCircuitBreaker.reset_shared()
+        parsed = self._valid_parsed()
+
+        def fake_complete(self, messages, **kwargs):
+            prov = self.config.provider
+            if prov == "groq":
+                return {
+                    "status": "error",
+                    "error_type": "rate_limit",
+                    "http_status": 429,
+                    "provider": "groq",
+                    "model": "llama-3.3-70b-versatile",
+                    "retry_count": 0,
+                }
+            return {
+                "status": "ok",
+                "provider": "cerebras",
+                "model": "llama-3.3-70b",
+                "parsed": parsed,
+                "raw_text": json.dumps(parsed),
+                "raw_content_empty": False,
+            }
+
+        env = {
+            "GROQ_API_KEY_PRIMARY": "groq-test-key",
+            "CEREBRAS_API_KEY": "cerebras-test-key",
+            "STAGE4_LLM_PROVIDER_CHAIN": "groq,cerebras",
+            "STAGE4_ALLOW_SECONDARY_REAL_LLM_FALLBACK": "true",
+            "STAGE4_ALLOW_MOCK_FALLBACK": "false",
+        }
+        with patch.dict(os.environ, env, clear=False), patch(
+            "tools.research.stage4_llm_client.Stage4LLMClient.complete_json",
+            fake_complete,
+        ):
+            chain = Stage4ProviderChainClient(load_env=False)
+            result = chain.complete_json([{"role": "user", "content": "test"}], symbol="ETHUSDT")
+        self.assertEqual(result.get("status"), "ok")
+        self.assertEqual(result.get("provider"), "cerebras")
+        self.assertTrue(result.get("fallback_used"))
+        self.assertEqual(result.get("fallback_reason"), "groq_rate_limited")
+        attempts = result.get("provider_attempts") or []
+        self.assertEqual(attempts[0]["result"], "rate_limited")
+        self.assertEqual(attempts[1]["result"], "success")
+
+    def test_cerebras_malformed_does_not_fallback_mock(self) -> None:
+        from tools.research.stage4_ai_decision_agent import Stage4AIDecisionAgent
+
+        class BadThenSkipLLM:
+            provider_chain = ["groq", "cerebras"]
+
+            def availability(self):
+                return {"real_llm_available": True, "provider": "groq", "model_name": "m1"}
+
+            def complete_json(self, messages, **kwargs):
+                return {
+                    "status": "error",
+                    "error_type": "json_parse_failed",
+                    "provider": "cerebras",
+                    "model": "llama-3.3-70b",
+                    "parsed": {},
+                    "raw_text": "not-json",
+                    "raw_content_empty": False,
+                    "provider_chain": ["groq", "cerebras"],
+                    "provider_attempts": [
+                        {"provider": "groq", "result": "rate_limited", "error_type": "rate_limit"},
+                        {"provider": "cerebras", "result": "error", "error_type": "json_parse_failed"},
+                    ],
+                    "fallback_used": True,
+                    "fallback_reason": "groq_rate_limited",
+                    "primary_provider": "groq",
+                }
+
+        agent = Stage4AIDecisionAgent(use_real_llm=True, llm_client=BadThenSkipLLM())
+        decision = agent.decide(
+            symbol="ETHUSDT",
+            market_context={"last_price": 3250, "data_quality": "ok", "kline_data_quality": "ok"},
+            account_context={"available_balance": 5000},
+        )
+        self.assertFalse(decision.get("is_mock_ai"))
+        self.assertTrue(decision.get("parse_error"))
+        self.assertFalse(decision.get("fallback_to_mock"))
+        self.assertFalse(decision.get("order_sent"))
+
+    def test_missing_cerebras_key_does_not_fallback_mock(self) -> None:
+        from tools.research.stage4_provider_chain import Stage4ProviderChainClient
+
+        env = {
+            "GROQ_API_KEY_PRIMARY": "groq-only-key",
+            "STAGE4_LLM_PROVIDER_CHAIN": "groq,cerebras",
+            "STAGE4_ALLOW_SECONDARY_REAL_LLM_FALLBACK": "true",
+            "STAGE4_ALLOW_MOCK_FALLBACK": "false",
+        }
+        blocked = (
+            "CEREBRAS_API_KEY",
+            "GROQ_API_KEY",
+            "GROQ_API_KEY_SECONDARY",
+            "OPENAI_API_KEY",
+            "ANTHROPIC_API_KEY",
+            "GOOGLE_API_KEY",
+        )
+        base = {k: v for k, v in os.environ.items() if k not in blocked}
+        base.update(env)
+        with patch.dict(os.environ, base, clear=True):
+            chain = Stage4ProviderChainClient(load_env=False)
+            self.assertFalse(chain.secondary_available)
+            with patch(
+                "tools.research.stage4_llm_client.Stage4LLMClient.complete_json",
+                return_value={
+                    "status": "error",
+                    "error_type": "rate_limit",
+                    "http_status": 429,
+                    "provider": "groq",
+                    "model": "m1",
+                },
+            ):
+                result = chain.complete_json([{"role": "user", "content": "x"}], symbol="ETHUSDT")
+        self.assertNotEqual(result.get("status"), "ok")
+        self.assertFalse(result.get("fallback_used"))
+
+    def test_provider_attempts_recorded_on_decision(self) -> None:
+        from tools.research.stage4_ai_decision_agent import Stage4AIDecisionAgent
+
+        parsed = self._valid_parsed()
+
+        class ChainLLM:
+            provider_chain = ["groq", "cerebras"]
+
+            def availability(self):
+                return {"real_llm_available": True, "provider": "cerebras", "model_name": "llama-3.3-70b"}
+
+            def complete_json(self, messages, **kwargs):
+                return {
+                    "status": "ok",
+                    "provider": "cerebras",
+                    "model": "llama-3.3-70b",
+                    "parsed": parsed,
+                    "raw_text": json.dumps(parsed),
+                    "provider_chain": ["groq", "cerebras"],
+                    "provider_attempts": [
+                        {"provider": "groq", "result": "rate_limited", "error_type": "provider_http_429"},
+                        {"provider": "cerebras", "result": "success"},
+                    ],
+                    "fallback_used": True,
+                    "fallback_reason": "groq_rate_limited",
+                    "primary_provider": "groq",
+                    "primary_error": "rate_limit",
+                }
+
+        agent = Stage4AIDecisionAgent(use_real_llm=True, llm_client=ChainLLM())
+        decision = agent.decide(
+            symbol="ETHUSDT",
+            market_context={"last_price": 3250, "data_quality": "ok", "kline_data_quality": "ok"},
+            account_context={"available_balance": 5000},
+        )
+        self.assertTrue(decision.get("fallback_used"))
+        self.assertEqual(decision.get("fallback_reason"), "groq_rate_limited")
+        self.assertEqual(decision.get("provider"), "cerebras")
+        self.assertEqual(len(decision.get("provider_attempts") or []), 2)
+        self.assertFalse(decision.get("order_sent"))
+
+    def test_validator_rejects_mock_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            write_decision(
+                out,
+                {
+                    "decision_id": "d1",
+                    "created_at_utc": "2026-01-01T00:00:00Z",
+                    "decision_source": "mock_ai_decision_agent",
+                    "mode": "dry_run",
+                    "model_name": MOCK_MODEL_NAME,
+                    "is_mock_ai": True,
+                    "real_llm_used": False,
+                    "fallback_to_mock": True,
+                    "prompt_hash": "abc",
+                    "symbol": "ETHUSDT",
+                    "candidate_side": "NONE",
+                    "final_action": "skip",
+                    "confidence": 0.1,
+                    "position_size_suggestion": 0,
+                    "market_context": {"symbol": "ETHUSDT"},
+                    "account_context": {"available_balance": 5000},
+                    "retrieved_patches": [],
+                    "why_enter": "",
+                    "why_skip": "test",
+                    "side_reason": "test",
+                    "confidence_reason": "test",
+                    "risk_notes": [],
+                    "safety_constraints": {},
+                    "risk_supervisor_result": {"approved": False, "final_decision": "skip"},
+                    "final_decision": "skip",
+                    "order_sent": False,
+                },
+            )
+            (out / "llm_client_debug.jsonl").write_text("{}\n", encoding="utf-8")
+            from tools.research.validate_stage4_ai_decision_outputs import validate
+
+            result = validate(out, require_real_llm=True)
+            self.assertFalse(result["passed"])
+            self.assertGreater(result["mock_fallback_attempt_count"], 0)
+
+    def test_validator_accepts_groq_cerebras_real_decisions(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            write_decision(
+                out,
+                {
+                    "decision_id": "d1",
+                    "created_at_utc": "2026-01-01T00:00:00Z",
+                    "decision_source": "ai_decision_agent",
+                    "mode": "dry_run",
+                    "model_name": "llama-3.3-70b",
+                    "provider": "cerebras",
+                    "provider_chain": ["groq", "cerebras"],
+                    "provider_attempts": [
+                        {"provider": "groq", "result": "rate_limited"},
+                        {"provider": "cerebras", "result": "success"},
+                    ],
+                    "fallback_used": True,
+                    "fallback_reason": "groq_rate_limited",
+                    "primary_provider": "groq",
+                    "is_mock_ai": False,
+                    "real_llm_used": True,
+                    "fallback_to_mock": False,
+                    "prompt_hash": "abc",
+                    "symbol": "ETHUSDT",
+                    "candidate_side": "NONE",
+                    "final_action": "skip",
+                    "confidence": 0.52,
+                    "position_size_suggestion": 0,
+                    "market_context": {"symbol": "ETHUSDT", "data_quality": "ok"},
+                    "account_context": {"available_balance": 5000},
+                    "retrieved_patches": [],
+                    "why_enter": "",
+                    "why_skip": "watch",
+                    "side_reason": "test",
+                    "confidence_reason": "test",
+                    "risk_notes": [],
+                    "decision_intent": "watch",
+                    "safety_constraints": {},
+                    "risk_supervisor_result": {"approved": False, "final_decision": "skip"},
+                    "final_decision": "skip",
+                    "order_sent": False,
+                },
+            )
+            (out / "llm_client_debug.jsonl").write_text('{"success": true}\n', encoding="utf-8")
+            (out / "stage4_ai_decision_summary.json").write_text(
+                json.dumps({"dry_run_completed": True}),
+                encoding="utf-8",
+            )
+            from tools.research.validate_stage4_ai_decision_outputs import validate
+
+            result = validate(out, require_real_llm=True)
+            self.assertTrue(result["passed"])
+            self.assertEqual(result["provider_success_distribution"].get("cerebras"), 1)
+
+    def test_circuit_breaker_trips_on_groq_429(self) -> None:
+        import io
+        import urllib.error
+
+        from tools.research.stage4_provider_chain import Stage4ProviderCircuitBreaker
+        from tools.research.stage4_llm_client import Stage4LLMClient, Stage4LLMConfig
+
+        Stage4ProviderCircuitBreaker.reset_shared()
+
+        def raise_429(*_args, **_kwargs):
+            body = io.BytesIO(b'{"error":"rate limit"}')
+            raise urllib.error.HTTPError("https://api.groq.com", 429, "Too Many Requests", {}, body)
+
+        cfg = Stage4LLMConfig(
+            provider="groq",
+            model="llama-3.3-70b-versatile",
+            api_key_env="GROQ_API_KEY_PRIMARY",
+            endpoint="https://api.groq.com/openai/v1/chat/completions",
+        )
+        client = Stage4LLMClient(provider="groq", model=cfg.model, load_env=False)
+        client.config = cfg
+        client.available = True
+        with patch.object(client, "_http_post", side_effect=raise_429):
+            with patch.dict(os.environ, {"GROQ_API_KEY_PRIMARY": "test-key"}, clear=False):
+                result = client.complete_json([{"role": "user", "content": "hi"}], use_rate_gate=False)
+        self.assertEqual(result.get("error_type"), "rate_limit")
+        cb = Stage4ProviderCircuitBreaker.shared()
+        self.assertTrue(cb.is_open("groq"))
+        self.assertGreaterEqual(cb.triggered_count, 1)
 
 
 class Stage4StrictEnvReadonlyTests(unittest.TestCase):

@@ -40,6 +40,7 @@ BASE_ALLOWLIST = [
     "tools/research/read_stage3_24h_status.py",
     "tools/research/export_stage3_24h_learning_bundle.py",
     "tools/research/stage3_readonly_web_app.py",
+    "tools/research/stage4_provider_chain.py",
     "tools/research/stage4_llm_client.py",
     "tools/research/stage4_rate_limit_gate.py",
     "tools/research/stage4_system_events.py",
