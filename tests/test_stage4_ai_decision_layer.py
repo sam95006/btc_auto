@@ -895,6 +895,28 @@ class Stage44RegimeContextTests(unittest.TestCase):
         self.assertEqual(decision.get("matched_patch_count"), 1)
         self.assertEqual(decision["risk_supervisor_result"]["veto_reason"], "patch_block")
 
+    def test_coerce_watch_final_action_to_skip(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        raw = {
+            "final_action": "watch",
+            "symbol": "ETHUSDT",
+            "candidate_side": "NONE",
+            "confidence": 0.42,
+            "why_enter": "",
+            "why_skip": "Wait for confirmation",
+            "side_reason": "Trend forming",
+            "confidence_reason": "watch band",
+            "risk_notes": [],
+            "patch_awareness": "",
+            "uncertainty": "medium",
+            "requires_manual_review": False,
+        }
+        proposal, ok, err = parse_llm_decision(raw, symbol="ETHUSDT")
+        self.assertTrue(ok, err)
+        self.assertEqual(proposal["final_action"], "skip")
+        self.assertEqual(proposal["decision_intent"], "watch")
+
     def test_parse_watch_and_enter_candidate_intent(self) -> None:
         from tools.research.stage4_decision_schema import parse_llm_decision
 

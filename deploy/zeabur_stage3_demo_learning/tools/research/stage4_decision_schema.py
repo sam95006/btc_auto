@@ -19,6 +19,7 @@ LLM_DECISION_FIELDS = (
 )
 
 VALID_ACTIONS = frozenset({"enter", "skip"})
+VALID_INTENT_ACTIONS = frozenset({"watch", "enter_candidate", "hard_skip", "soft_skip"})
 VALID_SIDES = frozenset({"BUY", "SELL", "NONE"})
 VALID_INTENTS = frozenset({"hard_skip", "soft_skip", "watch", "enter_candidate"})
 OPTIONAL_LLM_FIELDS = (
@@ -51,6 +52,11 @@ def parse_llm_decision(raw: Dict[str, Any], *, symbol: str) -> Tuple[Dict[str, A
         return skip_proposal(symbol, err, "missing_fields"), False, err
 
     action = str(raw.get("final_action") or "skip").strip().lower()
+    intent_raw = str(raw.get("decision_intent") or "").strip().lower()
+    if action in VALID_INTENT_ACTIONS and action not in VALID_ACTIONS:
+        if not intent_raw:
+            intent_raw = action
+        action = "skip"
     if action not in VALID_ACTIONS:
         err = f"invalid_final_action:{action}"
         return skip_proposal(symbol, err, "invalid_final_action"), False, err
@@ -65,7 +71,7 @@ def parse_llm_decision(raw: Dict[str, Any], *, symbol: str) -> Tuple[Dict[str, A
         return skip_proposal(symbol, "confidence_out_of_range", "confidence_out_of_range"), False, "confidence_out_of_range"
 
     sym = str(raw.get("symbol") or symbol).upper()
-    intent = str(raw.get("decision_intent") or "").strip().lower()
+    intent = intent_raw or str(raw.get("decision_intent") or "").strip().lower()
     if intent and intent not in VALID_INTENTS:
         intent = "hard_skip" if action == "skip" and conf <= 0.1 else "soft_skip"
     elif not intent:
