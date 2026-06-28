@@ -40,6 +40,18 @@ BASE_ALLOWLIST = [
     "tools/research/read_stage3_24h_status.py",
     "tools/research/export_stage3_24h_learning_bundle.py",
     "tools/research/stage3_readonly_web_app.py",
+    "tools/research/stage4_llm_client.py",
+    "tools/research/stage4_response_parser.py",
+    "tools/research/stage4_ai_decision_agent.py",
+    "tools/research/stage4_risk_supervisor.py",
+    "tools/research/stage4_prompt_builder.py",
+    "tools/research/stage4_decision_schema.py",
+    "tools/research/stage4_market_context.py",
+    "tools/research/stage4_context_summary.py",
+    "tools/research/run_stage4_ai_decision_dry_run.py",
+    "tools/research/check_stage4_llm_provider.py",
+    "tools/research/validate_stage4_ai_decision_outputs.py",
+    "tools/research/stage4_cloud_exec_wrapper.sh",
     "tools/research/__init__.py",
     "tools/__init__.py",
     "backend/__init__.py",
@@ -158,6 +170,39 @@ fi
 
 if [ "$MODE" = "idle" ]; then
   echo "Stage 3 idle web mode: starting read-only UI"
+  if [ "${STAGE4_DRY_RUN_ONLY:-false}" = "true" ] && [ "${STAGE4_CLOUD_DRY_RUN_MINUTES:-0}" != "0" ]; then
+    STAGE4_OUT="${STAGE4_OUTPUT_DIR:-/data/stage4_ai_decisions_42_10m}"
+    mkdir -p "$STAGE4_OUT"
+    if [ "${STAGE4_REQUIRE_REAL_LLM:-false}" = "true" ]; then
+      if ! python tools/research/run_stage4_ai_decision_dry_run.py \
+        --preflight-only \
+        --use-real-llm \
+        --output-dir "$STAGE4_OUT" \
+        >> "$STAGE4_OUT/stage4_cloud_dry_run.log" 2>&1; then
+        echo "Stage 4 cloud dry-run blocked: real LLM required but Groq key missing or provider unavailable"
+      else
+        echo "Stage 4 cloud dry-run: ${STAGE4_CLOUD_DRY_RUN_MINUTES}m -> $STAGE4_OUT (background, no orders)"
+        python tools/research/run_stage4_ai_decision_dry_run.py \
+          --duration-minutes "${STAGE4_CLOUD_DRY_RUN_MINUTES}" \
+          --poll-interval-seconds 60 \
+          --symbols ETHUSDT,BTCUSDT \
+          --mode dry-run \
+          --use-real-llm \
+          --output-dir "$STAGE4_OUT" \
+          >> "$STAGE4_OUT/stage4_cloud_dry_run.log" 2>&1 &
+      fi
+    else
+      echo "Stage 4 cloud dry-run: ${STAGE4_CLOUD_DRY_RUN_MINUTES}m -> $STAGE4_OUT (background, no orders)"
+      python tools/research/run_stage4_ai_decision_dry_run.py \
+        --duration-minutes "${STAGE4_CLOUD_DRY_RUN_MINUTES}" \
+        --poll-interval-seconds 60 \
+        --symbols ETHUSDT,BTCUSDT \
+        --mode dry-run \
+        --use-real-llm \
+        --output-dir "$STAGE4_OUT" \
+        >> "$STAGE4_OUT/stage4_cloud_dry_run.log" 2>&1 &
+    fi
+  fi
 fi
 
 if [ "$MODE" != "idle" ] && [ "$MODE" != "runner" ]; then
@@ -215,6 +260,7 @@ def _write_deploy_version() -> Dict[str, Any]:
         "startup_mode_expected": "idle",
         "contains_24h_runner": True,
         "contains_web_ui": True,
+        "contains_stage4_dry_run": True,
         "created_at_utc": utc_now_iso(),
     }
     write_json(DEPLOY_ROOT / VERSION_JSON_NAME, payload)
@@ -365,6 +411,13 @@ def build_package() -> Dict[str, Any]:
         normalized24 = h24_script.replace("\r\n", "\n").replace("\r", "\n")
         (DEPLOY_ROOT / "run_stage3_24h_demo_learning_background.sh").write_bytes(normalized24.encode("utf-8"))
         copied.append("run_stage3_24h_demo_learning_background.sh")
+
+    wrapper_src = ROOT / "tools/research/stage4_cloud_exec_wrapper.sh"
+    if wrapper_src.is_file():
+        wrapper = wrapper_src.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n")
+        (DEPLOY_ROOT / "tools/research/stage4_cloud_exec_wrapper.sh").write_bytes(wrapper.encode("utf-8"))
+        (DEPLOY_ROOT / "tools/research/stage4_cloud_exec_wrapper.sh").chmod(0o755)
+        copied.append("tools/research/stage4_cloud_exec_wrapper.sh")
 
     deploy_version = _write_deploy_version()
     copied.append(VERSION_JSON_NAME)

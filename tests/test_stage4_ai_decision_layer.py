@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from tools.research.bybit_demo_client import BybitDemoClient
 from tools.research.stage4_ai_decision_agent import (
     REQUIRED_DECISION_FIELDS,
     Stage4AIDecisionAgent,
@@ -135,7 +136,7 @@ class Stage4RiskSupervisorTests(unittest.TestCase):
         )
         self.assertFalse(result.approved)
         self.assertEqual(result.final_decision, "skip")
-        self.assertIn("block_reentry", result.veto_reason)
+        self.assertEqual(result.veto_reason, "patch_block")
 
     def test_manual_review_required_veto(self) -> None:
         sup = Stage4RiskSupervisor()
@@ -146,6 +147,7 @@ class Stage4RiskSupervisorTests(unittest.TestCase):
         )
         self.assertFalse(result.approved)
         self.assertEqual(result.final_decision, "skip")
+        self.assertEqual(result.veto_reason, "patch_block")
 
     def test_confidence_below_threshold_skip(self) -> None:
         sup = Stage4RiskSupervisor(confidence_threshold=0.5)
@@ -153,6 +155,7 @@ class Stage4RiskSupervisorTests(unittest.TestCase):
             proposal=self._proposal(confidence=0.2),
             account_context={"available_balance": 5000},
             retrieved_patches=[],
+            dry_run=False,
         )
         self.assertFalse(result.approved)
         self.assertEqual(result.action, "force_skip")
@@ -691,6 +694,107 @@ class Stage4RealLLMGuardTests(unittest.TestCase):
             report = run_health_check(provider="groq", model="llama-3.3-70b-versatile")
         self.assertTrue(report.get("groq_key_present"))
         self.assertEqual(report.get("groq_key_env_used"), "GROQ_API_KEY_PRIMARY")
+
+
+class Stage43MarketContextTests(unittest.TestCase):
+    def test_btcusdt_read_only_ticker_allowed(self) -> None:
+        client = BybitDemoClient("mock")
+        ticker = client.fetch_ticker("BTCUSDT")
+        self.assertEqual(ticker["symbol"], "BTCUSDT")
+
+    def test_build_market_context_has_trend_volatility_regime(self) -> None:
+        from tools.research.stage4_market_context import build_market_context
+
+        ctx = build_market_context("ETHUSDT", client=BybitDemoClient("mock"))
+        self.assertIn("change_24h_pct", ctx)
+        self.assertIn("trend_15m", ctx)
+        self.assertIn("volatility_15m", ctx)
+        self.assertIn("regime", ctx)
+        self.assertIn(ctx["data_quality"], {"ok", "partial", "error"})
+
+    def test_missing_market_data_does_not_crash(self) -> None:
+        from tools.research.stage4_market_context import build_market_context
+
+        class BrokenClient(BybitDemoClient):
+            def fetch_ticker(self, symbol: str = "ETHUSDT"):
+                raise RuntimeError("ticker_down")
+
+            def fetch_klines(self, symbol: str, **kwargs):
+                raise RuntimeError("kline_down")
+
+        ctx = build_market_context("BTCUSDT", client=BrokenClient("mock"))
+        self.assertEqual(ctx["data_quality"], "error")
+        self.assertTrue(ctx["data_limitations"])
+
+    def test_stage3_context_summary_max_five(self) -> None:
+        from tools.research.stage4_context_summary import summarize_trades
+
+        rows = [{"symbol": "ETHUSDT", "side": "BUY", "close_pnl": -1} for _ in range(10)]
+        self.assertEqual(len(summarize_trades(rows, limit=5)), 5)
+
+    def test_prompt_includes_decision_intent_rules(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT, OUTPUT_SCHEMA_HINT
+
+        self.assertIn("decision_intent", SYSTEM_PROMPT)
+        self.assertIn("hard_skip", OUTPUT_SCHEMA_HINT["decision_intent"])
+
+    def test_parse_decision_intent_and_nonzero_soft_skip(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        raw = {
+            "final_action": "skip",
+            "symbol": "ETHUSDT",
+            "candidate_side": "NONE",
+            "confidence": 0.22,
+            "decision_intent": "soft_skip",
+            "why_enter": "",
+            "why_skip": "Weak edge only",
+            "side_reason": "Flat",
+            "confidence_reason": "Some signal",
+            "risk_notes": [],
+            "patch_awareness": "",
+            "uncertainty": "medium",
+            "requires_manual_review": False,
+        }
+        proposal, ok, _ = parse_llm_decision(raw, symbol="ETHUSDT")
+        self.assertTrue(ok)
+        self.assertEqual(proposal["decision_intent"], "soft_skip")
+        self.assertGreater(proposal["confidence"], 0.0)
+
+    def test_supervisor_specific_veto_hard_skip(self) -> None:
+        sup = Stage4RiskSupervisor()
+        result = sup.evaluate(
+            proposal={
+                "final_action": "skip",
+                "decision_intent": "hard_skip",
+                "candidate_side": "NONE",
+                "confidence": 0.05,
+                "position_size_suggestion": 0,
+            },
+            account_context={"available_balance": 5000},
+            retrieved_patches=[],
+            market_context={"data_quality": "ok"},
+        )
+        self.assertEqual(result.veto_reason, "hard_skip")
+
+    def test_dry_run_enter_veto_order_not_allowed(self) -> None:
+        with patch.dict(os.environ, {"STAGE4_ORDER_ALLOWED": "false"}, clear=False):
+            sup = Stage4RiskSupervisor()
+            result = sup.evaluate(
+                proposal={
+                    "final_action": "enter",
+                    "decision_intent": "enter_candidate",
+                    "candidate_side": "BUY",
+                    "confidence": 0.7,
+                    "position_size_suggestion": 10,
+                },
+                account_context={"available_balance": 5000},
+                retrieved_patches=[],
+                market_context={"data_quality": "ok"},
+                dry_run=True,
+            )
+        self.assertEqual(result.veto_reason, "order_not_allowed_dry_run")
+        self.assertFalse(result.approved)
 
 
 class Stage4StrictEnvReadonlyTests(unittest.TestCase):

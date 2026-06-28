@@ -29,35 +29,36 @@ fi
 if [ "$MODE" = "idle" ]; then
   echo "Stage 3 idle web mode: starting read-only UI"
   if [ "${STAGE4_DRY_RUN_ONLY:-false}" = "true" ] && [ "${STAGE4_CLOUD_DRY_RUN_MINUTES:-0}" != "0" ]; then
-    mkdir -p /data/stage4_ai_decisions_42_10m
+    STAGE4_OUT="${STAGE4_OUTPUT_DIR:-/data/stage4_ai_decisions_42_10m}"
+    mkdir -p "$STAGE4_OUT"
     if [ "${STAGE4_REQUIRE_REAL_LLM:-false}" = "true" ]; then
       if ! python tools/research/run_stage4_ai_decision_dry_run.py \
         --preflight-only \
         --use-real-llm \
-        --output-dir /data/stage4_ai_decisions_42_10m \
-        >> /data/stage4_ai_decisions_42_10m/stage4_cloud_dry_run.log 2>&1; then
+        --output-dir "$STAGE4_OUT" \
+        >> "$STAGE4_OUT/stage4_cloud_dry_run.log" 2>&1; then
         echo "Stage 4 cloud dry-run blocked: real LLM required but Groq key missing or provider unavailable"
       else
-        echo "Stage 4 cloud dry-run: ${STAGE4_CLOUD_DRY_RUN_MINUTES}m -> /data/stage4_ai_decisions_42_10m (background, no orders)"
+        echo "Stage 4 cloud dry-run: ${STAGE4_CLOUD_DRY_RUN_MINUTES}m -> $STAGE4_OUT (background, no orders)"
         python tools/research/run_stage4_ai_decision_dry_run.py \
           --duration-minutes "${STAGE4_CLOUD_DRY_RUN_MINUTES}" \
           --poll-interval-seconds 60 \
           --symbols ETHUSDT,BTCUSDT \
           --mode dry-run \
           --use-real-llm \
-          --output-dir /data/stage4_ai_decisions_42_10m \
-          >> /data/stage4_ai_decisions_42_10m/stage4_cloud_dry_run.log 2>&1 &
+          --output-dir "$STAGE4_OUT" \
+          >> "$STAGE4_OUT/stage4_cloud_dry_run.log" 2>&1 &
       fi
     else
-      echo "Stage 4 cloud dry-run: ${STAGE4_CLOUD_DRY_RUN_MINUTES}m -> /data/stage4_ai_decisions_42_10m (background, no orders)"
+      echo "Stage 4 cloud dry-run: ${STAGE4_CLOUD_DRY_RUN_MINUTES}m -> $STAGE4_OUT (background, no orders)"
       python tools/research/run_stage4_ai_decision_dry_run.py \
         --duration-minutes "${STAGE4_CLOUD_DRY_RUN_MINUTES}" \
         --poll-interval-seconds 60 \
         --symbols ETHUSDT,BTCUSDT \
         --mode dry-run \
         --use-real-llm \
-        --output-dir /data/stage4_ai_decisions_42_10m \
-        >> /data/stage4_ai_decisions_42_10m/stage4_cloud_dry_run.log 2>&1 &
+        --output-dir "$STAGE4_OUT" \
+        >> "$STAGE4_OUT/stage4_cloud_dry_run.log" 2>&1 &
     fi
   fi
 fi

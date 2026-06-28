@@ -65,6 +65,14 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 2. On failure: log + write fail summary; **do not** start background dry-run.
 3. On success: start background real-LLM dry-run.
 
+### Stage 4.3 — Market context + prompt calibration (read-only)
+
+- Enriched `market_context` via `stage4_market_context.py` (ticker + 15m klines, regime, volatility).
+- Read-only symbols: `ETHUSDT`, `BTCUSDT` (`STAGE4_READ_ONLY_SYMBOLS`).
+- Stage 3 summaries via `stage4_context_summary.py` (max 5 trades/reflections/patches).
+- Prompt adds `decision_intent`, `missing_data`, `edge_factors`, `risk_factors`.
+- Supervisor veto reasons: `hard_skip`, `soft_skip`, `watch`, `patch_block`, `missing_market_context`, `order_not_allowed_dry_run`, `confidence_below_threshold`.
+
 ### Strict-env read-only exception (Stage 4.2b)
 
 When all of the following hold:

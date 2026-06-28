@@ -42,6 +42,7 @@ ALLOWED_PRIVATE_WRITE_PATHS = (
     "/v5/position/set-leverage",
 )
 DEFAULT_SYMBOL = "ETHUSDT"
+STAGE4_READ_ONLY_SYMBOLS = frozenset({"ETHUSDT", "BTCUSDT"})
 DEFAULT_CATEGORY = "linear"
 DEFAULT_COIN = "USDT"
 DEFAULT_ACCOUNT_TYPE = "UNIFIED"
@@ -365,14 +366,21 @@ class BybitDemoClient:
 
     def fetch_ticker(self, symbol: str = DEFAULT_SYMBOL) -> Dict[str, Any]:
         symbol = symbol.upper()
-        if symbol != DEFAULT_SYMBOL:
+        read_allowed = symbol in STAGE4_READ_ONLY_SYMBOLS
+        if symbol != DEFAULT_SYMBOL and not read_allowed:
             raise SafetyCapViolation(f"symbol_not_allowed:{symbol}")
         if self.mode == "mock":
             ts = int(time.time())
-            base = 3200.0 + (ts % 17)
+            base = 3200.0 + (ts % 17) if symbol == "ETHUSDT" else 65000.0 + (ts % 37)
+            prev = base * 0.998
             return {
                 "symbol": symbol,
                 "lastPrice": str(base),
+                "prevPrice24h": str(prev),
+                "highPrice24h": str(base * 1.002),
+                "lowPrice24h": str(base * 0.996),
+                "volume24h": "1000",
+                "turnover24h": str(base * 1000),
                 "bid1Price": str(base - 0.5),
                 "ask1Price": str(base + 0.5),
                 "source": "mock",
@@ -385,8 +393,61 @@ class BybitDemoClient:
         if not items:
             raise RuntimeError("empty_ticker_response")
         row = items[0]
-        row["source"] = "dry-run"
+        row["source"] = "bybit_demo_public_ticker"
         return row
+
+    def fetch_klines(
+        self,
+        symbol: str,
+        *,
+        interval: str = "15",
+        limit: int = 20,
+        category: str = DEFAULT_CATEGORY,
+    ) -> List[Dict[str, Any]]:
+        """Read-only public klines for Stage 4 market context."""
+        symbol = symbol.upper()
+        if symbol not in STAGE4_READ_ONLY_SYMBOLS:
+            raise SafetyCapViolation(f"symbol_not_allowed:{symbol}")
+        if self.mode == "mock":
+            base = 3200.0 if symbol == "ETHUSDT" else 65000.0
+            rows: List[Dict[str, Any]] = []
+            for i in range(min(limit, 20)):
+                px = base + i * 0.5
+                rows.append({"open": px, "high": px + 1, "low": px - 1, "close": px + 0.2, "volume": 10})
+            return rows
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "interval": interval,
+            "limit": str(min(max(limit, 1), 200)),
+        }
+        url = f"{self.base_url}/v5/market/kline?{urlencode(params)}"
+        self.urls_called.append(url)
+        payload = _http_get_json(url)
+        raw = ((payload.get("result") or {}).get("list") or [])
+        out: List[Dict[str, Any]] = []
+        for item in raw:
+            if isinstance(item, list) and len(item) >= 5:
+                out.append(
+                    {
+                        "open": _float_val(item[1]),
+                        "high": _float_val(item[2]),
+                        "low": _float_val(item[3]),
+                        "close": _float_val(item[4]),
+                        "volume": _float_val(item[5]) if len(item) > 5 else 0.0,
+                    }
+                )
+            elif isinstance(item, dict):
+                out.append(
+                    {
+                        "open": _float_val(item.get("open")),
+                        "high": _float_val(item.get("high")),
+                        "low": _float_val(item.get("low")),
+                        "close": _float_val(item.get("close")),
+                        "volume": _float_val(item.get("volume")),
+                    }
+                )
+        return out
 
     def simulate_order(
         self,
