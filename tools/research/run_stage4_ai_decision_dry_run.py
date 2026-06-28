@@ -18,9 +18,16 @@ if str(ROOT) not in sys.path:
 from tools.research.bybit_demo_client import BybitDemoClient  # noqa: E402
 from tools.research.bybit_demo_learning_common import utc_now_iso, write_json  # noqa: E402
 from tools.research.stage4_ai_decision_agent import (  # noqa: E402
+    MOCK_MODEL_NAME,
     Stage4AIDecisionAgent,
     resolve_stage4_output_dir,
     write_decision,
+)
+from tools.research.stage4_llm_client import (  # noqa: E402
+    RealLLMRequiredError,
+    mock_fallback_allowed,
+    real_llm_preflight,
+    require_real_llm_enabled,
 )
 
 READINESS = ROOT / "data/external_alpha/reports/stage4_ai_decision_dry_run_readiness.json"
@@ -56,6 +63,84 @@ def _append_run_log(log_path: Path, message: str) -> None:
     line = f"{utc_now_iso()} {message}\n"
     with log_path.open("a", encoding="utf-8") as fh:
         fh.write(line)
+
+
+def _write_fail_summary(
+    out: Path,
+    *,
+    failed_reason: str,
+    duration_minutes: float,
+    poll_interval_seconds: float,
+    symbols: List[str],
+    mode: str,
+    use_real_llm: bool,
+    log_path: Path | None = None,
+) -> Dict[str, Any]:
+    log_path = log_path or _resolve_run_log_path(out, duration_minutes)
+    summary = {
+        "record_type": "stage4_ai_decision_summary",
+        "generated_at_utc": utc_now_iso(),
+        "phase": "4",
+        "mode": mode,
+        "duration_minutes": duration_minutes,
+        "poll_interval_seconds": poll_interval_seconds,
+        "symbols": symbols,
+        "dry_run_completed": False,
+        "failed_reason": failed_reason,
+        "real_llm_required": require_real_llm_enabled(),
+        "mock_fallback_allowed": mock_fallback_allowed(use_real_llm=use_real_llm),
+        "decision_count": 0,
+        "real_llm_used_count": 0,
+        "mock_ai_used_count": 0,
+        "tick_count": 0,
+        "output_dir": str(out),
+        "model_name": None,
+        "is_mock_ai": False,
+        "real_llm_used": False,
+        "fallback_to_mock": False,
+        "all_order_sent_false": True,
+        "order_sent_count": 0,
+        "provider_health_check_passed": False,
+        "run_log_path": str(log_path),
+        "decisions": [],
+    }
+    write_json(out / "stage4_ai_decision_summary.json", summary)
+    _append_run_log(
+        log_path,
+        f"FAIL reason={failed_reason} real_llm_required={summary['real_llm_required']} "
+        f"mock_fallback_allowed={summary['mock_fallback_allowed']} order_sent_count=0",
+    )
+    return summary
+
+
+def preflight_real_llm(
+    *,
+    use_real_llm: bool,
+    output_dir: Path | None = None,
+    duration_minutes: float = 0.0,
+    poll_interval_seconds: float = 0.0,
+    symbols: List[str] | None = None,
+    mode: str = "dry_run",
+    write_fail: bool = True,
+) -> tuple[bool, str, Dict[str, Any] | None]:
+    symbols = symbols or []
+    with _stage4_output_dir_env(output_dir) as synced:
+        out = synced or resolve_stage4_output_dir()
+        ok, reason = real_llm_preflight(use_real_llm=use_real_llm)
+        if ok:
+            return True, "", None
+        summary = None
+        if write_fail:
+            summary = _write_fail_summary(
+                out,
+                failed_reason=reason,
+                duration_minutes=duration_minutes,
+                poll_interval_seconds=poll_interval_seconds,
+                symbols=symbols,
+                mode=mode,
+                use_real_llm=use_real_llm,
+            )
+        return False, reason, summary
 
 
 def _fetch_market(symbol: str) -> Dict[str, Any]:
@@ -134,7 +219,77 @@ def _run_dry_run_inner(
 ) -> Dict[str, Any]:
     out = output_dir
     log_path = _resolve_run_log_path(out, duration_minutes)
-    agent = Stage4AIDecisionAgent(use_real_llm=use_real_llm)
+
+    ok, reason, fail_summary = preflight_real_llm(
+        use_real_llm=use_real_llm,
+        output_dir=out,
+        duration_minutes=duration_minutes,
+        poll_interval_seconds=poll_interval_seconds,
+        symbols=symbols,
+        mode=mode,
+        write_fail=True,
+    )
+    if not ok:
+        return fail_summary or _write_fail_summary(
+            out,
+            failed_reason=reason,
+            duration_minutes=duration_minutes,
+            poll_interval_seconds=poll_interval_seconds,
+            symbols=symbols,
+            mode=mode,
+            use_real_llm=use_real_llm,
+            log_path=log_path,
+        )
+
+    provider_health_check_passed: bool | None = None
+    if use_real_llm and require_real_llm_enabled():
+        from tools.research.check_stage4_llm_provider import run_health_check
+
+        provider = os.environ.get("STAGE4_LLM_PROVIDER", "groq").strip().lower() or "groq"
+        model = os.environ.get("STAGE4_LLM_MODEL", "llama-3.3-70b-versatile").strip()
+        health = run_health_check(provider=provider, model=model)
+        provider_health_check_passed = bool(health.get("provider_health_check_passed"))
+        if not provider_health_check_passed:
+            failed = str(health.get("error") or "provider_health_check_failed")
+            return _write_fail_summary(
+                out,
+                failed_reason=failed,
+                duration_minutes=duration_minutes,
+                poll_interval_seconds=poll_interval_seconds,
+                symbols=symbols,
+                mode=mode,
+                use_real_llm=use_real_llm,
+                log_path=log_path,
+            )
+
+    try:
+        agent = Stage4AIDecisionAgent(use_real_llm=use_real_llm)
+    except RealLLMRequiredError as exc:
+        return _write_fail_summary(
+            out,
+            failed_reason=exc.reason,
+            duration_minutes=duration_minutes,
+            poll_interval_seconds=poll_interval_seconds,
+            symbols=symbols,
+            mode=mode,
+            use_real_llm=use_real_llm,
+            log_path=log_path,
+        )
+
+    if use_real_llm and not mock_fallback_allowed(use_real_llm=True) and (
+        agent.fallback_to_mock or agent.is_mock_ai or agent.model_name == MOCK_MODEL_NAME
+    ):
+        return _write_fail_summary(
+            out,
+            failed_reason="mock_fallback_blocked",
+            duration_minutes=duration_minutes,
+            poll_interval_seconds=poll_interval_seconds,
+            symbols=symbols,
+            mode=mode,
+            use_real_llm=use_real_llm,
+            log_path=log_path,
+        )
+
     _append_run_log(
         log_path,
         f"START mode={mode} duration_minutes={duration_minutes} symbols={','.join(symbols)} "
@@ -179,7 +334,10 @@ def _run_dry_run_inner(
         "duration_minutes": duration_minutes,
         "poll_interval_seconds": poll_interval_seconds,
         "symbols": symbols,
+        "dry_run_completed": True,
         "decision_count": len(decisions),
+        "real_llm_used_count": sum(1 for d in decisions if d.get("real_llm_used")),
+        "mock_ai_used_count": sum(1 for d in decisions if d.get("is_mock_ai")),
         "tick_count": tick,
         "output_dir": str(out),
         "model_name": agent.model_name,
@@ -187,6 +345,8 @@ def _run_dry_run_inner(
         "real_llm_used": agent.real_llm_used,
         "fallback_to_mock": agent.fallback_to_mock,
         "all_order_sent_false": all(not d.get("order_sent") for d in decisions),
+        "order_sent_count": sum(1 for d in decisions if d.get("order_sent")),
+        "provider_health_check_passed": provider_health_check_passed,
         "run_log_path": str(log_path),
         "decisions": [{"decision_id": d["decision_id"], "symbol": d["symbol"], "final_decision": d["final_decision"]} for d in decisions],
     }
@@ -206,6 +366,7 @@ def main() -> int:
     parser.add_argument("--mode", default="dry_run")
     parser.add_argument("--fast-test", action="store_true", help="Single tick, no sleep")
     parser.add_argument("--use-real-llm", action="store_true")
+    parser.add_argument("--preflight-only", action="store_true", help="Real LLM preflight; write fail summary and exit")
     parser.add_argument("--output-dir", default="")
     args = parser.parse_args()
 
@@ -213,6 +374,20 @@ def main() -> int:
     out = Path(args.output_dir) if args.output_dir else None
     duration = 0.01 if args.fast_test else args.duration_minutes
     poll = 0.0 if args.fast_test else args.poll_interval_seconds
+
+    if args.preflight_only:
+        ok, reason, summary = preflight_real_llm(
+            use_real_llm=args.use_real_llm,
+            output_dir=out,
+            duration_minutes=duration,
+            poll_interval_seconds=max(0.0, poll),
+            symbols=symbols,
+            mode=args.mode,
+            write_fail=True,
+        )
+        payload = {"preflight_passed": ok, "failed_reason": reason or None, "summary": summary}
+        print(json.dumps(payload, indent=2))
+        return 0 if ok else 1
 
     summary = run_dry_run(
         duration_minutes=duration,

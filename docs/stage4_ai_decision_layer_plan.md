@@ -1,98 +1,72 @@
 # Stage 4 AI Decision Layer Plan
 
-**Scope:** AI-assisted enter/skip proposals with Risk Supervisor gate. Dry-run only in this phase.
+## Phase 4.0–4.1
 
-## Goal
+- Mock and real LLM dry-run decision loop (no orders).
+- Risk Supervisor always runs after AI proposal.
+- Groq via OpenAI-compatible client with User-Agent, retries, and `llm_client_debug.jsonl`.
 
-Before any demo order, an AI Decision Agent evaluates:
+## Phase 4.2a — Cloud Real-LLM Required Guard
 
-1. Bybit market data (public ticker)
-2. Account snapshot
-3. Active learning patches (JSONL retrieval)
-4. Recent trade results / reflections
-5. Safety constraints (immutable)
-6. Regime / market condition (mock classifier in Phase 4.0)
+When cloud dry-run must use a real LLM, mock fallback is forbidden.
 
-Output: structured JSON decision log — **never sends orders** in dry-run.
+### Environment variables
 
-## Components
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `STAGE4_REQUIRE_REAL_LLM` | `false` | Hard require real LLM when `--use-real-llm` |
+| `STAGE4_ALLOW_MOCK_FALLBACK` | `true` (unless require=true, then `false`) | Allow mock when real LLM unavailable |
 
-| File | Role |
-|------|------|
-| `stage4_ai_decision_agent.py` | Mock/real AI proposal + patch retrieval |
-| `stage4_risk_supervisor.py` | Veto / reduce / force_skip — cannot submit orders |
-| `run_stage4_ai_decision_dry_run.py` | Local polling loop |
-| `validate_stage4_ai_decision_outputs.py` | Schema + safety validation |
+Recommended cloud settings:
 
-## Output paths
-
-- Local: `data/external_alpha/stage4_ai_decisions/`
-- Zeabur (future): `/data/stage4_ai_decisions/`
-
-Files:
-
-- `ai_decisions.jsonl`
-- `risk_supervisor_decisions.jsonl`
-- `stage4_ai_decision_summary.json`
-
-## Safety invariants
-
-AI **cannot** modify:
-
-- `max_margin_usd`, `max_leverage`, `max_open_positions`
-- `require_stop_loss`, `require_max_hold`
-- `mainnet_allowed`, `real_money`, `production_promotion_allowed`
-
-Risk Supervisor hard-vetoes unsafe env and active `block_reentry` / `manual_review_required` patches.
-
-## Phase 4.0 (this round)
-
-- Deterministic **mock AI** (`is_mock_ai=true`, `model_name=mock_ai_decision_agent`)
-- JSONL patch retrieval (no VectorDB)
-- Local dry-run only — no Zeabur 24h runner
-
-## Phase 4.1a (this round)
-
-- Root cause of 30m empty responses: Groq HTTP 403 (Cloudflare 1010) when `User-Agent` header missing
-- `stage4_llm_client.py`: User-Agent, retries/backoff, `llm_client_debug.jsonl`, GROQ secondary key fallback
-- `stage4_response_parser.py`: content extraction + markdown/tool-call JSON parsing
-- `check_stage4_llm_provider.py`: minimal health probe
-- Dry-run logs: `stage4_30m_dry_run.log` / `stage4_short_run.log` under output dir
-
-## Phase 4.2 (this round)
-
-- Zeabur Stage 3 container read-only real LLM dry-run (no orders)
-- `--output-dir` syncs `STAGE4_OUTPUT_DIR` so `llm_client_debug.jsonl` co-locates with decisions
-
-Health check:
-
-```bash
-python tools/research/check_stage4_llm_provider.py --provider groq --model llama-3.3-70b-versatile
+```env
+STAGE4_REQUIRE_REAL_LLM=true
+STAGE4_ALLOW_MOCK_FALLBACK=false
+STAGE4_USE_REAL_LLM=true
+STAGE4_DRY_RUN_ONLY=true
+STAGE4_ORDER_ALLOWED=false
 ```
 
-## Phase 4.1 (previous)
+### Groq key aliases (checked in order)
 
-- Real LLM via `stage4_llm_client.py` (Groq / OpenAI / Anthropic / Gemini / Ollama / Cerebras)
-- Blocked: DeepSeek, Qwen, ChatGLM, and other China-origin model name patterns
-- Structured JSON output enforced by `stage4_decision_schema.py`
-- Prompt builder: `stage4_prompt_builder.py`
-- Flow: LLM → Risk Supervisor → `final_decision` → `order_sent=false`
-- `--use-real-llm` on dry-run runner; honest `fallback_to_mock=true` if no key
+1. `GROQ_API_KEY_PRIMARY`
+2. `GROQ_API_KEY_SECONDARY`
+3. `GROQ_API_KEY`
 
-Run locally:
+Keys are never logged. Health check reports alias names and presence only.
+
+### Runner behavior (`run_stage4_ai_decision_dry_run.py`)
+
+When real LLM is required but unavailable:
+
+- Do **not** enter the decision loop.
+- Do **not** write `ai_decisions.jsonl`.
+- Write `stage4_ai_decision_summary.json` with `dry_run_completed=false`, `failed_reason`, `order_sent_count=0`.
+
+Preflight CLI:
 
 ```bash
-python tools/research/run_stage4_ai_decision_dry_run.py --duration-minutes 30 --poll-interval-seconds 60 --symbols ETHUSDT,BTCUSDT --mode dry-run --use-real-llm
+python tools/research/run_stage4_ai_decision_dry_run.py --preflight-only --use-real-llm --output-dir /path
 ```
 
-## Phase 4.2 (future)
+### Validator strict mode
 
-- Wire real LLM with `is_mock_ai=false`
-- Integrate with Stage 3 demo-order path behind `decision_source=ai_decision_agent`
-- Zeabur shadow dry-run service
+```bash
+python tools/research/validate_stage4_ai_decision_outputs.py --output-dir /path --require-real-llm
+```
 
-## Acceptance
+Fails when: `real_llm_used_count=0`, mock used, fallback, missing debug log, or provider health check failed. Still requires `order_sent_count=0`.
 
-- `decision_count > 0`
-- Every row: `order_sent=false`, `prompt_hash`, `risk_supervisor_result`
-- Patch veto tests pass in unittest
+### Entrypoint (Zeabur idle)
+
+If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
+
+1. Run `--preflight-only` first.
+2. On failure: log + write fail summary; **do not** start background dry-run.
+3. On success: start background real-LLM dry-run.
+
+### Safety invariants (unchanged)
+
+- No orders sent in dry-run mode.
+- Stage 3 runner remains gated by `STAGE3_STARTUP_MODE=idle`.
+- Production / btc-auto services are out of scope.

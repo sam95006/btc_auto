@@ -12,7 +12,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.research.stage4_decision_schema import LLM_DECISION_FIELDS, parse_llm_decision  # noqa: E402
-from tools.research.stage4_llm_client import Stage4LLMClient  # noqa: E402
+from tools.research.stage4_llm_client import Stage4LLMClient, groq_key_status  # noqa: E402
 
 HEALTH_FIELDS = (
     "final_action",
@@ -23,6 +23,7 @@ HEALTH_FIELDS = (
 
 
 def run_health_check(*, provider: str, model: str) -> dict:
+    key_status = groq_key_status() if provider.strip().lower() == "groq" else {}
     client = Stage4LLMClient(provider=provider, model=model, load_env=True)
     avail = client.availability()
     if not avail.get("real_llm_available"):
@@ -35,6 +36,7 @@ def run_health_check(*, provider: str, model: str) -> dict:
             "json_parse_ok": False,
             "required_fields_present": False,
             "error": avail.get("reason") or "provider_unavailable",
+            **key_status,
         }
 
     messages = [
@@ -89,6 +91,7 @@ def run_health_check(*, provider: str, model: str) -> dict:
         "error": result.get("error"),
         "response_path_used": result.get("response_path_used"),
         "latency_ms": result.get("latency_ms"),
+        **key_status,
     }
 
 

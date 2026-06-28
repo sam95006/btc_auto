@@ -381,6 +381,16 @@ class Stage4ResponseParserTests(unittest.TestCase):
 
 
 class Stage4LLMClientTests(unittest.TestCase):
+    def test_groq_api_key_alias_resolves(self) -> None:
+        from tools.research.stage4_llm_client import GROQ_KEY_ENVS, Stage4LLMClient
+
+        env = {k: v for k, v in os.environ.items() if k not in GROQ_KEY_ENVS}
+        env["GROQ_API_KEY"] = "cloud-test-key"
+        with patch.dict(os.environ, env, clear=True):
+            client = Stage4LLMClient(provider="groq", load_env=False)
+        self.assertTrue(client.available)
+        self.assertIn(client.config.api_key_env, ("GROQ_API_KEY", "GROQ_API_KEY_PRIMARY"))
+
     def test_empty_llm_response_skips(self) -> None:
         class EmptyLLM:
             def complete_json(self, messages, prompt_hash=""):
@@ -520,6 +530,167 @@ class Stage4LLMClientTests(unittest.TestCase):
                 self.assertIn("abc", log_text)
             finally:
                 os.environ.pop("STAGE4_OUTPUT_DIR", None)
+
+
+class Stage4RealLLMGuardTests(unittest.TestCase):
+    def test_require_real_llm_missing_key_hard_fail_no_decisions(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            env = {
+                "STAGE4_OUTPUT_DIR": str(out),
+                "STAGE4_REQUIRE_REAL_LLM": "true",
+                "STAGE4_ALLOW_MOCK_FALLBACK": "false",
+            }
+            env.update({k: v for k, v in os.environ.items() if k not in ("GROQ_API_KEY", "GROQ_API_KEY_PRIMARY", "GROQ_API_KEY_SECONDARY")})
+            with patch.dict(os.environ, env, clear=True):
+                from tools.research.run_stage4_ai_decision_dry_run import run_dry_run
+
+                summary = run_dry_run(
+                    duration_minutes=0.01,
+                    poll_interval_seconds=0,
+                    symbols=["ETHUSDT"],
+                    output_dir=out,
+                    use_real_llm=True,
+                )
+            self.assertFalse(summary.get("dry_run_completed", True))
+            self.assertEqual(summary.get("failed_reason"), "missing_real_llm_key")
+            self.assertEqual(summary.get("decision_count"), 0)
+            self.assertEqual(summary.get("order_sent_count"), 0)
+            self.assertFalse((out / "ai_decisions.jsonl").is_file())
+
+    def test_require_real_llm_disallows_mock_fallback_on_agent_init(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "STAGE4_REQUIRE_REAL_LLM": "true",
+                "STAGE4_ALLOW_MOCK_FALLBACK": "false",
+            },
+            clear=False,
+        ), patch(
+            "tools.research.stage4_llm_client.Stage4LLMClient._resolve_config",
+            return_value=None,
+        ):
+            from tools.research.stage4_llm_client import RealLLMRequiredError
+
+            with self.assertRaises(RealLLMRequiredError):
+                Stage4AIDecisionAgent(use_real_llm=True)
+
+    def test_validator_require_real_llm_fails_on_mock(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            write_decision(
+                out,
+                {
+                    "decision_id": "d1",
+                    "created_at_utc": "2026-01-01T00:00:00Z",
+                    "decision_source": "mock_ai_decision_agent",
+                    "mode": "dry_run",
+                    "model_name": "mock_ai_decision_agent",
+                    "is_mock_ai": True,
+                    "real_llm_used": False,
+                    "fallback_to_mock": True,
+                    "prompt_hash": "abc",
+                    "symbol": "ETHUSDT",
+                    "candidate_side": "BUY",
+                    "final_action": "skip",
+                    "confidence": 0.1,
+                    "position_size_suggestion": 0,
+                    "market_context": {"symbol": "ETHUSDT"},
+                    "account_context": {"available_balance": 5000},
+                    "retrieved_patches": [],
+                    "why_enter": "",
+                    "why_skip": "test",
+                    "side_reason": "test",
+                    "confidence_reason": "test",
+                    "risk_notes": [],
+                    "safety_constraints": {},
+                    "risk_supervisor_result": {"approved": False, "final_decision": "skip"},
+                    "final_decision": "skip",
+                    "order_sent": False,
+                },
+            )
+            from tools.research.validate_stage4_ai_decision_outputs import validate
+
+            result = validate(out, require_real_llm=True)
+            self.assertFalse(result["passed"])
+            self.assertIn("real_llm_used_count_zero", result["errors"])
+            self.assertIn("mock_ai_used_count_gt_zero", result["errors"])
+            self.assertEqual(result["order_sent_count"], 0)
+
+    def test_validator_require_real_llm_fails_when_real_llm_used_count_zero(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            from tools.research.validate_stage4_ai_decision_outputs import validate
+
+            result = validate(out, require_real_llm=True)
+            self.assertFalse(result["passed"])
+            self.assertIn("real_llm_used_count_zero", result["errors"])
+
+    def test_validator_require_real_llm_fails_when_debug_log_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / "stage4_ai_decision_summary.json").write_text(
+                json.dumps({"dry_run_completed": True, "real_llm_used_count": 1}),
+                encoding="utf-8",
+            )
+            from tools.research.validate_stage4_ai_decision_outputs import validate
+
+            result = validate(out, require_real_llm=True)
+            self.assertFalse(result["passed"])
+            self.assertIn("llm_client_debug_jsonl_missing", result["errors"])
+
+    def test_require_real_llm_guard_keeps_order_sent_zero(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            with patch.dict(
+                os.environ,
+                {
+                    "STAGE4_OUTPUT_DIR": str(out),
+                    "STAGE4_REQUIRE_REAL_LLM": "true",
+                    "STAGE4_ALLOW_MOCK_FALLBACK": "false",
+                },
+                clear=False,
+            ), patch(
+                "tools.research.stage4_llm_client.groq_key_configured",
+                return_value=False,
+            ):
+                from tools.research.run_stage4_ai_decision_dry_run import run_dry_run
+
+                summary = run_dry_run(
+                    duration_minutes=0.01,
+                    poll_interval_seconds=0,
+                    symbols=["ETHUSDT"],
+                    output_dir=out,
+                    use_real_llm=True,
+                )
+            self.assertEqual(summary.get("order_sent_count"), 0)
+
+    def test_health_check_uses_groq_primary_alias(self) -> None:
+        from tools.research.check_stage4_llm_provider import run_health_check
+
+        with patch.dict(os.environ, {"GROQ_API_KEY_PRIMARY": "alias-test-key"}, clear=False), patch(
+            "tools.research.check_stage4_llm_provider.Stage4LLMClient"
+        ) as mock_cls:
+            mock_cls.return_value.availability.return_value = {
+                "real_llm_available": True,
+                "model_name": "llama-3.3-70b-versatile",
+            }
+            mock_cls.return_value.complete_json.return_value = {
+                "status": "ok",
+                "provider": "groq",
+                "model": "llama-3.3-70b-versatile",
+                "http_status": 200,
+                "raw_content_length": 50,
+                "parsed": {
+                    "final_action": "skip",
+                    "candidate_side": "NONE",
+                    "confidence": 0.0,
+                    "why_skip": "health_check",
+                },
+            }
+            report = run_health_check(provider="groq", model="llama-3.3-70b-versatile")
+        self.assertTrue(report.get("groq_key_present"))
+        self.assertEqual(report.get("groq_key_env_used"), "GROQ_API_KEY_PRIMARY")
 
 
 class Stage4ProviderHealthTests(unittest.TestCase):

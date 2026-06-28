@@ -44,6 +44,15 @@ DEFAULT_MODELS = {
     "cerebras": os.environ.get("STAGE4_LLM_MODEL", "llama-3.3-70b"),
 }
 
+GROQ_KEY_ENVS = ("GROQ_API_KEY_PRIMARY", "GROQ_API_KEY_SECONDARY", "GROQ_API_KEY")
+
+
+def _first_env_key(names: Tuple[str, ...]) -> str:
+    for name in names:
+        if os.environ.get(name):
+            return name
+    return ""
+
 RETRYABLE_HTTP = frozenset({408, 429, 500, 502, 503, 504})
 MAX_RETRIES = 2
 BACKOFF_SECONDS = (1.0, 2.5)
@@ -53,6 +62,76 @@ HTTP_HEADERS_BASE = {
     "Accept": "application/json",
     "User-Agent": "Mozilla/5.0 NEXUS-Stage4/1.0",
 }
+
+
+def _bridge_groq_env_aliases() -> None:
+    """Mirror Zeabur GROQ_API_KEY into PRIMARY when only legacy name is set."""
+    groq = (os.environ.get("GROQ_API_KEY") or "").strip()
+    primary = (os.environ.get("GROQ_API_KEY_PRIMARY") or "").strip()
+    if groq and not primary:
+        os.environ["GROQ_API_KEY_PRIMARY"] = groq
+    elif primary and not groq:
+        os.environ["GROQ_API_KEY"] = primary
+
+
+class RealLLMRequiredError(RuntimeError):
+    """Raised when real LLM is required but unavailable (no mock fallback)."""
+
+    def __init__(self, reason: str = "missing_real_llm_key") -> None:
+        self.reason = reason
+        super().__init__(reason)
+
+
+def env_truthy(name: str, default: bool = False) -> bool:
+    raw = os.environ.get(name)
+    if raw is None or not str(raw).strip():
+        return default
+    return str(raw).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def require_real_llm_enabled() -> bool:
+    return env_truthy("STAGE4_REQUIRE_REAL_LLM", False)
+
+
+def mock_fallback_allowed(*, use_real_llm: bool = True) -> bool:
+    if not use_real_llm:
+        return True
+    if require_real_llm_enabled():
+        return env_truthy("STAGE4_ALLOW_MOCK_FALLBACK", False)
+    return env_truthy("STAGE4_ALLOW_MOCK_FALLBACK", True)
+
+
+def groq_key_configured() -> bool:
+    _bridge_groq_env_aliases()
+    return bool(_first_env_key(GROQ_KEY_ENVS))
+
+
+def groq_key_status() -> Dict[str, Any]:
+    _bridge_groq_env_aliases()
+    used = _first_env_key(GROQ_KEY_ENVS)
+    present_names = [name for name in GROQ_KEY_ENVS if os.environ.get(name)]
+    return {
+        "groq_key_aliases_checked": list(GROQ_KEY_ENVS),
+        "groq_key_present": bool(present_names),
+        "groq_key_env_used": used or None,
+        "groq_key_env_count": len(present_names),
+    }
+
+
+def real_llm_preflight(*, use_real_llm: bool, provider: str = "", model: str = "") -> Tuple[bool, str]:
+    if not use_real_llm:
+        return True, ""
+    if mock_fallback_allowed(use_real_llm=True):
+        return True, ""
+    if not groq_key_configured():
+        return False, "missing_real_llm_key"
+    prov = (provider or os.environ.get("STAGE4_LLM_PROVIDER", "groq") or "groq").strip().lower()
+    mdl = (model or os.environ.get("STAGE4_LLM_MODEL", "") or "").strip()
+    client = Stage4LLMClient(provider=prov, model=mdl, load_env=True)
+    avail = client.availability()
+    if not avail.get("real_llm_available"):
+        return False, str(avail.get("reason") or "no_allowed_provider_configured")
+    return True, ""
 
 
 def _load_local_env() -> None:
@@ -122,6 +201,7 @@ class Stage4LLMClient:
     def __init__(self, *, provider: str = "", model: str = "", load_env: bool = True) -> None:
         if load_env:
             _load_local_env()
+        _bridge_groq_env_aliases()
         self.timeout = int(os.environ.get("NEXUS_LLM_TIMEOUT_SECONDS", "20"))
         self.max_tokens = int(os.environ.get("NEXUS_LLM_MAX_COMPLETION_TOKENS", "700"))
         self.config = self._resolve_config(provider=provider, model=model)
@@ -140,6 +220,8 @@ class Stage4LLMClient:
         candidates: List[Tuple[str, str, str, str]] = []
         if explicit != "auto":
             key_env, endpoint = provider_defaults.get(explicit, ("", ""))
+            if explicit == "groq":
+                key_env = _first_env_key(GROQ_KEY_ENVS)
             candidates.append((explicit, model, key_env, endpoint))
         else:
             for prov, key_env, endpoint in (
@@ -161,7 +243,13 @@ class Stage4LLMClient:
                 if base:
                     return Stage4LLMConfig(provider=prov, model=chosen_model, endpoint=base)
                 continue
-            if key_env and os.environ.get(key_env):
+            if prov == "groq":
+                key_env = _first_env_key(GROQ_KEY_ENVS)
+                if not key_env:
+                    continue
+            elif not (key_env and os.environ.get(key_env)):
+                continue
+            if key_env:
                 return Stage4LLMConfig(provider=prov, model=chosen_model, api_key_env=key_env, endpoint=endpoint)
         return None
 
@@ -292,11 +380,8 @@ class Stage4LLMClient:
 
     def _api_key_chain(self, cfg: Stage4LLMConfig) -> List[str]:
         if cfg.provider == "groq":
-            keys = []
-            for env_name in ("GROQ_API_KEY_PRIMARY", "GROQ_API_KEY_SECONDARY"):
-                if os.environ.get(env_name):
-                    keys.append(env_name)
-            return keys or [cfg.api_key_env]
+            keys = [name for name in GROQ_KEY_ENVS if os.environ.get(name)]
+            return keys or ([cfg.api_key_env] if cfg.api_key_env else [])
         return [cfg.api_key_env] if cfg.api_key_env else [""]
 
     @staticmethod

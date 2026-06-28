@@ -154,7 +154,11 @@ class Stage4AIDecisionAgent:
         self.supervisor = supervisor or Stage4RiskSupervisor()
 
         if use_real_llm:
-            from tools.research.stage4_llm_client import Stage4LLMClient
+            from tools.research.stage4_llm_client import (
+                RealLLMRequiredError,
+                Stage4LLMClient,
+                mock_fallback_allowed,
+            )
 
             self.llm_client = llm_client or Stage4LLMClient(load_env=True)
             avail = self.llm_client.availability()
@@ -163,6 +167,9 @@ class Stage4AIDecisionAgent:
                 self.real_llm_used = True
                 self.model_name = str(avail.get("model_name") or model_name)
                 self.decision_source = "ai_decision_agent"
+            elif not mock_fallback_allowed(use_real_llm=True):
+                reason = str(avail.get("reason") or "missing_real_llm_key")
+                raise RealLLMRequiredError(reason)
             else:
                 self.is_mock_ai = True
                 self.real_llm_used = False
