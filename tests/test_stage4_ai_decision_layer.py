@@ -3,10 +3,14 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+
+ROOT = Path(__file__).resolve().parents[1]
 
 from tools.research.bybit_demo_client import BybitDemoClient
 from tools.research.stage4_ai_decision_agent import (
@@ -335,6 +339,11 @@ class Stage4DryRunIntegrationTests(unittest.TestCase):
                 "tools.research.stage4_llm_client.Stage4LLMClient._http_post",
                 return_value=(200, ok_payload),
             ), patch.dict(os.environ, {"GROQ_API_KEY_PRIMARY": "test-key-local-only"}, clear=False):
+                from tools.research.stage4_rate_limit_gate import Stage4LLMRateGate
+
+                Stage4LLMRateGate.reset_shared()
+                os.environ.pop("STAGE4_OUTPUT_DIR", None)
+                os.environ.pop("STAGE4_REQUIRE_STAGE3_CONTEXT", None)
                 run_dry_run(
                     duration_minutes=0.01,
                     poll_interval_seconds=0,
@@ -1147,7 +1156,149 @@ class Stage45RateLimitTests(unittest.TestCase):
                 os.environ.pop("STAGE4_OUTPUT_DIR", None)
 
 
-class Stage4StrictEnvReadonlyTests(unittest.TestCase):
+class Stage46aContextGuardTests(unittest.TestCase):
+    def test_require_stage3_context_blocks_when_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            env = {
+                "STAGE4_OUTPUT_DIR": str(out),
+                "STAGE3_OUTPUT_DIR": str(out / "missing_stage3"),
+                "STAGE4_REQUIRE_STAGE3_CONTEXT": "true",
+            }
+            with patch.dict(os.environ, env, clear=False):
+                from tools.research.run_stage4_ai_decision_dry_run import preflight_stage3_context
+
+                ok, reason, summary = preflight_stage3_context(
+                    output_dir=out,
+                    duration_minutes=20,
+                    poll_interval_seconds=180,
+                    symbols=["ETHUSDT"],
+                    mode="dry-run",
+                    use_real_llm=True,
+                )
+            self.assertFalse(ok)
+            self.assertEqual(reason, "missing_required_stage3_context")
+            self.assertIsNotNone(summary)
+            self.assertFalse(summary.get("dry_run_completed"))
+            self.assertEqual(summary.get("failed_reason"), "missing_required_stage3_context")
+            self.assertEqual(summary.get("order_sent_count"), 0)
+            self.assertTrue((out / "stage4_ai_decision_summary.json").is_file())
+
+    def test_require_stage3_context_allows_when_present(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            stage3 = Path(tmp) / "stage3"
+            stage3.mkdir()
+            (stage3 / "trade_results.jsonl").write_text(
+                json.dumps({"symbol": "ETHUSDT", "side": "BUY", "close_pnl": -0.1}) + "\n",
+                encoding="utf-8",
+            )
+            (stage3 / "reflection_records.jsonl").write_text(
+                json.dumps({"symbol": "ETHUSDT", "side": "BUY", "failure_reason": "demo"}) + "\n",
+                encoding="utf-8",
+            )
+            (stage3 / "applied_learning_patches.jsonl").write_text(
+                json.dumps({"symbol": "ETHUSDT", "side": "BUY", "action": "block"}) + "\n",
+                encoding="utf-8",
+            )
+            env = {"STAGE3_OUTPUT_DIR": str(stage3), "STAGE4_REQUIRE_STAGE3_CONTEXT": "true"}
+            with patch.dict(os.environ, env, clear=False):
+                from tools.research.run_stage4_ai_decision_dry_run import preflight_stage3_context
+
+                ok, reason, summary = preflight_stage3_context(
+                    output_dir=Path(tmp) / "out",
+                    duration_minutes=20,
+                    poll_interval_seconds=180,
+                    symbols=["ETHUSDT"],
+                    mode="dry-run",
+                    use_real_llm=True,
+                )
+            self.assertTrue(ok)
+            self.assertEqual(reason, "")
+            self.assertIsNone(summary)
+
+    def test_fail_summary_only_writes_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            env = {"STAGE4_OUTPUT_DIR": str(out)}
+            script = [
+                sys.executable,
+                str(ROOT / "tools" / "research" / "run_stage4_ai_decision_dry_run.py"),
+                "--fail-summary-only",
+                "--failed-reason",
+                "missing_required_stage3_context",
+                "--output-dir",
+                str(out),
+                "--symbols",
+                "ETHUSDT",
+            ]
+            with patch.dict(os.environ, env, clear=False):
+                proc = subprocess.run(script, capture_output=True, text=True, cwd=str(ROOT))
+            self.assertNotEqual(proc.returncode, 0)
+            summary = json.loads((out / "stage4_ai_decision_summary.json").read_text(encoding="utf-8"))
+            self.assertFalse(summary.get("dry_run_completed"))
+            self.assertEqual(summary.get("failed_reason"), "missing_required_stage3_context")
+
+    def test_summary_written_when_all_ticks_skipped(self) -> None:
+        from tools.research.stage4_llm_client import ProviderRateLimited
+
+        class SkippingAgent:
+            real_llm_used = True
+            is_mock_ai = False
+            model_name = "test-model"
+            fallback_to_mock = False
+
+            def decide(self, **kwargs):
+                raise ProviderRateLimited(
+                    provider="groq",
+                    model_name="test-model",
+                    symbol="ETHUSDT",
+                    reason="rate_limit",
+                )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "out"
+            env = {
+                "STAGE4_OUTPUT_DIR": str(out),
+                "STAGE4_REQUIRE_REAL_LLM": "false",
+                "STAGE4_ALLOW_MOCK_FALLBACK": "true",
+            }
+            with patch.dict(os.environ, env, clear=False):
+                agent_mod = __import__(
+                    "tools.research.stage4_ai_decision_agent",
+                    fromlist=["Stage4AIDecisionAgent"],
+                )
+                from tools.research.run_stage4_ai_decision_dry_run import run_dry_run
+
+                with patch.object(agent_mod, "Stage4AIDecisionAgent", return_value=SkippingAgent()):
+                    summary = run_dry_run(
+                        duration_minutes=0.01,
+                        poll_interval_seconds=0,
+                        symbols=["ETHUSDT"],
+                        mode="dry-run",
+                        output_dir=out,
+                        use_real_llm=True,
+                    )
+            self.assertTrue(summary.get("dry_run_completed"))
+            self.assertTrue((out / "stage4_ai_decision_summary.json").is_file())
+            self.assertGreaterEqual(summary.get("skipped_tick_count", 0), 1)
+            self.assertEqual(summary.get("order_sent_count"), 0)
+            self.assertIn("bundle_export", summary)
+
+    def test_check_stage3_context_seed_no_secrets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            stage3 = Path(tmp) / "stage3"
+            stage3.mkdir()
+            (stage3 / "trade_results.jsonl").write_text('{"symbol":"ETHUSDT"}\n', encoding="utf-8")
+            (stage3 / "reflection_records.jsonl").write_text('{"symbol":"ETHUSDT"}\n', encoding="utf-8")
+            (stage3 / "applied_learning_patches.jsonl").write_text('{"symbol":"ETHUSDT","action":"block"}\n', encoding="utf-8")
+            from tools.research.check_stage3_context_seed import check_stage3_context
+
+            result = check_stage3_context(target_dir=stage3)
+            blob = json.dumps(result)
+            self.assertNotIn("gsk_", blob)
+            self.assertNotIn("api_key", blob.lower())
+
+
     def _stage4_readonly_env(self) -> dict[str, str]:
         return {
             "STAGE3_STARTUP_MODE": "idle",

@@ -66,12 +66,19 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 3. On success: start background real-LLM dry-run.
 
 ### Stage 4.5 — Provider rate limit + Stage3 seed context
-
 - `Stage4LLMRateGate`: min interval + backoff after 429; shared by health check and decisions.
 - 429 / gate block → `ProviderRateLimited` → `stage4_system_events.jsonl` skipped tick (no fake decision).
 - `STAGE4_LIGHT_PREFLIGHT=true` (default): key check only, no extra LLM health call.
 - `STAGE4_POLL_INTERVAL_SECONDS` default 120; `STAGE4_SYMBOL_GAP_SECONDS` default 5.
 - Validator `--require-real-llm`: requires `parse_error_count=0`, `real_successful_llm_decision_count>0`.
+
+### Stage 4.6 — Cloud Stage3 seed + volume persistence
+
+- `check_stage3_context_seed.py`: read-only context availability check before dry-run.
+- `STAGE4_REQUIRE_STAGE3_CONTEXT=true`: entrypoint blocks dry-run if seed missing; writes fail summary.
+- `STAGE4_SYMBOLS` env (default `ETHUSDT,BTCUSDT`) for single-symbol low-frequency runs.
+- Dry-run `finally` + SIGTERM handler always writes `stage4_ai_decision_summary.json` and bundle export.
+- Seed import order: deploy → RUNNING → seed import → context check PASS → set dry-run minutes → restart.
 
 ### Stage 4.4 — Regime + Stage3 context wiring (read-only)
 

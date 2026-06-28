@@ -26,40 +26,56 @@ if [ "$MODE" = "runner" ]; then
   echo "24h demo learning runner spawned; starting read-only web UI"
 fi
 
-if [ "$MODE" = "idle" ]; then
-  echo "Stage 3 idle web mode: starting read-only UI"
-  if [ "${STAGE4_DRY_RUN_ONLY:-false}" = "true" ] && [ "${STAGE4_CLOUD_DRY_RUN_MINUTES:-0}" != "0" ]; then
-    STAGE4_OUT="${STAGE4_OUTPUT_DIR:-/data/stage4_ai_decisions_42_10m}"
-    mkdir -p "$STAGE4_OUT"
-    if [ "${STAGE4_REQUIRE_REAL_LLM:-false}" = "true" ]; then
-      if ! python tools/research/run_stage4_ai_decision_dry_run.py \
-        --preflight-only \
-        --use-real-llm \
-        --output-dir "$STAGE4_OUT" \
-        >> "$STAGE4_OUT/stage4_cloud_dry_run.log" 2>&1; then
-        echo "Stage 4 cloud dry-run blocked: real LLM required but Groq key missing or provider unavailable"
-      else
-        echo "Stage 4 cloud dry-run: ${STAGE4_CLOUD_DRY_RUN_MINUTES}m -> $STAGE4_OUT (background, no orders)"
-        python tools/research/run_stage4_ai_decision_dry_run.py \
-          --duration-minutes "${STAGE4_CLOUD_DRY_RUN_MINUTES}" \
-          --poll-interval-seconds "${STAGE4_POLL_INTERVAL_SECONDS:-120}" \
-          --symbols ETHUSDT,BTCUSDT \
-          --mode dry-run \
-          --use-real-llm \
-          --output-dir "$STAGE4_OUT" \
-          >> "$STAGE4_OUT/stage4_cloud_dry_run.log" 2>&1 &
-      fi
-    else
-      echo "Stage 4 cloud dry-run: ${STAGE4_CLOUD_DRY_RUN_MINUTES}m -> $STAGE4_OUT (background, no orders)"
+_start_stage4_cloud_dry_run() {
+  STAGE4_OUT="${STAGE4_OUTPUT_DIR:-/data/stage4_ai_decisions_42_10m}"
+  STAGE3_DIR="${STAGE3_OUTPUT_DIR:-/data/stage3_demo_learning}"
+  STAGE4_SYMBOLS_VAL="${STAGE4_SYMBOLS:-ETHUSDT,BTCUSDT}"
+  STAGE4_POLL="${STAGE4_POLL_INTERVAL_SECONDS:-120}"
+  mkdir -p "$STAGE4_OUT"
+
+  if [ "${STAGE4_REQUIRE_STAGE3_CONTEXT:-false}" = "true" ]; then
+    if ! python tools/research/check_stage3_context_seed.py --target-dir "$STAGE3_DIR"; then
+      echo "Stage 4 cloud dry-run blocked: missing required stage3 context"
       python tools/research/run_stage4_ai_decision_dry_run.py \
+        --fail-summary-only \
+        --failed-reason missing_required_stage3_context \
         --duration-minutes "${STAGE4_CLOUD_DRY_RUN_MINUTES}" \
-        --poll-interval-seconds "${STAGE4_POLL_INTERVAL_SECONDS:-120}" \
-        --symbols ETHUSDT,BTCUSDT \
+        --poll-interval-seconds "$STAGE4_POLL" \
+        --symbols "$STAGE4_SYMBOLS_VAL" \
         --mode dry-run \
         --use-real-llm \
         --output-dir "$STAGE4_OUT" \
-        >> "$STAGE4_OUT/stage4_cloud_dry_run.log" 2>&1 &
+        >> "$STAGE4_OUT/stage4_cloud_dry_run.log" 2>&1 || true
+      return 0
     fi
+  fi
+
+  if [ "${STAGE4_REQUIRE_REAL_LLM:-false}" = "true" ]; then
+    if ! python tools/research/run_stage4_ai_decision_dry_run.py \
+      --preflight-only \
+      --use-real-llm \
+      --output-dir "$STAGE4_OUT" \
+      >> "$STAGE4_OUT/stage4_cloud_dry_run.log" 2>&1; then
+      echo "Stage 4 cloud dry-run blocked: real LLM required but Groq key missing or provider unavailable"
+      return 0
+    fi
+  fi
+
+  echo "Stage 4 cloud dry-run: ${STAGE4_CLOUD_DRY_RUN_MINUTES}m -> $STAGE4_OUT (background, no orders)"
+  python tools/research/run_stage4_ai_decision_dry_run.py \
+    --duration-minutes "${STAGE4_CLOUD_DRY_RUN_MINUTES}" \
+    --poll-interval-seconds "$STAGE4_POLL" \
+    --symbols "$STAGE4_SYMBOLS_VAL" \
+    --mode dry-run \
+    --use-real-llm \
+    --output-dir "$STAGE4_OUT" \
+    >> "$STAGE4_OUT/stage4_cloud_dry_run.log" 2>&1 &
+}
+
+if [ "$MODE" = "idle" ]; then
+  echo "Stage 3 idle web mode: starting read-only UI"
+  if [ "${STAGE4_DRY_RUN_ONLY:-false}" = "true" ] && [ "${STAGE4_CLOUD_DRY_RUN_MINUTES:-0}" != "0" ]; then
+    _start_stage4_cloud_dry_run
   fi
 fi
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import signal
 import sys
 import time
 from contextlib import contextmanager
@@ -26,6 +27,7 @@ from tools.research.stage4_ai_decision_agent import (  # noqa: E402
 from tools.research.stage4_llm_client import (  # noqa: E402
     ProviderRateLimited,
     RealLLMRequiredError,
+    env_truthy,
     groq_key_configured,
     mock_fallback_allowed,
     real_llm_preflight,
@@ -48,6 +50,48 @@ def _env_float(name: str, default: float) -> float:
 
 def _default_poll_interval_seconds() -> float:
     return _env_float("STAGE4_POLL_INTERVAL_SECONDS", 120.0)
+
+
+def require_stage3_context_enabled() -> bool:
+    return env_truthy("STAGE4_REQUIRE_STAGE3_CONTEXT", False)
+
+
+def _resolve_stage3_dir() -> Path:
+    from tools.research.stage4_context_summary import resolve_stage3_data_dir
+
+    return resolve_stage3_data_dir()
+
+
+def preflight_stage3_context(
+    *,
+    output_dir: Path,
+    duration_minutes: float,
+    poll_interval_seconds: float,
+    symbols: List[str],
+    mode: str,
+    use_real_llm: bool,
+    log_path: Path | None = None,
+    stats: Dict[str, int] | None = None,
+) -> tuple[bool, str, Dict[str, Any] | None]:
+    if not require_stage3_context_enabled():
+        return True, "", None
+    from tools.research.check_stage3_context_seed import check_stage3_context
+
+    symbol = symbols[0] if symbols else "ETHUSDT"
+    result = check_stage3_context(target_dir=_resolve_stage3_dir(), symbol=symbol)
+    if result.get("passed"):
+        return True, "", None
+    return False, "missing_required_stage3_context", _write_fail_summary(
+        out=output_dir,
+        failed_reason="missing_required_stage3_context",
+        duration_minutes=duration_minutes,
+        poll_interval_seconds=poll_interval_seconds,
+        symbols=symbols,
+        mode=mode,
+        use_real_llm=use_real_llm,
+        log_path=log_path,
+        stats=stats,
+    )
 
 
 def _symbol_gap_seconds() -> float:
@@ -151,7 +195,7 @@ def _write_fail_summary(
     summary = {
         "record_type": "stage4_ai_decision_summary",
         "generated_at_utc": utc_now_iso(),
-        "phase": "4.5",
+        "phase": "4.6",
         "mode": mode,
         "duration_minutes": duration_minutes,
         "poll_interval_seconds": poll_interval_seconds,
@@ -307,6 +351,29 @@ def _run_dry_run_inner(
             stats=stats,
         )
 
+    ok_ctx, ctx_reason, ctx_fail = preflight_stage3_context(
+        output_dir=out,
+        duration_minutes=duration_minutes,
+        poll_interval_seconds=poll_interval_seconds,
+        symbols=symbols,
+        mode=mode,
+        use_real_llm=use_real_llm,
+        log_path=log_path,
+        stats=stats,
+    )
+    if not ok_ctx:
+        return ctx_fail or _write_fail_summary(
+            out,
+            failed_reason=ctx_reason,
+            duration_minutes=duration_minutes,
+            poll_interval_seconds=poll_interval_seconds,
+            symbols=symbols,
+            mode=mode,
+            use_real_llm=use_real_llm,
+            log_path=log_path,
+            stats=stats,
+        )
+
     provider_health_check_passed: bool | None = None
     if use_real_llm and require_real_llm_enabled():
         if _light_preflight_enabled():
@@ -387,105 +454,123 @@ def _run_dry_run_inner(
     end = started + duration_minutes * 60.0
     decisions: List[Dict[str, Any]] = []
     tick = 0
+    summary_written = False
 
-    while time.time() < end:
-        tick += 1
-        account = _fetch_account()
-        open_positions = int(account.get("open_positions") or 0)
-        for idx, symbol in enumerate(symbols):
-            market = _fetch_market(symbol)
-            try:
-                decision = agent.decide(
-                    symbol=symbol,
-                    mode=mode,
-                    market_context=market,
-                    account_context=account,
-                    open_positions=open_positions,
-                )
-            except ProviderRateLimited as exc:
-                _record_skipped_tick(exc=exc, tick=tick, stats=stats)
+    def _persist_summary(*, dry_run_completed: bool = True) -> Dict[str, Any]:
+        nonlocal summary_written
+        if summary_written:
+            return {}
+        summary_written = True
+        summary = {
+            "record_type": "stage4_ai_decision_summary",
+            "generated_at_utc": utc_now_iso(),
+            "phase": "4.6",
+            "mode": mode,
+            "duration_minutes": duration_minutes,
+            "poll_interval_seconds": poll_interval_seconds,
+            "symbols": symbols,
+            "dry_run_completed": dry_run_completed,
+            "decision_count": len(decisions),
+            "real_llm_used_count": sum(1 for d in decisions if d.get("real_llm_used")),
+            "mock_ai_used_count": sum(1 for d in decisions if d.get("is_mock_ai")),
+            "tick_count": tick,
+            "output_dir": str(out),
+            "model_name": agent.model_name,
+            "is_mock_ai": agent.is_mock_ai,
+            "real_llm_used": agent.real_llm_used,
+            "fallback_to_mock": agent.fallback_to_mock,
+            "all_order_sent_false": all(not d.get("order_sent") for d in decisions) if decisions else True,
+            "order_sent_count": sum(1 for d in decisions if d.get("order_sent")),
+            "provider_health_check_passed": provider_health_check_passed,
+            "run_log_path": str(log_path),
+            "decisions": [
+                {"decision_id": d["decision_id"], "symbol": d["symbol"], "final_decision": d["final_decision"]}
+                for d in decisions
+            ],
+            **stats,
+        }
+        write_json(out / "stage4_ai_decision_summary.json", summary)
+        _append_run_log(
+            log_path,
+            f"END decision_count={len(decisions)} effective={stats['effective_decision_count']} "
+            f"skipped={stats['skipped_tick_count']} rate_limit={stats['provider_rate_limit_count']} "
+            f"parse_errors={stats['parse_error_count']} order_sent_count=0",
+        )
+        try:
+            from tools.research.export_stage4_ai_decision_bundle import export_bundle
+
+            bundle = export_bundle(out)
+            summary["bundle_export"] = {
+                "bundle_path": bundle.get("bundle_path"),
+                "bundle_safe": bundle.get("bundle_safe"),
+                "file_count": bundle.get("file_count"),
+            }
+            write_json(out / "stage4_ai_decision_summary.json", summary)
+        except Exception as exc:
+            _append_run_log(log_path, f"BUNDLE_EXPORT_FAIL {str(exc)[:80]}")
+        return summary
+
+    def _handle_stop(signum: int, _frame: Any) -> None:
+        _append_run_log(log_path, f"SIGNAL signum={signum} persisting summary")
+        _persist_summary(dry_run_completed=True)
+        raise SystemExit(0)
+
+    signal.signal(signal.SIGTERM, _handle_stop)
+    signal.signal(signal.SIGINT, _handle_stop)
+
+    try:
+        while time.time() < end:
+            tick += 1
+            account = _fetch_account()
+            open_positions = int(account.get("open_positions") or 0)
+            for idx, symbol in enumerate(symbols):
+                market = _fetch_market(symbol)
+                try:
+                    decision = agent.decide(
+                        symbol=symbol,
+                        mode=mode,
+                        market_context=market,
+                        account_context=account,
+                        open_positions=open_positions,
+                    )
+                except ProviderRateLimited as exc:
+                    _record_skipped_tick(exc=exc, tick=tick, stats=stats)
+                    _append_run_log(
+                        log_path,
+                        f"TICK={tick} SKIPPED symbol={symbol} reason={exc.reason} order_sent=false",
+                    )
+                    if idx < len(symbols) - 1 and symbol_gap > 0:
+                        time.sleep(symbol_gap)
+                    continue
+
+                if decision.get("parse_error"):
+                    stats["parse_error_count"] += 1
+                    if decision.get("raw_content_empty") or decision.get("parse_error_type") in {
+                        "content_empty",
+                        "empty_llm_response",
+                    }:
+                        stats["empty_response_count"] += 1
+                else:
+                    stats["real_successful_llm_decision_count"] += 1
+                    stats["effective_decision_count"] += 1
+
+                write_decision(out, decision)
+                decisions.append(decision)
                 _append_run_log(
                     log_path,
-                    f"TICK={tick} SKIPPED symbol={symbol} reason={exc.reason} order_sent=false",
+                    f"TICK={tick} symbol={decision.get('symbol')} final={decision.get('final_decision')} "
+                    f"parse_error={decision.get('parse_error')} order_sent={decision.get('order_sent')}",
                 )
                 if idx < len(symbols) - 1 and symbol_gap > 0:
                     time.sleep(symbol_gap)
-                continue
 
-            if decision.get("parse_error"):
-                stats["parse_error_count"] += 1
-                if decision.get("raw_content_empty") or decision.get("parse_error_type") in {
-                    "content_empty",
-                    "empty_llm_response",
-                }:
-                    stats["empty_response_count"] += 1
-            else:
-                stats["real_successful_llm_decision_count"] += 1
-                stats["effective_decision_count"] += 1
-
-            write_decision(out, decision)
-            decisions.append(decision)
-            _append_run_log(
-                log_path,
-                f"TICK={tick} symbol={decision.get('symbol')} final={decision.get('final_decision')} "
-                f"parse_error={decision.get('parse_error')} order_sent={decision.get('order_sent')}",
-            )
-            if idx < len(symbols) - 1 and symbol_gap > 0:
-                time.sleep(symbol_gap)
-
-        if duration_minutes <= 0.05:
-            break
-        if time.time() >= end:
-            break
-        time.sleep(poll_interval_seconds)
-
-    summary = {
-        "record_type": "stage4_ai_decision_summary",
-        "generated_at_utc": utc_now_iso(),
-        "phase": "4.5",
-        "mode": mode,
-        "duration_minutes": duration_minutes,
-        "poll_interval_seconds": poll_interval_seconds,
-        "symbols": symbols,
-        "dry_run_completed": True,
-        "decision_count": len(decisions),
-        "real_llm_used_count": sum(1 for d in decisions if d.get("real_llm_used")),
-        "mock_ai_used_count": sum(1 for d in decisions if d.get("is_mock_ai")),
-        "tick_count": tick,
-        "output_dir": str(out),
-        "model_name": agent.model_name,
-        "is_mock_ai": agent.is_mock_ai,
-        "real_llm_used": agent.real_llm_used,
-        "fallback_to_mock": agent.fallback_to_mock,
-        "all_order_sent_false": all(not d.get("order_sent") for d in decisions),
-        "order_sent_count": sum(1 for d in decisions if d.get("order_sent")),
-        "provider_health_check_passed": provider_health_check_passed,
-        "run_log_path": str(log_path),
-        "decisions": [{"decision_id": d["decision_id"], "symbol": d["symbol"], "final_decision": d["final_decision"]} for d in decisions],
-        **stats,
-    }
-    write_json(out / "stage4_ai_decision_summary.json", summary)
-    _append_run_log(
-        log_path,
-        f"END decision_count={len(decisions)} effective={stats['effective_decision_count']} "
-        f"skipped={stats['skipped_tick_count']} rate_limit={stats['provider_rate_limit_count']} "
-        f"parse_errors={stats['parse_error_count']} order_sent_count=0",
-    )
-
-    try:
-        from tools.research.export_stage4_ai_decision_bundle import export_bundle
-
-        bundle = export_bundle(out)
-        summary["bundle_export"] = {
-            "bundle_path": bundle.get("bundle_path"),
-            "bundle_safe": bundle.get("bundle_safe"),
-            "file_count": bundle.get("file_count"),
-        }
-        write_json(out / "stage4_ai_decision_summary.json", summary)
-    except Exception as exc:
-        _append_run_log(log_path, f"BUNDLE_EXPORT_FAIL {str(exc)[:80]}")
-
-    return summary
+            if duration_minutes <= 0.05:
+                break
+            if time.time() >= end:
+                break
+            time.sleep(poll_interval_seconds)
+    finally:
+        return _persist_summary(dry_run_completed=True)
 
 
 def main() -> int:
@@ -497,6 +582,8 @@ def main() -> int:
     parser.add_argument("--fast-test", action="store_true", help="Single tick, no sleep")
     parser.add_argument("--use-real-llm", action="store_true")
     parser.add_argument("--preflight-only", action="store_true", help="Real LLM preflight; write fail summary and exit")
+    parser.add_argument("--fail-summary-only", action="store_true", help="Write fail summary and exit (no dry-run loop)")
+    parser.add_argument("--failed-reason", default="unknown", help="Reason for --fail-summary-only")
     parser.add_argument("--output-dir", default="")
     args = parser.parse_args()
 
@@ -506,6 +593,20 @@ def main() -> int:
     poll = 0.0 if args.fast_test else (
         args.poll_interval_seconds if args.poll_interval_seconds >= 0 else _default_poll_interval_seconds()
     )
+
+    if args.fail_summary_only:
+        target = out or resolve_stage4_output_dir()
+        summary = _write_fail_summary(
+            target,
+            failed_reason=args.failed_reason,
+            duration_minutes=duration,
+            poll_interval_seconds=max(0.0, poll),
+            symbols=symbols,
+            mode=args.mode,
+            use_real_llm=args.use_real_llm,
+        )
+        print(json.dumps({"summary": summary}, indent=2))
+        return 1
 
     if args.preflight_only:
         ok, reason, summary = preflight_real_llm(
