@@ -147,7 +147,7 @@ class Stage4RiskSupervisorTests(unittest.TestCase):
         )
         self.assertFalse(result.approved)
         self.assertEqual(result.final_decision, "skip")
-        self.assertEqual(result.veto_reason, "patch_block")
+        self.assertEqual(result.veto_reason, "manual_review_required")
 
     def test_confidence_below_threshold_skip(self) -> None:
         sup = Stage4RiskSupervisor(confidence_threshold=0.5)
@@ -795,6 +795,153 @@ class Stage43MarketContextTests(unittest.TestCase):
             )
         self.assertEqual(result.veto_reason, "order_not_allowed_dry_run")
         self.assertFalse(result.approved)
+
+
+class Stage44RegimeContextTests(unittest.TestCase):
+    def test_regime_classification_trend_from_mock_klines(self) -> None:
+        from tools.research.stage4_market_context import build_market_context, classify_regime_from_klines
+
+        closes = [100.0 + i * 0.8 for i in range(20)]
+        highs = [c + 0.5 for c in closes]
+        lows = [c - 0.5 for c in closes]
+        info = classify_regime_from_klines(closes, highs, lows, change_24h_pct=0.5)
+        self.assertIn(info["regime"], {"trend", "volatile", "range"})
+        self.assertIn("regime_reason", info)
+        self.assertIn(info["volatility_level"], {"low", "medium", "high", "unknown"})
+
+        ctx = build_market_context("ETHUSDT", client=BybitDemoClient("mock"))
+        self.assertIn("regime_reason", ctx)
+        self.assertIn("trend_strength", ctx)
+        self.assertIn("volatility_level", ctx)
+        self.assertIn("kline_data_quality", ctx)
+        self.assertNotEqual(ctx["regime"], "unknown")
+
+    def test_missing_kline_does_not_crash(self) -> None:
+        from tools.research.stage4_market_context import classify_regime_from_klines
+
+        info = classify_regime_from_klines([], [], [])
+        self.assertEqual(info["regime"], "unknown")
+        self.assertEqual(info["kline_data_quality"], "error")
+
+    def test_stage3_context_files_missing_no_crash(self) -> None:
+        from tools.research.stage4_context_summary import load_stage3_context
+
+        with tempfile.TemporaryDirectory() as tmp:
+            ctx = load_stage3_context(Path(tmp), symbol="ETHUSDT")
+        self.assertFalse(ctx["stage3_context_available"])
+        self.assertEqual(ctx["stage3_context_reason"], "files_missing")
+        self.assertEqual(ctx["recent_trade_results_count"], 0)
+
+    def test_stage3_context_max_five(self) -> None:
+        from tools.research.stage4_context_summary import load_stage3_context
+
+        with tempfile.TemporaryDirectory() as tmp:
+            stage3 = Path(tmp)
+            trades = stage3 / "trade_results.jsonl"
+            for i in range(8):
+                append_jsonl(
+                    trades,
+                    {"symbol": "ETHUSDT", "side": "BUY", "close_pnl": -0.1 * i, "created_at_utc": f"t{i}"},
+                )
+            ctx = load_stage3_context(stage3, symbol="ETHUSDT", trade_limit=5)
+        self.assertTrue(ctx["stage3_context_available"])
+        self.assertEqual(len(ctx["recent_trade_results"]), 5)
+
+    def test_patch_block_separated_from_hard_skip(self) -> None:
+        sup = Stage4RiskSupervisor()
+        patch_result = sup.evaluate(
+            proposal={
+                "final_action": "skip",
+                "decision_intent": "hard_skip",
+                "candidate_side": "NONE",
+                "confidence": 0.05,
+                "position_size_suggestion": 0,
+            },
+            account_context={"available_balance": 5000},
+            retrieved_patches=[{"action": "block_reentry", "setup_key": "k1"}],
+            market_context={"data_quality": "ok", "kline_data_quality": "ok"},
+        )
+        self.assertEqual(patch_result.veto_reason, "patch_block")
+
+        hard_result = sup.evaluate(
+            proposal={
+                "final_action": "skip",
+                "decision_intent": "hard_skip",
+                "candidate_side": "NONE",
+                "confidence": 0.05,
+                "position_size_suggestion": 0,
+            },
+            account_context={"available_balance": 5000},
+            retrieved_patches=[],
+            market_context={"data_quality": "ok", "kline_data_quality": "ok"},
+        )
+        self.assertEqual(hard_result.veto_reason, "hard_skip")
+
+    def test_decision_log_patch_block_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            stage3 = Path(tmp) / "stage3"
+            stage3.mkdir()
+            append_jsonl(
+                stage3 / "applied_learning_patches.jsonl",
+                {"symbol": "ETHUSDT", "side": "BUY", "action": "block_reentry", "setup_key": "k1"},
+            )
+            agent = Stage4AIDecisionAgent(retriever=Stage4PatchRetriever(stage3_dir=stage3))
+            decision = agent.decide(
+                symbol="ETHUSDT",
+                market_context={"last_price": 3250, "prev_price_24h": 3200, "data_quality": "ok", "kline_data_quality": "ok"},
+                account_context={"available_balance": 5000},
+            )
+        self.assertTrue(decision.get("patch_blocked"))
+        self.assertEqual(decision.get("matched_patch_count"), 1)
+        self.assertEqual(decision["risk_supervisor_result"]["veto_reason"], "patch_block")
+
+    def test_parse_watch_and_enter_candidate_intent(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        for intent, conf in (("watch", 0.42), ("enter_candidate", 0.62)):
+            raw = {
+                "final_action": "skip",
+                "symbol": "ETHUSDT",
+                "candidate_side": "NONE",
+                "confidence": conf,
+                "decision_intent": intent,
+                "why_enter": "",
+                "why_skip": "Wait for confirmation",
+                "side_reason": "Trend forming",
+                "confidence_reason": intent,
+                "risk_notes": [],
+                "patch_awareness": "",
+                "uncertainty": "medium",
+                "requires_manual_review": False,
+            }
+            proposal, ok, _ = parse_llm_decision(raw, symbol="ETHUSDT")
+            self.assertTrue(ok)
+            self.assertEqual(proposal["decision_intent"], intent)
+            self.assertGreaterEqual(proposal["confidence"], 0.30)
+
+    def test_export_bundle_excludes_secrets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / "ai_decisions.jsonl").write_text('{"order_sent": false}\n', encoding="utf-8")
+            (out / "llm_client_debug.jsonl").write_text('{"error_message_safe": "[REDACTED]"}\n', encoding="utf-8")
+            (out / "stage4_ai_decision_summary.json").write_text("{}", encoding="utf-8")
+            from tools.research.export_stage4_ai_decision_bundle import export_bundle
+
+            result = export_bundle(out)
+            self.assertTrue(result.get("bundle_safe"))
+            self.assertTrue(Path(result["bundle_path"]).is_file())
+
+    def test_agent_stage3_availability_flags(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            agent = Stage4AIDecisionAgent(retriever=Stage4PatchRetriever(stage3_dir=Path(tmp)))
+            decision = agent.decide(
+                symbol="ETHUSDT",
+                market_context={"last_price": 3250, "prev_price_24h": 3200, "data_quality": "ok"},
+                account_context={"available_balance": 5000},
+            )
+        self.assertIn("stage3_context_available", decision)
+        self.assertFalse(decision["stage3_context_available"])
+        self.assertEqual(decision["recent_trade_results_count"], 0)
 
 
 class Stage4StrictEnvReadonlyTests(unittest.TestCase):

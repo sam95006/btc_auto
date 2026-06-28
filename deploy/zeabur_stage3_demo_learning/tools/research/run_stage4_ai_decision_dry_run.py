@@ -347,6 +347,20 @@ def _run_dry_run_inner(
         log_path,
         f"END decision_count={len(decisions)} tick_count={tick} all_order_sent_false={summary['all_order_sent_false']}",
     )
+
+    try:
+        from tools.research.export_stage4_ai_decision_bundle import export_bundle
+
+        bundle = export_bundle(out)
+        summary["bundle_export"] = {
+            "bundle_path": bundle.get("bundle_path"),
+            "bundle_safe": bundle.get("bundle_safe"),
+            "file_count": bundle.get("file_count"),
+        }
+        write_json(out / "stage4_ai_decision_summary.json", summary)
+    except Exception as exc:
+        _append_run_log(log_path, f"BUNDLE_EXPORT_FAIL {str(exc)[:80]}")
+
     return summary
 
 

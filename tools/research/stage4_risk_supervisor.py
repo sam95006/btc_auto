@@ -11,9 +11,10 @@ from tools.research.bybit_demo_learning_common import (
     MAX_OPEN_POSITIONS,
     utc_now_iso,
 )
+from tools.research.stage4_context_summary import PATCH_BLOCK_ACTIONS, blocking_patches
 
 CONFIDENCE_THRESHOLD = 0.35
-VETO_ACTIONS = frozenset({"block_reentry", "manual_review_required"})
+VETO_ACTIONS = PATCH_BLOCK_ACTIONS
 
 
 def _truthy(val: str | None) -> bool:
@@ -32,6 +33,13 @@ def safety_constraints_from_env() -> Dict[str, Any]:
         "production_promotion_allowed": _truthy(os.environ.get("PRODUCTION_PROMOTION_ALLOWED")),
         "arm_allowed": _truthy(os.environ.get("ARM_ALLOWED")),
     }
+
+
+def patch_veto_reason(patch: Dict[str, Any]) -> str:
+    action = str(patch.get("action") or "")
+    if action == "manual_review_required":
+        return "manual_review_required"
+    return "patch_block"
 
 
 @dataclass
@@ -84,6 +92,7 @@ class Stage4RiskSupervisor:
         action = str(proposal.get("final_action") or "skip").lower()
         intent = str(proposal.get("decision_intent") or "").lower()
         mc = market_context or {}
+        blockers = blocking_patches(retrieved_patches)
 
         c = self.constraints
         if c.get("mainnet_allowed"):
@@ -108,14 +117,14 @@ class Stage4RiskSupervisor:
             notes.append("reduce_position_size_to_max_margin")
 
         data_quality = str(mc.get("data_quality") or "ok")
-        if data_quality == "error":
+        kline_dq = str(mc.get("kline_data_quality") or "ok")
+        if data_quality == "error" or kline_dq == "error":
             return self._force_skip("missing_market_context", conf, size, notes)
 
-        for patch in retrieved_patches:
-            patch_action = str(patch.get("action") or "")
-            if patch_action in VETO_ACTIONS:
-                notes.append(f"active_patch_{patch_action}")
-                return self._force_skip("patch_block", conf, size, notes)
+        if blockers:
+            reason = patch_veto_reason(blockers[0])
+            notes.append(f"active_patch_{blockers[0].get('action')}")
+            return self._force_skip(reason, conf, size, notes)
 
         if open_positions >= max_pos and action == "enter":
             return self._force_skip("open_positions_at_cap", conf, size, notes)
@@ -134,8 +143,10 @@ class Stage4RiskSupervisor:
                 return self._force_skip("soft_skip", conf, size, notes)
             if intent == "watch":
                 return self._force_skip("watch", conf, size, notes)
+            if intent == "enter_candidate":
+                return self._force_skip("enter_candidate", conf, size, notes)
             if conf < self.confidence_threshold:
-                reason = "soft_skip" if conf >= 0.1 else "hard_skip"
+                reason = "soft_skip" if conf >= 0.15 else "hard_skip"
                 return self._force_skip(reason, conf, size, notes)
             return RiskSupervisorResult(
                 approved=False,

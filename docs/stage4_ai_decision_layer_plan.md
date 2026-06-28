@@ -65,6 +65,15 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 2. On failure: log + write fail summary; **do not** start background dry-run.
 3. On success: start background real-LLM dry-run.
 
+### Stage 4.4 — Regime + Stage3 context wiring (read-only)
+
+- Kline-derived regime: `trend|range|volatile|unknown` with `regime_reason`, `trend_strength`, `volatility_level`.
+- Stage3 context from `/data/stage3_demo_learning/*.jsonl` with availability flags.
+- `import_stage3_context_seed.py` for bundle/JSONL seed import (not committed to git).
+- Patch veto split: `patch_block` vs `manual_review_required` vs `hard_skip`.
+- Decision log: `patch_blocked`, `matched_patch_actions`, stage3 counts.
+- `export_stage4_ai_decision_bundle.py` → `stage4_44_decision_bundle.tar.gz` (secret scan).
+
 ### Stage 4.3 — Market context + prompt calibration (read-only)
 
 - Enriched `market_context` via `stage4_market_context.py` (ticker + 15m klines, regime, volatility).

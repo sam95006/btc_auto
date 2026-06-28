@@ -12,6 +12,9 @@ from tools.research.stage3_learning_loop import append_jsonl, resolve_output_dir
 from tools.research.stage4_decision_schema import parse_llm_decision
 from tools.research.stage4_prompt_builder import build_decision_prompt, prompt_fingerprint
 from tools.research.stage4_context_summary import (  # noqa: E402
+    blocking_patches,
+    load_stage3_context,
+    resolve_stage3_data_dir,
     summarize_patches,
     summarize_reflections,
     summarize_trades,
@@ -75,12 +78,7 @@ def resolve_stage4_output_dir() -> Path:
 
 
 def resolve_stage3_learning_dir() -> Path:
-    import os
-
-    custom = os.environ.get("STAGE3_OUTPUT_DIR", "").strip()
-    if custom:
-        return Path(custom)
-    return resolve_output_dir()
+    return resolve_stage3_data_dir()
 
 
 def _read_jsonl(path: Path) -> List[Dict[str, Any]]:
@@ -255,6 +253,7 @@ class Stage4AIDecisionAgent:
         recent_trades: List[Dict[str, Any]],
         recent_reflections: List[Dict[str, Any]],
         open_positions: int,
+        stage3_context: Dict[str, Any],
     ) -> tuple[Dict[str, Any], str, bool, str]:
         constraints = safety_constraints_from_env()
         messages = build_decision_prompt(
@@ -266,6 +265,7 @@ class Stage4AIDecisionAgent:
             recent_reflections=summarize_reflections(recent_reflections, limit=5),
             safety_constraints=constraints,
             current_open_positions=open_positions,
+            stage3_context=stage3_context,
         )
         prompt_hash = prompt_fingerprint(messages)
         result = self.llm_client.complete_json(messages, prompt_hash=prompt_hash)
@@ -290,8 +290,13 @@ class Stage4AIDecisionAgent:
         open_positions: int = 0,
     ) -> Dict[str, Any]:
         patches = self.retriever.retrieve(symbol=symbol, side="NONE", limit=5)
-        recent_trades = self.retriever.recent_trades(symbol=symbol, limit=5)
-        recent_reflections = self.retriever.recent_reflections(limit=5)
+        stage3_ctx = load_stage3_context(self.retriever.stage3_dir, symbol=symbol)
+        recent_trades_raw = self.retriever.recent_trades(symbol=symbol, limit=5)
+        recent_reflections_raw = self.retriever.recent_reflections(limit=5)
+        recent_trades = stage3_ctx.get("recent_trade_results") or summarize_trades(recent_trades_raw, limit=5)
+        recent_reflections = stage3_ctx.get("recent_reflections") or summarize_reflections(
+            recent_reflections_raw, limit=5
+        )
         parse_error = False
         llm_parse_ok = True
 
@@ -301,9 +306,10 @@ class Stage4AIDecisionAgent:
                 market_context=market_context,
                 account_context=account_context,
                 patches=patches,
-                recent_trades=recent_trades,
-                recent_reflections=recent_reflections,
+                recent_trades=recent_trades_raw,
+                recent_reflections=recent_reflections_raw,
                 open_positions=open_positions,
+                stage3_context=stage3_ctx,
             )
             parse_error = not llm_parse_ok or bool(proposal.get("parse_error"))
         else:
@@ -339,6 +345,10 @@ class Stage4AIDecisionAgent:
         if not sr.get("approved") and final_decision == "skip" and not proposal.get("why_skip"):
             proposal["why_skip"] = sr.get("veto_reason") or "Risk supervisor veto."
             proposal["why_enter"] = ""
+
+        blockers = blocking_patches(patches)
+        veto = str(sr.get("veto_reason") or "")
+        patch_blocked = bool(blockers) and veto in {"patch_block", "manual_review_required"}
 
         row = {
             "decision_id": str(uuid.uuid4()),
@@ -378,10 +388,26 @@ class Stage4AIDecisionAgent:
             "edge_factors": proposal.get("edge_factors") or [],
             "risk_factors": proposal.get("risk_factors") or [],
             "stage3_context_summary": {
-                "recent_trade_results": summarize_trades(recent_trades, limit=5),
-                "recent_reflections": summarize_reflections(recent_reflections, limit=5),
+                "stage3_context_available": stage3_ctx.get("stage3_context_available", False),
+                "stage3_context_reason": stage3_ctx.get("stage3_context_reason", "unknown"),
+                "recent_trade_results_count": stage3_ctx.get("recent_trade_results_count", len(recent_trades)),
+                "recent_reflections_count": stage3_ctx.get("recent_reflections_count", len(recent_reflections)),
+                "active_patches_count": stage3_ctx.get("active_patches_count", len(patches)),
+                "recent_trade_results": recent_trades[:5],
+                "recent_reflections": recent_reflections[:5],
                 "active_patches": summarize_patches(patches, limit=5),
             },
+            "stage3_context_available": stage3_ctx.get("stage3_context_available", False),
+            "stage3_context_reason": stage3_ctx.get("stage3_context_reason", "unknown"),
+            "recent_trade_results_count": stage3_ctx.get("recent_trade_results_count", len(recent_trades)),
+            "recent_reflections_count": stage3_ctx.get("recent_reflections_count", len(recent_reflections)),
+            "active_patches_count": stage3_ctx.get("active_patches_count", len(patches)),
+            "patch_blocked": patch_blocked,
+            "patch_block_reason": (
+                f"active_patch_{blockers[0].get('action')}" if patch_blocked and blockers else ""
+            ),
+            "matched_patch_count": len(blockers),
+            "matched_patch_actions": [str(p.get("action") or "") for p in blockers],
             "parse_error": parse_error,
             "parse_error_type": proposal.get("parse_error_type"),
             "raw_content_empty": proposal.get("raw_content_empty"),
