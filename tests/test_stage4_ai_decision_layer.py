@@ -2105,6 +2105,38 @@ class Stage412ProviderExhaustionTests(unittest.TestCase):
             self.assertTrue(result["validator_passed"])
             self.assertEqual(result["order_sent_count"], 0)
 
+    def test_groq_multi_key_429_then_401_prefers_rate_limit_for_fallback(self) -> None:
+        import io
+        import urllib.error
+
+        from tools.research.stage4_llm_client import Stage4LLMClient, Stage4LLMConfig
+
+        calls = {"n": 0}
+
+        def side_effect(*_args, **_kwargs):
+            calls["n"] += 1
+            if calls["n"] <= 2:
+                body = io.BytesIO(b'{"error":"rate limit"}')
+                raise urllib.error.HTTPError("https://api.groq.com", 429, "Too Many Requests", {}, body)
+            body = io.BytesIO(b'{"error":"invalid"}')
+            raise urllib.error.HTTPError("https://api.groq.com", 401, "Unauthorized", {}, body)
+
+        cfg = Stage4LLMConfig(
+            provider="groq",
+            model="llama-3.3-70b-versatile",
+            api_key_env="GROQ_API_KEY_PRIMARY",
+            endpoint="https://api.groq.com/openai/v1/chat/completions",
+        )
+        client = Stage4LLMClient(provider="groq", model=cfg.model, load_env=False)
+        client.config = cfg
+        client.available = True
+        with patch.object(client, "_api_key_chain", return_value=["K1", "K2", "K3"]), patch.object(
+            client, "_http_post", side_effect=side_effect
+        ):
+            result = client.complete_json([{"role": "user", "content": "hi"}], use_rate_gate=False)
+        self.assertEqual(result.get("error_type"), "rate_limit")
+        self.assertTrue(Stage4LLMClient.is_chain_fallback_eligible(result))
+
     def test_no_secrets_in_summary_or_bundle(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp)

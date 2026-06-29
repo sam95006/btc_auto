@@ -338,6 +338,20 @@ class Stage4ProviderChainClient:
                 break
 
             if err_type in {"http_forbidden", "http_unauthorized"}:
+                if (
+                    is_primary
+                    and idx + 1 < len(self.provider_chain)
+                    and self.fallback_allowed
+                    and primary_error
+                    in {
+                        "rate_limit",
+                        "provider_quota_exhausted",
+                        "provider_rate_limited",
+                        "content_empty",
+                        "empty_llm_response",
+                    }
+                ):
+                    continue
                 break
 
         self._last_attempts = attempts

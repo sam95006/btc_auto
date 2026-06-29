@@ -368,6 +368,7 @@ class Stage4LLMClient:
 
         key_chain = self._api_key_chain(cfg)
         last_result: Dict[str, Any] = self._error_result("no_attempt", error_type="no_attempt")
+        prefer_chain_fallback: Dict[str, Any] | None = None
 
         for key_env in key_chain:
             for attempt in range(MAX_RETRIES + 1):
@@ -398,6 +399,9 @@ class Stage4LLMClient:
                         if use_rate_gate:
                             gate.record_success()
                         return result
+
+                    if self.is_chain_fallback_eligible(result):
+                        prefer_chain_fallback = result
 
                     err_type = str(result.get("error_type") or "")
                     if err_type == "rate_limit":
@@ -430,6 +434,8 @@ class Stage4LLMClient:
                         prompt_hash=prompt_hash,
                     )
                     self._write_debug_row(cfg, prompt_hash, request_id, result, attempt, latency_ms)
+                    if self.is_chain_fallback_eligible(result):
+                        prefer_chain_fallback = result
                     if exc.code == 429:
                         circuit.trip(cfg.provider)
                         if use_rate_gate:
@@ -473,6 +479,8 @@ class Stage4LLMClient:
                     last_result = result
                     break
 
+        if prefer_chain_fallback is not None and last_result.get("status") != "ok":
+            return prefer_chain_fallback
         return last_result
 
     def _api_key_chain(self, cfg: Stage4LLMConfig) -> List[str]:
