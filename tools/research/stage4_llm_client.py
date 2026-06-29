@@ -505,6 +505,25 @@ class Stage4LLMClient:
         return err_type in gate_types or code == 429
 
     @staticmethod
+    def is_quota_exhaustion_result(result: Dict[str, Any]) -> bool:
+        """Empty provider response treated as quota exhaustion (eligible for secondary fallback)."""
+        err_type = str(result.get("error_type") or "")
+        if err_type in {"provider_quota_exhausted", "empty_llm_response"}:
+            return True
+        if err_type == "content_empty" and bool(result.get("raw_content_empty")):
+            return not bool(str(result.get("raw_text") or "").strip())
+        return False
+
+    @staticmethod
+    def is_chain_fallback_eligible(result: Dict[str, Any]) -> bool:
+        """Primary provider failures that should try the next real LLM in chain."""
+        if Stage4LLMClient.is_rate_limited_result(result):
+            return True
+        if Stage4LLMClient.is_quota_exhaustion_result(result):
+            return True
+        return False
+
+    @staticmethod
     def _http_error_type(code: int) -> str:
         if code == 429:
             return "rate_limit"

@@ -23,8 +23,10 @@ FALLBACK_REASON_MAP = {
     "rate_limit": "groq_rate_limited",
     "provider_http_429": "groq_rate_limited",
     "provider_rate_limited": "groq_rate_limited",
-    "provider_quota_exhausted": "groq_rate_limited",
+    "provider_quota_exhausted": "groq_provider_quota_exhausted",
     "provider_circuit_breaker_open": "groq_rate_limited",
+    "content_empty": "groq_provider_quota_exhausted",
+    "empty_llm_response": "groq_provider_quota_exhausted",
 }
 
 
@@ -228,8 +230,14 @@ class Stage4ProviderChainClient:
         }
 
     @staticmethod
-    def _is_rate_limited(result: Dict[str, Any]) -> bool:
-        return Stage4LLMClient.is_rate_limited_result(result)
+    def _is_fallback_eligible(result: Dict[str, Any]) -> bool:
+        return Stage4LLMClient.is_chain_fallback_eligible(result)
+
+    @staticmethod
+    def _normalize_primary_error(err_type: str, result: Dict[str, Any]) -> str:
+        if err_type in {"content_empty", "empty_llm_response"} and Stage4LLMClient.is_quota_exhaustion_result(result):
+            return "provider_quota_exhausted"
+        return err_type or "provider_error"
 
     @staticmethod
     def _attempt_result(provider: str, result: Dict[str, Any]) -> Dict[str, Any]:
@@ -237,12 +245,13 @@ class Stage4ProviderChainClient:
         if result.get("status") == "ok":
             return {"provider": provider, "result": "success"}
         if err_type == "provider_circuit_breaker_open":
-            return {"provider": provider, "result": "circuit_breaker_open", "error_type": err_type}
-        if Stage4LLMClient.is_rate_limited_result(result):
+            return {"provider": provider, "result": "failed", "error_type": err_type}
+        if Stage4LLMClient.is_chain_fallback_eligible(result):
+            normalized = Stage4ProviderChainClient._normalize_primary_error(err_type, result)
             return {
                 "provider": provider,
-                "result": "rate_limited",
-                "error_type": err_type or "provider_http_429",
+                "result": "failed",
+                "error_type": normalized,
                 "http_status": result.get("http_status"),
             }
         return {
@@ -319,9 +328,11 @@ class Stage4ProviderChainClient:
 
             err_type = str(result.get("error_type") or "")
             if is_primary:
-                primary_error = err_type or "provider_error"
+                primary_error = self._normalize_primary_error(err_type, result) if self._is_fallback_eligible(result) else (
+                    err_type or "provider_error"
+                )
 
-            if self._is_rate_limited(result):
+            if self._is_fallback_eligible(result):
                 if idx + 1 < len(self.provider_chain) and self.fallback_allowed:
                     continue
                 break
@@ -337,6 +348,9 @@ class Stage4ProviderChainClient:
             last_result["fallback_used"] = False
             last_result["primary_provider"] = primary_provider
             last_result["primary_error"] = primary_error or last_result.get("error_type")
+            if last_result.get("status") != "ok" and len(attempts) > 1:
+                last_result["error_type"] = "provider_chain_failed"
+                last_result["status"] = "error"
         return last_result
 
     def last_provider_attempts(self) -> List[Dict[str, Any]]:

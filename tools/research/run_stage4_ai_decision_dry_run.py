@@ -149,7 +149,19 @@ def _empty_run_stats() -> Dict[str, int]:
         "real_successful_llm_decision_count": 0,
         "effective_decision_count": 0,
         "fallback_used_count": 0,
+        "provider_exhaustion_count": 0,
+        "fallback_attempt_count": 0,
+        "fallback_success_count": 0,
+        "provider_chain_failed_count": 0,
     }
+
+
+def _target_effective_decision_count() -> int:
+    raw = os.environ.get("STAGE4_TARGET_EFFECTIVE_DECISION_COUNT", "30").strip()
+    try:
+        return max(1, int(float(raw)))
+    except (TypeError, ValueError):
+        return 30
 
 
 def _aggregate_run_provider_stats(decisions: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -171,10 +183,16 @@ def _record_skipped_tick(
         "rate_limit_gate",
         "local_rate_gate_skip",
         "backoff_active_skip",
-        "empty_llm_response",
         "provider_http_429",
     }
-    if exc.reason in rate_like or exc.event_type in rate_like:
+    exhaustion_like = {"empty_llm_response", "provider_quota_exhausted", "content_empty"}
+    if exc.reason == "provider_chain_failed" or exc.event_type == "provider_chain_failed":
+        stats["provider_chain_failed_count"] += 1
+        stats["provider_error_count"] += 1
+    elif exc.reason in exhaustion_like or exc.event_type == "provider_quota_exhausted":
+        stats["provider_exhaustion_count"] += 1
+        stats["provider_rate_limit_count"] += 1
+    elif exc.reason in rate_like or exc.event_type in rate_like:
         stats["provider_rate_limit_count"] += 1
     else:
         stats["provider_error_count"] += 1
@@ -480,21 +498,40 @@ def _run_dry_run_inner(
     decisions: List[Dict[str, Any]] = []
     tick = 0
     summary_written = False
+    loop_completed = False
+    target_effective = _target_effective_decision_count()
 
-    def _persist_summary(*, dry_run_completed: bool = True) -> Dict[str, Any]:
+    def _persist_summary(
+        *,
+        dry_run_completed: bool = False,
+        partial_completion: bool = False,
+        failed_reason: str | None = None,
+    ) -> Dict[str, Any]:
         nonlocal summary_written
         if summary_written:
             return {}
         summary_written = True
+        effective = stats["effective_decision_count"]
+        partial = partial_completion or effective < target_effective
+        completed = dry_run_completed and effective >= target_effective and not partial
+        if partial and not failed_reason:
+            if effective < target_effective:
+                failed_reason = "provider_yield_below_target"
+            elif not loop_completed:
+                failed_reason = "partial_exit"
         summary = {
             "record_type": "stage4_ai_decision_summary",
             "generated_at_utc": utc_now_iso(),
-            "phase": "4.7",
+            "phase": "4.12",
             "mode": mode,
             "duration_minutes": duration_minutes,
             "poll_interval_seconds": poll_interval_seconds,
             "symbols": symbols,
-            "dry_run_completed": dry_run_completed,
+            "dry_run_completed": completed,
+            "partial_completion": partial,
+            "failed_reason": failed_reason,
+            "effective_decision_count": effective,
+            "target_effective_decision_count": target_effective,
             "decision_count": len(decisions),
             "real_llm_used_count": sum(1 for d in decisions if d.get("real_llm_used")),
             "mock_ai_used_count": sum(1 for d in decisions if d.get("is_mock_ai")),
@@ -521,9 +558,11 @@ def _run_dry_run_inner(
         write_json(out / "stage4_ai_decision_summary.json", summary)
         _append_run_log(
             log_path,
-            f"END decision_count={len(decisions)} effective={stats['effective_decision_count']} "
+            f"END decision_count={len(decisions)} effective={effective} "
             f"skipped={stats['skipped_tick_count']} rate_limit={stats['provider_rate_limit_count']} "
-            f"parse_errors={stats['parse_error_count']} order_sent_count=0",
+            f"exhaustion={stats['provider_exhaustion_count']} chain_failed={stats['provider_chain_failed_count']} "
+            f"fallback_success={stats['fallback_success_count']} parse_errors={stats['parse_error_count']} "
+            f"partial={partial} completed={completed} order_sent_count=0",
         )
         try:
             from tools.research.export_stage4_ai_decision_bundle import export_bundle
@@ -533,6 +572,7 @@ def _run_dry_run_inner(
                 "bundle_path": bundle.get("bundle_path"),
                 "bundle_safe": bundle.get("bundle_safe"),
                 "file_count": bundle.get("file_count"),
+                "bundle_exported": bool(bundle.get("bundle_safe") and bundle.get("file_count", 0) > 0),
             }
             write_json(out / "stage4_ai_decision_summary.json", summary)
         except Exception as exc:
@@ -540,13 +580,14 @@ def _run_dry_run_inner(
         return summary
 
     def _handle_stop(signum: int, _frame: Any) -> None:
-        _append_run_log(log_path, f"SIGNAL signum={signum} persisting summary")
-        _persist_summary(dry_run_completed=True)
+        _append_run_log(log_path, f"SIGNAL signum={signum} persisting partial summary")
+        _persist_summary(dry_run_completed=False, partial_completion=True, failed_reason="partial_exit")
         raise SystemExit(0)
 
     signal.signal(signal.SIGTERM, _handle_stop)
     signal.signal(signal.SIGINT, _handle_stop)
 
+    summary_result: Dict[str, Any] = {}
     try:
         while time.time() < end:
             tick += 1
@@ -584,6 +625,10 @@ def _run_dry_run_inner(
                     stats["effective_decision_count"] += 1
                     if decision.get("fallback_used"):
                         stats["fallback_used_count"] += 1
+                        stats["fallback_success_count"] += 1
+                    attempts = decision.get("provider_attempts") or []
+                    if len(attempts) > 1:
+                        stats["fallback_attempt_count"] += 1
 
                 write_decision(out, decision)
                 decisions.append(decision)
@@ -596,12 +641,18 @@ def _run_dry_run_inner(
                     time.sleep(symbol_gap)
 
             if duration_minutes <= 0.05:
+                loop_completed = True
                 break
             if time.time() >= end:
                 break
             time.sleep(poll_interval_seconds)
+        loop_completed = True
     finally:
-        return _persist_summary(dry_run_completed=True)
+        summary_result = _persist_summary(
+            dry_run_completed=loop_completed,
+            partial_completion=stats["effective_decision_count"] < target_effective,
+        )
+    return summary_result
 
 
 def main() -> int:

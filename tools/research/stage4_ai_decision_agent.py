@@ -307,14 +307,33 @@ class Stage4AIDecisionAgent:
                     "backoff_until_utc": result.get("backoff_until_utc"),
                 },
             )
+        if str(result.get("error_type") or "") == "provider_chain_failed":
+            raise ProviderRateLimited(
+                provider=str(provider_meta["provider"]),
+                model_name=str(provider_meta["model_name"]),
+                symbol=symbol.upper(),
+                retry_count=int(result.get("retry_count") or 0),
+                reason="provider_chain_failed",
+                event_type="provider_chain_failed",
+            )
         parsed = result.get("parsed") or {}
         proposal, ok, err = parse_llm_decision(parsed, symbol=symbol)
         if not ok or result.get("status") != "ok":
             err_type = result.get("parse_error_type") or result.get("error_type") or err or "llm_parse_failed"
             raw_nonempty = bool(str(result.get("raw_text") or "").strip())
+            attempts = result.get("provider_attempts") or provider_meta.get("provider_attempts") or []
             if (
                 err_type in {"content_empty", "empty_llm_response"} or bool(result.get("raw_content_empty"))
             ) and not raw_nonempty:
+                if len(attempts) > 1:
+                    raise ProviderRateLimited(
+                        provider=str(provider_meta["provider"]),
+                        model_name=str(provider_meta["model_name"]),
+                        symbol=symbol.upper(),
+                        retry_count=int(result.get("retry_count") or 0),
+                        reason="provider_chain_failed",
+                        event_type="provider_chain_failed",
+                    )
                 raise ProviderRateLimited(
                     provider=str(provider_meta["provider"]),
                     model_name=str(provider_meta["model_name"]),

@@ -108,6 +108,13 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 - Output: `shadow_compare.jsonl`, summary JSON, markdown report under `/data/stage4_shadow_compare_410/`.
 - **not_a_backtest=true** — no orders, labels only.
 
+### Stage 4.12 — Provider exhaustion fallback + partial soak finalization
+
+- Groq HTTP 429 / `provider_quota_exhausted` / empty `content_empty` → Cerebras real fallback (never mock).
+- `provider_attempts` records per-tick chain; summary tracks `provider_exhaustion_count`, `fallback_attempt_count`, `fallback_success_count`, `provider_chain_failed_count`.
+- Partial completion always writes summary + bundle (`partial_completion`, `target_effective_decision_count`).
+- Validator: `technical_valid` vs `dataset_target_met` (target default 30).
+
 ### Stage 4.4 — Regime + Stage3 context wiring (read-only)
 
 - Kline-derived regime: `trend|range|volatile|unknown` with `regime_reason`, `trend_strength`, `volatility_level`.

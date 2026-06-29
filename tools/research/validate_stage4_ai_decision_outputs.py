@@ -105,64 +105,77 @@ def _compute_decision_metrics(decisions: List[Dict[str, Any]], summary: Dict[str
     }
 
 
+def _target_effective_decision_count(summary: Dict[str, Any]) -> int:
+    import os
+
+    raw = summary.get("target_effective_decision_count")
+    if raw is not None:
+        try:
+            return max(1, int(raw))
+        except (TypeError, ValueError):
+            pass
+    env_raw = os.environ.get("STAGE4_TARGET_EFFECTIVE_DECISION_COUNT", "30").strip()
+    try:
+        return max(1, int(float(env_raw)))
+    except (TypeError, ValueError):
+        return 30
+
+
 def _apply_require_real_llm_checks(
     out: Path,
     *,
     decisions: List[Dict[str, Any]],
     summary: Dict[str, Any],
-    errors: List[str],
+    technical_errors: List[str],
     metrics: Dict[str, int],
 ) -> None:
-    if summary.get("dry_run_completed") is False:
-        errors.append(f"dry_run_failed:{summary.get('failed_reason') or 'unknown'}")
-
     real_count = sum(1 for d in decisions if d.get("real_llm_used"))
     mock_count = sum(1 for d in decisions if d.get("is_mock_ai"))
     if mock_count > 0:
-        errors.append("mock_ai_used_count_gt_zero")
+        technical_errors.append("mock_ai_used_count_gt_zero")
     if summary.get("fallback_to_mock") is True or any(d.get("fallback_to_mock") for d in decisions):
-        errors.append("fallback_to_mock_true")
+        technical_errors.append("fallback_to_mock_true")
     if summary.get("model_name") == MOCK_MODEL_NAME or any(
         str(d.get("model_name") or "") == MOCK_MODEL_NAME for d in decisions
     ):
-        errors.append("model_name_mock_ai_decision_agent")
+        technical_errors.append("model_name_mock_ai_decision_agent")
 
     debug_path = out / "llm_client_debug.jsonl"
     if not debug_path.is_file():
-        errors.append("llm_client_debug_jsonl_missing")
+        technical_errors.append("llm_client_debug_jsonl_missing")
     elif _debug_log_has_api_key(out):
-        errors.append("debug_log_has_api_key")
+        technical_errors.append("debug_log_has_api_key")
 
     if metrics["parse_error_count"] > 0:
-        errors.append(f"parse_error_count_gt_zero:{metrics['parse_error_count']}")
+        technical_errors.append(f"parse_error_count_gt_zero:{metrics['parse_error_count']}")
     if metrics["empty_response_count"] > 0:
-        errors.append(f"empty_response_count_gt_zero:{metrics['empty_response_count']}")
+        technical_errors.append(f"empty_response_count_gt_zero:{metrics['empty_response_count']}")
     if metrics["real_successful_llm_decision_count"] <= 0:
-        errors.append("real_successful_llm_decision_count_zero")
+        technical_errors.append("real_successful_llm_decision_count_zero")
     if metrics["effective_decision_count"] <= 0:
-        errors.append("effective_decision_count_zero")
+        technical_errors.append("effective_decision_count_zero")
 
     order_sent_count = sum(1 for d in decisions if d.get("order_sent"))
     if order_sent_count > 0:
-        errors.append("order_sent_count_gt_zero")
+        technical_errors.append("order_sent_count_gt_zero")
 
     if real_count == 0 and metrics["real_successful_llm_decision_count"] <= 0:
-        errors.append("real_llm_used_count_zero")
+        technical_errors.append("real_llm_used_count_zero")
 
     for i, d in enumerate(decisions):
         if d.get("is_mock_ai"):
-            errors.append(f"decision_{i}_is_mock_ai_true")
+            technical_errors.append(f"decision_{i}_is_mock_ai_true")
         prov = str(d.get("provider") or "")
         if prov and prov not in ALLOWED_REAL_PROVIDERS:
-            errors.append(f"decision_{i}_provider_not_allowed:{prov}")
+            technical_errors.append(f"decision_{i}_provider_not_allowed:{prov}")
 
     provider_stats = _aggregate_provider_stats(decisions)
     if provider_stats["mock_fallback_attempt_count"] > 0:
-        errors.append("mock_fallback_attempt_count_gt_zero")
+        technical_errors.append("mock_fallback_attempt_count_gt_zero")
 
     provider_ok = summary.get("provider_health_check_passed")
     if provider_ok is False and _env_light_preflight() is False:
-        errors.append("provider_health_check_failed")
+        technical_errors.append("provider_health_check_failed")
 
 
 def _env_light_preflight() -> bool:
@@ -175,15 +188,22 @@ def _env_light_preflight() -> bool:
 def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) -> Dict[str, Any]:
     out = output_dir or resolve_stage4_output_dir()
     errors: List[str] = []
+    technical_errors: List[str] = []
     decisions = _read_jsonl(out / "ai_decisions.jsonl")
     supervisor_rows = _read_jsonl(out / "risk_supervisor_decisions.jsonl")
     summary = _read_summary(out)
     metrics = _compute_decision_metrics(decisions, summary)
+    target = _target_effective_decision_count(summary)
+    dataset_target_met = metrics["effective_decision_count"] >= target
 
     if require_real_llm:
-        _apply_require_real_llm_checks(out, decisions=decisions, summary=summary, errors=errors, metrics=metrics)
+        _apply_require_real_llm_checks(
+            out, decisions=decisions, summary=summary, technical_errors=technical_errors, metrics=metrics
+        )
+        errors.extend(technical_errors)
     elif not decisions:
         errors.append("decision_count_zero")
+        technical_errors.append("decision_count_zero")
 
     for i, d in enumerate(decisions):
         for fld in REQUIRED_DECISION_FIELDS:
@@ -224,14 +244,25 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
     mock_count = sum(1 for d in decisions if d.get("is_mock_ai"))
     order_sent_count = sum(1 for d in decisions if d.get("order_sent"))
     provider_stats = _aggregate_provider_stats(decisions)
+    technical_valid = not technical_errors
+    bundle_export = summary.get("bundle_export") or {}
+    bundle_exported = bool(
+        bundle_export.get("bundle_exported")
+        or (bundle_export.get("bundle_safe") and bundle_export.get("file_count", 0) > 0)
+    )
 
-    passed = not errors
+    passed = technical_valid
     return {
         "record_type": "stage4_ai_decision_output_validation",
         "generated_at_utc": utc_now_iso(),
         "output_dir": str(out),
         "passed": passed,
+        "validator_passed": passed,
+        "technical_valid": technical_valid,
+        "dataset_target_met": dataset_target_met,
+        "target_effective_decision_count": target,
         "errors": errors,
+        "technical_errors": technical_errors,
         "require_real_llm": require_real_llm,
         "decision_count": len(decisions),
         "supervisor_decision_count": len(supervisor_rows),
@@ -242,10 +273,16 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
         "real_llm_used": any(d.get("real_llm_used") for d in decisions) if decisions else False,
         "fallback_to_mock": any(d.get("fallback_to_mock") for d in decisions) if decisions else False,
         "dry_run_completed": summary.get("dry_run_completed"),
+        "partial_completion": summary.get("partial_completion"),
         "failed_reason": summary.get("failed_reason"),
+        "bundle_exported": bundle_exported,
         "debug_log_has_api_key": _debug_log_has_api_key(out),
         **metrics,
         **provider_stats,
+        "provider_exhaustion_count": int(summary.get("provider_exhaustion_count") or 0),
+        "fallback_attempt_count": int(summary.get("fallback_attempt_count") or 0),
+        "fallback_success_count": int(summary.get("fallback_success_count") or 0),
+        "provider_chain_failed_count": int(summary.get("provider_chain_failed_count") or 0),
     }
 
 
