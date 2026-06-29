@@ -94,6 +94,7 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 - Decision log: `provider`, `provider_chain`, `provider_attempts`, `fallback_used`, `fallback_reason`.
 - Summary: `provider_chain_deduped`, `deduped_provider_key_count`, `provider_success_distribution`.
 - Validator `--require-real-llm`: rejects mock fallback; validates allowed real providers.
+- Agent init with `STAGE4_REQUIRE_REAL_LLM=true` + `STAGE4_ALLOW_MOCK_FALLBACK=false`: unavailable real LLM → `RealLLMRequiredError` (no mock fallback).
 
 ### Stage 4.9 — 60m read-only soak
 

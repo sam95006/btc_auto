@@ -99,15 +99,24 @@ class Stage4LLMSchemaTests(unittest.TestCase):
         self.assertTrue(decision.get("parse_error"))
         self.assertFalse(decision["risk_supervisor_result"]["approved"])
 
-    def test_real_llm_unavailable_falls_back_to_mock(self) -> None:
-        with patch(
-            "tools.research.stage4_llm_client.Stage4LLMClient._resolve_config",
-            return_value=None,
+    def test_real_llm_unavailable_raises_without_mock_fallback(self) -> None:
+        """Real LLM unavailable must hard-fail when mock fallback is disallowed."""
+        with patch.dict(
+            os.environ,
+            {
+                "STAGE4_REQUIRE_REAL_LLM": "true",
+                "STAGE4_ALLOW_MOCK_FALLBACK": "false",
+            },
+            clear=False,
+        ), patch(
+            "tools.research.stage4_provider_chain.Stage4ProviderChainClient.availability",
+            return_value={"real_llm_available": False, "reason": "provider_unavailable"},
         ):
-            agent = Stage4AIDecisionAgent(use_real_llm=True)
-        self.assertTrue(agent.fallback_to_mock)
-        self.assertTrue(agent.is_mock_ai)
-        self.assertFalse(agent.real_llm_used)
+            from tools.research.stage4_llm_client import RealLLMRequiredError
+
+            with self.assertRaises(RealLLMRequiredError) as ctx:
+                Stage4AIDecisionAgent(use_real_llm=True)
+            self.assertIn(ctx.exception.reason, ("provider_unavailable", "missing_real_llm_key", "no_allowed_provider_configured"))
 
     def test_mock_and_real_llm_flags_not_confused(self) -> None:
         mock_agent = Stage4AIDecisionAgent(use_real_llm=False)
@@ -605,8 +614,8 @@ class Stage4RealLLMGuardTests(unittest.TestCase):
             },
             clear=False,
         ), patch(
-            "tools.research.stage4_llm_client.Stage4LLMClient._resolve_config",
-            return_value=None,
+            "tools.research.stage4_provider_chain.Stage4ProviderChainClient.availability",
+            return_value={"real_llm_available": False, "reason": "provider_unavailable"},
         ):
             from tools.research.stage4_llm_client import RealLLMRequiredError
 
