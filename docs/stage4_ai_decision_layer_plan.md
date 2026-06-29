@@ -114,6 +114,8 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 - `provider_attempts` records per-tick chain; summary tracks `provider_exhaustion_count`, `fallback_attempt_count`, `fallback_success_count`, `provider_chain_failed_count`.
 - Partial completion always writes summary + bundle (`partial_completion`, `target_effective_decision_count`).
 - Validator: `technical_valid` vs `dataset_target_met` (target default 30).
+- Cerebras default model: `gpt-oss-120b` (do not inherit `STAGE4_LLM_MODEL` from Groq).
+- Groq multi-key exhaustion (429/quota) prefers chain fallback even if a later key returns 401.
 
 ### Stage 4.4 — Regime + Stage3 context wiring (read-only)
 

@@ -44,7 +44,7 @@ DEFAULT_MODELS = {
     "ollama": os.environ.get("STAGE4_OLLAMA_LLM_MODEL", "llama3.3"),
     "cerebras": os.environ.get(
         "STAGE4_CEREBRAS_LLM_MODEL",
-        os.environ.get("STAGE4_SECONDARY_LLM_MODEL", "llama-3.3-70b"),
+        os.environ.get("STAGE4_SECONDARY_LLM_MODEL", "gpt-oss-120b"),
     ),
 }
 
