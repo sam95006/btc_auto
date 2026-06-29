@@ -38,11 +38,14 @@ OPENAI_COMPAT_URLS = {
 
 DEFAULT_MODELS = {
     "groq": os.environ.get("STAGE4_LLM_MODEL", "llama-3.3-70b-versatile"),
-    "openai": os.environ.get("STAGE4_LLM_MODEL", "gpt-4o-mini"),
-    "anthropic": os.environ.get("STAGE4_LLM_MODEL", "claude-3-5-haiku-20241022"),
-    "gemini": os.environ.get("STAGE4_LLM_MODEL", "gemini-2.0-flash"),
-    "ollama": os.environ.get("STAGE4_LLM_MODEL", "llama3.3"),
-    "cerebras": os.environ.get("STAGE4_LLM_MODEL", "llama-3.3-70b"),
+    "openai": os.environ.get("STAGE4_OPENAI_LLM_MODEL", "gpt-4o-mini"),
+    "anthropic": os.environ.get("STAGE4_ANTHROPIC_LLM_MODEL", "claude-3-5-haiku-20241022"),
+    "gemini": os.environ.get("STAGE4_GEMINI_LLM_MODEL", "gemini-2.0-flash"),
+    "ollama": os.environ.get("STAGE4_OLLAMA_LLM_MODEL", "llama3.3"),
+    "cerebras": os.environ.get(
+        "STAGE4_CEREBRAS_LLM_MODEL",
+        os.environ.get("STAGE4_SECONDARY_LLM_MODEL", "llama-3.3-70b"),
+    ),
 }
 
 GROQ_KEY_ENVS = ("GROQ_API_KEY_PRIMARY", "GROQ_API_KEY_SECONDARY", "GROQ_API_KEY")
