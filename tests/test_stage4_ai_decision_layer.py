@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -1811,6 +1811,185 @@ class Stage4StrictEnvReadonlyTests(unittest.TestCase):
         ):
             result = run_strict_check(load_local_env=False, check_package=False)
         self.assertFalse(result["strict_env_passed"])
+
+
+class Stage410ShadowCompareTests(unittest.TestCase):
+    def _base_decision(self, **overrides: Any) -> Dict[str, Any]:
+        row = {
+            "decision_id": "test-decision-1",
+            "created_at_utc": "2026-06-29T01:00:00Z",
+            "symbol": "ETHUSDT",
+            "provider": "groq",
+            "decision_intent": "hard_skip",
+            "final_action": "skip",
+            "confidence": 0.1,
+            "regime": "volatile",
+            "candidate_side": "NONE",
+            "stage3_context_available": True,
+            "order_sent": False,
+            "is_mock_ai": False,
+            "market_context": {"last_price": 1000.0, "regime": "volatile"},
+        }
+        row.update(overrides)
+        return row
+
+    def _flat_klines(self, **kwargs: Any) -> List[Dict[str, Any]]:
+        start = kwargs["start_ms"]
+        end = kwargs["end_ms"]
+        rows: List[Dict[str, Any]] = []
+        t = start
+        while t <= end:
+            rows.append({"start_ms": t, "open": 1000.0, "high": 1000.2, "low": 999.8, "close": 1000.0})
+            t += 60_000
+        return rows
+
+    def _rising_klines(self, **kwargs: Any) -> List[Dict[str, Any]]:
+        start = kwargs["start_ms"]
+        end = kwargs["end_ms"]
+        rows: List[Dict[str, Any]] = []
+        t = start
+        i = 0
+        while t <= end:
+            px = 1000.0 + i * 5.0
+            rows.append({"start_ms": t, "open": px, "high": px + 1, "low": px - 0.5, "close": px})
+            t += 60_000
+            i += 1
+        return rows
+
+    def _choppy_klines(self, **kwargs: Any) -> List[Dict[str, Any]]:
+        start = kwargs["start_ms"]
+        end = kwargs["end_ms"]
+        rows: List[Dict[str, Any]] = []
+        t = start
+        i = 0
+        while t <= end:
+            px = 1000.0 + (2.0 if i % 2 == 0 else -2.0)
+            rows.append({"start_ms": t, "open": px, "high": px + 1.5, "low": px - 1.5, "close": px})
+            t += 60_000
+            i += 1
+        return rows
+
+    def _falling_klines(self, **kwargs: Any) -> List[Dict[str, Any]]:
+        start = kwargs["start_ms"]
+        end = kwargs["end_ms"]
+        rows: List[Dict[str, Any]] = []
+        t = start
+        i = 0
+        while t <= end:
+            px = 1000.0 - i * 4.0
+            rows.append({"start_ms": t, "open": px, "high": px + 0.5, "low": px - 2.0, "close": px})
+            t += 60_000
+            i += 1
+        return rows
+
+    def test_shadow_compare_reads_decision_jsonl(self) -> None:
+        from tools.research.stage4_shadow_compare import run_shadow_compare
+
+        with tempfile.TemporaryDirectory() as tmp:
+            dec_dir = Path(tmp) / "decisions"
+            out_dir = Path(tmp) / "out"
+            dec_dir.mkdir()
+            (dec_dir / "ai_decisions.jsonl").write_text(
+                json.dumps(self._base_decision()) + "\n",
+                encoding="utf-8",
+            )
+            result = run_shadow_compare(
+                decisions_dir=dec_dir,
+                output_dir=out_dir,
+                symbol="ETHUSDT",
+                kline_fetcher=self._flat_klines,
+            )
+            self.assertEqual(result["summary"]["decision_count"], 1)
+            self.assertTrue((out_dir / "shadow_compare.jsonl").is_file())
+
+    def test_missing_future_data_does_not_crash(self) -> None:
+        from tools.research.stage4_shadow_compare import compare_decision, parse_utc_iso
+
+        decision = self._base_decision()
+        now = parse_utc_iso("2026-06-29T01:15:00Z")
+        row = compare_decision(
+            decision,
+            symbol="ETHUSDT",
+            horizons_minutes=[15, 30, 60],
+            now_utc=now,
+            kline_fetcher=self._flat_klines,
+        )
+        self.assertEqual(row["shadow_label"], "insufficient_future_data")
+
+    def test_good_skip_label(self) -> None:
+        from tools.research.stage4_shadow_compare import compare_decision, parse_utc_iso
+
+        row = compare_decision(
+            self._base_decision(decision_intent="soft_skip"),
+            symbol="ETHUSDT",
+            horizons_minutes=[60],
+            now_utc=parse_utc_iso("2026-06-29T03:00:00Z"),
+            kline_fetcher=self._choppy_klines,
+        )
+        self.assertIn(row["shadow_label"], {"good_skip", "neutral"})
+
+    def test_missed_opportunity_label(self) -> None:
+        from tools.research.stage4_shadow_compare import compare_decision, parse_utc_iso
+
+        row = compare_decision(
+            self._base_decision(decision_intent="hard_skip", candidate_side="BUY"),
+            symbol="ETHUSDT",
+            horizons_minutes=[60],
+            now_utc=parse_utc_iso("2026-06-29T03:00:00Z"),
+            kline_fetcher=self._rising_klines,
+        )
+        self.assertEqual(row["shadow_label"], "missed_opportunity")
+
+    def test_bad_watch_label(self) -> None:
+        from tools.research.stage4_shadow_compare import compare_decision, parse_utc_iso
+
+        row = compare_decision(
+            self._base_decision(decision_intent="watch", candidate_side="BUY"),
+            symbol="ETHUSDT",
+            horizons_minutes=[60],
+            now_utc=parse_utc_iso("2026-06-29T03:00:00Z"),
+            kline_fetcher=self._falling_klines,
+        )
+        self.assertIn(row["shadow_label"], {"bad_watch", "missed_opportunity"})
+
+    def test_summary_and_report_written(self) -> None:
+        from tools.research.stage4_shadow_compare import run_shadow_compare
+
+        with tempfile.TemporaryDirectory() as tmp:
+            dec_dir = Path(tmp) / "decisions"
+            out_dir = Path(tmp) / "out"
+            dec_dir.mkdir()
+            (dec_dir / "ai_decisions.jsonl").write_text(
+                json.dumps(self._base_decision()) + "\n",
+                encoding="utf-8",
+            )
+            run_shadow_compare(
+                decisions_dir=dec_dir,
+                output_dir=out_dir,
+                kline_fetcher=self._flat_klines,
+            )
+            self.assertTrue((out_dir / "stage4_shadow_compare_summary.json").is_file())
+            self.assertTrue((out_dir / "stage4_shadow_compare_report.md").is_file())
+
+    def test_order_sent_always_false_and_no_secret(self) -> None:
+        from tools.research.stage4_shadow_compare import run_shadow_compare
+
+        with tempfile.TemporaryDirectory() as tmp:
+            dec_dir = Path(tmp) / "decisions"
+            out_dir = Path(tmp) / "out"
+            dec_dir.mkdir()
+            (dec_dir / "ai_decisions.jsonl").write_text(
+                json.dumps(self._base_decision()) + "\n",
+                encoding="utf-8",
+            )
+            result = run_shadow_compare(
+                decisions_dir=dec_dir,
+                output_dir=out_dir,
+                kline_fetcher=self._flat_klines,
+            )
+            self.assertEqual(result["summary"]["order_sent_count"], 0)
+            blob = (out_dir / "stage4_shadow_compare_summary.json").read_text(encoding="utf-8")
+            self.assertNotIn("gsk_", blob)
 
 
 class Stage4ProviderHealthTests(unittest.TestCase):

@@ -95,6 +95,18 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 - Summary: `provider_chain_deduped`, `deduped_provider_key_count`, `provider_success_distribution`.
 - Validator `--require-real-llm`: rejects mock fallback; validates allowed real providers.
 
+### Stage 4.9 — 60m read-only soak
+
+- ETHUSDT-only, poll=300s, provider chain groq+cerebras.
+- Target ≥10 effective decisions for shadow compare dataset.
+
+### Stage 4.10 — Shadow compare
+
+- `tools/research/stage4_shadow_compare.py`: read-only post-decision kline analysis.
+- Labels: good_skip, missed_opportunity, reasonable_watch, bad_watch, neutral, insufficient_future_data.
+- Output: `shadow_compare.jsonl`, summary JSON, markdown report under `/data/stage4_shadow_compare_410/`.
+- **not_a_backtest=true** — no orders, labels only.
+
 ### Stage 4.4 — Regime + Stage3 context wiring (read-only)
 
 - Kline-derived regime: `trend|range|volatile|unknown` with `regime_reason`, `trend_strength`, `volatility_level`.

@@ -55,6 +55,8 @@ BASE_ALLOWLIST = [
     "tools/research/import_stage3_context_seed.py",
     "tools/research/check_stage3_context_seed.py",
     "tools/research/analyze_stage4_rate_limit_events.py",
+    "tools/research/stage4_shadow_compare.py",
+    "tools/research/extract_stage4_decision_review_data.py",
     "tools/research/run_stage4_ai_decision_dry_run.py",
     "tools/research/check_stage4_llm_provider.py",
     "tools/research/validate_stage4_ai_decision_outputs.py",
