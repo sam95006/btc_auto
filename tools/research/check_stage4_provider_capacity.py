@@ -105,22 +105,57 @@ def _probe_cerebras_direct(*, model: str) -> Dict[str, Any]:
     }
 
 
-def run_capacity_check(*, output_path: Path | None = None) -> Dict[str, Any]:
+def run_capacity_check(
+    *,
+    output_path: Path | None = None,
+    provider: str = "full",
+) -> Dict[str, Any]:
     GroqKeyRegistry.reset_shared()
-    groq = probe_groq_keys()
-    cerebras_model = (
-        os.environ.get("STAGE4_CEREBRAS_LLM_MODEL")
-        or os.environ.get("STAGE4_SECONDARY_LLM_MODEL")
-        or "gpt-oss-120b"
-    ).strip()
-    cerebras = _probe_cerebras_direct(model=cerebras_model)
+    mode = (provider or "full").strip().lower()
+    groq: Dict[str, Any] = {}
+    cerebras: Dict[str, Any] = {}
+    if mode in {"full", "groq", "all"}:
+        groq = probe_groq_keys()
+    if mode in {"full", "cerebras", "all"}:
+        cerebras_model = (
+            os.environ.get("STAGE4_CEREBRAS_LLM_MODEL")
+            or os.environ.get("STAGE4_SECONDARY_LLM_MODEL")
+            or "gpt-oss-120b"
+        ).strip()
+        cerebras = _probe_cerebras_direct(model=cerebras_model)
+    elif mode == "groq":
+        cerebras_model = (
+            os.environ.get("STAGE4_CEREBRAS_LLM_MODEL")
+            or os.environ.get("STAGE4_SECONDARY_LLM_MODEL")
+            or "gpt-oss-120b"
+        ).strip()
+        cerebras = {
+            "cerebras_available": False,
+            "cerebras_valid_json": False,
+            "cerebras_direct_success": False,
+            "cerebras_error_type": "skipped_groq_only_probe",
+            "cerebras_error_distribution": {},
+        }
+    else:
+        cerebras_model = (
+            os.environ.get("STAGE4_CEREBRAS_LLM_MODEL")
+            or os.environ.get("STAGE4_SECONDARY_LLM_MODEL")
+            or "gpt-oss-120b"
+        ).strip()
+
     groq_available = int(groq.get("groq_valid_key_count") or 0) > 0
     groq_valid_json = bool(groq.get("groq_valid_key_count"))
+    groq_direct_success = groq_valid_json
     cerebras_key_present = bool((os.environ.get("CEREBRAS_API_KEY") or "").strip())
-    can_start = bool(groq_valid_json or cerebras.get("cerebras_direct_success"))
+    if mode == "groq":
+        can_start = groq_direct_success and int(groq.get("groq_invalid_key_count") or 0) == 0
+    else:
+        can_start = bool(groq_direct_success or cerebras.get("cerebras_direct_success"))
     report: Dict[str, Any] = {
+        "probe_mode": mode,
         "groq_available": groq_available,
         "groq_valid_json": groq_valid_json,
+        "groq_direct_success": groq_direct_success,
         "groq_error_type": next(iter(groq.get("groq_error_distribution") or {}), None),
         "groq_valid_key_count": int(groq.get("groq_valid_key_count") or 0),
         "groq_invalid_key_count": int(groq.get("groq_invalid_key_count") or 0),
@@ -132,7 +167,11 @@ def run_capacity_check(*, output_path: Path | None = None) -> Dict[str, Any]:
         "cerebras_available": cerebras.get("cerebras_available"),
         "cerebras_valid_json": cerebras.get("cerebras_valid_json"),
         "cerebras_error_type": cerebras.get("cerebras_error_type"),
-        "cerebras_model": cerebras_model,
+        "cerebras_model": cerebras_model if mode != "groq" else (
+            os.environ.get("STAGE4_CEREBRAS_LLM_MODEL")
+            or os.environ.get("STAGE4_SECONDARY_LLM_MODEL")
+            or "gpt-oss-120b"
+        ).strip(),
         "cerebras_direct_success": cerebras.get("cerebras_direct_success"),
         "cerebras_error_distribution": cerebras.get("cerebras_error_distribution") or {},
         "mock_used": False,
@@ -156,10 +195,16 @@ def run_capacity_check(*, output_path: Path | None = None) -> Dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Stage 4 provider capacity check (read-only)")
     parser.add_argument("--output", default="", help="Output JSON path")
+    parser.add_argument(
+        "--provider",
+        default="full",
+        choices=("full", "groq", "cerebras", "all"),
+        help="Probe scope: full (default), groq-only, cerebras-only",
+    )
     args = parser.parse_args()
     _load_local_env()
     out = Path(args.output) if args.output else None
-    report = run_capacity_check(output_path=out)
+    report = run_capacity_check(output_path=out, provider=args.provider)
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report.get("can_start_long_soak") else 1
 

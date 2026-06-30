@@ -2410,6 +2410,39 @@ class Stage410ShadowCompareTests(unittest.TestCase):
             self.assertNotIn("gsk_", blob)
 
 
+class Stage412a4GroqMinimalAuthTests(unittest.TestCase):
+    def test_key_format_inspection_detects_whitespace_and_quotes(self) -> None:
+        from tools.research.check_groq_auth_minimal import _inspect_key_format
+
+        ws = _inspect_key_format("  gsk_testkeyvalue123456789012345678901234567890  ")
+        self.assertTrue(ws["has_leading_or_trailing_whitespace"])
+        quoted = _inspect_key_format('"gsk_testkeyvalue123456789012345678901234567890"')
+        self.assertTrue(quoted["has_quote_wrapping"])
+        ok = _inspect_key_format("gsk_testkeyvalue123456789012345678901234567890")
+        self.assertTrue(ok["key_format_looks_valid"])
+
+    def test_minimal_auth_report_has_no_secrets(self) -> None:
+        from tools.research.check_groq_auth_minimal import run_minimal_groq_auth
+
+        with patch.dict(
+            os.environ,
+            {
+                "GROQ_API_KEY_PRIMARY": "gsk_testkeyvalue123456789012345678901234567890",
+                "GROQ_API_KEY_SECONDARY": "",
+                "GROQ_API_KEY": "",
+            },
+            clear=False,
+        ), patch(
+            "tools.research.check_groq_auth_minimal._minimal_chat_request",
+            return_value=(401, {}, "unauthorized"),
+        ):
+            report = run_minimal_groq_auth()
+        blob = json.dumps(report)
+        self.assertNotIn("gsk_testkeyvalue", blob)
+        self.assertFalse(report.get("debug_log_has_api_key"))
+        self.assertFalse(report.get("order_sent"))
+
+
 class Stage412aProviderCapacityTests(unittest.TestCase):
     def setUp(self) -> None:
         from tools.research.stage4_groq_key_registry import GroqKeyRegistry
