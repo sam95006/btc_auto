@@ -2749,7 +2749,7 @@ class Stage412aProviderCapacityTests(unittest.TestCase):
     def test_capacity_check_can_start_false_when_both_unavailable(self) -> None:
         from tools.research.check_stage4_provider_capacity import run_capacity_check
 
-        with patch("tools.research.check_stage4_provider_capacity.probe_groq_keys") as groq_probe, patch(
+        with patch("tools.research.check_stage4_provider_capacity.probe_groq_keys_for_capacity") as groq_probe, patch(
             "tools.research.check_stage4_provider_capacity._probe_cerebras_direct"
         ) as cerebras_probe:
             groq_probe.return_value = {
@@ -2774,7 +2774,7 @@ class Stage412aProviderCapacityTests(unittest.TestCase):
     def test_capacity_check_can_start_true_when_one_provider_valid(self) -> None:
         from tools.research.check_stage4_provider_capacity import run_capacity_check
 
-        with patch("tools.research.check_stage4_provider_capacity.probe_groq_keys") as groq_probe, patch(
+        with patch("tools.research.check_stage4_provider_capacity.probe_groq_keys_for_capacity") as groq_probe, patch(
             "tools.research.check_stage4_provider_capacity._probe_cerebras_direct"
         ) as cerebras_probe:
             groq_probe.return_value = {
@@ -2798,7 +2798,7 @@ class Stage412aProviderCapacityTests(unittest.TestCase):
     def test_capacity_report_has_no_secrets(self) -> None:
         from tools.research.check_stage4_provider_capacity import run_capacity_check
 
-        with patch("tools.research.check_stage4_provider_capacity.probe_groq_keys") as groq_probe, patch(
+        with patch("tools.research.check_stage4_provider_capacity.probe_groq_keys_for_capacity") as groq_probe, patch(
             "tools.research.check_stage4_provider_capacity._probe_cerebras_direct"
         ) as cerebras_probe:
             groq_probe.return_value = {
