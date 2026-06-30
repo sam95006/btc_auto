@@ -53,14 +53,17 @@ def _clean_key(raw: str) -> str:
 
 
 def _groq_post(*, api_key: str, payload: Dict[str, Any]) -> Tuple[int, str]:
+    from tools.research.stage4_llm_client import HTTP_HEADERS_BASE
+
     body = json.dumps(payload).encode("utf-8")
+    headers = {
+        **HTTP_HEADERS_BASE,
+        "Authorization": f"Bearer {_clean_key(api_key)}",
+    }
     req = urllib.request.Request(
         GROQ_CHAT_URL,
         data=body,
-        headers={
-            "Authorization": f"Bearer {_clean_key(api_key)}",
-            "Content-Type": "application/json",
-        },
+        headers=headers,
         method="POST",
     )
     try:
