@@ -1,6 +1,7 @@
 """Groq API key health registry — fingerprints only, no secret logging."""
 from __future__ import annotations
 
+import json
 import os
 from typing import Any, Dict, List, Optional
 
@@ -154,7 +155,30 @@ def probe_groq_keys(*, client_factory=None) -> Dict[str, Any]:
     error_distribution: Dict[str, int] = {}
     results: List[Dict[str, Any]] = []
     valid_count = 0
-    messages = [{"role": "user", "content": '{"final_action":"skip","symbol":"ETHUSDT","candidate_side":"NONE","confidence":0,"why_skip":"probe","side_reason":"p","confidence_reason":"p","risk_notes":[],"patch_awareness":"","uncertainty":"none","requires_manual_review":false}'}]
+    messages = [
+        {
+            "role": "system",
+            "content": "You are a JSON API. Respond with a single JSON object only.",
+        },
+        {
+            "role": "user",
+            "content": json.dumps(
+                {
+                    "final_action": "skip",
+                    "symbol": "ETHUSDT",
+                    "candidate_side": "NONE",
+                    "confidence": 0,
+                    "why_skip": "probe",
+                    "side_reason": "p",
+                    "confidence_reason": "p",
+                    "risk_notes": [],
+                    "patch_awareness": "",
+                    "uncertainty": "none",
+                    "requires_manual_review": False,
+                }
+            ),
+        },
+    ]
 
     for env_name in envs:
         val = (os.environ.get(env_name) or "").strip()
