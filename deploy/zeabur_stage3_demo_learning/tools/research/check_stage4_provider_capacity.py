@@ -15,7 +15,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.research.stage4_decision_schema import parse_llm_decision  # noqa: E402
-from tools.research.stage4_groq_key_registry import GroqKeyRegistry, probe_groq_keys  # noqa: E402
+from tools.research.stage4_groq_key_registry import GroqKeyRegistry, probe_groq_keys_for_capacity  # noqa: E402
 from tools.research.stage4_llm_client import Stage4LLMClient, _load_local_env  # noqa: E402
 
 SECRET_PATTERNS = (
@@ -115,7 +115,7 @@ def run_capacity_check(
     groq: Dict[str, Any] = {}
     cerebras: Dict[str, Any] = {}
     if mode in {"full", "groq", "all"}:
-        groq = probe_groq_keys()
+        groq = probe_groq_keys_for_capacity()
     if mode in {"full", "cerebras", "all"}:
         cerebras_model = (
             os.environ.get("STAGE4_CEREBRAS_LLM_MODEL")

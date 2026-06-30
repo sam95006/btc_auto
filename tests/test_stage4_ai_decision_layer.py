@@ -2497,7 +2497,7 @@ class Stage412a5GroqPayloadTests(unittest.TestCase):
         from tools.research.check_stage4_provider_capacity import run_capacity_check
 
         with patch(
-            "tools.research.check_stage4_provider_capacity.probe_groq_keys",
+            "tools.research.check_stage4_provider_capacity.probe_groq_keys_for_capacity",
             return_value={
                 "groq_valid_key_count": 1,
                 "groq_invalid_key_count": 0,

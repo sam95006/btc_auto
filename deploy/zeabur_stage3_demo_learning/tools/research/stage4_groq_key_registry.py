@@ -144,6 +144,63 @@ def _bridge() -> None:
     _bridge_groq_env_aliases()
 
 
+def probe_groq_keys_for_capacity(*, model: str | None = None) -> Dict[str, Any]:
+    """Probe Groq keys using the same stage4 json_object payload as the matrix tool."""
+    from tools.research.check_groq_auth_minimal import _clean_key, _fingerprint, _probe_stage4_style
+    from tools.research.stage4_groq_key_registry import GroqKeyRegistry
+    from tools.research.stage4_provider_chain import dedupe_groq_api_keys
+
+    model_name = (model or os.environ.get("STAGE4_LLM_MODEL") or "llama-3.3-70b-versatile").strip()
+    registry = GroqKeyRegistry.shared()
+    dedup = dedupe_groq_api_keys()
+    envs = list(dedup.get("groq_key_envs_deduped") or [])
+    error_distribution: Dict[str, int] = {}
+    results: List[Dict[str, Any]] = []
+    valid_count = 0
+    for env_name in envs:
+        val = (os.environ.get(env_name) or "").strip()
+        if not val:
+            continue
+        fp = _fingerprint(_clean_key(val))
+        row = _probe_stage4_style(api_key=val, model=model_name)
+        err = str(row.get("error_type") or "unknown")
+        ok = bool(row.get("auth_success")) and bool(row.get("valid_json"))
+        if ok:
+            registry.record_success(env_name=env_name, key_value=_clean_key(val))
+            valid_count += 1
+            st = "valid"
+        else:
+            registry.record_error(
+                env_name=env_name,
+                key_value=_clean_key(val),
+                error_type=err,
+                http_status=int(row.get("http_status") or 0) or None,
+            )
+            st = registry._entries.get(fp, {}).get("status", "unknown")
+            error_distribution[err] = error_distribution.get(err, 0) + 1
+        results.append(
+            {
+                "env": env_name,
+                "fingerprint": fp,
+                "status": st,
+                "error_type": err if not ok else None,
+                "error_message_safe": row.get("error_message_safe"),
+                "valid_json": ok,
+                "http_status": row.get("http_status"),
+            }
+        )
+    return {
+        "groq_key_count": len(results),
+        "groq_valid_key_count": valid_count,
+        "groq_invalid_key_count": sum(1 for r in results if r.get("status") == "invalid_401"),
+        "groq_rate_limited_key_count": sum(
+            1 for r in results if r.get("status") in {"rate_limited_429", "provider_quota_exhausted"}
+        ),
+        "groq_error_distribution": error_distribution,
+        "groq_keys": results,
+    }
+
+
 def probe_groq_keys(*, client_factory=None) -> Dict[str, Any]:
     """Read-only probe of each deduped Groq key (no secrets in output)."""
     from tools.research.stage4_llm_client import Stage4LLMClient, Stage4LLMConfig
