@@ -650,28 +650,58 @@ class Stage4LLMClient:
         *,
         key_env: str,
     ) -> Dict[str, Any]:
-        key = os.environ.get(key_env, "")
-        payload = {
-            "model": cfg.model,
-            "messages": messages,
-            "temperature": 0.2,
-            "max_tokens": self.max_tokens,
-            "max_completion_tokens": self.max_tokens,
-            "response_format": {"type": "json_object"},
-        }
-        status, raw = self._http_post(
-            cfg.endpoint,
-            {"Authorization": f"Bearer {key}"},
-            payload,
+        from tools.research.stage4_groq_payload import (
+            build_stage4_groq_openai_payload,
+            groq_payload_metadata,
+            parse_groq_error_safe,
         )
+
+        key = os.environ.get(key_env, "")
+        if cfg.provider == "groq":
+            payload = build_stage4_groq_openai_payload(
+                model=cfg.model,
+                messages=messages,
+                max_tokens=self.max_tokens,
+                temperature=0.2,
+            )
+        else:
+            payload = {
+                "model": cfg.model,
+                "messages": messages,
+                "temperature": 0.2,
+                "max_tokens": self.max_tokens,
+                "max_completion_tokens": self.max_tokens,
+                "response_format": {"type": "json_object"},
+            }
+        try:
+            status, raw = self._http_post(
+                cfg.endpoint,
+                {"Authorization": f"Bearer {key}"},
+                payload,
+            )
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode("utf-8", errors="replace")
+            err_safe = parse_groq_error_safe(body)
+            err_type = err_safe.get("error_type") or self._http_error_type(int(exc.code or 0))
+            return self._error_result(
+                err_safe.get("error_message_safe") or f"http_{exc.code}",
+                error_type=err_type,
+                http_status=int(exc.code or 0),
+                error_message_safe=err_safe.get("error_message_safe"),
+                request_id=err_safe.get("request_id"),
+                **groq_payload_metadata(model=cfg.model) if cfg.provider == "groq" else {},
+            )
         content, path, finish = extract_openai_compat_content(raw)
-        return self._finalize_content(
+        result = self._finalize_content(
             cfg,
             content=content,
             response_path=path,
             finish_reason=finish,
             http_status=status,
         )
+        if cfg.provider == "groq":
+            result.update(groq_payload_metadata(model=cfg.model))
+        return result
 
     def _anthropic(
         self,

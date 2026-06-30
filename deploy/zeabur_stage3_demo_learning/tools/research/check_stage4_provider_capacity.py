@@ -147,6 +147,11 @@ def run_capacity_check(
     groq_valid_json = bool(groq.get("groq_valid_key_count"))
     groq_direct_success = groq_valid_json
     cerebras_key_present = bool((os.environ.get("CEREBRAS_API_KEY") or "").strip())
+    from tools.research.stage4_groq_payload import groq_payload_metadata
+
+    groq_meta = groq_payload_metadata(
+        model=os.environ.get("STAGE4_LLM_MODEL", "llama-3.3-70b-versatile").strip()
+    )
     if mode == "groq":
         can_start = groq_direct_success and int(groq.get("groq_invalid_key_count") or 0) == 0
     else:
@@ -178,6 +183,7 @@ def run_capacity_check(
         "order_sent": False,
         "can_start_long_soak": can_start,
         "provider_capacity_ok": can_start,
+        **groq_meta,
     }
     serialized = json.dumps(report, ensure_ascii=False)
     report["debug_log_has_api_key"] = _text_has_secret(serialized)

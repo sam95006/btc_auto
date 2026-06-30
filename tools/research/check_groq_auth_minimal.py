@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Minimal Groq auth probe — direct HTTP, no Stage4 wrapper, no secrets in output."""
+"""Minimal Groq auth + payload matrix probe — direct HTTP, no secrets in output."""
 from __future__ import annotations
 
 import argparse
@@ -17,12 +17,23 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions"
-DEFAULT_MODEL = "llama-3.3-70b-versatile"
+from tools.research.stage4_groq_payload import (  # noqa: E402
+    DEFAULT_GROQ_MODEL,
+    GROQ_CHAT_URL,
+    PAYLOAD_VARIANTS,
+    build_groq_payload_variant,
+    build_stage4_groq_openai_payload,
+    classify_http_status,
+    groq_payload_metadata,
+    parse_groq_error_safe,
+)
+from tools.research.stage4_response_parser import safe_excerpt  # noqa: E402
+
 GROQ_ENV_NAMES = ("GROQ_API_KEY_PRIMARY", "GROQ_API_KEY_SECONDARY", "GROQ_API_KEY")
 
 SECRET_PATTERNS = (
     re.compile(r"gsk_[A-Za-z0-9]{10,}"),
+    re.compile(r"csk-[A-Za-z0-9]{10,}"),
     re.compile(r"sk-[A-Za-z0-9]{10,}"),
 )
 
@@ -37,177 +48,152 @@ def _text_has_secret(text: str) -> bool:
     return any(pat.search(text) for pat in SECRET_PATTERNS)
 
 
-def _inspect_key_format(raw: str) -> Dict[str, Any]:
-    """Key hygiene checks without printing the key."""
-    if not raw:
-        return {
-            "present": False,
-            "has_leading_or_trailing_whitespace": False,
-            "has_quote_wrapping": False,
-            "has_newline": False,
-            "key_format_looks_valid": False,
-        }
-    stripped = raw.strip()
-    has_ws = raw != stripped or raw.startswith(" ") or raw.endswith(" ")
-    has_quotes = (
-        (raw.startswith('"') and raw.endswith('"'))
-        or (raw.startswith("'") and raw.endswith("'"))
-        or (stripped.startswith('"') and stripped.endswith('"'))
-        or (stripped.startswith("'") and stripped.endswith("'"))
-    )
-    has_newline = "\n" in raw or "\r" in raw
-    inner = stripped.strip('"').strip("'")
-    looks_valid = bool(re.fullmatch(r"gsk_[A-Za-z0-9_-]{20,}", inner))
-    return {
-        "present": True,
-        "has_leading_or_trailing_whitespace": has_ws,
-        "has_quote_wrapping": has_quotes,
-        "has_newline": has_newline,
-        "key_format_looks_valid": looks_valid,
-    }
+def _clean_key(raw: str) -> str:
+    return raw.strip().strip('"').strip("'")
 
 
-def _http_error_type(code: int) -> str:
-    if code == 401:
-        return "http_unauthorized"
-    if code == 403:
-        return "http_forbidden"
-    if code == 429:
-        return "rate_limit"
-    if code == 404:
-        return "http_not_found"
-    if code >= 500:
-        return "server_error"
-    return f"http_{code}"
-
-
-def _minimal_chat_request(*, api_key: str, model: str) -> Tuple[int, Dict[str, Any], str]:
-    payload = {
-        "model": model,
-        "messages": [
-            {
-                "role": "user",
-                "content": 'Return one JSON object only: {"status":"ok","probe":"groq_minimal_auth"}',
-            }
-        ],
-        "temperature": 0,
-        "max_tokens": 64,
-        "response_format": {"type": "json_object"},
-    }
+def _groq_post(*, api_key: str, payload: Dict[str, Any]) -> Tuple[int, str]:
     body = json.dumps(payload).encode("utf-8")
-    key_clean = api_key.strip().strip('"').strip("'")
     req = urllib.request.Request(
         GROQ_CHAT_URL,
         data=body,
         headers={
-            "Authorization": f"Bearer {key_clean}",
+            "Authorization": f"Bearer {_clean_key(api_key)}",
             "Content-Type": "application/json",
         },
         method="POST",
     )
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
-            status = int(resp.status or 200)
-            raw_text = resp.read().decode("utf-8", errors="replace")
+            return int(resp.status or 200), resp.read().decode("utf-8", errors="replace")
     except urllib.error.HTTPError as exc:
-        status = int(exc.code or 0)
-        raw_text = exc.read().decode("utf-8", errors="replace")[:500]
-        return status, {}, raw_text
+        return int(exc.code or 0), exc.read().decode("utf-8", errors="replace")[:800]
     except Exception as exc:
-        return 0, {}, str(exc)[:200]
+        return 0, str(exc)[:200]
 
+
+def _content_valid_json(raw_text: str) -> bool:
     try:
         parsed = json.loads(raw_text)
     except json.JSONDecodeError:
-        return status, {}, raw_text
-
-    content = ""
+        return False
     choices = parsed.get("choices") or []
-    if choices and isinstance(choices[0], dict):
-        msg = choices[0].get("message") or {}
-        content = str(msg.get("content") or "")
-    valid_json = False
-    if content.strip():
-        try:
-            obj = json.loads(content)
-            valid_json = isinstance(obj, dict)
-        except json.JSONDecodeError:
-            valid_json = False
-    return status, {"valid_json": valid_json, "raw_content_length": len(content)}, raw_text[:200]
+    if not choices or not isinstance(choices[0], dict):
+        return False
+    content = str((choices[0].get("message") or {}).get("content") or "")
+    if not content.strip():
+        return False
+    try:
+        obj = json.loads(content)
+        return isinstance(obj, dict)
+    except json.JSONDecodeError:
+        return content.strip().upper() == "OK"
 
 
-def run_minimal_groq_auth(
-    *,
-    env_names: Tuple[str, ...] | None = None,
-    model: str = DEFAULT_MODEL,
-    include_legacy: bool = False,
-) -> Dict[str, Any]:
-    names = list(env_names or GROQ_ENV_NAMES)
-    if not include_legacy:
-        names = [n for n in names if n != "GROQ_API_KEY"]
+def _probe_variant(*, api_key: str, variant: str, model: str) -> Dict[str, Any]:
+    payload = build_groq_payload_variant(variant, model=model)
+    status, raw = _groq_post(api_key=api_key, payload=payload)
+    err_safe = parse_groq_error_safe(raw) if status != 200 else {}
+    err_type = classify_http_status(status, err_safe.get("error_type"))
+    auth_success = status == 200
+    valid_json = _content_valid_json(raw) if auth_success else False
+    return {
+        "payload_variant": variant,
+        "http_status": status or None,
+        "auth_success": auth_success,
+        "valid_json": valid_json,
+        "error_type": None if status == 200 else err_type,
+        "error_message_safe": err_safe.get("error_message_safe"),
+        "request_id": err_safe.get("request_id"),
+        "model": model,
+    }
 
-    results: List[Dict[str, Any]] = []
-    format_valid_count = 0
-    whitespace_issues = 0
-    quote_issues = 0
-    http_distribution: Dict[str, int] = {}
 
-    seen_fps: set[str] = set()
+def _probe_stage4_style(*, api_key: str, model: str) -> Dict[str, Any]:
+    messages = [
+        {
+            "role": "system",
+            "content": "You are a JSON API. Respond with a single JSON object only.",
+        },
+        {
+            "role": "user",
+            "content": json.dumps(
+                {
+                    "final_action": "skip",
+                    "symbol": "ETHUSDT",
+                    "candidate_side": "NONE",
+                    "confidence": 0.0,
+                    "why_skip": "probe",
+                }
+            ),
+        },
+    ]
+    payload = build_stage4_groq_openai_payload(model=model, messages=messages, max_tokens=128)
+    status, raw = _groq_post(api_key=api_key, payload=payload)
+    err_safe = parse_groq_error_safe(raw) if status != 200 else {}
+    err_type = classify_http_status(status, err_safe.get("error_type"))
+    return {
+        "payload_variant": "stage4_json_object_no_max_completion_tokens",
+        "http_status": status or None,
+        "auth_success": status == 200,
+        "valid_json": _content_valid_json(raw) if status == 200 else False,
+        "error_type": None if status == 200 else err_type,
+        "error_message_safe": err_safe.get("error_message_safe"),
+        "request_id": err_safe.get("request_id"),
+        "model": model,
+        **groq_payload_metadata(model=model),
+    }
+
+
+def run_payload_matrix(*, model: str = DEFAULT_GROQ_MODEL, include_legacy: bool = False) -> Dict[str, Any]:
+    names = [n for n in GROQ_ENV_NAMES if n != "GROQ_API_KEY" or include_legacy]
+    matrix: List[Dict[str, Any]] = []
+    seen: set[str] = set()
+    variant_success: Dict[str, int] = {v: 0 for v in PAYLOAD_VARIANTS}
+    root_causes: Dict[str, int] = {}
+
     for env_name in names:
         raw = os.environ.get(env_name) or ""
-        fmt = _inspect_key_format(raw)
-        if not fmt.get("present"):
+        if not raw.strip():
             continue
-        inner = raw.strip().strip('"').strip("'")
-        fp = _fingerprint(inner)
-        if fp in seen_fps:
+        fp = _fingerprint(_clean_key(raw))
+        if fp in seen:
             continue
-        seen_fps.add(fp)
+        seen.add(fp)
+        for variant in PAYLOAD_VARIANTS:
+            row = _probe_variant(api_key=raw, variant=variant, model=model)
+            row["env_name"] = env_name
+            row["fingerprint"] = fp
+            matrix.append(row)
+            if row.get("auth_success"):
+                variant_success[variant] = variant_success.get(variant, 0) + 1
+            elif row.get("error_type"):
+                root_causes[str(row["error_type"])] = root_causes.get(str(row["error_type"]), 0) + 1
 
-        if fmt.get("key_format_looks_valid"):
-            format_valid_count += 1
-        if fmt.get("has_leading_or_trailing_whitespace") or fmt.get("has_newline"):
-            whitespace_issues += 1
-        if fmt.get("has_quote_wrapping"):
-            quote_issues += 1
+        stage4_row = _probe_stage4_style(api_key=raw, model=model)
+        stage4_row["env_name"] = env_name
+        stage4_row["fingerprint"] = fp
+        matrix.append(stage4_row)
+        if stage4_row.get("auth_success"):
+            variant_success["stage4_json_object_no_max_completion_tokens"] = (
+                variant_success.get("stage4_json_object_no_max_completion_tokens", 0) + 1
+            )
 
-        status, meta, _ = _minimal_chat_request(api_key=inner, model=model)
-        err_type = None if status == 200 else _http_error_type(status)
-        if err_type:
-            http_distribution[err_type] = http_distribution.get(err_type, 0) + 1
-        elif status == 200:
-            http_distribution["http_200"] = http_distribution.get("http_200", 0) + 1
-
-        auth_success = status == 200
-        valid_json = bool(meta.get("valid_json")) if auth_success else False
-        results.append(
-            {
-                "env_name": env_name,
-                "fingerprint": fp,
-                "http_status": status or None,
-                "auth_success": auth_success,
-                "valid_json": valid_json,
-                "error_type": err_type,
-                "has_leading_or_trailing_whitespace": fmt.get("has_leading_or_trailing_whitespace"),
-                "has_quote_wrapping": fmt.get("has_quote_wrapping"),
-                "has_newline": fmt.get("has_newline"),
-                "key_format_looks_valid": fmt.get("key_format_looks_valid"),
-                "authorization_scheme": "Bearer",
-                "base_url": GROQ_CHAT_URL,
-                "model": model,
-            }
-        )
-
-    any_success = any(r.get("auth_success") for r in results)
+    any_auth = any(r.get("auth_success") for r in matrix)
     report: Dict[str, Any] = {
-        "groq_key_count": len(results),
-        "groq_key_fingerprints": [r.get("fingerprint") for r in results],
-        "groq_key_format_valid_count": format_valid_count,
-        "groq_key_has_whitespace_issue": whitespace_issues > 0,
-        "groq_key_has_quote_issue": quote_issues > 0,
-        "results": results,
-        "any_groq_auth_success": any_success,
-        "groq_minimal_http_status_distribution": http_distribution,
+        "groq_dashboard_observation_considered": True,
+        "groq_key_count": len(seen),
+        "groq_key_fingerprints": sorted(seen),
+        "payload_matrix_created": True,
+        "payload_matrix_results": matrix,
+        "bare_chat_success_count": variant_success.get("bare_chat_no_response_format", 0),
+        "json_object_success_count": variant_success.get("json_object_mode", 0),
+        "json_schema_strict_false_success_count": variant_success.get("json_schema_strict_false", 0),
+        "json_schema_strict_true_success_count": variant_success.get("json_schema_strict_true", 0),
+        "stage4_style_success_count": variant_success.get("stage4_json_object_no_max_completion_tokens", 0),
+        "any_groq_auth_success": any_auth,
+        "groq_400_root_cause": _infer_root_cause(matrix, root_causes),
+        **groq_payload_metadata(model=model),
         "mock_used": False,
         "order_sent": False,
     }
@@ -216,24 +202,63 @@ def run_minimal_groq_auth(
     return report
 
 
+def _infer_root_cause(matrix: List[Dict[str, Any]], root_causes: Dict[str, int]) -> str:
+    bare_ok = any(
+        r.get("payload_variant") == "bare_chat_no_response_format" and r.get("auth_success") for r in matrix
+    )
+    json_obj_ok = any(r.get("payload_variant") == "json_object_mode" and r.get("auth_success") for r in matrix)
+    schema_fail = any(
+        r.get("payload_variant", "").startswith("json_schema") and r.get("http_status") == 400 for r in matrix
+    )
+    stage4_ok = any(r.get("payload_variant") == "stage4_json_object_no_max_completion_tokens" and r.get("auth_success") for r in matrix)
+    if bare_ok and json_obj_ok and schema_fail:
+        return "json_schema_unsupported_use_json_object_mode"
+    if bare_ok and not json_obj_ok:
+        return "json_object_mode_rejected_check_prompt_or_model"
+    if not bare_ok:
+        msgs = [r.get("error_message_safe") for r in matrix if r.get("error_message_safe")]
+        if msgs:
+            return safe_excerpt(str(msgs[0]), 120)
+        return "auth_or_network_failure"
+    if stage4_ok:
+        return "resolved_stage4_json_object_without_max_completion_tokens"
+    if root_causes:
+        top = max(root_causes, key=root_causes.get)
+        return f"{top}_see_error_message_safe"
+    return "unknown"
+
+
+def run_minimal_groq_auth(*, model: str = DEFAULT_GROQ_MODEL, include_legacy: bool = False) -> Dict[str, Any]:
+    matrix = run_payload_matrix(model=model, include_legacy=include_legacy)
+    matrix["probe_mode"] = "minimal_json_object"
+    return matrix
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Minimal Groq auth probe (no secrets logged)")
-    parser.add_argument("--model", default=os.environ.get("STAGE4_LLM_MODEL", DEFAULT_MODEL))
+    parser = argparse.ArgumentParser(description="Groq auth + payload matrix probe")
+    parser.add_argument("--model", default=os.environ.get("STAGE4_LLM_MODEL", DEFAULT_GROQ_MODEL))
     parser.add_argument("--output", default="", help="Optional JSON output path")
-    parser.add_argument("--include-legacy", action="store_true", help="Include GROQ_API_KEY env")
+    parser.add_argument("--include-legacy", action="store_true")
+    parser.add_argument("--matrix", action="store_true", help="Run A/B/C/D payload matrix")
     args = parser.parse_args()
 
     from tools.research.stage4_llm_client import _load_local_env
 
     _load_local_env()
-    report = run_minimal_groq_auth(model=args.model.strip(), include_legacy=args.include_legacy)
+    model = args.model.strip()
+    report = run_payload_matrix(model=model, include_legacy=args.include_legacy) if args.matrix else run_minimal_groq_auth(
+        model=model, include_legacy=args.include_legacy
+    )
     if args.output:
         out = Path(args.output)
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         report["report_path"] = str(out)
     print(json.dumps(report, indent=2, ensure_ascii=False))
-    return 0 if report.get("any_groq_auth_success") else 1
+    ok = bool(report.get("any_groq_auth_success"))
+    if args.matrix:
+        ok = ok and int(report.get("json_object_success_count") or 0) >= 1
+    return 0 if ok else 1
 
 
 if __name__ == "__main__":

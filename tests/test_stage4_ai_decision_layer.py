@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import urllib.error
 from pathlib import Path
 from unittest.mock import patch
 
@@ -2410,33 +2411,168 @@ class Stage410ShadowCompareTests(unittest.TestCase):
             self.assertNotIn("gsk_", blob)
 
 
-class Stage412a4GroqMinimalAuthTests(unittest.TestCase):
-    def test_key_format_inspection_detects_whitespace_and_quotes(self) -> None:
-        from tools.research.check_groq_auth_minimal import _inspect_key_format
+class Stage412a5GroqPayloadTests(unittest.TestCase):
+    def test_llama_uses_json_object_not_json_schema(self) -> None:
+        from tools.research.stage4_groq_payload import (
+            build_stage4_groq_openai_payload,
+            groq_payload_metadata,
+        )
 
-        ws = _inspect_key_format("  gsk_testkeyvalue123456789012345678901234567890  ")
-        self.assertTrue(ws["has_leading_or_trailing_whitespace"])
-        quoted = _inspect_key_format('"gsk_testkeyvalue123456789012345678901234567890"')
-        self.assertTrue(quoted["has_quote_wrapping"])
-        ok = _inspect_key_format("gsk_testkeyvalue123456789012345678901234567890")
-        self.assertTrue(ok["key_format_looks_valid"])
+        meta = groq_payload_metadata()
+        self.assertEqual(meta["groq_payload_mode"], "json_object")
+        self.assertFalse(meta["json_schema_used"])
+        self.assertFalse(meta["strict_schema_used"])
+        payload = build_stage4_groq_openai_payload(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": "Return JSON {\"ok\": true}"}],
+            max_tokens=64,
+        )
+        self.assertEqual(payload["response_format"], {"type": "json_object"})
+        self.assertNotIn("max_completion_tokens", payload)
+        self.assertNotIn("json_schema", json.dumps(payload))
 
-    def test_minimal_auth_report_has_no_secrets(self) -> None:
-        from tools.research.check_groq_auth_minimal import run_minimal_groq_auth
+    def test_parse_groq_error_safe_redacts_secrets(self) -> None:
+        from tools.research.stage4_groq_payload import parse_groq_error_safe
+
+        body = json.dumps(
+            {
+                "error": {
+                    "type": "invalid_request_error",
+                    "message": "bad field gsk_ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890",
+                },
+                "request_id": "req_test123",
+            }
+        )
+        parsed = parse_groq_error_safe(body)
+        self.assertEqual(parsed["error_type"], "invalid_request_error")
+        self.assertIn("[redacted]", parsed["error_message_safe"] or "")
+        self.assertNotIn("gsk_", parsed["error_message_safe"] or "")
+        self.assertEqual(parsed["request_id"], "req_test123")
+
+    def test_payload_matrix_records_variants(self) -> None:
+        from tools.research.check_groq_auth_minimal import run_payload_matrix
+
+        def fake_probe(*, api_key, variant, model):
+            ok = variant in {"bare_chat_no_response_format", "json_object_mode"}
+            return {
+                "payload_variant": variant,
+                "http_status": 200 if ok else 400,
+                "auth_success": ok,
+                "valid_json": ok,
+                "error_type": None if ok else "invalid_request_error",
+                "error_message_safe": None if ok else "schema unsupported",
+                "request_id": "req_x",
+                "model": model,
+            }
+
+        def fake_stage4(*, api_key, model):
+            return {
+                "payload_variant": "stage4_json_object_no_max_completion_tokens",
+                "http_status": 200,
+                "auth_success": True,
+                "valid_json": True,
+                "error_type": None,
+                "error_message_safe": None,
+                "request_id": "req_y",
+                "model": model,
+            }
 
         with patch.dict(
             os.environ,
-            {
-                "GROQ_API_KEY_PRIMARY": "gsk_testkeyvalue123456789012345678901234567890",
-                "GROQ_API_KEY_SECONDARY": "",
-                "GROQ_API_KEY": "",
-            },
+            {"GROQ_API_KEY_PRIMARY": "gsk_testkeyvalue123456789012345678901234567890", "GROQ_API_KEY_SECONDARY": ""},
             clear=False,
-        ), patch(
-            "tools.research.check_groq_auth_minimal._minimal_chat_request",
-            return_value=(401, {}, "unauthorized"),
+        ), patch("tools.research.check_groq_auth_minimal._probe_variant", side_effect=fake_probe), patch(
+            "tools.research.check_groq_auth_minimal._probe_stage4_style",
+            side_effect=fake_stage4,
         ):
-            report = run_minimal_groq_auth()
+            report = run_payload_matrix()
+        variants = {r["payload_variant"] for r in report["payload_matrix_results"]}
+        self.assertIn("bare_chat_no_response_format", variants)
+        self.assertIn("json_object_mode", variants)
+        self.assertIn("json_schema_strict_false", variants)
+        self.assertTrue(report["any_groq_auth_success"])
+        self.assertGreaterEqual(report["json_object_success_count"], 1)
+
+    def test_capacity_check_includes_groq_payload_mode(self) -> None:
+        from tools.research.check_stage4_provider_capacity import run_capacity_check
+
+        with patch(
+            "tools.research.check_stage4_provider_capacity.probe_groq_keys",
+            return_value={
+                "groq_valid_key_count": 1,
+                "groq_invalid_key_count": 0,
+                "groq_rate_limited_key_count": 0,
+                "groq_key_count": 1,
+                "groq_error_distribution": {},
+                "groq_keys": [],
+            },
+        ):
+            report = run_capacity_check(provider="groq")
+        self.assertEqual(report["groq_payload_mode"], "json_object")
+        self.assertFalse(report["json_schema_used"])
+        self.assertTrue(report["can_start_long_soak"])
+
+    def test_groq_400_records_safe_error_in_client(self) -> None:
+        from tools.research.stage4_llm_client import Stage4LLMClient, Stage4LLMConfig
+
+        cfg = Stage4LLMConfig(
+            provider="groq",
+            model="llama-3.3-70b-versatile",
+            api_key_env="GROQ_API_KEY_PRIMARY",
+            endpoint="https://api.groq.com/openai/v1/chat/completions",
+        )
+        client = Stage4LLMClient(load_env=False)
+        client.config = cfg
+        client.available = True
+        err_body = json.dumps(
+            {"error": {"type": "invalid_request_error", "message": "max_completion_tokens unsupported"}}
+        ).encode("utf-8")
+
+        class FakeHTTPError(urllib.error.HTTPError):
+            def __init__(self) -> None:
+                super().__init__(
+                    url="https://api.groq.com",
+                    code=400,
+                    msg="Bad Request",
+                    hdrs=None,
+                    fp=None,
+                )
+
+            def read(self) -> bytes:
+                return err_body
+
+        with patch.object(client, "_http_post", side_effect=FakeHTTPError()):
+            result = client._openai_compat(cfg, [{"role": "user", "content": "json test"}], key_env="GROQ_API_KEY_PRIMARY")
+        self.assertEqual(result.get("error_type"), "invalid_request_error")
+        self.assertIn("max_completion", result.get("error_message_safe") or "")
+
+
+class Stage412a4GroqMinimalAuthTests(unittest.TestCase):
+    def test_key_format_inspection_detects_whitespace_and_quotes(self) -> None:
+        from tools.research.stage4_groq_payload import parse_groq_error_safe
+
+        body = json.dumps({"error": {"type": "invalid_request_error", "message": "x"}})
+        parsed = parse_groq_error_safe(body)
+        self.assertEqual(parsed["error_type"], "invalid_request_error")
+
+    def test_minimal_auth_report_has_no_secrets(self) -> None:
+        from tools.research.check_groq_auth_minimal import run_payload_matrix
+
+        with patch.dict(
+            os.environ,
+            {"GROQ_API_KEY_PRIMARY": "gsk_testkeyvalue123456789012345678901234567890"},
+            clear=False,
+        ), patch("tools.research.check_groq_auth_minimal._probe_variant") as probe, patch(
+            "tools.research.check_groq_auth_minimal._probe_stage4_style",
+            return_value={"payload_variant": "stage4_json_object_no_max_completion_tokens", "auth_success": False},
+        ):
+            probe.return_value = {
+                "payload_variant": "json_object_mode",
+                "auth_success": False,
+                "http_status": 400,
+                "error_type": "invalid_request_error",
+            }
+            report = run_payload_matrix()
         blob = json.dumps(report)
         self.assertNotIn("gsk_testkeyvalue", blob)
         self.assertFalse(report.get("debug_log_has_api_key"))
