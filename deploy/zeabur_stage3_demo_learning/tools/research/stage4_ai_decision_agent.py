@@ -152,6 +152,7 @@ class Stage4AIDecisionAgent:
         self.use_real_llm = use_real_llm
         self.real_llm_used = False
         self.fallback_to_mock = False
+        self.provider = ""
         self.llm_client = llm_client
         self.retriever = retriever or Stage4PatchRetriever()
         self.supervisor = supervisor or Stage4RiskSupervisor()
@@ -159,16 +160,17 @@ class Stage4AIDecisionAgent:
         if use_real_llm:
             from tools.research.stage4_llm_client import (
                 RealLLMRequiredError,
-                Stage4LLMClient,
                 mock_fallback_allowed,
             )
+            from tools.research.stage4_provider_chain import Stage4ProviderChainClient
 
-            self.llm_client = llm_client or Stage4LLMClient(load_env=True)
+            self.llm_client = llm_client or Stage4ProviderChainClient(load_env=True)
             avail = self.llm_client.availability()
             if avail.get("real_llm_available"):
                 self.is_mock_ai = False
                 self.real_llm_used = True
                 self.model_name = str(avail.get("model_name") or model_name)
+                self.provider = str(avail.get("provider") or "")
                 self.decision_source = "ai_decision_agent"
             elif not mock_fallback_allowed(use_real_llm=True):
                 reason = str(avail.get("reason") or "missing_real_llm_key")
@@ -178,10 +180,12 @@ class Stage4AIDecisionAgent:
                 self.real_llm_used = False
                 self.fallback_to_mock = True
                 self.model_name = MOCK_MODEL_NAME
+                self.provider = ""
                 self.decision_source = DEFAULT_DECISION_SOURCE
         else:
             self.model_name = model_name
             self.is_mock_ai = is_mock_ai
+            self.provider = ""
             self.decision_source = DEFAULT_DECISION_SOURCE if is_mock_ai else "ai_decision_agent"
 
     def _mock_proposal(
@@ -254,7 +258,7 @@ class Stage4AIDecisionAgent:
         recent_reflections: List[Dict[str, Any]],
         open_positions: int,
         stage3_context: Dict[str, Any],
-    ) -> tuple[Dict[str, Any], str, bool, str]:
+    ) -> tuple[Dict[str, Any], str, bool, str, Dict[str, Any]]:
         constraints = safety_constraints_from_env()
         messages = build_decision_prompt(
             symbol=symbol,
@@ -268,17 +272,95 @@ class Stage4AIDecisionAgent:
             stage3_context=stage3_context,
         )
         prompt_hash = prompt_fingerprint(messages)
-        result = self.llm_client.complete_json(messages, prompt_hash=prompt_hash)
+        result = self.llm_client.complete_json(messages, prompt_hash=prompt_hash, symbol=symbol)
+        from tools.research.stage4_llm_client import ProviderRateLimited, Stage4LLMClient
+
+        provider_meta = {
+            "provider": str(
+                result.get("provider")
+                or getattr(getattr(self.llm_client, "config", None), "provider", None)
+                or getattr(self, "provider", None)
+                or "unknown"
+            ),
+            "model_name": str(result.get("model") or self.model_name),
+            "provider_chain": result.get("provider_chain") or getattr(self.llm_client, "provider_chain", []),
+            "provider_attempts": result.get("provider_attempts") or [],
+            "fallback_used": bool(result.get("fallback_used")),
+            "fallback_reason": result.get("fallback_reason"),
+            "primary_provider": result.get("primary_provider"),
+            "primary_error": result.get("primary_error"),
+            "is_mock_ai": False,
+        }
+
+        if Stage4LLMClient.is_rate_limited_result(result):
+            err_type = str(result.get("error_type") or "provider_rate_limited")
+            raise ProviderRateLimited(
+                provider=str(provider_meta["provider"]),
+                model_name=str(provider_meta["model_name"]),
+                symbol=symbol.upper(),
+                retry_count=int(result.get("retry_count") or 0),
+                reason=err_type,
+                http_status=int(result.get("http_status") or 0) or None,
+                gate_status={
+                    "seconds_since_last_llm_call": result.get("seconds_since_last_llm_call"),
+                    "required_wait_seconds": result.get("required_wait_seconds"),
+                    "backoff_until_utc": result.get("backoff_until_utc"),
+                },
+                provider_attempts=provider_meta.get("provider_attempts"),
+                fallback_used=bool(provider_meta.get("fallback_used")),
+                fallback_reason=str(provider_meta.get("fallback_reason") or ""),
+            )
+        if str(result.get("error_type") or "") == "provider_chain_failed":
+            raise ProviderRateLimited(
+                provider=str(provider_meta["provider"]),
+                model_name=str(provider_meta["model_name"]),
+                symbol=symbol.upper(),
+                retry_count=int(result.get("retry_count") or 0),
+                reason="provider_chain_failed",
+                event_type="provider_chain_failed",
+                provider_attempts=provider_meta.get("provider_attempts"),
+                fallback_used=bool(provider_meta.get("fallback_used")),
+                fallback_reason=str(provider_meta.get("fallback_reason") or ""),
+            )
         parsed = result.get("parsed") or {}
         proposal, ok, err = parse_llm_decision(parsed, symbol=symbol)
         if not ok or result.get("status") != "ok":
             err_type = result.get("parse_error_type") or result.get("error_type") or err or "llm_parse_failed"
+            raw_nonempty = bool(str(result.get("raw_text") or "").strip())
+            attempts = result.get("provider_attempts") or provider_meta.get("provider_attempts") or []
+            if (
+                err_type in {"content_empty", "empty_llm_response"} or bool(result.get("raw_content_empty"))
+            ) and not raw_nonempty:
+                if len(attempts) > 1:
+                    raise ProviderRateLimited(
+                        provider=str(provider_meta["provider"]),
+                        model_name=str(provider_meta["model_name"]),
+                        symbol=symbol.upper(),
+                        retry_count=int(result.get("retry_count") or 0),
+                        reason="provider_chain_failed",
+                        event_type="provider_chain_failed",
+                        provider_attempts=attempts,
+                        fallback_used=bool(provider_meta.get("fallback_used")),
+                        fallback_reason=str(provider_meta.get("fallback_reason") or ""),
+                    )
+                raise ProviderRateLimited(
+                    provider=str(provider_meta["provider"]),
+                    model_name=str(provider_meta["model_name"]),
+                    symbol=symbol.upper(),
+                    retry_count=int(result.get("retry_count") or 0),
+                    reason="empty_llm_response",
+                    provider_attempts=attempts,
+                )
             proposal["parse_error"] = True
             proposal["parse_error_type"] = err_type
             proposal["raw_content_empty"] = bool(result.get("raw_content_empty"))
             proposal["why_skip"] = err or result.get("error") or "llm_parse_failed"
-            return proposal, prompt_hash, False, err or result.get("error") or err
-        return proposal, prompt_hash, True, ""
+            return proposal, prompt_hash, False, err or result.get("error") or err, provider_meta
+        if provider_meta["provider"]:
+            self.provider = str(provider_meta["provider"])
+        if provider_meta["model_name"]:
+            self.model_name = str(provider_meta["model_name"])
+        return proposal, prompt_hash, True, "", provider_meta
 
     def decide(
         self,
@@ -299,9 +381,10 @@ class Stage4AIDecisionAgent:
         )
         parse_error = False
         llm_parse_ok = True
+        provider_meta: Dict[str, Any] = {}
 
         if self.real_llm_used and self.llm_client:
-            proposal, prompt_hash, llm_parse_ok, _ = self._llm_proposal(
+            proposal, prompt_hash, llm_parse_ok, _, provider_meta = self._llm_proposal(
                 symbol=symbol,
                 market_context=market_context,
                 account_context=account_context,
@@ -356,6 +439,13 @@ class Stage4AIDecisionAgent:
             "decision_source": self.decision_source,
             "mode": mode,
             "model_name": self.model_name,
+            "provider": provider_meta.get("provider") or self.provider or (None if self.is_mock_ai else ""),
+            "provider_chain": provider_meta.get("provider_chain") or [],
+            "provider_attempts": provider_meta.get("provider_attempts") or [],
+            "fallback_used": bool(provider_meta.get("fallback_used")),
+            "fallback_reason": provider_meta.get("fallback_reason"),
+            "primary_provider": provider_meta.get("primary_provider"),
+            "primary_error": provider_meta.get("primary_error"),
             "is_mock_ai": self.is_mock_ai,
             "real_llm_used": self.real_llm_used,
             "fallback_to_mock": self.fallback_to_mock,

@@ -2410,6 +2410,251 @@ class Stage410ShadowCompareTests(unittest.TestCase):
             self.assertNotIn("gsk_", blob)
 
 
+class Stage412aProviderCapacityTests(unittest.TestCase):
+    def setUp(self) -> None:
+        from tools.research.stage4_groq_key_registry import GroqKeyRegistry
+        from tools.research.stage4_provider_chain import Stage4ProviderCircuitBreaker
+
+        GroqKeyRegistry.reset_shared()
+        Stage4ProviderCircuitBreaker.reset_shared()
+
+    def test_invalid_groq_key_disabled(self) -> None:
+        from tools.research.stage4_groq_key_registry import GroqKeyRegistry
+        from tools.research.stage4_llm_client import GROQ_KEY_ENVS
+
+        registry = GroqKeyRegistry.shared()
+        registry.record_error(
+            env_name="GROQ_API_KEY_PRIMARY",
+            key_value="bad-key-value",
+            error_type="http_unauthorized",
+            http_status=401,
+        )
+        self.assertTrue(registry.is_disabled("bad-key-value"))
+        env_patch = {name: "" for name in GROQ_KEY_ENVS}
+        env_patch["GROQ_API_KEY_PRIMARY"] = "bad-key-value"
+        with patch.dict(os.environ, env_patch, clear=False):
+            from tools.research.stage4_provider_chain import deduped_groq_key_envs
+
+            self.assertEqual(deduped_groq_key_envs(skip_disabled=True), [])
+
+    def test_groq_401_does_not_block_cerebras_fallback(self) -> None:
+        from tools.research.stage4_provider_chain import Stage4ProviderChainClient
+
+        parsed = {
+            "final_action": "skip",
+            "symbol": "ETHUSDT",
+            "candidate_side": "NONE",
+            "confidence": 0.05,
+            "why_enter": "",
+            "why_skip": "ok",
+            "side_reason": "x",
+            "confidence_reason": "x",
+            "risk_notes": [],
+            "patch_awareness": "",
+            "uncertainty": "high",
+            "requires_manual_review": False,
+        }
+
+        def fake_complete(self, messages, **kwargs):
+            prov = self.config.provider
+            if prov == "groq":
+                return {"status": "error", "error_type": "http_unauthorized", "http_status": 401}
+            return {
+                "status": "ok",
+                "provider": "cerebras",
+                "model": "gpt-oss-120b",
+                "parsed": parsed,
+                "raw_text": json.dumps(parsed),
+            }
+
+        env = {
+            "GROQ_API_KEY_PRIMARY": "groq-test-key",
+            "CEREBRAS_API_KEY": "cerebras-test-key",
+            "STAGE4_LLM_PROVIDER_CHAIN": "groq,cerebras",
+            "STAGE4_ALLOW_SECONDARY_REAL_LLM_FALLBACK": "true",
+            "STAGE4_ALLOW_MOCK_FALLBACK": "false",
+        }
+        with patch.dict(os.environ, env, clear=False), patch(
+            "tools.research.stage4_llm_client.Stage4LLMClient.complete_json",
+            fake_complete,
+        ):
+            result = Stage4ProviderChainClient(load_env=False).complete_json(
+                [{"role": "user", "content": "x"}],
+                symbol="ETHUSDT",
+            )
+        self.assertEqual(result.get("status"), "ok")
+        self.assertEqual(result.get("provider"), "cerebras")
+
+    def test_groq_429_triggers_cerebras_fallback(self) -> None:
+        from tools.research.stage4_provider_chain import Stage4ProviderChainClient
+
+        parsed = {
+            "final_action": "skip",
+            "symbol": "ETHUSDT",
+            "candidate_side": "NONE",
+            "confidence": 0.05,
+            "why_enter": "",
+            "why_skip": "ok",
+            "side_reason": "x",
+            "confidence_reason": "x",
+            "risk_notes": [],
+            "patch_awareness": "",
+            "uncertainty": "high",
+            "requires_manual_review": False,
+        }
+
+        def fake_complete(self, messages, **kwargs):
+            if self.config.provider == "groq":
+                return {"status": "error", "error_type": "rate_limit", "http_status": 429}
+            return {
+                "status": "ok",
+                "provider": "cerebras",
+                "model": "gpt-oss-120b",
+                "parsed": parsed,
+                "raw_text": json.dumps(parsed),
+            }
+
+        env = {
+            "GROQ_API_KEY_PRIMARY": "groq-test-key",
+            "CEREBRAS_API_KEY": "cerebras-test-key",
+            "STAGE4_LLM_PROVIDER_CHAIN": "groq,cerebras",
+            "STAGE4_ALLOW_SECONDARY_REAL_LLM_FALLBACK": "true",
+        }
+        with patch.dict(os.environ, env, clear=False), patch(
+            "tools.research.stage4_llm_client.Stage4LLMClient.complete_json",
+            fake_complete,
+        ):
+            result = Stage4ProviderChainClient(load_env=False).complete_json(
+                [{"role": "user", "content": "x"}],
+                symbol="ETHUSDT",
+            )
+        self.assertEqual(result.get("provider"), "cerebras")
+        self.assertTrue(result.get("fallback_used"))
+
+    def test_provider_chain_failed_metrics_include_fallback_attempt(self) -> None:
+        from tools.research.stage4_llm_client import ProviderRateLimited
+        from tools.research.run_stage4_ai_decision_dry_run import _empty_run_stats, _record_skipped_tick
+
+        stats = _empty_run_stats()
+        attempts = [
+            {"provider": "groq", "result": "failed", "error_type": "provider_quota_exhausted"},
+            {"provider": "cerebras", "result": "failed", "error_type": "rate_limit", "http_status": 429},
+        ]
+        exc = ProviderRateLimited(
+            provider="cerebras",
+            model_name="gpt-oss-120b",
+            symbol="ETHUSDT",
+            reason="provider_chain_failed",
+            event_type="provider_chain_failed",
+            provider_attempts=attempts,
+        )
+        _record_skipped_tick(exc=exc, tick=2, stats=stats)
+        self.assertEqual(stats["provider_chain_failed_count"], 1)
+        self.assertGreaterEqual(stats["fallback_attempt_count"], 1)
+
+    def test_aggregate_provider_attempt_metrics(self) -> None:
+        from tools.research.stage4_provider_metrics import aggregate_attempt_metrics_from_attempts
+
+        metrics = aggregate_attempt_metrics_from_attempts(
+            [
+                [
+                    {"provider": "groq", "result": "failed", "error_type": "http_unauthorized", "http_status": 401},
+                    {"provider": "cerebras", "result": "failed", "error_type": "rate_limit", "http_status": 429},
+                ]
+            ],
+            chain_failed_count=1,
+        )
+        self.assertEqual(metrics["groq_401_count"], 1)
+        self.assertEqual(metrics["cerebras_429_count"], 1)
+        self.assertEqual(metrics["fallback_attempt_count"], 1)
+        self.assertEqual(metrics["provider_chain_failed_count"], 1)
+
+    def test_cerebras_404_counted_correctly(self) -> None:
+        from tools.research.stage4_provider_metrics import aggregate_attempt_metrics_from_attempts
+
+        metrics = aggregate_attempt_metrics_from_attempts(
+            [[{"provider": "cerebras", "result": "failed", "error_type": "http_not_found", "http_status": 404}]],
+        )
+        self.assertEqual(metrics["cerebras_404_count"], 1)
+
+    def test_capacity_check_can_start_false_when_both_unavailable(self) -> None:
+        from tools.research.check_stage4_provider_capacity import run_capacity_check
+
+        with patch("tools.research.check_stage4_provider_capacity.probe_groq_keys") as groq_probe, patch(
+            "tools.research.check_stage4_provider_capacity._probe_cerebras_direct"
+        ) as cerebras_probe:
+            groq_probe.return_value = {
+                "groq_valid_key_count": 0,
+                "groq_invalid_key_count": 1,
+                "groq_rate_limited_key_count": 0,
+                "groq_key_count": 1,
+                "groq_error_distribution": {"http_unauthorized": 1},
+                "groq_keys": [],
+            }
+            cerebras_probe.return_value = {
+                "cerebras_available": True,
+                "cerebras_valid_json": False,
+                "cerebras_direct_success": False,
+                "cerebras_error_type": "rate_limit",
+                "cerebras_error_distribution": {"rate_limit": 1},
+            }
+            report = run_capacity_check()
+        self.assertFalse(report["can_start_long_soak"])
+        self.assertFalse(report["provider_capacity_ok"])
+
+    def test_capacity_check_can_start_true_when_one_provider_valid(self) -> None:
+        from tools.research.check_stage4_provider_capacity import run_capacity_check
+
+        with patch("tools.research.check_stage4_provider_capacity.probe_groq_keys") as groq_probe, patch(
+            "tools.research.check_stage4_provider_capacity._probe_cerebras_direct"
+        ) as cerebras_probe:
+            groq_probe.return_value = {
+                "groq_valid_key_count": 1,
+                "groq_invalid_key_count": 0,
+                "groq_rate_limited_key_count": 0,
+                "groq_key_count": 1,
+                "groq_error_distribution": {},
+                "groq_keys": [],
+            }
+            cerebras_probe.return_value = {
+                "cerebras_available": True,
+                "cerebras_valid_json": False,
+                "cerebras_direct_success": False,
+                "cerebras_error_type": "rate_limit",
+                "cerebras_error_distribution": {"rate_limit": 1},
+            }
+            report = run_capacity_check()
+        self.assertTrue(report["can_start_long_soak"])
+
+    def test_capacity_report_has_no_secrets(self) -> None:
+        from tools.research.check_stage4_provider_capacity import run_capacity_check
+
+        with patch("tools.research.check_stage4_provider_capacity.probe_groq_keys") as groq_probe, patch(
+            "tools.research.check_stage4_provider_capacity._probe_cerebras_direct"
+        ) as cerebras_probe:
+            groq_probe.return_value = {
+                "groq_valid_key_count": 0,
+                "groq_invalid_key_count": 0,
+                "groq_rate_limited_key_count": 0,
+                "groq_key_count": 0,
+                "groq_error_distribution": {},
+                "groq_keys": [{"fingerprint": "abc12345", "status": "unknown"}],
+            }
+            cerebras_probe.return_value = {
+                "cerebras_available": False,
+                "cerebras_valid_json": False,
+                "cerebras_direct_success": False,
+                "cerebras_error_type": "missing_api_key",
+                "cerebras_error_distribution": {},
+            }
+            report = run_capacity_check()
+        blob = json.dumps(report)
+        self.assertNotIn("gsk_", blob)
+        self.assertFalse(report.get("debug_log_has_api_key"))
+        self.assertFalse(report.get("order_sent"))
+        self.assertFalse(report.get("mock_used"))
+
+
 class Stage4ProviderHealthTests(unittest.TestCase):
     def test_provider_health_check_parse_ok(self) -> None:
         from tools.research.check_stage4_llm_provider import run_health_check

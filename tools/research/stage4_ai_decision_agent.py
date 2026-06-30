@@ -306,6 +306,9 @@ class Stage4AIDecisionAgent:
                     "required_wait_seconds": result.get("required_wait_seconds"),
                     "backoff_until_utc": result.get("backoff_until_utc"),
                 },
+                provider_attempts=provider_meta.get("provider_attempts"),
+                fallback_used=bool(provider_meta.get("fallback_used")),
+                fallback_reason=str(provider_meta.get("fallback_reason") or ""),
             )
         if str(result.get("error_type") or "") == "provider_chain_failed":
             raise ProviderRateLimited(
@@ -315,6 +318,9 @@ class Stage4AIDecisionAgent:
                 retry_count=int(result.get("retry_count") or 0),
                 reason="provider_chain_failed",
                 event_type="provider_chain_failed",
+                provider_attempts=provider_meta.get("provider_attempts"),
+                fallback_used=bool(provider_meta.get("fallback_used")),
+                fallback_reason=str(provider_meta.get("fallback_reason") or ""),
             )
         parsed = result.get("parsed") or {}
         proposal, ok, err = parse_llm_decision(parsed, symbol=symbol)
@@ -333,6 +339,9 @@ class Stage4AIDecisionAgent:
                         retry_count=int(result.get("retry_count") or 0),
                         reason="provider_chain_failed",
                         event_type="provider_chain_failed",
+                        provider_attempts=attempts,
+                        fallback_used=bool(provider_meta.get("fallback_used")),
+                        fallback_reason=str(provider_meta.get("fallback_reason") or ""),
                     )
                 raise ProviderRateLimited(
                     provider=str(provider_meta["provider"]),
@@ -340,6 +349,7 @@ class Stage4AIDecisionAgent:
                     symbol=symbol.upper(),
                     retry_count=int(result.get("retry_count") or 0),
                     reason="empty_llm_response",
+                    provider_attempts=attempts,
                 )
             proposal["parse_error"] = True
             proposal["parse_error_type"] = err_type

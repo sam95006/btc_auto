@@ -176,6 +176,8 @@ def _record_skipped_tick(
     tick: int,
     stats: Dict[str, int],
 ) -> None:
+    from tools.research.stage4_provider_metrics import aggregate_attempt_metrics_from_attempts
+
     stats["skipped_tick_count"] += 1
     rate_like = {
         "provider_rate_limited",
@@ -196,27 +198,46 @@ def _record_skipped_tick(
         stats["provider_rate_limit_count"] += 1
     else:
         stats["provider_error_count"] += 1
+
+    attempts = list(exc.provider_attempts or [])
+    if attempts:
+        tick_metrics = aggregate_attempt_metrics_from_attempts(
+            [attempts],
+            chain_failed_count=1 if exc.event_type == "provider_chain_failed" else 0,
+        )
+        stats["fallback_attempt_count"] = stats.get("fallback_attempt_count", 0) + int(
+            tick_metrics.get("fallback_attempt_count") or 0
+        )
+        if tick_metrics.get("fallback_success_count"):
+            stats["fallback_success_count"] = stats.get("fallback_success_count", 0) + int(
+                tick_metrics.get("fallback_success_count") or 0
+            )
+
     gate = exc.gate_status or {}
-    append_system_event(
-        {
-            "event_type": exc.event_type or "provider_rate_limited",
-            "provider": exc.provider,
-            "model_name": exc.model_name,
-            "symbol": exc.symbol,
-            "tick_time_utc": utc_now_iso(),
-            "tick_index": tick,
-            "tick_number": tick,
-            "retry_count": exc.retry_count,
-            "reason": exc.reason,
-            "call_kind": exc.call_kind,
-            "http_status": exc.http_status,
-            "seconds_since_last_llm_call": gate.get("seconds_since_last_llm_call"),
-            "required_wait_seconds": gate.get("required_wait_seconds"),
-            "backoff_until_utc": gate.get("backoff_until_utc"),
-            "action": "skip_tick_no_decision",
-            "order_sent": False,
-        }
-    )
+    event: Dict[str, Any] = {
+        "event_type": exc.event_type or "provider_rate_limited",
+        "provider": exc.provider,
+        "model_name": exc.model_name,
+        "symbol": exc.symbol,
+        "tick_time_utc": utc_now_iso(),
+        "tick_index": tick,
+        "tick_number": tick,
+        "retry_count": exc.retry_count,
+        "reason": exc.reason,
+        "call_kind": exc.call_kind,
+        "http_status": exc.http_status,
+        "seconds_since_last_llm_call": gate.get("seconds_since_last_llm_call"),
+        "required_wait_seconds": gate.get("required_wait_seconds"),
+        "backoff_until_utc": gate.get("backoff_until_utc"),
+        "action": "skip_tick_no_decision",
+        "order_sent": False,
+    }
+    if attempts:
+        event["provider_attempts"] = attempts
+        event["fallback_used"] = bool(exc.fallback_used)
+        if exc.fallback_reason:
+            event["fallback_reason"] = exc.fallback_reason
+    append_system_event(event)
 
 
 def _write_fail_summary(
@@ -552,6 +573,20 @@ def _run_dry_run_inner(
             **_aggregate_run_provider_stats(decisions),
             **stats,
         }
+        from tools.research.stage4_groq_key_registry import GroqKeyRegistry
+        from tools.research.stage4_provider_metrics import aggregate_attempt_metrics
+        from tools.research.stage4_system_events import read_system_events
+
+        summary.update(GroqKeyRegistry.shared().health_report())
+        attempt_metrics = aggregate_attempt_metrics(
+            decisions=decisions,
+            system_events=read_system_events(out),
+            chain_failed_count=int(stats.get("provider_chain_failed_count") or 0),
+        )
+        for key, value in attempt_metrics.items():
+            summary[key] = value
+        stats["fallback_attempt_count"] = int(attempt_metrics.get("fallback_attempt_count") or 0)
+        stats["fallback_success_count"] = int(attempt_metrics.get("fallback_success_count") or 0)
         chain_client = getattr(agent, "llm_client", None)
         if chain_client is not None and hasattr(chain_client, "chain_status"):
             summary.update(chain_client.chain_status())
