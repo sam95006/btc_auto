@@ -109,6 +109,7 @@ def run_capacity_check(
     *,
     output_path: Path | None = None,
     provider: str = "full",
+    matrix: bool = False,
 ) -> Dict[str, Any]:
     GroqKeyRegistry.reset_shared()
     mode = (provider or "full").strip().lower()
@@ -122,7 +123,22 @@ def run_capacity_check(
             or os.environ.get("STAGE4_SECONDARY_LLM_MODEL")
             or "gpt-oss-120b"
         ).strip()
-        cerebras = _probe_cerebras_direct(model=cerebras_model)
+        if matrix and mode in {"cerebras", "all", "full"}:
+            from tools.research.check_cerebras_auth_minimal import run_payload_matrix
+
+            matrix_report = run_payload_matrix(model=cerebras_model)
+            cerebras = {
+                "cerebras_available": matrix_report.get("cerebras_key_present"),
+                "cerebras_valid_json": matrix_report.get("cerebras_valid_json"),
+                "cerebras_error_type": matrix_report.get("cerebras_error_root_cause"),
+                "cerebras_model": cerebras_model,
+                "cerebras_direct_success": matrix_report.get("cerebras_direct_success"),
+                "cerebras_stage4_style_success": matrix_report.get("cerebras_stage4_style_success"),
+                "cerebras_error_distribution": {},
+                "cerebras_matrix": matrix_report,
+            }
+        else:
+            cerebras = _probe_cerebras_direct(model=cerebras_model)
     elif mode == "groq":
         cerebras_model = (
             os.environ.get("STAGE4_CEREBRAS_LLM_MODEL")
@@ -207,10 +223,15 @@ def main() -> int:
         choices=("full", "groq", "cerebras", "all"),
         help="Probe scope: full (default), groq-only, cerebras-only",
     )
+    parser.add_argument(
+        "--matrix",
+        action="store_true",
+        help="Run Cerebras payload matrix (A-E) when probing cerebras/full",
+    )
     args = parser.parse_args()
     _load_local_env()
     out = Path(args.output) if args.output else None
-    report = run_capacity_check(output_path=out, provider=args.provider)
+    report = run_capacity_check(output_path=out, provider=args.provider, matrix=args.matrix)
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report.get("can_start_long_soak") else 1
 

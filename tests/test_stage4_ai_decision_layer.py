@@ -2824,6 +2824,71 @@ class Stage412aProviderCapacityTests(unittest.TestCase):
         self.assertFalse(report.get("mock_used"))
 
 
+class Stage4CerebrasPayloadTests(unittest.TestCase):
+    def test_cerebras_stage4_payload_omits_max_completion_tokens(self) -> None:
+        from tools.research.stage4_cerebras_payload import build_stage4_cerebras_openai_payload
+
+        payload = build_stage4_cerebras_openai_payload(
+            model="gpt-oss-120b",
+            messages=[{"role": "user", "content": "JSON test"}],
+            max_tokens=128,
+        )
+        self.assertIn("max_tokens", payload)
+        self.assertNotIn("max_completion_tokens", payload)
+        self.assertEqual(payload["response_format"]["type"], "json_object")
+
+    def test_cerebras_matrix_infer_json_schema_unsupported(self) -> None:
+        from tools.research.check_cerebras_auth_minimal import _infer_root_cause
+
+        matrix = [
+            {"variant": "bare_chat_no_response_format", "auth_success": True, "http_status": 200},
+            {"variant": "json_object_mode", "auth_success": True, "http_status": 200},
+            {"variant": "json_schema_strict_false", "auth_success": False, "http_status": 400},
+        ]
+        self.assertEqual(_infer_root_cause(matrix, {}), "json_schema_unsupported_use_json_object_mode")
+
+    def test_cerebras_matrix_tool_no_key(self) -> None:
+        from tools.research.check_cerebras_auth_minimal import run_payload_matrix
+
+        with patch.dict(os.environ, {}, clear=True):
+            report = run_payload_matrix()
+        self.assertFalse(report["cerebras_direct_success"])
+        self.assertEqual(report["cerebras_error_root_cause"], "missing_api_key")
+
+
+class Stage4ProviderYieldAnalysisTests(unittest.TestCase):
+    def test_provider_yield_analysis_reads_summary_fields(self) -> None:
+        from tools.research.analyze_stage4_provider_yield import analyze_provider_yield
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / "stage4_ai_decision_summary.json").write_text(
+                json.dumps(
+                    {
+                        "groq_429_count": 2,
+                        "cerebras_attempt_count": 2,
+                        "cerebras_success_count": 0,
+                        "provider_chain_failed_count": 2,
+                        "effective_decision_count": 3,
+                        "tick_count": 5,
+                        "mock_ai_used_count": 0,
+                        "order_sent_count": 0,
+                        "parse_error_count": 0,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (out / "stage4_30m_dry_run.log").write_text(
+                "2026-01-01T00:00:00Z TICK=1 symbol=ETHUSDT final=skip parse_error=False order_sent=False\n"
+                "2026-01-01T00:05:00Z TICK=2 SKIPPED symbol=ETHUSDT reason=provider_chain_failed order_sent=false\n",
+                encoding="utf-8",
+            )
+            report = analyze_provider_yield(out)
+        self.assertEqual(report["groq_429_count"], 2)
+        self.assertEqual(report["cerebras_attempt_count"], 2)
+        self.assertEqual(report["effective_decision_count"], 3)
+
+
 class Stage4ProviderHealthTests(unittest.TestCase):
     def test_provider_health_check_parse_ok(self) -> None:
         from tools.research.check_stage4_llm_provider import run_health_check

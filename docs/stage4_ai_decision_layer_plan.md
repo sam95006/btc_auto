@@ -117,6 +117,15 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 - Cerebras default model: `gpt-oss-120b` (do not inherit `STAGE4_LLM_MODEL` from Groq).
 - Groq multi-key exhaustion (429/quota) prefers chain fallback even if a later key returns 401.
 
+### Stage 4.12c — Provider yield + shadow quality review (read-only, no soak)
+
+- `check_cerebras_auth_minimal.py`: Cerebras payload matrix A–E (diagnose `max_completion_tokens` conflict).
+- `analyze_stage4_provider_yield.py`: Groq 429 / token estimates from soak output.
+- `analyze_stage4_prompt_budget.py`: prompt character/token budget breakdown.
+- `stage4_cerebras_payload.py` + `stage4_llm_client.py`: Cerebras uses `max_tokens` only (mirror Groq 4.12a-5 fix).
+- Report: `docs/reports/STAGE_4_12C_PROVIDER_YIELD_AND_SHADOW_REVIEW.md`.
+- Retry plans: Plan A (180m/300s + Cerebras fix + prompt trim); Plan B (360m/600s only if TPM still limits).
+
 ### Stage 4.4 — Regime + Stage3 context wiring (read-only)
 
 - Kline-derived regime: `trend|range|volatile|unknown` with `regime_reason`, `trend_strength`, `volatility_level`.

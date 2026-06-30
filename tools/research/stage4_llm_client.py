@@ -664,6 +664,18 @@ class Stage4LLMClient:
                 max_tokens=self.max_tokens,
                 temperature=0.2,
             )
+        elif cfg.provider == "cerebras":
+            from tools.research.stage4_cerebras_payload import (
+                build_stage4_cerebras_openai_payload,
+                cerebras_payload_metadata,
+            )
+
+            payload = build_stage4_cerebras_openai_payload(
+                model=cfg.model,
+                messages=messages,
+                max_tokens=self.max_tokens,
+                temperature=0.2,
+            )
         else:
             payload = {
                 "model": cfg.model,
@@ -701,6 +713,10 @@ class Stage4LLMClient:
         )
         if cfg.provider == "groq":
             result.update(groq_payload_metadata(model=cfg.model))
+        elif cfg.provider == "cerebras":
+            from tools.research.stage4_cerebras_payload import cerebras_payload_metadata
+
+            result.update(cerebras_payload_metadata(model=cfg.model))
         return result
 
     def _anthropic(
