@@ -109,11 +109,18 @@ def load_stage3_context(
     stage3_dir: Optional[Path] = None,
     *,
     symbol: str = "",
-    trade_limit: int = 5,
-    reflection_limit: int = 5,
-    patch_limit: int = 5,
+    trade_limit: int | None = None,
+    reflection_limit: int | None = None,
+    patch_limit: int | None = None,
 ) -> Dict[str, Any]:
     """Load Stage 3 summaries with availability flags; never raises."""
+    from tools.research.stage4_prompt_builder import context_item_limit
+
+    trade_limit = trade_limit if trade_limit is not None else context_item_limit("STAGE4_CONTEXT_TRADE_LIMIT", 3)
+    reflection_limit = (
+        reflection_limit if reflection_limit is not None else context_item_limit("STAGE4_CONTEXT_REFLECTION_LIMIT", 3)
+    )
+    patch_limit = patch_limit if patch_limit is not None else context_item_limit("STAGE4_CONTEXT_PATCH_LIMIT", 3)
     data_dir = stage3_dir or resolve_stage3_data_dir()
     sym = symbol.upper()
 

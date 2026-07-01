@@ -39,6 +39,44 @@ FORBIDDEN_IF_TRUE = (
     "PAPER_ONLY",
 )
 
+STAGE4_READONLY_ALLOWED_TRUE = frozenset({"BYBIT_SHADOW_MODE", "PAPER_ONLY"})
+STAGE4_READONLY_ENV_OVERRIDES = {
+    "BYBIT_ORDER_ALLOWED": "false",
+    "EXCHANGE_WRITE_ALLOWED": "false",
+    "PAPER_ONLY": "true",
+    "BYBIT_SHADOW_MODE": "true",
+}
+
+
+def _is_stage4_readonly_dry_run() -> bool:
+    mode = (os.environ.get("STAGE3_STARTUP_MODE") or "idle").strip().lower()
+    return (
+        mode == "idle"
+        and _truthy(os.environ.get("STAGE4_DRY_RUN_ONLY"))
+        and _falsy(os.environ.get("STAGE4_ORDER_ALLOWED"))
+        and _truthy(os.environ.get("STAGE4_REQUIRE_REAL_LLM"))
+        and _falsy(os.environ.get("STAGE4_ALLOW_MOCK_FALLBACK"))
+        and _falsy(os.environ.get("OPERATOR_GO_STAGE3_24H_RUNNER"))
+    )
+
+
+def _check_stage4_readonly_hard_fail() -> List[str]:
+    """Hard fail when Stage 4 read-only dry-run env is unsafe."""
+    if not _is_stage4_readonly_dry_run():
+        return []
+    failures: List[str] = []
+    mode = (os.environ.get("STAGE3_STARTUP_MODE") or "idle").strip().lower()
+    if mode != "idle":
+        failures.append("stage4_readonly_startup_mode_not_idle")
+    if not _falsy(os.environ.get("OPERATOR_GO_STAGE3_24H_RUNNER")):
+        failures.append("stage4_readonly_operator_runner_not_false")
+    if not _falsy(os.environ.get("STAGE4_ORDER_ALLOWED")):
+        failures.append("stage4_readonly_order_allowed_not_false")
+    for key in ("REAL_MONEY", "LIVE_TRADING", "BYBIT_MAINNET_ALLOWED", "PRODUCTION_PROMOTION_ALLOWED"):
+        if not _falsy(os.environ.get(key)):
+            failures.append(f"stage4_readonly_{key.lower()}_not_false")
+    return failures
+
 FORBIDDEN_BASE_URLS = (
     BYBIT_MAINNET_BASE_URL,
     "https://api.bybit.com/",
@@ -93,7 +131,9 @@ def _int_env(key: str) -> int | None:
 def _check_required_env() -> Tuple[List[str], Dict[str, Any]]:
     failures: List[str] = []
     details: Dict[str, Any] = {}
+    overrides = STAGE4_READONLY_ENV_OVERRIDES if _is_stage4_readonly_dry_run() else {}
     for key, expected in REQUIRED_STRICT_ENV.items():
+        expected = overrides.get(key, expected)
         actual = os.environ.get(key)
         details[key] = "***" if "KEY" in key or "SECRET" in key else actual
         if actual is None:
@@ -138,7 +178,10 @@ def _check_credentials() -> List[str]:
 
 def _check_forbidden() -> List[str]:
     failures: List[str] = []
+    stage4_readonly = _is_stage4_readonly_dry_run()
     for key in FORBIDDEN_IF_TRUE:
+        if stage4_readonly and key in STAGE4_READONLY_ALLOWED_TRUE:
+            continue
         if _truthy(os.environ.get(key)):
             failures.append(f"forbidden_env_true:{key}")
     base = (os.environ.get("BYBIT_M0_BASE_URL") or "").strip().rstrip("/")
@@ -181,6 +224,15 @@ def run_strict_check(*, load_local_env: bool = False, check_package: bool = True
     failures.extend(_check_numeric_caps())
     failures.extend(_check_credentials())
     failures.extend(_check_forbidden())
+    failures.extend(_check_stage4_readonly_hard_fail())
+
+    if _is_stage4_readonly_dry_run():
+        if not _truthy(os.environ.get("STAGE4_REQUIRE_REAL_LLM")):
+            failures.append("stage4_require_real_llm_not_true")
+        if not _falsy(os.environ.get("STAGE4_ALLOW_MOCK_FALLBACK")):
+            failures.append("stage4_allow_mock_fallback_not_false")
+        if not _truthy(os.environ.get("PRIVATE_ORDER_ENDPOINT_BLOCKED")):
+            failures.append("private_order_endpoint_not_blocked")
 
     if not evidence_chain_ok():
         failures.append("evidence_chain_missing")

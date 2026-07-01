@@ -1,4 +1,4 @@
-﻿import { startStateStore, subscribe, getState } from "./state_store.js?v=20260626b";
+import { startStateStore, subscribe, getState } from "./state_store.js?v=20260626b";
 import { fetchLayoutConfig, fetchNexusState, fetchStage3Status } from "./api_client.js?v=20260626a";
 import { renderStage3TopStatusBar } from "./components/ui_stage3_top_status_bar.js?v=20260626a";
 import { renderStage3AlertPanel } from "./components/ui_stage3_alert_panel.js?v=20260626a";

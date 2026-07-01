@@ -29,6 +29,62 @@ def _text_has_secret(text: str) -> bool:
     return any(pat.search(text) for pat in SECRET_PATTERNS)
 
 
+def _probe_cerebras_stage4_minimal(*, model: str) -> tuple[Dict[str, Any], int]:
+    """One Stage4-style Cerebras probe (not full A-D matrix)."""
+    from tools.research.check_cerebras_stage4_decision_probe import run_variant
+    from tools.research.stage4_cerebras_payload import resolve_cerebras_max_tokens, resolve_cerebras_payload_mode
+
+    key = (os.environ.get("CEREBRAS_API_KEY") or "").strip()
+    if not key:
+        return (
+            {
+                "cerebras_available": False,
+                "cerebras_valid_json": False,
+                "cerebras_error_type": "missing_api_key",
+                "cerebras_model": model,
+                "cerebras_direct_success": False,
+                "cerebras_stage4_decision_valid_json": False,
+                "cerebras_error_distribution": {},
+            },
+            0,
+        )
+    mode = resolve_cerebras_payload_mode()
+    tokens = resolve_cerebras_max_tokens()
+    row = run_variant(
+        api_key=key,
+        model=model,
+        variant="preflight",
+        payload_mode=mode,
+        max_tokens=tokens,
+    )
+    valid = bool(row.get("valid_json"))
+    err = str(row.get("error_type") or "")
+    error_distribution: Dict[str, int] = {}
+    if not valid and err:
+        error_distribution[err] = 1
+    return (
+        {
+            "cerebras_available": True,
+            "cerebras_valid_json": valid,
+            "cerebras_error_type": None if valid else (err or "unknown"),
+            "cerebras_model": model,
+            "cerebras_direct_success": valid,
+            "cerebras_stage4_decision_valid_json": valid,
+            "cerebras_error_distribution": error_distribution,
+            "cerebras_preflight_probe": row,
+            "provider": "cerebras",
+            "model_name": model,
+            "is_mock_ai": False,
+            "parse_error": not valid,
+            "order_sent": False,
+            "http_status": row.get("http_status"),
+            "finish_reason": row.get("finish_reason"),
+            "response_text_chars": row.get("response_text_chars"),
+        },
+        1,
+    )
+
+
 def _probe_cerebras_direct(*, model: str) -> Dict[str, Any]:
     key_present = bool((os.environ.get("CEREBRAS_API_KEY") or "").strip())
     if not key_present:
@@ -109,20 +165,43 @@ def run_capacity_check(
     *,
     output_path: Path | None = None,
     provider: str = "full",
+    matrix: bool = False,
+    first_key_only: bool = True,
 ) -> Dict[str, Any]:
     GroqKeyRegistry.reset_shared()
     mode = (provider or "full").strip().lower()
     groq: Dict[str, Any] = {}
     cerebras: Dict[str, Any] = {}
+    probe_call_count = 0
     if mode in {"full", "groq", "all"}:
-        groq = probe_groq_keys_for_capacity()
+        groq = probe_groq_keys_for_capacity(first_key_only=first_key_only)
+        probe_call_count += int(groq.get("probe_call_count") or 0)
     if mode in {"full", "cerebras", "all"}:
         cerebras_model = (
             os.environ.get("STAGE4_CEREBRAS_LLM_MODEL")
             or os.environ.get("STAGE4_SECONDARY_LLM_MODEL")
             or "gpt-oss-120b"
         ).strip()
-        cerebras = _probe_cerebras_direct(model=cerebras_model)
+        if matrix and mode in {"cerebras", "all", "full"}:
+            from tools.research.check_cerebras_stage4_decision_probe import run_probe_matrix
+
+            matrix_report = run_probe_matrix(model=cerebras_model)
+            probe_call_count += int(matrix_report.get("probe_call_count") or 0)
+            cerebras = {
+                "cerebras_available": matrix_report.get("cerebras_key_present"),
+                "cerebras_valid_json": matrix_report.get("cerebras_stage4_decision_valid_json"),
+                "cerebras_error_type": None
+                if matrix_report.get("cerebras_stage4_decision_valid_json")
+                else (matrix_report.get("variants") or [{}])[0].get("error_type"),
+                "cerebras_model": cerebras_model,
+                "cerebras_direct_success": matrix_report.get("cerebras_stage4_decision_valid_json"),
+                "cerebras_stage4_decision_valid_json": matrix_report.get("cerebras_stage4_decision_valid_json"),
+                "cerebras_error_distribution": {},
+                "cerebras_decision_probe": matrix_report,
+            }
+        else:
+            cerebras, cerebras_calls = _probe_cerebras_stage4_minimal(model=cerebras_model)
+            probe_call_count += cerebras_calls
     elif mode == "groq":
         cerebras_model = (
             os.environ.get("STAGE4_CEREBRAS_LLM_MODEL")
@@ -183,6 +262,8 @@ def run_capacity_check(
         "order_sent": False,
         "can_start_long_soak": can_start,
         "provider_capacity_ok": can_start,
+        "preflight_probe_call_count": probe_call_count,
+        "groq_probe_first_key_only": first_key_only,
         **groq_meta,
     }
     serialized = json.dumps(report, ensure_ascii=False)
@@ -207,10 +288,25 @@ def main() -> int:
         choices=("full", "groq", "cerebras", "all"),
         help="Probe scope: full (default), groq-only, cerebras-only",
     )
+    parser.add_argument(
+        "--matrix",
+        action="store_true",
+        help="Run full Cerebras Stage4 decision probe matrix (A-D); default is one minimal probe",
+    )
+    parser.add_argument(
+        "--all-groq-keys",
+        action="store_true",
+        help="Probe every deduped Groq key (default: stop after first valid key)",
+    )
     args = parser.parse_args()
     _load_local_env()
     out = Path(args.output) if args.output else None
-    report = run_capacity_check(output_path=out, provider=args.provider)
+    report = run_capacity_check(
+        output_path=out,
+        provider=args.provider,
+        matrix=args.matrix,
+        first_key_only=not args.all_groq_keys,
+    )
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report.get("can_start_long_soak") else 1
 

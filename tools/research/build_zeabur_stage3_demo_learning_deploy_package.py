@@ -61,6 +61,8 @@ BASE_ALLOWLIST = [
     "tools/research/check_stage4_provider_capacity.py",
     "tools/research/extract_stage4_shadow_review.py",
     "tools/research/stage4_cerebras_payload.py",
+    "tools/research/stage4_provider_quota_governor.py",
+    "tools/research/check_cerebras_stage4_decision_probe.py",
     "tools/research/stage4_groq_payload.py",
     "tools/research/stage4_groq_key_registry.py",
     "tools/research/stage4_provider_metrics.py",

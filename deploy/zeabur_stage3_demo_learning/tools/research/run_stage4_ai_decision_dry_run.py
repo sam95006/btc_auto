@@ -390,6 +390,9 @@ def _run_dry_run_inner(
     out = output_dir
     log_path = _resolve_run_log_path(out, duration_minutes)
     stats = _empty_run_stats()
+    from tools.research.stage4_provider_quota_governor import Stage4ProviderQuotaGovernor
+
+    Stage4ProviderQuotaGovernor.reset_shared()
 
     ok, reason, fail_summary = preflight_real_llm(
         use_real_llm=use_real_llm,

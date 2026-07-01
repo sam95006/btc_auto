@@ -1,9 +1,9 @@
 {
   "record_type": "stage3_github_auto_24h_startup_safety_report",
-  "generated_at_utc": "2026-06-25T06:34:56Z",
-  "github_auto_24h_startup_safe": true,
-  "preflight_passed": true,
-  "clean_baseline_passed": true,
+  "generated_at_utc": "2026-06-26T06:54:51Z",
+  "github_auto_24h_startup_safe": false,
+  "preflight_passed": false,
+  "clean_baseline_passed": false,
   "entrypoint_runner_mode_requires_operator_go": true,
   "stop_conditions": [
     "bybit_mainnet_detected",
@@ -28,10 +28,12 @@
   "preflight": {
     "record_type": "stage3_24h_runner_preflight",
     "phase": "D",
-    "generated_at_utc": "2026-06-25T06:34:56Z",
-    "preflight_passed": true,
-    "preflight_errors": [],
-    "clean_baseline_passed": true,
+    "generated_at_utc": "2026-06-26T06:54:51Z",
+    "preflight_passed": false,
+    "preflight_errors": [
+      "bybit_read_failed:HTTP Error 401: API key is invalid."
+    ],
+    "clean_baseline_passed": false,
     "startup_mode": "runner",
     "operator_go_24h_runner": true,
     "operator_go_metadata": {
@@ -41,8 +43,8 @@
       "c1_demo_order_present": false
     },
     "strict_env_passed": true,
-    "account_balance_read_ok": true,
-    "account_available_balance": 4999.914805,
+    "account_balance_read_ok": false,
+    "account_available_balance": null,
     "existing_open_positions": 0,
     "max_margin_usd": 20.0,
     "max_leverage": 3,

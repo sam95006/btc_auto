@@ -1,7 +1,7 @@
 {
   "record_type": "research_stage3_bybit_demo_learning_readiness",
   "schema_version": "1.0",
-  "generated_at_utc": "2026-06-26T03:12:10Z",
+  "generated_at_utc": "2026-06-24T04:07:13Z",
   "scope": "bybit_demo_testnet_learning_only",
   "service_name": "nexus-stage3-bybit-demo-learning",
   "research_only": true,
@@ -63,22 +63,12 @@
     "same_setup_reentry_without_patch",
     "production_promotion_allowed",
     "kill_switch_disabled",
-    "btc_auto_production_touched",
-    "balance_read_failed",
-    "account_available_balance_zero",
-    "account_total_equity_zero",
-    "account_available_below_max_margin",
-    "wallet_coin_missing"
+    "btc_auto_production_touched"
   ],
   "notes": [
     "Not production GO, not real money GO, not Bybit mainnet GO.",
     "Demo/testnet orders only within margin/leverage caps.",
     "Use BYBIT_DEMO_API_KEY / BYBIT_DEMO_API_SECRET only; revoke legacy BYBIT_M0_* keys."
   ],
-  "strict_env_errors": [],
-  "credential_risk_acceptance": {
-    "credential_rotated": false,
-    "credential_reuse_risk_accepted": true,
-    "allowed_scope": "bybit_demo_or_testnet_only"
-  }
+  "strict_env_errors": []
 }
