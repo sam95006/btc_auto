@@ -284,10 +284,8 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
         "fallback_success_count": int(summary.get("fallback_success_count") or 0),
         "provider_chain_failed_count": int(summary.get("provider_chain_failed_count") or 0),
         "per_symbol_summary_present": bool(summary.get("per_symbol")),
-        "symbols_configured": summary.get("symbols_configured") or summary.get("symbols") or [],
+        "symbols_configured": summary.get("symbols_configured") or [],
         "symbols_seen": summary.get("symbols_seen") or [],
-        "symbols_missing": summary.get("symbols_missing") or [],
-        "symbols_with_market_context_error": summary.get("symbols_with_market_context_error") or [],
     }
 
 

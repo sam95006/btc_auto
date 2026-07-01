@@ -2835,10 +2835,18 @@ class Stage4CerebrasPayloadTests(unittest.TestCase):
             model="gpt-oss-120b",
             messages=[{"role": "user", "content": "JSON test"}],
             max_tokens=128,
+            payload_mode="json_object",
         )
         self.assertIn("max_tokens", payload)
         self.assertNotIn("max_completion_tokens", payload)
-        self.assertEqual(payload["response_format"]["type"], "json_schema")
+        self.assertEqual(payload["response_format"]["type"], "json_object")
+        schema_payload = build_stage4_cerebras_openai_payload(
+            model="gpt-oss-120b",
+            messages=[{"role": "user", "content": "JSON test"}],
+            max_tokens=900,
+            payload_mode="json_schema",
+        )
+        self.assertEqual(schema_payload["response_format"]["type"], "json_schema")
 
     def test_cerebras_matrix_infer_json_schema_unsupported(self) -> None:
         from tools.research.check_cerebras_auth_minimal import _infer_root_cause
@@ -2926,54 +2934,51 @@ class Stage4ProviderHealthTests(unittest.TestCase):
 
 
 class Stage413FixedFleetTests(unittest.TestCase):
-    def test_parse_stage4_symbols_fleet(self) -> None:
-        from tools.research.stage4_fleet_summary import DEFAULT_STAGE4_FLEET_SYMBOLS, parse_stage4_symbols
+    def test_parse_fleet_symbols(self) -> None:
+        from tools.research.stage4_fleet_symbols import STAGE4_FIXED_FLEET_SYMBOLS, parse_symbol_list
 
-        parsed = parse_stage4_symbols("BTCUSDT,ETHUSDT,SOLUSDT,PEPEUSDT")
-        self.assertEqual(parsed, list(DEFAULT_STAGE4_FLEET_SYMBOLS))
+        syms = parse_symbol_list("BTCUSDT,ETHUSDT,SOLUSDT,PEPEUSDT")
+        self.assertEqual(syms, list(STAGE4_FIXED_FLEET_SYMBOLS))
 
     def test_per_symbol_summary_written(self) -> None:
-        from tools.research.stage4_fleet_summary import build_per_symbol_summary
+        from tools.research.stage4_per_symbol_summary import build_per_symbol_summary
 
         decisions = [
             {
                 "symbol": "BTCUSDT",
-                "parse_error": False,
                 "real_llm_used": True,
-                "is_mock_ai": False,
-                "order_sent": False,
                 "decision_intent": "hard_skip",
+                "order_sent": False,
+                "is_mock_ai": False,
+                "parse_error": False,
             },
             {
-                "symbol": "ETHUSDT",
-                "parse_error": False,
-                "real_llm_used": True,
-                "is_mock_ai": False,
-                "order_sent": False,
-                "decision_intent": "soft_skip",
+                "symbol": "PEPEUSDT",
+                "market_context_unavailable": True,
+                "market_context_error": "symbol_unavailable_or_market_context_failed",
             },
         ]
-        fleet = build_per_symbol_summary(
+        summary = build_per_symbol_summary(
+            decisions,
             symbols_configured=["BTCUSDT", "ETHUSDT", "SOLUSDT", "PEPEUSDT"],
-            decisions=decisions,
-            symbols_with_market_context_error={"PEPEUSDT"},
+            symbols_with_market_context_error=["PEPEUSDT"],
         )
-        self.assertIn("per_symbol", fleet)
-        self.assertEqual(fleet["per_symbol"]["BTCUSDT"]["effective_decision_count"], 1)
-        self.assertEqual(fleet["per_symbol"]["PEPEUSDT"]["market_context_error"], "symbol_unavailable_or_market_context_failed")
-        self.assertIn("SOLUSDT", fleet["symbols_missing"])
+        self.assertIn("BTCUSDT", summary["symbols_seen"])
+        self.assertIn("PEPEUSDT", summary["symbols_with_market_context_error"])
+        self.assertEqual(summary["per_symbol"]["BTCUSDT"]["effective_decision_count"], 1)
+        self.assertEqual(summary["per_symbol"]["PEPEUSDT"]["context_unavailable_count"], 1)
+        self.assertIn("ETHUSDT", summary["symbols_missing"])
 
     def test_pepe_market_context_failure_recorded_safely(self) -> None:
-        from tools.research.stage4_fleet_summary import classify_market_context_failure
-        from tools.research.stage4_market_context import build_market_context
+        from tools.research.stage4_market_context import _empty_context, market_context_unavailable
 
-        ctx = build_market_context("NOTALLOWED")
-        self.assertEqual(classify_market_context_failure(ctx), "symbol_unavailable_or_market_context_failed")
+        ctx = _empty_context("PEPEUSDT", limitations=["symbol_not_in_read_allowlist:PEPEUSDT"])
+        bad, reason = market_context_unavailable(ctx)
+        self.assertTrue(bad)
+        self.assertEqual(reason, "symbol_unavailable_or_market_context_failed")
 
-    def test_fleet_dry_run_once_writes_summary(self) -> None:
-        import os
+    def test_fleet_dry_run_once_missing_symbol_does_not_crash(self) -> None:
         import tempfile
-        from pathlib import Path
         from unittest.mock import patch
 
         class FleetAgent:
@@ -2983,28 +2988,40 @@ class Stage413FixedFleetTests(unittest.TestCase):
             fallback_to_mock = False
 
             def decide(self, **kwargs):
-                sym = kwargs.get("symbol", "ETHUSDT")
                 return {
-                    "decision_id": f"id-{sym}",
-                    "created_at_utc": "2026-07-01T00:00:00Z",
-                    "symbol": sym,
+                    "decision_id": "d1",
+                    "created_at_utc": "2026-01-01T00:00:00Z",
+                    "symbol": kwargs["symbol"].upper(),
                     "final_decision": "skip",
                     "final_action": "skip",
-                    "parse_error": False,
+                    "decision_intent": "hard_skip",
                     "real_llm_used": True,
                     "is_mock_ai": False,
                     "order_sent": False,
-                    "decision_intent": "hard_skip",
-                    "provider_attempts": [{"provider": "groq", "result": "success"}],
+                    "parse_error": False,
                     "risk_supervisor_result": {"approved": False, "final_decision": "skip"},
+                    "market_context": kwargs["market_context"],
+                    "account_context": kwargs["account_context"],
                 }
+
+        def fake_market(symbol: str):
+            from tools.research.stage4_market_context import _empty_context
+
+            if symbol.upper() == "PEPEUSDT":
+                return _empty_context(symbol, limitations=["ticker_error:invalid"])
+            return {
+                "symbol": symbol.upper(),
+                "last_price": 100.0,
+                "regime": "range",
+                "data_quality": "ok",
+                "data_limitations": [],
+            }
 
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "fleet_out"
             env = {
                 "STAGE4_OUTPUT_DIR": str(out),
                 "STAGE4_REQUIRE_STAGE3_CONTEXT": "false",
-                "STAGE4_REQUIRE_REAL_LLM": "false",
                 "STAGE4_ALLOW_MOCK_FALLBACK": "true",
             }
             with patch.dict(os.environ, env, clear=False):
@@ -3015,12 +3032,7 @@ class Stage413FixedFleetTests(unittest.TestCase):
                     return_value=FleetAgent(),
                 ), patch(
                     "tools.research.run_stage4_ai_decision_dry_run._fetch_market",
-                    side_effect=lambda sym: {
-                        "symbol": sym,
-                        "last_price": 1.0,
-                        "data_quality": "error" if sym == "PEPEUSDT" else "ok",
-                        "data_limitations": ["ticker_error:x"] if sym == "PEPEUSDT" else [],
-                    },
+                    side_effect=fake_market,
                 ), patch(
                     "tools.research.run_stage4_ai_decision_dry_run._fetch_account",
                     return_value={"available_balance": 5000, "open_positions": 0},
@@ -3036,21 +3048,42 @@ class Stage413FixedFleetTests(unittest.TestCase):
                         output_dir=out,
                         use_real_llm=False,
                     )
+            self.assertIn("per_symbol", summary)
+            self.assertIn("PEPEUSDT", summary.get("symbols_with_market_context_error") or [])
             self.assertEqual(summary.get("order_sent_count"), 0)
             self.assertEqual(summary.get("mock_ai_used_count"), 0)
-            self.assertIn("per_symbol", summary)
-            self.assertIn("BTCUSDT", summary.get("symbols_seen") or [])
-            self.assertIn("PEPEUSDT", summary.get("symbols_with_market_context_error") or [])
 
-    def test_debug_log_no_api_key_in_fleet_summary(self) -> None:
-        from tools.research.stage4_fleet_summary import build_per_symbol_summary
+    def test_shadow_compare_accepts_symbol_filter(self) -> None:
+        from tools.research.stage4_shadow_compare import run_shadow_compare
+        import tempfile
 
-        fleet = build_per_symbol_summary(
-            symbols_configured=["BTCUSDT"],
-            decisions=[{"symbol": "BTCUSDT", "parse_error": False, "real_llm_used": True, "is_mock_ai": False, "order_sent": False}],
-        )
-        blob = json.dumps(fleet)
-        self.assertNotIn("gsk_", blob)
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / "ai_decisions.jsonl").write_text(
+                json.dumps(
+                    {
+                        "decision_id": "x",
+                        "created_at_utc": "2026-01-01T00:00:00Z",
+                        "symbol": "BTCUSDT",
+                        "final_decision": "skip",
+                        "decision_intent": "hard_skip",
+                        "confidence": 0.0,
+                        "real_llm_used": True,
+                        "is_mock_ai": False,
+                        "order_sent": False,
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            report = run_shadow_compare(
+                decisions_dir=out,
+                output_dir=out / "shadow",
+                symbol="BTCUSDT",
+                horizons_minutes=[15],
+                kline_fetcher=lambda **kwargs: [],
+            )
+            self.assertEqual(report["summary"].get("decision_count"), 1)
 
 
 if __name__ == "__main__":

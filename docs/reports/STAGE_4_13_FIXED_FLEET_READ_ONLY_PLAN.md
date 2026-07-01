@@ -2,54 +2,53 @@
 
 **Date:** 2026-07-01  
 **Branch:** `stage3-demo-learning`  
-**Prior:** Stage 4.12f PASS (36/36 ETHUSDT 180m)
+**Prerequisite:** Stage 4.12f PASS (36/36 ETHUSDT 180m)
 
 ## Goal
 
-Expand single-symbol ETHUSDT read-only dry-run to fixed four-symbol fleet:
+Expand read-only Stage 4 dry-run from single-symbol ETHUSDT to fixed four-coin fleet:
 
 ```text
 BTCUSDT, ETHUSDT, SOLUSDT, PEPEUSDT
 ```
 
-No orders, no ARM, no radar, no strategy changes.
+No strategy changes. No orders. No mock fallback.
 
-## Scope
+## Implementation
 
-| Area | Change |
-|------|--------|
-| `STAGE4_READ_ONLY_SYMBOLS` | +SOLUSDT, +PEPEUSDT (env override via `STAGE4_READ_ONLY_SYMBOLS`) |
-| `stage4_fleet_summary.py` | per-symbol summary, market context error tracking |
-| `run_stage4_ai_decision_dry_run.py` | fleet phase 4.13, `--dry-run-once`, per_symbol in summary |
-| `validate_stage4_ai_decision_outputs.py` | fleet fields in validation report |
+| Component | Change |
+|-----------|--------|
+| `stage4_fleet_symbols.py` | Fixed fleet list, `STAGE4_SYMBOLS` parse, PEPE→1000PEPE alias |
+| `stage4_per_symbol_summary.py` | `per_symbol`, `symbols_seen`, `symbols_missing`, context errors |
+| `stage4_context_skip.py` | Context-unavailable skip (no LLM, not mock) |
+| `bybit_demo_client.py` | `STAGE4_READ_ONLY_SYMBOLS` + SOL/PEPE |
+| `stage4_market_context.py` | Alias fetch, `market_context_unavailable()` |
+| `run_stage4_ai_decision_dry_run.py` | Per-symbol summary, `--dry-run-once`, phase 4.13 |
 
-## Per-symbol summary fields
+## PEPE handling
 
-```json
-{
-  "symbols_configured": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "PEPEUSDT"],
-  "symbols_seen": [],
-  "per_symbol": { "...": { "effective_decision_count": 0 } },
-  "symbols_missing": [],
-  "symbols_with_market_context_error": [],
-  "all_symbols_read_only": true
-}
-```
+- Configured symbol: `PEPEUSDT`
+- Bybit linear fetch alias: `1000PEPEUSDT`
+- If still unavailable → `symbol_unavailable_or_market_context_failed` (run continues)
 
-PEPE failure must not crash run; record `symbol_unavailable_or_market_context_failed`.
-
-## 30m fixed fleet probe gate
+## 30m probe gate
 
 ```text
-output_dir=/data/stage4_ai_decisions_413_fixed_fleet_30m
-duration=30m, poll=300s, target_effective>=20
-max decisions = 6 ticks × 4 symbols = 24
+6 ticks × 4 symbols = 24 max decisions
+PASS: effective_decision_count >= 20
+BTC + ETH + SOL must produce real LLM decisions
+PEPE: decision OR context_unavailable marker
 ```
 
-**PASS:** effective>=20, BTC/ETH/SOL seen, PEPE produced OR marked unavailable, no mock/orders.
+## Not in scope
 
-**Next after PASS:** Stage 4.13b 180m fixed fleet soak.
+- Demo order / ARM / radar / auto universe
+- Strategy or confidence calibration changes
+- 180m soak (Stage 4.13b after 30m PASS)
 
-## Prohibited
+## Cross-run reference
 
-No demo order, ARM, production, btc-auto, multi-coin radar, mock fallback.
+| Run | Result |
+|-----|--------|
+| 4.12f | 36/36 ETHUSDT PASS |
+| 4.13 | 30m fixed fleet probe |

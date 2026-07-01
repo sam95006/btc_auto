@@ -137,11 +137,11 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 
 ### Stage 4.13 — Fixed fleet read-only expansion
 
-- Symbols: `BTCUSDT,ETHUSDT,SOLUSDT,PEPEUSDT` via `STAGE4_SYMBOLS` / `STAGE4_READ_ONLY_SYMBOLS`.
-- `stage4_fleet_summary.py`: per-symbol summary, `symbols_with_market_context_error`, `--dry-run-once`.
-- PEPE market failure recorded as `symbol_unavailable_or_market_context_failed` without crashing run.
-- Gate: 30m fixed fleet probe (`target_effective>=20`); then 4.13b 180m soak.
-- Report: `docs/reports/STAGE_4_13_FIXED_FLEET_READ_ONLY_PLAN.md`.
+- Fixed symbols: `BTCUSDT,ETHUSDT,SOLUSDT,PEPEUSDT` via `STAGE4_SYMBOLS`.
+- `stage4_fleet_symbols.py`, `stage4_per_symbol_summary.py`, `stage4_context_skip.py`.
+- Summary fields: `symbols_configured`, `symbols_seen`, `per_symbol`, `symbols_with_market_context_error`.
+- PEPE fetch alias `1000PEPEUSDT`; context failure does not crash run.
+- 30m probe gate: `effective >= 20/24`. Report: `docs/reports/STAGE_4_13_FIXED_FLEET_READ_ONLY_PLAN.md`.
 
 ### Stage 4.4 — Regime + Stage3 context wiring (read-only)
 

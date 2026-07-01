@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from tools.research.bybit_demo_client import BybitDemoClient
-from tools.research.stage4_fleet_summary import resolve_stage4_read_only_symbols
+from tools.research.bybit_demo_client import STAGE4_READ_ONLY_SYMBOLS, BybitDemoClient
+from tools.research.stage4_fleet_symbols import fetch_symbol_for_market
 
 KLINE_INTERVAL = "15"
 KLINE_COUNT = 20
@@ -150,6 +150,20 @@ def classify_regime_from_klines(
     }
 
 
+def market_context_unavailable(ctx: Dict[str, Any]) -> tuple[bool, str]:
+    """Return (unusable, reason) when market data cannot support a real LLM decision."""
+    limitations = list(ctx.get("data_limitations") or [])
+    for lim in limitations:
+        if lim.startswith("symbol_not_in_read_allowlist"):
+            return True, "symbol_unavailable_or_market_context_failed"
+    last = float(ctx.get("last_price") or 0)
+    if last <= 0 and ctx.get("data_quality") == "error":
+        return True, "symbol_unavailable_or_market_context_failed"
+    if last <= 0 and any(str(l).startswith("ticker_error") for l in limitations):
+        return True, "symbol_unavailable_or_market_context_failed"
+    return False, ""
+
+
 def _empty_context(symbol: str, *, limitations: List[str]) -> Dict[str, Any]:
     sym = symbol.upper()
     return {
@@ -188,14 +202,15 @@ def build_market_context(
     """Build enriched read-only market context; never raises."""
     sym = symbol.upper()
     limitations: List[str] = []
-    if sym not in resolve_stage4_read_only_symbols():
+    if sym not in STAGE4_READ_ONLY_SYMBOLS and fetch_symbol_for_market(sym) not in STAGE4_READ_ONLY_SYMBOLS:
         return _empty_context(sym, limitations=[f"symbol_not_in_read_allowlist:{sym}"])
 
     cli = client or BybitDemoClient("dry-run", allow_demo_order=False)
     ctx = _empty_context(sym, limitations=[])
+    fetch_sym = fetch_symbol_for_market(sym)
 
     try:
-        ticker = cli.fetch_ticker(sym)
+        ticker = cli.fetch_ticker(fetch_sym)
         last = _f(ticker.get("lastPrice") or ticker.get("last_price"))
         prev = _f(ticker.get("prevPrice24h") or ticker.get("prev_price_24h"))
         high24 = _f(ticker.get("highPrice24h") or ticker.get("high_24h") or last)
@@ -219,6 +234,7 @@ def build_market_context(
                 "turnover_24h": turn24,
                 "spread_bps": spread_bps,
                 "source": str(ticker.get("source") or "bybit_demo_public_ticker"),
+                "fetch_symbol": fetch_sym if fetch_sym != sym else sym,
             }
         )
     except Exception as exc:
@@ -228,7 +244,7 @@ def build_market_context(
     highs: List[float] = []
     lows: List[float] = []
     try:
-        klines = cli.fetch_klines(sym, interval=KLINE_INTERVAL, limit=KLINE_COUNT)
+        klines = cli.fetch_klines(fetch_sym, interval=KLINE_INTERVAL, limit=KLINE_COUNT)
         for row in klines:
             closes.append(_f(row.get("close")))
             highs.append(_f(row.get("high")))
