@@ -2940,6 +2940,38 @@ class Stage413FixedFleetTests(unittest.TestCase):
         syms = parse_symbol_list("BTCUSDT,ETHUSDT,SOLUSDT,PEPEUSDT")
         self.assertEqual(syms, list(STAGE4_FIXED_FLEET_SYMBOLS))
 
+    def test_fleet_stage3_context_uses_eth_seed_when_btc_listed_first(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            stage3 = Path(tmp) / "stage3"
+            stage3.mkdir()
+            (stage3 / "trade_results.jsonl").write_text(
+                json.dumps({"symbol": "ETHUSDT", "side": "BUY", "close_pnl": -0.1}) + "\n",
+                encoding="utf-8",
+            )
+            (stage3 / "reflection_records.jsonl").write_text(
+                json.dumps({"symbol": "ETHUSDT", "side": "BUY", "failure_reason": "demo"}) + "\n",
+                encoding="utf-8",
+            )
+            (stage3 / "applied_learning_patches.jsonl").write_text(
+                json.dumps({"symbol": "ETHUSDT", "side": "BUY", "action": "block"}) + "\n",
+                encoding="utf-8",
+            )
+            env = {"STAGE3_OUTPUT_DIR": str(stage3), "STAGE4_REQUIRE_STAGE3_CONTEXT": "true"}
+            with patch.dict(os.environ, env, clear=False):
+                from tools.research.run_stage4_ai_decision_dry_run import preflight_stage3_context
+
+                ok, reason, summary = preflight_stage3_context(
+                    output_dir=Path(tmp) / "out",
+                    duration_minutes=20,
+                    poll_interval_seconds=180,
+                    symbols=["BTCUSDT", "ETHUSDT", "SOLUSDT", "PEPEUSDT"],
+                    mode="dry-run",
+                    use_real_llm=True,
+                )
+            self.assertTrue(ok)
+            self.assertEqual(reason, "")
+            self.assertIsNone(summary)
+
     def test_per_symbol_summary_written(self) -> None:
         from tools.research.stage4_per_symbol_summary import build_per_symbol_summary
 

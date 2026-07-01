@@ -77,8 +77,9 @@ def preflight_stage3_context(
         return True, "", None
     from tools.research.check_stage3_context_seed import check_stage3_context
 
-    symbol = symbols[0] if symbols else "ETHUSDT"
-    result = check_stage3_context(target_dir=_resolve_stage3_dir(), symbol=symbol)
+    # Stage 3 demo learning seed is ETHUSDT-centric; fleet read-only runs share the same files.
+    check_symbol = "ETHUSDT"
+    result = check_stage3_context(target_dir=_resolve_stage3_dir(), symbol=check_symbol)
     if result.get("passed"):
         return True, "", None
     return False, "missing_required_stage3_context", _write_fail_summary(
