@@ -524,6 +524,13 @@ def _run_dry_run_inner(
     summary_written = False
     loop_completed = False
     target_effective = _target_effective_decision_count()
+    symbols_with_market_context_error: set[str] = set()
+    per_symbol_chain_failed: Dict[str, int] = {}
+
+    from tools.research.stage4_fleet_summary import (
+        build_per_symbol_summary,
+        classify_market_context_failure,
+    )
 
     def _persist_summary(
         *,
@@ -546,7 +553,7 @@ def _run_dry_run_inner(
         summary = {
             "record_type": "stage4_ai_decision_summary",
             "generated_at_utc": utc_now_iso(),
-            "phase": "4.12",
+            "phase": "4.13" if len(symbols) > 1 else "4.12",
             "mode": mode,
             "duration_minutes": duration_minutes,
             "poll_interval_seconds": poll_interval_seconds,
@@ -593,6 +600,13 @@ def _run_dry_run_inner(
         chain_client = getattr(agent, "llm_client", None)
         if chain_client is not None and hasattr(chain_client, "chain_status"):
             summary.update(chain_client.chain_status())
+        fleet = build_per_symbol_summary(
+            symbols_configured=symbols,
+            decisions=decisions,
+            symbols_with_market_context_error=symbols_with_market_context_error,
+            per_symbol_chain_failed=per_symbol_chain_failed,
+        )
+        summary.update(fleet)
         write_json(out / "stage4_ai_decision_summary.json", summary)
         _append_run_log(
             log_path,
@@ -633,6 +647,9 @@ def _run_dry_run_inner(
             open_positions = int(account.get("open_positions") or 0)
             for idx, symbol in enumerate(symbols):
                 market = _fetch_market(symbol)
+                mkt_err = classify_market_context_failure(market)
+                if mkt_err:
+                    symbols_with_market_context_error.add(symbol.upper())
                 try:
                     decision = agent.decide(
                         symbol=symbol,
@@ -643,6 +660,9 @@ def _run_dry_run_inner(
                     )
                 except ProviderRateLimited as exc:
                     _record_skipped_tick(exc=exc, tick=tick, stats=stats)
+                    sym_up = symbol.upper()
+                    if exc.reason == "provider_chain_failed" or exc.event_type == "provider_chain_failed":
+                        per_symbol_chain_failed[sym_up] = per_symbol_chain_failed.get(sym_up, 0) + 1
                     _append_run_log(
                         log_path,
                         f"TICK={tick} SKIPPED symbol={symbol} reason={exc.reason} order_sent=false",
@@ -697,9 +717,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Stage 4 AI decision dry-run (no orders)")
     parser.add_argument("--duration-minutes", type=float, default=30.0)
     parser.add_argument("--poll-interval-seconds", type=float, default=-1.0)
-    parser.add_argument("--symbols", default="ETHUSDT,BTCUSDT")
+    parser.add_argument("--symbols", default="BTCUSDT,ETHUSDT,SOLUSDT,PEPEUSDT")
     parser.add_argument("--mode", default="dry_run")
     parser.add_argument("--fast-test", action="store_true", help="Single tick, no sleep")
+    parser.add_argument(
+        "--dry-run-once",
+        action="store_true",
+        help="One-shot multi-symbol smoke (alias for --fast-test)",
+    )
     parser.add_argument("--use-real-llm", action="store_true")
     parser.add_argument("--preflight-only", action="store_true", help="Real LLM preflight; write fail summary and exit")
     parser.add_argument("--fail-summary-only", action="store_true", help="Write fail summary and exit (no dry-run loop)")
@@ -709,8 +734,9 @@ def main() -> int:
 
     symbols = [s.strip().upper() for s in args.symbols.split(",") if s.strip()]
     out = Path(args.output_dir) if args.output_dir else None
-    duration = 0.01 if args.fast_test else args.duration_minutes
-    poll = 0.0 if args.fast_test else (
+    once = args.fast_test or args.dry_run_once
+    duration = 0.01 if once else args.duration_minutes
+    poll = 0.0 if once else (
         args.poll_interval_seconds if args.poll_interval_seconds >= 0 else _default_poll_interval_seconds()
     )
 

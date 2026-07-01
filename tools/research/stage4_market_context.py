@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from tools.research.bybit_demo_client import STAGE4_READ_ONLY_SYMBOLS, BybitDemoClient
+from tools.research.bybit_demo_client import BybitDemoClient
+from tools.research.stage4_fleet_summary import resolve_stage4_read_only_symbols
 
 KLINE_INTERVAL = "15"
 KLINE_COUNT = 20
@@ -187,7 +188,7 @@ def build_market_context(
     """Build enriched read-only market context; never raises."""
     sym = symbol.upper()
     limitations: List[str] = []
-    if sym not in STAGE4_READ_ONLY_SYMBOLS:
+    if sym not in resolve_stage4_read_only_symbols():
         return _empty_context(sym, limitations=[f"symbol_not_in_read_allowlist:{sym}"])
 
     cli = client or BybitDemoClient("dry-run", allow_demo_order=False)

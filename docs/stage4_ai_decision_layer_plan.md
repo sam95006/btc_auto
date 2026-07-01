@@ -135,6 +135,14 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 - `check_cerebras_stage4_decision_probe.py`: variants A–D (json_object/json_schema × 500/900).
 - Gate: 30m / 6-tick short probe before any 180m retry. Report: `docs/reports/STAGE_4_12E_PROVIDER_YIELD_REPAIR_PLAN.md`.
 
+### Stage 4.13 — Fixed fleet read-only expansion
+
+- Symbols: `BTCUSDT,ETHUSDT,SOLUSDT,PEPEUSDT` via `STAGE4_SYMBOLS` / `STAGE4_READ_ONLY_SYMBOLS`.
+- `stage4_fleet_summary.py`: per-symbol summary, `symbols_with_market_context_error`, `--dry-run-once`.
+- PEPE market failure recorded as `symbol_unavailable_or_market_context_failed` without crashing run.
+- Gate: 30m fixed fleet probe (`target_effective>=20`); then 4.13b 180m soak.
+- Report: `docs/reports/STAGE_4_13_FIXED_FLEET_READ_ONLY_PLAN.md`.
+
 ### Stage 4.4 — Regime + Stage3 context wiring (read-only)
 
 - Kline-derived regime: `trend|range|volatile|unknown` with `regime_reason`, `trend_strength`, `volatility_level`.
