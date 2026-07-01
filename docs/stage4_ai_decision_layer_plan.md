@@ -126,6 +126,15 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 - Report: `docs/reports/STAGE_4_12C_PROVIDER_YIELD_AND_SHADOW_REVIEW.md`.
 - Retry plans: Plan A (180m/300s + Cerebras fix + prompt trim); Plan B (360m/600s only if TPM still limits).
 
+### Stage 4.12e — Provider yield repair (no 180m soak)
+
+- Cerebras: dedicated `STAGE4_CEREBRAS_MAX_TOKENS` (default 900), separate error types (`provider_response_truncated`, `provider_empty_response`, `provider_quota_exhausted`).
+- Groq TPM governor: `stage4_provider_quota_governor.py` — cooldown skip Groq, try Cerebras only (`STAGE4_GROQ_TPM_COOLDOWN_MINUTES`, default 45).
+- Prompt compression: context caps 3/3/3, slim `market_context`, shorter system prompt; Groq completion cap default 450.
+- Preflight throttle: Groq first-key-only probe; one Cerebras Stage4 decision probe (`preflight_probe_call_count <= 3`).
+- `check_cerebras_stage4_decision_probe.py`: variants A–D (json_object/json_schema × 500/900).
+- Gate: 30m / 6-tick short probe before any 180m retry. Report: `docs/reports/STAGE_4_12E_PROVIDER_YIELD_REPAIR_PLAN.md`.
+
 ### Stage 4.4 — Regime + Stage3 context wiring (read-only)
 
 - Kline-derived regime: `trend|range|volatile|unknown` with `regime_reason`, `trend_strength`, `volatility_level`.

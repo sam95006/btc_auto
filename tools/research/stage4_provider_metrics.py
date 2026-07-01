@@ -6,6 +6,8 @@ from typing import Any, Dict, List
 _GROQ_ERRORS_401 = frozenset({"http_unauthorized", "http_forbidden"})
 _GROQ_ERRORS_429 = frozenset({"rate_limit", "provider_http_429", "provider_rate_limited"})
 _GROQ_ERRORS_EMPTY = frozenset({"content_empty", "empty_llm_response", "provider_quota_exhausted"})
+_CEREBRAS_ERRORS_EMPTY = frozenset({"provider_empty_response", "content_empty", "empty_llm_response"})
+_CEREBRAS_TRUNCATED = frozenset({"provider_response_truncated", "json_decode_error"})
 _CEREBRAS_ERRORS_429 = frozenset({"rate_limit", "provider_http_429", "provider_rate_limited"})
 _CEREBRAS_ERRORS_404 = frozenset({"http_not_found", "model_not_found"})
 
@@ -23,6 +25,8 @@ def empty_provider_attempt_metrics() -> Dict[str, Any]:
         "cerebras_404_count": 0,
         "cerebras_empty_count": 0,
         "cerebras_parse_error_count": 0,
+        "cerebras_json_decode_error_count": 0,
+        "cerebras_finish_reason_length_count": 0,
         "fallback_attempt_count": 0,
         "fallback_success_count": 0,
         "provider_chain_failed_count": 0,
@@ -54,10 +58,15 @@ def _classify_attempt(provider: str, attempt: Dict[str, Any], metrics: Dict[str,
             metrics["cerebras_429_count"] += 1
         elif err in _CEREBRAS_ERRORS_404 or http == 404:
             metrics["cerebras_404_count"] += 1
-        elif err in _GROQ_ERRORS_EMPTY:
+        elif err in _CEREBRAS_ERRORS_EMPTY:
             metrics["cerebras_empty_count"] += 1
-        elif err == "json_decode_error":
+        elif err in _CEREBRAS_TRUNCATED:
             metrics["cerebras_parse_error_count"] += 1
+            metrics["cerebras_json_decode_error_count"] += 1
+            if err == "provider_response_truncated":
+                metrics["cerebras_finish_reason_length_count"] += 1
+        elif err == "provider_quota_exhausted":
+            metrics["cerebras_empty_count"] += 1
 
 
 def aggregate_attempt_metrics_from_attempts(

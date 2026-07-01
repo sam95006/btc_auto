@@ -132,6 +132,20 @@ class RealLLMRequiredError(RuntimeError):
         super().__init__(reason)
 
 
+def groq_max_tokens() -> int:
+    raw = os.environ.get("NEXUS_LLM_MAX_COMPLETION_TOKENS", "450").strip()
+    try:
+        return max(128, int(float(raw)))
+    except (TypeError, ValueError):
+        return 450
+
+
+def cerebras_max_tokens() -> int:
+    from tools.research.stage4_cerebras_payload import resolve_cerebras_max_tokens
+
+    return resolve_cerebras_max_tokens()
+
+
 def env_truthy(name: str, default: bool = False) -> bool:
     raw = os.environ.get(name)
     if raw is None or not str(raw).strip():
@@ -263,7 +277,9 @@ class Stage4LLMClient:
             _load_local_env()
         _bridge_groq_env_aliases()
         self.timeout = int(os.environ.get("NEXUS_LLM_TIMEOUT_SECONDS", "20"))
-        self.max_tokens = int(os.environ.get("NEXUS_LLM_MAX_COMPLETION_TOKENS", "700"))
+        self.groq_max_tokens = groq_max_tokens()
+        self.cerebras_max_tokens = cerebras_max_tokens()
+        self.max_tokens = self.groq_max_tokens
         self.config = self._resolve_config(provider=provider, model=model)
         self.available = self.config is not None and self._provider_ready(self.config)
 
@@ -552,6 +568,8 @@ class Stage4LLMClient:
         err_type = str(result.get("error_type") or "")
         if err_type in {"provider_quota_exhausted", "empty_llm_response"}:
             return True
+        if err_type in {"provider_empty_response", "provider_response_truncated", "json_decode_error"}:
+            return False
         if err_type == "content_empty" and bool(result.get("raw_content_empty")):
             return not bool(str(result.get("raw_text") or "").strip())
         return False
@@ -619,6 +637,14 @@ class Stage4LLMClient:
         finish_reason: Optional[str],
         http_status: int,
     ) -> Dict[str, Any]:
+        if cfg.provider == "cerebras":
+            return self._finalize_cerebras_content(
+                cfg,
+                content=content,
+                response_path=response_path,
+                finish_reason=finish_reason,
+                http_status=http_status,
+            )
         parsed, ok, parse_error_type = parse_llm_response_text(content)
         raw_len = len(content or "")
         base = {
@@ -643,6 +669,54 @@ class Stage4LLMClient:
             )
         return {"status": "ok", "error": "", "error_type": None, **base}
 
+    def _finalize_cerebras_content(
+        self,
+        cfg: Stage4LLMConfig,
+        *,
+        content: str,
+        response_path: str,
+        finish_reason: Optional[str],
+        http_status: int,
+    ) -> Dict[str, Any]:
+        parsed, ok, parse_error_type = parse_llm_response_text(content)
+        raw_len = len(content or "")
+        finish = str(finish_reason or "").lower()
+        base: Dict[str, Any] = {
+            "provider": "cerebras",
+            "model": cfg.model,
+            "raw_text": content,
+            "parsed": parsed if ok else {},
+            "raw_content_length": raw_len,
+            "response_text_chars": raw_len,
+            "raw_content_empty": raw_len == 0,
+            "finish_reason": finish_reason,
+            "response_path_used": response_path,
+            "http_status": http_status,
+            "parse_error_type": parse_error_type if not ok else None,
+        }
+        if raw_len == 0 and http_status == 200:
+            return self._error_result(
+                "provider_empty_response",
+                error_type="provider_empty_response",
+                empty_response=True,
+                **base,
+            )
+        if not ok:
+            if finish == "length":
+                return self._error_result(
+                    "provider_response_truncated",
+                    error_type="provider_response_truncated",
+                    json_decode_error=True,
+                    **base,
+                )
+            return self._error_result(
+                parse_error_type or "json_decode_error",
+                error_type=parse_error_type or "json_decode_error",
+                json_decode_error=True,
+                **base,
+            )
+        return {"status": "ok", "error": "", "error_type": None, **base}
+
     def _openai_compat(
         self,
         cfg: Stage4LLMConfig,
@@ -661,7 +735,7 @@ class Stage4LLMClient:
             payload = build_stage4_groq_openai_payload(
                 model=cfg.model,
                 messages=messages,
-                max_tokens=self.max_tokens,
+                max_tokens=self.groq_max_tokens,
                 temperature=0.2,
             )
         elif cfg.provider == "cerebras":
@@ -673,7 +747,7 @@ class Stage4LLMClient:
             payload = build_stage4_cerebras_openai_payload(
                 model=cfg.model,
                 messages=messages,
-                max_tokens=self.max_tokens,
+                max_tokens=self.cerebras_max_tokens,
                 temperature=0.2,
             )
         else:
@@ -694,13 +768,19 @@ class Stage4LLMClient:
         except urllib.error.HTTPError as exc:
             body = exc.read().decode("utf-8", errors="replace")
             err_safe = parse_groq_error_safe(body)
-            err_type = err_safe.get("error_type") or self._http_error_type(int(exc.code or 0))
+            if cfg.provider == "cerebras":
+                from tools.research.stage4_cerebras_payload import classify_cerebras_http_error
+
+                err_type = classify_cerebras_http_error(http_status=int(exc.code or 0), body=body)
+            else:
+                err_type = err_safe.get("error_type") or self._http_error_type(int(exc.code or 0))
             return self._error_result(
                 err_safe.get("error_message_safe") or f"http_{exc.code}",
                 error_type=err_type,
                 http_status=int(exc.code or 0),
                 error_message_safe=err_safe.get("error_message_safe"),
                 request_id=err_safe.get("request_id"),
+                provider=cfg.provider,
                 **groq_payload_metadata(model=cfg.model) if cfg.provider == "groq" else {},
             )
         content, path, finish = extract_openai_compat_content(raw)
@@ -815,7 +895,10 @@ class Stage4LLMClient:
                 "error_type": result.get("error_type"),
                 "error_message_safe": safe_excerpt(str(result.get("error") or result.get("error_message_safe") or "")),
                 "raw_content_length": result.get("raw_content_length", len(raw_text)),
+                "response_text_chars": result.get("response_text_chars", result.get("raw_content_length", len(raw_text))),
                 "raw_content_empty": bool(result.get("raw_content_empty", not raw_text)),
+                "empty_response": bool(result.get("empty_response")),
+                "json_decode_error": bool(result.get("json_decode_error")),
                 "raw_content_excerpt": safe_excerpt(raw_text),
                 "finish_reason": result.get("finish_reason"),
                 "latency_ms": latency_ms,

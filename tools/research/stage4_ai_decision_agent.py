@@ -264,9 +264,9 @@ class Stage4AIDecisionAgent:
             symbol=symbol,
             market_context=market_context,
             account_context=account_context,
-            retrieved_patches=summarize_patches(patches, limit=5),
-            recent_trade_results=summarize_trades(recent_trades, limit=5),
-            recent_reflections=summarize_reflections(recent_reflections, limit=5),
+            retrieved_patches=summarize_patches(patches, limit=3),
+            recent_trade_results=summarize_trades(recent_trades, limit=3),
+            recent_reflections=summarize_reflections(recent_reflections, limit=3),
             safety_constraints=constraints,
             current_open_positions=open_positions,
             stage3_context=stage3_context,
@@ -371,13 +371,13 @@ class Stage4AIDecisionAgent:
         account_context: Dict[str, Any],
         open_positions: int = 0,
     ) -> Dict[str, Any]:
-        patches = self.retriever.retrieve(symbol=symbol, side="NONE", limit=5)
+        patches = self.retriever.retrieve(symbol=symbol, side="NONE", limit=3)
         stage3_ctx = load_stage3_context(self.retriever.stage3_dir, symbol=symbol)
-        recent_trades_raw = self.retriever.recent_trades(symbol=symbol, limit=5)
-        recent_reflections_raw = self.retriever.recent_reflections(limit=5)
-        recent_trades = stage3_ctx.get("recent_trade_results") or summarize_trades(recent_trades_raw, limit=5)
+        recent_trades_raw = self.retriever.recent_trades(symbol=symbol, limit=3)
+        recent_reflections_raw = self.retriever.recent_reflections(limit=3)
+        recent_trades = stage3_ctx.get("recent_trade_results") or summarize_trades(recent_trades_raw, limit=3)
         recent_reflections = stage3_ctx.get("recent_reflections") or summarize_reflections(
-            recent_reflections_raw, limit=5
+            recent_reflections_raw, limit=3
         )
         parse_error = False
         llm_parse_ok = True

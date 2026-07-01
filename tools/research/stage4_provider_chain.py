@@ -16,6 +16,7 @@ from tools.research.stage4_llm_client import (
     env_truthy,
     mock_fallback_allowed,
 )
+from tools.research.stage4_provider_quota_governor import Stage4ProviderQuotaGovernor
 
 ALLOWED_REAL_PROVIDERS = frozenset({"groq", "cerebras", "openai", "anthropic", "gemini", "ollama"})
 
@@ -210,6 +211,7 @@ class Stage4ProviderChainClient:
         return self._clients[provider]
 
     def chain_status(self) -> Dict[str, Any]:
+        governor = Stage4ProviderQuotaGovernor.shared()
         return {
             "provider_chain": self.provider_chain,
             "primary_provider": self.primary_provider,
@@ -218,6 +220,7 @@ class Stage4ProviderChainClient:
             "fallback_allowed": self.fallback_allowed,
             **self.dedup_status,
             "provider_circuit_breaker_triggered_count": self.circuit_breaker.triggered_count,
+            **governor.summary_fields(),
         }
 
     def availability(self) -> Dict[str, Any]:
@@ -250,6 +253,8 @@ class Stage4ProviderChainClient:
     def _normalize_primary_error(err_type: str, result: Dict[str, Any]) -> str:
         if err_type in {"content_empty", "empty_llm_response"} and Stage4LLMClient.is_quota_exhaustion_result(result):
             return "provider_quota_exhausted"
+        if err_type == "provider_empty_response":
+            return "provider_empty_response"
         return err_type or "provider_error"
 
     @staticmethod
@@ -289,12 +294,27 @@ class Stage4ProviderChainClient:
         primary_error = ""
         fallback_used = False
         fallback_reason = ""
+        governor = Stage4ProviderQuotaGovernor.shared()
 
         for idx, provider in enumerate(self.provider_chain):
             is_primary = idx == 0
             if not provider_key_configured(provider):
                 attempts.append({"provider": provider, "result": "skipped", "error_type": "missing_api_key"})
                 continue
+            if provider == "groq" and governor.should_skip_groq():
+                governor.record_cooldown_skip()
+                attempts.append(
+                    {
+                        "provider": "groq",
+                        "result": "skipped",
+                        "error_type": "groq_tpm_cooldown",
+                    }
+                )
+                if is_primary:
+                    primary_error = "rate_limit"
+                if self.fallback_allowed and idx + 1 < len(self.provider_chain):
+                    continue
+                break
             if self.circuit_breaker.is_open(provider):
                 attempts.append(
                     {
@@ -340,6 +360,11 @@ class Stage4ProviderChainClient:
                 return enriched
 
             err_type = str(result.get("error_type") or "")
+            if provider == "groq" and (
+                err_type in {"rate_limit", "provider_http_429", "provider_rate_limited"}
+                or int(result.get("http_status") or 0) == 429
+            ):
+                governor.record_groq_429(error_type=err_type, http_status=int(result.get("http_status") or 0) or None)
             if is_primary:
                 primary_error = self._normalize_primary_error(err_type, result) if self._is_fallback_eligible(result) else (
                     err_type or "provider_error"

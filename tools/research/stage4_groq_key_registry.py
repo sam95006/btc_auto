@@ -144,8 +144,8 @@ def _bridge() -> None:
     _bridge_groq_env_aliases()
 
 
-def probe_groq_keys_for_capacity(*, model: str | None = None) -> Dict[str, Any]:
-    """Probe Groq keys using the same stage4 json_object payload as the matrix tool."""
+def probe_groq_keys_for_capacity(*, model: str | None = None, first_key_only: bool = True) -> Dict[str, Any]:
+    """Probe Groq keys using stage4 json_object payload; stop after first valid key when enabled."""
     from tools.research.check_groq_auth_minimal import _clean_key, _fingerprint, _probe_stage4_style
     from tools.research.stage4_groq_key_registry import GroqKeyRegistry
     from tools.research.stage4_provider_chain import dedupe_groq_api_keys
@@ -157,11 +157,13 @@ def probe_groq_keys_for_capacity(*, model: str | None = None) -> Dict[str, Any]:
     error_distribution: Dict[str, int] = {}
     results: List[Dict[str, Any]] = []
     valid_count = 0
+    probe_call_count = 0
     for env_name in envs:
         val = (os.environ.get(env_name) or "").strip()
         if not val:
             continue
         fp = _fingerprint(_clean_key(val))
+        probe_call_count += 1
         row = _probe_stage4_style(api_key=val, model=model_name)
         err = str(row.get("error_type") or "unknown")
         ok = bool(row.get("auth_success")) and bool(row.get("valid_json"))
@@ -189,6 +191,8 @@ def probe_groq_keys_for_capacity(*, model: str | None = None) -> Dict[str, Any]:
                 "http_status": row.get("http_status"),
             }
         )
+        if first_key_only and ok:
+            break
     return {
         "groq_key_count": len(results),
         "groq_valid_key_count": valid_count,
@@ -198,6 +202,8 @@ def probe_groq_keys_for_capacity(*, model: str | None = None) -> Dict[str, Any]:
         ),
         "groq_error_distribution": error_distribution,
         "groq_keys": results,
+        "probe_call_count": probe_call_count,
+        "groq_probe_first_key_only": first_key_only,
     }
 
 

@@ -1291,20 +1291,23 @@ class Stage46aContextGuardTests(unittest.TestCase):
                 "STAGE4_OUTPUT_DIR": str(out),
                 "STAGE4_REQUIRE_REAL_LLM": "false",
                 "STAGE4_ALLOW_MOCK_FALLBACK": "true",
+                "STAGE4_REQUIRE_STAGE3_CONTEXT": "false",
             }
             with patch.dict(os.environ, env, clear=False):
-                agent_mod = __import__(
-                    "tools.research.stage4_ai_decision_agent",
-                    fromlist=["Stage4AIDecisionAgent"],
-                )
                 from tools.research.run_stage4_ai_decision_dry_run import run_dry_run
 
-                with patch.object(agent_mod, "Stage4AIDecisionAgent", return_value=SkippingAgent()), patch(
+                with patch(
+                    "tools.research.run_stage4_ai_decision_dry_run.Stage4AIDecisionAgent",
+                    return_value=SkippingAgent(),
+                ), patch(
                     "tools.research.run_stage4_ai_decision_dry_run._fetch_market",
                     return_value={"symbol": "ETHUSDT", "last_price": 3000},
                 ), patch(
                     "tools.research.run_stage4_ai_decision_dry_run._fetch_account",
                     return_value={"available_balance": 5000, "open_positions": 0},
+                ), patch(
+                    "tools.research.export_stage4_ai_decision_bundle.export_bundle",
+                    return_value={"bundle_path": str(out / "bundle.tar.gz"), "bundle_safe": True, "file_count": 1},
                 ):
                     summary = run_dry_run(
                         duration_minutes=0.01,

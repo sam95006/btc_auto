@@ -2,49 +2,85 @@
 from __future__ import annotations
 
 import json
+import os
 from typing import Any, Dict, List
 
 SYSTEM_PROMPT = """You are a Stage 4 trading decision assistant for Bybit demo/testnet research only.
-You MUST respond with a single JSON object only. No markdown, no prose outside JSON.
-You MUST NOT suggest changing safety caps: max_margin_usd, max_leverage, max_open_positions, stop_loss, max_hold.
-You MUST NOT recommend mainnet, real money, production, or ARM.
-Allowed final_action values: enter, skip ONLY (never watch or enter_candidate as final_action).
-Use decision_intent for watch and enter_candidate while final_action stays skip.
-Allowed candidate_side values: BUY, SELL, NONE.
-Allowed decision_intent values: hard_skip, soft_skip, watch, enter_candidate.
-confidence must be a number between 0 and 1.
-This is dry-run only — your output will NOT place orders; Risk Supervisor will review.
+Respond with a single JSON object only. No markdown or prose outside JSON.
+Do NOT suggest changing safety caps or recommend mainnet, real money, production, or ARM.
+Allowed final_action: enter, skip. Use decision_intent for watch/enter_candidate while final_action stays skip.
+Allowed candidate_side: BUY, SELL, NONE. Allowed decision_intent: hard_skip, soft_skip, watch, enter_candidate.
+confidence is 0-1. Dry-run only — output will NOT place orders; Risk Supervisor will review.
+Use market_context.regime, trend_15m, trend_strength, volatility_level, change_24h_pct.
+If patch action is block_reentry or manual_review_required, use hard_skip. Vary confidence by intent band."""
 
-Confidence calibration (use decision_intent consistently):
-- hard_skip (0.00–0.15): data error, patch block, high risk, no edge
-- soft_skip (0.15–0.35): no clear edge, flat or weak context
-- watch (0.30–0.55): weak signal worth monitoring, not enough to enter
-- enter_candidate (0.55–0.75): preliminary edge, still needs supervisor review
+SCHEMA_FIELD_NAMES = (
+    "final_action",
+    "decision_intent",
+    "symbol",
+    "candidate_side",
+    "confidence",
+    "why_enter",
+    "why_skip",
+    "side_reason",
+    "confidence_reason",
+    "missing_data",
+    "edge_factors",
+    "risk_factors",
+    "risk_notes",
+    "patch_awareness",
+    "uncertainty",
+    "requires_manual_review",
+)
 
-Use market_context.regime, regime_reason, trend_strength, volatility_level, trend_15m, change_24h_pct.
-When regime=trend with aligned trend_15m, consider watch or enter_candidate with calibrated confidence.
-When regime=range with low trend_strength, prefer soft_skip or watch.
-When regime=volatile, prefer watch with moderate confidence or soft_skip if risk high.
-If active patch action is block_reentry or manual_review_required, use hard_skip (not enter).
-Do NOT always output confidence=0.25 or soft_skip — vary intent when signal exists."""
+
+def context_item_limit(name: str, default: int) -> int:
+    raw = os.environ.get(name, str(default)).strip()
+    try:
+        return max(1, int(float(raw)))
+    except (TypeError, ValueError):
+        return default
+
+
+def slim_market_context(market_context: Dict[str, Any]) -> Dict[str, Any]:
+    """Drop duplicate/low-signal market fields to reduce prompt tokens."""
+    keep = (
+        "symbol",
+        "last_price",
+        "change_24h_pct",
+        "regime",
+        "regime_reason",
+        "trend_15m",
+        "trend_strength",
+        "range_strength",
+        "volatility_level",
+        "volatility_15m",
+        "spread_bps",
+        "data_quality",
+        "kline_data_quality",
+        "data_limitations",
+    )
+    slim = {k: market_context[k] for k in keep if k in market_context}
+    if "symbol" not in slim and market_context.get("symbol"):
+        slim["symbol"] = market_context.get("symbol")
+    return slim
+
+
+def slim_account_context(account_context: Dict[str, Any]) -> Dict[str, Any]:
+    keep = (
+        "available_balance",
+        "total_equity",
+        "open_positions",
+        "balance_read_ok",
+    )
+    return {k: account_context[k] for k in keep if k in account_context}
+
 
 OUTPUT_SCHEMA_HINT = {
+    "fields": list(SCHEMA_FIELD_NAMES),
     "final_action": "enter|skip",
     "decision_intent": "hard_skip|soft_skip|watch|enter_candidate",
-    "symbol": "ETHUSDT",
     "candidate_side": "BUY|SELL|NONE",
-    "confidence": 0.0,
-    "why_enter": "",
-    "why_skip": "",
-    "side_reason": "",
-    "confidence_reason": "",
-    "missing_data": [],
-    "edge_factors": [],
-    "risk_factors": [],
-    "risk_notes": [],
-    "patch_awareness": "",
-    "uncertainty": "",
-    "requires_manual_review": False,
 }
 
 
@@ -64,23 +100,19 @@ def build_decision_prompt(
     user_payload = {
         "task": "stage4_dry_run_decision",
         "symbol": symbol.upper(),
-        "market_context": market_context,
-        "account_context": account_context,
-        "retrieved_patches": retrieved_patches,
-        "recent_trade_results": recent_trade_results,
-        "recent_reflections": recent_reflections,
+        "market_context": slim_market_context(market_context),
+        "account_context": slim_account_context(account_context),
+        "retrieved_patches": retrieved_patches[: context_item_limit("STAGE4_CONTEXT_PATCH_LIMIT", 3)],
+        "recent_trade_results": recent_trade_results[: context_item_limit("STAGE4_CONTEXT_TRADE_LIMIT", 3)],
+        "recent_reflections": recent_reflections[: context_item_limit("STAGE4_CONTEXT_REFLECTION_LIMIT", 3)],
         "stage3_context_available": s3.get("stage3_context_available", False),
         "stage3_context_reason": s3.get("stage3_context_reason", "unknown"),
         "safety_constraints": safety_constraints,
         "current_open_positions": current_open_positions,
         "required_output_schema": OUTPUT_SCHEMA_HINT,
         "instructions": [
-            "Classify with decision_intent: hard_skip | soft_skip | watch | enter_candidate.",
-            "Use regime, regime_reason, trend_strength, range_strength, volatility_level from market_context.",
-            "If trend regime with trend_15m aligned and no blocking patch, watch or enter_candidate is valid.",
-            "If data_quality or kline_data_quality is partial/error, list gaps in missing_data.",
-            "If active patch action is block_reentry or manual_review_required, use hard_skip.",
-            "Vary confidence by intent band; avoid defaulting all skips to 0.25.",
+            "Classify decision_intent and calibrate confidence by intent band.",
+            "Respect blocking patches; list data gaps in missing_data when quality is partial.",
         ],
     }
     return [
