@@ -18,6 +18,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.research.bybit_demo_learning_common import BYBIT_DEMO_BASE_URL, utc_now_iso, write_json  # noqa: E402
+from tools.research.stage4_fleet_symbols import market_symbol_info  # noqa: E402
 
 SECRET_PATTERNS = (
     re.compile(r"gsk_[A-Za-z0-9]{20,}"),
@@ -227,10 +228,30 @@ def classify_shadow_label(
     return "neutral", f"Unhandled intent {intent}"
 
 
+def filter_decisions_for_symbol(
+    decisions: Sequence[Dict[str, Any]],
+    *,
+    requested_symbol: str,
+) -> tuple[List[Dict[str, Any]], int]:
+    """Return decisions matching requested_symbol and count of rows missing symbol."""
+    req = requested_symbol.upper()
+    filtered: List[Dict[str, Any]] = []
+    missing_symbol_count = 0
+    for decision in decisions:
+        sym = str(decision.get("symbol") or "").upper()
+        if not sym:
+            missing_symbol_count += 1
+            continue
+        if sym == req:
+            filtered.append(decision)
+    return filtered, missing_symbol_count
+
+
 def compare_decision(
     decision: Dict[str, Any],
     *,
-    symbol: str,
+    requested_symbol: str,
+    market_symbol: str,
     horizons_minutes: Sequence[int],
     now_utc: Optional[datetime] = None,
     kline_fetcher=fetch_klines_range,
@@ -252,7 +273,10 @@ def compare_decision(
         "decision_id": decision.get("decision_id"),
         "tick_index": tick_index,
         "timestamp_utc": ts,
-        "symbol": symbol.upper(),
+        "symbol": str(decision.get("symbol") or requested_symbol).upper(),
+        "requested_symbol": requested_symbol.upper(),
+        "market_symbol": market_symbol.upper(),
+        "alias_used": market_symbol.upper() != requested_symbol.upper(),
         "provider": decision.get("provider"),
         "decision_intent": decision.get("decision_intent"),
         "final_action": decision.get("final_action"),
@@ -277,7 +301,7 @@ def compare_decision(
         return row
 
     try:
-        klines = kline_fetcher(symbol=symbol, start_ms=start_ms, end_ms=end_ms)
+        klines = kline_fetcher(symbol=market_symbol, start_ms=start_ms, end_ms=end_ms)
     except Exception as exc:
         row.update(
             {
@@ -342,6 +366,11 @@ def build_summary(
     source_dir: Path,
     rows: List[Dict[str, Any]],
     decisions: List[Dict[str, Any]],
+    requested_symbol: str,
+    market_symbol: str,
+    alias_used: bool,
+    decision_missing_symbol_count: int = 0,
+    total_decision_count: int = 0,
 ) -> Dict[str, Any]:
     from collections import Counter
 
@@ -358,6 +387,11 @@ def build_summary(
         "record_type": "stage4_shadow_compare_summary",
         "generated_at_utc": utc_now_iso(),
         "source_output_dir": str(source_dir),
+        "requested_symbol": requested_symbol.upper(),
+        "market_symbol": market_symbol.upper(),
+        "alias_used": alias_used,
+        "total_decision_count": total_decision_count,
+        "decision_missing_symbol_count": decision_missing_symbol_count,
         "decision_count": len(decisions),
         "shadow_compared_count": compared,
         "insufficient_future_data_count": insufficient,
@@ -447,7 +481,15 @@ def run_shadow_compare(
     kline_fetcher=fetch_klines_range,
 ) -> Dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
-    decisions = _read_jsonl(decisions_dir / "ai_decisions.jsonl")
+    all_decisions = _read_jsonl(decisions_dir / "ai_decisions.jsonl")
+    symbol_meta = market_symbol_info(symbol)
+    requested_symbol = symbol_meta["requested_symbol"]
+    market_symbol = symbol_meta["market_symbol"]
+    alias_used = bool(symbol_meta["alias_used"])
+    decisions, decision_missing_symbol_count = filter_decisions_for_symbol(
+        all_decisions,
+        requested_symbol=requested_symbol,
+    )
     rows: List[Dict[str, Any]] = []
     for idx, decision in enumerate(decisions, start=1):
         enriched = dict(decision)
@@ -456,13 +498,23 @@ def run_shadow_compare(
         rows.append(
             compare_decision(
                 enriched,
-                symbol=symbol,
+                requested_symbol=requested_symbol,
+                market_symbol=market_symbol,
                 horizons_minutes=horizons_minutes,
                 kline_fetcher=kline_fetcher,
             )
         )
 
-    summary = build_summary(source_dir=decisions_dir, rows=rows, decisions=decisions)
+    summary = build_summary(
+        source_dir=decisions_dir,
+        rows=rows,
+        decisions=decisions,
+        requested_symbol=requested_symbol,
+        market_symbol=market_symbol,
+        alias_used=alias_used,
+        decision_missing_symbol_count=decision_missing_symbol_count,
+        total_decision_count=len(all_decisions),
+    )
     jsonl_path = output_dir / "shadow_compare.jsonl"
     with jsonl_path.open("w", encoding="utf-8") as fh:
         for row in rows:

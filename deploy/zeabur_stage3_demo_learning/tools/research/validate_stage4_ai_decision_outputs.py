@@ -19,6 +19,11 @@ from tools.research.stage4_ai_decision_agent import (  # noqa: E402
     REQUIRED_DECISION_FIELDS,
     resolve_stage4_output_dir,
 )
+from tools.research.stage4_per_symbol_summary import (  # noqa: E402
+    build_per_symbol_summary,
+    per_symbol_chain_failed_counts,
+)
+from tools.research.stage4_system_events import read_system_events  # noqa: E402
 
 ALLOWED_REAL_PROVIDERS = frozenset({"groq", "cerebras", "openai", "anthropic", "gemini"})
 
@@ -211,6 +216,8 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
                 if fld == "real_llm_used" and d.get("is_mock_ai") and str(d.get("model_name") or "") == MOCK_MODEL_NAME:
                     continue
                 errors.append(f"decision_{i}_missing_field:{fld}")
+        if not str(d.get("symbol") or "").strip():
+            technical_errors.append(f"decision_{i}_missing_symbol")
         if d.get("order_sent") is not False:
             errors.append(f"decision_{i}_order_sent_not_false")
         if require_real_llm and d.get("parse_error"):
@@ -243,7 +250,26 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
     real_count = sum(1 for d in decisions if d.get("real_llm_used"))
     mock_count = sum(1 for d in decisions if d.get("is_mock_ai"))
     order_sent_count = sum(1 for d in decisions if d.get("order_sent"))
+    decision_missing_symbol_count = sum(1 for d in decisions if not str(d.get("symbol") or "").strip())
     provider_stats = _aggregate_provider_stats(decisions)
+    system_events = read_system_events(out)
+    symbols_configured = summary.get("symbols_configured") or summary.get("symbols") or []
+    recomputed_fleet = build_per_symbol_summary(
+        decisions,
+        symbols_configured=symbols_configured,
+        symbols_with_market_context_error=summary.get("symbols_with_market_context_error") or [],
+        system_events=system_events,
+    )
+    per_symbol_failed = per_symbol_chain_failed_counts(recomputed_fleet)
+    global_chain_failed = int(summary.get("provider_chain_failed_count") or 0)
+    per_symbol_failed_sum = sum(per_symbol_failed.values())
+    per_symbol_failed_sum_matches_global = per_symbol_failed_sum == global_chain_failed
+    if require_real_llm and global_chain_failed > 0 and not per_symbol_failed_sum_matches_global:
+        technical_errors.append(
+            f"per_symbol_provider_chain_failed_sum_mismatch:{per_symbol_failed_sum}!={global_chain_failed}"
+        )
+    if decision_missing_symbol_count > 0:
+        technical_errors.append(f"decision_missing_symbol_count_gt_zero:{decision_missing_symbol_count}")
     technical_valid = not technical_errors
     bundle_export = summary.get("bundle_export") or {}
     bundle_exported = bool(
@@ -282,10 +308,13 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
         "provider_exhaustion_count": int(summary.get("provider_exhaustion_count") or 0),
         "fallback_attempt_count": int(summary.get("fallback_attempt_count") or 0),
         "fallback_success_count": int(summary.get("fallback_success_count") or 0),
-        "provider_chain_failed_count": int(summary.get("provider_chain_failed_count") or 0),
-        "per_symbol_summary_present": bool(summary.get("per_symbol")),
+        "provider_chain_failed_count": global_chain_failed,
+        "per_symbol_summary_present": bool(summary.get("per_symbol") or recomputed_fleet.get("per_symbol")),
+        "per_symbol_provider_chain_failed_counts": per_symbol_failed,
+        "per_symbol_failed_sum_matches_global": per_symbol_failed_sum_matches_global,
+        "decision_missing_symbol_count": decision_missing_symbol_count,
         "symbols_configured": summary.get("symbols_configured") or [],
-        "symbols_seen": summary.get("symbols_seen") or [],
+        "symbols_seen": summary.get("symbols_seen") or recomputed_fleet.get("symbols_seen") or [],
     }
 
 

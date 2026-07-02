@@ -32,6 +32,17 @@ def fetch_symbol_for_market(symbol: str) -> str:
     return SYMBOL_FETCH_ALIASES.get(sym, sym)
 
 
+def market_symbol_info(symbol: str) -> dict:
+    """Shadow / market fetch metadata for a configured fleet symbol."""
+    requested = symbol.upper()
+    market = fetch_symbol_for_market(requested)
+    return {
+        "requested_symbol": requested,
+        "market_symbol": market,
+        "alias_used": market != requested,
+    }
+
+
 def all_symbols_read_only(symbols: List[str]) -> bool:
     from tools.research.bybit_demo_client import STAGE4_READ_ONLY_SYMBOLS
 

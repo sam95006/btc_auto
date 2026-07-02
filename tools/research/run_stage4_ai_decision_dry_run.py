@@ -601,6 +601,7 @@ def _run_dry_run_inner(
             decisions,
             symbols_configured=symbols,
             symbols_with_market_context_error=sorted(symbols_with_market_context_error),
+            system_events=read_system_events(out),
         )
         summary.update(fleet_summary)
         summary["dataset_target_met"] = effective >= target_effective

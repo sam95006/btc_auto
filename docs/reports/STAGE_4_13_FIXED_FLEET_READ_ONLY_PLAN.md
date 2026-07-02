@@ -40,6 +40,17 @@ BTC + ETH + SOL must produce real LLM decisions
 PEPE: decision OR context_unavailable marker
 ```
 
+## Stage 4.13a — Evidence / Shadow Correctness (pre-413b)
+
+| Fix | Detail |
+|-----|--------|
+| Per-symbol chain failed | `build_per_symbol_summary(..., system_events=...)` attributes `provider_chain_failed` from system events by symbol |
+| Shadow filter | `--symbol BTCUSDT` compares only `decision.symbol == BTCUSDT` |
+| PEPE shadow alias | `PEPEUSDT` → `1000PEPEUSDT` for kline fetch; summary records `requested_symbol`, `market_symbol`, `alias_used` |
+| Validator | Recomputes per-symbol failed counts; fails if sum ≠ global `provider_chain_failed_count` |
+
+Re-run validator + per-symbol shadow on existing `/data/stage4_ai_decisions_413_fixed_fleet_30m` (no 30m re-probe).
+
 ## Not in scope
 
 - Demo order / ARM / radar / auto universe

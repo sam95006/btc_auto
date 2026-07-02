@@ -2331,7 +2331,8 @@ class Stage410ShadowCompareTests(unittest.TestCase):
         now = parse_utc_iso("2026-06-29T01:15:00Z")
         row = compare_decision(
             decision,
-            symbol="ETHUSDT",
+            requested_symbol="ETHUSDT",
+            market_symbol="ETHUSDT",
             horizons_minutes=[15, 30, 60],
             now_utc=now,
             kline_fetcher=self._flat_klines,
@@ -2343,7 +2344,8 @@ class Stage410ShadowCompareTests(unittest.TestCase):
 
         row = compare_decision(
             self._base_decision(decision_intent="soft_skip"),
-            symbol="ETHUSDT",
+            requested_symbol="ETHUSDT",
+            market_symbol="ETHUSDT",
             horizons_minutes=[60],
             now_utc=parse_utc_iso("2026-06-29T03:00:00Z"),
             kline_fetcher=self._choppy_klines,
@@ -2355,7 +2357,8 @@ class Stage410ShadowCompareTests(unittest.TestCase):
 
         row = compare_decision(
             self._base_decision(decision_intent="hard_skip", candidate_side="BUY"),
-            symbol="ETHUSDT",
+            requested_symbol="ETHUSDT",
+            market_symbol="ETHUSDT",
             horizons_minutes=[60],
             now_utc=parse_utc_iso("2026-06-29T03:00:00Z"),
             kline_fetcher=self._rising_klines,
@@ -2367,7 +2370,8 @@ class Stage410ShadowCompareTests(unittest.TestCase):
 
         row = compare_decision(
             self._base_decision(decision_intent="watch", candidate_side="BUY"),
-            symbol="ETHUSDT",
+            requested_symbol="ETHUSDT",
+            market_symbol="ETHUSDT",
             horizons_minutes=[60],
             now_utc=parse_utc_iso("2026-06-29T03:00:00Z"),
             kline_fetcher=self._falling_klines,
@@ -3116,6 +3120,186 @@ class Stage413FixedFleetTests(unittest.TestCase):
                 kline_fetcher=lambda **kwargs: [],
             )
             self.assertEqual(report["summary"].get("decision_count"), 1)
+
+
+class Stage413aEvidenceTests(unittest.TestCase):
+    def test_per_symbol_chain_failed_matches_global_from_events(self) -> None:
+        from tools.research.stage4_per_symbol_summary import build_per_symbol_summary
+
+        decisions = [
+            {"symbol": "BTCUSDT", "real_llm_used": True, "decision_intent": "watch", "order_sent": False},
+            {"symbol": "ETHUSDT", "real_llm_used": True, "decision_intent": "hard_skip", "order_sent": False},
+        ]
+        events = [
+            {"event_type": "provider_chain_failed", "symbol": "PEPEUSDT", "reason": "provider_chain_failed"},
+            {"event_type": "provider_chain_failed", "symbol": "ETHUSDT", "reason": "provider_chain_failed"},
+            {"event_type": "provider_chain_failed", "symbol": "SOLUSDT", "reason": "provider_chain_failed"},
+            {"event_type": "provider_chain_failed", "symbol": "PEPEUSDT", "reason": "provider_chain_failed"},
+        ]
+        summary = build_per_symbol_summary(
+            decisions,
+            symbols_configured=["BTCUSDT", "ETHUSDT", "SOLUSDT", "PEPEUSDT"],
+            system_events=events,
+        )
+        per_failed = {
+            sym: int(row.get("provider_chain_failed_count") or 0)
+            for sym, row in summary["per_symbol"].items()
+        }
+        self.assertEqual(per_failed["PEPEUSDT"], 2)
+        self.assertEqual(per_failed["ETHUSDT"], 1)
+        self.assertEqual(per_failed["SOLUSDT"], 1)
+        self.assertEqual(sum(per_failed.values()), 4)
+
+    def test_shadow_compare_filters_decisions_by_symbol(self) -> None:
+        from tools.research.stage4_shadow_compare import run_shadow_compare
+        import tempfile
+
+        captured: list[str] = []
+
+        def fake_klines(**kwargs):
+            captured.append(str(kwargs.get("symbol")))
+            return [
+                {"start_ms": 1767225600000, "open": 100.0, "high": 101.0, "low": 99.0, "close": 100.5},
+            ]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            dec_dir = Path(tmp) / "decisions"
+            out_dir = Path(tmp) / "out"
+            dec_dir.mkdir()
+            rows = [
+                {
+                    "decision_id": "btc1",
+                    "created_at_utc": "2026-01-01T00:00:00Z",
+                    "symbol": "BTCUSDT",
+                    "decision_intent": "watch",
+                    "confidence": 0.2,
+                    "real_llm_used": True,
+                    "is_mock_ai": False,
+                    "order_sent": False,
+                    "market_context": {"last_price": 100.0, "regime": "range"},
+                },
+                {
+                    "decision_id": "eth1",
+                    "created_at_utc": "2026-01-01T00:05:00Z",
+                    "symbol": "ETHUSDT",
+                    "decision_intent": "hard_skip",
+                    "confidence": 0.0,
+                    "real_llm_used": True,
+                    "is_mock_ai": False,
+                    "order_sent": False,
+                    "market_context": {"last_price": 200.0, "regime": "range"},
+                },
+            ]
+            (dec_dir / "ai_decisions.jsonl").write_text(
+                "\n".join(json.dumps(r) for r in rows) + "\n",
+                encoding="utf-8",
+            )
+            report = run_shadow_compare(
+                decisions_dir=dec_dir,
+                output_dir=out_dir,
+                symbol="BTCUSDT",
+                horizons_minutes=[15],
+                kline_fetcher=fake_klines,
+            )
+            self.assertEqual(report["summary"]["decision_count"], 1)
+            self.assertEqual(report["summary"]["total_decision_count"], 2)
+            self.assertEqual(captured, ["BTCUSDT"])
+
+    def test_pepe_shadow_uses_1000pepe_market_alias(self) -> None:
+        from tools.research.stage4_shadow_compare import run_shadow_compare
+        import tempfile
+
+        captured: list[str] = []
+
+        def fake_klines(**kwargs):
+            captured.append(str(kwargs.get("symbol")))
+            return [
+                {"start_ms": 1767225600000, "open": 0.01, "high": 0.011, "low": 0.009, "close": 0.0105},
+            ]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            dec_dir = Path(tmp) / "decisions"
+            out_dir = Path(tmp) / "out"
+            dec_dir.mkdir()
+            (dec_dir / "ai_decisions.jsonl").write_text(
+                json.dumps(
+                    {
+                        "decision_id": "pepe1",
+                        "created_at_utc": "2026-01-01T00:00:00Z",
+                        "symbol": "PEPEUSDT",
+                        "decision_intent": "watch",
+                        "confidence": 0.1,
+                        "real_llm_used": True,
+                        "is_mock_ai": False,
+                        "order_sent": False,
+                        "market_context": {"last_price": 0.01, "regime": "range"},
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            report = run_shadow_compare(
+                decisions_dir=dec_dir,
+                output_dir=out_dir,
+                symbol="PEPEUSDT",
+                horizons_minutes=[15],
+                kline_fetcher=fake_klines,
+            )
+            summary = report["summary"]
+            self.assertEqual(summary["requested_symbol"], "PEPEUSDT")
+            self.assertEqual(summary["market_symbol"], "1000PEPEUSDT")
+            self.assertTrue(summary["alias_used"])
+            self.assertEqual(summary["decision_count"], 1)
+            self.assertEqual(captured, ["1000PEPEUSDT"])
+
+    def test_validator_detects_missing_decision_symbol(self) -> None:
+        import tempfile
+        from tools.research.validate_stage4_ai_decision_outputs import validate
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / "ai_decisions.jsonl").write_text(
+                json.dumps(
+                    {
+                        "decision_id": "x",
+                        "created_at_utc": "2026-01-01T00:00:00Z",
+                        "final_decision": "skip",
+                        "decision_source": "ai_decision_agent",
+                        "mode": "dry-run",
+                        "model_name": "test",
+                        "provider": "groq",
+                        "decision_intent": "hard_skip",
+                        "confidence": 0.0,
+                        "real_llm_used": True,
+                        "is_mock_ai": False,
+                        "order_sent": False,
+                        "parse_error": False,
+                        "prompt_hash": "abc",
+                        "market_context": {"last_price": 1.0},
+                        "why_skip": "demo",
+                        "confidence_reason": "demo",
+                        "risk_supervisor_result": {"approved": False},
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (out / "stage4_ai_decision_summary.json").write_text(
+                json.dumps(
+                    {
+                        "dry_run_completed": True,
+                        "effective_decision_count": 1,
+                        "provider_chain_failed_count": 0,
+                        "parse_error_count": 0,
+                        "target_effective_decision_count": 1,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (out / "llm_client_debug.jsonl").write_text('{"safe":true}\n', encoding="utf-8")
+            result = validate(out, require_real_llm=True)
+            self.assertGreater(result["decision_missing_symbol_count"], 0)
+            self.assertFalse(result["validator_passed"])
 
 
 if __name__ == "__main__":

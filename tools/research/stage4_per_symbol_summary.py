@@ -1,7 +1,6 @@
 """Per-symbol Stage 4 dry-run summary aggregation."""
 from __future__ import annotations
 
-from collections import Counter
 from typing import Any, Dict, List
 
 
@@ -11,6 +10,7 @@ def _empty_symbol_stats() -> Dict[str, Any]:
         "real_llm_decision_count": 0,
         "context_unavailable_count": 0,
         "provider_chain_failed_count": 0,
+        "skipped_tick_count": 0,
         "parse_error_count": 0,
         "order_sent_count": 0,
         "mock_ai_used_count": 0,
@@ -19,11 +19,33 @@ def _empty_symbol_stats() -> Dict[str, Any]:
     }
 
 
+def _is_provider_chain_failed_event(event: Dict[str, Any]) -> bool:
+    if str(event.get("event_type") or "") == "provider_chain_failed":
+        return True
+    if str(event.get("reason") or "") == "provider_chain_failed":
+        return True
+    return False
+
+
+def aggregate_chain_failed_by_symbol(system_events: List[Dict[str, Any]] | None) -> Dict[str, int]:
+    """Count provider_chain_failed system events per symbol."""
+    counts: Dict[str, int] = {}
+    for event in system_events or []:
+        if not _is_provider_chain_failed_event(event):
+            continue
+        sym = str(event.get("symbol") or "").upper()
+        if not sym:
+            continue
+        counts[sym] = int(counts.get(sym) or 0) + 1
+    return counts
+
+
 def build_per_symbol_summary(
     decisions: List[Dict[str, Any]],
     *,
     symbols_configured: List[str],
     symbols_with_market_context_error: List[str] | None = None,
+    system_events: List[Dict[str, Any]] | None = None,
 ) -> Dict[str, Any]:
     configured = [s.upper() for s in symbols_configured]
     per_symbol: Dict[str, Dict[str, Any]] = {sym: _empty_symbol_stats() for sym in configured}
@@ -33,6 +55,13 @@ def build_per_symbol_summary(
         if sym in per_symbol:
             per_symbol[sym]["market_context_error"] = "symbol_unavailable_or_market_context_failed"
             per_symbol[sym]["context_unavailable_count"] = per_symbol[sym].get("context_unavailable_count", 0)
+
+    chain_failed_by_symbol = aggregate_chain_failed_by_symbol(system_events)
+    for sym, count in chain_failed_by_symbol.items():
+        if sym not in per_symbol:
+            per_symbol[sym] = _empty_symbol_stats()
+        per_symbol[sym]["provider_chain_failed_count"] = int(count)
+        per_symbol[sym]["skipped_tick_count"] = int(count)
 
     for decision in decisions:
         sym = str(decision.get("symbol") or "").upper()
@@ -56,9 +85,6 @@ def build_per_symbol_summary(
             row["mock_ai_used_count"] += 1
         if decision.get("order_sent"):
             row["order_sent_count"] += 1
-        attempts = decision.get("provider_attempts") or []
-        if any(a.get("error_type") == "provider_chain_failed" for a in attempts):
-            row["provider_chain_failed_count"] += 1
         intent = str(decision.get("decision_intent") or "unknown")
         dist = row["decision_intent_distribution"]
         dist[intent] = int(dist.get(intent) or 0) + 1
@@ -81,4 +107,11 @@ def per_symbol_decision_counts(summary: Dict[str, Any]) -> Dict[str, int]:
     out: Dict[str, int] = {}
     for sym, row in (summary.get("per_symbol") or {}).items():
         out[sym] = int(row.get("effective_decision_count") or 0) + int(row.get("context_unavailable_count") or 0)
+    return out
+
+
+def per_symbol_chain_failed_counts(summary: Dict[str, Any]) -> Dict[str, int]:
+    out: Dict[str, int] = {}
+    for sym, row in (summary.get("per_symbol") or {}).items():
+        out[sym] = int(row.get("provider_chain_failed_count") or 0)
     return out
