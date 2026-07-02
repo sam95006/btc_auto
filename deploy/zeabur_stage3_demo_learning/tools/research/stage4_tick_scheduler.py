@@ -1,70 +1,56 @@
-"""Absolute tick scheduling for Stage 4 dry-run loops."""
+"""Absolute tick scheduling helpers for Stage 4 dry-run loops."""
 from __future__ import annotations
 
-import math
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 
-def compute_expected_tick_count(duration_minutes: float, poll_interval_seconds: float) -> int:
-    if poll_interval_seconds <= 0 or duration_minutes <= 0.05:
+def expected_tick_count(duration_minutes: float, poll_interval_seconds: float) -> int:
+    """How many ticks fit in duration when scheduled at fixed poll intervals."""
+    if duration_minutes <= 0:
+        return 1
+    if poll_interval_seconds <= 0:
         return 1
     total_seconds = duration_minutes * 60.0
-    return max(1, int(math.floor(total_seconds / poll_interval_seconds)))
+    return max(1, int(total_seconds // poll_interval_seconds))
 
 
-def scheduled_tick_start(
-    started_at: float,
+def seconds_until_next_tick(
+    *,
+    run_started_at: float,
     tick_index: int,
     poll_interval_seconds: float,
 ) -> float:
-    return started_at + (tick_index - 1) * poll_interval_seconds
+    """Sleep duration to align tick (tick_index+1) at run_started_at + tick_index * poll."""
+    if poll_interval_seconds <= 0:
+        return 0.0
+    next_tick_at = run_started_at + tick_index * poll_interval_seconds
+    return max(0.0, next_tick_at - time.time())
 
 
-def wait_until_scheduled_tick(
-    started_at: float,
-    tick_index: int,
+def build_tick_scheduler_metrics(
+    *,
+    duration_minutes: float,
     poll_interval_seconds: float,
-) -> float:
-    """Sleep until the scheduled tick start. Returns drift seconds (late start)."""
-    target = scheduled_tick_start(started_at, tick_index, poll_interval_seconds)
-    now = time.time()
-    drift = max(0.0, now - target)
-    if now < target:
-        time.sleep(target - now)
-    return drift
-
-
-class TickSchedulerMetrics:
-    def __init__(self) -> None:
-        self.drift_seconds: List[float] = []
-        self.processing_seconds: List[float] = []
-
-    def record_tick(self, *, processing_seconds: float, drift_seconds: float) -> None:
-        self.processing_seconds.append(max(0.0, processing_seconds))
-        self.drift_seconds.append(max(0.0, drift_seconds))
-
-    def summary_fields(
-        self,
-        *,
-        expected_tick_count: int,
-        actual_tick_count: int,
-    ) -> Dict[str, Any]:
-        proc = self.processing_seconds
-        drifts = self.drift_seconds
-        return {
-            "expected_tick_count": expected_tick_count,
-            "actual_tick_count": actual_tick_count,
-            "tick_count": actual_tick_count,
-            "tick_drift_seconds_max": round(max(drifts), 3) if drifts else 0.0,
-            "tick_processing_seconds_avg": round(sum(proc) / len(proc), 3) if proc else 0.0,
-            "tick_processing_seconds_max": round(max(proc), 3) if proc else 0.0,
-        }
+    actual_tick_count: int,
+    tick_processing_seconds: list[float],
+    tick_drift_seconds: list[float],
+) -> Dict[str, Any]:
+    expected = expected_tick_count(duration_minutes, poll_interval_seconds)
+    processing = [float(v) for v in tick_processing_seconds if v >= 0]
+    drift = [float(v) for v in tick_drift_seconds if v >= 0]
+    return {
+        "expected_tick_count": expected,
+        "actual_tick_count": int(actual_tick_count),
+        "tick_count": int(actual_tick_count),
+        "tick_drift_seconds_max": round(max(drift), 3) if drift else 0.0,
+        "tick_processing_seconds_avg": round(sum(processing) / len(processing), 3) if processing else 0.0,
+        "tick_processing_seconds_max": round(max(processing), 3) if processing else 0.0,
+    }
 
 
 __all__ = [
-    "TickSchedulerMetrics",
-    "compute_expected_tick_count",
-    "scheduled_tick_start",
-    "wait_until_scheduled_tick",
+    "build_tick_scheduler_metrics",
+    "expected_tick_count",
+    "seconds_until_next_tick",
 ]

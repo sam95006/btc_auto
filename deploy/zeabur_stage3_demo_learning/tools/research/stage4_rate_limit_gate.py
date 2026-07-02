@@ -34,25 +34,23 @@ class Stage4LLMRateGate:
         cls._shared = None
 
     @staticmethod
+    def _fleet_symbol_count() -> int:
+        raw = os.environ.get("STAGE4_SYMBOLS", "").strip()
+        if not raw:
+            return 0
+        return len([s for s in raw.split(",") if s.strip()])
+
+    @staticmethod
     def min_interval_seconds() -> float:
-        symbols = (os.environ.get("STAGE4_SYMBOLS") or "").strip()
-        fleet_raw = (os.environ.get("STAGE4_FLEET_MIN_INTERVAL_SECONDS") or "").strip()
-        fleet_disabled = (os.environ.get("STAGE4_FLEET_PACING_ENABLED") or "").strip().lower() in {
-            "0",
-            "false",
-            "no",
-            "off",
-        }
-        if fleet_raw and "," in symbols and not fleet_disabled:
-            try:
-                return max(0.0, float(fleet_raw))
-            except (TypeError, ValueError):
-                pass
-        raw = os.environ.get("STAGE4_LLM_MIN_INTERVAL_SECONDS", "30")
+        fleet_count = Stage4LLMRateGate._fleet_symbol_count()
+        if fleet_count >= 2:
+            raw = os.environ.get("STAGE4_FLEET_LLM_MIN_INTERVAL_SECONDS", "6")
+        else:
+            raw = os.environ.get("STAGE4_LLM_MIN_INTERVAL_SECONDS", "30")
         try:
             return max(0.0, float(raw))
         except (TypeError, ValueError):
-            return 30.0
+            return 6.0 if fleet_count >= 2 else 30.0
 
     @staticmethod
     def backoff_seconds_on_429() -> float:
