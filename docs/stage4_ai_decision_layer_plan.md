@@ -143,6 +143,12 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 - PEPE fetch alias `1000PEPEUSDT`; context failure does not crash run.
 - 30m probe gate: `effective >= 20/24`. Report: `docs/reports/STAGE_4_13_FIXED_FLEET_READ_ONLY_PLAN.md`.
 
+### Stage 4.13a — Evidence / shadow correctness (pre-413b)
+
+- Per-symbol `provider_chain_failed_count` from `stage4_system_events.jsonl` (not decisions-only).
+- `stage4_shadow_compare.py`: filter by `decision.symbol`; PEPE kline alias `1000PEPEUSDT`.
+- Validator: `per_symbol_failed_sum_matches_global`, `decision_missing_symbol_count`.
+
 ### Stage 4.4 — Regime + Stage3 context wiring (read-only)
 
 - Kline-derived regime: `trend|range|volatile|unknown` with `regime_reason`, `trend_strength`, `volatility_level`.
