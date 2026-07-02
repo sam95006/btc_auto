@@ -212,7 +212,7 @@ if [ "$MODE" = "idle" ]; then
         python tools/research/run_stage4_ai_decision_dry_run.py \
           --duration-minutes "${STAGE4_CLOUD_DRY_RUN_MINUTES}" \
           --poll-interval-seconds "${STAGE4_POLL_INTERVAL_SECONDS:-120}" \
-          --symbols ETHUSDT,BTCUSDT \
+          --symbols "${STAGE4_SYMBOLS:-ETHUSDT,BTCUSDT}" \
           --mode dry-run \
           --use-real-llm \
           --output-dir "$STAGE4_OUT" \
@@ -223,7 +223,7 @@ if [ "$MODE" = "idle" ]; then
       python tools/research/run_stage4_ai_decision_dry_run.py \
         --duration-minutes "${STAGE4_CLOUD_DRY_RUN_MINUTES}" \
         --poll-interval-seconds 60 \
-        --symbols ETHUSDT,BTCUSDT \
+        --symbols "${STAGE4_SYMBOLS:-ETHUSDT,BTCUSDT}" \
         --mode dry-run \
         --use-real-llm \
         --output-dir "$STAGE4_OUT" \
