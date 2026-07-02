@@ -103,11 +103,21 @@ def _normalize_content_piece(content: Any) -> str:
     return str(content).strip()
 
 
+def _try_repair_json_text(raw: str) -> str:
+    text = raw.strip()
+    if not text:
+        return text
+    if text.count("{") > text.count("}"):
+        text = text + ("}" * (text.count("{") - text.count("}")))
+    text = re.sub(r",\s*([}\]])", r"\1", text)
+    return text
+
+
 def parse_llm_response_text(text: str) -> Tuple[Dict[str, Any], bool, str]:
     """Parse model text into dict. Returns (parsed, ok, parse_error_type)."""
     raw = (text or "").strip()
     if not raw:
-        return {}, False, "content_empty"
+        return {}, False, "provider_empty_response"
 
     candidates = [raw]
     if raw.startswith("```"):
@@ -119,7 +129,11 @@ def parse_llm_response_text(text: str) -> Tuple[Dict[str, Any], bool, str]:
     if brace_match and brace_match.group(0) not in candidates:
         candidates.append(brace_match.group(0))
 
-    last_err = "json_decode_error"
+    repaired = _try_repair_json_text(raw)
+    if repaired and repaired not in candidates:
+        candidates.append(repaired)
+
+    last_err = "provider_invalid_json"
     for candidate in candidates:
         try:
             parsed = json.loads(candidate)
@@ -127,7 +141,7 @@ def parse_llm_response_text(text: str) -> Tuple[Dict[str, Any], bool, str]:
                 return parsed, True, ""
             if isinstance(parsed, list) and parsed and isinstance(parsed[0], dict):
                 return parsed[0], True, ""
-            last_err = "json_not_object"
+            last_err = "provider_schema_mismatch"
         except json.JSONDecodeError:
             continue
 

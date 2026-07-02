@@ -352,7 +352,12 @@ class Stage4AIDecisionAgent:
                     provider_attempts=attempts,
                 )
             proposal["parse_error"] = True
-            proposal["parse_error_type"] = err_type
+            from tools.research.stage4_parse_metrics import normalize_parse_error_type
+
+            proposal["parse_error_type"] = normalize_parse_error_type(
+                err_type,
+                finish_reason=str(result.get("finish_reason") or ""),
+            )
             proposal["raw_content_empty"] = bool(result.get("raw_content_empty"))
             proposal["why_skip"] = err or result.get("error") or "llm_parse_failed"
             return proposal, prompt_hash, False, err or result.get("error") or err, provider_meta

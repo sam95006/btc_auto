@@ -35,6 +35,19 @@ class Stage4LLMRateGate:
 
     @staticmethod
     def min_interval_seconds() -> float:
+        symbols = (os.environ.get("STAGE4_SYMBOLS") or "").strip()
+        fleet_raw = (os.environ.get("STAGE4_FLEET_MIN_INTERVAL_SECONDS") or "").strip()
+        fleet_disabled = (os.environ.get("STAGE4_FLEET_PACING_ENABLED") or "").strip().lower() in {
+            "0",
+            "false",
+            "no",
+            "off",
+        }
+        if fleet_raw and "," in symbols and not fleet_disabled:
+            try:
+                return max(0.0, float(fleet_raw))
+            except (TypeError, ValueError):
+                pass
         raw = os.environ.get("STAGE4_LLM_MIN_INTERVAL_SECONDS", "30")
         try:
             return max(0.0, float(raw))

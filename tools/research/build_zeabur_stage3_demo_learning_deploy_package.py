@@ -69,6 +69,8 @@ BASE_ALLOWLIST = [
     "tools/research/stage4_provider_quota_governor.py",
     "tools/research/stage4_fleet_symbols.py",
     "tools/research/stage4_per_symbol_summary.py",
+    "tools/research/stage4_parse_metrics.py",
+    "tools/research/stage4_tick_scheduler.py",
     "tools/research/stage4_context_skip.py",
     "tools/research/check_cerebras_stage4_decision_probe.py",
     "tools/research/stage4_shadow_compare.py",

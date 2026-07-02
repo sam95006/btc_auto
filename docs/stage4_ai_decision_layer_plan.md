@@ -149,6 +149,14 @@ If `STAGE4_CLOUD_DRY_RUN_MINUTES > 0` and `STAGE4_REQUIRE_REAL_LLM=true`:
 - `stage4_shadow_compare.py`: filter by `decision.symbol`; PEPE kline alias `1000PEPEUSDT`.
 - Validator: `per_symbol_failed_sum_matches_global`, `decision_missing_symbol_count`.
 
+### Stage 4.13c — Yield / parse / scheduler repair (post-413b PARTIAL)
+
+- Parse classification: `stage4_parse_metrics.py` — `parse_error_count_by_symbol/provider`, sample refs; parse errors not effective.
+- Absolute tick scheduler: `stage4_tick_scheduler.py` — `expected_tick_count`, drift + processing metrics (fix 34/36 drift).
+- Cerebras: default `max_tokens` 1100, trimmed schema required fields, one-shot parse retry with token boost.
+- Fleet pacing: `STAGE4_FLEET_MIN_INTERVAL_SECONDS` overrides global min interval for multi-symbol runs.
+- Gate: 30m regression before 180m retry. Report: `docs/reports/STAGE_4_13C_FIXED_FLEET_YIELD_PARSE_SCHEDULER_REPAIR.md`.
+
 ### Stage 4.4 — Regime + Stage3 context wiring (read-only)
 
 - Kline-derived regime: `trend|range|volatile|unknown` with `regime_reason`, `trend_strength`, `volatility_level`.

@@ -3302,5 +3302,146 @@ class Stage413aEvidenceTests(unittest.TestCase):
             self.assertFalse(result["validator_passed"])
 
 
+class Stage413cRepairTests(unittest.TestCase):
+    def test_parse_error_not_effective_decision(self) -> None:
+        from tools.research.stage4_parse_metrics import build_parse_error_summary, effective_decision
+
+        decisions = [
+            {"symbol": "BTCUSDT", "real_llm_used": True, "parse_error": False},
+            {"symbol": "PEPEUSDT", "real_llm_used": True, "parse_error": True, "provider": "cerebras"},
+        ]
+        self.assertTrue(effective_decision(decisions[0]))
+        self.assertFalse(effective_decision(decisions[1]))
+        summary = build_parse_error_summary(decisions)
+        self.assertEqual(summary["parse_error_count"], 1)
+        self.assertEqual(summary["parse_error_count_by_symbol"]["PEPEUSDT"], 1)
+        self.assertEqual(summary["parse_error_count_by_provider"]["cerebras"], 1)
+
+    def test_parse_error_count_by_symbol_and_provider(self) -> None:
+        from tools.research.stage4_parse_metrics import build_parse_error_summary
+
+        decisions = [
+            {
+                "symbol": "ETHUSDT",
+                "parse_error": True,
+                "provider": "cerebras",
+                "parse_error_type": "provider_response_truncated",
+                "finish_reason": "length",
+            },
+            {
+                "symbol": "SOLUSDT",
+                "parse_error": True,
+                "provider": "cerebras",
+                "parse_error_type": "json_decode_error",
+            },
+        ]
+        summary = build_parse_error_summary(decisions)
+        self.assertEqual(summary["parse_error_count_by_symbol"]["ETHUSDT"], 1)
+        self.assertEqual(summary["parse_error_count_by_symbol"]["SOLUSDT"], 1)
+        self.assertEqual(summary["parse_error_count_by_provider"]["cerebras"], 2)
+        self.assertEqual(len(summary["parse_error_sample_refs"]), 2)
+
+    def test_validator_fails_when_parse_error_count_gt_zero(self) -> None:
+        from tools.research.validate_stage4_ai_decision_outputs import validate
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / "ai_decisions.jsonl").write_text(
+                json.dumps(
+                    {
+                        "decision_id": "d1",
+                        "symbol": "PEPEUSDT",
+                        "decision_source": "ai_decision_agent",
+                        "final_decision": "skip",
+                        "order_sent": False,
+                        "real_llm_used": True,
+                        "parse_error": True,
+                        "parse_error_type": "provider_invalid_json",
+                        "model_name": "gpt-oss-120b",
+                        "prompt_hash": "abc",
+                        "market_context": {"symbol": "PEPEUSDT"},
+                        "why_skip": "parse",
+                        "confidence_reason": "low",
+                        "risk_supervisor_result": {"approved": False},
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (out / "stage4_ai_decision_summary.json").write_text(
+                json.dumps({"dry_run_completed": True, "parse_error_count": 1}),
+                encoding="utf-8",
+            )
+            (out / "llm_client_debug.jsonl").write_text('{"safe":true}\n', encoding="utf-8")
+            result = validate(out, require_real_llm=True)
+            self.assertFalse(result["validator_passed"])
+            self.assertGreater(result["parse_error_count"], 0)
+
+    def test_expected_tick_count_180m_300s(self) -> None:
+        from tools.research.stage4_tick_scheduler import compute_expected_tick_count
+
+        self.assertEqual(compute_expected_tick_count(180, 300), 36)
+        self.assertEqual(compute_expected_tick_count(30, 300), 6)
+
+    def test_absolute_tick_scheduler_sleep_not_fixed_drift(self) -> None:
+        from unittest.mock import patch
+
+        from tools.research.stage4_tick_scheduler import scheduled_tick_start, wait_until_scheduled_tick
+
+        started = 1000.0
+        with patch("tools.research.stage4_tick_scheduler.time") as mock_time:
+            mock_time.time.return_value = 1305.0
+            drift = wait_until_scheduled_tick(started, 2, 300.0)
+            self.assertEqual(drift, 5.0)
+            mock_time.sleep.assert_not_called()
+        with patch("tools.research.stage4_tick_scheduler.time") as mock_time:
+            mock_time.time.side_effect = [1005.0, 1005.0]
+            wait_until_scheduled_tick(started, 2, 300.0)
+            mock_time.sleep.assert_called_once_with(295.0)
+        self.assertEqual(scheduled_tick_start(started, 3, 300.0), 1600.0)
+
+    def test_tick_drift_metrics_written(self) -> None:
+        from tools.research.stage4_tick_scheduler import TickSchedulerMetrics
+
+        metrics = TickSchedulerMetrics()
+        metrics.record_tick(processing_seconds=42.5, drift_seconds=3.2)
+        metrics.record_tick(processing_seconds=38.0, drift_seconds=1.0)
+        fields = metrics.summary_fields(expected_tick_count=6, actual_tick_count=2)
+        self.assertEqual(fields["expected_tick_count"], 6)
+        self.assertEqual(fields["actual_tick_count"], 2)
+        self.assertEqual(fields["tick_drift_seconds_max"], 3.2)
+        self.assertEqual(fields["tick_processing_seconds_max"], 42.5)
+
+    def test_per_symbol_chain_failed_sum_matches_global(self) -> None:
+        from tools.research.stage4_per_symbol_summary import build_per_symbol_summary
+
+        events = [
+            {"event_type": "provider_chain_failed", "symbol": "ETHUSDT"},
+            {"event_type": "provider_chain_failed", "symbol": "SOLUSDT"},
+        ]
+        fleet = build_per_symbol_summary([], symbols_configured=["BTCUSDT", "ETHUSDT"], system_events=events)
+        per_symbol = {k: v["provider_chain_failed_count"] for k, v in fleet["per_symbol"].items()}
+        self.assertEqual(sum(per_symbol.values()), 2)
+
+    def test_pepe_alias_shadow_still_works(self) -> None:
+        from tools.research.stage4_fleet_symbols import fetch_symbol_for_market, resolve_stage4_symbols
+
+        with patch.dict(os.environ, {"STAGE4_SYMBOLS": "BTCUSDT,ETHUSDT,SOLUSDT,PEPEUSDT"}, clear=False):
+            symbols = resolve_stage4_symbols()
+            self.assertIn("PEPEUSDT", symbols)
+        self.assertEqual(fetch_symbol_for_market("PEPEUSDT"), "1000PEPEUSDT")
+
+    def test_no_mock_no_order_no_api_key_in_debug_scan(self) -> None:
+        from tools.research.validate_stage4_ai_decision_outputs import _debug_log_has_api_key
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / "llm_client_debug.jsonl").write_text(
+                '{"provider":"groq","api_key_masked":"gsk_***"}\n',
+                encoding="utf-8",
+            )
+            self.assertFalse(_debug_log_has_api_key(out))
+
+
 if __name__ == "__main__":
     unittest.main()

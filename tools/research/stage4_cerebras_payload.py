@@ -49,8 +49,6 @@ STAGE4_DECISION_JSON_SCHEMA = {
         "side_reason",
         "confidence_reason",
         "risk_notes",
-        "patch_awareness",
-        "uncertainty",
         "requires_manual_review",
     ],
     "additionalProperties": True,
@@ -58,11 +56,19 @@ STAGE4_DECISION_JSON_SCHEMA = {
 
 
 def resolve_cerebras_max_tokens() -> int:
-    raw = os.environ.get("STAGE4_CEREBRAS_MAX_TOKENS", "900").strip()
+    raw = os.environ.get("STAGE4_CEREBRAS_MAX_TOKENS", "1100").strip()
     try:
         return max(128, int(float(raw)))
     except (TypeError, ValueError):
-        return 900
+        return 1100
+
+
+def cerebras_retry_token_boost() -> int:
+    raw = os.environ.get("STAGE4_CEREBRAS_RETRY_TOKEN_BOOST", "200").strip()
+    try:
+        return max(0, int(float(raw)))
+    except (TypeError, ValueError):
+        return 200
 
 
 def resolve_cerebras_payload_mode() -> str:
@@ -246,6 +252,7 @@ __all__ = [
     "classify_cerebras_http_error",
     "classify_http_status",
     "parse_groq_error_safe",
+    "cerebras_retry_token_boost",
     "resolve_cerebras_max_tokens",
     "resolve_cerebras_payload_mode",
 ]

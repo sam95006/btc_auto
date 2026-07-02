@@ -526,6 +526,17 @@ def _run_dry_run_inner(
     loop_completed = False
     target_effective = _target_effective_decision_count()
     symbols_with_market_context_error: set[str] = set()
+    from tools.research.stage4_tick_scheduler import (
+        TickSchedulerMetrics,
+        compute_expected_tick_count,
+        wait_until_scheduled_tick,
+    )
+
+    single_tick_mode = duration_minutes <= 0.05 or poll_interval_seconds <= 0
+    expected_tick_count = 1 if single_tick_mode else compute_expected_tick_count(
+        duration_minutes, poll_interval_seconds
+    )
+    tick_scheduler = TickSchedulerMetrics()
 
     def _persist_summary(
         *,
@@ -605,6 +616,15 @@ def _run_dry_run_inner(
         )
         summary.update(fleet_summary)
         summary["dataset_target_met"] = effective >= target_effective
+        from tools.research.stage4_parse_metrics import build_parse_error_summary
+
+        summary.update(build_parse_error_summary(decisions))
+        summary.update(
+            tick_scheduler.summary_fields(
+                expected_tick_count=expected_tick_count,
+                actual_tick_count=tick,
+            )
+        )
         write_json(out / "stage4_ai_decision_summary.json", summary)
         _append_run_log(
             log_path,
@@ -639,8 +659,15 @@ def _run_dry_run_inner(
 
     summary_result: Dict[str, Any] = {}
     try:
-        while time.time() < end:
-            tick += 1
+        tick_range = range(1, expected_tick_count + 1)
+        for tick in tick_range:
+            tick_drift = 0.0
+            if not single_tick_mode:
+                if tick == 1:
+                    tick_drift = max(0.0, time.time() - started)
+                else:
+                    tick_drift = wait_until_scheduled_tick(started, tick, poll_interval_seconds)
+            tick_proc_start = time.time()
             account = _fetch_account()
             open_positions = int(account.get("open_positions") or 0)
             for idx, symbol in enumerate(symbols):
@@ -713,13 +740,19 @@ def _run_dry_run_inner(
                 if idx < len(symbols) - 1 and symbol_gap > 0:
                     time.sleep(symbol_gap)
 
-            if duration_minutes <= 0.05:
+            tick_scheduler.record_tick(
+                processing_seconds=time.time() - tick_proc_start,
+                drift_seconds=tick_drift if not single_tick_mode else 0.0,
+            )
+
+            if single_tick_mode:
                 loop_completed = True
                 break
-            if time.time() >= end:
+            if tick >= expected_tick_count:
+                loop_completed = True
                 break
-            time.sleep(poll_interval_seconds)
-        loop_completed = True
+        if not single_tick_mode and tick >= expected_tick_count:
+            loop_completed = True
     finally:
         summary_result = _persist_summary(
             dry_run_completed=loop_completed,

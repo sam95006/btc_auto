@@ -277,6 +277,19 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
         or (bundle_export.get("bundle_safe") and bundle_export.get("file_count", 0) > 0)
     )
 
+    parse_summary = {}
+    if decisions:
+        from tools.research.stage4_parse_metrics import build_parse_error_summary
+
+        parse_summary = build_parse_error_summary(decisions)
+    elif summary.get("parse_error_count_by_symbol"):
+        parse_summary = {
+            "parse_error_count": int(summary.get("parse_error_count") or 0),
+            "parse_error_count_by_symbol": summary.get("parse_error_count_by_symbol") or {},
+            "parse_error_count_by_provider": summary.get("parse_error_count_by_provider") or {},
+            "parse_error_sample_refs": summary.get("parse_error_sample_refs") or [],
+        }
+
     passed = technical_valid
     return {
         "record_type": "stage4_ai_decision_output_validation",
@@ -315,6 +328,12 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
         "decision_missing_symbol_count": decision_missing_symbol_count,
         "symbols_configured": summary.get("symbols_configured") or [],
         "symbols_seen": summary.get("symbols_seen") or recomputed_fleet.get("symbols_seen") or [],
+        "expected_tick_count": int(summary.get("expected_tick_count") or 0),
+        "actual_tick_count": int(summary.get("actual_tick_count") or summary.get("tick_count") or 0),
+        "tick_drift_seconds_max": summary.get("tick_drift_seconds_max"),
+        "tick_processing_seconds_avg": summary.get("tick_processing_seconds_avg"),
+        "tick_processing_seconds_max": summary.get("tick_processing_seconds_max"),
+        **parse_summary,
     }
 
 
