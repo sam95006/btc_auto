@@ -1,56 +1,64 @@
 # Stage 4.13c — Fixed Fleet Yield / Parse / Scheduler Repair
 
 **Date:** 2026-06-08  
-**Prior run:** Stage 4.13b PARTIAL PASS (`/data/stage4_ai_decisions_413b_fixed_fleet_180m`)  
-**Scope:** Stability only — no strategy, orders, ARM, production, or mock fallback.
+**Prior stage:** 4.13b Fixed Fleet 180m — **PARTIAL PASS**  
+**Output reviewed:** `/data/stage4_ai_decisions_413b_fixed_fleet_180m`
 
 ---
 
-## 1. Stage 4.13b partial root cause
+## 1. 4.13b partial root cause
 
-| Issue | Symptom | Impact |
-|-------|---------|--------|
-| Parse error | `parse_error_count=1`, `validator_passed=false` | Blocks full PASS |
-| Tick drift | `tick_count=34/36` | Fixed sleep after multi-symbol processing ate 2 ticks |
-| Provider yield | `effective_decision_count=117/120`, `provider_chain_failed=18` | `partial_completion=true`, `dataset_target_met=false` |
+| Symptom | Value | Impact |
+|---------|-------|--------|
+| `tick_count` | 34 / 36 | Scheduler drift; two ticks lost |
+| `effective_decision_count` | 117 / 120 | Below dataset target |
+| `parse_error_count` | 1 | `validator_passed=false`, `technical_valid=false` |
+| `provider_chain_failed_count` | 18 | ETH/SOL ×8 each; yield pressure |
+| `cerebras_parse_error_count` (events) | 16 | Truncation / invalid JSON on fallback path |
+| Groq success | 34 | Heavy `local_rate_gate_skip` + TPM governor → Cerebras fallback |
 
-Four-symbol read-only architecture **validated** (all symbols seen, no orders, no mock, no API key leak). Failures are operational stability, not fleet design.
-
----
-
-## 2. Decision 65 parse error root cause
-
-**Symbol:** `PEPEUSDT` (line ~65 in `ai_decisions.jsonl`)
-
-**Classification:** `provider_invalid_json` or `provider_response_truncated` (Cerebras secondary path)
-
-**Mechanism:**
-- 4.13b had 16 Cerebras parse/truncation events cluster on ETH/SOL; PEPE had 2 chain fails and 1 surviving parse error.
-- Cerebras `json_schema` output with `max_tokens=900` can truncate long `why_enter` / `risk_notes` on volatile alts.
-- Prior parser returned generic `json_decode_error` without symbol/provider rollup in summary.
-
-**413c fix:**
-- Classify parse errors: `provider_response_truncated`, `provider_invalid_json`, `provider_empty_response`, `provider_schema_mismatch`.
-- `parse_error=true` decisions excluded from `effective_decision_count` (already in run loop; reinforced in per-symbol + `effective_decision()` helper).
-- Summary: `parse_error_count_by_symbol`, `parse_error_count_by_provider`, `parse_error_sample_refs`.
-- Cerebras: default `max_tokens` 1100, shorter required schema fields, one-shot parse retry with token boost.
-- Safe JSON repair (trailing comma, unclosed braces) before fail.
+**Verdict:** Four-symbol read-only architecture is validated (all symbols seen, shadow/alias OK, no orders/mock). Partial pass is due to **scheduler drift**, **one parse error**, and **provider yield** — not strategy defects.
 
 ---
 
-## 3. Tick count 34/36 root cause
+## 2. decision_65 parse error root cause
 
-**Expected:** `floor(180 * 60 / 300) = 36` ticks  
-**Actual:** 34
+**Evidence (4.13b summary):**
 
-**Cause:** Loop used `while time.time() < end` + `sleep(poll_interval)` **after** processing 4 symbols (~90–150s/tick with rate gate + LLM). Each cycle ≈ 300s processing + 300s sleep → ~600s effective period → only ~34 cycles in 10800s.
+- `decision_65_parse_error_true`
+- `symbol=PEPEUSDT`
+- `parse_error_count=1` (sole validator blocker)
 
-**413c fix:** Absolute schedule in `stage4_tick_scheduler.py`:
-```
-next_tick_at = start + (tick_index - 1) * poll_interval
-sleep = max(0, next_tick_at - now)
-```
-Record `tick_drift_seconds_max`, `tick_processing_seconds_avg/max`, `expected_tick_count`, `actual_tick_count`.
+**Likely mechanism:**
+
+1. Groq primary skipped or rate-gated → Cerebras fallback.
+2. Cerebras returned non-empty content that failed JSON parse (`json_decode_error` or truncated object).
+3. Decision row retained `parse_error=true` with `real_llm_used=true`; supervisor forced `skip`.
+4. Dry-run stats already excluded this row from `effective_decision_count`, but validator correctly fails on any `parse_error` in require-real-llm mode.
+
+**Repair (4.13c):**
+
+- Canonical `parse_error_type` classes: `provider_response_truncated`, `provider_invalid_json`, `provider_empty_response`, `provider_schema_mismatch`.
+- Safe truncated-JSON repair in `stage4_response_parser.py`.
+- Cerebras one-shot retry with bumped `max_tokens` on truncation/invalid JSON.
+- Summary fields: `parse_error_count_by_symbol`, `parse_error_count_by_provider`, `parse_error_sample_refs`.
+
+---
+
+## 3. tick_count 34/36 root cause
+
+**Config:** `duration=180m`, `poll=300s` → **expected 36 ticks**.
+
+**Bug:** `run_stage4_ai_decision_dry_run.py` used `time.sleep(poll_interval_seconds)` **after** each tick’s symbol processing. With four symbols + gaps + LLM latency, each cycle took **processing + 300s**, not **300s wall-clock from run start**.
+
+**Example:** If average tick processing ≈ 35s, effective period ≈ 335s → `10800/335 ≈ 32–34` ticks (matches observed 34).
+
+**Repair (4.13c):**
+
+- Absolute schedule: `next_tick_at = start + tick_index * poll_interval`.
+- `sleep = max(0, next_tick_at - now)`.
+- Metrics: `expected_tick_count`, `actual_tick_count`, `tick_drift_seconds_max`, `tick_processing_seconds_avg/max`.
+- Loop bound: `while tick < expected_ticks and time.time() < end`.
 
 ---
 
@@ -63,51 +71,75 @@ Record `tick_drift_seconds_max`, `tick_processing_seconds_avg/max`, `expected_ti
 | SOLUSDT | 26 | 8 |
 | PEPEUSDT | 31 | 2 |
 
-ETH/SOL bear disproportionate chain failures (Groq local gate + TPM governor → Cerebras overload).
+ETH/SOL bear the bulk of `provider_chain_failed` (Groq gate + Cerebras exhaustion/truncation under fleet pacing).
 
 ---
 
-## 5. Cerebras parse/truncation by symbol (4.13b)
+## 5. Cerebras parse/truncation by symbol
 
-- `provider_success_distribution`: groq=34, cerebras=83  
-- `cerebras_parse_error_count`: 16 (mostly ETH/SOL fallback path)  
-- `finish_reason=length` → `provider_response_truncated`
+- **Global:** 16 Cerebras parse/truncation events; 83 Cerebras successes.
+- **Concentration:** ETH/SOL chain failures (8 each) correlate with longer context + fallback load after Groq `local_rate_gate_skip`.
+- **Hypothesis:** `max_tokens=900` + `json_schema` occasionally truncates (`finish_reason=length`) → `json_decode_error` on repair miss.
+
+**Repair (4.13c):**
+
+- Default `STAGE4_CEREBRAS_MAX_TOKENS` raised to **1100** (env override unchanged).
+- Truncation retry once at `min(base+250, 2048)`.
+- Fleet rate gate: `STAGE4_FLEET_LLM_MIN_INTERVAL_SECONDS` default **6s** when `STAGE4_SYMBOLS` has ≥2 symbols (was effectively 30s global).
 
 ---
 
 ## 6. Proposed patch list (implemented in 4.13c)
 
-| Area | Patch |
-|------|-------|
-| Parse | `stage4_parse_metrics.py` — classification + summary |
-| Scheduler | `stage4_tick_scheduler.py` — absolute tick schedule + drift metrics |
-| Run loop | `run_stage4_ai_decision_dry_run.py` — integrate scheduler + parse summary |
-| Cerebras | `max_tokens` default 1100, schema trim, parse retry once |
-| Rate gate | `STAGE4_FLEET_MIN_INTERVAL_SECONDS` when multi-symbol fleet |
-| Parser | JSON repair + normalized error types |
-| Validator | Export parse + tick metrics |
-| Tests | `test_stage4_ai_decision_layer.py` — 413c regression cases |
+| Area | File(s) | Change |
+|------|---------|--------|
+| Parse taxonomy | `stage4_parse_error_metrics.py`, `stage4_ai_decision_agent.py` | Canonical types + summary aggregates |
+| JSON repair | `stage4_response_parser.py` | Truncated object brace repair |
+| Scheduler | `stage4_tick_scheduler.py`, `run_stage4_ai_decision_dry_run.py` | Absolute tick schedule + drift metrics |
+| Provider yield | `stage4_rate_limit_gate.py`, `stage4_cerebras_payload.py`, `stage4_llm_client.py` | Fleet pacing, tokens 1100, Cerebras retry |
+| Validation | `validate_stage4_ai_decision_outputs.py` | Parse + tick fields in report |
+| Tests | `tests/test_stage4_ai_decision_layer.py` | `Stage413cRepairTests` |
+
+**Not changed:** entry/exit strategy, confidence logic, risk limits, order paths, mock fallback.
 
 ---
 
 ## 7. Retry plan
 
-### Step A — 30m regression (413c)
-- `STAGE4_OUTPUT_DIR=/data/stage4_ai_decisions_413c_fixed_fleet_30m_regression`
-- `STAGE4_CLOUD_DRY_RUN_MINUTES=30`, `poll=300`, target effective=20
-- **PASS:** `tick_count=6`, `expected_tick_count=6`, `parse_error_count=0`, `validator_passed=true`, `provider_chain_failed<=4`
+### Step A — 30m regression (4.13c)
 
-### Step B — Only if 413c PASS
-- Stage 4.13d / 4.13b-retry: 180m fixed fleet, `target_effective_decision_count=120`
+```
+STAGE4_OUTPUT_DIR=/data/stage4_ai_decisions_413c_fixed_fleet_30m_regression
+STAGE4_CLOUD_DRY_RUN_MINUTES=30
+STAGE4_POLL_INTERVAL_SECONDS=300
+STAGE4_TARGET_EFFECTIVE_DECISION_COUNT=20
+STAGE4_SYMBOLS=BTCUSDT,ETHUSDT,SOLUSDT,PEPEUSDT
+```
 
-### Step C — If 413c FAIL
-- Do **not** run 180m; continue parse / scheduler / provider yield repair.
+**PASS criteria:**
+
+| Metric | Target |
+|--------|--------|
+| `tick_count` / `expected_tick_count` | 6 / 6 |
+| `effective_decision_count` | ≥ 20 |
+| `parse_error_count` | 0 |
+| `validator_passed` / `technical_valid` | true |
+| `provider_chain_failed_count` | ≤ 4 |
+| `mock_ai_used_count` / `order_sent_count` | 0 |
+
+### Step B — Only if 4.13c PASS
+
+- **4.13d / 4.13b-retry:** 180m fixed fleet, `target_effective_decision_count=120`.
+
+### Step C — If 4.13c FAIL
+
+- Do **not** run 180m.
+- Iterate parse repair, scheduler, or provider pacing only.
 
 ---
 
-## Safety checklist (unchanged)
+## Safety reaffirmation
 
-- No orders, demo order, ARM, Stage 3 runner, production, btc-auto, radar
-- No mock fallback
-- No full API keys in logs
-- No commit of data/jsonl/logs/bundles/secrets
+- No orders, ARM, Stage 3 runner, production, btc-auto, or radar.
+- `STAGE4_ALLOW_MOCK_FALLBACK=false`, `STAGE4_ORDER_ALLOWED=false`.
+- Still **not** the demo-order / trading stage.

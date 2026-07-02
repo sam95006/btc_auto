@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 from tools.research.bybit_demo_learning_common import MAX_MARGIN_USD, utc_now_iso
 from tools.research.stage3_learning_loop import append_jsonl, resolve_output_dir, setup_key
 from tools.research.stage4_decision_schema import parse_llm_decision
+from tools.research.stage4_parse_error_metrics import normalize_parse_error_type
 from tools.research.stage4_prompt_builder import build_decision_prompt, prompt_fingerprint
 from tools.research.stage4_context_summary import (  # noqa: E402
     blocking_patches,
@@ -352,11 +353,10 @@ class Stage4AIDecisionAgent:
                     provider_attempts=attempts,
                 )
             proposal["parse_error"] = True
-            from tools.research.stage4_parse_metrics import normalize_parse_error_type
-
             proposal["parse_error_type"] = normalize_parse_error_type(
                 err_type,
-                finish_reason=str(result.get("finish_reason") or ""),
+                raw_content_empty=bool(result.get("raw_content_empty")),
+                finish_reason=result.get("finish_reason"),
             )
             proposal["raw_content_empty"] = bool(result.get("raw_content_empty"))
             proposal["why_skip"] = err or result.get("error") or "llm_parse_failed"
@@ -504,7 +504,14 @@ class Stage4AIDecisionAgent:
             "matched_patch_count": len(blockers),
             "matched_patch_actions": [str(p.get("action") or "") for p in blockers],
             "parse_error": parse_error,
-            "parse_error_type": proposal.get("parse_error_type"),
+            "parse_error_type": (
+                normalize_parse_error_type(
+                    proposal.get("parse_error_type"),
+                    raw_content_empty=bool(proposal.get("raw_content_empty")),
+                )
+                if parse_error
+                else None
+            ),
             "raw_content_empty": proposal.get("raw_content_empty"),
             "safety_constraints": safety_constraints_from_env(),
             "risk_supervisor_result": sr,

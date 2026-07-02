@@ -407,6 +407,32 @@ class Stage4LLMClient:
                 try:
                     if cfg.provider in {"groq", "openai", "cerebras"}:
                         result = self._openai_compat(cfg, messages, key_env=key_env)
+                        if (
+                            cfg.provider == "cerebras"
+                            and result.get("status") != "ok"
+                            and str(result.get("error_type") or "")
+                            in {
+                                "provider_response_truncated",
+                                "json_decode_error",
+                                "provider_invalid_json",
+                            }
+                        ):
+                            bumped = min(self.cerebras_max_tokens + 250, 2048)
+                            if bumped > self.cerebras_max_tokens:
+                                retry = self._openai_compat(
+                                    cfg,
+                                    messages,
+                                    key_env=key_env,
+                                    cerebras_max_tokens=bumped,
+                                )
+                                retry["retry_count"] = attempt
+                                retry["cerebras_truncation_retry"] = True
+                                retry["cerebras_max_tokens_retry"] = bumped
+                                if retry.get("status") == "ok":
+                                    if use_rate_gate:
+                                        gate.record_success()
+                                    return retry
+                                result = retry
                     elif cfg.provider == "anthropic":
                         result = self._anthropic(cfg, messages, key_env=key_env)
                     elif cfg.provider == "gemini":
@@ -513,40 +539,6 @@ class Stage4LLMClient:
                     self._write_debug_row(cfg, prompt_hash, request_id, result, attempt, latency_ms)
                     last_result = result
                     break
-
-        # One-shot Cerebras parse retry with boosted max_tokens (stability only).
-        if (
-            cfg.provider == "cerebras"
-            and env_truthy("STAGE4_CEREBRAS_PARSE_RETRY_ONCE", True)
-            and last_result.get("status") != "ok"
-            and not last_result.get("cerebras_parse_retry")
-        ):
-            err_type = str(last_result.get("error_type") or "")
-            if err_type in {
-                "provider_response_truncated",
-                "json_decode_error",
-                "provider_invalid_json",
-            }:
-                from tools.research.stage4_cerebras_payload import (
-                    cerebras_retry_token_boost,
-                    resolve_cerebras_max_tokens,
-                )
-
-                boosted = min(2048, resolve_cerebras_max_tokens() + cerebras_retry_token_boost())
-                key_env = key_chain[0] if key_chain else (cfg.api_key_env or "")
-                retry = self._openai_compat(
-                    cfg,
-                    messages,
-                    key_env=key_env,
-                    max_tokens_override=boosted,
-                )
-                retry["cerebras_parse_retry"] = True
-                retry["max_tokens_used"] = boosted
-                if retry.get("status") == "ok":
-                    if use_rate_gate:
-                        gate.record_success()
-                    return retry
-                last_result = retry
 
         if prefer_chain_fallback is not None and last_result.get("status") != "ok":
             return prefer_chain_fallback
@@ -744,8 +736,8 @@ class Stage4LLMClient:
                     **base,
                 )
             return self._error_result(
-                parse_error_type or "provider_invalid_json",
-                error_type=parse_error_type or "provider_invalid_json",
+                parse_error_type or "json_decode_error",
+                error_type=parse_error_type or "json_decode_error",
                 json_decode_error=True,
                 **base,
             )
@@ -757,7 +749,7 @@ class Stage4LLMClient:
         messages: List[Dict[str, str]],
         *,
         key_env: str,
-        max_tokens_override: int | None = None,
+        cerebras_max_tokens: int | None = None,
     ) -> Dict[str, Any]:
         from tools.research.stage4_groq_payload import (
             build_stage4_groq_openai_payload,
@@ -779,11 +771,10 @@ class Stage4LLMClient:
                 cerebras_payload_metadata,
             )
 
-            cerebras_tokens = max_tokens_override if max_tokens_override is not None else self.cerebras_max_tokens
             payload = build_stage4_cerebras_openai_payload(
                 model=cfg.model,
                 messages=messages,
-                max_tokens=cerebras_tokens,
+                max_tokens=cerebras_max_tokens or self.cerebras_max_tokens,
                 temperature=0.2,
             )
         else:

@@ -107,20 +107,6 @@ def aggregate_attempt_metrics_from_attempts(
     return metrics
 
 
-def _cerebras_parse_errors_by_symbol(decisions: List[Dict[str, Any]]) -> Dict[str, int]:
-    counts: Dict[str, int] = {}
-    for decision in decisions:
-        if not decision.get("parse_error"):
-            continue
-        if str(decision.get("provider") or "").lower() != "cerebras":
-            continue
-        sym = str(decision.get("symbol") or "").upper()
-        if not sym:
-            continue
-        counts[sym] = int(counts.get(sym) or 0) + 1
-    return counts
-
-
 def aggregate_attempt_metrics(
     *,
     decisions: List[Dict[str, Any]],
@@ -141,9 +127,7 @@ def aggregate_attempt_metrics(
         if ev.get("event_type") == "provider_chain_failed":
             event_chain_failed += 1
     total_chain_failed = max(chain_failed_count, event_chain_failed)
-    metrics = aggregate_attempt_metrics_from_attempts(
+    return aggregate_attempt_metrics_from_attempts(
         attempts_list,
         chain_failed_count=total_chain_failed,
     )
-    metrics["cerebras_parse_error_count_by_symbol"] = _cerebras_parse_errors_by_symbol(decisions)
-    return metrics

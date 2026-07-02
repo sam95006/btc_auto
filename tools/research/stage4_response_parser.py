@@ -103,21 +103,23 @@ def _normalize_content_piece(content: Any) -> str:
     return str(content).strip()
 
 
-def _try_repair_json_text(raw: str) -> str:
-    text = raw.strip()
-    if not text:
-        return text
-    if text.count("{") > text.count("}"):
-        text = text + ("}" * (text.count("{") - text.count("}")))
-    text = re.sub(r",\s*([}\]])", r"\1", text)
-    return text
+def _repair_truncated_json(raw: str) -> str:
+    """Best-effort close for truncated JSON object payloads."""
+    text = (raw or "").strip()
+    if not text.startswith("{"):
+        return ""
+    trimmed = re.sub(r',\s*"[^"]*$', "", text)
+    trimmed = re.sub(r',\s*$', "", trimmed)
+    while trimmed.count("{") > trimmed.count("}"):
+        trimmed += "}"
+    return trimmed
 
 
 def parse_llm_response_text(text: str) -> Tuple[Dict[str, Any], bool, str]:
     """Parse model text into dict. Returns (parsed, ok, parse_error_type)."""
     raw = (text or "").strip()
     if not raw:
-        return {}, False, "provider_empty_response"
+        return {}, False, "content_empty"
 
     candidates = [raw]
     if raw.startswith("```"):
@@ -129,11 +131,11 @@ def parse_llm_response_text(text: str) -> Tuple[Dict[str, Any], bool, str]:
     if brace_match and brace_match.group(0) not in candidates:
         candidates.append(brace_match.group(0))
 
-    repaired = _try_repair_json_text(raw)
+    repaired = _repair_truncated_json(raw)
     if repaired and repaired not in candidates:
         candidates.append(repaired)
 
-    last_err = "provider_invalid_json"
+    last_err = "json_decode_error"
     for candidate in candidates:
         try:
             parsed = json.loads(candidate)
@@ -141,7 +143,7 @@ def parse_llm_response_text(text: str) -> Tuple[Dict[str, Any], bool, str]:
                 return parsed, True, ""
             if isinstance(parsed, list) and parsed and isinstance(parsed[0], dict):
                 return parsed[0], True, ""
-            last_err = "provider_schema_mismatch"
+            last_err = "json_not_object"
         except json.JSONDecodeError:
             continue
 

@@ -23,6 +23,7 @@ from tools.research.stage4_per_symbol_summary import (  # noqa: E402
     build_per_symbol_summary,
     per_symbol_chain_failed_counts,
 )
+from tools.research.stage4_parse_error_metrics import build_parse_error_summary  # noqa: E402
 from tools.research.stage4_system_events import read_system_events  # noqa: E402
 
 ALLOWED_REAL_PROVIDERS = frozenset({"groq", "cerebras", "openai", "anthropic", "gemini"})
@@ -264,6 +265,9 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
     global_chain_failed = int(summary.get("provider_chain_failed_count") or 0)
     per_symbol_failed_sum = sum(per_symbol_failed.values())
     per_symbol_failed_sum_matches_global = per_symbol_failed_sum == global_chain_failed
+    parse_error_summary = build_parse_error_summary(decisions)
+    if metrics["parse_error_count"] != int(parse_error_summary.get("parse_error_count") or 0):
+        technical_errors.append("parse_error_count_mismatch")
     if require_real_llm and global_chain_failed > 0 and not per_symbol_failed_sum_matches_global:
         technical_errors.append(
             f"per_symbol_provider_chain_failed_sum_mismatch:{per_symbol_failed_sum}!={global_chain_failed}"
@@ -276,19 +280,6 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
         bundle_export.get("bundle_exported")
         or (bundle_export.get("bundle_safe") and bundle_export.get("file_count", 0) > 0)
     )
-
-    parse_summary = {}
-    if decisions:
-        from tools.research.stage4_parse_metrics import build_parse_error_summary
-
-        parse_summary = build_parse_error_summary(decisions)
-    elif summary.get("parse_error_count_by_symbol"):
-        parse_summary = {
-            "parse_error_count": int(summary.get("parse_error_count") or 0),
-            "parse_error_count_by_symbol": summary.get("parse_error_count_by_symbol") or {},
-            "parse_error_count_by_provider": summary.get("parse_error_count_by_provider") or {},
-            "parse_error_sample_refs": summary.get("parse_error_sample_refs") or [],
-        }
 
     passed = technical_valid
     return {
@@ -330,10 +321,10 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
         "symbols_seen": summary.get("symbols_seen") or recomputed_fleet.get("symbols_seen") or [],
         "expected_tick_count": int(summary.get("expected_tick_count") or 0),
         "actual_tick_count": int(summary.get("actual_tick_count") or summary.get("tick_count") or 0),
-        "tick_drift_seconds_max": summary.get("tick_drift_seconds_max"),
-        "tick_processing_seconds_avg": summary.get("tick_processing_seconds_avg"),
-        "tick_processing_seconds_max": summary.get("tick_processing_seconds_max"),
-        **parse_summary,
+        "tick_drift_seconds_max": float(summary.get("tick_drift_seconds_max") or 0),
+        "tick_processing_seconds_avg": float(summary.get("tick_processing_seconds_avg") or 0),
+        "tick_processing_seconds_max": float(summary.get("tick_processing_seconds_max") or 0),
+        **parse_error_summary,
     }
 
 

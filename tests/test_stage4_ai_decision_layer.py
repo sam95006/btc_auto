@@ -3303,144 +3303,222 @@ class Stage413aEvidenceTests(unittest.TestCase):
 
 
 class Stage413cRepairTests(unittest.TestCase):
-    def test_parse_error_not_effective_decision(self) -> None:
-        from tools.research.stage4_parse_metrics import build_parse_error_summary, effective_decision
+    def test_parse_error_decision_not_counted_as_effective(self) -> None:
+        from tools.research.stage4_per_symbol_summary import build_per_symbol_summary
 
         decisions = [
-            {"symbol": "BTCUSDT", "real_llm_used": True, "parse_error": False},
-            {"symbol": "PEPEUSDT", "real_llm_used": True, "parse_error": True, "provider": "cerebras"},
+            {
+                "symbol": "PEPEUSDT",
+                "real_llm_used": True,
+                "parse_error": True,
+                "parse_error_type": "provider_invalid_json",
+                "provider": "cerebras",
+                "decision_id": "d1",
+            },
+            {
+                "symbol": "BTCUSDT",
+                "real_llm_used": True,
+                "parse_error": False,
+                "decision_intent": "watch",
+                "provider": "groq",
+            },
         ]
-        self.assertTrue(effective_decision(decisions[0]))
-        self.assertFalse(effective_decision(decisions[1]))
-        summary = build_parse_error_summary(decisions)
-        self.assertEqual(summary["parse_error_count"], 1)
-        self.assertEqual(summary["parse_error_count_by_symbol"]["PEPEUSDT"], 1)
-        self.assertEqual(summary["parse_error_count_by_provider"]["cerebras"], 1)
+        summary = build_per_symbol_summary(decisions, symbols_configured=["BTCUSDT", "PEPEUSDT"])
+        self.assertEqual(summary["per_symbol"]["PEPEUSDT"]["parse_error_count"], 1)
+        self.assertEqual(summary["per_symbol"]["PEPEUSDT"]["effective_decision_count"], 0)
+        self.assertEqual(summary["per_symbol"]["BTCUSDT"]["effective_decision_count"], 1)
 
     def test_parse_error_count_by_symbol_and_provider(self) -> None:
-        from tools.research.stage4_parse_metrics import build_parse_error_summary
+        from tools.research.stage4_parse_error_metrics import build_parse_error_summary
 
         decisions = [
+            {
+                "symbol": "PEPEUSDT",
+                "parse_error": True,
+                "parse_error_type": "provider_invalid_json",
+                "provider": "cerebras",
+                "decision_id": "a",
+            },
             {
                 "symbol": "ETHUSDT",
                 "parse_error": True,
-                "provider": "cerebras",
                 "parse_error_type": "provider_response_truncated",
-                "finish_reason": "length",
-            },
-            {
-                "symbol": "SOLUSDT",
-                "parse_error": True,
                 "provider": "cerebras",
-                "parse_error_type": "json_decode_error",
+                "decision_id": "b",
             },
         ]
-        summary = build_parse_error_summary(decisions)
-        self.assertEqual(summary["parse_error_count_by_symbol"]["ETHUSDT"], 1)
-        self.assertEqual(summary["parse_error_count_by_symbol"]["SOLUSDT"], 1)
-        self.assertEqual(summary["parse_error_count_by_provider"]["cerebras"], 2)
-        self.assertEqual(len(summary["parse_error_sample_refs"]), 2)
+        metrics = build_parse_error_summary(decisions)
+        self.assertEqual(metrics["parse_error_count"], 2)
+        self.assertEqual(metrics["parse_error_count_by_symbol"]["PEPEUSDT"], 1)
+        self.assertEqual(metrics["parse_error_count_by_provider"]["cerebras"], 2)
+        self.assertEqual(len(metrics["parse_error_sample_refs"]), 2)
+
+    def test_normalize_parse_error_types(self) -> None:
+        from tools.research.stage4_parse_error_metrics import normalize_parse_error_type
+
+        self.assertEqual(normalize_parse_error_type("json_decode_error"), "provider_invalid_json")
+        self.assertEqual(normalize_parse_error_type("content_empty", raw_content_empty=True), "provider_empty_response")
+        self.assertEqual(
+            normalize_parse_error_type("missing_fields:x", raw_content_empty=False),
+            "provider_schema_mismatch",
+        )
+        self.assertEqual(
+            normalize_parse_error_type("provider_response_truncated", finish_reason="length"),
+            "provider_response_truncated",
+        )
 
     def test_validator_fails_when_parse_error_count_gt_zero(self) -> None:
-        from tools.research.validate_stage4_ai_decision_outputs import validate
-
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp)
             (out / "ai_decisions.jsonl").write_text(
                 json.dumps(
                     {
-                        "decision_id": "d1",
-                        "symbol": "PEPEUSDT",
+                        "decision_id": "x",
+                        "created_at_utc": "2026-01-01T00:00:00Z",
                         "decision_source": "ai_decision_agent",
+                        "mode": "dry_run",
+                        "model_name": "llama-3.3-70b-versatile",
+                        "provider": "cerebras",
+                        "symbol": "PEPEUSDT",
+                        "candidate_side": "NONE",
+                        "final_action": "skip",
+                        "confidence": 0.1,
+                        "position_size_suggestion": 0,
+                        "market_context": {"symbol": "PEPEUSDT"},
+                        "account_context": {},
+                        "retrieved_patches": [],
+                        "recent_trade_results": [],
+                        "recent_reflections": [],
+                        "active_patch_count": 0,
+                        "patch_applied_before_decision": False,
+                        "current_open_positions": 0,
+                        "why_enter": "",
+                        "why_skip": "parse",
+                        "side_reason": "x",
+                        "confidence_reason": "x",
+                        "risk_notes": [],
+                        "patch_awareness": "",
+                        "uncertainty": "",
+                        "reasoning_summary": "",
+                        "regime": "range",
+                        "stage3_context_available": True,
+                        "stage3_context_reason": "ok",
+                        "recent_trade_results_count": 0,
+                        "recent_reflections_count": 0,
+                        "active_patches_count": 0,
+                        "patch_blocked": False,
+                        "parse_error": True,
+                        "parse_error_type": "provider_invalid_json",
+                        "safety_constraints": {},
+                        "risk_supervisor_result": {"approved": False, "final_decision": "skip"},
                         "final_decision": "skip",
                         "order_sent": False,
                         "real_llm_used": True,
-                        "parse_error": True,
-                        "parse_error_type": "provider_invalid_json",
-                        "model_name": "gpt-oss-120b",
+                        "is_mock_ai": False,
                         "prompt_hash": "abc",
-                        "market_context": {"symbol": "PEPEUSDT"},
-                        "why_skip": "parse",
-                        "confidence_reason": "low",
-                        "risk_supervisor_result": {"approved": False},
                     }
                 )
                 + "\n",
                 encoding="utf-8",
             )
+            (out / "risk_supervisor_decisions.jsonl").write_text("{}\n", encoding="utf-8")
             (out / "stage4_ai_decision_summary.json").write_text(
-                json.dumps({"dry_run_completed": True, "parse_error_count": 1}),
+                json.dumps(
+                    {
+                        "dry_run_completed": True,
+                        "effective_decision_count": 0,
+                        "parse_error_count": 1,
+                        "target_effective_decision_count": 1,
+                        "provider_health_check_passed": True,
+                    }
+                ),
                 encoding="utf-8",
             )
             (out / "llm_client_debug.jsonl").write_text('{"safe":true}\n', encoding="utf-8")
+            from tools.research.validate_stage4_ai_decision_outputs import validate
+
             result = validate(out, require_real_llm=True)
             self.assertFalse(result["validator_passed"])
             self.assertGreater(result["parse_error_count"], 0)
 
     def test_expected_tick_count_180m_300s(self) -> None:
-        from tools.research.stage4_tick_scheduler import compute_expected_tick_count
+        from tools.research.stage4_tick_scheduler import expected_tick_count
 
-        self.assertEqual(compute_expected_tick_count(180, 300), 36)
-        self.assertEqual(compute_expected_tick_count(30, 300), 6)
+        self.assertEqual(expected_tick_count(180, 300), 36)
+        self.assertEqual(expected_tick_count(30, 300), 6)
 
-    def test_absolute_tick_scheduler_sleep_not_fixed_drift(self) -> None:
-        from unittest.mock import patch
-
-        from tools.research.stage4_tick_scheduler import scheduled_tick_start, wait_until_scheduled_tick
+    def test_tick_scheduler_absolute_sleep_not_fixed_drift(self) -> None:
+        from tools.research.stage4_tick_scheduler import seconds_until_next_tick
 
         started = 1000.0
-        with patch("tools.research.stage4_tick_scheduler.time") as mock_time:
-            mock_time.time.return_value = 1305.0
-            drift = wait_until_scheduled_tick(started, 2, 300.0)
-            self.assertEqual(drift, 5.0)
-            mock_time.sleep.assert_not_called()
-        with patch("tools.research.stage4_tick_scheduler.time") as mock_time:
-            mock_time.time.side_effect = [1005.0, 1005.0]
-            wait_until_scheduled_tick(started, 2, 300.0)
-            mock_time.sleep.assert_called_once_with(295.0)
-        self.assertEqual(scheduled_tick_start(started, 3, 300.0), 1600.0)
+        with patch("tools.research.stage4_tick_scheduler.time.time", return_value=1045.0):
+            sleep_for = seconds_until_next_tick(
+                run_started_at=started,
+                tick_index=1,
+                poll_interval_seconds=300,
+            )
+        self.assertEqual(sleep_for, 255.0)
 
     def test_tick_drift_metrics_written(self) -> None:
-        from tools.research.stage4_tick_scheduler import TickSchedulerMetrics
+        from tools.research.stage4_tick_scheduler import build_tick_scheduler_metrics
 
-        metrics = TickSchedulerMetrics()
-        metrics.record_tick(processing_seconds=42.5, drift_seconds=3.2)
-        metrics.record_tick(processing_seconds=38.0, drift_seconds=1.0)
-        fields = metrics.summary_fields(expected_tick_count=6, actual_tick_count=2)
-        self.assertEqual(fields["expected_tick_count"], 6)
-        self.assertEqual(fields["actual_tick_count"], 2)
-        self.assertEqual(fields["tick_drift_seconds_max"], 3.2)
-        self.assertEqual(fields["tick_processing_seconds_max"], 42.5)
+        metrics = build_tick_scheduler_metrics(
+            duration_minutes=30,
+            poll_interval_seconds=300,
+            actual_tick_count=6,
+            tick_processing_seconds=[12.0, 15.0],
+            tick_drift_seconds=[0.0, 3.5],
+        )
+        self.assertEqual(metrics["expected_tick_count"], 6)
+        self.assertEqual(metrics["actual_tick_count"], 6)
+        self.assertEqual(metrics["tick_drift_seconds_max"], 3.5)
+        self.assertEqual(metrics["tick_processing_seconds_max"], 15.0)
 
-    def test_per_symbol_chain_failed_sum_matches_global(self) -> None:
-        from tools.research.stage4_per_symbol_summary import build_per_symbol_summary
+    def test_provider_chain_failed_attribution_still_matches_global(self) -> None:
+        from tools.research.stage4_per_symbol_summary import build_per_symbol_summary, per_symbol_chain_failed_counts
 
         events = [
             {"event_type": "provider_chain_failed", "symbol": "ETHUSDT"},
             {"event_type": "provider_chain_failed", "symbol": "SOLUSDT"},
         ]
-        fleet = build_per_symbol_summary([], symbols_configured=["BTCUSDT", "ETHUSDT"], system_events=events)
-        per_symbol = {k: v["provider_chain_failed_count"] for k, v in fleet["per_symbol"].items()}
-        self.assertEqual(sum(per_symbol.values()), 2)
+        summary = build_per_symbol_summary([], symbols_configured=["ETHUSDT", "SOLUSDT"], system_events=events)
+        counts = per_symbol_chain_failed_counts(summary)
+        self.assertEqual(sum(counts.values()), 2)
 
     def test_pepe_alias_shadow_still_works(self) -> None:
-        from tools.research.stage4_fleet_symbols import fetch_symbol_for_market, resolve_stage4_symbols
+        from tools.research.stage4_fleet_symbols import fetch_symbol_for_market, market_symbol_info
 
-        with patch.dict(os.environ, {"STAGE4_SYMBOLS": "BTCUSDT,ETHUSDT,SOLUSDT,PEPEUSDT"}, clear=False):
-            symbols = resolve_stage4_symbols()
-            self.assertIn("PEPEUSDT", symbols)
         self.assertEqual(fetch_symbol_for_market("PEPEUSDT"), "1000PEPEUSDT")
+        meta = market_symbol_info("PEPEUSDT")
+        self.assertEqual(meta["market_symbol"], "1000PEPEUSDT")
+        self.assertTrue(meta["alias_used"])
 
-    def test_no_mock_no_order_no_api_key_in_debug_scan(self) -> None:
-        from tools.research.validate_stage4_ai_decision_outputs import _debug_log_has_api_key
+    def test_json_repair_parses_truncated_object(self) -> None:
+        from tools.research.stage4_response_parser import parse_llm_response_text
 
-        with tempfile.TemporaryDirectory() as tmp:
-            out = Path(tmp)
-            (out / "llm_client_debug.jsonl").write_text(
-                '{"provider":"groq","api_key_masked":"gsk_***"}\n',
-                encoding="utf-8",
-            )
-            self.assertFalse(_debug_log_has_api_key(out))
+        parsed, ok, err = parse_llm_response_text('{"final_action":"skip","confidence":0.2')
+        self.assertTrue(ok)
+        self.assertEqual(parsed.get("final_action"), "skip")
+        self.assertEqual(err, "")
+
+    def test_fleet_rate_gate_uses_shorter_default_interval(self) -> None:
+        from tools.research.stage4_rate_limit_gate import Stage4LLMRateGate
+
+        Stage4LLMRateGate.reset_shared()
+        with patch.dict(
+            os.environ,
+            {"STAGE4_SYMBOLS": "BTCUSDT,ETHUSDT,SOLUSDT,PEPEUSDT"},
+            clear=False,
+        ):
+            self.assertEqual(Stage4LLMRateGate.min_interval_seconds(), 6.0)
+        Stage4LLMRateGate.reset_shared()
+
+    def test_cerebras_default_max_tokens_1100(self) -> None:
+        from tools.research.stage4_cerebras_payload import resolve_cerebras_max_tokens
+
+        with patch.dict(os.environ, {}, clear=True):
+            os.environ.pop("STAGE4_CEREBRAS_MAX_TOKENS", None)
+            self.assertEqual(resolve_cerebras_max_tokens(), 1100)
 
 
 if __name__ == "__main__":
