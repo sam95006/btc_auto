@@ -200,3 +200,17 @@ Still hard-fails if `REAL_MONEY`, `LIVE_TRADING`, `BYBIT_MAINNET_ALLOWED`, or `P
 - Parse-error decisions excluded from `effective_decision_count`.
 - Fleet LLM min interval default 6s when `STAGE4_SYMBOLS` has ≥2 symbols; Cerebras default `max_tokens=1100` with one truncation retry.
 - See `docs/reports/STAGE_4_13C_FIXED_FLEET_YIELD_PARSE_SCHEDULER_REPAIR.md`.
+
+### Stage 4.13d — Fixed fleet 180m read-only soak
+
+- Output: `/data/stage4_ai_decisions_413d_fixed_fleet_180m`
+- PASS: 36/36 ticks, 138 effective (target 120), parse=0, 4 symbols, validator PASS.
+
+### Stage 4.14 — Fixed fleet multi-session read-only stability review
+
+- **4.14a:** Evidence / quality review only (no long soak). Modules:
+  - `stage4_provider_stability_review.py`
+  - `stage4_shadow_quality_summary.py`
+  - `stage4_multi_session_review.py`
+- **4.14b (gate):** 6h fixed fleet read-only soak (360m, 72 ticks, target 240 effective) — only after 4.14a PASS.
+- See `docs/reports/STAGE_4_14_FIXED_FLEET_MULTI_SESSION_READ_ONLY_REVIEW.md`.

@@ -3521,5 +3521,117 @@ class Stage413cRepairTests(unittest.TestCase):
             self.assertEqual(resolve_cerebras_max_tokens(), 1100)
 
 
+class Stage414aReviewTests(unittest.TestCase):
+    def _summary_413d(self) -> dict:
+        return {
+            "duration_minutes": 180.0,
+            "dry_run_completed": True,
+            "effective_decision_count": 138,
+            "target_effective_decision_count": 120,
+            "parse_error_count": 0,
+            "cerebras_parse_error_count": 0,
+            "provider_chain_failed_count": 6,
+            "skipped_tick_count": 6,
+            "tick_count": 36,
+            "expected_tick_count": 36,
+            "tick_drift_seconds_max": 0.0,
+            "symbols_configured": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "PEPEUSDT"],
+            "provider_success_distribution": {"groq": 34, "cerebras": 104},
+            "fallback_attempt_count": 110,
+            "fallback_success_count": 110,
+            "groq_cooldown_skip_count": 75,
+            "groq_429_count": 3,
+            "per_symbol": {
+                "BTCUSDT": {"effective_decision_count": 36},
+                "ETHUSDT": {"effective_decision_count": 34},
+                "SOLUSDT": {"effective_decision_count": 33},
+                "PEPEUSDT": {"effective_decision_count": 35},
+            },
+        }
+
+    def test_provider_stability_review_detects_cerebras_dependency(self) -> None:
+        from tools.research.stage4_provider_stability_review import build_provider_stability_review
+
+        review = build_provider_stability_review(self._summary_413d())
+        self.assertEqual(review["cerebras_share"], round(104 / 138, 4))
+        self.assertIn("high_cerebras_dependency", review["stability_risks"])
+        self.assertEqual(review["fallback_dependency_risk"], "high")
+        self.assertTrue(review["needs_provider_budget_guard"])
+        self.assertTrue(review["readiness_for_longer_run"])
+
+    def test_shadow_quality_summary_fleet_aggregation(self) -> None:
+        from tools.research.stage4_shadow_quality_summary import build_shadow_quality_summary
+
+        per_symbol = {
+            "BTCUSDT": {
+                "requested_symbol": "BTCUSDT",
+                "decision_count": 36,
+                "shadow_compared_count": 36,
+                "shadow_label_distribution": {
+                    "neutral": 15,
+                    "bad_watch": 12,
+                    "missed_opportunity": 4,
+                    "reasonable_watch": 3,
+                    "good_skip": 2,
+                },
+                "decision_intent_distribution": {"watch": 32, "soft_skip": 4},
+                "bad_watch_count": 12,
+                "missed_opportunity_count": 4,
+            },
+            "ETHUSDT": {
+                "requested_symbol": "ETHUSDT",
+                "decision_count": 34,
+                "shadow_compared_count": 34,
+                "shadow_label_distribution": {
+                    "neutral": 17,
+                    "good_skip": 12,
+                    "bad_watch": 3,
+                    "missed_opportunity": 2,
+                },
+                "decision_intent_distribution": {"watch": 12, "hard_skip": 18, "soft_skip": 3, "enter_candidate": 1},
+                "bad_watch_count": 3,
+                "missed_opportunity_count": 2,
+                "good_skip_count": 12,
+            },
+        }
+        fleet = build_shadow_quality_summary(per_symbol)
+        self.assertEqual(fleet["fleet_bad_watch_count"], 15)
+        self.assertEqual(fleet["fleet_missed_opportunity_count"], 6)
+        self.assertTrue(fleet["eth_relative_stability"])
+        self.assertTrue(fleet["btc_bad_watch_elevated"])
+
+    def test_analyze_label_by_intent(self) -> None:
+        from tools.research.stage4_shadow_quality_summary import analyze_label_by_intent
+
+        rows = [
+            {"decision_intent": "watch", "shadow_label": "bad_watch"},
+            {"decision_intent": "watch", "shadow_label": "bad_watch"},
+            {"decision_intent": "hard_skip", "shadow_label": "missed_opportunity"},
+        ]
+        by_intent = analyze_label_by_intent(rows)
+        self.assertEqual(by_intent["watch"]["bad_watch"], 2)
+        self.assertEqual(by_intent["hard_skip"]["missed_opportunity"], 1)
+
+    def test_multi_session_readiness_schema(self) -> None:
+        from tools.research.stage4_multi_session_review import (
+            build_414b_run_plan,
+            build_multi_session_readiness,
+        )
+
+        readiness = build_multi_session_readiness(
+            self._summary_413d(),
+            session_id="stage4_413d_fixed_fleet_180m",
+        )
+        self.assertEqual(readiness["session_type"], "fixed_fleet_read_only")
+        self.assertEqual(readiness["effective_decision_count"], 138)
+        self.assertEqual(readiness["per_symbol_decision_counts"]["BTCUSDT"], 36)
+        self.assertTrue(readiness["readiness_for_next_session"])
+
+        plan = build_414b_run_plan()
+        self.assertEqual(plan["duration_minutes"], 360)
+        self.assertEqual(plan["expected_tick_count"], 72)
+        self.assertEqual(plan["target_effective_decision_count"], 240)
+
+
 if __name__ == "__main__":
     unittest.main()
