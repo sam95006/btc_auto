@@ -213,4 +213,6 @@ Still hard-fails if `REAL_MONEY`, `LIVE_TRADING`, `BYBIT_MAINNET_ALLOWED`, or `P
   - `stage4_shadow_quality_summary.py`
   - `stage4_multi_session_review.py`
 - **4.14b (gate):** 6h fixed fleet read-only soak (360m, 72 ticks, target 240 effective) — only after 4.14a PASS.
-- See `docs/reports/STAGE_4_14_FIXED_FLEET_MULTI_SESSION_READ_ONLY_REVIEW.md`.
+- **4.14b result:** PARTIAL PASS — ops layer validated (285 effective, 72/72 ticks); blocked by 1 Cerebras truncation parse on ETHUSDT.
+- **4.14c:** Cerebras truncation repair — `finish_reason=length` always triggers one safe retry with `STAGE4_CEREBRAS_RETRY_MAX_TOKENS=1400` + compact JSON instruction; provider dependency budget guard metrics.
+- See `docs/reports/STAGE_4_14_FIXED_FLEET_MULTI_SESSION_READ_ONLY_REVIEW.md` and `docs/reports/STAGE_4_14C_CEREBRAS_TRUNCATION_PARSE_REPAIR.md`.

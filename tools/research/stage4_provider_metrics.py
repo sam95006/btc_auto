@@ -31,6 +31,9 @@ def empty_provider_attempt_metrics() -> Dict[str, Any]:
         "fallback_success_count": 0,
         "provider_chain_failed_count": 0,
         "provider_capacity_ok": False,
+        "cerebras_retry_count": 0,
+        "cerebras_truncation_retry_success_count": 0,
+        "cerebras_truncation_retry_fail_count": 0,
     }
 
 
@@ -131,3 +134,34 @@ def aggregate_attempt_metrics(
         attempts_list,
         chain_failed_count=total_chain_failed,
     )
+
+
+def build_provider_dependency_metrics(
+    *,
+    provider_success_distribution: Dict[str, Any] | None,
+    cerebras_retry_count: int = 0,
+    cerebras_truncation_retry_success_count: int = 0,
+    cerebras_truncation_retry_fail_count: int = 0,
+) -> Dict[str, Any]:
+    """Read-only provider budget guard metrics for dry-run summaries."""
+    dist = provider_success_distribution or {}
+    groq = int(dist.get("groq") or 0)
+    cerebras = int(dist.get("cerebras") or 0)
+    total = groq + cerebras
+    groq_ratio = round(groq / total, 3) if total else 0.0
+    cerebras_ratio = round(cerebras / total, 3) if total else 0.0
+    if cerebras_ratio >= 0.7:
+        risk = "high"
+    elif cerebras_ratio >= 0.5:
+        risk = "medium"
+    else:
+        risk = "low"
+    return {
+        "provider_dependency_risk": risk,
+        "primary_provider_success_ratio": groq_ratio,
+        "secondary_provider_success_ratio": cerebras_ratio,
+        "provider_budget_guard_active": True,
+        "cerebras_retry_count": int(cerebras_retry_count or 0),
+        "cerebras_truncation_retry_success_count": int(cerebras_truncation_retry_success_count or 0),
+        "cerebras_truncation_retry_fail_count": int(cerebras_truncation_retry_fail_count or 0),
+    }

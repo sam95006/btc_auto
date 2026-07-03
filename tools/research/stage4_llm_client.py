@@ -146,6 +146,12 @@ def cerebras_max_tokens() -> int:
     return resolve_cerebras_max_tokens()
 
 
+def cerebras_retry_max_tokens() -> int:
+    from tools.research.stage4_cerebras_payload import resolve_cerebras_retry_max_tokens
+
+    return resolve_cerebras_retry_max_tokens()
+
+
 def env_truthy(name: str, default: bool = False) -> bool:
     raw = os.environ.get(name)
     if raw is None or not str(raw).strip():
@@ -279,6 +285,7 @@ class Stage4LLMClient:
         self.timeout = int(os.environ.get("NEXUS_LLM_TIMEOUT_SECONDS", "20"))
         self.groq_max_tokens = groq_max_tokens()
         self.cerebras_max_tokens = cerebras_max_tokens()
+        self.cerebras_retry_max_tokens = cerebras_retry_max_tokens()
         self.max_tokens = self.groq_max_tokens
         self.config = self._resolve_config(provider=provider, model=model)
         self.available = self.config is not None and self._provider_ready(self.config)
@@ -407,31 +414,15 @@ class Stage4LLMClient:
                 try:
                     if cfg.provider in {"groq", "openai", "cerebras"}:
                         result = self._openai_compat(cfg, messages, key_env=key_env)
-                        if (
-                            cfg.provider == "cerebras"
-                            and result.get("status") != "ok"
-                            and str(result.get("error_type") or "")
-                            in {
-                                "provider_response_truncated",
-                                "json_decode_error",
-                                "provider_invalid_json",
-                            }
-                        ):
-                            bumped = min(self.cerebras_max_tokens + 250, 2048)
-                            if bumped > self.cerebras_max_tokens:
-                                retry = self._openai_compat(
-                                    cfg,
-                                    messages,
-                                    key_env=key_env,
-                                    cerebras_max_tokens=bumped,
-                                )
-                                retry["retry_count"] = attempt
-                                retry["cerebras_truncation_retry"] = True
-                                retry["cerebras_max_tokens_retry"] = bumped
-                                if retry.get("status") == "ok":
-                                    if use_rate_gate:
-                                        gate.record_success()
-                                    return retry
+                        if cfg.provider == "cerebras" and not result.get("cerebras_truncation_retry"):
+                            retry = self._attempt_cerebras_truncation_retry(
+                                cfg,
+                                messages=messages,
+                                key_env=key_env,
+                                first_result=result,
+                                attempt=attempt,
+                            )
+                            if retry is not None:
                                 result = retry
                     elif cfg.provider == "anthropic":
                         result = self._anthropic(cfg, messages, key_env=key_env)
@@ -727,14 +718,14 @@ class Stage4LLMClient:
                 empty_response=True,
                 **base,
             )
+        if finish == "length":
+            return self._error_result(
+                "provider_response_truncated",
+                error_type="provider_response_truncated",
+                json_decode_error=True,
+                **base,
+            )
         if not ok:
-            if finish == "length":
-                return self._error_result(
-                    "provider_response_truncated",
-                    error_type="provider_response_truncated",
-                    json_decode_error=True,
-                    **base,
-                )
             return self._error_result(
                 parse_error_type or "json_decode_error",
                 error_type=parse_error_type or "json_decode_error",
@@ -742,6 +733,45 @@ class Stage4LLMClient:
                 **base,
             )
         return {"status": "ok", "error": "", "error_type": None, **base}
+
+    _CEREBRAS_TRUNCATION_RETRY_ERRORS = frozenset(
+        {
+            "provider_response_truncated",
+            "json_decode_error",
+            "provider_invalid_json",
+        }
+    )
+
+    def _attempt_cerebras_truncation_retry(
+        self,
+        cfg: Stage4LLMConfig,
+        *,
+        messages: List[Dict[str, str]],
+        key_env: str,
+        first_result: Dict[str, Any],
+        attempt: int,
+    ) -> Dict[str, Any] | None:
+        if first_result.get("status") == "ok":
+            return None
+        err_type = str(first_result.get("error_type") or "")
+        finish = str(first_result.get("finish_reason") or "").lower()
+        if err_type not in self._CEREBRAS_TRUNCATION_RETRY_ERRORS and finish != "length":
+            return None
+        retry_tokens = max(self.cerebras_retry_max_tokens, self.cerebras_max_tokens + 1)
+        from tools.research.stage4_cerebras_payload import compact_cerebras_retry_messages
+
+        retry_messages = compact_cerebras_retry_messages(messages)
+        retry = self._openai_compat(
+            cfg,
+            retry_messages,
+            key_env=key_env,
+            cerebras_max_tokens=retry_tokens,
+        )
+        retry["retry_count"] = attempt
+        retry["cerebras_truncation_retry"] = True
+        retry["cerebras_max_tokens_retry"] = retry_tokens
+        retry["cerebras_truncation_retry_success"] = retry.get("status") == "ok"
+        return retry
 
     def _openai_compat(
         self,

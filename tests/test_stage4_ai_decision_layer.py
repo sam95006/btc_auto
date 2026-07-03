@@ -3633,5 +3633,213 @@ class Stage414aReviewTests(unittest.TestCase):
         self.assertEqual(plan["target_effective_decision_count"], 240)
 
 
+class Stage414cRepairTests(unittest.TestCase):
+    _VALID_LLM = {
+        "final_action": "skip",
+        "decision_intent": "watch",
+        "symbol": "ETHUSDT",
+        "candidate_side": "NONE",
+        "confidence": 0.42,
+        "why_enter": "",
+        "why_skip": "No edge",
+        "side_reason": "Flat",
+        "confidence_reason": "Low",
+        "risk_notes": [],
+        "patch_awareness": "",
+        "uncertainty": "medium",
+        "requires_manual_review": False,
+    }
+
+    def test_cerebras_finish_reason_length_errors_even_when_json_repair_parses(self) -> None:
+        from tools.research.stage4_llm_client import Stage4LLMClient, Stage4LLMConfig
+
+        client = Stage4LLMClient(provider="cerebras", load_env=False)
+        cfg = Stage4LLMConfig(provider="cerebras", model="gpt-oss-120b")
+        result = client._finalize_cerebras_content(
+            cfg,
+            content='{"final_action":"skip","confidence":0.2',
+            response_path="choices[0].message.content",
+            finish_reason="length",
+            http_status=200,
+        )
+        self.assertNotEqual(result.get("status"), "ok")
+        self.assertEqual(result.get("error_type"), "provider_response_truncated")
+
+    def test_cerebras_truncation_triggers_one_safe_retry_with_retry_max_tokens(self) -> None:
+        from tools.research.stage4_llm_client import Stage4LLMClient, Stage4LLMConfig
+
+        token_calls: List[int | None] = []
+
+        def _fake_openai_compat(_self, _cfg, _messages, *, key_env, cerebras_max_tokens=None):
+            token_calls.append(cerebras_max_tokens)
+            if len(token_calls) == 1:
+                return _self._error_result(
+                    "provider_response_truncated",
+                    error_type="provider_response_truncated",
+                    provider="cerebras",
+                    finish_reason="length",
+                    response_text_chars=980,
+                )
+            return {
+                "status": "ok",
+                "provider": "cerebras",
+                "parsed": dict(Stage414cRepairTests._VALID_LLM),
+                "raw_text": json.dumps(Stage414cRepairTests._VALID_LLM),
+                "finish_reason": "stop",
+                "response_text_chars": 400,
+            }
+
+        with patch.dict(os.environ, {"CEREBRAS_API_KEY": "cerebras-test-key"}, clear=False), patch.object(
+            Stage4LLMClient,
+            "_openai_compat",
+            _fake_openai_compat,
+        ):
+            client = Stage4LLMClient(provider="cerebras", load_env=False)
+            client.cerebras_max_tokens = 1100
+            client.cerebras_retry_max_tokens = 1400
+            result = client.complete_json(
+                [{"role": "user", "content": "decide"}],
+                symbol="ETHUSDT",
+                use_rate_gate=False,
+            )
+
+        self.assertEqual(result.get("status"), "ok")
+        self.assertTrue(result.get("cerebras_truncation_retry"))
+        self.assertTrue(result.get("cerebras_truncation_retry_success"))
+        self.assertEqual(result.get("cerebras_max_tokens_retry"), 1400)
+        self.assertEqual(len(token_calls), 2)
+        self.assertEqual(token_calls[1], 1400)
+        self.assertNotEqual(token_calls[0], 1400)
+
+    def test_cerebras_retry_success_clears_parse_error_on_decision(self) -> None:
+        class RetryLLM:
+            provider_chain = ["cerebras"]
+
+            def complete_json(self, messages, prompt_hash="", **kwargs):
+                return {
+                    "status": "ok",
+                    "provider": "cerebras",
+                    "model": "gpt-oss-120b",
+                    "parsed": dict(Stage414cRepairTests._VALID_LLM),
+                    "provider_chain": ["cerebras"],
+                    "provider_attempts": [{"provider": "cerebras", "result": "success"}],
+                    "cerebras_truncation_retry": True,
+                    "cerebras_truncation_retry_success": True,
+                    "cerebras_max_tokens_retry": 1400,
+                    "finish_reason": "stop",
+                }
+
+        agent = Stage4AIDecisionAgent(use_real_llm=False, llm_client=RetryLLM())
+        agent.real_llm_used = True
+        agent.is_mock_ai = False
+        agent.model_name = "gpt-oss-120b"
+        decision = agent.decide(
+            symbol="ETHUSDT",
+            market_context={"last_price": 3250, "prev_price_24h": 3200},
+            account_context={"available_balance": 5000},
+        )
+        self.assertFalse(decision.get("parse_error"))
+        self.assertTrue(decision.get("cerebras_truncation_retry"))
+        self.assertFalse(decision.get("order_sent"))
+
+    def test_cerebras_retry_fail_keeps_parse_error_and_validator_fail(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            bad = {
+                "decision_id": "bad-1",
+                "symbol": "ETHUSDT",
+                "provider": "cerebras",
+                "parse_error": True,
+                "parse_error_type": "provider_response_truncated",
+                "finish_reason": "length",
+                "order_sent": False,
+                "real_llm_used": True,
+                "is_mock_ai": False,
+                "cerebras_truncation_retry": True,
+                "cerebras_truncation_retry_success": False,
+                "provider_attempts": [{"provider": "cerebras", "result": "failed", "error_type": "provider_response_truncated"}],
+            }
+            append_jsonl(out / "ai_decisions.jsonl", bad)
+            append_jsonl(out / "risk_supervisor_decisions.jsonl", {"decision_id": "bad-1", "approved": False})
+            summary = {
+                "dry_run_completed": True,
+                "partial_completion": False,
+                "effective_decision_count": 0,
+                "target_effective_decision_count": 20,
+                "parse_error_count": 1,
+                "provider_success_distribution": {},
+            }
+            (out / "stage4_ai_decision_summary.json").write_text(json.dumps(summary), encoding="utf-8")
+            from tools.research.validate_stage4_ai_decision_outputs import validate
+
+            result = validate(out, require_real_llm=True)
+            self.assertFalse(result.get("validator_passed"))
+            self.assertFalse(result.get("technical_valid"))
+            self.assertEqual(result.get("parse_error_count"), 1)
+
+    def test_parse_error_not_counted_as_effective(self) -> None:
+        from tools.research.run_stage4_ai_decision_dry_run import _empty_run_stats
+
+        stats = _empty_run_stats()
+        decision = {
+            "parse_error": True,
+            "parse_error_type": "provider_response_truncated",
+            "symbol": "ETHUSDT",
+            "cerebras_truncation_retry": True,
+            "cerebras_truncation_retry_success": False,
+        }
+        if decision.get("parse_error"):
+            stats["parse_error_count"] += 1
+        else:
+            stats["effective_decision_count"] += 1
+        self.assertEqual(stats["effective_decision_count"], 0)
+        self.assertEqual(stats["parse_error_count"], 1)
+
+    def test_parse_error_metrics_by_symbol_and_provider(self) -> None:
+        from tools.research.stage4_parse_error_metrics import build_parse_error_summary
+
+        decisions = [
+            {
+                "parse_error": True,
+                "parse_error_type": "provider_response_truncated",
+                "symbol": "ETHUSDT",
+                "provider": "cerebras",
+                "decision_id": "x1",
+            }
+        ]
+        metrics = build_parse_error_summary(decisions)
+        self.assertEqual(metrics["parse_error_count"], 1)
+        self.assertEqual(metrics["parse_error_count_by_symbol"]["ETHUSDT"], 1)
+        self.assertEqual(metrics["parse_error_count_by_provider"]["cerebras"], 1)
+
+    def test_provider_dependency_metrics_written(self) -> None:
+        from tools.research.stage4_provider_metrics import build_provider_dependency_metrics
+
+        metrics = build_provider_dependency_metrics(
+            provider_success_distribution={"groq": 36, "cerebras": 249},
+            cerebras_retry_count=1,
+            cerebras_truncation_retry_success_count=1,
+            cerebras_truncation_retry_fail_count=0,
+        )
+        self.assertEqual(metrics["provider_dependency_risk"], "high")
+        self.assertEqual(metrics["primary_provider_success_ratio"], 0.126)
+        self.assertEqual(metrics["secondary_provider_success_ratio"], 0.874)
+        self.assertTrue(metrics["provider_budget_guard_active"])
+        self.assertEqual(metrics["cerebras_truncation_retry_success_count"], 1)
+
+    def test_cerebras_retry_respects_env_max_tokens(self) -> None:
+        from tools.research.stage4_cerebras_payload import resolve_cerebras_retry_max_tokens
+
+        with patch.dict(os.environ, {"STAGE4_CEREBRAS_RETRY_MAX_TOKENS": "1400"}, clear=False):
+            self.assertEqual(resolve_cerebras_retry_max_tokens(), 1400)
+
+    def test_debug_log_redacts_api_key_on_truncation_retry(self) -> None:
+        from tools.research.stage4_response_parser import safe_excerpt
+
+        leaked = safe_excerpt('{"error":"invalid key gsk-abcdefghijklmnopqrstuvwxyz1234567890"}')
+        self.assertIn("[REDACTED]", leaked)
+        self.assertNotIn("gsk-abcdefghijklmnopqrstuvwxyz1234567890", leaked)
+
+
 if __name__ == "__main__":
     unittest.main()
