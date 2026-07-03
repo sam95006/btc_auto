@@ -65,6 +65,33 @@ def resolve_cerebras_max_tokens() -> int:
         return 1100
 
 
+def resolve_cerebras_retry_max_tokens() -> int:
+    raw = os.environ.get("STAGE4_CEREBRAS_RETRY_MAX_TOKENS", "1400").strip()
+    try:
+        return max(128, int(float(raw)))
+    except (TypeError, ValueError):
+        return 1400
+
+
+CEREBRAS_TRUNCATION_RETRY_INSTRUCTION = (
+    "Re-output ONLY valid compact JSON matching the schema. "
+    "Keep why_enter, why_skip, side_reason, confidence_reason, and patch_awareness under 80 characters each. "
+    "No markdown or prose outside JSON."
+)
+
+
+def compact_cerebras_retry_messages(messages: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    """Shorter output instruction for a single safe Cerebras truncation retry."""
+    out: List[Dict[str, str]] = []
+    for msg in messages:
+        role = str(msg.get("role") or "user")
+        content = str(msg.get("content") or "").rstrip()
+        if role in {"system", "user"}:
+            content = f"{content}\n\n{CEREBRAS_TRUNCATION_RETRY_INSTRUCTION}"
+        out.append({"role": role, "content": content})
+    return out
+
+
 def resolve_cerebras_payload_mode() -> str:
     mode = os.environ.get("STAGE4_CEREBRAS_PAYLOAD_MODE", "json_schema").strip().lower()
     return mode if mode in {"json_object", "json_schema"} else "json_schema"
@@ -247,5 +274,8 @@ __all__ = [
     "classify_http_status",
     "parse_groq_error_safe",
     "resolve_cerebras_max_tokens",
+    "resolve_cerebras_retry_max_tokens",
     "resolve_cerebras_payload_mode",
+    "compact_cerebras_retry_messages",
+    "CEREBRAS_TRUNCATION_RETRY_INSTRUCTION",
 ]

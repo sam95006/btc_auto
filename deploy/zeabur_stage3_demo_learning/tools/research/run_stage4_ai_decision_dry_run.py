@@ -154,6 +154,9 @@ def _empty_run_stats() -> Dict[str, int]:
         "fallback_attempt_count": 0,
         "fallback_success_count": 0,
         "provider_chain_failed_count": 0,
+        "cerebras_retry_count": 0,
+        "cerebras_truncation_retry_success_count": 0,
+        "cerebras_truncation_retry_fail_count": 0,
     }
 
 
@@ -611,6 +614,20 @@ def _run_dry_run_inner(
         )
         summary.update(fleet_summary)
         summary.update(build_parse_error_summary(decisions))
+        from tools.research.stage4_provider_metrics import build_provider_dependency_metrics
+
+        summary.update(
+            build_provider_dependency_metrics(
+                provider_success_distribution=summary.get("provider_success_distribution") or {},
+                cerebras_retry_count=int(stats.get("cerebras_retry_count") or 0),
+                cerebras_truncation_retry_success_count=int(
+                    stats.get("cerebras_truncation_retry_success_count") or 0
+                ),
+                cerebras_truncation_retry_fail_count=int(
+                    stats.get("cerebras_truncation_retry_fail_count") or 0
+                ),
+            )
+        )
         from tools.research.stage4_tick_scheduler import build_tick_scheduler_metrics
 
         summary.update(
@@ -721,6 +738,17 @@ def _run_dry_run_inner(
                     attempts = decision.get("provider_attempts") or []
                     if len(attempts) > 1:
                         stats["fallback_attempt_count"] += 1
+
+                if decision.get("cerebras_truncation_retry"):
+                    stats["cerebras_retry_count"] = int(stats.get("cerebras_retry_count") or 0) + 1
+                    if decision.get("cerebras_truncation_retry_success"):
+                        stats["cerebras_truncation_retry_success_count"] = (
+                            int(stats.get("cerebras_truncation_retry_success_count") or 0) + 1
+                        )
+                    elif decision.get("parse_error"):
+                        stats["cerebras_truncation_retry_fail_count"] = (
+                            int(stats.get("cerebras_truncation_retry_fail_count") or 0) + 1
+                        )
 
                 write_decision(out, decision)
                 decisions.append(decision)

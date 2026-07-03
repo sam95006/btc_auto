@@ -1,10 +1,10 @@
 {
   "branch": "stage3-demo-learning",
-  "commit": "22f11e1e894abf9bdc45ef79fad2c2b175063ba6",
+  "commit": "b962e8bb344bbd845e9f24a6ec327a5716984f5f",
   "deploy_package": "deploy/zeabur_stage3_demo_learning",
   "startup_mode_expected": "idle",
   "contains_24h_runner": true,
   "contains_web_ui": true,
   "contains_stage4_dry_run": true,
-  "created_at_utc": "2026-07-02T14:30:28Z"
+  "created_at_utc": "2026-07-03T11:57:10Z"
 }

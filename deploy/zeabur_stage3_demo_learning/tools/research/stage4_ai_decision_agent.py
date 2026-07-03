@@ -291,6 +291,11 @@ class Stage4AIDecisionAgent:
             "primary_provider": result.get("primary_provider"),
             "primary_error": result.get("primary_error"),
             "is_mock_ai": False,
+            "finish_reason": result.get("finish_reason"),
+            "response_text_chars": result.get("response_text_chars") or result.get("raw_content_length"),
+            "cerebras_truncation_retry": bool(result.get("cerebras_truncation_retry")),
+            "cerebras_truncation_retry_success": bool(result.get("cerebras_truncation_retry_success")),
+            "cerebras_max_tokens_retry": result.get("cerebras_max_tokens_retry"),
         }
 
         if Stage4LLMClient.is_rate_limited_result(result):
@@ -508,11 +513,17 @@ class Stage4AIDecisionAgent:
                 normalize_parse_error_type(
                     proposal.get("parse_error_type"),
                     raw_content_empty=bool(proposal.get("raw_content_empty")),
+                    finish_reason=provider_meta.get("finish_reason"),
                 )
                 if parse_error
                 else None
             ),
             "raw_content_empty": proposal.get("raw_content_empty"),
+            "finish_reason": provider_meta.get("finish_reason"),
+            "response_text_chars": provider_meta.get("response_text_chars"),
+            "cerebras_truncation_retry": bool(provider_meta.get("cerebras_truncation_retry")),
+            "cerebras_truncation_retry_success": provider_meta.get("cerebras_truncation_retry_success"),
+            "cerebras_max_tokens_retry": provider_meta.get("cerebras_max_tokens_retry"),
             "safety_constraints": safety_constraints_from_env(),
             "risk_supervisor_result": sr,
             "final_decision": final_decision,
