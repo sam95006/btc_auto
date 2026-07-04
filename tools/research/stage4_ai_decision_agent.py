@@ -330,6 +330,19 @@ class Stage4AIDecisionAgent:
             )
         parsed = result.get("parsed") or {}
         proposal, ok, err = parse_llm_decision(parsed, symbol=symbol)
+        schema_repair_meta: Dict[str, Any] = {}
+        if not ok and result.get("status") == "ok":
+            from tools.research.stage4_schema_repair import attempt_schema_safe_repair
+
+            repaired, schema_repair_meta = attempt_schema_safe_repair(
+                parsed,
+                symbol=symbol,
+                parse_error=err,
+            )
+            if repaired is not None:
+                proposal = repaired
+                ok = True
+                err = ""
         if not ok or result.get("status") != "ok":
             err_type = result.get("parse_error_type") or result.get("error_type") or err or "llm_parse_failed"
             raw_nonempty = bool(str(result.get("raw_text") or "").strip())
@@ -366,6 +379,8 @@ class Stage4AIDecisionAgent:
             proposal["raw_content_empty"] = bool(result.get("raw_content_empty"))
             proposal["why_skip"] = err or result.get("error") or "llm_parse_failed"
             return proposal, prompt_hash, False, err or result.get("error") or err, provider_meta
+        if schema_repair_meta:
+            provider_meta.update(schema_repair_meta)
         if provider_meta["provider"]:
             self.provider = str(provider_meta["provider"])
         if provider_meta["model_name"]:
@@ -524,6 +539,11 @@ class Stage4AIDecisionAgent:
             "cerebras_truncation_retry": bool(provider_meta.get("cerebras_truncation_retry")),
             "cerebras_truncation_retry_success": provider_meta.get("cerebras_truncation_retry_success"),
             "cerebras_max_tokens_retry": provider_meta.get("cerebras_max_tokens_retry"),
+            "schema_repaired": bool(proposal.get("schema_repaired") or provider_meta.get("schema_repaired")),
+            "schema_repair_mode": proposal.get("schema_repair_mode") or provider_meta.get("schema_repair_mode"),
+            "schema_mismatch_repair_attempted": bool(
+                provider_meta.get("schema_mismatch_repair_attempted")
+            ),
             "safety_constraints": safety_constraints_from_env(),
             "risk_supervisor_result": sr,
             "final_decision": final_decision,

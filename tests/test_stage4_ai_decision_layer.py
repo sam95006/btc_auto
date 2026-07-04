@@ -3841,5 +3841,124 @@ class Stage414cRepairTests(unittest.TestCase):
         self.assertNotIn("gsk-abcdefghijklmnopqrstuvwxyz1234567890", leaked)
 
 
+class Stage414fRepairTests(unittest.TestCase):
+    """Stage 4.14f provider schema mismatch safe repair."""
+
+    _414D_NEAR_VALID = {
+        "final_action": "skip",
+        "decision_intent": "watch",
+        "symbol": "BTCUSDT",
+        "candidate_side": "NONE",
+        "confidence": 0.32,
+        "why_enter": "Modest 24h gain in range regime.",
+        "why_skip": "No strong edge; monitor only.",
+        "side_reason": "Flat bias.",
+        "confidence_reason": "Moderate conviction.",
+        "risk_notes": ["low volatility"],
+        "patch_awareness": "none",
+        "uncertainty": "moderate",
+    }
+
+    def test_414d_missing_requires_manual_review_cosmetic_repair(self) -> None:
+        from tools.research.stage4_schema_repair import attempt_schema_safe_repair
+
+        proposal, meta = attempt_schema_safe_repair(
+            self._414D_NEAR_VALID,
+            symbol="BTCUSDT",
+            parse_error="missing_fields:requires_manual_review",
+        )
+        self.assertIsNotNone(proposal)
+        self.assertTrue(meta.get("schema_repaired"))
+        self.assertEqual(meta.get("schema_repair_mode"), "cosmetic_defaults")
+        self.assertFalse(proposal.get("parse_error", True))
+        self.assertEqual(proposal.get("final_action"), "skip")
+        self.assertEqual(proposal.get("decision_intent"), "watch")
+        self.assertEqual(proposal.get("confidence"), 0.32)
+        self.assertFalse(proposal.get("requires_manual_review"))
+
+    def test_safe_skip_repair_never_creates_enter(self) -> None:
+        from tools.research.stage4_schema_repair import attempt_schema_safe_repair
+
+        raw = {
+            "final_action": "enter",
+            "candidate_side": "BUY",
+            "confidence": 0.8,
+            "symbol": "ETHUSDT",
+        }
+        proposal, meta = attempt_schema_safe_repair(
+            raw,
+            symbol="ETHUSDT",
+            parse_error="missing_fields:why_enter,why_skip",
+        )
+        self.assertIsNotNone(proposal)
+        self.assertEqual(meta.get("schema_repair_mode"), "safe_skip_defaults")
+        self.assertEqual(proposal.get("final_action"), "skip")
+        self.assertEqual(proposal.get("decision_intent"), "hard_skip")
+        self.assertEqual(proposal.get("confidence"), 0.0)
+        self.assertEqual(proposal.get("candidate_side"), "NONE")
+        self.assertEqual(proposal.get("position_size_suggestion"), 0.0)
+
+    def test_unrecoverable_schema_remains_parse_error(self) -> None:
+        from tools.research.stage4_schema_repair import attempt_schema_safe_repair
+
+        proposal, meta = attempt_schema_safe_repair({}, symbol="BTCUSDT", parse_error="missing_fields:final_action")
+        self.assertIsNone(proposal)
+        self.assertTrue(meta.get("schema_mismatch_repair_fail"))
+
+    def test_schema_mismatch_summary_metrics(self) -> None:
+        from tools.research.stage4_schema_repair import build_schema_mismatch_summary
+
+        decisions = [
+            {
+                "symbol": "BTCUSDT",
+                "provider": "cerebras",
+                "schema_repaired": True,
+                "schema_mismatch_repair_attempted": True,
+                "schema_repair_mode": "cosmetic_defaults",
+                "parse_error": False,
+            },
+            {
+                "symbol": "ETHUSDT",
+                "provider": "cerebras",
+                "parse_error": True,
+                "parse_error_type": "provider_schema_mismatch",
+                "schema_mismatch_repair_attempted": True,
+            },
+        ]
+        metrics = build_schema_mismatch_summary(decisions)
+        self.assertEqual(metrics["schema_mismatch_repair_success_count"], 1)
+        self.assertEqual(metrics["schema_mismatch_repair_fail_count"], 1)
+        self.assertEqual(metrics["schema_mismatch_count_by_symbol"]["ETHUSDT"], 1)
+        self.assertEqual(metrics["schema_mismatch_count_by_provider"]["cerebras"], 1)
+
+    def test_agent_applies_schema_repair_on_missing_field(self) -> None:
+        class SchemaGapLLM:
+            provider_chain = ["cerebras"]
+
+            def complete_json(self, messages, prompt_hash="", **kwargs):
+                return {
+                    "status": "ok",
+                    "provider": "cerebras",
+                    "model": "gpt-oss-120b",
+                    "parsed": dict(Stage414fRepairTests._414D_NEAR_VALID),
+                    "provider_chain": ["cerebras"],
+                    "provider_attempts": [{"provider": "cerebras", "result": "success"}],
+                    "finish_reason": "stop",
+                }
+
+        agent = Stage4AIDecisionAgent(use_real_llm=False, llm_client=SchemaGapLLM())
+        agent.real_llm_used = True
+        agent.is_mock_ai = False
+        agent.model_name = "gpt-oss-120b"
+        decision = agent.decide(
+            symbol="BTCUSDT",
+            market_context={"last_price": 62500, "prev_price_24h": 62000, "symbol": "BTCUSDT"},
+            account_context={"available_balance": 5000},
+        )
+        self.assertFalse(decision.get("parse_error"))
+        self.assertTrue(decision.get("schema_repaired"))
+        self.assertFalse(decision.get("order_sent"))
+
+
 if __name__ == "__main__":
     unittest.main()

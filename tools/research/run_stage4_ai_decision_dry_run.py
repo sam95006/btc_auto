@@ -157,6 +157,10 @@ def _empty_run_stats() -> Dict[str, int]:
         "cerebras_retry_count": 0,
         "cerebras_truncation_retry_success_count": 0,
         "cerebras_truncation_retry_fail_count": 0,
+        "schema_mismatch_repair_attempt_count": 0,
+        "schema_mismatch_repair_success_count": 0,
+        "schema_mismatch_repair_fail_count": 0,
+        "schema_mismatch_safe_skip_count": 0,
     }
 
 
@@ -614,6 +618,9 @@ def _run_dry_run_inner(
         )
         summary.update(fleet_summary)
         summary.update(build_parse_error_summary(decisions))
+        from tools.research.stage4_schema_repair import build_schema_mismatch_summary
+
+        summary.update(build_schema_mismatch_summary(decisions))
         from tools.research.stage4_provider_metrics import build_provider_dependency_metrics
 
         summary.update(
@@ -748,6 +755,23 @@ def _run_dry_run_inner(
                     elif decision.get("parse_error"):
                         stats["cerebras_truncation_retry_fail_count"] = (
                             int(stats.get("cerebras_truncation_retry_fail_count") or 0) + 1
+                        )
+
+                if decision.get("schema_mismatch_repair_attempted"):
+                    stats["schema_mismatch_repair_attempt_count"] = (
+                        int(stats.get("schema_mismatch_repair_attempt_count") or 0) + 1
+                    )
+                    if decision.get("schema_repaired"):
+                        stats["schema_mismatch_repair_success_count"] = (
+                            int(stats.get("schema_mismatch_repair_success_count") or 0) + 1
+                        )
+                        if decision.get("schema_repair_mode") == "safe_skip_defaults":
+                            stats["schema_mismatch_safe_skip_count"] = (
+                                int(stats.get("schema_mismatch_safe_skip_count") or 0) + 1
+                            )
+                    elif decision.get("parse_error"):
+                        stats["schema_mismatch_repair_fail_count"] = (
+                            int(stats.get("schema_mismatch_repair_fail_count") or 0) + 1
                         )
 
                 write_decision(out, decision)
