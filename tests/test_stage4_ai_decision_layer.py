@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 import urllib.error
+from collections import Counter
 from pathlib import Path
 from unittest.mock import patch
 
@@ -3958,6 +3959,275 @@ class Stage414fRepairTests(unittest.TestCase):
         self.assertFalse(decision.get("parse_error"))
         self.assertTrue(decision.get("schema_repaired"))
         self.assertFalse(decision.get("order_sent"))
+
+
+class Stage415QualityReviewTests(unittest.TestCase):
+    def _write_session(
+        self,
+        root: Path,
+        session_id: str,
+        *,
+        decisions: List[Dict[str, Any]],
+        summary: Dict[str, Any],
+        shadow_rows_by_symbol: Optional[Dict[str, List[Dict[str, Any]]]] = None,
+        shadow_template: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        dec_dir = root / f"stage4_ai_decisions_{session_id}"
+        dec_dir.mkdir(parents=True, exist_ok=True)
+        jsonl = dec_dir / "ai_decisions.jsonl"
+        jsonl.write_text("\n".join(json.dumps(d) for d in decisions) + "\n", encoding="utf-8")
+        (dec_dir / "stage4_ai_decision_summary.json").write_text(json.dumps(summary), encoding="utf-8")
+        session = {
+            "session_id": session_id,
+            "label": session_id,
+            "decisions_dir": str(dec_dir),
+            "shadow_symbol_template": shadow_template,
+        }
+        if shadow_template and shadow_rows_by_symbol:
+            for sym, rows in shadow_rows_by_symbol.items():
+                sh_dir = Path(shadow_template.format(symbol=sym))
+                sh_dir.mkdir(parents=True, exist_ok=True)
+                (sh_dir / "shadow_compare.jsonl").write_text(
+                    "\n".join(json.dumps(r) for r in rows) + "\n",
+                    encoding="utf-8",
+                )
+                labels = Counter(str(r.get("shadow_label") or "unknown") for r in rows)
+                intents = Counter(str(r.get("decision_intent") or "unknown") for r in rows)
+                compared = sum(1 for r in rows if r.get("shadow_label") != "insufficient_future_data")
+                sh_summary = {
+                    "requested_symbol": sym,
+                    "decision_count": len(rows),
+                    "shadow_compared_count": compared,
+                    "shadow_label_distribution": dict(labels),
+                    "decision_intent_distribution": dict(intents),
+                    "bad_watch_count": labels.get("bad_watch", 0),
+                    "missed_opportunity_count": labels.get("missed_opportunity", 0),
+                }
+                (sh_dir / "stage4_shadow_compare_summary.json").write_text(
+                    json.dumps(sh_summary),
+                    encoding="utf-8",
+                )
+        return session
+
+    def test_quality_analyzer_loads_multiple_sessions(self) -> None:
+        from tools.research.stage4_decision_quality_review import build_decision_quality_review
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            d1 = {
+                "symbol": "BTCUSDT",
+                "decision_intent": "watch",
+                "confidence": 0.4,
+                "provider": "groq",
+                "parse_error": False,
+                "order_sent": False,
+                "is_mock_ai": False,
+            }
+            d2 = dict(d1, symbol="ETHUSDT", decision_intent="hard_skip")
+            s1 = self._write_session(
+                root,
+                "a",
+                decisions=[d1],
+                summary={
+                    "effective_decision_count": 1,
+                    "parse_error_count": 0,
+                    "provider_success_distribution": {"groq": 1},
+                    "mock_ai_used_count": 0,
+                    "order_sent_count": 0,
+                },
+            )
+            s2 = self._write_session(
+                root,
+                "b",
+                decisions=[d2],
+                summary={
+                    "effective_decision_count": 1,
+                    "parse_error_count": 0,
+                    "provider_success_distribution": {"cerebras": 1},
+                    "mock_ai_used_count": 0,
+                    "order_sent_count": 0,
+                },
+            )
+            for s in (s1, s2):
+                s["decisions_dir"] = str(Path(s["decisions_dir"]))
+            review = build_decision_quality_review([s1, s2], data_root=root)
+            self.assertEqual(review["totals"]["total_effective_decisions"], 2)
+            self.assertEqual(len(review["datasets_analyzed"]), 2)
+
+    def test_per_symbol_quality_aggregation(self) -> None:
+        from tools.research.stage4_decision_quality_review import build_decision_quality_review
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shadow = [
+                {
+                    "symbol": "SOLUSDT",
+                    "decision_intent": "watch",
+                    "shadow_label": "bad_watch",
+                    "confidence": 0.55,
+                    "provider": "cerebras",
+                    "regime": "high_volatility",
+                },
+                {
+                    "symbol": "SOLUSDT",
+                    "decision_intent": "watch",
+                    "shadow_label": "reasonable_watch",
+                    "confidence": 0.35,
+                    "provider": "groq",
+                    "regime": "range",
+                },
+            ]
+            session = self._write_session(
+                root,
+                "sh",
+                decisions=[
+                    {
+                        "symbol": "SOLUSDT",
+                        "decision_intent": "watch",
+                        "confidence": 0.5,
+                        "provider": "cerebras",
+                        "parse_error": False,
+                    }
+                ],
+                summary={
+                    "effective_decision_count": 1,
+                    "parse_error_count": 0,
+                    "provider_success_distribution": {"cerebras": 1},
+                    "mock_ai_used_count": 0,
+                    "order_sent_count": 0,
+                },
+                shadow_rows_by_symbol={"SOLUSDT": shadow},
+                shadow_template=str(root / "shadow_{symbol}"),
+            )
+            session["decisions_dir"] = str(Path(session["decisions_dir"]))
+            session["shadow_symbol_template"] = str(root / "shadow_{symbol}")
+            review = build_decision_quality_review([session], data_root=root)
+            self.assertEqual(review["per_symbol_bad_watch_rate"]["SOLUSDT"], 0.5)
+            self.assertEqual(review["per_symbol_reasonable_watch_rate"]["SOLUSDT"], 0.5)
+
+    def test_bad_watch_and_missed_opportunity_rates(self) -> None:
+        from tools.research.stage4_decision_quality_review import build_decision_quality_review
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            rows = [
+                {"symbol": "PEPEUSDT", "decision_intent": "watch", "shadow_label": "bad_watch", "confidence": 0.6},
+                {"symbol": "PEPEUSDT", "decision_intent": "hard_skip", "shadow_label": "missed_opportunity", "confidence": 0.2},
+                {"symbol": "PEPEUSDT", "decision_intent": "hard_skip", "shadow_label": "good_skip", "confidence": 0.2},
+                {"symbol": "PEPEUSDT", "decision_intent": "watch", "shadow_label": "neutral", "confidence": 0.3},
+            ]
+            session = self._write_session(
+                root,
+                "pepe",
+                decisions=[{"symbol": "PEPEUSDT", "decision_intent": "watch", "provider": "groq", "parse_error": False}],
+                summary={
+                    "effective_decision_count": 1,
+                    "parse_error_count": 0,
+                    "provider_success_distribution": {"groq": 1},
+                    "mock_ai_used_count": 0,
+                    "order_sent_count": 0,
+                },
+                shadow_rows_by_symbol={"PEPEUSDT": rows},
+                shadow_template=str(root / "shadow_{symbol}"),
+            )
+            session["decisions_dir"] = str(Path(session["decisions_dir"]))
+            session["shadow_symbol_template"] = str(root / "shadow_{symbol}")
+            review = build_decision_quality_review([session], data_root=root)
+            self.assertEqual(review["per_symbol_bad_watch_rate"]["PEPEUSDT"], 0.25)
+            self.assertEqual(review["per_symbol_missed_opportunity_rate"]["PEPEUSDT"], 0.25)
+            self.assertEqual(review["per_symbol_good_skip_rate"]["PEPEUSDT"], 0.25)
+
+    def test_intent_and_provider_dependency(self) -> None:
+        from tools.research.stage4_decision_quality_review import build_decision_quality_review
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            decisions = [
+                {"symbol": "BTCUSDT", "decision_intent": "watch", "provider": "cerebras", "parse_error": False},
+                {"symbol": "BTCUSDT", "decision_intent": "soft_skip", "provider": "cerebras", "parse_error": False},
+                {"symbol": "ETHUSDT", "decision_intent": "hard_skip", "provider": "groq", "parse_error": False},
+            ]
+            session = self._write_session(
+                root,
+                "prov",
+                decisions=decisions,
+                summary={
+                    "effective_decision_count": 3,
+                    "parse_error_count": 0,
+                    "provider_success_distribution": {"groq": 1, "cerebras": 2},
+                    "mock_ai_used_count": 0,
+                    "order_sent_count": 0,
+                    "duration_minutes": 180,
+                },
+            )
+            session["decisions_dir"] = str(Path(session["decisions_dir"]))
+            review = build_decision_quality_review([session], data_root=root)
+            self.assertEqual(review["intent_distribution_fleet"]["watch"], 1)
+            self.assertEqual(review["provider_dependency_summary"]["cerebras_share"], round(2 / 3, 4))
+            self.assertIn(review["provider_dependency_summary"]["provider_dependency_risk"], {"medium", "high", "low"})
+
+    def test_report_writes_json_and_markdown(self) -> None:
+        from tools.research.stage4_decision_quality_review import render_markdown_report, run_review
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            session = self._write_session(
+                root,
+                "out",
+                decisions=[{"symbol": "BTCUSDT", "decision_intent": "watch", "provider": "groq", "parse_error": False}],
+                summary={
+                    "effective_decision_count": 1,
+                    "parse_error_count": 0,
+                    "provider_success_distribution": {"groq": 1},
+                    "mock_ai_used_count": 0,
+                    "order_sent_count": 0,
+                },
+            )
+            session["decisions_dir"] = str(Path(session["decisions_dir"]))
+            out_dir = root / "out_review"
+            report = root / "report.md"
+            summary = run_review(sessions=[session], output_dir=out_dir, report_path=report, data_root=root)
+            self.assertTrue((out_dir / "stage4_15_decision_quality_summary.json").is_file())
+            self.assertTrue(report.is_file())
+            md = render_markdown_report(summary)
+            self.assertIn("Stage 4.15", md)
+            self.assertNotIn("sk-", md.lower())
+
+    def test_no_order_no_mock_no_api_key_leak(self) -> None:
+        from tools.research.stage4_decision_quality_review import build_decision_quality_review, render_markdown_report
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            bad_key = "sk-" + "a" * 40
+            session = self._write_session(
+                root,
+                "safe",
+                decisions=[
+                    {
+                        "symbol": "BTCUSDT",
+                        "decision_intent": "watch",
+                        "provider": "groq",
+                        "parse_error": False,
+                        "order_sent": False,
+                        "is_mock_ai": False,
+                        "why_skip": f"should not leak {bad_key}",
+                    }
+                ],
+                summary={
+                    "effective_decision_count": 1,
+                    "parse_error_count": 0,
+                    "provider_success_distribution": {"groq": 1},
+                    "mock_ai_used_count": 0,
+                    "order_sent_count": 0,
+                },
+            )
+            session["decisions_dir"] = str(Path(session["decisions_dir"]))
+            review = build_decision_quality_review([session], data_root=root)
+            self.assertEqual(review["order_sent_count"], 0)
+            self.assertEqual(review["mock_ai_used_count"], 0)
+            self.assertFalse(review["any_trading_action_sent"])
+            md = render_markdown_report(review)
+            self.assertNotIn(bad_key, md)
 
 
 if __name__ == "__main__":
