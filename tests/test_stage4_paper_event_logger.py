@@ -376,6 +376,36 @@ class Stage418CPaperReadinessLoggerTests(unittest.TestCase):
             )
         )
 
+    def test_logger_emits_skip_for_incomplete_watch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            inp = Path(tmp) / "in"
+            out = Path(tmp) / "out"
+            inp.mkdir()
+            row = _decision(
+                decision_intent="watch",
+                symbol="BTCUSDT",
+                directional_bias="LONG",
+                watch_confirmation_reason="Range support",
+                mae_risk_estimate_pct=0.40,
+                invalidation={
+                    "invalidation_price": 61000.0,
+                    "invalidation_reason": "Break below range low",
+                    "max_adverse_move_pct": 0.40,
+                },
+                paper_readiness={
+                    "eligible_for_watchlist": True,
+                    "eligible_for_hypothetical_entry": False,
+                    "block_reason": "ok",
+                },
+            )
+            (inp / "ai_decisions.jsonl").write_text(json.dumps(row) + "\n", encoding="utf-8")
+            summary = run_paper_event_logger([inp], output_dir=out, mode="overwrite")
+            self.assertEqual(summary["total_events_written"], 1)
+            self.assertEqual(summary["hypothetical_skip_count"], 1)
+            self.assertEqual(summary["watchlist_count"], 0)
+            events = json.loads((out / "hypothetical_entry_log.jsonl").read_text(encoding="utf-8").strip())
+            self.assertIn("decision_quality_incomplete", events["risk_governor_reasons"])
+
     def test_complete_watch_is_eligible(self) -> None:
         self.assertTrue(is_eligible_decision(_decision(decision_intent="watch")))
 
@@ -499,6 +529,23 @@ class Stage418EPaperMaeIntegrationTests(unittest.TestCase):
         )
         self.assertEqual(guard.verdict, "downgrade_to_skip")
         self.assertIn("mae_watch_downgrade", guard.reasons)
+
+    def test_logger_emits_skip_for_paper_readiness_mae_block(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            inp = Path(tmp) / "in"
+            out = Path(tmp) / "out"
+            inp.mkdir()
+            row = _decision(decision_intent="watch")
+            row["paper_readiness"] = {
+                "eligible_for_watchlist": False,
+                "eligible_for_hypothetical_entry": False,
+                "block_reason": "mae_risk_too_high",
+            }
+            (inp / "ai_decisions.jsonl").write_text(json.dumps(row) + "\n", encoding="utf-8")
+            summary = run_paper_event_logger([inp], output_dir=out, mode="overwrite")
+            self.assertEqual(summary["hypothetical_skip_count"], 1)
+            events = json.loads((out / "hypothetical_entry_log.jsonl").read_text(encoding="utf-8").strip())
+            self.assertIn("paper_readiness_mae_block", events["risk_governor_reasons"])
 
 
 if __name__ == "__main__":

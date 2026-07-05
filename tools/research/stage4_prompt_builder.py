@@ -18,7 +18,15 @@ Paper-readiness rules (Stage 4.18-C):
 - watch: MUST include directional_bias (not NONE), watch_confirmation_reason, invalidation, mae_risk_estimate_pct.
 - enter_candidate: MUST include candidate_side (not NONE), directional_bias (not NONE), entry_trigger, invalidation, mae_risk_estimate_pct, risk_reward_estimate.
 - If direction is unclear, use soft_skip or hard_skip — never enter_candidate with NONE side.
-- watch cannot become entry in the same tick; describe follow-up conditions only."""
+- watch cannot become entry in the same tick; describe follow-up conditions only.
+
+MAE estimate calibration (Stage 4.18-F) — mae_risk_estimate_pct is a PERCENT number, not a ratio:
+- 0.25 means 0.25% adverse move, NOT 25% and NOT 0.0025.
+- BTC/ETH watch: reasonable MAE usually 0.05–0.35; above 0.35% is too high for paper-ready watch → use soft_skip/hard_skip.
+- SOL watch: above 0.25% → lower paper_readiness or soft_skip.
+- PEPE watch: above 0.20% → lower paper_readiness or soft_skip.
+- If MAE risk is high: set paper_readiness.eligible_for_watchlist=false, block_reason=mae_risk_too_high; do NOT output paper-ready watch.
+- mae_risk_estimate_pct MUST be <= invalidation.max_adverse_move_pct (same percent units)."""
 
 SCHEMA_FIELD_NAMES = (
     "final_action",
@@ -106,8 +114,9 @@ OUTPUT_SCHEMA_HINT = {
     "invalidation": {
         "invalidation_price": "number",
         "invalidation_reason": "string",
-        "max_adverse_move_pct": "number",
+        "max_adverse_move_pct": "number (percent, same units as mae_risk_estimate_pct)",
     },
+    "mae_risk_estimate_pct": "number (percent, e.g. 0.25 = 0.25%)",
     "paper_readiness": {
         "eligible_for_watchlist": "bool",
         "eligible_for_hypothetical_entry": "bool",
@@ -148,6 +157,9 @@ def build_decision_prompt(
             "For watch: set directional_bias, watch_confirmation_reason, invalidation, mae_risk_estimate_pct.",
             "For enter_candidate: require candidate_side, directional_bias, entry_trigger, invalidation, mae_risk_estimate_pct, risk_reward_estimate.",
             "If direction unclear, use soft_skip/hard_skip — never enter_candidate with NONE side.",
+            "mae_risk_estimate_pct is percent (0.25 = 0.25%); must be <= invalidation.max_adverse_move_pct.",
+            "BTC/ETH watch MAE > 0.35% → soft_skip/hard_skip, not paper-ready watch; SOL > 0.25%; PEPE > 0.20%.",
+            "If MAE too high: paper_readiness.eligible_for_watchlist=false, block_reason=mae_risk_too_high.",
         ],
     }
     return [

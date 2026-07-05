@@ -73,6 +73,7 @@ BASE_ALLOWLIST = [
     "tools/research/stage4_schema_repair.py",
     "tools/research/stage4_paper_readiness.py",
     "tools/research/stage4_paper_guard_inputs.py",
+    "tools/research/stage4_mae_calibration_analysis.py",
     "tools/research/stage4_paper_event_logger.py",
     "tools/research/stage4_watchlist_followup_simulator.py",
     "tools/research/stage4_tick_scheduler.py",

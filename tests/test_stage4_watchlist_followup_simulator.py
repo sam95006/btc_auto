@@ -547,6 +547,56 @@ class Stage418CPaperReadinessSimulatorTests(unittest.TestCase):
 
         self.assertTrue(is_eligible_decision(_decision(decision_intent="watch")))
 
+    def test_simulator_does_not_graduate_incomplete_watch(self) -> None:
+        rows = [
+            (
+                "/data/test",
+                _decision(
+                    decision_id="d1",
+                    tick_index=1,
+                    decision_intent="watch",
+                    symbol="BTCUSDT",
+                    directional_bias="LONG",
+                    watch_confirmation_reason="Support",
+                    mae_risk_estimate_pct=0.40,
+                    invalidation={
+                        "invalidation_price": 61000.0,
+                        "invalidation_reason": "SL",
+                        "max_adverse_move_pct": 0.40,
+                    },
+                    paper_readiness={
+                        "eligible_for_watchlist": True,
+                        "eligible_for_hypothetical_entry": False,
+                        "block_reason": "ok",
+                    },
+                ),
+            ),
+            (
+                "/data/test",
+                _decision(
+                    decision_id="d2",
+                    tick_index=2,
+                    decision_intent="watch",
+                    symbol="BTCUSDT",
+                    directional_bias="LONG",
+                    watch_confirmation_reason="Support",
+                    mae_risk_estimate_pct=0.40,
+                    invalidation={
+                        "invalidation_price": 61000.0,
+                        "invalidation_reason": "SL",
+                        "max_adverse_move_pct": 0.40,
+                    },
+                    paper_readiness={
+                        "eligible_for_watchlist": True,
+                        "eligible_for_hypothetical_entry": False,
+                        "block_reason": "ok",
+                    },
+                ),
+            ),
+        ]
+        acc = simulate_major_mae_calibration_mode("major_mae_100_llm_mae", rows)
+        self.assertEqual(acc.hypothetical_graduation_count, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

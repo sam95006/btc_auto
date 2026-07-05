@@ -4344,6 +4344,147 @@ class Stage418CPaperReadinessSchemaTests(unittest.TestCase):
         self.assertIn("paper_ready_watch_count", metrics)
         self.assertEqual(metrics["paper_ready_watch_count"], 1)
 
+
+class Stage418FMaeEstimateCalibrationTests(unittest.TestCase):
+    def _base_llm(self, **overrides: Any) -> Dict[str, Any]:
+        raw: Dict[str, Any] = {
+            "final_action": "skip",
+            "symbol": "BTCUSDT",
+            "candidate_side": "NONE",
+            "confidence": 0.45,
+            "why_enter": "",
+            "why_skip": "No edge",
+            "side_reason": "Flat",
+            "confidence_reason": "Low conviction",
+            "risk_notes": [],
+            "patch_awareness": "",
+            "uncertainty": "medium",
+            "requires_manual_review": False,
+            "decision_intent": "watch",
+        }
+        raw.update(overrides)
+        return raw
+
+    def test_mae_uses_percent_units_valid(self) -> None:
+        from tools.research.stage4_paper_readiness import assess_mae_quality
+
+        reasons = assess_mae_quality(
+            {
+                "symbol": "BTCUSDT",
+                "decision_intent": "watch",
+                "mae_risk_estimate_pct": 0.25,
+                "invalidation": {"max_adverse_move_pct": 0.30},
+            }
+        )
+        self.assertEqual(reasons, [])
+
+    def test_btc_watch_mae_within_cap_passes(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        proposal, ok, _ = parse_llm_decision(
+            self._base_llm(
+                symbol="BTCUSDT",
+                directional_bias="LONG",
+                watch_confirmation_reason="Support",
+                invalidation={"invalidation_price": 61000, "invalidation_reason": "SL", "max_adverse_move_pct": 0.35},
+                mae_risk_estimate_pct=0.30,
+            ),
+            symbol="BTCUSDT",
+        )
+        self.assertTrue(ok)
+        self.assertFalse(proposal.get("decision_quality_incomplete"))
+
+    def test_eth_watch_mae_within_cap_passes(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        proposal, ok, _ = parse_llm_decision(
+            self._base_llm(
+                symbol="ETHUSDT",
+                directional_bias="LONG",
+                watch_confirmation_reason="Support",
+                invalidation={"invalidation_price": 3100, "invalidation_reason": "SL", "max_adverse_move_pct": 0.35},
+                mae_risk_estimate_pct=0.34,
+            ),
+            symbol="ETHUSDT",
+        )
+        self.assertTrue(ok)
+        self.assertFalse(proposal.get("decision_quality_incomplete"))
+
+    def test_sol_watch_mae_above_cap_incomplete(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        proposal, ok, _ = parse_llm_decision(
+            self._base_llm(
+                symbol="SOLUSDT",
+                confidence=0.55,
+                directional_bias="LONG",
+                watch_confirmation_reason="Support",
+                invalidation={"invalidation_price": 140, "invalidation_reason": "SL", "max_adverse_move_pct": 0.30},
+                mae_risk_estimate_pct=0.26,
+            ),
+            symbol="SOLUSDT",
+        )
+        self.assertTrue(ok)
+        self.assertTrue(proposal.get("decision_quality_incomplete"))
+
+    def test_pepe_watch_mae_above_cap_incomplete(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        proposal, ok, _ = parse_llm_decision(
+            self._base_llm(
+                symbol="PEPEUSDT",
+                confidence=0.55,
+                directional_bias="LONG",
+                watch_confirmation_reason="Support",
+                invalidation={"invalidation_price": 0.00001, "invalidation_reason": "SL", "max_adverse_move_pct": 0.25},
+                mae_risk_estimate_pct=0.21,
+            ),
+            symbol="PEPEUSDT",
+        )
+        self.assertTrue(ok)
+        self.assertTrue(proposal.get("decision_quality_incomplete"))
+
+    def test_mae_above_invalidation_incomplete(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        proposal, ok, _ = parse_llm_decision(
+            self._base_llm(
+                directional_bias="LONG",
+                watch_confirmation_reason="Support",
+                invalidation={"invalidation_price": 61000, "invalidation_reason": "SL", "max_adverse_move_pct": 0.20},
+                mae_risk_estimate_pct=0.25,
+            ),
+            symbol="BTCUSDT",
+        )
+        self.assertTrue(ok)
+        self.assertTrue(proposal.get("decision_quality_incomplete"))
+        self.assertFalse(proposal.get("parse_error"))
+
+    def test_mae_above_5_scale_invalid(self) -> None:
+        from tools.research.stage4_paper_readiness import assess_mae_quality
+
+        reasons = assess_mae_quality(
+            {"symbol": "BTCUSDT", "decision_intent": "watch", "mae_risk_estimate_pct": 6.0}
+        )
+        self.assertIn("mae_scale_invalid_above_5pct", reasons)
+
+    def test_mae_calibration_metrics(self) -> None:
+        from tools.research.stage4_paper_readiness import build_mae_calibration_metrics
+
+        metrics = build_mae_calibration_metrics(
+            [
+                {
+                    "symbol": "BTCUSDT",
+                    "decision_intent": "watch",
+                    "mae_risk_estimate_pct": 0.40,
+                    "paper_readiness": {"eligible_for_watchlist": True},
+                    "invalidation": {"max_adverse_move_pct": 0.40},
+                }
+            ]
+        )
+        self.assertEqual(metrics["mae_estimate_above_symbol_cap_count"], 1)
+        self.assertEqual(metrics["paper_ready_watch_mae_above_cap_count"], 1)
+
     def test_no_order_sent(self) -> None:
         agent = Stage4AIDecisionAgent(use_real_llm=False)
         decision = agent.decide(

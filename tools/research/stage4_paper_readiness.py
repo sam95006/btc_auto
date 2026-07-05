@@ -21,6 +21,70 @@ PAPER_READINESS_METRIC_KEYS = (
     "invalidation_present_count",
 )
 
+MAE_CALIBRATION_METRIC_KEYS = (
+    "mae_estimate_scale_valid_count",
+    "mae_estimate_scale_invalid_count",
+    "mae_estimate_above_symbol_cap_count",
+    "paper_ready_watch_mae_within_cap_count",
+    "paper_ready_watch_mae_above_cap_count",
+    "mae_invalidation_consistency_fail_count",
+)
+
+MAE_SCALE_MAX_PCT = 5.0
+
+MAE_SYMBOL_WATCH_CAPS_PCT: Dict[str, float] = {
+    "BTCUSDT": 0.35,
+    "ETHUSDT": 0.35,
+    "SOLUSDT": 0.25,
+    "PEPEUSDT": 0.20,
+}
+
+MAE_WATCH_SURVIVAL_PCT: Dict[str, float] = {
+    "BTCUSDT": 0.28,
+    "ETHUSDT": 0.28,
+    "SOLUSDT": 0.20,
+    "PEPEUSDT": 0.16,
+}
+
+
+def symbol_mae_watch_cap_pct(symbol: str) -> float:
+    return MAE_SYMBOL_WATCH_CAPS_PCT.get(str(symbol or "").upper(), 0.35)
+
+
+def symbol_mae_watch_survival_pct(symbol: str) -> float:
+    return MAE_WATCH_SURVIVAL_PCT.get(str(symbol or "").upper(), 0.28)
+
+
+def infer_paper_readiness_mae_block(decision: Dict[str, Any]) -> bool:
+    pr = decision.get("paper_readiness") or {}
+    return str(pr.get("block_reason") or "").strip() == "mae_risk_too_high"
+
+
+def assess_mae_quality(proposal: Dict[str, Any]) -> List[str]:
+    """MAE scale, symbol cap, and invalidation consistency checks (not parse_error)."""
+    reasons: List[str] = []
+    intent = str(proposal.get("decision_intent") or "").lower()
+    symbol = str(proposal.get("symbol") or "").upper()
+    mae = _as_float(proposal.get("mae_risk_estimate_pct"))
+    invalidation = parse_invalidation(proposal.get("invalidation"))
+    max_adv = _as_float(invalidation.get("max_adverse_move_pct"))
+
+    if mae <= 0:
+        return reasons
+
+    if mae > MAE_SCALE_MAX_PCT:
+        reasons.append("mae_scale_invalid_above_5pct")
+
+    if max_adv > 0 and mae > max_adv:
+        reasons.append("mae_exceeds_invalidation_max_adverse")
+
+    if intent in {"watch", "enter_candidate"}:
+        cap = symbol_mae_watch_cap_pct(symbol)
+        if mae > cap:
+            reasons.append(f"mae_above_symbol_cap_{cap}")
+
+    return reasons
+
 
 def _as_float(raw: Any, default: float = 0.0) -> float:
     try:
@@ -162,6 +226,9 @@ def assess_decision_quality(proposal: Dict[str, Any]) -> Tuple[bool, Dict[str, A
     mae = _as_float(proposal.get("mae_risk_estimate_pct"))
     rr = _as_float(proposal.get("risk_reward_estimate"))
     watch_reason = _non_empty_str(proposal.get("watch_confirmation_reason"))
+    symbol = str(proposal.get("symbol") or "").upper()
+    mae_reasons = assess_mae_quality(proposal)
+    reasons.extend(mae_reasons)
 
     if intent == "watch":
         if bias == "NONE":
@@ -231,13 +298,71 @@ def enrich_proposal_paper_fields(
 
 
 def infer_decision_quality_incomplete(decision: Dict[str, Any]) -> bool:
-    if "decision_quality_incomplete" in decision:
-        return bool(decision.get("decision_quality_incomplete"))
     intent = str(decision.get("decision_intent") or "").lower()
     if intent not in {"watch", "enter_candidate"}:
         return False
     incomplete, _, _ = assess_decision_quality(decision)
     return incomplete
+
+
+def _mae_scale_valid(mae: float) -> bool:
+    return 0 < mae <= MAE_SCALE_MAX_PCT
+
+
+def build_mae_calibration_metrics(decisions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """MAE scale / cap metrics for Stage 4.18-F validation and analysis."""
+    metrics: Dict[str, int] = {key: 0 for key in MAE_CALIBRATION_METRIC_KEYS}
+    mae_by_symbol: Dict[str, List[float]] = {}
+
+    for decision in decisions:
+        if decision.get("parse_error") or decision.get("is_mock_ai"):
+            continue
+
+        symbol = str(decision.get("symbol") or "unknown").upper()
+        intent = str(decision.get("decision_intent") or "").lower()
+        mae = _as_float(decision.get("mae_risk_estimate_pct"))
+        invalidation = parse_invalidation(decision.get("invalidation"))
+        max_adv = _as_float(invalidation.get("max_adverse_move_pct"))
+
+        if mae > 0:
+            mae_by_symbol.setdefault(symbol, []).append(mae)
+            if _mae_scale_valid(mae):
+                metrics["mae_estimate_scale_valid_count"] += 1
+            else:
+                metrics["mae_estimate_scale_invalid_count"] += 1
+
+        mae_reasons = assess_mae_quality(decision)
+        if any(r.startswith("mae_above_symbol_cap") for r in mae_reasons):
+            metrics["mae_estimate_above_symbol_cap_count"] += 1
+        if "mae_exceeds_invalidation_max_adverse" in mae_reasons:
+            metrics["mae_invalidation_consistency_fail_count"] += 1
+
+        if intent != "watch" or mae <= 0:
+            continue
+
+        pr = decision.get("paper_readiness") or {}
+        if pr.get("eligible_for_watchlist"):
+            cap = symbol_mae_watch_cap_pct(symbol)
+            if mae <= cap:
+                metrics["paper_ready_watch_mae_within_cap_count"] += 1
+            else:
+                metrics["paper_ready_watch_mae_above_cap_count"] += 1
+
+    mae_estimate_by_symbol: Dict[str, Dict[str, float]] = {}
+    for sym, values in sorted(mae_by_symbol.items()):
+        if not values:
+            continue
+        mae_estimate_by_symbol[sym] = {
+            "count": len(values),
+            "min": round(min(values), 6),
+            "max": round(max(values), 6),
+            "avg": round(sum(values) / len(values), 6),
+        }
+
+    return {
+        **metrics,
+        "mae_estimate_by_symbol": mae_estimate_by_symbol,
+    }
 
 
 def build_paper_readiness_metrics(decisions: List[Dict[str, Any]]) -> Dict[str, int]:
@@ -275,10 +400,13 @@ def build_paper_readiness_metrics(decisions: List[Dict[str, Any]]) -> Dict[str, 
             metrics["decision_quality_incomplete_count"] += 1
             continue
 
-        pr = decision.get("paper_readiness") or {}
-        if intent == "watch" and pr.get("eligible_for_watchlist"):
+        if infer_paper_readiness_mae_block(decision):
+            continue
+
+        incomplete, paper_readiness, _ = assess_decision_quality(decision)
+        if not incomplete and intent == "watch" and paper_readiness.get("eligible_for_watchlist"):
             metrics["paper_ready_watch_count"] += 1
-        if intent == "enter_candidate" and pr.get("eligible_for_hypothetical_entry"):
+        if not incomplete and intent == "enter_candidate" and paper_readiness.get("eligible_for_hypothetical_entry"):
             metrics["paper_ready_enter_candidate_count"] += 1
 
     return metrics
@@ -288,11 +416,20 @@ __all__ = [
     "VALID_DIRECTIONAL_BIAS",
     "VALID_ENTRY_TRIGGER_TYPES",
     "PAPER_READINESS_METRIC_KEYS",
+    "MAE_CALIBRATION_METRIC_KEYS",
+    "MAE_SCALE_MAX_PCT",
+    "MAE_SYMBOL_WATCH_CAPS_PCT",
+    "MAE_WATCH_SURVIVAL_PCT",
     "assess_decision_quality",
+    "assess_mae_quality",
+    "build_mae_calibration_metrics",
     "build_paper_readiness_metrics",
     "default_paper_field_defaults",
     "enrich_proposal_paper_fields",
     "infer_decision_quality_incomplete",
+    "infer_paper_readiness_mae_block",
     "parse_entry_trigger",
     "parse_invalidation",
+    "symbol_mae_watch_cap_pct",
+    "symbol_mae_watch_survival_pct",
 ]

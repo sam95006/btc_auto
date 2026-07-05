@@ -194,6 +194,10 @@ def _hard_block_enter(decision: Dict[str, Any]) -> Tuple[bool, List[str]]:
 
     if infer_decision_quality_incomplete(decision):
         reasons.append("decision_quality_incomplete")
+    from tools.research.stage4_paper_readiness import infer_paper_readiness_mae_block
+
+    if infer_paper_readiness_mae_block(decision):
+        reasons.append("paper_readiness_mae_block")
     return bool(reasons), reasons
 
 
@@ -386,6 +390,47 @@ def _hypothetical_prices(symbol: str, side: str, entry: float) -> Tuple[float, f
     return entry, entry * (1 + sl_pct / 100), entry * (1 - tp_pct / 100), hold
 
 
+def _quality_blocked_skip_reason(decision: Dict[str, Any]) -> Optional[str]:
+    from tools.research.stage4_paper_readiness import (
+        infer_decision_quality_incomplete,
+        infer_paper_readiness_mae_block,
+    )
+
+    if infer_paper_readiness_mae_block(decision):
+        return "paper_readiness_mae_block"
+    if infer_decision_quality_incomplete(decision):
+        return "decision_quality_incomplete"
+    return None
+
+
+def build_quality_blocked_skip_event(
+    decision: Dict[str, Any],
+    *,
+    source_dataset: str,
+    reason: str,
+) -> Dict[str, Any]:
+    symbol = str(decision.get("symbol") or "").upper()
+    ref_price = _reference_price(decision)
+    mae_pct, mae_src = get_paper_mae_pct(decision)
+    return _build_event(
+        decision,
+        source_dataset=source_dataset,
+        paper_action="hypothetical_skip",
+        side="NONE",
+        ref_price=ref_price,
+        verdict="block",
+        reasons=[reason],
+        watchlist_meta={
+            "required": False,
+            "watchlist_id": None,
+            "confirmation_count": 0,
+            "confirmation_threshold": 2,
+        },
+        paper_mae_pct=mae_pct,
+        paper_mae_source=mae_src,
+    )
+
+
 def is_eligible_decision(decision: Dict[str, Any]) -> bool:
     if decision.get("parse_error"):
         return False
@@ -393,9 +438,7 @@ def is_eligible_decision(decision: Dict[str, Any]) -> bool:
         return False
     if decision.get("order_sent"):
         return False
-    from tools.research.stage4_paper_readiness import infer_decision_quality_incomplete
-
-    if infer_decision_quality_incomplete(decision):
+    if _quality_blocked_skip_reason(decision):
         return False
     return True
 
@@ -923,6 +966,7 @@ def run_paper_event_logger(
     total_read = 0
     excluded_parse = excluded_mock = excluded_order = excluded_quality = 0
     from tools.research.stage4_paper_readiness import (
+        build_mae_calibration_metrics,
         build_paper_readiness_metrics,
         infer_decision_quality_incomplete,
     )
@@ -958,19 +1002,31 @@ def run_paper_event_logger(
 
     with log_path.open("a", encoding="utf-8") as fh:
         for dataset, decision in all_rows:
-            if not is_eligible_decision(decision):
+            if decision.get("parse_error") or decision.get("is_mock_ai") or decision.get("order_sent"):
                 continue
             did = str(decision.get("decision_id") or "")
             key = (dataset, did)
             if key in existing_keys:
                 continue
-            event = classify_paper_event(
-                decision,
-                source_dataset=dataset,
-                watchlists=watchlists,
-                guard_stats=guard_stats,
-                mae_source_stats=mae_source_stats,
-            )
+
+            quality_reason = _quality_blocked_skip_reason(decision)
+            if quality_reason:
+                event = build_quality_blocked_skip_event(
+                    decision,
+                    source_dataset=dataset,
+                    reason=quality_reason,
+                )
+                mae_source_stats.record(str(event.get("paper_mae_source") or MAE_SOURCE_MISSING))
+            elif not is_eligible_decision(decision):
+                continue
+            else:
+                event = classify_paper_event(
+                    decision,
+                    source_dataset=dataset,
+                    watchlists=watchlists,
+                    guard_stats=guard_stats,
+                    mae_source_stats=mae_source_stats,
+                )
             if not event:
                 continue
             events.append(event)
@@ -994,6 +1050,7 @@ def run_paper_event_logger(
         paper_readiness_metrics=build_paper_readiness_metrics([r for _, r in all_rows]),
         mae_source_stats=mae_source_stats,
     )
+    summary.update(build_mae_calibration_metrics([r for _, r in all_rows]))
     write_json(output_dir / "stage4_17_paper_event_summary.json", strip_events_for_output(summary))
     return summary
 
