@@ -13,11 +13,13 @@ from tools.research.stage4_watchlist_followup_simulator import (
     contains_secret,
     render_418b_report,
     render_report,
+    recommend_calibration_mode_for_419,
     run_major_mae_calibration_replay,
     run_simulator,
     simulate_major_mae_calibration_mode,
     simulate_mode,
 )
+from tools.research.stage4_paper_guard_inputs import MAE_SOURCE_LLM, get_paper_mae_pct
 
 
 def _watch_paper_fields() -> Dict[str, Any]:
@@ -29,7 +31,7 @@ def _watch_paper_fields() -> Dict[str, Any]:
             "invalidation_reason": "Break below support",
             "max_adverse_move_pct": 0.35,
         },
-        "mae_risk_estimate_pct": 0.22,
+        "mae_risk_estimate_pct": 0.20,
         "decision_quality_incomplete": False,
         "paper_readiness": {
             "eligible_for_watchlist": True,
@@ -52,7 +54,7 @@ def _enter_paper_fields() -> Dict[str, Any]:
             "invalidation_reason": "Structure break",
             "max_adverse_move_pct": 0.30,
         },
-        "mae_risk_estimate_pct": 0.22,
+        "mae_risk_estimate_pct": 0.20,
         "risk_reward_estimate": 1.5,
         "decision_quality_incomplete": False,
         "paper_readiness": {
@@ -436,6 +438,101 @@ class Stage418BMaeCalibrationTests(unittest.TestCase):
         args = parser.parse_args(["--input-dir", "/data/test"])
         self.assertEqual(args.decision_dirs, ["/data/test"])
         self.assertIn("--input-dir", Path(mod.__file__).read_text(encoding="utf-8"))
+
+
+class Stage418ELlmMaeCalibrationTests(unittest.TestCase):
+    def test_llm_mae_calibration_graduation_with_high_legacy_vol(self) -> None:
+        rows = [
+            (
+                "/data/test",
+                _decision(
+                    decision_id="d1",
+                    tick_index=1,
+                    decision_intent="watch",
+                    candidate_side="LONG",
+                    confidence=0.45,
+                    mae_risk_estimate_pct=0.22,
+                    market_context={
+                        "last_price": 62000.0,
+                        "regime": "range",
+                        "volatility_level": "high",
+                        "volatility_15m": 0.004,
+                    },
+                ),
+            ),
+            (
+                "/data/test",
+                _decision(
+                    decision_id="d2",
+                    tick_index=2,
+                    decision_intent="watch",
+                    candidate_side="LONG",
+                    confidence=0.46,
+                    mae_risk_estimate_pct=0.22,
+                    market_context={
+                        "last_price": 62000.0,
+                        "regime": "range",
+                        "volatility_level": "high",
+                        "volatility_15m": 0.004,
+                    },
+                ),
+            ),
+        ]
+        acc = simulate_major_mae_calibration_mode("major_mae_100_llm_mae", rows)
+        self.assertGreater(acc.watchlist_confirmed, 0)
+        self.assertGreater(acc.hypothetical_graduation_count, 0)
+
+    def test_legacy_mode_blocks_same_rows_without_llm_mae(self) -> None:
+        rows = [
+            (
+                "/data/test",
+                _decision(
+                    decision_id="d1",
+                    tick_index=1,
+                    decision_intent="watch",
+                    candidate_side="LONG",
+                    confidence=0.45,
+                    market_context={
+                        "last_price": 62000.0,
+                        "regime": "range",
+                        "volatility_level": "high",
+                        "volatility_15m": 0.004,
+                    },
+                ),
+            ),
+        ]
+        row = rows[0][1]
+        row.pop("mae_risk_estimate_pct", None)
+        acc = simulate_major_mae_calibration_mode("major_mae_100", rows)
+        self.assertEqual(acc.hypothetical_graduation_count, 0)
+
+    def test_sol_pepe_blocked_in_llm_mae_modes(self) -> None:
+        for mode in (
+            "major_mae_100_llm_mae",
+            "major_mae_100_llm_mae_side_memory",
+            "major_mae_100_llm_mae_conf_floor",
+        ):
+            acc = simulate_major_mae_calibration_mode(
+                mode,
+                [("/data/test", _decision(symbol="SOLUSDT", decision_intent="watch", mae_risk_estimate_pct=0.10))],
+            )
+            self.assertEqual(acc.hypothetical_graduation_count, 0)
+            self.assertGreater(acc.sol_pepe_blocked_count, 0)
+
+    def test_llm_mae_mode_preferred_for_419_recommendation(self) -> None:
+        mode_results = {
+            "major_mae_100": {"hypothetical_graduation_count": 1},
+            "major_mae_100_llm_mae": {"hypothetical_graduation_count": 2},
+        }
+        self.assertEqual(
+            recommend_calibration_mode_for_419(mode_results),
+            "major_mae_100_llm_mae",
+        )
+
+    def test_simulator_uses_llm_mae_in_llm_modes(self) -> None:
+        row = _decision(mae_risk_estimate_pct=0.22, market_context={"volatility_level": "high"})
+        mae, src = get_paper_mae_pct(row)
+        self.assertEqual(src, MAE_SOURCE_LLM)
 
 
 class Stage418CPaperReadinessSimulatorTests(unittest.TestCase):

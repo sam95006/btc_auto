@@ -17,6 +17,14 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.research.bybit_demo_learning_common import utc_now_iso, write_json  # noqa: E402
+from tools.research.stage4_paper_guard_inputs import (  # noqa: E402
+    MAE_SOURCE_LEGACY,
+    MAE_SOURCE_LLM,
+    MAE_SOURCE_MISSING,
+    get_paper_mae_pct,
+    legacy_market_mae_proxy_pct,
+    llm_mae_risk_estimate_pct,
+)
 
 RECORD_TYPE = "stage4_hypothetical_paper_event"
 DESIGN_GATE_VERSION = "4.16"
@@ -128,13 +136,8 @@ def _volatility_level(decision: Dict[str, Any]) -> str:
 
 
 def _mae_proxy_pct(decision: Dict[str, Any]) -> float:
-    mc = decision.get("market_context") or {}
-    vol15 = mc.get("volatility_15m")
-    if vol15 is not None:
-        v = abs(_safe_float(vol15))
-        return v * 100.0 if v < 1.0 else v
-    mapping = {"high": 0.30, "medium": 0.15, "low": 0.06, "unknown": 0.10}
-    return mapping.get(_volatility_level(decision), 0.10)
+    """Backward-compatible alias — prefer get_paper_mae_pct() for paper guards."""
+    return legacy_market_mae_proxy_pct(decision)
 
 
 def _reference_price(decision: Dict[str, Any]) -> float:
@@ -241,6 +244,33 @@ class WatchlistState:
 
 
 @dataclass
+class MaeSourceStats:
+    llm: int = 0
+    legacy: int = 0
+    missing: int = 0
+
+    def record(self, source: str) -> None:
+        if source == MAE_SOURCE_LLM:
+            self.llm += 1
+        elif source == MAE_SOURCE_LEGACY:
+            self.legacy += 1
+        else:
+            self.missing += 1
+
+    def to_summary(self) -> Dict[str, Any]:
+        return {
+            "mae_source_distribution": {
+                MAE_SOURCE_LLM: self.llm,
+                MAE_SOURCE_LEGACY: self.legacy,
+                MAE_SOURCE_MISSING: self.missing,
+            },
+            "llm_mae_used_count": self.llm,
+            "legacy_mae_proxy_used_count": self.legacy,
+            "missing_mae_source_count": self.missing,
+        }
+
+
+@dataclass
 class GuardResult:
     verdict: str
     reasons: List[str] = field(default_factory=list)
@@ -249,6 +279,8 @@ class GuardResult:
     mae_fired: bool = False
     trend_fired: bool = False
     confirmation_threshold: int = 2
+    paper_mae_pct: float = 0.0
+    paper_mae_source: str = MAE_SOURCE_LEGACY
 
 
 def apply_paper_guards(
@@ -257,17 +289,23 @@ def apply_paper_guards(
     intent: str,
     side: str,
     watchlist: Optional[WatchlistState] = None,
+    mae_source_mode: str = "llm_mae_primary",
 ) -> GuardResult:
     """Stage 4.16 watch-quality guards (design-only, no order path)."""
     symbol = str(decision.get("symbol") or "").upper()
     regime = _normalize_regime(decision)
     vol_level = _volatility_level(decision)
     confidence = _safe_float(decision.get("confidence"))
-    mae_proxy = _mae_proxy_pct(decision)
+    mae_proxy, mae_source = get_paper_mae_pct(decision, mae_source_mode=mae_source_mode)
     mae_cap = MAE_CAPS_PCT.get(symbol, 0.35)
     intent_l = intent.lower()
     reasons: List[str] = []
-    result = GuardResult(verdict="allow", confirmation_threshold=2)
+    result = GuardResult(
+        verdict="allow",
+        confirmation_threshold=2,
+        paper_mae_pct=mae_proxy,
+        paper_mae_source=mae_source,
+    )
 
     # 1. SOL guard
     if symbol == "SOLUSDT":
@@ -368,6 +406,7 @@ def classify_paper_event(
     source_dataset: str,
     watchlists: Dict[str, WatchlistState],
     guard_stats: Optional[GuardStats] = None,
+    mae_source_stats: Optional[MaeSourceStats] = None,
 ) -> Optional[Dict[str, Any]]:
     """Map one eligible decision to a hypothetical paper event."""
     if not is_eligible_decision(decision):
@@ -387,8 +426,19 @@ def classify_paper_event(
         existing = None
 
     guard_stats = guard_stats or GuardStats()
+    mae_source_stats = mae_source_stats or MaeSourceStats()
     enter_downgraded = False
     enter_allowed = False
+
+    def _mae_event_kwargs(guard: Optional[GuardResult] = None) -> Dict[str, Any]:
+        if guard is not None:
+            return {
+                "paper_mae_pct": guard.paper_mae_pct,
+                "paper_mae_source": guard.paper_mae_source,
+            }
+        mae_pct, mae_src = get_paper_mae_pct(decision)
+        mae_source_stats.record(mae_src)
+        return {"paper_mae_pct": mae_pct, "paper_mae_source": mae_src}
 
     # --- skip intents ---
     if intent in {"hard_skip", "soft_skip"}:
@@ -402,6 +452,7 @@ def classify_paper_event(
             verdict=verdict,
             reasons=[f"{intent}_intent"],
             watchlist_meta={"required": False, "watchlist_id": None, "confirmation_count": 0, "confirmation_threshold": 2},
+            **_mae_event_kwargs(),
         )
 
     guard = apply_paper_guards(decision, intent=intent, side=side, watchlist=existing)
@@ -413,6 +464,8 @@ def classify_paper_event(
         guard_stats.mae += 1
     if guard.trend_fired:
         guard_stats.trend += 1
+    mae_source_stats.record(guard.paper_mae_source)
+    mae_kwargs = _mae_event_kwargs(guard)
 
     # --- watch intent ---
     if intent == "watch":
@@ -426,6 +479,7 @@ def classify_paper_event(
                 verdict="downgrade_to_skip",
                 reasons=guard.reasons,
                 watchlist_meta={"required": False, "watchlist_id": None, "confirmation_count": 0, "confirmation_threshold": guard.confirmation_threshold},
+                **mae_kwargs,
             )
 
         if existing is None:
@@ -462,6 +516,7 @@ def classify_paper_event(
                 "confirmation_count": existing.confirmation_count,
                 "confirmation_threshold": existing.confirmation_threshold,
             },
+            **mae_kwargs,
         )
 
     # --- enter_candidate ---
@@ -478,6 +533,7 @@ def classify_paper_event(
                 reasons=block_reasons,
                 watchlist_meta={"required": False, "watchlist_id": None, "confirmation_count": 0, "confirmation_threshold": 2},
                 enter_downgraded=True,
+                **mae_kwargs,
             )
 
         floor = CONFIDENCE_FLOORS.get(symbol, 0.35)
@@ -492,6 +548,7 @@ def classify_paper_event(
                 reasons=["candidate_side_none"],
                 watchlist_meta={"required": True, "watchlist_id": existing.watchlist_id if existing else None, "confirmation_count": existing.confirmation_count if existing else 0, "confirmation_threshold": guard.confirmation_threshold},
                 enter_downgraded=True,
+                **mae_kwargs,
             )
 
         if confidence < floor:
@@ -506,6 +563,7 @@ def classify_paper_event(
                 reasons=[f"confidence_below_floor_{floor}"],
                 watchlist_meta={"required": False, "watchlist_id": None, "confirmation_count": 0, "confirmation_threshold": 2},
                 enter_downgraded=True,
+                **mae_kwargs,
             )
 
         if guard.verdict in {"downgrade_to_skip", "block"}:
@@ -520,6 +578,7 @@ def classify_paper_event(
                 reasons=guard.reasons,
                 watchlist_meta={"required": False, "watchlist_id": None, "confirmation_count": 0, "confirmation_threshold": guard.confirmation_threshold},
                 enter_downgraded=True,
+                **mae_kwargs,
             )
 
         if guard.verdict == "downgrade_to_watchlist":
@@ -555,6 +614,7 @@ def classify_paper_event(
                     "confirmation_threshold": existing.confirmation_threshold,
                 },
                 enter_downgraded=True,
+                **mae_kwargs,
             )
 
         # SOL/PEPE require watchlist confirmation
@@ -594,6 +654,7 @@ def classify_paper_event(
                         "confirmation_threshold": existing.confirmation_threshold,
                     },
                     enter_downgraded=True,
+                    **mae_kwargs,
                 )
 
         # BTC/ETH may skip watchlist if elevated confidence in trend
@@ -619,6 +680,7 @@ def classify_paper_event(
                         "confirmation_threshold": 2,
                     },
                     enter_downgraded=True,
+                    **mae_kwargs,
                 )
 
         enter_allowed = True
@@ -643,6 +705,7 @@ def classify_paper_event(
             },
             enter_allowed=enter_allowed,
             enter_downgraded=enter_downgraded,
+            **mae_kwargs,
         )
 
     # unknown intent → skip
@@ -655,6 +718,7 @@ def classify_paper_event(
         verdict="block",
         reasons=[f"unknown_intent_{intent}"],
         watchlist_meta={"required": False, "watchlist_id": None, "confirmation_count": 0, "confirmation_threshold": 2},
+        **_mae_event_kwargs(),
     )
 
 
@@ -674,8 +738,15 @@ def _build_event(
     max_hold: int = 0,
     enter_allowed: bool = False,
     enter_downgraded: bool = False,
+    paper_mae_pct: Optional[float] = None,
+    paper_mae_source: Optional[str] = None,
 ) -> Dict[str, Any]:
     symbol = str(decision.get("symbol") or "").upper()
+    mae_pct, mae_src = (
+        (paper_mae_pct, paper_mae_source)
+        if paper_mae_pct is not None and paper_mae_source is not None
+        else get_paper_mae_pct(decision)
+    )
     event = {
         "record_type": RECORD_TYPE,
         "paper_event_id": _paper_event_id(decision, symbol),
@@ -708,6 +779,9 @@ def _build_event(
         "is_mock_ai": bool(decision.get("is_mock_ai")),
         "created_by": CREATED_BY,
         "design_gate_version": DESIGN_GATE_VERSION,
+        "paper_mae_pct": round(mae_pct, 6),
+        "paper_mae_source": mae_src,
+        "llm_mae_risk_estimate_pct": round(llm_mae_risk_estimate_pct(decision), 6),
     }
     if enter_allowed:
         event["_enter_allowed"] = True
@@ -743,6 +817,7 @@ def build_summary(
     excluded_order: int,
     excluded_quality_incomplete: int = 0,
     paper_readiness_metrics: Optional[Dict[str, int]] = None,
+    mae_source_stats: Optional[MaeSourceStats] = None,
 ) -> Dict[str, Any]:
     paper_actions = Counter(str(e.get("paper_action") or "unknown") for e in events)
     verdicts = Counter(str(e.get("risk_governor_verdict") or "unknown") for e in events)
@@ -781,7 +856,7 @@ def build_summary(
         row.pop("_enter_downgraded", None)
         clean_events.append(row)
 
-    return {
+    summary = {
         "record_type": "stage4_17_paper_event_summary",
         "generated_at_utc": utc_now_iso(),
         "datasets_analyzed": list(datasets_analyzed),
@@ -814,6 +889,9 @@ def build_summary(
         **(paper_readiness_metrics or {}),
         "events": clean_events,
     }
+    if mae_source_stats is not None:
+        summary.update(mae_source_stats.to_summary())
+    return summary
 
 
 def strip_events_for_output(summary: Dict[str, Any]) -> Dict[str, Any]:
@@ -874,6 +952,7 @@ def run_paper_event_logger(
 
     watchlists: Dict[str, WatchlistState] = {}
     guard_stats = GuardStats()
+    mae_source_stats = MaeSourceStats()
     events: List[Dict[str, Any]] = []
     written = 0
 
@@ -890,6 +969,7 @@ def run_paper_event_logger(
                 source_dataset=dataset,
                 watchlists=watchlists,
                 guard_stats=guard_stats,
+                mae_source_stats=mae_source_stats,
             )
             if not event:
                 continue
@@ -912,6 +992,7 @@ def run_paper_event_logger(
         excluded_order=excluded_order,
         excluded_quality_incomplete=excluded_quality,
         paper_readiness_metrics=build_paper_readiness_metrics([r for _, r in all_rows]),
+        mae_source_stats=mae_source_stats,
     )
     write_json(output_dir / "stage4_17_paper_event_summary.json", strip_events_for_output(summary))
     return summary

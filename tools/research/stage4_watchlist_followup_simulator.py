@@ -17,6 +17,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.research.bybit_demo_learning_common import utc_now_iso, write_json  # noqa: E402
+from tools.research.stage4_paper_guard_inputs import get_paper_mae_pct  # noqa: E402
 from tools.research.stage4_paper_event_logger import (  # noqa: E402
     ALT_SYMBOLS,
     CONFIDENCE_FLOORS,
@@ -48,7 +49,11 @@ MAE_CALIBRATION_MODES = (
     "major_mae_100",
     "major_mae_100_side_memory",
     "major_mae_100_side_memory_conf_floor",
+    "major_mae_100_llm_mae",
+    "major_mae_100_llm_mae_side_memory",
+    "major_mae_100_llm_mae_conf_floor",
 )
+MAE_SOURCE_MODES = ("llm_mae_primary", "legacy_proxy_primary", "compare_llm_vs_proxy")
 MAJOR_SYMBOLS = frozenset({"BTCUSDT", "ETHUSDT"})
 SIDE_MEMORY_TICKS = 2
 
@@ -58,30 +63,56 @@ MAE_CALIBRATION_CONFIG: Dict[str, Dict[str, Any]] = {
         "side_memory": False,
         "enforce_conf_floor": False,
         "enforce_conf_non_decreasing": False,
+        "mae_source_mode": "legacy_proxy_primary",
     },
     "major_mae_90": {
         "mae_enter_factor": 0.90,
         "side_memory": False,
         "enforce_conf_floor": False,
         "enforce_conf_non_decreasing": False,
+        "mae_source_mode": "legacy_proxy_primary",
     },
     "major_mae_100": {
         "mae_enter_factor": 1.0,
         "side_memory": False,
         "enforce_conf_floor": False,
         "enforce_conf_non_decreasing": False,
+        "mae_source_mode": "legacy_proxy_primary",
     },
     "major_mae_100_side_memory": {
         "mae_enter_factor": 1.0,
         "side_memory": True,
         "enforce_conf_floor": False,
         "enforce_conf_non_decreasing": False,
+        "mae_source_mode": "legacy_proxy_primary",
     },
     "major_mae_100_side_memory_conf_floor": {
         "mae_enter_factor": 1.0,
         "side_memory": True,
         "enforce_conf_floor": True,
         "enforce_conf_non_decreasing": True,
+        "mae_source_mode": "legacy_proxy_primary",
+    },
+    "major_mae_100_llm_mae": {
+        "mae_enter_factor": 1.0,
+        "side_memory": False,
+        "enforce_conf_floor": False,
+        "enforce_conf_non_decreasing": False,
+        "mae_source_mode": "llm_mae_primary",
+    },
+    "major_mae_100_llm_mae_side_memory": {
+        "mae_enter_factor": 1.0,
+        "side_memory": True,
+        "enforce_conf_floor": False,
+        "enforce_conf_non_decreasing": False,
+        "mae_source_mode": "llm_mae_primary",
+    },
+    "major_mae_100_llm_mae_conf_floor": {
+        "mae_enter_factor": 1.0,
+        "side_memory": True,
+        "enforce_conf_floor": True,
+        "enforce_conf_non_decreasing": True,
+        "mae_source_mode": "llm_mae_primary",
     },
 }
 SECRET_PATTERNS = (
@@ -123,12 +154,25 @@ def _hard_block_graduation(decision: Dict[str, Any]) -> Tuple[bool, List[str]]:
     return blocked, reasons
 
 
-def _sol_pepe_hard_skip(decision: Dict[str, Any], mode: str) -> Tuple[bool, List[str]]:
+def _resolved_paper_mae(
+    decision: Dict[str, Any],
+    *,
+    mae_source_mode: str = "llm_mae_primary",
+) -> Tuple[float, str]:
+    return get_paper_mae_pct(decision, mae_source_mode=mae_source_mode)
+
+
+def _sol_pepe_hard_skip(
+    decision: Dict[str, Any],
+    mode: str,
+    *,
+    mae_source_mode: str = "llm_mae_primary",
+) -> Tuple[bool, List[str]]:
     """Hard skip checks that apply even in relaxed modes."""
     symbol = str(decision.get("symbol") or "").upper()
     regime = _normalize_regime(decision)
     vol_level = _volatility_level(decision)
-    mae_proxy = _mae_proxy_pct(decision)
+    mae_proxy, _ = _resolved_paper_mae(decision, mae_source_mode=mae_source_mode)
     confidence = _safe_float(decision.get("confidence"))
     reasons: List[str] = []
 
@@ -149,21 +193,31 @@ def _sol_pepe_hard_skip(decision: Dict[str, Any], mode: str) -> Tuple[bool, List
     return bool(reasons), reasons
 
 
-def _mae_blocks_watchlist_creation(decision: Dict[str, Any], mode: str) -> bool:
+def _mae_blocks_watchlist_creation(
+    decision: Dict[str, Any],
+    mode: str,
+    *,
+    mae_source_mode: str = "llm_mae_primary",
+) -> bool:
     if mode in {"confirmed_watchlist_only", "major_only_calibrated"}:
         return False
     symbol = str(decision.get("symbol") or "").upper()
     intent = str(decision.get("decision_intent") or "").lower()
     if intent != "watch":
         return False
-    mae_proxy = _mae_proxy_pct(decision)
+    mae_proxy, _ = _resolved_paper_mae(decision, mae_source_mode=mae_source_mode)
     cap = MAE_CAPS_PCT.get(symbol, 0.35)
     return mae_proxy > cap * 0.80
 
 
-def _mae_blocks_graduation(decision: Dict[str, Any], mode: str) -> Tuple[bool, str]:
+def _mae_blocks_graduation(
+    decision: Dict[str, Any],
+    mode: str,
+    *,
+    mae_source_mode: str = "llm_mae_primary",
+) -> Tuple[bool, str]:
     symbol = str(decision.get("symbol") or "").upper()
-    mae_proxy = _mae_proxy_pct(decision)
+    mae_proxy, _ = _resolved_paper_mae(decision, mae_source_mode=mae_source_mode)
     cap = MAE_CAPS_PCT.get(symbol, 0.35)
     if mode == "major_only_calibrated" and symbol in MAJOR_SYMBOLS:
         if mae_proxy > cap:
@@ -542,11 +596,12 @@ def _mae_blocks_major_calibration(
     decision: Dict[str, Any],
     *,
     mae_enter_factor: float,
+    mae_source_mode: str = "llm_mae_primary",
 ) -> Tuple[bool, str]:
     symbol = str(decision.get("symbol") or "").upper()
     if symbol not in MAJOR_SYMBOLS:
         return True, "not_major_symbol"
-    mae_proxy = _mae_proxy_pct(decision)
+    mae_proxy, _ = _resolved_paper_mae(decision, mae_source_mode=mae_source_mode)
     cap = MAE_CAPS_PCT.get(symbol, 0.35) * mae_enter_factor
     if mae_proxy > cap:
         return True, f"mae_cap_violation_{int(mae_enter_factor * 100)}pct"
@@ -602,6 +657,7 @@ def simulate_major_mae_calibration_mode(
     side_memory = bool(cfg["side_memory"])
     enforce_conf_floor = bool(cfg["enforce_conf_floor"])
     enforce_conf_non_decreasing = bool(cfg["enforce_conf_non_decreasing"])
+    mae_source_mode = str(cfg.get("mae_source_mode") or "llm_mae_primary")
 
     acc = ModeAccumulator()
     watchlists: Dict[str, WatchlistState] = {}
@@ -687,7 +743,9 @@ def simulate_major_mae_calibration_mode(
                     continue
 
                 mae_block, mae_reason = _mae_blocks_major_calibration(
-                    decision, mae_enter_factor=mae_factor
+                    decision,
+                    mae_enter_factor=mae_factor,
+                    mae_source_mode=mae_source_mode,
                 )
                 if mae_block:
                     acc.block_reason_counts[mae_reason] += 1
@@ -738,7 +796,9 @@ def simulate_major_mae_calibration_mode(
                 continue
 
             mae_block, mae_reason = _mae_blocks_major_calibration(
-                decision, mae_enter_factor=mae_factor
+                decision,
+                mae_enter_factor=mae_factor,
+                mae_source_mode=mae_source_mode,
             )
             if mae_block:
                 acc.block_reason_counts[mae_reason] += 1
@@ -786,6 +846,7 @@ def _calibration_mode_to_dict(mode: str, acc: ModeAccumulator) -> Dict[str, Any]
     confs = acc.graduation_confidences
     avg_conf = round(sum(confs) / len(confs), 4) if confs else 0.0
     factor = MAE_CALIBRATION_CONFIG[mode]["mae_enter_factor"]
+    mae_source_mode = str(MAE_CALIBRATION_CONFIG[mode].get("mae_source_mode") or "llm_mae_primary")
     return {
         "mode": mode,
         "watchlist_created": acc.watchlist_created,
@@ -798,6 +859,7 @@ def _calibration_mode_to_dict(mode: str, acc: ModeAccumulator) -> Dict[str, Any]
         "block_reason_counts": dict(acc.block_reason_counts),
         "avg_confidence_of_graduations": avg_conf,
         "side_source_distribution": dict(acc.side_source_distribution),
+        "mae_source_mode": mae_source_mode,
         "mae_cap_used": {
             sym: round(MAE_CAPS_PCT.get(sym, 0.35) * factor, 4)
             for sym in sorted(MAJOR_SYMBOLS)
@@ -817,7 +879,9 @@ def _calibration_mode_to_dict(mode: str, acc: ModeAccumulator) -> Dict[str, Any]
 def recommend_calibration_mode_for_419(mode_results: Dict[str, Dict[str, Any]]) -> str:
     best_mode = "none"
     best_count = 0
-    for mode in MAE_CALIBRATION_MODES:
+    llm_modes = [m for m in MAE_CALIBRATION_MODES if "llm_mae" in m]
+    search_order = llm_modes + [m for m in MAE_CALIBRATION_MODES if m not in llm_modes]
+    for mode in search_order:
         count = int((mode_results.get(mode) or {}).get("hypothetical_graduation_count", 0))
         if count > best_count:
             best_count = count

@@ -10,6 +10,8 @@ from unittest.mock import patch
 
 from tools.research.stage4_paper_event_logger import (
     GuardStats,
+    MaeSourceStats,
+    apply_paper_guards,
     classify_paper_event,
     contains_secret,
     is_eligible_decision,
@@ -17,6 +19,13 @@ from tools.research.stage4_paper_event_logger import (
     render_report,
     run_paper_event_logger,
     strip_events_for_output,
+)
+from tools.research.stage4_paper_guard_inputs import (
+    MAE_SOURCE_LEGACY,
+    MAE_SOURCE_LLM,
+    MAE_SOURCE_MISSING,
+    get_paper_mae_pct,
+    legacy_market_mae_proxy_pct,
 )
 
 
@@ -29,7 +38,7 @@ def _watch_paper_fields() -> Dict[str, Any]:
             "invalidation_reason": "Break below range low",
             "max_adverse_move_pct": 0.35,
         },
-        "mae_risk_estimate_pct": 0.22,
+        "mae_risk_estimate_pct": 0.20,
         "decision_quality_incomplete": False,
         "paper_readiness": {
             "eligible_for_watchlist": True,
@@ -52,7 +61,7 @@ def _enter_paper_fields() -> Dict[str, Any]:
             "invalidation_reason": "Structure break",
             "max_adverse_move_pct": 0.30,
         },
-        "mae_risk_estimate_pct": 0.22,
+        "mae_risk_estimate_pct": 0.20,
         "risk_reward_estimate": 1.5,
         "decision_quality_incomplete": False,
         "paper_readiness": {
@@ -390,6 +399,106 @@ class Stage418CPaperReadinessLoggerTests(unittest.TestCase):
             )
             summary = run_paper_event_logger([inp], output_dir=out, mode="overwrite")
             self.assertEqual(summary["order_sent_count"], 0)
+
+
+class Stage418EPaperMaeIntegrationTests(unittest.TestCase):
+    def test_get_paper_mae_pct_uses_llm_when_present(self) -> None:
+        row = _decision(
+            decision_intent="hard_skip",
+            mae_risk_estimate_pct=0.22,
+            market_context={"volatility_level": "high"},
+        )
+        mae, src = get_paper_mae_pct(row)
+        self.assertEqual(src, MAE_SOURCE_LLM)
+        self.assertAlmostEqual(mae, 0.22)
+
+    def test_get_paper_mae_pct_fallback_legacy(self) -> None:
+        row = _decision(
+            mae_risk_estimate_pct=None,
+            market_context={"volatility_level": "high", "last_price": 62000.0},
+        )
+        row.pop("mae_risk_estimate_pct", None)
+        mae, src = get_paper_mae_pct(row)
+        self.assertEqual(src, MAE_SOURCE_LEGACY)
+        self.assertAlmostEqual(mae, legacy_market_mae_proxy_pct(row))
+
+    def test_missing_mae_not_silent_zero(self) -> None:
+        row = _decision(mae_risk_estimate_pct=None)
+        row.pop("mae_risk_estimate_pct", None)
+        with patch(
+            "tools.research.stage4_paper_guard_inputs.legacy_market_mae_proxy_pct",
+            return_value=0.0,
+        ):
+            mae, src = get_paper_mae_pct(row)
+        self.assertEqual(src, MAE_SOURCE_MISSING)
+        self.assertEqual(mae, 0.0)
+
+    def test_paper_event_includes_mae_fields(self) -> None:
+        event = classify_paper_event(
+            _decision(decision_intent="watch", mae_risk_estimate_pct=0.22),
+            source_dataset="/data/test",
+            watchlists={},
+        )
+        assert event is not None
+        self.assertIn("paper_mae_pct", event)
+        self.assertIn("paper_mae_source", event)
+        self.assertIn("llm_mae_risk_estimate_pct", event)
+        self.assertEqual(event["paper_mae_source"], MAE_SOURCE_LLM)
+
+    def test_summary_mae_source_distribution(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            inp = Path(tmp) / "in"
+            out = Path(tmp) / "out"
+            inp.mkdir()
+            (inp / "ai_decisions.jsonl").write_text(
+                json.dumps(_decision(decision_id="d1", decision_intent="watch", mae_risk_estimate_pct=0.22))
+                + "\n",
+                encoding="utf-8",
+            )
+            summary = run_paper_event_logger([inp], output_dir=out, mode="overwrite")
+            self.assertGreater(summary.get("llm_mae_used_count", 0), 0)
+            self.assertIn("mae_source_distribution", summary)
+
+    def test_llm_mae_allows_watch_when_proxy_blocks(self) -> None:
+        row = _decision(
+            decision_intent="watch",
+            symbol="BTCUSDT",
+            mae_risk_estimate_pct=0.22,
+            market_context={
+                "last_price": 62000.0,
+                "regime": "range",
+                "volatility_level": "high",
+                "volatility_15m": 0.004,
+            },
+        )
+        guard = apply_paper_guards(row, intent="watch", side="LONG")
+        self.assertEqual(guard.verdict, "allow")
+        self.assertEqual(guard.paper_mae_source, MAE_SOURCE_LLM)
+        event = classify_paper_event(row, source_dataset="/data/test", watchlists={})
+        assert event is not None
+        self.assertEqual(event["paper_action"], "watchlist")
+        self.assertNotIn("mae_watch_downgrade", event["risk_governor_reasons"])
+
+    def test_legacy_proxy_blocks_high_vol_watch_without_llm_mae(self) -> None:
+        row = _decision(
+            decision_intent="watch",
+            symbol="BTCUSDT",
+            market_context={
+                "last_price": 62000.0,
+                "regime": "range",
+                "volatility_level": "high",
+                "volatility_15m": 0.004,
+            },
+        )
+        row.pop("mae_risk_estimate_pct", None)
+        guard = apply_paper_guards(
+            row,
+            intent="watch",
+            side="LONG",
+            mae_source_mode="legacy_proxy_primary",
+        )
+        self.assertEqual(guard.verdict, "downgrade_to_skip")
+        self.assertIn("mae_watch_downgrade", guard.reasons)
 
 
 if __name__ == "__main__":
