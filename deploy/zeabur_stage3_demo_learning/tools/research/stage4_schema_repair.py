@@ -10,6 +10,10 @@ from tools.research.stage4_decision_schema import (
     VALID_SIDES,
     parse_llm_decision,
 )
+from tools.research.stage4_paper_readiness import (
+    default_paper_field_defaults,
+    enrich_proposal_paper_fields,
+)
 
 NON_DIRECTIONAL_DEFAULTS: Dict[str, Any] = {
     "requires_manual_review": False,
@@ -23,6 +27,23 @@ NON_DIRECTIONAL_DEFAULTS: Dict[str, Any] = {
     "missing_data": [],
     "edge_factors": [],
     "risk_factors": [],
+    **{
+        k: v
+        for k, v in default_paper_field_defaults().items()
+        if k
+        in {
+            "side_confidence",
+            "watch_followup_required",
+            "watch_confirmation_reason",
+            "mfe_potential_estimate_pct",
+        }
+    },
+    "directional_bias": "NONE",
+    "mae_risk_estimate_pct": 0.0,
+    "risk_reward_estimate": 0.0,
+    "entry_trigger": default_paper_field_defaults()["entry_trigger"],
+    "invalidation": default_paper_field_defaults()["invalidation"],
+    "paper_readiness": default_paper_field_defaults()["paper_readiness"],
 }
 
 REPAIRABLE_ERROR_PREFIXES = (
@@ -186,6 +207,7 @@ def attempt_schema_safe_repair(
     proposal["schema_mismatch_repair_attempted"] = True
     proposal["parse_error"] = False
     proposal["parse_error_type"] = None
+    proposal = enrich_proposal_paper_fields(proposal, patched)
     meta["schema_repaired"] = True
     meta["schema_mismatch_repair_success"] = True
     return proposal, meta

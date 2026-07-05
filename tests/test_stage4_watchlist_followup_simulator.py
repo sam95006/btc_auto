@@ -427,6 +427,16 @@ class Stage418BMaeCalibrationTests(unittest.TestCase):
         self.assertFalse(summary["production_touched"])
         self.assertFalse(summary["btc_auto_touched"])
 
+    def test_input_dir_alias_for_decision_dir(self) -> None:
+        import argparse
+        from tools.research import stage4_watchlist_followup_simulator as mod
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--decision-dir", "--input-dir", action="append", dest="decision_dirs", default=[])
+        args = parser.parse_args(["--input-dir", "/data/test"])
+        self.assertEqual(args.decision_dirs, ["/data/test"])
+        self.assertIn("--input-dir", Path(mod.__file__).read_text(encoding="utf-8"))
+
 
 class Stage418CPaperReadinessSimulatorTests(unittest.TestCase):
     def test_simulator_blocks_decision_quality_incomplete(self) -> None:

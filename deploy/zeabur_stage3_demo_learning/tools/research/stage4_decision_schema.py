@@ -27,6 +27,16 @@ OPTIONAL_LLM_FIELDS = (
     "missing_data",
     "edge_factors",
     "risk_factors",
+    "directional_bias",
+    "side_confidence",
+    "watch_followup_required",
+    "watch_confirmation_reason",
+    "entry_trigger",
+    "invalidation",
+    "mae_risk_estimate_pct",
+    "mfe_potential_estimate_pct",
+    "risk_reward_estimate",
+    "paper_readiness",
 )
 
 
@@ -109,7 +119,9 @@ def parse_llm_decision(raw: Dict[str, Any], *, symbol: str) -> Tuple[Dict[str, A
         from tools.research.bybit_demo_learning_common import MAX_MARGIN_USD
 
         proposal["position_size_suggestion"] = round(min(MAX_MARGIN_USD, MAX_MARGIN_USD * conf), 4)
-    return proposal, True, ""
+    from tools.research.stage4_paper_readiness import enrich_proposal_paper_fields
+
+    return enrich_proposal_paper_fields(proposal, raw), True, ""
 
 
 def skip_proposal(symbol: str, reason: str, parse_error_type: str = "parse_error") -> Dict[str, Any]:

@@ -10,9 +10,15 @@ Respond with a single JSON object only. No markdown or prose outside JSON.
 Do NOT suggest changing safety caps or recommend mainnet, real money, production, or ARM.
 Allowed final_action: enter, skip. Use decision_intent for watch/enter_candidate while final_action stays skip.
 Allowed candidate_side: BUY, SELL, NONE. Allowed decision_intent: hard_skip, soft_skip, watch, enter_candidate.
+Allowed directional_bias: LONG, SHORT, NONE (maps from candidate_side: BUY=LONG, SELL=SHORT).
 confidence is 0-1. Dry-run only — output will NOT place orders; Risk Supervisor will review.
 Use market_context.regime, trend_15m, trend_strength, volatility_level, change_24h_pct.
-If patch action is block_reentry or manual_review_required, use hard_skip. Vary confidence by intent band."""
+If patch action is block_reentry or manual_review_required, use hard_skip. Vary confidence by intent band.
+Paper-readiness rules (Stage 4.18-C):
+- watch: MUST include directional_bias (not NONE), watch_confirmation_reason, invalidation, mae_risk_estimate_pct.
+- enter_candidate: MUST include candidate_side (not NONE), directional_bias (not NONE), entry_trigger, invalidation, mae_risk_estimate_pct, risk_reward_estimate.
+- If direction is unclear, use soft_skip or hard_skip — never enter_candidate with NONE side.
+- watch cannot become entry in the same tick; describe follow-up conditions only."""
 
 SCHEMA_FIELD_NAMES = (
     "final_action",
@@ -31,6 +37,16 @@ SCHEMA_FIELD_NAMES = (
     "patch_awareness",
     "uncertainty",
     "requires_manual_review",
+    "directional_bias",
+    "side_confidence",
+    "watch_followup_required",
+    "watch_confirmation_reason",
+    "entry_trigger",
+    "invalidation",
+    "mae_risk_estimate_pct",
+    "mfe_potential_estimate_pct",
+    "risk_reward_estimate",
+    "paper_readiness",
 )
 
 
@@ -81,6 +97,22 @@ OUTPUT_SCHEMA_HINT = {
     "final_action": "enter|skip",
     "decision_intent": "hard_skip|soft_skip|watch|enter_candidate",
     "candidate_side": "BUY|SELL|NONE",
+    "directional_bias": "LONG|SHORT|NONE",
+    "entry_trigger": {
+        "type": "price_breakout|pullback_confirm|momentum_confirm|none",
+        "trigger_price": "number",
+        "trigger_condition": "string",
+    },
+    "invalidation": {
+        "invalidation_price": "number",
+        "invalidation_reason": "string",
+        "max_adverse_move_pct": "number",
+    },
+    "paper_readiness": {
+        "eligible_for_watchlist": "bool",
+        "eligible_for_hypothetical_entry": "bool",
+        "block_reason": "string",
+    },
 }
 
 
@@ -113,6 +145,9 @@ def build_decision_prompt(
         "instructions": [
             "Classify decision_intent and calibrate confidence by intent band.",
             "Respect blocking patches; list data gaps in missing_data when quality is partial.",
+            "For watch: set directional_bias, watch_confirmation_reason, invalidation, mae_risk_estimate_pct.",
+            "For enter_candidate: require candidate_side, directional_bias, entry_trigger, invalidation, mae_risk_estimate_pct, risk_reward_estimate.",
+            "If direction unclear, use soft_skip/hard_skip — never enter_candidate with NONE side.",
         ],
     }
     return [

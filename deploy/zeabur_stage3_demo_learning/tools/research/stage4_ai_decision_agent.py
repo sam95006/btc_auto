@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 from tools.research.bybit_demo_learning_common import MAX_MARGIN_USD, utc_now_iso
 from tools.research.stage3_learning_loop import append_jsonl, resolve_output_dir, setup_key
 from tools.research.stage4_decision_schema import parse_llm_decision
+from tools.research.stage4_paper_readiness import default_paper_field_defaults, enrich_proposal_paper_fields
 from tools.research.stage4_parse_error_metrics import normalize_parse_error_type
 from tools.research.stage4_prompt_builder import build_decision_prompt, prompt_fingerprint
 from tools.research.stage4_context_summary import (  # noqa: E402
@@ -431,6 +432,7 @@ class Stage4AIDecisionAgent:
             )
             prompt_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
             proposal = self._mock_proposal(symbol=symbol, market_context=market_context, patches=patches)
+            proposal = enrich_proposal_paper_fields(proposal, proposal)
 
         supervisor_result = self.supervisor.evaluate(
             proposal=proposal,
@@ -548,7 +550,13 @@ class Stage4AIDecisionAgent:
             "risk_supervisor_result": sr,
             "final_decision": final_decision,
             "order_sent": False,
+            "decision_quality_incomplete": bool(proposal.get("decision_quality_incomplete")),
+            "paper_readiness": proposal.get("paper_readiness")
+            or default_paper_field_defaults()["paper_readiness"],
         }
+        for paper_key, paper_val in default_paper_field_defaults().items():
+            if paper_key not in row:
+                row[paper_key] = proposal.get(paper_key, paper_val)
         return row
 
 
