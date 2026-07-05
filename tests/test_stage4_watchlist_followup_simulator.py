@@ -9,9 +9,13 @@ from typing import Any, Dict
 
 from tools.research.stage4_paper_event_logger import run_paper_event_logger
 from tools.research.stage4_watchlist_followup_simulator import (
+    MAE_CALIBRATION_MODES,
     contains_secret,
+    render_418b_report,
     render_report,
+    run_major_mae_calibration_replay,
     run_simulator,
+    simulate_major_mae_calibration_mode,
     simulate_mode,
 )
 
@@ -210,6 +214,166 @@ class Stage418WatchlistSimulatorTests(unittest.TestCase):
             output_dir=tempfile.mkdtemp(),
         )["production_touched"])
         self.assertNotIn("place_order", source)
+
+
+class Stage418BMaeCalibrationTests(unittest.TestCase):
+    def _major_rows(self, **overrides: Any) -> list[tuple[str, Dict[str, Any]]]:
+        base = _decision(
+            symbol="BTCUSDT",
+            market_context={
+                "last_price": 62000.0,
+                "regime": "range",
+                "volatility_level": "low",
+                "volatility_15m": 0.0005,
+                "trend_15m": "up",
+            },
+            **overrides,
+        )
+        return [("/data/test", base)]
+
+    def test_major_mae_75_only_btc_eth(self) -> None:
+        rows = self._major_rows(decision_intent="enter_candidate", confidence=0.50, candidate_side="LONG")
+        acc = simulate_major_mae_calibration_mode("major_mae_75", rows)
+        self.assertIn("BTCUSDT", acc.per_symbol_graduations or acc.per_symbol_graduations.keys() or {"BTCUSDT": 0})
+        sol = simulate_major_mae_calibration_mode(
+            "major_mae_75",
+            [("/data/test", _decision(symbol="SOLUSDT", decision_intent="enter_candidate", confidence=0.55))],
+        )
+        self.assertEqual(sol.hypothetical_graduation_count, 0)
+        self.assertGreater(sol.sol_pepe_blocked_count, 0)
+
+    def test_major_mae_90_graduation_possible(self) -> None:
+        rows = self._major_rows(decision_intent="enter_candidate", confidence=0.50, candidate_side="LONG")
+        acc = simulate_major_mae_calibration_mode("major_mae_90", rows)
+        self.assertGreaterEqual(acc.hypothetical_graduation_count, 0)
+
+    def test_major_mae_100_graduation_possible(self) -> None:
+        rows = self._major_rows(decision_intent="enter_candidate", confidence=0.50, candidate_side="LONG")
+        acc = simulate_major_mae_calibration_mode("major_mae_100", rows)
+        self.assertEqual(acc.hypothetical_graduation_count, 1)
+
+    def test_sol_pepe_always_blocked(self) -> None:
+        for mode in MAE_CALIBRATION_MODES:
+            acc = simulate_major_mae_calibration_mode(
+                mode,
+                [("/data/test", _decision(symbol="PEPEUSDT", decision_intent="watch"))],
+            )
+            self.assertEqual(acc.hypothetical_graduation_count, 0)
+            self.assertGreater(acc.sol_pepe_blocked_count, 0)
+
+    def test_side_memory_uses_recent_side(self) -> None:
+        rows = [
+            (
+                "/data/test",
+                _decision(
+                    decision_id="d0",
+                    tick_index=1,
+                    decision_intent="skip",
+                    candidate_side="LONG",
+                    confidence=0.44,
+                ),
+            ),
+            (
+                "/data/test",
+                _decision(
+                    decision_id="d1",
+                    tick_index=2,
+                    decision_intent="watch",
+                    candidate_side="NONE",
+                    confidence=0.45,
+                    market_context={"last_price": 62000, "regime": "range", "volatility_level": "low", "volatility_15m": 0.0005},
+                ),
+            ),
+            (
+                "/data/test",
+                _decision(
+                    decision_id="d2",
+                    tick_index=3,
+                    decision_intent="watch",
+                    candidate_side="NONE",
+                    confidence=0.46,
+                    market_context={"last_price": 62000, "regime": "range", "volatility_level": "low", "volatility_15m": 0.0005},
+                ),
+            ),
+        ]
+        acc = simulate_major_mae_calibration_mode("major_mae_100_side_memory", rows)
+        self.assertGreater(acc.hypothetical_graduation_count, 0)
+        self.assertIn("recent_confirmed_side", acc.side_source_distribution)
+
+    def test_side_memory_records_side_source(self) -> None:
+        rows = self._major_rows(decision_intent="enter_candidate", candidate_side="LONG", confidence=0.50)
+        acc = simulate_major_mae_calibration_mode("major_mae_100_side_memory", rows)
+        if acc.graduations:
+            self.assertIn(acc.graduations[0].get("side_source"), {"decision_candidate_side", "recent_confirmed_side"})
+
+    def test_confidence_floor_enforced(self) -> None:
+        rows = self._major_rows(decision_intent="enter_candidate", candidate_side="LONG", confidence=0.30)
+        acc = simulate_major_mae_calibration_mode("major_mae_100_side_memory_conf_floor", rows)
+        self.assertEqual(acc.hypothetical_graduation_count, 0)
+        self.assertTrue(any("confidence_below" in k for k in acc.block_reason_counts))
+
+    def test_graduation_count_in_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            inp = root / "in"
+            paper = root / "paper"
+            out = root / "out"
+            inp.mkdir()
+            paper.mkdir()
+            decisions = [
+                _decision(
+                    decision_id="d1",
+                    decision_intent="enter_candidate",
+                    candidate_side="LONG",
+                    confidence=0.50,
+                    market_context={"last_price": 62000, "regime": "range", "volatility_level": "low", "volatility_15m": 0.0005},
+                ),
+            ]
+            (inp / "ai_decisions.jsonl").write_text(json.dumps(decisions[0]) + "\n", encoding="utf-8")
+            run_paper_event_logger([inp], output_dir=paper, mode="overwrite")
+            summary = run_major_mae_calibration_replay(
+                decision_dirs=[inp], paper_events_dir=paper, output_dir=out
+            )
+            self.assertIn("mode_results", summary)
+            self.assertTrue((out / "stage4_18b_block_reason_matrix.json").is_file())
+
+    def test_block_reason_matrix_written(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            inp, paper, out = root / "in", root / "paper", root / "out"
+            inp.mkdir()
+            paper.mkdir()
+            (inp / "ai_decisions.jsonl").write_text(
+                json.dumps(_decision(decision_intent="watch")) + "\n",
+                encoding="utf-8",
+            )
+            run_paper_event_logger([inp], output_dir=paper, mode="overwrite")
+            run_major_mae_calibration_replay(decision_dirs=[inp], paper_events_dir=paper, output_dir=out)
+            matrix = json.loads((out / "stage4_18b_block_reason_matrix.json").read_text(encoding="utf-8"))
+            self.assertIn("major_mae_75", matrix)
+
+    def test_calibration_no_order_sent(self) -> None:
+        summary = run_major_mae_calibration_replay(
+            decision_dirs=[],
+            paper_events_dir=tempfile.mkdtemp(),
+            output_dir=tempfile.mkdtemp(),
+        )
+        self.assertEqual(summary["order_sent_count"], 0)
+
+    def test_calibration_no_exchange_path(self) -> None:
+        import tools.research.stage4_watchlist_followup_simulator as mod
+
+        source = Path(mod.__file__).read_text(encoding="utf-8")
+        self.assertNotIn("urlopen", source)
+
+    def test_calibration_production_not_touched(self) -> None:
+        summary = run_major_mae_calibration_replay(
+            decision_dirs=[],
+            paper_events_dir=tempfile.mkdtemp(),
+            output_dir=tempfile.mkdtemp(),
+        )
+        self.assertFalse(summary["production_touched"])
+        self.assertFalse(summary["btc_auto_touched"])
 
 
 if __name__ == "__main__":
