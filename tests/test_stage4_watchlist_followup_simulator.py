@@ -20,6 +20,49 @@ from tools.research.stage4_watchlist_followup_simulator import (
 )
 
 
+def _watch_paper_fields() -> Dict[str, Any]:
+    return {
+        "directional_bias": "LONG",
+        "watch_confirmation_reason": "Pullback held support",
+        "invalidation": {
+            "invalidation_price": 61000.0,
+            "invalidation_reason": "Break below support",
+            "max_adverse_move_pct": 0.35,
+        },
+        "mae_risk_estimate_pct": 0.22,
+        "decision_quality_incomplete": False,
+        "paper_readiness": {
+            "eligible_for_watchlist": True,
+            "eligible_for_hypothetical_entry": False,
+            "block_reason": "ok",
+        },
+    }
+
+
+def _enter_paper_fields() -> Dict[str, Any]:
+    return {
+        "directional_bias": "LONG",
+        "entry_trigger": {
+            "type": "pullback_confirm",
+            "trigger_price": 62000.0,
+            "trigger_condition": "Reclaim VWAP",
+        },
+        "invalidation": {
+            "invalidation_price": 61000.0,
+            "invalidation_reason": "Structure break",
+            "max_adverse_move_pct": 0.30,
+        },
+        "mae_risk_estimate_pct": 0.22,
+        "risk_reward_estimate": 1.5,
+        "decision_quality_incomplete": False,
+        "paper_readiness": {
+            "eligible_for_watchlist": False,
+            "eligible_for_hypothetical_entry": True,
+            "block_reason": "ok",
+        },
+    }
+
+
 def _decision(**overrides: Any) -> Dict[str, Any]:
     row: Dict[str, Any] = {
         "decision_id": "dec-1",
@@ -45,6 +88,15 @@ def _decision(**overrides: Any) -> Dict[str, Any]:
         },
     }
     row.update(overrides)
+    intent = str(row.get("decision_intent") or "").lower()
+    if intent == "watch" and "directional_bias" not in overrides and "decision_quality_incomplete" not in overrides:
+        row.update(_watch_paper_fields())
+    elif (
+        intent == "enter_candidate"
+        and "directional_bias" not in overrides
+        and "decision_quality_incomplete" not in overrides
+    ):
+        row.update(_enter_paper_fields())
     return row
 
 
@@ -374,6 +426,19 @@ class Stage418BMaeCalibrationTests(unittest.TestCase):
         )
         self.assertFalse(summary["production_touched"])
         self.assertFalse(summary["btc_auto_touched"])
+
+
+class Stage418CPaperReadinessSimulatorTests(unittest.TestCase):
+    def test_simulator_blocks_decision_quality_incomplete(self) -> None:
+        from tools.research.stage4_paper_event_logger import is_eligible_decision
+
+        row = _decision(decision_intent="watch", decision_quality_incomplete=True, directional_bias="NONE")
+        self.assertFalse(is_eligible_decision(row))
+
+    def test_simulator_allows_paper_ready_watch(self) -> None:
+        from tools.research.stage4_paper_event_logger import is_eligible_decision
+
+        self.assertTrue(is_eligible_decision(_decision(decision_intent="watch")))
 
 
 if __name__ == "__main__":

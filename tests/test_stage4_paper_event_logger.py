@@ -20,6 +20,49 @@ from tools.research.stage4_paper_event_logger import (
 )
 
 
+def _watch_paper_fields() -> Dict[str, Any]:
+    return {
+        "directional_bias": "LONG",
+        "watch_confirmation_reason": "Range support holding with neutral vol",
+        "invalidation": {
+            "invalidation_price": 61000.0,
+            "invalidation_reason": "Break below range low",
+            "max_adverse_move_pct": 0.35,
+        },
+        "mae_risk_estimate_pct": 0.22,
+        "decision_quality_incomplete": False,
+        "paper_readiness": {
+            "eligible_for_watchlist": True,
+            "eligible_for_hypothetical_entry": False,
+            "block_reason": "ok",
+        },
+    }
+
+
+def _enter_paper_fields() -> Dict[str, Any]:
+    return {
+        "directional_bias": "LONG",
+        "entry_trigger": {
+            "type": "pullback_confirm",
+            "trigger_price": 62000.0,
+            "trigger_condition": "Reclaim VWAP",
+        },
+        "invalidation": {
+            "invalidation_price": 61000.0,
+            "invalidation_reason": "Structure break",
+            "max_adverse_move_pct": 0.30,
+        },
+        "mae_risk_estimate_pct": 0.22,
+        "risk_reward_estimate": 1.5,
+        "decision_quality_incomplete": False,
+        "paper_readiness": {
+            "eligible_for_watchlist": False,
+            "eligible_for_hypothetical_entry": True,
+            "block_reason": "ok",
+        },
+    }
+
+
 def _decision(**overrides: Any) -> Dict[str, Any]:
     row: Dict[str, Any] = {
         "decision_id": "dec-test-1",
@@ -46,6 +89,15 @@ def _decision(**overrides: Any) -> Dict[str, Any]:
         },
     }
     row.update(overrides)
+    intent = str(row.get("decision_intent") or "").lower()
+    if intent == "watch" and "directional_bias" not in overrides and "decision_quality_incomplete" not in overrides:
+        row.update(_watch_paper_fields())
+    elif (
+        intent == "enter_candidate"
+        and "directional_bias" not in overrides
+        and "decision_quality_incomplete" not in overrides
+    ):
+        row.update(_enter_paper_fields())
     return row
 
 
@@ -301,6 +353,43 @@ class Stage417PaperEventLoggerTests(unittest.TestCase):
         )
         self.assertNotIn("place_order", source)
         self.assertNotIn("BybitDemoClient", source)
+
+
+class Stage418CPaperReadinessLoggerTests(unittest.TestCase):
+    def test_logger_blocks_decision_quality_incomplete(self) -> None:
+        self.assertFalse(
+            is_eligible_decision(
+                _decision(
+                    decision_intent="watch",
+                    decision_quality_incomplete=True,
+                    directional_bias="NONE",
+                )
+            )
+        )
+
+    def test_complete_watch_is_eligible(self) -> None:
+        self.assertTrue(is_eligible_decision(_decision(decision_intent="watch")))
+
+    def test_enter_candidate_missing_side_ineligible(self) -> None:
+        row = _decision(
+            decision_intent="enter_candidate",
+            candidate_side="NONE",
+            decision_quality_incomplete=True,
+            directional_bias="NONE",
+        )
+        self.assertFalse(is_eligible_decision(row))
+
+    def test_no_order_sent_in_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            inp = Path(tmp) / "in"
+            out = Path(tmp) / "out"
+            inp.mkdir()
+            (inp / "ai_decisions.jsonl").write_text(
+                json.dumps(_decision(decision_intent="watch")) + "\n",
+                encoding="utf-8",
+            )
+            summary = run_paper_event_logger([inp], output_dir=out, mode="overwrite")
+            self.assertEqual(summary["order_sent_count"], 0)
 
 
 if __name__ == "__main__":

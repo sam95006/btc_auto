@@ -621,6 +621,9 @@ def _run_dry_run_inner(
         from tools.research.stage4_schema_repair import build_schema_mismatch_summary
 
         summary.update(build_schema_mismatch_summary(decisions))
+        from tools.research.stage4_paper_readiness import build_paper_readiness_metrics
+
+        summary.update(build_paper_readiness_metrics(decisions))
         from tools.research.stage4_provider_metrics import build_provider_dependency_metrics
 
         summary.update(

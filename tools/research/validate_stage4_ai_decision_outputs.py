@@ -24,6 +24,7 @@ from tools.research.stage4_per_symbol_summary import (  # noqa: E402
     per_symbol_chain_failed_counts,
 )
 from tools.research.stage4_parse_error_metrics import build_parse_error_summary  # noqa: E402
+from tools.research.stage4_paper_readiness import build_paper_readiness_metrics  # noqa: E402
 from tools.research.stage4_system_events import read_system_events  # noqa: E402
 
 ALLOWED_REAL_PROVIDERS = frozenset({"groq", "cerebras", "openai", "anthropic", "gemini"})
@@ -266,6 +267,7 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
     per_symbol_failed_sum = sum(per_symbol_failed.values())
     per_symbol_failed_sum_matches_global = per_symbol_failed_sum == global_chain_failed
     parse_error_summary = build_parse_error_summary(decisions)
+    paper_readiness_metrics = build_paper_readiness_metrics(decisions)
     if metrics["parse_error_count"] != int(parse_error_summary.get("parse_error_count") or 0):
         technical_errors.append("parse_error_count_mismatch")
     if require_real_llm and global_chain_failed > 0 and not per_symbol_failed_sum_matches_global:
@@ -325,6 +327,7 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
         "tick_processing_seconds_avg": float(summary.get("tick_processing_seconds_avg") or 0),
         "tick_processing_seconds_max": float(summary.get("tick_processing_seconds_max") or 0),
         **parse_error_summary,
+        **paper_readiness_metrics,
     }
 
 

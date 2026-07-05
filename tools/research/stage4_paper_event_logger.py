@@ -187,6 +187,10 @@ def _hard_block_enter(decision: Dict[str, Any]) -> Tuple[bool, List[str]]:
         reasons.append("provider_chain_failed")
     if not str(decision.get("provider") or "").strip():
         reasons.append("missing_provider")
+    from tools.research.stage4_paper_readiness import infer_decision_quality_incomplete
+
+    if infer_decision_quality_incomplete(decision):
+        reasons.append("decision_quality_incomplete")
     return bool(reasons), reasons
 
 
@@ -350,6 +354,10 @@ def is_eligible_decision(decision: Dict[str, Any]) -> bool:
     if decision.get("is_mock_ai"):
         return False
     if decision.get("order_sent"):
+        return False
+    from tools.research.stage4_paper_readiness import infer_decision_quality_incomplete
+
+    if infer_decision_quality_incomplete(decision):
         return False
     return True
 
@@ -733,6 +741,8 @@ def build_summary(
     excluded_parse: int,
     excluded_mock: int,
     excluded_order: int,
+    excluded_quality_incomplete: int = 0,
+    paper_readiness_metrics: Optional[Dict[str, int]] = None,
 ) -> Dict[str, Any]:
     paper_actions = Counter(str(e.get("paper_action") or "unknown") for e in events)
     verdicts = Counter(str(e.get("risk_governor_verdict") or "unknown") for e in events)
@@ -781,6 +791,7 @@ def build_summary(
         "excluded_parse_error_count": excluded_parse,
         "excluded_mock_ai_count": excluded_mock,
         "excluded_order_sent_count": excluded_order,
+        "excluded_decision_quality_incomplete_count": excluded_quality_incomplete,
         "paper_action_distribution": dict(paper_actions),
         "per_symbol_event_counts": dict(per_symbol),
         "per_symbol_paper_action_distribution": {k: dict(v) for k, v in per_symbol_actions.items()},
@@ -800,6 +811,7 @@ def build_summary(
         "any_exchange_call_made": False,
         "production_touched": False,
         "btc_auto_touched": False,
+        **(paper_readiness_metrics or {}),
         "events": clean_events,
     }
 
@@ -831,7 +843,11 @@ def run_paper_event_logger(
     missing_datasets: List[str] = []
     all_rows: List[Tuple[str, Dict[str, Any]]] = []
     total_read = 0
-    excluded_parse = excluded_mock = excluded_order = 0
+    excluded_parse = excluded_mock = excluded_order = excluded_quality = 0
+    from tools.research.stage4_paper_readiness import (
+        build_paper_readiness_metrics,
+        infer_decision_quality_incomplete,
+    )
 
     for raw_dir in input_dirs:
         dpath = Path(raw_dir)
@@ -850,6 +866,8 @@ def run_paper_event_logger(
                 excluded_mock += 1
             if row.get("order_sent"):
                 excluded_order += 1
+            if infer_decision_quality_incomplete(row):
+                excluded_quality += 1
             all_rows.append((canonical, row))
 
     all_rows.sort(key=lambda item: _sort_key(item[1], item[0]))
@@ -892,6 +910,8 @@ def run_paper_event_logger(
         excluded_parse=excluded_parse,
         excluded_mock=excluded_mock,
         excluded_order=excluded_order,
+        excluded_quality_incomplete=excluded_quality,
+        paper_readiness_metrics=build_paper_readiness_metrics([r for _, r in all_rows]),
     )
     write_json(output_dir / "stage4_17_paper_event_summary.json", strip_events_for_output(summary))
     return summary

@@ -4230,5 +4230,142 @@ class Stage415QualityReviewTests(unittest.TestCase):
             self.assertNotIn(bad_key, md)
 
 
+class Stage418CPaperReadinessSchemaTests(unittest.TestCase):
+    def _base_llm(self, **overrides: Any) -> Dict[str, Any]:
+        raw: Dict[str, Any] = {
+            "final_action": "skip",
+            "symbol": "BTCUSDT",
+            "candidate_side": "NONE",
+            "confidence": 0.45,
+            "why_enter": "",
+            "why_skip": "No edge",
+            "side_reason": "Flat",
+            "confidence_reason": "Low conviction",
+            "risk_notes": [],
+            "patch_awareness": "",
+            "uncertainty": "medium",
+            "requires_manual_review": False,
+            "decision_intent": "watch",
+        }
+        raw.update(overrides)
+        return raw
+
+    def test_watch_requires_directional_bias(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        proposal, ok, _ = parse_llm_decision(self._base_llm(decision_intent="watch"), symbol="BTCUSDT")
+        self.assertTrue(ok)
+        self.assertTrue(proposal.get("decision_quality_incomplete"))
+
+    def test_watch_with_directional_bias_paper_ready(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        proposal, ok, _ = parse_llm_decision(
+            self._base_llm(
+                decision_intent="watch",
+                directional_bias="LONG",
+                watch_confirmation_reason="Support held",
+                invalidation={"invalidation_price": 61000, "invalidation_reason": "Break low", "max_adverse_move_pct": 0.3},
+                mae_risk_estimate_pct=0.2,
+            ),
+            symbol="BTCUSDT",
+        )
+        self.assertTrue(ok)
+        self.assertFalse(proposal.get("decision_quality_incomplete"))
+        self.assertTrue(proposal.get("paper_readiness", {}).get("eligible_for_watchlist"))
+
+    def test_enter_candidate_requires_candidate_side(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        proposal, ok, _ = parse_llm_decision(
+            self._base_llm(
+                decision_intent="enter_candidate",
+                candidate_side="NONE",
+                directional_bias="LONG",
+                entry_trigger={"type": "pullback_confirm", "trigger_price": 62000, "trigger_condition": "VWAP"},
+                invalidation={"invalidation_price": 61000, "invalidation_reason": "SL", "max_adverse_move_pct": 0.3},
+                mae_risk_estimate_pct=0.2,
+                risk_reward_estimate=1.5,
+            ),
+            symbol="BTCUSDT",
+        )
+        self.assertTrue(ok)
+        self.assertTrue(proposal.get("decision_quality_incomplete"))
+
+    def test_missing_directional_fields_not_parse_error(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        proposal, ok, err = parse_llm_decision(self._base_llm(decision_intent="watch"), symbol="BTCUSDT")
+        self.assertTrue(ok)
+        self.assertEqual(err, "")
+        self.assertFalse(proposal.get("parse_error"))
+
+    def test_schema_repair_never_creates_trade_intent(self) -> None:
+        from tools.research.stage4_schema_repair import attempt_schema_safe_repair
+
+        raw = {
+            "final_action": "enter",
+            "symbol": "BTCUSDT",
+            "candidate_side": "BUY",
+            "confidence": 0.7,
+        }
+        proposal, meta = attempt_schema_safe_repair(
+            raw, symbol="BTCUSDT", parse_error="missing_fields:why_enter"
+        )
+        self.assertIsNotNone(proposal)
+        self.assertEqual(proposal.get("final_action"), "skip")
+        self.assertEqual(proposal.get("decision_intent"), "hard_skip")
+        self.assertEqual(proposal.get("candidate_side"), "NONE")
+
+    def test_mae_risk_estimate_parsed(self) -> None:
+        from tools.research.stage4_paper_readiness import parse_entry_trigger, parse_invalidation
+
+        trigger = parse_entry_trigger({"type": "price_breakout", "trigger_price": 62000, "trigger_condition": "Break"})
+        inv = parse_invalidation({"invalidation_price": 61000, "invalidation_reason": "SL", "max_adverse_move_pct": 0.25})
+        self.assertEqual(trigger["type"], "price_breakout")
+        self.assertEqual(inv["invalidation_reason"], "SL")
+
+    def test_paper_readiness_metrics_in_summary(self) -> None:
+        from tools.research.stage4_paper_readiness import build_paper_readiness_metrics
+
+        metrics = build_paper_readiness_metrics(
+            [
+                {
+                    "decision_intent": "watch",
+                    "directional_bias": "LONG",
+                    "watch_confirmation_reason": "ok",
+                    "invalidation": {"invalidation_reason": "x", "invalidation_price": 1},
+                    "mae_risk_estimate_pct": 0.2,
+                    "decision_quality_incomplete": False,
+                    "paper_readiness": {"eligible_for_watchlist": True, "eligible_for_hypothetical_entry": False},
+                }
+            ]
+        )
+        self.assertIn("paper_ready_watch_count", metrics)
+        self.assertEqual(metrics["paper_ready_watch_count"], 1)
+
+    def test_no_order_sent(self) -> None:
+        agent = Stage4AIDecisionAgent(use_real_llm=False)
+        decision = agent.decide(
+            symbol="BTCUSDT",
+            market_context={"last_price": 62000, "prev_price_24h": 61900},
+            account_context={"available_balance": 5000},
+        )
+        self.assertFalse(decision.get("order_sent"))
+
+    def test_no_exchange_path_in_agent(self) -> None:
+        import tools.research.stage4_ai_decision_agent as mod
+
+        source = Path(mod.__file__).read_text(encoding="utf-8")
+        self.assertNotIn("urlopen", source)
+
+    def test_production_btc_auto_not_referenced(self) -> None:
+        import tools.research.stage4_decision_schema as mod
+
+        source = Path(mod.__file__).read_text(encoding="utf-8")
+        self.assertNotIn("btc-auto", source)
+        self.assertNotIn("btc_auto", source)
+
+
 if __name__ == "__main__":
     unittest.main()
