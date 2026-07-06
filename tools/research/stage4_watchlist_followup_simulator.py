@@ -18,6 +18,7 @@ if str(ROOT) not in sys.path:
 
 from tools.research.bybit_demo_learning_common import utc_now_iso, write_json  # noqa: E402
 from tools.research.stage4_paper_guard_inputs import get_paper_mae_pct  # noqa: E402
+from tools.research.stage4_paper_readiness import _directional_bias_without_side  # noqa: E402
 from tools.research.stage4_paper_event_logger import (  # noqa: E402
     ALT_SYMBOLS,
     CONFIDENCE_FLOORS,
@@ -297,6 +298,18 @@ def _record_transition(
     )
 
 
+def _blocks_directional_bias_without_side(
+    decision: Dict[str, Any],
+    *,
+    side_source: str,
+) -> bool:
+    if not decision.get("directional_bias_without_candidate_side"):
+        return False
+    if _normalize_side(decision.get("candidate_side")) != "NONE":
+        return False
+    return side_source not in {"watchlist_side_bias", "recent_confirmed_side"}
+
+
 def _try_graduate(
     acc: ModeAccumulator,
     *,
@@ -311,7 +324,13 @@ def _try_graduate(
     symbol = str(decision.get("symbol") or "").upper()
     resolved_side = side or _normalize_side(decision.get("candidate_side")) or watchlist.side_bias
     if resolved_side == "NONE":
-        acc.block_reason_counts["candidate_side_none"] += 1
+        if decision.get("directional_bias_without_candidate_side") or _directional_bias_without_side(decision):
+            acc.block_reason_counts["directional_bias_without_candidate_side"] += 1
+        else:
+            acc.block_reason_counts["candidate_side_none"] += 1
+        return False
+    if _blocks_directional_bias_without_side(decision, side_source=side_source):
+        acc.block_reason_counts["directional_bias_without_candidate_side"] += 1
         return False
     ref = _safe_float((decision.get("market_context") or {}).get("last_price"))
     entry, sl, tp, hold = _hypothetical_prices(symbol, resolved_side, ref)
@@ -759,7 +778,15 @@ def simulate_major_mae_calibration_mode(
                     side_memory=side_memory,
                 )
                 if resolved_side == "NONE":
-                    acc.block_reason_counts["candidate_side_none"] += 1
+                    if decision.get("directional_bias_without_candidate_side") or _directional_bias_without_side(
+                        decision
+                    ):
+                        acc.block_reason_counts["directional_bias_without_candidate_side"] += 1
+                    else:
+                        acc.block_reason_counts["candidate_side_none"] += 1
+                    continue
+                if _blocks_directional_bias_without_side(decision, side_source=side_source):
+                    acc.block_reason_counts["directional_bias_without_candidate_side"] += 1
                     continue
 
                 _try_graduate(

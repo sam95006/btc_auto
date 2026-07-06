@@ -26,6 +26,11 @@ def _watch_paper_fields() -> Dict[str, Any]:
     return {
         "directional_bias": "LONG",
         "watch_confirmation_reason": "Pullback held support",
+        "entry_trigger": {
+            "type": "pullback_confirm",
+            "trigger_price": 62000.0,
+            "trigger_condition": "Reclaim VWAP",
+        },
         "invalidation": {
             "invalidation_price": 61000.0,
             "invalidation_reason": "Break below support",
@@ -626,6 +631,53 @@ class Stage418ICompareIntegrationTests(unittest.TestCase):
         source = Path(mod.__file__).read_text(encoding="utf-8")
         self.assertNotIn("btc-auto", source)
         self.assertNotIn("place_order", source)
+
+
+class Stage418JSimulatorEnforcementTests(unittest.TestCase):
+    def test_simulator_blocks_graduation_directional_bias_without_side(self) -> None:
+        watch_fields = {
+            k: v
+            for k, v in _watch_paper_fields().items()
+            if k not in {"directional_bias", "mae_risk_estimate_pct"}
+        }
+        rows = [
+            (
+                "/data/test",
+                _decision(
+                    **watch_fields,
+                    decision_id="d1",
+                    tick_index=1,
+                    symbol="BTCUSDT",
+                    decision_intent="watch",
+                    candidate_side="NONE",
+                    directional_bias="LONG",
+                    confidence=0.5,
+                    mae_risk_estimate_pct=0.25,
+                ),
+            ),
+            (
+                "/data/test",
+                _decision(
+                    **watch_fields,
+                    decision_id="d2",
+                    tick_index=2,
+                    symbol="BTCUSDT",
+                    decision_intent="watch",
+                    candidate_side="NONE",
+                    directional_bias="LONG",
+                    confidence=0.5,
+                    mae_risk_estimate_pct=0.25,
+                ),
+            ),
+        ]
+        rows[0][1]["directional_bias_without_candidate_side"] = True
+        rows[1][1]["directional_bias_without_candidate_side"] = True
+        acc = simulate_major_mae_calibration_mode("major_mae_100_llm_mae", rows)
+        self.assertEqual(acc.hypothetical_graduation_count, 0)
+        self.assertGreater(
+            acc.block_reason_counts.get("directional_bias_without_candidate_side", 0),
+            0,
+        )
 
 
 if __name__ == "__main__":

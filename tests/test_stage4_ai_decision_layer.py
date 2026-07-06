@@ -4263,8 +4263,10 @@ class Stage418CPaperReadinessSchemaTests(unittest.TestCase):
         proposal, ok, _ = parse_llm_decision(
             self._base_llm(
                 decision_intent="watch",
+                candidate_side="BUY",
                 directional_bias="LONG",
                 watch_confirmation_reason="Support held",
+                entry_trigger={"type": "pullback_confirm", "trigger_price": 62000, "trigger_condition": "VWAP"},
                 invalidation={"invalidation_price": 61000, "invalidation_reason": "Break low", "max_adverse_move_pct": 0.3},
                 mae_risk_estimate_pct=0.2,
             ),
@@ -4332,8 +4334,14 @@ class Stage418CPaperReadinessSchemaTests(unittest.TestCase):
             [
                 {
                     "decision_intent": "watch",
+                    "candidate_side": "BUY",
                     "directional_bias": "LONG",
                     "watch_confirmation_reason": "ok",
+                    "entry_trigger": {
+                        "type": "pullback_confirm",
+                        "trigger_price": 62000,
+                        "trigger_condition": "x",
+                    },
                     "invalidation": {"invalidation_reason": "x", "invalidation_price": 1},
                     "mae_risk_estimate_pct": 0.2,
                     "decision_quality_incomplete": False,
@@ -4384,8 +4392,10 @@ class Stage418FMaeEstimateCalibrationTests(unittest.TestCase):
         proposal, ok, _ = parse_llm_decision(
             self._base_llm(
                 symbol="BTCUSDT",
+                candidate_side="BUY",
                 directional_bias="LONG",
                 watch_confirmation_reason="Support",
+                entry_trigger={"type": "pullback_confirm", "trigger_price": 62000, "trigger_condition": "VWAP"},
                 invalidation={"invalidation_price": 61000, "invalidation_reason": "SL", "max_adverse_move_pct": 0.35},
                 mae_risk_estimate_pct=0.30,
             ),
@@ -4400,8 +4410,10 @@ class Stage418FMaeEstimateCalibrationTests(unittest.TestCase):
         proposal, ok, _ = parse_llm_decision(
             self._base_llm(
                 symbol="ETHUSDT",
+                candidate_side="BUY",
                 directional_bias="LONG",
                 watch_confirmation_reason="Support",
+                entry_trigger={"type": "pullback_confirm", "trigger_price": 3100, "trigger_condition": "VWAP"},
                 invalidation={"invalidation_price": 3100, "invalidation_reason": "SL", "max_adverse_move_pct": 0.35},
                 mae_risk_estimate_pct=0.34,
             ),
@@ -4649,6 +4661,7 @@ class Stage418HPromptIterationTests(unittest.TestCase):
             "decision_intent": "watch",
             "directional_bias": "LONG",
             "watch_confirmation_reason": "Breakout",
+            "entry_trigger": {"type": "pullback_confirm", "trigger_price": 62000, "trigger_condition": "x"},
             "invalidation": {"max_adverse_move_pct": 0.40},
             "mae_risk_estimate_pct": 0.50,
             "why_enter": "",
@@ -4663,6 +4676,10 @@ class Stage418HPromptIterationTests(unittest.TestCase):
         proposal, ok, _ = parse_llm_decision(raw, symbol="BTCUSDT")
         self.assertTrue(ok)
         self.assertTrue(proposal.get("decision_quality_incomplete"))
+        self.assertEqual(
+            (proposal.get("paper_readiness") or {}).get("block_reason"),
+            "mae_above_symbol_cap",
+        )
 
 
 class Stage418IPromptAlignmentTests(unittest.TestCase):
@@ -4713,6 +4730,74 @@ class Stage418IPromptAlignmentTests(unittest.TestCase):
         source = Path(mod.__file__).read_text(encoding="utf-8")
         self.assertNotIn("place_order", source)
         self.assertNotIn("btc-auto", source)
+
+
+class Stage418JSchemaEnforcementTests(unittest.TestCase):
+    def test_mae_invalidation_inconsistent_block_reason(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        raw = {
+            "final_action": "skip",
+            "symbol": "BTCUSDT",
+            "candidate_side": "BUY",
+            "confidence": 0.5,
+            "decision_intent": "watch",
+            "directional_bias": "LONG",
+            "watch_confirmation_reason": "x",
+            "entry_trigger": {"type": "pullback_confirm", "trigger_price": 62000, "trigger_condition": "x"},
+            "invalidation": {"invalidation_price": 61000, "invalidation_reason": "x", "max_adverse_move_pct": 0.20},
+            "mae_risk_estimate_pct": 0.30,
+            "why_enter": "",
+            "why_skip": "",
+            "side_reason": "x",
+            "confidence_reason": "x",
+            "risk_notes": [],
+            "patch_awareness": "",
+            "uncertainty": "low",
+            "requires_manual_review": False,
+        }
+        proposal, ok, _ = parse_llm_decision(raw, symbol="BTCUSDT")
+        self.assertTrue(ok)
+        self.assertEqual(
+            (proposal.get("paper_readiness") or {}).get("block_reason"),
+            "mae_invalidation_inconsistent",
+        )
+
+    def test_missing_paper_fields_block_reason(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        raw = {
+            "final_action": "skip",
+            "symbol": "ETHUSDT",
+            "candidate_side": "NONE",
+            "confidence": 0.5,
+            "decision_intent": "watch",
+            "directional_bias": "LONG",
+            "watch_confirmation_reason": "x",
+            "mae_risk_estimate_pct": 0.25,
+            "why_enter": "",
+            "why_skip": "",
+            "side_reason": "x",
+            "confidence_reason": "x",
+            "risk_notes": [],
+            "patch_awareness": "",
+            "uncertainty": "low",
+            "requires_manual_review": False,
+        }
+        proposal, ok, _ = parse_llm_decision(raw, symbol="ETHUSDT")
+        self.assertTrue(ok)
+        self.assertEqual(
+            (proposal.get("paper_readiness") or {}).get("block_reason"),
+            "missing_paper_fields",
+        )
+        self.assertTrue(proposal.get("directional_bias_without_candidate_side"))
+
+    def test_prompt_eth_examples_present(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT
+
+        self.assertIn("ETH acceptable watch example", SYSTEM_PROMPT)
+        self.assertIn("ETH too-risky example", SYSTEM_PROMPT)
+        self.assertIn("reference_price=3000", SYSTEM_PROMPT)
 
 
 if __name__ == "__main__":

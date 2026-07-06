@@ -33,6 +33,11 @@ def _watch_paper_fields() -> Dict[str, Any]:
     return {
         "directional_bias": "LONG",
         "watch_confirmation_reason": "Range support holding with neutral vol",
+        "entry_trigger": {
+            "type": "pullback_confirm",
+            "trigger_price": 62000.0,
+            "trigger_condition": "Reclaim VWAP",
+        },
         "invalidation": {
             "invalidation_price": 61000.0,
             "invalidation_reason": "Break below range low",
@@ -80,7 +85,7 @@ def _decision(**overrides: Any) -> Dict[str, Any]:
         "symbol": "BTCUSDT",
         "decision_intent": "watch",
         "final_action": "skip",
-        "candidate_side": "NONE",
+        "candidate_side": "BUY",
         "confidence": 0.45,
         "provider": "groq",
         "regime": "range",
@@ -386,7 +391,7 @@ class Stage418CPaperReadinessLoggerTests(unittest.TestCase):
                 symbol="BTCUSDT",
                 directional_bias="LONG",
                 watch_confirmation_reason="Range support",
-                mae_risk_estimate_pct=0.40,
+                mae_risk_estimate_pct=0.30,
                 invalidation={
                     "invalidation_price": 61000.0,
                     "invalidation_reason": "Break below range low",
@@ -398,13 +403,17 @@ class Stage418CPaperReadinessLoggerTests(unittest.TestCase):
                     "block_reason": "ok",
                 },
             )
+            row.pop("entry_trigger", None)
             (inp / "ai_decisions.jsonl").write_text(json.dumps(row) + "\n", encoding="utf-8")
             summary = run_paper_event_logger([inp], output_dir=out, mode="overwrite")
             self.assertEqual(summary["total_events_written"], 1)
             self.assertEqual(summary["hypothetical_skip_count"], 1)
             self.assertEqual(summary["watchlist_count"], 0)
             events = json.loads((out / "hypothetical_entry_log.jsonl").read_text(encoding="utf-8").strip())
-            self.assertIn("decision_quality_incomplete", events["risk_governor_reasons"])
+            self.assertIn(
+                events["risk_governor_reasons"][0],
+                {"missing_paper_fields", "decision_quality_incomplete", "mae_above_symbol_cap"},
+            )
 
     def test_complete_watch_is_eligible(self) -> None:
         self.assertTrue(is_eligible_decision(_decision(decision_intent="watch")))
@@ -545,7 +554,7 @@ class Stage418EPaperMaeIntegrationTests(unittest.TestCase):
             summary = run_paper_event_logger([inp], output_dir=out, mode="overwrite")
             self.assertEqual(summary["hypothetical_skip_count"], 1)
             events = json.loads((out / "hypothetical_entry_log.jsonl").read_text(encoding="utf-8").strip())
-            self.assertIn("paper_readiness_mae_block", events["risk_governor_reasons"])
+            self.assertIn(events["risk_governor_reasons"][0], {"paper_readiness_mae_block", "mae_risk_too_high"})
 
 
 class Stage418HRuntimeGateLoggerTests(unittest.TestCase):
@@ -610,6 +619,37 @@ class Stage418IPromptLoggerSafetyTests(unittest.TestCase):
             (inp / "ai_decisions.jsonl").write_text(json.dumps(row) + "\n", encoding="utf-8")
             summary = run_paper_event_logger([inp], output_dir=out, mode="overwrite")
             self.assertEqual(summary["order_sent_count"], 0)
+
+
+class Stage418JLoggerEnforcementTests(unittest.TestCase):
+    def test_logger_records_paper_readiness_block_reason_counts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            inp = Path(tmp) / "in"
+            out = Path(tmp) / "out"
+            inp.mkdir()
+            row = _decision(
+                symbol="ETHUSDT",
+                decision_intent="watch",
+                mae_risk_estimate_pct=1.5,
+                directional_bias="LONG",
+                candidate_side="LONG",
+                entry_trigger={"type": "pullback_confirm", "trigger_price": 3000, "trigger_condition": "x"},
+                invalidation={
+                    "invalidation_price": 2950,
+                    "invalidation_reason": "break",
+                    "max_adverse_move_pct": 1.5,
+                },
+            )
+            (inp / "ai_decisions.jsonl").write_text(json.dumps(row) + "\n", encoding="utf-8")
+            summary = run_paper_event_logger([inp], output_dir=out, mode="overwrite")
+            self.assertIn("paper_readiness_block_reason_counts", summary)
+            self.assertGreater(summary.get("mae_above_symbol_cap_count", 0), 0)
+
+    def test_logger_no_exchange_calls(self) -> None:
+        import tools.research.stage4_paper_event_logger as mod
+
+        source = Path(mod.__file__).read_text(encoding="utf-8")
+        self.assertNotIn("BybitDemoClient", source)
 
 
 if __name__ == "__main__":

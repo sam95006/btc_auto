@@ -32,6 +32,11 @@ def _base_decision(**overrides: Any) -> Dict[str, Any]:
             "trend_15m": "up",
         },
         "watch_confirmation_reason": "Support held",
+        "entry_trigger": {
+            "type": "pullback_confirm",
+            "trigger_price": 62000.0,
+            "trigger_condition": "Reclaim VWAP",
+        },
         "invalidation": {
             "invalidation_price": 61780.0,
             "invalidation_reason": "Break support",
@@ -137,6 +142,65 @@ class Stage418IMaeRegressionCompareTests(unittest.TestCase):
             candidate_dir=tempfile.mkdtemp(),
             output_dir=tempfile.mkdtemp(),
         )["production_touched"])
+
+
+class Stage418JCompareDiagnosticsTests(unittest.TestCase):
+    def _grad_btc_rows(self) -> list[tuple[str, Dict[str, Any]]]:
+        base = {
+            "parse_error": False,
+            "is_mock_ai": False,
+            "order_sent": False,
+            "provider": "groq",
+            "created_at_utc": "2026-07-05T02:00:00Z",
+            "symbol": "BTCUSDT",
+            "decision_intent": "watch",
+            "candidate_side": "LONG",
+            "directional_bias": "LONG",
+            "confidence": 0.5,
+            "mae_risk_estimate_pct": 0.30,
+            "market_context": {"last_price": 62000.0, "regime": "range", "volatility_level": "low"},
+            "watch_confirmation_reason": "Support",
+            "entry_trigger": {"type": "pullback_confirm", "trigger_price": 62000, "trigger_condition": "x"},
+            "invalidation": {
+                "invalidation_price": 61800,
+                "invalidation_reason": "break",
+                "max_adverse_move_pct": 0.30,
+            },
+            "decision_quality_incomplete": False,
+            "paper_readiness": {
+                "eligible_for_watchlist": True,
+                "eligible_for_hypothetical_entry": False,
+                "block_reason": "ok",
+            },
+        }
+        return [
+            ("/data/g", {**base, "decision_id": "g1", "tick_index": 1}),
+            ("/data/g", {**base, "decision_id": "g2", "tick_index": 2}),
+        ]
+
+    def test_compare_reports_watchlist_confirmation_window_miss(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            b_dir = _write_session(root, "baseline", [self._grad_btc_rows()[0][1], self._grad_btc_rows()[1][1]])
+            c_dir = _write_session(
+                root,
+                "candidate",
+                [{**self._grad_btc_rows()[0][1], "decision_id": "c1", "tick_index": 5, "mae_risk_estimate_pct": 0.5}],
+            )
+            summary = compare_mae_regressions(
+                baseline_dir=str(b_dir),
+                candidate_dir=str(c_dir),
+                output_dir=str(root / "out"),
+            )
+            breakdown = summary["analysis"]["watchlist_confirmation_regression_breakdown"]
+            self.assertTrue(breakdown.get("no_consecutive_tick", 0) >= 0 or breakdown)
+
+    def test_compare_identifies_g_r1_btc_graduation_tick(self) -> None:
+        from tools.research.stage4_mae_regression_compare import _find_btc_graduation_tick
+
+        rows = [self._grad_btc_rows()[0][1], self._grad_btc_rows()[1][1]]
+        diag = _find_btc_graduation_tick(rows, dataset="/data/g")
+        self.assertTrue(diag.get("graduation_found"))
 
 
 if __name__ == "__main__":

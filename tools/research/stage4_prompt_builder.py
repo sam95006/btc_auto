@@ -46,7 +46,25 @@ BTC graduation recovery (Stage 4.18-I):
 SOL / PEPE conservative line (Stage 4.18-I):
 - Do NOT lower MAE on SOL/PEPE to chase graduation.
 - SOL MAE > 0.25% or PEPE MAE > 0.20%: soft_skip or watchlist-only — not paper-ready watch.
-- PEPE in high volatility: prefer soft_skip."""
+- PEPE in high volatility: prefer soft_skip.
+
+Worked examples (Stage 4.18-J):
+
+ETH acceptable watch example:
+- reference_price=3000, directional_bias=LONG, invalidation_price=2991
+- adverse distance = 9/3000 = 0.30% → mae_risk_estimate_pct=0.30
+- watch_followup_required=true, paper_readiness.eligible_for_watchlist=true, block_reason=null
+
+ETH too-risky example:
+- reference_price=3000, invalidation_price=2960
+- adverse distance = 40/3000 = 1.33% → mae_risk_estimate_pct=1.33
+- decision_intent=soft_skip or hard_skip, eligible_for_watchlist=false, block_reason=mae_risk_too_high
+
+BTC acceptable watch example:
+- reference_price=100000, invalidation_price=99700, adverse distance=0.30%
+- confidence>=0.40, candidate_side=LONG or SHORT → decision_intent=watch, paper-ready
+
+SOL/PEPE: if SOL MAE>0.25% or PEPE MAE>0.20%, skip/watchlist-only; block_reason=mae_risk_too_high; never deflate MAE."""
 
 SCHEMA_FIELD_NAMES = (
     "final_action",

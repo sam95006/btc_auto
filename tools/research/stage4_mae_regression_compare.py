@@ -22,9 +22,12 @@ from tools.research.stage4_paper_event_logger import (  # noqa: E402
 )
 from tools.research.stage4_paper_guard_inputs import get_paper_mae_pct  # noqa: E402
 from tools.research.stage4_paper_readiness import (  # noqa: E402
-    assess_mae_quality,
+    apply_schema_level_enforcement,
+    assess_decision_quality,
+    build_enforcement_metrics,
     build_mae_calibration_metrics,
     infer_decision_quality_incomplete,
+    parse_invalidation,
     symbol_mae_watch_cap_pct,
 )
 from tools.research.stage4_watchlist_followup_simulator import (  # noqa: E402
@@ -339,6 +342,200 @@ def _eth_no_graduation_cause(
     return "confirmation_or_confidence_gate"
 
 
+def _tick_detail_rows(decisions: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    for decision in _analyzable_decisions(decisions):
+        enforced = apply_schema_level_enforcement(decision)
+        intent = str(enforced.get("decision_intent") or "").lower()
+        if intent not in {"watch", "enter_candidate"}:
+            continue
+        inv = parse_invalidation(enforced.get("invalidation"))
+        pr = enforced.get("paper_readiness") or {}
+        _, _, reasons = assess_decision_quality(enforced)
+        rows.append(
+            {
+                "decision_id": enforced.get("decision_id"),
+                "tick_index": enforced.get("tick_index"),
+                "symbol": enforced.get("symbol"),
+                "provider": enforced.get("provider"),
+                "directional_bias": enforced.get("directional_bias"),
+                "candidate_side": enforced.get("candidate_side"),
+                "mae_risk_estimate_pct": enforced.get("mae_risk_estimate_pct"),
+                "invalidation_max_adverse_move_pct": inv.get("max_adverse_move_pct"),
+                "paper_readiness_block_reason": pr.get("block_reason"),
+                "decision_quality_incomplete": enforced.get("decision_quality_incomplete"),
+                "directional_bias_without_candidate_side": enforced.get(
+                    "directional_bias_without_candidate_side"
+                ),
+                "paper_enforcement_reasons": reasons,
+                "regime": (enforced.get("market_context") or {}).get("regime"),
+            }
+        )
+    return rows
+
+
+def _find_btc_graduation_tick(
+    decisions: Sequence[Dict[str, Any]],
+    *,
+    dataset: str,
+) -> Dict[str, Any]:
+    rows = [
+        (dataset, d)
+        for d in _analyzable_decisions(decisions)
+        if str(d.get("symbol") or "").upper() == "BTCUSDT"
+    ]
+    acc = simulate_major_mae_calibration_mode(CALIBRATION_MODE, rows)
+    grad = acc.graduations[0] if acc.graduations else {}
+    grad_id = grad.get("source_decision_id")
+    tick_row: Dict[str, Any] = {}
+    for d in rows:
+        if str(d[1].get("decision_id")) == str(grad_id):
+            tick_row = apply_schema_level_enforcement(d[1])
+            break
+    return {
+        "graduation_found": bool(grad),
+        "graduation_tick": {
+            "decision_id": grad.get("source_decision_id"),
+            "tick_index": tick_row.get("tick_index"),
+            "candidate_side": tick_row.get("candidate_side"),
+            "directional_bias": tick_row.get("directional_bias"),
+            "confidence": tick_row.get("confidence"),
+            "mae_risk_estimate_pct": tick_row.get("mae_risk_estimate_pct"),
+            "regime": (tick_row.get("market_context") or {}).get("regime"),
+            "provider": tick_row.get("provider"),
+        }
+        if grad
+        else {},
+        "calibration_graduations": acc.hypothetical_graduation_count,
+        "watchlist_confirmed": acc.watchlist_confirmed,
+    }
+
+
+def _matching_btc_tick_failure(
+    baseline_decisions: Sequence[Dict[str, Any]],
+    candidate_decisions: Sequence[Dict[str, Any]],
+    *,
+    grad_tick: Dict[str, Any],
+) -> Dict[str, Any]:
+    if not grad_tick:
+        return {"matched": False, "failure_reason": "no_baseline_graduation_tick"}
+    target_tick = grad_tick.get("tick_index")
+    candidate_btc = [
+        apply_schema_level_enforcement(d)
+        for d in _analyzable_decisions(candidate_decisions)
+        if str(d.get("symbol") or "").upper() == "BTCUSDT"
+        and _safe_int(d.get("tick_index")) == _safe_int(target_tick)
+    ]
+    if not candidate_btc:
+        return {
+            "matched": False,
+            "failure_reason": "no_consecutive_tick",
+            "watchlist_confirmation_window_miss": True,
+        }
+    row = candidate_btc[0]
+    _, pr, reasons = assess_decision_quality(row)
+    failure: List[str] = []
+    if row.get("decision_quality_incomplete"):
+        if "mae_above_symbol_cap" in reasons:
+            failure.append("mae_above_cap")
+        if "missing_paper_fields" in reasons:
+            failure.append("quality_incomplete")
+        if "directional_bias_without_candidate_side" in reasons:
+            failure.append("side_missing_on_confirmation")
+    if str(pr.get("block_reason")) == "mae_above_symbol_cap":
+        failure.append("mae_above_cap")
+    if row.get("directional_bias_without_candidate_side"):
+        failure.append("side_missing")
+    provider = row.get("provider")
+    baseline_provider = grad_tick.get("provider")
+    if provider and baseline_provider and provider != baseline_provider:
+        failure.append("provider_diff")
+    regime = (row.get("market_context") or {}).get("regime")
+    if regime and grad_tick.get("regime") and regime != grad_tick.get("regime"):
+        failure.append("regime_diff")
+    if not failure:
+        failure.append("watchlist_confirmation_window_miss")
+    return {
+        "matched": True,
+        "tick_index": target_tick,
+        "candidate_decision_id": row.get("decision_id"),
+        "failure_reason": ";".join(failure),
+        "candidate_mae": row.get("mae_risk_estimate_pct"),
+        "candidate_confidence": row.get("confidence"),
+    }
+
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _watchlist_confirmation_regression_breakdown(
+    baseline_decisions: Sequence[Dict[str, Any]],
+    candidate_decisions: Sequence[Dict[str, Any]],
+    *,
+    baseline_dataset: str,
+    candidate_dataset: str,
+) -> Dict[str, int]:
+    breakdown: Counter[str] = Counter()
+    b_cal = _calibration_summary(
+        [d for d in baseline_decisions if is_eligible_decision(d)],
+        dataset=baseline_dataset,
+    )
+    c_cal = _calibration_summary(
+        [d for d in candidate_decisions if is_eligible_decision(d)],
+        dataset=candidate_dataset,
+    )
+    if int(c_cal.get("watchlist_confirmed") or 0) < int(b_cal.get("watchlist_confirmed") or 0):
+        breakdown["watchlist_confirmation_regression"] += 1
+
+    for d in _analyzable_decisions(candidate_decisions):
+        enforced = apply_schema_level_enforcement(d)
+        _, _, reasons = assess_decision_quality(enforced)
+        if "mae_above_symbol_cap" in reasons:
+            breakdown["mae_above_cap"] += 1
+        if enforced.get("decision_quality_incomplete"):
+            breakdown["quality_incomplete"] += 1
+        if enforced.get("directional_bias_without_candidate_side"):
+            breakdown["side_missing_on_confirmation"] += 1
+        conf = _safe_float(enforced.get("confidence"))
+        if conf < 0.40 and str(enforced.get("symbol") or "").upper() in {"BTCUSDT", "ETHUSDT"}:
+            breakdown["confidence_decreasing"] += 1
+
+    b_btc = sorted(
+        [
+            d
+            for d in _analyzable_decisions(baseline_decisions)
+            if str(d.get("symbol") or "").upper() == "BTCUSDT"
+        ],
+        key=lambda x: _safe_int(x.get("tick_index")),
+    )
+    c_btc = sorted(
+        [
+            d
+            for d in _analyzable_decisions(candidate_decisions)
+            if str(d.get("symbol") or "").upper() == "BTCUSDT"
+        ],
+        key=lambda x: _safe_int(x.get("tick_index")),
+    )
+    for i in range(1, min(len(b_btc), len(c_btc))):
+        prev = apply_schema_level_enforcement(c_btc[i - 1])
+        cur = apply_schema_level_enforcement(c_btc[i])
+        if _safe_float(cur.get("confidence")) < _safe_float(prev.get("confidence")):
+            breakdown["confidence_decreasing"] += 1
+        if _safe_int(cur.get("tick_index")) - _safe_int(prev.get("tick_index")) > 1:
+            breakdown["no_consecutive_tick"] += 1
+
+    providers_b = {str(d.get("provider")) for d in b_btc if d.get("provider")}
+    providers_c = {str(d.get("provider")) for d in c_btc if d.get("provider")}
+    if providers_b != providers_c:
+        breakdown["provider_diff"] += 1
+
+    return dict(breakdown)
+
+
 def compare_mae_regressions(
     *,
     baseline_dir: str,
@@ -393,13 +590,27 @@ def compare_mae_regressions(
         if top:
             watchlist_regression_cause += f"; top_blocks={dict(top)}"
 
+    enforcement = build_enforcement_metrics(c_an)
+    tick_details = {
+        "baseline": _tick_detail_rows(b_an),
+        "candidate": _tick_detail_rows(c_an),
+    }
+    g_r1_grad = _find_btc_graduation_tick(b_an, dataset=str(baseline_path))
+    i_r1_fail = _matching_btc_tick_failure(b_an, c_an, grad_tick=g_r1_grad.get("graduation_tick") or {})
+    wl_breakdown = _watchlist_confirmation_regression_breakdown(
+        b_an,
+        c_an,
+        baseline_dataset=str(baseline_path),
+        candidate_dataset=str(candidate_path),
+    )
+
     summary: Dict[str, Any] = {
         "generated_at_utc": utc_now_iso(),
-        "stage": "4.18-I",
+        "stage": "4.18-J",
         "baseline_dir": str(baseline_path),
         "candidate_dir": str(candidate_path),
-        "baseline_label": "418g_r1",
-        "candidate_label": "418h_r1",
+        "baseline_label": baseline_path.name,
+        "candidate_label": candidate_path.name,
         "order_sent_count": 0,
         "mock_ai_used_count": 0,
         "any_exchange_call_made": False,
@@ -447,20 +658,30 @@ def compare_mae_regressions(
             "btc_graduation_regression_cause": grad_analysis.get("btc_graduation_regression_cause"),
             "eth_no_graduation_cause": _eth_no_graduation_cause(c_eth, c_cal),
             "watchlist_confirmation_regression_cause": watchlist_regression_cause,
+            "watchlist_confirmation_regression_breakdown": wl_breakdown,
+            "btc_g_r1_graduation_diagnostic": g_r1_grad,
+            "btc_i_r1_matching_tick_failure": i_r1_fail,
+            "eth_no_graduation_diagnostic": {
+                "eth_watch_count": c_eth.get("eth_watch_count"),
+                "eth_watch_mae_above_cap_count": c_eth.get("eth_watch_mae_above_cap_count"),
+                "cause": _eth_no_graduation_cause(c_eth, c_cal),
+            },
             "pepe_mae_worsening": pepe_analysis,
             "pepe_mae_worsening_cause": pepe_analysis.get("pepe_mae_worsening_cause"),
             "sol_analysis": sol_analysis,
             "sol_recommendation": sol_analysis.get("sol_recommendation"),
         },
+        "tick_details": tick_details,
+        **enforcement,
         "eth_watch_count": c_eth.get("eth_watch_count", 0),
         "eth_watch_mae_within_cap_count": c_eth.get("eth_watch_mae_within_cap_count", 0),
         "eth_watch_mae_above_cap_count": c_eth.get("eth_watch_mae_above_cap_count", 0),
         "btc_watch_confirmation_candidate_count": c_btc.get("btc_watch_confirmation_candidate_count", 0),
         "btc_graduation_candidate_count": c_btc.get("btc_graduation_candidate_count", 0),
         "watchlist_confirmation_block_reasons": dict(merged_blocks),
-        "final_verdict": "STAGE_4_18I_COMPARE_COMPLETE",
+        "final_verdict": "STAGE_4_18J_COMPARE_COMPLETE",
         "next_step_recommendation": (
-            "Apply 418-I prompt alignment; run 4.18-I-R1 30m regression after code pass."
+            "Run 4.18-J-R1 30m regression after schema enforcement code pass."
         ),
     }
 

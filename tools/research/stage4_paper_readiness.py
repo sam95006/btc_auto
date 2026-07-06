@@ -1,6 +1,7 @@
 """Stage 4.18-C paper-readiness fields and decision quality assessment."""
 from __future__ import annotations
 
+from collections import Counter
 from typing import Any, Dict, List, Optional, Tuple
 
 VALID_DIRECTIONAL_BIAS = frozenset({"LONG", "SHORT", "NONE"})
@@ -20,6 +21,20 @@ PAPER_READINESS_METRIC_KEYS = (
     "entry_trigger_present_count",
     "invalidation_present_count",
 )
+
+ENFORCEMENT_METRIC_KEYS = (
+    "directional_bias_without_candidate_side_count",
+    "missing_paper_fields_count",
+    "mae_above_symbol_cap_count",
+    "mae_invalidation_inconsistent_count",
+    "watchlist_confirmation_window_miss_count",
+    "side_missing_on_confirmation_count",
+)
+
+BLOCK_REASON_MAE_ABOVE_CAP = "mae_above_symbol_cap"
+BLOCK_REASON_MAE_INVALIDATION = "mae_invalidation_inconsistent"
+BLOCK_REASON_MISSING_FIELDS = "missing_paper_fields"
+BLOCK_REASON_MAE_TOO_HIGH = "mae_risk_too_high"
 
 MAE_CALIBRATION_METRIC_KEYS = (
     "mae_estimate_scale_valid_count",
@@ -75,13 +90,13 @@ def assess_mae_quality(proposal: Dict[str, Any]) -> List[str]:
     if mae > MAE_SCALE_MAX_PCT:
         reasons.append("mae_scale_invalid_above_5pct")
 
-    if max_adv > 0 and mae > max_adv:
-        reasons.append("mae_exceeds_invalidation_max_adverse")
-
     if intent in {"watch", "enter_candidate"}:
         cap = symbol_mae_watch_cap_pct(symbol)
         if mae > cap:
-            reasons.append(f"mae_above_symbol_cap_{cap}")
+            reasons.append(BLOCK_REASON_MAE_ABOVE_CAP)
+
+    if max_adv > 0 and mae > max_adv:
+        reasons.append(BLOCK_REASON_MAE_INVALIDATION)
 
     return reasons
 
@@ -210,11 +225,39 @@ def default_paper_field_defaults() -> Dict[str, Any]:
     }
 
 
+def _has_invalidation(invalidation: Dict[str, Any]) -> bool:
+    return bool(invalidation.get("invalidation_reason")) or invalidation.get("invalidation_price", 0) > 0
+
+
+def _has_entry_trigger(entry_trigger: Dict[str, Any]) -> bool:
+    return entry_trigger.get("type") != "none" or bool(entry_trigger.get("trigger_condition"))
+
+
+def _primary_block_reason(reasons: List[str]) -> str:
+    priority = (
+        BLOCK_REASON_MAE_ABOVE_CAP,
+        BLOCK_REASON_MAE_INVALIDATION,
+        BLOCK_REASON_MISSING_FIELDS,
+        "mae_scale_invalid_above_5pct",
+    )
+    for key in priority:
+        if key in reasons:
+            return key
+    return reasons[0] if reasons else ""
+
+
+def _directional_bias_without_side(proposal: Dict[str, Any]) -> bool:
+    bias = _normalize_directional_bias(proposal.get("directional_bias"))
+    side = str(proposal.get("candidate_side") or "NONE").upper()
+    return bias in {"LONG", "SHORT"} and side == "NONE"
+
+
 def assess_decision_quality(proposal: Dict[str, Any]) -> Tuple[bool, Dict[str, Any], List[str]]:
     """
     Return (decision_quality_incomplete, paper_readiness, incomplete_reasons).
 
-    Missing directional paper fields mark incomplete — not parse_error.
+    Stage 4.18-J schema-level enforcement — missing/invalid paper fields mark incomplete;
+    not parse_error. Formal RG thresholds unchanged.
     """
     intent = str(proposal.get("decision_intent") or "").lower()
     side = str(proposal.get("candidate_side") or "NONE").upper()
@@ -226,56 +269,62 @@ def assess_decision_quality(proposal: Dict[str, Any]) -> Tuple[bool, Dict[str, A
     mae = _as_float(proposal.get("mae_risk_estimate_pct"))
     rr = _as_float(proposal.get("risk_reward_estimate"))
     watch_reason = _non_empty_str(proposal.get("watch_confirmation_reason"))
-    symbol = str(proposal.get("symbol") or "").upper()
-    mae_reasons = assess_mae_quality(proposal)
-    reasons.extend(mae_reasons)
 
-    if intent == "watch":
-        if bias == "NONE":
-            reasons.append("watch_missing_directional_bias")
-        if not watch_reason:
-            reasons.append("watch_missing_confirmation_reason")
-        if not invalidation.get("invalidation_reason") and invalidation.get("invalidation_price", 0) <= 0:
-            reasons.append("watch_missing_invalidation")
-        if mae <= 0:
-            reasons.append("watch_missing_mae_risk_estimate")
-        eligible = not reasons
-        block = ";".join(reasons) if reasons else ""
-        paper_readiness = default_paper_readiness_block(
-            eligible_for_watchlist=eligible,
-            eligible_for_hypothetical_entry=False,
-            block_reason=block or ("ok" if eligible else "watch_not_paper_ready"),
-        )
-        return bool(reasons), paper_readiness, reasons
-
-    if intent == "enter_candidate":
-        if side == "NONE":
-            reasons.append("enter_candidate_missing_candidate_side")
-        if bias == "NONE":
-            reasons.append("enter_candidate_missing_directional_bias")
-        if entry_trigger.get("type") == "none" or not entry_trigger.get("trigger_condition"):
-            reasons.append("enter_candidate_missing_entry_trigger")
-        if not invalidation.get("invalidation_reason") and invalidation.get("invalidation_price", 0) <= 0:
-            reasons.append("enter_candidate_missing_invalidation")
-        if mae <= 0:
-            reasons.append("enter_candidate_missing_mae_risk_estimate")
-        if rr <= 0:
-            reasons.append("enter_candidate_missing_risk_reward_estimate")
-        eligible = not reasons
-        block = ";".join(reasons) if reasons else ""
+    if intent not in {"watch", "enter_candidate"}:
         paper_readiness = default_paper_readiness_block(
             eligible_for_watchlist=False,
-            eligible_for_hypothetical_entry=eligible,
-            block_reason=block or ("ok" if eligible else "enter_not_paper_ready"),
+            eligible_for_hypothetical_entry=False,
+            block_reason="skip_intent",
         )
-        return bool(reasons), paper_readiness, reasons
+        return False, paper_readiness, []
 
+    missing_fields: List[str] = []
+    if intent == "watch":
+        if bias == "NONE":
+            missing_fields.append("watch_missing_directional_bias")
+        if not watch_reason:
+            missing_fields.append("watch_missing_confirmation_reason")
+        if not _has_entry_trigger(entry_trigger):
+            missing_fields.append("watch_missing_entry_trigger")
+        if not _has_invalidation(invalidation):
+            missing_fields.append("watch_missing_invalidation")
+        if mae <= 0:
+            missing_fields.append("watch_missing_mae_risk_estimate")
+    else:
+        if side == "NONE":
+            missing_fields.append("enter_candidate_missing_candidate_side")
+        if bias == "NONE":
+            missing_fields.append("enter_candidate_missing_directional_bias")
+        if not _has_entry_trigger(entry_trigger):
+            missing_fields.append("enter_candidate_missing_entry_trigger")
+        if not _has_invalidation(invalidation):
+            missing_fields.append("enter_candidate_missing_invalidation")
+        if mae <= 0:
+            missing_fields.append("enter_candidate_missing_mae_risk_estimate")
+        if rr <= 0:
+            missing_fields.append("enter_candidate_missing_risk_reward_estimate")
+
+    if missing_fields:
+        reasons.append(BLOCK_REASON_MISSING_FIELDS)
+
+    if intent == "enter_candidate" and _directional_bias_without_side(proposal):
+        reasons.append("directional_bias_without_candidate_side")
+
+    mae_reasons = assess_mae_quality(proposal)
+    for r in mae_reasons:
+        if r not in reasons:
+            reasons.append(r)
+
+    incomplete = bool(reasons)
+    block = _primary_block_reason(reasons) if reasons else "ok"
+    eligible_watch = intent == "watch" and not incomplete
+    eligible_enter = intent == "enter_candidate" and not incomplete
     paper_readiness = default_paper_readiness_block(
-        eligible_for_watchlist=False,
-        eligible_for_hypothetical_entry=False,
-        block_reason="skip_intent",
+        eligible_for_watchlist=eligible_watch,
+        eligible_for_hypothetical_entry=eligible_enter,
+        block_reason=block,
     )
-    return False, paper_readiness, []
+    return incomplete, paper_readiness, reasons
 
 
 def enrich_proposal_paper_fields(
@@ -291,9 +340,22 @@ def enrich_proposal_paper_fields(
         if key not in merged:
             merged[key] = value
 
-    incomplete, paper_readiness, _reasons = assess_decision_quality(merged)
+    incomplete, paper_readiness, reasons = assess_decision_quality(merged)
     merged["paper_readiness"] = paper_readiness
     merged["decision_quality_incomplete"] = incomplete
+    merged["directional_bias_without_candidate_side"] = _directional_bias_without_side(merged)
+    merged["paper_enforcement_reasons"] = reasons
+    return merged
+
+
+def apply_schema_level_enforcement(proposal: Dict[str, Any]) -> Dict[str, Any]:
+    """Stage 4.18-J post-parse enforcement (paper readiness only, no order path)."""
+    merged = dict(proposal)
+    incomplete, paper_readiness, reasons = assess_decision_quality(merged)
+    merged["paper_readiness"] = paper_readiness
+    merged["decision_quality_incomplete"] = incomplete
+    merged["directional_bias_without_candidate_side"] = _directional_bias_without_side(merged)
+    merged["paper_enforcement_reasons"] = reasons
     return merged
 
 
@@ -332,9 +394,9 @@ def build_mae_calibration_metrics(decisions: List[Dict[str, Any]]) -> Dict[str, 
                 metrics["mae_estimate_scale_invalid_count"] += 1
 
         mae_reasons = assess_mae_quality(decision)
-        if any(r.startswith("mae_above_symbol_cap") for r in mae_reasons):
+        if any(r == BLOCK_REASON_MAE_ABOVE_CAP for r in mae_reasons):
             metrics["mae_estimate_above_symbol_cap_count"] += 1
-        if "mae_exceeds_invalidation_max_adverse" in mae_reasons:
+        if BLOCK_REASON_MAE_INVALIDATION in mae_reasons:
             metrics["mae_invalidation_consistency_fail_count"] += 1
 
         if intent != "watch" or mae <= 0:
@@ -362,6 +424,38 @@ def build_mae_calibration_metrics(decisions: List[Dict[str, Any]]) -> Dict[str, 
     return {
         **metrics,
         "mae_estimate_by_symbol": mae_estimate_by_symbol,
+    }
+
+
+def build_enforcement_metrics(decisions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Stage 4.18-J enforcement counters from decision rows (offline replay safe)."""
+    metrics: Dict[str, int] = {key: 0 for key in ENFORCEMENT_METRIC_KEYS}
+    block_counts: Counter[str] = Counter()
+
+    for decision in decisions:
+        if decision.get("parse_error") or decision.get("is_mock_ai"):
+            continue
+        intent = str(decision.get("decision_intent") or "").lower()
+        if intent not in {"watch", "enter_candidate"}:
+            continue
+
+        _, paper_readiness, reasons = assess_decision_quality(decision)
+        block = str(paper_readiness.get("block_reason") or "")
+        if block and block != "ok":
+            block_counts[block] += 1
+
+        if decision.get("directional_bias_without_candidate_side") or _directional_bias_without_side(decision):
+            metrics["directional_bias_without_candidate_side_count"] += 1
+        if BLOCK_REASON_MISSING_FIELDS in reasons:
+            metrics["missing_paper_fields_count"] += 1
+        if BLOCK_REASON_MAE_ABOVE_CAP in reasons:
+            metrics["mae_above_symbol_cap_count"] += 1
+        if BLOCK_REASON_MAE_INVALIDATION in reasons:
+            metrics["mae_invalidation_inconsistent_count"] += 1
+
+    return {
+        **metrics,
+        "paper_readiness_block_reason_counts": dict(block_counts),
     }
 
 
@@ -416,12 +510,18 @@ __all__ = [
     "VALID_DIRECTIONAL_BIAS",
     "VALID_ENTRY_TRIGGER_TYPES",
     "PAPER_READINESS_METRIC_KEYS",
+    "ENFORCEMENT_METRIC_KEYS",
     "MAE_CALIBRATION_METRIC_KEYS",
     "MAE_SCALE_MAX_PCT",
     "MAE_SYMBOL_WATCH_CAPS_PCT",
     "MAE_WATCH_SURVIVAL_PCT",
+    "BLOCK_REASON_MAE_ABOVE_CAP",
+    "BLOCK_REASON_MAE_INVALIDATION",
+    "BLOCK_REASON_MISSING_FIELDS",
+    "apply_schema_level_enforcement",
     "assess_decision_quality",
     "assess_mae_quality",
+    "build_enforcement_metrics",
     "build_mae_calibration_metrics",
     "build_paper_readiness_metrics",
     "default_paper_field_defaults",
