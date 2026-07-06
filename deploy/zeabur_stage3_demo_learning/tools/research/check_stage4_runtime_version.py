@@ -31,9 +31,8 @@ REQUIRED_FILES = (
     "stage4_ai_decision_agent.py",
     "stage4_schema_repair.py",
     "stage4_watchlist_followup_simulator.py",
+    "stage4_mae_regression_compare.py",
 )
-
-PROMPT_HINTS_418F = (
     "0.25 = 0.25%",
     "mae_risk_too_high",
     "max_adverse_move_pct",
@@ -44,14 +43,31 @@ PROMPT_HINTS_418H = (
     "NOT ATR",
     "watch survival target",
     "0.28%",
-    "invalidation-risk",
+    "invalidation distance",
     "directional_bias is LONG/SHORT",
+)
+
+PROMPT_HINTS_418I = (
+    "Stage 4.18-I",
+    "invalidation distance",
+    "BTC graduation recovery",
+    "watch_followup_required",
+    "PEPE in high volatility",
+)
+
+PROMPT_HINTS_418J = (
+    "Stage 4.18-J",
+    "ETH acceptable watch example",
+    "ETH too-risky example",
+    "reference_price=3000",
+    "mae_above_symbol_cap",
 )
 
 PATCH_MARKER_FILES = (
     "stage4_paper_readiness.py",
     "stage4_prompt_builder.py",
     "stage4_mae_calibration_analysis.py",
+    "stage4_mae_regression_compare.py",
 )
 
 MIN_PAPER_READINESS_BYTES = 15_000
@@ -70,8 +86,18 @@ def _file_present(app_root: Path, name: str) -> bool:
 
 def _prompt_hints_present(app_root: Path) -> tuple[bool, List[str]]:
     text = _read_text(app_root / TOOLS_RESEARCH / "stage4_prompt_builder.py")
-    missing = [h for h in PROMPT_HINTS_418F + PROMPT_HINTS_418H if h not in text]
+    all_hints = PROMPT_HINTS_418F + PROMPT_HINTS_418H + PROMPT_HINTS_418I + PROMPT_HINTS_418J
+    missing = [h for h in all_hints if h not in text]
     return len(missing) == 0, missing
+
+
+def _schema_enforcement_present(app_root: Path) -> bool:
+    text = _read_text(app_root / TOOLS_RESEARCH / "stage4_paper_readiness.py")
+    return "apply_schema_level_enforcement" in text and "mae_above_symbol_cap" in text
+
+
+def _compare_tool_present(app_root: Path) -> bool:
+    return _file_present(app_root, "stage4_mae_regression_compare.py")
 
 
 def _paper_readiness_markers(app_root: Path) -> tuple[bool, bool]:
@@ -167,6 +193,8 @@ def check_runtime_version(*, app_root: Optional[Path] = None) -> Dict[str, Any]:
 
     mae_script = _file_present(app_root, "stage4_mae_calibration_analysis.py")
     guard_inputs = _file_present(app_root, "stage4_paper_guard_inputs.py")
+    schema_enforcement = _schema_enforcement_present(app_root)
+    compare_tool = _compare_tool_present(app_root)
 
     passed = (
         not missing_files
@@ -174,6 +202,8 @@ def check_runtime_version(*, app_root: Optional[Path] = None) -> Dict[str, Any]:
         and mae_script
         and build_ok
         and guard_inputs
+        and schema_enforcement
+        and compare_tool
         and imports["get_paper_mae_pct_present"]
         and imports["build_mae_metrics_present"]
         and imports["mae_analysis_main_present"]
@@ -187,6 +217,8 @@ def check_runtime_version(*, app_root: Optional[Path] = None) -> Dict[str, Any]:
         "runtime_version_check_passed": passed,
         "prompt_hints_present": hints_ok,
         "missing_prompt_hints": missing_hints,
+        "schema_enforcement_present": schema_enforcement,
+        "compare_tool_present": compare_tool,
         "mae_analysis_script_present": mae_script,
         "build_mae_metrics_present": build_ok and imports["build_mae_metrics_present"],
         "paper_guard_inputs_present": guard_inputs,
@@ -196,7 +228,7 @@ def check_runtime_version(*, app_root: Optional[Path] = None) -> Dict[str, Any]:
         "stale_reasons": stale_reasons,
         "missing_required_files": missing_files,
         "required_files_checked": list(REQUIRED_FILES),
-        "stage_marker": "4.18-H",
+        "stage_marker": "4.18-J",
     }
 
 

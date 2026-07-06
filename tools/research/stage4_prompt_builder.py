@@ -14,11 +14,13 @@ Allowed directional_bias: LONG, SHORT, NONE (maps from candidate_side: BUY=LONG,
 confidence is 0-1. Dry-run only — output will NOT place orders; Risk Supervisor will review.
 Use market_context.regime, trend_15m, trend_strength, volatility_level, change_24h_pct.
 If patch action is block_reentry or manual_review_required, use hard_skip. Vary confidence by intent band.
-Paper-readiness rules (Stage 4.18-C):
-- watch: MUST include directional_bias (not NONE), watch_confirmation_reason, invalidation, mae_risk_estimate_pct.
+Paper-readiness rules (Stage 4.18-C / 4.18-L):
+- watch: MUST include directional_bias (not NONE), candidate_side (BUY/SELL — not NONE when bias is LONG/SHORT), watch_confirmation_reason, entry_trigger (type != none), invalidation, mae_risk_estimate_pct.
 - enter_candidate: MUST include candidate_side (not NONE), directional_bias (not NONE), entry_trigger, invalidation, mae_risk_estimate_pct, risk_reward_estimate.
+- LONG directional_bias → candidate_side=BUY. SHORT directional_bias → candidate_side=SELL. Never LONG/SHORT bias with candidate_side=NONE.
 - If direction is unclear, use soft_skip or hard_skip — never enter_candidate with NONE side.
 - watch cannot become entry in the same tick; describe follow-up conditions only.
+- watch is NOT vague observation — watch MUST have entry_trigger + invalidation.
 
 MAE estimate calibration (Stage 4.18-F / 4.18-H / 4.18-I) — mae_risk_estimate_pct is a PERCENT number, not a ratio:
 - 0.25 means 0.25% adverse move, NOT 25% and NOT 0.0025.
@@ -48,23 +50,47 @@ SOL / PEPE conservative line (Stage 4.18-I):
 - SOL MAE > 0.25% or PEPE MAE > 0.20%: soft_skip or watchlist-only — not paper-ready watch.
 - PEPE in high volatility: prefer soft_skip.
 
-Worked examples (Stage 4.18-J):
+Worked examples (Stage 4.18-J / 4.18-L):
 
-ETH acceptable watch example:
-- reference_price=3000, directional_bias=LONG, invalidation_price=2991
-- adverse distance = 9/3000 = 0.30% → mae_risk_estimate_pct=0.30
+Example 1 — BTC valid watch WITH side (Stage 4.18-L):
+- symbol=BTCUSDT, decision_intent=watch, directional_bias=SHORT
+- reference_price=100000, invalidation_price=100300, adverse distance=0.30%, confidence=0.62
+- MUST output: candidate_side=SELL, mae_risk_estimate_pct=0.30
+- entry_trigger.type != none (e.g. pullback_confirm) with clear trigger_condition
+- invalidation.invalidation_price=100300, invalidation.max_adverse_move_pct=0.30
 - watch_followup_required=true, paper_readiness.eligible_for_watchlist=true, block_reason=null
 
-ETH too-risky example:
-- reference_price=3000, invalidation_price=2960
-- adverse distance = 40/3000 = 1.33% → mae_risk_estimate_pct=1.33
+Example 2 — ETH valid watch WITH side (Stage 4.18-L):
+- symbol=ETHUSDT, decision_intent=watch, directional_bias=LONG
+- reference_price=3000, invalidation_price=2991, adverse distance=0.30%, confidence>=0.40
+- MUST output: candidate_side=BUY, mae_risk_estimate_pct=0.30
+- entry_trigger.type != none, invalidation.invalidation_price=2991, max_adverse_move_pct=0.30
+- watch_followup_required=true, paper_readiness.eligible_for_watchlist=true, block_reason=null
+
+Example 3 — Directional bias but side missing is INVALID (Stage 4.18-L):
+- If directional_bias=LONG or SHORT and candidate_side=NONE:
+- decision_quality_incomplete=true, paper_readiness.eligible_for_watchlist=false
+- block_reason=directional_bias_without_candidate_side
+- LONG bias → candidate_side MUST be BUY (not NONE). SHORT bias → candidate_side MUST be SELL (not NONE).
+- Never output LONG/SHORT bias with candidate_side=NONE on watch or enter_candidate.
+
+Example 4 — entry_trigger / invalidation missing is INVALID (Stage 4.18-L):
+- Watch is NOT vague observation — watch MUST have entry_trigger + invalidation.
+- If entry_trigger.type=none, entry_trigger missing, or invalidation missing on watch/enter_candidate:
+- paper_readiness.eligible_for_watchlist=false, block_reason=missing_paper_fields
+
+Example 5 — MAE above cap remains skip (Stage 4.18-L):
+- BTC/ETH MAE > 0.35%, SOL MAE > 0.25%, PEPE MAE > 0.20%:
 - decision_intent=soft_skip or hard_skip, eligible_for_watchlist=false, block_reason=mae_risk_too_high
+- Do NOT deflate MAE to pass graduation.
 
-BTC acceptable watch example:
-- reference_price=100000, invalidation_price=99700, adverse distance=0.30%
-- confidence>=0.40, candidate_side=LONG or SHORT → decision_intent=watch, paper-ready
+ETH acceptable watch:
+- reference_price=3000, invalidation_price=2991 → mae_risk_estimate_pct=0.30, candidate_side=BUY
 
-SOL/PEPE: if SOL MAE>0.25% or PEPE MAE>0.20%, skip/watchlist-only; block_reason=mae_risk_too_high; never deflate MAE."""
+ETH too-risky (reference):
+- reference_price=3000, invalidation_price=2960 → mae=1.33%, soft_skip/hard_skip, block_reason=mae_risk_too_high
+
+SOL/PEPE: if SOL MAE>0.25% or PEPE MAE>0.20%, skip/watchlist-only; never deflate MAE."""
 
 SCHEMA_FIELD_NAMES = (
     "final_action",
@@ -192,7 +218,9 @@ def build_decision_prompt(
         "instructions": [
             "Classify decision_intent and calibrate confidence by intent band.",
             "Respect blocking patches; list data gaps in missing_data when quality is partial.",
-            "For watch: set directional_bias, watch_confirmation_reason, invalidation, mae_risk_estimate_pct.",
+            "For watch: set directional_bias, candidate_side (BUY/SELL), entry_trigger (type != none), watch_confirmation_reason, invalidation, mae_risk_estimate_pct.",
+            "LONG bias → candidate_side=BUY; SHORT bias → candidate_side=SELL; never bias with NONE side.",
+            "Watch requires entry_trigger + invalidation — entry_trigger.type=none is invalid for watch.",
             "For enter_candidate: require candidate_side, directional_bias, entry_trigger, invalidation, mae_risk_estimate_pct, risk_reward_estimate.",
             "If direction unclear, use soft_skip/hard_skip — never enter_candidate with NONE side.",
             "Stage 4.18-H/I: MAE = invalidation distance from reference_price to invalidation_price, not ATR/vol.",

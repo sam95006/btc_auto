@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Stage 4.18-K — offline paper entry failure analyzer (no orders, no LLM)."""
+"""Stage 4.18-K/L — offline paper entry failure analyzer (no orders, no LLM)."""
 from __future__ import annotations
 
 import argparse
 import json
 import sys
-from collections import Counter
+from collections import Counter, defaultdict
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -15,9 +15,13 @@ if str(ROOT) not in sys.path:
 
 from tools.research.bybit_demo_learning_common import utc_now_iso, write_json  # noqa: E402
 from tools.research.stage4_paper_readiness import (  # noqa: E402
+    BLOCK_REASON_MAE_ABOVE_CAP,
+    BLOCK_REASON_MISSING_FIELDS,
     apply_schema_level_enforcement,
     assess_decision_quality,
     build_enforcement_metrics,
+    parse_entry_trigger,
+    symbol_mae_watch_cap_pct,
 )
 
 
@@ -36,10 +40,104 @@ def _read_jsonl(path: Path) -> List[Dict[str, Any]]:
     return rows
 
 
+def _normalize_side(raw: Any) -> str:
+    side = str(raw or "NONE").upper()
+    if side in {"BUY", "LONG"}:
+        return "LONG"
+    if side in {"SELL", "SHORT"}:
+        return "SHORT"
+    return "NONE"
+
+
+def _has_entry_trigger(entry_trigger: Dict[str, Any]) -> bool:
+    return entry_trigger.get("type") != "none" or bool(entry_trigger.get("trigger_condition"))
+
+
+def _bias_without_side(raw: Dict[str, Any]) -> bool:
+    bias = str(raw.get("directional_bias") or "NONE").upper()
+    if bias in {"BUY"}:
+        bias = "LONG"
+    if bias in {"SELL"}:
+        bias = "SHORT"
+    return bias in {"LONG", "SHORT"} and _normalize_side(raw.get("candidate_side")) == "NONE"
+
+
+def _missing_entry_trigger(raw: Dict[str, Any]) -> bool:
+    intent = str(raw.get("decision_intent") or "").lower()
+    if intent not in {"watch", "enter_candidate"}:
+        return False
+    return not _has_entry_trigger(parse_entry_trigger(raw.get("entry_trigger")))
+
+
+def _is_valid_watch_candidate(raw: Dict[str, Any]) -> bool:
+    intent = str(raw.get("decision_intent") or "").lower()
+    if intent != "watch":
+        return False
+    incomplete, paper_readiness, _ = assess_decision_quality(raw)
+    if incomplete:
+        return False
+    block = str(paper_readiness.get("block_reason") or "")
+    if block and block != "ok":
+        return False
+    if _normalize_side(raw.get("candidate_side")) == "NONE":
+        return False
+    if not _has_entry_trigger(parse_entry_trigger(raw.get("entry_trigger"))):
+        return False
+    try:
+        mae = float(raw.get("mae_risk_estimate_pct") or 0)
+    except (TypeError, ValueError):
+        return False
+    cap = symbol_mae_watch_cap_pct(str(raw.get("symbol") or ""))
+    return 0 < mae <= cap
+
+
+def _rate(numerator: int, denominator: int) -> float:
+    if denominator <= 0:
+        return 0.0
+    return round(numerator / denominator, 4)
+
+
+def _build_recommendations(
+    *,
+    side_missing_rate: Dict[str, float],
+    trigger_missing_rate: Dict[str, float],
+    valid_watch_by_symbol: Dict[str, int],
+    paper_intent_by_symbol: Dict[str, int],
+) -> List[str]:
+    recs: List[str] = []
+    high_side = [s for s, r in side_missing_rate.items() if r >= 0.5 and paper_intent_by_symbol.get(s, 0) > 0]
+    high_trigger = [s for s, r in trigger_missing_rate.items() if r >= 0.5 and paper_intent_by_symbol.get(s, 0) > 0]
+    low_valid = [s for s, c in valid_watch_by_symbol.items() if c == 0 and paper_intent_by_symbol.get(s, 0) >= 2]
+
+    if high_side:
+        recs.append(
+            "candidate_side_missing_rate high for "
+            + ", ".join(high_side)
+            + " → reinforce LONG→BUY / SHORT→SELL prompt examples (418-L)"
+        )
+    if high_trigger:
+        recs.append(
+            "missing_entry_trigger_rate high for "
+            + ", ".join(high_trigger)
+            + " → reinforce watch requires entry_trigger.type != none (418-L)"
+        )
+    if low_valid:
+        recs.append(
+            "valid_watch_candidate_count=0 for "
+            + ", ".join(low_valid)
+            + " → after 418-L code pass, consider 60m read-only sample only with operator approval"
+        )
+    if not recs:
+        recs.append("failure rates moderate — run 418-L-R1 30m regression before considering 60m sample")
+    return recs
+
+
 def analyze_paper_entry_failures(
     *,
     input_dir: str | Path,
     output_dir: str | Path | None = None,
+    paper_events_dir: Optional[str | Path] = None,
+    calibration_dir: Optional[str | Path] = None,
 ) -> Dict[str, Any]:
     inp = Path(input_dir)
     decisions = _read_jsonl(inp / "ai_decisions.jsonl")
@@ -49,6 +147,16 @@ def analyze_paper_entry_failures(
     by_symbol: Counter[str] = Counter()
     by_block: Counter[str] = Counter()
     by_intent: Counter[str] = Counter()
+
+    side_missing_num: Counter[str] = Counter()
+    side_missing_den: Counter[str] = Counter()
+    trigger_missing_num: Counter[str] = Counter()
+    trigger_missing_den: Counter[str] = Counter()
+    valid_watch: Counter[str] = Counter()
+
+    top_side_missing: List[Dict[str, Any]] = []
+    top_missing_fields: List[Dict[str, Any]] = []
+    top_mae_above: List[Dict[str, Any]] = []
     rows_out: List[Dict[str, Any]] = []
 
     for raw in enforced:
@@ -62,33 +170,83 @@ def analyze_paper_entry_failures(
         by_intent[intent] += 1
         if block != "ok":
             by_block[block] += 1
-        rows_out.append(
-            {
-                "decision_id": raw.get("decision_id"),
-                "tick_index": raw.get("tick_index"),
-                "symbol": symbol,
-                "decision_intent": intent,
-                "candidate_side": raw.get("candidate_side"),
-                "directional_bias": raw.get("directional_bias"),
-                "mae_risk_estimate_pct": raw.get("mae_risk_estimate_pct"),
-                "block_reason": block,
-                "decision_quality_incomplete": incomplete,
-                "directional_bias_without_candidate_side": raw.get(
-                    "directional_bias_without_candidate_side"
-                ),
-                "paper_enforcement_reasons": reasons,
-            }
-        )
+
+        if _bias_without_side(raw) or raw.get("directional_bias_without_candidate_side"):
+            side_missing_num[symbol] += 1
+        if _normalize_side(raw.get("directional_bias")) in {"LONG", "SHORT"} or str(
+            raw.get("directional_bias") or ""
+        ).upper() in {"LONG", "SHORT", "BUY", "SELL"}:
+            side_missing_den[symbol] += 1
+
+        if intent == "watch":
+            trigger_missing_den[symbol] += 1
+            if _missing_entry_trigger(raw):
+                trigger_missing_num[symbol] += 1
+            if _is_valid_watch_candidate(raw):
+                valid_watch[symbol] += 1
+
+        row = {
+            "decision_id": raw.get("decision_id"),
+            "tick_index": raw.get("tick_index"),
+            "symbol": symbol,
+            "decision_intent": intent,
+            "candidate_side": raw.get("candidate_side"),
+            "directional_bias": raw.get("directional_bias"),
+            "mae_risk_estimate_pct": raw.get("mae_risk_estimate_pct"),
+            "block_reason": block,
+            "decision_quality_incomplete": incomplete,
+            "directional_bias_without_candidate_side": raw.get("directional_bias_without_candidate_side")
+            or _bias_without_side(raw),
+            "missing_entry_trigger": _missing_entry_trigger(raw),
+            "valid_watch_candidate": _is_valid_watch_candidate(raw),
+            "paper_enforcement_reasons": reasons,
+        }
+        rows_out.append(row)
+
+        if row["directional_bias_without_candidate_side"] and len(top_side_missing) < 5:
+            top_side_missing.append(row)
+        if BLOCK_REASON_MISSING_FIELDS in reasons and len(top_missing_fields) < 5:
+            top_missing_fields.append(row)
+        if BLOCK_REASON_MAE_ABOVE_CAP in reasons and len(top_mae_above) < 5:
+            top_mae_above.append(row)
+
+    paper_intent_by_symbol = dict(by_symbol)
+    candidate_side_missing_rate = {
+        s: _rate(side_missing_num[s], side_missing_den[s]) for s in paper_intent_by_symbol
+    }
+    missing_entry_trigger_rate = {
+        s: _rate(trigger_missing_num[s], trigger_missing_den[s]) for s in paper_intent_by_symbol
+    }
+    valid_watch_candidate_count_by_symbol = {s: valid_watch.get(s, 0) for s in paper_intent_by_symbol}
+
+    recommendations = _build_recommendations(
+        side_missing_rate=candidate_side_missing_rate,
+        trigger_missing_rate=missing_entry_trigger_rate,
+        valid_watch_by_symbol=valid_watch_candidate_count_by_symbol,
+        paper_intent_by_symbol=paper_intent_by_symbol,
+    )
 
     summary: Dict[str, Any] = {
         "record_type": "stage4_paper_entry_failure_analysis",
+        "stage_marker": "4.18-L",
         "generated_at_utc": utc_now_iso(),
         "input_dir": str(inp),
+        "paper_events_dir": str(paper_events_dir) if paper_events_dir else None,
+        "calibration_dir": str(calibration_dir) if calibration_dir else None,
         "decision_count": len(decisions),
         "paper_intent_count": len(rows_out),
         "failure_by_block_reason": dict(by_block),
         "failure_by_symbol": dict(by_symbol),
         "failure_by_intent": dict(by_intent),
+        "candidate_side_missing_rate_by_symbol": candidate_side_missing_rate,
+        "missing_entry_trigger_rate_by_symbol": missing_entry_trigger_rate,
+        "valid_watch_candidate_count_by_symbol": valid_watch_candidate_count_by_symbol,
+        "top_examples": {
+            "directional_bias_without_candidate_side": top_side_missing,
+            "missing_paper_fields": top_missing_fields,
+            "mae_above_symbol_cap": top_mae_above,
+        },
+        "recommendations": recommendations,
         **enforcement,
         "offline_only": True,
         "order_sent": False,
@@ -106,13 +264,17 @@ def analyze_paper_entry_failures(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Stage 4.18-K paper entry failure analyzer")
+    parser = argparse.ArgumentParser(description="Stage 4.18-K/L paper entry failure analyzer")
     parser.add_argument("--input-dir", required=True)
     parser.add_argument("--output-dir", default="")
+    parser.add_argument("--paper-events-dir", default="")
+    parser.add_argument("--calibration-dir", default="")
     args = parser.parse_args()
     summary = analyze_paper_entry_failures(
         input_dir=args.input_dir,
         output_dir=args.output_dir or None,
+        paper_events_dir=args.paper_events_dir or None,
+        calibration_dir=args.calibration_dir or None,
     )
     print(json.dumps(summary, indent=2))
     return 0

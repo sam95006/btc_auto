@@ -20,7 +20,7 @@ Paper-readiness rules (Stage 4.18-C):
 - If direction is unclear, use soft_skip or hard_skip — never enter_candidate with NONE side.
 - watch cannot become entry in the same tick; describe follow-up conditions only.
 
-MAE estimate calibration (Stage 4.18-F / 4.18-H) — mae_risk_estimate_pct is a PERCENT number, not a ratio:
+MAE estimate calibration (Stage 4.18-F / 4.18-H / 4.18-I) — mae_risk_estimate_pct is a PERCENT number, not a ratio:
 - 0.25 means 0.25% adverse move, NOT 25% and NOT 0.0025.
 - MAE is NOT a forecast of future max volatility, NOT ATR, and NOT 24h range. It is the acceptable adverse move from reference price to invalidation if this watch/candidate were taken.
 - Tie MAE to entry_trigger + invalidation: use the distance to invalidation as the MAE estimate, not whole-session volatility.
@@ -29,7 +29,42 @@ MAE estimate calibration (Stage 4.18-F / 4.18-H) — mae_risk_estimate_pct is a 
 - PEPE cap 0.20%: usually watchlist-only or skip; do NOT lower risk estimate just to pass cap.
 - ETH: if no direction, skip is correct. If direction is clear, MUST output directional_bias, entry_trigger, invalidation, mae_risk_estimate_pct (do not hard_skip with missing paper fields when bias exists).
 - Do NOT underestimate MAE to pass caps. If uncertain, skip. If MAE too high: paper_readiness.eligible_for_watchlist=false, block_reason=mae_risk_too_high.
-- mae_risk_estimate_pct MUST be <= invalidation.max_adverse_move_pct (same percent units)."""
+- mae_risk_estimate_pct MUST be <= invalidation.max_adverse_move_pct (same percent units).
+
+ETH MAE alignment (Stage 4.18-I):
+- If directional_bias=LONG/SHORT and decision_intent=watch, do NOT use whole 15m volatility as MAE.
+- mae_risk_estimate_pct MUST equal the percent distance (invalidation distance) from reference_price (last_price) to invalidation_price.
+- If ETH MAE > 0.35%, use soft_skip or hard_skip — NOT a paper-ready watch.
+- If ETH MAE is 0.28–0.35%, watch is allowed with watch_followup_required=true, entry_trigger, invalidation, block_reason=null.
+- Do NOT force enter_candidate on ETH; output paper-ready watch only when direction is clear.
+
+BTC graduation recovery (Stage 4.18-I):
+- Do not over-skip BTC watches that meet paper criteria.
+- If BTC directional_bias is LONG/SHORT, candidate_side is set, MAE <= 0.35%, confidence >= 0.40: allow paper-ready watch.
+- If BTC MAE > 0.35%, skip — never deflate MAE to pass cap.
+
+SOL / PEPE conservative line (Stage 4.18-I):
+- Do NOT lower MAE on SOL/PEPE to chase graduation.
+- SOL MAE > 0.25% or PEPE MAE > 0.20%: soft_skip or watchlist-only — not paper-ready watch.
+- PEPE in high volatility: prefer soft_skip.
+
+Worked examples (Stage 4.18-J):
+
+ETH acceptable watch example:
+- reference_price=3000, directional_bias=LONG, invalidation_price=2991
+- adverse distance = 9/3000 = 0.30% → mae_risk_estimate_pct=0.30
+- watch_followup_required=true, paper_readiness.eligible_for_watchlist=true, block_reason=null
+
+ETH too-risky example:
+- reference_price=3000, invalidation_price=2960
+- adverse distance = 40/3000 = 1.33% → mae_risk_estimate_pct=1.33
+- decision_intent=soft_skip or hard_skip, eligible_for_watchlist=false, block_reason=mae_risk_too_high
+
+BTC acceptable watch example:
+- reference_price=100000, invalidation_price=99700, adverse distance=0.30%
+- confidence>=0.40, candidate_side=LONG or SHORT → decision_intent=watch, paper-ready
+
+SOL/PEPE: if SOL MAE>0.25% or PEPE MAE>0.20%, skip/watchlist-only; block_reason=mae_risk_too_high; never deflate MAE."""
 
 SCHEMA_FIELD_NAMES = (
     "final_action",
@@ -160,11 +195,13 @@ def build_decision_prompt(
             "For watch: set directional_bias, watch_confirmation_reason, invalidation, mae_risk_estimate_pct.",
             "For enter_candidate: require candidate_side, directional_bias, entry_trigger, invalidation, mae_risk_estimate_pct, risk_reward_estimate.",
             "If direction unclear, use soft_skip/hard_skip — never enter_candidate with NONE side.",
-            "Stage 4.18-H: MAE = invalidation-risk from reference to stop, not ATR/vol forecast.",
+            "Stage 4.18-H/I: MAE = invalidation distance from reference_price to invalidation_price, not ATR/vol.",
             "mae_risk_estimate_pct is percent (0.25 = 0.25%); must be <= invalidation.max_adverse_move_pct.",
             "BTC/ETH: watch survival <=0.28%, graduation <=0.35%; above 0.35% → soft_skip/hard_skip.",
             "SOL cap 0.25%; PEPE cap 0.20%; do not deflate MAE to pass caps — skip instead.",
-            "ETH: if directional_bias is LONG/SHORT, include entry_trigger, invalidation, mae_risk_estimate_pct.",
+            "ETH watch: tie MAE to invalidation distance; 0.28–0.35% watch needs watch_followup_required=true.",
+            "BTC: if bias clear, side set, MAE<=0.35%, conf>=0.40 → paper-ready watch; do not over-skip.",
+            "PEPE high vol → soft_skip; SOL/PEPE never deflate MAE for graduation.",
             "If MAE too high: paper_readiness.eligible_for_watchlist=false, block_reason=mae_risk_too_high.",
         ],
     }

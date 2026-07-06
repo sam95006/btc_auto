@@ -235,5 +235,6 @@ Still hard-fails if `REAL_MONEY`, `LIVE_TRADING`, `BYBIT_MAINNET_ALLOWED`, or `P
 - **4.18j:** Schema-level MAE cap enforcement + ETH invalidation examples + confirmation diagnostics — offline replay on I-R1; tests 281/281; **Stage 4.19 not ready**.
 - **4.18j-r1:** Runtime-gated 30m with 418-J enforcement — gate PASS, technical PASS; **PARTIAL** (within_cap 2 vs above_cap 13, ETH within-cap 1, 0 graduations); **Stage 4.19 not started**.
 - **4.18k:** Post-J-R1 diagnostics + `stage4_paper_entry_failure_analyzer.py`; code-only; **Stage 4.19 not ready**.
-- **4.18l (next):** `candidate_side` + `entry_trigger` prompt iteration — **not started** (gate).
+- **4.18l:** Candidate side + entry trigger prompt/schema iteration; analyzer v2 rates + recommendations; offline J-R1 replay; **no soak**; **Stage 4.19 not ready**.
+- **4.18l-r1 (next):** Runtime-gated **30m** regression with 418-L prompt; if still `no_consecutive_tick` after field compliance improves, **60m read-only** only with operator approval.
 - See `docs/reports/STAGE_4_18J_SCHEMA_ENFORCEMENT_AND_CONFIRMATION_DIAGNOSTICS.md`, `docs/reports/STAGE_4_18J_R1_RUNTIME_GATED_SCHEMA_ENFORCED_REGRESSION_REPORT.md`, `docs/reports/STAGE_4_18K_DIAGNOSTICS_AFTER_418J_R1.md`, plus prior 4.18 reports in plan tail.

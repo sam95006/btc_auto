@@ -4795,9 +4795,47 @@ class Stage418JSchemaEnforcementTests(unittest.TestCase):
     def test_prompt_eth_examples_present(self) -> None:
         from tools.research.stage4_prompt_builder import SYSTEM_PROMPT
 
-        self.assertIn("ETH acceptable watch example", SYSTEM_PROMPT)
-        self.assertIn("ETH too-risky example", SYSTEM_PROMPT)
-        self.assertIn("reference_price=3000", SYSTEM_PROMPT)
+        self.assertIn("ETH acceptable watch", SYSTEM_PROMPT)
+
+
+class Stage418LPromptIterationTests(unittest.TestCase):
+    def test_prompt_btc_valid_watch_with_sell_side(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT
+
+        self.assertIn("BTC valid watch WITH side", SYSTEM_PROMPT)
+        self.assertIn("candidate_side=SELL", SYSTEM_PROMPT)
+        self.assertIn("invalidation_price=100300", SYSTEM_PROMPT)
+
+    def test_prompt_eth_valid_watch_with_buy_side(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT
+
+        self.assertIn("ETH valid watch WITH side", SYSTEM_PROMPT)
+        self.assertIn("candidate_side=BUY", SYSTEM_PROMPT)
+
+    def test_prompt_long_buy_short_sell_guidance(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT
+
+        self.assertIn("LONG directional_bias → candidate_side=BUY", SYSTEM_PROMPT)
+        self.assertIn("SHORT bias → candidate_side MUST be SELL", SYSTEM_PROMPT)
+
+    def test_prompt_bias_without_side_invalid(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT
+
+        self.assertIn("directional_bias_without_candidate_side", SYSTEM_PROMPT)
+        self.assertIn("candidate_side=NONE", SYSTEM_PROMPT)
+
+    def test_prompt_watch_requires_entry_trigger_and_invalidation(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT
+
+        self.assertIn("watch MUST have entry_trigger + invalidation", SYSTEM_PROMPT)
+        self.assertIn("entry_trigger.type=none", SYSTEM_PROMPT)
+        self.assertIn("missing_paper_fields", SYSTEM_PROMPT)
+
+    def test_prompt_mae_cap_skip_preserved(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT
+
+        self.assertIn("mae_risk_too_high", SYSTEM_PROMPT)
+        self.assertIn("Do NOT deflate MAE", SYSTEM_PROMPT)
 
 
 if __name__ == "__main__":

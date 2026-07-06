@@ -59,10 +59,21 @@ PROMPT_HINTS_418I = (
 
 PROMPT_HINTS_418J = (
     "Stage 4.18-J",
-    "ETH acceptable watch example",
-    "ETH too-risky example",
+    "ETH acceptable watch",
+    "ETH too-risky",
     "reference_price=3000",
     "mae_risk_estimate_pct=0.30",
+)
+
+PROMPT_HINTS_418L = (
+    "Stage 4.18-L",
+    "BTC valid watch WITH side",
+    "ETH valid watch WITH side",
+    "candidate_side=SELL",
+    "candidate_side=BUY",
+    "LONG bias → candidate_side=BUY",
+    "entry_trigger.type=none is invalid",
+    "directional_bias_without_candidate_side",
 )
 
 PATCH_MARKER_FILES = (
@@ -88,7 +99,7 @@ def _file_present(app_root: Path, name: str) -> bool:
 
 def _prompt_hints_present(app_root: Path) -> tuple[bool, List[str]]:
     text = _read_text(app_root / TOOLS_RESEARCH / "stage4_prompt_builder.py")
-    all_hints = PROMPT_HINTS_418F + PROMPT_HINTS_418H + PROMPT_HINTS_418I + PROMPT_HINTS_418J
+    all_hints = PROMPT_HINTS_418F + PROMPT_HINTS_418H + PROMPT_HINTS_418I + PROMPT_HINTS_418J + PROMPT_HINTS_418L
     missing = [h for h in all_hints if h not in text]
     return len(missing) == 0, missing
 
@@ -230,7 +241,7 @@ def check_runtime_version(*, app_root: Optional[Path] = None) -> Dict[str, Any]:
         "stale_reasons": stale_reasons,
         "missing_required_files": missing_files,
         "required_files_checked": list(REQUIRED_FILES),
-        "stage_marker": "4.18-J",
+        "stage_marker": "4.18-L",
     }
 
 
