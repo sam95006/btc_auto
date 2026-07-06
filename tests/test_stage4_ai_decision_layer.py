@@ -4508,5 +4508,162 @@ class Stage418FMaeEstimateCalibrationTests(unittest.TestCase):
         self.assertNotIn("btc_auto", source)
 
 
+class Stage418HRuntimeVersionCheckTests(unittest.TestCase):
+    def test_runtime_check_passes_on_current_repo(self) -> None:
+        from tools.research.check_stage4_runtime_version import check_runtime_version
+
+        root = Path(__file__).resolve().parents[1]
+        summary = check_runtime_version(app_root=root)
+        self.assertTrue(summary["runtime_version_check_passed"])
+        self.assertTrue(summary["prompt_hints_present"])
+        self.assertTrue(summary["mae_analysis_script_present"])
+        self.assertTrue(summary["build_mae_metrics_present"])
+        self.assertTrue(summary["paper_guard_inputs_present"])
+        self.assertTrue(summary["get_paper_mae_pct_present"])
+        self.assertFalse(summary["app_file_stale_suspected"])
+
+    def test_runtime_check_detects_missing_mae_analysis_script(self) -> None:
+        import shutil
+        import tempfile
+
+        from tools.research.check_stage4_runtime_version import check_runtime_version
+
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp:
+            app = Path(tmp) / "app"
+            shutil.copytree(root / "tools", app / "tools")
+            (app / "tools" / "research" / "stage4_mae_calibration_analysis.py").unlink()
+            summary = check_runtime_version(app_root=app)
+            self.assertFalse(summary["mae_analysis_script_present"])
+            self.assertFalse(summary["runtime_version_check_passed"])
+            self.assertTrue(summary["app_file_stale_suspected"])
+
+    def test_runtime_check_detects_missing_build_mae_metrics(self) -> None:
+        import shutil
+        import tempfile
+
+        from tools.research.check_stage4_runtime_version import check_runtime_version
+
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp:
+            app = Path(tmp) / "app"
+            shutil.copytree(root / "tools", app / "tools")
+            pr = app / "tools" / "research" / "stage4_paper_readiness.py"
+            pr.write_text("# stale\n", encoding="utf-8")
+            summary = check_runtime_version(app_root=app)
+            self.assertFalse(summary["build_mae_metrics_present"])
+            self.assertFalse(summary["runtime_version_check_passed"])
+            self.assertTrue(summary["app_file_stale_suspected"])
+
+    def test_runtime_check_blocks_stale_prompt(self) -> None:
+        import shutil
+        import tempfile
+
+        from tools.research.check_stage4_runtime_version import check_runtime_version
+
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp:
+            app = Path(tmp) / "app"
+            shutil.copytree(root / "tools", app / "tools")
+            pb = app / "tools" / "research" / "stage4_prompt_builder.py"
+            pb.write_text("SYSTEM_PROMPT = 'legacy'\n", encoding="utf-8")
+            summary = check_runtime_version(app_root=app)
+            self.assertFalse(summary["prompt_hints_present"])
+            self.assertFalse(summary["runtime_version_check_passed"])
+
+    def test_apply_patch_copies_files(self) -> None:
+        import shutil
+        import tempfile
+
+        from tools.research.check_stage4_runtime_version import apply_runtime_patch, check_runtime_version
+
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp:
+            patch = Path(tmp) / "patch"
+            app = Path(tmp) / "app"
+            patch.mkdir()
+            app.mkdir()
+            src = root / "tools" / "research" / "stage4_mae_calibration_analysis.py"
+            shutil.copy(src, patch / "stage4_mae_calibration_analysis.py")
+            result = apply_runtime_patch(patch_dir=patch, app_root=app)
+            self.assertEqual(result["copied_count"], 1)
+            self.assertTrue((app / "tools" / "research" / "stage4_mae_calibration_analysis.py").is_file())
+
+    def test_no_exchange_in_runtime_check(self) -> None:
+        import tools.research.check_stage4_runtime_version as mod
+
+        source = Path(mod.__file__).read_text(encoding="utf-8")
+        self.assertNotIn("BybitDemoClient", source)
+        self.assertNotIn("urlopen", source)
+
+
+class Stage418HPromptIterationTests(unittest.TestCase):
+    def test_prompt_mae_as_invalidation_risk_guidance(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT, build_decision_prompt
+
+        self.assertIn("NOT ATR", SYSTEM_PROMPT)
+        self.assertIn("invalidation", SYSTEM_PROMPT.lower())
+        self.assertIn("watch survival target", SYSTEM_PROMPT)
+        messages = build_decision_prompt(
+            symbol="BTCUSDT",
+            market_context={"symbol": "BTCUSDT", "last_price": 62000},
+            account_context={"available_balance": 5000},
+            retrieved_patches=[],
+            recent_trade_results=[],
+            recent_reflections=[],
+            safety_constraints={"order_allowed": False},
+            current_open_positions=0,
+        )
+        user = json.loads(messages[1]["content"])
+        joined = " ".join(user.get("instructions", []))
+        self.assertIn("Stage 4.18-H", joined)
+        self.assertIn("0.28%", joined)
+
+    def test_prompt_btc_eth_mae_guidance(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT
+
+        self.assertIn("0.35%", SYSTEM_PROMPT)
+        self.assertIn("0.28%", SYSTEM_PROMPT)
+
+    def test_prompt_eth_candidate_yield_guidance(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT
+
+        self.assertIn("ETH", SYSTEM_PROMPT)
+        self.assertIn("directional_bias", SYSTEM_PROMPT)
+        self.assertIn("entry_trigger", SYSTEM_PROMPT)
+
+    def test_prompt_sol_pepe_caps(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT
+
+        self.assertIn("SOL cap 0.25%", SYSTEM_PROMPT)
+        self.assertIn("PEPE cap 0.20%", SYSTEM_PROMPT)
+
+    def test_mae_above_cap_still_incomplete(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        raw = {
+            "final_action": "skip",
+            "symbol": "BTCUSDT",
+            "candidate_side": "NONE",
+            "confidence": 0.55,
+            "decision_intent": "watch",
+            "directional_bias": "LONG",
+            "watch_confirmation_reason": "Breakout",
+            "invalidation": {"max_adverse_move_pct": 0.40},
+            "mae_risk_estimate_pct": 0.50,
+            "why_enter": "",
+            "why_skip": "",
+            "side_reason": "x",
+            "confidence_reason": "x",
+            "risk_notes": [],
+            "patch_awareness": "",
+            "uncertainty": "low",
+            "requires_manual_review": False,
+        }
+        proposal, ok, _ = parse_llm_decision(raw, symbol="BTCUSDT")
+        self.assertTrue(ok)
+        self.assertTrue(proposal.get("decision_quality_incomplete"))
+
+
 if __name__ == "__main__":
     unittest.main()

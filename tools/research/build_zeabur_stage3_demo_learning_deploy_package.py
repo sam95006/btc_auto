@@ -86,6 +86,7 @@ BASE_ALLOWLIST = [
     "tools/research/extract_stage4_decision_review_data.py",
     "tools/research/run_stage4_ai_decision_dry_run.py",
     "tools/research/check_stage4_llm_provider.py",
+    "tools/research/check_stage4_runtime_version.py",
     "tools/research/validate_stage4_ai_decision_outputs.py",
     "tools/research/stage4_cloud_exec_wrapper.sh",
     "tools/research/__init__.py",

@@ -447,6 +447,26 @@ def _run_dry_run_inner(
             stats=stats,
         )
 
+    from tools.research.check_stage4_runtime_version import (
+        check_runtime_version,
+        runtime_version_gate_enabled,
+    )
+
+    if runtime_version_gate_enabled():
+        rt = check_runtime_version()
+        if not rt.get("runtime_version_check_passed"):
+            return _write_fail_summary(
+                out,
+                failed_reason="stage4_runtime_version_check_failed",
+                duration_minutes=duration_minutes,
+                poll_interval_seconds=poll_interval_seconds,
+                symbols=symbols,
+                mode=mode,
+                use_real_llm=use_real_llm,
+                log_path=log_path,
+                stats=stats,
+            )
+
     provider_health_check_passed: bool | None = None
     if use_real_llm and require_real_llm_enabled():
         if _light_preflight_enabled():

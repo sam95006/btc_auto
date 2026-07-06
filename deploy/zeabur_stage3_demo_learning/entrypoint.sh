@@ -28,11 +28,18 @@ fi
 
 if [ "$MODE" = "idle" ]; then
   echo "Stage 3 idle web mode: starting read-only UI"
+  PATCH_DIR="/data/stage4_418f_runtime_patch"
+  if [ -d "$PATCH_DIR" ] && [ "${STAGE4_APPLY_RUNTIME_PATCH:-true}" = "true" ]; then
+    echo "Stage 4.18-H: applying persisted runtime patch from $PATCH_DIR"
+    cp -f "$PATCH_DIR"/*.py /app/tools/research/ 2>/dev/null || true
+  fi
   if [ "${STAGE4_DRY_RUN_ONLY:-false}" = "true" ] && [ "${STAGE4_CLOUD_DRY_RUN_MINUTES:-0}" != "0" ]; then
     STAGE4_OUT="${STAGE4_OUTPUT_DIR:-/data/stage4_ai_decisions_42_10m}"
     mkdir -p "$STAGE4_OUT"
     if [ "${STAGE4_REQUIRE_REAL_LLM:-false}" = "true" ]; then
-      if ! python tools/research/run_stage4_ai_decision_dry_run.py         --preflight-only         --use-real-llm         --output-dir "$STAGE4_OUT"         >> "$STAGE4_OUT/stage4_cloud_dry_run.log" 2>&1; then
+      if ! python tools/research/check_stage4_runtime_version.py --gate --app-root /app; then
+        echo "Stage 4 cloud dry-run blocked: runtime version check failed (418-F/H code missing or stale)"
+      elif ! python tools/research/run_stage4_ai_decision_dry_run.py         --preflight-only         --use-real-llm         --output-dir "$STAGE4_OUT"         >> "$STAGE4_OUT/stage4_cloud_dry_run.log" 2>&1; then
         echo "Stage 4 cloud dry-run blocked: real LLM required but Groq key missing or provider unavailable"
       else
         echo "Stage 4 cloud dry-run: ${STAGE4_CLOUD_DRY_RUN_MINUTES}m -> $STAGE4_OUT (background, no orders)"

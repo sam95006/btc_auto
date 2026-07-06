@@ -548,5 +548,36 @@ class Stage418EPaperMaeIntegrationTests(unittest.TestCase):
             self.assertIn("paper_readiness_mae_block", events["risk_governor_reasons"])
 
 
+class Stage418HRuntimeGateLoggerTests(unittest.TestCase):
+    def test_logger_blocks_decision_quality_incomplete(self) -> None:
+        self.assertFalse(
+            is_eligible_decision(
+                _decision(
+                    decision_intent="watch",
+                    decision_quality_incomplete=True,
+                    directional_bias="LONG",
+                )
+            )
+        )
+
+    def test_no_order_sent_in_logger(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            inp = Path(tmp) / "in"
+            out = Path(tmp) / "out"
+            inp.mkdir()
+            (inp / "ai_decisions.jsonl").write_text(
+                json.dumps(_decision(decision_intent="watch")) + "\n",
+                encoding="utf-8",
+            )
+            summary = run_paper_event_logger([inp], output_dir=out, mode="overwrite")
+            self.assertEqual(summary["order_sent_count"], 0)
+
+    def test_runtime_version_check_module_has_no_exchange(self) -> None:
+        import tools.research.check_stage4_runtime_version as mod
+
+        source = Path(mod.__file__).read_text(encoding="utf-8")
+        self.assertNotIn("BybitDemoClient", source)
+
+
 if __name__ == "__main__":
     unittest.main()

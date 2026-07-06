@@ -20,12 +20,15 @@ Paper-readiness rules (Stage 4.18-C):
 - If direction is unclear, use soft_skip or hard_skip — never enter_candidate with NONE side.
 - watch cannot become entry in the same tick; describe follow-up conditions only.
 
-MAE estimate calibration (Stage 4.18-F) — mae_risk_estimate_pct is a PERCENT number, not a ratio:
+MAE estimate calibration (Stage 4.18-F / 4.18-H) — mae_risk_estimate_pct is a PERCENT number, not a ratio:
 - 0.25 means 0.25% adverse move, NOT 25% and NOT 0.0025.
-- BTC/ETH watch: reasonable MAE usually 0.05–0.35; above 0.35% is too high for paper-ready watch → use soft_skip/hard_skip.
-- SOL watch: above 0.25% → lower paper_readiness or soft_skip.
-- PEPE watch: above 0.20% → lower paper_readiness or soft_skip.
-- If MAE risk is high: set paper_readiness.eligible_for_watchlist=false, block_reason=mae_risk_too_high; do NOT output paper-ready watch.
+- MAE is NOT a forecast of future max volatility, NOT ATR, and NOT 24h range. It is the acceptable adverse move from reference price to invalidation if this watch/candidate were taken.
+- Tie MAE to entry_trigger + invalidation: use the distance to invalidation as the MAE estimate, not whole-session volatility.
+- BTC/ETH watch survival target: <= 0.28%. Graduation target: <= 0.35%. If estimated MAE > 0.35%, use soft_skip/hard_skip — NOT paper-ready watch.
+- SOL cap 0.25%: if MAE > 0.25%, usually soft_skip. Do NOT use SOL short-term chop as MAE.
+- PEPE cap 0.20%: usually watchlist-only or skip; do NOT lower risk estimate just to pass cap.
+- ETH: if no direction, skip is correct. If direction is clear, MUST output directional_bias, entry_trigger, invalidation, mae_risk_estimate_pct (do not hard_skip with missing paper fields when bias exists).
+- Do NOT underestimate MAE to pass caps. If uncertain, skip. If MAE too high: paper_readiness.eligible_for_watchlist=false, block_reason=mae_risk_too_high.
 - mae_risk_estimate_pct MUST be <= invalidation.max_adverse_move_pct (same percent units)."""
 
 SCHEMA_FIELD_NAMES = (
@@ -157,8 +160,11 @@ def build_decision_prompt(
             "For watch: set directional_bias, watch_confirmation_reason, invalidation, mae_risk_estimate_pct.",
             "For enter_candidate: require candidate_side, directional_bias, entry_trigger, invalidation, mae_risk_estimate_pct, risk_reward_estimate.",
             "If direction unclear, use soft_skip/hard_skip — never enter_candidate with NONE side.",
+            "Stage 4.18-H: MAE = invalidation-risk from reference to stop, not ATR/vol forecast.",
             "mae_risk_estimate_pct is percent (0.25 = 0.25%); must be <= invalidation.max_adverse_move_pct.",
-            "BTC/ETH watch MAE > 0.35% → soft_skip/hard_skip, not paper-ready watch; SOL > 0.25%; PEPE > 0.20%.",
+            "BTC/ETH: watch survival <=0.28%, graduation <=0.35%; above 0.35% → soft_skip/hard_skip.",
+            "SOL cap 0.25%; PEPE cap 0.20%; do not deflate MAE to pass caps — skip instead.",
+            "ETH: if directional_bias is LONG/SHORT, include entry_trigger, invalidation, mae_risk_estimate_pct.",
             "If MAE too high: paper_readiness.eligible_for_watchlist=false, block_reason=mae_risk_too_high.",
         ],
     }

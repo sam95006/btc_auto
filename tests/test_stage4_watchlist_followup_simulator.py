@@ -598,5 +598,21 @@ class Stage418CPaperReadinessSimulatorTests(unittest.TestCase):
         self.assertEqual(acc.hypothetical_graduation_count, 0)
 
 
+class Stage418HWatchlistRuntimeTests(unittest.TestCase):
+    def test_runtime_version_check_importable(self) -> None:
+        from tools.research.check_stage4_runtime_version import check_runtime_version
+
+        root = Path(__file__).resolve().parents[1]
+        summary = check_runtime_version(app_root=root)
+        self.assertIn("runtime_version_check_passed", summary)
+
+    def test_calibration_no_orders_sent(self) -> None:
+        import tools.research.stage4_watchlist_followup_simulator as mod
+
+        source = Path(mod.__file__).read_text(encoding="utf-8")
+        self.assertNotIn("place_order", source)
+        self.assertNotIn("btc-auto", source)
+
+
 if __name__ == "__main__":
     unittest.main()
