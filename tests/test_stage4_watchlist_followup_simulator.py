@@ -614,5 +614,19 @@ class Stage418HWatchlistRuntimeTests(unittest.TestCase):
         self.assertNotIn("btc-auto", source)
 
 
+class Stage418ICompareIntegrationTests(unittest.TestCase):
+    def test_compare_tool_importable_from_simulator_context(self) -> None:
+        from tools.research.stage4_mae_regression_compare import compare_mae_regressions
+
+        self.assertTrue(callable(compare_mae_regressions))
+
+    def test_no_production_btc_auto_in_compare(self) -> None:
+        import tools.research.stage4_mae_regression_compare as mod
+
+        source = Path(mod.__file__).read_text(encoding="utf-8")
+        self.assertNotIn("btc-auto", source)
+        self.assertNotIn("place_order", source)
+
+
 if __name__ == "__main__":
     unittest.main()

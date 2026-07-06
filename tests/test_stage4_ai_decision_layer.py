@@ -4665,5 +4665,55 @@ class Stage418HPromptIterationTests(unittest.TestCase):
         self.assertTrue(proposal.get("decision_quality_incomplete"))
 
 
+class Stage418IPromptAlignmentTests(unittest.TestCase):
+    def test_prompt_eth_mae_invalidation_distance_guidance(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT
+
+        self.assertIn("invalidation distance", SYSTEM_PROMPT)
+        self.assertIn("reference_price", SYSTEM_PROMPT.lower())
+        self.assertIn("15m volatility", SYSTEM_PROMPT)
+
+    def test_prompt_eth_cap_guidance(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT
+
+        self.assertIn("ETH MAE > 0.35%", SYSTEM_PROMPT)
+        self.assertIn("0.28–0.35%", SYSTEM_PROMPT)
+        self.assertIn("watch_followup_required", SYSTEM_PROMPT)
+
+    def test_prompt_btc_confirmation_recovery_guidance(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT, build_decision_prompt
+
+        self.assertIn("BTC graduation recovery", SYSTEM_PROMPT)
+        self.assertIn("confidence >= 0.40", SYSTEM_PROMPT)
+        messages = build_decision_prompt(
+            symbol="BTCUSDT",
+            market_context={"symbol": "BTCUSDT", "last_price": 62000},
+            account_context={"available_balance": 5000},
+            retrieved_patches=[],
+            recent_trade_results=[],
+            recent_reflections=[],
+            safety_constraints={"order_allowed": False},
+            current_open_positions=0,
+        )
+        joined = " ".join(json.loads(messages[1]["content"]).get("instructions", []))
+        self.assertIn("BTC:", joined)
+        self.assertIn("0.35%", joined)
+
+    def test_prompt_sol_pepe_conservative_preserved(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT
+
+        self.assertIn("SOL MAE > 0.25%", SYSTEM_PROMPT)
+        self.assertIn("PEPE MAE > 0.20%", SYSTEM_PROMPT)
+        self.assertIn("PEPE in high volatility", SYSTEM_PROMPT)
+        self.assertIn("never deflate MAE", SYSTEM_PROMPT)
+
+    def test_no_order_sent_in_prompt_builder(self) -> None:
+        import tools.research.stage4_prompt_builder as mod
+
+        source = Path(mod.__file__).read_text(encoding="utf-8")
+        self.assertNotIn("place_order", source)
+        self.assertNotIn("btc-auto", source)
+
+
 if __name__ == "__main__":
     unittest.main()

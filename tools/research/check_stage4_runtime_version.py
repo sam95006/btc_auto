@@ -44,8 +44,16 @@ PROMPT_HINTS_418H = (
     "NOT ATR",
     "watch survival target",
     "0.28%",
-    "invalidation-risk",
+    "invalidation distance",
     "directional_bias is LONG/SHORT",
+)
+
+PROMPT_HINTS_418I = (
+    "Stage 4.18-I",
+    "invalidation distance",
+    "BTC graduation recovery",
+    "watch_followup_required",
+    "PEPE in high volatility",
 )
 
 PATCH_MARKER_FILES = (
@@ -70,7 +78,7 @@ def _file_present(app_root: Path, name: str) -> bool:
 
 def _prompt_hints_present(app_root: Path) -> tuple[bool, List[str]]:
     text = _read_text(app_root / TOOLS_RESEARCH / "stage4_prompt_builder.py")
-    missing = [h for h in PROMPT_HINTS_418F + PROMPT_HINTS_418H if h not in text]
+    missing = [h for h in PROMPT_HINTS_418F + PROMPT_HINTS_418H + PROMPT_HINTS_418I if h not in text]
     return len(missing) == 0, missing
 
 

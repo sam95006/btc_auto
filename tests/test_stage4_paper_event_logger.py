@@ -579,5 +579,38 @@ class Stage418HRuntimeGateLoggerTests(unittest.TestCase):
         self.assertNotIn("BybitDemoClient", source)
 
 
+class Stage418IPromptLoggerSafetyTests(unittest.TestCase):
+    def test_logger_no_exchange_calls(self) -> None:
+        import tools.research.stage4_paper_event_logger as mod
+
+        source = Path(mod.__file__).read_text(encoding="utf-8")
+        self.assertNotIn("place_order", source)
+        self.assertNotIn("BybitDemoClient", source)
+
+    def test_logger_eth_high_mae_still_no_order(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            inp = Path(tmp) / "in"
+            out = Path(tmp) / "out"
+            inp.mkdir()
+            row = _decision(
+                symbol="ETHUSDT",
+                decision_intent="watch",
+                mae_risk_estimate_pct=0.45,
+                invalidation={
+                    "invalidation_price": 3400.0,
+                    "invalidation_reason": "Break support",
+                    "max_adverse_move_pct": 0.45,
+                },
+                paper_readiness={
+                    "eligible_for_watchlist": True,
+                    "eligible_for_hypothetical_entry": False,
+                    "block_reason": "ok",
+                },
+            )
+            (inp / "ai_decisions.jsonl").write_text(json.dumps(row) + "\n", encoding="utf-8")
+            summary = run_paper_event_logger([inp], output_dir=out, mode="overwrite")
+            self.assertEqual(summary["order_sent_count"], 0)
+
+
 if __name__ == "__main__":
     unittest.main()
