@@ -4971,6 +4971,32 @@ class Stage418MStructuredOutputTests(unittest.TestCase):
         self.assertIn("candidate_side NONE is ONLY allowed for soft_skip or hard_skip", SYSTEM_PROMPT)
         self.assertIn("Bad output (INVALID)", SYSTEM_PROMPT)
 
+    def test_groq_strict_prompt_contains_side_rule(self) -> None:
+        from tools.research.stage4_prompt_builder import (
+            GROQ_STRICT_OUTPUT_RULE,
+            inject_provider_strict_prompt,
+        )
+
+        self.assertIn("candidate_side must not be NONE", GROQ_STRICT_OUTPUT_RULE)
+        msgs = inject_provider_strict_prompt(
+            [{"role": "system", "content": "base"}, {"role": "user", "content": "{}"}],
+            "groq",
+        )
+        self.assertIn("GROQ STRICT OUTPUT RULE", msgs[0]["content"])
+
+    def test_cerebras_strict_prompt_contains_trigger_rule(self) -> None:
+        from tools.research.stage4_prompt_builder import (
+            CEREBRAS_STRICT_OUTPUT_RULE,
+            inject_provider_strict_prompt,
+        )
+
+        self.assertIn("entry_trigger.type must not be none", CEREBRAS_STRICT_OUTPUT_RULE)
+        msgs = inject_provider_strict_prompt(
+            [{"role": "system", "content": "base"}, {"role": "user", "content": "{}"}],
+            "cerebras",
+        )
+        self.assertIn("CEREBRAS STRICT OUTPUT RULE", msgs[0]["content"])
+
 
 if __name__ == "__main__":
     unittest.main()

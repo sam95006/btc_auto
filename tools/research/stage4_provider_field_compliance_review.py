@@ -7,7 +7,7 @@ import json
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -23,6 +23,11 @@ from tools.research.stage4_paper_entry_failure_analyzer import (  # noqa: E402
 from tools.research.stage4_paper_readiness import (  # noqa: E402
     apply_schema_level_enforcement,
     detect_mae_scale_drift,
+)
+from tools.research.stage4_schema_repair import (  # noqa: E402
+    ALLOWED_REPAIR_ACTIONS,
+    FORBIDDEN_REPAIR_ACTIONS,
+    build_schema_repair_aggregate_metrics,
 )
 
 
@@ -56,6 +61,40 @@ def _rate(num: int, den: int) -> float:
     return round(num / den, 4)
 
 
+def _build_provider_summary_entry(
+    *,
+    provider: str,
+    rows: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    paper_rows = [
+        r
+        for r in rows
+        if str(r.get("decision_intent") or "").lower() in {"watch", "enter_candidate"}
+    ]
+    side_missing = sum(1 for r in paper_rows if _bias_without_side(r))
+    trigger_missing = sum(1 for r in paper_rows if _missing_entry_trigger(r))
+    valid_watch = sum(1 for r in paper_rows if _is_valid_watch_candidate(r))
+    drift = sum(1 for r in paper_rows if detect_mae_scale_drift(r))
+    contract_totals = Counter()
+    for r in paper_rows:
+        for k, v in _field_contract_failures(r).items():
+            contract_totals[k] += v
+
+    den = len(paper_rows)
+    return {
+        "decision_count": len(rows),
+        "paper_intent_count": den,
+        "side_missing_count": side_missing,
+        "side_missing_rate": _rate(side_missing, den),
+        "trigger_missing_count": trigger_missing,
+        "trigger_missing_rate": _rate(trigger_missing, den),
+        "valid_watch_candidate_count": valid_watch,
+        "mae_scale_drift_suspected_count": drift,
+        "field_contract_failure_totals": dict(contract_totals),
+        "top_failure_reasons": dict(contract_totals.most_common(5)),
+    }
+
+
 def review_provider_field_compliance(
     *,
     input_dir: str | Path,
@@ -71,35 +110,32 @@ def review_provider_field_compliance(
         by_provider[_provider_label(row)].append(row)
 
     provider_stats: Dict[str, Any] = {}
+    provider_summary: Dict[str, Any] = {}
     recommendations: List[str] = []
 
     for provider, rows in sorted(by_provider.items()):
-        paper_rows = [
-            r
-            for r in rows
-            if str(r.get("decision_intent") or "").lower() in {"watch", "enter_candidate"}
-        ]
-        side_missing = sum(1 for r in paper_rows if _bias_without_side(r))
-        trigger_missing = sum(1 for r in paper_rows if _missing_entry_trigger(r))
-        valid_watch = sum(1 for r in paper_rows if _is_valid_watch_candidate(r))
-        drift = sum(1 for r in paper_rows if detect_mae_scale_drift(r))
-        contract_totals = Counter()
-        for r in paper_rows:
-            for k, v in _field_contract_failures(r).items():
-                contract_totals[k] += v
+        entry = _build_provider_summary_entry(provider=provider, rows=rows)
+        provider_stats[provider] = entry
+        if provider in {"groq", "cerebras"}:
+            provider_summary[provider] = {
+                "decision_count": entry["decision_count"],
+                "paper_intent_count": entry["paper_intent_count"],
+                "side_missing_rate": entry["side_missing_rate"],
+                "trigger_missing_rate": entry["trigger_missing_rate"],
+                "valid_watch_candidate_count": entry["valid_watch_candidate_count"],
+                "top_failure_reasons": entry["top_failure_reasons"],
+            }
 
-        den = len(paper_rows)
-        provider_stats[provider] = {
-            "decision_count": len(rows),
-            "paper_intent_count": den,
-            "side_missing_count": side_missing,
-            "side_missing_rate": _rate(side_missing, den),
-            "trigger_missing_count": trigger_missing,
-            "trigger_missing_rate": _rate(trigger_missing, den),
-            "valid_watch_candidate_count": valid_watch,
-            "mae_scale_drift_suspected_count": drift,
-            "field_contract_failure_totals": dict(contract_totals),
-        }
+    for name in ("groq", "cerebras"):
+        if name not in provider_summary:
+            provider_summary[name] = {
+                "decision_count": 0,
+                "paper_intent_count": 0,
+                "side_missing_rate": 0.0,
+                "trigger_missing_rate": 0.0,
+                "valid_watch_candidate_count": 0,
+                "top_failure_reasons": {},
+            }
 
     groq = provider_stats.get("groq", {})
     cerebras = provider_stats.get("cerebras", {})
@@ -108,30 +144,36 @@ def review_provider_field_compliance(
     groq_trigger = float(groq.get("trigger_missing_rate") or 0)
     cerebras_trigger = float(cerebras.get("trigger_missing_rate") or 0)
 
-    if groq_side > cerebras_side + 0.1:
+    if groq_side >= 0.5:
         recommendations.append("groq_higher_side_missing → tighten Groq JSON schema / response_format")
-    elif cerebras_side > groq_side + 0.1:
-        recommendations.append("cerebras_higher_side_missing → tighten Cerebras json_schema payload")
+    if cerebras_trigger >= 0.5:
+        recommendations.append("cerebras_higher_trigger_missing → Cerebras-specific entry_trigger contract")
     if groq_trigger > cerebras_trigger + 0.1:
         recommendations.append("groq_higher_trigger_missing → Groq-specific entry_trigger examples")
-    elif cerebras_trigger > groq_trigger + 0.1:
-        recommendations.append("cerebras_higher_trigger_missing → Cerebras-specific entry_trigger contract")
+    elif cerebras_side > groq_side + 0.1:
+        recommendations.append("cerebras_higher_side_missing → tighten Cerebras json_schema payload")
     if not recommendations:
         recommendations.append("providers_similar → apply unified schema repair with provider-specific probes")
 
     repair_policy = {
-        "allowed_repairs": [
-            "normalize_empty_object_containers",
-            "coerce_string_trim",
-            "fill_missing_nested_dict_shells",
-        ],
-        "forbidden_repairs": [
-            "auto_set_candidate_side_from_bias",
-            "deflate_mae_to_pass_cap",
-            "synthesize_entry_trigger_to_pass",
-            "promote_to_eligible_watchlist",
-        ],
+        "allowed_repairs": sorted(ALLOWED_REPAIR_ACTIONS),
+        "forbidden_repairs": sorted(FORBIDDEN_REPAIR_ACTIONS),
     }
+
+    provider_side_missing_rate = {
+        p: float((provider_summary.get(p) or {}).get("side_missing_rate") or 0)
+        for p in ("groq", "cerebras")
+    }
+    provider_trigger_missing_rate = {
+        p: float((provider_summary.get(p) or {}).get("trigger_missing_rate") or 0)
+        for p in ("groq", "cerebras")
+    }
+    provider_valid_watch_candidate_count = {
+        p: int((provider_summary.get(p) or {}).get("valid_watch_candidate_count") or 0)
+        for p in ("groq", "cerebras")
+    }
+
+    schema_repair_metrics = build_schema_repair_aggregate_metrics(enforced)
 
     summary: Dict[str, Any] = {
         "record_type": "stage4_provider_field_compliance_review",
@@ -141,8 +183,13 @@ def review_provider_field_compliance(
         "baseline_label": baseline_label or inp.name,
         "decision_count": len(decisions),
         "provider_stats": provider_stats,
+        "provider_summary": provider_summary,
+        "provider_side_missing_rate": provider_side_missing_rate,
+        "provider_trigger_missing_rate": provider_trigger_missing_rate,
+        "provider_valid_watch_candidate_count": provider_valid_watch_candidate_count,
         "repair_policy": repair_policy,
         "recommendations": recommendations,
+        **schema_repair_metrics,
         "offline_only": True,
         "order_sent": False,
         "exchange_private_api_called": False,

@@ -83,6 +83,14 @@ PROMPT_HINTS_418M = (
     "Bad output (INVALID)",
 )
 
+PROMPT_HINTS_418N = (
+    "Stage 4.18-N",
+    "GROQ STRICT OUTPUT RULE",
+    "CEREBRAS STRICT OUTPUT RULE",
+    "candidate_side must not be NONE",
+    "entry_trigger.type must not be none",
+)
+
 PATCH_MARKER_FILES = (
     "stage4_paper_readiness.py",
     "stage4_prompt_builder.py",
@@ -113,6 +121,7 @@ def _prompt_hints_present(app_root: Path) -> tuple[bool, List[str]]:
         + PROMPT_HINTS_418J
         + PROMPT_HINTS_418L
         + PROMPT_HINTS_418M
+        + PROMPT_HINTS_418N
     )
     missing = [h for h in all_hints if h not in text]
     return len(missing) == 0, missing
@@ -255,7 +264,7 @@ def check_runtime_version(*, app_root: Optional[Path] = None) -> Dict[str, Any]:
         "stale_reasons": stale_reasons,
         "missing_required_files": missing_files,
         "required_files_checked": list(REQUIRED_FILES),
-        "stage_marker": "4.18-M",
+        "stage_marker": "4.18-N",
     }
 
 

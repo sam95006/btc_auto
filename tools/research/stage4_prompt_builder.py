@@ -106,7 +106,48 @@ Bad output (INVALID):
 
 Correct output (choose one):
 - soft_skip or hard_skip with clear why_skip
-- OR candidate_side=BUY + entry_trigger (type != none) + invalidation + mae_risk_estimate_pct within symbol cap"""
+- OR candidate_side=BUY + entry_trigger (type != none) + invalidation + mae_risk_estimate_pct within symbol cap
+
+Provider-specific strict output rules (Stage 4.18-N) are injected per provider at call time."""
+
+GROQ_STRICT_OUTPUT_RULE = """GROQ STRICT OUTPUT RULE:
+For any watch or enter_candidate, candidate_side must not be NONE.
+If you cannot provide BUY/SELL, output soft_skip.
+Never output directional_bias LONG/SHORT with candidate_side NONE.
+LONG directional_bias → candidate_side=BUY.
+SHORT directional_bias → candidate_side=SELL."""
+
+CEREBRAS_STRICT_OUTPUT_RULE = """CEREBRAS STRICT OUTPUT RULE:
+For watch or enter_candidate, entry_trigger.type must not be none.
+entry_trigger.trigger_condition must be non-empty.
+invalidation must be present (invalidation_price or max_adverse_move_pct).
+If no concrete trigger exists, output soft_skip/hard_skip.
+Do not output watch with missing or none entry_trigger."""
+
+
+def provider_strict_output_block(provider: str) -> str:
+    p = str(provider or "").strip().lower()
+    if p == "groq":
+        return GROQ_STRICT_OUTPUT_RULE
+    if p == "cerebras":
+        return CEREBRAS_STRICT_OUTPUT_RULE
+    return ""
+
+
+def inject_provider_strict_prompt(messages: List[Dict[str, str]], provider: str) -> List[Dict[str, str]]:
+    block = provider_strict_output_block(provider)
+    if not block:
+        return messages
+    out: List[Dict[str, str]] = []
+    for msg in messages:
+        if msg.get("role") == "system":
+            content = str(msg.get("content") or "")
+            if block not in content:
+                content = f"{content}\n\n{block}"
+            out.append({"role": "system", "content": content})
+        else:
+            out.append(dict(msg))
+    return out
 
 SCHEMA_FIELD_NAMES = (
     "final_action",

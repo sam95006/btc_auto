@@ -27,6 +27,8 @@ FILES = [
     "tools/research/stage4_decision_schema.py",
     "tools/research/stage4_ai_decision_agent.py",
     "tools/research/stage4_schema_repair.py",
+    "tools/research/stage4_cerebras_payload.py",
+    "tools/research/stage4_provider_chain.py",
     "tools/research/stage4_watchlist_followup_simulator.py",
     "tools/research/stage4_paper_entry_failure_analyzer.py",
     "tools/research/stage4_provider_field_compliance_review.py",
@@ -91,6 +93,8 @@ def main() -> int:
         "/app/tools/research/stage4_decision_schema.py "
         "/app/tools/research/stage4_ai_decision_agent.py "
         "/app/tools/research/stage4_schema_repair.py "
+        "/app/tools/research/stage4_cerebras_payload.py "
+        "/app/tools/research/stage4_provider_chain.py "
         "/app/tools/research/stage4_watchlist_followup_simulator.py "
         "/app/tools/research/stage4_paper_entry_failure_analyzer.py "
         "/app/tools/research/stage4_provider_field_compliance_review.py "

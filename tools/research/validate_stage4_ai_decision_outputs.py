@@ -29,6 +29,7 @@ from tools.research.stage4_paper_readiness import (  # noqa: E402
     build_paper_readiness_metrics,
 )
 from tools.research.stage4_system_events import read_system_events  # noqa: E402
+from tools.research.stage4_schema_repair import build_schema_repair_aggregate_metrics  # noqa: E402
 
 ALLOWED_REAL_PROVIDERS = frozenset({"groq", "cerebras", "openai", "anthropic", "gemini"})
 
@@ -272,6 +273,13 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
     parse_error_summary = build_parse_error_summary(decisions)
     paper_readiness_metrics = build_paper_readiness_metrics(decisions)
     mae_calibration_metrics = build_mae_calibration_metrics(decisions)
+    schema_repair_metrics = build_schema_repair_aggregate_metrics(decisions)
+    for i, d in enumerate(decisions):
+        if d.get("schema_repair_promoted_eligibility"):
+            technical_errors.append(f"decision_{i}_schema_repair_promoted_eligibility")
+        forbidden = d.get("schema_repair_forbidden_actions_detected") or []
+        if d.get("schema_repair_applied") and forbidden:
+            technical_errors.append(f"decision_{i}_schema_repair_forbidden_actions_applied")
     if metrics["parse_error_count"] != int(parse_error_summary.get("parse_error_count") or 0):
         technical_errors.append("parse_error_count_mismatch")
     if require_real_llm and global_chain_failed > 0 and not per_symbol_failed_sum_matches_global:
@@ -333,6 +341,7 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
         **parse_error_summary,
         **paper_readiness_metrics,
         **mae_calibration_metrics,
+        **schema_repair_metrics,
     }
 
 

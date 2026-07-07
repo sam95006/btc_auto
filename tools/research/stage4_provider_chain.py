@@ -328,8 +328,11 @@ class Stage4ProviderChainClient:
                 continue
 
             client = self._client_for(provider, is_primary=is_primary)
+            from tools.research.stage4_prompt_builder import inject_provider_strict_prompt
+
+            provider_messages = inject_provider_strict_prompt(messages, provider)
             result = client.complete_json(
-                messages,
+                provider_messages,
                 prompt_hash=prompt_hash,
                 symbol=symbol,
                 use_rate_gate=use_rate_gate and is_primary,

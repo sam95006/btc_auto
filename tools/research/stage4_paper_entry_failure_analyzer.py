@@ -28,6 +28,16 @@ from tools.research.stage4_paper_readiness import (  # noqa: E402
     parse_invalidation,
     symbol_mae_watch_cap_pct,
 )
+from tools.research.stage4_schema_repair import build_schema_repair_aggregate_metrics  # noqa: E402
+
+
+def _provider_label(raw: Dict[str, Any]) -> str:
+    provider = str(raw.get("provider") or raw.get("llm_provider") or "unknown").strip().lower()
+    if not provider or provider == "unknown":
+        fb = str(raw.get("fallback_provider") or "").strip().lower()
+        if fb:
+            return fb
+    return provider or "unknown"
 
 
 def _read_jsonl(path: Path) -> List[Dict[str, Any]]:
@@ -323,9 +333,34 @@ def analyze_paper_entry_failures(
         paper_intent_count=len(rows_out),
     )
 
+    by_provider_side: Dict[str, List[float]] = defaultdict(list)
+    by_provider_trigger: Dict[str, List[float]] = defaultdict(list)
+    provider_valid_watch: Counter[str] = Counter()
+    for raw in enforced:
+        intent = str(raw.get("decision_intent") or "").lower()
+        if intent not in {"watch", "enter_candidate"}:
+            continue
+        prov = _provider_label(raw)
+        if _bias_without_side(raw) or str(raw.get("candidate_side") or "NONE").upper() == "NONE":
+            by_provider_side[prov].append(1.0)
+        else:
+            by_provider_side[prov].append(0.0)
+        if intent == "watch":
+            by_provider_trigger[prov].append(1.0 if _missing_entry_trigger(raw) else 0.0)
+            if _is_valid_watch_candidate(raw):
+                provider_valid_watch[prov] += 1
+
+    provider_side_missing_rate = {
+        p: _rate(int(sum(v)), len(v)) for p, v in by_provider_side.items() if v
+    }
+    provider_trigger_missing_rate = {
+        p: _rate(int(sum(v)), len(v)) for p, v in by_provider_trigger.items() if v
+    }
+    schema_repair_metrics = build_schema_repair_aggregate_metrics(enforced)
+
     summary: Dict[str, Any] = {
         "record_type": "stage4_paper_entry_failure_analysis",
-        "stage_marker": "4.18-M",
+        "stage_marker": "4.18-N",
         "generated_at_utc": utc_now_iso(),
         "input_dir": str(inp),
         "paper_events_dir": str(paper_events_dir) if paper_events_dir else None,
@@ -350,6 +385,10 @@ def analyze_paper_entry_failures(
             "mae_above_symbol_cap": top_mae_above,
         },
         "recommendations": recommendations,
+        "provider_side_missing_rate": provider_side_missing_rate,
+        "provider_trigger_missing_rate": provider_trigger_missing_rate,
+        "provider_valid_watch_candidate_count": dict(provider_valid_watch),
+        **schema_repair_metrics,
         **enforcement,
         "offline_only": True,
         "order_sent": False,

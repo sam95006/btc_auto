@@ -47,6 +47,11 @@ class Stage418NProviderComplianceTests(unittest.TestCase):
             summary = review_provider_field_compliance(input_dir=root, output_dir=root / "out")
             self.assertIn("groq", summary["provider_stats"])
             self.assertIn("cerebras", summary["provider_stats"])
+            self.assertIn("groq", summary["provider_summary"])
+            self.assertIn("cerebras", summary["provider_summary"])
+            self.assertEqual(summary["provider_summary"]["groq"]["side_missing_rate"], 1.0)
+            self.assertEqual(summary["provider_summary"]["cerebras"]["trigger_missing_rate"], 0.0)
+            self.assertIn("provider_valid_watch_candidate_count", summary)
             self.assertIn("forbidden_repairs", summary["repair_policy"])
             self.assertTrue(summary["offline_only"])
 

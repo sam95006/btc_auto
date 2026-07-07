@@ -217,5 +217,34 @@ class Stage418MFailureAnalyzerTests(unittest.TestCase):
             self.assertIn("do_not_extend_sample_until_field_contract_passes", joined)
 
 
+class Stage418NFailureAnalyzerTests(unittest.TestCase):
+    def test_analyzer_reports_schema_repair_metrics(self) -> None:
+        rows = [
+            {
+                "decision_id": "r1",
+                "parse_error": False,
+                "provider": "groq",
+                "symbol": "BTCUSDT",
+                "decision_intent": "watch",
+                "candidate_side": " buy ",
+                "directional_bias": "LONG",
+                "entry_trigger": {"type": "pullback_confirm", "trigger_condition": "x"},
+                "invalidation": {"invalidation_price": 99000, "max_adverse_move_pct": 0.3},
+                "mae_risk_estimate_pct": 0.3,
+                "watch_confirmation_reason": "x",
+            }
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "ai_decisions.jsonl").write_text(
+                "\n".join(json.dumps(r) for r in rows) + "\n",
+                encoding="utf-8",
+            )
+            summary = analyze_paper_entry_failures(input_dir=root, output_dir=root / "out")
+            self.assertIn("schema_repair_applied_count", summary)
+            self.assertIn("provider_side_missing_rate", summary)
+            self.assertIn("groq", summary["provider_side_missing_rate"])
+
+
 if __name__ == "__main__":
     unittest.main()
