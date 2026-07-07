@@ -4656,7 +4656,7 @@ class Stage418HPromptIterationTests(unittest.TestCase):
         raw = {
             "final_action": "skip",
             "symbol": "BTCUSDT",
-            "candidate_side": "NONE",
+            "candidate_side": "BUY",
             "confidence": 0.55,
             "decision_intent": "watch",
             "directional_bias": "LONG",
@@ -4788,9 +4788,10 @@ class Stage418JSchemaEnforcementTests(unittest.TestCase):
         self.assertTrue(ok)
         self.assertEqual(
             (proposal.get("paper_readiness") or {}).get("block_reason"),
-            "missing_paper_fields",
+            "directional_bias_without_candidate_side",
         )
         self.assertTrue(proposal.get("directional_bias_without_candidate_side"))
+        self.assertEqual(proposal.get("derived_candidate_side_suggestion"), "BUY")
 
     def test_prompt_eth_examples_present(self) -> None:
         from tools.research.stage4_prompt_builder import SYSTEM_PROMPT
@@ -4836,6 +4837,139 @@ class Stage418LPromptIterationTests(unittest.TestCase):
 
         self.assertIn("mae_risk_too_high", SYSTEM_PROMPT)
         self.assertIn("Do NOT deflate MAE", SYSTEM_PROMPT)
+
+
+class Stage418MStructuredOutputTests(unittest.TestCase):
+    def test_long_none_derives_buy_suggestion_blocked(self) -> None:
+        from tools.research.stage4_decision_schema import parse_llm_decision
+
+        raw = {
+            "final_action": "skip",
+            "symbol": "BTCUSDT",
+            "candidate_side": "NONE",
+            "confidence": 0.5,
+            "decision_intent": "watch",
+            "directional_bias": "LONG",
+            "watch_confirmation_reason": "x",
+            "entry_trigger": {"type": "pullback_confirm", "trigger_price": 0, "trigger_condition": "reclaim"},
+            "invalidation": {"invalidation_price": 99000, "invalidation_reason": "x", "max_adverse_move_pct": 0.30},
+            "mae_risk_estimate_pct": 0.30,
+            "why_enter": "",
+            "why_skip": "",
+            "side_reason": "x",
+            "confidence_reason": "x",
+            "risk_notes": [],
+            "patch_awareness": "",
+            "uncertainty": "low",
+            "requires_manual_review": False,
+        }
+        proposal, ok, _ = parse_llm_decision(raw, symbol="BTCUSDT")
+        self.assertTrue(ok)
+        self.assertEqual(proposal.get("derived_candidate_side_suggestion"), "BUY")
+        self.assertFalse((proposal.get("paper_readiness") or {}).get("eligible_for_watchlist"))
+        self.assertEqual(
+            (proposal.get("paper_readiness") or {}).get("block_reason"),
+            "directional_bias_without_candidate_side",
+        )
+
+    def test_short_none_derives_sell_suggestion_blocked(self) -> None:
+        from tools.research.stage4_paper_readiness import apply_schema_level_enforcement
+
+        proposal = apply_schema_level_enforcement(
+            {
+                "final_action": "skip",
+                "symbol": "ETHUSDT",
+                "candidate_side": "NONE",
+                "confidence": 0.5,
+                "decision_intent": "watch",
+                "directional_bias": "SHORT",
+                "watch_confirmation_reason": "x",
+                "entry_trigger": {"type": "momentum_confirm", "trigger_price": 0, "trigger_condition": "break"},
+                "invalidation": {"invalidation_price": 3010, "invalidation_reason": "x", "max_adverse_move_pct": 0.30},
+                "mae_risk_estimate_pct": 0.30,
+            }
+        )
+        self.assertEqual(proposal.get("derived_candidate_side_suggestion"), "SELL")
+        self.assertTrue(proposal.get("directional_bias_without_candidate_side"))
+
+    def test_watch_entry_trigger_none_blocked(self) -> None:
+        from tools.research.stage4_paper_readiness import assess_decision_quality
+
+        incomplete, paper_readiness, _ = assess_decision_quality(
+            {
+                "decision_intent": "watch",
+                "symbol": "ETHUSDT",
+                "candidate_side": "BUY",
+                "directional_bias": "LONG",
+                "watch_confirmation_reason": "x",
+                "entry_trigger": {"type": "none", "trigger_price": 0, "trigger_condition": ""},
+                "invalidation": {"invalidation_price": 2991, "invalidation_reason": "x", "max_adverse_move_pct": 0.30},
+                "mae_risk_estimate_pct": 0.30,
+            }
+        )
+        self.assertTrue(incomplete)
+        self.assertEqual(paper_readiness.get("block_reason"), "missing_paper_fields")
+
+    def test_watch_missing_invalidation_blocked(self) -> None:
+        from tools.research.stage4_paper_readiness import assess_decision_quality
+
+        incomplete, paper_readiness, _ = assess_decision_quality(
+            {
+                "decision_intent": "watch",
+                "symbol": "ETHUSDT",
+                "candidate_side": "BUY",
+                "directional_bias": "LONG",
+                "watch_confirmation_reason": "x",
+                "entry_trigger": {"type": "pullback_confirm", "trigger_price": 0, "trigger_condition": "x"},
+                "invalidation": {"invalidation_price": 0, "invalidation_reason": "", "max_adverse_move_pct": 0},
+                "mae_risk_estimate_pct": 0.30,
+            }
+        )
+        self.assertTrue(incomplete)
+        self.assertEqual(paper_readiness.get("block_reason"), "missing_paper_fields")
+
+    def test_watch_missing_mae_blocked(self) -> None:
+        from tools.research.stage4_paper_readiness import assess_decision_quality
+
+        incomplete, paper_readiness, _ = assess_decision_quality(
+            {
+                "decision_intent": "watch",
+                "symbol": "ETHUSDT",
+                "candidate_side": "BUY",
+                "directional_bias": "LONG",
+                "watch_confirmation_reason": "x",
+                "entry_trigger": {"type": "pullback_confirm", "trigger_price": 0, "trigger_condition": "x"},
+                "invalidation": {"invalidation_price": 2991, "invalidation_reason": "x", "max_adverse_move_pct": 0.30},
+                "mae_risk_estimate_pct": 0,
+            }
+        )
+        self.assertTrue(incomplete)
+
+    def test_mae_scale_drift_suspected_blocks_without_normalize(self) -> None:
+        from tools.research.stage4_paper_readiness import apply_schema_level_enforcement
+
+        proposal = apply_schema_level_enforcement(
+            {
+                "decision_intent": "watch",
+                "symbol": "BTCUSDT",
+                "candidate_side": "BUY",
+                "directional_bias": "LONG",
+                "watch_confirmation_reason": "x",
+                "entry_trigger": {"type": "pullback_confirm", "trigger_price": 0, "trigger_condition": "x"},
+                "invalidation": {"invalidation_price": 99500, "invalidation_reason": "x", "max_adverse_move_pct": 0.30},
+                "mae_risk_estimate_pct": 1.5,
+            }
+        )
+        self.assertTrue(proposal.get("mae_scale_drift_suspected"))
+        self.assertEqual(proposal.get("mae_risk_estimate_pct"), 1.5)
+        self.assertFalse((proposal.get("paper_readiness") or {}).get("eligible_for_watchlist"))
+
+    def test_prompt_structured_output_contract(self) -> None:
+        from tools.research.stage4_prompt_builder import SYSTEM_PROMPT
+
+        self.assertIn("Structured output contract (Stage 4.18-M)", SYSTEM_PROMPT)
+        self.assertIn("candidate_side NONE is ONLY allowed for soft_skip or hard_skip", SYSTEM_PROMPT)
+        self.assertIn("Bad output (INVALID)", SYSTEM_PROMPT)
 
 
 if __name__ == "__main__":

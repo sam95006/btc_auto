@@ -652,5 +652,31 @@ class Stage418JLoggerEnforcementTests(unittest.TestCase):
         self.assertNotIn("BybitDemoClient", source)
 
 
+class Stage418MLoggerStructuredOutputTests(unittest.TestCase):
+    def test_logger_no_order_path_with_mae_drift_flag(self) -> None:
+        from tools.research.stage4_paper_readiness import apply_schema_level_enforcement
+
+        proposal = apply_schema_level_enforcement(
+            {
+                "decision_intent": "watch",
+                "symbol": "BTCUSDT",
+                "candidate_side": "NONE",
+                "directional_bias": "LONG",
+                "watch_confirmation_reason": "x",
+                "entry_trigger": {"type": "pullback_confirm", "trigger_price": 0, "trigger_condition": "x"},
+                "invalidation": {"invalidation_price": 99000, "invalidation_reason": "x", "max_adverse_move_pct": 0.30},
+                "mae_risk_estimate_pct": 1.5,
+            }
+        )
+        self.assertTrue(proposal.get("mae_scale_drift_suspected"))
+        self.assertEqual(proposal.get("derived_candidate_side_suggestion"), "BUY")
+
+    def test_logger_module_no_production_refs(self) -> None:
+        import tools.research.stage4_paper_event_logger as mod
+
+        source = Path(mod.__file__).read_text(encoding="utf-8")
+        self.assertNotIn("btc-auto", source)
+
+
 if __name__ == "__main__":
     unittest.main()

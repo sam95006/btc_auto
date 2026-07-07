@@ -392,13 +392,20 @@ def _hypothetical_prices(symbol: str, side: str, entry: float) -> Tuple[float, f
 
 def _quality_blocked_skip_reason(decision: Dict[str, Any]) -> Optional[str]:
     from tools.research.stage4_paper_readiness import (
+        assess_decision_quality,
         infer_decision_quality_incomplete,
         infer_paper_readiness_mae_block,
     )
 
     if infer_paper_readiness_mae_block(decision):
-        return "paper_readiness_mae_block"
+        return "mae_risk_too_high"
     if infer_decision_quality_incomplete(decision):
+        _, paper_readiness, reasons = assess_decision_quality(decision)
+        block = str(paper_readiness.get("block_reason") or "")
+        if block and block != "ok":
+            return block
+        if "directional_bias_without_candidate_side" in reasons:
+            return "directional_bias_without_candidate_side"
         return "decision_quality_incomplete"
     return None
 
@@ -966,6 +973,7 @@ def run_paper_event_logger(
     total_read = 0
     excluded_parse = excluded_mock = excluded_order = excluded_quality = 0
     from tools.research.stage4_paper_readiness import (
+        build_enforcement_metrics,
         build_mae_calibration_metrics,
         build_paper_readiness_metrics,
         infer_decision_quality_incomplete,
@@ -1037,6 +1045,7 @@ def run_paper_event_logger(
             existing_keys.add(key)
             written += 1
 
+    all_decisions = [r for _, r in all_rows]
     summary = build_summary(
         datasets_analyzed=datasets_analyzed,
         missing_datasets=missing_datasets,
@@ -1047,10 +1056,11 @@ def run_paper_event_logger(
         excluded_mock=excluded_mock,
         excluded_order=excluded_order,
         excluded_quality_incomplete=excluded_quality,
-        paper_readiness_metrics=build_paper_readiness_metrics([r for _, r in all_rows]),
+        paper_readiness_metrics=build_paper_readiness_metrics(all_decisions),
         mae_source_stats=mae_source_stats,
     )
-    summary.update(build_mae_calibration_metrics([r for _, r in all_rows]))
+    summary.update(build_mae_calibration_metrics(all_decisions))
+    summary.update(build_enforcement_metrics(all_decisions))
     write_json(output_dir / "stage4_17_paper_event_summary.json", strip_events_for_output(summary))
     return summary
 

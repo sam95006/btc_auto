@@ -90,7 +90,23 @@ ETH acceptable watch:
 ETH too-risky (reference):
 - reference_price=3000, invalidation_price=2960 → mae=1.33%, soft_skip/hard_skip, block_reason=mae_risk_too_high
 
-SOL/PEPE: if SOL MAE>0.25% or PEPE MAE>0.20%, skip/watchlist-only; never deflate MAE."""
+SOL/PEPE: if SOL MAE>0.25% or PEPE MAE>0.20%, skip/watchlist-only; never deflate MAE.
+
+Structured output contract (Stage 4.18-M) — for watch / enter_candidate:
+1. candidate_side is REQUIRED (BUY or SELL). candidate_side NONE is ONLY allowed for soft_skip or hard_skip.
+2. directional_bias LONG requires candidate_side BUY.
+3. directional_bias SHORT requires candidate_side SELL.
+4. entry_trigger.type must NOT be none; entry_trigger.trigger_condition must be non-empty.
+5. invalidation is REQUIRED (invalidation_price or max_adverse_move_pct).
+6. mae_risk_estimate_pct must equal reference-to-invalidation adverse distance in percent.
+7. If you cannot provide side + trigger + invalidation + MAE within cap, output soft_skip or hard_skip.
+
+Bad output (INVALID):
+- decision_intent=watch, directional_bias=LONG, candidate_side=NONE, entry_trigger.type=none
+
+Correct output (choose one):
+- soft_skip or hard_skip with clear why_skip
+- OR candidate_side=BUY + entry_trigger (type != none) + invalidation + mae_risk_estimate_pct within symbol cap"""
 
 SCHEMA_FIELD_NAMES = (
     "final_action",
@@ -231,6 +247,8 @@ def build_decision_prompt(
             "BTC: if bias clear, side set, MAE<=0.35%, conf>=0.40 → paper-ready watch; do not over-skip.",
             "PEPE high vol → soft_skip; SOL/PEPE never deflate MAE for graduation.",
             "If MAE too high: paper_readiness.eligible_for_watchlist=false, block_reason=mae_risk_too_high.",
+            "Stage 4.18-M: structured contract — side+trigger+invalidation+MAE required for watch; else soft_skip/hard_skip.",
+            "candidate_side NONE only for skip intents; LONG→BUY, SHORT→SELL; entry_trigger.type=none is invalid.",
         ],
     }
     return [

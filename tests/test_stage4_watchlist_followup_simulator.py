@@ -356,8 +356,10 @@ class Stage418BMaeCalibrationTests(unittest.TestCase):
             ),
         ]
         acc = simulate_major_mae_calibration_mode("major_mae_100_side_memory", rows)
-        self.assertGreater(acc.hypothetical_graduation_count, 0)
-        self.assertIn("recent_confirmed_side", acc.side_source_distribution)
+        self.assertEqual(acc.hypothetical_graduation_count, 0)
+        from tools.research.stage4_paper_event_logger import is_eligible_decision
+
+        self.assertFalse(is_eligible_decision(rows[1][1]))
 
     def test_side_memory_records_side_source(self) -> None:
         rows = self._major_rows(decision_intent="enter_candidate", candidate_side="LONG", confidence=0.50)
@@ -635,49 +637,65 @@ class Stage418ICompareIntegrationTests(unittest.TestCase):
 
 class Stage418JSimulatorEnforcementTests(unittest.TestCase):
     def test_simulator_blocks_graduation_directional_bias_without_side(self) -> None:
+        from tools.research.stage4_paper_event_logger import (
+            _quality_blocked_skip_reason,
+            is_eligible_decision,
+        )
+
         watch_fields = {
             k: v
             for k, v in _watch_paper_fields().items()
             if k not in {"directional_bias", "mae_risk_estimate_pct"}
         }
-        rows = [
-            (
-                "/data/test",
-                _decision(
-                    **watch_fields,
-                    decision_id="d1",
-                    tick_index=1,
-                    symbol="BTCUSDT",
-                    decision_intent="watch",
-                    candidate_side="NONE",
-                    directional_bias="LONG",
-                    confidence=0.5,
-                    mae_risk_estimate_pct=0.25,
-                ),
-            ),
-            (
-                "/data/test",
-                _decision(
-                    **watch_fields,
-                    decision_id="d2",
-                    tick_index=2,
-                    symbol="BTCUSDT",
-                    decision_intent="watch",
-                    candidate_side="NONE",
-                    directional_bias="LONG",
-                    confidence=0.5,
-                    mae_risk_estimate_pct=0.25,
-                ),
-            ),
-        ]
-        rows[0][1]["directional_bias_without_candidate_side"] = True
-        rows[1][1]["directional_bias_without_candidate_side"] = True
-        acc = simulate_major_mae_calibration_mode("major_mae_100_llm_mae", rows)
-        self.assertEqual(acc.hypothetical_graduation_count, 0)
-        self.assertGreater(
-            acc.block_reason_counts.get("directional_bias_without_candidate_side", 0),
-            0,
+        row = _decision(
+            **watch_fields,
+            decision_id="d1",
+            tick_index=1,
+            symbol="BTCUSDT",
+            decision_intent="watch",
+            candidate_side="NONE",
+            directional_bias="LONG",
+            confidence=0.5,
+            mae_risk_estimate_pct=0.25,
         )
+        row["directional_bias_without_candidate_side"] = True
+        self.assertFalse(is_eligible_decision(row))
+        self.assertEqual(
+            _quality_blocked_skip_reason(row),
+            "directional_bias_without_candidate_side",
+        )
+        acc = simulate_major_mae_calibration_mode(
+            "major_mae_100_llm_mae",
+            [("/data/test", row)],
+        )
+        self.assertEqual(acc.hypothetical_graduation_count, 0)
+
+
+class Stage418MSimulatorStructuredOutputTests(unittest.TestCase):
+    def test_simulator_blocks_mae_scale_drift_candidate(self) -> None:
+        from tools.research.stage4_paper_readiness import apply_schema_level_enforcement
+
+        proposal = apply_schema_level_enforcement(
+            {
+                "decision_intent": "watch",
+                "symbol": "ETHUSDT",
+                "candidate_side": "BUY",
+                "directional_bias": "LONG",
+                "watch_confirmation_reason": "x",
+                "entry_trigger": {"type": "pullback_confirm", "trigger_price": 0, "trigger_condition": "x"},
+                "invalidation": {"invalidation_price": 2991, "invalidation_reason": "x", "max_adverse_move_pct": 0.30},
+                "mae_risk_estimate_pct": 2.0,
+            }
+        )
+        self.assertTrue(proposal.get("mae_scale_drift_suspected"))
+        self.assertFalse((proposal.get("paper_readiness") or {}).get("eligible_for_watchlist"))
+
+    def test_simulator_no_exchange_call_path(self) -> None:
+        import tools.research.stage4_watchlist_followup_simulator as mod
+
+        source = Path(mod.__file__).read_text(encoding="utf-8")
+        self.assertNotIn("place_order", source)
+        self.assertNotIn("btc-auto", source)
 
 
 if __name__ == "__main__":
