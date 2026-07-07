@@ -29,6 +29,7 @@ FILES = [
     "tools/research/stage4_schema_repair.py",
     "tools/research/stage4_watchlist_followup_simulator.py",
     "tools/research/stage4_paper_entry_failure_analyzer.py",
+    "tools/research/check_stage4_runtime_version.py",
 ]
 
 
@@ -90,6 +91,7 @@ def main() -> int:
         "/app/tools/research/stage4_ai_decision_agent.py "
         "/app/tools/research/stage4_schema_repair.py "
         "/app/tools/research/stage4_watchlist_followup_simulator.py "
+        "/app/tools/research/stage4_paper_entry_failure_analyzer.py "
         "/data/stage4_418f_runtime_patch/ && "
         "ls /data/stage4_418f_runtime_patch/ | wc -l"
     )
