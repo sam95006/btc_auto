@@ -238,5 +238,7 @@ Still hard-fails if `REAL_MONEY`, `LIVE_TRADING`, `BYBIT_MAINNET_ALLOWED`, or `P
 - **4.18l:** Candidate side + entry trigger prompt/schema iteration; analyzer v2 rates + recommendations; offline J-R1 replay; **no soak**; **Stage 4.19 not ready**.
 - **4.18l-r1:** Runtime-gated 30m with 418-L prompt — gate PASS, technical PASS; **PARTIAL** (side/trigger rates improved on some symbols; `valid_watch=0`; MAE regressed within_cap 0 vs 2, above_cap 18 vs 13; 0 graduations); **Stage 4.19 not started**.
 - **4.18m:** Structured output / schema hardening — side derivation diagnostic, strict field contract, MAE scale drift detection; analyzer v3; offline L-R1 replay; **no soak**; **Stage 4.19 not ready**.
-- **4.18m-r1 (next):** Runtime-gated **30m** structured-output regression; **60m** only if field contract passes but `no_consecutive_tick` blocks graduation (operator approval).
+- **4.18m-r1:** Runtime-gated 30m with 418-M contract — gate PASS, technical PASS; **PARTIAL B** (`valid_watch=0`; within_cap 3 vs above_cap 15; 0 graduations); **Stage 4.19 not started**; **60m not proposed**.
+- **4.18n:** Provider-specific JSON schema / output repair plan + `stage4_provider_field_compliance_review.py`; code-only; **no soak**; **Stage 4.19 not ready**.
+- **4.18n-r1 (next):** Runtime-gated 30m after N schema/repair code pass; 60m only if field contract passes + operator approval.
 - See `docs/reports/STAGE_4_18J_SCHEMA_ENFORCEMENT_AND_CONFIRMATION_DIAGNOSTICS.md`, `docs/reports/STAGE_4_18J_R1_RUNTIME_GATED_SCHEMA_ENFORCED_REGRESSION_REPORT.md`, `docs/reports/STAGE_4_18K_DIAGNOSTICS_AFTER_418J_R1.md`, plus prior 4.18 reports in plan tail.
