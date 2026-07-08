@@ -190,12 +190,16 @@ def _hard_block_enter(decision: Dict[str, Any]) -> Tuple[bool, List[str]]:
         reasons.append("provider_chain_failed")
     if not str(decision.get("provider") or "").strip():
         reasons.append("missing_provider")
-    from tools.research.stage4_paper_readiness import infer_decision_quality_incomplete
+    from tools.research.stage4_paper_readiness import (
+        _directional_bias_without_side,
+        infer_decision_quality_incomplete,
+        infer_paper_readiness_mae_block,
+    )
 
-    if infer_decision_quality_incomplete(decision):
+    if _directional_bias_without_side(decision):
+        reasons.append("directional_bias_without_candidate_side")
+    elif infer_decision_quality_incomplete(decision):
         reasons.append("decision_quality_incomplete")
-    from tools.research.stage4_paper_readiness import infer_paper_readiness_mae_block
-
     if infer_paper_readiness_mae_block(decision):
         reasons.append("paper_readiness_mae_block")
     return bool(reasons), reasons

@@ -119,9 +119,10 @@ def parse_llm_decision(raw: Dict[str, Any], *, symbol: str) -> Tuple[Dict[str, A
         from tools.research.bybit_demo_learning_common import MAX_MARGIN_USD
 
         proposal["position_size_suggestion"] = round(min(MAX_MARGIN_USD, MAX_MARGIN_USD * conf), 4)
-    from tools.research.stage4_paper_readiness import enrich_proposal_paper_fields
+    from tools.research.stage4_paper_readiness import apply_schema_level_enforcement, enrich_proposal_paper_fields
 
-    return enrich_proposal_paper_fields(proposal, raw), True, ""
+    enriched = enrich_proposal_paper_fields(proposal, raw)
+    return apply_schema_level_enforcement(enriched), True, ""
 
 
 def skip_proposal(symbol: str, reason: str, parse_error_type: str = "parse_error") -> Dict[str, Any]:

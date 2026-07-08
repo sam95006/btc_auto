@@ -76,6 +76,7 @@ BASE_ALLOWLIST = [
     "tools/research/stage4_mae_calibration_analysis.py",
     "tools/research/stage4_mae_regression_compare.py",
     "tools/research/stage4_paper_entry_failure_analyzer.py",
+    "tools/research/stage4_provider_field_compliance_review.py",
     "tools/research/stage4_paper_event_logger.py",
     "tools/research/stage4_watchlist_followup_simulator.py",
     "tools/research/stage4_tick_scheduler.py",
@@ -362,6 +363,12 @@ def build_package() -> Dict[str, Any]:
     entrypoint_path = script_dir / "entrypoint.sh"
     bg_script = bg_script_path.read_text(encoding="utf-8") if bg_script_path.is_file() else ""
     h24_script = h24_script_path.read_text(encoding="utf-8") if h24_script_path.is_file() else ""
+    if not bg_script or not h24_script:
+        raise FileNotFoundError(
+            "missing deploy background scripts: "
+            "deploy/zeabur_stage3_demo_learning/run_stage3_demo_order_background.sh and "
+            "deploy/zeabur_stage3_demo_learning/run_stage3_24h_demo_learning_background.sh"
+        )
     entrypoint_script = STAGE3_ENTRYPOINT_SH
     if entrypoint_path.is_file():
         entrypoint_script = entrypoint_path.read_text(encoding="utf-8")

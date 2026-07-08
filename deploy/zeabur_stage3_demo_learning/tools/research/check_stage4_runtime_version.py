@@ -76,6 +76,21 @@ PROMPT_HINTS_418L = (
     "directional_bias_without_candidate_side",
 )
 
+PROMPT_HINTS_418M = (
+    "Stage 4.18-M",
+    "Structured output contract",
+    "candidate_side NONE is ONLY allowed for soft_skip or hard_skip",
+    "Bad output (INVALID)",
+)
+
+PROMPT_HINTS_418N = (
+    "Stage 4.18-N",
+    "GROQ STRICT OUTPUT RULE",
+    "CEREBRAS STRICT OUTPUT RULE",
+    "candidate_side must not be NONE",
+    "entry_trigger.type must not be none",
+)
+
 PATCH_MARKER_FILES = (
     "stage4_paper_readiness.py",
     "stage4_prompt_builder.py",
@@ -99,7 +114,15 @@ def _file_present(app_root: Path, name: str) -> bool:
 
 def _prompt_hints_present(app_root: Path) -> tuple[bool, List[str]]:
     text = _read_text(app_root / TOOLS_RESEARCH / "stage4_prompt_builder.py")
-    all_hints = PROMPT_HINTS_418F + PROMPT_HINTS_418H + PROMPT_HINTS_418I + PROMPT_HINTS_418J + PROMPT_HINTS_418L
+    all_hints = (
+        PROMPT_HINTS_418F
+        + PROMPT_HINTS_418H
+        + PROMPT_HINTS_418I
+        + PROMPT_HINTS_418J
+        + PROMPT_HINTS_418L
+        + PROMPT_HINTS_418M
+        + PROMPT_HINTS_418N
+    )
     missing = [h for h in all_hints if h not in text]
     return len(missing) == 0, missing
 
@@ -241,7 +264,7 @@ def check_runtime_version(*, app_root: Optional[Path] = None) -> Dict[str, Any]:
         "stale_reasons": stale_reasons,
         "missing_required_files": missing_files,
         "required_files_checked": list(REQUIRED_FILES),
-        "stage_marker": "4.18-L",
+        "stage_marker": "4.18-N",
     }
 
 
