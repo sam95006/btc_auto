@@ -1,5 +1,11 @@
-"""Stage 4 multi-provider LLM chain with Groq dedup and circuit breaker."""
+"""Stage 4 multi-provider LLM chain with Groq dedup and circuit breaker.
+
+Stage 4.18-P1: BTC dual-provider shadow uses direct Stage4LLMClient and bypasses
+this chain — shadow must not alter fallback state or actual routing.
+"""
 from __future__ import annotations
+
+SHADOW_BYPASSES_PROVIDER_CHAIN = True
 
 import hashlib
 import os

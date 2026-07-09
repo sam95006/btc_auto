@@ -397,6 +397,7 @@ class Stage4AIDecisionAgent:
         account_context: Dict[str, Any],
         open_positions: int = 0,
     ) -> Dict[str, Any]:
+        """Produce one dry-run decision. BTC shadow provider runs separately in dry-run loop (P1)."""
         patches = self.retriever.retrieve(symbol=symbol, side="NONE", limit=3)
         stage3_ctx = load_stage3_context(self.retriever.stage3_dir, symbol=symbol)
         recent_trades_raw = self.retriever.recent_trades(symbol=symbol, limit=3)

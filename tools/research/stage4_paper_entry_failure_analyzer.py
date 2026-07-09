@@ -212,7 +212,9 @@ def analyze_paper_entry_failures(
     calibration_dir: Optional[str | Path] = None,
 ) -> Dict[str, Any]:
     inp = Path(input_dir)
-    decisions = _read_jsonl(inp / "ai_decisions.jsonl")
+    from tools.research.stage4_provider_routing_config import is_shadow_decision_row
+
+    decisions = [d for d in _read_jsonl(inp / "ai_decisions.jsonl") if not is_shadow_decision_row(d)]
     enforced = [apply_schema_level_enforcement(d) for d in decisions if not d.get("parse_error")]
     enforcement = build_enforcement_metrics(enforced)
 

@@ -189,6 +189,58 @@ def _apply_require_real_llm_checks(
         technical_errors.append("provider_health_check_failed")
 
 
+def _validate_shadow_safety(
+    *,
+    out: Path,
+    decisions: List[Dict[str, Any]],
+    summary: Dict[str, Any],
+    technical_errors: List[str],
+) -> None:
+    from tools.research.stage4_provider_routing_config import (
+        SHADOW_JSONL_FILENAME,
+        is_shadow_decision_row,
+    )
+
+    for i, d in enumerate(decisions):
+        if is_shadow_decision_row(d):
+            technical_errors.append(f"decision_{i}_shadow_row_in_ai_decisions")
+
+    shadow_path = out / SHADOW_JSONL_FILENAME
+    shadow_ids: set[str] = set()
+    if shadow_path.is_file():
+        for row in _read_jsonl(shadow_path):
+            sid = str(row.get("shadow_decision_id") or "")
+            if sid:
+                shadow_ids.add(sid)
+            for flag in (
+                "shadow_excluded_from_paper_logger",
+                "shadow_excluded_from_calibration",
+                "shadow_excluded_from_graduation",
+                "shadow_excluded_from_stage_419_readiness",
+            ):
+                if row.get(flag) is not True:
+                    technical_errors.append(f"shadow_row_missing_{flag}")
+
+    paper_log = out / "hypothetical_entry_log.jsonl"
+    if paper_log.is_file() and shadow_ids:
+        for ev in _read_jsonl(paper_log):
+            eid = str(ev.get("decision_id") or ev.get("source_decision_id") or "")
+            if eid in shadow_ids:
+                technical_errors.append("shadow_decision_id_in_paper_events")
+
+    if summary.get("btc_shadow_valid_watch_count", 0) and summary.get("stage_419_readiness") is True:
+        technical_errors.append("stage_419_readiness_true_with_shadow_valid_watch")
+
+    for flag in (
+        "btc_shadow_excluded_from_paper_logger",
+        "btc_shadow_excluded_from_calibration",
+        "btc_shadow_excluded_from_graduation",
+        "btc_shadow_excluded_from_stage_419_readiness",
+    ):
+        if summary.get("btc_shadow_mode_enabled") and summary.get(flag) is not True:
+            technical_errors.append(f"summary_missing_{flag}")
+
+
 def _env_light_preflight() -> bool:
     import os
 
@@ -288,6 +340,7 @@ def validate(output_dir: Path | None = None, *, require_real_llm: bool = False) 
         )
     if decision_missing_symbol_count > 0:
         technical_errors.append(f"decision_missing_symbol_count_gt_zero:{decision_missing_symbol_count}")
+    _validate_shadow_safety(out=out, decisions=decisions, summary=summary, technical_errors=technical_errors)
     technical_valid = not technical_errors
     bundle_export = summary.get("bundle_export") or {}
     bundle_exported = bool(

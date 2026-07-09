@@ -1310,7 +1310,11 @@ def load_inputs(
             missing_datasets.append(canonical)
             continue
         datasets_analyzed.append(canonical)
+        from tools.research.stage4_provider_routing_config import is_shadow_decision_row
+
         for row in _read_jsonl(path):
+            if is_shadow_decision_row(row):
+                continue
             all_decisions.append((canonical, row))
 
     all_decisions.sort(key=lambda item: _sort_key(item[1], item[0]))

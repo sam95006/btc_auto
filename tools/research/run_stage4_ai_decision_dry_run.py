@@ -548,6 +548,7 @@ def _run_dry_run_inner(
     started = time.time()
     end = started + duration_minutes * 60.0
     decisions: List[Dict[str, Any]] = []
+    shadow_decisions: List[Dict[str, Any]] = []
     tick = 0
     tick_processing_seconds: List[float] = []
     tick_drift_seconds: List[float] = []
@@ -670,6 +671,11 @@ def _run_dry_run_inner(
             )
         )
         summary["dataset_target_met"] = effective >= target_effective
+        from tools.research.stage4_btc_dual_provider_shadow import aggregate_shadow_rows
+        from tools.research.stage4_provider_routing_config import routing_config_summary
+
+        summary.update(routing_config_summary())
+        summary.update(aggregate_shadow_rows(shadow_decisions))
         write_json(out / "stage4_ai_decision_summary.json", summary)
         _append_run_log(
             log_path,
@@ -799,6 +805,15 @@ def _run_dry_run_inner(
 
                 write_decision(out, decision)
                 decisions.append(decision)
+                from tools.research.stage4_btc_dual_provider_shadow import maybe_run_and_write_btc_shadow
+
+                shadow_row = maybe_run_and_write_btc_shadow(
+                    output_dir=out,
+                    actual_decision=decision,
+                    tick_index=tick,
+                )
+                if shadow_row:
+                    shadow_decisions.append(shadow_row)
                 _append_run_log(
                     log_path,
                     f"TICK={tick} symbol={decision.get('symbol')} final={decision.get('final_decision')} "

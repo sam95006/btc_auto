@@ -993,7 +993,11 @@ def run_paper_event_logger(
         datasets_analyzed.append(canonical)
         rows = _read_jsonl(jsonl)
         total_read += len(rows)
+        from tools.research.stage4_provider_routing_config import is_shadow_decision_row
+
         for row in rows:
+            if is_shadow_decision_row(row):
+                continue
             if row.get("parse_error"):
                 excluded_parse += 1
             if row.get("is_mock_ai"):
