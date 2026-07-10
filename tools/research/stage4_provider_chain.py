@@ -6,6 +6,8 @@ this chain — shadow must not alter fallback state or actual routing.
 from __future__ import annotations
 
 SHADOW_BYPASSES_PROVIDER_CHAIN = True
+# Stage 4.18-P1B: shadow still bypasses chain routing, but must respect Groq TPM governor.
+SHADOW_RESPECTS_GROQ_TPM_GOVERNOR = True
 
 import hashlib
 import os
@@ -417,3 +419,19 @@ def assert_real_llm_chain_available(*, use_real_llm: bool) -> Tuple[bool, str]:
     if avail.get("real_llm_available"):
         return True, ""
     return False, str(avail.get("reason") or "missing_real_llm_key")
+
+
+def shadow_groq_call_blocked_reason(
+    actual_decision: Optional[Dict[str, Any]] = None,
+) -> Optional[str]:
+    """
+    Stage 4.18-P1B — whether BTC shadow must skip a Groq opposite-provider call.
+
+    Shadow still bypasses the provider chain for routing, but must not hard-call Groq
+    when TPM cooldown is active or actual already fell back for groq_rate_limited.
+    """
+    if not SHADOW_RESPECTS_GROQ_TPM_GOVERNOR:
+        return None
+    return Stage4ProviderQuotaGovernor.shared().shadow_groq_skip_reason(
+        actual_decision=actual_decision
+    )

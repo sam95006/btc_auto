@@ -15,7 +15,12 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.research.bybit_demo_learning_common import utc_now_iso, write_json  # noqa: E402
-from tools.research.stage4_btc_dual_provider_shadow import _intent_bucket, _safe_float  # noqa: E402
+from tools.research.stage4_btc_dual_provider_shadow import (  # noqa: E402
+    _intent_bucket,
+    _safe_float,
+    classify_shadow_outcome,
+    is_shadow_comparable,
+)
 from tools.research.stage4_paper_entry_failure_analyzer import (  # noqa: E402
     _has_entry_trigger,
     _has_invalidation,
@@ -113,14 +118,27 @@ def _block_reason_for_decision(raw: Dict[str, Any]) -> str:
 
 
 def _why_shadow_not_valid_watch(shadow: Dict[str, Any]) -> str:
-    if shadow.get("shadow_would_be_valid_watch_under_current_rules"):
+    outcome = classify_shadow_outcome(shadow)
+    if outcome == "shadow_valid_watch":
         return "n/a_shadow_valid_watch"
+    if shadow.get("shadow_call_skipped") or outcome == "shadow_call_skipped":
+        return f"shadow_call_skipped:{shadow.get('shadow_skip_reason') or 'unknown'}"
+    if outcome == "shadow_provider_token_limited":
+        return "shadow_provider_token_limited"
+    if outcome == "shadow_provider_rate_limited":
+        return "shadow_provider_rate_limited"
+    if outcome == "shadow_provider_response_truncated":
+        return "shadow_provider_response_truncated"
+    if outcome == "shadow_provider_unavailable":
+        return "shadow_provider_unavailable"
+    if outcome == "shadow_parse_unknown_intent":
+        return "shadow_parse_unknown_intent"
     if shadow.get("parse_error") or shadow.get("llm_error"):
         err = str(shadow.get("llm_error") or "parse_error")
         return f"shadow_provider_error:{err}"
     intent = _intent_bucket(str(shadow.get("shadow_decision_intent") or ""))
     if intent in {"unknown", ""}:
-        return "shadow_unknown_intent"
+        return "shadow_parse_unknown_intent"
     if intent not in {"watch", "enter_candidate"}:
         return f"shadow_intent_{intent}"
     if _normalize_side(shadow.get("shadow_candidate_side")) == "NONE":
@@ -143,7 +161,7 @@ def _why_shadow_not_valid_watch(shadow: Dict[str, Any]) -> str:
         return "shadow_confidence_below_soft_floor"
     if shadow.get("shadow_paper_readiness_eligible") is False:
         return "shadow_paper_readiness_ineligible"
-    return "shadow_not_valid_watch_other"
+    return "shadow_valid_decision_but_not_watch"
 
 
 def _why_actual_not_graduated(
@@ -270,9 +288,14 @@ def build_pair_row(
     actual_intent = _intent_bucket(str(actual.get("decision_intent") or ""))
     shadow_intent = _intent_bucket(str(shadow.get("shadow_decision_intent") or ""))
     actual_valid = _is_valid_watch_candidate(actual)
-    shadow_valid = bool(shadow.get("shadow_would_be_valid_watch_under_current_rules"))
-    divergence = bool(shadow.get("provider_divergence_detected"))
-    if not divergence:
+    outcome = classify_shadow_outcome(shadow)
+    comparable = is_shadow_comparable(shadow)
+    # Uncomparable rows never count as skill valid_watch.
+    shadow_valid = bool(
+        comparable and shadow.get("shadow_would_be_valid_watch_under_current_rules")
+    )
+    divergence = bool(comparable and shadow.get("provider_divergence_detected"))
+    if comparable and not divergence:
         divergence = actual_intent != shadow_intent or str(
             actual.get("directional_bias") or "NONE"
         ) != str(shadow.get("shadow_directional_bias") or "NONE")
@@ -283,8 +306,7 @@ def build_pair_row(
         actual_valid_watch=actual_valid,
         graduated_ids=graduated_ids,
     )
-    # Routing change only justified if shadow is clearly better on this pair.
-    routing_justified = bool(shadow_valid and not actual_valid)
+    routing_justified = bool(comparable and shadow_valid and not actual_valid)
 
     return {
         "pair_id": str(uuid.uuid4()),
@@ -312,6 +334,10 @@ def build_pair_row(
         "shadow_valid_watch": shadow_valid,
         "actual_block_reason": _block_reason_for_decision(actual),
         "shadow_block_reason": why_shadow if not shadow_valid else "ok",
+        "shadow_outcome_class": outcome,
+        "shadow_comparable": comparable,
+        "shadow_call_skipped": bool(shadow.get("shadow_call_skipped")),
+        "shadow_skip_reason": shadow.get("shadow_skip_reason"),
         "divergence_detected": divergence,
         "divergence_type": _divergence_type(actual_intent, shadow_intent, divergence),
         "why_shadow_not_valid_watch": why_shadow,
@@ -330,17 +356,38 @@ def build_pair_row(
 def _recommendation(
     *,
     pair_count: int,
+    comparable: int,
+    uncomparable: int,
+    uncomparable_reasons: Dict[str, int],
     actual_valid: int,
     shadow_valid: int,
-    shadow_unknown: int,
     actual_grad: int,
 ) -> Tuple[str, bool, bool, bool, bool]:
     """Returns recommendation, routing_supported, p2_recommended, should_60m, should_419."""
     if pair_count <= 0:
         return "no_pairs_found", False, False, False, False
-    if shadow_unknown >= max(2, pair_count // 2) and shadow_valid == 0:
+    quotaish = sum(
+        uncomparable_reasons.get(k, 0)
+        for k in (
+            "shadow_call_skipped",
+            "shadow_provider_token_limited",
+            "shadow_provider_rate_limited",
+            "shadow_provider_unavailable",
+            "shadow_provider_response_truncated",
+            "shadow_parse_unknown_intent",
+        )
+    )
+    if comparable < 3:
+        if uncomparable > 0 and quotaish >= max(1, uncomparable // 2):
+            return (
+                "fix_shadow_quota_handling_before_provider_routing",
+                False,
+                False,
+                False,
+                False,
+            )
         return (
-            "fix_shadow_provider_parse_or_prompt_before_more_shadow_samples",
+            "collect_more_clean_shadow_samples_after_quota_aware_fix",
             False,
             False,
             False,
@@ -354,8 +401,8 @@ def _recommendation(
             False,
             False,
         )
-    if actual_valid > 0 and shadow_valid == 0:
-        if actual_grad == 0:
+    if actual_valid > shadow_valid:
+        if actual_grad == 0 and actual_valid > 0:
             return (
                 "analyze_btc_watchlist_followup_failure",
                 False,
@@ -389,40 +436,68 @@ def _recommendation(
 
 def build_summary(pairs: List[Dict[str, Any]]) -> Dict[str, Any]:
     actual_valid = sum(1 for p in pairs if p.get("actual_valid_watch"))
-    shadow_valid = sum(1 for p in pairs if p.get("shadow_valid_watch"))
+    # Only comparable shadow valid watches count toward skill comparison.
+    shadow_valid = sum(
+        1 for p in pairs if p.get("shadow_comparable") and p.get("shadow_valid_watch")
+    )
     actual_grad = sum(1 for p in pairs if p.get("why_actual_not_graduated") == "n/a_graduated")
-    # Shadow never counts toward graduation by design.
     shadow_grad = 0
-    divergence = sum(1 for p in pairs if p.get("divergence_detected"))
+    comparable_pairs = [p for p in pairs if p.get("shadow_comparable")]
+    uncomparable_pairs = [p for p in pairs if not p.get("shadow_comparable")]
+    divergence = sum(1 for p in comparable_pairs if p.get("divergence_detected"))
     shadow_unknown = sum(
         1
         for p in pairs
         if _intent_bucket(str(p.get("shadow_decision_intent") or "")) in {"unknown", ""}
+        or p.get("shadow_outcome_class") == "shadow_parse_unknown_intent"
     )
     actual_watch_shadow_not = sum(
-        1 for p in pairs if p.get("actual_valid_watch") and not p.get("shadow_valid_watch")
+        1
+        for p in comparable_pairs
+        if p.get("actual_valid_watch") and not p.get("shadow_valid_watch")
     )
     shadow_watch_actual_not = sum(
-        1 for p in pairs if p.get("shadow_valid_watch") and not p.get("actual_valid_watch")
+        1
+        for p in comparable_pairs
+        if p.get("shadow_valid_watch") and not p.get("actual_valid_watch")
     )
     why_shadow = Counter(str(p.get("why_shadow_not_valid_watch") or "") for p in pairs)
     why_shadow.pop("n/a_shadow_valid_watch", None)
     why_actual = Counter(str(p.get("why_actual_not_graduated") or "") for p in pairs)
     why_actual.pop("n/a_graduated", None)
+    uncomp_reasons = Counter(
+        str(p.get("shadow_outcome_class") or "unknown") for p in uncomparable_pairs
+    )
+    skipped = sum(1 for p in pairs if p.get("shadow_call_skipped"))
+    called = len(pairs) - skipped
+    skill_valid = len(comparable_pairs) >= 3
 
     rec, routing_ok, p2, should_60m, should_419 = _recommendation(
         pair_count=len(pairs),
+        comparable=len(comparable_pairs),
+        uncomparable=len(uncomparable_pairs),
+        uncomparable_reasons=dict(uncomp_reasons),
         actual_valid=actual_valid,
         shadow_valid=shadow_valid,
-        shadow_unknown=shadow_unknown,
         actual_grad=actual_grad,
     )
+    # Never recommend P2 when skill comparison invalid.
+    if not skill_valid:
+        routing_ok = False
+        p2 = False
 
     return {
         "record_type": "stage4_btc_shadow_pair_compare",
-        "stage_marker": "4.18-P1A",
+        "stage_marker": "4.18-P1B",
         "generated_at_utc": utc_now_iso(),
         "pair_count": len(pairs),
+        "shadow_total_rows": len(pairs),
+        "shadow_called_count": called,
+        "shadow_call_skipped_count": skipped,
+        "shadow_comparable_pair_count": len(comparable_pairs),
+        "shadow_uncomparable_pair_count": len(uncomparable_pairs),
+        "shadow_uncomparable_reason_counts": dict(uncomp_reasons),
+        "provider_skill_comparison_valid": skill_valid,
         "actual_valid_watch_count": actual_valid,
         "shadow_valid_watch_count": shadow_valid,
         "actual_graduation_count": actual_grad,
@@ -445,6 +520,7 @@ def build_summary(pairs: List[Dict[str, Any]]) -> Dict[str, Any]:
         "should_start_419": should_419,
         "stage_419_readiness": False,
         "recommendation": rec,
+        "next_recommendation": rec,
         "shadow_excluded_from_paper_logger": True,
         "shadow_excluded_from_calibration": True,
         "shadow_excluded_from_graduation": True,
@@ -462,12 +538,21 @@ def _write_report_md(path: Path, summary: Dict[str, Any], pairs: List[Dict[str, 
         "",
         f"- generated_at_utc: `{summary.get('generated_at_utc')}`",
         f"- pair_count: **{summary.get('pair_count')}**",
+        f"- shadow_comparable_pair_count: **{summary.get('shadow_comparable_pair_count')}**",
+        f"- shadow_uncomparable_pair_count: **{summary.get('shadow_uncomparable_pair_count')}**",
+        f"- provider_skill_comparison_valid: **{summary.get('provider_skill_comparison_valid')}**",
         f"- actual_valid_watch_count: **{summary.get('actual_valid_watch_count')}**",
         f"- shadow_valid_watch_count: **{summary.get('shadow_valid_watch_count')}**",
         f"- divergence_count: **{summary.get('divergence_count')}**",
         f"- shadow_unknown_intent_count: **{summary.get('shadow_unknown_intent_count')}**",
         f"- recommendation: `{summary.get('recommendation')}`",
         f"- stage_419_readiness: `{summary.get('stage_419_readiness')}`",
+        "",
+        "## shadow_uncomparable_reason_counts",
+        "",
+        "```json",
+        json.dumps(summary.get("shadow_uncomparable_reason_counts") or {}, indent=2),
+        "```",
         "",
         "## why_shadow_not_valid_watch_counts",
         "",
@@ -489,6 +574,8 @@ def _write_report_md(path: Path, summary: Dict[str, Any], pairs: List[Dict[str, 
             f"- tick={p.get('tick_index')} actual={p.get('actual_provider')}/"
             f"{p.get('actual_decision_intent')} shadow={p.get('shadow_provider')}/"
             f"{p.get('shadow_decision_intent')} "
+            f"comparable={p.get('shadow_comparable')} "
+            f"class=`{p.get('shadow_outcome_class')}` "
             f"valid(a/s)={p.get('actual_valid_watch')}/{p.get('shadow_valid_watch')} "
             f"why_shadow=`{p.get('why_shadow_not_valid_watch')}` "
             f"why_grad=`{p.get('why_actual_not_graduated')}`"

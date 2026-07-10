@@ -1,4 +1,4 @@
-"""Tests for Stage 4.18-P1 BTC dual-provider shadow mode."""
+"""Tests for Stage 4.18-P1/P1B BTC dual-provider shadow mode."""
 from __future__ import annotations
 
 import json
@@ -8,12 +8,14 @@ import unittest
 from pathlib import Path
 
 from tools.research.stage4_btc_dual_provider_shadow import (
-    append_shadow_decision,
     build_shadow_row,
+    classify_shadow_outcome,
+    is_shadow_comparable,
     maybe_run_and_write_btc_shadow,
     run_btc_shadow_for_actual,
     shadow_provider_for,
 )
+from tools.research.stage4_provider_quota_governor import Stage4ProviderQuotaGovernor
 from tools.research.stage4_provider_routing_config import (
     ENV_BTC_DUAL_SHADOW,
     ENV_ROUTING_EXPERIMENT,
@@ -99,6 +101,7 @@ class Stage418P1ShadowTests(unittest.TestCase):
     def tearDown(self) -> None:
         os.environ.pop(ENV_ROUTING_EXPERIMENT, None)
         os.environ.pop(ENV_BTC_DUAL_SHADOW, None)
+        Stage4ProviderQuotaGovernor.reset_shared()
 
     def test_default_flags_shadow_inactive(self) -> None:
         os.environ.pop(ENV_ROUTING_EXPERIMENT, None)
@@ -185,11 +188,97 @@ class Stage418P1ShadowTests(unittest.TestCase):
             self.assertTrue(shadow_path.is_file())
             lines = shadow_path.read_text(encoding="utf-8").strip().splitlines()
             self.assertEqual(len(lines), 1)
-            self.assertNotIn("shadow_decision_id", (out / "ai_decisions.jsonl").read_text() if (out / "ai_decisions.jsonl").exists() else "")
+            self.assertFalse((out / "ai_decisions.jsonl").exists())
 
     def test_shadow_row_detected_and_not_actual(self) -> None:
         self.assertTrue(is_shadow_decision_row({"shadow_diagnostic_only": True}))
         self.assertFalse(is_shadow_decision_row(_actual_btc()))
+
+    def test_actual_groq_rate_limited_skips_hard_groq_shadow(self) -> None:
+        os.environ[ENV_ROUTING_EXPERIMENT] = "true"
+        os.environ[ENV_BTC_DUAL_SHADOW] = "true"
+        called = []
+
+        def tracking_llm(provider, messages, *, symbol, prompt_hash):
+            called.append(provider)
+            return _mock_llm(provider, messages, symbol=symbol, prompt_hash=prompt_hash)
+
+        actual = _actual_btc(provider="cerebras", fallback_reason="groq_rate_limited")
+        row = run_btc_shadow_for_actual(actual_decision=actual, tick_index=1, llm_fn=tracking_llm)
+        self.assertIsNotNone(row)
+        self.assertTrue(row["shadow_call_skipped"])
+        self.assertEqual(row["shadow_skip_reason"], "actual_fallback_groq_rate_limited")
+        self.assertEqual(row["shadow_decision_intent"], "not_called")
+        self.assertFalse(row["shadow_would_be_valid_watch_under_current_rules"])
+        self.assertFalse(is_shadow_comparable(row))
+        self.assertEqual(called, [])
+
+    def test_groq_cooldown_active_skips_shadow(self) -> None:
+        os.environ[ENV_ROUTING_EXPERIMENT] = "true"
+        os.environ[ENV_BTC_DUAL_SHADOW] = "true"
+        gov = Stage4ProviderQuotaGovernor.shared()
+        gov.record_groq_429(tick=0, error_type="tokens", http_status=429)
+        called = []
+
+        def tracking_llm(provider, messages, *, symbol, prompt_hash):
+            called.append(provider)
+            return _mock_llm(provider, messages, symbol=symbol, prompt_hash=prompt_hash)
+
+        actual = _actual_btc(provider="cerebras")
+        row = run_btc_shadow_for_actual(actual_decision=actual, tick_index=2, llm_fn=tracking_llm)
+        self.assertTrue(row["shadow_call_skipped"])
+        self.assertEqual(row["shadow_skip_reason"], "groq_tpm_cooldown_active")
+        self.assertEqual(classify_shadow_outcome(row), "shadow_call_skipped")
+        self.assertEqual(called, [])
+
+    def test_truncation_classified_uncomparable(self) -> None:
+        row = build_shadow_row(
+            actual_decision=_actual_btc(),
+            shadow_proposal={"decision_intent": "watch", "parse_error": True},
+            shadow_provider="cerebras",
+            tick_index=1,
+            llm_error="provider_response_truncated",
+            finish_reason="length",
+        )
+        self.assertEqual(classify_shadow_outcome(row), "shadow_provider_response_truncated")
+        self.assertFalse(is_shadow_comparable(row))
+        self.assertFalse(row["shadow_would_be_valid_watch_under_current_rules"])
+
+    def test_cerebras_truncation_retry_does_not_write_ai_decisions(self) -> None:
+        os.environ[ENV_ROUTING_EXPERIMENT] = "true"
+        os.environ[ENV_BTC_DUAL_SHADOW] = "true"
+        calls = {"n": 0}
+
+        def trunc_then_ok(provider, messages, *, symbol, prompt_hash):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                return {
+                    "status": "error",
+                    "error_type": "provider_response_truncated",
+                    "finish_reason": "length",
+                    "parsed": {},
+                }
+            return _mock_llm(provider, messages, symbol=symbol, prompt_hash=prompt_hash)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            actual = _actual_btc(provider="groq")
+            row = maybe_run_and_write_btc_shadow(
+                output_dir=out,
+                actual_decision=actual,
+                tick_index=1,
+                llm_fn=trunc_then_ok,
+            )
+            self.assertIsNotNone(row)
+            self.assertGreaterEqual(calls["n"], 2)
+            self.assertTrue(row.get("cerebras_shadow_truncation_retry"))
+            self.assertFalse((out / "ai_decisions.jsonl").exists())
+            self.assertTrue((out / "btc_shadow_provider_decisions.jsonl").is_file())
+
+    def test_no_order_or_production_refs(self) -> None:
+        source = Path("tools/research/stage4_btc_dual_provider_shadow.py").read_text(encoding="utf-8")
+        for banned in ("place_order", "btc-auto", "production_promotion", "create_order"):
+            self.assertNotIn(banned, source)
 
 
 class Stage418P1ValidatorGuardTests(unittest.TestCase):

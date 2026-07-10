@@ -77,6 +77,29 @@ class Stage4ProviderQuotaGovernor:
     def record_cooldown_skip(self) -> None:
         self._cooldown_skip_count += 1
 
+    def record_shadow_cooldown_skip(self) -> None:
+        """Shadow diagnostic skip — increments same cooldown skip counter."""
+        self.record_cooldown_skip()
+
+    def shadow_groq_skip_reason(
+        self,
+        *,
+        actual_decision: Optional[Dict[str, Any]] = None,
+    ) -> Optional[str]:
+        """
+        Stage 4.18-P1B: if Groq is unavailable for a fair shadow call, return skip reason.
+
+        Does not change actual routing. Shadow must not hard-call Groq during TPM cooldown
+        or when the actual path already fell back due to groq_rate_limited.
+        """
+        actual = actual_decision or {}
+        fallback = str(actual.get("fallback_reason") or "").strip().lower()
+        if fallback in {"groq_rate_limited", "groq_provider_quota_exhausted"}:
+            return "actual_fallback_groq_rate_limited"
+        if self.should_skip_groq():
+            return "groq_tpm_cooldown_active"
+        return None
+
     def summary_fields(self) -> Dict[str, Any]:
         active = self.should_skip_groq()
         return {

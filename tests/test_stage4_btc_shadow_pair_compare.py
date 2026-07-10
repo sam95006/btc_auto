@@ -177,12 +177,14 @@ class Stage418P1APairCompareTests(unittest.TestCase):
             self.assertEqual(summary["pair_count"], 3)
             self.assertEqual(summary["actual_valid_watch_count"], 1)
             self.assertEqual(summary["shadow_valid_watch_count"], 0)
-            self.assertEqual(summary["divergence_count"], 2)
+            self.assertGreaterEqual(summary["shadow_uncomparable_pair_count"], 2)
+            self.assertFalse(summary["provider_skill_comparison_valid"])
             self.assertEqual(summary["shadow_unknown_intent_count"], 2)
             self.assertIn("why_shadow_not_valid_watch_counts", summary)
             self.assertIn("why_actual_not_graduated_counts", summary)
             self.assertGreaterEqual(
-                summary["why_shadow_not_valid_watch_counts"].get("shadow_unknown_intent", 0),
+                summary["why_shadow_not_valid_watch_counts"].get("shadow_parse_unknown_intent", 0)
+                + summary["shadow_uncomparable_reason_counts"].get("shadow_parse_unknown_intent", 0),
                 1,
             )
             self.assertIn(
@@ -195,6 +197,59 @@ class Stage418P1APairCompareTests(unittest.TestCase):
             self.assertTrue((root / "out" / "paired_comparison.jsonl").is_file())
             self.assertTrue((root / "out" / "paired_comparison_summary.json").is_file())
             self.assertTrue((root / "out" / "paired_comparison_report.md").is_file())
+
+    def test_skipped_and_truncated_are_uncomparable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            actuals = [
+                _actual(decision_id="a0", intent="soft_skip", provider="cerebras", tick=0),
+                _actual(decision_id="a1", intent="soft_skip", provider="groq", tick=1),
+            ]
+            shadows = [
+                {
+                    "shadow_decision_id": "s0",
+                    "source_decision_id": "a0",
+                    "source_tick_index": 0,
+                    "actual_provider": "cerebras",
+                    "shadow_provider": "groq",
+                    "shadow_call_skipped": True,
+                    "shadow_skip_reason": "groq_tpm_cooldown_active",
+                    "shadow_decision_intent": "not_called",
+                    "shadow_would_be_valid_watch_under_current_rules": False,
+                    "provider_divergence_detected": False,
+                },
+                {
+                    "shadow_decision_id": "s1",
+                    "source_decision_id": "a1",
+                    "source_tick_index": 1,
+                    "actual_provider": "groq",
+                    "shadow_provider": "cerebras",
+                    "shadow_call_skipped": False,
+                    "shadow_decision_intent": "unknown",
+                    "llm_error": "provider_response_truncated",
+                    "parse_error": True,
+                    "shadow_would_be_valid_watch_under_current_rules": False,
+                    "provider_divergence_detected": False,
+                },
+            ]
+            (root / "ai_decisions.jsonl").write_text(
+                "\n".join(json.dumps(r) for r in actuals) + "\n", encoding="utf-8"
+            )
+            (root / SHADOW_JSONL_FILENAME).write_text(
+                "\n".join(json.dumps(r) for r in shadows) + "\n", encoding="utf-8"
+            )
+            summary = run_pair_compare(input_dir=root, output_dir=root / "out")
+            self.assertEqual(summary["shadow_comparable_pair_count"], 0)
+            self.assertEqual(summary["shadow_uncomparable_pair_count"], 2)
+            self.assertFalse(summary["provider_skill_comparison_valid"])
+            self.assertFalse(summary["p2_routing_experiment_recommended"])
+            self.assertIn(
+                summary["recommendation"],
+                {
+                    "fix_shadow_quota_handling_before_provider_routing",
+                    "collect_more_clean_shadow_samples_after_quota_aware_fix",
+                },
+            )
 
     def test_pairs_by_tick_index_fallback(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

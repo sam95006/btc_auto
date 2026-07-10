@@ -1,4 +1,4 @@
-"""Tests for Stage 4.18-P1 BTC shadow diagnostics."""
+"""Tests for Stage 4.18-P1B BTC shadow diagnostics."""
 from __future__ import annotations
 
 import json
@@ -10,20 +10,30 @@ from tools.research.stage4_btc_shadow_diagnostics import analyze_btc_shadow_diag
 from tools.research.stage4_provider_routing_config import PROBE_RESULTS_JSONL, SHADOW_JSONL_FILENAME
 
 
-class Stage418P1ShadowDiagnosticsTests(unittest.TestCase):
-    def test_summarizes_shadow_jsonl(self) -> None:
+class Stage418P1BShadowDiagnosticsTests(unittest.TestCase):
+    def test_summarizes_shadow_jsonl_with_uncomparable(self) -> None:
         rows = [
             {
                 "shadow_decision_id": "s1",
+                "actual_provider": "cerebras",
+                "shadow_provider": "groq",
+                "actual_decision_intent": "soft_skip",
+                "shadow_decision_intent": "not_called",
+                "shadow_call_skipped": True,
+                "shadow_skip_reason": "groq_tpm_cooldown_active",
+                "shadow_would_be_valid_watch_under_current_rules": False,
+                "provider_divergence_detected": False,
+            },
+            {
+                "shadow_decision_id": "s2",
                 "actual_provider": "groq",
                 "shadow_provider": "cerebras",
                 "actual_decision_intent": "soft_skip",
-                "shadow_decision_intent": "watch",
-                "actual_confidence": 0.2,
-                "shadow_confidence": 0.55,
-                "shadow_would_be_valid_watch_under_current_rules": True,
-                "provider_divergence_detected": True,
-            }
+                "shadow_decision_intent": "soft_skip",
+                "shadow_call_skipped": False,
+                "shadow_would_be_valid_watch_under_current_rules": False,
+                "provider_divergence_detected": False,
+            },
         ]
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -31,10 +41,16 @@ class Stage418P1ShadowDiagnosticsTests(unittest.TestCase):
                 "\n".join(json.dumps(r) for r in rows) + "\n",
                 encoding="utf-8",
             )
+            (root / "ai_decisions.jsonl").write_text("", encoding="utf-8")
             s = analyze_btc_shadow_diagnostics(input_dir=root, output_dir=root / "out")
-            self.assertEqual(s["shadow_decision_count"], 1)
-            self.assertEqual(s["shadow_valid_watch_count"], 1)
-            self.assertEqual(s["provider_divergence_count"], 1)
+            self.assertEqual(s["shadow_total_rows"], 2)
+            self.assertEqual(s["shadow_call_skipped_count"], 1)
+            self.assertEqual(s["shadow_comparable_pair_count"], 1)
+            self.assertEqual(s["shadow_uncomparable_pair_count"], 1)
+            self.assertFalse(s["provider_skill_comparison_valid"])
+            self.assertFalse(s["p2_routing_experiment_recommended"])
+            self.assertFalse(s["routing_change_supported"])
+            self.assertIn("next_recommendation", s)
             self.assertTrue(s["shadow_excluded_from_paper_logger"])
             self.assertTrue(s["shadow_excluded_from_stage_419_readiness"])
 
@@ -54,7 +70,6 @@ class Stage418P1ShadowDiagnosticsTests(unittest.TestCase):
             (root / PROBE_RESULTS_JSONL).write_text(json.dumps(rows[0]) + "\n", encoding="utf-8")
             s = analyze_btc_shadow_diagnostics(input_dir=root, output_dir=root / "out")
             self.assertEqual(s["shadow_decision_count"], 1)
-            self.assertGreaterEqual(s["provider_divergence_count"], 1)
 
     def test_no_order_paths(self) -> None:
         import tools.research.stage4_btc_shadow_diagnostics as mod
