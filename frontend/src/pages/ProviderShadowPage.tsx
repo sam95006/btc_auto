@@ -1,7 +1,7 @@
 import { ProviderComparisonCard } from "../components/ProviderComparisonCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
-import { getProviderShadowSummary } from "../data/nexusDataAdapter";
+import { getProviderShadowSummary } from "../demo/nexusDataAdapter";
 
 export function ProviderShadowPage() {
   const summary = getProviderShadowSummary();

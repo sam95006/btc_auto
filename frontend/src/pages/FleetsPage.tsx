@@ -1,7 +1,7 @@
 import { FleetCard } from "../components/FleetCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
-import { getFleetStatus } from "../data/nexusDataAdapter";
+import { getFleetStatus } from "../demo/nexusDataAdapter";
 
 export function FleetsPage() {
   const fleets = getFleetStatus();

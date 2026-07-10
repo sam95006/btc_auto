@@ -1,6 +1,6 @@
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
-import { getPaperLabSummary } from "../data/nexusDataAdapter";
+import { getPaperLabSummary } from "../demo/nexusDataAdapter";
 
 export function PaperLabPage() {
   const p = getPaperLabSummary();

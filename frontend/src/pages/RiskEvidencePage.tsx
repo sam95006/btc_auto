@@ -1,6 +1,6 @@
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
-import { getRiskEvidenceFlags } from "../data/nexusDataAdapter";
+import { getRiskEvidenceFlags } from "../demo/nexusDataAdapter";
 
 export function RiskEvidencePage() {
   const f = getRiskEvidenceFlags();

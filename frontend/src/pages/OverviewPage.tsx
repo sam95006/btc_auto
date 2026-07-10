@@ -1,6 +1,6 @@
 import { MarketStatusCard } from "../components/MarketStatusCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
-import { getMarketOverview, getRoundTable } from "../data/nexusDataAdapter";
+import { getMarketOverview, getRoundTable } from "../demo/nexusDataAdapter";
 
 export function OverviewPage() {
   const markets = getMarketOverview();

@@ -1,4 +1,4 @@
-import { getSystemStatus } from "../data/nexusDataAdapter";
+import { getSystemStatus } from "../demo/nexusDataAdapter";
 import { DemoDataBadge } from "./DemoDataBadge";
 
 export function TopStatusBar() {

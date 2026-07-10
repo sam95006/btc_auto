@@ -45,7 +45,7 @@ for (const file of files) {
   }
 }
 
-const demo = fs.readFileSync(path.join(SRC, "data/demoNexusData.ts"), "utf8");
+const demo = fs.readFileSync(path.join(SRC, "demo/demoNexusData.ts"), "utf8");
 if (!demo.includes("DEMO DATA - READ ONLY - NOT INVESTMENT ADVICE")) {
   issues.push("demoNexusData.ts missing DEMO SOURCE");
 }

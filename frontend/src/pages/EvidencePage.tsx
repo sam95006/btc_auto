@@ -1,7 +1,7 @@
 import { EvidenceItemCard } from "../components/EvidenceItemCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
-import { getEvidence } from "../data/nexusDataAdapter";
+import { getEvidence } from "../demo/nexusDataAdapter";
 
 export function EvidencePage() {
   const items = getEvidence();

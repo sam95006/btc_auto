@@ -102,8 +102,8 @@ def scan_file(path: Path) -> list[str]:
 
 def check_demo_policy(files: list[Path]) -> list[str]:
     issues: list[str] = []
-    demo_data = FRONTEND_SRC / "data" / "demoNexusData.ts"
-    adapter = FRONTEND_SRC / "data" / "nexusDataAdapter.ts"
+    demo_data = FRONTEND_SRC / "demo" / "demoNexusData.ts"
+    adapter = FRONTEND_SRC / "demo" / "nexusDataAdapter.ts"
     safety = FRONTEND_SRC / "components" / "SafetyBanner.tsx"
     badge = FRONTEND_SRC / "components" / "DemoDataBadge.tsx"
 

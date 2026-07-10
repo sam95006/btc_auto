@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getRoundTable } from "../data/nexusDataAdapter";
+import { getRoundTable } from "../demo/nexusDataAdapter";
 import { DemoDataBadge } from "./DemoDataBadge";
 
 const TABS = [

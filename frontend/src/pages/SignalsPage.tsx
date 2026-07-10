@@ -1,6 +1,6 @@
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { SignalStatusBadge } from "../components/SignalStatusBadge";
-import { getSignals } from "../data/nexusDataAdapter";
+import { getSignals } from "../demo/nexusDataAdapter";
 
 export function SignalsPage() {
   const rows = getSignals();

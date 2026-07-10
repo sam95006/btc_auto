@@ -1,7 +1,7 @@
 import { ReflectionSummaryCard } from "../components/ReflectionSummaryCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
-import { getReflectionSummary } from "../data/nexusDataAdapter";
+import { getReflectionSummary } from "../demo/nexusDataAdapter";
 
 export function ReflectionPage() {
   const summary = getReflectionSummary();

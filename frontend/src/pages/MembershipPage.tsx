@@ -1,6 +1,6 @@
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
-import { getMembershipTiers } from "../data/nexusDataAdapter";
+import { getMembershipTiers } from "../demo/nexusDataAdapter";
 
 export function MembershipPage() {
   const tiers = getMembershipTiers();

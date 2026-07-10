@@ -57,7 +57,7 @@ MVP-0 delivers a Vite + React + TypeScript dark fintech dashboard shell with lef
 
 ## 4. Adapter
 
-`src/data/nexusDataAdapter.ts` exposes read-only getters:
+`src/demo/nexusDataAdapter.ts` exposes read-only getters:
 
 - `getMarketOverview`
 - `getFleetStatus`
