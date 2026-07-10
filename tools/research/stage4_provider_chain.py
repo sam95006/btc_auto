@@ -109,6 +109,25 @@ def resolve_provider_chain() -> List[str]:
     return chain or ["groq"]
 
 
+def resolve_provider_chain_for_symbol(symbol: str = "") -> List[str]:
+    """Default chain, unless BTC-only override experiment is active."""
+    base = resolve_provider_chain()
+    sym = str(symbol or "").strip().upper()
+    if sym != "BTCUSDT":
+        return base
+    try:
+        from tools.research.stage4_provider_routing_config import (
+            is_btc_provider_override_active,
+            parse_btc_provider_chain,
+        )
+    except Exception:
+        return base
+    if not is_btc_provider_override_active():
+        return base
+    override = parse_btc_provider_chain()
+    return override or base
+
+
 def secondary_fallback_allowed() -> bool:
     return env_truthy("STAGE4_ALLOW_SECONDARY_REAL_LLM_FALLBACK", False)
 
@@ -298,13 +317,23 @@ class Stage4ProviderChainClient:
     ) -> Dict[str, Any]:
         attempts: List[Dict[str, Any]] = []
         last_result: Dict[str, Any] = {}
-        primary_provider = self.primary_provider
+        active_chain = resolve_provider_chain_for_symbol(symbol)
+        primary_provider = active_chain[0] if active_chain else self.primary_provider
         primary_error = ""
         fallback_used = False
         fallback_reason = ""
         governor = Stage4ProviderQuotaGovernor.shared()
+        btc_override = False
+        try:
+            from tools.research.stage4_provider_routing_config import is_btc_provider_override_active
 
-        for idx, provider in enumerate(self.provider_chain):
+            btc_override = bool(
+                is_btc_provider_override_active() and str(symbol or "").strip().upper() == "BTCUSDT"
+            )
+        except Exception:
+            btc_override = False
+
+        for idx, provider in enumerate(active_chain):
             is_primary = idx == 0
             if not provider_key_configured(provider):
                 attempts.append({"provider": provider, "result": "skipped", "error_type": "missing_api_key"})
@@ -320,7 +349,7 @@ class Stage4ProviderChainClient:
                 )
                 if is_primary:
                     primary_error = "rate_limit"
-                if self.fallback_allowed and idx + 1 < len(self.provider_chain):
+                if self.fallback_allowed and idx + 1 < len(active_chain):
                     continue
                 break
             if self.circuit_breaker.is_open(provider):
@@ -358,13 +387,15 @@ class Stage4ProviderChainClient:
                     {
                         "provider": provider,
                         "model": result.get("model") or client.config.model if client.config else "",
-                        "provider_chain": self.provider_chain,
+                        "provider_chain": active_chain,
                         "provider_attempts": attempts,
                         "fallback_used": fallback_used,
                         "fallback_reason": fallback_reason if fallback_used else None,
                         "primary_provider": primary_provider,
                         "primary_error": primary_error if fallback_used else None,
                         "is_mock_ai": False,
+                        "experiment_mode": btc_override,
+                        "btc_provider_override_active": btc_override,
                     }
                 )
                 self._last_attempts = attempts
@@ -382,12 +413,12 @@ class Stage4ProviderChainClient:
                 )
 
             if self._is_fallback_eligible(result):
-                if idx + 1 < len(self.provider_chain) and self.fallback_allowed:
+                if idx + 1 < len(active_chain) and self.fallback_allowed:
                     continue
                 break
 
             if err_type in {"http_forbidden", "http_unauthorized"}:
-                if is_primary and idx + 1 < len(self.provider_chain) and self.fallback_allowed:
+                if is_primary and idx + 1 < len(active_chain) and self.fallback_allowed:
                     primary_error = err_type or "http_unauthorized"
                     continue
                 break
@@ -396,10 +427,12 @@ class Stage4ProviderChainClient:
         if last_result:
             last_result = dict(last_result)
             last_result["provider_attempts"] = attempts
-            last_result["provider_chain"] = self.provider_chain
+            last_result["provider_chain"] = active_chain
             last_result["fallback_used"] = False
             last_result["primary_provider"] = primary_provider
             last_result["primary_error"] = primary_error or last_result.get("error_type")
+            last_result["experiment_mode"] = btc_override
+            last_result["btc_provider_override_active"] = btc_override
             if last_result.get("status") != "ok" and len(attempts) > 1:
                 last_result["error_type"] = "provider_chain_failed"
                 last_result["status"] = "error"

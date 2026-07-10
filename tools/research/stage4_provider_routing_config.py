@@ -10,6 +10,10 @@ PROBE_RESULTS_JSONL = "stage4_controlled_provider_probe_results.jsonl"
 
 ENV_ROUTING_EXPERIMENT = "STAGE4_PROVIDER_ROUTING_EXPERIMENT_ENABLED"
 ENV_BTC_DUAL_SHADOW = "STAGE4_BTC_DUAL_PROVIDER_SHADOW"
+ENV_BTC_PROVIDER_OVERRIDE = "STAGE4_BTC_PROVIDER_OVERRIDE_ENABLED"
+ENV_BTC_PROVIDER_CHAIN = "STAGE4_BTC_PROVIDER_CHAIN"
+
+ALLOWED_OVERRIDE_PROVIDERS = frozenset({"groq", "cerebras", "openai", "anthropic", "gemini", "ollama"})
 
 
 def env_truthy(name: str, default: bool = False) -> bool:
@@ -25,6 +29,23 @@ def provider_routing_experiment_enabled() -> bool:
 
 def btc_dual_provider_shadow_enabled() -> bool:
     return env_truthy(ENV_BTC_DUAL_SHADOW, False)
+
+
+def btc_provider_override_enabled() -> bool:
+    """Default off. Requires experiment flag + override flag."""
+    return provider_routing_experiment_enabled() and env_truthy(ENV_BTC_PROVIDER_OVERRIDE, False)
+
+
+def parse_btc_provider_chain() -> list[str]:
+    raw = (os.environ.get(ENV_BTC_PROVIDER_CHAIN) or "").strip()
+    if not raw:
+        return []
+    parts = [p.strip().lower() for p in raw.split(",") if p.strip()]
+    return [p for p in parts if p in ALLOWED_OVERRIDE_PROVIDERS]
+
+
+def is_btc_provider_override_active() -> bool:
+    return btc_provider_override_enabled() and bool(parse_btc_provider_chain())
 
 
 def is_btc_shadow_mode_active() -> bool:
@@ -54,6 +75,7 @@ def shadow_provider_for(actual_provider: str) -> str:
 
 def routing_config_summary() -> Dict[str, Any]:
     active = is_btc_shadow_mode_active()
+    override_active = is_btc_provider_override_active()
     return {
         "provider_routing_experiment_enabled": provider_routing_experiment_enabled(),
         "btc_dual_provider_shadow_enabled": btc_dual_provider_shadow_enabled(),
@@ -63,6 +85,12 @@ def routing_config_summary() -> Dict[str, Any]:
         "shadow_decisions_excluded_from_calibration": True,
         "shadow_decisions_excluded_from_graduation": True,
         "shadow_decisions_excluded_from_stage_419_readiness": True,
+        "experiment_mode": provider_routing_experiment_enabled(),
+        "btc_provider_override_enabled": btc_provider_override_enabled(),
+        "btc_provider_override_active": override_active,
+        "btc_provider_chain": ",".join(parse_btc_provider_chain()) if override_active else "",
+        "btc_provider_override_symbol_only": BTC_SYMBOL,
+        "routing_auto_change_allowed": False,
     }
 
 

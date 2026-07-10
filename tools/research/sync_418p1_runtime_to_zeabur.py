@@ -26,6 +26,7 @@ FILES = [
     "tools/research/stage4_provider_chain.py",
     "tools/research/stage4_ai_decision_agent.py",
     "tools/research/check_stage4_runtime_version.py",
+    "tools/research/stage4_p2_r1_analysis.py",
 ]
 
 
