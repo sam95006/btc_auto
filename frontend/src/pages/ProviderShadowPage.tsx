@@ -78,7 +78,7 @@ export function ProviderShadowPage() {
           </div>
           <p className="muted" style={{ marginTop: "0.75rem" }}>
             Experiment-only (default-off). Must not imply permanent Cerebras-first production
-            routing. Permanent routing change still unsupported after P2C.
+            routing. Permanent routing still unsupported after P2D.
           </p>
         </article>
 
@@ -88,6 +88,12 @@ export function ProviderShadowPage() {
             <DemoDataBadge />
           </div>
           <p>{summary.p2r1Summary}</p>
+          {snap.providerShadowStatus.p2cSummary ? (
+            <p className="muted">{snap.providerShadowStatus.p2cSummary}</p>
+          ) : null}
+          {snap.providerShadowStatus.p2dSummary ? (
+            <p className="muted">{snap.providerShadowStatus.p2dSummary}</p>
+          ) : null}
           {snap.providerShadowStatus.p2bSummary ? (
             <p className="muted">{snap.providerShadowStatus.p2bSummary}</p>
           ) : null}

@@ -198,8 +198,8 @@ export function EthConfirmationTimelineCard({
           {timeline.conclusion}
         </p>
         <p className="muted">
-          Next = P2D confirmation prompt review · recovery=
-          {timeline.recoveryRecommendation}
+          Next = {timeline.nextStep || "P2D-R1 runtime regression"} · recovery=
+          {timeline.recoveryRecommendation} · SYSTEM ISSUE preserved historically
         </p>
       </div>
     </section>

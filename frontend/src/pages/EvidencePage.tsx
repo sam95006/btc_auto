@@ -1,11 +1,16 @@
 import { EvidenceItemCard } from "../components/EvidenceItemCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
-import { getEthConfirmationTimeline, getEvidence } from "../demo/nexusDataAdapter";
+import {
+  getEthConfirmationTimeline,
+  getEvidence,
+  getPromptRepairStatus,
+} from "../demo/nexusDataAdapter";
 
 export function EvidencePage() {
   const items = getEvidence();
   const ethTimeline = getEthConfirmationTimeline();
+  const promptRepair = getPromptRepairStatus();
   const watch = ethTimeline?.watch;
   const followup = ethTimeline?.followup;
 
@@ -17,7 +22,7 @@ export function EvidencePage() {
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
           Recent AI decisions with stage markers. Sanitized snapshot · READ ONLY · NOT INVESTMENT
-          ADVICE.
+          ADVICE. P2C issue → P2D repair timeline.
         </p>
       </header>
 
@@ -37,7 +42,7 @@ export function EvidencePage() {
               Triggers: entry={watch?.entryTrigger} · MAE={watch?.mae} · invalidation=
               {watch?.invalidation}
             </p>
-            <p className="muted">Stage 4.18-P2C · valid_watch summary (sanitized)</p>
+            <p className="muted">Stage 4.18-P2D · valid_watch summary (sanitized)</p>
           </article>
 
           <article className="panel-card operator-card">
@@ -52,7 +57,7 @@ export function EvidencePage() {
               {followup?.candidateSide}
             </p>
             <p className="muted">
-              Confirmation failed ·{" "}
+              P2C issue preserved ·{" "}
               {ethTimeline.failureReason || "confirmation_prompt_too_strict"} ·{" "}
               {ethTimeline.ethDetail || "LONG/BUY → NONE/NONE without market reversal"}
             </p>
@@ -85,6 +90,29 @@ export function EvidencePage() {
               </p>
             </article>
           ) : null}
+
+          <article className="panel-card operator-card">
+            <div className="meta-row" style={{ marginTop: 0 }}>
+              <h3 style={{ margin: 0 }}>P2C Issue → P2D Repair Timeline</h3>
+              <span className="demo-badge">prompt repair status</span>
+              <DemoDataBadge />
+            </div>
+            <p className="muted">
+              P2C: confirmation_prompt_too_strict (SYSTEM ISSUE preserved historically) → P2D:
+              prompt repair added (previous_watch_context + direction collapse guard)
+            </p>
+            <p className="mono">
+              static_expected=
+              {promptRepair?.staticExpectedFollowupBehavior ??
+                "continuation_watch_or_confirmation_pending"}{" "}
+              · would_prevent_unexplained_collapse=
+              {String(promptRepair?.wouldPreventUnexplainedCollapse ?? true)} · next=
+              {promptRepair?.nextStep ?? "P2D-R1 runtime regression"}
+            </p>
+            <p className="muted">
+              Awaiting runtime regression · Stage 4.19 blocked · READ ONLY
+            </p>
+          </article>
         </div>
       ) : null}
 

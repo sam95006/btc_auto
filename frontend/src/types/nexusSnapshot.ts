@@ -1,5 +1,5 @@
 /**
- * NEXUS Private Operator snapshot schema — MVP-2 / MVP-3.
+ * NEXUS Private Operator snapshot schema — MVP-2 / MVP-3 / MVP-4 / MVP-5.
  * Read-only sanitized research summaries only. No secrets, no /data raw paths.
  */
 
@@ -31,6 +31,7 @@ export interface SnapshotStageGate {
   p2aStatus: string;
   p2bStatus?: string;
   p2cStatus?: string;
+  p2dStatus?: string;
   latestGate: string;
   note: string;
 }
@@ -72,6 +73,7 @@ export interface SnapshotProviderShadowStatus {
   p2r1Summary: string;
   p2bSummary?: string;
   p2cSummary?: string;
+  p2dSummary?: string;
   actualOnlyGraduation: true;
 }
 
@@ -149,7 +151,23 @@ export interface EthConfirmationTimeline {
   recoveryRecommendation: string;
 }
 
-/** Canonical Private Operator / demo fixture shape for MVP-2 / MVP-3 wiring. */
+/** P2D prompt repair status (static review; awaiting runtime regression). */
+export interface PromptRepairStatus {
+  promptRepairAdded: boolean;
+  previousWatchContextInjected: boolean;
+  entryTriggerRecheckRequired: boolean;
+  invalidationRecheckRequired: boolean;
+  maeRecheckRequired: boolean;
+  contextContinuityCheckRequired: boolean;
+  directionCollapseGuardAdded: boolean;
+  confidenceCollapseReasonRequired: boolean;
+  staticExpectedFollowupBehavior: string;
+  wouldPreventUnexplainedCollapse: boolean;
+  needsNextRuntimeRegression: boolean;
+  nextStep: string;
+}
+
+/** Canonical Private Operator / demo fixture shape for MVP-2 … MVP-5 wiring. */
 export interface NexusSnapshot {
   source: string;
   uiMode: NexusUiMode;
@@ -164,5 +182,6 @@ export interface NexusSnapshot {
   providerShadowStatus: SnapshotProviderShadowStatus;
   paperLabStatus: SnapshotPaperLabStatus;
   ethConfirmationTimeline?: EthConfirmationTimeline;
+  promptRepairStatus?: PromptRepairStatus;
   reports: SnapshotReportMeta[];
 }

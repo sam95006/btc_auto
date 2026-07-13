@@ -1,6 +1,6 @@
 /**
  * Read-only NEXUS data adapter.
- * MVP-4: defaults to sanitized P2C private_operator_snapshot (prefers P2C over P2B/P2A).
+ * MVP-5: defaults to sanitized P2D private_operator_snapshot (prefers P2D over P2C/P2B/P2A).
  * Never writes backend / trading state. No order / ARM / routing APIs.
  */
 import {
@@ -26,6 +26,7 @@ import {
 import { p2aPrivateOperatorSnapshot } from "./snapshots/p2aPrivateOperatorSnapshot";
 import { p2bPrivateOperatorSnapshot } from "./snapshots/p2bPrivateOperatorSnapshot";
 import { p2cPrivateOperatorSnapshot } from "./snapshots/p2cPrivateOperatorSnapshot";
+import { p2dPrivateOperatorSnapshot } from "./snapshots/p2dPrivateOperatorSnapshot";
 import type {
   EvidenceItem,
   FleetStatus,
@@ -49,14 +50,16 @@ import type {
   EthConfirmationTimeline,
   NexusSnapshot,
   NexusUiMode,
+  PromptRepairStatus,
   SnapshotStage419Status,
 } from "../types/nexusSnapshot";
 
 /** Default UI mode for Private Operator Dashboard. */
 let currentUiMode: NexusUiMode = "private_operator_snapshot";
 
-/** Prefer P2C over P2B/P2A when sanitized snapshots are available. */
+/** Prefer P2D over P2C/P2B/P2A when sanitized snapshots are available. */
 const ACTIVE_PRIVATE_OPERATOR_SNAPSHOT: NexusSnapshot =
+  p2dPrivateOperatorSnapshot ??
   p2cPrivateOperatorSnapshot ??
   p2bPrivateOperatorSnapshot ??
   p2aPrivateOperatorSnapshot;
@@ -93,6 +96,11 @@ export function getNexusSnapshot(): NexusSnapshot {
 export function getEthConfirmationTimeline(): EthConfirmationTimeline | null {
   const snap = getNexusSnapshot();
   return snap.ethConfirmationTimeline ?? null;
+}
+
+export function getPromptRepairStatus(): PromptRepairStatus | null {
+  const snap = getNexusSnapshot();
+  return snap.promptRepairStatus ?? null;
 }
 
 export function getLatestBackendVerdict(): string {
@@ -137,7 +145,7 @@ export function getStageGateStatus(): StageGateStatus {
       source: s.source,
       stageLabel: g.stageLabel,
       verdict: g.verdict,
-      p2aStatus: g.p2cStatus ?? g.p2bStatus ?? g.p2aStatus,
+      p2aStatus: g.p2dStatus ?? g.p2cStatus ?? g.p2bStatus ?? g.p2aStatus,
       latestGate: g.latestGate,
       note: g.note,
     };

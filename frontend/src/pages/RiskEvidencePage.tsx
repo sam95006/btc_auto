@@ -3,6 +3,7 @@ import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import {
   getEthConfirmationTimeline,
   getNexusSnapshot,
+  getPromptRepairStatus,
   getRiskEvidenceFlags,
   getSafetyStatus,
   getStage419Status,
@@ -14,6 +15,7 @@ export function RiskEvidencePage() {
   const stage419 = getStage419Status();
   const snap = getNexusSnapshot();
   const ethTimeline = getEthConfirmationTimeline();
+  const promptRepair = getPromptRepairStatus();
   const failureReason =
     ethTimeline?.failureReason ??
     snap.ethStatus.confirmationFailureReason ??
@@ -32,7 +34,8 @@ export function RiskEvidencePage() {
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
           Safety flags only — no order / no ARM / no production controls. Private Operator
-          read-only. Stage 4.19 start button absent (forbidden).
+          read-only. Stage 4.19 start button absent (forbidden). Prompt repair safety · Stage 4.19
+          blocked.
         </p>
       </header>
       <div className="flag-grid">
@@ -92,13 +95,61 @@ export function RiskEvidencePage() {
 
       <section className="panel-card operator-card" style={{ marginTop: "1.25rem" }}>
         <div className="meta-row" style={{ marginTop: 0 }}>
+          <h3 style={{ margin: 0 }}>Prompt Repair Safety</h3>
+          <span className="demo-badge">prompt repair status</span>
+          <DemoDataBadge />
+        </div>
+        <p className="muted">
+          P2D prompt repair added · previous_watch_context · direction collapse guard · Stage 4.19
+          blocked · awaiting P2D-R1 runtime regression
+        </p>
+        <div className="flag-grid" style={{ marginTop: "0.75rem" }}>
+          <div className="flag-item">
+            <div className="k">prompt_repair_added</div>
+            <div className="v">{String(promptRepair?.promptRepairAdded ?? true)}</div>
+          </div>
+          <div className="flag-item">
+            <div className="k">direction_collapse_guard_added</div>
+            <div className="v">
+              {String(promptRepair?.directionCollapseGuardAdded ?? true)}
+            </div>
+          </div>
+          <div className="flag-item">
+            <div className="k">would_prevent_unexplained_collapse</div>
+            <div className="v">
+              {String(promptRepair?.wouldPreventUnexplainedCollapse ?? true)}
+            </div>
+          </div>
+          <div className="flag-item">
+            <div className="k">needs_next_runtime_regression</div>
+            <div className="v">
+              {String(promptRepair?.needsNextRuntimeRegression ?? true)}
+            </div>
+          </div>
+          <div className="flag-item">
+            <div className="k">stage_419_readiness</div>
+            <div className="v">{String(f.stage419Readiness)}</div>
+          </div>
+          <div className="flag-item">
+            <div className="k">should_start_419</div>
+            <div className="v">{String(f.shouldStart419)}</div>
+          </div>
+        </div>
+        <p className="muted" style={{ marginTop: "0.75rem" }}>
+          Next = {promptRepair?.nextStep ?? "P2D-R1 runtime regression"} · Stage 4.19 blocked
+        </p>
+      </section>
+
+      <section className="panel-card operator-card" style={{ marginTop: "1.25rem" }}>
+        <div className="meta-row" style={{ marginTop: 0 }}>
           <h3 style={{ margin: 0 }}>ETH Confirmation System Issue</h3>
           <span className="demo-badge">SYSTEM ISSUE</span>
           <span className="demo-badge">NOT MARKET REVERSAL</span>
           <DemoDataBadge />
         </div>
         <p>
-          Confirmation failed · reason=<span className="mono">{failureReason}</span>
+          Previous failure · reason=<span className="mono">{failureReason}</span> · SYSTEM ISSUE
+          preserved historically
         </p>
         <p className="mono">Direction collapse: {ethDetail}</p>
         <div className="flag-grid" style={{ marginTop: "0.75rem" }}>

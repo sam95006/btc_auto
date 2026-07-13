@@ -9,6 +9,7 @@ import {
   getMarketOverview,
   getNexusSnapshot,
   getPrivateOperatorMode,
+  getPromptRepairStatus,
   getRoundTable,
   getSafetyStatus,
   getStage419Status,
@@ -28,11 +29,17 @@ export function OverviewPage() {
   const uiMode = getCurrentUiMode();
   const latestVerdict = getLatestBackendVerdict();
   const ethTimeline = getEthConfirmationTimeline();
+  const promptRepair = getPromptRepairStatus();
   const ethBlocker =
     snap.ethStatus.confirmationFailureReason ??
     snap.ethStatus.rootCause ??
     ethTimeline?.failureReason ??
     "confirmation_prompt_too_strict";
+  const nextStep =
+    promptRepair?.nextStep ??
+    ethTimeline?.nextStep ??
+    snap.paperLabStatus.nextDiagnostic ??
+    "P2D-R1 runtime regression";
 
   return (
     <div>
@@ -70,11 +77,15 @@ export function OverviewPage() {
             {gate.stageLabel} · {gate.verdict}
           </p>
           <p>
-            <span className="muted">P2C:</span>{" "}
-            {snap.stageGate.p2cStatus ?? snap.stageGate.p2bStatus ?? gate.p2aStatus}
+            <span className="muted">P2D:</span>{" "}
+            {snap.stageGate.p2dStatus ??
+              snap.stageGate.p2cStatus ??
+              snap.stageGate.p2bStatus ??
+              gate.p2aStatus}
           </p>
           <p className="muted">{gate.latestGate}</p>
           <p className="muted">{gate.note}</p>
+          <p className="muted">Next: {nextStep}</p>
         </section>
 
         <section className="panel-card operator-card">
@@ -104,9 +115,10 @@ export function OverviewPage() {
             BTC: {snap.btcStatus.statusLabel} · ETH: {snap.ethStatus.statusLabel}
           </p>
           <p className="muted">
-            ETH blocker: {ethBlocker}
+            ETH previous failure: {ethBlocker}
             {snap.ethStatus.ethDetail ? ` · ${snap.ethStatus.ethDetail}` : ""}
           </p>
+          <p className="muted">Next: {nextStep}</p>
         </section>
 
         <section className="panel-card operator-card">

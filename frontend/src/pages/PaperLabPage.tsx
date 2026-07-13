@@ -1,11 +1,13 @@
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { EthConfirmationTimelineCard } from "../components/EthConfirmationTimelineCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
+import { PromptRepairStatusCard } from "../components/PromptRepairStatusCard";
 import {
   getEthConfirmationTimeline,
   getGraduationStatus,
   getNexusSnapshot,
   getPaperLabSummary,
+  getPromptRepairStatus,
 } from "../demo/nexusDataAdapter";
 
 export function PaperLabPage() {
@@ -14,6 +16,7 @@ export function PaperLabPage() {
   const snap = getNexusSnapshot();
   const paper = snap.paperLabStatus;
   const ethTimeline = getEthConfirmationTimeline();
+  const promptRepair = getPromptRepairStatus();
 
   return (
     <div>
@@ -23,8 +26,7 @@ export function PaperLabPage() {
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
           Read-only would_enter / would_skip counts. BTC passed / ETH blocked. Stage 4.19 blocked.
-          ETH confirmation prompt issue · Next: P2D prompt review (code-only). No paper execution
-          from UI.
+          Prompt repair status · Awaiting runtime regression (P2D-R1). No paper execution from UI.
         </p>
       </header>
       <div className="flag-grid">
@@ -89,10 +91,12 @@ export function PaperLabPage() {
         Why not graduated to Stage 4.19: {p.whyNotGraduated}
       </p>
       <p className="muted">
-        Next diagnostic: {paper.nextDiagnostic} (read-only; no Stage 4.19 start).
+        Next diagnostic: {paper.nextDiagnostic} · Awaiting runtime regression (read-only; no Stage
+        4.19 start).
       </p>
       <p className="muted">{g.whyBlocked}</p>
 
+      {promptRepair ? <PromptRepairStatusCard status={promptRepair} /> : null}
       {ethTimeline ? <EthConfirmationTimelineCard timeline={ethTimeline} /> : null}
     </div>
   );
