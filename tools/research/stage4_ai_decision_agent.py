@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -12,7 +13,11 @@ from tools.research.stage3_learning_loop import append_jsonl, resolve_output_dir
 from tools.research.stage4_decision_schema import parse_llm_decision
 from tools.research.stage4_paper_readiness import default_paper_field_defaults, enrich_proposal_paper_fields
 from tools.research.stage4_parse_error_metrics import normalize_parse_error_type
-from tools.research.stage4_prompt_builder import build_decision_prompt, prompt_fingerprint
+from tools.research.stage4_prompt_builder import (
+    build_decision_prompt,
+    load_previous_watch_context_from_jsonl,
+    prompt_fingerprint,
+)
 from tools.research.stage4_context_summary import (  # noqa: E402
     blocking_patches,
     load_stage3_context,
@@ -260,6 +265,7 @@ class Stage4AIDecisionAgent:
         recent_reflections: List[Dict[str, Any]],
         open_positions: int,
         stage3_context: Dict[str, Any],
+        previous_watch_context: Dict[str, Any] | None = None,
     ) -> tuple[Dict[str, Any], str, bool, str, Dict[str, Any]]:
         constraints = safety_constraints_from_env()
         messages = build_decision_prompt(
@@ -272,6 +278,7 @@ class Stage4AIDecisionAgent:
             safety_constraints=constraints,
             current_open_positions=open_positions,
             stage3_context=stage3_context,
+            previous_watch_context=previous_watch_context,
         )
         prompt_hash = prompt_fingerprint(messages)
         result = self.llm_client.complete_json(messages, prompt_hash=prompt_hash, symbol=symbol)
@@ -409,6 +416,10 @@ class Stage4AIDecisionAgent:
         parse_error = False
         llm_parse_ok = True
         provider_meta: Dict[str, Any] = {}
+        previous_watch_context = load_previous_watch_context_from_jsonl(
+            os.environ.get("STAGE4_OUTPUT_DIR") or "",
+            symbol,
+        )
 
         if self.real_llm_used and self.llm_client:
             proposal, prompt_hash, llm_parse_ok, _, provider_meta = self._llm_proposal(
@@ -420,6 +431,7 @@ class Stage4AIDecisionAgent:
                 recent_reflections=recent_reflections_raw,
                 open_positions=open_positions,
                 stage3_context=stage3_ctx,
+                previous_watch_context=previous_watch_context,
             )
             parse_error = not llm_parse_ok or bool(proposal.get("parse_error"))
         else:
@@ -554,6 +566,18 @@ class Stage4AIDecisionAgent:
             "decision_quality_incomplete": bool(proposal.get("decision_quality_incomplete")),
             "paper_readiness": proposal.get("paper_readiness")
             or default_paper_field_defaults()["paper_readiness"],
+            "previous_watch_context_injected": bool(previous_watch_context),
+            "previous_watch_rechecked": proposal.get("previous_watch_rechecked"),
+            "entry_trigger_rechecked": proposal.get("entry_trigger_rechecked"),
+            "entry_trigger_status": proposal.get("entry_trigger_status"),
+            "invalidation_status": proposal.get("invalidation_status"),
+            "mae_status": proposal.get("mae_status"),
+            "context_continuity_status": proposal.get("context_continuity_status"),
+            "direction_collapse_allowed": proposal.get("direction_collapse_allowed"),
+            "direction_collapse_reason": proposal.get("direction_collapse_reason"),
+            "followup_continuation_status": proposal.get("followup_continuation_status"),
+            "confirmation_failure_reason": proposal.get("confirmation_failure_reason"),
+            "collapse_reason": proposal.get("collapse_reason"),
         }
         for paper_key, paper_val in default_paper_field_defaults().items():
             if paper_key not in row:

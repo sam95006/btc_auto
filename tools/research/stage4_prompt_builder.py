@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 from typing import Any, Dict, List
 
 SYSTEM_PROMPT = """You are a Stage 4 trading decision assistant for Bybit demo/testnet research only.
@@ -108,7 +109,50 @@ Correct output (choose one):
 - soft_skip or hard_skip with clear why_skip
 - OR candidate_side=BUY + entry_trigger (type != none) + invalidation + mae_risk_estimate_pct within symbol cap
 
-Provider-specific strict output rules (Stage 4.18-N) are injected per provider at call time."""
+Provider-specific strict output rules (Stage 4.18-N) are injected per provider at call time.
+
+Follow-up confirmation rules (Stage 4.18-P2D) — when previous_watch_context is present:
+- This tick is a watchlist FOLLOW-UP confirmation, not a fresh blank-slate decision.
+- MUST recheck previous_watch_context: entry_trigger, invalidation, mae_risk_estimate_pct, directional_bias, candidate_side, market_context continuity.
+- Set previous_watch_rechecked=true and entry_trigger_rechecked=true in the JSON output.
+- entry_trigger_status: confirmed|pending|failed|unknown
+- invalidation_status: intact|breached|unknown
+- mae_status: within_cap|breached|unknown
+- context_continuity_status: stable|improved|degraded|unknown
+- followup_continuation_status: confirmed|pending|failed|blocked
+- Do NOT hard_skip to NONE/NONE solely because this is a new tick.
+- If context is stable/improved AND invalidation intact AND MAE within_cap AND no major new risk_factors:
+  do NOT collapse LONG/BUY → NONE/NONE. Prefer decision_intent=watch (continuation_watch / confirmation_pending)
+  OR soft_skip while RETAINING previous directional_bias + candidate_side, with an explicit why_skip.
+- direction_collapse_allowed=true ONLY when at least one is true: invalidation_breached, mae_breached,
+  regime_reversal, data_quality_degraded, entry_trigger_failed, major_risk_factor_added.
+- If collapsing direction to NONE/NONE, set direction_collapse_reason to one of those explicit reasons.
+- Confidence must NOT drop from a valid watch (e.g. 0.55) to 0.0 without collapse_reason / confidence_reason explaining why.
+- Do NOT force ETH watch when direction truly reversed; do NOT loosen MAE caps or confidence floors."""
+
+# Exported markers for Stage 4.18-P2D static review / tests (must stay in sync with SYSTEM_PROMPT).
+FOLLOWUP_CONFIRMATION_MARKERS = (
+    "previous_watch_rechecked",
+    "entry_trigger_rechecked",
+    "entry_trigger_status",
+    "invalidation_status",
+    "mae_status",
+    "context_continuity_status",
+    "direction_collapse_allowed",
+    "direction_collapse_reason",
+    "followup_continuation_status",
+    "collapse_reason",
+    "continuation_watch",
+    "confirmation_pending",
+)
+
+FOLLOWUP_USER_INSTRUCTIONS = [
+    "Stage 4.18-P2D FOLLOW-UP: previous_watch_context is active — recheck entry_trigger, invalidation, MAE, bias/side, context continuity.",
+    "Set previous_watch_rechecked=true, entry_trigger_rechecked=true, and fill entry_trigger_status / invalidation_status / mae_status / context_continuity_status.",
+    "If context stable/improved and invalidation/MAE not breached: do NOT hard_skip NONE/NONE; use watch (confirmation_pending) or soft_skip retaining prior bias/side.",
+    "Direction collapse LONG/BUY→NONE/NONE requires direction_collapse_allowed with explicit reason (invalidation_breached|mae_breached|regime_reversal|data_quality_degraded|entry_trigger_failed|major_risk_factor_added).",
+    "Confidence collapse to ~0.0 requires collapse_reason / confidence_reason; unexplained 0.55→0.0 is forbidden.",
+]
 
 GROQ_STRICT_OUTPUT_RULE = """GROQ STRICT OUTPUT RULE:
 For any watch or enter_candidate, candidate_side must not be NONE.
@@ -176,6 +220,18 @@ SCHEMA_FIELD_NAMES = (
     "mfe_potential_estimate_pct",
     "risk_reward_estimate",
     "paper_readiness",
+    # Stage 4.18-P2D follow-up diagnostics (optional; required when previous_watch_context present)
+    "previous_watch_rechecked",
+    "entry_trigger_rechecked",
+    "entry_trigger_status",
+    "invalidation_status",
+    "mae_status",
+    "context_continuity_status",
+    "direction_collapse_allowed",
+    "direction_collapse_reason",
+    "followup_continuation_status",
+    "confirmation_failure_reason",
+    "collapse_reason",
 )
 
 
@@ -243,7 +299,88 @@ OUTPUT_SCHEMA_HINT = {
         "eligible_for_hypothetical_entry": "bool",
         "block_reason": "string",
     },
+    "previous_watch_rechecked": "bool (required on follow-up)",
+    "entry_trigger_rechecked": "bool (required on follow-up)",
+    "entry_trigger_status": "confirmed|pending|failed|unknown",
+    "invalidation_status": "intact|breached|unknown",
+    "mae_status": "within_cap|breached|unknown",
+    "context_continuity_status": "stable|improved|degraded|unknown",
+    "direction_collapse_allowed": "bool",
+    "direction_collapse_reason": "string",
+    "followup_continuation_status": "confirmed|pending|failed|blocked",
+    "confirmation_failure_reason": "string",
+    "collapse_reason": "string (required if confidence collapses near 0)",
 }
+
+
+def build_previous_watch_context(decision: Dict[str, Any] | None) -> Dict[str, Any] | None:
+    """Slim prior watch decision into prompt-safe previous_watch_context."""
+    if not isinstance(decision, dict):
+        return None
+    intent = str(
+        decision.get("decision_intent")
+        or decision.get("intent")
+        or decision.get("final_decision")
+        or ""
+    ).strip().lower()
+    if intent not in {"watch", "valid_watch", "enter_candidate"}:
+        return None
+    bias = str(decision.get("directional_bias") or decision.get("bias") or "").strip().upper()
+    side = str(decision.get("candidate_side") or "").strip().upper()
+    if bias in {"", "NONE"} and side in {"", "NONE"}:
+        return None
+    mc = decision.get("market_context")
+    if not isinstance(mc, dict):
+        mc = {}
+    return {
+        "symbol": str(decision.get("symbol") or "").upper(),
+        "decision_id": decision.get("decision_id"),
+        "provider": decision.get("provider"),
+        "decision_intent": intent,
+        "directional_bias": bias or ("LONG" if side == "BUY" else "SHORT" if side == "SELL" else "NONE"),
+        "candidate_side": side or ("BUY" if bias == "LONG" else "SELL" if bias == "SHORT" else "NONE"),
+        "confidence": decision.get("confidence"),
+        "entry_trigger": decision.get("entry_trigger"),
+        "invalidation": decision.get("invalidation"),
+        "mae_risk_estimate_pct": decision.get("mae_risk_estimate_pct"),
+        "market_context": slim_market_context(mc),
+    }
+
+
+def load_previous_watch_context_from_jsonl(
+    output_dir: str | Path | None,
+    symbol: str,
+) -> Dict[str, Any] | None:
+    """Read last same-symbol watch/enter_candidate from ai_decisions.jsonl (if present)."""
+    if not output_dir:
+        return None
+    path = Path(output_dir) / "ai_decisions.jsonl"
+    if not path.is_file():
+        return None
+    sym = str(symbol or "").upper()
+    last_watch: Dict[str, Any] | None = None
+    try:
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(row, dict):
+                continue
+            if str(row.get("symbol") or "").upper() != sym:
+                continue
+            # Skip shadow rows if flagged
+            if row.get("shadow") or row.get("is_shadow") or str(row.get("lane") or "").lower() == "shadow":
+                continue
+            ctx = build_previous_watch_context(row)
+            if ctx:
+                last_watch = ctx
+    except OSError:
+        return None
+    return last_watch
 
 
 def build_decision_prompt(
@@ -257,9 +394,32 @@ def build_decision_prompt(
     safety_constraints: Dict[str, Any],
     current_open_positions: int,
     stage3_context: Dict[str, Any] | None = None,
+    previous_watch_context: Dict[str, Any] | None = None,
 ) -> List[Dict[str, str]]:
     s3 = stage3_context or {}
-    user_payload = {
+    instructions = [
+        "Classify decision_intent and calibrate confidence by intent band.",
+        "Respect blocking patches; list data gaps in missing_data when quality is partial.",
+        "For watch: set directional_bias, candidate_side (BUY/SELL), entry_trigger (type != none), watch_confirmation_reason, invalidation, mae_risk_estimate_pct.",
+        "LONG bias → candidate_side=BUY; SHORT bias → candidate_side=SELL; never bias with NONE side.",
+        "Watch requires entry_trigger + invalidation — entry_trigger.type=none is invalid for watch.",
+        "For enter_candidate: require candidate_side, directional_bias, entry_trigger, invalidation, mae_risk_estimate_pct, risk_reward_estimate.",
+        "If direction unclear, use soft_skip/hard_skip — never enter_candidate with NONE side.",
+        "Stage 4.18-H/I: MAE = invalidation distance from reference_price to invalidation_price, not ATR/vol.",
+        "mae_risk_estimate_pct is percent (0.25 = 0.25%); must be <= invalidation.max_adverse_move_pct.",
+        "BTC/ETH: watch survival <=0.28%, graduation <=0.35%; above 0.35% → soft_skip/hard_skip.",
+        "SOL cap 0.25%; PEPE cap 0.20%; do not deflate MAE to pass caps — skip instead.",
+        "ETH watch: tie MAE to invalidation distance; 0.28–0.35% watch needs watch_followup_required=true.",
+        "BTC: if bias clear, side set, MAE<=0.35%, conf>=0.40 → paper-ready watch; do not over-skip.",
+        "PEPE high vol → soft_skip; SOL/PEPE never deflate MAE for graduation.",
+        "If MAE too high: paper_readiness.eligible_for_watchlist=false, block_reason=mae_risk_too_high.",
+        "Stage 4.18-M: structured contract — side+trigger+invalidation+MAE required for watch; else soft_skip/hard_skip.",
+        "candidate_side NONE only for skip intents; LONG→BUY, SHORT→SELL; entry_trigger.type=none is invalid.",
+    ]
+    prev = previous_watch_context if isinstance(previous_watch_context, dict) and previous_watch_context else None
+    if prev:
+        instructions.extend(FOLLOWUP_USER_INSTRUCTIONS)
+    user_payload: Dict[str, Any] = {
         "task": "stage4_dry_run_decision",
         "symbol": symbol.upper(),
         "market_context": slim_market_context(market_context),
@@ -272,26 +432,12 @@ def build_decision_prompt(
         "safety_constraints": safety_constraints,
         "current_open_positions": current_open_positions,
         "required_output_schema": OUTPUT_SCHEMA_HINT,
-        "instructions": [
-            "Classify decision_intent and calibrate confidence by intent band.",
-            "Respect blocking patches; list data gaps in missing_data when quality is partial.",
-            "For watch: set directional_bias, candidate_side (BUY/SELL), entry_trigger (type != none), watch_confirmation_reason, invalidation, mae_risk_estimate_pct.",
-            "LONG bias → candidate_side=BUY; SHORT bias → candidate_side=SELL; never bias with NONE side.",
-            "Watch requires entry_trigger + invalidation — entry_trigger.type=none is invalid for watch.",
-            "For enter_candidate: require candidate_side, directional_bias, entry_trigger, invalidation, mae_risk_estimate_pct, risk_reward_estimate.",
-            "If direction unclear, use soft_skip/hard_skip — never enter_candidate with NONE side.",
-            "Stage 4.18-H/I: MAE = invalidation distance from reference_price to invalidation_price, not ATR/vol.",
-            "mae_risk_estimate_pct is percent (0.25 = 0.25%); must be <= invalidation.max_adverse_move_pct.",
-            "BTC/ETH: watch survival <=0.28%, graduation <=0.35%; above 0.35% → soft_skip/hard_skip.",
-            "SOL cap 0.25%; PEPE cap 0.20%; do not deflate MAE to pass caps — skip instead.",
-            "ETH watch: tie MAE to invalidation distance; 0.28–0.35% watch needs watch_followup_required=true.",
-            "BTC: if bias clear, side set, MAE<=0.35%, conf>=0.40 → paper-ready watch; do not over-skip.",
-            "PEPE high vol → soft_skip; SOL/PEPE never deflate MAE for graduation.",
-            "If MAE too high: paper_readiness.eligible_for_watchlist=false, block_reason=mae_risk_too_high.",
-            "Stage 4.18-M: structured contract — side+trigger+invalidation+MAE required for watch; else soft_skip/hard_skip.",
-            "candidate_side NONE only for skip intents; LONG→BUY, SHORT→SELL; entry_trigger.type=none is invalid.",
-        ],
+        "instructions": instructions,
     }
+    if prev:
+        user_payload["previous_watch_context"] = prev
+        user_payload["followup_confirmation_mode"] = True
+        user_payload["task"] = "stage4_dry_run_followup_confirmation"
     return [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False)},
