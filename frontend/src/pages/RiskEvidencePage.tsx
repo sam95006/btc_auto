@@ -1,10 +1,15 @@
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
-import { getRiskEvidenceFlags, getSafetyStatus } from "../demo/nexusDataAdapter";
+import {
+  getRiskEvidenceFlags,
+  getSafetyStatus,
+  getStage419Status,
+} from "../demo/nexusDataAdapter";
 
 export function RiskEvidencePage() {
   const f = getRiskEvidenceFlags();
   const safety = getSafetyStatus();
+  const stage419 = getStage419Status();
 
   return (
     <div>
@@ -13,7 +18,8 @@ export function RiskEvidencePage() {
         <DemoDataBadge />
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
-          Safety flags only — no ARM or order controls. Private Operator read-only.
+          Safety flags only — no order / no ARM / no production controls. Private Operator
+          read-only. Stage 4.19 start button absent (forbidden).
         </p>
       </header>
       <div className="flag-grid">
@@ -46,6 +52,10 @@ export function RiskEvidencePage() {
           <div className="v">{String(f.shouldStart419)}</div>
         </div>
         <div className="flag-item">
+          <div className="k">Stage 4.19</div>
+          <div className="v">{stage419.blocked ? "blocked" : "open"}</div>
+        </div>
+        <div className="flag-item">
           <div className="k">validator</div>
           <div className="v">{f.validatorStatus}</div>
         </div>
@@ -67,9 +77,11 @@ export function RiskEvidencePage() {
         </div>
       </div>
       <p className="muted" style={{ marginTop: "1rem" }}>
-        {f.safetyLogSummary}
+        No order · No ARM · No production · should_start_419={String(safety.shouldStart419)}
       </p>
+      <p className="muted">{f.safetyLogSummary}</p>
       <p className="muted">{safety.summary}</p>
+      <p className="muted">{stage419.reason}</p>
     </div>
   );
 }

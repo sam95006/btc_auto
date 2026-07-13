@@ -12,8 +12,8 @@ export function MembershipPage() {
         <h1>Membership Center</h1>
         <DemoDataBadge />
         <p className="page-sub">
-          Future Public SaaS architecture labels only. {op.publicSaas}. Private Operator Mode is
-          the active product surface — not a customer membership product.
+          Future only / customer SaaS not implemented. {op.publicSaas}. Private Operator Mode is
+          the active product surface — not a customer membership product. No billing.
         </p>
       </header>
 
@@ -21,6 +21,8 @@ export function MembershipPage() {
         <span className="operator-banner-label">Future Public SaaS</span>
         <span className="operator-banner-sep">·</span>
         <span>Future only / Not implemented / No billing</span>
+        <span className="operator-banner-sep">·</span>
+        <span>customer SaaS not implemented</span>
         <DemoDataBadge />
       </div>
 
@@ -33,6 +35,7 @@ export function MembershipPage() {
             </div>
             <p className="future-tier-tag">{t.productBoundary}</p>
             <p>{t.summary}</p>
+            <p className="muted">Customer SaaS not implemented — architecture label only.</p>
             {t.lockedSurfaces.length > 0 ? (
               <>
                 <p className="muted">Locked surfaces (example):</p>

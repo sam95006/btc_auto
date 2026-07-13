@@ -1,6 +1,7 @@
 /**
  * Read-only NEXUS data adapter.
- * MVP-1 Private Operator Dashboard returns demo data only.
+ * MVP-2: switches between demo fixtures and sanitized private_operator_snapshot.
+ * Default mode: private_operator_snapshot.
  * Never writes backend / trading state. No order / ARM / routing APIs.
  */
 import {
@@ -21,7 +22,9 @@ import {
   demoSignals,
   demoStageGateStatus,
   demoSystemStatus,
+  DEMO_SOURCE,
 } from "./demoNexusData";
+import { p2aPrivateOperatorSnapshot } from "./snapshots/p2aPrivateOperatorSnapshot";
 import type {
   EvidenceItem,
   FleetStatus,
@@ -41,20 +44,117 @@ import type {
   StageGateStatus,
   SystemStatus,
 } from "../types/nexus";
+import type {
+  NexusSnapshot,
+  NexusUiMode,
+  SnapshotStage419Status,
+} from "../types/nexusSnapshot";
+
+/** Default UI mode for MVP-2 Private Operator Dashboard. */
+let currentUiMode: NexusUiMode = "private_operator_snapshot";
+
+export function setNexusUiMode(mode: NexusUiMode): void {
+  currentUiMode = mode;
+}
+
+export function getCurrentUiMode(): NexusUiMode {
+  return currentUiMode;
+}
+
+function isSnapshotMode(): boolean {
+  return currentUiMode === "private_operator_snapshot";
+}
+
+export function getPrivateOperatorSnapshot(): NexusSnapshot {
+  return p2aPrivateOperatorSnapshot;
+}
+
+export function getNexusSnapshot(): NexusSnapshot {
+  if (isSnapshotMode()) {
+    return getPrivateOperatorSnapshot();
+  }
+  // Demo mode still exposes a snapshot-shaped view derived from demo fixtures
+  // without inventing a second source of truth for P2A fields.
+  return {
+    ...p2aPrivateOperatorSnapshot,
+    source: DEMO_SOURCE,
+    uiMode: "demo",
+    latestBackendStage: demoStageGateStatus.stageLabel,
+    latestVerdict: demoStageGateStatus.verdict,
+  };
+}
+
+export function getLatestBackendVerdict(): string {
+  if (isSnapshotMode()) {
+    return getPrivateOperatorSnapshot().latestVerdict;
+  }
+  return demoStageGateStatus.verdict;
+}
+
+export function getStage419Status(): SnapshotStage419Status {
+  const snap = isSnapshotMode() ? getPrivateOperatorSnapshot() : null;
+  const ready = false as const;
+  const start = false as const;
+  return {
+    stage419Readiness: ready,
+    shouldStart419: start,
+    blocked: true,
+    reason: snap
+      ? snap.ethStatus.note
+      : demoGraduationStatus.whyBlocked,
+  };
+}
 
 export function getSystemStatus(): SystemStatus {
+  if (isSnapshotMode()) {
+    const s = getPrivateOperatorSnapshot();
+    return {
+      demo: false,
+      source: s.source,
+      ...s.systemStatus,
+    };
+  }
   return demoSystemStatus;
 }
 
 export function getStageGateStatus(): StageGateStatus {
+  if (isSnapshotMode()) {
+    const s = getPrivateOperatorSnapshot();
+    return {
+      demo: false,
+      source: s.source,
+      ...s.stageGate,
+    };
+  }
   return demoStageGateStatus;
 }
 
 export function getProviderStatus(): ProviderStatusSummary {
+  if (isSnapshotMode()) {
+    const r = getPrivateOperatorSnapshot().providerRoutingStatus;
+    return {
+      demo: false,
+      source: getPrivateOperatorSnapshot().source,
+      actualPrimary: r.actualPrimary,
+      shadowPrimary: r.shadowPrimary,
+      btcExperimentChain: r.btcExperimentChain,
+      ethRoutingUnchanged: r.ethRoutingUnchanged,
+      health: r.health,
+      note: r.note,
+    };
+  }
   return demoProviderStatus;
 }
 
 export function getLatestReports(): LatestReportMeta[] {
+  if (isSnapshotMode()) {
+    const s = getPrivateOperatorSnapshot();
+    return s.reports.map((r) => ({
+      demo: false,
+      source: s.source,
+      ...r,
+    }));
+  }
   return demoLatestReports;
 }
 
@@ -68,14 +168,48 @@ export function getEvidence(): EvidenceItem[] {
 }
 
 export function getGraduationStatus(): GraduationStatusSummary {
+  if (isSnapshotMode()) {
+    const s = getPrivateOperatorSnapshot();
+    return {
+      demo: false,
+      source: s.source,
+      btcGraduationCount: s.btcStatus.actualGraduationCount,
+      ethGraduationCount: s.ethStatus.actualGraduationCount,
+      shadowExcludedFromGraduation: true,
+      actualOnly: true,
+      stage419Readiness: false,
+      shouldStart419: false,
+      whyBlocked: s.ethStatus.note,
+    };
+  }
   return demoGraduationStatus;
 }
 
 export function getSafetyStatus(): SafetyStatusSummary {
+  if (isSnapshotMode()) {
+    const s = getPrivateOperatorSnapshot();
+    return {
+      demo: false,
+      source: s.source,
+      ...s.safetyStatus,
+    };
+  }
   return demoSafetyStatus;
 }
 
 export function getPrivateOperatorMode(): PrivateOperatorMode {
+  if (isSnapshotMode()) {
+    const s = getPrivateOperatorSnapshot();
+    return {
+      demo: false,
+      source: s.source,
+      enabled: true,
+      label: "Private Operator Mode ON",
+      audience: "Internal operators / researchers only",
+      publicSaas: "Future only / Not implemented / No billing",
+      readOnly: true,
+    };
+  }
   return demoPrivateOperatorMode;
 }
 
@@ -98,10 +232,48 @@ export function getReflectionSummary(): ReflectionSummary {
 }
 
 export function getProviderShadowSummary(): ProviderShadowSummary {
+  if (isSnapshotMode()) {
+    const s = getPrivateOperatorSnapshot();
+    const p = s.providerShadowStatus;
+    return {
+      demo: false,
+      source: s.source,
+      actualProvider: p.actualProvider,
+      shadowProvider: p.shadowProvider,
+      divergence: p.divergence,
+      comparable: p.comparable,
+      notes: p.notes,
+      shadowExcludedFromPaper: true,
+      shadowExcludedFromCalibration: true,
+      shadowExcludedFromGraduation: true,
+      mustNotAffectStage419: true,
+      p1cSummary: p.p1cSummary,
+      p2DesignSummary: p.p2DesignSummary,
+      p2r1Summary: p.p2r1Summary,
+    };
+  }
   return demoProviderShadow;
 }
 
 export function getPaperLabSummary(): PaperLabSummary {
+  if (isSnapshotMode()) {
+    const s = getPrivateOperatorSnapshot();
+    const p = s.paperLabStatus;
+    return {
+      demo: false,
+      source: s.source,
+      wouldEnterCount: p.wouldEnterCount,
+      wouldSkipCount: p.wouldSkipCount,
+      watchlistCount: p.watchlistCount,
+      calibrationStatus: p.calibrationStatus,
+      graduationStatus: p.graduationStatus,
+      btcGraduationCount: p.btcGraduationCount,
+      ethGraduationCount: p.ethGraduationCount,
+      stage419Blocked: true,
+      whyNotGraduated: p.whyNotGraduated,
+      paperLoggerStatus: p.paperLoggerStatus,
+    };
+  }
   return demoPaperLab;
 }
 
@@ -114,5 +286,27 @@ export function getRoundTable(): RoundTableSummary {
 }
 
 export function getRiskEvidenceFlags(): RiskEvidenceFlags {
+  if (isSnapshotMode()) {
+    const s = getPrivateOperatorSnapshot();
+    const safety = s.safetyStatus;
+    const grad = getGraduationStatus();
+    return {
+      demo: false,
+      source: s.source,
+      orderAllowed: false,
+      mock: false,
+      arm: false,
+      production: false,
+      paperExecution: false,
+      stage419Readiness: false,
+      shouldStart419: false,
+      validatorStatus: "PASS (sanitized snapshot)",
+      calibrationStatus: `actual-only · BTC=${grad.btcGraduationCount} ETH=${grad.ethGraduationCount}`,
+      graduationStatus: `BTC=${grad.btcGraduationCount} ETH=${grad.ethGraduationCount} · Stage 4.19 blocked`,
+      providerHealth: s.providerRoutingStatus.health,
+      resetStatus: "experiment flags not persisted as permanent routing",
+      safetyLogSummary: safety.summary,
+    };
+  }
   return demoRiskFlags;
 }

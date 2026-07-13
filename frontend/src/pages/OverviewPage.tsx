@@ -1,11 +1,16 @@
 import { MarketStatusCard } from "../components/MarketStatusCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import {
+  getCurrentUiMode,
+  getGraduationStatus,
+  getLatestBackendVerdict,
   getLatestReports,
   getMarketOverview,
+  getNexusSnapshot,
   getPrivateOperatorMode,
   getRoundTable,
   getSafetyStatus,
+  getStage419Status,
   getStageGateStatus,
 } from "../demo/nexusDataAdapter";
 
@@ -16,6 +21,11 @@ export function OverviewPage() {
   const gate = getStageGateStatus();
   const safety = getSafetyStatus();
   const reports = getLatestReports();
+  const snap = getNexusSnapshot();
+  const grad = getGraduationStatus();
+  const stage419 = getStage419Status();
+  const uiMode = getCurrentUiMode();
+  const latestVerdict = getLatestBackendVerdict();
 
   return (
     <div>
@@ -32,8 +42,8 @@ export function OverviewPage() {
         <h1>Private Operator Dashboard</h1>
         <DemoDataBadge />
         <p className="page-sub">
-          Read-only research overview. Latest gate: Stage 4.18-P2-R1 PARTIAL_BTC_ONLY · P2A pending.
-          Not investment advice.
+          Read-only research overview · UI mode: {uiMode} · Source: {snap.source}. Not investment
+          advice.
         </p>
       </header>
 
@@ -44,6 +54,12 @@ export function OverviewPage() {
             <DemoDataBadge />
           </div>
           <p className="mono">
+            latestBackendStage: {snap.latestBackendStage}
+          </p>
+          <p className="mono">
+            latestVerdict: {latestVerdict}
+          </p>
+          <p className="mono">
             {gate.stageLabel} · {gate.verdict}
           </p>
           <p>
@@ -51,6 +67,35 @@ export function OverviewPage() {
           </p>
           <p className="muted">{gate.latestGate}</p>
           <p className="muted">{gate.note}</p>
+        </section>
+
+        <section className="panel-card operator-card">
+          <div className="meta-row" style={{ marginTop: 0 }}>
+            <h3 style={{ margin: 0 }}>Graduation (actual-only)</h3>
+            <DemoDataBadge />
+          </div>
+          <div className="flag-grid">
+            <div className="flag-item">
+              <div className="k">BTC graduation</div>
+              <div className="v">{grad.btcGraduationCount}</div>
+            </div>
+            <div className="flag-item">
+              <div className="k">ETH graduation</div>
+              <div className="v">{grad.ethGraduationCount}</div>
+            </div>
+            <div className="flag-item">
+              <div className="k">Stage 4.19</div>
+              <div className="v">{stage419.blocked ? "blocked" : "open"}</div>
+            </div>
+            <div className="flag-item">
+              <div className="k">should_start_419</div>
+              <div className="v">{String(stage419.shouldStart419)}</div>
+            </div>
+          </div>
+          <p className="muted" style={{ marginTop: "0.75rem" }}>
+            BTC: {snap.btcStatus.statusLabel} · ETH: {snap.ethStatus.statusLabel}
+            {snap.ethStatus.rootCause ? ` · root cause=${snap.ethStatus.rootCause}` : ""}
+          </p>
         </section>
 
         <section className="panel-card operator-card">

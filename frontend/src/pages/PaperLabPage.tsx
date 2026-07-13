@@ -1,10 +1,16 @@
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
-import { getGraduationStatus, getPaperLabSummary } from "../demo/nexusDataAdapter";
+import {
+  getGraduationStatus,
+  getNexusSnapshot,
+  getPaperLabSummary,
+} from "../demo/nexusDataAdapter";
 
 export function PaperLabPage() {
   const p = getPaperLabSummary();
   const g = getGraduationStatus();
+  const snap = getNexusSnapshot();
+  const paper = snap.paperLabStatus;
 
   return (
     <div>
@@ -13,8 +19,8 @@ export function PaperLabPage() {
         <DemoDataBadge />
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
-          Read-only would_enter / would_skip counts. Actual-only graduation. Stage 4.19 blocked.
-          No paper execution from UI.
+          Read-only would_enter / would_skip counts. BTC passed / ETH blocked. Stage 4.19 blocked.
+          Next diagnostic: P2B ETH confirmation diagnostics. No paper execution from UI.
         </p>
       </header>
       <div className="flag-grid">
@@ -33,6 +39,14 @@ export function PaperLabPage() {
         <div className="flag-item">
           <div className="k">calibration</div>
           <div className="v">{p.calibrationStatus}</div>
+        </div>
+        <div className="flag-item">
+          <div className="k">BTC status</div>
+          <div className="v">{paper.btcPassed ? "passed" : "blocked"}</div>
+        </div>
+        <div className="flag-item">
+          <div className="k">ETH status</div>
+          <div className="v">{paper.ethBlocked ? "blocked" : "open"}</div>
         </div>
         <div className="flag-item">
           <div className="k">BTC graduation</div>
@@ -62,9 +76,16 @@ export function PaperLabPage() {
           <div className="k">paper logger</div>
           <div className="v">{p.paperLoggerStatus}</div>
         </div>
+        <div className="flag-item">
+          <div className="k">next diagnostic</div>
+          <div className="v">{paper.nextDiagnostic}</div>
+        </div>
       </div>
       <p className="muted" style={{ marginTop: "1rem" }}>
         Why not graduated to Stage 4.19: {p.whyNotGraduated}
+      </p>
+      <p className="muted">
+        Next diagnostic: {paper.nextDiagnostic} (read-only; no Stage 4.19 start).
       </p>
       <p className="muted">{g.whyBlocked}</p>
     </div>
