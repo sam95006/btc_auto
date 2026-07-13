@@ -37,13 +37,13 @@ export function EvidencePage() {
               Triggers: entry={watch?.entryTrigger} · MAE={watch?.mae} · invalidation=
               {watch?.invalidation}
             </p>
-            <p className="muted">Stage 4.18-P2B · valid_watch summary (sanitized)</p>
+            <p className="muted">Stage 4.18-P2C · valid_watch summary (sanitized)</p>
           </article>
 
           <article className="panel-card operator-card">
             <div className="meta-row" style={{ marginTop: 0 }}>
               <h3 style={{ margin: 0 }}>ETH Follow-up Evidence</h3>
-              <span className="demo-badge">SANITIZED</span>
+              <span className="demo-badge">SYSTEM ISSUE</span>
               <DemoDataBadge />
             </div>
             <p className="mono">
@@ -53,14 +53,38 @@ export function EvidencePage() {
             </p>
             <p className="muted">
               Confirmation failed ·{" "}
-              {ethTimeline.failureReason || "eth_followup_direction_changed"} ·{" "}
-              {ethTimeline.ethDetail || "LONG/BUY → NONE/NONE"}
+              {ethTimeline.failureReason || "confirmation_prompt_too_strict"} ·{" "}
+              {ethTimeline.ethDetail || "LONG/BUY → NONE/NONE without market reversal"}
             </p>
             <p className="muted">
               invalidation_breached={String(ethTimeline.invalidationBreached)} · mae_breached=
-              {String(ethTimeline.maeBreached)} · next={ethTimeline.nextStep}
+              {String(ethTimeline.maeBreached)} · market_valid=
+              {String(ethTimeline.confirmationFailureIsMarketValid ?? false)} · system_issue=
+              {String(ethTimeline.confirmationFailureIsSystemIssue ?? true)} · next=
+              {ethTimeline.nextStep}
             </p>
           </article>
+
+          {ethTimeline.marketContextDelta ? (
+            <article className="panel-card operator-card">
+              <div className="meta-row" style={{ marginTop: 0 }}>
+                <h3 style={{ margin: 0 }}>ETH Market Context Delta</h3>
+                <span className="demo-badge">NOT MARKET REVERSAL</span>
+                <DemoDataBadge />
+              </div>
+              <p className="mono">
+                price_change_pct={ethTimeline.marketContextDelta.priceChangePct} · regime{" "}
+                {ethTimeline.marketContextDelta.regimeBefore}→
+                {ethTimeline.marketContextDelta.regimeAfter}
+              </p>
+              <p className="muted">
+                trend_strength {ethTimeline.marketContextDelta.trendStrengthBefore}→
+                {ethTimeline.marketContextDelta.trendStrengthAfter} · data_quality{" "}
+                {ethTimeline.marketContextDelta.dataQualityBefore}→
+                {ethTimeline.marketContextDelta.dataQualityAfter}
+              </p>
+            </article>
+          ) : null}
         </div>
       ) : null}
 

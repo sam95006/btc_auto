@@ -17,8 +17,12 @@ export function RiskEvidencePage() {
   const failureReason =
     ethTimeline?.failureReason ??
     snap.ethStatus.confirmationFailureReason ??
-    "eth_followup_direction_changed";
-  const ethDetail = ethTimeline?.ethDetail ?? snap.ethStatus.ethDetail ?? "LONG/BUY → NONE/NONE";
+    "confirmation_prompt_too_strict";
+  const ethDetail =
+    ethTimeline?.ethDetail ??
+    snap.ethStatus.ethDetail ??
+    "LONG/BUY → NONE/NONE without market reversal";
+  const delta = ethTimeline?.marketContextDelta;
 
   return (
     <div>
@@ -88,8 +92,9 @@ export function RiskEvidencePage() {
 
       <section className="panel-card operator-card" style={{ marginTop: "1.25rem" }}>
         <div className="meta-row" style={{ marginTop: 0 }}>
-          <h3 style={{ margin: 0 }}>ETH Follow-up Failure Risk</h3>
-          <span className="demo-badge">SANITIZED</span>
+          <h3 style={{ margin: 0 }}>ETH Confirmation System Issue</h3>
+          <span className="demo-badge">SYSTEM ISSUE</span>
+          <span className="demo-badge">NOT MARKET REVERSAL</span>
           <DemoDataBadge />
         </div>
         <p>
@@ -97,6 +102,18 @@ export function RiskEvidencePage() {
         </p>
         <p className="mono">Direction collapse: {ethDetail}</p>
         <div className="flag-grid" style={{ marginTop: "0.75rem" }}>
+          <div className="flag-item">
+            <div className="k">confirmation_failure_is_market_valid</div>
+            <div className="v">
+              {String(ethTimeline?.confirmationFailureIsMarketValid ?? false)}
+            </div>
+          </div>
+          <div className="flag-item">
+            <div className="k">confirmation_failure_is_system_issue</div>
+            <div className="v">
+              {String(ethTimeline?.confirmationFailureIsSystemIssue ?? true)}
+            </div>
+          </div>
           <div className="flag-item">
             <div className="k">invalidation_breached</div>
             <div className="v">
@@ -116,8 +133,17 @@ export function RiskEvidencePage() {
             <div className="v">hard_skip</div>
           </div>
         </div>
+        {delta ? (
+          <p className="muted" style={{ marginTop: "0.75rem" }}>
+            Context delta: price={delta.priceChangePct}% · regime {delta.regimeBefore}→
+            {delta.regimeAfter} · trend_strength {delta.trendStrengthBefore}→
+            {delta.trendStrengthAfter} · data_quality {delta.dataQualityBefore}→
+            {delta.dataQualityAfter}
+          </p>
+        ) : null}
         <p className="muted" style={{ marginTop: "0.75rem" }}>
-          No MAE breach · No invalidation breach · ETH graduation remains 0 · Stage 4.19 blocked
+          No MAE breach · No invalidation breach · Not market reversal · System issue · ETH
+          graduation remains 0 · Stage 4.19 blocked
         </p>
       </section>
 

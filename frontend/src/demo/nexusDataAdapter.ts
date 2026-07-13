@@ -1,6 +1,6 @@
 /**
  * Read-only NEXUS data adapter.
- * MVP-3: defaults to sanitized P2B private_operator_snapshot (prefers P2B over P2A).
+ * MVP-4: defaults to sanitized P2C private_operator_snapshot (prefers P2C over P2B/P2A).
  * Never writes backend / trading state. No order / ARM / routing APIs.
  */
 import {
@@ -25,6 +25,7 @@ import {
 } from "./demoNexusData";
 import { p2aPrivateOperatorSnapshot } from "./snapshots/p2aPrivateOperatorSnapshot";
 import { p2bPrivateOperatorSnapshot } from "./snapshots/p2bPrivateOperatorSnapshot";
+import { p2cPrivateOperatorSnapshot } from "./snapshots/p2cPrivateOperatorSnapshot";
 import type {
   EvidenceItem,
   FleetStatus,
@@ -54,9 +55,11 @@ import type {
 /** Default UI mode for Private Operator Dashboard. */
 let currentUiMode: NexusUiMode = "private_operator_snapshot";
 
-/** Prefer P2B over P2A when both sanitized snapshots are available. */
+/** Prefer P2C over P2B/P2A when sanitized snapshots are available. */
 const ACTIVE_PRIVATE_OPERATOR_SNAPSHOT: NexusSnapshot =
-  p2bPrivateOperatorSnapshot ?? p2aPrivateOperatorSnapshot;
+  p2cPrivateOperatorSnapshot ??
+  p2bPrivateOperatorSnapshot ??
+  p2aPrivateOperatorSnapshot;
 
 export function setNexusUiMode(mode: NexusUiMode): void {
   currentUiMode = mode;
@@ -134,7 +137,7 @@ export function getStageGateStatus(): StageGateStatus {
       source: s.source,
       stageLabel: g.stageLabel,
       verdict: g.verdict,
-      p2aStatus: g.p2bStatus ?? g.p2aStatus,
+      p2aStatus: g.p2cStatus ?? g.p2bStatus ?? g.p2aStatus,
       latestGate: g.latestGate,
       note: g.note,
     };

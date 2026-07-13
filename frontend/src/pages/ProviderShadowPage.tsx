@@ -78,7 +78,7 @@ export function ProviderShadowPage() {
           </div>
           <p className="muted" style={{ marginTop: "0.75rem" }}>
             Experiment-only (default-off). Must not imply permanent Cerebras-first production
-            routing.
+            routing. Permanent routing change still unsupported after P2C.
           </p>
         </article>
 

@@ -71,6 +71,11 @@ export function EthConfirmationTimelineCard({
 }) {
   const w = timeline.watch;
   const f = timeline.followup;
+  const delta = timeline.marketContextDelta;
+  const systemIssue = timeline.confirmationFailureIsSystemIssue !== false;
+  const notMarket =
+    timeline.confirmationFailureIsMarketValid === false ||
+    timeline.failureReason === "confirmation_prompt_too_strict";
 
   return (
     <section className="panel-card" style={{ marginTop: "1.25rem" }}>
@@ -84,6 +89,11 @@ export function EthConfirmationTimelineCard({
       <p className="muted">
         Sanitized snapshot · READ ONLY · NOT INVESTMENT ADVICE · No live trading
       </p>
+
+      <div className="meta-row" style={{ marginTop: "0.5rem", gap: "0.5rem", flexWrap: "wrap" }}>
+        {systemIssue ? <span className="demo-badge">SYSTEM ISSUE</span> : null}
+        {notMarket ? <span className="demo-badge">NOT MARKET REVERSAL</span> : null}
+      </div>
 
       <div className="operator-card-grid" style={{ marginTop: "0.75rem" }}>
         <TickBlock
@@ -110,6 +120,39 @@ export function EthConfirmationTimelineCard({
         />
       </div>
 
+      {delta ? (
+        <div className="panel-card operator-card" style={{ marginTop: "0.75rem" }}>
+          <div className="meta-row" style={{ marginTop: 0 }}>
+            <h3 style={{ margin: 0 }}>Market Context Delta</h3>
+            <DemoDataBadge />
+          </div>
+          <div className="flag-grid">
+            <div className="flag-item">
+              <div className="k">price_change_pct</div>
+              <div className="v">{delta.priceChangePct}</div>
+            </div>
+            <div className="flag-item">
+              <div className="k">regime</div>
+              <div className="v">
+                {delta.regimeBefore} → {delta.regimeAfter}
+              </div>
+            </div>
+            <div className="flag-item">
+              <div className="k">trend_strength</div>
+              <div className="v">
+                {delta.trendStrengthBefore} → {delta.trendStrengthAfter}
+              </div>
+            </div>
+            <div className="flag-item">
+              <div className="k">data_quality</div>
+              <div className="v">
+                {delta.dataQualityBefore} → {delta.dataQualityAfter}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="panel-card operator-card" style={{ marginTop: "0.75rem" }}>
         <div className="meta-row" style={{ marginTop: 0 }}>
           <h3 style={{ margin: 0 }}>Conclusion</h3>
@@ -118,12 +161,12 @@ export function EthConfirmationTimelineCard({
         <p>
           Confirmation failed · reason=
           <span className="mono">
-            {timeline.failureReason || "eth_followup_direction_changed"}
+            {timeline.failureReason || "confirmation_prompt_too_strict"}
           </span>
         </p>
         <p className="mono">
-          ethDetail: {timeline.ethDetail || "LONG/BUY → NONE/NONE"} · follow-up intent=hard_skip ·
-          bias/side=NONE/NONE
+          ethDetail: {timeline.ethDetail || "LONG/BUY → NONE/NONE without market reversal"} ·
+          follow-up intent=hard_skip · bias/side=NONE/NONE
         </p>
         <div className="flag-grid" style={{ marginTop: "0.5rem" }}>
           <div className="flag-item">
@@ -135,15 +178,27 @@ export function EthConfirmationTimelineCard({
             <div className="v">{String(timeline.maeBreached)}</div>
           </div>
           <div className="flag-item">
+            <div className="k">market_valid</div>
+            <div className="v">
+              {String(timeline.confirmationFailureIsMarketValid ?? false)}
+            </div>
+          </div>
+          <div className="flag-item">
+            <div className="k">system_issue</div>
+            <div className="v">
+              {String(timeline.confirmationFailureIsSystemIssue ?? true)}
+            </div>
+          </div>
+          <div className="flag-item">
             <div className="k">next</div>
-            <div className="v">{timeline.nextStep || "P2C market context review"}</div>
+            <div className="v">{timeline.nextStep || "P2D confirmation prompt review"}</div>
           </div>
         </div>
         <p className="muted" style={{ marginTop: "0.75rem" }}>
           {timeline.conclusion}
         </p>
         <p className="muted">
-          Next = P2C market context review · recovery=
+          Next = P2D confirmation prompt review · recovery=
           {timeline.recoveryRecommendation}
         </p>
       </div>

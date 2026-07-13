@@ -32,7 +32,7 @@ export function OverviewPage() {
     snap.ethStatus.confirmationFailureReason ??
     snap.ethStatus.rootCause ??
     ethTimeline?.failureReason ??
-    "eth_followup_direction_changed";
+    "confirmation_prompt_too_strict";
 
   return (
     <div>
@@ -70,8 +70,8 @@ export function OverviewPage() {
             {gate.stageLabel} · {gate.verdict}
           </p>
           <p>
-            <span className="muted">P2B:</span>{" "}
-            {snap.stageGate.p2bStatus ?? gate.p2aStatus}
+            <span className="muted">P2C:</span>{" "}
+            {snap.stageGate.p2cStatus ?? snap.stageGate.p2bStatus ?? gate.p2aStatus}
           </p>
           <p className="muted">{gate.latestGate}</p>
           <p className="muted">{gate.note}</p>

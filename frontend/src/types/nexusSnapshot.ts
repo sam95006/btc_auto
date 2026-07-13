@@ -30,6 +30,7 @@ export interface SnapshotStageGate {
   verdict: string;
   p2aStatus: string;
   p2bStatus?: string;
+  p2cStatus?: string;
   latestGate: string;
   note: string;
 }
@@ -70,6 +71,7 @@ export interface SnapshotProviderShadowStatus {
   p2DesignSummary: string;
   p2r1Summary: string;
   p2bSummary?: string;
+  p2cSummary?: string;
   actualOnlyGraduation: true;
 }
 
@@ -120,6 +122,16 @@ export interface EthConfirmationTick {
   maeBreached: false;
 }
 
+export interface EthMarketContextDelta {
+  priceChangePct: number;
+  regimeBefore: string;
+  regimeAfter: string;
+  trendStrengthBefore: number;
+  trendStrengthAfter: number;
+  dataQualityBefore: string;
+  dataQualityAfter: string;
+}
+
 export interface EthConfirmationTimeline {
   symbol: string;
   confirmationFailed: true;
@@ -127,6 +139,9 @@ export interface EthConfirmationTimeline {
   ethDetail: string;
   invalidationBreached: false;
   maeBreached: false;
+  confirmationFailureIsMarketValid: false;
+  confirmationFailureIsSystemIssue: true;
+  marketContextDelta?: EthMarketContextDelta;
   watch: EthConfirmationTick;
   followup: EthConfirmationTick;
   conclusion: string;

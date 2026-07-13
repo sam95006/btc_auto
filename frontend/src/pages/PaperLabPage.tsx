@@ -23,7 +23,8 @@ export function PaperLabPage() {
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
           Read-only would_enter / would_skip counts. BTC passed / ETH blocked. Stage 4.19 blocked.
-          Next diagnostic: P2C market context review. No paper execution from UI.
+          ETH confirmation prompt issue · Next: P2D prompt review (code-only). No paper execution
+          from UI.
         </p>
       </header>
       <div className="flag-grid">
