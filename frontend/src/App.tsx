@@ -17,8 +17,8 @@ import { CalculatorPage } from "./pages/CalculatorPage";
 import { MembershipPage } from "./pages/MembershipPage";
 
 /**
- * NEXUS / EATI UI MVP-0 shell.
- * Explicitly absent: /trade, /orders, /arm, /routing-edit
+ * NEXUS / EATI UI MVP-1 Private Operator Dashboard (read-only).
+ * Explicitly absent (forbidden): /trade, /orders, /arm, /routing-edit
  */
 export default function App() {
   return (

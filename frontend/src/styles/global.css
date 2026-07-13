@@ -1,4 +1,4 @@
-/* NEXUS / EATI MVP-0 — dark fintech shell */
+/* NEXUS / EATI MVP-1 — dark fintech Private Operator shell */
 
 :root {
   --bg-deep: #0a0e14;
@@ -414,6 +414,75 @@ button {
   margin-top: 0.25rem;
   font-family: var(--mono);
   color: var(--warn);
+}
+
+/* Private Operator Mode — MVP-1 */
+.operator-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.65rem;
+  margin-bottom: 1rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid rgba(61, 156, 240, 0.35);
+  background: linear-gradient(90deg, rgba(61, 156, 240, 0.1), rgba(17, 24, 33, 0.9));
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.operator-banner-label {
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+.operator-banner-sep {
+  color: var(--text-dim);
+}
+
+.operator-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.operator-card {
+  border-color: rgba(61, 156, 240, 0.22);
+}
+
+.operator-card h3 {
+  color: var(--text);
+}
+
+.report-list {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.report-list li + li {
+  margin-top: 0.55rem;
+}
+
+.future-tier-tag {
+  display: inline-block;
+  margin: 0 0 0.5rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  border: 1px dashed rgba(139, 155, 176, 0.45);
+  color: var(--text-dim);
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+}
+
+@media (max-width: 720px) {
+  .operator-banner {
+    font-size: 0.72rem;
+  }
 }
 
 .price-up {

@@ -1,9 +1,10 @@
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
-import { getMembershipTiers } from "../demo/nexusDataAdapter";
+import { getMembershipTiers, getPrivateOperatorMode } from "../demo/nexusDataAdapter";
 
 export function MembershipPage() {
   const tiers = getMembershipTiers();
+  const op = getPrivateOperatorMode();
 
   return (
     <div>
@@ -11,9 +12,18 @@ export function MembershipPage() {
         <h1>Membership Center</h1>
         <DemoDataBadge />
         <p className="page-sub">
-          Free → Standard → Pro → Elite → Team → Enterprise. UI lock stubs only — no billing.
+          Future Public SaaS architecture labels only. {op.publicSaas}. Private Operator Mode is
+          the active product surface — not a customer membership product.
         </p>
       </header>
+
+      <div className="operator-banner" role="status" style={{ marginBottom: "1.25rem" }}>
+        <span className="operator-banner-label">Future Public SaaS</span>
+        <span className="operator-banner-sep">·</span>
+        <span>Future only / Not implemented / No billing</span>
+        <DemoDataBadge />
+      </div>
+
       <div className="card-grid">
         {tiers.map((t) => (
           <article key={t.tier} className="panel-card">
@@ -21,6 +31,7 @@ export function MembershipPage() {
               <h3 style={{ margin: 0 }}>{t.label}</h3>
               <DemoDataBadge />
             </div>
+            <p className="future-tier-tag">{t.productBoundary}</p>
             <p>{t.summary}</p>
             {t.lockedSurfaces.length > 0 ? (
               <>

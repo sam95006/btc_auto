@@ -1,4 +1,4 @@
-/** Shared NEXUS / EATI UI types — MVP-0 read-only shell. */
+/** Shared NEXUS / EATI UI types — MVP-1 Private Operator Dashboard (read-only). */
 
 export type SignalStatus =
   | "observe"
@@ -101,6 +101,8 @@ export interface RiskEvidenceFlags extends DemoMeta {
   arm: false;
   production: false;
   paperExecution: false;
+  stage419Readiness: false;
+  shouldStart419: false;
   validatorStatus: string;
   calibrationStatus: string;
   graduationStatus: string;
@@ -129,6 +131,9 @@ export interface ProviderShadowSummary extends DemoMeta {
   shadowExcludedFromCalibration: true;
   shadowExcludedFromGraduation: true;
   mustNotAffectStage419: true;
+  p1cSummary: string;
+  p2DesignSummary: string;
+  p2r1Summary: string;
 }
 
 export interface PaperLabSummary extends DemoMeta {
@@ -137,6 +142,9 @@ export interface PaperLabSummary extends DemoMeta {
   watchlistCount: number;
   calibrationStatus: string;
   graduationStatus: string;
+  btcGraduationCount: number;
+  ethGraduationCount: number;
+  stage419Blocked: true;
   whyNotGraduated: string;
   paperLoggerStatus: string;
 }
@@ -146,6 +154,8 @@ export interface MembershipTierInfo extends DemoMeta {
   label: string;
   summary: string;
   lockedSurfaces: string[];
+  /** Future Public SaaS placeholder — not a live product. */
+  productBoundary: "Future only / Not implemented / No billing";
 }
 
 export interface SystemStatus extends DemoMeta {
@@ -155,4 +165,65 @@ export interface SystemStatus extends DemoMeta {
   currentGate: string;
   lastUpdate: string;
   disclaimer: string;
+}
+
+/** Stage gate panel for Private Operator Overview. */
+export interface StageGateStatus extends DemoMeta {
+  stageLabel: string;
+  verdict: string;
+  p2aStatus: string;
+  latestGate: string;
+  note: string;
+}
+
+/** Provider health / routing experiment summary (read-only). */
+export interface ProviderStatusSummary extends DemoMeta {
+  actualPrimary: string;
+  shadowPrimary: string;
+  btcExperimentChain: string;
+  ethRoutingUnchanged: true;
+  health: string;
+  note: string;
+}
+
+/** Latest research report metadata (links are repo paths, not live APIs). */
+export interface LatestReportMeta extends DemoMeta {
+  id: string;
+  title: string;
+  stageMarker: string;
+  verdict: string;
+  path: string;
+  updatedAt: string;
+}
+
+/** Actual-only graduation summary (shadow excluded). */
+export interface GraduationStatusSummary extends DemoMeta {
+  btcGraduationCount: number;
+  ethGraduationCount: number;
+  shadowExcludedFromGraduation: true;
+  actualOnly: true;
+  stage419Readiness: false;
+  shouldStart419: false;
+  whyBlocked: string;
+}
+
+/** Safety flags for Private Operator Safety Status card. */
+export interface SafetyStatusSummary extends DemoMeta {
+  orderAllowed: false;
+  arm: false;
+  production: false;
+  stage419Readiness: false;
+  shouldStart419: false;
+  privateOperatorMode: true;
+  defensiveOn: true;
+  summary: string;
+}
+
+/** Private Operator Mode chrome — not a public SaaS session. */
+export interface PrivateOperatorMode extends DemoMeta {
+  enabled: true;
+  label: string;
+  audience: string;
+  publicSaas: "Future only / Not implemented / No billing";
+  readOnly: true;
 }
