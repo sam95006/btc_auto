@@ -2,6 +2,7 @@ import { MarketStatusCard } from "../components/MarketStatusCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import {
   getCurrentUiMode,
+  getEthConfirmationTimeline,
   getGraduationStatus,
   getLatestBackendVerdict,
   getLatestReports,
@@ -26,6 +27,12 @@ export function OverviewPage() {
   const stage419 = getStage419Status();
   const uiMode = getCurrentUiMode();
   const latestVerdict = getLatestBackendVerdict();
+  const ethTimeline = getEthConfirmationTimeline();
+  const ethBlocker =
+    snap.ethStatus.confirmationFailureReason ??
+    snap.ethStatus.rootCause ??
+    ethTimeline?.failureReason ??
+    "eth_followup_direction_changed";
 
   return (
     <div>
@@ -63,7 +70,8 @@ export function OverviewPage() {
             {gate.stageLabel} · {gate.verdict}
           </p>
           <p>
-            <span className="muted">P2A:</span> {gate.p2aStatus}
+            <span className="muted">P2B:</span>{" "}
+            {snap.stageGate.p2bStatus ?? gate.p2aStatus}
           </p>
           <p className="muted">{gate.latestGate}</p>
           <p className="muted">{gate.note}</p>
@@ -94,7 +102,10 @@ export function OverviewPage() {
           </div>
           <p className="muted" style={{ marginTop: "0.75rem" }}>
             BTC: {snap.btcStatus.statusLabel} · ETH: {snap.ethStatus.statusLabel}
-            {snap.ethStatus.rootCause ? ` · root cause=${snap.ethStatus.rootCause}` : ""}
+          </p>
+          <p className="muted">
+            ETH blocker: {ethBlocker}
+            {snap.ethStatus.ethDetail ? ` · ${snap.ethStatus.ethDetail}` : ""}
           </p>
         </section>
 

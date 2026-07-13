@@ -1,6 +1,8 @@
 import { DemoDataBadge } from "../components/DemoDataBadge";
+import { EthConfirmationTimelineCard } from "../components/EthConfirmationTimelineCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import {
+  getEthConfirmationTimeline,
   getGraduationStatus,
   getNexusSnapshot,
   getPaperLabSummary,
@@ -11,6 +13,7 @@ export function PaperLabPage() {
   const g = getGraduationStatus();
   const snap = getNexusSnapshot();
   const paper = snap.paperLabStatus;
+  const ethTimeline = getEthConfirmationTimeline();
 
   return (
     <div>
@@ -20,7 +23,7 @@ export function PaperLabPage() {
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
           Read-only would_enter / would_skip counts. BTC passed / ETH blocked. Stage 4.19 blocked.
-          Next diagnostic: P2B ETH confirmation diagnostics. No paper execution from UI.
+          Next diagnostic: P2C market context review. No paper execution from UI.
         </p>
       </header>
       <div className="flag-grid">
@@ -88,6 +91,8 @@ export function PaperLabPage() {
         Next diagnostic: {paper.nextDiagnostic} (read-only; no Stage 4.19 start).
       </p>
       <p className="muted">{g.whyBlocked}</p>
+
+      {ethTimeline ? <EthConfirmationTimelineCard timeline={ethTimeline} /> : null}
     </div>
   );
 }

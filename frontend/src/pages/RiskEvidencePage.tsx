@@ -1,6 +1,8 @@
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import {
+  getEthConfirmationTimeline,
+  getNexusSnapshot,
   getRiskEvidenceFlags,
   getSafetyStatus,
   getStage419Status,
@@ -10,6 +12,13 @@ export function RiskEvidencePage() {
   const f = getRiskEvidenceFlags();
   const safety = getSafetyStatus();
   const stage419 = getStage419Status();
+  const snap = getNexusSnapshot();
+  const ethTimeline = getEthConfirmationTimeline();
+  const failureReason =
+    ethTimeline?.failureReason ??
+    snap.ethStatus.confirmationFailureReason ??
+    "eth_followup_direction_changed";
+  const ethDetail = ethTimeline?.ethDetail ?? snap.ethStatus.ethDetail ?? "LONG/BUY → NONE/NONE";
 
   return (
     <div>
@@ -76,6 +85,42 @@ export function RiskEvidencePage() {
           <div className="v">{f.resetStatus}</div>
         </div>
       </div>
+
+      <section className="panel-card operator-card" style={{ marginTop: "1.25rem" }}>
+        <div className="meta-row" style={{ marginTop: 0 }}>
+          <h3 style={{ margin: 0 }}>ETH Follow-up Failure Risk</h3>
+          <span className="demo-badge">SANITIZED</span>
+          <DemoDataBadge />
+        </div>
+        <p>
+          Confirmation failed · reason=<span className="mono">{failureReason}</span>
+        </p>
+        <p className="mono">Direction collapse: {ethDetail}</p>
+        <div className="flag-grid" style={{ marginTop: "0.75rem" }}>
+          <div className="flag-item">
+            <div className="k">invalidation_breached</div>
+            <div className="v">
+              {String(ethTimeline?.invalidationBreached ?? false)}
+            </div>
+          </div>
+          <div className="flag-item">
+            <div className="k">mae_breached</div>
+            <div className="v">{String(ethTimeline?.maeBreached ?? false)}</div>
+          </div>
+          <div className="flag-item">
+            <div className="k">watch → follow-up</div>
+            <div className="v">LONG/BUY → NONE/NONE</div>
+          </div>
+          <div className="flag-item">
+            <div className="k">follow-up intent</div>
+            <div className="v">hard_skip</div>
+          </div>
+        </div>
+        <p className="muted" style={{ marginTop: "0.75rem" }}>
+          No MAE breach · No invalidation breach · ETH graduation remains 0 · Stage 4.19 blocked
+        </p>
+      </section>
+
       <p className="muted" style={{ marginTop: "1rem" }}>
         No order · No ARM · No production · should_start_419={String(safety.shouldStart419)}
       </p>

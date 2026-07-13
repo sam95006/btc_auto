@@ -14,6 +14,7 @@ export function ProviderShadowPage() {
   const grad = getGraduationStatus();
   const snap = getNexusSnapshot();
   const routing = snap.providerRoutingStatus;
+  const experimentSupported = routing.btcCerebrasFirstExperimentSupported ?? true;
 
   return (
     <div>
@@ -22,7 +23,7 @@ export function ProviderShadowPage() {
         <DemoDataBadge />
         <MembershipLockBadge requiredTier="Elite" currentTier="Free" />
         <p className="page-sub">
-          P2-R1 BTC Cerebras-first (experiment). Permanent routing change not supported.
+          BTC Cerebras-first experiment supported. Permanent routing change not supported.
           Actual-only graduation. Routing editor absent (forbidden).
         </p>
       </header>
@@ -54,10 +55,42 @@ export function ProviderShadowPage() {
 
         <article className="panel-card operator-card">
           <div className="meta-row" style={{ marginTop: 0 }}>
+            <h3 style={{ margin: 0 }}>BTC Cerebras-first vs Permanent Routing</h3>
+            <DemoDataBadge />
+          </div>
+          <div className="flag-grid">
+            <div className="flag-item">
+              <div className="k">BTC Cerebras-first experiment</div>
+              <div className="v">{experimentSupported ? "supported" : "not supported"}</div>
+            </div>
+            <div className="flag-item">
+              <div className="k">permanent routing</div>
+              <div className="v">not supported</div>
+            </div>
+            <div className="flag-item">
+              <div className="k">routing_permanent_change_supported</div>
+              <div className="v">{String(routing.routingPermanentChangeSupported)}</div>
+            </div>
+            <div className="flag-item">
+              <div className="k">ETH routing</div>
+              <div className="v">unchanged</div>
+            </div>
+          </div>
+          <p className="muted" style={{ marginTop: "0.75rem" }}>
+            Experiment-only (default-off). Must not imply permanent Cerebras-first production
+            routing.
+          </p>
+        </article>
+
+        <article className="panel-card operator-card">
+          <div className="meta-row" style={{ marginTop: 0 }}>
             <h3 style={{ margin: 0 }}>P2-R1 BTC Cerebras-first</h3>
             <DemoDataBadge />
           </div>
           <p>{summary.p2r1Summary}</p>
+          {snap.providerShadowStatus.p2bSummary ? (
+            <p className="muted">{snap.providerShadowStatus.p2bSummary}</p>
+          ) : null}
           <div className="flag-grid" style={{ marginTop: "0.75rem" }}>
             <div className="flag-item">
               <div className="k">BTC graduation (actual)</div>

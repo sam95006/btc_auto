@@ -1,7 +1,6 @@
 /**
  * Read-only NEXUS data adapter.
- * MVP-2: switches between demo fixtures and sanitized private_operator_snapshot.
- * Default mode: private_operator_snapshot.
+ * MVP-3: defaults to sanitized P2B private_operator_snapshot (prefers P2B over P2A).
  * Never writes backend / trading state. No order / ARM / routing APIs.
  */
 import {
@@ -25,6 +24,7 @@ import {
   DEMO_SOURCE,
 } from "./demoNexusData";
 import { p2aPrivateOperatorSnapshot } from "./snapshots/p2aPrivateOperatorSnapshot";
+import { p2bPrivateOperatorSnapshot } from "./snapshots/p2bPrivateOperatorSnapshot";
 import type {
   EvidenceItem,
   FleetStatus,
@@ -45,13 +45,18 @@ import type {
   SystemStatus,
 } from "../types/nexus";
 import type {
+  EthConfirmationTimeline,
   NexusSnapshot,
   NexusUiMode,
   SnapshotStage419Status,
 } from "../types/nexusSnapshot";
 
-/** Default UI mode for MVP-2 Private Operator Dashboard. */
+/** Default UI mode for Private Operator Dashboard. */
 let currentUiMode: NexusUiMode = "private_operator_snapshot";
+
+/** Prefer P2B over P2A when both sanitized snapshots are available. */
+const ACTIVE_PRIVATE_OPERATOR_SNAPSHOT: NexusSnapshot =
+  p2bPrivateOperatorSnapshot ?? p2aPrivateOperatorSnapshot;
 
 export function setNexusUiMode(mode: NexusUiMode): void {
   currentUiMode = mode;
@@ -66,22 +71,25 @@ function isSnapshotMode(): boolean {
 }
 
 export function getPrivateOperatorSnapshot(): NexusSnapshot {
-  return p2aPrivateOperatorSnapshot;
+  return ACTIVE_PRIVATE_OPERATOR_SNAPSHOT;
 }
 
 export function getNexusSnapshot(): NexusSnapshot {
   if (isSnapshotMode()) {
     return getPrivateOperatorSnapshot();
   }
-  // Demo mode still exposes a snapshot-shaped view derived from demo fixtures
-  // without inventing a second source of truth for P2A fields.
   return {
-    ...p2aPrivateOperatorSnapshot,
+    ...ACTIVE_PRIVATE_OPERATOR_SNAPSHOT,
     source: DEMO_SOURCE,
     uiMode: "demo",
     latestBackendStage: demoStageGateStatus.stageLabel,
     latestVerdict: demoStageGateStatus.verdict,
   };
+}
+
+export function getEthConfirmationTimeline(): EthConfirmationTimeline | null {
+  const snap = getNexusSnapshot();
+  return snap.ethConfirmationTimeline ?? null;
 }
 
 export function getLatestBackendVerdict(): string {
@@ -120,10 +128,15 @@ export function getSystemStatus(): SystemStatus {
 export function getStageGateStatus(): StageGateStatus {
   if (isSnapshotMode()) {
     const s = getPrivateOperatorSnapshot();
+    const g = s.stageGate;
     return {
       demo: false,
       source: s.source,
-      ...s.stageGate,
+      stageLabel: g.stageLabel,
+      verdict: g.verdict,
+      p2aStatus: g.p2bStatus ?? g.p2aStatus,
+      latestGate: g.latestGate,
+      note: g.note,
     };
   }
   return demoStageGateStatus;

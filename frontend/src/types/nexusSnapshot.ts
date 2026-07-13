@@ -1,5 +1,5 @@
 /**
- * NEXUS Private Operator snapshot schema — MVP-2.
+ * NEXUS Private Operator snapshot schema — MVP-2 / MVP-3.
  * Read-only sanitized research summaries only. No secrets, no /data raw paths.
  */
 
@@ -29,6 +29,7 @@ export interface SnapshotStageGate {
   stageLabel: string;
   verdict: string;
   p2aStatus: string;
+  p2bStatus?: string;
   latestGate: string;
   note: string;
 }
@@ -38,6 +39,8 @@ export interface SnapshotSymbolStatus {
   actualValidWatchCount: number;
   actualGraduationCount: number;
   rootCause?: string;
+  confirmationFailureReason?: string;
+  ethDetail?: string;
   statusLabel: string;
   note: string;
 }
@@ -48,6 +51,7 @@ export interface SnapshotProviderRoutingStatus {
   btcExperimentChain: string;
   ethRoutingUnchanged: true;
   routingPermanentChangeSupported: false;
+  btcCerebrasFirstExperimentSupported?: boolean;
   health: string;
   note: string;
 }
@@ -65,6 +69,7 @@ export interface SnapshotProviderShadowStatus {
   p1cSummary: string;
   p2DesignSummary: string;
   p2r1Summary: string;
+  p2bSummary?: string;
   actualOnlyGraduation: true;
 }
 
@@ -100,7 +105,36 @@ export interface SnapshotStage419Status {
   reason: string;
 }
 
-/** Canonical Private Operator / demo fixture shape for MVP-2 wiring. */
+/** ETH watch → follow-up confirmation timeline (P2B sanitized). */
+export interface EthConfirmationTick {
+  label: string;
+  provider: string;
+  intent: string;
+  confidence: number;
+  directionalBias: string;
+  candidateSide: string;
+  entryTrigger: string;
+  invalidation: string;
+  mae: string;
+  invalidationBreached: false;
+  maeBreached: false;
+}
+
+export interface EthConfirmationTimeline {
+  symbol: string;
+  confirmationFailed: true;
+  failureReason: string;
+  ethDetail: string;
+  invalidationBreached: false;
+  maeBreached: false;
+  watch: EthConfirmationTick;
+  followup: EthConfirmationTick;
+  conclusion: string;
+  nextStep: string;
+  recoveryRecommendation: string;
+}
+
+/** Canonical Private Operator / demo fixture shape for MVP-2 / MVP-3 wiring. */
 export interface NexusSnapshot {
   source: string;
   uiMode: NexusUiMode;
@@ -114,5 +148,6 @@ export interface NexusSnapshot {
   providerRoutingStatus: SnapshotProviderRoutingStatus;
   providerShadowStatus: SnapshotProviderShadowStatus;
   paperLabStatus: SnapshotPaperLabStatus;
+  ethConfirmationTimeline?: EthConfirmationTimeline;
   reports: SnapshotReportMeta[];
 }
