@@ -2,6 +2,7 @@ import { BackendHoldStateCard } from "../components/BackendHoldStateCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { EthConfirmationTimelineCard } from "../components/EthConfirmationTimelineCard";
 import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
+import { GateChecklistCard } from "../components/GateChecklistCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCard";
 import { OperatorHoldBanner } from "../components/OperatorHoldBanner";
@@ -9,6 +10,7 @@ import { PromptRepairStatusCard } from "../components/PromptRepairStatusCard";
 import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
+import { SHORT_REGRESSION_CHECKLIST } from "../demo/reportIndex";
 import {
   getBackendHoldStateStatus,
   getEthConfirmationTimeline,
@@ -49,6 +51,12 @@ export function PaperLabPage() {
       </header>
 
       {hold ? <OperatorHoldBanner hold={hold} /> : null}
+
+      <GateChecklistCard
+        title="Next Short Regression Checklist"
+        items={SHORT_REGRESSION_CHECKLIST}
+        footer="next_short_regression_allowed_now=false · operator approval required even if all flip true · no auto-run"
+      />
 
       <section className="panel-card operator-card" style={{ marginTop: "1.25rem" }}>
         <div className="meta-row" style={{ marginTop: 0 }}>

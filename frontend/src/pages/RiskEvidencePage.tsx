@@ -1,10 +1,12 @@
 import { BackendHoldStateCard } from "../components/BackendHoldStateCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
+import { GateChecklistCard } from "../components/GateChecklistCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCard";
 import { OperatorHoldBanner } from "../components/OperatorHoldBanner";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
+import { SAFETY_INVARIANTS_CHECKLIST } from "../demo/reportIndex";
 import {
   getBackendHoldStateStatus,
   getEthConfirmationTimeline,
@@ -51,6 +53,12 @@ export function RiskEvidencePage() {
       </header>
 
       {hold ? <OperatorHoldBanner hold={hold} /> : null}
+
+      <GateChecklistCard
+        title="Safety Invariants Checklist"
+        items={SAFETY_INVARIANTS_CHECKLIST}
+        footer="All must stay true while backend HOLD · no Stage 4.19 start button · READ ONLY"
+      />
 
       <div className="flag-grid" style={{ marginTop: "1.25rem" }}>
         <div className="flag-item">

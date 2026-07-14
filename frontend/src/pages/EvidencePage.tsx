@@ -1,7 +1,13 @@
 import { EvidenceItemCard } from "../components/EvidenceItemCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
+import { OperatorRunbookCard } from "../components/OperatorRunbookCard";
+import { PrivateReportViewerCard } from "../components/PrivateReportViewerCard";
 import { ReportIndexCard } from "../components/ReportIndexCard";
+import {
+  PRIVATE_OPERATOR_REPORTS,
+  PRIVATE_OPERATOR_RUNBOOKS,
+} from "../demo/reportIndex";
 import {
   getEthConfirmationTimeline,
   getEvidence,
@@ -27,9 +33,12 @@ export function EvidencePage() {
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
           Recent AI decisions with stage markers. Sanitized snapshot · READ ONLY · NOT INVESTMENT
-          ADVICE. Report index: P2D / P2D-R1 / P2E / P2F / P2G / P2H. Backend HOLD / wait-for-condition.
+          ADVICE. Report viewer + runbook viewer · P2D→P2H(+QA) · Backend HOLD / wait-for-condition.
         </p>
       </header>
+
+      <PrivateReportViewerCard reports={PRIVATE_OPERATOR_REPORTS} />
+      <OperatorRunbookCard runbooks={PRIVATE_OPERATOR_RUNBOOKS} />
 
       {reportIndex.length > 0 ? <ReportIndexCard items={reportIndex} /> : null}
 

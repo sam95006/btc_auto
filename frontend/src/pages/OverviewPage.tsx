@@ -2,11 +2,13 @@ import { MarketStatusCard } from "../components/MarketStatusCard";
 import { BackendHoldStateCard } from "../components/BackendHoldStateCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
+import { GateChecklistCard } from "../components/GateChecklistCard";
 import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCard";
 import { OperatorHoldBanner } from "../components/OperatorHoldBanner";
 import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
+import { SHORT_REGRESSION_CHECKLIST } from "../demo/reportIndex";
 import {
   getBackendHoldStateStatus,
   getCurrentUiMode,
@@ -78,6 +80,12 @@ export function OverviewPage() {
       </header>
 
       {hold ? <OperatorHoldBanner hold={hold} /> : null}
+
+      <GateChecklistCard
+        title="Gate Checklist Summary (next short regression)"
+        items={SHORT_REGRESSION_CHECKLIST}
+        footer="All false under HOLD — continue wait-for-condition · no 30m · no 60m · Stage 4.19 blocked"
+      />
 
       <div className="operator-card-grid" style={{ marginTop: "1.25rem" }}>
         <section className="panel-card operator-card">

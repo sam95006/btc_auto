@@ -31,9 +31,25 @@ Open the Vite URL (typically `http://localhost:5173`).
 ## Snapshot policy
 
 - UI reads **sanitized** TypeScript fixtures under `src/demo/snapshots/`
+- Report / runbook viewers read **sanitized metadata** from `src/demo/reportIndex.ts` (`docs/...` paths only)
 - Do **not** commit raw `/data` jsonl, logs, or cloud bundles into `frontend/`
 - Do **not** place API keys or secrets in snapshots
 - Adapter prefers the latest private-operator snapshot (currently P2G/P2H HOLD)
+
+## Report Viewer / Runbook Viewer (MVP-11)
+
+- **Evidence**: Private Report Viewer + Operator Runbook Viewer (why HOLD, which report/runbook)
+- **Overview**: Gate checklist summary for next short regression
+- **Paper Lab**: Next short-regression checklist
+- **Risk Evidence**: Safety invariants checklist
+- **Provider Shadow**: Routing remains experimental / permanent routing false
+- Metadata only — **no control buttons**, no Stage 4.19 start, no order/ARM controls
+
+Safety:
+
+```bash
+python tools/research/check_nexus_ui_mvp11_safety.py
+```
 
 ## Explicitly not implemented
 

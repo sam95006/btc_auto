@@ -1,6 +1,8 @@
 import { ProviderComparisonCard } from "../components/ProviderComparisonCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
+import { GateChecklistCard } from "../components/GateChecklistCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
+import { ROUTING_POLICY_CHECKLIST } from "../demo/reportIndex";
 import {
   getGraduationStatus,
   getNexusSnapshot,
@@ -29,7 +31,13 @@ export function ProviderShadowPage() {
         </p>
       </header>
 
-      <div className="operator-card-grid" style={{ marginBottom: "1.25rem" }}>
+      <GateChecklistCard
+        title="Routing Remains Experimental"
+        items={ROUTING_POLICY_CHECKLIST}
+        footer="Permanent routing change = false · BTC Cerebras-first experiment only · no routing editor"
+      />
+
+      <div className="operator-card-grid" style={{ marginBottom: "1.25rem", marginTop: "1.25rem" }}>
         <article className="panel-card operator-card">
           <div className="meta-row" style={{ marginTop: 0 }}>
             <h3 style={{ margin: 0 }}>Routing Policy (MVP-10)</h3>
