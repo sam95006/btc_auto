@@ -1,5 +1,6 @@
 import { MarketStatusCard } from "../components/MarketStatusCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
+import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
 import {
   getCurrentUiMode,
   getEthConfirmationTimeline,
@@ -11,6 +12,7 @@ import {
   getPrivateOperatorMode,
   getPromptRepairStatus,
   getRoundTable,
+  getRuntimeRegressionStatus,
   getSafetyStatus,
   getStage419Status,
   getStageGateStatus,
@@ -30,16 +32,18 @@ export function OverviewPage() {
   const latestVerdict = getLatestBackendVerdict();
   const ethTimeline = getEthConfirmationTimeline();
   const promptRepair = getPromptRepairStatus();
+  const runtimeReg = getRuntimeRegressionStatus();
   const ethBlocker =
     snap.ethStatus.confirmationFailureReason ??
     snap.ethStatus.rootCause ??
     ethTimeline?.failureReason ??
-    "confirmation_prompt_too_strict";
+    "PARTIAL_NO_ETH_WATCH";
   const nextStep =
+    runtimeReg?.nextStep ??
     promptRepair?.nextStep ??
     ethTimeline?.nextStep ??
     snap.paperLabStatus.nextDiagnostic ??
-    "P2D-R1 runtime regression";
+    "P2E ETH no-watch diagnostics";
 
   return (
     <div>
@@ -77,11 +81,15 @@ export function OverviewPage() {
             {gate.stageLabel} · {gate.verdict}
           </p>
           <p>
-            <span className="muted">P2D:</span>{" "}
-            {snap.stageGate.p2dStatus ??
+            <span className="muted">P2D-R1:</span>{" "}
+            {snap.stageGate.p2dR1Status ??
+              snap.stageGate.p2dStatus ??
               snap.stageGate.p2cStatus ??
               snap.stageGate.p2bStatus ??
               gate.p2aStatus}
+          </p>
+          <p className="muted">
+            technical PASS but no ETH watch · PARTIAL_NO_ETH_WATCH · Stage 4.19 blocked
           </p>
           <p className="muted">{gate.latestGate}</p>
           <p className="muted">{gate.note}</p>
@@ -174,6 +182,8 @@ export function OverviewPage() {
           </ul>
         </section>
       </div>
+
+      {runtimeReg ? <RuntimeRegressionStatusCard status={runtimeReg} /> : null}
 
       <div className="card-grid" style={{ marginTop: "1.25rem" }}>
         {markets.map((m) => (

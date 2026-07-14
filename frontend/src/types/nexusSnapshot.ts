@@ -32,6 +32,7 @@ export interface SnapshotStageGate {
   p2bStatus?: string;
   p2cStatus?: string;
   p2dStatus?: string;
+  p2dR1Status?: string;
   latestGate: string;
   note: string;
 }
@@ -74,6 +75,7 @@ export interface SnapshotProviderShadowStatus {
   p2bSummary?: string;
   p2cSummary?: string;
   p2dSummary?: string;
+  p2dR1Summary?: string;
   actualOnlyGraduation: true;
 }
 
@@ -167,7 +169,29 @@ export interface PromptRepairStatus {
   nextStep: string;
 }
 
-/** Canonical Private Operator / demo fixture shape for MVP-2 … MVP-5 wiring. */
+/** P2D-R1 runtime regression status (sample insufficient for ETH repair validation). */
+export interface RuntimeRegressionStatus {
+  technicalValid: true;
+  tickCount: number;
+  effectiveDecisionCount: number;
+  parseErrorCount: number;
+  promptRepairRuntimePresent: true;
+  previousWatchContextSeen: false;
+  directionCollapseGuardSeen: false;
+  ethValidWatchCount: number;
+  ethFollowupCasesCount: number;
+  ethGraduationCount: number;
+  ethConfirmationPromptRepairEffective: false;
+  sampleInsufficientReason: string;
+  btcValidWatchCount: number;
+  btcValidWatchNote: string;
+  btcGraduationCount: number;
+  actualNonShadowBtcEthGraduationMet: false;
+  stage419Blocked: true;
+  nextStep: string;
+}
+
+/** Canonical Private Operator / demo fixture shape for MVP-2 … MVP-6 wiring. */
 export interface NexusSnapshot {
   source: string;
   uiMode: NexusUiMode;
@@ -183,5 +207,6 @@ export interface NexusSnapshot {
   paperLabStatus: SnapshotPaperLabStatus;
   ethConfirmationTimeline?: EthConfirmationTimeline;
   promptRepairStatus?: PromptRepairStatus;
+  runtimeRegressionStatus?: RuntimeRegressionStatus;
   reports: SnapshotReportMeta[];
 }

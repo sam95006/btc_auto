@@ -2,12 +2,14 @@ import { DemoDataBadge } from "../components/DemoDataBadge";
 import { EthConfirmationTimelineCard } from "../components/EthConfirmationTimelineCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import { PromptRepairStatusCard } from "../components/PromptRepairStatusCard";
+import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
 import {
   getEthConfirmationTimeline,
   getGraduationStatus,
   getNexusSnapshot,
   getPaperLabSummary,
   getPromptRepairStatus,
+  getRuntimeRegressionStatus,
 } from "../demo/nexusDataAdapter";
 
 export function PaperLabPage() {
@@ -17,6 +19,7 @@ export function PaperLabPage() {
   const paper = snap.paperLabStatus;
   const ethTimeline = getEthConfirmationTimeline();
   const promptRepair = getPromptRepairStatus();
+  const runtimeReg = getRuntimeRegressionStatus();
 
   return (
     <div>
@@ -25,8 +28,8 @@ export function PaperLabPage() {
         <DemoDataBadge />
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
-          Read-only would_enter / would_skip counts. BTC passed / ETH blocked. Stage 4.19 blocked.
-          Prompt repair status · Awaiting runtime regression (P2D-R1). No paper execution from UI.
+          Read-only would_enter / would_skip counts. BTC last-tick watch · ETH no-watch · no
+          graduation. Stage 4.19 blocked. P2D-R1 PARTIAL. No paper execution from UI.
         </p>
       </header>
       <div className="flag-grid">
@@ -91,11 +94,12 @@ export function PaperLabPage() {
         Why not graduated to Stage 4.19: {p.whyNotGraduated}
       </p>
       <p className="muted">
-        Next diagnostic: {paper.nextDiagnostic} · Awaiting runtime regression (read-only; no Stage
-        4.19 start).
+        BTC last tick watch · ETH no-watch · no graduation · Next diagnostic:{" "}
+        {paper.nextDiagnostic} (read-only; no Stage 4.19 start).
       </p>
       <p className="muted">{g.whyBlocked}</p>
 
+      {runtimeReg ? <RuntimeRegressionStatusCard status={runtimeReg} /> : null}
       {promptRepair ? <PromptRepairStatusCard status={promptRepair} /> : null}
       {ethTimeline ? <EthConfirmationTimelineCard timeline={ethTimeline} /> : null}
     </div>

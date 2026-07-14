@@ -5,12 +5,14 @@ import {
   getEthConfirmationTimeline,
   getEvidence,
   getPromptRepairStatus,
+  getRuntimeRegressionStatus,
 } from "../demo/nexusDataAdapter";
 
 export function EvidencePage() {
   const items = getEvidence();
   const ethTimeline = getEthConfirmationTimeline();
   const promptRepair = getPromptRepairStatus();
+  const runtimeReg = getRuntimeRegressionStatus();
   const watch = ethTimeline?.watch;
   const followup = ethTimeline?.followup;
 
@@ -22,7 +24,7 @@ export function EvidencePage() {
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
           Recent AI decisions with stage markers. Sanitized snapshot · READ ONLY · NOT INVESTMENT
-          ADVICE. P2C issue → P2D repair timeline.
+          ADVICE. P2D static repair → P2D-R1 runtime insufficient sample timeline.
         </p>
       </header>
 
@@ -93,24 +95,24 @@ export function EvidencePage() {
 
           <article className="panel-card operator-card">
             <div className="meta-row" style={{ marginTop: 0 }}>
-              <h3 style={{ margin: 0 }}>P2C Issue → P2D Repair Timeline</h3>
-              <span className="demo-badge">prompt repair status</span>
+              <h3 style={{ margin: 0 }}>P2D static repair → P2D-R1 runtime insufficient sample</h3>
+              <span className="demo-badge">PARTIAL_NO_ETH_WATCH</span>
               <DemoDataBadge />
             </div>
             <p className="muted">
-              P2C: confirmation_prompt_too_strict (SYSTEM ISSUE preserved historically) → P2D:
-              prompt repair added (previous_watch_context + direction collapse guard)
+              P2C: confirmation_prompt_too_strict (SYSTEM ISSUE) → P2D: prompt repair added →
+              P2D-R1: technical PASS but ETH valid_watch=0 so repair not runtime-validated
+              (insufficient sample).
             </p>
             <p className="mono">
-              static_expected=
-              {promptRepair?.staticExpectedFollowupBehavior ??
-                "continuation_watch_or_confirmation_pending"}{" "}
-              · would_prevent_unexplained_collapse=
-              {String(promptRepair?.wouldPreventUnexplainedCollapse ?? true)} · next=
-              {promptRepair?.nextStep ?? "P2D-R1 runtime regression"}
+              technical_valid={String(runtimeReg?.technicalValid ?? true)} · ETH vw=
+              {String(runtimeReg?.ethValidWatchCount ?? 0)} · followup=
+              {String(runtimeReg?.ethFollowupCasesCount ?? 0)} · repair_effective=
+              {String(runtimeReg?.ethConfirmationPromptRepairEffective ?? false)} · next=
+              {runtimeReg?.nextStep ?? promptRepair?.nextStep ?? "P2E"}
             </p>
             <p className="muted">
-              Awaiting runtime regression · Stage 4.19 blocked · READ ONLY
+              Stage 4.19 blocked · READ ONLY · NOT INVESTMENT ADVICE
             </p>
           </article>
         </div>

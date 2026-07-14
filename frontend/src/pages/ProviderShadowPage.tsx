@@ -24,7 +24,8 @@ export function ProviderShadowPage() {
         <MembershipLockBadge requiredTier="Elite" currentTier="Free" />
         <p className="page-sub">
           BTC Cerebras-first experiment supported. Permanent routing change not supported.
-          Actual-only graduation. Routing editor absent (forbidden).
+          Actual-only graduation. No permanent routing change after P2D-R1. Routing editor absent
+          (forbidden).
         </p>
       </header>
 
@@ -94,9 +95,15 @@ export function ProviderShadowPage() {
           {snap.providerShadowStatus.p2dSummary ? (
             <p className="muted">{snap.providerShadowStatus.p2dSummary}</p>
           ) : null}
+          {snap.providerShadowStatus.p2dR1Summary ? (
+            <p className="muted">{snap.providerShadowStatus.p2dR1Summary}</p>
+          ) : null}
           {snap.providerShadowStatus.p2bSummary ? (
             <p className="muted">{snap.providerShadowStatus.p2bSummary}</p>
           ) : null}
+          <p className="muted">
+            No permanent routing change · P2D-R1 experiment flags reset · Stage 4.19 blocked
+          </p>
           <div className="flag-grid" style={{ marginTop: "0.75rem" }}>
             <div className="flag-item">
               <div className="k">BTC graduation (actual)</div>

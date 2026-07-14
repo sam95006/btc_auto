@@ -1,6 +1,7 @@
 /**
  * Read-only NEXUS data adapter.
- * MVP-5: defaults to sanitized P2D private_operator_snapshot (prefers P2D over P2C/P2B/P2A).
+ * MVP-6: defaults to sanitized P2D-R1 private_operator_snapshot
+ * (prefers P2D-R1 over P2D/P2C/P2B/P2A).
  * Never writes backend / trading state. No order / ARM / routing APIs.
  */
 import {
@@ -27,6 +28,7 @@ import { p2aPrivateOperatorSnapshot } from "./snapshots/p2aPrivateOperatorSnapsh
 import { p2bPrivateOperatorSnapshot } from "./snapshots/p2bPrivateOperatorSnapshot";
 import { p2cPrivateOperatorSnapshot } from "./snapshots/p2cPrivateOperatorSnapshot";
 import { p2dPrivateOperatorSnapshot } from "./snapshots/p2dPrivateOperatorSnapshot";
+import { p2dR1PrivateOperatorSnapshot } from "./snapshots/p2dR1PrivateOperatorSnapshot";
 import type {
   EvidenceItem,
   FleetStatus,
@@ -51,14 +53,16 @@ import type {
   NexusSnapshot,
   NexusUiMode,
   PromptRepairStatus,
+  RuntimeRegressionStatus,
   SnapshotStage419Status,
 } from "../types/nexusSnapshot";
 
 /** Default UI mode for Private Operator Dashboard. */
 let currentUiMode: NexusUiMode = "private_operator_snapshot";
 
-/** Prefer P2D over P2C/P2B/P2A when sanitized snapshots are available. */
+/** Prefer P2D-R1 over P2D/P2C/P2B/P2A when sanitized snapshots are available. */
 const ACTIVE_PRIVATE_OPERATOR_SNAPSHOT: NexusSnapshot =
+  p2dR1PrivateOperatorSnapshot ??
   p2dPrivateOperatorSnapshot ??
   p2cPrivateOperatorSnapshot ??
   p2bPrivateOperatorSnapshot ??
@@ -103,6 +107,11 @@ export function getPromptRepairStatus(): PromptRepairStatus | null {
   return snap.promptRepairStatus ?? null;
 }
 
+export function getRuntimeRegressionStatus(): RuntimeRegressionStatus | null {
+  const snap = getNexusSnapshot();
+  return snap.runtimeRegressionStatus ?? null;
+}
+
 export function getLatestBackendVerdict(): string {
   if (isSnapshotMode()) {
     return getPrivateOperatorSnapshot().latestVerdict;
@@ -145,7 +154,7 @@ export function getStageGateStatus(): StageGateStatus {
       source: s.source,
       stageLabel: g.stageLabel,
       verdict: g.verdict,
-      p2aStatus: g.p2dStatus ?? g.p2cStatus ?? g.p2bStatus ?? g.p2aStatus,
+      p2aStatus: g.p2dR1Status ?? g.p2dStatus ?? g.p2cStatus ?? g.p2bStatus ?? g.p2aStatus,
       latestGate: g.latestGate,
       note: g.note,
     };
