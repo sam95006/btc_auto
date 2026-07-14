@@ -266,6 +266,13 @@ export const p2gPrivateOperatorSnapshot: NexusSnapshot = {
       reportPath: "docs/reports/STAGE_4_18P2H_BACKEND_HOLD_AND_PASSIVE_GATE_CHECKER_REPORT.md",
       nextAction: "continue_hold_no_regression",
     },
+    {
+      stage: "4.18-P2H-QA",
+      verdict: "STAGE_4_18P2H_QA_PASS",
+      oneLineConclusion: "Release checkpoint ready under HOLD",
+      reportPath: "docs/reports/STAGE_4_18P2H_QA_RELEASE_HEALTH_CHECK_REPORT.md",
+      nextAction: "hold_backend_and_continue_private_operator_ui",
+    },
   ],
 
   ethConfirmationTimeline: {

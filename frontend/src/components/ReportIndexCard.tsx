@@ -1,5 +1,6 @@
 import type { ReportIndexItem } from "../types/nexusSnapshot";
 import { DemoDataBadge } from "./DemoDataBadge";
+import { ReleaseHealthBadge } from "./CheckpointHealthCard";
 
 const EXPECTED_STAGES = [
   "4.18-P2D",
@@ -8,9 +9,16 @@ const EXPECTED_STAGES = [
   "4.18-P2F",
   "4.18-P2G",
   "4.18-P2H",
+  "4.18-P2H-QA",
 ];
 
-export function ReportIndexCard({ items }: { items: ReportIndexItem[] }) {
+export function ReportIndexCard({
+  items,
+  showP2hQaHealthBadge = false,
+}: {
+  items: ReportIndexItem[];
+  showP2hQaHealthBadge?: boolean;
+}) {
   const present = new Set(items.map((i) => i.stage));
   return (
     <section className="panel-card" style={{ marginTop: "1.25rem" }}>
@@ -18,14 +26,21 @@ export function ReportIndexCard({ items }: { items: ReportIndexItem[] }) {
         <h2 style={{ margin: 0, fontSize: "1.1rem" }}>Private Operator Report Index</h2>
         <span className="demo-badge">SANITIZED</span>
         <span className="demo-badge">READ ONLY</span>
+        {showP2hQaHealthBadge ? <ReleaseHealthBadge /> : null}
         <DemoDataBadge />
       </div>
       <p className="muted">
         Sanitized snapshot · READ ONLY · NOT INVESTMENT ADVICE · research report index only · No
-        live trading · Required chain: P2D → P2D-R1 → P2E → P2F → P2G → P2H
+        live trading · Required chain: P2D → P2D-R1 → P2E → P2F → P2G → P2H → P2H-QA
       </p>
+      {showP2hQaHealthBadge ? (
+        <p className="muted">
+          P2H-QA health PASS · release checkpoint ready · Backend HOLD confirmed · no Stage 4.19
+          start
+        </p>
+      ) : null}
 
-      <div className="report-stage-chips" aria-label="Report stages P2D through P2H">
+      <div className="report-stage-chips" aria-label="Report stages P2D through P2H-QA">
         {EXPECTED_STAGES.map((stage) => (
           <span
             key={stage}

@@ -1,4 +1,5 @@
 import { BackendHoldStateCard } from "../components/BackendHoldStateCard";
+import { CheckpointHealthCard } from "../components/CheckpointHealthCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
 import { GateChecklistCard } from "../components/GateChecklistCard";
@@ -54,10 +55,12 @@ export function RiskEvidencePage() {
 
       {hold ? <OperatorHoldBanner hold={hold} /> : null}
 
+      <CheckpointHealthCard />
+
       <GateChecklistCard
         title="Safety Invariants Checklist"
         items={SAFETY_INVARIANTS_CHECKLIST}
-        footer="All must stay true while backend HOLD · no Stage 4.19 start button · READ ONLY"
+        footer="Safety invariants PASS · release checkpoint ready · All must stay true while backend HOLD · no Stage 4.19 start button · READ ONLY"
       />
 
       <div className="flag-grid" style={{ marginTop: "1.25rem" }}>

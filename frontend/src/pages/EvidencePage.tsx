@@ -3,6 +3,7 @@ import { DemoDataBadge } from "../components/DemoDataBadge";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import { OperatorRunbookCard } from "../components/OperatorRunbookCard";
 import { PrivateReportViewerCard } from "../components/PrivateReportViewerCard";
+import { ReleaseHealthBadge } from "../components/CheckpointHealthCard";
 import { ReportIndexCard } from "../components/ReportIndexCard";
 import {
   PRIVATE_OPERATOR_REPORTS,
@@ -30,6 +31,7 @@ export function EvidencePage() {
       <header className="page-header">
         <h1>Evidence Vault</h1>
         <DemoDataBadge />
+        <ReleaseHealthBadge />
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
           Recent AI decisions with stage markers. Sanitized snapshot · READ ONLY · NOT INVESTMENT
@@ -40,7 +42,9 @@ export function EvidencePage() {
       <PrivateReportViewerCard reports={PRIVATE_OPERATOR_REPORTS} />
       <OperatorRunbookCard runbooks={PRIVATE_OPERATOR_RUNBOOKS} />
 
-      {reportIndex.length > 0 ? <ReportIndexCard items={reportIndex} /> : null}
+      {reportIndex.length > 0 ? (
+        <ReportIndexCard items={reportIndex} showP2hQaHealthBadge />
+      ) : null}
 
       {ethTimeline ? (
         <div className="operator-card-grid" style={{ marginBottom: "1.25rem" }}>

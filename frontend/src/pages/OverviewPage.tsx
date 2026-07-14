@@ -1,5 +1,6 @@
 import { MarketStatusCard } from "../components/MarketStatusCard";
 import { BackendHoldStateCard } from "../components/BackendHoldStateCard";
+import { CheckpointHealthCard } from "../components/CheckpointHealthCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
 import { GateChecklistCard } from "../components/GateChecklistCard";
@@ -80,6 +81,8 @@ export function OverviewPage() {
       </header>
 
       {hold ? <OperatorHoldBanner hold={hold} /> : null}
+
+      <CheckpointHealthCard />
 
       <GateChecklistCard
         title="Gate Checklist Summary (next short regression)"

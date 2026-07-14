@@ -309,6 +309,12 @@ button {
   text-transform: uppercase;
 }
 
+.release-health-badge {
+  background: rgba(61, 180, 120, 0.14);
+  border-color: rgba(61, 180, 120, 0.5);
+  color: var(--positive, #3db478);
+}
+
 .signal-badge,
 .risk-badge,
 .lock-badge {

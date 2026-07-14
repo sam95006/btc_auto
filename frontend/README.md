@@ -45,10 +45,18 @@ Open the Vite URL (typically `http://localhost:5173`).
 - **Provider Shadow**: Routing remains experimental / permanent routing false
 - Metadata only — **no control buttons**, no Stage 4.19 start, no order/ARM controls
 
+## Release Health Badge (MVP-12)
+
+- Sanitized metadata: `src/demo/releaseHealth.ts` (P2H-QA checkpoint)
+- **Overview / Risk**: `CheckpointHealthCard` — release checkpoint ready, backend HOLD confirmed, no auto-run
+- **Evidence**: `ReleaseHealthBadge` + Report Index **P2H-QA health PASS**
+- Suggested tag (docs only): `stage4.18-p2h-hold-checkpoint`
+
 Safety:
 
 ```bash
 python tools/research/check_nexus_ui_mvp11_safety.py
+python tools/research/check_nexus_ui_mvp12_safety.py
 ```
 
 ## Explicitly not implemented
