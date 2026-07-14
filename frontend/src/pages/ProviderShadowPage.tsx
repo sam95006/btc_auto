@@ -101,11 +101,14 @@ export function ProviderShadowPage() {
           {snap.providerShadowStatus.p2eSummary ? (
             <p className="muted">{snap.providerShadowStatus.p2eSummary}</p>
           ) : null}
+          {snap.providerShadowStatus.p2fSummary ? (
+            <p className="muted">{snap.providerShadowStatus.p2fSummary}</p>
+          ) : null}
           {snap.providerShadowStatus.p2bSummary ? (
             <p className="muted">{snap.providerShadowStatus.p2bSummary}</p>
           ) : null}
           <p className="muted">
-            No permanent routing change · P2E diagnostics offline · Stage 4.19 blocked
+            No permanent routing change · P2F gate offline · Stage 4.19 blocked
           </p>
           <div className="flag-grid" style={{ marginTop: "0.75rem" }}>
             <div className="flag-item">

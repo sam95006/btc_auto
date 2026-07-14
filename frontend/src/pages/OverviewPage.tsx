@@ -2,6 +2,7 @@ import { MarketStatusCard } from "../components/MarketStatusCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
+import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
 import {
   getCurrentUiMode,
   getEthConfirmationTimeline,
@@ -18,6 +19,7 @@ import {
   getSafetyStatus,
   getStage419Status,
   getStageGateStatus,
+  getWatchReappearanceGateStatus,
 } from "../demo/nexusDataAdapter";
 
 export function OverviewPage() {
@@ -36,19 +38,21 @@ export function OverviewPage() {
   const promptRepair = getPromptRepairStatus();
   const runtimeReg = getRuntimeRegressionStatus();
   const ready = getRegressionReadinessStatus();
+  const watchGate = getWatchReappearanceGateStatus();
   const ethBlocker =
     snap.ethStatus.rootCause ??
     snap.ethStatus.confirmationFailureReason ??
     ethTimeline?.failureReason ??
     "sample_market_no_edge";
   const nextStep =
+    watchGate?.nextRecommendation ??
     ready?.nextRecommendation ??
     ready?.nextGate ??
     runtimeReg?.nextStep ??
     promptRepair?.nextStep ??
     ethTimeline?.nextStep ??
     snap.paperLabStatus.nextDiagnostic ??
-    "P2F ETH Watch Reappearance Gate";
+    "wait_for_eth_watch_conditions_reappear_no_60m";
 
   return (
     <div>
@@ -86,8 +90,9 @@ export function OverviewPage() {
             {gate.stageLabel} · {gate.verdict}
           </p>
           <p>
-            <span className="muted">P2E:</span>{" "}
-            {snap.stageGate.p2eStatus ??
+            <span className="muted">P2F:</span>{" "}
+            {snap.stageGate.p2fStatus ??
+              snap.stageGate.p2eStatus ??
               snap.stageGate.p2dR1Status ??
               snap.stageGate.p2dStatus ??
               snap.stageGate.p2cStatus ??
@@ -95,8 +100,8 @@ export function OverviewPage() {
               gate.p2aStatus}
           </p>
           <p className="muted">
-            ETH no-watch root cause: <span className="mono">{ethBlocker}</span> · not prompt
-            over-conservative · Stage 4.19 blocked · no 60m
+            regression readiness=false · do_not_run_regression_now · ETH root=
+            <span className="mono">{ethBlocker}</span> · Stage 4.19 blocked · no 60m
           </p>
           <p className="muted">{gate.latestGate}</p>
           <p className="muted">{gate.note}</p>
@@ -190,6 +195,7 @@ export function OverviewPage() {
         </section>
       </div>
 
+      {watchGate ? <WatchReappearanceGateCard status={watchGate} /> : null}
       {ready ? <RegressionReadinessCard status={ready} /> : null}
       {runtimeReg ? <RuntimeRegressionStatusCard status={runtimeReg} /> : null}
 

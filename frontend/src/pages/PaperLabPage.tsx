@@ -4,6 +4,7 @@ import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import { PromptRepairStatusCard } from "../components/PromptRepairStatusCard";
 import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
+import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
 import {
   getEthConfirmationTimeline,
   getGraduationStatus,
@@ -12,6 +13,7 @@ import {
   getPromptRepairStatus,
   getRegressionReadinessStatus,
   getRuntimeRegressionStatus,
+  getWatchReappearanceGateStatus,
 } from "../demo/nexusDataAdapter";
 
 export function PaperLabPage() {
@@ -23,6 +25,7 @@ export function PaperLabPage() {
   const promptRepair = getPromptRepairStatus();
   const runtimeReg = getRuntimeRegressionStatus();
   const ready = getRegressionReadinessStatus();
+  const watchGate = getWatchReappearanceGateStatus();
 
   return (
     <div>
@@ -31,9 +34,9 @@ export function PaperLabPage() {
         <DemoDataBadge />
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
-          Read-only would_enter / would_skip counts. Regression readiness=false · ETH watch
-          conditions absent · sample_market_no_edge · Stage 4.19 blocked. No paper execution from
-          UI.
+          Read-only would_enter / would_skip counts. Next condition before regression: ETH
+          watch/valid_watch + bias/side + conf≥0.45 + trigger + invalidation + MAE cap. Stage 4.19
+          blocked. No paper execution from UI.
         </p>
       </header>
       <div className="flag-grid">
@@ -103,6 +106,7 @@ export function PaperLabPage() {
       </p>
       <p className="muted">{g.whyBlocked}</p>
 
+      {watchGate ? <WatchReappearanceGateCard status={watchGate} /> : null}
       {ready ? <RegressionReadinessCard status={ready} /> : null}
       {runtimeReg ? <RuntimeRegressionStatusCard status={runtimeReg} /> : null}
       {promptRepair ? <PromptRepairStatusCard status={promptRepair} /> : null}

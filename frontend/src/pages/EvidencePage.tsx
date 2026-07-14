@@ -1,10 +1,12 @@
 import { EvidenceItemCard } from "../components/EvidenceItemCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
+import { ReportIndexCard } from "../components/ReportIndexCard";
 import {
   getEthConfirmationTimeline,
   getEvidence,
   getPromptRepairStatus,
+  getReportIndex,
   getRuntimeRegressionStatus,
 } from "../demo/nexusDataAdapter";
 
@@ -13,6 +15,7 @@ export function EvidencePage() {
   const ethTimeline = getEthConfirmationTimeline();
   const promptRepair = getPromptRepairStatus();
   const runtimeReg = getRuntimeRegressionStatus();
+  const reportIndex = getReportIndex();
   const watch = ethTimeline?.watch;
   const followup = ethTimeline?.followup;
 
@@ -24,9 +27,11 @@ export function EvidencePage() {
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
           Recent AI decisions with stage markers. Sanitized snapshot · READ ONLY · NOT INVESTMENT
-          ADVICE. P2D repair → P2D-R1 no ETH watch → P2E sample_market_no_edge timeline.
+          ADVICE. Report index: P2D / P2D-R1 / P2E / P2F. Why we cannot run yet.
         </p>
       </header>
+
+      {reportIndex.length > 0 ? <ReportIndexCard items={reportIndex} /> : null}
 
       {ethTimeline ? (
         <div className="operator-card-grid" style={{ marginBottom: "1.25rem" }}>

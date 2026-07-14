@@ -1,5 +1,6 @@
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
+import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
 import {
   getEthConfirmationTimeline,
   getNexusSnapshot,
@@ -7,6 +8,7 @@ import {
   getRiskEvidenceFlags,
   getSafetyStatus,
   getStage419Status,
+  getWatchReappearanceGateStatus,
 } from "../demo/nexusDataAdapter";
 
 export function RiskEvidencePage() {
@@ -16,6 +18,7 @@ export function RiskEvidencePage() {
   const snap = getNexusSnapshot();
   const ethTimeline = getEthConfirmationTimeline();
   const promptRepair = getPromptRepairStatus();
+  const watchGate = getWatchReappearanceGateStatus();
   const failureReason =
     ethTimeline?.failureReason ??
     snap.ethStatus.confirmationFailureReason ??
@@ -34,9 +37,8 @@ export function RiskEvidencePage() {
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
           Safety flags only — no order / no ARM / no production controls. Private Operator
-          read-only. Stage 4.19 start button absent (forbidden). P2E · sample_market_no_edge · no
-          60m recommended · wait helper fixed · Stage 4.19 blocked · no order / no mock / no
-          production.
+          read-only. Stage 4.19 start button absent (forbidden). P2F · watch reappearance gate ·
+          no 30m · no 60m · Stage 4.19 blocked · no order / no mock / no production.
         </p>
       </header>
       <div className="flag-grid">
@@ -93,6 +95,8 @@ export function RiskEvidencePage() {
           <div className="v">{f.resetStatus}</div>
         </div>
       </div>
+
+      {watchGate ? <WatchReappearanceGateCard status={watchGate} /> : null}
 
       <section className="panel-card operator-card" style={{ marginTop: "1.25rem" }}>
         <div className="meta-row" style={{ marginTop: 0 }}>

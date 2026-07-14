@@ -34,6 +34,7 @@ export interface SnapshotStageGate {
   p2dStatus?: string;
   p2dR1Status?: string;
   p2eStatus?: string;
+  p2fStatus?: string;
   latestGate: string;
   note: string;
 }
@@ -78,6 +79,7 @@ export interface SnapshotProviderShadowStatus {
   p2dSummary?: string;
   p2dR1Summary?: string;
   p2eSummary?: string;
+  p2fSummary?: string;
   actualOnlyGraduation: true;
 }
 
@@ -208,7 +210,36 @@ export interface RegressionReadinessStatus {
   nextRecommendation: string;
 }
 
-/** Canonical Private Operator / demo fixture shape for MVP-2 … MVP-7 wiring. */
+/** P2F ETH watch reappearance gate checklist. */
+export interface WatchReappearanceGateStatus {
+  regressionReadiness: false;
+  doNotRunRegressionNow: true;
+  operatorApprovedShortRegressionMayBeJustified: false;
+  conditions: {
+    hasEthWatchOrValidWatch: false;
+    hasLongBuyBias: false;
+    confidenceNearReference: false;
+    entryTriggerPresent: false;
+    invalidationPresent: false;
+    maeCapPassed: false;
+    contextQualityOk: true;
+    regimeNotUnknown: true;
+  };
+  shouldRun60m: false;
+  waitHelperRobustnessStatus: "PASS";
+  stage419Blocked: true;
+  nextRecommendation: string;
+}
+
+export interface ReportIndexItem {
+  stage: string;
+  verdict: string;
+  oneLineConclusion: string;
+  reportPath: string;
+  nextAction: string;
+}
+
+/** Canonical Private Operator / demo fixture shape for MVP-2 … MVP-8 wiring. */
 export interface NexusSnapshot {
   source: string;
   uiMode: NexusUiMode;
@@ -226,5 +257,7 @@ export interface NexusSnapshot {
   promptRepairStatus?: PromptRepairStatus;
   runtimeRegressionStatus?: RuntimeRegressionStatus;
   regressionReadinessStatus?: RegressionReadinessStatus;
+  watchReappearanceGateStatus?: WatchReappearanceGateStatus;
+  reportIndex?: ReportIndexItem[];
   reports: SnapshotReportMeta[];
 }
