@@ -335,6 +335,75 @@ button {
   color: var(--text-dim);
 }
 
+.deep-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.deep-link:hover {
+  color: var(--text);
+}
+
+.deep-link-list {
+  list-style: none;
+  margin: 0.65rem 0 0;
+  padding: 0;
+}
+
+.deep-link-list li {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(139, 155, 176, 0.12);
+  font-size: 0.85rem;
+}
+
+.related-links {
+  margin-top: 0.55rem;
+}
+
+.related-links-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  margin-bottom: 0.35rem;
+}
+
+.related-links-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.chip-link,
+.deep-link-chip {
+  text-decoration: none !important;
+}
+
+.operator-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.crumb-sep {
+  margin: 0 0.25rem;
+  color: var(--text-dim);
+}
+
+.crumb-current {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.crumb-note {
+  font-size: 0.72rem;
+}
+
 /* AI rail */
 .ai-rail {
   background: var(--bg-panel);

@@ -24,7 +24,12 @@ export function CheckpointHealthCard({
   health?: ReleaseHealthStatus;
 }) {
   return (
-    <section className="panel-card hold-banner" style={{ marginTop: "1.25rem" }} role="status">
+    <section
+      id="release-checkpoint"
+      className="panel-card hold-banner"
+      style={{ marginTop: "1.25rem" }}
+      role="status"
+    >
       <div className="meta-row" style={{ marginTop: 0 }}>
         <h2 style={{ margin: 0, fontSize: "1.1rem" }}>Release Checkpoint Health</h2>
         <ReleaseHealthBadge health={health} />

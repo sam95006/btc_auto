@@ -4,11 +4,14 @@ import { DemoDataBadge } from "../components/DemoDataBadge";
 import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
 import { GateChecklistCard } from "../components/GateChecklistCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
+import { OperatorBreadcrumbs } from "../components/OperatorBreadcrumbs";
 import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCard";
 import { OperatorHoldBanner } from "../components/OperatorHoldBanner";
+import { RelatedArtifactLinks } from "../components/RelatedArtifactLinks";
 import { StatusBadge } from "../components/StatusBadge";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
-import { SAFETY_INVARIANTS_CHECKLIST } from "../demo/reportIndex";
+import { RISK_RELATED_STAGES, SAFETY_INVARIANTS_CHECKLIST } from "../demo/reportIndex";
+import { useHashScroll } from "../hooks/useHashScroll";
 import {
   getBackendHoldStateStatus,
   getEthConfirmationTimeline,
@@ -22,6 +25,7 @@ import {
 } from "../demo/nexusDataAdapter";
 
 export function RiskEvidencePage() {
+  useHashScroll();
   const f = getRiskEvidenceFlags();
   const safety = getSafetyStatus();
   const stage419 = getStage419Status();
@@ -43,6 +47,12 @@ export function RiskEvidencePage() {
 
   return (
     <div className="page-stack">
+      <OperatorBreadcrumbs
+        crumbs={[
+          { label: "Operator Console", to: "/overview" },
+          { label: "Risk & Safety" },
+        ]}
+      />
       <header className="page-header">
         <h1>Risk & Safety</h1>
         <StatusBadge tone="pass">PASS</StatusBadge>
@@ -59,7 +69,7 @@ export function RiskEvidencePage() {
 
       <CheckpointHealthCard />
 
-      <section className="panel-card operator-card">
+      <section id="safety-invariants" className="panel-card operator-card">
         <div className="meta-row" style={{ marginTop: 0 }}>
           <h3 style={{ margin: 0 }}>Safety invariants</h3>
           <StatusBadge tone="pass">PASS</StatusBadge>
@@ -103,6 +113,10 @@ export function RiskEvidencePage() {
           order_allowed={String(f.orderAllowed)} · mock={String(f.mock)} · ARM={String(f.arm)} ·
           production={String(f.production)} · should_start_419={String(stage419.shouldStart419)}
         </p>
+        <RelatedArtifactLinks
+          stages={[...RISK_RELATED_STAGES]}
+          label="Related checkpoint docs (P2H-QA · P2H-REL)"
+        />
       </section>
 
       <GateChecklistCard

@@ -2,8 +2,11 @@ import { ProviderComparisonCard } from "../components/ProviderComparisonCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { GateChecklistCard } from "../components/GateChecklistCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
+import { OperatorBreadcrumbs } from "../components/OperatorBreadcrumbs";
+import { RelatedArtifactLinks } from "../components/RelatedArtifactLinks";
 import { StatusBadge } from "../components/StatusBadge";
-import { ROUTING_POLICY_CHECKLIST } from "../demo/reportIndex";
+import { PROVIDER_RELATED_STAGES, ROUTING_POLICY_CHECKLIST } from "../demo/reportIndex";
+import { useHashScroll } from "../hooks/useHashScroll";
 import {
   getGraduationStatus,
   getNexusSnapshot,
@@ -12,6 +15,7 @@ import {
 } from "../demo/nexusDataAdapter";
 
 export function ProviderShadowPage() {
+  useHashScroll();
   const summary = getProviderShadowSummary();
   const provider = getProviderStatus();
   const grad = getGraduationStatus();
@@ -21,6 +25,12 @@ export function ProviderShadowPage() {
 
   return (
     <div className="page-stack">
+      <OperatorBreadcrumbs
+        crumbs={[
+          { label: "Operator Console", to: "/overview" },
+          { label: "Provider Shadow" },
+        ]}
+      />
       <header className="page-header">
         <h1>Provider Shadow</h1>
         <StatusBadge tone="hold">HOLD</StatusBadge>
@@ -66,6 +76,10 @@ export function ProviderShadowPage() {
             <div className="v">{String(experimentSupported)}</div>
           </div>
         </div>
+        <RelatedArtifactLinks
+          stages={[...PROVIDER_RELATED_STAGES]}
+          label="Related docs (P2G · P2H · P2H-REL) · routing remains experimental"
+        />
       </section>
 
       <GateChecklistCard

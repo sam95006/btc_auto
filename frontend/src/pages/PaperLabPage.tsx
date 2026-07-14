@@ -4,14 +4,17 @@ import { EthConfirmationTimelineCard } from "../components/EthConfirmationTimeli
 import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
 import { GateChecklistCard } from "../components/GateChecklistCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
+import { OperatorBreadcrumbs } from "../components/OperatorBreadcrumbs";
 import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCard";
 import { OperatorHoldBanner } from "../components/OperatorHoldBanner";
 import { PromptRepairStatusCard } from "../components/PromptRepairStatusCard";
 import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
+import { RelatedArtifactLinks } from "../components/RelatedArtifactLinks";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
 import { StatusBadge } from "../components/StatusBadge";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
-import { SHORT_REGRESSION_CHECKLIST } from "../demo/reportIndex";
+import { PAPER_LAB_RELATED_STAGES, SHORT_REGRESSION_CHECKLIST } from "../demo/reportIndex";
+import { useHashScroll } from "../hooks/useHashScroll";
 import {
   getBackendHoldStateStatus,
   getEthConfirmationTimeline,
@@ -26,6 +29,7 @@ import {
 } from "../demo/nexusDataAdapter";
 
 export function PaperLabPage() {
+  useHashScroll();
   const p = getPaperLabSummary();
   const g = getGraduationStatus();
   const snap = getNexusSnapshot();
@@ -40,6 +44,12 @@ export function PaperLabPage() {
 
   return (
     <div className="page-stack">
+      <OperatorBreadcrumbs
+        crumbs={[
+          { label: "Operator Console", to: "/overview" },
+          { label: "Paper Lab" },
+        ]}
+      />
       <header className="page-header">
         <h1>Paper Trading Lab</h1>
         <StatusBadge tone="hold">HOLD</StatusBadge>
@@ -104,6 +114,10 @@ export function PaperLabPage() {
             </div>
           </div>
         </div>
+        <RelatedArtifactLinks
+          stages={[...PAPER_LAB_RELATED_STAGES]}
+          label="Related reports (P2D · P2D-R1 · P2E · P2F)"
+        />
       </section>
 
       <GateChecklistCard

@@ -1,4 +1,10 @@
+import { Link } from "react-router-dom";
 import type { ReportIndexItem } from "../types/nexusSnapshot";
+import {
+  artifactHref,
+  getOrderedChainStages,
+  stageAnchorId,
+} from "../demo/reportIndex";
 import { DemoDataBadge } from "./DemoDataBadge";
 import { ReleaseHealthBadge } from "./CheckpointHealthCard";
 
@@ -20,8 +26,9 @@ export function ReportIndexCard({
   showP2hQaHealthBadge?: boolean;
 }) {
   const present = new Set(items.map((i) => i.stage));
+  const chain = getOrderedChainStages();
   return (
-    <section className="panel-card" style={{ marginTop: "1.25rem" }}>
+    <section id="report-index" className="panel-card" style={{ marginTop: "1.25rem" }}>
       <div className="meta-row" style={{ marginTop: 0 }}>
         <h2 style={{ margin: 0, fontSize: "1.1rem" }}>Private Operator Report Index</h2>
         <span className="demo-badge">SANITIZED</span>
@@ -31,7 +38,7 @@ export function ReportIndexCard({
       </div>
       <p className="muted">
         Sanitized snapshot · READ ONLY · NOT INVESTMENT ADVICE · research report index only · No
-        live trading · Required chain: P2D → P2D-R1 → P2E → P2F → P2G → P2H → P2H-QA
+        live trading · Jump chain: P2D → P2H-REL
       </p>
       {showP2hQaHealthBadge ? (
         <p className="muted">
@@ -40,24 +47,30 @@ export function ReportIndexCard({
         </p>
       ) : null}
 
-      <div className="report-stage-chips" aria-label="Report stages P2D through P2H-QA">
-        {EXPECTED_STAGES.map((stage) => (
-          <span
+      <div className="report-stage-chips" aria-label="Deep link chain P2D through P2H-REL">
+        {chain.map((stage) => (
+          <Link
             key={stage}
             className={
-              present.has(stage) ? "report-stage-chip present" : "report-stage-chip missing"
+              present.has(stage) || stage.includes("OPS") || stage.includes("REL")
+                ? "report-stage-chip present deep-link-chip"
+                : "report-stage-chip missing"
             }
+            to={artifactHref(stage)}
           >
             {stage.replace("4.18-", "")}
-          </span>
+          </Link>
         ))}
       </div>
 
       <ul className="report-list" style={{ marginTop: "0.75rem" }}>
         {items.map((item) => (
-          <li key={item.stage}>
+          <li key={item.stage} id={stageAnchorId(item.stage)}>
             <strong>
-              {item.stage} — {item.verdict}
+              <Link className="deep-link" to={artifactHref(item.stage)}>
+                {item.stage}
+              </Link>{" "}
+              — {item.verdict}
             </strong>
             <div className="muted">{item.oneLineConclusion}</div>
             <div className="mono muted">{item.reportPath}</div>
@@ -65,6 +78,11 @@ export function ReportIndexCard({
           </li>
         ))}
       </ul>
+
+      {/* Keep EXPECTED_STAGES referenced for older snapshots without P2H-QA */}
+      <p className="mono muted" style={{ marginTop: "0.5rem" }}>
+        Snapshot stages present: {EXPECTED_STAGES.filter((s) => present.has(s)).join(" · ")}
+      </p>
     </section>
   );
 }

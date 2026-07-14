@@ -24,12 +24,27 @@ Checks:
 ```bash
 npm run typecheck
 npm run build
-python ../tools/research/check_nexus_ui_mvp13_safety.py
+python ../tools/research/check_nexus_ui_mvp14_safety.py
 ```
 
-Open the Vite URL (typically `http://localhost:5173`).
+## How to use Private Operator deep links (MVP-14)
 
-## How to use (MVP-13)
+Deep links are **documentation-only navigation** between console sections and sanitized report/runbook/checkpoint metadata. They do **not** start soaks, edits, or Stage 4.19.
+
+| From | Jump to |
+|------|---------|
+| Overview quick links | Evidence Center · HOLD Runbook · Gate Checklist · Release Checkpoint |
+| Evidence Report Viewer | Related reports / runbooks / P2H-REL checkpoint |
+| Report Index chips | Ordered P2D → P2H-REL anchors |
+| Paper Lab | P2D · P2D-R1 · P2E · P2F |
+| Risk & Safety | P2H-QA · P2H-REL |
+| Provider Shadow | P2G · P2H · P2H-REL |
+
+URLs look like `/evidence#artifact-4-18-p2h-ops` or `/overview#gate-checklist`.
+
+**No control actions** — no Start Stage 4.19 / Run 30m / Run 60m buttons.
+
+## How to use (MVP-13 console)
 
 | Nav group | Pages | Purpose |
 |-----------|-------|---------|
@@ -37,16 +52,10 @@ Open the Vite URL (typically `http://localhost:5173`).
 | Research | Fleets, Signals, Reflection | Supporting research views |
 | Future / Placeholder | Assistant, Academy, Calculator, Membership | Not productized SaaS |
 
-1. Start on **Overview** — Operator Console hero shows HOLD / P2H checkpoint / Stage 4.19 BLOCKED / next action / no 30m·60m·auto-run.
-2. Open **Evidence Center** for Report Viewer, Runbook Viewer, Release Checkpoint, and ordered P2D→P2H-QA index.
-3. Use **Paper Lab** for validation status (BTC prior evidence, ETH repair pending runtime, short regression=false).
-4. Use **Risk & Safety** for safety invariants (`orders/mock/ARM/production/btc_auto/4.19/billing=false`).
-5. Use **Provider Shadow** for experiment-only routing history (permanent change=false; operator approval required).
-
 ## Snapshot policy
 
 - Sanitized fixtures: `src/demo/snapshots/`
-- Report/runbook metadata: `src/demo/reportIndex.ts` (`docs/...` only)
+- Report/runbook/checkpoint metadata: `src/demo/reportIndex.ts` (`docs/...` only)
 - Release health: `src/demo/releaseHealth.ts`
 - Do **not** commit raw `/data`, jsonl, logs, bundles, or secrets
 
@@ -55,11 +64,10 @@ Open the Vite URL (typically `http://localhost:5173`).
 - Customer accounts / billing / API key collection  
 - Copy trading / managed accounts  
 - Trade / orders / ARM / routing-edit / Stage 4.19 start  
-- Production or btc-auto arming  
 
 ## Safety scanners
 
 ```bash
-python tools/research/check_nexus_ui_mvp12_safety.py
 python tools/research/check_nexus_ui_mvp13_safety.py
+python tools/research/check_nexus_ui_mvp14_safety.py
 ```

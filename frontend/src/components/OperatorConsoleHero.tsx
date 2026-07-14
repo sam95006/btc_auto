@@ -1,15 +1,22 @@
 import { DemoDataBadge } from "./DemoDataBadge";
+import { DeepLinkActionCard } from "./DeepLinkActionCard";
 import { ReleaseHealthBadge } from "./CheckpointHealthCard";
 import { StatusBadge } from "./StatusBadge";
+import { OVERVIEW_QUICK_LINKS } from "../demo/reportIndex";
 
-/** First-screen Private Operator console summary (MVP-13). */
+/** First-screen Private Operator console summary (MVP-14 deep links). */
 export function OperatorConsoleHero({
   nextAllowedAction = "wait for ETH watch conditions",
 }: {
   nextAllowedAction?: string;
 }) {
   return (
-    <section className="panel-card operator-console-hero" role="status" aria-label="Operator console">
+    <section
+      id="operator-console"
+      className="panel-card operator-console-hero"
+      role="status"
+      aria-label="Operator console"
+    >
       <div className="meta-row" style={{ marginTop: 0 }}>
         <h2 style={{ margin: 0, fontSize: "1.15rem" }}>Operator Console</h2>
         <StatusBadge tone="hold">HOLD</StatusBadge>
@@ -20,7 +27,7 @@ export function OperatorConsoleHero({
       </div>
       <p className="muted">
         Sanitized snapshot · READ ONLY · NOT INVESTMENT ADVICE · Private Operator total console · no
-        auto-run
+        auto-run · deep links are documentation-only
       </p>
       <div className="flag-grid console-hero-grid" style={{ marginTop: "0.85rem" }}>
         <div className="flag-item">
@@ -64,6 +71,12 @@ export function OperatorConsoleHero({
           </div>
         </div>
       </div>
+
+      <DeepLinkActionCard
+        title="Quick links"
+        actions={OVERVIEW_QUICK_LINKS}
+        footer="Evidence Center · HOLD Runbook · Gate Checklist · Release Checkpoint — navigation only"
+      />
     </section>
   );
 }

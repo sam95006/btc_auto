@@ -4,6 +4,7 @@ import { CheckpointHealthCard } from "../components/CheckpointHealthCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
 import { GateChecklistCard } from "../components/GateChecklistCard";
+import { OperatorBreadcrumbs } from "../components/OperatorBreadcrumbs";
 import { OperatorConsoleHero } from "../components/OperatorConsoleHero";
 import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCard";
 import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
@@ -11,6 +12,7 @@ import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStat
 import { StatusBadge } from "../components/StatusBadge";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
 import { SHORT_REGRESSION_CHECKLIST } from "../demo/reportIndex";
+import { useHashScroll } from "../hooks/useHashScroll";
 import {
   getBackendHoldStateStatus,
   getCurrentUiMode,
@@ -32,6 +34,7 @@ import {
 } from "../demo/nexusDataAdapter";
 
 export function OverviewPage() {
+  useHashScroll();
   const markets = getMarketOverview();
   const rt = getRoundTable();
   const op = getPrivateOperatorMode();
@@ -63,6 +66,12 @@ export function OverviewPage() {
 
   return (
     <div className="page-stack">
+      <OperatorBreadcrumbs
+        crumbs={[
+          { label: "Operator Console", to: "/overview" },
+          { label: "Overview" },
+        ]}
+      />
       <div className="operator-banner" role="status">
         <span className="operator-banner-label">{op.label}</span>
         <span className="operator-banner-sep">·</span>
@@ -85,7 +94,7 @@ export function OverviewPage() {
 
       <OperatorConsoleHero nextAllowedAction={nextStep} />
 
-      <div className="operator-section">
+      <div className="operator-section" id="gate-checklist">
         <h2 className="section-title">Checkpoint & gate</h2>
         <CheckpointHealthCard />
         <GateChecklistCard
