@@ -12,6 +12,7 @@ export type FleetIntel = {
   confidence: number;
   riskGate: string;
   nextAction: string;
+  drillLinks: { label: string; to: string }[];
 };
 
 export type CandidateRow = {
@@ -26,6 +27,12 @@ export type CandidateRow = {
   evidenceNote: string;
   nextAction: "View Evidence" | "Open Risk Card" | "Ask AI" | "View Gate";
   bucket: "long" | "short" | "waiting";
+  links: {
+    evidence: string;
+    gate: string;
+    provider: string;
+    risk: string;
+  };
 };
 
 export type SignalFeedRow = {
@@ -46,6 +53,12 @@ export type SignalFeedRow = {
     | "confirmation_pending"
     | "graduated";
   evidenceHref: string;
+  links: {
+    evidence: string;
+    gate: string;
+    provider: string;
+    risk: string;
+  };
 };
 
 export type AnomalyRow = {
@@ -58,6 +71,12 @@ export type AnomalyRow = {
   change: string;
   riskNote: string;
   evidenceHref: string;
+  links: {
+    evidence: string;
+    gate: string;
+    provider: string;
+    risk: string;
+  };
 };
 
 export type CopilotPrompt = {
@@ -96,6 +115,11 @@ export const FLEET_INTELLIGENCE: FleetIntel[] = [
     confidence: 0,
     riskGate: "HOLD",
     nextAction: "View Evidence",
+    drillLinks: [
+      { label: "Evidence", to: "/evidence?q=BTC#doc-summary-p2d-r1" },
+      { label: "Provider", to: "/provider-shadow#btc-cerebras-first" },
+      { label: "Risk", to: "/risk-evidence#checklist-safety-invariants" },
+    ],
   },
   {
     symbol: "ETH",
@@ -106,6 +130,11 @@ export const FLEET_INTELLIGENCE: FleetIntel[] = [
     confidence: 0,
     riskGate: "WAIT",
     nextAction: "View Gate",
+    drillLinks: [
+      { label: "Gate", to: "/overview#checklist-eth-watch-reappearance" },
+      { label: "Evidence", to: "/evidence?q=ETH&unresolved=true#doc-summary-p2f" },
+      { label: "Risk", to: "/risk-evidence#checklist-safety-invariants" },
+    ],
   },
   {
     symbol: "SOL",
@@ -116,6 +145,10 @@ export const FLEET_INTELLIGENCE: FleetIntel[] = [
     confidence: 0,
     riskGate: "HOLD",
     nextAction: "Ask AI",
+    drillLinks: [
+      { label: "Evidence", to: "/evidence#doc-summaries" },
+      { label: "Gate", to: "/overview#gate-checklist" },
+    ],
   },
   {
     symbol: "PEPE",
@@ -126,6 +159,10 @@ export const FLEET_INTELLIGENCE: FleetIntel[] = [
     confidence: 0,
     riskGate: "HOLD",
     nextAction: "Open Risk Card",
+    drillLinks: [
+      { label: "Risk", to: "/risk-evidence#checklist-safety-invariants" },
+      { label: "Evidence", to: "/evidence#doc-summaries" },
+    ],
   },
 ];
 
@@ -142,6 +179,12 @@ export const CANDIDATE_ROWS: CandidateRow[] = [
     evidenceNote: "prior graduation evidence exists; latest regen grad=0",
     nextAction: "View Evidence",
     bucket: "waiting",
+    links: {
+      evidence: "/evidence?q=BTC#p2-r1-btc",
+      gate: "/overview#gate-checklist",
+      provider: "/provider-shadow#btc-cerebras-first",
+      risk: "/risk-evidence#checklist-safety-invariants",
+    },
   },
   {
     id: "eth-wait",
@@ -155,6 +198,12 @@ export const CANDIDATE_ROWS: CandidateRow[] = [
     evidenceNote: "ETH watch conditions not reappeared",
     nextAction: "View Gate",
     bucket: "waiting",
+    links: {
+      evidence: "/evidence?q=ETH#eth-watch-reappearance",
+      gate: "/overview#checklist-eth-watch-reappearance",
+      provider: "/provider-shadow#provider-history-chart",
+      risk: "/risk-evidence#checklist-safety-invariants",
+    },
   },
   {
     id: "sol-skip",
@@ -168,6 +217,12 @@ export const CANDIDATE_ROWS: CandidateRow[] = [
     evidenceNote: "waiting / skip under HOLD",
     nextAction: "Ask AI",
     bucket: "waiting",
+    links: {
+      evidence: "/evidence#doc-summaries",
+      gate: "/overview#gate-checklist",
+      provider: "/provider-shadow#provider-routing-posture",
+      risk: "/risk-evidence#checklist-safety-invariants",
+    },
   },
   {
     id: "pepe-skip",
@@ -181,6 +236,12 @@ export const CANDIDATE_ROWS: CandidateRow[] = [
     evidenceNote: "waiting / skip under HOLD",
     nextAction: "Open Risk Card",
     bucket: "waiting",
+    links: {
+      evidence: "/evidence#doc-summaries",
+      gate: "/overview#gate-checklist",
+      provider: "/provider-shadow#provider-routing-posture",
+      risk: "/risk-evidence#checklist-safety-invariants",
+    },
   },
 ];
 
@@ -196,7 +257,13 @@ export const SIGNAL_FEED: SignalFeedRow[] = [
     trigger: "—",
     gateStatus: "WAIT",
     status: "blocked",
-    evidenceHref: "/evidence#doc-summaries",
+    evidenceHref: "/evidence?q=ETH",
+    links: {
+      evidence: "/evidence?q=ETH#doc-summary-p2f",
+      gate: "/overview#checklist-eth-watch-reappearance",
+      provider: "/provider-shadow#provider-history-chart",
+      risk: "/risk-evidence#checklist-safety-invariants",
+    },
   },
   {
     id: "s2",
@@ -209,7 +276,13 @@ export const SIGNAL_FEED: SignalFeedRow[] = [
     trigger: "prior",
     gateStatus: "HOLD",
     status: "soft_skip",
-    evidenceHref: "/evidence#doc-summaries",
+    evidenceHref: "/evidence?q=BTC",
+    links: {
+      evidence: "/evidence?q=BTC#p2-r1-btc",
+      gate: "/overview#gate-checklist",
+      provider: "/provider-shadow#btc-cerebras-first",
+      risk: "/risk-evidence#checklist-safety-invariants",
+    },
   },
   {
     id: "s3",
@@ -223,6 +296,12 @@ export const SIGNAL_FEED: SignalFeedRow[] = [
     gateStatus: "WAIT",
     status: "confirmation_pending",
     evidenceHref: "/overview#checklist-eth-watch-reappearance",
+    links: {
+      evidence: "/evidence?q=P2F#p2f-watch-gate",
+      gate: "/overview#checklist-eth-watch-reappearance",
+      provider: "/provider-shadow#provider-divergence-timeline",
+      risk: "/risk-evidence#checklist-safety-invariants",
+    },
   },
   {
     id: "s4",
@@ -236,6 +315,12 @@ export const SIGNAL_FEED: SignalFeedRow[] = [
     gateStatus: "HOLD",
     status: "hard_skip",
     evidenceHref: "/risk-evidence",
+    links: {
+      evidence: "/evidence#doc-summaries",
+      gate: "/overview#gate-checklist",
+      provider: "/provider-shadow#provider-routing-posture",
+      risk: "/risk-evidence#checklist-safety-invariants",
+    },
   },
 ];
 
@@ -249,7 +334,13 @@ export const ANOMALY_ROWS: AnomalyRow[] = [
     latestValue: "permanent routing=false",
     change: "experiment only",
     riskNote: "Shadow not used for graduation",
-    evidenceHref: "/provider-shadow",
+    evidenceHref: "/provider-shadow#btc-cerebras-first",
+    links: {
+      evidence: "/evidence?q=routing",
+      gate: "/overview#gate-checklist",
+      provider: "/provider-shadow#btc-cerebras-first",
+      risk: "/risk-evidence#checklist-safety-invariants",
+    },
   },
   {
     id: "a2",
@@ -261,6 +352,12 @@ export const ANOMALY_ROWS: AnomalyRow[] = [
     change: "not reappeared",
     riskNote: "Next = wait · no 60m",
     evidenceHref: "/overview#unresolved-gate",
+    links: {
+      evidence: "/evidence?q=ETH#eth-watch-reappearance",
+      gate: "/overview#checklist-eth-watch-reappearance",
+      provider: "/provider-shadow#provider-history-chart",
+      risk: "/risk-evidence#checklist-safety-invariants",
+    },
   },
   {
     id: "a3",
@@ -272,6 +369,12 @@ export const ANOMALY_ROWS: AnomalyRow[] = [
     change: "unchanged",
     riskNote: "Needs actual BTC+ETH graduation",
     evidenceHref: "/overview#checklist-stage-419-dossier",
+    links: {
+      evidence: "/evidence?q=4.19",
+      gate: "/overview#checklist-stage-419-dossier",
+      provider: "/provider-shadow#provider-routing-posture",
+      risk: "/risk-evidence#checklist-safety-invariants",
+    },
   },
   {
     id: "a4",
@@ -283,6 +386,12 @@ export const ANOMALY_ROWS: AnomalyRow[] = [
     change: "HOLD",
     riskNote: "Auto-run=false",
     evidenceHref: "/overview#gate-checklist",
+    links: {
+      evidence: "/evidence?q=HOLD",
+      gate: "/overview#gate-checklist",
+      provider: "/provider-shadow#provider-routing-posture",
+      risk: "/risk-evidence#checklist-safety-invariants",
+    },
   },
   {
     id: "a5",
@@ -293,7 +402,13 @@ export const ANOMALY_ROWS: AnomalyRow[] = [
     latestValue: "false",
     change: "policy hold",
     riskNote: "Operator approval required",
-    evidenceHref: "/provider-shadow",
+    evidenceHref: "/provider-shadow#provider-routing-posture",
+    links: {
+      evidence: "/evidence?category=routing",
+      gate: "/overview#gate-checklist",
+      provider: "/provider-shadow#provider-routing-posture",
+      risk: "/risk-evidence#checklist-safety-invariants",
+    },
   },
 ];
 

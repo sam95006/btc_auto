@@ -393,6 +393,7 @@ export type DocSummaryFilterState = {
   category: DocCategory | "";
   gateStatus: GateStatusLabel | "";
   unresolvedOnly: boolean;
+  tag: string;
 };
 
 export const EMPTY_DOC_SUMMARY_FILTER: DocSummaryFilterState = {
@@ -400,6 +401,7 @@ export const EMPTY_DOC_SUMMARY_FILTER: DocSummaryFilterState = {
   category: "",
   gateStatus: "",
   unresolvedOnly: false,
+  tag: "",
 };
 
 export function getDocSummaries(): DocSummary[] {
@@ -442,11 +444,13 @@ export function filterDocSummaries(
   filter: DocSummaryFilterState,
 ): DocSummary[] {
   const q = filter.query.trim().toLowerCase();
+  const tag = filter.tag.trim().toLowerCase();
   return summaries
     .filter((s) => {
       if (filter.category && s.category !== filter.category) return false;
       if (filter.gateStatus && s.gateStatus !== filter.gateStatus) return false;
       if (filter.unresolvedOnly && !s.unresolvedGate) return false;
+      if (tag && !s.tags.some((t) => t.toLowerCase().includes(tag))) return false;
       if (q && !haystack(s).includes(q)) return false;
       return true;
     })

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   FLEET_INTELLIGENCE,
   SYSTEM_GATE_STRIP,
@@ -41,11 +42,18 @@ function FleetIntelCard({ fleet }: { fleet: FleetIntel }) {
           <span className="v">{fleet.nextAction}</span>
         </div>
       </div>
+      <div className="ro-nav-row" style={{ marginTop: "0.45rem" }}>
+        {fleet.drillLinks.map((l) => (
+          <Link key={l.to + l.label} className="ro-nav-chip" to={l.to}>
+            {l.label}
+          </Link>
+        ))}
+      </div>
     </article>
   );
 }
 
-/** Market Command Center — DataHunterX-inspired denser financial layout (MVP-17). */
+/** Market Command Center — denser financial layout + drilldowns (MVP-17/18). */
 export function MarketCommandCenter() {
   const g = SYSTEM_GATE_STRIP;
   return (
@@ -60,8 +68,8 @@ export function MarketCommandCenter() {
         <DemoDataBadge />
       </div>
       <p className="muted" style={{ marginTop: 0 }}>
-        Market Intelligence layout · NOT INVESTMENT ADVICE · no trading controls · sanitized static
-        data
+        Market Intelligence · drilldowns are read-only navigation · NOT INVESTMENT ADVICE · no
+        trading controls
       </p>
 
       <div className="mcc-grid">
@@ -70,13 +78,22 @@ export function MarketCommandCenter() {
             <h3 style={{ margin: 0, fontSize: "0.9rem" }}>System Gate Strip</h3>
             <div className="gate-strip-row">
               <span>
-                Backend State: <strong className="tone-hold">{g.backendState}</strong>
+                Backend State:{" "}
+                <Link className="tone-hold deep-link" to="/evidence#artifact-4-18-p2h-rel">
+                  <strong>{g.backendState}</strong>
+                </Link>
               </span>
               <span>
-                Release: <strong>{g.releaseCheckpoint}</strong>
+                Release:{" "}
+                <Link className="deep-link" to="/evidence#artifact-4-18-p2h-rel">
+                  <strong>{g.releaseCheckpoint}</strong>
+                </Link>
               </span>
               <span>
-                Stage 4.19: <strong className="tone-blocked">{g.stage419}</strong>
+                Stage 4.19:{" "}
+                <Link className="tone-blocked deep-link" to="/overview#checklist-stage-419-dossier">
+                  <strong>{g.stage419}</strong>
+                </Link>
               </span>
               <span>
                 Next: <strong>{g.nextAction}</strong>
@@ -84,6 +101,14 @@ export function MarketCommandCenter() {
               <span className="mono">30m now: {String(g.thirtyMNow)}</span>
               <span className="mono">60m: {String(g.sixtyM)}</span>
               <span className="mono">Auto-run: {String(g.autoRun)}</span>
+            </div>
+            <div className="ro-nav-row" style={{ marginTop: "0.55rem" }}>
+              <ReadOnlyNavChip label="View Runbook" to="/evidence#artifact-4-18-p2h-ops" />
+              <ReadOnlyNavChip
+                label="View Gate"
+                to="/overview#checklist-stage-419-dossier"
+              />
+              <ReadOnlyNavChip label="View Evidence" to="/evidence?q=HOLD" />
             </div>
           </section>
 
@@ -98,6 +123,7 @@ export function MarketCommandCenter() {
             <ReadOnlyNavChip label="Open Risk Card" />
             <ReadOnlyNavChip label="View Gate" />
             <ReadOnlyNavChip label="View Runbook" />
+            <ReadOnlyNavChip label="View Provider History" />
             <ReadOnlyNavChip label="Ask AI" />
           </div>
         </div>

@@ -4,7 +4,10 @@ import { GateChecklistCard } from "../components/GateChecklistCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import { OperatorBreadcrumbs } from "../components/OperatorBreadcrumbs";
 import { PageSummaryCard } from "../components/PageSummaryCard";
+import { ProviderDivergenceTimeline } from "../components/ProviderDivergenceTimeline";
+import { ProviderHistoryChart } from "../components/ProviderHistoryChart";
 import { ProviderIntelligencePanel } from "../components/ProviderIntelligencePanel";
+import { ProviderRoutingPostureCard } from "../components/ProviderRoutingPostureCard";
 import { RelatedArtifactLinks } from "../components/RelatedArtifactLinks";
 import { StatusBadge } from "../components/StatusBadge";
 import { PROVIDER_ROUTING_SUMMARY } from "../demo/docSummaries";
@@ -48,6 +51,9 @@ export function ProviderShadowPage() {
 
       <PageSummaryCard {...PROVIDER_ROUTING_SUMMARY} />
       <ProviderIntelligencePanel />
+      <ProviderHistoryChart />
+      <ProviderDivergenceTimeline />
+      <ProviderRoutingPostureCard />
 
       <section className="panel-card dense-card">
         <div className="meta-row" style={{ marginTop: 0 }}>

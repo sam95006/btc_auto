@@ -1,15 +1,18 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { DocSummary } from "../demo/docSummaries";
-import {
-  EMPTY_DOC_SUMMARY_FILTER,
-  filterDocSummaries,
-  type DocSummaryFilterState,
-} from "../demo/docSummaries";
+import { filterDocSummaries } from "../demo/docSummaries";
+import { useEvidenceFilterQueryState } from "../hooks/useEvidenceFilterQueryState";
 import { DemoDataBadge } from "./DemoDataBadge";
 import { DocSummaryCard } from "./DocSummaryCard";
 import { DocSummaryFilterBar } from "./DocSummaryFilterBar";
 
-/** Filtered list of sanitized doc excerpts for Evidence Center (MVP-15 / MVP-16). */
+/** Drilldown aliases → summary ids (MVP-18). */
+const ANCHOR_ALIASES: Record<string, string[]> = {
+  "p2d-r1": ["p2-r1-btc"],
+  p2f: ["p2f-watch-gate", "eth-watch-reappearance"],
+};
+
+/** Filtered list of sanitized doc excerpts (MVP-15/16 + URL state MVP-18). */
 export function DocSummaryList({
   summaries,
   title = "Static Doc Summary Viewer",
@@ -19,7 +22,7 @@ export function DocSummaryList({
   title?: string;
   enableFilter?: boolean;
 }) {
-  const [filter, setFilter] = useState<DocSummaryFilterState>({ ...EMPTY_DOC_SUMMARY_FILTER });
+  const [filter, setFilter] = useEvidenceFilterQueryState();
   const visible = useMemo(
     () => (enableFilter ? filterDocSummaries(summaries, filter) : summaries),
     [summaries, filter, enableFilter],
@@ -36,8 +39,8 @@ export function DocSummaryList({
         <DemoDataBadge />
       </div>
       <p className="muted" style={{ marginTop: 0 }}>
-        Sanitized one-line excerpts · key conclusion · next action · gate status · checklist links ·
-        no /data raw files · no control actions · NOT INVESTMENT ADVICE
+        Sanitized one-line excerpts · URL filter state (q/category/gateStatus/unresolved/tag) · no
+        /data · no backend · no control actions · NOT INVESTMENT ADVICE
       </p>
       {enableFilter ? (
         <DocSummaryFilterBar value={filter} onChange={setFilter} resultCount={visible.length} />
@@ -46,7 +49,14 @@ export function DocSummaryList({
         {visible.length === 0 ? (
           <p className="muted">No sanitized excerpts match these local filters.</p>
         ) : (
-          visible.map((s) => <DocSummaryCard key={s.id} summary={s} />)
+          visible.map((s) => (
+            <div key={s.id}>
+              {(ANCHOR_ALIASES[s.id] ?? []).map((alias) => (
+                <span key={alias} id={alias} className="anchor-alias" />
+              ))}
+              <DocSummaryCard summary={s} />
+            </div>
+          ))
         )}
       </div>
     </section>

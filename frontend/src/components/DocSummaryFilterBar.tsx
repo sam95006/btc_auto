@@ -2,7 +2,7 @@ import type { DocCategory, DocSummaryFilterState, GateStatusLabel } from "../dem
 import { DOC_CATEGORIES, EMPTY_DOC_SUMMARY_FILTER, GATE_STATUS_OPTIONS } from "../demo/docSummaries";
 import { DemoDataBadge } from "./DemoDataBadge";
 
-/** Static sanitized-metadata search / filter (MVP-16) — no backend, no /data. */
+/** Static sanitized-metadata search / filter (MVP-16/18) — URL sync · no backend · no /data. */
 export function DocSummaryFilterBar({
   value,
   onChange,
@@ -18,21 +18,21 @@ export function DocSummaryFilterBar({
     <section className="panel-card doc-filter-bar" aria-label="Static doc summary filters">
       <div className="meta-row" style={{ marginTop: 0 }}>
         <h3 style={{ margin: 0, fontSize: "1rem" }}>Static Excerpt Search / Filter</h3>
+        <span className="demo-badge">URL QUERY</span>
         <span className="demo-badge">LOCAL METADATA</span>
-        <span className="demo-badge">READ ONLY</span>
         <DemoDataBadge />
       </div>
       <p className="muted" style={{ marginTop: "0.35rem" }}>
-        Sanitized metadata only · no backend calls · no /data · no control actions · NOT INVESTMENT
-        ADVICE
+        Filter state in URL (q · category · gateStatus · unresolved · tag) · share/reload keeps
+        filters · no backend · no /data · no localStorage secrets · NOT INVESTMENT ADVICE
       </p>
-      <div className="doc-filter-grid">
+      <div className="doc-filter-grid mi18-filter-grid">
         <label className="doc-filter-field">
-          <span className="k">Search</span>
+          <span className="k">Search (q)</span>
           <input
             type="search"
             value={value.query}
-            placeholder="P2D · P2E · HOLD · Stage 4.19 · no 60m · ETH watch · prompt repair · release checkpoint"
+            placeholder="P2D · ETH · HOLD · Stage 4.19 · no 60m · prompt repair"
             onChange={(e) => set({ query: e.target.value })}
             aria-label="Search sanitized doc summaries"
           />
@@ -67,13 +67,23 @@ export function DocSummaryFilterBar({
             ))}
           </select>
         </label>
+        <label className="doc-filter-field">
+          <span className="k">Tag</span>
+          <input
+            type="search"
+            value={value.tag}
+            placeholder="HOLD · ETH · BTC · Stage 4.19"
+            onChange={(e) => set({ tag: e.target.value })}
+            aria-label="Filter by tag"
+          />
+        </label>
         <label className="doc-filter-check">
           <input
             type="checkbox"
             checked={value.unresolvedOnly}
             onChange={(e) => set({ unresolvedOnly: e.target.checked })}
           />
-          <span>Show unresolved only</span>
+          <span>Unresolved only</span>
         </label>
         <button
           type="button"
@@ -84,7 +94,8 @@ export function DocSummaryFilterBar({
         </button>
       </div>
       <p className="mono muted" style={{ marginBottom: 0 }}>
-        Showing {resultCount} sanitized excerpt(s)
+        Showing {resultCount} sanitized excerpt(s) · example{" "}
+        <code>/evidence?q=ETH&amp;category=backend-gate&amp;gateStatus=HOLD&amp;unresolved=true</code>
       </p>
     </section>
   );

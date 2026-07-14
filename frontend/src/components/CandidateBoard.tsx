@@ -3,7 +3,7 @@ import { DemoDataBadge } from "./DemoDataBadge";
 import { ReadOnlyNavChip } from "./ReadOnlyNavChip";
 import { StatusBadge } from "./StatusBadge";
 
-/** Candidate table — trading-platform density, read-only nav only (MVP-17). */
+/** Candidate table — read-only Evidence/Gate/Provider/Risk links (MVP-17/18). */
 export function CandidateBoard() {
   const longRows = CANDIDATE_ROWS.filter((r) => r.bucket === "long");
   const shortRows = CANDIDATE_ROWS.filter((r) => r.bucket === "short");
@@ -26,8 +26,8 @@ export function CandidateBoard() {
         <DemoDataBadge />
       </div>
       <p className="muted" style={{ marginTop: 0 }}>
-        No Buy / Sell / Quick Order · next actions are View Evidence / Open Risk Card / Ask AI / View
-        Gate only · NOT INVESTMENT ADVICE
+        Cross-links to Evidence / Gate / Provider / Risk only · no Buy / Sell / Quick Order · NOT
+        INVESTMENT ADVICE
       </p>
 
       {sections.map((sec) => (
@@ -44,8 +44,8 @@ export function CandidateBoard() {
                   <th>Entry trigger</th>
                   <th>Invalidation</th>
                   <th>Gate</th>
-                  <th>Evidence</th>
-                  <th>Next action</th>
+                  <th>Evidence note</th>
+                  <th>Links</th>
                 </tr>
               </thead>
               <tbody>
@@ -70,8 +70,11 @@ export function CandidateBoard() {
                         </StatusBadge>
                       </td>
                       <td className="muted">{r.evidenceNote}</td>
-                      <td>
-                        <ReadOnlyNavChip label={r.nextAction} />
+                      <td className="ro-nav-row">
+                        <ReadOnlyNavChip label="Evidence" to={r.links.evidence} />
+                        <ReadOnlyNavChip label="Gate" to={r.links.gate} />
+                        <ReadOnlyNavChip label="Provider" to={r.links.provider} />
+                        <ReadOnlyNavChip label="Risk" to={r.links.risk} />
                       </td>
                     </tr>
                   ))

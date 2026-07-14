@@ -24,8 +24,37 @@ Checks:
 ```bash
 npm run typecheck
 npm run build
-python ../tools/research/check_nexus_ui_mvp17_safety.py
+python ../tools/research/check_nexus_ui_mvp18_safety.py
 ```
+
+## Evidence URL filter + Provider charts (MVP-18)
+
+Interaction polish on top of MVP-17 Market Intelligence (no visual redesign).
+
+### Evidence URL filter usage
+
+Filters sync to the address bar:
+
+```
+/evidence?q=ETH&category=backend-gate&gateStatus=HOLD&unresolved=true&tag=HOLD
+```
+
+- Reload / share keeps filter state  
+- Clear filters removes related query keys  
+- Params are sanitized filter state only · **no backend calls** · **no /data** · no secret localStorage  
+
+### Provider chart policy
+
+`src/demo/providerHistory.ts` feeds CSS bar chart + divergence timeline + routing posture card.
+
+- **Provider chart is sanitized static metadata**  
+- Shadow not used for graduation · permanent routing=false · experiment only  
+
+### Drilldown links
+
+Candidate / Signal / Anomaly / Market Command use **read-only navigation** (Evidence · Gate · Provider · Risk · Runbook).
+
+- **No control actions** · no Buy / Sell / Quick Order / Execute / Start Stage 4.19 / Run 30m / 60m  
 
 ## Market Intelligence Layout (MVP-17)
 
@@ -137,7 +166,7 @@ URLs look like `/evidence#artifact-4-18-p2h-ops` or `/overview#gate-checklist`.
 ## Safety scanners
 
 ```bash
-python tools/research/check_nexus_ui_mvp15_safety.py
 python tools/research/check_nexus_ui_mvp16_safety.py
 python tools/research/check_nexus_ui_mvp17_safety.py
+python tools/research/check_nexus_ui_mvp18_safety.py
 ```

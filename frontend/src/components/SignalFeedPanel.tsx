@@ -3,7 +3,7 @@ import { DemoDataBadge } from "./DemoDataBadge";
 import { ReadOnlyNavChip } from "./ReadOnlyNavChip";
 import { StatusBadge } from "./StatusBadge";
 
-/** Signal feed — dense rows, read-only actions only (MVP-17). */
+/** Signal feed — dense rows + Evidence/Gate/Provider/Risk links (MVP-17/18). */
 export function SignalFeedPanel() {
   return (
     <section id="signal-feed" className="operator-section">
@@ -16,8 +16,8 @@ export function SignalFeedPanel() {
         <DemoDataBadge />
       </div>
       <p className="muted" style={{ marginTop: 0 }}>
-        No quick order · no execution · View Evidence / Ask AI / Open Risk Card only · NOT INVESTMENT
-        ADVICE
+        No quick order · no execution · Evidence / Gate / Provider / Risk navigation only · NOT
+        INVESTMENT ADVICE
       </p>
 
       <div className="signal-feed-desktop table-scroll">
@@ -33,7 +33,7 @@ export function SignalFeedPanel() {
               <th>Trigger</th>
               <th>Gate</th>
               <th>Status</th>
-              <th>Actions</th>
+              <th>Links</th>
             </tr>
           </thead>
           <tbody>
@@ -53,9 +53,10 @@ export function SignalFeedPanel() {
                 </td>
                 <td className="mono">{s.status}</td>
                 <td className="ro-nav-row">
-                  <ReadOnlyNavChip label="View Evidence" />
-                  <ReadOnlyNavChip label="Ask AI" />
-                  <ReadOnlyNavChip label="Open Risk Card" />
+                  <ReadOnlyNavChip label="Evidence" to={s.links.evidence} />
+                  <ReadOnlyNavChip label="Gate" to={s.links.gate} />
+                  <ReadOnlyNavChip label="Provider" to={s.links.provider} />
+                  <ReadOnlyNavChip label="Risk" to={s.links.risk} />
                 </td>
               </tr>
             ))}
@@ -76,9 +77,10 @@ export function SignalFeedPanel() {
               {s.provider} · {s.intent} · {s.direction} · gate {s.gateStatus}
             </p>
             <div className="ro-nav-row">
-              <ReadOnlyNavChip label="View Evidence" />
-              <ReadOnlyNavChip label="Ask AI" />
-              <ReadOnlyNavChip label="Open Risk Card" />
+              <ReadOnlyNavChip label="Evidence" to={s.links.evidence} />
+              <ReadOnlyNavChip label="Gate" to={s.links.gate} />
+              <ReadOnlyNavChip label="Provider" to={s.links.provider} />
+              <ReadOnlyNavChip label="Risk" to={s.links.risk} />
             </div>
           </article>
         ))}

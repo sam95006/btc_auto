@@ -1,6 +1,6 @@
 import { ANOMALY_ROWS } from "../demo/marketIntelligence";
 import { DemoDataBadge } from "./DemoDataBadge";
-import { Link } from "react-router-dom";
+import { ReadOnlyNavChip } from "./ReadOnlyNavChip";
 import { StatusBadge } from "./StatusBadge";
 
 const CAT_LABEL = {
@@ -11,7 +11,7 @@ const CAT_LABEL = {
   gate: "Gate warning",
 } as const;
 
-/** Anomaly radar — sanitized static alerts, documentation links only (MVP-17). */
+/** Anomaly radar — sanitized alerts + cross links (MVP-17/18). */
 export function AnomalyRadarPanel() {
   const cats = ["gate", "risk", "provider", "bullish", "bearish"] as const;
 
@@ -26,7 +26,8 @@ export function AnomalyRadarPanel() {
         <DemoDataBadge />
       </div>
       <p className="muted" style={{ marginTop: 0 }}>
-        Priority anomalies under HOLD · no chase-trade · evidence links only · NOT INVESTMENT ADVICE
+        Priority anomalies under HOLD · Evidence / Gate / Provider / Risk links only · NOT
+        INVESTMENT ADVICE
       </p>
 
       <div className="anomaly-grid">
@@ -61,9 +62,12 @@ export function AnomalyRadarPanel() {
                         <span className="v">{r.riskNote}</span>
                       </div>
                     </div>
-                    <Link className="ro-nav-chip" to={r.evidenceHref}>
-                      View Evidence
-                    </Link>
+                    <div className="ro-nav-row" style={{ marginTop: "0.35rem" }}>
+                      <ReadOnlyNavChip label="Evidence" to={r.links.evidence} />
+                      <ReadOnlyNavChip label="Gate" to={r.links.gate} />
+                      <ReadOnlyNavChip label="Provider" to={r.links.provider} />
+                      <ReadOnlyNavChip label="Risk" to={r.links.risk} />
+                    </div>
                   </li>
                 ))}
               </ul>
