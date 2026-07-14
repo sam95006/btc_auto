@@ -1,6 +1,7 @@
 /**
- * Sanitized static doc summaries for Private Operator (MVP-15).
+ * Sanitized static doc summaries for Private Operator (MVP-15 / MVP-16).
  * READ ONLY · NOT INVESTMENT ADVICE · excerpts only · no raw /data · no secrets · no control actions
+ * Search/filter is local metadata only — no backend calls.
  */
 
 export type GateStatusLabel =
@@ -10,6 +11,57 @@ export type GateStatusLabel =
   | "PARTIAL"
   | "BLOCKED"
   | "READY";
+
+export type DocCategory =
+  | "backend-gate"
+  | "prompt-repair"
+  | "runtime-regression"
+  | "no-watch-diagnostics"
+  | "release-checkpoint"
+  | "ui"
+  | "safety"
+  | "routing";
+
+export type ChecklistRefId =
+  | "eth-watch-reappearance"
+  | "short-regression-approval"
+  | "stage-419-dossier"
+  | "safety-invariants";
+
+export type ChecklistRef = {
+  id: ChecklistRefId;
+  label: string;
+  href: string;
+  description: string;
+};
+
+/** Documentation-only anchors for runbook / gate checklist lines. */
+export const CHECKLIST_REFS: Record<ChecklistRefId, ChecklistRef> = {
+  "eth-watch-reappearance": {
+    id: "eth-watch-reappearance",
+    label: "ETH watch reappearance checklist",
+    href: "/overview#checklist-eth-watch-reappearance",
+    description: "Conditions for ETH watch / valid_watch to reappear",
+  },
+  "short-regression-approval": {
+    id: "short-regression-approval",
+    label: "Short regression approval checklist",
+    href: "/overview#checklist-short-regression-approval",
+    description: "Manual approval gates before any short regression",
+  },
+  "stage-419-dossier": {
+    id: "stage-419-dossier",
+    label: "Stage 4.19 dossier checklist",
+    href: "/overview#checklist-stage-419-dossier",
+    description: "Actual BTC+ETH graduation required — dossier not started",
+  },
+  "safety-invariants": {
+    id: "safety-invariants",
+    label: "Safety invariants checklist",
+    href: "/risk#checklist-safety-invariants",
+    description: "No orders / ARM / production / billing / Stage 4.19",
+  },
+};
 
 export type DocSummary = {
   id: string;
@@ -22,7 +74,24 @@ export type DocSummary = {
   gateStatus: GateStatusLabel;
   safetyNote: string;
   relatedArtifactIds: string[];
+  category: DocCategory;
+  tags: string[];
+  checklistRefs: ChecklistRefId[];
+  unresolvedGate: boolean;
+  operatorPriority: number;
 };
+
+const T = {
+  HOLD: "HOLD",
+  ETH: "ETH",
+  BTC: "BTC",
+  STAGE419: "Stage 4.19",
+  NO60: "no 60m",
+  NO_RUNTIME: "no runtime",
+  PROMPT: "prompt repair",
+  REL: "release checkpoint",
+  RO: "read-only",
+} as const;
 
 export const DOC_SUMMARIES: DocSummary[] = [
   {
@@ -36,6 +105,11 @@ export const DOC_SUMMARIES: DocSummary[] = [
     gateStatus: "PASS",
     safetyNote: "No MAE/RG/routing/order changes · Stage 4.19 blocked",
     relatedArtifactIds: ["p2d-r1", "p2e", "p2h-ops"],
+    category: "prompt-repair",
+    tags: [T.PROMPT, T.ETH, T.STAGE419, T.NO60, T.RO],
+    checklistRefs: ["eth-watch-reappearance"],
+    unresolvedGate: false,
+    operatorPriority: 40,
   },
   {
     id: "p2d-r1",
@@ -48,6 +122,11 @@ export const DOC_SUMMARIES: DocSummary[] = [
     gateStatus: "PARTIAL",
     safetyNote: "mock=0 · order=0 · Stage 4.19 blocked",
     relatedArtifactIds: ["p2d", "p2e", "p2f"],
+    category: "runtime-regression",
+    tags: [T.ETH, T.PROMPT, T.NO60, T.STAGE419, T.RO],
+    checklistRefs: ["eth-watch-reappearance"],
+    unresolvedGate: true,
+    operatorPriority: 25,
   },
   {
     id: "p2e",
@@ -60,6 +139,11 @@ export const DOC_SUMMARIES: DocSummary[] = [
     gateStatus: "PASS",
     safetyNote: "No prompt/MAE/RG/routing edits · Stage 4.19 blocked",
     relatedArtifactIds: ["p2d-r1", "p2f"],
+    category: "no-watch-diagnostics",
+    tags: [T.ETH, "P2E", T.NO60, T.STAGE419, T.RO],
+    checklistRefs: ["eth-watch-reappearance"],
+    unresolvedGate: false,
+    operatorPriority: 35,
   },
   {
     id: "p2f",
@@ -72,6 +156,11 @@ export const DOC_SUMMARIES: DocSummary[] = [
     gateStatus: "WAIT",
     safetyNote: "No auto-run · Stage 4.19 blocked",
     relatedArtifactIds: ["p2e", "p2g", "p2h-ops"],
+    category: "backend-gate",
+    tags: [T.ETH, "ETH watch", T.HOLD, T.NO60, T.STAGE419, T.RO],
+    checklistRefs: ["eth-watch-reappearance", "short-regression-approval"],
+    unresolvedGate: true,
+    operatorPriority: 10,
   },
   {
     id: "p2g",
@@ -84,6 +173,11 @@ export const DOC_SUMMARIES: DocSummary[] = [
     gateStatus: "WAIT",
     safetyNote: "should_run_30m_now=false · should_run_60m=false · Stage 4.19 blocked",
     relatedArtifactIds: ["p2f", "p2h", "p2h-rel"],
+    category: "backend-gate",
+    tags: [T.BTC, T.ETH, T.HOLD, T.NO60, T.STAGE419, T.RO],
+    checklistRefs: ["short-regression-approval", "stage-419-dossier"],
+    unresolvedGate: true,
+    operatorPriority: 15,
   },
   {
     id: "p2h",
@@ -96,6 +190,11 @@ export const DOC_SUMMARIES: DocSummary[] = [
     gateStatus: "HOLD",
     safetyNote: "Manual checker only · no Stage 4.19 start",
     relatedArtifactIds: ["p2g", "p2h-ops", "p2h-qa"],
+    category: "backend-gate",
+    tags: [T.HOLD, T.ETH, T.NO_RUNTIME, T.STAGE419, T.RO],
+    checklistRefs: ["eth-watch-reappearance", "short-regression-approval"],
+    unresolvedGate: true,
+    operatorPriority: 5,
   },
   {
     id: "p2h-ops",
@@ -108,6 +207,11 @@ export const DOC_SUMMARIES: DocSummary[] = [
     gateStatus: "HOLD",
     safetyNote: "Docs/CLI only · no runtime · Stage 4.19 blocked",
     relatedArtifactIds: ["p2h", "p2h-qa", "p2h-rel"],
+    category: "backend-gate",
+    tags: [T.HOLD, T.NO_RUNTIME, T.STAGE419, T.RO, "P2H-OPS"],
+    checklistRefs: ["short-regression-approval"],
+    unresolvedGate: false,
+    operatorPriority: 20,
   },
   {
     id: "p2h-qa",
@@ -120,6 +224,11 @@ export const DOC_SUMMARIES: DocSummary[] = [
     gateStatus: "READY",
     safetyNote: "No runtime · Stage 4.19 blocked",
     relatedArtifactIds: ["p2h", "p2h-ops", "p2h-rel"],
+    category: "safety",
+    tags: [T.REL, T.HOLD, T.STAGE419, T.NO_RUNTIME, T.RO],
+    checklistRefs: ["safety-invariants"],
+    unresolvedGate: false,
+    operatorPriority: 30,
   },
   {
     id: "p2h-rel",
@@ -132,6 +241,11 @@ export const DOC_SUMMARIES: DocSummary[] = [
     gateStatus: "HOLD",
     safetyNote: "Docs archive only · git tag not auto-created · Stage 4.19 blocked",
     relatedArtifactIds: ["p2h-qa", "p2h", "p2h-ops"],
+    category: "release-checkpoint",
+    tags: [T.REL, T.HOLD, T.STAGE419, T.ETH, T.RO],
+    checklistRefs: ["stage-419-dossier"],
+    unresolvedGate: false,
+    operatorPriority: 18,
   },
   {
     id: "ui-mvp13",
@@ -144,6 +258,11 @@ export const DOC_SUMMARIES: DocSummary[] = [
     gateStatus: "PASS",
     safetyNote: "READ ONLY · no Stage 4.19 start · no trade/order/ARM",
     relatedArtifactIds: ["ui-mvp14", "p2h-rel"],
+    category: "ui",
+    tags: [T.RO, T.HOLD, T.STAGE419],
+    checklistRefs: [],
+    unresolvedGate: false,
+    operatorPriority: 90,
   },
   {
     id: "ui-mvp14",
@@ -151,12 +270,55 @@ export const DOC_SUMMARIES: DocSummary[] = [
     title: "Private Operator deep links / cross navigation",
     verdict: "UI_MVP14_PASS",
     oneLineSummary: "Report / runbook / checkpoint deep links — documentation-only.",
-    keyConclusion: "Can navigate Overview → Evidence → Runbook → Gate → Checkpoint without opening /data.",
+    keyConclusion:
+      "Can navigate Overview → Evidence → Runbook → Gate → Checkpoint without opening /data.",
     nextAction: "Add sanitized one-line excerpts (MVP-15)",
     gateStatus: "PASS",
     safetyNote: "No control buttons · no Run 30m/60m · Stage 4.19 blocked",
     relatedArtifactIds: ["ui-mvp13", "p2h-ops", "p2h-rel"],
+    category: "ui",
+    tags: [T.RO, T.HOLD, T.STAGE419],
+    checklistRefs: [],
+    unresolvedGate: false,
+    operatorPriority: 88,
   },
+  {
+    id: "ui-mvp15",
+    stage: "UI-MVP-15",
+    title: "Static doc summary viewer / sanitized excerpts",
+    verdict: "UI_MVP15_PASS",
+    oneLineSummary: "One-line summary / conclusion / next action without opening full reports.",
+    keyConclusion: "Operators can glance gate posture from static metadata only.",
+    nextAction: "Add static search/filter + checklist links (MVP-16)",
+    gateStatus: "PASS",
+    safetyNote: "READ ONLY · no /data raw · Stage 4.19 blocked",
+    relatedArtifactIds: ["ui-mvp14", "p2h-rel"],
+    category: "ui",
+    tags: [T.RO, T.HOLD, T.REL, T.STAGE419],
+    checklistRefs: [],
+    unresolvedGate: false,
+    operatorPriority: 85,
+  },
+];
+
+export const DOC_CATEGORIES: DocCategory[] = [
+  "backend-gate",
+  "prompt-repair",
+  "runtime-regression",
+  "no-watch-diagnostics",
+  "release-checkpoint",
+  "ui",
+  "safety",
+  "routing",
+];
+
+export const GATE_STATUS_OPTIONS: GateStatusLabel[] = [
+  "HOLD",
+  "WAIT",
+  "PASS",
+  "PARTIAL",
+  "BLOCKED",
+  "READY",
 ];
 
 export const CURRENT_GATE_HIGHLIGHTS = [
@@ -176,6 +338,15 @@ export const CURRENT_GATE_HIGHLIGHTS = [
     body: "Needs actual non-shadow BTC + ETH graduation — not shadow or packs alone.",
   },
 ] as const;
+
+export const UNRESOLVED_GATE_SNAPSHOT = {
+  title: "Top unresolved gate",
+  currentUnresolved: "ETH watch conditions not reappeared",
+  regressionNow: false,
+  sixtyM: false,
+  stage419: "blocked",
+  nextAction: "wait for ETH watch conditions",
+} as const;
 
 export const PAPER_LAB_VALIDATION_SUMMARY = {
   title: "Validation summary",
@@ -217,6 +388,20 @@ export const PROVIDER_ROUTING_SUMMARY = {
   safetyNote: "Routing editor absent · Stage 4.19 blocked",
 };
 
+export type DocSummaryFilterState = {
+  query: string;
+  category: DocCategory | "";
+  gateStatus: GateStatusLabel | "";
+  unresolvedOnly: boolean;
+};
+
+export const EMPTY_DOC_SUMMARY_FILTER: DocSummaryFilterState = {
+  query: "",
+  category: "",
+  gateStatus: "",
+  unresolvedOnly: false,
+};
+
 export function getDocSummaries(): DocSummary[] {
   return DOC_SUMMARIES;
 }
@@ -227,4 +412,43 @@ export function getDocSummaryByStage(stage: string): DocSummary | undefined {
 
 export function getOperatorDocSummaries(): DocSummary[] {
   return DOC_SUMMARIES.filter((d) => d.stage.startsWith("4.18-"));
+}
+
+export function getChecklistRefs(ids: ChecklistRefId[]): ChecklistRef[] {
+  return ids.map((id) => CHECKLIST_REFS[id]).filter(Boolean);
+}
+
+function haystack(s: DocSummary): string {
+  return [
+    s.id,
+    s.stage,
+    s.title,
+    s.verdict,
+    s.oneLineSummary,
+    s.keyConclusion,
+    s.nextAction,
+    s.gateStatus,
+    s.safetyNote,
+    s.category,
+    ...s.tags,
+  ]
+    .join(" ")
+    .toLowerCase();
+}
+
+/** Local sanitized-metadata filter — no backend, no /data. */
+export function filterDocSummaries(
+  summaries: DocSummary[],
+  filter: DocSummaryFilterState,
+): DocSummary[] {
+  const q = filter.query.trim().toLowerCase();
+  return summaries
+    .filter((s) => {
+      if (filter.category && s.category !== filter.category) return false;
+      if (filter.gateStatus && s.gateStatus !== filter.gateStatus) return false;
+      if (filter.unresolvedOnly && !s.unresolvedGate) return false;
+      if (q && !haystack(s).includes(q)) return false;
+      return true;
+    })
+    .sort((a, b) => a.operatorPriority - b.operatorPriority);
 }

@@ -53,8 +53,8 @@ export function EvidencePage() {
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
           Documents & reports hub · Report Viewer · Runbook Viewer · Release Checkpoint · deep
-          links P2D → P2H-REL · static doc summaries. READ ONLY · NOT INVESTMENT ADVICE ·
-          documentation-only · sanitized excerpts.
+          links P2D → P2H-REL · static doc summaries · search/filter. READ ONLY · NOT INVESTMENT
+          ADVICE · documentation-only · sanitized excerpts · local metadata only.
         </p>
       </header>
 
@@ -86,6 +86,7 @@ export function EvidencePage() {
         <DocSummaryList
           summaries={getOperatorDocSummaries()}
           title="Static Doc Summary Viewer (P2D → P2H-REL)"
+          enableFilter
         />
         <PrivateReportViewerCard reports={PRIVATE_OPERATOR_REPORTS} />
         {reportIndex.length > 0 ? (

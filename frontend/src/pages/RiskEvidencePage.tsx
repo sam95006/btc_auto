@@ -124,6 +124,7 @@ export function RiskEvidencePage() {
       </section>
 
       <GateChecklistCard
+        id="checklist-safety-invariants"
         title="Safety Invariants Checklist"
         items={SAFETY_INVARIANTS_CHECKLIST}
         footer="Safety invariants PASS · release checkpoint ready · no Stage 4.19 start button · READ ONLY"

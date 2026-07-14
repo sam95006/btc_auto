@@ -226,6 +226,15 @@ export const PROVIDER_RELATED_STAGES = [
   "4.18-P2H-REL",
 ] as const;
 
+/** ETH watch reappearance conditions (all false under HOLD). */
+export const ETH_WATCH_REAPPEARANCE_CHECKLIST: ChecklistItem[] = [
+  { id: "eth_watch", label: "ETH watch or valid_watch present", ok: false },
+  { id: "bias", label: "directional_bias != NONE", ok: false },
+  { id: "side", label: "candidate_side != NONE", ok: false },
+  { id: "conf", label: "confidence usable (>= 0.45)", ok: false },
+  { id: "triggers", label: "entry_trigger + invalidation + MAE + quality", ok: false },
+];
+
 /** Short-regression approval checklist (current HOLD snapshot defaults). */
 export const SHORT_REGRESSION_CHECKLIST: ChecklistItem[] = [
   { id: "eth_watch", label: "ETH has watch or valid_watch", ok: false },
@@ -237,6 +246,15 @@ export const SHORT_REGRESSION_CHECKLIST: ChecklistItem[] = [
   { id: "mae", label: "MAE cap passed", ok: false },
   { id: "dq", label: "data_quality ok", ok: false },
   { id: "regime", label: "regime not unknown", ok: false },
+];
+
+/** Stage 4.19 dossier — blocked until actual BTC+ETH graduation (read-only). */
+export const STAGE_419_DOSSIER_CHECKLIST: ChecklistItem[] = [
+  { id: "btc_grad", label: "Actual non-shadow BTC graduation", ok: false },
+  { id: "eth_grad", label: "Actual non-shadow ETH graduation", ok: false },
+  { id: "both", label: "BTC + ETH together (not unilateral)", ok: false },
+  { id: "no_shadow", label: "Shadow / pack alone insufficient", ok: true },
+  { id: "dossier", label: "Stage 4.19 dossier started", ok: false },
 ];
 
 /** Safety invariants — always asserted in Private Operator UI. */

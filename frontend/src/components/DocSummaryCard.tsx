@@ -1,5 +1,6 @@
 import type { DocSummary } from "../demo/docSummaries";
 import { artifactHref } from "../demo/reportIndex";
+import { ChecklistReferenceLinks } from "./ChecklistReferenceLinks";
 import { DemoDataBadge } from "./DemoDataBadge";
 import { StatusBadge, type StatusTone } from "./StatusBadge";
 import { Link } from "react-router-dom";
@@ -21,7 +22,7 @@ function toneForGate(gate: DocSummary["gateStatus"]): StatusTone {
   }
 }
 
-/** Single sanitized doc excerpt card (MVP-15). */
+/** Single sanitized doc excerpt card (MVP-15 / MVP-16). */
 export function DocSummaryCard({ summary }: { summary: DocSummary }) {
   return (
     <article className="panel-card doc-summary-card" id={`doc-summary-${summary.id}`}>
@@ -33,6 +34,8 @@ export function DocSummaryCard({ summary }: { summary: DocSummary }) {
           — {summary.title}
         </h3>
         <StatusBadge tone={toneForGate(summary.gateStatus)}>{summary.gateStatus}</StatusBadge>
+        {summary.unresolvedGate ? <StatusBadge tone="wait">UNRESOLVED</StatusBadge> : null}
+        <span className="demo-badge">{summary.category}</span>
         <span className="demo-badge">SANITIZED</span>
         <DemoDataBadge />
       </div>
@@ -59,6 +62,14 @@ export function DocSummaryCard({ summary }: { summary: DocSummary }) {
           <div className="v">{summary.safetyNote}</div>
         </div>
       </div>
+      <div className="report-stage-chips" style={{ marginTop: "0.45rem" }}>
+        {summary.tags.map((t) => (
+          <span key={t} className="report-stage-chip present">
+            {t}
+          </span>
+        ))}
+      </div>
+      <ChecklistReferenceLinks refs={summary.checklistRefs} />
       <p className="muted" style={{ marginTop: "0.55rem", marginBottom: 0 }}>
         READ ONLY · NOT INVESTMENT ADVICE · excerpt only · no raw report body · no control buttons
       </p>

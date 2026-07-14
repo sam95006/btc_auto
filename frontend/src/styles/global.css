@@ -713,6 +713,59 @@ button {
   border-color: rgba(61, 156, 240, 0.18);
 }
 
+.doc-filter-bar {
+  margin-bottom: 0.85rem;
+}
+
+.doc-filter-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr auto auto;
+  gap: 0.65rem;
+  align-items: end;
+  margin: 0.65rem 0;
+}
+
+.doc-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+}
+
+.doc-filter-field input,
+.doc-filter-field select {
+  background: rgba(8, 12, 18, 0.7);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 3px;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.82rem;
+}
+
+.doc-filter-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding-bottom: 0.35rem;
+}
+
+.doc-filter-clear {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 3px;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.doc-filter-clear:hover {
+  border-color: rgba(61, 156, 240, 0.45);
+  color: var(--text);
+}
+
 .gate-highlight-list {
   margin: 0.85rem 0 0;
   padding-left: 1.15rem;
@@ -821,6 +874,10 @@ button {
 
   .flag-grid,
   .console-hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .doc-filter-grid {
     grid-template-columns: 1fr;
   }
 

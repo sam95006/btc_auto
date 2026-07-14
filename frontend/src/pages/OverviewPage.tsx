@@ -11,8 +11,13 @@ import { CurrentGateSummaryCard } from "../components/CurrentGateSummaryCard";
 import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
 import { StatusBadge } from "../components/StatusBadge";
+import { UnresolvedGateCard } from "../components/UnresolvedGateCard";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
-import { SHORT_REGRESSION_CHECKLIST } from "../demo/reportIndex";
+import {
+  ETH_WATCH_REAPPEARANCE_CHECKLIST,
+  SHORT_REGRESSION_CHECKLIST,
+  STAGE_419_DOSSIER_CHECKLIST,
+} from "../demo/reportIndex";
 import { useHashScroll } from "../hooks/useHashScroll";
 import {
   getBackendHoldStateStatus,
@@ -97,13 +102,28 @@ export function OverviewPage() {
 
       <CurrentGateSummaryCard />
 
+      <UnresolvedGateCard />
+
       <div className="operator-section" id="gate-checklist">
         <h2 className="section-title">Checkpoint & gate</h2>
         <CheckpointHealthCard />
         <GateChecklistCard
-          title="Gate Checklist Summary (next short regression)"
+          id="checklist-eth-watch-reappearance"
+          title="ETH Watch Reappearance Checklist"
+          items={ETH_WATCH_REAPPEARANCE_CHECKLIST}
+          footer="All false under HOLD — wait for ETH watch conditions · no 30m · no 60m · Stage 4.19 blocked"
+        />
+        <GateChecklistCard
+          id="checklist-short-regression-approval"
+          title="Short Regression Approval Checklist"
           items={SHORT_REGRESSION_CHECKLIST}
           footer="All false under HOLD — continue wait-for-condition · 30m now: false · 60m: false · Auto-run: false · Stage 4.19 blocked"
+        />
+        <GateChecklistCard
+          id="checklist-stage-419-dossier"
+          title="Stage 4.19 Dossier Checklist"
+          items={STAGE_419_DOSSIER_CHECKLIST}
+          footer="Dossier not started · needs actual non-shadow BTC + ETH graduation · no Stage 4.19 start button"
         />
       </div>
 

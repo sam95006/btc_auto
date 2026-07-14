@@ -6,14 +6,16 @@ export function GateChecklistCard({
   title,
   items,
   footer,
+  id,
 }: {
   title: string;
   items: ChecklistItem[];
   footer?: string;
+  id?: string;
 }) {
   const allOk = items.every((i) => i.ok);
   return (
-    <section className="panel-card" style={{ marginTop: "1.25rem" }}>
+    <section className="panel-card" id={id} style={{ marginTop: "1.25rem" }}>
       <div className="meta-row" style={{ marginTop: 0 }}>
         <h2 style={{ margin: 0, fontSize: "1.1rem" }}>{title}</h2>
         <span className="demo-badge">SANITIZED</span>

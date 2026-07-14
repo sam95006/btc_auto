@@ -24,8 +24,42 @@ Checks:
 ```bash
 npm run typecheck
 npm run build
-python ../tools/research/check_nexus_ui_mvp15_safety.py
+python ../tools/research/check_nexus_ui_mvp16_safety.py
 ```
+
+## Static excerpt search / filter + checklist links (MVP-16)
+
+Evidence Center can **search and filter** sanitized doc summaries locally, and summary cards link to checklist anchors.
+
+### Static search / filter usage
+
+On Evidence → Static Doc Summary Viewer:
+
+- Search text (e.g. `P2D`, `P2E`, `HOLD`, `Stage 4.19`, `no 60m`, `ETH watch`, `prompt repair`, `release checkpoint`)
+- Filter by **category** / **gateStatus**
+- Toggle **Show unresolved only**
+- **Clear filters**
+
+Search/filter is **local sanitized metadata only** (`src/demo/docSummaries.ts`).
+
+- **No backend calls**
+- **No /data** raw reads
+- **No control actions**
+
+### Checklist link usage
+
+Summary cards may show checklist chips (documentation anchors only):
+
+| From | Links to |
+|------|----------|
+| P2F | ETH watch reappearance checklist |
+| P2H-OPS | Short regression approval checklist |
+| P2H-REL | Stage 4.19 dossier checklist |
+| P2H-QA | Safety invariants checklist |
+
+URLs e.g. `/overview#checklist-eth-watch-reappearance`, `/risk#checklist-safety-invariants`.
+
+Overview also shows **Top Unresolved Gate**: ETH watch conditions not reappeared · next = wait.
 
 ## Static doc summary viewer (MVP-15)
 
@@ -34,10 +68,11 @@ Operators can read **sanitized one-line excerpts** without opening full reports 
 | Surface | What you see |
 |---------|----------------|
 | Overview `CurrentGateSummaryCard` | Backend HOLD · ETH not reappeared · Stage 4.19 blocked · next = wait |
-| Evidence `DocSummaryList` | Per-report one-line / conclusion / next action / gate / safety |
-| Paper Lab | Validation summary (BTC prior · no latest graduation · ETH repair pending) |
-| Risk & Safety | Safety summary (no orders / ARM / production / billing / 4.19) |
-| Provider Shadow | Routing summary (experiment only · permanent routing=false) |
+| Overview `UnresolvedGateCard` | Top unresolved gate under HOLD |
+| Evidence `DocSummaryList` + filter | Per-report excerpts · search / category / gate |
+| Paper Lab | Validation summary |
+| Risk & Safety | Safety summary + invariants checklist |
+| Provider Shadow | Routing summary |
 
 ### Sanitized excerpt policy
 
@@ -76,7 +111,7 @@ URLs look like `/evidence#artifact-4-18-p2h-ops` or `/overview#gate-checklist`.
 
 - Sanitized fixtures: `src/demo/snapshots/`
 - Report/runbook/checkpoint metadata: `src/demo/reportIndex.ts` (`docs/...` only)
-- Doc summaries / excerpts: `src/demo/docSummaries.ts`
+- Doc summaries / excerpts / filter tags: `src/demo/docSummaries.ts`
 - Release health: `src/demo/releaseHealth.ts`
 - Do **not** commit raw `/data`, jsonl, logs, bundles, or secrets
 
@@ -89,7 +124,7 @@ URLs look like `/evidence#artifact-4-18-p2h-ops` or `/overview#gate-checklist`.
 ## Safety scanners
 
 ```bash
-python tools/research/check_nexus_ui_mvp13_safety.py
 python tools/research/check_nexus_ui_mvp14_safety.py
 python tools/research/check_nexus_ui_mvp15_safety.py
+python tools/research/check_nexus_ui_mvp16_safety.py
 ```
