@@ -1,0 +1,342 @@
+/**
+ * Sanitized Private Operator snapshot for MVP-9 (Stage 4.18-P2G / P2H HOLD).
+ * READ ONLY — research summaries only.
+ * No secrets, no API keys, no /data raw paths, no investment advice.
+ */
+import type { NexusSnapshot } from "../../types/nexusSnapshot";
+
+export const SNAPSHOT_SOURCE =
+  "SANITIZED SNAPSHOT - READ ONLY - NOT INVESTMENT ADVICE" as const;
+
+export const p2gPrivateOperatorSnapshot: NexusSnapshot = {
+  source: SNAPSHOT_SOURCE,
+  uiMode: "private_operator_snapshot",
+
+  latestBackendStage: "4.18-P2G / P2H",
+  latestVerdict: "STAGE_4_18P2G_PASS / STAGE_4_18P2H_PASS",
+
+  systemStatus: {
+    mode: "Private Operator · Research-only",
+    safetyLine: "No ARM / No Live Trading / Defensive ON",
+    stageReadiness:
+      "Backend HOLD · ETH watch conditions not present · wait-for-condition · Stage 4.19 blocked",
+    currentGate: "4.18-P2H HOLD · continue_hold_no_regression · no auto-run",
+    lastUpdate: "2026-07-14T04:00:00Z",
+    disclaimer: "Not Investment Advice",
+  },
+
+  safetyStatus: {
+    orderAllowed: false,
+    arm: false,
+    production: false,
+    stage419Readiness: false,
+    shouldStart419: false,
+    privateOperatorMode: true,
+    defensiveOn: true,
+    summary:
+      "HOLD · order_allowed=false · ARM=false · production=false · 30m=false · 60m=false · stage_419=false · permanent_routing=false",
+  },
+
+  stageGate: {
+    stageLabel: "4.18-P2G / P2H",
+    verdict: "STAGE_4_18P2G_PASS / STAGE_4_18P2H_PASS",
+    p2aStatus: "P2A PASS — prior BTC graduation evidence",
+    p2bStatus: "P2B PASS — eth_followup_direction_changed",
+    p2cStatus: "P2C PASS — confirmation_prompt_too_strict",
+    p2dStatus: "P2D PASS — prompt repair on runtime",
+    p2dR1Status: "P2D-R1 PARTIAL_NO_ETH_WATCH",
+    p2eStatus: "P2E PASS — sample_market_no_edge",
+    p2fStatus: "P2F PASS — regression_readiness=false",
+    p2gStatus:
+      "P2G PASS — operator pack; next_short_regression_allowed_now=false; HOLD wait",
+    p2hStatus:
+      "P2H PASS — backend HOLD + passive future checker (manual only / no auto-run)",
+    latestGate:
+      "Backend HOLD · ETH watch conditions not present · future checker passive · Stage 4.19 blocked",
+    note: "Not a failure — conditional wait. Do not start Stage 4.19. No 30m/60m now.",
+  },
+
+  btcStatus: {
+    symbol: "BTCUSDT",
+    actualValidWatchCount: 1,
+    actualGraduationCount: 0,
+    statusLabel: "prior evidence exists; latest regression grad=0",
+    note: "Historical BTC graduation evidence alone cannot open Stage 4.19",
+  },
+
+  ethStatus: {
+    symbol: "ETHUSDT",
+    actualValidWatchCount: 0,
+    actualGraduationCount: 0,
+    rootCause: "sample_market_no_edge",
+    confirmationFailureReason: "ETH watch conditions not present",
+    ethDetail: "HOLD waiting for ETH watch/valid_watch reappearance",
+    statusLabel: "HOLD (wait-for-condition)",
+    note: "prompt repair done but not runtime-validated; next_short_regression_allowed_now=false",
+  },
+
+  providerRoutingStatus: {
+    actualPrimary: "groq",
+    shadowPrimary: "cerebras",
+    btcExperimentChain: "prior experiment only (not permanent)",
+    ethRoutingUnchanged: true,
+    routingPermanentChangeSupported: false,
+    btcCerebrasFirstExperimentSupported: true,
+    health: "ok (sanitized snapshot)",
+    note: "Permanent routing change: false",
+  },
+
+  providerShadowStatus: {
+    actualProvider: "groq",
+    shadowProvider: "cerebras",
+    divergence: "Backend HOLD; shadow excluded from graduation",
+    comparable: true,
+    notes: "Shadow excluded from paper / calibration / graduation / Stage 4.19.",
+    shadowExcludedFromPaper: true,
+    shadowExcludedFromCalibration: true,
+    shadowExcludedFromGraduation: true,
+    mustNotAffectStage419: true,
+    p1cSummary: "P1C shadow diagnostics only",
+    p2DesignSummary: "P2 design Option 2 experiment (default-off)",
+    p2r1Summary: "P2-R1 prior BTC graduation context (historical)",
+    p2dSummary: "P2D prompt repair present on runtime",
+    p2dR1Summary: "P2D-R1 PARTIAL_NO_ETH_WATCH",
+    p2eSummary: "P2E PASS — sample_market_no_edge",
+    p2fSummary: "P2F PASS — gate closed",
+    p2gSummary: "P2G PASS — operator readiness pack; HOLD wait",
+    p2hSummary: "P2H PASS — HOLD + passive future checker; no auto-run",
+    actualOnlyGraduation: true,
+  },
+
+  paperLabStatus: {
+    wouldEnterCount: 0,
+    wouldSkipCount: 5,
+    watchlistCount: 0,
+    calibrationStatus: "actual-only",
+    graduationStatus: "HOLD · ETH watch absent · Stage 4.19 blocked",
+    btcGraduationCount: 0,
+    ethGraduationCount: 0,
+    btcPassed: false,
+    ethBlocked: true,
+    stage419Blocked: true,
+    whyNotGraduated: "Backend HOLD — wait for ETH watch/valid_watch conditions",
+    paperLoggerStatus: "read-only / append-only research (actual-only)",
+    nextDiagnostic:
+      "Next allowed action: wait for ETH watch/valid_watch reappearance (then operator may approve short regression)",
+  },
+
+  promptRepairStatus: {
+    promptRepairAdded: true,
+    previousWatchContextInjected: true,
+    entryTriggerRecheckRequired: true,
+    invalidationRecheckRequired: true,
+    maeRecheckRequired: true,
+    contextContinuityCheckRequired: true,
+    directionCollapseGuardAdded: true,
+    confidenceCollapseReasonRequired: true,
+    staticExpectedFollowupBehavior: "continuation_watch_or_confirmation_pending",
+    wouldPreventUnexplainedCollapse: true,
+    needsNextRuntimeRegression: true,
+    nextStep: "continue_hold_no_regression",
+  },
+
+  runtimeRegressionStatus: {
+    technicalValid: true,
+    tickCount: 6,
+    effectiveDecisionCount: 18,
+    parseErrorCount: 0,
+    promptRepairRuntimePresent: true,
+    previousWatchContextSeen: false,
+    directionCollapseGuardSeen: false,
+    ethValidWatchCount: 0,
+    ethFollowupCasesCount: 0,
+    ethGraduationCount: 0,
+    ethConfirmationPromptRepairEffective: false,
+    sampleInsufficientReason: "HOLD — ETH watch conditions not present",
+    btcValidWatchCount: 1,
+    btcValidWatchNote: "last tick, no follow-up",
+    btcGraduationCount: 0,
+    actualNonShadowBtcEthGraduationMet: false,
+    stage419Blocked: true,
+    nextStep: "continue_hold_no_regression",
+  },
+
+  regressionReadinessStatus: {
+    readiness: false,
+    reason: "ETH watch conditions not present",
+    noWatchRootCause: "sample_market_no_edge",
+    promptRepairOverConservativeSuspected: false,
+    needsPromptAdjustment: false,
+    shouldRun60m: false,
+    waitHelperFixed: true,
+    ethWatchConditionsPresent: false,
+    stage419Blocked: true,
+    nextGate: "P2H passive future checker (manual only)",
+    nextRecommendation: "continue_hold_no_regression",
+  },
+
+  watchReappearanceGateStatus: {
+    regressionReadiness: false,
+    doNotRunRegressionNow: true,
+    operatorApprovedShortRegressionMayBeJustified: false,
+    conditions: {
+      hasEthWatchOrValidWatch: false,
+      hasLongBuyBias: false,
+      confidenceNearReference: false,
+      entryTriggerPresent: false,
+      invalidationPresent: false,
+      maeCapPassed: false,
+      contextQualityOk: true,
+      regimeNotUnknown: true,
+    },
+    shouldRun60m: false,
+    waitHelperRobustnessStatus: "PASS",
+    stage419Blocked: true,
+    nextRecommendation: "continue_hold_no_regression",
+  },
+
+  backendHoldStateStatus: {
+    state: "HOLD",
+    reason: "ETH watch conditions not present",
+    nextAllowedAction: "wait for ETH watch/valid_watch reappearance",
+    shouldRun30mNow: false,
+    shouldRun60m: false,
+    stage419Blocked: true,
+    routingPermanentChangeSupported: false,
+    nextShortRegressionAllowedNow: false,
+  },
+
+  futureRegressionGateStatus: {
+    mode: "manual_only",
+    autoRun: false,
+    ethWatchConditionsReappeared: false,
+    operatorMayApproveShortRegression: false,
+    shouldRun30mNow: false,
+    shouldRun60m: false,
+    stage419Blocked: true,
+    nextRecommendation: "continue_hold_no_regression",
+  },
+
+  reportIndex: [
+    {
+      stage: "4.18-P2D",
+      verdict: "STAGE_4_18P2D_PASS",
+      oneLineConclusion: "Prompt repair added",
+      reportPath: "docs/reports/STAGE_4_18P2D_ETH_FOLLOWUP_CONFIRMATION_PROMPT_REVIEW_REPORT.md",
+      nextAction: "Needs runtime validation",
+    },
+    {
+      stage: "4.18-P2D-R1",
+      verdict: "STAGE_4_18P2D_R1_PARTIAL_NO_ETH_WATCH",
+      oneLineConclusion: "Technical PASS but no ETH watch",
+      reportPath: "docs/reports/STAGE_4_18P2D_R1_ETH_FOLLOWUP_PROMPT_RUNTIME_REGRESSION_REPORT.md",
+      nextAction: "Diagnose no-watch",
+    },
+    {
+      stage: "4.18-P2E",
+      verdict: "STAGE_4_18P2E_PASS",
+      oneLineConclusion: "sample_market_no_edge; wait helper fixed",
+      reportPath:
+        "docs/reports/STAGE_4_18P2E_ETH_NO_WATCH_DIAGNOSTICS_AND_WAIT_HELPER_FIX_REPORT.md",
+      nextAction: "Define reappearance gate",
+    },
+    {
+      stage: "4.18-P2F",
+      verdict: "STAGE_4_18P2F_PASS",
+      oneLineConclusion: "regression_readiness=false — do not run",
+      reportPath: "docs/reports/STAGE_4_18P2F_ETH_WATCH_REAPPEARANCE_GATE_REPORT.md",
+      nextAction: "Consolidate operator pack",
+    },
+    {
+      stage: "4.18-P2G",
+      verdict: "STAGE_4_18P2G_PASS",
+      oneLineConclusion: "Operator readiness pack — wait for ETH watch conditions",
+      reportPath: "docs/reports/STAGE_4_18P2G_OPERATOR_READINESS_PACK.md",
+      nextAction: "Enter backend HOLD",
+    },
+    {
+      stage: "4.18-P2H",
+      verdict: "STAGE_4_18P2H_PASS",
+      oneLineConclusion: "HOLD + passive future checker — no auto-run",
+      reportPath: "docs/reports/STAGE_4_18P2H_BACKEND_HOLD_AND_PASSIVE_GATE_CHECKER_REPORT.md",
+      nextAction: "continue_hold_no_regression",
+    },
+  ],
+
+  ethConfirmationTimeline: {
+    symbol: "ETHUSDT",
+    confirmationFailed: true,
+    failureReason: "confirmation_prompt_too_strict",
+    ethDetail: "Historical P2C system issue retained; current state is HOLD wait-for-condition",
+    invalidationBreached: false,
+    maeBreached: false,
+    confirmationFailureIsMarketValid: false,
+    confirmationFailureIsSystemIssue: true,
+    marketContextDelta: {
+      priceChangePct: -0.127,
+      regimeBefore: "trend",
+      regimeAfter: "trend",
+      trendStrengthBefore: 0.41,
+      trendStrengthAfter: 0.64,
+      dataQualityBefore: "ok",
+      dataQualityAfter: "ok",
+    },
+    watch: {
+      label: "Historical P2C watch",
+      provider: "cerebras",
+      intent: "watch",
+      confidence: 0.55,
+      directionalBias: "LONG",
+      candidateSide: "BUY",
+      entryTrigger: "present",
+      invalidation: "present (not breached)",
+      mae: "0.30 (cap passed)",
+      invalidationBreached: false,
+      maeBreached: false,
+    },
+    followup: {
+      label: "Historical P2C follow-up",
+      provider: "cerebras",
+      intent: "hard_skip",
+      confidence: 0.0,
+      directionalBias: "NONE",
+      candidateSide: "NONE",
+      entryTrigger: "not rechecked",
+      invalidation: "not breached",
+      mae: "not breached",
+      invalidationBreached: false,
+      maeBreached: false,
+    },
+    conclusion:
+      "Backend HOLD: not stuck — wait for ETH watch conditions before operator-approved short regression.",
+    nextStep: "continue_hold_no_regression",
+    recoveryRecommendation: "continue_hold_no_regression",
+  },
+
+  reports: [
+    {
+      id: "rpt-p2h",
+      title: "Stage 4.18-P2H Backend Hold and Passive Gate Checker",
+      stageMarker: "4.18-P2H",
+      verdict: "STAGE_4_18P2H_PASS",
+      path: "docs/reports/STAGE_4_18P2H_BACKEND_HOLD_AND_PASSIVE_GATE_CHECKER_REPORT.md",
+      updatedAt: "2026-07-14T04:00:00Z",
+    },
+    {
+      id: "rpt-p2g",
+      title: "Stage 4.18-P2G Operator Readiness Pack",
+      stageMarker: "4.18-P2G",
+      verdict: "STAGE_4_18P2G_PASS",
+      path: "docs/reports/STAGE_4_18P2G_OPERATOR_READINESS_PACK.md",
+      updatedAt: "2026-07-14T03:50:00Z",
+    },
+    {
+      id: "rpt-p2f",
+      title: "Stage 4.18-P2F ETH Watch Reappearance Gate",
+      stageMarker: "4.18-P2F",
+      verdict: "STAGE_4_18P2F_PASS",
+      path: "docs/reports/STAGE_4_18P2F_ETH_WATCH_REAPPEARANCE_GATE_REPORT.md",
+      updatedAt: "2026-07-14T03:40:00Z",
+    },
+  ],
+};

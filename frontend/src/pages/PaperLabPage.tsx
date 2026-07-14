@@ -1,12 +1,16 @@
+import { BackendHoldStateCard } from "../components/BackendHoldStateCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { EthConfirmationTimelineCard } from "../components/EthConfirmationTimelineCard";
+import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import { PromptRepairStatusCard } from "../components/PromptRepairStatusCard";
 import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
 import {
+  getBackendHoldStateStatus,
   getEthConfirmationTimeline,
+  getFutureRegressionGateStatus,
   getGraduationStatus,
   getNexusSnapshot,
   getPaperLabSummary,
@@ -26,6 +30,8 @@ export function PaperLabPage() {
   const runtimeReg = getRuntimeRegressionStatus();
   const ready = getRegressionReadinessStatus();
   const watchGate = getWatchReappearanceGateStatus();
+  const hold = getBackendHoldStateStatus();
+  const futureGate = getFutureRegressionGateStatus();
 
   return (
     <div>
@@ -34,9 +40,9 @@ export function PaperLabPage() {
         <DemoDataBadge />
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
-          Read-only would_enter / would_skip counts. Next condition before regression: ETH
-          watch/valid_watch + bias/side + conf≥0.45 + trigger + invalidation + MAE cap. Stage 4.19
-          blocked. No paper execution from UI.
+          Read-only would_enter / would_skip counts. Next allowed action: wait for ETH
+          watch/valid_watch reappearance. Backend HOLD · Stage 4.19 blocked. No paper execution
+          from UI.
         </p>
       </header>
       <div className="flag-grid">
@@ -106,6 +112,8 @@ export function PaperLabPage() {
       </p>
       <p className="muted">{g.whyBlocked}</p>
 
+      {hold ? <BackendHoldStateCard status={hold} /> : null}
+      {futureGate ? <FutureRegressionGateCard status={futureGate} /> : null}
       {watchGate ? <WatchReappearanceGateCard status={watchGate} /> : null}
       {ready ? <RegressionReadinessCard status={ready} /> : null}
       {runtimeReg ? <RuntimeRegressionStatusCard status={runtimeReg} /> : null}

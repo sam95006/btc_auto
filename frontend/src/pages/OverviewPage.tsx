@@ -1,11 +1,15 @@
 import { MarketStatusCard } from "../components/MarketStatusCard";
+import { BackendHoldStateCard } from "../components/BackendHoldStateCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
+import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
 import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
 import {
+  getBackendHoldStateStatus,
   getCurrentUiMode,
   getEthConfirmationTimeline,
+  getFutureRegressionGateStatus,
   getGraduationStatus,
   getLatestBackendVerdict,
   getLatestReports,
@@ -39,20 +43,19 @@ export function OverviewPage() {
   const runtimeReg = getRuntimeRegressionStatus();
   const ready = getRegressionReadinessStatus();
   const watchGate = getWatchReappearanceGateStatus();
+  const hold = getBackendHoldStateStatus();
+  const futureGate = getFutureRegressionGateStatus();
   const ethBlocker =
     snap.ethStatus.rootCause ??
     snap.ethStatus.confirmationFailureReason ??
     ethTimeline?.failureReason ??
-    "sample_market_no_edge";
+    "ETH watch conditions not present";
   const nextStep =
+    hold?.nextAllowedAction ??
+    futureGate?.nextRecommendation ??
     watchGate?.nextRecommendation ??
     ready?.nextRecommendation ??
-    ready?.nextGate ??
-    runtimeReg?.nextStep ??
-    promptRepair?.nextStep ??
-    ethTimeline?.nextStep ??
-    snap.paperLabStatus.nextDiagnostic ??
-    "wait_for_eth_watch_conditions_reappear_no_60m";
+    "wait for ETH watch/valid_watch reappearance";
 
   return (
     <div>
@@ -90,18 +93,16 @@ export function OverviewPage() {
             {gate.stageLabel} · {gate.verdict}
           </p>
           <p>
-            <span className="muted">P2F:</span>{" "}
-            {snap.stageGate.p2fStatus ??
+            <span className="muted">P2G/P2H:</span>{" "}
+            {snap.stageGate.p2hStatus ??
+              snap.stageGate.p2gStatus ??
+              snap.stageGate.p2fStatus ??
               snap.stageGate.p2eStatus ??
-              snap.stageGate.p2dR1Status ??
-              snap.stageGate.p2dStatus ??
-              snap.stageGate.p2cStatus ??
-              snap.stageGate.p2bStatus ??
               gate.p2aStatus}
           </p>
           <p className="muted">
-            regression readiness=false · do_not_run_regression_now · ETH root=
-            <span className="mono">{ethBlocker}</span> · Stage 4.19 blocked · no 60m
+            Current backend state: HOLD · reason: <span className="mono">{ethBlocker}</span> ·
+            regression readiness=false · Stage 4.19 blocked · no 30m/60m
           </p>
           <p className="muted">{gate.latestGate}</p>
           <p className="muted">{gate.note}</p>
@@ -195,6 +196,8 @@ export function OverviewPage() {
         </section>
       </div>
 
+      {hold ? <BackendHoldStateCard status={hold} /> : null}
+      {futureGate ? <FutureRegressionGateCard status={futureGate} /> : null}
       {watchGate ? <WatchReappearanceGateCard status={watchGate} /> : null}
       {ready ? <RegressionReadinessCard status={ready} /> : null}
       {runtimeReg ? <RuntimeRegressionStatusCard status={runtimeReg} /> : null}

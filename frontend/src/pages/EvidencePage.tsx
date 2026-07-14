@@ -27,7 +27,7 @@ export function EvidencePage() {
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
           Recent AI decisions with stage markers. Sanitized snapshot · READ ONLY · NOT INVESTMENT
-          ADVICE. Report index: P2D / P2D-R1 / P2E / P2F. Why we cannot run yet.
+          ADVICE. Report index: P2D / P2D-R1 / P2E / P2F / P2G / P2H. Backend HOLD / wait-for-condition.
         </p>
       </header>
 

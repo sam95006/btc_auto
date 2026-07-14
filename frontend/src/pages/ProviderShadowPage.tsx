@@ -104,11 +104,17 @@ export function ProviderShadowPage() {
           {snap.providerShadowStatus.p2fSummary ? (
             <p className="muted">{snap.providerShadowStatus.p2fSummary}</p>
           ) : null}
+          {snap.providerShadowStatus.p2gSummary ? (
+            <p className="muted">{snap.providerShadowStatus.p2gSummary}</p>
+          ) : null}
+          {snap.providerShadowStatus.p2hSummary ? (
+            <p className="muted">{snap.providerShadowStatus.p2hSummary}</p>
+          ) : null}
           {snap.providerShadowStatus.p2bSummary ? (
             <p className="muted">{snap.providerShadowStatus.p2bSummary}</p>
           ) : null}
           <p className="muted">
-            No permanent routing change · P2F gate offline · Stage 4.19 blocked
+            No permanent routing change · Backend HOLD · Stage 4.19 blocked
           </p>
           <div className="flag-grid" style={{ marginTop: "0.75rem" }}>
             <div className="flag-item">

@@ -1,7 +1,7 @@
 /**
  * Read-only NEXUS data adapter.
- * MVP-8: defaults to sanitized P2F private_operator_snapshot
- * (prefers P2F over P2E/P2D-R1/P2D/P2C/P2B/P2A).
+ * MVP-9: defaults to sanitized P2G/P2H HOLD private_operator_snapshot
+ * (prefers P2G over P2F/P2E/…).
  * Never writes backend / trading state. No order / ARM / routing APIs.
  */
 import {
@@ -31,6 +31,7 @@ import { p2dPrivateOperatorSnapshot } from "./snapshots/p2dPrivateOperatorSnapsh
 import { p2dR1PrivateOperatorSnapshot } from "./snapshots/p2dR1PrivateOperatorSnapshot";
 import { p2ePrivateOperatorSnapshot } from "./snapshots/p2ePrivateOperatorSnapshot";
 import { p2fPrivateOperatorSnapshot } from "./snapshots/p2fPrivateOperatorSnapshot";
+import { p2gPrivateOperatorSnapshot } from "./snapshots/p2gPrivateOperatorSnapshot";
 import type {
   EvidenceItem,
   FleetStatus,
@@ -51,7 +52,9 @@ import type {
   SystemStatus,
 } from "../types/nexus";
 import type {
+  BackendHoldStateStatus,
   EthConfirmationTimeline,
+  FutureRegressionGateStatus,
   NexusSnapshot,
   NexusUiMode,
   PromptRepairStatus,
@@ -65,8 +68,9 @@ import type {
 /** Default UI mode for Private Operator Dashboard. */
 let currentUiMode: NexusUiMode = "private_operator_snapshot";
 
-/** Prefer P2F over P2E/P2D-R1/… when sanitized snapshots are available. */
+/** Prefer P2G/P2H HOLD over P2F/P2E/… when sanitized snapshots are available. */
 const ACTIVE_PRIVATE_OPERATOR_SNAPSHOT: NexusSnapshot =
+  p2gPrivateOperatorSnapshot ??
   p2fPrivateOperatorSnapshot ??
   p2ePrivateOperatorSnapshot ??
   p2dR1PrivateOperatorSnapshot ??
@@ -134,6 +138,16 @@ export function getReportIndex(): ReportIndexItem[] {
   return snap.reportIndex ?? [];
 }
 
+export function getBackendHoldStateStatus(): BackendHoldStateStatus | null {
+  const snap = getNexusSnapshot();
+  return snap.backendHoldStateStatus ?? null;
+}
+
+export function getFutureRegressionGateStatus(): FutureRegressionGateStatus | null {
+  const snap = getNexusSnapshot();
+  return snap.futureRegressionGateStatus ?? null;
+}
+
 export function getLatestBackendVerdict(): string {
   if (isSnapshotMode()) {
     return getPrivateOperatorSnapshot().latestVerdict;
@@ -176,7 +190,7 @@ export function getStageGateStatus(): StageGateStatus {
       source: s.source,
       stageLabel: g.stageLabel,
       verdict: g.verdict,
-      p2aStatus: g.p2fStatus ?? g.p2eStatus ?? g.p2dR1Status ?? g.p2dStatus ?? g.p2cStatus ?? g.p2bStatus ?? g.p2aStatus,
+      p2aStatus: g.p2hStatus ?? g.p2gStatus ?? g.p2fStatus ?? g.p2eStatus ?? g.p2dR1Status ?? g.p2dStatus ?? g.p2cStatus ?? g.p2bStatus ?? g.p2aStatus,
       latestGate: g.latestGate,
       note: g.note,
     };

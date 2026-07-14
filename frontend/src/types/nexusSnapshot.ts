@@ -35,6 +35,8 @@ export interface SnapshotStageGate {
   p2dR1Status?: string;
   p2eStatus?: string;
   p2fStatus?: string;
+  p2gStatus?: string;
+  p2hStatus?: string;
   latestGate: string;
   note: string;
 }
@@ -80,6 +82,8 @@ export interface SnapshotProviderShadowStatus {
   p2dR1Summary?: string;
   p2eSummary?: string;
   p2fSummary?: string;
+  p2gSummary?: string;
+  p2hSummary?: string;
   actualOnlyGraduation: true;
 }
 
@@ -239,7 +243,31 @@ export interface ReportIndexItem {
   nextAction: string;
 }
 
-/** Canonical Private Operator / demo fixture shape for MVP-2 … MVP-8 wiring. */
+/** P2G/P2H backend hold posture for Private Operator. */
+export interface BackendHoldStateStatus {
+  state: "HOLD";
+  reason: string;
+  nextAllowedAction: string;
+  shouldRun30mNow: false;
+  shouldRun60m: false;
+  stage419Blocked: true;
+  routingPermanentChangeSupported: false;
+  nextShortRegressionAllowedNow: false;
+}
+
+/** Passive future checker display — manual only / no auto-run. */
+export interface FutureRegressionGateStatus {
+  mode: "manual_only";
+  autoRun: false;
+  ethWatchConditionsReappeared: false;
+  operatorMayApproveShortRegression: false;
+  shouldRun30mNow: false;
+  shouldRun60m: false;
+  stage419Blocked: true;
+  nextRecommendation: string;
+}
+
+/** Canonical Private Operator / demo fixture shape for MVP-2 … MVP-9 wiring. */
 export interface NexusSnapshot {
   source: string;
   uiMode: NexusUiMode;
@@ -258,6 +286,8 @@ export interface NexusSnapshot {
   runtimeRegressionStatus?: RuntimeRegressionStatus;
   regressionReadinessStatus?: RegressionReadinessStatus;
   watchReappearanceGateStatus?: WatchReappearanceGateStatus;
+  backendHoldStateStatus?: BackendHoldStateStatus;
+  futureRegressionGateStatus?: FutureRegressionGateStatus;
   reportIndex?: ReportIndexItem[];
   reports: SnapshotReportMeta[];
 }

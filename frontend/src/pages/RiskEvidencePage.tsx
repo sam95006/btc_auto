@@ -1,8 +1,12 @@
+import { BackendHoldStateCard } from "../components/BackendHoldStateCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
+import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
 import {
+  getBackendHoldStateStatus,
   getEthConfirmationTimeline,
+  getFutureRegressionGateStatus,
   getNexusSnapshot,
   getPromptRepairStatus,
   getRiskEvidenceFlags,
@@ -19,14 +23,16 @@ export function RiskEvidencePage() {
   const ethTimeline = getEthConfirmationTimeline();
   const promptRepair = getPromptRepairStatus();
   const watchGate = getWatchReappearanceGateStatus();
+  const hold = getBackendHoldStateStatus();
+  const futureGate = getFutureRegressionGateStatus();
   const failureReason =
     ethTimeline?.failureReason ??
     snap.ethStatus.confirmationFailureReason ??
-    "confirmation_prompt_too_strict";
+    "ETH watch conditions not present";
   const ethDetail =
     ethTimeline?.ethDetail ??
     snap.ethStatus.ethDetail ??
-    "LONG/BUY → NONE/NONE without market reversal";
+    "HOLD — wait for ETH watch/valid_watch";
   const delta = ethTimeline?.marketContextDelta;
 
   return (
@@ -37,8 +43,8 @@ export function RiskEvidencePage() {
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
           Safety flags only — no order / no ARM / no production controls. Private Operator
-          read-only. Stage 4.19 start button absent (forbidden). P2F · watch reappearance gate ·
-          no 30m · no 60m · Stage 4.19 blocked · no order / no mock / no production.
+          read-only. Backend HOLD · no 30m · no 60m · Stage 4.19 blocked · future checker: manual
+          only / no auto-run · no order / no mock / no production.
         </p>
       </header>
       <div className="flag-grid">
@@ -96,6 +102,8 @@ export function RiskEvidencePage() {
         </div>
       </div>
 
+      {hold ? <BackendHoldStateCard status={hold} /> : null}
+      {futureGate ? <FutureRegressionGateCard status={futureGate} /> : null}
       {watchGate ? <WatchReappearanceGateCard status={watchGate} /> : null}
 
       <section className="panel-card operator-card" style={{ marginTop: "1.25rem" }}>
