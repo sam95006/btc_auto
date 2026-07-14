@@ -101,6 +101,12 @@ export interface SnapshotPaperLabStatus {
   whyNotGraduated: string;
   paperLoggerStatus: string;
   nextDiagnostic: string;
+  /** MVP-10 operator clarity fields (optional on older snapshots). */
+  btcPriorGraduationEvidenceExists?: boolean;
+  latestBtcRegressionGraduation?: number;
+  ethPromptRepairDone?: boolean;
+  ethRuntimeValidationPending?: boolean;
+  nextShortRegressionAllowedNow?: false;
 }
 
 export interface SnapshotReportMeta {

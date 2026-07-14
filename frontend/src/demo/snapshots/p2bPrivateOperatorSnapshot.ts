@@ -123,6 +123,8 @@ export const p2bPrivateOperatorSnapshot: NexusSnapshot = {
     ethDetail: "LONG/BUY → NONE/NONE",
     invalidationBreached: false,
     maeBreached: false,
+    confirmationFailureIsMarketValid: false,
+    confirmationFailureIsSystemIssue: true,
     watch: {
       label: "Watch tick",
       provider: "cerebras",

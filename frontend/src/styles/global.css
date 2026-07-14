@@ -503,6 +503,72 @@ button {
   }
 }
 
+.hold-banner {
+  border-color: rgba(240, 180, 61, 0.45);
+  background: linear-gradient(
+    180deg,
+    rgba(240, 180, 61, 0.08) 0%,
+    rgba(15, 20, 28, 0.2) 100%
+  );
+  margin-bottom: 0.25rem;
+}
+
+.report-stage-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.65rem;
+}
+
+.report-stage-chip {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.report-stage-chip.present {
+  border-color: rgba(61, 156, 240, 0.45);
+  color: var(--text);
+  background: rgba(61, 156, 240, 0.1);
+}
+
+.report-stage-chip.missing {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.gate-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gate-checklist li {
+  display: grid;
+  grid-template-columns: 1.25rem 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(139, 155, 176, 0.12);
+  font-size: 0.82rem;
+}
+
+.gate-checklist .gate-mark {
+  font-weight: 600;
+}
+
+.gate-checklist .gate-ok .gate-mark {
+  color: var(--positive);
+}
+
+.gate-checklist .gate-fail .gate-mark {
+  color: var(--negative);
+}
+
 @media (max-width: 720px) {
   .app-body {
     grid-template-columns: 1fr;
@@ -515,6 +581,7 @@ button {
     border-right: none;
     border-bottom: 1px solid var(--border);
     padding: 0.4rem;
+    -webkit-overflow-scrolling: touch;
   }
 
   .sidebar-nav .nav-label {
@@ -529,5 +596,25 @@ button {
   .app-body {
     height: auto;
     grid-template-rows: auto 1fr;
+  }
+
+  .main-content {
+    padding: 0.85rem;
+  }
+
+  .operator-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .flag-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .page-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .hold-banner {
+    padding: 0.85rem;
   }
 }

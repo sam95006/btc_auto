@@ -2,6 +2,8 @@ import { BackendHoldStateCard } from "../components/BackendHoldStateCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
+import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCard";
+import { OperatorHoldBanner } from "../components/OperatorHoldBanner";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
 import {
   getBackendHoldStateStatus,
@@ -42,12 +44,39 @@ export function RiskEvidencePage() {
         <DemoDataBadge />
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
-          Safety flags only — no order / no ARM / no production controls. Private Operator
-          read-only. Backend HOLD · no 30m · no 60m · Stage 4.19 blocked · future checker: manual
-          only / no auto-run · no order / no mock / no production.
+          Safety flags only — no order / no mock / no ARM / no production / no btc-auto / no Stage
+          4.19. Private Operator read-only. Backend HOLD · no 30m · no 60m · Stage 4.19 blocked ·
+          future checker: manual only / no auto-run. READ ONLY · NOT INVESTMENT ADVICE.
         </p>
       </header>
-      <div className="flag-grid">
+
+      {hold ? <OperatorHoldBanner hold={hold} /> : null}
+
+      <div className="flag-grid" style={{ marginTop: "1.25rem" }}>
+        <div className="flag-item">
+          <div className="k">no order</div>
+          <div className="v">true (order_allowed={String(f.orderAllowed)})</div>
+        </div>
+        <div className="flag-item">
+          <div className="k">no mock</div>
+          <div className="v">true (mock={String(f.mock)})</div>
+        </div>
+        <div className="flag-item">
+          <div className="k">no ARM</div>
+          <div className="v">true (ARM={String(f.arm)})</div>
+        </div>
+        <div className="flag-item">
+          <div className="k">no production</div>
+          <div className="v">true (production={String(f.production)})</div>
+        </div>
+        <div className="flag-item">
+          <div className="k">no btc-auto</div>
+          <div className="v">true</div>
+        </div>
+        <div className="flag-item">
+          <div className="k">no Stage 4.19</div>
+          <div className="v">{stage419.blocked ? "blocked" : "open"}</div>
+        </div>
         <div className="flag-item">
           <div className="k">order_allowed</div>
           <div className="v">{String(f.orderAllowed)}</div>
@@ -104,6 +133,7 @@ export function RiskEvidencePage() {
 
       {hold ? <BackendHoldStateCard status={hold} /> : null}
       {futureGate ? <FutureRegressionGateCard status={futureGate} /> : null}
+      {watchGate ? <OperatorGateChecklistCard gate={watchGate} /> : null}
       {watchGate ? <WatchReappearanceGateCard status={watchGate} /> : null}
 
       <section className="panel-card operator-card" style={{ marginTop: "1.25rem" }}>

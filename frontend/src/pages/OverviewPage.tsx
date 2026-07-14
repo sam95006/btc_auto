@@ -2,6 +2,8 @@ import { MarketStatusCard } from "../components/MarketStatusCard";
 import { BackendHoldStateCard } from "../components/BackendHoldStateCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
+import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCard";
+import { OperatorHoldBanner } from "../components/OperatorHoldBanner";
 import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
@@ -16,7 +18,6 @@ import {
   getMarketOverview,
   getNexusSnapshot,
   getPrivateOperatorMode,
-  getPromptRepairStatus,
   getRegressionReadinessStatus,
   getRoundTable,
   getRuntimeRegressionStatus,
@@ -39,7 +40,6 @@ export function OverviewPage() {
   const uiMode = getCurrentUiMode();
   const latestVerdict = getLatestBackendVerdict();
   const ethTimeline = getEthConfirmationTimeline();
-  const promptRepair = getPromptRepairStatus();
   const runtimeReg = getRuntimeRegressionStatus();
   const ready = getRegressionReadinessStatus();
   const watchGate = getWatchReappearanceGateStatus();
@@ -72,12 +72,14 @@ export function OverviewPage() {
         <h1>Private Operator Dashboard</h1>
         <DemoDataBadge />
         <p className="page-sub">
-          Read-only research overview · UI mode: {uiMode} · Source: {snap.source}. Not investment
-          advice.
+          Read-only research overview · UI mode: {uiMode} · Source: {snap.source}. Backend HOLD ·
+          wait-for-condition · no auto-run · Stage 4.19 blocked. NOT INVESTMENT ADVICE.
         </p>
       </header>
 
-      <div className="operator-card-grid">
+      {hold ? <OperatorHoldBanner hold={hold} /> : null}
+
+      <div className="operator-card-grid" style={{ marginTop: "1.25rem" }}>
         <section className="panel-card operator-card">
           <div className="meta-row" style={{ marginTop: 0 }}>
             <h3 style={{ margin: 0 }}>Stage Gate</h3>
@@ -101,8 +103,11 @@ export function OverviewPage() {
               gate.p2aStatus}
           </p>
           <p className="muted">
-            Current backend state: HOLD · reason: <span className="mono">{ethBlocker}</span> ·
-            regression readiness=false · Stage 4.19 blocked · no 30m/60m
+            Backend State: HOLD · Reason: ETH watch conditions not present · Next allowed action:
+            wait · 30m now: false · 60m: false · Stage 4.19: blocked
+          </p>
+          <p className="muted">
+            reason detail: <span className="mono">{ethBlocker}</span>
           </p>
           <p className="muted">{gate.latestGate}</p>
           <p className="muted">{gate.note}</p>
@@ -198,6 +203,7 @@ export function OverviewPage() {
 
       {hold ? <BackendHoldStateCard status={hold} /> : null}
       {futureGate ? <FutureRegressionGateCard status={futureGate} /> : null}
+      {watchGate ? <OperatorGateChecklistCard gate={watchGate} /> : null}
       {watchGate ? <WatchReappearanceGateCard status={watchGate} /> : null}
       {ready ? <RegressionReadinessCard status={ready} /> : null}
       {runtimeReg ? <RuntimeRegressionStatusCard status={runtimeReg} /> : null}

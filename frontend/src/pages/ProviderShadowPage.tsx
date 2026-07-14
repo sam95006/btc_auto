@@ -23,13 +23,38 @@ export function ProviderShadowPage() {
         <DemoDataBadge />
         <MembershipLockBadge requiredTier="Elite" currentTier="Free" />
         <p className="page-sub">
-          BTC Cerebras-first experiment supported. Permanent routing change not supported.
-          Actual-only graduation. No permanent routing change after P2E. Routing editor absent
-          (forbidden).
+          BTC Cerebras-first was experiment only. Permanent routing change not supported. Routing
+          auto change false. Actual-only graduation. No permanent routing change after P2E. Routing
+          editor absent (forbidden). Backend HOLD · Stage 4.19 blocked.
         </p>
       </header>
 
       <div className="operator-card-grid" style={{ marginBottom: "1.25rem" }}>
+        <article className="panel-card operator-card">
+          <div className="meta-row" style={{ marginTop: 0 }}>
+            <h3 style={{ margin: 0 }}>Routing Policy (MVP-10)</h3>
+            <DemoDataBadge />
+          </div>
+          <div className="flag-grid">
+            <div className="flag-item">
+              <div className="k">no permanent routing change</div>
+              <div className="v">true</div>
+            </div>
+            <div className="flag-item">
+              <div className="k">BTC Cerebras-first</div>
+              <div className="v">experiment only</div>
+            </div>
+            <div className="flag-item">
+              <div className="k">routing auto change</div>
+              <div className="v">false</div>
+            </div>
+            <div className="flag-item">
+              <div className="k">routing_permanent_change_supported</div>
+              <div className="v">{String(routing.routingPermanentChangeSupported)}</div>
+            </div>
+          </div>
+        </article>
+
         <article className="panel-card operator-card">
           <div className="meta-row" style={{ marginTop: 0 }}>
             <h3 style={{ margin: 0 }}>P1C Summary</h3>

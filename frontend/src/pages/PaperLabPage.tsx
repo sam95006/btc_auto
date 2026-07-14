@@ -3,6 +3,8 @@ import { DemoDataBadge } from "../components/DemoDataBadge";
 import { EthConfirmationTimelineCard } from "../components/EthConfirmationTimelineCard";
 import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
+import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCard";
+import { OperatorHoldBanner } from "../components/OperatorHoldBanner";
 import { PromptRepairStatusCard } from "../components/PromptRepairStatusCard";
 import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
@@ -42,10 +44,60 @@ export function PaperLabPage() {
         <p className="page-sub">
           Read-only would_enter / would_skip counts. Next allowed action: wait for ETH
           watch/valid_watch reappearance. Backend HOLD · Stage 4.19 blocked. No paper execution
-          from UI.
+          from UI. NOT INVESTMENT ADVICE.
         </p>
       </header>
-      <div className="flag-grid">
+
+      {hold ? <OperatorHoldBanner hold={hold} /> : null}
+
+      <section className="panel-card operator-card" style={{ marginTop: "1.25rem" }}>
+        <div className="meta-row" style={{ marginTop: 0 }}>
+          <h3 style={{ margin: 0 }}>Operator Paper Gate (MVP-10)</h3>
+          <DemoDataBadge />
+        </div>
+        <div className="flag-grid">
+          <div className="flag-item">
+            <div className="k">BTC prior graduation evidence</div>
+            <div className="v">
+              {String(paper.btcPriorGraduationEvidenceExists ?? true)}
+            </div>
+          </div>
+          <div className="flag-item">
+            <div className="k">latest BTC regression graduation</div>
+            <div className="v">
+              {String(
+                paper.latestBtcRegressionGraduation ??
+                  runtimeReg?.btcGraduationCount ??
+                  p.btcGraduationCount,
+              )}
+            </div>
+          </div>
+          <div className="flag-item">
+            <div className="k">ETH prompt repair done</div>
+            <div className="v">
+              {String(paper.ethPromptRepairDone ?? promptRepair?.promptRepairAdded ?? true)}
+            </div>
+          </div>
+          <div className="flag-item">
+            <div className="k">ETH runtime validation</div>
+            <div className="v">
+              {(paper.ethRuntimeValidationPending ?? true) ? "pending" : "done"}
+            </div>
+          </div>
+          <div className="flag-item">
+            <div className="k">next short regression allowed now</div>
+            <div className="v">
+              {String(paper.nextShortRegressionAllowedNow ?? false)}
+            </div>
+          </div>
+          <div className="flag-item">
+            <div className="k">Stage 4.19</div>
+            <div className="v">blocked</div>
+          </div>
+        </div>
+      </section>
+
+      <div className="flag-grid" style={{ marginTop: "1.25rem" }}>
         <div className="flag-item">
           <div className="k">would_enter</div>
           <div className="v">{p.wouldEnterCount}</div>
@@ -114,6 +166,7 @@ export function PaperLabPage() {
 
       {hold ? <BackendHoldStateCard status={hold} /> : null}
       {futureGate ? <FutureRegressionGateCard status={futureGate} /> : null}
+      {watchGate ? <OperatorGateChecklistCard gate={watchGate} /> : null}
       {watchGate ? <WatchReappearanceGateCard status={watchGate} /> : null}
       {ready ? <RegressionReadinessCard status={ready} /> : null}
       {runtimeReg ? <RuntimeRegressionStatusCard status={runtimeReg} /> : null}

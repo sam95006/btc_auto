@@ -1,5 +1,5 @@
 /**
- * Sanitized Private Operator snapshot for MVP-9 (Stage 4.18-P2G / P2H HOLD).
+ * Sanitized Private Operator snapshot for MVP-10 (Stage 4.18-P2G / P2H HOLD).
  * READ ONLY — research summaries only.
  * No secrets, no API keys, no /data raw paths, no investment advice.
  */
@@ -123,6 +123,11 @@ export const p2gPrivateOperatorSnapshot: NexusSnapshot = {
     paperLoggerStatus: "read-only / append-only research (actual-only)",
     nextDiagnostic:
       "Next allowed action: wait for ETH watch/valid_watch reappearance (then operator may approve short regression)",
+    btcPriorGraduationEvidenceExists: true,
+    latestBtcRegressionGraduation: 0,
+    ethPromptRepairDone: true,
+    ethRuntimeValidationPending: true,
+    nextShortRegressionAllowedNow: false,
   },
 
   promptRepairStatus: {

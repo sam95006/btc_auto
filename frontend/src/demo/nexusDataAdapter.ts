@@ -1,6 +1,6 @@
 /**
  * Read-only NEXUS data adapter.
- * MVP-9: defaults to sanitized P2G/P2H HOLD private_operator_snapshot
+ * MVP-10: defaults to sanitized P2G/P2H HOLD private_operator_snapshot
  * (prefers P2G over P2F/P2E/…).
  * Never writes backend / trading state. No order / ARM / routing APIs.
  */
@@ -286,6 +286,8 @@ export function getMarketOverview(): MarketCard[] {
   return demoMarkets;
 }
 
+export function getFleetStatus(): FleetStatus[];
+export function getFleetStatus(symbol: string): FleetStatus;
 export function getFleetStatus(symbol?: string): FleetStatus | FleetStatus[] {
   if (!symbol) return demoFleets;
   const hit = demoFleets.find((f) => f.symbol.toUpperCase() === symbol.toUpperCase());

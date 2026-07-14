@@ -72,9 +72,9 @@ export function EthConfirmationTimelineCard({
   const w = timeline.watch;
   const f = timeline.followup;
   const delta = timeline.marketContextDelta;
-  const systemIssue = timeline.confirmationFailureIsSystemIssue !== false;
+  const systemIssue = Boolean(timeline.confirmationFailureIsSystemIssue);
   const notMarket =
-    timeline.confirmationFailureIsMarketValid === false ||
+    !Boolean(timeline.confirmationFailureIsMarketValid) ||
     timeline.failureReason === "confirmation_prompt_too_strict";
 
   return (
