@@ -2,6 +2,7 @@ import { DemoDataBadge } from "../components/DemoDataBadge";
 import { EthConfirmationTimelineCard } from "../components/EthConfirmationTimelineCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import { PromptRepairStatusCard } from "../components/PromptRepairStatusCard";
+import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
 import {
   getEthConfirmationTimeline,
@@ -9,6 +10,7 @@ import {
   getNexusSnapshot,
   getPaperLabSummary,
   getPromptRepairStatus,
+  getRegressionReadinessStatus,
   getRuntimeRegressionStatus,
 } from "../demo/nexusDataAdapter";
 
@@ -20,6 +22,7 @@ export function PaperLabPage() {
   const ethTimeline = getEthConfirmationTimeline();
   const promptRepair = getPromptRepairStatus();
   const runtimeReg = getRuntimeRegressionStatus();
+  const ready = getRegressionReadinessStatus();
 
   return (
     <div>
@@ -28,8 +31,9 @@ export function PaperLabPage() {
         <DemoDataBadge />
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
-          Read-only would_enter / would_skip counts. BTC last-tick watch · ETH no-watch · no
-          graduation. Stage 4.19 blocked. P2D-R1 PARTIAL. No paper execution from UI.
+          Read-only would_enter / would_skip counts. Regression readiness=false · ETH watch
+          conditions absent · sample_market_no_edge · Stage 4.19 blocked. No paper execution from
+          UI.
         </p>
       </header>
       <div className="flag-grid">
@@ -94,11 +98,12 @@ export function PaperLabPage() {
         Why not graduated to Stage 4.19: {p.whyNotGraduated}
       </p>
       <p className="muted">
-        BTC last tick watch · ETH no-watch · no graduation · Next diagnostic:{" "}
-        {paper.nextDiagnostic} (read-only; no Stage 4.19 start).
+        Regression readiness=false · ETH watch conditions absent · Next diagnostic:{" "}
+        {paper.nextDiagnostic} (read-only; no Stage 4.19 start; no 60m).
       </p>
       <p className="muted">{g.whyBlocked}</p>
 
+      {ready ? <RegressionReadinessCard status={ready} /> : null}
       {runtimeReg ? <RuntimeRegressionStatusCard status={runtimeReg} /> : null}
       {promptRepair ? <PromptRepairStatusCard status={promptRepair} /> : null}
       {ethTimeline ? <EthConfirmationTimelineCard timeline={ethTimeline} /> : null}

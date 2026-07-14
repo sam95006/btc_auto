@@ -1,7 +1,7 @@
 /**
  * Read-only NEXUS data adapter.
- * MVP-6: defaults to sanitized P2D-R1 private_operator_snapshot
- * (prefers P2D-R1 over P2D/P2C/P2B/P2A).
+ * MVP-7: defaults to sanitized P2E private_operator_snapshot
+ * (prefers P2E over P2D-R1/P2D/P2C/P2B/P2A).
  * Never writes backend / trading state. No order / ARM / routing APIs.
  */
 import {
@@ -29,6 +29,7 @@ import { p2bPrivateOperatorSnapshot } from "./snapshots/p2bPrivateOperatorSnapsh
 import { p2cPrivateOperatorSnapshot } from "./snapshots/p2cPrivateOperatorSnapshot";
 import { p2dPrivateOperatorSnapshot } from "./snapshots/p2dPrivateOperatorSnapshot";
 import { p2dR1PrivateOperatorSnapshot } from "./snapshots/p2dR1PrivateOperatorSnapshot";
+import { p2ePrivateOperatorSnapshot } from "./snapshots/p2ePrivateOperatorSnapshot";
 import type {
   EvidenceItem,
   FleetStatus,
@@ -53,6 +54,7 @@ import type {
   NexusSnapshot,
   NexusUiMode,
   PromptRepairStatus,
+  RegressionReadinessStatus,
   RuntimeRegressionStatus,
   SnapshotStage419Status,
 } from "../types/nexusSnapshot";
@@ -60,8 +62,9 @@ import type {
 /** Default UI mode for Private Operator Dashboard. */
 let currentUiMode: NexusUiMode = "private_operator_snapshot";
 
-/** Prefer P2D-R1 over P2D/P2C/P2B/P2A when sanitized snapshots are available. */
+/** Prefer P2E over P2D-R1/P2D/P2C/P2B/P2A when sanitized snapshots are available. */
 const ACTIVE_PRIVATE_OPERATOR_SNAPSHOT: NexusSnapshot =
+  p2ePrivateOperatorSnapshot ??
   p2dR1PrivateOperatorSnapshot ??
   p2dPrivateOperatorSnapshot ??
   p2cPrivateOperatorSnapshot ??
@@ -112,6 +115,11 @@ export function getRuntimeRegressionStatus(): RuntimeRegressionStatus | null {
   return snap.runtimeRegressionStatus ?? null;
 }
 
+export function getRegressionReadinessStatus(): RegressionReadinessStatus | null {
+  const snap = getNexusSnapshot();
+  return snap.regressionReadinessStatus ?? null;
+}
+
 export function getLatestBackendVerdict(): string {
   if (isSnapshotMode()) {
     return getPrivateOperatorSnapshot().latestVerdict;
@@ -154,7 +162,7 @@ export function getStageGateStatus(): StageGateStatus {
       source: s.source,
       stageLabel: g.stageLabel,
       verdict: g.verdict,
-      p2aStatus: g.p2dR1Status ?? g.p2dStatus ?? g.p2cStatus ?? g.p2bStatus ?? g.p2aStatus,
+      p2aStatus: g.p2eStatus ?? g.p2dR1Status ?? g.p2dStatus ?? g.p2cStatus ?? g.p2bStatus ?? g.p2aStatus,
       latestGate: g.latestGate,
       note: g.note,
     };

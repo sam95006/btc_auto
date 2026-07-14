@@ -34,8 +34,9 @@ export function RiskEvidencePage() {
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
           Safety flags only — no order / no ARM / no production controls. Private Operator
-          read-only. Stage 4.19 start button absent (forbidden). P2D-R1 PARTIAL · technical PASS ·
-          no ETH watch · Stage 4.19 blocked · no order / no mock / no production.
+          read-only. Stage 4.19 start button absent (forbidden). P2E · sample_market_no_edge · no
+          60m recommended · wait helper fixed · Stage 4.19 blocked · no order / no mock / no
+          production.
         </p>
       </header>
       <div className="flag-grid">
@@ -100,8 +101,8 @@ export function RiskEvidencePage() {
           <DemoDataBadge />
         </div>
         <p className="muted">
-          P2D-R1 · prompt repair runtime present · ETH valid_watch=0 · repair not validated due
-          sample insufficient · Stage 4.19 blocked · no order / no mock / no production
+          P2E · ETH sample_market_no_edge · prompt_repair_over_conservative=false · wait helper
+          fixed · should_run_60m=false · Stage 4.19 blocked · no order / no mock / no production
         </p>
         <div className="flag-grid" style={{ marginTop: "0.75rem" }}>
           <div className="flag-item">
@@ -136,7 +137,8 @@ export function RiskEvidencePage() {
           </div>
         </div>
         <p className="muted" style={{ marginTop: "0.75rem" }}>
-          Next = {promptRepair?.nextStep ?? "P2E ETH no-watch diagnostics"} · Stage 4.19 blocked
+          Next = {promptRepair?.nextStep ?? "wait_for_eth_watch_conditions_reappear_no_60m"} ·
+          Stage 4.19 blocked · wait helper fixed
         </p>
       </section>
 

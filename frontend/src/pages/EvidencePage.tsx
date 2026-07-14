@@ -24,7 +24,7 @@ export function EvidencePage() {
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
           Recent AI decisions with stage markers. Sanitized snapshot · READ ONLY · NOT INVESTMENT
-          ADVICE. P2D static repair → P2D-R1 runtime insufficient sample timeline.
+          ADVICE. P2D repair → P2D-R1 no ETH watch → P2E sample_market_no_edge timeline.
         </p>
       </header>
 
@@ -95,21 +95,20 @@ export function EvidencePage() {
 
           <article className="panel-card operator-card">
             <div className="meta-row" style={{ marginTop: 0 }}>
-              <h3 style={{ margin: 0 }}>P2D static repair → P2D-R1 runtime insufficient sample</h3>
-              <span className="demo-badge">PARTIAL_NO_ETH_WATCH</span>
+              <h3 style={{ margin: 0 }}>
+                P2D repair → P2D-R1 no ETH watch → P2E sample_market_no_edge
+              </h3>
+              <span className="demo-badge">sample_market_no_edge</span>
               <DemoDataBadge />
             </div>
             <p className="muted">
-              P2C: confirmation_prompt_too_strict (SYSTEM ISSUE) → P2D: prompt repair added →
-              P2D-R1: technical PASS but ETH valid_watch=0 so repair not runtime-validated
-              (insufficient sample).
+              P2D: prompt repair added → P2D-R1: technical PASS but ETH valid_watch=0 → P2E:
+              sample_market_no_edge (not prompt over-conservative). Stage 4.19 blocked · no 60m.
             </p>
             <p className="mono">
               technical_valid={String(runtimeReg?.technicalValid ?? true)} · ETH vw=
-              {String(runtimeReg?.ethValidWatchCount ?? 0)} · followup=
-              {String(runtimeReg?.ethFollowupCasesCount ?? 0)} · repair_effective=
-              {String(runtimeReg?.ethConfirmationPromptRepairEffective ?? false)} · next=
-              {runtimeReg?.nextStep ?? promptRepair?.nextStep ?? "P2E"}
+              {String(runtimeReg?.ethValidWatchCount ?? 0)} · root=sample_market_no_edge · next=
+              {promptRepair?.nextStep ?? "wait_for_eth_watch_conditions_reappear_no_60m"}
             </p>
             <p className="muted">
               Stage 4.19 blocked · READ ONLY · NOT INVESTMENT ADVICE
