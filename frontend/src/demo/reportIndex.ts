@@ -114,21 +114,24 @@ export const SHORT_REGRESSION_CHECKLIST: ChecklistItem[] = [
 
 /** Safety invariants — always asserted in Private Operator UI. */
 export const SAFETY_INVARIANTS_CHECKLIST: ChecklistItem[] = [
-  { id: "no_order", label: "no order", ok: true },
-  { id: "no_mock", label: "no mock", ok: true },
-  { id: "no_arm", label: "no ARM", ok: true },
-  { id: "no_production", label: "no production", ok: true },
-  { id: "no_btc_auto", label: "no btc-auto", ok: true },
-  { id: "no_419", label: "no Stage 4.19 start", ok: true },
-  { id: "no_30m", label: "no 30m now", ok: true },
-  { id: "no_60m", label: "no 60m", ok: true },
+  { id: "orders", label: "orders=false", ok: true },
+  { id: "mock", label: "mock=false", ok: true },
+  { id: "arm", label: "ARM=false", ok: true },
+  { id: "production", label: "production=false", ok: true },
+  { id: "btc_auto", label: "btc_auto=false", ok: true },
+  { id: "stage_419", label: "Stage 4.19=false (blocked)", ok: true },
+  { id: "billing", label: "billing/accounts/API keys=false", ok: true },
+  { id: "no_30m", label: "30m now=false", ok: true },
+  { id: "no_60m", label: "60m=false", ok: true },
   { id: "hold", label: "backend HOLD", ok: true },
 ];
 
 export const ROUTING_POLICY_CHECKLIST: ChecklistItem[] = [
-  { id: "no_permanent", label: "no permanent routing change", ok: true },
   { id: "cerebras_exp", label: "BTC Cerebras-first was experiment only", ok: true },
-  { id: "auto_change", label: "routing auto change = false", ok: true },
+  { id: "no_permanent", label: "permanent routing change=false", ok: true },
+  { id: "shadow_grad", label: "shadow not used for graduation", ok: true },
+  { id: "ops_approval", label: "future routing changes require operator approval", ok: true },
+  { id: "auto_change", label: "routing auto change=false", ok: true },
   { id: "editor", label: "routing editor absent (forbidden)", ok: true },
 ];
 

@@ -4,10 +4,11 @@ import { CheckpointHealthCard } from "../components/CheckpointHealthCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
 import { GateChecklistCard } from "../components/GateChecklistCard";
+import { OperatorConsoleHero } from "../components/OperatorConsoleHero";
 import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCard";
-import { OperatorHoldBanner } from "../components/OperatorHoldBanner";
 import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
+import { StatusBadge } from "../components/StatusBadge";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
 import { SHORT_REGRESSION_CHECKLIST } from "../demo/reportIndex";
 import {
@@ -58,10 +59,10 @@ export function OverviewPage() {
     futureGate?.nextRecommendation ??
     watchGate?.nextRecommendation ??
     ready?.nextRecommendation ??
-    "wait for ETH watch/valid_watch reappearance";
+    "wait for ETH watch conditions";
 
   return (
-    <div>
+    <div className="page-stack">
       <div className="operator-banner" role="status">
         <span className="operator-banner-label">{op.label}</span>
         <span className="operator-banner-sep">·</span>
@@ -73,160 +74,157 @@ export function OverviewPage() {
 
       <header className="page-header">
         <h1>Private Operator Dashboard</h1>
+        <StatusBadge tone="hold">HOLD</StatusBadge>
+        <StatusBadge tone="blocked">BLOCKED</StatusBadge>
         <DemoDataBadge />
         <p className="page-sub">
-          Read-only research overview · UI mode: {uiMode} · Source: {snap.source}. Backend HOLD ·
-          wait-for-condition · no auto-run · Stage 4.19 blocked. NOT INVESTMENT ADVICE.
+          Total console · UI mode: {uiMode} · Source: {snap.source}. READ ONLY · NOT INVESTMENT
+          ADVICE · Backend HOLD · no auto-run · Stage 4.19 blocked.
         </p>
       </header>
 
-      {hold ? <OperatorHoldBanner hold={hold} /> : null}
+      <OperatorConsoleHero nextAllowedAction={nextStep} />
 
-      <CheckpointHealthCard />
+      <div className="operator-section">
+        <h2 className="section-title">Checkpoint & gate</h2>
+        <CheckpointHealthCard />
+        <GateChecklistCard
+          title="Gate Checklist Summary (next short regression)"
+          items={SHORT_REGRESSION_CHECKLIST}
+          footer="All false under HOLD — continue wait-for-condition · 30m now: false · 60m: false · Auto-run: false · Stage 4.19 blocked"
+        />
+      </div>
 
-      <GateChecklistCard
-        title="Gate Checklist Summary (next short regression)"
-        items={SHORT_REGRESSION_CHECKLIST}
-        footer="All false under HOLD — continue wait-for-condition · no 30m · no 60m · Stage 4.19 blocked"
-      />
+      <div className="operator-section">
+        <h2 className="section-title">Stage · Graduation · Safety</h2>
+        <div className="operator-card-grid">
+          <section className="panel-card operator-card">
+            <div className="meta-row" style={{ marginTop: 0 }}>
+              <h3 style={{ margin: 0 }}>Stage Gate</h3>
+              <StatusBadge tone="hold">HOLD</StatusBadge>
+              <DemoDataBadge />
+            </div>
+            <p className="mono">latestBackendStage: {snap.latestBackendStage}</p>
+            <p className="mono">latestVerdict: {latestVerdict}</p>
+            <p className="mono">
+              {gate.stageLabel} · {gate.verdict}
+            </p>
+            <p className="muted">
+              Backend State: HOLD · Release Checkpoint: P2H · Stage 4.19: BLOCKED · Next: wait for
+              ETH watch conditions · 30m now: false · 60m: false · Auto-run: false
+            </p>
+            <p className="muted">
+              reason: <span className="mono">{ethBlocker}</span>
+            </p>
+            <p className="muted">Next: {nextStep}</p>
+          </section>
 
-      <div className="operator-card-grid" style={{ marginTop: "1.25rem" }}>
-        <section className="panel-card operator-card">
-          <div className="meta-row" style={{ marginTop: 0 }}>
-            <h3 style={{ margin: 0 }}>Stage Gate</h3>
-            <DemoDataBadge />
-          </div>
-          <p className="mono">
-            latestBackendStage: {snap.latestBackendStage}
-          </p>
-          <p className="mono">
-            latestVerdict: {latestVerdict}
-          </p>
-          <p className="mono">
-            {gate.stageLabel} · {gate.verdict}
-          </p>
-          <p>
-            <span className="muted">P2G/P2H:</span>{" "}
-            {snap.stageGate.p2hStatus ??
-              snap.stageGate.p2gStatus ??
-              snap.stageGate.p2fStatus ??
-              snap.stageGate.p2eStatus ??
-              gate.p2aStatus}
-          </p>
-          <p className="muted">
-            Backend State: HOLD · Reason: ETH watch conditions not present · Next allowed action:
-            wait · 30m now: false · 60m: false · Stage 4.19: blocked
-          </p>
-          <p className="muted">
-            reason detail: <span className="mono">{ethBlocker}</span>
-          </p>
-          <p className="muted">{gate.latestGate}</p>
-          <p className="muted">{gate.note}</p>
-          <p className="muted">Next: {nextStep}</p>
-        </section>
-
-        <section className="panel-card operator-card">
-          <div className="meta-row" style={{ marginTop: 0 }}>
-            <h3 style={{ margin: 0 }}>Graduation (actual-only)</h3>
-            <DemoDataBadge />
-          </div>
-          <div className="flag-grid">
-            <div className="flag-item">
-              <div className="k">BTC graduation</div>
-              <div className="v">{grad.btcGraduationCount}</div>
+          <section className="panel-card operator-card">
+            <div className="meta-row" style={{ marginTop: 0 }}>
+              <h3 style={{ margin: 0 }}>Graduation (actual-only)</h3>
+              <StatusBadge tone="blocked">Stage 4.19 BLOCKED</StatusBadge>
+              <DemoDataBadge />
             </div>
-            <div className="flag-item">
-              <div className="k">ETH graduation</div>
-              <div className="v">{grad.ethGraduationCount}</div>
-            </div>
-            <div className="flag-item">
-              <div className="k">Stage 4.19</div>
-              <div className="v">{stage419.blocked ? "blocked" : "open"}</div>
-            </div>
-            <div className="flag-item">
-              <div className="k">should_start_419</div>
-              <div className="v">{String(stage419.shouldStart419)}</div>
-            </div>
-          </div>
-          <p className="muted" style={{ marginTop: "0.75rem" }}>
-            BTC: {snap.btcStatus.statusLabel} · ETH: {snap.ethStatus.statusLabel}
-          </p>
-          <p className="muted">
-            ETH previous failure: {ethBlocker}
-            {snap.ethStatus.ethDetail ? ` · ${snap.ethStatus.ethDetail}` : ""}
-          </p>
-          <p className="muted">Next: {nextStep}</p>
-        </section>
-
-        <section className="panel-card operator-card">
-          <div className="meta-row" style={{ marginTop: 0 }}>
-            <h3 style={{ margin: 0 }}>Safety Status</h3>
-            <DemoDataBadge />
-          </div>
-          <div className="flag-grid">
-            <div className="flag-item">
-              <div className="k">order_allowed</div>
-              <div className="v">{String(safety.orderAllowed)}</div>
-            </div>
-            <div className="flag-item">
-              <div className="k">ARM</div>
-              <div className="v">{String(safety.arm)}</div>
-            </div>
-            <div className="flag-item">
-              <div className="k">production</div>
-              <div className="v">{String(safety.production)}</div>
-            </div>
-            <div className="flag-item">
-              <div className="k">stage_419_readiness</div>
-              <div className="v">{String(safety.stage419Readiness)}</div>
-            </div>
-            <div className="flag-item">
-              <div className="k">should_start_419</div>
-              <div className="v">{String(safety.shouldStart419)}</div>
-            </div>
-            <div className="flag-item">
-              <div className="k">Private Operator</div>
-              <div className="v">ON</div>
-            </div>
-          </div>
-          <p className="muted" style={{ marginTop: "0.75rem" }}>
-            {safety.summary}
-          </p>
-        </section>
-
-        <section className="panel-card operator-card">
-          <div className="meta-row" style={{ marginTop: 0 }}>
-            <h3 style={{ margin: 0 }}>Latest Reports</h3>
-            <DemoDataBadge />
-          </div>
-          <ul className="report-list">
-            {reports.map((r) => (
-              <li key={r.id}>
-                <strong>{r.stageMarker}</strong> — {r.title}
-                <div className="muted">
-                  {r.verdict} · {r.updatedAt}
+            <div className="flag-grid">
+              <div className="flag-item">
+                <div className="k">BTC graduation</div>
+                <div className="v">{grad.btcGraduationCount}</div>
+              </div>
+              <div className="flag-item">
+                <div className="k">ETH graduation</div>
+                <div className="v">{grad.ethGraduationCount}</div>
+              </div>
+              <div className="flag-item">
+                <div className="k">Stage 4.19</div>
+                <div className="v">
+                  <StatusBadge tone="blocked">BLOCKED</StatusBadge>
                 </div>
-              </li>
-            ))}
-          </ul>
-        </section>
+              </div>
+              <div className="flag-item">
+                <div className="k">should_start_419</div>
+                <div className="v">{String(stage419.shouldStart419)}</div>
+              </div>
+            </div>
+            <p className="muted" style={{ marginTop: "0.75rem" }}>
+              BTC: {snap.btcStatus.statusLabel} · ETH: {snap.ethStatus.statusLabel}
+            </p>
+            <p className="muted">Next: {nextStep}</p>
+          </section>
+
+          <section className="panel-card operator-card">
+            <div className="meta-row" style={{ marginTop: 0 }}>
+              <h3 style={{ margin: 0 }}>Safety Status</h3>
+              <StatusBadge tone="pass">PASS</StatusBadge>
+              <DemoDataBadge />
+            </div>
+            <div className="flag-grid">
+              <div className="flag-item">
+                <div className="k">order_allowed</div>
+                <div className="v">{String(safety.orderAllowed)}</div>
+              </div>
+              <div className="flag-item">
+                <div className="k">ARM</div>
+                <div className="v">{String(safety.arm)}</div>
+              </div>
+              <div className="flag-item">
+                <div className="k">production</div>
+                <div className="v">{String(safety.production)}</div>
+              </div>
+              <div className="flag-item">
+                <div className="k">should_start_419</div>
+                <div className="v">{String(safety.shouldStart419)}</div>
+              </div>
+              <div className="flag-item">
+                <div className="k">auto-run</div>
+                <div className="v">false</div>
+              </div>
+              <div className="flag-item">
+                <div className="k">Private Operator</div>
+                <div className="v">ON</div>
+              </div>
+            </div>
+            <p className="muted" style={{ marginTop: "0.75rem" }}>
+              {safety.summary}
+            </p>
+          </section>
+
+          <section className="panel-card operator-card">
+            <div className="meta-row" style={{ marginTop: 0 }}>
+              <h3 style={{ margin: 0 }}>Latest Reports</h3>
+              <DemoDataBadge />
+            </div>
+            <ul className="report-list">
+              {reports.map((r) => (
+                <li key={r.id}>
+                  <strong>{r.stageMarker}</strong> — {r.title}
+                  <div className="muted">
+                    {r.verdict} · {r.updatedAt}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
       </div>
 
-      {hold ? <BackendHoldStateCard status={hold} /> : null}
-      {futureGate ? <FutureRegressionGateCard status={futureGate} /> : null}
-      {watchGate ? <OperatorGateChecklistCard gate={watchGate} /> : null}
-      {watchGate ? <WatchReappearanceGateCard status={watchGate} /> : null}
-      {ready ? <RegressionReadinessCard status={ready} /> : null}
-      {runtimeReg ? <RuntimeRegressionStatusCard status={runtimeReg} /> : null}
-
-      <div className="card-grid" style={{ marginTop: "1.25rem" }}>
-        {markets.map((m) => (
-          <MarketStatusCard key={m.symbol} market={m} />
-        ))}
+      <div className="operator-section">
+        <h2 className="section-title">Hold detail (secondary)</h2>
+        {hold ? <BackendHoldStateCard status={hold} /> : null}
+        {futureGate ? <FutureRegressionGateCard status={futureGate} /> : null}
+        {watchGate ? <OperatorGateChecklistCard gate={watchGate} /> : null}
+        {watchGate ? <WatchReappearanceGateCard status={watchGate} /> : null}
+        {ready ? <RegressionReadinessCard status={ready} /> : null}
+        {runtimeReg ? <RuntimeRegressionStatusCard status={runtimeReg} /> : null}
       </div>
 
-      <section style={{ marginTop: "1.5rem" }}>
-        <div className="panel-card">
+      <div className="operator-section">
+        <h2 className="section-title">Markets & round table</h2>
+        <div className="card-grid">
+          {markets.map((m) => (
+            <MarketStatusCard key={m.symbol} market={m} />
+          ))}
+        </div>
+        <section className="panel-card" style={{ marginTop: "1.25rem" }}>
           <div className="meta-row" style={{ marginTop: 0 }}>
             <h3 style={{ margin: 0 }}>Round Table (summary)</h3>
             <DemoDataBadge />
@@ -234,8 +232,8 @@ export function OverviewPage() {
           <p>{rt.consensus}</p>
           <p className="muted">{rt.whyNotTradeNow}</p>
           <p className="muted">Confirmation needed: {rt.confirmationNeeded}</p>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }
