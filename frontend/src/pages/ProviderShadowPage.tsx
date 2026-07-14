@@ -3,8 +3,10 @@ import { DemoDataBadge } from "../components/DemoDataBadge";
 import { GateChecklistCard } from "../components/GateChecklistCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import { OperatorBreadcrumbs } from "../components/OperatorBreadcrumbs";
+import { PageSummaryCard } from "../components/PageSummaryCard";
 import { RelatedArtifactLinks } from "../components/RelatedArtifactLinks";
 import { StatusBadge } from "../components/StatusBadge";
+import { PROVIDER_ROUTING_SUMMARY } from "../demo/docSummaries";
 import { PROVIDER_RELATED_STAGES, ROUTING_POLICY_CHECKLIST } from "../demo/reportIndex";
 import { useHashScroll } from "../hooks/useHashScroll";
 import {
@@ -43,6 +45,8 @@ export function ProviderShadowPage() {
           ADVICE.
         </p>
       </header>
+
+      <PageSummaryCard {...PROVIDER_ROUTING_SUMMARY} />
 
       <section className="panel-card operator-card">
         <div className="meta-row" style={{ marginTop: 0 }}>

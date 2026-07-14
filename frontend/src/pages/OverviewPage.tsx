@@ -7,6 +7,7 @@ import { GateChecklistCard } from "../components/GateChecklistCard";
 import { OperatorBreadcrumbs } from "../components/OperatorBreadcrumbs";
 import { OperatorConsoleHero } from "../components/OperatorConsoleHero";
 import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCard";
+import { CurrentGateSummaryCard } from "../components/CurrentGateSummaryCard";
 import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
 import { StatusBadge } from "../components/StatusBadge";
@@ -93,6 +94,8 @@ export function OverviewPage() {
       </header>
 
       <OperatorConsoleHero nextAllowedAction={nextStep} />
+
+      <CurrentGateSummaryCard />
 
       <div className="operator-section" id="gate-checklist">
         <h2 className="section-title">Checkpoint & gate</h2>

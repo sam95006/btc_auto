@@ -2,12 +2,14 @@ import { CheckpointHealthCard, ReleaseHealthBadge } from "../components/Checkpoi
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { EvidenceItemCard } from "../components/EvidenceItemCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
+import { DocSummaryList } from "../components/DocSummaryList";
 import { OperatorBreadcrumbs } from "../components/OperatorBreadcrumbs";
 import { OperatorRunbookCard } from "../components/OperatorRunbookCard";
 import { PrivateReportViewerCard } from "../components/PrivateReportViewerCard";
 import { RelatedArtifactLinks } from "../components/RelatedArtifactLinks";
 import { ReportIndexCard } from "../components/ReportIndexCard";
 import { StatusBadge } from "../components/StatusBadge";
+import { getOperatorDocSummaries } from "../demo/docSummaries";
 import {
   findArtifact,
   PRIVATE_OPERATOR_CHECKPOINTS,
@@ -51,7 +53,8 @@ export function EvidencePage() {
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
           Documents & reports hub · Report Viewer · Runbook Viewer · Release Checkpoint · deep
-          links P2D → P2H-REL. READ ONLY · NOT INVESTMENT ADVICE · documentation-only navigation.
+          links P2D → P2H-REL · static doc summaries. READ ONLY · NOT INVESTMENT ADVICE ·
+          documentation-only · sanitized excerpts.
         </p>
       </header>
 
@@ -80,6 +83,10 @@ export function EvidencePage() {
 
       <div className="operator-section">
         <h2 className="section-title">Reports (P2D → P2H-QA)</h2>
+        <DocSummaryList
+          summaries={getOperatorDocSummaries()}
+          title="Static Doc Summary Viewer (P2D → P2H-REL)"
+        />
         <PrivateReportViewerCard reports={PRIVATE_OPERATOR_REPORTS} />
         {reportIndex.length > 0 ? (
           <ReportIndexCard items={reportIndex} showP2hQaHealthBadge />

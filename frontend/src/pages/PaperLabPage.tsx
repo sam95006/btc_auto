@@ -4,6 +4,7 @@ import { EthConfirmationTimelineCard } from "../components/EthConfirmationTimeli
 import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
 import { GateChecklistCard } from "../components/GateChecklistCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
+import { PageSummaryCard } from "../components/PageSummaryCard";
 import { OperatorBreadcrumbs } from "../components/OperatorBreadcrumbs";
 import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCard";
 import { OperatorHoldBanner } from "../components/OperatorHoldBanner";
@@ -13,6 +14,7 @@ import { RelatedArtifactLinks } from "../components/RelatedArtifactLinks";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
 import { StatusBadge } from "../components/StatusBadge";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
+import { PAPER_LAB_VALIDATION_SUMMARY } from "../demo/docSummaries";
 import { PAPER_LAB_RELATED_STAGES, SHORT_REGRESSION_CHECKLIST } from "../demo/reportIndex";
 import { useHashScroll } from "../hooks/useHashScroll";
 import {
@@ -63,6 +65,8 @@ export function PaperLabPage() {
       </header>
 
       {hold ? <OperatorHoldBanner hold={hold} /> : null}
+
+      <PageSummaryCard {...PAPER_LAB_VALIDATION_SUMMARY} />
 
       <section className="panel-card operator-card">
         <div className="meta-row" style={{ marginTop: 0 }}>

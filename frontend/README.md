@@ -24,8 +24,28 @@ Checks:
 ```bash
 npm run typecheck
 npm run build
-python ../tools/research/check_nexus_ui_mvp14_safety.py
+python ../tools/research/check_nexus_ui_mvp15_safety.py
 ```
+
+## Static doc summary viewer (MVP-15)
+
+Operators can read **sanitized one-line excerpts** without opening full reports or raw `/data`.
+
+| Surface | What you see |
+|---------|----------------|
+| Overview `CurrentGateSummaryCard` | Backend HOLD · ETH not reappeared · Stage 4.19 blocked · next = wait |
+| Evidence `DocSummaryList` | Per-report one-line / conclusion / next action / gate / safety |
+| Paper Lab | Validation summary (BTC prior · no latest graduation · ETH repair pending) |
+| Risk & Safety | Safety summary (no orders / ARM / production / billing / 4.19) |
+| Provider Shadow | Routing summary (experiment only · permanent routing=false) |
+
+### Sanitized excerpt policy
+
+- Metadata only: `src/demo/docSummaries.ts`
+- **No raw reports** embedded as full bodies from `/data`
+- **No raw data** paths, jsonl, logs, or secrets
+- **No control action** buttons (no Start Stage 4.19 / Run 30m / Run 60m)
+- Next action language is **wait / hold**, not run
 
 ## How to use Private Operator deep links (MVP-14)
 
@@ -56,6 +76,7 @@ URLs look like `/evidence#artifact-4-18-p2h-ops` or `/overview#gate-checklist`.
 
 - Sanitized fixtures: `src/demo/snapshots/`
 - Report/runbook/checkpoint metadata: `src/demo/reportIndex.ts` (`docs/...` only)
+- Doc summaries / excerpts: `src/demo/docSummaries.ts`
 - Release health: `src/demo/releaseHealth.ts`
 - Do **not** commit raw `/data`, jsonl, logs, bundles, or secrets
 
@@ -70,4 +91,5 @@ URLs look like `/evidence#artifact-4-18-p2h-ops` or `/overview#gate-checklist`.
 ```bash
 python tools/research/check_nexus_ui_mvp13_safety.py
 python tools/research/check_nexus_ui_mvp14_safety.py
+python tools/research/check_nexus_ui_mvp15_safety.py
 ```

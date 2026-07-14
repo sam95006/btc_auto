@@ -7,9 +7,11 @@ import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import { OperatorBreadcrumbs } from "../components/OperatorBreadcrumbs";
 import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCard";
 import { OperatorHoldBanner } from "../components/OperatorHoldBanner";
+import { PageSummaryCard } from "../components/PageSummaryCard";
 import { RelatedArtifactLinks } from "../components/RelatedArtifactLinks";
 import { StatusBadge } from "../components/StatusBadge";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
+import { RISK_SAFETY_SUMMARY } from "../demo/docSummaries";
 import { RISK_RELATED_STAGES, SAFETY_INVARIANTS_CHECKLIST } from "../demo/reportIndex";
 import { useHashScroll } from "../hooks/useHashScroll";
 import {
@@ -66,6 +68,8 @@ export function RiskEvidencePage() {
       </header>
 
       {hold ? <OperatorHoldBanner hold={hold} /> : null}
+
+      <PageSummaryCard {...RISK_SAFETY_SUMMARY} />
 
       <CheckpointHealthCard />
 
