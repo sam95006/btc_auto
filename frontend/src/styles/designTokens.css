@@ -1,0 +1,81 @@
+/**
+ * NEXUS / EATI MVP-17 design tokens — dark fintech Market Intelligence.
+ * Dense, scan-friendly. Weak background. Not game UI.
+ * READ ONLY · NOT INVESTMENT ADVICE
+ */
+
+:root {
+  /* Backgrounds — muted, do not compete with data */
+  --bg-deep: #0b0f14;
+  --bg-panel: #10161e;
+  --bg-elevated: #151c26;
+  --bg-hover: #1a2330;
+  --bg-surface: #121820;
+  --bg-inset: #0d1218;
+
+  /* Borders — hairline financial */
+  --border: #243040;
+  --border-soft: #1a2330;
+  --border-strong: #334155;
+
+  /* Text */
+  --text: #e6edf5;
+  --text-muted: #8b9aab;
+  --text-dim: #5e6d80;
+  --text-inverse: #0b0f14;
+
+  /* Accent — restrained tech, not neon game */
+  --accent: #3b82c4;
+  --accent-soft: rgba(59, 130, 196, 0.12);
+  --accent-line: rgba(59, 130, 196, 0.35);
+
+  /* Semantic */
+  --bullish: #22c55e;
+  --bearish: #ef4444;
+  --neutral: #94a3b8;
+  --blocked: #f97316;
+  --hold: #eab308;
+  --pass: #22c55e;
+  --warning: #f59e0b;
+  --danger: #dc2626;
+  --positive: var(--bullish);
+  --negative: var(--bearish);
+  --warn: var(--warning);
+  --demo: #a78b2a;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  /* Radius — flatter fintech */
+  --radius-card: 4px;
+  --radius-badge: 2px;
+  --radius-input: 3px;
+
+  /* Typography */
+  --font: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", "Consolas", monospace;
+  --fs-xs: 0.68rem;
+  --fs-sm: 0.75rem;
+  --fs-base: 0.8125rem;
+  --fs-md: 0.875rem;
+  --fs-lg: 1rem;
+  --fs-xl: 1.15rem;
+  --fs-title: 1.25rem;
+
+  /* Density */
+  --table-row-h: 2rem;
+  --dash-gap: 0.75rem;
+  --card-pad: 0.75rem 0.85rem;
+
+  /* Layout */
+  --sidebar-w: 208px;
+  --rail-w: 268px;
+  --topbar-h: 44px;
+  --banner-h: 32px;
+}

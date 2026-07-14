@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { SafetyBanner } from "./components/SafetyBanner";
 import { TopStatusBar } from "./components/TopStatusBar";
 import { SidebarNav } from "./components/SidebarNav";
-import { AICommanderPanel } from "./components/AICommanderPanel";
+import { AICopilotPanel } from "./components/AICopilotPanel";
 import { OverviewPage } from "./pages/OverviewPage";
 import { FleetsPage } from "./pages/FleetsPage";
 import { SignalsPage } from "./pages/SignalsPage";
@@ -17,12 +17,12 @@ import { CalculatorPage } from "./pages/CalculatorPage";
 import { MembershipPage } from "./pages/MembershipPage";
 
 /**
- * NEXUS / EATI UI MVP-14 Private Operator Dashboard (read-only).
+ * NEXUS / EATI UI MVP-17 Market Intelligence Layout (read-only).
  * Explicitly absent (forbidden): /trade, /orders, /arm, /routing-edit
  */
 export default function App() {
   return (
-    <div className="app-shell">
+    <div className="app-shell mi-shell">
       <SafetyBanner />
       <TopStatusBar />
       <div className="app-body">
@@ -45,7 +45,12 @@ export default function App() {
             <Route path="*" element={<Navigate to="/overview" replace />} />
           </Routes>
         </main>
-        <AICommanderPanel />
+        <aside className="ai-rail desktop-ai-rail" aria-label="AI Commander rail">
+          <AICopilotPanel />
+        </aside>
+      </div>
+      <div className="mobile-ai-dock" aria-label="AI Commander mobile">
+        <AICopilotPanel compact />
       </div>
     </div>
   );

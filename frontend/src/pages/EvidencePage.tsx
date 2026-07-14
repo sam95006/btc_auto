@@ -52,18 +52,24 @@ export function EvidencePage() {
         <DemoDataBadge />
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
-          Documents & reports hub · Report Viewer · Runbook Viewer · Release Checkpoint · deep
-          links P2D → P2H-REL · static doc summaries · search/filter. READ ONLY · NOT INVESTMENT
-          ADVICE · documentation-only · sanitized excerpts · local metadata only.
+          Market Intelligence data layer · MVP-16 search/filter retained · P2D → P2H-REL · READ ONLY ·
+          NOT INVESTMENT ADVICE · local sanitized metadata only · no trading controls.
         </p>
       </header>
 
-      <div className="operator-section">
-        <h2 className="section-title">Release checkpoint</h2>
+      <div className="evidence-zone-strip" aria-label="Evidence zones">
+        <span className="evidence-zone-chip">1 Market / Signal</span>
+        <span className="evidence-zone-chip">2 Gate / Runbook</span>
+        <span className="evidence-zone-chip">3 Release / Checkpoint</span>
+        <span className="evidence-zone-chip">4 UI / Product</span>
+      </div>
+
+      <div className="operator-section" id="release-checkpoint">
+        <h2 className="section-title">3 · Release / Checkpoint Reports</h2>
         <CheckpointHealthCard />
         {checkpoint ? (
           <section
-            className="panel-card"
+            className="panel-card dense-card"
             id={stageAnchorId(checkpoint.stage)}
             style={{ marginTop: "1rem" }}
           >
@@ -82,10 +88,10 @@ export function EvidencePage() {
       </div>
 
       <div className="operator-section">
-        <h2 className="section-title">Reports (P2D → P2H-QA)</h2>
+        <h2 className="section-title">1 · Market / Signal · Gate Reports (P2D → P2H-REL)</h2>
         <DocSummaryList
           summaries={getOperatorDocSummaries()}
-          title="Static Doc Summary Viewer (P2D → P2H-REL)"
+          title="Static Doc Summary Viewer (search/filter retained)"
           enableFilter
         />
         <PrivateReportViewerCard reports={PRIVATE_OPERATOR_REPORTS} />
@@ -95,7 +101,7 @@ export function EvidencePage() {
       </div>
 
       <div className="operator-section">
-        <h2 className="section-title">Runbooks</h2>
+        <h2 className="section-title">2 · Gate / Runbook Reports</h2>
         <OperatorRunbookCard runbooks={PRIVATE_OPERATOR_RUNBOOKS} />
         {findArtifact("4.18-P2H-OPS") ? (
           <RelatedArtifactLinks
@@ -105,11 +111,11 @@ export function EvidencePage() {
         ) : null}
       </div>
 
-      {ethTimeline ? (
-        <div className="operator-section">
-          <h2 className="section-title">ETH evidence trail (sanitized)</h2>
+      <div className="operator-section">
+        <h2 className="section-title">4 · UI / Product · ETH trail</h2>
+        {ethTimeline ? (
           <div className="operator-card-grid">
-            <article className="panel-card operator-card">
+            <article className="panel-card dense-card">
               <div className="meta-row" style={{ marginTop: 0 }}>
                 <h3 style={{ margin: 0 }}>ETH Watch Evidence</h3>
                 <span className="demo-badge">SANITIZED</span>
@@ -125,7 +131,7 @@ export function EvidencePage() {
               </p>
             </article>
 
-            <article className="panel-card operator-card">
+            <article className="panel-card dense-card">
               <div className="meta-row" style={{ marginTop: 0 }}>
                 <h3 style={{ margin: 0 }}>ETH Follow-up Evidence</h3>
                 <StatusBadge tone="wait">SYSTEM ISSUE</StatusBadge>
@@ -142,7 +148,7 @@ export function EvidencePage() {
               </p>
             </article>
 
-            <article className="panel-card operator-card">
+            <article className="panel-card dense-card">
               <div className="meta-row" style={{ marginTop: 0 }}>
                 <h3 style={{ margin: 0 }}>Chain status</h3>
                 <StatusBadge tone="wait">WAIT</StatusBadge>
@@ -159,8 +165,10 @@ export function EvidencePage() {
               </p>
             </article>
           </div>
-        </div>
-      ) : null}
+        ) : (
+          <p className="muted">No ETH trail in sanitized snapshot.</p>
+        )}
+      </div>
 
       <div className="operator-section">
         <h2 className="section-title">Recent decision evidence</h2>

@@ -4,6 +4,7 @@ import { GateChecklistCard } from "../components/GateChecklistCard";
 import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import { OperatorBreadcrumbs } from "../components/OperatorBreadcrumbs";
 import { PageSummaryCard } from "../components/PageSummaryCard";
+import { ProviderIntelligencePanel } from "../components/ProviderIntelligencePanel";
 import { RelatedArtifactLinks } from "../components/RelatedArtifactLinks";
 import { StatusBadge } from "../components/StatusBadge";
 import { PROVIDER_ROUTING_SUMMARY } from "../demo/docSummaries";
@@ -30,25 +31,25 @@ export function ProviderShadowPage() {
       <OperatorBreadcrumbs
         crumbs={[
           { label: "Operator Console", to: "/overview" },
-          { label: "Provider Shadow" },
+          { label: "Provider Intelligence" },
         ]}
       />
       <header className="page-header">
-        <h1>Provider Shadow</h1>
+        <h1>Provider Intelligence</h1>
         <StatusBadge tone="hold">HOLD</StatusBadge>
         <StatusBadge tone="pass">experiment only</StatusBadge>
         <DemoDataBadge />
         <MembershipLockBadge requiredTier="Elite" currentTier="Free" />
         <p className="page-sub">
-          Routing experiment history · permanent routing change=false · shadow not used for
-          graduation · future routing changes require operator approval. READ ONLY · NOT INVESTMENT
-          ADVICE.
+          Provider Intelligence · permanent routing=false · no routing editor · shadow ≠ graduation ·
+          READ ONLY · NOT INVESTMENT ADVICE.
         </p>
       </header>
 
       <PageSummaryCard {...PROVIDER_ROUTING_SUMMARY} />
+      <ProviderIntelligencePanel />
 
-      <section className="panel-card operator-card">
+      <section className="panel-card dense-card">
         <div className="meta-row" style={{ marginTop: 0 }}>
           <h3 style={{ margin: 0 }}>Current routing posture</h3>
           <StatusBadge tone="pass">no permanent change</StatusBadge>

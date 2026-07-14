@@ -13,6 +13,7 @@ import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
 import { RelatedArtifactLinks } from "../components/RelatedArtifactLinks";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
 import { StatusBadge } from "../components/StatusBadge";
+import { ValidationStatusBoard } from "../components/ValidationStatusBoard";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
 import { PAPER_LAB_VALIDATION_SUMMARY } from "../demo/docSummaries";
 import { PAPER_LAB_RELATED_STAGES, SHORT_REGRESSION_CHECKLIST } from "../demo/reportIndex";
@@ -53,22 +54,23 @@ export function PaperLabPage() {
         ]}
       />
       <header className="page-header">
-        <h1>Paper Trading Lab</h1>
+        <h1>Paper Lab · Validation Lab</h1>
         <StatusBadge tone="hold">HOLD</StatusBadge>
         <StatusBadge tone="wait">WAIT</StatusBadge>
         <DemoDataBadge />
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
-          Validation status (read-only). Next short regression allowed now=false. Backend HOLD ·
-          Stage 4.19 blocked · Auto-run: false. NOT INVESTMENT ADVICE.
+          Validation Lab style · next short regression allowed now=false · dossier=false · Backend
+          HOLD · Stage 4.19 blocked · READ ONLY · NOT INVESTMENT ADVICE · no trading controls.
         </p>
       </header>
 
       {hold ? <OperatorHoldBanner hold={hold} /> : null}
 
       <PageSummaryCard {...PAPER_LAB_VALIDATION_SUMMARY} />
+      <ValidationStatusBoard />
 
-      <section className="panel-card operator-card">
+      <section className="panel-card dense-card">
         <div className="meta-row" style={{ marginTop: 0 }}>
           <h3 style={{ margin: 0 }}>Current validation status</h3>
           <StatusBadge tone="wait">pending</StatusBadge>

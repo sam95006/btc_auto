@@ -24,8 +24,21 @@ Checks:
 ```bash
 npm run typecheck
 npm run build
-python ../tools/research/check_nexus_ui_mvp16_safety.py
+python ../tools/research/check_nexus_ui_mvp17_safety.py
 ```
+
+## Market Intelligence Layout (MVP-17)
+
+Private Operator UI is a **dark fintech Market Intelligence** shell (DataHunterX-inspired structure, not a clone).
+
+- **Market Command Center** on Overview: System Gate Strip · Fleet grid · Candidate Board · Signal Feed · Anomaly Radar · AI Commander (static prompts)
+- **Static demo data policy**: `src/demo/marketIntelligence.ts` + sanitized snapshots only · no `/data` · no secrets
+- **Read-only navigation policy**: View Evidence · Open Risk Card · Ask AI · View Gate · View Runbook · Generate Brief (prompt card only)
+- **No trading controls**: no Buy / Sell / Quick Order / Execute / Start Stage 4.19 / Run 30m / Run 60m
+- **Evidence search/filter retained from MVP-16**
+- **Backend remains HOLD**
+
+Design tokens: `src/styles/designTokens.css`
 
 ## Static excerpt search / filter + checklist links (MVP-16)
 
@@ -124,7 +137,7 @@ URLs look like `/evidence#artifact-4-18-p2h-ops` or `/overview#gate-checklist`.
 ## Safety scanners
 
 ```bash
-python tools/research/check_nexus_ui_mvp14_safety.py
 python tools/research/check_nexus_ui_mvp15_safety.py
 python tools/research/check_nexus_ui_mvp16_safety.py
+python tools/research/check_nexus_ui_mvp17_safety.py
 ```

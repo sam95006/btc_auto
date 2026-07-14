@@ -1,20 +1,28 @@
-import { getSystemStatus } from "../demo/nexusDataAdapter";
 import { DemoDataBadge } from "./DemoDataBadge";
 
+/**
+ * Top bar display chips only — not controls (MVP-17).
+ * READ ONLY · NOT INVESTMENT ADVICE
+ */
 export function TopStatusBar() {
-  const s = getSystemStatus();
   return (
-    <header className="top-status-bar">
+    <header className="top-status-bar" role="status">
       <div className="brand-mark">
         NEXUS / <span>EATI</span>
       </div>
-      <span className="status-chip mode">{s.mode}</span>
-      <span className="status-chip safety">{s.safetyLine}</span>
-      <span className="status-chip">
-        {s.stageReadiness} / {s.currentGate}
+      <span className="status-chip tone-hold">
+        Backend State: <strong>HOLD</strong>
       </span>
-      <span className="status-chip mono">Last Update: {s.lastUpdate}</span>
-      <span className="status-chip disclaimer">{s.disclaimer}</span>
+      <span className="status-chip">
+        Release: <strong>P2H</strong>
+      </span>
+      <span className="status-chip tone-blocked">
+        Stage 4.19: <strong>BLOCKED</strong>
+      </span>
+      <span className="status-chip">Runtime: paused</span>
+      <span className="status-chip mode">Mode: READ ONLY</span>
+      <span className="status-chip">No auto-run</span>
+      <span className="status-chip disclaimer">NOT INVESTMENT ADVICE</span>
       <DemoDataBadge />
     </header>
   );

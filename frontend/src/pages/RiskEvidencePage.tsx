@@ -9,6 +9,7 @@ import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCa
 import { OperatorHoldBanner } from "../components/OperatorHoldBanner";
 import { PageSummaryCard } from "../components/PageSummaryCard";
 import { RelatedArtifactLinks } from "../components/RelatedArtifactLinks";
+import { SafetyInvariantGrid } from "../components/SafetyInvariantGrid";
 import { StatusBadge } from "../components/StatusBadge";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
 import { RISK_SAFETY_SUMMARY } from "../demo/docSummaries";
@@ -37,33 +38,28 @@ export function RiskEvidencePage() {
   const watchGate = getWatchReappearanceGateStatus();
   const hold = getBackendHoldStateStatus();
   const futureGate = getFutureRegressionGateStatus();
-  const failureReason =
-    ethTimeline?.failureReason ??
-    snap.ethStatus.confirmationFailureReason ??
-    "ETH watch conditions not present";
   const ethDetail =
     ethTimeline?.ethDetail ??
     snap.ethStatus.ethDetail ??
     "HOLD — wait for ETH watch/valid_watch";
-  const delta = ethTimeline?.marketContextDelta;
 
   return (
-    <div className="page-stack">
+    <div className="page-stack mi-page">
       <OperatorBreadcrumbs
         crumbs={[
           { label: "Operator Console", to: "/overview" },
-          { label: "Risk & Safety" },
+          { label: "Risk Center" },
         ]}
       />
       <header className="page-header">
-        <h1>Risk & Safety</h1>
+        <h1>Risk Center</h1>
         <StatusBadge tone="pass">PASS</StatusBadge>
         <StatusBadge tone="hold">HOLD</StatusBadge>
         <DemoDataBadge />
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
-          Safety invariants only · READ ONLY · NOT INVESTMENT ADVICE · Backend HOLD · 30m now:
-          false · 60m: false · Auto-run: false · Stage 4.19 blocked.
+          Safety invariants · READ ONLY · NOT INVESTMENT ADVICE · Backend HOLD · no trading controls
+          · Stage 4.19 blocked · Risk Governor unchanged · MAE unchanged.
         </p>
       </header>
 
@@ -71,51 +67,20 @@ export function RiskEvidencePage() {
 
       <PageSummaryCard {...RISK_SAFETY_SUMMARY} />
 
+      <SafetyInvariantGrid />
+
       <CheckpointHealthCard />
 
-      <section id="safety-invariants" className="panel-card operator-card">
+      <section id="safety-invariants" className="panel-card dense-card">
         <div className="meta-row" style={{ marginTop: 0 }}>
-          <h3 style={{ margin: 0 }}>Safety invariants</h3>
+          <h3 style={{ margin: 0 }}>Safety detail</h3>
           <StatusBadge tone="pass">PASS</StatusBadge>
           <DemoDataBadge />
         </div>
-        <div className="flag-grid">
-          <div className="flag-item">
-            <div className="k">orders</div>
-            <div className="v">false</div>
-          </div>
-          <div className="flag-item">
-            <div className="k">mock</div>
-            <div className="v">false</div>
-          </div>
-          <div className="flag-item">
-            <div className="k">ARM</div>
-            <div className="v">false</div>
-          </div>
-          <div className="flag-item">
-            <div className="k">production</div>
-            <div className="v">false</div>
-          </div>
-          <div className="flag-item">
-            <div className="k">btc_auto</div>
-            <div className="v">false</div>
-          </div>
-          <div className="flag-item">
-            <div className="k">Stage 4.19</div>
-            <div className="v">false (blocked)</div>
-          </div>
-          <div className="flag-item">
-            <div className="k">billing/accounts/API keys</div>
-            <div className="v">false</div>
-          </div>
-          <div className="flag-item">
-            <div className="k">auto-run</div>
-            <div className="v">false</div>
-          </div>
-        </div>
-        <p className="muted" style={{ marginTop: "0.75rem" }}>
+        <p className="muted">
           order_allowed={String(f.orderAllowed)} · mock={String(f.mock)} · ARM={String(f.arm)} ·
-          production={String(f.production)} · should_start_419={String(stage419.shouldStart419)}
+          production={String(f.production)} · should_start_419={String(stage419.shouldStart419)} ·{" "}
+          {safety.summary} · {ethDetail}
         </p>
         <RelatedArtifactLinks
           stages={[...RISK_RELATED_STAGES]}
@@ -135,46 +100,14 @@ export function RiskEvidencePage() {
       {watchGate ? <OperatorGateChecklistCard gate={watchGate} /> : null}
       {watchGate ? <WatchReappearanceGateCard status={watchGate} /> : null}
 
-      <section className="panel-card operator-card">
+      <section className="panel-card dense-card">
         <div className="meta-row" style={{ marginTop: 0 }}>
           <h3 style={{ margin: 0 }}>Prompt Repair Safety</h3>
           <DemoDataBadge />
         </div>
         <p className="muted">
-          P2E · sample_market_no_edge · Stage 4.19 blocked · no order / no mock / no production
-        </p>
-        <div className="flag-grid" style={{ marginTop: "0.75rem" }}>
-          <div className="flag-item">
-            <div className="k">prompt_repair_added</div>
-            <div className="v">{String(promptRepair?.promptRepairAdded ?? true)}</div>
-          </div>
-          <div className="flag-item">
-            <div className="k">needs_next_runtime_regression</div>
-            <div className="v">
-              {String(promptRepair?.needsNextRuntimeRegression ?? true)}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="panel-card operator-card">
-        <div className="meta-row" style={{ marginTop: 0 }}>
-          <h3 style={{ margin: 0 }}>ETH Confirmation System Issue (historical)</h3>
-          <StatusBadge tone="wait">SYSTEM ISSUE</StatusBadge>
-          <DemoDataBadge />
-        </div>
-        <p>
-          Previous failure · reason=<span className="mono">{failureReason}</span>
-        </p>
-        <p className="mono">Direction collapse: {ethDetail}</p>
-        {delta ? (
-          <p className="muted" style={{ marginTop: "0.75rem" }}>
-            Context delta: price={delta.priceChangePct}% · regime {delta.regimeBefore}→
-            {delta.regimeAfter}
-          </p>
-        ) : null}
-        <p className="muted" style={{ marginTop: "0.75rem" }}>
-          {safety.summary}
+          P2E · sample_market_no_edge · Stage 4.19 blocked · no order / no mock / no production ·
+          prompt_repair_added={String(promptRepair?.promptRepairAdded ?? true)}
         </p>
       </section>
     </div>

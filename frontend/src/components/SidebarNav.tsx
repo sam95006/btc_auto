@@ -4,23 +4,26 @@ type NavItem = { to: string; label: string; short: string };
 
 const OPERATOR_CORE: NavItem[] = [
   { to: "/overview", label: "Overview", short: "Overview" },
+  { to: "/overview#market-command", label: "Market Command", short: "Market" },
   { to: "/evidence", label: "Evidence Center", short: "Evidence" },
-  { to: "/risk-evidence", label: "Risk & Safety", short: "Risk" },
-  { to: "/paper-lab", label: "Paper Lab", short: "Paper" },
-  { to: "/provider-shadow", label: "Provider Shadow", short: "Shadow" },
+  { to: "/risk-evidence", label: "Risk Center", short: "Risk" },
 ];
 
 const RESEARCH: NavItem[] = [
+  { to: "/paper-lab", label: "Paper Lab", short: "Paper" },
+  { to: "/provider-shadow", label: "Provider Intelligence", short: "Provider" },
+  { to: "/evidence#doc-summaries", label: "Report Viewer", short: "Reports" },
+  { to: "/evidence#artifact-4-18-p2h-ops", label: "Runbook", short: "Runbook" },
   { to: "/fleets", label: "Fleets", short: "Fleets" },
   { to: "/signals", label: "Signals", short: "Signals" },
   { to: "/reflection", label: "Reflection", short: "Reflect" },
 ];
 
 const FUTURE: NavItem[] = [
-  { to: "/assistant", label: "Assistant", short: "Assist" },
   { to: "/academy", label: "Academy", short: "Academy" },
-  { to: "/calculator", label: "Calculator", short: "Calc" },
   { to: "/membership", label: "Membership", short: "Member" },
+  { to: "/assistant", label: "Public SaaS Placeholder", short: "SaaS" },
+  { to: "/calculator", label: "Calculator", short: "Calc" },
 ];
 
 function NavGroup({ title, items }: { title: string; items: NavItem[] }) {
@@ -43,7 +46,7 @@ function NavGroup({ title, items }: { title: string; items: NavItem[] }) {
 }
 
 /**
- * Private Operator navigation (MVP-13).
+ * Private Operator navigation (MVP-17 Market Intelligence).
  * Explicitly absent (forbidden): /trade, /orders, /arm, /routing-edit
  */
 export function SidebarNav() {
@@ -51,7 +54,7 @@ export function SidebarNav() {
     <nav className="sidebar-nav" aria-label="Primary">
       <NavGroup title="Operator Console" items={OPERATOR_CORE} />
       <NavGroup title="Research" items={RESEARCH} />
-      <NavGroup title="Future / Placeholder" items={FUTURE} />
+      <NavGroup title="Future" items={FUTURE} />
     </nav>
   );
 }
