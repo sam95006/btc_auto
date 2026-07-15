@@ -81,6 +81,19 @@ After this commit deploys `RUNNING`:
 
 Trading logic / provider routing / Risk Governor / Stage 4.19 / 30m / 60m / orders / ARM / billing / secrets: untouched.
 
-## 6. Gate
+## 6. Live re-verify after `8502fba` (PASSED)
 
-Backend HOLD. No MVP-20. Await live re-verify after this deploy.
+| Check | Result |
+|-------|--------|
+| Deployed commit | `8502fba` RUNNING |
+| `/health` | `operator_ui_ready=true`, `root_serves=operator_ui`, marker present |
+| `/api/nexus/ui-build` | `operator_ui_ready=true`, `buildMarker=NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60` |
+| `/` | Market Intelligence SPA (`id=root`, not Stage 3 title) |
+| SPA routes | `/overview` `/evidence` `/risk-evidence` `/provider-shadow` `/paper-lab` → SPA |
+| `/nexus` | Legacy Stage 3 UI |
+| Asset marker | `/assets/index-DL4JEs18.js` contains build marker + UI Build string |
+
+## 7. Gate
+
+Backend HOLD. No MVP-20. No Stage 4.19. No 30m/60m.  
+**UI live gate: OPEN for Market Intelligence SPA on Zeabur.**
