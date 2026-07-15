@@ -1,13 +1,12 @@
 import { Link } from "react-router-dom";
-import { COPILOT_PROMPTS } from "../demo/marketIntelligence";
+import { GUIDED_PROMPTS } from "../demo/productUx";
 
 /**
- * Compact main-area AI summary chips (MVP-20).
- * Desktop AI Commander lives in the right rail only — this is not a second full panel.
- * Static prompts · no live AI API · no trading actions.
+ * Compact main-area guided prompt chips (MVP-21).
+ * Full AI Commander stays in the right rail.
  */
 export function AIPromptChipStrip() {
-  const primary = COPILOT_PROMPTS.slice(0, 4);
+  const primary = GUIDED_PROMPTS.slice(0, 5);
   return (
     <section
       id="ai-copilot"
@@ -16,15 +15,15 @@ export function AIPromptChipStrip() {
     >
       <div className="ai-chip-strip-head">
         <span className="ai-chip-strip-label">Ask AI</span>
-        <span className="muted">Static prompts · see right rail</span>
+        <span className="muted">Guided static prompts · see right rail</span>
         <Link className="ro-nav-chip ghost" to="/assistant">
           Open assistant
         </Link>
       </div>
       <div className="copilot-prompt-grid">
         {primary.map((p) => (
-          <span key={p.id} className="copilot-prompt-btn static-chip" title={p.prompt}>
-            {p.label}
+          <span key={p.id} className="copilot-prompt-btn static-chip" title={p.question}>
+            {p.labelZh}
           </span>
         ))}
       </div>

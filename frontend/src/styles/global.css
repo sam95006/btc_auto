@@ -1525,4 +1525,163 @@ button {
   .fleet-summary > div {
     grid-template-columns: 5.5rem minmax(0, 1fr);
   }
+
+  .desktop-mcc-block,
+  .desktop-only-banner {
+    display: none;
+  }
+
+  .desk-secondary {
+    display: none;
+  }
+
+  .candidate-desktop {
+    display: none;
+  }
+
+  .candidate-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dash-gap);
+  }
+
+  .decision-card-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .look-first-grid,
+  .feature-map-grid,
+  .why-safe-grid,
+  .provider-explain-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hold-headline {
+    font-size: var(--fs-md);
+  }
+}
+
+/* —— MVP-21 Product UX —— */
+.hold-decision-strip {
+  margin-bottom: var(--space-5);
+}
+
+.hold-headline-block {
+  margin-bottom: var(--space-4);
+}
+
+.hold-headline {
+  margin: 0.55rem 0 0.35rem;
+  font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+  font-weight: 650;
+  line-height: 1.35;
+  max-width: 52rem;
+}
+
+.decision-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--dash-gap);
+}
+
+.decision-card .decision-value {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  margin: 0.25rem 0 0.35rem;
+}
+
+.decision-card.tone-hold .decision-value {
+  color: var(--hold);
+}
+
+.decision-card.tone-blocked .decision-value {
+  color: var(--blocked);
+}
+
+.decision-card.tone-wait .decision-value {
+  color: var(--warning);
+}
+
+.look-first-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--dash-gap);
+}
+
+.candidate-mobile {
+  display: none;
+}
+
+.feature-map-grid,
+.why-safe-grid,
+.provider-explain-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--dash-gap);
+}
+
+.why-safe-grid {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.feature-map-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+  font-size: var(--fs-sm);
+}
+
+.feature-map-list li + li {
+  margin-top: 0.35rem;
+}
+
+.evidence-zone-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.5rem 0;
+}
+
+.evidence-zone-tab {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: var(--radius-badge);
+  padding: 0.35rem 0.65rem;
+  font-size: var(--fs-sm);
+}
+
+.evidence-zone-tab.active,
+.evidence-zone-tab:hover {
+  border-color: var(--accent-line);
+  color: var(--text);
+  background: var(--accent-soft);
+}
+
+.evidence-start-here {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dash-gap);
+  margin-bottom: var(--space-4);
+}
+
+.meaning-cell {
+  max-width: 280px;
+}
+
+.guided-preview .k {
+  margin-top: 0.45rem;
+}
+
+@media (max-width: 1100px) {
+  .decision-card-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .look-first-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-map-grid {
+    grid-template-columns: 1fr;
+  }
 }

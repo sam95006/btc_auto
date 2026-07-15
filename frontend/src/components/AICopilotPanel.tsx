@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { COPILOT_PROMPTS } from "../demo/marketIntelligence";
+import { Link } from "react-router-dom";
+import { GUIDED_PROMPTS } from "../demo/productUx";
 
 /**
- * AI Commander rail — static prompt cards only (MVP-17/20).
- * No live AI API · no orders · desktop: right rail only.
+ * Guided AI Commander — static prompts only (MVP-21).
+ * No live AI API · no orders · desktop right rail.
  */
 export function AICopilotPanel({ compact = false }: { compact?: boolean }) {
-  const [active, setActive] = useState(COPILOT_PROMPTS[0]?.id ?? "");
-  const selected = COPILOT_PROMPTS.find((p) => p.id === active) ?? COPILOT_PROMPTS[0];
+  const [active, setActive] = useState(GUIDED_PROMPTS[0]?.id ?? "");
+  const selected = GUIDED_PROMPTS.find((p) => p.id === active) ?? GUIDED_PROMPTS[0];
 
   return (
     <section
@@ -19,25 +20,39 @@ export function AICopilotPanel({ compact = false }: { compact?: boolean }) {
         <span className="demo-badge priority-med">STATIC</span>
       </div>
       <p className="muted" style={{ marginTop: "0.35rem", marginBottom: 0 }}>
-        Read-only prompts · no live AI · no Buy / Sell / Execute
+        Guided questions · no live AI · no Buy / Sell / Execute
       </p>
       <div className="copilot-prompt-grid">
-        {COPILOT_PROMPTS.map((p) => (
+        {GUIDED_PROMPTS.map((p) => (
           <button
             key={p.id}
             type="button"
             className={`copilot-prompt-btn${active === p.id ? " active" : ""}`}
             onClick={() => setActive(p.id)}
           >
-            {p.label}
+            {p.labelZh}
           </button>
         ))}
       </div>
       {selected ? (
-        <div className="copilot-prompt-preview">
-          <div className="k">Selected prompt</div>
-          <p className="mono muted">{selected.prompt}</p>
-          <p className="muted" style={{ marginBottom: 0 }}>
+        <div className="copilot-prompt-preview guided-preview">
+          <div className="k">Question</div>
+          <p style={{ margin: "0.25rem 0" }}>
+            <strong>{selected.question}</strong>
+          </p>
+          <div className="k">What it will explain</div>
+          <p className="muted">{selected.willExplain}</p>
+          <div className="k">Related page</div>
+          <p className="muted">
+            <Link className="deep-link" to={selected.relatedTo}>
+              {selected.relatedPage}
+            </Link>
+          </p>
+          <div className="k">Static answer</div>
+          <p className="mono muted" style={{ marginBottom: 0 }}>
+            {selected.answer}
+          </p>
+          <p className="muted" style={{ marginBottom: 0, marginTop: "0.45rem" }}>
             Generate Brief = navigation metaphor · NOT INVESTMENT ADVICE
           </p>
         </div>

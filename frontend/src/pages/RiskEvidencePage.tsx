@@ -3,7 +3,6 @@ import { CheckpointHealthCard } from "../components/CheckpointHealthCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
 import { GateChecklistCard } from "../components/GateChecklistCard";
-import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import { OperatorBreadcrumbs } from "../components/OperatorBreadcrumbs";
 import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCard";
 import { OperatorHoldBanner } from "../components/OperatorHoldBanner";
@@ -12,6 +11,7 @@ import { RelatedArtifactLinks } from "../components/RelatedArtifactLinks";
 import { SafetyInvariantGrid } from "../components/SafetyInvariantGrid";
 import { StatusBadge } from "../components/StatusBadge";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
+import { WhySafeSection } from "../components/WhySafeSection";
 import { RISK_SAFETY_SUMMARY } from "../demo/docSummaries";
 import { RISK_RELATED_STAGES, SAFETY_INVARIANTS_CHECKLIST } from "../demo/reportIndex";
 import { useHashScroll } from "../hooks/useHashScroll";
@@ -48,7 +48,7 @@ export function RiskEvidencePage() {
       <OperatorBreadcrumbs
         crumbs={[
           { label: "Operator Console", to: "/overview" },
-          { label: "Risk Center" },
+          { label: "Risk" },
         ]}
       />
       <header className="page-header">
@@ -56,14 +56,15 @@ export function RiskEvidencePage() {
         <StatusBadge tone="pass">PASS</StatusBadge>
         <StatusBadge tone="hold">HOLD</StatusBadge>
         <DemoDataBadge />
-        <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
-          Safety invariants · READ ONLY · NOT INVESTMENT ADVICE · Backend HOLD · no trading controls
-          · Stage 4.19 blocked · Risk Governor unchanged · MAE unchanged.
+          Why this console is safe · READ ONLY · NOT INVESTMENT ADVICE · Backend HOLD · Stage 4.19
+          blocked
         </p>
       </header>
 
       {hold ? <OperatorHoldBanner hold={hold} /> : null}
+
+      <WhySafeSection />
 
       <PageSummaryCard {...RISK_SAFETY_SUMMARY} />
 

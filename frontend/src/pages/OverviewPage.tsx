@@ -1,19 +1,17 @@
 import { AnomalyRadarPanel } from "../components/AnomalyRadarPanel";
 import { BackendHoldStateCard } from "../components/BackendHoldStateCard";
 import { CandidateBoard } from "../components/CandidateBoard";
-import { CheckpointHealthCard } from "../components/CheckpointHealthCard";
-import { CurrentGateSummaryCard } from "../components/CurrentGateSummaryCard";
+import { FeatureCompletenessMap } from "../components/FeatureCompletenessMap";
 import { FutureRegressionGateCard } from "../components/FutureRegressionGateCard";
 import { GateChecklistCard } from "../components/GateChecklistCard";
+import { HoldDecisionStrip } from "../components/HoldDecisionStrip";
+import { LookFirstSection } from "../components/LookFirstSection";
 import { MarketCommandCenter } from "../components/MarketCommandCenter";
 import { OperatorBreadcrumbs } from "../components/OperatorBreadcrumbs";
 import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCard";
-import { OperatorWorkspacePins } from "../components/OperatorWorkspacePins";
 import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
 import { SignalFeedPanel } from "../components/SignalFeedPanel";
-import { StatusBadge } from "../components/StatusBadge";
-import { UnresolvedGateCard } from "../components/UnresolvedGateCard";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
 import {
   ETH_WATCH_REAPPEARANCE_CHECKLIST,
@@ -40,14 +38,14 @@ export function OverviewPage() {
   const futureGate = getFutureRegressionGateStatus();
 
   return (
-    <div className="page-stack mi-page">
+    <div className="page-stack mi-page mvp21-overview">
       <OperatorBreadcrumbs
         crumbs={[
           { label: "Operator Console", to: "/overview" },
           { label: "Overview" },
         ]}
       />
-      <div className="operator-banner compact-banner" role="status">
+      <div className="operator-banner compact-banner desktop-only-banner" role="status">
         <span className="operator-banner-label">{op.label}</span>
         <span className="operator-banner-sep">·</span>
         <span>Market Intelligence</span>
@@ -55,31 +53,25 @@ export function OverviewPage() {
         <span>Public SaaS: {op.publicSaas}</span>
       </div>
 
-      <header className="page-header">
-        <h1>Overview</h1>
-        <StatusBadge tone="hold">HOLD</StatusBadge>
-        <StatusBadge tone="blocked">BLOCKED</StatusBadge>
-        <p className="page-sub">
-          Fintech Market Intelligence · READ ONLY · NOT INVESTMENT ADVICE · Backend HOLD · Stage
-          4.19 blocked
-        </p>
-      </header>
+      {/* Mobile-first simplified stack */}
+      <div className="mobile-priority-stack">
+        <HoldDecisionStrip />
+        <LookFirstSection />
+      </div>
 
-      <MarketCommandCenter />
-
-      <OperatorWorkspacePins />
+      <div className="desktop-mcc-block">
+        <MarketCommandCenter />
+      </div>
 
       <div className="overview-lower">
-        <UnresolvedGateCard />
-        <CurrentGateSummaryCard />
         <CandidateBoard />
         <SignalFeedPanel />
         <AnomalyRadarPanel />
+        <FeatureCompletenessMap />
       </div>
 
-      <div className="operator-section" id="gate-checklist">
+      <div className="operator-section desk-secondary" id="gate-checklist">
         <h2 className="section-title">Checkpoint & gate</h2>
-        <CheckpointHealthCard />
         <span id="stage-419-dossier" className="anchor-alias" />
         <GateChecklistCard
           id="checklist-eth-watch-reappearance"
@@ -101,7 +93,7 @@ export function OverviewPage() {
         />
       </div>
 
-      <div className="operator-section">
+      <div className="operator-section desk-secondary">
         <h2 className="section-title">Hold detail (secondary)</h2>
         {hold ? <BackendHoldStateCard status={hold} /> : null}
         {futureGate ? <FutureRegressionGateCard status={futureGate} /> : null}

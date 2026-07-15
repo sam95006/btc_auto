@@ -1,39 +1,11 @@
 import { useState } from "react";
-import { getRoundTable } from "../demo/nexusDataAdapter";
+import { Link } from "react-router-dom";
+import { GUIDED_PROMPTS } from "../demo/productUx";
 
-/** Full-page assistant tabs — Chinese prompt labels allowed (MVP-20 language strategy). */
-const TABS = [
-  "問目前頁",
-  "找風險",
-  "找機會",
-  "今日簡報",
-  "Explain decision",
-  "Ask evidence",
-  "Why HOLD now?",
-] as const;
-
+/** Full-page guided assistant — Chinese labels OK (MVP-21). */
 export function AICommanderPanel() {
-  const [tab, setTab] = useState<(typeof TABS)[number]>(TABS[0]);
-  const rt = getRoundTable();
-
-  const body = (() => {
-    switch (tab) {
-      case "找風險":
-        return "Elevated MAE on SOL/PEPE; PEPE blocked_by_risk. Defensive ON.";
-      case "找機會":
-        return "BTC prior evidence only — observation priority, not an action cue.";
-      case "今日簡報":
-        return `${rt.consensus} ${rt.whyNotTradeNow}`;
-      case "Explain decision":
-        return "Decisions use observe / watch / skip / blocked language only.";
-      case "Ask evidence":
-        return "Open Evidence for decision rows with stage markers.";
-      case "Why HOLD now?":
-        return rt.whyNotTradeNow;
-      default:
-        return "Research assistant stub. Answers use DEMO DATA only. READ ONLY.";
-    }
-  })();
+  const [tab, setTab] = useState(GUIDED_PROMPTS[0]?.id ?? "");
+  const selected = GUIDED_PROMPTS.find((p) => p.id === tab) ?? GUIDED_PROMPTS[0];
 
   return (
     <aside className="ai-rail page-ai" aria-label="AI Assistant">
@@ -42,18 +14,32 @@ export function AICommanderPanel() {
         <span className="demo-badge priority-med">STATIC</span>
       </div>
       <div className="ai-tabs">
-        {TABS.map((t) => (
+        {GUIDED_PROMPTS.map((t) => (
           <button
-            key={t}
+            key={t.id}
             type="button"
-            className={tab === t ? "active" : undefined}
-            onClick={() => setTab(t)}
+            className={tab === t.id ? "active" : undefined}
+            onClick={() => setTab(t.id)}
           >
-            {t}
+            {t.labelZh}
           </button>
         ))}
       </div>
-      <div className="ai-body">{body}</div>
+      {selected ? (
+        <div className="ai-body">
+          <p>
+            <strong>{selected.question}</strong>
+          </p>
+          <p className="muted">{selected.willExplain}</p>
+          <p>
+            Related:{" "}
+            <Link className="deep-link" to={selected.relatedTo}>
+              {selected.relatedPage}
+            </Link>
+          </p>
+          <p>{selected.answer}</p>
+        </div>
+      ) : null}
       <p className="muted" style={{ fontSize: "0.7rem" }}>
         DEMO DATA · READ ONLY · NOT INVESTMENT ADVICE
       </p>

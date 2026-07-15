@@ -1,38 +1,45 @@
-import { ANOMALY_ROWS } from "../demo/marketIntelligence";
+import { ANOMALY_ROWS, type DecisionRadarCategory } from "../demo/marketIntelligence";
 import { ReadOnlyNavChip } from "./ReadOnlyNavChip";
 import { StatusBadge } from "./StatusBadge";
 
-const CAT_LABEL = {
-  bullish: "Bullish",
-  bearish: "Bearish",
-  risk: "Risk",
-  provider: "Provider",
-  gate: "Gate",
-} as const;
+const CAT_LABEL: Partial<Record<DecisionRadarCategory, string>> = {
+  market: "Market signals",
+  gate: "Gate blockers",
+  provider: "Provider divergence",
+  safety: "Safety warnings",
+  risk: "Safety warnings",
+  bullish: "Market signals",
+  bearish: "Market signals",
+};
 
-/** Anomaly radar — compact cards (MVP-20). */
+const ORDER: DecisionRadarCategory[] = ["gate", "safety", "provider", "market"];
+
+/** Decision Radar — impact on operator decisions (MVP-21). */
 export function AnomalyRadarPanel() {
-  const cats = ["gate", "risk", "provider", "bullish", "bearish"] as const;
-
   return (
     <section id="anomaly-radar" className="operator-section board-section">
       <div className="section-head">
         <h2 className="section-title" style={{ margin: 0 }}>
-          Anomaly Radar
+          Decision Radar
         </h2>
         <StatusBadge tone="wait">WATCH</StatusBadge>
       </div>
       <p className="muted section-lede">
-        Priority anomalies under HOLD · read-only cross-links
+        What happened · why it matters · next read-only action · NOT INVESTMENT ADVICE
       </p>
 
-      <div className="anomaly-grid">
-        {cats.map((cat) => {
-          const rows = ANOMALY_ROWS.filter((r) => r.category === cat);
+      <div className="anomaly-grid decision-radar-grid">
+        {ORDER.map((cat) => {
+          const rows = ANOMALY_ROWS.filter(
+            (r) =>
+              r.category === cat ||
+              (cat === "safety" && r.category === "risk") ||
+              (cat === "market" && (r.category === "bullish" || r.category === "bearish")),
+          );
           if (rows.length === 0) return null;
           return (
             <div key={cat} className="panel-card dense-card anomaly-card">
-              <h3 className="anomaly-cat">{CAT_LABEL[cat]}</h3>
+              <h3 className="anomaly-cat">{CAT_LABEL[cat] ?? cat}</h3>
               <ul className="anomaly-list">
                 {rows.map((r) => (
                   <li key={r.id}>
@@ -40,29 +47,26 @@ export function AnomalyRadarPanel() {
                       <strong className="mono">{r.symbol}</strong>
                       <span className="muted">{r.anomalyType}</span>
                     </div>
-                    <dl className="fleet-summary compact">
-                      <div>
-                        <dt>First</dt>
-                        <dd>{r.firstAlert}</dd>
-                      </div>
-                      <div>
-                        <dt>Latest</dt>
-                        <dd>{r.latestValue}</dd>
-                      </div>
-                      <div>
-                        <dt>Change</dt>
-                        <dd>{r.change}</dd>
-                      </div>
-                      <div>
-                        <dt>Risk</dt>
-                        <dd>{r.riskNote}</dd>
-                      </div>
-                    </dl>
-                    <div className="ro-nav-row" style={{ marginTop: "0.35rem" }}>
+                    <p>
+                      <strong>What happened:</strong> {r.whatHappened}
+                    </p>
+                    <p className="muted">
+                      <strong>Why it matters:</strong> {r.whyItMatters}
+                    </p>
+                    <div className="ro-nav-row">
+                      <ReadOnlyNavChip
+                        label={r.nextAction}
+                        to={
+                          r.nextAction === "View Gate"
+                            ? r.links.gate
+                            : r.nextAction === "View Risk"
+                              ? r.links.risk
+                              : r.nextAction === "View Provider"
+                                ? r.links.provider
+                                : r.links.evidence
+                        }
+                      />
                       <ReadOnlyNavChip label="Evidence" to={r.links.evidence} />
-                      <ReadOnlyNavChip label="Gate" to={r.links.gate} />
-                      <ReadOnlyNavChip label="Provider" to={r.links.provider} />
-                      <ReadOnlyNavChip label="Risk" to={r.links.risk} />
                     </div>
                   </li>
                 ))}

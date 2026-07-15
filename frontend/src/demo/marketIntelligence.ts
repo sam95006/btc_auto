@@ -35,6 +35,8 @@ export type CandidateRow = {
   };
 };
 
+export type SignalSeverity = "info" | "watch" | "warning" | "blocked";
+
 export type SignalFeedRow = {
   id: string;
   time: string;
@@ -52,6 +54,9 @@ export type SignalFeedRow = {
     | "blocked"
     | "confirmation_pending"
     | "graduated";
+  severity: SignalSeverity;
+  meaning: string;
+  nextAction: "View Evidence" | "View Gate" | "View Risk" | "View Provider";
   evidenceHref: string;
   links: {
     evidence: string;
@@ -61,16 +66,28 @@ export type SignalFeedRow = {
   };
 };
 
+export type DecisionRadarCategory =
+  | "market"
+  | "gate"
+  | "provider"
+  | "safety"
+  | "bullish"
+  | "bearish"
+  | "risk";
+
 export type AnomalyRow = {
   id: string;
   symbol: string;
-  category: "bullish" | "bearish" | "risk" | "provider" | "gate";
+  category: DecisionRadarCategory;
   anomalyType: string;
+  whatHappened: string;
+  whyItMatters: string;
   firstAlert: string;
   latestValue: string;
   change: string;
   riskNote: string;
   evidenceHref: string;
+  nextAction: "View Evidence" | "View Gate" | "View Risk" | "View Provider";
   links: {
     evidence: string;
     gate: string;
@@ -257,6 +274,9 @@ export const SIGNAL_FEED: SignalFeedRow[] = [
     trigger: "—",
     gateStatus: "WAIT",
     status: "blocked",
+    severity: "blocked",
+    meaning: "ETH has no valid watch condition, so regression should not run.",
+    nextAction: "View Gate",
     evidenceHref: "/evidence?q=ETH",
     links: {
       evidence: "/evidence?q=ETH#doc-summary-p2f",
@@ -276,6 +296,9 @@ export const SIGNAL_FEED: SignalFeedRow[] = [
     trigger: "prior",
     gateStatus: "HOLD",
     status: "soft_skip",
+    severity: "info",
+    meaning: "BTC has prior evidence only; it is not the active blocker today.",
+    nextAction: "View Evidence",
     evidenceHref: "/evidence?q=BTC",
     links: {
       evidence: "/evidence?q=BTC#p2-r1-btc",
@@ -295,6 +318,9 @@ export const SIGNAL_FEED: SignalFeedRow[] = [
     trigger: "no watch",
     gateStatus: "WAIT",
     status: "confirmation_pending",
+    severity: "watch",
+    meaning: "ETH confirmation stays pending until watch reappears.",
+    nextAction: "View Gate",
     evidenceHref: "/overview#checklist-eth-watch-reappearance",
     links: {
       evidence: "/evidence?q=P2F#p2f-watch-gate",
@@ -306,20 +332,23 @@ export const SIGNAL_FEED: SignalFeedRow[] = [
   {
     id: "s4",
     time: "2026-07-12 16:00Z",
-    symbol: "SOL",
-    provider: "demo",
-    intent: "SKIP",
+    symbol: "SYS",
+    provider: "gate",
+    intent: "BLOCK_419",
     direction: "NONE",
     confidence: null,
-    trigger: "—",
+    trigger: "dossier",
     gateStatus: "HOLD",
-    status: "hard_skip",
-    evidenceHref: "/risk-evidence",
+    status: "blocked",
+    severity: "warning",
+    meaning: "Stage 4.19 blocked — needs actual BTC + ETH graduation.",
+    nextAction: "View Gate",
+    evidenceHref: "/overview#checklist-stage-419-dossier",
     links: {
-      evidence: "/evidence#doc-summaries",
-      gate: "/overview#gate-checklist",
+      evidence: "/evidence?q=4.19",
+      gate: "/overview#checklist-stage-419-dossier",
       provider: "/provider-shadow#provider-routing-posture",
-      risk: "/risk-evidence#checklist-safety-invariants",
+      risk: "/risk-evidence#why-safe",
     },
   },
 ];
@@ -330,11 +359,14 @@ export const ANOMALY_ROWS: AnomalyRow[] = [
     symbol: "BTC",
     category: "provider",
     anomalyType: "Provider divergence history",
+    whatHappened: "Groq vs Cerebras history was reviewed under research HOLD.",
+    whyItMatters: "Provider history informs reading, not permanent routing.",
     firstAlert: "P1 shadow era",
     latestValue: "permanent routing=false",
     change: "experiment only",
     riskNote: "Shadow not used for graduation",
     evidenceHref: "/provider-shadow#btc-cerebras-first",
+    nextAction: "View Provider",
     links: {
       evidence: "/evidence?q=routing",
       gate: "/overview#gate-checklist",
@@ -347,11 +379,14 @@ export const ANOMALY_ROWS: AnomalyRow[] = [
     symbol: "ETH",
     category: "gate",
     anomalyType: "ETH watch condition missing",
+    whatHappened: "ETH valid watch has not reappeared.",
+    whyItMatters: "This is the primary blocker before any next regression.",
     firstAlert: "P2D-R1 / P2F",
     latestValue: "vw=0",
     change: "not reappeared",
     riskNote: "Next = wait · no 60m",
     evidenceHref: "/overview#unresolved-gate",
+    nextAction: "View Gate",
     links: {
       evidence: "/evidence?q=ETH#eth-watch-reappearance",
       gate: "/overview#checklist-eth-watch-reappearance",
@@ -364,11 +399,14 @@ export const ANOMALY_ROWS: AnomalyRow[] = [
     symbol: "SYS",
     category: "gate",
     anomalyType: "Stage 4.19 blocked",
+    whatHappened: "Stage 4.19 dossier remains blocked.",
+    whyItMatters: "Needs actual BTC + ETH graduation before any start discussion.",
     firstAlert: "product gate",
     latestValue: "blocked",
     change: "unchanged",
     riskNote: "Needs actual BTC+ETH graduation",
     evidenceHref: "/overview#checklist-stage-419-dossier",
+    nextAction: "View Gate",
     links: {
       evidence: "/evidence?q=4.19",
       gate: "/overview#checklist-stage-419-dossier",
@@ -379,69 +417,71 @@ export const ANOMALY_ROWS: AnomalyRow[] = [
   {
     id: "a4",
     symbol: "SYS",
-    category: "risk",
+    category: "safety",
     anomalyType: "No 60m recommended",
+    whatHappened: "60m and auto-run stay false under HOLD.",
+    whyItMatters: "Operators wait; they do not launch timed regressions from UI.",
     firstAlert: "P2G / P2H",
     latestValue: "60m=false",
     change: "HOLD",
     riskNote: "Auto-run=false",
     evidenceHref: "/overview#gate-checklist",
+    nextAction: "View Risk",
     links: {
       evidence: "/evidence?q=HOLD",
       gate: "/overview#gate-checklist",
       provider: "/provider-shadow#provider-routing-posture",
-      risk: "/risk-evidence#checklist-safety-invariants",
+      risk: "/risk-evidence#why-safe",
     },
   },
   {
     id: "a5",
     symbol: "SYS",
-    category: "risk",
-    anomalyType: "Routing permanent=false",
-    firstAlert: "P1C / P2G",
-    latestValue: "false",
-    change: "policy hold",
-    riskNote: "Operator approval required",
-    evidenceHref: "/provider-shadow#provider-routing-posture",
+    category: "market",
+    anomalyType: "BTC prior evidence only",
+    whatHappened: "BTC has prior evidence; latest confirmation is not current.",
+    whyItMatters: "Useful history, but ETH remains the readiness blocker.",
+    firstAlert: "P2D / P2D-R1",
+    latestValue: "prior yes / latest 0",
+    change: "observe",
+    riskNote: "Not a trade cue",
+    evidenceHref: "/evidence?q=BTC",
+    nextAction: "View Evidence",
     links: {
-      evidence: "/evidence?category=routing",
+      evidence: "/evidence?q=BTC#doc-summary-p2d-r1",
       gate: "/overview#gate-checklist",
-      provider: "/provider-shadow#provider-routing-posture",
+      provider: "/provider-shadow#provider-history-chart",
       risk: "/risk-evidence#checklist-safety-invariants",
     },
   },
 ];
 
+/** Legacy chip labels kept for strip; guided prompts live in productUx.ts */
 export const COPILOT_PROMPTS: CopilotPrompt[] = [
   {
-    id: "page",
-    label: "問目前頁",
-    prompt: "Summarize this Market Command page under HOLD (sanitized, no orders).",
-  },
-  {
-    id: "risk",
-    label: "找風險",
-    prompt: "List top risk / gate blockers: ETH watch, Stage 4.19, no auto-run.",
-  },
-  {
-    id: "opp",
-    label: "找機會",
-    prompt: "What candidates exist under Waiting/Blocked? Do not suggest execution.",
-  },
-  {
-    id: "brief",
-    label: "今日簡報",
-    prompt: "Generate a HOLD-day brief: wait for ETH watch, Stage 4.19 blocked.",
-  },
-  {
-    id: "evidence",
-    label: "解釋 Evidence",
-    prompt: "Explain P2D→P2H-REL doc summaries and next action = wait.",
+    id: "hold",
+    label: "為什麼 HOLD？",
+    prompt: "Why are we in HOLD? Explain wait-for-ETH, no trading action.",
   },
   {
     id: "419",
-    label: "解釋 Stage 4.19 blocked",
-    prompt: "Why is Stage 4.19 blocked? Actual non-shadow BTC+ETH required.",
+    label: "什麼卡住 4.19？",
+    prompt: "What blocks Stage 4.19? Actual BTC+ETH graduation required.",
+  },
+  {
+    id: "first",
+    label: "先看什麼？",
+    prompt: "What should I check first under HOLD?",
+  },
+  {
+    id: "eth",
+    label: "解釋 ETH Gate",
+    prompt: "Explain ETH watch gate in plain language.",
+  },
+  {
+    id: "evidence",
+    label: "證據摘要",
+    prompt: "Summarize latest evidence trail P2D→P2H.",
   },
 ];
 

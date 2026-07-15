@@ -1,10 +1,10 @@
 import { ProviderComparisonCard } from "../components/ProviderComparisonCard";
 import { DemoDataBadge } from "../components/DemoDataBadge";
 import { GateChecklistCard } from "../components/GateChecklistCard";
-import { MembershipLockBadge } from "../components/MembershipLockBadge";
 import { OperatorBreadcrumbs } from "../components/OperatorBreadcrumbs";
 import { PageSummaryCard } from "../components/PageSummaryCard";
 import { ProviderDivergenceTimeline } from "../components/ProviderDivergenceTimeline";
+import { ProviderExplanationLayer } from "../components/ProviderExplanationLayer";
 import { ProviderHistoryChart } from "../components/ProviderHistoryChart";
 import { ProviderIntelligencePanel } from "../components/ProviderIntelligencePanel";
 import { ProviderRoutingPostureCard } from "../components/ProviderRoutingPostureCard";
@@ -42,13 +42,13 @@ export function ProviderShadowPage() {
         <StatusBadge tone="hold">HOLD</StatusBadge>
         <StatusBadge tone="pass">experiment only</StatusBadge>
         <DemoDataBadge />
-        <MembershipLockBadge requiredTier="Elite" currentTier="Free" />
         <p className="page-sub">
-          Provider Intelligence · permanent routing=false · no routing editor · shadow ≠ graduation ·
-          READ ONLY · NOT INVESTMENT ADVICE.
+          What provider history means · permanent routing=false · no routing editor · shadow ≠
+          graduation · READ ONLY · NOT INVESTMENT ADVICE
         </p>
       </header>
 
+      <ProviderExplanationLayer />
       <PageSummaryCard {...PROVIDER_ROUTING_SUMMARY} />
       <ProviderIntelligencePanel />
       <ProviderHistoryChart />
