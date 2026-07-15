@@ -167,7 +167,9 @@ Secondary / not confirmed live:
 
 **Root cause:** Zeabur was never serving Cursor’s `frontend/` Market Intelligence SPA. It served the Stage 3 Flask legacy template from the deploy package. MVP-17~19 were successful in-repo; deployment plumbing was missing.
 
-**Status after this change:** Package and Flask serve path are fixed locally and ready to push. **Live Zeabur confirmation requires a redeploy**, then verify the build marker. Backend remains **HOLD**. Do not start Stage 4.19. Do not start MVP-20 until marker is visible on Zeabur.
+**Status after this change:** Package and Flask serve path fixed, committed, and pushed as `c840401`. **Live Zeabur confirmation still requires a redeploy/rebuild**, then verify the build marker. Backend remains **HOLD**. Do not start Stage 4.19. Do not start MVP-20 until marker is visible on Zeabur.
+
+**git_commit_hash:** `c840401` · **git_push_done:** yes (`origin/stage3-demo-learning`)
 
 ---
 

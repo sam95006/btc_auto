@@ -7,7 +7,12 @@ except Exception:
     def load_dotenv():
         return False
 
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, request, send_file, send_from_directory
+from backend.api.operator_ui_routes import (
+    OPERATOR_BUILD_MARKER,
+    operator_ui_ready,
+    register_operator_ui_routes,
+)
 from backend.api.server import register_nexus_routes
 from backend.core.env_loader import load_env_file
 from backend.runtime.single_instance_guard import SingleInstanceError, SingleInstanceGuard
@@ -29,18 +34,26 @@ except TradingModeSafetyError as exc:
 
 app = Flask(__name__)
 register_nexus_routes(app)
+# UI-DEPLOY-2: Market Intelligence SPA (static/operator_ui) — register before / catch-alls finish
+register_operator_ui_routes(app)
 
 _asset_check = verify_console_assets(app.root_path)
 if _asset_check.get("ok"):
     print(f"[startup] Console artwork OK ({_asset_check.get('present_count')} files)")
 else:
     print(f"[startup] WARNING missing console artwork: {_asset_check.get('missing')}")
+if operator_ui_ready(app):
+    print(f"[startup] Operator UI ready ({OPERATOR_BUILD_MARKER})")
+else:
+    print("[startup] Operator UI missing — / falls back to legacy nexus_command")
 
 
 @app.after_request
 def _nexus_static_cache_control(response):
     """Avoid stale ES module bundles after deploy (Zeabur CDN/browser 304)."""
     if request.path.startswith("/static/nexus/"):
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+    if request.path.startswith("/assets/") or request.path in {"/", "/overview"}:
         response.headers["Cache-Control"] = "no-cache, must-revalidate"
     return response
 _single_instance = None
@@ -114,6 +127,10 @@ _start_embedded_nexus_worker_if_configured()
 
 @app.route("/")
 def dashboard():
+    # UI-DEPLOY-2: prefer Market Intelligence SPA when present
+    ui_dir = Path(app.root_path) / "static" / "operator_ui"
+    if (ui_dir / "index.html").is_file():
+        return send_from_directory(ui_dir, "index.html")
     return send_file(Path(app.root_path) / "templates" / "nexus_command.html")
 
 
@@ -123,6 +140,7 @@ def health():
     from config.pure_ai_trading_config import pure_ai_active
 
     assets = verify_console_assets(app.root_path)
+    ready = operator_ui_ready(app)
     return jsonify(
         {
             "status": "ok" if assets.get("ok") else "degraded",
@@ -131,6 +149,9 @@ def health():
             "embedded_worker_error": embedded_worker_error,
             "pure_ai_enabled": pure_ai_active(),
             "console_assets": assets,
+            "operator_ui_ready": ready,
+            "build_marker": OPERATOR_BUILD_MARKER,
+            "root_serves": "operator_ui" if ready else "legacy_nexus",
         }
     )
 
