@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Minimal read-only Flask app for Stage 3 Bybit demo learning dashboard."""
+"""Minimal read-only Flask app for Stage 3 + Operator Market Intelligence UI.
+
+Serves:
+  /              -> frontend Market Intelligence SPA (static/operator_ui) when present
+  /nexus         -> legacy Stage 3 space-station command UI
+  /api/...       -> Stage 3 read-only APIs
+  /static/nexus  -> legacy assets
+
+UI-DEPLOY-1: ROOT_ROUTE previously served nexus_command.html only; that is why Zeabur
+showed the old UI while Cursor evolved frontend/.
+"""
 from __future__ import annotations
 
 import os
@@ -14,6 +24,25 @@ from flask import Flask, abort, jsonify, render_template, request, send_from_dir
 
 app = Flask(__name__, template_folder=str(ROOT / "templates"))
 
+OPERATOR_UI_DIR = ROOT / "static" / "operator_ui"
+OPERATOR_BUILD_MARKER = "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60"
+
+# Client-side React routes that must fall back to SPA index.html
+_SPA_PREFIXES = (
+    "overview",
+    "fleets",
+    "signals",
+    "risk-evidence",
+    "evidence",
+    "reflection",
+    "provider-shadow",
+    "paper-lab",
+    "assistant",
+    "academy",
+    "calculator",
+    "membership",
+)
+
 
 def _port() -> int:
     for key in ("PORT", "WEB_PORT"):
@@ -24,6 +53,14 @@ def _port() -> int:
             except ValueError:
                 pass
     return 8080
+
+
+def _operator_ui_ready() -> bool:
+    return (OPERATOR_UI_DIR / "index.html").is_file()
+
+
+def _operator_index():
+    return send_from_directory(OPERATOR_UI_DIR, "index.html")
 
 
 @app.before_request
@@ -41,12 +78,48 @@ def _read_only_guard():
 def _nexus_static_cache_control(response):
     if request.path.startswith("/static/nexus/"):
         response.headers["Cache-Control"] = "no-cache, must-revalidate"
+    if request.path.startswith("/assets/") or request.path == "/" or any(
+        request.path.startswith(f"/{p}") for p in _SPA_PREFIXES
+    ):
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
     return response
 
 
 @app.route("/health")
 def health():
-    return jsonify({"ok": True, "service": "stage3-readonly-web", "read_only": True})
+    return jsonify(
+        {
+            "ok": True,
+            "service": "stage3-readonly-web",
+            "read_only": True,
+            "operator_ui_ready": _operator_ui_ready(),
+            "operator_ui_dir": str(OPERATOR_UI_DIR),
+            "build_marker": OPERATOR_BUILD_MARKER,
+            "root_serves": "operator_ui" if _operator_ui_ready() else "legacy_nexus",
+        }
+    )
+
+
+@app.route("/api/nexus/ui-build")
+def ui_build():
+    meta_path = OPERATOR_UI_DIR / "operator_ui_build.json"
+    payload = {
+        "ok": True,
+        "read_only": True,
+        "operator_ui_ready": _operator_ui_ready(),
+        "build_marker": OPERATOR_BUILD_MARKER,
+        "ui_style": "Market Intelligence Layout",
+        "ui_version": "MVP-19",
+        "legacy_nexus_path": "/nexus",
+    }
+    if meta_path.is_file():
+        try:
+            import json
+
+            payload["sync_meta"] = json.loads(meta_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            payload["sync_meta_error"] = str(exc)
+    return jsonify(payload)
 
 
 def _legacy_compat_payload() -> dict:
@@ -61,6 +134,8 @@ def _legacy_compat_payload() -> dict:
         "read_only": True,
         "mode": "stage3_demo_learning",
         "legacy_compat": True,
+        "operator_ui_ready": _operator_ui_ready(),
+        "build_marker": OPERATOR_BUILD_MARKER,
         "stage3": stage3,
     }
 
@@ -74,11 +149,14 @@ def nexus_legacy_compat():
 
 @app.route("/")
 def root():
+    if _operator_ui_ready():
+        return _operator_index()
     return render_template("nexus_command.html")
 
 
 @app.route("/nexus")
 def nexus_page():
+    """Legacy Stage 3 space-station command UI (kept for rollback / ops)."""
     return render_template("nexus_command.html")
 
 
@@ -91,6 +169,19 @@ def nexus_static(filename: str):
     if not target.is_file():
         abort(404)
     return send_from_directory(static_root, filename)
+
+
+@app.route("/assets/<path:filename>")
+def operator_assets(filename: str):
+    if not _operator_ui_ready():
+        abort(404)
+    target = (OPERATOR_UI_DIR / "assets" / filename).resolve()
+    assets_root = (OPERATOR_UI_DIR / "assets").resolve()
+    if not str(target).startswith(str(assets_root)):
+        abort(404)
+    if not target.is_file():
+        abort(404)
+    return send_from_directory(assets_root, filename)
 
 
 @app.route("/api/nexus/stage3/status")
@@ -156,6 +247,25 @@ def stage3_log_tail():
         return jsonify(build_stage3_log_tail(lines=lines))
     except Exception as exc:
         return jsonify({"read_only": True, "error": str(exc)}), 500
+
+
+@app.route("/<path:path>")
+def spa_or_static_fallback(path: str):
+    """SPA history fallback for Market Intelligence routes."""
+    if path.startswith("api/") or path.startswith("static/"):
+        abort(404)
+    if path == "nexus" or path.startswith("nexus/"):
+        return render_template("nexus_command.html")
+    if not _operator_ui_ready():
+        abort(404)
+    # Prefer real files under operator_ui (e.g. favicon)
+    candidate = (OPERATOR_UI_DIR / path).resolve()
+    if str(candidate).startswith(str(OPERATOR_UI_DIR.resolve())) and candidate.is_file():
+        return send_from_directory(OPERATOR_UI_DIR, path)
+    first = path.split("/", 1)[0]
+    if first in _SPA_PREFIXES or path == "index.html":
+        return _operator_index()
+    abort(404)
 
 
 def main() -> None:

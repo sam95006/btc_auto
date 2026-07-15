@@ -1,10 +1,17 @@
 {
   "branch": "stage3-demo-learning",
-  "commit": "8230f73d623e0b55005ad88b182c450e40cb5e71",
+  "commit": "76e8b602e432c9952fa432d587432983225d73e7",
   "deploy_package": "deploy/zeabur_stage3_demo_learning",
   "startup_mode_expected": "idle",
   "contains_24h_runner": true,
   "contains_web_ui": true,
   "contains_stage4_dry_run": true,
-  "created_at_utc": "2026-07-08T03:32:55Z"
+  "contains_operator_ui": true,
+  "operator_ui_path": "static/operator_ui",
+  "operator_ui_marker": "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60",
+  "ui_source_commit": "76e8b60",
+  "root_serves": "operator_ui",
+  "legacy_ui_path": "/nexus",
+  "created_at_utc": "2026-07-15T02:10:00Z",
+  "ui_deploy_1_note": "UI-DEPLOY-1 wires frontend/dist into static/operator_ui; / serves Market Intelligence SPA"
 }

@@ -1,10 +1,12 @@
+import { NEXUS_UI_BUILD_INFO } from "../demo/buildInfo";
 import { DemoDataBadge } from "./DemoDataBadge";
 
 /**
  * Top bar display chips only — not controls (MVP-17).
- * READ ONLY · NOT INVESTMENT ADVICE
+ * Includes UI-DEPLOY-1 build marker · READ ONLY · NOT INVESTMENT ADVICE
  */
 export function TopStatusBar() {
+  const b = NEXUS_UI_BUILD_INFO;
   return (
     <header className="top-status-bar" role="status">
       <div className="brand-mark">
@@ -23,6 +25,9 @@ export function TopStatusBar() {
       <span className="status-chip mode">Mode: READ ONLY</span>
       <span className="status-chip">No auto-run</span>
       <span className="status-chip disclaimer">NOT INVESTMENT ADVICE</span>
+      <span className="status-chip mono" title={b.buildMarker}>
+        UI Build: {b.uiVersion} · {b.latestCommit} · {b.uiStyle} · {b.backendState}
+      </span>
       <DemoDataBadge />
     </header>
   );
