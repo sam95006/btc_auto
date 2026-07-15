@@ -1220,6 +1220,63 @@ button {
   margin-top: 0.65rem;
 }
 
+.evidence-preset-bar {
+  margin-bottom: 0.75rem;
+}
+
+.preset-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.5rem 0;
+}
+
+.preset-chip {
+  display: inline-block;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-badge);
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+}
+
+.preset-chip:hover {
+  border-color: var(--accent-line);
+  color: var(--text);
+}
+
+.preset-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--dash-gap);
+  margin-top: 0.65rem;
+}
+
+.workspace-pin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--dash-gap);
+  margin-top: 0.55rem;
+}
+
+.workspace-pin {
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 0.65rem;
+  background: var(--bg-elevated);
+}
+
+.workspace-pin:hover {
+  border-color: var(--accent-line);
+}
+
+.ro-nav-chip.as-button {
+  font: inherit;
+  cursor: pointer;
+}
+
 .ai-rail {
   background: var(--bg-panel);
   border-left: 1px solid var(--border);

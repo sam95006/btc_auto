@@ -24,8 +24,24 @@ Checks:
 ```bash
 npm run typecheck
 npm run build
-python ../tools/research/check_nexus_ui_mvp18_safety.py
+python ../tools/research/check_nexus_ui_mvp19_safety.py
 ```
+
+## Evidence presets + workspace pins (MVP-19)
+
+Static read-only research shortcuts on top of MVP-18 URL filters.
+
+### Evidence presets
+
+Evidence Center shows preset chips/cards (ETH Watch Gate · Stage 4.19 Blocker · Safety · Provider · P2H Checkpoint · Prompt Repair).
+
+- **Open preset** = navigate `?query#hash` only  
+- **Copy link** = clipboard (or fallback text)  
+- **URL-only share policy** · **no backend calls** · **no trading controls**
+
+### Workspace pins
+
+Overview **Operator Workspace Pins** jump to the four highest-use views (waiting / blocked / pass / experiment-only).
 
 ## Evidence URL filter + Provider charts (MVP-18)
 
@@ -166,7 +182,7 @@ URLs look like `/evidence#artifact-4-18-p2h-ops` or `/overview#gate-checklist`.
 ## Safety scanners
 
 ```bash
-python tools/research/check_nexus_ui_mvp16_safety.py
 python tools/research/check_nexus_ui_mvp17_safety.py
 python tools/research/check_nexus_ui_mvp18_safety.py
+python tools/research/check_nexus_ui_mvp19_safety.py
 ```

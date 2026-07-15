@@ -5,14 +5,17 @@ import { useEvidenceFilterQueryState } from "../hooks/useEvidenceFilterQueryStat
 import { DemoDataBadge } from "./DemoDataBadge";
 import { DocSummaryCard } from "./DocSummaryCard";
 import { DocSummaryFilterBar } from "./DocSummaryFilterBar";
+import { EvidencePresetBar } from "./EvidencePresetBar";
 
-/** Drilldown aliases → summary ids (MVP-18). */
+/** Drilldown + preset aliases → summary ids (MVP-18/19). */
 const ANCHOR_ALIASES: Record<string, string[]> = {
   "p2d-r1": ["p2-r1-btc"],
+  p2d: ["p2d-prompt-repair"],
   p2f: ["p2f-watch-gate", "eth-watch-reappearance"],
+  "p2h-rel": ["p2h-rel"],
 };
 
-/** Filtered list of sanitized doc excerpts (MVP-15/16 + URL state MVP-18). */
+/** Filtered list of sanitized doc excerpts + share presets (MVP-15…19). */
 export function DocSummaryList({
   summaries,
   title = "Static Doc Summary Viewer",
@@ -39,11 +42,14 @@ export function DocSummaryList({
         <DemoDataBadge />
       </div>
       <p className="muted" style={{ marginTop: 0 }}>
-        Sanitized one-line excerpts · URL filter state (q/category/gateStatus/unresolved/tag) · no
+        Sanitized excerpts · share presets · URL filter (q/category/gateStatus/unresolved/tag) · no
         /data · no backend · no control actions · NOT INVESTMENT ADVICE
       </p>
       {enableFilter ? (
-        <DocSummaryFilterBar value={filter} onChange={setFilter} resultCount={visible.length} />
+        <>
+          <EvidencePresetBar />
+          <DocSummaryFilterBar value={filter} onChange={setFilter} resultCount={visible.length} />
+        </>
       ) : null}
       <div className="doc-summary-stack">
         {visible.length === 0 ? (

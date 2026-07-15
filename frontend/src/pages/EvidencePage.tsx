@@ -52,7 +52,7 @@ export function EvidencePage() {
         <DemoDataBadge />
         <MembershipLockBadge requiredTier="Pro" currentTier="Free" />
         <p className="page-sub">
-          Market Intelligence data layer · MVP-16 search/filter retained · P2D → P2H-REL · READ ONLY ·
+          Market Intelligence data layer · share presets · URL filters · P2D → P2H-REL · READ ONLY ·
           NOT INVESTMENT ADVICE · local sanitized metadata only · no trading controls.
         </p>
       </header>
@@ -73,6 +73,7 @@ export function EvidencePage() {
             id={stageAnchorId(checkpoint.stage)}
             style={{ marginTop: "1rem" }}
           >
+            <span id="p2h-rel" className="anchor-alias" />
             <div className="meta-row" style={{ marginTop: 0 }}>
               <h3 style={{ margin: 0 }}>
                 {checkpoint.stage} — {checkpoint.title}

@@ -9,6 +9,7 @@ import { GateChecklistCard } from "../components/GateChecklistCard";
 import { MarketCommandCenter } from "../components/MarketCommandCenter";
 import { OperatorBreadcrumbs } from "../components/OperatorBreadcrumbs";
 import { OperatorGateChecklistCard } from "../components/OperatorGateChecklistCard";
+import { OperatorWorkspacePins } from "../components/OperatorWorkspacePins";
 import { RegressionReadinessCard } from "../components/RegressionReadinessCard";
 import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStatusCard";
 import { SignalFeedPanel } from "../components/SignalFeedPanel";
@@ -73,6 +74,8 @@ export function OverviewPage() {
 
       <MarketCommandCenter />
 
+      <OperatorWorkspacePins />
+
       <UnresolvedGateCard />
       <CurrentGateSummaryCard />
 
@@ -83,6 +86,7 @@ export function OverviewPage() {
       <div className="operator-section" id="gate-checklist">
         <h2 className="section-title">Checkpoint & gate</h2>
         <CheckpointHealthCard />
+        <span id="stage-419-dossier" className="anchor-alias" />
         <GateChecklistCard
           id="checklist-eth-watch-reappearance"
           title="ETH Watch Reappearance Checklist"
