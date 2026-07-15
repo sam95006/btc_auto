@@ -1,23 +1,19 @@
 import { SIGNAL_FEED } from "../demo/marketIntelligence";
-import { DemoDataBadge } from "./DemoDataBadge";
 import { ReadOnlyNavChip } from "./ReadOnlyNavChip";
 import { StatusBadge } from "./StatusBadge";
 
-/** Signal feed — dense rows + Evidence/Gate/Provider/Risk links (MVP-17/18). */
+/** Signal feed — clearer rows + ghost actions (MVP-20). */
 export function SignalFeedPanel() {
   return (
-    <section id="signal-feed" className="operator-section">
-      <div className="meta-row" style={{ marginTop: 0, marginBottom: "0.5rem" }}>
+    <section id="signal-feed" className="operator-section board-section">
+      <div className="section-head">
         <h2 className="section-title" style={{ margin: 0 }}>
           Signal Feed
         </h2>
-        <span className="demo-badge">SANITIZED</span>
-        <span className="demo-badge">READ ONLY</span>
-        <DemoDataBadge />
+        <span className="demo-badge priority-med">SANITIZED</span>
       </div>
-      <p className="muted" style={{ marginTop: 0 }}>
-        No quick order · no execution · Evidence / Gate / Provider / Risk navigation only · NOT
-        INVESTMENT ADVICE
+      <p className="muted section-lede">
+        No execution · Evidence / Gate / Provider / Risk only
       </p>
 
       <div className="signal-feed-desktop table-scroll">
@@ -28,19 +24,19 @@ export function SignalFeedPanel() {
               <th>Symbol</th>
               <th>Provider</th>
               <th>Intent</th>
-              <th>Direction</th>
+              <th>Dir</th>
               <th>Conf</th>
               <th>Trigger</th>
               <th>Gate</th>
               <th>Status</th>
-              <th>Links</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {SIGNAL_FEED.map((s) => (
-              <tr key={s.id}>
+              <tr key={s.id} className="signal-row">
                 <td className="mono">{s.time}</td>
-                <td className="mono">{s.symbol}</td>
+                <td className="mono sym-cell">{s.symbol}</td>
                 <td>{s.provider}</td>
                 <td>{s.intent}</td>
                 <td>{s.direction}</td>
@@ -51,12 +47,14 @@ export function SignalFeedPanel() {
                     {s.gateStatus}
                   </StatusBadge>
                 </td>
-                <td className="mono">{s.status}</td>
-                <td className="ro-nav-row">
-                  <ReadOnlyNavChip label="Evidence" to={s.links.evidence} />
-                  <ReadOnlyNavChip label="Gate" to={s.links.gate} />
-                  <ReadOnlyNavChip label="Provider" to={s.links.provider} />
-                  <ReadOnlyNavChip label="Risk" to={s.links.risk} />
+                <td className="mono status-cell">{s.status}</td>
+                <td>
+                  <div className="ro-nav-row">
+                    <ReadOnlyNavChip label="Evidence" to={s.links.evidence} />
+                    <ReadOnlyNavChip label="Gate" to={s.links.gate} />
+                    <ReadOnlyNavChip label="Provider" to={s.links.provider} />
+                    <ReadOnlyNavChip label="Risk" to={s.links.risk} />
+                  </div>
                 </td>
               </tr>
             ))}
@@ -67,7 +65,7 @@ export function SignalFeedPanel() {
       <div className="signal-feed-mobile">
         {SIGNAL_FEED.map((s) => (
           <article key={s.id} className="panel-card dense-card signal-mobile-card">
-            <div className="meta-row" style={{ marginTop: 0 }}>
+            <div className="fleet-card-head">
               <strong className="mono">
                 {s.symbol} · {s.time}
               </strong>

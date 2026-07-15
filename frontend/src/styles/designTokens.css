@@ -73,9 +73,10 @@
   --dash-gap: 0.75rem;
   --card-pad: 0.75rem 0.85rem;
 
-  /* Layout */
-  --sidebar-w: 208px;
-  --rail-w: 268px;
-  --topbar-h: 44px;
+  /* Layout (MVP-20) */
+  --sidebar-w: 200px;
+  --rail-w: 280px;
+  --topbar-h: auto;
+  --topbar-min-h: 48px;
   --banner-h: 32px;
 }

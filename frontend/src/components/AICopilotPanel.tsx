@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { COPILOT_PROMPTS } from "../demo/marketIntelligence";
-import { DemoDataBadge } from "./DemoDataBadge";
 
 /**
- * Static AI prompt cards only — no live AI API, no orders (MVP-17).
+ * AI Commander rail — static prompt cards only (MVP-17/20).
+ * No live AI API · no orders · desktop: right rail only.
  */
 export function AICopilotPanel({ compact = false }: { compact?: boolean }) {
   const [active, setActive] = useState(COPILOT_PROMPTS[0]?.id ?? "");
@@ -11,17 +11,15 @@ export function AICopilotPanel({ compact = false }: { compact?: boolean }) {
 
   return (
     <section
-      id="ai-copilot"
       className={`panel-card dense-card ai-copilot-panel${compact ? " compact" : ""}`}
-      aria-label="AI Commander Mini Panel"
+      aria-label="AI Commander"
     >
       <div className="meta-row" style={{ marginTop: 0 }}>
         <h3 style={{ margin: 0, fontSize: "0.9rem" }}>AI Commander</h3>
-        <span className="demo-badge">STATIC PROMPTS</span>
-        <DemoDataBadge />
+        <span className="demo-badge priority-med">STATIC</span>
       </div>
-      <p className="muted" style={{ marginTop: "0.35rem" }}>
-        Read-only prompt cards · no live AI API · no Buy / Sell / Execute · NOT INVESTMENT ADVICE
+      <p className="muted" style={{ marginTop: "0.35rem", marginBottom: 0 }}>
+        Read-only prompts · no live AI · no Buy / Sell / Execute
       </p>
       <div className="copilot-prompt-grid">
         {COPILOT_PROMPTS.map((p) => (
@@ -37,10 +35,10 @@ export function AICopilotPanel({ compact = false }: { compact?: boolean }) {
       </div>
       {selected ? (
         <div className="copilot-prompt-preview">
-          <div className="k">Selected static prompt</div>
+          <div className="k">Selected prompt</div>
           <p className="mono muted">{selected.prompt}</p>
           <p className="muted" style={{ marginBottom: 0 }}>
-            Display only · Generate Brief is navigation metaphor · no order execution
+            Generate Brief = navigation metaphor · NOT INVESTMENT ADVICE
           </p>
         </div>
       ) : null}

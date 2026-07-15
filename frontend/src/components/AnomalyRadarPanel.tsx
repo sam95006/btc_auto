@@ -1,33 +1,29 @@
 import { ANOMALY_ROWS } from "../demo/marketIntelligence";
-import { DemoDataBadge } from "./DemoDataBadge";
 import { ReadOnlyNavChip } from "./ReadOnlyNavChip";
 import { StatusBadge } from "./StatusBadge";
 
 const CAT_LABEL = {
-  bullish: "Bullish anomaly",
-  bearish: "Bearish anomaly",
-  risk: "Risk anomaly",
-  provider: "Provider divergence",
-  gate: "Gate warning",
+  bullish: "Bullish",
+  bearish: "Bearish",
+  risk: "Risk",
+  provider: "Provider",
+  gate: "Gate",
 } as const;
 
-/** Anomaly radar — sanitized alerts + cross links (MVP-17/18). */
+/** Anomaly radar — compact cards (MVP-20). */
 export function AnomalyRadarPanel() {
   const cats = ["gate", "risk", "provider", "bullish", "bearish"] as const;
 
   return (
-    <section id="anomaly-radar" className="operator-section">
-      <div className="meta-row" style={{ marginTop: 0, marginBottom: "0.5rem" }}>
+    <section id="anomaly-radar" className="operator-section board-section">
+      <div className="section-head">
         <h2 className="section-title" style={{ margin: 0 }}>
           Anomaly Radar
         </h2>
         <StatusBadge tone="wait">WATCH</StatusBadge>
-        <span className="demo-badge">SANITIZED</span>
-        <DemoDataBadge />
       </div>
-      <p className="muted" style={{ marginTop: 0 }}>
-        Priority anomalies under HOLD · Evidence / Gate / Provider / Risk links only · NOT
-        INVESTMENT ADVICE
+      <p className="muted section-lede">
+        Priority anomalies under HOLD · read-only cross-links
       </p>
 
       <div className="anomaly-grid">
@@ -35,33 +31,33 @@ export function AnomalyRadarPanel() {
           const rows = ANOMALY_ROWS.filter((r) => r.category === cat);
           if (rows.length === 0) return null;
           return (
-            <div key={cat} className="panel-card dense-card">
-              <h3 style={{ margin: 0, fontSize: "0.85rem" }}>{CAT_LABEL[cat]}</h3>
+            <div key={cat} className="panel-card dense-card anomaly-card">
+              <h3 className="anomaly-cat">{CAT_LABEL[cat]}</h3>
               <ul className="anomaly-list">
                 {rows.map((r) => (
                   <li key={r.id}>
-                    <div className="meta-row" style={{ marginTop: 0 }}>
+                    <div className="fleet-card-head">
                       <strong className="mono">{r.symbol}</strong>
                       <span className="muted">{r.anomalyType}</span>
                     </div>
-                    <div className="dense-kv">
+                    <dl className="fleet-summary compact">
                       <div>
-                        <span className="k">First</span>
-                        <span className="v">{r.firstAlert}</span>
+                        <dt>First</dt>
+                        <dd>{r.firstAlert}</dd>
                       </div>
                       <div>
-                        <span className="k">Latest</span>
-                        <span className="v">{r.latestValue}</span>
+                        <dt>Latest</dt>
+                        <dd>{r.latestValue}</dd>
                       </div>
                       <div>
-                        <span className="k">Change</span>
-                        <span className="v">{r.change}</span>
+                        <dt>Change</dt>
+                        <dd>{r.change}</dd>
                       </div>
                       <div>
-                        <span className="k">Risk</span>
-                        <span className="v">{r.riskNote}</span>
+                        <dt>Risk</dt>
+                        <dd>{r.riskNote}</dd>
                       </div>
-                    </div>
+                    </dl>
                     <div className="ro-nav-row" style={{ marginTop: "0.35rem" }}>
                       <ReadOnlyNavChip label="Evidence" to={r.links.evidence} />
                       <ReadOnlyNavChip label="Gate" to={r.links.gate} />

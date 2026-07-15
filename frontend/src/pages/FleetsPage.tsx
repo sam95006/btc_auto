@@ -1,22 +1,20 @@
 import { FleetCard } from "../components/FleetCard";
-import { DemoDataBadge } from "../components/DemoDataBadge";
-import { MembershipLockBadge } from "../components/MembershipLockBadge";
+import { StatusBadge } from "../components/StatusBadge";
 import { getFleetStatus } from "../demo/nexusDataAdapter";
 
 export function FleetsPage() {
   const fleets = getFleetStatus();
 
   return (
-    <div>
+    <div className="page-stack">
       <header className="page-header">
-        <h1>AI Fleet Center</h1>
-        <DemoDataBadge />
-        <MembershipLockBadge requiredTier="Standard" currentTier="Free" />
+        <h1>Fleets</h1>
+        <StatusBadge tone="hold">HOLD</StatusBadge>
         <p className="page-sub">
-          Per-fleet intent, watch state, MAE, invalidation. UI lock stub only.
+          Per-symbol trading summary · READ ONLY · NOT INVESTMENT ADVICE
         </p>
       </header>
-      <div className="card-grid">
+      <div className="fleet-intel-grid fleets-page-grid">
         {fleets.map((f) => (
           <FleetCard key={f.fleetId} fleet={f} />
         ))}

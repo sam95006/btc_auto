@@ -1,16 +1,15 @@
 import { useState } from "react";
 import { getRoundTable } from "../demo/nexusDataAdapter";
-import { DemoDataBadge } from "./DemoDataBadge";
 
+/** Full-page assistant tabs — Chinese prompt labels allowed (MVP-20 language strategy). */
 const TABS = [
-  "Ask current page",
-  "Find risk",
-  "Find opportunity",
-  "Daily brief",
+  "問目前頁",
+  "找風險",
+  "找機會",
+  "今日簡報",
   "Explain decision",
-  "Ask reflection",
   "Ask evidence",
-  "Why can’t we trade now?",
+  "Why HOLD now?",
 ] as const;
 
 export function AICommanderPanel() {
@@ -19,30 +18,28 @@ export function AICommanderPanel() {
 
   const body = (() => {
     switch (tab) {
-      case "Find risk":
+      case "找風險":
         return "Elevated MAE on SOL/PEPE; PEPE blocked_by_risk. Defensive ON.";
-      case "Find opportunity":
-        return "BTC valid_watch only — observation priority, not an action cue.";
-      case "Daily brief":
+      case "找機會":
+        return "BTC prior evidence only — observation priority, not an action cue.";
+      case "今日簡報":
         return `${rt.consensus} ${rt.whyNotTradeNow}`;
       case "Explain decision":
-        return "Decisions are observe / watch / skip / blocked language only.";
-      case "Ask reflection":
-        return "Reflection AI: confidence haircut on meme names (demo).";
+        return "Decisions use observe / watch / skip / blocked language only.";
       case "Ask evidence":
-        return "Open Evidence Vault for decision rows with stage markers.";
-      case "Why can’t we trade now?":
+        return "Open Evidence for decision rows with stage markers.";
+      case "Why HOLD now?":
         return rt.whyNotTradeNow;
       default:
-        return "Research assistant stub. Answers use DEMO DATA only.";
+        return "Research assistant stub. Answers use DEMO DATA only. READ ONLY.";
     }
   })();
 
   return (
-    <aside className="ai-rail" aria-label="AI Assistant">
+    <aside className="ai-rail page-ai" aria-label="AI Assistant">
       <div className="meta-row" style={{ marginTop: 0 }}>
         <h2>AI Commander</h2>
-        <DemoDataBadge />
+        <span className="demo-badge priority-med">STATIC</span>
       </div>
       <div className="ai-tabs">
         {TABS.map((t) => (
@@ -58,7 +55,7 @@ export function AICommanderPanel() {
       </div>
       <div className="ai-body">{body}</div>
       <p className="muted" style={{ fontSize: "0.7rem" }}>
-        DEMO DATA - READ ONLY - NOT INVESTMENT ADVICE
+        DEMO DATA · READ ONLY · NOT INVESTMENT ADVICE
       </p>
     </aside>
   );

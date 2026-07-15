@@ -1,33 +1,29 @@
 import { CANDIDATE_ROWS } from "../demo/marketIntelligence";
-import { DemoDataBadge } from "./DemoDataBadge";
 import { ReadOnlyNavChip } from "./ReadOnlyNavChip";
 import { StatusBadge } from "./StatusBadge";
 
-/** Candidate table — read-only Evidence/Gate/Provider/Risk links (MVP-17/18). */
+/** Candidate table — trading-dashboard density (MVP-20 visual polish). */
 export function CandidateBoard() {
   const longRows = CANDIDATE_ROWS.filter((r) => r.bucket === "long");
   const shortRows = CANDIDATE_ROWS.filter((r) => r.bucket === "short");
   const waiting = CANDIDATE_ROWS.filter((r) => r.bucket === "waiting");
 
   const sections: { title: string; rows: typeof CANDIDATE_ROWS; empty: string }[] = [
-    { title: "Long Candidates", rows: longRows, empty: "None under HOLD (sanitized)" },
-    { title: "Short Candidates", rows: shortRows, empty: "None under HOLD (sanitized)" },
+    { title: "Long Candidates", rows: longRows, empty: "None under HOLD" },
+    { title: "Short Candidates", rows: shortRows, empty: "None under HOLD" },
     { title: "Waiting / Blocked", rows: waiting, empty: "—" },
   ];
 
   return (
-    <section id="candidate-board" className="operator-section">
-      <div className="meta-row" style={{ marginTop: 0, marginBottom: "0.5rem" }}>
+    <section id="candidate-board" className="operator-section board-section">
+      <div className="section-head">
         <h2 className="section-title" style={{ margin: 0 }}>
           Candidate Board
         </h2>
         <StatusBadge tone="hold">HOLD</StatusBadge>
-        <span className="demo-badge">READ ONLY</span>
-        <DemoDataBadge />
       </div>
-      <p className="muted" style={{ marginTop: 0 }}>
-        Cross-links to Evidence / Gate / Provider / Risk only · no Buy / Sell / Quick Order · NOT
-        INVESTMENT ADVICE
+      <p className="muted section-lede">
+        Evidence / Gate / Provider / Risk links only · no Buy / Sell / Quick Order
       </p>
 
       {sections.map((sec) => (
@@ -39,13 +35,13 @@ export function CandidateBoard() {
                 <tr>
                   <th>Symbol</th>
                   <th>Direction</th>
-                  <th>Confidence</th>
-                  <th>MAE risk</th>
-                  <th>Entry trigger</th>
+                  <th>Conf</th>
+                  <th>MAE</th>
+                  <th>Trigger</th>
                   <th>Invalidation</th>
                   <th>Gate</th>
-                  <th>Evidence note</th>
-                  <th>Links</th>
+                  <th>Note</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -58,7 +54,7 @@ export function CandidateBoard() {
                 ) : (
                   sec.rows.map((r) => (
                     <tr key={r.id}>
-                      <td className="mono">{r.symbol}</td>
+                      <td className="mono sym-cell">{r.symbol}</td>
                       <td>{r.direction}</td>
                       <td className="mono">{r.confidence ?? "—"}</td>
                       <td>{r.maeRisk}</td>
@@ -69,12 +65,14 @@ export function CandidateBoard() {
                           {r.gateStatus}
                         </StatusBadge>
                       </td>
-                      <td className="muted">{r.evidenceNote}</td>
-                      <td className="ro-nav-row">
-                        <ReadOnlyNavChip label="Evidence" to={r.links.evidence} />
-                        <ReadOnlyNavChip label="Gate" to={r.links.gate} />
-                        <ReadOnlyNavChip label="Provider" to={r.links.provider} />
-                        <ReadOnlyNavChip label="Risk" to={r.links.risk} />
+                      <td className="muted note-cell">{r.evidenceNote}</td>
+                      <td>
+                        <div className="ro-nav-row">
+                          <ReadOnlyNavChip label="Evidence" to={r.links.evidence} />
+                          <ReadOnlyNavChip label="Gate" to={r.links.gate} />
+                          <ReadOnlyNavChip label="Provider" to={r.links.provider} />
+                          <ReadOnlyNavChip label="Risk" to={r.links.risk} />
+                        </div>
                       </td>
                     </tr>
                   ))
