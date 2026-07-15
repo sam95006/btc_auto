@@ -1,9 +1,9 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { AICopilotPanel } from "./components/AICopilotPanel";
 import { AppFooter } from "./components/AppFooter";
+import { FloatingAIAssistant } from "./components/FloatingAIAssistant";
+import { MarketTopTicker } from "./components/MarketTopTicker";
 import { SafetyBanner } from "./components/SafetyBanner";
 import { SidebarNav } from "./components/SidebarNav";
-import { TopStatusBar } from "./components/TopStatusBar";
 import { AcademyPage } from "./pages/AcademyPage";
 import { AssistantPage } from "./pages/AssistantPage";
 import { CalculatorPage } from "./pages/CalculatorPage";
@@ -18,16 +18,16 @@ import { RiskEvidencePage } from "./pages/RiskEvidencePage";
 import { SignalsPage } from "./pages/SignalsPage";
 
 /**
- * NEXUS / EATI UI MVP-20 Market Intelligence polish (read-only).
- * Explicitly absent (forbidden): /trade, /orders, /arm, /routing-edit
- * Desktop: AI Commander only in right rail. Mobile: bottom dock.
+ * NEXUS / EATI UI MVP-22 simplified market dashboard (read-only).
+ * Forbidden: /trade, /orders, /arm, /routing-edit
+ * AI: floating panel (no permanent right rail).
  */
 export default function App() {
   return (
-    <div className="app-shell mi-shell">
+    <div className="app-shell mi-shell mvp22-shell">
       <SafetyBanner />
-      <TopStatusBar />
-      <div className="app-body">
+      <MarketTopTicker />
+      <div className="app-body app-body-no-rail">
         <SidebarNav />
         <div className="main-column">
           <main className="main-content">
@@ -50,13 +50,8 @@ export default function App() {
           </main>
           <AppFooter />
         </div>
-        <aside className="ai-rail desktop-ai-rail" aria-label="AI Commander rail">
-          <AICopilotPanel />
-        </aside>
       </div>
-      <div className="mobile-ai-dock" aria-label="AI Commander mobile">
-        <AICopilotPanel compact />
-      </div>
+      <FloatingAIAssistant />
     </div>
   );
 }

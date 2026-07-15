@@ -1,60 +1,61 @@
 import { NavLink } from "react-router-dom";
 
-type NavItem = { to: string; label: string; short: string };
+type NavItem = { to: string; label: string; short: string; icon: string };
 
-const OPERATOR_CORE: NavItem[] = [
-  { to: "/overview", label: "Overview", short: "Overview" },
-  { to: "/overview#market-command", label: "Market Command", short: "Market" },
-  { to: "/evidence", label: "Evidence", short: "Evidence" },
-  { to: "/risk-evidence", label: "Risk", short: "Risk" },
-];
-
-const RESEARCH: NavItem[] = [
-  { to: "/paper-lab", label: "Validation Lab", short: "Lab" },
-  { to: "/provider-shadow", label: "Provider Intelligence", short: "Provider" },
-  { to: "/evidence#doc-summaries", label: "Reports", short: "Reports" },
-  { to: "/evidence#artifact-4-18-p2h-ops", label: "Runbooks", short: "Runbooks" },
+const PRIMARY: NavItem[] = [
+  { to: "/overview", label: "Market Dashboard", short: "Market", icon: "▣" },
+  { to: "/evidence", label: "Evidence Center", short: "Evidence", icon: "▤" },
+  { to: "/risk-evidence", label: "Risk Center", short: "Risk", icon: "◈" },
+  { to: "/provider-shadow", label: "Provider Intel", short: "Provider", icon: "◇" },
+  { to: "/paper-lab", label: "Validation Lab", short: "Lab", icon: "◎" },
+  { to: "/evidence#doc-summaries", label: "Reports", short: "Reports", icon: "☰" },
+  { to: "/evidence#artifact-4-18-p2h-ops", label: "Runbooks", short: "Runbooks", icon: "⇉" },
 ];
 
 const FUTURE: NavItem[] = [
-  { to: "/academy", label: "Academy", short: "Academy" },
-  { to: "/membership", label: "Membership", short: "Member" },
-  { to: "/assistant", label: "Public SaaS", short: "SaaS" },
+  { to: "/academy", label: "Academy", short: "Academy", icon: "◇" },
+  { to: "/membership", label: "Settings / Future", short: "Future", icon: "⚙" },
 ];
 
-function NavGroup({ title, items }: { title: string; items: NavItem[] }) {
-  return (
-    <div className="nav-group">
-      <div className="nav-label">{title}</div>
-      {items.map((l) => (
-        <NavLink
-          key={l.to}
-          to={l.to}
-          className={({ isActive }) => (isActive ? "active" : undefined)}
-          title={l.label}
-        >
-          <span className="nav-text-full">{l.label}</span>
-          <span className="nav-text-short">{l.short}</span>
-        </NavLink>
-      ))}
-    </div>
-  );
-}
-
 /**
- * Productized Private Operator nav (MVP-20).
+ * Compact product sidebar (MVP-22).
  * Forbidden routes absent: /trade, /orders, /arm, /routing-edit
  */
 export function SidebarNav() {
   return (
-    <nav className="sidebar-nav" aria-label="Primary">
+    <nav className="sidebar-nav sidebar-nav-compact" aria-label="Primary">
       <div className="sidebar-brand-block">
-        <div className="sidebar-product">Operator Console</div>
-        <div className="sidebar-product-sub muted">Research · READ ONLY</div>
+        <div className="sidebar-product">NEXUS</div>
+        <div className="sidebar-product-sub muted">READ ONLY</div>
       </div>
-      <NavGroup title="Operator Console" items={OPERATOR_CORE} />
-      <NavGroup title="Research" items={RESEARCH} />
-      <NavGroup title="Future" items={FUTURE} />
+      <div className="nav-group">
+        {PRIMARY.map((l) => (
+          <NavLink
+            key={l.to}
+            to={l.to}
+            className={({ isActive }) => (isActive ? "active" : undefined)}
+            title={l.label}
+          >
+            <span className="nav-ico" aria-hidden>
+              {l.icon}
+            </span>
+            <span className="nav-text-full">{l.label}</span>
+            <span className="nav-text-short">{l.short}</span>
+          </NavLink>
+        ))}
+      </div>
+      <div className="nav-group">
+        <div className="nav-label">More</div>
+        {FUTURE.map((l) => (
+          <NavLink key={l.to} to={l.to} title={l.label}>
+            <span className="nav-ico" aria-hidden>
+              {l.icon}
+            </span>
+            <span className="nav-text-full">{l.label}</span>
+            <span className="nav-text-short">{l.short}</span>
+          </NavLink>
+        ))}
+      </div>
     </nav>
   );
 }

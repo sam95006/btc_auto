@@ -24,10 +24,11 @@
   --text-dim: #5e6d80;
   --text-inverse: #0b0f14;
 
-  /* Accent — restrained tech, not neon game */
-  --accent: #3b82c4;
-  --accent-soft: rgba(59, 130, 196, 0.12);
-  --accent-line: rgba(59, 130, 196, 0.35);
+  /* Accent — gold primary (fintech), blue secondary (MVP-22) */
+  --accent: #d4a017;
+  --accent-soft: rgba(212, 160, 23, 0.12);
+  --accent-line: rgba(212, 160, 23, 0.4);
+  --accent-blue: #3b82c4;
 
   /* Semantic */
   --bullish: #22c55e;
@@ -73,10 +74,10 @@
   --dash-gap: 0.75rem;
   --card-pad: 0.75rem 0.85rem;
 
-  /* Layout (MVP-20) */
-  --sidebar-w: 200px;
-  --rail-w: 280px;
+  /* Layout (MVP-22 — no permanent AI rail) */
+  --sidebar-w: 188px;
+  --rail-w: 0px;
   --topbar-h: auto;
-  --topbar-min-h: 48px;
-  --banner-h: 32px;
+  --topbar-min-h: 52px;
+  --banner-h: 28px;
 }
