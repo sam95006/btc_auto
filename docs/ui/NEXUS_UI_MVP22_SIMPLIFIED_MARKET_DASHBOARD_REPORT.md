@@ -76,4 +76,15 @@ Backend HOLD unchanged. Trading backend untouched. Public SaaS still NOT IMPLEME
 
 ## 15. Next recommendation
 
-Redeploy → visual sign-off. Prefer APPROVE if dashboard scans in 3 seconds; else tiny visual fixes only — no more copy walls.
+Redeploy → visual sign-off. Prefer APPROVE if first paint answers: prices, which coin to watch (ETH), long/short boards, readiness, alerts — without reading Gate essays.
+
+## 16. First-paint polish (same MVP-22)
+
+After `dd0ac05`, live still felt status-heavy. Polish pass:
+
+- Single status line (not pill wall)
+- Ticker prices larger; HOLD/READ ONLY plain text; 4.19 mini badge
+- Focus line: ETH WAIT
+- Removed board footnotes / secondary link row
+- Gate checklists collapsed under `<details>`
+- Mobile: gauge before watchlists

@@ -7,6 +7,7 @@ const DEFAULT_HREF: Record<string, string> = {
   "View Provider": "/provider-shadow#provider-explain",
   "Ask AI": "/overview#ai-copilot",
   "View Gate": "/overview#gate-checklist",
+  "View Checklist": "/overview#checklist-stage-419-dossier",
   "View Runbook": "/evidence#artifact-4-18-p2h-ops",
   "Generate Brief": "/overview#ai-copilot",
   "Add to Local Watch View": "/overview#candidate-board",
@@ -21,6 +22,7 @@ export type ReadOnlyNavLabel =
   | "View Provider"
   | "Ask AI"
   | "View Gate"
+  | "View Checklist"
   | "View Runbook"
   | "Generate Brief"
   | "Add to Local Watch View"

@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import type { WatchRow } from "../demo/marketDashboard";
 import { ReadOnlyNavChip } from "./ReadOnlyNavChip";
 import { StatusBadge } from "./StatusBadge";
@@ -14,10 +13,12 @@ export function RecommendationBoard({
   title,
   rows,
   emptyNote,
+  focusSymbol,
 }: {
   title: string;
   rows: WatchRow[];
   emptyNote?: string;
+  focusSymbol?: string;
 }) {
   return (
     <section className="panel-card rec-board" aria-label={title}>
@@ -42,8 +43,18 @@ export function RecommendationBoard({
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr key={r.symbol}>
-                    <td className="mono sym-cell">{r.symbol}</td>
+                  <tr
+                    key={r.symbol}
+                    className={focusSymbol === r.symbol ? "rec-row-focus" : undefined}
+                  >
+                    <td className="mono sym-cell">
+                      {r.symbol}
+                      {focusSymbol === r.symbol ? (
+                        <span className="focus-mark" aria-label="focus">
+                          ◀
+                        </span>
+                      ) : null}
+                    </td>
                     <td className="mono">{r.price}</td>
                     <td>{r.aiScore}</td>
                     <td
@@ -57,7 +68,7 @@ export function RecommendationBoard({
                     >
                       {r.changePct == null
                         ? "—"
-                        : `${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(2)}%`}
+                        : `${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(1)}%`}
                     </td>
                     <td>
                       <StatusBadge tone={tone(r.status)}>{r.status}</StatusBadge>
@@ -72,7 +83,10 @@ export function RecommendationBoard({
           </div>
           <div className="rec-mobile">
             {rows.map((r) => (
-              <article key={r.symbol} className="rec-mobile-card">
+              <article
+                key={r.symbol}
+                className={`rec-mobile-card${focusSymbol === r.symbol ? " rec-row-focus" : ""}`}
+              >
                 <div className="fleet-card-head">
                   <strong className="mono">{r.symbol}</strong>
                   <StatusBadge tone={tone(r.status)}>{r.status}</StatusBadge>
@@ -80,7 +94,7 @@ export function RecommendationBoard({
                 <div className="rec-mobile-meta mono">
                   {r.price} · {r.aiScore}
                   {r.changePct != null
-                    ? ` · ${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(2)}%`
+                    ? ` · ${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(1)}%`
                     : ""}
                 </div>
                 <ReadOnlyNavChip label={r.next} to={r.nextTo} />
@@ -89,12 +103,6 @@ export function RecommendationBoard({
           </div>
         </>
       )}
-      <p className="muted rec-footnote">
-        DEMO DATA · no Buy / Long / Execute / Quick Order ·{" "}
-        <Link className="deep-link" to="/evidence">
-          Evidence
-        </Link>
-      </p>
     </section>
   );
 }

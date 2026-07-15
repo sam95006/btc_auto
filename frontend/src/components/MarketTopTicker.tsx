@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { NEXUS_UI_BUILD_INFO } from "../demo/buildInfo";
 import { TICKER_QUOTES } from "../demo/marketDashboard";
 
-/** Compact market top header — prices + HOLD (MVP-22). */
+/** Market-first top header — prices dominate, status is compact (MVP-22). */
 export function MarketTopTicker() {
   const [q, setQ] = useState("");
   return (
@@ -17,21 +16,21 @@ export function MarketTopTicker() {
         {TICKER_QUOTES.map((t) => (
           <span key={t.symbol} className="mtt-quote">
             <strong>{t.symbol}</strong>
-            <span className="mono">{t.price}</span>
+            <span className="mono mtt-price">{t.price}</span>
             <span className={t.changePct >= 0 ? "price-up" : "price-down"}>
               {t.changePct >= 0 ? "+" : ""}
-              {t.changePct.toFixed(2)}%
+              {t.changePct.toFixed(1)}%
             </span>
           </span>
         ))}
-        <span className="status-chip tone-hold compact">
-          Backend: <strong>HOLD</strong>
+        <span className="mtt-status-plain">
+          Backend <strong>HOLD</strong>
         </span>
-        <span className="status-chip mode compact">
-          Mode: <strong>READ ONLY</strong>
+        <span className="mtt-status-plain">
+          <strong>READ ONLY</strong>
         </span>
-        <span className="status-chip tone-blocked compact mtt-419" title="Stage 4.19 blocked">
-          4.19 BLOCKED
+        <span className="mtt-badge-419" title="Stage 4.19 blocked">
+          4.19
         </span>
       </div>
       <div className="mtt-right">
@@ -45,14 +44,22 @@ export function MarketTopTicker() {
             aria-label="Search (local UI only)"
           />
         </label>
-        <Link className="mtt-icon" to="/overview#decision-alerts" title="Alerts">
-          Alerts
+        <Link className="mtt-icon" to="/overview#decision-alerts" title="Alerts" aria-label="Alerts">
+          ⌂
         </Link>
-        <Link className="mtt-icon" to="/assistant" title="AI Assistant">
+        <button
+          type="button"
+          className="mtt-icon"
+          title="AI Assistant"
+          aria-label="Open AI Assistant"
+          onClick={() => {
+            document.querySelector<HTMLButtonElement>(".floating-ai-fab")?.click();
+          }}
+        >
           AI
-        </Link>
-        <span className="mtt-icon muted" title={`UI ${NEXUS_UI_BUILD_INFO.displayLabel}`}>
-          UI
+        </button>
+        <span className="mtt-icon muted" title="Theme (static)">
+          ◐
         </span>
       </div>
     </header>

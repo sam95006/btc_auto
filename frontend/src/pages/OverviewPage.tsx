@@ -10,7 +10,7 @@ import {
 import { useHashScroll } from "../hooks/useHashScroll";
 
 /**
- * MVP-22 market dashboard home — boards first, gate docs behind optional reveal.
+ * MVP-22 market dashboard — first paint is boards; gate docs are opt-in.
  */
 export function OverviewPage() {
   useHashScroll();
@@ -31,20 +31,13 @@ export function OverviewPage() {
     <div className="page-stack mi-page mvp22-overview">
       <SimplifiedMarketDashboard />
 
-      <div className="operator-details-toggle">
-        <button
-          type="button"
-          className="ro-nav-chip"
-          onClick={() => setShowDetails((v) => !v)}
-          aria-expanded={showDetails}
-        >
-          {showDetails ? "Hide gate details" : "Show gate details"}
-        </button>
-      </div>
-
-      {showDetails ? (
+      <details
+        className="operator-details-toggle"
+        open={showDetails}
+        onToggle={(e) => setShowDetails((e.target as HTMLDetailsElement).open)}
+      >
+        <summary className="muted">Gate checklists (optional)</summary>
         <div className="operator-section desk-secondary" id="gate-checklist-detail">
-          <h2 className="section-title">Checkpoint & gate</h2>
           <GateChecklistCard
             id="checklist-eth-watch-reappearance"
             title="ETH Watch Reappearance Checklist"
@@ -64,7 +57,7 @@ export function OverviewPage() {
             footer="Dossier not started · no Stage 4.19 start button"
           />
         </div>
-      ) : null}
+      </details>
     </div>
   );
 }
