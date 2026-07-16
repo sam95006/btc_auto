@@ -62,12 +62,16 @@ export class LiveMarketFeed {
 
   snapshot(): LiveMarketSnapshot {
     const bySymbol: LiveMarketSnapshot["bySymbol"] = {};
-    for (const [k, v] of this.prices) bySymbol[k] = v;
+    let latestReceived = 0;
+    for (const [k, v] of this.prices) {
+      bySymbol[k] = v;
+      if (v.receivedAt > latestReceived) latestReceived = v.receivedAt;
+    }
     return {
       bySymbol,
       feedStatus: this.feedStatus(),
       transport: this.transport,
-      updatedAt: Date.now(),
+      updatedAt: latestReceived || 0,
     };
   }
 
@@ -77,14 +81,20 @@ export class LiveMarketFeed {
 
   private feedStatus(): MarketConnectionStatus {
     if (!this.prices.size) {
-      return this.reconnecting ? "RECONNECTING" : "DISCONNECTED";
+      if (this.reconnecting) return "RECONNECTING";
+      if (this.restFallback) return "REST_FALLBACK";
+      return "DISCONNECTED";
     }
-    const ages = [...this.prices.values()].map((p) => Date.now() - p.receivedAt);
+    const now = Date.now();
+    const ages = [...this.prices.values()].map((p) => now - p.receivedAt);
     const worst = Math.max(...ages);
+    // If socket is down and data is old, prefer explicit non-LIVE states.
+    if (!this.wsOpen && worst > 15_000 && !this.restFallback) {
+      return ageToStatus(worst, { disconnected: true });
+    }
     return ageToStatus(worst, {
       reconnecting: this.reconnecting && !this.wsOpen,
       restFallback: this.restFallback && !this.wsOpen,
-      disconnected: !this.wsOpen && !this.restFallback && worst > 15_000,
     });
   }
 

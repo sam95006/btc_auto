@@ -112,5 +112,10 @@ After `dd0ac05`, live still felt status-heavy. Polish pass:
 
 **Checks:** `check_nexus_ui_mvp22a_safety.py` · `verify_mvp22a_live_market_truth.py` · typecheck · build · static sync
 
-**Redeploy:** not performed this round (pending operator request).
+**Redeploy / Live sign-off (2026-07-16):**
+- Deployed `a702e66` then freshness fix follow-up (see latest commit)
+- Live `/api/market/tickers` vs official Bybit Mainnet: 3-round PASS (≤ max(2 ticks, 5 bps))
+- Browser Playwright: WS `wss://stream.bybit.com/v5/public/linear` connected; BTC/ETH/SOL tickers update; Current vs Signal separated; no fixture ticker; mobile gauge `order:-1`; no overflow; FAB only
+- Freshness age now uses last market `receivedAt` (not emit clock)
+- Verdict target: **PASS — MVP-22A LIVE MARKET DATA DEPLOYED AND VERIFIED**
 
