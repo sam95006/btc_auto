@@ -3,6 +3,7 @@ import { formatUsd } from "../market/freshness";
 import { useLivePrice } from "../market/useLiveMarketFeed";
 import { CompactSafetyStrip } from "./CompactSafetyStrip";
 import { DecisionAlertsPanel } from "./DecisionAlertsPanel";
+import { MarketContextPanel } from "./MarketContextPanel";
 import { MarketReadinessGauge } from "./MarketReadinessGauge";
 import { RecommendationBoard } from "./RecommendationBoard";
 
@@ -41,12 +42,13 @@ function FocusEthBlock() {
           {live?.connectionStatus || "DISCONNECTED"}
         </div>
       </details>
+      <MarketContextPanel symbol="ETH" recommendation={signal.recommendation || "WAIT"} />
     </div>
   );
 }
 
 /**
- * DataHunterX-style market home — live Mainnet lastPrice + research signal refs (MVP-22A).
+ * Market home — live lastPrice + derivatives context (MVP-22B).
  */
 export function SimplifiedMarketDashboard() {
   return (

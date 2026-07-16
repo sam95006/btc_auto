@@ -50,6 +50,16 @@ def _fetch_ticker(symbol: str) -> dict[str, Any]:
         "change24hPct": float(row["price24hPcnt"]) * 100.0
         if row.get("price24hPcnt") not in (None, "")
         else None,
+        "openInterest": float(row["openInterest"]) if row.get("openInterest") not in (None, "") else None,
+        "openInterestValue": float(row["openInterestValue"])
+        if row.get("openInterestValue") not in (None, "")
+        else None,
+        "fundingRate": float(row["fundingRate"]) if row.get("fundingRate") not in (None, "") else None,
+        "nextFundingTime": int(row["nextFundingTime"])
+        if row.get("nextFundingTime") not in (None, "")
+        else None,
+        "volume24h": float(row["volume24h"]) if row.get("volume24h") not in (None, "") else None,
+        "turnover24h": float(row["turnover24h"]) if row.get("turnover24h") not in (None, "") else None,
         "exchangeTimestamp": int(row["ts"]) if row.get("ts") not in (None, "") else None,
         "raw": {
             "lastPrice": row.get("lastPrice"),
@@ -58,6 +68,12 @@ def _fetch_ticker(symbol: str) -> dict[str, Any]:
             "bid1Price": row.get("bid1Price"),
             "ask1Price": row.get("ask1Price"),
             "price24hPcnt": row.get("price24hPcnt"),
+            "openInterest": row.get("openInterest"),
+            "openInterestValue": row.get("openInterestValue"),
+            "fundingRate": row.get("fundingRate"),
+            "nextFundingTime": row.get("nextFundingTime"),
+            "volume24h": row.get("volume24h"),
+            "turnover24h": row.get("turnover24h"),
             "ts": row.get("ts"),
         },
     }

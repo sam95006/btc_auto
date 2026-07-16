@@ -1913,9 +1913,88 @@ button {
   font-weight: 500;
 }
 
-@media (max-width: 900px) {
-  .focus-price-grid {
-    grid-template-columns: 1fr 1fr;
+.market-context-panel {
+  margin-top: 0.65rem;
+  padding: 0.65rem 0.75rem;
+}
+
+.mc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+}
+
+.mc-head h3 {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 650;
+}
+
+.mc-status {
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.mc-status.tone-live {
+  color: var(--pass);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.mc-status.tone-delayed {
+  color: var(--hold);
+  border-color: rgba(234, 179, 8, 0.4);
+}
+
+.mc-status.tone-stale,
+.mc-status.tone-unavailable {
+  color: var(--blocked);
+  border-color: rgba(249, 115, 22, 0.4);
+}
+
+.mc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.mc-k {
+  font-size: var(--fs-xs);
+}
+
+.mc-v {
+  font-size: var(--fs-sm);
+  font-weight: 650;
+}
+
+.mc-sub {
+  font-size: 0.68rem;
+  margin-top: 0.15rem;
+}
+
+.mc-note {
+  margin: 0.45rem 0 0;
+  font-size: 0.68rem;
+}
+
+.mc-details {
+  margin-top: 0.35rem;
+  font-size: var(--fs-xs);
+}
+
+.mc-detail-list {
+  margin: 0.35rem 0 0;
+  padding-left: 1rem;
+}
+
+@media (max-width: 720px) {
+  .mc-grid {
+    grid-template-columns: 1fr;
   }
 }
 

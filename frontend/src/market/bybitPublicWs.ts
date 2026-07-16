@@ -17,6 +17,7 @@ function num(v: unknown): number | undefined {
 /**
  * Bybit Mainnet public linear ticker WebSocket.
  * Auto-reconnect with exponential backoff + jitter. No API key.
+ * Preserves OI / funding / volume when present in ticker deltas.
  */
 export class BybitPublicTickerSocket {
   private ws: WebSocket | null = null;
@@ -116,6 +117,12 @@ export class BybitPublicTickerSocket {
             const p = num(raw.price24hPcnt);
             return p == null ? undefined : p * 100;
           })(),
+          openInterest: num(raw.openInterest),
+          openInterestValue: num(raw.openInterestValue),
+          fundingRate: num(raw.fundingRate),
+          nextFundingTime: num(raw.nextFundingTime),
+          volume24h: num(raw.volume24h),
+          turnover24h: num(raw.turnover24h),
           exchangeTimestamp,
           receivedAt,
         });

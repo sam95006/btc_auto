@@ -1,6 +1,7 @@
 import { fetchMainnetRestSnapshot } from "./bybitPublicRest";
 import { BybitPublicTickerSocket } from "./bybitPublicWs";
 import { ageToStatus } from "./freshness";
+import { sharedOiHistory } from "./oiHistory";
 import type { LiveMarketPrice, LiveSymbol, MarketConnectionStatus } from "./types";
 import { LIVE_SYMBOLS } from "./types";
 
@@ -12,6 +13,27 @@ export type LiveMarketSnapshot = {
 };
 
 type Listener = (snap: LiveMarketSnapshot) => void;
+
+function mergeTicker(
+  prev: LiveMarketPrice | undefined,
+  next: Omit<LiveMarketPrice, "ageMs" | "connectionStatus">,
+): Omit<LiveMarketPrice, "ageMs" | "connectionStatus"> {
+  // WS deltas may omit OI/funding/volume — never wipe prior values with undefined.
+  return {
+    ...next,
+    markPrice: next.markPrice ?? prev?.markPrice,
+    indexPrice: next.indexPrice ?? prev?.indexPrice,
+    bidPrice: next.bidPrice ?? prev?.bidPrice,
+    askPrice: next.askPrice ?? prev?.askPrice,
+    change24hPct: next.change24hPct ?? prev?.change24hPct,
+    openInterest: next.openInterest ?? prev?.openInterest,
+    openInterestValue: next.openInterestValue ?? prev?.openInterestValue,
+    fundingRate: next.fundingRate ?? prev?.fundingRate,
+    nextFundingTime: next.nextFundingTime ?? prev?.nextFundingTime,
+    volume24h: next.volume24h ?? prev?.volume24h,
+    turnover24h: next.turnover24h ?? prev?.turnover24h,
+  };
+}
 
 /**
  * Singleton Mainnet public market feed.
@@ -88,7 +110,6 @@ export class LiveMarketFeed {
     const now = Date.now();
     const ages = [...this.prices.values()].map((p) => now - p.receivedAt);
     const worst = Math.max(...ages);
-    // If socket is down and data is old, prefer explicit non-LIVE states.
     if (!this.wsOpen && worst > 15_000 && !this.restFallback) {
       return ageToStatus(worst, { disconnected: true });
     }
@@ -98,20 +119,46 @@ export class LiveMarketFeed {
     });
   }
 
+  private rememberOi(row: LiveMarketPrice) {
+    sharedOiHistory.push(row.symbol, row.openInterest, row.receivedAt);
+  }
+
   private async bootstrapRest(asFallback = false) {
     try {
       const rows = await fetchMainnetRestSnapshot(LIVE_SYMBOLS);
       const now = Date.now();
       for (const row of rows) {
         const existing = this.prices.get(row.symbol);
-        // Do not let REST overwrite a fresher WS tick.
-        if (existing && existing.receivedAt > now - 1500 && this.wsOpen) continue;
-        this.prices.set(row.symbol, {
+        if (existing && existing.receivedAt > now - 1500 && this.wsOpen) {
+          const merged = mergeTicker(existing, {
+            ...existing,
+            openInterest: row.openInterest ?? existing.openInterest,
+            openInterestValue: row.openInterestValue ?? existing.openInterestValue,
+            fundingRate: row.fundingRate ?? existing.fundingRate,
+            nextFundingTime: row.nextFundingTime ?? existing.nextFundingTime,
+            volume24h: row.volume24h ?? existing.volume24h,
+            turnover24h: row.turnover24h ?? existing.turnover24h,
+            receivedAt: existing.receivedAt,
+          });
+          const ageMs = Math.max(0, now - existing.receivedAt);
+          const next: LiveMarketPrice = {
+            ...merged,
+            receivedAt: existing.receivedAt,
+            ageMs,
+            connectionStatus: existing.connectionStatus,
+          };
+          this.prices.set(row.symbol, next);
+          this.rememberOi(next);
+          continue;
+        }
+        const next: LiveMarketPrice = {
           ...row,
           receivedAt: now,
           ageMs: 0,
           connectionStatus: ageToStatus(0, { restFallback: asFallback || !this.wsOpen }),
-        });
+        };
+        this.prices.set(row.symbol, next);
+        this.rememberOi(next);
       }
       this.restFallback = !this.wsOpen;
       this.transport = this.wsOpen ? "websocket" : "rest";
@@ -131,12 +178,16 @@ export class LiveMarketFeed {
     this.reconnecting = false;
     this.restFallback = false;
     this.transport = "websocket";
-    const ageMs = Math.max(0, Date.now() - partial.receivedAt);
-    this.prices.set(partial.symbol, {
-      ...partial,
+    const prev = this.prices.get(partial.symbol);
+    const merged = mergeTicker(prev, partial);
+    const ageMs = Math.max(0, Date.now() - merged.receivedAt);
+    const next: LiveMarketPrice = {
+      ...merged,
       ageMs,
       connectionStatus: ageToStatus(ageMs),
-    });
+    };
+    this.prices.set(partial.symbol, next);
+    this.rememberOi(next);
     this.emit();
   }
 

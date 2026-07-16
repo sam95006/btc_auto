@@ -118,5 +118,19 @@ After `dd0ac05`, live still felt status-heavy. Polish pass:
 - `/api/market/tickers` vs official Bybit Mainnet: **3-round PASS** (≤ max(2 ticks, 5 bps)); `Cache-Control: no-store`
 - Browser Playwright on `/overview`: WS `wss://stream.bybit.com/v5/public/linear` connected; BTC/ETH/SOL lastPrice updates; no hardcoded 64,943/1,882/148.2 as ticker; Current vs Signal separated; mobile gauge `order:-1`; no overflow; FAB only; gate `<details>` collapsed
 - Freshness: LIVE/DELAYED **browser live verified**; STALE/RECONNECTING/REST_FALLBACK/DISCONNECTED **automated state transition verified**; recovery to LIVE **browser live verified**
-- Verdict: **PASS — MVP-22A LIVE MARKET DATA DEPLOYED AND VERIFIED**
+## 19. MVP-22B — Derivatives Market Context Layer
+
+**Audit:** Bybit Mainnet linear tickers already include `openInterest`, `openInterestValue`, `fundingRate`, `nextFundingTime`, `volume24h`, `turnover24h`. Gap was that REST proxy / WS parser / TS types dropped them; UI had no presentation.
+
+**Fix (no new private API):**
+- Preserve derivative fields through `/api/market/tickers` + WS ticker merge (never wipe missing delta fields)
+- In-memory OI 1m/5m/15m rolling samples (`Collecting` until window ready)
+- Funding % conversion via single `FUNDING_CONFIG` (decimal → percent)
+- Compact `Market Context` under Focus ETH (OI · Funding · Volume)
+- Evidence labels supportive/neutral/conflicting/unavailable — **not** in recommendation scoring
+- Units: OI coin vs USDT value; Volume coin vs Turnover USDT separated
+
+**Checks:** `check_nexus_ui_mvp22b_safety.py` · `verify_mvp22b_derivatives_context.py` · typecheck · build · static sync
+
+**Redeploy:** not performed this round.
 

@@ -10,6 +10,12 @@ type RestTickerRow = {
   bidPrice?: number | null;
   askPrice?: number | null;
   change24hPct?: number | null;
+  openInterest?: number | null;
+  openInterestValue?: number | null;
+  fundingRate?: number | null;
+  nextFundingTime?: number | null;
+  volume24h?: number | null;
+  turnover24h?: number | null;
   exchangeTimestamp?: number | null;
 };
 
@@ -18,6 +24,10 @@ type RestResponse = {
   tickers?: RestTickerRow[];
   error?: string;
 };
+
+function opt(n: number | null | undefined): number | undefined {
+  return n == null || !Number.isFinite(n) ? undefined : n;
+}
 
 /** Bootstrap via NEXUS read-only proxy → Bybit Mainnet public REST. */
 export async function fetchMainnetRestSnapshot(
@@ -51,11 +61,17 @@ export async function fetchMainnetRestSnapshot(
       source: "BYBIT_MAINNET_LINEAR",
       priceType: "LAST",
       lastPrice: row.lastPrice,
-      markPrice: row.markPrice ?? undefined,
-      indexPrice: row.indexPrice ?? undefined,
-      bidPrice: row.bidPrice ?? undefined,
-      askPrice: row.askPrice ?? undefined,
-      change24hPct: row.change24hPct ?? undefined,
+      markPrice: opt(row.markPrice),
+      indexPrice: opt(row.indexPrice),
+      bidPrice: opt(row.bidPrice),
+      askPrice: opt(row.askPrice),
+      change24hPct: opt(row.change24hPct),
+      openInterest: opt(row.openInterest),
+      openInterestValue: opt(row.openInterestValue),
+      fundingRate: opt(row.fundingRate),
+      nextFundingTime: opt(row.nextFundingTime),
+      volume24h: opt(row.volume24h),
+      turnover24h: opt(row.turnover24h),
       exchangeTimestamp,
       receivedAt,
       ageMs,
