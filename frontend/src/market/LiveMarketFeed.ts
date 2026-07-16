@@ -2,6 +2,8 @@ import { fetchMainnetRestSnapshot } from "./bybitPublicRest";
 import { BybitPublicTickerSocket } from "./bybitPublicWs";
 import { ageToStatus } from "./freshness";
 import { sharedOiHistory } from "./oiHistory";
+import { sharedPriceHistory } from "./priceHistory";
+import { sharedVolumeHistory } from "./volumeHistory";
 import type { LiveMarketPrice, LiveSymbol, MarketConnectionStatus } from "./types";
 import { LIVE_SYMBOLS } from "./types";
 
@@ -119,8 +121,10 @@ export class LiveMarketFeed {
     });
   }
 
-  private rememberOi(row: LiveMarketPrice) {
+  private rememberRolling(row: LiveMarketPrice) {
     sharedOiHistory.push(row.symbol, row.openInterest, row.receivedAt);
+    sharedPriceHistory.push(row.symbol, row.lastPrice, row.receivedAt);
+    sharedVolumeHistory.push(row.symbol, row.turnover24h, row.receivedAt);
   }
 
   private async bootstrapRest(asFallback = false) {
@@ -148,7 +152,7 @@ export class LiveMarketFeed {
             connectionStatus: existing.connectionStatus,
           };
           this.prices.set(row.symbol, next);
-          this.rememberOi(next);
+          this.rememberRolling(next);
           continue;
         }
         const next: LiveMarketPrice = {
@@ -158,7 +162,7 @@ export class LiveMarketFeed {
           connectionStatus: ageToStatus(0, { restFallback: asFallback || !this.wsOpen }),
         };
         this.prices.set(row.symbol, next);
-        this.rememberOi(next);
+        this.rememberRolling(next);
       }
       this.restFallback = !this.wsOpen;
       this.transport = this.wsOpen ? "websocket" : "rest";
@@ -187,7 +191,7 @@ export class LiveMarketFeed {
       connectionStatus: ageToStatus(ageMs),
     };
     this.prices.set(partial.symbol, next);
-    this.rememberOi(next);
+    this.rememberRolling(next);
     this.emit();
   }
 

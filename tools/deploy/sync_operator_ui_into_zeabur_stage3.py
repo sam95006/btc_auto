@@ -21,7 +21,8 @@ DESTS = (
     ROOT / "deploy" / "zeabur_stage3_demo_learning" / "static" / "operator_ui",
     ROOT / "static" / "operator_ui",  # repo-root Flask ROOT when tools/research is used locally
 )
-MARKER = "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT"
+MARKER = "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR"
+MVP22B_MARKER = "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT"
 MVP22A_MARKER = "NEXUS_UI_MVP22A_LIVE_MARKET_DATA"
 LEGACY_MARKER = "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60"
 
@@ -31,11 +32,12 @@ def _sync_one(dest: Path) -> dict:
         shutil.rmtree(dest)
     shutil.copytree(SRC, dest)
     blob = "\n".join(p.read_text(encoding="utf-8", errors="ignore") for p in dest.rglob("*") if p.is_file())
-    found = MARKER in blob or MVP22A_MARKER in blob or LEGACY_MARKER in blob
+    found = MARKER in blob or MVP22B_MARKER in blob or MVP22A_MARKER in blob or LEGACY_MARKER in blob
     meta = {
         "source": "frontend/dist",
         "dest": str(dest.relative_to(ROOT)).replace("\\", "/"),
         "marker": MARKER,
+        "mvp22b_marker": MVP22B_MARKER,
         "mvp22a_marker": MVP22A_MARKER,
         "legacy_marker": LEGACY_MARKER,
         "marker_found": found,

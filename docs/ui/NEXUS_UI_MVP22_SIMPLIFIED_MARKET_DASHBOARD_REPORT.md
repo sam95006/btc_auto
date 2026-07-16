@@ -155,3 +155,24 @@ After `dd0ac05`, live still felt status-heavy. Polish pass:
 
 **Safety:** mvp22 / mvp22a / mvp22b PASS · typecheck PASS · build PASS · operator UI static sync PASS · forbidden trade/ARM/billing/4.19 paths absent
 
+## 21. MVP-22C — Read-only Market Anomaly Radar (code)
+
+**Scope:** detect + rank + explain market anomalies from existing Mainnet public feed. **No** recommendation scoring change · **no** redeploy this round.
+
+**Data:** reuses live ticker fields + in-memory price/OI/volume rolling buffers (`Collecting` until window ready). No DB · no private API.
+
+**Anomaly types:** PRICE_ACCELERATION · OI_SURGE/DROP · PRICE_OI_DIVERGENCE · FUNDING_EXTREME · VOLUME_EXPANSION · SPREAD_WIDENING · MULTI_FACTOR_ANOMALY.
+
+**Lifecycle:** dedup by symbol+type · NEW→ACTIVE→COOLING→RESOLVED · cooldown · no per-tick spam.
+
+**UI:** `/anomalies` full list + filters; homepage Decision Alerts shows up to 3 **Market anomaly** summaries (separate from research alerts).
+
+**Thresholds:** centralized `ANOMALY_CONFIG` · UI: *Research threshold — not a trade trigger* · score ranks attention only.
+
+**Build (local):** typecheck PASS · asset `index-CpBPYA6d.js` · marker `NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR`.
+
+**MVP-22B duration follow-up:** fresh Live page load → all OI windows **Collecting** (in-memory reset expected). Prior soak verified **1m** after ~75s; **5m/15m** remain **duration_pending** until uninterrupted session — no code change required.
+
+**Verdict (code):** `PASS — MVP-22C MARKET ANOMALY RADAR VERIFIED IN CODE`  
+**remaining_issues:** redeploy and live anomaly sign-off pending
+

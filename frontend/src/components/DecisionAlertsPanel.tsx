@@ -1,6 +1,7 @@
 import { DECISION_ALERTS } from "../demo/marketDashboard";
 import { formatUsd } from "../market/freshness";
 import { useLivePrice } from "../market/useLiveMarketFeed";
+import { MarketAnomalyAlertSummary } from "./MarketAnomalyAlertSummary";
 import { ReadOnlyNavChip } from "./ReadOnlyNavChip";
 
 const ZONES = [
@@ -46,6 +47,8 @@ export function DecisionAlertsPanel() {
   return (
     <section id="decision-alerts" className="decision-alerts-panel">
       <h2 className="section-title">Decision Alerts</h2>
+      <MarketAnomalyAlertSummary />
+      <p className="muted alerts-section-label">Research decision alerts (existing)</p>
       <div className="alert-zones">
         {ZONES.map((zone) => {
           const rows = DECISION_ALERTS.filter((a) => a.zone === zone);

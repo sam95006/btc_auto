@@ -4,6 +4,7 @@ type NavItem = { to: string; label: string; short: string; icon: string };
 
 const PRIMARY: NavItem[] = [
   { to: "/overview", label: "Market Dashboard", short: "Market", icon: "▣" },
+  { to: "/anomalies", label: "Anomaly Radar", short: "Anomalies", icon: "◉" },
   { to: "/evidence", label: "Evidence Center", short: "Evidence", icon: "▤" },
   { to: "/risk-evidence", label: "Risk Center", short: "Risk", icon: "◈" },
   { to: "/provider-shadow", label: "Provider Intel", short: "Provider", icon: "◇" },
