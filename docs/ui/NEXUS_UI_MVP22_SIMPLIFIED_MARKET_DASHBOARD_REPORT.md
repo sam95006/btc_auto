@@ -67,7 +67,7 @@ No Buy/Sell/Execute/Quick Order/Run 30m/60m/Start 4.19/trade routes/billing/acco
 
 - `check_nexus_ui_mvp22_safety.py` → **PASS** (109 files)
 - `npm run typecheck` → **PASS**
-- `npm run build` → **PASS** (`index-DtVt2AEO.js` / `index-BJsuFuLr.css`)
+- `npm run build` → **PASS** (`index-DlS-3yea.js` / `index-DXC1RwAR.css` after polish)
 - `sync_operator_ui_into_zeabur_stage3.py` → **PASS** (`static/operator_ui` + deploy package; marker retained)
 
 ## 12–14. HOLD / trading / SaaS
@@ -88,3 +88,13 @@ After `dd0ac05`, live still felt status-heavy. Polish pass:
 - Removed board footnotes / secondary link row
 - Gate checklists collapsed under `<details>`
 - Mobile: gauge before watchlists
+
+## 17. Redeploy + live visual sign-off (2026-07-16)
+
+- Source of truth: `9aa4ffc` on `stage3-demo-learning` (includes `dd0ac05`)
+- Zeabur deployment: `commitSHA=9aa4ffc…` · `status=RUNNING` · ref `stage3-demo-learning`
+- Live asset: `/assets/index-DlS-3yea.js` (+ `index-DXC1RwAR.css`)
+- Service restart refreshed containers; `/health` ok; `/api/nexus/ui-build` ok; root=`operator_ui`
+- Visual markers PASS: ticker → single Status → Focus ETH → Long/Short + Gauge → Alerts; no HOLD essay wall; gate in optional details; no permanent AI rail; FAB present; Evidence/Risk/Provider routes retained
+- Backend HOLD · UI read-only · no 30m/60m · Stage 4.19 not started
+- Verdict: **PASS — MVP-22 9aa4ffc LIVE AND VISUALLY SIGNED OFF**
