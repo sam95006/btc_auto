@@ -59,7 +59,7 @@ export const ANOMALY_TYPE_LABEL: Record<MarketAnomalyType, string> = {
   OI_DROP: "OI drop",
   PRICE_OI_DIVERGENCE: "Price / OI divergence",
   FUNDING_EXTREME: "Funding extreme",
-  VOLUME_EXPANSION: "Volume expansion",
+  VOLUME_EXPANSION: "Turnover expansion",
   SPREAD_WIDENING: "Spread widening",
   MULTI_FACTOR_ANOMALY: "Multi-factor anomaly",
 };

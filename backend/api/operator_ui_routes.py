@@ -8,11 +8,13 @@ from pathlib import Path
 
 from flask import abort, jsonify, send_from_directory
 
-OPERATOR_BUILD_MARKER = "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT"
+OPERATOR_BUILD_MARKER = "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR"
+MVP22B_BUILD_MARKER = "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT"
 MVP22A_BUILD_MARKER = "NEXUS_UI_MVP22A_LIVE_MARKET_DATA"
 LEGACY_BUILD_MARKER = "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60"
 _SPA_PREFIXES = (
     "overview",
+    "anomalies",
     "fleets",
     "signals",
     "risk-evidence",
@@ -51,10 +53,11 @@ def register_operator_ui_routes(app) -> None:
             "operator_ui_ready": operator_ui_ready(app),
             "build_marker": OPERATOR_BUILD_MARKER,
             "buildMarker": OPERATOR_BUILD_MARKER,
+            "mvp22b_build_marker": MVP22B_BUILD_MARKER,
             "mvp22a_build_marker": MVP22A_BUILD_MARKER,
             "legacy_build_marker": LEGACY_BUILD_MARKER,
             "ui_style": "Live Market Intelligence",
-            "ui_version": "MVP-22B",
+            "ui_version": "MVP-22C",
             "public_name": "NEXUS — Live Market Intelligence",
             "legacy_nexus_path": "/nexus",
             "served_by": "nexus-web",
