@@ -1,7 +1,8 @@
 {
   "source": "frontend/dist",
   "dest": "deploy/zeabur_stage3_demo_learning/static/operator_ui",
-  "marker": "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60",
+  "marker": "NEXUS_UI_MVP22A_LIVE_MARKET_DATA",
+  "legacy_marker": "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60",
   "marker_found": true,
   "file_count": 3
 }

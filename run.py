@@ -13,6 +13,7 @@ from backend.api.operator_ui_routes import (
     operator_ui_ready,
     register_operator_ui_routes,
 )
+from backend.api.market_public_routes import register_market_public_routes
 from backend.api.server import register_nexus_routes
 from backend.core.env_loader import load_env_file
 from backend.runtime.single_instance_guard import SingleInstanceError, SingleInstanceGuard
@@ -34,6 +35,7 @@ except TradingModeSafetyError as exc:
 
 app = Flask(__name__)
 register_nexus_routes(app)
+register_market_public_routes(app)
 # UI-DEPLOY-2: Market Intelligence SPA (static/operator_ui) — register before / catch-alls finish
 register_operator_ui_routes(app)
 
@@ -55,6 +57,9 @@ def _nexus_static_cache_control(response):
         response.headers["Cache-Control"] = "no-cache, must-revalidate"
     if request.path.startswith("/assets/") or request.path in {"/", "/overview"}:
         response.headers["Cache-Control"] = "no-cache, must-revalidate"
+    if request.path.startswith("/api/market/"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
     return response
 _single_instance = None
 

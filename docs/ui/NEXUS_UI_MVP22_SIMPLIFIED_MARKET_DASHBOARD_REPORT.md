@@ -95,6 +95,22 @@ After `dd0ac05`, live still felt status-heavy. Polish pass:
 - Zeabur deployment: `commitSHA=9aa4ffc…` · `status=RUNNING` · ref `stage3-demo-learning`
 - Live asset: `/assets/index-DlS-3yea.js` (+ `index-DXC1RwAR.css`)
 - Service restart refreshed containers; `/health` ok; `/api/nexus/ui-build` ok; root=`operator_ui`
-- Visual markers PASS: ticker → single Status → Focus ETH → Long/Short + Gauge → Alerts; no HOLD essay wall; gate in optional details; no permanent AI rail; FAB present; Evidence/Risk/Provider routes retained
-- Backend HOLD · UI read-only · no 30m/60m · Stage 4.19 not started
+- Visual markers PASS: ticker → single Status → Focus ETH → Long/Short + Gauge → Alerts
 - Verdict: **PASS — MVP-22 9aa4ffc LIVE AND VISUALLY SIGNED OFF**
+
+## 18. MVP-22A — Live Market Data Truth Layer
+
+**Audit root cause:** Homepage BTC/ETH/SOL prices were static fixtures in `frontend/src/demo/marketDashboard.ts` (hardcoded 64,943 / 1,882 / 148.2). No REST, no WebSocket, no Mainnet feed. Current price and signal reference were the same demo numbers.
+
+**Fix:**
+- Display environment: Bybit **Mainnet public** linear lastPrice (REST bootstrap via `/api/market/tickers` proxy + browser WS `wss://stream.bybit.com/v5/public/linear`)
+- Research/execution environment unchanged: HOLD / read-only / no Stage 4.19 / no private API
+- Types: `LiveMarketPrice` vs `SignalReference` separated
+- Freshness: LIVE / DELAYED / STALE / RECONNECTING / REST_FALLBACK / DISCONNECTED
+- Cache: `/api/market/*` → `no-store`; no service worker; no localStorage market source
+- Version: public name **NEXUS — Live Market Intelligence**; ui-build **MVP-22A** (`NEXUS_UI_MVP22A_LIVE_MARKET_DATA`) with legacy marker retained for sync compatibility
+
+**Checks:** `check_nexus_ui_mvp22a_safety.py` · `verify_mvp22a_live_market_truth.py` · typecheck · build · static sync
+
+**Redeploy:** not performed this round (pending operator request).
+

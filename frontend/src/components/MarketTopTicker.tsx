@@ -1,10 +1,17 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { TICKER_QUOTES } from "../demo/marketDashboard";
+import { formatAge, formatUsd } from "../market/freshness";
+import { useLiveMarketFeed } from "../market/useLiveMarketFeed";
+import type { LiveSymbol } from "../market/types";
+import { shortSymbol } from "../market/types";
 
-/** Market-first top header — prices dominate, status is compact (MVP-22). */
+const ORDER: LiveSymbol[] = ["BTCUSDT", "ETHUSDT", "SOLUSDT"];
+
+/** Market-first top header — Mainnet lastPrice + freshness (MVP-22A). */
 export function MarketTopTicker() {
   const [q, setQ] = useState("");
+  const feed = useLiveMarketFeed();
+
   return (
     <header className="market-top-ticker" role="banner">
       <div className="mtt-left">
@@ -13,16 +20,27 @@ export function MarketTopTicker() {
         </Link>
       </div>
       <div className="mtt-center">
-        {TICKER_QUOTES.map((t) => (
-          <span key={t.symbol} className="mtt-quote">
-            <strong>{t.symbol}</strong>
-            <span className="mono mtt-price">{t.price}</span>
-            <span className={t.changePct >= 0 ? "price-up" : "price-down"}>
-              {t.changePct >= 0 ? "+" : ""}
-              {t.changePct.toFixed(1)}%
+        {ORDER.map((sym) => {
+          const p = feed.bySymbol[sym];
+          const label = shortSymbol(sym);
+          const ch = p?.change24hPct;
+          return (
+            <span key={sym} className="mtt-quote" title={p ? `${p.connectionStatus} · ${p.source}` : "Waiting"}>
+              <strong>{label}</strong>
+              <span className="mono mtt-price">{formatUsd(p?.lastPrice)}</span>
+              <span
+                className={
+                  ch == null ? "muted" : ch >= 0 ? "price-up" : "price-down"
+                }
+              >
+                {ch == null ? "—" : `${ch >= 0 ? "+" : ""}${ch.toFixed(2)}%`}
+              </span>
+              <span className={`mtt-fresh tone-${(p?.connectionStatus || "DISCONNECTED").toLowerCase()}`}>
+                {p?.connectionStatus || "…"}
+              </span>
             </span>
-          </span>
-        ))}
+          );
+        })}
         <span className="mtt-status-plain">
           Backend <strong>HOLD</strong>
         </span>
@@ -34,6 +52,10 @@ export function MarketTopTicker() {
         </span>
       </div>
       <div className="mtt-right">
+        <span className="mtt-feed-chip muted" title="Feed age">
+          {feed.feedStatus}
+          {feed.transport !== "none" ? ` · ${formatAge(Date.now() - feed.updatedAt)}` : ""}
+        </span>
         <label className="mtt-search">
           <span className="sr-only">Search</span>
           <input

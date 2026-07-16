@@ -1,4 +1,6 @@
 import { DECISION_ALERTS } from "../demo/marketDashboard";
+import { formatUsd } from "../market/freshness";
+import { useLivePrice } from "../market/useLiveMarketFeed";
 import { ReadOnlyNavChip } from "./ReadOnlyNavChip";
 
 const ZONES = [
@@ -8,7 +10,38 @@ const ZONES = [
   "Provider Divergence",
 ] as const;
 
-/** Compact decision alerts under the boards (MVP-22). */
+function AlertItem({
+  a,
+}: {
+  a: (typeof DECISION_ALERTS)[number];
+}) {
+  const live = useLivePrice(a.symbol);
+  const current = live?.lastPrice;
+  const trigger = a.triggerPrice;
+  const distance =
+    current != null && trigger != null && trigger !== 0
+      ? ((current - trigger) / trigger) * 100
+      : null;
+
+  return (
+    <li>
+      <div className="alert-head">
+        <strong className="mono">{a.symbol}</strong>
+        <span className="alert-type">{a.alertType}</span>
+      </div>
+      <p className="muted">{a.meaning}</p>
+      <div className="alert-meta mono muted">
+        Trigger {a.triggerTime ? new Date(a.triggerTime).toISOString() : "—"} · TrigPx{" "}
+        {formatUsd(trigger)} · Now {formatUsd(current)} · Dist{" "}
+        {distance == null ? "—" : `${distance >= 0 ? "+" : ""}${distance.toFixed(2)}%`} ·{" "}
+        {a.valid ? "Valid" : "Expired"}
+      </div>
+      <ReadOnlyNavChip label={a.action} to={a.actionTo} />
+    </li>
+  );
+}
+
+/** Compact decision alerts under the boards (MVP-22 / 22A). */
 export function DecisionAlertsPanel() {
   return (
     <section id="decision-alerts" className="decision-alerts-panel">
@@ -24,14 +57,7 @@ export function DecisionAlertsPanel() {
               ) : (
                 <ul className="alert-list">
                   {rows.map((a) => (
-                    <li key={a.id}>
-                      <div className="alert-head">
-                        <strong className="mono">{a.symbol}</strong>
-                        <span className="alert-type">{a.alertType}</span>
-                      </div>
-                      <p className="muted">{a.meaning}</p>
-                      <ReadOnlyNavChip label={a.action} to={a.actionTo} />
-                    </li>
+                    <AlertItem key={a.id} a={a} />
                   ))}
                 </ul>
               )}

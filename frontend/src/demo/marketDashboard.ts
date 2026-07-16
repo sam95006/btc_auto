@@ -1,20 +1,24 @@
 /**
- * MVP-22 simplified market dashboard demo fixtures.
- * READ ONLY · NOT INVESTMENT ADVICE · DEMO DATA · no order controls
+ * MVP-22 / MVP-22A research signal fixtures (NOT live market prices).
+ * Live lastPrice comes from BYBIT_MAINNET_LINEAR via LiveMarketFeed.
+ * READ ONLY · NOT INVESTMENT ADVICE · no order controls
  */
 
-export type TickerQuote = {
-  symbol: string;
-  price: string;
-  changePct: number;
-};
+import type { SignalReference } from "../market/types";
 
 export type WatchRow = {
   symbol: string;
+  /** @deprecated Prefer signalReferencePrice — kept for non-live symbols like PEPE */
   price: string;
+  signalReferencePrice: number | null;
   aiScore: string;
   changePct: number | null;
   status: "HOLD" | "WAIT" | "MONITOR";
+  recommendation: "LONG" | "SHORT" | "NEUTRAL" | "HOLD" | "WAIT" | "MONITOR";
+  confidence: string;
+  timeframe: string;
+  analysisTimestamp: number;
+  invalidationLevel: string;
   next: "View Evidence" | "View Gate";
   nextTo: string;
 };
@@ -25,50 +29,119 @@ export type DecisionAlert = {
   symbol: string;
   alertType: string;
   meaning: string;
+  triggerPrice: number | null;
+  triggerTime: number | null;
+  valid: boolean;
   action: "View Evidence" | "View Gate" | "View Risk" | "View Provider" | "View Checklist";
   actionTo: string;
 };
 
-export const TICKER_QUOTES: TickerQuote[] = [
-  { symbol: "BTC", price: "64,943", changePct: 3.7 },
-  { symbol: "ETH", price: "1,882", changePct: 5.5 },
-  { symbol: "SOL", price: "148.2", changePct: 1.1 },
-];
+/** Static research signal references — never overwrite with live lastPrice. */
+export const SIGNAL_REFERENCES: Record<string, SignalReference> = {
+  BTC: {
+    symbol: "BTCUSDT",
+    displaySymbol: "BTC",
+    referencePrice: 64943,
+    analysisTimestamp: Date.parse("2026-07-15T00:00:00Z"),
+    timeframe: "research",
+    recommendation: "HOLD",
+    confidence: "Prior evidence",
+    invalidationLevel: "Gate / confirmation incomplete",
+    aiScore: "Prior evidence",
+  },
+  ETH: {
+    symbol: "ETHUSDT",
+    displaySymbol: "ETH",
+    referencePrice: 1882,
+    analysisTimestamp: Date.parse("2026-07-15T00:00:00Z"),
+    timeframe: "research",
+    recommendation: "WAIT",
+    confidence: "Watch gate not ready",
+    invalidationLevel: "ETH watch not reappeared",
+    aiScore: "Watch gate not ready",
+  },
+  SOL: {
+    symbol: "SOLUSDT",
+    displaySymbol: "SOL",
+    referencePrice: 148.2,
+    analysisTimestamp: Date.parse("2026-07-15T00:00:00Z"),
+    timeframe: "research",
+    recommendation: "MONITOR",
+    confidence: "Monitor",
+    invalidationLevel: "No active thesis",
+    aiScore: "Monitor",
+  },
+  PEPE: {
+    symbol: "PEPEUSDT",
+    displaySymbol: "PEPE",
+    referencePrice: 0.000012,
+    analysisTimestamp: Date.parse("2026-07-15T00:00:00Z"),
+    timeframe: "research",
+    recommendation: "MONITOR",
+    confidence: "Monitor",
+    invalidationLevel: "No live feed",
+    aiScore: "Monitor",
+  },
+};
 
 export const LONG_WATCHLIST: WatchRow[] = [
   {
     symbol: "BTC",
     price: "64,943",
-    aiScore: "Prior evidence",
-    changePct: 3.7,
+    signalReferencePrice: SIGNAL_REFERENCES.BTC.referencePrice,
+    aiScore: SIGNAL_REFERENCES.BTC.aiScore!,
+    changePct: null,
     status: "HOLD",
+    recommendation: "HOLD",
+    confidence: "Prior evidence",
+    timeframe: "research",
+    analysisTimestamp: SIGNAL_REFERENCES.BTC.analysisTimestamp,
+    invalidationLevel: SIGNAL_REFERENCES.BTC.invalidationLevel!,
     next: "View Evidence",
     nextTo: "/evidence?q=BTC",
   },
   {
     symbol: "ETH",
     price: "1,882",
-    aiScore: "Watch gate not ready",
-    changePct: 5.5,
+    signalReferencePrice: SIGNAL_REFERENCES.ETH.referencePrice,
+    aiScore: SIGNAL_REFERENCES.ETH.aiScore!,
+    changePct: null,
     status: "WAIT",
+    recommendation: "WAIT",
+    confidence: "Watch gate not ready",
+    timeframe: "research",
+    analysisTimestamp: SIGNAL_REFERENCES.ETH.analysisTimestamp,
+    invalidationLevel: SIGNAL_REFERENCES.ETH.invalidationLevel!,
     next: "View Gate",
     nextTo: "/overview#checklist-eth-watch-reappearance",
   },
   {
     symbol: "SOL",
     price: "148.2",
-    aiScore: "Monitor",
-    changePct: 1.1,
+    signalReferencePrice: SIGNAL_REFERENCES.SOL.referencePrice,
+    aiScore: SIGNAL_REFERENCES.SOL.aiScore!,
+    changePct: null,
     status: "MONITOR",
+    recommendation: "MONITOR",
+    confidence: "Monitor",
+    timeframe: "research",
+    analysisTimestamp: SIGNAL_REFERENCES.SOL.analysisTimestamp,
+    invalidationLevel: SIGNAL_REFERENCES.SOL.invalidationLevel!,
     next: "View Evidence",
     nextTo: "/evidence#doc-summaries",
   },
   {
     symbol: "PEPE",
     price: "0.000012",
+    signalReferencePrice: SIGNAL_REFERENCES.PEPE.referencePrice,
     aiScore: "Monitor",
-    changePct: -2.4,
+    changePct: null,
     status: "MONITOR",
+    recommendation: "MONITOR",
+    confidence: "Monitor",
+    timeframe: "research",
+    analysisTimestamp: SIGNAL_REFERENCES.PEPE.analysisTimestamp,
+    invalidationLevel: "No live feed",
     next: "View Evidence",
     nextTo: "/risk-evidence#why-safe",
   },
@@ -89,6 +162,9 @@ export const DECISION_ALERTS: DecisionAlert[] = [
     symbol: "ETH",
     alertType: "Gate Waiting",
     meaning: "ETH watch condition has not reappeared.",
+    triggerPrice: SIGNAL_REFERENCES.ETH.referencePrice,
+    triggerTime: SIGNAL_REFERENCES.ETH.analysisTimestamp,
+    valid: true,
     action: "View Gate",
     actionTo: "/overview#checklist-eth-watch-reappearance",
   },
@@ -98,6 +174,9 @@ export const DECISION_ALERTS: DecisionAlert[] = [
     symbol: "4.19",
     alertType: "Blocked",
     meaning: "Needs BTC + ETH actual graduation.",
+    triggerPrice: null,
+    triggerTime: null,
+    valid: true,
     action: "View Checklist",
     actionTo: "/overview#checklist-stage-419-dossier",
   },
@@ -107,6 +186,9 @@ export const DECISION_ALERTS: DecisionAlert[] = [
     symbol: "BTC",
     alertType: "Prior only",
     meaning: "Prior evidence only; not a live breakout.",
+    triggerPrice: SIGNAL_REFERENCES.BTC.referencePrice,
+    triggerTime: SIGNAL_REFERENCES.BTC.analysisTimestamp,
+    valid: true,
     action: "View Evidence",
     actionTo: "/evidence?q=BTC",
   },
@@ -116,6 +198,9 @@ export const DECISION_ALERTS: DecisionAlert[] = [
     symbol: "BTC",
     alertType: "Research",
     meaning: "Provider history is research-only.",
+    triggerPrice: SIGNAL_REFERENCES.BTC.referencePrice,
+    triggerTime: SIGNAL_REFERENCES.BTC.analysisTimestamp,
+    valid: true,
     action: "View Provider",
     actionTo: "/provider-shadow#provider-explain",
   },
@@ -125,6 +210,9 @@ export const DECISION_ALERTS: DecisionAlert[] = [
     symbol: "—",
     alertType: "None",
     meaning: "No confirmed breakout.",
+    triggerPrice: null,
+    triggerTime: null,
+    valid: false,
     action: "View Risk",
     actionTo: "/risk-evidence#why-safe",
   },
@@ -157,3 +245,10 @@ export const FLOATING_AI_PROMPTS = [
     answer: "Blocked until real BTC + ETH graduation. No start control in UI.",
   },
 ] as const;
+
+/** Legacy name kept so older imports do not break — NOT live prices. */
+export const TICKER_QUOTES = [
+  { symbol: "BTC", price: "signal-ref-only", changePct: 0 },
+  { symbol: "ETH", price: "signal-ref-only", changePct: 0 },
+  { symbol: "SOL", price: "signal-ref-only", changePct: 0 },
+];

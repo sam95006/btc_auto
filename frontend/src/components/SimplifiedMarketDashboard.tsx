@@ -1,23 +1,63 @@
-import { LONG_WATCHLIST, SHORT_WATCHLIST } from "../demo/marketDashboard";
+import { LONG_WATCHLIST, SHORT_WATCHLIST, SIGNAL_REFERENCES } from "../demo/marketDashboard";
+import { formatUsd } from "../market/freshness";
+import { useLivePrice } from "../market/useLiveMarketFeed";
 import { CompactSafetyStrip } from "./CompactSafetyStrip";
 import { DecisionAlertsPanel } from "./DecisionAlertsPanel";
 import { MarketReadinessGauge } from "./MarketReadinessGauge";
 import { RecommendationBoard } from "./RecommendationBoard";
 
+function FocusEthBlock() {
+  const live = useLivePrice("ETH");
+  const signal = SIGNAL_REFERENCES.ETH;
+  return (
+    <div className="dash-focus-block">
+      <p className="dash-focus-line">
+        Focus: <strong className="mono">ETH</strong> · status WAIT · next View Gate
+      </p>
+      <div className="focus-price-grid">
+        <div>
+          <div className="muted focus-k">Current Market Price</div>
+          <div className="mono focus-v">{formatUsd(live?.lastPrice)}</div>
+        </div>
+        <div>
+          <div className="muted focus-k">Signal Reference Price</div>
+          <div className="mono focus-v">{formatUsd(signal.referencePrice)}</div>
+        </div>
+        <div>
+          <div className="muted focus-k">Signal Generated At</div>
+          <div className="mono focus-v">{new Date(signal.analysisTimestamp).toISOString()}</div>
+        </div>
+        <div>
+          <div className="muted focus-k">Market Updated At</div>
+          <div className="mono focus-v">
+            {live ? new Date(live.receivedAt).toISOString() : "—"}
+          </div>
+        </div>
+      </div>
+      <details className="focus-mark-details">
+        <summary className="muted">Mark / Index (secondary)</summary>
+        <div className="mono muted">
+          Mark {formatUsd(live?.markPrice)} · Index {formatUsd(live?.indexPrice)} ·{" "}
+          {live?.connectionStatus || "DISCONNECTED"}
+        </div>
+      </details>
+    </div>
+  );
+}
+
 /**
- * DataHunterX-style market home — boards first, minimal prose (MVP-22).
+ * DataHunterX-style market home — live Mainnet lastPrice + research signal refs (MVP-22A).
  */
 export function SimplifiedMarketDashboard() {
   return (
     <div className="simplified-market-dashboard" id="market-dashboard">
       <CompactSafetyStrip />
       <p className="sr-only">
-        READ ONLY. NOT INVESTMENT ADVICE. Demo market dashboard. No live trading.
+        READ ONLY. NOT INVESTMENT ADVICE. Live Mainnet public market data for display only. No live
+        trading.
       </p>
 
-      <p className="dash-focus-line">
-        Focus: <strong className="mono">ETH</strong> · status WAIT · next View Gate
-      </p>
+      <FocusEthBlock />
 
       <div className="dash-main-grid">
         <div className="dash-boards">

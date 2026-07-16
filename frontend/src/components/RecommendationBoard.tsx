@@ -1,4 +1,6 @@
 import type { WatchRow } from "../demo/marketDashboard";
+import { formatUsd } from "../market/freshness";
+import { useLivePrice } from "../market/useLiveMarketFeed";
 import { ReadOnlyNavChip } from "./ReadOnlyNavChip";
 import { StatusBadge } from "./StatusBadge";
 
@@ -8,7 +10,78 @@ function tone(status: WatchRow["status"]): "hold" | "wait" | "pass" {
   return "hold";
 }
 
-/** Long / Short watchlist tables — read-only actions only (MVP-22). */
+function RowView({
+  r,
+  focusSymbol,
+}: {
+  r: WatchRow;
+  focusSymbol?: string;
+}) {
+  const live = useLivePrice(r.symbol);
+  const current = live?.lastPrice;
+  const ch = live?.change24hPct ?? r.changePct;
+  const ref = r.signalReferencePrice;
+
+  return (
+    <>
+      <tr className={focusSymbol === r.symbol ? "rec-row-focus" : undefined}>
+        <td className="mono sym-cell">
+          {r.symbol}
+          {focusSymbol === r.symbol ? (
+            <span className="focus-mark" aria-label="focus">
+              ◀
+            </span>
+          ) : null}
+        </td>
+        <td className="mono">
+          <div>Live {formatUsd(current)}</div>
+          <div className="muted rec-sub">Signal ref {formatUsd(ref)}</div>
+        </td>
+        <td>
+          <div>{r.recommendation}</div>
+          <div className="muted rec-sub">
+            {r.confidence} · {r.timeframe}
+          </div>
+        </td>
+        <td
+          className={ch == null ? "muted" : ch >= 0 ? "price-up" : "price-down"}
+        >
+          {ch == null ? "—" : `${ch >= 0 ? "+" : ""}${ch.toFixed(2)}%`}
+        </td>
+        <td>
+          <StatusBadge tone={tone(r.status)}>{r.status}</StatusBadge>
+          <div className="muted rec-sub">Inv {r.invalidationLevel}</div>
+        </td>
+        <td>
+          <ReadOnlyNavChip label={r.next} to={r.nextTo} />
+        </td>
+      </tr>
+    </>
+  );
+}
+
+function MobileCard({ r, focusSymbol }: { r: WatchRow; focusSymbol?: string }) {
+  const live = useLivePrice(r.symbol);
+  const current = live?.lastPrice;
+  const ref = r.signalReferencePrice;
+  return (
+    <article className={`rec-mobile-card${focusSymbol === r.symbol ? " rec-row-focus" : ""}`}>
+      <div className="fleet-card-head">
+        <strong className="mono">{r.symbol}</strong>
+        <StatusBadge tone={tone(r.status)}>{r.status}</StatusBadge>
+      </div>
+      <div className="rec-mobile-meta mono">
+        Live {formatUsd(current)} · Ref {formatUsd(ref)} · {r.recommendation} · {r.timeframe}
+      </div>
+      <div className="muted rec-sub">
+        Analysis {new Date(r.analysisTimestamp).toISOString()} · Inv {r.invalidationLevel}
+      </div>
+      <ReadOnlyNavChip label={r.next} to={r.nextTo} />
+    </article>
+  );
+}
+
+/** Long / Short watchlist — live lastPrice + signal reference (MVP-22A). */
 export function RecommendationBoard({
   title,
   rows,
@@ -34,71 +107,23 @@ export function RecommendationBoard({
               <thead>
                 <tr>
                   <th>Symbol</th>
-                  <th>Price</th>
-                  <th>AI Score</th>
-                  <th>Change</th>
+                  <th>Current / Signal Ref</th>
+                  <th>Recommendation</th>
+                  <th>24h</th>
                   <th>Status</th>
                   <th />
                 </tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr
-                    key={r.symbol}
-                    className={focusSymbol === r.symbol ? "rec-row-focus" : undefined}
-                  >
-                    <td className="mono sym-cell">
-                      {r.symbol}
-                      {focusSymbol === r.symbol ? (
-                        <span className="focus-mark" aria-label="focus">
-                          ◀
-                        </span>
-                      ) : null}
-                    </td>
-                    <td className="mono">{r.price}</td>
-                    <td>{r.aiScore}</td>
-                    <td
-                      className={
-                        r.changePct == null
-                          ? "muted"
-                          : r.changePct >= 0
-                            ? "price-up"
-                            : "price-down"
-                      }
-                    >
-                      {r.changePct == null
-                        ? "—"
-                        : `${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(1)}%`}
-                    </td>
-                    <td>
-                      <StatusBadge tone={tone(r.status)}>{r.status}</StatusBadge>
-                    </td>
-                    <td>
-                      <ReadOnlyNavChip label={r.next} to={r.nextTo} />
-                    </td>
-                  </tr>
+                  <RowView key={r.symbol} r={r} focusSymbol={focusSymbol} />
                 ))}
               </tbody>
             </table>
           </div>
           <div className="rec-mobile">
             {rows.map((r) => (
-              <article
-                key={r.symbol}
-                className={`rec-mobile-card${focusSymbol === r.symbol ? " rec-row-focus" : ""}`}
-              >
-                <div className="fleet-card-head">
-                  <strong className="mono">{r.symbol}</strong>
-                  <StatusBadge tone={tone(r.status)}>{r.status}</StatusBadge>
-                </div>
-                <div className="rec-mobile-meta mono">
-                  {r.price} · {r.aiScore}
-                  {r.changePct != null
-                    ? ` · ${r.changePct >= 0 ? "+" : ""}${r.changePct.toFixed(1)}%`
-                    : ""}
-                </div>
-                <ReadOnlyNavChip label={r.next} to={r.nextTo} />
-              </article>
+              <MobileCard key={r.symbol} r={r} focusSymbol={focusSymbol} />
             ))}
           </div>
         </>

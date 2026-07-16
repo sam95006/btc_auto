@@ -25,7 +25,8 @@ from flask import Flask, abort, jsonify, render_template, request, send_from_dir
 app = Flask(__name__, template_folder=str(ROOT / "templates"))
 
 OPERATOR_UI_DIR = ROOT / "static" / "operator_ui"
-OPERATOR_BUILD_MARKER = "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60"
+OPERATOR_BUILD_MARKER = "NEXUS_UI_MVP22A_LIVE_MARKET_DATA"
+LEGACY_BUILD_MARKER = "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60"
 
 # Client-side React routes that must fall back to SPA index.html
 _SPA_PREFIXES = (
@@ -82,7 +83,15 @@ def _nexus_static_cache_control(response):
         request.path.startswith(f"/{p}") for p in _SPA_PREFIXES
     ):
         response.headers["Cache-Control"] = "no-cache, must-revalidate"
+    if request.path.startswith("/api/market/"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
     return response
+
+
+from backend.api.market_public_routes import register_market_public_routes
+
+register_market_public_routes(app)
 
 
 @app.route("/health")
@@ -108,8 +117,10 @@ def ui_build():
         "read_only": True,
         "operator_ui_ready": _operator_ui_ready(),
         "build_marker": OPERATOR_BUILD_MARKER,
-        "ui_style": "Market Intelligence Layout",
-        "ui_version": "MVP-19",
+        "legacy_build_marker": LEGACY_BUILD_MARKER,
+        "ui_style": "Live Market Intelligence",
+        "ui_version": "MVP-22A",
+        "public_name": "NEXUS — Live Market Intelligence",
         "legacy_nexus_path": "/nexus",
     }
     if meta_path.is_file():

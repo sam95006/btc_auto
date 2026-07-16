@@ -6,5 +6,12 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: false,
+    proxy: {
+      // Local Vite → Flask public market proxy (MVP-22A)
+      "/api/market": {
+        target: "http://127.0.0.1:5000",
+        changeOrigin: true,
+      },
+    },
   },
 });
