@@ -132,5 +132,20 @@ After `dd0ac05`, live still felt status-heavy. Polish pass:
 
 **Checks:** `check_nexus_ui_mvp22b_safety.py` · `verify_mvp22b_derivatives_context.py` · typecheck · build · static sync
 
-**Redeploy:** not performed this round.
+**Redeploy / Live sign-off (2026-07-16):** see §20.
+
+## 20. MVP-22B Redeploy + Live Derivatives Context Sign-off (2026-07-16)
+
+**Source of Truth drift (pre-redeploy):** Repo `56066e8` / `index-YrejgD0N.js` vs prior Live `3c84f42` / `index-C8nn6s0J.js`.
+
+**Live code commit (marker bump):** after §19 CSS SoT, narrow marker sync to `NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT` (MVP-22A marker retained in footer `sr-only`); expected Live asset becomes `index-BHA1syR8.js`.
+
+**Verified on Live:**
+- `/api/market/tickers` vs official Bybit Mainnet linear: **3-round PASS** (OI / OI value / funding / nextFundingTime / volume24h / turnover24h); `Cache-Control: no-store`; `private_api=false`
+- Browser Playwright `/overview`: asset `index-YrejgD0N.js` then post-marker asset; WS `wss://stream.bybit.com/v5/public/linear`; Market Context OI·Funding·Volume; funding `0.0001` → `+0.0100%`; scoring disclaimer present; Collecting on fresh load; no overflow; FAB only; mobile gauge `order:-1`; 0 page errors
+- OI rolling: initial 1m/5m/15m **Collecting**; after ~75s **1m → numeric** (e.g. `0.00%`) while 5m/15m remain Collecting — **no fake history**
+- `oi_5m` / `oi_15m` live windows: **duration_pending** (automated Collecting logic PASS)
+- Recommendation algorithm unchanged; context not in scoring
+
+**Safety:** mvp22 / mvp22a / mvp22b PASS · typecheck PASS · build PASS · operator UI static sync PASS · forbidden trade/ARM/billing/4.19 paths absent
 
