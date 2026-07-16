@@ -169,10 +169,29 @@ After `dd0ac05`, live still felt status-heavy. Polish pass:
 
 **Thresholds:** centralized `ANOMALY_CONFIG` · UI: *Research threshold — not a trade trigger* · score ranks attention only.
 
-**Build (local):** typecheck PASS · asset `index-CpBPYA6d.js` · marker `NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR`.
+**Version semantics:**
+- MVP-22C initial implementation: `0e6c985` · asset `index-CpBPYA6d.js`
+- MVP-22C live deployment fix: `fac292d` · asset `index-DI2woa9V.js`
+- **Current Live Source of Truth:** `fac292d2acaedbb64378a672ce75560f726c1612`
 
-**MVP-22B duration follow-up:** fresh Live page load → all OI windows **Collecting** (in-memory reset expected). Prior soak verified **1m** after ~75s; **5m/15m** remain **duration_pending** until uninterrupted session — no code change required.
+**Live deploy (fac292d):** `/anomalies` SPA fallback · turnover semantics (`Turnover expansion` label) · static sync · marker `NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR`.
 
-**Verdict (code):** `PASS — MVP-22C MARKET ANOMALY RADAR VERIFIED IN CODE`  
-**remaining_issues:** redeploy and live anomaly sign-off pending
+**MVP-22B duration follow-up:** fresh Live page load → all OI windows **Collecting** (in-memory reset expected). **5m/15m** remain **duration_pending** until uninterrupted soak — no fabricated window values.
+
+**Verdict (Live):** `PASS — MVP-22C MARKET ANOMALY RADAR DEPLOYED AND VERIFIED`  
+**remaining_issues:** `oi_5m` / `oi_15m` live duration pending (Collecting on fresh load; expected)
+
+## 22. POST-MVP-22C repo reconciliation + SPA cache resilience (code)
+
+**Live SoT unchanged:** `fac292d` / `index-DI2woa9V.js` (RUNNING until next deploy).
+
+**Repo fixes (no redeploy this round):**
+- Reconciled local MVP-22C semantic regressions (`Turnover expansion`, `/anomalies` SPA, MVP-22C markers).
+- HTML shell: `Cache-Control: no-store, no-cache, must-revalidate, max-age=0`.
+- Hashed assets: `public, max-age=31536000, immutable`.
+- Static sync retains previous hashed JS/CSS generation (max 2) instead of deleting all old assets.
+- Frontend one-shot asset-load recovery + fallback error UI (no infinite reload).
+
+**Verdict (code):** `PASS — MVP-22C REPO STATE AND SPA CACHE RESILIENCE VERIFIED IN CODE`  
+**remaining_issues:** redeploy and live stale-cache recovery sign-off pending
 

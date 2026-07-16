@@ -6,7 +6,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from flask import abort, jsonify, send_from_directory
+from flask import abort, jsonify, request, send_from_directory
+
+from backend.api.operator_ui_cache import apply_operator_ui_cache_headers, is_operator_ui_html_path
 
 OPERATOR_BUILD_MARKER = "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR"
 MVP22B_BUILD_MARKER = "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT"
@@ -39,6 +41,22 @@ def operator_ui_ready(app) -> bool:
 
 def register_operator_ui_routes(app) -> None:
     """Mount SPA at / when static/operator_ui is present; leave /nexus for legacy."""
+
+    @app.after_request
+    def _operator_ui_cache_control(response):
+        if request.path.startswith("/static/nexus/"):
+            response.headers["Cache-Control"] = "no-cache, must-revalidate"
+            return response
+        if request.path.startswith("/assets/") or is_operator_ui_html_path(
+            request.path, _SPA_PREFIXES
+        ):
+            return apply_operator_ui_cache_headers(
+                response, request.path, spa_prefixes=_SPA_PREFIXES
+            )
+        if request.path.startswith("/api/market/"):
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+        return response
 
     def _index():
         return send_from_directory(_operator_ui_dir(app), "index.html")

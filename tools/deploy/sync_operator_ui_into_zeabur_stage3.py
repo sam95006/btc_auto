@@ -9,8 +9,8 @@ Does not touch trading logic. READ ONLY UI assets only.
 """
 from __future__ import annotations
 
-import hashlib
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -25,12 +25,56 @@ MARKER = "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR"
 MVP22B_MARKER = "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT"
 MVP22A_MARKER = "NEXUS_UI_MVP22A_LIVE_MARKET_DATA"
 LEGACY_MARKER = "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60"
+ASSET_REF_RE = re.compile(r"/assets/(index-[^\"']+\.(?:js|css))", re.I)
+MAX_RETAINED_GENERATIONS = 2
+
+
+def _extract_asset_refs(html: str) -> set[str]:
+    return set(ASSET_REF_RE.findall(html))
+
+
+def _collect_hashed_assets(assets_dir: Path) -> dict[str, bytes]:
+    if not assets_dir.is_dir():
+        return {}
+    retained: dict[str, bytes] = {}
+    for path in assets_dir.iterdir():
+        if path.is_file() and path.name.startswith("index-") and path.suffix in {".js", ".css"}:
+            retained[path.name] = path.read_bytes()
+    return retained
 
 
 def _sync_one(dest: Path) -> dict:
+    index_path = dest / "index.html"
+    assets_dir = dest / "assets"
+    previous_refs: set[str] = set()
+    previous_assets: dict[str, bytes] = {}
+    if index_path.is_file():
+        previous_refs = _extract_asset_refs(index_path.read_text(encoding="utf-8", errors="ignore"))
+    previous_assets = _collect_hashed_assets(assets_dir)
+
     if dest.exists():
         shutil.rmtree(dest)
     shutil.copytree(SRC, dest)
+
+    new_index = (dest / "index.html").read_text(encoding="utf-8", errors="ignore")
+    new_refs = _extract_asset_refs(new_index)
+    keep_refs = set(new_refs)
+    keep_refs.update(previous_refs)
+
+    out_assets = dest / "assets"
+    for name, data in previous_assets.items():
+        if name in keep_refs and not (out_assets / name).exists():
+            (out_assets / name).write_bytes(data)
+
+    allowed = set(new_refs)
+    allowed.update(previous_refs)
+    for path in out_assets.iterdir():
+        if path.is_file() and path.name.startswith("index-") and path.name not in allowed:
+            path.unlink()
+
+    retained_assets = sorted(
+        p.name for p in out_assets.iterdir() if p.is_file() and p.name.startswith("index-")
+    )
     blob = "\n".join(p.read_text(encoding="utf-8", errors="ignore") for p in dest.rglob("*") if p.is_file())
     found = MARKER in blob or MVP22B_MARKER in blob or MVP22A_MARKER in blob or LEGACY_MARKER in blob
     meta = {
@@ -42,6 +86,10 @@ def _sync_one(dest: Path) -> dict:
         "legacy_marker": LEGACY_MARKER,
         "marker_found": found,
         "file_count": sum(1 for p in dest.rglob("*") if p.is_file()),
+        "current_assets": sorted(new_refs),
+        "retained_assets": retained_assets,
+        "retained_generations": MAX_RETAINED_GENERATIONS,
+        "previous_assets": sorted(previous_refs),
     }
     (dest / "operator_ui_build.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
     return meta

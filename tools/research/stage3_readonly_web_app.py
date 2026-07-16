@@ -82,10 +82,12 @@ def _read_only_guard():
 def _nexus_static_cache_control(response):
     if request.path.startswith("/static/nexus/"):
         response.headers["Cache-Control"] = "no-cache, must-revalidate"
-    if request.path.startswith("/assets/") or request.path == "/" or any(
-        request.path.startswith(f"/{p}") for p in _SPA_PREFIXES
+    if request.path.startswith("/assets/") or is_operator_ui_html_path(
+        request.path, _SPA_PREFIXES
     ):
-        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        response = apply_operator_ui_cache_headers(
+            response, request.path, spa_prefixes=_SPA_PREFIXES
+        )
     if request.path.startswith("/api/market/"):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
@@ -93,6 +95,7 @@ def _nexus_static_cache_control(response):
 
 
 from backend.api.market_public_routes import register_market_public_routes
+from backend.api.operator_ui_cache import apply_operator_ui_cache_headers, is_operator_ui_html_path
 
 register_market_public_routes(app)
 

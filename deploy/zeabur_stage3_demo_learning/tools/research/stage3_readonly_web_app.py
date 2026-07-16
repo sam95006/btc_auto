@@ -22,6 +22,8 @@ if str(ROOT) not in sys.path:
 
 from flask import Flask, abort, jsonify, render_template, request, send_from_directory
 
+from backend.api.operator_ui_cache import apply_operator_ui_cache_headers, is_operator_ui_html_path
+
 app = Flask(__name__, template_folder=str(ROOT / "templates"))
 
 OPERATOR_UI_DIR = ROOT / "static" / "operator_ui"
@@ -82,10 +84,12 @@ def _read_only_guard():
 def _nexus_static_cache_control(response):
     if request.path.startswith("/static/nexus/"):
         response.headers["Cache-Control"] = "no-cache, must-revalidate"
-    if request.path.startswith("/assets/") or request.path == "/" or any(
-        request.path.startswith(f"/{p}") for p in _SPA_PREFIXES
+    if request.path.startswith("/assets/") or is_operator_ui_html_path(
+        request.path, _SPA_PREFIXES
     ):
-        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        response = apply_operator_ui_cache_headers(
+            response, request.path, spa_prefixes=_SPA_PREFIXES
+        )
     return response
 
 
