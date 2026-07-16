@@ -25,7 +25,8 @@ from flask import Flask, abort, jsonify, render_template, request, send_from_dir
 app = Flask(__name__, template_folder=str(ROOT / "templates"))
 
 OPERATOR_UI_DIR = ROOT / "static" / "operator_ui"
-OPERATOR_BUILD_MARKER = "NEXUS_UI_MVP22A_LIVE_MARKET_DATA"
+OPERATOR_BUILD_MARKER = "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT"
+MVP22A_BUILD_MARKER = "NEXUS_UI_MVP22A_LIVE_MARKET_DATA"
 LEGACY_BUILD_MARKER = "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60"
 
 # Client-side React routes that must fall back to SPA index.html
@@ -117,9 +118,10 @@ def ui_build():
         "read_only": True,
         "operator_ui_ready": _operator_ui_ready(),
         "build_marker": OPERATOR_BUILD_MARKER,
+        "mvp22a_build_marker": MVP22A_BUILD_MARKER,
         "legacy_build_marker": LEGACY_BUILD_MARKER,
         "ui_style": "Live Market Intelligence",
-        "ui_version": "MVP-22A",
+        "ui_version": "MVP-22B",
         "public_name": "NEXUS — Live Market Intelligence",
         "legacy_nexus_path": "/nexus",
     }
