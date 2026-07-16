@@ -1913,6 +1913,12 @@ button {
   font-weight: 500;
 }
 
+.dash-focus-line {
+  margin: 0 0 0.35rem;
+  font-size: var(--fs-sm);
+  color: var(--accent);
+}
+
 .market-context-panel {
   margin-top: 0.65rem;
   padding: 0.65rem 0.75rem;
