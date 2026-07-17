@@ -341,3 +341,38 @@ Bybit Public Market Data → NEXUS Read-only Market Scanner (server)
 - real anomaly outcome duration pending
 - oi_5m/oi_15m duration pending
 
+## 29. Phase 2 Redeploy + Live Decision Experience Sign-off (2026-07-17)
+
+**Live Source of Truth:** `7dfc87886b2adcd0af93bc1073e434d5e5b0a1bf`  
+**Live asset:** `index-BkeSH4cj.js`  
+**UI marker:** `NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE`  
+**Deployment:** Zeabur GitHub auto-deploy from `stage3-demo-learning` · status `RUNNING` · served_by `nexus-web`  
+**URL:** https://nexus-stage3-bybit-demo-learning.zeabur.app/
+
+**Predeploy:** remote head = `7dfc878` · expected asset reproducible from commit tree · unrelated dirty tree preserved · no dirty deploy
+
+**Live API (real data, post-window):**
+- Scanner: `freshness=LIVE` · `symbolCount=80` · `cycleCount` advancing ~1 / 20s · `loopOverlapBlocked=true` · `threadAlive=true` · `private_api=false`
+- Breadth sum = 80 · Long/Short candidates non-empty after 5m window · no collecting Top-5 fill
+- Events stream live (NEW_TOP / RANK_UP observed)
+- Charts: Turnover Top 10 · Price/OI quadrant points from real 5m windows
+
+**Live UI (Playwright, real data — not stubs):**
+- Top bar: no Backend HOLD / 4.19 chips; System Status drawer retains HOLD + 4.19 BLOCKED
+- Overview 3s: regime（偏多／偏空／混合／累積中）· coverage 80 · Top Long/Short spotlight · 持倉 plain language · stage 產品語 · cadence ~20s · research/no-trading
+- Event Center: unread badge · drawer · sound/browser notify default OFF
+- Scanner: desktop sticky + mobile cards · no page horizontal overflow at audited sizes
+- Symbol detail: 「為什麼是候選」· no「完整生命週期時間線」claim (partial status only)
+- Watchlist: `/watchlist` hard refresh 200 · localStorage · no account
+- SPA: HTML `no-store` · previous `index-9zfXgtWz.js` retained 200 · current HTML only references `BkeSH4cj`
+
+**Perf (bounded observation):** overview scanner hits ≈5 on first settle · scanner ≈7 · symbol ≈6 · no duplicate topbar/overview provider · JS 448190 B · HTML ~2.8 KB
+
+**Verdict:** `PASS — NEXUS PRODUCT TRANSFORMATION PHASE 2 DEPLOYED AND LIVE VERIFIED`
+
+**remaining_issues:**
+- Full candidate stage transition timeline deferred
+- Full-market WebSocket fast-lane deferred
+- Real anomaly outcome duration pending
+- OI 5m／15m duration pending (BTC/ETH/SOL feed)
+
