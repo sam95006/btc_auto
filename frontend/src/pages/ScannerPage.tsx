@@ -88,8 +88,8 @@ export function ScannerPage() {
       <header className="nx-ov-header">
         <h1 className="nx-page-title">全市場掃描器</h1>
         <p className="nx-status-line">
-          {status?.symbolCount ?? "—"} symbols · {status?.freshness || "—"} · Research only · No
-          trading
+          {status?.symbolCount ?? "—"} symbols · {status?.freshness || "—"} · 候選約每{" "}
+          {status?.snapshotIntervalSec ?? 20} 秒重新掃描 · Research only · No trading
         </p>
         <div className="nx-ov-meta">
           <Link to="/overview">← 總覽</Link>

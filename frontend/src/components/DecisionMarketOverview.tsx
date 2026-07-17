@@ -337,6 +337,9 @@ export function DecisionMarketOverview() {
             完整掃描器 →
           </Link>
         </div>
+        <p className="nx-cadence muted">
+          候選約每 {status?.snapshotIntervalSec ?? 20} 秒重新掃描 · 非逐筆成交即時排名 · Research only
+        </p>
         <div className="nx-side-tabs mobile-only">
           <button
             type="button"

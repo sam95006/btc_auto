@@ -14,7 +14,7 @@ MAX_SPREAD_BPS = 25.0
 MIN_LISTING_AGE_MS = 7 * 24 * 60 * 60 * 1000  # 7 days when launchTime available
 
 SNAPSHOT_INTERVAL_SEC = 20.0
-HISTORY_CAPACITY_PER_SYMBOL = 48  # ~16 min at 20s
+HISTORY_CAPACITY_PER_SYMBOL = 72  # ~24 min at 20s — reliable 15m window with interval drift
 CANDIDATE_CAPACITY = 40
 EVENT_CAPACITY = 80
 

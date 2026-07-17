@@ -14,6 +14,7 @@ from backend.api.operator_ui_routes import (
     register_operator_ui_routes,
 )
 from backend.api.market_public_routes import register_market_public_routes
+from backend.api.market_scanner_routes import register_market_scanner_routes
 from backend.api.server import register_nexus_routes
 from backend.core.env_loader import load_env_file
 from backend.runtime.single_instance_guard import SingleInstanceError, SingleInstanceGuard
@@ -36,8 +37,18 @@ except TradingModeSafetyError as exc:
 app = Flask(__name__)
 register_nexus_routes(app)
 register_market_public_routes(app)
+register_market_scanner_routes(app)
 # UI-DEPLOY-2: Market Intelligence SPA (static/operator_ui) — register before / catch-alls finish
 register_operator_ui_routes(app)
+
+# Product Transformation Phase 1: eager read-only scanner bootstrap (public market data only).
+try:
+    from backend.market.scanner.scanner_service import get_market_scanner
+
+    get_market_scanner()
+    print("[startup] Market scanner started (read-only · BYBIT_MAINNET_LINEAR)")
+except Exception as exc:  # noqa: BLE001
+    print(f"[startup] Market scanner bootstrap deferred: {exc}")
 
 _asset_check = verify_console_assets(app.root_path)
 if _asset_check.get("ok"):
