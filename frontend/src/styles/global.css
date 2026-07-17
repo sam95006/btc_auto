@@ -2477,6 +2477,11 @@ button {
 }
 
 /* MVP-22D anomaly outcome research */
+.mvp22d-outcomes-page {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 .outcome-subhead {
   margin: 1.25rem 0 0.5rem;
   font-size: 1rem;
@@ -2487,6 +2492,15 @@ button {
   font-size: 0.8rem;
 }
 
+.outcome-session-banner {
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(120, 140, 160, 0.35);
+  background: rgba(120, 140, 160, 0.08);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
 .anomaly-outcome-link {
   margin: 0.55rem 0 0;
   font-size: 0.85rem;
@@ -2494,6 +2508,7 @@ button {
 
 .mvp22d-outcomes-page .anomaly-table-wrap {
   margin-bottom: 0.75rem;
+  max-width: 100%;
 }
 
 @media (max-width: 768px) {
@@ -2501,6 +2516,7 @@ button {
     display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    max-width: 100%;
   }
 
   .mvp22d-outcomes-page .anomaly-table {

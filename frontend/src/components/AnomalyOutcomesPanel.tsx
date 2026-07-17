@@ -67,6 +67,10 @@ export function AnomalyOutcomesPanel() {
         <p className="muted section-lede">{OUTCOME_RESEARCH_DISCLAIMER}</p>
       </div>
       <p className="muted anomaly-score-note">{OUTCOME_SCORE_DISCLAIMER}</p>
+      <p className="outcome-session-banner" role="status">
+        Session-based research observation — in-memory only. Reload clears tracking. Not permanent
+        history · not a trade signal.
+      </p>
       <p className="muted mono outcome-feed-line">
         Feed {feed.feedStatus} · transport {feed.transport} · tracked {rows.length} · pending{" "}
         {pending.length} · with complete {completed.length}
@@ -214,7 +218,7 @@ export function AnomalyOutcomesPanel() {
             {completed.length === 0 ? (
               <tr>
                 <td colSpan={9} className="muted">
-                  No completed windows yet (in-memory; reload resets tracking)
+                  No completed windows yet (session-based; reload resets tracking)
                 </td>
               </tr>
             ) : (

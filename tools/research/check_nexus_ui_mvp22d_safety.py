@@ -23,6 +23,7 @@ REQUIRED_FILES = [
 REQUIRED_STRINGS = [
     "NEXUS_UI_MVP22D_ANOMALY_OUTCOME_RESEARCH",
     "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR",
+    "Session-based research observation",
     "Observed research outcomes",
     "Insufficient sample",
     "researchOnly: true",
