@@ -25,7 +25,7 @@ from flask import Flask, abort, jsonify, render_template, request, send_from_dir
 app = Flask(__name__, template_folder=str(ROOT / "templates"))
 
 OPERATOR_UI_DIR = ROOT / "static" / "operator_ui"
-OPERATOR_BUILD_MARKER = "NEXUS_UI_MVP22D_ANOMALY_OUTCOME_RESEARCH"
+OPERATOR_BUILD_MARKER = "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE1_MARKET_SCANNER"
 MVP22C_BUILD_MARKER = "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR"
 MVP22B_BUILD_MARKER = "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT"
 MVP22A_BUILD_MARKER = "NEXUS_UI_MVP22A_LIVE_MARKET_DATA"
@@ -34,6 +34,8 @@ LEGACY_BUILD_MARKER = "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60"
 # Client-side React routes that must fall back to SPA index.html
 _SPA_PREFIXES = (
     "overview",
+    "scanner",
+    "market",
     "anomalies",
     "anomaly-outcomes",
     "fleets",
@@ -97,9 +99,11 @@ def _nexus_static_cache_control(response):
 
 
 from backend.api.market_public_routes import register_market_public_routes
+from backend.api.market_scanner_routes import register_market_scanner_routes
 from backend.api.operator_ui_cache import apply_operator_ui_cache_headers, is_operator_ui_html_path
 
 register_market_public_routes(app)
+register_market_scanner_routes(app)
 
 
 @app.route("/health")

@@ -3,14 +3,15 @@ import { NavLink } from "react-router-dom";
 type NavItem = { to: string; label: string; short: string; icon: string };
 
 const PRIMARY: NavItem[] = [
-  { to: "/overview", label: "Market Dashboard", short: "Market", icon: "▣" },
-  { to: "/anomalies", label: "Anomaly Radar", short: "Anomalies", icon: "◉" },
-  { to: "/anomaly-outcomes", label: "Outcome Research", short: "Outcomes", icon: "◌" },
-  { to: "/evidence", label: "Evidence Center", short: "Evidence", icon: "▤" },
-  { to: "/risk-evidence", label: "Risk Center", short: "Risk", icon: "◈" },
-  { to: "/provider-shadow", label: "Provider Intel", short: "Provider", icon: "◇" },
-  { to: "/paper-lab", label: "Validation Lab", short: "Lab", icon: "◎" },
-  { to: "/evidence#doc-summaries", label: "Reports", short: "Reports", icon: "☰" },
+  { to: "/overview", label: "市場總覽", short: "總覽", icon: "▣" },
+  { to: "/scanner", label: "全市場掃描", short: "掃描", icon: "◎" },
+  { to: "/anomalies", label: "異動雷達", short: "異動", icon: "◉" },
+  { to: "/anomaly-outcomes", label: "結果研究", short: "結果", icon: "◌" },
+  { to: "/evidence", label: "證據中心", short: "證據", icon: "▤" },
+  { to: "/risk-evidence", label: "風險中心", short: "風險", icon: "◈" },
+  { to: "/provider-shadow", label: "Provider 驗證", short: "Provider", icon: "◇" },
+  { to: "/paper-lab", label: "驗證實驗室", short: "Lab", icon: "◎" },
+  { to: "/evidence#doc-summaries", label: "報告", short: "報告", icon: "☰" },
   { to: "/evidence#artifact-4-18-p2h-ops", label: "Runbooks", short: "Runbooks", icon: "⇉" },
 ];
 

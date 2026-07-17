@@ -12,6 +12,8 @@ export function AppFooter() {
       <span className="mono footer-marker" title="Deploy marker">
         {b.buildMarker}
       </span>
+      <span className="sr-only">{b.mvp22dLegacyMarker}</span>
+      <span className="sr-only">{b.mvp22cLegacyMarker}</span>
       <span className="sr-only">{b.mvp22bLegacyMarker}</span>
       <span className="sr-only">{b.mvp22aLegacyMarker}</span>
       <span className="sr-only">{b.syncCompatibilityMarker}</span>

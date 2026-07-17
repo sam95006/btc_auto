@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { GateChecklistCard } from "../components/GateChecklistCard";
-import { SimplifiedMarketDashboard } from "../components/SimplifiedMarketDashboard";
+import { DecisionMarketOverview } from "../components/DecisionMarketOverview";
 import {
   ETH_WATCH_REAPPEARANCE_CHECKLIST,
   SHORT_REGRESSION_CHECKLIST,
@@ -10,7 +10,8 @@ import {
 import { useHashScroll } from "../hooks/useHashScroll";
 
 /**
- * MVP-22 market dashboard — first paint is boards; gate docs are opt-in.
+ * Decision-first overview (Product Transformation Phase 1).
+ * Legacy fixed-symbol dashboard remains nested under research details.
  */
 export function OverviewPage() {
   useHashScroll();
@@ -28,8 +29,8 @@ export function OverviewPage() {
   }, [loc.hash]);
 
   return (
-    <div className="page-stack mi-page mvp22-overview">
-      <SimplifiedMarketDashboard />
+    <div className="page-stack mi-page mvp22-overview nx-product-overview">
+      <DecisionMarketOverview />
 
       <details
         className="operator-details-toggle"

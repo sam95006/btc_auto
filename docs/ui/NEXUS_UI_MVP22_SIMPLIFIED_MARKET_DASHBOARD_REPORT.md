@@ -243,3 +243,41 @@ After `dd0ac05`, live still felt status-heavy. Polish pass:
 
 **Verdict:** `PASS — MVP-22D ANOMALY OUTCOME RESEARCH DEPLOYED AND VERIFIED`
 **remaining_issues:** real outcome window duration pending (no_live_event_available) · oi_5m/oi_15m duration pending
+
+## 26. NEXUS Product Transformation Phase 1 (code — 2026-07-17)
+
+**Closed Live baseline (do not confuse with this code commit):**
+- Current Live code SoT: `4e62f2e78d840aa33e2a6603bd9ca2ca1094fbc6` · asset `index-BLh5ikEO.js`
+- Sign-off docs head: `d371c8d` (docs only, not Live code)
+- Core MVP-22D: `6322582`
+
+**Product shift:** fixed BTC/ETH/SOL research dashboard → decision-first market opportunity product.
+
+**Architecture:**
+```
+Bybit Public Market Data → NEXUS Read-only Market Scanner (server)
+→ Bounded Rolling State → Candidate Engine → Ranking Snapshot
+→ Public Read-only API → UI
+```
+
+**Delivered in code (no Redeploy this round):**
+- Dynamic Market Universe (Bybit Mainnet linear USDT, turnover/OI/spread filters, limit 80)
+- Centralized server scanner + rolling history + stale/overlap guards
+- Long/Short Candidate Engine (Opportunity / Confirmation / Risk 0–100, lifecycle stages)
+- Ranking + candidate event stream (dedup/cooldown/bounded)
+- APIs: `/api/market/scanner/{status,universe,candidates,symbol,events,charts}`
+- New `/overview` (Market Pulse, Top Long/Short, breadth + turnover charts, events)
+- `/scanner` filters/sort · `/market/:symbol` detail + sparkline
+- Preserved: anomalies, outcomes, evidence, freshness, Signal Reference, SPA cache resilience, AI FAB
+- Research/trading isolation: scores ≠ Recommendation/confidence/sizing/leverage
+
+**Smoke:** live universe ~742 tickers → 80 eligible · scanner refresh produces real Long/Short candidates (`researchOnly=true`)
+
+**Build asset (repo, not Live):** `index-CCe0pwCY.js`
+
+**Verdict (code):** `PASS — NEXUS PRODUCT TRANSFORMATION PHASE 1 VERIFIED IN CODE`
+
+**remaining_issues:**
+- redeploy and live scanner/product sign-off pending
+- real anomaly outcome duration pending
+- oi_5m/oi_15m duration pending

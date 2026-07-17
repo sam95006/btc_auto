@@ -20,13 +20,14 @@ import { PaperLabPage } from "./pages/PaperLabPage";
 import { ProviderShadowPage } from "./pages/ProviderShadowPage";
 import { ReflectionPage } from "./pages/ReflectionPage";
 import { RiskEvidencePage } from "./pages/RiskEvidencePage";
+import { ScannerPage } from "./pages/ScannerPage";
+import { MarketSymbolPage } from "./pages/MarketSymbolPage";
 import { SignalsPage } from "./pages/SignalsPage";
 
 /**
- * NEXUS / EATI UI MVP-22A — Live Market Data Truth Layer (read-only).
+ * NEXUS Product Transformation Phase 1 — decision-first market intelligence (read-only).
  * Forbidden: /trade, /orders, /arm, /routing-edit
- * Market: Bybit Mainnet public lastPrice only · no private API
- * AI: floating panel (no permanent right rail).
+ * Market: Bybit Mainnet public data · server scanner · no private API
  */
 export default function App() {
   return (
@@ -43,6 +44,8 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<Navigate to="/overview" replace />} />
                 <Route path="/overview" element={<OverviewPage />} />
+                <Route path="/scanner" element={<ScannerPage />} />
+                <Route path="/market/:symbol" element={<MarketSymbolPage />} />
                 <Route path="/anomalies" element={<AnomaliesPage />} />
                 <Route path="/anomaly-outcomes" element={<AnomalyOutcomesPage />} />
                 <Route path="/fleets" element={<FleetsPage />} />

@@ -10,13 +10,15 @@ from flask import abort, jsonify, request, send_from_directory
 
 from backend.api.operator_ui_cache import apply_operator_ui_cache_headers, is_operator_ui_html_path
 
-OPERATOR_BUILD_MARKER = "NEXUS_UI_MVP22D_ANOMALY_OUTCOME_RESEARCH"
+OPERATOR_BUILD_MARKER = "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE1_MARKET_SCANNER"
 MVP22C_BUILD_MARKER = "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR"
 MVP22B_BUILD_MARKER = "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT"
 MVP22A_BUILD_MARKER = "NEXUS_UI_MVP22A_LIVE_MARKET_DATA"
 LEGACY_BUILD_MARKER = "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60"
 _SPA_PREFIXES = (
     "overview",
+    "scanner",
+    "market",
     "anomalies",
     "anomaly-outcomes",
     "fleets",
