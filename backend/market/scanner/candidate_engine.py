@@ -255,8 +255,17 @@ def rank_candidates(
 ) -> list[dict[str, Any]]:
     previous = previous or {}
     now = int(time.time() * 1000)
-    longs = [c for c in scored if c["side"] == "LONG" and c["stage"] != "EXPIRED"]
-    shorts = [c for c in scored if c["side"] == "SHORT" and c["stage"] != "EXPIRED"]
+    # Do not fill Top Long/Short with collecting placeholders — empty state until 5m window exists.
+    ranked_pool = [
+        c
+        for c in scored
+        if c.get("side") in ("LONG", "SHORT")
+        and c.get("stage") != "EXPIRED"
+        and c.get("stage") != "INSUFFICIENT_DATA"
+        and not c.get("collecting")
+    ]
+    longs = [c for c in ranked_pool if c["side"] == "LONG"]
+    shorts = [c for c in ranked_pool if c["side"] == "SHORT"]
     longs.sort(key=lambda c: c["rankScore"], reverse=True)
     shorts.sort(key=lambda c: c["rankScore"], reverse=True)
 
@@ -275,11 +284,14 @@ def rank_candidates(
                 "rankDelta": (prev_rank - i) if isinstance(prev_rank, int) else None,
             }
             out.append(item)
-    # watching / insufficient / overextended pools (bounded)
+    # watching / insufficient / overextended pools (bounded, unranked)
     extras = [
         c
         for c in scored
-        if c["side"] == "NEUTRAL" or c["stage"] in ("INSUFFICIENT_DATA", "OVEREXTENDED", "COOLING", "WATCHING")
+        if c["side"] == "NEUTRAL"
+        or c["stage"]
+        in ("INSUFFICIENT_DATA", "OVEREXTENDED", "COOLING", "WATCHING", "EXPIRED")
+        or c.get("collecting")
     ]
     extras.sort(key=lambda c: c["opportunityScore"], reverse=True)
     for c in extras[:20]:

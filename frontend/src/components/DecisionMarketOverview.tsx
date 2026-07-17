@@ -361,7 +361,14 @@ export function DecisionMarketOverview() {
             <h3 className="nx-col-title up">做多機會 Top 5</h3>
             <div className="nx-cand-list">
               {longs.length === 0 ? (
-                <p className="muted">{loading ? "資料累積中…" : "暫無符合條件的做多機會"}</p>
+                <p className="muted">
+                  {loading
+                    ? "資料累積中…"
+                    : status?.breadth?.insufficient &&
+                        status.breadth.insufficient >= (status.symbolCount || 0)
+                      ? "資料累積中：約 5 分鐘窗口建立後才會產生做多排名"
+                      : "暫無符合條件的做多機會"}
+                </p>
               ) : (
                 longs.map((c) => <CandidateCard key={c.id} c={c} advanced={advanced} />)
               )}
@@ -371,7 +378,14 @@ export function DecisionMarketOverview() {
             <h3 className="nx-col-title down">做空機會 Top 5</h3>
             <div className="nx-cand-list">
               {shorts.length === 0 ? (
-                <p className="muted">{loading ? "資料累積中…" : "暫無符合條件的做空機會"}</p>
+                <p className="muted">
+                  {loading
+                    ? "資料累積中…"
+                    : status?.breadth?.insufficient &&
+                        status.breadth.insufficient >= (status.symbolCount || 0)
+                      ? "資料累積中：約 5 分鐘窗口建立後才會產生做空排名"
+                      : "暫無符合條件的做空機會"}
+                </p>
               ) : (
                 shorts.map((c) => <CandidateCard key={c.id} c={c} advanced={advanced} />)
               )}
