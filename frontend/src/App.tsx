@@ -7,6 +7,7 @@ import { SidebarNav } from "./components/SidebarNav";
 import { LiveMarketProvider } from "./market/useLiveMarketFeed";
 import { AnomalyOutcomeProvider } from "./market/useAnomalyOutcomes";
 import { MarketAnomalyProvider } from "./market/useMarketAnomalies";
+import { MarketScannerProvider } from "./market/useMarketScanner";
 import { AnomaliesPage } from "./pages/AnomaliesPage";
 import { AnomalyOutcomesPage } from "./pages/AnomalyOutcomesPage";
 import { AcademyPage } from "./pages/AcademyPage";
@@ -22,10 +23,11 @@ import { ReflectionPage } from "./pages/ReflectionPage";
 import { RiskEvidencePage } from "./pages/RiskEvidencePage";
 import { ScannerPage } from "./pages/ScannerPage";
 import { MarketSymbolPage } from "./pages/MarketSymbolPage";
+import { WatchlistPage } from "./pages/WatchlistPage";
 import { SignalsPage } from "./pages/SignalsPage";
 
 /**
- * NEXUS Product Transformation Phase 1 — decision-first market intelligence (read-only).
+ * NEXUS Product Transformation Phase 2 — decision experience (read-only).
  * Forbidden: /trade, /orders, /arm, /routing-edit
  * Market: Bybit Mainnet public data · server scanner · no private API
  */
@@ -34,7 +36,8 @@ export default function App() {
     <LiveMarketProvider>
       <MarketAnomalyProvider>
       <AnomalyOutcomeProvider>
-      <div className="app-shell mi-shell mvp22-shell">
+      <MarketScannerProvider>
+      <div className="app-shell mi-shell mvp22-shell nx-phase2-shell">
         <SafetyBanner />
         <MarketTopTicker />
         <div className="app-body app-body-no-rail">
@@ -46,6 +49,7 @@ export default function App() {
                 <Route path="/overview" element={<OverviewPage />} />
                 <Route path="/scanner" element={<ScannerPage />} />
                 <Route path="/market/:symbol" element={<MarketSymbolPage />} />
+                <Route path="/watchlist" element={<WatchlistPage />} />
                 <Route path="/anomalies" element={<AnomaliesPage />} />
                 <Route path="/anomaly-outcomes" element={<AnomalyOutcomesPage />} />
                 <Route path="/fleets" element={<FleetsPage />} />
@@ -67,6 +71,7 @@ export default function App() {
         </div>
         <FloatingAIAssistant />
       </div>
+      </MarketScannerProvider>
       </AnomalyOutcomeProvider>
       </MarketAnomalyProvider>
     </LiveMarketProvider>

@@ -309,3 +309,35 @@ Bybit Public Market Data → NEXUS Read-only Market Scanner (server)
 - MVP-22B oi_5m/oi_15m duration pending (BTC/ETH/SOL browser feed)
 - full-market WebSocket adapter deferred
 - chrome still shows compact Backend HOLD / 4.19 chip in top bar (not overview body); deeper chrome declutter is Phase 2 polish
+
+## 28. Product Transformation Phase 2 — Decision Experience (code, no Redeploy)
+
+**Repo base:** `8999298855bc94cd01c78b349f8db2b1e7448e0d` (Phase 1 sign-off docs head on `stage3-demo-learning`)  
+**Current Live SoT (unchanged this round — no Redeploy):** `df0a519a106d5aa8e6cda45beca5dfa6cc82a525` · asset `index-9zfXgtWz.js`  
+**Phase 2 built asset (repo / deploy package, not Live):** `index-BkeSH4cj.js`
+
+**Goals:** make decision experience primary — Market Regime Hero, Top Long/Short spotlight, declutter top bar, Event Center, Watchlist, Simple language, scanner/detail productization. No scanner scoring/ranking rewrite.
+
+**Delivered in code:**
+- Design tokens: `frontend/src/styles/phase2Tokens.css` (+ Phase 2 layout CSS in `global.css`)
+- Top bar: brand · scanner freshness · coverage · Simple/Advanced · Event bell · System Status · AI — HOLD / 4.19 moved to System Status drawer
+- Nav: 主要產品 / 研究工具 / 系統資訊 (+ `/watchlist`)
+- Overview: regime hero + data-driven summary (`marketSummary.ts`) · spotlight #1 Long/Short · compact #2–5 · Long/Short balance · chart narratives
+- Event Center drawer (toast/sound/browser notify prefs; sound & browser default OFF; high-priority toast filter)
+- Local Watchlist (localStorage v1, max 30, no account)
+- Scanner desktop sticky table + row expand; mobile candidate cards
+- Symbol detail: Why candidate · support/risk · score bars · price/OI charts
+- Shared `MarketScannerProvider` polling for top bar + overview
+- SPA prefix `watchlist`; build marker `NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE`
+- Previous Live asset `index-9zfXgtWz.js` retained in static package
+
+**Verifies (stdout):** phase2 visual · event/watchlist · product UI · market universe · MVP-22A–D · SPA cache resilience · frontend typecheck/build
+
+**Verdict (code):** `PASS — NEXUS PRODUCT TRANSFORMATION PHASE 2 VERIFIED IN CODE`
+
+**remaining_issues:**
+- redeploy and live Phase 2 visual/product sign-off pending
+- full-market WebSocket fast-lane deferred
+- real anomaly outcome duration pending
+- oi_5m/oi_15m duration pending
+

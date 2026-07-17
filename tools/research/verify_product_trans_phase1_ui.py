@@ -9,10 +9,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 CHECKS = [
-    (ROOT / "frontend/src/components/DecisionMarketOverview.tsx", ["做多機會", "做空機會", "市場脈搏"]),
-    (ROOT / "frontend/src/pages/ScannerPage.tsx", ["全市場掃描器", "useScannerBoard"]),
-    (ROOT / "frontend/src/pages/MarketSymbolPage.tsx", ["No trading", "Research mode"]),
-    (ROOT / "frontend/src/App.tsx", ["/scanner", "/market/:symbol"]),
+    (ROOT / "frontend/src/components/DecisionMarketOverview.tsx", ["首選機會", "市場脈搏", "nx-regime-hero"]),
+    (ROOT / "frontend/src/pages/ScannerPage.tsx", ["市場掃描", "useScannerBoard"]),
+    (ROOT / "frontend/src/pages/MarketSymbolPage.tsx", ["不執行交易", "研究模式"]),
+    (ROOT / "frontend/src/App.tsx", ["/scanner", "/market/:symbol", "/watchlist"]),
     (ROOT / "backend/api/market_scanner_routes.py", ["/api/market/scanner/status", "Read-only"]),
     (ROOT / "backend/market/scanner/scanner_service.py", ["BYBIT_MAINNET_LINEAR", "overlap_blocked"]),
 ]

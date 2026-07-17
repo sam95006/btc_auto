@@ -1,0 +1,85 @@
+/**
+ * NEXUS Market Intelligence — Phase 2 design tokens.
+ * Centralized surfaces, semantics, motion. No neon / glass wall.
+ * READ ONLY · Research mode · Not investment advice
+ */
+
+:root {
+  /* —— Surface hierarchy —— */
+  --nx-bg-0: #0a0e13;
+  --nx-bg-1: #0f141b;
+  --nx-bg-2: #151b24;
+  --nx-bg-3: #1b2330;
+  --nx-border: rgba(148, 163, 184, 0.16);
+  --nx-border-strong: rgba(148, 163, 184, 0.28);
+
+  /* —— Text —— */
+  --nx-text: #e8eef6;
+  --nx-text-2: #a8b4c4;
+  --nx-text-3: #6f7d90;
+
+  /* —— Direction —— */
+  --nx-long: #22c55e;
+  --nx-long-soft: rgba(34, 197, 94, 0.12);
+  --nx-short: #ef4444;
+  --nx-short-soft: rgba(239, 68, 68, 0.12);
+  --nx-warn: #eab308;
+  --nx-warn-soft: rgba(234, 179, 8, 0.14);
+  --nx-neutral: #94a3b8;
+  --nx-live: #22c55e;
+  --nx-delayed: #eab308;
+  --nx-stale: #f97316;
+
+  /* —— Accent (brand, not neon) —— */
+  --nx-accent: #c9a227;
+  --nx-accent-soft: rgba(201, 162, 39, 0.12);
+
+  /* —— Spacing —— */
+  --nx-s1: 0.25rem;
+  --nx-s2: 0.5rem;
+  --nx-s3: 0.75rem;
+  --nx-s4: 1rem;
+  --nx-s5: 1.25rem;
+  --nx-s6: 1.5rem;
+  --nx-s8: 2rem;
+
+  /* —— Radius —— */
+  --nx-r-sm: 6px;
+  --nx-r-md: 10px;
+  --nx-r-lg: 14px;
+
+  /* —— Shadow (minimal) —— */
+  --nx-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+
+  /* —— Type —— */
+  --nx-fs-label: 0.72rem;
+  --nx-fs-body: 0.875rem;
+  --nx-fs-title: 1.125rem;
+  --nx-fs-hero: 1.5rem;
+  --nx-fs-num: 1.75rem;
+  --nx-fs-num-lg: 2.25rem;
+
+  /* —— Motion —— */
+  --nx-dur-fast: 120ms;
+  --nx-dur: 220ms;
+  --nx-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* —— Breakpoints (documentation; use media queries) —— */
+  /* 1440 / 1280 / 1024 / 768 / 430 / 390 / 360 */
+
+  /* —— Chart —— */
+  --nx-chart-grid: rgba(148, 163, 184, 0.12);
+  --nx-chart-axis: #6f7d90;
+  --nx-chart-tooltip-bg: #151b24;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --nx-dur-fast: 1ms;
+    --nx-dur: 1ms;
+  }
+  .nx-motion-ok {
+    animation: none !important;
+    transition: none !important;
+  }
+}

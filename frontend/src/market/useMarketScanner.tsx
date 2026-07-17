@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   fetchScannerCandidates,
   fetchScannerCharts,
@@ -12,7 +12,24 @@ import {
 
 const POLL_MS = 12_000;
 
-export function useMarketScannerOverview() {
+type OverviewCtx = {
+  status: ScannerStatus | null;
+  longs: MarketCandidate[];
+  shorts: MarketCandidate[];
+  events: ScannerEvent[];
+  charts: ScannerCharts | null;
+  error: string | null;
+  loading: boolean;
+  refresh: () => Promise<void>;
+};
+
+const Ctx = createContext<OverviewCtx | null>(null);
+
+/**
+ * Shared scanner overview polling — one interval for top bar + overview + event center.
+ * Does not replace ScannerPage board polling (different payload).
+ */
+export function MarketScannerProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<ScannerStatus | null>(null);
   const [longs, setLongs] = useState<MarketCandidate[]>([]);
   const [shorts, setShorts] = useState<MarketCandidate[]>([]);
@@ -28,14 +45,14 @@ export function useMarketScannerOverview() {
         fetchScannerStatus(),
         fetchScannerCandidates("LONG", 8),
         fetchScannerCandidates("SHORT", 8),
-        fetchScannerEvents(16),
+        fetchScannerEvents(24),
         fetchScannerCharts(),
       ]);
       if (!mounted.current) return;
       setStatus(st);
       setLongs((longBody.candidates || []).filter((c) => c.rank != null).slice(0, 5));
       setShorts((shortBody.candidates || []).filter((c) => c.rank != null).slice(0, 5));
-      setEvents(ev.events || []);
+      setEvents((ev.events || []).slice(0, 40));
       setCharts(ch);
       setError(null);
     } catch (e) {
@@ -56,7 +73,20 @@ export function useMarketScannerOverview() {
     };
   }, [refresh]);
 
-  return { status, longs, shorts, events, charts, error, loading, refresh };
+  const value = useMemo(
+    () => ({ status, longs, shorts, events, charts, error, loading, refresh }),
+    [status, longs, shorts, events, charts, error, loading, refresh],
+  );
+
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+}
+
+export function useMarketScannerOverview() {
+  const ctx = useContext(Ctx);
+  if (!ctx) {
+    throw new Error("useMarketScannerOverview requires MarketScannerProvider");
+  }
+  return ctx;
 }
 
 export function useScannerBoard() {

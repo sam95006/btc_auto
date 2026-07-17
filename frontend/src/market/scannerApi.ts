@@ -150,14 +150,25 @@ export function fetchScannerUniverse() {
 
 export const STAGE_LABEL_ZH: Record<CandidateStage, string> = {
   WATCHING: "觀察中",
-  BUILDING: "形成中",
+  BUILDING: "結構形成中",
   AWAITING_CONFIRMATION: "等待確認",
-  CONFIRMED: "已確認",
+  CONFIRMED: "條件已確認",
   OVEREXTENDED: "過熱勿追",
   COOLING: "條件減弱",
   EXPIRED: "條件已失效",
   INSUFFICIENT_DATA: "資料累積中",
 };
+
+/** Soften technical jargon in Simple View reason lines. */
+export function plainReason(text: string, simple: boolean): string {
+  if (!simple || !text) return text;
+  return text
+    .replace(/\bOI\b/gi, "持倉")
+    .replace(/open interest/gi, "持倉")
+    .replace(/funding/gi, "資金費率擁擠")
+    .replace(/turnover/gi, "交易活躍度")
+    .replace(/overextended/gi, "過熱");
+}
 
 export function sideLabelZh(side: CandidateSide) {
   if (side === "LONG") return "做多機會";

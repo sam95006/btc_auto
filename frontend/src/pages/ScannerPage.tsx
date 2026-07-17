@@ -1,13 +1,16 @@
 import { Link } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import {
   STAGE_LABEL_ZH,
+  plainReason,
   sideLabelZh,
   type CandidateStage,
   type MarketCandidate,
 } from "../market/scannerApi";
 import { useScannerBoard } from "../market/useMarketScanner";
 import { formatUsd } from "../market/freshness";
+import { WatchStarButton } from "../components/WatchStarButton";
+import { loadViewMode, saveViewMode, type ViewMode } from "../market/viewPrefs";
 
 type Filter =
   | "ALL"
@@ -36,15 +39,34 @@ function fmtPct(v: number | null | undefined) {
   return `${v > 0 ? "+" : ""}${v.toFixed(2)}%`;
 }
 
+function rankMove(c: MarketCandidate) {
+  const d = c.rankDelta;
+  if (d == null || d === 0) return "—";
+  return d > 0 ? `↑${d}` : `↓${Math.abs(d)}`;
+}
+
 /**
- * Full market scanner board — server ranking snapshot only.
+ * Full market scanner board — Phase 2 product explorer (server ranking only).
  */
 export function ScannerPage() {
   const { rows, status, error, loading } = useScannerBoard();
   const [filter, setFilter] = useState<Filter>("ALL");
   const [sort, setSort] = useState<SortKey>("opportunity");
   const [q, setQ] = useState("");
-  const [advanced, setAdvanced] = useState(false);
+  const [view, setView] = useState<ViewMode>(() => loadViewMode());
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const advanced = view === "advanced";
+  const simple = view === "simple";
+
+  useEffect(() => {
+    const onView = (e: Event) => {
+      const mode = (e as CustomEvent<ViewMode>).detail;
+      if (mode === "simple" || mode === "advanced") setView(mode);
+    };
+    window.addEventListener("nexus-view-mode", onView);
+    return () => window.removeEventListener("nexus-view-mode", onView);
+  }, []);
 
   const filtered = useMemo(() => {
     let list = [...rows];
@@ -84,130 +106,238 @@ export function ScannerPage() {
   ];
 
   return (
-    <div className="page-stack nx-scanner-page">
+    <div className="page-stack nx-scanner-page nx-p2">
       <header className="nx-ov-header">
-        <h1 className="nx-page-title">全市場掃描器</h1>
+        <h1 className="nx-page-title">市場掃描</h1>
         <p className="nx-status-line">
-          {status?.symbolCount ?? "—"} symbols · {status?.freshness || "—"} · 候選約每{" "}
-          {status?.snapshotIntervalSec ?? 20} 秒重新掃描 · Research only · No trading
+          {filtered.length} / {rows.length} 結果 · {status?.freshness || "—"} · 約每{" "}
+          {status?.snapshotIntervalSec ?? 20} 秒掃描 · 更新{" "}
+          {status?.lastCycleAt ? new Date(status.lastCycleAt).toLocaleTimeString() : "—"}
         </p>
         <div className="nx-ov-meta">
           <Link to="/overview">← 總覽</Link>
-          <button type="button" className="nx-text-btn" onClick={() => setAdvanced((v) => !v)}>
+          <Link to="/watchlist">關注</Link>
+          <button
+            type="button"
+            className="nx-text-btn"
+            onClick={() => {
+              const next: ViewMode = view === "simple" ? "advanced" : "simple";
+              setView(next);
+              saveViewMode(next);
+            }}
+          >
             {advanced ? "簡易" : "進階"}
+          </button>
+          <button type="button" className="nx-text-btn mobile-only" onClick={() => setFiltersOpen(true)}>
+            篩選
           </button>
         </div>
       </header>
 
       {error ? <div className="nx-banner-warn">{error}</div> : null}
 
-      <div className="nx-filter-row">
-        {filters.map((f) => (
-          <button
-            key={f.id}
-            type="button"
-            className={filter === f.id ? "active" : ""}
-            onClick={() => setFilter(f.id)}
-          >
-            {f.label}
-          </button>
-        ))}
+      <div className={`nx-scanner-toolbar ${filtersOpen ? "open" : ""}`}>
+        <div className="nx-filter-row desktop-only">
+          {filters.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              className={filter === f.id ? "active" : ""}
+              onClick={() => setFilter(f.id)}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        {filtersOpen ? (
+          <div className="nx-filter-sheet mobile-only">
+            <div className="nx-filter-row">
+              {filters.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  className={filter === f.id ? "active" : ""}
+                  onClick={() => {
+                    setFilter(f.id);
+                    setFiltersOpen(false);
+                  }}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <button type="button" className="nx-text-btn" onClick={() => setFiltersOpen(false)}>
+              關閉
+            </button>
+          </div>
+        ) : null}
+        <div className="nx-sort-row">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="搜尋 symbol…"
+            className="nx-search"
+          />
+          <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="排序">
+            <option value="opportunity">機會分數</option>
+            <option value="confirmation">確認程度</option>
+            <option value="risk">風險程度</option>
+            <option value="oi">持倉變動</option>
+            <option value="price">價格動能</option>
+            <option value="turnover">交易活躍</option>
+            <option value="liquidity">流動性</option>
+            <option value="newest">最新</option>
+            <option value="rankChange">排名變化</option>
+          </select>
+        </div>
       </div>
 
-      <div className="nx-sort-row">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="搜尋 symbol…"
-          className="nx-search"
-        />
-        <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
-          <option value="opportunity">機會分數</option>
-          <option value="confirmation">確認程度</option>
-          <option value="risk">風險程度</option>
-          <option value="oi">OI 變動</option>
-          <option value="price">價格動能</option>
-          <option value="turnover">交易活躍</option>
-          <option value="liquidity">流動性</option>
-          <option value="newest">最新</option>
-          <option value="rankChange">排名變化</option>
-        </select>
-      </div>
-
-      <div className="nx-scanner-table-wrap">
-        <table className="nx-scanner-table">
+      {/* Desktop table */}
+      <div className="nx-scanner-table-wrap desktop-only">
+        <table className="nx-scanner-table sticky-head">
           <thead>
             <tr>
+              <th>#</th>
               <th>Symbol</th>
               <th>方向</th>
               <th>階段</th>
-              <th>機會</th>
+              <th className={sort === "opportunity" ? "sorted" : ""}>機會</th>
               <th>確認</th>
               <th>風險</th>
-              <th>價格</th>
-              <th>價變</th>
-              <th>OI</th>
-              {advanced ? (
-                <>
-                  <th>Funding</th>
-                  <th>Spread</th>
-                </>
-              ) : null}
-              <th>理由</th>
+              <th>價 5m</th>
+              <th>持倉 5m</th>
+              <th>活躍</th>
+              <th>排名</th>
               <th>新鮮度</th>
+              <th />
             </tr>
           </thead>
           <tbody>
             {loading && filtered.length === 0 ? (
               <tr>
-                <td colSpan={12} className="muted">
+                <td colSpan={13} className="muted">
                   資料累積中…
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={12} className="muted">
-                  無符合條件的市場機會
+                <td colSpan={13} className="muted">
+                  篩選後無結果（不會用假候選填空）
                 </td>
               </tr>
             ) : (
               filtered.map((r) => (
-                <tr key={r.id}>
-                  <td>
-                    <Link to={`/market/${r.symbol}`} className="mono">
-                      {r.symbol}
-                    </Link>
-                  </td>
-                  <td>{sideLabelZh(r.side)}</td>
-                  <td>{STAGE_LABEL_ZH[r.stage]}</td>
-                  <td className="mono">{Math.round(r.opportunityScore)}</td>
-                  <td className="mono">{Math.round(r.confirmationScore)}</td>
-                  <td className="mono">{Math.round(r.riskScore)}</td>
-                  <td className="mono">{formatUsd(r.currentPrice)}</td>
-                  <td className="mono">{fmtPct(r.priceChange5mPct)}</td>
-                  <td className="mono">{fmtPct(r.oiChange5mPct)}</td>
-                  {advanced ? (
-                    <>
-                      <td className="mono">
-                        {r.fundingRate != null ? (r.fundingRate * 100).toFixed(4) + "%" : "—"}
+                <Fragment key={r.id}>
+                  <tr
+                    className="nx-scan-row"
+                    tabIndex={0}
+                    onClick={() => setExpanded(expanded === r.id ? null : r.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") setExpanded(expanded === r.id ? null : r.id);
+                    }}
+                  >
+                    <td className="mono">{r.rank ?? "—"}</td>
+                    <td>
+                      <Link to={`/market/${r.symbol}`} className="mono" onClick={(e) => e.stopPropagation()}>
+                        {r.symbol.replace("USDT", "")}
+                      </Link>
+                    </td>
+                    <td>
+                      <span className={`nx-side-mark side-${r.side.toLowerCase()}`}>
+                        {r.side === "LONG" ? "▲" : r.side === "SHORT" ? "▼" : "·"} {sideLabelZh(r.side)}
+                      </span>
+                    </td>
+                    <td>{STAGE_LABEL_ZH[r.stage]}</td>
+                    <td className="mono">{Math.round(r.opportunityScore)}</td>
+                    <td className="mono">{Math.round(r.confirmationScore)}</td>
+                    <td className="mono">{Math.round(r.riskScore)}</td>
+                    <td className="mono">{fmtPct(r.priceChange5mPct)}</td>
+                    <td className="mono">{fmtPct(r.oiChange5mPct)}</td>
+                    <td className="mono">{r.turnoverPace != null ? r.turnoverPace.toFixed(2) : "—"}</td>
+                    <td className="mono">{rankMove(r)}</td>
+                    <td>{r.freshness}</td>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      <WatchStarButton symbol={r.symbol} />
+                    </td>
+                  </tr>
+                  {expanded === r.id ? (
+                    <tr className="nx-row-expand">
+                      <td colSpan={13}>
+                        <p>{plainReason(r.reasons?.[0] || "—", simple)}</p>
+                        {r.conflicts?.[0] ? (
+                          <p className="muted">風險：{plainReason(r.conflicts[0], simple)}</p>
+                        ) : null}
+                        {advanced ? (
+                          <dl className="nx-kv mono sm">
+                            <div>
+                              <dt>Funding</dt>
+                              <dd>
+                                {r.fundingRate != null ? `${(r.fundingRate * 100).toFixed(4)}%` : "—"}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>Spread</dt>
+                              <dd>{r.spreadBps != null ? r.spreadBps.toFixed(1) : "—"}</dd>
+                            </div>
+                            <div>
+                              <dt>OI Value</dt>
+                              <dd>{r.openInterestValue ?? "—"}</dd>
+                            </div>
+                            <div>
+                              <dt>Price</dt>
+                              <dd>{formatUsd(r.currentPrice)}</dd>
+                            </div>
+                          </dl>
+                        ) : null}
+                        <Link to={`/market/${r.symbol}`}>開啟詳情 →</Link>
                       </td>
-                      <td className="mono">
-                        {r.spreadBps != null ? r.spreadBps.toFixed(1) : "—"}
-                      </td>
-                    </>
+                    </tr>
                   ) : null}
-                  <td className="nx-reason-cell">
-                    {r.reasons?.[0] || "—"}
-                    {advanced && r.conflicts?.[0] ? (
-                      <div className="muted">衝突：{r.conflicts[0]}</div>
-                    ) : null}
-                  </td>
-                  <td>{r.freshness}</td>
-                </tr>
+                </Fragment>
               ))
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="nx-scanner-cards mobile-only">
+        {loading && filtered.length === 0 ? (
+          <p className="muted">資料累積中…</p>
+        ) : filtered.length === 0 ? (
+          <p className="muted">篩選後無結果</p>
+        ) : (
+          filtered.map((r) => (
+            <article key={r.id} className="nx-scan-card">
+              <div className="nx-cand-top">
+                <span className="nx-cand-rank">#{r.rank ?? "—"}</span>
+                <Link to={`/market/${r.symbol}`} className="mono nx-cand-sym">
+                  {r.symbol.replace("USDT", "")}
+                </Link>
+                <WatchStarButton symbol={r.symbol} />
+              </div>
+              <p className="nx-stage-line">
+                <span className={`nx-side-mark side-${r.side.toLowerCase()}`}>
+                  {r.side === "LONG" ? "▲" : "▼"}
+                </span>{" "}
+                {STAGE_LABEL_ZH[r.stage]}
+              </p>
+              <div className="nx-opp-primary inline">
+                <span className="nx-score-label">機會</span>
+                <span className="nx-score-val">{Math.round(r.opportunityScore)}</span>
+              </div>
+              <p className="nx-cand-reason">{plainReason(r.reasons?.[0] || "—", simple)}</p>
+              <div className="nx-cand-moves">
+                <span>確認 {Math.round(r.confirmationScore)}</span>
+                <span className={r.riskScore >= 70 ? "risk" : ""}>風險 {Math.round(r.riskScore)}</span>
+                <span>價 {fmtPct(r.priceChange5mPct)}</span>
+                <span>持倉 {fmtPct(r.oiChange5mPct)}</span>
+                <span>{rankMove(r)}</span>
+              </div>
+              <div className="muted sm">{r.freshness}</div>
+            </article>
+          ))
+        )}
       </div>
     </div>
   );
