@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CompactSafetyStrip } from "./CompactSafetyStrip";
 import { SimplifiedMarketDashboard } from "./SimplifiedMarketDashboard";
 import { useLivePrice } from "../market/useLiveMarketFeed";
 import { useMarketAnomalies } from "../market/useMarketAnomalies";
@@ -248,7 +247,6 @@ export function DecisionMarketOverview() {
 
   return (
     <div className="nx-decision-overview" id="market-dashboard">
-      <CompactSafetyStrip />
       <p className="sr-only">
         READ ONLY. Research mode. Live Mainnet public market data for display only. No trading.
       </p>
@@ -256,7 +254,7 @@ export function DecisionMarketOverview() {
       <header className="nx-ov-header">
         <div className="nx-ov-title-block">
           <h1 className="nx-page-title">市場機會總覽</h1>
-          <p className="nx-status-line">Live market data · Research mode · No trading</p>
+          <p className="nx-status-line">即時市場資料 · 研究模式 · 不執行交易</p>
         </div>
         <div className="nx-ticker-row">
           <CompactTickerChip symbol="BTC" />
@@ -276,9 +274,10 @@ export function DecisionMarketOverview() {
           </button>
         </div>
         <details className="nx-tech-details">
-          <summary className="muted">技術來源</summary>
+          <summary className="muted">技術來源與安全狀態</summary>
           <p className="muted mono">
-            Bybit Mainnet Public Linear · server scanner · researchOnly · private_api=false
+            Bybit Mainnet Public Linear · server scanner · researchOnly · private_api=false · Backend
+            HOLD · Stage 4.19 blocked · No trading
           </p>
         </details>
       </header>

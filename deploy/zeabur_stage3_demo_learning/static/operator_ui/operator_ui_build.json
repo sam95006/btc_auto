@@ -10,17 +10,17 @@
   "marker_found": true,
   "file_count": 4,
   "current_assets": [
-    "index-C-Rjc6Iz.js",
+    "index-9zfXgtWz.js",
     "index-JsAYmE_v.css"
   ],
   "retained_assets": [
+    "index-9zfXgtWz.js",
     "index-C-Rjc6Iz.js",
-    "index-CtD3mGIU.js",
     "index-JsAYmE_v.css"
   ],
   "retained_generations": 2,
   "previous_assets": [
-    "index-CtD3mGIU.js",
+    "index-C-Rjc6Iz.js",
     "index-JsAYmE_v.css"
   ]
 }
