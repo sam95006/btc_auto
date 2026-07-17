@@ -183,15 +183,33 @@ After `dd0ac05`, live still felt status-heavy. Polish pass:
 
 ## 22. POST-MVP-22C repo reconciliation + SPA cache resilience (code)
 
-**Live SoT unchanged:** `fac292d` / `index-DI2woa9V.js` (RUNNING until next deploy).
+**Repo SoT (pre-Live):** `a1fc958` · expected asset `index-DuAW9484.js`.
 
-**Repo fixes (no redeploy this round):**
+**Repo fixes:**
 - Reconciled local MVP-22C semantic regressions (`Turnover expansion`, `/anomalies` SPA, MVP-22C markers).
 - HTML shell: `Cache-Control: no-store, no-cache, must-revalidate, max-age=0`.
 - Hashed assets: `public, max-age=31536000, immutable`.
 - Static sync retains previous hashed JS/CSS generation (max 2) instead of deleting all old assets.
-- Frontend one-shot asset-load recovery + fallback error UI (no infinite reload).
+- Asset-load recovery + fallback error UI (no infinite reload).
 
-**Verdict (code):** `PASS — MVP-22C REPO STATE AND SPA CACHE RESILIENCE VERIFIED IN CODE`  
-**remaining_issues:** redeploy and live stale-cache recovery sign-off pending
+**Live root-cause fix (follow-up):** recovery inside the hashed JS bundle cannot run when that bundle 404s. Moved primary one-shot reload + error UI into **inline `frontend/index.html` bootstrap** (`00a0075` · `index-klwOjLAR.js`).
 
+## 23. SPA Cache Resilience Redeploy + Live Sign-off (2026-07-17)
+
+**Live Source of Truth:** `00a007511df08e5a437313e683976b746c589ca3`  
+**Live asset:** `index-klwOjLAR.js` (+ CSS `index-D_BggeCB.css`)  
+**Retained previous:** `index-DuAW9484.js` (200) · older `index-DI2woa9V.js` pruned (404; 2-generation retention)
+
+**HTTP:** HTML `/` `/overview` `/anomalies` → `no-store, no-cache, must-revalidate, max-age=0` + Pragma/Expires · hashed JS/CSS → `public, max-age=31536000, immutable`
+
+**Playwright Live:**
+- Current HTML + current asset: mount PASS
+- Stale HTML + retained previous asset: mount PASS
+- Missing asset → one-shot reload → current HTML: PASS
+- Persistent missing → fallback error UI, guard=`failed`, no empty root, no loop: PASS
+- Desktop/tablet/mobile overview+anomalies: PASS · no horizontal overflow
+
+**Regression:** MVP-22～22C feed/anomaly/turnover PASS · market tickers public-only · safety PASS
+
+**Verdict:** `PASS — SPA CACHE RESILIENCE DEPLOYED AND LIVE VERIFIED`  
+**remaining_issues:** `oi_5m` / `oi_15m` live duration pending (unchanged; not blocking)
