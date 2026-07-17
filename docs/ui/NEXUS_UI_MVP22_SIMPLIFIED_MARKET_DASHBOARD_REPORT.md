@@ -226,3 +226,20 @@ After `dd0ac05`, live still felt status-heavy. Polish pass:
 
 **Verdict (code):** `PASS — MVP-22D ANOMALY OUTCOME RESEARCH VERIFIED IN CODE`  
 **remaining_issues:** redeploy and live outcome-duration verification pending · OI 5m/15m duration pending
+
+## 25. MVP-22D Redeploy + Live Outcome Research Sign-off (2026-07-17)
+
+**Live Source of Truth:** `4e62f2e78d840aa33e2a6603bd9ca2ca1094fbc6`
+**Live asset:** `index-BLh5ikEO.js` (+ CSS `index-BMXNpqmh.css`)
+**Core feature commit:** `6322582` · **Live polish:** session banner + overflow + retain `index-klwOjLAR.js`
+
+**Verified Live:**
+- `/anomaly-outcomes` mounts · Session-based research observation banner visible
+- HTML no-store · hashed assets immutable · previous `klwOjLAR` + `BOIvB-zY` retained (200)
+- MVP-22~22C regression PASS · market tickers public-only
+- Synthetic outcome state-machine PASS
+- Desktop/mobile: page horizontal overflow absent; table internal scroll on <=768px
+- No natural Live anomaly during sign-off -> real 5m/15m/30m/60m duration **pending** (not fabricated)
+
+**Verdict:** `PASS — MVP-22D ANOMALY OUTCOME RESEARCH DEPLOYED AND VERIFIED`
+**remaining_issues:** real outcome window duration pending (no_live_event_available) · oi_5m/oi_15m duration pending
