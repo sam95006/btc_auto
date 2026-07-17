@@ -213,3 +213,16 @@ After `dd0ac05`, live still felt status-heavy. Polish pass:
 
 **Verdict:** `PASS — SPA CACHE RESILIENCE DEPLOYED AND LIVE VERIFIED`  
 **remaining_issues:** `oi_5m` / `oi_15m` live duration pending (unchanged; not blocking)
+
+## 24. MVP-22D — Anomaly Outcome Tracking & Research Validation (code)
+
+**Scope:** read-only forward outcome tracking for detected anomalies (5m / 15m / 30m / 60m). **No** Recommendation / confidence / Gauge / trading changes · **no** redeploy this round.
+
+**Model:** one `AnomalyOutcome` per `anomalyId` · windows PENDING→COMPLETE|MISSED|STALE · timestamp tolerance 15s · MFE/MAE + forward return · bounded in-memory store.
+
+**UI:** `/anomaly-outcomes` research page · Anomaly Radar link “View outcome tracking” · aggregations labeled *Observed research outcomes* / *Insufficient sample*.
+
+**Safety:** mvp22～22d PASS · SPA cache resilience verify PASS · synthetic outcome state-machine PASS.
+
+**Verdict (code):** `PASS — MVP-22D ANOMALY OUTCOME RESEARCH VERIFIED IN CODE`  
+**remaining_issues:** redeploy and live outcome-duration verification pending · OI 5m/15m duration pending

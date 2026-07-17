@@ -5,8 +5,10 @@ import { MarketTopTicker } from "./components/MarketTopTicker";
 import { SafetyBanner } from "./components/SafetyBanner";
 import { SidebarNav } from "./components/SidebarNav";
 import { LiveMarketProvider } from "./market/useLiveMarketFeed";
+import { AnomalyOutcomeProvider } from "./market/useAnomalyOutcomes";
 import { MarketAnomalyProvider } from "./market/useMarketAnomalies";
 import { AnomaliesPage } from "./pages/AnomaliesPage";
+import { AnomalyOutcomesPage } from "./pages/AnomalyOutcomesPage";
 import { AcademyPage } from "./pages/AcademyPage";
 import { AssistantPage } from "./pages/AssistantPage";
 import { CalculatorPage } from "./pages/CalculatorPage";
@@ -30,6 +32,7 @@ export default function App() {
   return (
     <LiveMarketProvider>
       <MarketAnomalyProvider>
+      <AnomalyOutcomeProvider>
       <div className="app-shell mi-shell mvp22-shell">
         <SafetyBanner />
         <MarketTopTicker />
@@ -41,6 +44,7 @@ export default function App() {
                 <Route path="/" element={<Navigate to="/overview" replace />} />
                 <Route path="/overview" element={<OverviewPage />} />
                 <Route path="/anomalies" element={<AnomaliesPage />} />
+                <Route path="/anomaly-outcomes" element={<AnomalyOutcomesPage />} />
                 <Route path="/fleets" element={<FleetsPage />} />
                 <Route path="/signals" element={<SignalsPage />} />
                 <Route path="/risk-evidence" element={<RiskEvidencePage />} />
@@ -60,6 +64,7 @@ export default function App() {
         </div>
         <FloatingAIAssistant />
       </div>
+      </AnomalyOutcomeProvider>
       </MarketAnomalyProvider>
     </LiveMarketProvider>
   );

@@ -1,24 +1,26 @@
 {
   "source": "frontend/dist",
   "dest": "deploy/zeabur_stage3_demo_learning/static/operator_ui",
-  "marker": "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR",
+  "marker": "NEXUS_UI_MVP22D_ANOMALY_OUTCOME_RESEARCH",
+  "mvp22c_marker": "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR",
   "mvp22b_marker": "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT",
   "mvp22a_marker": "NEXUS_UI_MVP22A_LIVE_MARKET_DATA",
   "legacy_marker": "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60",
   "marker_found": true,
-  "file_count": 4,
+  "file_count": 5,
   "current_assets": [
-    "index-D_BggeCB.css",
-    "index-klwOjLAR.js"
+    "index-BOIvB-zY.js",
+    "index-CccBYZq0.css"
   ],
   "retained_assets": [
+    "index-BOIvB-zY.js",
+    "index-CccBYZq0.css",
     "index-D_BggeCB.css",
-    "index-DuAW9484.js",
     "index-klwOjLAR.js"
   ],
   "retained_generations": 2,
   "previous_assets": [
     "index-D_BggeCB.css",
-    "index-DuAW9484.js"
+    "index-klwOjLAR.js"
   ]
 }

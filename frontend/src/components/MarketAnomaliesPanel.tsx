@@ -72,6 +72,10 @@ function AnomalyCard({ a }: { a: MarketAnomaly }) {
       <div className="anomaly-times mono muted">
         First {new Date(a.firstSeenAt).toISOString()} · Updated {new Date(a.lastSeenAt).toISOString()}
       </div>
+      <p className="anomaly-outcome-link">
+        <Link to={`/anomaly-outcomes#${a.id}`}>View outcome tracking</Link>
+        <span className="muted"> · research only · not a recommendation</span>
+      </p>
     </article>
   );
 }
