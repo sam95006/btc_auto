@@ -273,11 +273,39 @@ Bybit Public Market Data → NEXUS Read-only Market Scanner (server)
 
 **Smoke:** live universe ~742 tickers → 80 eligible · scanner refresh produces real Long/Short candidates (`researchOnly=true`)
 
-**Build asset (repo, not Live):** `index-CCe0pwCY.js`
+**Build asset (repo, not Live at time of code commit):** `index-CCe0pwCY.js`
 
 **Verdict (code):** `PASS — NEXUS PRODUCT TRANSFORMATION PHASE 1 VERIFIED IN CODE`
 
-**remaining_issues:**
+**remaining_issues (at code commit):**
 - redeploy and live scanner/product sign-off pending
 - real anomaly outcome duration pending
 - oi_5m/oi_15m duration pending
+
+## 27. Phase 1 Redeploy + Live Sign-off (2026-07-17)
+
+**Live Source of Truth:** `df0a519a106d5aa8e6cda45beca5dfa6cc82a525`  
+**Live asset:** `index-9zfXgtWz.js`  
+**Prior Phase 1 code:** `a7b5b86` · Live polish path: `e9836ed` (register scanner on `run.py`) → `4e245c8` (no collecting Top-5 fill) → `df0a519` (overview declutter)
+
+**Root cause found during Live:** Zeabur serves monorepo `gunicorn app:app` / `run.py` (nexus-web), not `stage3_readonly_web_app.py`. Scanner routes were initially only on the deploy-package entrypoint → `/api/market/scanner/*` 404 until `e9836ed`.
+
+**Live verified:**
+- Universe: ~742 tickers → ~97 eligible → 80 limit; exclusions include `LOW_LIQUIDITY` / `UNSUPPORTED`
+- Scanner: ~20.6s average cycle · overlap blocked · `historyCapacity=72` · gunicorn workers default 1
+- After ~5m window: real Long/Short with non-null `priceChange5mPct` / `oiChange5mPct`; collecting symbols do not fill Top 5
+- Cadence copy: 「候選約每 20 秒重新掃描」
+- Charts: Market Breadth sum=80 · Turnover Top 10 · Price/OI quadrant points only when 5m ready
+- Playwright: `/overview` `/scanner` `/market/BTCUSDT` `/anomalies` `/anomaly-outcomes` mount · 0 page errors · no horizontal overflow at 1440/1280/1024/768/430/390/375/360
+- Three-second cues PASS (Pulse · Long/Short · cadence · research/no-trading · no Buy/Sell CTA)
+- SPA: HTML `no-store` · hashed assets immutable · previous `C-Rjc6Iz` / `BLh5ikEO` retained 200
+- Toast observed (rank up / overextended) · sound/notification default OFF
+- Recommendation/trading isolation unchanged · private_api=false
+
+**Verdict:** `PASS — NEXUS PRODUCT TRANSFORMATION PHASE 1 DEPLOYED AND LIVE VERIFIED`
+
+**remaining_issues:**
+- real anomaly outcome 5m/15m/30m/60m duration pending
+- MVP-22B oi_5m/oi_15m duration pending (BTC/ETH/SOL browser feed)
+- full-market WebSocket adapter deferred
+- chrome still shows compact Backend HOLD / 4.19 chip in top bar (not overview body); deeper chrome declutter is Phase 2 polish
