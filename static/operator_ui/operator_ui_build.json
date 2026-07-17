@@ -9,17 +9,16 @@
   "file_count": 4,
   "current_assets": [
     "index-D_BggeCB.css",
-    "index-DuAW9484.js"
+    "index-klwOjLAR.js"
   ],
   "retained_assets": [
-    "index-CpBPYA6d.js",
-    "index-DI2woa9V.js",
     "index-D_BggeCB.css",
-    "index-DuAW9484.js"
+    "index-DuAW9484.js",
+    "index-klwOjLAR.js"
   ],
   "retained_generations": 2,
   "previous_assets": [
-    "index-CpBPYA6d.js",
-    "index-D_BggeCB.css"
+    "index-D_BggeCB.css",
+    "index-DuAW9484.js"
   ]
 }

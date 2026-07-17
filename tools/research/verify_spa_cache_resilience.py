@@ -16,8 +16,9 @@ def main() -> int:
     sync_py = ROOT / "tools" / "deploy" / "sync_operator_ui_into_zeabur_stage3.py"
     recovery_ts = ROOT / "frontend" / "src" / "assetLoadRecovery.ts"
     main_ts = ROOT / "frontend" / "src" / "main.tsx"
+    index_html = ROOT / "frontend" / "index.html"
 
-    for path in (cache_py, sync_py, recovery_ts, main_ts):
+    for path in (cache_py, sync_py, recovery_ts, main_ts, index_html):
         if not path.is_file():
             issues.append(f"missing:{path.relative_to(ROOT)}")
 
@@ -30,6 +31,14 @@ def main() -> int:
     sync_src = sync_py.read_text(encoding="utf-8")
     if "retained_assets" not in sync_src or "previous_refs" not in sync_src:
         issues.append("asset_retention_missing")
+
+    index_src = index_html.read_text(encoding="utf-8")
+    if "nexus_ui_asset_reload_guard" not in index_src:
+        issues.append("inline_html_bootstrap_guard_missing")
+    if "NEXUS UI could not load" not in index_src:
+        issues.append("inline_html_fallback_error_ui_missing")
+    if "location.reload()" not in index_src:
+        issues.append("inline_html_oneshot_reload_missing")
 
     recovery_src = recovery_ts.read_text(encoding="utf-8")
     if "RELOAD_GUARD_KEY" not in recovery_src or "failed" not in recovery_src:

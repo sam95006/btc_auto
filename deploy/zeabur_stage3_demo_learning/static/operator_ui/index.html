@@ -13,7 +13,57 @@
       content="Read-only research UI. Bybit Mainnet public lastPrice for display only. No live trading."
     />
     <title>NEXUS — Live Market Intelligence</title>
-    <script type="module" crossorigin src="/assets/index-DuAW9484.js"></script>
+    <!-- Inline bootstrap: must run even when hashed main bundle 404s after deploy. -->
+    <script>
+      (function () {
+        var KEY = "nexus_ui_asset_reload_guard";
+        function isAssetUrl(url) {
+          return !!url && /\/assets\/index-[^/]+\.(js|css)/i.test(String(url));
+        }
+        function showError() {
+          var root = document.getElementById("root");
+          if (!root || root.childElementCount > 0) return;
+          root.innerHTML =
+            '<div style="font-family:system-ui,sans-serif;max-width:32rem;margin:2rem auto;padding:1rem 1.25rem;line-height:1.5">' +
+            "<strong>NEXUS UI could not load.</strong>" +
+            "<p>A newer version may have been deployed. Please refresh once. If this persists, clear site data for this domain.</p>" +
+            "<p><small>READ-ONLY · research UI · not investment advice</small></p>" +
+            "</div>";
+        }
+        try {
+          if (sessionStorage.getItem(KEY) === "failed") {
+            if (document.readyState === "loading") {
+              document.addEventListener("DOMContentLoaded", showError);
+            } else {
+              showError();
+            }
+          }
+        } catch (e) {}
+        window.addEventListener(
+          "error",
+          function (event) {
+            var t = event && event.target;
+            if (!t || (t.tagName !== "SCRIPT" && t.tagName !== "LINK")) return;
+            var src = t.src || t.href || "";
+            if (!isAssetUrl(src)) return;
+            try {
+              var state = sessionStorage.getItem(KEY);
+              if (state === "1" || state === "failed") {
+                sessionStorage.setItem(KEY, "failed");
+                showError();
+                return;
+              }
+              sessionStorage.setItem(KEY, "1");
+              location.reload();
+            } catch (e) {
+              showError();
+            }
+          },
+          true
+        );
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-klwOjLAR.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-D_BggeCB.css">
   </head>
   <body>

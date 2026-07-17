@@ -1,13 +1,12 @@
 /**
- * One-shot reload when hashed SPA assets 404 after deploy (stale HTML shell).
+ * Secondary recovery for ChunkLoadError / dynamic import failures after the
+ * main bundle has already loaded. Primary shell recovery lives inline in
+ * frontend/index.html so a missing hashed main asset can still recover.
  * Does not intercept market WebSocket errors.
  */
 const RELOAD_GUARD_KEY = "nexus_ui_asset_reload_guard";
 
-function isAssetLoadFailure(message: string, source?: string): boolean {
-  if (source && /\/assets\/index-[^/]+\.(js|css)/i.test(source)) {
-    return true;
-  }
+function isChunkLoadFailure(message: string): boolean {
   return /ChunkLoadError|Failed to fetch dynamically imported module|Loading chunk \d+ failed|Importing a module script failed/i.test(
     message
   );
@@ -38,36 +37,13 @@ export function installAssetLoadRecovery(): void {
     return;
   }
 
-  window.addEventListener(
-    "error",
-    (event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLScriptElement) && !(target instanceof HTMLLinkElement)) {
-        return;
-      }
-      const source = target instanceof HTMLScriptElement ? target.src : target.href;
-      if (!source || !isAssetLoadFailure("", source)) {
-        return;
-      }
-      const state = sessionStorage.getItem(RELOAD_GUARD_KEY);
-      if (state === "1") {
-        sessionStorage.setItem(RELOAD_GUARD_KEY, "failed");
-        showAssetErrorUi();
-        return;
-      }
-      sessionStorage.setItem(RELOAD_GUARD_KEY, "1");
-      window.location.reload();
-    },
-    true
-  );
-
   window.addEventListener("unhandledrejection", (event) => {
     const message = String((event.reason as Error | undefined)?.message ?? event.reason ?? "");
-    if (!isAssetLoadFailure(message)) {
+    if (!isChunkLoadFailure(message)) {
       return;
     }
     const state = sessionStorage.getItem(RELOAD_GUARD_KEY);
-    if (state === "1") {
+    if (state === "1" || state === "failed") {
       sessionStorage.setItem(RELOAD_GUARD_KEY, "failed");
       showAssetErrorUi();
       return;
