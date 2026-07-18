@@ -13,7 +13,7 @@ export function WatchStarButton({ symbol, className }: { symbol: string; classNa
         e.preventDefault();
         e.stopPropagation();
         const next = toggleWatch(symbol);
-        setOn(next.symbols.includes(symbol.toUpperCase()));
+        setOn(next.items.some((i) => i.symbol === symbol.toUpperCase() && i.assetClass === "CRYPTO"));
       }}
     >
       {on ? "★" : "☆"}

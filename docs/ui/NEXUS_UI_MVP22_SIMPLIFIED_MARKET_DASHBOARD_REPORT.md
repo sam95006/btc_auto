@@ -376,3 +376,35 @@ Bybit Public Market Data → NEXUS Read-only Market Scanner (server)
 - Real anomaly outcome duration pending
 - OI 5m／15m duration pending (BTC/ETH/SOL feed)
 
+## 30. Phase 3 — Sector / Chart / Equities Foundation (code verified, no Redeploy)
+
+**Repository base at start:** `45a9e3ca98f14b69523ff747cdd47cb2892ecf8a` (Phase 2 docs-only head)  
+**Current Live functional SoT (unchanged this round):** `7dfc87886b2adcd0af93bc1073e434d5e5b0a1bf` · asset `index-BkeSH4cj.js` · marker Phase 2  
+**Redeploy:** not performed this round
+
+### Delivered in code
+- Crypto Sector Taxonomy (NEXUS curated, multi-membership, provenance/confidence)
+- Server-side Sector Aggregation Engine + `/api/market/sectors*` (breadth ~742 + deep ~80)
+- `/crypto/sectors`, `/crypto/sectors/:slug`, `/crypto/oi`, `/crypto/funding`, `/crypto/price-oi`
+- NEXUS Chart Data Layer: `/api/market/charts/ohlcv|open-interest|funding` (Bybit public; funding history honest unavailable)
+- Symbol detail SVG chart via NEXUS datafeed (no TradingView market data / scraping)
+- Equities foundation: `/equities/tokenized` · `/equities/analysis` · provider-pending (no fake quotes)
+- Watchlist schema v2 (`assetClass`) with v1 migration
+- Hierarchical nav: product / crypto / equities / research / system
+
+### Explicit non-goals this round
+- No licensed equity / tokenized equity live quotes
+- No TradingView scraping or unofficial TV APIs
+- No candidate scoring / ranking / Recommendation / trading path changes
+- No Live Redeploy / Live SoT mutation
+
+**Architecture note:** `docs/ui/NEXUS_PHASE3_SECTOR_CHART_EQUITIES_ARCHITECTURE.md`
+
+**remaining_issues (expected until Redeploy + providers):**
+- redeploy and live Phase 3 sector/chart sign-off pending
+- licensed equity market data provider selection pending
+- tokenized equity provider selection pending
+- full-market WebSocket fast-lane deferred
+- full candidate stage transition timeline deferred
+- real anomaly outcome duration pending
+

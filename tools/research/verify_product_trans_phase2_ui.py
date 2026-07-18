@@ -19,6 +19,7 @@ CHECKS = [
     (ROOT / "frontend/src/App.tsx", ["/watchlist", "MarketScannerProvider"]),
     (ROOT / "frontend/src/market/useMarketScanner.tsx", ["MarketScannerProvider", "POLL_MS"]),
     (ROOT / "backend/api/operator_ui_routes.py", ["watchlist", "PHASE2_DECISION_EXPERIENCE"]),
+    # Phase 3 retains Phase 2 marker as legacy string in buildInfo / routes.
 ]
 
 FORBIDDEN = [
@@ -74,7 +75,11 @@ def main() -> int:
         ok = False
 
     wl = (ROOT / "frontend/src/market/watchlistStore.ts").read_text(encoding="utf-8")
-    if "LIMIT = 30" in wl and "version: 1" in wl:
+    if "LIMIT = 30" in wl and ("version: 2" in wl or "version: 1" in wl) and "migrateV1" in wl:
+        print("watchlist_bounded=true")
+        print("watchlist_schema_versioned=true")
+        print("watchlist_v1_migration_present=true")
+    elif "LIMIT = 30" in wl and "version: 1" in wl:
         print("watchlist_bounded=true")
         print("watchlist_schema_versioned=true")
     else:

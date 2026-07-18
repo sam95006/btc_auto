@@ -1,26 +1,28 @@
 {
   "source": "frontend/dist",
   "dest": "static/operator_ui",
-  "marker": "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE",
+  "marker": "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES",
+  "phase2_marker": "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE",
+  "mvp22d_marker": "NEXUS_UI_MVP22D_ANOMALY_OUTCOME_RESEARCH",
+  "mvp22c_marker": "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR",
+  "mvp22b_marker": "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT",
+  "mvp22a_marker": "NEXUS_UI_MVP22A_LIVE_MARKET_DATA",
+  "legacy_marker": "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60",
+  "marker_found": true,
+  "file_count": 5,
   "current_assets": [
-    "index-BkeSH4cj.js",
-    "index-EFqAIPyf.css"
+    "index-ChR5GS_H.js",
+    "index-DV6_5x8g.css"
   ],
   "retained_assets": [
-    "index-9zfXgtWz.js",
-    "index-BLh5ikEO.js",
-    "index-BMXNpqmh.css",
     "index-BkeSH4cj.js",
-    "index-C-Rjc6Iz.js",
-    "index-CtD3mGIU.js",
-    "index-EFqAIPyf.css",
-    "index-JsAYmE_v.css",
-    "index-klwOjLAR.js"
-  ],
-  "previous_assets": [
-    "index-9zfXgtWz.js",
-    "index-JsAYmE_v.css"
+    "index-ChR5GS_H.js",
+    "index-DV6_5x8g.css",
+    "index-EFqAIPyf.css"
   ],
   "retained_generations": 2,
-  "marker_found": true
+  "previous_assets": [
+    "index-BkeSH4cj.js",
+    "index-EFqAIPyf.css"
+  ]
 }

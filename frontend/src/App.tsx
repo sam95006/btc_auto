@@ -25,11 +25,18 @@ import { ScannerPage } from "./pages/ScannerPage";
 import { MarketSymbolPage } from "./pages/MarketSymbolPage";
 import { WatchlistPage } from "./pages/WatchlistPage";
 import { SignalsPage } from "./pages/SignalsPage";
+import { CryptoSectorsPage } from "./pages/crypto/CryptoSectorsPage";
+import { CryptoSectorDetailPage } from "./pages/crypto/CryptoSectorDetailPage";
+import { CryptoFundingPage, CryptoOiPage, CryptoPriceOiPage } from "./pages/crypto/CryptoRankPages";
+import {
+  EquitiesAnalysisPage,
+  EquitiesIndexRedirect,
+  EquitiesTokenizedPage,
+} from "./pages/equities/EquitiesPages";
 
 /**
- * NEXUS Product Transformation Phase 2 — decision experience (read-only).
+ * NEXUS Product Transformation Phase 3 — sectors, charts, equities foundation (read-only).
  * Forbidden: /trade, /orders, /arm, /routing-edit
- * Market: Bybit Mainnet public data · server scanner · no private API
  */
 export default function App() {
   return (
@@ -37,7 +44,7 @@ export default function App() {
       <MarketAnomalyProvider>
       <AnomalyOutcomeProvider>
       <MarketScannerProvider>
-      <div className="app-shell mi-shell mvp22-shell nx-phase2-shell">
+      <div className="app-shell mi-shell mvp22-shell nx-phase2-shell nx-phase3-shell">
         <SafetyBanner />
         <MarketTopTicker />
         <div className="app-body app-body-no-rail">
@@ -50,6 +57,14 @@ export default function App() {
                 <Route path="/scanner" element={<ScannerPage />} />
                 <Route path="/market/:symbol" element={<MarketSymbolPage />} />
                 <Route path="/watchlist" element={<WatchlistPage />} />
+                <Route path="/crypto/sectors" element={<CryptoSectorsPage />} />
+                <Route path="/crypto/sectors/:sectorSlug" element={<CryptoSectorDetailPage />} />
+                <Route path="/crypto/oi" element={<CryptoOiPage />} />
+                <Route path="/crypto/funding" element={<CryptoFundingPage />} />
+                <Route path="/crypto/price-oi" element={<CryptoPriceOiPage />} />
+                <Route path="/equities" element={<EquitiesIndexRedirect />} />
+                <Route path="/equities/tokenized" element={<EquitiesTokenizedPage />} />
+                <Route path="/equities/analysis" element={<EquitiesAnalysisPage />} />
                 <Route path="/anomalies" element={<AnomaliesPage />} />
                 <Route path="/anomaly-outcomes" element={<AnomalyOutcomesPage />} />
                 <Route path="/fleets" element={<FleetsPage />} />

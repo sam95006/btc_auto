@@ -527,8 +527,16 @@ export function DecisionMarketOverview() {
             </strong>
           </div>
           <div>
-            <span className="lbl">覆蓋</span>
+            <span className="lbl">深度掃描</span>
             <strong>{status?.symbolCount ?? "—"} / {status?.symbolLimit ?? 80}</strong>
+          </div>
+          <div>
+            <span className="lbl">市場涵蓋</span>
+            <strong>
+              <Link to="/crypto/sectors" className="nx-inline-link">
+                廣度層 · 版塊
+              </Link>
+            </strong>
           </div>
           <div>
             <span className="lbl">新鮮度</span>

@@ -1,17 +1,19 @@
 /**
- * Visible UI deploy marker (Product Transformation Phase 2).
+ * Visible UI deploy marker (Product Transformation Phase 3).
  * READ ONLY · NOT INVESTMENT ADVICE · backend HOLD (in System Status)
  */
 export const NEXUS_UI_BUILD_INFO = {
-  uiVersion: "PT-2",
-  uiStyle: "Decision Experience · Visual Intelligence",
+  uiVersion: "PT-3",
+  uiStyle: "Sector Intelligence · Chart Data Layer · Equities Foundation",
   publicName: "NEXUS — Live Market Intelligence",
   latestCommit: "pending",
   backendState: "HOLD",
   stage419: "BLOCKED",
   /** Compact top-bar / footer label */
-  displayLabel: "PT-2 · decision experience",
-  buildMarker: "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE",
+  displayLabel: "PT-3 · sector · chart · equities",
+  buildMarker: "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES",
+  /** Retained so Phase 2 / Live SoT checks still find the string. */
+  phase2LegacyMarker: "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE",
   /** Retained so Phase 1 / MVP-22D / prior Live SoT checks still find the string. */
   phase1LegacyMarker: "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE1_MARKET_SCANNER",
   mvp22dLegacyMarker: "NEXUS_UI_MVP22D_ANOMALY_OUTCOME_RESEARCH",

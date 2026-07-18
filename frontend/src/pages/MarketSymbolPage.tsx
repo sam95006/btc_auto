@@ -9,6 +9,7 @@ import {
 } from "../market/scannerApi";
 import { formatUsd } from "../market/freshness";
 import { WatchStarButton } from "../components/WatchStarButton";
+import { NexusOhlcvChart } from "../components/NexusOhlcvChart";
 import { loadViewMode, saveViewMode, type ViewMode } from "../market/viewPrefs";
 
 function fmtPct(v: number | null | undefined) {
@@ -313,8 +314,14 @@ export function MarketSymbolPage() {
         </section>
       ) : null}
 
+      <section className="nx-chart-card nx-ohlcv-wrap">
+        <h2 className="nx-sec-title">NEXUS 圖表（交易所公開資料）</h2>
+        <p className="muted sm">Bybit Public → NEXUS datafeed · 非 TradingView 行情來源</p>
+        <NexusOhlcvChart symbol={symbol} advanced={advanced} />
+      </section>
+
       <section className="nx-chart-card">
-        <h2 className="nx-sec-title">短期價格走勢</h2>
+        <h2 className="nx-sec-title">短期價格走勢（掃描器窗口）</h2>
         <Sparkline points={spark} />
       </section>
 

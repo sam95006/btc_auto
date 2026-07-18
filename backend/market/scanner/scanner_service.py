@@ -341,6 +341,37 @@ class MarketScannerService:
                 "cache": "no-store",
             }
 
+    def sector_deep_snapshot(self) -> dict[str, Any]:
+        """Read-only deep-scan rows for sector aggregation (Phase 3). Does not alter scoring."""
+        with self._lock:
+            rows = []
+            for sym, snap in self._latest.items():
+                hist = list(self._history.get(sym) or [])
+                cand = next((c for c in self._candidates if c.get("symbol") == sym), None)
+                rows.append(
+                    {
+                        "symbol": sym,
+                        "lastPrice": snap.get("lastPrice"),
+                        "change24hPct": snap.get("change24hPct"),
+                        "turnover24h": snap.get("turnover24h"),
+                        "fundingRate": snap.get("fundingRate"),
+                        "openInterest": snap.get("openInterest"),
+                        "openInterestValue": snap.get("openInterestValue"),
+                        "priceChange5mPct": (cand or {}).get("priceChange5mPct"),
+                        "oiChange5mPct": (cand or {}).get("oiChange5mPct"),
+                        "collecting": bool((cand or {}).get("collecting")),
+                        "historyPoints": len(hist),
+                    }
+                )
+            return {
+                "ok": True,
+                "symbolCount": len(rows),
+                "freshness": self.status().get("freshness"),
+                "rows": rows,
+                "candidates": list(self._candidates),
+                "generatedAt": int(time.time() * 1000),
+            }
+
     def charts(self) -> dict[str, Any]:
         with self._lock:
             breadth = dict(self._breadth)

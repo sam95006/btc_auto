@@ -3559,3 +3559,79 @@ button {
 @media (prefers-reduced-motion: reduce) {
   .nx-toast, .nx-drawer-panel { transition: none !important; animation: none !important; }
 }
+
+/* ===== NEXUS Product Transformation Phase 3 ===== */
+.nx-phase3-shell .nav-group + .nav-group { margin-top: 0.65rem; }
+.nx-nav-p3 .nav-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--nx-text-2);
+  margin: 0.35rem 0.5rem 0.25rem;
+}
+.nx-sector-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.65rem; }
+.nx-sector-card {
+  border: 1px solid var(--nx-border);
+  border-radius: var(--nx-r-md, 8px);
+  background: var(--nx-bg-2, #151b24);
+  padding: 0.65rem 0.75rem;
+}
+.nx-sector-head {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) auto auto;
+  gap: 0.35rem 0.75rem;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+}
+.nx-sector-name { font-weight: 650; }
+.nx-sector-state { font-size: 0.78rem; color: var(--nx-accent); }
+.nx-sector-meta { margin-top: 0.35rem; }
+.nx-sector-members { margin-top: 0.55rem; overflow-x: auto; }
+.nx-filter-row, .nx-sort-row, .nx-eq-tabs, .nx-chart-toolbar {
+  display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.5rem 0 0.75rem;
+}
+.nx-filter-row button, .nx-eq-tabs a, .nx-chart-toolbar button {
+  border: 1px solid var(--nx-border);
+  background: var(--nx-bg-3, #1b2330);
+  color: var(--nx-text);
+  border-radius: 6px;
+  padding: 0.28rem 0.55rem;
+  font-size: 0.78rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+.nx-filter-row button.active, .nx-eq-tabs a.active, .nx-chart-toolbar button.active {
+  border-color: var(--nx-accent);
+  color: var(--nx-accent);
+}
+.nx-bar-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.35rem; }
+.nx-bar-list li { display: grid; grid-template-columns: 64px 1fr 48px; gap: 0.4rem; align-items: center; }
+.nx-bar-track { height: 8px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; }
+.nx-bar-fill { display: block; height: 100%; background: var(--nx-accent); }
+.nx-bar-fill.up { background: var(--nx-long); }
+.nx-bar-fill.down { background: var(--nx-short); }
+.nx-ohlcv { margin-top: 0.35rem; }
+.nx-chart-toggle { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.78rem; }
+.nx-eq-tabs { border-bottom: 1px solid var(--nx-border); padding-bottom: 0.45rem; }
+.nx-search-wrap { display: block; margin: 0.75rem 0; }
+.nx-search {
+  width: min(420px, 100%);
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--nx-border);
+  background: var(--nx-bg-3);
+  color: var(--nx-text);
+}
+.nx-inline-link { color: var(--nx-accent); text-decoration: none; }
+.nx-p3 .nx-banner-warn { margin: 0.5rem 0 0.85rem; }
+
+@media (max-width: 768px) {
+  .nx-sector-head { grid-template-columns: 1fr; }
+  .nx-bar-list li { grid-template-columns: 52px 1fr 40px; }
+  .nx-nav-p3 .nav-text-full { display: none; }
+  .nx-nav-p3 .nav-text-short { display: inline; }
+}

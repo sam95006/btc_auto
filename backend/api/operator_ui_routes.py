@@ -10,7 +10,8 @@ from flask import abort, jsonify, request, send_from_directory
 
 from backend.api.operator_ui_cache import apply_operator_ui_cache_headers, is_operator_ui_html_path
 
-OPERATOR_BUILD_MARKER = "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE"
+OPERATOR_BUILD_MARKER = "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES"
+PHASE2_BUILD_MARKER = "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE"
 MVP22C_BUILD_MARKER = "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR"
 MVP22B_BUILD_MARKER = "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT"
 MVP22A_BUILD_MARKER = "NEXUS_UI_MVP22A_LIVE_MARKET_DATA"
@@ -20,6 +21,8 @@ _SPA_PREFIXES = (
     "scanner",
     "market",
     "watchlist",
+    "crypto",
+    "equities",
     "anomalies",
     "anomaly-outcomes",
     "fleets",
