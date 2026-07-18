@@ -437,13 +437,14 @@ Bybit Public Market Data → NEXUS Read-only Market Scanner (server)
 - Full candidate stage transition timeline deferred
 - Real anomaly outcome duration pending
 
-## 32. Phase 4 — Visual Reduction + Market Intelligence Backend (code verified, no Redeploy)
+## 32. Phase 4 — Visual Reduction + Market Intelligence Backend
 
-**Base repo head:** `1428298a47e0d52a21c9b07672954e09dffe8b98`  
-**Current Live functional SoT (unchanged this round):** `3d213c8a480f822664e286010fe45a817f8ae415` · asset `index-BZTA1-bM.js` · Phase 3 marker  
-**Expected Phase 4 asset (repo/static, pending Redeploy):** `index-BhzPt_Df.js`  
+**Phase 4 repository / Live functional SoT:** `2533fb9ff223e8caab85c058eb77285d0ee09def`  
+**Live asset:** `index-BhzPt_Df.js` + `index-DVRzanNn.css`  
 **UI marker:** `NEXUS_UI_PRODUCT_AND_INTELLIGENCE_PHASE4`  
-**Redeploy:** not performed this round
+**Live URL:** https://nexus-stage3-bybit-demo-learning.zeabur.app/  
+**Deploy:** auto-deployed from remote `2533fb9` (manual Redeploy not required)  
+**Live verify:** `python tools/research/verify_phase4_live_playwright.py` → PASS
 
 ### Track A — Visual Reduction
 - Compact header: Live market vs execution Disabled separated; DEMO DATA banner removed
@@ -460,12 +461,16 @@ Bybit Public Market Data → NEXUS Read-only Market Scanner (server)
 - Bounded history / outcome server stores (honest memory vs NEXUS_DATA_DIR persistence)
 - Funding history wired from Bybit public `/v5/market/funding/history` (no fabrication)
 - `GET /api/market/intelligence/status`
+- Live intelligence: `transport=WS`, `wsConnected=true`, funding `fabricatedHistory=false`
 - No candidate formula / Recommendation / trading path changes
 
-**remaining_issues:**
-- redeploy and live Phase 4 product/backend sign-off pending
+**Live remaining_issues (product/intelligence):**
 - licensed equity market data provider selection pending
 - tokenized equity provider selection pending
 - real anomaly outcome durations pending if no natural event
 - full-market (~642) WebSocket still deferred (deep-scan 80 only)
+
+## 33. Phase 4 Live Gate (Gate A) — DEPLOYED AND LIVE VERIFIED
+
+See Live Playwright + API discovery: assets match Phase 4; intelligence/funding/timeline APIs live; UI compact header / Top Long·Short / clean footer verified. Fixed four-fleet HQ runtime remains deprecated for new work (historical docs only).
 
