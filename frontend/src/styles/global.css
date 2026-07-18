@@ -3741,3 +3741,56 @@ button {
   .nx-regime-stats-compact { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 }
 
+
+/* Phase 5 Gate B ¡X AI Review Center (.nx-ai-reviews) */
+.nx-ai-reviews { padding: 1.5rem; max-width: 860px; margin: 0 auto; }
+.nx-ai-reviews-page-header { margin-bottom: 1.5rem; }
+.nx-ai-reviews-status-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+.nx-ai-reviews-status-header {
+  display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;
+}
+.nx-ai-reviews-title { font-weight: 600; font-size: 1rem; }
+.nx-ai-reviews-status-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.75rem;
+}
+.nx-ai-reviews-label { font-size: 0.72rem; opacity: 0.55; margin-bottom: 0.2rem; text-transform: uppercase; }
+.nx-ai-reviews-value { font-size: 0.95rem; font-weight: 500; }
+.nx-ai-reviews-current {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08);
+}
+.nx-ai-reviews-sessions-section { margin-bottom: 2rem; }
+.nx-ai-reviews-sessions-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.nx-ai-reviews-session-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; padding: 1rem;
+}
+.nx-ai-reviews-session-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
+.nx-ai-reviews-slot { font-size: 0.8rem; opacity: 0.7; font-family: monospace; }
+.nx-ai-reviews-session-meta { font-size: 0.75rem; opacity: 0.5; display: flex; gap: 1.2rem; }
+.nx-ai-reviews-error-note { font-size: 0.8rem; color: #f87171; margin-top: 0.4rem; }
+.nx-ai-reviews-error-banner {
+  background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.3);
+  border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 1rem; font-size: 0.85rem; color: #fca5a5;
+}
+.nx-ai-reviews-empty { padding: 2rem; text-align: center; }
+.nx-ai-reviews-loading { padding: 1rem 0; }
+.nx-ai-reviews-summary-hint { font-size: 0.75rem; margin-top: 0.4rem; }
+.nx-ai-reviews-footer { font-size: 0.72rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); }
+.nx-text-warn { color: #fbbf24; }
+.nx-badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; }
+.nx-badge-ok { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+.nx-badge-active { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); }
+.nx-badge-fail { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
+.nx-badge-dim { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.1); }
+@media (max-width: 600px) {
+  .nx-ai-reviews-status-grid { grid-template-columns: repeat(2, 1fr); }
+  .nx-ai-reviews-session-meta { flex-direction: column; gap: 0.25rem; }
+}

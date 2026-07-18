@@ -28,6 +28,7 @@ from backend.api.market_scanner_routes import register_market_scanner_routes
 from backend.api.market_sector_routes import register_market_sector_routes
 from backend.api.market_chart_routes import register_market_chart_routes
 from backend.api.market_intelligence_routes import register_market_intelligence_routes
+from backend.nexus_research.api_routes import register_nexus_research_routes
 
 app = Flask(__name__, template_folder=str(ROOT / "templates"))
 
@@ -59,6 +60,7 @@ _SPA_PREFIXES = (
     "academy",
     "calculator",
     "membership",
+    "ai-reviews",  # Phase 5 Gate B
 )
 
 
@@ -113,6 +115,11 @@ register_market_scanner_routes(app)
 register_market_sector_routes(app)
 register_market_chart_routes(app)
 register_market_intelligence_routes(app)
+try:
+    register_nexus_research_routes(app)  # Phase 5 Gate B
+except Exception as _e:
+    import logging as _log
+    _log.getLogger(__name__).warning("[stage3] nexus_research routes not registered: %s", _e)
 
 
 @app.route("/health")
