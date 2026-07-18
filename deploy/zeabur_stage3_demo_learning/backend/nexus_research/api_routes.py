@@ -99,7 +99,18 @@ def get_review_case(case_id: str):
         case = get_review_case_manager().get_case(case_id)
         if case is None:
             return _err("case not found", 404)
-        data = {"ok": True, "researchOnly": True, "case": case.to_dict()}
+        payload = case.to_dict()
+        decision = payload.get("decision") or {}
+        assessments = decision.get("assessments") or []
+        data = {
+            "ok": True,
+            "researchOnly": True,
+            "case": payload,
+            "roleAssessments": assessments,
+            "decisionStatus": decision.get("decisionStatus"),
+            "analysisMode": decision.get("analysisMode") or "RULES",
+            "fabricatedChat": False,
+        }
     except Exception as exc:  # noqa: BLE001
         data = {"ok": False, "error": str(exc), "researchOnly": True}
     resp = jsonify(data)

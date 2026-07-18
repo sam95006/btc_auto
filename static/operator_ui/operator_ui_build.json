@@ -12,18 +12,18 @@
   "marker_found": true,
   "file_count": 5,
   "current_assets": [
-    "index-BVoNwt4E.js",
-    "index-LdM4AbsE.css"
+    "index-CbnM1cBW.js",
+    "index-DnR1AQao.css"
   ],
   "retained_assets": [
     "index-BVoNwt4E.js",
-    "index-BhzPt_Df.js",
-    "index-DVRzanNn.css",
+    "index-CbnM1cBW.js",
+    "index-DnR1AQao.css",
     "index-LdM4AbsE.css"
   ],
   "retained_generations": 3,
   "previous_assets": [
-    "index-BhzPt_Df.js",
-    "index-DVRzanNn.css"
+    "index-BVoNwt4E.js",
+    "index-LdM4AbsE.css"
   ]
 }

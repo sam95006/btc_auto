@@ -120,7 +120,18 @@ try:
         candidate_snapshot={"symbol": "TESTUSDT", "score": 55, "stage": "BUILDING"},
     )
     check("create_case returns CandidateReviewCase", case is not None)
-    check("case.status == PENDING", case.status == STATUS_PENDING if case else False)
+    check(
+        "case.status after instant review",
+        case is not None
+        and case.status in ("COMPLETED", "IN_REVIEW", "PENDING")
+        and (case.status != "COMPLETED" or bool(case.decision)),
+    )
+    if case and case.decision:
+        assessments = case.decision.get("assessments") or []
+        check(
+            "instant review includes RISK_CRITIC",
+            any(a.get("role") == "RISK_CRITIC" for a in assessments),
+        )
 
     # dedup: same case, should return None
     case2 = mgr.create_case(

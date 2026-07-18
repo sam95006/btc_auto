@@ -159,7 +159,41 @@ class ReviewCaseManager:
             {"caseId": case_id, "symbol": symbol, "direction": direction, "trigger": trigger},
             idempotency_key=f"case:{self._dedup_key(symbol, direction, trigger)}:{int(time.time()//60)}",
         )
-        return case
+        # Instant path: role review immediately — do not wait for 6h cycle.
+        try:
+            self.run_instant_role_review(case_id)
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("[review_cases] instant role review deferred: %s", exc)
+        return self._cases.get(case_id) or case
+
+    def run_instant_role_review(self, case_id: str) -> dict[str, Any] | None:
+        """Run DecisionOrchestrator for one case (Risk Critic mandatory). Research-only."""
+        with self._lock:
+            case = self._cases.get(case_id)
+            if case is None:
+                return None
+            if case.decision:
+                return case.decision
+            snapshot = dict(case.candidate_snapshot)
+            symbol = case.symbol
+            direction = case.direction
+            active = sum(
+                1 for c in self._cases.values() if c.status in (STATUS_PENDING, STATUS_IN_REVIEW)
+            )
+
+        self.update_case_status(case_id, STATUS_IN_REVIEW)
+        from backend.nexus_research.roles import DecisionOrchestrator
+
+        cand = dict(snapshot)
+        cand.setdefault("symbol", symbol)
+        cand.setdefault("side", direction)
+        decision = DecisionOrchestrator().run(
+            case_id,
+            cand,
+            {"activeCases": active, "triggerType": "INSTANT_CASE"},
+        )
+        self.update_case_status(case_id, STATUS_COMPLETED, decision=decision)
+        return decision
 
     def update_case_status(
         self,

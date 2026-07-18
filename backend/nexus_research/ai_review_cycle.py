@@ -158,6 +158,50 @@ class AIReviewCycleScheduler:
 
         try:
             summary = self._collect_session_summary()
+            # Process a bounded set of open cases (not all 80 symbols).
+            reviewed = []
+            try:
+                from backend.nexus_research.review_cases import (
+                    STATUS_PENDING,
+                    get_review_case_manager,
+                )
+
+                mgr = get_review_case_manager()
+                pending = [
+                    c
+                    for c in mgr.list_cases(limit=40)
+                    if c.get("status") == STATUS_PENDING and not c.get("decision")
+                ][:10]
+                for c in pending:
+                    cid = c.get("caseId")
+                    if not cid:
+                        continue
+                    decision = mgr.run_instant_role_review(str(cid))
+                    if decision:
+                        reviewed.append(
+                            {
+                                "caseId": cid,
+                                "symbol": decision.get("symbol"),
+                                "decisionStatus": decision.get("decisionStatus"),
+                                "supportingRoles": [
+                                    a.get("role")
+                                    for a in (decision.get("assessments") or [])
+                                    if a.get("verdict")
+                                    in ("FAVORABLE", "ALIGNED", "ACCEPTABLE", "OK", "SUPPORT")
+                                ],
+                                "opposingRoles": [
+                                    a.get("role")
+                                    for a in (decision.get("assessments") or [])
+                                    if a.get("verdict")
+                                    in ("UNFAVORABLE", "BLOCKED", "UNALIGNED", "WEAK", "CONFLICT")
+                                ],
+                                "analysisMode": decision.get("analysisMode"),
+                            }
+                        )
+            except Exception as review_exc:  # noqa: BLE001
+                summary["caseReviewError"] = str(review_exc)
+            summary["casesReviewed"] = reviewed
+            summary["casesReviewedCount"] = len(reviewed)
             session.summary = summary
             session.state = STATE_COMPLETED
             session.completed_at = int(time.time() * 1000)

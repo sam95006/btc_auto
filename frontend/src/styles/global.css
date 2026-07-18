@@ -3790,7 +3790,24 @@ button {
 .nx-badge-active { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); }
 .nx-badge-fail { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
 .nx-badge-dim { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.1); }
+.nx-ai-reviews-case-card {
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; padding: 1rem;
+}
+.nx-ai-reviews-role-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.6rem; margin-top: 0.75rem;
+}
+.nx-ai-reviews-role-card {
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px; padding: 0.7rem; font-size: 0.8rem;
+}
+.nx-ai-reviews-decision-summary { font-size: 0.88rem; margin: 0.5rem 0; }
+.nx-ai-reviews-role-meta { font-size: 0.72rem; margin-top: 0.35rem; }
+.nx-ai-reviews-mini-list { margin: 0.35rem 0 0; padding-left: 1.1rem; }
 @media (max-width: 600px) {
   .nx-ai-reviews-status-grid { grid-template-columns: repeat(2, 1fr); }
   .nx-ai-reviews-session-meta { flex-direction: column; gap: 0.25rem; }
+  .nx-ai-reviews-role-grid { grid-template-columns: 1fr; }
 }
