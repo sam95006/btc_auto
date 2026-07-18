@@ -17,6 +17,7 @@ from backend.api.market_public_routes import register_market_public_routes
 from backend.api.market_scanner_routes import register_market_scanner_routes
 from backend.api.market_sector_routes import register_market_sector_routes
 from backend.api.market_chart_routes import register_market_chart_routes
+from backend.api.market_intelligence_routes import register_market_intelligence_routes
 from backend.api.server import register_nexus_routes
 from backend.core.env_loader import load_env_file
 from backend.runtime.single_instance_guard import SingleInstanceError, SingleInstanceGuard
@@ -42,6 +43,7 @@ register_market_public_routes(app)
 register_market_scanner_routes(app)
 register_market_sector_routes(app)
 register_market_chart_routes(app)
+register_market_intelligence_routes(app)
 # UI-DEPLOY-2: Market Intelligence SPA (static/operator_ui) — register before / catch-alls finish
 register_operator_ui_routes(app)
 

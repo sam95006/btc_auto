@@ -59,3 +59,14 @@ def register_market_scanner_routes(app: Flask) -> None:
     def market_scanner_charts():
         scanner = get_market_scanner()
         return _no_store(jsonify(scanner.charts()))
+
+    @app.route("/api/market/scanner/candidates/<symbol>/timeline")
+    def market_scanner_candidate_timeline(symbol: str):
+        from backend.market.intelligence.transition_store import get_transition_store
+
+        try:
+            limit = int(request.args.get("limit") or 40)
+        except ValueError:
+            limit = 40
+        body = get_transition_store().timeline(symbol, limit=limit)
+        return _no_store(jsonify(body))

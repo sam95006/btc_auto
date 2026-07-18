@@ -27,11 +27,12 @@ from backend.api.market_public_routes import register_market_public_routes
 from backend.api.market_scanner_routes import register_market_scanner_routes
 from backend.api.market_sector_routes import register_market_sector_routes
 from backend.api.market_chart_routes import register_market_chart_routes
+from backend.api.market_intelligence_routes import register_market_intelligence_routes
 
 app = Flask(__name__, template_folder=str(ROOT / "templates"))
 
 OPERATOR_UI_DIR = ROOT / "static" / "operator_ui"
-OPERATOR_BUILD_MARKER = "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES"
+OPERATOR_BUILD_MARKER = "NEXUS_UI_PRODUCT_AND_INTELLIGENCE_PHASE4"
 MVP22C_BUILD_MARKER = "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR"
 MVP22B_BUILD_MARKER = "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT"
 MVP22A_BUILD_MARKER = "NEXUS_UI_MVP22A_LIVE_MARKET_DATA"
@@ -111,6 +112,7 @@ register_market_public_routes(app)
 register_market_scanner_routes(app)
 register_market_sector_routes(app)
 register_market_chart_routes(app)
+register_market_intelligence_routes(app)
 
 
 @app.route("/health")

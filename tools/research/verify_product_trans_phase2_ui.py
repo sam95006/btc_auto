@@ -10,16 +10,15 @@ ROOT = Path(__file__).resolve().parents[2]
 
 CHECKS = [
     (ROOT / "frontend/src/styles/phase2Tokens.css", ["--nx-bg-0", "--nx-long", "--nx-short", "prefers-reduced-motion"]),
-    (ROOT / "frontend/src/components/MarketTopTicker.tsx", ["SystemStatusDrawer", "EventBellButton", "候選約每", "研究模式"]),
-    (ROOT / "frontend/src/components/DecisionMarketOverview.tsx", ["nx-regime-hero", "nx-spotlight", "buildMarketSummary", "多空候選分布"]),
+    (ROOT / "frontend/src/components/MarketTopTicker.tsx", ["SystemStatusDrawer", "EventBellButton", "研究模式", "NEXUS"]),
+    (ROOT / "frontend/src/components/DecisionMarketOverview.tsx", ["nx-regime-hero", "nx-spotlight", "buildMarketSummary"]),
     (ROOT / "frontend/src/components/EventCenter.tsx", ["事件中心", "browserNotify", "聲音"]),
     (ROOT / "frontend/src/pages/WatchlistPage.tsx", ["關注清單", "WATCHLIST_LIMIT", "本機儲存"]),
     (ROOT / "frontend/src/pages/ScannerPage.tsx", ["nx-scanner-cards", "sticky-head", "useScannerBoard"]),
     (ROOT / "frontend/src/pages/MarketSymbolPage.tsx", ["為什麼是候選", "支持因素", "主要風險"]),
     (ROOT / "frontend/src/App.tsx", ["/watchlist", "MarketScannerProvider"]),
     (ROOT / "frontend/src/market/useMarketScanner.tsx", ["MarketScannerProvider", "POLL_MS"]),
-    (ROOT / "backend/api/operator_ui_routes.py", ["watchlist", "PHASE2_DECISION_EXPERIENCE"]),
-    # Phase 3 retains Phase 2 marker as legacy string in buildInfo / routes.
+    (ROOT / "frontend/src/demo/buildInfo.ts", ["phase3LegacyMarker"]),
 ]
 
 FORBIDDEN = [
@@ -95,6 +94,12 @@ def main() -> int:
             ok = False
         else:
             print("candidate_scoring_unchanged_for_recommendation=true")
+
+    # Phase 2 marker retained for Live SoT / sync compatibility
+    op = (ROOT / "backend/api/operator_ui_routes.py").read_text(encoding="utf-8")
+    if "watchlist" not in op or "PHASE2_DECISION_EXPERIENCE" not in op:
+        print("MISSING phase2 marker or watchlist spa in operator_ui_routes")
+        ok = False
 
     print("fake_candidate_fill_absent=true")
     print("private_api_used=false")

@@ -437,3 +437,35 @@ Bybit Public Market Data → NEXUS Read-only Market Scanner (server)
 - Full candidate stage transition timeline deferred
 - Real anomaly outcome duration pending
 
+## 32. Phase 4 — Visual Reduction + Market Intelligence Backend (code verified, no Redeploy)
+
+**Base repo head:** `1428298a47e0d52a21c9b07672954e09dffe8b98`  
+**Current Live functional SoT (unchanged this round):** `3d213c8a480f822664e286010fe45a817f8ae415` · asset `index-BZTA1-bM.js` · Phase 3 marker  
+**Expected Phase 4 asset (repo/static, pending Redeploy):** `index-BhzPt_Df.js`  
+**UI marker:** `NEXUS_UI_PRODUCT_AND_INTELLIGENCE_PHASE4`  
+**Redeploy:** not performed this round
+
+### Track A — Visual Reduction
+- Compact header: Live market vs execution Disabled separated; DEMO DATA banner removed
+- Collecting: single progress panel (not dual empty spotlight cards)
+- Regime hero compacted; Top Long/Short remain primary when ready
+- Sector momentum strip on overview
+- Sidebar: explore/tools/rankings/equities + collapsed research
+- Product footer cleaned (build/HOLD/marker → System Status / sr-only)
+- AI FAB prompts product-facing; reduced motion pulse removed
+
+### Track B — Market Intelligence Backend
+- 80-symbol Bybit public WebSocket fast-lane (REST bootstrap + reconciliation; throttled candidate recompute)
+- Candidate transition store + timeline API
+- Bounded history / outcome server stores (honest memory vs NEXUS_DATA_DIR persistence)
+- Funding history wired from Bybit public `/v5/market/funding/history` (no fabrication)
+- `GET /api/market/intelligence/status`
+- No candidate formula / Recommendation / trading path changes
+
+**remaining_issues:**
+- redeploy and live Phase 4 product/backend sign-off pending
+- licensed equity market data provider selection pending
+- tokenized equity provider selection pending
+- real anomaly outcome durations pending if no natural event
+- full-market (~642) WebSocket still deferred (deep-scan 80 only)
+

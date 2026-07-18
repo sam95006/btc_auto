@@ -9,3 +9,4 @@ tradingview-ta
 python-dotenv
 requests
 flask-sock
+websocket-client

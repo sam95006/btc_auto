@@ -95,7 +95,13 @@ def main() -> int:
         _ok(route in app, f"route_{route.replace('/', '_').replace(':', '')}", failures)
     nav = _read("frontend/src/components/SidebarNav.tsx")
     _ok("幣種版塊" in nav and "美股代幣" in nav and "Outcome Research" in nav, "navigation_reorganized", failures)
-    _ok("PHASE3_SECTOR_CHART_EQUITIES" in _read("frontend/src/demo/buildInfo.ts"), "phase3_build_marker", failures)
+    bi = _read("frontend/src/demo/buildInfo.ts")
+    op_txt = _read("backend/api/operator_ui_routes.py")
+    _ok(
+        "PHASE3_SECTOR_CHART_EQUITIES" in bi or "PHASE3_SECTOR_CHART_EQUITIES" in op_txt,
+        "phase3_build_marker",
+        failures,
+    )
     _ok("crypto" in _read("backend/api/operator_ui_routes.py") and "equities" in _read("backend/api/operator_ui_routes.py"), "spa_prefixes", failures)
 
     # --- Safety isolation ---

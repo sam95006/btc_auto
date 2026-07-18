@@ -44,7 +44,7 @@ export default function App() {
       <MarketAnomalyProvider>
       <AnomalyOutcomeProvider>
       <MarketScannerProvider>
-      <div className="app-shell mi-shell mvp22-shell nx-phase2-shell nx-phase3-shell">
+      <div className="app-shell mi-shell mvp22-shell nx-phase2-shell nx-phase3-shell nx-phase4-shell">
         <SafetyBanner />
         <MarketTopTicker />
         <div className="app-body app-body-no-rail">

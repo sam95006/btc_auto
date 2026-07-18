@@ -14,12 +14,66 @@ import {
 } from "../market/scannerApi";
 import { useMarketScannerOverview } from "../market/useMarketScanner";
 import { buildMarketSummary, deriveRegime } from "../market/marketSummary";
-import { loadViewMode, saveViewMode, type ViewMode } from "../market/viewPrefs";
+import { loadViewMode, type ViewMode } from "../market/viewPrefs";
 import {
   isHighPriorityEvent,
   loadEventPrefs,
   type EventPrefs,
 } from "../market/eventPrefs";
+import { fetchSectors, type SectorRow } from "../market/sectorApi";
+
+function CollectingPanel({
+  startedAt,
+  status,
+}: {
+  startedAt?: number | null;
+  status: ReturnType<typeof useMarketScannerOverview>["status"];
+}) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  const WINDOW_MS = 5 * 60 * 1000;
+  const start = startedAt || status?.lastCycleAt || now;
+  const elapsed = Math.max(0, now - start);
+  const remain = Math.max(0, WINDOW_MS - elapsed);
+  const elapsedSec = Math.floor(elapsed / 1000);
+  const remainSec = Math.floor(remain / 1000);
+  const mm = String(Math.floor(elapsedSec / 60)).padStart(1, "0");
+  const ss = String(elapsedSec % 60).padStart(2, "0");
+  const rmm = String(Math.floor(remainSec / 60)).padStart(1, "0");
+  const rss = String(remainSec % 60).padStart(2, "0");
+  const priceReady = (status?.symbolCount || 0) > 0;
+  const breadthReady = Boolean(status?.breadth && (status.breadth.rising || status.breadth.falling || status.breadth.neutral));
+  const windowReady = Boolean(topCandidatesReady(status));
+  return (
+    <section className="nx-collecting-panel" aria-label="Collecting progress">
+      <div className="nx-collect-head">
+        <strong>正在建立短期市場結構</strong>
+        <span className="mono muted">
+          {mm}:{ss} / 約 5:00 · 剩餘約 {rmm}:{rss}
+        </span>
+      </div>
+      <ul className="nx-collect-checks">
+        <li className={priceReady ? "done" : ""}>{priceReady ? "✓" : "○"} 即時價格</li>
+        <li className={breadthReady ? "done" : ""}>{breadthReady ? "✓" : "○"} 市場廣度</li>
+        <li className="done">✓ Funding（點值）</li>
+        <li className="done">✓ 交易活躍度</li>
+        <li className={windowReady ? "done" : ""}>{windowReady ? "✓" : "○"} 5m 價格窗口</li>
+        <li className={windowReady ? "done" : ""}>{windowReady ? "✓" : "○"} 5m 持倉窗口</li>
+      </ul>
+      <p className="muted sm">預計約數分鐘後產生候選排名 · 不會顯示假候選</p>
+    </section>
+  );
+}
+
+function topCandidatesReady(status: ReturnType<typeof useMarketScannerOverview>["status"]) {
+  const insuff = status?.breadth?.insufficient ?? 0;
+  const n = status?.symbolCount ?? 0;
+  if (!n) return false;
+  return insuff < n * 0.7;
+}
 
 function fmtPct(v: number | null | undefined) {
   if (v == null || Number.isNaN(v)) return "—";
@@ -452,72 +506,84 @@ export function DecisionMarketOverview() {
   const restShort = shorts.slice(1);
 
   const emptyLongMsg = loading
-    ? "資料累積中…"
-    : status?.breadth?.insufficient && status.breadth.insufficient >= (status.symbolCount || 0)
-      ? "資料累積中：約 5 分鐘窗口建立後才會產生做多排名"
-      : "暫無符合條件的做多機會";
+    ? "資料建立中…"
+    : "暫無符合條件的做多機會";
   const emptyShortMsg = loading
-    ? "資料累積中…"
-    : status?.breadth?.insufficient && status.breadth.insufficient >= (status.symbolCount || 0)
-      ? "資料累積中：約 5 分鐘窗口建立後才會產生做空排名"
-      : "暫無符合條件的做空機會";
+    ? "資料建立中…"
+    : "暫無符合條件的做空機會";
+
+  const [sectors, setSectors] = useState<SectorRow[]>([]);
+  useEffect(() => {
+    let alive = true;
+    void fetchSectors("performance")
+      .then((b) => {
+        if (alive) setSectors((b.sectors || []).slice(0, 5));
+      })
+      .catch(() => undefined);
+    const id = window.setInterval(() => {
+      void fetchSectors("performance")
+        .then((b) => {
+          if (alive) setSectors((b.sectors || []).slice(0, 5));
+        })
+        .catch(() => undefined);
+    }, 30000);
+    return () => {
+      alive = false;
+      window.clearInterval(id);
+    };
+  }, []);
+
+  const collecting =
+    !topLong &&
+    !topShort &&
+    (loading ||
+      Boolean(
+        status?.breadth?.insufficient &&
+          status.breadth.insufficient >= Math.max(1, (status.symbolCount || 1) * 0.5),
+      ));
 
   return (
-    <div className="nx-decision-overview nx-p2" id="market-dashboard">
+    <div className="nx-decision-overview nx-p2 nx-p4" id="market-dashboard">
       <p className="sr-only">
         READ ONLY. Research mode. Live Mainnet public market data for display only. No trading.
       </p>
 
-      <header className="nx-ov-header nx-ov-compact">
+      <header className="nx-ov-header nx-ov-compact nx-ov-p4">
         <div className="nx-ov-title-block">
           <h1 className="nx-page-title">市場機會總覽</h1>
-          <p className="nx-status-line">即時市場資料 · 研究模式 · 不執行交易</p>
         </div>
         <div className="nx-ticker-row">
           <CompactTickerChip symbol="BTC" />
           <CompactTickerChip symbol="ETH" />
           <CompactTickerChip symbol="SOL" />
         </div>
-        <div className="nx-ov-meta muted">
-          <button
-            type="button"
-            className="nx-text-btn"
-            onClick={() => {
-              const next: ViewMode = view === "simple" ? "advanced" : "simple";
-              setView(next);
-              saveViewMode(next);
-            }}
-          >
-            {simple ? "切換進階" : "切換簡易"}
-          </button>
-        </div>
       </header>
 
       {error ? (
-        <div className="nx-banner-warn">掃描器暫不可用：{error}。請稍後重試，不會連續狂打 API。</div>
+        <div className="nx-banner-warn">掃描器暫不可用：{error}。請稍後重試。</div>
       ) : null}
 
-      <section className="nx-regime-hero" aria-label="Market regime">
+      <section className="nx-regime-hero nx-regime-compact" aria-label="Market regime">
         <div className="nx-regime-main">
           <p className="nx-regime-label">市場狀態</p>
           <p className={`nx-regime-value regime-${regime}`}>{regime}</p>
           <p className="nx-regime-summary">{summary}</p>
         </div>
-        <div className="nx-regime-stats">
+        <div className="nx-regime-stats nx-regime-stats-compact">
           <div>
-            <span className="lbl">做多候選</span>
+            <span className="lbl">做多</span>
             <strong className="up">{status?.longCandidates ?? "—"}</strong>
           </div>
           <div>
-            <span className="lbl">做空候選</span>
+            <span className="lbl">做空</span>
             <strong className="down">{status?.shortCandidates ?? "—"}</strong>
           </div>
           <div>
-            <span className="lbl">已確認</span>
+            <span className="lbl">確認</span>
             <strong>{status?.confirmedCandidates ?? "—"}</strong>
           </div>
           <div>
-            <span className="lbl">高風險</span>
+            <span className="lbl">風險</span>
             <strong className="risk">{status?.highRiskCandidates ?? "—"}</strong>
           </div>
           <div>
@@ -527,52 +593,42 @@ export function DecisionMarketOverview() {
             </strong>
           </div>
           <div>
-            <span className="lbl">深度掃描</span>
-            <strong>{status?.symbolCount ?? "—"} / {status?.symbolLimit ?? 80}</strong>
-          </div>
-          <div>
-            <span className="lbl">市場涵蓋</span>
-            <strong>
-              <Link to="/crypto/sectors" className="nx-inline-link">
-                廣度層 · 版塊
-              </Link>
-            </strong>
-          </div>
-          <div>
-            <span className="lbl">新鮮度</span>
-            <strong>{status?.freshness || "—"}</strong>
-          </div>
-          <div>
             <span className="lbl">異動</span>
             <strong>{activeAnomalies}</strong>
           </div>
         </div>
       </section>
 
+      {collecting ? (
+        <CollectingPanel startedAt={status?.lastCycleAt} status={status} />
+      ) : null}
+
       <section className="nx-spotlight-row" aria-label="Top Long Short spotlight">
         <div className="nx-tops-head">
           <h2 className="nx-sec-title">首選機會</h2>
-          <p className="nx-cadence muted">
-            候選約每 {status?.snapshotIntervalSec ?? 20} 秒更新 · Research only
-          </p>
           <Link to="/scanner" className="nx-link">
             完整掃描 →
           </Link>
         </div>
-        <div className="nx-spotlight-grid">
-          {topLong ? (
-            <SpotlightCard c={topLong} simple={simple} />
-          ) : (
-            <div className="nx-spotlight empty muted">{emptyLongMsg}</div>
-          )}
-          {topShort ? (
-            <SpotlightCard c={topShort} simple={simple} />
-          ) : (
-            <div className="nx-spotlight empty muted">{emptyShortMsg}</div>
-          )}
-        </div>
+        {collecting && !topLong && !topShort ? (
+          <p className="muted sm">候選排名建立中 — 下方仍可查看廣度、版塊與活躍度。</p>
+        ) : (
+          <div className="nx-spotlight-grid">
+            {topLong ? (
+              <SpotlightCard c={topLong} simple={simple} />
+            ) : (
+              <div className="nx-spotlight empty muted">{emptyLongMsg}</div>
+            )}
+            {topShort ? (
+              <SpotlightCard c={topShort} simple={simple} />
+            ) : (
+              <div className="nx-spotlight empty muted">{emptyShortMsg}</div>
+            )}
+          </div>
+        )}
       </section>
 
+      {!collecting || topLong || topShort ? (
       <section className="nx-tops nx-rest-tops" aria-label="Remaining top 5">
         <div className="nx-side-tabs mobile-only">
           <button
@@ -623,9 +679,10 @@ export function DecisionMarketOverview() {
           </div>
         </div>
       </section>
+      ) : null}
 
-      <section className="nx-pulse-band" aria-label="Market pulse">
-        <h2 className="nx-sec-title">市場脈搏</h2>
+      <section className="nx-pulse-band nx-pulse-p4" aria-label="Market intelligence charts">
+        <h2 className="nx-sec-title">市場情報圖表</h2>
         <LongShortBalance
           longs={status?.longCandidates ?? 0}
           shorts={status?.shortCandidates ?? 0}
@@ -635,9 +692,41 @@ export function DecisionMarketOverview() {
           <MarketBreadthChart breadth={charts?.breadth || status?.breadth} />
           <TurnoverChart rows={charts?.turnoverTop10 || []} />
         </div>
-        {(charts?.priceOiQuadrant?.length || 0) > 0 || !simple ? (
-          <PriceOiQuadrant points={charts?.priceOiQuadrant || []} />
-        ) : null}
+        <PriceOiQuadrant points={charts?.priceOiQuadrant || []} />
+        <p className="muted sm">
+          <Link to="/crypto/price-oi">開啟完整 Price／OI 結構 →</Link>
+        </p>
+      </section>
+
+      <section className="nx-sector-momentum" aria-label="Sector momentum">
+        <div className="nx-tops-head">
+          <h2 className="nx-sec-title">版塊動能</h2>
+          <Link to="/crypto/sectors" className="nx-link">
+            全部版塊 →
+          </Link>
+        </div>
+        <ul className="nx-sector-momentum-list">
+          {sectors.length === 0 ? (
+            <li className="muted">版塊資料載入中…</li>
+          ) : (
+            sectors.map((s) => (
+              <li key={s.id}>
+                <Link to={`/crypto/sectors/${s.slug}`} className="nx-sector-momentum-row">
+                  <strong>{s.nameZhTW}</strong>
+                  <span>{s.sectorStateLabelZh}</span>
+                  <span className="mono">
+                    {s.turnoverWeightedReturn24h != null
+                      ? `${s.turnoverWeightedReturn24h > 0 ? "+" : ""}${s.turnoverWeightedReturn24h.toFixed(2)}%`
+                      : "—"}
+                  </span>
+                  <span className="muted sm">
+                    多 {s.longCandidateCount}／空 {s.shortCandidateCount}
+                  </span>
+                </Link>
+              </li>
+            ))
+          )}
+        </ul>
       </section>
 
       <section className="nx-events nx-events-preview">
@@ -662,15 +751,15 @@ export function DecisionMarketOverview() {
         </ul>
       </section>
 
-      <section className="nx-research-layer">
-        <h2 className="nx-sec-title">研究工具</h2>
+      <section className="nx-research-layer nx-research-p4">
+        <h2 className="nx-sec-title">更多入口</h2>
         <div className="nx-research-links">
-          <Link to="/anomalies">異動雷達</Link>
-          <Link to="/anomaly-outcomes">結果研究</Link>
-          <Link to="/evidence">證據中心</Link>
-          <Link to="/provider-shadow">Provider 驗證</Link>
+          <Link to="/crypto/sectors">幣種版塊</Link>
+          <Link to="/crypto/oi">OI 排行</Link>
+          <Link to="/crypto/funding">Funding 排行</Link>
           <Link to="/watchlist">關注清單</Link>
-          <Link to="/scanner">全市場掃描</Link>
+          <Link to="/anomalies">市場異動</Link>
+          <Link to="/scanner">市場掃描</Link>
         </div>
       </section>
 
@@ -682,7 +771,7 @@ export function DecisionMarketOverview() {
       ) : null}
 
       <details className="nx-tech-details">
-        <summary className="muted">系統與研究安全（非主要決策資訊）</summary>
+        <summary className="muted">系統與研究安全（見系統狀態）</summary>
         <p className="muted mono">
           Bybit Mainnet Public Linear · server scanner · researchOnly · private_api=false · Backend
           HOLD · Stage 4.19 blocked · No trading

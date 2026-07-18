@@ -44,4 +44,20 @@ def register_market_chart_routes(app: Flask) -> None:
 
     @app.route("/api/market/charts/funding")
     def market_charts_funding():
-        return _no_store(jsonify(charts.funding_series_status()))
+        symbol = (request.args.get("symbol") or "BTCUSDT").strip()
+        try:
+            limit = int(request.args.get("limit") or 100)
+        except ValueError:
+            limit = 100
+        start = request.args.get("from") or request.args.get("start")
+        end = request.args.get("to") or request.args.get("end")
+        if start or end:
+            body = charts.fetch_funding_history(
+                symbol,
+                limit=limit,
+                start=int(start) if start else None,
+                end=int(end) if end else None,
+            )
+        else:
+            body = charts.funding_series_status(symbol, limit=limit)
+        return _no_store(jsonify(body))

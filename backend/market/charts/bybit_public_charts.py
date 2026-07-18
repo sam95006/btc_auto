@@ -158,13 +158,87 @@ def fetch_open_interest(
     }
 
 
-def funding_series_status() -> dict[str, Any]:
-    """Honest status: historical funding series not fabricated."""
+def fetch_funding_history(
+    symbol: str,
+    *,
+    limit: int = 100,
+    start: int | None = None,
+    end: int | None = None,
+) -> dict[str, Any]:
+    """Bybit public GET /v5/market/funding/history — no fabrication, no interpolation."""
+    sym = symbol.upper().strip()
+    lim = max(1, min(int(limit or 100), _BAR_LIMIT))
+    params: dict[str, Any] = {"category": "linear", "symbol": sym, "limit": lim}
+    if start:
+        params["startTime"] = int(start)
+    if end:
+        params["endTime"] = int(end)
+    try:
+        payload = _get("/v5/market/funding/history", params)
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "ok": False,
+            "available": False,
+            "error": str(exc),
+            "symbol": sym,
+            "points": [],
+            "fabricatedHistory": False,
+            "source": "BYBIT_MAINNET_LINEAR",
+            "freshness": "COLLECTING",
+            "generatedAt": int(time.time() * 1000),
+            "cache": "no-store",
+        }
+    raw = list(((payload.get("result") or {}).get("list")) or [])
+    points: list[dict[str, Any]] = []
+    for row in reversed(raw):
+        try:
+            rate = float(row.get("fundingRate"))
+            ts = int(row.get("fundingRateTimestamp"))
+        except (TypeError, ValueError):
+            continue
+        points.append(
+            {
+                "time": ts,
+                "fundingRate": rate,
+                "fundingRatePct": rate * 100.0,
+                "symbol": str(row.get("symbol") or sym),
+            }
+        )
     return {
         "ok": True,
+        "available": bool(points),
+        "read_only": True,
+        "private_api": False,
+        "symbol": sym,
+        "count": len(points),
+        "points": points,
+        "fabricatedHistory": False,
+        "interpolated": False,
+        "source": "BYBIT_MAINNET_LINEAR",
+        "endpoint": "/v5/market/funding/history",
+        "generatedAt": int(time.time() * 1000),
+        "freshness": "LIVE" if points else "COLLECTING",
+        "reason": None if points else "empty_funding_history",
+        "cache": "no-store",
+    }
+
+
+def funding_series_status(symbol: str = "BTCUSDT", *, limit: int = 100) -> dict[str, Any]:
+    """Return real funding history when Bybit public endpoint succeeds; never fabricate."""
+    body = fetch_funding_history(symbol, limit=limit)
+    if body.get("ok") and body.get("points"):
+        return body
+    # Honest unavailable / error path — fabricatedHistory stays false
+    return {
+        "ok": bool(body.get("ok")),
         "available": False,
-        "reason": "reliable_historical_funding_series_not_wired",
+        "reason": body.get("error") or body.get("reason") or "funding_history_unavailable",
+        "error": body.get("error"),
+        "symbol": symbol.upper().strip(),
+        "points": [],
         "pointInTimeFunding": "available_via_ticker_and_scanner",
         "fabricatedHistory": False,
-        "source": "NEXUS_POLICY",
+        "source": "BYBIT_MAINNET_LINEAR",
+        "generatedAt": int(time.time() * 1000),
+        "cache": "no-store",
     }

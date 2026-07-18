@@ -23,7 +23,7 @@ export function FloatingAIAssistant() {
             </button>
           </div>
           <p className="muted" style={{ margin: "0.25rem 0 0.5rem" }}>
-            Static prompts · READ ONLY · NOT INVESTMENT ADVICE
+            Static prompts · 研究說明 · 非投資建議
           </p>
           <div className="copilot-prompt-grid">
             {FLOATING_AI_PROMPTS.map((p) => (

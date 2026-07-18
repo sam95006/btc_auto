@@ -1,14 +1,22 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { loadViewMode, saveViewMode, type ViewMode } from "../market/viewPrefs";
 import { loadEventPrefs, loadReadEventIds, type EventPrefs } from "../market/eventPrefs";
 import { useMarketScannerOverview } from "../market/useMarketScanner";
+import { fetchSectorsStatus } from "../market/sectorApi";
 import { EventBellButton, EventCenterDrawer } from "./EventCenter";
 import { SystemStatusDrawer } from "./SystemStatusDrawer";
 
+function agoLabel(ts?: number | null) {
+  if (!ts) return "—";
+  const sec = Math.max(0, Math.round((Date.now() - ts) / 1000));
+  if (sec < 5) return "剛剛更新";
+  if (sec < 60) return `${sec} 秒前更新`;
+  return `${Math.round(sec / 60)} 分鐘前更新`;
+}
+
 /**
- * Phase 2 top bar — brand, scanner freshness, Simple/Advanced, events, AI.
- * HOLD / Stage 4.19 live in System Status drawer (not primary chrome).
+ * Phase 4 compact header — Live market wording separated from execution status.
  */
 export function MarketTopTicker() {
   const navigate = useNavigate();
@@ -19,6 +27,34 @@ export function MarketTopTicker() {
   const [sysOpen, setSysOpen] = useState(false);
   const [prefs, setPrefs] = useState<EventPrefs>(() => loadEventPrefs());
   const [readTick, setReadTick] = useState(0);
+  const [breadth, setBreadth] = useState<number | null>(null);
+  const [nowTick, setNowTick] = useState(0);
+
+  useEffect(() => {
+    let alive = true;
+    void fetchSectorsStatus()
+      .then((s) => {
+        if (alive && s.breadthMarketCount != null) setBreadth(s.breadthMarketCount);
+      })
+      .catch(() => undefined);
+    const id = window.setInterval(() => {
+      setNowTick((n) => n + 1);
+      void fetchSectorsStatus()
+        .then((s) => {
+          if (alive && s.breadthMarketCount != null) setBreadth(s.breadthMarketCount);
+        })
+        .catch(() => undefined);
+    }, 30000);
+    return () => {
+      alive = false;
+      window.clearInterval(id);
+    };
+  }, []);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNowTick((n) => n + 1), 5000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const unread = useMemo(() => {
     void readTick;
@@ -42,37 +78,34 @@ export function MarketTopTicker() {
     window.dispatchEvent(new CustomEvent("nexus-view-mode", { detail: next }));
   };
 
-  const coverage = status?.symbolCount ?? "—";
   const fresh = status?.freshness || "—";
-  const updated = status?.lastCycleAt
-    ? new Date(status.lastCycleAt).toLocaleTimeString()
-    : "—";
-  const cadence = status?.snapshotIntervalSec ?? 20;
+  const deep = status?.symbolCount ?? "—";
+  const updated = agoLabel(status?.lastCycleAt);
+  void nowTick;
 
   return (
     <>
-      <header className="market-top-ticker nx-topbar-p2" role="banner">
+      <header className="market-top-ticker nx-topbar-p2 nx-topbar-p4" role="banner">
         <div className="mtt-left">
           <Link to="/overview" className="brand-mark mtt-brand">
             NEXUS
           </Link>
-          <span className="mtt-tagline muted">市場情報</span>
         </div>
         <div className="mtt-center nx-top-meta">
-          <span className={`mtt-fresh-pill tone-${String(fresh).toLowerCase()}`} title="Scanner freshness">
-            {fresh}
+          <span className={`mtt-fresh-pill tone-${String(fresh).toLowerCase()}`} title="市場資料新鮮度">
+            市場資料 {fresh}
           </span>
-          <span className="mtt-meta-item" title="掃描覆蓋">
-            {coverage} 市場
+          <span className="mtt-meta-item" title="廣度市場">
+            市場涵蓋 {breadth ?? "—"}
           </span>
-          <span className="mtt-meta-item muted" title="最後掃描">
-            更新 {updated}
+          <span className="mtt-meta-item" title="深度掃描">
+            重點追蹤 {deep}
           </span>
-          <span className="mtt-meta-item muted desktop-only">
-            候選約每 {cadence} 秒更新
+          <span className="mtt-meta-item muted" title="最後更新">
+            {updated}
           </span>
-          <span className="mtt-research-chip" title="研究模式">
-            即時市場資料 · 研究模式 · 不執行交易
+          <span className="mtt-research-chip muted" title="執行狀態見系統狀態">
+            研究模式 · 不執行交易
           </span>
         </div>
         <div className="mtt-right">
@@ -111,8 +144,8 @@ export function MarketTopTicker() {
           <button
             type="button"
             className="mtt-icon"
-            title="AI Commander"
-            aria-label="Open AI Commander"
+            title="解釋市場"
+            aria-label="Open AI Assistant"
             onClick={() => {
               document.querySelector<HTMLButtonElement>(".floating-ai-fab")?.click();
             }}
@@ -131,7 +164,6 @@ export function MarketTopTicker() {
         onPrefsChange={setPrefs}
       />
       <SystemStatusDrawer open={sysOpen} onClose={() => setSysOpen(false)} />
-      {/* prefs reserved for toast gate via custom event */}
       <span className="sr-only" data-toast={prefs.toast ? "1" : "0"} />
     </>
   );

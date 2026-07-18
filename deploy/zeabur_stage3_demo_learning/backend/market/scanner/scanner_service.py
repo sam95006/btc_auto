@@ -1,6 +1,7 @@
-"""Bounded in-process read-only market scanner (Phase 1).
+"""Bounded in-process read-only market scanner (Phase 1 + Phase 4 Track B WS).
 
-Public Bybit REST only · daemon thread · no trading path coupling.
+Public Bybit REST + optional public WS · daemon thread · no trading path coupling.
+Candidate scoring formula unchanged — recompute stays throttled to SNAPSHOT_INTERVAL.
 """
 from __future__ import annotations
 
@@ -10,11 +11,31 @@ import time
 from collections import deque
 from typing import Any
 
+from backend.market.intelligence.history_store import get_history_store
+from backend.market.intelligence.outcome_store import get_outcome_store
+from backend.market.intelligence.transition_store import get_transition_store
 from backend.market.scanner import universe_config as cfg
+from backend.market.scanner.bybit_public_ws import BybitPublicTickerWS
 from backend.market.scanner.candidate_engine import rank_candidates, score_symbol
 from backend.market.scanner.universe import build_universe, fetch_all_linear_tickers
 
 logger = logging.getLogger(__name__)
+
+_WS_HISTORY_MIN_GAP_MS = 5_000
+_KEEP_FIELDS = (
+    "markPrice",
+    "indexPrice",
+    "bid1",
+    "ask1",
+    "spreadBps",
+    "change24hPct",
+    "openInterest",
+    "openInterestValue",
+    "fundingRate",
+    "nextFundingTime",
+    "volume24h",
+    "turnover24h",
+)
 
 
 class MarketScannerService:
@@ -40,6 +61,17 @@ class MarketScannerService:
             "insufficient": 0,
         }
         self._started_at = 0
+        # Phase 4 Track B transport / observability
+        self._transport = "REST"
+        self._ws: BybitPublicTickerWS | None = None
+        self._ws_connected = False
+        self._ws_reconnect_count = 0
+        self._last_market_update_at = 0
+        self._last_candidate_recompute_at = 0
+        self._ws_updates = 0
+        self._ws_ooo_blocked = 0
+        self._ws_dup_suppressed = 0
+        self._rest_fallback = False
 
     def start(self, *, bootstrap: bool = True) -> None:
         with self._lock:
@@ -59,12 +91,125 @@ class MarketScannerService:
             except Exception as exc:  # noqa: BLE001
                 self._last_error = str(exc)
                 logger.warning("scanner bootstrap failed: %s", exc)
+            self._ensure_ws()
 
     def stop(self, timeout: float = 3.0) -> None:
         self._stop.set()
+        ws = self._ws
+        if ws is not None:
+            try:
+                ws.stop(timeout=min(timeout, 2.0))
+            except Exception:  # noqa: BLE001
+                pass
         t = self._thread
         if t and t.is_alive():
             t.join(timeout=timeout)
+
+    def _ensure_ws(self) -> None:
+        with self._lock:
+            symbols = list(self._universe_meta.get("symbols") or list(self._latest.keys()))
+        if not symbols:
+            return
+        if self._ws is None:
+            self._ws = BybitPublicTickerWS(
+                on_ticker=self._on_ws_ticker,
+                on_status=self._on_ws_status,
+                max_symbols=cfg.SYMBOL_LIMIT,
+            )
+            self._ws.start(symbols)
+        else:
+            self._ws.update_symbols(symbols)
+
+    def _on_ws_status(self, st: str) -> None:
+        with self._lock:
+            if st == "open":
+                self._ws_connected = True
+                self._rest_fallback = False
+                self._transport = "WS"
+            elif st in ("reconnecting", "connecting"):
+                self._ws_connected = False
+                if self._latest:
+                    self._rest_fallback = True
+                    self._transport = "FALLBACK"
+                else:
+                    self._transport = "REST"
+            elif st in ("closed", "error"):
+                self._ws_connected = False
+                if self._latest:
+                    self._rest_fallback = True
+                    self._transport = "FALLBACK"
+            if self._ws is not None:
+                st_body = self._ws.status()
+                self._ws_reconnect_count = int(st_body.get("wsReconnectCount") or 0)
+
+    def _on_ws_ticker(self, delta: dict[str, Any]) -> None:
+        """Merge WS ticker into _latest only — no candidate recompute."""
+        sym = str(delta.get("symbol") or "")
+        if not sym:
+            return
+        now = int(time.time() * 1000)
+        with self._lock:
+            prev = self._latest.get(sym)
+            exch = int(delta.get("exchangeTimestamp") or delta.get("receivedAt") or now)
+            if prev is not None:
+                prev_exch = int(prev.get("exchangeTimestamp") or prev.get("receivedAt") or 0)
+                if exch < prev_exch:
+                    self._ws_ooo_blocked += 1
+                    return
+                if (
+                    exch == prev_exch
+                    and delta.get("lastPrice") == prev.get("lastPrice")
+                    and delta.get("openInterest") == prev.get("openInterest")
+                ):
+                    self._ws_dup_suppressed += 1
+                    return
+            merged = dict(prev or {})
+            for k, v in delta.items():
+                if v is not None:
+                    merged[k] = v
+            # keep-last for omitted delta fields
+            if prev is not None:
+                for k in _KEEP_FIELDS:
+                    if merged.get(k) is None and prev.get(k) is not None:
+                        merged[k] = prev[k]
+            merged["symbol"] = sym
+            merged["receivedAt"] = int(delta.get("receivedAt") or now)
+            merged["exchangeTimestamp"] = exch
+            merged["source"] = "BYBIT_MAINNET_LINEAR"
+            self._latest[sym] = merged
+            self._last_market_update_at = merged["receivedAt"]
+            self._ws_updates += 1
+            self._ws_connected = True
+            self._rest_fallback = False
+            self._transport = "WS"
+            # Throttled history append for denser 5m windows — not every tick
+            hist = self._history.get(sym)
+            if hist is None:
+                hist = deque(maxlen=cfg.HISTORY_CAPACITY_PER_SYMBOL)
+                self._history[sym] = hist
+            append = True
+            if hist:
+                last = hist[-1]
+                if merged["receivedAt"] - int(last.get("receivedAt") or 0) < _WS_HISTORY_MIN_GAP_MS:
+                    append = False
+            if append:
+                hist.append(dict(merged))
+            sample_price = merged.get("lastPrice")
+            sample_oi = merged.get("openInterest")
+            sample_turn = merged.get("turnover24h")
+            sample_ts = merged.get("receivedAt")
+        try:
+            if sample_price is not None:
+                get_history_store().append_sample(
+                    sym,
+                    price=sample_price,
+                    oi=sample_oi,
+                    turnover=sample_turn,
+                    ts=sample_ts,
+                )
+                get_outcome_store().on_price(sym, float(sample_price), now=int(sample_ts or now))
+        except Exception:  # noqa: BLE001
+            pass
 
     def _poll_loop(self) -> None:
         while not self._stop.is_set():
@@ -79,6 +224,7 @@ class MarketScannerService:
             self._stop.wait(cfg.SNAPSHOT_INTERVAL_SEC)
 
     def refresh_once(self) -> dict[str, Any]:
+        """REST bootstrap / reconciliation + throttled candidate recompute."""
         if self._loop_running:
             return {"ok": False, "error": "overlap_blocked"}
         self._loop_running = True
@@ -99,12 +245,35 @@ class MarketScannerService:
 
                 for row in uni["rows"]:
                     sym = row["symbol"]
+                    prev = self._latest.get(sym)
+                    # REST reconciliation: keep fresher WS lastPrice if very recent
+                    if (
+                        prev
+                        and self._ws_connected
+                        and int(prev.get("receivedAt") or 0) > now - 3_000
+                        and prev.get("lastPrice") is not None
+                    ):
+                        merged = dict(row)
+                        for k in _KEEP_FIELDS:
+                            if prev.get(k) is not None:
+                                merged[k] = prev.get(k) if row.get(k) is None else row.get(k)
+                        # Prefer REST structural fields; keep WS lastPrice if newer exch ts
+                        prev_exch = int(prev.get("exchangeTimestamp") or 0)
+                        row_exch = int(row.get("exchangeTimestamp") or 0)
+                        if prev_exch >= row_exch:
+                            merged["lastPrice"] = prev.get("lastPrice")
+                            merged["receivedAt"] = prev.get("receivedAt")
+                            merged["exchangeTimestamp"] = prev_exch
+                        row = merged
                     hist = self._history.get(sym)
                     if hist is None:
                         hist = deque(maxlen=cfg.HISTORY_CAPACITY_PER_SYMBOL)
                         self._history[sym] = hist
                     hist.append(row)
                     self._latest[sym] = row
+                    self._last_market_update_at = max(
+                        self._last_market_update_at, int(row.get("receivedAt") or now)
+                    )
                     sc = score_symbol(row, list(hist))
                     scored.append(sc)
                     if sc.get("collecting"):
@@ -115,9 +284,31 @@ class MarketScannerService:
                         breadth["falling"] += 1
                     else:
                         breadth["neutral"] += 1
+                    try:
+                        get_history_store().append_sample(
+                            sym,
+                            price=row.get("lastPrice"),
+                            oi=row.get("openInterest"),
+                            turnover=row.get("turnover24h"),
+                            ts=row.get("receivedAt"),
+                        )
+                        if row.get("lastPrice"):
+                            get_outcome_store().on_price(
+                                sym, float(row["lastPrice"]), now=int(row.get("receivedAt") or now)
+                            )
+                    except Exception:  # noqa: BLE001
+                        pass
 
+                prev_snap = dict(self._prev_candidates)
                 ranked = rank_candidates(scored, self._prev_candidates)
                 self._emit_events(ranked)
+                try:
+                    get_transition_store().record_from_candidates(
+                        ranked, prev_snap, source_snapshot_at=now
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    logger.debug("transition record failed: %s", exc)
+                self._maybe_track_outcomes(ranked)
                 self._prev_candidates = {c["id"]: c for c in ranked if c.get("id")}
                 self._candidates = ranked
                 self._breadth = breadth
@@ -143,11 +334,44 @@ class MarketScannerService:
                     if k in uni
                 }
                 self._last_cycle_at = now
+                self._last_candidate_recompute_at = now
                 self._cycle_count += 1
                 self._last_error = ""
+                if not self._ws_connected:
+                    self._transport = "FALLBACK" if self._rest_fallback or self._ws is not None else "REST"
+            # Start / refresh WS after first REST universe is known
+            self._ensure_ws()
             return {"ok": True, "symbols": len(uni["symbols"]), "candidates": len(ranked)}
         finally:
             self._loop_running = False
+
+    def _maybe_track_outcomes(self, ranked: list[dict[str, Any]]) -> None:
+        """Start research outcome trackers for new top / stage-confirmed candidates."""
+        store = get_outcome_store()
+        for c in ranked:
+            if c.get("rank") is None or c["rank"] > 3:
+                continue
+            if c.get("stage") not in ("CONFIRMED", "AWAITING_CONFIRMATION", "BUILDING"):
+                continue
+            px = c.get("currentPrice")
+            if px is None:
+                continue
+            aid = f"cand:{c.get('id')}:{c.get('stage')}:{c.get('firstSeenAt')}"
+            store.ensure_tracking(
+                anomaly_id=aid,
+                symbol=str(c.get("symbol")),
+                anomaly_type="CANDIDATE_TOP",
+                severity="research",
+                direction="UP" if c.get("side") == "LONG" else "DOWN",
+                score=c.get("opportunityScore"),
+                observed_at=c.get("lastUpdatedAt"),
+                reference_price=float(px),
+                evidence={
+                    "stage": c.get("stage"),
+                    "rank": c.get("rank"),
+                    "side": c.get("side"),
+                },
+            )
 
     def _emit_events(self, ranked: list[dict[str, Any]]) -> None:
         now = int(time.time() * 1000)
@@ -244,6 +468,7 @@ class MarketScannerService:
             high_risk = sum(
                 1 for c in self._candidates if c.get("stage") == "OVEREXTENDED" or (c.get("riskScore") or 0) >= 70
             )
+            ws_body = self._ws.status() if self._ws is not None else {}
             return {
                 "ok": True,
                 "read_only": True,
@@ -272,6 +497,18 @@ class MarketScannerService:
                 "highRiskCandidates": high_risk,
                 "breadth": dict(self._breadth),
                 "cache": "no-store",
+                # Phase 4 Track B
+                "transport": self._transport,
+                "wsConnected": self._ws_connected,
+                "wsReconnectCount": self._ws_reconnect_count,
+                "lastMarketUpdateAt": self._last_market_update_at or None,
+                "lastCandidateRecomputeAt": self._last_candidate_recompute_at or None,
+                "wsUpdates": self._ws_updates,
+                "wsOutOfOrderBlocked": self._ws_ooo_blocked,
+                "wsDuplicateSuppressed": self._ws_dup_suppressed,
+                "wsSubscribedTopics": ws_body.get("subscribedTopics"),
+                "candidateRecomputeThrottled": True,
+                "candidateRecomputeEveryTick": False,
             }
 
     def universe(self) -> dict[str, Any]:

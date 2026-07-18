@@ -220,29 +220,24 @@ export const DECISION_ALERTS: DecisionAlert[] = [
 
 export const FLOATING_AI_PROMPTS = [
   {
-    id: "hold",
-    label: "Why are we in HOLD?",
-    answer: "HOLD — ETH watch not reappeared. Wait only. No Stage 4.19 start.",
+    id: "market",
+    label: "解釋目前市場",
+    answer: "先看市場狀態、廣度與 Top Long／Short。這是研究資訊，不是下單建議。",
   },
   {
-    id: "first",
-    label: "What should I check first?",
-    answer: "ETH Gate → Evidence Start Here → Risk why-safe.",
+    id: "candidate",
+    label: "解釋這個候選",
+    answer: "打開標的詳情，看機會分數、一句支持因素與主要風險。不代表建議買賣。",
   },
   {
-    id: "eth",
-    label: "Explain ETH Gate",
-    answer: "ETH has no valid watch/reappearance. Blocks regression and 4.19.",
+    id: "watch",
+    label: "找出值得關注的市場",
+    answer: "從首選機會、版塊動能與市場異動開始；關注清單可本機收藏。",
   },
   {
-    id: "evidence",
-    label: "Summarize Evidence",
-    answer: "Evidence Center holds gate and release docs. Search stays read-only.",
-  },
-  {
-    id: "419",
-    label: "Explain Stage 4.19",
-    answer: "Blocked until real BTC + ETH graduation. No start control in UI.",
+    id: "summary",
+    label: "產生今日市場摘要",
+    answer: "摘要市場狀態、多空候選平衡、廣度與高風險數。執行仍為 Disabled／HOLD。",
   },
 ] as const;
 
