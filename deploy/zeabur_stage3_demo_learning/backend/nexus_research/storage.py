@@ -1,24 +1,391 @@
-"""Storage audit + adapter for nexus_research.
+"""Storage adapter for nexus_research — Phase 6 Gate B: Durable Persistence.
 
-Default: in-memory. Optional: sqlite under NEXUS_DATA_DIR if writable.
-No secrets stored. Schema version tracked.
+Env contract
+------------
+NEXUS_RESEARCH_DATABASE_URL   Postgres DSN (postgres driver pending — see below)
+DATABASE_URL                  Fallback postgres DSN
+NEXUS_DATA_DIR                Directory for sqlite file; writability probed at startup
+NEXUS_RESEARCH_STORAGE_MODE   memory | sqlite | postgres | auto  (default: auto)
+
+Postgres status: *pending*.  psycopg2-binary is not in requirements.txt.
+When a postgres URL is detected the store falls back to sqlite/memory and logs
+a clear warning.  Add psycopg2-binary to requirements.txt to enable postgres.
+
+Isolation guarantee
+-------------------
+The research DB file is nexus_research.db, never trading.db.  Any path
+conflict with the trading DB raises ValueError at startup.
+
+Schema versioning
+-----------------
+Idempotent migrations are applied automatically in get_research_store().
+SCHEMA_VERSION tracks the highest applied migration.
 """
 from __future__ import annotations
 
+import datetime
 import json
 import logging
 import os
+import sqlite3
 import threading
 import time
+import uuid
 from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 _STORE_LOCK = threading.Lock()
 _STORE: "_ResearchStore | None" = None
 
+# Tables that have their own typed schema (with idempotency + indexes).
+# All other table names fall back to the generic kv table.
+TYPED_TABLES = frozenset({
+    "domain_events",
+    "dead_letters",
+    "review_cases",
+    "role_assessments",
+    "research_decisions",
+    "review_sessions",
+    "sim_orders",
+    "sim_fills",
+    "sim_positions",
+    "sim_ledger",
+    "risk_snapshots",
+    "outcomes",
+    "reflections",
+    "patch_proposals",
+    "replay_checkpoints",
+    "runtime_job_state",
+    "persistence_validation_markers",
+})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Helpers
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _utc_iso() -> str:
+    return datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f") + "Z"
+
+
+def _new_id() -> str:
+    return str(uuid.uuid4())
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Schema migrations (idempotent)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Each entry: (target_version, description, [sql_statements])
+_MIGRATIONS: list[tuple[int, str, list[str]]] = [
+    (
+        1,
+        "initial kv + schema_meta",
+        [
+            """CREATE TABLE IF NOT EXISTS kv (
+                table_name TEXT NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                payload TEXT NOT NULL,
+                created_at REAL NOT NULL
+            )""",
+            "CREATE INDEX IF NOT EXISTS kv_table ON kv(table_name, id)",
+            """CREATE TABLE IF NOT EXISTS schema_meta (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )""",
+        ],
+    ),
+    (
+        2,
+        "phase6 typed tables with idempotency keys and UTC timestamps",
+        [
+            # domain_events
+            """CREATE TABLE IF NOT EXISTS domain_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_id TEXT NOT NULL,
+                event_type TEXT NOT NULL DEFAULT '',
+                tag TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                CONSTRAINT domain_events_event_id_uq UNIQUE (event_id)
+            )""",
+            "CREATE INDEX IF NOT EXISTS domain_events_type_ts"
+            "  ON domain_events(event_type, created_at_ts)",
+            "CREATE INDEX IF NOT EXISTS domain_events_tag_ts"
+            "  ON domain_events(tag, created_at_ts)",
+
+            # dead_letters
+            """CREATE TABLE IF NOT EXISTS dead_letters (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                letter_id TEXT NOT NULL,
+                source TEXT NOT NULL DEFAULT '',
+                reason TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                CONSTRAINT dead_letters_letter_id_uq UNIQUE (letter_id)
+            )""",
+
+            # review_cases
+            """CREATE TABLE IF NOT EXISTS review_cases (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                case_id TEXT NOT NULL,
+                symbol TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                updated_at_ts REAL,
+                CONSTRAINT review_cases_case_id_uq UNIQUE (case_id)
+            )""",
+            "CREATE INDEX IF NOT EXISTS review_cases_symbol_ts"
+            "  ON review_cases(symbol, created_at_ts)",
+            "CREATE INDEX IF NOT EXISTS review_cases_status_ts"
+            "  ON review_cases(status, created_at_ts)",
+
+            # role_assessments
+            """CREATE TABLE IF NOT EXISTS role_assessments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                assessment_id TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT '',
+                case_id TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                CONSTRAINT role_assessments_assessment_id_uq UNIQUE (assessment_id)
+            )""",
+            "CREATE INDEX IF NOT EXISTS role_assessments_role_ts"
+            "  ON role_assessments(role, created_at_ts)",
+
+            # research_decisions
+            """CREATE TABLE IF NOT EXISTS research_decisions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                decision_id TEXT NOT NULL,
+                symbol TEXT NOT NULL DEFAULT '',
+                decision_type TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                CONSTRAINT research_decisions_decision_id_uq UNIQUE (decision_id)
+            )""",
+            "CREATE INDEX IF NOT EXISTS research_decisions_symbol_ts"
+            "  ON research_decisions(symbol, created_at_ts)",
+
+            # review_sessions
+            """CREATE TABLE IF NOT EXISTS review_sessions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                completed_at_ts REAL,
+                CONSTRAINT review_sessions_session_id_uq UNIQUE (session_id)
+            )""",
+
+            # sim_orders
+            """CREATE TABLE IF NOT EXISTS sim_orders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                order_id TEXT NOT NULL,
+                symbol TEXT NOT NULL DEFAULT '',
+                side TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                CONSTRAINT sim_orders_order_id_uq UNIQUE (order_id)
+            )""",
+            "CREATE INDEX IF NOT EXISTS sim_orders_symbol_ts"
+            "  ON sim_orders(symbol, created_at_ts)",
+
+            # sim_fills
+            """CREATE TABLE IF NOT EXISTS sim_fills (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fill_id TEXT NOT NULL,
+                order_id TEXT NOT NULL DEFAULT '',
+                symbol TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                CONSTRAINT sim_fills_fill_id_uq UNIQUE (fill_id)
+            )""",
+            "CREATE INDEX IF NOT EXISTS sim_fills_order ON sim_fills(order_id)",
+
+            # sim_positions
+            """CREATE TABLE IF NOT EXISTS sim_positions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                position_id TEXT NOT NULL,
+                symbol TEXT NOT NULL DEFAULT '',
+                side TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                closed_at_ts REAL,
+                CONSTRAINT sim_positions_position_id_uq UNIQUE (position_id)
+            )""",
+            "CREATE INDEX IF NOT EXISTS sim_positions_symbol_status"
+            "  ON sim_positions(symbol, status)",
+
+            # sim_ledger
+            """CREATE TABLE IF NOT EXISTS sim_ledger (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                entry_id TEXT NOT NULL,
+                entry_type TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                CONSTRAINT sim_ledger_entry_id_uq UNIQUE (entry_id)
+            )""",
+
+            # risk_snapshots
+            """CREATE TABLE IF NOT EXISTS risk_snapshots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                snapshot_id TEXT NOT NULL,
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                CONSTRAINT risk_snapshots_snapshot_id_uq UNIQUE (snapshot_id)
+            )""",
+
+            # outcomes
+            """CREATE TABLE IF NOT EXISTS outcomes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                outcome_id TEXT NOT NULL,
+                position_id TEXT NOT NULL DEFAULT '',
+                symbol TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                CONSTRAINT outcomes_outcome_id_uq UNIQUE (outcome_id)
+            )""",
+            "CREATE INDEX IF NOT EXISTS outcomes_symbol_ts"
+            "  ON outcomes(symbol, created_at_ts)",
+
+            # reflections
+            """CREATE TABLE IF NOT EXISTS reflections (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                reflection_id TEXT NOT NULL,
+                session_id TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                CONSTRAINT reflections_reflection_id_uq UNIQUE (reflection_id)
+            )""",
+
+            # patch_proposals
+            """CREATE TABLE IF NOT EXISTS patch_proposals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                proposal_id TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                applied_at_ts REAL,
+                CONSTRAINT patch_proposals_proposal_id_uq UNIQUE (proposal_id)
+            )""",
+            "CREATE INDEX IF NOT EXISTS patch_proposals_status_ts"
+            "  ON patch_proposals(status, created_at_ts)",
+
+            # replay_checkpoints
+            """CREATE TABLE IF NOT EXISTS replay_checkpoints (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                checkpoint_id TEXT NOT NULL,
+                replay_run_id TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                CONSTRAINT replay_checkpoints_checkpoint_id_uq UNIQUE (checkpoint_id)
+            )""",
+            "CREATE INDEX IF NOT EXISTS replay_checkpoints_run_ts"
+            "  ON replay_checkpoints(replay_run_id, created_at_ts)",
+
+            # runtime_job_state
+            """CREATE TABLE IF NOT EXISTS runtime_job_state (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                job_id TEXT NOT NULL,
+                job_type TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                updated_at_ts REAL,
+                CONSTRAINT runtime_job_state_job_id_uq UNIQUE (job_id)
+            )""",
+            "CREATE INDEX IF NOT EXISTS runtime_job_state_type_status"
+            "  ON runtime_job_state(job_type, status)",
+
+            # persistence_validation_markers
+            """CREATE TABLE IF NOT EXISTS persistence_validation_markers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                marker_id TEXT NOT NULL,
+                tag TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                CONSTRAINT persistence_validation_markers_marker_id_uq UNIQUE (marker_id)
+            )""",
+        ],
+    ),
+]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Typed-table insert helper
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Maps table name → (pk_field, extra_cols_spec)
+# extra_cols_spec is a list of (col_name, record_key) pairs
+_TYPED_INSERT: dict[str, tuple[str, list[tuple[str, str]]]] = {
+    "domain_events":         ("event_id",      [("event_type","event_type"), ("tag","tag")]),
+    "dead_letters":          ("letter_id",      [("source","source"), ("reason","reason")]),
+    "review_cases":          ("case_id",        [("symbol","symbol"), ("status","status")]),
+    "role_assessments":      ("assessment_id",  [("role","role"), ("case_id","case_id")]),
+    "research_decisions":    ("decision_id",    [("symbol","symbol"), ("decision_type","decision_type")]),
+    "review_sessions":       ("session_id",     [("status","status")]),
+    "sim_orders":            ("order_id",       [("symbol","symbol"), ("side","side"), ("status","status")]),
+    "sim_fills":             ("fill_id",        [("order_id","order_id"), ("symbol","symbol")]),
+    "sim_positions":         ("position_id",    [("symbol","symbol"), ("side","side"), ("status","status")]),
+    "sim_ledger":            ("entry_id",       [("entry_type","entry_type")]),
+    "risk_snapshots":        ("snapshot_id",    []),
+    "outcomes":              ("outcome_id",     [("position_id","position_id"), ("symbol","symbol")]),
+    "reflections":           ("reflection_id",  [("session_id","session_id")]),
+    "patch_proposals":       ("proposal_id",    [("status","status")]),
+    "replay_checkpoints":    ("checkpoint_id",  [("replay_run_id","replay_run_id")]),
+    "runtime_job_state":     ("job_id",         [("job_type","job_type"), ("status","status")]),
+    "persistence_validation_markers": ("marker_id", [("tag","tag")]),
+}
+
+
+def _build_typed_insert(
+    table: str,
+    record: dict[str, Any],
+) -> tuple[str, tuple[Any, ...]]:
+    """Return (sql, args) for INSERT OR IGNORE into a typed table."""
+    spec = _TYPED_INSERT[table]
+    pk_field, extra = spec
+    ts = time.time()
+    payload = json.dumps(record, ensure_ascii=False)
+    now_utc = _utc_iso()
+
+    pk_val = str(record.get(pk_field) or _new_id())
+
+    cols = [pk_field] + [c for c, _ in extra] + ["payload", "created_at_utc", "created_at_ts"]
+    vals: list[Any] = [pk_val] + [str(record.get(rk) or "") for _, rk in extra] + [payload, now_utc, ts]
+
+    placeholders = ",".join("?" * len(cols))
+    col_list = ",".join(cols)
+    sql = f"INSERT OR IGNORE INTO {table} ({col_list}) VALUES ({placeholders})"
+    return sql, tuple(vals)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# In-memory store
+# ─────────────────────────────────────────────────────────────────────────────
 
 class _MemoryStore:
     """Append-only in-memory store for research records."""
@@ -26,15 +393,32 @@ class _MemoryStore:
     def __init__(self) -> None:
         self._lock = threading.RLock()
         self._tables: dict[str, list[dict[str, Any]]] = {}
+        self._seen_ids: dict[str, set[str]] = {}
+
+    def _dedup_key(self, table: str, record: dict[str, Any]) -> str | None:
+        spec = _TYPED_INSERT.get(table)
+        if spec:
+            pk_field = spec[0]
+            val = record.get(pk_field)
+            if val:
+                return str(val)
+        return str(record.get("_idempotency_key") or "")
 
     def append(self, table: str, record: dict[str, Any]) -> None:
         with self._lock:
+            key = self._dedup_key(table, record)
+            if key:
+                if key in self._seen_ids.get(table, set()):
+                    return
+                self._seen_ids.setdefault(table, set()).add(key)
+            if "created_at_utc" not in record:
+                record = {**record, "created_at_utc": _utc_iso(), "created_at_ts": time.time()}
             self._tables.setdefault(table, []).append(record)
 
-    def query(self, table: str, limit: int = 200) -> list[dict[str, Any]]:
+    def query(self, table: str, limit: int = 200, offset: int = 0) -> list[dict[str, Any]]:
         with self._lock:
             rows = self._tables.get(table, [])
-            return list(rows[-limit:]) if rows else []
+            return list(rows[offset : offset + limit]) if rows else []
 
     def count(self, table: str) -> int:
         with self._lock:
@@ -44,92 +428,245 @@ class _MemoryStore:
         with self._lock:
             n = len(self._tables.get(table, []))
             self._tables[table] = []
+            self._seen_ids.pop(table, None)
             return n
+
+    def persist_validation_marker(
+        self, marker_id: str, tag: str, payload: dict[str, Any]
+    ) -> None:
+        record = {
+            "marker_id": marker_id,
+            "tag": tag,
+            "payload": payload,
+            "created_at_utc": _utc_iso(),
+            "created_at_ts": time.time(),
+        }
+        self.append("persistence_validation_markers", record)
+
+    def delete_old_records(self, table: str, older_than_ts: float) -> int:
+        with self._lock:
+            rows = self._tables.get(table, [])
+            kept = [r for r in rows if float(r.get("created_at_ts", 0)) >= older_than_ts]
+            removed = len(rows) - len(kept)
+            self._tables[table] = kept
+            return removed
 
     @property
     def backend_type(self) -> str:
         return "memory"
 
+    @property
+    def schema_version(self) -> int:
+        return SCHEMA_VERSION
+
+    @property
+    def db_path(self) -> str | None:
+        return None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SQLite store (isolated from trading.db)
+# ─────────────────────────────────────────────────────────────────────────────
 
 class _SqliteStore:
-    """Optional sqlite-backed store when NEXUS_DATA_DIR is writable."""
+    """SQLite-backed research store.  File is always nexus_research.db, never trading.db."""
 
     def __init__(self, db_path: Path) -> None:
-        import sqlite3
-
         self._db_path = db_path
         self._conn = sqlite3.connect(str(db_path), check_same_thread=False)
         self._conn.execute("PRAGMA journal_mode=WAL")
-        self._conn.execute(
-            "CREATE TABLE IF NOT EXISTS kv ("
-            "  table_name TEXT NOT NULL,"
-            "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
-            "  payload TEXT NOT NULL,"
-            "  created_at REAL NOT NULL"
-            ")"
-        )
-        self._conn.execute(
-            "CREATE INDEX IF NOT EXISTS kv_table ON kv(table_name, id)"
-        )
-        self._conn.execute(
-            "CREATE TABLE IF NOT EXISTS schema_meta ("
-            "  key TEXT PRIMARY KEY, value TEXT NOT NULL"
-            ")"
-        )
-        self._conn.execute(
-            "INSERT OR REPLACE INTO schema_meta VALUES ('version', ?)",
-            (str(SCHEMA_VERSION),),
-        )
-        self._conn.commit()
+        self._conn.execute("PRAGMA foreign_keys=ON")
         self._lock = threading.RLock()
+        self._run_migrations()
+
+    # ── migrations ────────────────────────────────────────────────────────────
+
+    def _current_version(self) -> int:
+        try:
+            cur = self._conn.execute(
+                "SELECT value FROM schema_meta WHERE key='version'"
+            )
+            row = cur.fetchone()
+            return int(row[0]) if row else 0
+        except Exception:  # noqa: BLE001
+            return 0
+
+    def _run_migrations(self) -> None:
+        current = self._current_version()
+        for target, description, stmts in _MIGRATIONS:
+            if current >= target:
+                continue
+            logger.info(
+                "[nexus_research.storage] migrate v%d→v%d: %s",
+                current, target, description,
+            )
+            for stmt in stmts:
+                self._conn.execute(stmt)
+            self._conn.execute(
+                "INSERT OR REPLACE INTO schema_meta VALUES ('version', ?)",
+                (str(target),),
+            )
+            self._conn.commit()
+            current = target
+        logger.debug("[nexus_research.storage] schema version=%d", current)
+
+    # ── typed-table write ─────────────────────────────────────────────────────
+
+    def _try_typed_insert(self, table: str, record: dict[str, Any]) -> bool:
+        if table not in _TYPED_INSERT:
+            return False
+        try:
+            sql, args = _build_typed_insert(table, record)
+            self._conn.execute(sql, args)
+            self._conn.commit()
+            return True
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("[nexus_research.storage] typed insert failed (%s): %s", table, exc)
+            return False
+
+    # ── public interface ──────────────────────────────────────────────────────
 
     def append(self, table: str, record: dict[str, Any]) -> None:
-        payload = json.dumps(record, ensure_ascii=False)
         with self._lock:
+            if self._try_typed_insert(table, record):
+                return
+            payload = json.dumps(record, ensure_ascii=False)
             self._conn.execute(
                 "INSERT INTO kv(table_name, payload, created_at) VALUES (?,?,?)",
                 (table, payload, time.time()),
             )
             self._conn.commit()
 
-    def query(self, table: str, limit: int = 200) -> list[dict[str, Any]]:
+    def query(self, table: str, limit: int = 200, offset: int = 0) -> list[dict[str, Any]]:
         with self._lock:
-            cursor = self._conn.execute(
-                "SELECT payload FROM kv WHERE table_name=? ORDER BY id DESC LIMIT ?",
-                (table, limit),
+            if table in _TYPED_INSERT:
+                try:
+                    cur = self._conn.execute(
+                        f"SELECT payload FROM {table} ORDER BY id DESC LIMIT ? OFFSET ?",
+                        (limit, offset),
+                    )
+                    rows = [json.loads(r[0]) for r in cur.fetchall()]
+                    rows.reverse()
+                    return rows
+                except Exception:  # noqa: BLE001
+                    pass
+            cur = self._conn.execute(
+                "SELECT payload FROM kv WHERE table_name=? ORDER BY id DESC LIMIT ? OFFSET ?",
+                (table, limit, offset),
             )
-            rows = [json.loads(r[0]) for r in cursor.fetchall()]
-        rows.reverse()
-        return rows
+            rows = [json.loads(r[0]) for r in cur.fetchall()]
+            rows.reverse()
+            return rows
 
     def count(self, table: str) -> int:
         with self._lock:
-            cursor = self._conn.execute(
+            if table in _TYPED_INSERT:
+                try:
+                    cur = self._conn.execute(f"SELECT COUNT(*) FROM {table}")
+                    return int(cur.fetchone()[0])
+                except Exception:  # noqa: BLE001
+                    pass
+            cur = self._conn.execute(
                 "SELECT COUNT(*) FROM kv WHERE table_name=?", (table,)
             )
-            return int(cursor.fetchone()[0])
+            return int(cur.fetchone()[0])
 
     def clear_table(self, table: str) -> int:
         with self._lock:
             n = self.count(table)
+            if table in _TYPED_INSERT:
+                try:
+                    self._conn.execute(f"DELETE FROM {table}")
+                    self._conn.commit()
+                    return n
+                except Exception:  # noqa: BLE001
+                    pass
             self._conn.execute("DELETE FROM kv WHERE table_name=?", (table,))
             self._conn.commit()
             return n
+
+    def persist_validation_marker(
+        self, marker_id: str, tag: str, payload: dict[str, Any]
+    ) -> None:
+        payload_json = json.dumps(payload, ensure_ascii=False)
+        now_utc = _utc_iso()
+        ts = time.time()
+        with self._lock:
+            self._conn.execute(
+                "INSERT OR IGNORE INTO persistence_validation_markers"
+                "  (marker_id, tag, payload, created_at_utc, created_at_ts)"
+                "  VALUES (?,?,?,?,?)",
+                (marker_id, tag, payload_json, now_utc, ts),
+            )
+            self._conn.commit()
+
+    def delete_old_records(self, table: str, older_than_ts: float) -> int:
+        with self._lock:
+            if table in _TYPED_INSERT:
+                try:
+                    cur = self._conn.execute(
+                        f"SELECT COUNT(*) FROM {table} WHERE created_at_ts < ?",
+                        (older_than_ts,),
+                    )
+                    n = int(cur.fetchone()[0])
+                    self._conn.execute(
+                        f"DELETE FROM {table} WHERE created_at_ts < ?",
+                        (older_than_ts,),
+                    )
+                    self._conn.commit()
+                    return n
+                except Exception:  # noqa: BLE001
+                    pass
+            cur = self._conn.execute(
+                "SELECT COUNT(*) FROM kv WHERE table_name=? AND created_at < ?",
+                (table, older_than_ts),
+            )
+            n = int(cur.fetchone()[0])
+            self._conn.execute(
+                "DELETE FROM kv WHERE table_name=? AND created_at < ?",
+                (table, older_than_ts),
+            )
+            self._conn.commit()
+            return n
+
+    def close(self) -> None:
+        """Close the underlying SQLite connection (releases file lock)."""
+        with self._lock:
+            try:
+                self._conn.close()
+            except Exception:  # noqa: BLE001
+                pass
 
     @property
     def backend_type(self) -> str:
         return "sqlite"
 
+    @property
+    def schema_version(self) -> int:
+        return self._current_version()
+
+    @property
+    def db_path(self) -> str | None:
+        return str(self._db_path)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Public research store wrapper
+# ─────────────────────────────────────────────────────────────────────────────
 
 class _ResearchStore:
+    """Thread-safe research store.  Wraps a memory or sqlite adapter."""
+
     def __init__(self, adapter: _MemoryStore | _SqliteStore) -> None:
         self._adapter = adapter
+
+    # ── core interface (backward-compatible) ──────────────────────────────────
 
     def append(self, table: str, record: dict[str, Any]) -> None:
         self._adapter.append(table, record)
 
-    def query(self, table: str, limit: int = 200) -> list[dict[str, Any]]:
-        return self._adapter.query(table, limit)
+    def query(self, table: str, limit: int = 200, offset: int = 0) -> list[dict[str, Any]]:
+        return self._adapter.query(table, limit, offset)
 
     def count(self, table: str) -> int:
         return self._adapter.count(table)
@@ -137,29 +674,155 @@ class _ResearchStore:
     def clear_table(self, table: str) -> int:
         return self._adapter.clear_table(table)
 
+    def close(self) -> None:
+        """Release underlying DB connection (needed on Windows before temp dir cleanup)."""
+        if hasattr(self._adapter, "close"):
+            self._adapter.close()
+
+    # ── Phase 6 helpers ───────────────────────────────────────────────────────
+
+    def persist_validation_marker(
+        self,
+        marker_id: str,
+        tag: str = "PERSISTENCE_VALIDATION",
+        payload: dict[str, Any] | None = None,
+    ) -> None:
+        """Persist a tagged validation marker (idempotent by marker_id)."""
+        self._adapter.persist_validation_marker(marker_id, tag, payload or {})
+
+    def delete_old_records(self, table: str, older_than_days: float = 30.0) -> int:
+        """Retention helper: delete records older than N days, return count removed."""
+        cutoff = time.time() - older_than_days * 86400
+        return self._adapter.delete_old_records(table, cutoff)
+
+    def paginate(self, table: str, page: int = 1, page_size: int = 50) -> dict[str, Any]:
+        """Return a paginated slice plus total/has_more metadata."""
+        page = max(1, page)
+        page_size = max(1, min(page_size, 500))
+        offset = (page - 1) * page_size
+        rows = self.query(table, limit=page_size, offset=offset)
+        total = self.count(table)
+        return {
+            "page": page,
+            "pageSize": page_size,
+            "total": total,
+            "rows": rows,
+            "hasMore": (offset + len(rows)) < total,
+        }
+
+    # ── status / health ───────────────────────────────────────────────────────
+
     @property
     def backend_type(self) -> str:
         return self._adapter.backend_type
 
+    @property
+    def schema_version(self) -> int:
+        return self._adapter.schema_version
+
+    @property
+    def db_path(self) -> str | None:
+        return self._adapter.db_path
+
+    def status(self) -> dict[str, Any]:
+        """Return storage status suitable for API exposure (no secrets)."""
+        try:
+            from backend.nexus_research.storage_discovery import discover_storage  # type: ignore
+            disc = discover_storage()
+        except Exception:  # noqa: BLE001
+            disc = {}
+
+        legacy_tables = [
+            "events", "review_cases", "role_assessments", "research_decisions",
+            "review_sessions", "sim_placeholders",
+        ]
+        sample_tables = list(TYPED_TABLES) + legacy_tables
+        counts: dict[str, int] = {}
+        for t in sample_tables:
+            try:
+                counts[t] = self.count(t)
+            except Exception:  # noqa: BLE001
+                counts[t] = -1
+
+        return {
+            "ok": True,
+            "storageMode": self._adapter.backend_type,
+            "durableClaim": disc.get("durableClaim", False),
+            "volumeConfirmed": disc.get("volumeConfirmed", False),
+            "lastMigrationVersion": self.schema_version,
+            "health": "ok",
+            "dbPath": self.db_path,
+            "researchOnly": True,
+            "production_persistence_available": disc.get("productionPersistenceAvailable", False),
+            "postgresDriverPending": True,
+            "tableCounts": counts,
+            "generatedAt": int(time.time() * 1000),
+        }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Store construction
+# ─────────────────────────────────────────────────────────────────────────────
 
 def _build_store() -> _ResearchStore:
-    data_dir_env = os.getenv("NEXUS_DATA_DIR", "").strip()
-    if data_dir_env:
-        try:
-            data_dir = Path(data_dir_env)
-            data_dir.mkdir(parents=True, exist_ok=True)
-            db_path = data_dir / "nexus_research.db"
-            adapter: _MemoryStore | _SqliteStore = _SqliteStore(db_path)
-            logger.info("[nexus_research.storage] sqlite store at %s", db_path)
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("[nexus_research.storage] sqlite unavailable (%s); using memory", exc)
-            adapter = _MemoryStore()
-    else:
-        adapter = _MemoryStore()
-    return _ResearchStore(adapter)
+    """Build a research store based on env configuration.
+
+    Postgres is detected but deferred (driver not installed).
+    SQLite is used when NEXUS_DATA_DIR is writable.
+    Memory fallback is always available.
+    """
+    mode = os.getenv("NEXUS_RESEARCH_STORAGE_MODE", "auto").strip().lower()
+
+    # Postgres: detect URL presence and warn — driver pending
+    _has_postgres = bool(
+        os.getenv("NEXUS_RESEARCH_DATABASE_URL", "").strip()
+        or os.getenv("DATABASE_URL", "").strip()
+        or os.getenv("POSTGRES_URL", "").strip()
+        or os.getenv("PGHOST", "").strip()
+    )
+    if _has_postgres and mode in ("postgres", "auto"):
+        logger.warning(
+            "[nexus_research.storage] Postgres URL/host detected but psycopg2-binary is not in "
+            "requirements.txt — postgres storage is pending.  Falling back to sqlite/memory."
+        )
+
+    # SQLite path
+    if mode not in ("memory",):
+        data_dir_env = os.getenv("NEXUS_DATA_DIR", "").strip()
+        if data_dir_env:
+            try:
+                data_dir = Path(data_dir_env)
+                data_dir.mkdir(parents=True, exist_ok=True)
+                db_path = data_dir / "nexus_research.db"
+
+                # Safety: must never be the same file as trading.db
+                try:
+                    from backend.core.data_paths import resolve_runtime_db_path  # type: ignore
+                    trading_raw = resolve_runtime_db_path()
+                    if trading_raw:
+                        trading_p = Path(str(trading_raw)).resolve()
+                        if db_path.resolve() == trading_p:
+                            raise ValueError(
+                                f"Research DB path conflicts with trading.db: {db_path}"
+                            )
+                except ImportError:
+                    pass  # data_paths not available in deploy mirror — skip check
+
+                adapter: _MemoryStore | _SqliteStore = _SqliteStore(db_path)
+                logger.info("[nexus_research.storage] sqlite store → %s", db_path)
+                return _ResearchStore(adapter)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(
+                    "[nexus_research.storage] sqlite unavailable (%s); falling back to memory", exc
+                )
+
+    mem_adapter = _MemoryStore()
+    logger.info("[nexus_research.storage] in-memory store active")
+    return _ResearchStore(mem_adapter)
 
 
 def get_research_store() -> _ResearchStore:
+    """Return the singleton research store, running migrations on first call."""
     global _STORE
     with _STORE_LOCK:
         if _STORE is None:
@@ -167,17 +830,11 @@ def get_research_store() -> _ResearchStore:
         return _STORE
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Legacy helper (kept for backward compat)
+# ─────────────────────────────────────────────────────────────────────────────
+
 def storage_audit() -> dict[str, Any]:
-    """Return storage audit summary (no secrets)."""
+    """Return storage audit summary (no secrets).  Deprecated — prefer store.status()."""
     store = get_research_store()
-    tables = ["events", "review_cases", "role_assessments", "research_decisions",
-              "review_sessions", "sim_placeholders"]
-    counts = {t: store.count(t) for t in tables}
-    return {
-        "ok": True,
-        "schemaVersion": SCHEMA_VERSION,
-        "backendType": store.backend_type,
-        "researchOnly": True,
-        "tableCounts": counts,
-        "generatedAt": int(time.time() * 1000),
-    }
+    return store.status()
