@@ -32,6 +32,12 @@ from backend.nexus_research.api_routes import register_nexus_research_routes
 
 app = Flask(__name__, template_folder=str(ROOT / "templates"))
 
+# Gate C research-only POST endpoints allowed through the read-only guard
+_GATE_C_POST_ALLOWLIST = {
+    "/api/nexus/simulator/order",
+    "/api/nexus/soak/run",
+}
+
 OPERATOR_UI_DIR = ROOT / "static" / "operator_ui"
 OPERATOR_BUILD_MARKER = "NEXUS_UI_PRODUCT_AND_INTELLIGENCE_PHASE4"
 MVP22C_BUILD_MARKER = "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR"
@@ -61,6 +67,8 @@ _SPA_PREFIXES = (
     "calculator",
     "membership",
     "ai-reviews",  # Phase 5 Gate B
+    "simulation",  # Phase 5 Gate C — simulator view
+    "replay",      # Phase 5 Gate C — replay view
 )
 
 
@@ -86,6 +94,9 @@ def _operator_index():
 @app.before_request
 def _read_only_guard():
     if request.method != "GET":
+        # Gate C research-only POST endpoints pass through with their own researchOnly guard
+        if request.path in _GATE_C_POST_ALLOWLIST:
+            return None
         if request.path in {"/api/nexus/state", "/api/nexus/status", "/api/nexus/snapshot"}:
             return jsonify({"read_only": True, "error": "method_not_allowed"}), 405
         if request.path.startswith("/api/nexus/stage3/"):
@@ -120,6 +131,13 @@ try:
 except Exception as _e:
     import logging as _log
     _log.getLogger(__name__).warning("[stage3] nexus_research routes not registered: %s", _e)
+
+try:
+    from backend.nexus_research.sim_routes import register_gate_c_routes
+    register_gate_c_routes(app)  # Phase 5 Gate C
+except Exception as _e:
+    import logging as _log
+    _log.getLogger(__name__).warning("[stage3] gate_c routes not registered: %s", _e)
 
 
 @app.route("/health")

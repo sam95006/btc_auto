@@ -46,6 +46,12 @@ register_market_sector_routes(app)
 register_market_chart_routes(app)
 register_market_intelligence_routes(app)
 register_nexus_research_routes(app)  # Phase 5 Gate B: AI Review research routes
+try:
+    from backend.nexus_research.sim_routes import register_gate_c_routes
+
+    register_gate_c_routes(app)  # Phase 5 Gate C: simulator / risk / reflection / replay
+except Exception as _gate_c_exc:  # noqa: BLE001
+    print(f"[startup] Gate C routes deferred: {_gate_c_exc}")
 # UI-DEPLOY-2: Market Intelligence SPA (static/operator_ui) — register before / catch-alls finish
 register_operator_ui_routes(app)
 

@@ -234,6 +234,7 @@ class MarketScannerService:
             now = int(time.time() * 1000)
             scored: list[dict[str, Any]] = []
             breadth = {"rising": 0, "falling": 0, "neutral": 0, "insufficient": 0}
+            _ranked_snapshot: list[dict] = []  # Phase 5 Gate B: populated inside lock
 
             with self._lock:
                 active = set(uni["symbols"])
@@ -312,6 +313,12 @@ class MarketScannerService:
                 self._prev_candidates = {c["id"]: c for c in ranked if c.get("id")}
                 self._candidates = ranked
                 self._breadth = breadth
+
+                # Phase 5 Gate B: capture snapshot inside lock for safe hook call
+                try:
+                    _ranked_snapshot = list(ranked)
+                except Exception:  # noqa: BLE001
+                    _ranked_snapshot = []
                 self._universe_meta = {
                     k: uni[k]
                     for k in (
@@ -339,6 +346,15 @@ class MarketScannerService:
                 self._last_error = ""
                 if not self._ws_connected:
                     self._transport = "FALLBACK" if self._rest_fallback or self._ws is not None else "REST"
+            # Phase 5 Gate B: call review_cases hook outside lock (best-effort, never breaks scanner)
+            try:
+                if _ranked_snapshot:
+                    from backend.nexus_research.review_cases import ingest_scanner_snapshot as _nr_ingest
+                    _longs = [c for c in _ranked_snapshot if c.get("side") == "LONG" and c.get("rank")]
+                    _shorts = [c for c in _ranked_snapshot if c.get("side") == "SHORT" and c.get("rank")]
+                    _nr_ingest({"longs": _longs, "shorts": _shorts})
+            except Exception:  # noqa: BLE001
+                pass  # never break scanner
             # Start / refresh WS after first REST universe is known
             self._ensure_ws()
             return {"ok": True, "symbols": len(uni["symbols"]), "candidates": len(ranked)}
