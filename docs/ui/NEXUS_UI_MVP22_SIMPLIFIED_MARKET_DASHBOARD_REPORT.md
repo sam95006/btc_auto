@@ -376,35 +376,64 @@ Bybit Public Market Data → NEXUS Read-only Market Scanner (server)
 - Real anomaly outcome duration pending
 - OI 5m／15m duration pending (BTC/ETH/SOL feed)
 
-## 30. Phase 3 — Sector / Chart / Equities Foundation (code verified, no Redeploy)
+## 30. Phase 3 — Sector / Chart / Equities Foundation (code verified)
 
-**Repository base at start:** `45a9e3ca98f14b69523ff747cdd47cb2892ecf8a` (Phase 2 docs-only head)  
-**Current Live functional SoT (unchanged this round):** `7dfc87886b2adcd0af93bc1073e434d5e5b0a1bf` · asset `index-BkeSH4cj.js` · marker Phase 2  
-**Redeploy:** not performed this round
+**Code commit (foundation):** `8f68e269be06bd6cf0d6cbcdaeeb911fe49ade93` · asset `index-ChR5GS_H.js`  
+**Honesty fix commit (Live):** `3d213c8a480f822664e286010fe45a817f8ae415` · asset `index-BZTA1-bM.js`
 
 ### Delivered in code
 - Crypto Sector Taxonomy (NEXUS curated, multi-membership, provenance/confidence)
-- Server-side Sector Aggregation Engine + `/api/market/sectors*` (breadth ~742 + deep ~80)
+- Server-side Sector Aggregation Engine + `/api/market/sectors*` (breadth dynamic ~642–748 + deep ~80)
 - `/crypto/sectors`, `/crypto/sectors/:slug`, `/crypto/oi`, `/crypto/funding`, `/crypto/price-oi`
+- Sector detail → `/crypto/price-oi?sector=` filtered deep link (inline Price／OI chart deferred)
 - NEXUS Chart Data Layer: `/api/market/charts/ohlcv|open-interest|funding` (Bybit public; funding history honest unavailable)
-- Symbol detail SVG chart via NEXUS datafeed (no TradingView market data / scraping)
+- Symbol detail SVG chart via NEXUS datafeed; chart marker scope declared as current-state only
 - Equities foundation: `/equities/tokenized` · `/equities/analysis` · provider-pending (no fake quotes)
 - Watchlist schema v2 (`assetClass`) with v1 migration
 - Hierarchical nav: product / crypto / equities / research / system
 
-### Explicit non-goals this round
-- No licensed equity / tokenized equity live quotes
-- No TradingView scraping or unofficial TV APIs
-- No candidate scoring / ranking / Recommendation / trading path changes
-- No Live Redeploy / Live SoT mutation
-
 **Architecture note:** `docs/ui/NEXUS_PHASE3_SECTOR_CHART_EQUITIES_ARCHITECTURE.md`
 
-**remaining_issues (expected until Redeploy + providers):**
-- redeploy and live Phase 3 sector/chart sign-off pending
-- licensed equity market data provider selection pending
-- tokenized equity provider selection pending
-- full-market WebSocket fast-lane deferred
-- full candidate stage transition timeline deferred
-- real anomaly outcome duration pending
+## 31. Phase 3 Live State Discovery + Sign-off (2026-07-18)
+
+**Live Source of Truth:** `3d213c8a480f822664e286010fe45a817f8ae415`  
+**Live asset:** `index-BZTA1-bM.js`  
+**UI marker:** `NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES`  
+**Deployment:** Zeabur GitHub auto-deploy from `stage3-demo-learning` · status `RUNNING` · served_by `nexus-web` · runtime `run.py`  
+**URL:** https://nexus-stage3-bybit-demo-learning.zeabur.app/
+
+### Live State Discovery
+- First probe after Phase 3 push: already auto-deployed `8f68e269` / `index-ChR5GS_H.js` / Phase 3 marker / sector+chart APIs live → **no unnecessary repeat Redeploy**
+- Honesty fix push `3d213c8` auto-deployed → current Live SoT
+- Retained previous assets: `index-ChR5GS_H.js`, `index-BkeSH4cj.js` (200)
+
+### Live truth (post 5m warmup)
+- Breadth `642` · Deep scan `80/80` · Sector count `19` · freshness LIVE
+- Classified ~109 / unclassified ~533 (not forced into Other)
+- Scanner `cycleCount` advancing · `loopOverlapBlocked=true` · Long/Short candidates non-empty after window
+- Price／OI quadrant real points (no zero-fill) · Sector OI 5m uses sample counts / null when insufficient
+- Layer1 candidate counts matched ranked scanner membership
+- OHLCV Live == Bybit public for BTC/ETH/SOL (timestamp+close) · intervals 1m–1d
+- Funding history API `available=false` · `fabricatedHistory=false`
+- Equities pages: provider pending · no fake quotes (Playwright)
+- SPA: HTML `no-store` · hashed assets immutable · hard refresh on sector/equities routes 200
+- Playwright responsive viewports 1440→360: overflow failures `0`
+
+### Honesty scope (explicit)
+- Sector Price／OI: filtered deep link (not inline chart)
+- Candidate／Anomaly／Signal Reference chart markers: current-state only (not full history)
+- Historical funding series: unavailable
+- Equity／tokenized providers: not connected
+
+**Verdict:** `PASS — NEXUS PRODUCT TRANSFORMATION PHASE 3 DEPLOYED AND LIVE VERIFIED`
+
+**remaining_issues:**
+- Licensed equity market data provider selection pending
+- Tokenized equity provider selection pending
+- Inline sector Price／OI chart deferred (filtered deep link available)
+- Full candidate／anomaly historical chart markers deferred
+- Historical funding series unavailable
+- Full-market WebSocket fast-lane deferred
+- Full candidate stage transition timeline deferred
+- Real anomaly outcome duration pending
 

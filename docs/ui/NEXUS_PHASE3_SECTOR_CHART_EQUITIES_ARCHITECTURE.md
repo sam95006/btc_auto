@@ -38,8 +38,10 @@ Bybit public kline / open-interest
 - Pending providers return empty / unavailable — **no fake prices**
 - Routes: `/equities/tokenized`, `/equities/analysis`
 
-## Safety
+## Sector Price／OI experience
 
-- Sector state ≠ recommendation / trading trigger
-- Chart data ≠ order routing
-- Read-only · public crypto data · no private API / keys in UI path
+Sector detail does **not** inline the full Price／OI scatter. It deep-links to:
+
+`/crypto/price-oi?sector=<slug>`
+
+with membership filter preserved. Collecting symbols are not zero-filled onto the plot.
