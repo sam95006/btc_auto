@@ -184,6 +184,8 @@ class ResearchSupervisor:
         backoff_sec: float = 5.0,
     ) -> None:
         job = RegisteredJob(job_id, fn, interval_sec, timeout_sec, max_retries, backoff_sec)
+        # Do not fire every new job on the first supervisor tick.
+        job._last_run_at = time.time()
         with self._lock:
             self._jobs[job_id] = job
         publish_event(SUPERVISOR_JOB_REGISTERED, {"jobId": job_id, "intervalSec": interval_sec})

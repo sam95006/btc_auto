@@ -156,10 +156,21 @@ _GATE_C_POST_ALLOWLIST.update({
 
 try:
     from backend.nexus_research.bootstrap import bootstrap_research_runtime
-    _stage3_bootstrap = bootstrap_research_runtime()  # supervisor + paper controller
+    import threading
+    import time as _time
+
+    def _deferred_stage3_bootstrap() -> None:
+        try:
+            _time.sleep(8.0)
+            bootstrap_research_runtime()
+        except Exception as _inner:  # noqa: BLE001
+            import logging as _log
+            _log.getLogger(__name__).warning("[stage3] research runtime bootstrap deferred: %s", _inner)
+
+    threading.Thread(target=_deferred_stage3_bootstrap, name="nexus-research-bootstrap", daemon=True).start()
 except Exception as _e:
     import logging as _log
-    _log.getLogger(__name__).warning("[stage3] research runtime bootstrap deferred: %s", _e)
+    _log.getLogger(__name__).warning("[stage3] research runtime bootstrap wiring deferred: %s", _e)
 
 
 @app.route("/health")

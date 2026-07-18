@@ -162,11 +162,27 @@ _start_embedded_nexus_worker_if_configured()
 
 try:
     from backend.nexus_research.bootstrap import bootstrap_research_runtime
+    import threading
 
-    _bootstrap_result = bootstrap_research_runtime()  # Phase 6 Gate C: supervisor + paper controller
-    print(f"[startup] Research runtime bootstrap: {_bootstrap_result.get('steps', [])}")
+    def _deferred_research_bootstrap() -> None:
+        try:
+            # Let HTTP/health bind first; avoid startup contention with scanner bootstrap.
+            import time as _time
+
+            _time.sleep(8.0)
+            _bootstrap_result = bootstrap_research_runtime()
+            print(f"[startup] Research runtime bootstrap: {_bootstrap_result.get('steps', [])}")
+        except Exception as _bootstrap_exc:  # noqa: BLE001
+            print(f"[startup] Research runtime bootstrap deferred: {_bootstrap_exc}")
+
+    threading.Thread(
+        target=_deferred_research_bootstrap,
+        name="nexus-research-bootstrap",
+        daemon=True,
+    ).start()
+    print("[startup] Research runtime bootstrap scheduled (deferred)")
 except Exception as _bootstrap_exc:  # noqa: BLE001
-    print(f"[startup] Research runtime bootstrap deferred: {_bootstrap_exc}")
+    print(f"[startup] Research runtime bootstrap wiring deferred: {_bootstrap_exc}")
 
 
 @app.route("/")
