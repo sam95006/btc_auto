@@ -187,7 +187,133 @@ def decisions_status():
     return resp
 
 
+@nexus_research_bp.route("/api/nexus/storage/status")
+def storage_status():
+    """Phase 6 Gate B: storage mode, durability claim, migration version (no secrets)."""
+    try:
+        from backend.nexus_research.storage import get_research_store
+        data = get_research_store().status()
+        data.update({"researchOnly": True, "privateApi": False})
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
+@nexus_research_bp.route("/api/nexus/storage/discovery")
+def storage_discovery():
+    """Phase 6 Gate B: env presence check + recommended mode (no secrets/values)."""
+    try:
+        from backend.nexus_research.storage_discovery import discover_storage
+        data = {**discover_storage(), "researchOnly": True, "privateApi": False}
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
+@nexus_research_bp.route("/api/nexus/review-engine/status")
+def review_engine_status():
+    """Phase 6 Gate D: review engine mode + provider status."""
+    try:
+        from backend.nexus_research.review_engine import get_review_engine
+        data = get_review_engine().status()
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
+@nexus_research_bp.route("/api/nexus/performance/summary")
+def performance_summary():
+    """Phase 6 Gate D: performance summary for all streams."""
+    try:
+        from backend.nexus_research.performance_service import get_performance_service
+        data = get_performance_service().summary()
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
+@nexus_research_bp.route("/api/nexus/performance/by-sector")
+def performance_by_sector():
+    try:
+        from backend.nexus_research.performance_service import get_performance_service
+        data = get_performance_service().by_sector()
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
+@nexus_research_bp.route("/api/nexus/performance/by-regime")
+def performance_by_regime():
+    try:
+        from backend.nexus_research.performance_service import get_performance_service
+        data = get_performance_service().by_regime()
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
+@nexus_research_bp.route("/api/nexus/performance/by-side")
+def performance_by_side():
+    try:
+        from backend.nexus_research.performance_service import get_performance_service
+        data = get_performance_service().by_side()
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
+@nexus_research_bp.route("/api/nexus/performance/risk-blocks")
+def performance_risk_blocks():
+    try:
+        from backend.nexus_research.performance_service import get_performance_service
+        data = get_performance_service().risk_blocks()
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
+@nexus_research_bp.route("/api/nexus/performance/calibration")
+def performance_calibration():
+    try:
+        from backend.nexus_research.performance_service import get_performance_service
+        data = get_performance_service().calibration()
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
+@nexus_research_bp.route("/api/nexus/soak/live/status")
+def live_soak_status():
+    """Phase 6 Gate D: live soak + phased marker status."""
+    try:
+        from backend.nexus_research.live_soak import get_live_soak_framework
+        data = get_live_soak_framework().status()
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
 def register_nexus_research_routes(app: "Flask") -> None:
-    """Register all Phase 5 Gate B routes."""
+    """Register all Phase 5 / Phase 6 Gate B + Gate D routes."""
     app.register_blueprint(nexus_research_bp)
-    logger.info("[nexus_research] Phase 5 Gate B routes registered")
+    logger.info("[nexus_research] Phase 6 Gate D routes registered")

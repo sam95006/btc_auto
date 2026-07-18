@@ -26,6 +26,7 @@ import { MarketSymbolPage } from "./pages/MarketSymbolPage";
 import { WatchlistPage } from "./pages/WatchlistPage";
 import { SignalsPage } from "./pages/SignalsPage";
 import { AiReviewsPage } from "./pages/AiReviewsPage";
+import { ResearchPerformancePage } from "./pages/ResearchPerformancePage";
 import { CryptoSectorsPage } from "./pages/crypto/CryptoSectorsPage";
 import { CryptoSectorDetailPage } from "./pages/crypto/CryptoSectorDetailPage";
 import { CryptoFundingPage, CryptoOiPage, CryptoPriceOiPage } from "./pages/crypto/CryptoRankPages";
@@ -36,7 +37,8 @@ import {
 } from "./pages/equities/EquitiesPages";
 
 /**
- * NEXUS Product Transformation Phase 3–5 — sectors, charts, equities, AI review (read-only).
+ * NEXUS Product Transformation Phase 3–6 — sectors, charts, equities, AI review,
+ * research performance (read-only).
  * Forbidden: /trade, /orders, /arm, /routing-edit
  */
 export default function App() {
@@ -80,6 +82,7 @@ export default function App() {
                 <Route path="/calculator" element={<CalculatorPage />} />
                 <Route path="/membership" element={<MembershipPage />} />
                 <Route path="/ai-reviews" element={<AiReviewsPage />} />
+                <Route path="/research-performance" element={<ResearchPerformancePage />} />
                 <Route path="*" element={<Navigate to="/overview" replace />} />
               </Routes>
             </main>

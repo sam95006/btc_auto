@@ -27,6 +27,7 @@ const EQUITIES: NavItem[] = [
 
 const RESEARCH: NavItem[] = [
   { to: "/ai-reviews", label: "AI 檢討中心", short: "AI" },
+  { to: "/research-performance", label: "Research Performance", short: "績效" },
   { to: "/anomaly-outcomes", label: "Outcome Research", short: "結果" },
   { to: "/evidence", label: "Evidence", short: "證據" },
   { to: "/provider-shadow", label: "Provider Validation", short: "Provider" },
@@ -54,7 +55,8 @@ function Links({ items }: { items: NavItem[] }) {
 }
 
 /**
- * Phase 4–5 nav — explore / tools / rankings / equities + collapsed research (AI 檢討中心).
+ * Phase 4–6 nav — explore / tools / rankings / equities + collapsed research.
+ * Gate D adds: Research Performance (/research-performance).
  * Forbidden: /trade, /orders, /arm, /routing-edit
  */
 export function SidebarNav() {

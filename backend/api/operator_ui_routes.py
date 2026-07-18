@@ -37,7 +37,8 @@ _SPA_PREFIXES = (
     "academy",
     "calculator",
     "membership",
-    "ai-reviews",  # Phase 5 Gate B — AI Review Center
+    "ai-reviews",           # Phase 5 Gate B — AI Review Center
+    "research-performance", # Phase 6 Gate D — Research Performance Validation
 )
 
 

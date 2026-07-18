@@ -372,3 +372,214 @@ python tools/research/verify_phase5_gate_b.py
 ```
 
 Expected output: `VERDICT=PASS`
+
+---
+
+## Phase 6 Persistence
+
+**Phase 6 Gate B — Production Durable Persistence**
+Status: IMPLEMENTED (postgres driver pending)
+Research-only · No real orders · No private API
+
+### New modules
+
+| Module | Purpose |
+|---|---|
+| `storage_discovery.py` | `discover_storage()` — env-name presence check, recommended mode, no secret values |
+| `storage.py` (enhanced) | Schema v2 migrations, typed tables, idempotency keys, UTC timestamps, retention/pagination |
+
+### Env contract
+
+| Variable | Purpose |
+|---|---|
+| `NEXUS_RESEARCH_DATABASE_URL` | Postgres DSN (pending psycopg2-binary in requirements) |
+| `DATABASE_URL` | Fallback postgres DSN |
+| `NEXUS_DATA_DIR` | Directory for `nexus_research.db` (never `trading.db`) |
+| `NEXUS_RESEARCH_STORAGE_MODE` | `memory` \| `sqlite` \| `postgres` \| `auto` |
+
+### Typed tables (schema v2)
+
+`domain_events`, `dead_letters`, `review_cases`, `role_assessments`,
+`research_decisions`, `review_sessions`, `sim_orders`, `sim_fills`,
+`sim_positions`, `sim_ledger`, `risk_snapshots`, `outcomes`, `reflections`,
+`patch_proposals`, `replay_checkpoints`, `runtime_job_state`,
+`persistence_validation_markers`
+
+Each typed table has a `UNIQUE` idempotency key constraint, UTC `created_at_utc`
+column, and relevant secondary indexes.  Generic `kv` table retained for
+backward compatibility.
+
+### Durability honesty
+
+If neither a confirmed-volume NEXUS_DATA_DIR nor a postgres URL is available:
+`durableClaim=false`, `productionPersistenceAvailable=false`.
+Sqlite under a non-volume-confirmed path → mode `sqlite_ephemeral`, NOT "durable".
+
+### New API endpoints
+
+- `GET /api/nexus/storage/status` — storageMode, durableClaim, volumeConfirmed, lastMigrationVersion, health
+- `GET /api/nexus/storage/discovery` — env presence report, recommended mode (no secret values)
+
+### Postgres status
+
+psycopg2-binary is **not** in requirements.txt.  Postgres URLs are detected and
+logged as warnings; the store falls back to sqlite/memory.  To enable postgres,
+add `psycopg2-binary` to requirements.txt and re-run migrations.
+
+### Verification
+
+```bash
+python tools/research/verify_phase6_gate_b_persistence.py
+```
+
+Expected output: `VERDICT=PASS`
+
+---
+
+## Phase 6 Gate D — AI-assisted Review, Performance Validation, Soak Framework
+
+**Status: IMPLEMENTED**
+Research-only · No real orders · No private API · LLM allowlist: openai, anthropic, azure_openai
+
+### Overview
+
+Gate D adds:
+1. **Reasoning Provider** — structured interface for deterministic vs LLM-assisted analysis
+2. **Performance Service** — per-stream metrics with strict stream separation
+3. **Review Engine** — exposes current review mode to the UI honestly
+4. **Live Soak Framework** — 30-minute smoke checklist + phased soak markers
+
+### New modules
+
+| Module | Purpose |
+|---|---|
+| `reasoning_provider.py` | `ResearchReasoningProvider` ABC + `RulesOnlyProvider` + `LlmAssistedProvider` stub |
+| `performance_service.py` | Per-stream performance metrics: LIVE_PAPER / SHADOW / REPLAY / MANUAL_VALIDATION |
+| `review_engine.py` | Wraps orchestrator + provider; exposes `reviewMode` / `uiModeLabel` to UI |
+| `live_soak.py` | 30m smoke checklist + phased markers (6h/24h/72h DEFERRED) |
+
+### Reasoning Provider
+
+**Modes:**
+
+| Mode | Condition |
+|---|---|
+| `RULES_ONLY` | No LLM env configured, or provider blocked |
+| `LLM_ASSISTED` | Approved provider env set + API key present |
+| `LLM_UNAVAILABLE` | Provider env set but API key absent |
+| `DEGRADED` | Circuit breaker open (3 failures → 10-min cooldown) |
+
+**Allowlisted providers (western/approved only):**
+- `openai`, `anthropic`, `azure_openai`
+- Any other provider (including Chinese endpoints) → `RULES_ONLY` (blocked)
+
+**Safety invariants:**
+- LLM NEVER modifies candidate scores, risk verdicts, or creates orders
+- Only public market evidence packs sent to LLM (no private account data)
+- No secrets logged
+- Token budget: evidence ≤2000 tokens, output ≤800 tokens
+- Numeric hallucination guard: rejects invented price/OI numbers
+- JSON schema validation + SHA-256 output hash for audit
+- Prompt version: `gate-d-v1`
+
+**Env vars:**
+
+| Variable | Purpose |
+|---|---|
+| `NEXUS_RESEARCH_LLM_PROVIDER` | `openai` \| `anthropic` \| `azure_openai` (or absent → RULES_ONLY) |
+| `OPENAI_API_KEY` | Required if provider=openai |
+| `ANTHROPIC_API_KEY` | Required if provider=anthropic |
+| `AZURE_OPENAI_API_KEY` | Required if provider=azure_openai |
+
+### Performance Service
+
+**Streams (NEVER merged):**
+
+| Stream ID | Source |
+|---|---|
+| `LIVE_PAPER` | Autonomous paper positions from `paper_controller` |
+| `SHADOW` | Shadow / dry-run records (no sim positions) |
+| `REPLAY` | Historical replay soak results |
+| `MANUAL_VALIDATION` | Operator-triggered manual research cases |
+
+**Metrics per stream:** cases, decisions by status, sim entries, open/closed positions,
+PnL gross/net, fees, slippage, funding, win rate, expectancy, profit factor, max drawdown,
+MFE/MAE, avg hold time, risk-block effectiveness, sample size + uncertainty label.
+
+**Uncertainty labels:** INSUFFICIENT (<10) → LOW (<30) → MODERATE (<100) → ADEQUATE (≥100)
+
+**New API endpoints:**
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/nexus/performance/summary` | All-stream summary |
+| `GET /api/nexus/performance/by-sector` | Sector breakdown per stream |
+| `GET /api/nexus/performance/by-regime` | Regime breakdown per stream |
+| `GET /api/nexus/performance/by-side` | Long/Short breakdown per stream |
+| `GET /api/nexus/performance/risk-blocks` | Risk block effectiveness per stream |
+| `GET /api/nexus/performance/calibration` | Win rate / expectancy / PF per stream |
+| `GET /api/nexus/review-engine/status` | Review mode + provider status |
+| `GET /api/nexus/soak/live/status` | Live soak + phased marker status |
+
+### Review Engine
+
+Wraps `DecisionOrchestrator` (roles.py) + reasoning provider. Exposes:
+- `reviewMode`: RULES_ONLY / LLM_ASSISTED / LLM_UNAVAILABLE / DEGRADED
+- `uiModeLabel`: honest Chinese label (e.g. "規則式分析（非生成式 AI）")
+- `fabricatedChat: false` (always)
+- `_invariant`: annotation that reasoning never modifies risk verdict
+
+UI must display mode honestly:
+- `RULES_ONLY` → "規則式分析（非生成式 AI）" — NOT labelled as generative AI
+- `LLM_ASSISTED` → "LLM 輔助分析" + provider name
+
+### Live Soak Framework (30m smoke)
+
+**30-minute smoke checklist (5 items):**
+
+| Item | Check |
+|---|---|
+| `SIM_STACK_ALIVE` | Sim + ledger initialize; bars processed > 0 |
+| `RISK_ENGINE_ACTIVE` | At least 1 risk decision recorded |
+| `LEDGER_CONSISTENT` | Final equity > 0 (no negative balance) |
+| `EXIT_POLICIES_FIRE` | At least 1 position closed (SKIP if window too short) |
+| `NO_PRIVATE_API` | No private API references in soak errors |
+
+**Phased markers:**
+
+| Phase | Default status | Notes |
+|---|---|---|
+| `smoke_30m` | PENDING → PASSED/FAILED | Auto-run |
+| `6h` | DEFERRED | Requires manual trigger |
+| `24h` | DEFERRED | Requires manual trigger |
+| `72h` | DEFERRED | Requires manual trigger |
+
+### Frontend
+
+- New page: `ResearchPerformancePage.tsx` at `/research-performance`
+- Added to `SidebarNav.tsx` RESEARCH group: "Research Performance"
+- `AiReviewsPage.tsx` updated: shows `ReviewEngineModeBanner` with honest mode disclosure
+- Phase 6 Gate D marker badge on AI Review Center page
+- SPA prefix `research-performance` added to `operator_ui_routes.py` and `stage3_readonly_web_app.py`
+
+### Version
+
+`__version__ = "6.0.0-gate-d"` · `PHASE = "6-GATE-D"`
+
+### Verification
+
+```bash
+# Performance + Soak
+python tools/research/verify_phase6_gate_d_performance.py
+
+# AI Review + Reasoning Provider
+python tools/research/verify_phase6_gate_d_ai_review.py
+```
+
+Expected output: `VERDICT=PASS`
+
+### Mirror
+
+All new `backend/nexus_research/` modules are mirrored to:
+`deploy/zeabur_stage3_demo_learning/backend/nexus_research/`
+

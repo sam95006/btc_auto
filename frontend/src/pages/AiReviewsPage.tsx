@@ -361,14 +361,83 @@ function StatusCard({ status }: { status: AiReviewsStatus }) {
   );
 }
 
+interface ReviewEngineStatus {
+  ok: boolean;
+  researchOnly: boolean;
+  reviewMode: string;
+  providerName: string;
+  reviewCount: number;
+  uiModeLabel: string;
+  fabricatedChat: boolean;
+  error?: string;
+}
+
+function useReviewEngineStatus() {
+  const [engineStatus, setEngineStatus] = useState<ReviewEngineStatus | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/nexus/review-engine/status")
+      .then((r) => r.json())
+      .then((d: ReviewEngineStatus) => { if (!cancelled) setEngineStatus(d); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  return engineStatus;
+}
+
+function reviewModeLabel(mode: string | undefined): string {
+  switch (mode) {
+    case "RULES_ONLY": return "規則式分析（非生成式 AI）";
+    case "LLM_ASSISTED": return "LLM 輔助分析";
+    case "LLM_UNAVAILABLE": return "LLM 不可用 → 規則式分析";
+    case "DEGRADED": return "降級模式 → 規則式分析";
+    default: return "規則式分析（非生成式 AI）";
+  }
+}
+
+function reviewModeBadgeClass(mode: string | undefined): string {
+  if (mode === "LLM_ASSISTED") return "nx-badge-ok";
+  if (mode === "DEGRADED") return "nx-badge-fail";
+  if (mode === "LLM_UNAVAILABLE") return "nx-badge-warn";
+  return "nx-badge-dim";
+}
+
+function ReviewEngineModeBanner({ engineStatus }: { engineStatus: ReviewEngineStatus | null }) {
+  const mode = engineStatus?.reviewMode ?? "RULES_ONLY";
+  const label = engineStatus?.uiModeLabel ?? reviewModeLabel(mode);
+  const isLlm = mode === "LLM_ASSISTED";
+
+  return (
+    <div className="nx-ai-reviews-engine-banner">
+      <div className="nx-ai-reviews-engine-row">
+        <span className="nx-ai-reviews-engine-label">分析引擎</span>
+        <span className={`nx-badge ${reviewModeBadgeClass(mode)}`}>{mode}</span>
+        {isLlm && engineStatus?.providerName && (
+          <span className="nx-badge nx-badge-active">{engineStatus.providerName}</span>
+        )}
+        {!isLlm && (
+          <span className="nx-badge nx-badge-dim">非生成式 AI</span>
+        )}
+      </div>
+      <div className="muted" style={{ fontSize: "0.8rem", marginTop: "0.25rem" }}>
+        {label} · fabricatedChat=false · 無虛構聊天
+      </div>
+    </div>
+  );
+}
+
 /**
- * Phase 5 Gate B — AI Review Center page.
+ * Phase 5 Gate B / Phase 6 Gate D — AI Review Center page.
  * Read-only: structured role cards + decisions. No fabricated AI chat.
+ * Shows review engine mode (RULES_ONLY vs LLM_ASSISTED) honestly.
  */
 export function AiReviewsPage() {
   const { status, loading: statusLoading, error: statusError } = useAiReviewsStatus();
   const { sessions, loading: sessionsLoading } = useAiReviewSessions();
   const { cases, loading: casesLoading } = useReviewCases();
+  const engineStatus = useReviewEngineStatus();
 
   const riskBlocks = cases.filter((c) => c.decision?.decisionStatus === "RISK_BLOCKED").length;
   const readySim = cases.filter((c) => c.decision?.decisionStatus === "READY_FOR_SIMULATION").length;
@@ -380,7 +449,13 @@ export function AiReviewsPage() {
         <p className="nx-page-subtitle muted">
           即時候選審查案件 + 每六小時自我檢討 · 純研究模式 · 不執行真實交易
         </p>
+        <span className="nx-badge nx-badge-dim" style={{ marginTop: "0.25rem" }}>
+          Phase 6 Gate D
+        </span>
       </div>
+
+      {/* Review engine mode — honest disclosure */}
+      <ReviewEngineModeBanner engineStatus={engineStatus} />
 
       {statusLoading && <div className="nx-ai-reviews-loading muted">載入週期狀態…</div>}
       {statusError && !statusLoading && (
@@ -439,7 +514,8 @@ export function AiReviewsPage() {
       </div>
 
       <div className="nx-ai-reviews-footer muted">
-        研究系統 · Phase 5 · researchOnly=true · privateApi=false · 無虛構聊天對話
+        研究系統 · Phase 6 Gate D · researchOnly=true · privateApi=false · 無虛構聊天對話 ·
+        分析模式：規則式（RULES_ONLY 時非生成式 AI）
       </div>
     </div>
   );
