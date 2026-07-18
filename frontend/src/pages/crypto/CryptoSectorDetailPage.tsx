@@ -177,6 +177,16 @@ export function CryptoSectorDetailPage() {
             </p>
           </section>
 
+          <section className="nx-chart-card">
+            <h2 className="nx-sec-title">價格／持倉結構</h2>
+            <p className="muted sm">
+              版塊詳情不內嵌完整 Price／OI 散點；請使用已套用本版塊篩選的專頁。
+            </p>
+            <Link className="nx-link" to={`/crypto/price-oi?sector=${encodeURIComponent(sector.slug)}`}>
+              查看此版塊的價格／持倉結構 →
+            </Link>
+          </section>
+
           <div className="nx-filter-row">
             {[
               ["ALL", "全部"],

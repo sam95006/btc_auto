@@ -9,20 +9,23 @@
   "mvp22a_marker": "NEXUS_UI_MVP22A_LIVE_MARKET_DATA",
   "legacy_marker": "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60",
   "marker_found": true,
-  "file_count": 5,
+  "file_count": 6,
   "current_assets": [
-    "index-ChR5GS_H.js",
+    "index-BZTA1-bM.js",
     "index-DV6_5x8g.css"
   ],
   "retained_assets": [
+    "index-BZTA1-bM.js",
     "index-BkeSH4cj.js",
     "index-ChR5GS_H.js",
     "index-DV6_5x8g.css",
     "index-EFqAIPyf.css"
   ],
-  "retained_generations": 2,
+  "retained_generations": 3,
   "previous_assets": [
+    "index-ChR5GS_H.js",
     "index-BkeSH4cj.js",
+    "index-DV6_5x8g.css",
     "index-EFqAIPyf.css"
   ]
 }

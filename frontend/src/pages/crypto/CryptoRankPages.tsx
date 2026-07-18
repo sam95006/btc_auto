@@ -1,6 +1,7 @@
-import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { fetchScannerCharts, fetchScannerCandidates } from "../../market/scannerApi";
+import { fetchSectorSymbols } from "../../market/sectorApi";
 
 function fmtPct(v: number | null | undefined) {
   if (v == null || Number.isNaN(v)) return "—";
@@ -99,9 +100,13 @@ export function CryptoFundingPage() {
 }
 
 export function CryptoPriceOiPage() {
+  const [params] = useSearchParams();
+  const sector = (params.get("sector") || "").trim().toLowerCase();
   const [points, setPoints] = useState<
     { symbol: string; side: string; priceChange5mPct: number; oiChange5mPct: number; stage?: string }[]
   >([]);
+  const [sectorMembers, setSectorMembers] = useState<Set<string> | null>(null);
+
   useEffect(() => {
     let alive = true;
     const load = async () => {
@@ -116,16 +121,49 @@ export function CryptoPriceOiPage() {
       window.clearInterval(id);
     };
   }, []);
+
+  useEffect(() => {
+    let alive = true;
+    if (!sector) {
+      setSectorMembers(null);
+      return;
+    }
+    void fetchSectorSymbols(sector, 120)
+      .then((body) => {
+        if (!alive) return;
+        const set = new Set((body.symbols || []).map((s) => String(s.symbol || "").toUpperCase()));
+        setSectorMembers(set);
+      })
+      .catch(() => {
+        if (alive) setSectorMembers(new Set());
+      });
+    return () => {
+      alive = false;
+    };
+  }, [sector]);
+
+  const filtered = useMemo(() => {
+    if (!sectorMembers) return points;
+    return points.filter((p) => sectorMembers.has(p.symbol.toUpperCase()));
+  }, [points, sectorMembers]);
+
   return (
     <div className="page-stack nx-p3">
       <header className="nx-ov-header">
         <h1 className="nx-page-title">價格與持倉結構</h1>
-        <p className="nx-status-line">僅深度掃描、具備真實 5m 窗口的標的 · Collecting 不進圖</p>
-        <Link to="/crypto/sectors">← 版塊</Link>
+        <p className="nx-status-line">
+          僅深度掃描、具備真實 5m 窗口的標的 · Collecting 不進圖
+          {sector ? ` · 版塊篩選：${sector}` : ""}
+        </p>
+        <div className="nx-ov-meta">
+          <Link to="/crypto/sectors">← 版塊</Link>
+          {sector ? <Link to="/crypto/price-oi">清除版塊篩選</Link> : null}
+          {sector ? <Link to={`/crypto/sectors/${sector}`}>版塊詳情</Link> : null}
+        </div>
       </header>
       <section className="nx-chart-card nx-quadrant">
         <div className="nx-quad-plot">
-          {points.slice(0, 60).map((p) => (
+          {filtered.slice(0, 60).map((p) => (
             <Link
               key={p.symbol}
               to={`/market/${p.symbol}`}
@@ -140,7 +178,9 @@ export function CryptoPriceOiPage() {
           <span className="nx-quad-axis-x">5m 價格 →</span>
           <span className="nx-quad-axis-y">5m 持倉 ↑</span>
         </div>
-        {points.length === 0 ? <p className="muted">資料累積中…</p> : null}
+        {filtered.length === 0 ? (
+          <p className="muted">{sector ? "此版塊暫無具備 5m 窗口的深度掃描點" : "資料累積中…"}</p>
+        ) : null}
       </section>
     </div>
   );

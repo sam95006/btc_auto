@@ -317,6 +317,10 @@ export function MarketSymbolPage() {
       <section className="nx-chart-card nx-ohlcv-wrap">
         <h2 className="nx-sec-title">NEXUS 圖表（交易所公開資料）</h2>
         <p className="muted sm">Bybit Public → NEXUS datafeed · 非 TradingView 行情來源</p>
+        <p className="muted sm">
+          圖表範圍：目前價格 K 線／可選持倉層。候選／異動／訊號參考僅顯示當前狀態，非完整歷史 markers；Funding
+          歷史序列尚未提供。
+        </p>
         <NexusOhlcvChart symbol={symbol} advanced={advanced} />
       </section>
 
