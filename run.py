@@ -52,6 +52,12 @@ try:
     register_gate_c_routes(app)  # Phase 5 Gate C: simulator / risk / reflection / replay
 except Exception as _gate_c_exc:  # noqa: BLE001
     print(f"[startup] Gate C routes deferred: {_gate_c_exc}")
+try:
+    from backend.nexus_research.paper_routes import register_paper_routes
+
+    register_paper_routes(app)  # Phase 6 Gate C: paper runtime API
+except Exception as _paper_routes_exc:  # noqa: BLE001
+    print(f"[startup] Paper routes deferred: {_paper_routes_exc}")
 # UI-DEPLOY-2: Market Intelligence SPA (static/operator_ui) — register before / catch-alls finish
 register_operator_ui_routes(app)
 
@@ -153,6 +159,14 @@ def _start_embedded_nexus_worker_if_configured():
 
 
 _start_embedded_nexus_worker_if_configured()
+
+try:
+    from backend.nexus_research.bootstrap import bootstrap_research_runtime
+
+    _bootstrap_result = bootstrap_research_runtime()  # Phase 6 Gate C: supervisor + paper controller
+    print(f"[startup] Research runtime bootstrap: {_bootstrap_result.get('steps', [])}")
+except Exception as _bootstrap_exc:  # noqa: BLE001
+    print(f"[startup] Research runtime bootstrap deferred: {_bootstrap_exc}")
 
 
 @app.route("/")

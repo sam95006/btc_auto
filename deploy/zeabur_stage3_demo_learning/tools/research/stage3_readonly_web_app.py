@@ -66,9 +66,10 @@ _SPA_PREFIXES = (
     "academy",
     "calculator",
     "membership",
-    "ai-reviews",  # Phase 5 Gate B
-    "simulation",  # Phase 5 Gate C — simulator view
-    "replay",      # Phase 5 Gate C — replay view
+    "ai-reviews",           # Phase 5 Gate B — AI Review Center
+    "simulation",           # Phase 5 Gate C — simulator view
+    "replay",               # Phase 5 Gate C — replay view
+    "research-performance", # Phase 6 Gate D — Research Performance Validation
 )
 
 
@@ -138,6 +139,27 @@ try:
 except Exception as _e:
     import logging as _log
     _log.getLogger(__name__).warning("[stage3] gate_c routes not registered: %s", _e)
+
+try:
+    from backend.nexus_research.paper_routes import register_paper_routes
+    register_paper_routes(app)  # Phase 6 Gate C: paper runtime API
+except Exception as _e:
+    import logging as _log
+    _log.getLogger(__name__).warning("[stage3] paper routes not registered: %s", _e)
+
+# Phase 6 Gate C POST allowlist additions
+_GATE_C_POST_ALLOWLIST.update({
+    "/api/nexus/paper/manual-close",
+    "/api/nexus/ai-reviews/manual-validation",
+    "/api/nexus/review-cases/manual-research",
+})
+
+try:
+    from backend.nexus_research.bootstrap import bootstrap_research_runtime
+    _stage3_bootstrap = bootstrap_research_runtime()  # supervisor + paper controller
+except Exception as _e:
+    import logging as _log
+    _log.getLogger(__name__).warning("[stage3] research runtime bootstrap deferred: %s", _e)
 
 
 @app.route("/health")
