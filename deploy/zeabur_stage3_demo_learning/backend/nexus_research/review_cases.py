@@ -138,12 +138,17 @@ def _is_validation(snapshot: dict[str, Any] | None, row: dict[str, Any] | None =
 
 
 def _setup_identity(snapshot: dict[str, Any], window: str) -> str:
+    # Stable identity — never include score (score changes must UPDATE, not create).
     return str(
         snapshot.get("setupId")
         or snapshot.get("setupIdentity")
         or snapshot.get("candidateId")
+        or snapshot.get("id")
         or snapshot.get("fingerprint")
-        or f"{snapshot.get('stage') or ''}:{window}:{snapshot.get('score') or ''}"
+        or f"{snapshot.get('symbol') or ''}:"
+        f"{snapshot.get('side') or snapshot.get('direction') or ''}:"
+        f"{snapshot.get('stage') or ''}:"
+        f"{window}"
     )
 
 
