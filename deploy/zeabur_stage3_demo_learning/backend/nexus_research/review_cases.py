@@ -641,19 +641,26 @@ class ReviewCaseManager:
                     return None
                 natural_count = len(self._natural_active_cases())
                 if natural_count >= _MAX_ACTIVE_CASES:
-                    # Critical triggers may displace lowest-priority WATCH_ONLY / SCORE_CHANGE
-                    if _TRIGGER_PRIORITY.get(trigger, 0) >= 80:
+                    # Higher-priority triggers may displace lower-priority actives
+                    # (never silent-delete; explicit SUPERSEDED transition).
+                    new_pri = int(_TRIGGER_PRIORITY.get(trigger, 0))
+                    if new_pri >= 70:
                         victims = sorted(
                             self._natural_active_cases(),
                             key=lambda c: (c.priority(), c.updated_at),
                         )
                         displaced = False
+                        now_ms = _now_ms()
                         for v in victims:
-                            if v.priority() < _TRIGGER_PRIORITY.get(trigger, 0):
+                            stale_peer = (
+                                v.priority() == new_pri
+                                and (now_ms - v.updated_at) > 600_000
+                            )
+                            if v.priority() < new_pri or stale_peer:
                                 self._transition_terminal(
                                     v,
                                     STATUS_SUPERSEDED,
-                                    f"displaced by critical trigger {trigger}",
+                                    f"displaced by higher/equal-stale trigger {trigger}",
                                     persist=True,
                                 )
                                 displaced = True
@@ -969,6 +976,9 @@ class ReviewCaseManager:
         created = 0
         updated = 0
         skipped = 0
+        superseded_out_of_top = 0
+
+        keep_keys: set[str] = set()
 
         def _process_list(candidates: list[dict[str, Any]], direction: str) -> None:
             nonlocal created, updated, skipped
@@ -976,7 +986,11 @@ class ReviewCaseManager:
                 sym = str(c.get("symbol") or "")
                 if not sym:
                     continue
-                before_ids = set(self._cases.keys())
+                setup = _setup_identity(c, "5m")
+                keep_keys.add(_natural_key(sym, direction, setup, "5m"))
+                # Also keep symbol+side loosely for top-5 membership
+                keep_keys.add(f"{sym}|{direction}|*")
+                before = self._find_active_by_natural_key(_natural_key(sym, direction, setup, "5m"))
                 case = self.create_case(
                     symbol=sym,
                     direction=direction,
@@ -985,7 +999,9 @@ class ReviewCaseManager:
                 )
                 if case is None:
                     skipped += 1
-                elif case.case_id in before_ids or case.case_id in self._cases and case.notes and "Updated snapshot" in case.notes[-1]:
+                elif before is not None and before.case_id == case.case_id:
+                    updated += 1
+                elif case.notes and "Updated snapshot" in (case.notes[-1] or ""):
                     updated += 1
                 else:
                     created += 1
@@ -996,6 +1012,9 @@ class ReviewCaseManager:
                 sym = str(c.get("symbol") or "")
                 if not sym:
                     continue
+                setup = _setup_identity(c, "5m")
+                keep_keys.add(_natural_key(sym, direction, setup, "5m"))
+                keep_keys.add(f"{sym}|{direction}|*")
                 case = self.create_case(
                     symbol=sym,
                     direction=direction,
@@ -1004,23 +1023,56 @@ class ReviewCaseManager:
                 )
                 if case is None:
                     skipped += 1
+                elif case.notes and "Updated snapshot" in (case.notes[-1] or ""):
+                    updated += 1
                 else:
-                    # create_case returns existing on dedup — count as updated if note present
-                    if case.notes and "Updated snapshot" in (case.notes[-1] or ""):
-                        updated += 1
-                    else:
-                        created += 1
+                    created += 1
 
         longs = snapshot.get("longs") or snapshot.get("longCandidates") or []
         shorts = snapshot.get("shorts") or snapshot.get("shortCandidates") or []
         _process_list(longs, "LONG")
         _process_list(shorts, "SHORT")
 
+        # Release capacity: supersede natural actives no longer in current top/confirmed set
+        with self._lock:
+            now = _now_ms()
+            for case in list(self._cases.values()):
+                if not case.is_natural_active(now):
+                    continue
+                if case.trigger in (
+                    TRIGGER_POSITION_RISK,
+                    TRIGGER_MAJOR_ANOMALY,
+                    TRIGGER_CONFIRMED,
+                    TRIGGER_SCHEDULED_REVIEW,
+                ):
+                    continue
+                loose = f"{case.symbol}|{case.direction}|*"
+                if case.natural_key in keep_keys or loose in keep_keys:
+                    continue
+                if case.trigger in (TRIGGER_TOP5_ENTRY, TRIGGER_SCORE_CHANGE):
+                    self._transition_terminal(
+                        case,
+                        STATUS_SUPERSEDED,
+                        "no longer in scanner top5",
+                        persist=True,
+                    )
+                    superseded_out_of_top += 1
+
         publish_event(
             SCANNER_SNAPSHOT_INGESTED,
-            {"casesCreated": created, "casesUpdated": updated, "casesSkipped": skipped},
+            {
+                "casesCreated": created,
+                "casesUpdated": updated,
+                "casesSkipped": skipped,
+                "casesSupersededOutOfTop": superseded_out_of_top,
+            },
         )
-        return {"casesCreated": created, "casesUpdated": updated, "casesSkipped": skipped}
+        return {
+            "casesCreated": created,
+            "casesUpdated": updated,
+            "casesSkipped": skipped,
+            "casesSupersededOutOfTop": superseded_out_of_top,
+        }
 
 
 _MANAGER: ReviewCaseManager | None = None
