@@ -3,11 +3,14 @@
 Call bootstrap_research_runtime() at app startup (after route registration).
 Idempotent: safe to call multiple times; will not start duplicate jobs.
 
-Startup sequence:
-  1. Initialise simulation policy (audit defaults)
-  2. Register and start the 6h AI review cycle supervisor job
-  3. Register and start the paper controller tick job
-  4. Log mode + state summary
+Startup sequence (Phase 6.1B):
+  1. Storage / integrity (via get_research_store)
+  2. Durable ledger replay + hash-chain validation
+  3. Review case / repository hydration
+  4. Simulation policy
+  5. AI review cycle job
+  6. Paper controller job (SHADOW default; blocked if ledger hydration failed)
+  7. Exit policy engine
 
 Never modifies trading logic, strategy logic, or production config.
 Never touches real orders, real funds, or private API.
@@ -45,19 +48,55 @@ def bootstrap_research_runtime() -> dict:
         }
         errors: list[str] = []
 
-        # ── Step 1: Simulation policy ─────────────────────────────────────────
+        # ── Step 0: Open research store (migrations + integrity) ──────────────
+        try:
+            from backend.nexus_research.storage import get_research_store
+
+            store = get_research_store()
+            profile = store.sqlite_runtime_profile()
+            summary["schemaVersion"] = store.schema_version
+            summary["sqliteIntegrity"] = profile.get("integrity_check")
+            summary["steps"].append(
+                f"storage: OK schema={store.schema_version} integrity={profile.get('integrity_check')}"
+            )
+        except Exception as exc:  # noqa: BLE001
+            msg = f"storage init failed: {exc}"
+            logger.warning("[bootstrap] %s", msg)
+            errors.append(msg)
+            summary["steps"].append(f"storage: FAILED ({exc})")
+
+        # ── Step 1: Ledger replay + runtime hydration (BEFORE paper controller)
+        try:
+            from backend.nexus_research.runtime_hydration import hydrate_research_runtime
+
+            hyd = hydrate_research_runtime()
+            summary["runtimeHydration"] = hyd
+            summary["steps"].append(
+                "runtime_hydration: OK"
+                if hyd.get("ok")
+                else f"runtime_hydration: DEGRADED ({hyd.get('steps')})"
+            )
+            if hyd.get("hydrationFailed"):
+                errors.append("ledger_hydration_failed")
+        except Exception as exc:  # noqa: BLE001
+            msg = f"runtime hydration failed: {exc}"
+            logger.warning("[bootstrap] %s", msg)
+            errors.append(msg)
+            summary["steps"].append(f"runtime_hydration: FAILED ({exc})")
+
+        # ── Step 2: Simulation policy ─────────────────────────────────────────
         try:
             from backend.nexus_research.simulation_policy import get_simulation_policy
-            policy = get_simulation_policy()
+            get_simulation_policy()
             summary["steps"].append("simulation_policy: OK")
-            summary["policyVersion"] = "6.0.0-gate-c"
+            summary["policyVersion"] = "6.1b-gate-c"
         except Exception as exc:  # noqa: BLE001
             msg = f"simulation_policy init failed: {exc}"
             logger.warning("[bootstrap] %s", msg)
             errors.append(msg)
             summary["steps"].append(f"simulation_policy: FAILED ({exc})")
 
-        # ── Step 2: AI review cycle supervisor job ────────────────────────────
+        # ── Step 3: AI review cycle supervisor job ────────────────────────────
         try:
             from backend.nexus_research.ai_review_cycle import start_ai_review_supervisor_job
             start_ai_review_supervisor_job()
@@ -68,7 +107,7 @@ def bootstrap_research_runtime() -> dict:
             errors.append(msg)
             summary["steps"].append(f"ai_review_cycle_job: FAILED ({exc})")
 
-        # ── Step 3: Paper controller job ──────────────────────────────────────
+        # ── Step 4: Paper controller job (SHADOW; no orders if hydration failed)
         try:
             from backend.nexus_research.paper_controller import (
                 start_paper_controller_job,
@@ -92,7 +131,7 @@ def bootstrap_research_runtime() -> dict:
             errors.append(msg)
             summary["steps"].append(f"paper_controller_job: FAILED ({exc})")
 
-        # ── Step 4: Exit policy engine init ───────────────────────────────────
+        # ── Step 5: Exit policy engine init ───────────────────────────────────
         try:
             from backend.nexus_research.exit_policies import get_exit_policy_engine
             get_exit_policy_engine()
@@ -103,7 +142,6 @@ def bootstrap_research_runtime() -> dict:
             errors.append(msg)
             summary["steps"].append(f"exit_policy_engine: FAILED ({exc})")
 
-        # ── Finalize ──────────────────────────────────────────────────────────
         summary["errors"] = errors
         summary["bootstrapComplete"] = len(errors) == 0
 

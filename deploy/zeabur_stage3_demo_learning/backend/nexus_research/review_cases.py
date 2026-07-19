@@ -100,6 +100,73 @@ class ReviewCaseManager:
         self._total_created = 0
         self._total_expired = 0
         self._total_closed = 0
+        self._hydrated = False
+        self._hydrate_stats: dict[str, Any] = {}
+
+    def hydrate_from_store(self, limit: int = 500) -> dict[str, Any]:
+        """Load review cases from repository into memory cache (no CREATED events)."""
+        with self._lock:
+            if self._hydrated:
+                return dict(self._hydrate_stats)
+            loaded = 0
+            skipped_expired = 0
+            try:
+                rows = get_research_store().query("review_cases", limit=limit)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("[review_cases] hydrate failed: %s", exc)
+                self._hydrate_stats = {
+                    "ok": False,
+                    "error": str(exc),
+                    "review_cases_loaded": 0,
+                }
+                return dict(self._hydrate_stats)
+
+            now_ms = int(time.time() * 1000)
+            for row in rows:
+                cid = str(row.get("caseId") or row.get("case_id") or "")
+                if not cid or cid in self._cases:
+                    continue
+                status = str(row.get("status") or STATUS_PENDING)
+                # Skip expired / cancelled for active cache, but still expose via list from repo.
+                if status in (STATUS_EXPIRED, STATUS_CANCELLED):
+                    skipped_expired += 1
+                    continue
+                case = CandidateReviewCase(
+                    case_id=cid,
+                    symbol=str(row.get("symbol") or ""),
+                    direction=str(row.get("direction") or row.get("side") or "LONG"),
+                    trigger=str(row.get("trigger") or TRIGGER_MANUAL_RESEARCH),
+                    window=str(row.get("window") or "5m"),
+                    candidate_snapshot=dict(
+                        row.get("candidateSnapshot")
+                        or row.get("candidate_snapshot")
+                        or {}
+                    ),
+                )
+                case.status = status
+                case.created_at = int(row.get("createdAt") or row.get("created_at") or now_ms)
+                case.updated_at = int(row.get("updatedAt") or row.get("updated_at") or case.created_at)
+                case.completed_at = row.get("completedAt") or row.get("completed_at")
+                case.decision = row.get("decision")
+                case.notes = list(row.get("notes") or [])
+                self._cases[cid] = case
+                loaded += 1
+
+            self._hydrated = True
+            self._hydrate_stats = {
+                "ok": True,
+                "review_cases_loaded": loaded,
+                "expired_records_skipped": skipped_expired,
+                "hydrate_duplicate_events": 0,
+                "hydrate_duplicate_cases": 0,
+                "researchOnly": True,
+            }
+            logger.info(
+                "[review_cases] hydrated %d cases (skipped_expired=%d)",
+                loaded,
+                skipped_expired,
+            )
+            return dict(self._hydrate_stats)
 
     def _dedup_key(self, symbol: str, direction: str, trigger: str) -> str:
         return f"{symbol}:{direction}:{trigger}"
@@ -271,7 +338,34 @@ class ReviewCaseManager:
         if symbol:
             cases = [c for c in cases if c.symbol == symbol]
         cases.sort(key=lambda c: c.created_at, reverse=True)
-        return [c.to_dict() for c in cases[:limit]]
+        result = [c.to_dict() for c in cases[:limit]]
+
+        # Repository fallback when cache empty or short — never claim hydrate-complete
+        # solely from DB; but list must not go blank after restart.
+        if len(result) < limit:
+            try:
+                rows = get_research_store().query("review_cases", limit=limit)
+                seen = {r.get("caseId") for r in result}
+                for row in reversed(rows):
+                    cid = str(row.get("caseId") or row.get("case_id") or "")
+                    if not cid or cid in seen:
+                        continue
+                    if status and str(row.get("status") or "") != status:
+                        continue
+                    if symbol and str(row.get("symbol") or "") != symbol:
+                        continue
+                    # Normalize keys
+                    if "caseId" not in row and cid:
+                        row = {**row, "caseId": cid}
+                    row.setdefault("researchOnly", True)
+                    row["_source"] = "repository"
+                    result.append(row)
+                    seen.add(cid)
+                    if len(result) >= limit:
+                        break
+            except Exception as exc:  # noqa: BLE001
+                logger.debug("[review_cases] repository list fallback failed: %s", exc)
+        return result[:limit]
 
     def status_summary(self) -> dict[str, Any]:
         with self._lock:
@@ -373,6 +467,10 @@ def get_review_case_manager() -> ReviewCaseManager:
     with _MANAGER_LOCK:
         if _MANAGER is None:
             _MANAGER = ReviewCaseManager()
+            try:
+                _MANAGER.hydrate_from_store()
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("[review_cases] startup hydrate deferred: %s", exc)
         return _MANAGER
 
 

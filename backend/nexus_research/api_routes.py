@@ -302,7 +302,7 @@ def storage_probes_create():
 
 @nexus_research_bp.route("/api/nexus/storage/persistence-validation", methods=["POST"])
 def storage_persistence_validation():
-    """Write full PERSISTENCE_VALIDATION dataset + pre-restart snapshot."""
+    """Write PERSISTENCE_VALIDATION dataset + pre-restart snapshot (V1 or V2)."""
     try:
         body = request.get_json(silent=True) or {}
         if not body.get("researchOnly"):
@@ -310,16 +310,11 @@ def storage_persistence_validation():
             resp = jsonify(data)
             _no_store(resp)
             return resp, 400
-        if body.get("contract") != "NEXUS_PHASE61_PERSISTENCE_VALIDATION_V1":
-            data = {
-                "ok": False,
-                "error": "contract NEXUS_PHASE61_PERSISTENCE_VALIDATION_V1 required",
-                "researchOnly": True,
-            }
-            resp = jsonify(data)
-            _no_store(resp)
-            return resp, 400
-        if body.get("validationType") != "PERSISTENCE_VALIDATION":
+        contract = str(body.get("contract") or "")
+        validation_type = str(body.get("validationType") or "")
+        round_id = str(body.get("validationRound") or body.get("round") or "V1")
+
+        if validation_type != "PERSISTENCE_VALIDATION":
             data = {
                 "ok": False,
                 "error": "validationType PERSISTENCE_VALIDATION required",
@@ -329,13 +324,44 @@ def storage_persistence_validation():
             _no_store(resp)
             return resp, 400
 
-        from backend.nexus_research.persistence_validation import run_persistence_validation_pack
+        if round_id in ("V2", "PHASE61_RESTART_PROOF_V2"):
+            if contract != "NEXUS_PHASE61_PERSISTENCE_VALIDATION_V2":
+                data = {
+                    "ok": False,
+                    "error": "contract NEXUS_PHASE61_PERSISTENCE_VALIDATION_V2 required for V2",
+                    "researchOnly": True,
+                }
+                resp = jsonify(data)
+                _no_store(resp)
+                return resp, 400
+            from backend.nexus_research.persistence_validation import (
+                run_persistence_validation_pack_v2,
+            )
 
-        snap = run_persistence_validation_pack()
+            snap = run_persistence_validation_pack_v2()
+        else:
+            if contract != "NEXUS_PHASE61_PERSISTENCE_VALIDATION_V1":
+                data = {
+                    "ok": False,
+                    "error": "contract NEXUS_PHASE61_PERSISTENCE_VALIDATION_V1 required",
+                    "researchOnly": True,
+                }
+                resp = jsonify(data)
+                _no_store(resp)
+                return resp, 400
+            from backend.nexus_research.persistence_validation import (
+                run_persistence_validation_pack,
+            )
+
+            snap = run_persistence_validation_pack()
+
         data = {
             "ok": True,
             "snapshot": snap,
-            "readyForControlledRestart": bool(snap.get("readyForControlledRestart")),
+            "readyForControlledRestart": bool(
+                snap.get("readyForControlledRestart")
+                or snap.get("readyForSecondControlledRestart")
+            ),
             "researchOnly": True,
             "privateApi": False,
             "paperModeEnabled": False,
@@ -370,6 +396,37 @@ def storage_pre_restart_snapshot():
             "privateApi": False,
             "generatedAt": int(time.time() * 1000),
         }
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
+@nexus_research_bp.route("/api/nexus/storage/recovery-verify", methods=["POST"])
+def storage_recovery_verify():
+    """Gate B: verify original PERSISTENCE_VALIDATION IDs survived restart."""
+    try:
+        body = request.get_json(silent=True) or {}
+        if not body.get("researchOnly"):
+            data = {"ok": False, "error": "researchOnly:true required", "researchOnly": True}
+            resp = jsonify(data)
+            _no_store(resp)
+            return resp, 400
+        if body.get("contract") != "NEXUS_PHASE61_PERSISTENCE_VALIDATION_V1":
+            data = {
+                "ok": False,
+                "error": "contract NEXUS_PHASE61_PERSISTENCE_VALIDATION_V1 required",
+                "researchOnly": True,
+            }
+            resp = jsonify(data)
+            _no_store(resp)
+            return resp, 400
+
+        from backend.nexus_research.persistence_validation import verify_restart_recovery
+
+        report = verify_restart_recovery(body)
+        data = {**report, "researchOnly": True, "privateApi": False}
     except Exception as exc:  # noqa: BLE001
         data = {"ok": False, "error": str(exc), "researchOnly": True}
     resp = jsonify(data)

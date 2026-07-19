@@ -36,7 +36,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 _STORE_LOCK = threading.Lock()
 _STORE: "_ResearchStore | None" = None
 
@@ -53,6 +53,7 @@ TYPED_TABLES = frozenset({
     "sim_fills",
     "sim_positions",
     "sim_ledger",
+    "durable_ledger_events",
     "risk_snapshots",
     "outcomes",
     "reflections",
@@ -351,6 +352,31 @@ _MIGRATIONS: list[tuple[int, str, list[str]]] = [
             "  ON persistence_probes(created_boot_id, created_at_ts)",
         ],
     ),
+    (
+        4,
+        "phase61b durable_ledger_events hash-chained SoT",
+        [
+            """CREATE TABLE IF NOT EXISTS durable_ledger_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_id TEXT NOT NULL,
+                account_id TEXT NOT NULL DEFAULT '',
+                sequence INTEGER NOT NULL DEFAULT 0,
+                event_type TEXT NOT NULL DEFAULT '',
+                idempotency_key TEXT NOT NULL DEFAULT '',
+                event_hash TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                CONSTRAINT durable_ledger_events_event_id_uq UNIQUE (event_id),
+                CONSTRAINT durable_ledger_events_idem_uq UNIQUE (idempotency_key),
+                CONSTRAINT durable_ledger_events_acct_seq_uq UNIQUE (account_id, sequence)
+            )""",
+            "CREATE INDEX IF NOT EXISTS durable_ledger_events_acct_seq"
+            "  ON durable_ledger_events(account_id, sequence)",
+            "CREATE INDEX IF NOT EXISTS durable_ledger_events_hash"
+            "  ON durable_ledger_events(event_hash)",
+        ],
+    ),
 ]
 
 
@@ -371,6 +397,13 @@ _TYPED_INSERT: dict[str, tuple[str, list[tuple[str, str]]]] = {
     "sim_fills":             ("fill_id",        [("order_id","order_id"), ("symbol","symbol")]),
     "sim_positions":         ("position_id",    [("symbol","symbol"), ("side","side"), ("status","status")]),
     "sim_ledger":            ("entry_id",       [("entry_type","entry_type")]),
+    "durable_ledger_events": ("event_id", [
+        ("account_id", "accountId"),
+        ("sequence", "sequence"),
+        ("event_type", "eventType"),
+        ("idempotency_key", "idempotencyKey"),
+        ("event_hash", "eventHash"),
+    ]),
     "risk_snapshots":        ("snapshot_id",    []),
     "outcomes":              ("outcome_id",     [("position_id","position_id"), ("symbol","symbol")]),
     "reflections":           ("reflection_id",  [("session_id","session_id")]),
@@ -459,6 +492,23 @@ class _MemoryStore:
             self._tables[table] = []
             self._seen_ids.pop(table, None)
             return n
+
+    def get_by_pk(self, table: str, pk_value: str) -> dict[str, Any] | None:
+        with self._lock:
+            spec = _TYPED_INSERT.get(table)
+            pk_field = spec[0] if spec else None
+            for row in self._tables.get(table, []):
+                if pk_field and str(row.get(pk_field) or "") == str(pk_value):
+                    return dict(row)
+                # camelCase fallback
+                if pk_field:
+                    camel = "".join(
+                        part[:1].upper() + part[1:] if i else part
+                        for i, part in enumerate(pk_field.split("_"))
+                    )
+                    if str(row.get(camel) or "") == str(pk_value):
+                        return dict(row)
+            return None
 
     def persist_validation_marker(
         self, marker_id: str, tag: str, payload: dict[str, Any]
@@ -670,6 +720,65 @@ class _SqliteStore:
             self._conn.commit()
             return n
 
+    def get_by_pk(self, table: str, pk_value: str) -> dict[str, Any] | None:
+        with self._lock:
+            if table in _TYPED_INSERT:
+                pk_field = _TYPED_INSERT[table][0]
+                try:
+                    cur = self._conn.execute(
+                        f"SELECT payload FROM {table} WHERE {pk_field}=? LIMIT 1",
+                        (str(pk_value),),
+                    )
+                    row = cur.fetchone()
+                    if row:
+                        return json.loads(row[0])
+                except Exception:  # noqa: BLE001
+                    pass
+            # Fallback scan recent kv rows (bounded).
+            cur = self._conn.execute(
+                "SELECT payload FROM kv WHERE table_name=? ORDER BY id DESC LIMIT 5000",
+                (table,),
+            )
+            for (payload,) in cur.fetchall():
+                try:
+                    rec = json.loads(payload)
+                except Exception:  # noqa: BLE001
+                    continue
+                for key in (
+                    "caseId", "case_id", "decisionId", "decision_id",
+                    "sessionId", "session_id", "assessmentId", "assessment_id",
+                    "reflectionId", "reflection_id", "proposalId", "proposal_id",
+                    "entryId", "entry_id", "probeId", "probe_id", "marker_id",
+                ):
+                    if str(rec.get(key) or "") == str(pk_value):
+                        return rec
+            return None
+
+    def query_ledger_events(self, account_id: str, limit: int = 5000) -> list[dict[str, Any]]:
+        with self._lock:
+            try:
+                cur = self._conn.execute(
+                    "SELECT payload FROM durable_ledger_events"
+                    " WHERE account_id=? ORDER BY sequence ASC LIMIT ?",
+                    (str(account_id), int(limit)),
+                )
+                return [json.loads(r[0]) for r in cur.fetchall()]
+            except Exception:  # noqa: BLE001
+                rows: list[dict[str, Any]] = []
+                cur = self._conn.execute(
+                    "SELECT payload FROM kv WHERE table_name=? ORDER BY id ASC LIMIT ?",
+                    ("durable_ledger_events", int(limit)),
+                )
+                for (payload,) in cur.fetchall():
+                    try:
+                        rec = json.loads(payload)
+                    except Exception:  # noqa: BLE001
+                        continue
+                    if str(rec.get("accountId") or rec.get("account_id") or "") == str(account_id):
+                        rows.append(rec)
+                rows.sort(key=lambda r: int(r.get("sequence") or 0))
+                return rows
+
     def persist_validation_marker(
         self, marker_id: str, tag: str, payload: dict[str, Any]
     ) -> None:
@@ -758,6 +867,31 @@ class _ResearchStore:
 
     def clear_table(self, table: str) -> int:
         return self._adapter.clear_table(table)
+
+    def get_by_pk(self, table: str, pk_value: str) -> dict[str, Any] | None:
+        return self._adapter.get_by_pk(table, pk_value)
+
+    def query_ledger_events(self, account_id: str, limit: int = 5000) -> list[dict[str, Any]]:
+        """Return durable ledger events for one account ordered by sequence ASC."""
+        fn = getattr(self._adapter, "query_ledger_events", None)
+        if callable(fn):
+            return fn(account_id, limit=limit)
+        rows = [
+            r
+            for r in self.query("durable_ledger_events", limit=limit)
+            if str(r.get("accountId") or r.get("account_id") or "") == account_id
+        ]
+        rows.sort(key=lambda r: int(r.get("sequence") or 0))
+        return rows
+
+    def append_ledger_event(self, record: dict[str, Any]) -> bool:
+        """Persist one durable ledger event (INSERT OR IGNORE by event_id/idempotency)."""
+        try:
+            self.append("durable_ledger_events", record)
+            return True
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("[storage] append_ledger_event failed: %s", exc)
+            return False
 
     def close(self) -> None:
         """Release underlying DB connection (needed on Windows before temp dir cleanup)."""

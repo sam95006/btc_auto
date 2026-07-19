@@ -155,6 +155,7 @@ _GATE_C_POST_ALLOWLIST.update({
     # Phase 6.1 — persistence validation (research contract only)
     "/api/nexus/storage/probes",
     "/api/nexus/storage/persistence-validation",
+    "/api/nexus/storage/recovery-verify",
 })
 
 try:

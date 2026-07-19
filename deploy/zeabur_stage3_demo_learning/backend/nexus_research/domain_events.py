@@ -49,6 +49,8 @@ SCANNER_SNAPSHOT_INGESTED = "SCANNER_SNAPSHOT_INGESTED"
 PAPER_POSITION_EXITED = "paper.position.exited"
 PAPER_CYCLE_COMPLETED = "paper.cycle.completed"
 PAPER_GUARD_BLOCKED = "paper.guard.blocked"
+# Phase 6.1 — persistence validation (research-only; must be registered to avoid DLQ)
+PERSISTENCE_VALIDATION_PACK_CREATED = "PERSISTENCE_VALIDATION_PACK_CREATED"
 
 _KNOWN_TYPES = {
     MARKET_SNAPSHOT_UPDATED, CANDIDATE_APPEARED, CANDIDATE_UPDATED, CANDIDATE_SCORED,
@@ -64,6 +66,7 @@ _KNOWN_TYPES = {
     SUPERVISOR_JOB_FAILED, SUPERVISOR_CIRCUIT_OPEN,
     SCANNER_SNAPSHOT_INGESTED,
     PAPER_POSITION_EXITED, PAPER_CYCLE_COMPLETED, PAPER_GUARD_BLOCKED,
+    PERSISTENCE_VALIDATION_PACK_CREATED,
 }
 
 _DLQ_CAPACITY = 200
@@ -117,18 +120,67 @@ class NexusDomainEventBus:
             if idempotency_key:
                 self._idempotency_seen[idempotency_key] = now
             self._total_published += 1
+            # Durable append for restart recovery / idempotency evidence.
+            try:
+                from backend.nexus_research.storage import get_research_store
+
+                get_research_store().append(
+                    "domain_events",
+                    {
+                        "event_id": event_id,
+                        "eventId": event_id,
+                        "event_type": event_type,
+                        "eventType": event_type,
+                        "tag": "research",
+                        "idempotencyKey": idempotency_key,
+                        "correlationId": event["correlationId"],
+                        "payload": payload,
+                        "researchOnly": True,
+                    },
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("[events] failed to persist domain event: %s", exc)
             return event_id
-
     def _send_to_dlq(self, event_type: str, payload: dict[str, Any], reason: str) -> None:
-        with self._lock:
-            self._dlq.append({
-                "eventType": event_type,
-                "reason": reason,
-                "payload": payload,
-                "ts": int(time.time() * 1000),
-            })
-            self._total_dlq += 1
+        import hashlib
+        import json as _json
 
+        payload_hash = hashlib.sha256(
+            _json.dumps(payload or {}, sort_keys=True, default=str).encode("utf-8")
+        ).hexdigest()
+        # Stable idempotency so restart / retry does not duplicate DLQ rows.
+        letter_id = f"dlq:{event_type}:{payload_hash}:{reason}"
+        now = int(time.time() * 1000)
+        entry = {
+            "letter_id": letter_id,
+            "letterId": letter_id,
+            "eventId": letter_id,
+            "eventType": event_type,
+            "failureReason": reason,
+            "reason": reason,
+            "source": "domain_event_bus",
+            "payloadHash": payload_hash,
+            "payload": payload,
+            "occurredAt": now,
+            "failedAt": now,
+            "retryCount": 0,
+            "status": "OPEN",
+            "correlationId": (payload or {}).get("correlationId") if isinstance(payload, dict) else None,
+            "schemaVersion": 1,
+            "ts": now,
+            "researchOnly": True,
+            # Preserve V1 root-cause note — never delete historical evidence.
+            "note": "durable_dlq_v1",
+        }
+        with self._lock:
+            self._dlq.append(entry)
+            self._total_dlq += 1
+        try:
+            from backend.nexus_research.storage import get_research_store
+
+            get_research_store().append("dead_letters", entry)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("[events] failed to persist DLQ entry: %s", exc)
     def recent(self, limit: int = 100, event_type: str | None = None) -> list[dict[str, Any]]:
         with self._lock:
             events = list(self._events)
