@@ -36,7 +36,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 _STORE_LOCK = threading.Lock()
 _STORE: "_ResearchStore | None" = None
 
@@ -60,6 +60,7 @@ TYPED_TABLES = frozenset({
     "replay_checkpoints",
     "runtime_job_state",
     "persistence_validation_markers",
+    "persistence_probes",
 })
 
 
@@ -331,6 +332,25 @@ _MIGRATIONS: list[tuple[int, str, list[str]]] = [
             )""",
         ],
     ),
+    (
+        3,
+        "phase61 persistence_probes for restart proof",
+        [
+            """CREATE TABLE IF NOT EXISTS persistence_probes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                probe_id TEXT NOT NULL,
+                created_boot_id TEXT NOT NULL DEFAULT '',
+                payload_hash TEXT NOT NULL DEFAULT '',
+                validation_label TEXT NOT NULL DEFAULT 'PERSISTENCE_VALIDATION',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                CONSTRAINT persistence_probes_probe_id_uq UNIQUE (probe_id)
+            )""",
+            "CREATE INDEX IF NOT EXISTS persistence_probes_boot_ts"
+            "  ON persistence_probes(created_boot_id, created_at_ts)",
+        ],
+    ),
 ]
 
 
@@ -358,6 +378,7 @@ _TYPED_INSERT: dict[str, tuple[str, list[tuple[str, str]]]] = {
     "replay_checkpoints":    ("checkpoint_id",  [("replay_run_id","replay_run_id")]),
     "runtime_job_state":     ("job_id",         [("job_type","job_type"), ("status","status")]),
     "persistence_validation_markers": ("marker_id", [("tag","tag")]),
+    "persistence_probes": ("probe_id", [("created_boot_id","createdBootId"), ("payload_hash","payloadHash"), ("validation_label","validationLabel")]),
 }
 
 
@@ -372,7 +393,15 @@ def _build_typed_insert(
     payload = json.dumps(record, ensure_ascii=False)
     now_utc = _utc_iso()
 
-    pk_val = str(record.get(pk_field) or _new_id())
+    pk_val = record.get(pk_field)
+    if not pk_val:
+        # camelCase aliases used by research records (caseId, probeId, …)
+        camel = "".join(
+            part[:1].upper() + part[1:] if i else part
+            for i, part in enumerate(pk_field.split("_"))
+        )
+        pk_val = record.get(camel)
+    pk_val = str(pk_val or _new_id())
 
     cols = [pk_field] + [c for c, _ in extra] + ["payload", "created_at_utc", "created_at_ts"]
     vals: list[Any] = [pk_val] + [str(record.get(rk) or "") for _, rk in extra] + [payload, now_utc, ts]
@@ -451,6 +480,23 @@ class _MemoryStore:
             self._tables[table] = kept
             return removed
 
+    def wal_checkpoint(self, mode: str = "TRUNCATE") -> dict[str, Any]:
+        return {"ok": True, "mode": mode, "backend": "memory", "skipped": True}
+
+    def sqlite_runtime_profile(self) -> dict[str, Any]:
+        return {
+            "database_path_redacted": None,
+            "journal_mode": None,
+            "foreign_keys": None,
+            "busy_timeout_ms": None,
+            "synchronous_mode": None,
+            "single_writer_owner": None,
+            "migration_lock": False,
+            "integrity_check": "memory",
+            "checkpoint_policy": "n/a",
+            "backup_policy": "n/a",
+        }
+
     @property
     def backend_type(self) -> str:
         return "memory"
@@ -476,8 +522,47 @@ class _SqliteStore:
         self._conn = sqlite3.connect(str(db_path), check_same_thread=False)
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute("PRAGMA foreign_keys=ON")
+        self._conn.execute("PRAGMA busy_timeout=5000")
+        self._conn.execute("PRAGMA synchronous=NORMAL")
         self._lock = threading.RLock()
         self._run_migrations()
+        self._owner_id = str(uuid.uuid4())
+
+    def sqlite_runtime_profile(self) -> dict[str, Any]:
+        with self._lock:
+            def _pragma(name: str) -> Any:
+                row = self._conn.execute(f"PRAGMA {name}").fetchone()
+                return row[0] if row else None
+
+            integrity = _pragma("integrity_check")
+            return {
+                "database_path_redacted": str(self._db_path).replace("\\", "/").split("/data/")[-1]
+                if "/data/" in str(self._db_path).replace("\\", "/")
+                else "nexus-research/nexus_research.db",
+                "journal_mode": _pragma("journal_mode"),
+                "foreign_keys": bool(_pragma("foreign_keys")),
+                "busy_timeout_ms": _pragma("busy_timeout"),
+                "synchronous_mode": _pragma("synchronous"),
+                "single_writer_owner": self._owner_id,
+                "migration_lock": True,
+                "integrity_check": integrity,
+                "checkpoint_policy": "TRUNCATE_on_validation_and_shutdown",
+                "backup_policy": "volume_probe + backups/ directory",
+            }
+
+    def wal_checkpoint(self, mode: str = "TRUNCATE") -> dict[str, Any]:
+        with self._lock:
+            try:
+                row = self._conn.execute(f"PRAGMA wal_checkpoint({mode})").fetchone()
+                return {
+                    "ok": True,
+                    "mode": mode,
+                    "busy": row[0] if row else None,
+                    "log": row[1] if row and len(row) > 1 else None,
+                    "checkpointed": row[2] if row and len(row) > 2 else None,
+                }
+            except Exception as exc:  # noqa: BLE001
+                return {"ok": False, "error": str(exc), "mode": mode}
 
     # ── migrations ────────────────────────────────────────────────────────────
 
@@ -690,6 +775,18 @@ class _ResearchStore:
         """Persist a tagged validation marker (idempotent by marker_id)."""
         self._adapter.persist_validation_marker(marker_id, tag, payload or {})
 
+    def wal_checkpoint(self, mode: str = "TRUNCATE") -> dict[str, Any]:
+        fn = getattr(self._adapter, "wal_checkpoint", None)
+        if callable(fn):
+            return fn(mode)
+        return {"ok": True, "skipped": True, "mode": mode}
+
+    def sqlite_runtime_profile(self) -> dict[str, Any]:
+        fn = getattr(self._adapter, "sqlite_runtime_profile", None)
+        if callable(fn):
+            return fn()
+        return {"integrity_check": "unavailable"}
+
     def delete_old_records(self, table: str, older_than_days: float = 30.0) -> int:
         """Retention helper: delete records older than N days, return count removed."""
         cutoff = time.time() - older_than_days * 86400
@@ -732,9 +829,24 @@ class _ResearchStore:
         except Exception:  # noqa: BLE001
             disc = {}
 
+        try:
+            from backend.nexus_research.boot_identity import get_boot_identity
+
+            boot = get_boot_identity()
+        except Exception:  # noqa: BLE001
+            boot = {}
+
+        profile = self.sqlite_runtime_profile()
+        probes: list[dict[str, Any]] = []
+        try:
+            probes = self.query("persistence_probes", limit=5)
+        except Exception:  # noqa: BLE001
+            probes = []
+        previous_probe = probes[-1] if probes else None
+
         legacy_tables = [
             "events", "review_cases", "role_assessments", "research_decisions",
-            "review_sessions", "sim_placeholders",
+            "review_sessions", "sim_placeholders", "persistence_probes",
         ]
         sample_tables = list(TYPED_TABLES) + legacy_tables
         counts: dict[str, int] = {}
@@ -744,16 +856,59 @@ class _ResearchStore:
             except Exception:  # noqa: BLE001
                 counts[t] = -1
 
+        db_path = self.db_path
+        path_redacted = None
+        if db_path:
+            p = str(db_path).replace("\\", "/")
+            idx = p.find("/data/")
+            path_redacted = p[idx:] if idx >= 0 else "nexus-research/nexus_research.db"
+
+        db_size = None
+        try:
+            if db_path and Path(db_path).exists():
+                db_size = int(Path(db_path).stat().st_size)
+        except Exception:  # noqa: BLE001
+            db_size = None
+
+        # Durable claim requires restart proof — never from writability alone.
+        durable_claim = bool(disc.get("durableClaim", False))
+        restart_proof = bool(disc.get("restartProofVerified", False))
+
         return {
             "ok": True,
             "storageMode": self._adapter.backend_type,
-            "durableClaim": disc.get("durableClaim", False),
+            "storageModeClaim": disc.get("recommendedMode"),
+            "pathRedacted": path_redacted,
+            "writable": bool(disc.get("dataDirWritable", False)),
+            "durableClaim": durable_claim,
+            "restartProof": restart_proof,
             "volumeConfirmed": disc.get("volumeConfirmed", False),
+            "persistentVolumeResourceConfirmed": disc.get(
+                "persistentVolumeResourceConfirmed", False
+            ),
+            "persistentVolumeMountConfirmed": disc.get(
+                "persistentVolumeMountConfirmed", False
+            ),
+            "persistentVolumePath": disc.get("persistentVolumePath"),
+            "currentBootId": boot.get("bootId"),
+            "previousProbeFound": previous_probe is not None,
+            "previousProbeId": (previous_probe or {}).get("probeId"),
+            "schemaVersion": self.schema_version,
             "lastMigrationVersion": self.schema_version,
-            "health": "ok",
-            "dbPath": self.db_path,
+            "migrationStatus": "applied",
+            "walStatus": profile.get("journal_mode"),
+            "sqliteRuntimeProfile": profile,
+            "lastCheckpoint": None,
+            "databaseSizeBytes": db_size,
+            "lastBackup": None,
+            "health": "ok" if profile.get("integrity_check") in (None, "ok", "memory")
+            or str(profile.get("integrity_check")) == "ok"
+            else "degraded",
+            "dbPath": path_redacted,
             "researchOnly": True,
-            "production_persistence_available": disc.get("productionPersistenceAvailable", False),
+            "production_persistence_available": bool(
+                disc.get("productionPersistenceAvailable", False)
+            ),
             "postgresDriverPending": True,
             "tableCounts": counts,
             "generatedAt": int(time.time() * 1000),
@@ -764,11 +919,47 @@ class _ResearchStore:
 # Store construction
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _legacy_research_db_candidates(data_dir: Path) -> list[Path]:
+    """Previous (incorrect) locations that must not be abandoned silently."""
+    return [
+        data_dir / "nexus_research.db",
+    ]
+
+
+def _migrate_legacy_research_db(target: Path, data_dir: Path) -> None:
+    """Copy legacy /data/nexus_research.db into dedicated nexus-research/ if needed.
+
+    Never deletes the legacy file. Never touches trading.db.
+    Does not overwrite an existing non-empty target with an empty copy.
+    """
+    import shutil
+
+    if target.exists() and target.stat().st_size > 0:
+        return
+    for legacy in _legacy_research_db_candidates(data_dir):
+        if not legacy.exists() or legacy.resolve() == target.resolve():
+            continue
+        if legacy.name == "trading.db":
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        logger.warning(
+            "[nexus_research.storage] migrating legacy research DB %s → %s",
+            legacy,
+            target,
+        )
+        shutil.copy2(legacy, target)
+        for suffix in ("-wal", "-shm"):
+            side = Path(str(legacy) + suffix)
+            if side.exists():
+                shutil.copy2(side, Path(str(target) + suffix))
+        return
+
+
 def _build_store() -> _ResearchStore:
     """Build a research store based on env configuration.
 
     Postgres is detected but deferred (driver not installed).
-    SQLite is used when NEXUS_DATA_DIR is writable.
+    SQLite uses /data/nexus-research/nexus_research.db when NEXUS_DATA_DIR is set.
     Memory fallback is always available.
     """
     mode = os.getenv("NEXUS_RESEARCH_STORAGE_MODE", "auto").strip().lower()
@@ -786,14 +977,26 @@ def _build_store() -> _ResearchStore:
             "requirements.txt — postgres storage is pending.  Falling back to sqlite/memory."
         )
 
-    # SQLite path
+    # SQLite path — dedicated research directory under NEXUS_DATA_DIR
     if mode not in ("memory",):
         data_dir_env = os.getenv("NEXUS_DATA_DIR", "").strip()
         if data_dir_env:
             try:
                 data_dir = Path(data_dir_env)
                 data_dir.mkdir(parents=True, exist_ok=True)
-                db_path = data_dir / "nexus_research.db"
+                try:
+                    from backend.nexus_research.boot_identity import research_data_dir
+
+                    research_root = research_data_dir()
+                except Exception:  # noqa: BLE001
+                    research_root = data_dir / "nexus-research"
+                    research_root.mkdir(parents=True, exist_ok=True)
+
+                if research_root is None:
+                    raise RuntimeError("research_data_dir unavailable")
+
+                db_path = research_root / "nexus_research.db"
+                _migrate_legacy_research_db(db_path, data_dir)
 
                 # Safety: must never be the same file as trading.db
                 try:
@@ -804,6 +1007,10 @@ def _build_store() -> _ResearchStore:
                         if db_path.resolve() == trading_p:
                             raise ValueError(
                                 f"Research DB path conflicts with trading.db: {db_path}"
+                            )
+                        if "trading.db" in str(db_path).replace("\\", "/").lower():
+                            raise ValueError(
+                                f"Research DB path must not use trading.db: {db_path}"
                             )
                 except ImportError:
                     pass  # data_paths not available in deploy mirror — skip check

@@ -214,6 +214,169 @@ def storage_discovery():
     return resp
 
 
+@nexus_research_bp.route("/api/nexus/storage/probes")
+def storage_probes_list():
+    """List recent persistence probes (read-only)."""
+    try:
+        from backend.nexus_research.persistence_validation import list_probes
+
+        rows = list_probes(limit=20)
+        data = {
+            "ok": True,
+            "count": len(rows),
+            "probes": rows,
+            "researchOnly": True,
+            "privateApi": False,
+            "generatedAt": int(time.time() * 1000),
+        }
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
+@nexus_research_bp.route("/api/nexus/storage/probes", methods=["POST"])
+def storage_probes_create():
+    """Create a PersistenceProbe — internal validation contract only."""
+    try:
+        body = request.get_json(silent=True) or {}
+        if not body.get("researchOnly"):
+            data = {"ok": False, "error": "researchOnly:true required", "researchOnly": True}
+            resp = jsonify(data)
+            _no_store(resp)
+            return resp, 400
+        if body.get("contract") != "NEXUS_PHASE61_PERSISTENCE_VALIDATION_V1":
+            data = {
+                "ok": False,
+                "error": "contract NEXUS_PHASE61_PERSISTENCE_VALIDATION_V1 required",
+                "researchOnly": True,
+            }
+            resp = jsonify(data)
+            _no_store(resp)
+            return resp, 400
+        if body.get("validationLabel") != "PERSISTENCE_VALIDATION":
+            data = {
+                "ok": False,
+                "error": "validationLabel PERSISTENCE_VALIDATION required",
+                "researchOnly": True,
+            }
+            resp = jsonify(data)
+            _no_store(resp)
+            return resp, 400
+        # Reject arbitrary user payloads — only allow empty or fixed note key.
+        extra = body.get("payload")
+        if extra is not None and not isinstance(extra, dict):
+            data = {"ok": False, "error": "payload must be object or omitted", "researchOnly": True}
+            resp = jsonify(data)
+            _no_store(resp)
+            return resp, 400
+        if isinstance(extra, dict):
+            allowed = {"note", "packId"}
+            if set(extra.keys()) - allowed:
+                data = {
+                    "ok": False,
+                    "error": "payload keys limited to note, packId",
+                    "researchOnly": True,
+                }
+                resp = jsonify(data)
+                _no_store(resp)
+                return resp, 400
+
+        from backend.nexus_research.persistence_validation import create_persistence_probe
+
+        probe = create_persistence_probe(payload=extra if isinstance(extra, dict) else None)
+        data = {
+            "ok": True,
+            "probe": probe,
+            "researchOnly": True,
+            "privateApi": False,
+            "generatedAt": int(time.time() * 1000),
+        }
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
+@nexus_research_bp.route("/api/nexus/storage/persistence-validation", methods=["POST"])
+def storage_persistence_validation():
+    """Write full PERSISTENCE_VALIDATION dataset + pre-restart snapshot."""
+    try:
+        body = request.get_json(silent=True) or {}
+        if not body.get("researchOnly"):
+            data = {"ok": False, "error": "researchOnly:true required", "researchOnly": True}
+            resp = jsonify(data)
+            _no_store(resp)
+            return resp, 400
+        if body.get("contract") != "NEXUS_PHASE61_PERSISTENCE_VALIDATION_V1":
+            data = {
+                "ok": False,
+                "error": "contract NEXUS_PHASE61_PERSISTENCE_VALIDATION_V1 required",
+                "researchOnly": True,
+            }
+            resp = jsonify(data)
+            _no_store(resp)
+            return resp, 400
+        if body.get("validationType") != "PERSISTENCE_VALIDATION":
+            data = {
+                "ok": False,
+                "error": "validationType PERSISTENCE_VALIDATION required",
+                "researchOnly": True,
+            }
+            resp = jsonify(data)
+            _no_store(resp)
+            return resp, 400
+
+        from backend.nexus_research.persistence_validation import run_persistence_validation_pack
+
+        snap = run_persistence_validation_pack()
+        data = {
+            "ok": True,
+            "snapshot": snap,
+            "readyForControlledRestart": bool(snap.get("readyForControlledRestart")),
+            "researchOnly": True,
+            "privateApi": False,
+            "paperModeEnabled": False,
+            "generatedAt": int(time.time() * 1000),
+        }
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
+@nexus_research_bp.route("/api/nexus/storage/pre-restart-snapshot")
+def storage_pre_restart_snapshot():
+    """Return the latest saved pre-restart snapshot marker, if any."""
+    try:
+        from backend.nexus_research.storage import get_research_store
+
+        store = get_research_store()
+        markers = store.query("persistence_validation_markers", limit=50)
+        snap = None
+        for m in reversed(markers):
+            mid = str(m.get("marker_id") or m.get("markerId") or "")
+            if mid.startswith("pre-restart-snapshot:"):
+                snap = m.get("payload") or m
+                break
+        data = {
+            "ok": True,
+            "found": snap is not None,
+            "snapshot": snap,
+            "researchOnly": True,
+            "privateApi": False,
+            "generatedAt": int(time.time() * 1000),
+        }
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
 @nexus_research_bp.route("/api/nexus/review-engine/status")
 def review_engine_status():
     """Phase 6 Gate D: review engine mode + provider status."""
