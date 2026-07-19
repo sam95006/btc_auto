@@ -425,7 +425,14 @@ def storage_recovery_verify():
 
         from backend.nexus_research.persistence_validation import verify_restart_recovery
 
-        report = verify_restart_recovery(body)
+        if body.get("ledger_account_id") or body.get("validation_round") == "PHASE61_RESTART_PROOF_V2":
+            from backend.nexus_research.persistence_validation import (
+                verify_v2_durable_ledger_recovery,
+            )
+
+            report = verify_v2_durable_ledger_recovery(body)
+        else:
+            report = verify_restart_recovery(body)
         data = {**report, "researchOnly": True, "privateApi": False}
     except Exception as exc:  # noqa: BLE001
         data = {"ok": False, "error": str(exc), "researchOnly": True}
