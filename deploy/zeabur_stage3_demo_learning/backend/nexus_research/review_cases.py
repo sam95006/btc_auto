@@ -279,6 +279,8 @@ class ReviewCaseManager:
         self._capacity_log_ts = 0.0
         self._capacity_suppressed = 0
         self._ownership_blocked = False
+        self._last_sweep_ts = 0.0
+        self._sweep_min_interval_sec = 30.0
 
     # ── Persistence helpers ─────────────────────────────────────────────────
 
@@ -404,6 +406,14 @@ class ReviewCaseManager:
             return self._lifecycle_sweep_unlocked(persist=persist, reason="api")
 
     def _lifecycle_sweep_unlocked(self, *, persist: bool, reason: str) -> dict[str, Any]:
+        now_ts = time.time()
+        if (
+            reason in ("status", "list", "admission")
+            and (now_ts - self._last_sweep_ts) < self._sweep_min_interval_sec
+            and self._sweep_stats.get("lastSuccess")
+        ):
+            return dict(self._sweep_stats)
+
         t0 = time.time()
         metrics = {
             "scanned": 0,
@@ -540,6 +550,7 @@ class ReviewCaseManager:
         metrics["durationMs"] = duration_ms
         metrics["lastSuccess"] = _now_ms()
         self._sweep_stats = dict(metrics)
+        self._last_sweep_ts = time.time()
         return metrics
 
     def _transition_terminal(
@@ -625,10 +636,50 @@ class ReviewCaseManager:
 
             # Duplicate natural active → update existing (no new case)
             existing = self._find_active_by_natural_key(key)
+            if existing is None and not force:
+                # Also reuse recent terminal/natural case for same symbol+side within cooldown
+                # so instant-complete does not thrash new case IDs every scanner tick.
+                for c in self._cases.values():
+                    if (
+                        c.symbol == symbol
+                        and c.direction == direction
+                        and not c.is_validation
+                        and (_now_ms() - c.updated_at) < _COOLDOWN_SEC * 1000
+                    ):
+                        existing = c
+                        break
+            if existing is None and not force and not is_validation:
+                try:
+                    rows = get_research_store().query_cases(
+                        symbol=symbol,
+                        limit=20,
+                        order_desc=True,
+                    )
+                    now = _now_ms()
+                    for row in rows:
+                        if str(row.get("direction") or row.get("side") or "") != direction:
+                            continue
+                        if _is_validation(row.get("candidateSnapshot") or {}, row):
+                            continue
+                        updated_at = int(row.get("updatedAt") or row.get("createdAt") or 0)
+                        if now - updated_at > _CASE_TTL_SEC * 1000:
+                            continue
+                        reused = self._row_to_case(row)
+                        if reused is None:
+                            continue
+                        existing = reused
+                        self._cases[reused.case_id] = reused
+                        break
+                except Exception:  # noqa: BLE001
+                    pass
+
             if existing and not force:
                 existing.candidate_snapshot = dict(candidate_snapshot)
                 existing.updated_at = _now_ms()
                 existing.expires_at = existing.updated_at + _CASE_TTL_SEC * 1000
+                if existing.status in TERMINAL_CASE_STATUSES:
+                    existing.status = STATUS_OPEN
+                    existing.completed_at = None
                 if existing.trigger != trigger and _TRIGGER_PRIORITY.get(trigger, 0) > existing.priority():
                     existing.trigger = trigger
                 existing.notes.append(f"Updated snapshot ({trigger})")
