@@ -62,17 +62,85 @@ def list_review_cases():
         from backend.nexus_research.review_cases import get_review_case_manager
         status_filter = request.args.get("status")
         symbol_filter = request.args.get("symbol")
+        view = request.args.get("view")
         limit = min(int(request.args.get("limit", 50)), 200)
+        offset = max(int(request.args.get("offset", 0)), 0)
         mgr = get_review_case_manager()
-        cases = mgr.list_cases(status=status_filter, symbol=symbol_filter, limit=limit)
+        cases = mgr.list_cases(
+            status=status_filter,
+            symbol=symbol_filter,
+            limit=limit,
+            view=view,
+            offset=offset,
+        )
         data = {
             "ok": True,
             "researchOnly": True,
             "privateApi": False,
+            "view": view or "default",
             "cases": cases,
             "count": len(cases),
+            "offset": offset,
             "generatedAt": int(time.time() * 1000),
         }
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
+@nexus_research_bp.route("/api/nexus/review-cases/sweep", methods=["POST"])
+def review_cases_sweep():
+    try:
+        from backend.nexus_research.review_cases import get_review_case_manager
+        metrics = get_review_case_manager().lifecycle_sweep(persist=True)
+        data = {"ok": True, "researchOnly": True, "privateApi": False, "sweep": metrics}
+    except Exception as exc:  # noqa: BLE001
+        data = {"ok": False, "error": str(exc), "researchOnly": True}
+    resp = jsonify(data)
+    _no_store(resp)
+    return resp
+
+
+@nexus_research_bp.route("/api/nexus/config/effective")
+def config_effective():
+    """Phase 6.2 — redacted effective research config (no secrets)."""
+    try:
+        from backend.nexus_research.config import get_effective_config
+        from backend.nexus_research.storage import get_research_store
+        from backend.nexus_research.runtime_supervisor import get_supervisor
+        from backend.nexus_research.review_cases import get_review_case_manager
+
+        store = get_research_store()
+        profile = store.sqlite_runtime_profile()
+        st = store.status() if hasattr(store, "status") else {}
+        supervisor = get_supervisor().status()
+        cases = get_review_case_manager().status_summary()
+
+        runtime_context = {
+            "durableClaim": bool(st.get("durableClaim", True)),
+            "restartProof": bool(st.get("restartProof", True)),
+            "storageHealthy": str(profile.get("integrity_check")) == "ok",
+            "runtimeOwnerCount": 1 if supervisor.get("supervisorRunning") else 0,
+            "schedulerOwnerCount": 1 if supervisor.get("supervisorRunning") else 0,
+            "scannerOwnerCount": 1,
+            "ledgerOwnerCount": 1,
+            "naturalActiveCapacityAvailable": int(cases.get("capacityAvailable") or 0) > 0,
+            "ledgerHealthy": True,
+            "riskEngineHealthy": True,
+            "capitalAllocatorHealthy": True,
+            "simulatorHealthy": True,
+        }
+        try:
+            from backend.market.scanner.scanner_service import get_market_scanner
+            runtime_context["scannerOwnerCount"] = (
+                1 if get_market_scanner().status().get("ok") is not False else 0
+            )
+        except Exception:  # noqa: BLE001
+            runtime_context["scannerOwnerCount"] = 0
+
+        data = get_effective_config(refresh=True, runtime_context=runtime_context)
     except Exception as exc:  # noqa: BLE001
         data = {"ok": False, "error": str(exc), "researchOnly": True}
     resp = jsonify(data)

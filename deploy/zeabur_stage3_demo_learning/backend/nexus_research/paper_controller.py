@@ -72,15 +72,19 @@ _MODE_ENV_VAR = "NEXUS_AUTONOMOUS_RESEARCH_MODE"
 
 
 def _read_mode() -> str:
-    raw = (os.getenv(_MODE_ENV_VAR) or "").strip().upper()
-    if raw in _VALID_MODES:
-        return raw
-    if raw:
-        logger.warning(
-            "[paper_ctrl] Unknown mode %r for %s; defaulting to %s",
-            raw, _MODE_ENV_VAR, _DEFAULT_MODE,
-        )
-    return _DEFAULT_MODE
+    try:
+        from backend.nexus_research.config import read_autonomous_mode
+        return read_autonomous_mode()
+    except Exception:  # noqa: BLE001
+        raw = (os.getenv(_MODE_ENV_VAR) or "").strip().upper()
+        if raw in _VALID_MODES:
+            return raw
+        if raw:
+            logger.warning(
+                "[paper_ctrl] Unknown mode %r for %s; defaulting to %s",
+                raw, _MODE_ENV_VAR, _DEFAULT_MODE,
+            )
+        return _DEFAULT_MODE
 
 
 class PaperCycleRecord:

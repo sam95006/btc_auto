@@ -152,6 +152,7 @@ _GATE_C_POST_ALLOWLIST.update({
     "/api/nexus/paper/manual-close",
     "/api/nexus/ai-reviews/manual-validation",
     "/api/nexus/review-cases/manual-research",
+    "/api/nexus/review-cases/sweep",
     # Phase 6.1 — persistence validation (research contract only)
     "/api/nexus/storage/probes",
     "/api/nexus/storage/persistence-validation",

@@ -142,6 +142,38 @@ def bootstrap_research_runtime() -> dict:
             errors.append(msg)
             summary["steps"].append(f"exit_policy_engine: FAILED ({exc})")
 
+        # ── Step 6: Canonical config + startup safety verdict ─────────────────
+        try:
+            from backend.nexus_research.config import get_effective_config
+            from backend.nexus_research.review_cases import get_review_case_manager
+
+            cases = get_review_case_manager().status_summary()
+            cfg = get_effective_config(
+                refresh=True,
+                runtime_context={
+                    "durableClaim": True,
+                    "restartProof": True,
+                    "storageHealthy": summary.get("sqliteIntegrity") == "ok",
+                    "runtimeOwnerCount": 1,
+                    "schedulerOwnerCount": 1,
+                    "scannerOwnerCount": 1,
+                    "ledgerOwnerCount": 1,
+                    "naturalActiveCapacityAvailable": int(cases.get("capacityAvailable") or 0) > 0,
+                    "stage4RuntimePatchEffective": False,
+                },
+            )
+            summary["startupSafetyVerdict"] = (cfg.get("startupSafetyVerdict") or {}).get("verdict")
+            summary["autonomousMode"] = (cfg.get("autonomousMode") or {}).get("effective")
+            summary["reviewEngineMode"] = (cfg.get("reviewEngineMode") or {}).get("effective")
+            summary["steps"].append(
+                f"config: OK verdict={summary['startupSafetyVerdict']} mode={summary['autonomousMode']}"
+            )
+        except Exception as exc:  # noqa: BLE001
+            msg = f"config resolver failed: {exc}"
+            logger.warning("[bootstrap] %s", msg)
+            errors.append(msg)
+            summary["steps"].append(f"config: FAILED ({exc})")
+
         summary["errors"] = errors
         summary["bootstrapComplete"] = len(errors) == 0
 

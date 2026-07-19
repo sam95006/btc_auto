@@ -101,8 +101,10 @@ class TestPhase61BDurableLedger(unittest.TestCase):
     def test_review_case_hydrate(self) -> None:
         from backend.nexus_research.storage import get_research_store
         from backend.nexus_research.review_cases import ReviewCaseManager
+        import time
 
         store = get_research_store()
+        now = int(time.time() * 1000)
         store.append(
             "review_cases",
             {
@@ -110,9 +112,37 @@ class TestPhase61BDurableLedger(unittest.TestCase):
                 "case_id": "case-hydrate-1",
                 "symbol": "ETHUSDT",
                 "direction": "LONG",
-                "trigger": "MANUAL_RESEARCH",
+                "side": "LONG",
+                "trigger": "TOP5_ENTRY",
+                "status": "PENDING",
+                "window": "5m",
+                "createdAt": now,
+                "updatedAt": now,
+                "expiresAt": now + 3_600_000,
+                "candidateSnapshot": {
+                    "symbol": "ETHUSDT",
+                    "score": 42,
+                    "stage": "WATCHING",
+                    "candidateId": "eth-h1",
+                },
+            },
+        )
+        store.append(
+            "review_cases",
+            {
+                "caseId": "case-completed-1",
+                "symbol": "BTCUSDT",
+                "direction": "LONG",
                 "status": "COMPLETED",
-                "createdAt": 1,
+                "trigger": "MANUAL_RESEARCH",
+                "createdAt": now,
+                "updatedAt": now,
+                "expiresAt": now + 3_600_000,
+                "validationType": "PERSISTENCE_VALIDATION",
+                "candidateSnapshot": {
+                    "validationType": "PERSISTENCE_VALIDATION",
+                    "excludeFromNaturalPaperPnl": True,
+                },
             },
         )
         mgr = ReviewCaseManager()
@@ -120,6 +150,10 @@ class TestPhase61BDurableLedger(unittest.TestCase):
         self.assertGreaterEqual(stats.get("review_cases_loaded"), 1)
         listed = mgr.list_cases(limit=10)
         self.assertTrue(any(c.get("caseId") == "case-hydrate-1" for c in listed))
+        # Validation/completed remain in repository, not natural working set
+        self.assertIsNotNone(mgr.get_case("case-completed-1"))
+        hist = mgr.list_cases(view="historical", limit=20)
+        self.assertTrue(any(c.get("caseId") == "case-completed-1" for c in hist))
 
 
 if __name__ == "__main__":

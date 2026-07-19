@@ -36,7 +36,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 _STORE_LOCK = threading.Lock()
 _STORE: "_ResearchStore | None" = None
 
@@ -377,6 +377,31 @@ _MIGRATIONS: list[tuple[int, str, list[str]]] = [
             "  ON durable_ledger_events(event_hash)",
         ],
     ),
+    (
+        5,
+        "phase62 review_cases lifecycle indexes + lookup columns",
+        [
+            "ALTER TABLE review_cases ADD COLUMN expires_at_ts REAL",
+            "ALTER TABLE review_cases ADD COLUMN validation_type TEXT NOT NULL DEFAULT ''",
+            "ALTER TABLE review_cases ADD COLUMN side TEXT NOT NULL DEFAULT ''",
+            "ALTER TABLE review_cases ADD COLUMN candidate_id TEXT NOT NULL DEFAULT ''",
+            "ALTER TABLE review_cases ADD COLUMN correlation_id TEXT NOT NULL DEFAULT ''",
+            "CREATE INDEX IF NOT EXISTS review_cases_expires_ts"
+            "  ON review_cases(expires_at_ts)",
+            "CREATE INDEX IF NOT EXISTS review_cases_updated_ts"
+            "  ON review_cases(updated_at_ts)",
+            "CREATE INDEX IF NOT EXISTS review_cases_validation_type"
+            "  ON review_cases(validation_type)",
+            "CREATE INDEX IF NOT EXISTS review_cases_side_status"
+            "  ON review_cases(side, status)",
+            "CREATE INDEX IF NOT EXISTS review_cases_candidate"
+            "  ON review_cases(candidate_id)",
+            "CREATE INDEX IF NOT EXISTS review_cases_correlation"
+            "  ON review_cases(correlation_id)",
+            "CREATE INDEX IF NOT EXISTS review_cases_natural_active"
+            "  ON review_cases(status, validation_type, expires_at_ts, updated_at_ts)",
+        ],
+    ),
 ]
 
 
@@ -389,7 +414,14 @@ _MIGRATIONS: list[tuple[int, str, list[str]]] = [
 _TYPED_INSERT: dict[str, tuple[str, list[tuple[str, str]]]] = {
     "domain_events":         ("event_id",      [("event_type","event_type"), ("tag","tag")]),
     "dead_letters":          ("letter_id",      [("source","source"), ("reason","reason")]),
-    "review_cases":          ("case_id",        [("symbol","symbol"), ("status","status")]),
+    "review_cases":          ("case_id",        [
+        ("symbol", "symbol"),
+        ("status", "status"),
+        ("side", "side"),
+        ("validation_type", "validationType"),
+        ("candidate_id", "candidateId"),
+        ("correlation_id", "correlationId"),
+    ]),
     "role_assessments":      ("assessment_id",  [("role","role"), ("case_id","case_id")]),
     "research_decisions":    ("decision_id",    [("symbol","symbol"), ("decision_type","decision_type")]),
     "review_sessions":       ("session_id",     [("status","status")]),
@@ -438,6 +470,15 @@ def _build_typed_insert(
 
     cols = [pk_field] + [c for c, _ in extra] + ["payload", "created_at_utc", "created_at_ts"]
     vals: list[Any] = [pk_val] + [str(record.get(rk) or "") for _, rk in extra] + [payload, now_utc, ts]
+
+    if table == "review_cases":
+        cols.extend(["updated_at_ts", "expires_at_ts"])
+        expires = record.get("expiresAt") or record.get("expires_at") or record.get("expiresAtTs")
+        try:
+            expires_ts = float(expires) / (1000.0 if float(expires) > 1e12 else 1.0) if expires else None
+        except (TypeError, ValueError):
+            expires_ts = None
+        vals.extend([ts, expires_ts])
 
     placeholders = ",".join("?" * len(cols))
     col_list = ",".join(cols)
@@ -509,6 +550,75 @@ class _MemoryStore:
                     if str(row.get(camel) or "") == str(pk_value):
                         return dict(row)
             return None
+
+    def upsert(self, table: str, record: dict[str, Any]) -> bool:
+        with self._lock:
+            spec = _TYPED_INSERT.get(table)
+            pk_field = spec[0] if spec else None
+            if not pk_field:
+                self.append(table, record)
+                return True
+            camel = "".join(
+                part[:1].upper() + part[1:] if i else part
+                for i, part in enumerate(pk_field.split("_"))
+            )
+            pk_val = str(record.get(pk_field) or record.get(camel) or "")
+            rows = self._tables.setdefault(table, [])
+            for i, row in enumerate(rows):
+                if str(row.get(pk_field) or row.get(camel) or "") == pk_val:
+                    rows[i] = {**row, **record}
+                    return True
+            rows.append(dict(record))
+            if pk_val:
+                self._seen_ids.setdefault(table, set()).add(pk_val)
+            return True
+
+    def query_cases(
+        self,
+        *,
+        statuses: list[str] | None = None,
+        validation_types: list[str] | None = None,
+        exclude_validation: bool = False,
+        symbol: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+        order_desc: bool = True,
+    ) -> list[dict[str, Any]]:
+        with self._lock:
+            rows = list(self._tables.get("review_cases", []))
+
+        def _val_type(r: dict[str, Any]) -> str:
+            return str(r.get("validationType") or r.get("validation_type") or "")
+
+        if statuses:
+            status_set = set(statuses)
+            rows = [r for r in rows if str(r.get("status") or "") in status_set]
+        if validation_types:
+            vt = set(validation_types)
+            rows = [r for r in rows if _val_type(r) in vt]
+        if exclude_validation:
+            rows = [r for r in rows if _val_type(r) in ("", "NATURAL")]
+        if symbol:
+            rows = [r for r in rows if str(r.get("symbol") or "") == symbol]
+        rows.sort(
+            key=lambda r: int(r.get("updatedAt") or r.get("createdAt") or 0),
+            reverse=order_desc,
+        )
+        return rows[offset : offset + limit]
+
+    def count_cases(
+        self,
+        *,
+        statuses: list[str] | None = None,
+        exclude_validation: bool = False,
+    ) -> int:
+        return len(
+            self.query_cases(
+                statuses=statuses,
+                exclude_validation=exclude_validation,
+                limit=10_000_000,
+            )
+        )
 
     def persist_validation_marker(
         self, marker_id: str, tag: str, payload: dict[str, Any]
@@ -754,6 +864,122 @@ class _SqliteStore:
                         return rec
             return None
 
+    def upsert(self, table: str, record: dict[str, Any]) -> bool:
+        """Insert or replace a typed-table record by primary key (payload + indexed cols)."""
+        with self._lock:
+            if table not in _TYPED_INSERT:
+                self.append(table, record)
+                return True
+            pk_field, extra = _TYPED_INSERT[table]
+            pk_val = record.get(pk_field)
+            if not pk_val:
+                camel = "".join(
+                    part[:1].upper() + part[1:] if i else part
+                    for i, part in enumerate(pk_field.split("_"))
+                )
+                pk_val = record.get(camel)
+            pk_val = str(pk_val or "")
+            if not pk_val:
+                return False
+            ts = time.time()
+            payload = json.dumps(record, ensure_ascii=False)
+            now_utc = _utc_iso()
+            set_cols = [f"{c}=?" for c, _ in extra] + ["payload=?"]
+            set_vals: list[Any] = [str(record.get(rk) or "") for _, rk in extra] + [payload]
+            if table == "review_cases":
+                set_cols.extend(["updated_at_ts=?", "expires_at_ts=?"])
+                expires = record.get("expiresAt") or record.get("expires_at") or record.get("expiresAtTs")
+                try:
+                    expires_ts = (
+                        float(expires) / (1000.0 if float(expires) > 1e12 else 1.0)
+                        if expires
+                        else None
+                    )
+                except (TypeError, ValueError):
+                    expires_ts = None
+                set_vals.extend([ts, expires_ts])
+            sql = f"UPDATE {table} SET {', '.join(set_cols)} WHERE {pk_field}=?"
+            cur = self._conn.execute(sql, tuple(set_vals + [pk_val]))
+            if cur.rowcount == 0:
+                # Fall back to insert
+                insert_sql, args = _build_typed_insert(table, record)
+                # Force replace path: delete ignore then insert
+                self._conn.execute(insert_sql, args)
+                if self._conn.total_changes == 0:
+                    # INSERT OR IGNORE ignored existing — force update already tried
+                    pass
+            self._conn.commit()
+            return True
+
+    def query_cases(
+        self,
+        *,
+        statuses: list[str] | None = None,
+        validation_types: list[str] | None = None,
+        exclude_validation: bool = False,
+        symbol: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+        order_desc: bool = True,
+    ) -> list[dict[str, Any]]:
+        """Bounded review_cases query using indexes (never loads full history)."""
+        with self._lock:
+            where: list[str] = []
+            args: list[Any] = []
+            if statuses:
+                placeholders = ",".join("?" * len(statuses))
+                where.append(f"status IN ({placeholders})")
+                args.extend(statuses)
+            if validation_types:
+                placeholders = ",".join("?" * len(validation_types))
+                where.append(f"validation_type IN ({placeholders})")
+                args.extend(validation_types)
+            if exclude_validation:
+                where.append("(validation_type IS NULL OR validation_type='' OR validation_type='NATURAL')")
+            if symbol:
+                where.append("symbol=?")
+                args.append(symbol)
+            clause = (" WHERE " + " AND ".join(where)) if where else ""
+            order = "DESC" if order_desc else "ASC"
+            # Prefer updated_at_ts when present; fall back to created_at_ts
+            sql = (
+                f"SELECT payload FROM review_cases{clause}"
+                f" ORDER BY COALESCE(updated_at_ts, created_at_ts) {order}"
+                f" LIMIT ? OFFSET ?"
+            )
+            args.extend([int(limit), int(offset)])
+            try:
+                cur = self._conn.execute(sql, tuple(args))
+                return [json.loads(r[0]) for r in cur.fetchall()]
+            except Exception as exc:  # noqa: BLE001
+                logger.debug("[storage] query_cases failed: %s", exc)
+                return []
+
+    def count_cases(
+        self,
+        *,
+        statuses: list[str] | None = None,
+        exclude_validation: bool = False,
+    ) -> int:
+        with self._lock:
+            where: list[str] = []
+            args: list[Any] = []
+            if statuses:
+                placeholders = ",".join("?" * len(statuses))
+                where.append(f"status IN ({placeholders})")
+                args.extend(statuses)
+            if exclude_validation:
+                where.append("(validation_type IS NULL OR validation_type='' OR validation_type='NATURAL')")
+            clause = (" WHERE " + " AND ".join(where)) if where else ""
+            try:
+                cur = self._conn.execute(
+                    f"SELECT COUNT(*) FROM review_cases{clause}",
+                    tuple(args),
+                )
+                return int(cur.fetchone()[0])
+            except Exception:  # noqa: BLE001
+                return 0
+
     def query_ledger_events(self, account_id: str, limit: int = 5000) -> list[dict[str, Any]]:
         with self._lock:
             try:
@@ -870,6 +1096,25 @@ class _ResearchStore:
 
     def get_by_pk(self, table: str, pk_value: str) -> dict[str, Any] | None:
         return self._adapter.get_by_pk(table, pk_value)
+
+    def upsert(self, table: str, record: dict[str, Any]) -> bool:
+        fn = getattr(self._adapter, "upsert", None)
+        if callable(fn):
+            return bool(fn(table, record))
+        self.append(table, record)
+        return True
+
+    def query_cases(self, **kwargs: Any) -> list[dict[str, Any]]:
+        fn = getattr(self._adapter, "query_cases", None)
+        if callable(fn):
+            return fn(**kwargs)
+        return self.query("review_cases", limit=int(kwargs.get("limit") or 100))
+
+    def count_cases(self, **kwargs: Any) -> int:
+        fn = getattr(self._adapter, "count_cases", None)
+        if callable(fn):
+            return int(fn(**kwargs))
+        return self.count("review_cases")
 
     def query_ledger_events(self, account_id: str, limit: int = 5000) -> list[dict[str, Any]]:
         """Return durable ledger events for one account ordered by sequence ASC."""
