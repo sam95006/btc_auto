@@ -60,10 +60,20 @@ async function fetchCandles(symbol: string, interval: string, limit: number): Pr
   return [];
 }
 
+function toUnixSeconds(t: number): number {
+  // Bybit kline timestamps are ms; lightweight-charts expects UTC seconds.
+  return t > 1e12 ? Math.floor(t / 1000) : Math.floor(t);
+}
+
 function mergeBars(existing: RawBar[], incoming: RawBar[]): RawBar[] {
-  if (existing.length === 0) return incoming;
-  const map = new Map<number, RawBar>(existing.map((b) => [b.time, b]));
-  for (const b of incoming) map.set(b.time, b);
+  if (existing.length === 0) return incoming.map((b) => ({ ...b, time: toUnixSeconds(b.time) }));
+  const map = new Map<number, RawBar>(
+    existing.map((b) => [toUnixSeconds(b.time), { ...b, time: toUnixSeconds(b.time) }]),
+  );
+  for (const b of incoming) {
+    const t = toUnixSeconds(b.time);
+    map.set(t, { ...b, time: t });
+  }
   return Array.from(map.values()).sort((a, b) => a.time - b.time);
 }
 

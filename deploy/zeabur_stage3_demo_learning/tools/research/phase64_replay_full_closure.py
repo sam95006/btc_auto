@@ -333,12 +333,12 @@ def _run_one_scenario(
                 "patch_proposal_count": patch_count,
                 "exit_reason": reason,
                 "expected_exit_family": exit_kind,
+                # Strict match only — do not soft-accept RISK_DETERIORATION etc.
                 "exit_reason_matched": (
                     (exit_kind == "PROFIT_EXIT" and reason == ExitReason.TAKE_PROFIT)
                     or (exit_kind == "STOP_LOSS_EXIT" and reason == ExitReason.STOP_LOSS)
                     or (exit_kind == "MAX_HOLD_EXIT" and reason == ExitReason.MAX_HOLD)
                     or (exit_kind == "DATA_STALE_EXIT" and reason == ExitReason.STALE_DATA)
-                    or (positions_closed > 0 and reason is not None)
                 ),
                 "ledger_chain_valid": bool(chain.get("chainValid")),
                 "ledger_event_count": len(events),
@@ -360,29 +360,42 @@ def _run_one_scenario(
 def run_phase64_replay_full_closure() -> dict[str, Any]:
     entry = 2500.0
     scenarios = [
-        # +5% mark → take profit (policy default 4%)
+        # Jump directly to +5% so TAKE_PROFIT fires before RISK_DETERIORATION
+        # (risk re-check uses a new-entry RiskRequest and would BLOCK_DUPLICATE
+        # on intermediate marks that have not yet hit TP/SL).
         {
             "scenario_id": "PROFIT_EXIT_VALIDATION",
             "exit_kind": "PROFIT_EXIT",
             "entry_price": entry,
-            "mark_path": [entry, entry * 1.01, entry * 1.05],
-            "policy_overrides": None,
+            "mark_path": [entry * 1.05],
+            "policy_overrides": {
+                "stale_mark_price_ms": 3_600_000,
+                "max_hold_hours": 999.0,
+            },
         },
-        # -3% mark → stop loss (policy default 2%)
+        # Jump directly to -3% → STOP_LOSS (policy default 2%)
         {
             "scenario_id": "STOP_LOSS_EXIT_VALIDATION",
             "exit_kind": "STOP_LOSS_EXIT",
             "entry_price": entry,
-            "mark_path": [entry, entry * 0.99, entry * 0.97],
-            "policy_overrides": None,
+            "mark_path": [entry * 0.97],
+            "policy_overrides": {
+                "stale_mark_price_ms": 3_600_000,
+                "max_hold_hours": 999.0,
+            },
         },
         # Force max-hold with tiny hold limit + aged openedAt via policy
         {
             "scenario_id": "MAX_HOLD_EXIT_VALIDATION",
             "exit_kind": "MAX_HOLD_EXIT",
             "entry_price": entry,
-            "mark_path": [entry, entry],
-            "policy_overrides": {"max_hold_hours": 0.0, "stop_loss_pct": 99.0, "take_profit_pct": 99.0},
+            "mark_path": [entry],
+            "policy_overrides": {
+                "max_hold_hours": 0.0,
+                "stop_loss_pct": 99.0,
+                "take_profit_pct": 99.0,
+                "stale_mark_price_ms": 3_600_000,
+            },
         },
         # Stale mark: zero stale window + freeze updates
         {

@@ -1,7 +1,8 @@
 ﻿{
-    "phase":  "6.4",
-    "js":  "index-DXsX-xQU.js",
-    "source":  "temp_clean_build",
-    "css":  "index-DnR1AQao.css",
-    "builtAt":  "2026-07-20T07:31:23.9737115Z"
+  "phase": "6.4",
+  "js": "index-BWwOeIeV.js",
+  "css": "index-DnR1AQao.css",
+  "source": "temp_clean_build",
+  "builtAt": "2026-07-20T08:00:00Z",
+  "notes": "candle ms->seconds fix; market data routes on nexus-web run.py"
 }

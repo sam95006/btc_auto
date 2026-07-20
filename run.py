@@ -58,6 +58,12 @@ try:
     register_paper_routes(app)  # Phase 6 Gate C: paper runtime API
 except Exception as _paper_routes_exc:  # noqa: BLE001
     print(f"[startup] Paper routes deferred: {_paper_routes_exc}")
+try:
+    from backend.api.nexus_market_data_routes import register_nexus_market_data_routes
+
+    register_nexus_market_data_routes(app)  # Phase 6.4: candles / features / intelligence
+except Exception as _market_data_exc:  # noqa: BLE001
+    print(f"[startup] Nexus market data routes deferred: {_market_data_exc}")
 # UI-DEPLOY-2: Market Intelligence SPA (static/operator_ui) — register before / catch-alls finish
 register_operator_ui_routes(app)
 
@@ -88,7 +94,10 @@ def _nexus_static_cache_control(response):
         response.headers["Cache-Control"] = "no-cache, must-revalidate"
     if request.path.startswith("/assets/") or request.path in {"/", "/overview"}:
         response.headers["Cache-Control"] = "no-cache, must-revalidate"
-    if request.path.startswith("/api/market/"):
+    if request.path.startswith("/api/market/") or request.path.startswith("/api/nexus/markets/") \
+            or request.path.startswith("/api/nexus/market-intelligence/") \
+            or request.path.startswith("/api/nexus/data-providers/") \
+            or request.path.startswith("/api/nexus/features/"):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
     return response
