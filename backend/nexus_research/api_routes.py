@@ -608,6 +608,22 @@ def live_soak_status():
     return resp
 
 
+@nexus_research_bp.route("/api/nexus/candidates/<candidate_id>/decision-trace")
+def candidate_decision_trace(candidate_id: str):
+    """Phase 6.5 — per-candidate funnel trace."""
+    try:
+        from backend.nexus_research.decision_funnel import build_candidate_decision_trace
+
+        body = build_candidate_decision_trace(candidate_id)
+        resp = jsonify(body)
+        _no_store(resp)
+        return resp
+    except Exception as exc:  # noqa: BLE001
+        resp = jsonify({"ok": False, "error": str(exc), "researchOnly": True})
+        _no_store(resp)
+        return resp, 500
+
+
 def register_nexus_research_routes(app: "Flask") -> None:
     """Register all Phase 5 / Phase 6 Gate B + Gate D routes."""
     app.register_blueprint(nexus_research_bp)

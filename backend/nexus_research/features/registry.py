@@ -282,4 +282,10 @@ def get_feature_registry() -> FeatureRegistry:
         with _REGISTRY_LOCK:
             if _REGISTRY is None:
                 _REGISTRY = FeatureRegistry()
+                try:
+                    from backend.nexus_research.features.feature_seed import seed_default_feature_definitions
+
+                    seed_default_feature_definitions()
+                except Exception:  # noqa: BLE001
+                    pass
     return _REGISTRY

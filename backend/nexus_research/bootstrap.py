@@ -96,6 +96,25 @@ def bootstrap_research_runtime() -> dict:
             errors.append(msg)
             summary["steps"].append(f"simulation_policy: FAILED ({exc})")
 
+        # ── Step 2b: Feature registry seed + observation feed (Phase 6.5) ─────
+        try:
+            from backend.nexus_research.features.feature_seed import seed_default_feature_definitions
+            from backend.nexus_research.features.feature_observation_feed import refresh_feature_observations_from_scanner
+
+            seed_result = seed_default_feature_definitions()
+            feed_result = refresh_feature_observations_from_scanner()
+            summary["featureRegistry"] = {
+                "definitions": seed_result.get("count"),
+                "observationsRecorded": feed_result.get("recorded"),
+            }
+            summary["steps"].append(
+                f"feature_registry: seeded defs={seed_result.get('count')} obs={feed_result.get('recorded')}"
+            )
+        except Exception as exc:  # noqa: BLE001
+            msg = f"feature registry seed failed: {exc}"
+            logger.warning("[bootstrap] %s", msg)
+            summary["steps"].append(f"feature_registry: FAILED ({exc})")
+
         # ── Step 3: AI review cycle supervisor job ────────────────────────────
         try:
             from backend.nexus_research.ai_review_cycle import start_ai_review_supervisor_job

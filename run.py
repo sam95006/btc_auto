@@ -64,6 +64,12 @@ try:
     register_nexus_market_data_routes(app)  # Phase 6.4: candles / features / intelligence
 except Exception as _market_data_exc:  # noqa: BLE001
     print(f"[startup] Nexus market data routes deferred: {_market_data_exc}")
+try:
+    from backend.api.founder_private_routes import register_founder_private_routes
+
+    register_founder_private_routes(app)  # Phase 6.5: founder private boundary
+except Exception as _founder_exc:  # noqa: BLE001
+    print(f"[startup] Founder private routes deferred: {_founder_exc}")
 # UI-DEPLOY-2: Market Intelligence SPA (static/operator_ui) — register before / catch-alls finish
 register_operator_ui_routes(app)
 

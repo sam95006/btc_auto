@@ -350,11 +350,12 @@ class PaperController:
         shadow_dry_runs = 0
         guards_blocked = 0
         try:
+            processed_ids = _load_processed_decision_ids(store)
             decisions = store.query("research_decisions", limit=100)
             ready = [
                 d for d in decisions
-                if d.get("status") == "READY_FOR_SIMULATION"
-                and not d.get("_paper_processed")
+                if _decision_ready_for_paper(d)
+                and str(d.get("decisionId") or "") not in processed_ids
             ]
             max_per_cycle = int(policy.get("max_candidates_per_cycle", 3))
             ready = ready[:max_per_cycle]
@@ -372,6 +373,20 @@ class PaperController:
                         "[paper_ctrl] decision %s blocked by guard: %s",
                         decision_id, guard_result.get("reason"),
                     )
+                    try:
+                        from backend.nexus_research.domain_events import PAPER_GUARD_BLOCKED, publish_event
+
+                        publish_event(
+                            PAPER_GUARD_BLOCKED,
+                            {
+                                "decisionId": decision_id,
+                                "symbol": decision.get("symbol"),
+                                "reason": guard_result.get("reason"),
+                                "checks": guard_result.get("checks"),
+                            },
+                        )
+                    except Exception:  # noqa: BLE001
+                        pass
                     # Mark as processed to avoid re-evaluating next tick
                     _mark_decision_processed(
                         store, decision_id, "GUARD_BLOCKED", guard_result.get("reason")
@@ -733,6 +748,31 @@ def _fetch_public_mark_prices() -> dict[str, float]:
             logger.debug("[paper_ctrl] fallback mark price failed: %s", exc)
 
     return mark_prices
+
+
+def _decision_ready_for_paper(d: dict) -> bool:
+    """Canonical field is decisionStatus; status is legacy-only.
+
+    Conflict (both present and unequal) → fail-closed (not ready).
+    """
+    canonical = d.get("decisionStatus")
+    legacy = d.get("status")
+    if canonical is not None and legacy is not None and str(canonical) != str(legacy):
+        return False  # fail-closed on conflict — never create paper order
+    status = canonical if canonical is not None else legacy
+    return status == "READY_FOR_SIMULATION"
+
+
+def _load_processed_decision_ids(store) -> set[str]:
+    ids: set[str] = set()
+    try:
+        for row in store.query("paper_processed_decisions", limit=500):
+            did = row.get("decisionId") or row.get("decision_id")
+            if did:
+                ids.add(str(did))
+    except Exception:  # noqa: BLE001
+        pass
+    return ids
 
 
 def _mark_decision_processed(

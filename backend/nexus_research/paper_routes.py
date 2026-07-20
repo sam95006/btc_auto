@@ -397,6 +397,18 @@ def review_cases_manual_research():
         return _err(str(exc))
 
 
+@nexus_paper_bp.route("/api/nexus/paper/decision-funnel")
+def paper_decision_funnel():
+    """Phase 6.5 — natural PAPER funnel observability (no gate changes)."""
+    try:
+        hours = float(request.args.get("windowHours") or request.args.get("hours") or 24)
+        from backend.nexus_research.decision_funnel import build_decision_funnel
+
+        return _ok(build_decision_funnel(window_hours=hours))
+    except Exception as exc:  # noqa: BLE001
+        return _err(str(exc))
+
+
 def register_paper_routes(app: "Flask") -> None:
     """Register all Phase 6 Gate C paper runtime routes."""
     app.register_blueprint(nexus_paper_bp)

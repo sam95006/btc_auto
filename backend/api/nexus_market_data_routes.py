@@ -186,9 +186,16 @@ def nexus_market_intelligence_summary():
         # Try to populate from market scanner if available
         try:
             from backend.market.scanner.scanner_service import get_market_scanner
+            from backend.nexus_research.features.feature_observation_feed import (
+                build_msi_components_from_scanner,
+                refresh_feature_observations_from_scanner,
+            )
+
+            refresh_feature_observations_from_scanner()
+            msi_components = build_msi_components_from_scanner()
             scanner = get_market_scanner()
             status = scanner.status()
-            candidates = status.get("candidates") or []
+            candidates = scanner.candidates(limit=50)
             for c in candidates:
                 candidate_states.append({
                     "symbol": c.get("symbol"),
@@ -396,6 +403,41 @@ def nexus_features_registry():
     except Exception as exc:  # noqa: BLE001
         body = {"ok": False, "error": str(exc), "researchOnly": True}
     return _no_store(jsonify(body))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Realtime stream (Phase 6.5 Gate E — public SSE hybrid)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@nexus_market_data_bp.route("/api/nexus/markets/<symbol>/stream-status")
+def nexus_market_stream_status(symbol: str):
+    try:
+        from backend.market.stream.market_stream import get_stream_status
+
+        body = get_stream_status(symbol)
+    except Exception as exc:  # noqa: BLE001
+        body = {"ok": False, "error": str(exc), "researchOnly": True}
+    return _no_store(jsonify(body))
+
+
+@nexus_market_data_bp.route("/api/nexus/markets/<symbol>/stream")
+def nexus_market_stream(symbol: str):
+    """SSE stream — public kline updates with REST backfill."""
+    from flask import Response
+
+    from backend.market.stream.market_stream import sse_event_stream
+
+    max_events = min(60, max(5, int(request.args.get("maxEvents") or 20)))
+
+    def generate():
+        for chunk in sse_event_stream(symbol, max_events=max_events):
+            yield chunk
+
+    resp = Response(generate(), mimetype="text/event-stream")
+    resp.headers["Cache-Control"] = "no-cache"
+    resp.headers["X-Research-Only"] = "true"
+    resp.headers["X-Private-Api"] = "false"
+    return resp
 
 
 # ─────────────────────────────────────────────────────────────────────────────
