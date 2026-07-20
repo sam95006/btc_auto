@@ -49,6 +49,8 @@ _SPA_PREFIXES = (
     "academy",
     "calculator",
     "membership",
+    "ai-reviews",           # Phase 5 Gate B — AI Review Center
+    "research-performance", # Phase 6 Gate D — Research Performance Validation
 )
 
 
@@ -104,6 +106,33 @@ from backend.api.operator_ui_cache import apply_operator_ui_cache_headers, is_op
 
 register_market_public_routes(app)
 register_market_scanner_routes(app)
+
+try:
+    from backend.nexus_research.api_routes import register_nexus_research_routes
+    register_nexus_research_routes(app)
+except Exception as _nexus_exc:
+    import logging as _logging
+    _logging.getLogger(__name__).warning(
+        "stage3_readonly_web_app: nexus_research routes not loaded: %s", _nexus_exc
+    )
+
+try:
+    from backend.nexus_research.paper_routes import register_paper_routes
+    register_paper_routes(app)
+except Exception as _paper_exc:
+    import logging as _logging
+    _logging.getLogger(__name__).warning(
+        "stage3_readonly_web_app: paper_routes not loaded: %s", _paper_exc
+    )
+
+try:
+    from backend.api.nexus_market_data_routes import register_nexus_market_data_routes
+    register_nexus_market_data_routes(app)
+except Exception as _md_exc:
+    import logging as _logging
+    _logging.getLogger(__name__).warning(
+        "stage3_readonly_web_app: nexus_market_data routes not loaded: %s", _md_exc
+    )
 
 
 @app.route("/health")

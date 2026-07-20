@@ -376,7 +376,51 @@ class DecisionOrchestrator:
             "assessments": [a.to_dict() for a in assessments],
             "allFlags": all_flags,
             "producedAt": _ts(),
+            # Phase 6.4: shadow feature evidence IDs only — never mutate production score/side/ranking
+            "featureSnapshotId": None,
+            "shadowEvaluationId": None,
+            "supportingFeatureIds": [],
+            "opposingFeatureIds": [],
+            "missingFeatureIds": [],
+            "featureQualityScore": None,
         }
+
+        # Shadow Feature Evaluation (RULES_ONLY evidence). Failures are non-blocking.
+        try:
+            from backend.nexus_research.features.shadow_evaluation import get_shadow_evaluator
+
+            before_score = candidate.get("score")
+            before_side = candidate.get("side")
+            feature_map = {
+                "score": candidate.get("score"),
+                "priceChange5mPct": candidate.get("priceChange5mPct"),
+                "oiChange5mPct": candidate.get("oiChange5mPct"),
+                "fundingRate": candidate.get("fundingRate"),
+            }
+            shadow = get_shadow_evaluator().evaluate(
+                candidate=candidate,
+                feature_snapshot=feature_map,
+                extra_context={"caseId": case_id, "productionDecisionStatus": decision_status},
+            )
+            if candidate.get("score") != before_score or candidate.get("side") != before_side:
+                raise RuntimeError("shadow evaluation mutated production candidate")
+            if isinstance(shadow, dict):
+                result["featureSnapshotId"] = shadow.get("featureHash")
+                result["shadowEvaluationId"] = shadow.get("evaluationId")
+                result["featureQualityScore"] = 1.0 if shadow.get("productionUnchanged") else 0.0
+                result["shadowDecision"] = shadow.get("shadowDecision")
+                result["shadowScore"] = shadow.get("shadowScore")
+                result["shadowAgreement"] = (
+                    "AGREE"
+                    if (
+                        (direction == "LONG" and shadow.get("shadowDecision") == "SHADOW_LONG")
+                        or (direction == "SHORT" and shadow.get("shadowDecision") == "SHADOW_SHORT")
+                    )
+                    else "DISAGREE_OR_NEUTRAL"
+                )
+        except Exception:  # noqa: BLE001
+            pass
+
         get_research_store().append("research_decisions", result)
         publish_event(
             RESEARCH_DECISION_PRODUCED,

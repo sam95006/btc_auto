@@ -147,6 +147,13 @@ except Exception as _e:
     import logging as _log
     _log.getLogger(__name__).warning("[stage3] paper routes not registered: %s", _e)
 
+try:
+    from backend.api.nexus_market_data_routes import register_nexus_market_data_routes
+    register_nexus_market_data_routes(app)  # Phase 6.4: candles / features / intelligence
+except Exception as _e:
+    import logging as _log
+    _log.getLogger(__name__).warning("[stage3] nexus_market_data routes not registered: %s", _e)
+
 # Phase 6 Gate C POST allowlist additions
 _GATE_C_POST_ALLOWLIST.update({
     "/api/nexus/paper/manual-close",
