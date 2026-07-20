@@ -380,6 +380,7 @@ def pause_active_session(reason: str) -> dict[str, Any]:
 
 
 def get_active_paper_session() -> dict[str, Any] | None:
+    global _ACTIVE_SESSION
     with _LOCK:
         if _ACTIVE_SESSION is not None:
             return dict(_ACTIVE_SESSION)
