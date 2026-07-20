@@ -66,6 +66,13 @@ STATE_RUNNING = "RUNNING"
 STATE_PAUSED = "PAUSED"
 STATE_KILLED = "KILLED"
 STATE_DEGRADED = "DEGRADED"
+STATE_PAPER_ACTIVE = "PAPER_ACTIVE"
+STATE_PAPER_PAUSED = "PAPER_PAUSED"
+STATE_DEGRADED_STORAGE = "DEGRADED_STORAGE"
+STATE_DEGRADED_LEDGER = "DEGRADED_LEDGER"
+STATE_DEGRADED_OWNERSHIP = "DEGRADED_OWNERSHIP"
+STATE_DEGRADED_CASE_CAPACITY = "DEGRADED_CASE_CAPACITY"
+STATE_DEGRADED_RISK = "DEGRADED_RISK"
 
 # ── Env var ───────────────────────────────────────────────────────────────────
 _MODE_ENV_VAR = "NEXUS_AUTONOMOUS_RESEARCH_MODE"
@@ -197,7 +204,7 @@ class PaperController:
                 cycle_id, mode, state, 0, 0, 0, 0, 0, errors, detail
             )
 
-        if state == STATE_PAUSED:
+        if state == STATE_PAUSED or state == STATE_PAPER_PAUSED:
             detail["pauseReason"] = self._state_reason
             return self._make_record(
                 cycle_id, mode, state, 0, 0, 0, 0, 0, errors, detail
@@ -209,6 +216,48 @@ class PaperController:
                 cycle_id, mode, state, 0, 0, 0, 0, 0, errors, detail
             )
 
+        # ── Phase 6.3: PAPER activation fail-closed preflight ────────────────
+        paper_account_id = None
+        activation_session_id = None
+        if mode == MODE_PAPER:
+            try:
+                from backend.nexus_research.paper_activation import (
+                    activate_or_resume_paper_session,
+                    ACCOUNT_PAPER_MAIN_V1,
+                )
+                act = activate_or_resume_paper_session()
+                detail["activation"] = {
+                    "ok": act.get("ok"),
+                    "sessionId": (act.get("session") or {}).get("activationSessionId"),
+                    "hint": act.get("controllerHint"),
+                    "reasons": (act.get("preflight") or {}).get("reasons") or [],
+                }
+                session = act.get("session") or {}
+                activation_session_id = session.get("activationSessionId")
+                paper_account_id = session.get("accountId") or ACCOUNT_PAPER_MAIN_V1
+                if not act.get("ok") or act.get("controllerHint") == "PAPER_PAUSED":
+                    with self._lock:
+                        self._state = STATE_PAPER_PAUSED
+                        self._state_reason = ",".join(
+                            (act.get("preflight") or {}).get("reasons") or ["preflight_failed"]
+                        )
+                    return self._make_record(
+                        cycle_id, mode, STATE_PAPER_PAUSED, 0, 0, 0, 0, 0, errors, detail
+                    )
+                with self._lock:
+                    if self._state not in (STATE_KILLED, STATE_PAUSED):
+                        self._state = STATE_PAPER_ACTIVE
+                        self._state_reason = "paper_activation_ok"
+                state = STATE_PAPER_ACTIVE
+            except Exception as exc:  # noqa: BLE001
+                errors.append(f"paper activation failed: {exc}")
+                with self._lock:
+                    self._state = STATE_PAPER_PAUSED
+                    self._state_reason = f"activation_error:{exc}"
+                return self._make_record(
+                    cycle_id, mode, STATE_PAPER_PAUSED, 0, 0, 0, 0, 0, errors, detail
+                )
+
         # ── Load required components (fail-fast but degrade gracefully) ───────
         try:
             from backend.nexus_research.simulator import get_simulator
@@ -219,9 +268,12 @@ class PaperController:
             from backend.nexus_research.exit_policies import get_exit_policy_engine, ExitReason
             from backend.nexus_research.simulation_policy import get_simulation_policy
             from backend.nexus_research.storage import get_research_store
+            from backend.nexus_research.durable_ledger import ACCOUNT_PAPER_DEFAULT
 
             sim = get_simulator()
-            ledger = get_sim_ledger()
+            ledger = get_sim_ledger(
+                account_id=paper_account_id or ACCOUNT_PAPER_DEFAULT
+            )
             risk = get_risk_engine()
             allocator = get_capital_allocator()
             exit_engine = get_exit_policy_engine()
@@ -327,15 +379,25 @@ class PaperController:
                     continue
 
                 if mode == MODE_PAPER:
-                    # Full pipeline: submit sim order
+                    # Full pipeline: submit sim order on NEXUS_PAPER_MAIN_V1
                     try:
-                        result = try_simulate_decision(decision)
+                        result = try_simulate_decision(
+                            decision,
+                            account_id=paper_account_id,
+                            activation_session_id=activation_session_id,
+                        )
                         if result.success:
                             orders_submitted += 1
                             logger.info(
                                 "[paper_ctrl] PAPER: sim order %s for %s %s",
                                 result.order_id, decision.get("symbol"), decision.get("side"),
                             )
+                            # Same-tick fill attempt with public mark prices
+                            try:
+                                if mark_prices:
+                                    sim.process_pending_orders(mark_prices)
+                            except Exception as fill_exc:  # noqa: BLE001
+                                logger.debug("[paper_ctrl] same-tick fill deferred: %s", fill_exc)
                         else:
                             errors.append(
                                 f"sim failed for {decision_id}: "
@@ -474,6 +536,20 @@ class PaperController:
             total_exits = self._total_exits
             total_errors = self._total_errors
             last_cycle = self._recent_cycles[-1].to_dict() if self._recent_cycles else None
+        activation = None
+        ledger_snap = None
+        try:
+            from backend.nexus_research.paper_activation import get_active_paper_session
+            activation = get_active_paper_session()
+        except Exception:  # noqa: BLE001
+            activation = None
+        if mode == MODE_PAPER:
+            try:
+                from backend.nexus_research.sim_ledger import get_sim_ledger
+                from backend.nexus_research.paper_activation import ACCOUNT_PAPER_MAIN_V1
+                ledger_snap = get_sim_ledger(account_id=ACCOUNT_PAPER_MAIN_V1).snapshot()
+            except Exception:  # noqa: BLE001
+                ledger_snap = None
         return {
             "ok": True,
             "researchOnly": True,
@@ -487,7 +563,11 @@ class PaperController:
                 "PAPER requires explicit operator opt-in via env var"
             ),
             "runtimeState": state,
+            "paperControllerState": state,
             "stateReason": state_reason,
+            "activationSession": activation,
+            "paperAccountId": (activation or {}).get("accountId") if activation else None,
+            "ledger": ledger_snap,
             "totalCycles": total_cycles,
             "totalOrdersSubmitted": total_orders,
             "totalShadowRuns": total_shadow,
@@ -495,6 +575,7 @@ class PaperController:
             "totalErrorCycles": total_errors,
             "startedAtMs": self._started_at_ms,
             "lastCycle": last_cycle,
+            "realOrderCreated": False,
             "generatedAt": int(time.time() * 1000),
         }
 

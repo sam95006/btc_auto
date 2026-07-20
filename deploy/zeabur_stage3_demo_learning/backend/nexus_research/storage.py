@@ -36,7 +36,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 _STORE_LOCK = threading.Lock()
 _STORE: "_ResearchStore | None" = None
 
@@ -62,6 +62,8 @@ TYPED_TABLES = frozenset({
     "runtime_job_state",
     "persistence_validation_markers",
     "persistence_probes",
+    "paper_activation_sessions",
+    "paper_trade_evidence",
 })
 
 
@@ -402,6 +404,42 @@ _MIGRATIONS: list[tuple[int, str, list[str]]] = [
             "  ON review_cases(status, validation_type, expires_at_ts, updated_at_ts)",
         ],
     ),
+    (
+        6,
+        "phase63 paper activation sessions + trade evidence",
+        [
+            """CREATE TABLE IF NOT EXISTS paper_activation_sessions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                state TEXT NOT NULL DEFAULT '',
+                account_id TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                updated_at_ts REAL,
+                CONSTRAINT paper_activation_sessions_session_id_uq UNIQUE (session_id)
+            )""",
+            "CREATE INDEX IF NOT EXISTS paper_activation_sessions_state"
+            "  ON paper_activation_sessions(state, created_at_ts)",
+            "CREATE INDEX IF NOT EXISTS paper_activation_sessions_account"
+            "  ON paper_activation_sessions(account_id, created_at_ts)",
+            """CREATE TABLE IF NOT EXISTS paper_trade_evidence (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                evidence_id TEXT NOT NULL,
+                session_id TEXT NOT NULL DEFAULT '',
+                decision_id TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT '',
+                payload TEXT NOT NULL,
+                created_at_utc TEXT NOT NULL,
+                created_at_ts REAL NOT NULL,
+                CONSTRAINT paper_trade_evidence_evidence_id_uq UNIQUE (evidence_id)
+            )""",
+            "CREATE INDEX IF NOT EXISTS paper_trade_evidence_session"
+            "  ON paper_trade_evidence(session_id, created_at_ts)",
+            "CREATE INDEX IF NOT EXISTS paper_trade_evidence_decision"
+            "  ON paper_trade_evidence(decision_id)",
+        ],
+    ),
 ]
 
 
@@ -444,6 +482,15 @@ _TYPED_INSERT: dict[str, tuple[str, list[tuple[str, str]]]] = {
     "runtime_job_state":     ("job_id",         [("job_type","job_type"), ("status","status")]),
     "persistence_validation_markers": ("marker_id", [("tag","tag")]),
     "persistence_probes": ("probe_id", [("created_boot_id","createdBootId"), ("payload_hash","payloadHash"), ("validation_label","validationLabel")]),
+    "paper_activation_sessions": ("session_id", [
+        ("state", "state"),
+        ("account_id", "accountId"),
+    ]),
+    "paper_trade_evidence": ("evidence_id", [
+        ("session_id", "sessionId"),
+        ("decision_id", "decisionId"),
+        ("status", "status"),
+    ]),
 }
 
 

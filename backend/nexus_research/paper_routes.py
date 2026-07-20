@@ -72,6 +72,117 @@ def paper_status():
         return _err(str(exc))
 
 
+@nexus_paper_bp.route("/api/nexus/paper/activate", methods=["POST"])
+def paper_activate():
+    """Create or resume durable PAPER activation session (researchOnly required)."""
+    try:
+        body = request.get_json(silent=True) or {}
+        if not body.get("researchOnly"):
+            return _err("researchOnly:true required", 400)
+        from backend.nexus_research.paper_activation import activate_or_resume_paper_session
+        result = activate_or_resume_paper_session(
+            deployment_commit=body.get("deploymentCommit"),
+            force_new=bool(body.get("forceNew")),
+        )
+        # Sync controller pause/active from activation result
+        from backend.nexus_research.paper_controller import get_paper_controller
+        ctrl = get_paper_controller()
+        if result.get("controllerHint") == "PAPER_PAUSED":
+            ctrl.pause(reason=(result.get("session") or {}).get("pausedReason") or "preflight_failed")
+        elif result.get("ok"):
+            ctrl.resume(reason="paper_activation_ok")
+        return _ok({**result, "generatedAt": int(time.time() * 1000)})
+    except Exception as exc:  # noqa: BLE001
+        return _err(str(exc))
+
+
+@nexus_paper_bp.route("/api/nexus/paper/sessions")
+def paper_sessions():
+    try:
+        from backend.nexus_research.paper_activation import list_paper_sessions, get_active_paper_session
+        limit = min(int(request.args.get("limit", 20)), 100)
+        sessions = list_paper_sessions(limit=limit)
+        return _ok({
+            "ok": True,
+            "active": get_active_paper_session(),
+            "sessions": sessions,
+            "count": len(sessions),
+            "generatedAt": int(time.time() * 1000),
+        })
+    except Exception as exc:  # noqa: BLE001
+        return _err(str(exc))
+
+
+@nexus_paper_bp.route("/api/nexus/paper/trades")
+def paper_trades():
+    try:
+        from backend.nexus_research.storage import get_research_store
+        limit = min(int(request.args.get("limit", 50)), 200)
+        store = get_research_store()
+        attempts = list(reversed(store.query("sim_attempts", limit=limit)))
+        evidence = list(reversed(store.query("paper_trade_evidence", limit=limit)))
+        return _ok({
+            "ok": True,
+            "trades": attempts,
+            "evidence": evidence,
+            "count": len(attempts),
+            "generatedAt": int(time.time() * 1000),
+        })
+    except Exception as exc:  # noqa: BLE001
+        return _err(str(exc))
+
+
+@nexus_paper_bp.route("/api/nexus/paper/trades/<trade_id>")
+def paper_trade_detail(trade_id: str):
+    try:
+        from backend.nexus_research.storage import get_research_store
+        store = get_research_store()
+        hit = None
+        for row in store.query("sim_attempts", limit=500):
+            if str(row.get("orderId") or row.get("decisionId") or "") == trade_id:
+                hit = row
+                break
+        if hit is None:
+            return _err("trade not found", 404)
+        evidence = None
+        eid = hit.get("evidenceId")
+        if eid:
+            evidence = store.get_by_pk("paper_trade_evidence", eid)
+        return _ok({"ok": True, "trade": hit, "evidence": evidence, "generatedAt": int(time.time() * 1000)})
+    except Exception as exc:  # noqa: BLE001
+        return _err(str(exc))
+
+
+@nexus_paper_bp.route("/api/nexus/paper/evidence/<evidence_id>")
+def paper_evidence_detail(evidence_id: str):
+    try:
+        from backend.nexus_research.storage import get_research_store
+        row = get_research_store().get_by_pk("paper_trade_evidence", evidence_id)
+        if row is None:
+            return _err("evidence not found", 404)
+        return _ok({"ok": True, "evidence": row, "generatedAt": int(time.time() * 1000)})
+    except Exception as exc:  # noqa: BLE001
+        return _err(str(exc))
+
+
+@nexus_paper_bp.route("/api/nexus/paper/ledger")
+def paper_ledger_status():
+    try:
+        from backend.nexus_research.sim_ledger import get_sim_ledger
+        from backend.nexus_research.paper_activation import ACCOUNT_PAPER_MAIN_V1
+        snap = get_sim_ledger(account_id=ACCOUNT_PAPER_MAIN_V1).snapshot()
+        events = get_sim_ledger(account_id=ACCOUNT_PAPER_MAIN_V1)._durable.recent_events(limit=20)
+        return _ok({
+            "ok": True,
+            "accountId": ACCOUNT_PAPER_MAIN_V1,
+            "snapshot": snap,
+            "recentEvents": events,
+            "generatedAt": int(time.time() * 1000),
+        })
+    except Exception as exc:  # noqa: BLE001
+        return _err(str(exc))
+
+
 @nexus_paper_bp.route("/api/nexus/paper/policy")
 def paper_policy():
     try:

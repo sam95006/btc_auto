@@ -135,14 +135,13 @@ def resolve_autonomous_mode() -> dict[str, Any]:
         source = "default"
         is_default = True
 
-    # Legacy may only tighten safety — never unlock PAPER.
+    # Legacy PAPER_ONLY is compatible with canonical PAPER — it must NEVER override
+    # an explicit NEXUS_AUTONOMOUS_RESEARCH_MODE=PAPER back to SHADOW.
+    # Legacy may only tighten safety against LIVE / REAL_MONEY.
+    notes: list[str] = []
     paper_only = _truthy(os.getenv("PAPER_ONLY")) or _truthy(os.getenv("NEXUS_PAPER_ONLY"))
-    if paper_only and mode == MODE_PAPER:
-        # PAPER_ONLY historically meant paper, but Phase 6.2 keeps SHADOW until explicit canonical PAPER.
-        conflicts.append("legacy_PAPER_ONLY_present_while_canonical_PAPER")
-        mode = MODE_SHADOW
-        source = "fail_closed_legacy_conflict"
-        is_default = False
+    if paper_only and mode == MODE_PAPER and source == ENV_AUTONOMOUS:
+        notes.append("legacy_PAPER_ONLY_compatible_with_canonical_PAPER")
 
     live = _truthy(os.getenv("LIVE_TRADING")) or _truthy(os.getenv("NEXUS_LIVE_TRADING"))
     real_money = _truthy(os.getenv("REAL_MONEY")) or _truthy(os.getenv("NEXUS_REAL_MONEY"))
@@ -161,6 +160,7 @@ def resolve_autonomous_mode() -> dict[str, Any]:
             fail_closed=bool(conflicts),
         ),
         "conflicts": conflicts,
+        "notes": notes,
     }
 
 

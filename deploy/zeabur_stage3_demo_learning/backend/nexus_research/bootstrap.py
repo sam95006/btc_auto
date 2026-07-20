@@ -121,6 +121,22 @@ def bootstrap_research_runtime() -> dict:
             summary["paperModeEnvVar"] = _MODE_ENV_VAR
             summary["paperModeDefault"] = _DEFAULT_MODE
             summary["steps"].append(f"paper_controller_job: registered (mode={mode})")
+            if mode == "PAPER":
+                try:
+                    from backend.nexus_research.paper_activation import activate_or_resume_paper_session
+                    act = activate_or_resume_paper_session()
+                    summary["paperActivation"] = {
+                        "ok": act.get("ok"),
+                        "sessionId": (act.get("session") or {}).get("activationSessionId"),
+                        "accountId": (act.get("session") or {}).get("accountId"),
+                        "hint": act.get("controllerHint"),
+                    }
+                    summary["steps"].append(
+                        f"paper_activation: {act.get('controllerHint')} ok={act.get('ok')}"
+                    )
+                except Exception as act_exc:  # noqa: BLE001
+                    summary["steps"].append(f"paper_activation: FAILED ({act_exc})")
+                    errors.append(f"paper_activation_failed: {act_exc}")
             logger.info(
                 "[bootstrap] paper controller registered in mode=%s "
                 "(set %s=PAPER to enable paper trading)", mode, _MODE_ENV_VAR

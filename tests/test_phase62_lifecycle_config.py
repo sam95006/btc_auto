@@ -31,6 +31,23 @@ class TestPhase62Config(unittest.TestCase):
             self.assertEqual(r["effective"], "SHADOW")
             self.assertTrue(r["failClosed"])
 
+    def test_paper_only_compatible_with_canonical_paper(self):
+        from backend.nexus_research.config import resolve_autonomous_mode
+
+        env = {
+            "NEXUS_AUTONOMOUS_RESEARCH_MODE": "PAPER",
+            "PAPER_ONLY": "true",
+            "NEXUS_PAPER_ONLY": "1",
+            "LIVE_TRADING": "false",
+            "REAL_MONEY": "false",
+        }
+        with mock.patch.dict(os.environ, env, clear=False):
+            r = resolve_autonomous_mode()
+            self.assertEqual(r["effective"], "PAPER")
+            self.assertEqual(r["source"], "NEXUS_AUTONOMOUS_RESEARCH_MODE")
+            self.assertFalse(r["failClosed"])
+            self.assertIn("legacy_PAPER_ONLY_compatible_with_canonical_PAPER", r.get("notes") or [])
+
     def test_llm_assisted_fail_closed_to_rules_only(self):
         from backend.nexus_research.config import resolve_review_engine_mode
 

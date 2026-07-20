@@ -150,6 +150,7 @@ except Exception as _e:
 # Phase 6 Gate C POST allowlist additions
 _GATE_C_POST_ALLOWLIST.update({
     "/api/nexus/paper/manual-close",
+    "/api/nexus/paper/activate",
     "/api/nexus/ai-reviews/manual-validation",
     "/api/nexus/review-cases/manual-research",
     "/api/nexus/review-cases/sweep",
