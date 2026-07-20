@@ -20,6 +20,30 @@ async function getJson<T>(path: string): Promise<T> {
 
 export async function getBars(symbol: string, interval: string, limit = 120) {
   const qs = new URLSearchParams({ symbol, interval, limit: String(limit) });
+  // Prefer Phase 6.4 nexus market-data route; fall back to legacy chart route.
+  try {
+    const primary = await getJson<{
+      ok?: boolean;
+      bars?: OhlcvBar[];
+      candles?: OhlcvBar[];
+      freshness?: string;
+      source?: string;
+      error?: string;
+      barLimit?: number;
+    }>(`/api/nexus/markets/${encodeURIComponent(symbol)}/candles?interval=${encodeURIComponent(interval)}&limit=${limit}`);
+    const bars = primary.bars ?? primary.candles ?? [];
+    if (primary.ok !== false && bars.length > 0) {
+      return {
+        ok: true,
+        bars,
+        freshness: primary.freshness,
+        source: primary.source || "NEXUS_BYBIT_PUBLIC",
+        barLimit: primary.barLimit,
+      };
+    }
+  } catch {
+    // fall through
+  }
   return getJson<{
     ok: boolean;
     bars: OhlcvBar[];

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { GateChecklistCard } from "../components/GateChecklistCard";
 import { DecisionMarketOverview } from "../components/DecisionMarketOverview";
+import { NexusMarketIntelligenceCards } from "../components/NexusMarketIntelligenceCards";
 import {
   ETH_WATCH_REAPPEARANCE_CHECKLIST,
   SHORT_REGRESSION_CHECKLIST,
@@ -31,6 +32,7 @@ export function OverviewPage() {
   return (
     <div className="page-stack mi-page mvp22-overview nx-product-overview">
       <DecisionMarketOverview />
+      <NexusMarketIntelligenceCards />
 
       <details
         className="operator-details-toggle"

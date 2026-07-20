@@ -9,7 +9,7 @@ import {
 } from "../market/scannerApi";
 import { formatUsd } from "../market/freshness";
 import { WatchStarButton } from "../components/WatchStarButton";
-import { NexusOhlcvChart } from "../components/NexusOhlcvChart";
+import { NexusLiveCandleChart } from "../components/NexusLiveCandleChart";
 import { loadViewMode, saveViewMode, type ViewMode } from "../market/viewPrefs";
 
 function fmtPct(v: number | null | undefined) {
@@ -316,12 +316,12 @@ export function MarketSymbolPage() {
 
       <section className="nx-chart-card nx-ohlcv-wrap">
         <h2 className="nx-sec-title">NEXUS 圖表（交易所公開資料）</h2>
-        <p className="muted sm">Bybit Public → NEXUS datafeed · 非 TradingView 行情來源</p>
+        <p className="muted sm">Bybit Public Kline → NEXUS · 非 TradingView 行情來源 · true OHLCV</p>
         <p className="muted sm">
-          圖表範圍：目前價格 K 線／可選持倉層。候選／異動／訊號參考僅顯示當前狀態，非完整歷史 markers；Funding
-          歷史序列尚未提供。
+          支援 1m／5m／15m／1h／4h／1d · Crosshair／Zoom／Pan · 即時輪詢合併 · 掃描器 sparkline 僅供輔助（非
+          OHLCV）。
         </p>
-        <NexusOhlcvChart symbol={symbol} advanced={advanced} />
+        <NexusLiveCandleChart symbol={symbol.toUpperCase()} advanced={advanced} />
       </section>
 
       <section className="nx-chart-card">
