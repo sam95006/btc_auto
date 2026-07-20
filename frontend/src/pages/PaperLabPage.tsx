@@ -15,6 +15,7 @@ import { RuntimeRegressionStatusCard } from "../components/RuntimeRegressionStat
 import { StatusBadge } from "../components/StatusBadge";
 import { ValidationStatusBoard } from "../components/ValidationStatusBoard";
 import { WatchReappearanceGateCard } from "../components/WatchReappearanceGateCard";
+import { PaperDecisionFunnelPanel } from "../components/PaperDecisionFunnelPanel";
 import { PAPER_LAB_VALIDATION_SUMMARY } from "../demo/docSummaries";
 import { PAPER_LAB_RELATED_STAGES, SHORT_REGRESSION_CHECKLIST } from "../demo/reportIndex";
 import { useHashScroll } from "../hooks/useHashScroll";
@@ -66,6 +67,8 @@ export function PaperLabPage() {
       </header>
 
       {hold ? <OperatorHoldBanner hold={hold} /> : null}
+
+      <PaperDecisionFunnelPanel />
 
       <PageSummaryCard {...PAPER_LAB_VALIDATION_SUMMARY} />
       <ValidationStatusBoard />

@@ -10,6 +10,7 @@ import {
 import { formatUsd } from "../market/freshness";
 import { WatchStarButton } from "../components/WatchStarButton";
 import { NexusLiveCandleChart } from "../components/NexusLiveCandleChart";
+import { SymbolWorkbenchTabs } from "../components/SymbolWorkbenchTabs";
 import { loadViewMode, saveViewMode, type ViewMode } from "../market/viewPrefs";
 
 function fmtPct(v: number | null | undefined) {
@@ -323,6 +324,13 @@ export function MarketSymbolPage() {
         </p>
         <NexusLiveCandleChart symbol={symbol.toUpperCase()} advanced={advanced} />
       </section>
+
+      <SymbolWorkbenchTabs
+        symbol={symbol.toUpperCase()}
+        candidate={c}
+        snap={snap}
+        price={price}
+      />
 
       <section className="nx-chart-card">
         <h2 className="nx-sec-title">短期價格走勢（掃描器窗口）</h2>

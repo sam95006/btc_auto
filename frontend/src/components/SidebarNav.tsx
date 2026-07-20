@@ -3,37 +3,31 @@ import { useState } from "react";
 
 type NavItem = { to: string; label: string; short: string };
 
-const EXPLORE: NavItem[] = [
-  { to: "/overview", label: "市場總覽", short: "總覽" },
-  { to: "/scanner", label: "市場掃描", short: "掃描" },
-  { to: "/crypto/sectors", label: "幣種版塊", short: "版塊" },
-  { to: "/anomalies", label: "市場異動", short: "異動" },
+/** Phase 6.5 product IA — primary navigation */
+const PRIMARY: NavItem[] = [
+  { to: "/overview", label: "總覽", short: "總覽" },
+  { to: "/scanner", label: "市場", short: "市場" },
+  { to: "/opportunities", label: "機會", short: "機會" },
+  { to: "/anomalies", label: "異常", short: "異常" },
+  { to: "/intelligence", label: "情報", short: "情報" },
+  { to: "/trade-plan", label: "交易計畫", short: "計畫" },
+  { to: "/research-performance", label: "績效", short: "績效" },
+  { to: "/learning", label: "學習", short: "學習" },
 ];
 
-const TOOLS: NavItem[] = [
+const MARKET_DEPTH: NavItem[] = [
+  { to: "/crypto/sectors", label: "幣種版塊", short: "版塊" },
+  { to: "/crypto/oi", label: "OI 排行", short: "OI" },
+  { to: "/crypto/funding", label: "Funding 排行", short: "Funding" },
   { to: "/watchlist", label: "關注清單", short: "關注" },
 ];
 
-const RANKINGS: NavItem[] = [
-  { to: "/crypto/oi", label: "OI 排行", short: "OI" },
-  { to: "/crypto/funding", label: "Funding 排行", short: "Funding" },
-  { to: "/crypto/price-oi", label: "Price／OI 結構", short: "結構" },
-];
-
-const EQUITIES: NavItem[] = [
-  { to: "/equities/tokenized", label: "美股代幣", short: "代幣" },
-  { to: "/equities/analysis", label: "美股分析", short: "美股" },
-];
-
 const RESEARCH: NavItem[] = [
+  { to: "/paper-lab", label: "PAPER Lab", short: "PAPER" },
   { to: "/ai-reviews", label: "AI 檢討中心", short: "AI" },
-  { to: "/research-performance", label: "Research Performance", short: "績效" },
   { to: "/anomaly-outcomes", label: "Outcome Research", short: "結果" },
   { to: "/evidence", label: "Evidence", short: "證據" },
-  { to: "/provider-shadow", label: "Provider Validation", short: "Provider" },
-  { to: "/risk-evidence", label: "Risk Evidence", short: "風險" },
-  { to: "/evidence#doc-summaries", label: "Research Safety", short: "安全" },
-  { to: "/membership", label: "System Status", short: "系統" },
+  { to: "/membership", label: "Membership", short: "會員" },
 ];
 
 function Links({ items }: { items: NavItem[] }) {
@@ -54,34 +48,21 @@ function Links({ items }: { items: NavItem[] }) {
   );
 }
 
-/**
- * Phase 4–6 nav — explore / tools / rankings / equities + collapsed research.
- * Gate D adds: Research Performance (/research-performance).
- * Forbidden: /trade, /orders, /arm, /routing-edit
- */
 export function SidebarNav() {
   const [researchOpen, setResearchOpen] = useState(false);
   return (
-    <nav className="sidebar-nav sidebar-nav-compact nx-nav-p2 nx-nav-p3 nx-nav-p4" aria-label="Primary">
+    <nav className="sidebar-nav sidebar-nav-compact nx-nav-p2 nx-nav-p3 nx-nav-p4 nx-nav-p65" aria-label="Primary">
       <div className="sidebar-brand-block">
         <div className="sidebar-product">NEXUS</div>
-        <div className="sidebar-product-sub muted">市場情報</div>
+        <div className="sidebar-product-sub muted">Market Intelligence</div>
       </div>
       <div className="nav-group">
-        <div className="nav-label">探索市場</div>
-        <Links items={EXPLORE} />
+        <div className="nav-label">產品</div>
+        <Links items={PRIMARY} />
       </div>
       <div className="nav-group">
-        <div className="nav-label">我的工具</div>
-        <Links items={TOOLS} />
-      </div>
-      <div className="nav-group">
-        <div className="nav-label">市場排行</div>
-        <Links items={RANKINGS} />
-      </div>
-      <div className="nav-group">
-        <div className="nav-label">美股專區</div>
-        <Links items={EQUITIES} />
+        <div className="nav-label">市場深度</div>
+        <Links items={MARKET_DEPTH} />
       </div>
       <div className="nav-group nav-research">
         <button
@@ -90,7 +71,7 @@ export function SidebarNav() {
           aria-expanded={researchOpen}
           onClick={() => setResearchOpen((v) => !v)}
         >
-          研究分析 {researchOpen ? "▾" : "▸"}
+          研究 / 營運 {researchOpen ? "▾" : "▸"}
         </button>
         {researchOpen ? <Links items={RESEARCH} /> : null}
       </div>

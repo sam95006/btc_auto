@@ -35,6 +35,10 @@ import {
   EquitiesIndexRedirect,
   EquitiesTokenizedPage,
 } from "./pages/equities/EquitiesPages";
+import { OpportunitiesPage } from "./pages/OpportunitiesPage";
+import { IntelligencePage } from "./pages/IntelligencePage";
+import { TradePlanPage } from "./pages/TradePlanPage";
+import { LearningPage } from "./pages/LearningPage";
 
 /**
  * NEXUS Product Transformation Phase 3–6 — sectors, charts, equities, AI review,
@@ -57,6 +61,10 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<Navigate to="/overview" replace />} />
                 <Route path="/overview" element={<OverviewPage />} />
+                <Route path="/opportunities" element={<OpportunitiesPage />} />
+                <Route path="/intelligence" element={<IntelligencePage />} />
+                <Route path="/trade-plan" element={<TradePlanPage />} />
+                <Route path="/learning" element={<LearningPage />} />
                 <Route path="/scanner" element={<ScannerPage />} />
                 <Route path="/market/:symbol" element={<MarketSymbolPage />} />
                 <Route path="/watchlist" element={<WatchlistPage />} />
