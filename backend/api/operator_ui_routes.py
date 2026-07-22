@@ -10,7 +10,8 @@ from flask import abort, jsonify, request, send_from_directory
 
 from backend.api.operator_ui_cache import apply_operator_ui_cache_headers, is_operator_ui_html_path
 
-OPERATOR_BUILD_MARKER = "NEXUS_UI_PRODUCT_AND_INTELLIGENCE_PHASE4"
+OPERATOR_BUILD_MARKER = "NEXUS_UI_PRODUCT_7_PARALLEL_5H"
+PHASE4_BUILD_MARKER = "NEXUS_UI_PRODUCT_AND_INTELLIGENCE_PHASE4"
 PHASE3_BUILD_MARKER = "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES"
 PHASE2_BUILD_MARKER = "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE"
 MVP22C_BUILD_MARKER = "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR"
@@ -19,12 +20,17 @@ MVP22A_BUILD_MARKER = "NEXUS_UI_MVP22A_LIVE_MARKET_DATA"
 LEGACY_BUILD_MARKER = "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60"
 _SPA_PREFIXES = (
     "overview",
+    "opportunities",
+    "anomalies",
+    "intelligence",
+    "trade-plan",
+    "performance",
+    "learning",
     "scanner",
     "market",
     "watchlist",
     "crypto",
     "equities",
-    "anomalies",
     "anomaly-outcomes",
     "fleets",
     "signals",
@@ -37,8 +43,8 @@ _SPA_PREFIXES = (
     "academy",
     "calculator",
     "membership",
-    "ai-reviews",           # Phase 5 Gate B — AI Review Center
-    "research-performance", # Phase 6 Gate D — Research Performance Validation
+    "ai-reviews",
+    "research-performance",
 )
 
 
@@ -82,12 +88,13 @@ def register_operator_ui_routes(app) -> None:
             "operator_ui_ready": operator_ui_ready(app),
             "build_marker": OPERATOR_BUILD_MARKER,
             "buildMarker": OPERATOR_BUILD_MARKER,
+            "phase4_build_marker": PHASE4_BUILD_MARKER,
             "mvp22c_build_marker": MVP22C_BUILD_MARKER,
             "mvp22b_build_marker": MVP22B_BUILD_MARKER,
             "mvp22a_build_marker": MVP22A_BUILD_MARKER,
             "legacy_build_marker": LEGACY_BUILD_MARKER,
-            "ui_style": "Live Market Intelligence",
-            "ui_version": "MVP-22D",
+            "ui_style": "Product Simple View · Evidence-first",
+            "ui_version": "PRODUCT-7",
             "public_name": "NEXUS — Live Market Intelligence",
             "legacy_nexus_path": "/nexus",
             "served_by": "nexus-web",

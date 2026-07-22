@@ -3811,3 +3811,66 @@ button {
   .nx-ai-reviews-session-meta { flex-direction: column; gap: 0.25rem; }
   .nx-ai-reviews-role-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Product UI 7.0 ───────────────────────────────────────── */
+.nx-product7 #product-simple-view { max-width: 960px; }
+.nx-p7-header { margin-bottom: 0.75rem; }
+.nx-p7-block {
+  margin: 0.85rem 0 1.1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+}
+.nx-p7-fiveq { margin: 0.6rem 0 0; padding-left: 1.2rem; display: grid; gap: 0.45rem; }
+.nx-p7-fiveq li { font-size: 0.92rem; line-height: 1.45; }
+.nx-p7-focus-card { display: grid; gap: 0.25rem; }
+.nx-p7-lsn { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 0.5rem; margin: 0.4rem 0; }
+.nx-p7-lsn strong { display: block; font-size: 1.25rem; }
+.nx-p7-stance { margin: 0.2rem 0 0.4rem; }
+.nx-p7-gauge .gauge-ring { margin: 0.5rem auto; }
+.nx-p7-top3 { display: grid; gap: 0.75rem; }
+.nx-p7-alerts { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.4rem; }
+.nx-p7-alerts a { color: inherit; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 0.35rem 0; display: block; }
+.nx-p7-ai-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.nx-p7-ai-btn {
+  appearance: none; border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(96,165,250,0.12); color: inherit;
+  border-radius: 8px; padding: 0.45rem 0.8rem; cursor: pointer; text-decoration: none;
+}
+.nx-p7-ai-btn.ghost { background: transparent; }
+.nx-p7-pro-layer { margin-top: 1rem; }
+.nx-opp-card {
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 0.85rem 1rem; background: rgba(0,0,0,0.18);
+}
+.nx-opp-card-head { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
+.nx-opp-sym { font-size: 1.1rem; font-weight: 700; text-decoration: none; color: inherit; }
+.nx-opp-card-scores { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 0.4rem; margin: 0.55rem 0; }
+.nx-opp-card-scores .muted { display: block; font-size: 0.7rem; }
+.nx-opp-card-scores .hot strong { color: #f87171; }
+.nx-opp-why { margin: 0.25rem 0; }
+.nx-opp-card-foot { display: flex; gap: 0.75rem; flex-wrap: wrap; font-size: 0.78rem; }
+.nx-opp-card-evidence { margin-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.75rem; display: grid; gap: 0.6rem; }
+.nx-opp-card-evidence h4 { margin: 0 0 0.25rem; font-size: 0.85rem; }
+.nx-opp-grid-p7 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.nx-opp-grid-p7 section { display: grid; gap: 0.75rem; align-content: start; }
+.nx-wb-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.6rem; }
+.nx-tf-selector { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.nx-tf-selector button {
+  appearance: none; border: 1px solid rgba(255,255,255,0.14);
+  background: transparent; color: inherit; border-radius: 6px;
+  padding: 0.2rem 0.45rem; cursor: pointer; font-size: 0.78rem;
+}
+.nx-tf-selector button.active { background: rgba(96,165,250,0.2); border-color: rgba(96,165,250,0.45); }
+.nx-wb-meta { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.nx-ai-p7 .nx-ai-answer-frame { margin-top: 0.6rem; max-height: 42vh; overflow: auto; }
+.nx-ai-answer-frame h4 { margin: 0.55rem 0 0.2rem; font-size: 0.78rem; opacity: 0.7; text-transform: uppercase; }
+.nx-ai-answer-frame ul { margin: 0; padding-left: 1.1rem; }
+.nx-learning-list { display: grid; gap: 0.45rem; padding-left: 1.1rem; }
+@media (max-width: 720px) {
+  .nx-opp-grid-p7 { grid-template-columns: 1fr; }
+  .nx-opp-card-scores { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .nx-p7-lsn { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .nx-p7-block { padding: 0.7rem 0.75rem; }
+}

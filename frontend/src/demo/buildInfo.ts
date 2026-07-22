@@ -1,16 +1,17 @@
 /**
- * Visible UI deploy marker (Product & Intelligence Phase 4).
+ * Visible UI deploy marker (Product UI 7.0 Parallel 5H).
  * READ ONLY · NOT INVESTMENT ADVICE · backend HOLD (in System Status)
  */
 export const NEXUS_UI_BUILD_INFO = {
-  uiVersion: "PT-4",
-  uiStyle: "Visual Reduction · Market Intelligence Backend",
+  uiVersion: "PRODUCT-7",
+  uiStyle: "Product Simple View · Evidence-first Market Intelligence",
   publicName: "NEXUS — Live Market Intelligence",
   latestCommit: "pending",
   backendState: "HOLD",
   stage419: "BLOCKED",
-  displayLabel: "PT-4 · visual · intelligence",
-  buildMarker: "NEXUS_UI_PRODUCT_AND_INTELLIGENCE_PHASE4",
+  displayLabel: "PRODUCT-7 · simple · evidence",
+  buildMarker: "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
+  phase4LegacyMarker: "NEXUS_UI_PRODUCT_AND_INTELLIGENCE_PHASE4",
   phase3LegacyMarker: "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES",
   phase2LegacyMarker: "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE",
   phase1LegacyMarker: "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE1_MARKET_SCANNER",

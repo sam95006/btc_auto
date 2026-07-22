@@ -3,7 +3,7 @@ import { useState } from "react";
 
 type NavItem = { to: string; label: string; short: string };
 
-/** Phase 6.5 product IA — primary navigation */
+/** Product 7 IA — Traditional Chinese primary navigation */
 const PRIMARY: NavItem[] = [
   { to: "/overview", label: "總覽", short: "總覽" },
   { to: "/scanner", label: "市場", short: "市場" },
@@ -11,7 +11,7 @@ const PRIMARY: NavItem[] = [
   { to: "/anomalies", label: "異常", short: "異常" },
   { to: "/intelligence", label: "情報", short: "情報" },
   { to: "/trade-plan", label: "交易計畫", short: "計畫" },
-  { to: "/research-performance", label: "績效", short: "績效" },
+  { to: "/performance", label: "績效", short: "績效" },
   { to: "/learning", label: "學習", short: "學習" },
 ];
 

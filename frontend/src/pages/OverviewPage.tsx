@@ -3,21 +3,23 @@ import { useLocation } from "react-router-dom";
 import { GateChecklistCard } from "../components/GateChecklistCard";
 import { DecisionMarketOverview } from "../components/DecisionMarketOverview";
 import { NexusMarketIntelligenceCards } from "../components/NexusMarketIntelligenceCards";
+import { ProductSimpleView } from "../components/ProductSimpleView";
 import {
   ETH_WATCH_REAPPEARANCE_CHECKLIST,
   SHORT_REGRESSION_CHECKLIST,
   STAGE_419_DOSSIER_CHECKLIST,
 } from "../demo/reportIndex";
 import { useHashScroll } from "../hooks/useHashScroll";
+import { loadViewMode, type ViewMode } from "../market/viewPrefs";
 
 /**
- * Decision-first overview (Product Transformation Phase 1).
- * Legacy fixed-symbol dashboard remains nested under research details.
+ * Product 7 Overview — Simple View first screen, then Pro / research layers.
  */
 export function OverviewPage() {
   useHashScroll();
   const loc = useLocation();
   const [showDetails, setShowDetails] = useState(false);
+  const [view, setView] = useState<ViewMode>(() => loadViewMode());
 
   useEffect(() => {
     if (
@@ -29,10 +31,26 @@ export function OverviewPage() {
     }
   }, [loc.hash]);
 
+  useEffect(() => {
+    const onView = (e: Event) => {
+      const mode = (e as CustomEvent<ViewMode>).detail;
+      if (mode === "simple" || mode === "advanced") setView(mode);
+    };
+    window.addEventListener("nexus-view-mode", onView);
+    return () => window.removeEventListener("nexus-view-mode", onView);
+  }, []);
+
+  const simple = view === "simple";
+
   return (
-    <div className="page-stack mi-page mvp22-overview nx-product-overview">
-      <DecisionMarketOverview />
-      <NexusMarketIntelligenceCards />
+    <div className="page-stack mi-page mvp22-overview nx-product-overview nx-product7">
+      {simple ? <ProductSimpleView /> : null}
+
+      <details className="nx-p7-pro-layer" open={!simple}>
+        <summary className="muted">{simple ? "展開 Pro／研究層（圖表、版塊、掃描）" : "Pro View · 研究層"}</summary>
+        <DecisionMarketOverview />
+        <NexusMarketIntelligenceCards />
+      </details>
 
       <details
         className="operator-details-toggle"

@@ -11,7 +11,7 @@ export function TradePlanPage() {
       </header>
       <PaperDecisionFunnelPanel />
       <p>
-        <Link to="/paper-lab">PAPER Lab</Link> · <Link to="/research-performance">Performance</Link>
+        <Link to="/paper-lab">PAPER Lab</Link> · <Link to="/performance">績效</Link>
       </p>
     </div>
   );

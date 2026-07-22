@@ -65,6 +65,7 @@ export default function App() {
                 <Route path="/intelligence" element={<IntelligencePage />} />
                 <Route path="/trade-plan" element={<TradePlanPage />} />
                 <Route path="/learning" element={<LearningPage />} />
+                <Route path="/performance" element={<ResearchPerformancePage />} />
                 <Route path="/scanner" element={<ScannerPage />} />
                 <Route path="/market/:symbol" element={<MarketSymbolPage />} />
                 <Route path="/watchlist" element={<WatchlistPage />} />
@@ -90,7 +91,7 @@ export default function App() {
                 <Route path="/calculator" element={<CalculatorPage />} />
                 <Route path="/membership" element={<MembershipPage />} />
                 <Route path="/ai-reviews" element={<AiReviewsPage />} />
-                <Route path="/research-performance" element={<ResearchPerformancePage />} />
+                <Route path="/research-performance" element={<Navigate to="/performance" replace />} />
                 <Route path="*" element={<Navigate to="/overview" replace />} />
               </Routes>
             </main>

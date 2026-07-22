@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { MarketCandidate } from "../market/scannerApi";
 import { formatUsd } from "../market/freshness";
+import { displayOrPending, fmtNum, fmtPctNull } from "../market/displayNull";
 
 type TabId =
   | "overview"
@@ -13,22 +14,29 @@ type TabId =
   | "performance";
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "structure", label: "Structure" },
-  { id: "orderflow", label: "Order Flow" },
-  { id: "derivatives", label: "Derivatives" },
-  { id: "sentiment", label: "Sentiment" },
-  { id: "ai", label: "AI Evidence" },
-  { id: "risk", label: "Risk" },
-  { id: "performance", label: "Performance" },
+  { id: "overview", label: "總覽" },
+  { id: "structure", label: "結構" },
+  { id: "orderflow", label: "訂單流" },
+  { id: "derivatives", label: "衍生" },
+  { id: "sentiment", label: "情緒" },
+  { id: "ai", label: "AI 證據" },
+  { id: "risk", label: "風險" },
+  { id: "performance", label: "績效" },
 ];
+
+const TIMEFRAMES = ["1m", "5m", "15m", "1h", "4h", "1d"] as const;
 
 function Pending({ label }: { label: string }) {
   return (
     <p className="muted">
-      {label}: <span className="tag tag-warn">UNAVAILABLE_PROVIDER_PENDING</span>
+      {label}：<span className="tag tag-warn">UNAVAILABLE_PROVIDER_PENDING</span>
     </p>
   );
+}
+
+function NullVal({ v, pending = "資料尚不可用" }: { v: unknown; pending?: string }) {
+  if (v == null || v === "") return <span className="muted">{pending}</span>;
+  return <span>{String(v)}</span>;
 }
 
 type Props = {
@@ -39,19 +47,25 @@ type Props = {
 };
 
 /**
- * Phase 6.5 Symbol Workbench tabs — real data when available, honest pending otherwise.
+ * Product 7 Symbol Workbench — 8 tabs + timeframe + honest pending providers.
  */
 export function SymbolWorkbenchTabs({ symbol, candidate, snap, price }: Props) {
   const [tab, setTab] = useState<TabId>("overview");
+  const [tf, setTf] = useState<(typeof TIMEFRAMES)[number]>("5m");
   const [indicators, setIndicators] = useState<Record<string, unknown> | null>(null);
-  const [streamMode, setStreamMode] = useState<string>("HYBRID_POLLING");
+  const [indPending, setIndPending] = useState(false);
+  const [streamMode, setStreamMode] = useState<string | null>(null);
   const [trace, setTrace] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     let alive = true;
+    setIndPending(true);
+    setIndicators(null);
     const sym = symbol.toUpperCase();
     Promise.all([
-      fetch(`/api/nexus/markets/${encodeURIComponent(sym)}/indicators?interval=5m&limit=120`)
+      fetch(
+        `/api/nexus/markets/${encodeURIComponent(sym)}/indicators?interval=${encodeURIComponent(tf)}&limit=120`,
+      )
         .then((r) => r.json())
         .catch(() => null),
       fetch(`/api/nexus/markets/${encodeURIComponent(sym)}/stream-status`)
@@ -60,31 +74,67 @@ export function SymbolWorkbenchTabs({ symbol, candidate, snap, price }: Props) {
     ]).then(([ind, st]) => {
       if (!alive) return;
       if (ind?.ok && ind.indicators) setIndicators(ind.indicators);
+      else setIndicators(null);
       if (st?.streamMode) setStreamMode(String(st.streamMode));
+      else setStreamMode(null);
+      setIndPending(false);
     });
     return () => {
       alive = false;
     };
-  }, [symbol]);
+  }, [symbol, tf]);
 
   useEffect(() => {
-    if (!candidate?.id) return;
+    if (!candidate?.id) {
+      setTrace(null);
+      return;
+    }
     let alive = true;
     fetch(`/api/nexus/candidates/${encodeURIComponent(candidate.id)}/decision-trace`)
       .then((r) => r.json())
       .then((j) => {
         if (alive) setTrace(j);
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (alive) setTrace(null);
+      });
     return () => {
       alive = false;
     };
   }, [candidate?.id]);
 
   const ind = indicators || {};
+  const direction = candidate?.side ?? "NEUTRAL";
 
   return (
-    <section className="nx-workbench">
+    <section className="nx-workbench nx-workbench-p7">
+      <div className="nx-wb-toolbar">
+        <div className="nx-tf-selector" role="group" aria-label="Timeframe">
+          {TIMEFRAMES.map((t) => (
+            <button
+              key={t}
+              type="button"
+              className={tf === t ? "active" : undefined}
+              aria-pressed={tf === t}
+              onClick={() => setTf(t)}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+        <div className="nx-wb-meta muted sm">
+          <span>新鮮度 {candidate?.freshness || "未知"}</span>
+          <span>
+            Provider{" "}
+            {streamMode ? (
+              <span className="mono">{streamMode}</span>
+            ) : (
+              <span className="tag tag-warn">pending</span>
+            )}
+          </span>
+        </div>
+      </div>
+
       <div className="nx-workbench-tabs" role="tablist" aria-label="Symbol workbench">
         {TABS.map((t) => (
           <button
@@ -103,21 +153,63 @@ export function SymbolWorkbenchTabs({ symbol, candidate, snap, price }: Props) {
       <div className="nx-workbench-panel" role="tabpanel">
         {tab === "overview" ? (
           <div className="nx-wb-grid">
-            <div><span className="muted">Price</span><strong className="mono">{formatUsd(price)}</strong></div>
-            <div><span className="muted">24h</span><strong className="mono">{String(snap?.change24hPct ?? candidate?.change24hPct ?? "—")}</strong></div>
-            <div><span className="muted">Volume</span><strong className="mono">{String(snap?.volume24h ?? "—")}</strong></div>
-            <div><span className="muted">Direction</span><strong>{candidate?.side ?? "NEUTRAL"}</strong></div>
-            <div><span className="muted">Stage</span><strong>{candidate?.stage ?? "—"}</strong></div>
-            <div><span className="muted">Risk</span><strong>{candidate ? Math.round(candidate.riskScore) : "—"}</strong></div>
-            <div><span className="muted">Stream</span><strong className="mono">{streamMode}</strong></div>
-            <div><span className="muted">Freshness</span><strong>{candidate?.freshness ?? "—"}</strong></div>
+            <div>
+              <span className="muted">價格</span>
+              <strong className="mono">{formatUsd(price)}</strong>
+            </div>
+            <div>
+              <span className="muted">24h</span>
+              <strong className="mono">
+                {fmtPctNull(
+                  (snap?.change24hPct as number | null | undefined) ?? candidate?.change24hPct,
+                )}
+              </strong>
+            </div>
+            <div>
+              <span className="muted">成交量</span>
+              <strong className="mono">
+                <NullVal v={snap?.volume24h} />
+              </strong>
+            </div>
+            <div>
+              <span className="muted">多空傾向</span>
+              <strong>{direction}</strong>
+            </div>
+            <div>
+              <span className="muted">階段</span>
+              <strong>{candidate?.stage ?? "—"}</strong>
+            </div>
+            <div>
+              <span className="muted">風險</span>
+              <strong>{fmtNum(candidate?.riskScore)}</strong>
+            </div>
+            <div>
+              <span className="muted">關鍵位</span>
+              <strong className="muted">資料尚不可用</strong>
+            </div>
+            <div>
+              <span className="muted">失效條件</span>
+              <strong>{displayOrPending(candidate?.invalidationContext, "尚未提供")}</strong>
+            </div>
           </div>
         ) : null}
 
         {tab === "structure" ? (
-          indicators ? (
+          indPending ? (
+            <p className="muted">指標載入中（{tf}）…</p>
+          ) : indicators ? (
             <dl className="nx-kv mono">
-              {["ema_20", "ema_50", "vwap", "rsi_14", "macd", "atr_14", "adx_14", "bollinger_20", "supertrend_10"].map((k) => (
+              {[
+                "ema_20",
+                "ema_50",
+                "vwap",
+                "rsi_14",
+                "macd",
+                "atr_14",
+                "adx_14",
+                "bollinger_20",
+                "supertrend_10",
+              ].map((k) => (
                 <div key={k}>
                   <dt>{k}</dt>
                   <dd>{ind[k] != null ? JSON.stringify(ind[k]).slice(0, 80) : "—"}</dd>
@@ -125,19 +217,44 @@ export function SymbolWorkbenchTabs({ symbol, candidate, snap, price }: Props) {
               ))}
             </dl>
           ) : (
-            <Pending label="Technical indicators" />
+            <Pending label={`技術指標（${tf}）`} />
           )
         ) : null}
 
         {tab === "orderflow" ? (
           <div>
-            <p className="muted sm">Public order-flow foundation — advanced signals remain experimental.</p>
+            <p className="muted sm">公開訂單流基礎 — 進階訊號仍為實驗性。</p>
             <dl className="nx-kv mono">
-              <div><dt>Spread bps</dt><dd>{String(snap?.spreadBps ?? "—")}</dd></div>
-              <div><dt>Best bid/ask</dt><dd>UNAVAILABLE_PROVIDER_PENDING</dd></div>
-              <div><dt>Imbalance</dt><dd>UNAVAILABLE_PROVIDER_PENDING</dd></div>
-              <div><dt>CVD</dt><dd>UNAVAILABLE_PROVIDER_PENDING</dd></div>
-              <div><dt>Taker flow</dt><dd>UNAVAILABLE_PROVIDER_PENDING</dd></div>
+              <div>
+                <dt>Spread bps</dt>
+                <dd>
+                  <NullVal v={snap?.spreadBps ?? candidate?.spreadBps} />
+                </dd>
+              </div>
+              <div>
+                <dt>Best bid/ask</dt>
+                <dd>
+                  <span className="tag tag-warn">UNAVAILABLE_PROVIDER_PENDING</span>
+                </dd>
+              </div>
+              <div>
+                <dt>Imbalance</dt>
+                <dd>
+                  <span className="tag tag-warn">UNAVAILABLE_PROVIDER_PENDING</span>
+                </dd>
+              </div>
+              <div>
+                <dt>CVD</dt>
+                <dd>
+                  <span className="tag tag-warn">UNAVAILABLE_PROVIDER_PENDING</span>
+                </dd>
+              </div>
+              <div>
+                <dt>Taker flow</dt>
+                <dd>
+                  <span className="tag tag-warn">UNAVAILABLE_PROVIDER_PENDING</span>
+                </dd>
+              </div>
             </dl>
             <p className="tag tag-warn">EXPERIMENTAL — not production signals</p>
           </div>
@@ -145,42 +262,84 @@ export function SymbolWorkbenchTabs({ symbol, candidate, snap, price }: Props) {
 
         {tab === "derivatives" ? (
           <dl className="nx-kv mono">
-            <div><dt>Funding</dt><dd>{String(snap?.fundingRate ?? candidate?.fundingRate ?? "—")}</dd></div>
-            <div><dt>OI</dt><dd>{String(snap?.openInterest ?? "—")}</dd></div>
-            <div><dt>OI value</dt><dd>{String(snap?.openInterestValue ?? "—")}</dd></div>
-            <div><dt>Mark</dt><dd>{formatUsd(snap?.markPrice as number)}</dd></div>
-            <div><dt>Index</dt><dd>{formatUsd(snap?.indexPrice as number)}</dd></div>
-            <div><dt>Long/Short ratio</dt><dd>UNAVAILABLE_PROVIDER_PENDING</dd></div>
-            <div><dt>Liquidations</dt><dd>UNAVAILABLE_PROVIDER_PENDING</dd></div>
+            <div>
+              <dt>Funding</dt>
+              <dd>
+                <NullVal v={snap?.fundingRate ?? candidate?.fundingRate} />
+              </dd>
+            </div>
+            <div>
+              <dt>OI</dt>
+              <dd>
+                <NullVal v={snap?.openInterest} />
+              </dd>
+            </div>
+            <div>
+              <dt>OI value</dt>
+              <dd>
+                <NullVal v={snap?.openInterestValue ?? candidate?.openInterestValue} />
+              </dd>
+            </div>
+            <div>
+              <dt>Mark</dt>
+              <dd>{formatUsd(snap?.markPrice as number)}</dd>
+            </div>
+            <div>
+              <dt>Index</dt>
+              <dd>{formatUsd(snap?.indexPrice as number)}</dd>
+            </div>
+            <div>
+              <dt>Long/Short ratio</dt>
+              <dd>
+                <span className="tag tag-warn">UNAVAILABLE_PROVIDER_PENDING</span>
+              </dd>
+            </div>
+            <div>
+              <dt>Liquidations</dt>
+              <dd>
+                <span className="tag tag-warn">UNAVAILABLE_PROVIDER_PENDING</span>
+              </dd>
+            </div>
           </dl>
         ) : null}
 
-        {tab === "sentiment" ? (
-          <Pending label="NEXUS symbol-level sentiment" />
-        ) : null}
+        {tab === "sentiment" ? <Pending label="NEXUS 標的層級情緒" /> : null}
 
         {tab === "ai" ? (
           <div className="nx-ai-evidence">
-            <h3>Level 1 — 白話結論</h3>
+            <h3>結論</h3>
             <p>
               {candidate
-                ? `${candidate.side} 候選 · 階段 ${candidate.stage} · 機會 ${Math.round(candidate.opportunityScore)} / 風險 ${Math.round(candidate.riskScore)}`
+                ? `${candidate.side} 候選 · 階段 ${candidate.stage} · 機會 ${fmtNum(candidate.opportunityScore)} / 風險 ${fmtNum(candidate.riskScore)}`
                 : "尚無方向候選"}
             </p>
-            <h3>Level 2 — 支持／反對</h3>
+            <h3>Supporting Evidence</h3>
             <ul>
               {(candidate?.reasons || []).slice(0, 4).map((r) => (
                 <li key={r}>+ {r}</li>
               ))}
-              {(candidate?.conflicts || []).slice(0, 4).map((r) => (
-                <li key={r} className="conflict">− {r}</li>
-              ))}
+              {!candidate?.reasons?.length ? <li className="muted">尚無</li> : null}
             </ul>
-            <h3>Level 3 — Decision Trace</h3>
+            <h3>Contradicting Evidence</h3>
+            <ul>
+              {(candidate?.conflicts || []).slice(0, 4).map((r) => (
+                <li key={r} className="conflict">
+                  − {r}
+                </li>
+              ))}
+              {!candidate?.conflicts?.length ? <li className="muted">尚無明顯反方</li> : null}
+            </ul>
+            <h3>Invalidation</h3>
+            <p>{displayOrPending(candidate?.invalidationContext, "失效條件尚未提供")}</p>
+            <h3>Freshness</h3>
+            <p>{candidate?.freshness || "更新時間未知"}</p>
+            <h3>Decision Trace</h3>
             {trace?.ok ? (
-              <pre className="mono muted sm">{JSON.stringify(trace.stages || trace, null, 2).slice(0, 1200)}</pre>
+              <pre className="mono muted sm">
+                {JSON.stringify(trace.stages || trace, null, 2).slice(0, 1200)}
+              </pre>
             ) : (
-              <p className="muted">Trace pending or candidate not in review pipeline.</p>
+              <p className="muted">Trace pending 或候選尚未進入 review pipeline。</p>
             )}
           </div>
         ) : null}
@@ -188,20 +347,37 @@ export function SymbolWorkbenchTabs({ symbol, candidate, snap, price }: Props) {
         {tab === "risk" ? (
           <div>
             <dl className="nx-kv mono">
-              <div><dt>Production max leverage</dt><dd>3x</dd></div>
-              <div><dt>Production max margin</dt><dd>20 USDT</dd></div>
-              <div><dt>Max open positions</dt><dd>1</dd></div>
-              <div><dt>Stop / Target</dt><dd>policy-driven when position opens</dd></div>
-              <div><dt>Invalidation</dt><dd>{candidate?.invalidationContext || "—"}</dd></div>
+              <div>
+                <dt>Production max leverage</dt>
+                <dd>3x</dd>
+              </div>
+              <div>
+                <dt>Production max margin</dt>
+                <dd>20 USDT</dd>
+              </div>
+              <div>
+                <dt>Max open positions</dt>
+                <dd>1</dd>
+              </div>
+              <div>
+                <dt>Stop / Target</dt>
+                <dd>policy-driven when position opens</dd>
+              </div>
+              <div>
+                <dt>Invalidation</dt>
+                <dd>{displayOrPending(candidate?.invalidationContext, "尚未提供")}</dd>
+              </div>
             </dl>
-            <p className="tag tag-warn">DynamicRiskProposal = SHADOW ONLY — does not change production PAPER limits</p>
+            <p className="tag tag-warn">
+              DynamicRiskProposal = SHADOW ONLY — does not change production PAPER limits
+            </p>
           </div>
         ) : null}
 
         {tab === "performance" ? (
           <div>
             <p className="muted">Natural PAPER metrics only — Validation／Replay streams are separated.</p>
-            <Pending label="Symbol-level natural PAPER performance series" />
+            <Pending label="標的層級 natural PAPER 績效序列" />
           </div>
         ) : null}
       </div>
