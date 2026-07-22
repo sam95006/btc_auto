@@ -690,7 +690,7 @@ class _MemoryStore:
     def wal_checkpoint(self, mode: str = "TRUNCATE") -> dict[str, Any]:
         return {"ok": True, "mode": mode, "backend": "memory", "skipped": True}
 
-    def sqlite_runtime_profile(self) -> dict[str, Any]:
+    def sqlite_runtime_profile(self, *, force_integrity: bool = False) -> dict[str, Any]:
         return {
             "database_path_redacted": None,
             "journal_mode": None,
@@ -700,6 +700,8 @@ class _MemoryStore:
             "single_writer_owner": None,
             "migration_lock": False,
             "integrity_check": "memory",
+            "integrity_check_cached": False,
+            "force_integrity": force_integrity,
             "checkpoint_policy": "n/a",
             "backup_policy": "n/a",
         }
@@ -735,13 +737,37 @@ class _SqliteStore:
         self._run_migrations()
         self._owner_id = str(uuid.uuid4())
 
-    def sqlite_runtime_profile(self) -> dict[str, Any]:
+    # Full integrity_check on a large WAL DB can take minutes and holds
+    # the store RLock — starving paper/status and other read APIs.
+    _INTEGRITY_CACHE_TTL_SEC = 3600.0
+    _TABLE_COUNT_CACHE_TTL_SEC = 60.0
+    _integrity_cache: tuple[float, Any] | None = None
+    _table_count_cache: tuple[float, dict[str, int]] | None = None
+
+    def sqlite_runtime_profile(self, *, force_integrity: bool = False) -> dict[str, Any]:
         with self._lock:
             def _pragma(name: str) -> Any:
                 row = self._conn.execute(f"PRAGMA {name}").fetchone()
                 return row[0] if row else None
 
-            integrity = _pragma("integrity_check")
+            now = time.time()
+            cached = getattr(self, "_integrity_cache", None)
+            integrity: Any
+            used_cache = False
+            if force_integrity:
+                integrity = _pragma("integrity_check")
+                self._integrity_cache = (now, integrity)
+            elif (
+                cached is not None
+                and (now - float(cached[0])) < self._INTEGRITY_CACHE_TTL_SEC
+            ):
+                integrity = cached[1]
+                used_cache = True
+            else:
+                # Hot path: do NOT run full integrity_check (can lock large DB for minutes).
+                integrity = "skipped_on_status_path"
+                used_cache = False
+
             return {
                 "database_path_redacted": str(self._db_path).replace("\\", "/").split("/data/")[-1]
                 if "/data/" in str(self._db_path).replace("\\", "/")
@@ -753,6 +779,7 @@ class _SqliteStore:
                 "single_writer_owner": self._owner_id,
                 "migration_lock": True,
                 "integrity_check": integrity,
+                "integrity_check_cached": used_cache,
                 "checkpoint_policy": "TRUNCATE_on_validation_and_shutdown",
                 "backup_policy": "volume_probe + backups/ directory",
             }
@@ -1207,11 +1234,28 @@ class _ResearchStore:
             return fn(mode)
         return {"ok": True, "skipped": True, "mode": mode}
 
-    def sqlite_runtime_profile(self) -> dict[str, Any]:
+    def sqlite_runtime_profile(self, *, force_integrity: bool = False) -> dict[str, Any]:
         fn = getattr(self._adapter, "sqlite_runtime_profile", None)
         if callable(fn):
-            return fn()
+            try:
+                return fn(force_integrity=force_integrity)
+            except TypeError:
+                return fn()
         return {"integrity_check": "unavailable"}
+
+    def run_maintenance_integrity_check(self) -> dict[str, Any]:
+        """Explicit maintenance/diagnostic integrity scan — NOT for hot status path.
+
+        Holds the store lock for the duration of PRAGMA integrity_check.
+        Call only from low-frequency ops / operator tools.
+        """
+        return {
+            "ok": True,
+            "researchOnly": True,
+            "maintenance": True,
+            "profile": self.sqlite_runtime_profile(force_integrity=True),
+            "generatedAt": int(time.time() * 1000),
+        }
 
     def delete_old_records(self, table: str, older_than_days: float = 30.0) -> int:
         """Retention helper: delete records older than N days, return count removed."""
@@ -1262,7 +1306,8 @@ class _ResearchStore:
         except Exception:  # noqa: BLE001
             boot = {}
 
-        profile = self.sqlite_runtime_profile()
+        # Never force full integrity_check on the hot status path.
+        profile = self.sqlite_runtime_profile(force_integrity=False)
         probes: list[dict[str, Any]] = []
         try:
             probes = self.query("persistence_probes", limit=5)
@@ -1276,11 +1321,20 @@ class _ResearchStore:
         ]
         sample_tables = list(TYPED_TABLES) + legacy_tables
         counts: dict[str, int] = {}
-        for t in sample_tables:
-            try:
-                counts[t] = self.count(t)
-            except Exception:  # noqa: BLE001
-                counts[t] = -1
+        now = time.time()
+        count_cached = getattr(self, "_table_count_cache", None)
+        if (
+            count_cached is not None
+            and (now - float(count_cached[0])) < getattr(self, "_TABLE_COUNT_CACHE_TTL_SEC", 60.0)
+        ):
+            counts = dict(count_cached[1])
+        else:
+            for t in sample_tables:
+                try:
+                    counts[t] = self.count(t)
+                except Exception:  # noqa: BLE001
+                    counts[t] = -1
+            self._table_count_cache = (now, dict(counts))
 
         db_path = self.db_path
         path_redacted = None
@@ -1327,9 +1381,11 @@ class _ResearchStore:
             "lastCheckpoint": None,
             "databaseSizeBytes": db_size,
             "lastBackup": None,
-            "health": "ok" if profile.get("integrity_check") in (None, "ok", "memory")
-            or str(profile.get("integrity_check")) == "ok"
-            else "degraded",
+            "health": "ok" if (
+                profile.get("integrity_check") in (None, "ok", "memory", "skipped_on_status_path")
+                or str(profile.get("integrity_check")) == "ok"
+                or str(profile.get("integrity_check", "")).startswith("skipped")
+            ) else "degraded",
             "dbPath": path_redacted,
             "researchOnly": True,
             "production_persistence_available": bool(
