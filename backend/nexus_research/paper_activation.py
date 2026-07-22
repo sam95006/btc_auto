@@ -53,7 +53,7 @@ def _boot_id() -> str:
 def paper_preflight() -> dict[str, Any]:
     """Fail-closed preflight for PAPER_ACTIVE. Never enables real execution."""
     from backend.nexus_research.config import get_effective_config, MODE_PAPER
-    from backend.nexus_research.storage import get_research_store
+    from backend.nexus_research.storage import get_research_store, is_storage_integrity_healthy
     from backend.nexus_research.runtime_supervisor import get_supervisor
     from backend.nexus_research.review_cases import get_review_case_manager
 
@@ -66,7 +66,7 @@ def paper_preflight() -> dict[str, Any]:
     runtime_context = {
         "durableClaim": bool(st.get("durableClaim", True)),
         "restartProof": bool(st.get("restartProof", True)),
-        "storageHealthy": str(profile.get("integrity_check")) == "ok",
+        "storageHealthy": is_storage_integrity_healthy(profile.get("integrity_check")),
         "runtimeOwnerCount": 1 if supervisor.get("supervisorRunning") else 0,
         "schedulerOwnerCount": 1 if supervisor.get("supervisorRunning") else 0,
         "scannerOwnerCount": 1,

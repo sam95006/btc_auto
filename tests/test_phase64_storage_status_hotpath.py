@@ -78,3 +78,13 @@ def test_status_is_readonly_no_write_side_effects():
     store.status()
     after = store.count("persistence_probes")
     assert before == after
+
+
+def test_skipped_integrity_counts_as_healthy():
+    from backend.nexus_research.storage import is_storage_integrity_healthy
+
+    assert is_storage_integrity_healthy("ok") is True
+    assert is_storage_integrity_healthy("skipped_on_status_path") is True
+    assert is_storage_integrity_healthy("memory") is True
+    assert is_storage_integrity_healthy(None) is True
+    assert is_storage_integrity_healthy("*** in database main ***") is False

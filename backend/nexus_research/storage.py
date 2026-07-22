@@ -38,6 +38,23 @@ logger = logging.getLogger(__name__)
 
 SCHEMA_VERSION = 6
 _STORE_LOCK = threading.Lock()
+
+# Values that mean "storage is usable" without requiring a full PRAGMA integrity_check
+# on the hot path. Real failures remain anything else (e.g. "*** failed").
+_HEALTHY_INTEGRITY_VALUES = frozenset({
+    "ok",
+    "memory",
+    "skipped_on_status_path",
+    None,
+})
+
+
+def is_storage_integrity_healthy(integrity_check: Any) -> bool:
+    """True when integrity is ok, intentionally skipped on status path, or memory backend."""
+    if integrity_check in _HEALTHY_INTEGRITY_VALUES:
+        return True
+    text = str(integrity_check or "").strip().lower()
+    return text in {"ok", "memory", "skipped_on_status_path"} or text.startswith("skipped")
 _STORE: "_ResearchStore | None" = None
 
 # Tables that have their own typed schema (with idempotency + indexes).

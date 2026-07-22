@@ -162,6 +162,7 @@ def bootstrap_research_runtime() -> dict:
         try:
             from backend.nexus_research.config import get_effective_config
             from backend.nexus_research.review_cases import get_review_case_manager
+            from backend.nexus_research.storage import is_storage_integrity_healthy
 
             cases = get_review_case_manager().status_summary()
             cfg = get_effective_config(
@@ -169,7 +170,7 @@ def bootstrap_research_runtime() -> dict:
                 runtime_context={
                     "durableClaim": True,
                     "restartProof": True,
-                    "storageHealthy": summary.get("sqliteIntegrity") == "ok",
+                    "storageHealthy": is_storage_integrity_healthy(summary.get("sqliteIntegrity")),
                     "runtimeOwnerCount": 1,
                     "schedulerOwnerCount": 1,
                     "scannerOwnerCount": 1,
