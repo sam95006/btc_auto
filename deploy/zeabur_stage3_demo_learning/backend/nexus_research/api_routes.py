@@ -108,7 +108,7 @@ def config_effective():
     """Phase 6.2 — redacted effective research config (no secrets)."""
     try:
         from backend.nexus_research.config import get_effective_config
-        from backend.nexus_research.storage import get_research_store
+        from backend.nexus_research.storage import get_research_store, is_storage_integrity_healthy
         from backend.nexus_research.runtime_supervisor import get_supervisor
         from backend.nexus_research.review_cases import get_review_case_manager
 
@@ -121,7 +121,7 @@ def config_effective():
         runtime_context = {
             "durableClaim": bool(st.get("durableClaim", True)),
             "restartProof": bool(st.get("restartProof", True)),
-            "storageHealthy": str(profile.get("integrity_check")) == "ok",
+            "storageHealthy": is_storage_integrity_healthy(profile.get("integrity_check")),
             "runtimeOwnerCount": 1 if supervisor.get("supervisorRunning") else 0,
             "schedulerOwnerCount": 1 if supervisor.get("supervisorRunning") else 0,
             "scannerOwnerCount": 1,
