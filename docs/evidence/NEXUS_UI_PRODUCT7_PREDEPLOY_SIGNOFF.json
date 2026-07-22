@@ -1,7 +1,7 @@
 {
   "base_commit": "18714436dab329811637292d31bfe432405f1f83",
   "ui_commit": "7c200d5d1bef2bce32fc26ef6f034cf992c0d5c6",
-  "ui_static_commit": "pending",
+  "ui_static_commit": "f73149b98032aecd31e8759aa74125a3771e32dd",
   "build_marker": "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
   "source_build_dir": "C:/Users/user/AppData/Local/Temp/nexus_ui_product7_build",
   "static_target_dir": "static/operator_ui",
@@ -37,5 +37,9 @@
     "/market/SOLUSDT"
   ],
   "served_by": "run.py -> Path(app.root_path)/static/operator_ui",
-  "notes": "UI-only track A. No push performed by agent; parent may deploy after reviewing this signoff. Marker NEXUS_UI_PRODUCT_7_PARALLEL_5H embedded in footer/sr-only and /api/nexus/ui-build."
+  "notes": "UI-only track A. No push performed by agent; parent may deploy after reviewing this signoff. Marker NEXUS_UI_PRODUCT_7_PARALLEL_5H embedded in footer/sr-only and /api/nexus/ui-build.",
+  "ui_commits": [
+    "7c200d5d1bef2bce32fc26ef6f034cf992c0d5c6",
+    "f73149b98032aecd31e8759aa74125a3771e32dd"
+  ]
 }
