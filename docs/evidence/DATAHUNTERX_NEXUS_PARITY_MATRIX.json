@@ -1,0 +1,282 @@
+{
+  "marker": "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
+  "generated_at": "2026-07-22T17:20:00Z",
+  "benchmark": "DataHunterX (https://datahunterx.com/) — compete on clarity/evidence, do not copy",
+  "features": [
+    {
+      "feature": "long_recommendations",
+      "datahunterx_present": true,
+      "nexus_backend_present": true,
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "Opportunity cards include supporting/contradicting evidence, risk gate, invalidation, freshness — not score-only",
+      "current_gap": "No tip-style guaranteed ranking UX by design",
+      "priority": "P0",
+      "implementation_status": "done"
+    },
+    {
+      "feature": "short_recommendations",
+      "datahunterx_present": true,
+      "nexus_backend_present": true,
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "Same evidence card model for shorts; OVEREXTENDED do-not-chase language",
+      "current_gap": "none critical",
+      "priority": "P0",
+      "implementation_status": "done"
+    },
+    {
+      "feature": "market_average_rsi",
+      "datahunterx_present": true,
+      "nexus_backend_present": "partial",
+      "nexus_ui_present": "partial",
+      "nexus_live_present": false,
+      "nexus_advantage": "Symbol workbench structure tab exposes RSI when indicators ready",
+      "current_gap": "No single homepage market-average RSI gauge yet",
+      "priority": "P2",
+      "implementation_status": "partial"
+    },
+    {
+      "feature": "altcoin_season",
+      "datahunterx_present": true,
+      "nexus_backend_present": false,
+      "nexus_ui_present": false,
+      "nexus_live_present": false,
+      "nexus_advantage": "N/A — prefer regime + breadth over meme index",
+      "current_gap": "No altseason index provider",
+      "priority": "P3",
+      "implementation_status": "not_started"
+    },
+    {
+      "feature": "fear_greed",
+      "datahunterx_present": true,
+      "nexus_backend_present": false,
+      "nexus_ui_present": false,
+      "nexus_live_present": false,
+      "nexus_advantage": "Readiness gauge + regime derived from live scanner pulse",
+      "current_gap": "No external fear/greed feed; pending provider",
+      "priority": "P3",
+      "implementation_status": "not_started"
+    },
+    {
+      "feature": "market_avg_funding",
+      "datahunterx_present": true,
+      "nexus_backend_present": true,
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "Per-symbol funding + funding leaderboard route",
+      "current_gap": "Homepage does not show single average funding number",
+      "priority": "P2",
+      "implementation_status": "partial"
+    },
+    {
+      "feature": "oi_dashboard",
+      "datahunterx_present": true,
+      "nexus_backend_present": true,
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "OI ranks + Price/OI quadrant + workbench derivatives tab",
+      "current_gap": "none critical",
+      "priority": "P1",
+      "implementation_status": "done"
+    },
+    {
+      "feature": "visual_screener",
+      "datahunterx_present": true,
+      "nexus_backend_present": true,
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "Price/OI quadrant with stage awareness; insufficient data not faked as 0,0",
+      "current_gap": "Confidence×risk four-quadrant screener still secondary",
+      "priority": "P2",
+      "implementation_status": "partial"
+    },
+    {
+      "feature": "sectors",
+      "datahunterx_present": true,
+      "nexus_backend_present": true,
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "Sector pages with ZH labels + momentum strip",
+      "current_gap": "none critical",
+      "priority": "P1",
+      "implementation_status": "done"
+    },
+    {
+      "feature": "anomaly_alerts",
+      "datahunterx_present": true,
+      "nexus_backend_present": true,
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "Anomaly radar + outcomes research + critical alerts on Simple View",
+      "current_gap": "none critical",
+      "priority": "P0",
+      "implementation_status": "done"
+    },
+    {
+      "feature": "oi_cvd_divergence",
+      "datahunterx_present": true,
+      "nexus_backend_present": "partial",
+      "nexus_ui_present": "partial",
+      "nexus_live_present": false,
+      "nexus_advantage": "Honest UNAVAILABLE_PROVIDER_PENDING for CVD in workbench",
+      "current_gap": "CVD provider not wired; no fake CVD numbers",
+      "priority": "P1",
+      "implementation_status": "honest_pending"
+    },
+    {
+      "feature": "oi_change_ranking",
+      "datahunterx_present": true,
+      "nexus_backend_present": true,
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "/crypto/oi route + scanner windows",
+      "current_gap": "none critical",
+      "priority": "P1",
+      "implementation_status": "done"
+    },
+    {
+      "feature": "news_feed",
+      "datahunterx_present": true,
+      "nexus_backend_present": false,
+      "nexus_ui_present": "pending_labelled",
+      "nexus_live_present": false,
+      "nexus_advantage": "Intelligence page labels News as provider pending",
+      "current_gap": "News provider integration",
+      "priority": "P2",
+      "implementation_status": "honest_pending"
+    },
+    {
+      "feature": "watchlist_favorites",
+      "datahunterx_present": true,
+      "nexus_backend_present": true,
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "Local watch stars + watchlist page",
+      "current_gap": "none critical",
+      "priority": "P1",
+      "implementation_status": "done"
+    },
+    {
+      "feature": "notifications",
+      "datahunterx_present": true,
+      "nexus_backend_present": "partial",
+      "nexus_ui_present": true,
+      "nexus_live_present": "partial",
+      "nexus_advantage": "Event toast + prefs; research alerts",
+      "current_gap": "No push notification service",
+      "priority": "P2",
+      "implementation_status": "partial"
+    },
+    {
+      "feature": "ai_explain_current_page",
+      "datahunterx_present": true,
+      "nexus_backend_present": false,
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "FAB rules-only answers with Evidence/Risk/Invalidation/Freshness/Trace frame; no fake LLM",
+      "current_gap": "No live LLM provider",
+      "priority": "P0",
+      "implementation_status": "done_rules_only"
+    },
+    {
+      "feature": "ai_find_opportunity",
+      "datahunterx_present": true,
+      "nexus_backend_present": true,
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "Rules-only long/short finder from scanner candidates",
+      "current_gap": "No generative narrative",
+      "priority": "P0",
+      "implementation_status": "done_rules_only"
+    },
+    {
+      "feature": "ai_daily_brief",
+      "datahunterx_present": true,
+      "nexus_backend_present": true,
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "Simple View AI brief entry + rules brief from pulse summary",
+      "current_gap": "No LLM daily narrative",
+      "priority": "P0",
+      "implementation_status": "done_rules_only"
+    },
+    {
+      "feature": "oi_price_confidence_plot",
+      "datahunterx_present": true,
+      "nexus_backend_present": true,
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "Price/OI structure chart + dedicated route",
+      "current_gap": "none critical",
+      "priority": "P1",
+      "implementation_status": "done"
+    },
+    {
+      "feature": "equity_tokenized",
+      "datahunterx_present": true,
+      "nexus_backend_present": "partial",
+      "nexus_ui_present": true,
+      "nexus_live_present": "partial",
+      "nexus_advantage": "Equities routes present in product shell",
+      "current_gap": "Depth vs DataHunterX equity coverage",
+      "priority": "P3",
+      "implementation_status": "partial"
+    },
+    {
+      "feature": "position_calculator",
+      "datahunterx_present": true,
+      "nexus_backend_present": false,
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "Risk calculator page exists (education)",
+      "current_gap": "Not first-screen; intentionally secondary",
+      "priority": "P2",
+      "implementation_status": "done"
+    },
+    {
+      "feature": "decision_trace_evidence_chain",
+      "datahunterx_present": false,
+      "nexus_backend_present": true,
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "Core NEXUS differentiator vs DataHunterX",
+      "current_gap": "Trace coverage depends on candidate pipeline",
+      "priority": "P0",
+      "implementation_status": "done"
+    },
+    {
+      "feature": "risk_invalidation_freshness",
+      "datahunterx_present": false,
+      "nexus_backend_present": true,
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "Required on every opportunity card; null never coerced to 0",
+      "current_gap": "invalidation_price often pending",
+      "priority": "P0",
+      "implementation_status": "done"
+    },
+    {
+      "feature": "symbol_workbench_8_tabs",
+      "datahunterx_present": false,
+      "nexus_backend_present": "partial",
+      "nexus_ui_present": true,
+      "nexus_live_present": true,
+      "nexus_advantage": "8 tabs + timeframe selector + honest pending providers",
+      "current_gap": "Order flow / sentiment providers pending",
+      "priority": "P0",
+      "implementation_status": "done"
+    },
+    {
+      "feature": "product_simple_view_first_screen",
+      "datahunterx_present": "partial",
+      "nexus_backend_present": true,
+      "nexus_ui_present": true,
+      "nexus_live_present": false,
+      "nexus_advantage": "Fixed first-screen order answering five operator questions",
+      "current_gap": "Awaiting Live deploy of PRODUCT-7 bundle",
+      "priority": "P0",
+      "implementation_status": "done_local"
+    }
+  ]
+}
