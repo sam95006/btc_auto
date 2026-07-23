@@ -3742,7 +3742,7 @@ button {
 }
 
 
-/* Phase 5 Gate B ¡X AI Review Center (.nx-ai-reviews) */
+/* Phase 5 Gate B â€” AI Review Center (.nx-ai-reviews) */
 .nx-ai-reviews { padding: 1.5rem; max-width: 860px; margin: 0 auto; }
 .nx-ai-reviews-page-header { margin-bottom: 1.5rem; }
 .nx-ai-reviews-status-card {
@@ -3873,4 +3873,14 @@ button {
   .nx-opp-card-scores { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .nx-p7-lsn { grid-template-columns: repeat(3, minmax(0,1fr)); }
   .nx-p7-block { padding: 0.7rem 0.75rem; }
+}
+
+
+/* Product 7 Simple/Pro toggle */
+.nx-p7-view-toggle { display: inline-flex; gap: 0.35rem; margin: 0.25rem 0 0.75rem; flex-wrap: wrap; }
+.nx-p7-view-toggle button { border: 1px solid var(--nx-border, #334); background: transparent; color: inherit; padding: 0.35rem 0.7rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+.nx-p7-view-toggle button.active { background: var(--nx-accent-soft, rgba(80,140,255,0.18)); border-color: var(--nx-accent, #6af); }
+@media (max-width: 420px) {
+  .nx-product7, .nx-product7-simple, .nx-opp-grid-p7, .nx-ticker-row { max-width: 100%; overflow-x: hidden; }
+  .nx-ticker-row { flex-wrap: wrap; gap: 0.4rem; }
 }

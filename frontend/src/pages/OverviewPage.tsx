@@ -10,7 +10,7 @@ import {
   STAGE_419_DOSSIER_CHECKLIST,
 } from "../demo/reportIndex";
 import { useHashScroll } from "../hooks/useHashScroll";
-import { loadViewMode, type ViewMode } from "../market/viewPrefs";
+import { loadViewMode, saveViewMode, type ViewMode } from "../market/viewPrefs";
 
 /**
  * Product 7 Overview — Simple View first screen, then Pro / research layers.
@@ -41,9 +41,33 @@ export function OverviewPage() {
   }, []);
 
   const simple = view === "simple";
+  const setMode = (mode: ViewMode) => {
+    setView(mode);
+    saveViewMode(mode);
+    window.dispatchEvent(new CustomEvent("nexus-view-mode", { detail: mode }));
+  };
 
   return (
     <div className="page-stack mi-page mvp22-overview nx-product-overview nx-product7">
+      <div className="nx-p7-view-toggle" role="group" aria-label="Simple or Pro view">
+        <button
+          type="button"
+          className={simple ? "active" : undefined}
+          aria-pressed={simple}
+          onClick={() => setMode("simple")}
+        >
+          Simple View
+        </button>
+        <button
+          type="button"
+          className={!simple ? "active" : undefined}
+          aria-pressed={!simple}
+          onClick={() => setMode("advanced")}
+        >
+          Pro View
+        </button>
+      </div>
+
       {simple ? <ProductSimpleView /> : null}
 
       <details className="nx-p7-pro-layer" open={!simple}>

@@ -9,7 +9,7 @@ const PRIMARY: NavItem[] = [
   { to: "/scanner", label: "市場", short: "市場" },
   { to: "/opportunities", label: "機會", short: "機會" },
   { to: "/anomalies", label: "異常", short: "異常" },
-  { to: "/intelligence", label: "情報", short: "情報" },
+  { to: "/intelligence", label: "市場情報", short: "情報" },
   { to: "/trade-plan", label: "交易計畫", short: "計畫" },
   { to: "/performance", label: "績效", short: "績效" },
   { to: "/learning", label: "學習", short: "學習" },

@@ -26,9 +26,9 @@ const PROMPTS: { id: PromptId; label: string }[] = [
   { id: "explain_page", label: "解釋目前頁面" },
   { id: "find_long", label: "找多頭機會" },
   { id: "find_short", label: "找空頭機會" },
-  { id: "explain_risk", label: "解釋風險" },
-  { id: "daily_brief", label: "產生今日簡報" },
-  { id: "why_blocked", label: "為何現在不能交易" },
+  { id: "explain_risk", label: "找風險" },
+  { id: "daily_brief", label: "每日簡報" },
+  { id: "why_blocked", label: "為何不能進場" },
 ];
 
 function detectLlmAvailable(): boolean {
