@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useMarketScannerOverview } from "../market/useMarketScanner";
 import { buildMarketSummary, deriveRegime } from "../market/marketSummary";
+import { buildAiDailyBrief } from "../market/aiDailyBrief";
 
 type PromptId =
   | "explain_page"
@@ -144,19 +145,33 @@ export function FloatingAIAssistant() {
             risk: "任何看似可交易的狀態僅為觀察用語",
           };
         case "daily_brief":
-        default:
+        default: {
+          const brief = buildAiDailyBrief({
+            pulse: {
+              longCandidates: status?.longCandidates,
+              shortCandidates: status?.shortCandidates,
+              confirmedCandidates: status?.confirmedCandidates,
+              highRiskCandidates: status?.highRiskCandidates,
+              breadth: status?.breadth,
+              symbolCount: status?.symbolCount,
+              freshness: status?.freshness,
+            },
+            longs,
+            shorts,
+            loading,
+            llmAvailable: false,
+          });
           return {
-            ...baseMeta,
-            conclusion: `今日規則簡報：${summary}`,
-            evidence: [
-              `做多 ${status?.longCandidates ?? "—"} · 做空 ${status?.shortCandidates ?? "—"}`,
-              `已確認 ${status?.confirmedCandidates ?? "—"} · 高風險 ${status?.highRiskCandidates ?? "—"}`,
-              topL ? `焦點多：${topL.symbol}` : "焦點多：無",
-              topS ? `焦點空：${topS.symbol}` : "焦點空：無",
-            ],
-            contradicting: ["此簡報非 LLM 生成，缺少敘事推理"],
-            risk: `市場狀態 ${regime}`,
+            mode: brief.mode,
+            conclusion: brief.conclusion,
+            evidence: brief.evidence,
+            contradicting: brief.contradicting,
+            risk: brief.risk,
+            invalidation: brief.invalidation,
+            freshness: brief.freshness,
+            decisionTrace: brief.decisionTrace,
           };
+        }
       }
     }
 

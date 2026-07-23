@@ -7,6 +7,7 @@ export function AppFooter() {
     <footer className="app-footer nx-footer-p4" aria-label="Product footer">
       <span>NEXUS Market Intelligence · Live public market data for research use</span>
       <span className="sr-only">{b.buildMarker}</span>
+      <span className="sr-only">{b.localTrackNote}</span>
       <span className="sr-only">{b.phase4LegacyMarker}</span>
       <span className="sr-only">{b.phase3LegacyMarker}</span>
       <span className="sr-only">{b.phase2LegacyMarker}</span>

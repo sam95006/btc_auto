@@ -8,6 +8,7 @@ import {
 } from "../market/scannerApi";
 import { displayOrPending, fmtNum, freshnessLabel } from "../market/displayNull";
 import { formatUsd } from "../market/freshness";
+import { FavoriteToggle } from "./FavoriteToggle";
 
 type Props = {
   candidate: MarketCandidate;
@@ -51,6 +52,7 @@ export function OpportunityCard({ candidate: c, simple = true, defaultExpanded =
           <Link to={`/market/${c.symbol}`} className="nx-opp-sym mono">
             {c.symbol.replace("USDT", "")}
           </Link>
+          <FavoriteToggle symbol={c.symbol} />
           <span className={`nx-side-mark side-${c.side.toLowerCase()}`}>
             {c.side === "LONG" ? "▲" : c.side === "SHORT" ? "▼" : "●"} {sideLabelZh(c.side)}
           </span>

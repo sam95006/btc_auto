@@ -1,0 +1,99 @@
+﻿{
+    "gate":  "NEXUS_UI_PRODUCT_71_REVIEW",
+    "generatedAt":  "2026-07-23T16:55:00Z",
+    "ready_for_ui71_review":  true,
+    "local_only":  true,
+    "pushed":  false,
+    "deployed":  false,
+    "base_commit":  "33c2ddfe64c3681ee65fbf413c4ba35c392dfb16",
+    "branch":  "phase71-ui-product-71",
+    "worktree_note":  "Canonical worktree registered under Cursor projects path due to G: Drive permission/junction limits; content intended for g:/???脩垢蝖祉?/btc_bot/nexus-ui-product-71",
+    "marker":  "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
+    "local_track_note":  "PRODUCT_7_1_LOCAL_PARITY 繚 not deployed",
+    "rules_honored":  [
+                          "never_coerce_missing_to_zero",
+                          "show_freshness_pending_error",
+                          "simple_low_density_pro_expands",
+                          "keep_product7_marker",
+                          "no_push_no_deploy"
+                      ],
+    "features":  {
+                     "market_average_rsi":  {
+                                                "status":  "PROVIDER_PENDING",
+                                                "notes":  "Contract + Simple/Pro PENDING widget; per-symbol rsi_14 remains on workbench"
+                                            },
+                     "market_avg_funding":  {
+                                                "status":  "LOCAL_READY",
+                                                "notes":  "Avg from scanner candidates with sampleCount + freshness; missing rates excluded (not 0)"
+                                            },
+                     "fear_greed":  {
+                                        "status":  "PROVIDER_PENDING",
+                                        "notes":  "FearGreedProviderPending + Pro/Intelligence pending UI"
+                                    },
+                     "altcoin_season":  {
+                                            "status":  "PROVIDER_PENDING",
+                                            "notes":  "AltcoinSeasonProviderPending; not branded as official Altseason"
+                                        },
+                     "news_feed":  {
+                                       "status":  "PROVIDER_PENDING",
+                                       "notes":  "NewsProviderPending; no fake headlines"
+                                   },
+                     "favorites":  {
+                                       "status":  "LOCAL_READY",
+                                       "notes":  "favoritesStore localStorage + FavoriteToggle on OpportunityCard + Pro list"
+                                   },
+                     "notifications":  {
+                                           "status":  "LOCAL_READY",
+                                           "notes":  "NotificationPrefsStub; digestOnly default blocks toast spam"
+                                       },
+                     "ai_daily_brief":  {
+                                            "status":  "LOCAL_READY",
+                                            "notes":  "aiDailyBrief.ts shared contract; FloatingAIAssistant daily_brief uses rules-only/unavailable"
+                                        }
+                 },
+    "files_added":  [
+                        "frontend/src/market/parityContracts.ts",
+                        "frontend/src/market/marketAvgFunding.ts",
+                        "frontend/src/market/marketAvgRsi.ts",
+                        "frontend/src/market/favoritesStore.ts",
+                        "frontend/src/market/notificationPrefs.ts",
+                        "frontend/src/market/aiDailyBrief.ts",
+                        "frontend/src/market/providers/fearGreedProvider.ts",
+                        "frontend/src/market/providers/altcoinSeasonProvider.ts",
+                        "frontend/src/market/providers/newsProvider.ts",
+                        "frontend/src/components/MarketParityStrip.tsx",
+                        "frontend/src/components/NotificationPrefsStub.tsx",
+                        "frontend/src/components/FavoriteToggle.tsx",
+                        "docs/evidence/nexus_ui_product71_review.json"
+                    ],
+    "files_modified":  [
+                           "frontend/src/components/ProductSimpleView.tsx",
+                           "frontend/src/pages/OverviewPage.tsx",
+                           "frontend/src/pages/IntelligencePage.tsx",
+                           "frontend/src/components/OpportunityCard.tsx",
+                           "frontend/src/components/FloatingAIAssistant.tsx",
+                           "frontend/src/components/DecisionMarketOverview.tsx",
+                           "frontend/src/components/AppFooter.tsx",
+                           "frontend/src/demo/buildInfo.ts",
+                           "frontend/src/styles/global.css",
+                           "docs/evidence/DATAHUNTERX_NEXUS_PARITY_MATRIX.json",
+                           "static/operator_ui/* (local sync after build)"
+                       ],
+    "prohibited_untouched":  [
+                                 "trading logic / strategy engines / order execution / leverage rules",
+                                 "nexus-ui-product-7-5h worktree (9c65d5b evidence commits)",
+                                 "secrets / .env",
+                                 "remote push / Live deploy"
+                             ],
+    "test_commands":  [
+                          "cd frontend \u0026\u0026 npm run typecheck",
+                          "cd frontend \u0026\u0026 npm run build",
+                          "robocopy frontend/dist ../static/operator_ui /MIR (local preview only)"
+                      ],
+    "typecheck":  "pass",
+    "build":  "pass",
+    "static_assets":  [
+                          "index-DU1MSqgO.js",
+                          "index-BIl0p-za.css"
+                      ]
+}

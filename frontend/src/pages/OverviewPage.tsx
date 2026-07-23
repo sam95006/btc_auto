@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { GateChecklistCard } from "../components/GateChecklistCard";
 import { DecisionMarketOverview } from "../components/DecisionMarketOverview";
 import { NexusMarketIntelligenceCards } from "../components/NexusMarketIntelligenceCards";
 import { ProductSimpleView } from "../components/ProductSimpleView";
+import { MarketParityStrip } from "../components/MarketParityStrip";
+import { NotificationPrefsStub } from "../components/NotificationPrefsStub";
 import {
   ETH_WATCH_REAPPEARANCE_CHECKLIST,
   SHORT_REGRESSION_CHECKLIST,
@@ -11,6 +13,7 @@ import {
 } from "../demo/reportIndex";
 import { useHashScroll } from "../hooks/useHashScroll";
 import { loadViewMode, saveViewMode, type ViewMode } from "../market/viewPrefs";
+import { listFavoriteSymbols } from "../market/favoritesStore";
 
 /**
  * Product 7 Overview — Simple View first screen, then Pro / research layers.
@@ -72,6 +75,29 @@ export function OverviewPage() {
 
       <details className="nx-p7-pro-layer" open={!simple}>
         <summary className="muted">{simple ? "展開 Pro／研究層（圖表、版塊、掃描）" : "Pro View · 研究層"}</summary>
+        {!simple ? (
+          <>
+            <MarketParityStrip expanded />
+            <section className="nx-p7-block" aria-label="Local favorites">
+              <h2 className="nx-sec-title">本地收藏</h2>
+              <p className="muted sm">localStorage · 不上雲 · 與 watchlist 分開</p>
+              {listFavoriteSymbols().length === 0 ? (
+                <p className="muted">尚無收藏（可在機會卡按 ☆）</p>
+              ) : (
+                <ul className="nx-fav-list">
+                  {listFavoriteSymbols().map((sym) => (
+                    <li key={sym}>
+                      <Link to={`/market/${sym}`} className="mono">
+                        {sym.replace("USDT", "")}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+            <NotificationPrefsStub />
+          </>
+        ) : null}
         <DecisionMarketOverview />
         <NexusMarketIntelligenceCards />
       </details>

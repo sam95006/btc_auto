@@ -1,14 +1,12 @@
 ﻿{
-    "buildMarker":  "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
-    "production_build":  "pass",
-    "source_build_dir":  "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_ui_product7_resume",
-    "bundle":  {
-                   "css":  "index-iXjHLSLB.css",
-                   "js":  "index-BMEGG_7_.js"
-               },
-    "ui_version":  "PRODUCT-7",
-    "typecheck":  "pass",
-    "synced_at":  "2026-07-23T16:11:23Z",
-    "served_by":  "run.py -\u003e static/operator_ui",
-    "build_marker":  "NEXUS_UI_PRODUCT_7_PARALLEL_5H"
+  "build_marker": "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
+  "buildMarker": "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
+  "localTrackNote": "PRODUCT_7_1_LOCAL_PARITY - not deployed",
+  "uiVersion": "PRODUCT-7",
+  "builtAt": "2026-07-23T16:57:06Z",
+  "assets": [
+    "assets/index-DU1MSqgO.js",
+    "assets/index-BIl0p-za.css"
+  ],
+  "local_only": true
 }

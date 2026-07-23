@@ -7,6 +7,7 @@ import { buildMarketSummary, deriveRegime } from "../market/marketSummary";
 import { formatUsd } from "../market/freshness";
 import { fmtNum } from "../market/displayNull";
 import { OpportunityCard } from "./OpportunityCard";
+import { MarketParityStrip } from "./MarketParityStrip";
 import type { MarketCandidate } from "../market/scannerApi";
 
 function TickerChip({ symbol }: { symbol: "BTC" | "ETH" | "SOL" }) {
@@ -248,6 +249,11 @@ export function ProductSimpleView() {
         </div>
         <p className="muted sm">這是掃描候選分布，不是勝率或帳戶持倉比。</p>
       </section>
+
+      {/* 4b. Parity metrics (low density) */}
+      <div className="nx-p7-block">
+        <MarketParityStrip expanded={false} />
+      </div>
 
       {/* 5. Readiness Gauge */}
       <section className="nx-p7-block readiness-gauge nx-p7-gauge" aria-label="Market readiness">

@@ -20,6 +20,7 @@ import {
   loadEventPrefs,
   type EventPrefs,
 } from "../market/eventPrefs";
+import { shouldEmitNotification } from "../market/notificationPrefs";
 import { fetchSectors, type SectorRow } from "../market/sectorApi";
 
 function CollectingPanel({
@@ -399,6 +400,8 @@ function EventToast({
 
   useEffect(() => {
     if (!prefs.toast) return;
+    // Product 7.1: digest-only / muted defaults suppress realtime spam
+    if (!shouldEmitNotification()) return;
     for (const ev of events) {
       if (seen.current.has(ev.id)) continue;
       seen.current.add(ev.id);
