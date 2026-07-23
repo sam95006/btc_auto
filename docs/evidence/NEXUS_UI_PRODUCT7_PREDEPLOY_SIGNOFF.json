@@ -37,7 +37,15 @@
     "/market/ETHUSDT",
     "/market/SOLUSDT"
   ],
-  "nav_zh": ["總覽", "機會", "異常", "市場情報", "交易計畫", "績效", "學習"],
+  "nav_zh": [
+    "總覽",
+    "機會",
+    "異常",
+    "市場情報",
+    "交易計畫",
+    "績效",
+    "學習"
+  ],
   "served_by": "run.py -> Path(app.root_path)/static/operator_ui",
   "notes": "UI-only track A. No push performed by agent; parent may deploy after reviewing this signoff. Marker NEXUS_UI_PRODUCT_7_PARALLEL_5H embedded in footer/sr-only and /api/nexus/ui-build.",
   "ui_commits": [
@@ -45,9 +53,10 @@
     "f73149b98032aecd31e8759aa74125a3771e32dd",
     "8a38c556dac4373f83d575e369d16b28ef6848cc",
     "bab097794d64128cd573b1cbc295438a1be2fc68",
-    "30cd2df48aa9d334e17ce6a293503fe10b59e8ec"
+    "30cd2df48aa9d334e17ce6a293503fe10b59e8ec",
+    "8bbf0a2e8e9a91ee1c2d298518a5f6db4fb67a65"
   ],
-  "branch_tip": "30cd2df48aa9d334e17ce6a293503fe10b59e8ec",
+  "branch_tip": "8bbf0a2e8e9a91ee1c2d298518a5f6db4fb67a65",
   "remaining_gaps": [
     "altseason / fear-greed / news / notifications providers not wired (honest pending)",
     "No LLM — FAB stays rules-only / unavailable",
