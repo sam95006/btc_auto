@@ -1,13 +1,14 @@
-{
-  "build_marker": "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
-  "buildMarker": "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
-  "ui_version": "PRODUCT-7",
-  "ui_style": "Product Simple View · Evidence-first Market Intelligence",
-  "synced_at": "2026-07-23T13:09:38Z",
-  "source_build_dir": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_ui_product7_build",
-  "bundle": {
-    "js": "index-BMEGG_7_.js",
-    "css": "index-iXjHLSLB.css"
-  },
-  "served_by": "run.py -> static/operator_ui"
+﻿{
+    "buildMarker":  "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
+    "production_build":  "pass",
+    "source_build_dir":  "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_ui_product7_resume",
+    "bundle":  {
+                   "css":  "index-iXjHLSLB.css",
+                   "js":  "index-BMEGG_7_.js"
+               },
+    "ui_version":  "PRODUCT-7",
+    "typecheck":  "pass",
+    "synced_at":  "2026-07-23T16:11:23Z",
+    "served_by":  "run.py -\u003e static/operator_ui",
+    "build_marker":  "NEXUS_UI_PRODUCT_7_PARALLEL_5H"
 }
