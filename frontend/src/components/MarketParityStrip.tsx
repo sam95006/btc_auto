@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fmtNum } from "../market/displayNull";
 import { fetchAvgFundingMetric, type AvgFundingValue } from "../market/marketAvgFunding";
-import { getMarketAvgRsiMetric, type AvgRsiValue } from "../market/marketAvgRsi";
+import { fetchMarketAvgRsiMetric, getMarketAvgRsiMetric, type AvgRsiValue } from "../market/marketAvgRsi";
 import { pendingMetric, statusTag, type ParityMetric } from "../market/parityContracts";
 import { fearGreedProvider } from "../market/providers/fearGreedProvider";
 import { altcoinSeasonProvider } from "../market/providers/altcoinSeasonProvider";
@@ -56,7 +56,7 @@ export function MarketParityStrip({ expanded = false }: { expanded?: boolean }) 
     ...pendingMetric<AvgFundingValue>("市場平均 Funding", "scanner.candidates"),
     freshness: "載入中…",
   }));
-  const [rsi] = useState<ParityMetric<AvgRsiValue>>(() => getMarketAvgRsiMetric());
+  const [rsi, setRsi] = useState<ParityMetric<AvgRsiValue>>(() => getMarketAvgRsiMetric());
   const [fear, setFear] = useState<ParityMetric<unknown> | null>(null);
   const [alt, setAlt] = useState<ParityMetric<unknown> | null>(null);
   const [news, setNews] = useState<ParityMetric<unknown> | null>(null);
@@ -64,8 +64,10 @@ export function MarketParityStrip({ expanded = false }: { expanded?: boolean }) 
   useEffect(() => {
     let alive = true;
     const load = async () => {
-      const f = await fetchAvgFundingMetric();
-      if (alive) setFunding(f);
+      const [f, r] = await Promise.all([fetchAvgFundingMetric(), fetchMarketAvgRsiMetric()]);
+      if (!alive) return;
+      setFunding(f);
+      setRsi(r);
       if (expanded) {
         const [fg, as, nw] = await Promise.all([
           fearGreedProvider.getIndex(),

@@ -1,12 +1,6 @@
 ﻿{
-  "build_marker": "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
-  "buildMarker": "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
-  "localTrackNote": "PRODUCT_7_1_LOCAL_PARITY - not deployed",
-  "uiVersion": "PRODUCT-7",
-  "builtAt": "2026-07-23T16:57:06Z",
-  "assets": [
-    "assets/index-DU1MSqgO.js",
-    "assets/index-BIl0p-za.css"
-  ],
-  "local_only": true
+    "synced_at":  "2026-07-24T01:01:44Z",
+    "js_hash_prefix":  "97F45E6E8DEF",
+    "source":  "frontend/dist",
+    "note":  "Product 7.1 RSI derivation + parity strip refresh"
 }

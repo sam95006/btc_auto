@@ -1,6 +1,6 @@
 {
   "gate": "DATAHUNTERX_NEXUS_PARITY_MATRIX",
-  "generatedAt": "2026-07-23T16:55:00Z",
+  "generatedAt": "2026-07-24T01:00:00Z",
   "marker": "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
   "local_track": "PRODUCT_7_1_LOCAL_PARITY",
   "ui_head_base": "33c2ddfe64c3681ee65fbf413c4ba35c392dfb16",
@@ -38,13 +38,13 @@
     {
       "feature": "market_average_rsi",
       "datahunterx_present": true,
-      "nexus_backend_present": "partial",
+      "nexus_backend_present": true,
       "nexus_ui_present": true,
       "nexus_live_present": false,
       "priority": "P0",
-      "status": "PROVIDER_PENDING",
-      "current_gap": "No market-avg RSI API; Simple/Pro show PENDING + freshness; per-symbol rsi_14 on workbench",
-      "implementation_status": "contract_pending"
+      "status": "LOCAL_READY",
+      "current_gap": "Derived from BTC/ETH/SOL 5m rsi_14 via per-symbol indicators API; shows sample count + freshness; not yet Live",
+      "implementation_status": "local_ready"
     },
     {
       "feature": "market_avg_funding",
