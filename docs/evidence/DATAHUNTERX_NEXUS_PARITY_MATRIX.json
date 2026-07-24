@@ -1,15 +1,15 @@
 {
   "gate": "DATAHUNTERX_NEXUS_PARITY_MATRIX",
-  "generatedAt": "2026-07-24T01:00:00Z",
+  "generatedAt": "2026-07-24T04:37:00Z",
   "marker": "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
-  "local_track": "PRODUCT_7_1_LOCAL_PARITY",
-  "ui_head_base": "33c2ddfe64c3681ee65fbf413c4ba35c392dfb16",
-  "branch": "phase71-ui-product-71",
+  "local_track": "PRODUCT_7_2_LOCAL_PARITY",
+  "ui_head_base": "35e678a6f5bc30549bf6523d25ec3f0eafdaf0de",
+  "branch": "phase72-ui-product-72",
   "benchmark": "DataHunterX (https://datahunterx.com/) — compete on clarity/evidence, do not copy",
   "nexus_positioning": "Fewer first-screen modules; stronger evidence chain, contradicting evidence, invalidation, freshness, decision trace",
   "status_legend": {
     "LIVE": "Deployed and serving real data on Live",
-    "LOCAL_READY": "Implemented locally with honest contracts; ready for UI 7.1 review (not pushed)",
+    "LOCAL_READY": "Implemented locally with honest contracts; ready for review (not pushed)",
     "BACKEND_READY_UI_PENDING": "Backend/data exists; UI surface not yet promoted",
     "PROVIDER_PENDING": "Provider stub only — pending/unavailable UI, no fake numbers",
     "NOT_STARTED": "No foundation yet"
@@ -43,7 +43,8 @@
       "nexus_live_present": false,
       "priority": "P0",
       "status": "LOCAL_READY",
-      "current_gap": "Derived from BTC/ETH/SOL 5m rsi_14 via per-symbol indicators API; shows sample count + freshness; not yet Live",
+      "product_72_changes": "MetricCell shows coverage note, sampleCount, lastAttempted; STALE state wired; 375px overflow fix",
+      "current_gap": "Derived from BTC/ETH/SOL 5m rsi_14 via per-symbol indicators API; not yet on Live",
       "implementation_status": "local_ready"
     },
     {
@@ -54,7 +55,8 @@
       "nexus_live_present": false,
       "priority": "P0",
       "status": "LOCAL_READY",
-      "current_gap": "Local avg from scanner candidates with sampleCount; not yet Live",
+      "product_72_changes": "MetricCell polished with coverage notes and tag-ok coloring; grid density improvements",
+      "current_gap": "Local avg from scanner candidates; not yet on Live",
       "implementation_status": "local_ready"
     },
     {
@@ -65,8 +67,8 @@
       "nexus_live_present": false,
       "priority": "P0",
       "status": "PROVIDER_PENDING",
-      "current_gap": "FearGreedProviderPending — Pro/Intelligence pending UI only",
-      "implementation_status": "provider_foundation"
+      "product_72_changes": "State machine with lastAttempted + lastSuccessful + consecutiveFailures; pending/unavailable/error/stale transitions; stale guard contract exported; NO fake values",
+      "implementation_status": "provider_foundation_72"
     },
     {
       "feature": "altcoin_season",
@@ -76,8 +78,8 @@
       "nexus_live_present": false,
       "priority": "P0",
       "status": "PROVIDER_PENDING",
-      "current_gap": "AltcoinSeasonProviderPending — not labeled as official Altseason",
-      "implementation_status": "provider_foundation"
+      "product_72_changes": "State machine; indexType: official | nexus-breadth-proxy label; stale guard; NO fake scores",
+      "implementation_status": "provider_foundation_72"
     },
     {
       "feature": "news_feed",
@@ -87,8 +89,8 @@
       "nexus_live_present": false,
       "priority": "P0",
       "status": "PROVIDER_PENDING",
-      "current_gap": "NewsProviderPending — no fake headlines",
-      "implementation_status": "provider_foundation"
+      "product_72_changes": "feedState: populated | empty | unavailable — empty != unavailable distinction; makeEmptyNewsFeed() helper; stale detection",
+      "implementation_status": "provider_foundation_72"
     },
     {
       "feature": "favorites",
@@ -98,7 +100,8 @@
       "nexus_live_present": false,
       "priority": "P0",
       "status": "LOCAL_READY",
-      "current_gap": "localStorage favoritesStore + OpportunityCard toggle; Pro list",
+      "product_72_changes": "FAVORITES_STORAGE_CONTRACT exported with scope=LOCAL_ONLY, cloudSync=false, crossDeviceSync=false; disclosure string for UI panels",
+      "current_gap": "localStorage-only; cross-device sync requires backend (not implemented)",
       "implementation_status": "local_ready"
     },
     {
@@ -109,7 +112,8 @@
       "nexus_live_present": false,
       "priority": "P0",
       "status": "LOCAL_READY",
-      "current_gap": "NotificationPrefsStub + digest-only default suppresses spam toasts",
+      "product_72_changes": "browserPushPermission field reflects real Notification.permission; isBrowserPushGranted(); saveNotificationPrefs guard never sets browserNotify=true without permission; LOCAL_ONLY label in UI",
+      "current_gap": "No cross-device sync; browser push requires real OS permission grant",
       "implementation_status": "local_ready"
     },
     {
@@ -120,7 +124,7 @@
       "nexus_live_present": true,
       "priority": "P0",
       "status": "LOCAL_READY",
-      "current_gap": "Shared AiDailyBrief contract — rules-only / unavailable honest",
+      "product_72_changes": "Renamed contradicting→contradictingEvidence; added invalidationTriggers array; added traceSteps structured trace; added generatedAt ISO timestamp; RULES-ONLY label enforced",
       "implementation_status": "local_ready"
     },
     {
@@ -185,10 +189,14 @@
     }
   ],
   "notes": [
-    "Product 7.1 LOCAL-ONLY — marker stays NEXUS_UI_PRODUCT_7_PARALLEL_5H; localTrackNote PRODUCT_7_1_LOCAL_PARITY",
-    "Never coerce missing→0; pending/error/freshness shown honestly",
-    "Simple View low density (RSI pending + Funding avg); Pro expands pending providers",
-    "Do not push/deploy from this track",
-    "Filename datahunterx_nexus_parity_matrix.json resolves to this file on Windows case-insensitive FS"
+    "Product 7.2 LOCAL-ONLY — no push, no deploy",
+    "7.2 deepens provider contracts: state machine (lastAttempted, lastSuccessful, consecutiveFailures), stale guard, feedState distinction",
+    "7.2 persistence contracts clearly label LOCAL_ONLY vs cloud-synced (favorites, notifications)",
+    "7.2 AI Brief adds invalidationTriggers, traceSteps, generatedAt, contradictingEvidence rename",
+    "7.2 MetricCell shows tag colors (tag-ok/warn/err), lastAttempted, STALE state",
+    "7.2 Mobile: 375px no horizontal overflow enforced",
+    "Never coerce missing→0; pending/error/stale/unavailable shown honestly",
+    "Simple View low density; Pro expands pending providers",
+    "Do not push/deploy from this track"
   ]
 }

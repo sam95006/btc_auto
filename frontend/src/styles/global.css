@@ -3885,7 +3885,7 @@ button {
   .nx-ticker-row { flex-wrap: wrap; gap: 0.4rem; }
 }
 
-/* ── Product UI 7.1 local parity foundations ──────────────── */
+/* ── Product UI 7.2 parity + mobile polish ──────────────── */
 .nx-parity-strip { margin: 0; }
 .nx-parity-grid {
   display: grid;
@@ -3896,11 +3896,17 @@ button {
 .nx-parity-expanded .nx-parity-grid {
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
 }
+.nx-parity-grid-ext {
+  margin-top: 0.55rem;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
 .nx-parity-cell {
   padding: 0.55rem 0.65rem;
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 8px;
   background: rgba(0,0,0,0.15);
+  min-width: 0;
+  overflow: hidden;
 }
 .nx-parity-cell-head {
   display: flex;
@@ -3908,11 +3914,24 @@ button {
   align-items: center;
   gap: 0.35rem;
   margin-bottom: 0.25rem;
+  flex-wrap: wrap;
 }
-.nx-parity-label { font-size: 0.78rem; opacity: 0.85; }
-.nx-parity-value { font-size: 1.15rem; }
+.nx-parity-label { font-size: 0.78rem; opacity: 0.85; white-space: nowrap; }
+.nx-parity-value { font-size: 1.1rem; word-break: break-all; }
 .nx-parity-pending .nx-parity-value,
 .nx-parity-unavailable .nx-parity-value { opacity: 0.55; }
+.nx-parity-stale .nx-parity-value { opacity: 0.75; color: var(--warn, #f5c542); }
+.nx-parity-err { color: var(--neg, #f66); font-size: 0.78rem; }
+.nx-parity-fresh { font-size: 0.75rem; }
+.nx-parity-coverage { font-size: 0.73rem; opacity: 0.7; word-break: break-word; }
+.nx-parity-ext-note,
+.nx-parity-simple-note,
+.nx-parity-coverage-note { margin-top: 0.45rem; font-size: 0.73rem; opacity: 0.65; word-break: break-word; }
+/* Tag color variants — used by statusTagColor() */
+.tag-ok { background: rgba(80,220,100,0.15); color: var(--pos, #6efa8e); border-color: rgba(80,220,100,0.25); }
+.tag-err { background: rgba(240,60,60,0.15); color: var(--neg, #f66); border-color: rgba(240,60,60,0.25); }
+.tag-warn { background: rgba(245,197,66,0.12); color: var(--warn, #f5c542); border-color: rgba(245,197,66,0.22); }
+/* Notification prefs */
 .nx-notif-grid { display: grid; gap: 0.35rem; margin-top: 0.4rem; }
 .nx-notif-grid label { font-size: 0.88rem; }
 .nx-fav-toggle {
@@ -3930,5 +3949,20 @@ button {
 .nx-fav-list { list-style: none; padding: 0; margin: 0.35rem 0 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .nx-fav-list a { text-decoration: none; color: inherit; border-bottom: 1px solid rgba(255,255,255,0.12); }
 @media (max-width: 520px) {
-  .nx-parity-grid { grid-template-columns: 1fr; }
+  .nx-parity-grid,
+  .nx-parity-grid-ext { grid-template-columns: 1fr; }
+}
+/* 375px mobile — prevent any horizontal overflow */
+@media (max-width: 375px) {
+  .nx-product7-simple,
+  .nx-product7,
+  .nx-p7-block,
+  .nx-parity-strip,
+  .nx-parity-cell,
+  .nx-ticker-row,
+  .nx-p7-lsn,
+  .nx-notif-grid { max-width: 100%; overflow-x: hidden; }
+  .nx-parity-value { font-size: 0.95rem; }
+  .nx-p7-lsn { flex-wrap: wrap; gap: 0.4rem; }
+  .nx-tops-head { flex-wrap: wrap; gap: 0.25rem; }
 }

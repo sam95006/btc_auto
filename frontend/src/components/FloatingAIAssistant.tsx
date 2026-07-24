@@ -16,7 +16,8 @@ type AiAnswer = {
   mode: "rules-only" | "unavailable";
   conclusion: string;
   evidence: string[];
-  contradicting: string[];
+  /** Renamed from contradicting in 7.2 to match AiDailyBrief contract. */
+  contradictingEvidence: string[];
   risk: string;
   invalidation: string;
   freshness: string;
@@ -94,7 +95,7 @@ export function FloatingAIAssistant() {
           mode: "unavailable",
           conclusion: "掃描器資料尚未就緒，無法產生可靠簡報。",
           evidence: [],
-          contradicting: [],
+          contradictingEvidence: [],
           risk: "資料不足",
         };
       }
@@ -105,7 +106,7 @@ export function FloatingAIAssistant() {
             ...baseMeta,
             conclusion: `目前頁面：${loc.pathname}。這是研究介面，不是交易終端。`,
             evidence: [summary, `市場狀態：${regime}`],
-            contradicting: ["規則引擎無法解讀頁面私有上下文以外的內容"],
+            contradictingEvidence: ["規則引擎無法解讀頁面私有上下文以外的內容"],
             risk: "勿把 UI 說明當成投資建議",
           };
         case "find_long":
@@ -115,7 +116,7 @@ export function FloatingAIAssistant() {
               ? `規則摘要：最高做多候選 ${topL.symbol.replace("USDT", "")}（機會 ${Math.round(topL.opportunityScore)}）`
               : "目前沒有可列出的做多候選",
             evidence: topL?.reasons?.slice(0, 3) || [],
-            contradicting: topL?.conflicts?.slice(0, 3) || [],
+            contradictingEvidence: topL?.conflicts?.slice(0, 3) || [],
             risk: topL ? `風險分數 ${Math.round(topL.riskScore)}` : "無候選",
           };
         case "find_short":
@@ -125,7 +126,7 @@ export function FloatingAIAssistant() {
               ? `規則摘要：最高做空候選 ${topS.symbol.replace("USDT", "")}（機會 ${Math.round(topS.opportunityScore)}）`
               : "目前沒有可列出的做空候選",
             evidence: topS?.reasons?.slice(0, 3) || [],
-            contradicting: topS?.conflicts?.slice(0, 3) || [],
+            contradictingEvidence: topS?.conflicts?.slice(0, 3) || [],
             risk: topS ? `風險分數 ${Math.round(topS.riskScore)}` : "無候選",
           };
         case "explain_risk":
@@ -133,16 +134,16 @@ export function FloatingAIAssistant() {
             ...baseMeta,
             conclusion: `高風險／過熱標的：${status?.highRiskCandidates ?? "—"}；生產限制 3x／20 USDT／最多 1 倉。`,
             evidence: ["Risk Gate 與 PAPER 限制由後端治理，前端只讀顯示"],
-            contradicting: [],
-            risk: "前端不會覆寫 leverage／margin／position 上限",
+          contradictingEvidence: [],
+          risk: "前端不會覆寫 leverage／margin／position 上限",
           };
         case "why_blocked":
           return {
             ...baseMeta,
             conclusion: "現在不能交易：研究／PAPER 模式、無 ARM、無 live order、Stage 4.19 blocked。",
             evidence: ["private_api=false", "real_order=false", "UI 無下單控件"],
-            contradicting: [],
-            risk: "任何看似可交易的狀態僅為觀察用語",
+          contradictingEvidence: [],
+          risk: "任何看似可交易的狀態僅為觀察用語",
           };
         case "daily_brief":
         default: {
@@ -165,7 +166,7 @@ export function FloatingAIAssistant() {
             mode: brief.mode,
             conclusion: brief.conclusion,
             evidence: brief.evidence,
-            contradicting: brief.contradicting,
+            contradictingEvidence: brief.contradictingEvidence,
             risk: brief.risk,
             invalidation: brief.invalidation,
             freshness: brief.freshness,
@@ -179,7 +180,7 @@ export function FloatingAIAssistant() {
       mode: "unavailable",
       conclusion: "AI provider unavailable",
       evidence: [],
-      contradicting: [],
+      contradictingEvidence: [],
       risk: "—",
       invalidation: "—",
       freshness,
@@ -222,8 +223,8 @@ export function FloatingAIAssistant() {
             </ul>
             <h4>Contradicting Evidence</h4>
             <ul>
-              {answer.contradicting.length ? (
-                answer.contradicting.map((e) => (
+              {answer.contradictingEvidence.length ? (
+                answer.contradictingEvidence.map((e) => (
                   <li key={e} className="conflict">
                     {e}
                   </li>

@@ -1,10 +1,33 @@
 /**
- * Local favorites foundation (localStorage). Distinct from watchlist;
- * max density kept low for Simple View.
+ * Favorites persistence data contract (Product 7.2).
+ *
+ * STORAGE_CONTRACT:
+ *   scope:        LOCAL_ONLY — stored in localStorage of this browser only.
+ *   sync:         NOT synced across devices. No backend endpoint exists.
+ *                 Cross-device sync requires a signed-in user API (NOT implemented).
+ *   cloud:        NEVER claimed. Do not show "synced to cloud" without backend confirmation.
+ *   version:      v1 — schema migrations must increment version and handle legacy.
+ *   limit:        20 favorites max (prevent unbounded growth in localStorage).
+ *   persistence:  Survives page refresh; lost on clear-site-data / incognito.
+ *
+ * Distinct from watchlist (useWatchlistStore) — favorites are operator-curated pins.
  */
 
 const KEY = "nexus_mi_favorites_v1";
 const LIMIT = 20;
+
+/**
+ * Exported storage contract for UI disclosure.
+ */
+export const FAVORITES_STORAGE_CONTRACT = {
+  scope: "LOCAL_ONLY",
+  cloudSync: false,
+  crossDeviceSync: false,
+  backendRequired: true,
+  maxItems: LIMIT,
+  storageKey: KEY,
+  note: "只存於本瀏覽器 localStorage。不跨裝置，無雲端同步。",
+} as const;
 
 export type FavoriteItem = {
   symbol: string;
@@ -75,3 +98,11 @@ export function listFavoriteSymbols(): string[] {
 }
 
 export const FAVORITES_LIMIT = LIMIT;
+
+/**
+ * Returns a human-readable disclosure string for UI display.
+ * Use this in settings panels to make persistence scope clear to operators.
+ */
+export function favoritesStorageDisclosure(): string {
+  return "收藏清單僅存於本瀏覽器 localStorage（本機）。不會跨裝置同步，不會上傳至雲端。清除網站資料或無痕模式會失去收藏。";
+}
