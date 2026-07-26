@@ -69,6 +69,7 @@ def fetch_ticker_quality(
             depth_score=min(100.0, turnover / 1e8 * 10),
             price_continuity=1.0 if spread_bps < 50 else 0.5,
             funding_abnormal=funding_abnormal,
+            last_price=last,
         )
     logger.info("ticker_quality_count=%s", len(out))
     return out

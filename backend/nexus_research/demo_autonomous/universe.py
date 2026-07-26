@@ -53,6 +53,7 @@ class MarketQualitySnapshot:
     depth_score: float = 50.0
     price_continuity: float = 1.0
     funding_abnormal: bool = False
+    last_price: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -66,6 +67,7 @@ class MarketQualitySnapshot:
             "depthScore": self.depth_score,
             "priceContinuity": self.price_continuity,
             "fundingAbnormal": self.funding_abnormal,
+            "lastPrice": self.last_price,
         }
 
 

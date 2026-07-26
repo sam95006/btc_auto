@@ -270,7 +270,9 @@ class AutonomousDemoOrchestrator:
         if not lev.allow:
             blocks.extend(lev.block_reasons)
 
-        entry = float(ENTRY_PRICE_HINT.get(symbol, 100.0))
+        entry = float(q.last_price or ENTRY_PRICE_HINT.get(symbol, 100.0))
+        if entry <= 0:
+            entry = float(ENTRY_PRICE_HINT.get(symbol, 100.0))
         alloc = self.allocator.allocate(
             symbol=symbol,
             direction=side,
@@ -322,13 +324,14 @@ class AutonomousDemoOrchestrator:
         candidates: list[AutonomousCandidate],
         session_active: bool,
     ) -> OrchestratorResult:
+        entry_px = float(top.notional / top.qty) if top.qty else ENTRY_PRICE_HINT.get(top.symbol, 100.0)
         intent = DemoOrderIntent(
             intent_id=f"auto-{int(time.time())}",
             symbol=top.symbol,
             side=top.side,
             qty=top.qty,
             leverage=top.leverage,
-            entry_price=ENTRY_PRICE_HINT.get(top.symbol, 100.0),
+            entry_price=entry_px,
             stop_loss_price=top.stop_price,
             take_profit_price=top.take_profit_price,
             risk_tier="VALIDATION",
