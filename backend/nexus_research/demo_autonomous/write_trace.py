@@ -169,6 +169,8 @@ class BybitDemoErrorClassifier:
             return WriteFailureClass.RATE_LIMIT
         if ret_code == 110043 or "not been modified" in msg or "leverage not modified" in msg:
             return WriteFailureClass.ALREADY_SATISFIED
+        if ret_code == 34040 or msg.strip() == "not modified":
+            return WriteFailureClass.ALREADY_SATISFIED
         if ret_code in (110001, 110003, 110004) or "qty" in msg or "precision" in msg:
             return WriteFailureClass.INVALID_QUANTITY_PRECISION
         if "notional" in msg or ret_code == 110092:
