@@ -22,9 +22,15 @@ ACCOUNT_BYBIT_DEMO = "BYBIT_DEMO_ACCOUNT"
 ENV_API_KEY = "BYBIT_DEMO_API_KEY"
 ENV_API_SECRET = "BYBIT_DEMO_API_SECRET"
 
-# GET-only private read paths (Bybit v5).
+# GET-only private + public read paths (Bybit v5).
+# Public market paths are included so transport allowlist covers preflight.
 ALLOWED_GET_PATHS = frozenset(
     {
+        "/v5/market/time",
+        "/v5/market/instruments-info",
+        "/v5/market/tickers",
+        "/v5/market/kline",
+        "/v5/user/query-api",
         "/v5/account/wallet-balance",
         "/v5/position/list",
         "/v5/order/realtime",

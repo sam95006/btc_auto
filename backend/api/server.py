@@ -423,6 +423,17 @@ def register_nexus_routes(app):
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc), "network_calls": 0, "secret_safe": True}), 500
 
+    try:
+        from backend.nexus_research.demo_autonomous.api_routes import register_autonomous_demo_routes
+
+        register_autonomous_demo_routes(app)
+    except Exception as _auto_reg_exc:  # noqa: BLE001 — keep server boot if optional module missing
+        import logging as _logging
+
+        _logging.getLogger(__name__).warning(
+            "autonomous_demo_routes_unavailable: %s", type(_auto_reg_exc).__name__
+        )
+
     @app.route("/api/nexus/stage3/summary")
     def nexus_stage3_summary():
         try:

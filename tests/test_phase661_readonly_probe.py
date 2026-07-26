@@ -235,13 +235,15 @@ class TestProbeWithFixtures:
         with patch.dict("os.environ", {"DEMO_READONLY_PROBE_ENABLED": "true"}, clear=True):
             result = run_readonly_probe(environ=env, transport=transport)
         assert result.status == "PROBE_PASSED"
+        assert result.server_time_ok is True
         assert result.wallet_readable is True
         assert result.position_readable is True
         assert result.order_readable is True
         assert result.execution_readable is True
-        assert result.network_calls == 4
-        assert len(result.endpoints_probed) == 4
+        assert result.network_calls == 6
+        assert len(result.endpoints_probed) == 6
         assert result.write_attempted is False
+        assert result.to_dict()["execution_write_allowed"] is False
 
     def test_probe_result_dict_has_all_fields(self):
         from backend.nexus_research.demo_exchange.readonly_probe import run_readonly_probe
@@ -356,8 +358,20 @@ class TestProbePermissionCheck:
 
         data = {"permissions": {"ContractTrade": ["Trade"], "ReadOnly": ["ReadOnly"]}}
         result = _check_permissions(data)
+        # Trade-capable Demo keys are expected; hard-fail only Withdraw/Transfer.
+        assert result["fail_closed"] is False
+        assert result["trade_capable"] is True
+        assert "Trade" in result["trade_permissions"]
+        assert result["writes_still_impossible"] is True
+        assert result["execution_write_allowed"] is False
+
+    def test_check_permissions_withdraw_hard_fail(self):
+        from backend.nexus_research.demo_exchange.readonly_probe import _check_permissions
+
+        data = {"permissions": {"Wallet": ["Withdraw"]}}
+        result = _check_permissions(data)
         assert result["fail_closed"] is True
-        assert "Trade" in result["violations"]
+        assert "Withdraw" in result["hard_violations"]
 
     def test_check_permissions_empty(self):
         from backend.nexus_research.demo_exchange.readonly_probe import _check_permissions
@@ -365,6 +379,47 @@ class TestProbePermissionCheck:
         result = _check_permissions({})
         assert result["read_only"] is True
         assert result["fail_closed"] is False
+
+    def test_probe_stops_on_withdraw_permission(self):
+        from backend.nexus_research.demo_exchange.readonly_probe import run_readonly_probe
+        from backend.nexus_research.demo_exchange.transport import DemoReadOnlyTransport
+
+        transport = DemoReadOnlyTransport(use_fixtures=True)
+        # Force withdraw fixture via monkeypatch of FIXTURE path
+        from backend.nexus_research.demo_exchange import fixtures as fx
+
+        original = fx.FIXTURE_BY_PATH["/v5/user/query-api"]
+        fx.FIXTURE_BY_PATH["/v5/user/query-api"] = lambda **_: fx.fixture_query_api(withdraw=True)
+        try:
+            env = {"BYBIT_DEMO_API_KEY": "k", "BYBIT_DEMO_API_SECRET": "s"}
+            with patch.dict("os.environ", {"DEMO_READONLY_PROBE_ENABLED": "true"}, clear=True):
+                result = run_readonly_probe(environ=env, transport=transport)
+            assert result.status == "FAIL_CLOSED_PERMISSION"
+            assert result.fail_closed is True
+            assert result.wallet_readable is False
+            assert result.network_calls == 2  # time + query-api only
+        finally:
+            fx.FIXTURE_BY_PATH["/v5/user/query-api"] = original
+
+    def test_probe_continues_on_trade_capable_key(self):
+        from backend.nexus_research.demo_exchange.readonly_probe import run_readonly_probe
+        from backend.nexus_research.demo_exchange.transport import DemoReadOnlyTransport
+        from backend.nexus_research.demo_exchange import fixtures as fx
+
+        transport = DemoReadOnlyTransport(use_fixtures=True)
+        original = fx.FIXTURE_BY_PATH["/v5/user/query-api"]
+        fx.FIXTURE_BY_PATH["/v5/user/query-api"] = lambda **_: fx.fixture_query_api(trade=True)
+        try:
+            env = {"BYBIT_DEMO_API_KEY": "k", "BYBIT_DEMO_API_SECRET": "s"}
+            with patch.dict("os.environ", {"DEMO_READONLY_PROBE_ENABLED": "true"}, clear=True):
+                result = run_readonly_probe(environ=env, transport=transport)
+            assert result.status == "PROBE_PASSED"
+            assert result.fail_closed is False
+            assert result.permission_check.get("trade_capable") is True
+            assert result.wallet_readable is True
+            assert result.to_dict()["write_impossible"] is True
+        finally:
+            fx.FIXTURE_BY_PATH["/v5/user/query-api"] = original
 
 
 class TestFingerprintBootContinuityCompare:

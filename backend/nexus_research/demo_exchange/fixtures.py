@@ -132,7 +132,46 @@ def fixture_executions(*, duplicate: bool = False) -> dict[str, Any]:
     }
 
 
+def fixture_server_time() -> dict[str, Any]:
+    ts = _now_ms()
+    return {
+        "retCode": 0,
+        "retMsg": "OK",
+        "time": ts,
+        "result": {"timeSecond": str(ts // 1000), "timeNano": str(ts * 1_000_000)},
+    }
+
+
+def fixture_query_api(*, trade: bool = False, withdraw: bool = False) -> dict[str, Any]:
+    """Permission fixture. Default: read-capable without hard-fail perms."""
+    permissions: dict[str, list[str]] = {"ContractTrade": []}
+    if trade:
+        permissions["ContractTrade"] = ["Order", "Position"]
+    if withdraw:
+        permissions["Wallet"] = ["Withdraw"]
+    # Bybit-style nested permission bags; probe flattens values.
+    if not trade and not withdraw:
+        permissions = {"ReadOnly": ["ReadOnly"]}
+    return {
+        "retCode": 0,
+        "retMsg": "OK",
+        "time": _now_ms(),
+        "result": {
+            "id": "fixture-key",
+            "note": "fixture",
+            "apiKey": "REDACTED",
+            "readOnly": 0 if trade else 1,
+            "permissions": permissions,
+        },
+    }
+
+
 FIXTURE_BY_PATH = {
+    "/v5/market/time": lambda **_: fixture_server_time(),
+    "/v5/user/query-api": lambda **kw: fixture_query_api(
+        trade=bool(kw.get("trade", False)),
+        withdraw=bool(kw.get("withdraw", False)),
+    ),
     "/v5/account/wallet-balance": lambda **_: fixture_wallet(),
     "/v5/position/list": lambda **_: fixture_positions(),
     "/v5/order/realtime": lambda **kw: fixture_open_orders(page=int(kw.get("page", 1))),

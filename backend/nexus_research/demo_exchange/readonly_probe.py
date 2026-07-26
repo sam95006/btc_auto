@@ -4,11 +4,13 @@ Activated ONLY when DEMO_READONLY_PROBE_ENABLED=true AND credentials present.
 
 Hard rules:
 - Domain hard-locked to api-demo.bybit.com
-- Allowed GETs: server time, wallet-balance, position/list, order/realtime,
+- Allowed GETs: server time, query-api, wallet-balance, position/list, order/realtime,
   order/history, execution/list, market instruments/tickers/kline (public)
-- API key info/permission check — FAIL_CLOSED if Trade/Withdraw/Transfer appear
+- Permission: FAIL_CLOSED on Withdraw/Transfer/Exchange/Mainnet markers
+- Trade-capable Demo keys are EXPECTED for a future controlled order path;
+  they are recorded but do NOT enable writes (transport still GET-only)
 - ZERO write methods
-- On any permission fail: FAIL_CLOSED, stop further private calls
+- On hard permission fail: FAIL_CLOSED, stop further private calls
 - Never include secrets in responses
 """
 from __future__ import annotations
@@ -27,10 +29,8 @@ from backend.nexus_research.demo_exchange.credential_audit import (
     build_credential_fingerprint,
     check_credential_presence,
 )
-from backend.nexus_research.demo_exchange.credentials import DemoCredentialPresenceValidator
 from backend.nexus_research.demo_exchange.domain_policy import DemoDomainPolicy
 from backend.nexus_research.demo_exchange.errors import (
-    CredentialMissingError,
     DemoExchangeError,
     PermissionDeniedError,
 )
@@ -39,15 +39,24 @@ from backend.nexus_research.demo_exchange.transport import DemoReadOnlyTransport
 
 logger = logging.getLogger(__name__)
 
-FORBIDDEN_API_PERMISSIONS = frozenset({
-    "Trade",
+# Hard-fail permissions: discovery must stop. Never relax these.
+HARD_FAIL_PERMISSIONS = frozenset({
     "Withdraw",
     "Transfer",
+    "Exchange",
+    "AccountTransfer",
+    "SubMemberTransfer",
+})
+
+# Trade-capable markers: expected on Demo trading keys. Writes remain impossible.
+TRADE_CAPABLE_PERMISSIONS = frozenset({
+    "Trade",
+    "Order",
+    "Position",
     "ContractTrade",
     "SpotTrade",
     "OptionsTrade",
     "CopyTrading",
-    "Exchange",
 })
 
 PUBLIC_GET_PATHS = frozenset({
@@ -110,6 +119,7 @@ class ReadOnlyProbeResult:
             "endpoints_probed": list(self.endpoints_probed),
             "write_attempted": self.write_attempted,
             "write_impossible": True,
+            "execution_write_allowed": False,
             "started_at_ms": self.started_at_ms,
             "finished_at_ms": self.finished_at_ms,
             "secret_safe": True,
@@ -122,31 +132,38 @@ def _probe_enabled() -> bool:
 
 
 def _check_permissions(result_data: dict[str, Any]) -> dict[str, Any]:
-    """Check API key info result for forbidden permissions.
+    """Classify API key permissions.
 
-    Bybit v5 /v5/user/query-api returns permissions in the result.
-    If any forbidden permission appears → FAIL_CLOSED.
+    Hard-fail (stop private probe): Withdraw / Transfer / Exchange.
+    Trade-capable: recorded only — app-layer writes remain impossible.
     """
     permissions = result_data.get("permissions") or {}
     if isinstance(permissions, dict):
         all_perms: set[str] = set()
-        for category, perms in permissions.items():
+        for _category, perms in permissions.items():
             if isinstance(perms, list):
-                all_perms.update(perms)
+                all_perms.update(str(p) for p in perms)
             elif isinstance(perms, str):
                 all_perms.add(perms)
+            # Category keys themselves can be permission families
+            all_perms.add(str(_category))
     elif isinstance(permissions, list):
-        all_perms = set(permissions)
+        all_perms = {str(p) for p in permissions}
     else:
         all_perms = set()
 
-    violations = all_perms & FORBIDDEN_API_PERMISSIONS
-    read_only = bool({"ReadOnly"} & all_perms) or not violations
+    hard = all_perms & HARD_FAIL_PERMISSIONS
+    trade = all_perms & TRADE_CAPABLE_PERMISSIONS
     return {
         "permissions_found": sorted(all_perms) if all_perms else [],
-        "violations": sorted(violations),
-        "read_only": read_only and not violations,
-        "fail_closed": bool(violations),
+        "hard_violations": sorted(hard),
+        "violations": sorted(hard),  # alias used by older tests / callers
+        "trade_capable": bool(trade),
+        "trade_permissions": sorted(trade),
+        "read_only": (not hard) and (not trade),
+        "fail_closed": bool(hard),
+        "writes_still_impossible": True,
+        "execution_write_allowed": False,
     }
 
 
@@ -209,6 +226,53 @@ def run_readonly_probe(
         domain=DEMO_REST_BASE_URL,
         started_at_ms=now,
     )
+
+    # 1) Server time (public)
+    try:
+        resp = transport.request("GET", "/v5/market/time", {})
+        result.network_calls += 1
+        result.endpoints_probed.append("/v5/market/time")
+        if int(resp.get("retCode", -1)) == 0:
+            result.server_time_ok = True
+        else:
+            result.errors.append(f"/v5/market/time:retCode={resp.get('retCode')}")
+    except DemoExchangeError as exc:
+        result.errors.append(f"/v5/market/time:{type(exc).__name__}")
+        result.network_calls += 1
+    except Exception as exc:
+        result.errors.append(f"/v5/market/time:{type(exc).__name__}")
+        result.network_calls += 1
+
+    # 2) API key permission info — hard-fail stops further private GETs
+    try:
+        resp = transport.request("GET", "/v5/user/query-api", {})
+        result.network_calls += 1
+        result.endpoints_probed.append("/v5/user/query-api")
+        payload = resp.get("result") if isinstance(resp.get("result"), dict) else resp
+        perm = _check_permissions(payload if isinstance(payload, dict) else {})
+        result.permission_check = perm
+        if perm.get("fail_closed"):
+            result.fail_closed = True
+            result.status = ProbeStatus.FAIL_CLOSED_PERMISSION
+            result.errors.append("permission:hard_fail:" + ",".join(perm.get("hard_violations") or []))
+            logger.warning("probe_fail_closed reason=hard_permission_violation")
+            result.finished_at_ms = int(time.time() * 1000)
+            return result
+        if perm.get("trade_capable"):
+            result.errors.append("permission:trade_capable_key_writes_still_impossible")
+    except PermissionDeniedError:
+        result.fail_closed = True
+        result.status = ProbeStatus.FAIL_CLOSED_PERMISSION
+        result.errors.append("/v5/user/query-api:permission_denied")
+        result.finished_at_ms = int(time.time() * 1000)
+        return result
+    except DemoExchangeError as exc:
+        # Permission endpoint unavailable — continue discovery but record
+        result.errors.append(f"/v5/user/query-api:{type(exc).__name__}")
+        result.network_calls += 1
+    except Exception as exc:
+        result.errors.append(f"/v5/user/query-api:{type(exc).__name__}")
+        result.network_calls += 1
 
     probe_sequence = [
         ("/v5/account/wallet-balance", {"accountType": "UNIFIED"}, "wallet_readable"),
