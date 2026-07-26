@@ -186,9 +186,9 @@ class DemoWalletReader:
         # Prefer equity/wallet for available when no explicit available fields exist.
         if available <= 0 and equity > 0:
             available = equity if equity > 0 else wallet
-        elif equity > 0 and available > equity * 1.05:
-            # Guard against mismatched UTA field units/sources.
-            available = equity
+        if equity > 0:
+            # Available must never exceed total equity for sizing.
+            available = min(available, equity)
         return WalletView(
             account_type=str(row.get("accountType") or account_type),
             total_equity=equity,
