@@ -401,6 +401,28 @@ def register_nexus_routes(app):
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc), "network_calls": 0}), 500
 
+    @app.route("/api/nexus/demo/credential-audit")
+    def nexus_demo_credential_audit():
+        """Phase 6.6.1 credential presence + fingerprint + boot continuity — no secrets."""
+        try:
+            from backend.nexus_research.demo_exchange.credential_audit import DemoCredentialPresenceAudit
+
+            audit = DemoCredentialPresenceAudit.build()
+            return jsonify(audit.to_dict())
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc), "secret_safe": True}), 500
+
+    @app.route("/api/nexus/demo/account-snapshot")
+    def nexus_demo_account_snapshot():
+        """Phase 6.6.1 GET-only account snapshot — probe_disabled with zero network calls when off."""
+        try:
+            from backend.nexus_research.demo_exchange.account_snapshot import capture_account_snapshot
+
+            snapshot = capture_account_snapshot()
+            return jsonify(snapshot.to_dict())
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc), "network_calls": 0, "secret_safe": True}), 500
+
     @app.route("/api/nexus/stage3/summary")
     def nexus_stage3_summary():
         try:

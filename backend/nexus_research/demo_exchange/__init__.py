@@ -10,6 +10,11 @@ Hard rules:
 """
 from __future__ import annotations
 
+from backend.nexus_research.demo_exchange.account_snapshot import (
+    AccountSnapshotResult,
+    SnapshotStatus,
+    capture_account_snapshot,
+)
 from backend.nexus_research.demo_exchange.constants import (
     ACCOUNT_BYBIT_DEMO,
     ACCOUNT_PAPER_MAIN_V1,
@@ -18,6 +23,11 @@ from backend.nexus_research.demo_exchange.constants import (
     PHASE,
     RESEARCH_ONLY,
     WRITE_ALLOWED,
+)
+from backend.nexus_research.demo_exchange.credential_audit import (
+    BootContinuityRecord,
+    DemoCredentialPresenceAudit,
+    credential_fingerprint,
 )
 from backend.nexus_research.demo_exchange.credentials import (
     DemoCredentialPresenceValidator,
@@ -47,6 +57,10 @@ from backend.nexus_research.demo_exchange.probe_readiness import (
     ReadOnlyEndpointAllowlist,
     ReadOnlySnapshotReport,
 )
+from backend.nexus_research.demo_exchange.readonly_probe import (
+    ReadOnlyProbeResult,
+    run_readonly_probe,
+)
 from backend.nexus_research.demo_exchange.readers import (
     DemoExchangeSnapshot,
     DemoExecutionReader,
@@ -75,12 +89,15 @@ __all__ = [
     "ACCOUNT_BYBIT_DEMO",
     "ACCOUNT_PAPER_MAIN_V1",
     "AccountBoundary",
+    "AccountSnapshotResult",
+    "BootContinuityRecord",
     "CredentialConfiguredState",
     "CredentialDiscoveryResult",
     "DEMO_READONLY_PROBE_ENABLED_ENV",
     "DEMO_REST_BASE_URL",
     "DEMO_WS_PRIVATE_NOTE",
     "DemoConnectivityResult",
+    "DemoCredentialPresenceAudit",
     "DemoCredentialPresenceValidator",
     "DemoDomainPolicy",
     "DemoExchangeSnapshot",
@@ -111,10 +128,15 @@ __all__ = [
     "ProbeFailClosedPolicy",
     "RESEARCH_ONLY",
     "ReadOnlyEndpointAllowlist",
+    "ReadOnlyProbeResult",
     "ReadOnlySnapshotReport",
     "ReconciliationResult",
     "RestartRecoveryPlan",
+    "SnapshotStatus",
     "WRITE_ALLOWED",
+    "capture_account_snapshot",
+    "credential_fingerprint",
     "discover_credentials",
     "fingerprint_secret",
+    "run_readonly_probe",
 ]

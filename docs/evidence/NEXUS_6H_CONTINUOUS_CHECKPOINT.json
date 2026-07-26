@@ -1,0 +1,60 @@
+{
+  "phase": "6.6.1",
+  "track": "A",
+  "title": "NEXUS 6H Demo Foundation — Continuous Checkpoint",
+  "description": "TRACK 0-2: GET-only probe, credential audit, account snapshot implemented",
+  "timestamp": "2026-07-26T16:57:00+08:00",
+  "base_commit": "f7d4a96",
+  "branch": "phase66-6h-demo-foundation",
+  "files_changed": [
+    "backend/nexus_research/demo_exchange/credential_audit.py",
+    "backend/nexus_research/demo_exchange/readonly_probe.py",
+    "backend/nexus_research/demo_exchange/account_snapshot.py",
+    "backend/nexus_research/demo_exchange/__init__.py",
+    "backend/api/server.py",
+    "tests/test_phase661_readonly_probe.py",
+    "tests/test_phase661_account_snapshot.py",
+    "docs/evidence/BYBIT_DEMO_ACCOUNT_DISCOVERY.json",
+    "docs/evidence/NEXUS_6H_CONTINUOUS_CHECKPOINT.json"
+  ],
+  "files_added": [
+    "backend/nexus_research/demo_exchange/credential_audit.py",
+    "backend/nexus_research/demo_exchange/readonly_probe.py",
+    "backend/nexus_research/demo_exchange/account_snapshot.py",
+    "tests/test_phase661_readonly_probe.py",
+    "tests/test_phase661_account_snapshot.py",
+    "docs/evidence/BYBIT_DEMO_ACCOUNT_DISCOVERY.json"
+  ],
+  "files_modified": [
+    "backend/api/server.py",
+    "backend/nexus_research/demo_exchange/__init__.py"
+  ],
+  "tests": {
+    "test_phase661_readonly_probe": 34,
+    "test_phase661_account_snapshot": 17,
+    "total_new": 51,
+    "all_passed": true
+  },
+  "routes_added": [
+    "GET /api/nexus/demo/credential-audit",
+    "GET /api/nexus/demo/account-snapshot"
+  ],
+  "routes_existing": [
+    "GET /api/nexus/demo/discovery",
+    "GET /api/nexus/demo/readiness"
+  ],
+  "hard_rules_enforced": {
+    "secret_safe": true,
+    "write_allowed": false,
+    "mainnet_rejected": true,
+    "testnet_rejected": true,
+    "domain_locked": "api-demo.bybit.com",
+    "get_only": true,
+    "paper_demo_separated": true
+  },
+  "next_steps": [
+    "Enable DEMO_READONLY_PROBE_ENABLED=true with live Bybit Demo credentials",
+    "Verify live probe passes with real account",
+    "Populate account snapshot with real balances"
+  ]
+}

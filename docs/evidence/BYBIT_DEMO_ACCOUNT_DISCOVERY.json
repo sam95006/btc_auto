@@ -1,0 +1,80 @@
+{
+  "phase": "6.6.1",
+  "track": "A",
+  "title": "Bybit Demo GET-only Account Discovery",
+  "description": "TRACK 0-2: Credential audit, GET-only probe, account snapshot",
+  "domain": "https://api-demo.bybit.com",
+  "domain_locked": true,
+  "mainnet_rejected": true,
+  "testnet_rejected": true,
+  "write_allowed": false,
+  "write_impossible": true,
+  "secret_safe": true,
+  "credential_audit": {
+    "key_status": "MISSING",
+    "secret_status": "MISSING",
+    "credential_present": false,
+    "fingerprint": "",
+    "boot_continuity": {
+      "boot_id": "",
+      "deployment_commit": "",
+      "credential_present": false,
+      "fingerprint": "",
+      "probe_enabled": false,
+      "timestamp_ms": 0
+    }
+  },
+  "readonly_probe": {
+    "status": "PROBE_DISABLED",
+    "probe_enabled": false,
+    "credential_present": false,
+    "fingerprint": "",
+    "network_calls": 0,
+    "server_time_ok": false,
+    "wallet_readable": false,
+    "position_readable": false,
+    "order_readable": false,
+    "execution_readable": false,
+    "fail_closed": false,
+    "write_attempted": false,
+    "endpoints_probed": []
+  },
+  "account_snapshot": {
+    "status": "PROBE_DISABLED",
+    "account_identity": "BYBIT_DEMO_ACCOUNT",
+    "account_type": "",
+    "total_equity": 0.0,
+    "wallet_balance": 0.0,
+    "available_balance": 0.0,
+    "unrealised_pnl": 0.0,
+    "margins": 0.0,
+    "currency": "USDT",
+    "updated_at_ms": 0,
+    "freshness_ms": 0,
+    "positions": [],
+    "open_orders": [],
+    "recent_orders": [],
+    "executions": [],
+    "review_flags": [],
+    "network_calls": 0
+  },
+  "routes": [
+    "GET /api/nexus/demo/discovery",
+    "GET /api/nexus/demo/readiness",
+    "GET /api/nexus/demo/credential-audit",
+    "GET /api/nexus/demo/account-snapshot"
+  ],
+  "files_added": [
+    "backend/nexus_research/demo_exchange/credential_audit.py",
+    "backend/nexus_research/demo_exchange/readonly_probe.py",
+    "backend/nexus_research/demo_exchange/account_snapshot.py",
+    "tests/test_phase661_readonly_probe.py",
+    "tests/test_phase661_account_snapshot.py"
+  ],
+  "files_modified": [
+    "backend/api/server.py",
+    "backend/nexus_research/demo_exchange/__init__.py"
+  ],
+  "notes": "Placeholder zeros — live probe not yet enabled. Values populate when DEMO_READONLY_PROBE_ENABLED=true and credentials injected via Zeabur secret.",
+  "generated_at": "2026-07-26T16:57:00+08:00"
+}
