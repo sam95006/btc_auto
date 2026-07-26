@@ -8,6 +8,7 @@ import { formatUsd } from "../market/freshness";
 import { fmtNum } from "../market/displayNull";
 import { OpportunityCard } from "./OpportunityCard";
 import { MarketParityStrip } from "./MarketParityStrip";
+import { BybitDemoAutonomousCard } from "./BybitDemoAutonomousCard";
 import type { MarketCandidate } from "../market/scannerApi";
 
 function TickerChip({ symbol }: { symbol: "BTC" | "ETH" | "SOL" }) {
@@ -175,6 +176,9 @@ export function ProductSimpleView() {
       </header>
 
       {error ? <div className="nx-banner-warn">掃描器暫不可用：{error}</div> : null}
+
+      {/* 0. Bybit Demo autonomous ops */}
+      <BybitDemoAutonomousCard />
 
       {/* 1. Ticker */}
       <section className="nx-p7-block" aria-label="Ticker">

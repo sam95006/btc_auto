@@ -3966,3 +3966,31 @@ button {
   .nx-p7-lsn { flex-wrap: wrap; gap: 0.4rem; }
   .nx-tops-head { flex-wrap: wrap; gap: 0.25rem; }
 }
+
+/* ¢w¢w Bybit Demo autonomous ops card ¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w */
+.nx-demo-ops-card { border-color: rgba(96,165,250,0.28); }
+.nx-demo-ops-head { display:flex; justify-content:space-between; gap:0.75rem; flex-wrap:wrap; align-items:flex-start; }
+.nx-demo-ops-badges { display:flex; flex-wrap:wrap; gap:0.35rem; }
+.nx-demo-badge { font-size:0.72rem; border:1px solid rgba(255,255,255,0.16); border-radius:6px; padding:0.2rem 0.45rem; }
+.nx-demo-badge.ok { border-color: rgba(74,222,128,0.45); background: rgba(74,222,128,0.08); }
+.nx-demo-badge.warn { border-color: rgba(251,191,36,0.45); background: rgba(251,191,36,0.08); }
+.nx-demo-ops-state { margin:0.55rem 0 0.7rem; font-size:0.98rem; }
+.nx-demo-ops-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0.45rem 0.6rem; }
+.nx-demo-ops-grid > div { display:grid; gap:0.1rem; }
+.nx-demo-ops-grid .muted { font-size:0.7rem; }
+.nx-demo-ops-scanline { display:flex; flex-wrap:wrap; gap:0.65rem; margin:0.7rem 0 0.35rem; font-size:0.82rem; }
+.nx-demo-ops-section { margin-top:0.7rem; }
+.nx-demo-ops-h3 { margin:0 0 0.25rem; font-size:0.88rem; }
+.nx-demo-ops-list { margin:0; padding-left:1.1rem; display:grid; gap:0.2rem; font-size:0.88rem; }
+.nx-demo-lifecycle { display:flex; flex-wrap:wrap; gap:0.3rem; }
+.nx-demo-lifecycle span { font-size:0.68rem; border:1px solid rgba(255,255,255,0.14); border-radius:4px; padding:0.15rem 0.35rem; opacity:0.45; }
+.nx-demo-lifecycle span.done { opacity:1; border-color:rgba(74,222,128,0.5); background:rgba(74,222,128,0.1); }
+.nx-demo-ops-actions { display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin-top:0.35rem; }
+.nx-demo-ops-foot { margin:0.7rem 0 0; }
+@media (max-width:720px) {
+  .nx-demo-ops-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:375px) {
+  .nx-demo-ops-card, .nx-demo-ops-grid, .nx-demo-lifecycle { max-width:100%; overflow-x:hidden; }
+  .nx-demo-ops-grid { grid-template-columns:1fr 1fr; }
+}

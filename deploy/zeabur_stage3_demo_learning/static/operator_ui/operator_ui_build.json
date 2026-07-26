@@ -1,8 +1,29 @@
-﻿{
-  "phase": "6.4",
-  "js": "index-BWwOeIeV.js",
-  "css": "index-DnR1AQao.css",
-  "source": "temp_clean_build",
-  "builtAt": "2026-07-20T08:00:00Z",
-  "notes": "candle ms->seconds fix; market data routes on nexus-web run.py"
+{
+  "source": "frontend/dist",
+  "dest": "deploy/zeabur_stage3_demo_learning/static/operator_ui",
+  "marker": "NEXUS_UI_PRODUCT_AND_INTELLIGENCE_PHASE4",
+  "phase3_marker": "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES",
+  "phase2_marker": "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE",
+  "mvp22d_marker": "NEXUS_UI_MVP22D_ANOMALY_OUTCOME_RESEARCH",
+  "mvp22c_marker": "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR",
+  "mvp22b_marker": "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT",
+  "mvp22a_marker": "NEXUS_UI_MVP22A_LIVE_MARKET_DATA",
+  "legacy_marker": "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60",
+  "marker_found": true,
+  "file_count": 5,
+  "current_assets": [
+    "index-DGpIoh9h.js",
+    "index-zYpQICrL.css"
+  ],
+  "retained_assets": [
+    "index-BWwOeIeV.js",
+    "index-DGpIoh9h.js",
+    "index-DnR1AQao.css",
+    "index-zYpQICrL.css"
+  ],
+  "retained_generations": 3,
+  "previous_assets": [
+    "index-BWwOeIeV.js",
+    "index-DnR1AQao.css"
+  ]
 }
