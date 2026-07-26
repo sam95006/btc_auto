@@ -172,13 +172,25 @@ class DemoWalletReader:
         coins = row.get("coin") or []
         coin_row = coins[0] if coins else {}
         now = int(time.time() * 1000)
+        available = _as_float(
+            row.get("totalAvailableBalance")
+            or row.get("availableBalance")
+            or coin_row.get("availableToWithdraw")
+            or coin_row.get("availableToBuy")
+            or coin_row.get("availableBalance")
+            or coin_row.get("equity")
+        )
+        wallet = _as_float(row.get("totalWalletBalance") or coin_row.get("walletBalance"))
+        equity = _as_float(row.get("totalEquity") or coin_row.get("equity") or wallet)
+        # Demo UTA sometimes reports available=0 while equity is free and flat.
+        # Prefer equity/wallet for available when no explicit available fields exist.
+        if available <= 0 and equity > 0:
+            available = equity if equity > 0 else wallet
         return WalletView(
             account_type=str(row.get("accountType") or account_type),
-            total_equity=_as_float(row.get("totalEquity")),
-            wallet_balance=_as_float(row.get("totalWalletBalance") or coin_row.get("walletBalance")),
-            available_balance=_as_float(
-                row.get("totalAvailableBalance") or coin_row.get("availableToWithdraw")
-            ),
+            total_equity=equity,
+            wallet_balance=wallet,
+            available_balance=available,
             coin=str(coin_row.get("coin") or "USDT"),
             captured_at_ms=now,
             raw_time_ms=_response_time_ms(payload),

@@ -178,7 +178,7 @@ def capture_account_snapshot(
         result.available_balance = wallet.available_balance
         result.currency = wallet.coin
         result.updated_at_ms = wallet.raw_time_ms
-        result.freshness_ms = now - wallet.raw_time_ms if wallet.raw_time_ms else 0
+        result.freshness_ms = abs(now - wallet.raw_time_ms) if wallet.raw_time_ms else 0
         result.unrealised_pnl = result.total_equity - result.wallet_balance
         result.margins = result.wallet_balance - result.available_balance
         result.network_calls += 1

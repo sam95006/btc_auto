@@ -51,6 +51,7 @@ def _env_present(name: str, environ: dict[str, str] | None = None) -> bool:
 
 class DiscoveryStatus:
     CREDENTIAL_DETECTED_PROBE_DISABLED = "CREDENTIAL_DETECTED_PROBE_DISABLED"
+    CREDENTIAL_DETECTED_PROBE_ENABLED = "CREDENTIAL_DETECTED_PROBE_ENABLED"
     BLOCKED_CREDENTIALS_MISSING = "BLOCKED_CREDENTIALS_MISSING"
     BLOCKED_CREDENTIAL_NAME_MISMATCH = "BLOCKED_CREDENTIAL_NAME_MISMATCH"
 
@@ -99,7 +100,11 @@ def discover_credentials(
     alt_secret = any(_env_present(n, environ) for n in ALTERNATE_SECRET_NAMES)
 
     if expected_configured:
-        status = DiscoveryStatus.CREDENTIAL_DETECTED_PROBE_DISABLED
+        status = (
+            DiscoveryStatus.CREDENTIAL_DETECTED_PROBE_ENABLED
+            if probe_on
+            else DiscoveryStatus.CREDENTIAL_DETECTED_PROBE_DISABLED
+        )
     elif (alt_key or alt_secret) and not expected_configured:
         status = DiscoveryStatus.BLOCKED_CREDENTIAL_NAME_MISMATCH
     else:
