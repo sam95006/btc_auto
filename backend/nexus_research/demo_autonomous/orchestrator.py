@@ -362,7 +362,26 @@ class AutonomousDemoOrchestrator:
 
         assert self.write_adapter is not None
         lev_res = self.write_adapter.set_leverage(top.symbol, top.leverage)
+        if not lev_res.ok:
+            sm.transition(DemoOrderState.REJECTED, reason=lev_res.ret_msg or lev_res.error or "set_leverage_failed")
+            return OrchestratorResult(
+                summary, candidates, top, False,
+                {"leverage": lev_res.to_dict()},
+                sm.state.value, session_active, self.dry_run,
+                blocker=lev_res.ret_msg or lev_res.error or "set_leverage_failed",
+            )
         iso_res = self.write_adapter.ensure_isolated(top.symbol, top.leverage)
+        if not iso_res.ok:
+            # Some Demo keys reject switch-isolated if already isolated — continue only when ret hints already-set.
+            msg = (iso_res.ret_msg or iso_res.error or "").lower()
+            if "permission" in msg or iso_res.ret_code in (10005, 10003, 10004):
+                sm.transition(DemoOrderState.REJECTED, reason=iso_res.ret_msg or iso_res.error or "isolated_failed")
+                return OrchestratorResult(
+                    summary, candidates, top, False,
+                    {"leverage": lev_res.to_dict(), "isolated": iso_res.to_dict()},
+                    sm.state.value, session_active, self.dry_run,
+                    blocker=iso_res.ret_msg or iso_res.error or "isolated_failed",
+                )
         place_res = self.write_adapter.place_order(intent)
         order_sent = place_res.ok
         if place_res.ok:
