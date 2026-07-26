@@ -45,3 +45,28 @@ def test_multi_strategy_picks_fitted():
     scores = score_strategies(feat, "LONG")
     assert len(scores) >= 5
     assert infer_regime(feat)
+
+
+def test_supervisor_dry_exit_builds_reflection():
+    import time
+
+    from backend.nexus_research.demo_autonomous.position_lifecycle import PositionSnapshot
+    from backend.nexus_research.demo_autonomous.position_supervisor import AutonomousPositionSupervisor
+
+    now = int(time.time() * 1000)
+    pos = PositionSnapshot(
+        "BTCUSDT", "Buy", 0.01, 100_000, 98_000, -20, 96_000, 99_000, 103_000,
+        now - 60_000, True,
+    )
+    r = AutonomousPositionSupervisor(dry_run=True).tick(
+        pos,
+        stop_distance_pct=1.5,
+        risk_amount=25.0,
+        strategy="TREND_FOLLOWING",
+        regime="BULL_TREND",
+        confidence=70,
+        leverage=25,
+    )
+    assert r.closed is True
+    assert r.reflection is not None
+    assert r.reflection.to_dict()["livePatchApplied"] is False

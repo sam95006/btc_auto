@@ -27,22 +27,31 @@ def _get_orch(*, dry_run: bool | None = None):
         )
     if _ORCH_SINGLETON is None or getattr(_ORCH_SINGLETON, "dry_run", None) != dry_run:
         adapter = _WRITE_ADAPTER
-        if adapter is None and not dry_run:
+        if adapter is None:
             try:
                 from backend.nexus_research.demo_autonomous.write_adapter import AutonomousDemoOrderAdapter
                 from backend.nexus_research.demo_autonomous.write_transport import DemoWriteTransport
                 from backend.nexus_research.demo_exchange.signer import DemoRequestSigner
 
-                key = os.environ.get("BYBIT_DEMO_API_KEY", "").strip()
-                secret = os.environ.get("BYBIT_DEMO_API_SECRET", "").strip()
-                if key and secret:
+                if dry_run:
+                    # Dry-run path: no live credentials required; transport never POSTs.
                     transport = DemoWriteTransport(
-                        signer=DemoRequestSigner(key, secret),
+                        signer=DemoRequestSigner("dry-run", "dry-run"),
                         auth=auth,
-                        dry_run=False,
+                        dry_run=True,
                     )
                     adapter = AutonomousDemoOrderAdapter(transport, auth=auth)
-                    _WRITE_ADAPTER = adapter
+                else:
+                    key = os.environ.get("BYBIT_DEMO_API_KEY", "").strip()
+                    secret = os.environ.get("BYBIT_DEMO_API_SECRET", "").strip()
+                    if key and secret:
+                        transport = DemoWriteTransport(
+                            signer=DemoRequestSigner(key, secret),
+                            auth=auth,
+                            dry_run=False,
+                        )
+                        adapter = AutonomousDemoOrderAdapter(transport, auth=auth)
+                        _WRITE_ADAPTER = adapter
             except Exception as exc:
                 logger.warning("write_adapter_init_failed: %s", type(exc).__name__)
                 adapter = None
