@@ -121,6 +121,29 @@ class AutonomousDemoOrderAdapter:
     def set_leverage(self, symbol: str, leverage: int, *, category: str = "linear") -> WriteResult:
         stage = WriteStage.STEP_1_SET_LEVERAGE
         path = "/v5/position/set-leverage"
+        account = self.last_account or self.refresh_account_truth()
+        # Fail closed before any write when exchange marks key read-only (readOnly=1),
+        # even if ContractTrade Order/Position permission arrays are non-empty.
+        if account.read_only_key == 1:
+            meta = self._meta(
+                WriteStage.STEP_1_SET_LEVERAGE, "/v5/position/set-leverage",
+                symbol=symbol, category=category, leverage=leverage, account=account,
+                already=False, ret_code=10005, ret_msg="EXCHANGE_KEY_READONLY_FLAG",
+                classification=WriteFailureClass.PERMISSION_CONTEXT_ERROR,
+                notes=[
+                    "query_api_readOnly=1",
+                    "contract_trade_order_present_still_readonly_key_type",
+                    "not_missing_order_checkbox",
+                ],
+            )
+            self.last_trace.add(meta)
+            return WriteResult(
+                False, "/v5/position/set-leverage", 10005, "EXCHANGE_KEY_READONLY_FLAG",
+                stage=WriteStage.STEP_1_SET_LEVERAGE.value,
+                classification=WriteFailureClass.PERMISSION_CONTEXT_ERROR.value,
+                meta=meta.to_dict(), error="exchange_key_readonly_flag",
+            )
+
         # Skip if position already at target leverage
         if self.get_json is not None:
             pos = self.position_resolver.resolve_symbol(self.get_json, symbol, category=category)
