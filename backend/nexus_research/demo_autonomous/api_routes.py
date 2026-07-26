@@ -306,3 +306,66 @@ def register_autonomous_demo_routes(app: Flask) -> None:
         except Exception as exc:
             logger.exception("write_trace_failed")
             return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500
+
+    @app.route("/api/nexus/demo/autonomous/close", methods=["POST"])
+    def nexus_autonomous_close():
+        """Controlled reduce-only close for Demo position (session required)."""
+        try:
+            from backend.nexus_research.demo_autonomous.outcome_reflection import build_reflection_bundle
+            from backend.nexus_research.demo_autonomous.session_authorization import (
+                get_authorization_validator,
+            )
+            from backend.nexus_research.demo_autonomous.write_adapter import AutonomousDemoOrderAdapter
+            from backend.nexus_research.demo_autonomous.write_transport import DemoWriteTransport
+            from backend.nexus_research.demo_exchange.account_snapshot import capture_account_snapshot
+            from backend.nexus_research.demo_exchange.credentials import DemoCredentialPresenceValidator
+            from backend.nexus_research.demo_exchange.signer import DemoRequestSigner
+
+            body = request.get_json(silent=True) or {}
+            auth = get_authorization_validator()
+            auth.require_active()
+            snap = capture_account_snapshot()
+            positions = list(snap.positions or [])
+            if not positions:
+                return jsonify({"ok": True, "closed": False, "reason": "no_position", "secretSafe": True})
+            pos = positions[0]
+            symbol = str(pos.get("symbol") or body.get("symbol") or "")
+            side = str(pos.get("side") or "")
+            size = float(pos.get("size") or 0)
+            if size <= 0 or not symbol:
+                return jsonify({"ok": False, "error": "invalid_position", "secretSafe": True}), 400
+
+            key, secret = DemoCredentialPresenceValidator().load_secrets_for_signer()
+            transport = DemoWriteTransport(
+                signer=DemoRequestSigner(key, secret), auth=auth, dry_run=False,
+            )
+            adapter = AutonomousDemoOrderAdapter(transport, auth=auth, get_json=transport.get)
+            res = adapter.close_position(symbol, side, size)
+            reflection = None
+            if res.ok:
+                upnl = float(pos.get("unrealisedPnl") or 0)
+                reflection = build_reflection_bundle(
+                    symbol=symbol,
+                    side=side,
+                    strategy=str(body.get("strategy") or "UNKNOWN"),
+                    regime=str(body.get("regime") or "UNKNOWN"),
+                    confidence=float(body.get("confidence") or 0),
+                    leverage=int(body.get("leverage") or 25),
+                    gross_pnl=upnl,
+                    fees=abs(float(pos.get("realisedPnl") or 0)) if float(pos.get("realisedPnl") or 0) < 0 else 0.5,
+                    funding=0.0,
+                    slippage=0.0,
+                    risk_amount=float(body.get("riskAmount") or 25),
+                    exit_reason="CONTROLLED_CLOSE",
+                ).to_dict()
+            return jsonify({
+                "ok": res.ok,
+                "closed": res.ok,
+                "write": res.to_dict(),
+                "reflection": reflection,
+                "secretSafe": True,
+                "mainnetUsed": False,
+            })
+        except Exception as exc:
+            logger.exception("autonomous_close_failed")
+            return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500

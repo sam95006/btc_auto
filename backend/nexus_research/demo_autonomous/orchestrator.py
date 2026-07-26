@@ -460,6 +460,8 @@ class AutonomousDemoOrchestrator:
             prot = self.write_adapter.set_trading_stop(
                 top.symbol, stop_loss=top.stop_price, take_profit=top.take_profit_price,
             )
+            # 34040 / "not modified" = exchange already has TP/SL (often attached on create).
+            prot_ok = prot.ok or prot.already_satisfied or prot.ret_code in (34040, 110043)
             write_payload = {
                 "account": account.to_dict(),
                 "leverage": lev_res.to_dict(),
@@ -471,11 +473,12 @@ class AutonomousDemoOrchestrator:
                 "rootCause": self.write_adapter.last_trace.root_cause_report(),
                 "instrument": instrument.to_dict() if instrument else None,
             }
-            if not prot.ok:
+            if not prot_ok:
                 state = "PROTECTION_FAILED"
-                # Do not claim PROTECTED
             else:
                 state = "PROTECTED"
+                if not prot.ok:
+                    write_payload["protectionNote"] = "exchange_tpsl_already_present_or_unmodified"
         else:
             sm.transition(
                 DemoOrderState.AMBIGUOUS if place_res.error and "Timeout" in (place_res.error or "") else DemoOrderState.REJECTED,
