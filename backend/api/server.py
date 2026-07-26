@@ -379,6 +379,28 @@ def register_nexus_routes(app):
         except Exception as exc:
             return jsonify({"read_only": True, "error": str(exc), "data_available": False}), 500
 
+    @app.route("/api/nexus/demo/readiness")
+    def nexus_demo_readiness():
+        """Phase 6.6.1 read-only credential discovery — zero network calls, no secret values."""
+        try:
+            from backend.nexus_research.demo_exchange.discovery import DemoReadinessReport
+
+            report = DemoReadinessReport.build()
+            return jsonify(report.to_dict())
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc), "probe_enabled": False}), 500
+
+    @app.route("/api/nexus/demo/discovery")
+    def nexus_demo_discovery():
+        """Phase 6.6.1 credential presence discovery — no secret values returned."""
+        try:
+            from backend.nexus_research.demo_exchange.discovery import discover_credentials
+
+            result = discover_credentials()
+            return jsonify(result.to_dict())
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc), "network_calls": 0}), 500
+
     @app.route("/api/nexus/stage3/summary")
     def nexus_stage3_summary():
         try:
