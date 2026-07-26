@@ -114,7 +114,14 @@ def build_boot_continuity(
     src = environ if environ is not None else os.environ
     presence = check_credential_presence(src)
     fp = build_credential_fingerprint(src)
-    commit = (src.get("DEPLOYMENT_COMMIT") or src.get("GIT_COMMIT") or "").strip()
+    commit = (
+        src.get("ZEABUR_GIT_COMMIT")
+        or src.get("ZEABUR_COMMIT_SHA")
+        or src.get("DEPLOYMENT_COMMIT")
+        or src.get("GIT_COMMIT")
+        or src.get("COMMIT_SHA")
+        or ""
+    ).strip()
     return BootContinuityRecord(
         boot_id=_get_boot_id(),
         deployment_commit=commit,

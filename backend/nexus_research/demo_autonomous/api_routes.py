@@ -63,24 +63,242 @@ def _get_orch(*, dry_run: bool | None = None):
 def register_autonomous_demo_routes(app: Flask) -> None:
     """Register /api/nexus/demo/autonomous/* routes."""
 
+    try:
+        from backend.nexus_research.demo_autonomous.runtime_bootstrap import (
+            ensure_autonomous_runtime,
+        )
+
+        ensure_autonomous_runtime()
+    except Exception as exc:
+        logger.warning("autonomous_runtime_bootstrap_failed: %s", type(exc).__name__)
+
     @app.route("/api/nexus/demo/autonomous/status")
     def nexus_autonomous_status():
         try:
-            from backend.nexus_research.demo_autonomous.session_authorization import (
-                autonomous_enabled_from_env,
-                get_authorization_validator,
-            )
+            from backend.nexus_research.demo_autonomous.ops_status import build_operations_status
 
-            auth = get_authorization_validator()
-            sess = auth.session
+            return jsonify(build_operations_status(include_snapshot=True))
+        except Exception as exc:
+            logger.exception("autonomous_status_failed")
+            return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500
+
+    @app.route("/api/nexus/demo/autonomous/account")
+    def nexus_autonomous_account():
+        try:
+            from backend.nexus_research.demo_exchange.account_snapshot import capture_account_snapshot
+
+            snap = capture_account_snapshot().to_dict()
             return jsonify({
                 "ok": True,
-                "enabledEnv": autonomous_enabled_from_env(),
-                "session": sess.to_public_dict() if sess else None,
-                "dryRunDefault": os.environ.get("NEXUS_AUTONOMOUS_DEMO_DRY_RUN", "true"),
-                "mainnetAllowed": False,
-                "realMoneyAllowed": False,
+                "demoEquity": snap.get("total_equity"),
+                "availableBalance": snap.get("available_balance"),
+                "walletBalance": snap.get("wallet_balance"),
+                "unrealisedPnl": snap.get("unrealised_pnl"),
+                "positionCount": len([
+                    p for p in (snap.get("positions") or []) if float(p.get("size") or 0) > 0
+                ]),
+                "openOrderCount": len(snap.get("open_orders") or []),
+                "fingerprint": snap.get("fingerprint"),
+                "status": snap.get("status"),
+                "mainnetUsed": False,
+                "realMoneyUsed": False,
                 "secretSafe": True,
+            })
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500
+
+    @app.route("/api/nexus/demo/autonomous/candidates")
+    def nexus_autonomous_candidates():
+        try:
+            from backend.nexus_research.demo_autonomous.ops_status import get_ops_store
+
+            store = get_ops_store()
+            return jsonify({
+                "ok": True,
+                "eligibleCandidates": store.eligible_candidates,
+                "topCandidate": store.top_candidate,
+                "blockReasons": list(store.last_block_reasons),
+                "lastScanAtMs": store.last_scan_at_ms,
+                "symbolsScanned": store.symbols_scanned,
+                "tradableSymbols": store.tradable_symbols,
+                "secretSafe": True,
+            })
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500
+
+    @app.route("/api/nexus/demo/autonomous/position")
+    def nexus_autonomous_position():
+        try:
+            from backend.nexus_research.demo_autonomous.ops_status import build_operations_status
+
+            st = build_operations_status(include_snapshot=True)
+            return jsonify({
+                "ok": True,
+                "positionOpen": int(st.get("positionCount") or 0) > 0,
+                "currentPosition": st.get("currentPosition"),
+                "protectionStatus": st.get("protectionStatus"),
+                "openOrderCount": st.get("openOrderCount"),
+                "reconciliationStatus": st.get("reconciliationStatus"),
+                "secretSafe": True,
+            })
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500
+
+    @app.route("/api/nexus/demo/autonomous/recent-trades")
+    def nexus_autonomous_recent_trades():
+        try:
+            from backend.nexus_research.demo_autonomous.ops_status import get_ops_store
+            from backend.nexus_research.demo_exchange.account_snapshot import capture_account_snapshot
+
+            store = get_ops_store()
+            trades: list[dict[str, Any]] = []
+            if store.last_trade:
+                trades.append(store.last_trade)
+            else:
+                # Incomplete backfill — do not invent zeros.
+                try:
+                    snap = capture_account_snapshot()
+                    execs = list(snap.executions or [])[:6]
+                    if execs:
+                        trades.append({
+                            "incomplete": True,
+                            "noteZh": "資料尚未完整回填",
+                            "executionsSample": [
+                                {
+                                    "symbol": e.get("symbol"),
+                                    "side": e.get("side"),
+                                    "execPrice": e.get("execPrice") or e.get("price"),
+                                    "execQty": e.get("execQty") or e.get("qty"),
+                                    "execTime": e.get("execTime") or e.get("updatedTime"),
+                                }
+                                for e in execs
+                                if isinstance(e, dict)
+                            ],
+                        })
+                    else:
+                        trades.append({"incomplete": True, "noteZh": "資料尚未完整回填"})
+                except Exception:
+                    trades.append({"incomplete": True, "noteZh": "資料尚未完整回填"})
+            return jsonify({"ok": True, "trades": trades, "secretSafe": True})
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500
+
+    @app.route("/api/nexus/demo/autonomous/reflections")
+    def nexus_autonomous_reflections():
+        try:
+            from backend.nexus_research.demo_autonomous.ops_status import get_ops_store
+
+            store = get_ops_store()
+            items = []
+            if store.last_reflection:
+                items.append(store.last_reflection)
+            return jsonify({
+                "ok": True,
+                "reflections": items,
+                "lastReflectionAtMs": store.last_reflection_at_ms,
+                "secretSafe": True,
+            })
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500
+
+    @app.route("/api/nexus/demo/autonomous/risk")
+    def nexus_autonomous_risk():
+        try:
+            from backend.nexus_research.demo_autonomous.ops_status import build_operations_status
+
+            st = build_operations_status(include_snapshot=False)
+            return jsonify({
+                "ok": True,
+                "demoOnly": True,
+                "mainnetBlocked": True,
+                "realMoneyBlocked": True,
+                "isolatedOnly": True,
+                "maxPositions": 1,
+                "maxPendingOrders": 1,
+                "riskPerTradeMaxPct": 0.5,
+                "dailyLossGate": True,
+                "weeklyDrawdownGate": True,
+                "consecutiveLossGate": True,
+                "emergencyStop": st.get("emergencyStop"),
+                "reconciliationStatus": st.get("reconciliationStatus"),
+                "capitalTier": st.get("capitalTier"),
+                "riskTier": st.get("riskTier"),
+                "sessionStatus": st.get("sessionStatus"),
+                "secretSafe": True,
+            })
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500
+
+    @app.route("/api/nexus/demo/autonomous/health")
+    def nexus_autonomous_health():
+        try:
+            from backend.nexus_research.demo_autonomous.ops_status import build_operations_status
+
+            st = build_operations_status(include_snapshot=True)
+            return jsonify({
+                "ok": True,
+                "opsState": st.get("opsState"),
+                "controllerStatus": st.get("controllerStatus"),
+                "scannerStatus": st.get("scannerStatus"),
+                "sessionStatus": st.get("sessionStatus"),
+                "lastScanAtMs": st.get("lastScanAtMs"),
+                "lastScanTimeProgressing": st.get("lastScanTimeProgressing"),
+                "controllerOwnerCount": st.get("controllerOwnerCount"),
+                "bootId": st.get("bootId"),
+                "deploymentCommit": st.get("deploymentCommit"),
+                "paperStatus": st.get("paperStatus"),
+                "ledgerValid": st.get("ledgerValid"),
+                "secretSafe": True,
+                "mainnetUsed": False,
+            })
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500
+
+    @app.route("/api/nexus/demo/autonomous/source-of-truth")
+    def nexus_autonomous_source_of_truth():
+        """Live SoT probe — never infer solely from git push."""
+        try:
+            from backend.nexus_research.demo_autonomous.ops_status import build_operations_status
+
+            st = build_operations_status(include_snapshot=True)
+            deploy = str(st.get("deploymentCommit") or "")
+            tip_hint = (os.environ.get("NEXUS_EXPECTED_GIT_TIP") or "").strip()
+            match = None
+            if deploy and tip_hint:
+                match = deploy.startswith(tip_hint) or tip_hint.startswith(deploy[:7])
+            return jsonify({
+                "ok": True,
+                "report": "NEXUS_AUTONOMOUS_LIVE_SOURCE_OF_TRUTH",
+                "current_deployed_commit": deploy or None,
+                "commit_matches_expected": match,
+                "runtime_status": st.get("controllerStatus"),
+                "boot_id": st.get("bootId"),
+                "paper_status": st.get("paperStatus"),
+                "ledger_valid": st.get("ledgerValid"),
+                "v2_preserved": st.get("v2Preserved"),
+                "credential_fingerprint": st.get("credentialFingerprint"),
+                "demo_equity": st.get("demoEquity"),
+                "available_balance": st.get("availableBalance"),
+                "position_count": st.get("positionCount"),
+                "open_order_count": st.get("openOrderCount"),
+                "autonomous_session_enabled": st.get("sessionStatus") == "ACTIVE",
+                "session": st.get("session"),
+                "session_expired": (st.get("session") or {}).get("expired") if st.get("session") else None,
+                "controller_owner_count": st.get("controllerOwnerCount"),
+                "scanner_running": st.get("scannerStatus") == "RUNNING",
+                "last_scan_time": st.get("lastScanAtMs"),
+                "last_scan_time_progressing": st.get("lastScanTimeProgressing"),
+                "last_candidate_time": st.get("lastCandidateTime"),
+                "last_order_time": st.get("lastOrderTime"),
+                "last_reflection_time": st.get("lastReflectionTime"),
+                "ops_state": st.get("opsState"),
+                "source_of_truth_pass": bool(
+                    st.get("scannerStatus") == "RUNNING"
+                    and st.get("bootId")
+                    and st.get("secretSafe")
+                ),
+                "secretSafe": True,
+                "mainnetUsed": False,
             })
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500
@@ -97,7 +315,7 @@ def register_autonomous_demo_routes(app: Flask) -> None:
             ttl_ms = int(body.get("ttlMs") or (6 * 60 * 60 * 1000))
             ttl_ms = max(60_000, min(ttl_ms, 12 * 60 * 60 * 1000))
             max_risk = float(body.get("maxRiskPerTradePct") or 0.5)
-            max_risk = max(0.1, min(max_risk, 0.75))
+            max_risk = max(0.1, min(max_risk, 0.5))
             symbols = body.get("allowedSymbols") or []
             if isinstance(symbols, str):
                 symbols = [s.strip() for s in symbols.split(",") if s.strip()]
@@ -110,9 +328,40 @@ def register_autonomous_demo_routes(app: Flask) -> None:
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500
 
+    @app.route("/api/nexus/demo/autonomous/session/renew", methods=["POST"])
+    def nexus_autonomous_session_renew():
+        """Safe Demo session renew — cannot raise risk; mainnet forever blocked."""
+        try:
+            from backend.nexus_research.demo_autonomous.session_authorization import (
+                get_authorization_validator,
+            )
+            from backend.nexus_research.demo_exchange.account_snapshot import capture_account_snapshot
+
+            # Reconcile before write grant.
+            snap = capture_account_snapshot()
+            body = request.get_json(silent=True) or {}
+            ttl_ms = int(body.get("ttlMs") or (6 * 60 * 60 * 1000))
+            ttl_ms = max(60_000, min(ttl_ms, 12 * 60 * 60 * 1000))
+            auth = get_authorization_validator().renew(ttl_ms=ttl_ms)
+            return jsonify({
+                "ok": True,
+                "session": auth.to_public_dict(),
+                "reconcile": {
+                    "positionCount": len([
+                        p for p in (snap.positions or []) if float(p.get("size") or 0) > 0
+                    ]),
+                    "openOrderCount": len(snap.open_orders or []),
+                },
+                "secretSafe": True,
+                "mainnetAllowed": False,
+            })
+        except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 400
+
     @app.route("/api/nexus/demo/autonomous/session/emergency-stop", methods=["POST"])
     def nexus_autonomous_emergency_stop():
         try:
+            from backend.nexus_research.demo_autonomous.controller import get_autonomous_controller
             from backend.nexus_research.demo_autonomous.session_authorization import (
                 get_authorization_validator,
             )
@@ -120,7 +369,17 @@ def register_autonomous_demo_routes(app: Flask) -> None:
             body = request.get_json(silent=True) or {}
             reason = str(body.get("reason") or "operator_stop")
             get_authorization_validator().emergency_stop(reason)
-            return jsonify({"ok": True, "emergencyStopped": True, "reason": reason, "secretSafe": True})
+            ctrl = get_autonomous_controller()
+            ctrl.health.emergency_stop = True
+            # Stop new orders only — do not close positions / cancel protection.
+            return jsonify({
+                "ok": True,
+                "emergencyStopped": True,
+                "reason": reason,
+                "closesPositions": False,
+                "cancelsOrders": False,
+                "secretSafe": True,
+            })
         except Exception as exc:
             return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500
 
@@ -128,6 +387,8 @@ def register_autonomous_demo_routes(app: Flask) -> None:
     def nexus_autonomous_scan():
         """Scan universe + rank candidates. send=false by default."""
         try:
+            from backend.nexus_research.demo_autonomous.ops_status import record_scan_result
+
             body = request.get_json(silent=True) or {}
             send = bool(body.get("send") or request.args.get("send") == "1")
             dry_run = body.get("dryRun")
@@ -164,7 +425,9 @@ def register_autonomous_demo_routes(app: Flask) -> None:
                 open_orders=open_orders,
                 send=send,
             )
-            return jsonify({"ok": True, **result.to_dict()})
+            payload = result.to_dict()
+            record_scan_result(payload)
+            return jsonify({"ok": True, **payload})
         except Exception as exc:
             logger.exception("autonomous_scan_failed")
             return jsonify({"ok": False, "error": str(exc), "secretSafe": True, "orderSent": False}), 500
@@ -280,6 +543,8 @@ def register_autonomous_demo_routes(app: Flask) -> None:
                 "mainnetUsed": False,
             }
             _ = fingerprint_secret  # imported for clarity; presence already fingerprinted
+            _ = WriteStage
+            _ = DemoAccountModeResolver
 
             if read_only == 1:
                 out["status"] = "READ_WRITE_KEY_NOT_ACTIVE"
@@ -311,6 +576,7 @@ def register_autonomous_demo_routes(app: Flask) -> None:
     def nexus_autonomous_close():
         """Controlled reduce-only close for Demo position (session required)."""
         try:
+            from backend.nexus_research.demo_autonomous.ops_status import record_reflection
             from backend.nexus_research.demo_autonomous.outcome_reflection import build_reflection_bundle
             from backend.nexus_research.demo_autonomous.session_authorization import (
                 get_authorization_validator,
@@ -344,20 +610,63 @@ def register_autonomous_demo_routes(app: Flask) -> None:
             reflection = None
             if res.ok:
                 upnl = float(pos.get("unrealisedPnl") or 0)
-                reflection = build_reflection_bundle(
-                    symbol=symbol,
-                    side=side,
-                    strategy=str(body.get("strategy") or "UNKNOWN"),
-                    regime=str(body.get("regime") or "UNKNOWN"),
-                    confidence=float(body.get("confidence") or 0),
-                    leverage=int(body.get("leverage") or 25),
-                    gross_pnl=upnl,
-                    fees=abs(float(pos.get("realisedPnl") or 0)) if float(pos.get("realisedPnl") or 0) < 0 else 0.5,
-                    funding=0.0,
-                    slippage=0.0,
-                    risk_amount=float(body.get("riskAmount") or 25),
-                    exit_reason="CONTROLLED_CLOSE",
-                ).to_dict()
+                fees_raw = body.get("fees")
+                funding_raw = body.get("funding")
+                slippage_raw = body.get("slippage")
+                incomplete = fees_raw is None or funding_raw is None or slippage_raw is None
+                if incomplete:
+                    reflection = {
+                        "incomplete": True,
+                        "noteZh": "資料尚未完整回填",
+                        "outcome": {
+                            "symbol": symbol,
+                            "side": side,
+                            "strategy": str(body.get("strategy") or "UNKNOWN"),
+                            "grossPnl": upnl,
+                            "fees": None,
+                            "funding": None,
+                            "slippage": None,
+                            "netPnl": None,
+                            "rMultiple": None,
+                            "livePatchApplied": False,
+                        },
+                        "livePatchApplied": False,
+                    }
+                else:
+                    reflection = build_reflection_bundle(
+                        symbol=symbol,
+                        side=side,
+                        strategy=str(body.get("strategy") or "UNKNOWN"),
+                        regime=str(body.get("regime") or "UNKNOWN"),
+                        confidence=float(body.get("confidence") or 0),
+                        leverage=int(body.get("leverage") or 25),
+                        gross_pnl=upnl,
+                        fees=float(fees_raw),
+                        funding=float(funding_raw),
+                        slippage=float(slippage_raw),
+                        risk_amount=float(body.get("riskAmount") or 25),
+                        exit_reason="CONTROLLED_CLOSE",
+                    ).to_dict()
+                trade = {
+                    "symbol": symbol,
+                    "side": side,
+                    "strategy": body.get("strategy") or "UNKNOWN",
+                    "confidence": body.get("confidence"),
+                    "leverage": body.get("leverage") or 25,
+                    "entry": pos.get("avgPrice") or pos.get("entryPrice"),
+                    "exit": None,
+                    "grossPnl": upnl,
+                    "fees": None if incomplete else float(fees_raw),
+                    "funding": None if incomplete else float(funding_raw),
+                    "slippage": None if incomplete else float(slippage_raw),
+                    "netPnl": None,
+                    "rMultiple": None,
+                    "exitReason": "CONTROLLED_CLOSE",
+                    "reflectionStatus": "CREATED",
+                    "incomplete": incomplete,
+                    "noteZh": "資料尚未完整回填" if incomplete else None,
+                }
+                record_reflection(reflection, trade)
             return jsonify({
                 "ok": res.ok,
                 "closed": res.ok,

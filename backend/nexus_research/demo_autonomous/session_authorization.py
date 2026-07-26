@@ -6,13 +6,13 @@ Never authorizes mainnet / real money / withdraw / transfer.
 from __future__ import annotations
 
 import hashlib
-import hmac
 import json
 import os
 import secrets
 import threading
 import time
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 SESSION_AUTH_ENV = "NEXUS_AUTONOMOUS_DEMO_SESSION_TOKEN"
@@ -110,6 +110,18 @@ class AuthorizationError(RuntimeError):
     pass
 
 
+def _session_store_path() -> Path | None:
+    try:
+        from backend.nexus_research.boot_identity import research_data_dir
+
+        root = research_data_dir()
+        if root is None:
+            return None
+        return root / "autonomous_session.json"
+    except Exception:
+        return None
+
+
 class AuthorizationValidator:
     """Validate and gate session authorization."""
 
@@ -130,6 +142,8 @@ class AuthorizationValidator:
         raw_token: str | None = None,
     ) -> AutonomousDemoSessionAuthorization:
         now = int(time.time() * 1000)
+        # Never raise risk above default ceiling.
+        max_risk_per_trade_pct = min(float(max_risk_per_trade_pct), DEFAULT_MAX_RISK_PCT)
         token = raw_token or secrets.token_hex(32)
         payload = {
             "environment": "BYBIT_DEMO",
@@ -154,12 +168,123 @@ class AuthorizationValidator:
         )
         with self._lock:
             self._session = auth
+        self.persist_to_disk()
         return auth
+
+    def renew(
+        self,
+        *,
+        ttl_ms: int = DEFAULT_TTL_MS,
+        max_risk_per_trade_pct: float | None = None,
+    ) -> AutonomousDemoSessionAuthorization:
+        """Renew Demo session without raising risk limits. Mainnet forever blocked."""
+        with self._lock:
+            parent = self._session
+            if parent is None:
+                raise AuthorizationError("session_authorization_missing_for_renew")
+            if parent.emergency_stopped:
+                raise AuthorizationError("session_emergency_stopped")
+            if parent.environment != "BYBIT_DEMO" or parent.account_identity != "BYBIT_DEMO_ACCOUNT":
+                raise AuthorizationError("session_environment_not_demo")
+            if parent.leverage_policy_version != LEVERAGE_POLICY_VERSION:
+                raise AuthorizationError("leverage_policy_version_mismatch")
+            if parent.capital_policy_version != CAPITAL_POLICY_VERSION:
+                raise AuthorizationError("capital_policy_version_mismatch")
+            risk = parent.max_risk_per_trade_pct
+            if max_risk_per_trade_pct is not None:
+                risk = min(float(max_risk_per_trade_pct), parent.max_risk_per_trade_pct)
+            symbols = parent.allowed_symbols
+        return self.issue(
+            ttl_ms=ttl_ms,
+            allowed_symbols=symbols,
+            max_risk_per_trade_pct=risk,
+        )
+
+    def persist_to_disk(self) -> bool:
+        path = _session_store_path()
+        if path is None:
+            return False
+        with self._lock:
+            sess = self._session
+            if sess is None:
+                return False
+            payload = {
+                "authorizationHash": sess.authorization_hash,
+                "environment": sess.environment,
+                "accountIdentity": sess.account_identity,
+                "createdAtMs": sess.created_at_ms,
+                "expiresAtMs": sess.expires_at_ms,
+                "allowedSides": list(sess.allowed_sides),
+                "allowedStrategies": list(sess.allowed_strategies),
+                "allowedSymbols": list(sess.allowed_symbols),
+                "maxOpenPositions": sess.max_open_positions,
+                "maxPendingOrders": sess.max_pending_orders,
+                "maxRiskPerTradePct": sess.max_risk_per_trade_pct,
+                "maxDailyLossPct": sess.max_daily_loss_pct,
+                "maxWeeklyDrawdownPct": sess.max_weekly_drawdown_pct,
+                "leveragePolicyVersion": sess.leverage_policy_version,
+                "capitalPolicyVersion": sess.capital_policy_version,
+                "emergencyStopped": sess.emergency_stopped,
+                "consumedWrites": sess.consumed_writes,
+            }
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+            return True
+        except Exception:
+            return False
+
+    def restore_from_disk(self) -> bool:
+        path = _session_store_path()
+        if path is None:
+            return False
+        try:
+            if not path.is_file():
+                return False
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if data.get("environment") != "BYBIT_DEMO":
+                return False
+            if data.get("accountIdentity") != "BYBIT_DEMO_ACCOUNT":
+                return False
+            if data.get("leveragePolicyVersion") != LEVERAGE_POLICY_VERSION:
+                return False
+            if data.get("capitalPolicyVersion") != CAPITAL_POLICY_VERSION:
+                return False
+            auth = AutonomousDemoSessionAuthorization(
+                authorization_hash=str(data.get("authorizationHash") or ""),
+                created_at_ms=int(data.get("createdAtMs") or 0),
+                expires_at_ms=int(data.get("expiresAtMs") or 0),
+                allowed_sides=tuple(data.get("allowedSides") or ("Buy", "Sell")),
+                allowed_strategies=tuple(data.get("allowedStrategies") or ()),
+                allowed_symbols=tuple(data.get("allowedSymbols") or ()),
+                max_open_positions=int(data.get("maxOpenPositions") or 1),
+                max_pending_orders=int(data.get("maxPendingOrders") or 1),
+                max_risk_per_trade_pct=min(
+                    float(data.get("maxRiskPerTradePct") or DEFAULT_MAX_RISK_PCT),
+                    DEFAULT_MAX_RISK_PCT,
+                ),
+                max_daily_loss_pct=float(data.get("maxDailyLossPct") or DEFAULT_MAX_DAILY_LOSS_PCT),
+                max_weekly_drawdown_pct=float(
+                    data.get("maxWeeklyDrawdownPct") or DEFAULT_MAX_WEEKLY_DD_PCT
+                ),
+                leverage_policy_version=LEVERAGE_POLICY_VERSION,
+                capital_policy_version=CAPITAL_POLICY_VERSION,
+                emergency_stopped=bool(data.get("emergencyStopped")),
+                consumed_writes=int(data.get("consumedWrites") or 0),
+                raw_token_present=False,
+            )
+            # Expired sessions are restored as expired (no silent write grant).
+            with self._lock:
+                self._session = auth
+            return True
+        except Exception:
+            return False
 
     def emergency_stop(self, reason: str = "") -> None:
         with self._lock:
             if self._session is not None:
                 self._session.emergency_stopped = True
+        self.persist_to_disk()
 
     def require_active(self) -> AutonomousDemoSessionAuthorization:
         with self._lock:
@@ -173,6 +298,7 @@ class AuthorizationValidator:
         with self._lock:
             if self._session is not None:
                 self._session.consumed_writes += 1
+        self.persist_to_disk()
 
     def validate_order_bounds(
         self,
