@@ -226,34 +226,65 @@ def register_autonomous_demo_routes(app: Flask) -> None:
             run_writes = bool(body.get("runWrites") or request.args.get("runWrites") == "1")
             dry_run = body.get("dryRun")
             if dry_run is None:
-                dry_run = request.args.get("dryRun", "1") != "0"
+                # Reads always use live credentials; dryRun only affects POSTs when runWrites.
+                dry_run = request.args.get("dryRun", "0" if not run_writes else "1") != "0"
             else:
                 dry_run = bool(dry_run)
 
+            from backend.nexus_research.demo_exchange.credentials import (
+                DemoCredentialPresenceValidator,
+                fingerprint_secret,
+            )
+            presence = DemoCredentialPresenceValidator().validate(require=True)
             key, secret = DemoCredentialPresenceValidator().load_secrets_for_signer()
             auth = get_authorization_validator()
-            transport = DemoWriteTransport(
+            # Account truth GETs must use real signer even when write dry-run is requested.
+            read_transport = DemoWriteTransport(
+                signer=DemoRequestSigner(key, secret),
+                auth=auth,
+                dry_run=False,
+            )
+            write_transport = DemoWriteTransport(
                 signer=DemoRequestSigner(key, secret),
                 auth=auth,
                 dry_run=bool(dry_run),
             )
-            adapter = AutonomousDemoOrderAdapter(transport, auth=auth, get_json=transport.get)
+            adapter = AutonomousDemoOrderAdapter(
+                write_transport, auth=auth, get_json=read_transport.get,
+            )
             account = adapter.refresh_account_truth()
-            pos = DemoPositionModeResolver().resolve_symbol(transport.get, symbol)
+            pos = DemoPositionModeResolver().resolve_symbol(read_transport.get, symbol)
 
+            read_only = account.read_only_key
+            preflight_pass = (
+                read_only == 0
+                and account.contract_trade_order
+                and account.contract_trade_position
+            )
             out: dict[str, Any] = {
                 "ok": True,
                 "symbol": symbol,
+                "domain": "api-demo.bybit.com",
+                "accountIdentity": "BYBIT_DEMO_ACCOUNT",
+                "credentialPresent": presence.configured,
+                "credentialFingerprint": presence.fingerprint,
+                "readOnly": read_only,
+                "contractTradeOrder": account.contract_trade_order,
+                "contractTradePosition": account.contract_trade_position,
+                "preflightPass": preflight_pass,
+                "readWriteKeyNotActive": read_only == 1,
                 "account": account.to_dict(),
                 "position": pos.to_dict(),
                 "demoUnsupportedPaths": sorted(DEMO_UNSUPPORTED_WRITE_PATHS),
-                "write_10005_hypothesis": (
-                    "STEP_2 previously called /v5/position/switch-isolated which is NOT on "
-                    "Bybit Demo Available API List; UTA Demo must use /v5/account/set-margin-mode"
-                ),
                 "secretSafe": True,
                 "mainnetUsed": False,
             }
+            _ = fingerprint_secret  # imported for clarity; presence already fingerprinted
+
+            if read_only == 1:
+                out["status"] = "READ_WRITE_KEY_NOT_ACTIVE"
+                out["ok"] = False
+                return jsonify(out), 409
 
             if run_writes:
                 if not dry_run:

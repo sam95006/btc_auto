@@ -91,33 +91,53 @@ class DemoAccountModeResolver:
         # query-api
         try:
             qa = get_json("/v5/user/query-api", None)
+            ret = int(qa.get("retCode", -1)) if isinstance(qa, dict) else -1
+            truth.notes.append(f"query_api_retCode={ret}")
             result = qa.get("result") if isinstance(qa.get("result"), dict) else {}
-            truth.read_only_key = int(result.get("readOnly")) if result.get("readOnly") is not None else None
-            truth.uta = int(result.get("uta")) if result.get("uta") is not None else None
+            if ret != 0:
+                truth.notes.append(f"query_api_retMsg={(str(qa.get('retMsg') or ''))[:80]}")
+            if result.get("readOnly") is not None:
+                truth.read_only_key = int(result.get("readOnly"))
+            if result.get("uta") is not None:
+                truth.uta = int(result.get("uta"))
             perms = result.get("permissions") or {}
+            wallet_flags: dict[str, bool] = {
+                "AccountTransfer": False,
+                "SubMemberTransfer": False,
+                "Withdraw": False,
+            }
             if isinstance(perms, dict):
                 ct = perms.get("ContractTrade") or []
                 truth.contract_trade_order = "Order" in ct
                 truth.contract_trade_position = "Position" in ct
+                wallet = perms.get("Wallet") or []
+                if isinstance(wallet, list):
+                    for k in wallet_flags:
+                        wallet_flags[k] = k in wallet
+            truth.notes.append(
+                "wallet_flags:"
+                + ",".join(f"{k}={'1' if v else '0'}" for k, v in wallet_flags.items())
+            )
             if truth.read_only_key == 1:
                 truth.notes.append("query_api_readOnly=1_exchange_marks_key_readonly")
             if truth.read_only_key == 0:
                 truth.notes.append("query_api_readOnly=0_read_write_key")
+            if truth.read_only_key is None and ret == 0:
+                truth.notes.append("query_api_missing_readOnly_field")
         except Exception as exc:  # noqa: BLE001
             truth.notes.append(f"query_api_failed:{type(exc).__name__}")
 
         # account/info
         try:
             info = get_json("/v5/account/info", None)
+            ret = int(info.get("retCode", -1)) if isinstance(info, dict) else -1
+            truth.notes.append(f"account_info_retCode={ret}")
             result = info.get("result") if isinstance(info.get("result"), dict) else {}
             truth.margin_mode = str(result.get("marginMode") or result.get("marginModeName") or "") or None
-            # unifiedMarginStatus: 1 classic→UTA etc.
             ums = result.get("unifiedMarginStatus")
             truth.unified_margin_status = str(ums) if ums is not None else None
-            # position mode sometimes on account info
             pm = result.get("positionMode")
             if pm is not None:
-                # 0 both sides / one-way depending on docs — store raw then map
                 truth.position_mode = "hedge" if int(pm) == 3 else "one_way"
             truth.account_type = "UNIFIED"
             if not truth.margin_mode:

@@ -93,12 +93,16 @@ class DemoWriteTransport:
             raise DomainRejectedError("host_not_demo")
 
     def get(self, path: str, params: Mapping[str, Any] | None = None) -> dict[str, Any]:
-        """Private GET for account/position truth (session not required for preflight reads)."""
+        """Private GET for account/position truth.
+
+        Always hits Demo host when credentials are real — dry_run only stubs POSTs.
+        """
         if path not in ALLOWED_PRIVATE_GET_PATHS:
             raise WriteForbiddenError(f"path_not_in_private_get_allowlist:{path}")
         if self.policy.ALLOWED_HOST != "api-demo.bybit.com":
             raise DomainRejectedError("host_not_demo")
-        if self.dry_run:
+        # dry-run signer placeholders must not call the network
+        if self.dry_run and self.signer._api_key in ("dry-run", "dry", "k"):
             return {"retCode": 0, "retMsg": "OK", "result": {"dryRun": True, "list": []}}
         return self._live_get(path, dict(params or {}))
 
