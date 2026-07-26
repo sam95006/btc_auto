@@ -10,6 +10,9 @@ export type AutonomousOpsStatus = {
   scannerStatus?: string;
   sessionStatus?: string;
   sessionExpiresAt?: number | null;
+  autoSend?: boolean;
+  headlineZh?: string;
+  orderStatusZh?: string;
   lastScanAtMs?: number | null;
   symbolsScanned?: number;
   tradableSymbols?: number;
@@ -134,6 +137,13 @@ export function BybitDemoAutonomousCard() {
   const trade = data?.lastTrade;
   const completed = new Set(data?.lifecycle?.completed || []);
   const hasPos = (data?.positionCount || 0) > 0;
+  const sessionActive = data?.sessionStatus === "ACTIVE";
+  const autoSendOn = Boolean(data?.autoSend);
+  const modeBadge = !sessionActive
+    ? "待啟用"
+    : autoSendOn
+      ? "運行中"
+      : "Session已啟用・Auto Send OFF";
 
   return (
     <section className="nx-p7-block nx-demo-ops-card" aria-label="Bybit Demo 自動交易">
@@ -144,8 +154,11 @@ export function BybitDemoAutonomousCard() {
         </div>
         <div className="nx-demo-ops-badges">
           <span className="nx-demo-badge">Demo</span>
-          <span className={`nx-demo-badge ${data?.scannerStatus === "RUNNING" ? "ok" : "warn"}`}>
-            自動Demo交易：{runLabel(data?.scannerStatus)}
+          <span className={`nx-demo-badge ${sessionActive && autoSendOn ? "ok" : "warn"}`}>
+            自動Demo交易：{modeBadge}
+          </span>
+          <span className={`nx-demo-badge ${autoSendOn ? "ok" : "warn"}`}>
+            Demo Auto Send：{autoSendOn ? "ON" : "OFF"}
           </span>
         </div>
       </div>
@@ -153,17 +166,29 @@ export function BybitDemoAutonomousCard() {
       {error ? <div className="nx-banner-warn">營運狀態暫不可用：{error}</div> : null}
 
       <p className="nx-demo-ops-state">
-        目前狀態：<strong>{data?.opsStateZh || "讀取中…"}</strong>
+        目前狀態：<strong>{data?.headlineZh || data?.opsStateZh || "讀取中…"}</strong>
         <span className="muted mono"> {data?.opsState || ""}</span>
       </p>
+      {!sessionActive ? (
+        <p className="muted sm">自動下單尚未啟用 · 下單狀態：{data?.orderStatusZh || "等待 Demo Session"}</p>
+      ) : (
+        <p className="muted sm">
+          Session：ACTIVE
+          {data?.sessionExpiresAt
+            ? ` · 到期 ${new Date(data.sessionExpiresAt).toLocaleString("zh-TW")}`
+            : ""}
+          {" · "}
+          {data?.orderStatusZh || ""}
+        </p>
+      )}
 
       <div className="nx-demo-ops-grid">
         <div>
           <span className="muted">Session</span>
-          <strong>{data?.sessionStatus || "—"}</strong>
+          <strong>{data?.sessionStatus || "NONE"}</strong>
         </div>
         <div>
-          <span className="muted">Scanner</span>
+          <span className="muted">市場掃描</span>
           <strong>{runLabel(data?.scannerStatus)}</strong>
         </div>
         <div>
@@ -204,11 +229,11 @@ export function BybitDemoAutonomousCard() {
         {top ? (
           <p>
             {top.symbol || "—"} · {top.side || "—"} · {top.strategy || "—"} · 信心{" "}
-            {fmtNum(top.confidence, 1)} · 槓桿 {top.leverage ?? "—"}x
+            {fmtNum(top.confidence, 1)} · 建議槓桿 {top.leverage ?? "—"}x
             {top.allowTrade === false ? " · 暫不可交易" : ""}
           </p>
         ) : (
-          <p className="muted">{hasPos ? "持倉中，不顯示新候選交易中" : "尚無合格候選"}</p>
+          <p className="muted">{hasPos ? "持倉中，暫不顯示新候選" : "尚無合格候選"}</p>
         )}
         {(data?.blockReasons || []).length ? (
           <p className="muted sm">阻塞原因：{(data?.blockReasons || []).join(", ")}</p>
@@ -230,10 +255,15 @@ export function BybitDemoAutonomousCard() {
               SL {fmtMaybe(pos.stopLoss, "—")} · TP {fmtMaybe(pos.takeProfit, "—")} · Liq{" "}
               {fmtMaybe(pos.liquidationPrice, "—")}
             </li>
-            <li>保護狀態：{data?.protectionStatus || "—"}</li>
+            <li>
+              保護狀態：
+              {data?.protectionStatus === "ACTIVE" ? "持倉中・已設置停損與停利" : data?.protectionStatus || "—"}
+            </li>
           </ul>
         ) : (
-          <p className="muted">目前持倉：無 · {data?.opsStateZh || "掃描市場中"}</p>
+          <p className="muted">
+            目前持倉：無 · 下單狀態：{data?.orderStatusZh || (!sessionActive ? "等待 Demo Session" : "掃描中")}
+          </p>
         )}
       </div>
 

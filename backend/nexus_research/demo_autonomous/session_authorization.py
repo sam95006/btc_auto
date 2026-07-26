@@ -58,6 +58,10 @@ class AutonomousDemoSessionAuthorization:
     emergency_stopped: bool = False
     consumed_writes: int = 0
     raw_token_present: bool = False
+    session_id: str = ""
+    auto_send: bool = False
+    max_consecutive_losses: int = 3
+    risk_tier: str = "VALIDATION"
 
     def is_expired(self, now_ms: int | None = None) -> bool:
         now = now_ms if now_ms is not None else int(time.time() * 1000)
@@ -81,6 +85,7 @@ class AutonomousDemoSessionAuthorization:
 
     def to_public_dict(self) -> dict[str, Any]:
         return {
+            "sessionId": self.session_id or self.authorization_hash[:16],
             "authorizationHashPrefix": self.authorization_hash[:12],
             "environment": self.environment,
             "accountIdentity": self.account_identity,
@@ -89,6 +94,8 @@ class AutonomousDemoSessionAuthorization:
             "expired": self.is_expired(),
             "active": self.is_active(),
             "emergencyStopped": self.emergency_stopped,
+            "autoSend": self.auto_send,
+            "riskTier": self.risk_tier,
             "allowedSides": list(self.allowed_sides),
             "allowedStrategies": list(self.allowed_strategies),
             "allowedSymbols": list(self.allowed_symbols) if self.allowed_symbols else ["*DYNAMIC*"],
@@ -97,11 +104,14 @@ class AutonomousDemoSessionAuthorization:
             "maxRiskPerTradePct": self.max_risk_per_trade_pct,
             "maxDailyLossPct": self.max_daily_loss_pct,
             "maxWeeklyDrawdownPct": self.max_weekly_drawdown_pct,
+            "maxConsecutiveLosses": self.max_consecutive_losses,
             "leveragePolicyVersion": self.leverage_policy_version,
             "capitalPolicyVersion": self.capital_policy_version,
             "consumedWrites": self.consumed_writes,
             "mainnetAllowed": False,
             "realMoneyAllowed": False,
+            "withdrawAllowed": False,
+            "transferAllowed": False,
             "secretSafe": True,
         }
 
@@ -140,11 +150,15 @@ class AuthorizationValidator:
         allowed_symbols: tuple[str, ...] | list[str] | None = None,
         max_risk_per_trade_pct: float = DEFAULT_MAX_RISK_PCT,
         raw_token: str | None = None,
+        auto_send: bool = False,
+        max_consecutive_losses: int = 3,
+        risk_tier: str = "VALIDATION",
     ) -> AutonomousDemoSessionAuthorization:
         now = int(time.time() * 1000)
         # Never raise risk above default ceiling.
         max_risk_per_trade_pct = min(float(max_risk_per_trade_pct), DEFAULT_MAX_RISK_PCT)
         token = raw_token or secrets.token_hex(32)
+        session_id = secrets.token_hex(8)
         payload = {
             "environment": "BYBIT_DEMO",
             "account": "BYBIT_DEMO_ACCOUNT",
@@ -154,6 +168,7 @@ class AuthorizationValidator:
             "lev_pol": LEVERAGE_POLICY_VERSION,
             "cap_pol": CAPITAL_POLICY_VERSION,
             "nonce": token,
+            "session_id": session_id,
         }
         digest = hashlib.sha256(
             json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -165,6 +180,10 @@ class AuthorizationValidator:
             allowed_symbols=tuple(allowed_symbols or ()),
             max_risk_per_trade_pct=float(max_risk_per_trade_pct),
             raw_token_present=True,
+            session_id=session_id,
+            auto_send=bool(auto_send),
+            max_consecutive_losses=max(1, min(int(max_consecutive_losses), 3)),
+            risk_tier=str(risk_tier or "VALIDATION"),
         )
         with self._lock:
             self._session = auth
@@ -194,10 +213,16 @@ class AuthorizationValidator:
             if max_risk_per_trade_pct is not None:
                 risk = min(float(max_risk_per_trade_pct), parent.max_risk_per_trade_pct)
             symbols = parent.allowed_symbols
+            auto_send = parent.auto_send
+            max_cl = parent.max_consecutive_losses
+            risk_tier = parent.risk_tier
         return self.issue(
             ttl_ms=ttl_ms,
             allowed_symbols=symbols,
             max_risk_per_trade_pct=risk,
+            auto_send=auto_send,
+            max_consecutive_losses=max_cl,
+            risk_tier=risk_tier,
         )
 
     def persist_to_disk(self) -> bool:
@@ -226,6 +251,10 @@ class AuthorizationValidator:
                 "capitalPolicyVersion": sess.capital_policy_version,
                 "emergencyStopped": sess.emergency_stopped,
                 "consumedWrites": sess.consumed_writes,
+                "sessionId": sess.session_id,
+                "autoSend": sess.auto_send,
+                "maxConsecutiveLosses": sess.max_consecutive_losses,
+                "riskTier": sess.risk_tier,
             }
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -272,6 +301,10 @@ class AuthorizationValidator:
                 emergency_stopped=bool(data.get("emergencyStopped")),
                 consumed_writes=int(data.get("consumedWrites") or 0),
                 raw_token_present=False,
+                session_id=str(data.get("sessionId") or ""),
+                auto_send=bool(data.get("autoSend")),
+                max_consecutive_losses=int(data.get("maxConsecutiveLosses") or 3),
+                risk_tier=str(data.get("riskTier") or "VALIDATION"),
             )
             # Expired sessions are restored as expired (no silent write grant).
             with self._lock:

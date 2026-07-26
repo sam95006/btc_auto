@@ -431,6 +431,42 @@ def build_operations_status(*, include_snapshot: bool = True) -> dict[str, Any]:
     paper = _paper_status_safe()
     deploy_commit = resolve_deployment_commit()
 
+    auto_send = False
+    try:
+        if os.environ.get("NEXUS_AUTONOMOUS_DEMO_AUTO_SEND", "").strip().lower() in (
+            "1",
+            "true",
+            "yes",
+        ):
+            auto_send = True
+        elif session_pub and session_pub.get("active") and session_pub.get("autoSend"):
+            auto_send = True
+    except Exception:
+        auto_send = False
+
+    # Operator-facing headline (never "正在交易中" when flat).
+    if session_pub is None or session_pub.get("expired") or not session_pub.get("active"):
+        if ops_state == OpsState.EMERGENCY_STOPPED:
+            headline_zh = "緊急停止"
+        else:
+            headline_zh = "自動Demo交易：待啟用"
+        order_status_zh = "等待 Demo Session"
+    elif auto_send and position_count == 0 and ops_state == OpsState.CANDIDATE_SELECTED:
+        headline_zh = "自動Demo交易運行中"
+        order_status_zh = "候選已選定・執行前風控檢查中"
+    elif auto_send and position_count == 0:
+        headline_zh = "自動Demo交易運行中・正在掃描市場"
+        order_status_zh = "掃描中・尚無新單"
+    elif position_count > 0 and protection_active:
+        headline_zh = "持倉中・已設置停損與停利"
+        order_status_zh = "持倉保護中"
+    elif position_count > 0:
+        headline_zh = "持倉中"
+        order_status_zh = "持倉中・保護確認中"
+    else:
+        headline_zh = OPS_STATE_ZH[ops_state.value]
+        order_status_zh = OPS_STATE_ZH[ops_state.value]
+
     current_position = None
     if positions:
         p = positions[0]
@@ -459,6 +495,11 @@ def build_operations_status(*, include_snapshot: bool = True) -> dict[str, Any]:
         "environment": "BYBIT_DEMO",
         "opsState": ops_state.value,
         "opsStateZh": OPS_STATE_ZH[ops_state.value],
+        "headlineZh": headline_zh,
+        "orderStatusZh": order_status_zh,
+        "autoSend": auto_send,
+        "autoSendEnv": os.environ.get("NEXUS_AUTONOMOUS_DEMO_AUTO_SEND", "").strip().lower()
+        in ("1", "true", "yes"),
         "controllerStatus": "RUNNING" if controller.get("running") else "STOPPED",
         "scannerStatus": "RUNNING" if controller.get("running") else "STOPPED",
         "sessionStatus": (

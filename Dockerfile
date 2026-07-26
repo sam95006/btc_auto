@@ -32,7 +32,8 @@ RUN test -f static/nexus/assets/nexus_overview.png \
  && test -f static/nexus/assets/hq_roundtable.png \
  || (echo "MISSING console assets in build context"; ls -la static/nexus/assets || true; exit 1)
 
-ENV PORT=8080
+ENV PORT=8080 \
+    NEXUS_AUTONOMOUS_DEMO_AUTO_SEND=true
 EXPOSE 8080
 
 CMD ["gunicorn", "-c", "gunicorn.conf.py", "app:app"]

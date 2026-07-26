@@ -319,10 +319,16 @@ def register_autonomous_demo_routes(app: Flask) -> None:
             symbols = body.get("allowedSymbols") or []
             if isinstance(symbols, str):
                 symbols = [s.strip() for s in symbols.split(",") if s.strip()]
+            auto_send = bool(body.get("autoSend", True))
+            max_cl = int(body.get("maxConsecutiveLosses") or 3)
+            risk_tier = str(body.get("riskTier") or "VALIDATION")
             auth = get_authorization_validator().issue(
                 ttl_ms=ttl_ms,
                 allowed_symbols=tuple(symbols),
                 max_risk_per_trade_pct=max_risk,
+                auto_send=auto_send,
+                max_consecutive_losses=max_cl,
+                risk_tier=risk_tier,
             )
             return jsonify({"ok": True, "session": auth.to_public_dict(), "secretSafe": True})
         except Exception as exc:

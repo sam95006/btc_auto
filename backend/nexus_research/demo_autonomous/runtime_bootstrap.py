@@ -13,11 +13,21 @@ _BOOT_LOCK = threading.Lock()
 
 
 def _auto_send_enabled() -> bool:
-    return os.environ.get("NEXUS_AUTONOMOUS_DEMO_AUTO_SEND", "").strip().lower() in (
+    if os.environ.get("NEXUS_AUTONOMOUS_DEMO_AUTO_SEND", "").strip().lower() in (
         "1",
         "true",
         "yes",
-    )
+    ):
+        return True
+    try:
+        from backend.nexus_research.demo_autonomous.session_authorization import (
+            get_authorization_validator,
+        )
+
+        sess = get_authorization_validator().session
+        return bool(sess and sess.is_active() and sess.auto_send)
+    except Exception:
+        return False
 
 
 def _scanner_enabled() -> bool:
