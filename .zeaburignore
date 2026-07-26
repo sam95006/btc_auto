@@ -1,50 +1,43 @@
-# Zeabur Stage 2 Bybit Shadow Runner — deploy exclusions
-# Recommended upload root: deploy/zeabur_stage2_shadow/ (clean allowlist package)
-# Do NOT upload full repo; use manifest at data/external_alpha/reports/zeabur_deploy_package_manifest.json
+# Zeabur upload exclusions for NEXUS stage3-demo-learning (repo-root service).
+# IMPORTANT: Do NOT exclude static/, backend/, app.py — Console assets and runtime
+# are required by the root Dockerfile:
+#   RUN test -f static/nexus/assets/nexus_overview.png \
+#    && test -f static/nexus/assets/hq_roundtable.png
+#
+# Stage-2 shadow runner must deploy from deploy/zeabur_stage2_shadow/ with its own
+# package ignore — never reuse a shadow-only ignore at repo root.
 
 # --- Secrets (never upload) ---
 .env
 .env.*
 *.secret
-*.key
 *.pem
 **/credentials.json
 **/*_credentials.json
 
-# --- Local evidence / promotion (preserve locally, exclude from Zeabur) ---
+# --- Local evidence / docs / tools (not required at runtime) ---
+docs/
 docs/evidence/
 docs/promotion/
-docs/NEXUS_EXTERNAL_ALPHA_PHASE9_PRODUCTION_PROMOTION_REVIEW.md
 docs/archive/
-
-# --- Old phase / operator reports (boot evidence copied via deploy package only) ---
-data/external_alpha/reports/phase*.json
-data/external_alpha/reports/p1_behavior_change_report.json
-data/external_alpha/reports/p2_performance_report.json
-data/external_alpha/reports/oos_walkforward_report.json
-data/external_alpha/reports/operator_go_readiness_audit.json
-data/external_alpha/paper_tests/
-
-# --- Runtime-generated (use /data volume on Zeabur) ---
-logs/
-logs/*.log
-exports/
-exports/*.zip
-data/external_alpha/shadow/
-data/external_alpha/reports/stage2_daily_audit.json
-data/external_alpha/reports/stage2_stop_conditions.json
-data/external_alpha/reports/stage2_risk_snapshot.json
-data/external_alpha/reports/stage2_evidence_manifest.json
-
-# --- Production / backend bulk (not needed for shadow runner) ---
-backend/
-frontend/
-static/
-app.py
-gunicorn.conf.py
 archives/
 scratch/
+tools/research/
 tests/
+.pytest_cache/
+.cache/
+
+# --- Local runtime / volume data ---
+data/
+logs/
+exports/
+*.log
+*.zip
+*.db
+*.db-*
+trading.db*
+
+# --- Dev environments ---
 venv/
 .venv/
 node_modules/
@@ -54,27 +47,6 @@ node_modules/
 __pycache__/
 **/__pycache__/
 *.py[cod]
-.pytest_cache/
-.cache/
-*.log
-*.zip
-*.db
-*.db-*
-trading.db*
-assets/
 
-# --- Full research tree (use deploy/zeabur_stage2_shadow allowlist instead) ---
-tools/research/
-!tools/research/run_bybit_shadow_runner.py
-!tools/research/export_shadow_runner_log_bundle.py
-!tools/research/bybit_shadow_runner_common.py
-!tools/research/check_zeabur_shadow_env.py
-
-# --- Full data tree except readiness/status in deploy package ---
-data/
-!data/external_alpha/
-data/external_alpha/*
-!data/external_alpha/reports/
-data/external_alpha/reports/*
-!data/external_alpha/reports/zeabur_stage2_shadow_readiness.json
-!data/external_alpha/reports/zeabur_stage2_shadow_status.json
+# --- Unused repo-root artwork only (keep static/nexus/assets) ---
+/assets/

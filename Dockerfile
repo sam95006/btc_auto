@@ -26,7 +26,11 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-RUN test -f static/nexus/assets/nexus_overview.png && test -f static/nexus/assets/hq_roundtable.png
+# Fail loudly with directory listing if Console artwork missing from build context.
+# Common failure mode: root .zeaburignore accidentally excluding static/ on CLI upload.
+RUN test -f static/nexus/assets/nexus_overview.png \
+ && test -f static/nexus/assets/hq_roundtable.png \
+ || (echo "MISSING console assets in build context"; ls -la static/nexus/assets || true; exit 1)
 
 ENV PORT=8080
 EXPOSE 8080
