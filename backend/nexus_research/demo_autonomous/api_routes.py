@@ -26,35 +26,34 @@ def _get_orch(*, dry_run: bool | None = None):
             "1", "true", "yes", "",
         )
     if _ORCH_SINGLETON is None or getattr(_ORCH_SINGLETON, "dry_run", None) != dry_run:
-        adapter = _WRITE_ADAPTER
-        if adapter is None:
-            try:
-                from backend.nexus_research.demo_autonomous.write_adapter import AutonomousDemoOrderAdapter
-                from backend.nexus_research.demo_autonomous.write_transport import DemoWriteTransport
-                from backend.nexus_research.demo_exchange.signer import DemoRequestSigner
+        adapter = None
+        try:
+            from backend.nexus_research.demo_autonomous.write_adapter import AutonomousDemoOrderAdapter
+            from backend.nexus_research.demo_autonomous.write_transport import DemoWriteTransport
+            from backend.nexus_research.demo_exchange.credentials import DemoCredentialPresenceValidator
+            from backend.nexus_research.demo_exchange.signer import DemoRequestSigner
 
-                if dry_run:
-                    # Dry-run path: no live credentials required; transport never POSTs.
-                    transport = DemoWriteTransport(
-                        signer=DemoRequestSigner("dry-run", "dry-run"),
-                        auth=auth,
-                        dry_run=True,
-                    )
-                    adapter = AutonomousDemoOrderAdapter(transport, auth=auth)
-                else:
-                    key = os.environ.get("BYBIT_DEMO_API_KEY", "").strip()
-                    secret = os.environ.get("BYBIT_DEMO_API_SECRET", "").strip()
-                    if key and secret:
-                        transport = DemoWriteTransport(
-                            signer=DemoRequestSigner(key, secret),
-                            auth=auth,
-                            dry_run=False,
-                        )
-                        adapter = AutonomousDemoOrderAdapter(transport, auth=auth)
-                        _WRITE_ADAPTER = adapter
-            except Exception as exc:
-                logger.warning("write_adapter_init_failed: %s", type(exc).__name__)
-                adapter = None
+            if dry_run:
+                transport = DemoWriteTransport(
+                    signer=DemoRequestSigner("dry-run", "dry-run"),
+                    auth=auth,
+                    dry_run=True,
+                )
+                adapter = AutonomousDemoOrderAdapter(transport, auth=auth)
+            else:
+                key, secret = DemoCredentialPresenceValidator().load_secrets_for_signer()
+                transport = DemoWriteTransport(
+                    signer=DemoRequestSigner(key, secret),
+                    auth=auth,
+                    dry_run=False,
+                )
+                adapter = AutonomousDemoOrderAdapter(
+                    transport, auth=auth, get_json=transport.get,
+                )
+                _WRITE_ADAPTER = adapter
+        except Exception as exc:
+            logger.warning("write_adapter_init_failed: %s", type(exc).__name__)
+            adapter = None
         _ORCH_SINGLETON = AutonomousDemoOrchestrator(
             auth=auth, write_adapter=adapter, dry_run=bool(dry_run),
         )
@@ -200,4 +199,79 @@ def register_autonomous_demo_routes(app: Flask) -> None:
                 "secretSafe": True,
             })
         except Exception as exc:
+            return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500
+
+    @app.route("/api/nexus/demo/autonomous/write-trace", methods=["GET", "POST"])
+    def nexus_autonomous_write_trace():
+        """Safe account-mode + optional stepwise write diagnosis (no secrets)."""
+        try:
+            from backend.nexus_research.demo_autonomous.account_mode import (
+                DemoAccountModeResolver,
+                DemoPositionModeResolver,
+            )
+            from backend.nexus_research.demo_autonomous.session_authorization import (
+                get_authorization_validator,
+            )
+            from backend.nexus_research.demo_autonomous.write_adapter import AutonomousDemoOrderAdapter
+            from backend.nexus_research.demo_autonomous.write_transport import DemoWriteTransport
+            from backend.nexus_research.demo_autonomous.write_trace import (
+                DEMO_UNSUPPORTED_WRITE_PATHS,
+                WriteStage,
+            )
+            from backend.nexus_research.demo_exchange.credentials import DemoCredentialPresenceValidator
+            from backend.nexus_research.demo_exchange.signer import DemoRequestSigner
+
+            body = request.get_json(silent=True) or {}
+            symbol = str(body.get("symbol") or request.args.get("symbol") or "BTCUSDT")
+            run_writes = bool(body.get("runWrites") or request.args.get("runWrites") == "1")
+            dry_run = body.get("dryRun")
+            if dry_run is None:
+                dry_run = request.args.get("dryRun", "1") != "0"
+            else:
+                dry_run = bool(dry_run)
+
+            key, secret = DemoCredentialPresenceValidator().load_secrets_for_signer()
+            auth = get_authorization_validator()
+            transport = DemoWriteTransport(
+                signer=DemoRequestSigner(key, secret),
+                auth=auth,
+                dry_run=bool(dry_run),
+            )
+            adapter = AutonomousDemoOrderAdapter(transport, auth=auth, get_json=transport.get)
+            account = adapter.refresh_account_truth()
+            pos = DemoPositionModeResolver().resolve_symbol(transport.get, symbol)
+
+            out: dict[str, Any] = {
+                "ok": True,
+                "symbol": symbol,
+                "account": account.to_dict(),
+                "position": pos.to_dict(),
+                "demoUnsupportedPaths": sorted(DEMO_UNSUPPORTED_WRITE_PATHS),
+                "write_10005_hypothesis": (
+                    "STEP_2 previously called /v5/position/switch-isolated which is NOT on "
+                    "Bybit Demo Available API List; UTA Demo must use /v5/account/set-margin-mode"
+                ),
+                "secretSafe": True,
+                "mainnetUsed": False,
+            }
+
+            if run_writes:
+                if not dry_run:
+                    try:
+                        auth.require_active()
+                    except Exception:
+                        auth.issue(ttl_ms=600_000, max_risk_per_trade_pct=0.5)
+                lev = int(body.get("leverage") or 25)
+                s1 = adapter.set_leverage(symbol, lev)
+                s2 = adapter.ensure_isolated(symbol, lev)
+                out["stages"] = {
+                    "STEP_1_SET_LEVERAGE": s1.to_dict(),
+                    "STEP_2_VERIFY_OR_SET_MARGIN_MODE": s2.to_dict(),
+                }
+                out["trace"] = adapter.last_trace.to_dict()
+                out["rootCause"] = adapter.last_trace.root_cause_report()
+                out["WRITE_10005_ROOT_STAGE"] = adapter.last_trace.root_cause_report()
+            return jsonify(out)
+        except Exception as exc:
+            logger.exception("write_trace_failed")
             return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500

@@ -22,6 +22,7 @@ from backend.nexus_research.demo_autonomous.write_adapter import (
     AutonomousDemoOrderAdapter,
     make_order_link_id,
 )
+from backend.nexus_research.demo_autonomous.write_trace import DemoWriteStageTrace
 from backend.nexus_research.demo_execution.intent import DemoOrderIntent
 from backend.nexus_research.demo_execution.preflight import DemoOrderPreflight
 from backend.nexus_research.demo_execution.state_machine import DemoOrderState, DemoOrderStateMachine
@@ -361,54 +362,138 @@ class AutonomousDemoOrchestrator:
         sm.transition(DemoOrderState.SEND_STARTED, reason="send")
 
         assert self.write_adapter is not None
+        self.write_adapter.last_trace = DemoWriteStageTrace()
+        account = self.write_adapter.refresh_account_truth()
+
+        # Instrument truth for qty rounding
+        instrument = None
+        try:
+            from backend.nexus_research.demo_autonomous.account_mode import DemoInstrumentTruth
+            if self.write_adapter.get_json is not None:
+                raw = self.write_adapter.get_json(
+                    "/v5/market/instruments-info",
+                    {"category": "linear", "symbol": top.symbol},
+                )
+                rows = ((raw.get("result") or {}).get("list") or [])
+                if rows and isinstance(rows[0], dict):
+                    row = rows[0]
+                    lot = row.get("lotSizeFilter") or {}
+                    price = row.get("priceFilter") or {}
+                    lev = row.get("leverageFilter") or {}
+                    instrument = DemoInstrumentTruth(
+                        symbol=top.symbol,
+                        category="linear",
+                        status=str(row.get("status") or ""),
+                        max_leverage=float(lev.get("maxLeverage") or 0),
+                        qty_step=float(lot.get("qtyStep") or 0),
+                        min_order_qty=float(lot.get("minOrderQty") or 0),
+                        min_notional=float(lot.get("minNotionalValue") or 0),
+                        tick_size=float(price.get("tickSize") or 0),
+                    )
+                    if instrument.qty_step > 0:
+                        from backend.nexus_research.demo_autonomous.write_adapter import round_qty_to_step
+                        rounded = round_qty_to_step(top.qty, instrument.qty_step, instrument.min_order_qty)
+                        if rounded <= 0:
+                            sm.transition(DemoOrderState.REJECTED, reason="qty_precision")
+                            return OrchestratorResult(
+                                summary, candidates, top, False,
+                                {"trace": self.write_adapter.last_trace.to_dict(), "account": account.to_dict()},
+                                sm.state.value, session_active, self.dry_run,
+                                blocker="qty_rounded_to_zero",
+                            )
+                        # mutate intent qty via reconstruct
+                        intent = DemoOrderIntent(
+                            intent_id=intent.intent_id,
+                            symbol=intent.symbol,
+                            side=intent.side,
+                            qty=rounded,
+                            leverage=intent.leverage,
+                            entry_price=intent.entry_price,
+                            stop_loss_price=intent.stop_loss_price,
+                            take_profit_price=intent.take_profit_price,
+                            risk_tier=intent.risk_tier,
+                            client_order_id=intent.client_order_id,
+                            source=intent.source,
+                        )
+        except Exception:
+            instrument = None
+
         lev_res = self.write_adapter.set_leverage(top.symbol, top.leverage)
         if not lev_res.ok:
             sm.transition(DemoOrderState.REJECTED, reason=lev_res.ret_msg or lev_res.error or "set_leverage_failed")
             return OrchestratorResult(
                 summary, candidates, top, False,
-                {"leverage": lev_res.to_dict()},
+                {
+                    "leverage": lev_res.to_dict(),
+                    "trace": self.write_adapter.last_trace.to_dict(),
+                    "rootCause": self.write_adapter.last_trace.root_cause_report(),
+                    "account": account.to_dict(),
+                },
                 sm.state.value, session_active, self.dry_run,
-                blocker=lev_res.ret_msg or lev_res.error or "set_leverage_failed",
+                blocker=lev_res.classification or lev_res.ret_msg or "set_leverage_failed",
             )
+
         iso_res = self.write_adapter.ensure_isolated(top.symbol, top.leverage)
         if not iso_res.ok:
-            # Some Demo keys reject switch-isolated if already isolated — continue only when ret hints already-set.
-            msg = (iso_res.ret_msg or iso_res.error or "").lower()
-            if "permission" in msg or iso_res.ret_code in (10005, 10003, 10004):
-                sm.transition(DemoOrderState.REJECTED, reason=iso_res.ret_msg or iso_res.error or "isolated_failed")
-                return OrchestratorResult(
-                    summary, candidates, top, False,
-                    {"leverage": lev_res.to_dict(), "isolated": iso_res.to_dict()},
-                    sm.state.value, session_active, self.dry_run,
-                    blocker=iso_res.ret_msg or iso_res.error or "isolated_failed",
-                )
-        place_res = self.write_adapter.place_order(intent)
+            sm.transition(DemoOrderState.REJECTED, reason=iso_res.ret_msg or iso_res.error or "margin_mode_failed")
+            return OrchestratorResult(
+                summary, candidates, top, False,
+                {
+                    "leverage": lev_res.to_dict(),
+                    "marginMode": iso_res.to_dict(),
+                    "trace": self.write_adapter.last_trace.to_dict(),
+                    "rootCause": self.write_adapter.last_trace.root_cause_report(),
+                    "account": account.to_dict(),
+                },
+                sm.state.value, session_active, self.dry_run,
+                blocker=iso_res.classification or iso_res.ret_msg or "margin_mode_failed",
+            )
+
+        place_res = self.write_adapter.place_order(
+            intent,
+            instrument=instrument,
+            position_mode=account.position_mode,
+        )
         order_sent = place_res.ok
         if place_res.ok:
             sm.transition(DemoOrderState.ACKNOWLEDGED, reason="exchange_ack")
-            # Protective stop via trading-stop if not attached
             prot = self.write_adapter.set_trading_stop(
                 top.symbol, stop_loss=top.stop_price, take_profit=top.take_profit_price,
             )
             write_payload = {
+                "account": account.to_dict(),
                 "leverage": lev_res.to_dict(),
-                "isolated": iso_res.to_dict(),
+                "marginMode": iso_res.to_dict(),
                 "place": place_res.to_dict(),
                 "protection": prot.to_dict(),
                 "clientOrderId": intent.client_order_id,
+                "trace": self.write_adapter.last_trace.to_dict(),
+                "rootCause": self.write_adapter.last_trace.root_cause_report(),
+                "instrument": instrument.to_dict() if instrument else None,
             }
-            state = "PROTECTED" if prot.ok else "ACKNOWLEDGED"
+            if not prot.ok:
+                state = "PROTECTION_FAILED"
+                # Do not claim PROTECTED
+            else:
+                state = "PROTECTED"
         else:
-            sm.transition(DemoOrderState.AMBIGUOUS if place_res.error and "Timeout" in (place_res.error or "") else DemoOrderState.REJECTED, reason=place_res.error or place_res.ret_msg)
+            sm.transition(
+                DemoOrderState.AMBIGUOUS if place_res.error and "Timeout" in (place_res.error or "") else DemoOrderState.REJECTED,
+                reason=place_res.error or place_res.ret_msg,
+            )
             write_payload = {
+                "account": account.to_dict(),
                 "leverage": lev_res.to_dict(),
-                "isolated": iso_res.to_dict(),
+                "marginMode": iso_res.to_dict(),
                 "place": place_res.to_dict(),
+                "trace": self.write_adapter.last_trace.to_dict(),
+                "rootCause": self.write_adapter.last_trace.root_cause_report(),
+                "instrument": instrument.to_dict() if instrument else None,
             }
             state = sm.state.value
 
         return OrchestratorResult(
             summary, candidates, top, order_sent, write_payload, state,
             session_active, self.dry_run,
-            blocker=None if order_sent else (place_res.error or place_res.ret_msg or "place_failed"),
+            blocker=None if order_sent else (place_res.classification or place_res.error or place_res.ret_msg or "place_failed"),
         )

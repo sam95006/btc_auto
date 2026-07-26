@@ -32,6 +32,7 @@ ALLOWED_GET_PATHS = frozenset(
         "/v5/market/kline",
         "/v5/user/query-api",
         "/v5/account/wallet-balance",
+        "/v5/account/info",
         "/v5/position/list",
         "/v5/order/realtime",
         "/v5/order/history",

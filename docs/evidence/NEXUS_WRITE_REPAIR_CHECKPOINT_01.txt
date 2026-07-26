@@ -1,0 +1,26 @@
+NEXUS_WRITE_REPAIR_AUTONOMOUS_CHECKPOINT
+
+timestamp: 2026-07-26T22:25:00+08:00
+elapsed: ~70m this repair track
+current_track: TRACK_0/1/2 write-path repair
+live_commit: pending push (local tip after repair)
+boot_id: (pre-push) 6ba224039dbc
+write_10005_stage: STEP_2_VERIFY_OR_SET_MARGIN_MODE (primary)
+write_10005_endpoint: /v5/position/switch-isolated
+root_cause: ENDPOINT_NOT_ON_DEMO_ALLOWLIST — Bybit Demo Available API List omits switch-isolated; UTA Demo requires /v5/account/set-margin-mode. Prior flow also continued to create after STEP_1/2 failures. STEP_1 set-leverage IS on Demo allowlist; 10005 on STEP_1 in prior run may be secondary/context or key readOnly flag — diagnostic endpoint now reports query-api readOnly without secrets.
+fix_status: code complete locally; removing switch-isolated; adding set-margin-mode; stage traces; qty step rounding; major <25x block
+tests_passed: 33 write-repair+autonomous
+demo_equity: ~4994.03
+symbols_scanned: (post-deploy rescan)
+eligible_candidates: pending
+top_candidate: pending fresh rescan
+side: pending
+selected_leverage: pending
+order_state: none
+position_state: flat
+protective_stop_state: n/a
+paper_active: true
+ledger_valid: true
+secret_safe: true
+blocker: deploy pending
+next_action: scoped GitHub push → Live write-trace → real send

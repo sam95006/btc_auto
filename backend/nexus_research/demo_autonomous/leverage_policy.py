@@ -140,6 +140,20 @@ class ConfidenceLeveragePolicy:
             selected = 20
             notes.append("small_coin_cap_20x")
 
+        # Majors: do not silently place below 25x — block instead (unless explicit demotion notes).
+        demotion = any(
+            n.startswith("delever_") or n in {"vol_cap", "spread_cap"}
+            for n in notes
+        )
+        if (
+            tier == LiquidityTier.TIER_A_MAJOR
+            and selected < rng.low
+            and not demotion
+            and "reduced_for_liq_buffer" in notes
+        ):
+            blocks.append(f"major_below_25x_blocked:selected={selected}")
+            notes.append("prefer_no_trade_over_silent_delever_major")
+
         allow = len(blocks) == 0 and selected >= 1
         return LeverageDecision(
             selected=selected if allow else 0,

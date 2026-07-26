@@ -31,8 +31,25 @@ ALLOWED_WRITE_PATHS = frozenset({
     "/v5/order/create",
     "/v5/order/cancel",
     "/v5/position/set-leverage",
-    "/v5/position/switch-isolated",
     "/v5/position/trading-stop",
+    "/v5/account/set-margin-mode",
+    "/v5/position/switch-mode",
+})
+
+# Classic path — intentionally NOT allowlisted for Demo UTA.
+DEMO_BLOCKED_CLASSIC_PATHS = frozenset({
+    "/v5/position/switch-isolated",
+})
+
+ALLOWED_PRIVATE_GET_PATHS = frozenset({
+    "/v5/user/query-api",
+    "/v5/account/info",
+    "/v5/account/wallet-balance",
+    "/v5/position/list",
+    "/v5/order/realtime",
+    "/v5/order/history",
+    "/v5/execution/list",
+    "/v5/market/instruments-info",
 })
 
 FORBIDDEN_ALWAYS = frozenset({
@@ -67,11 +84,23 @@ class DemoWriteTransport:
     def _assert_path(self, path: str) -> None:
         if path in FORBIDDEN_ALWAYS or "withdraw" in path or "transfer" in path:
             raise WriteForbiddenError(f"path_forbidden:{path}")
+        if path in DEMO_BLOCKED_CLASSIC_PATHS:
+            raise WriteForbiddenError(f"path_not_supported_on_bybit_demo:{path}")
         if path not in ALLOWED_WRITE_PATHS:
             raise WriteForbiddenError(f"path_not_in_write_allowlist:{path}")
         # Domain must remain demo
         if self.policy.ALLOWED_HOST != "api-demo.bybit.com":
             raise DomainRejectedError("host_not_demo")
+
+    def get(self, path: str, params: Mapping[str, Any] | None = None) -> dict[str, Any]:
+        """Private GET for account/position truth (session not required for preflight reads)."""
+        if path not in ALLOWED_PRIVATE_GET_PATHS:
+            raise WriteForbiddenError(f"path_not_in_private_get_allowlist:{path}")
+        if self.policy.ALLOWED_HOST != "api-demo.bybit.com":
+            raise DomainRejectedError("host_not_demo")
+        if self.dry_run:
+            return {"retCode": 0, "retMsg": "OK", "result": {"dryRun": True, "list": []}}
+        return self._live_get(path, dict(params or {}))
 
     def post(self, path: str, body: Mapping[str, Any]) -> dict[str, Any]:
         self._assert_session()
@@ -87,6 +116,32 @@ class DemoWriteTransport:
                 "time": int(time.time() * 1000),
             }
         return self._live_post(path, dict(body))
+
+    def _live_get(self, path: str, params: dict[str, Any]) -> dict[str, Any]:
+        from urllib.parse import urlencode
+
+        str_params = {str(k): str(v) for k, v in params.items() if v is not None}
+        headers = self.signer.sign_get(str_params)
+        query = urlencode(sorted(str_params.items())) if str_params else ""
+        url = f"{self.policy.base_url}{path}"
+        if query:
+            url = f"{url}?{query}"
+        req = Request(url, headers=headers, method="GET")
+        try:
+            with urlopen(req, timeout=self.timeout_sec) as resp:
+                raw = resp.read().decode("utf-8", "replace")
+        except HTTPError as exc:
+            if exc.code == 429:
+                raise RateLimitError("rate_limit") from exc
+            if exc.code in (401, 403):
+                raise SignatureInvalidError("auth_rejected") from exc
+            raise MalformedResponseError(f"http_{exc.code}") from exc
+        except URLError as exc:
+            raise TimeoutError_(f"url_error:{type(exc).__name__}") from exc
+        data = json.loads(raw)
+        if not isinstance(data, dict):
+            raise MalformedResponseError("non_object")
+        return data
 
     def _live_post(self, path: str, body: dict[str, Any]) -> dict[str, Any]:
         ts = str(int(time.time() * 1000))
