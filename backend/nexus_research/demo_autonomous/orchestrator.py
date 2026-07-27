@@ -359,6 +359,63 @@ class AutonomousDemoOrchestrator:
         sm.transition(DemoOrderState.READY_FOR_AUTHORIZATION, reason="preflight_ok")
         # Session already authorized — treat as AUTHORIZED
         sm.transition(DemoOrderState.AUTHORIZED, reason="session_grant")
+
+        # Hard gate BEFORE SEND_STARTED: reentry + exit policy must be persisted.
+        from backend.nexus_research.demo_autonomous.exit_policy_record import record_exit_policy
+        from backend.nexus_research.demo_autonomous.reentry_guard import get_reentry_guard
+
+        signal_id = str(
+            top.why_selected
+            or f"{top.symbol}:{top.side}:{top.strategy}:{top.confidence}"
+        )
+        ok_re, re_reason = get_reentry_guard().allow(
+            symbol=top.symbol,
+            side=top.side,
+            strategy=str(top.strategy or ""),
+            signal_id=signal_id,
+            market_snapshot_id=str(summary.get("capturedAtMs") or ""),
+        )
+        if not ok_re:
+            sm.transition(DemoOrderState.PREFLIGHT_BLOCKED, reason=re_reason or "reentry_blocked")
+            return OrchestratorResult(
+                summary, candidates, top, False,
+                {"reentry": re_reason},
+                sm.state.value, session_active, self.dry_run,
+                blocker=re_reason or "reentry_blocked",
+            )
+
+        policy = record_exit_policy(
+            symbol=top.symbol,
+            side=top.side,
+            strategy=str(top.strategy or ""),
+            signal_id=signal_id,
+            max_hold_ms=6 * 60 * 60 * 1000,
+            time_stop_enabled=True,
+            order_link_id=str(intent.client_order_id or ""),
+            protective_stop_plan={
+                "type": "StopLoss",
+                "triggerBy": "MarkPrice",
+                "triggerPrice": top.stop_price,
+                "reduceOnly": True,
+                "closeOnTrigger": True,
+            },
+            take_profit_plan={
+                "type": "TakeProfit",
+                "triggerBy": "MarkPrice",
+                "triggerPrice": top.take_profit_price,
+                "reduceOnly": True,
+                "closeOnTrigger": True,
+            },
+        )
+        if not policy.is_complete():
+            sm.transition(DemoOrderState.PREFLIGHT_BLOCKED, reason="exit_policy_not_persisted")
+            return OrchestratorResult(
+                summary, candidates, top, False,
+                {"exitPolicy": policy.to_dict()},
+                sm.state.value, session_active, self.dry_run,
+                blocker="exit_policy_not_persisted",
+            )
+
         sm.transition(DemoOrderState.SEND_STARTED, reason="send")
 
         assert self.write_adapter is not None

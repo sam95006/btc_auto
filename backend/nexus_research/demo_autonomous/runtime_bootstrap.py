@@ -134,40 +134,101 @@ def _run_scan_cycle() -> dict[str, Any]:
     payload = result.to_dict()
     top = payload.get("top") or {}
 
-    # Re-entry guard: if we would have sent, verify fingerprint; orchestrator may already have sent.
-    if send and payload.get("orderSent") and top:
-        from backend.nexus_research.demo_autonomous.exit_policy_record import record_exit_policy
-
-        signal_id = str(
-            top.get("whySelected")
-            or f"{top.get('symbol')}:{top.get('side')}:{top.get('strategy')}:{top.get('confidence')}"
-        )
-        record_exit_policy(
-            symbol=str(top.get("symbol") or ""),
-            side=str(top.get("side") or ""),
-            strategy=str(top.get("strategy") or ""),
-            signal_id=signal_id,
-            max_hold_ms=6 * 60 * 60 * 1000,
-            time_stop_enabled=True,
-            order_link_id=str(((payload.get("writeResult") or {}).get("orderLinkId")) or ""),
-        )
-    elif send and top and not payload.get("orderSent"):
-        # Pre-check path: if blocker empty but we skipped — apply guard for next cycles via note
-        ok_re, reason = get_reentry_guard().allow(
-            symbol=str(top.get("symbol") or ""),
-            side=str(top.get("side") or ""),
-            strategy=str(top.get("strategy") or ""),
-            signal_id=str(top.get("whySelected") or ""),
-            market_snapshot_id=str((payload.get("universe") or {}).get("capturedAtMs") or ""),
-        )
-        if not ok_re:
-            payload["blocker"] = reason
-            payload["orderSent"] = False
-
-    # Future-trade supervisor: only when exit policy exists for open symbol (never invent for legacy).
+    # Supervisor / Time Stop: only when a persisted exit policy exists for the open symbol.
+    # Never invent Time Stop for legacy trades without exit_policy_records.
     supervisor_note = None
+    supervisor_tick = None
     if open_positions > 0 and snap is not None:
-        supervisor_note = "position_open_managed_by_exchange_protection_until_exit_policy_tick"
+        from backend.nexus_research.demo_autonomous.exit_policy_record import latest_exit_policy
+        from backend.nexus_research.demo_autonomous.position_lifecycle import (
+            LifecyclePolicy,
+            PositionSnapshot,
+        )
+        from backend.nexus_research.demo_autonomous.position_supervisor import (
+            AutonomousPositionSupervisor,
+        )
+
+        pos_raw = next(
+            (p for p in (snap.positions or []) if float(p.get("size") or 0) > 0),
+            None,
+        )
+        if pos_raw:
+            policy = latest_exit_policy(str(pos_raw.get("symbol") or ""))
+            if policy is None or not policy.is_complete():
+                supervisor_note = "legacy_or_incomplete_exit_policy_exchange_protection_only"
+            else:
+                opened_at = int(
+                    pos_raw.get("createdTime")
+                    or pos_raw.get("updatedTime")
+                    or policy.created_at_ms
+                    or 0
+                )
+                snap_pos = PositionSnapshot(
+                    symbol=str(pos_raw.get("symbol") or ""),
+                    side=str(pos_raw.get("side") or ""),
+                    size=float(pos_raw.get("size") or 0),
+                    entry_price=float(pos_raw.get("avgPrice") or pos_raw.get("entryPrice") or 0),
+                    mark_price=float(pos_raw.get("markPrice") or pos_raw.get("avgPrice") or 0),
+                    unrealised_pnl=float(pos_raw.get("unrealisedPnl") or 0),
+                    liquidation_price=(
+                        float(pos_raw["liqPrice"])
+                        if pos_raw.get("liqPrice") not in (None, "", "0")
+                        else None
+                    ),
+                    stop_loss=(
+                        float(policy.protective_stop_plan.get("triggerPrice"))
+                        if policy.protective_stop_plan.get("triggerPrice") is not None
+                        else None
+                    ),
+                    take_profit=(
+                        float(policy.take_profit_plan.get("triggerPrice"))
+                        if policy.take_profit_plan.get("triggerPrice") is not None
+                        else None
+                    ),
+                    opened_at_ms=opened_at,
+                    protection_verified=True,
+                )
+                # Build live write adapter only when session can write (not emergency-stopped).
+                write_adapter = None
+                dry_sup = True
+                if session_active:
+                    try:
+                        live_orch = _build_orch(dry_run=False)
+                        write_adapter = live_orch.write_adapter
+                        dry_sup = False
+                    except Exception:
+                        write_adapter = None
+                        dry_sup = True
+                supervisor = AutonomousPositionSupervisor(
+                    write_adapter=write_adapter, dry_run=dry_sup,
+                )
+                supervisor.lifecycle.policy = LifecyclePolicy(max_hold_ms=policy.max_hold_ms)
+                stop_dist = 0.0
+                if snap_pos.entry_price and policy.protective_stop_plan.get("triggerPrice"):
+                    stop_dist = abs(
+                        snap_pos.entry_price - float(policy.protective_stop_plan["triggerPrice"])
+                    ) / snap_pos.entry_price * 100.0
+                tick = supervisor.tick(
+                    snap_pos,
+                    stop_distance_pct=stop_dist or 1.5,
+                    risk_amount=max(1.0, equity * 0.005),
+                    strategy=policy.strategy,
+                    regime="",
+                    confidence=70.0,
+                    leverage=25,
+                )
+                supervisor_tick = tick.to_dict()
+                supervisor_note = (
+                    f"exit_supervisor:{tick.exit_decision.reason.value}"
+                    f":closed={tick.closed}"
+                )
+                if tick.closed:
+                    get_reentry_guard().record_close(
+                        symbol=snap_pos.symbol,
+                        side=snap_pos.side,
+                        strategy=policy.strategy,
+                        signal_id=policy.signal_id,
+                    )
 
     record_scan_result(payload)
     return {
@@ -182,6 +243,9 @@ def _run_scan_cycle() -> dict[str, Any]:
         "rotation": rotation.to_dict(),
         "newEntriesPaused": entries_paused,
         "supervisorNote": supervisor_note,
+        "supervisorTick": supervisor_tick,
+        "sessionRotationEnabled": True,
+        "exitSupervisorEnabled": True,
     }
 
 

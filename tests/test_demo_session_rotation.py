@@ -154,3 +154,39 @@ def test_skip_when_not_near_expiry(auth):
     rot = AutonomousDemoSessionRotator(auth=auth)
     res = rot.rotate_if_needed(position_count=0, open_order_count=0, force=False)
     assert res.mode == "SKIPPED"
+
+
+def test_exit_policy_incomplete_without_plans(tmp_path, monkeypatch):
+    monkeypatch.setenv("NEXUS_DATA_DIR", str(tmp_path))
+    from backend.nexus_research.demo_autonomous.exit_policy_record import record_exit_policy
+
+    incomplete = record_exit_policy(
+        symbol="BTCUSDT",
+        side="Buy",
+        strategy="TREND_FOLLOWING",
+        protective_stop_plan=None,
+        take_profit_plan=None,
+    )
+    assert incomplete.persisted is True
+    assert incomplete.is_complete() is False
+
+
+def test_exit_policy_complete_and_latest(tmp_path, monkeypatch):
+    monkeypatch.setenv("NEXUS_DATA_DIR", str(tmp_path))
+    from backend.nexus_research.demo_autonomous.exit_policy_record import (
+        latest_exit_policy,
+        record_exit_policy,
+    )
+
+    complete = record_exit_policy(
+        symbol="BTCUSDT",
+        side="Buy",
+        strategy="TREND_FOLLOWING",
+        protective_stop_plan={"type": "StopLoss", "triggerPrice": 100.0},
+        take_profit_plan={"type": "TakeProfit", "triggerPrice": 110.0},
+    )
+    assert complete.is_complete() is True
+    loaded = latest_exit_policy("BTCUSDT")
+    assert loaded is not None
+    assert loaded.is_complete() is True
+    assert loaded.protective_stop_plan["triggerPrice"] == 100.0
