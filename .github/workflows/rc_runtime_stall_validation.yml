@@ -85,11 +85,12 @@ jobs:
           python - <<'PY'
           import re, sys
           from pathlib import Path
-          # Only flag hardcoded string literals — not assignments to helpers/env lookups.
+          # Hardcoded credential *literals* only (quoted). Skip env-key-name constants.
           pat = re.compile(
               r"(?i)(api[_-]?secret|private[_-]?key|mnemonic|seed.?phrase)\s*[:=]\s*"
-              r"(['\"])[A-Za-z0-9_\-+/=]{16,}\2"
+              r"(['\"])([A-Za-z0-9_\-+/=]{16,})\2"
           )
+          env_name = re.compile(r"^[A-Z][A-Z0-9_]{15,}$")
           roots = ["backend", "frontend", "tools", "tests", "config"]
           hits = []
           for root in roots:
@@ -104,8 +105,12 @@ jobs:
               if p.stat().st_size > 1_000_000:
                 continue
               text = p.read_text(encoding="utf-8", errors="ignore")
-              if pat.search(text):
+              for m in pat.finditer(text):
+                  value = m.group(3)
+                  if env_name.fullmatch(value):
+                      continue
                   hits.append(str(p).replace("\\", "/"))
+                  break
           print(f"active_secret_pattern_hits={len(hits)}")
           for h in hits[:50]:
               print(h)
