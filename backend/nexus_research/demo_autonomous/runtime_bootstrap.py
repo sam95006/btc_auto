@@ -69,11 +69,14 @@ def _build_orch(*, dry_run: bool):
 
 def _run_scan_cycle() -> dict[str, Any]:
     from backend.nexus_research.demo_autonomous.ops_status import record_scan_result
+    from backend.nexus_research.demo_autonomous.reentry_guard import get_reentry_guard
     from backend.nexus_research.demo_autonomous.session_authorization import get_authorization_validator
+    from backend.nexus_research.demo_autonomous.session_rotator import get_session_rotator
 
     equity = 5000.0
     open_positions = 0
     open_orders = 0
+    snap = None
     try:
         from backend.nexus_research.demo_exchange.account_snapshot import capture_account_snapshot
 
@@ -83,6 +86,15 @@ def _run_scan_cycle() -> dict[str, Any]:
         open_orders = len(snap.open_orders or [])
     except Exception as exc:
         logger.warning("autonomous_scan_snapshot_failed: %s", type(exc).__name__)
+
+    rotator = get_session_rotator()
+    rotation = rotator.rotate_if_needed(
+        position_count=open_positions,
+        open_order_count=open_orders,
+        reconcile_ok=True,
+        ambiguous=False,
+    )
+    rotator.clear_new_entries_pause_if_flat(open_positions)
 
     instruments = None
     quality = None
@@ -99,7 +111,14 @@ def _run_scan_cycle() -> dict[str, Any]:
 
     auth = get_authorization_validator()
     session_active = bool(auth.session and auth.session.is_active())
-    send = bool(_auto_send_enabled() and session_active and open_positions == 0 and open_orders == 0)
+    entries_paused = bool(rotator.continuity.new_entries_paused)
+    send = bool(
+        _auto_send_enabled()
+        and session_active
+        and open_positions == 0
+        and open_orders == 0
+        and not entries_paused
+    )
 
     # Prefer live dry_run=false only when sending; otherwise dry scan is fine for ranking.
     dry_run = not send
@@ -110,9 +129,46 @@ def _run_scan_cycle() -> dict[str, Any]:
         quality=quality,
         open_positions=open_positions,
         open_orders=open_orders,
-        send=send,
+        send=False if not send else True,
     )
     payload = result.to_dict()
+    top = payload.get("top") or {}
+
+    # Re-entry guard: if we would have sent, verify fingerprint; orchestrator may already have sent.
+    if send and payload.get("orderSent") and top:
+        from backend.nexus_research.demo_autonomous.exit_policy_record import record_exit_policy
+
+        signal_id = str(
+            top.get("whySelected")
+            or f"{top.get('symbol')}:{top.get('side')}:{top.get('strategy')}:{top.get('confidence')}"
+        )
+        record_exit_policy(
+            symbol=str(top.get("symbol") or ""),
+            side=str(top.get("side") or ""),
+            strategy=str(top.get("strategy") or ""),
+            signal_id=signal_id,
+            max_hold_ms=6 * 60 * 60 * 1000,
+            time_stop_enabled=True,
+            order_link_id=str(((payload.get("writeResult") or {}).get("orderLinkId")) or ""),
+        )
+    elif send and top and not payload.get("orderSent"):
+        # Pre-check path: if blocker empty but we skipped — apply guard for next cycles via note
+        ok_re, reason = get_reentry_guard().allow(
+            symbol=str(top.get("symbol") or ""),
+            side=str(top.get("side") or ""),
+            strategy=str(top.get("strategy") or ""),
+            signal_id=str(top.get("whySelected") or ""),
+            market_snapshot_id=str((payload.get("universe") or {}).get("capturedAtMs") or ""),
+        )
+        if not ok_re:
+            payload["blocker"] = reason
+            payload["orderSent"] = False
+
+    # Future-trade supervisor: only when exit policy exists for open symbol (never invent for legacy).
+    supervisor_note = None
+    if open_positions > 0 and snap is not None:
+        supervisor_note = "position_open_managed_by_exchange_protection_until_exit_policy_tick"
+
     record_scan_result(payload)
     return {
         "ok": True,
@@ -122,7 +178,10 @@ def _run_scan_cycle() -> dict[str, Any]:
         "state": payload.get("state"),
         "blocker": payload.get("blocker"),
         "eligible": len(payload.get("candidates") or []),
-        "top": (payload.get("top") or {}).get("symbol") if payload.get("top") else None,
+        "top": top.get("symbol") if top else None,
+        "rotation": rotation.to_dict(),
+        "newEntriesPaused": entries_paused,
+        "supervisorNote": supervisor_note,
     }
 
 
