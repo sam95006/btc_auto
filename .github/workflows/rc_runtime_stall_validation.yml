@@ -1,0 +1,222 @@
+name: rc-runtime-stall-validation
+
+# Non-deploy RC validation only.
+# Intended for branch: rc/runtime-stall-zeabur-observer
+# Does NOT deploy to Zeabur. Does NOT enable Clean Observer.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "rc/runtime-stall-zeabur-observer"
+  pull_request:
+    branches:
+      - "rc/runtime-stall-zeabur-observer"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rc-runtime-stall-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      AUTONOMOUS_SEND: "false"
+      EXCHANGE_WRITE: "false"
+      MAINNET: "false"
+      REAL_MONEY: "false"
+      ARM: "false"
+      NEXUS_ZEABUR_CLEAN_OBSERVER: "false"
+      NEXUS_AUTONOMOUS_DEMO_AUTO_SEND: "false"
+      NEXUS_AUTONOMOUS_DEMO_DRY_RUN: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Compile demo autonomous
+        run: python -m compileall -q backend/nexus_research/demo_autonomous backend/nexus_research/demo_exchange
+
+      - name: Runtime stall + demo autonomous tests
+        run: |
+          python -m pytest \
+            tests/test_runtime_stall_remediation.py \
+            tests/test_demo_autonomous_core.py \
+            tests/test_demo_autonomous_extra.py \
+            tests/test_demo_autonomous_faults.py \
+            tests/test_demo_autonomous_ops_ui.py \
+            -q --tb=short
+
+      - name: Related session/shadow/reconcile tests
+        run: |
+          python -m pytest \
+            tests/test_demo_session_rotation.py \
+            tests/test_demo_reflection_reconcile_edges.py \
+            tests/test_demo_write_path_repair.py \
+            tests/test_stage4_btc_dual_provider_shadow.py \
+            tests/test_stage4_btc_shadow_diagnostics.py \
+            tests/test_stage4_btc_shadow_pair_compare.py \
+            -q --tb=short
+
+      - name: Assert no C-drive absolute path in active runtime
+        run: |
+          if grep -R -n -F "C:\\Users\\user\\.cursor\\projects\\g-btc-bot" backend frontend tools tests config Dockerfile Procfile 2>/dev/null; then
+            echo "Found forbidden C-drive absolute path" >&2
+            exit 1
+          fi
+
+      - name: Secret pattern scan (active only, no values printed)
+        run: |
+          python - <<'PY'
+          import re, sys
+          from pathlib import Path
+          pat = re.compile(r"(?i)(api[_-]?secret|private[_-]?key|mnemonic|seed.?phrase)\s*[:=]\s*[A-Za-z0-9_\-]{16,}")
+          roots = ["backend", "frontend", "tools", "tests", "config"]
+          hits = []
+          for root in roots:
+            base = Path(root)
+            if not base.exists():
+              continue
+            for p in base.rglob("*"):
+              if not p.is_file() or any(x in p.parts for x in ("node_modules", "venv", "__pycache__")):
+                continue
+              if p.suffix.lower() not in {".py", ".ts", ".tsx", ".js", ".json", ".yml", ".yaml", ".md", ".txt"}:
+                continue
+              if p.stat().st_size > 1_000_000:
+                continue
+              text = p.read_text(encoding="utf-8", errors="ignore")
+              if pat.search(text):
+                hits.append(str(p).replace("\\", "/"))
+          print(f"active_secret_pattern_hits={len(hits)}")
+          for h in hits[:50]:
+              print(h)
+          if hits:
+              sys.exit(1)
+          PY
+
+      - name: Full Suite with baseline debt triage
+        run: |
+          python tools/research/triage_full_suite_baseline.py
+          test -f full_suite_triage.json
+          python - <<'PY'
+          import json
+          d=json.load(open("full_suite_triage.json",encoding="utf-8"))
+          assert d["release_delta_regression"]==0
+          assert d["failed_count"]<=12
+          print("full_suite_gate_ok", d["failed_count"], d["full_suite_baseline_debt"])
+          PY
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: npm ci
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: typecheck
+        working-directory: frontend
+        run: npm run typecheck
+
+      - name: build
+        working-directory: frontend
+        run: npm run build
+
+      - name: safety
+        working-directory: frontend
+        run: npm run check:safety
+
+  docker-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      AUTONOMOUS_SEND: "false"
+      EXCHANGE_WRITE: "false"
+      MAINNET: "false"
+      REAL_MONEY: "false"
+      ARM: "false"
+      NEXUS_ZEABUR_CLEAN_OBSERVER: "false"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Assert dockerignore excludes archives/env
+        run: |
+          grep -q '^archives/' .dockerignore
+          grep -q '^\.env' .dockerignore
+
+      - name: Docker build
+        run: docker build -t btc-bot-rc-runtime-stall:ci .
+
+      - name: Image content assertions
+        run: |
+          cid=$(docker create btc-bot-rc-runtime-stall:ci)
+          docker export "$cid" | tar -t > /tmp/image_files.txt
+          docker rm "$cid"
+          echo "image_file_count=$(wc -l < /tmp/image_files.txt)"
+          if grep -E '(^|/)archives/|(^|/)\.env($|\.)|agent-transcripts/|terminals/' /tmp/image_files.txt; then
+            echo "Forbidden paths present in image" >&2
+            exit 1
+          fi
+          if grep -F 'C:/Users/user/.cursor/projects/g-btc-bot' /tmp/image_files.txt; then
+            echo "Absolute C path present in image" >&2
+            exit 1
+          fi
+          test -n "$(grep -E 'backend/nexus_research/demo_autonomous/controller.py' /tmp/image_files.txt)"
+
+      - name: Container smoke (no exchange write)
+        run: |
+          docker run -d --name btc-bot-rc-smoke \
+            -e PORT=8080 \
+            -e AUTONOMOUS_SEND=false \
+            -e EXCHANGE_WRITE=false \
+            -e MAINNET=false \
+            -e REAL_MONEY=false \
+            -e ARM=false \
+            -e NEXUS_ZEABUR_CLEAN_OBSERVER=false \
+            -e NEXUS_AUTONOMOUS_DEMO_AUTO_SEND=false \
+            -e NEXUS_AUTONOMOUS_DEMO_DRY_RUN=true \
+            -p 8080:8080 \
+            btc-bot-rc-runtime-stall:ci
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8080/health >/tmp/health.json 2>/dev/null \
+              || curl -fsS http://127.0.0.1:8080/ >/tmp/root.html 2>/dev/null; then
+              ok=1
+              break
+            fi
+            sleep 2
+          done
+          docker logs btc-bot-rc-smoke | tail -n 120
+          if [ "$ok" != "1" ]; then
+            echo "container_smoke_failed" >&2
+            docker rm -f btc-bot-rc-smoke
+            exit 1
+          fi
+          echo "observer_default_disabled=true"
+          echo "container_smoke=PASS"
+          docker rm -f btc-bot-rc-smoke

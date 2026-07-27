@@ -69,9 +69,9 @@ class AutonomousPositionSupervisor:
         system_healthy: bool = True,
         emergency_stop: bool = False,
         mark_exit_pnl: float | None = None,
-        fees: float = 0.0,
-        funding: float = 0.0,
-        slippage: float = 0.0,
+        fees: float | None = None,
+        funding: float | None = None,
+        slippage: float | None = None,
     ) -> MonitorCycleResult:
         decision = self.lifecycle.evaluate(
             pos,
@@ -104,6 +104,7 @@ class AutonomousPositionSupervisor:
         reflection = None
         if closed:
             pnl = float(mark_exit_pnl if mark_exit_pnl is not None else pos.unrealised_pnl)
+            # Missing fee/funding/slippage stay None — never invent 0.
             reflection = build_reflection_bundle(
                 symbol=pos.symbol,
                 side=pos.side,
@@ -116,14 +117,22 @@ class AutonomousPositionSupervisor:
                 funding=funding,
                 slippage=slippage,
                 risk_amount=risk_amount,
+                mae=None,
+                mfe=None,
                 holding_ms=max(0, int(time.time() * 1000) - pos.opened_at_ms),
                 exit_reason=decision.reason.value,
             )
+            if reflection.outcome.incomplete:
+                notes.append("outcome_incomplete:" + ",".join(reflection.outcome.missing_fields))
 
         return MonitorCycleResult(
             exit_decision=decision,
             closed=closed,
-            reconciled=closed,
+            reconciled=bool(
+                closed
+                and reflection is not None
+                and not reflection.outcome.incomplete
+            ),
             reflection=reflection,
             write_result=write_payload,
             notes=notes,

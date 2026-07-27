@@ -1,0 +1,98 @@
+﻿[
+    {
+        "source_path":  "G:\\我的雲端硬碟\\btc_bot\\backend\\nexus_research\\demo_autonomous\\controller.py",
+        "destination_path":  "C:\\Temp\\BTC_BOT_RUNTIME_RC\\backend\\nexus_research\\demo_autonomous\\controller.py",
+        "base_sha":  "2761718d510f35728e5c108003ceb59ab8039dbc",
+        "source_sha256":  "8DD18FD5478528D249ED420ACCDEF34AECFA61E58C90B09BCF7F02DADD642E5A",
+        "dest_sha256":  "8DD18FD5478528D249ED420ACCDEF34AECFA61E58C90B09BCF7F02DADD642E5A",
+        "match":  true
+    },
+    {
+        "source_path":  "G:\\我的雲端硬碟\\btc_bot\\backend\\nexus_research\\demo_autonomous\\error_sanitize.py",
+        "destination_path":  "C:\\Temp\\BTC_BOT_RUNTIME_RC\\backend\\nexus_research\\demo_autonomous\\error_sanitize.py",
+        "base_sha":  "2761718d510f35728e5c108003ceb59ab8039dbc",
+        "source_sha256":  "1F18270333E96A58A0DE7EDC08275FE4405771E108221FDD9DFC767433A6AE86",
+        "dest_sha256":  "1F18270333E96A58A0DE7EDC08275FE4405771E108221FDD9DFC767433A6AE86",
+        "match":  true
+    },
+    {
+        "source_path":  "G:\\我的雲端硬碟\\btc_bot\\backend\\nexus_research\\demo_autonomous\\ops_status.py",
+        "destination_path":  "C:\\Temp\\BTC_BOT_RUNTIME_RC\\backend\\nexus_research\\demo_autonomous\\ops_status.py",
+        "base_sha":  "2761718d510f35728e5c108003ceb59ab8039dbc",
+        "source_sha256":  "052D91310FDD40EC767369FDDE1272968705F59A62F25AA97030912798A1E65B",
+        "dest_sha256":  "052D91310FDD40EC767369FDDE1272968705F59A62F25AA97030912798A1E65B",
+        "match":  true
+    },
+    {
+        "source_path":  "G:\\我的雲端硬碟\\btc_bot\\backend\\nexus_research\\demo_autonomous\\outcome_reflection.py",
+        "destination_path":  "C:\\Temp\\BTC_BOT_RUNTIME_RC\\backend\\nexus_research\\demo_autonomous\\outcome_reflection.py",
+        "base_sha":  "2761718d510f35728e5c108003ceb59ab8039dbc",
+        "source_sha256":  "B83CEB3E729B01A17641520BBF74248C79E1473AF9F865AC001E52A5FC33956D",
+        "dest_sha256":  "B83CEB3E729B01A17641520BBF74248C79E1473AF9F865AC001E52A5FC33956D",
+        "match":  true
+    },
+    {
+        "source_path":  "G:\\我的雲端硬碟\\btc_bot\\backend\\nexus_research\\demo_autonomous\\position_supervisor.py",
+        "destination_path":  "C:\\Temp\\BTC_BOT_RUNTIME_RC\\backend\\nexus_research\\demo_autonomous\\position_supervisor.py",
+        "base_sha":  "2761718d510f35728e5c108003ceb59ab8039dbc",
+        "source_sha256":  "D991900AC260678C332EE03CE4EFC590E3F8C734D612D540A724B6B12320B318",
+        "dest_sha256":  "D991900AC260678C332EE03CE4EFC590E3F8C734D612D540A724B6B12320B318",
+        "match":  true
+    },
+    {
+        "source_path":  "G:\\我的雲端硬碟\\btc_bot\\backend\\nexus_research\\demo_autonomous\\runtime_bootstrap.py",
+        "destination_path":  "C:\\Temp\\BTC_BOT_RUNTIME_RC\\backend\\nexus_research\\demo_autonomous\\runtime_bootstrap.py",
+        "base_sha":  "2761718d510f35728e5c108003ceb59ab8039dbc",
+        "source_sha256":  "B174A02E2BFEC32C2B097FE3140F52E5931D271DB99DC686E3A158EBC10E68B5",
+        "dest_sha256":  "B174A02E2BFEC32C2B097FE3140F52E5931D271DB99DC686E3A158EBC10E68B5",
+        "match":  true
+    },
+    {
+        "source_path":  "G:\\我的雲端硬碟\\btc_bot\\backend\\nexus_research\\demo_autonomous\\validation_observer.py",
+        "destination_path":  "C:\\Temp\\BTC_BOT_RUNTIME_RC\\backend\\nexus_research\\demo_autonomous\\validation_observer.py",
+        "base_sha":  "2761718d510f35728e5c108003ceb59ab8039dbc",
+        "source_sha256":  "32A5A8404F38D1E33C3B9D3953B9EB37814C5C5BDB66AA1716D25450AEABDA9C",
+        "dest_sha256":  "32A5A8404F38D1E33C3B9D3953B9EB37814C5C5BDB66AA1716D25450AEABDA9C",
+        "match":  true
+    },
+    {
+        "source_path":  "G:\\我的雲端硬碟\\btc_bot\\backend\\nexus_research\\demo_autonomous\\api_routes.py",
+        "destination_path":  "C:\\Temp\\BTC_BOT_RUNTIME_RC\\backend\\nexus_research\\demo_autonomous\\api_routes.py",
+        "base_sha":  "2761718d510f35728e5c108003ceb59ab8039dbc",
+        "source_sha256":  "DA55C235D6771DBF9B445A5D1B8FCFBD86B19A31652A9ABD40601147A29AF8A0",
+        "dest_sha256":  "DA55C235D6771DBF9B445A5D1B8FCFBD86B19A31652A9ABD40601147A29AF8A0",
+        "match":  true
+    },
+    {
+        "source_path":  "G:\\我的雲端硬碟\\btc_bot\\tests\\test_runtime_stall_remediation.py",
+        "destination_path":  "C:\\Temp\\BTC_BOT_RUNTIME_RC\\tests\\test_runtime_stall_remediation.py",
+        "base_sha":  "2761718d510f35728e5c108003ceb59ab8039dbc",
+        "source_sha256":  "D5A2860F69A7A5104ACA2D731DEEC873327B6A179924767FAE4F53A875446E51",
+        "dest_sha256":  "D5A2860F69A7A5104ACA2D731DEEC873327B6A179924767FAE4F53A875446E51",
+        "match":  true
+    },
+    {
+        "source_path":  "G:\\我的雲端硬碟\\btc_bot\\docs\\04_readiness\\NEXUS_CLEAN_24H_ZEABUR_ONLY.md",
+        "destination_path":  "C:\\Temp\\BTC_BOT_RUNTIME_RC\\docs\\04_readiness\\NEXUS_CLEAN_24H_ZEABUR_ONLY.md",
+        "base_sha":  "2761718d510f35728e5c108003ceb59ab8039dbc",
+        "source_sha256":  "018058A9D3315551D14DE8B68129DE96BC23CC9B3D79DC98213ED302DC7ABCF2",
+        "dest_sha256":  "018058A9D3315551D14DE8B68129DE96BC23CC9B3D79DC98213ED302DC7ABCF2",
+        "match":  true
+    },
+    {
+        "source_path":  "G:\\我的雲端硬碟\\btc_bot\\docs\\04_readiness\\NEXUS_ZEABUR_CLEAN_OBSERVER_READY.md",
+        "destination_path":  "C:\\Temp\\BTC_BOT_RUNTIME_RC\\docs\\04_readiness\\NEXUS_ZEABUR_CLEAN_OBSERVER_READY.md",
+        "base_sha":  "2761718d510f35728e5c108003ceb59ab8039dbc",
+        "source_sha256":  "3DBF4E9E037EB50CF1B43027E3E9CA0B5ECCF0B14D719FEED1D7E90A1E5641B6",
+        "dest_sha256":  "3DBF4E9E037EB50CF1B43027E3E9CA0B5ECCF0B14D719FEED1D7E90A1E5641B6",
+        "match":  true
+    },
+    {
+        "source_path":  "G:\\我的雲端硬碟\\btc_bot\\docs\\04_readiness\\BTC_BOT_PATH_MAPPING.md",
+        "destination_path":  "C:\\Temp\\BTC_BOT_RUNTIME_RC\\docs\\04_readiness\\BTC_BOT_PATH_MAPPING.md",
+        "base_sha":  "2761718d510f35728e5c108003ceb59ab8039dbc",
+        "source_sha256":  "4F8F1B330AAE6AFDB88033D3B726AA74464D0D6FB0DE72E58804AF3599DE5475",
+        "dest_sha256":  "4F8F1B330AAE6AFDB88033D3B726AA74464D0D6FB0DE72E58804AF3599DE5475",
+        "match":  true
+    }
+]

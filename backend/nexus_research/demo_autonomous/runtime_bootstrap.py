@@ -68,11 +68,14 @@ def _build_orch(*, dry_run: bool):
 
 
 def _run_scan_cycle() -> dict[str, Any]:
+    from backend.nexus_research.demo_autonomous.controller import get_autonomous_controller
     from backend.nexus_research.demo_autonomous.ops_status import record_scan_result
     from backend.nexus_research.demo_autonomous.reentry_guard import get_reentry_guard
     from backend.nexus_research.demo_autonomous.session_authorization import get_authorization_validator
     from backend.nexus_research.demo_autonomous.session_rotator import get_session_rotator
 
+    ctrl = get_autonomous_controller()
+    ctrl.mark_progress("account_snapshot")
     equity = 5000.0
     open_positions = 0
     open_orders = 0
@@ -87,6 +90,7 @@ def _run_scan_cycle() -> dict[str, Any]:
     except Exception as exc:
         logger.warning("autonomous_scan_snapshot_failed: %s", type(exc).__name__)
 
+    ctrl.mark_progress("session_rotation")
     rotator = get_session_rotator()
     rotation = rotator.rotate_if_needed(
         position_count=open_positions,
@@ -99,12 +103,14 @@ def _run_scan_cycle() -> dict[str, Any]:
     instruments = None
     quality = None
     try:
+        ctrl.mark_progress("instruments")
         from backend.nexus_research.demo_autonomous.instruments_fetch import (
             fetch_linear_perpetual_instruments,
         )
         from backend.nexus_research.demo_autonomous.market_quality_fetch import fetch_ticker_quality
 
         instruments = fetch_linear_perpetual_instruments()
+        ctrl.mark_progress("market_quality")
         quality = fetch_ticker_quality()
     except Exception as exc:
         logger.warning("autonomous_scan_instruments_failed: %s", type(exc).__name__)
@@ -118,10 +124,12 @@ def _run_scan_cycle() -> dict[str, Any]:
         and open_positions == 0
         and open_orders == 0
         and not entries_paused
+        and ctrl.health.allow_new_orders()[0]
     )
 
     # Prefer live dry_run=false only when sending; otherwise dry scan is fine for ranking.
     dry_run = not send
+    ctrl.mark_progress("candidate_generation")
     orch = _build_orch(dry_run=dry_run)
     result = orch.run_cycle(
         equity=equity,
@@ -139,6 +147,7 @@ def _run_scan_cycle() -> dict[str, Any]:
     supervisor_note = None
     supervisor_tick = None
     if open_positions > 0 and snap is not None:
+        ctrl.mark_progress("supervisor")
         from backend.nexus_research.demo_autonomous.exit_policy_record import latest_exit_policy
         from backend.nexus_research.demo_autonomous.position_lifecycle import (
             LifecyclePolicy,
@@ -230,6 +239,7 @@ def _run_scan_cycle() -> dict[str, Any]:
                         signal_id=policy.signal_id,
                     )
 
+    ctrl.mark_progress("record_result")
     record_scan_result(payload)
     return {
         "ok": True,

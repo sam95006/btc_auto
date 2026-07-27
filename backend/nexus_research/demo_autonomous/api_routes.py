@@ -72,6 +72,15 @@ def register_autonomous_demo_routes(app: Flask) -> None:
     except Exception as exc:
         logger.warning("autonomous_runtime_bootstrap_failed: %s", type(exc).__name__)
 
+    try:
+        from backend.nexus_research.demo_autonomous.validation_observer import (
+            ensure_validation_observer,
+        )
+
+        ensure_validation_observer()
+    except Exception as exc:
+        logger.warning("validation_observer_bootstrap_failed: %s", type(exc).__name__)
+
     @app.route("/api/nexus/demo/autonomous/status")
     def nexus_autonomous_status():
         try:
@@ -80,6 +89,18 @@ def register_autonomous_demo_routes(app: Flask) -> None:
             return jsonify(build_operations_status(include_snapshot=True))
         except Exception as exc:
             logger.exception("autonomous_status_failed")
+            return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500
+
+    @app.route("/api/nexus/demo/autonomous/observer")
+    def nexus_autonomous_observer():
+        try:
+            from backend.nexus_research.demo_autonomous.validation_observer import (
+                get_validation_observer,
+            )
+
+            return jsonify({"ok": True, **get_validation_observer().to_dict(), "secretSafe": True})
+        except Exception as exc:
+            logger.exception("autonomous_observer_status_failed")
             return jsonify({"ok": False, "error": str(exc), "secretSafe": True}), 500
 
     @app.route("/api/nexus/demo/autonomous/account")

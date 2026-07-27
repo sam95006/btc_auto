@@ -232,6 +232,7 @@ def record_scan_result(result: dict[str, Any]) -> AutonomousOpsStore:
     elif "SCANNED" not in store.lifecycle_completed:
         store.lifecycle_completed.append("SCANNED")
     blocker = result.get("blocker")
+    # Persist raw historical reason list; current read-model may clear stale exposure blockers.
     store.last_block_reasons = [str(blocker)] if blocker else []
     if result.get("orderSent"):
         store.last_order_at_ms = now
@@ -418,7 +419,13 @@ def build_operations_status(*, include_snapshot: bool = True) -> dict[str, Any]:
     )
 
     scan_hist = store.scan_history_ms
-    scan_progressing = len(scan_hist) >= 2 and scan_hist[-1] > scan_hist[-2]
+    # Wall-clock freshness — do not treat frozen history as "progressing".
+    scan_age_ms = (
+        max(0, now - int(store.last_scan_at_ms)) if store.last_scan_at_ms else None
+    )
+    scan_progressing = bool(
+        scan_age_ms is not None and scan_age_ms < 120_000 and len(scan_hist) >= 1
+    )
 
     boot: dict[str, Any] = {}
     try:
@@ -485,9 +492,69 @@ def build_operations_status(*, include_snapshot: bool = True) -> dict[str, Any]:
             "protectionActive": protection_active,
         }
 
-    freshness_ms = None
-    if store.last_scan_at_ms:
-        freshness_ms = max(0, now - int(store.last_scan_at_ms))
+    freshness_ms = scan_age_ms
+
+    # Current block-reason truth: clear stale exposure blockers when exchange is flat + OK.
+    controller_health = str(controller.get("controllerHealth") or (
+        "HEALTHY" if controller.get("running") else "STOPPED"
+    ))
+    if controller.get("stalled"):
+        controller_health = "STALLED"
+    scanner_health = str(controller.get("scannerHealth") or controller_health)
+
+    audit_block_reasons = list(store.last_block_reasons)
+    current_block_reasons: list[dict[str, Any]] = []
+    for raw in audit_block_reasons:
+        reason = str(raw)
+        stale = False
+        freshness = "unknown"
+        truth_match = True
+        if reason == "existing_position_or_order":
+            if position_count == 0 and open_order_count == 0 and not recovery_required:
+                stale = True
+                freshness = "stale"
+                truth_match = False
+            else:
+                freshness = "fresh"
+        current_block_reasons.append(
+            {
+                "reason": reason,
+                "source": "ops_store.last_block_reasons",
+                "observed_at": store.updated_at_ms or store.last_scan_at_ms,
+                "source_cycle_id": controller.get("currentCycleId"),
+                "freshness": freshness,
+                "stale": stale,
+                "current_truth_match": truth_match,
+            }
+        )
+    if scanner_health == "STALLED" or controller_health == "STALLED":
+        current_block_reasons.append(
+            {
+                "reason": "scanner_stalled",
+                "source": "controller_heartbeat",
+                "observed_at": now,
+                "source_cycle_id": controller.get("currentCycleId"),
+                "freshness": "fresh",
+                "stale": False,
+                "current_truth_match": True,
+            }
+        )
+    active_block_reasons = [
+        b["reason"] for b in current_block_reasons if not b.get("stale")
+    ]
+    # Keep historical list on store; current API uses active only for blockReasons.
+    if (
+        position_count == 0
+        and open_order_count == 0
+        and not recovery_required
+        and "existing_position_or_order" in store.last_block_reasons
+    ):
+        store.last_block_reasons = [
+            r for r in store.last_block_reasons if r != "existing_position_or_order"
+        ]
+        save_ops_store(store)
+
+    status_label = controller_health if controller.get("running") else "STOPPED"
 
     return {
         "ok": True,
@@ -500,8 +567,10 @@ def build_operations_status(*, include_snapshot: bool = True) -> dict[str, Any]:
         "autoSend": auto_send,
         "autoSendEnv": os.environ.get("NEXUS_AUTONOMOUS_DEMO_AUTO_SEND", "").strip().lower()
         in ("1", "true", "yes"),
-        "controllerStatus": "RUNNING" if controller.get("running") else "STOPPED",
-        "scannerStatus": "RUNNING" if controller.get("running") else "STOPPED",
+        "controllerStatus": status_label,
+        "scannerStatus": status_label,
+        "controllerHealth": controller_health,
+        "scannerHealth": scanner_health,
         "sessionStatus": (
             "ACTIVE"
             if session_pub and session_pub.get("active")
@@ -539,10 +608,33 @@ def build_operations_status(*, include_snapshot: bool = True) -> dict[str, Any]:
         "reconciliationStatus": "REQUIRED" if recovery_required else "OK",
         "lastTrade": store.last_trade,
         "lastReflection": store.last_reflection,
-        "blockReasons": list(store.last_block_reasons),
+        "blockReasons": active_block_reasons,
+        "blockReasonsDetail": current_block_reasons,
+        "blockReasonsAuditHistory": audit_block_reasons,
+        "staleBlockReasonCount": sum(1 for b in current_block_reasons if b.get("stale")),
         "freshness": {
             "lastScanAgeMs": freshness_ms,
             "generatedAtMs": now,
+        },
+        "runtimeHeartbeat": {
+            "boot_id": boot.get("bootId"),
+            "commit_sha": deploy_commit,
+            "cycle_id": controller.get("currentCycleId"),
+            "controller_owner_count": 1 if controller.get("running") else 0,
+            "scanner_health": scanner_health,
+            "controller_health": controller_health,
+            "last_cycle_progress_at": controller.get("lastCycleProgressAtMs"),
+            "session_hash": ((session_pub or {}).get("sessionId") or "")[:16],
+            "session_state": (
+                "ACTIVE"
+                if session_pub and session_pub.get("active")
+                else "NONE"
+            ),
+            "position_count": position_count,
+            "open_order_count": open_order_count,
+            "protection_state": "ACTIVE" if protection_active else "NONE",
+            "reconciliation_state": "REQUIRED" if recovery_required else "OK",
+            "observed_at": now,
         },
         "lifecycle": {
             "steps": list(LIFECYCLE_STEPS),
