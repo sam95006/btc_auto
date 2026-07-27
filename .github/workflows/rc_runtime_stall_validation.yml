@@ -120,15 +120,49 @@ jobs:
 
       - name: Full Suite with baseline debt triage
         run: |
+          set +e
           python tools/research/triage_full_suite_baseline.py
+          code=$?
+          set -e
           test -f full_suite_triage.json
+          echo "===== full_suite_triage.json ====="
+          cat full_suite_triage.json
           python - <<'PY'
-          import json
+          import json, sys
           d=json.load(open("full_suite_triage.json",encoding="utf-8"))
-          assert d["release_delta_regression"]==0
-          assert d["failed_count"]<=12
+          print(
+              "gate_check",
+              "failed_count=", d.get("failed_count"),
+              "delta=", d.get("release_delta_regression"),
+              "parse=", d.get("parse_source"),
+              "hint=", d.get("failed_hint"), d.get("passed_hint"),
+          )
+          for item in (d.get("new_regressions") or [])[:40]:
+              # Surface in Actions annotations (readable via API without log download auth)
+              print(f"::error title=new_regression::{item}")
+          if d.get("failed_count", 0) > 12:
+              print(f"::error title=failed_count::{d.get('failed_count')}")
+          if d["release_delta_regression"] != 0:
+              print("GATE_FAIL release_delta_regression", file=sys.stderr)
+              sys.exit(1)
+          if d["failed_count"] > 12:
+              print("GATE_FAIL failed_count", file=sys.stderr)
+              sys.exit(1)
+          if d.get("full_suite_baseline_debt") != "FULL_SUITE_BASELINE_DEBT_12":
+              print("GATE_FAIL debt_label", file=sys.stderr)
+              sys.exit(1)
           print("full_suite_gate_ok", d["failed_count"], d["full_suite_baseline_debt"])
           PY
+
+      - name: Upload full suite triage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-suite-triage
+          path: |
+            full_suite_triage.json
+            full_suite_junit.xml
+          if-no-files-found: warn
 
   frontend:
     runs-on: ubuntu-latest

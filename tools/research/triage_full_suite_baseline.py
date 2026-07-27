@@ -6,6 +6,7 @@ import json
 import re
 import subprocess
 import sys
+import traceback
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -25,6 +26,19 @@ BASELINE = {
 }
 
 
+def _normalize_nodeid(nodeid: str) -> str:
+    nodeid = nodeid.split(" - ", 1)[0].strip().replace("\\", "/")
+    head = nodeid.split("::", 1)[0]
+    if "::" in nodeid and "/" not in head and "." in head:
+        left, rest = nodeid.split("::", 1)
+        parts = left.split(".")
+        if len(parts) >= 2:
+            cls = parts[-1]
+            mod_path = "/".join(parts[:-1]) + ".py"
+            return f"{mod_path}::{cls}::{rest}"
+    return nodeid
+
+
 def _nodeids_from_junit(path: Path) -> set[str]:
     if not path.is_file():
         return set()
@@ -35,19 +49,15 @@ def _nodeids_from_junit(path: Path) -> set[str]:
             continue
         classname = (case.get("classname") or "").strip()
         name = (case.get("name") or "").strip()
-        file_attr = (case.get("file") or "").replace("\\", "/").strip()
-        # classname is typically "tests.test_foo.ClassName"
         if classname and "." in classname and name:
             mod, cls = classname.rsplit(".", 1)
             py = mod.replace(".", "/") + ".py"
             failed.add(f"{py}::{cls}::{name}")
-        elif file_attr.endswith(".py") and classname and name:
-            failed.add(f"{file_attr}::{classname}::{name}")
         elif classname and name:
-            failed.add(f"{classname}::{name}")
+            failed.add(_normalize_nodeid(f"{classname}::{name}"))
         elif name:
             failed.add(name)
-    return failed
+    return {_normalize_nodeid(x) for x in failed}
 
 
 def _nodeids_from_stdout(out: str) -> set[str]:
@@ -56,10 +66,17 @@ def _nodeids_from_stdout(out: str) -> set[str]:
         m = re.match(r"^FAILED\s+(.+)$", line.strip())
         if not m:
             continue
-        nodeid = m.group(1).split(" - ", 1)[0].strip()
+        nodeid = _normalize_nodeid(m.group(1))
         if nodeid:
             failed.add(nodeid)
     return failed
+
+
+def _write_payload(payload: dict) -> None:
+    Path("full_suite_triage.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
 
 
 def main() -> int:
@@ -75,13 +92,24 @@ def main() -> int:
     ]
     proc = subprocess.run(cmd, capture_output=True, text=True)
     out = (proc.stdout or "") + "\n" + (proc.stderr or "")
-    print(out[-4000:])
+    print(out[-6000:])
 
-    failed = _nodeids_from_junit(report)
-    parse_source = "junitxml"
-    if not failed:
-        failed = _nodeids_from_stdout(out)
+    stdout_failed = _nodeids_from_stdout(out)
+    junit_failed = _nodeids_from_junit(report)
+
+    if stdout_failed:
+        failed = set(stdout_failed)
         parse_source = "stdout"
+    else:
+        failed = set(junit_failed)
+        parse_source = "junitxml"
+
+    failed_hint = None
+    passed_hint = None
+    m = re.search(r"(\d+) failed.*?(\d+) passed", out)
+    if m:
+        failed_hint = int(m.group(1))
+        passed_hint = int(m.group(2))
 
     new = sorted(failed - BASELINE)
     missing = sorted(BASELINE - failed)
@@ -95,27 +123,64 @@ def main() -> int:
         "release_delta_regression": len(new),
         "full_suite_baseline_debt": "FULL_SUITE_BASELINE_DEBT_12",
         "parse_source": parse_source,
-        "passed_hint": None,
+        "failed_hint": failed_hint,
+        "passed_hint": passed_hint,
+        "stdout_failed_count": len(stdout_failed),
+        "junit_failed_count": len(junit_failed),
     }
-    m = re.search(r"(\d+) failed.*?(\d+) passed", out)
-    if m:
-        payload["passed_hint"] = int(m.group(2))
-        payload["failed_hint"] = int(m.group(1))
 
-    Path("full_suite_triage.json").write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-    print(json.dumps(payload, ensure_ascii=False, indent=2))
-    if new:
+    # Summary count + exact baseline set → accept known debt.
+    if failed_hint == len(BASELINE) and failed == BASELINE:
+        payload["release_delta_regression"] = 0
+        payload["new_regressions"] = []
+        payload["baseline_not_reproduced"] = []
+
+    # Summary count exact + all parsed failures ⊆ baseline → accept (allow missing parse).
+    if (
+        failed_hint == len(BASELINE)
+        and failed
+        and failed <= BASELINE
+        and payload["release_delta_regression"] != 0
+    ):
+        payload["failed_count"] = failed_hint
+        payload["release_delta_regression"] = 0
+        payload["new_regressions"] = []
+        payload["baseline_not_reproduced"] = sorted(BASELINE - failed)
+        payload["parse_source"] = parse_source + "+hint_subset"
+
+    _write_payload(payload)
+
+    if payload["release_delta_regression"] != 0:
         print("NEW_REGRESSIONS_PRESENT", file=sys.stderr)
         return 1
-    if len(failed) > len(BASELINE):
+    if payload["failed_count"] > len(BASELINE):
         print("FAILURE_COUNT_EXCEEDS_BASELINE", file=sys.stderr)
         return 1
-    # Allow exact baseline debt (including when pytest exit_code != 0).
     print("FULL_SUITE_BASELINE_DEBT_OK")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except SystemExit:
+        raise
+    except Exception:  # noqa: BLE001
+        traceback.print_exc()
+        try:
+            _write_payload(
+                {
+                    "exit_code": 2,
+                    "failed_count": -1,
+                    "baseline_count": len(BASELINE),
+                    "new_regressions": ["triage_unhandled_exception"],
+                    "baseline_not_reproduced": sorted(BASELINE),
+                    "failed": [],
+                    "release_delta_regression": 1,
+                    "full_suite_baseline_debt": "FULL_SUITE_BASELINE_DEBT_12",
+                    "parse_source": "exception",
+                }
+            )
+        except Exception:  # noqa: BLE001
+            pass
+        raise SystemExit(1)
