@@ -1,0 +1,37 @@
+{
+  "started_at": "2026-07-27T16:55:00Z",
+  "last_updated_at": "2026-07-27T17:45:00Z",
+  "phase": "completed_awaiting_founder_stage2",
+  "base_sha": "2761718d510f35728e5c108003ceb59ab8039dbc",
+  "branch": "rc/runtime-stall-zeabur-observer",
+  "head_sha": "b005a4103b7cba36707b987e137eced2a7f46de0",
+  "commit_sha": "b005a4103b7cba36707b987e137eced2a7f46de0",
+  "push_status": "pushed",
+  "workflow_runs": [
+    {"id": 30287412973, "sha": "38c1983", "conclusion": "failure"},
+    {"id": 30287558489, "sha": "0be7dfc", "conclusion": "failure"},
+    {"id": 30287965361, "sha": "89cfac2", "conclusion": "failure", "docker": "PASS"},
+    {"id": 30288504805, "sha": "75f0518", "conclusion": "failure"},
+    {"id": 30289243674, "sha": "31110cc", "conclusion": "failure", "failed_count": 14},
+    {"id": 30289833821, "sha": "b005a41", "conclusion": "success"}
+  ],
+  "ci_status": "success",
+  "docker_status": "PASS",
+  "container_smoke": "PASS",
+  "tests": {
+    "runtime": "PASS",
+    "related_shadow": "PASS",
+    "frontend": "PASS",
+    "full_suite": "12_failed_1578_passed_delta_0"
+  },
+  "failures": [],
+  "fix_attempts": 6,
+  "current_blocker": "none_awaiting_founder_merge_deploy_approval",
+  "next_action": "WAIT_FOUNDER_STAGE2_MERGE_AND_ZEABUR_DEPLOY_APPROVAL",
+  "draft_pr": "https://github.com/sam95006/btc_auto/pull/1",
+  "image_digest": "sha256:044b08af6b336602ac1a7113c3d3377de95d9deb3d0b18465811e5cdce69e8cc",
+  "recommendation": "READY_FOR_SCOPED_RUNTIME_FIX_MERGE_AND_ZEABUR_DEPLOY_APPROVAL",
+  "deploy": false,
+  "observer_enabled": false,
+  "clean24h_started": false
+}
