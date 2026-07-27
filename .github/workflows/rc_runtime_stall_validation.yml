@@ -85,7 +85,11 @@ jobs:
           python - <<'PY'
           import re, sys
           from pathlib import Path
-          pat = re.compile(r"(?i)(api[_-]?secret|private[_-]?key|mnemonic|seed.?phrase)\s*[:=]\s*[A-Za-z0-9_\-]{16,}")
+          # Only flag hardcoded string literals — not assignments to helpers/env lookups.
+          pat = re.compile(
+              r"(?i)(api[_-]?secret|private[_-]?key|mnemonic|seed.?phrase)\s*[:=]\s*"
+              r"(['\"])[A-Za-z0-9_\-+/=]{16,}\2"
+          )
           roots = ["backend", "frontend", "tools", "tests", "config"]
           hits = []
           for root in roots:
@@ -101,7 +105,7 @@ jobs:
                 continue
               text = p.read_text(encoding="utf-8", errors="ignore")
               if pat.search(text):
-                hits.append(str(p).replace("\\", "/"))
+                  hits.append(str(p).replace("\\", "/"))
           print(f"active_secret_pattern_hits={len(hits)}")
           for h in hits[:50]:
               print(h)
@@ -176,20 +180,23 @@ jobs:
       - name: Image content assertions
         run: |
           cid=$(docker create btc-bot-rc-runtime-stall:ci)
-          docker export "$cid" | tar -t > /tmp/image_files.txt
+          docker export "$cid" | tar -t | sed 's|^\./||' > /tmp/image_files.txt
           docker rm "$cid"
+          # Scope to application tree only — base image has /var/cache/apt/archives/ etc.
+          grep -E '^app/' /tmp/image_files.txt > /tmp/app_files.txt || true
           echo "image_file_count=$(wc -l < /tmp/image_files.txt)"
-          # Forbid real secrets/archives/transcripts; allow .env.example
-          if grep -E '(^|/)archives/|(^|/)\.env$|(^|/)\.env\.local$|agent-transcripts/|(^|/)terminals/' /tmp/image_files.txt; then
-            echo "Forbidden paths present in image" >&2
+          echo "app_file_count=$(wc -l < /tmp/app_files.txt)"
+          # Forbid real secrets/archives/transcripts under /app; allow .env.example
+          if grep -E '(^|/)archives/|(^|/)\.env$|(^|/)\.env\.local$|agent-transcripts/|(^|/)terminals/' /tmp/app_files.txt; then
+            echo "Forbidden paths present under /app" >&2
             exit 1
           fi
-          if grep -F 'C:/Users/user/.cursor/projects/g-btc-bot' /tmp/image_files.txt; then
-            echo "Absolute C path present in image" >&2
+          if grep -F 'C:/Users/user/.cursor/projects/g-btc-bot' /tmp/app_files.txt; then
+            echo "Absolute C path present under /app" >&2
             exit 1
           fi
-          if ! grep -E 'backend/nexus_research/demo_autonomous/controller\.py$' /tmp/image_files.txt; then
-            echo "controller.py missing from image" >&2
+          if ! grep -E 'app/backend/nexus_research/demo_autonomous/controller\.py$' /tmp/app_files.txt; then
+            echo "controller.py missing from /app" >&2
             exit 1
           fi
 
