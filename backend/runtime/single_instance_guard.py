@@ -13,6 +13,11 @@ try:
 except Exception:  # pragma: no cover - non-Windows fallback
     msvcrt = None
 
+try:
+    import fcntl
+except Exception:  # pragma: no cover - Windows / non-POSIX
+    fcntl = None
+
 
 def _now():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -143,16 +148,24 @@ class SingleInstanceGuard:
         self.pid_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
     def _lock_handle(self):
-        if msvcrt is None:  # pragma: no cover - non-Windows fallback
+        if msvcrt is not None:
+            self._fh.seek(0)
+            msvcrt.locking(self._fh.fileno(), msvcrt.LK_NBLCK, 1)
             return
-        self._fh.seek(0)
-        msvcrt.locking(self._fh.fileno(), msvcrt.LK_NBLCK, 1)
+        if fcntl is not None:
+            # Non-blocking exclusive flock for Linux/macOS (Zeabur runtime).
+            fcntl.flock(self._fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return
+        raise SingleInstanceError(f"{self.name} no usable file-lock primitive on this platform")
 
     def _unlock_handle(self):
-        if msvcrt is None:  # pragma: no cover - non-Windows fallback
+        if msvcrt is not None:
+            self._fh.seek(0)
+            msvcrt.locking(self._fh.fileno(), msvcrt.LK_UNLCK, 1)
             return
-        self._fh.seek(0)
-        msvcrt.locking(self._fh.fileno(), msvcrt.LK_UNLCK, 1)
+        if fcntl is not None:
+            fcntl.flock(self._fh.fileno(), fcntl.LOCK_UN)
+            return
 
     def _prime_lock_file(self):
         if self._fh is None:
