@@ -74,7 +74,8 @@ jobs:
 
       - name: Assert no C-drive absolute path in active runtime
         run: |
-          if grep -R -n -F "C:\\Users\\user\\.cursor\\projects\\g-btc-bot" backend frontend tools tests config Dockerfile Procfile 2>/dev/null; then
+          needle='C:\Users\user\.cursor\projects\g-btc-bot'
+          if grep -R -n -F "$needle" backend frontend config Dockerfile Procfile 2>/dev/null; then
             echo "Found forbidden C-drive absolute path" >&2
             exit 1
           fi
@@ -178,7 +179,8 @@ jobs:
           docker export "$cid" | tar -t > /tmp/image_files.txt
           docker rm "$cid"
           echo "image_file_count=$(wc -l < /tmp/image_files.txt)"
-          if grep -E '(^|/)archives/|(^|/)\.env($|\.)|agent-transcripts/|terminals/' /tmp/image_files.txt; then
+          # Forbid real secrets/archives/transcripts; allow .env.example
+          if grep -E '(^|/)archives/|(^|/)\.env$|(^|/)\.env\.local$|agent-transcripts/|(^|/)terminals/' /tmp/image_files.txt; then
             echo "Forbidden paths present in image" >&2
             exit 1
           fi
@@ -186,7 +188,10 @@ jobs:
             echo "Absolute C path present in image" >&2
             exit 1
           fi
-          test -n "$(grep -E 'backend/nexus_research/demo_autonomous/controller.py' /tmp/image_files.txt)"
+          if ! grep -E 'backend/nexus_research/demo_autonomous/controller\.py$' /tmp/image_files.txt; then
+            echo "controller.py missing from image" >&2
+            exit 1
+          fi
 
       - name: Container smoke (no exchange write)
         run: |

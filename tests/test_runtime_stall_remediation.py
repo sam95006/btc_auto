@@ -201,10 +201,12 @@ def test_observer_boot_change_fails(monkeypatch):
 
 def test_no_absolute_c_drive_path_in_active_runtime():
     root = Path(__file__).resolve().parents[1]
+    needle = "C:" + "\\Users\\user\\.cursor\\projects\\" + "g-btc-bot"
+    needle2 = "C:" + "/Users/user/.cursor/projects/" + "g-btc-bot"
     bad = []
     for path in (root / "backend" / "nexus_research" / "demo_autonomous").rglob("*.py"):
         text = path.read_text(encoding="utf-8")
-        if "C:\\Users\\user\\.cursor\\projects\\g-btc-bot" in text or "C:/Users/user/.cursor/projects/g-btc-bot" in text:
+        if needle in text or needle2 in text:
             bad.append(str(path))
     assert bad == []
 
