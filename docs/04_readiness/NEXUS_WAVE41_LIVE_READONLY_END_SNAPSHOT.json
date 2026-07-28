@@ -1,0 +1,9 @@
+{
+  "snapshot_kind": "WAVE41_END_LIVE_READONLY",
+  "position_count": 1,
+  "open_order_count": 2,
+  "deployment_gate": "HOLD_FOR_OPEN_EXPOSURE",
+  "head_sha": "46c88eebea693debe6e2084f6916cf7d19703142",
+  "live_effect": false,
+  "exchange_write": false
+}
