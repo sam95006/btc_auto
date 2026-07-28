@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "wave2.global.evidence_envelope.v1",
+  "title": "EvidenceEnvelope",
+  "type": "object",
+  "required": ["schema_version", "record_id", "mode", "source"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "record_id": {"type": "string"},
+    "correlation_id": {"type": "string"},
+    "session_id": {"type": "string"},
+    "universe_snapshot_id": {"type": "string"},
+    "instrument_id": {"type": "string"},
+    "symbol": {"type": "string"},
+    "mode": {"enum": ["SHADOW", "REPLAY", "FIXTURE", "PAPER"]},
+    "source": {"type": "string"},
+    "provider": {"type": "string"},
+    "observed_at": {"type": "integer"},
+    "captured_at": {"type": "integer"},
+    "created_at": {"type": "integer"},
+    "freshness": {"type": "string"},
+    "quality": {"type": "string"},
+    "completeness": {"type": "string"},
+    "missing_fields": {"type": "array", "items": {"type": "string"}},
+    "checksum": {"type": "string"},
+    "sequence_number": {"type": "integer"}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,70 @@
+{
+  "audit_version": "wave2.global.v1",
+  "base_sha": "c2b3c9504bbd011e677e2cfe9ccb707e9944a5ff",
+  "branch": "feature/wave2-global-market-six-role",
+  "updated_at": "2026-07-28T10:45:00+08:00",
+  "components": [
+    {
+      "component": "DynamicContractUniverse",
+      "path": "backend/nexus_research/demo_autonomous/universe.py",
+      "current_base_present": true,
+      "architecture_type": "demo_autonomous_fixed_hints",
+      "global_market_ready": false,
+      "six_role_ready": false,
+      "four_fleet_specific": false,
+      "reuse_decision": "SELECTIVE_PORT",
+      "notes": "Ported filter/gate patterns; removed MAJOR_HINTS as formal universe"
+    },
+    {
+      "component": "nexus_research roles",
+      "path": "backend/nexus_research/roles.py",
+      "current_base_present": true,
+      "architecture_type": "legacy_research_roles",
+      "global_market_ready": false,
+      "six_role_ready": "partial",
+      "four_fleet_specific": false,
+      "reuse_decision": "EVIDENCE_ONLY",
+      "notes": "Role naming reference only; new six_role.py reimplemented"
+    },
+    {
+      "component": "GlobalMarketShadowContracts",
+      "path": "backend/nexus_global_shadow/contracts.py",
+      "current_base_present": true,
+      "architecture_type": "wave2_global_no_fleet_id",
+      "global_market_ready": true,
+      "six_role_ready": true,
+      "four_fleet_specific": false,
+      "reuse_decision": "REIMPLEMENT"
+    },
+    {
+      "component": "DynamicMarketUniverseProvider",
+      "path": "backend/nexus_global_shadow/universe.py",
+      "current_base_present": true,
+      "architecture_type": "wave2_global_dynamic",
+      "global_market_ready": true,
+      "six_role_ready": false,
+      "four_fleet_specific": false,
+      "reuse_decision": "REIMPLEMENT"
+    },
+    {
+      "component": "SixRoleDecisionAggregator",
+      "path": "backend/nexus_global_shadow/six_role.py",
+      "current_base_present": true,
+      "architecture_type": "wave2_mandatory_risk_veto",
+      "global_market_ready": true,
+      "six_role_ready": true,
+      "four_fleet_specific": false,
+      "reuse_decision": "REIMPLEMENT"
+    },
+    {
+      "component": "ShadowFleetCoordinator",
+      "path": "archives/deprecated",
+      "current_base_present": false,
+      "architecture_type": "four_fleet",
+      "global_market_ready": false,
+      "six_role_ready": false,
+      "four_fleet_specific": true,
+      "reuse_decision": "DEPRECATED"
+    }
+  ]
+}
