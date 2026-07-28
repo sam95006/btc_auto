@@ -478,9 +478,13 @@ class TestWave4Assets:
         data = json.loads(CHECKPOINT_JSON.read_text(encoding="utf-8"))
         assert data["constraints_honored"]["shadow_ui_only"] is True
 
-    def test_visual_manifest_planned(self):
+    def test_visual_manifest_capture_status(self):
         data = json.loads(VISUAL_JSON.read_text(encoding="utf-8"))
-        assert data["browser_screenshot_capture_status"] == "planned_not_captured"
+        assert data["browser_screenshot_capture_status"] in {
+            "planned_not_captured",
+            "partial_captured",
+            "captured",
+        }
         assert len(data["screenshots"]) >= 10
 
     def test_report_md_exists(self):

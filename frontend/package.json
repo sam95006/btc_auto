@@ -8,7 +8,10 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b --pretty false",
     "preview": "vite preview",
-    "check:safety": "node scripts/check_ui_safety.mjs"
+    "check:safety": "node scripts/check_ui_safety.mjs",
+    "e2e": "playwright test",
+    "e2e:a11y": "playwright test --grep @a11y",
+    "e2e:visual": "playwright test --grep @visual"
   },
   "dependencies": {
     "lightweight-charts": "file:lightweight-charts-5.2.0.tgz",
@@ -17,6 +20,8 @@
     "react-router-dom": "^6.28.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.62.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
