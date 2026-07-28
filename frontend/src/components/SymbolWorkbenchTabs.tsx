@@ -6,22 +6,22 @@ import { displayOrPending, fmtNum, fmtPctNull } from "../market/displayNull";
 type TabId =
   | "overview"
   | "structure"
-  | "orderflow"
-  | "derivatives"
-  | "sentiment"
-  | "ai"
+  | "flows"
+  | "six_roles"
   | "risk"
-  | "performance";
+  | "plan"
+  | "memory"
+  | "evidence";
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: "overview", label: "總覽" },
-  { id: "structure", label: "結構" },
-  { id: "orderflow", label: "訂單流" },
-  { id: "derivatives", label: "衍生" },
-  { id: "sentiment", label: "情緒" },
-  { id: "ai", label: "AI 證據" },
-  { id: "risk", label: "風險" },
-  { id: "performance", label: "績效" },
+  { id: "overview", label: "Overview" },
+  { id: "structure", label: "Structure" },
+  { id: "flows", label: "Flows" },
+  { id: "six_roles", label: "Six Roles" },
+  { id: "risk", label: "Risk" },
+  { id: "plan", label: "Plan" },
+  { id: "memory", label: "Memory" },
+  { id: "evidence", label: "Evidence" },
 ];
 
 const TIMEFRAMES = ["1m", "5m", "15m", "1h", "4h", "1d"] as const;
@@ -221,9 +221,9 @@ export function SymbolWorkbenchTabs({ symbol, candidate, snap, price }: Props) {
           )
         ) : null}
 
-        {tab === "orderflow" ? (
+        {tab === "flows" ? (
           <div>
-            <p className="muted sm">公開訂單流基礎 — 進階訊號仍為實驗性。</p>
+            <p className="muted sm">Flows — orderflow + derivatives context</p>
             <dl className="nx-kv mono">
               <div>
                 <dt>Spread bps</dt>
@@ -232,15 +232,15 @@ export function SymbolWorkbenchTabs({ symbol, candidate, snap, price }: Props) {
                 </dd>
               </div>
               <div>
-                <dt>Best bid/ask</dt>
+                <dt>Funding</dt>
                 <dd>
-                  <span className="tag tag-warn">UNAVAILABLE_PROVIDER_PENDING</span>
+                  <NullVal v={snap?.fundingRate ?? candidate?.fundingRate} />
                 </dd>
               </div>
               <div>
-                <dt>Imbalance</dt>
+                <dt>OI value</dt>
                 <dd>
-                  <span className="tag tag-warn">UNAVAILABLE_PROVIDER_PENDING</span>
+                  <NullVal v={snap?.openInterestValue ?? candidate?.openInterestValue} />
                 </dd>
               </div>
               <div>
@@ -260,52 +260,37 @@ export function SymbolWorkbenchTabs({ symbol, candidate, snap, price }: Props) {
           </div>
         ) : null}
 
-        {tab === "derivatives" ? (
-          <dl className="nx-kv mono">
-            <div>
-              <dt>Funding</dt>
-              <dd>
-                <NullVal v={snap?.fundingRate ?? candidate?.fundingRate} />
-              </dd>
-            </div>
-            <div>
-              <dt>OI</dt>
-              <dd>
-                <NullVal v={snap?.openInterest} />
-              </dd>
-            </div>
-            <div>
-              <dt>OI value</dt>
-              <dd>
-                <NullVal v={snap?.openInterestValue ?? candidate?.openInterestValue} />
-              </dd>
-            </div>
-            <div>
-              <dt>Mark</dt>
-              <dd>{formatUsd(snap?.markPrice as number)}</dd>
-            </div>
-            <div>
-              <dt>Index</dt>
-              <dd>{formatUsd(snap?.indexPrice as number)}</dd>
-            </div>
-            <div>
-              <dt>Long/Short ratio</dt>
-              <dd>
-                <span className="tag tag-warn">UNAVAILABLE_PROVIDER_PENDING</span>
-              </dd>
-            </div>
-            <div>
-              <dt>Liquidations</dt>
-              <dd>
-                <span className="tag tag-warn">UNAVAILABLE_PROVIDER_PENDING</span>
-              </dd>
-            </div>
-          </dl>
+        {tab === "six_roles" ? (
+          <div>
+            <p className="muted sm">Six-role shadow verdicts — wired to global shadow pipeline when available.</p>
+            <dl className="nx-kv mono">
+              {["Trend", "Momentum", "Liquidity", "Funding", "Risk", "Execution"].map((role) => (
+                <div key={role}>
+                  <dt>{role}</dt>
+                  <dd>
+                    <span className="tag tag-warn">NO_DATA</span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         ) : null}
 
-        {tab === "sentiment" ? <Pending label="NEXUS 標的層級情緒" /> : null}
+        {tab === "plan" ? (
+          <div>
+            <p className="muted">Trade plan context — read-only · no live actions</p>
+            <Pending label="Symbol-level plan draft" />
+          </div>
+        ) : null}
 
-        {tab === "ai" ? (
+        {tab === "memory" ? (
+          <div>
+            <p className="muted">Learning memory / reflection hooks — shadow only</p>
+            <Pending label="Symbol memory graph" />
+          </div>
+        ) : null}
+
+        {tab === "evidence" ? (
           <div className="nx-ai-evidence">
             <h3>結論</h3>
             <p>
@@ -348,6 +333,14 @@ export function SymbolWorkbenchTabs({ symbol, candidate, snap, price }: Props) {
           <div>
             <dl className="nx-kv mono">
               <div>
+                <dt>Shadow leverage label</dt>
+                <dd>25x</dd>
+              </div>
+              <div>
+                <dt>Max shadow positions</dt>
+                <dd>2</dd>
+              </div>
+              <div>
                 <dt>Production max leverage</dt>
                 <dd>3x</dd>
               </div>
@@ -371,13 +364,6 @@ export function SymbolWorkbenchTabs({ symbol, candidate, snap, price }: Props) {
             <p className="tag tag-warn">
               DynamicRiskProposal = SHADOW ONLY — does not change production PAPER limits
             </p>
-          </div>
-        ) : null}
-
-        {tab === "performance" ? (
-          <div>
-            <p className="muted">Natural PAPER metrics only — Validation／Replay streams are separated.</p>
-            <Pending label="標的層級 natural PAPER 績效序列" />
           </div>
         ) : null}
       </div>
