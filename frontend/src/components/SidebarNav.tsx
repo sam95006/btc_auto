@@ -24,6 +24,7 @@ const MARKET_DEPTH: NavItem[] = [
 
 const RESEARCH: NavItem[] = [
   { to: "/paper-lab", label: "PAPER Lab", short: "PAPER" },
+  { to: "/global-shadow", label: "全球 Shadow", short: "Shadow" },
   { to: "/ai-reviews", label: "AI 檢討中心", short: "AI" },
   { to: "/anomaly-outcomes", label: "Outcome Research", short: "結果" },
   { to: "/evidence", label: "Evidence", short: "證據" },
