@@ -35,5 +35,16 @@
     "pytest_wave2_wave3": "pass",
     "pytest_wave4_count": 130,
     "pytest_total_count": 369
-  }
+  },
+  "draft_pr": {
+    "number": 4,
+    "url": "https://github.com/sam95006/btc_auto/pull/4",
+    "draft": true
+  },
+  "head_sha": "c3f2f330e0e501a91d950c300ae4cc33fda8896b",
+  "recommendation": "WAVE4_PRODUCT_UI_DRAFT_PR_READY_FOR_REVIEW",
+  "live_effect": false,
+  "exchange_write": false,
+  "merge": false,
+  "deploy": false
 }
