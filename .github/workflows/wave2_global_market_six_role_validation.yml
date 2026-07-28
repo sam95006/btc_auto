@@ -1,0 +1,126 @@
+name: wave2-global-market-six-role-validation
+
+# Wave 2 shadow validation only — no deploy, no exchange calls, no secrets.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "feature/wave2-global-market-six-role"
+  pull_request:
+    branches:
+      - "feature/wave2-global-market-six-role"
+      - "rc/runtime-stall-zeabur-observer"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave2-global-market-six-role-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  AUTONOMOUS_SEND: "false"
+  EXCHANGE_WRITE: "false"
+  MAINNET: "false"
+  REAL_MONEY: "false"
+  ARM: "false"
+  NEXUS_ZEABUR_CLEAN_OBSERVER: "false"
+
+jobs:
+  wave2-python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Wave 2 pytest
+        run: |
+          python -m pytest \
+            tests/test_wave2_global_market_six_role.py \
+            tests/test_wave2_shadow_api_routes.py \
+            -q --tb=short
+
+      - name: Compile nexus_global_shadow
+        run: python -m compileall -q backend/nexus_global_shadow
+
+      - name: Architecture scan
+        run: |
+          python -c "from pathlib import Path; from backend.nexus_global_shadow.architecture_scan import scan_nexus_global_shadow; r=scan_nexus_global_shadow(Path('backend/nexus_global_shadow')); print('violations=', r.active_architecture_violation_count); assert r.active_architecture_violation_count == 0"
+
+  wave2-frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: npm ci
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: typecheck
+        working-directory: frontend
+        run: npm run typecheck
+
+  wave2-docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Docker build
+        run: docker build -t btc-bot-wave2-shadow:ci .
+
+      - name: Container smoke (shadow overview or health)
+        run: |
+          docker run -d --name btc-bot-wave2-smoke \
+            -e PORT=8080 \
+            -e AUTONOMOUS_SEND=false \
+            -e EXCHANGE_WRITE=false \
+            -e MAINNET=false \
+            -e REAL_MONEY=false \
+            -e ARM=false \
+            -e NEXUS_ZEABUR_CLEAN_OBSERVER=false \
+            -p 8080:8080 \
+            btc-bot-wave2-shadow:ci
+          ok=0
+          for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:8080/api/nexus/shadow/overview >/tmp/shadow_overview.json 2>/dev/null; then
+              ok=1
+              break
+            fi
+            if curl -fsS http://127.0.0.1:8080/health >/tmp/health.json 2>/dev/null; then
+              ok=1
+              break
+            fi
+            sleep 2
+          done
+          docker logs btc-bot-wave2-smoke | tail -n 80
+          if [ "$ok" != "1" ]; then
+            echo "container_smoke_failed" >&2
+            docker rm -f btc-bot-wave2-smoke
+            exit 1
+          fi
+          echo "container_smoke=PASS"
+          docker rm -f btc-bot-wave2-smoke
