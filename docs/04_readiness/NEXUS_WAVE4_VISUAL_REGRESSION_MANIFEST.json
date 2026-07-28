@@ -1,23 +1,30 @@
 {
   "schema_version": "wave4_visual_regression_manifest_v1",
-  "browser_screenshot_capture_status": "planned_not_captured",
-  "note_zh": "截圖清單已宣告；實際 PNG 擷取待 CI 或手動瀏覽器執行",
+  "browser_screenshot_capture_status": "partial_captured",
+  "note_zh": "Wave 4.1：after/ 11 PNG + before/ 2 PNG 已擷取；Pro/quant/sidebar 互動狀態仍 planned",
   "viewports": ["1440x900", "768x1024", "390x844"],
+  "artifacts": {
+    "after_dir": "artifacts/wave4/after",
+    "before_dir": "artifacts/wave4/before",
+    "naming_pattern": "{route}_{state}_{width}x{height}.png"
+  },
   "screenshots": [
-    { "id": "overview_simple", "route": "/overview", "description": "Simple View 首屏 — Market Pulse + Funnel NO_DATA" },
-    { "id": "overview_pro", "route": "/overview", "description": "Pro View 展開層" },
-    { "id": "universe_simple", "route": "/universe", "description": "Universe SIMPLE 欄位預設" },
-    { "id": "universe_quant", "route": "/universe", "description": "Universe QUANT 欄位預設" },
-    { "id": "alerts_composite", "route": "/alerts", "description": "警報合併頁" },
-    { "id": "portfolio_shadow", "route": "/portfolio", "description": "Shadow 25x 投資組合" },
-    { "id": "learning_lab_link", "route": "/learning", "description": "學習頁 + Lab 連結" },
-    { "id": "evidence_workspace", "route": "/evidence", "description": "證據工作區" },
-    { "id": "symbol_workbench", "route": "/market/BTCUSDT", "description": "Symbol Workbench 8 tabs" },
-    { "id": "founder_runtime", "route": "/founder/runtime", "description": "Founder Runtime（私有）" },
-    { "id": "ai_commander_open", "route": "/overview", "interaction": "open AiCommander FAB", "description": "AiCommander 抽屜" },
-    { "id": "mobile_bottom_nav", "route": "/overview", "viewport": "390x844", "description": "行動底部導航" },
-    { "id": "fleets_deprecated", "route": "/fleets", "description": "Fleets 棄用 redirect 提示" },
-    { "id": "sidebar_expert_collapsed", "route": "/overview", "description": "側欄進階連結折疊" },
-    { "id": "sidebar_expert_expanded", "route": "/overview", "interaction": "expand expert nav", "description": "側欄進階連結展開" }
+    { "id": "overview_simple", "route": "/overview", "state": "simple", "viewport": "1440x900", "status": "captured", "file": "overview_simple_1440x900.png" },
+    { "id": "overview_pro", "route": "/overview", "state": "overview_pro", "viewport": "1440x900", "status": "captured", "source": "before_live", "file": "overview_overview_pro_1440x900.png" },
+    { "id": "universe_simple", "route": "/universe", "state": "default", "viewport": "1440x900", "status": "captured", "file": "universe_default_1440x900.png" },
+    { "id": "universe_quant", "route": "/universe", "state": "quant", "viewport": "1440x900", "status": "planned" },
+    { "id": "alerts_composite", "route": "/alerts", "state": "default", "viewport": "1440x900", "status": "captured", "file": "alerts_default_1440x900.png" },
+    { "id": "portfolio_shadow", "route": "/portfolio", "state": "shadow", "viewport": "1440x900", "status": "captured", "file": "portfolio_shadow_1440x900.png" },
+    { "id": "learning_lab_link", "route": "/learning", "state": "default", "viewport": "1440x900", "status": "captured", "file": "learning_default_1440x900.png" },
+    { "id": "evidence_workspace", "route": "/evidence", "state": "default", "viewport": "1440x900", "status": "captured", "file": "evidence_default_1440x900.png" },
+    { "id": "symbol_workbench", "route": "/market/BTCUSDT", "state": "workbench", "viewport": "1440x900", "status": "captured", "file": "market_BTCUSDT_workbench_1440x900.png" },
+    { "id": "founder_runtime", "route": "/founder/runtime", "state": "readonly", "viewport": "1440x900", "status": "captured", "file": "founder_runtime_readonly_1440x900.png" },
+    { "id": "ai_commander_open", "route": "/overview", "interaction": "open AiCommander FAB", "status": "planned" },
+    { "id": "mobile_bottom_nav", "route": "/overview", "state": "mobile_nav", "viewport": "390x844", "status": "captured", "file": "overview_mobile_nav_390x844.png" },
+    { "id": "scanner_before", "route": "/scanner", "state": "scanner", "viewport": "1440x900", "status": "captured", "source": "before_live", "file": "scanner_scanner_1440x900.png" },
+    { "id": "fleets_deprecated", "route": "/fleets", "state": "deprecated", "viewport": "1440x900", "status": "captured", "file": "fleets_deprecated_1440x900.png" },
+    { "id": "overview_tablet", "route": "/overview", "state": "tablet", "viewport": "768x1024", "status": "captured", "file": "overview_tablet_768x1024.png" },
+    { "id": "sidebar_expert_collapsed", "route": "/overview", "status": "planned" },
+    { "id": "sidebar_expert_expanded", "route": "/overview", "interaction": "expand expert nav", "status": "planned" }
   ]
 }

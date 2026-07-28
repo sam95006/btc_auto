@@ -1,0 +1,83 @@
+{
+  "schema_version": "wave4_visual_capture_manifest_v1",
+  "capturedAt": "2026-07-28T04:13:44.657Z",
+  "entries": [
+    {
+      "file": "overview_simple_1440x900.png",
+      "route": "/overview",
+      "state": "simple",
+      "viewport": "1440x900",
+      "capturedAt": "2026-07-28T04:13:35.974Z"
+    },
+    {
+      "file": "overview_mobile_nav_390x844.png",
+      "route": "/overview",
+      "state": "mobile_nav",
+      "viewport": "390x844",
+      "capturedAt": "2026-07-28T04:13:36.754Z"
+    },
+    {
+      "file": "universe_default_1440x900.png",
+      "route": "/universe",
+      "state": "default",
+      "viewport": "1440x900",
+      "capturedAt": "2026-07-28T04:13:37.574Z"
+    },
+    {
+      "file": "alerts_default_1440x900.png",
+      "route": "/alerts",
+      "state": "default",
+      "viewport": "1440x900",
+      "capturedAt": "2026-07-28T04:13:38.406Z"
+    },
+    {
+      "file": "portfolio_shadow_1440x900.png",
+      "route": "/portfolio",
+      "state": "shadow",
+      "viewport": "1440x900",
+      "capturedAt": "2026-07-28T04:13:39.253Z"
+    },
+    {
+      "file": "learning_default_1440x900.png",
+      "route": "/learning",
+      "state": "default",
+      "viewport": "1440x900",
+      "capturedAt": "2026-07-28T04:13:40.062Z"
+    },
+    {
+      "file": "evidence_default_1440x900.png",
+      "route": "/evidence",
+      "state": "default",
+      "viewport": "1440x900",
+      "capturedAt": "2026-07-28T04:13:41.013Z"
+    },
+    {
+      "file": "market_BTCUSDT_workbench_1440x900.png",
+      "route": "/market/BTCUSDT",
+      "state": "workbench",
+      "viewport": "1440x900",
+      "capturedAt": "2026-07-28T04:13:41.993Z"
+    },
+    {
+      "file": "founder_runtime_readonly_1440x900.png",
+      "route": "/founder/runtime",
+      "state": "readonly",
+      "viewport": "1440x900",
+      "capturedAt": "2026-07-28T04:13:42.909Z"
+    },
+    {
+      "file": "fleets_deprecated_1440x900.png",
+      "route": "/fleets",
+      "state": "deprecated",
+      "viewport": "1440x900",
+      "capturedAt": "2026-07-28T04:13:43.768Z"
+    },
+    {
+      "file": "overview_tablet_768x1024.png",
+      "route": "/overview",
+      "state": "tablet",
+      "viewport": "768x1024",
+      "capturedAt": "2026-07-28T04:13:44.656Z"
+    }
+  ]
+}
