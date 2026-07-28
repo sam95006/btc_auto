@@ -15,6 +15,7 @@ import { AssistantPage } from "./pages/AssistantPage";
 import { CalculatorPage } from "./pages/CalculatorPage";
 import { EvidencePage } from "./pages/EvidencePage";
 import { GlobalMarketShadowPage } from "./pages/GlobalMarketShadowPage";
+import { AiLearningLabPage } from "./pages/AiLearningLabPage";
 import { FleetsPage } from "./pages/FleetsPage";
 import { MembershipPage } from "./pages/MembershipPage";
 import { OverviewPage } from "./pages/OverviewPage";
@@ -81,6 +82,7 @@ export default function App() {
                 <Route path="/anomalies" element={<AnomaliesPage />} />
                 <Route path="/anomaly-outcomes" element={<AnomalyOutcomesPage />} />
                 <Route path="/global-shadow" element={<GlobalMarketShadowPage />} />
+                <Route path="/ai-learning-lab" element={<AiLearningLabPage />} />
                 <Route path="/fleets" element={<FleetsPage />} />
                 <Route path="/signals" element={<SignalsPage />} />
                 <Route path="/risk-evidence" element={<RiskEvidencePage />} />
