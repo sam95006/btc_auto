@@ -39,10 +39,10 @@
 Related／Shadow／Runtime 本機 PASS；Full Suite triage：12 failed／1598 passed；`release_delta_regression=0`
 
 ## CI Run
-（Push 後填入）
+https://github.com/sam95006/btc_auto/actions/runs/30320925228 （**PASS**）
 
 ## Latest RC SHA
-（Push 後填入）
+`7d0164392f042fef74ca2b1e7b0967a797ab80a8`
 
 ## Live Position／Orders
 1／2（仍 HOLD；send=false）
