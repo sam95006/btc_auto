@@ -9,7 +9,7 @@ on:
       - "feature/wave4-product-ui-intelligence"
   pull_request:
     branches:
-      - "feature/wave4-product-ui-intelligence"
+      - "feature/wave3-adaptive-policy-learning"
 
 permissions:
   contents: read
@@ -26,6 +26,7 @@ env:
   ARM: "false"
   FIXED_LEVERAGE: "25"
   AI_CAN_CHANGE_LEVERAGE: "false"
+  EXPLICIT_FIXTURE_MODE: "false"
   NEXUS_ZEABUR_CLEAN_OBSERVER: "false"
 
 jobs:
@@ -51,6 +52,7 @@ jobs:
         run: |
           python -m pytest \
             tests/test_wave4_product_ui_intelligence.py \
+            tests/test_wave4_visual_acceptance.py \
             tests/test_wave3_adaptive_policy_learning.py \
             tests/test_wave2_global_market_six_role.py \
             tests/test_wave2_shadow_api_routes.py \
@@ -100,3 +102,156 @@ jobs:
 
       - name: Wave4 tokens imported
         run: grep -q wave4ProductTokens.css frontend/src/main.tsx
+
+  wave4-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [wave4-frontend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: npm ci
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Playwright Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: build
+        working-directory: frontend
+        run: npm run build
+
+      - name: Playwright e2e (functional)
+        working-directory: frontend
+        run: npm run e2e -- --grep-invert "@visual|@a11y"
+
+  wave4-accessibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [wave4-frontend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: npm ci
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Playwright Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: build
+        working-directory: frontend
+        run: npm run build
+
+      - name: Playwright accessibility (@a11y)
+        working-directory: frontend
+        run: npm run e2e:a11y
+
+  wave4-visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [wave4-frontend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: npm ci
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Playwright Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: build
+        working-directory: frontend
+        run: npm run build
+
+      - name: Playwright visual regression (@visual)
+        working-directory: frontend
+        run: npm run e2e:visual
+
+      - name: Upload Wave4 visual artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wave4-visual-screenshots
+          path: artifacts/wave4/after/
+          if-no-files-found: warn
+
+  wave4-docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Docker build
+        run: docker build -t btc-bot-wave4-product-ui:ci .
+
+      - name: Container smoke (/overview /universe /founder/runtime)
+        run: |
+          docker run -d --name btc-bot-wave4-smoke \
+            -e PORT=8080 \
+            -e AUTONOMOUS_SEND=false \
+            -e EXCHANGE_WRITE=false \
+            -e MAINNET=false \
+            -e REAL_MONEY=false \
+            -e ARM=false \
+            -e FIXED_LEVERAGE=25 \
+            -e AI_CAN_CHANGE_LEVERAGE=false \
+            -e EXPLICIT_FIXTURE_MODE=false \
+            -e NEXUS_ZEABUR_CLEAN_OBSERVER=false \
+            -p 8080:8080 \
+            btc-bot-wave4-product-ui:ci
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8080/health >/tmp/health.json 2>/dev/null; then
+              ok=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ok" != "1" ]; then
+            echo "health_check_failed" >&2
+            docker logs btc-bot-wave4-smoke | tail -n 80
+            docker rm -f btc-bot-wave4-smoke
+            exit 1
+          fi
+          for path in /overview /universe /founder/runtime; do
+            code=$(curl -s -o /tmp/page.html -w "%{http_code}" "http://127.0.0.1:8080${path}")
+            echo "smoke_${path//\//_}=${code}"
+            if [ "$code" != "200" ]; then
+              echo "container_smoke_failed path=${path}" >&2
+              docker logs btc-bot-wave4-smoke | tail -n 80
+              docker rm -f btc-bot-wave4-smoke
+              exit 1
+            fi
+          done
+          echo "container_smoke=PASS"
+          docker rm -f btc-bot-wave4-smoke
