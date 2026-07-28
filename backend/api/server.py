@@ -445,6 +445,17 @@ def register_nexus_routes(app):
             "shadow_routes_unavailable: %s", type(_shadow_reg_exc).__name__
         )
 
+    try:
+        from backend.nexus_adaptive_policy.api_routes import register_adaptive_policy_routes
+
+        register_adaptive_policy_routes(app)
+    except Exception as _adaptive_reg_exc:  # noqa: BLE001 — keep server boot if optional module missing
+        import logging as _logging
+
+        _logging.getLogger(__name__).warning(
+            "adaptive_policy_routes_unavailable: %s", type(_adaptive_reg_exc).__name__
+        )
+
     @app.route("/api/nexus/stage3/summary")
     def nexus_stage3_summary():
         try:
