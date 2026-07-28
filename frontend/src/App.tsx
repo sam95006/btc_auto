@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppFooter } from "./components/AppFooter";
-import { FloatingAIAssistant } from "./components/FloatingAIAssistant";
+import { AiCommander } from "./components/AiCommander";
 import { MarketTopTicker } from "./components/MarketTopTicker";
 import { SafetyBanner } from "./components/SafetyBanner";
 import { SidebarNav } from "./components/SidebarNav";
@@ -16,14 +16,16 @@ import { CalculatorPage } from "./pages/CalculatorPage";
 import { EvidencePage } from "./pages/EvidencePage";
 import { GlobalMarketShadowPage } from "./pages/GlobalMarketShadowPage";
 import { AiLearningLabPage } from "./pages/AiLearningLabPage";
-import { FleetsPage } from "./pages/FleetsPage";
 import { MembershipPage } from "./pages/MembershipPage";
 import { OverviewPage } from "./pages/OverviewPage";
 import { PaperLabPage } from "./pages/PaperLabPage";
 import { ProviderShadowPage } from "./pages/ProviderShadowPage";
 import { ReflectionPage } from "./pages/ReflectionPage";
 import { RiskEvidencePage } from "./pages/RiskEvidencePage";
-import { ScannerPage } from "./pages/ScannerPage";
+import { UniversePage } from "./pages/UniversePage";
+import { AlertsPage } from "./pages/AlertsPage";
+import { PortfolioWorkspacePage } from "./pages/PortfolioWorkspacePage";
+import { FounderRuntimePage } from "./pages/FounderRuntimePage";
 import { MarketSymbolPage } from "./pages/MarketSymbolPage";
 import { WatchlistPage } from "./pages/WatchlistPage";
 import { SignalsPage } from "./pages/SignalsPage";
@@ -42,9 +44,17 @@ import { IntelligencePage } from "./pages/IntelligencePage";
 import { TradePlanPage } from "./pages/TradePlanPage";
 import { LearningPage } from "./pages/LearningPage";
 
+function FleetsDeprecatedRedirect() {
+  return (
+    <div className="page-stack">
+      <p className="tag tag-warn">/fleets 已棄用 — 重新導向至 /universe</p>
+      <Navigate to="/universe" replace />
+    </div>
+  );
+}
+
 /**
- * NEXUS Product Transformation Phase 3–6 — sectors, charts, equities, AI review,
- * research performance (read-only).
+ * NEXUS Wave 4 Product UI Intelligence — all legacy routes preserved.
  * Forbidden: /trade, /orders, /arm, /routing-edit
  */
 export default function App() {
@@ -53,7 +63,7 @@ export default function App() {
       <MarketAnomalyProvider>
       <AnomalyOutcomeProvider>
       <MarketScannerProvider>
-      <div className="app-shell mi-shell mvp22-shell nx-phase2-shell nx-phase3-shell nx-phase4-shell">
+      <div className="app-shell mi-shell mvp22-shell nx-phase2-shell nx-phase3-shell nx-phase4-shell nx-wave4-shell">
         <SafetyBanner />
         <MarketTopTicker />
         <div className="app-body app-body-no-rail">
@@ -63,12 +73,16 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<Navigate to="/overview" replace />} />
                 <Route path="/overview" element={<OverviewPage />} />
+                <Route path="/universe" element={<UniversePage />} />
                 <Route path="/opportunities" element={<OpportunitiesPage />} />
+                <Route path="/alerts" element={<AlertsPage />} />
+                <Route path="/portfolio" element={<PortfolioWorkspacePage />} />
+                <Route path="/founder/runtime" element={<FounderRuntimePage />} />
                 <Route path="/intelligence" element={<IntelligencePage />} />
                 <Route path="/trade-plan" element={<TradePlanPage />} />
                 <Route path="/learning" element={<LearningPage />} />
                 <Route path="/performance" element={<ResearchPerformancePage />} />
-                <Route path="/scanner" element={<ScannerPage />} />
+                <Route path="/scanner" element={<UniversePage />} />
                 <Route path="/market/:symbol" element={<MarketSymbolPage />} />
                 <Route path="/watchlist" element={<WatchlistPage />} />
                 <Route path="/crypto/sectors" element={<CryptoSectorsPage />} />
@@ -83,7 +97,7 @@ export default function App() {
                 <Route path="/anomaly-outcomes" element={<AnomalyOutcomesPage />} />
                 <Route path="/global-shadow" element={<GlobalMarketShadowPage />} />
                 <Route path="/ai-learning-lab" element={<AiLearningLabPage />} />
-                <Route path="/fleets" element={<FleetsPage />} />
+                <Route path="/fleets" element={<FleetsDeprecatedRedirect />} />
                 <Route path="/signals" element={<SignalsPage />} />
                 <Route path="/risk-evidence" element={<RiskEvidencePage />} />
                 <Route path="/evidence" element={<EvidencePage />} />
@@ -102,7 +116,7 @@ export default function App() {
             <AppFooter />
           </div>
         </div>
-        <FloatingAIAssistant />
+        <AiCommander />
       </div>
       </MarketScannerProvider>
       </AnomalyOutcomeProvider>
