@@ -3,7 +3,7 @@
   "branch": "feature/wave3-adaptive-policy-learning",
   "base_branch": "feature/wave2-global-market-six-role",
   "actual_base_sha": "c0c6c3af313f14f3636804211d41ed02d02efa95",
-  "actual_head_sha": "27b810283ef27901448a659245f65e491aa90fb9",
+  "actual_head_sha": "21e8993750262efc375b4cbda835078445bd98d5",
   "pr3_scope_frozen": true,
   "draft": true,
   "merge": false,
@@ -20,5 +20,17 @@
   "wave2_test_count": 100,
   "frontend_typecheck": "PASS",
   "frontend_build": "PASS",
-  "ci_pending": true
+  "ci_pending": false,
+  "ci_runs": {
+    "wave2": {
+      "run_id": 30326431243,
+      "conclusion": "success"
+    },
+    "wave3": {
+      "run_id": 30326429515,
+      "conclusion": "success"
+    }
+  },
+  "docker_build": "PASS",
+  "container_smoke": "PASS"
 }
