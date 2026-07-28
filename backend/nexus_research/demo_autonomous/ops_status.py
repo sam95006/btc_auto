@@ -339,17 +339,11 @@ def _paper_status_safe() -> dict[str, Any]:
 
 
 def _protection_from_orders(open_orders: list[dict[str, Any]], positions: list[dict[str, Any]]) -> bool:
-    if not positions:
-        return False
-    # Conditional / Stop orders typically indicate exchange-side SL/TP.
-    for o in open_orders or []:
-        typ = str(o.get("orderType") or o.get("stopOrderType") or "").lower()
-        reduce = o.get("reduceOnly")
-        if "stop" in typ or "tp" in typ or "sl" in typ or reduce is True:
-            return True
-        if str(o.get("orderStatus") or "").lower() == "untriggered":
-            return True
-    return False
+    from backend.nexus_research.demo_autonomous.protection_evidence import (
+        protection_bool_from_orders,
+    )
+
+    return protection_bool_from_orders(open_orders, positions)
 
 
 def build_operations_status(*, include_snapshot: bool = True) -> dict[str, Any]:
@@ -396,7 +390,15 @@ def build_operations_status(*, include_snapshot: bool = True) -> dict[str, Any]:
         except Exception as exc:
             snap = {"status": "SNAPSHOT_UNAVAILABLE", "error": type(exc).__name__, "secret_safe": True}
 
-    protection_active = _protection_from_orders(open_orders, positions)
+    from backend.nexus_research.demo_autonomous.protection_evidence import (
+        classify_protection_orders,
+    )
+
+    protection_model = classify_protection_orders(open_orders, positions)
+    open_orders = list(protection_model.get("openOrders") or open_orders)
+    protection_active = bool(protection_model.get("protectionActive"))
+    protection_verdict = str(protection_model.get("protectionVerdict") or "AMBIGUOUS")
+    protection_status = str(protection_model.get("protectionStatus") or "UNVERIFIED")
     health = (controller.get("health") or {})
     risk_paused = bool(health.get("dailyLossPaused") or health.get("weeklyDdPaused"))
     exit_pending = bool(store.last_block_reasons and "exit" in str(store.last_block_reasons).lower())
@@ -488,6 +490,7 @@ def build_operations_status(*, include_snapshot: bool = True) -> dict[str, Any]:
             "stopLoss": p.get("stopLoss"),
             "takeProfit": p.get("takeProfit"),
             "liquidationPrice": p.get("liqPrice") or p.get("liquidationPrice"),
+            "positionIdx": p.get("positionIdx"),
             "protectionActive": protection_active,
         }
 
@@ -594,7 +597,18 @@ def build_operations_status(*, include_snapshot: bool = True) -> dict[str, Any]:
         "topCandidate": store.top_candidate,
         "currentPosition": current_position,
         "currentOrder": open_orders[0] if open_orders else None,
-        "protectionStatus": "ACTIVE" if protection_active else ("NONE" if position_count == 0 else "UNVERIFIED"),
+        "openOrders": open_orders,
+        "openOrderCount": open_order_count,
+        "openOrderCountFromArray": len(open_orders),
+        "protectionOrders": list(protection_model.get("protectionOrders") or []),
+        "protectionGroups": list(protection_model.get("protectionGroups") or []),
+        "protectionVerdict": protection_verdict,
+        "protectionEvidenceQuality": protection_model.get("evidenceQuality"),
+        "protectionStatus": (
+            "NONE"
+            if position_count == 0 and protection_verdict == "FLAT_NOT_APPLICABLE"
+            else protection_status
+        ),
         "demoEquity": demo_equity,
         "availableBalance": available_balance,
         "dailyPnl": store.daily_pnl,

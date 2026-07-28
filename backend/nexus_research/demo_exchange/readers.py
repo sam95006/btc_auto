@@ -85,6 +85,14 @@ class PositionView:
     unrealised_pnl: float
     realised_pnl: float
     updated_at_ms: int
+    position_idx: int | None = None
+    stop_loss: float | None = None
+    take_profit: float | None = None
+    tp_trigger_by: str | None = None
+    sl_trigger_by: str | None = None
+    mark_price: float | None = None
+    liq_price: float | None = None
+    leverage: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -95,6 +103,14 @@ class PositionView:
             "unrealisedPnl": self.unrealised_pnl,
             "realisedPnl": self.realised_pnl,
             "updatedAtMs": self.updated_at_ms,
+            "positionIdx": self.position_idx,
+            "stopLoss": self.stop_loss,
+            "takeProfit": self.take_profit,
+            "tpTriggerBy": self.tp_trigger_by,
+            "slTriggerBy": self.sl_trigger_by,
+            "markPrice": self.mark_price,
+            "liqPrice": self.liq_price,
+            "leverage": self.leverage,
         }
 
 
@@ -109,19 +125,135 @@ class OrderView:
     status: str
     created_at_ms: int
     updated_at_ms: int
+    order_type: str | None = None
+    stop_order_type: str | None = None
+    trigger_price: float | None = None
+    trigger_direction: str | None = None
+    trigger_by: str | None = None
+    leaves_qty: float | None = None
+    cum_exec_qty: float | None = None
+    reduce_only: bool | None = None
+    close_on_trigger: bool | None = None
+    position_idx: int | None = None
+    take_profit: float | None = None
+    stop_loss: float | None = None
+    tp_trigger_by: str | None = None
+    sl_trigger_by: str | None = None
+    tpsl_mode: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
+        normalized = normalize_order_status(self.status)
         return {
             "orderId": self.order_id,
             "orderLinkId": self.order_link_id,
             "symbol": self.symbol,
             "side": self.side,
+            "orderType": self.order_type,
+            "stopOrderType": self.stop_order_type,
+            "triggerPrice": self.trigger_price,
+            "triggerDirection": self.trigger_direction,
+            "triggerBy": self.trigger_by,
             "qty": self.qty,
+            "leavesQty": self.leaves_qty,
+            "cumExecQty": self.cum_exec_qty,
             "avgPrice": self.avg_price,
+            "reduceOnly": self.reduce_only,
+            "closeOnTrigger": self.close_on_trigger,
+            "positionIdx": self.position_idx,
+            "orderStatus": self.status,
             "status": self.status,
+            "normalizedOrderStatus": normalized,
+            "createdTime": self.created_at_ms,
+            "updatedTime": self.updated_at_ms,
             "createdAtMs": self.created_at_ms,
             "updatedAtMs": self.updated_at_ms,
+            "takeProfit": self.take_profit,
+            "stopLoss": self.stop_loss,
+            "tpTriggerBy": self.tp_trigger_by,
+            "slTriggerBy": self.sl_trigger_by,
+            "tpslMode": self.tpsl_mode,
         }
+
+
+def normalize_order_status(*candidates: Any) -> str:
+    """Normalize orderStatus/status into a single verdict-friendly token."""
+    raw = ""
+    for c in candidates:
+        if c is None:
+            continue
+        s = str(c).strip()
+        if s:
+            raw = s
+            break
+    if not raw:
+        return "UNKNOWN"
+    low = raw.lower()
+    active = {"untriggered", "new", "created", "active", "partiallyfilled", "triggered"}
+    terminal = {"filled", "cancelled", "canceled", "rejected", "deactivated", "expired"}
+    compact = low.replace("_", "").replace(" ", "")
+    if compact in active or low in {"untriggered", "new", "active"}:
+        if compact == "untriggered":
+            return "Untriggered"
+        if compact in {"new", "created"}:
+            return "New"
+        if compact == "active":
+            return "Active"
+        if compact == "partiallyfilled":
+            return "PartiallyFilled"
+        if compact == "triggered":
+            return "Triggered"
+        return raw
+    if compact in terminal:
+        if compact in {"cancelled", "canceled"}:
+            return "Cancelled"
+        if compact == "filled":
+            return "Filled"
+        if compact == "rejected":
+            return "Rejected"
+        if compact == "deactivated":
+            return "Deactivated"
+        if compact == "expired":
+            return "Expired"
+        return raw
+    return "UNKNOWN"
+
+
+def _optional_str(v: Any) -> str | None:
+    if v is None:
+        return None
+    s = str(v).strip()
+    return s if s else None
+
+
+def _optional_float(v: Any) -> float | None:
+    if v is None or v == "":
+        return None
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def _optional_int(v: Any) -> int | None:
+    if v is None or v == "":
+        return None
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def _optional_bool(v: Any) -> bool | None:
+    if v is None or v == "":
+        return None
+    if isinstance(v, bool):
+        return v
+    s = str(v).strip().lower()
+    if s in ("true", "1", "yes"):
+        return True
+    if s in ("false", "0", "no"):
+        return False
+    return None
 
 
 @dataclass
@@ -232,6 +364,14 @@ class DemoPositionReader:
                     unrealised_pnl=_as_float(row.get("unrealisedPnl")),
                     realised_pnl=_as_float(row.get("cumRealisedPnl")),
                     updated_at_ms=_as_int(row.get("updatedTime")),
+                    position_idx=_optional_int(row.get("positionIdx")),
+                    stop_loss=_optional_float(row.get("stopLoss")),
+                    take_profit=_optional_float(row.get("takeProfit")),
+                    tp_trigger_by=_optional_str(row.get("tpTriggerBy")),
+                    sl_trigger_by=_optional_str(row.get("slTriggerBy")),
+                    mark_price=_optional_float(row.get("markPrice")),
+                    liq_price=_optional_float(row.get("liqPrice") or row.get("liquidationPrice")),
+                    leverage=_optional_float(row.get("leverage")),
                 )
             )
         return out
@@ -318,6 +458,10 @@ class DemoExecutionReader:
 
 
 def _parse_order(row: Mapping[str, Any]) -> OrderView:
+    status_raw = row.get("orderStatus")
+    if status_raw is None or str(status_raw).strip() == "":
+        status_raw = row.get("status")
+    status = str(status_raw or "")
     return OrderView(
         order_id=str(row.get("orderId") or ""),
         order_link_id=str(row.get("orderLinkId") or ""),
@@ -325,9 +469,24 @@ def _parse_order(row: Mapping[str, Any]) -> OrderView:
         side=str(row.get("side") or ""),
         qty=_as_float(row.get("qty")),
         avg_price=_as_float(row.get("avgPrice")),
-        status=str(row.get("orderStatus") or ""),
-        created_at_ms=_as_int(row.get("createdTime")),
-        updated_at_ms=_as_int(row.get("updatedTime")),
+        status=status,
+        created_at_ms=_as_int(row.get("createdTime") or row.get("createdAtMs")),
+        updated_at_ms=_as_int(row.get("updatedTime") or row.get("updatedAtMs")),
+        order_type=_optional_str(row.get("orderType")),
+        stop_order_type=_optional_str(row.get("stopOrderType")),
+        trigger_price=_optional_float(row.get("triggerPrice")),
+        trigger_direction=_optional_str(row.get("triggerDirection")),
+        trigger_by=_optional_str(row.get("triggerBy")),
+        leaves_qty=_optional_float(row.get("leavesQty")),
+        cum_exec_qty=_optional_float(row.get("cumExecQty")),
+        reduce_only=_optional_bool(row.get("reduceOnly")),
+        close_on_trigger=_optional_bool(row.get("closeOnTrigger")),
+        position_idx=_optional_int(row.get("positionIdx")),
+        take_profit=_optional_float(row.get("takeProfit")),
+        stop_loss=_optional_float(row.get("stopLoss")),
+        tp_trigger_by=_optional_str(row.get("tpTriggerBy")),
+        sl_trigger_by=_optional_str(row.get("slTriggerBy")),
+        tpsl_mode=_optional_str(row.get("tpslMode")),
     )
 
 

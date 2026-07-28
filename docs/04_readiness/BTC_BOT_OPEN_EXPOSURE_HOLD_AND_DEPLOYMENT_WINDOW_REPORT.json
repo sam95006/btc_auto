@@ -1,0 +1,39 @@
+{
+  "observed_at_utc": "2026-07-28T01:14:59Z",
+  "protection_verdict": "AMBIGUOUS",
+  "recommendation": "OPEN_EXPOSURE_SAFETY_INCIDENT",
+  "deployment_gate": "HOLD_FOR_OPEN_EXPOSURE",
+  "merge": false,
+  "deploy": false,
+  "observer_enabled": false,
+  "clean24h_started": false,
+  "position_count": 1,
+  "open_order_count": 2,
+  "orders_detail_visible": 1,
+  "visible_order": {
+    "order_id_hash": "67ad0b78f57e1fdd",
+    "symbol": "BTCUSDT",
+    "side": "Sell",
+    "qty": 0.026,
+    "status": "Untriggered",
+    "order_type": null,
+    "stop_order_type": null,
+    "trigger_price": null,
+    "protection_role": "UNKNOWN"
+  },
+  "second_order": "NOT_VISIBLE_IN_READONLY_API",
+  "new_entry_blocked": true,
+  "controller_owner_count": 1,
+  "runtime_stalled": false,
+  "unexpected_multi_entry": false,
+  "snapshots": [
+    {"tag": "T0", "cycleCount": 362, "positionCount": 1, "openOrderCount": 2},
+    {"tag": "T70", "cycleCount": 364, "positionCount": 1, "openOrderCount": 2},
+    {"tag": "T140", "cycleCount": 365, "positionCount": 1, "openOrderCount": 2}
+  ],
+  "observability_gaps": [
+    "OrderView drops stopOrderType/triggerPrice/reduceOnly/closeOnTrigger/positionIdx",
+    "status.currentOrder only exposes open_orders[0]",
+    "_protection_from_orders checks orderStatus but DTO uses status"
+  ]
+}
