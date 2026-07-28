@@ -73,6 +73,7 @@ export function OverviewPage() {
 
       {simple ? <ProductSimpleView /> : null}
 
+      {/* Pro / research layer — not above-the-fold in Simple */}
       <details className="nx-p7-pro-layer" open={!simple}>
         <summary className="muted">{simple ? "展開 Pro／研究層（圖表、版塊、掃描）" : "Pro View · 研究層"}</summary>
         {!simple ? (
@@ -96,10 +97,12 @@ export function OverviewPage() {
               )}
             </section>
             <NotificationPrefsStub />
+            <DecisionMarketOverview />
+            <NexusMarketIntelligenceCards />
           </>
-        ) : null}
-        <DecisionMarketOverview />
-        <NexusMarketIntelligenceCards />
+        ) : (
+          <p className="muted sm">Simple View 已隱藏研究牆；切換 Pro View 可看完整掃描與情報卡。</p>
+        )}
       </details>
 
       <details
@@ -107,7 +110,7 @@ export function OverviewPage() {
         open={showDetails}
         onToggle={(e) => setShowDetails((e.target as HTMLDetailsElement).open)}
       >
-        <summary className="muted">Gate checklists (optional)</summary>
+        <summary className="muted">Expert · Gate checklists（非首屏）</summary>
         <div className="operator-section desk-secondary" id="gate-checklist-detail">
           <GateChecklistCard
             id="checklist-eth-watch-reappearance"

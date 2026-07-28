@@ -64,13 +64,24 @@ function Links({ items }: { items: NavItem[] }) {
 }
 
 export function MobileBottomNav() {
+  const primaryFive = PRIMARY.slice(0, 4);
   return (
     <nav className="w4-mobile-bottom-nav" aria-label="Mobile primary">
-      {PRIMARY.map((l) => (
+      {primaryFive.map((l) => (
         <NavLink key={l.to} to={l.to} className={({ isActive }) => (isActive ? "active" : undefined)}>
           <span>{l.short}</span>
         </NavLink>
       ))}
+      <details className="w4-mobile-more">
+        <summary>更多</summary>
+        <div className="w4-mobile-more-panel">
+          {PRIMARY.slice(4).map((l) => (
+            <NavLink key={l.to} to={l.to}>
+              {l.label}
+            </NavLink>
+          ))}
+        </div>
+      </details>
     </nav>
   );
 }
