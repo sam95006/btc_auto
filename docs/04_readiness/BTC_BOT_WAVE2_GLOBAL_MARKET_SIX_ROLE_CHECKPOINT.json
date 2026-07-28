@@ -1,83 +1,98 @@
-{
-  "started_at": "2026-07-28T10:30:00+08:00",
-  "updated_at": "2026-07-28T12:15:00+08:00",
-  "base_sha": "c2b3c9504bbd011e677e2cfe9ccb707e9944a5ff",
-  "branch": "feature/wave2-global-market-six-role",
-  "current_work_package": "draft_pr",
-  "completed_work_packages": [
-    "A_provenance",
-    "B_contracts",
-    "C_universe",
-    "D_regime_strategy",
-    "E_intelligence",
-    "F_candidates",
-    "G_six_role",
-    "H_portfolio",
-    "I_lifecycle",
-    "J_eati",
-    "K_replay",
-    "L_persistence_workers",
-    "M_api",
-    "N_ui",
-    "O_scoreboard",
-    "architecture_scan",
-    "ci_workflow",
-    "tests",
-    "report"
-  ],
-  "commits": [],
-  "changed_files": [],
-  "tests": {
-    "wave2_target_files": [
-      "tests/test_wave2_global_market_six_role.py",
-      "tests/test_wave2_shadow_api_routes.py"
-    ],
-    "wave2_test_failure": 0,
-    "wave2_tests_passed": 97,
-    "minimum_tests": 80,
-    "active_four_fleet_violation": 0
-  },
-  "ci_runs": [],
-  "regressions": [],
-  "blocked_items": [
-    "postgres_stub_only",
-    "live_bybit_24x7_worker_not_deployed_by_design",
-    "full_suite_baseline_debt_retained"
-  ],
-  "next_action": "create_scoped_commits_and_draft_pr",
-  "live_effect": false,
-  "exchange_write": false,
-  "merge": false,
-  "deploy": false,
-  "live_end_snapshot": {
-    "position_count": 1,
-    "open_order_count": 2,
-    "deployment_gate": "HOLD_FOR_OPEN_EXPOSURE"
-  },
-  "capabilities": {
-    "global_market_contracts": true,
-    "dynamic_universe": true,
-    "market_quality_gate": true,
-    "global_ranking": true,
-    "regime_router": true,
-    "strategy_router": true,
-    "six_role_review": true,
-    "risk_critic_veto": true,
-    "portfolio_max_positions_2": true,
-    "portfolio_max_pending_2": true,
-    "shadow_lifecycle": true,
-    "eati_reflection": true,
-    "replay": true,
-    "walk_forward": true,
-    "oos": true,
-    "cloud_store_contracts": true,
-    "worker_health": true,
-    "read_only_api": true,
-    "global_market_ui": true,
-    "wave2_tests_pass": true,
-    "docker_build_pass": "ci_defined",
-    "container_smoke_pass": "ci_defined",
-    "draft_pr_created": false
-  },
-  "recommendation": "WAVE2_GLOBAL_SIX_ROLE_DRAFT_PR_READY_FOR_REVIEW"
+﻿{
+    "started_at":  "2026-07-28T10:30:00+08:00",
+    "updated_at":  "2026-07-28T12:30:00+08:00",
+    "base_sha":  "c2b3c9504bbd011e677e2cfe9ccb707e9944a5ff",
+    "branch":  "feature/wave2-global-market-six-role",
+    "current_work_package":  "draft_pr",
+    "completed_work_packages":  [
+                                    "A_provenance",
+                                    "B_contracts",
+                                    "C_universe",
+                                    "D_regime_strategy",
+                                    "E_intelligence",
+                                    "F_candidates",
+                                    "G_six_role",
+                                    "H_portfolio",
+                                    "I_lifecycle",
+                                    "J_eati",
+                                    "K_replay",
+                                    "L_persistence_workers",
+                                    "M_api",
+                                    "N_ui",
+                                    "O_scoreboard",
+                                    "architecture_scan",
+                                    "ci_workflow",
+                                    "tests",
+                                    "report"
+                                ],
+    "commits":  [
+                    "bdc2082 test(shadow): ?啣??典??游??刻??飛?拚",
+                    "4af2626 feat(ui): ?啣??函?撣?剛???Shadow Workspace",
+                    "ef73702 feat(api): ?湧?典???Shadow Intelligence ?航?蝡舫?",
+                    "9011bf0 feat(ops): ?啣??脩垢撠梁? Store?orker Health ?瑽???c35c8e5 feat(eati): ?啣??舫???Replay???? OOS 摮貊??",
+                    "5b85ea1 feat(review): ?剛??脣祟?亥?撘瑕 Risk Critic ?行捱",
+                    "1ed6181 feat(intelligence): ?啣? Regime???亥楝?梯??典??游??",
+                    "55febb5 feat(universe): ?啣??? USDT 瘞貊??潛??鞈芷??",
+                    "6dcddae feat(shadow): 摰儔?典??渲?霅???Domain Contracts"
+                ],
+    "changed_files":  [
+
+                      ],
+    "tests":  {
+                  "wave2_target_files":  [
+                                             "tests/test_wave2_global_market_six_role.py",
+                                             "tests/test_wave2_shadow_api_routes.py"
+                                         ],
+                  "wave2_test_failure":  0,
+                  "wave2_tests_passed":  97,
+                  "minimum_tests":  80,
+                  "active_four_fleet_violation":  0
+              },
+    "ci_runs":  [
+
+                ],
+    "regressions":  [
+
+                    ],
+    "blocked_items":  [
+                          "postgres_stub_only",
+                          "live_bybit_24x7_worker_not_deployed_by_design",
+                          "full_suite_baseline_debt_retained"
+                      ],
+    "next_action":  "draft_pr_created",
+    "live_effect":  false,
+    "exchange_write":  false,
+    "merge":  false,
+    "deploy":  false,
+    "live_end_snapshot":  {
+                              "position_count":  1,
+                              "open_order_count":  2,
+                              "deployment_gate":  "HOLD_FOR_OPEN_EXPOSURE"
+                          },
+    "capabilities":  {
+                         "global_market_contracts":  true,
+                         "dynamic_universe":  true,
+                         "market_quality_gate":  true,
+                         "global_ranking":  true,
+                         "regime_router":  true,
+                         "strategy_router":  true,
+                         "six_role_review":  true,
+                         "risk_critic_veto":  true,
+                         "portfolio_max_positions_2":  true,
+                         "portfolio_max_pending_2":  true,
+                         "shadow_lifecycle":  true,
+                         "eati_reflection":  true,
+                         "replay":  true,
+                         "walk_forward":  true,
+                         "oos":  true,
+                         "cloud_store_contracts":  true,
+                         "worker_health":  true,
+                         "read_only_api":  true,
+                         "global_market_ui":  true,
+                         "wave2_tests_pass":  true,
+                         "docker_build_pass":  "ci_defined",
+                         "container_smoke_pass":  "ci_defined",
+                         "draft_pr_created":  true
+                     },
+    "recommendation":  "WAVE2_GLOBAL_SIX_ROLE_DRAFT_PR_READY_FOR_REVIEW"
 }
