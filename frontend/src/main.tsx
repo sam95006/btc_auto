@@ -5,6 +5,7 @@ import { clearAssetLoadRecoveryGuard, installAssetLoadRecovery } from "./assetLo
 import App from "./App";
 import "./styles/designTokens.css";
 import "./styles/phase2Tokens.css";
+import "./styles/wave4ProductTokens.css";
 import "./styles/global.css";
 
 installAssetLoadRecovery();
