@@ -11,6 +11,11 @@ import { useScannerBoard } from "../market/useMarketScanner";
 import { formatUsd } from "../market/freshness";
 import { WatchStarButton } from "../components/WatchStarButton";
 import { loadViewMode, saveViewMode, type ViewMode } from "../market/viewPrefs";
+import {
+  resolveColumnPreset,
+  visibleColumns,
+  type ColumnPreset,
+} from "../wave4/columnPresets";
 
 type Filter =
   | "ALL"
@@ -45,10 +50,15 @@ function rankMove(c: MarketCandidate) {
   return d > 0 ? `↑${d}` : `↓${Math.abs(d)}`;
 }
 
+type ScannerPageProps = {
+  columnPreset?: ColumnPreset;
+  hideHeader?: boolean;
+};
+
 /**
  * Full market scanner board — Phase 2 product explorer (server ranking only).
  */
-export function ScannerPage() {
+export function ScannerPage({ columnPreset, hideHeader = false }: ScannerPageProps = {}) {
   const { rows, status, error, loading } = useScannerBoard();
   const [filter, setFilter] = useState<Filter>("ALL");
   const [sort, setSort] = useState<SortKey>("opportunity");
@@ -58,6 +68,9 @@ export function ScannerPage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const advanced = view === "advanced";
   const simple = view === "simple";
+  const preset = columnPreset ?? resolveColumnPreset();
+  const cols = visibleColumns(preset);
+  const showCol = (id: string) => cols.some((c) => c.id === id);
 
   useEffect(() => {
     const onView = (e: Event) => {
@@ -107,32 +120,38 @@ export function ScannerPage() {
 
   return (
     <div className="page-stack nx-scanner-page nx-p2">
-      <header className="nx-ov-header">
-        <h1 className="nx-page-title">市場掃描</h1>
-        <p className="nx-status-line">
-          {filtered.length} / {rows.length} 結果 · {status?.freshness || "—"} · 約每{" "}
-          {status?.snapshotIntervalSec ?? 20} 秒掃描 · 更新{" "}
-          {status?.lastCycleAt ? new Date(status.lastCycleAt).toLocaleTimeString() : "—"}
+      {!hideHeader ? (
+        <header className="nx-ov-header">
+          <h1 className="nx-page-title">市場掃描</h1>
+          <p className="nx-status-line">
+            {filtered.length} / {rows.length} 結果 · {status?.freshness || "—"} · 約每{" "}
+            {status?.snapshotIntervalSec ?? 20} 秒掃描 · 更新{" "}
+            {status?.lastCycleAt ? new Date(status.lastCycleAt).toLocaleTimeString() : "—"}
+          </p>
+          <div className="nx-ov-meta">
+            <Link to="/overview">← 總覽</Link>
+            <Link to="/watchlist">關注</Link>
+            <button
+              type="button"
+              className="nx-text-btn"
+              onClick={() => {
+                const next: ViewMode = view === "simple" ? "advanced" : "simple";
+                setView(next);
+                saveViewMode(next);
+              }}
+            >
+              {advanced ? "簡易" : "進階"}
+            </button>
+            <button type="button" className="nx-text-btn mobile-only" onClick={() => setFiltersOpen(true)}>
+              篩選
+            </button>
+          </div>
+        </header>
+      ) : (
+        <p className="nx-status-line muted sm">
+          {filtered.length} / {rows.length} · {preset} 欄位 · {status?.freshness || "—"}
         </p>
-        <div className="nx-ov-meta">
-          <Link to="/overview">← 總覽</Link>
-          <Link to="/watchlist">關注</Link>
-          <button
-            type="button"
-            className="nx-text-btn"
-            onClick={() => {
-              const next: ViewMode = view === "simple" ? "advanced" : "simple";
-              setView(next);
-              saveViewMode(next);
-            }}
-          >
-            {advanced ? "簡易" : "進階"}
-          </button>
-          <button type="button" className="nx-text-btn mobile-only" onClick={() => setFiltersOpen(true)}>
-            篩選
-          </button>
-        </div>
-      </header>
+      )}
 
       {error ? <div className="nx-banner-warn">{error}</div> : null}
 
@@ -201,14 +220,16 @@ export function ScannerPage() {
               <th>Symbol</th>
               <th>方向</th>
               <th>階段</th>
-              <th className={sort === "opportunity" ? "sorted" : ""}>機會</th>
-              <th>確認</th>
-              <th>風險</th>
-              <th>價 5m</th>
-              <th>持倉 5m</th>
-              <th>活躍</th>
-              <th>排名</th>
-              <th>新鮮度</th>
+              {showCol("opportunity") ? (
+                <th className={sort === "opportunity" ? "sorted" : ""}>機會</th>
+              ) : null}
+              {showCol("confirmation") ? <th>確認</th> : null}
+              {showCol("risk") ? <th>風險</th> : null}
+              {showCol("price5m") ? <th>價 5m</th> : null}
+              {showCol("oi5m") ? <th>持倉 5m</th> : null}
+              {showCol("turnover") ? <th>活躍</th> : null}
+              {showCol("rankChange") ? <th>排名</th> : null}
+              {showCol("freshness") ? <th>新鮮度</th> : null}
               <th />
             </tr>
           </thead>
@@ -248,14 +269,26 @@ export function ScannerPage() {
                       </span>
                     </td>
                     <td>{STAGE_LABEL_ZH[r.stage]}</td>
-                    <td className="mono">{Math.round(r.opportunityScore)}</td>
-                    <td className="mono">{Math.round(r.confirmationScore)}</td>
-                    <td className="mono">{Math.round(r.riskScore)}</td>
-                    <td className="mono">{fmtPct(r.priceChange5mPct)}</td>
-                    <td className="mono">{fmtPct(r.oiChange5mPct)}</td>
-                    <td className="mono">{r.turnoverPace != null ? r.turnoverPace.toFixed(2) : "—"}</td>
-                    <td className="mono">{rankMove(r)}</td>
-                    <td>{r.freshness}</td>
+                    {showCol("opportunity") ? (
+                      <td className="mono">{Math.round(r.opportunityScore)}</td>
+                    ) : null}
+                    {showCol("confirmation") ? (
+                      <td className="mono">{Math.round(r.confirmationScore)}</td>
+                    ) : null}
+                    {showCol("risk") ? (
+                      <td className="mono">{Math.round(r.riskScore)}</td>
+                    ) : null}
+                    {showCol("price5m") ? (
+                      <td className="mono">{fmtPct(r.priceChange5mPct)}</td>
+                    ) : null}
+                    {showCol("oi5m") ? (
+                      <td className="mono">{fmtPct(r.oiChange5mPct)}</td>
+                    ) : null}
+                    {showCol("turnover") ? (
+                      <td className="mono">{r.turnoverPace != null ? r.turnoverPace.toFixed(2) : "—"}</td>
+                    ) : null}
+                    {showCol("rankChange") ? <td className="mono">{rankMove(r)}</td> : null}
+                    {showCol("freshness") ? <td>{r.freshness}</td> : null}
                     <td onClick={(e) => e.stopPropagation()}>
                       <WatchStarButton symbol={r.symbol} />
                     </td>

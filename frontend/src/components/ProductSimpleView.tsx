@@ -8,8 +8,9 @@ import { formatUsd } from "../market/freshness";
 import { fmtNum } from "../market/displayNull";
 import { OpportunityCard } from "./OpportunityCard";
 import { MarketParityStrip } from "./MarketParityStrip";
-import { BybitDemoAutonomousCard } from "./BybitDemoAutonomousCard";
 import type { MarketCandidate } from "../market/scannerApi";
+import { buildFunnelDisplay, NO_DATA } from "../wave4/noDataFunnel";
+import { portfolioLeverageBadge } from "../wave4/fixedLeverageLabels";
 
 function TickerChip({ symbol }: { symbol: "BTC" | "ETH" | "SOL" }) {
   const live = useLivePrice(symbol);
@@ -168,6 +169,16 @@ export function ProductSimpleView() {
         ? "建議等待：市場動能不足"
         : "可觀察 Top 機會，但仍為研究模式（不下單）";
 
+  const funnel = buildFunnelDisplay(
+    [
+      { key: "symbols", label: "標的", value: status?.symbolCount },
+      { key: "long", label: "做多", value: status?.longCandidates },
+      { key: "short", label: "做空", value: status?.shortCandidates },
+      { key: "confirmed", label: "確認", value: status?.confirmedCandidates },
+    ],
+    Boolean(status) && !loading,
+  );
+
   return (
     <div className="nx-product7-simple" id="product-simple-view" aria-label="Product Simple View">
       <header className="nx-p7-header">
@@ -177,10 +188,39 @@ export function ProductSimpleView() {
 
       {error ? <div className="nx-banner-warn">掃描器暫不可用：{error}</div> : null}
 
-      {/* 0. Bybit Demo autonomous ops */}
-      <BybitDemoAutonomousCard />
+      {/* Market Pulse */}
+      <section className="nx-p7-block" aria-label="Market pulse">
+        <h2 className="nx-sec-title">Market Pulse</h2>
+        <p className={`nx-regime-value regime-${regime}`}>{regime}</p>
+        <p className="muted">{summary || NO_DATA}</p>
+      </section>
 
-      {/* 1. Ticker */}
+      {/* Decision Funnel — NO synthetic defaults */}
+      <section className="nx-p7-block" aria-label="Decision funnel">
+        <h2 className="nx-sec-title">Decision Funnel</h2>
+        {!funnel.hasData ? (
+          <p className="w4-no-data">{NO_DATA}</p>
+        ) : (
+          <div className="w4-funnel-grid">
+            {funnel.stages.map((s) => (
+              <div key={s.key} className="w4-funnel-step">
+                <strong className="mono">{s.display}</strong>
+                <span>{s.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Portfolio / Risk snapshot */}
+      <section className="nx-p7-block" aria-label="Portfolio risk">
+        <h2 className="nx-sec-title">Portfolio / Risk</h2>
+        <span className="w4-leverage-badge">{portfolioLeverageBadge()}</span>
+        <p className="muted sm">
+          高風險候選 {status?.highRiskCandidates ?? NO_DATA} ·{" "}
+          <Link to="/portfolio">Shadow 組合 →</Link>
+        </p>
+      </section>
       <section className="nx-p7-block" aria-label="Ticker">
         <div className="nx-ticker-row">
           <TickerChip symbol="BTC" />
@@ -301,8 +341,8 @@ export function ProductSimpleView() {
       <section className="nx-p7-block" aria-label="Critical alerts">
         <div className="nx-tops-head">
           <h2 className="nx-sec-title">關鍵警報</h2>
-          <Link to="/anomalies" className="nx-link">
-            異常中心 →
+          <Link to="/alerts" className="nx-link">
+            警報中心 →
           </Link>
         </div>
         {critical.length === 0 ? (
@@ -318,7 +358,16 @@ export function ProductSimpleView() {
         )}
       </section>
 
-      {/* 8. AI Brief entry */}
+      {/* Data Quality Summary */}
+      <section className="nx-p7-block" aria-label="Data quality">
+        <details>
+          <summary className="nx-sec-title">Data Quality Summary</summary>
+          <MarketParityStrip expanded={false} />
+          <p className="muted sm">Provider 失敗已折疊於 parity strip</p>
+        </details>
+      </section>
+
+      {/* AI Brief entry */}
       <section className="nx-p7-block nx-p7-ai-entry" aria-label="AI brief entry">
         <h2 className="nx-sec-title">AI 簡報入口</h2>
         <p className="muted sm">無 LLM 時僅提供規則摘要，不會捏造答案。</p>
