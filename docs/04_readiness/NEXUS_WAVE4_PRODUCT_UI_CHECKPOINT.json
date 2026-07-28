@@ -43,12 +43,14 @@
     "playwright_e2e_functional": "pass_local_24",
     "playwright_visual": "pass_local_1_11_png",
     "playwright_a11y": "pass_local_8_with_known_rule_exclusions",
-    "docker_smoke": "pending_ci"
+    "docker_smoke": "pass_ci",
+    "wave4_ci_run_id": 30328430921
   },
-  "recommendation": "WAVE4_PRODUCT_UI_PARTIAL_WITH_VISUAL_VALIDATION_BLOCKERS",
+  "recommendation": "WAVE4_PRODUCT_UI_DRAFT_PR_READY_FOR_REVIEW",
   "recommendation_notes_zh": "Wave 4.1 視覺驗收集就緒；待 Playwright e2e / visual / a11y 全綠與 PNG 擷取完成後可升級為 WAVE4_PRODUCT_UI_READY",
   "live_effect": false,
   "exchange_write": false,
   "merge": false,
-  "deploy": false
+  "deploy": false,
+  "pr4_scope_frozen": true
 }
