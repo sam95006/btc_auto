@@ -93,7 +93,7 @@ export function AiLearningLabPage() {
         <StatusBadge tone="hold">SHADOW ONLY</StatusBadge>
         <StatusBadge tone="blocked">NO EXCHANGE WRITE</StatusBadge>
         <StatusBadge tone="wait">NOT REAL MONEY</StatusBadge>
-        <StatusBadge tone="neutral">FIXED {FIXED_LEVERAGE}X</StatusBadge>
+        <StatusBadge tone="neutral">{`FIXED ${FIXED_LEVERAGE}X`}</StatusBadge>
         {isNoData ? <StatusBadge tone="wait">NO_DATA</StatusBadge> : null}
         <p className="page-sub">
           Adaptive learning policy workspace · immutable 25x leverage · read-only shadow metrics · NOT EXECUTED
