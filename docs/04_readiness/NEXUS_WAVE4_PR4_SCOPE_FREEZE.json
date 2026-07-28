@@ -3,7 +3,7 @@
   "branch": "feature/wave4-product-ui-intelligence",
   "base_branch": "feature/wave3-adaptive-policy-learning",
   "actual_base_sha": "aa43d463b5b91d00bd81cdba9dedfd5eee5300fb",
-  "actual_head_sha": "117ea630402e3f7d4c131a03a56c622e77674dfa",
+  "actual_head_sha": "bfd21a9b5adfc904d75f0cad09fa65fbe0dbbb00",
   "pr4_scope_frozen": true,
   "draft": true,
   "merge": false,
@@ -23,5 +23,6 @@
   },
   "visual_png_captured": true,
   "recommendation": "WAVE4_PRODUCT_UI_DRAFT_PR_READY_FOR_REVIEW",
-  "note_zh": "Wave 4.1 驗收通過後 Scope Freeze；不得再塞入 Wave 5。"
+  "note_zh": "Wave 4.1 驗收通過後 Scope Freeze；不得再塞入 Wave 5。",
+  "functional_ci_head": "117ea630402e3f7d4c131a03a56c622e77674dfa"
 }

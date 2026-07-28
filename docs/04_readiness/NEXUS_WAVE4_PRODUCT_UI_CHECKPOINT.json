@@ -52,5 +52,7 @@
   "exchange_write": false,
   "merge": false,
   "deploy": false,
-  "pr4_scope_frozen": true
+  "pr4_scope_frozen": true,
+  "actual_head_sha": "bfd21a9b5adfc904d75f0cad09fa65fbe0dbbb00",
+  "functional_ci_head": "117ea630402e3f7d4c131a03a56c622e77674dfa"
 }
