@@ -1,0 +1,24 @@
+{
+  "pr": 3,
+  "branch": "feature/wave3-adaptive-policy-learning",
+  "base_branch": "feature/wave2-global-market-six-role",
+  "actual_base_sha": "c0c6c3af313f14f3636804211d41ed02d02efa95",
+  "actual_head_sha": "27b810283ef27901448a659245f65e491aa90fb9",
+  "pr3_scope_frozen": true,
+  "draft": true,
+  "merge": false,
+  "deploy": false,
+  "live_effect": false,
+  "exchange_write": false,
+  "blocker_cleared": [
+    "FRONTEND_TYPECHECK",
+    "PR_BODY_TRUTH"
+  ],
+  "recommendation": "WAVE3_ADAPTIVE_POLICY_DRAFT_PR_READY_FOR_REVIEW",
+  "note_zh": "Typecheck 修復與 Truth 對齊後凍結；Wave 4 不得再塞入本 PR。",
+  "wave3_test_count": 139,
+  "wave2_test_count": 100,
+  "frontend_typecheck": "PASS",
+  "frontend_build": "PASS",
+  "ci_pending": true
+}
