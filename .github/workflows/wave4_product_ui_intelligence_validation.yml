@@ -1,0 +1,102 @@
+name: wave4-product-ui-intelligence-validation
+
+# Wave 4 product UI intelligence — shadow/UI only, no deploy, no exchange writes.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "feature/wave4-product-ui-intelligence"
+  pull_request:
+    branches:
+      - "feature/wave4-product-ui-intelligence"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave4-product-ui-intelligence-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  AUTONOMOUS_SEND: "false"
+  EXCHANGE_WRITE: "false"
+  MAINNET: "false"
+  REAL_MONEY: "false"
+  ARM: "false"
+  FIXED_LEVERAGE: "25"
+  AI_CAN_CHANGE_LEVERAGE: "false"
+  NEXUS_ZEABUR_CLEAN_OBSERVER: "false"
+
+jobs:
+  wave4-python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Wave 4 + Wave 3 + Wave 2 pytest
+        run: |
+          python -m pytest \
+            tests/test_wave4_product_ui_intelligence.py \
+            tests/test_wave3_adaptive_policy_learning.py \
+            tests/test_wave2_global_market_six_role.py \
+            tests/test_wave2_shadow_api_routes.py \
+            -q --tb=short
+
+      - name: Fixture truth scan
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          matrix = json.loads(Path("docs/04_readiness/NEXUS_WAVE4_UI_FEATURE_PRESERVATION_MATRIX.json").read_text())
+          assert matrix["feature_loss_count"] == 0
+          audit = json.loads(Path("docs/04_readiness/NEXUS_WAVE4_DATAHUNTERX_FEATURE_AUDIT.json").read_text())
+          assert audit["copy_forbidden"] is True
+          app = Path("frontend/src/App.tsx").read_text(encoding="utf-8")
+          assert "FloatingAIAssistant" not in app
+          assert "AiCommander" in app
+          assert 'path="/founder/runtime"' in app
+          print("fixture_truth_scan=PASS")
+          PY
+
+  wave4-frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: npm ci
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: typecheck
+        working-directory: frontend
+        run: npm run typecheck
+
+      - name: build
+        working-directory: frontend
+        run: npm run build
+
+      - name: Wave4 tokens imported
+        run: grep -q wave4ProductTokens.css frontend/src/main.tsx

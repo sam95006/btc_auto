@@ -1,0 +1,39 @@
+{
+  "schema_version": "wave4_product_ui_checkpoint_v1",
+  "branch": "feature/wave4-product-ui-intelligence",
+  "worktree": "C:\\Temp\\BTC_BOT_WAVE4_PRODUCT_UI",
+  "timestamp": "2026-07-28T11:45:00+08:00",
+  "phase": "Wave 4 Product UI Intelligence",
+  "constraints_honored": {
+    "shadow_ui_only": true,
+    "no_exchange_write": true,
+    "no_merge_deploy": true,
+    "no_force_push": true,
+    "no_git_add_dash_a": true,
+    "no_commit_by_agent": true
+  },
+  "deliverables": {
+    "feature_preservation_matrix": "docs/04_readiness/NEXUS_WAVE4_UI_FEATURE_PRESERVATION_MATRIX.json",
+    "datahunterx_audit": "docs/04_readiness/NEXUS_WAVE4_DATAHUNTERX_FEATURE_AUDIT.json",
+    "wave4_tokens_css": "frontend/src/styles/wave4ProductTokens.css",
+    "sidebar_ia_7_primary": true,
+    "universe_page": "frontend/src/pages/UniversePage.tsx",
+    "alerts_page": "frontend/src/pages/AlertsPage.tsx",
+    "portfolio_page": "frontend/src/pages/PortfolioWorkspacePage.tsx",
+    "founder_runtime_page": "frontend/src/pages/FounderRuntimePage.tsx",
+    "ai_commander": "frontend/src/components/AiCommander.tsx",
+    "symbol_workbench_tabs": "frontend/src/components/SymbolWorkbenchTabs.tsx",
+    "tests": "tests/test_wave4_product_ui_intelligence.py",
+    "ci_workflow": ".github/workflows/wave4_product_ui_intelligence_validation.yml",
+    "report_md": "docs/04_readiness/NEXUS_WAVE4_PRODUCT_UI_INTELLIGENCE_REPORT.md",
+    "visual_regression_manifest": "docs/04_readiness/NEXUS_WAVE4_VISUAL_REGRESSION_MANIFEST.json"
+  },
+  "validation": {
+    "typecheck": "pass",
+    "build": "pass",
+    "pytest_wave4": "pass",
+    "pytest_wave2_wave3": "pass",
+    "pytest_wave4_count": 130,
+    "pytest_total_count": 369
+  }
+}
