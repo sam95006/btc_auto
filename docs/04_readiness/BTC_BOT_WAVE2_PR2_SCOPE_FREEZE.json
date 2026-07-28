@@ -4,8 +4,8 @@
   "branch": "feature/wave2-global-market-six-role",
   "base_branch": "rc/runtime-stall-zeabur-observer",
   "base_sha": "c2b3c9504bbd011e677e2cfe9ccb707e9944a5ff",
-  "actual_head_sha": "PENDING_AFTER_TRUTH_COMMIT",
-  "pr2_scope_frozen": false,
+  "actual_head_sha": "16781abc4035ce9b3b3f3608598c8d3e0a7912de",
+  "pr2_scope_frozen": true,
   "draft": true,
   "merge": false,
   "deploy": false,
@@ -16,5 +16,8 @@
     "fixture_only_explicit_or_dedicated_endpoint",
     "ui_empty_state_not_synthetic_128"
   ],
-  "note_zh": "完成最終真實性修正與 CI 後將 pr2_scope_frozen=true；Wave 3 不得再塞入本 PR。"
+  "note_zh": "完成最終真實性修正與 CI 後將 pr2_scope_frozen=true；Wave 3 不得再塞入本 PR。",
+  "commit_count": 13,
+  "latest_ci": "pending_push",
+  "test_count": 100
 }
