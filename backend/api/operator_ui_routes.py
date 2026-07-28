@@ -20,7 +20,10 @@ MVP22A_BUILD_MARKER = "NEXUS_UI_MVP22A_LIVE_MARKET_DATA"
 LEGACY_BUILD_MARKER = "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60"
 _SPA_PREFIXES = (
     "overview",
+    "universe",
     "opportunities",
+    "alerts",
+    "portfolio",
     "anomalies",
     "intelligence",
     "trade-plan",
@@ -45,6 +48,9 @@ _SPA_PREFIXES = (
     "membership",
     "ai-reviews",
     "research-performance",
+    "global-shadow",
+    "ai-learning-lab",
+    "founder",
 )
 
 

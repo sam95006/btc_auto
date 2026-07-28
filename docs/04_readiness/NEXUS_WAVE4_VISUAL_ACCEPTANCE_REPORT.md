@@ -1,77 +1,79 @@
 # NEXUS Wave 4.1 Visual Acceptance Report
 
-## Recommendation（目前）
-`WAVE4_PRODUCT_UI_PARTIAL_WITH_VISUAL_VALIDATION_BLOCKERS` → 待本輪 CI（含 Docker／Browser）全綠後升級為 `WAVE4_PRODUCT_UI_DRAFT_PR_READY_FOR_REVIEW` 並 Freeze。
-
 ## 1. Before Screenshots
-- `artifacts/wave4/before/overview_overview_pro_1440x900.png`（Zeabur Live 唯讀）
-- `artifacts/wave4/before/scanner_scanner_1440x900.png`
+`artifacts/wave4/before/`（Zeabur Live 唯讀 overview／scanner）。
 
 ## 2. After Screenshots
-已產生於 `artifacts/wave4/after/`（含 overview／universe／portfolio／founder／mobile／tablet 等）。詳見 Manifest。
+`artifacts/wave4/after/`（Local Wave4 Build PNG）。
 
 ## 3. Viewports
-1440×900、768×1024、390×844（本輪已擷取）；其餘 viewport 由 CI visual job 擴充。
+1440×900、768×1024、390×844 已擷取；其餘由 CI visual job 擴充。
 
 ## 4. Data States
-預設 NO_DATA／API 不可用時誠實空狀態；Fixture 僅 explicit mode。
+NO_DATA／DEGRADED／EXPLICIT_FIXTURE（Fixture 非預設）。
 
 ## 5. Above-the-fold Results
-- market_pulse_above_fold：true（`data-testid=market-pulse`）
-- decision_funnel_above_fold：true
-- top_opportunity_above_fold：true
-- portfolio_above_fold：true
-- critical_alert_above_fold：true
-- duplicate_status_strip：false（已收斂）
-- provider_failure_dominates：false（改 compact Data Quality strip）
-- excessive_empty_space：改善為 12-column grid（max-width 1760px）
+Market Pulse／Funnel／Opportunities／Portfolio／Alerts 於首屏；Provider 不主導。
 
 ## 6. Provider Failure Summary
-首頁僅 compact strip + Provider Health 連結；詳細診斷在 details／`/provider-shadow`。
+Compact Data Quality strip＋Provider Health 連結。
 
 ## 7. Navigation Reachability
-七欄 IA + 市場深度 + Expert 折疊；Mobile 最多 5 入口（更多含組合／學習／證據）。
+七欄 IA；Mobile 最多 5 入口＋更多。
 
 ## 8. Feature Preservation
-`feature_loss_count=0`（矩陣維持）；舊路由 alias 保留。
+feature_loss=0；舊路由 alias 保留。
 
 ## 9. Universe Performance
-Browser 驗收存在；600+ row virtualization 後續可強化（本輪無假 128 合成漏斗）。
+Browser 驗收；無合成 128 漏斗。
 
 ## 10. Workbench Completeness
-八 Tab Shell 存在；缺資料顯示 NO_DATA／MISSING，不填假 0。
+八 Tab Shell；缺資料誠實標示。
 
-## 11–12. Six-role／Risk Critic
-Workbench／Portfolio 標籤與 Risk Critic 可見性由 e2e／靜態掃描覆蓋。
+## 11. Six-role Visibility
+Workbench／相關頁可達。
+
+## 12. Risk Critic Veto Visibility
+Portfolio／Workbench 風險標籤可驗證。
 
 ## 13. Portfolio／Fixed 25x
-FIXED 25X／AI Cannot Change Leverage／max 2 可見；無槓桿滑桿／Live Trade。
+FIXED 25X；無槓桿控制／Live Trade。
 
 ## 14. Public／Founder Separation
-`/founder/runtime`：FOUNDER PRIVATE／READ ONLY；BybitDemo 已移出公開總覽。
+`/founder/runtime` READ ONLY；BybitDemo 不在公開首頁。
 
 ## 15. AI Commander
-單一 FAB／Drawer；無 FloatingAIAssistant 掛載。
+單一例；無 FloatingAIAssistant 掛載。
 
-## 16–17. Responsive／Accessibility
-Playwright responsive＋axe（已知 color-contrast／tablist 規則排除有記錄）。
+## 16. Responsive
+Desktop／Tablet／Mobile e2e。
 
-## 18–19. Browser／Visual Results
-本地：functional／visual／a11y 通過；PNG 已產生。
+## 17. Accessibility
+axe suite；已知排除項有記錄。
 
-## 20–21. Docker／Container Smoke
-以 Wave4 CI `wave4-docker` job 為準（本機可能無 Docker CLI）。
+## 18. Browser Results
+本地／CI browser job。
 
-## 22–23. Console／Network
-Preview 無後端時 proxy ECONNREFUSED 已 allowlist；不得無限迴圈。
+## 19. Visual Results
+PNG captured（部分 planned 於 Manifest）。
+
+## 20. Docker
+CI `wave4-docker`；SPA prefixes 含 universe／founder。
+
+## 21. Container Smoke
+/health／/overview／/universe／/founder/runtime。
+
+## 22. Console Errors
+Proxy allowlist（無後端 preview）。
+
+## 23. Network Errors
+無無限迴圈要求。
 
 ## 24. Known Limitations
-- 部分 Manifest viewport／狀態仍 planned
-- axe 排除項需後續 Design Token／ARIA 精修
-- Docker 驗收依賴 CI
+部分 viewport planned；axe token／tablist 後續精修。
 
 ## 25. Live Effect
-false；position=1／orders=2 → HOLD_FOR_OPEN_EXPOSURE
+false；HOLD_FOR_OPEN_EXPOSURE。
 
 ## 26. Recommendation
-完成本輪 push 後依 CI 結論更新；未全綠前維持 PARTIAL。
+待 CI 全綠後可 Freeze；否則維持 PARTIAL_WITH_VISUAL_VALIDATION_BLOCKERS。
