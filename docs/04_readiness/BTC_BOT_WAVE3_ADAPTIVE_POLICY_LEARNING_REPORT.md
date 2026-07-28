@@ -1,6 +1,6 @@
 # BTC_BOT Wave 3 Adaptive AI Trading Policy — Learning Report
 
-> **狀態**：SHADOW ONLY · 固定 25X · 無交易所寫入 · Draft PR URL：**pending**
+> **狀態**：SHADOW ONLY · 固定 25X · 無交易所寫入 · Draft PR URL：**https://github.com/sam95006/btc_auto/pull/3**
 
 ---
 

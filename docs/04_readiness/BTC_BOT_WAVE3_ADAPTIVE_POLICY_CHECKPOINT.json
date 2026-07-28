@@ -27,5 +27,18 @@
   "wave2_truthful_empty_api": true,
   "draft_pr_url": "pending",
   "status": "IMPLEMENTATION_CHECKPOINT",
-  "updated_at": "2026-07-28T00:00:00Z"
+  "updated_at": "2026-07-28T00:00:00Z",
+  "draft_pr": {
+    "number": 3,
+    "url": "https://github.com/sam95006/btc_auto/pull/3",
+    "draft": true
+  },
+  "head_sha": "7140b045d6a806a88823defef513aa57bab5d01c",
+  "recommendation": "WAVE3_ADAPTIVE_POLICY_DRAFT_PR_READY_FOR_REVIEW",
+  "capabilities": {
+    "draft_pr_created": true
+  },
+  "live_effect": false,
+  "merge": false,
+  "deploy": false
 }
