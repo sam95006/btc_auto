@@ -238,6 +238,19 @@ jobs:
             echo "controller.py missing from /app" >&2
             exit 1
           fi
+          # Fail-closed Auto Send default in Dockerfile / image ENV
+          grep -q 'NEXUS_AUTONOMOUS_DEMO_AUTO_SEND=false' Dockerfile
+          if grep -E 'NEXUS_AUTONOMOUS_DEMO_AUTO_SEND=true' Dockerfile; then
+            echo "Dockerfile must not default AUTO_SEND=true" >&2
+            exit 1
+          fi
+          env_json=$(docker image inspect btc-bot-rc-runtime-stall:ci --format '{{json .Config.Env}}')
+          echo "$env_json" | grep -F 'NEXUS_AUTONOMOUS_DEMO_AUTO_SEND=false'
+          if echo "$env_json" | grep -F 'NEXUS_AUTONOMOUS_DEMO_AUTO_SEND=true'; then
+            echo "Image ENV must not set AUTO_SEND=true" >&2
+            exit 1
+          fi
+          echo "auto_send_default=false"
 
       - name: Container smoke (no exchange write)
         run: |
@@ -269,5 +282,12 @@ jobs:
             exit 1
           fi
           echo "observer_default_disabled=true"
+          echo "auto_send_default=false"
           echo "container_smoke=PASS"
+          # Confirm smoke container did not enable observer/auto-send
+          docker inspect btc-bot-rc-smoke --format '{{range .Config.Env}}{{println .}}{{end}}' | tee /tmp/smoke_env.txt
+          grep -q '^NEXUS_ZEABUR_CLEAN_OBSERVER=false$' /tmp/smoke_env.txt
+          grep -q '^NEXUS_AUTONOMOUS_DEMO_AUTO_SEND=false$' /tmp/smoke_env.txt
+          grep -q '^MAINNET=false$' /tmp/smoke_env.txt
+          grep -q '^REAL_MONEY=false$' /tmp/smoke_env.txt
           docker rm -f btc-bot-rc-smoke

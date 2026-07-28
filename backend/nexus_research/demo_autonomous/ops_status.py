@@ -438,6 +438,7 @@ def build_operations_status(*, include_snapshot: bool = True) -> dict[str, Any]:
     paper = _paper_status_safe()
     deploy_commit = resolve_deployment_commit()
 
+    # Effective auto-send is env-gated only (fail-closed when missing/false).
     auto_send = False
     try:
         if os.environ.get("NEXUS_AUTONOMOUS_DEMO_AUTO_SEND", "").strip().lower() in (
@@ -445,8 +446,6 @@ def build_operations_status(*, include_snapshot: bool = True) -> dict[str, Any]:
             "true",
             "yes",
         ):
-            auto_send = True
-        elif session_pub and session_pub.get("active") and session_pub.get("autoSend"):
             auto_send = True
     except Exception:
         auto_send = False

@@ -32,8 +32,10 @@ RUN test -f static/nexus/assets/nexus_overview.png \
  && test -f static/nexus/assets/hq_roundtable.png \
  || (echo "MISSING console assets in build context"; ls -la static/nexus/assets || true; exit 1)
 
+# Fail-closed: Auto Send must be explicitly enabled via Zeabur env (true/1/yes).
+# Missing or unset → treated as disabled by runtime parser.
 ENV PORT=8080 \
-    NEXUS_AUTONOMOUS_DEMO_AUTO_SEND=true
+    NEXUS_AUTONOMOUS_DEMO_AUTO_SEND=false
 EXPOSE 8080
 
 CMD ["gunicorn", "-c", "gunicorn.conf.py", "app:app"]

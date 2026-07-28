@@ -340,7 +340,9 @@ def register_autonomous_demo_routes(app: Flask) -> None:
             symbols = body.get("allowedSymbols") or []
             if isinstance(symbols, str):
                 symbols = [s.strip() for s in symbols.split(",") if s.strip()]
-            auto_send = bool(body.get("autoSend", True))
+            # Fail-closed default: session flag off unless caller explicitly sets true.
+            # New demo sends still require NEXUS_AUTONOMOUS_DEMO_AUTO_SEND env enable.
+            auto_send = bool(body.get("autoSend", False))
             max_cl = int(body.get("maxConsecutiveLosses") or 3)
             risk_tier = str(body.get("riskTier") or "VALIDATION")
             auth = get_authorization_validator().issue(

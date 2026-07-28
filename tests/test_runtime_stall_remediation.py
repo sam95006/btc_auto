@@ -350,3 +350,52 @@ def test_observer_sequence_monotonic_with_temp_evidence(tmp_path, monkeypatch):
     assert r2["sequence"] == r1["sequence"] + 1
     lines = (tmp_path / "samples.jsonl").read_text(encoding="utf-8").strip().splitlines()
     assert len(lines) == 2
+
+
+def test_auto_send_missing_env_fail_closed(monkeypatch):
+    monkeypatch.delenv("NEXUS_AUTONOMOUS_DEMO_AUTO_SEND", raising=False)
+    from backend.nexus_research.demo_autonomous.runtime_bootstrap import _auto_send_enabled
+
+    assert _auto_send_enabled() is False
+
+
+def test_auto_send_false_env_fail_closed(monkeypatch):
+    monkeypatch.setenv("NEXUS_AUTONOMOUS_DEMO_AUTO_SEND", "false")
+    from backend.nexus_research.demo_autonomous.runtime_bootstrap import _auto_send_enabled
+
+    assert _auto_send_enabled() is False
+
+
+def test_auto_send_requires_explicit_true(monkeypatch):
+    monkeypatch.setenv("NEXUS_AUTONOMOUS_DEMO_AUTO_SEND", "true")
+    from backend.nexus_research.demo_autonomous.runtime_bootstrap import _auto_send_enabled
+
+    assert _auto_send_enabled() is True
+
+
+def test_auto_send_session_alone_cannot_enable(monkeypatch):
+    """Session.auto_send must not bypass missing/false env (fail-closed)."""
+    monkeypatch.delenv("NEXUS_AUTONOMOUS_DEMO_AUTO_SEND", raising=False)
+
+    class _Sess:
+        auto_send = True
+
+        def is_active(self):
+            return True
+
+    class _Auth:
+        session = _Sess()
+
+    monkeypatch.setattr(
+        "backend.nexus_research.demo_autonomous.session_authorization.get_authorization_validator",
+        lambda: _Auth(),
+    )
+    from backend.nexus_research.demo_autonomous.runtime_bootstrap import _auto_send_enabled
+
+    assert _auto_send_enabled() is False
+
+
+def test_dockerfile_auto_send_default_false():
+    text = Path("Dockerfile").read_text(encoding="utf-8")
+    assert "NEXUS_AUTONOMOUS_DEMO_AUTO_SEND=false" in text
+    assert "NEXUS_AUTONOMOUS_DEMO_AUTO_SEND=true" not in text
