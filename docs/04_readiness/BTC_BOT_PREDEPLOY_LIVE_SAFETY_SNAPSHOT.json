@@ -1,0 +1,31 @@
+﻿{
+    "timestamp":  "2026-07-28T01:06:46Z",
+    "pre_deploy_live_url":  "https://nexus-stage3-bybit-demo-learning.zeabur.app",
+    "pre_deploy_live_commit":  "",
+    "pre_deploy_boot_id":  "232394af-536c-49a8-a782-2eeb973ed060",
+    "position_count":  1,
+    "open_order_count":  2,
+    "account_snapshot_status":  "EXISTING_ACCOUNT_STATE_REQUIRES_REVIEW",
+    "reconciliation_status":  "OK",
+    "controller_owner_count":  1,
+    "scanner_health":  "RUNNING",
+    "controller_health":  "RUNNING",
+    "controller_cycle_count":  357,
+    "session_state":  "ACTIVE",
+    "paper_status":  "ACTIVE",
+    "ledger_valid":  true,
+    "mainnet":  false,
+    "real_money":  false,
+    "auto_send":  true,
+    "auto_send_env":  true,
+    "block_reasons":  [
+                          "existing_position_or_order"
+                      ],
+    "protection_status":  "UNVERIFIED",
+    "current_position_symbol":  "BTCUSDT",
+    "current_position_size":  0.026,
+    "deployment_gate":  "HOLD_FOR_OPEN_EXPOSURE",
+    "merge":  false,
+    "deploy":  false,
+    "note":  "Founder gate requires position_count=0 and open_order_count=0; must NOT manually close/cancel."
+}
