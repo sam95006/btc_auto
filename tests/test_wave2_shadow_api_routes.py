@@ -5,9 +5,11 @@ import pytest
 from flask import Flask
 
 from backend.nexus_global_shadow.api_routes import (
+    EMPTY_FUNNEL,
     FIXTURE_LABELS,
     READ_ONLY_META,
     dispatch_route,
+    enable_explicit_fixture_mode,
     register_shadow_routes,
     reset_shadow_api_state,
 )
@@ -53,18 +55,46 @@ class TestShadowApiDispatch:
             assert out["exchange_write"] is False
             assert out["mainnet"] is False
             assert out["real_money"] is False
-            for label in FIXTURE_LABELS:
-                assert label in out["labels"]
+            assert "SHADOW" in out["labels"]
+            assert "NO_EXCHANGE_WRITE" in out["labels"]
 
-    def test_param_routes(self):
+    def test_product_overview_is_no_data_not_synthetic(self):
+        out = dispatch_route("/api/nexus/shadow/overview")
+        assert out["data_status"] == "NO_DATA"
+        assert out["data_source"] == "NONE"
+        assert out["funnel"] == EMPTY_FUNNEL
+        assert out["funnel"]["marketsScanned"] == 0
+        assert out["freshness"] == "UNAVAILABLE"
+        assert out["providerStatus"] == "NOT_CONNECTED"
+        assert "FIXTURE" not in out["labels"]
+        assert "SYNTHETIC_TEST_DATA" not in out["labels"]
+
+    def test_fixture_only_when_explicit(self):
+        enable_explicit_fixture_mode(True)
+        out = dispatch_route("/api/nexus/shadow/overview")
+        assert out["data_status"] == "FIXTURE"
+        assert out["funnel"]["marketsScanned"] == 128
+        for label in FIXTURE_LABELS:
+            assert label in out["labels"]
+
+        dedicated = dispatch_route("/api/nexus/shadow/fixture/overview")
+        assert dedicated["data_status"] == "FIXTURE"
+        assert "SYNTHETIC_TEST_DATA" in dedicated["labels"]
+
+    def test_param_routes_no_default_fixture(self):
         out = dispatch_route("/api/nexus/shadow/markets/BTCUSDT")
-        assert out["market"]["symbol"] == "BTCUSDT"
+        assert out.get("ok") is False
+        assert out["error"] == "not_found"
+        assert out["data_status"] == "NO_DATA"
 
         out = dispatch_route("/api/nexus/shadow/candidates/fixture_cand_001")
-        assert out["candidate"]["candidate_id"] == "fixture_cand_001"
+        assert out.get("ok") is False
+        assert out["data_status"] == "NO_DATA"
 
-        out = dispatch_route("/api/nexus/shadow/reviews/fixture_cand_001")
-        assert out["review"]["candidate_id"] == "fixture_cand_001"
+        enable_explicit_fixture_mode(True)
+        out = dispatch_route("/api/nexus/shadow/candidates/fixture_cand_001")
+        assert out["candidate"]["candidate_id"] == "fixture_cand_001"
+        assert "SYNTHETIC_TEST_DATA" in out["labels"]
 
         out = dispatch_route("/api/nexus/shadow/evidence/fixture_evidence_001")
         assert out["evidence"]["record_id"] == "fixture_evidence_001"
@@ -83,59 +113,71 @@ class TestShadowFlaskRoutes:
         assert res.status_code == 200
         data = res.get_json()
         assert data["read_only"] is True
-        assert "funnel" in data
+        assert data["data_status"] == "NO_DATA"
+        assert data["funnel"]["marketsScanned"] == 0
         assert data["maxOpenPositions"] == 2
+
+    def test_fixture_overview_endpoint(self, client):
+        res = client.get("/api/nexus/shadow/fixture/overview")
+        assert res.status_code == 200
+        data = res.get_json()
+        assert data["data_status"] == "FIXTURE"
+        assert data["funnel"]["marketsScanned"] == 128
+        assert "SYNTHETIC_TEST_DATA" in data["labels"]
 
     def test_universe_endpoints(self, client):
         res = client.get("/api/nexus/shadow/universe")
         assert res.status_code == 200
-        assert res.get_json()["count"] >= 1
+        body = res.get_json()
+        assert body["count"] == 0
+        assert body["data_status"] == "NO_DATA"
 
         res = client.get("/api/nexus/shadow/universe/latest")
         assert res.status_code == 200
-        assert "totalMarkets" in res.get_json()
+        latest = res.get_json()
+        assert latest["totalMarkets"] == 0
+        assert latest["providerStatus"] == "NOT_CONNECTED"
 
     def test_markets_endpoints(self, client):
         res = client.get("/api/nexus/shadow/markets")
         assert res.status_code == 200
-        assert res.get_json()["count"] >= 1
+        assert res.get_json()["count"] == 0
 
         res = client.get("/api/nexus/shadow/markets/BTCUSDT")
         assert res.status_code == 200
-        assert res.get_json()["symbol"] == "BTCUSDT"
+        assert res.get_json()["error"] == "not_found"
 
     def test_candidates_reviews_risk(self, client):
         res = client.get("/api/nexus/shadow/candidates")
         assert res.status_code == 200
+        assert res.get_json()["count"] == 0
 
         res = client.get("/api/nexus/shadow/candidates/fixture_cand_001")
         assert res.status_code == 200
+        assert res.get_json()["error"] == "not_found"
 
         res = client.get("/api/nexus/shadow/reviews")
         assert res.status_code == 200
-
-        res = client.get("/api/nexus/shadow/reviews/fixture_cand_001")
-        assert res.status_code == 200
+        assert res.get_json()["count"] == 0
 
         res = client.get("/api/nexus/shadow/risk-verdicts")
         assert res.status_code == 200
+        assert res.get_json()["count"] == 0
 
     def test_portfolio_positions_outcomes(self, client):
         res = client.get("/api/nexus/shadow/portfolio")
         assert res.status_code == 200
-        assert res.get_json()["maxOpenPositions"] == 2
+        data = res.get_json()
+        assert data["maxOpenPositions"] == 2
+        assert data["count"] == 0
+        assert data["data_status"] == "NO_DATA"
 
         res = client.get("/api/nexus/shadow/positions")
         assert res.status_code == 200
 
         res = client.get("/api/nexus/shadow/outcomes")
         assert res.status_code == 200
-
-        res = client.get("/api/nexus/shadow/reflections")
-        assert res.status_code == 200
-
-        res = client.get("/api/nexus/shadow/learning-patches")
-        assert res.status_code == 200
+        assert res.get_json()["count"] == 0
 
     def test_replay_evidence_workers(self, client):
         res = client.get("/api/nexus/shadow/replay/status")
@@ -143,6 +185,7 @@ class TestShadowFlaskRoutes:
 
         res = client.get("/api/nexus/shadow/evidence/fixture_evidence_001")
         assert res.status_code == 200
+        assert res.get_json()["error"] == "not_found"
 
         res = client.get("/api/nexus/shadow/workers/health")
         assert res.status_code == 200
@@ -151,3 +194,4 @@ class TestShadowFlaskRoutes:
     def test_read_only_meta_constant(self):
         assert READ_ONLY_META["read_only"] is True
         assert READ_ONLY_META["exchange_write"] is False
+        assert "FIXTURE" not in READ_ONLY_META["labels"]

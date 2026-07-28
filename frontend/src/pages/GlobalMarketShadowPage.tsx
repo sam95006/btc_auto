@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { DemoDataBadge } from "../components/DemoDataBadge";
 import { OperatorBreadcrumbs } from "../components/OperatorBreadcrumbs";
 import { StatusBadge } from "../components/StatusBadge";
 
@@ -24,16 +23,20 @@ interface ShadowOverviewResponse {
   funnel?: ShadowFunnel;
   maxOpenPositions?: number;
   dataSource?: string;
+  data_source?: string;
+  data_status?: string;
+  freshness?: string;
+  providerStatus?: string;
 }
 
-const FIXTURE_FUNNEL: ShadowFunnel = {
-  marketsScanned: 128,
-  marketsEligible: 24,
-  candidatesGenerated: 6,
-  sixRoleReviewed: 4,
-  riskCriticPassed: 2,
-  riskCriticBlocked: 2,
-  portfolioSelected: 1,
+const EMPTY_FUNNEL: ShadowFunnel = {
+  marketsScanned: 0,
+  marketsEligible: 0,
+  candidatesGenerated: 0,
+  sixRoleReviewed: 0,
+  riskCriticPassed: 0,
+  riskCriticBlocked: 0,
+  portfolioSelected: 0,
   openShadowPositions: 0,
 };
 
@@ -64,9 +67,15 @@ const FUNNEL_STEPS: { key: keyof ShadowFunnel; label: string }[] = [
   { key: "portfolioSelected", label: "Portfolio" },
 ];
 
+function formatFunnelValue(status: string | undefined, value: number): string {
+  if (status === "NO_DATA" || status === undefined) {
+    return value === 0 ? "0 · NO_DATA" : String(value);
+  }
+  return String(value);
+}
+
 export function GlobalMarketShadowPage() {
   const [overview, setOverview] = useState<ShadowOverviewResponse | null>(null);
-  const [usingFixture, setUsingFixture] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -78,12 +87,10 @@ export function GlobalMarketShadowPage() {
         const data = (await res.json()) as ShadowOverviewResponse;
         if (!alive) return;
         setOverview(data);
-        setUsingFixture(data.dataSource === "fixture" || !data.funnel);
         setLoadError(null);
       } catch (err) {
         if (!alive) return;
         setOverview(null);
-        setUsingFixture(true);
         setLoadError(err instanceof Error ? err.message : "fetch_failed");
       }
     })();
@@ -92,8 +99,11 @@ export function GlobalMarketShadowPage() {
     };
   }, []);
 
-  const funnel = overview?.funnel ?? FIXTURE_FUNNEL;
+  const funnel = overview?.funnel ?? EMPTY_FUNNEL;
   const maxPositions = overview?.maxOpenPositions ?? 2;
+  const dataStatus = overview?.data_status ?? (loadError ? "UNAVAILABLE" : "NO_DATA");
+  const dataSource = overview?.data_source ?? overview?.dataSource ?? "NONE";
+  const isNoData = dataStatus === "NO_DATA" || dataStatus === "UNAVAILABLE" || dataSource === "NONE";
 
   return (
     <div className="page-stack">
@@ -108,15 +118,13 @@ export function GlobalMarketShadowPage() {
         <StatusBadge tone="hold">SHADOW ONLY</StatusBadge>
         <StatusBadge tone="blocked">NO EXCHANGE WRITE</StatusBadge>
         <StatusBadge tone="wait">NOT REAL MONEY</StatusBadge>
-        {usingFixture ? <DemoDataBadge /> : null}
+        {isNoData ? <StatusBadge tone="wait">NO_DATA</StatusBadge> : null}
         <p className="page-sub">
           Global market six-role shadow funnel · max {maxPositions} open positions · read-only
           intelligence · NOT EXECUTED · NOT INVESTMENT ADVICE
         </p>
         {loadError ? (
-          <p className="muted sm">
-            API unavailable ({loadError}) — showing FIXTURE demo numbers.
-          </p>
+          <p className="muted sm">API unavailable ({loadError}) — showing NO_DATA empty state.</p>
         ) : null}
       </header>
 
@@ -144,12 +152,20 @@ export function GlobalMarketShadowPage() {
             <div className="v">{maxPositions}</div>
           </div>
           <div className="flag-item">
-            <div className="k">labels</div>
-            <div className="v">FIXTURE · NOT_LIVE · NOT_EXECUTED</div>
+            <div className="k">data status</div>
+            <div className="v">{dataStatus}</div>
           </div>
           <div className="flag-item">
             <div className="k">data source</div>
-            <div className="v">{usingFixture ? "FIXTURE" : overview?.dataSource ?? "live_state"}</div>
+            <div className="v">{dataSource}</div>
+          </div>
+          <div className="flag-item">
+            <div className="k">freshness</div>
+            <div className="v">{overview?.freshness ?? "UNAVAILABLE"}</div>
+          </div>
+          <div className="flag-item">
+            <div className="k">provider</div>
+            <div className="v">{overview?.providerStatus ?? "NOT_CONNECTED"}</div>
           </div>
         </div>
       </section>
@@ -157,13 +173,13 @@ export function GlobalMarketShadowPage() {
       <section className="panel-card dense-card">
         <div className="meta-row" style={{ marginTop: 0 }}>
           <h3 style={{ margin: 0 }}>Shadow funnel</h3>
-          {usingFixture ? <DemoDataBadge /> : null}
+          {isNoData ? <StatusBadge tone="wait">NO_DATA · NOT SYNTHETIC</StatusBadge> : null}
         </div>
         <div className="flag-grid">
           {FUNNEL_STEPS.map((step) => (
             <div className="flag-item" key={step.key}>
               <div className="k">{step.label}</div>
-              <div className="v">{funnel[step.key]}</div>
+              <div className="v">{formatFunnelValue(dataStatus, funnel[step.key])}</div>
             </div>
           ))}
           <div className="flag-item">
