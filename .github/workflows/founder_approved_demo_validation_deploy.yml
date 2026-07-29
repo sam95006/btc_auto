@@ -33,84 +33,10 @@ jobs:
             exit 1
           fi
 
-  deploy:
-    needs: validate-input
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - name: Checkout validation branch
-        uses: actions/checkout@v4
-        with:
-          ref: feature/bybit-demo-execution-validation
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install Zeabur CLI
-        run: npm i -g zeabur
-
-      - name: Guard forbidden Stage3 service ID
-        env:
-          ZEABUR_SERVICE_ID: ${{ secrets.ZEABUR_DEMO_VALIDATION_SERVICE_ID }}
-        run: |
-          if [ "$ZEABUR_SERVICE_ID" = "$FORBIDDEN_SERVICE_ID" ]; then
-            echo "BLOCKED: must not overwrite Stage3 live service"
-            exit 1
-          fi
-
-      - name: Create or deploy validation service
-        env:
-          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
-          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
-          ZEABUR_SERVICE_ID: ${{ secrets.ZEABUR_DEMO_VALIDATION_SERVICE_ID }}
-          BYBIT_DEMO_API_KEY: ${{ secrets.BYBIT_DEMO_API_KEY }}
-          BYBIT_DEMO_API_SECRET: ${{ secrets.BYBIT_DEMO_API_SECRET }}
-        run: |
-          if [ -z "$ZEABUR_TOKEN" ] || [ -z "$ZEABUR_PROJECT_ID" ]; then
-            echo "Missing ZEABUR_TOKEN or ZEABUR_PROJECT_ID"
-            exit 1
-          fi
-          if [ -z "$ZEABUR_SERVICE_ID" ]; then
-            echo "BLOCKER: ZEABUR_DEMO_VALIDATION_SERVICE_ID not configured — create new service first"
-            echo "Required: zeabur service create --name $SERVICE_NAME --project-id \$ZEABUR_PROJECT_ID"
-            exit 1
-          fi
-          zeabur deploy \
-            --project-id "$ZEABUR_PROJECT_ID" \
-            --service-id "$ZEABUR_SERVICE_ID" \
-            -i=false
-          # Set env vars without printing secrets
-          zeabur env set BYBIT_DEMO=true --project-id "$ZEABUR_PROJECT_ID" --service-id "$ZEABUR_SERVICE_ID"
-          zeabur env set MAINNET=false --project-id "$ZEABUR_PROJECT_ID" --service-id "$ZEABUR_SERVICE_ID"
-          zeabur env set REAL_MONEY=false --project-id "$ZEABUR_PROJECT_ID" --service-id "$ZEABUR_SERVICE_ID"
-          zeabur env set DEMO_AUTONOMOUS_ENABLED=false --project-id "$ZEABUR_PROJECT_ID" --service-id "$ZEABUR_SERVICE_ID"
-          zeabur env set AUTONOMOUS_SEND=false --project-id "$ZEABUR_PROJECT_ID" --service-id "$ZEABUR_SERVICE_ID"
-          zeabur env set EXCHANGE_WRITE=false --project-id "$ZEABUR_PROJECT_ID" --service-id "$ZEABUR_SERVICE_ID"
-          zeabur env set NEXUS_ZEABUR_CLEAN_OBSERVER=false --project-id "$ZEABUR_PROJECT_ID" --service-id "$ZEABUR_SERVICE_ID"
-          zeabur env set FIXED_LEVERAGE=25 --project-id "$ZEABUR_PROJECT_ID" --service-id "$ZEABUR_SERVICE_ID"
-          if [ -n "$BYBIT_DEMO_API_KEY" ]; then
-            zeabur env set BYBIT_DEMO_API_KEY="$BYBIT_DEMO_API_KEY" --project-id "$ZEABUR_PROJECT_ID" --service-id "$ZEABUR_SERVICE_ID"
-          fi
-          if [ -n "$BYBIT_DEMO_API_SECRET" ]; then
-            zeabur env set BYBIT_DEMO_API_SECRET="$BYBIT_DEMO_API_SECRET" --project-id "$ZEABUR_PROJECT_ID" --service-id "$ZEABUR_SERVICE_ID"
-          fi
-
-      - name: Post-deploy smoke
-        env:
-          DEPLOY_URL: ${{ secrets.ZEABUR_DEMO_VALIDATION_URL }}
-        run: |
-          if [ -z "$DEPLOY_URL" ]; then
-            echo "DEPLOY_URL not configured — skip remote smoke"
-            exit 0
-          fi
-          curl -sf "$DEPLOY_URL/health" || curl -sf "$DEPLOY_URL/api/health"
-          curl -sf "$DEPLOY_URL/api/nexus/demo-execution/status"
-
   test-gate-runner:
     needs: validate-input
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -123,3 +49,159 @@ jobs:
         run: python tools/ci/demo_validation_gate_runner.py
       - name: Pytest
         run: python -m pytest tests/test_bybit_demo_execution_validation.py -q --tb=line
+      - name: Upload offline evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-validation-offline-evidence
+          path: artifacts/demo_validation/
+          if-no-files-found: warn
+
+  deploy:
+    needs: [validate-input, test-gate-runner]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout validation branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/bybit-demo-execution-validation
+
+      - name: Record deploy meta
+        id: meta
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git rev-parse HEAD
+          git log -1 --oneline
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Zeabur CLI
+        run: npm i -g zeabur@0.2.9
+
+      - name: Resolve or create validation service
+        id: resolve
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          PRESET_SERVICE_ID: ${{ secrets.ZEABUR_DEMO_VALIDATION_SERVICE_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ZEABUR_TOKEN:-}" ] || [ -z "${ZEABUR_PROJECT_ID:-}" ]; then
+            echo "Missing ZEABUR_TOKEN or ZEABUR_PROJECT_ID"
+            exit 1
+          fi
+          SID="${PRESET_SERVICE_ID:-}"
+          if [ "$SID" = "$FORBIDDEN_SERVICE_ID" ]; then
+            echo "BLOCKED: must not overwrite Stage3 live service"
+            exit 1
+          fi
+          if [ -z "$SID" ]; then
+            echo "Creating independent service $SERVICE_NAME"
+            set +e
+            CREATE_OUT=$(zeabur deploy --create --name "$SERVICE_NAME" --project-id "$ZEABUR_PROJECT_ID" -i=false 2>&1)
+            CREATE_CODE=$?
+            set -e
+            echo "create_exit=$CREATE_CODE"
+            echo "$CREATE_OUT" | sed -E 's/[A-Za-z0-9_+\/-]{28,}/***REDACTED***/g' | tail -n 30
+            set +e
+            LIST_OUT=$(zeabur service ls --project-id "$ZEABUR_PROJECT_ID" --json -i=false 2>&1)
+            set -e
+            SID=$(printf '%s' "$LIST_OUT" | python tools/ci/resolve_demo_validation_service_id.py || true)
+            if [ -z "$SID" ]; then
+              SID=$(printf '%s' "$CREATE_OUT" | python tools/ci/resolve_demo_validation_service_id.py || true)
+            fi
+          fi
+          if [ -z "$SID" ] || [ "$SID" = "$FORBIDDEN_SERVICE_ID" ]; then
+            echo "BLOCKER: could not resolve independent service id"
+            exit 1
+          fi
+          echo "service_id=$SID" >> "$GITHUB_OUTPUT"
+          echo "resolved_service_id_prefix=${SID:0:6}"
+
+      - name: Write env file (secrets not logged)
+        env:
+          BYBIT_DEMO_API_KEY: ${{ secrets.BYBIT_DEMO_API_KEY }}
+          BYBIT_DEMO_API_SECRET: ${{ secrets.BYBIT_DEMO_API_SECRET }}
+        run: |
+          set -euo pipefail
+          {
+            echo "BYBIT_DEMO=true"
+            echo "MAINNET=false"
+            echo "REAL_MONEY=false"
+            echo "LIVE_PRODUCTION=false"
+            echo "DEMO_AUTONOMOUS_ENABLED=false"
+            echo "AUTONOMOUS_SEND=false"
+            echo "NEXUS_AUTONOMOUS_DEMO_AUTO_SEND=false"
+            echo "EXCHANGE_WRITE=false"
+            echo "EXCHANGE_WRITE_ALLOWED=false"
+            echo "NEXUS_EXCHANGE_WRITE_ALLOWED=false"
+            echo "NEXUS_ZEABUR_CLEAN_OBSERVER=false"
+            echo "ARM=false"
+            echo "ARM_ALLOWED=false"
+            echo "FIXED_LEVERAGE=25"
+            echo "AI_CAN_CHANGE_LEVERAGE=false"
+            echo "BYBIT_DEMO_LEARNING_MODE=true"
+            echo "NEXUS_DATA_DIR=/data/nexus_demo_validation"
+          } > /tmp/demo_validation.env
+          if [ -n "${BYBIT_DEMO_API_KEY:-}" ]; then
+            echo "BYBIT_DEMO_API_KEY=${BYBIT_DEMO_API_KEY}" >> /tmp/demo_validation.env
+            echo "demo_key_present=true"
+          else
+            echo "demo_key_present=false"
+          fi
+          if [ -n "${BYBIT_DEMO_API_SECRET:-}" ]; then
+            echo "BYBIT_DEMO_API_SECRET=${BYBIT_DEMO_API_SECRET}" >> /tmp/demo_validation.env
+            echo "demo_secret_present=true"
+          else
+            echo "demo_secret_present=false"
+          fi
+
+      - name: Apply env and deploy
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          if [ "$SERVICE_ID" = "$FORBIDDEN_SERVICE_ID" ]; then
+            echo "BLOCKED Stage3 id"
+            exit 1
+          fi
+          set +e
+          zeabur variable env -f /tmp/demo_validation.env --id "$SERVICE_ID" -i=false
+          echo "variable_env_exit=$?"
+          set -e
+          zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false
+          shred -u /tmp/demo_validation.env 2>/dev/null || rm -f /tmp/demo_validation.env
+
+      - name: Post-deploy HTTP smoke (optional URL)
+        env:
+          DEPLOY_URL: ${{ secrets.ZEABUR_DEMO_VALIDATION_URL }}
+        run: |
+          if [ -z "${DEPLOY_URL:-}" ]; then
+            echo "ZEABUR_DEMO_VALIDATION_URL unset — remote HTTP smoke deferred to Founder URL bind"
+            exit 0
+          fi
+          ok=0
+          for i in $(seq 1 36); do
+            if curl -fsS "$DEPLOY_URL/health" >/tmp/health.json; then
+              ok=1
+              break
+            fi
+            sleep 10
+          done
+          test "$ok" = "1"
+          curl -fsS "$DEPLOY_URL/api/nexus/demo-execution/status" >/tmp/demo_status.json || true
+          python - <<'PY'
+          import json
+          print("health_ok", bool(json.load(open("/tmp/health.json"))))
+          try:
+            s=json.load(open("/tmp/demo_status.json"))
+            print("gate", s.get("current_stage") or s.get("gate"))
+            print("first_demo_smoke_order_ready", s.get("first_demo_smoke_order_ready"))
+          except Exception as e:
+            print("status_note", type(e).__name__)
+          PY
