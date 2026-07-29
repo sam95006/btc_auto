@@ -4,7 +4,7 @@
   "base_branch": "feature/wave4-product-ui-intelligence",
   "actual_base_sha": "dfbaa61b0e26acd2b0de218e003c40a101e1286d",
   "ci_green_head_sha": "02426d9a277816bbd70b9a404494e2af09674696",
-  "actual_head_sha": "02426d9a277816bbd70b9a404494e2af09674696",
+  "actual_head_sha": "6c992f5fda533549ff23e28ead0b210b04f2f897",
   "head_update_note": "Freeze docs commit 將使 PR Head 前進；以推送後 GitHub Head 為準並回寫。",
   "historical_intermediate_commits": [
     {
@@ -21,7 +21,7 @@
   "draft_pr": 5,
   "draft_pr_url": "https://github.com/sam95006/btc_auto/pull/5",
   "commits_approx": 15,
-  "checkpoint_at": "2026-07-29T09:30:00+08:00",
+  "checkpoint_at": "2026-07-29T09:40:00+08:00",
   "status": "SCOPE_FROZEN_DRAFT_READY",
   "recommendation": "WAVE5_REAL_PUBLIC_SHADOW_DRAFT_PR_READY_FOR_REVIEW",
   "pr5_scope_frozen": true,
@@ -101,7 +101,9 @@
     "test_file": "tests/test_wave5_real_public_shadow_runtime.py"
   },
   "ci_workflow": ".github/workflows/wave5_real_public_shadow_runtime_validation.yml",
-  "freeze_allows": ["docs-only CI evidence update"],
+  "freeze_allows": [
+    "docs-only CI evidence update"
+  ],
   "freeze_forbids": [
     "wave6_features",
     "exchange_write",
@@ -117,5 +119,6 @@
     "axe_color_contrast_exclusions",
     "axe_tablist_exclusions",
     "quant_workbench_panel_reuse"
-  ]
+  ],
+  "freeze_commit_sha": "6c992f5fda533549ff23e28ead0b210b04f2f897"
 }
