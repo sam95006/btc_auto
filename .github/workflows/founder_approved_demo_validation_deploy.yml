@@ -108,6 +108,7 @@ jobs:
             exit 1
           fi
           echo "service_id=$SID" >> "$GITHUB_OUTPUT"
+          echo "resolved_service_id=$SID"
           echo "resolved_service_id_prefix=${SID:0:6}"
 
       - name: Apply env vars and deploy code
@@ -186,21 +187,28 @@ jobs:
         id: domain
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+          # BTC project production env (same as Stage3; new service shares project env)
+          ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
         run: |
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur context set project --id "$ZEABUR_PROJECT_ID" -y -i=false || true
           zeabur context set service --id "$SERVICE_ID" -y -i=false || true
           set +e
-          zeabur domain list --json -i=false > /tmp/dom_out.txt 2>&1
+          zeabur domain list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/dom_out.txt 2>&1
           set -e
           sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/dom_out.txt | tail -n 20
           URL=$(python tools/ci/extract_zeabur_app_url.py < /tmp/dom_out.txt || true)
           if [ -z "$URL" ]; then
             set +e
-            zeabur domain create --service-id "$SERVICE_ID" -i=false --json > /tmp/dom_create.txt 2>&1
+            # Generated temp domain: --id service, --env-id, -g
+            zeabur domain create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -g -y -i=false --json > /tmp/dom_create.txt 2>&1
+            CREATE_CODE=$?
             set -e
-            sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/dom_create.txt | tail -n 30
+            echo "domain_create_exit=$CREATE_CODE"
+            sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/dom_create.txt | tail -n 40
             URL=$(python tools/ci/extract_zeabur_app_url.py < /tmp/dom_create.txt || true)
           fi
           if [ -n "$URL" ]; then

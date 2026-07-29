@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 
 from backend.nexus_demo_execution import (
     BYBIT_DEMO,
@@ -20,7 +21,7 @@ from backend.nexus_demo_execution import (
     SERVICE_NAME,
 )
 from backend.nexus_demo_execution.account_epoch import AccountEpochTracker
-from backend.nexus_demo_execution.account_reader import FakeDemoAccountReader
+from backend.nexus_demo_execution.account_reader import BybitDemoAccountReader, FakeDemoAccountReader
 from backend.nexus_demo_execution.allocation import MarginAllocator
 from backend.nexus_demo_execution.capital_constitution import CapitalConstitution
 from backend.nexus_demo_execution.demo_domain import DemoDomainPolicy
@@ -31,6 +32,25 @@ from backend.nexus_demo_execution.persistence import DemoExecutionPersistence
 from backend.nexus_demo_execution.safety_gate import DemoExecutionSafetyGate
 
 logger = logging.getLogger(__name__)
+
+
+def _data_root() -> Path:
+    root = Path(os.environ.get("NEXUS_DATA_DIR") or "data/nexus_demo_validation")
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+def _build_live_or_fake_reader() -> BybitDemoAccountReader:
+    """Prefer live Bybit Demo private GET when credentials are present."""
+    key = (os.environ.get("BYBIT_DEMO_API_KEY") or "").strip()
+    secret = (os.environ.get("BYBIT_DEMO_API_SECRET") or "").strip()
+    if key and secret:
+        from backend.nexus_demo_execution.http_demo_reader import HttpDemoAccountReader
+
+        logger.info("demo_account_reader=HttpDemoAccountReader demo_key_present=true")
+        return HttpDemoAccountReader(api_key=key, api_secret=secret)
+    logger.warning("demo_account_reader=FakeDemoAccountReader credential_missing=true")
+    return FakeDemoAccountReader()
 
 READ_ONLY_META = {
     "read_only": True,
@@ -56,41 +76,43 @@ class DemoExecutionApiState:
         self.epoch_tracker = AccountEpochTracker()
         self.order_adapter = DemoOrderAdapter(gate=self.gate)
         self.persistence = DemoExecutionPersistence(
-            db_path=Path("data/demo_execution/validation.sqlite3"),
+            db_path=_data_root() / "validation.sqlite3",
         )
         self._last_cycle_result: dict[str, Any] | None = None
         self._orchestrator: DemoValidationOrchestrator | None = None
 
-    def _build_orchestrator(self, reader: FakeDemoAccountReader | None = None) -> DemoValidationOrchestrator:
+    def _build_orchestrator(self, reader: BybitDemoAccountReader | None = None) -> DemoValidationOrchestrator:
         return DemoValidationOrchestrator(
             gate=self.gate,
-            reader=reader or FakeDemoAccountReader(),
+            reader=reader or _build_live_or_fake_reader(),
             persistence=self.persistence,
             epoch_tracker=self.epoch_tracker,
             order_adapter=self.order_adapter,
             kill_switch=self.kill_switch,
-            export_dir=Path("artifacts/demo_validation"),
+            export_dir=_data_root() / "artifacts" / "demo_validation",
         )
 
-    def run_readonly_cycle(self, reader: FakeDemoAccountReader | None = None) -> dict[str, Any]:
-        """Safe readonly cycle — no exchange writes."""
+    def run_readonly_cycle(self, reader: BybitDemoAccountReader | None = None) -> dict[str, Any]:
+        """Safe readonly cycle — no exchange writes. Uses live Demo private GET when keyed."""
         if reader is None:
-            reader = FakeDemoAccountReader()
-            from backend.nexus_demo_execution.account_reader import DemoAccountSnapshot
+            reader = _build_live_or_fake_reader()
+            if isinstance(reader, FakeDemoAccountReader):
+                from backend.nexus_demo_execution.account_reader import DemoAccountSnapshot
 
-            reader.set_snapshot(
-                DemoAccountSnapshot(
-                    wallet_balance=200.0,
-                    equity=200.0,
-                    available_balance=180.0,
-                    margin_balance=200.0,
-                    used_margin=20.0,
-                    unrealized_pnl=0.0,
-                    realized_pnl=0.0,
-                    open_positions=[],
-                    open_orders=[],
+                # Offline fallback only — never used as capital source when live keys exist.
+                reader.set_snapshot(
+                    DemoAccountSnapshot(
+                        wallet_balance=0.0,
+                        equity=0.0,
+                        available_balance=0.0,
+                        margin_balance=0.0,
+                        used_margin=0.0,
+                        unrealized_pnl=0.0,
+                        realized_pnl=0.0,
+                        open_positions=[],
+                        open_orders=[],
+                    )
                 )
-            )
         orch = self._build_orchestrator(reader)
         self._orchestrator = orch
         result = orch.run_readonly_cycle()
@@ -207,24 +229,8 @@ def register_demo_execution_routes(app: Flask) -> None:
 
     @app.route("/api/nexus/demo-execution/run-readonly-cycle", methods=["GET", "POST"])
     def demo_execution_run_readonly_cycle():
-        """Trigger safe readonly validation cycle — no exchange write."""
-        from backend.nexus_demo_execution.account_reader import DemoAccountSnapshot
-
-        reader = FakeDemoAccountReader()
-        reader.set_snapshot(
-            DemoAccountSnapshot(
-                wallet_balance=200.0,
-                equity=200.0,
-                available_balance=180.0,
-                margin_balance=200.0,
-                used_margin=20.0,
-                unrealized_pnl=0.0,
-                realized_pnl=0.0,
-                open_positions=[],
-                open_orders=[],
-            )
-        )
-        result = _STATE.run_readonly_cycle(reader)
+        """Trigger safe readonly validation cycle — live Demo GET when keyed; never exchange write."""
+        result = _STATE.run_readonly_cycle()
         return jsonify(_wrap({"cycle": result}))
 
     logger.info("demo_execution_routes_registered")

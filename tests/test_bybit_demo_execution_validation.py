@@ -555,10 +555,25 @@ class TestApiRoutes:
         assert payload["exchange_write_call_count"] == 0
 
     def test_run_readonly_cycle_endpoint_state(self, tmp_path, monkeypatch):
+        from backend.nexus_demo_execution.account_reader import DemoAccountSnapshot, FakeDemoAccountReader
         from backend.nexus_demo_execution.api_routes import DemoExecutionApiState
 
         state = DemoExecutionApiState()
         monkeypatch.setattr(state, "persistence", DemoExecutionPersistence(db_path=tmp_path / "api.sqlite3"))
-        result = state.run_readonly_cycle()
+        reader = FakeDemoAccountReader()
+        reader.set_snapshot(
+            DemoAccountSnapshot(
+                wallet_balance=200.0,
+                equity=200.0,
+                available_balance=180.0,
+                margin_balance=200.0,
+                used_margin=20.0,
+                unrealized_pnl=0.0,
+                realized_pnl=0.0,
+                open_positions=[],
+                open_orders=[],
+            )
+        )
+        result = state.run_readonly_cycle(reader)
         assert result["success"] is True
         assert result["current_stage"] == ROUND_TERMINAL_STAGE.value
