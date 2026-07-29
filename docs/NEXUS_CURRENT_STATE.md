@@ -29,3 +29,11 @@
 ## 禁止
 
 Mainnet · Real Money · ARM · Exchange Write · Force Push · 平倉／改 TP-SL／Restart 為部署方便
+
+## PR #1 Deployment Window（Wave 5.1）
+
+- runtime_rc_head: `c2b3c95…`（不變）
+- docs_truth_head: `630e36e…`（僅文件）
+- Live triple 0/0: PASS
+- Recommendation: `PR1_DEPLOYMENT_READY_AWAITING_FOUNDER_APPROVAL`
+- merge=false · deploy=false · 等待 Founder 批准
