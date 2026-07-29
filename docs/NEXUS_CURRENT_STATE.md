@@ -11,12 +11,13 @@
 | #3 | `feature/wave3-adaptive-policy-learning` | `aa43d463…` | Frozen Draft |
 | #4 | `feature/wave4-product-ui-intelligence` | `dfbaa61b0e26acd2b0de218e003c40a101e1286d` | Frozen Draft · Wave4 UI 驗收完成 |
 
-## Wave 5（Draft PR #5 · CI Truth Reconciliation）
+## Wave 5（Draft PR #5 · Scope Frozen）
 
 - Branch：`feature/wave5-real-public-shadow-runtime`
 - Base：PR #4 Head `dfbaa61…`
-- 修復前 Head：`4b90e16…`（歷史中間 `b3031c…` 僅 docs checkpoint，非 PR Head）
-- Recommendation：**`WAVE5_REAL_PUBLIC_SHADOW_PARTIAL_WITH_CI_BLOCKERS`**（待 CI 全綠後才可 Freeze／Ready）
+- CI 全綠 Head：`02426d9…` · run `30413566548`
+- Recommendation：`WAVE5_REAL_PUBLIC_SHADOW_DRAFT_PR_READY_FOR_REVIEW`
+- `pr5_scope_frozen=true`（僅允許 docs-only CI evidence）
 - 固定：PUBLIC ONLY · SHADOW ONLY · NO WRITE · NO DEPLOY · NO MERGE
 
 ## Live（唯讀）
