@@ -16,6 +16,10 @@ STREAMS = frozenset(
         "outcomes",
         "reflections",
         "epochs",
+        "snapshots",
+        "dry_run_intents",
+        "protection_checks",
+        "gate_evidence",
     }
 )
 
