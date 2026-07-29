@@ -320,9 +320,11 @@ class TestVisualAcceptanceDocs:
 
     def test_checkpoint_recommendation_partial_or_ready(self):
         data = json.loads(CHECKPOINT_JSON.read_text(encoding="utf-8"))
+        # Canonical Wave 4 recommendation enum (no wildcards / deprecated aliases).
         assert data["recommendation"] in {
+            "WAVE4_PRODUCT_UI_DRAFT_PR_READY_FOR_REVIEW",
             "WAVE4_PRODUCT_UI_PARTIAL_WITH_VISUAL_VALIDATION_BLOCKERS",
-            "WAVE4_PRODUCT_UI_READY",
+            "BLOCKED_WAVE4_PRODUCT_UI",
         }
 
 

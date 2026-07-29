@@ -47,7 +47,7 @@
     "wave4_ci_run_id": 30328430921
   },
   "recommendation": "WAVE4_PRODUCT_UI_DRAFT_PR_READY_FOR_REVIEW",
-  "recommendation_notes_zh": "Wave 4.1 視覺驗收集就緒；待 Playwright e2e / visual / a11y 全綠與 PNG 擷取完成後可升級為 WAVE4_PRODUCT_UI_READY",
+  "recommendation_notes_zh": "Wave 4.1 視覺驗收完成並 Scope Freeze。Canonical recommendation enum：WAVE4_PRODUCT_UI_DRAFT_PR_READY_FOR_REVIEW｜WAVE4_PRODUCT_UI_PARTIAL_WITH_VISUAL_VALIDATION_BLOCKERS｜BLOCKED_WAVE4_PRODUCT_UI。舊別名 WAVE4_PRODUCT_UI_READY 已 deprecated，不得再作為正式狀態。",
   "live_effect": false,
   "exchange_write": false,
   "merge": false,
