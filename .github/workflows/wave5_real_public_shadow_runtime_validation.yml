@@ -102,10 +102,12 @@ jobs:
         run: npm ci --no-audit --no-fund
       - working-directory: frontend
         run: npm run typecheck
+      - working-directory: frontend
+        run: npm run build
 
   wave5-browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -116,16 +118,35 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -r requirements.txt
-      - working-directory: frontend
-        run: npm ci --no-audit --no-fund
-      - working-directory: frontend
-        run: npx playwright install --with-deps chromium
-      - name: Playwright wave4 regression (functional)
-        working-directory: frontend
-        run: npx playwright test --grep-invert "@visual|@a11y" --reporter=line
+      - name: Install Python deps (backend readiness)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Browser readiness + Playwright (fixture mode)
         env:
           CI: "true"
+          PUBLIC_MARKET_DATA_ONLY: "true"
+          BYBIT_PRIVATE_API: "false"
+          EXCHANGE_WRITE: "false"
+          AUTONOMOUS_SEND: "false"
+          MAINNET: "false"
+          REAL_MONEY: "false"
+          ARM: "false"
+          EXPLICIT_FIXTURE_MODE: "true"
+          NEXUS_ZEABUR_CLEAN_OBSERVER: "false"
+          FIXED_LEVERAGE: "25"
+          AI_CAN_CHANGE_LEVERAGE: "false"
+          PLAYWRIGHT_REUSE_SERVER: "1"
+        run: |
+          chmod +x tools/ci/wave5_browser_ready.sh
+          tools/ci/wave5_browser_ready.sh
+      - name: Upload server logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave5-browser-server-logs
+          path: artifacts/wave5/
+          if-no-files-found: ignore
 
   wave5-docker:
     runs-on: ubuntu-latest
