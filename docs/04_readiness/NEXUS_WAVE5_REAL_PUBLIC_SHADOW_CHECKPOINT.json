@@ -4,7 +4,7 @@
   "base_branch": "feature/wave4-product-ui-intelligence",
   "actual_base_sha": "dfbaa61b0e26acd2b0de218e003c40a101e1286d",
   "ci_green_head_sha": "02426d9a277816bbd70b9a404494e2af09674696",
-  "actual_head_sha": "50d6184202482908ba6cc471f2cc29ba7cd7f62d",
+  "actual_head_sha": "560fe5bc35e3dad613e638f3b918b9faaa9c43df",
   "historical_intermediate_commits": [
     {
       "sha": "b3031c675320e7c4fe046fe4dc442dcb795ca858",
@@ -120,5 +120,5 @@
     "quant_workbench_panel_reuse"
   ],
   "freeze_commit_sha": "6c992f5fda533549ff23e28ead0b210b04f2f897",
-  "authoritative_head_source": "github_pulls_api_at_freeze_report"
+  "authoritative_head_source": "git_rev_parse_after_pin_commit"
 }
