@@ -9,6 +9,7 @@ import {
 import { saveViewMode, type ViewMode } from "../market/viewPrefs";
 import { buildFunnelDisplay } from "../wave4/noDataFunnel";
 import { useMarketScannerOverview } from "../market/useMarketScanner";
+import { useRealShadowRuntime } from "../wave5/useRealShadowRuntime";
 
 const PRESET_LABEL: Record<ColumnPreset, string> = {
   SIMPLE: "簡易",
@@ -22,6 +23,7 @@ const PRESET_LABEL: Record<ColumnPreset, string> = {
 export function UniversePage() {
   const [preset, setPreset] = useState<ColumnPreset>(() => resolveColumnPreset());
   const { status, loading } = useMarketScannerOverview();
+  const { status: shadowRt, hasRealData: hasShadowRt } = useRealShadowRuntime();
 
   useEffect(() => {
     const onView = (e: Event) => {
@@ -33,16 +35,27 @@ export function UniversePage() {
     return () => window.removeEventListener("nexus-view-mode", onView);
   }, []);
 
-  const funnel = buildFunnelDisplay(
-    [
-      { key: "symbols", label: "標的", value: status?.symbolCount },
-      { key: "long", label: "做多", value: status?.longCandidates },
-      { key: "short", label: "做空", value: status?.shortCandidates },
-      { key: "confirmed", label: "確認", value: status?.confirmedCandidates },
-      { key: "highRisk", label: "高風險", value: status?.highRiskCandidates },
-    ],
-    Boolean(status) && !loading,
-  );
+  const funnel = hasShadowRt
+    ? buildFunnelDisplay(
+        [
+          { key: "symbols", label: "標的", value: shadowRt?.funnel?.marketsScanned },
+          { key: "eligible", label: "合格", value: shadowRt?.funnel?.marketsEligible },
+          { key: "candidates", label: "候選", value: shadowRt?.funnel?.candidatesGenerated },
+          { key: "sixRole", label: "六角色", value: shadowRt?.funnel?.sixRoleReviewed },
+          { key: "selected", label: "入選", value: shadowRt?.funnel?.portfolioSelected },
+        ],
+        true,
+      )
+    : buildFunnelDisplay(
+        [
+          { key: "symbols", label: "標的", value: status?.symbolCount },
+          { key: "long", label: "做多", value: status?.longCandidates },
+          { key: "short", label: "做空", value: status?.shortCandidates },
+          { key: "confirmed", label: "確認", value: status?.confirmedCandidates },
+          { key: "highRisk", label: "高風險", value: status?.highRiskCandidates },
+        ],
+        Boolean(status) && !loading,
+      );
 
   const applyPreset = (next: ColumnPreset) => {
     setPreset(next);
@@ -55,7 +68,9 @@ export function UniversePage() {
     <div className="page-stack nx-universe-w4">
       <header className="nx-ov-header">
         <h1 className="nx-page-title">全市場</h1>
-        <p className="muted sm">Universe · Shadow 觀察 · 非下單介面</p>
+        <p className="muted sm">
+          Universe · {hasShadowRt ? "PUBLIC MARKET DATA · REAL SHADOW" : "Shadow 觀察"} · 非下單介面
+        </p>
         <div className="nx-ov-meta">
           <Link to="/overview">← 總覽</Link>
           <Link to="/opportunities">機會</Link>
