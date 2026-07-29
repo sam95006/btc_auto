@@ -157,7 +157,6 @@ jobs:
           set_var AI_CAN_CHANGE_LEVERAGE false
           set_var BYBIT_DEMO_LEARNING_MODE true
           # Prefer writable ephemeral path until independent volume is attached.
-          # Soft-fallback in runtime still applies if this is unwritable.
           set_var NEXUS_DATA_DIR /tmp/nexus_demo_validation
           set_var NEXUS_WEB_ONLY true
           set_var NEXUS_EMBEDDED_WORKER false
@@ -179,13 +178,79 @@ jobs:
             echo "demo_secret_present=false"
           fi
 
+          # Assemble a Stage3-style self-contained context from repo root.
+          # Zeabur CLI PackZip uses CWD; monorepo-root zip was PREBUILT_V2 with
+          # Status=UNKNOWN and empty runtime logs. Keep the SAME service id.
+          CTX=/tmp/demo_validation_ctx
+          rm -rf "$CTX"
+          mkdir -p "$CTX"
+          cp -a app.py run.py gunicorn.conf.py requirements.txt zbpack.json "$CTX/"
+          cp -a Dockerfile "$CTX/Dockerfile"
+          cp -a backend "$CTX/backend"
+          cp -a config "$CTX/config"
+          cp -a static "$CTX/static"
+          cp -a templates "$CTX/templates"
+          mkdir -p "$CTX/tools"
+          cp -a tools/ci "$CTX/tools/ci"
+          cp -a deploy/zeabur_bybit_demo_validation/entrypoint.sh "$CTX/entrypoint.sh"
+          chmod +x "$CTX/entrypoint.sh"
+          # Prefer explicit gunicorn CMD; keep entrypoint available.
+          cat > "$CTX/Dockerfile" <<'DOCKER'
+          FROM python:3.11-slim-bookworm
+          ENV PYTHONDONTWRITEBYTECODE=1 \
+              PYTHONUNBUFFERED=1 \
+              BYBIT_DEMO=true \
+              MAINNET=false \
+              REAL_MONEY=false \
+              DEMO_AUTONOMOUS_ENABLED=false \
+              AUTONOMOUS_SEND=false \
+              EXCHANGE_WRITE=false \
+              NEXUS_WEB_ONLY=true \
+              NEXUS_EMBEDDED_WORKER=false \
+              NEXUS_DATA_DIR=/tmp/nexus_demo_validation \
+              PORT=8080
+          WORKDIR /app
+          RUN mkdir -p /tmp/nexus_demo_validation
+          COPY requirements.txt .
+          RUN pip install --no-cache-dir -r requirements.txt
+          COPY . .
+          RUN chmod +x entrypoint.sh || true
+          EXPOSE 8080
+          CMD ["/bin/sh", "./entrypoint.sh"]
+          DOCKER
+          # Fix heredoc leading spaces from YAML indentation
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/demo_validation_ctx/Dockerfile')
+          lines=p.read_text(encoding='utf-8').splitlines()
+          # strip common leading indent introduced by workflow YAML
+          cleaned=[]
+          for ln in lines:
+            cleaned.append(ln[10:] if ln.startswith('          ') else ln)
+          p.write_text('\n'.join(cleaned)+'\n', encoding='utf-8')
+          print('dockerfile_bytes', p.stat().st_size)
+          print(p.read_text(encoding='utf-8')[:400])
+          PY
+
           set +e
-          zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json > /tmp/deploy_out.txt 2>&1
+          (
+            cd "$CTX"
+            zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json
+          ) > /tmp/deploy_out.txt 2>&1
           DEPLOY_CODE=$?
           set -e
           echo "deploy_exit=$DEPLOY_CODE"
-          sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/deploy_out.txt | tail -n 40
+          echo "deploy_out_bytes=$(wc -c </tmp/deploy_out.txt)"
+          sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/deploy_out.txt | tail -n 80
           test "$DEPLOY_CODE" = "0"
+
+          set +e
+          zeabur service restart --id "$SERVICE_ID" --env-id 69d559b6474db8a99d6dd6bf -i=false >/tmp/restart_out.txt 2>&1
+          echo "restart_exit=$?"
+          sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/restart_out.txt | tail -n 20
+          set -e
+          # Give Zeabur time to pull/restart before smoke
+          sleep 45
 
       - name: Create temporary domain if missing
         id: domain
