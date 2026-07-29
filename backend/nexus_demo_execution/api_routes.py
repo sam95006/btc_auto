@@ -34,14 +34,60 @@ from backend.nexus_demo_execution.safety_gate import DemoExecutionSafetyGate
 logger = logging.getLogger(__name__)
 
 
-def _data_root() -> Path:
-    root = Path(os.environ.get("NEXUS_DATA_DIR") or "data/nexus_demo_validation")
-    root.mkdir(parents=True, exist_ok=True)
-    return root
+def _candidate_data_roots() -> list[Path]:
+    preferred = (os.environ.get("NEXUS_DATA_DIR") or "").strip()
+    roots: list[Path] = []
+    if preferred:
+        roots.append(Path(preferred))
+    roots.extend(
+        [
+            Path("data/nexus_demo_validation"),
+            Path("/tmp/nexus_demo_validation"),
+            Path("/app/data/nexus_demo_validation"),
+        ]
+    )
+    # de-dupe while preserving order
+    seen: set[str] = set()
+    out: list[Path] = []
+    for root in roots:
+        key = str(root)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(root)
+    return out
+
+
+def _probe_writable(root: Path) -> bool:
+    try:
+        root.mkdir(parents=True, exist_ok=True)
+        probe = root / ".write_test"
+        probe.write_text("ok", encoding="utf-8")
+        probe.unlink(missing_ok=True)
+        return True
+    except Exception as exc:  # noqa: BLE001 — startup must not crash on storage probe
+        logger.warning("data_root_unwritable path=%s err=%s", root, type(exc).__name__)
+        return False
+
+
+def _data_root() -> tuple[Path, bool]:
+    """Return (root, writable). Never raises — falls back to /tmp."""
+    for root in _candidate_data_roots():
+        if _probe_writable(root):
+            return root, True
+    fallback = Path("/tmp/nexus_demo_validation")
+    try:
+        fallback.mkdir(parents=True, exist_ok=True)
+    except Exception:  # noqa: BLE001
+        fallback = Path(".")
+    return fallback, False
 
 
 def _build_live_or_fake_reader() -> BybitDemoAccountReader:
-    """Prefer live Bybit Demo private GET when credentials are present."""
+    """Prefer live Bybit Demo private GET when credentials are present.
+
+    Never call Bybit at module import — only when explicitly constructing a reader.
+    """
     key = (os.environ.get("BYBIT_DEMO_API_KEY") or "").strip()
     secret = (os.environ.get("BYBIT_DEMO_API_SECRET") or "").strip()
     if key and secret:
@@ -51,6 +97,7 @@ def _build_live_or_fake_reader() -> BybitDemoAccountReader:
         return HttpDemoAccountReader(api_key=key, api_secret=secret)
     logger.warning("demo_account_reader=FakeDemoAccountReader credential_missing=true")
     return FakeDemoAccountReader()
+
 
 READ_ONLY_META = {
     "read_only": True,
@@ -75,13 +122,38 @@ class DemoExecutionApiState:
         self.allocator = MarginAllocator()
         self.epoch_tracker = AccountEpochTracker()
         self.order_adapter = DemoOrderAdapter(gate=self.gate)
-        self.persistence = DemoExecutionPersistence(
-            db_path=_data_root() / "validation.sqlite3",
-        )
+        data_root, writable = _data_root()
+        self.data_root = data_root
+        self.persistence_writable = writable
+        self.persistence_blocked = not writable
+        try:
+            self.persistence = DemoExecutionPersistence(
+                db_path=data_root / "validation.sqlite3",
+            )
+        except Exception as exc:  # noqa: BLE001 — keep web process alive
+            logger.error("persistence_init_failed err=%s", type(exc).__name__)
+            self.persistence_blocked = True
+            # Last-resort in-process path under /tmp
+            emergency = Path("/tmp/nexus_demo_validation_emergency")
+            emergency.mkdir(parents=True, exist_ok=True)
+            self.persistence = DemoExecutionPersistence(
+                db_path=emergency / "validation.sqlite3",
+            )
+            self.data_root = emergency
         self._last_cycle_result: dict[str, Any] | None = None
         self._orchestrator: DemoValidationOrchestrator | None = None
-
+        logger.info(
+            "demo_api_state_ready data_root=%s persistence_blocked=%s",
+            self.data_root,
+            self.persistence_blocked,
+        )
     def _build_orchestrator(self, reader: BybitDemoAccountReader | None = None) -> DemoValidationOrchestrator:
+        export_dir = self.data_root / "artifacts" / "demo_validation"
+        try:
+            export_dir.mkdir(parents=True, exist_ok=True)
+        except Exception:  # noqa: BLE001
+            export_dir = Path("/tmp/nexus_demo_validation/artifacts/demo_validation")
+            export_dir.mkdir(parents=True, exist_ok=True)
         return DemoValidationOrchestrator(
             gate=self.gate,
             reader=reader or _build_live_or_fake_reader(),
@@ -89,7 +161,7 @@ class DemoExecutionApiState:
             epoch_tracker=self.epoch_tracker,
             order_adapter=self.order_adapter,
             kill_switch=self.kill_switch,
-            export_dir=_data_root() / "artifacts" / "demo_validation",
+            export_dir=export_dir,
         )
 
     def run_readonly_cycle(self, reader: BybitDemoAccountReader | None = None) -> dict[str, Any]:
@@ -122,6 +194,9 @@ class DemoExecutionApiState:
 
     def status_payload(self) -> dict[str, Any]:
         gate_snap = self.gate.snapshot()
+        persistence = self.persistence.summary()
+        persistence["persistence_blocked"] = self.persistence_blocked
+        persistence["data_root"] = str(self.data_root)
         return {
             **READ_ONLY_META,
             "fixed_leverage": FIXED_LEVERAGE,
@@ -140,7 +215,7 @@ class DemoExecutionApiState:
             "kill_switch": self.kill_switch.snapshot(),
             "constitution": self.constitution.snapshot(),
             "domain": self.domain.summary(),
-            "persistence": self.persistence.summary(),
+            "persistence": persistence,
             "epoch": self.epoch_tracker.summary(),
             "order_adapter": self.order_adapter.counters(),
             "last_cycle": self._last_cycle_result,
@@ -171,10 +246,14 @@ class DemoExecutionApiState:
         return {"found": False}
 
 
-_STATE = DemoExecutionApiState()
+_STATE: DemoExecutionApiState | None = None
 
 
 def get_demo_execution_state() -> DemoExecutionApiState:
+    """Lazy init — never crash Flask import if storage probe fails."""
+    global _STATE
+    if _STATE is None:
+        _STATE = DemoExecutionApiState()
     return _STATE
 
 
@@ -190,47 +269,55 @@ def _wrap(data: dict[str, Any]) -> dict[str, Any]:
 
 def register_demo_execution_routes(app: Flask) -> None:
     """Register /api/nexus/demo-execution/* read-only routes."""
+    state = get_demo_execution_state()
 
     @app.route("/api/nexus/demo-execution/status")
     def demo_execution_status():
-        return jsonify(_wrap(_STATE.status_payload()))
+        return jsonify(_wrap(get_demo_execution_state().status_payload()))
 
     @app.route("/api/nexus/demo-execution/gate")
     def demo_execution_gate():
-        return jsonify(_wrap(_STATE.gate.snapshot()))
+        return jsonify(_wrap(get_demo_execution_state().gate.snapshot()))
 
     @app.route("/api/nexus/demo-execution/account")
     def demo_execution_account():
-        return jsonify(_wrap(_STATE.account_payload()))
+        return jsonify(_wrap(get_demo_execution_state().account_payload()))
 
     @app.route("/api/nexus/demo-execution/epoch")
     def demo_execution_epoch():
-        return jsonify(_wrap(_STATE.epoch_tracker.summary()))
+        return jsonify(_wrap(get_demo_execution_state().epoch_tracker.summary()))
 
     @app.route("/api/nexus/demo-execution/dry-run/latest")
     def demo_execution_dry_run_latest():
-        return jsonify(_wrap(_STATE.dry_run_latest()))
+        return jsonify(_wrap(get_demo_execution_state().dry_run_latest()))
 
     @app.route("/api/nexus/demo-execution/constitution")
     def demo_execution_constitution():
-        return jsonify(_wrap(_STATE.constitution.snapshot()))
+        return jsonify(_wrap(get_demo_execution_state().constitution.snapshot()))
 
     @app.route("/api/nexus/demo-execution/domain")
     def demo_execution_domain():
-        return jsonify(_wrap(_STATE.domain.summary()))
+        return jsonify(_wrap(get_demo_execution_state().domain.summary()))
 
     @app.route("/api/nexus/demo-execution/kill-switch")
     def demo_execution_kill_switch():
-        return jsonify(_wrap(_STATE.kill_switch.snapshot()))
+        return jsonify(_wrap(get_demo_execution_state().kill_switch.snapshot()))
 
     @app.route("/api/nexus/demo-execution/persistence")
     def demo_execution_persistence():
-        return jsonify(_wrap(_STATE.persistence.summary()))
+        st = get_demo_execution_state()
+        payload = st.persistence.summary()
+        payload["persistence_blocked"] = st.persistence_blocked
+        payload["data_root"] = str(st.data_root)
+        return jsonify(_wrap(payload))
 
     @app.route("/api/nexus/demo-execution/run-readonly-cycle", methods=["GET", "POST"])
     def demo_execution_run_readonly_cycle():
         """Trigger safe readonly validation cycle — live Demo GET when keyed; never exchange write."""
-        result = _STATE.run_readonly_cycle()
+        result = get_demo_execution_state().run_readonly_cycle()
         return jsonify(_wrap({"cycle": result}))
 
-    logger.info("demo_execution_routes_registered")
+    logger.info(
+        "demo_execution_routes_registered persistence_blocked=%s",
+        state.persistence_blocked,
+    )

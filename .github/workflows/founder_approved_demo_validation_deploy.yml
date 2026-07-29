@@ -156,7 +156,11 @@ jobs:
           set_var FIXED_LEVERAGE 25
           set_var AI_CAN_CHANGE_LEVERAGE false
           set_var BYBIT_DEMO_LEARNING_MODE true
-          set_var NEXUS_DATA_DIR /data/nexus_demo_validation
+          # Prefer writable ephemeral path until independent volume is attached.
+          # Soft-fallback in runtime still applies if this is unwritable.
+          set_var NEXUS_DATA_DIR /tmp/nexus_demo_validation
+          set_var NEXUS_WEB_ONLY true
+          set_var NEXUS_EMBEDDED_WORKER false
           set_var AUTO_SEND false
           set_var OBSERVER false
           set_var CLEAN24H false

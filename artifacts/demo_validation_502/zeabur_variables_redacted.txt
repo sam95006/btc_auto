@@ -1,0 +1,101 @@
+[
+  {
+    "key": "PORT",
+    "value": "${WEB_PORT}"
+  },
+  {
+    "key": "PASSWORD",
+    "present": true,
+    "value": "***REDACTED***"
+  },
+  {
+    "key": "BYBIT_DEMO",
+    "value": "true"
+  },
+  {
+    "key": "MAINNET",
+    "value": "false"
+  },
+  {
+    "key": "REAL_MONEY",
+    "value": "false"
+  },
+  {
+    "key": "LIVE_PRODUCTION",
+    "value": "false"
+  },
+  {
+    "key": "DEMO_AUTONOMOUS_ENABLED",
+    "value": "false"
+  },
+  {
+    "key": "AUTONOMOUS_SEND",
+    "value": "false"
+  },
+  {
+    "key": "NEXUS_AUTONOMOUS_DEMO_AUTO_SEND",
+    "value": "false"
+  },
+  {
+    "key": "EXCHANGE_WRITE",
+    "value": "false"
+  },
+  {
+    "key": "EXCHANGE_WRITE_ALLOWED",
+    "value": "false"
+  },
+  {
+    "key": "NEXUS_EXCHANGE_WRITE_ALLOWED",
+    "value": "false"
+  },
+  {
+    "key": "NEXUS_ZEABUR_CLEAN_OBSERVER",
+    "value": "false"
+  },
+  {
+    "key": "ARM",
+    "value": "false"
+  },
+  {
+    "key": "FIXED_LEVERAGE",
+    "value": "25"
+  },
+  {
+    "key": "AI_CAN_CHANGE_LEVERAGE",
+    "value": "false"
+  },
+  {
+    "key": "BYBIT_DEMO_LEARNING_MODE",
+    "value": "true"
+  },
+  {
+    "key": "NEXUS_DATA_DIR",
+    "value": "/data/nexus_demo_validation"
+  },
+  {
+    "key": "AUTO_SEND",
+    "value": "false"
+  },
+  {
+    "key": "OBSERVER",
+    "value": "false"
+  },
+  {
+    "key": "CLEAN24H",
+    "value": "false"
+  },
+  {
+    "key": "FORCE_PUSH",
+    "value": "false"
+  },
+  {
+    "key": "BYBIT_DEMO_API_KEY",
+    "present": true,
+    "value": "***REDACTED***"
+  },
+  {
+    "key": "BYBIT_DEMO_API_SECRET",
+    "present": true,
+    "value": "***REDACTED***"
+  }
+]

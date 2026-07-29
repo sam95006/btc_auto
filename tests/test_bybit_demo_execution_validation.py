@@ -555,9 +555,12 @@ class TestApiRoutes:
         assert payload["exchange_write_call_count"] == 0
 
     def test_run_readonly_cycle_endpoint_state(self, tmp_path, monkeypatch):
+        from backend.nexus_demo_execution import api_routes as api_mod
         from backend.nexus_demo_execution.account_reader import DemoAccountSnapshot, FakeDemoAccountReader
         from backend.nexus_demo_execution.api_routes import DemoExecutionApiState
 
+        monkeypatch.setenv("NEXUS_DATA_DIR", str(tmp_path / "writable_data"))
+        api_mod._STATE = None
         state = DemoExecutionApiState()
         monkeypatch.setattr(state, "persistence", DemoExecutionPersistence(db_path=tmp_path / "api.sqlite3"))
         reader = FakeDemoAccountReader()
@@ -577,3 +580,20 @@ class TestApiRoutes:
         result = state.run_readonly_cycle(reader)
         assert result["success"] is True
         assert result["current_stage"] == ROUND_TERMINAL_STAGE.value
+
+    def test_data_root_falls_back_when_unwritable(self, tmp_path, monkeypatch):
+        from backend.nexus_demo_execution import api_routes as api_mod
+
+        forbidden = tmp_path / "no_write"
+        forbidden.mkdir()
+        forbidden.chmod(0o400)
+        monkeypatch.setenv("NEXUS_DATA_DIR", str(forbidden / "child"))
+        api_mod._STATE = None
+        try:
+            state = api_mod.DemoExecutionApiState()
+            assert state.data_root is not None
+            # Must not raise; may mark blocked or fall back to writable path
+            payload = state.status_payload()
+            assert payload["first_demo_smoke_order_ready"] is False
+        finally:
+            forbidden.chmod(0o700)

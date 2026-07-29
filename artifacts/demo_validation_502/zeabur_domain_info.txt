@@ -1,0 +1,14 @@
+[
+  {
+    "id": "6a69b8dba0f25ada30ed9da6",
+    "domain": "nexus-bybit-demo-val.zeabur.app",
+    "serviceID": "6a69ad539949111176cefe63",
+    "environmentID": "69d559b6474db8a99d6dd6bf",
+    "projectID": "69d559b62696d526abde8cd9",
+    "portName": "web",
+    "redirectTo": "",
+    "status": "PROVISIONED",
+    "isGenerated": true,
+    "createdAt": "2026-07-29T08:24:59.163Z"
+  }
+]
