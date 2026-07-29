@@ -1,0 +1,71 @@
+name: bybit-demo-execution-validation
+
+# Bybit Demo Execution Validation — DEMO-only, no mainnet, no deploy.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "feature/bybit-demo-execution-validation"
+  pull_request:
+    branches:
+      - "feature/wave5-real-public-shadow-runtime"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bybit-demo-execution-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BYBIT_DEMO: "true"
+  MAINNET: "false"
+  REAL_MONEY: "false"
+  EXCHANGE_WRITE: "false"
+  DEMO_AUTONOMOUS: "false"
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: No mainnet security scan
+        run: |
+          python -c "from backend.nexus_demo_execution.security_scan import assert_no_mainnet; r=assert_no_mainnet(); print('violations=', r.violation_count)"
+
+  python-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+      - name: Bybit demo execution validation pytest
+        run: |
+          python -m pytest tests/test_bybit_demo_execution_validation.py -q --tb=line
+      - name: Compile nexus_demo_execution
+        run: python -m compileall -q backend/nexus_demo_execution
+
+  typecheck-optional:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Optional compileall type sanity
+        run: python -m compileall -q backend/nexus_demo_execution backend/api/server.py

@@ -1,0 +1,57 @@
+{
+  "report_id": "NEXUS_BYBIT_DEMO_EXECUTION_VALIDATION_CHECKPOINT",
+  "generated_at": "2026-07-29T06:36:00Z",
+  "branch": "feature/bybit-demo-execution-validation",
+  "base_head": "d78c583c11790f629ade0d411c9b9e311b306a76",
+  "service_name": "nexus-bybit-demo-learning-validation",
+  "scope": "DEMO_ONLY",
+  "mainnet": false,
+  "real_money": false,
+  "bybit_demo": true,
+  "state": {
+    "autonomous_mode": "DEMO_AUTONOMOUS_DISABLED",
+    "current_stage": "READ_ONLY",
+    "next_gate": "FOUNDER_CONFIRMATION_AFTER_SMOKE",
+    "first_demo_smoke_order_ready": false
+  },
+  "capital_constitution": {
+    "capital_source": "BYBIT_DEMO_ACCOUNT",
+    "balance_source": "BYBIT_DEMO_PRIVATE_API",
+    "allocation_source": "AVAILABLE_BALANCE",
+    "internal_fake_balance": false,
+    "automatic_fund_reset": false,
+    "founder_manual_reset_only": true
+  },
+  "risk_caps": {
+    "fixed_leverage": 25,
+    "max_open": 2,
+    "max_pending": 2,
+    "min_margin_usdt": 20,
+    "max_margin_usdt": 500
+  },
+  "safety_gate_stages": [
+    "READ_ONLY",
+    "ACCOUNT_RECONCILED",
+    "DRY_RUN_INTENT",
+    "DEMO_ORDER_SMOKE",
+    "PROTECTION_VERIFIED",
+    "FOUNDER_CONFIRMATION",
+    "DEMO_AUTONOMOUS_ENABLED"
+  ],
+  "package_path": "backend/nexus_demo_execution/",
+  "api_prefix": "/api/nexus/demo-execution/",
+  "ci_workflow": ".github/workflows/bybit_demo_execution_validation.yml",
+  "blockers": [
+    "DEMO_AUTONOMOUS_DISABLED — safety gates not passed",
+    "first_demo_smoke_order_ready=false — requires DEMO_ORDER_SMOKE gate",
+    "FOUNDER_CONFIRMATION required after smoke test",
+    "No Zeabur deploy until Founder approval"
+  ],
+  "prohibited": [
+    "mainnet endpoints",
+    "real money trading",
+    "virtual_balance / hardcoded 5000U",
+    "automatic fund reset",
+    "merge or deploy without Founder approval"
+  ]
+}
