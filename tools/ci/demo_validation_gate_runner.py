@@ -7,6 +7,10 @@ import json
 import sys
 from pathlib import Path
 
+_ROOT = Path(__file__).resolve().parents[2]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
 from backend.nexus_demo_execution.account_epoch import AccountEpochTracker
 from backend.nexus_demo_execution.account_reader import DemoAccountSnapshot, FakeDemoAccountReader
 from backend.nexus_demo_execution.kill_switch import KillSwitch
