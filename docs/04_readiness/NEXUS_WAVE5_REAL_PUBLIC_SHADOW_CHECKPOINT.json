@@ -4,8 +4,7 @@
   "base_branch": "feature/wave4-product-ui-intelligence",
   "actual_base_sha": "dfbaa61b0e26acd2b0de218e003c40a101e1286d",
   "ci_green_head_sha": "02426d9a277816bbd70b9a404494e2af09674696",
-  "actual_head_sha": "e1a0280de9f8bf5f23cdb5b5472a5ef57206df6b",
-  "head_update_note": "Freeze docs commit 將使 PR Head 前進；以推送後 GitHub Head 為準並回寫。",
+  "actual_head_sha": "50d6184202482908ba6cc471f2cc29ba7cd7f62d",
   "historical_intermediate_commits": [
     {
       "sha": "b3031c675320e7c4fe046fe4dc442dcb795ca858",
@@ -121,5 +120,5 @@
     "quant_workbench_panel_reuse"
   ],
   "freeze_commit_sha": "6c992f5fda533549ff23e28ead0b210b04f2f897",
-  "head_alignment_commit": "e1a0280de9f8bf5f23cdb5b5472a5ef57206df6b"
+  "authoritative_head_source": "github_pulls_api_at_freeze_report"
 }
