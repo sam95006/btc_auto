@@ -54,6 +54,8 @@ jobs:
       - name: Bybit demo execution validation pytest
         run: |
           python -m pytest tests/test_bybit_demo_execution_validation.py -q --tb=line
+      - name: Offline demo validation gate runner
+        run: python tools/ci/demo_validation_gate_runner.py
       - name: Compile nexus_demo_execution
         run: python -m compileall -q backend/nexus_demo_execution
 

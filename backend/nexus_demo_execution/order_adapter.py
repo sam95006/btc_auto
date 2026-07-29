@@ -57,7 +57,7 @@ class OrderAdapterResult:
 
 @dataclass
 class DemoOrderAdapter:
-    """Stub adapter — exchange write disabled until DEMO_ORDER_SMOKE+ and gate enabled."""
+    """Stub adapter — exchange write always disabled until Founder approval."""
 
     gate: DemoExecutionSafetyGate
     exchange_write_call_count: int = 0
@@ -76,7 +76,7 @@ class DemoOrderAdapter:
             )
 
         if dry_run is None:
-            dry_run = not self.gate.can_write_orders()
+            dry_run = True
 
         if dry_run or not self.gate.can_write_orders():
             result = OrderAdapterResult(
