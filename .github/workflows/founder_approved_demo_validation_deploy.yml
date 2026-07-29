@@ -203,13 +203,19 @@ jobs:
           URL=$(python tools/ci/extract_zeabur_app_url.py < /tmp/dom_out.txt || true)
           if [ -z "$URL" ]; then
             set +e
-            # Generated temp domain: --id service, --env-id, -g
-            zeabur domain create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -g -y -i=false --json > /tmp/dom_create.txt 2>&1
+            # Generated temp domain requires --domain (subdomain of zeabur.app)
+            zeabur domain create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -g --domain nexus-bybit-demo-val -y -i=false --json > /tmp/dom_create.txt 2>&1
             CREATE_CODE=$?
             set -e
             echo "domain_create_exit=$CREATE_CODE"
             sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/dom_create.txt | tail -n 40
             URL=$(python tools/ci/extract_zeabur_app_url.py < /tmp/dom_create.txt || true)
+          fi
+          if [ -z "$URL" ]; then
+            # Fallback probe for known generated hostname
+            if curl -fsS "https://nexus-bybit-demo-val.zeabur.app/health" >/dev/null 2>&1; then
+              URL="https://nexus-bybit-demo-val.zeabur.app"
+            fi
           fi
           if [ -n "$URL" ]; then
             echo "url=$URL" >> "$GITHUB_OUTPUT"
