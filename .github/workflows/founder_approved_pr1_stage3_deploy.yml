@@ -1,0 +1,64 @@
+name: founder-approved-pr1-stage3-deploy
+
+# Founder-approved one-shot deploy of merged PR #1 RC to nexus-stage3-bybit-demo-learning.
+# Keeps Auto Send / Observer / Clean24H disabled (env must already be false on Zeabur).
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type DEPLOY_PR1_RC to confirm"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: founder-pr1-stage3-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    if: ${{ inputs.confirm == 'DEPLOY_PR1_RC' }}
+    steps:
+      - name: Checkout merged stage3-demo-learning
+        uses: actions/checkout@v4
+        with:
+          ref: stage3-demo-learning
+
+      - name: Record deploy identity
+        run: |
+          echo "deploy_git_sha=$(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+          git rev-parse HEAD
+          git log -1 --oneline
+          test "$(git merge-base --is-ancestor c2b3c9504bbd011e677e2cfe9ccb707e9944a5ff HEAD && echo yes)" = "yes"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Zeabur CLI
+        run: npm i -g zeabur@0.2.9
+
+      - name: Deploy to Zeabur Stage3 Demo Learning
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          # Prefer Stage3 service from setup script; fall back to repo secrets.
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          ZEABUR_SERVICE_ID_INPUT: ${{ secrets.ZEABUR_SERVICE_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ZEABUR_TOKEN:-}" ] || [ -z "${ZEABUR_PROJECT_ID:-}" ]; then
+            echo "Missing ZEABUR_TOKEN or ZEABUR_PROJECT_ID" >&2
+            exit 1
+          fi
+          # Known Stage3 service id for nexus-stage3-bybit-demo-learning
+          STAGE3_SERVICE_ID="6a3b81652fdef84a45a2a553"
+          SERVICE_ID="${STAGE3_SERVICE_ID}"
+          echo "Using project=$ZEABUR_PROJECT_ID service=$SERVICE_ID"
+          echo "NOTE: Ensure Zeabur env AUTONOMOUS_SEND/OBSERVER/CLEAN24H/MAINNET/REAL_MONEY/EXCHANGE_WRITE remain false."
+          zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false
