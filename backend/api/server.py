@@ -467,6 +467,17 @@ def register_nexus_routes(app):
             "real_shadow_routes_unavailable: %s", type(_wave5_reg_exc).__name__
         )
 
+    try:
+        from backend.nexus_demo_execution.api_routes import register_demo_execution_routes
+
+        register_demo_execution_routes(app)
+    except Exception as _demo_exec_reg_exc:  # noqa: BLE001 — keep server boot if optional module missing
+        import logging as _logging
+
+        _logging.getLogger(__name__).warning(
+            "demo_execution_routes_unavailable: %s", type(_demo_exec_reg_exc).__name__
+        )
+
     @app.route("/api/nexus/stage3/summary")
     def nexus_stage3_summary():
         try:
