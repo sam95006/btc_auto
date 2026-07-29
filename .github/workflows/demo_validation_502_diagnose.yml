@@ -1,0 +1,87 @@
+name: demo-validation-502-diagnose
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SERVICE_ID: 6a69ad539949111176cefe63
+  FORBIDDEN_SERVICE_ID: 6a3b81652fdef84a45a2a553
+  ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+  SERVICE_NAME: nexus-bybit-demo-learning-validation
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/bybit-demo-execution-validation
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i -g zeabur@latest
+      - name: Collect Zeabur evidence (redacted)
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          if [ "$SERVICE_ID" = "$FORBIDDEN_SERVICE_ID" ]; then
+            echo "BLOCKED Stage3"
+            exit 1
+          fi
+          mkdir -p artifacts/demo_validation_502
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          set +e
+          zeabur service get --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > artifacts/demo_validation_502/zeabur_service_info.txt 2>&1
+          zeabur deployment get --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > artifacts/demo_validation_502/zeabur_deployment_info.txt 2>&1
+          zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > artifacts/demo_validation_502/zeabur_deployment_list.txt 2>&1
+          zeabur deployment log -t=build --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false > artifacts/demo_validation_502/zeabur_build_logs.txt 2>&1
+          zeabur deployment log -t=runtime --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false > artifacts/demo_validation_502/zeabur_runtime_logs.txt 2>&1
+          zeabur domain list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > artifacts/demo_validation_502/zeabur_domain_info.txt 2>&1
+          zeabur variable list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > artifacts/demo_validation_502/zeabur_variables_raw.txt 2>&1
+          set -e
+          python - <<'PY'
+          import json,re
+          from pathlib import Path
+          root=Path('artifacts/demo_validation_502')
+          raw=(root/'zeabur_variables_raw.txt').read_text(encoding='utf-8',errors='replace')
+          secret_keys={'BYBIT_DEMO_API_KEY','BYBIT_DEMO_API_SECRET','API_KEY','API_SECRET','TOKEN','SECRET','PASSWORD'}
+          try:
+            data=json.loads(raw)
+          except Exception:
+            red=re.sub(r'[A-Za-z0-9_+/\\-]{20,}','***REDACTED***',raw)
+            (root/'zeabur_variables_redacted.txt').write_text(red,encoding='utf-8')
+          else:
+            rows=data if isinstance(data,list) else data.get('variables') or data.get('items') or []
+            out=[]
+            for r in rows if isinstance(rows,list) else []:
+              if not isinstance(r,dict):
+                continue
+              k=str(r.get('key') or r.get('name') or '')
+              present=bool(str(r.get('value') or r.get('Value') or '').strip())
+              if any(s in k.upper() for s in secret_keys):
+                out.append({'key':k,'present':present,'value':'***REDACTED***'})
+              else:
+                out.append({'key':k,'value':r.get('value') or r.get('Value')})
+            (root/'zeabur_variables_redacted.txt').write_text(json.dumps(out,indent=2),encoding='utf-8')
+          # redact long secrets in all text files
+          for p in root.glob('*.txt'):
+            t=p.read_text(encoding='utf-8',errors='replace')
+            t=re.sub(r'(?i)(api[_-]?key|api[_-]?secret|token|password|authorization)\s*[:=]\s*\S+','\\1=***REDACTED***',t)
+            t=re.sub(r'[A-Za-z0-9_+/\\-]{40,}','***LONG***',t)
+            p.write_text(t,encoding='utf-8')
+          print('runtime_bytes', (root/'zeabur_runtime_logs.txt').stat().st_size)
+          print('build_bytes', (root/'zeabur_build_logs.txt').stat().st_size)
+          print('runtime_tail:')
+          print('\n'.join((root/'zeabur_runtime_logs.txt').read_text(encoding='utf-8',errors='replace').splitlines()[-40:]))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-validation-502-evidence
+          path: artifacts/demo_validation_502/
+          if-no-files-found: error
