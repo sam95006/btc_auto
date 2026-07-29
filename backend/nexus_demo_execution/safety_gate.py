@@ -12,9 +12,15 @@ class SafetyGateStage(str, Enum):
     READ_ONLY = "READ_ONLY"
     ACCOUNT_RECONCILED = "ACCOUNT_RECONCILED"
     DRY_RUN_INTENT = "DRY_RUN_INTENT"
-    DEMO_ORDER_SMOKE = "DEMO_ORDER_SMOKE"
+    DEMO_ORDER_PAYLOAD_VALIDATED = "DEMO_ORDER_PAYLOAD_VALIDATED"
+    PROTECTION_PAYLOAD_VALIDATED = "PROTECTION_PAYLOAD_VALIDATED"
+    RESTART_RECOVERY_VERIFIED = "RESTART_RECOVERY_VERIFIED"
+    PERSISTENCE_VERIFIED = "PERSISTENCE_VERIFIED"
+    EXPORT_VERIFIED = "EXPORT_VERIFIED"
     PROTECTION_VERIFIED = "PROTECTION_VERIFIED"
-    FOUNDER_CONFIRMATION = "FOUNDER_CONFIRMATION"
+    FOUNDER_CONFIRMATION_REQUIRED = "FOUNDER_CONFIRMATION_REQUIRED"
+    # Post-founder stages — unreachable in validation round
+    DEMO_ORDER_SMOKE_EXECUTED = "DEMO_ORDER_SMOKE_EXECUTED"
     DEMO_AUTONOMOUS_ENABLED = "DEMO_AUTONOMOUS_ENABLED"
 
 
@@ -27,13 +33,23 @@ STAGE_ORDER: tuple[SafetyGateStage, ...] = (
     SafetyGateStage.READ_ONLY,
     SafetyGateStage.ACCOUNT_RECONCILED,
     SafetyGateStage.DRY_RUN_INTENT,
-    SafetyGateStage.DEMO_ORDER_SMOKE,
+    SafetyGateStage.DEMO_ORDER_PAYLOAD_VALIDATED,
+    SafetyGateStage.PROTECTION_PAYLOAD_VALIDATED,
+    SafetyGateStage.RESTART_RECOVERY_VERIFIED,
+    SafetyGateStage.PERSISTENCE_VERIFIED,
+    SafetyGateStage.EXPORT_VERIFIED,
     SafetyGateStage.PROTECTION_VERIFIED,
-    SafetyGateStage.FOUNDER_CONFIRMATION,
-    SafetyGateStage.DEMO_AUTONOMOUS_ENABLED,
+    SafetyGateStage.FOUNDER_CONFIRMATION_REQUIRED,
 )
 
-NEXT_GATE_AFTER_SMOKE = SafetyGateStage.FOUNDER_CONFIRMATION
+ROUND_TERMINAL_STAGE = SafetyGateStage.FOUNDER_CONFIRMATION_REQUIRED
+
+POST_FOUNDER_STAGES = frozenset(
+    {
+        SafetyGateStage.DEMO_ORDER_SMOKE_EXECUTED,
+        SafetyGateStage.DEMO_AUTONOMOUS_ENABLED,
+    }
+)
 
 
 @dataclass
@@ -69,6 +85,12 @@ class DemoExecutionSafetyGate:
         )
 
     def advance(self, stage: SafetyGateStage, *, detail: str = "") -> bool:
+        if stage in POST_FOUNDER_STAGES:
+            self.fail(f"post_founder_stage_forbidden:{stage.value}")
+            return False
+        if stage not in STAGE_ORDER:
+            self.fail(f"unknown_stage:{stage.value}")
+            return False
         expected_idx = STAGE_ORDER.index(self.current_stage)
         target_idx = STAGE_ORDER.index(stage)
         if target_idx != expected_idx + 1 and target_idx > expected_idx:
@@ -79,26 +101,24 @@ class DemoExecutionSafetyGate:
             return False
         self.current_stage = stage
         self.transitions.append(GateTransition(stage=stage, passed=True, detail=detail))
-        if stage == SafetyGateStage.DEMO_AUTONOMOUS_ENABLED:
-            self.autonomous_mode = AutonomousMode.DEMO_AUTONOMOUS_ENABLED
-        else:
-            self.autonomous_mode = AutonomousMode.DEMO_AUTONOMOUS_DISABLED
+        self.autonomous_mode = AutonomousMode.DEMO_AUTONOMOUS_DISABLED
         return True
 
     def can_write_orders(self) -> bool:
-        idx = STAGE_ORDER.index(self.current_stage)
-        smoke_idx = STAGE_ORDER.index(SafetyGateStage.DEMO_ORDER_SMOKE)
-        return (
-            idx >= smoke_idx
-            and self.autonomous_mode == AutonomousMode.DEMO_AUTONOMOUS_ENABLED
-            and not self.last_failure
-        )
+        """Always False until Founder approves first demo order (not this round)."""
+        return False
 
     @property
     def first_demo_smoke_order_ready(self) -> bool:
-        idx = STAGE_ORDER.index(self.current_stage)
-        smoke_idx = STAGE_ORDER.index(SafetyGateStage.DEMO_ORDER_SMOKE)
-        return idx >= smoke_idx and not self.last_failure
+        """Always False — smoke execution not approved this round."""
+        return False
+
+    @property
+    def round_complete(self) -> bool:
+        return (
+            self.current_stage == ROUND_TERMINAL_STAGE
+            and not self.last_failure
+        )
 
     @property
     def next_gate(self) -> str:
@@ -107,8 +127,6 @@ class DemoExecutionSafetyGate:
         idx = STAGE_ORDER.index(self.current_stage)
         if idx >= len(STAGE_ORDER) - 1:
             return "NONE"
-        if self.current_stage == SafetyGateStage.PROTECTION_VERIFIED:
-            return "FOUNDER_CONFIRMATION_AFTER_SMOKE"
         return STAGE_ORDER[idx + 1].value
 
     def snapshot(self) -> dict[str, Any]:
@@ -116,6 +134,8 @@ class DemoExecutionSafetyGate:
             "current_stage": self.current_stage.value,
             "autonomous_mode": self.autonomous_mode.value,
             "next_gate": self.next_gate,
+            "round_terminal": ROUND_TERMINAL_STAGE.value,
+            "round_complete": self.round_complete,
             "first_demo_smoke_order_ready": self.first_demo_smoke_order_ready,
             "can_write_orders": self.can_write_orders(),
             "last_failure": self.last_failure,
