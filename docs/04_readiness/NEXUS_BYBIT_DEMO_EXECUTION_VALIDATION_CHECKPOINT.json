@@ -1,8 +1,7 @@
 {
   "report_id": "NEXUS_BYBIT_DEMO_EXECUTION_VALIDATION_CHECKPOINT",
-  "generated_at": "2026-07-29T06:36:00Z",
+  "generated_at": "2026-07-29T07:30:00Z",
   "branch": "feature/bybit-demo-execution-validation",
-  "base_head": "d78c583c11790f629ade0d411c9b9e311b306a76",
   "service_name": "nexus-bybit-demo-learning-validation",
   "scope": "DEMO_ONLY",
   "mainnet": false,
@@ -10,9 +9,13 @@
   "bybit_demo": true,
   "state": {
     "autonomous_mode": "DEMO_AUTONOMOUS_DISABLED",
-    "current_stage": "READ_ONLY",
-    "next_gate": "FOUNDER_CONFIRMATION_AFTER_SMOKE",
-    "first_demo_smoke_order_ready": false
+    "current_stage": "FOUNDER_CONFIRMATION_REQUIRED",
+    "next_gate": "NONE",
+    "round_terminal": "FOUNDER_CONFIRMATION_REQUIRED",
+    "round_complete": true,
+    "first_demo_smoke_order_ready": false,
+    "can_write_orders": false,
+    "exchange_write_call_count": 0
   },
   "capital_constitution": {
     "capital_source": "BYBIT_DEMO_ACCOUNT",
@@ -33,25 +36,38 @@
     "READ_ONLY",
     "ACCOUNT_RECONCILED",
     "DRY_RUN_INTENT",
-    "DEMO_ORDER_SMOKE",
+    "DEMO_ORDER_PAYLOAD_VALIDATED",
+    "PROTECTION_PAYLOAD_VALIDATED",
+    "RESTART_RECOVERY_VERIFIED",
+    "PERSISTENCE_VERIFIED",
+    "EXPORT_VERIFIED",
     "PROTECTION_VERIFIED",
-    "FOUNDER_CONFIRMATION",
+    "FOUNDER_CONFIRMATION_REQUIRED"
+  ],
+  "post_founder_stages_blocked": [
+    "DEMO_ORDER_SMOKE_EXECUTED",
     "DEMO_AUTONOMOUS_ENABLED"
   ],
   "package_path": "backend/nexus_demo_execution/",
   "api_prefix": "/api/nexus/demo-execution/",
   "ci_workflow": ".github/workflows/bybit_demo_execution_validation.yml",
+  "deploy_workflow": ".github/workflows/founder_approved_demo_validation_deploy.yml",
+  "deploy_package": "deploy/zeabur_bybit_demo_validation/",
   "blockers": [
-    "DEMO_AUTONOMOUS_DISABLED — safety gates not passed",
-    "first_demo_smoke_order_ready=false — requires DEMO_ORDER_SMOKE gate",
-    "FOUNDER_CONFIRMATION required after smoke test",
-    "No Zeabur deploy until Founder approval"
+    "FOUNDER_CONFIRMATION_REQUIRED — first demo smoke order not approved",
+    "first_demo_smoke_order_ready=false",
+    "can_write_orders=false",
+    "exchange_write_call_count must remain 0",
+    "DEMO_ORDER_SMOKE_EXECUTED blocked until Founder approves",
+    "Zeabur service creation requires ZEABUR_TOKEN + ZEABUR_PROJECT_ID secrets",
+    "Must NOT overwrite Stage3 SERVICE_ID 6a3b81652fdef84a45a2a553"
   ],
   "prohibited": [
     "mainnet endpoints",
     "real money trading",
     "virtual_balance / hardcoded 5000U",
     "automatic fund reset",
+    "DEMO_ORDER_SMOKE_EXECUTED without Founder approval",
     "merge or deploy without Founder approval"
   ]
 }

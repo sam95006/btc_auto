@@ -1,0 +1,14 @@
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+.env
+.env.*
+*.key
+*.pem
+*.secret
+*.db
+trading.db
+logs/
+archives/
+deploy/zeabur_stage3_demo_learning/
+data/external_alpha/
