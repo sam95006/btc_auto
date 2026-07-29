@@ -87,10 +87,10 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install Zeabur CLI (latest — needs project-id flags)
+      - name: Install Zeabur CLI
         run: npm i -g zeabur@latest
 
-      - name: Resolve or create validation service (GraphQL)
+      - name: Resolve or create validation service
         id: resolve
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
@@ -174,55 +174,34 @@ jobs:
             echo "demo_secret_present=false"
           fi
 
-          zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json | tee /tmp/deploy_out.txt | sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' | tail -n 40
-          python tools/ci/resolve_demo_validation_service_id.py < /tmp/deploy_out.txt >/tmp/deploy_sid.txt || true
-          DEPLOY_SID=$(cat /tmp/deploy_sid.txt || true)
-          if [ -n "$DEPLOY_SID" ] && [ "$DEPLOY_SID" != "$SERVICE_ID" ]; then
-            echo "WARN: deploy reported different service id prefix=${DEPLOY_SID:0:6}"
-          fi
+          set +e
+          zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json > /tmp/deploy_out.txt 2>&1
+          DEPLOY_CODE=$?
+          set -e
+          echo "deploy_exit=$DEPLOY_CODE"
+          sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/deploy_out.txt | tail -n 40
+          test "$DEPLOY_CODE" = "0"
 
       - name: Create temporary domain if missing
         id: domain
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
-          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
         run: |
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           zeabur context set service --id "$SERVICE_ID" -y -i=false || true
           set +e
-          DOM_OUT=$(zeabur domain list --json -i=false 2>&1)
+          zeabur domain list --json -i=false > /tmp/dom_out.txt 2>&1
           set -e
-          echo "$DOM_OUT" | sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' | tail -n 20
-          printf '%s\n' "$DOM_OUT" > /tmp/dom_out.txt
-          URL=$(python -c "import json,re; raw=open('/tmp/dom_out.txt',encoding='utf-8',errors='replace').read();
-c=[];
-import ast
-try:
- d=json.loads(raw)
-except Exception:
- d=None
-def walk(o):
- if isinstance(o,dict):
-  for k,v in o.items():
-   if str(k).lower() in ('domain','hostname','host','url','name') and isinstance(v,str): c.append(v)
-   walk(v)
- elif isinstance(o,list):
-  for i in o: walk(i)
-if d is not None: walk(d)
-else: c+=re.findall(r'[a-z0-9.-]+\.zeabur\.app', raw, re.I)
-out=''
-for x in c:
- x=x.strip().removeprefix('https://').removeprefix('http://')
- if 'zeabur.app' in x.lower(): out='https://'+x; break
-print(out)")
+          sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/dom_out.txt | tail -n 20
+          URL=$(python tools/ci/extract_zeabur_app_url.py < /tmp/dom_out.txt || true)
           if [ -z "$URL" ]; then
             set +e
-            CREATE_DOM=$(zeabur domain create --service-id "$SERVICE_ID" -i=false --json 2>&1)
+            zeabur domain create --service-id "$SERVICE_ID" -i=false --json > /tmp/dom_create.txt 2>&1
             set -e
-            echo "$CREATE_DOM" | sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' | tail -n 30
-            URL=$(printf '%s\n' "$CREATE_DOM" | python -c "import sys,re; t=sys.stdin.read(); m=re.search(r'([a-z0-9.-]+\.zeabur\.app)', t, re.I); print('https://'+m.group(1) if m else '')")
+            sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/dom_create.txt | tail -n 30
+            URL=$(python tools/ci/extract_zeabur_app_url.py < /tmp/dom_create.txt || true)
           fi
           if [ -n "$URL" ]; then
             echo "url=$URL" >> "$GITHUB_OUTPUT"
@@ -238,8 +217,7 @@ print(out)")
         run: |
           URL="${SECRET_URL:-${FALLBACK_URL:-}}"
           if [ -z "$URL" ]; then
-            echo "No validation URL yet — service created/deployed; set ZEABUR_DEMO_VALIDATION_URL after domain bind"
-            echo "service_id_prefix=${{ steps.resolve.outputs.service_id }}"
+            echo "No validation URL yet; set ZEABUR_DEMO_VALIDATION_URL after domain bind"
             exit 0
           fi
           echo "smoke_url=$URL"
@@ -253,8 +231,4 @@ print(out)")
           done
           test "$ok" = "1"
           curl -fsS "$URL/api/nexus/demo-execution/status" >/tmp/demo_status.json || true
-          python -c "import json; print('health_ok', bool(json.load(open('/tmp/health.json'))));
-try:
- s=json.load(open('/tmp/demo_status.json')); print('gate', s.get('current_stage') or s.get('gate')); print('first_demo_smoke_order_ready', s.get('first_demo_smoke_order_ready'))
-except Exception as e:
- print('status_note', type(e).__name__)"
+          python tools/ci/print_demo_status_smoke.py
