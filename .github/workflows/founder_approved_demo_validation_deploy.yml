@@ -77,6 +77,11 @@ jobs:
           git rev-parse HEAD
           git log -1 --oneline
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -85,7 +90,7 @@ jobs:
       - name: Install Zeabur CLI (latest — needs project-id flags)
         run: npm i -g zeabur@latest
 
-      - name: Resolve or create validation service
+      - name: Resolve or create validation service (GraphQL)
         id: resolve
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
@@ -97,33 +102,7 @@ jobs:
             echo "Missing ZEABUR_TOKEN or ZEABUR_PROJECT_ID"
             exit 1
           fi
-          export ZEABUR_TOKEN
-          zeabur context set project --id "$ZEABUR_PROJECT_ID" -y -i=false || true
-          SID="${PRESET_SERVICE_ID:-}"
-          if [ "$SID" = "$FORBIDDEN_SERVICE_ID" ]; then
-            echo "BLOCKED: must not overwrite Stage3 live service"
-            exit 1
-          fi
-          if [ -z "$SID" ]; then
-            echo "Creating independent service $SERVICE_NAME"
-            set +e
-            CREATE_OUT=$(zeabur deploy --create --name "$SERVICE_NAME" --project-id "$ZEABUR_PROJECT_ID" -i=false --json 2>&1)
-            CREATE_CODE=$?
-            set -e
-            echo "create_exit=$CREATE_CODE"
-            printf '%s\n' "$CREATE_OUT" > /tmp/create_out.txt
-            # Extract candidate ids BEFORE log redaction
-            SID=$(python tools/ci/resolve_demo_validation_service_id.py < /tmp/create_out.txt || true)
-            if [ -z "$SID" ]; then
-              set +e
-              LIST_OUT=$(zeabur service list --project-id "$ZEABUR_PROJECT_ID" --json -i=false 2>&1)
-              set -e
-              printf '%s\n' "$LIST_OUT" > /tmp/list_out.txt
-              SID=$(python tools/ci/resolve_demo_validation_service_id.py < /tmp/list_out.txt || true)
-            fi
-            # Safe log (redact long tokens only; keep 24-char ids)
-            sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/create_out.txt | tail -n 40
-          fi
+          SID=$(python tools/ci/ensure_demo_validation_zeabur_service.py)
           if [ -z "$SID" ] || [ "$SID" = "$FORBIDDEN_SERVICE_ID" ]; then
             echo "BLOCKER: could not resolve independent service id"
             exit 1
@@ -140,11 +119,11 @@ jobs:
           BYBIT_DEMO_API_SECRET: ${{ secrets.BYBIT_DEMO_API_SECRET }}
         run: |
           set -euo pipefail
-          export ZEABUR_TOKEN
           if [ "$SERVICE_ID" = "$FORBIDDEN_SERVICE_ID" ]; then
             echo "BLOCKED Stage3 id"
             exit 1
           fi
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           zeabur context set project --id "$ZEABUR_PROJECT_ID" -y -i=false || true
           zeabur context set service --id "$SERVICE_ID" -y -i=false || true
 
@@ -177,6 +156,10 @@ jobs:
           set_var AI_CAN_CHANGE_LEVERAGE false
           set_var BYBIT_DEMO_LEARNING_MODE true
           set_var NEXUS_DATA_DIR /data/nexus_demo_validation
+          set_var AUTO_SEND false
+          set_var OBSERVER false
+          set_var CLEAN24H false
+          set_var FORCE_PUSH false
 
           if [ -n "${BYBIT_DEMO_API_KEY:-}" ]; then
             set_var BYBIT_DEMO_API_KEY "$BYBIT_DEMO_API_KEY"
@@ -191,53 +174,87 @@ jobs:
             echo "demo_secret_present=false"
           fi
 
-          zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false
+          zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json | tee /tmp/deploy_out.txt | sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' | tail -n 40
+          python tools/ci/resolve_demo_validation_service_id.py < /tmp/deploy_out.txt >/tmp/deploy_sid.txt || true
+          DEPLOY_SID=$(cat /tmp/deploy_sid.txt || true)
+          if [ -n "$DEPLOY_SID" ] && [ "$DEPLOY_SID" != "$SERVICE_ID" ]; then
+            echo "WARN: deploy reported different service id prefix=${DEPLOY_SID:0:6}"
+          fi
 
       - name: Create temporary domain if missing
+        id: domain
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
           ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
           SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
         run: |
           set -euo pipefail
-          export ZEABUR_TOKEN
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           zeabur context set service --id "$SERVICE_ID" -y -i=false || true
           set +e
           DOM_OUT=$(zeabur domain list --json -i=false 2>&1)
           set -e
           echo "$DOM_OUT" | sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' | tail -n 20
-          if ! echo "$DOM_OUT" | grep -qi "nexus-bybit-demo-learning-validation\|zeabur.app"; then
+          printf '%s\n' "$DOM_OUT" > /tmp/dom_out.txt
+          URL=$(python -c "import json,re; raw=open('/tmp/dom_out.txt',encoding='utf-8',errors='replace').read();
+c=[];
+import ast
+try:
+ d=json.loads(raw)
+except Exception:
+ d=None
+def walk(o):
+ if isinstance(o,dict):
+  for k,v in o.items():
+   if str(k).lower() in ('domain','hostname','host','url','name') and isinstance(v,str): c.append(v)
+   walk(v)
+ elif isinstance(o,list):
+  for i in o: walk(i)
+if d is not None: walk(d)
+else: c+=re.findall(r'[a-z0-9.-]+\.zeabur\.app', raw, re.I)
+out=''
+for x in c:
+ x=x.strip().removeprefix('https://').removeprefix('http://')
+ if 'zeabur.app' in x.lower(): out='https://'+x; break
+print(out)")
+          if [ -z "$URL" ]; then
             set +e
-            zeabur domain create --service-id "$SERVICE_ID" -i=false --json 2>&1 | sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' | tail -n 30
+            CREATE_DOM=$(zeabur domain create --service-id "$SERVICE_ID" -i=false --json 2>&1)
             set -e
+            echo "$CREATE_DOM" | sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' | tail -n 30
+            URL=$(printf '%s\n' "$CREATE_DOM" | python -c "import sys,re; t=sys.stdin.read(); m=re.search(r'([a-z0-9.-]+\.zeabur\.app)', t, re.I); print('https://'+m.group(1) if m else '')")
+          fi
+          if [ -n "$URL" ]; then
+            echo "url=$URL" >> "$GITHUB_OUTPUT"
+            echo "bound_url=$URL"
+          else
+            echo "domain_unresolved=true"
           fi
 
-      - name: Post-deploy HTTP smoke (optional URL secret)
+      - name: Post-deploy HTTP smoke
         env:
-          DEPLOY_URL: ${{ secrets.ZEABUR_DEMO_VALIDATION_URL }}
+          SECRET_URL: ${{ secrets.ZEABUR_DEMO_VALIDATION_URL }}
+          FALLBACK_URL: ${{ steps.domain.outputs.url }}
         run: |
-          if [ -z "${DEPLOY_URL:-}" ]; then
-            echo "ZEABUR_DEMO_VALIDATION_URL unset — bind domain in Zeabur then set secret for next run"
+          URL="${SECRET_URL:-${FALLBACK_URL:-}}"
+          if [ -z "$URL" ]; then
+            echo "No validation URL yet — service created/deployed; set ZEABUR_DEMO_VALIDATION_URL after domain bind"
             echo "service_id_prefix=${{ steps.resolve.outputs.service_id }}"
             exit 0
           fi
+          echo "smoke_url=$URL"
           ok=0
           for i in $(seq 1 36); do
-            if curl -fsS "$DEPLOY_URL/health" >/tmp/health.json; then
+            if curl -fsS "$URL/health" >/tmp/health.json; then
               ok=1
               break
             fi
             sleep 10
           done
           test "$ok" = "1"
-          curl -fsS "$DEPLOY_URL/api/nexus/demo-execution/status" >/tmp/demo_status.json || true
-          python - <<'PY'
-          import json
-          print("health_ok", bool(json.load(open("/tmp/health.json"))))
-          try:
-            s=json.load(open("/tmp/demo_status.json"))
-            print("gate", s.get("current_stage") or s.get("gate"))
-            print("first_demo_smoke_order_ready", s.get("first_demo_smoke_order_ready"))
-          except Exception as e:
-            print("status_note", type(e).__name__)
-          PY
+          curl -fsS "$URL/api/nexus/demo-execution/status" >/tmp/demo_status.json || true
+          python -c "import json; print('health_ok', bool(json.load(open('/tmp/health.json'))));
+try:
+ s=json.load(open('/tmp/demo_status.json')); print('gate', s.get('current_stage') or s.get('gate')); print('first_demo_smoke_order_ready', s.get('first_demo_smoke_order_ready'))
+except Exception as e:
+ print('status_note', type(e).__name__)"
