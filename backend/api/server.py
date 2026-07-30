@@ -478,6 +478,17 @@ def register_nexus_routes(app):
             "demo_execution_routes_unavailable: %s", type(_demo_exec_reg_exc).__name__
         )
 
+    try:
+        from backend.nexus_control_plane.api_routes import register_control_plane_routes
+
+        register_control_plane_routes(app)
+    except Exception as _cp_reg_exc:  # noqa: BLE001 — keep server boot if optional module missing
+        import logging as _logging
+
+        _logging.getLogger(__name__).warning(
+            "control_plane_routes_unavailable: %s", type(_cp_reg_exc).__name__
+        )
+
     @app.route("/api/nexus/stage3/summary")
     def nexus_stage3_summary():
         try:

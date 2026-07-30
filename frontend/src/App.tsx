@@ -17,6 +17,7 @@ import { EvidencePage } from "./pages/EvidencePage";
 import { GlobalMarketShadowPage } from "./pages/GlobalMarketShadowPage";
 import { AiLearningLabPage } from "./pages/AiLearningLabPage";
 import { MembershipPage } from "./pages/MembershipPage";
+import { ControlPlaneOverviewPage } from "./pages/ControlPlaneOverviewPage";
 import { OverviewPage } from "./pages/OverviewPage";
 import { PaperLabPage } from "./pages/PaperLabPage";
 import { ProviderShadowPage } from "./pages/ProviderShadowPage";
@@ -73,6 +74,7 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<Navigate to="/overview" replace />} />
                 <Route path="/overview" element={<OverviewPage />} />
+                <Route path="/control-plane" element={<ControlPlaneOverviewPage />} />
                 <Route path="/universe" element={<UniversePage />} />
                 <Route path="/opportunities" element={<OpportunitiesPage />} />
                 <Route path="/alerts" element={<AlertsPage />} />

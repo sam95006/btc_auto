@@ -1,0 +1,45 @@
+{
+  "checkpoint_name": "NEXUS_UNIFIED_CONTROL_PLANE_CHECKPOINT",
+  "created_at_utc": "2026-07-30T03:20:00Z",
+  "observation": {
+    "session_id": "NEXUS-DEMO-6H-8124394e67",
+    "service": "nexus-bybit-demo-learning-validation",
+    "url": "https://nexus-bybit-demo-val.zeabur.app",
+    "observation_deployed_code_sha": "9b6f57c1bc3afe988f0fc3829f62dad2ee510156",
+    "deploy_run": "30509623012",
+    "pr6_branch_head": "2a647695e9cc6f90d54a92ce5c35fd8de3000aea",
+    "note": "PR head and observation SHA are intentionally different labels"
+  },
+  "unified_control_plane": {
+    "worktree": "C:\\Temp\\BTC_BOT_UNIFIED_NEXUS_CONTROL_PLANE",
+    "branch": "feature/unified-nexus-control-plane",
+    "base_sha": "2a647695e9cc6f90d54a92ce5c35fd8de3000aea",
+    "stacked_base_branch": "feature/bybit-demo-execution-validation"
+  },
+  "flags": {
+    "unified_control_plane_deployed": false,
+    "stage3_modified": false,
+    "demo_validation_modified": false,
+    "observation_cohort_preserved": true,
+    "exchange_write_added": false,
+    "mainnet": false,
+    "real_money": false,
+    "pr6_merge": false,
+    "control_plane_merge": false,
+    "auto_24h_started": false
+  },
+  "deliverables": {
+    "design_doc": "docs/04_readiness/NEXUS_UNIFIED_CONTROL_PLANE_DESIGN.md",
+    "api_inventory": "docs/04_readiness/NEXUS_UNIFIED_CONTROL_PLANE_API_INVENTORY.md",
+    "retirement_plan": "docs/04_readiness/NEXUS_STAGE3_EXECUTION_RETIREMENT_PLAN.md",
+    "analysis_spec": "docs/04_readiness/NEXUS_POST_SESSION_EVIDENCE_ANALYSIS_SPEC.md",
+    "analyzer": "tools/analysis/analyze_nexus_demo_session.py",
+    "backend_package": "backend/nexus_control_plane/",
+    "frontend_page": "frontend/src/pages/ControlPlaneOverviewPage.tsx",
+    "tests": "tests/test_unified_nexus_control_plane.py"
+  },
+  "next_founder_gates_separate": [
+    "FOUNDER_GATE=DEMO_AUTONOMOUS_24H_BOUNDED_VALIDATION",
+    "FOUNDER_GATE=DEPLOY_UNIFIED_NEXUS_CONTROL_PLANE"
+  ]
+}
