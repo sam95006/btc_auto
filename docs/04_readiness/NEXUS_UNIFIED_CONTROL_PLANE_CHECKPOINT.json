@@ -14,7 +14,13 @@
     "worktree": "C:\\Temp\\BTC_BOT_UNIFIED_NEXUS_CONTROL_PLANE",
     "branch": "feature/unified-nexus-control-plane",
     "base_sha": "2a647695e9cc6f90d54a92ce5c35fd8de3000aea",
-    "stacked_base_branch": "feature/bybit-demo-execution-validation"
+    "head_sha": "4270cd3b70388f91dab13069d8f3102fcb537061",
+    "stacked_base_branch": "feature/bybit-demo-execution-validation",
+    "draft_pr": "https://github.com/sam95006/btc_auto/pull/23",
+    "draft_pr_number": 23,
+    "merge": false,
+    "deploy": false,
+    "live_effect": false
   },
   "flags": {
     "unified_control_plane_deployed": false,
