@@ -1,26 +1,57 @@
 {
   "checkpoint_name": "NEXUS_UNIFIED_CONTROL_PLANE_CHECKPOINT",
-  "updated_at_utc": "2026-07-30T03:56:00Z",
+  "updated_at_utc": "2026-07-30T06:02:00Z",
+  "truth_update": "docs_and_pr_body_only_no_feature_code",
   "observation": {
     "session_id": "NEXUS-DEMO-6H-8124394e67",
     "service": "nexus-bybit-demo-learning-validation",
     "url": "https://nexus-bybit-demo-val.zeabur.app",
+    "session_started_at": "2026-07-30T02:56:16Z",
+    "expected_deadline": "2026-07-30T08:56:16Z",
+    "expected_deadline_taiwan": "2026-07-30T16:56:16+08:00",
     "observation_deployed_code_sha": "9b6f57c1bc3afe988f0fc3829f62dad2ee510156",
     "deploy_run": "30509623012",
     "pr6_branch_head": "2a647695e9cc6f90d54a92ce5c35fd8de3000aea",
     "note": "PR head and observation SHA are intentionally different labels",
-    "observation_cohort_preserved": true
+    "observation_cohort_preserved": true,
+    "latest_readonly_snapshot": {
+      "candidates_total": 640,
+      "cost_gate_blocks": 640,
+      "entries": 0,
+      "trades": 0,
+      "position_count": 0,
+      "runtime_health": "UP",
+      "monitor_health": "UP",
+      "redeploy_count": 0,
+      "env_change_count": 0
+    }
   },
   "unified_control_plane": {
     "worktree": "C:\\Temp\\BTC_BOT_UNIFIED_NEXUS_CONTROL_PLANE",
     "branch": "feature/unified-nexus-control-plane",
     "base_sha": "2a647695e9cc6f90d54a92ce5c35fd8de3000aea",
+    "head_sha": "32df89864b31a0bdc0087e6dc778cff14e455b15",
     "stacked_base_branch": "feature/bybit-demo-execution-validation",
     "draft_pr": "https://github.com/sam95006/btc_auto/pull/23",
     "draft_pr_number": 23,
+    "body_truth_updated": true,
     "merge": false,
     "deploy": false,
-    "live_effect": false
+    "live_effect": false,
+    "exchange_write": false
+  },
+  "validation_truth": {
+    "python": "14 passed",
+    "security": "PASS",
+    "contract": "PASS",
+    "frontend_typecheck": "PASS",
+    "frontend_build": "PASS",
+    "browser": "10 passed",
+    "mobile": "PASS 390/430/768/1440",
+    "accessibility": "PASS axe serious/critical=0",
+    "docker": "PASS",
+    "execution_owner_count": 1,
+    "stage3_legacy_isolated": true
   },
   "flags": {
     "pr23_scope_frozen": true,
@@ -43,6 +74,13 @@
     "pr6_merge": false,
     "control_plane_merge": false,
     "auto_24h_started": false
+  },
+  "owners": {
+    "market_owner": "Stage3 Market Intelligence",
+    "execution_owner": "Demo Validation",
+    "learning_owner": "Demo Validation",
+    "control_plane_exchange_write": false,
+    "stage3_exchange_write": false
   },
   "deliverables": {
     "design_doc": "docs/04_readiness/NEXUS_UNIFIED_CONTROL_PLANE_DESIGN.md",
