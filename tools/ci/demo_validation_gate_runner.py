@@ -76,6 +76,7 @@ def run_gate_chain(
         "expected_terminal": ROUND_TERMINAL_STAGE.value,
         "exchange_write_call_count": result.exchange_write_call_count,
         "first_demo_smoke_order_ready": result.first_demo_smoke_order_ready,
+        "can_write_orders": gate.can_write_orders(),
         "autonomous_mode": result.autonomous_mode,
         "error": result.error,
         "output_dir": str(output_dir),
@@ -118,8 +119,11 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     if report["exchange_write_call_count"] != 0:
         return 3
-    if report["first_demo_smoke_order_ready"]:
+    if report.get("can_write_orders"):
         return 4
+    if report["autonomous_mode"] != "DEMO_AUTONOMOUS_DISABLED":
+        return 5
+    # At FOUNDER_CONFIRMATION, first_demo_smoke_order_ready may be true (awaiting execute).
     return 0
 
 

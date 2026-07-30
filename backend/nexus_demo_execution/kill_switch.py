@@ -94,7 +94,14 @@ class KillSwitch:
         if ctx.get("real_money"):
             self.engage_trigger(KillSwitchTrigger.REAL_MONEY_FLAG)
             return True
-        if ctx.get("exchange_write_call_count", 0) > 0:
+        # Authorized one-shot founder smoke write is allowed; unauthorized writes trip kill.
+        unauthorized_write = bool(ctx.get("unauthorized_exchange_write"))
+        if unauthorized_write or (
+            ctx.get("exchange_write_call_count", 0) > 0
+            and not ctx.get("founder_smoke_authorized")
+            and not self.gate.smoke_write_window_open
+            and not self.gate.smoke_executed
+        ):
             self.engage_trigger(KillSwitchTrigger.EXCHANGE_WRITE_ATTEMPTED)
             return True
         if ctx.get("fake_balance"):
@@ -106,7 +113,14 @@ class KillSwitch:
         if ctx.get("founder_bypass"):
             self.engage_trigger(KillSwitchTrigger.FOUNDER_BYPASS_ATTEMPT)
             return True
-        if self.gate.current_stage in POST_FOUNDER_STAGES:
+        # Smoke executed is allowed; autonomous without approval is not.
+        if self.gate.current_stage == SafetyGateStage.DEMO_AUTONOMOUS_ENABLED:
+            self.engage_trigger(KillSwitchTrigger.AUTONOMOUS_WITHOUT_APPROVAL)
+            return True
+        if (
+            self.gate.current_stage == SafetyGateStage.DEMO_ORDER_SMOKE_EXECUTED
+            and ctx.get("autonomous_without_approval")
+        ):
             self.engage_trigger(KillSwitchTrigger.AUTONOMOUS_WITHOUT_APPROVAL)
             return True
         if self.gate.last_failure:

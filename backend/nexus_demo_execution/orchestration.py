@@ -368,8 +368,9 @@ class DemoValidationOrchestrator:
     def _advance_founder_confirmation(self, evidence: dict[str, Any]) -> None:
         evidence["founder_confirmation"] = {
             "required": True,
-            "first_demo_smoke_order_ready": False,
-            "can_write_orders": False,
+            "first_demo_smoke_order_ready": self.gate.first_demo_smoke_order_ready,
+            "can_write_orders": self.gate.can_write_orders(),
+            "note": "smoke_requires_founder_nonce_and_env_gate",
         }
         if not self.gate.advance(
             SafetyGateStage.FOUNDER_CONFIRMATION_REQUIRED,

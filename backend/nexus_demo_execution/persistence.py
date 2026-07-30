@@ -20,6 +20,7 @@ STREAMS = frozenset(
         "dry_run_intents",
         "protection_checks",
         "gate_evidence",
+        "smoke_sessions",
     }
 )
 

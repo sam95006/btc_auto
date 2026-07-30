@@ -142,6 +142,10 @@ class DemoExecutionApiState:
             self.data_root = emergency
         self._last_cycle_result: dict[str, Any] | None = None
         self._orchestrator: DemoValidationOrchestrator | None = None
+        self._last_smoke_result: dict[str, Any] | None = None
+        from backend.nexus_demo_execution.founder_approval import FounderSmokeApprovalStore
+
+        self.approval = FounderSmokeApprovalStore()
         logger.info(
             "demo_api_state_ready data_root=%s persistence_blocked=%s",
             self.data_root,
@@ -211,6 +215,7 @@ class DemoExecutionApiState:
             "round_complete": gate_snap.get("round_complete", False),
             "first_demo_smoke_order_ready": gate_snap["first_demo_smoke_order_ready"],
             "can_write_orders": gate_snap["can_write_orders"],
+            "founder_smoke_approval": self.approval.snapshot(),
             "exchange_write_call_count": self.order_adapter.exchange_write_call_count,
             "kill_switch": self.kill_switch.snapshot(),
             "constitution": self.constitution.snapshot(),
@@ -219,20 +224,32 @@ class DemoExecutionApiState:
             "epoch": self.epoch_tracker.summary(),
             "order_adapter": self.order_adapter.counters(),
             "last_cycle": self._last_cycle_result,
+            "last_smoke": self._last_smoke_result,
         }
 
-    def account_payload(self) -> dict[str, Any]:
-        orch = self._orchestrator
-        snap = orch._last_snapshot if orch else None
+    def account_payload(self, *, fresh: bool = False) -> dict[str, Any]:
+        snap = None
+        if fresh:
+            try:
+                reader = _build_live_or_fake_reader()
+                snap = reader.read_with_constitution()
+            except Exception as exc:  # noqa: BLE001
+                return {"available": False, "reason": f"fresh_read_failed:{type(exc).__name__}"}
+        else:
+            orch = self._orchestrator
+            snap = orch._last_snapshot if orch else None
         if snap is None:
             return {"available": False, "reason": "no_cycle_run"}
         return {
             "wallet_balance": snap.wallet_balance,
             "equity": snap.equity,
             "available_balance": snap.available_balance,
+            "used_margin": snap.used_margin,
+            "unrealized_pnl": snap.unrealized_pnl,
             "open_positions": len(snap.open_positions),
             "open_orders": len(snap.open_orders),
             "source": snap.source,
+            "fresh": fresh,
         }
 
     def dry_run_latest(self) -> dict[str, Any]:
@@ -244,6 +261,84 @@ class DemoExecutionApiState:
         if rows:
             return {"found": True, "intent": rows[-1]}
         return {"found": False}
+
+    def run_founder_smoke(self, *, async_mode: bool = True) -> dict[str, Any]:
+        """One-shot Founder smoke order — requires env FOUNDER gate approval."""
+        import threading
+
+        from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
+        from backend.nexus_demo_execution.smoke_orchestrator import SmokeOrderOrchestrator
+
+        if getattr(self, "_smoke_running", False):
+            return {
+                "success": False,
+                "recommendation": "FIRST_DEMO_SMOKE_ORDER_BLOCKED",
+                "error": "smoke_already_running",
+                "smoke_running": True,
+                "smoke": self._last_smoke_result,
+            }
+
+        export_dir = self.data_root / "artifacts" / "demo_validation"
+        export_dir.mkdir(parents=True, exist_ok=True)
+        writer = DemoWriteClient()
+        orch = SmokeOrderOrchestrator(
+            gate=self.gate,
+            reader=_build_live_or_fake_reader(),
+            persistence=self.persistence,
+            epoch_tracker=self.epoch_tracker,
+            approval=self.approval,
+            kill_switch=self.kill_switch,
+            writer=writer,
+            export_dir=export_dir,
+        )
+
+        if not async_mode:
+            result = orch.run_end_to_end()
+            payload = result.to_dict()
+            self._last_smoke_result = payload
+            self.order_adapter.exchange_write_call_count = max(
+                self.order_adapter.exchange_write_call_count,
+                writer.write_call_count,
+            )
+            return payload
+
+        self._smoke_running = True
+        self._last_smoke_result = {
+            "success": None,
+            "recommendation": "RUNNING",
+            "report": {"status": "STARTED"},
+            "error": "",
+        }
+
+        def _job() -> None:
+            try:
+                result = orch.run_end_to_end()
+                payload = result.to_dict()
+                self._last_smoke_result = payload
+                self.order_adapter.exchange_write_call_count = max(
+                    self.order_adapter.exchange_write_call_count,
+                    writer.write_call_count,
+                )
+            except Exception as exc:  # noqa: BLE001
+                self._last_smoke_result = {
+                    "success": False,
+                    "recommendation": "FIRST_DEMO_SMOKE_ORDER_FAILED_KILL_SWITCH_APPLIED",
+                    "error": type(exc).__name__,
+                    "report": {},
+                }
+                self.approval.close_window("async_exception")
+                self.gate.close_smoke_write_window()
+            finally:
+                self._smoke_running = False
+
+        threading.Thread(target=_job, name="founder-smoke", daemon=True).start()
+        return {
+            "success": True,
+            "recommendation": "RUNNING",
+            "error": "",
+            "smoke_running": True,
+            "report": {"status": "STARTED", "poll": "/api/nexus/demo-execution/founder-smoke/latest"},
+        }
 
 
 _STATE: DemoExecutionApiState | None = None
@@ -268,7 +363,7 @@ def _wrap(data: dict[str, Any]) -> dict[str, Any]:
 
 
 def register_demo_execution_routes(app: Flask) -> None:
-    """Register /api/nexus/demo-execution/* read-only routes."""
+    """Register /api/nexus/demo-execution/* routes (readonly + founder smoke)."""
     state = get_demo_execution_state()
 
     @app.route("/api/nexus/demo-execution/status")
@@ -281,7 +376,12 @@ def register_demo_execution_routes(app: Flask) -> None:
 
     @app.route("/api/nexus/demo-execution/account")
     def demo_execution_account():
-        return jsonify(_wrap(get_demo_execution_state().account_payload()))
+        fresh = (os.environ.get("NEXUS_ACCOUNT_FRESH") or "").lower() in {"1", "true"}
+        # Prefer fresh query param
+        from flask import request
+
+        fresh = fresh or (request.args.get("fresh", "").lower() in {"1", "true", "yes"})
+        return jsonify(_wrap(get_demo_execution_state().account_payload(fresh=fresh)))
 
     @app.route("/api/nexus/demo-execution/epoch")
     def demo_execution_epoch():
@@ -316,6 +416,51 @@ def register_demo_execution_routes(app: Flask) -> None:
         """Trigger safe readonly validation cycle — live Demo GET when keyed; never exchange write."""
         result = get_demo_execution_state().run_readonly_cycle()
         return jsonify(_wrap({"cycle": result}))
+
+    @app.route("/api/nexus/demo-execution/founder-smoke/preflight", methods=["GET", "POST"])
+    def demo_execution_founder_smoke_preflight():
+        st = get_demo_execution_state()
+        from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
+        from backend.nexus_demo_execution.smoke_orchestrator import SmokeOrderOrchestrator
+
+        orch = SmokeOrderOrchestrator(
+            gate=st.gate,
+            reader=_build_live_or_fake_reader(),
+            persistence=st.persistence,
+            epoch_tracker=st.epoch_tracker,
+            approval=st.approval,
+            kill_switch=st.kill_switch,
+            writer=DemoWriteClient(),
+            export_dir=st.data_root / "artifacts" / "demo_validation",
+        )
+        pre = orch._preflight()
+        # Do not leak snapshot object
+        snap = pre.pop("snapshot", None)
+        if snap is not None:
+            pre["account"] = {
+                "wallet_balance": snap.wallet_balance,
+                "equity": snap.equity,
+                "available_balance": snap.available_balance,
+                "used_margin": snap.used_margin,
+                "unrealized_pnl": snap.unrealized_pnl,
+                "open_positions": len(snap.open_positions),
+                "open_orders": len(snap.open_orders),
+                "source": snap.source,
+            }
+        pre["approval"] = st.approval.snapshot()
+        pre["gate"] = st.gate.snapshot()
+        return jsonify(_wrap(pre))
+
+    @app.route("/api/nexus/demo-execution/founder-smoke/execute", methods=["POST"])
+    def demo_execution_founder_smoke_execute():
+        """Execute one-shot Founder Demo smoke order. Requires env gate approval."""
+        result = get_demo_execution_state().run_founder_smoke()
+        return jsonify(_wrap({"smoke": result}))
+
+    @app.route("/api/nexus/demo-execution/founder-smoke/latest")
+    def demo_execution_founder_smoke_latest():
+        st = get_demo_execution_state()
+        return jsonify(_wrap({"found": st._last_smoke_result is not None, "smoke": st._last_smoke_result}))
 
     logger.info(
         "demo_execution_routes_registered persistence_blocked=%s",

@@ -261,22 +261,29 @@ class TestSafetyGate:
     def test_smoke_not_ready_initially(self):
         assert DemoExecutionSafetyGate().first_demo_smoke_order_ready is False
 
-    def test_can_write_always_false(self):
+    def test_can_write_false_without_window(self):
         gate = DemoExecutionSafetyGate()
         for stage in STAGE_ORDER[1:]:
             gate.advance(stage)
         assert gate.can_write_orders() is False
+        assert gate.first_demo_smoke_order_ready is True
 
-    def test_post_founder_stage_forbidden(self):
+    def test_post_founder_stage_forbidden_via_advance(self):
         gate = DemoExecutionSafetyGate()
         for stage in STAGE_ORDER[1:]:
             gate.advance(stage)
         assert gate.advance(SafetyGateStage.DEMO_ORDER_SMOKE_EXECUTED) is False
+        assert gate.complete_smoke_execution(detail="test") is True
+        assert gate.current_stage == SafetyGateStage.DEMO_ORDER_SMOKE_EXECUTED
+        assert gate.can_write_orders() is False
+        assert gate.autonomous_mode == AutonomousMode.DEMO_AUTONOMOUS_DISABLED
 
     def test_full_gate_to_founder(self):
         gate = DemoExecutionSafetyGate()
         for stage in STAGE_ORDER[1:]:
             assert gate.advance(stage) is True
+        assert gate.first_demo_smoke_order_ready is True
+        assert gate.can_write_orders() is False
         assert gate.current_stage == ROUND_TERMINAL_STAGE
         assert gate.round_complete is True
 
@@ -417,7 +424,8 @@ class TestOrchestration:
         assert result.success is True
         assert result.current_stage == ROUND_TERMINAL_STAGE.value
         assert result.exchange_write_call_count == 0
-        assert result.first_demo_smoke_order_ready is False
+        assert result.first_demo_smoke_order_ready is True
+        assert orch.gate.can_write_orders() is False
 
     def test_fake_balance_blocked(self, tmp_path):
         reader = FakeDemoAccountReader()
@@ -552,6 +560,7 @@ class TestApiRoutes:
 
         payload = get_demo_execution_state().status_payload()
         assert payload["first_demo_smoke_order_ready"] is False
+        assert payload["can_write_orders"] is False
         assert payload["exchange_write_call_count"] == 0
 
     def test_run_readonly_cycle_endpoint_state(self, tmp_path, monkeypatch):
@@ -594,6 +603,7 @@ class TestApiRoutes:
             assert state.data_root is not None
             # Must not raise; may mark blocked or fall back to writable path
             payload = state.status_payload()
-            assert payload["first_demo_smoke_order_ready"] is False
+            assert payload["can_write_orders"] is False
+            assert payload["exchange_write_call_count"] == 0
         finally:
             forbidden.chmod(0o700)

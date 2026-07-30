@@ -70,23 +70,39 @@ class DemoExecutionSafetyGate:
     autonomous_mode: AutonomousMode = AutonomousMode.DEMO_AUTONOMOUS_DISABLED
     transitions: list[GateTransition] = field(default_factory=list)
     last_failure: str = ""
+    smoke_write_window_open: bool = False
+    smoke_orders_remaining: int = 0
+    smoke_executed: bool = False
 
     def reset(self) -> None:
         self.current_stage = SafetyGateStage.READ_ONLY
         self.autonomous_mode = AutonomousMode.DEMO_AUTONOMOUS_DISABLED
         self.transitions.clear()
         self.last_failure = ""
+        self.smoke_write_window_open = False
+        self.smoke_orders_remaining = 0
+        # keep smoke_executed sticky within process unless explicit reset_smoke
+
+    def reset_smoke_flags(self) -> None:
+        self.smoke_write_window_open = False
+        self.smoke_orders_remaining = 0
+        self.smoke_executed = False
 
     def fail(self, detail: str) -> None:
         self.last_failure = detail
         self.autonomous_mode = AutonomousMode.DEMO_AUTONOMOUS_DISABLED
+        self.smoke_write_window_open = False
+        self.smoke_orders_remaining = 0
         self.transitions.append(
             GateTransition(stage=self.current_stage, passed=False, detail=detail)
         )
 
     def advance(self, stage: SafetyGateStage, *, detail: str = "") -> bool:
-        if stage in POST_FOUNDER_STAGES:
+        if stage == SafetyGateStage.DEMO_AUTONOMOUS_ENABLED:
             self.fail(f"post_founder_stage_forbidden:{stage.value}")
+            return False
+        if stage == SafetyGateStage.DEMO_ORDER_SMOKE_EXECUTED:
+            self.fail(f"use_complete_smoke_execution:{stage.value}")
             return False
         if stage not in STAGE_ORDER:
             self.fail(f"unknown_stage:{stage.value}")
@@ -104,19 +120,51 @@ class DemoExecutionSafetyGate:
         self.autonomous_mode = AutonomousMode.DEMO_AUTONOMOUS_DISABLED
         return True
 
+    def open_smoke_write_window(self, *, max_orders: int = 1) -> None:
+        self.smoke_write_window_open = True
+        self.smoke_orders_remaining = max_orders
+        self.autonomous_mode = AutonomousMode.DEMO_AUTONOMOUS_DISABLED
+
+    def close_smoke_write_window(self) -> None:
+        self.smoke_write_window_open = False
+        self.smoke_orders_remaining = 0
+        self.autonomous_mode = AutonomousMode.DEMO_AUTONOMOUS_DISABLED
+
+    def complete_smoke_execution(self, *, detail: str = "") -> bool:
+        """Mark smoke complete — never enables autonomous."""
+        if not BYBIT_DEMO or MAINNET or REAL_MONEY:
+            self.fail("demo_only_boundary_violation")
+            return False
+        self.last_failure = ""
+        self.current_stage = SafetyGateStage.DEMO_ORDER_SMOKE_EXECUTED
+        self.smoke_executed = True
+        self.close_smoke_write_window()
+        self.autonomous_mode = AutonomousMode.DEMO_AUTONOMOUS_DISABLED
+        self.transitions.append(
+            GateTransition(
+                stage=SafetyGateStage.DEMO_ORDER_SMOKE_EXECUTED,
+                passed=True,
+                detail=detail or "smoke_executed",
+            )
+        )
+        return True
+
     def can_write_orders(self) -> bool:
-        """Always False until Founder approves first demo order (not this round)."""
-        return False
+        """True only during Founder one-shot smoke write window."""
+        return (
+            self.smoke_write_window_open
+            and self.smoke_orders_remaining > 0
+            and self.autonomous_mode == AutonomousMode.DEMO_AUTONOMOUS_DISABLED
+            and not self.last_failure
+        )
 
     @property
     def first_demo_smoke_order_ready(self) -> bool:
-        """Always False — smoke execution not approved this round."""
-        return False
-
-    @property
-    def round_complete(self) -> bool:
+        """Ready when founder confirmation reached and smoke not yet executed."""
         return (
-            self.current_stage == ROUND_TERMINAL_STAGE
+            self.current_stage == SafetyGateStage.FOUNDER_CONFIRMATION_REQUIRED
+            and not self.smoke_executed
+            and self.autonomous_mode == AutonomousMode.DEMO_AUTONOMOUS_DISABLED
             and not self.last_failure
         )
 
@@ -124,10 +172,25 @@ class DemoExecutionSafetyGate:
     def next_gate(self) -> str:
         if self.last_failure:
             return "RECOVERY_REQUIRED"
+        if self.current_stage == SafetyGateStage.DEMO_ORDER_SMOKE_EXECUTED:
+            return "FOUNDER_GATE=DEMO_AUTONOMOUS_6H_BOUNDED_VALIDATION"
+        if self.current_stage == SafetyGateStage.DEMO_AUTONOMOUS_ENABLED:
+            return "NONE"
         idx = STAGE_ORDER.index(self.current_stage)
         if idx >= len(STAGE_ORDER) - 1:
             return "NONE"
         return STAGE_ORDER[idx + 1].value
+
+    @property
+    def round_complete(self) -> bool:
+        return (
+            self.current_stage
+            in {
+                ROUND_TERMINAL_STAGE,
+                SafetyGateStage.DEMO_ORDER_SMOKE_EXECUTED,
+            }
+            and not self.last_failure
+        )
 
     def snapshot(self) -> dict[str, Any]:
         return {
@@ -138,6 +201,9 @@ class DemoExecutionSafetyGate:
             "round_complete": self.round_complete,
             "first_demo_smoke_order_ready": self.first_demo_smoke_order_ready,
             "can_write_orders": self.can_write_orders(),
+            "smoke_write_window_open": self.smoke_write_window_open,
+            "smoke_orders_remaining": self.smoke_orders_remaining,
+            "smoke_executed": self.smoke_executed,
             "last_failure": self.last_failure,
             "labels": list(DEMO_EXECUTION_LABELS),
             "transitions": [t.to_dict() for t in self.transitions],
