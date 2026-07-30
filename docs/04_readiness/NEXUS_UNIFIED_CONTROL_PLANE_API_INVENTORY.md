@@ -2,6 +2,10 @@
 
 Inventory of routes that exist in-repo. Control Plane may federate **GET** only from allowlisted hosts. Status reflects code presence, not live deployment of Control Plane.
 
+| `/api/nexus/control-plane/why-no-trade` | control_plane | GET | none/local | gate breakdown | source_timestamp | demo_execution | yes | no | IMPLEMENTED |
+| `/api/nexus/control-plane/federation-counters` | control_plane | GET | none/local | counters | n/a | control_plane | yes | no | IMPLEMENTED |
+| `/api/nexus/control-plane/ownership` | control_plane | GET | none/local | ownership contract | n/a | control_plane | yes | no | IMPLEMENTED |
+
 ## Control Plane (new)
 
 | route | service | method | auth | schema | freshness | data owner | safe for frontend | contains secret | status |

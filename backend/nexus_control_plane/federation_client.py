@@ -16,6 +16,7 @@ from backend.nexus_control_plane import (
     DATA_STATUS_STALE,
     DATA_STATUS_UNKNOWN,
 )
+from backend.nexus_control_plane import federation_counters as counters
 from backend.nexus_control_plane.service_registry import ServiceRegistry
 
 FORBIDDEN_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
@@ -35,6 +36,7 @@ def redact_secrets(payload: Any) -> Any:
         for k, v in payload.items():
             if any(m in str(k).lower() for m in SECRET_MARKERS):
                 out[k] = "[REDACTED]"
+                counters.incr("secret_redaction_count")
             else:
                 out[k] = redact_secrets(v)
         return out
@@ -69,8 +71,19 @@ class FederationClient:
     max_bytes: int = DEFAULT_MAX_BYTES
     _circuits: dict[str, CircuitState] = field(default_factory=dict)
 
+    def attempt_write(self, *_a: Any, **_k: Any) -> dict[str, Any]:
+        """Explicitly rejected — Control Plane must never write via federation."""
+        counters.incr("federation_write_attempt_count")
+        return {
+            "ok": False,
+            "error": "CONTROL_PLANE_READ_ONLY",
+            "data_status": DATA_STATUS_UNKNOWN,
+            "payload": None,
+        }
+
     def get_json(self, role: str, path: str) -> dict[str, Any]:
         """GET JSON from a registered service role. Never POST/PUT/PATCH/DELETE."""
+        counters.incr("federation_get_count")
         rec = self.registry.get(role)
         if rec is None:
             return {
@@ -80,9 +93,20 @@ class FederationClient:
                 "payload": None,
             }
         url = f"{rec.service_url.rstrip('/')}{path}"
-        self._assert_url_allowed(url)
+        try:
+            self._assert_url_allowed(url)
+        except FederationSecurityError as exc:
+            counters.incr("ssrf_block_count")
+            return {
+                "ok": False,
+                "data_status": DATA_STATUS_UNKNOWN,
+                "error": str(exc),
+                "payload": None,
+                "source_service": rec.service_name,
+            }
         circuit = self._circuits.setdefault(role, CircuitState())
         if not circuit.allow():
+            counters.incr("circuit_open_count")
             return {
                 "ok": False,
                 "data_status": DATA_STATUS_SERVICE_UNAVAILABLE,
@@ -92,11 +116,16 @@ class FederationClient:
                 "source_url": rec.service_url,
             }
         try:
-            req = Request(url, method="GET", headers={"User-Agent": "NEXUS-ControlPlane/1.0", "Accept": "application/json"})
+            req = Request(
+                url,
+                method="GET",
+                headers={"User-Agent": "NEXUS-ControlPlane/1.0", "Accept": "application/json"},
+            )
             with urlopen(req, timeout=self.timeout_sec) as resp:
                 raw = resp.read(self.max_bytes + 1)
             if len(raw) > self.max_bytes:
                 circuit.record_failure()
+                counters.incr("schema_mismatch_count")
                 return {
                     "ok": False,
                     "data_status": DATA_STATUS_SCHEMA_MISMATCH,
@@ -107,6 +136,7 @@ class FederationClient:
             payload = json.loads(raw.decode("utf-8"))
             if not isinstance(payload, dict):
                 circuit.record_failure()
+                counters.incr("schema_mismatch_count")
                 return {
                     "ok": False,
                     "data_status": DATA_STATUS_SCHEMA_MISMATCH,
@@ -135,17 +165,27 @@ class FederationClient:
                 "payload": None,
                 "source_service": rec.service_name,
             }
-        except (URLError, TimeoutError, json.JSONDecodeError, FederationSecurityError) as exc:
+        except TimeoutError:
             circuit.record_failure()
-            status = (
-                DATA_STATUS_SERVICE_UNAVAILABLE
-                if not isinstance(exc, FederationSecurityError)
-                else DATA_STATUS_UNKNOWN
-            )
+            counters.incr("service_timeout_count")
+            return {
+                "ok": False,
+                "data_status": DATA_STATUS_SERVICE_UNAVAILABLE,
+                "error": "TimeoutError",
+                "payload": None,
+                "source_service": rec.service_name,
+            }
+        except (URLError, json.JSONDecodeError) as exc:
+            circuit.record_failure()
+            if isinstance(exc, json.JSONDecodeError):
+                counters.incr("schema_mismatch_count")
+                status = DATA_STATUS_SCHEMA_MISMATCH
+            else:
+                status = DATA_STATUS_SERVICE_UNAVAILABLE
             return {
                 "ok": False,
                 "data_status": status,
-                "error": type(exc).__name__ if not isinstance(exc, FederationSecurityError) else str(exc),
+                "error": type(exc).__name__,
                 "payload": None,
                 "source_service": rec.service_name if rec else role,
             }
@@ -159,8 +199,9 @@ class FederationClient:
         host = (parsed.hostname or "").lower()
         if not host or host not in self.registry.allowed_hosts():
             raise FederationSecurityError("SECURITY_BLOCKED_UNKNOWN_SERVICE_HOST")
-        # Block obvious SSRF targets
         if host in {"metadata.google.internal", "169.254.169.254"} or host.startswith("10."):
+            raise FederationSecurityError("SECURITY_BLOCKED_UNKNOWN_SERVICE_HOST")
+        if host.startswith("169.254.") or host in {"0.0.0.0"}:
             raise FederationSecurityError("SECURITY_BLOCKED_UNKNOWN_SERVICE_HOST")
 
     @staticmethod

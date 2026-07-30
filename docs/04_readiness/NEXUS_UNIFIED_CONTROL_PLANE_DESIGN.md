@@ -55,8 +55,14 @@ These must never be conflated as one "runtime version".
 - No Mainnet / Real Money
 - No 24H auto-start
 
-## Packages
+## Hardening (PR #23)
 
-- `backend/nexus_control_plane/` — registry, federation client, aggregator, routes
-- `frontend/src/pages/ControlPlaneOverviewPage.tsx` — `/control-plane`
-- `tools/analysis/analyze_nexus_demo_session.py` — offline export analyzer
+- Canonical envelope: `source_role`, `received_at`, `freshness_seconds`, `schema_version`, `NOT_APPLICABLE`
+- Ownership contract: single `DEMO_VALIDATION_SERVICE`; Stage3 permanently execution-disabled
+- Why-no-trade Gate Breakdown + cost-gate diagnosis (analysis only)
+- Learning evidence chain UI + effectiveness labels (no PROVEN/PROFITABLE)
+- Version labels keep `pr6_branch_head` ≠ `observation_deployed_code_sha`
+- Federation counters + write-route 405
+- Browser / mobile / a11y / in-process container smoke + CI workflow
+- `tools/analysis/finalize_demo_6h_session.py` for post-deadline readonly finalize
+- Scope frozen: `pr23_scope_frozen=true`, still `deploy=false`

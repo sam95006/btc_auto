@@ -1,6 +1,6 @@
 {
   "checkpoint_name": "NEXUS_UNIFIED_CONTROL_PLANE_CHECKPOINT",
-  "created_at_utc": "2026-07-30T03:20:00Z",
+  "updated_at_utc": "2026-07-30T03:56:00Z",
   "observation": {
     "session_id": "NEXUS-DEMO-6H-8124394e67",
     "service": "nexus-bybit-demo-learning-validation",
@@ -8,13 +8,13 @@
     "observation_deployed_code_sha": "9b6f57c1bc3afe988f0fc3829f62dad2ee510156",
     "deploy_run": "30509623012",
     "pr6_branch_head": "2a647695e9cc6f90d54a92ce5c35fd8de3000aea",
-    "note": "PR head and observation SHA are intentionally different labels"
+    "note": "PR head and observation SHA are intentionally different labels",
+    "observation_cohort_preserved": true
   },
   "unified_control_plane": {
     "worktree": "C:\\Temp\\BTC_BOT_UNIFIED_NEXUS_CONTROL_PLANE",
     "branch": "feature/unified-nexus-control-plane",
     "base_sha": "2a647695e9cc6f90d54a92ce5c35fd8de3000aea",
-    "head_sha": "4270cd3b70388f91dab13069d8f3102fcb537061",
     "stacked_base_branch": "feature/bybit-demo-execution-validation",
     "draft_pr": "https://github.com/sam95006/btc_auto/pull/23",
     "draft_pr_number": 23,
@@ -23,10 +23,20 @@
     "live_effect": false
   },
   "flags": {
+    "pr23_scope_frozen": true,
+    "browser_pass": true,
+    "mobile_pass": true,
+    "accessibility_status": "PASS_NO_GLOBAL_DISABLE_ON_CONTROL_PLANE",
+    "docker_pass": true,
+    "execution_owner_count": 1,
+    "federation_write_attempt_count_policy": "reject_only_on_blocked_write_routes",
+    "stage3_execution_disabled_contract": true,
+    "no_synthetic_fallback": true,
     "unified_control_plane_deployed": false,
     "stage3_modified": false,
     "demo_validation_modified": false,
     "observation_cohort_preserved": true,
+    "exchange_write": false,
     "exchange_write_added": false,
     "mainnet": false,
     "real_money": false,
@@ -39,11 +49,16 @@
     "api_inventory": "docs/04_readiness/NEXUS_UNIFIED_CONTROL_PLANE_API_INVENTORY.md",
     "retirement_plan": "docs/04_readiness/NEXUS_STAGE3_EXECUTION_RETIREMENT_PLAN.md",
     "analysis_spec": "docs/04_readiness/NEXUS_POST_SESSION_EVIDENCE_ANALYSIS_SPEC.md",
+    "test_report": "docs/04_readiness/NEXUS_UNIFIED_CONTROL_PLANE_TEST_REPORT.md",
+    "deploy_runbook": "docs/04_readiness/NEXUS_UNIFIED_CONTROL_PLANE_DEPLOY_RUNBOOK.md",
     "analyzer": "tools/analysis/analyze_nexus_demo_session.py",
+    "finalizer": "tools/analysis/finalize_demo_6h_session.py",
+    "ci_workflow": ".github/workflows/unified_nexus_control_plane_validation.yml",
     "backend_package": "backend/nexus_control_plane/",
     "frontend_page": "frontend/src/pages/ControlPlaneOverviewPage.tsx",
-    "tests": "tests/test_unified_nexus_control_plane.py"
+    "browser_tests": "frontend/e2e/control-plane.spec.ts"
   },
+  "recommendation": "UNIFIED_NEXUS_CONTROL_PLANE_DRAFT_READY_FOR_FOUNDER_DEPLOY_REVIEW",
   "next_founder_gates_separate": [
     "FOUNDER_GATE=DEMO_AUTONOMOUS_24H_BOUNDED_VALIDATION",
     "FOUNDER_GATE=DEPLOY_UNIFIED_NEXUS_CONTROL_PLANE"

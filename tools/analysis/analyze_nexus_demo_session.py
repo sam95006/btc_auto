@@ -13,6 +13,7 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
+from backend.nexus_control_plane.cost_gate_diagnosis import diagnose_blocked_candidates
 
 UNAVAILABLE = "UNAVAILABLE"
 INSUFFICIENT_SAMPLE = "INSUFFICIENT_SAMPLE"
@@ -219,6 +220,7 @@ def analyze_session(root: Path, session_id: str | None = None) -> dict[str, Any]
         max_dd = _max_drawdown([float(r["gross_pnl"]) for r in trade_rows if isinstance(r["gross_pnl"], float)])
 
     learning = assess_learning(reflections, decision_deltas, candidates)
+    cost_diag = diagnose_blocked_candidates(candidates)
     zero_trade = None
     if entries == 0 and completed == 0:
         zero_trade = {
@@ -229,6 +231,19 @@ def analyze_session(root: Path, session_id: str | None = None) -> dict[str, Any]
             "recommendation": "DEMO_AUTONOMOUS_6H_BLOCKED_NO_VALID_CANDIDATES",
             "note": "Zero fills is valid when gates fail-closed; do not loosen live session",
             "false_negative_unknown": True,
+            "cost_gate_diagnosis": {
+                "block_reason_distribution": cost_diag.get("block_reason_distribution"),
+                "median_gross_reward": cost_diag.get("median_gross_reward"),
+                "median_total_cost": cost_diag.get("median_total_cost"),
+                "median_net_reward": cost_diag.get("median_net_reward"),
+                "fee_dominated_count": cost_diag.get("fee_dominated_count"),
+                "funding_unknown_count": cost_diag.get("funding_unknown_count"),
+            },
+            "system_failure_checks": {
+                "scanner_advanced": candidates_total > 0,
+                "cost_gate_has_evidence": cost_blocks > 0 or bool(cost_diag.get("block_reason_distribution")),
+                "note": "Zero trade is not automatic fail; only stall/recon/protection/write-window issues are failures",
+            },
         }
 
     summary = {
@@ -263,6 +278,7 @@ def analyze_session(root: Path, session_id: str | None = None) -> dict[str, Any]
         "fee_churn_count": fee_churn,
         "learning_effectiveness": learning["learning_effectiveness"],
         "zero_trade_analysis": zero_trade,
+        "cost_gate_diagnosis": cost_diag,
         "forbidden_labels": {
             "proven": False,
             "production_ready": False,
@@ -276,6 +292,7 @@ def analyze_session(root: Path, session_id: str | None = None) -> dict[str, Any]
         "reflections": reflections,
         "decision_deltas": decision_deltas,
         "learning": learning,
+        "cost_gate_diagnosis": cost_diag,
     }
 
 
@@ -384,6 +401,10 @@ def write_outputs(result: dict[str, Any], out_dir: Path) -> None:
     )
     (out_dir / "error_recurrence_analysis.json").write_text(
         json.dumps({"repeated_error_count": summary.get("repeated_error_count"), "items": [r for r in result["reflections"] if r.get("repeated_error")]}, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    (out_dir / "cost_gate_diagnosis.json").write_text(
+        json.dumps(result.get("cost_gate_diagnosis") or {}, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
 

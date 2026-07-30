@@ -7,6 +7,8 @@ from flask import Flask, jsonify
 
 from backend.nexus_control_plane.aggregator import ControlPlaneAggregator
 from backend.nexus_control_plane.federation_client import FederationClient
+from backend.nexus_control_plane import federation_counters as counters
+from backend.nexus_control_plane.ownership_contract import validate_execution_ownership
 from backend.nexus_control_plane.service_registry import ServiceRegistry
 
 _FORBIDDEN_WRITE_HINT = {
@@ -71,18 +73,34 @@ def register_control_plane_routes(app: Flask) -> None:
     def control_plane_runtime_identity():
         return _ok({"runtime_identity": agg.runtime_identity()})
 
+    @app.route("/api/nexus/control-plane/why-no-trade", methods=["GET"])
+    def control_plane_why_no_trade():
+        return _ok({"why_no_trade": agg.why_no_trade()})
+
+    @app.route("/api/nexus/control-plane/federation-counters", methods=["GET"])
+    def control_plane_federation_counters():
+        return _ok({"counters": counters.snapshot()})
+
+    @app.route("/api/nexus/control-plane/ownership", methods=["GET"])
+    def control_plane_ownership():
+        return _ok({"ownership": validate_execution_ownership(registry)})
+
+    def _block_write():
+        counters.incr("federation_write_attempt_count")
+        return jsonify(_FORBIDDEN_WRITE_HINT), 405
+
     @app.route("/api/nexus/control-plane/orders", methods=["POST", "PUT", "PATCH", "DELETE"])
     def control_plane_orders_blocked():
-        return jsonify(_FORBIDDEN_WRITE_HINT), 405
+        return _block_write()
 
     @app.route("/api/nexus/control-plane/session/start", methods=["POST", "PUT", "PATCH", "DELETE"])
     def control_plane_session_start_blocked():
-        return jsonify(_FORBIDDEN_WRITE_HINT), 405
+        return _block_write()
 
     @app.route("/api/nexus/control-plane/session/stop", methods=["POST", "PUT", "PATCH", "DELETE"])
     def control_plane_session_stop_blocked():
-        return jsonify(_FORBIDDEN_WRITE_HINT), 405
+        return _block_write()
 
     @app.route("/api/nexus/control-plane/position/close", methods=["POST", "PUT", "PATCH", "DELETE"])
     def control_plane_position_close_blocked():
-        return jsonify(_FORBIDDEN_WRITE_HINT), 405
+        return _block_write()
