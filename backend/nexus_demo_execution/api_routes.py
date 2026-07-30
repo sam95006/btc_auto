@@ -227,6 +227,13 @@ class DemoExecutionApiState:
             "last_cycle": self._last_cycle_result,
             "last_smoke": self._last_smoke_result,
             "bounded_6h": self._bounded_6h.status() if self._bounded_6h else {"status": "IDLE"},
+            "founder_env": {
+                "FOUNDER_GATE": (os.environ.get("FOUNDER_GATE") or "").strip() or "MISSING",
+                "FOUNDER_6H_APPROVED": (os.environ.get("FOUNDER_6H_APPROVED") or "").strip() or "MISSING",
+                "FOUNDER_SMOKE_ORDER_APPROVED": (os.environ.get("FOUNDER_SMOKE_ORDER_APPROVED") or "").strip()
+                or "MISSING",
+                "NEXUS_DEPLOYMENT_ID": ((os.environ.get("NEXUS_DEPLOYMENT_ID") or "")[:12] or "MISSING"),
+            },
         }
 
     def account_payload(self, *, fresh: bool = False) -> dict[str, Any]:

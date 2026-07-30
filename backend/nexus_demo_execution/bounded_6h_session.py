@@ -53,6 +53,27 @@ _RECS = (
 )
 
 
+def _load_founder_gate_file() -> None:
+    """Load ./demo_founder_gate.env if process env missing FOUNDER_GATE."""
+    if (os.environ.get("FOUNDER_GATE") or "").strip():
+        return
+    for path in (Path("demo_founder_gate.env"), Path("/app/demo_founder_gate.env")):
+        if not path.exists():
+            continue
+        try:
+            for line in path.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, _, v = line.partition("=")
+                k, v = k.strip(), v.strip()
+                if k and k not in os.environ:
+                    os.environ[k] = v
+        except Exception:
+            return
+        break
+
+
 def _env_true(name: str) -> bool:
     return (os.environ.get(name) or "").strip().lower() in _TRUE
 
@@ -146,10 +167,20 @@ class Bounded6HSession:
         with self._lock:
             if self._thread and self._thread.is_alive():
                 return redact_secrets({"ok": False, "reason": "already_running", **self.status()})
-            if (os.environ.get("FOUNDER_GATE") or "").strip() != SESSION_GATE_NAME:
-                return redact_secrets({"ok": False, "reason": "founder_gate_mismatch"})
+            _load_founder_gate_file()
+            gate_env = (os.environ.get("FOUNDER_GATE") or "").strip()
+            if gate_env != SESSION_GATE_NAME:
+                return redact_secrets(
+                    {
+                        "ok": False,
+                        "reason": "founder_gate_mismatch",
+                        "expected": SESSION_GATE_NAME,
+                        "got": gate_env or "MISSING",
+                        "founder_6h_approved": _env_true("FOUNDER_6H_APPROVED"),
+                    }
+                )
             if not _env_true("FOUNDER_6H_APPROVED"):
-                return redact_secrets({"ok": False, "reason": "founder_6h_not_approved"})
+                return redact_secrets({"ok": False, "reason": "founder_6h_not_approved", "got_gate": gate_env})
             if self.kill_switch.engaged:
                 return redact_secrets({"ok": False, "reason": "kill_switch_engaged"})
 

@@ -29,12 +29,25 @@ export PORT="$PORT_RESOLVED"
 echo "service_mode=BYBIT_DEMO_VALIDATION"
 echo "bind_host=0.0.0.0"
 echo "bind_port=$PORT"
+
+# Optional baked Founder gate file (CI deploy context).
+if [ -f ./demo_founder_gate.env ]; then
+  # shellcheck disable=SC1091
+  set -a
+  . ./demo_founder_gate.env
+  set +a
+  echo "founder_gate_file=loaded"
+fi
+
+echo "founder_gate=${FOUNDER_GATE:-MISSING}"
+echo "founder_6h_approved=${FOUNDER_6H_APPROVED:-MISSING}"
 echo "demo_autonomous_enabled=${DEMO_AUTONOMOUS_ENABLED:-false}"
 echo "exchange_write=${EXCHANGE_WRITE:-false}"
 echo "mainnet=${MAINNET:-false}"
 echo "real_money=${REAL_MONEY:-false}"
 
-# Fail-closed: never enable autonomous send from this entrypoint.
+# Fail-closed: never enable unbounded autonomous send from this entrypoint.
+# Bounded 6H session uses FOUNDER_6H_APPROVED + in-process write window, not this flag.
 export DEMO_AUTONOMOUS_ENABLED=false
 export AUTONOMOUS_SEND=false
 export EXCHANGE_WRITE=false

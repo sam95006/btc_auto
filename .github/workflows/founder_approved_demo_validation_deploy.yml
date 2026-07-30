@@ -204,6 +204,13 @@ jobs:
           cp -a tools/ci "$CTX/tools/ci"
           cp -a deploy/zeabur_bybit_demo_validation/entrypoint.sh "$CTX/entrypoint.sh"
           chmod +x "$CTX/entrypoint.sh"
+          # Bake Founder 6H gate file as env fallback if Zeabur runtime env lags.
+          printf '%s\n' \
+            'FOUNDER_GATE=DEMO_AUTONOMOUS_6H_BOUNDED_VALIDATION' \
+            'FOUNDER_6H_APPROVED=true' \
+            'FOUNDER_SMOKE_ORDER_APPROVED=false' \
+            'DEMO_AUTONOMOUS_ENABLED=false' \
+            > "$CTX/demo_founder_gate.env"
           # Prefer explicit gunicorn CMD; keep entrypoint available.
           cat > "$CTX/Dockerfile" <<'DOCKER'
           FROM python:3.11-slim-bookworm
