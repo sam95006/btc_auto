@@ -303,7 +303,12 @@ class SmokeOrderOrchestrator:
                 if wait:
                     time.sleep(wait)
                 after = self.reader.read_with_constitution()
-                recon = self.reconciler.reconcile([], [], after.open_positions, after.open_orders)
+                recon = self.reconciler.reconcile(
+                    local_positions=[],
+                    local_orders=[],
+                    remote_positions=after.open_positions,
+                    remote_orders=after.open_orders,
+                )
                 recon_rows.append({"label": label, **recon.to_dict(), "snapshot": _snap(after)})
             evidence["reconciliation_triple"] = recon_rows
             final = recon_rows[-1]
@@ -504,7 +509,12 @@ class SmokeOrderOrchestrator:
             return out
         out["snapshot"] = snap
         out["credential_status"] = "VALID" if snap.source == "BYBIT_DEMO_PRIVATE_API" else "UNKNOWN"
-        recon = self.reconciler.reconcile([], [], snap.open_positions, snap.open_orders)
+        recon = self.reconciler.reconcile(
+            local_positions=[],
+            local_orders=[],
+            remote_positions=snap.open_positions,
+            remote_orders=snap.open_orders,
+        )
         out["account_reconciliation"] = recon.state.value
         out["position_count"] = len(snap.open_positions)
         out["open_order_count"] = len(snap.open_orders)

@@ -420,36 +420,48 @@ def register_demo_execution_routes(app: Flask) -> None:
     @app.route("/api/nexus/demo-execution/founder-smoke/preflight", methods=["GET", "POST"])
     def demo_execution_founder_smoke_preflight():
         st = get_demo_execution_state()
-        from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
-        from backend.nexus_demo_execution.smoke_orchestrator import SmokeOrderOrchestrator
+        try:
+            from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
+            from backend.nexus_demo_execution.smoke_orchestrator import SmokeOrderOrchestrator
 
-        orch = SmokeOrderOrchestrator(
-            gate=st.gate,
-            reader=_build_live_or_fake_reader(),
-            persistence=st.persistence,
-            epoch_tracker=st.epoch_tracker,
-            approval=st.approval,
-            kill_switch=st.kill_switch,
-            writer=DemoWriteClient(),
-            export_dir=st.data_root / "artifacts" / "demo_validation",
-        )
-        pre = orch._preflight()
-        # Do not leak snapshot object
-        snap = pre.pop("snapshot", None)
-        if snap is not None:
-            pre["account"] = {
-                "wallet_balance": snap.wallet_balance,
-                "equity": snap.equity,
-                "available_balance": snap.available_balance,
-                "used_margin": snap.used_margin,
-                "unrealized_pnl": snap.unrealized_pnl,
-                "open_positions": len(snap.open_positions),
-                "open_orders": len(snap.open_orders),
-                "source": snap.source,
-            }
-        pre["approval"] = st.approval.snapshot()
-        pre["gate"] = st.gate.snapshot()
-        return jsonify(_wrap(pre))
+            orch = SmokeOrderOrchestrator(
+                gate=st.gate,
+                reader=_build_live_or_fake_reader(),
+                persistence=st.persistence,
+                epoch_tracker=st.epoch_tracker,
+                approval=st.approval,
+                kill_switch=st.kill_switch,
+                writer=DemoWriteClient(),
+                export_dir=st.data_root / "artifacts" / "demo_validation",
+            )
+            pre = orch._preflight()
+            snap = pre.pop("snapshot", None)
+            if snap is not None:
+                pre["account"] = {
+                    "wallet_balance": snap.wallet_balance,
+                    "equity": snap.equity,
+                    "available_balance": snap.available_balance,
+                    "used_margin": snap.used_margin,
+                    "unrealized_pnl": snap.unrealized_pnl,
+                    "open_positions": len(snap.open_positions),
+                    "open_orders": len(snap.open_orders),
+                    "source": snap.source,
+                }
+            pre["approval"] = st.approval.snapshot()
+            pre["gate"] = st.gate.snapshot()
+            return jsonify(_wrap(pre))
+        except Exception as exc:  # noqa: BLE001 — never 500 opaque for operator preflight
+            logger.exception("founder_smoke_preflight_failed")
+            return jsonify(
+                _wrap(
+                    {
+                        "ok": False,
+                        "reason": f"preflight_exception:{type(exc).__name__}",
+                        "approval": st.approval.snapshot(),
+                        "gate": st.gate.snapshot(),
+                    }
+                )
+            ), 200
 
     @app.route("/api/nexus/demo-execution/founder-smoke/execute", methods=["POST"])
     def demo_execution_founder_smoke_execute():
