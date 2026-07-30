@@ -164,6 +164,11 @@ jobs:
           set_var OBSERVER false
           set_var CLEAN24H false
           set_var FORCE_PUSH false
+          # Founder-approved one-shot smoke window (NOT autonomous).
+          set_var FOUNDER_GATE FIRST_BYBIT_DEMO_SMOKE_ORDER
+          set_var FOUNDER_SMOKE_ORDER_APPROVED true
+          set_var NEXUS_DEPLOYMENT_ID "${GITHUB_SHA:-unknown}"
+          set_var GITHUB_SHA "${GITHUB_SHA:-unknown}"
 
           if [ -n "${BYBIT_DEMO_API_KEY:-}" ]; then
             set_var BYBIT_DEMO_API_KEY "$BYBIT_DEMO_API_KEY"
