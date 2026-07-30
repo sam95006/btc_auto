@@ -146,6 +146,7 @@ class DemoExecutionApiState:
         from backend.nexus_demo_execution.founder_approval import FounderSmokeApprovalStore
 
         self.approval = FounderSmokeApprovalStore()
+        self._bounded_6h: Any = None
         logger.info(
             "demo_api_state_ready data_root=%s persistence_blocked=%s",
             self.data_root,
@@ -225,6 +226,7 @@ class DemoExecutionApiState:
             "order_adapter": self.order_adapter.counters(),
             "last_cycle": self._last_cycle_result,
             "last_smoke": self._last_smoke_result,
+            "bounded_6h": self._bounded_6h.status() if self._bounded_6h else {"status": "IDLE"},
         }
 
     def account_payload(self, *, fresh: bool = False) -> dict[str, Any]:
@@ -339,6 +341,39 @@ class DemoExecutionApiState:
             "smoke_running": True,
             "report": {"status": "STARTED", "poll": "/api/nexus/demo-execution/founder-smoke/latest"},
         }
+
+    def start_bounded_6h(self) -> dict[str, Any]:
+        from backend.nexus_demo_execution.bounded_6h_session import Bounded6HSession
+        from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
+
+        if self._bounded_6h is None:
+            export_dir = self.data_root / "artifacts" / "demo_validation"
+            export_dir.mkdir(parents=True, exist_ok=True)
+            self._bounded_6h = Bounded6HSession(
+                gate=self.gate,
+                reader=_build_live_or_fake_reader(),
+                persistence=self.persistence,
+                epoch_tracker=self.epoch_tracker,
+                kill_switch=self.kill_switch,
+                writer=DemoWriteClient(),
+                approval=self.approval,
+                export_dir=export_dir,
+                data_root=self.data_root,
+            )
+        return self._bounded_6h.start()
+
+    def bounded_6h_status(self) -> dict[str, Any]:
+        if self._bounded_6h is None:
+            return {"status": "IDLE", "found": False}
+        payload = self._bounded_6h.status()
+        payload["found"] = True
+        return payload
+
+    def stop_bounded_6h(self, reason: str = "OPERATOR_STOP") -> dict[str, Any]:
+        if self._bounded_6h is None:
+            return {"ok": False, "reason": "no_session"}
+        self._bounded_6h.stop(reason)
+        return {"ok": True, "status": self._bounded_6h.status()}
 
 
 _STATE: DemoExecutionApiState | None = None
@@ -473,6 +508,19 @@ def register_demo_execution_routes(app: Flask) -> None:
     def demo_execution_founder_smoke_latest():
         st = get_demo_execution_state()
         return jsonify(_wrap({"found": st._last_smoke_result is not None, "smoke": st._last_smoke_result}))
+
+    @app.route("/api/nexus/demo-execution/bounded-6h/start", methods=["POST"])
+    def demo_execution_bounded_6h_start():
+        result = get_demo_execution_state().start_bounded_6h()
+        return jsonify(_wrap({"bounded_6h_start": result}))
+
+    @app.route("/api/nexus/demo-execution/bounded-6h/status", methods=["GET"])
+    def demo_execution_bounded_6h_status():
+        return jsonify(_wrap({"bounded_6h": get_demo_execution_state().bounded_6h_status()}))
+
+    @app.route("/api/nexus/demo-execution/bounded-6h/stop", methods=["POST"])
+    def demo_execution_bounded_6h_stop():
+        return jsonify(_wrap(get_demo_execution_state().stop_bounded_6h("OPERATOR_STOP")))
 
     logger.info(
         "demo_execution_routes_registered persistence_blocked=%s",

@@ -28,6 +28,7 @@ ALLOWED_PRIVATE_READ = frozenset(
         "/v5/order/realtime",
         "/v5/order/history",
         "/v5/position/closed-pnl",
+        "/v5/account/fee-rate",
     }
 )
 SMOKE_SYMBOLS = frozenset({"BTCUSDT", "ETHUSDT"})
@@ -298,6 +299,21 @@ class DemoWriteClient:
             params["symbol"] = symbol.upper()
         data = self._get("/v5/order/realtime", params)
         return list((data.get("result") or {}).get("list") or [])
+
+    def fetch_fee_rate(self, symbol: str) -> float | None:
+        """Return taker fee rate or None if unknown (must not invent)."""
+        try:
+            data = self._get(
+                "/v5/account/fee-rate",
+                {"category": "linear", "symbol": symbol.upper()},
+            )
+            rows = (data.get("result") or {}).get("list") or []
+            if not rows:
+                return None
+            rate = _float(rows[0].get("takerFeeRate"))
+            return rate if rate > 0 else None
+        except Exception:
+            return None
 
     def closed_pnl(self, symbol: str) -> dict[str, Any] | None:
         data = self._get(

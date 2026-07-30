@@ -164,13 +164,16 @@ jobs:
           set_var OBSERVER false
           set_var CLEAN24H false
           set_var FORCE_PUSH false
-          # Founder one-shot smoke window — default OFF after first smoke executed.
-          # Re-enable only with a new Founder approval for a future gate.
-          set_var FOUNDER_GATE FIRST_BYBIT_DEMO_SMOKE_ORDER
+          # Founder 6H bounded autonomous validation window (NOT 24H, NOT mainnet).
+          set_var FOUNDER_GATE DEMO_AUTONOMOUS_6H_BOUNDED_VALIDATION
+          set_var FOUNDER_6H_APPROVED true
           set_var FOUNDER_SMOKE_ORDER_APPROVED false
           set_var FOUNDER_SMOKE_ALREADY_EXECUTED true
+          set_var DEMO_AUTONOMOUS_ENABLED false
           set_var NEXUS_DEPLOYMENT_ID "${GITHUB_SHA:-unknown}"
+          set_var NEXUS_DEPLOY_RUN_ID "${GITHUB_RUN_ID:-unknown}"
           set_var GITHUB_SHA "${GITHUB_SHA:-unknown}"
+          set_var GITHUB_RUN_ID "${GITHUB_RUN_ID:-unknown}"
 
           if [ -n "${BYBIT_DEMO_API_KEY:-}" ]; then
             set_var BYBIT_DEMO_API_KEY "$BYBIT_DEMO_API_KEY"

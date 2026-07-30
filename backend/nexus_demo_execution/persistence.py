@@ -21,6 +21,12 @@ STREAMS = frozenset(
         "protection_checks",
         "gate_evidence",
         "smoke_sessions",
+        "session_checkpoints",
+        "decision_deltas",
+        "cost_gates",
+        "session_summaries",
+        "universe_scans",
+        "bounded_candidates",
     }
 )
 
