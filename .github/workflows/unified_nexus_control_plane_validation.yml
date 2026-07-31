@@ -878,7 +878,8 @@ jobs:
           gql_code=$?
           set -e
           echo "graphql_scale_exit=$gql_code"
-          # Do not hard-fail here: final health probe decides success.      - name: Verify Validation alive; legacy endpoints down/error
+          # Do not hard-fail here: final health probe decides success.
+      - name: Verify Validation alive; legacy endpoints down/error
         run: |
           set -euo pipefail
           sleep 20
