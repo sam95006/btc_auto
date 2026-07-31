@@ -9,8 +9,11 @@ from backend.nexus_demo_execution.session_limits import (
     FUNDING_CONSERVATIVE_BUFFER_RATE,
     MIN_NET_REWARD_RISK_RATIO,
     MIN_NET_REWARD_TO_COST,
-    TAKER_FEE_RATE_DEFAULT,
 )
+
+
+MISSING = "MISSING"
+UNAVAILABLE = "UNAVAILABLE"
 
 
 @dataclass
@@ -19,13 +22,14 @@ class CostGateResult:
     reason: str
     fee_rate_status: str
     funding_status: str
-    estimated_net_reward: float = 0.0
-    estimated_net_risk: float = 0.0
-    estimated_total_cost: float = 0.0
-    net_reward_risk_ratio: float = 0.0
-    cost_to_gross_reward_ratio: float = 0.0
+    estimated_net_reward: float | str = UNAVAILABLE
+    estimated_net_risk: float | str = UNAVAILABLE
+    estimated_total_cost: float | str = UNAVAILABLE
+    net_reward_risk_ratio: float | str = UNAVAILABLE
+    cost_to_gross_reward_ratio: float | str = UNAVAILABLE
     labels: list[str] = field(default_factory=list)
     breakdown: dict[str, Any] = field(default_factory=dict)
+    fee_meta: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -40,6 +44,7 @@ class CostGateResult:
             "cost_to_gross_reward_ratio": self.cost_to_gross_reward_ratio,
             "labels": list(self.labels),
             "breakdown": dict(self.breakdown),
+            "fee_meta": dict(self.fee_meta),
         }
 
 
@@ -53,15 +58,43 @@ def evaluate_cost_gate(
     fee_rate: float | None,
     funding_rate: float | None,
     slippage_bps: float,
+    fee_meta: dict[str, Any] | None = None,
 ) -> CostGateResult:
     labels: list[str] = []
+    meta = dict(fee_meta or {})
+    funding_status = UNAVAILABLE if funding_rate is None else "KNOWN"
+
     if fee_rate is None or fee_rate <= 0:
+        status = str(meta.get("status") or "FEE_RATE_UNAVAILABLE")
         return CostGateResult(
             allowed=False,
             reason="FEE_RATE_UNKNOWN",
-            fee_rate_status="UNKNOWN",
-            funding_status="UNAVAILABLE" if funding_rate is None else "KNOWN",
-            labels=["FEE_RATE_UNKNOWN", "NEW_ENTRY_BLOCKED"],
+            fee_rate_status=status,
+            funding_status=funding_status,
+            estimated_net_reward=UNAVAILABLE,
+            estimated_net_risk=UNAVAILABLE,
+            estimated_total_cost=UNAVAILABLE,
+            net_reward_risk_ratio=UNAVAILABLE,
+            cost_to_gross_reward_ratio=UNAVAILABLE,
+            labels=["FEE_RATE_UNKNOWN", "NEW_ENTRY_BLOCKED", status],
+            breakdown={
+                "gross_take_profit_pnl": UNAVAILABLE,
+                "gross_stop_loss_pnl": UNAVAILABLE,
+                "estimated_entry_fee": UNAVAILABLE,
+                "estimated_exit_fee": UNAVAILABLE,
+                "estimated_round_trip_fee": UNAVAILABLE,
+                "estimated_slippage": UNAVAILABLE,
+                "estimated_funding": UNAVAILABLE,
+                "cost_uncertainty_buffer": UNAVAILABLE,
+                "fee_rate": UNAVAILABLE,
+                "notional": UNAVAILABLE,
+                "fee_source": meta.get("fee_source", MISSING),
+                "fee_fetch_error": meta.get("fee_fetch_error", MISSING),
+                "fee_fetched_at": meta.get("fee_fetched_at", MISSING),
+                "maker_fee_rate": meta.get("maker_fee_rate", UNAVAILABLE),
+                "taker_fee_rate": meta.get("taker_fee_rate", UNAVAILABLE),
+            },
+            fee_meta=meta,
         )
 
     notional = abs(entry_price * qty)
@@ -69,12 +102,18 @@ def evaluate_cost_gate(
         return CostGateResult(
             allowed=False,
             reason="INVALID_PRICE_QTY",
-            fee_rate_status="KNOWN",
-            funding_status="UNAVAILABLE" if funding_rate is None else "KNOWN",
+            fee_rate_status=str(meta.get("status") or "KNOWN"),
+            funding_status=funding_status,
+            estimated_net_reward=UNAVAILABLE,
+            estimated_net_risk=UNAVAILABLE,
+            estimated_total_cost=UNAVAILABLE,
+            net_reward_risk_ratio=UNAVAILABLE,
+            cost_to_gross_reward_ratio=UNAVAILABLE,
             labels=["INVALID_NOTIONAL"],
+            breakdown={"notional": notional, "entry_price": entry_price, "qty": qty},
+            fee_meta=meta,
         )
 
-    # Gross TP / SL PnL (price move * qty)
     if side.lower() == "buy":
         gross_tp = (take_profit - entry_price) * qty
         gross_sl = (entry_price - stop_loss) * qty
@@ -85,11 +124,9 @@ def evaluate_cost_gate(
     entry_fee = notional * fee_rate
     exit_fee = notional * fee_rate
     round_trip_fee = entry_fee + exit_fee
-    slippage = notional * (slippage_bps / 10000.0)
+    slippage = notional * (float(slippage_bps) / 10000.0)
 
-    funding_status = "KNOWN"
     if funding_rate is None:
-        funding_status = "UNAVAILABLE"
         funding_cost = notional * FUNDING_CONSERVATIVE_BUFFER_RATE
         labels.append("FUNDING_UNAVAILABLE_USING_CONSERVATIVE_BUFFER")
     else:
@@ -102,6 +139,7 @@ def evaluate_cost_gate(
     rr = (net_reward / net_risk) if net_risk > 0 else 0.0
     cost_to_gross = (total_cost / gross_tp) if gross_tp > 0 else 999.0
 
+    fee_status = str(meta.get("status") or "FEE_RATE_LIVE")
     breakdown = {
         "gross_take_profit_pnl": round(gross_tp, 6),
         "gross_stop_loss_pnl": round(gross_sl, 6),
@@ -113,7 +151,12 @@ def evaluate_cost_gate(
         "cost_uncertainty_buffer": round(uncertainty, 6),
         "fee_rate": fee_rate,
         "notional": round(notional, 6),
-        "default_fee_fallback_used": fee_rate == TAKER_FEE_RATE_DEFAULT,
+        "fee_source": meta.get("fee_source", MISSING),
+        "fee_fetch_error": meta.get("fee_fetch_error"),
+        "fee_fetched_at": meta.get("fee_fetched_at"),
+        "maker_fee_rate": meta.get("maker_fee_rate"),
+        "taker_fee_rate": meta.get("taker_fee_rate", fee_rate),
+        "default_fee_fallback_used": fee_status == "FEE_RATE_CONFIGURED_CONSERVATIVE",
     }
 
     if net_reward <= 0:
@@ -121,7 +164,7 @@ def evaluate_cost_gate(
         return CostGateResult(
             False,
             "BLOCK_COST_DOMINATED_ENTRY",
-            "KNOWN",
+            fee_status,
             funding_status,
             net_reward,
             net_risk,
@@ -130,13 +173,14 @@ def evaluate_cost_gate(
             cost_to_gross,
             labels,
             breakdown,
+            meta,
         )
     if net_reward < MIN_NET_REWARD_TO_COST * total_cost:
         labels.extend(["BLOCK_COST_DOMINATED_ENTRY", "fee_churn_candidate"])
         return CostGateResult(
             False,
             "BLOCK_COST_DOMINATED_ENTRY",
-            "KNOWN",
+            fee_status,
             funding_status,
             net_reward,
             net_risk,
@@ -145,13 +189,14 @@ def evaluate_cost_gate(
             cost_to_gross,
             labels,
             breakdown,
+            meta,
         )
     if rr < MIN_NET_REWARD_RISK_RATIO:
         labels.extend(["BLOCK_COST_DOMINATED_ENTRY", "net_reward_risk_ratio_low"])
         return CostGateResult(
             False,
             "BLOCK_COST_DOMINATED_ENTRY",
-            "KNOWN",
+            fee_status,
             funding_status,
             net_reward,
             net_risk,
@@ -160,12 +205,13 @@ def evaluate_cost_gate(
             cost_to_gross,
             labels,
             breakdown,
+            meta,
         )
 
     return CostGateResult(
         True,
         "COST_GATE_PASS",
-        "KNOWN",
+        fee_status,
         funding_status,
         net_reward,
         net_risk,
@@ -174,4 +220,5 @@ def evaluate_cost_gate(
         cost_to_gross,
         labels,
         breakdown,
+        meta,
     )

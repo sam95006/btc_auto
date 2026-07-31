@@ -300,20 +300,61 @@ class DemoWriteClient:
         data = self._get("/v5/order/realtime", params)
         return list((data.get("result") or {}).get("list") or [])
 
-    def fetch_fee_rate(self, symbol: str) -> float | None:
-        """Return taker fee rate or None if unknown (must not invent)."""
+    def fetch_fee_rate_quote(self, symbol: str):
+        """Resolve taker fee with honest status — never invent silent zeros."""
+        from backend.nexus_demo_execution.fee_rate import (
+            FEE_RATE_AUTH_FAILED,
+            FEE_RATE_UNAVAILABLE,
+            cache_get,
+            configured_conservative_quote,
+            parse_fee_rows,
+            unavailable,
+        )
+
+        symbol = symbol.upper()
+        cached = cache_get(symbol)
+        if cached is not None:
+            return cached
+
         try:
             data = self._get(
                 "/v5/account/fee-rate",
-                {"category": "linear", "symbol": symbol.upper()},
+                {"category": "linear", "symbol": symbol},
             )
             rows = (data.get("result") or {}).get("list") or []
-            if not rows:
-                return None
-            rate = _float(rows[0].get("takerFeeRate"))
-            return rate if rate > 0 else None
-        except Exception:
-            return None
+            quote = parse_fee_rows(rows, symbol)
+            if quote.usable_taker is not None:
+                return quote
+            # Retry without symbol (account-tier default)
+            data2 = self._get("/v5/account/fee-rate", {"category": "linear"})
+            rows2 = (data2.get("result") or {}).get("list") or []
+            quote2 = parse_fee_rows(rows2, symbol)
+            if quote2.usable_taker is not None:
+                quote2.fee_source = "bybit_demo:/v5/account/fee-rate?category=linear"
+                return quote2
+            conservative = configured_conservative_quote(symbol)
+            return conservative or quote2
+        except DemoWriteError as exc:
+            status = FEE_RATE_AUTH_FAILED if exc.code in {"credentials_missing", "api_error"} and (
+                "10003" in exc.detail or "10004" in exc.detail or "10005" in exc.detail or exc.code == "credentials_missing"
+            ) else FEE_RATE_UNAVAILABLE
+            if exc.code == "credentials_missing":
+                status = FEE_RATE_AUTH_FAILED
+            conservative = configured_conservative_quote(symbol)
+            if conservative is not None:
+                conservative.fee_fetch_error = f"{exc.code}:{exc.detail}"
+                return conservative
+            return unavailable(symbol, status=status, error=f"{exc.code}:{exc.detail}")
+        except Exception as exc:  # noqa: BLE001
+            conservative = configured_conservative_quote(symbol)
+            if conservative is not None:
+                conservative.fee_fetch_error = type(exc).__name__
+                return conservative
+            return unavailable(symbol, status=FEE_RATE_UNAVAILABLE, error=type(exc).__name__)
+
+    def fetch_fee_rate(self, symbol: str) -> float | None:
+        """Backward-compatible taker rate or None (must not invent)."""
+        return self.fetch_fee_rate_quote(symbol).usable_taker
 
     def closed_pnl(self, symbol: str) -> dict[str, Any] | None:
         data = self._get(

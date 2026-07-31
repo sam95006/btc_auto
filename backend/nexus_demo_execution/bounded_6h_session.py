@@ -390,7 +390,7 @@ class Bounded6HSession:
                 sl_f, tp_f = price * 1.008, price * 0.992
             sl = self.writer.format_price(sl_f, tick)
             tp = self.writer.format_price(tp_f, tick)
-            fee_rate = self.writer.fetch_fee_rate(cand.symbol)
+            fee_quote = self.writer.fetch_fee_rate_quote(cand.symbol)
             funding = cand.funding_rate if cand.funding_status == "KNOWN" else None
             cost = evaluate_cost_gate(
                 entry_price=price,
@@ -398,9 +398,10 @@ class Bounded6HSession:
                 take_profit=_f(tp),
                 qty=_f(qty),
                 side=cand.direction,
-                fee_rate=fee_rate,
+                fee_rate=fee_quote.usable_taker,
                 funding_rate=funding,
                 slippage_bps=cand.spread_bps,
+                fee_meta=fee_quote.to_dict(),
             )
             self.persistence.append("cost_gates", redact_secrets(cost.to_dict()), account_epoch=account_epoch)
             if not cost.allowed:

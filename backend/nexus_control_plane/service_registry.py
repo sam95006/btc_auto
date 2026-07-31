@@ -65,17 +65,37 @@ class ServiceRegistry:
 
     @classmethod
     def from_env(cls) -> "ServiceRegistry":
-        market_url = (
-            os.environ.get("NEXUS_MARKET_INTELLIGENCE_URL")
-            or os.environ.get("NEXUS_STAGE3_URL")
-            or "https://nexus-stage3-bybit-demo-learning.zeabur.app"
-        ).rstrip("/")
-        demo_url = (
-            os.environ.get("NEXUS_DEMO_EXECUTION_URL")
+        single = _truthy("NEXUS_SINGLE_SERVICE")
+        self_url = (
+            os.environ.get("NEXUS_SELF_URL")
             or os.environ.get("NEXUS_DEMO_VALIDATION_URL")
-            or "https://nexus-bybit-demo-val.zeabur.app"
+            or os.environ.get("NEXUS_DEMO_EXECUTION_URL")
+            or "http://127.0.0.1:8080"
         ).rstrip("/")
-        control_url = (os.environ.get("NEXUS_CONTROL_PLANE_URL") or "local://control-plane").rstrip("/")
+
+        if single:
+            # Consolidation mode: one Zeabur service owns market + execution + learning + UI.
+            market_url = self_url
+            demo_url = self_url
+            control_url = self_url
+            market_name = "nexus-bybit-demo-learning-validation"
+            control_name = "nexus-bybit-demo-learning-validation"
+            market_policy = "internal-market-intelligence"
+        else:
+            market_url = (
+                os.environ.get("NEXUS_MARKET_INTELLIGENCE_URL")
+                or os.environ.get("NEXUS_STAGE3_URL")
+                or "https://nexus-stage3-bybit-demo-learning.zeabur.app"
+            ).rstrip("/")
+            demo_url = (
+                os.environ.get("NEXUS_DEMO_EXECUTION_URL")
+                or os.environ.get("NEXUS_DEMO_VALIDATION_URL")
+                or "https://nexus-bybit-demo-val.zeabur.app"
+            ).rstrip("/")
+            control_url = (os.environ.get("NEXUS_CONTROL_PLANE_URL") or "local://control-plane").rstrip("/")
+            market_name = "nexus-stage3-bybit-demo-learning"
+            control_name = "nexus-web-control-plane"
+            market_policy = "stage3-market-gateway"
 
         # Stage3 must never be execution owner in the unified contract.
         stage3_exec = False
@@ -84,14 +104,14 @@ class ServiceRegistry:
 
         reg = cls()
         reg.records[ROLE_MARKET_INTELLIGENCE] = ServiceRecord(
-            service_name="nexus-stage3-bybit-demo-learning",
+            service_name=market_name,
             service_role=ROLE_MARKET_INTELLIGENCE,
             service_url=market_url,
             execution_owner=stage3_exec,
             exchange_write_capability=False,
             mainnet_capability=False,
             real_money_capability=False,
-            policy_version="stage3-market-gateway",
+            policy_version=market_policy,
         )
         reg.records[ROLE_DEMO_EXECUTION] = ServiceRecord(
             service_name="nexus-bybit-demo-learning-validation",
@@ -114,7 +134,7 @@ class ServiceRegistry:
             policy_version="demo-learning-evidence",
         )
         reg.records[ROLE_CONTROL_PLANE] = ServiceRecord(
-            service_name="nexus-web-control-plane",
+            service_name=control_name,
             service_role=ROLE_CONTROL_PLANE,
             service_url=control_url,
             execution_owner=False,

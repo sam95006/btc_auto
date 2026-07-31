@@ -85,6 +85,12 @@ def register_control_plane_routes(app: Flask) -> None:
     def control_plane_ownership():
         return _ok({"ownership": validate_execution_ownership(registry)})
 
+    @app.route("/api/nexus/control-plane/component-health", methods=["GET"])
+    def control_plane_component_health():
+        from backend.nexus_demo_execution.component_health import snapshot as health_snapshot
+
+        return _ok({"component_health": health_snapshot()})
+
     def _block_write():
         counters.incr("federation_write_attempt_count")
         return jsonify(_FORBIDDEN_WRITE_HINT), 405
