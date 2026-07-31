@@ -1,0 +1,77 @@
+{
+  "observation_status": "ABORTED_BY_FOUNDER_FOR_DEMO_VALIDATION",
+  "operational_observation_pass": false,
+  "observation_completed_full_24h": false,
+  "operational_observation_status": "ABORTED_BY_FOUNDER_FOR_DEMO_VALIDATION",
+  "reason": "FOUNDER_PRIORITIZED_BOUNDED_DEMO_EXECUTION_VALIDATION",
+  "founder_override_id": "FO-20260731-ABORT24H-DEMO6H12H",
+  "founder_override_reason": "FOUNDER_PRIORITIZED_BOUNDED_DEMO_EXECUTION_VALIDATION",
+  "approved_at": "2026-07-31T10:05:06Z",
+  "approved_scope": [
+    "abort_incomplete_operational_24h",
+    "demo_autonomous_6h_v2",
+    "demo_autonomous_12h_v3_via_machine_gate"
+  ],
+  "FOUNDER_OVERRIDE_ABORT_OPERATIONAL_24H": true,
+  "FOUNDER_APPROVE_DEMO_AUTONOMOUS_6H_V2": true,
+  "FOUNDER_APPROVE_DEMO_AUTONOMOUS_12H_V3": true,
+  "observation_started_at": "2026-07-31T05:11:30Z",
+  "observation_aborted_at": "2026-07-31T10:05:06Z",
+  "actual_duration_hours": 4.8933,
+  "completed_checkpoints": [
+    "T+EARLY",
+    "T+1H",
+    "T+3H",
+    "ABORT_FINAL"
+  ],
+  "missing_checkpoints": [
+    "T+6H",
+    "T+12H",
+    "T+18H",
+    "T+24H"
+  ],
+  "runtime_health": {
+    "health_status": 200,
+    "market_worker_health": "HEALTHY",
+    "position_supervisor_health": "UNKNOWN",
+    "persistence_health": "UNKNOWN",
+    "soft_flags": [
+      "RUNTIME_IDENTITY_LABEL_MISMATCH_VS_SOT",
+      "COMPONENT_UNKNOWN:web_health",
+      "COMPONENT_UNKNOWN:position_supervisor_health",
+      "COMPONENT_UNKNOWN:persistence_health"
+    ]
+  },
+  "market_cycles_delta": null,
+  "market_cycles_note": "market_cycle_count field non-incremental/timestamp-like; delta not claimed",
+  "candidate_delta": 0,
+  "geometry_complete": 8,
+  "geometry_missing": 0,
+  "cost_gate_delta": null,
+  "position_count_at_abort": 0,
+  "open_order_count_at_abort": 0,
+  "exchange_write_call_count_at_abort": 0,
+  "hidden_dependency_count_at_abort": 0,
+  "active_http_200_service_count": 1,
+  "execution_owner_count": 1,
+  "legacy_stage3_http_status": 404,
+  "legacy_control_plane_http_status": 404,
+  "legacy_stage3": "SUSPENDED",
+  "legacy_control_plane": "SUSPENDED",
+  "deployment_commit_at_abort": "598a5e11985f613007c8d65e61fa1dd9c7cbdf67",
+  "deploy_run_at_abort": "30605493505",
+  "abort_checkpoint_path": "artifacts/single_service_observation/checkpoint_ABORT_FINAL_20260731T100509Z.json",
+  "must_not_claim": [
+    "NEXUS_SINGLE_SERVICE_OPERATIONAL_24H_PASS",
+    "fabricated_T+12",
+    "fabricated_T+18",
+    "fabricated_T+24",
+    "completed_full_24h"
+  ],
+  "mainnet": false,
+  "real_money": false,
+  "exchange_write": false,
+  "source_observation_report": "docs/04_readiness/NEXUS_SINGLE_SERVICE_OPERATIONAL_OBSERVATION_ABORTED_REPORT.md",
+  "source_observation_checksum": "59abadb5c0532dbca4ca69dfb3a1e295c888c03ad4d3e305c71bbef36dcfdf3d",
+  "observation_aborted_json_checksum": "fdc85f660bcb4f0337407c9b0cdc45548a4db74814741660906f3fe8206d8b83"
+}

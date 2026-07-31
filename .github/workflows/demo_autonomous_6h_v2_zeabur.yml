@@ -1,6 +1,7 @@
 name: demo-autonomous-6h-v2-zeabur
 
-# CONDITIONALLY APPROVED only. Refuses to start during 24h operational observation.
+# CONDITIONALLY APPROVED. Allows either full 24H observation PASS
+# OR explicit Founder abort override (never a silent boolean skip).
 # Never creates a new Zeabur service. Deploy target = existing Validation only.
 
 on:
@@ -26,7 +27,26 @@ on:
         type: string
       observation_report_path:
         required: false
-        default: "docs/04_readiness/NEXUS_SINGLE_SERVICE_24H_OPERATIONAL_FINAL_REPORT.md"
+        default: "docs/04_readiness/NEXUS_SINGLE_SERVICE_OPERATIONAL_OBSERVATION_ABORTED_REPORT.md"
+        type: string
+      founder_override_id:
+        required: false
+        default: ""
+        type: string
+      founder_override_abort_operational_24h:
+        description: "Must be exact string true when using abort path"
+        required: false
+        default: ""
+        type: string
+      founder_approve_demo_autonomous_6h_v2:
+        description: "Must be exact string true"
+        required: false
+        default: ""
+        type: string
+      founder_approve_demo_autonomous_12h_v3:
+        description: "Must be exact string true to arm 12H (still machine-gated)"
+        required: false
+        default: ""
         type: string
 
 permissions:
@@ -43,7 +63,6 @@ env:
   DEMO_AUTONOMOUS_ENABLED: "false"
   VALIDATION_SERVICE_ID: 6a69ad539949111176cefe63
   FORBIDDEN_STAGE3: 6a3b81652fdef84a45a2a553
-  OBS_END: "2026-08-01T05:11:30Z"
 
 jobs:
   gate-and-prepare:
@@ -54,13 +73,6 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.founder_approval_phrase }}" != "APPROVE_NEXUS_DEMO_6H_V2" ]; then
             echo "Founder phrase mismatch"
-            exit 1
-          fi
-      - name: Observation deadline must be reached
-        run: |
-          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          if [[ "$NOW" < "$OBS_END" ]]; then
-            echo "BLOCKED: operational observation still open ($NOW < $OBS_END)"
             exit 1
           fi
       - name: Service id must be Validation only
@@ -75,29 +87,66 @@ jobs:
       - run: pip install -r requirements.txt flask pytest
         env:
           PYTHONPATH: ${{ github.workspace }}
-      - name: Unit + dry-run gates
+      - name: Unit + override + dry-run gates
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: |
-          python -m pytest tests/test_demo_6h_v2_readiness.py tests/test_demo_6h_12h_session_engine.py -q --tb=line
+          python -m pytest tests/test_demo_6h_v2_readiness.py tests/test_demo_6h_12h_session_engine.py tests/test_founder_operational_override.py -q --tb=line
           python tools/ci/demo_6h_v2_dry_run.py
-      - name: Require observation PASS artifact/report markers
+      - name: Honest observation PASS or Founder abort override
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          FOUNDER_OVERRIDE_ABORT_OPERATIONAL_24H: ${{ github.event.inputs.founder_override_abort_operational_24h }}
+          FOUNDER_APPROVE_DEMO_AUTONOMOUS_6H_V2: ${{ github.event.inputs.founder_approve_demo_autonomous_6h_v2 }}
+          FOUNDER_APPROVE_DEMO_AUTONOMOUS_12H_V3: ${{ github.event.inputs.founder_approve_demo_autonomous_12h_v3 }}
+          MAINNET: "false"
+          REAL_MONEY: "false"
         run: |
-          # Final report must exist and declare PASS (created after observation ends).
-          test -f "${{ github.event.inputs.observation_report_path }}" || test -f docs/04_readiness/NEXUS_SINGLE_SERVICE_24H_OPERATIONAL_FINAL_REPORT.md
           python - <<'PY'
+          import json, sys
+          from datetime import datetime, timezone
           from pathlib import Path
-          cands=[Path("docs/04_readiness/NEXUS_SINGLE_SERVICE_24H_OPERATIONAL_FINAL_REPORT.md"), Path("artifacts/single_service_observation/final_pass.json")]
-          text=""
-          for p in cands:
-              if p.exists():
-                  text += p.read_text(encoding="utf-8", errors="ignore")
-          assert "NEXUS_SINGLE_SERVICE_OPERATIONAL_24H_PASS" in text or '"operational_observation_pass": true' in text.lower() or '"operational_observation_pass":true' in text.lower(), "observation pass marker missing"
-          print("observation_pass_marker_ok")
+          from backend.nexus_demo_execution.founder_operational_override import (
+              build_override_record,
+              evaluate_operational_observation_gate,
+          )
+          cands = [
+              Path("""${{ github.event.inputs.observation_report_path }}"""),
+              Path("docs/04_readiness/NEXUS_SINGLE_SERVICE_OPERATIONAL_OBSERVATION_ABORTED_REPORT.md"),
+              Path("docs/04_readiness/NEXUS_SINGLE_SERVICE_24H_OPERATIONAL_FINAL_REPORT.md"),
+              Path("artifacts/single_service_observation/observation_aborted.json"),
+              Path("artifacts/single_service_observation/final_pass.json"),
+          ]
+          path = next((p for p in cands if p.exists()), None)
+          if path is None:
+              print("observation report missing")
+              sys.exit(1)
+          text = path.read_text(encoding="utf-8", errors="ignore")
+          ov = None
+          oid = """${{ github.event.inputs.founder_override_id }}""".strip()
+          if oid:
+              ov = build_override_record(
+                  founder_override_id=oid,
+                  approved_at=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                  source_observation_report=str(path),
+                  source_text=text,
+              )
+              Path("artifacts").mkdir(exist_ok=True)
+              Path("artifacts/founder_override_record.json").write_text(
+                  json.dumps(ov.to_dict(), indent=2) + "\n", encoding="utf-8"
+              )
+              print(json.dumps(ov.to_dict(), indent=2))
+          gate = evaluate_operational_observation_gate(observation_text=text, override=ov)
+          print(json.dumps({k: gate[k] for k in ("allow_6h_v2_start","path","problems","markers")}, indent=2))
+          if not gate["allow_6h_v2_start"]:
+              sys.exit(1)
+          assert gate["can_bypass_6h_to_12h_machine_gate"] is False
+          assert gate["can_enable_mainnet"] is False
+          print("observation_gate_ok", gate["path"])
           PY
-      - name: Stop before live deploy/write (scaffold)
+      - name: Stop before live deploy/write (scaffold until deploy job armed)
         run: |
-          echo "6H V2 workflow scaffold PASS — live deploy/write intentionally not executed in this job revision until post-observation Founder confirm."
+          echo "6H V2 observation/override gate PASS"
           echo "exchange_write=false"
           echo "deploy=false"
           echo "auto_start_12h=false"
