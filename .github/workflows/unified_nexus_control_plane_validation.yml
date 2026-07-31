@@ -667,8 +667,15 @@ jobs:
           ENV_ID="$ZEABUR_ENV_ID"
           set_var() {
             local k="$1" v="$2"
-            zeabur variable upsert --key "$k" --value "$v" --service-id "$SID" --env-id "$ENV_ID" -i=false || \
-            zeabur variable create --key "$k" --value "$v" --service-id "$SID" --env-id "$ENV_ID" -i=false || true
+            set +e
+            zeabur variable create --id "$SID" -k "${k}=${v}" -y -i=false >/tmp/var_out.txt 2>&1
+            code=$?
+            if [ "$code" != "0" ]; then
+              zeabur variable update --id "$SID" -k "${k}=${v}" -y -i=false >/tmp/var_out.txt 2>&1
+              code=$?
+            fi
+            set -e
+            echo "var_${k}_exit=$code"
           }
           SHA=$(git rev-parse HEAD)
           set_var NEXUS_SINGLE_SERVICE true
@@ -732,7 +739,14 @@ jobs:
             sleep 15
           done
           test "$code" = "200"
-          curl -fsS "$BASE/api/nexus/fee-policy" | tee /tmp/fee.json | head -c 500
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            fcode=$(curl -sS -o /tmp/fee.json -w "%{http_code}" "$BASE/api/nexus/fee-policy" || echo 000)
+            echo "fee_try=$i code=$fcode"
+            [ "$fcode" = "200" ] && break
+            sleep 12
+          done
+          test "$fcode" = "200"
+          head -c 500 /tmp/fee.json; echo
           curl -fsS "$BASE/api/nexus/market/status" | tee /tmp/mkt.json | head -c 500
           curl -fsS "$BASE/api/nexus/control-plane/overview" | tee /tmp/ov.json | head -c 500
           python - <<'PY'
