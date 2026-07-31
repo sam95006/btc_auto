@@ -1,7 +1,27 @@
 # NEXUS Single-Service 24H Read-Only Operational Observation
 
 **NOT** 24H Trading Validation.  
-**exchange_write=false** · **demo_autonomous=false** · **6H V2 not started**.
+**exchange_write=false** · **demo_autonomous=false** · **6H V2 not started** · **legacy delete frozen until PASS**.
+
+## Service count (Founder SoT)
+
+| Layer | Count | Detail |
+|-------|------:|--------|
+| Zeabur service **cards** | 3 | Validation + Stage3 + old Control Plane still listed |
+| Active **HTTP 200** services | **1** | `nexus-bybit-demo-learning-validation` only |
+| Execution owners | **1** | Demo Validation |
+| Suspended (HTTP ≠200) | 2 | Stage3 + old Control Plane (502) |
+
+## Version identity (do not conflate)
+
+| Label | SHA / ID | Meaning |
+|-------|----------|---------|
+| **deployment_commit (runtime SoT)** | `598a5e11985f613007c8d65e61fa1dd9c7cbdf67` | Fee-env fix + single-service deploy |
+| deploy_run | `30605493505` | Validation read-only deploy |
+| scale_run | `30606087614` | Legacy suspend |
+| **branch_docs_tip** | `38eb6b3…` | Readiness / observation docs only — **not** runtime |
+
+UI `version_labels.observation_deployed_code_sha` may still show an older label; treat Founder SoT `598a5e1` as deployment truth during this freeze (fee policy LIVE proves conservative config is loaded).
 
 ## Observation window
 
@@ -10,43 +30,43 @@
 | observation_kind | `single_service_operational_observation` |
 | started_at_utc | **2026-07-31T05:11:30Z** |
 | ends_at_utc | **2026-08-01T05:11:30Z** |
-| sole_running_service | `nexus-bybit-demo-learning-validation` |
+| started_at_taiwan | 2026-07-31T13:11:30+08:00 |
+| ends_at_taiwan | 2026-08-01T13:11:30+08:00 |
 | sole_url | https://nexus-bybit-demo-val.zeabur.app |
-| legacy_stage3_health_at_start | 502 |
-| legacy_control_plane_health_at_start | 502 |
-| validation_health_at_start | 200 |
-| fee_at_start | `FEE_RATE_CONFIGURED_CONSERVATIVE` / `FOUNDER_APPROVED_CONFIG` |
-| geometry_at_start | complete=8 missing=0 |
-| scale_run | [30606087614](https://github.com/sam95006/btc_auto/actions/runs/30606087614) |
 
-## Required continuous truths
+## Freeze until ends_at_utc
 
-- `stage3_http_dependency_count=0`
-- `external_control_plane_http_dependency_count=0`
-- `hidden_dependency_count=0`
-- `market_cycles_progressing=true`
-- `candidate_evidence_progressing=true`
-- `geometry_complete_count` increasing over time
-- `cost_gate_records_progressing=true` (read-only / dry evaluation only)
-- `demo_account_fresh=true`
-- `persistence_healthy=true`
-- `position_count=0`
-- `open_order_count=0`
-- `exchange_write_call_count=0`
-- `fee_rate_status=FEE_RATE_CONFIGURED_CONSERVATIVE`
+Forbidden: redeploy, runtime code change, env/fee/geometry/R:R change, service resume/delete/rename, 6H V2, 24H trading, exchange write, demo order, mainnet, real money.
 
-## Failure flag
+Monitor: **GET only** (`tools/ci/single_service_operational_monitor.py` + workflow `nexus-single-service-observation`).
 
-If any required capability dies because Stage3 / old Control Plane stopped:
+## Checkpoints
 
-`NEXUS_SINGLE_SERVICE_HIDDEN_DEPENDENCY_FOUND` → **do not** propose 6H V2.
+| Checkpoint | Target UTC | Status |
+|------------|------------|--------|
+| T+EARLY | 2026-07-31T05:52:40Z | **PASS soft** — health 200; geo 8/0; pos/orders 0; legacy ≠200 (404); fee_ok; soft: identity label mismatch + some component UNKNOWN |
+| T+1H | 2026-07-31T06:11:30Z | pending |
+| T+3H | 2026-07-31T08:11:30Z | pending |
+| T+6H | 2026-07-31T11:11:30Z | pending |
+| T+12H | 2026-07-31T17:11:30Z | pending |
+| T+18H | 2026-08-01T00:11:30Z | pending |
+| T+24H | 2026-08-01T05:11:30Z | pending |
 
-## End-state recommendation options
+Artifacts: `artifacts/single_service_observation/`.
 
-- `NEXUS_SINGLE_SERVICE_READY_FOR_6H_V2_FOUNDER_APPROVAL`
-- `NEXUS_SINGLE_SERVICE_PARTIAL_WITH_BLOCKERS`
-- `BLOCKED_NEXUS_SINGLE_SERVICE_CONSOLIDATION`
+## Soft findings to watch
 
-## Current checkpoint recommendation
+- Component health: `market_worker_health=HEALTHY`; `web` / `position_supervisor` / `persistence` may report `UNKNOWN` until workers annotate (freeze = no redeploy to “fix” labels).
+- Identity label mismatch vs SoT may appear in UI envelopes — do not “fix” by redeploy during freeze.
 
-`NEXUS_SINGLE_SERVICE_PARTIAL_WITH_BLOCKERS` — observation **started**, not finished.
+## After T+24H PASS only
+
+1. Final report → `NEXUS_SINGLE_SERVICE_24H_OPERATIONAL_FINAL_REPORT.md`
+2. Backup legacy **non-secret** metadata
+3. Conditional Founder delete of Stage3 + old Control Plane
+4. Verify `zeabur_project_service_count=1`
+5. **STOP BEFORE 6H V2** (`DEMO_AUTONOMOUS_6H_V2_APPROVED=false`)
+
+## Current recommendation
+
+`NEXUS_SINGLE_SERVICE_PARTIAL_WITH_BLOCKERS` — observation in progress; legacy delete not yet allowed.
