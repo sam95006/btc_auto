@@ -70,10 +70,12 @@ jobs:
           if [ "$SID" = "$FORBIDDEN_STAGE3" ]; then echo "stage3 forbidden"; exit 1; fi
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+        python-version: "3.11"
       - run: pip install -r requirements.txt flask pytest
       - name: Unit + dry-run gates
-        env: { PYTHONPATH: ${{ github.workspace }} }
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           python -m pytest tests/test_demo_6h_v2_readiness.py tests/test_demo_6h_12h_session_engine.py -q --tb=line
           python tools/ci/demo_6h_v2_dry_run.py

@@ -38,87 +38,104 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+        python-version: "3.11"
       - run: pip install -r requirements.txt flask pytest
       - run: python -m pytest tests/test_fee_rate_honesty.py tests/test_founder_fee_and_geometry_policy.py tests/test_demo_6h_v2_readiness.py::test_fee_conservative_env -q --tb=line
-        env: { PYTHONPATH: ${{ github.workspace }} }
+        env:
+          PYTHONPATH: ${{ github.workspace }}
 
   geometry-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+        python-version: "3.11"
       - run: pip install -r requirements.txt flask pytest
       - run: python -m pytest tests/test_fee_geometry_single_service.py tests/test_demo_6h_v2_readiness.py::test_geometry_missing_blocks tests/test_demo_6h_v2_readiness.py::test_structure_geometry_long_short tests/test_demo_6h_v2_readiness.py::test_net_rr_unchanged -q --tb=line
-        env: { PYTHONPATH: ${{ github.workspace }} }
+        env:
+          PYTHONPATH: ${{ github.workspace }}
 
   cost-gate-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+        python-version: "3.11"
       - run: pip install -r requirements.txt flask pytest
       - run: python -m pytest tests/test_fee_churn_guard.py tests/test_fee_rate_honesty.py -q --tb=line
-        env: { PYTHONPATH: ${{ github.workspace }} }
+        env:
+          PYTHONPATH: ${{ github.workspace }}
 
   risk-policy-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+        python-version: "3.11"
       - run: pip install -r requirements.txt flask pytest
       - run: python -m pytest tests/test_demo_6h_v2_readiness.py::test_six_role_and_risk_veto tests/test_demo_6h_v2_readiness.py::test_session_blocks_stale_and_duplicate -q --tb=line
-        env: { PYTHONPATH: ${{ github.workspace }} }
+        env:
+          PYTHONPATH: ${{ github.workspace }}
 
   decision-delta-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+        python-version: "3.11"
       - run: pip install -r requirements.txt flask pytest
       - run: python -m pytest tests/test_demo_6h_v2_readiness.py::test_decision_delta_not_cost_block -q --tb=line
-        env: { PYTHONPATH: ${{ github.workspace }} }
+        env:
+          PYTHONPATH: ${{ github.workspace }}
 
   session-controller-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+        python-version: "3.11"
       - run: pip install -r requirements.txt flask pytest
       - run: python -m pytest tests/test_demo_6h_v2_readiness.py::test_session_controller_dry_run_no_write tests/test_demo_6h_12h_session_engine.py -q --tb=line
-        env: { PYTHONPATH: ${{ github.workspace }} }
+        env:
+          PYTHONPATH: ${{ github.workspace }}
 
   deadline-kill-recovery-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+        python-version: "3.11"
       - run: pip install -r requirements.txt flask pytest
       - run: python -m pytest tests/test_demo_6h_12h_session_engine.py::test_engine_deadline_and_no_extend tests/test_demo_6h_12h_session_engine.py::test_kill_switch_and_finalize tests/test_demo_6h_12h_session_engine.py::test_recovery_preserves_counters tests/test_demo_6h_12h_session_engine.py::test_12h_gate_blocks_failed_6h tests/test_demo_6h_12h_session_engine.py::test_12h_gate_blocks_security_findings -q --tb=line
-        env: { PYTHONPATH: ${{ github.workspace }} }
+        env:
+          PYTHONPATH: ${{ github.workspace }}
 
   persistence-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+        python-version: "3.11"
       - run: pip install -r requirements.txt flask pytest
       - run: python -m pytest tests/test_demo_6h_v2_readiness.py::test_evidence_schema_no_secrets -q --tb=line
-        env: { PYTHONPATH: ${{ github.workspace }} }
+        env:
+          PYTHONPATH: ${{ github.workspace }}
 
   security-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+        python-version: "3.11"
       - run: pip install -r requirements.txt flask pytest
       - run: |
           python - <<'PY'
@@ -143,10 +160,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+        python-version: "3.11"
       - run: pip install -r requirements.txt flask pytest
       - run: python tools/ci/demo_6h_v2_dry_run.py
-        env: { PYTHONPATH: ${{ github.workspace }} }
+        env:
+          PYTHONPATH: ${{ github.workspace }}
       - name: Legacy delete dry-run
         run: |
           mkdir -p artifacts
@@ -176,7 +195,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: "20" }
+        with:
+        node-version: "20"
       - name: Check readiness page stub exists
         run: |
           test -f frontend/src/pages/SixHV2ReadinessPage.tsx || test -f frontend/src/pages/SixHV2ReadinessPage.jsx

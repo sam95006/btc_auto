@@ -54,10 +54,12 @@ jobs:
           test "${{ github.event.inputs.expected_service_id }}" = "$VALIDATION_SERVICE_ID"
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+        python-version: "3.11"
       - run: pip install -r requirements.txt flask pytest
       - name: Evaluate 12H machine gate from 6H report
-        env: { PYTHONPATH: ${{ github.workspace }} }
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           python - <<'PY'
           import json,sys
@@ -92,7 +94,8 @@ jobs:
           assert gate["auto_start_24h"] is False
           PY
       - run: python -m pytest tests/test_demo_6h_12h_session_engine.py -q --tb=line
-        env: { PYTHONPATH: ${{ github.workspace }} }
+        env:
+          PYTHONPATH: ${{ github.workspace }}
       - name: Stop before live 12H write window
         run: |
           echo "12H V3 machine gate scaffold PASS"
