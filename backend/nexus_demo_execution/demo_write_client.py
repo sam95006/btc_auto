@@ -301,11 +301,15 @@ class DemoWriteClient:
         return list((data.get("result") or {}).get("list") or [])
 
     def fetch_fee_rate_quote(self, symbol: str):
-        """Resolve taker fee with honest status — never invent silent zeros."""
+        """Resolve taker fee with honest status — never invent silent zeros.
+
+        Domain is locked to api-demo.bybit.com by DemoWriteClient guards.
+        Never fall back to mainnet/testnet for fee discovery.
+        """
         from backend.nexus_demo_execution.fee_rate import (
-            FEE_RATE_AUTH_FAILED,
-            FEE_RATE_UNAVAILABLE,
+            DEMO_FEE_ENDPOINT_UNSUPPORTED,
             cache_get,
+            classify_demo_fee_error,
             configured_conservative_quote,
             parse_fee_rows,
             unavailable,
@@ -325,21 +329,19 @@ class DemoWriteClient:
             quote = parse_fee_rows(rows, symbol)
             if quote.usable_taker is not None:
                 return quote
-            # Retry without symbol (account-tier default)
             data2 = self._get("/v5/account/fee-rate", {"category": "linear"})
             rows2 = (data2.get("result") or {}).get("list") or []
             quote2 = parse_fee_rows(rows2, symbol)
             if quote2.usable_taker is not None:
                 quote2.fee_source = "bybit_demo:/v5/account/fee-rate?category=linear"
                 return quote2
+            if quote2.status == DEMO_FEE_ENDPOINT_UNSUPPORTED or quote.status == DEMO_FEE_ENDPOINT_UNSUPPORTED:
+                cons = configured_conservative_quote(symbol)
+                return cons or quote2
             conservative = configured_conservative_quote(symbol)
             return conservative or quote2
         except DemoWriteError as exc:
-            status = FEE_RATE_AUTH_FAILED if exc.code in {"credentials_missing", "api_error"} and (
-                "10003" in exc.detail or "10004" in exc.detail or "10005" in exc.detail or exc.code == "credentials_missing"
-            ) else FEE_RATE_UNAVAILABLE
-            if exc.code == "credentials_missing":
-                status = FEE_RATE_AUTH_FAILED
+            status = classify_demo_fee_error(exc.code, exc.detail)
             conservative = configured_conservative_quote(symbol)
             if conservative is not None:
                 conservative.fee_fetch_error = f"{exc.code}:{exc.detail}"
@@ -350,7 +352,7 @@ class DemoWriteClient:
             if conservative is not None:
                 conservative.fee_fetch_error = type(exc).__name__
                 return conservative
-            return unavailable(symbol, status=FEE_RATE_UNAVAILABLE, error=type(exc).__name__)
+            return unavailable(symbol, error=type(exc).__name__)
 
     def fetch_fee_rate(self, symbol: str) -> float | None:
         """Backward-compatible taker rate or None (must not invent)."""

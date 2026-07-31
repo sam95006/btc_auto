@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "validate | deploy_control_plane | export_cost_gate_forensic"
+        description: "validate | deploy_control_plane | export_cost_gate_forensic | probe_demo_fee_capability"
         required: true
         default: validate
         type: choice
@@ -15,8 +15,9 @@ on:
           - validate
           - deploy_control_plane
           - export_cost_gate_forensic
+          - probe_demo_fee_capability
       confirm:
-        description: "For deploy: DEPLOY_UNIFIED_NEXUS_CONTROL_PLANE. For export: EXPORT_COST_GATE_FORENSIC_READONLY"
+        description: "For deploy: DEPLOY_UNIFIED_NEXUS_CONTROL_PLANE. For export: EXPORT_COST_GATE_FORENSIC_READONLY. For fee probe: PROBE_DEMO_FEE_CAPABILITY_READONLY"
         required: false
         default: ""
         type: string
@@ -28,6 +29,7 @@ on:
   push:
     branches:
       - "feature/unified-nexus-control-plane"
+      - "feature/nexus-single-service-consolidation"
   pull_request:
     branches:
       - "feature/bybit-demo-execution-validation"
@@ -497,4 +499,116 @@ jobs:
         with:
           name: cost-gate-forensic-${{ github.event.inputs.session_id }}
           path: artifacts/cost_gate_forensic/
+          if-no-files-found: error
+
+  probe-demo-fee-capability:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'probe_demo_fee_capability'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Confirm
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "PROBE_DEMO_FEE_CAPABILITY_READONLY" ]; then
+            echo "Confirmation mismatch"
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i -g zeabur@latest
+      - name: Readonly fee probe inside Demo Validation container
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          mkdir -p artifacts/fee_probe
+          zeabur service exec --id "$VALIDATION_SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            sh -lc 'python3 - <<"PY"
+          import hashlib, hmac, json, os, re, time, urllib.error, urllib.request
+          from urllib.parse import urlencode
+          DEMO="https://api-demo.bybit.com"
+          ENDPOINT="/v5/account/fee-rate"
+          key=(os.environ.get("BYBIT_DEMO_API_KEY") or "").strip()
+          secret=(os.environ.get("BYBIT_DEMO_API_SECRET") or "").strip()
+          assert key and secret, "missing_demo_credentials"
+          def redact(s):
+            out=s or ""
+            out=out.replace(key,"***").replace(secret,"***")
+            return re.sub(r"[A-Za-z0-9_\-+/=]{40,}","***",out)[:400]
+          def probe(symbol):
+            params={"category":"linear","symbol":symbol}
+            q=urlencode(sorted(params.items()))
+            url=f"{DEMO}{ENDPOINT}?{q}"
+            assert url.startswith(DEMO) and "api-testnet" not in url
+            ts=str(int(time.time()*1000)); recv="5000"
+            sign=hmac.new(secret.encode(), f"{ts}{key}{recv}{q}".encode(), hashlib.sha256).hexdigest()
+            headers={"Content-Type":"application/json","X-BAPI-API-KEY":key,"X-BAPI-SIGN":sign,"X-BAPI-SIGN-TYPE":"2","X-BAPI-TIMESTAMP":ts,"X-BAPI-RECV-WINDOW":recv,"User-Agent":"NEXUS-FeeProbe/1.0"}
+            http=None; body={}; err=None
+            try:
+              req=urllib.request.Request(url, headers=headers, method="GET")
+              with urllib.request.urlopen(req, timeout=20) as resp:
+                http=int(resp.status); body=json.loads(resp.read().decode())
+            except urllib.error.HTTPError as e:
+              http=int(e.code)
+              try: body=json.loads(e.read().decode("utf-8","replace"))
+              except Exception: body={}
+              err=f"HTTPError:{http}"
+            except Exception as e:
+              err=type(e).__name__
+            ret=body.get("retCode"); msg=str(body.get("retMsg") or "")
+            rows=((body.get("result") or {}) if isinstance(body.get("result"),dict) else {}).get("list") or []
+            if not isinstance(rows,list): rows=[]
+            maker=taker=None; mp=tp=False
+            if rows and isinstance(rows[0],dict):
+              mp=rows[0].get("makerFeeRate") is not None; tp=rows[0].get("takerFeeRate") is not None
+              try:
+                if mp: maker=float(rows[0].get("makerFeeRate"))
+                if tp: taker=float(rows[0].get("takerFeeRate"))
+              except Exception:
+                return {"symbol":symbol,"http_status":http,"retCode":ret,"retMsg_redacted":redact(msg),"result_list_count":len(rows),"endpoint_supported":True,"fee_rate_status":"FEE_RATE_SCHEMA_MISMATCH","maker_fee_rate":"UNAVAILABLE","taker_fee_rate":"UNAVAILABLE","error":err,"domain":DEMO,"credential_mode":"BYBIT_DEMO","observed_at":time.time()}
+            low=msg.lower()
+            if http==200 and str(ret) in {"0","None"} and rows and taker is not None and taker>0:
+              st, supported = "FEE_RATE_LIVE", True
+            elif http==200 and str(ret) in {"0","None"}:
+              st, supported = "FEE_RATE_SCHEMA_MISMATCH", True
+            elif any(t in low for t in ("not support","unsupported","not available for demo","demo trading does not support")) or (http==200 and str(ret) not in {"0","None",""}):
+              st, supported = "DEMO_FEE_ENDPOINT_UNSUPPORTED", False
+            elif http in (401,403) or str(ret) in {"10003","10004","10005"} or "invalid api" in low:
+              st, supported = "FEE_RATE_AUTH_FAILED", "UNKNOWN"
+            elif http is None:
+              st, supported = "FEE_RATE_UNAVAILABLE", "UNKNOWN"
+            else:
+              st, supported = "FEE_RATE_UNAVAILABLE", "UNKNOWN"
+            return {"symbol":symbol,"http_status":http if http is not None else "UNAVAILABLE","retCode":ret if ret is not None else "UNAVAILABLE","retMsg_redacted":redact(msg),"result_list_count":len(rows),"response_schema":sorted(rows[0].keys()) if rows and isinstance(rows[0],dict) else [],"endpoint_supported":supported,"fee_rate_status":st,"maker_fee_rate":maker if maker is not None else "UNAVAILABLE","taker_fee_rate":taker if taker is not None else "UNAVAILABLE","maker_fee_present":mp,"taker_fee_present":tp,"error":err,"domain":DEMO,"endpoint":ENDPOINT,"category":"linear","credential_mode":"BYBIT_DEMO","observed_at":time.time()}
+          results=[probe("BTCUSDT"), probe("ETHUSDT")]
+          statuses={r["fee_rate_status"] for r in results}
+          if statuses<={"FEE_RATE_LIVE"}: rec="DEMO_FEE_RATE_LIVE_VERIFIED"
+          elif "DEMO_FEE_ENDPOINT_UNSUPPORTED" in statuses and "FEE_RATE_LIVE" not in statuses: rec="DEMO_FEE_ENDPOINT_UNSUPPORTED_USE_APPROVED_CONSERVATIVE"
+          else: rec="DEMO_FEE_RATE_PARTIAL_WITH_BLOCKERS"
+          primary=results[0]
+          out={"demo_domain":DEMO,"endpoint":ENDPOINT,"category":"linear","symbols_tested":["BTCUSDT","ETHUSDT"],"results":results,"endpoint_supported":primary["endpoint_supported"],"fee_rate_status":primary["fee_rate_status"],"maker_fee_rate":primary["maker_fee_rate"],"taker_fee_rate":primary["taker_fee_rate"],"fee_source":"bybit_demo:/v5/account/fee-rate" if primary["fee_rate_status"]=="FEE_RATE_LIVE" else "UNAVAILABLE","fallback_required":primary["fee_rate_status"]!="FEE_RATE_LIVE","fallback_honesty":"FEE_RATE_CONFIGURED_CONSERVATIVE_requires_founder_approval","secret_redaction":True,"forbidden_domain_fallback_used":False,"recommendation":rec,"observed_at":time.time()}
+          print("PROBE_JSON_BEGIN")
+          print(json.dumps(out))
+          print("PROBE_JSON_END")
+          PY' > artifacts/fee_probe/exec_out.txt 2>&1
+          python - <<'PY'
+          import json,re
+          from pathlib import Path
+          raw=Path("artifacts/fee_probe/exec_out.txt").read_text(encoding="utf-8",errors="replace")
+          Path("artifacts/fee_probe/exec_tail.txt").write_text(raw[-8000:],encoding="utf-8")
+          m=re.search(r"PROBE_JSON_BEGIN\s*(\{.*\})\s*PROBE_JSON_END", raw, re.S)
+          assert m, "probe_json_missing"
+          data=json.loads(m.group(1))
+          assert data.get("demo_domain")=="https://api-demo.bybit.com"
+          assert data.get("forbidden_domain_fallback_used") is False
+          Path("artifacts/fee_probe/fee_capability.json").write_text(json.dumps(data,indent=2),encoding="utf-8")
+          print(json.dumps({k:data[k] for k in data if k!="results"},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bybit-demo-fee-capability-probe
+          path: artifacts/fee_probe/
           if-no-files-found: error

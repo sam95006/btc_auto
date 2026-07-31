@@ -13,6 +13,15 @@ FEE_RATE_CONFIGURED_CONSERVATIVE = "FEE_RATE_CONFIGURED_CONSERVATIVE"
 FEE_RATE_UNAVAILABLE = "FEE_RATE_UNAVAILABLE"
 FEE_RATE_AUTH_FAILED = "FEE_RATE_AUTH_FAILED"
 FEE_RATE_SCHEMA_MISMATCH = "FEE_RATE_SCHEMA_MISMATCH"
+DEMO_FEE_ENDPOINT_UNSUPPORTED = "DEMO_FEE_ENDPOINT_UNSUPPORTED"
+REPLAY_CONFIGURED_CONSERVATIVE = "REPLAY_CONFIGURED_CONSERVATIVE"
+
+_USABLE_STATUSES = {
+    FEE_RATE_LIVE,
+    FEE_RATE_CACHED_FRESH,
+    FEE_RATE_CONFIGURED_CONSERVATIVE,
+    REPLAY_CONFIGURED_CONSERVATIVE,
+}
 
 _CACHE_TTL_SEC = 300.0
 _cache: dict[str, tuple[float, "FeeRateQuote"]] = {}
@@ -30,10 +39,14 @@ class FeeRateQuote:
     fee_freshness_sec: float | None = None
     fail_closed: bool = True
     new_entry_blocked: bool = True
+    fee_rate_version: str | None = None
+    fee_rate_effective_at: float | None = None
+    fee_rate_reviewed_at: float | None = None
+    fee_rate_expiry: float | None = None
 
     @property
     def usable_taker(self) -> float | None:
-        if self.status in {FEE_RATE_LIVE, FEE_RATE_CACHED_FRESH, FEE_RATE_CONFIGURED_CONSERVATIVE}:
+        if self.status in _USABLE_STATUSES:
             if self.taker_fee_rate is not None and self.taker_fee_rate > 0:
                 return float(self.taker_fee_rate)
         return None
@@ -47,7 +60,7 @@ def _env_flag(name: str) -> bool:
 
 
 def configured_conservative_quote(symbol: str) -> FeeRateQuote | None:
-    """Founder-gated conservative fallback only — never silent default."""
+    """Founder-gated conservative fallback only — never silent default / never claim LIVE."""
     if not _env_flag("NEXUS_FEE_RATE_CONSERVATIVE_ENABLED"):
         return None
     if not _env_flag("NEXUS_FEE_RATE_CONSERVATIVE_FOUNDER_APPROVED"):
@@ -61,17 +74,40 @@ def configured_conservative_quote(symbol: str) -> FeeRateQuote | None:
     if taker <= 0:
         return None
     now = time.time()
+    version = (os.environ.get("NEXUS_FEE_RATE_VERSION") or "founder-conservative-v1").strip()
     return FeeRateQuote(
         status=FEE_RATE_CONFIGURED_CONSERVATIVE,
         symbol=symbol.upper(),
         maker_fee_rate=maker if maker is not None and maker > 0 else None,
         taker_fee_rate=taker,
-        fee_source="env:NEXUS_FEE_RATE_CONSERVATIVE_*",
+        fee_source="FOUNDER_APPROVED_CONFIG",
         fee_fetch_error=None,
         fee_fetched_at=now,
         fee_freshness_sec=0.0,
         fail_closed=False,
         new_entry_blocked=False,
+        fee_rate_version=version,
+        fee_rate_effective_at=now,
+        fee_rate_reviewed_at=now,
+        fee_rate_expiry=None,
+    )
+
+
+def replay_conservative_quote(symbol: str, taker: float, *, source: str = "REPLAY_CONFIGURED_CONSERVATIVE") -> FeeRateQuote:
+    """Offline replay only — must not become runtime production constant."""
+    now = time.time()
+    return FeeRateQuote(
+        status=REPLAY_CONFIGURED_CONSERVATIVE,
+        symbol=symbol.upper(),
+        maker_fee_rate=None,
+        taker_fee_rate=taker,
+        fee_source=source,
+        fee_fetch_error=None,
+        fee_fetched_at=now,
+        fee_freshness_sec=0.0,
+        fail_closed=False,
+        new_entry_blocked=False,
+        fee_rate_version="replay-only",
     )
 
 
@@ -96,6 +132,27 @@ def unavailable(
     )
 
 
+def classify_demo_fee_error(code: str, detail: str) -> str:
+    msg = f"{code} {detail}".lower()
+    unsupported = (
+        "not support",
+        "not supported",
+        "unsupported",
+        "demo trading does not support",
+        "not available for demo",
+        "invalid request path",
+    )
+    auth = ("credentials_missing", "10003", "10004", "10005", "invalid api", "unauthorized", "sign error")
+    if any(t in msg for t in unsupported):
+        return DEMO_FEE_ENDPOINT_UNSUPPORTED
+    if any(t in msg for t in auth):
+        return FEE_RATE_AUTH_FAILED
+    # Non-zero API error on demo fee-rate without clear auth → unsupported pending docs
+    if code == "api_error":
+        return DEMO_FEE_ENDPOINT_UNSUPPORTED
+    return FEE_RATE_UNAVAILABLE
+
+
 def cache_get(symbol: str) -> FeeRateQuote | None:
     key = symbol.upper()
     hit = _cache.get(key)
@@ -107,7 +164,7 @@ def cache_get(symbol: str) -> FeeRateQuote | None:
         return None
     if quote.usable_taker is None:
         return None
-    fresh = FeeRateQuote(
+    return FeeRateQuote(
         status=FEE_RATE_CACHED_FRESH,
         symbol=quote.symbol,
         maker_fee_rate=quote.maker_fee_rate,
@@ -118,12 +175,12 @@ def cache_get(symbol: str) -> FeeRateQuote | None:
         fee_freshness_sec=age,
         fail_closed=False,
         new_entry_blocked=False,
+        fee_rate_version=quote.fee_rate_version,
     )
-    return fresh
 
 
 def cache_put(quote: FeeRateQuote) -> None:
-    if quote.usable_taker is None:
+    if quote.usable_taker is None or quote.status != FEE_RATE_LIVE:
         return
     _cache[quote.symbol.upper()] = (time.time(), quote)
 
