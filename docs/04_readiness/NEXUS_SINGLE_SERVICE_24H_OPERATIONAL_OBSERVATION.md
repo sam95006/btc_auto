@@ -44,8 +44,8 @@ Monitor: **GET only** (`tools/ci/single_service_operational_monitor.py` + workfl
 
 | Checkpoint | Target UTC | Status |
 |------------|------------|--------|
-| T+EARLY | 2026-07-31T05:52:40Z | **PASS soft** — health 200; geo 8/0; pos/orders 0; legacy ≠200 (404); fee_ok; soft: identity label mismatch + some component UNKNOWN |
-| T+1H | 2026-07-31T06:11:30Z | pending |
+| T+EARLY | 2026-07-31T05:52:40Z | **PASS soft** — health 200; geo 8/0; pos/orders 0; legacy ≠200; fee_ok; soft: identity label mismatch + some component UNKNOWN |
+| T+1H | 2026-07-31T06:11:53Z | **PASS soft** — health 200; geo 8/0; candidates 8; pos/orders 0; stage3/cp 404; active_http_200=1; fee_ok; same soft flags |
 | T+3H | 2026-07-31T08:11:30Z | pending |
 | T+6H | 2026-07-31T11:11:30Z | pending |
 | T+12H | 2026-07-31T17:11:30Z | pending |
