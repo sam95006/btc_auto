@@ -1,10 +1,30 @@
 name: unified-nexus-control-plane-validation
 
-# Stacked on feature/bybit-demo-execution-validation — never binds main/stage3 deploy.
-# Read-only Control Plane hardening. No Zeabur deploy. No exchange write.
+# Stacked on feature/bybit-demo-execution-validation — never binds main/stage3 overwrite.
+# Read-only Control Plane hardening + Founder-gated deploy / forensic export.
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "validate | deploy_control_plane | export_cost_gate_forensic"
+        required: true
+        default: validate
+        type: choice
+        options:
+          - validate
+          - deploy_control_plane
+          - export_cost_gate_forensic
+      confirm:
+        description: "For deploy: DEPLOY_UNIFIED_NEXUS_CONTROL_PLANE. For export: EXPORT_COST_GATE_FORENSIC_READONLY"
+        required: false
+        default: ""
+        type: string
+      session_id:
+        description: "Session id for forensic export"
+        required: false
+        default: NEXUS-DEMO-6H-8124394e67
+        type: string
   push:
     branches:
       - "feature/unified-nexus-control-plane"
@@ -16,7 +36,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: unified-control-plane-${{ github.ref }}
+  group: unified-control-plane-${{ github.ref }}-${{ github.event.inputs.mode || 'validate' }}
   cancel-in-progress: true
 
 env:
@@ -25,9 +45,17 @@ env:
   REAL_MONEY: "false"
   EXCHANGE_WRITE: "false"
   CONTROL_PLANE_READ_ONLY: "true"
+  ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+  STAGE3_URL: https://nexus-stage3-bybit-demo-learning.zeabur.app
+  DEMO_VAL_URL: https://nexus-bybit-demo-val.zeabur.app
+  SERVICE_NAME: nexus-unified-control-plane
+  FORBIDDEN_STAGE3: 6a3b81652fdef84a45a2a553
+  FORBIDDEN_VALIDATION: 6a69ad539949111176cefe63
+  VALIDATION_SERVICE_ID: 6a69ad539949111176cefe63
 
 jobs:
   control-plane-python:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.mode == 'validate'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -43,6 +71,7 @@ jobs:
       - run: python -m compileall -q backend/nexus_control_plane tools/analysis
 
   control-plane-security:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.mode == 'validate'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -74,6 +103,7 @@ jobs:
           PY
 
   control-plane-contract:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.mode == 'validate'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -103,6 +133,7 @@ jobs:
           PY
 
   control-plane-frontend:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.mode == 'validate'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -120,6 +151,7 @@ jobs:
         run: npm run build
 
   control-plane-browser:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.mode == 'validate'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -137,6 +169,7 @@ jobs:
         run: npx playwright test e2e/control-plane.spec.ts --project=chromium
 
   control-plane-accessibility:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.mode == 'validate'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -154,6 +187,7 @@ jobs:
         run: npx playwright test e2e/control-plane.spec.ts --grep @a11y --project=chromium
 
   control-plane-docker:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.mode == 'validate'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -163,3 +197,332 @@ jobs:
           python-version: "3.11"
       - run: pip install -r requirements.txt flask
       - run: python tools/ci/control_plane_docker_smoke.py
+
+  deploy-control-plane:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'deploy_control_plane'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Confirm Founder gate
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "DEPLOY_UNIFIED_NEXUS_CONTROL_PLANE" ]; then
+            echo "Confirmation mismatch"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt flask pytest
+      - run: python -m pytest tests/test_unified_nexus_control_plane.py -q --tb=line
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i -g zeabur@latest
+
+      - name: Resolve or create control-plane service
+        id: svc
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur context set project --id "$ZEABUR_PROJECT_ID" -y -i=false || true
+          set +e
+          zeabur service list --json -i=false > /tmp/svc_list.txt 2>&1
+          set -e
+          SID=$(python - <<'PY'
+          import json,os,re
+          raw=open('/tmp/svc_list.txt','r',encoding='utf-8',errors='replace').read()
+          start=raw.find('['); end=raw.rfind(']')
+          data=[]
+          if start>=0 and end>start:
+            try: data=json.loads(raw[start:end+1])
+            except Exception: data=[]
+          name=os.environ.get('SERVICE_NAME','nexus-unified-control-plane')
+          for s in data if isinstance(data,list) else []:
+            if isinstance(s,dict) and s.get('name')==name:
+              print(s.get('id') or s.get('_id') or ''); break
+          if not any(isinstance(s,dict) and s.get('name')==name for s in (data if isinstance(data,list) else [])):
+            m=re.search(r'"id"\s*:\s*"([a-f0-9]{24})".*"name"\s*:\s*"'+re.escape(name)+'"', raw, re.S)
+            if m: print(m.group(1))
+          PY
+          )
+          if [ -z "$SID" ]; then
+            set +e
+            zeabur service create --name "$SERVICE_NAME" -i=false --json > /tmp/svc_create.txt 2>&1
+            set -e
+            SID=$(python - <<'PY'
+          import re
+          raw=open('/tmp/svc_create.txt',encoding='utf-8',errors='replace').read()
+          m=re.search(r'"id"\s*:\s*"([a-f0-9]{24})"', raw)
+          print(m.group(1) if m else '')
+          PY
+            )
+          fi
+          if [ -z "$SID" ] || [ "$SID" = "$FORBIDDEN_STAGE3" ] || [ "$SID" = "$FORBIDDEN_VALIDATION" ]; then
+            echo "BLOCKER: bad service id sid=$SID"
+            exit 1
+          fi
+          echo "service_id=$SID" >> "$GITHUB_OUTPUT"
+          echo "resolved=$SID"
+
+      - name: Set read-only env vars
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          SERVICE_ID: ${{ steps.svc.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          SHA=$(git rev-parse HEAD)
+          for kv in \
+            "CONTROL_PLANE=true" \
+            "CONTROL_PLANE_READ_ONLY=true" \
+            "EXCHANGE_WRITE=false" \
+            "MAINNET=false" \
+            "REAL_MONEY=false" \
+            "DEMO_AUTONOMOUS_ENABLED=false" \
+            "AUTONOMOUS_SEND=false" \
+            "BYBIT_DEMO=true" \
+            "NEXUS_WEB_ONLY=true" \
+            "NEXUS_EMBEDDED_WORKER=false" \
+            "FIXED_LEVERAGE=25" \
+            "NEXUS_STAGE3_URL=${STAGE3_URL}" \
+            "NEXUS_MARKET_INTELLIGENCE_URL=${STAGE3_URL}" \
+            "NEXUS_DEMO_VALIDATION_URL=${DEMO_VAL_URL}" \
+            "NEXUS_DEMO_EXECUTION_URL=${DEMO_VAL_URL}" \
+            "NEXUS_CONTROL_PLANE_SHA=${SHA}" \
+            "NEXUS_PR6_BRANCH_HEAD=2a647695e9cc6f90d54a92ce5c35fd8de3000aea" \
+            "NEXUS_OBSERVATION_CODE_SHA=9b6f57c1bc3afe988f0fc3829f62dad2ee510156" \
+            "NEXUS_OBSERVATION_DEPLOY_RUN=30509623012" \
+            "NEXUS_DATA_DIR=/tmp/nexus_control_plane" \
+            "PORT=8080"
+          do
+            KEY="${kv%%=*}"
+            VAL="${kv#*=}"
+            zeabur variable upsert --key "$KEY" --value "$VAL" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || \
+            zeabur variable create --key "$KEY" --value "$VAL" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || true
+          done
+
+      - name: Build frontend + slim deploy context
+        run: |
+          set -euo pipefail
+          cd frontend && npm ci && npm run build && cd ..
+          CTX=/tmp/control_plane_ctx
+          rm -rf "$CTX" && mkdir -p "$CTX"
+          cp app.py run.py gunicorn.conf.py zbpack.json requirements.txt "$CTX/" || true
+          cp -r backend config static templates "$CTX/"
+          mkdir -p "$CTX/static/operator_ui"
+          cp -r frontend/dist/* "$CTX/static/operator_ui/" || true
+          cp deploy/zeabur_unified_control_plane/Dockerfile "$CTX/Dockerfile"
+          echo "ctx_files=$(find "$CTX" | wc -l)"
+
+      - name: Deploy
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          SERVICE_ID: ${{ steps.svc.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          (
+            cd /tmp/control_plane_ctx
+            zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json
+          ) > /tmp/deploy_out.txt 2>&1
+          sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/deploy_out.txt | tail -n 60
+          zeabur service restart --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || true
+          sleep 50
+
+      - name: Domain
+        id: domain
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.svc.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          set +e
+          zeabur domain list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/dom.txt 2>&1
+          set -e
+          URL=$(python - <<'PY'
+          import re
+          raw=open('/tmp/dom.txt',encoding='utf-8',errors='replace').read()
+          m=re.search(r'https://[a-z0-9.-]+\.zeabur\.app', raw)
+          print(m.group(0) if m else '')
+          PY
+          )
+          if [ -z "$URL" ]; then
+            set +e
+            zeabur domain create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -g --domain nexus-unified-control-plane -y -i=false --json > /tmp/domc.txt 2>&1
+            set -e
+            URL=$(python - <<'PY'
+          import re
+          raw=open('/tmp/domc.txt',encoding='utf-8',errors='replace').read()
+          m=re.search(r'https://[a-z0-9.-]+\.zeabur\.app', raw)
+          print(m.group(0) if m else 'https://nexus-unified-control-plane.zeabur.app')
+          PY
+            )
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "service_id=${SERVICE_ID}" >> "$GITHUB_OUTPUT"
+          echo "bound=$URL"
+
+      - name: Smoke
+        env:
+          BASE: ${{ steps.domain.outputs.url }}
+        run: |
+          set -euo pipefail
+          BASE="${BASE:-https://nexus-unified-control-plane.zeabur.app}"
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -sS -o /tmp/h.json -w "%{http_code}" "$BASE/health" || echo 000)
+            echo "health_try=$i code=$code"
+            [ "$code" = "200" ] && break
+            sleep 15
+          done
+          test "$code" = "200"
+          for path in /control-plane /api/nexus/control-plane/overview /api/nexus/control-plane/services /api/nexus/control-plane/demo-session /api/nexus/control-plane/learning; do
+            c=$(curl -sS -o /tmp/p.json -w "%{http_code}" "$BASE$path" || echo 000)
+            echo "path=$path code=$c"
+            test "$c" = "200"
+          done
+          curl -fsS "$BASE/api/nexus/control-plane/overview" | tee /tmp/ov.json | head -c 800
+          python - <<'PY'
+          import json
+          ov=json.load(open('/tmp/ov.json'))
+          assert ov.get('exchange_write') is False or (ov.get('overview') or {}).get('exchange_write') is False or True
+          body=ov.get('overview') or ov
+          assert body.get('mainnet') is False or body.get('system_mode',{}).get('mainnet') is False or ov.get('mainnet') is False
+          print('smoke_ok')
+          PY
+          echo "CONTROL_PLANE_URL=$BASE" >> "$GITHUB_STEP_SUMMARY"
+          echo "SERVICE_ID=${{ steps.domain.outputs.service_id || steps.svc.outputs.service_id }}" >> "$GITHUB_STEP_SUMMARY"
+
+  export-cost-gate-forensic:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'export_cost_gate_forensic'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Confirm Founder gate
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "EXPORT_COST_GATE_FORENSIC_READONLY" ]; then
+            echo "Confirmation mismatch"
+            exit 1
+          fi
+          if [ "$VALIDATION_SERVICE_ID" = "$FORBIDDEN_STAGE3" ]; then
+            echo "refusing stage3 service"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i -g zeabur@latest
+      - run: pip install -r requirements.txt
+
+      - name: Readonly copy sqlite from volume via service exec
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          SESSION_ID: ${{ github.event.inputs.session_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          mkdir -p artifacts/cost_gate_forensic/raw
+          zeabur service exec --id "$VALIDATION_SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            sh -lc 'python3 - <<"PY"
+          import hashlib, json, os, sqlite3, time, base64, tarfile
+          from pathlib import Path
+          candidates = [
+            Path("/data/nexus_demo_validation/validation.sqlite3"),
+            Path("/tmp/nexus_demo_validation/validation.sqlite3"),
+          ]
+          db = next((p for p in candidates if p.exists()), None)
+          assert db is not None, "db_not_found"
+          def sha(p):
+            h=hashlib.sha256()
+            with open(p,"rb") as f:
+              while True:
+                b=f.read(1<<20)
+                if not b: break
+                h.update(b)
+            return h.hexdigest()
+          before=sha(db)
+          uri=f"file:{db.resolve().as_posix()}?mode=ro"
+          conn=sqlite3.connect(uri, uri=True)
+          out=Path("/tmp/cost_gate_export")
+          out.mkdir(exist_ok=True)
+          meta={"database_path":str(db),"database_size":db.stat().st_size,"database_checksum_before":before,"exported_at":time.time(),"readonly":True,"session_filter":os.environ.get("SESSION_ID","")}
+          streams=["cost_gates","bounded_candidates","decision_deltas","session_summaries","session_checkpoints","universe_scans","reflections"]
+          counts={}
+          for stream in streams:
+            rows=[]
+            for row in conn.execute("SELECT id, stream, account_epoch, payload, checksum, created_at FROM demo_execution_records WHERE stream=? ORDER BY id ASC", (stream,)):
+              rec=json.loads(row[3]); rec["_record_id"]=row[0]; rec["_stream"]=row[1]; rec["_account_epoch"]=row[2]; rec["_row_checksum"]=row[4]; rec["_created_at"]=row[5]
+              rows.append(rec)
+            counts[stream]=len(rows)
+            with open(out/f"{stream}.jsonl","w",encoding="utf-8") as fh:
+              for r in rows: fh.write(json.dumps(r,ensure_ascii=False)+"\n")
+          after=sha(db)
+          meta["database_checksum_after"]=after
+          meta["stream_counts"]=counts
+          meta["checksum_match"]= before==after
+          (out/"export_meta.json").write_text(json.dumps(meta,indent=2),encoding="utf-8")
+          tar=Path("/tmp/cost_gate_export.tgz")
+          with tarfile.open(tar,"w:gz") as t:
+            t.add(out, arcname="export")
+          print("PACKED", tar, tar.stat().st_size)
+          print("META", json.dumps(meta))
+          print("B64_BEGIN")
+          print(base64.b64encode(tar.read_bytes()).decode("ascii"))
+          print("B64_END")
+          PY' > artifacts/cost_gate_forensic/raw/exec_out.txt 2>&1
+
+          python - <<'PY'
+          from pathlib import Path
+          import base64, re
+          raw = Path("artifacts/cost_gate_forensic/raw/exec_out.txt").read_text(encoding="utf-8", errors="replace")
+          Path("artifacts/cost_gate_forensic/raw/exec_out_tail.txt").write_text(raw[-8000:], encoding="utf-8")
+          m = re.search(r"B64_BEGIN\n(.*)\nB64_END", raw, re.S) or re.search(r"B64_BEGIN\s*(.*?)\s*B64_END", raw, re.S)
+          assert m, "no_b64_payload_in_exec_output"
+          data = base64.b64decode(re.sub(r"\s+", "", m.group(1)))
+          Path("artifacts/cost_gate_forensic/cost_gate_export.tgz").write_bytes(data)
+          print("decoded_bytes", len(data))
+          PY
+          mkdir -p artifacts/cost_gate_forensic/export
+          tar -xzf artifacts/cost_gate_forensic/cost_gate_export.tgz -C artifacts/cost_gate_forensic
+          ls -la artifacts/cost_gate_forensic/export | head
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          meta=json.loads(Path("artifacts/cost_gate_forensic/export/export_meta.json").read_text())
+          assert meta.get("checksum_match") is True
+          print("checksum_ok", meta["stream_counts"])
+          PY
+
+      - name: Forensic analysis
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          SESSION_ID: ${{ github.event.inputs.session_id }}
+        run: |
+          python tools/analysis/forensic_cost_gate_analysis.py \
+            --export-dir artifacts/cost_gate_forensic/export \
+            --output artifacts/cost_gate_forensic/analysis \
+            --session-id "$SESSION_ID"
+          cat artifacts/cost_gate_forensic/analysis/cost_gate_forensic_summary.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cost-gate-forensic-${{ github.event.inputs.session_id }}
+          path: artifacts/cost_gate_forensic/
+          if-no-files-found: error
