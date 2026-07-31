@@ -1,0 +1,102 @@
+name: demo-autonomous-12h-v3-zeabur
+
+# CONDITIONALLY APPROVED. Requires 6H V2 machine hard gates PASS.
+# Never reuses 6H session id / write window. Never auto-starts 24H.
+
+on:
+  workflow_dispatch:
+    inputs:
+      founder_approval_phrase:
+        description: "Must equal APPROVE_NEXUS_DEMO_12H_V3"
+        required: true
+        type: string
+      source_6h_session_id:
+        required: true
+        type: string
+      source_6h_report_path:
+        required: true
+        type: string
+      expected_service_id:
+        required: true
+        default: "6a69ad539949111176cefe63"
+        type: string
+      session_nonce:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-12h-v3-zeabur
+  cancel-in-progress: false
+
+env:
+  MAINNET: "false"
+  REAL_MONEY: "false"
+  EXCHANGE_WRITE: "false"
+  DEMO_AUTONOMOUS_ENABLED: "false"
+  VALIDATION_SERVICE_ID: 6a69ad539949111176cefe63
+
+jobs:
+  gate-from-6h:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Confirm Founder phrase
+        run: |
+          if [ "${{ github.event.inputs.founder_approval_phrase }}" != "APPROVE_NEXUS_DEMO_12H_V3" ]; then
+            echo "Founder phrase mismatch"
+            exit 1
+          fi
+      - name: Service id guard
+        run: |
+          test "${{ github.event.inputs.expected_service_id }}" = "$VALIDATION_SERVICE_ID"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements.txt flask pytest
+      - name: Evaluate 12H machine gate from 6H report
+        env: { PYTHONPATH: ${{ github.workspace }} }
+        run: |
+          python - <<'PY'
+          import json,sys
+          from pathlib import Path
+          from backend.nexus_demo_execution.v3_start_gate import evaluate_12h_machine_gate
+          from backend.nexus_demo_execution.v2_bounded_engine import new_12h_session_id
+          path=Path("""${{ github.event.inputs.source_6h_report_path }}""")
+          if not path.exists():
+              print("missing 6h report", path)
+              sys.exit(1)
+          raw=path.read_text(encoding="utf-8")
+          try:
+              report=json.loads(raw)
+          except json.JSONDecodeError:
+              # Markdown final reports: require JSON sidecar sibling when present.
+              side=path.with_suffix(path.suffix+".json") if path.suffix else Path(str(path)+".json")
+              if not side.exists():
+                  print("6h report must be JSON or have .json sidecar for machine gate")
+                  sys.exit(1)
+              report=json.loads(side.read_text(encoding="utf-8"))
+          report["proposed_12h_session_id"]=new_12h_session_id("""${{ github.event.inputs.session_nonce }}""")
+          if report.get("session_id") != """${{ github.event.inputs.source_6h_session_id }}""":
+              # allow if report embeds session_id field differently
+              if """${{ github.event.inputs.source_6h_session_id }}""" not in raw:
+                  print("source_6h_session_id mismatch")
+                  sys.exit(1)
+              report["session_id"]="""${{ github.event.inputs.source_6h_session_id }}"""
+          gate=evaluate_12h_machine_gate(report)
+          print(json.dumps(gate, indent=2))
+          if not gate["machine_gate_pass"]:
+              sys.exit(1)
+          assert gate["auto_start_24h"] is False
+          PY
+      - run: python -m pytest tests/test_demo_6h_12h_session_engine.py -q --tb=line
+        env: { PYTHONPATH: ${{ github.workspace }} }
+      - name: Stop before live 12H write window
+        run: |
+          echo "12H V3 machine gate scaffold PASS"
+          echo "deploy=false"
+          echo "exchange_write=false"
+          echo "STOP_BEFORE_24H"
+          echo "FOUNDER_GATE=DEMO_AUTONOMOUS_24H_BOUNDED_VALIDATION (not started)"

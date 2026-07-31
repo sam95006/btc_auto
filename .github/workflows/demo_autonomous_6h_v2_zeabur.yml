@@ -1,0 +1,100 @@
+name: demo-autonomous-6h-v2-zeabur
+
+# CONDITIONALLY APPROVED only. Refuses to start during 24h operational observation.
+# Never creates a new Zeabur service. Deploy target = existing Validation only.
+
+on:
+  workflow_dispatch:
+    inputs:
+      founder_approval_phrase:
+        description: "Must equal APPROVE_NEXUS_DEMO_6H_V2"
+        required: true
+        type: string
+      expected_runtime_sha:
+        required: true
+        type: string
+      expected_service_id:
+        required: true
+        default: "6a69ad539949111176cefe63"
+        type: string
+      expected_account_epoch:
+        required: false
+        default: ""
+        type: string
+      session_nonce:
+        required: true
+        type: string
+      observation_report_path:
+        required: false
+        default: "docs/04_readiness/NEXUS_SINGLE_SERVICE_24H_OPERATIONAL_FINAL_REPORT.md"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-6h-v2-zeabur
+  cancel-in-progress: false
+
+env:
+  MAINNET: "false"
+  REAL_MONEY: "false"
+  EXCHANGE_WRITE: "false"
+  DEMO_AUTONOMOUS_ENABLED: "false"
+  VALIDATION_SERVICE_ID: 6a69ad539949111176cefe63
+  FORBIDDEN_STAGE3: 6a3b81652fdef84a45a2a553
+  OBS_END: "2026-08-01T05:11:30Z"
+
+jobs:
+  gate-and-prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Confirm Founder phrase
+        run: |
+          if [ "${{ github.event.inputs.founder_approval_phrase }}" != "APPROVE_NEXUS_DEMO_6H_V2" ]; then
+            echo "Founder phrase mismatch"
+            exit 1
+          fi
+      - name: Observation deadline must be reached
+        run: |
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          if [[ "$NOW" < "$OBS_END" ]]; then
+            echo "BLOCKED: operational observation still open ($NOW < $OBS_END)"
+            exit 1
+          fi
+      - name: Service id must be Validation only
+        run: |
+          SID="${{ github.event.inputs.expected_service_id }}"
+          if [ "$SID" != "$VALIDATION_SERVICE_ID" ]; then echo "wrong service"; exit 1; fi
+          if [ "$SID" = "$FORBIDDEN_STAGE3" ]; then echo "stage3 forbidden"; exit 1; fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements.txt flask pytest
+      - name: Unit + dry-run gates
+        env: { PYTHONPATH: ${{ github.workspace }} }
+        run: |
+          python -m pytest tests/test_demo_6h_v2_readiness.py tests/test_demo_6h_12h_session_engine.py -q --tb=line
+          python tools/ci/demo_6h_v2_dry_run.py
+      - name: Require observation PASS artifact/report markers
+        run: |
+          # Final report must exist and declare PASS (created after observation ends).
+          test -f "${{ github.event.inputs.observation_report_path }}" || test -f docs/04_readiness/NEXUS_SINGLE_SERVICE_24H_OPERATIONAL_FINAL_REPORT.md
+          python - <<'PY'
+          from pathlib import Path
+          cands=[Path("docs/04_readiness/NEXUS_SINGLE_SERVICE_24H_OPERATIONAL_FINAL_REPORT.md"), Path("artifacts/single_service_observation/final_pass.json")]
+          text=""
+          for p in cands:
+              if p.exists():
+                  text += p.read_text(encoding="utf-8", errors="ignore")
+          assert "NEXUS_SINGLE_SERVICE_OPERATIONAL_24H_PASS" in text or '"operational_observation_pass": true' in text.lower() or '"operational_observation_pass":true' in text.lower(), "observation pass marker missing"
+          print("observation_pass_marker_ok")
+          PY
+      - name: Stop before live deploy/write (scaffold)
+        run: |
+          echo "6H V2 workflow scaffold PASS — live deploy/write intentionally not executed in this job revision until post-observation Founder confirm."
+          echo "exchange_write=false"
+          echo "deploy=false"
+          echo "auto_start_12h=false"
+          echo "STOP_BEFORE_LIVE_6H_WRITE_WINDOW"
