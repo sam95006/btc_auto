@@ -51,6 +51,7 @@ _SPA_PREFIXES = (
     "global-shadow",
     "ai-learning-lab",
     "founder",
+    "control-plane",
 )
 
 
