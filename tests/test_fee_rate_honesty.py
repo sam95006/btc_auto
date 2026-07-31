@@ -49,6 +49,7 @@ def test_conservative_requires_founder_flags():
     assert q is not None
     assert q.status == FEE_RATE_CONFIGURED_CONSERVATIVE
     assert q.usable_taker == pytest.approx(0.00055)
+    assert q.fee_source == "FOUNDER_APPROVED_CONFIG"
 
 
 def test_cost_gate_unavailable_does_not_emit_zero_costs():

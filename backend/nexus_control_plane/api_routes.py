@@ -91,6 +91,12 @@ def register_control_plane_routes(app: Flask) -> None:
 
         return _ok({"component_health": health_snapshot()})
 
+    @app.route("/api/nexus/control-plane/fee-policy", methods=["GET"])
+    def control_plane_fee_policy():
+        from backend.nexus_demo_execution.fee_rate import fee_policy_public_status
+
+        return _ok({"fee_policy": fee_policy_public_status()})
+
     def _block_write():
         counters.incr("federation_write_attempt_count")
         return jsonify(_FORBIDDEN_WRITE_HINT), 405

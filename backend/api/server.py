@@ -479,6 +479,17 @@ def register_nexus_routes(app):
         )
 
     try:
+        from backend.nexus_demo_execution.internal_market_routes import register_internal_market_routes
+
+        register_internal_market_routes(app)
+    except Exception as _mkt_reg_exc:  # noqa: BLE001
+        import logging as _logging
+
+        _logging.getLogger(__name__).warning(
+            "internal_market_routes_unavailable: %s", type(_mkt_reg_exc).__name__
+        )
+
+    try:
         from backend.nexus_control_plane.api_routes import register_control_plane_routes
 
         register_control_plane_routes(app)

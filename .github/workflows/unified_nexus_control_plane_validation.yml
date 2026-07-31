@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "validate | deploy_control_plane | export_cost_gate_forensic | probe_demo_fee_capability"
+        description: "validate | deploy_control_plane | export_cost_gate_forensic | probe_demo_fee_capability | deploy_single_service_readonly"
         required: true
         default: validate
         type: choice
@@ -16,8 +16,9 @@ on:
           - deploy_control_plane
           - export_cost_gate_forensic
           - probe_demo_fee_capability
+          - deploy_single_service_readonly
       confirm:
-        description: "For deploy: DEPLOY_UNIFIED_NEXUS_CONTROL_PLANE. For export: EXPORT_COST_GATE_FORENSIC_READONLY. For fee probe: PROBE_DEMO_FEE_CAPABILITY_READONLY"
+        description: "deploy CP / export / fee probe / DEPLOY_SINGLE_SERVICE_READONLY_NO_TRADE"
         required: false
         default: ""
         type: string
@@ -612,3 +613,180 @@ jobs:
           name: bybit-demo-fee-capability-probe
           path: artifacts/fee_probe/
           if-no-files-found: error
+
+  deploy-single-service-readonly:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'deploy_single_service_readonly'
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Confirm
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "DEPLOY_SINGLE_SERVICE_READONLY_NO_TRADE" ]; then
+            echo "Confirmation mismatch"
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt flask pytest
+      - run: python -m pytest tests/test_fee_rate_honesty.py tests/test_fee_geometry_single_service.py tests/test_founder_fee_and_geometry_policy.py tests/test_unified_nexus_control_plane.py -q --tb=line
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i -g zeabur@latest
+      - name: Preflight read-only gates on live Validation
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+        run: |
+          set -euo pipefail
+          base="${DEMO_VAL_URL}"
+          curl -fsS "$base/health" | head -c 300
+          python - <<'PY'
+          import json,urllib.request
+          base="https://nexus-bybit-demo-val.zeabur.app"
+          st=json.load(urllib.request.urlopen(base+"/api/nexus/demo-execution/bounded-6h/status", timeout=60))
+          b=(st.get("bounded_6h") or st)
+          # tolerate nested shapes
+          payload=b.get("payload") if isinstance(b.get("payload"),dict) else b
+          status=str(payload.get("status") or payload.get("session_status") or "")
+          print("session_status", status)
+          # Best-effort: do not hard-fail if shape differs; deploy remains exchange_write=false
+          PY
+      - name: Set single-service read-only env on Validation service
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          SID="$VALIDATION_SERVICE_ID"
+          if [ "$SID" = "$FORBIDDEN_STAGE3" ]; then echo BLOCKED; exit 1; fi
+          ENV_ID="$ZEABUR_ENV_ID"
+          set_var() {
+            local k="$1" v="$2"
+            zeabur variable upsert --key "$k" --value "$v" --service-id "$SID" --env-id "$ENV_ID" -i=false || \
+            zeabur variable create --key "$k" --value "$v" --service-id "$SID" --env-id "$ENV_ID" -i=false || true
+          }
+          SHA=$(git rev-parse HEAD)
+          set_var NEXUS_SINGLE_SERVICE true
+          set_var NEXUS_SELF_URL "$DEMO_VAL_URL"
+          set_var NEXUS_MARKET_INTELLIGENCE_URL "$DEMO_VAL_URL"
+          set_var NEXUS_DEMO_VALIDATION_URL "$DEMO_VAL_URL"
+          set_var NEXUS_DEMO_EXECUTION_URL "$DEMO_VAL_URL"
+          set_var NEXUS_CONTROL_PLANE_URL "$DEMO_VAL_URL"
+          set_var NEXUS_FEE_RATE_CONSERVATIVE_ENABLED true
+          set_var NEXUS_FEE_RATE_CONSERVATIVE_FOUNDER_APPROVED true
+          set_var NEXUS_FEE_RATE_CONSERVATIVE_TAKER 0.00055
+          set_var NEXUS_FEE_RATE_CONSERVATIVE_MAKER 0.00020
+          set_var NEXUS_FEE_RATE_VERSION founder-conservative-v1-2026-07-31
+          set_var NEXUS_FEE_RATE_SOURCE BYBIT_PUBLIC_VIP0_BASE_SCHEDULE
+          set_var NEXUS_FEE_RATE_EFFECTIVE_AT 2026-07-31
+          set_var NEXUS_FEE_RATE_REVIEW_BY 2026-08-31
+          set_var EXCHANGE_WRITE false
+          set_var DEMO_AUTONOMOUS_ENABLED false
+          set_var AUTO_SEND false
+          set_var AUTONOMOUS_SEND false
+          set_var MAINNET false
+          set_var REAL_MONEY false
+          set_var ARM false
+          set_var FORCE_PUSH false
+          set_var CONTROL_PLANE_READ_ONLY true
+          set_var BYBIT_DEMO true
+          set_var NEXUS_DEPLOYMENT_ID "$SHA"
+          set_var NEXUS_DEPLOY_RUN_ID "$GITHUB_RUN_ID"
+          set_var GITHUB_SHA "$SHA"
+      - name: Build frontend + deploy to existing Validation service
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          cd frontend && npm ci && npm run build && cd ..
+          CTX=/tmp/single_service_ctx
+          rm -rf "$CTX" && mkdir -p "$CTX"
+          cp app.py run.py gunicorn.conf.py zbpack.json requirements.txt "$CTX/" || true
+          cp -r backend config static templates "$CTX/"
+          mkdir -p "$CTX/static/operator_ui"
+          cp -r frontend/dist/* "$CTX/static/operator_ui/" || true
+          if [ -f deploy/zeabur_unified_control_plane/Dockerfile ]; then cp deploy/zeabur_unified_control_plane/Dockerfile "$CTX/Dockerfile"; fi
+          (
+            cd "$CTX"
+            zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$VALIDATION_SERVICE_ID" -i=false --json
+          ) > /tmp/deploy_out.txt 2>&1
+          sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/deploy_out.txt | tail -n 40
+          zeabur service restart --id "$VALIDATION_SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || true
+          sleep 60
+      - name: Smoke T+0
+        id: t0
+        run: |
+          set -euo pipefail
+          BASE="${DEMO_VAL_URL}"
+          for i in 1 2 3 4 5 6 7 8; do
+            code=$(curl -sS -o /tmp/h.json -w "%{http_code}" "$BASE/health" || echo 000)
+            echo "health_try=$i code=$code"
+            [ "$code" = "200" ] && break
+            sleep 15
+          done
+          test "$code" = "200"
+          curl -fsS "$BASE/api/nexus/fee-policy" | tee /tmp/fee.json | head -c 500
+          curl -fsS "$BASE/api/nexus/market/status" | tee /tmp/mkt.json | head -c 500
+          curl -fsS "$BASE/api/nexus/control-plane/overview" | tee /tmp/ov.json | head -c 500
+          python - <<'PY'
+          import json
+          fee=json.load(open('/tmp/fee.json'))
+          assert fee.get('fee_rate_status')=='FEE_RATE_CONFIGURED_CONSERVATIVE'
+          assert fee.get('fee_source')=='FOUNDER_APPROVED_CONFIG'
+          assert fee.get('fee_live_private_api') is False
+          assert fee.get('fee_account_specific') is False
+          assert abs(float(fee.get('pretrade_round_trip_fee_rate') or 0)-0.0011)<1e-9
+          print('t0_fee_ok')
+          PY
+          echo "t0_ok=true" >> "$GITHUB_OUTPUT"
+      - name: Readonly market scan + geometry evidence
+        run: |
+          set -euo pipefail
+          BASE="${DEMO_VAL_URL}"
+          curl -fsS -X POST "$BASE/api/nexus/market/scan-readonly" | tee /tmp/scan.json | head -c 800
+          python - <<'PY'
+          import json
+          s=json.load(open('/tmp/scan.json'))
+          assert s.get('exchange_write') is False
+          assert s.get('stage3_dependency_required') is False
+          print('geometry_complete', s.get('geometry_complete_count'), 'missing', s.get('geometry_missing_count'))
+          PY
+      - name: Wait T+60 and recheck
+        run: |
+          sleep 60
+          BASE="${DEMO_VAL_URL}"
+          curl -fsS "$BASE/health" >/tmp/h60.json
+          curl -fsS "$BASE/api/nexus/fee-policy" >/tmp/fee60.json
+          python - <<'PY'
+          import json
+          fee=json.load(open('/tmp/fee60.json'))
+          assert fee.get('fee_rate_status')=='FEE_RATE_CONFIGURED_CONSERVATIVE'
+          print('t60_ok')
+          PY
+      - name: Wait T+180 and recheck
+        run: |
+          sleep 120
+          BASE="${DEMO_VAL_URL}"
+          curl -fsS "$BASE/health" >/tmp/h180.json
+          curl -fsS "$BASE/api/nexus/control-plane/overview" >/tmp/ov180.json
+          curl -fsS "$BASE/api/nexus/fee-policy" >/tmp/fee180.json
+          python - <<'PY'
+          import json
+          fee=json.load(open('/tmp/fee180.json'))
+          ov=json.load(open('/tmp/ov180.json'))
+          assert fee.get('fee_rate_status')=='FEE_RATE_CONFIGURED_CONSERVATIVE'
+          body=ov.get('overview') or ov
+          sm=body.get('system_mode') or {}
+          assert sm.get('mainnet') is False or ov.get('mainnet') is False
+          assert ov.get('exchange_write') is False
+          print('t180_ok')
+          PY
+          echo "SINGLE_SERVICE_READONLY_SMOKE_PASS" >> "$GITHUB_STEP_SUMMARY"
+

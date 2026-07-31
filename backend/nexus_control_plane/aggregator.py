@@ -58,7 +58,17 @@ class ControlPlaneAggregator:
                 "execution_owner": EXECUTION_OWNER_DEMO_VALIDATION,
                 "stage3_execution_disabled": True,
                 "automatic_extension": False,
+                "single_service": (os.environ.get("NEXUS_SINGLE_SERVICE") or "").strip().lower()
+                in {"1", "true", "yes", "on"},
+                "stage3_dependency_required": (os.environ.get("NEXUS_SINGLE_SERVICE") or "").strip().lower()
+                not in {"1", "true", "yes", "on"},
+                "external_control_plane_dependency_required": (os.environ.get("NEXUS_SINGLE_SERVICE") or "")
+                .strip()
+                .lower()
+                not in {"1", "true", "yes", "on"},
+                "exchange_write": False,
             },
+            "fee_policy": self._fee_policy(),
             "service_health": self._service_health(market, demo_status),
             "demo_session": session,
             "demo_account": self._demo_account(demo_account, now),
@@ -124,6 +134,20 @@ class ControlPlaneAggregator:
     def why_no_trade(self) -> dict[str, Any]:
         demo_6h = self.client.get_json(ROLE_DEMO_EXECUTION, "/api/nexus/demo-execution/bounded-6h/status")
         return self._why_no_trade(demo_6h)
+
+    def _fee_policy(self) -> dict[str, Any]:
+        try:
+            from backend.nexus_demo_execution.fee_rate import fee_policy_public_status
+
+            return fee_policy_public_status()
+        except Exception:  # noqa: BLE001
+            return {
+                "fee_endpoint_supported": False,
+                "fee_rate_status": "FEE_RATE_UNAVAILABLE",
+                "fee_source": "UNAVAILABLE",
+                "fee_account_specific": False,
+                "fee_live_private_api": False,
+            }
 
     def _why_no_trade(self, demo_6h: dict[str, Any]) -> dict[str, Any]:
         if not demo_6h.get("ok"):
