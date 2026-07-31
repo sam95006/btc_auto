@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "validate | deploy_control_plane | export_cost_gate_forensic | probe_demo_fee_capability | deploy_single_service_readonly"
+        description: "validate | deploy_control_plane | export_cost_gate_forensic | probe_demo_fee_capability | deploy_single_service_readonly | scale_legacy_to_zero"
         required: true
         default: validate
         type: choice
@@ -17,8 +17,9 @@ on:
           - export_cost_gate_forensic
           - probe_demo_fee_capability
           - deploy_single_service_readonly
+          - scale_legacy_to_zero
       confirm:
-        description: "deploy CP / export / fee probe / DEPLOY_SINGLE_SERVICE_READONLY_NO_TRADE"
+        description: "deploy CP / export / fee probe / DEPLOY_SINGLE_SERVICE_READONLY_NO_TRADE / SCALE_LEGACY_TO_ZERO_KEEP_VALIDATION"
         required: false
         default: ""
         type: string
@@ -803,4 +804,115 @@ jobs:
           print('t180_ok')
           PY
           echo "SINGLE_SERVICE_READONLY_SMOKE_PASS" >> "$GITHUB_STEP_SUMMARY"
+
+  scale-legacy-to-zero:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'scale_legacy_to_zero'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Confirm
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "SCALE_LEGACY_TO_ZERO_KEEP_VALIDATION" ]; then
+            echo "Confirmation mismatch"
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i -g zeabur@latest
+      - name: Discover Zeabur suspend/stop CLI surface
+        run: |
+          set +e
+          zeabur --help 2>&1 | head -n 80
+          zeabur service --help 2>&1 | head -n 120
+          zeabur deployment --help 2>&1 | head -n 80
+          set -e
+      - name: Preflight Validation must stay healthy
+        run: |
+          set -euo pipefail
+          curl -fsS "$DEMO_VAL_URL/health" | head -c 200
+          curl -fsS "$DEMO_VAL_URL/api/nexus/fee-policy" | head -c 300
+          python - <<'PY'
+          import json,urllib.request
+          fee=json.load(urllib.request.urlopen("https://nexus-bybit-demo-val.zeabur.app/api/nexus/fee-policy", timeout=30))
+          assert fee.get("fee_rate_status")=="FEE_RATE_CONFIGURED_CONSERVATIVE"
+          print("validation_preflight_ok")
+          PY
+      - name: Suspend Stage3 + Control Plane (never Validation)
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          STAGE3_SERVICE_ID: 6a3b81652fdef84a45a2a553
+          CONTROL_PLANE_SERVICE_ID: 6a6bf638ffb4fc697c8a7b1f
+          VALIDATION_SERVICE_ID: 6a69ad539949111176cefe63
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          # Prefer CLI if available; never target Validation.
+          set +e
+          for cmd in \
+            "zeabur service suspend --id $STAGE3_SERVICE_ID --env-id $ZEABUR_ENV_ID -i=false" \
+            "zeabur service stop --id $STAGE3_SERVICE_ID --env-id $ZEABUR_ENV_ID -i=false" \
+            "zeabur service pause --id $STAGE3_SERVICE_ID --env-id $ZEABUR_ENV_ID -i=false"; do
+            echo "try_cli_stage3: $cmd"
+            eval $cmd >/tmp/cli_s3.txt 2>&1
+            echo "exit=$?"
+            sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/cli_s3.txt | tail -n 20
+          done
+          for cmd in \
+            "zeabur service suspend --id $CONTROL_PLANE_SERVICE_ID --env-id $ZEABUR_ENV_ID -i=false" \
+            "zeabur service stop --id $CONTROL_PLANE_SERVICE_ID --env-id $ZEABUR_ENV_ID -i=false" \
+            "zeabur service pause --id $CONTROL_PLANE_SERVICE_ID --env-id $ZEABUR_ENV_ID -i=false"; do
+            echo "try_cli_cp: $cmd"
+            eval $cmd >/tmp/cli_cp.txt 2>&1
+            echo "exit=$?"
+            sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/cli_cp.txt | tail -n 20
+          done
+          set -e
+          set +e
+          python tools/ci/scale_legacy_zeabur_services_to_zero.py | tee /tmp/scale_report.json
+          gql_code=$?
+          set -e
+          echo "graphql_scale_exit=$gql_code"
+          # Do not hard-fail here: final health probe decides success.      - name: Verify Validation alive; legacy endpoints down/error
+        run: |
+          set -euo pipefail
+          sleep 20
+          curl -fsS "$DEMO_VAL_URL/health" >/tmp/val_h.json
+          curl -fsS "$DEMO_VAL_URL/api/nexus/control-plane/overview" >/tmp/val_ov.json
+          curl -fsS "$DEMO_VAL_URL/api/nexus/fee-policy" >/tmp/val_fee.json
+          curl -fsS -X POST "$DEMO_VAL_URL/api/nexus/market/scan-readonly" >/tmp/val_scan.json
+          python - <<'PY'
+          import json,urllib.request,urllib.error
+          fee=json.load(open("/tmp/val_fee.json"))
+          scan=json.load(open("/tmp/val_scan.json"))
+          assert fee.get("fee_rate_status")=="FEE_RATE_CONFIGURED_CONSERVATIVE"
+          assert scan.get("stage3_dependency_required") is False
+          assert scan.get("exchange_write") is False
+          print("validation_post_suspend_ok geo", scan.get("geometry_complete_count"), scan.get("geometry_missing_count"))
+
+          def probe(url):
+            try:
+              with urllib.request.urlopen(url, timeout=20) as r:
+                return r.status
+            except urllib.error.HTTPError as e:
+              return e.code
+            except Exception as e:
+              return f"ERR:{type(e).__name__}"
+
+          s3 = probe("https://nexus-stage3-bybit-demo-learning.zeabur.app/health")
+          cp = probe("https://nexus-unified-control-plane.zeabur.app/health")
+          print("stage3_health", s3)
+          print("control_plane_health", cp)
+          # Accept non-200 as scaled/suspended; if still 200, report blocker.
+          open("/tmp/legacy_health.json","w").write(json.dumps({"stage3":s3,"control_plane":cp}))
+          if s3 == 200 or cp == 200:
+            raise SystemExit("LEGACY_STILL_RUNNING_NEED_DASHBOARD_SUSPEND")
+          print("legacy_scaled_or_unreachable_ok")
+          PY
+          echo "SCALE_LEGACY_TO_ZERO_PASS" >> "$GITHUB_STEP_SUMMARY"
 
