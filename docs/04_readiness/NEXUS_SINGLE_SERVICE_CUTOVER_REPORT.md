@@ -1,73 +1,44 @@
 # NEXUS Single-Service Cutover Report
 
-**Status after T+180 smoke:** deploy PASS · fee config LIVE · legacy scale pending/partial  
-**Recommendation (this checkpoint):** `NEXUS_SINGLE_SERVICE_PARTIAL_WITH_BLOCKERS` until Stage3 + Control Plane are suspended and 24h operational observation completes.
+**Recommendation:** `NEXUS_SINGLE_SERVICE_PARTIAL_WITH_BLOCKERS`  
+**Blocker remaining:** 24h read-only **operational** observation still in progress (not a trading validation). **6H V2 not started.**
 
 | Field | Value |
 |-------|-------|
-| consolidation_head | `598a5e1` (fee env CLI fix) · prior fee/market `1b452a8` |
+| consolidation_head | `5f690be` |
 | branch | `feature/nexus-single-service-consolidation` |
-| deployment_target | `nexus-bybit-demo-learning-validation` (`6a69ad539949111176cefe63`) |
-| new_service_created | **false** |
-| deploy_run | [30605493505](https://github.com/sam95006/btc_auto/actions/runs/30605493505) |
-| deployment_commit | `598a5e1` |
-| keep_service | `nexus-bybit-demo-learning-validation` |
-
-## Fee (Founder-approved conservative)
-
-| Field | Live value |
-|-------|------------|
-| fee_endpoint_supported | false |
 | fee_rate_status | `FEE_RATE_CONFIGURED_CONSERVATIVE` |
 | fee_source | `FOUNDER_APPROVED_CONFIG` |
 | taker_fee_rate | 0.00055 |
 | maker_fee_rate | 0.00020 |
-| pretrade_round_trip_fee | 0.00110 (TAKER+TAKER) |
+| pretrade_round_trip_fee | 0.00110 |
 | fee_config_expiry | 2026-08-31 |
-| fee_account_specific | false |
-| fee_live_private_api | false |
-| fee_version | `founder-conservative-v1-2026-07-31` |
-
-## Internalization
-
-| Field | Value |
-|-------|-------|
-| market_internalized | true (`market_owner=INTERNAL_MARKET_INTELLIGENCE`) |
-| control_plane_internalized | true (served from Validation `/control-plane`) |
-| stage3_dependency_required | **false** |
-| external_control_plane_dependency_required | **false** |
+| market_internalized | true |
+| control_plane_internalized | true |
+| stage3_dependency_required | false |
+| external_control_plane_dependency_required | false |
+| deployment_target | `nexus-bybit-demo-learning-validation` |
+| new_service_created | false |
+| deployment_commit | `598a5e1` (fee env) → head `5f690be` |
+| deploy_run | [30605493505](https://github.com/sam95006/btc_auto/actions/runs/30605493505) |
+| health_t0 / t60 / t180 | 200 / 200 / 200 |
+| market_worker / geometry_complete / missing | scan OK / **8** / **0** |
+| cost_gate | configured fee path active (read-only) |
 | execution_owner_count | 1 |
-
-## T+0 / T+60 / T+180 (read-only)
-
-| Check | Result |
-|-------|--------|
-| health_t0 | 200 PASS |
-| health_t60 | 200 PASS |
-| health_t180 | 200 PASS |
-| fee_rate_status (all) | `FEE_RATE_CONFIGURED_CONSERVATIVE` |
-| geometry_complete_count (scan) | **8** |
-| geometry_missing_count | **0** |
-| exchange_write | false |
+| exchange_write_call_count | 0 |
+| position_count | 0 |
+| open_order_count | 0 |
+| stage3_scaled_to_zero | **true** (health **502** after `zeabur service suspend`; not deleted) |
+| control_plane_scaled_to_zero | **true** (health **502** after suspend; not deleted) |
+| scale_run | [30606087614](https://github.com/sam95006/btc_auto/actions/runs/30606087614) |
+| active_running_service_count (HTTP 200) | **1** (Validation only) |
+| hidden_dependency_count (post-suspend smoke) | **0** (Validation market/CP/fee still OK) |
 | mainnet | false |
 | real_money | false |
-| pytest (deploy job) | **35 passed** |
+| 6h_v2_gate_ready | **false** (needs 24h operational observation complete) |
 
-## Legacy services
+## Notes
 
-| Service | Target | Status |
-|---------|--------|--------|
-| Stage3 `6a3b81652fdef84a45a2a553` | Scale/suspend (not delete) | pending CI `scale_legacy_to_zero` |
-| Control Plane `6a6bf638ffb4fc697c8a7b1f` | Scale/suspend (not delete) | pending CI `scale_legacy_to_zero` |
-| Validation | KEEP running | LIVE |
-
-## Explicit non-approvals (still closed)
-
-`DEMO_AUTONOMOUS_6H_V2=false` · `DEMO_AUTONOMOUS_24H=false` · `EXCHANGE_WRITE=false` · no Demo orders · no 4th Zeabur service · Net R:R 1.2 unchanged.
-
-## Next
-
-1. Run `scale_legacy_to_zero` (or Dashboard Suspend if API/CLI lacks suspend).
-2. Confirm `active_running_service_count=1`.
-3. Start **24h read-only operational observation** (not trading validation).
-4. Stop before 6H V2 Founder gate.
+- GraphQL direct `urllib` suspend was blocked by Cloudflare 1010; Zeabur CLI `service suspend` returned exit 0 and legacy endpoints became non-200.
+- Services were **not deleted** — short-term rollback via Zeabur Restart/Resume remains possible.
+- Observation checklist: `NEXUS_SINGLE_SERVICE_24H_OPERATIONAL_OBSERVATION.md`.

@@ -8,10 +8,16 @@
 | Field | Value |
 |-------|-------|
 | observation_kind | `single_service_operational_observation` |
-| started_at_utc | *set when Stage3 + CP scaled to zero* |
-| ends_at_utc | started + 24h |
+| started_at_utc | **2026-07-31T05:11:30Z** |
+| ends_at_utc | **2026-08-01T05:11:30Z** |
 | sole_running_service | `nexus-bybit-demo-learning-validation` |
 | sole_url | https://nexus-bybit-demo-val.zeabur.app |
+| legacy_stage3_health_at_start | 502 |
+| legacy_control_plane_health_at_start | 502 |
+| validation_health_at_start | 200 |
+| fee_at_start | `FEE_RATE_CONFIGURED_CONSERVATIVE` / `FOUNDER_APPROVED_CONFIG` |
+| geometry_at_start | complete=8 missing=0 |
+| scale_run | [30606087614](https://github.com/sam95006/btc_auto/actions/runs/30606087614) |
 
 ## Required continuous truths
 
@@ -31,7 +37,7 @@
 
 ## Failure flag
 
-If any required capability dies when Stage3 / old Control Plane stop:
+If any required capability dies because Stage3 / old Control Plane stopped:
 
 `NEXUS_SINGLE_SERVICE_HIDDEN_DEPENDENCY_FOUND` → **do not** propose 6H V2.
 
@@ -40,3 +46,7 @@ If any required capability dies when Stage3 / old Control Plane stop:
 - `NEXUS_SINGLE_SERVICE_READY_FOR_6H_V2_FOUNDER_APPROVAL`
 - `NEXUS_SINGLE_SERVICE_PARTIAL_WITH_BLOCKERS`
 - `BLOCKED_NEXUS_SINGLE_SERVICE_CONSOLIDATION`
+
+## Current checkpoint recommendation
+
+`NEXUS_SINGLE_SERVICE_PARTIAL_WITH_BLOCKERS` — observation **started**, not finished.
