@@ -9,7 +9,11 @@
 | branch | `feature/demo-autonomous-6h-v2-readiness` |
 | base | `feature/nexus-single-service-consolidation` @ `a90fb0c` |
 | draft_pr | [#24](https://github.com/sam95006/btc_auto/pull/24) (draft=true, merge=false, deploy=false) |
-| readiness_head | `51a92f0` |
+| readiness_head | `823d881` |
+| ci_status | **PASS** |
+| ci_run_push | [30621214461](https://github.com/sam95006/btc_auto/actions/runs/30621214461) |
+| ci_run_pr | [30621217333](https://github.com/sam95006/btc_auto/actions/runs/30621217333) |
+| tests_passed_local | 18 |
 | deploy | **false** |
 | live_effect | **false** |
 | exchange_write | **false** |
