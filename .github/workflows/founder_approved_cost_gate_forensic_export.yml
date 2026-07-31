@@ -1,0 +1,171 @@
+# Founder-approved READ-ONLY forensic export of 6H cost_gates from Demo Validation volume.
+# Does NOT redeploy validation, does NOT start 24H, does NOT mutate SQLite.
+
+name: founder-approved-cost-gate-forensic-export
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type EXPORT_COST_GATE_FORENSIC_READONLY"
+        required: true
+        type: string
+      session_id:
+        description: "Session id"
+        required: true
+        default: NEXUS-DEMO-6H-8124394e67
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: founder-cost-gate-forensic
+  cancel-in-progress: false
+
+env:
+  VALIDATION_SERVICE_ID: 6a69ad539949111176cefe63
+  ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+  FORBIDDEN_STAGE3: 6a3b81652fdef84a45a2a553
+
+jobs:
+  export-and-analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Confirm
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "EXPORT_COST_GATE_FORENSIC_READONLY" ]; then
+            echo "Confirmation mismatch"
+            exit 1
+          fi
+          if [ "$VALIDATION_SERVICE_ID" = "$FORBIDDEN_STAGE3" ]; then
+            echo "refusing stage3 service"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/unified-nexus-control-plane
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i -g zeabur@latest
+      - run: pip install -r requirements.txt
+
+      - name: Readonly copy sqlite from volume via service exec
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          SESSION_ID: ${{ github.event.inputs.session_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          mkdir -p artifacts/cost_gate_forensic/raw
+          # Locate db and checksum without write
+          zeabur service exec --id "$VALIDATION_SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            sh -lc 'set -e; DB=""; for p in /data/nexus_demo_validation/validation.sqlite3 /tmp/nexus_demo_validation/validation.sqlite3; do if [ -f "$p" ]; then DB="$p"; break; fi; done; echo DB_PATH=$DB; ls -la "$DB"; sha256sum "$DB"; python3 - <<"PY"
+          import os,sqlite3,json
+          db=os.environ.get("DB","")
+          PY' > artifacts/cost_gate_forensic/raw/db_locate.txt 2>&1 || true
+          cat artifacts/cost_gate_forensic/raw/db_locate.txt | tail -n 40
+
+          # Export streams to /tmp then base64 chunk (readonly sqlite dump via python)
+          zeabur service exec --id "$VALIDATION_SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false -- \
+            sh -lc 'python3 - <<"PY"
+          import hashlib, json, os, sqlite3, time
+          from pathlib import Path
+          candidates = [
+            Path("/data/nexus_demo_validation/validation.sqlite3"),
+            Path("/tmp/nexus_demo_validation/validation.sqlite3"),
+          ]
+          db = next((p for p in candidates if p.exists()), None)
+          assert db is not None, "db_not_found"
+          def sha(p):
+            h=hashlib.sha256()
+            with open(p,"rb") as f:
+              while True:
+                b=f.read(1<<20)
+                if not b: break
+                h.update(b)
+            return h.hexdigest()
+          before=sha(db)
+          uri=f"file:{db.resolve().as_posix()}?mode=ro"
+          conn=sqlite3.connect(uri, uri=True)
+          out=Path("/tmp/cost_gate_export")
+          out.mkdir(exist_ok=True)
+          meta={"database_path":str(db),"database_size":db.stat().st_size,"database_checksum_before":before,"exported_at":time.time(),"readonly":True}
+          streams=["cost_gates","bounded_candidates","decision_deltas","session_summaries","session_checkpoints","universe_scans","reflections"]
+          counts={}
+          for stream in streams:
+            rows=[]
+            for row in conn.execute("SELECT id, stream, account_epoch, payload, checksum, created_at FROM demo_execution_records WHERE stream=? ORDER BY id ASC", (stream,)):
+              rec=json.loads(row[3]); rec["_record_id"]=row[0]; rec["_stream"]=row[1]; rec["_account_epoch"]=row[2]; rec["_row_checksum"]=row[4]; rec["_created_at"]=row[5]
+              rows.append(rec)
+            counts[stream]=len(rows)
+            with open(out/f"{stream}.jsonl","w",encoding="utf-8") as fh:
+              for r in rows: fh.write(json.dumps(r,ensure_ascii=False)+"\n")
+          after=sha(db)
+          meta["database_checksum_after"]=after
+          meta["stream_counts"]=counts
+          meta["checksum_match"]= before==after
+          (out/"export_meta.json").write_text(json.dumps(meta,indent=2),encoding="utf-8")
+          # pack
+          import tarfile
+          tar=Path("/tmp/cost_gate_export.tgz")
+          with tarfile.open(tar,"w:gz") as t:
+            t.add(out, arcname="export")
+          print("PACKED", tar, tar.stat().st_size)
+          print("META", json.dumps(meta))
+          # emit base64 to stdout marker
+          import base64
+          print("B64_BEGIN")
+          print(base64.b64encode(tar.read_bytes()).decode("ascii"))
+          print("B64_END")
+          PY' > artifacts/cost_gate_forensic/raw/exec_out.txt 2>&1
+
+          python - <<'PY'
+          from pathlib import Path
+          import base64, re
+          raw = Path("artifacts/cost_gate_forensic/raw/exec_out.txt").read_text(encoding="utf-8", errors="replace")
+          Path("artifacts/cost_gate_forensic/raw/exec_out_tail.txt").write_text(raw[-8000:], encoding="utf-8")
+          m = re.search(r"B64_BEGIN\n(.*)\nB64_END", raw, re.S)
+          if not m:
+            # try without exact newlines
+            m = re.search(r"B64_BEGIN\s*(.*?)\s*B64_END", raw, re.S)
+          assert m, "no_b64_payload_in_exec_output"
+          data = base64.b64decode(re.sub(r"\s+", "", m.group(1)))
+          Path("artifacts/cost_gate_forensic/cost_gate_export.tgz").write_bytes(data)
+          print("decoded_bytes", len(data))
+          PY
+          mkdir -p artifacts/cost_gate_forensic/export
+          tar -xzf artifacts/cost_gate_forensic/cost_gate_export.tgz -C artifacts/cost_gate_forensic
+          ls -la artifacts/cost_gate_forensic/export | head
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          meta=json.loads(Path("artifacts/cost_gate_forensic/export/export_meta.json").read_text())
+          assert meta.get("checksum_match") is True
+          print("checksum_ok", meta["stream_counts"])
+          PY
+
+      - name: Forensic analysis
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          SESSION_ID: ${{ github.event.inputs.session_id }}
+        run: |
+          python tools/analysis/forensic_cost_gate_analysis.py \
+            --export-dir artifacts/cost_gate_forensic/export \
+            --output artifacts/cost_gate_forensic/analysis \
+            --session-id "$SESSION_ID"
+          cat artifacts/cost_gate_forensic/analysis/cost_gate_forensic_summary.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cost-gate-forensic-${{ github.event.inputs.session_id }}
+          path: artifacts/cost_gate_forensic/
+          if-no-files-found: error
