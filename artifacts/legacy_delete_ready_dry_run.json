@@ -1,0 +1,32 @@
+{
+  "dry_run": true,
+  "gates_pass": true,
+  "problems": [],
+  "backup": {
+    "retired_at_planned": "2026-07-31T06:17:19Z",
+    "services": [
+      {
+        "service_name": "nexus-stage3-bybit-demo-learning",
+        "service_id": "6a3b81652fdef84a45a2a553",
+        "domain": "https://nexus-stage3-bybit-demo-learning.zeabur.app",
+        "service_role": "legacy_market_ui",
+        "retirement_reason": "single_service_consolidation",
+        "replacement_service": "nexus-bybit-demo-learning-validation"
+      },
+      {
+        "service_name": "nexus-unified-control-plane",
+        "service_id": "6a6bf638ffb4fc697c8a7b1f",
+        "domain": "https://nexus-unified-control-plane.zeabur.app",
+        "service_role": "temporary_federation_ui",
+        "retirement_reason": "control_plane_internalized",
+        "replacement_service": "nexus-bybit-demo-learning-validation"
+      }
+    ],
+    "keep_service_id": "6a69ad539949111176cefe63",
+    "keep_service_name": "nexus-bybit-demo-learning-validation",
+    "secrets_backed_up": false,
+    "note": "Non-secret metadata only; no API keys/tokens/signatures"
+  },
+  "deleted": [],
+  "execute_attempted": false
+}
