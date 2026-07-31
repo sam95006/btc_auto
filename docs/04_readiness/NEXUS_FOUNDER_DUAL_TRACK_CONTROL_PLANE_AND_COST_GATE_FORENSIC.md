@@ -7,23 +7,31 @@
 
 ---
 
-## A 軌 — Unified Control Plane
+## A 軌 — Unified Control Plane (LIVE)
 
 | Field | Value |
 |-------|-------|
 | service_name | `nexus-unified-control-plane` |
-| service_url | *(pending smoke — see live CI)* |
-| deployment_commit | `b9f7a55` (deploy fix) / feature freeze `32df898` |
-| deploy_run | See GitHub Actions `30595631319` |
-| control_plane_read_only | true |
+| service_url | https://nexus-unified-control-plane.zeabur.app |
+| service_id | `6a6bf638ffb4fc697c8a7b1f` |
+| deployment_commit | `4cadeab` (SPA `/control-plane` fix) |
+| deploy_run | `30595915532` (CI smoke raced rollout; live re-smoke PASS) |
+| health | 200 |
+| overview | 200 |
+| `/control-plane` | 200 |
+| market_source | Stage3 / `market_intelligence` (LIVE) |
+| demo_account_source | Demo Validation / `demo_execution` (`BYBIT_DEMO_PRIVATE_API`) |
+| session_source | Demo Validation / `demo_execution` (status=`COMPLETED`) |
+| learning_source | Demo Validation federation |
+| execution_owner | `DEMO_VALIDATION_SERVICE` |
+| execution_owner_count | 1 |
 | exchange_write | false |
-| execution_owner | DEMO_VALIDATION_SERVICE |
-| execution_owner_count | 1 (contract) |
+| stage3_execution_disabled | true |
 | mainnet | false |
 | real_money | false |
-| recommendation | Continue until smoke PASS; do not overwrite Stage3 / Demo Validation |
+| recommendation | `UNIFIED_NEXUS_CONTROL_PLANE_LIVE_READ_ONLY` — use as single NEXUS entry |
 
-**Must not:** become execution owner · start 24H · exchange write · merge PR #6
+**Must not:** become execution owner · start 24H · exchange write · merge PR #6 · overwrite Stage3 (`6a3b8165…`) or Demo Validation (`6a69ad53…`)
 
 ---
 
@@ -34,6 +42,7 @@
 | source_db | `/data/nexus_demo_validation/validation.sqlite3` |
 | source_checksum | `8e8757ccdfc07efc0f957d0ec75ad54b1862abe766ad9903b0acd84ac801a118` |
 | checksum_before == after | true |
+| export_run | `30595242637` |
 | rows_exported | 1221 |
 | unique_candidates | 1221 |
 | duplicates | 0 |
