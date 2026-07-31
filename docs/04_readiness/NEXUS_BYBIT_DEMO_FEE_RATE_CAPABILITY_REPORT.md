@@ -1,24 +1,11 @@
 # NEXUS Bybit Demo Fee-Rate Capability Report
 
-**Status:** Probe workflow dispatched / pending live container result  
+**Probe run:** https://github.com/sam95006/btc_auto/actions/runs/30602684513  
+**Observed:** 2026-07-31 (container on `nexus-bybit-demo-learning-validation`)  
 **Domain (locked):** `https://api-demo.bybit.com`  
-**Endpoint:** `GET /v5/account/fee-rate`  
-**Forbidden fallbacks:** `api.bybit.com`, `api-testnet.bybit.com` — **never used**
+**Forbidden fallbacks used:** **false** (never hit mainnet/testnet)
 
-## Policy
-
-Success is **not** “must be LIVE”.
-
-```text
-Demo fee-rate probe
-├─ supported + parseable → FEE_RATE_LIVE
-└─ unsupported on Demo → DEMO_FEE_ENDPOINT_UNSUPPORTED
-                        → FEE_RATE_CONFIGURED_CONSERVATIVE (Founder-gated only)
-```
-
-Offline replay fee `0.00055` is labeled **`REPLAY_CONFIGURED_CONSERVATIVE`** only — not a runtime production constant until Founder approval.
-
-## Probe fields (filled after CI artifact)
+## Result
 
 | Field | Value |
 |-------|-------|
@@ -26,28 +13,33 @@ Offline replay fee `0.00055` is labeled **`REPLAY_CONFIGURED_CONSERVATIVE`** onl
 | endpoint | `/v5/account/fee-rate` |
 | category | `linear` |
 | symbols_tested | BTCUSDT, ETHUSDT |
-| http_status | *(from artifact)* |
-| ret_code | *(from artifact)* |
-| endpoint_supported | *(from artifact)* |
-| fee_rate_status | *(from artifact)* |
-| maker_fee_rate | *(from artifact)* |
-| taker_fee_rate | *(from artifact)* |
-| fee_source | *(from artifact)* |
-| fallback_required | *(from artifact)* |
-| fallback_honesty | `FEE_RATE_CONFIGURED_CONSERVATIVE_requires_founder_approval` |
+| http_status | 200 |
+| ret_code | **10001** |
+| result_list_count | 0 |
+| endpoint_supported | **false** |
+| fee_rate_status | **`DEMO_FEE_ENDPOINT_UNSUPPORTED`** |
+| maker_fee_rate | UNAVAILABLE |
+| taker_fee_rate | UNAVAILABLE |
+| fee_source | UNAVAILABLE |
+| fallback_required | **true** |
+| fallback_honesty | Founder-gated `FEE_RATE_CONFIGURED_CONSERVATIVE` only |
 | secret_redaction | true |
-| forbidden_domain_fallback_used | false |
+| credential_mode | BYBIT_DEMO |
 
-## Recommendation (pending live probe)
+Both symbols identical: HTTP 200 + `retCode=10001` + empty list → **not AUTH_FAILED**, **not LIVE**.
 
-Placeholder until CI artifact lands:
+## Recommendation
 
-- `DEMO_FEE_RATE_LIVE_VERIFIED` **or**
-- `DEMO_FEE_ENDPOINT_UNSUPPORTED_USE_APPROVED_CONSERVATIVE` **or**
-- `DEMO_FEE_RATE_PARTIAL_WITH_BLOCKERS`
+**`DEMO_FEE_ENDPOINT_UNSUPPORTED_USE_APPROVED_CONSERVATIVE`**
 
-## Code landed
+Runtime may use conservative fee **only after** Founder sets:
 
-- `tools/analysis/probe_bybit_demo_fee_rate_capability.py`
-- `DEMO_FEE_ENDPOINT_UNSUPPORTED` status in `fee_rate.py`
-- CI mode `probe_demo_fee_capability` on registered workflow
+```text
+NEXUS_FEE_RATE_CONSERVATIVE_ENABLED=true
+NEXUS_FEE_RATE_CONSERVATIVE_FOUNDER_APPROVED=true
+NEXUS_FEE_RATE_CONSERVATIVE_TAKER=<approved>
+NEXUS_FEE_RATE_CONSERVATIVE_MAKER=<optional>
+NEXUS_FEE_RATE_VERSION=<version>
+```
+
+Offline replay `0.00055` remains **`REPLAY_CONFIGURED_CONSERVATIVE`** until that approval — must not be auto-promoted to production constant.

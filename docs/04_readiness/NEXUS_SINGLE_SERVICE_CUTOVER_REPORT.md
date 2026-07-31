@@ -32,3 +32,10 @@
 ## Recommendation
 
 `NEXUS_SINGLE_SERVICE_PARTIAL_WITH_BLOCKERS`
+
+### Fee probe (complete)
+
+- `fee_endpoint_supported=false`
+- `fee_rate_status=DEMO_FEE_ENDPOINT_UNSUPPORTED`
+- `recommendation=DEMO_FEE_ENDPOINT_UNSUPPORTED_USE_APPROVED_CONSERVATIVE`
+- Needs Founder approval of conservative rates before runtime enablement.
