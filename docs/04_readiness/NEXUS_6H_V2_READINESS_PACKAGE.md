@@ -8,7 +8,8 @@
 | worktree | `C:\Temp\BTC_BOT_6H_V2_READINESS` |
 | branch | `feature/demo-autonomous-6h-v2-readiness` |
 | base | `feature/nexus-single-service-consolidation` @ `a90fb0c` |
-| draft_pr | pending create |
+| draft_pr | [#24](https://github.com/sam95006/btc_auto/pull/24) (draft=true, merge=false, deploy=false) |
+| readiness_head | `51a92f0` |
 | deploy | **false** |
 | live_effect | **false** |
 | exchange_write | **false** |
