@@ -367,7 +367,7 @@ def analyze(export_dir: Path, output: Path, session_id: str) -> dict[str, Any]:
     cost_vals: list[float] = []
     net_vals: list[float] = []
     rr_vals: list[float] = []
-    fee_dom = slip_dom = fund_dom = buf_dom = threshold_only = formula_mismatch = 0
+    fee_dom = slip_dom = fund_dom = buf_dom = threshold_only = formula_mismatch = formula_unverifiable = 0
     symbols: set[str] = set()
     strategies: set[str] = set()
     regimes: set[str] = set()
@@ -428,7 +428,10 @@ def analyze(export_dir: Path, output: Path, session_id: str) -> dict[str, Any]:
         if primary == "D_POTENTIAL_FALSE_NEGATIVE":
             threshold_only += 1
         if not rc["formula_match"]:
-            formula_mismatch += 1
+            if "INSUFFICIENT_INPUTS_FOR_RECOMPUTE" in (rc.get("formula_issue_codes") or []):
+                formula_unverifiable += 1
+            else:
+                formula_mismatch += 1
 
         if cand:
             if cand.get("symbol"):
@@ -524,7 +527,12 @@ def analyze(export_dir: Path, output: Path, session_id: str) -> dict[str, Any]:
 
     # Dominant classification
     dominant_class = class_counts.most_common(1)[0][0] if class_counts else "UNKNOWN"
-    possible_defect = class_counts.get("E_POSSIBLE_GATE_CONFIGURATION_DEFECT", 0) > 0 or formula_mismatch > 0 or funding_default_zero > 0
+    # Insufficient inputs (e.g. FEE_RATE_UNKNOWN early exit) is data defect, not formula defect.
+    possible_defect = (
+        class_counts.get("E_POSSIBLE_GATE_CONFIGURATION_DEFECT", 0) > 0
+        or formula_mismatch > 0
+        or funding_default_zero > 0
+    )
 
     gate24_ready = (
         formula_mismatch == 0
@@ -594,7 +602,15 @@ def analyze(export_dir: Path, output: Path, session_id: str) -> dict[str, Any]:
         "buffer_dominated_count": buf_dom,
         "threshold_only_block_count": threshold_only,
         "formula_mismatch_count": formula_mismatch,
+        "formula_unverifiable_count": formula_unverifiable,
         "block_reason_distribution": dict(reason_counter),
+        "root_cause_note": (
+            "All rows short-circuited on FEE_RATE_UNKNOWN with empty breakdown; "
+            "cost math never ran. Decision deltas lack source_trade_case_id and "
+            "are scan-memory applies, not trade-learning deltas."
+            if reason_counter.get("FEE_RATE_UNKNOWN", 0) == len(gates) and gates
+            else ""
+        ),
         "decision_delta_audit": {
             "recorded_decision_delta_count": delta_audit["recorded_decision_delta_count"],
             "validated_decision_delta_count": delta_audit["validated_decision_delta_count"],
