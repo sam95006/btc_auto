@@ -10,7 +10,7 @@ on:
       - "static/**"
       - "templates/**"
       - ".env.example"
-      - ".github/workflows/**"
+      # workflows excluded: CI-only changes must not redeploy live Validation during bounded sessions
 
 permissions:
   contents: read

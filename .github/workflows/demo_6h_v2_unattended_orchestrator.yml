@@ -2,7 +2,8 @@ name: demo-6h-v2-unattended-orchestrator
 
 # Remote persistent observer for remaining 6H V2 checkpoints, deadline finalize
 # watchdog, machine gate, and conditional 12H start.
-# Does NOT redeploy Validation. Does NOT rely on Founder laptop / Cursor sleepers.
+# Does NOT redeploy Validation.
+# Evidence commits target feature branch only. Does NOT rely on Founder laptop / Cursor sleepers.
 
 on:
   workflow_dispatch:
@@ -58,7 +59,8 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
+          # Workflow file is on main for dispatchability; code/tools come from readiness tip.
+          ref: feature/demo-autonomous-6h-v2-readiness
 
       - uses: actions/setup-python@v5
         with:
@@ -132,4 +134,4 @@ jobs:
             exit 0
           fi
           git commit -m "chore(evidence): 6H V2 unattended checkpoints/finalize run ${{ github.run_id }}"
-          git push origin HEAD:${{ github.ref_name }}
+          git push origin HEAD:feature/demo-autonomous-6h-v2-readiness
