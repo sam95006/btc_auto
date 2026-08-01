@@ -448,10 +448,13 @@ jobs:
           echo "$GITHUB_SHA" > "$CTX/SOURCE_COMMIT"
           grep -q "BoundedAutonomousSessionEngine" "$CTX/backend/nexus_demo_execution/bounded_12h_session.py"
           ! grep -q "_run_placeholder" "$CTX/backend/nexus_demo_execution/bounded_12h_session.py"
+          cp deploy/zeabur_bybit_demo_validation/Dockerfile.full_engine "$CTX/Dockerfile"
+          test -s "$CTX/DEPLOYMENT_COMMIT"
+          grep -q "BOUNDED_AUTONOMOUS_ENGINE_V1" "$CTX/backend/nexus_demo_execution/api_routes.py"
           ( cd "$CTX" && zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$VALIDATION_SERVICE_ID" -i=false --json ) > /tmp/deploy_out.txt 2>&1
           sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/deploy_out.txt | tail -n 40
           grep -q '"status": "success"' /tmp/deploy_out.txt
-      - name: Restart + re-arm 12H gate + T+0/60/180
+      - name: Restart + re-arm 12H gate + wait for new code + T+0/60/180
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
         run: |
@@ -465,7 +468,30 @@ jobs:
           zeabur variable update --id "$SID" -k "FOUNDER_APPROVE_12H_AFTER_INCONCLUSIVE_6H_AND_PROBE=true" -y -i=false \
             || zeabur variable create --id "$SID" -k "FOUNDER_APPROVE_12H_AFTER_INCONCLUSIVE_6H_AND_PROBE=true" -y -i=false
           zeabur service restart --id "$SID" --env-id "$ZEABUR_ENV_ID" -i=false
-          sleep 75
+          echo "waiting for FULL_AUTONOMOUS_ENGINE code marker"
+          ready=0
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /tmp/st_wait.json -w "%{http_code}" "$DEMO_VAL_URL/api/nexus/demo-execution/status" || true)
+            if [ "$code" = "200" ]; then
+              if python - <<'PY'
+          import json,sys
+          d=json.load(open("/tmp/st_wait.json"))
+          print("try", d.get("code_marker"), d.get("bounded_12h_controller_type"), (d.get("baked_deployment_commit") or "")[:12])
+          sys.exit(0 if d.get("bounded_12h_controller_type")=="FULL_AUTONOMOUS_ENGINE" and d.get("code_marker")=="BOUNDED_AUTONOMOUS_ENGINE_V1" else 1)
+          PY
+              then
+                ready=1
+                break
+              fi
+            fi
+            echo "wait_code_rollout attempt=$i http=$code"
+            sleep 15
+          done
+          test "$ready" = "1"
+          # Re-arm after new entrypoint (gaps-only) is live, then restart once more so FOUNDER_GATE sticks.
+          zeabur variable update --id "$SID" -k "FOUNDER_GATE=DEMO_AUTONOMOUS_12H_V3_BOUNDED_VALIDATION" -y -i=false
+          zeabur service restart --id "$SID" --env-id "$ZEABUR_ENV_ID" -i=false
+          sleep 60
           for label in t0 t60 t180; do
             code=$(curl -s -o /tmp/h_${label}.json -w "%{http_code}" "$DEMO_VAL_URL/health" || true)
             echo "health_${label}=$code"
@@ -474,12 +500,13 @@ jobs:
             python - <<PY
           import json,sys
           d=json.load(open("/tmp/st_${label}.json"))
+          assert d.get("code_marker")=="BOUNDED_AUTONOMOUS_ENGINE_V1", d.get("code_marker")
           assert d.get("bounded_12h_controller_type")=="FULL_AUTONOMOUS_ENGINE", d.get("bounded_12h_controller_type")
           assert d.get("bounded_12h_full_engine_ready") is True
           assert d.get("placeholder_reference_count", 0)==0
           assert d.get("mainnet") is False and d.get("real_money") is False
           ident=d.get("runtime_identity") or {}
-          print("identity", ident.get("identity_class"), (ident.get("deployment_commit") or "")[:12])
+          print("identity", ident.get("identity_class"), (ident.get("deployment_commit") or "")[:12], "baked", (d.get("baked_deployment_commit") or "")[:12])
           if ident.get("identity_class")=="RUNTIME_IDENTITY_LABEL_STALE":
               sys.exit(2)
           print("ok_${label}")

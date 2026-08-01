@@ -211,6 +211,15 @@ class DemoExecutionApiState:
         persistence["persistence_blocked"] = self.persistence_blocked
         persistence["data_root"] = str(self.data_root)
         epoch_sum = self.epoch_tracker.summary()
+        baked_commit = ""
+        for cand in (Path("/app/DEPLOYMENT_COMMIT"), Path("DEPLOYMENT_COMMIT")):
+            try:
+                if cand.exists():
+                    baked_commit = cand.read_text(encoding="utf-8").strip()[:64]
+                    if baked_commit:
+                        break
+            except Exception:
+                pass
         try:
             identity = capture_runtime_identity(
                 account_epoch=str(epoch_sum.get("account_epoch") or ""),
@@ -223,6 +232,8 @@ class DemoExecutionApiState:
             identity = {"identity_class": "RUNTIME_IDENTITY_UNKNOWN"}
         return {
             **READ_ONLY_META,
+            "baked_deployment_commit": baked_commit or None,
+            "code_marker": "BOUNDED_AUTONOMOUS_ENGINE_V1",
             "fixed_leverage": FIXED_LEVERAGE,
             "max_open": MAX_OPEN,
             "max_pending": MAX_PENDING,

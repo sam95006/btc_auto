@@ -1,0 +1,38 @@
+# Full autonomous engine Validation image (CLI CTX = repo-like root).
+FROM python:3.11-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    BYBIT_DEMO=true \
+    MAINNET=false \
+    REAL_MONEY=false \
+    DEMO_AUTONOMOUS_ENABLED=false \
+    AUTONOMOUS_SEND=false \
+    EXCHANGE_WRITE=false \
+    NEXUS_WEB_ONLY=true \
+    NEXUS_EMBEDDED_WORKER=false \
+    FIXED_LEVERAGE=25 \
+    NEXUS_DATA_DIR=/tmp/nexus_demo_validation \
+    PORT=8080
+
+WORKDIR /app
+RUN mkdir -p /tmp/nexus_demo_validation /data/nexus_demo_validation || true
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+RUN test -f app.py \
+ && test -f gunicorn.conf.py \
+ && test -f entrypoint.sh \
+ && test -s DEPLOYMENT_COMMIT \
+ && test -s SOURCE_COMMIT \
+ && test -f demo_founder_gate.env \
+ && grep -q "BoundedAutonomousSessionEngine" backend/nexus_demo_execution/bounded_12h_session.py \
+ && ! grep -q "_run_placeholder" backend/nexus_demo_execution/bounded_12h_session.py \
+ && grep -q "BOUNDED_AUTONOMOUS_ENGINE_V1" backend/nexus_demo_execution/api_routes.py \
+ && chmod +x entrypoint.sh
+
+EXPOSE 8080
+CMD ["/bin/sh", "./entrypoint.sh"]
