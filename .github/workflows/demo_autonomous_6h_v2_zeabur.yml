@@ -190,18 +190,29 @@ jobs:
           set -euo pipefail
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           SID="$VALIDATION_SERVICE_ID"
+          ENV_ID="$ZEABUR_ENV_ID"
           if [ "$SID" = "$FORBIDDEN_STAGE3" ]; then echo BLOCKED; exit 1; fi
           set_var() {
             local k="$1" v="$2"
             set +e
-            zeabur variable create --id "$SID" -k "${k}=${v}" -y -i=false >/tmp/var_out.txt 2>&1
+            zeabur variable upsert --key "$k" --value "$v" --service-id "$SID" --env-id "$ENV_ID" -i=false >/tmp/var_out.txt 2>&1
             code=$?
+            if [ "$code" != "0" ]; then
+              zeabur variable create --key "$k" --value "$v" --service-id "$SID" --env-id "$ENV_ID" -i=false >/tmp/var_out.txt 2>&1
+              code=$?
+            fi
+            if [ "$code" != "0" ]; then
+              zeabur variable create --id "$SID" -k "${k}=${v}" -y -i=false >/tmp/var_out.txt 2>&1
+              code=$?
+            fi
             if [ "$code" != "0" ]; then
               zeabur variable update --id "$SID" -k "${k}=${v}" -y -i=false >/tmp/var_out.txt 2>&1
               code=$?
             fi
             set -e
             echo "var_${k}_exit=$code"
+            sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/var_out.txt | tail -n 3 || true
+            if [ "$code" != "0" ]; then echo "FAILED_SET $k"; exit 1; fi
           }
           SHA="${{ github.event.inputs.expected_runtime_sha }}"
           set_var FOUNDER_GATE DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION
@@ -219,6 +230,7 @@ jobs:
           set_var NEXUS_DEPLOYMENT_ID "$SHA"
           set_var NEXUS_DEPLOY_RUN_ID "$GITHUB_RUN_ID"
           set_var GITHUB_SHA "$SHA"
+          set_var NEXUS_BUILD_MARKER "6H_V2_${SHA:0:8}"
       - name: Redeploy Validation with V2 start code (existing service only)
         env:
           ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
@@ -228,19 +240,35 @@ jobs:
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           cd frontend && npm ci && npm run build && cd ..
           CTX=/tmp/6h_v2_ctx
-          rm -rf "$CTX" && mkdir -p "$CTX"
-          cp app.py run.py gunicorn.conf.py zbpack.json requirements.txt "$CTX/" || true
+          rm -rf "$CTX" && mkdir -p "$CTX/tools" "$CTX/deploy/zeabur_bybit_demo_validation"
+          cp app.py run.py gunicorn.conf.py zbpack.json requirements.txt "$CTX/"
           cp -r backend config static templates "$CTX/"
           mkdir -p "$CTX/static/operator_ui"
           cp -r frontend/dist/* "$CTX/static/operator_ui/" || true
-          if [ -f deploy/zeabur_unified_control_plane/Dockerfile ]; then cp deploy/zeabur_unified_control_plane/Dockerfile "$CTX/Dockerfile"; fi
+          cp deploy/zeabur_bybit_demo_validation/Dockerfile "$CTX/Dockerfile"
+          cp deploy/zeabur_bybit_demo_validation/entrypoint.sh "$CTX/entrypoint.sh" || true
+          cp -r tools/ci "$CTX/tools/" || true
+          grep -n "DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" "$CTX/backend/nexus_demo_execution/session_limits.py"
           (
             cd "$CTX"
             zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$VALIDATION_SERVICE_ID" -i=false --json
           ) > /tmp/deploy_out.txt 2>&1
           sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/deploy_out.txt | tail -n 40
-          zeabur service restart --id "$VALIDATION_SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || true
-          sleep 60
+          grep -q '"status": "success"' /tmp/deploy_out.txt
+      - name: Re-arm FOUNDER_GATE after deploy and restart
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          SID="$VALIDATION_SERVICE_ID"
+          ENV_ID="$ZEABUR_ENV_ID"
+          zeabur variable upsert --key FOUNDER_GATE --value DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION --service-id "$SID" --env-id "$ENV_ID" -i=false \
+            || zeabur variable update --id "$SID" -k "FOUNDER_GATE=DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" -y -i=false
+          zeabur variable upsert --key FOUNDER_6H_APPROVED --value true --service-id "$SID" --env-id "$ENV_ID" -i=false \
+            || zeabur variable update --id "$SID" -k "FOUNDER_6H_APPROVED=true" -y -i=false
+          zeabur service restart --id "$SID" --env-id "$ENV_ID" -i=false
+          sleep 75
       - name: Wait health ready
         run: |
           set -euo pipefail
