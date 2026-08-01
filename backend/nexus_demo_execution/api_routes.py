@@ -354,7 +354,7 @@ class DemoExecutionApiState:
         from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
 
         if self._bounded_6h is None:
-            export_dir = self.data_root / "artifacts" / "demo_validation"
+            export_dir = self.data_root / "artifacts" / "demo_validation_6h_v2"
             export_dir.mkdir(parents=True, exist_ok=True)
             self._bounded_6h = Bounded6HSession(
                 gate=self.gate,

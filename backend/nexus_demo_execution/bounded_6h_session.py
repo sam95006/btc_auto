@@ -1,4 +1,4 @@
-"""DEMO_AUTONOMOUS_6H_BOUNDED_VALIDATION session runner.
+"""DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION session runner.
 
 NOTE: persistence.py STREAMS must include:
   session_checkpoints, decision_deltas, cost_gates, session_summaries,
@@ -12,6 +12,7 @@ import threading
 import time
 import uuid
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -40,16 +41,18 @@ from backend.nexus_demo_execution.session_limits import (
     SCHEMA_VERSION,
     SESSION_DURATION_SEC,
     SESSION_GATE_NAME,
+    SESSION_GATE_NAME_LEGACY,
     SUPERVISOR_POLL_SEC,
 )
 from backend.nexus_demo_execution.session_mistake_memory import SessionMistakeMemory
 
 _TRUE = {"1", "true", "yes", "on"}
+_ALLOWED_GATES = frozenset({SESSION_GATE_NAME, SESSION_GATE_NAME_LEGACY})
+# Founder V2 vocabulary only (no silent 24H auto-open).
 _RECS = (
-    "DEMO_AUTONOMOUS_6H_PASS_AWAITING_24H_APPROVAL",
-    "DEMO_AUTONOMOUS_6H_COMPLETED_WITH_FINDINGS",
-    "DEMO_AUTONOMOUS_6H_BLOCKED_NO_VALID_CANDIDATES",
-    "DEMO_AUTONOMOUS_6H_FAILED_KILL_SWITCH_APPLIED",
+    "DEMO_AUTONOMOUS_6H_V2_PASS",
+    "DEMO_AUTONOMOUS_6H_V2_PASS_WITH_FINDINGS",
+    "DEMO_AUTONOMOUS_6H_V2_FAILED",
 )
 
 
@@ -169,7 +172,7 @@ class Bounded6HSession:
                 return redact_secrets({"ok": False, "reason": "already_running", **self.status()})
             _load_founder_gate_file()
             gate_env = (os.environ.get("FOUNDER_GATE") or "").strip()
-            if gate_env != SESSION_GATE_NAME:
+            if gate_env not in _ALLOWED_GATES:
                 return redact_secrets(
                     {
                         "ok": False,
@@ -186,10 +189,14 @@ class Bounded6HSession:
 
             self._reset_counters()
             self._stop.clear()
-            self.session_id = f"NEXUS-DEMO-6H-{uuid.uuid4().hex[:10]}"
+            utc = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+            nonce = uuid.uuid4().hex[:8]
+            self.session_id = f"NEXUS-DEMO-6H-V2-{utc}-{nonce}"
             self._state["session_id"] = self.session_id
             self._state["status"] = "STARTING"
-            self._thread = threading.Thread(target=self._safe_run, name="bounded-6h", daemon=True)
+            self._state["policy_version"] = POLICY_VERSION
+            self._state["founder_gate"] = gate_env
+            self._thread = threading.Thread(target=self._safe_run, name="bounded-6h-v2", daemon=True)
             self._thread.start()
             return redact_secrets({"ok": True, "session_id": self.session_id, "status": "STARTING"})
 
@@ -681,7 +688,9 @@ class Bounded6HSession:
                 "demo_autonomous_final": False,
                 "exchange_write_final": False,
                 "recommendation": rec,
+                "next_machine_gate": "DEMO_AUTONOMOUS_12H_V3_VIA_6H_HARD_SAFETY",
                 "next_founder_gate": "FOUNDER_GATE=DEMO_AUTONOMOUS_24H_BOUNDED_VALIDATION",
+                "next_founder_gate_approved": False,
                 "policy_version": POLICY_VERSION,
                 "schema_version": SCHEMA_VERSION,
                 "stop_reason": reason or self._state.get("stop_reason"),
@@ -716,9 +725,9 @@ class Bounded6HSession:
     def _recommend(self) -> str:
         st = self._state
         if self.kill_switch.engaged or st.get("kill_switch_events", 0) > 0:
-            return _RECS[3]
+            return "DEMO_AUTONOMOUS_6H_V2_FAILED"
         if st.get("entries_total", 0) == 0:
-            return _RECS[2]
+            return "DEMO_AUTONOMOUS_6H_V2_FAILED"
         findings = (
             st.get("bad_process_wins", 0)
             + st.get("bad_process_losses", 0)
@@ -727,8 +736,8 @@ class Bounded6HSession:
             + st.get("duplicate_order_incidents", 0)
         )
         if findings > 0:
-            return _RECS[1]
-        return _RECS[0]
+            return "DEMO_AUTONOMOUS_6H_V2_PASS_WITH_FINDINGS"
+        return "DEMO_AUTONOMOUS_6H_V2_PASS"
 
     def _maybe_checkpoints(self, elapsed: float, export_root: Path, account_epoch: str) -> None:
         done = set(self._state.get("checkpoints_done") or [])

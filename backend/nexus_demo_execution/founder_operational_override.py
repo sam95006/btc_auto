@@ -73,17 +73,30 @@ def parse_observation_markers(text: str) -> dict[str, Any]:
             pass
 
     pass_true = (
-        "NEXUS_SINGLE_SERVICE_OPERATIONAL_24H_PASS" in text
-        or '"operational_observation_pass": true' in lower
+        '"operational_observation_pass": true' in lower
         or '"operational_observation_pass":true' in lower
         or "operational_observation_pass=true" in lower
         or "operational_observation_pass: true" in lower
+        or re.search(r"operational_observation_pass\s*\|\s*`?true`?", text, flags=re.IGNORECASE) is not None
     )
+    # Mentioning the PASS token as a forbidden claim must NOT count as pass.
+    forbidden_pass_claim = bool(
+        re.search(
+            r"(not|forbidden|must_not|不得).{0,40}NEXUS_SINGLE_SERVICE_OPERATIONAL_24H_PASS",
+            text,
+            flags=re.IGNORECASE | re.DOTALL,
+        )
+    )
+    has_pass_marker = (
+        "NEXUS_SINGLE_SERVICE_OPERATIONAL_24H_PASS" in text and not forbidden_pass_claim
+    )
+    pass_true = pass_true or (has_pass_marker and not forbidden_pass_claim)
     pass_false = (
         "operational_observation_pass=false" in lower
         or "operational_observation_pass: false" in lower
         or '"operational_observation_pass": false' in lower
         or '"operational_observation_pass":false' in lower
+        or re.search(r"operational_observation_pass\s*\|\s*`?false`?", text, flags=re.IGNORECASE) is not None
     )
     completed = (
         "observation_completed_full_24h=true" in lower
@@ -155,7 +168,8 @@ def evaluate_operational_observation_gate(
     Missing / incomplete observation without override → BLOCK.
     Aborted observation without exact Founder flags → BLOCK.
     """
-    env_map = {k: str(v) for k, v in (env or os.environ).items()}
+    # Important: empty dict must NOT fall through to os.environ (falsy `{} or environ` bug).
+    env_map = {k: str(v) for k, v in (env if env is not None else os.environ).items()}
     markers = parse_observation_markers(observation_text)
     problems: list[str] = []
 
@@ -250,7 +264,7 @@ def assert_override_cannot_bypass_12h_machine_gate(
     env: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """Even with Founder 6H/12H approval flags, 12H still requires machine gate."""
-    env_map = {k: str(v) for k, v in (env or os.environ).items()}
+    env_map = {k: str(v) for k, v in (env if env is not None else os.environ).items()}
     gate = evaluate_12h_machine_gate(report_6h)
     founder_wants_12h = _env_true(OPTIONAL_12H_FLAG, env_map) and _env_true(
         "FOUNDER_APPROVE_DEMO_AUTONOMOUS_6H_V2", env_map

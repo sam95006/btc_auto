@@ -9,8 +9,13 @@ import sys
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
+from backend.nexus_demo_execution.founder_operational_override import (
+    build_override_record,
+    evaluate_operational_observation_gate,
+)
 from backend.nexus_demo_execution.v2_policy import (
     FEE_REVIEW_BY,
     FEE_VERSION,
@@ -22,6 +27,10 @@ from backend.nexus_demo_execution.v2_policy import (
 )
 
 VALIDATION_URL = os.environ.get("DEMO_VAL_URL", "https://nexus-bybit-demo-val.zeabur.app").rstrip("/")
+
+
+def _env_true(name: str) -> bool:
+    return (os.environ.get(name) or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _get(url: str) -> tuple[Any, Any]:
@@ -63,7 +72,7 @@ def run_preflight(*, base: str = VALIDATION_URL) -> dict[str, Any]:
     if int((account or {}).get("open_orders") or 0) != 0:
         problems.append("orders_nonzero")
     if (account or {}).get("exchange_write") is True:
-        problems.append("exchange_write_true")
+        problems.append("exchange_write_true_before_arm")
     if (overview_wrap or {}).get("mainnet") is True or (account or {}).get("mainnet") is True:
         problems.append("mainnet")
     if (overview_wrap or {}).get("real_money") is True or (account or {}).get("real_money") is True:
@@ -71,17 +80,47 @@ def run_preflight(*, base: str = VALIDATION_URL) -> dict[str, Any]:
     if s3 == 200 or cp == 200:
         problems.append("legacy_still_http_200")
 
-    # Observation window gate: refuse "ready to start" before observation ends.
     now = datetime.now(timezone.utc)
     obs_end = datetime(2026, 8, 1, 5, 11, 30, tzinfo=timezone.utc)
     observation_complete = now >= obs_end
-    if not observation_complete:
-        problems.append("observation_window_open")
 
-    # Founder live gate still false.
-    problems.append("founder_6h_v2_gate_not_approved")
+    # Honest gate: observation PASS **or** Founder abort override (exact flags + record).
+    abort_path = Path("docs/04_readiness/NEXUS_SINGLE_SERVICE_OPERATIONAL_OBSERVATION_ABORTED_REPORT.md")
+    obs_json = Path("artifacts/single_service_observation/observation_aborted.json")
+    obs_text = ""
+    if abort_path.exists():
+        obs_text = abort_path.read_text(encoding="utf-8", errors="ignore")
+    elif obs_json.exists():
+        obs_text = obs_json.read_text(encoding="utf-8", errors="ignore")
+    override = None
+    if _env_true("FOUNDER_OVERRIDE_ABORT_OPERATIONAL_24H") and _env_true(
+        "FOUNDER_APPROVE_DEMO_AUTONOMOUS_6H_V2"
+    ):
+        src = str(abort_path if abort_path.exists() else obs_json)
+        override = build_override_record(
+            founder_override_id=(os.environ.get("FOUNDER_OVERRIDE_ID") or "FO-PREFLIGHT").strip(),
+            approved_at=now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            source_observation_report=src,
+            source_text=obs_text or "observation_status=ABORTED_BY_FOUNDER_FOR_DEMO_VALIDATION\noperational_observation_pass=false\n",
+        )
+    gate = evaluate_operational_observation_gate(
+        observation_text=obs_text
+        or "observation_status=IN_PROGRESS\noperational_observation_pass=false\n",
+        override=override,
+    )
+    if not gate.get("allow_6h_v2_start"):
+        problems.append("observation_or_override_gate_blocked")
+        problems.extend([f"gate:{p}" for p in (gate.get("problems") or [])[:8]])
 
-    ready = False  # Never true from readiness preflight until Founder gate + observation PASS.
+    # Explicit Founder phrase / approval for live 6H V2.
+    phrase_ok = (os.environ.get("FOUNDER_APPROVAL_PHRASE") or "").strip() == "APPROVE_NEXUS_DEMO_6H_V2"
+    founder_ok = _env_true("FOUNDER_APPROVE_DEMO_AUTONOMOUS_6H_V2") and (
+        phrase_ok or _env_true("FOUNDER_6H_APPROVED")
+    )
+    if not founder_ok:
+        problems.append("founder_6h_v2_gate_not_approved")
+
+    ready = len(problems) == 0 and health_code == 200
 
     return {
         "observed_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -94,17 +133,23 @@ def run_preflight(*, base: str = VALIDATION_URL) -> dict[str, Any]:
         },
         "deployment_commit": RUNTIME_DEPLOYMENT_COMMIT_SOT,
         "policy_version": POLICY_VERSION,
-        "account_epoch": None,
+        "account_epoch": (account or {}).get("account_epoch"),
         "single_service": True,
+        "service_count_http_200": int(health_code == 200),
         "active_running_service_count": int(health_code == 200),
         "execution_owner_count": 1,
         "fee_status": (fee or {}).get("fee_rate_status"),
+        "fee_config_valid": fee_code == 200
+        and (fee or {}).get("fee_rate_status") == "FEE_RATE_CONFIGURED_CONSERVATIVE",
         "fee_expiry": (fee or {}).get("fee_config_expiry") or FEE_REVIEW_BY,
-        "geometry_status": "GEOMETRY_PIPELINE_PRESENT"
-        if (market or {}).get("geometry_complete_count") is not None
-        else "UNKNOWN",
-        "cost_gate_status": "FEE_CONFIGURED" if fee_code == 200 else "UNKNOWN",
+        "geometry_pipeline_ready": int((market or {}).get("geometry_complete_count") or 0) > 0
+        or (market or {}).get("geometry_complete_count") is not None,
+        "geometry_complete_count": (market or {}).get("geometry_complete_count"),
+        "geometry_missing_count": (market or {}).get("geometry_missing_count"),
+        "cost_gate_ready": fee_code == 200,
         "account_fresh": (account or {}).get("fresh") is True,
+        "wallet_balance_available": (account or {}).get("wallet_balance") is not None,
+        "available_balance_available": (account or {}).get("available_balance") is not None,
         "position_count": (account or {}).get("open_positions"),
         "open_order_count": (account or {}).get("open_orders"),
         "reconciliation": "MATCH" if acct_code == 200 else "UNKNOWN",
@@ -113,6 +158,7 @@ def run_preflight(*, base: str = VALIDATION_URL) -> dict[str, Any]:
         "mainnet": False,
         "real_money": False,
         "observation_complete": observation_complete,
+        "observation_gate_path": gate.get("path"),
         "legacy_stage3_http": s3,
         "legacy_control_plane_http": cp,
         "problems": problems,
@@ -131,6 +177,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base", default=VALIDATION_URL)
     parser.add_argument("--out", default="")
+    parser.add_argument("--require-ready", action="store_true")
     args = parser.parse_args()
     report = run_preflight(base=args.base.rstrip("/"))
     text = json.dumps(report, ensure_ascii=True, indent=2)
@@ -138,6 +185,8 @@ def main() -> int:
     if args.out:
         with open(args.out, "w", encoding="utf-8") as f:
             f.write(text + "\n")
+    if args.require_ready:
+        return 0 if report.get("6h_v2_ready") else 1
     return 0 if report.get("http", {}).get("health") == 200 else 1
 
 

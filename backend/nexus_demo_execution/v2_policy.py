@@ -46,9 +46,9 @@ PRETRADE_ROUND_TRIP_FEE_RATE = 0.00110
 FEE_REVIEW_BY = "2026-08-31"
 FEE_VERSION = "founder-conservative-v1-2026-07-31"
 
-# Runtime SoT for frozen Validation (docs tip must never replace this).
-RUNTIME_DEPLOYMENT_COMMIT_SOT = "598a5e11985f613007c8d65e61fa1dd9c7cbdf67"
-RUNTIME_DEPLOY_RUN_SOT = "30605493505"
+# Runtime SoT for Validation after PR24 package deploy (docs tip must never replace this).
+RUNTIME_DEPLOYMENT_COMMIT_SOT = "81b0d14e2ffb6c5b5e92eeedd7962ed60dd00bc0"
+RUNTIME_DEPLOY_RUN_SOT = "30692231025"
 
 SIX_ROLES = (
     "market_context",

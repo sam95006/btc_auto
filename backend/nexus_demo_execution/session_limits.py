@@ -1,7 +1,9 @@
-"""DEMO_AUTONOMOUS_6H_BOUNDED_VALIDATION session constants."""
+"""DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION session constants."""
 from __future__ import annotations
 
-SESSION_GATE_NAME = "DEMO_AUTONOMOUS_6H_BOUNDED_VALIDATION"
+SESSION_GATE_NAME = "DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION"
+# Legacy alias still recognized by start() for one-release compatibility.
+SESSION_GATE_NAME_LEGACY = "DEMO_AUTONOMOUS_6H_BOUNDED_VALIDATION"
 SESSION_DURATION_SEC = 6 * 60 * 60
 CHECKPOINT_OFFSETS_SEC = (
     0,
@@ -38,13 +40,13 @@ MAX_HOLD_SEC = 30 * 60
 CYCLE_INTERVAL_SEC = 120
 SUPERVISOR_POLL_SEC = 10
 
-# Cost gate
+# Cost gate — floors must not be lowered.
 TAKER_FEE_RATE_DEFAULT = 0.00055  # used only after fee-rate fetch fails → BLOCK
 MIN_NET_REWARD_TO_COST = 1.5
 MIN_NET_REWARD_RISK_RATIO = 1.2
 FUNDING_CONSERVATIVE_BUFFER_RATE = 0.0001  # per hold window when funding UNAVAILABLE
 COST_UNCERTAINTY_BUFFER_RATE = 0.0002
 
-POLICY_VERSION = "demo-autonomous-6h-bounded-v1"
-SCHEMA_VERSION = "demo_validation_session_v1"
+POLICY_VERSION = "demo-autonomous-6h-v2-bounded"
+SCHEMA_VERSION = "demo_validation_session_v2"
 DECISION_LABEL = "RULE_BASED"  # honest: no LLM claim
