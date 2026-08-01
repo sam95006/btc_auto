@@ -324,6 +324,14 @@ class DemoExecutionApiState:
             snap = orch._last_snapshot if orch else None
         if snap is None:
             return {"available": False, "reason": "no_cycle_run"}
+        epoch_id = None
+        fingerprint = None
+        try:
+            ep = self.epoch_tracker.observe(snap, persist=True)
+            epoch_id = ep.epoch_id
+            fingerprint = ep.fingerprint
+        except Exception:
+            pass
         return {
             "wallet_balance": snap.wallet_balance,
             "equity": snap.equity,
@@ -334,6 +342,8 @@ class DemoExecutionApiState:
             "open_orders": len(snap.open_orders),
             "source": snap.source,
             "fresh": fresh,
+            "account_epoch": epoch_id,
+            "account_fingerprint": fingerprint,
         }
 
     def dry_run_latest(self) -> dict[str, Any]:
