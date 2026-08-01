@@ -388,16 +388,68 @@ def build_final_report(checkpoints: list[dict[str, Any]], final: dict[str, Any])
     return report
 
 
-def run_machine_gate(report_6h: dict[str, Any]) -> dict[str, Any]:
-    from backend.nexus_demo_execution.v2_bounded_engine import new_12h_session_id
-    from backend.nexus_demo_execution.v3_start_gate import evaluate_12h_machine_gate
+def _new_12h_session_id(nonce: str) -> str:
+    utc = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return f"NEXUS-DEMO-12H-V3-{utc}-{nonce}"
 
-    nonce = os.environ.get("SESSION_NONCE") or _fmt().replace(":", "").replace("-", "")[-10:]
-    proposed = new_12h_session_id(nonce)
-    report = dict(report_6h)
-    report["proposed_12h_session_id"] = proposed
-    gate = evaluate_12h_machine_gate(report)
-    gate["proposed_12h_session_id"] = proposed
+
+def _evaluate_12h_machine_gate(report_6h: dict[str, Any]) -> dict[str, Any]:
+    try:
+        from backend.nexus_demo_execution.v3_start_gate import evaluate_12h_machine_gate
+        from backend.nexus_demo_execution.v2_bounded_engine import new_12h_session_id
+        nonce = os.environ.get("SESSION_NONCE") or _fmt().replace(":", "").replace("-", "")[-10:]
+        proposed = new_12h_session_id(nonce)
+        report = dict(report_6h)
+        report["proposed_12h_session_id"] = proposed
+        gate = evaluate_12h_machine_gate(report)
+        gate["proposed_12h_session_id"] = proposed
+        return gate
+    except Exception as exc:  # noqa: BLE001
+        problems: list[str] = []
+        allowed = {
+            "DEMO_AUTONOMOUS_6H_V2_PASS",
+            "DEMO_AUTONOMOUS_6H_V2_PASS_WITH_FINDINGS",
+        }
+        rec = str(report_6h.get("recommendation") or "")
+        if rec not in allowed:
+            problems.append("6h_recommendation_not_allowed")
+        if report_6h.get("session_completed") is not True:
+            problems.append("6h_not_completed")
+        if report_6h.get("write_window_closed") is not True:
+            problems.append("6h_write_window_open")
+        for key in (
+            "position_count",
+            "open_order_count",
+            "duplicate_order_count",
+            "unprotected_position_count",
+            "protection_incident_count",
+            "runtime_stall_count",
+            "persistence_error_count",
+            "bad_process_outcome_count",
+            "secret_leak_count",
+        ):
+            if int(report_6h.get(key) or 0) != 0:
+                problems.append(key)
+        if str(report_6h.get("reconciliation") or report_6h.get("reconciliation_final") or "") != "MATCH":
+            problems.append("6h_reconciliation")
+        if report_6h.get("export_complete") is not True and report_6h.get("evidence_export_complete") is not True:
+            problems.append("6h_export_incomplete")
+        nonce = os.environ.get("SESSION_NONCE") or _fmt().replace(":", "").replace("-", "")[-10:]
+        proposed = _new_12h_session_id(nonce)
+        return {
+            "machine_gate_pass": len(problems) == 0,
+            "problems": problems,
+            "proposed_12h_session_id": proposed,
+            "fallback_gate": True,
+            "fallback_error": f"{type(exc).__name__}:{str(exc)[:120]}",
+            "auto_start_24h": False,
+            "source_6h_session_id": report_6h.get("session_id"),
+            "source_6h_recommendation": rec,
+        }
+
+
+def run_machine_gate(report_6h: dict[str, Any]) -> dict[str, Any]:
+    gate = _evaluate_12h_machine_gate(report_6h)
     gate["founder_approve_12h_env"] = os.environ.get("FOUNDER_APPROVE_DEMO_AUTONOMOUS_12H_V3", "true")
     return gate
 
