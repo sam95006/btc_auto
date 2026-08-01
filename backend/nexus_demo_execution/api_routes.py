@@ -147,6 +147,7 @@ class DemoExecutionApiState:
 
         self.approval = FounderSmokeApprovalStore()
         self._bounded_6h: Any = None
+        self._bounded_12h: Any = None
         logger.info(
             "demo_api_state_ready data_root=%s persistence_blocked=%s",
             self.data_root,
@@ -382,6 +383,46 @@ class DemoExecutionApiState:
         self._bounded_6h.stop(reason)
         return {"ok": True, "status": self._bounded_6h.status()}
 
+    def start_bounded_12h(self, body: dict[str, Any] | None = None) -> dict[str, Any]:
+        from backend.nexus_demo_execution.bounded_12h_session import Bounded12HSession
+
+        body = body or {}
+        if self._bounded_12h is None:
+            export_dir = self.data_root / "artifacts" / "demo_validation_12h_v3"
+            export_dir.mkdir(parents=True, exist_ok=True)
+            self._bounded_12h = Bounded12HSession(
+                export_dir=export_dir,
+                data_root=self.data_root,
+            )
+        report = body.get("source_6h_report") or body
+        return self._bounded_12h.start(
+            source_6h_report=report if isinstance(report, dict) else {},
+            nonce=str(body.get("session_nonce") or "") or None,
+        )
+
+    def bounded_12h_status(self) -> dict[str, Any]:
+        if self._bounded_12h is None:
+            return {"status": "IDLE", "found": False}
+        payload = self._bounded_12h.status()
+        payload["found"] = True
+        return payload
+
+    def stop_bounded_12h(self, reason: str = "OPERATOR_STOP") -> dict[str, Any]:
+        if self._bounded_12h is None:
+            return {"ok": False, "reason": "no_session"}
+        return self._bounded_12h.stop(reason)
+
+    def run_same_router_probe(self, *, dry_run: bool = True) -> dict[str, Any]:
+        from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
+        from backend.nexus_demo_execution.same_router_probe import SameRouterExecutionProbe
+
+        export_dir = self.data_root / "artifacts" / "same_router_probe"
+        probe = SameRouterExecutionProbe(
+            writer=DemoWriteClient(),
+            export_dir=export_dir,
+        )
+        return probe.run(dry_run=dry_run).to_dict()
+
 
 _STATE: DemoExecutionApiState | None = None
 
@@ -528,6 +569,35 @@ def register_demo_execution_routes(app: Flask) -> None:
     @app.route("/api/nexus/demo-execution/bounded-6h/stop", methods=["POST"])
     def demo_execution_bounded_6h_stop():
         return jsonify(_wrap(get_demo_execution_state().stop_bounded_6h("OPERATOR_STOP")))
+
+    @app.route("/api/nexus/demo-execution/bounded-12h/start", methods=["POST"])
+    def demo_execution_bounded_12h_start():
+        from flask import request
+
+        body = request.get_json(silent=True) or {}
+        result = get_demo_execution_state().start_bounded_12h(body)
+        return jsonify(_wrap({"bounded_12h_start": result}))
+
+    @app.route("/api/nexus/demo-execution/bounded-12h/status", methods=["GET"])
+    def demo_execution_bounded_12h_status():
+        return jsonify(_wrap({"bounded_12h": get_demo_execution_state().bounded_12h_status()}))
+
+    @app.route("/api/nexus/demo-execution/bounded-12h/stop", methods=["POST"])
+    def demo_execution_bounded_12h_stop():
+        return jsonify(_wrap(get_demo_execution_state().stop_bounded_12h("OPERATOR_STOP")))
+
+    @app.route("/api/nexus/demo-execution/same-router-probe", methods=["POST"])
+    def demo_execution_same_router_probe():
+        from flask import request
+
+        body = request.get_json(silent=True) or {}
+        # Default dry_run=true fail-closed until Founder arms live probe after deploy.
+        dry = str(body.get("dry_run", "true")).lower() not in {"0", "false", "no"}
+        phrase = str(body.get("founder_phrase") or "")
+        if not dry and phrase != "APPROVE_SAME_ROUTER_PROBE":
+            return jsonify(_wrap({"probe": {"ok": False, "reason": "phrase_required_for_live_probe"}})), 200
+        result = get_demo_execution_state().run_same_router_probe(dry_run=dry)
+        return jsonify(_wrap({"probe": result}))
 
     logger.info(
         "demo_execution_routes_registered persistence_blocked=%s",

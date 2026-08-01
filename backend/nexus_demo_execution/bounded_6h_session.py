@@ -52,6 +52,7 @@ _ALLOWED_GATES = frozenset({SESSION_GATE_NAME, SESSION_GATE_NAME_LEGACY})
 _RECS = (
     "DEMO_AUTONOMOUS_6H_V2_PASS",
     "DEMO_AUTONOMOUS_6H_V2_PASS_WITH_FINDINGS",
+    "DEMO_AUTONOMOUS_6H_V2_INCONCLUSIVE_NO_EXECUTION",
     "DEMO_AUTONOMOUS_6H_V2_FAILED",
 )
 
@@ -137,8 +138,26 @@ class Bounded6HSession:
             "ending_equity": 0.0,
             "candidates_total": 0,
             "risk_critic_blocks": 0,
+            "risk_critic_pass_total": 0,
             "mistake_guard_blocks": 0,
+            "mistake_guard_pass_total": 0,
+            "cost_gate_evaluated_total": 0,
+            "cost_gate_pass_total": 0,
             "cost_gate_blocks": 0,
+            "cost_gate_block_reason_distribution": {},
+            "pre_cost_drop_total": 0,
+            "pre_cost_drop_reason_distribution": {},
+            "valid_intent_total": 0,
+            "order_intent_total": 0,
+            "exchange_write_attempt_total": 0,
+            "exchange_write_authorized_total": 0,
+            "exchange_write_blocked_total": 0,
+            "exchange_request_total": 0,
+            "exchange_accepted_total": 0,
+            "exchange_rejected_total": 0,
+            "last_exchange_rejection_code": "",
+            "last_exchange_rejection_reason": "",
+            "fills_total": 0,
             "entries_total": 0,
             "trades_completed": 0,
             "wins": 0,
@@ -361,6 +380,8 @@ class Bounded6HSession:
                 with self._lock:
                     self._state["risk_critic_blocks"] += 1
                 continue
+            with self._lock:
+                self._state["risk_critic_pass_total"] += 1
 
             delta = self.memory.apply(candidate=cdict, before_score=cand.candidate_score, before_verdict="ALLOW")
             with self._lock:
@@ -370,17 +391,34 @@ class Bounded6HSession:
                 with self._lock:
                     self._state["mistake_guard_blocks"] += 1
                 continue
+            with self._lock:
+                self._state["mistake_guard_pass_total"] += 1
 
             try:
                 snap = self.reader.read_with_constitution()
             except Exception:
+                with self._lock:
+                    self._state["pre_cost_drop_total"] += 1
+                    dist = dict(self._state.get("pre_cost_drop_reason_distribution") or {})
+                    dist["READER_EXCEPTION"] = int(dist.get("READER_EXCEPTION") or 0) + 1
+                    self._state["pre_cost_drop_reason_distribution"] = dist
                 continue
             decision = allocator.allocate(snap, requested_margin=MARGIN_PER_TRADE_CAP, open_count=0, pending_count=0)
             if decision.result != AllocationResult.ALLOCATED:
+                with self._lock:
+                    self._state["pre_cost_drop_total"] += 1
+                    dist = dict(self._state.get("pre_cost_drop_reason_distribution") or {})
+                    dist["ALLOCATOR_BLOCK"] = int(dist.get("ALLOCATOR_BLOCK") or 0) + 1
+                    self._state["pre_cost_drop_reason_distribution"] = dist
                 continue
 
             price = cand.last_price
             if price <= 0:
+                with self._lock:
+                    self._state["pre_cost_drop_total"] += 1
+                    dist = dict(self._state.get("pre_cost_drop_reason_distribution") or {})
+                    dist["PRICE_INVALID"] = int(dist.get("PRICE_INVALID") or 0) + 1
+                    self._state["pre_cost_drop_reason_distribution"] = dist
                 continue
             try:
                 info = self.writer.fetch_instrument(cand.symbol)
@@ -389,6 +427,11 @@ class Bounded6HSession:
                 )
                 tick = self.writer.tick_size(info)
             except DemoWriteError:
+                with self._lock:
+                    self._state["pre_cost_drop_total"] += 1
+                    dist = dict(self._state.get("pre_cost_drop_reason_distribution") or {})
+                    dist["INSTRUMENT_OR_QTY_ERROR"] = int(dist.get("INSTRUMENT_OR_QTY_ERROR") or 0) + 1
+                    self._state["pre_cost_drop_reason_distribution"] = dist
                 continue
 
             if cand.direction == "Buy":
@@ -411,10 +454,19 @@ class Bounded6HSession:
                 fee_meta=fee_quote.to_dict(),
             )
             self.persistence.append("cost_gates", redact_secrets(cost.to_dict()), account_epoch=account_epoch)
+            with self._lock:
+                self._state["cost_gate_evaluated_total"] += 1
             if not cost.allowed:
                 with self._lock:
                     self._state["cost_gate_blocks"] += 1
+                    dist = dict(self._state.get("cost_gate_block_reason_distribution") or {})
+                    reason = str(cost.reason or "UNKNOWN")
+                    dist[reason] = int(dist.get(reason) or 0) + 1
+                    self._state["cost_gate_block_reason_distribution"] = dist
                 continue
+            with self._lock:
+                self._state["cost_gate_pass_total"] += 1
+                self._state["valid_intent_total"] += 1
 
             if self._state["net_pnl"] <= -MAX_SESSION_NET_LOSS:
                 self._kill("session_net_loss", KillSwitchTrigger.GATE_FAILURE)
@@ -424,6 +476,10 @@ class Bounded6HSession:
 
             trade_case_id = f"case-{uuid.uuid4().hex[:12]}"
             order_link_id = f"NEXUS-6H-{uuid.uuid4().hex[:12]}"[:36]
+            with self._lock:
+                self._state["order_intent_total"] += 1
+                self._state["exchange_write_attempt_total"] += 1
+                self._state["exchange_request_total"] += 1
             try:
                 self.writer.set_leverage(cand.symbol, FIXED_LEVERAGE)
                 resp = self.writer.create_market_order(
@@ -435,8 +491,15 @@ class Bounded6HSession:
                     take_profit=tp,
                 )
             except DemoWriteError as exc:
+                with self._lock:
+                    self._state["exchange_rejected_total"] += 1
+                    self._state["last_exchange_rejection_code"] = str(exc.code)
+                    self._state["last_exchange_rejection_reason"] = str(exc.detail or "")[:200]
                 self._kill(f"order_fail:{exc.code}", KillSwitchTrigger.GATE_FAILURE)
                 return None
+            with self._lock:
+                self._state["exchange_accepted_total"] += 1
+                self._state["exchange_write_authorized_total"] += 1
 
             self.gate.smoke_orders_remaining = max(0, int(self.gate.smoke_orders_remaining) - 1)
             with self._lock:
@@ -466,6 +529,8 @@ class Bounded6HSession:
             if not pos:
                 self._kill("no_fill", KillSwitchTrigger.GATE_FAILURE)
                 return None
+            with self._lock:
+                self._state["fills_total"] += 1
             ok, _, pev = self._verify_protection(cand.symbol, sl, tp)
             self.persistence.append("protection_checks", redact_secrets(pev), account_epoch=account_epoch)
             if not ok:
@@ -726,8 +791,6 @@ class Bounded6HSession:
         st = self._state
         if self.kill_switch.engaged or st.get("kill_switch_events", 0) > 0:
             return "DEMO_AUTONOMOUS_6H_V2_FAILED"
-        if st.get("entries_total", 0) == 0:
-            return "DEMO_AUTONOMOUS_6H_V2_FAILED"
         findings = (
             st.get("bad_process_wins", 0)
             + st.get("bad_process_losses", 0)
@@ -735,6 +798,11 @@ class Bounded6HSession:
             + st.get("reconciliation_incidents", 0)
             + st.get("duplicate_order_incidents", 0)
         )
+        # Zero entries: operational pipeline may be fine, but autonomous execution was not proven.
+        if st.get("entries_total", 0) == 0:
+            if findings == 0:
+                return "DEMO_AUTONOMOUS_6H_V2_INCONCLUSIVE_NO_EXECUTION"
+            return "DEMO_AUTONOMOUS_6H_V2_FAILED"
         if findings > 0:
             return "DEMO_AUTONOMOUS_6H_V2_PASS_WITH_FINDINGS"
         return "DEMO_AUTONOMOUS_6H_V2_PASS"

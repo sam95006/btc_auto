@@ -41,10 +41,18 @@ FEE_REVIEW_BY = "2026-08-31"
 
 # 12H must never reuse 6H session id / write window.
 REQUIRES_SOURCE_6H_PASS = True
+# PASS_WITH_FINDINGS alone is insufficient when entries_total==0;
+# machine gate also requires autonomous_execution_observed / same-router probe.
 ALLOWED_SOURCE_6H_RECOMMENDATIONS = frozenset(
     {
         "DEMO_AUTONOMOUS_6H_V2_PASS",
         "DEMO_AUTONOMOUS_6H_V2_PASS_WITH_FINDINGS",
+    }
+)
+INCONCLUSIVE_6H_RECOMMENDATIONS = frozenset(
+    {
+        "DEMO_AUTONOMOUS_6H_V2_INCONCLUSIVE_NO_EXECUTION",
+        "DEMO_AUTONOMOUS_6H_V2_FAILED",  # Runtime SoT for zero-entry sessions until enum ships live
     }
 )
 

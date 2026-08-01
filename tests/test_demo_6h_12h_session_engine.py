@@ -113,11 +113,18 @@ def test_recovery_preserves_counters():
 
 
 def test_12h_gate_blocks_failed_6h():
-    bad = evaluate_12h_machine_gate({"recommendation": "DEMO_AUTONOMOUS_6H_V2_FAILED"})
+    bad = evaluate_12h_machine_gate({"recommendation": "DEMO_AUTONOMOUS_6H_V2_FAILED", "entries_total": 0})
     assert bad["machine_gate_pass"] is False
-    good = evaluate_12h_machine_gate(
+    assert bad["autonomous_execution_observed"] is False
+    assert bad["12H_ALLOWED"] is False
+
+    # Zero-entry PASS-like report must still block without execution / probe.
+    zero = evaluate_12h_machine_gate(
         {
-            "recommendation": "DEMO_AUTONOMOUS_6H_V2_PASS",
+            "recommendation": "DEMO_AUTONOMOUS_6H_V2_PASS_WITH_FINDINGS",
+            "runtime_recommendation_sot": "DEMO_AUTONOMOUS_6H_V2_FAILED",
+            "orchestrator_recommendation": "DEMO_AUTONOMOUS_6H_V2_PASS_WITH_FINDINGS",
+            "canonical_6h_classification": "DEMO_AUTONOMOUS_6H_V2_INCONCLUSIVE_NO_EXECUTION",
             "session_completed": True,
             "write_window_closed": True,
             "position_count": 0,
@@ -128,6 +135,33 @@ def test_12h_gate_blocks_failed_6h():
             "protection_incident_count": 0,
             "runtime_stall_count": 0,
             "export_complete": True,
+            "entries_total": 0,
+            "session_id": "6h-1",
+            "proposed_12h_session_id": "12h-1",
+            "findings": [],
+        }
+    )
+    assert zero["machine_gate_pass"] is False
+    assert "autonomous_execution_not_observed" in zero["problems"] or "zero_entries_without_same_router_probe" in zero["problems"]
+
+    good = evaluate_12h_machine_gate(
+        {
+            "recommendation": "DEMO_AUTONOMOUS_6H_V2_PASS",
+            "runtime_recommendation_sot": "DEMO_AUTONOMOUS_6H_V2_PASS",
+            "session_completed": True,
+            "write_window_closed": True,
+            "position_count": 0,
+            "open_order_count": 0,
+            "reconciliation": "MATCH",
+            "duplicate_order_count": 0,
+            "unprotected_position_count": 0,
+            "protection_incident_count": 0,
+            "runtime_stall_count": 0,
+            "export_complete": True,
+            "entries_total": 1,
+            "completed_trades_total": 1,
+            "order_route_verified": True,
+            "same_router_probe_pass": True,
             "session_id": "6h-1",
             "proposed_12h_session_id": "12h-1",
             "findings": [],
@@ -135,12 +169,14 @@ def test_12h_gate_blocks_failed_6h():
     )
     assert good["machine_gate_pass"] is True
     assert good["auto_start_24h"] is False
+    assert good["autonomous_execution_observed"] is True
 
 
 def test_12h_gate_blocks_security_findings():
     r = evaluate_12h_machine_gate(
         {
             "recommendation": "DEMO_AUTONOMOUS_6H_V2_PASS_WITH_FINDINGS",
+            "runtime_recommendation_sot": "DEMO_AUTONOMOUS_6H_V2_PASS_WITH_FINDINGS",
             "session_completed": True,
             "write_window_closed": True,
             "position_count": 0,
@@ -151,9 +187,61 @@ def test_12h_gate_blocks_security_findings():
             "protection_incident_count": 0,
             "runtime_stall_count": 0,
             "export_complete": True,
+            "entries_total": 1,
+            "order_route_verified": True,
+            "same_router_probe_pass": True,
             "session_id": "6h-1",
             "proposed_12h_session_id": "12h-1",
             "findings": ["RUNTIME_STALL"],
         }
     )
     assert r["machine_gate_pass"] is False
+
+
+def test_same_router_probe_dry_run():
+    from backend.nexus_demo_execution.same_router_probe import SameRouterExecutionProbe
+
+    out = SameRouterExecutionProbe().run(dry_run=True)
+    assert out.ok is False
+    assert out.reason == "dry_run_only"
+    assert out.to_dict()["strategy_evidence"] is False
+
+
+def test_12h_idempotent_duplicate_start():
+    import os
+    from pathlib import Path
+    import tempfile
+
+    from backend.nexus_demo_execution.bounded_12h_session import Bounded12HSession
+
+    os.environ["FOUNDER_GATE"] = "DEMO_AUTONOMOUS_12H_V3_BOUNDED_VALIDATION"
+    os.environ["FOUNDER_APPROVE_DEMO_AUTONOMOUS_12H_V3"] = "true"
+    os.environ["MAINNET"] = "false"
+    os.environ["REAL_MONEY"] = "false"
+    with tempfile.TemporaryDirectory() as td:
+        s = Bounded12HSession(export_dir=Path(td), data_root=Path(td))
+        report = {
+            "recommendation": "DEMO_AUTONOMOUS_6H_V2_PASS",
+            "runtime_recommendation_sot": "DEMO_AUTONOMOUS_6H_V2_PASS",
+            "session_completed": True,
+            "write_window_closed": True,
+            "position_count": 0,
+            "open_order_count": 0,
+            "reconciliation": "MATCH",
+            "duplicate_order_count": 0,
+            "unprotected_position_count": 0,
+            "protection_incident_count": 0,
+            "runtime_stall_count": 0,
+            "export_complete": True,
+            "entries_total": 1,
+            "completed_trades_total": 1,
+            "order_route_verified": True,
+            "same_router_probe_pass": True,
+            "session_id": "6h-x",
+            "findings": [],
+        }
+        a = s.start(source_6h_report=report, nonce="aaaa")
+        assert a.get("ok") is True
+        b = s.start(source_6h_report=report, nonce="bbbb")
+        assert b.get("reason") == "IDEMPOTENT_DUPLICATE_START_BLOCKED"
+        s.stop("test")
