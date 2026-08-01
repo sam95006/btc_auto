@@ -248,7 +248,21 @@ jobs:
           cp deploy/zeabur_bybit_demo_validation/Dockerfile "$CTX/Dockerfile"
           cp deploy/zeabur_bybit_demo_validation/entrypoint.sh "$CTX/entrypoint.sh" || true
           cp -r tools/ci "$CTX/tools/" || true
+          # Bake Founder V2 gate file — entrypoint `set -a` sources this and overwrites
+          # stale Zeabur FOUNDER_GATE leftovers (e.g. FIRST_BYBIT_DEMO_SMOKE_ORDER).
+          cat > "$CTX/demo_founder_gate.env" <<'EOF'
+FOUNDER_GATE=DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION
+FOUNDER_6H_APPROVED=true
+FOUNDER_OVERRIDE_ABORT_OPERATIONAL_24H=true
+FOUNDER_APPROVE_DEMO_AUTONOMOUS_6H_V2=true
+FOUNDER_APPROVE_DEMO_AUTONOMOUS_12H_V3=true
+EXCHANGE_WRITE=false
+DEMO_AUTONOMOUS_ENABLED=false
+MAINNET=false
+REAL_MONEY=false
+EOF
           grep -n "DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" "$CTX/backend/nexus_demo_execution/session_limits.py"
+          grep -n "FOUNDER_GATE=DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" "$CTX/demo_founder_gate.env"
           (
             cd "$CTX"
             zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$VALIDATION_SERVICE_ID" -i=false --json
@@ -263,12 +277,31 @@ jobs:
           zeabur auth login --token "$ZEABUR_TOKEN" -i=false
           SID="$VALIDATION_SERVICE_ID"
           ENV_ID="$ZEABUR_ENV_ID"
-          zeabur variable upsert --key FOUNDER_GATE --value DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION --service-id "$SID" --env-id "$ENV_ID" -i=false \
-            || zeabur variable update --id "$SID" -k "FOUNDER_GATE=DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" -y -i=false
-          zeabur variable upsert --key FOUNDER_6H_APPROVED --value true --service-id "$SID" --env-id "$ENV_ID" -i=false \
-            || zeabur variable update --id "$SID" -k "FOUNDER_6H_APPROVED=true" -y -i=false
+          # Prefer -k key=value form (CLI rejects --key on some versions).
+          zeabur variable update --id "$SID" -k "FOUNDER_GATE=DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" -y -i=false \
+            || zeabur variable create --id "$SID" -k "FOUNDER_GATE=DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" -y -i=false
+          zeabur variable update --id "$SID" -k "FOUNDER_6H_APPROVED=true" -y -i=false \
+            || zeabur variable create --id "$SID" -k "FOUNDER_6H_APPROVED=true" -y -i=false
           zeabur service restart --id "$SID" --env-id "$ENV_ID" -i=false
           sleep 75
+          # Prove process sees V2 gate (must not still be FIRST_BYBIT_DEMO_SMOKE_ORDER).
+          curl -fsS -X POST "$DEMO_VAL_URL/api/nexus/demo-execution/bounded-6h/start" \
+            -H "Content-Type: application/json" -d '{}' > /tmp/probe_gate.json || true
+          python - <<'PY'
+          import json,sys
+          d=json.load(open("/tmp/probe_gate.json"))
+          body=d.get("bounded_6h_start") or d
+          got=str((body or {}).get("got") or "")
+          expected=str((body or {}).get("expected") or "")
+          ok=bool((body or {}).get("ok"))
+          print("probe", {"ok": ok, "got": got, "expected": expected, "reason": (body or {}).get("reason")})
+          if got == "FIRST_BYBIT_DEMO_SMOKE_ORDER":
+              print("STALE_FOUNDER_GATE_STILL_SMOKE")
+              sys.exit(1)
+          if expected and "6H_V2" not in expected and "6H_BOUNDED" not in expected:
+              print("unexpected expected gate", expected)
+              sys.exit(1)
+          PY
       - name: Wait health ready
         run: |
           set -euo pipefail

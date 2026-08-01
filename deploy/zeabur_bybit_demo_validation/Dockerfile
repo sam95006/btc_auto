@@ -39,11 +39,15 @@ COPY config/ config/
 COPY static/ static/
 COPY templates/ templates/
 COPY tools/ci/ tools/ci/
-COPY deploy/zeabur_bybit_demo_validation/entrypoint.sh ./entrypoint.sh
+# Prefer root-copied entrypoint + Founder gate file (CI CTX layout).
+COPY entrypoint.sh ./entrypoint.sh
+COPY demo_founder_gate.env ./demo_founder_gate.env
 RUN chmod +x entrypoint.sh \
  && test -f app.py \
  && test -f gunicorn.conf.py \
- && test -f entrypoint.sh
+ && test -f entrypoint.sh \
+ && test -f demo_founder_gate.env \
+ && grep -q "DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" demo_founder_gate.env
 
 EXPOSE 8080
 CMD ["/bin/sh", "./entrypoint.sh"]
