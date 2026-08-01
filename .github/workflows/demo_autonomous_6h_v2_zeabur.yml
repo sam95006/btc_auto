@@ -50,7 +50,12 @@ on:
         default: "true"
         type: string
       live_start:
-        description: "Set true to arm FOUNDER_GATE + POST bounded-6h/start on Validation"
+        description: "Set true to POST bounded-6h/start AFTER deploy. false = deploy-only (probe path)."
+        required: false
+        default: "false"
+        type: string
+      deploy_validation:
+        description: "Set true to redeploy existing Validation service"
         required: false
         default: "true"
         type: string
@@ -78,6 +83,7 @@ jobs:
     timeout-minutes: 20
     outputs:
       allow_live_start: ${{ steps.live.outputs.allow }}
+      allow_deploy: ${{ steps.live.outputs.allow_deploy }}
     steps:
       - name: Confirm Founder phrase
         run: |
@@ -168,12 +174,13 @@ jobs:
           REAL_MONEY: "false"
         run: |
           python tools/ci/demo_6h_v2_preflight.py --out artifacts/demo_6h_v2_preflight.json --require-ready
+          echo "allow_deploy=${{ github.event.inputs.deploy_validation }}" >> "$GITHUB_OUTPUT"
           echo "allow=${{ github.event.inputs.live_start }}" >> "$GITHUB_OUTPUT"
           echo "NEXUS_6H_V2_PREFLIGHT_PASS" >> "$GITHUB_STEP_SUMMARY"
 
-  arm-and-start:
+  arm-and-deploy:
     needs: gate-and-prepare
-    if: needs.gate-and-prepare.outputs.allow_live_start == 'true'
+    if: needs.gate-and-prepare.outputs.allow_deploy == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -308,89 +315,36 @@ jobs:
             sleep 10
           done
           exit 1
-      - name: POST start bounded 6H V2
-        id: start
+      - name: Deploy-only safety snapshot (no 6H/12H start)
         run: |
           set -euo pipefail
-          curl -fsS "$DEMO_VAL_URL/api/nexus/demo-execution/bounded-6h/status" > /tmp/pre_st.json
-          python - <<'PY'
-          import json,sys
-          d=json.load(open("/tmp/pre_st.json"))
-          b=d.get("bounded_6h") or d
-          if isinstance(b, dict) and isinstance(b.get("bounded_6h"), dict):
-              b=b["bounded_6h"]
-          status=str((b or {}).get("status") or "")
-          sid=str((b or {}).get("session_id") or "")
-          print("pre_status", status, sid)
-          if status in {"RUNNING", "STARTING"} and sid:
-              open("/tmp/session_id.txt","w").write(sid)
-              open("/tmp/skip_start.txt","w").write("1")
-          else:
-              open("/tmp/skip_start.txt","w").write("0")
-          PY
-          if [ "$(cat /tmp/skip_start.txt)" = "1" ]; then
-            echo "session_id=$(cat /tmp/session_id.txt)" >> "$GITHUB_OUTPUT"
-            echo "already_running_ok"
-            exit 0
-          fi
-          curl -fsS -X POST "$DEMO_VAL_URL/api/nexus/demo-execution/bounded-6h/start" \
-            -H "Content-Type: application/json" \
-            -d '{}' > /tmp/start6h.json
-          cat /tmp/start6h.json
-          python - <<'PY'
-          import json,sys
-          d=json.load(open("/tmp/start6h.json"))
-          body=d.get("bounded_6h_start") or d.get("payload") or d
-          if isinstance(body, dict) and "bounded_6h_start" in body:
-              body=body["bounded_6h_start"]
-          ok=bool(body.get("ok")) if isinstance(body, dict) else False
-          reason=str((body or {}).get("reason") or "")
-          status=str((body or {}).get("status") or "")
-          sid=(body or {}).get("session_id") if isinstance(body, dict) else None
-          print("start_ok", ok, "session_id", sid, "reason", reason, "status", status)
-          if ok or reason == "already_running" or status in {"RUNNING", "STARTING"}:
-              open("/tmp/session_id.txt","w").write(str(sid or ""))
-              sys.exit(0)
-          sys.exit(1)
-          PY
-          echo "session_id=$(cat /tmp/session_id.txt)" >> "$GITHUB_OUTPUT"
-      - name: Verify RUNNING within 90s
-        run: |
-          set -euo pipefail
-          for i in $(seq 1 18); do
-            curl -fsS "$DEMO_VAL_URL/api/nexus/demo-execution/bounded-6h/status" > /tmp/st.json
-            python - <<'PY'
-          import json,sys
-          d=json.load(open("/tmp/st.json"))
-          b=d.get("bounded_6h") or d
-          if isinstance(b, dict) and isinstance(b.get("bounded_6h"), dict):
-              b=b["bounded_6h"]
-          status=str((b or {}).get("status") or "")
-          sid=str((b or {}).get("session_id") or "")
-          print("status", status, "session_id", sid)
-          open("/tmp/status.txt","w").write(status)
-          PY
-            st=$(cat /tmp/status.txt)
-            if [ "$st" = "RUNNING" ] || [ "$st" = "STARTING" ]; then
-              echo "NEXUS_6H_V2_RUNNING"
-              echo "recommendation=NEXUS_6H_V2_RUNNING" >> "$GITHUB_STEP_SUMMARY"
-              exit 0
-            fi
-            sleep 5
-          done
-          echo "session did not reach RUNNING"
-          cat /tmp/st.json
-          exit 1
-      - name: Safety snapshot after start
-        run: |
+          curl -fsS "$DEMO_VAL_URL/health" > /tmp/h.json
           curl -fsS "$DEMO_VAL_URL/api/nexus/demo-execution/account?fresh=true" > /tmp/acct.json
+          curl -fsS "$DEMO_VAL_URL/api/nexus/demo-execution/status" > /tmp/st.json
           python - <<'PY'
           import json
           a=json.load(open("/tmp/acct.json"))
+          s=json.load(open("/tmp/st.json"))
           print("positions", a.get("open_positions"), "orders", a.get("open_orders"), "write", a.get("exchange_write"), "mainnet", a.get("mainnet"))
           assert a.get("mainnet") is not True
           assert a.get("real_money") is not True
+          assert a.get("exchange_write") is not True
+          print("deploy_only_ok FOUNDER_GATE", (s.get("founder_env") or {}).get("FOUNDER_GATE"))
           PY
+          echo "auto_start_6h=false"
           echo "auto_start_12h=false"
           echo "24h_gate_approved=false"
-          echo "FOUNDER_GATE=DEMO_AUTONOMOUS_24H_BOUNDED_VALIDATION APPROVED=false (not opened)"
+          echo "recommendation=NEXUS_SAME_ROUTER_PROBE_DEPLOYING" >> "$GITHUB_STEP_SUMMARY"
+
+  start-6h-optional:
+    needs: [gate-and-prepare, arm-and-deploy]
+    if: needs.gate-and-prepare.outputs.allow_live_start == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: POST start bounded 6H V2 (explicit live_start only)
+        run: |
+          set -euo pipefail
+          echo "LIVE_START was requested — this path is NOT used for same-router probe deploy."
+          echo "Refusing silent 6H start during observability/probe wave unless Founder re-approves."
+          exit 1

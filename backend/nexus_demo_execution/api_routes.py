@@ -228,6 +228,31 @@ class DemoExecutionApiState:
             "last_cycle": self._last_cycle_result,
             "last_smoke": self._last_smoke_result,
             "bounded_6h": self._bounded_6h.status() if self._bounded_6h else {"status": "IDLE"},
+            "bounded_12h": self._bounded_12h.status() if getattr(self, "_bounded_12h", None) else {"status": "IDLE", "found": False},
+            "bounded_12h_controller_type": "PLACEHOLDER",
+            "bounded_12h_full_engine_ready": False,
+            "observability": (
+                {
+                    k: (self._bounded_6h.status() if self._bounded_6h else {}).get(k, 0 if "distribution" not in k else {})
+                    for k in (
+                        "cost_gate_evaluated_total",
+                        "cost_gate_pass_total",
+                        "cost_gate_block_total",
+                        "cost_gate_block_reason_distribution",
+                        "valid_intent_total",
+                        "order_intent_total",
+                        "exchange_write_attempt_total",
+                        "exchange_write_authorized_total",
+                        "exchange_write_blocked_total",
+                        "exchange_request_total",
+                        "exchange_accepted_total",
+                        "exchange_rejected_total",
+                        "fills_total",
+                        "entries_total",
+                        "trades_completed",
+                    )
+                }
+            ),
             "founder_env": {
                 "FOUNDER_GATE": (os.environ.get("FOUNDER_GATE") or "").strip() or "MISSING",
                 "FOUNDER_6H_APPROVED": (os.environ.get("FOUNDER_6H_APPROVED") or "").strip() or "MISSING",

@@ -202,9 +202,14 @@ def test_same_router_probe_dry_run():
     from backend.nexus_demo_execution.same_router_probe import SameRouterExecutionProbe
 
     out = SameRouterExecutionProbe().run(dry_run=True)
-    assert out.ok is False
-    assert out.reason == "dry_run_only"
-    assert out.to_dict()["strategy_evidence"] is False
+    assert out.ok is True
+    assert out.reason == "DRY_RUN_PATH_IDENTITY_OK"
+    d = out.to_dict()
+    assert d["strategy_evidence"] is False
+    assert d["same_order_router"] is True
+    assert d["same_write_client"] is True
+    assert d["exchange_write_attempt_total_delta"] == 0
+    assert d["live_execution_proof"] is False
 
 
 def test_12h_idempotent_duplicate_start():
