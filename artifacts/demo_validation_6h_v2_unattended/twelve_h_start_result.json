@@ -1,0 +1,7 @@
+{
+  "attempted": true,
+  "started": false,
+  "session_id": null,
+  "blocked_reason": "12H_START_API_NOT_PRESENT_ON_RUNTIME_NO_REDEPLOY",
+  "recommendation": "NEXUS_6H_V2_COMPLETED_12H_V3_BLOCKED"
+}

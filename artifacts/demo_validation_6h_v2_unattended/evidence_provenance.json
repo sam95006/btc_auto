@@ -1,0 +1,9 @@
+﻿{
+    "source_run_id":  30698036252,
+    "artifact_zip_sha256":  "f22fcb56c0b3d9237a833a9c445c6e0ccc401cdc23e923fcabec1dd13c1915ab",
+    "note":  "Evidence push failure is not a Runtime trading failure; orchestrator step succeeded.",
+    "gha_orchestrator_recommendation_not_for_12h":  "DEMO_AUTONOMOUS_6H_V2_PASS_WITH_FINDINGS",
+    "canonical_6h_classification":  "DEMO_AUTONOMOUS_6H_V2_INCONCLUSIVE_NO_EXECUTION",
+    "artifact_id":  8820732459,
+    "runtime_recommendation_sot":  "DEMO_AUTONOMOUS_6H_V2_FAILED"
+}
