@@ -9,8 +9,13 @@ on:
   workflow_dispatch:
     inputs:
       founder_approval_phrase:
-        description: "Must equal APPROVE_NEXUS_DEMO_6H_V2"
+        description: "APPROVE_NEXUS_DEMO_6H_V2 or APPROVE_NEXUS_DEMO_12H_V3_EXTENDED_OBSERVATION"
         required: true
+        type: string
+      start_12h_after_deploy:
+        description: "For 12H extended phrase only: POST bounded-12h/start after T+180"
+        required: false
+        default: "false"
         type: string
       expected_runtime_sha:
         required: true
@@ -79,6 +84,7 @@ env:
 
 jobs:
   gate-and-prepare:
+    if: ${{ github.event.inputs.founder_approval_phrase == 'APPROVE_NEXUS_DEMO_6H_V2' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     outputs:
@@ -353,3 +359,163 @@ jobs:
           echo "LIVE_START was requested — this path is NOT used for same-router probe deploy."
           echo "Refusing silent 6H start during observability/probe wave unless Founder re-approves."
           exit 1
+
+  # ---------------------------------------------------------------------------
+  # Founder: full 12H engine deploy + optional extended observation start
+  # ---------------------------------------------------------------------------
+  full-12h-engine:
+    if: ${{ github.event.inputs.founder_approval_phrase == 'APPROVE_NEXUS_DEMO_12H_V3_EXTENDED_OBSERVATION' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Service guard
+        run: |
+          test "${{ github.event.inputs.expected_service_id }}" = "$VALIDATION_SERVICE_ID"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: pip install -r requirements.txt flask pytest
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+      - name: Full-engine tests + no placeholder
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          FOUNDER_APPROVE_12H_AFTER_INCONCLUSIVE_6H_AND_PROBE: "true"
+          MAINNET: "false"
+          REAL_MONEY: "false"
+        run: |
+          ! grep -q "_run_placeholder" backend/nexus_demo_execution/bounded_12h_session.py
+          python -m pytest tests/test_12h_full_autonomous_engine.py tests/test_demo_6h_12h_session_engine.py -q --tb=line
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from backend.nexus_demo_execution.v3_extended_observation_gate import evaluate_extended_observation_gate, EXACT_PHRASE
+          from backend.nexus_demo_execution.v3_start_gate import evaluate_12h_machine_gate
+          pack=json.loads(Path("artifacts/demo_validation_12h_v3/extended_observation_source_pack.json").read_text(encoding="utf-8"))
+          ordinary=evaluate_12h_machine_gate({**pack, "runtime_recommendation_sot":"DEMO_AUTONOMOUS_6H_V2_INCONCLUSIVE_NO_EXECUTION","recommendation":"DEMO_AUTONOMOUS_6H_V2_INCONCLUSIVE_NO_EXECUTION","proposed_12h_session_id":"12h-y"})
+          assert ordinary["machine_gate_pass"] is False
+          gate=evaluate_extended_observation_gate(pack, approval_phrase=EXACT_PHRASE)
+          assert gate["gate_pass"] is True
+          assert gate["6h_pass"] is False
+          print("extended_gate_ok")
+          PY
+      - run: npm i -g zeabur@latest
+      - name: Arm 12H env (write closed)
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          SID="$VALIDATION_SERVICE_ID"
+          SHA="${{ github.event.inputs.expected_runtime_sha }}"
+          if [ -z "$SHA" ] || [ "$SHA" = "auto" ]; then SHA="$GITHUB_SHA"; fi
+          set_var() { zeabur variable update --id "$SID" -k "${1}=${2}" -y -i=false || zeabur variable create --id "$SID" -k "${1}=${2}" -y -i=false; }
+          set_var MAINNET false
+          set_var REAL_MONEY false
+          set_var EXCHANGE_WRITE false
+          set_var DEMO_AUTONOMOUS_ENABLED false
+          set_var FOUNDER_GATE DEMO_AUTONOMOUS_12H_V3_BOUNDED_VALIDATION
+          set_var FOUNDER_APPROVE_DEMO_AUTONOMOUS_12H_V3 true
+          set_var FOUNDER_APPROVE_12H_AFTER_INCONCLUSIVE_6H_AND_PROBE true
+          set_var NEXUS_DEPLOYMENT_ID "$SHA"
+          set_var NEXUS_DEPLOYMENT_COMMIT "$SHA"
+          set_var NEXUS_SOURCE_COMMIT "$SHA"
+          set_var NEXUS_DEPLOY_RUN_ID "$GITHUB_RUN_ID"
+          set_var GITHUB_SHA "$SHA"
+      - name: Deploy Validation full engine
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          cd frontend && npm ci && npm run build && cd ..
+          CTX=/tmp/12h_full_ctx
+          rm -rf "$CTX" && mkdir -p "$CTX/tools"
+          cp app.py run.py gunicorn.conf.py zbpack.json requirements.txt "$CTX/"
+          cp -r backend config static templates "$CTX/"
+          mkdir -p "$CTX/static/operator_ui"
+          cp -r frontend/dist/* "$CTX/static/operator_ui/" || true
+          cp deploy/zeabur_bybit_demo_validation/Dockerfile "$CTX/Dockerfile"
+          cp deploy/zeabur_bybit_demo_validation/entrypoint.sh "$CTX/entrypoint.sh"
+          cp deploy/zeabur_bybit_demo_validation/demo_founder_gate.env "$CTX/demo_founder_gate.env"
+          cp -r tools/ci "$CTX/tools/" || true
+          echo "$GITHUB_SHA" > "$CTX/DEPLOYMENT_COMMIT"
+          echo "$GITHUB_SHA" > "$CTX/SOURCE_COMMIT"
+          grep -q "BoundedAutonomousSessionEngine" "$CTX/backend/nexus_demo_execution/bounded_12h_session.py"
+          ! grep -q "_run_placeholder" "$CTX/backend/nexus_demo_execution/bounded_12h_session.py"
+          ( cd "$CTX" && zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$VALIDATION_SERVICE_ID" -i=false --json ) > /tmp/deploy_out.txt 2>&1
+          sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/deploy_out.txt | tail -n 40
+          grep -q '"status": "success"' /tmp/deploy_out.txt
+      - name: Restart + re-arm 12H gate + T+0/60/180
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          SID="$VALIDATION_SERVICE_ID"
+          zeabur variable update --id "$SID" -k "FOUNDER_GATE=DEMO_AUTONOMOUS_12H_V3_BOUNDED_VALIDATION" -y -i=false \
+            || zeabur variable create --id "$SID" -k "FOUNDER_GATE=DEMO_AUTONOMOUS_12H_V3_BOUNDED_VALIDATION" -y -i=false
+          zeabur variable update --id "$SID" -k "FOUNDER_APPROVE_DEMO_AUTONOMOUS_12H_V3=true" -y -i=false \
+            || zeabur variable create --id "$SID" -k "FOUNDER_APPROVE_DEMO_AUTONOMOUS_12H_V3=true" -y -i=false
+          zeabur variable update --id "$SID" -k "FOUNDER_APPROVE_12H_AFTER_INCONCLUSIVE_6H_AND_PROBE=true" -y -i=false \
+            || zeabur variable create --id "$SID" -k "FOUNDER_APPROVE_12H_AFTER_INCONCLUSIVE_6H_AND_PROBE=true" -y -i=false
+          zeabur service restart --id "$SID" --env-id "$ZEABUR_ENV_ID" -i=false
+          sleep 75
+          for label in t0 t60 t180; do
+            code=$(curl -s -o /tmp/h_${label}.json -w "%{http_code}" "$DEMO_VAL_URL/health" || true)
+            echo "health_${label}=$code"
+            test "$code" = "200"
+            curl -fsS "$DEMO_VAL_URL/api/nexus/demo-execution/status" > /tmp/st_${label}.json
+            python - <<PY
+          import json,sys
+          d=json.load(open("/tmp/st_${label}.json"))
+          assert d.get("bounded_12h_controller_type")=="FULL_AUTONOMOUS_ENGINE", d.get("bounded_12h_controller_type")
+          assert d.get("bounded_12h_full_engine_ready") is True
+          assert d.get("placeholder_reference_count", 0)==0
+          assert d.get("mainnet") is False and d.get("real_money") is False
+          ident=d.get("runtime_identity") or {}
+          print("identity", ident.get("identity_class"), (ident.get("deployment_commit") or "")[:12])
+          if ident.get("identity_class")=="RUNTIME_IDENTITY_LABEL_STALE":
+              sys.exit(2)
+          print("ok_${label}")
+          PY
+            if [ "$label" = "t0" ]; then sleep 60; fi
+            if [ "$label" = "t60" ]; then sleep 120; fi
+          done
+      - name: Conditional 12H start
+        if: ${{ github.event.inputs.start_12h_after_deploy == 'true' }}
+        run: |
+          set -euo pipefail
+          BODY=$(python - <<'PY'
+          import json
+          from pathlib import Path
+          pack=json.loads(Path("artifacts/demo_validation_12h_v3/extended_observation_source_pack.json").read_text(encoding="utf-8"))
+          pack["session_nonce"]="""${{ github.event.inputs.session_nonce }}"""
+          pack["approval_phrase"]="APPROVE_NEXUS_DEMO_12H_V3_EXTENDED_OBSERVATION"
+          pack["exact_phrase"]="APPROVE_NEXUS_DEMO_12H_V3_EXTENDED_OBSERVATION"
+          print(json.dumps({"source_6h_report": pack, "session_nonce": pack["session_nonce"], "approval_phrase": pack["approval_phrase"], "exact_phrase": pack["exact_phrase"]}))
+          PY
+          )
+          curl -fsS -X POST "$DEMO_VAL_URL/api/nexus/demo-execution/bounded-12h/start" \
+            -H "Content-Type: application/json" -d "$BODY" > /tmp/12h_start.json
+          python - <<'PY'
+          import json,sys
+          d=json.load(open("/tmp/12h_start.json"))
+          print(json.dumps(d, indent=2, default=str)[:4000])
+          if not d.get("ok"):
+              sys.exit(1)
+          assert str(d.get("session_id","")).startswith("NEXUS-DEMO-12H-V3-")
+          PY
+          curl -fsS "$DEMO_VAL_URL/api/nexus/demo-execution/bounded-12h/status" > /tmp/12h_st.json
+          python - <<'PY'
+          import json,sys
+          d=json.load(open("/tmp/12h_st.json"))
+          print({k:d.get(k) for k in ("status","session_id","thread_alive","deadline_ts","session_write_enabled","controller_type")})
+          assert d.get("thread_alive") is True
+          assert d.get("status") in {"RUNNING","STARTING"}
+          PY
