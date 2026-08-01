@@ -42,12 +42,18 @@ COPY tools/ci/ tools/ci/
 # Prefer root-copied entrypoint + Founder gate file (CI CTX layout).
 COPY entrypoint.sh ./entrypoint.sh
 COPY demo_founder_gate.env ./demo_founder_gate.env
+# Bake actual deploy commit (written by CI into build context). Never rely solely on stale Zeabur env labels.
+COPY DEPLOYMENT_COMMIT ./DEPLOYMENT_COMMIT
+COPY SOURCE_COMMIT ./SOURCE_COMMIT
 RUN chmod +x entrypoint.sh \
  && test -f app.py \
  && test -f gunicorn.conf.py \
  && test -f entrypoint.sh \
  && test -f demo_founder_gate.env \
- && grep -q "DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" demo_founder_gate.env
+ && test -s DEPLOYMENT_COMMIT \
+ && test -s SOURCE_COMMIT \
+ && grep -q "DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" demo_founder_gate.env \
+ && ! grep -q "_run_placeholder" backend/nexus_demo_execution/bounded_12h_session.py
 
 EXPOSE 8080
 CMD ["/bin/sh", "./entrypoint.sh"]

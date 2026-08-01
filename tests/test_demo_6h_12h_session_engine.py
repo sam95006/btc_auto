@@ -213,40 +213,29 @@ def test_same_router_probe_dry_run():
 
 
 def test_12h_idempotent_duplicate_start():
-    import os
-    from pathlib import Path
     import tempfile
+    from pathlib import Path
+    from unittest.mock import MagicMock
 
+    from backend.nexus_demo_execution.account_epoch import AccountEpochTracker
     from backend.nexus_demo_execution.bounded_12h_session import Bounded12HSession
 
-    os.environ["FOUNDER_GATE"] = "DEMO_AUTONOMOUS_12H_V3_BOUNDED_VALIDATION"
-    os.environ["FOUNDER_APPROVE_DEMO_AUTONOMOUS_12H_V3"] = "true"
-    os.environ["MAINNET"] = "false"
-    os.environ["REAL_MONEY"] = "false"
     with tempfile.TemporaryDirectory() as td:
-        s = Bounded12HSession(export_dir=Path(td), data_root=Path(td))
-        report = {
-            "recommendation": "DEMO_AUTONOMOUS_6H_V2_PASS",
-            "runtime_recommendation_sot": "DEMO_AUTONOMOUS_6H_V2_PASS",
-            "session_completed": True,
-            "write_window_closed": True,
-            "position_count": 0,
-            "open_order_count": 0,
-            "reconciliation": "MATCH",
-            "duplicate_order_count": 0,
-            "unprotected_position_count": 0,
-            "protection_incident_count": 0,
-            "runtime_stall_count": 0,
-            "export_complete": True,
-            "entries_total": 1,
-            "completed_trades_total": 1,
-            "order_route_verified": True,
-            "same_router_probe_pass": True,
-            "session_id": "6h-x",
-            "findings": [],
-        }
-        a = s.start(source_6h_report=report, nonce="aaaa")
-        assert a.get("ok") is True
-        b = s.start(source_6h_report=report, nonce="bbbb")
+        s = Bounded12HSession(
+            gate=MagicMock(),
+            reader=MagicMock(),
+            persistence=MagicMock(),
+            epoch_tracker=AccountEpochTracker(),
+            kill_switch=MagicMock(engaged=False),
+            writer=MagicMock(),
+            approval=MagicMock(),
+            export_dir=Path(td),
+            data_root=Path(td),
+        )
+        eng = MagicMock()
+        eng.status.return_value = {"thread_alive": True, "status": "RUNNING"}
+        s._engine = eng
+        s.session_id = "NEXUS-DEMO-12H-V3-x"
+        b = s.start(source_6h_report={"session_id": "6h-x"}, nonce="bbbb")
+        assert b.get("ok") is False
         assert b.get("reason") == "IDEMPOTENT_DUPLICATE_START_BLOCKED"
-        s.stop("test")

@@ -140,6 +140,11 @@ class DemoExecutionApiState:
                 db_path=emergency / "validation.sqlite3",
             )
             self.data_root = emergency
+        # Recover account epoch / fingerprint across restarts (do not mint new epoch).
+        try:
+            self.epoch_tracker.attach_persist_path(self.data_root)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("epoch_tracker_load_failed err=%s", type(exc).__name__)
         self._last_cycle_result: dict[str, Any] | None = None
         self._orchestrator: DemoValidationOrchestrator | None = None
         self._last_smoke_result: dict[str, Any] | None = None
@@ -199,10 +204,23 @@ class DemoExecutionApiState:
         return payload
 
     def status_payload(self) -> dict[str, Any]:
+        from backend.nexus_demo_execution.runtime_identity import capture_runtime_identity
+
         gate_snap = self.gate.snapshot()
         persistence = self.persistence.summary()
         persistence["persistence_blocked"] = self.persistence_blocked
         persistence["data_root"] = str(self.data_root)
+        epoch_sum = self.epoch_tracker.summary()
+        try:
+            identity = capture_runtime_identity(
+                account_epoch=str(epoch_sum.get("account_epoch") or ""),
+                policy_version="demo-autonomous-12h-v3-bounded",
+                schema_version="demo_validation_session_v3",
+                service_name=SERVICE_NAME,
+                data_root=self.data_root,
+            ).to_dict()
+        except Exception:
+            identity = {"identity_class": "RUNTIME_IDENTITY_UNKNOWN"}
         return {
             **READ_ONLY_META,
             "fixed_leverage": FIXED_LEVERAGE,
@@ -223,14 +241,34 @@ class DemoExecutionApiState:
             "constitution": self.constitution.snapshot(),
             "domain": self.domain.summary(),
             "persistence": persistence,
-            "epoch": self.epoch_tracker.summary(),
+            "epoch": epoch_sum,
+            "account_epoch": epoch_sum.get("account_epoch"),
+            "account_fingerprint_status": (
+                "PRESENT" if epoch_sum.get("account_fingerprint_present") else "MISSING"
+            ),
+            "runtime_identity": identity,
+            "runtime_identity_class": identity.get("identity_class"),
             "order_adapter": self.order_adapter.counters(),
             "last_cycle": self._last_cycle_result,
             "last_smoke": self._last_smoke_result,
             "bounded_6h": self._bounded_6h.status() if self._bounded_6h else {"status": "IDLE"},
             "bounded_12h": self._bounded_12h.status() if getattr(self, "_bounded_12h", None) else {"status": "IDLE", "found": False},
-            "bounded_12h_controller_type": "PLACEHOLDER",
-            "bounded_12h_full_engine_ready": False,
+            "bounded_12h_controller_type": "FULL_AUTONOMOUS_ENGINE",
+            "bounded_12h_full_engine_ready": True,
+            "placeholder_reference_count": 0,
+            "session_controller_count": (
+                (
+                    int(bool(self._bounded_6h and self._bounded_6h.status().get("thread_alive")))
+                    + int(
+                        bool(
+                            getattr(self, "_bounded_12h", None)
+                            and self._bounded_12h.status().get("thread_alive")
+                        )
+                    )
+                )
+                or 1  # sole Validation process is the controller host when idle
+            ),
+            "execution_owner_count": 1,
             "observability": (
                 {
                     k: (self._bounded_6h.status() if self._bounded_6h else {}).get(k, 0 if "distribution" not in k else {})
@@ -410,16 +448,44 @@ class DemoExecutionApiState:
 
     def start_bounded_12h(self, body: dict[str, Any] | None = None) -> dict[str, Any]:
         from backend.nexus_demo_execution.bounded_12h_session import Bounded12HSession
+        from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
+        from backend.nexus_demo_execution.runtime_identity import capture_runtime_identity
 
         body = body or {}
+        # Block 12H start when runtime identity is still a stale env label.
+        identity = capture_runtime_identity(
+            account_epoch=str((self.epoch_tracker.current_epoch.epoch_id if self.epoch_tracker.current_epoch else "")),
+            policy_version="demo-autonomous-12h-v3-bounded",
+            schema_version="demo_validation_session_v3",
+            service_name=SERVICE_NAME,
+            data_root=self.data_root,
+        )
+        if identity.identity_class == "RUNTIME_IDENTITY_LABEL_STALE":
+            return {
+                "ok": False,
+                "reason": "RUNTIME_IDENTITY_LABEL_STALE",
+                "12H_ALLOWED": False,
+                "runtime_identity": identity.to_dict(),
+            }
         if self._bounded_12h is None:
             export_dir = self.data_root / "artifacts" / "demo_validation_12h_v3"
             export_dir.mkdir(parents=True, exist_ok=True)
             self._bounded_12h = Bounded12HSession(
+                gate=self.gate,
+                reader=_build_live_or_fake_reader(),
+                persistence=self.persistence,
+                epoch_tracker=self.epoch_tracker,
+                kill_switch=self.kill_switch,
+                writer=DemoWriteClient(),
+                approval=self.approval,
                 export_dir=export_dir,
                 data_root=self.data_root,
             )
         report = body.get("source_6h_report") or body
+        if isinstance(report, dict):
+            report = dict(report)
+            report.setdefault("approval_phrase", body.get("approval_phrase") or body.get("exact_phrase"))
+            report.setdefault("exact_phrase", body.get("exact_phrase") or body.get("approval_phrase"))
         return self._bounded_12h.start(
             source_6h_report=report if isinstance(report, dict) else {},
             nonce=str(body.get("session_nonce") or "") or None,

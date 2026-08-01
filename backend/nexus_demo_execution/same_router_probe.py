@@ -284,12 +284,29 @@ class SameRouterExecutionProbe:
             evidence["exchange_accepted_total_delta"] = 1
             evidence["fills_total_delta"] = 1
             evidence["live_execution_proof"] = True
-            # PnL left null unless closed-pnl API available; do not fabricate.
-            evidence["gross_pnl"] = 0 if evidence["final_reconciliation"] == "MATCH" else None
-            evidence["actual_fees"] = None
-            evidence["funding"] = 0
-            evidence["slippage"] = None
-            evidence["net_pnl"] = None
+            # Clarify write deltas: entry + protection path + controlled close may all write.
+            evidence["maximum_order_creates_autonomous_entry"] = 1
+            evidence["write_delta_includes"] = ["entry", "protection", "controlled_close"]
+            from backend.nexus_demo_execution.pnl_reconcile import reconcile_via_writer
+
+            pnl = reconcile_via_writer(self.writer, self.symbol)
+            evidence.update(
+                {
+                    "gross_pnl": pnl.get("gross_pnl"),
+                    "actual_fees": pnl.get("actual_fees"),
+                    "entry_fee": pnl.get("entry_fee"),
+                    "exit_fee": pnl.get("exit_fee"),
+                    "total_fees": pnl.get("total_fees"),
+                    "funding": pnl.get("funding"),
+                    "slippage": pnl.get("slippage"),
+                    "net_pnl": pnl.get("net_pnl"),
+                    "fee_source": pnl.get("fee_source"),
+                    "actual_fees_status": pnl.get("actual_fees_status"),
+                    "net_pnl_status": pnl.get("net_pnl_status"),
+                    "pnl_availability_reason": pnl.get("availability_reason"),
+                    "probe_fee_reconciliation_status": pnl.get("actual_fees_status"),
+                }
+            )
 
             ok = (
                 evidence["exchange_accepted_total"] == 1
