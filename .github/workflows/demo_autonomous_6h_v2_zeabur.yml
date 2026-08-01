@@ -274,23 +274,25 @@ jobs:
             || zeabur variable create --id "$SID" -k "FOUNDER_6H_APPROVED=true" -y -i=false
           zeabur service restart --id "$SID" --env-id "$ENV_ID" -i=false
           sleep 75
-          # Prove process sees V2 gate (must not still be FIRST_BYBIT_DEMO_SMOKE_ORDER).
-          curl -fsS -X POST "$DEMO_VAL_URL/api/nexus/demo-execution/bounded-6h/start" \
-            -H "Content-Type: application/json" -d '{}' > /tmp/probe_gate.json || true
+          # Prove process sees V2 gate via GET (do not POST start here).
+          curl -fsS "$DEMO_VAL_URL/api/nexus/demo-execution/status" > /tmp/probe_gate.json
           python - <<'PY'
           import json,sys
           d=json.load(open("/tmp/probe_gate.json"))
-          body=d.get("bounded_6h_start") or d
-          got=str((body or {}).get("got") or "")
-          expected=str((body or {}).get("expected") or "")
-          ok=bool((body or {}).get("ok"))
-          print("probe", {"ok": ok, "got": got, "expected": expected, "reason": (body or {}).get("reason")})
-          if got == "FIRST_BYBIT_DEMO_SMOKE_ORDER":
+          env=(d.get("founder_env") or {})
+          gate=str(env.get("FOUNDER_GATE") or "")
+          approved=str(env.get("FOUNDER_6H_APPROVED") or "").lower()
+          print("probe_env", {"FOUNDER_GATE": gate, "FOUNDER_6H_APPROVED": approved})
+          if gate == "FIRST_BYBIT_DEMO_SMOKE_ORDER":
               print("STALE_FOUNDER_GATE_STILL_SMOKE")
               sys.exit(1)
-          if expected and "6H_V2" not in expected and "6H_BOUNDED" not in expected:
-              print("unexpected expected gate", expected)
+          if "6H_V2" not in gate and "6H_BOUNDED" not in gate:
+              print("unexpected FOUNDER_GATE", gate)
               sys.exit(1)
+          if approved not in {"true", "1", "yes", "on"}:
+              print("FOUNDER_6H_APPROVED missing")
+              sys.exit(1)
+          print("probe_gate_ok")
           PY
       - name: Wait health ready
         run: |
@@ -310,6 +312,27 @@ jobs:
         id: start
         run: |
           set -euo pipefail
+          curl -fsS "$DEMO_VAL_URL/api/nexus/demo-execution/bounded-6h/status" > /tmp/pre_st.json
+          python - <<'PY'
+          import json,sys
+          d=json.load(open("/tmp/pre_st.json"))
+          b=d.get("bounded_6h") or d
+          if isinstance(b, dict) and isinstance(b.get("bounded_6h"), dict):
+              b=b["bounded_6h"]
+          status=str((b or {}).get("status") or "")
+          sid=str((b or {}).get("session_id") or "")
+          print("pre_status", status, sid)
+          if status in {"RUNNING", "STARTING"} and sid:
+              open("/tmp/session_id.txt","w").write(sid)
+              open("/tmp/skip_start.txt","w").write("1")
+          else:
+              open("/tmp/skip_start.txt","w").write("0")
+          PY
+          if [ "$(cat /tmp/skip_start.txt)" = "1" ]; then
+            echo "session_id=$(cat /tmp/session_id.txt)" >> "$GITHUB_OUTPUT"
+            echo "already_running_ok"
+            exit 0
+          fi
           curl -fsS -X POST "$DEMO_VAL_URL/api/nexus/demo-execution/bounded-6h/start" \
             -H "Content-Type: application/json" \
             -d '{}' > /tmp/start6h.json
@@ -321,11 +344,14 @@ jobs:
           if isinstance(body, dict) and "bounded_6h_start" in body:
               body=body["bounded_6h_start"]
           ok=bool(body.get("ok")) if isinstance(body, dict) else False
+          reason=str((body or {}).get("reason") or "")
+          status=str((body or {}).get("status") or "")
           sid=(body or {}).get("session_id") if isinstance(body, dict) else None
-          print("start_ok", ok, "session_id", sid)
-          if not ok:
-              sys.exit(1)
-          open("/tmp/session_id.txt","w").write(str(sid or ""))
+          print("start_ok", ok, "session_id", sid, "reason", reason, "status", status)
+          if ok or reason == "already_running" or status in {"RUNNING", "STARTING"}:
+              open("/tmp/session_id.txt","w").write(str(sid or ""))
+              sys.exit(0)
+          sys.exit(1)
           PY
           echo "session_id=$(cat /tmp/session_id.txt)" >> "$GITHUB_OUTPUT"
       - name: Verify RUNNING within 90s
