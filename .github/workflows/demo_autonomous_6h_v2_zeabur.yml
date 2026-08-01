@@ -248,19 +248,9 @@ jobs:
           cp deploy/zeabur_bybit_demo_validation/Dockerfile "$CTX/Dockerfile"
           cp deploy/zeabur_bybit_demo_validation/entrypoint.sh "$CTX/entrypoint.sh" || true
           cp -r tools/ci "$CTX/tools/" || true
-          # Bake Founder V2 gate file — entrypoint `set -a` sources this and overwrites
+          # Bake Founder V2 gate file — entrypoint set -a sources this and overwrites
           # stale Zeabur FOUNDER_GATE leftovers (e.g. FIRST_BYBIT_DEMO_SMOKE_ORDER).
-          cat > "$CTX/demo_founder_gate.env" <<'EOF'
-FOUNDER_GATE=DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION
-FOUNDER_6H_APPROVED=true
-FOUNDER_OVERRIDE_ABORT_OPERATIONAL_24H=true
-FOUNDER_APPROVE_DEMO_AUTONOMOUS_6H_V2=true
-FOUNDER_APPROVE_DEMO_AUTONOMOUS_12H_V3=true
-EXCHANGE_WRITE=false
-DEMO_AUTONOMOUS_ENABLED=false
-MAINNET=false
-REAL_MONEY=false
-EOF
+          cp deploy/zeabur_bybit_demo_validation/demo_founder_gate.env "$CTX/demo_founder_gate.env"
           grep -n "DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" "$CTX/backend/nexus_demo_execution/session_limits.py"
           grep -n "FOUNDER_GATE=DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" "$CTX/demo_founder_gate.env"
           (
