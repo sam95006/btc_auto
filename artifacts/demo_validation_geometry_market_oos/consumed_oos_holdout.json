@@ -1,0 +1,7 @@
+{
+  "oos_cohort_id": "OOS_REAL_MARKET_2026Q_FAILED_HOLDOUT_e186d13",
+  "oos_cohort_status": "CONSUMED_FAILED_HOLDOUT",
+  "qualification_commit_ref": "e186d130552e2456d9c26df2feb0ac8667dee54f",
+  "reuse_forbidden": true,
+  "requires_new_untouched_oos": true
+}

@@ -200,6 +200,8 @@ def simulate_natural_trade(
     time_stop_bars: int = 48,
     adverse_first: bool = True,
     cost_mode: str = "BASE_CONSERVATIVE",
+    enforce_risk_sizing: bool = True,
+    apply_costs: bool = True,
 ) -> SimTrade:
     """Natural entry on subsequent real candles only."""
     geo = evaluate_structural_geometry(candidate.evidence)
@@ -228,10 +230,58 @@ def simulate_natural_trade(
     entry = float(candidate.entry_price)
     side = candidate.side
     buy = side.lower() in {"buy", "long"}
-    fee_rate = float(candidate.evidence.fee_rate or TAKER_FEE)
-    slip_bps = float(candidate.evidence.slippage_bps or 0.0)
-    spread_bps = float(candidate.evidence.spread_bps or 0.0)
-    if cost_mode == "ADVERSE_COST_STRESS":
+
+    from backend.nexus_demo_execution.risk_sizing import size_position
+    from backend.nexus_demo_execution.session_limits import FIXED_LEVERAGE, MARGIN_PER_TRADE_CAP, MAX_SINGLE_TRADE_NET_LOSS
+
+    raw_qty = candidate.evidence.qty
+    if enforce_risk_sizing and (raw_qty is None or float(raw_qty) >= 0.99):
+        step = 0.001
+        if candidate.symbol.startswith("ETH"):
+            step = 0.01
+        elif candidate.symbol.startswith("DOGE"):
+            step = 1.0
+        elif candidate.symbol.startswith("XRP") or candidate.symbol.startswith("SOL"):
+            step = 0.1
+        sized = size_position(
+            symbol=candidate.symbol,
+            side=side,
+            entry_price=entry,
+            stop_price=stop,
+            take_profit_price=tp,
+            margin_usdt=MARGIN_PER_TRADE_CAP,
+            leverage=FIXED_LEVERAGE,
+            risk_budget_usdt=MAX_SINGLE_TRADE_NET_LOSS,
+            qty_step=step,
+            min_order_qty=step,
+            min_notional=5.0,
+        )
+        if not sized.allowed:
+            return SimTrade(
+                symbol=candidate.symbol,
+                side=side,
+                strategy=candidate.strategy,
+                regime=candidate.regime,
+                entry_status="GEOMETRY_BLOCKED",
+                candidate_snapshot_time=candidate.candidate_snapshot_time,
+                stop=stop,
+                take_profit=tp,
+                qty=0.0,
+            )
+        qty = float(sized.quantity)
+        candidate.evidence.qty = qty
+    else:
+        qty = float(raw_qty if raw_qty is not None else 1.0)
+
+    # Geometry/cost-gate keep real fee inputs; diagnostic gross path zeros costs at PnL only.
+    fee_rate = float(TAKER_FEE if candidate.evidence.fee_rate is None else candidate.evidence.fee_rate)
+    slip_bps = float(0.0 if candidate.evidence.slippage_bps is None else candidate.evidence.slippage_bps)
+    spread_bps = float(0.0 if candidate.evidence.spread_bps is None else candidate.evidence.spread_bps)
+    if not apply_costs or cost_mode == "GROSS_NO_COST_DIAGNOSTIC":
+        fee_rate = 0.0
+        slip_bps = 0.0
+        spread_bps = 0.0
+    elif cost_mode == "ADVERSE_COST_STRESS":
         slip_bps *= 2.0
         spread_bps *= 2.0
         fee_rate = max(fee_rate, TAKER_FEE)
@@ -247,7 +297,7 @@ def simulate_natural_trade(
         candidate_snapshot_time=candidate.candidate_snapshot_time,
         stop=stop,
         take_profit=tp,
-        qty=float(candidate.evidence.qty or 1.0),
+        qty=qty,
         look_ahead_contamination=candidate.look_ahead_contamination,
         path_source="REAL_HISTORICAL_MARKET_DATA",
     )
@@ -301,7 +351,9 @@ def simulate_natural_trade(
             trade.exit_ts = bar.ts_ms
             trade.exit_price = bar.close
             break
-        funding_acc += abs(fill_px * qty) * float(candidate.evidence.funding_rate or 0.0001) / (24.0 * 4.0)
+        if apply_costs and cost_mode != "GROSS_NO_COST_DIAGNOSTIC":
+            fr = 0.0001 if candidate.evidence.funding_rate is None else float(candidate.evidence.funding_rate)
+            funding_acc += abs(fill_px * qty) * fr / (24.0 * 4.0)
         hit_sl = (bar.low <= stop) if buy else (bar.high >= stop)
         hit_tp = (bar.high >= tp) if buy else (bar.low <= tp)
         if hit_sl and hit_tp:
