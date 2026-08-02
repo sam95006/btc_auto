@@ -54,6 +54,14 @@ jobs:
       - name: Bybit demo execution validation pytest
         run: |
           python -m pytest tests/test_bybit_demo_execution_validation.py -q --tb=line
+      - name: Post-12H forensic + geometry qualification pytest
+        run: |
+          python -m pytest \
+            tests/test_12h_post_forensic_repair.py \
+            tests/test_structural_geometry_qualify.py \
+            tests/test_12h_full_autonomous_engine.py \
+            tests/test_demo_6h_12h_session_engine.py \
+            -q --tb=line
       - name: Offline demo validation gate runner
         run: python tools/ci/demo_validation_gate_runner.py
       - name: Compile nexus_demo_execution

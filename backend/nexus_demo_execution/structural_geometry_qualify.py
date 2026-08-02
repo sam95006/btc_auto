@@ -263,58 +263,99 @@ def compare_ab(candidates: list[CandidateEvidence]) -> dict[str, Any]:
 
 
 def synthesize_structure_candidates(n: int = 2407) -> list[CandidateEvidence]:
-    """Synthetic evidence set for offline framework tests — not used to claim OOS success."""
+    """Synthetic evidence set for offline framework tests — not used to claim OOS success.
+
+    Mixes complete / missing / stale / tight-structure cases so pass rate is not artificial 100%.
+    """
     out: list[CandidateEvidence] = []
     for i in range(n):
         entry = 100.0 + (i % 50) * 0.1
         side = "Buy" if i % 2 == 0 else "Sell"
         atr = 1.2 + (i % 7) * 0.05
+        mode = i % 5  # 0-1 complete wide, 2 tight, 3 missing, 4 stale
+        base = dict(
+            symbol=f"SYN{i % 40}USDT",
+            side=side,
+            entry_price=entry,
+            regime=("TREND_UP" if side == "Buy" else "TREND_DOWN") if i % 3 else "RANGE",
+            strategy="STRUCT_SWING",
+            spread_bps=2.0,
+            slippage_bps=2.0,
+            fee_rate=TAKER_FEE_RATE_DEFAULT,
+            funding_rate=None,
+            tick_size=0.01,
+            qty=5.0,
+            ts=float(i),
+        )
+        if mode == 3:
+            out.append(CandidateEvidence(**base, atr=None, data_freshness_sec=30.0))
+            continue
+        if mode == 4:
+            out.append(
+                CandidateEvidence(
+                    **base,
+                    atr=atr,
+                    recent_swing_high=entry + 2.0 * atr,
+                    recent_swing_low=entry - 1.2 * atr,
+                    support=entry - 1.1 * atr,
+                    resistance=entry + 1.8 * atr,
+                    data_freshness_sec=9999.0,
+                    max_freshness_sec=300.0,
+                )
+            )
+            continue
+        # Tight structure: target barely beyond stop → often cost-blocked.
+        if mode == 2:
+            if side == "Buy":
+                out.append(
+                    CandidateEvidence(
+                        **base,
+                        atr=atr,
+                        recent_swing_high=entry + 0.4 * atr,
+                        recent_swing_low=entry - 0.35 * atr,
+                        support=entry - 0.3 * atr,
+                        resistance=entry + 0.35 * atr,
+                        data_freshness_sec=30.0,
+                    )
+                )
+            else:
+                out.append(
+                    CandidateEvidence(
+                        **base,
+                        atr=atr,
+                        recent_swing_high=entry + 0.35 * atr,
+                        recent_swing_low=entry - 0.4 * atr,
+                        support=entry - 0.35 * atr,
+                        resistance=entry + 0.3 * atr,
+                        data_freshness_sec=30.0,
+                    )
+                )
+            continue
+        # Complete wide structure
         if side == "Buy":
             out.append(
                 CandidateEvidence(
-                    symbol=f"SYN{i % 40}USDT",
-                    side=side,
-                    entry_price=entry,
-                    regime="TREND_UP" if i % 3 else "RANGE",
-                    strategy="STRUCT_SWING",
+                    **base,
                     atr=atr,
                     recent_swing_high=entry + 2.5 * atr,
                     recent_swing_low=entry - 1.2 * atr,
                     support=entry - 1.1 * atr,
                     resistance=entry + 2.0 * atr,
                     liquidity_levels=[entry + 2.2 * atr],
-                    spread_bps=2.0,
-                    slippage_bps=2.0,
-                    fee_rate=TAKER_FEE_RATE_DEFAULT,
-                    funding_rate=None,
-                    tick_size=0.01,
-                    qty=5.0,
                     data_freshness_sec=30.0,
-                    ts=float(i),
                 )
             )
         else:
             out.append(
                 CandidateEvidence(
-                    symbol=f"SYN{i % 40}USDT",
-                    side=side,
-                    entry_price=entry,
-                    regime="TREND_DOWN" if i % 3 else "RANGE",
-                    strategy="STRUCT_SWING",
+                    **base,
                     atr=atr,
                     recent_swing_high=entry + 1.2 * atr,
                     recent_swing_low=entry - 2.5 * atr,
                     support=entry - 2.0 * atr,
                     resistance=entry + 1.1 * atr,
                     liquidity_levels=[entry - 2.2 * atr],
-                    spread_bps=2.0,
-                    slippage_bps=2.0,
-                    fee_rate=TAKER_FEE_RATE_DEFAULT,
-                    funding_rate=None,
-                    tick_size=0.01,
-                    qty=5.0,
                     data_freshness_sec=30.0,
-                    ts=float(i),
                 )
             )
     return out

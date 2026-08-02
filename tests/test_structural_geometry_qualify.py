@@ -64,8 +64,10 @@ def test_ab_replay_diagnostic_only():
     assert ab["diagnostic_only"] is True
     assert ab["oos_claim_forbidden"] is True
     assert ab["fixed_geometry_pass_rate"] == 0.0
-    # Structural may pass some with evidence-backed wider targets — not required.
-    assert ab["structural_geometry_pass_rate"] >= 0.0
+    # Structural may pass some — but synthetic mix must not be artificial 100%.
+    assert 0.0 < ab["structural_geometry_pass_rate"] < 1.0
+    assert ab["structural_geometry_missing"] > 0
+    assert ab["structural_geometry_invalid"] > 0
 
 
 def test_qualification_pipeline_not_complete_without_risk_shadow():
