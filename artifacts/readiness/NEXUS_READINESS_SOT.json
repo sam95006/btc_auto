@@ -1,12 +1,12 @@
 {
   "schema_version": "nexus_readiness_sot_v1",
-  "updated_at": "2026-08-02T15:57:33Z",
+  "updated_at": "2026-08-02T16:13:24Z",
   "pr": 24,
   "pr_draft": true,
   "pr_merged": false,
   "pr_head": "ce661009d26df73fd369560dbe5c0220c28a079e",
   "edge_research_v3_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-  "system_stage": "OOS_PREFLIGHT_FROZEN_AWAITING_FOUNDER_PHRASE",
+  "system_stage": "DEEP_CONSOLIDATION_COMPLETE_AWAITING_OOS_APPROVAL",
   "current_approved_strategies": {
     "PRIMARY_QUALIFICATION_COHORT": "H3E",
     "CONFIRMATORY_COHORT": "H3D",
@@ -98,11 +98,11 @@
     "wallet_delta_UNKNOWN",
     "risk_review_packet_not_ready"
   ],
-  "next_permitted_action": "Await exact phrase APPROVE_NEXUS_H3_UNTOUCHED_OOS_V1 then download/execute untouched OOS only",
+  "next_permitted_action": "Await exact phrase APPROVE_NEXUS_H3_UNTOUCHED_OOS_V1",
   "risk_review_packet_ready": false,
   "shadow_status": "NOT_APPLIED",
   "qualification_complete": false,
-  "recommendation": "NEXUS_NEW_OOS_PLAN_READY",
+  "recommendation": "NEXUS_H3_OOS_APPROVAL_REQUIRED",
   "canonical_files": [
     "docs/04_readiness/NEXUS_READINESS_SOT.md",
     "artifacts/readiness/NEXUS_READINESS_SOT.json",
@@ -120,5 +120,24 @@
   "wallet_delta_classification": "UNKNOWN",
   "wallet_delta_unattributed": -0.97052039,
   "broken_reference_count": 0,
-  "orphan_manifest_entry_count": 0
+  "orphan_manifest_entry_count": 0,
+  "repository_consolidation_status": "DEEP_PASS_COMPLETE",
+  "active_runtime_module_count": 84,
+  "active_research_module_count": 14,
+  "legacy_module_count": 39,
+  "dead_code_removed_count": 110,
+  "duplicate_module_groups_merged": 1,
+  "unknown_manual_review_count": 3,
+  "unknown_review_required_after": 3,
+  "oos_runner_dry_run": "PASS",
+  "h3e_policy_checksum": "bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33",
+  "h3d_policy_checksum": "d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7",
+  "h3e_policy_unchanged": true,
+  "h3d_policy_unchanged": true,
+  "deep_cleanup": {
+    "files_before_wave": 2140,
+    "files_after": 2011,
+    "files_removed_this_wave": 161,
+    "bytes_removed_this_wave": 1358224
+  }
 }

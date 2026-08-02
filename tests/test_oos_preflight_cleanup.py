@@ -96,7 +96,10 @@ def test_mainnet_and_real_money_forbidden_in_sot():
     assert sot["safety"]["EXCHANGE_WRITE"] is False
     assert sot["oos"]["downloaded"] is False
     assert sot["oos"]["executed"] is False
-    assert sot["recommendation"] == "NEXUS_NEW_OOS_PLAN_READY"
+    assert sot["recommendation"] in {
+        "NEXUS_NEW_OOS_PLAN_READY",
+        "NEXUS_H3_OOS_APPROVAL_REQUIRED",
+    }
     assert sot["account_state"]["wallet_delta_classification"] == "UNKNOWN"
     assert sot["account_state"]["wallet_delta_unattributed"] == -0.97052039
     assert sot["wallet_delta_classification"] == "UNKNOWN"

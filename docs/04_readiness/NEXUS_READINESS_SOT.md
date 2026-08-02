@@ -4,9 +4,9 @@ Updated: 2026-08-02T15:57:33Z
 
 ## Current system stage
 
-`OOS_PREFLIGHT_FROZEN_AWAITING_FOUNDER_PHRASE`
+`DEEP_CONSOLIDATION_COMPLETE_AWAITING_OOS_APPROVAL`
 
-PR #24 head `ce661009d26df73fd369560dbe5c0220c28a079e` — Draft, not merged.
+PR #24 — Draft, not merged. Head updated by deep consolidation commit.
 
 ## Approved / rejected strategies
 
@@ -44,4 +44,4 @@ Await Founder phrase `APPROVE_NEXUS_H3_UNTOUCHED_OOS_V1`. Until then: no OOS dow
 
 ## Recommendation
 
-`NEXUS_NEW_OOS_PLAN_READY`
+`NEXUS_H3_OOS_APPROVAL_REQUIRED`

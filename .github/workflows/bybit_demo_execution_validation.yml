@@ -66,6 +66,7 @@ jobs:
             tests/test_edge_research_v2.py \
             tests/test_edge_research_v3.py \
             tests/test_oos_preflight_cleanup.py \
+            tests/test_deep_consolidation_oos_preflight.py \
             tests/test_12h_full_autonomous_engine.py \
             tests/test_demo_6h_12h_session_engine.py \
             -q --tb=line

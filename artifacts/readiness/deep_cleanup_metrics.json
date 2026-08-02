@@ -1,0 +1,49 @@
+{
+  "files_after": 2011,
+  "bytes_after": 95899812,
+  "docs_after": 9,
+  "reports_after": 0,
+  "tests_after": 154,
+  "assertions_after": 2281,
+  "safety_behavior_count_after": 58,
+  "source_modules_after": 481,
+  "demo_exec_modules": 84,
+  "orphan_manifest_entry_count": 0,
+  "route_count": [
+    "IMPORT_ERROR:cannot import name 'app' from 'backend.api.server' (C:\\Temp\\BTC_BOT_6H_V2_READINESS\\backend\\api\\server.py)"
+  ],
+  "dry": {
+    "oos_runner_dry_run": "PASS",
+    "network_download_attempt_count": 0,
+    "oos_data_record_count": 0,
+    "oos_outcome_visibility": false,
+    "checks": {
+      "reservation_id_ok": true,
+      "reserved_start_ok": true,
+      "reserved_end_ok": true,
+      "downloaded_false": true,
+      "executed_false": true,
+      "checksum_null": true,
+      "no_overlap_with_training": true,
+      "no_overlap_with_validation": true,
+      "no_overlap_with_consumed_oos": true,
+      "h3e_checksum_ok": true,
+      "h3d_checksum_ok": true
+    },
+    "qualification_hierarchy": {
+      "PRIMARY_QUALIFICATION_COHORT": "H3E",
+      "CONFIRMATORY_COHORT": "H3D",
+      "EXPLORATORY_ONLY": [
+        "H3G_trend_down_oi_continuation"
+      ],
+      "primary_policy_id": "H3E_OOS_POLICY_V1_FROZEN",
+      "confirmatory_policy_id": "H3D_OOS_POLICY_V1_FROZEN",
+      "h3g_may_not_rescue_failed_h3e_oos": true,
+      "h1_h2_excluded_from_qualification_oos": true,
+      "do_not_aggregate_h3d_h3e_to_hide_primary_failure": true
+    },
+    "requires_phrase": "APPROVE_NEXUS_H3_UNTOUCHED_OOS_V1",
+    "oos_downloaded": false,
+    "oos_executed": false
+  }
+}

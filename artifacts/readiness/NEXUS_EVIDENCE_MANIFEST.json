@@ -1,6 +1,6 @@
 {
   "schema_version": "nexus_evidence_manifest_v1",
-  "updated_at": "2026-08-02T15:57:34Z",
+  "updated_at": "2026-08-02T16:13:24Z",
   "entries": [
     {
       "evidence_id": "6H_FINAL_ZERO_EXECUTION::artifacts/readiness/immutable/6h_final/NEXUS_6H_V2_FINAL_REPORT.md",
@@ -272,6 +272,32 @@
       "retention_reason": "single_human_readable_readiness_summary",
       "canonical_or_historical": "canonical",
       "supersedes": [],
+      "superseded_by": null,
+      "status": "ACTIVE"
+    },
+    {
+      "evidence_id": "DEEP_CONSOLIDATION::artifacts/readiness/deep_consolidation_report.json",
+      "path": "artifacts/readiness/deep_consolidation_report.json",
+      "evidence_type": "REPOSITORY_CONSOLIDATION",
+      "source_commit": "pending",
+      "checksum": "a4d0e918763e55183cc8582cce6b87c8eaa20a921f808a26089d1a5bfd1991d8",
+      "retention_reason": "deep_cleanup_wave_report",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "ACTIVE"
+    },
+    {
+      "evidence_id": "EXTERNAL_ALPHA_BASELINE::artifacts/readiness/immutable/external_alpha_baseline/external_alpha_manifest.json",
+      "path": "artifacts/readiness/immutable/external_alpha_baseline/external_alpha_manifest.json",
+      "evidence_type": "EXTERNAL_ALPHA_BASELINE",
+      "source_commit": "pending",
+      "checksum": "1c4f8f543826fd4e913af01a4b531f2ce11fac84f269ebdedb5f3409a4637ca7",
+      "retention_reason": "stage3_report_checksums_only",
+      "canonical_or_historical": "historical",
+      "supersedes": [
+        "data/external_alpha/reports/*"
+      ],
       "superseded_by": null,
       "status": "ACTIVE"
     }
