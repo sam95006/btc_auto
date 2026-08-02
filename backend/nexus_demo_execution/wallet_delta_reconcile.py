@@ -238,10 +238,9 @@ def reconcile_wallet_delta(
         primary = "PARTIALLY_ATTRIBUTED"
     elif not has_ledger:
         primary = "API_HISTORY_RETENTION_GAP"
-    elif external_hits > 0 and abs(attributed) < 1e-8:
-        primary = "EXTERNAL_ACCOUNT_ACTIVITY"
-    elif semantic_only and abs(attributed) < 1e-8:
-        # Semantic gap observed but does not by itself explain start→end wallet delta.
+    elif abs(attributed) < 1e-8:
+        # Ledger rows may exist outside the window or without matching amount.
+        # Do not claim EXTERNAL_ACCOUNT_ACTIVITY unless amount is attributed.
         primary = "UNKNOWN"
     else:
         primary = "UNKNOWN"
