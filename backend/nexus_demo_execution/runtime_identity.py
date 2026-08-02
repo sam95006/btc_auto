@@ -70,22 +70,21 @@ def _read_text(path: Path) -> str:
 
 
 def _resolve_commit(*, data_root: Path) -> tuple[str, str]:
-    """Return (commit, source_tag). Prefer session/data-root bake files over CI env/git."""
+    """Return (commit, source_tag).
+
+    Priority:
+      1) Image bake (/app) — authoritative for the running deploy
+      2) data_root session bake — used by unit tests / cohort freeze when /app absent
+      3) repo/cwd bake files
+      4) env / git fallbacks
+    """
     candidates: list[tuple[str, str]] = []
-    # 1) Session / data-root bake files win (cohort frozen for this runtime).
     for path in (
+        Path("/app/DEPLOYMENT_COMMIT"),
+        Path("/app/SOURCE_COMMIT"),
         data_root / "artifacts" / "demo_validation" / "DEPLOYMENT_COMMIT",
         data_root / "DEPLOYMENT_COMMIT",
         data_root / "SOURCE_COMMIT",
-        Path("/app/DEPLOYMENT_COMMIT"),
-        Path("/app/SOURCE_COMMIT"),
-    ):
-        val = _read_text(path)
-        if val:
-            candidates.append((val[:64], f"file:{path.name}"))
-
-    # 2) Repo / cwd bake files.
-    for path in (
         Path(__file__).resolve().parents[2] / "DEPLOYMENT_COMMIT",
         Path(__file__).resolve().parents[2] / "SOURCE_COMMIT",
         Path("DEPLOYMENT_COMMIT"),
@@ -95,7 +94,6 @@ def _resolve_commit(*, data_root: Path) -> tuple[str, str]:
         if val:
             candidates.append((val[:64], f"file:{path.name}"))
 
-    # 3) Env / git fallbacks (never preferred over an explicit bake file).
     env_keys = (
         "NEXUS_SOURCE_COMMIT",
         "NEXUS_DEPLOYMENT_COMMIT",

@@ -271,6 +271,11 @@ jobs:
           grep -n "FOUNDER_GATE=DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION" "$CTX/demo_founder_gate.env"
           grep -q "BoundedAutonomousSessionEngine" "$CTX/backend/nexus_demo_execution/bounded_12h_session.py"
           ! grep -q "_run_placeholder" "$CTX/backend/nexus_demo_execution/bounded_12h_session.py"
+          grep -q "account/forensic" "$CTX/backend/nexus_demo_execution/api_routes.py"
+          grep -q "persistence/stream/status" "$CTX/backend/nexus_demo_execution/api_routes.py"
+          grep -q "session_finalizer" "$CTX/backend/nexus_demo_execution/session_finalizer.py"
+          test -s "$CTX/DEPLOYMENT_COMMIT"
+          echo "baked_commit=$(tr -d '\r\n' < "$CTX/DEPLOYMENT_COMMIT")"
           (
             cd "$CTX"
             zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$VALIDATION_SERVICE_ID" -i=false --json
@@ -325,6 +330,38 @@ jobs:
             echo "wait_health attempt=$i code=$code"
             sleep 10
           done
+          exit 1
+      - name: Prove forensic routes + deployment commit
+        run: |
+          set -euo pipefail
+          EXP="${{ github.sha }}"
+          EXP12="${EXP:0:12}"
+          for i in $(seq 1 24); do
+            fcode=$(curl -s -o /tmp/forensic.json -w "%{http_code}" "$DEMO_VAL_URL/api/nexus/demo-execution/account/forensic" || true)
+            scode=$(curl -s -o /tmp/stream_status.json -w "%{http_code}" "$DEMO_VAL_URL/api/nexus/demo-execution/persistence/stream/status" || true)
+            ecode=$(curl -s -o /tmp/stream_events.json -w "%{http_code}" "$DEMO_VAL_URL/api/nexus/demo-execution/persistence/stream/events?limit=1" || true)
+            curl -fsS "$DEMO_VAL_URL/api/nexus/demo-execution/status" > /tmp/st.json || true
+            python - "$fcode" "$scode" "$ecode" "$EXP12" <<'PY'
+          import json, sys
+          fcode, scode, ecode, exp12 = sys.argv[1:5]
+          try:
+              st = json.load(open("/tmp/st.json", encoding="utf-8"))
+          except Exception:
+              st = {}
+          ri = st.get("runtime_identity") or {}
+          commit = str(ri.get("deployment_commit") or "")
+          print({"forensic": fcode, "stream_status": scode, "stream_events": ecode, "commit": commit, "exp12": exp12})
+          ok = fcode == "200" and scode == "200" and ecode == "200" and commit.startswith(exp12)
+          raise SystemExit(0 if ok else 2)
+          PY
+            if [ $? -eq 0 ]; then
+              echo "forensic_routes_live=true"
+              exit 0
+            fi
+            echo "wait_forensic attempt=$i f=$fcode s=$scode e=$ecode"
+            sleep 10
+          done
+          echo "forensic_routes_not_live"
           exit 1
       - name: Deploy-only safety snapshot (no 6H/12H start)
         run: |
