@@ -40,3 +40,4 @@ scratch/
 tools/deploy/*.ps1
 
 artifacts/demo_validation_geometry_market_oos/market_cache/
+artifacts/demo_validation_edge_research_v2/market_cache/

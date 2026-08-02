@@ -158,7 +158,7 @@ def fetch_historical_klines(
     interval: str = "15",
     start_ms: int,
     end_ms: int,
-    max_pages: int = 40,
+    max_pages: int = 80,
 ) -> MarketDataset:
     """Paginate public klines backward from end_ms until start_ms."""
     if end_ms <= start_ms:
@@ -292,6 +292,7 @@ def fetch_or_load_bundle(
     end_ms: int,
     cache_dir: Path,
     use_network: bool = True,
+    max_pages: int = 80,
 ) -> list[MarketDataset]:
     out: list[MarketDataset] = []
     for sym in symbols:
@@ -304,7 +305,11 @@ def fetch_or_load_bundle(
             raise FileNotFoundError(f"missing_cached_market_data:{cache}")
         try:
             ds = fetch_historical_klines(
-                symbol=sym, interval=interval, start_ms=start_ms, end_ms=end_ms
+                symbol=sym,
+                interval=interval,
+                start_ms=start_ms,
+                end_ms=end_ms,
+                max_pages=max_pages,
             )
         except (urllib.error.URLError, TimeoutError, RuntimeError, OSError) as exc:
             raise RuntimeError(f"market_data_fetch_failed:{sym}:{type(exc).__name__}") from exc
