@@ -1,6 +1,6 @@
 {
   "directive": "TRUE_MARKET_DATA_EVENT_DRIVEN_GEOMETRY_QUALIFICATION",
-  "qualification_commit": "PENDING_AFTER_PUSH",
+  "qualification_commit": "19e8b22121bf7e20deea8b06ce329a0493732d01",
   "pr": 24,
   "pr_draft": true,
   "pr_merged": false,
@@ -71,5 +71,10 @@
     "fold2_test",
     "fold3_test_oos"
   ],
-  "intrabar_ambiguity_count": 0
+  "intrabar_ambiguity_count": 0,
+  "pr_head": "19e8b22121bf7e20deea8b06ce329a0493732d01",
+  "ci_run": "https://github.com/sam95006/btc_auto/actions/runs/30742075475",
+  "ci_status": "PASS",
+  "failed_tests": 0,
+  "secret_leak_count": 0
 }
