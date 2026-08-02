@@ -14,7 +14,9 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-BYBIT_PUBLIC = "https://api.bybit.com"
+from backend.nexus_demo_execution.demo_domain import DEMO_REST_BASE_URL
+
+BYBIT_PUBLIC = DEMO_REST_BASE_URL  # api-demo.bybit.com only — public klines, no mainnet host
 SOURCE_ENDPOINT = "/v5/market/kline"
 MARKET_TYPE = "linear"
 EXCHANGE = "bybit"
