@@ -177,12 +177,15 @@ def test_fingerprint_not_reset_on_restart_only():
         )
 
 
-def test_runtime_identity_rejects_stale_label():
+def test_runtime_identity_rejects_stale_label(monkeypatch):
     assert classify_identity("92a89dfaa8cc", "env:NEXUS_DEPLOYMENT_ID") == "RUNTIME_IDENTITY_LABEL_STALE"
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
-        (root / "DEPLOYMENT_COMMIT").write_text("b0ca9219a634d22330684915778ef19e0cc42226\n", encoding="utf-8")
-        os.environ["NEXUS_DEPLOYMENT_ID"] = "92a89dfaa8cc"
+        bake = "b0ca9219a634d22330684915778ef19e0cc42226"
+        (root / "DEPLOYMENT_COMMIT").write_text(bake + "\n", encoding="utf-8")
+        monkeypatch.setenv("NEXUS_DEPLOYMENT_ID", "92a89dfaa8cc")
+        # CI injects GITHUB_SHA; bake file in data_root must still win.
+        monkeypatch.setenv("GITHUB_SHA", "fdf5271952662f9b19e84a749c9cc6ac7a4ba7e1")
         ident = capture_runtime_identity(
             account_epoch="epoch-0001",
             policy_version="demo-autonomous-12h-v3-bounded",
@@ -192,6 +195,7 @@ def test_runtime_identity_rejects_stale_label():
         )
         assert ident.identity_class == "RUNTIME_IDENTITY_CONFIRMED"
         assert ident.deployment_commit.startswith("b0ca9219")
+        assert ident.deployment_commit != os.environ["GITHUB_SHA"]
 
 
 def test_fee_pnl_reconciliation_from_closed_pnl():
