@@ -344,6 +344,7 @@ jobs:
             ecode=$(curl -s -o /tmp/stream_events.json -w "%{http_code}" "$DEMO_VAL_URL/api/nexus/demo-execution/persistence/stream/events?limit=1" || true)
             curl -fsS "$DEMO_VAL_URL/api/nexus/demo-execution/status" > /tmp/st.json || true
             curl -fsS "$DEMO_VAL_URL/api/nexus/demo-execution/runtime-identity" > /tmp/ri.json || true
+            set +e
             python - "$fcode" "$scode" "$ecode" "$EXP12" <<'PY'
           import json, sys
           fcode, scode, ecode, exp12 = sys.argv[1:5]
@@ -356,7 +357,6 @@ jobs:
           except Exception:
               ri_ep = {}
           ri = st.get("runtime_identity") or {}
-          # Prefer dedicated identity endpoint once live.
           if ri_ep.get("runtime_current_code_commit"):
               ri = {**ri, **ri_ep}
           code = str(ri.get("runtime_current_code_commit") or ri.get("deployment_commit") or "")
@@ -369,26 +369,26 @@ jobs:
               "env_github_sha": ri.get("env_github_sha"),
           })
           routes_ok = fcode == "200" and scode == "200" and ecode == "200"
-          # Strict identity proof: code == bake == expected. Persistent metadata may differ.
-          # Allow CONFIRMED when expected env unset but bake==code==exp12 (rollout).
-          commit_ok = (
-              bool(code) and bool(baked)
-              and code.startswith(exp12) and baked.startswith(exp12)
-              and iclass in {"RUNTIME_IDENTITY_CONFIRMED", "RUNTIME_IDENTITY_AMBIGUOUS"}
-              and (iclass == "RUNTIME_IDENTITY_CONFIRMED" or not ri.get("expected_deployment_commit"))
-          )
-          # Prefer hard CONFIRMED; accept only when bake already matches expected SHA.
-          if routes_ok and code.startswith(exp12) and baked.startswith(exp12) and code == baked:
-              if iclass == "RUNTIME_IDENTITY_CONFIRMED" or not (ri.get("expected_deployment_commit") or "").strip():
-                  raise SystemExit(0)
+          if (
+              routes_ok
+              and code
+              and baked
+              and code.startswith(exp12)
+              and baked.startswith(exp12)
+              and code == baked
+              and iclass == "RUNTIME_IDENTITY_CONFIRMED"
+          ):
+              raise SystemExit(0)
           raise SystemExit(2)
           PY
-            if [ $? -eq 0 ]; then
+            rc=$?
+            set -e
+            if [ "$rc" -eq 0 ]; then
               echo "forensic_routes_live=true"
               exit 0
             fi
-            echo "wait_forensic attempt=$i f=$fcode s=$scode e=$ecode"
-            sleep 10
+            echo "wait_forensic attempt=$i f=$fcode s=$scode e=$ecode rc=$rc"
+            sleep 15
           done
           echo "forensic_routes_not_live"
           exit 1
