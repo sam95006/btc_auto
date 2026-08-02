@@ -1,26 +1,33 @@
 # NEXUS Readiness Source of Truth
 
-Updated: 2026-08-02T17:18:07Z
+Updated: 2026-08-02T17:52:00Z
 
 ## Current system stage
 
 `RUNTIME_DEFECTS_REPAIRED_AWAITING_OOS_APPROVAL`
 
-PR #24 — Draft, not merged. Head: `638fb5558396a113a2b91f66aef6f089e0deeed3`.
+PR #24 — Draft, not merged. Head: `4aebf540178c0fe6a6ff5a72156f9e865f0eda9d`.
 
-## Footprint
+Canonical operational workspace: `C:\NEXUS\BTC_BOT_ACTIVE` (do not run from Google Drive).
 
-- initial_total_bytes=`3271808626` (~3.04GB Drive folder before cleanup)
-- final_total_bytes (operational ACTIVE with venv+node_modules)=`391853326` (<= 2500000000)
-- git_history_strategy=`SHALLOW_SINGLE_BRANCH_PLUS_EXTERNAL_BUNDLE`
-- external bundle: `C:\\Temp\\btc_bot_history_20260803.bundle`
-- Note: `G:\\我的雲端硬碟\\btc_bot` recovered via shallow clone; Google Drive sync corrupted prior `.git` during interrupted `git gc`. Local untracked `trading.db` was lost (not in git).
+## Verified runtime state
 
-## Route contract
+- D_REAL_RUNTIME_DEFECT remaining=`0`
+- full_suite_collection_errors=`0`
+- full_suite_test_failures=`0`
+- tests_collected=`1996` · tests_passed=`1995` · skipped=`1`
+  - skipped: `tests/test_market_geometry_qualification.py:113` — `cost gate blocked on fixture` (not a failure)
+- runtime startup=`PASS` · health=`200`
+- frontend typecheck=`PASS` · frontend production build=`PASS`
+- route_count=`238` · route_contract_difference_count=`0`
+- production entrypoint=`run.app`
 
-- classification=`SCANNER_USED_WRONG_APP_ENTRYPOINT`
-- production entrypoint=`run.app` (not `backend.api.server.app`)
-- route_count=`238`, route_contract_difference_count=`0`, runtime_import_error_count=`0`
+## Footprint / workspace
+
+- Canonical: `C:\NEXUS\BTC_BOT_ACTIVE`
+- Incomplete Drive copy must be renamed to `btc_bot_INCOMPLETE_DO_NOT_RUN` (helper waits on old Cursor lock)
+- Temp duplicate `C:\Temp\BTC_BOT_ACTIVE` permanently removed after tracked-tree match
+- trading_db_status=`TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED` (~62MB prior local state not recovered; empty stubs not promoted)
 
 ## Approved / rejected strategies
 
@@ -34,6 +41,7 @@ PR #24 — Draft, not merged. Head: `638fb5558396a113a2b91f66aef6f089e0deeed3`.
 
 - H3E=`bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33`
 - H3D=`d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7`
+- h3e_policy_unchanged=`true` · h3d_policy_unchanged=`true`
 
 ## OOS reservation
 
@@ -58,6 +66,7 @@ PR #24 — Draft, not merged. Head: `638fb5558396a113a2b91f66aef6f089e0deeed3`.
 - Exact Founder phrase required: `APPROVE_NEXUS_H3_UNTOUCHED_OOS_V1`
 - Risk Review packet not ready
 - Shadow not applied
+- Prior local trading.db state not recovered
 
 ## Next permitted action
 
