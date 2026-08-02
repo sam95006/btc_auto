@@ -273,7 +273,7 @@ jobs:
           ! grep -q "_run_placeholder" "$CTX/backend/nexus_demo_execution/bounded_12h_session.py"
           grep -q "account/forensic" "$CTX/backend/nexus_demo_execution/api_routes.py"
           grep -q "persistence/stream/status" "$CTX/backend/nexus_demo_execution/api_routes.py"
-          grep -q "session_finalizer" "$CTX/backend/nexus_demo_execution/session_finalizer.py"
+          grep -q "poll_until_stable" "$CTX/backend/nexus_demo_execution/session_finalizer.py"
           test -s "$CTX/DEPLOYMENT_COMMIT"
           echo "baked_commit=$(tr -d '\r\n' < "$CTX/DEPLOYMENT_COMMIT")"
           (
