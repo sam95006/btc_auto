@@ -4,7 +4,8 @@ from __future__ import annotations
 import hashlib
 from typing import Any
 
-CLASSIFICATIONS = (
+# Bucket labels (evidence rows) — not necessarily the primary Founder classification.
+BUCKETS = (
     "PRIOR_PROBE_SETTLEMENT",
     "TRADING_FEE",
     "REALIZED_PNL",
@@ -15,6 +16,19 @@ CLASSIFICATIONS = (
     "API_UNSUPPORTED",
     "UNKNOWN",
 )
+
+# Founder §6 final primary classification — exactly one of these.
+FOUNDER_CLASSIFICATIONS = (
+    "FULLY_ATTRIBUTED",
+    "PARTIALLY_ATTRIBUTED",
+    "API_HISTORY_RETENTION_GAP",
+    "API_UNSUPPORTED",
+    "EXTERNAL_ACCOUNT_ACTIVITY",
+    "WALLET_SNAPSHOT_SEMANTIC_DIFFERENCE",
+    "UNKNOWN",
+)
+
+CLASSIFICATIONS = BUCKETS  # backward compatible alias
 
 
 def _f(v: Any) -> float | None:
@@ -62,10 +76,13 @@ def reconcile_wallet_delta(
     wallet_delta = float(final_wallet) - float(starting_wallet)
     evidence: list[dict[str, Any]] = []
     attributed = 0.0
-    buckets: dict[str, float] = {c: 0.0 for c in CLASSIFICATIONS}
+    buckets: dict[str, float] = {c: 0.0 for c in BUCKETS}
+    api_unsupported = False
+    semantic_only = False
 
     # Semantic difference: available vs wallet (informative only; not attributed to session PnL).
     if available_balance is not None and abs(float(available_balance) - float(final_wallet)) > 1e-8:
+        semantic_only = True
         evidence.append(
             {
                 "class": "WALLET_SNAPSHOT_SEMANTIC_DIFFERENCE",
@@ -207,12 +224,26 @@ def reconcile_wallet_delta(
             )
 
     unattributed = wallet_delta - attributed
-    primary = "UNKNOWN"
-    if abs(unattributed) < 1e-8 and abs(wallet_delta) >= 1e-8:
-        primary = max(buckets.items(), key=lambda kv: abs(kv[1]))[0]
-    elif abs(unattributed) >= 1e-8 and not (closed_pnl_rows or execution_rows or transaction_rows):
+    has_ledger = bool(closed_pnl_rows or execution_rows or transaction_rows)
+    external_hits = sum(1 for e in evidence if e.get("class") == "EXTERNAL_ACCOUNT_ACTIVITY")
+
+    # Founder primary classification (exactly one).
+    if api_unsupported:
+        primary = "API_UNSUPPORTED"
+    elif abs(wallet_delta) < 1e-8:
+        primary = "FULLY_ATTRIBUTED"
+    elif abs(unattributed) < 1e-8 and abs(attributed) >= 1e-8:
+        primary = "FULLY_ATTRIBUTED"
+    elif abs(attributed) >= 1e-8 and abs(unattributed) >= 1e-8:
+        primary = "PARTIALLY_ATTRIBUTED"
+    elif not has_ledger:
         primary = "API_HISTORY_RETENTION_GAP"
-    elif abs(unattributed) >= 1e-8:
+    elif external_hits > 0 and abs(attributed) < 1e-8:
+        primary = "EXTERNAL_ACCOUNT_ACTIVITY"
+    elif semantic_only and abs(attributed) < 1e-8:
+        # Semantic gap observed but does not by itself explain start→end wallet delta.
+        primary = "UNKNOWN"
+    else:
         primary = "UNKNOWN"
 
     return {
@@ -225,8 +256,11 @@ def reconcile_wallet_delta(
         "attributed_amount": round(attributed, 8),
         "unattributed_amount": round(unattributed, 8),
         "classification": primary,
+        "evidence_record_count": len(evidence),
         "bucket_totals": {k: round(v, 8) for k, v in buckets.items() if abs(v) > 0},
         "evidence_records": evidence,
-        "session_attribution_allowed": abs(unattributed) < 1e-8
-        and primary in {"TRADING_FEE", "FUNDING", "REALIZED_PNL", "PRIOR_PROBE_SETTLEMENT"},
+        "session_attribution_allowed": primary == "FULLY_ATTRIBUTED"
+        and abs(unattributed) < 1e-8
+        and abs(attributed) >= 1e-8,
+        "founder_classifications": list(FOUNDER_CLASSIFICATIONS),
     }

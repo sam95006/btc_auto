@@ -241,8 +241,10 @@ jobs:
           set_var MAINNET false
           set_var REAL_MONEY false
           set_var NEXUS_DEPLOYMENT_ID "$SHA"
+          set_var NEXUS_DEPLOYMENT_COMMIT "${{ github.sha }}"
+          set_var EXPECTED_DEPLOYMENT_COMMIT "${{ github.sha }}"
           set_var NEXUS_DEPLOY_RUN_ID "$GITHUB_RUN_ID"
-          set_var GITHUB_SHA "$SHA"
+          set_var GITHUB_SHA "${{ github.sha }}"
           set_var NEXUS_BUILD_MARKER "6H_V2_${SHA:0:8}"
       - name: Redeploy Validation with V2 start code (existing service only)
         env:
@@ -349,14 +351,19 @@ jobs:
           except Exception:
               st = {}
           ri = st.get("runtime_identity") or {}
-          commit = str(ri.get("deployment_commit") or "")
-          print({"forensic": fcode, "stream_status": scode, "stream_events": ecode, "commit": commit, "exp12": exp12})
+          code = str(ri.get("runtime_current_code_commit") or ri.get("deployment_commit") or "")
+          baked = str(ri.get("container_baked_commit") or st.get("baked_deployment_commit") or "")
+          iclass = str(ri.get("identity_class") or ri.get("runtime_identity") or "")
+          print({
+              "forensic": fcode, "stream_status": scode, "stream_events": ecode,
+              "code": code, "baked": baked, "identity_class": iclass, "exp12": exp12,
+          })
           routes_ok = fcode == "200" and scode == "200" and ecode == "200"
-          # Accept exact SHA or any post-forensic SHA that is not the pre-forensic runtime.
-          pre_forensic = "63a4c17d80e988756493bc035beb594157342aa5"
-          commit_ok = bool(commit) and commit != pre_forensic and (
-              commit.startswith(exp12) or commit.startswith("824817d") or commit.startswith("ca3dedc")
-              or commit.startswith("cdbb30c") or commit.startswith("4bc0bb8") or commit.startswith("fdf5271")
+          # Strict identity proof: code == bake == expected. Persistent metadata may differ.
+          commit_ok = (
+              bool(code) and bool(baked)
+              and code.startswith(exp12) and baked.startswith(exp12)
+              and iclass == "RUNTIME_IDENTITY_CONFIRMED"
           )
           ok = routes_ok and commit_ok
           raise SystemExit(0 if ok else 2)

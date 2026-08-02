@@ -32,31 +32,52 @@ def _get(path: str) -> tuple[dict, int]:
 
 
 def snapshot(label: str) -> dict:
-    health, hcode = _get("/api/nexus/demo-execution/status")
+    health, hcode = _get("/health")
+    status, scode_status = _get("/api/nexus/demo-execution/status")
+    identity, icode = _get("/api/nexus/demo-execution/runtime-identity")
     acct, acode = _get("/api/nexus/demo-execution/account?fresh=true")
     b12, bcode = _get("/api/nexus/demo-execution/bounded-12h/status")
-    forensic, fcode = _get("/api/nexus/demo-execution/account/forensic?starting_wallet=5024.24829280")
+    forensic, fcode = _get(
+        "/api/nexus/demo-execution/account/forensic?starting_wallet=5024.24829280&paginate=true&max_pages=10"
+    )
     stream_status, scode = _get("/api/nexus/demo-execution/persistence/stream/status")
     stream_events, ecode = _get("/api/nexus/demo-execution/persistence/stream/events?limit=5")
 
     bb = b12.get("bounded_12h") if isinstance(b12, dict) else {}
     if isinstance(bb, dict) and isinstance(bb.get("bounded_12h"), dict):
         bb = bb["bounded_12h"]
-    ri = (health.get("runtime_identity") if isinstance(health, dict) else {}) or {}
+    ri = (identity if isinstance(identity, dict) and identity.get("runtime_current_code_commit") else None) or (
+        (status.get("runtime_identity") if isinstance(status, dict) else {}) or {}
+    )
     pos = acct.get("open_positions") if isinstance(acct, dict) else None
     ord_ = acct.get("open_orders") if isinstance(acct, dict) else None
-    deploy = str(ri.get("deployment_commit") or "")
+    code = str(ri.get("runtime_current_code_commit") or ri.get("deployment_commit") or "")
+    baked = str(ri.get("container_baked_commit") or status.get("baked_deployment_commit") or "")
+    iclass = str(ri.get("identity_class") or ri.get("runtime_identity_classification") or "")
+    identity_confirmed = (
+        iclass == "RUNTIME_IDENTITY_CONFIRMED"
+        and bool(EXPECTED_COMMIT)
+        and code.startswith(EXPECTED_COMMIT[:12])
+        and baked.startswith(EXPECTED_COMMIT[:12])
+    )
     out = {
         "label": label,
         "health_http": hcode,
+        "status_http": scode_status,
+        "runtime_identity_http": icode,
         "account_http": acode,
         "bounded_12h_http": bcode,
         "forensic_routes_http": fcode,
         "persistence_stream_status_http": scode,
         "persistence_stream_events_http": ecode,
-        "runtime_identity": ri.get("runtime_identity") or ri.get("identity_class"),
-        "deployment_commit": deploy,
-        "deployment_commit_match": (not EXPECTED_COMMIT) or deploy.startswith(EXPECTED_COMMIT[:12]),
+        "runtime_identity_classification": iclass,
+        "runtime_current_code_commit": code,
+        "container_baked_commit": baked,
+        "persistent_state_origin_commit": ri.get("persistent_state_origin_commit"),
+        "persistent_state_last_writer_commit": ri.get("persistent_state_last_writer_commit"),
+        "deployment_commit": code,
+        "deployment_commit_match": (not EXPECTED_COMMIT) or code.startswith(EXPECTED_COMMIT[:12]),
+        "runtime_identity_confirmed": identity_confirmed,
         "position_count": pos,
         "open_order_count": ord_,
         "reconciliation": (
@@ -76,10 +97,28 @@ def snapshot(label: str) -> dict:
         "wallet_delta_reconcile": forensic.get("wallet_delta_reconcile") if isinstance(forensic, dict) else None,
         "stream_status_ok": bool(isinstance(stream_status, dict) and stream_status.get("ok") is not False and scode == 200),
         "stream_events_ok": bool(isinstance(stream_events, dict) and ecode == 200),
-        "mainnet": bool((health or {}).get("mainnet")) if isinstance(health, dict) else None,
-        "real_money": bool((health or {}).get("real_money")) if isinstance(health, dict) else None,
+        "mainnet": bool((status or {}).get("mainnet")) if isinstance(status, dict) else None,
+        "real_money": bool((status or {}).get("real_money")) if isinstance(status, dict) else None,
+        "health_payload_ok": hcode == 200,
     }
     return out
+
+
+def _checkpoint_ok(snap: dict) -> bool:
+    return (
+        snap.get("health_http") == 200
+        and snap.get("status_http") == 200
+        and snap.get("forensic_routes_http") == 200
+        and snap.get("persistence_stream_status_http") == 200
+        and snap.get("persistence_stream_events_http") == 200
+        and snap.get("position_count") == 0
+        and snap.get("open_order_count") == 0
+        and snap.get("reconciliation") == "MATCH"
+        and snap.get("negative_count_sentinel_present") is False
+        and snap.get("mainnet") is False
+        and snap.get("real_money") is False
+        and (not EXPECTED_COMMIT or snap.get("runtime_identity_confirmed") is True)
+    )
 
 
 def main() -> int:
@@ -93,21 +132,13 @@ def main() -> int:
         results[label] = snap
         (OUT / f"{label}.json").write_text(json.dumps(snap, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(snap, indent=2), flush=True)
+        if not _checkpoint_ok(snap):
+            print(f"checkpoint_failed={label}", flush=True)
+            (OUT / "verify_summary.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+            return 2
     (OUT / "verify_summary.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
-    t0 = results["Tplus0"]
-    ok = (
-        t0.get("health_http") == 200
-        and t0.get("forensic_routes_http") == 200
-        and t0.get("persistence_stream_status_http") == 200
-        and t0.get("persistence_stream_events_http") == 200
-        and t0.get("position_count") == 0
-        and t0.get("open_order_count") == 0
-        and t0.get("negative_count_sentinel_present") is False
-        and t0.get("mainnet") is False
-        and t0.get("real_money") is False
-    )
-    print("verify_ok" if ok else "verify_incomplete", flush=True)
-    return 0 if ok else 2
+    print("verify_ok_t0_t60_t180", flush=True)
+    return 0
 
 
 if __name__ == "__main__":

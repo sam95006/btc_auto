@@ -420,6 +420,98 @@ class DemoWriteClient:
         data = self._get("/v5/account/transaction-log", params)
         return list((data.get("result") or {}).get("list") or [])
 
+    def _paginate_get(
+        self,
+        path: str,
+        base_params: dict[str, Any],
+        *,
+        max_pages: int = 10,
+        start_time_ms: int | None = None,
+        end_time_ms: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """Bounded cursor pagination for private history endpoints."""
+        rows: list[dict[str, Any]] = []
+        cursor = ""
+        for _ in range(max(1, min(20, int(max_pages)))):
+            params = dict(base_params)
+            if start_time_ms is not None:
+                params["startTime"] = str(int(start_time_ms))
+            if end_time_ms is not None:
+                params["endTime"] = str(int(end_time_ms))
+            if cursor:
+                params["cursor"] = cursor
+            data = self._get(path, params)
+            result = data.get("result") or {}
+            batch = list(result.get("list") or [])
+            rows.extend(r for r in batch if isinstance(r, dict))
+            cursor = str(result.get("nextPageCursor") or "")
+            if not cursor or not batch:
+                break
+        return rows
+
+    def list_closed_pnl_paginated(
+        self,
+        *,
+        symbol: str | None = None,
+        limit: int = 100,
+        max_pages: int = 10,
+        start_time_ms: int | None = None,
+        end_time_ms: int | None = None,
+    ) -> list[dict[str, Any]]:
+        params: dict[str, Any] = {"category": "linear", "limit": str(max(1, min(100, int(limit))))}
+        if symbol:
+            params["symbol"] = symbol.upper()
+        return self._paginate_get(
+            "/v5/position/closed-pnl",
+            params,
+            max_pages=max_pages,
+            start_time_ms=start_time_ms,
+            end_time_ms=end_time_ms,
+        )
+
+    def list_executions_paginated(
+        self,
+        *,
+        symbol: str | None = None,
+        limit: int = 100,
+        max_pages: int = 10,
+        start_time_ms: int | None = None,
+        end_time_ms: int | None = None,
+    ) -> list[dict[str, Any]]:
+        params: dict[str, Any] = {"category": "linear", "limit": str(max(1, min(100, int(limit))))}
+        if symbol:
+            params["symbol"] = symbol.upper()
+        return self._paginate_get(
+            "/v5/execution/list",
+            params,
+            max_pages=max_pages,
+            start_time_ms=start_time_ms,
+            end_time_ms=end_time_ms,
+        )
+
+    def list_transaction_log_paginated(
+        self,
+        *,
+        limit: int = 100,
+        coin: str = "USDT",
+        max_pages: int = 10,
+        start_time_ms: int | None = None,
+        end_time_ms: int | None = None,
+    ) -> list[dict[str, Any]]:
+        params: dict[str, Any] = {
+            "accountType": "UNIFIED",
+            "category": "linear",
+            "currency": coin,
+            "limit": str(max(1, min(100, int(limit)))),
+        }
+        return self._paginate_get(
+            "/v5/account/transaction-log",
+            params,
+            max_pages=max_pages,
+            start_time_ms=start_time_ms,
+            end_time_ms=end_time_ms,
+        )
+
     def closed_pnl(self, symbol: str) -> dict[str, Any] | None:
         data = self._get(
             "/v5/position/closed-pnl",

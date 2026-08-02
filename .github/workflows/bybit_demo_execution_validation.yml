@@ -59,6 +59,7 @@ jobs:
           python -m pytest \
             tests/test_12h_post_forensic_repair.py \
             tests/test_structural_geometry_qualify.py \
+            tests/test_identity_and_geometry_qualification.py \
             tests/test_12h_full_autonomous_engine.py \
             tests/test_demo_6h_12h_session_engine.py \
             -q --tb=line

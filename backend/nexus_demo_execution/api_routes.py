@@ -211,15 +211,6 @@ class DemoExecutionApiState:
         persistence["persistence_blocked"] = self.persistence_blocked
         persistence["data_root"] = str(self.data_root)
         epoch_sum = self.epoch_tracker.summary()
-        baked_commit = ""
-        for cand in (Path("/app/DEPLOYMENT_COMMIT"), Path("DEPLOYMENT_COMMIT")):
-            try:
-                if cand.exists():
-                    baked_commit = cand.read_text(encoding="utf-8").strip()[:64]
-                    if baked_commit:
-                        break
-            except Exception:
-                pass
         try:
             identity = capture_runtime_identity(
                 account_epoch=str(epoch_sum.get("account_epoch") or ""),
@@ -227,9 +218,18 @@ class DemoExecutionApiState:
                 schema_version="demo_validation_session_v3",
                 service_name=SERVICE_NAME,
                 data_root=self.data_root,
+                expected_deployment_commit=(
+                    (os.environ.get("EXPECTED_DEPLOYMENT_COMMIT") or os.environ.get("GITHUB_SHA") or "").strip()
+                    or None
+                ),
             ).to_dict()
         except Exception:
             identity = {"identity_class": "RUNTIME_IDENTITY_UNKNOWN"}
+        baked_commit = (
+            identity.get("container_baked_commit")
+            or identity.get("runtime_current_code_commit")
+            or ""
+        )
         return {
             **READ_ONLY_META,
             "baked_deployment_commit": baked_commit or None,
@@ -561,6 +561,32 @@ def register_demo_execution_routes(app: Flask) -> None:
     """Register /api/nexus/demo-execution/* routes (readonly + founder smoke)."""
     state = get_demo_execution_state()
 
+    @app.route("/api/nexus/demo-execution/runtime-identity")
+    def demo_execution_runtime_identity():
+        """Read-only separated runtime / container / persistent identity fields."""
+        from backend.nexus_demo_execution.runtime_identity import capture_runtime_identity
+
+        st = get_demo_execution_state()
+        epoch_sum = st.epoch_tracker.summary()
+        expected = (os.environ.get("EXPECTED_DEPLOYMENT_COMMIT") or os.environ.get("GITHUB_SHA") or "").strip() or None
+        identity = capture_runtime_identity(
+            account_epoch=str(epoch_sum.get("account_epoch") or ""),
+            policy_version="demo-autonomous-12h-v3-bounded",
+            schema_version="demo_validation_session_v3",
+            service_name=SERVICE_NAME,
+            data_root=st.data_root,
+            expected_deployment_commit=expected,
+        ).to_dict()
+        return jsonify(
+            _wrap(
+                {
+                    "read_only": True,
+                    "runtime_identity_classification": identity.get("identity_class"),
+                    **identity,
+                }
+            )
+        )
+
     @app.route("/api/nexus/demo-execution/status")
     def demo_execution_status():
         return jsonify(_wrap(get_demo_execution_state().status_payload()))
@@ -751,14 +777,47 @@ def register_demo_execution_routes(app: Flask) -> None:
             out["failures"]["open_orders"] = f"{exc.code}:{exc.detail}"[:200]
             out["open_order_count"] = None
             out["conditional_order_count"] = None
-        for key, fn in (
-            ("executions", lambda: writer.list_executions(limit=50)),
-            ("closed_pnl", lambda: writer.list_closed_pnl(limit=50)),
-            ("transaction_log", lambda: writer.list_transaction_log(limit=50)),
-        ):
+        from flask import request
+
+        paginate = str(request.args.get("paginate") or "").lower() in {"1", "true", "yes"}
+        start_ms = request.args.get("start_time_ms")
+        end_ms = request.args.get("end_time_ms")
+        start_time_ms = int(start_ms) if start_ms and str(start_ms).isdigit() else None
+        end_time_ms = int(end_ms) if end_ms and str(end_ms).isdigit() else None
+        max_pages = min(20, max(1, int(request.args.get("max_pages") or 10)))
+
+        if paginate:
+            fetchers = (
+                (
+                    "executions",
+                    lambda: writer.list_executions_paginated(
+                        limit=100, max_pages=max_pages, start_time_ms=start_time_ms, end_time_ms=end_time_ms
+                    ),
+                ),
+                (
+                    "closed_pnl",
+                    lambda: writer.list_closed_pnl_paginated(
+                        limit=100, max_pages=max_pages, start_time_ms=start_time_ms, end_time_ms=end_time_ms
+                    ),
+                ),
+                (
+                    "transaction_log",
+                    lambda: writer.list_transaction_log_paginated(
+                        limit=100, max_pages=max_pages, start_time_ms=start_time_ms, end_time_ms=end_time_ms
+                    ),
+                ),
+            )
+        else:
+            fetchers = (
+                ("executions", lambda: writer.list_executions(limit=50)),
+                ("closed_pnl", lambda: writer.list_closed_pnl(limit=50)),
+                ("transaction_log", lambda: writer.list_transaction_log(limit=50)),
+            )
+        for key, fn in fetchers:
             try:
-                rows = fn()[:50]
-                out["lists"][key] = [redact_secrets(r) for r in rows if isinstance(r, dict)]
+                rows = fn()
+                cap = 500 if paginate else 50
+                out["lists"][key] = [redact_secrets(r) for r in rows[:cap] if isinstance(r, dict)]
             except DemoWriteError as exc:
                 out["failures"][key] = f"{exc.code}:{exc.detail}"[:200]
             except Exception as exc:  # noqa: BLE001
@@ -770,14 +829,14 @@ def register_demo_execution_routes(app: Flask) -> None:
         out["account_classification"] = classify_account_flat(pos, ord_)
 
         # Optional wallet delta vs known 12H V3 start if query params present.
-        from flask import request
-
         start_w = request.args.get("starting_wallet")
         if start_w is not None and out.get("wallet_balance") is not None:
             try:
                 delta = reconcile_wallet_delta(
                     starting_wallet=float(start_w),
                     final_wallet=float(out["wallet_balance"]),
+                    session_start_ms=start_time_ms,
+                    session_end_ms=end_time_ms,
                     closed_pnl_rows=out["lists"].get("closed_pnl") or [],
                     execution_rows=out["lists"].get("executions") or [],
                     transaction_rows=out["lists"].get("transaction_log") or [],
