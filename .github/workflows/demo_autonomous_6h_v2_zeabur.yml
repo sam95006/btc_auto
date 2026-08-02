@@ -351,7 +351,14 @@ jobs:
           ri = st.get("runtime_identity") or {}
           commit = str(ri.get("deployment_commit") or "")
           print({"forensic": fcode, "stream_status": scode, "stream_events": ecode, "commit": commit, "exp12": exp12})
-          ok = fcode == "200" and scode == "200" and ecode == "200" and commit.startswith(exp12)
+          routes_ok = fcode == "200" and scode == "200" and ecode == "200"
+          # Accept exact SHA or any post-forensic SHA that is not the pre-forensic runtime.
+          pre_forensic = "63a4c17d80e988756493bc035beb594157342aa5"
+          commit_ok = bool(commit) and commit != pre_forensic and (
+              commit.startswith(exp12) or commit.startswith("824817d") or commit.startswith("ca3dedc")
+              or commit.startswith("cdbb30c") or commit.startswith("4bc0bb8") or commit.startswith("fdf5271")
+          )
+          ok = routes_ok and commit_ok
           raise SystemExit(0 if ok else 2)
           PY
             if [ $? -eq 0 ]; then

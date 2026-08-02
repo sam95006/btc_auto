@@ -722,7 +722,15 @@ def register_demo_execution_routes(app: Flask) -> None:
             out["position_count"] = len(snap.open_positions)
             out["open_order_count"] = len(snap.open_orders)
         except Exception as exc:  # noqa: BLE001
-            out["failures"]["account_snapshot"] = type(exc).__name__
+            out["failures"]["account_snapshot"] = f"{type(exc).__name__}:{exc}"[:200]
+            try:
+                snap2 = st.reader.read_snapshot() if hasattr(st.reader, "read_snapshot") else None
+                if snap2 is not None:
+                    out["wallet_balance"] = getattr(snap2, "wallet_balance", None)
+                    out["equity"] = getattr(snap2, "equity", None)
+                    out["available_balance"] = getattr(snap2, "available_balance", None)
+            except Exception as exc2:  # noqa: BLE001
+                out["failures"]["account_snapshot_fallback"] = f"{type(exc2).__name__}:{exc2}"[:200]
 
         writer = DemoWriteClient()
         try:
