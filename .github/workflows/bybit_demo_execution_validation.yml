@@ -64,6 +64,7 @@ jobs:
             tests/test_oos_risk_audit.py \
             tests/test_cohort_edge_research.py \
             tests/test_edge_research_v2.py \
+            tests/test_edge_research_v3.py \
             tests/test_12h_full_autonomous_engine.py \
             tests/test_demo_6h_12h_session_engine.py \
             -q --tb=line
