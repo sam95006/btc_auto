@@ -1,6 +1,6 @@
 {
   "schema_version": "nexus_readiness_sot_v1",
-  "updated_at": "2026-08-02T16:13:24Z",
+  "updated_at": "2026-08-02T16:43:32Z",
   "pr": 24,
   "pr_draft": true,
   "pr_merged": false,
@@ -139,5 +139,10 @@
     "files_after": 2011,
     "files_removed_this_wave": 161,
     "bytes_removed_this_wave": 1358224
-  }
+  },
+  "route_import_discrepancy_classification": "SCANNER_USED_WRONG_APP_ENTRYPOINT",
+  "route_snapshot_status": "PASS",
+  "route_count": 238,
+  "runtime_import_error_count": 0,
+  "local_footprint_note": "G_DRIVE_REPO_GIT_CORRUPTED_DURING_INTERRUPTED_GC; rebuilt via shallow clone; trading.db local file lost"
 }

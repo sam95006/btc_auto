@@ -9,9 +9,7 @@
   "source_modules_after": 481,
   "demo_exec_modules": 84,
   "orphan_manifest_entry_count": 0,
-  "route_count": [
-    "IMPORT_ERROR:cannot import name 'app' from 'backend.api.server' (C:\\Temp\\BTC_BOT_6H_V2_READINESS\\backend\\api\\server.py)"
-  ],
+  "route_count": 237,
   "dry": {
     "oos_runner_dry_run": "PASS",
     "network_download_attempt_count": 0,
@@ -45,5 +43,8 @@
     "requires_phrase": "APPROVE_NEXUS_H3_UNTOUCHED_OOS_V1",
     "oos_downloaded": false,
     "oos_executed": false
-  }
+  },
+  "route_snapshot_status": "PASS",
+  "route_import_discrepancy_classification": "SCANNER_USED_WRONG_APP_ENTRYPOINT",
+  "runtime_import_error_count": 0
 }
