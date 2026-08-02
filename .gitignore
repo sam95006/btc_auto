@@ -38,3 +38,5 @@ scratch/
 !/static/nexus/assets/
 !/static/nexus/assets/**
 tools/deploy/*.ps1
+
+artifacts/demo_validation_geometry_market_oos/market_cache/

@@ -16,16 +16,20 @@ def build_risk_review_packet(
     diagnostic_ab: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build a packet for Founder sign-off. Status remains PENDING until explicit sign."""
-    oos_trades = int(oos.get("simulated_trade_count") or 0)
+    oos_trades = int(oos.get("simulated_trade_count") or oos.get("oos_simulated_trades") or 0)
     oos_status = str(oos.get("oos_status") or "")
+    path_source = str(oos.get("path_source") or "")
+    synth = int(oos.get("synthetic_forced_trade_count") or 0)
     ready = (
-        oos_trades >= 30
+        path_source == "REAL_HISTORICAL_MARKET_DATA"
+        and synth == 0
+        and oos_trades >= 30
         and oos.get("net_pnl") is not None
         and oos.get("profit_factor") is not None
         and oos.get("expectancy") is not None
         and oos.get("maximum_drawdown") is not None
         and not bool(oos.get("look_ahead_contamination"))
-        and oos_status in {"OOS_PERFORMANCE_VALIDATED", "OOS_PERFORMANCE_FAILED"}
+        and oos_status == "OOS_PERFORMANCE_VALIDATED"
     )
     return {
         "packet_version": "geometry_risk_review_v1",
