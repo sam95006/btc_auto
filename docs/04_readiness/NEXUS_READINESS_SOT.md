@@ -1,12 +1,26 @@
 # NEXUS Readiness Source of Truth
 
-Updated: 2026-08-02T15:57:33Z
+Updated: 2026-08-02T17:18:07Z
 
 ## Current system stage
 
-`DEEP_CONSOLIDATION_COMPLETE_AWAITING_OOS_APPROVAL`
+`FOOTPRINT_REDUCED_AWAITING_OOS_APPROVAL`
 
-PR #24 — Draft, not merged. Head updated by deep consolidation commit.
+PR #24 — Draft, not merged. Head: `638fb5558396a113a2b91f66aef6f089e0deeed3`.
+
+## Footprint
+
+- initial_total_bytes=`3271808626` (~3.04GB Drive folder before cleanup)
+- final_total_bytes (operational ACTIVE with venv+node_modules)=`391853326` (<= 2500000000)
+- git_history_strategy=`SHALLOW_SINGLE_BRANCH_PLUS_EXTERNAL_BUNDLE`
+- external bundle: `C:\\Temp\\btc_bot_history_20260803.bundle`
+- Note: `G:\\我的雲端硬碟\\btc_bot` recovered via shallow clone; Google Drive sync corrupted prior `.git` during interrupted `git gc`. Local untracked `trading.db` was lost (not in git).
+
+## Route contract
+
+- classification=`SCANNER_USED_WRONG_APP_ENTRYPOINT`
+- production entrypoint=`run.app` (not `backend.api.server.app`)
+- route_count=`238`, route_contract_difference_count=`0`, runtime_import_error_count=`0`
 
 ## Approved / rejected strategies
 
@@ -16,10 +30,17 @@ PR #24 — Draft, not merged. Head updated by deep consolidation commit.
 - **H1:** excluded — `INSUFFICIENT_SAMPLE` / `TARGET_TOO_CLOSE`
 - **H2:** excluded — `REJECTED` / `NO_GROSS_EDGE` / `COST_DOMINATED_CHURN`
 
-## Consumed datasets
+## Frozen policy checksums
 
-- Research wave V2: `CONSUMED_NO_VALIDATED_COHORT`
-- Failed OOS holdout: `OOS_REAL_MARKET_2026Q_FAILED_HOLDOUT_e186d13` (immutable, do not reuse)
+- H3E=`bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33`
+- H3D=`d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7`
+
+## OOS reservation
+
+- reservation_id=`OOS_H3_UNTOUCHED_V1_RESERVED`
+- reserved_start=`1785663000001` · reserved_end=`1789551000000`
+- downloaded=`false` · executed=`false`
+- oos_runner_dry_run=`PASS`
 
 ## Safety state
 

@@ -1,10 +1,10 @@
 {
   "schema_version": "nexus_readiness_sot_v1",
-  "updated_at": "2026-08-02T16:43:32Z",
+  "updated_at": "2026-08-02T17:18:07Z",
   "pr": 24,
   "pr_draft": true,
   "pr_merged": false,
-  "pr_head": "ce661009d26df73fd369560dbe5c0220c28a079e",
+  "pr_head": "638fb5558396a113a2b91f66aef6f089e0deeed3",
   "edge_research_v3_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
   "system_stage": "DEEP_CONSOLIDATION_COMPLETE_AWAITING_OOS_APPROVAL",
   "current_approved_strategies": {
@@ -144,5 +144,18 @@
   "route_snapshot_status": "PASS",
   "route_count": 238,
   "runtime_import_error_count": 0,
-  "local_footprint_note": "G_DRIVE_REPO_GIT_CORRUPTED_DURING_INTERRUPTED_GC; rebuilt via shallow clone; trading.db local file lost"
+  "local_footprint_note": "G_DRIVE_REPO_GIT_CORRUPTED_DURING_INTERRUPTED_GC; rebuilt via shallow clone; trading.db local file lost",
+  "current_system_stage": "FOOTPRINT_REDUCED_AWAITING_OOS_APPROVAL",
+  "storage_cleanup_commit": "638fb5558396a113a2b91f66aef6f089e0deeed3",
+  "route_contract_difference_count": 0,
+  "local_footprint": {
+    "initial_total_bytes": 3271808626,
+    "final_total_bytes_operational_active": 391853326,
+    "final_total_bytes_drive_folder": 138727790,
+    "drive_note": "Google Drive folder may under-report due to cloud placeholders; incomplete deps (.venv partial, no node_modules). Operational truth is C:\\Temp\\BTC_BOT_ACTIVE with venv+frontend deps.",
+    "git_history_strategy": "SHALLOW_SINGLE_BRANCH_PLUS_EXTERNAL_BUNDLE",
+    "external_bundle": "C:\\Temp\\btc_bot_history_20260803.bundle",
+    "trading_db_status": "LOST_LOCAL_UNTRACKED_NOT_IN_GIT",
+    "size_target_met": true
+  }
 }
