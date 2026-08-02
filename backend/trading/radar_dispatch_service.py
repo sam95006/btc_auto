@@ -96,8 +96,10 @@ class RadarDispatchService:
         blocked = {str(item).upper() for item in (learning_guidance.get("blocked_symbols") or [])}
         if symbol in blocked:
             return False
+        # Symbol hard-blocks and active cooldowns are safety controls and must
+        # remain enforceable even when sandbox / bold-testnet soft mode is on.
         cooldown = dict(learning_guidance.get("symbol_cooldown") or {}).get(symbol) or {}
-        if cooldown.get("active") and not sandbox_active():
+        if cooldown.get("active"):
             return False
         if learning_guidance.get("pause_new_entries") and not sandbox_active():
             return False

@@ -104,6 +104,14 @@ def resolve_executable_code_commit(*, data_root: Path | None = None) -> tuple[st
     if source and source != baked:
         candidates.append((source, source_src))
 
+    # Unit-test / local bake without /app: allow data_root bake to beat stale
+    # platform env labels (GITHUB_SHA / NEXUS_DEPLOYMENT_ID) while never beating
+    # an immutable /app container bake.
+    if not baked and data_root is not None and not Path("/app/DEPLOYMENT_COMMIT").exists():
+        test_bake = _read_text(Path(data_root) / "DEPLOYMENT_COMMIT")
+        if test_bake:
+            candidates.append((test_bake[:64], "file:data_root_test_bake"))
+
     # Optional explicit code-commit env (not persistent files).
     for key in (
         "NEXUS_SOURCE_COMMIT",
@@ -128,13 +136,6 @@ def resolve_executable_code_commit(*, data_root: Path | None = None) -> tuple[st
             candidates.append((sha[:64], "git:HEAD"))
     except Exception:
         pass
-
-    # Unit-test / local bake without /app: allow data_root ONLY when /app absent
-    # and caller is not production (no /app directory). Still never prefer it over /app.
-    if not baked and data_root is not None and not Path("/app/DEPLOYMENT_COMMIT").exists():
-        test_bake = _read_text(Path(data_root) / "DEPLOYMENT_COMMIT")
-        if test_bake:
-            candidates.insert(0, (test_bake[:64], "file:data_root_test_bake"))
 
     return _pick_non_stale(candidates)
 

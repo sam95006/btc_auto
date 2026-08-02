@@ -1,6 +1,6 @@
 {
   "schema_version": "nexus_evidence_manifest_v1",
-  "updated_at": "2026-08-02T17:18:07Z",
+  "updated_at": "2026-08-02T17:48:16Z",
   "entries": [
     {
       "evidence_id": "6H_FINAL_ZERO_EXECUTION::artifacts/readiness/immutable/6h_final/NEXUS_6H_V2_FINAL_REPORT.md",
@@ -303,5 +303,6 @@
     }
   ],
   "storage_cleanup_commit": "638fb5558396a113a2b91f66aef6f089e0deeed3",
-  "recommendation": "NEXUS_H3_OOS_APPROVAL_REQUIRED"
+  "recommendation": "NEXUS_H3_OOS_APPROVAL_REQUIRED",
+  "D_real_runtime_defects_remaining": 0
 }

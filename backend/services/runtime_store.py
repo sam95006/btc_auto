@@ -526,12 +526,9 @@ class RuntimeStateStore:
             }
         )
         payload_snapshot["runtime"] = runtime_block
-        self._live_snapshot.put(payload_snapshot)
 
         now = time.time()
         should_flush = bool(flush_now) or (now - self._snapshot_last_flush_at) >= self._snapshot_flush_seconds
-        if not should_flush:
-            return
 
         def operation(cursor):
             cursor.execute("SELECT snapshot_version FROM nexus_runtime_state WHERE id = 1")
@@ -556,10 +553,20 @@ class RuntimeStateStore:
                 """,
                 (payload, _now(), worker_pid, worker_status, next_version, writer),
             )
+            return db_snapshot
 
-        with self._write_guard():
-            self._run_write(operation)
-        self._snapshot_last_flush_at = now
+        if should_flush:
+            with self._write_guard():
+                versioned = self._run_write(operation)
+            self._snapshot_last_flush_at = now
+            self._live_snapshot.put(versioned)
+        else:
+            # Keep live cache coherent even when DB flush is deferred.
+            cached = self._live_snapshot.get() or {}
+            prev = int(((cached.get("runtime") or {}).get("snapshot_version") or 0) or 0)
+            runtime_block["snapshot_version"] = prev + 1
+            payload_snapshot["runtime"] = runtime_block
+            self._live_snapshot.put(payload_snapshot)
 
     def load_snapshot(self):
         cached = self._live_snapshot.get()

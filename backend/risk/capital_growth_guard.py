@@ -136,7 +136,9 @@ class CapitalGrowthGuard:
                 block_new_entries = True
                 block_reason = block_reason or "daily_positive_mode_defense"
 
-        if LOCK_PROFIT_AFTER_DAILY_TARGET and daily_target_hit and not REVENUE_GROWTH_MODE:
+        # Profit lock is an explicit safety latch. It must still engage when the
+        # daily target is hit even if revenue-growth exploration mode is enabled.
+        if LOCK_PROFIT_AFTER_DAILY_TARGET and daily_target_hit:
             block_new_entries = True
             block_reason = block_reason or "daily_target_locked_for_compound"
             mode = "PROFIT_LOCK"

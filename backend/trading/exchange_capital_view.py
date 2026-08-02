@@ -152,19 +152,13 @@ def build_futures_capital_from_binance(futures_account: dict | None) -> Dict[str
     assets = _treasury_assets()
 
     if assets == ("USDT",):
+        # USDT-only treasury must use the USDT asset row, never the multi-asset
+        # account summary (which can include USDC/BTC and inflate totals).
         usdt_capital = _futures_usdt_asset_capital(futures_account)
         exchange = futures_account.get("exchange_account") or {}
-        exchange_wallet = _safe_float(exchange.get("totalWalletBalance"))
         exchange_margin = _safe_float(exchange.get("totalMarginBalance"))
-        exchange_available = _safe_float(exchange.get("availableBalance"))
-        exchange_unrealized = _safe_float(exchange.get("totalUnrealizedProfit"))
-        wallet_balance = exchange_wallet if exchange_wallet > 0 else usdt_capital["wallet_balance"]
-        margin_balance = exchange_margin if exchange_margin > 0 else usdt_capital["margin_balance"]
-        available_balance = exchange_available if exchange_available > 0 else usdt_capital["available_balance"]
-        unrealized_pnl = (
-            exchange_unrealized
-            if abs(exchange_unrealized) > 1e-8
-            else resolve_futures_display_unrealized(futures_account, usdt_capital["unrealized_pnl"])
+        unrealized_pnl = resolve_futures_display_unrealized(
+            futures_account, usdt_capital["unrealized_pnl"]
         )
         return {
             "source": "binance_futures_rest",
@@ -172,13 +166,13 @@ def build_futures_capital_from_binance(futures_account: dict | None) -> Dict[str
             "market_type": "USDT_M",
             "coin_margined_included": False,
             "treasury_assets": ["USDT"],
-            "wallet_balance": round(wallet_balance, 4),
+            "wallet_balance": usdt_capital["wallet_balance"],
             "usdt_asset_wallet_balance": usdt_capital["wallet_balance"],
-            "margin_balance": round(margin_balance, 4),
+            "margin_balance": usdt_capital["margin_balance"],
             "unrealized_pnl": round(unrealized_pnl, 4),
-            "available_balance": round(available_balance, 4),
+            "available_balance": usdt_capital["available_balance"],
             "account_total_margin_balance": round(exchange_margin, 4),
-            "using_exchange_summary": bool(exchange_margin or exchange_wallet),
+            "using_exchange_summary": False,
             "update_time": int(futures_account.get("update_time") or 0),
             "sync_status": str(futures_account.get("sync_status") or ""),
             "sync_error": str(futures_account.get("sync_error") or ""),
@@ -232,15 +226,16 @@ def build_ui_capital(
 
     spot_stable = spot["stable_total"] if spot_configured else 0.0
     futures_equity = futures["margin_balance"] if futures_configured else 0.0
-    # Most users operate U本位合約 testnet only; spot testnet balances can be unrelated.
-    combined = round(futures_equity if FUTURES_ONLY_TRADING else (spot_stable + futures_equity), 4)
+    # UI treasury total always includes configured spot + futures balances.
+    # FUTURES_ONLY_TRADING affects trading deployment gates, not display arithmetic.
+    combined = round(spot_stable + futures_equity, 4)
 
     assets = _treasury_assets()
     scope = "usdt_only_treasury" if assets == ("USDT",) else "multi_asset_treasury"
 
     return {
         "source": "binance_rest",
-        "display_scope": ("futures_only_total" if FUTURES_ONLY_TRADING else scope),
+        "display_scope": ("futures_only_trading_" + scope if FUTURES_ONLY_TRADING else scope),
         "treasury_assets": list(assets),
         "coin_margined_included": False,
         "futures_market_scope": "usdt_m",

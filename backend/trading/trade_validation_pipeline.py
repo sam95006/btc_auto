@@ -83,14 +83,14 @@ def _hard_learning_block(symbol, learning_guidance):
         return True, "learning_symbol_blacklisted"
     cooldown = dict(learning_guidance.get("symbol_cooldown") or {}).get(symbol) or {}
     if cooldown.get("active"):
-        if _sandbox_mode() and SANDBOX_SKIP_SYMBOL_COOLDOWN:
-            return False, None
         if cooldown.get("reason") == "exchange_liquidation":
+            # Liquidation cooldowns are hard safety and must not be softened by
+            # revenue-growth / learning-relaxed exploration modes.
             if _sandbox_mode() and SANDBOX_SKIP_LIQUIDATION_COOLDOWN:
                 return False, None
-            if _learning_relaxed():
-                return False, None
             return True, "learning_liquidation_cooldown"
+        if _sandbox_mode() and SANDBOX_SKIP_SYMBOL_COOLDOWN:
+            return False, None
     return False, None
 
 
@@ -258,7 +258,17 @@ class SimulationValidationEngine:
         liquidation_distance_pct = _safe_float(market_context.get("liquidation_distance_pct"))
         liquidation_risk = str(market_context.get("liquidation_risk") or "none").lower()
         oi_notional_status = str(market_context.get("oi_notional_status") or "healthy").lower()
-        truth_fresh = bool(truth_status.get("fresh_for_ai"))
+        market_type = str(proposal.get("market_type") or market_context.get("market_type") or "").lower()
+        if "fresh_for_ai" in truth_status:
+            truth_fresh = bool(truth_status.get("fresh_for_ai"))
+        elif market_type == "spot":
+            truth_fresh = bool(truth_status.get("spot_ready_for_ai"))
+        else:
+            # Futures / default: accept futures_ready_for_ai as truth freshness.
+            truth_fresh = bool(
+                truth_status.get("futures_ready_for_ai")
+                or truth_status.get("fresh_for_ai")
+            )
 
         approved = True
         reason = "execution_conditions_ok"
