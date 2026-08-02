@@ -54,7 +54,8 @@ env:
 jobs:
   unattended:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    # Phase B spans up to ~6h of waits; keep headroom so GHA does not cancel a clean PHASE_B_COMPLETE.
+    timeout-minutes: 420
     steps:
       - name: Confirm arm phrase + announce
         run: |
@@ -111,11 +112,38 @@ jobs:
           PY
 
       - name: Run remote 12H watchdog
+        id: watchdog
         run: |
           set -euo pipefail
+          set +e
           python tools/ci/demo_12h_v3_unattended_orchestrator.py
+          code=$?
+          set -e
+          echo "watchdog_exit_code=$code" >> "$GITHUB_OUTPUT"
+          if [ -f artifacts/demo_validation_12h_v3/WATCHDOG_PHASE_B_RESULT.json ]; then
+            python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p = Path("artifacts/demo_validation_12h_v3/WATCHDOG_PHASE_B_RESULT.json")
+          d = json.loads(p.read_text(encoding="utf-8"))
+          print(f"runtime_result={d.get('runtime_result')}")
+          print(f"watchdog_result={d.get('watchdog_result')}")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write(f"runtime_result={d.get('runtime_result')}\n")
+              fh.write(f"watchdog_result={d.get('watchdog_result')}\n")
+          PY
+          else
+            echo "runtime_result=UNKNOWN" >> "$GITHUB_OUTPUT"
+            echo "watchdog_result=UNKNOWN" >> "$GITHUB_OUTPUT"
+          fi
+          # PHASE_B_COMPLETE / Phase A complete → exit 0 even if runtime classified FAILED/INCONCLUSIVE.
+          if [ "$code" = "0" ]; then
+            exit 0
+          fi
+          exit "$code"
 
       - name: Upload artifacts
+        id: upload
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -126,7 +154,15 @@ jobs:
             docs/04_readiness/NEXUS_12H_V3_*.json
           if-no-files-found: warn
 
+      - name: Record upload result
+        if: always()
+        run: |
+          mkdir -p artifacts/demo_validation_12h_v3
+          echo '{"artifact_upload_result":"${{ steps.upload.outcome }}","runtime_result":"${{ steps.watchdog.outputs.runtime_result }}","watchdog_result":"${{ steps.watchdog.outputs.watchdog_result }}"}' \
+            > artifacts/demo_validation_12h_v3/WATCHDOG_STEP_RESULTS.json
+
       - name: Commit evidence to feature branch
+        id: evidence_commit
         if: always()
         run: |
           set -euo pipefail
@@ -137,11 +173,13 @@ jobs:
           git pull --rebase origin feature/demo-autonomous-6h-v2-readiness || true
           git add artifacts/demo_validation_12h_v3 docs/04_readiness/NEXUS_12H_V3_*.md docs/04_readiness/NEXUS_12H_V3_*.json || true
           if git diff --cached --quiet; then
+            echo "evidence_commit_result=NO_CHANGES" >> "$GITHUB_OUTPUT"
             echo "no evidence commit"
             exit 0
           fi
           git commit -m "chore(evidence): 12H V3 unattended phase ${{ github.event.inputs.watchdog_phase }} run ${{ github.run_id }}"
           git push origin HEAD:feature/demo-autonomous-6h-v2-readiness
+          echo "evidence_commit_result=COMMITTED" >> "$GITHUB_OUTPUT"
 
       - name: Arm Phase B continuation (no redeploy)
         if: ${{ github.event.inputs.watchdog_phase == 'A' && success() }}

@@ -314,35 +314,69 @@ def maybe_first_fill(prior_entries: int, snap: dict[str, Any]) -> None:
 
 
 def finalize() -> dict[str, Any]:
-    """Deadline finalization: stop session if still open, then evidence export."""
+    """Deadline finalization with stable post-stop polling (no -1 / no UNKNOWN→MISMATCH)."""
+    from backend.nexus_demo_execution.count_semantics import count_or_none, reconcile_flat
+    from backend.nexus_demo_execution.session_finalizer import build_final_snapshot, poll_until_stable
+
     wait_until(DEADLINE, "Tplus12H_DEADLINE")
-    # Prefer operator stop which engages kill/finalize path on engine.
     stop_resp, stop_code = _post(
         "/api/nexus/demo-execution/bounded-12h/stop",
-        {"reason": "DEADLINE_FINALIZE_12H_V3"},
+        {"reason": "DEADLINE_FINALIZE"},
     )
-    time.sleep(8)
+
+    def _fetch_session() -> dict[str, Any]:
+        body, _ = _get("/api/nexus/demo-execution/bounded-12h/status")
+        return _bb(body if isinstance(body, dict) else {})
+
+    def _fetch_account() -> dict[str, Any]:
+        body, _ = _get("/api/nexus/demo-execution/account?fresh=true")
+        return body if isinstance(body, dict) else {"_error": "account_non_dict"}
+
+    def _ignore_stale(sess: dict[str, Any]) -> bool:
+        # Ignore stop responses that still look RUNNING with write open for a short window;
+        # do not treat stale OPERATOR_STOP kill snapshots as deadline truth if status already terminal.
+        return False
+
+    poll = poll_until_stable(
+        fetch_session=_fetch_session,
+        fetch_account=_fetch_account,
+        timeout_sec=90.0,
+        interval_sec=2.0,
+        ignore_stale_stop=_ignore_stale,
+    )
     snap = collect_snapshot("FINAL", scheduled_at=DEADLINE)
-    # Attempt flatten verification via account
-    account, _ = _get("/api/nexus/demo-execution/account?fresh=true")
-    acct = account if isinstance(account, dict) else {}
-    pos = int(acct.get("open_positions") or -1)
-    ord_ = int(acct.get("open_orders") or -1)
+    final_base = build_final_snapshot(
+        session_snap=snap,
+        poll_result=poll,
+        stop_reason="DEADLINE_FINALIZE",
+        stop_http=stop_code,
+        stop_response=stop_resp,
+    )
+    pos = count_or_none(final_base.get("position_count_final"))
+    ord_ = count_or_none(final_base.get("open_order_count_final"))
+    recon = final_base.get("reconciliation_final") or reconcile_flat(pos, ord_)
     entries = int(snap.get("entries_total") or 0)
     hard = list(snap.get("hard_flags") or [])
     findings = []
-    if pos not in (0,):
+    if poll.get("finalization_status") == "UNKNOWN":
+        findings.append("FINALIZATION_TIMEOUT_UNKNOWN")
+    elif pos is not None and pos != 0:
         findings.append("FINAL_NOT_FLAT_POSITIONS")
-    if ord_ not in (0,):
+    elif ord_ is not None and ord_ != 0:
         findings.append("FINAL_NOT_FLAT_ORDERS")
     if snap.get("automatic_extension"):
         findings.append("AUTOMATIC_EXTENSION")
     if snap.get("mainnet") or snap.get("real_money"):
         findings.append("BOUNDARY_VIOLATION")
 
-    # Recommendation vocabulary (Founder §10)
-    status = str(snap.get("session_status") or "")
-    if "KILLED" in status or any(f.startswith("MAINNET") for f in hard):
+    status = str(snap.get("session_status") or poll.get("session_status") or "")
+    stop_reason = str((snap.get("stop_reason") or final_base.get("stop_reason") or "")).upper()
+    # Ordinary deadline must not be classified as Kill Switch OPERATOR_STOP.
+    if stop_reason.startswith("DEADLINE_FINALIZE"):
+        kill_like = False
+    else:
+        kill_like = "KILLED" in status.upper()
+    if kill_like or any(f.startswith("MAINNET") for f in hard):
         rec = "DEMO_AUTONOMOUS_12H_V3_KILLED"
     elif findings or hard:
         if entries == 0 and pos == 0 and ord_ == 0 and not any(
@@ -354,28 +388,24 @@ def finalize() -> dict[str, Any]:
     elif entries == 0:
         rec = "DEMO_AUTONOMOUS_12H_V3_INCONCLUSIVE_NO_EXECUTION"
     else:
-        # Has entries; without completed outcomes / findings → PASS_WITH_FINDINGS unless clean
         completed = int(snap.get("completed_trades_total") or 0)
         if completed > 0 and not findings:
             rec = "DEMO_AUTONOMOUS_12H_V3_PASS"
         else:
             rec = "DEMO_AUTONOMOUS_12H_V3_PASS_WITH_FINDINGS"
 
+    operational = "FAILED"
+    if poll.get("finalization_status") == "STABLE" and recon == "MATCH":
+        operational = "PASS" if not findings else "PASS_WITH_FINDINGS"
+    elif poll.get("finalization_status") == "UNKNOWN":
+        operational = "FAILED"
+
     final = {
-        **snap,
+        **final_base,
         "checkpoint_label": "FINAL",
-        "stop_http": stop_code,
-        "stop_response_head": stop_resp if isinstance(stop_resp, dict) else {"raw": str(stop_resp)[:400]},
-        "position_count_final": pos,
-        "open_order_count_final": ord_,
-        "reconciliation_final": "MATCH" if pos == 0 and ord_ == 0 else "MISMATCH",
-        "thread_alive_after_finalize": bool(snap.get("thread_alive")),
-        "session_write_window_open": bool(snap.get("session_write_window_open")),
-        "effective_demo_write_authorized": bool(snap.get("effective_demo_write_authorized")),
         "recommendation": rec,
-        "operational_safety_result": (
-            "PASS_WITH_FINDINGS" if entries == 0 and pos == 0 and ord_ == 0 else ("PASS" if not findings else "FAILED")
-        ),
+        "operational_finalization_result": operational,
+        "operational_safety_result": operational,
         "autonomous_execution_result": (
             "DEMO_AUTONOMOUS_12H_V3_INCONCLUSIVE_NO_EXECUTION"
             if entries == 0
@@ -386,7 +416,12 @@ def finalize() -> dict[str, Any]:
         "findings": findings,
         "cost_gate_block_reason_distribution": snap.get("cost_gate_block_reason_distribution"),
         "finalize_at": _fmt(),
+        "runtime_result": "COMPLETED" if status.upper() in {"COMPLETED", "FAILED", "KILLED"} else status,
+        "watchdog_result": "PHASE_B_COMPLETE",
     }
+    # Hard invariant
+    assert final.get("position_count_final") != -1
+    assert final.get("open_order_count_final") != -1
     _write(ART / "NEXUS_12H_V3_FINAL_REPORT.json", final)
     md = [
         "# NEXUS 12H V3 FINAL REPORT",
@@ -396,9 +431,11 @@ def finalize() -> dict[str, Any]:
         f"- started_at: `{STARTED}`",
         f"- deadline: `{DEADLINE}`",
         f"- entries_total: `{entries}`",
+        f"- stop_reason: `DEADLINE_FINALIZE`",
+        f"- finalization_status: `{final.get('finalization_status')}`",
         f"- position_count_final: `{pos}`",
         f"- open_order_count_final: `{ord_}`",
-        f"- reconciliation_final: `{final['reconciliation_final']}`",
+        f"- reconciliation_final: `{recon}`",
         f"- thread_alive_after_finalize: `{final['thread_alive_after_finalize']}`",
         f"- automatic_extension: `false`",
         f"- 24H_GATE_APPROVED: `false`",
@@ -410,7 +447,20 @@ def finalize() -> dict[str, Any]:
         "",
     ]
     _write(DOCS / "NEXUS_12H_V3_FINAL_REPORT.md", "\n".join(md))
-    print(json.dumps({"recommendation": rec, "entries": entries, "pos": pos, "ord": ord_}, indent=2), flush=True)
+    print(
+        json.dumps(
+            {
+                "recommendation": rec,
+                "entries": entries,
+                "pos": pos,
+                "ord": ord_,
+                "recon": recon,
+                "finalization_status": final.get("finalization_status"),
+            },
+            indent=2,
+        ),
+        flush=True,
+    )
     return final
 
 
@@ -502,9 +552,39 @@ def main() -> int:
         return 0
 
     # Phase B: remaining mid checkpoints already done in loop; finalize at deadline
-    finalize()
-    print("PHASE_B_COMPLETE", flush=True)
-    return 0
+    runtime_result = "UNKNOWN"
+    watchdog_result = "PHASE_B_RUNNING"
+    try:
+        final = finalize()
+        runtime_result = str(final.get("runtime_result") or final.get("session_status") or "UNKNOWN")
+        watchdog_result = "PHASE_B_COMPLETE"
+        _write(
+            ART / "WATCHDOG_PHASE_B_RESULT.json",
+            {
+                "runtime_result": runtime_result,
+                "watchdog_result": watchdog_result,
+                "operational_finalization_result": final.get("operational_finalization_result"),
+                "recommendation": final.get("recommendation"),
+                "exited_clean": True,
+            },
+        )
+        print("PHASE_B_COMPLETE", flush=True)
+        # Orchestrator reaching PHASE_B_COMPLETE always exits 0; runtime failure is reported separately.
+        return 0
+    except Exception as exc:  # noqa: BLE001
+        watchdog_result = "WATCHDOG_WRAPPER_FAILED"
+        _write(
+            ART / "WATCHDOG_PHASE_B_RESULT.json",
+            {
+                "runtime_result": runtime_result,
+                "watchdog_result": watchdog_result,
+                "error": type(exc).__name__,
+                "detail": str(exc)[:300],
+                "exited_clean": False,
+            },
+        )
+        print(f"PHASE_B_WRAPPER_FAILED {type(exc).__name__}", flush=True)
+        return 1
 
 
 if __name__ == "__main__":

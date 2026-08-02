@@ -1,0 +1,38 @@
+{
+  "session_id": "NEXUS-DEMO-12H-V3-20260801T181517Z-12hv3c01",
+  "current_account_state": "ACCOUNT_CONFIRMED_FLAT",
+  "current_position_count": 0,
+  "current_open_order_count": 0,
+  "current_reconciliation": "MATCH",
+  "finalizer_root_cause": "int(0 or -1) sentinel + stop reason hardcoded OPERATOR_STOP + no stable post-stop poll",
+  "finalizer_patch_complete": true,
+  "cost_gate_zero_pass_root_cause": "B+E+F: fixed \u00b10.8% geometry forces gross_rr=1.0; net_rr never reaches 1.2 under cost buffers; gate functioning as designed",
+  "candidate_replay_complete": true,
+  "instrument_qty_error_root_cause": "Primarily qty_step_rounding / min_order_qty under margin=20*lev=25 vs high mark / coarse qtyStep; classifier + deterministic step decimals patched",
+  "instrument_qty_patch_complete": true,
+  "wallet_delta_classification": "UNKNOWN",
+  "unattributed_wallet_delta": -0.97052039,
+  "watchdog_patch_complete": true,
+  "tests_passed": true,
+  "ci_status": "LOCAL_FORMAL_CI_PASSED",
+  "recommendation": "NEXUS_12H_FORENSIC_IN_PROGRESS",
+  "cost_gate_replay": {
+    "candidates_replayed": 2407,
+    "cost_gate_pass_total": 0,
+    "primary_root_cause": "B",
+    "root_cause_codes": [
+      "B",
+      "E",
+      "F"
+    ],
+    "source": "SYNTHETIC_FIXED_GEOMETRY"
+  },
+  "safety_freeze": {
+    "session_write_window_open": false,
+    "effective_demo_write_authorized": false,
+    "MAINNET": false,
+    "REAL_MONEY": false,
+    "24H_GATE_APPROVED": false,
+    "another_12h_started": false
+  }
+}

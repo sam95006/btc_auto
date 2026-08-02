@@ -1,0 +1,19 @@
+{
+  "starting_wallet": 5024.2482928,
+  "final_wallet": 5023.27777241,
+  "wallet_delta": -0.97052039,
+  "attributed_amount": 0.0,
+  "unattributed_amount": -0.97052039,
+  "classification": "UNKNOWN",
+  "bucket_totals": {},
+  "evidence_records": [
+    {
+      "class": "WALLET_SNAPSHOT_SEMANTIC_DIFFERENCE",
+      "wallet_balance": 5023.27777241,
+      "available_balance": 5028.60306306,
+      "equity": 5023.27777241,
+      "note": "available_balance \u2260 wallet_balance; do not treat as session PnL"
+    }
+  ],
+  "session_attribution_allowed": false
+}

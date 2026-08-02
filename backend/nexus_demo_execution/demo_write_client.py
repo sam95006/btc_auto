@@ -29,6 +29,8 @@ ALLOWED_PRIVATE_READ = frozenset(
         "/v5/order/history",
         "/v5/position/closed-pnl",
         "/v5/account/fee-rate",
+        "/v5/account/transaction-log",
+        "/v5/execution/list",
     }
 )
 SMOKE_SYMBOLS = frozenset({"BTCUSDT", "ETHUSDT"})
@@ -49,18 +51,33 @@ def _float(v: Any) -> float:
         return 0.0
 
 
+def _step_decimals(step: float) -> int:
+    """Deterministic decimal places for qty/price steps (handles non-power-of-10 ticks)."""
+    if step <= 0:
+        return 4
+    # Normalize via integer scaling to avoid float log10 edge cases (e.g. 0.00015).
+    text = f"{step:.16f}".rstrip("0").rstrip(".")
+    if "." not in text:
+        return 0
+    return len(text.split(".", 1)[1])
+
+
 def _round_qty(qty: float, step: float) -> str:
     if step <= 0:
         return f"{qty:.4f}".rstrip("0").rstrip(".")
-    precision = max(0, int(round(-math.log10(step)))) if step < 1 else 0
+    precision = _step_decimals(step)
     floored = math.floor(qty / step + 1e-12) * step
-    return f"{floored:.{precision}f}".rstrip("0").rstrip(".") or "0"
+    out = f"{floored:.{precision}f}"
+    # Preserve exact step precision for exchange validation; strip only pure trailing zeros beyond step.
+    if "." in out:
+        out = out.rstrip("0").rstrip(".")
+    return out or "0"
 
 
 def _round_price(price: float, tick: float) -> str:
     if tick <= 0:
         return f"{price:.2f}"
-    precision = max(0, int(round(-math.log10(tick)))) if tick < 1 else 0
+    precision = _step_decimals(tick)
     rounded = round(round(price / tick) * tick, precision)
     return f"{rounded:.{precision}f}"
 
@@ -196,11 +213,21 @@ class DemoWriteClient:
         rows = (data.get("result") or {}).get("list") or []
         if not rows:
             raise DemoWriteError("instrument_missing", symbol)
-        return rows[0]
+        info = rows[0]
+        status = str(info.get("status") or "").strip()
+        if status and status.upper() not in {"TRADING", "AVAILABLE", ""}:
+            raise DemoWriteError("instrument_status_invalid", f"{symbol}:{status}")
+        return info
 
     def qty_step(self, info: dict[str, Any]) -> float:
         lot = info.get("lotSizeFilter") or {}
-        return _float(lot.get("qtyStep") or lot.get("minOrderQty") or 0.001)
+        raw = lot.get("qtyStep")
+        if raw is None or raw == "":
+            raw = lot.get("minOrderQty")
+        step = _float(raw) if raw not in (None, "") else 0.0
+        if step <= 0:
+            raise DemoWriteError("qty_step", f"missing_or_invalid:{raw!r}")
+        return step
 
     def min_qty(self, info: dict[str, Any]) -> float:
         lot = info.get("lotSizeFilter") or {}
@@ -212,20 +239,31 @@ class DemoWriteClient:
 
     def tick_size(self, info: dict[str, Any]) -> float:
         pf = info.get("priceFilter") or {}
-        return _float(pf.get("tickSize") or 0.01)
+        tick = _float(pf.get("tickSize") or 0.0)
+        if tick <= 0:
+            raise DemoWriteError("price_tick", "missing_or_invalid")
+        return tick
 
     def compute_qty(self, *, margin_usdt: float, leverage: int, price: float, info: dict[str, Any]) -> str:
-        notional = margin_usdt * leverage
-        raw_qty = notional / price if price > 0 else 0.0
+        if price <= 0:
+            raise DemoWriteError("qty_invalid", "price_non_positive")
+        notional = float(margin_usdt) * int(leverage)
+        raw_qty = notional / price
         step = self.qty_step(info)
         qty_str = _round_qty(raw_qty, step)
         qty = _float(qty_str)
-        if qty < self.min_qty(info):
-            raise DemoWriteError("qty_below_min", qty_str)
-        if self.min_notional(info) > 0 and qty * price < self.min_notional(info):
-            raise DemoWriteError("notional_below_min", f"{qty * price}")
         if qty <= 0:
-            raise DemoWriteError("qty_invalid", qty_str)
+            # Floor-to-zero after step rounding under high mark / fixed margin.
+            raise DemoWriteError(
+                "qty_step_rounding",
+                f"raw={raw_qty:.12g};step={step};rounded={qty_str}",
+            )
+        min_q = self.min_qty(info)
+        if min_q > 0 and qty + 1e-15 < min_q:
+            raise DemoWriteError("qty_below_min", f"{qty_str}<{min_q}")
+        min_n = self.min_notional(info)
+        if min_n > 0 and qty * price + 1e-12 < min_n:
+            raise DemoWriteError("notional_below_min", f"{qty * price}<{min_n}")
         return qty_str
 
     def set_leverage(self, symbol: str, leverage: int) -> dict[str, Any]:
@@ -357,6 +395,30 @@ class DemoWriteClient:
     def fetch_fee_rate(self, symbol: str) -> float | None:
         """Backward-compatible taker rate or None (must not invent)."""
         return self.fetch_fee_rate_quote(symbol).usable_taker
+
+    def list_closed_pnl(self, *, symbol: str | None = None, limit: int = 50) -> list[dict[str, Any]]:
+        params: dict[str, Any] = {"category": "linear", "limit": str(max(1, min(100, int(limit))))}
+        if symbol:
+            params["symbol"] = symbol.upper()
+        data = self._get("/v5/position/closed-pnl", params)
+        return list((data.get("result") or {}).get("list") or [])
+
+    def list_executions(self, *, symbol: str | None = None, limit: int = 50) -> list[dict[str, Any]]:
+        params: dict[str, Any] = {"category": "linear", "limit": str(max(1, min(100, int(limit))))}
+        if symbol:
+            params["symbol"] = symbol.upper()
+        data = self._get("/v5/execution/list", params)
+        return list((data.get("result") or {}).get("list") or [])
+
+    def list_transaction_log(self, *, limit: int = 50, coin: str = "USDT") -> list[dict[str, Any]]:
+        params: dict[str, Any] = {
+            "accountType": "UNIFIED",
+            "category": "linear",
+            "currency": coin,
+            "limit": str(max(1, min(100, int(limit)))),
+        }
+        data = self._get("/v5/account/transaction-log", params)
+        return list((data.get("result") or {}).get("list") or [])
 
     def closed_pnl(self, symbol: str) -> dict[str, Any] | None:
         data = self._get(

@@ -606,6 +606,181 @@ def register_demo_execution_routes(app: Flask) -> None:
         payload["data_root"] = str(st.data_root)
         return jsonify(_wrap(payload))
 
+    @app.route("/api/nexus/demo-execution/persistence/stream/status")
+    def demo_execution_persistence_stream_status():
+        """Read-only stream inventory for forensic observability."""
+        st = get_demo_execution_state()
+        summary = st.persistence.summary()
+        return jsonify(
+            _wrap(
+                {
+                    "ok": True,
+                    "read_only": True,
+                    "persistence_blocked": st.persistence_blocked,
+                    "stream_counts": summary.get("stream_counts") or {},
+                    "db_path_present": bool(summary.get("db_path")),
+                }
+            )
+        )
+
+    @app.route("/api/nexus/demo-execution/persistence/stream/events")
+    def demo_execution_persistence_stream_events():
+        """Read-only recent forensic events (cost_gates + decision_deltas), redacted."""
+        from flask import request
+
+        from backend.nexus_demo_execution.http_demo_reader import redact_secrets
+
+        st = get_demo_execution_state()
+        try:
+            limit = min(1000, max(1, int(request.args.get("limit") or 100)))
+        except (TypeError, ValueError):
+            limit = 100
+        events: list[dict[str, Any]] = []
+        for stream in ("cost_gates", "decision_deltas", "session_checkpoints"):
+            for row in st.persistence.read_all(stream, limit=limit):
+                if isinstance(row, dict):
+                    safe = redact_secrets(row)
+                    safe["_stream"] = stream
+                    events.append(safe)
+        events.sort(key=lambda r: int(r.get("_record_id") or 0), reverse=True)
+        return jsonify(
+            _wrap(
+                {
+                    "ok": True,
+                    "read_only": True,
+                    "count": len(events[:limit]),
+                    "events": events[:limit],
+                }
+            )
+        )
+
+    @app.route("/api/nexus/demo-execution/persistence/stream/<stream_name>")
+    def demo_execution_persistence_stream(stream_name: str):
+        """Read-only forensic export of a persistence stream (redacted, bounded)."""
+        from flask import request
+
+        from backend.nexus_demo_execution.http_demo_reader import redact_secrets
+        from backend.nexus_demo_execution.persistence import STREAMS
+
+        # Reserved aliases handled by dedicated routes above.
+        if stream_name in {"status", "events"}:
+            return jsonify(_wrap({"ok": False, "reason": "use_dedicated_route", "stream": stream_name})), 404
+
+        st = get_demo_execution_state()
+        if stream_name not in STREAMS:
+            return jsonify(_wrap({"ok": False, "reason": "unknown_stream", "stream": stream_name})), 404
+        try:
+            limit = min(5000, max(1, int(request.args.get("limit") or 200)))
+            offset = max(0, int(request.args.get("offset") or 0))
+        except (TypeError, ValueError):
+            limit, offset = 200, 0
+        rows = st.persistence.read_all(stream_name, limit=limit, offset=offset)
+        safe_rows = [redact_secrets(r) if isinstance(r, dict) else r for r in rows]
+        return jsonify(
+            _wrap(
+                {
+                    "ok": True,
+                    "read_only": True,
+                    "stream": stream_name,
+                    "limit": limit,
+                    "offset": offset,
+                    "count": len(safe_rows),
+                    "rows": safe_rows,
+                }
+            )
+        )
+
+    @app.route("/api/nexus/demo-execution/account/forensic")
+    def demo_execution_account_forensic():
+        """Read-only private API verification for post-session forensic (no writes)."""
+        from backend.nexus_demo_execution.count_semantics import classify_account_flat, reconcile_flat
+        from backend.nexus_demo_execution.demo_write_client import DemoWriteClient, DemoWriteError
+        from backend.nexus_demo_execution.http_demo_reader import redact_secrets
+        from backend.nexus_demo_execution.wallet_delta_reconcile import reconcile_wallet_delta
+
+        st = get_demo_execution_state()
+        out: dict[str, Any] = {
+            "read_only": True,
+            "mainnet": False,
+            "real_money": False,
+            "position_count": None,
+            "open_order_count": None,
+            "conditional_order_count": None,
+            "reconciliation_status": "UNKNOWN",
+            "account_classification": "ACCOUNT_STATE_UNKNOWN",
+            "wallet_balance": None,
+            "equity": None,
+            "available_balance": None,
+            "lists": {},
+            "failures": {},
+        }
+        try:
+            snap = st.reader.read_with_constitution()
+            out["wallet_balance"] = snap.wallet_balance
+            out["equity"] = snap.equity
+            out["available_balance"] = snap.available_balance
+            out["position_count"] = len(snap.open_positions)
+            out["open_order_count"] = len(snap.open_orders)
+        except Exception as exc:  # noqa: BLE001
+            out["failures"]["account_snapshot"] = type(exc).__name__
+
+        writer = DemoWriteClient()
+        try:
+            positions = writer.list_positions()
+            out["position_count"] = len(positions)
+            out["lists"]["positions"] = [redact_secrets(r) for r in positions[:20] if isinstance(r, dict)]
+        except DemoWriteError as exc:
+            out["failures"]["positions"] = f"{exc.code}:{exc.detail}"[:200]
+            out["position_count"] = None
+        try:
+            orders = writer.list_open_orders()
+            out["open_order_count"] = len(orders)
+            out["conditional_order_count"] = sum(
+                1 for o in orders if str(o.get("stopOrderType") or o.get("orderType") or "").lower() not in {"", "market", "limit"}
+            )
+            out["lists"]["open_orders"] = [redact_secrets(r) for r in orders[:20] if isinstance(r, dict)]
+        except DemoWriteError as exc:
+            out["failures"]["open_orders"] = f"{exc.code}:{exc.detail}"[:200]
+            out["open_order_count"] = None
+            out["conditional_order_count"] = None
+        for key, fn in (
+            ("executions", lambda: writer.list_executions(limit=50)),
+            ("closed_pnl", lambda: writer.list_closed_pnl(limit=50)),
+            ("transaction_log", lambda: writer.list_transaction_log(limit=50)),
+        ):
+            try:
+                rows = fn()[:50]
+                out["lists"][key] = [redact_secrets(r) for r in rows if isinstance(r, dict)]
+            except DemoWriteError as exc:
+                out["failures"][key] = f"{exc.code}:{exc.detail}"[:200]
+            except Exception as exc:  # noqa: BLE001
+                out["failures"][key] = type(exc).__name__
+
+        pos = out["position_count"]
+        ord_ = out["open_order_count"]
+        out["reconciliation_status"] = reconcile_flat(pos, ord_)
+        out["account_classification"] = classify_account_flat(pos, ord_)
+
+        # Optional wallet delta vs known 12H V3 start if query params present.
+        from flask import request
+
+        start_w = request.args.get("starting_wallet")
+        if start_w is not None and out.get("wallet_balance") is not None:
+            try:
+                delta = reconcile_wallet_delta(
+                    starting_wallet=float(start_w),
+                    final_wallet=float(out["wallet_balance"]),
+                    closed_pnl_rows=out["lists"].get("closed_pnl") or [],
+                    execution_rows=out["lists"].get("executions") or [],
+                    transaction_rows=out["lists"].get("transaction_log") or [],
+                    available_balance=out.get("available_balance"),
+                    equity=out.get("equity"),
+                )
+                out["wallet_delta_reconcile"] = delta
+            except Exception as exc:  # noqa: BLE001
+                out["failures"]["wallet_delta"] = type(exc).__name__
+        return jsonify(_wrap(out))
+
     @app.route("/api/nexus/demo-execution/run-readonly-cycle", methods=["GET", "POST"])
     def demo_execution_run_readonly_cycle():
         """Trigger safe readonly validation cycle — live Demo GET when keyed; never exchange write."""
@@ -696,7 +871,11 @@ def register_demo_execution_routes(app: Flask) -> None:
 
     @app.route("/api/nexus/demo-execution/bounded-12h/stop", methods=["POST"])
     def demo_execution_bounded_12h_stop():
-        return jsonify(_wrap(get_demo_execution_state().stop_bounded_12h("OPERATOR_STOP")))
+        from flask import request
+
+        body = request.get_json(silent=True) or {}
+        reason = str(body.get("reason") or "OPERATOR_STOP").strip() or "OPERATOR_STOP"
+        return jsonify(_wrap(get_demo_execution_state().stop_bounded_12h(reason)))
 
     @app.route("/api/nexus/demo-execution/same-router-probe", methods=["POST"])
     def demo_execution_same_router_probe():

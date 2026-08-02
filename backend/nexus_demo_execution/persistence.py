@@ -97,6 +97,8 @@ class DemoExecutionPersistence:
         account_epoch: str | None = None,
         from_id: int | None = None,
         to_id: int | None = None,
+        limit: int | None = None,
+        offset: int = 0,
     ) -> list[dict[str, Any]]:
         query = "SELECT id, payload FROM demo_execution_records WHERE stream = ?"
         params: list[Any] = [stream]
@@ -110,6 +112,12 @@ class DemoExecutionPersistence:
             query += " AND id <= ?"
             params.append(to_id)
         query += " ORDER BY id ASC"
+        if limit is not None:
+            query += " LIMIT ?"
+            params.append(int(limit))
+            if offset:
+                query += " OFFSET ?"
+                params.append(int(offset))
         with sqlite3.connect(self.db_path) as conn:
             cur = conn.execute(query, params)
             rows = []

@@ -179,6 +179,28 @@ class BoundedAutonomousSessionEngine:
             "risk_critic_block_total": 0,
             "mistake_guard_evaluated_total": 0,
             "mistake_guard_block_total": 0,
+            "instrument_qty_error_distribution": {},
+            "instrument_qty_error_by_symbol": {},
+            "completed_trades_total": 0,
+            "duplicate_intent_count": 0,
+            "duplicate_entry_order_count": 0,
+            "protection_incident_count": 0,
+            "reconciliation_incident_count": 0,
+            "similar_case_matches": 0,
+            "slippage": None,
+            "maximum_drawdown": None,
+            "observability": {
+                "completed_trades_total": "ZERO_WITH_EVIDENCE",
+                "slippage": "NOT_APPLICABLE",
+                "maximum_drawdown": "NOT_APPLICABLE",
+                "duplicate_intent_count": "ZERO_WITH_EVIDENCE",
+                "duplicate_entry_order_count": "ZERO_WITH_EVIDENCE",
+                "protection_incident_count": "ZERO_WITH_EVIDENCE",
+                "reconciliation_incident_count": "ZERO_WITH_EVIDENCE",
+                "leader_lock_status": "AVAILABLE",
+                "similar_case_matches": "ZERO_WITH_EVIDENCE",
+            },
+            "leader_lock_status": "HELD",
         }
 
     def start(self) -> dict[str, Any]:
@@ -224,9 +246,22 @@ class BoundedAutonomousSessionEngine:
             return redact_secrets({"ok": True, "session_id": self.session_id, "status": "STARTING"})
 
     def stop(self, reason: str = "OPERATOR_STOP") -> None:
+        """Stop session loop. Ordinary deadline finalize must NOT engage Kill Switch."""
+        reason = (reason or "OPERATOR_STOP").strip() or "OPERATOR_STOP"
         self._stop.set()
         with self._lock:
             self._state["stop_reason"] = reason
+            if reason.upper().startswith("DEADLINE_FINALIZE"):
+                self._state["status"] = "FINALIZING"
+        # Deadline / orderly finalize: close write window without Kill Switch.
+        if reason.upper().startswith("DEADLINE_FINALIZE"):
+            self.session_write_enabled = False
+            self.session_autonomous_enabled = False
+            try:
+                self.gate.close_smoke_write_window()
+            except Exception:
+                pass
+            return
         if reason and not self.kill_switch.engaged:
             self.kill_switch.engage(reason, trigger=KillSwitchTrigger.OPERATOR_STOP)
             with self._lock:
@@ -235,10 +270,34 @@ class BoundedAutonomousSessionEngine:
     def status(self) -> dict[str, Any]:
         with self._lock:
             snap = dict(self._state)
+            obs = dict(snap.get("observability") or {})
+            # Keep aliases synchronized without converting missing → zero silently.
+            snap["completed_trades_total"] = int(snap.get("trades_completed") or 0)
+            snap["duplicate_entry_order_count"] = int(snap.get("duplicate_order_incidents") or 0)
+            snap["duplicate_intent_count"] = int(snap.get("duplicate_intent_count") or snap.get("duplicate_order_incidents") or 0)
+            snap["protection_incident_count"] = int(snap.get("protection_incidents") or 0)
+            snap["reconciliation_incident_count"] = int(snap.get("reconciliation_incidents") or 0)
+            if int(snap.get("entries_total") or 0) == 0:
+                obs.setdefault("slippage", "NOT_APPLICABLE")
+                obs.setdefault("maximum_drawdown", "NOT_APPLICABLE")
+                obs.setdefault("completed_trades_total", "ZERO_WITH_EVIDENCE")
+            obs.setdefault("duplicate_intent_count", "ZERO_WITH_EVIDENCE")
+            obs.setdefault("duplicate_entry_order_count", "ZERO_WITH_EVIDENCE")
+            obs.setdefault("protection_incident_count", "ZERO_WITH_EVIDENCE")
+            obs.setdefault("reconciliation_incident_count", "ZERO_WITH_EVIDENCE")
+            obs.setdefault("similar_case_matches", "ZERO_WITH_EVIDENCE")
+            obs["leader_lock_status"] = "AVAILABLE" if snap.get("leader_lock_status") else "UNKNOWN"
+            snap["observability"] = obs
             snap.update(
                 {
                     "session_write_enabled": self.session_write_enabled,
                     "session_autonomous_enabled": self.session_autonomous_enabled,
+                    "session_write_window_open": bool(
+                        self.session_write_enabled or getattr(self.gate, "smoke_write_window_open", False)
+                    ),
+                    "effective_demo_write_authorized": bool(
+                        self.session_write_enabled and getattr(self.gate, "smoke_write_window_open", False)
+                    ),
                     "gate_autonomous_mode": getattr(
                         getattr(self.gate, "autonomous_mode", None), "value", "DEMO_AUTONOMOUS_DISABLED"
                     ),
@@ -347,7 +406,12 @@ class BoundedAutonomousSessionEngine:
             self._force_flat(active.get("symbol", ""), active.get("side", "Buy"), str(active.get("qty") or "0"))
             self._record_exit(active, "SESSION_END", export_root, account_epoch)
 
-        self._finalize("duration" if time.time() >= deadline else (self._state.get("stop_reason") or "completed"))
+        # Ordinary deadline completion uses DEADLINE_FINALIZE (not Kill Switch / OPERATOR_STOP).
+        if time.time() >= deadline:
+            finalize_reason = "DEADLINE_FINALIZE"
+        else:
+            finalize_reason = str(self._state.get("stop_reason") or "completed")
+        self._finalize(finalize_reason)
 
     def _seed_baseline_memory(self, account_epoch: str) -> None:
         try:
@@ -382,6 +446,9 @@ class BoundedAutonomousSessionEngine:
         if positions or orders:
             with self._lock:
                 self._state["duplicate_order_incidents"] += 1
+                self._state["duplicate_entry_order_count"] = int(
+                    self._state.get("duplicate_order_incidents") or 0
+                )
             self._kill("not_flat_before_entry", KillSwitchTrigger.GATE_FAILURE)
             return None
 
@@ -453,12 +520,29 @@ class BoundedAutonomousSessionEngine:
                     margin_usdt=decision.margin_usdt, leverage=self.policy.leverage, price=price, info=info
                 )
                 tick = self.writer.tick_size(info)
-            except DemoWriteError:
+            except DemoWriteError as exc:
+                from backend.nexus_demo_execution.instrument_qty_classify import classify_from_exc
+
+                sub = classify_from_exc(exc)
                 with self._lock:
                     self._state["pre_cost_drop_total"] += 1
+                    self._state["pre_cost_silent_drop_total"] = int(
+                        self._state.get("pre_cost_silent_drop_total") or 0
+                    ) + 1
                     dist = dict(self._state.get("pre_cost_drop_reason_distribution") or {})
                     dist["INSTRUMENT_OR_QTY_ERROR"] = int(dist.get("INSTRUMENT_OR_QTY_ERROR") or 0) + 1
                     self._state["pre_cost_drop_reason_distribution"] = dist
+                    sub_dist = dict(self._state.get("instrument_qty_error_distribution") or {})
+                    sub_dist[sub] = int(sub_dist.get(sub) or 0) + 1
+                    self._state["instrument_qty_error_distribution"] = sub_dist
+                    by_sym = dict(self._state.get("instrument_qty_error_by_symbol") or {})
+                    sym_bucket = dict(by_sym.get(cand.symbol) or {})
+                    sym_bucket[sub] = int(sym_bucket.get(sub) or 0) + 1
+                    by_sym[cand.symbol] = sym_bucket
+                    self._state["instrument_qty_error_by_symbol"] = by_sym
+                    silent = dict(self._state.get("pre_cost_silent_drop_reason_distribution") or {})
+                    silent[sub] = int(silent.get(sub) or 0) + 1
+                    self._state["pre_cost_silent_drop_reason_distribution"] = silent
                 continue
 
             if cand.direction == "Buy":
@@ -568,6 +652,7 @@ class BoundedAutonomousSessionEngine:
             if not ok:
                 with self._lock:
                     self._state["protection_incidents"] += 1
+                    self._state["protection_incident_count"] = int(self._state.get("protection_incidents") or 0)
                 self._force_flat(cand.symbol, str(pos.get("side") or cand.direction), str(pos.get("size") or qty))
                 self._kill("unprotected", KillSwitchTrigger.PROTECTION_NOT_VERIFIED)
                 return None
@@ -635,6 +720,9 @@ class BoundedAutonomousSessionEngine:
                 process_ok = False
                 with self._lock:
                     self._state["reconciliation_incidents"] += 1
+                    self._state["reconciliation_incident_count"] = int(
+                        self._state.get("reconciliation_incidents") or 0
+                    )
         except Exception:
             process_ok = False
 
@@ -691,6 +779,12 @@ class BoundedAutonomousSessionEngine:
         with self._lock:
             st = self._state
             st["trades_completed"] += 1
+            st["completed_trades_total"] = int(st.get("trades_completed") or 0)
+            obs = dict(st.get("observability") or {})
+            obs["completed_trades_total"] = "AVAILABLE"
+            obs["slippage"] = "AVAILABLE" if st.get("slippage") is not None else "UNKNOWN"
+            obs["maximum_drawdown"] = "AVAILABLE" if st.get("maximum_drawdown") is not None else "UNKNOWN"
+            st["observability"] = obs
             if gross is not None:
                 st["gross_pnl"] += gross
             if entry_fee is not None:
@@ -756,9 +850,15 @@ class BoundedAutonomousSessionEngine:
         self.gate.close_smoke_write_window()
 
     def _finalize(self, reason: str) -> None:
+        from backend.nexus_demo_execution.count_semantics import reconcile_flat
+
         export_root = Path(self._state.get("export_path") or (self.export_dir / f"session_{self.session_id}"))
         export_root.mkdir(parents=True, exist_ok=True)
         account_epoch = str(self._state.get("account_epoch") or "")
+        with self._lock:
+            self._state["status"] = "FINALIZING"
+            if reason and str(reason).upper().startswith("DEADLINE"):
+                self._state["stop_reason"] = reason
 
         # Ensure flat
         try:
@@ -769,23 +869,38 @@ class BoundedAutonomousSessionEngine:
 
         ending_wallet = self._state.get("starting_wallet", 0.0)
         ending_equity = self._state.get("starting_equity", 0.0)
-        final_pos = final_ord = -1
+        final_pos: int | None = None
+        final_ord: int | None = None
+        recon_final = "UNKNOWN"
         try:
             after = self.reader.read_with_constitution()
             ending_wallet, ending_equity = after.wallet_balance, after.equity
-            final_pos, final_ord = len(after.open_positions), len(after.open_orders)
+            final_pos = len(after.open_positions)
+            final_ord = len(after.open_orders)
             recon = self.reconciler.reconcile(
                 local_positions=[],
                 local_orders=[],
                 remote_positions=after.open_positions,
                 remote_orders=after.open_orders,
             )
-            if recon.state != ReconciliationState.MATCH or final_pos or final_ord:
+            recon_final = reconcile_flat(final_pos, final_ord)
+            if recon.state != ReconciliationState.MATCH or (final_pos or final_ord):
                 with self._lock:
                     self._state["reconciliation_incidents"] += 1
+                    self._state["reconciliation_incident_count"] = int(
+                        self._state.get("reconciliation_incidents") or 0
+                    )
+                    if recon_final == "MATCH" and recon.state != ReconciliationState.MATCH:
+                        recon_final = "MISMATCH"
         except Exception:
             with self._lock:
                 self._state["reconciliation_incidents"] += 1
+                self._state["reconciliation_incident_count"] = int(
+                    self._state.get("reconciliation_incidents") or 0
+                )
+            final_pos = None
+            final_ord = None
+            recon_final = "UNKNOWN"
 
         self.session_write_enabled = False
         self.session_autonomous_enabled = False
@@ -796,8 +911,28 @@ class BoundedAutonomousSessionEngine:
             except Exception:
                 pass
 
+        with self._lock:
+            self._state["completed_trades_total"] = int(self._state.get("trades_completed") or 0)
+            self._state["duplicate_entry_order_count"] = int(self._state.get("duplicate_order_incidents") or 0)
+            self._state["duplicate_intent_count"] = int(self._state.get("duplicate_order_incidents") or 0)
+            self._state["protection_incident_count"] = int(self._state.get("protection_incidents") or 0)
+            self._state["reconciliation_incident_count"] = int(self._state.get("reconciliation_incidents") or 0)
+            # Zero-entry session: slippage/drawdown are N/A, not silent zeros.
+            obs = dict(self._state.get("observability") or {})
+            if int(self._state.get("entries_total") or 0) == 0:
+                obs["slippage"] = "NOT_APPLICABLE"
+                obs["maximum_drawdown"] = "NOT_APPLICABLE"
+                obs["completed_trades_total"] = "ZERO_WITH_EVIDENCE"
+            self._state["observability"] = obs
+
         rec = self._recommend()
         ended = time.time()
+        # Ordinary deadline completion is COMPLETED, not KILLED.
+        terminal = "COMPLETED"
+        if self.kill_switch.engaged and not str(self._state.get("stop_reason") or "").upper().startswith(
+            "DEADLINE_FINALIZE"
+        ):
+            terminal = "KILLED"
         summary = redact_secrets(
             {
                 **{k: self._state[k] for k in self._state if k != "runtime_identity"},
@@ -806,6 +941,9 @@ class BoundedAutonomousSessionEngine:
                 "ending_equity": ending_equity,
                 "final_position_count": final_pos,
                 "final_open_order_count": final_ord,
+                "position_count_final": final_pos,
+                "open_order_count_final": final_ord,
+                "reconciliation_final": recon_final,
                 "demo_autonomous_final": False,
                 "exchange_write_final": False,
                 "recommendation": rec,
@@ -822,12 +960,16 @@ class BoundedAutonomousSessionEngine:
         with self._lock:
             self._state.update(
                 {
-                    "status": "COMPLETED",
+                    "status": terminal,
                     "ended_at": ended,
                     "ending_wallet": ending_wallet,
                     "ending_equity": ending_equity,
                     "recommendation": rec,
                     "export_path": str(export_root),
+                    "position_count_final": final_pos,
+                    "open_order_count_final": final_ord,
+                    "reconciliation_final": recon_final,
+                    "session_write_enabled": False,
                 }
             )
 
@@ -851,7 +993,12 @@ class BoundedAutonomousSessionEngine:
         inconclusive = next((r for r in recs if "INCONCLUSIVE" in r), failed)
         pass_findings = next((r for r in recs if "PASS_WITH_FINDINGS" in r), failed)
         passed = next((r for r in recs if r.endswith("_PASS")), failed)
-        if self.kill_switch.engaged or st.get("kill_switch_events", 0) > 0:
+        stop_reason = str(st.get("stop_reason") or "")
+        # Deadline finalize must not be classified as Kill Switch failure.
+        if stop_reason.upper().startswith("DEADLINE_FINALIZE"):
+            if st.get("entries_total", 0) == 0:
+                return inconclusive
+        elif self.kill_switch.engaged or st.get("kill_switch_events", 0) > 0:
             return failed
         findings = (
             st.get("bad_process_wins", 0)
