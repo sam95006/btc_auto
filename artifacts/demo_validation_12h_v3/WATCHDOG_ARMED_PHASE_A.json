@@ -1,0 +1,39 @@
+{
+  "remote_watchdog_armed": true,
+  "local_computer_dependency": false,
+  "phase": "A",
+  "session_id": "NEXUS-DEMO-12H-V3-20260801T181517Z-12hv3c01",
+  "started_at": "2026-08-01T18:15:17Z",
+  "deadline": "2026-08-02T06:15:17Z",
+  "deployment_commit": "63a4c17d80e988756493bc035beb594157342aa5",
+  "checkpoints": [
+    [
+      "Tplus15m",
+      "2026-08-01T18:30:17Z"
+    ],
+    [
+      "Tplus30m",
+      "2026-08-01T18:45:17Z"
+    ],
+    [
+      "Tplus1H",
+      "2026-08-01T19:15:17Z"
+    ],
+    [
+      "Tplus2H",
+      "2026-08-01T20:15:17Z"
+    ],
+    [
+      "Tplus4H",
+      "2026-08-01T22:15:17Z"
+    ],
+    [
+      "Tplus6H",
+      "2026-08-02T00:15:17Z"
+    ]
+  ],
+  "armed_at": "2026-08-01T18:47:02Z",
+  "get_only_until_final": true,
+  "redeploy_forbidden": true,
+  "24H_GATE_APPROVED": false
+}
