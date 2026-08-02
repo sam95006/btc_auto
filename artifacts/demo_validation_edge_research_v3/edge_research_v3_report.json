@@ -3741,5 +3741,28 @@
     "REAL_MONEY": false,
     "24H_GATE_APPROVED": false
   },
-  "recommendation": "NEXUS_NEW_OOS_PLAN_READY"
+  "recommendation": "NEXUS_NEW_OOS_PLAN_READY",
+  "new_untouched_oos_plan": {
+    "reserved_start": 1785663000001,
+    "reserved_end": 1789551000000,
+    "symbols": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "SOLUSDT",
+      "XRPUSDT",
+      "DOGEUSDT"
+    ],
+    "intervals": [
+      "15",
+      "60",
+      "240"
+    ],
+    "created_before_download": true,
+    "downloaded": false,
+    "executed": false,
+    "status": "NEW_UNTOUCHED_OOS_PLAN_READY",
+    "note": "Reserved only because H3D/H3E WALK_FORWARD_VALIDATED; not executed in this wave",
+    "data_checksum": "0e1297342e9cd58c63f2a658ce3f9f86a348d19e3814447299550f63d2db2401"
+  },
+  "h2_holding_redesign_note": "H2D median holding bars=17 vs V2 ~5; gross_move_to_cost median~5.3 but still NO_GROSS_EDGE/REJECTED"
 }
