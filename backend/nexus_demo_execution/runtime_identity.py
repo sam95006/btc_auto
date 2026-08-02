@@ -230,6 +230,8 @@ class RuntimeIdentity:
             "image_deployment_commit": baked,
             "session_created_by_commit": self.extra.get("session_created_by_commit", "UNKNOWN"),
             "environment_label_commit": (os.environ.get("NEXUS_DEPLOYMENT_ID") or "UNKNOWN")[:64],
+            "expected_deployment_commit": (os.environ.get("EXPECTED_DEPLOYMENT_COMMIT") or "")[:64] or None,
+            "env_github_sha": (os.environ.get("GITHUB_SHA") or "")[:64] or None,
         }
 
 
@@ -258,7 +260,12 @@ def capture_runtime_identity(
         source = baked
 
     persistent = read_persistent_state_commits(data_root)
-    expected = expected_deployment_commit or (os.environ.get("EXPECTED_DEPLOYMENT_COMMIT") or "").strip() or None
+    expected = expected_deployment_commit
+    if expected is None:
+        # Only explicit EXPECTED_DEPLOYMENT_COMMIT is proof target.
+        # Do NOT fall back to GITHUB_SHA — platform/env may retain a stale SHA and
+        # falsely classify a correct bake as MISMATCH.
+        expected = (os.environ.get("EXPECTED_DEPLOYMENT_COMMIT") or "").strip() or None
     identity_class = classify_identity_confirmed(
         runtime_current_code_commit=code_commit,
         container_baked_commit=baked,

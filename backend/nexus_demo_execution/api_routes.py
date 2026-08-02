@@ -219,8 +219,7 @@ class DemoExecutionApiState:
                 service_name=SERVICE_NAME,
                 data_root=self.data_root,
                 expected_deployment_commit=(
-                    (os.environ.get("EXPECTED_DEPLOYMENT_COMMIT") or os.environ.get("GITHUB_SHA") or "").strip()
-                    or None
+                    (os.environ.get("EXPECTED_DEPLOYMENT_COMMIT") or "").strip() or None
                 ),
             ).to_dict()
         except Exception:
@@ -568,7 +567,7 @@ def register_demo_execution_routes(app: Flask) -> None:
 
         st = get_demo_execution_state()
         epoch_sum = st.epoch_tracker.summary()
-        expected = (os.environ.get("EXPECTED_DEPLOYMENT_COMMIT") or os.environ.get("GITHUB_SHA") or "").strip() or None
+        expected = (os.environ.get("EXPECTED_DEPLOYMENT_COMMIT") or "").strip() or None
         identity = capture_runtime_identity(
             account_epoch=str(epoch_sum.get("account_epoch") or ""),
             policy_version="demo-autonomous-12h-v3-bounded",

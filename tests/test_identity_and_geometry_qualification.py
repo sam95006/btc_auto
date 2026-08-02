@@ -90,7 +90,28 @@ def test_persistent_identity_preserved_as_metadata(monkeypatch, tmp_path: Path):
     assert (art / "DEPLOYMENT_COMMIT").read_text(encoding="utf-8").strip().startswith("oldpersistent")
 
 
-def test_identity_mismatch_when_expected_differs(monkeypatch, tmp_path: Path):
+def test_stale_github_sha_env_does_not_force_mismatch(monkeypatch, tmp_path: Path):
+    baked = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    monkeypatch.setattr(
+        "backend.nexus_demo_execution.runtime_identity.read_container_baked_commit",
+        lambda: (baked, "file:/app/DEPLOYMENT_COMMIT"),
+    )
+    monkeypatch.setattr(
+        "backend.nexus_demo_execution.runtime_identity.read_container_source_commit",
+        lambda: (baked, "file:/app/SOURCE_COMMIT"),
+    )
+    monkeypatch.setenv("GITHUB_SHA", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+    monkeypatch.delenv("EXPECTED_DEPLOYMENT_COMMIT", raising=False)
+    ident = capture_runtime_identity(
+        account_epoch="e1",
+        policy_version="p",
+        schema_version="s",
+        service_name="t",
+        data_root=tmp_path,
+    )
+    assert ident.runtime_current_code_commit.startswith("bbbb")
+    assert ident.identity_class == "RUNTIME_IDENTITY_CONFIRMED"
+
     baked = "ffffffffffffffffffffffffffffffffffffffff"
     monkeypatch.setattr(
         "backend.nexus_demo_execution.runtime_identity.read_container_baked_commit",
