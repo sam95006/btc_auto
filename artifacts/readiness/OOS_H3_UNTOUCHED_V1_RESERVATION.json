@@ -1,0 +1,48 @@
+{
+  "reservation_id": "OOS_H3_UNTOUCHED_V1_RESERVED",
+  "reserved_start": 1785663000001,
+  "reserved_end": 1789551000000,
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+    "DOGEUSDT"
+  ],
+  "intervals": [
+    "15",
+    "60",
+    "240"
+  ],
+  "expected_data_sources": {
+    "klines": "bybit_demo_public_v5_market_kline",
+    "funding": "bybit_demo_public_v5_market_funding_history",
+    "open_interest": "bybit_demo_public_v5_market_open_interest",
+    "trade_flow": "INSUFFICIENT_HISTORY",
+    "cvd": "INSUFFICIENT_HISTORY"
+  },
+  "primary_policy_id": "H3E_OOS_POLICY_V1_FROZEN",
+  "confirmatory_policy_id": "H3D_OOS_POLICY_V1_FROZEN",
+  "exploratory_only": [
+    "H3G_trend_down_oi_continuation"
+  ],
+  "excluded_from_qualification_oos": [
+    "H1*",
+    "H2*"
+  ],
+  "created_before_download": true,
+  "downloaded": false,
+  "executed": false,
+  "checksum": null,
+  "checks": {
+    "no_overlap_with_training": true,
+    "no_overlap_with_validation": true,
+    "no_overlap_with_consumed_failed_oos": true,
+    "chronologically_later": true,
+    "consumed_oos_id": "OOS_REAL_MARKET_2026Q_FAILED_HOLDOUT_e186d13"
+  },
+  "download_requires_exact_phrase": "APPROVE_NEXUS_H3_UNTOUCHED_OOS_V1",
+  "outcome_data_exposed": false,
+  "source_plan_checksum": "0e1297342e9cd58c63f2a658ce3f9f86a348d19e3814447299550f63d2db2401",
+  "created_at": "2026-08-02T15:57:33Z"
+}

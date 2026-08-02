@@ -135,9 +135,8 @@ jobs:
           cands = [
               Path("""${{ github.event.inputs.observation_report_path }}"""),
               Path("docs/04_readiness/NEXUS_SINGLE_SERVICE_OPERATIONAL_OBSERVATION_ABORTED_REPORT.md"),
-              Path("docs/04_readiness/NEXUS_SINGLE_SERVICE_24H_OPERATIONAL_FINAL_REPORT.md"),
-              Path("artifacts/single_service_observation/observation_aborted.json"),
-              Path("artifacts/single_service_observation/final_pass.json"),
+              Path("docs/04_readiness/NEXUS_READINESS_SOT.md"),
+              Path("artifacts/readiness/immutable/6h_final/forensic_zero_execution.json"),
           ]
           path = next((p for p in cands if p.exists()), None)
           if path is None:

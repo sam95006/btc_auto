@@ -1,1 +1,0 @@
-[31mERROR[0m	no build logs available: this service was started from a container image and was not built on Zeabur

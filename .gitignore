@@ -39,6 +39,15 @@ scratch/
 !/static/nexus/assets/**
 tools/deploy/*.ps1
 
-artifacts/demo_validation_geometry_market_oos/market_cache/
-artifacts/demo_validation_edge_research_v2/market_cache/
-artifacts/demo_validation_edge_research_v3/micro_cache/
+# Raw market / microstructure caches — reproducible from manifests only
+**/market_cache/
+**/micro_cache/
+artifacts/**/market_cache/**
+artifacts/**/micro_cache/**
+artifacts/_gha_*/
+*.stdout.txt
+*_live.json
+12h_*.json
+pr24_*.json
+pr24_*.md
+DEPLOYMENT_COMMIT

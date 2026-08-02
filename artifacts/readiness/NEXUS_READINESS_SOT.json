@@ -1,0 +1,124 @@
+{
+  "schema_version": "nexus_readiness_sot_v1",
+  "updated_at": "2026-08-02T15:57:33Z",
+  "pr": 24,
+  "pr_draft": true,
+  "pr_merged": false,
+  "pr_head": "ce661009d26df73fd369560dbe5c0220c28a079e",
+  "edge_research_v3_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+  "system_stage": "OOS_PREFLIGHT_FROZEN_AWAITING_FOUNDER_PHRASE",
+  "current_approved_strategies": {
+    "PRIMARY_QUALIFICATION_COHORT": "H3E",
+    "CONFIRMATORY_COHORT": "H3D",
+    "EXPLORATORY_ONLY": "H3G"
+  },
+  "rejected_strategies": {
+    "H1": "INSUFFICIENT_SAMPLE / TARGET_TOO_CLOSE",
+    "H2": "REJECTED / NO_GROSS_EDGE / COST_DOMINATED_CHURN"
+  },
+  "consumed_datasets": {
+    "research_wave_v2_status": "CONSUMED_NO_VALIDATED_COHORT",
+    "consumed_failed_oos_id": "OOS_REAL_MARKET_2026Q_FAILED_HOLDOUT_e186d13",
+    "oos_cohort_status": "CONSUMED_FAILED_HOLDOUT"
+  },
+  "h3e": {
+    "status": "WALK_FORWARD_VALIDATED",
+    "policy_id": "H3E_OOS_POLICY_V1_FROZEN",
+    "policy_checksum": "bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33",
+    "completed_trades": 109,
+    "net_expectancy": 0.23973877816513764,
+    "base_pf": 1.164216,
+    "adverse_pf": 1.051885,
+    "cost_gate_pass_rate": 0.11323529411764706
+  },
+  "h3d": {
+    "status": "WALK_FORWARD_VALIDATED",
+    "policy_id": "H3D_OOS_POLICY_V1_FROZEN",
+    "policy_checksum": "d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7"
+  },
+  "h3g": {
+    "status": "REPLAY_VALIDATED",
+    "role": "EXPLORATORY_ONLY"
+  },
+  "h1": {
+    "status": "INSUFFICIENT_SAMPLE",
+    "hypothesis_id": "H1D_60m_support_break_15m_failed_retest",
+    "completed_trades": 0,
+    "cost_gate_pass_rate": null,
+    "net_expectancy": null,
+    "base_pf": null,
+    "adverse_pf": null,
+    "median_holding_bars": null,
+    "median_gross_move_to_cost": null,
+    "edge": "INSUFFICIENT_SAMPLE",
+    "candidates": 0,
+    "trend_events": null
+  },
+  "h2": {
+    "status": "REJECTED",
+    "hypothesis_id": "H2D_60m_upper_reject_to_vwap",
+    "completed_trades": 250,
+    "cost_gate_pass_rate": 0.8516320474777448,
+    "net_expectancy": -0.78386667448,
+    "base_pf": 0.66318,
+    "adverse_pf": 0.592254,
+    "median_holding_bars": 17.0,
+    "median_gross_move_to_cost": 5.278724073824618,
+    "edge": "NO_GROSS_EDGE",
+    "candidates": 337,
+    "trend_events": null
+  },
+  "oos": {
+    "reservation_id": "OOS_H3_UNTOUCHED_V1_RESERVED",
+    "reserved_start": 1785663000001,
+    "reserved_end": 1789551000000,
+    "downloaded": false,
+    "executed": false,
+    "requires_phrase": "APPROVE_NEXUS_H3_UNTOUCHED_OOS_V1"
+  },
+  "safety": {
+    "EXCHANGE_WRITE": false,
+    "DEMO_AUTONOMOUS_ENABLED": false,
+    "MAINNET": false,
+    "REAL_MONEY": false,
+    "24H_GATE_APPROVED": false,
+    "NO_6H": true,
+    "NO_12H": true,
+    "NO_24H": true,
+    "NO_SHADOW": true,
+    "NO_CANARY": true
+  },
+  "account_state": {
+    "wallet_delta_classification": "UNKNOWN",
+    "wallet_delta_unattributed": -0.97052039
+  },
+  "blockers": [
+    "new_untouched_oos_not_downloaded",
+    "founder_phrase_not_issued",
+    "wallet_delta_UNKNOWN",
+    "risk_review_packet_not_ready"
+  ],
+  "next_permitted_action": "Await exact phrase APPROVE_NEXUS_H3_UNTOUCHED_OOS_V1 then download/execute untouched OOS only",
+  "risk_review_packet_ready": false,
+  "shadow_status": "NOT_APPLIED",
+  "qualification_complete": false,
+  "recommendation": "NEXUS_NEW_OOS_PLAN_READY",
+  "canonical_files": [
+    "docs/04_readiness/NEXUS_READINESS_SOT.md",
+    "artifacts/readiness/NEXUS_READINESS_SOT.json",
+    "artifacts/readiness/NEXUS_EVIDENCE_MANIFEST.json"
+  ],
+  "cleanup": {
+    "files_before": 2499,
+    "bytes_before": 179244065,
+    "files_after": 2140,
+    "bytes_after": 97122481,
+    "files_removed": 394,
+    "bytes_removed": 82686411,
+    "unknown_review_required_count": 54
+  },
+  "wallet_delta_classification": "UNKNOWN",
+  "wallet_delta_unattributed": -0.97052039,
+  "broken_reference_count": 0,
+  "orphan_manifest_entry_count": 0
+}

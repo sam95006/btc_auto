@@ -54,9 +54,9 @@ def main() -> int:
         micro=micro,
         starvation=starvation,
     )
-    (OUT / "edge_research_v3_report.json").write_text(
-        json.dumps(report, indent=2, default=str) + "\n", encoding="utf-8"
-    )
+    # Detailed row-level report stays local/CI artifact — not a new committed wave file.
+    detail_path = OUT / "edge_research_v3_report.ci_artifact.json"
+    detail_path.write_text(json.dumps(report, indent=2, default=str) + "\n", encoding="utf-8")
     summary = {
         "recommendation": report.get("recommendation"),
         "cost_gate_starvation_counts_by_cause": report.get("cost_gate_starvation_counts_by_cause"),
@@ -75,6 +75,12 @@ def main() -> int:
         "new_untouched_oos_plan_ready": report.get("new_untouched_oos_plan_ready"),
     }
     print(json.dumps(summary, indent=2, default=str), flush=True)
+    # Update single canonical machine state only when milestone fields present.
+    sot_path = ROOT / "artifacts" / "readiness" / "NEXUS_READINESS_SOT.json"
+    if sot_path.is_file() and report.get("cohorts_walk_forward_validated"):
+        sot = json.loads(sot_path.read_text(encoding="utf-8"))
+        sot["last_research_wave_summary"] = summary
+        sot_path.write_text(json.dumps(sot, indent=2) + "\n", encoding="utf-8")
     return 0
 
 

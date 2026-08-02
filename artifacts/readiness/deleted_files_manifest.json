@@ -1,0 +1,2044 @@
+{
+  "generated_at": "2026-08-02T15:57:33Z",
+  "deleted": [
+    {
+      "path": "docs/04_readiness/BTC_BOT_5H_RC_CI_FINAL_REPORT.md",
+      "size": 4461,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_5H_RC_EXECUTION_CHECKPOINT.json",
+      "size": 1012,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_DEPLOYMENT_WINDOW_STATE.json",
+      "size": 1242,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_INVALID_FILES_CLASSIFICATION.json",
+      "size": 19718,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_OPEN_EXPOSURE_HOLD_AND_DEPLOYMENT_WINDOW_REPORT.json",
+      "size": 1345,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_OPEN_EXPOSURE_HOLD_AND_DEPLOYMENT_WINDOW_REPORT.md",
+      "size": 9463,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_PATH_MAPPING.md",
+      "size": 2454,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_PR1_DEPLOYMENT_WINDOW_PRECHECK.md",
+      "size": 4730,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_PREDEPLOY_LIVE_SAFETY_SNAPSHOT.json",
+      "size": 1188,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_PROTECTION_OBSERVABILITY_PATCH_REPORT.md",
+      "size": 1833,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_RC_DEPLOYMENT_PACKAGE.md",
+      "size": 1926,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_RC_SCOPED_TRANSPLANT_PROVENANCE.json",
+      "size": 6368,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_RUNTIME_OBSERVER_FAILURE_MATRIX.md",
+      "size": 1233,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_SCOPED_RUNTIME_FIX_DEPLOYMENT_AND_SMOKE_REPORT.md",
+      "size": 3122,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_SECRET_FINDINGS_CLASSIFICATION.json",
+      "size": 6703,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_SECRET_FINDINGS_CLASSIFICATION.md",
+      "size": 1653,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_WAVE2_GLOBAL_COMPONENT_PROVENANCE.json",
+      "size": 2516,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_WAVE2_GLOBAL_MARKET_SIX_ROLE_CHECKPOINT.json",
+      "size": 3146,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_WAVE2_GLOBAL_MARKET_SIX_ROLE_REPORT.md",
+      "size": 2989,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_WAVE2_LIVE_READONLY_END_SNAPSHOT.json",
+      "size": 676,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_WAVE2_PR2_SCOPE_FREEZE.json",
+      "size": 901,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_WAVE3_ADAPTIVE_POLICY_CHECKPOINT.json",
+      "size": 1412,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_WAVE3_ADAPTIVE_POLICY_LEARNING_REPORT.md",
+      "size": 7745,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_WAVE3_FRONTEND_TYPECHECK_BLOCKER.json",
+      "size": 826,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_WAVE3_LIVE_READONLY_END_SNAPSHOT.json",
+      "size": 500,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/BTC_BOT_WAVE3_PR3_SCOPE_FREEZE.json",
+      "size": 1034,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_12H_CONTROLLER_AUDIT.md",
+      "size": 902,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_12H_V3_FINAL_REPORT.md",
+      "size": 739,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_12H_V3_POST_FORENSIC_RETURN.json",
+      "size": 1538,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_12H_V3_POST_FORENSIC_RETURN.md",
+      "size": 598,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_12H_V3_Tplus10H.md",
+      "size": 696,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_12H_V3_Tplus15m.md",
+      "size": 720,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_12H_V3_Tplus1H.md",
+      "size": 694,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_12H_V3_Tplus2H.md",
+      "size": 694,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_12H_V3_Tplus30m.md",
+      "size": 695,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_12H_V3_Tplus4H.md",
+      "size": 694,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_12H_V3_Tplus6H.md",
+      "size": 696,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_12H_V3_Tplus8H.md",
+      "size": 696,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_6H_V2_FINAL_REPORT.md",
+      "size": 330,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_6H_V2_FINAL_REPORT.md.json",
+      "size": 2660,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_6H_V2_FORENSIC_ZERO_EXECUTION.md",
+      "size": 4180,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_6H_V2_LIVE_CHECKPOINT_Tplus1H.md",
+      "size": 4719,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_6H_V2_LIVE_CHECKPOINT_Tplus2H.md",
+      "size": 4954,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_6H_V2_LIVE_CHECKPOINT_Tplus3H.md",
+      "size": 267,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_6H_V2_LIVE_CHECKPOINT_Tplus4H.md",
+      "size": 267,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_6H_V2_LIVE_CHECKPOINT_Tplus5H.md",
+      "size": 269,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_6H_V2_READINESS_PACKAGE.md",
+      "size": 1833,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_6H_V2_READINESS_REPORT.md",
+      "size": 1046,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_BYBIT_DEMO_EXECUTION_VALIDATION_CHECKPOINT.json",
+      "size": 2563,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_BYBIT_DEMO_EXECUTION_VALIDATION_REPORT.md",
+      "size": 2858,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_BYBIT_DEMO_FEE_RATE_CAPABILITY_REPORT.md",
+      "size": 1620,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_CLEAN_24H_ZEABUR_ONLY.md",
+      "size": 1619,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_DEMO_AUTONOMOUS_6H_BOUNDED_VALIDATION_REPORT.md",
+      "size": 1091,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_DEMO_VALIDATION_ZEABUR_502_INCIDENT_REPORT.md",
+      "size": 7425,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_FIRST_DEMO_SMOKE_ORDER_REPORT.md",
+      "size": 1302,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_FOUNDER_APPROVED_DEMO_CONSERVATIVE_FEE_RATE.md",
+      "size": 970,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_FOUNDER_DUAL_TRACK_CONTROL_PLANE_AND_COST_GATE_FORENSIC.md",
+      "size": 4267,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_FOUNDER_RETURN_BRIEF_20260802_0005_TW.md",
+      "size": 952,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_IDENTITY_AND_GEOMETRY_QUALIFICATION_RETURN.json",
+      "size": 2562,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_MARKET_GEOMETRY_QUALIFICATION_RETURN.json",
+      "size": 2445,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_OOS_RISK_MODEL_INTEGRITY_AUDIT.md",
+      "size": 3652,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_POST_12H_LAND_AND_GEOMETRY_RETURN.json",
+      "size": 4022,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_POST_12H_LAND_AND_GEOMETRY_RETURN.md",
+      "size": 739,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_POST_SESSION_EVIDENCE_ANALYSIS_SPEC.md",
+      "size": 2362,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_SAME_ROUTER_PROBE_WAVE_REPORT.md",
+      "size": 1997,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_SINGLE_SERVICE_24H_OPERATIONAL_OBSERVATION.md",
+      "size": 1891,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_SINGLE_SERVICE_CONSOLIDATION_PROGRESS.md",
+      "size": 905,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_SINGLE_SERVICE_CUTOVER_REPORT.md",
+      "size": 2248,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_SINGLE_SERVICE_OPERATIONAL_OBSERVATION_ABORTED_REPORT.md",
+      "size": 4756,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_SINGLE_SERVICE_RETIREMENT_CHECKLIST.md",
+      "size": 1072,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_STAGE3_EXECUTION_RETIREMENT_PLAN.md",
+      "size": 2946,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_STRATEGY_EDGE_COHORT_RESEARCH.md",
+      "size": 2308,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_STRATEGY_EDGE_RESEARCH_V2.md",
+      "size": 2787,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_STRATEGY_EDGE_RESEARCH_V3.md",
+      "size": 1533,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_TRADE_GEOMETRY_REPLAY_REPORT.md",
+      "size": 1582,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_UNIFIED_CONTROL_PLANE_API_INVENTORY.md",
+      "size": 6648,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_UNIFIED_CONTROL_PLANE_CHECKPOINT.json",
+      "size": 4283,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_UNIFIED_CONTROL_PLANE_DEPLOY_RUNBOOK.md",
+      "size": 1622,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_UNIFIED_CONTROL_PLANE_DESIGN.md",
+      "size": 3081,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_UNIFIED_CONTROL_PLANE_TEST_REPORT.md",
+      "size": 2303,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_WAVE41_LIVE_READONLY_END_SNAPSHOT.json",
+      "size": 263,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_WAVE4_DATAHUNTERX_FEATURE_AUDIT.json",
+      "size": 3653,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_WAVE4_LIVE_READONLY_END_SNAPSHOT.json",
+      "size": 203,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_WAVE4_PR4_SCOPE_FREEZE.json",
+      "size": 1018,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_WAVE4_PRODUCT_UI_CHECKPOINT.json",
+      "size": 2992,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_WAVE4_PRODUCT_UI_INTELLIGENCE_REPORT.md",
+      "size": 2355,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_WAVE4_UI_FEATURE_PRESERVATION_MATRIX.json",
+      "size": 4523,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_WAVE4_VISUAL_ACCEPTANCE_REPORT.md",
+      "size": 2162,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_WAVE4_VISUAL_REGRESSION_MANIFEST.json",
+      "size": 3147,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_WAVE5_LIVE_READONLY_END_SNAPSHOT.json",
+      "size": 646,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_WAVE5_LIVE_READONLY_START_SNAPSHOT.json",
+      "size": 782,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_WAVE5_LIVE_TRIPLE_FLAT_SNAPSHOT.json",
+      "size": 2150,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_WAVE5_PUBLIC_DATA_BOUNDARY_REPORT.md",
+      "size": 1248,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_WAVE5_REAL_PUBLIC_SHADOW_CHECKPOINT.json",
+      "size": 4336,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_WAVE5_REAL_PUBLIC_SHADOW_RUNTIME_REPORT.md",
+      "size": 1488,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_WAVE5_SHADOW_RUNTIME_SOAK_REPORT.md",
+      "size": 359,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_ZEABUR_CLEAN_OBSERVER_READY.md",
+      "size": 1278,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/04_readiness/NEXUS_ZEABUR_SEQUENTIAL_6H_12H_PLAN.md",
+      "size": 1624,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/NEXUS_6H_CONTINUOUS_CHECKPOINT.json",
+      "size": 2151,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/releases/STAGE_4_18_P2H_HOLD_RELEASE_CHECKPOINT.md",
+      "size": 5015,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_6h_v2_preflight.json",
+      "size": 1341,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/founder_override_record.json",
+      "size": 559,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/legacy_delete_blocked.json",
+      "size": 1244,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/legacy_delete_ready_dry_run.json",
+      "size": 1197,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/obs_fail.json",
+      "size": 138,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/obs_pass.json",
+      "size": 176,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/checkpoint_Tplus10H_20260802T041519Z.json",
+      "size": 3864,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/checkpoint_Tplus15m_20260801T184704Z.json",
+      "size": 3885,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/checkpoint_Tplus1H_20260801T191519Z.json",
+      "size": 3850,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/checkpoint_Tplus2H_20260801T201518Z.json",
+      "size": 3850,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/checkpoint_Tplus30m_20260801T184706Z.json",
+      "size": 3847,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/checkpoint_Tplus4H_20260801T221518Z.json",
+      "size": 3854,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/checkpoint_Tplus6H_20260802T001518Z.json",
+      "size": 3864,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/checkpoint_Tplus8H_20260802T021519Z.json",
+      "size": 3865,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/extended_observation_source_pack.json",
+      "size": 2059,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/NEXUS_12H_V3_FINAL_REPORT.json",
+      "size": 10358,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/NEXUS_12H_V3_START_REPORT.json",
+      "size": 1142,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/NEXUS_12H_V3_Tplus10H.json",
+      "size": 3864,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/NEXUS_12H_V3_Tplus15m.json",
+      "size": 3885,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/NEXUS_12H_V3_Tplus1H.json",
+      "size": 3850,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/NEXUS_12H_V3_Tplus2H.json",
+      "size": 3850,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/NEXUS_12H_V3_Tplus30m.json",
+      "size": 3847,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/NEXUS_12H_V3_Tplus4H.json",
+      "size": 3854,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/NEXUS_12H_V3_Tplus6H.json",
+      "size": 3864,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/NEXUS_12H_V3_Tplus8H.json",
+      "size": 3865,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/PHASE_B_CONTINUATION_REQUEST.json",
+      "size": 234,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/WATCHDOG_ARMED_PHASE_A.json",
+      "size": 846,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3/WATCHDOG_ARMED_PHASE_B.json",
+      "size": 593,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3_forensic/cost_gate_forensic_replay.json",
+      "size": 8289,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3_forensic/cost_gate_forensic_replay.md",
+      "size": 1747,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3_forensic/geometry_event_qualification.json",
+      "size": 9404,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3_forensic/live_forensic_now.json",
+      "size": 56809,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3_forensic/wallet_delta_final_attempt.json",
+      "size": 494,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3_forensic/wallet_delta_reconcile.json",
+      "size": 573,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3_forensic/wallet_delta_reconcile_live.json",
+      "size": 9317,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_502/container_startup_diagnosis.json",
+      "size": 856,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_502/zeabur_build_logs.txt",
+      "size": 117,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_502/zeabur_deployment_info.txt",
+      "size": 0,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_502/zeabur_deployment_list.txt",
+      "size": 4,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_502/zeabur_domain_info.txt",
+      "size": 395,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_502/zeabur_runtime_logs.txt",
+      "size": 471,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_502/zeabur_service_info.txt",
+      "size": 899,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_502/zeabur_variables_raw.txt",
+      "size": 3207,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_502/zeabur_variables_redacted.txt",
+      "size": 1660,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2/checkpoint_latest.json",
+      "size": 5323,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2/checkpoint_Tplus1H_20260801T101500Z.json",
+      "size": 4557,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2/checkpoint_Tplus2H_20260801T111459Z.json",
+      "size": 4557,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2/checkpoint_Tplus2H_20260801T111845Z.json",
+      "size": 5454,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2/checkpoint_Tplus3H_2026-08-01T121507Z.json",
+      "size": 6992,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2/checkpoint_Tplus4H_2026-08-01T131507Z.json",
+      "size": 6990,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2/checkpoint_Tplus5H_2026-08-01T141507Z.json",
+      "size": 6996,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2/forensic_zero_execution.json",
+      "size": 3415,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2/remote_orchestrator_armed.json",
+      "size": 1001,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2/_raw_api_nexus_demo-execution_bounded-6h_status.json",
+      "size": 3398,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2/_raw_api_nexus_demo-execution_status.json",
+      "size": 7016,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2_unattended/arm_verify.json",
+      "size": 6995,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2_unattended/checkpoint_Tplus3H_2026-08-01T121507Z.json",
+      "size": 6992,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2_unattended/checkpoint_Tplus4H_2026-08-01T131507Z.json",
+      "size": 6990,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2_unattended/checkpoint_Tplus5H_2026-08-01T141507Z.json",
+      "size": 6996,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2_unattended/checkpoint_Tplus6H_DEADLINE_2026-08-01T151507Z.json",
+      "size": 7018,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2_unattended/checkpoint_Tplus6H_FINAL_2026-08-01T151518Z.json",
+      "size": 7095,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2_unattended/evidence_provenance.json",
+      "size": 529,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2_unattended/founder_return_brief.json",
+      "size": 27417,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2_unattended/machine_gate_12h.json",
+      "size": 382,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2_unattended/remote_orchestrator_armed.json",
+      "size": 599,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2_unattended/session_summary.json",
+      "size": 2660,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2_unattended/twelve_h_start_result.json",
+      "size": 198,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_cohort_edge/cohort_edge_research_report.json",
+      "size": 160716,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/edge_research_v2_report.json",
+      "size": 94287,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/existing_dataset_audit.json",
+      "size": 3209,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v3/cost_gate_starvation_forensic.json",
+      "size": 16510,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v3/edge_research_v3_report.json",
+      "size": 126743,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_geometry_market_oos/consumed_oos_holdout.json",
+      "size": 266,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_geometry_market_oos/market_oos_qualification_report.json",
+      "size": 23027,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_geometry_market_oos/risk_model_audit_report.json",
+      "size": 15939,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/geometry_qualification/qualification_report.json",
+      "size": 11678,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/geometry_qualification/qualification_report.md",
+      "size": 561,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/same_router_probe_wave/checkpoint_Tplus0_2026-08-01T172505Z.json",
+      "size": 2093,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/same_router_probe_wave/checkpoint_Tplus180_2026-08-01T172813Z.json",
+      "size": 2095,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/same_router_probe_wave/checkpoint_Tplus60_2026-08-01T172610Z.json",
+      "size": 2094,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/same_router_probe_wave/dry_run_result.json",
+      "size": 2672,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/same_router_probe_wave/live_probe_result.json",
+      "size": 2866,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/same_router_probe_wave/wave_summary.json",
+      "size": 11502,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/single_service_observation/checkpoint_ABORT_FINAL_20260731T100509Z.json",
+      "size": 3562,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/single_service_observation/checkpoint_ABORT_FINAL_RECONFIRM_20260801T083449Z.json",
+      "size": 3596,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/single_service_observation/checkpoint_latest.json",
+      "size": 3596,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/single_service_observation/checkpoint_Tplus1H_20260731T061155Z.json",
+      "size": 3555,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/single_service_observation/checkpoint_Tplus3H_20260731T081207Z.json",
+      "size": 3555,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/single_service_observation/checkpoint_TplusEARLY_20260731T055242Z.json",
+      "size": 3558,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/single_service_observation/observation_aborted.json",
+      "size": 3008,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/docs/04_readiness/NEXUS_6H_V2_FINAL_REPORT.md",
+      "size": 330,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/docs/04_readiness/NEXUS_6H_V2_FINAL_REPORT.md.json",
+      "size": 2660,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/docs/04_readiness/NEXUS_6H_V2_LIVE_CHECKPOINT_Tplus3H.md",
+      "size": 267,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/docs/04_readiness/NEXUS_6H_V2_LIVE_CHECKPOINT_Tplus4H.md",
+      "size": 267,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/docs/04_readiness/NEXUS_6H_V2_LIVE_CHECKPOINT_Tplus5H.md",
+      "size": 269,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/docs/04_readiness/NEXUS_FOUNDER_RETURN_BRIEF_20260802_0005_TW.md",
+      "size": 952,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/artifacts/demo_validation_6h_v2/checkpoint_Tplus3H_2026-08-01T121507Z.json",
+      "size": 6992,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/artifacts/demo_validation_6h_v2/checkpoint_Tplus4H_2026-08-01T131507Z.json",
+      "size": 6990,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/artifacts/demo_validation_6h_v2/checkpoint_Tplus5H_2026-08-01T141507Z.json",
+      "size": 6996,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/artifacts/demo_validation_6h_v2_unattended/arm_verify.json",
+      "size": 6995,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/artifacts/demo_validation_6h_v2_unattended/checkpoint_Tplus3H_2026-08-01T121507Z.json",
+      "size": 6992,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/artifacts/demo_validation_6h_v2_unattended/checkpoint_Tplus4H_2026-08-01T131507Z.json",
+      "size": 6990,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/artifacts/demo_validation_6h_v2_unattended/checkpoint_Tplus5H_2026-08-01T141507Z.json",
+      "size": 6996,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/artifacts/demo_validation_6h_v2_unattended/checkpoint_Tplus6H_DEADLINE_2026-08-01T151507Z.json",
+      "size": 7018,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/artifacts/demo_validation_6h_v2_unattended/checkpoint_Tplus6H_FINAL_2026-08-01T151518Z.json",
+      "size": 7095,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/artifacts/demo_validation_6h_v2_unattended/founder_return_brief.json",
+      "size": 27417,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/artifacts/demo_validation_6h_v2_unattended/machine_gate_12h.json",
+      "size": 382,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/artifacts/demo_validation_6h_v2_unattended/remote_orchestrator_armed.json",
+      "size": 599,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/artifacts/demo_validation_6h_v2_unattended/session_summary.json",
+      "size": 2660,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/artifacts/demo_validation_6h_v2_unattended/twelve_h_start_result.json",
+      "size": 198,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/artifacts/demo_validation_6h_v2/session_NEXUS-DEMO-6H-V2-20260801T091457Z-2350a7d0/evidence_manifest.json",
+      "size": 461,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_30698036252/artifacts/demo_validation_6h_v2/session_NEXUS-DEMO-6H-V2-20260801T091457Z-2350a7d0/session_summary.json",
+      "size": 2660,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/docs/04_readiness/NEXUS_12H_V3_FINAL_REPORT.md",
+      "size": 721,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/docs/04_readiness/NEXUS_12H_V3_Tplus10H.md",
+      "size": 675,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/docs/04_readiness/NEXUS_12H_V3_Tplus15m.md",
+      "size": 699,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/docs/04_readiness/NEXUS_12H_V3_Tplus1H.md",
+      "size": 673,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/docs/04_readiness/NEXUS_12H_V3_Tplus2H.md",
+      "size": 673,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/docs/04_readiness/NEXUS_12H_V3_Tplus30m.md",
+      "size": 674,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/docs/04_readiness/NEXUS_12H_V3_Tplus4H.md",
+      "size": 673,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/docs/04_readiness/NEXUS_12H_V3_Tplus6H.md",
+      "size": 675,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/docs/04_readiness/NEXUS_12H_V3_Tplus8H.md",
+      "size": 675,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/checkpoint_Tplus10H_20260802T041519Z.json",
+      "size": 3745,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/checkpoint_Tplus15m_20260801T184704Z.json",
+      "size": 3764,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/checkpoint_Tplus1H_20260801T191519Z.json",
+      "size": 3731,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/checkpoint_Tplus2H_20260801T201518Z.json",
+      "size": 3731,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/checkpoint_Tplus30m_20260801T184706Z.json",
+      "size": 3728,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/checkpoint_Tplus4H_20260801T221518Z.json",
+      "size": 3735,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/checkpoint_Tplus6H_20260802T001518Z.json",
+      "size": 3745,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/checkpoint_Tplus8H_20260802T021519Z.json",
+      "size": 3746,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/extended_observation_source_pack.json",
+      "size": 2059,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/NEXUS_12H_V3_FINAL_REPORT.json",
+      "size": 10058,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/NEXUS_12H_V3_START_REPORT.json",
+      "size": 1116,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/NEXUS_12H_V3_Tplus10H.json",
+      "size": 3745,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/NEXUS_12H_V3_Tplus15m.json",
+      "size": 3764,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/NEXUS_12H_V3_Tplus1H.json",
+      "size": 3731,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/NEXUS_12H_V3_Tplus2H.json",
+      "size": 3731,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/NEXUS_12H_V3_Tplus30m.json",
+      "size": 3728,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/NEXUS_12H_V3_Tplus4H.json",
+      "size": 3735,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/NEXUS_12H_V3_Tplus6H.json",
+      "size": 3745,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/NEXUS_12H_V3_Tplus8H.json",
+      "size": 3746,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/PHASE_B_CONTINUATION_REQUEST.json",
+      "size": 226,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/WATCHDOG_ARMED_PHASE_A.json",
+      "size": 807,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/_gha_12h_phase_b/artifacts/demo_validation_12h_v3/WATCHDOG_ARMED_PHASE_B.json",
+      "size": 570,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "artifacts/wave4/after/alerts_default_1440x900.png",
+      "size": 77771,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/wave4/after/evidence_default_1440x900.png",
+      "size": 118202,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/wave4/after/fleets_deprecated_1440x900.png",
+      "size": 71015,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/wave4/after/founder_runtime_readonly_1440x900.png",
+      "size": 82280,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/wave4/after/learning_default_1440x900.png",
+      "size": 58811,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/wave4/after/manifest.json",
+      "size": 2334,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/wave4/after/market_BTCUSDT_workbench_1440x900.png",
+      "size": 89380,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/wave4/after/overview_mobile_nav_390x844.png",
+      "size": 81335,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/wave4/after/overview_simple_1440x900.png",
+      "size": 78414,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/wave4/after/overview_tablet_768x1024.png",
+      "size": 67257,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/wave4/after/portfolio_shadow_1440x900.png",
+      "size": 67718,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/wave4/after/universe_default_1440x900.png",
+      "size": 71015,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/wave4/before/manifest.json",
+      "size": 674,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/wave4/before/overview_overview_pro_1440x900.png",
+      "size": 91235,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/wave4/before/scanner_scanner_1440x900.png",
+      "size": 112689,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_geometry_market_oos/market_cache/BTCUSDT_15_1770111030061_1785663030061.json",
+      "size": 2887683,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_geometry_market_oos/market_cache/BTCUSDT_15_1777886962598_1785662962598.json",
+      "size": 1443849,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_geometry_market_oos/market_cache/DOGEUSDT_15_1770111030061_1785663030061.json",
+      "size": 2922095,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_geometry_market_oos/market_cache/ETHUSDT_15_1770111030061_1785663030061.json",
+      "size": 2881140,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_geometry_market_oos/market_cache/ETHUSDT_15_1777886962598_1785662962598.json",
+      "size": 1440809,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_geometry_market_oos/market_cache/SOLUSDT_15_1770111030061_1785663030061.json",
+      "size": 2746883,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_geometry_market_oos/market_cache/SOLUSDT_15_1777886962598_1785662962598.json",
+      "size": 1373124,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_geometry_market_oos/market_cache/XRPUSDT_15_1770111030061_1785663030061.json",
+      "size": 2839084,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v3/micro_cache/BTCUSDT_funding_1739007000000_1785663000000.json",
+      "size": 127616,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v3/micro_cache/BTCUSDT_oi_1h_1739007000000_1785663000000.json",
+      "size": 800337,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v3/micro_cache/DOGEUSDT_funding_1739007000000_1785663000000.json",
+      "size": 127185,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v3/micro_cache/DOGEUSDT_oi_1h_1739007000000_1785663000000.json",
+      "size": 827069,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v3/micro_cache/ETHUSDT_funding_1739007000000_1785663000000.json",
+      "size": 127535,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v3/micro_cache/ETHUSDT_oi_1h_1739007000000_1785663000000.json",
+      "size": 804499,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v3/micro_cache/microstructure_manifest.json",
+      "size": 6233,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v3/micro_cache/SOLUSDT_funding_1739007000000_1785663000000.json",
+      "size": 127641,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v3/micro_cache/SOLUSDT_oi_1h_1739007000000_1785663000000.json",
+      "size": 802578,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v3/micro_cache/XRPUSDT_funding_1739007000000_1785663000000.json",
+      "size": 127446,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v3/micro_cache/XRPUSDT_oi_1h_1739007000000_1785663000000.json",
+      "size": 820387,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/market_cache/BTCUSDT_15_1739007000000_1785663000000.json",
+      "size": 8735334,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/market_cache/BTCUSDT_240_1739007000000_1785663000000.json",
+      "size": 550691,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/market_cache/BTCUSDT_60_1739007000000_1785663000000.json",
+      "size": 2193300,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/market_cache/DOGEUSDT_15_1739007000000_1785663000000.json",
+      "size": 8771647,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/market_cache/DOGEUSDT_240_1739007000000_1785663000000.json",
+      "size": 553048,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/market_cache/DOGEUSDT_60_1739007000000_1785663000000.json",
+      "size": 2201479,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/market_cache/ETHUSDT_15_1739007000000_1785663000000.json",
+      "size": 8644050,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/market_cache/ETHUSDT_240_1739007000000_1785663000000.json",
+      "size": 545088,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/market_cache/ETHUSDT_60_1739007000000_1785663000000.json",
+      "size": 2169698,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/market_cache/SOLUSDT_15_1739007000000_1785663000000.json",
+      "size": 8379755,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/market_cache/SOLUSDT_240_1739007000000_1785663000000.json",
+      "size": 528746,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/market_cache/SOLUSDT_60_1739007000000_1785663000000.json",
+      "size": 2104006,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/market_cache/XRPUSDT_15_1739007000000_1785663000000.json",
+      "size": 8523338,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/market_cache/XRPUSDT_240_1739007000000_1785663000000.json",
+      "size": 537301,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_edge_research_v2/market_cache/XRPUSDT_60_1739007000000_1785663000000.json",
+      "size": 2139328,
+      "classification": "DELETE_CACHE"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2/session_NEXUS-DEMO-6H-V2-20260801T091457Z-2350a7d0/evidence_manifest.json",
+      "size": 461,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_6h_v2/session_NEXUS-DEMO-6H-V2-20260801T091457Z-2350a7d0/session_summary.json",
+      "size": 2660,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3_forensic/post_deploy_verify/Tplus0.json",
+      "size": 774,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3_forensic/post_deploy_verify/Tplus180.json",
+      "size": 793,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3_forensic/post_deploy_verify/Tplus60.json",
+      "size": 792,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3_forensic/post_deploy_verify/verify_summary.json",
+      "size": 2550,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3_forensic/post_deploy_verify_identity/Tplus0.json",
+      "size": 1249,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3_forensic/post_deploy_verify_identity/Tplus180.json",
+      "size": 1251,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3_forensic/post_deploy_verify_identity/Tplus60.json",
+      "size": 1250,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "artifacts/demo_validation_12h_v3_forensic/post_deploy_verify_identity/verify_summary.json",
+      "size": 3989,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "12h_arm.json",
+      "size": 4412,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "12h_final_live.json",
+      "size": 4577,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "12h_now.json",
+      "size": 4412,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "12h_st.json",
+      "size": 4353,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "12h_start.json",
+      "size": 1409,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "12h_start_body.json",
+      "size": 2173,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "acct_live.json",
+      "size": 516,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "DEPLOYMENT_COMMIT",
+      "size": 42,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "h.json",
+      "size": 295,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "pr24.json",
+      "size": 1509,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "pr24_api_body.json",
+      "size": 2377,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "pr24_body.md",
+      "size": 1668,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "pr24_body_updated.md",
+      "size": 2322,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "pr24_patch.json",
+      "size": 1682,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "st2.json",
+      "size": 9351,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "st_live.json",
+      "size": 9612,
+      "classification": "DELETE_TEMPORARY"
+    },
+    {
+      "path": "docs/evidence/BYBIT_DEMO_ACCOUNT_DISCOVERY.json",
+      "size": 2473,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/BYBIT_DEMO_EXISTING_CREDENTIAL_DISCOVERY.json",
+      "size": 1235,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/DATAHUNTERX_NEXUS_PARITY_MATRIX.json",
+      "size": 8202,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/NEXUS_AUTONOMOUS_DEMO_CHECKPOINT_01.txt",
+      "size": 1815,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/NEXUS_AUTONOMOUS_DEMO_CHECKPOINT_04.txt",
+      "size": 1089,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/NEXUS_AUTONOMOUS_DEMO_RUN_START.txt",
+      "size": 32,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/NEXUS_AUTONOMOUS_LIVE_SOURCE_OF_TRUTH.txt",
+      "size": 2142,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/NEXUS_AUTONOMOUS_PRE_ACTIVATION_SOAK.jsonl",
+      "size": 32564,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/NEXUS_AUTONOMOUS_PRE_ACTIVATION_SOAK.txt",
+      "size": 557,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/NEXUS_FIRST_AUTONOMOUS_DEMO_SESSION_REPORT.txt",
+      "size": 2828,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/nexus_ui_product71_review.json",
+      "size": 4090,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/NEXUS_UI_PRODUCT7_PREDEPLOY_SIGNOFF.json",
+      "size": 2433,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/NEXUS_WRITE_REPAIR_CHECKPOINT_01.txt",
+      "size": 1331,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/phase63_extended_soak_signoff.json",
+      "size": 2234,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/phase63_paper_soak.json",
+      "size": 63179,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/phase64_chart_data_lineage_audit.md",
+      "size": 5567,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/phase64_replay_full_closure.json",
+      "size": 6183,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/evidence/PHASE661_EXISTING_CREDENTIAL_SAFE_PREDEPLOY.json",
+      "size": 2594,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_10_SHADOW_COMPARE_REPORT.md",
+      "size": 5958,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_11_EXTENDED_SHADOW_SOAK_REPORT.md",
+      "size": 6791,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_12C_PROVIDER_YIELD_AND_SHADOW_REVIEW.md",
+      "size": 8863,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_12E_PROVIDER_YIELD_REPAIR_PLAN.md",
+      "size": 4153,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_13C_FIXED_FLEET_YIELD_PARSE_SCHEDULER_REPAIR.md",
+      "size": 5960,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_13_FIXED_FLEET_READ_ONLY_PLAN.md",
+      "size": 2344,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_14C_CEREBRAS_TRUNCATION_PARSE_REPAIR.md",
+      "size": 4316,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_14F_PROVIDER_SCHEMA_MISMATCH_REPAIR.md",
+      "size": 4023,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_14_FIXED_FLEET_MULTI_SESSION_READ_ONLY_REVIEW.md",
+      "size": 9968,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_15_FIXED_FLEET_DECISION_QUALITY_REVIEW.md",
+      "size": 8934,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_16_PAPER_TRADING_DESIGN_GATE.md",
+      "size": 25517,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_17A_PAPER_EVENT_LOGGER_REPORT.md",
+      "size": 4079,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18B_MAJOR_MAE_CALIBRATION_REPLAY_REPORT.md",
+      "size": 4530,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18C_AI_DECISION_SCHEMA_REPAIR.md",
+      "size": 5847,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18D_SCHEMA_REGRESSION_30M_REPORT.md",
+      "size": 6136,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18E_PAPER_GUARD_LLM_MAE_INTEGRATION_REPORT.md",
+      "size": 7839,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18F_LLM_MAE_ESTIMATE_CALIBRATION_REPORT.md",
+      "size": 7102,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18G_LLM_MAE_SCHEMA_REGRESSION_30M_REPORT.md",
+      "size": 9368,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18G_R1_RUNTIME_SYNC_AND_MAE_REGRESSION_REPORT.md",
+      "size": 9169,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18H_DEPLOY_PIPELINE_AND_MAE_PROMPT_ITERATION.md",
+      "size": 6888,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18H_R1_RUNTIME_GATED_MAE_REGRESSION_REPORT.md",
+      "size": 7033,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18I_ETH_MAE_ALIGNMENT_AND_CONFIRMATION_RECOVERY.md",
+      "size": 5040,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18I_R1_RUNTIME_GATED_ETH_MAE_RECOVERY_REPORT.md",
+      "size": 7644,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18J_R1_RUNTIME_GATED_SCHEMA_ENFORCED_REGRESSION_REPORT.md",
+      "size": 5054,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18J_SCHEMA_ENFORCEMENT_AND_CONFIRMATION_DIAGNOSTICS.md",
+      "size": 7745,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18K_DIAGNOSTICS_AFTER_418J_R1.md",
+      "size": 4203,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18L_CANDIDATE_SIDE_AND_TRIGGER_PROMPT_ITERATION.md",
+      "size": 5222,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18L_R1_RUNTIME_GATED_FIELD_COMPLIANCE_REPORT.md",
+      "size": 7072,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18M_R1_RUNTIME_GATED_STRUCTURED_OUTPUT_REPORT.md",
+      "size": 5997,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18M_STRUCTURED_OUTPUT_HARDENING.md",
+      "size": 6103,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18N_PROVIDER_SCHEMA_AND_OUTPUT_REPAIR_PLAN.md",
+      "size": 3418,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18N_PROVIDER_SCHEMA_AND_OUTPUT_REPAIR_REPORT.md",
+      "size": 4194,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18N_R1_RUNTIME_GATED_PROVIDER_SCHEMA_REGRESSION_REPORT.md",
+      "size": 7182,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18N_R2_PROVIDER_SCHEMA_60M_STABILITY_REPORT.md",
+      "size": 6807,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18N_REDEPLOY_AND_RUNTIME_READY_REPORT.md",
+      "size": 5873,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18O2_PROVIDER_ROUTING_DIAGNOSTICS_REPORT.md",
+      "size": 7409,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18O3_CONTROLLED_PROVIDER_PROBE_REPORT.md",
+      "size": 8097,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18O_BTC_SPECIFIC_DIAGNOSTICS_REPORT.md",
+      "size": 9564,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P1A_BTC_SHADOW_PAIRED_COMPARISON_REPORT.md",
+      "size": 5437,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P1B_SHADOW_QUOTA_AND_BTC_FOLLOWUP_DIAGNOSTICS_REPORT.md",
+      "size": 5037,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P1C_CLEAN_SHADOW_AND_BTC_FOLLOWUP_REPORT.md",
+      "size": 5580,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P1_BTC_DUAL_PROVIDER_SHADOW_IMPLEMENTATION_REPORT.md",
+      "size": 4335,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P1_R1_BTC_SHADOW_30M_REPORT.md",
+      "size": 8336,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P2A_ETH_BTC_GRADUATION_ALIGNMENT_DIAGNOSTICS_REPORT.md",
+      "size": 4058,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P2B_ETH_WATCHLIST_CONFIRMATION_DIAGNOSTICS_REPORT.md",
+      "size": 3280,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P2C_ETH_FOLLOWUP_MARKET_CONTEXT_REVIEW_REPORT.md",
+      "size": 6589,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P2D_ETH_FOLLOWUP_CONFIRMATION_PROMPT_REVIEW_REPORT.md",
+      "size": 4250,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P2D_R1_ETH_FOLLOWUP_PROMPT_RUNTIME_REGRESSION_REPORT.md",
+      "size": 5637,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P2E_ETH_NO_WATCH_DIAGNOSTICS_AND_WAIT_HELPER_FIX_REPORT.md",
+      "size": 6338,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P2F_ETH_WATCH_REAPPEARANCE_GATE_REPORT.md",
+      "size": 4215,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P2G_OPERATOR_READINESS_PACK.md",
+      "size": 3761,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P2H_BACKEND_HOLD_AND_PASSIVE_GATE_CHECKER_REPORT.md",
+      "size": 2775,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P2H_QA_RELEASE_HEALTH_CHECK_REPORT.md",
+      "size": 1825,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P2_PROVIDER_ROUTING_DESIGN_GATE_REPORT.md",
+      "size": 4398,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P2_R1_BTC_CEREBRAS_FIRST_READ_ONLY_EXPERIMENT_REPORT.md",
+      "size": 4121,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18P_PROVIDER_ROUTING_DESIGN_GATE_REPORT.md",
+      "size": 6768,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_18_WATCHLIST_FOLLOWUP_SIMULATOR_REPORT.md",
+      "size": 7638,
+      "classification": "DELETE_SUPERSEDED"
+    },
+    {
+      "path": "docs/reports/STAGE_4_8_PATCH_REFLECTION_INFLUENCE_REVIEW.md",
+      "size": 10390,
+      "classification": "DELETE_SUPERSEDED"
+    }
+  ],
+  "unknown_review_required": [
+    "docs/NEXUS_CURRENT_STATE.md",
+    "docs/NEXUS_GUIDE.zh-TW.md",
+    "docs/NEXUS_PHASE63_CONTROLLED_PAPER_ACTIVATION.md",
+    "docs/research_stage3_bybit_demo_learning_runner_plan.md",
+    "docs/research_stage3_phase_c_controlled_demo_order_plan.md",
+    "docs/stage4_ai_decision_layer_plan.md",
+    "docs/runbooks/STAGE_4_18_P2H_OPERATOR_HOLD_RUNBOOK.md",
+    "docs/ui/NEXUS_PHASE3_SECTOR_CHART_EQUITIES_ARCHITECTURE.md",
+    "docs/ui/NEXUS_PHASE4_VISUAL_AND_INTELLIGENCE_ARCHITECTURE.md",
+    "docs/ui/NEXUS_PHASE5_ALL_MARKET_AUTONOMOUS_RESEARCH_ARCHITECTURE.md",
+    "docs/ui/NEXUS_PRIVATE_VS_PUBLIC_PRODUCT_BOUNDARY.md",
+    "docs/ui/NEXUS_UI_DATA_SOURCE_MAPPING_V1.md",
+    "docs/ui/NEXUS_UI_DEPLOY_1_ZEABUR_FRONTEND_REALITY_CHECK_REPORT.md",
+    "docs/ui/NEXUS_UI_DEPLOY_2_ZEABUR_LIVE_RUNTIME_VERIFICATION_REPORT.md",
+    "docs/ui/NEXUS_UI_DEPLOY_3_LIVE_MVP20_POLISH_VERIFICATION_REPORT.md",
+    "docs/ui/NEXUS_UI_LIVE_SIGNOFF_1_OPERATOR_VISUAL_CHECKLIST.md",
+    "docs/ui/NEXUS_UI_MVP0_FRONTEND_SHELL_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP10_PRIVATE_OPERATOR_HARDENING_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP11_REPORT_RUNBOOK_VIEWER_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP12_RELEASE_HEALTH_BADGE_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP13_PRIVATE_OPERATOR_UX_POLISH_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP14_PRIVATE_OPERATOR_DEEP_LINKS_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP15_STATIC_DOC_SUMMARY_VIEWER_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP16_STATIC_EXCERPT_SEARCH_FILTER_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP17_DATAHUNTERX_INSPIRED_MARKET_INTELLIGENCE_LAYOUT_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP18_EVIDENCE_FILTER_AND_PROVIDER_CHARTS_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP19_EVIDENCE_PRESETS_AND_WORKSPACE_PINS_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP1_PRIVATE_OPERATOR_DASHBOARD_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP20_LIVE_MARKET_INTELLIGENCE_POLISH_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP21_PRODUCT_UX_SIMPLIFICATION_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP22_SIMPLIFIED_MARKET_DASHBOARD_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP2_PRIVATE_OPERATOR_DATA_SNAPSHOT_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP3_ETH_CONFIRMATION_TIMELINE_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP4_P2C_CONFIRMATION_PROMPT_ISSUE_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP5_P2D_PROMPT_REPAIR_STATUS_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP6_P2D_R1_PARTIAL_SNAPSHOT_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP7_P2E_REGRESSION_READINESS_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP8_P2F_GATE_AND_REPORT_INDEX_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP9_BACKEND_HOLD_STATE_REPORT.md",
+    "docs/ui/NEXUS_UI_MVP_ROADMAP_30_90_DAYS.md",
+    "docs/ui/NEXUS_UI_PERMISSION_MATRIX_V1.md",
+    "docs/ui/NEXUS_UI_PRODUCT_SPEC_V1.md",
+    "docs/ui/NEXUS_UI_SITEMAP_V1.md",
+    "data/nexus_demo_validation/validation.sqlite3",
+    "data/nexus_demo_validation/artifacts/demo_validation/DEPLOYMENT_COMMIT",
+    "data/nexus_demo_validation/artifacts/demo_validation/runtime_identity.json",
+    "data/external_alpha/reports/research_stage3_bybit_demo_learning_readiness.json",
+    "data/external_alpha/reports/stage3_24h_runner_preflight.json",
+    "data/external_alpha/reports/stage3_24h_runner_readiness.json",
+    "data/external_alpha/reports/stage3_c3_background_supervisor_readiness.json",
+    "data/external_alpha/reports/stage3_demo_learning_runner_readiness.json",
+    "data/external_alpha/reports/stage3_demo_order_preflight.json",
+    "data/external_alpha/reports/stage3_github_auto_24h_startup_safety_report.json",
+    "data/external_alpha/reports/stage3_github_deploy_readiness.json"
+  ],
+  "summary": {
+    "files_before": 2499,
+    "bytes_before": 179244065,
+    "files_after": 2200,
+    "bytes_after": 97263043,
+    "files_removed": 318,
+    "bytes_removed": 82179653,
+    "unknown_review_required_count": 130
+  },
+  "pass2": {
+    "deleted": 76,
+    "remaining_docs_files": 43
+  }
+}

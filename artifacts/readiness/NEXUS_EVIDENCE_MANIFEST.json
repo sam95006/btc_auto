@@ -1,0 +1,279 @@
+{
+  "schema_version": "nexus_evidence_manifest_v1",
+  "updated_at": "2026-08-02T15:57:34Z",
+  "entries": [
+    {
+      "evidence_id": "6H_FINAL_ZERO_EXECUTION::artifacts/readiness/immutable/6h_final/NEXUS_6H_V2_FINAL_REPORT.md",
+      "path": "artifacts/readiness/immutable/6h_final/NEXUS_6H_V2_FINAL_REPORT.md",
+      "evidence_type": "6H_FINAL_ZERO_EXECUTION",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "10e890118a7f7e3cd0604170323cde57ebeab0f85b006b9162573aaa1429feb4",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "historical",
+      "supersedes": [
+        "docs/04_readiness/NEXUS_6H_V2_FINAL_REPORT.md"
+      ],
+      "superseded_by": null,
+      "status": "COPIED"
+    },
+    {
+      "evidence_id": "6H_FINAL_ZERO_EXECUTION::artifacts/readiness/immutable/6h_final/NEXUS_6H_V2_FORENSIC_ZERO_EXECUTION.md",
+      "path": "artifacts/readiness/immutable/6h_final/NEXUS_6H_V2_FORENSIC_ZERO_EXECUTION.md",
+      "evidence_type": "6H_FINAL_ZERO_EXECUTION",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "e7b128b9bc60c1adae50ed34e720e1f4345512da1580a5928cb224822b2c3f86",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "historical",
+      "supersedes": [
+        "docs/04_readiness/NEXUS_6H_V2_FORENSIC_ZERO_EXECUTION.md"
+      ],
+      "superseded_by": null,
+      "status": "COPIED"
+    },
+    {
+      "evidence_id": "6H_FINAL_ZERO_EXECUTION::artifacts/readiness/immutable/6h_final/forensic_zero_execution.json",
+      "path": "artifacts/readiness/immutable/6h_final/forensic_zero_execution.json",
+      "evidence_type": "6H_FINAL_ZERO_EXECUTION",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "ba96ea6c36d4361570e81246339c73d3ec7d6e730089b7b0534649dd8c2d9c81",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "historical",
+      "supersedes": [
+        "artifacts/demo_validation_6h_v2/forensic_zero_execution.json"
+      ],
+      "superseded_by": null,
+      "status": "COPIED"
+    },
+    {
+      "evidence_id": "12H_FINAL::artifacts/readiness/immutable/12h_final/NEXUS_12H_V3_FINAL_REPORT.md",
+      "path": "artifacts/readiness/immutable/12h_final/NEXUS_12H_V3_FINAL_REPORT.md",
+      "evidence_type": "12H_FINAL",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "7b38d90713b41a4d1f407af9b3dd388f8be577d06f74ce40ac6dbd538558da8d",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "historical",
+      "supersedes": [
+        "docs/04_readiness/NEXUS_12H_V3_FINAL_REPORT.md"
+      ],
+      "superseded_by": null,
+      "status": "COPIED"
+    },
+    {
+      "evidence_id": "12H_FINAL::artifacts/readiness/immutable/12h_final/NEXUS_12H_V3_FINAL_REPORT.json",
+      "path": "artifacts/readiness/immutable/12h_final/NEXUS_12H_V3_FINAL_REPORT.json",
+      "evidence_type": "12H_FINAL",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "a3c4ee1b83e8b943fa62e3328856cd6490a7a5bf479e4d49e9bb1745ea89d0a2",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "historical",
+      "supersedes": [
+        "artifacts/demo_validation_12h_v3/NEXUS_12H_V3_FINAL_REPORT.json"
+      ],
+      "superseded_by": null,
+      "status": "COPIED"
+    },
+    {
+      "evidence_id": "POST_12H_FORENSIC::artifacts/readiness/immutable/post_12h_forensic/NEXUS_12H_V3_POST_FORENSIC_RETURN.md",
+      "path": "artifacts/readiness/immutable/post_12h_forensic/NEXUS_12H_V3_POST_FORENSIC_RETURN.md",
+      "evidence_type": "POST_12H_FORENSIC",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "e5b0e592e58aafb64e8794d0a45d3a99aa55d562ca2d6131ed80ef68318ff8df",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "historical",
+      "supersedes": [
+        "docs/04_readiness/NEXUS_12H_V3_POST_FORENSIC_RETURN.md"
+      ],
+      "superseded_by": null,
+      "status": "COPIED"
+    },
+    {
+      "evidence_id": "POST_12H_FORENSIC::artifacts/readiness/immutable/post_12h_forensic/NEXUS_12H_V3_POST_FORENSIC_RETURN.json",
+      "path": "artifacts/readiness/immutable/post_12h_forensic/NEXUS_12H_V3_POST_FORENSIC_RETURN.json",
+      "evidence_type": "POST_12H_FORENSIC",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "08fb0d65c3d27dbeaffa467a849b91a2736b95c058d1808c70480fc36f23bca0",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "historical",
+      "supersedes": [
+        "docs/04_readiness/NEXUS_12H_V3_POST_FORENSIC_RETURN.json"
+      ],
+      "superseded_by": null,
+      "status": "COPIED"
+    },
+    {
+      "evidence_id": "POST_12H_FORENSIC::artifacts/readiness/immutable/post_12h_forensic/wallet_delta_final_attempt.json",
+      "path": "artifacts/readiness/immutable/post_12h_forensic/wallet_delta_final_attempt.json",
+      "evidence_type": "POST_12H_FORENSIC",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "cb4827ac39e4bcd2d0dbadacf365cdf82f2eced3f3036a9489f32b1f271a208e",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "historical",
+      "supersedes": [
+        "artifacts/demo_validation_12h_v3_forensic/wallet_delta_final_attempt.json"
+      ],
+      "superseded_by": null,
+      "status": "COPIED"
+    },
+    {
+      "evidence_id": "SIMULATOR_QTY1_DEFECT::artifacts/readiness/immutable/risk_model_defect/NEXUS_OOS_RISK_MODEL_INTEGRITY_AUDIT.md",
+      "path": "artifacts/readiness/immutable/risk_model_defect/NEXUS_OOS_RISK_MODEL_INTEGRITY_AUDIT.md",
+      "evidence_type": "SIMULATOR_QTY1_DEFECT",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "d17477a7ffab42490b16acb84dbf711a0a950b7fb224b8418d0fce7d0570ccbb",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "historical",
+      "supersedes": [
+        "docs/04_readiness/NEXUS_OOS_RISK_MODEL_INTEGRITY_AUDIT.md"
+      ],
+      "superseded_by": null,
+      "status": "COPIED"
+    },
+    {
+      "evidence_id": "SIMULATOR_QTY1_DEFECT::artifacts/readiness/immutable/risk_model_defect/risk_model_audit_report.json",
+      "path": "artifacts/readiness/immutable/risk_model_defect/risk_model_audit_report.json",
+      "evidence_type": "SIMULATOR_QTY1_DEFECT",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "065f7c7fc4a7363211441750c39686cb40958609003564296a4b36f34bf2a284",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "historical",
+      "supersedes": [
+        "artifacts/demo_validation_geometry_market_oos/risk_model_audit_report.json"
+      ],
+      "superseded_by": null,
+      "status": "COPIED"
+    },
+    {
+      "evidence_id": "CONSUMED_FAILED_OOS::artifacts/readiness/immutable/consumed_failed_oos/consumed_oos_holdout.json",
+      "path": "artifacts/readiness/immutable/consumed_failed_oos/consumed_oos_holdout.json",
+      "evidence_type": "CONSUMED_FAILED_OOS",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "ded0caa6fa475ac4cb299d4f54e29d179b21ce1465cc8146f61e239360ab4f14",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "historical",
+      "supersedes": [
+        "artifacts/demo_validation_geometry_market_oos/consumed_oos_holdout.json"
+      ],
+      "superseded_by": null,
+      "status": "COPIED"
+    },
+    {
+      "evidence_id": "H3_WALK_FORWARD::artifacts/readiness/immutable/h3_walk_forward/edge_research_v3_report.json",
+      "path": "artifacts/readiness/immutable/h3_walk_forward/edge_research_v3_report.json",
+      "evidence_type": "H3_WALK_FORWARD",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "be2deb355a7289d93e9e45a7d57bf3144ca22fef7d881265edf930de1b542fb3",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "historical",
+      "supersedes": [
+        "artifacts/demo_validation_edge_research_v3/edge_research_v3_report.json"
+      ],
+      "superseded_by": null,
+      "status": "COPIED"
+    },
+    {
+      "evidence_id": "H3_WALK_FORWARD::artifacts/readiness/immutable/h3_walk_forward/cost_gate_starvation_forensic.json",
+      "path": "artifacts/readiness/immutable/h3_walk_forward/cost_gate_starvation_forensic.json",
+      "evidence_type": "H3_WALK_FORWARD",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "45be339cb8e94bde5c3974e4e0633da91579318bb0dfe3f2be72b3244ef54ef7",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "historical",
+      "supersedes": [
+        "artifacts/demo_validation_edge_research_v3/cost_gate_starvation_forensic.json"
+      ],
+      "superseded_by": null,
+      "status": "COPIED"
+    },
+    {
+      "evidence_id": "RUNTIME_IDENTITY::artifacts/readiness/immutable/runtime_identity/NEXUS_IDENTITY_AND_GEOMETRY_QUALIFICATION_RETURN.json",
+      "path": "artifacts/readiness/immutable/runtime_identity/NEXUS_IDENTITY_AND_GEOMETRY_QUALIFICATION_RETURN.json",
+      "evidence_type": "RUNTIME_IDENTITY",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "c33e8be427fe38c27947f30e9a92b876098d1f02d17cf312245837fd67152ea4",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "historical",
+      "supersedes": [
+        "docs/04_readiness/NEXUS_IDENTITY_AND_GEOMETRY_QUALIFICATION_RETURN.json"
+      ],
+      "superseded_by": null,
+      "status": "COPIED"
+    },
+    {
+      "evidence_id": "RUNTIME_IDENTITY::artifacts/readiness/immutable/runtime_identity/NEXUS_POST_12H_LAND_AND_GEOMETRY_RETURN.json",
+      "path": "artifacts/readiness/immutable/runtime_identity/NEXUS_POST_12H_LAND_AND_GEOMETRY_RETURN.json",
+      "evidence_type": "RUNTIME_IDENTITY",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "25cc1a5f2525715dc397d0a9f76abfa9df17d56b1bafb5cd4c2260611b5ead71",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "historical",
+      "supersedes": [
+        "docs/04_readiness/NEXUS_POST_12H_LAND_AND_GEOMETRY_RETURN.json"
+      ],
+      "superseded_by": null,
+      "status": "COPIED"
+    },
+    {
+      "evidence_id": "OOS_RESERVATION::artifacts/readiness/OOS_H3_UNTOUCHED_V1_RESERVATION.json",
+      "path": "artifacts/readiness/OOS_H3_UNTOUCHED_V1_RESERVATION.json",
+      "evidence_type": "OOS_RESERVATION",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "10ee2e4aac1aac231c5fe0fc8098c09bbec1d54d0217ec4487dbd8f203177338",
+      "retention_reason": "current_oos_reservation_not_downloaded",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "ACTIVE"
+    },
+    {
+      "evidence_id": "H3E_POLICY::artifacts/readiness/policies/H3E_OOS_POLICY_V1_FROZEN.json",
+      "path": "artifacts/readiness/policies/H3E_OOS_POLICY_V1_FROZEN.json",
+      "evidence_type": "FROZEN_POLICY",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "6912870df4f24afef2071e8681e04525d9dcfd950766f52babfb37414e6f0c71",
+      "retention_reason": "oos_preflight_policy_freeze",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "FROZEN"
+    },
+    {
+      "evidence_id": "H3D_POLICY::artifacts/readiness/policies/H3D_OOS_POLICY_V1_FROZEN.json",
+      "path": "artifacts/readiness/policies/H3D_OOS_POLICY_V1_FROZEN.json",
+      "evidence_type": "FROZEN_POLICY",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "6829c620684b4c3e1744d4e50abd4dba66427e2e554c1ee66377a18def56ea53",
+      "retention_reason": "oos_preflight_policy_freeze",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "FROZEN"
+    },
+    {
+      "evidence_id": "CANONICAL_SOT::artifacts/readiness/NEXUS_READINESS_SOT.json",
+      "path": "artifacts/readiness/NEXUS_READINESS_SOT.json",
+      "evidence_type": "CANONICAL_STATE",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "5c13585456c2f6908042b2f8ffe68defa00e74d3676a5af1c6ca9882593f8024",
+      "retention_reason": "single_machine_readable_readiness_state",
+      "canonical_or_historical": "canonical",
+      "supersedes": [
+        "docs/04_readiness/*_RETURN.*",
+        "artifacts/demo_validation_*/*"
+      ],
+      "superseded_by": null,
+      "status": "ACTIVE"
+    },
+    {
+      "evidence_id": "CANONICAL_SOT_MD::docs/04_readiness/NEXUS_READINESS_SOT.md",
+      "path": "docs/04_readiness/NEXUS_READINESS_SOT.md",
+      "evidence_type": "CANONICAL_STATE",
+      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+      "checksum": "bce8530b3cfd38b0637f9714a548cfbba9800895a411487f84119eceb994f689",
+      "retention_reason": "single_human_readable_readiness_summary",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "ACTIVE"
+    }
+  ]
+}
