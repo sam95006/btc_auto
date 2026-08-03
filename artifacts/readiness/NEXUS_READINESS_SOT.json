@@ -1,12 +1,12 @@
 {
   "schema_version": "nexus_readiness_sot_v1",
-  "updated_at": "2026-08-03T08:00:55Z",
+  "updated_at": "2026-08-03T08:53:06Z",
   "pr": 24,
   "pr_draft": true,
   "pr_merged": false,
-  "pr_head": "05957249aaf0085082fa5ba2110db6e5255726f1",
+  "pr_head": "bd1c1fb0ab762830a86e95596fb0235d19ff8d0b",
   "edge_research_v3_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-  "system_stage": "GOAL_ALIGNMENT_REAL_AI_AND_BROAD_DATA",
+  "system_stage": "REAL_FOUR_AI_LEARNING_LOOP_VERIFICATION_V1",
   "current_approved_strategies": {
     "PRIMARY_QUALIFICATION_COHORT": "H3E",
     "CONFIRMATORY_COHORT": "H3D",
@@ -122,7 +122,7 @@
   "risk_review_packet_ready": false,
   "shadow_status": "NOT_APPLIED",
   "qualification_complete": false,
-  "recommendation": "NEXUS_REAL_AI_PROVIDER_CONFIGURATION_INCOMPLETE",
+  "recommendation": "NEXUS_REAL_AI_LEARNING_LOOP_VERIFIED_READY_FOR_STRATEGY_ENGINE",
   "canonical_files": [
     "docs/04_readiness/NEXUS_READINESS_SOT.md",
     "artifacts/readiness/NEXUS_READINESS_SOT.json",
@@ -262,7 +262,7 @@
   },
   "implementation_commit": "46a419149a6a6a7f530d0f806c13816979dbf122",
   "h5_research_commit": "46a419149a6a6a7f530d0f806c13816979dbf122",
-  "canonical_workspace": "G:\\我的雲端硬碟\\btc_bot",
+  "canonical_workspace": "G:\\\\我的雲端硬碟\\\\btc_bot",
   "goal_alignment_v1": {
     "recommendation": "NEXUS_REAL_AI_PROVIDER_CONFIGURATION_INCOMPLETE",
     "immutable_package": "artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/",
@@ -278,5 +278,36 @@
     "h5_preserved": true,
     "h5_not_rerun": true
   },
-  "alignment_commit": "05957249aaf0085082fa5ba2110db6e5255726f1"
+  "alignment_commit": "05957249aaf0085082fa5ba2110db6e5255726f1",
+  "remaining_unattributed_delta": -0.97052039,
+  "real_four_ai_learning_loop": {
+    "providers": {
+      "groq_main_model_id": "llama-3.3-70b-versatile",
+      "groq_main_status": "REAL_API_PASS",
+      "groq_main_latency_ms": 396,
+      "groq_reflection_model_id": "llama-3.3-70b-versatile",
+      "groq_reflection_status": "REAL_API_PASS",
+      "groq_reflection_latency_ms": 238,
+      "groq_quota_pool_relation": "UNKNOWN",
+      "cerebras_model_id": "gemma-4-31b",
+      "cerebras_status": "REAL_API_PASS",
+      "cerebras_latency_ms": 560,
+      "sambanova_model_id": "Meta-Llama-3.3-70B-Instruct",
+      "sambanova_status": "REAL_API_PASS",
+      "sambanova_latency_ms": 659
+    },
+    "learning_loop_real_api_status": "PASS",
+    "lesson_delivery_proof_status": "PASS",
+    "reflection_success_count": 20,
+    "lesson_record_count": 9,
+    "lesson_memory_write_count": 9,
+    "lesson_retrieval_count": 13,
+    "main_reasoner_lesson_reference_count": 11,
+    "main_reasoner_lesson_application_count": 3,
+    "cerebras_model_note": "NEXUS_CEREBRAS_MODEL override (account catalog; llama-3.3-70b unavailable)"
+  },
+  "mainnet": false,
+  "real_money": false,
+  "deployment_started": false,
+  "exchange_write_attempt_count": 0
 }
