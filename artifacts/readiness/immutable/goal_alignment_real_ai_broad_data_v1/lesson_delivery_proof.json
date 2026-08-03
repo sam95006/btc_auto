@@ -1,0 +1,58 @@
+{
+  "schema": "lesson_delivery_proof_v1",
+  "status": "FAIL",
+  "cases": [
+    {
+      "candidate_symbol": "SOLUSDT",
+      "result": {
+        "decision_status": "MAIN_REASONER_UNAVAILABLE",
+        "decision": "UNKNOWN",
+        "order_permission": "BLOCK_NEW_ORDER",
+        "auto_failover_forbidden": true
+      },
+      "provider_record_status": "PROVIDER_UNAVAILABLE"
+    },
+    {
+      "candidate_symbol": "HYPEUSDT",
+      "result": {
+        "decision_status": "MAIN_REASONER_UNAVAILABLE",
+        "decision": "UNKNOWN",
+        "order_permission": "BLOCK_NEW_ORDER",
+        "auto_failover_forbidden": true
+      },
+      "provider_record_status": "PROVIDER_UNAVAILABLE"
+    },
+    {
+      "candidate_symbol": "DOGEUSDT",
+      "result": {
+        "decision_status": "MAIN_REASONER_UNAVAILABLE",
+        "decision": "UNKNOWN",
+        "order_permission": "BLOCK_NEW_ORDER",
+        "auto_failover_forbidden": true
+      },
+      "provider_record_status": "PROVIDER_UNAVAILABLE"
+    },
+    {
+      "candidate_symbol": "ADAUSDT",
+      "result": {
+        "decision_status": "MAIN_REASONER_UNAVAILABLE",
+        "decision": "UNKNOWN",
+        "order_permission": "BLOCK_NEW_ORDER",
+        "auto_failover_forbidden": true
+      },
+      "provider_record_status": "PROVIDER_UNAVAILABLE"
+    },
+    {
+      "candidate_symbol": "ZECUSDT",
+      "result": {
+        "decision_status": "MAIN_REASONER_UNAVAILABLE",
+        "decision": "UNKNOWN",
+        "order_permission": "BLOCK_NEW_ORDER",
+        "auto_failover_forbidden": true
+      },
+      "provider_record_status": "PROVIDER_UNAVAILABLE"
+    }
+  ],
+  "main_reasoner_lesson_reference_count": 0,
+  "main_reasoner_lesson_application_count": 0
+}

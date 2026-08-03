@@ -29,6 +29,11 @@ SECRET_PATTERNS = [
     re.compile(r"(?i)Bearer\s+[A-Za-z0-9\-._~+/]+=*"),
     re.compile(r"(?i)BYBIT[_A-Z0-9]*\s*[:=]\s*\S+"),
     re.compile(r"(?i)NEXUS_[A-Z0-9_]*KEY\s*[:=]\s*\S+"),
+    re.compile(r"(?i)GROQ_API_KEY[_A-Z]*\s*[:=]\s*\S+"),
+    re.compile(r"(?i)CEREBRAS_API_KEY\s*[:=]\s*\S+"),
+    re.compile(r"(?i)SAMBANOVA_API_KEY\s*[:=]\s*\S+"),
+    re.compile(r"(?i)\bgsk_[A-Za-z0-9]{8,}\b"),
+    re.compile(r"(?i)\bcsk_[A-Za-z0-9]{8,}\b"),
 ]
 
 

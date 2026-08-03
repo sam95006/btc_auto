@@ -1,0 +1,19 @@
+{
+  "schema": "pr_metadata_correction_v1",
+  "pr_number": 24,
+  "canonical_workspace": "G:\\我的雲端硬碟\\btc_bot",
+  "current_stage": "GOAL_ALIGNMENT_REAL_AI_AND_BROAD_DATA",
+  "H3": "REJECTED_CURRENT_POLICY",
+  "H4": "NO_VALIDATED_POLICY",
+  "H5": "INSUFFICIENT_SAMPLE",
+  "Demo": "BLOCKED",
+  "september_h3_oos": "OOS_WINDOW_NOT_MATURE_RESEARCH_CONFIRMATION_ONLY",
+  "wallet_residual": "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST",
+  "trading_db": "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED",
+  "removed_stale_claims": [
+    "canonical workspace at C:\\NEXUS\\BTC_BOT_ACTIVE",
+    "H3 OOS approval required as current recommendation",
+    "old PR head / old test counts"
+  ],
+  "no_demo_oos_deploy_mainnet_real_money": true
+}

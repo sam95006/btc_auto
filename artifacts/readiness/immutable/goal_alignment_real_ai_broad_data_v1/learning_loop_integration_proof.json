@@ -1,0 +1,83 @@
+{
+  "schema": "learning_loop_integration_proof_v1",
+  "h5_not_rerun": true,
+  "strategy_qualification_executed": false,
+  "exchange_write_attempt_count": 0,
+  "integration_trade_sample_count": 20,
+  "reflection_success_count": 0,
+  "lesson_record_count": 0,
+  "independent_critic_review_count": 0,
+  "lesson_memory_write_count": 0,
+  "lesson_retrieval_count": 0,
+  "main_reasoner_lesson_reference_count": 0,
+  "main_reasoner_lesson_application_count": 0,
+  "invalid_ai_schema_count": 0,
+  "provider_substitution_count": 0,
+  "local_reasoner_crosscheck": {
+    "retrieved_lesson_ids": [],
+    "applied_lesson_ids": []
+  },
+  "delivery_cases": [
+    {
+      "candidate_symbol": "SOLUSDT",
+      "result": {
+        "decision_status": "MAIN_REASONER_UNAVAILABLE",
+        "decision": "UNKNOWN",
+        "order_permission": "BLOCK_NEW_ORDER",
+        "auto_failover_forbidden": true
+      },
+      "provider_record_status": "PROVIDER_UNAVAILABLE"
+    },
+    {
+      "candidate_symbol": "HYPEUSDT",
+      "result": {
+        "decision_status": "MAIN_REASONER_UNAVAILABLE",
+        "decision": "UNKNOWN",
+        "order_permission": "BLOCK_NEW_ORDER",
+        "auto_failover_forbidden": true
+      },
+      "provider_record_status": "PROVIDER_UNAVAILABLE"
+    },
+    {
+      "candidate_symbol": "DOGEUSDT",
+      "result": {
+        "decision_status": "MAIN_REASONER_UNAVAILABLE",
+        "decision": "UNKNOWN",
+        "order_permission": "BLOCK_NEW_ORDER",
+        "auto_failover_forbidden": true
+      },
+      "provider_record_status": "PROVIDER_UNAVAILABLE"
+    },
+    {
+      "candidate_symbol": "ADAUSDT",
+      "result": {
+        "decision_status": "MAIN_REASONER_UNAVAILABLE",
+        "decision": "UNKNOWN",
+        "order_permission": "BLOCK_NEW_ORDER",
+        "auto_failover_forbidden": true
+      },
+      "provider_record_status": "PROVIDER_UNAVAILABLE"
+    },
+    {
+      "candidate_symbol": "ZECUSDT",
+      "result": {
+        "decision_status": "MAIN_REASONER_UNAVAILABLE",
+        "decision": "UNKNOWN",
+        "order_permission": "BLOCK_NEW_ORDER",
+        "auto_failover_forbidden": true
+      },
+      "provider_record_status": "PROVIDER_UNAVAILABLE"
+    }
+  ],
+  "lesson_delivery_proof_status": "FAIL",
+  "hard_risk_override_test_status": "PASS",
+  "lessons_status_ceiling": "VALIDATED_AS_TEMPORARY_CONTROL",
+  "permanent_validation_statuses_created": [],
+  "learning_loop_real_api_status": "FAIL",
+  "providers_used": [
+    "GROQ_MAIN_REASONER",
+    "GROQ_REFLECTION_REASONER",
+    "CEREBRAS_RESEARCH_NORMALIZER",
+    "SAMBANOVA_INDEPENDENT_CRITIC"
+  ]
+}

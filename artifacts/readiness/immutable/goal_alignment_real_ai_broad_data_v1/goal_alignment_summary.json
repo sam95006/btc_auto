@@ -1,0 +1,265 @@
+{
+  "schema": "goal_alignment_v1_summary",
+  "updated_at": "2026-08-03T07:54:22Z",
+  "source_commit": "92758ab63183b116bf63ed6499657bbc092272d2",
+  "recommendation": "NEXUS_REAL_AI_PROVIDER_CONFIGURATION_INCOMPLETE",
+  "exchange_write_attempt_count": 0,
+  "shadow_status": "NOT_APPLIED",
+  "deployment_started": false,
+  "mainnet": false,
+  "real_money": false,
+  "demo_forward_status": "BLOCKED",
+  "H3_status": "REJECTED_CURRENT_POLICY",
+  "september_h3_oos_status": "OOS_WINDOW_NOT_MATURE_RESEARCH_CONFIRMATION_ONLY",
+  "wallet_delta_classification": "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST",
+  "remaining_unattributed_delta": -0.97052039,
+  "trading_db_status": "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED",
+  "h5_preserved": {
+    "H5A_status": "INSUFFICIENT_SAMPLE",
+    "H5A_founder_label": "PROMISING_RESEARCH_CANDIDATE_INSUFFICIENT_SAMPLE",
+    "H5A_completed_trade_count": 125,
+    "H5A_net_expectancy": 0.3217121452,
+    "H5A_profit_factor": 1.222693,
+    "H5A_adverse_profit_factor": 1.137898,
+    "H5B_status": "INSUFFICIENT_SAMPLE",
+    "H5C_status": "INSUFFICIENT_SAMPLE",
+    "H5C_founder_label": "PROMISING_RESEARCH_CANDIDATE_FOLD_CONCENTRATION_AND_SAMPLE_LIMITED",
+    "selected_h5_primary_policy": null,
+    "h5_oos_reservation_id": null,
+    "h5_not_rerun": true,
+    "h5_trade_gate_not_lowered": true,
+    "preregistration_checksums_unchanged": true
+  },
+  "alignment": {
+    "schema": "provider_alignment_v1",
+    "active_provider_profile_count": 4,
+    "active_profiles": [
+      "GROQ_MAIN_REASONER",
+      "GROQ_REFLECTION_REASONER",
+      "CEREBRAS_RESEARCH_NORMALIZER",
+      "SAMBANOVA_INDEPENDENT_CRITIC"
+    ],
+    "inactive_providers": {
+      "OLLAMA": "INACTIVE_NOT_FOUNDER_CONFIGURED",
+      "GEMINI": "INACTIVE_NOT_FOUNDER_CONFIGURED",
+      "CLOUDFLARE_WORKERS_AI": "INACTIVE_NOT_FOUNDER_CONFIGURED",
+      "OPENROUTER": "INACTIVE_NOT_FOUNDER_CONFIGURED"
+    },
+    "groq_main_profile_id": "GROQ_MAIN_REASONER",
+    "groq_reflection_profile_id": "GROQ_REFLECTION_REASONER",
+    "groq_main_model_id": "llama-3.3-70b-versatile",
+    "groq_reflection_model_id": "llama-3.3-70b-versatile",
+    "groq_quota_pool_relation": "UNKNOWN",
+    "cerebras_model_id": "llama-3.3-70b",
+    "sambanova_model_id": "Meta-Llama-3.3-70B-Instruct",
+    "role_map": {
+      "main_market_reasoner": "GROQ_MAIN_REASONER",
+      "reflection_reasoner": "GROQ_REFLECTION_REASONER",
+      "lesson_normalizer": "CEREBRAS_RESEARCH_NORMALIZER",
+      "bulk_research_summarizer": "CEREBRAS_RESEARCH_NORMALIZER",
+      "independent_reflection_critic": "SAMBANOVA_INDEPENDENT_CRITIC"
+    },
+    "env_var_names": {
+      "GROQ_MAIN_REASONER": "GROQ_API_KEY_PRIMARY",
+      "GROQ_REFLECTION_REASONER": "GROQ_API_KEY_SECONDARY",
+      "CEREBRAS_RESEARCH_NORMALIZER": "CEREBRAS_API_KEY",
+      "SAMBANOVA_INDEPENDENT_CRITIC": "SAMBANOVA_API_KEY"
+    },
+    "cerebras_cannot_approve_orders": true,
+    "sambanova_cannot_approve_orders": true,
+    "hard_risk_override_forbidden": true,
+    "main_reasoner_failover_forbidden": true,
+    "smoke": {
+      "groq_main_status": "NOT_CONFIGURED",
+      "groq_reflection_status": "NOT_CONFIGURED",
+      "cerebras_status": "NOT_CONFIGURED",
+      "sambanova_status": "NOT_CONFIGURED"
+    },
+    "external_secret_redaction_status": "IMPLEMENTED",
+    "provider_fail_closed_status": "IMPLEMENTED",
+    "dotenv_keys_loaded_count": 0,
+    "dotenv_key_names_loaded": [],
+    "ci_mock_mode": false
+  },
+  "smoke": [
+    {
+      "provider_profile": "GROQ_MAIN_REASONER",
+      "provider_name": "groq",
+      "endpoint_host": "api.groq.com",
+      "verified_model_id": "llama-3.3-70b-versatile",
+      "response_schema_version": "nexus_smoke_v1",
+      "request_hash": "7699c823584d3a1e7bb1713b916ca0e58f4e2dd9dc3eabb6dada3b240180195d",
+      "response_hash": null,
+      "latency_ms": 0,
+      "input_tokens": null,
+      "output_tokens": null,
+      "rate_limit_header_present": false,
+      "result_status": "NOT_CONFIGURED",
+      "tested_at": "2026-08-03T07:51:36Z",
+      "api_key_env_name": "GROQ_API_KEY_PRIMARY",
+      "api_key_present": false
+    },
+    {
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "provider_name": "groq",
+      "endpoint_host": "api.groq.com",
+      "verified_model_id": "llama-3.3-70b-versatile",
+      "response_schema_version": "nexus_smoke_v1",
+      "request_hash": "7699c823584d3a1e7bb1713b916ca0e58f4e2dd9dc3eabb6dada3b240180195d",
+      "response_hash": null,
+      "latency_ms": 0,
+      "input_tokens": null,
+      "output_tokens": null,
+      "rate_limit_header_present": false,
+      "result_status": "NOT_CONFIGURED",
+      "tested_at": "2026-08-03T07:51:36Z",
+      "api_key_env_name": "GROQ_API_KEY_SECONDARY",
+      "api_key_present": false
+    },
+    {
+      "provider_profile": "CEREBRAS_RESEARCH_NORMALIZER",
+      "provider_name": "cerebras",
+      "endpoint_host": "api.cerebras.ai",
+      "verified_model_id": "llama-3.3-70b",
+      "response_schema_version": "nexus_smoke_v1",
+      "request_hash": "7699c823584d3a1e7bb1713b916ca0e58f4e2dd9dc3eabb6dada3b240180195d",
+      "response_hash": null,
+      "latency_ms": 0,
+      "input_tokens": null,
+      "output_tokens": null,
+      "rate_limit_header_present": false,
+      "result_status": "NOT_CONFIGURED",
+      "tested_at": "2026-08-03T07:51:36Z",
+      "api_key_env_name": "CEREBRAS_API_KEY",
+      "api_key_present": false
+    },
+    {
+      "provider_profile": "SAMBANOVA_INDEPENDENT_CRITIC",
+      "provider_name": "sambanova",
+      "endpoint_host": "api.sambanova.ai",
+      "verified_model_id": "Meta-Llama-3.3-70B-Instruct",
+      "response_schema_version": "nexus_smoke_v1",
+      "request_hash": "7699c823584d3a1e7bb1713b916ca0e58f4e2dd9dc3eabb6dada3b240180195d",
+      "response_hash": null,
+      "latency_ms": 0,
+      "input_tokens": null,
+      "output_tokens": null,
+      "rate_limit_header_present": false,
+      "result_status": "NOT_CONFIGURED",
+      "tested_at": "2026-08-03T07:51:36Z",
+      "api_key_env_name": "SAMBANOVA_API_KEY",
+      "api_key_present": false
+    }
+  ],
+  "coverage": {
+    "schema": "historical_capability_coverage_v1",
+    "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE",
+    "fleet_architecture": false,
+    "price_history_eligible_count": 99,
+    "derivatives_history_eligible_count": 99,
+    "live_monitor_only_count": 547,
+    "ineligible_count": 30,
+    "mainstream_price_eligible_count": 94,
+    "mid_size_price_eligible_count": 5,
+    "small_price_eligible_count": 0,
+    "meme_price_eligible_count": 5,
+    "targets": {
+      "PRICE_HISTORY_ELIGIBLE": 60,
+      "DERIVATIVES_HISTORY_ELIGIBLE": 20,
+      "mainstream": 15,
+      "mid_size": 20,
+      "small": 15,
+      "meme": 8
+    },
+    "note": "Price-structure strategies must not require OI; OI/Funding strategies require DERIVATIVES_HISTORY_ELIGIBLE",
+    "class_coverage_profiles": {
+      "schema": "dynamic_universe_coverage_v1",
+      "note": "Coverage only — not fleets",
+      "total_profiles": 676,
+      "MAINSTREAM": 187,
+      "MID_SIZE": 257,
+      "SMALL": 232,
+      "MEME": 12,
+      "NON_MEME": 664,
+      "UNKNOWN": 0
+    },
+    "historical_symbols_attempted": 80,
+    "download": {
+      "partitions_written": 54,
+      "historical_record_count": 935989,
+      "historical_dataset_checksum": "4e0115e9a61c95d14af7fd7b8e381dae813b464897adb1a4d883f87b8d4f8b93",
+      "pending_remaining": 666,
+      "completed_count": 54,
+      "prior_h5_cache_symbols": [
+        "ADAUSDT",
+        "BTCUSDT",
+        "DOGEUSDT",
+        "ETHUSDT",
+        "HYPEUSDT",
+        "SOLUSDT",
+        "SOXLUSDT",
+        "XAUUSDT",
+        "XRPUSDT",
+        "ZECUSDT"
+      ],
+      "prior_h5_record_count": 572216
+    },
+    "historical_storage_size": 99976542,
+    "download_resume_test_status": "PASS",
+    "reserved_interval_exclusion_status": "ENFORCED",
+    "blockers_if_targets_missed": []
+  },
+  "exclusion_top": [
+    {
+      "exclusion_reason": "PRIOR_RESEARCH_SYMBOL_CAP_NOT_DATA_GATE",
+      "affected_symbol_count": 666
+    },
+    {
+      "exclusion_reason": "TURNOVER_TOO_LOW",
+      "affected_symbol_count": 387
+    },
+    {
+      "exclusion_reason": "OTHER_EXPLICIT_REASON",
+      "affected_symbol_count": 174
+    },
+    {
+      "exclusion_reason": "INSUFFICIENT_LISTING_AGE",
+      "affected_symbol_count": 78
+    },
+    {
+      "exclusion_reason": "SPREAD_TOO_HIGH",
+      "affected_symbol_count": 30
+    },
+    {
+      "exclusion_reason": "SLIPPAGE_TOO_HIGH",
+      "affected_symbol_count": 12
+    }
+  ],
+  "learning": {
+    "schema": "learning_loop_integration_proof_v1",
+    "h5_not_rerun": true,
+    "strategy_qualification_executed": false,
+    "exchange_write_attempt_count": 0,
+    "integration_trade_sample_count": 20,
+    "reflection_success_count": 0,
+    "lesson_record_count": 0,
+    "independent_critic_review_count": 0,
+    "lesson_memory_write_count": 0,
+    "lesson_retrieval_count": 0,
+    "main_reasoner_lesson_reference_count": 0,
+    "main_reasoner_lesson_application_count": 0,
+    "invalid_ai_schema_count": 0,
+    "provider_substitution_count": 0,
+    "lesson_delivery_proof_status": "FAIL",
+    "hard_risk_override_test_status": "PASS",
+    "lessons_status_ceiling": "VALIDATED_AS_TEMPORARY_CONTROL",
+    "permanent_validation_statuses_created": [],
+    "learning_loop_real_api_status": "FAIL",
+    "providers_used": [
+      "GROQ_MAIN_REASONER",
+      "GROQ_REFLECTION_REASONER",
+      "CEREBRAS_RESEARCH_NORMALIZER",
+      "SAMBANOVA_INDEPENDENT_CRITIC"
+    ]
+  }
+}

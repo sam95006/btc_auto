@@ -1,0 +1,51 @@
+{
+  "schema": "provider_alignment_v1",
+  "active_provider_profile_count": 4,
+  "active_profiles": [
+    "GROQ_MAIN_REASONER",
+    "GROQ_REFLECTION_REASONER",
+    "CEREBRAS_RESEARCH_NORMALIZER",
+    "SAMBANOVA_INDEPENDENT_CRITIC"
+  ],
+  "inactive_providers": {
+    "OLLAMA": "INACTIVE_NOT_FOUNDER_CONFIGURED",
+    "GEMINI": "INACTIVE_NOT_FOUNDER_CONFIGURED",
+    "CLOUDFLARE_WORKERS_AI": "INACTIVE_NOT_FOUNDER_CONFIGURED",
+    "OPENROUTER": "INACTIVE_NOT_FOUNDER_CONFIGURED"
+  },
+  "groq_main_profile_id": "GROQ_MAIN_REASONER",
+  "groq_reflection_profile_id": "GROQ_REFLECTION_REASONER",
+  "groq_main_model_id": "llama-3.3-70b-versatile",
+  "groq_reflection_model_id": "llama-3.3-70b-versatile",
+  "groq_quota_pool_relation": "UNKNOWN",
+  "cerebras_model_id": "llama-3.3-70b",
+  "sambanova_model_id": "Meta-Llama-3.3-70B-Instruct",
+  "role_map": {
+    "main_market_reasoner": "GROQ_MAIN_REASONER",
+    "reflection_reasoner": "GROQ_REFLECTION_REASONER",
+    "lesson_normalizer": "CEREBRAS_RESEARCH_NORMALIZER",
+    "bulk_research_summarizer": "CEREBRAS_RESEARCH_NORMALIZER",
+    "independent_reflection_critic": "SAMBANOVA_INDEPENDENT_CRITIC"
+  },
+  "env_var_names": {
+    "GROQ_MAIN_REASONER": "GROQ_API_KEY_PRIMARY",
+    "GROQ_REFLECTION_REASONER": "GROQ_API_KEY_SECONDARY",
+    "CEREBRAS_RESEARCH_NORMALIZER": "CEREBRAS_API_KEY",
+    "SAMBANOVA_INDEPENDENT_CRITIC": "SAMBANOVA_API_KEY"
+  },
+  "cerebras_cannot_approve_orders": true,
+  "sambanova_cannot_approve_orders": true,
+  "hard_risk_override_forbidden": true,
+  "main_reasoner_failover_forbidden": true,
+  "smoke": {
+    "groq_main_status": "NOT_CONFIGURED",
+    "groq_reflection_status": "NOT_CONFIGURED",
+    "cerebras_status": "NOT_CONFIGURED",
+    "sambanova_status": "NOT_CONFIGURED"
+  },
+  "external_secret_redaction_status": "IMPLEMENTED",
+  "provider_fail_closed_status": "IMPLEMENTED",
+  "dotenv_keys_loaded_count": 0,
+  "dotenv_key_names_loaded": [],
+  "ci_mock_mode": false
+}

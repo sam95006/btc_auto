@@ -1,12 +1,12 @@
 {
   "schema_version": "nexus_readiness_sot_v1",
-  "updated_at": "2026-08-03T07:18:29Z",
+  "updated_at": "2026-08-03T07:55:28Z",
   "pr": 24,
   "pr_draft": true,
   "pr_merged": false,
   "pr_head": "46a419149a6a6a7f530d0f806c13816979dbf122",
   "edge_research_v3_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-  "system_stage": "H5_RESEARCH_INSUFFICIENT_SAMPLE",
+  "system_stage": "GOAL_ALIGNMENT_REAL_AI_AND_BROAD_DATA",
   "current_approved_strategies": {
     "PRIMARY_QUALIFICATION_COHORT": "H3E",
     "CONFIRMATORY_COHORT": "H3D",
@@ -118,11 +118,11 @@
     "trading_db_prior_local_state_not_recovered",
     "wallet_delta_unattributed"
   ],
-  "next_permitted_action": "Expand eligible historical coverage / redesign H5 without lowering gates; no Demo; no H5 OOS; no September OOS",
+  "next_permitted_action": "Configure GROQ_API_KEY_PRIMARY/SECONDARY, CEREBRAS_API_KEY, SAMBANOVA_API_KEY under G Drive root .env then re-run smoke + learning drill; no H5 rerun; no Demo",
   "risk_review_packet_ready": false,
   "shadow_status": "NOT_APPLIED",
   "qualification_complete": false,
-  "recommendation": "NEXUS_H5_RESEARCH_INSUFFICIENT_SAMPLE",
+  "recommendation": "NEXUS_REAL_AI_PROVIDER_CONFIGURATION_INCOMPLETE",
   "canonical_files": [
     "docs/04_readiness/NEXUS_READINESS_SOT.md",
     "artifacts/readiness/NEXUS_READINESS_SOT.json",
@@ -165,7 +165,7 @@
   "route_count": 238,
   "runtime_import_error_count": 0,
   "local_footprint_note": "G_DRIVE_REPO_GIT_CORRUPTED_DURING_INTERRUPTED_GC; rebuilt via shallow clone; trading.db local file lost",
-  "current_system_stage": "H5_RESEARCH_INSUFFICIENT_SAMPLE",
+  "current_system_stage": "GOAL_ALIGNMENT_REAL_AI_AND_BROAD_DATA",
   "storage_cleanup_commit": "4aebf540178c0fe6a6ff5a72156f9e865f0eda9d",
   "route_contract_difference_count": 0,
   "local_footprint": {
@@ -242,7 +242,7 @@
   },
   "september_h3_oos_status": "OOS_WINDOW_NOT_MATURE_RESEARCH_CONFIRMATION_ONLY",
   "demo_forward_packet_ready": false,
-  "demo_forward_status": "BLOCKED_PENDING_VALIDATED_POLICY_AND_OOS",
+  "demo_forward_status": "BLOCKED",
   "dynamic_universe_ai_learning_h5_v1": {
     "recommendation": "NEXUS_H5_RESEARCH_INSUFFICIENT_SAMPLE",
     "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE",
@@ -261,5 +261,21 @@
     "exchange_write_attempt_count": 0
   },
   "implementation_commit": "46a419149a6a6a7f530d0f806c13816979dbf122",
-  "h5_research_commit": "46a419149a6a6a7f530d0f806c13816979dbf122"
+  "h5_research_commit": "46a419149a6a6a7f530d0f806c13816979dbf122",
+  "canonical_workspace": "G:\\我的雲端硬碟\\btc_bot",
+  "goal_alignment_v1": {
+    "recommendation": "NEXUS_REAL_AI_PROVIDER_CONFIGURATION_INCOMPLETE",
+    "immutable_package": "artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/",
+    "price_history_eligible_count": 99,
+    "derivatives_history_eligible_count": 99,
+    "active_provider_profile_count": 4,
+    "smoke": {
+      "GROQ_MAIN_REASONER": "NOT_CONFIGURED",
+      "GROQ_REFLECTION_REASONER": "NOT_CONFIGURED",
+      "CEREBRAS_RESEARCH_NORMALIZER": "NOT_CONFIGURED",
+      "SAMBANOVA_INDEPENDENT_CRITIC": "NOT_CONFIGURED"
+    },
+    "h5_preserved": true,
+    "h5_not_rerun": true
+  }
 }

@@ -1,53 +1,36 @@
 # NEXUS Readiness Source of Truth
 
-Updated: 2026-08-03T07:15:00Z
+Updated: 2026-08-03T08:00:00Z
 
 ## Current system stage
 
-`H5_RESEARCH_INSUFFICIENT_SAMPLE`
+`GOAL_ALIGNMENT_REAL_AI_AND_BROAD_DATA`
 
-PR #24 head: 46a419149a6a6a7f530d0f806c13816979dbf122
+Canonical workspace: `G:\我的雲端硬碟\btc_bot`
 
-Immutable package: `artifacts/readiness/immutable/dynamic_universe_ai_learning_h5_v1/`
+## H3 / H4 / H5 (preserved)
 
-## H3 status
+- H3=`REJECTED_CURRENT_POLICY`
+- H4=`NO_VALIDATED_POLICY` (H4A PROMISING_MECHANISM_NOT_PORTABLE; H4C POSITIVE_BASE_RESULT_NOT_COST_OR_FOLD_STABLE — not promoted)
+- H5A/B/C=`INSUFFICIENT_SAMPLE` (not rerun; gate not lowered)
+- H5A label=`PROMISING_RESEARCH_CANDIDATE_INSUFFICIENT_SAMPLE`
+- selected_h5_primary_policy=`null` · h5_oos_reservation_id=`null`
 
-`REJECTED_CURRENT_POLICY`
+## Goal Alignment V1
 
-- September OOS=`OOS_WINDOW_NOT_MATURE_RESEARCH_CONFIRMATION_ONLY`
-- consumed closed historical holdout remains sealed failed
+- dynamic universe eligible≈676; prior 10-symbol limit was research hard-cap, not full data gate
+- PRICE_HISTORY_ELIGIBLE / DERIVATIVES_HISTORY_ELIGIBLE expanded via capability model + probes
+- Active AI profiles (4): GROQ_MAIN_REASONER, GROQ_REFLECTION_REASONER, CEREBRAS_RESEARCH_NORMALIZER, SAMBANOVA_INDEPENDENT_CRITIC
+- Real API smoke: all four `NOT_CONFIGURED` (env keys unset in this workspace)
+- Learning-loop real API delivery: `FAIL` until keys present
 
-## H4 sealed (do not soften)
+## Blockers preserved
 
-- H4A=`REJECTED_CONCENTRATED_EDGE` / Founder=`PROMISING_MECHANISM_NOT_PORTABLE` (201 trades; fold_concentration≈0.804)
-- H4B=`INSUFFICIENT_SAMPLE`
-- H4C=`REJECTED_COST_DOMINATED` / Founder=`POSITIVE_BASE_RESULT_NOT_COST_OR_FOLD_STABLE`
-- selected_h4_primary_policy=`null`
-- fold-concentration gate not lowered
-
-## Dynamic universe + AI learning foundation
-
-- universe=`NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE` (single universe; no fleets)
-- eligible instruments≈676 (cursor pagination complete)
-- AI gateway=`IMPLEMENTED` (OLLAMA/GROQ/GEMINI/CLOUDFLARE; CI mocked; fail-closed; redaction)
-- learning loop=`IMPLEMENTED` (lesson_record_v1; hard Risk Critic non-overridable)
-
-## H5 Portability Research V1
-
-- recommendation=`NEXUS_H5_RESEARCH_INSUFFICIENT_SAMPLE`
-- selected_h5_primary_policy=`null`
-- H5A=`INSUFFICIENT_SAMPLE` (125 completed < 150 gate; metrics not promoted)
-- H5B=`INSUFFICIENT_SAMPLE` (65)
-- H5C=`INSUFFICIENT_SAMPLE` (116)
-- h5_oos_reservation_id=`null`
-- h5_oos_downloaded=`false` / h5_oos_executed=`false`
-- Demo forward=`BLOCKED_PENDING_VALIDATED_POLICY_AND_OOS`
-
-## Wallet residual
-
-- `WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST` / `-0.97052039`
-- trading_db=`TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED`
+- September H3 OOS=`OOS_WINDOW_NOT_MATURE_RESEARCH_CONFIRMATION_ONLY`
+- Wallet=`WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST` / `-0.97052039`
+- Trading DB=`TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED`
+- Demo=`BLOCKED`
 
 ## Recommendation
 
-`NEXUS_H5_RESEARCH_INSUFFICIENT_SAMPLE`
+`NEXUS_REAL_AI_PROVIDER_CONFIGURATION_INCOMPLETE`
