@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import time
 from collections import Counter
 from typing import Any
 
@@ -340,16 +341,24 @@ def run_reflection_calibration_v21(
         if det == "PROCESS_EVIDENCE_INSUFFICIENT":
             expected_family = "UNDETERMINED_PROCESS"
 
-        # Instruct AI: may not invent missing fields
+        # Instruct AI: may not invent missing fields; Evidence V2.1 taxonomy is closed
         missing = (packet.get("evidence_layers") or {}).get("missing_evidence") or []
+        allowed = (
+            "GOOD_PROCESS_WIN|GOOD_PROCESS_LOSS|BAD_PROCESS_WIN|BAD_PROCESS_LOSS|UNDETERMINED_PROCESS"
+        )
         prompt = (
-            "Reflection V2.1. Classify process using ONLY evidence. "
+            "Reflection V2.1 Evidence classification. "
             f"deterministic_baseline={det}. "
             f"missing_evidence={missing}. "
             "Do NOT invent spread, slippage, Funding, OI, regime, rule violation, or entry rationale. "
             "Distinguish fact vs inference vs interpretation. "
             "A loss is not automatically BAD_PROCESS_LOSS. "
             "A win is not automatically GOOD_PROCESS_WIN. "
+            f"process_classification MUST be exactly one of: {allowed}. "
+            "Do not return PROCESS_COMPLIANT, NONCOMPLIANT, INCONCLUSIVE, or INCOMPLETE_EVIDENCE. "
+            "If evidence is insufficient, return UNDETERMINED_PROCESS. "
+            f"Deterministic mapping suggests {expected_family} when evidence supports it; "
+            "you may disagree only with evidence-based justification, still using an allowed label. "
             "Return reflection_v1 JSON."
         )
         if mock:
@@ -373,22 +382,59 @@ def run_reflection_calibration_v21(
         if reflection is None:
             undetermined += 1
             continue
-        ai_cls = str(reflection.get("process_classification") or "UNDETERMINED_PROCESS")
-        packet.setdefault("evidence_layers", {}).setdefault("AI_interpretation", {})["process_classification"] = ai_cls
+        raw_cls = str(reflection.get("process_classification") or "").strip().upper()
+        allowed_set = {
+            "GOOD_PROCESS_WIN",
+            "GOOD_PROCESS_LOSS",
+            "BAD_PROCESS_WIN",
+            "BAD_PROCESS_LOSS",
+            "UNDETERMINED_PROCESS",
+        }
+        taxonomy_ok = raw_cls in allowed_set
+        ai_cls = raw_cls if taxonomy_ok else "UNDETERMINED_PROCESS"
+        packet.setdefault("evidence_layers", {}).setdefault("AI_interpretation", {})[
+            "process_classification"
+        ] = ai_cls
+        packet["evidence_layers"]["AI_interpretation"]["raw_process_classification"] = raw_cls or None
+        packet["evidence_layers"]["AI_interpretation"]["taxonomy_ok"] = taxonomy_ok
         ai_counts[ai_cls] += 1
         ai_classified += 1
-        if ai_cls == "UNDETERMINED_PROCESS":
+        if not taxonomy_ok:
+            # Wrong Evidence V2.1 label is a disagreement — do not fake agreement
+            disagree += 1
+            critic_total += 1
+            if mock:
+                critic_resolved += 1
+            elif not mock:
+                time.sleep(0.35)
+                critic, crit_rec, _ = gw.invoke_profile(
+                    profile_id="SAMBANOVA_INDEPENDENT_CRITIC",
+                    prompt=(
+                        f"Review invalid taxonomy raw={raw_cls} det={det}. "
+                        "Allowed: GOOD_PROCESS_WIN|GOOD_PROCESS_LOSS|BAD_PROCESS_WIN|"
+                        "BAD_PROCESS_LOSS|UNDETERMINED_PROCESS. Return critic_v1."
+                    ),
+                    schema=CRITIC_SCHEMA,
+                    prompt_schema_version="critic_v1",
+                )
+                if crit_rec.get("result_status") == "INVALID_SCHEMA":
+                    invalid_schema += 1
+                if critic and str(critic.get("critic_verdict") or critic.get("verdict") or ""):
+                    critic_resolved += 1
+        elif ai_cls == "UNDETERMINED_PROCESS":
             undetermined += 1
-        if expected_family and ai_cls == expected_family:
+            if expected_family == "UNDETERMINED_PROCESS" or det == "PROCESS_EVIDENCE_INSUFFICIENT":
+                agree += 1
+            # else: neither agree nor disagree (insufficient AI commitment)
+        elif expected_family and ai_cls == expected_family:
             agree += 1
-        elif det == "PROCESS_EVIDENCE_INSUFFICIENT" and ai_cls == "UNDETERMINED_PROCESS":
-            agree += 1
-        elif ai_cls != "UNDETERMINED_PROCESS":
+        else:
             disagree += 1
             critic_total += 1
             if mock:
                 critic_resolved += 1
             else:
+                time.sleep(0.35)
                 critic, crit_rec, _ = gw.invoke_profile(
                     profile_id="SAMBANOVA_INDEPENDENT_CRITIC",
                     prompt=(
@@ -400,11 +446,10 @@ def run_reflection_calibration_v21(
                 )
                 if crit_rec.get("result_status") == "INVALID_SCHEMA":
                     invalid_schema += 1
-                if critic:
-                    v = str(critic.get("critic_verdict") or critic.get("verdict") or "").upper()
-                    if v:
-                        critic_resolved += 1
-
+                if critic and str(critic.get("critic_verdict") or critic.get("verdict") or ""):
+                    critic_resolved += 1
+        if not mock:
+            time.sleep(0.25)
     n = max(len(packets), 1)
     evidence_completeness_ratio = sum(completeness) / n
     deterministic_classifiable_ratio = (
