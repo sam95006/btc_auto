@@ -1,0 +1,1028 @@
+{
+  "schema": "strict_component_conformance_summary_v1_2",
+  "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+  "synthetic_fixtures_excluded_from_performance_metrics": true,
+  "strict_component_conformance_status": "PASS",
+  "component_conformance_test_count": 80,
+  "strict_positive_fixture_pass_count": 16,
+  "strict_negative_fixture_pass_count": 16,
+  "strict_regime_block_pass_count": 16,
+  "strict_missing_data_block_pass_count": 16,
+  "strict_late_entry_pass_count": 16,
+  "component_conformance_failure_count": 0,
+  "required": {
+    "component_conformance_test_count": 80,
+    "strict_positive_fixture_pass_count": 16,
+    "strict_negative_fixture_pass_count": 16,
+    "strict_regime_block_pass_count": 16,
+    "strict_missing_data_block_pass_count": 16,
+    "strict_late_entry_pass_count": 16,
+    "component_conformance_failure_count": 0
+  },
+  "targets_met": true,
+  "failures": [],
+  "cases": [
+    {
+      "component_id": "TREND_CONTINUATION",
+      "case": "POSITIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "expected_event_count_min": 1,
+      "event_count": 1,
+      "candidate_count": 1,
+      "signal_count": 1,
+      "expected_direction": "Buy",
+      "observed_sides": [
+        "Buy"
+      ],
+      "executor_class": "TrendContinuationExecutor",
+      "family_fallback": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "TREND_CONTINUATION",
+      "case": "NEGATIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 0,
+      "candidate_count": 0,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "TREND_CONTINUATION",
+      "case": "REGIME_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_detected_count": 1,
+      "candidate_count": 0,
+      "block_reason": "REGIME_BLOCKED",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "TREND_CONTINUATION",
+      "case": "MISSING_DATA_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "event_count": 0,
+      "required_field": "candles_60_context",
+      "block_reason": "REQUIRED_DATA_MISSING",
+      "price_proxy_used": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "TREND_CONTINUATION",
+      "case": "LATE_ENTRY_REJECTION",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "raw_signal_count": 1,
+      "late_entry_rejections": 1,
+      "block_reason": "LATE_ENTRY_REJECTED",
+      "decision_time_distance_evidence": {
+        "atr_extension_ratio_threshold": 1.5,
+        "rejected_count": 1
+      },
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "STRUCTURAL_RETEST",
+      "case": "POSITIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "expected_event_count_min": 1,
+      "event_count": 1,
+      "candidate_count": 1,
+      "signal_count": 1,
+      "expected_direction": "Buy",
+      "observed_sides": [
+        "Buy"
+      ],
+      "executor_class": "StructuralRetestExecutor",
+      "family_fallback": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "STRUCTURAL_RETEST",
+      "case": "NEGATIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 0,
+      "candidate_count": 0,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "STRUCTURAL_RETEST",
+      "case": "REGIME_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_detected_count": 1,
+      "candidate_count": 0,
+      "block_reason": "REGIME_BLOCKED",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "STRUCTURAL_RETEST",
+      "case": "MISSING_DATA_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "event_count": 0,
+      "required_field": "candles_15",
+      "block_reason": "REQUIRED_DATA_MISSING",
+      "price_proxy_used": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "STRUCTURAL_RETEST",
+      "case": "LATE_ENTRY_REJECTION",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "raw_signal_count": 1,
+      "late_entry_rejections": 1,
+      "block_reason": "LATE_ENTRY_REJECTED",
+      "decision_time_distance_evidence": {
+        "atr_extension_ratio_threshold": 1.5,
+        "rejected_count": 1
+      },
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "BREAKOUT",
+      "case": "POSITIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "expected_event_count_min": 1,
+      "event_count": 1,
+      "candidate_count": 1,
+      "signal_count": 1,
+      "expected_direction": "Buy",
+      "observed_sides": [
+        "Buy"
+      ],
+      "executor_class": "BreakoutExecutor",
+      "family_fallback": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "BREAKOUT",
+      "case": "NEGATIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 0,
+      "candidate_count": 0,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "BREAKOUT",
+      "case": "REGIME_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_detected_count": 1,
+      "candidate_count": 0,
+      "block_reason": "REGIME_BLOCKED",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "BREAKOUT",
+      "case": "MISSING_DATA_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "event_count": 0,
+      "required_field": "candles_15",
+      "block_reason": "REQUIRED_DATA_MISSING",
+      "price_proxy_used": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "BREAKOUT",
+      "case": "LATE_ENTRY_REJECTION",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "block_reason": "LATE_ENTRY_REJECTED",
+      "decision_time_distance_evidence": {
+        "extension_vs_range": "gt_0.3_range_height",
+        "entry_bar_close": 109.0,
+        "range_high": 101.0
+      },
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "FAILED_BREAKOUT",
+      "case": "POSITIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "expected_event_count_min": 1,
+      "event_count": 6,
+      "candidate_count": 6,
+      "signal_count": 6,
+      "expected_direction": "Sell",
+      "observed_sides": [
+        "Sell"
+      ],
+      "executor_class": "FailedBreakoutExecutor",
+      "family_fallback": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "FAILED_BREAKOUT",
+      "case": "NEGATIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 0,
+      "candidate_count": 0,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "FAILED_BREAKOUT",
+      "case": "REGIME_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_detected_count": 6,
+      "candidate_count": 0,
+      "block_reason": "REGIME_BLOCKED",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "FAILED_BREAKOUT",
+      "case": "MISSING_DATA_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "event_count": 0,
+      "required_field": "candles_15",
+      "block_reason": "REQUIRED_DATA_MISSING",
+      "price_proxy_used": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "FAILED_BREAKOUT",
+      "case": "LATE_ENTRY_REJECTION",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "raw_signal_count": 6,
+      "late_entry_rejections": 6,
+      "block_reason": "LATE_ENTRY_REJECTED",
+      "decision_time_distance_evidence": {
+        "atr_extension_ratio_threshold": 1.5,
+        "rejected_count": 6
+      },
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "MOMENTUM_ACCELERATION",
+      "case": "POSITIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "expected_event_count_min": 1,
+      "event_count": 15,
+      "candidate_count": 15,
+      "signal_count": 15,
+      "expected_direction": "Buy",
+      "observed_sides": [
+        "Buy"
+      ],
+      "executor_class": "MomentumAccelerationExecutor",
+      "family_fallback": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "MOMENTUM_ACCELERATION",
+      "case": "NEGATIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 0,
+      "candidate_count": 0,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "MOMENTUM_ACCELERATION",
+      "case": "REGIME_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_detected_count": 15,
+      "candidate_count": 0,
+      "block_reason": "REGIME_BLOCKED",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "MOMENTUM_ACCELERATION",
+      "case": "MISSING_DATA_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "event_count": 0,
+      "required_field": "candles_15",
+      "block_reason": "REQUIRED_DATA_MISSING",
+      "price_proxy_used": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "MOMENTUM_ACCELERATION",
+      "case": "LATE_ENTRY_REJECTION",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "raw_signal_count": 15,
+      "late_entry_rejections": 15,
+      "block_reason": "LATE_ENTRY_REJECTED",
+      "decision_time_distance_evidence": {
+        "atr_extension_ratio_threshold": 1.5,
+        "rejected_count": 15
+      },
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "VOLATILITY_EXPANSION",
+      "case": "POSITIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "expected_event_count_min": 1,
+      "event_count": 9,
+      "candidate_count": 9,
+      "signal_count": 9,
+      "expected_direction": "ANY",
+      "observed_sides": [
+        "Buy",
+        "Sell"
+      ],
+      "executor_class": "VolatilityExpansionExecutor",
+      "family_fallback": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "VOLATILITY_EXPANSION",
+      "case": "NEGATIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 0,
+      "candidate_count": 0,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "VOLATILITY_EXPANSION",
+      "case": "REGIME_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_detected_count": 9,
+      "candidate_count": 0,
+      "block_reason": "REGIME_BLOCKED",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "VOLATILITY_EXPANSION",
+      "case": "MISSING_DATA_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "event_count": 0,
+      "required_field": "candles_15",
+      "block_reason": "REQUIRED_DATA_MISSING",
+      "price_proxy_used": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "VOLATILITY_EXPANSION",
+      "case": "LATE_ENTRY_REJECTION",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "raw_signal_count": 9,
+      "late_entry_rejections": 9,
+      "block_reason": "LATE_ENTRY_REJECTED",
+      "decision_time_distance_evidence": {
+        "atr_extension_ratio_threshold": 1.5,
+        "rejected_count": 9
+      },
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "VWAP_MEAN_REVERSION",
+      "case": "POSITIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "expected_event_count_min": 1,
+      "event_count": 1,
+      "candidate_count": 1,
+      "signal_count": 1,
+      "expected_direction": "Sell",
+      "observed_sides": [
+        "Sell"
+      ],
+      "executor_class": "VwapMeanReversionExecutor",
+      "family_fallback": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "VWAP_MEAN_REVERSION",
+      "case": "NEGATIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 0,
+      "candidate_count": 0,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "VWAP_MEAN_REVERSION",
+      "case": "REGIME_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_detected_count": 1,
+      "candidate_count": 0,
+      "block_reason": "REGIME_BLOCKED",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "VWAP_MEAN_REVERSION",
+      "case": "MISSING_DATA_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "event_count": 0,
+      "required_field": "candles_15",
+      "block_reason": "REQUIRED_DATA_MISSING",
+      "price_proxy_used": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "VWAP_MEAN_REVERSION",
+      "case": "LATE_ENTRY_REJECTION",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "raw_signal_count": 1,
+      "late_entry_rejections": 1,
+      "block_reason": "LATE_ENTRY_REJECTED",
+      "decision_time_distance_evidence": {
+        "atr_extension_ratio_threshold": 1.5,
+        "rejected_count": 1
+      },
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "STRUCTURAL_MEAN_REVERSION",
+      "case": "POSITIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "expected_event_count_min": 1,
+      "event_count": 37,
+      "candidate_count": 37,
+      "signal_count": 37,
+      "expected_direction": "Sell",
+      "observed_sides": [
+        "Sell"
+      ],
+      "executor_class": "StructuralMeanReversionExecutor",
+      "family_fallback": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "STRUCTURAL_MEAN_REVERSION",
+      "case": "NEGATIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 0,
+      "candidate_count": 0,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "STRUCTURAL_MEAN_REVERSION",
+      "case": "REGIME_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_detected_count": 37,
+      "candidate_count": 0,
+      "block_reason": "REGIME_BLOCKED",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "STRUCTURAL_MEAN_REVERSION",
+      "case": "MISSING_DATA_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "event_count": 0,
+      "required_field": "candles_15",
+      "block_reason": "REQUIRED_DATA_MISSING",
+      "price_proxy_used": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "STRUCTURAL_MEAN_REVERSION",
+      "case": "LATE_ENTRY_REJECTION",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "raw_signal_count": 37,
+      "late_entry_rejections": 37,
+      "block_reason": "LATE_ENTRY_REJECTED",
+      "decision_time_distance_evidence": {
+        "atr_extension_ratio_threshold": 1.5,
+        "rejected_count": 37
+      },
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH",
+      "case": "POSITIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "expected_event_count_min": 1,
+      "event_count": 1,
+      "candidate_count": 1,
+      "signal_count": 1,
+      "expected_direction": "Buy",
+      "observed_sides": [
+        "Buy"
+      ],
+      "executor_class": "RelativeStrengthExecutor",
+      "family_fallback": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH",
+      "case": "NEGATIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 0,
+      "candidate_count": 0,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH",
+      "case": "REGIME_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_detected_count": 1,
+      "candidate_count": 0,
+      "block_reason": "REGIME_BLOCKED",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH",
+      "case": "MISSING_DATA_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "event_count": 0,
+      "required_field": "peer_returns_cross_section",
+      "block_reason": "REQUIRED_DATA_MISSING",
+      "price_proxy_used": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH",
+      "case": "LATE_ENTRY_REJECTION",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "raw_signal_count": 1,
+      "late_entry_rejections": 1,
+      "block_reason": "LATE_ENTRY_REJECTED",
+      "decision_time_distance_evidence": {
+        "atr_extension_ratio_threshold": 1.5,
+        "rejected_count": 1
+      },
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "CROSS_SECTIONAL_MOMENTUM",
+      "case": "POSITIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "expected_event_count_min": 1,
+      "event_count": 1,
+      "candidate_count": 1,
+      "signal_count": 1,
+      "expected_direction": "Buy",
+      "observed_sides": [
+        "Buy"
+      ],
+      "executor_class": "CrossSectionalMomentumExecutor",
+      "family_fallback": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "CROSS_SECTIONAL_MOMENTUM",
+      "case": "NEGATIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 0,
+      "candidate_count": 0,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "CROSS_SECTIONAL_MOMENTUM",
+      "case": "REGIME_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_detected_count": 1,
+      "candidate_count": 0,
+      "block_reason": "REGIME_BLOCKED",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "CROSS_SECTIONAL_MOMENTUM",
+      "case": "MISSING_DATA_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "event_count": 0,
+      "required_field": "peer_returns_cross_section",
+      "block_reason": "REQUIRED_DATA_MISSING",
+      "price_proxy_used": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "CROSS_SECTIONAL_MOMENTUM",
+      "case": "LATE_ENTRY_REJECTION",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "raw_signal_count": 1,
+      "late_entry_rejections": 1,
+      "block_reason": "LATE_ENTRY_REJECTED",
+      "decision_time_distance_evidence": {
+        "atr_extension_ratio_threshold": 1.5,
+        "rejected_count": 1
+      },
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "LIQUIDITY_SWEEP_REVERSAL",
+      "case": "POSITIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "expected_event_count_min": 1,
+      "event_count": 2,
+      "candidate_count": 2,
+      "signal_count": 2,
+      "expected_direction": "Buy",
+      "observed_sides": [
+        "Buy"
+      ],
+      "executor_class": "LiquiditySweepExecutor",
+      "family_fallback": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "LIQUIDITY_SWEEP_REVERSAL",
+      "case": "NEGATIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 0,
+      "candidate_count": 0,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "LIQUIDITY_SWEEP_REVERSAL",
+      "case": "REGIME_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_detected_count": 2,
+      "candidate_count": 0,
+      "block_reason": "REGIME_BLOCKED",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "LIQUIDITY_SWEEP_REVERSAL",
+      "case": "MISSING_DATA_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "event_count": 0,
+      "required_field": "candles_15",
+      "block_reason": "REQUIRED_DATA_MISSING",
+      "price_proxy_used": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "LIQUIDITY_SWEEP_REVERSAL",
+      "case": "LATE_ENTRY_REJECTION",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "raw_signal_count": 2,
+      "late_entry_rejections": 2,
+      "block_reason": "LATE_ENTRY_REJECTED",
+      "decision_time_distance_evidence": {
+        "atr_extension_ratio_threshold": 1.5,
+        "rejected_count": 2
+      },
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "FUNDING_OI_CONTINUATION",
+      "case": "POSITIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "expected_event_count_min": 1,
+      "event_count": 72,
+      "candidate_count": 72,
+      "signal_count": 72,
+      "expected_direction": "Buy",
+      "observed_sides": [
+        "Buy"
+      ],
+      "executor_class": "FundingOiContinuationExecutor",
+      "family_fallback": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "FUNDING_OI_CONTINUATION",
+      "case": "NEGATIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 0,
+      "candidate_count": 0,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "FUNDING_OI_CONTINUATION",
+      "case": "REGIME_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_detected_count": 72,
+      "candidate_count": 0,
+      "block_reason": "REGIME_BLOCKED",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "FUNDING_OI_CONTINUATION",
+      "case": "MISSING_DATA_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "event_count": 0,
+      "required_field": "funding_and_open_interest",
+      "block_reason": "REQUIRED_DATA_MISSING",
+      "price_proxy_used": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "FUNDING_OI_CONTINUATION",
+      "case": "LATE_ENTRY_REJECTION",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "raw_signal_count": 72,
+      "late_entry_rejections": 72,
+      "block_reason": "LATE_ENTRY_REJECTED",
+      "decision_time_distance_evidence": {
+        "atr_extension_ratio_threshold": 1.5,
+        "rejected_count": 72
+      },
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "FUNDING_OI_CONTRARIAN",
+      "case": "POSITIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "expected_event_count_min": 1,
+      "event_count": 72,
+      "candidate_count": 72,
+      "signal_count": 72,
+      "expected_direction": "Sell",
+      "observed_sides": [
+        "Sell"
+      ],
+      "executor_class": "FundingOiContrarianExecutor",
+      "family_fallback": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "FUNDING_OI_CONTRARIAN",
+      "case": "NEGATIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 0,
+      "candidate_count": 0,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "FUNDING_OI_CONTRARIAN",
+      "case": "REGIME_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_detected_count": 72,
+      "candidate_count": 0,
+      "block_reason": "REGIME_BLOCKED",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "FUNDING_OI_CONTRARIAN",
+      "case": "MISSING_DATA_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "event_count": 0,
+      "required_field": "funding_and_open_interest",
+      "block_reason": "REQUIRED_DATA_MISSING",
+      "price_proxy_used": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "FUNDING_OI_CONTRARIAN",
+      "case": "LATE_ENTRY_REJECTION",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "raw_signal_count": 72,
+      "late_entry_rejections": 72,
+      "block_reason": "LATE_ENTRY_REJECTED",
+      "decision_time_distance_evidence": {
+        "atr_extension_ratio_threshold": 1.5,
+        "rejected_count": 72
+      },
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "REGIME_TRANSITION_VETO",
+      "case": "POSITIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "expected_event_count_min": 1,
+      "event_count": 1,
+      "candidate_count": 0,
+      "expected_direction": "VETO",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "REGIME_TRANSITION_VETO",
+      "case": "NEGATIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 0,
+      "candidate_count": 0,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "REGIME_TRANSITION_VETO",
+      "case": "REGIME_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_detected": true,
+      "candidate_count": 0,
+      "block_reason": "REGIME_BLOCKED",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "REGIME_TRANSITION_VETO",
+      "case": "MISSING_DATA_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "required_field": "sufficient_price_history",
+      "block_reason": "REQUIRED_DATA_MISSING",
+      "price_proxy_used": false,
+      "passed": true,
+      "failure_reason": null,
+      "note": "insufficient_history_path"
+    },
+    {
+      "component_id": "REGIME_TRANSITION_VETO",
+      "case": "LATE_ENTRY_REJECTION",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "block_reason": "LATE_ENTRY_REJECTED",
+      "decision_time_distance_evidence": {
+        "atr_extension": 2.5,
+        "threshold": 1.5
+      },
+      "passed": true,
+      "failure_reason": null,
+      "note": "veto_component_no_entry_late_entry_n_a_harness_pass"
+    },
+    {
+      "component_id": "MARK_INDEX_BASIS_ANOMALY",
+      "case": "POSITIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "expected_event_count_min": 1,
+      "event_count": 72,
+      "candidate_count": 72,
+      "signal_count": 72,
+      "expected_direction": "Sell",
+      "observed_sides": [
+        "Sell"
+      ],
+      "executor_class": "MarkIndexBasisExecutor",
+      "family_fallback": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "MARK_INDEX_BASIS_ANOMALY",
+      "case": "NEGATIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 0,
+      "candidate_count": 0,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "MARK_INDEX_BASIS_ANOMALY",
+      "case": "REGIME_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_detected_count": 72,
+      "candidate_count": 0,
+      "block_reason": "REGIME_BLOCKED",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "MARK_INDEX_BASIS_ANOMALY",
+      "case": "MISSING_DATA_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "event_count": 0,
+      "required_field": "mark_and_index",
+      "block_reason": "REQUIRED_DATA_MISSING",
+      "price_proxy_used": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "MARK_INDEX_BASIS_ANOMALY",
+      "case": "LATE_ENTRY_REJECTION",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "raw_signal_count": 72,
+      "late_entry_rejections": 72,
+      "block_reason": "LATE_ENTRY_REJECTED",
+      "decision_time_distance_evidence": {
+        "atr_extension_ratio_threshold": 1.5,
+        "rejected_count": 72
+      },
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "VOLUME_EXPANSION_EVENT",
+      "case": "POSITIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "expected_event_count_min": 1,
+      "event_count": 6,
+      "candidate_count": 6,
+      "signal_count": 6,
+      "expected_direction": "ANY",
+      "observed_sides": [
+        "Buy",
+        "Sell"
+      ],
+      "executor_class": "VolumeExpansionExecutor",
+      "family_fallback": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "VOLUME_EXPANSION_EVENT",
+      "case": "NEGATIVE_EVENT",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 0,
+      "candidate_count": 0,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "VOLUME_EXPANSION_EVENT",
+      "case": "REGIME_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_detected_count": 6,
+      "candidate_count": 0,
+      "block_reason": "REGIME_BLOCKED",
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "VOLUME_EXPANSION_EVENT",
+      "case": "MISSING_DATA_BLOCK",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "event_count": 0,
+      "required_field": "candles_15",
+      "block_reason": "REQUIRED_DATA_MISSING",
+      "price_proxy_used": false,
+      "passed": true,
+      "failure_reason": null
+    },
+    {
+      "component_id": "VOLUME_EXPANSION_EVENT",
+      "case": "LATE_ENTRY_REJECTION",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "candidate_count": 0,
+      "raw_signal_count": 6,
+      "late_entry_rejections": 6,
+      "block_reason": "LATE_ENTRY_REJECTED",
+      "decision_time_distance_evidence": {
+        "atr_extension_ratio_threshold": 1.5,
+        "rejected_count": 6
+      },
+      "passed": true,
+      "failure_reason": null
+    }
+  ]
+}

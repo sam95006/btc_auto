@@ -1,4 +1,4 @@
-"""Read-only functional research observability — V1.1 extended fields."""
+"""Read-only functional research observability — V1.2 extended fields."""
 from __future__ import annotations
 
 from typing import Any
@@ -6,7 +6,7 @@ from typing import Any
 
 def observability_contract() -> dict[str, Any]:
     return {
-        "schema": "functional_observability_contract_v1_1",
+        "schema": "functional_observability_contract_v1_2",
         "ui_redesign": False,
         "read_only": True,
         "secrets_displayed": False,
@@ -22,6 +22,14 @@ def observability_contract() -> dict[str, Any]:
                 "actual_loaded_dataset_count",
                 "actual_price_dataset_count",
                 "actual_derivatives_dataset_count",
+                "actual_mainstream_dataset_count",
+                "actual_mid_size_dataset_count",
+                "actual_small_dataset_count",
+                "actual_meme_dataset_count",
+                "download_total_partitions",
+                "download_completed_partitions",
+                "download_failed_partitions",
+                "download_pending_partitions",
                 "multi_timeframe_bundle_status",
             ],
             "real_ai": [
@@ -33,6 +41,9 @@ def observability_contract() -> dict[str, Any]:
                 "rate_limit_count",
                 "average_latency_ms",
                 "last_successful_call",
+                "real_reflection_calibration_status",
+                "real_deterministic_AI_agreement_ratio",
+                "real_critic_resolution_ratio",
             ],
             "learning_loop": [
                 "reflections",
@@ -64,6 +75,12 @@ def observability_contract() -> dict[str, Any]:
                 "derivative_proxy_violation_count",
                 "V1_results_interpretation",
                 "V1_1_research_status",
+                "strict_component_conformance_status",
+                "component_conformance_failure_count",
+                "V1_2_hypotheses_preregistered",
+                "V1_2_hypotheses_executed",
+                "V1_2_promising_count",
+                "V1_2_recommended_candidate_count",
             ],
         },
         "api_path": "/api/nexus/research/observability",
@@ -80,16 +97,34 @@ def build_observability_status(
 ) -> dict[str, Any]:
     extra = v11_extra or {}
     return {
-        "schema": "functional_research_observability_status_v1_1",
+        "schema": "functional_research_observability_status_v1_2",
         "read_only": True,
         "secrets_present_in_payload": False,
         "dynamic_universe": coverage,
         "real_ai": providers,
         "learning_loop": learning,
         "strategy_research": research,
+        "registry_research_eligible_count": extra.get("registry_research_eligible_count"),
         "actual_loaded_dataset_count": extra.get("actual_loaded_dataset_count"),
         "actual_price_dataset_count": extra.get("actual_price_dataset_count"),
         "actual_derivatives_dataset_count": extra.get("actual_derivatives_dataset_count"),
+        "actual_mainstream_dataset_count": extra.get("actual_mainstream_dataset_count"),
+        "actual_mid_size_dataset_count": extra.get("actual_mid_size_dataset_count"),
+        "actual_small_dataset_count": extra.get("actual_small_dataset_count"),
+        "actual_meme_dataset_count": extra.get("actual_meme_dataset_count"),
+        "download_total_partitions": extra.get("download_total_partitions"),
+        "download_completed_partitions": extra.get("download_completed_partitions"),
+        "download_failed_partitions": extra.get("download_failed_partitions"),
+        "download_pending_partitions": extra.get("download_pending_partitions"),
+        "strict_component_conformance_status": extra.get("strict_component_conformance_status"),
+        "component_conformance_failure_count": extra.get("component_conformance_failure_count"),
+        "real_reflection_calibration_status": extra.get("real_reflection_calibration_status"),
+        "real_deterministic_AI_agreement_ratio": extra.get("real_deterministic_AI_agreement_ratio"),
+        "real_critic_resolution_ratio": extra.get("real_critic_resolution_ratio"),
+        "V1_2_hypotheses_preregistered": extra.get("V1_2_hypotheses_preregistered"),
+        "V1_2_hypotheses_executed": extra.get("V1_2_hypotheses_executed"),
+        "V1_2_promising_count": extra.get("V1_2_promising_count"),
+        "V1_2_recommended_candidate_count": extra.get("V1_2_recommended_candidate_count"),
         "component_implemented_count": extra.get("component_implemented_count"),
         "component_not_implemented_count": extra.get("component_not_implemented_count"),
         "semantic_collision_count": extra.get("semantic_collision_count"),
@@ -101,6 +136,7 @@ def build_observability_status(
         "AI_deterministic_agreement_ratio": extra.get("AI_deterministic_agreement_ratio"),
         "V1_results_interpretation": extra.get("V1_results_interpretation"),
         "V1_1_research_status": extra.get("V1_1_research_status"),
+        "V1_2_research_status": extra.get("V1_2_research_status"),
         "exchange_write_attempt_count": 0,
         "deployment_started": False,
     }
