@@ -1,0 +1,242 @@
+{
+  "schema": "h3_failure_decomposition_v1",
+  "diagnostic_only": true,
+  "modified_strategy_rerun_on_holdout": false,
+  "consumed_holdout_id": "H3_CLOSED_HISTORICAL_HOLDOUT_V1_RESERVED",
+  "consumed_holdout_classification": "CONSUMED_FAILED_CLOSED_HISTORICAL_HOLDOUT",
+  "dataset_checksum": "b59d8409005e5f89d01b8fa167a571b9e0665ea66b732367b006222fd988db46",
+  "H3E_promotion_status": "REJECTED_CURRENT_POLICY",
+  "H3D_promotion_status": "REJECTED_CURRENT_POLICY",
+  "H3_current_demo_eligibility": false,
+  "september_oos_may_not_rescue": true,
+  "comparison_h3e_wf_vs_holdout": [
+    {
+      "metric": "completed_trade_count",
+      "walk_forward": 109,
+      "holdout": 32,
+      "difference_holdout_minus_wf": -77.0
+    },
+    {
+      "metric": "gross_pnl",
+      "walk_forward": 69.72472719,
+      "holdout": -5.15721912,
+      "difference_holdout_minus_wf": -74.88194630999999
+    },
+    {
+      "metric": "fees",
+      "walk_forward": 31.78429606,
+      "holdout": 9.23537488,
+      "difference_holdout_minus_wf": -22.54892118
+    },
+    {
+      "metric": "spread",
+      "walk_forward": 5.7859354,
+      "holdout": 1.67864334,
+      "difference_holdout_minus_wf": -4.10729206
+    },
+    {
+      "metric": "slippage",
+      "walk_forward": 5.7859354,
+      "holdout": 1.67864334,
+      "difference_holdout_minus_wf": -4.10729206
+    },
+    {
+      "metric": "funding",
+      "walk_forward": 0.23703352,
+      "holdout": 0.09119377,
+      "difference_holdout_minus_wf": -0.14583975
+    },
+    {
+      "metric": "net_pnl",
+      "walk_forward": 26.13152682,
+      "holdout": -17.84107443,
+      "difference_holdout_minus_wf": -43.97260125
+    },
+    {
+      "metric": "gross_expectancy",
+      "walk_forward": 0.6927689908256881,
+      "holdout": -0.1611630975,
+      "difference_holdout_minus_wf": -0.8539320883256881
+    },
+    {
+      "metric": "net_expectancy",
+      "walk_forward": 0.23973877816513764,
+      "holdout": -0.5575335759375,
+      "difference_holdout_minus_wf": -0.7972723541026376
+    },
+    {
+      "metric": "gross_profit_factor",
+      "walk_forward": 1.579279,
+      "holdout": 0.898445,
+      "difference_holdout_minus_wf": -0.680834
+    },
+    {
+      "metric": "net_profit_factor",
+      "walk_forward": 1.164216,
+      "holdout": 0.698176,
+      "difference_holdout_minus_wf": -0.4660399999999999
+    },
+    {
+      "metric": "adverse_profit_factor",
+      "walk_forward": 1.051885,
+      "holdout": 0.633705,
+      "difference_holdout_minus_wf": -0.41818
+    },
+    {
+      "metric": "win_rate",
+      "walk_forward": 0.44036697247706424,
+      "holdout": 0.28125,
+      "difference_holdout_minus_wf": -0.15911697247706424
+    },
+    {
+      "metric": "maximum_drawdown",
+      "walk_forward": -34.59862444,
+      "holdout": -21.71079983,
+      "difference_holdout_minus_wf": 12.887824610000003
+    },
+    {
+      "metric": "maximum_consecutive_losses",
+      "walk_forward": 9,
+      "holdout": 7,
+      "difference_holdout_minus_wf": -2.0
+    },
+    {
+      "metric": "cost_gate_pass_rate",
+      "walk_forward": 0.11323529411764706,
+      "holdout": 0.11784511784511785,
+      "difference_holdout_minus_wf": 0.004609823727470791
+    }
+  ],
+  "holdout_symbol_distribution": {
+    "ETHUSDT": 7,
+    "BTCUSDT": 7,
+    "XRPUSDT": 8,
+    "DOGEUSDT": 4,
+    "SOLUSDT": 6
+  },
+  "holdout_regime_distribution": {
+    "TRENDING_DOWN": 32
+  },
+  "holdout_direction": {
+    "long_count": 0,
+    "short_count": 32
+  },
+  "payoff_ratio_holdout": 1.7842276448483663,
+  "average_win_holdout": 4.585531835555555,
+  "average_loss_holdout": -2.5700374326086957,
+  "median_hold_bars_holdout": 26,
+  "exit_geometry_note": "Sealed sim uses structural ATR stop/target; MFE/MAE row dumps not committed",
+  "classifications": [
+    {
+      "classification": "EDGE_NOT_PORTABLE",
+      "evidence": "WF gross PF>1 but holdout gross PF<1 — edge did not survive earlier regime period",
+      "walk_forward_value": 1.579279,
+      "holdout_value": 0.898445,
+      "difference": -0.680834,
+      "severity": "CRITICAL",
+      "confidence": "HIGH",
+      "research_implication": "Do not promote H3E; require new H4 mechanism with stronger portability gates"
+    },
+    {
+      "classification": "NO_GROSS_EDGE",
+      "evidence": "Holdout gross expectancy/PF negative before costs",
+      "walk_forward_value": 0.6927689908256881,
+      "holdout_value": -0.1611630975,
+      "difference": -0.8539320883256881,
+      "severity": "CRITICAL",
+      "confidence": "HIGH",
+      "research_implication": "Cost tuning cannot rescue; redesign entry/event definition"
+    },
+    {
+      "classification": "GROSS_EDGE_DESTROYED_BY_COST",
+      "evidence": "WF costs consumed majority of gross PnL; holdout already gross-negative so costs amplify failure",
+      "walk_forward_value": {
+        "gross": 69.72472719,
+        "fees": 31.78429606,
+        "net": 26.13152682
+      },
+      "holdout_value": {
+        "gross": -5.15721912,
+        "fees": 9.23537488,
+        "net": -17.84107443
+      },
+      "difference": null,
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "research_implication": "H4 must raise min_move_to_cost and reject late/chase entries"
+    },
+    {
+      "classification": "REGIME_FILTER_NOT_PORTABLE",
+      "evidence": "WF already had weak fold(s): [('outer_1', 2.288182), ('outer_2', 0.957232), ('outer_3', 1.056968)]; holdout collapsed further",
+      "walk_forward_value": [
+        [
+          "outer_1",
+          2.288182
+        ],
+        [
+          "outer_2",
+          0.957232
+        ],
+        [
+          "outer_3",
+          1.056968
+        ]
+      ],
+      "holdout_value": 0.698176,
+      "difference": null,
+      "severity": "HIGH",
+      "confidence": "MEDIUM",
+      "research_implication": "TRENDING_DOWN pullback filter insufficient across regimes; H4 needs event retest / vol norms"
+    },
+    {
+      "classification": "ENTRY_TIMING_TOO_LATE",
+      "evidence": "H3 pullback/continuation often enters after displacement; holdout win_rate 28% vs WF 44%",
+      "walk_forward_value": 0.44036697247706424,
+      "holdout_value": 0.28125,
+      "difference": -0.15911697247706424,
+      "severity": "HIGH",
+      "confidence": "MEDIUM",
+      "research_implication": "H4A requires explicit retest; H4B rejects late extension"
+    },
+    {
+      "classification": "FALSE_CONTINUATION_RATE_TOO_HIGH",
+      "evidence": "Holdout short-only TRENDING_DOWN continuation produced negative expectancy",
+      "walk_forward_value": 0.23973877816513764,
+      "holdout_value": -0.5575335759375,
+      "difference": -0.7972723541026376,
+      "severity": "HIGH",
+      "confidence": "MEDIUM",
+      "research_implication": "Require structural retest confirmation before intent"
+    },
+    {
+      "classification": "SAMPLE_INSUFFICIENT",
+      "evidence": "H3D confirmatory holdout <30 completed trades",
+      "walk_forward_value": 102,
+      "holdout_value": 29,
+      "difference": -73.0,
+      "severity": "MEDIUM",
+      "confidence": "HIGH",
+      "research_implication": "H3D cannot confirm; still does not rescue H3E failure"
+    }
+  ],
+  "primary_root_cause": "EDGE_NOT_PORTABLE",
+  "secondary_root_causes": [
+    "NO_GROSS_EDGE",
+    "GROSS_EDGE_DESTROYED_BY_COST",
+    "REGIME_FILTER_NOT_PORTABLE",
+    "ENTRY_TIMING_TOO_LATE",
+    "FALSE_CONTINUATION_RATE_TOO_HIGH",
+    "SAMPLE_INSUFFICIENT"
+  ],
+  "gross_edge_status": "ABSENT_ON_HOLDOUT",
+  "cost_destruction_status": "AMPLIFIES_FAILURE_ON_HOLDOUT",
+  "regime_portability_status": "FAILED",
+  "entry_timing_status": "LIKELY_TOO_LATE",
+  "exit_geometry_status": "NOT_PRIMARY_FAILURE_GROSS_ALREADY_NEGATIVE",
+  "h3d_confirmatory_note": {
+    "wf_status": "WALK_FORWARD_VALIDATED",
+    "holdout_status": "CONFIRMATORY_INSUFFICIENT_SAMPLE",
+    "cannot_rescue_h3e": true
+  },
+  "block_h4_for_defect": false
+}

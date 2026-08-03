@@ -1,39 +1,32 @@
 # NEXUS Readiness Source of Truth
 
-Updated: 2026-08-03T05:47:27Z
+Updated: 2026-08-03T06:33:29Z
 
 ## Current system stage
 
-`H3_CLOSED_HISTORICAL_FAILED_RETURN_TO_RESEARCH`
+`H4_RESEARCH_FAILED_NO_DEMO`
 
-PR #24 — Draft. Head at update time: `d9e74617ea6c289502c2549107e8fae754f432fe`.
+PR #24 head (at write): `febfa111af23f8c33e83bf42595e6253db22e574`
 
-## Closed Historical Holdout V1
+## H3 status
 
-- reservation_id=`H3_CLOSED_HISTORICAL_HOLDOUT_V1_RESERVED`
-- window=`1720863000000` → `1736415000000` (180 days)
-- dataset_checksum=`b59d8409005e5f89d01b8fa167a571b9e0665ea66b732367b006222fd988db46`
-- integrity=`PASS`
-- H3E primary=`CLOSED_HISTORICAL_PERFORMANCE_FAILED` trades=`32` net_pnl=`-17.84107443`
-- H3D confirmatory=`CONFIRMATORY_INSUFFICIENT_SAMPLE`
-- consumed=`CONSUMED_FAILED_CLOSED_HISTORICAL_HOLDOUT`
-- historical_execution_mode=`HISTORICAL_SIMULATION_ONLY`
-- exchange_write_attempt_count=`0` · demo_order_count=`0`
+`REJECTED_CURRENT_POLICY`
 
-## September untouched OOS
+- primary_root_cause=`EDGE_NOT_PORTABLE`
+- closed historical holdout remains `CONSUMED_FAILED_CLOSED_HISTORICAL_HOLDOUT`
+- September OOS=`OOS_WINDOW_NOT_MATURE_RESEARCH_CONFIRMATION_ONLY` (cannot rescue H3 or validate H4)
 
-Still sealed: `OOS_WINDOW_NOT_MATURE` / not consumed / not for research.
+## H4 Edge Research V1
 
-## Frozen policies
+- recommendation=`NEXUS_H4_RESEARCH_FAILED_NO_DEMO`
+- selected_primary=`None`
+- statuses={"H4A_EVENT_RETEST_CONTINUATION": "REJECTED_CONCENTRATED_EDGE", "H4B_VOLATILITY_NORMALIZED_CONTINUATION": "INSUFFICIENT_SAMPLE", "H4C_OI_FUNDING_CONFIRMED_CONTINUATION": "REJECTED_COST_DOMINATED"}
+- Demo forward=`BLOCKED_NO_VALIDATED_POLICY`
 
-- H3E unchanged=`true`
-- H3D unchanged=`true`
+## Wallet residual
 
-## Wallet residual (blocker for live Demo writes)
-
-- classification=`WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST`
-- remaining=`-0.97052039`
+- `WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST` / `-0.97052039`
 
 ## Recommendation
 
-`NEXUS_H3_CLOSED_HISTORICAL_FAILED_RETURN_TO_RESEARCH`
+`NEXUS_H4_RESEARCH_FAILED_NO_DEMO`

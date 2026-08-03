@@ -1,12 +1,12 @@
 {
   "schema_version": "nexus_readiness_sot_v1",
-  "updated_at": "2026-08-03T05:52:44Z",
+  "updated_at": "2026-08-03T06:33:31Z",
   "pr": 24,
   "pr_draft": true,
   "pr_merged": false,
-  "pr_head": "d9e74617ea6c289502c2549107e8fae754f432fe",
+  "pr_head": "febfa111af23f8c33e83bf42595e6253db22e574",
   "edge_research_v3_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-  "system_stage": "H3_CLOSED_HISTORICAL_FAILED_RETURN_TO_RESEARCH",
+  "system_stage": "H4_RESEARCH_FAILED_NO_DEMO",
   "current_approved_strategies": {
     "PRIMARY_QUALIFICATION_COHORT": "H3E",
     "CONFIRMATORY_COHORT": "H3D",
@@ -110,17 +110,17 @@
     "forensic_report": "artifacts/readiness/immutable/wallet_delta_forensic/wallet_delta_forensic_report.json"
   },
   "blockers": [
-    "closed_historical_holdout_failed",
-    "oos_window_not_mature_until_after_2026-09-16",
+    "h3_rejected_current_policy",
+    "h4_no_walk_forward_validated_primary",
+    "oos_window_not_mature_research_confirmation_only",
     "wallet_delta_unattributed",
-    "trading_db_prior_local_state_not_recovered",
-    "risk_review_packet_not_ready"
+    "trading_db_prior_local_state_not_recovered"
   ],
-  "next_permitted_action": "Return to research; do not start Demo forward; keep September OOS sealed; preserve wallet residual blocker",
+  "next_permitted_action": "Continue H4 research redesign without Demo; keep September OOS sealed; do not reuse consumed holdout",
   "risk_review_packet_ready": false,
   "shadow_status": "NOT_APPLIED",
   "qualification_complete": false,
-  "recommendation": "NEXUS_H3_CLOSED_HISTORICAL_FAILED_RETURN_TO_RESEARCH",
+  "recommendation": "NEXUS_H4_RESEARCH_FAILED_NO_DEMO",
   "canonical_files": [
     "docs/04_readiness/NEXUS_READINESS_SOT.md",
     "artifacts/readiness/NEXUS_READINESS_SOT.json",
@@ -163,7 +163,7 @@
   "route_count": 238,
   "runtime_import_error_count": 0,
   "local_footprint_note": "G_DRIVE_REPO_GIT_CORRUPTED_DURING_INTERRUPTED_GC; rebuilt via shallow clone; trading.db local file lost",
-  "current_system_stage": "H3_CLOSED_HISTORICAL_FAILED_RETURN_TO_RESEARCH",
+  "current_system_stage": "H4_RESEARCH_FAILED_NO_DEMO",
   "storage_cleanup_commit": "4aebf540178c0fe6a6ff5a72156f9e865f0eda9d",
   "route_contract_difference_count": 0,
   "local_footprint": {
@@ -182,9 +182,9 @@
   "trading_db_status": "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED",
   "canonical_workspace_path_note": "G:\\\\\u6211\u7684\u96f2\u7aef\u786c\u789f\\\\btc_bot",
   "repair_commit": "4aebf540178c0fe6a6ff5a72156f9e865f0eda9d",
-  "tests_collected": 2020,
-  "tests_passed": 2019,
-  "tests_skipped": 1,
+  "tests_collected": 2030,
+  "tests_passed": 2028,
+  "tests_skipped": 2,
   "skipped_test": "tests/test_market_geometry_qualification.py:: (line 113) cost gate blocked on fixture",
   "runtime_startup_status": "PASS",
   "health_status": 200,
@@ -206,5 +206,34 @@
     "demo_forward_packet_ready": false,
     "demo_forward_status": "NOT_APPLICABLE_PRIMARY_NOT_VALIDATED"
   },
-  "cli_contract_difference_count": 0
+  "cli_contract_difference_count": 0,
+  "H3E_promotion_status": "REJECTED_CURRENT_POLICY",
+  "H3D_promotion_status": "REJECTED_CURRENT_POLICY",
+  "H3_current_demo_eligibility": false,
+  "h3_failure": {
+    "primary_root_cause": "EDGE_NOT_PORTABLE",
+    "secondary_root_causes": [
+      "NO_GROSS_EDGE",
+      "GROSS_EDGE_DESTROYED_BY_COST",
+      "REGIME_FILTER_NOT_PORTABLE",
+      "ENTRY_TIMING_TOO_LATE",
+      "FALSE_CONTINUATION_RATE_TOO_HIGH",
+      "SAMPLE_INSUFFICIENT"
+    ],
+    "immutable": "artifacts/readiness/immutable/h4_edge_research_v1/h3_failure_decomposition.json"
+  },
+  "h4_edge_research_v1": {
+    "recommendation": "NEXUS_H4_RESEARCH_FAILED_NO_DEMO",
+    "selected_h4_primary_policy": null,
+    "statuses": {
+      "H4A_EVENT_RETEST_CONTINUATION": "REJECTED_CONCENTRATED_EDGE",
+      "H4B_VOLATILITY_NORMALIZED_CONTINUATION": "INSUFFICIENT_SAMPLE",
+      "H4C_OI_FUNDING_CONFIRMED_CONTINUATION": "REJECTED_COST_DOMINATED"
+    },
+    "preregistration_checksum": "7b283704996c3501731ba585916cb5100ae0bf7c5e0cff729c42f4c5cc17f98d",
+    "immutable_package": "artifacts/readiness/immutable/h4_edge_research_v1/"
+  },
+  "september_h3_oos_status": "OOS_WINDOW_NOT_MATURE_RESEARCH_CONFIRMATION_ONLY",
+  "demo_forward_packet_ready": false,
+  "demo_forward_status": "BLOCKED_NO_VALIDATED_POLICY"
 }

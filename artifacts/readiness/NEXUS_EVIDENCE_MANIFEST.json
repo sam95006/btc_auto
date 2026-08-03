@@ -1,6 +1,6 @@
 {
   "schema_version": "nexus_evidence_manifest_v1",
-  "updated_at": "2026-08-03T05:47:27Z",
+  "updated_at": "2026-08-03T06:33:29Z",
   "entries": [
     {
       "evidence_id": "6H_FINAL_ZERO_EXECUTION::artifacts/readiness/immutable/6h_final/NEXUS_6H_V2_FINAL_REPORT.md",
@@ -443,11 +443,11 @@
       "status": "PRESENT"
     },
     {
-      "evidence_id": "H3_CLOSED_HISTORICAL_V1::artifacts/readiness/NEXUS_READINESS_SOT.json",
-      "path": "artifacts/readiness/NEXUS_READINESS_SOT.json",
-      "evidence_type": "H3_CLOSED_HISTORICAL_V1",
-      "source_commit": "337045fc434970ec8f83f5420a951a2255c4f033",
-      "checksum": "95a3b85eb5a0da74d7dcfbf1421351afb2c49394cb9d1eead0e07fd1c2930aec",
+      "evidence_id": "H4_EDGE_RESEARCH_V1::artifacts/readiness/immutable/h4_edge_research_v1/h3_failure_decomposition.json",
+      "path": "artifacts/readiness/immutable/h4_edge_research_v1/h3_failure_decomposition.json",
+      "evidence_type": "H4_EDGE_RESEARCH_V1",
+      "source_commit": "febfa111af23f8c33e83bf42595e6253db22e574",
+      "checksum": "1236051df4f4083de75caef6937c2ef0100d02ecec71e18e293632e96ffd8202",
       "retention_reason": "irreversible_milestone",
       "canonical_or_historical": "canonical",
       "supersedes": [],
@@ -455,11 +455,47 @@
       "status": "PRESENT"
     },
     {
-      "evidence_id": "H3_CLOSED_HISTORICAL_V1::docs/04_readiness/NEXUS_READINESS_SOT.md",
+      "evidence_id": "H4_EDGE_RESEARCH_V1::artifacts/readiness/immutable/h4_edge_research_v1/h4_preregistration.json",
+      "path": "artifacts/readiness/immutable/h4_edge_research_v1/h4_preregistration.json",
+      "evidence_type": "H4_EDGE_RESEARCH_V1",
+      "source_commit": "febfa111af23f8c33e83bf42595e6253db22e574",
+      "checksum": "9f8003318fdd7f6c98ce9e1b266c7fa68f8c92588f858f62357f801aa0b3fb26",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H4_EDGE_RESEARCH_V1::artifacts/readiness/immutable/h4_edge_research_v1/h4_research_summary.json",
+      "path": "artifacts/readiness/immutable/h4_edge_research_v1/h4_research_summary.json",
+      "evidence_type": "H4_EDGE_RESEARCH_V1",
+      "source_commit": "febfa111af23f8c33e83bf42595e6253db22e574",
+      "checksum": "dc3d9749836bd41447998d8380db9ce812422e557fdc356cbcf6162ca2511e77",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H4_EDGE_RESEARCH_V1::artifacts/readiness/NEXUS_READINESS_SOT.json",
+      "path": "artifacts/readiness/NEXUS_READINESS_SOT.json",
+      "evidence_type": "H4_EDGE_RESEARCH_V1",
+      "source_commit": "febfa111af23f8c33e83bf42595e6253db22e574",
+      "checksum": "71d95549ccbe42fe3347812498941228292e77c4d813c842f526491f04f72b2c",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H4_EDGE_RESEARCH_V1::docs/04_readiness/NEXUS_READINESS_SOT.md",
       "path": "docs/04_readiness/NEXUS_READINESS_SOT.md",
-      "evidence_type": "H3_CLOSED_HISTORICAL_V1",
-      "source_commit": "337045fc434970ec8f83f5420a951a2255c4f033",
-      "checksum": "8ae748e6b95712537a1e35b2ba900e92b7b87a73d031b5c46abdcefd7f5ff37f",
+      "evidence_type": "H4_EDGE_RESEARCH_V1",
+      "source_commit": "febfa111af23f8c33e83bf42595e6253db22e574",
+      "checksum": "f0582aefe2b71157daae02763f04f18d5192c79b98ee3406dbbc7914336e236f",
       "retention_reason": "irreversible_milestone",
       "canonical_or_historical": "canonical",
       "supersedes": [],
