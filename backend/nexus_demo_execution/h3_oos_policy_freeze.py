@@ -48,11 +48,11 @@ def load_frozen_policy(policy_id: str) -> dict[str, Any]:
     return data
 
 
-def load_oos_reservation() -> dict[str, Any]:
+def load_oos_reservation(*, require_untouched: bool = False) -> dict[str, Any]:
     if not RESERVATION_PATH.is_file():
         raise FileNotFoundError(f"reservation missing: {RESERVATION_PATH}")
     data = json.loads(RESERVATION_PATH.read_text(encoding="utf-8"))
-    if data.get("downloaded") is True or data.get("executed") is True:
+    if require_untouched and (data.get("downloaded") is True or data.get("executed") is True):
         raise RuntimeError("reservation unexpectedly marked downloaded/executed during preflight")
     return data
 
@@ -76,8 +76,8 @@ def guard_oos_download(*, founder_phrase: str | None) -> dict[str, Any]:
         "reservation_id": reservation.get("reservation_id"),
         "primary_policy_id": primary["policy_id"],
         "confirmatory_policy_id": confirmatory["policy_id"],
-        "downloaded": False,
-        "executed": False,
+        "downloaded": bool(reservation.get("downloaded")),
+        "executed": bool(reservation.get("executed")),
         "note": "phrase accepted; caller must still perform download separately",
     }
 

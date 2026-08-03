@@ -1,12 +1,12 @@
 {
   "schema_version": "nexus_readiness_sot_v1",
-  "updated_at": "2026-08-02T17:53:09Z",
+  "updated_at": "2026-08-03T05:06:01Z",
   "pr": 24,
   "pr_draft": true,
   "pr_merged": false,
-  "pr_head": "4aebf540178c0fe6a6ff5a72156f9e865f0eda9d",
+  "pr_head": "c2668ac81be1e2eea882ee0ea59bb0a519a507d7",
   "edge_research_v3_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-  "system_stage": "RUNTIME_DEFECTS_REPAIRED_AWAITING_OOS_APPROVAL",
+  "system_stage": "H3_OOS_DATA_INVALID_NEW_RESERVATION_REQUIRED",
   "current_approved_strategies": {
     "PRIMARY_QUALIFICATION_COHORT": "H3E",
     "CONFIRMATORY_COHORT": "H3D",
@@ -72,9 +72,16 @@
     "reservation_id": "OOS_H3_UNTOUCHED_V1_RESERVED",
     "reserved_start": 1785663000001,
     "reserved_end": 1789551000000,
-    "downloaded": false,
+    "downloaded": true,
     "executed": false,
-    "requires_phrase": "APPROVE_NEXUS_H3_UNTOUCHED_OOS_V1"
+    "checksum": "9cc83d2997fc98a0d43f43324acbc7a73266b4c38a32379e640301dedc85e3d2",
+    "classification": "DATA_INVALID",
+    "data_integrity": "FAIL",
+    "primary_status": "OOS_DATA_INVALID",
+    "dataset_record_count": 515,
+    "immutable_package": "artifacts/readiness/immutable/h3_oos_v1/",
+    "requires_phrase": "APPROVE_NEXUS_H3_UNTOUCHED_OOS_V1",
+    "note": "Reserved window still open until 2026-09-16; only partial history available at download time. Execution not started."
   },
   "safety": {
     "EXCHANGE_WRITE": false,
@@ -93,16 +100,16 @@
     "wallet_delta_unattributed": -0.97052039
   },
   "blockers": [
-    "new_untouched_oos_not_downloaded",
-    "founder_phrase_not_issued",
+    "oos_data_invalid_incomplete_reserved_window",
     "wallet_delta_UNKNOWN",
-    "risk_review_packet_not_ready"
+    "risk_review_packet_not_ready",
+    "trading_db_prior_local_state_not_recovered"
   ],
-  "next_permitted_action": "Await exact phrase APPROVE_NEXUS_H3_UNTOUCHED_OOS_V1",
+  "next_permitted_action": "Create a new future untouched OOS reservation after reserved_end is fully available historically; do not retune on this partial download; no Shadow/Demo",
   "risk_review_packet_ready": false,
   "shadow_status": "NOT_APPLIED",
   "qualification_complete": false,
-  "recommendation": "NEXUS_H3_OOS_APPROVAL_REQUIRED",
+  "recommendation": "NEXUS_H3_OOS_DATA_INVALID",
   "canonical_files": [
     "docs/04_readiness/NEXUS_READINESS_SOT.md",
     "artifacts/readiness/NEXUS_READINESS_SOT.json",
@@ -145,7 +152,7 @@
   "route_count": 238,
   "runtime_import_error_count": 0,
   "local_footprint_note": "G_DRIVE_REPO_GIT_CORRUPTED_DURING_INTERRUPTED_GC; rebuilt via shallow clone; trading.db local file lost",
-  "current_system_stage": "RUNTIME_DEFECTS_REPAIRED_AWAITING_OOS_APPROVAL",
+  "current_system_stage": "H3_OOS_DATA_INVALID_NEW_RESERVATION_REQUIRED",
   "storage_cleanup_commit": "4aebf540178c0fe6a6ff5a72156f9e865f0eda9d",
   "route_contract_difference_count": 0,
   "local_footprint": {
@@ -162,7 +169,7 @@
   "full_suite_collection_errors": 0,
   "full_suite_test_failures": 0,
   "trading_db_status": "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED",
-  "canonical_workspace_path_note": "C:\\NEXUS\\BTC_BOT_ACTIVE",
+  "canonical_workspace_path_note": "G:\\\u6211\u7684\u96f2\u7aef\u786c\u789f\\btc_bot",
   "repair_commit": "4aebf540178c0fe6a6ff5a72156f9e865f0eda9d",
   "tests_collected": 1996,
   "tests_passed": 1995,
@@ -171,5 +178,6 @@
   "runtime_startup_status": "PASS",
   "health_status": 200,
   "frontend_typecheck_status": "PASS",
-  "frontend_build_status": "PASS"
+  "frontend_build_status": "PASS",
+  "risk_review_status": "NOT_APPLICABLE_DATA_INVALID"
 }

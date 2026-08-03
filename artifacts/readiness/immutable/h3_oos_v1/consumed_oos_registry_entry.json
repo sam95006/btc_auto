@@ -1,0 +1,20 @@
+{
+  "reservation_id": "OOS_H3_UNTOUCHED_V1_RESERVED",
+  "status": "SKIPPED_DATA_INVALID",
+  "classification": "NOT_CONSUMED_EXECUTION_NOT_STARTED",
+  "dataset_checksum": "9cc83d2997fc98a0d43f43324acbc7a73266b4c38a32379e640301dedc85e3d2",
+  "policy_checksums": {
+    "H3E_OOS_POLICY_V1_FROZEN": "bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33",
+    "H3D_OOS_POLICY_V1_FROZEN": "d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7"
+  },
+  "execution_started": false,
+  "execution_start_time": null,
+  "execution_end_time": null,
+  "source_commit": "c2668ac81be1e2eea882ee0ea59bb0a519a507d7",
+  "runner_version": "h3_oos_v1_download_gate",
+  "result_checksums": {
+    "oos_summary": "5a05b1a0352a55ddda27ff6df472382de0000c9a7420534aa6ddfe8346415ac8"
+  },
+  "primary_verdict": "OOS_DATA_INVALID",
+  "note": "Execution not started because data_integrity=FAIL (reserved window still open / incomplete)."
+}

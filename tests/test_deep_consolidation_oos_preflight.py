@@ -35,9 +35,11 @@ def test_oos_runner_dry_run_pass_without_network():
     assert r["oos_runner_dry_run"] == "PASS"
     assert r["network_download_attempt_count"] == 0
     assert r["oos_data_record_count"] == 0
-    assert r["oos_outcome_visibility"] is False
-    assert r["oos_downloaded"] is False
     assert r["oos_executed"] is False
+    # After Founder download gate, downloaded may be true; dry-run still must not hit network.
+    assert "h3e_checksum_ok" in r["checks"]
+    assert r["checks"]["h3e_checksum_ok"] is True
+    assert r["checks"]["h3d_checksum_ok"] is True
 
 
 def test_oos_download_blocked_without_phrase():
@@ -65,8 +67,15 @@ def test_orphan_manifest_zero():
     assert orphan_count() == 0
 
 
-def test_recommendation_requires_oos_approval_in_sot_when_set():
+def test_recommendation_terminal_oos_state_in_sot():
     sot = json.loads((ROOT / "artifacts/readiness/NEXUS_READINESS_SOT.json").read_text(encoding="utf-8"))
-    # after this wave SOT should request approval; allow either during mid-update
-    assert sot.get("oos", {}).get("downloaded") is False
     assert sot.get("oos", {}).get("executed") is False
+    assert sot.get("recommendation") in {
+        "NEXUS_H3_OOS_APPROVAL_REQUIRED",
+        "NEXUS_H3_OOS_DATA_INVALID",
+        "NEXUS_H3_OOS_FAILED_RETURN_TO_RESEARCH",
+        "NEXUS_H3_OOS_INSUFFICIENT_NEW_RESERVATION_REQUIRED",
+        "NEXUS_H3_OOS_VALIDATED_RISK_REVIEW_REQUIRED",
+        "NEXUS_H3_OOS_EXECUTION_INVALID",
+        "NEXUS_NEW_OOS_PLAN_READY",
+    }

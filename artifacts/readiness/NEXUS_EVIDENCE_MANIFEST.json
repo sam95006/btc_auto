@@ -1,6 +1,6 @@
 {
   "schema_version": "nexus_evidence_manifest_v1",
-  "updated_at": "2026-08-02T17:53:09Z",
+  "updated_at": "2026-08-03T05:06:01Z",
   "entries": [
     {
       "evidence_id": "6H_FINAL_ZERO_EXECUTION::artifacts/readiness/immutable/6h_final/NEXUS_6H_V2_FINAL_REPORT.md",
@@ -213,18 +213,6 @@
       "status": "COPIED"
     },
     {
-      "evidence_id": "OOS_RESERVATION::artifacts/readiness/OOS_H3_UNTOUCHED_V1_RESERVATION.json",
-      "path": "artifacts/readiness/OOS_H3_UNTOUCHED_V1_RESERVATION.json",
-      "evidence_type": "OOS_RESERVATION",
-      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-      "checksum": "10ee2e4aac1aac231c5fe0fc8098c09bbec1d54d0217ec4487dbd8f203177338",
-      "retention_reason": "current_oos_reservation_not_downloaded",
-      "canonical_or_historical": "canonical",
-      "supersedes": [],
-      "superseded_by": null,
-      "status": "ACTIVE"
-    },
-    {
       "evidence_id": "H3E_POLICY::artifacts/readiness/policies/H3E_OOS_POLICY_V1_FROZEN.json",
       "path": "artifacts/readiness/policies/H3E_OOS_POLICY_V1_FROZEN.json",
       "evidence_type": "FROZEN_POLICY",
@@ -300,6 +288,66 @@
       ],
       "superseded_by": null,
       "status": "ACTIVE"
+    },
+    {
+      "evidence_id": "H3_OOS_V1_TERMINAL::artifacts/readiness/immutable/h3_oos_v1/oos_summary.json",
+      "path": "artifacts/readiness/immutable/h3_oos_v1/oos_summary.json",
+      "evidence_type": "H3_OOS_V1_TERMINAL",
+      "source_commit": "c2668ac81be1e2eea882ee0ea59bb0a519a507d7",
+      "checksum": "66095bab814a32e6932f51a92ca0bbae47c8bcb65d8d39dee8d6bba95619c4e3",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H3_OOS_V1_POLICY::artifacts/readiness/immutable/h3_oos_v1/policy_checksum_manifest.json",
+      "path": "artifacts/readiness/immutable/h3_oos_v1/policy_checksum_manifest.json",
+      "evidence_type": "H3_OOS_V1_POLICY",
+      "source_commit": "c2668ac81be1e2eea882ee0ea59bb0a519a507d7",
+      "checksum": "af40e52032689a83c31d077db75a8bdaea4c6d0838d480c0b3bb652206ed24a4",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H3_OOS_V1_DATASET::artifacts/readiness/immutable/h3_oos_v1/dataset_provenance_checksum_manifest.json",
+      "path": "artifacts/readiness/immutable/h3_oos_v1/dataset_provenance_checksum_manifest.json",
+      "evidence_type": "H3_OOS_V1_DATASET",
+      "source_commit": "c2668ac81be1e2eea882ee0ea59bb0a519a507d7",
+      "checksum": "069ae66107f217054d8fa2a3fcb5d8e3ecc66dc5947f562bc6d24f3d324e6f87",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H3_OOS_V1_REGISTRY::artifacts/readiness/immutable/h3_oos_v1/consumed_oos_registry_entry.json",
+      "path": "artifacts/readiness/immutable/h3_oos_v1/consumed_oos_registry_entry.json",
+      "evidence_type": "H3_OOS_V1_REGISTRY",
+      "source_commit": "c2668ac81be1e2eea882ee0ea59bb0a519a507d7",
+      "checksum": "111414ddfeadeb2450541e7e6575dee8f85ed2efc92fc91211f9a082ca437e9d",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "OOS_RESERVATION::artifacts/readiness/OOS_H3_UNTOUCHED_V1_RESERVATION.json",
+      "path": "artifacts/readiness/OOS_H3_UNTOUCHED_V1_RESERVATION.json",
+      "evidence_type": "OOS_RESERVATION",
+      "source_commit": "c2668ac81be1e2eea882ee0ea59bb0a519a507d7",
+      "checksum": "2b0a42cd11f03b1b53ea94ea7b395e41955877f9474d5eb3bafbd045e6aa5b3f",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
     }
   ],
   "storage_cleanup_commit": "638fb5558396a113a2b91f66aef6f089e0deeed3",

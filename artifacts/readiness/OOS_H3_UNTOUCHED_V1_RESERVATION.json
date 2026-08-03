@@ -31,9 +31,9 @@
     "H2*"
   ],
   "created_before_download": true,
-  "downloaded": false,
+  "downloaded": true,
   "executed": false,
-  "checksum": null,
+  "checksum": "9cc83d2997fc98a0d43f43324acbc7a73266b4c38a32379e640301dedc85e3d2",
   "checks": {
     "no_overlap_with_training": true,
     "no_overlap_with_validation": true,
@@ -42,7 +42,11 @@
     "consumed_oos_id": "OOS_REAL_MARKET_2026Q_FAILED_HOLDOUT_e186d13"
   },
   "download_requires_exact_phrase": "APPROVE_NEXUS_H3_UNTOUCHED_OOS_V1",
-  "outcome_data_exposed": false,
+  "outcome_data_exposed": true,
   "source_plan_checksum": "0e1297342e9cd58c63f2a658ce3f9f86a348d19e3814447299550f63d2db2401",
-  "created_at": "2026-08-02T15:57:33Z"
+  "created_at": "2026-08-02T15:57:33Z",
+  "download_manifest_ref": "artifacts/readiness/immutable/h3_oos_v1/dataset_provenance_checksum_manifest.json",
+  "data_integrity": "FAIL",
+  "classification": "DATA_INVALID",
+  "downloaded_at": "2026-08-03T05:04:38Z"
 }

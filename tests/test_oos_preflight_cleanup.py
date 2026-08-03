@@ -63,12 +63,19 @@ def test_h3_policies_frozen():
     assert e["risk_sizing_rules"]["maximum_notional"] == 500
 
 
-def test_oos_reservation_not_downloaded():
+def test_oos_reservation_terminal_download_state():
     r = load_oos_reservation()
-    assert r["downloaded"] is False
-    assert r["executed"] is False
-    assert r["checksum"] is None
+    assert r["reservation_id"] == "OOS_H3_UNTOUCHED_V1_RESERVED"
     assert r["download_requires_exact_phrase"] == FOUNDER_OOS_APPROVAL_PHRASE
+    # After Founder-approved download gate: downloaded may be true with DATA_INVALID;
+    # execution must remain false until a complete reserved window is sealed.
+    assert r["executed"] is False
+    if r.get("downloaded") is True:
+        assert isinstance(r.get("checksum"), str) and len(r["checksum"]) == 64
+        assert r.get("classification") == "DATA_INVALID"
+        assert r.get("data_integrity") == "FAIL"
+    else:
+        assert r["checksum"] is None
 
 
 def test_oos_download_requires_exact_founder_phrase():
@@ -80,7 +87,6 @@ def test_oos_download_requires_exact_founder_phrase():
         guard_oos_download(founder_phrase="approve_nexus_h3_untouched_oos_v1")
     allowed = guard_oos_download(founder_phrase=FOUNDER_OOS_APPROVAL_PHRASE)
     assert allowed["allowed"] is True
-    assert allowed["downloaded"] is False
     assert allowed["executed"] is False
 
 
@@ -94,19 +100,44 @@ def test_mainnet_and_real_money_forbidden_in_sot():
     assert sot["safety"]["MAINNET"] is False
     assert sot["safety"]["REAL_MONEY"] is False
     assert sot["safety"]["EXCHANGE_WRITE"] is False
-    assert sot["oos"]["downloaded"] is False
     assert sot["oos"]["executed"] is False
     assert sot["recommendation"] in {
         "NEXUS_NEW_OOS_PLAN_READY",
         "NEXUS_H3_OOS_APPROVAL_REQUIRED",
+        "NEXUS_H3_OOS_DATA_INVALID",
+        "NEXUS_H3_OOS_FAILED_RETURN_TO_RESEARCH",
+        "NEXUS_H3_OOS_INSUFFICIENT_NEW_RESERVATION_REQUIRED",
+        "NEXUS_H3_OOS_VALIDATED_RISK_REVIEW_REQUIRED",
+        "NEXUS_H3_OOS_EXECUTION_INVALID",
     }
     assert sot["account_state"]["wallet_delta_classification"] == "UNKNOWN"
     assert sot["account_state"]["wallet_delta_unattributed"] == -0.97052039
     assert sot["wallet_delta_classification"] == "UNKNOWN"
     assert sot["wallet_delta_unattributed"] == -0.97052039
-    assert sot["risk_review_packet_ready"] is False
     assert sot["shadow_status"] == "NOT_APPLIED"
     assert sot["qualification_complete"] is False
+
+
+def test_h3_oos_v1_immutable_package_present_when_downloaded():
+    r = load_oos_reservation()
+    if not r.get("downloaded"):
+        pytest.skip("OOS not downloaded yet")
+    base = ROOT / "artifacts/readiness/immutable/h3_oos_v1"
+    for name in (
+        "oos_summary.json",
+        "policy_checksum_manifest.json",
+        "dataset_provenance_checksum_manifest.json",
+        "consumed_oos_registry_entry.json",
+    ):
+        assert (base / name).is_file(), name
+    summary = json.loads((base / "oos_summary.json").read_text(encoding="utf-8"))
+    assert summary["recommendation"] == "NEXUS_H3_OOS_DATA_INVALID"
+    assert summary["executed"] is False
+    assert summary["h3e"]["primary_status"] == "OOS_DATA_INVALID"
+    assert summary["shadow_status"] == "NOT_APPLIED"
+    pol = json.loads((base / "policy_checksum_manifest.json").read_text(encoding="utf-8"))
+    assert pol["h3e_policy_unchanged"] is True
+    assert pol["h3d_policy_unchanged"] is True
 
 
 def test_qualification_hierarchy():
