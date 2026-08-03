@@ -1,0 +1,23 @@
+# NEXUS Product Strategy SOT
+
+Docs-only track. No frontend, backend, routes, APIs, migrations, or deployment.
+
+Canonical dual-track charter:
+
+- `NEXUS_DUAL_TRACK_MISSION_AND_BOUNDARY_V1.md`
+
+Decision documents (nine):
+
+1. `NEXUS_GLOBAL_COMPETITIVE_REALITY_REPORT_V1.md`
+2. `NEXUS_ICP_AND_INTERVIEW_PLAN_V1.md`
+3. `NEXUS_DECISION_OBJECT_SPECIFICATION_V1.md`
+4. `NEXUS_DECISION_FLYWHEEL_ARCHITECTURE_V1.md`
+5. `NEXUS_PRIVATE_PUBLIC_SEPARATION_DESIGN_V1.md`
+6. `NEXUS_CONCIERGE_MVP_SPECIFICATION_V1.md`
+7. `NEXUS_CROSS_DEVICE_PRODUCT_SPECIFICATION_V1.md`
+8. `NEXUS_METRICS_AND_STAGE_GATES_V1.md`
+9. `NEXUS_COMPLIANCE_BOUNDARY_V1.md`
+
+Public product: **NEXUS — Crypto Decision Integrity Platform**  
+Atomic object: **Decision Object**  
+Pricing: **UNVALIDATED_HYPOTHESIS**
