@@ -6,7 +6,7 @@ Updated: 2026-08-03T06:33:29Z
 
 `H4_RESEARCH_FAILED_NO_DEMO`
 
-PR #24 head (at write): `febfa111af23f8c33e83bf42595e6253db22e574`
+PR #24 head (at write): `f7ade4a379c268d7c08517b8a8a79e4838a5476f`
 
 ## H3 status
 
