@@ -1,26 +1,32 @@
 # NEXUS Readiness Source of Truth
 
-Updated: 2026-08-03T09:17:26Z
+Updated: 2026-08-03T12:23:12Z
 
 ## Current system stage
 
-`GENERAL_MULTI_STRATEGY_RESEARCH_ENGINE_V1`
+`STRATEGY_ENGINE_V1_1_SEMANTIC_REPAIR`
 
 Canonical workspace: `G:\我的雲端硬碟\btc_bot`
 
-## Real AI loop
+## V1 reinterpretation (preserved, not overwritten)
 
-- transport_and_delivery_verified=`true`
-- semantic_trade_learning_quality=`CALIBRATION_REQUIRED`
-- Groq Main=`REAL_API_PASS` · Reflection=`REAL_API_PASS`
-- Cerebras=`REAL_API_PASS` · SambaNova=`REAL_API_PASS`
+- V1_EXECUTION_INTERPRETATION=`GENERIC_FAMILY_EXECUTOR_RESULTS_NOT_COMPONENT_DISTINCT`
+- semantic_collision_pair_count=`10`
+- exact_metric_collision_count=`7`
+- V1 immutable package preserved
 
-## Strategy engine V1
+## Strategy engine V1.1 semantic repair
 
-- hypotheses executed=`12` across `9` families
-- recommended future qualification candidates=`0`
-- reflection calibration trades=`40`
-- evidence_completeness_ratio=`0.5637820512820513`
+- implemented_components=`16` / registered=`16`
+- conformance_tests=`80` failures=`0`
+- actual_price_datasets=`16` (target ≥60)
+- actual_derivatives_datasets=`16` (target ≥20)
+- executed_hypothesis_count=`12`
+- DISCOVERY_PROMISING=`0`
+- recommended_candidate_count=`0`
+- reflection evidence_completeness_ratio=`0.9957264957264957`
+- deterministic_AI_agreement_ratio=`1.0`
+- new_policy_effect_lesson_count=`0`
 
 ## Preserved
 
@@ -31,4 +37,4 @@ Canonical workspace: `G:\我的雲端硬碟\btc_bot`
 
 ## Recommendation
 
-`NEXUS_STRATEGY_ENGINE_V1_NO_PROMISING_MECHANISM`
+`NEXUS_STRATEGY_ENGINE_V11_RESEARCH_COVERAGE_INSUFFICIENT`
