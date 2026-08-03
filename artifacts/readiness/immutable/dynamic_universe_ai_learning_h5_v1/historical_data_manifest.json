@@ -1,0 +1,50 @@
+{
+  "schema": "historical_data_manifest_v1",
+  "provider": "bybit_public_readonly",
+  "research_symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+    "DOGEUSDT",
+    "HYPEUSDT",
+    "ADAUSDT",
+    "ZECUSDT",
+    "XAUUSDT",
+    "SOXLUSDT"
+  ],
+  "eligible_historical_symbol_count": 10,
+  "intervals": [
+    "15",
+    "60",
+    "240"
+  ],
+  "optional_5m_for_intrabar_only": true,
+  "start_ms": 1739007000000,
+  "end_ms": 1785663000000,
+  "historical_start": 1739007000000,
+  "historical_end": 1785663000000,
+  "historical_record_count": 572216,
+  "never_replace_missing_oi_funding_with_zero": true,
+  "raw_data_gitignored": true,
+  "survivorship_bias": {
+    "status": "ACKNOWLEDGED",
+    "pit_symbol_count_at_dev_start": 306,
+    "pit_symbol_count_at_dev_mid": 448,
+    "current_eligible_count": 676,
+    "survivorship_delta_current_minus_start": 370,
+    "limitation": "Historical research must reconstruct membership point-in-time; using only today-surviving symbols without PIT is forbidden as sole method"
+  },
+  "coverage_by_class": {
+    "schema": "dynamic_universe_coverage_v1",
+    "note": "Coverage only — not fleets",
+    "total_profiles": 676,
+    "MAINSTREAM": 187,
+    "MID_SIZE": 256,
+    "SMALL": 233,
+    "MEME": 12,
+    "NON_MEME": 664,
+    "UNKNOWN": 0
+  },
+  "historical_dataset_checksum": "f9e354075af5c63fe031149ac77d1fab64d02b57d7cc4c35b4d9c2aad17e280b"
+}

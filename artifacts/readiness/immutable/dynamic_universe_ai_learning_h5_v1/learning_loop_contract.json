@@ -1,0 +1,24 @@
+{
+  "schema": "learning_loop_contract_v1",
+  "learning_loop_status": "IMPLEMENTED",
+  "lesson_schema_version": "lesson_record_v1",
+  "reflection_schema_version": "reflection_v1",
+  "path": [
+    "Candidate",
+    "Main Reasoner",
+    "Deterministic Risk Critic",
+    "Simulated Outcome",
+    "Outcome Recorder",
+    "Reflection AI",
+    "Independent Reflection Critic",
+    "Lesson Record",
+    "Lesson Memory",
+    "Relevant Lesson Retrieval",
+    "Future Main Reasoner context",
+    "Learning Patch proposal",
+    "EATI validation"
+  ],
+  "ai_cannot_override_hard_risk": true,
+  "autonomous_online_weight_training": false,
+  "immediate_vs_permanent_boundary": "ENFORCED"
+}

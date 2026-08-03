@@ -1,0 +1,17 @@
+{
+  "schema_version": "symbol_profile_v1",
+  "taxonomy_version": "meme_taxonomy_v1",
+  "coverage": {
+    "schema": "dynamic_universe_coverage_v1",
+    "note": "Coverage only — not fleets",
+    "total_profiles": 676,
+    "MAINSTREAM": 187,
+    "MID_SIZE": 256,
+    "SMALL": 233,
+    "MEME": 12,
+    "NON_MEME": 664,
+    "UNKNOWN": 0
+  },
+  "note": "Labels/features in one system — not fleets",
+  "profile_count": 676
+}
