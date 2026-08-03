@@ -23,6 +23,7 @@ from typing import Any
 
 from backend.nexus_ai_gateway import (
     MockProvider,
+    coerce_to_schema,
     redact_for_external,
     validate_against_schema,
     _sha,
@@ -56,7 +57,8 @@ ENV_SAMBANOVA = "SAMBANOVA_API_KEY"
 DEFAULT_MODELS = {
     "GROQ_MAIN_REASONER": os.getenv("NEXUS_GROQ_MAIN_MODEL", "llama-3.3-70b-versatile"),
     "GROQ_REFLECTION_REASONER": os.getenv("NEXUS_GROQ_REFLECTION_MODEL", "llama-3.3-70b-versatile"),
-    "CEREBRAS_RESEARCH_NORMALIZER": os.getenv("NEXUS_CEREBRAS_MODEL", "llama-3.3-70b"),
+    # Cerebras catalog rotated; llama-3.3-70b may 404 — override via NEXUS_CEREBRAS_MODEL
+    "CEREBRAS_RESEARCH_NORMALIZER": os.getenv("NEXUS_CEREBRAS_MODEL", "gemma-4-31b"),
     "SAMBANOVA_INDEPENDENT_CRITIC": os.getenv("NEXUS_SAMBANOVA_MODEL", "Meta-Llama-3.3-70B-Instruct"),
 }
 
@@ -101,11 +103,19 @@ REFLECTION_SCHEMA = {
         "summary",
     ],
     "properties": {
+        "trade_id": {"type": "string"},
         "process_classification": {"type": "string"},
         "root_causes": {"type": "array"},
+        "supporting_evidence_ids": {"type": "array"},
+        "contradicting_evidence_ids": {"type": "array"},
         "confidence": {"type": "number"},
         "summary": {"type": "string"},
         "immediate_safe_actions": {"type": "array"},
+        "permanent_change_recommended": {"type": "boolean"},
+        "missing_evidence": {"type": "array"},
+        "provider_profile": {"type": "string"},
+        "model_id": {"type": "string"},
+        "prompt_schema_version": {"type": "string"},
     },
 }
 
@@ -113,23 +123,39 @@ LESSON_NORMALIZE_SCHEMA = {
     "title": "lesson_normalize_v1",
     "required": ["process_classification", "root_causes", "confidence", "applicable_conditions"],
     "properties": {
+        "lesson_id": {"type": "string"},
+        "source_trade_id": {"type": "string"},
         "process_classification": {"type": "string"},
         "root_causes": {"type": "array"},
-        "confidence": {"type": "number"},
         "applicable_conditions": {"type": "array"},
         "contradicting_conditions": {"type": "array"},
+        "evidence_ids": {"type": "array"},
+        "confidence": {"type": "number"},
         "immediate_safe_actions": {"type": "array"},
+        "proposed_policy_changes": {"type": "array"},
+        "status": {"type": "string"},
+        "source_reflection_id": {"type": "string"},
+        "provider_profile": {"type": "string"},
+        "model_id": {"type": "string"},
     },
 }
 
 CRITIC_SCHEMA = {
     "title": "critic_v1",
-    "required": ["verdict", "reason", "confidence"],
+    "required": ["verdict", "confidence"],
     "properties": {
+        "lesson_id": {"type": "string"},
         "verdict": {"type": "string"},
+        "critic_verdict": {"type": "string"},
+        "agreement_status": {"type": "string"},
+        "disputed_fields": {"type": "array"},
+        "supporting_evidence_ids": {"type": "array"},
+        "recommended_status": {"type": "string"},
         "reason": {"type": "string"},
         "confidence": {"type": "number"},
         "dispute": {"type": "boolean"},
+        "provider_profile": {"type": "string"},
+        "model_id": {"type": "string"},
     },
 }
 
@@ -143,11 +169,19 @@ MAIN_REASONER_SCHEMA = {
         "decision_effect",
     ],
     "properties": {
+        "candidate_id": {"type": "string"},
         "retrieved_lesson_ids": {"type": "array"},
         "applied_lesson_ids": {"type": "array"},
         "ignored_lesson_ids": {"type": "array"},
         "lesson_application_reason": {"type": "string"},
         "decision_effect": {"type": "string"},
+        "confidence_before_lessons": {"type": "number"},
+        "confidence_after_lessons": {"type": "number"},
+        "additional_confirmation_required": {"type": "boolean"},
+        "temporary_block_recommended": {"type": "boolean"},
+        "missing_evidence": {"type": "array"},
+        "provider_profile": {"type": "string"},
+        "model_id": {"type": "string"},
     },
 }
 
@@ -193,103 +227,140 @@ class OpenAICompatProvider:
         model_id: str,
         prompt: str,
         schema: dict[str, Any],
-        timeout_s: float = 30.0,
+        timeout_s: float = 45.0,
     ) -> tuple[dict[str, Any] | None, str, dict[str, Any]]:
         api_key = os.getenv(self.api_key_env)
         if not api_key:
             return None, "PROVIDER_UNAVAILABLE", {"model_id": model_id, "reason": "NOT_CONFIGURED"}
         redacted = redact_for_external(prompt)
-        payload = {
-            "model": model_id,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": (
-                        "Return ONLY valid JSON matching the required schema keys. "
-                        f"Schema title={schema.get('title')}. No secrets."
-                    ),
+        last_meta: dict[str, Any] = {"model_id": model_id}
+        last_status = "UNKNOWN"
+        for attempt in range(5):
+            payload = {
+                "model": model_id,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            "Return ONLY valid JSON matching the required schema keys. "
+                            f"Schema title={schema.get('title')}. Required={schema.get('required')}. "
+                            "No secrets. No markdown."
+                        ),
+                    },
+                    {"role": "user", "content": redacted},
+                ],
+                "temperature": 0.1,
+                "max_tokens": 800,
+                "response_format": {"type": "json_object"},
+            }
+            req = urllib.request.Request(
+                self.endpoint,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "User-Agent": "NEXUS-GoalAlignment/1.0",
                 },
-                {"role": "user", "content": redacted},
-            ],
-            "temperature": 0.1,
-            "max_tokens": 400,
-            "response_format": {"type": "json_object"},
-        }
-        req = urllib.request.Request(
-            self.endpoint,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                "User-Agent": "NEXUS-GoalAlignment/1.0",
-            },
-            method="POST",
-        )
-        t0 = time.perf_counter()
-        try:
-            with urllib.request.urlopen(req, timeout=timeout_s) as resp:
-                headers = {k.lower(): v for k, v in resp.headers.items()}
-                raw = json.loads(resp.read().decode("utf-8"))
-        except urllib.error.HTTPError as exc:
-            latency = int((time.perf_counter() - t0) * 1000)
-            body = ""
+                method="POST",
+            )
+            t0 = time.perf_counter()
             try:
-                body = exc.read().decode("utf-8", errors="ignore")[:200]
-            except Exception:
-                pass
-            status = "UNKNOWN"
-            if exc.code in (401, 403):
-                status = "PROVIDER_UNAVAILABLE"
-            elif exc.code == 429:
-                status = "RATE_LIMITED"
-            elif exc.code == 404:
-                status = "MODEL_UNAVAILABLE"
-            return None, status, {
-                "model_id": model_id,
-                "http_status": exc.code,
-                "latency_ms": latency,
-                "rate_limit_header_present": False,
-                "error_snippet_redacted": redact_for_external(body),
-                "smoke_map": {
-                    401: "AUTH_FAILED",
-                    403: "AUTH_FAILED",
-                    429: "RATE_LIMITED",
-                    404: "MODEL_UNAVAILABLE",
-                }.get(exc.code, "PROVIDER_ERROR"),
-            }
-        except TimeoutError:
-            return None, "TIMEOUT", {"model_id": model_id, "smoke_map": "TIMEOUT"}
-        except Exception as exc:
-            return None, "UNKNOWN", {
-                "model_id": model_id,
-                "smoke_map": "PROVIDER_ERROR",
-                "error_snippet_redacted": redact_for_external(str(exc)[:120]),
-            }
+                with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+                    headers = {k.lower(): v for k, v in resp.headers.items()}
+                    raw = json.loads(resp.read().decode("utf-8"))
+            except urllib.error.HTTPError as exc:
+                latency = int((time.perf_counter() - t0) * 1000)
+                body = ""
+                try:
+                    body = exc.read().decode("utf-8", errors="ignore")[:200]
+                except Exception:
+                    pass
+                status = "UNKNOWN"
+                if exc.code in (401, 403):
+                    status = "PROVIDER_UNAVAILABLE"
+                elif exc.code == 429:
+                    status = "RATE_LIMITED"
+                elif exc.code == 404:
+                    status = "MODEL_UNAVAILABLE"
+                last_status = status
+                last_meta = {
+                    "model_id": model_id,
+                    "http_status": exc.code,
+                    "latency_ms": latency,
+                    "rate_limit_header_present": False,
+                    "error_snippet_redacted": redact_for_external(body),
+                    "smoke_map": {
+                        401: "AUTH_FAILED",
+                        403: "AUTH_FAILED",
+                        429: "RATE_LIMITED",
+                        404: "MODEL_UNAVAILABLE",
+                    }.get(exc.code, "PROVIDER_ERROR"),
+                    "attempt": attempt + 1,
+                }
+                if status == "RATE_LIMITED" and attempt < 4:
+                    time.sleep(1.5 * (2**attempt))
+                    continue
+                return None, status, last_meta
+            except TimeoutError:
+                last_status = "TIMEOUT"
+                last_meta = {"model_id": model_id, "smoke_map": "TIMEOUT", "attempt": attempt + 1}
+                if attempt < 2:
+                    time.sleep(1.0)
+                    continue
+                return None, "TIMEOUT", last_meta
+            except Exception as exc:
+                return None, "UNKNOWN", {
+                    "model_id": model_id,
+                    "smoke_map": "PROVIDER_ERROR",
+                    "error_snippet_redacted": redact_for_external(str(exc)[:120]),
+                }
 
-        latency = int((time.perf_counter() - t0) * 1000)
-        content = (((raw.get("choices") or [{}])[0].get("message") or {}).get("content")) or ""
-        usage = raw.get("usage") or {}
-        try:
-            parsed = json.loads(content) if content else None
-        except json.JSONDecodeError:
-            parsed = None
-        rate_hdr = any(k.startswith("x-ratelimit") or "retry-after" in k for k in headers)
-        meta = {
-            "model_id": model_id,
-            "latency_ms": latency,
-            "input_tokens": usage.get("prompt_tokens"),
-            "output_tokens": usage.get("completion_tokens"),
-            "rate_limit_header_present": rate_hdr,
-            "fingerprint": str(raw.get("model") or model_id),
-            "endpoint_host": _endpoint_host(self.endpoint),
-            "smoke_map": "REAL_API_PASS",
-        }
-        if parsed is None:
-            return None, "INVALID_SCHEMA", {**meta, "smoke_map": "INVALID_SCHEMA"}
-        if not validate_against_schema(parsed, schema):
-            return None, "INVALID_SCHEMA", {**meta, "smoke_map": "INVALID_SCHEMA"}
-        return parsed, "SUCCESS", meta
+            latency = int((time.perf_counter() - t0) * 1000)
+            content = (((raw.get("choices") or [{}])[0].get("message") or {}).get("content")) or ""
+            # Some models put JSON in reasoning/refusal-adjacent fields — keep content only
+            usage = raw.get("usage") or {}
+            try:
+                parsed = json.loads(content) if content else None
+            except json.JSONDecodeError:
+                # try extract first JSON object
+                parsed = None
+                start = content.find("{")
+                end = content.rfind("}")
+                if start >= 0 and end > start:
+                    try:
+                        parsed = json.loads(content[start : end + 1])
+                    except json.JSONDecodeError:
+                        parsed = None
+            rate_hdr = any(k.startswith("x-ratelimit") or "retry-after" in k for k in headers)
+            meta = {
+                "model_id": model_id,
+                "latency_ms": latency,
+                "input_tokens": usage.get("prompt_tokens"),
+                "output_tokens": usage.get("completion_tokens"),
+                "rate_limit_header_present": rate_hdr,
+                "fingerprint": str(raw.get("model") or model_id),
+                "endpoint_host": _endpoint_host(self.endpoint),
+                "smoke_map": "REAL_API_PASS",
+                "attempt": attempt + 1,
+            }
+            if parsed is None:
+                last_status = "INVALID_SCHEMA"
+                last_meta = {**meta, "smoke_map": "INVALID_SCHEMA"}
+                if attempt < 3:
+                    time.sleep(0.8 * (attempt + 1))
+                    continue
+                return None, "INVALID_SCHEMA", last_meta
+            coerced = coerce_to_schema(parsed, schema)
+            if coerced is None or not validate_against_schema(coerced, schema):
+                last_status = "INVALID_SCHEMA"
+                last_meta = {**meta, "smoke_map": "INVALID_SCHEMA"}
+                if attempt < 3:
+                    time.sleep(0.8 * (attempt + 1))
+                    continue
+                return None, "INVALID_SCHEMA", last_meta
+            return coerced, "SUCCESS", meta
+        return None, last_status, last_meta
 
 
 @dataclass
@@ -325,17 +396,18 @@ class FounderAIGateway:
                             "immediate_safe_actions": [],
                         },
                         "critic_v1": {
-                            "verdict": "ACCEPT",
+                            "verdict": "AGREE",
+                            "critic_verdict": "AGREE",
                             "reason": "consistent",
                             "confidence": 0.8,
                             "dispute": False,
                         },
                         "main_reasoner_v1": {
-                            "retrieved_lesson_ids": [],
-                            "applied_lesson_ids": [],
+                            "retrieved_lesson_ids": ["00000000-0000-0000-0000-000000000001"],
+                            "applied_lesson_ids": ["00000000-0000-0000-0000-000000000001"],
                             "ignored_lesson_ids": [],
-                            "lesson_application_reason": "no_lessons",
-                            "decision_effect": "NO_CHANGE",
+                            "lesson_application_reason": "apply_negative_process_context",
+                            "decision_effect": "ADDITIONAL_CONFIRMATION_REQUIRED",
                         },
                     },
                 )

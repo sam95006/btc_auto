@@ -1,0 +1,196 @@
+{
+  "schema": "real_reflection_run_v1",
+  "reflection_attempt_count": 20,
+  "reflection_success_count": 20,
+  "reflection_failure_count": 0,
+  "process_counts": {
+    "GOOD_PROCESS_WIN": 0,
+    "GOOD_PROCESS_LOSS": 0,
+    "BAD_PROCESS_WIN": 0,
+    "BAD_PROCESS_LOSS": 0,
+    "UNDETERMINED_PROCESS": 20
+  },
+  "rows": [
+    {
+      "trade_id": "H5A_EVIDENCE_1_1",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.5,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_1_7",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.3,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_1_13",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.5,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_1_19",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.5,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_2_3",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.5,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_2_9",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.5,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_2_15",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.3,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_2_21",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.3,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_2_27",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.3,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_3_2",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.5,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_3_8",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.3,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_3_14",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.3,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_3_20",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.3,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_3_26",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.3,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_4_6",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.5,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_4_12",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.3,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_4_18",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.3,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_5_2",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.3,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_5_8",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.5,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    },
+    {
+      "trade_id": "H5A_EVIDENCE_5_14",
+      "process_classification": "UNDETERMINED_PROCESS",
+      "confidence": 0.3,
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "model_id": "llama-3.3-70b-versatile",
+      "prompt_schema_version": "reflection_v1",
+      "result_status": "SUCCESS"
+    }
+  ],
+  "raw_provider_text_stored": false
+}

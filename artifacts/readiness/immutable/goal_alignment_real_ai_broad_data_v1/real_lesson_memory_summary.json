@@ -1,0 +1,12 @@
+{
+  "schema": "real_lesson_memory_v1",
+  "lesson_record_count": 9,
+  "lesson_memory_write_count": 9,
+  "lesson_deduplicated_count": 11,
+  "lesson_conflict_count": 9,
+  "independent_critic_review_count": 12,
+  "critic_agree_count": 0,
+  "critic_partial_count": 0,
+  "critic_disagree_count": 9,
+  "critic_insufficient_evidence_count": 3
+}

@@ -1,0 +1,72 @@
+{
+  "schema": "real_provider_verified_v1",
+  "tested_at": "2026-08-03T08:39:06Z",
+  "results": [
+    {
+      "provider_profile": "GROQ_MAIN_REASONER",
+      "endpoint_host": "api.groq.com",
+      "requested_model_id": "llama-3.3-70b-versatile",
+      "returned_model_identity_when_available": "llama-3.3-70b-versatile",
+      "request_hash": "7699c823584d3a1e7bb1713b916ca0e58f4e2dd9dc3eabb6dada3b240180195d",
+      "response_hash": "7efd7d1dcb5ea74a31fe970f7cbcccea85a390380d0ffb8d01114ac740557a53",
+      "latency_ms": 396,
+      "token_usage_when_available": {
+        "input_tokens": 108,
+        "output_tokens": 15
+      },
+      "rate_limit_metadata_present": true,
+      "result_status": "REAL_API_PASS",
+      "tested_at": "2026-08-03T08:39:04Z"
+    },
+    {
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "endpoint_host": "api.groq.com",
+      "requested_model_id": "llama-3.3-70b-versatile",
+      "returned_model_identity_when_available": "llama-3.3-70b-versatile",
+      "request_hash": "7699c823584d3a1e7bb1713b916ca0e58f4e2dd9dc3eabb6dada3b240180195d",
+      "response_hash": "7efd7d1dcb5ea74a31fe970f7cbcccea85a390380d0ffb8d01114ac740557a53",
+      "latency_ms": 238,
+      "token_usage_when_available": {
+        "input_tokens": 108,
+        "output_tokens": 15
+      },
+      "rate_limit_metadata_present": true,
+      "result_status": "REAL_API_PASS",
+      "tested_at": "2026-08-03T08:39:05Z"
+    },
+    {
+      "provider_profile": "CEREBRAS_RESEARCH_NORMALIZER",
+      "endpoint_host": "api.cerebras.ai",
+      "requested_model_id": "gemma-4-31b",
+      "returned_model_identity_when_available": "gemma-4-31b",
+      "request_hash": "7699c823584d3a1e7bb1713b916ca0e58f4e2dd9dc3eabb6dada3b240180195d",
+      "response_hash": "7efd7d1dcb5ea74a31fe970f7cbcccea85a390380d0ffb8d01114ac740557a53",
+      "latency_ms": 560,
+      "token_usage_when_available": {
+        "input_tokens": 158,
+        "output_tokens": 12
+      },
+      "rate_limit_metadata_present": true,
+      "result_status": "REAL_API_PASS",
+      "tested_at": "2026-08-03T08:39:05Z"
+    },
+    {
+      "provider_profile": "SAMBANOVA_INDEPENDENT_CRITIC",
+      "endpoint_host": "api.sambanova.ai",
+      "requested_model_id": "Meta-Llama-3.3-70B-Instruct",
+      "returned_model_identity_when_available": "Meta-Llama-3.3-70B-Instruct",
+      "request_hash": "7699c823584d3a1e7bb1713b916ca0e58f4e2dd9dc3eabb6dada3b240180195d",
+      "response_hash": "7efd7d1dcb5ea74a31fe970f7cbcccea85a390380d0ffb8d01114ac740557a53",
+      "latency_ms": 659,
+      "token_usage_when_available": {
+        "input_tokens": 128,
+        "output_tokens": 11
+      },
+      "rate_limit_metadata_present": false,
+      "result_status": "REAL_API_PASS",
+      "tested_at": "2026-08-03T08:39:06Z"
+    }
+  ],
+  "groq_quota_pool_relation": "UNKNOWN",
+  "raw_api_response_text_stored": false
+}

@@ -219,6 +219,36 @@ def test_provider_unavailable_blocks_future_order():
     assert hard["ai_override_allowed"] is False
 
 
+def test_coerce_to_schema_strips_extras_and_coerces_numbers():
+    from backend.nexus_ai_gateway import coerce_to_schema, validate_against_schema
+    from backend.nexus_ai_gateway.founder_providers import REFLECTION_SCHEMA
+
+    raw = {
+        "process_classification": "GOOD_PROCESS_LOSS",
+        "root_causes": ["noise"],
+        "confidence": "0.66",
+        "summary": "ok",
+        "extra_forbidden_field": "drop_me",
+    }
+    coerced = coerce_to_schema(raw, REFLECTION_SCHEMA)
+    assert coerced is not None
+    assert "extra_forbidden_field" not in coerced
+    assert coerce_to_schema and validate_against_schema(coerced, REFLECTION_SCHEMA)
+    assert isinstance(coerced["confidence"], float)
+
+
+def test_env_file_gitignored_when_present():
+    import subprocess
+
+    env_path = ROOT / ".env"
+    if not env_path.is_file():
+        pytest.skip(".env not present locally")
+    gi = subprocess.run(["git", "check-ignore", "-v", ".env"], cwd=str(ROOT), capture_output=True, text=True)
+    tracked = subprocess.run(["git", "ls-files", "--error-unmatch", ".env"], cwd=str(ROOT), capture_output=True, text=True)
+    assert gi.returncode == 0
+    assert tracked.returncode != 0
+
+
 def test_h5_not_rerun_preserved_in_package_when_present():
     path = ROOT / "artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/h5_preserved.json"
     if not path.is_file():

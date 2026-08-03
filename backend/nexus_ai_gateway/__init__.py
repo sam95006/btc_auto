@@ -113,8 +113,72 @@ class MockProvider:
         return payload, "SUCCESS", {"model_id": model_id, "input_tokens": 10, "output_tokens": 10}
 
 
+def coerce_to_schema(obj: Any, schema: dict[str, Any]) -> dict[str, Any] | None:
+    """Keep only declared properties; coerce common LLM type drift; drop extras."""
+    if not isinstance(obj, dict):
+        return None
+    props = schema.get("properties") or {}
+    out: dict[str, Any] = {}
+    for key, spec in props.items():
+        if key not in obj:
+            continue
+        val = obj[key]
+        expected = spec.get("type")
+        if expected == "number":
+            if isinstance(val, bool):
+                continue
+            if isinstance(val, (int, float)):
+                out[key] = float(val)
+            elif isinstance(val, str):
+                try:
+                    out[key] = float(val.strip())
+                except ValueError:
+                    continue
+            continue
+        if expected == "integer":
+            if isinstance(val, bool):
+                continue
+            if isinstance(val, int):
+                out[key] = val
+            elif isinstance(val, float) and val.is_integer():
+                out[key] = int(val)
+            elif isinstance(val, str):
+                try:
+                    out[key] = int(val.strip())
+                except ValueError:
+                    continue
+            continue
+        if expected == "boolean":
+            if isinstance(val, bool):
+                out[key] = val
+            elif isinstance(val, str) and val.strip().lower() in {"true", "false"}:
+                out[key] = val.strip().lower() == "true"
+            continue
+        if expected == "string":
+            if isinstance(val, str):
+                out[key] = val
+            elif isinstance(val, (int, float, bool)):
+                out[key] = str(val)
+            continue
+        if expected == "array":
+            if isinstance(val, list):
+                out[key] = val
+            elif val is None:
+                out[key] = []
+            continue
+        if expected == "object":
+            if isinstance(val, dict):
+                out[key] = val
+            continue
+        out[key] = val
+    return out
+
+
 def validate_against_schema(obj: Any, schema: dict[str, Any]) -> bool:
-    """Minimal strict JSON object schema check (required keys + types)."""
+    """Minimal strict JSON object schema check (required keys + types).
+
+    Extra keys are rejected unless first passed through coerce_to_schema.
+    """
     if not isinstance(obj, dict):
         return False
     required = schema.get("required") or []

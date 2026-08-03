@@ -18,7 +18,7 @@
   "groq_main_model_id": "llama-3.3-70b-versatile",
   "groq_reflection_model_id": "llama-3.3-70b-versatile",
   "groq_quota_pool_relation": "UNKNOWN",
-  "cerebras_model_id": "llama-3.3-70b",
+  "cerebras_model_id": "gemma-4-31b",
   "sambanova_model_id": "Meta-Llama-3.3-70B-Instruct",
   "role_map": {
     "main_market_reasoner": "GROQ_MAIN_REASONER",
@@ -38,14 +38,12 @@
   "hard_risk_override_forbidden": true,
   "main_reasoner_failover_forbidden": true,
   "smoke": {
-    "groq_main_status": "NOT_CONFIGURED",
-    "groq_reflection_status": "NOT_CONFIGURED",
-    "cerebras_status": "NOT_CONFIGURED",
-    "sambanova_status": "NOT_CONFIGURED"
+    "groq_main_status": "REAL_API_PASS",
+    "groq_reflection_status": "REAL_API_PASS",
+    "cerebras_status": "REAL_API_PASS",
+    "sambanova_status": "REAL_API_PASS"
   },
   "external_secret_redaction_status": "IMPLEMENTED",
   "provider_fail_closed_status": "IMPLEMENTED",
-  "dotenv_keys_loaded_count": 0,
-  "dotenv_key_names_loaded": [],
   "ci_mock_mode": false
 }
