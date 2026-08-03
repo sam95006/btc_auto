@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import tempfile
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -82,7 +83,8 @@ class SameRouterExecutionProbe:
         side: str = "Sell",
     ) -> None:
         self.writer = writer or DemoWriteClient()
-        self.export_dir = Path(export_dir or "/tmp/nexus_same_router_probe")
+        # Use OS temp (honors TMP/TEMP/TMPDIR) — Drive root /tmp is not creatable on Windows G:.
+        self.export_dir = Path(export_dir or (Path(tempfile.gettempdir()) / "nexus_same_router_probe"))
         self.symbol = symbol
         self.side = side
 

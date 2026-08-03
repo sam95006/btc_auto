@@ -1,4 +1,5 @@
 venv/
+.venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -18,6 +19,16 @@ trading.db
 /data/
 logs/
 exports/
+.nexus_runtime/
+_recovery/
+_archive/
+.git_broken/
+.git_old_*/
+.git_pointer_backup_*
+.git_migration_tmp/
+DO_NOT_RUN_INCOMPLETE_DRIVE_WORKSPACE.txt
+btc_bot.code-workspace
+.local/
 data/
 !data/external_alpha/
 data/external_alpha/*
