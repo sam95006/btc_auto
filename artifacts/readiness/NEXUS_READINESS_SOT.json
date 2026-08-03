@@ -1,12 +1,12 @@
 {
   "schema_version": "nexus_readiness_sot_v1",
-  "updated_at": "2026-08-03T05:32:44Z",
+  "updated_at": "2026-08-03T05:52:03Z",
   "pr": 24,
   "pr_draft": true,
   "pr_merged": false,
-  "pr_head": "9f7d395f5e686d3b63472831bd1bee3302b73fe8",
+  "pr_head": "337045fc434970ec8f83f5420a951a2255c4f033",
   "edge_research_v3_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-  "system_stage": "H3_OOS_WAITING_FOR_RESERVED_WINDOW_CLOSE",
+  "system_stage": "H3_CLOSED_HISTORICAL_FAILED_RETURN_TO_RESEARCH",
   "current_approved_strategies": {
     "PRIMARY_QUALIFICATION_COHORT": "H3E",
     "CONFIRMATORY_COHORT": "H3D",
@@ -110,16 +110,17 @@
     "forensic_report": "artifacts/readiness/immutable/wallet_delta_forensic/wallet_delta_forensic_report.json"
   },
   "blockers": [
+    "closed_historical_holdout_failed",
     "oos_window_not_mature_until_after_2026-09-16",
     "wallet_delta_unattributed",
     "trading_db_prior_local_state_not_recovered",
     "risk_review_packet_not_ready"
   ],
-  "next_permitted_action": "Wait for reserved window close + maturity gate PASS; new Founder phrase required; continue read-only wallet forensic if new evidence appears",
+  "next_permitted_action": "Return to research; do not start Demo forward; keep September OOS sealed; preserve wallet residual blocker",
   "risk_review_packet_ready": false,
   "shadow_status": "NOT_APPLIED",
   "qualification_complete": false,
-  "recommendation": "NEXUS_H3_OOS_WAITING_FOR_RESERVED_WINDOW_CLOSE",
+  "recommendation": "NEXUS_H3_CLOSED_HISTORICAL_FAILED_RETURN_TO_RESEARCH",
   "canonical_files": [
     "docs/04_readiness/NEXUS_READINESS_SOT.md",
     "artifacts/readiness/NEXUS_READINESS_SOT.json",
@@ -162,7 +163,7 @@
   "route_count": 238,
   "runtime_import_error_count": 0,
   "local_footprint_note": "G_DRIVE_REPO_GIT_CORRUPTED_DURING_INTERRUPTED_GC; rebuilt via shallow clone; trading.db local file lost",
-  "current_system_stage": "H3_OOS_WAITING_FOR_RESERVED_WINDOW_CLOSE",
+  "current_system_stage": "H3_CLOSED_HISTORICAL_FAILED_RETURN_TO_RESEARCH",
   "storage_cleanup_commit": "4aebf540178c0fe6a6ff5a72156f9e865f0eda9d",
   "route_contract_difference_count": 0,
   "local_footprint": {
@@ -181,8 +182,8 @@
   "trading_db_status": "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED",
   "canonical_workspace_path_note": "G:\\\\\u6211\u7684\u96f2\u7aef\u786c\u789f\\\\btc_bot",
   "repair_commit": "4aebf540178c0fe6a6ff5a72156f9e865f0eda9d",
-  "tests_collected": 2007,
-  "tests_passed": 2006,
+  "tests_collected": 2020,
+  "tests_passed": 2019,
   "tests_skipped": 1,
   "skipped_test": "tests/test_market_geometry_qualification.py:: (line 113) cost gate blocked on fixture",
   "runtime_startup_status": "PASS",
@@ -190,5 +191,20 @@
   "frontend_typecheck_status": "PASS",
   "frontend_build_status": "PASS",
   "risk_review_status": "NOT_APPLICABLE_WINDOW_NOT_MATURE",
-  "schema_contract_difference_count": 0
+  "schema_contract_difference_count": 0,
+  "closed_historical_holdout_v1": {
+    "reservation_id": "H3_CLOSED_HISTORICAL_HOLDOUT_V1_RESERVED",
+    "reservation_start": 1720863000000,
+    "reservation_end": 1736415000000,
+    "reservation_duration_days": 180,
+    "primary_status": "CLOSED_HISTORICAL_PERFORMANCE_FAILED",
+    "confirmatory_status": "CONFIRMATORY_INSUFFICIENT_SAMPLE",
+    "dataset_checksum": "b59d8409005e5f89d01b8fa167a571b9e0665ea66b732367b006222fd988db46",
+    "dataset_integrity_status": "PASS",
+    "consumed_classification": "CONSUMED_FAILED_CLOSED_HISTORICAL_HOLDOUT",
+    "immutable_package": "artifacts/readiness/immutable/h3_closed_historical_v1/",
+    "demo_forward_packet_ready": false,
+    "demo_forward_status": "NOT_APPLICABLE_PRIMARY_NOT_VALIDATED"
+  },
+  "cli_contract_difference_count": 0
 }

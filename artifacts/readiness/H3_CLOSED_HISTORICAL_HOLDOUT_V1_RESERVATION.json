@@ -1,0 +1,41 @@
+{
+  "reservation_id": "H3_CLOSED_HISTORICAL_HOLDOUT_V1_RESERVED",
+  "reservation_start": 1720863000000,
+  "reservation_end": 1736415000000,
+  "reservation_duration_days": 180,
+  "selection_rule": "latest_fully_closed_contiguous_180d_ending_at_least_30d_before_earliest_used;chronology_non_overlap_completeness_only;fallback_180_150_120;no_perf_inspection",
+  "interval_registry_checksum": "76907574444ebbb7fa464b96e2ab10e4d57e653f0941e80f843f17fda7dce1fa",
+  "policy_checksums": {
+    "H3E": "bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33",
+    "H3D": "d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7"
+  },
+  "source_commit": "337045fc434970ec8f83f5420a951a2255c4f033",
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+    "DOGEUSDT"
+  ],
+  "intervals": [
+    "15",
+    "60",
+    "240"
+  ],
+  "created_at": "2026-08-03T05:45:04Z",
+  "downloaded": true,
+  "executed": true,
+  "window_fully_closed": true,
+  "overlap_training": false,
+  "overlap_replay": false,
+  "overlap_walk_forward": false,
+  "overlap_prior_research": false,
+  "overlap_prior_oos": false,
+  "overlap_september_oos": false,
+  "prior_strategy_visibility": false,
+  "september_reservation_excluded": true,
+  "partial_september_cache_excluded": true,
+  "checksum": "b59d8409005e5f89d01b8fa167a571b9e0665ea66b732367b006222fd988db46",
+  "data_integrity": "PASS",
+  "primary_status": "CLOSED_HISTORICAL_PERFORMANCE_FAILED"
+}

@@ -1,13 +1,13 @@
 {
   "schema_version": "nexus_evidence_manifest_v1",
-  "updated_at": "2026-08-03T05:22:14Z",
+  "updated_at": "2026-08-03T05:47:27Z",
   "entries": [
     {
       "evidence_id": "6H_FINAL_ZERO_EXECUTION::artifacts/readiness/immutable/6h_final/NEXUS_6H_V2_FINAL_REPORT.md",
       "path": "artifacts/readiness/immutable/6h_final/NEXUS_6H_V2_FINAL_REPORT.md",
       "evidence_type": "6H_FINAL_ZERO_EXECUTION",
       "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-      "checksum": "10e890118a7f7e3cd0604170323cde57ebeab0f85b006b9162573aaa1429feb4",
+      "checksum": "69e05d08afe642e0263a2a4c3db4a278dc11457118fb9cccd20ce741913c0055",
       "retention_reason": "irreversible_milestone",
       "canonical_or_historical": "historical",
       "supersedes": [
@@ -21,7 +21,7 @@
       "path": "artifacts/readiness/immutable/6h_final/NEXUS_6H_V2_FORENSIC_ZERO_EXECUTION.md",
       "evidence_type": "6H_FINAL_ZERO_EXECUTION",
       "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-      "checksum": "e7b128b9bc60c1adae50ed34e720e1f4345512da1580a5928cb224822b2c3f86",
+      "checksum": "b83700a278543b15075ed0b76d2b3d3553047ab0fa6407355e3413123a1c8f2d",
       "retention_reason": "irreversible_milestone",
       "canonical_or_historical": "historical",
       "supersedes": [
@@ -35,7 +35,7 @@
       "path": "artifacts/readiness/immutable/6h_final/forensic_zero_execution.json",
       "evidence_type": "6H_FINAL_ZERO_EXECUTION",
       "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-      "checksum": "ba96ea6c36d4361570e81246339c73d3ec7d6e730089b7b0534649dd8c2d9c81",
+      "checksum": "6acc0e0263212dda58c52eb68e381e9aed031a0b6763988af111d8865eaf23a3",
       "retention_reason": "irreversible_milestone",
       "canonical_or_historical": "historical",
       "supersedes": [
@@ -119,7 +119,7 @@
       "path": "artifacts/readiness/immutable/risk_model_defect/NEXUS_OOS_RISK_MODEL_INTEGRITY_AUDIT.md",
       "evidence_type": "SIMULATOR_QTY1_DEFECT",
       "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-      "checksum": "d17477a7ffab42490b16acb84dbf711a0a950b7fb224b8418d0fce7d0570ccbb",
+      "checksum": "151e314bd211ad9d4125053b3e9e0be1cb42cc4062c879e857218e31b63ba4bb",
       "retention_reason": "irreversible_milestone",
       "canonical_or_historical": "historical",
       "supersedes": [
@@ -237,33 +237,6 @@
       "status": "FROZEN"
     },
     {
-      "evidence_id": "CANONICAL_SOT::artifacts/readiness/NEXUS_READINESS_SOT.json",
-      "path": "artifacts/readiness/NEXUS_READINESS_SOT.json",
-      "evidence_type": "CANONICAL_STATE",
-      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-      "checksum": "7adc5b1d989961ef06f266c2a3ada6583c535b332738bc4f435854ab6ac9b78e",
-      "retention_reason": "single_machine_readable_readiness_state",
-      "canonical_or_historical": "canonical",
-      "supersedes": [
-        "docs/04_readiness/*_RETURN.*",
-        "artifacts/demo_validation_*/*"
-      ],
-      "superseded_by": null,
-      "status": "ACTIVE"
-    },
-    {
-      "evidence_id": "CANONICAL_SOT_MD::docs/04_readiness/NEXUS_READINESS_SOT.md",
-      "path": "docs/04_readiness/NEXUS_READINESS_SOT.md",
-      "evidence_type": "CANONICAL_STATE",
-      "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-      "checksum": "b6da4c73c87bffcd5313ce13ef3ba695487042ffde3f9bb8dd62628232752817",
-      "retention_reason": "single_human_readable_readiness_summary",
-      "canonical_or_historical": "canonical",
-      "supersedes": [],
-      "superseded_by": null,
-      "status": "ACTIVE"
-    },
-    {
       "evidence_id": "DEEP_CONSOLIDATION::artifacts/readiness/deep_consolidation_report.json",
       "path": "artifacts/readiness/deep_consolidation_report.json",
       "evidence_type": "REPOSITORY_CONSOLIDATION",
@@ -366,7 +339,7 @@
       "path": "artifacts/readiness/immutable/h3_oos_v1/consumed_oos_registry_entry.json",
       "evidence_type": "H3_OOS_V1_UPDATED",
       "source_commit": "8e15900ea423daaa793bd388514ae8f57b6b55e9",
-      "checksum": "336c161d9e7daf1572227fcb495aa7b4c6c7d3bc11f0ed663828efc3ec178889",
+      "checksum": "406b72d4b4bc99f8ac1f5c3d821b29cc1fa7933aa8acf8418822877ccd81ecd6",
       "retention_reason": "irreversible_milestone",
       "canonical_or_historical": "canonical",
       "supersedes": [],
@@ -379,6 +352,114 @@
       "evidence_type": "H3_OOS_V1_UPDATED",
       "source_commit": "8e15900ea423daaa793bd388514ae8f57b6b55e9",
       "checksum": "433da4c59129ec506a72998b14e78627fdf86c28e891e31308447b924839c0b1",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H3_CLOSED_HISTORICAL_V1::artifacts/readiness/immutable/h3_closed_historical_v1/closed_historical_summary.json",
+      "path": "artifacts/readiness/immutable/h3_closed_historical_v1/closed_historical_summary.json",
+      "evidence_type": "H3_CLOSED_HISTORICAL_V1",
+      "source_commit": "337045fc434970ec8f83f5420a951a2255c4f033",
+      "checksum": "07b0fa0bcfe8ca6b3b840eb679307a333595dc23bb767d2eee2e6fa1ee097b93",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H3_CLOSED_HISTORICAL_V1::artifacts/readiness/immutable/h3_closed_historical_v1/interval_reservation_manifest.json",
+      "path": "artifacts/readiness/immutable/h3_closed_historical_v1/interval_reservation_manifest.json",
+      "evidence_type": "H3_CLOSED_HISTORICAL_V1",
+      "source_commit": "337045fc434970ec8f83f5420a951a2255c4f033",
+      "checksum": "316443d5cf30900bfe08a2ba4b5c69696f2e73951a75c964260f46c7cecc0035",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H3_CLOSED_HISTORICAL_V1::artifacts/readiness/immutable/h3_closed_historical_v1/dataset_provenance_checksum_manifest.json",
+      "path": "artifacts/readiness/immutable/h3_closed_historical_v1/dataset_provenance_checksum_manifest.json",
+      "evidence_type": "H3_CLOSED_HISTORICAL_V1",
+      "source_commit": "337045fc434970ec8f83f5420a951a2255c4f033",
+      "checksum": "6da39642fe7034a669b0e63388fe4e4d7c5ce999de9f786d66a60d4125def4c9",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H3_CLOSED_HISTORICAL_V1::artifacts/readiness/immutable/h3_closed_historical_v1/policy_checksum_manifest.json",
+      "path": "artifacts/readiness/immutable/h3_closed_historical_v1/policy_checksum_manifest.json",
+      "evidence_type": "H3_CLOSED_HISTORICAL_V1",
+      "source_commit": "337045fc434970ec8f83f5420a951a2255c4f033",
+      "checksum": "d69a51085159cdb0212e7499e6ca3ba01dc33e79dd2e3d6a78470e2965e300c2",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H3_CLOSED_HISTORICAL_V1::artifacts/readiness/immutable/h3_closed_historical_v1/consumed_holdout_registry_entry.json",
+      "path": "artifacts/readiness/immutable/h3_closed_historical_v1/consumed_holdout_registry_entry.json",
+      "evidence_type": "H3_CLOSED_HISTORICAL_V1",
+      "source_commit": "337045fc434970ec8f83f5420a951a2255c4f033",
+      "checksum": "defe759cd03a3855a16d59640baf53b63ee0f239028f7eea0d3a3d053483121c",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H3_CLOSED_HISTORICAL_V1::artifacts/readiness/immutable/h3_closed_historical_v1/h3e_result_sealed.json",
+      "path": "artifacts/readiness/immutable/h3_closed_historical_v1/h3e_result_sealed.json",
+      "evidence_type": "H3_CLOSED_HISTORICAL_V1",
+      "source_commit": "337045fc434970ec8f83f5420a951a2255c4f033",
+      "checksum": "0b33bed33d951bd8df3bf72f3a935f274f7bae2015223facc83f623dc272c5d1",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H3_CLOSED_HISTORICAL_V1::artifacts/readiness/H3_CLOSED_HISTORICAL_HOLDOUT_V1_RESERVATION.json",
+      "path": "artifacts/readiness/H3_CLOSED_HISTORICAL_HOLDOUT_V1_RESERVATION.json",
+      "evidence_type": "H3_CLOSED_HISTORICAL_V1",
+      "source_commit": "337045fc434970ec8f83f5420a951a2255c4f033",
+      "checksum": "87066f32d68bdd75821e13013994e106f6975b0eccb32d3ee8e2bda471bec470",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H3_CLOSED_HISTORICAL_V1::artifacts/readiness/NEXUS_READINESS_SOT.json",
+      "path": "artifacts/readiness/NEXUS_READINESS_SOT.json",
+      "evidence_type": "H3_CLOSED_HISTORICAL_V1",
+      "source_commit": "337045fc434970ec8f83f5420a951a2255c4f033",
+      "checksum": "95a3b85eb5a0da74d7dcfbf1421351afb2c49394cb9d1eead0e07fd1c2930aec",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H3_CLOSED_HISTORICAL_V1::docs/04_readiness/NEXUS_READINESS_SOT.md",
+      "path": "docs/04_readiness/NEXUS_READINESS_SOT.md",
+      "evidence_type": "H3_CLOSED_HISTORICAL_V1",
+      "source_commit": "337045fc434970ec8f83f5420a951a2255c4f033",
+      "checksum": "8ae748e6b95712537a1e35b2ba900e92b7b87a73d031b5c46abdcefd7f5ff37f",
       "retention_reason": "irreversible_milestone",
       "canonical_or_historical": "canonical",
       "supersedes": [],

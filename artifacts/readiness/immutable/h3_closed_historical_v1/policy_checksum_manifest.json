@@ -1,0 +1,9 @@
+{
+  "h3e_policy_checksum_before": "bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33",
+  "h3d_policy_checksum_before": "d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7",
+  "h3e_policy_unchanged": true,
+  "h3d_policy_unchanged": true,
+  "policy_semantic_difference_count": 0,
+  "h3e_policy_checksum_after": "bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33",
+  "h3d_policy_checksum_after": "d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7"
+}

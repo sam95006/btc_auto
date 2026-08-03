@@ -1,0 +1,17 @@
+{
+  "reservation_id": "H3_CLOSED_HISTORICAL_HOLDOUT_V1_RESERVED",
+  "reservation_start": 1720863000000,
+  "reservation_end": 1736415000000,
+  "dataset_checksum": "b59d8409005e5f89d01b8fa167a571b9e0665ea66b732367b006222fd988db46",
+  "interval_registry_checksum": "76907574444ebbb7fa464b96e2ab10e4d57e653f0941e80f843f17fda7dce1fa",
+  "h3e_policy_checksum": "bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33",
+  "h3d_policy_checksum": "d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7",
+  "source_commit": "337045fc434970ec8f83f5420a951a2255c4f033",
+  "runner_checksum": "5aab8e935f1cda278766d18bfcda7255957c50b45fba29a48efa961c37b5280f",
+  "execution_start": "2026-08-03T05:46:13Z",
+  "execution_end": "2026-08-03T05:46:16Z",
+  "primary_verdict": "CLOSED_HISTORICAL_PERFORMANCE_FAILED",
+  "status": "CONSUMED",
+  "classification": "CONSUMED_FAILED_CLOSED_HISTORICAL_HOLDOUT",
+  "confirmatory_verdict": "CONFIRMATORY_INSUFFICIENT_SAMPLE"
+}

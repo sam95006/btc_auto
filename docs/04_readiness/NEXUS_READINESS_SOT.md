@@ -1,51 +1,39 @@
 # NEXUS Readiness Source of Truth
 
-Updated: 2026-08-03T05:22:14Z
+Updated: 2026-08-03T05:47:27Z
 
 ## Current system stage
 
-H3_OOS_WAITING_FOR_RESERVED_WINDOW_CLOSE
+`H3_CLOSED_HISTORICAL_FAILED_RETURN_TO_RESEARCH`
 
-PR #24 — Draft. Head at update time: 9f7d395f5e686d3b63472831bd1bee3302b73fe8.
+PR #24 — Draft. Head at update time: `337045fc434970ec8f83f5420a951a2255c4f033`.
 
-Canonical workspace: G:\我的雲端硬碟\btc_bot.
+## Closed Historical Holdout V1
 
-## Strategy result
+- reservation_id=`H3_CLOSED_HISTORICAL_HOLDOUT_V1_RESERVED`
+- window=`1720863000000` → `1736415000000` (180 days)
+- dataset_checksum=`b59d8409005e5f89d01b8fa167a571b9e0665ea66b732367b006222fd988db46`
+- integrity=`PASS`
+- H3E primary=`CLOSED_HISTORICAL_PERFORMANCE_FAILED` trades=`32` net_pnl=`-17.84107443`
+- H3D confirmatory=`CONFIRMATORY_INSUFFICIENT_SAMPLE`
+- consumed=`CONSUMED_FAILED_CLOSED_HISTORICAL_HOLDOUT`
+- historical_execution_mode=`HISTORICAL_SIMULATION_ONLY`
+- exchange_write_attempt_count=`0` · demo_order_count=`0`
 
-**NOT_YET_DETERMINED** — H3E/H3D/H3G were not examined. The premature OOS attempt stopped before simulation.
+## September untouched OOS
 
-## OOS reservation
-
-- reservation_id=OOS_H3_UNTOUCHED_V1_RESERVED
-- reserved_start_local=2026-08-02T17:30:00.001+08:00
-- reserved_end_local=2026-09-16T17:30:00+08:00
-- classification=OOS_WINDOW_NOT_MATURE (corrected from OOS_DATA_INVALID)
-- stop_class=PREMATURE_DATA_GATE_STOP
-- reason=RESERVED_END_IS_IN_THE_FUTURE
-- downloaded_partial=	rue · executed=alse · consumed=alse
-- partial_dataset_record_count=515
-- partial_dataset_checksum=9cc83d2997fc98a0d43f43324acbc7a73266b4c38a32379e640301dedc85e3d2
-- partial sealed as PRELIMINARY_PARTIAL_NOT_FOR_ANALYSIS (not for tuning/performance/research)
-- prior Founder approval exhausted; next run needs a **new** exact phrase **after** maturity gate PASS
+Still sealed: `OOS_WINDOW_NOT_MATURE` / not consumed / not for research.
 
 ## Frozen policies
 
-- H3E=ca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33 unchanged=	rue
-- H3D=d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7 unchanged=	rue
+- H3E unchanged=`true`
+- H3D unchanged=`true`
 
-## Wallet delta forensic (read-only)
+## Wallet residual (blocker for live Demo writes)
 
-- wallet_delta_original=-0.97052039
-- classification=WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST
-- remaining_unattributed_delta=-0.97052039
-- trading_db_status=TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED
-- report: rtifacts/readiness/immutable/wallet_delta_forensic/wallet_delta_forensic_report.json
-
-## Safety
-
-- EXCHANGE_WRITE=false · MAINNET=false · REAL_MONEY=false
-- NO Shadow / Demo canary / 6H / 12H / 24H
+- classification=`WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST`
+- remaining=`-0.97052039`
 
 ## Recommendation
 
-NEXUS_H3_OOS_WAITING_FOR_RESERVED_WINDOW_CLOSE
+`NEXUS_H3_CLOSED_HISTORICAL_FAILED_RETURN_TO_RESEARCH`
