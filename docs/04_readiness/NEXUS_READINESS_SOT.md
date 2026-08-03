@@ -6,7 +6,7 @@ Updated: 2026-08-03T05:22:14Z
 
 H3_OOS_WAITING_FOR_RESERVED_WINDOW_CLOSE
 
-PR #24 — Draft. Head at update time: 8e15900ea423daaa793bd388514ae8f57b6b55e9.
+PR #24 — Draft. Head at update time: 9f7d395f5e686d3b63472831bd1bee3302b73fe8.
 
 Canonical workspace: G:\我的雲端硬碟\btc_bot.
 

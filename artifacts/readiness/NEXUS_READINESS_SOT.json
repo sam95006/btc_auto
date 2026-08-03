@@ -1,10 +1,10 @@
 {
   "schema_version": "nexus_readiness_sot_v1",
-  "updated_at": "2026-08-03T05:31:00Z",
+  "updated_at": "2026-08-03T05:32:44Z",
   "pr": 24,
   "pr_draft": true,
   "pr_merged": false,
-  "pr_head": "8e15900ea423daaa793bd388514ae8f57b6b55e9",
+  "pr_head": "9f7d395f5e686d3b63472831bd1bee3302b73fe8",
   "edge_research_v3_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
   "system_stage": "H3_OOS_WAITING_FOR_RESERVED_WINDOW_CLOSE",
   "current_approved_strategies": {
