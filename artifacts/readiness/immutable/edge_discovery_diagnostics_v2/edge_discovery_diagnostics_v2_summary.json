@@ -1,0 +1,102 @@
+{
+  "schema": "edge_discovery_diagnostics_v2_summary",
+  "sealed_at": "2026-08-03T15:59:41Z",
+  "implementation_commit": "45e775bc646bb721545ba97480d4b431c0fc90f0",
+  "observed_pr_head_before_sync": "45e775bc646bb721545ba97480d4b431c0fc90f0",
+  "recommendation": "NEXUS_BLIND_REFLECTION_CALIBRATION_FAILED",
+  "v1_2_preserved": true,
+  "v1_2_conclusion_preserved": "NO QUALIFICATION-READY CANDIDATE",
+  "taxonomy": {
+    "audited_hypothesis_count": 12,
+    "raw_signal_no_edge_count": 8,
+    "raw_edge_cost_destroyed_count": 1,
+    "raw_edge_unstable_count": 0,
+    "raw_edge_concentrated_count": 0,
+    "rare_edge_insufficient_support_count": 1,
+    "execution_gate_starved_count": 2,
+    "raw_edge_diagnostic_promising_count": 0
+  },
+  "H01": {
+    "H01_diagnostic_status": "H01_RAW_EDGE_TOO_SMALL_FOR_COST",
+    "H01_gross_expectancy": 0.06620056683999997,
+    "H01_gross_profit_factor": null,
+    "H01_total_execution_cost": 203.60428967,
+    "H01_net_expectancy": -0.74821659184,
+    "H01_net_profit_factor": 0.719227,
+    "H01_cost_to_gross_edge_ratio": 12.30226865954733
+  },
+  "H11": {
+    "H11_diagnostic_status": "H11_RAW_SIGNAL_NOT_CONFIRMED",
+    "H11_history_depth_days": 540.0,
+    "H11_derivatives_symbol_count": 28,
+    "H11_raw_event_count": 1616,
+    "H11_completed_trade_count": 31,
+    "gross_expectancy": -0.08960633806451611,
+    "net_expectancy": -0.4766656677419354,
+    "net_profit_factor": 0.781879,
+    "H11_positive_fold_count": 3,
+    "fold_count": 5,
+    "H11_largest_symbol_contribution": 0.24370531846042146,
+    "H11_largest_regime_contribution": 0.6152218403306597
+  },
+  "event_study": {
+    "event_study_component_count": 12,
+    "event_study_observation_count": 103161,
+    "hypothesis_test_count": 12,
+    "raw_significant_count": 1,
+    "FDR_adjusted_significant_count": 1,
+    "raw_supported_signal_count": 1
+  },
+  "cross_sectional": {
+    "relative_strength_raw_spread_status": "RAW_RANK_SIGNAL_PRESENT",
+    "relative_strength_post_cost_status": "EXECUTION_GATE_STARVED",
+    "cross_sectional_momentum_raw_spread_status": "RAW_RANK_SIGNAL_PRESENT",
+    "cross_sectional_momentum_post_cost_status": "EXECUTION_GATE_STARVED"
+  },
+  "blind_reflection": {
+    "NEXUS_AI_MOCK": "0",
+    "blind_reflection_calibration_count": 60,
+    "blind_valid_schema_ratio": 1.0,
+    "blind_agreement_ratio": 0.0,
+    "blind_disagreement_ratio": 1.0,
+    "informative_classification_ratio": 0.0,
+    "undetermined_ratio": 1.0,
+    "critic_resolution_ratio": 0.0,
+    "new_lesson_record_count": 0,
+    "new_policy_effect_lesson_count": 0,
+    "quality_targets_met": false
+  },
+  "conditional_development": {
+    "generated_new_mechanism_count": 1,
+    "preregistered_new_mechanism_count": 1,
+    "executed_confirmation_count": 0,
+    "DEVELOPMENT_CONFIRMED_PROMISING_count": 0,
+    "recommended_candidate_count": 0,
+    "recommended_candidate_ids": []
+  },
+  "historical_depth": {
+    "price_depth_gate_ok": true,
+    "derivatives_depth_gate_ok": true,
+    "price_symbols_with_depth_ge_300d": 40,
+    "derivatives_symbols_ready": 30
+  },
+  "formal_walk_forward_executed": false,
+  "oos_reservation_created": false,
+  "oos_executed": false,
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "deployment_started": false,
+  "mainnet": false,
+  "real_money": false,
+  "H3_status": "REJECTED_CURRENT_POLICY",
+  "H4_status": "NO_VALIDATED_POLICY",
+  "H5A_status": "INSUFFICIENT_SAMPLE",
+  "H5B_status": "INSUFFICIENT_SAMPLE",
+  "H5C_status": "INSUFFICIENT_SAMPLE",
+  "september_h3_oos_status": "OOS_WINDOW_NOT_MATURE_RESEARCH_CONFIRMATION_ONLY",
+  "wallet_delta_classification": "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST",
+  "remaining_unattributed_delta": -0.97052039,
+  "trading_db_status": "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED",
+  "demo_forward_status": "BLOCKED",
+  "shadow_status": "NOT_APPLIED"
+}

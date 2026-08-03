@@ -1,0 +1,28 @@
+{
+  "schema": "AI_failure_synthesis",
+  "inputs_sanitized": true,
+  "deterministic_summaries_only": true,
+  "notes": [
+    "H01 shows positive gross expectancy destroyed by costs",
+    "Most price mechanisms show non-positive gross expectancy on V1.2 window",
+    "H11 remains rare-event with insufficient completed trades",
+    "Cross-sectional events are cost-gate starved"
+  ],
+  "AI_roles": {
+    "GROQ_MAIN_REASONER": "economic_explanations_from_aggregates",
+    "GROQ_REFLECTION_REASONER": "process_failure_review",
+    "CEREBRAS_RESEARCH_NORMALIZER": "group_repeated_failures",
+    "SAMBANOVA_INDEPENDENT_CRITIC": "overfit_and_false_discovery_critique"
+  },
+  "AI_forbidden": [
+    "invent_market_data",
+    "change_sealed_event_study",
+    "select_reserved_data",
+    "approve_strategy",
+    "change_risk_limits",
+    "authorize_Demo",
+    "authorize_OOS"
+  ],
+  "skipped_live_ai_synthesis": true,
+  "reason": "aggregates_recorded_for_review_without_mutating_sealed_metrics"
+}

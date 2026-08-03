@@ -1,0 +1,39 @@
+{
+  "schema": "cross_sectional_diagnostics",
+  "relative_strength_raw_spread_status": "RAW_RANK_SIGNAL_PRESENT",
+  "relative_strength_post_cost_status": "EXECUTION_GATE_STARVED",
+  "relative_strength": {
+    "ranking_timestamp": 1785654900000,
+    "eligible_ranking_universe": 65,
+    "eligible_symbol_count": 65,
+    "top_bucket_return": 0.02666101068363004,
+    "bottom_bucket_return": -0.005927605391455879,
+    "long_short_spread": 0.03258861607508592,
+    "portfolio_turnover": "snapshot_rebalance_assumed",
+    "estimated_execution_cost": 0.0035000000000000005,
+    "post_cost_long_short_spread": 0.029088616075085918,
+    "rebalance_frequency": "event_scan_cooldown",
+    "event_count": 26,
+    "cost_gate_block_count": 26,
+    "candidate_count": 0,
+    "cost_gate_not_loosened": true
+  },
+  "cross_sectional_momentum_raw_spread_status": "RAW_RANK_SIGNAL_PRESENT",
+  "cross_sectional_momentum_post_cost_status": "EXECUTION_GATE_STARVED",
+  "cross_sectional_momentum": {
+    "ranking_timestamp": 1785654900000,
+    "eligible_ranking_universe": 65,
+    "eligible_symbol_count": 65,
+    "top_bucket_return": 0.02666101068363004,
+    "bottom_bucket_return": -0.005927605391455879,
+    "long_short_spread": 0.03258861607508592,
+    "portfolio_turnover": "snapshot_rebalance_assumed",
+    "estimated_execution_cost": 0.0035000000000000005,
+    "post_cost_long_short_spread": 0.029088616075085918,
+    "rebalance_frequency": "event_scan_cooldown",
+    "event_count": 26,
+    "cost_gate_block_count": 26,
+    "candidate_count": 0,
+    "cost_gate_not_loosened": true
+  }
+}

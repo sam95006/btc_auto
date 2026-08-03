@@ -1,0 +1,35 @@
+{
+  "schema": "h01_cost_destruction_investigation",
+  "H01_diagnostic_status": "H01_RAW_EDGE_TOO_SMALL_FOR_COST",
+  "H01_gross_expectancy": 0.06620056683999997,
+  "H01_gross_profit_factor": null,
+  "H01_total_execution_cost": 203.60428967,
+  "H01_net_expectancy": -0.74821659184,
+  "H01_net_profit_factor": 0.719227,
+  "H01_cost_to_gross_edge_ratio": 12.30226865954733,
+  "cost_bridge": {
+    "gross_pnl": 16.55014171,
+    "minus_spread": 51.23378275543033,
+    "minus_slippage": 54.66640247456965,
+    "minus_entry_fee": 48.496983985,
+    "minus_exit_fee": 48.496983985,
+    "minus_funding": 0.71013647,
+    "equals_net_pnl": -187.05414796,
+    "identity_ok": true
+  },
+  "fold_stability": {
+    "positive_folds": 1,
+    "fold_count": 5,
+    "largest_fold_contribution": 1.0
+  },
+  "symbol_stability": {
+    "largest_symbol_contribution": 0.17257868427406425
+  },
+  "regime_stability": {
+    "largest_regime_contribution": 0.6600398809001684
+  },
+  "parameters_not_redesigned": true,
+  "fees_not_reduced": true,
+  "maker_fills_not_invented": true,
+  "v1_2_mislabel_note": "V1.2 labeled DISCOVERY_NO_GROSS_EDGE despite positive gross_expectancy"
+}

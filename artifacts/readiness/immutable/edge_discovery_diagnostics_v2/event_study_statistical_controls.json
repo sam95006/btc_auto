@@ -1,0 +1,97 @@
+{
+  "hypothesis_test_count": 12,
+  "raw_significant_count": 1,
+  "FDR_adjusted_significant_count": 1,
+  "false_discovery_rate": 0.1,
+  "tests": [
+    {
+      "test_id": "TREND_CONTINUATION::ret_8",
+      "p_value": 0.15422885572139303,
+      "bh_threshold": 0.03333333333333333,
+      "raw_significant": false,
+      "fdr_significant": false
+    },
+    {
+      "test_id": "STRUCTURAL_RETEST::ret_8",
+      "p_value": 1.0,
+      "bh_threshold": 0.04166666666666667,
+      "raw_significant": false,
+      "fdr_significant": false
+    },
+    {
+      "test_id": "BREAKOUT::ret_8",
+      "p_value": 1.0,
+      "bh_threshold": 0.05,
+      "raw_significant": false,
+      "fdr_significant": false
+    },
+    {
+      "test_id": "FAILED_BREAKOUT::ret_8",
+      "p_value": 1.0,
+      "bh_threshold": 0.05833333333333334,
+      "raw_significant": false,
+      "fdr_significant": false
+    },
+    {
+      "test_id": "MOMENTUM_ACCELERATION::ret_8",
+      "p_value": 0.11442786069651742,
+      "bh_threshold": 0.016666666666666666,
+      "raw_significant": false,
+      "fdr_significant": false
+    },
+    {
+      "test_id": "VOLATILITY_EXPANSION::ret_8",
+      "p_value": 0.14925373134328357,
+      "bh_threshold": 0.025,
+      "raw_significant": false,
+      "fdr_significant": false
+    },
+    {
+      "test_id": "VWAP_MEAN_REVERSION::ret_8",
+      "p_value": 0.004975124378109453,
+      "bh_threshold": 0.008333333333333333,
+      "raw_significant": true,
+      "fdr_significant": true
+    },
+    {
+      "test_id": "STRUCTURAL_MEAN_REVERSION::ret_8",
+      "p_value": 1.0,
+      "bh_threshold": 0.06666666666666667,
+      "raw_significant": false,
+      "fdr_significant": false
+    },
+    {
+      "test_id": "RELATIVE_STRENGTH::ret_8",
+      "p_value": 1.0,
+      "bh_threshold": 0.07500000000000001,
+      "raw_significant": false,
+      "fdr_significant": false
+    },
+    {
+      "test_id": "CROSS_SECTIONAL_MOMENTUM::ret_8",
+      "p_value": 1.0,
+      "bh_threshold": 0.08333333333333334,
+      "raw_significant": false,
+      "fdr_significant": false
+    },
+    {
+      "test_id": "FUNDING_OI_CONTINUATION::ret_8",
+      "p_value": 1.0,
+      "bh_threshold": 0.09166666666666667,
+      "raw_significant": false,
+      "fdr_significant": false
+    },
+    {
+      "test_id": "LIQUIDITY_SWEEP_REVERSAL::ret_8",
+      "p_value": 1.0,
+      "bh_threshold": 0.1,
+      "raw_significant": false,
+      "fdr_significant": false
+    }
+  ],
+  "bootstrap_method": "chronological_block_bootstrap",
+  "bootstrap_block_size": 32,
+  "bootstrap_replicates": 200,
+  "random_seed": 20260803,
+  "seeds_frozen_before_execution": true
+}

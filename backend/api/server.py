@@ -583,6 +583,14 @@ def register_nexus_routes(app):
             import json
 
             root = Path(__file__).resolve().parents[2]
+            path_edge = (
+                root
+                / "artifacts"
+                / "readiness"
+                / "immutable"
+                / "edge_discovery_diagnostics_v2"
+                / "functional_observability_status.json"
+            )
             path_v12 = (
                 root
                 / "artifacts"
@@ -607,7 +615,9 @@ def register_nexus_routes(app):
                 / "general_multi_strategy_engine_v1"
                 / "functional_observability_status.json"
             )
-            if path_v12.is_file():
+            if path_edge.is_file():
+                payload = json.loads(path_edge.read_text(encoding="utf-8"))
+            elif path_v12.is_file():
                 payload = json.loads(path_v12.read_text(encoding="utf-8"))
             elif path_v11.is_file():
                 payload = json.loads(path_v11.read_text(encoding="utf-8"))

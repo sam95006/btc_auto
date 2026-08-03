@@ -1,0 +1,404 @@
+{
+  "schema": "NEXUS_EDGE_DISCOVERY_DEVELOPMENT_INTERVAL_REGISTRY_V1",
+  "created_at": "2026-08-03T15:09:31Z",
+  "v1_2_development_window": {
+    "start_ms": 1775295000000,
+    "end_ms": 1785663000000,
+    "start_utc": "2026-04-04T09:30:00Z",
+    "end_utc": "2026-08-02T09:30:00Z",
+    "approx_local_note": "2026-04-04 17:30 +08 through 2026-08-02 17:30 +08"
+  },
+  "EVENT_EXPLORATION_INTERVALS": [
+    {
+      "start_ms": 1775295000000,
+      "end_ms": 1781515799999,
+      "label": "EVENT_EXPLORATION_PRIMARY"
+    }
+  ],
+  "DEVELOPMENT_CONFIRMATION_INTERVALS": [
+    {
+      "start_ms": 1781515800000,
+      "end_ms": 1785663000000,
+      "label": "DEVELOPMENT_CONFIRMATION_PRIMARY"
+    }
+  ],
+  "excluded_intervals": [
+    {
+      "label": "SEPTEMBER_H3_RESERVED_OOS",
+      "start_ms": 1785663000001,
+      "end_ms": 1789551000000,
+      "reason": "RESERVED_UNTOUCHED"
+    },
+    {
+      "label": "ALL_FUTURE_UNTOUCHED_RESERVATIONS",
+      "start_ms": 1789551000001,
+      "end_ms": 1821087000000,
+      "reason": "FUTURE_RESERVATION_EXCLUDED"
+    },
+    {
+      "source": "artifacts/readiness/H3_CLOSED_HISTORICAL_HOLDOUT_V1_RESERVATION.json",
+      "label": "H3_CLOSED_HISTORICAL_HOLDOUT_V1_RESERVATION.json",
+      "start_ms": 1720863000000,
+      "end_ms": 1736415000000,
+      "category": "readiness_manifest_interval",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/readiness/immutable/h3_closed_historical_v1/closed_historical_summary.json",
+      "label": "closed_historical_summary.json",
+      "start_ms": 1720863000000,
+      "end_ms": 1736415000000,
+      "category": "readiness_manifest_interval",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/readiness/immutable/h3_closed_historical_v1/consumed_holdout_registry_entry.json",
+      "label": "consumed_holdout_registry_entry.json",
+      "start_ms": 1720863000000,
+      "end_ms": 1736415000000,
+      "category": "prior_consumed_oos",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/readiness/immutable/h3_closed_historical_v1/interval_reservation_manifest.json",
+      "label": "interval_reservation_manifest.json",
+      "start_ms": 1720863000000,
+      "end_ms": 1736415000000,
+      "category": "readiness_manifest_interval",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v2/market_cache/BTCUSDT_15_1739007000000_1785663000000.json",
+      "label": "BTCUSDT_15_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v2/market_cache/BTCUSDT_240_1739007000000_1785663000000.json",
+      "label": "BTCUSDT_240_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v2/market_cache/BTCUSDT_60_1739007000000_1785663000000.json",
+      "label": "BTCUSDT_60_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v3/micro_cache/BTCUSDT_funding_1739007000000_1785663000000.json",
+      "label": "BTCUSDT_funding_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v3/micro_cache/BTCUSDT_oi_1h_1739007000000_1785663000000.json",
+      "label": "BTCUSDT_oi_1h_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v2/market_cache/DOGEUSDT_15_1739007000000_1785663000000.json",
+      "label": "DOGEUSDT_15_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v2/market_cache/DOGEUSDT_240_1739007000000_1785663000000.json",
+      "label": "DOGEUSDT_240_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v2/market_cache/DOGEUSDT_60_1739007000000_1785663000000.json",
+      "label": "DOGEUSDT_60_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v3/micro_cache/DOGEUSDT_funding_1739007000000_1785663000000.json",
+      "label": "DOGEUSDT_funding_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v3/micro_cache/DOGEUSDT_oi_1h_1739007000000_1785663000000.json",
+      "label": "DOGEUSDT_oi_1h_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v2/market_cache/ETHUSDT_15_1739007000000_1785663000000.json",
+      "label": "ETHUSDT_15_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v2/market_cache/ETHUSDT_240_1739007000000_1785663000000.json",
+      "label": "ETHUSDT_240_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v2/market_cache/ETHUSDT_60_1739007000000_1785663000000.json",
+      "label": "ETHUSDT_60_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v3/micro_cache/ETHUSDT_funding_1739007000000_1785663000000.json",
+      "label": "ETHUSDT_funding_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v3/micro_cache/ETHUSDT_oi_1h_1739007000000_1785663000000.json",
+      "label": "ETHUSDT_oi_1h_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v2/market_cache/SOLUSDT_15_1739007000000_1785663000000.json",
+      "label": "SOLUSDT_15_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v2/market_cache/SOLUSDT_240_1739007000000_1785663000000.json",
+      "label": "SOLUSDT_240_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v2/market_cache/SOLUSDT_60_1739007000000_1785663000000.json",
+      "label": "SOLUSDT_60_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v3/micro_cache/SOLUSDT_funding_1739007000000_1785663000000.json",
+      "label": "SOLUSDT_funding_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v3/micro_cache/SOLUSDT_oi_1h_1739007000000_1785663000000.json",
+      "label": "SOLUSDT_oi_1h_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v2/market_cache/XRPUSDT_15_1739007000000_1785663000000.json",
+      "label": "XRPUSDT_15_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v2/market_cache/XRPUSDT_240_1739007000000_1785663000000.json",
+      "label": "XRPUSDT_240_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v2/market_cache/XRPUSDT_60_1739007000000_1785663000000.json",
+      "label": "XRPUSDT_60_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v3/micro_cache/XRPUSDT_funding_1739007000000_1785663000000.json",
+      "label": "XRPUSDT_funding_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_edge_research_v3/micro_cache/XRPUSDT_oi_1h_1739007000000_1785663000000.json",
+      "label": "XRPUSDT_oi_1h_1739007000000_1785663000000.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "prior_research_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/readiness/MARKET_DATASET_MANIFEST.json+deleted_files_manifest",
+      "label": "edge_research_v2_v3_market_span",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "training_replay_walk_forward_research",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/readiness/immutable/dynamic_universe_ai_learning_h5_v1/historical_data_manifest.json",
+      "label": "historical_data_manifest.json",
+      "start_ms": 1739007000000,
+      "end_ms": 1785663000000,
+      "category": "readiness_manifest_interval",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_geometry_market_oos/market_cache/BTCUSDT_15_1770111030061_1785663030061.json",
+      "label": "BTCUSDT_15_1770111030061_1785663030061.json",
+      "start_ms": 1770111030061,
+      "end_ms": 1785663030061,
+      "category": "prior_oos_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_geometry_market_oos/market_cache/DOGEUSDT_15_1770111030061_1785663030061.json",
+      "label": "DOGEUSDT_15_1770111030061_1785663030061.json",
+      "start_ms": 1770111030061,
+      "end_ms": 1785663030061,
+      "category": "prior_oos_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_geometry_market_oos/market_cache/ETHUSDT_15_1770111030061_1785663030061.json",
+      "label": "ETHUSDT_15_1770111030061_1785663030061.json",
+      "start_ms": 1770111030061,
+      "end_ms": 1785663030061,
+      "category": "prior_oos_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_geometry_market_oos/market_cache/SOLUSDT_15_1770111030061_1785663030061.json",
+      "label": "SOLUSDT_15_1770111030061_1785663030061.json",
+      "start_ms": 1770111030061,
+      "end_ms": 1785663030061,
+      "category": "prior_oos_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_geometry_market_oos/market_cache/XRPUSDT_15_1770111030061_1785663030061.json",
+      "label": "XRPUSDT_15_1770111030061_1785663030061.json",
+      "start_ms": 1770111030061,
+      "end_ms": 1785663030061,
+      "category": "prior_oos_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_geometry_market_oos/market_cache/BTCUSDT_15_1777886962598_1785662962598.json",
+      "label": "BTCUSDT_15_1777886962598_1785662962598.json",
+      "start_ms": 1777886962598,
+      "end_ms": 1785662962598,
+      "category": "prior_oos_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_geometry_market_oos/market_cache/ETHUSDT_15_1777886962598_1785662962598.json",
+      "label": "ETHUSDT_15_1777886962598_1785662962598.json",
+      "start_ms": 1777886962598,
+      "end_ms": 1785662962598,
+      "category": "prior_oos_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/demo_validation_geometry_market_oos/market_cache/SOLUSDT_15_1777886962598_1785662962598.json",
+      "label": "SOLUSDT_15_1777886962598_1785662962598.json",
+      "start_ms": 1777886962598,
+      "end_ms": 1785662962598,
+      "category": "prior_oos_cache",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/readiness/immutable/consumed_failed_oos/consumed_oos_holdout.json",
+      "label": "OOS_REAL_MARKET_2026Q_FAILED_HOLDOUT_e186d13",
+      "start_ms": 1778664600000,
+      "end_ms": 1785663000000,
+      "category": "prior_consumed_oos",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/readiness/OOS_H3_UNTOUCHED_V1_RESERVATION.json",
+      "label": "OOS_H3_UNTOUCHED_V1_RESERVATION.json",
+      "start_ms": 1785663000001,
+      "end_ms": 1789551000000,
+      "category": "september_untouched_oos",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/readiness/OOS_H3_UNTOUCHED_V1_RESERVATION.json",
+      "label": "OOS_H3_UNTOUCHED_V1_RESERVED",
+      "start_ms": 1785663000001,
+      "end_ms": 1789551000000,
+      "category": "september_untouched_oos",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/readiness/immutable/h3_oos_v1/dataset_provenance_checksum_manifest.json",
+      "label": "dataset_provenance_checksum_manifest.json",
+      "start_ms": 1785663000001,
+      "end_ms": 1789551000000,
+      "category": "september_untouched_oos",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/readiness/immutable/h3_oos_v1/maturity_assessment_latest.json",
+      "label": "maturity_assessment_latest.json",
+      "start_ms": 1785663000001,
+      "end_ms": 1789551000000,
+      "category": "september_untouched_oos",
+      "reason": "CONSUMED_OR_RESERVED"
+    },
+    {
+      "source": "artifacts/readiness/immutable/h3_oos_v1/oos_summary.json",
+      "label": "oos_summary.json",
+      "start_ms": 1785663000001,
+      "end_ms": 1789551000000,
+      "category": "september_untouched_oos",
+      "reason": "CONSUMED_OR_RESERVED"
+    }
+  ],
+  "confirmation_sealed_before_mechanism_proposals": true,
+  "is_formal_walk_forward": false,
+  "is_oos": false,
+  "research_v2_v3_end_ms": 1785663000000,
+  "registry_checksum": "e6756315aa48a14acd406d58308c00b5b89c6473644e8651816eb8a23e144cdf"
+}
