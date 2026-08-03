@@ -1,12 +1,12 @@
 {
   "schema_version": "nexus_readiness_sot_v1",
-  "updated_at": "2026-08-03T14:20:45Z",
+  "updated_at": "2026-08-03T16:28:40Z",
   "pr": 24,
   "pr_draft": true,
   "pr_merged": false,
   "pr_head": "599abe7bc77582b7bcd9347a5dca981cbc6ff8fe",
   "edge_research_v3_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-  "system_stage": "STRATEGY_ENGINE_V1_2_BROAD_RESEARCH_COVERAGE",
+  "system_stage": "EDGE_DISCOVERY_DIAGNOSTICS_V2",
   "current_approved_strategies": {
     "PRIMARY_QUALIFICATION_COHORT": "H3E",
     "CONFIRMATORY_COHORT": "H3D",
@@ -122,7 +122,7 @@
   "risk_review_packet_ready": false,
   "shadow_status": "NOT_APPLIED",
   "qualification_complete": false,
-  "recommendation": "NEXUS_STRATEGY_ENGINE_V12_NO_PROMISING_AFTER_BROAD_COVERAGE",
+  "recommendation": "NEXUS_BLIND_REFLECTION_CALIBRATION_FAILED",
   "canonical_files": [
     "docs/04_readiness/NEXUS_READINESS_SOT.md",
     "artifacts/readiness/NEXUS_READINESS_SOT.json",
@@ -357,5 +357,18 @@
   "strategy_engine_v1_1_preserved": {
     "recommendation": "NEXUS_STRATEGY_ENGINE_V11_RESEARCH_COVERAGE_INSUFFICIENT",
     "immutable_package": "artifacts/readiness/immutable/strategy_engine_semantic_repair_v1_1/"
+  },
+  "edge_discovery_v2": {
+    "immutable_package": "artifacts/readiness/immutable/edge_discovery_diagnostics_v2/",
+    "v1_2_preserved": true,
+    "H01_diagnostic_status": "H01_RAW_EDGE_TOO_SMALL_FOR_COST",
+    "H11_diagnostic_status": "H11_RAW_SIGNAL_NOT_CONFIRMED",
+    "blind_informative_classification_ratio": 0.0,
+    "formal_walk_forward_executed": false
+  },
+  "commit_reference_semantics": {
+    "note": "Git commit cannot reliably contain its own final SHA without another commit",
+    "observed_pr_head_before_sync": "45e775bc646bb721545ba97480d4b431c0fc90f0",
+    "current_pr_head_reported_externally": true
   }
 }

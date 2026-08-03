@@ -1,6 +1,6 @@
 {
   "schema_version": "nexus_evidence_manifest_v1",
-  "updated_at": "2026-08-03T14:20:45Z",
+  "updated_at": "2026-08-03T16:28:40Z",
   "entries": [
     {
       "evidence_id": "6H_FINAL_ZERO_EXECUTION::artifacts/readiness/immutable/6h_final/NEXUS_6H_V2_FINAL_REPORT.md",
@@ -1126,6 +1126,10 @@
       "path": "artifacts/readiness/immutable/strategy_engine_broad_coverage_v1_2/",
       "stage": "STRATEGY_ENGINE_V1_2_BROAD_RESEARCH_COVERAGE",
       "recommendation": "NEXUS_STRATEGY_ENGINE_V12_NO_PROMISING_AFTER_BROAD_COVERAGE"
+    },
+    "edge_discovery_diagnostics_v2": {
+      "path": "artifacts/readiness/immutable/edge_discovery_diagnostics_v2/",
+      "recommendation": "NEXUS_BLIND_REFLECTION_CALIBRATION_FAILED"
     }
   }
 }

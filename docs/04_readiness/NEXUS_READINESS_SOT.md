@@ -1,45 +1,38 @@
 # NEXUS Readiness Source of Truth
 
-Updated: 2026-08-03T14:20:00Z
+Updated: 2026-08-03T16:30:00Z
 
 ## Current system stage
 
-`STRATEGY_ENGINE_V1_2_BROAD_RESEARCH_COVERAGE`
+`EDGE_DISCOVERY_DIAGNOSTICS_V2`
 
 Canonical workspace: `G:\我的雲端硬碟\btc_bot`
 
-## V1 reinterpretation (preserved)
+## Preserved milestones
 
-- V1_EXECUTION_INTERPRETATION=`GENERIC_FAMILY_EXECUTOR_RESULTS_NOT_COMPONENT_DISTINCT`
-- V1 immutable package preserved
+- V1 reinterpretation: `GENERIC_FAMILY_EXECUTOR_RESULTS_NOT_COMPONENT_DISTINCT`
+- V1.1: semantic execution repaired
+- V1.2: `NEXUS_STRATEGY_ENGINE_V12_NO_PROMISING_AFTER_BROAD_COVERAGE` (unchanged conclusion)
 
-## V1.1 semantic repair (preserved)
+## Edge discovery V2
 
-- implemented_components=`16`
-- semantic_collision_hypothesis_count=`0`
-- recommendation preserved=`NEXUS_STRATEGY_ENGINE_V11_RESEARCH_COVERAGE_INSUFFICIENT`
-- Mock Reflection V2.1 is not real-provider quality
+- Taxonomy: H01 = `RAW_EDGE_COST_DESTROYED` (not NO_GROSS_EDGE)
+- H01 cost ratio ≈ 12.3× gross edge
+- H11 deeper history: gross expectancy turned negative → `H11_RAW_SIGNAL_NOT_CONFIRMED`
+- Event study: 103161 observations; FDR-supported raw signals = 1 (VWAP_MEAN_REVERSION)
+- Cross-sectional: raw rank present; post-cost = `EXECUTION_GATE_STARVED`
+- Blind Reflection V2.2: informative_classification_ratio = 0.0 (all UNDETERMINED without anchors)
+- Anchored V2.1 result preserved as `ANCHORED_CALIBRATION_RESULT`
 
-## V1.2 broad coverage
+## Formal blockers preserved
 
-- strict_component_conformance=`PASS` (80/80; 16×5 fixture types)
-- actual_price_datasets=`65` (gate ≥60)
-- actual_derivatives_datasets=`25` (gate ≥20)
-- diversity: mainstream=`26` mid=`18` small=`12` meme=`9`
-- executed_hypothesis_count=`12`
-- DISCOVERY_PROMISING=`0`
-- recommended_candidate_count=`0`
-- real Reflection V2.1 (`NEXUS_AI_MOCK=0`) quality_targets_met=`true`
-- new_policy_effect_lesson_count=`0`
-
-## Preserved blockers
-
-- H3=`REJECTED_CURRENT_POLICY` · H5A/B/C=`INSUFFICIENT_SAMPLE`
-- Demo=`BLOCKED` · formal WF=`false` · OOS=`false`
-- September OOS immature · Shadow=`NOT_APPLIED`
-- Wallet=`WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST` / `-0.97052039`
-- Trading DB=`TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED`
+- Demo=`BLOCKED` · WF=`false` · OOS=`false` · Shadow=`NOT_APPLIED`
+- H3 rejected · H5 insufficient · September OOS immature
 
 ## Recommendation
 
-`NEXUS_STRATEGY_ENGINE_V12_NO_PROMISING_AFTER_BROAD_COVERAGE`
+`NEXUS_BLIND_REFLECTION_CALIBRATION_FAILED`
+
+Commit references (do not self-pin tip SHA inside the same commit):
+
+- See git history / PR head reported externally after push
