@@ -6,7 +6,7 @@ Updated: 2026-08-03T05:47:27Z
 
 `H3_CLOSED_HISTORICAL_FAILED_RETURN_TO_RESEARCH`
 
-PR #24 — Draft. Head at update time: `337045fc434970ec8f83f5420a951a2255c4f033`.
+PR #24 — Draft. Head at update time: `d9e74617ea6c289502c2549107e8fae754f432fe`.
 
 ## Closed Historical Holdout V1
 
