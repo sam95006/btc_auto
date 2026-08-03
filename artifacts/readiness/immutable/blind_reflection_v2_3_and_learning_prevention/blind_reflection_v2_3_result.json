@@ -1,0 +1,776 @@
+{
+  "schema": "blind_reflection_v2_3_calibration",
+  "engine": "BLIND_REFLECTION_V2_3",
+  "NEXUS_AI_MOCK": "0",
+  "v2_2_preserved_as": "BLIND_REFLECTION_V2_2_EVIDENCE_DELIVERY_INCOMPLETE_RESULT",
+  "v2_2_not_overwritten": true,
+  "evidence_packet_delivery_ratio": 1.0,
+  "evidence_packet_serialized_to_prompt": true,
+  "blind_reflection_v2_3_calibration_count": 80,
+  "real_trade_case_count": 60,
+  "control_fixture_count": 20,
+  "evidence_sufficient_case_count": 0,
+  "blind_valid_schema_ratio": 0.0,
+  "informative_classification_ratio_overall": 0.0,
+  "informative_classification_ratio_on_sufficient_cases": 0.0,
+  "blind_agreement_ratio_on_sufficient_cases": 0.0,
+  "critic_resolution_ratio": 1.0,
+  "critic_evidence_packet_delivered": true,
+  "critic_resolution_count": 0,
+  "critic_unresolved_count": 0,
+  "critic_schema_invalid_count": 0,
+  "missing_evidence_invention_count": 0,
+  "deterministic_answer_leak_count": 0,
+  "secret_leak_count": 0,
+  "ai_process_counts": {},
+  "quality_targets_met": false,
+  "new_policy_effect_lesson_count": 0,
+  "new_lesson_record_count": 0,
+  "undetermined_ratio": 1.0,
+  "calibration_cases_hashed": [
+    {
+      "trade_id": "CAL_V21_MKT_0",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "ab268c8806eacef5803a85231622b853a651645e3661d7375deb56a2c83bf2fe",
+      "prompt_hash": "f830092b91ad8520ed10107b4bae4b9d0880c7a7ec6e2b7bd1fe162955c60536",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_1",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "e395bf12eee279bb00888e42e849c4181d583692da679363a545ec36cc28d38f",
+      "prompt_hash": "9e2635a6184a4ec16d949374ea779f185849c4641d2896aae083dafe57e28c15",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_2",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "386f355111b7ba147540e75ff95ddb5739b374d521a72142065e283bb291e9c3",
+      "prompt_hash": "c2a363669228a847ddbd4eab86791980785ea3be92feb75dbd5568e4be4e887b",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_3",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "82d6607d7d0359cf89b62e9e680c9cadee0d08c16bf4420d1b6f607385372b46",
+      "prompt_hash": "7f5d1119e3ca90e4546afa181b02af7b7ad30d880f27bb0624d3ae61d7de655f",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_4",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "50f7f6dbd1dee51993b9ae509773a4edd91fd8098808979ba4377eb01e2c642f",
+      "prompt_hash": "fa5ca04ae7d89e600e395ecbe86dbd64ee112db1947fdd754ef8911f20461cd5",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_5",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "1daef0e65fb2cccb96f69384c23fc9131c31b27fae9ff5ad1acda303c56830af",
+      "prompt_hash": "146191a7acfd64b10f17b4a240e12626abb6f3b7b233c57617a4c3f88bf2322d",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_6",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "9006f452cf8eef17a2aa37f98c88622fc444e1ad726609803824f4230389efa1",
+      "prompt_hash": "f7e61d46f446c985231ef8f7708046f0a6ca57b34304552a87fc93889a07c0ed",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_7",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "4ec7e34b8d8ce762c08fb9c7685aa250430c93bc856725778e8bb6d71932afec",
+      "prompt_hash": "9f836e4c68c7be2458de485cb52b03c9d0595dcc940acc4428b58fa3c2caadeb",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_8",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "7297aeebae7af7da5ec749ac33265bc5dc29e453834f7b91acec1466ca8a1fa8",
+      "prompt_hash": "106342385bc0e38c49d2c95e7cd6d2e235b15a29bd6e072d18759e7952b2c36c",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_9",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "4cd2965e4d02779d872fac57462daa637a568ed5af0e10b9521a67a05ee751a5",
+      "prompt_hash": "5f585304277927abe9361a41ad5435bae2b7d9b029050f51ef8163917fd96896",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_10",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "6bb65f671100abccc0583d953840fffb9d6ed0991f690681ab97cf0f6cb851a4",
+      "prompt_hash": "06b8811ad006ac30f1cbd4a8c2235b232ae2c121f9058f534eacb8c751aee6cb",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_11",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "664311814aa85141da50cae61575e74a0a28cf89c1e4c628db05dd1e73a14c48",
+      "prompt_hash": "be4ba91f9543e8e243cf7b1b64426125f664abc351476ba89f13a3746d8a54a0",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_12",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "244ccfe77eb530b1a2ec4207d7b9fd845c95bcf05a0f384ee88f8a1147e85447",
+      "prompt_hash": "b17ed07f43d0bddd9e4dae4302535087f929dd98e51bd24833e278c2c62cbac1",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_13",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "1edd02681e00b92ef77401bf660f31cfed1f5970301b1e3be549fc5cbd1184a6",
+      "prompt_hash": "b1527c45fb137a800c48f3663a12a00b44a1a005fd64a9781665116cf7824835",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_14",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "fc6c2044b279935d2c20bce247b0881a1686a6b04e59f2bebfaa591543563537",
+      "prompt_hash": "dc16d8436357d8dc12aec53311b3e438c8241443aac1073c601bc3dc58a69416",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_15",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "d34c5f8414e3b5bd4daecf91e40893abd894432f8b33152fe5d9859f7edc39c1",
+      "prompt_hash": "77c46bf9168f31b8f4c663f1635d1351d52aa05978d0b16540ffa069ab199552",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_16",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "1dcb553d7b9d5a33c03cbc8b0fb5a719a3f4c696ee26bab589b75170b253e976",
+      "prompt_hash": "69e8d15964bd175745328cd849e6c26de0143a343f953eca4408ff9c590bbbd0",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_17",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "17ee3d92d375b4dee7a42f2ecbb0f9c332ded82be245c5e1a4f3625ccde1e7c0",
+      "prompt_hash": "e93f843af1ed9fe1f4aa27bb618b2d259925e350f1ab835df0be04627c4b5de1",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_18",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "901ff1ed3cf65712cf1a95f1e2dac24b3ef78f87c029a4cb7d234ddcfdf0bcd6",
+      "prompt_hash": "7f39ca75cb836f93656faceed8aad3d500c6b2a85ee37dd4195ff76fc4840d7e",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_19",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "f3cfd4b8058c5dfcb07b58bfd736a736008e052458bb1f050194c469293c5a17",
+      "prompt_hash": "340bab06fbdaaad80c9ef6a9ee5d523b39f6b6ebb109642c05f8cb782f1d001f",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_20",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "bca7c75ab3de487699666755612dffcadae39e76702a5d83e5f61c130b2a1c11",
+      "prompt_hash": "464d3dc601b300bc269852ff03eca60989398f7e2d40091fe9f9487274224e0f",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_21",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "d706dabfba267fa807b78faed0fa9cfc340621e2836ea0e9e06ef6dfd1eff0b8",
+      "prompt_hash": "9fb1cb8be0960d415ca73b2dfb6ea13d0fbd2de9033dad3337e36e79b04089c3",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_22",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "e82305d894ed2491f5599ea775de8892bc26887db8bf2afc34808d6214c786ad",
+      "prompt_hash": "49963e2244582bb1c2b6ba7cdd3e81a8e106b78f21b0d9aa5f465a085db50535",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_23",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "74a31133af441a842f2bbd5e5d29cbac3e9a3d7d9c5f8807f36dec1fb4787028",
+      "prompt_hash": "a09ea9ca9106271baf563428b18449e2f18bd53f9828ad4e4a21aacd6f9db8a6",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_24",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "19a52e6c2580019436631d2e50c176b453cde20cc6d799594eda6fd33de6ac09",
+      "prompt_hash": "030cbf3e5427ff393a6c20541baaeb5193ee4a692ee95d9db4430c00d3067a48",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_25",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "336f586228c5c79e2cc284e742786201c7e076a9001674f26ea72b7070ab794d",
+      "prompt_hash": "6f2ac57100f67362903cbee42d7518fc0d8e393454439764f8d88527505d798c",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_26",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "4b0eff27cb9c716feb959db1ca592ac772bea8d613032ab7374efbfbc0da2842",
+      "prompt_hash": "6ec01563b1a62ff201753fbd01e3bfc722383a95cfe3d674bee2ff86d5ff3a82",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_27",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "271ca2c01fad62d3a485d7bd8895b072864bca6198caa22c15f9247db759789a",
+      "prompt_hash": "107c1ccd8f535a8b9c57a421314c1ffb1f4c804fd1eca555c6432f0a61495a80",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_28",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "bed024f04188286a9121925f4d9d509db20646e6274194e6892f732628e73866",
+      "prompt_hash": "d732bb97e558e3346a7322e4e9820e52b0af9928eb5560c2740d89e8695602b9",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_29",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "24bb449c09fad0e351bc56420c93bad1f67b741afe44e7c94954672300334987",
+      "prompt_hash": "e79a98a0f6d7acca7f56be8962168f8fc57e4b8e5405f2cbd8f24c4c7b4f1b8d",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_30",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "332d2c509b53822d43bbb58859bc49f40b3364565199489404617d5e932fa254",
+      "prompt_hash": "88af1f1298ef7be0875e10b2eb63711d46f9a42d4017f7dbb7df9eae56659cc4",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_31",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "93c8a0131158b5f5e94e8a321bae081a86ac600e3d6e8814ff868dd9b873aaf5",
+      "prompt_hash": "5c490702fd2b6eae2f75633bde28c47c13c0160bd17d3f157d7bedac14c167ca",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_32",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "5e1a00e61e26e3d45316e08cf637c276973d70c74f72aff43d892f70e5341e42",
+      "prompt_hash": "0f535e47af74fee3a2ce61ab0999feb2e91dba7c01ea8ceb83616bd969badb0b",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_33",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "cf15d4e808507161b29c3054c29c35fec0d19ed8637c25a1ec7a2b90a69aebc6",
+      "prompt_hash": "d21df7fc4b530b30bb0a321961bfca643f33324190c0befec90cf6f1a2d16532",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_34",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "22f11ad5f9fc30d31662d05eb28d048169dc1ea7dd31fd67ae47b92784c42aa2",
+      "prompt_hash": "756d00eea62082653e0d3fbde186128d6bb5805a884a73e46fb49cbc6815f2e4",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_35",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "080b8d7cd67cba130d286b78f41b016db6b846597bd63af056e11308314454bb",
+      "prompt_hash": "0beae8f4ef20828ea458e4842b1c0ab2b62218fb143be83678fccd951391aa73",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_36",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "8afe42c1b6b44d5f865589ba6a490ff70934be6c76b5c596eaf5fbb61aa481a3",
+      "prompt_hash": "f0f380c4abf3c7251cbe7bf3c885f100c196083a937c4f88cdbe9696a3c7abaa",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_37",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "1ce94d5fa37af085996f2fe6cfad6e1bfd061494c5db20a5c6d507ff5d78d219",
+      "prompt_hash": "baf87fbdd792b4cb9aaac704d67d3b7029d36d28fef2e747e1bb853e3b089f93",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_38",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "58b4050300f1fcddb072a8296f1ea5f964f98c39f0226de41295f795c61fdbe5",
+      "prompt_hash": "ad2c386e5f2e1fe3485d2052b07d4b681f0295e19442c904d963f5238e3975e3",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_39",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "59b50b354b4f2d8919090cf7ba6552e6f690042ac85b87de02e47ebea0434915",
+      "prompt_hash": "9b94ffb48ba887dfca3deee0c3f0730cf199134d541bcea50fbcb3531d8674f0",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_40",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "8e3d010a8b5caff4fba88d825e718407c464d50cda89230553a4ac5b2d9cff06",
+      "prompt_hash": "9cc32dce4cfb6342eb6b3ca8ce8174a699d1ac52f1e9b8c0c8d530311bd26e53",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_41",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "03f07bee95cb5fcf063fedf435f0d1807e193b6abaaf8b94854aac46fc9deb43",
+      "prompt_hash": "b8e753abede870a1b6cc919ccb87962f1ab1cd48e3ef3ca7f5b7e63f61310810",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_42",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "f9d13ac1bbfc30f990964de6b1109776d71d457ff24ce99cb507cf9d66b875c0",
+      "prompt_hash": "a1bfaa9fe1368e308961762adfe72f72ba952dd9355513561e4b464648a0b8d9",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_43",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "0826adff3e33e054053217c7dfa1f3ed882199bce5d521be52ccd119ed1f53de",
+      "prompt_hash": "f8937b918d6dff368b6c303e8893cb57c9b58715872acbd278a6129a944f02b9",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_44",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "09e8af5156ea43d89197282405bc013ad3c13900c85a218c1851c0f7b7083c29",
+      "prompt_hash": "54ee53d1a7ffcc40483b62d8a1f1194f3553855b4ca37cd7931258fa578e050f",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_45",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "c904c9cad6e79d7341c151ee587977d5b61834aa0e786df49d7083fda2f2b95f",
+      "prompt_hash": "7d790618c7e4af5d8ada17cce4ab844762200cf462074eeab1221b8e10537857",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_46",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "586c667c3bfc812ceccad0d6ccbefdeb14d89cd5cfaab07904b93f5307d217db",
+      "prompt_hash": "50f3495db8f877e72448b444130f2ce3750818105db6b161b83dc13d4a9e6ee8",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_47",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "b003ec7e8224fc442093f13ea854e0e7838c5d2a996e8912bb428c5c32f56954",
+      "prompt_hash": "0ab752f3e3032b96e2f0ccfd9a1febf13b457248e47bc989b49ab2e63bee3544",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_48",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "b7e8fa05602e0ae822edd5516eb25415ede1467b52c8289b6fb5b40048687d96",
+      "prompt_hash": "f878f1a1d7e635b0d90084aeb3f5ce1dce30b0538f4db8ed0717e0a6ef4e0b42",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_49",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "3af4d40c8fb9e20ce1b35162764998285312de82d2880182ff980abca371942c",
+      "prompt_hash": "db88096fe956af46467fd247ef7094c1e102f3090353c5496152f3c41e0aa2bd",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_50",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "e233f9c179374c189e4a1a174a9e56cb5e2118254d1b16f4d2fd4880efc81305",
+      "prompt_hash": "dfe618b24ec8d17f214fcfa8892cd41517f80f39e82e2cff98f993ac4a8fe43f",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_51",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "8090296f8ec6c18f95aa3baef2325d7d5044baf9f12004df7d49b157aff12329",
+      "prompt_hash": "b40a009054d42908153de9d4a696326bace10eebafa004398e99348552b102e0",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_52",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "f1cfa24dc5746f74213b3ecf56e161d9d85eecd6af0a7d81e2980e177536a515",
+      "prompt_hash": "9350680c35017d2257fe7caf2bcb7b17af7b790183f56328048d736a360c19dd",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_53",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "1d2cf0eedf2f2580b77451eea548ce082e78247d39860630721d88a16957a1cc",
+      "prompt_hash": "a8008209ad79034f5c8259e2a3a1da53e9de23f1371504533240c07fd451ca4d",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_54",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "c358c1d531125b06bde26fa8b94152a06d0eedca58025751f263035aa0a2f676",
+      "prompt_hash": "2007dfd82ee00019f5bd0f6e1e36831396d220ba4a880e7adbeaed737d50ac8d",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_55",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "a671e11a76fa5e4a83edf5dada1ee5857ebccadfab8cbdba9fdc9d6f9e31536f",
+      "prompt_hash": "277a3fea830965c1a5e0201553b86d67c5d4f50001a1d55a25dc84c81fa5a5c5",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_56",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "6b0f1979feda5ce1f55a8c432311a6d7a05b9b3639bffc52078ea6e9ce82fdf9",
+      "prompt_hash": "69b9f50a5b312090263bf8e26f18e3af540a0c626362c9174215d51fa892029d",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_57",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "44073e5c62ed4a9f09e9c7d98e95aebb5f2c0cb8ec04aacec17fa2a2bc62f82c",
+      "prompt_hash": "2c7b20ef1c299451a7328a7189bc78904b4a6cd29e58188f0e7a5acae224cc9e",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_58",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "c808c2e74ee1cf999c9d016888e5c219fe500da12a0bb0cf403bc4c25bef39a4",
+      "prompt_hash": "f25c9faf055ccefd9b9223a8248bc268e2ff3b79ea879350caea0986096652f5",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MKT_59",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "6308850de8ff1b4185533b86e1d3b81071f595704eac9489e79e03e8d732efe2",
+      "prompt_hash": "e26e57d33a77c7e6678d3fcb77fc3919d8e5ab89bb435d8f2860995f488b4955",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_FIX_stale_data",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "edece85975cbc53866c98a6119402c42ab228c77f3b3b374fa485959f09cf020",
+      "prompt_hash": "e64869bdf8e09e8f4c2b7b31ef03edd0ec32185941daffa38b3737be6ee37794",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_FIX_cost_gate",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "fe9fdb5ca3c8709c7f8f4d669550fe0df2159cccb897431bca10cd03aa63080a",
+      "prompt_hash": "df79c57a0344ca2beface2dc601bd922a62802b705631b0dfeed51411b9d2656",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_FIX_missing_stop",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "67724de87d31efcc25530b8905b581a1662144f88cacbb08d5a925018911cab5",
+      "prompt_hash": "c951cd62c4859c9e052c4c072a7cdada6b8886be1beffe9c710c2b596729eb4d",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_FIX_hard_block",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "aef1fc11a58ff24f748a6cd5974f7b834cda4945b37dc5fda11e17592f20ff36",
+      "prompt_hash": "8143438122259cc5a2cf913d05e7e128cee128cb24acc41a5e18c6928c3b94c1",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 58,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_FIX_invalid_size",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "81861b09063d4158185202858210e65eaedb545c011602aeb25758fc00b6c1b4",
+      "prompt_hash": "17fe023a41f68f6052580b8f98b3ef97ecc871f6ab48901fb30a49e3896aa736",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MISS_0",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "ad2b361bca36fca53c5badc966002ce353bc2eba26896b19cf51e5f7bd83d7f5",
+      "prompt_hash": "20500cbb0439a3d2fb9a20b9db1965f899035f614acdfc58d4a2adec9cf998c6",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 55,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MISS_1",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "c0742a6d5a775d1c3dbc83d7a9ae01ddf2456bc325f74977a175b23b145aec49",
+      "prompt_hash": "fc6de7561893a99bd33c2ee3ca4086e93c57331c15522e0b661497cf2472e2f4",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 55,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MISS_2",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "16859ff782e8f07987ac790386d0ab1f37d399b95dc090e8a166f5bd2cf15392",
+      "prompt_hash": "26b19dc4e01f1bce3d37e5ce58150648bd32cf7d662619ee04e137dcd82742e9",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 55,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MISS_3",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "2ea31c66f4ad775bc24202c1e61184c8b4431ec1c390b360db04d53c87a7b7a1",
+      "prompt_hash": "d97cd8410cb28c67940950d62ba12beaf76d31f4c117abf43aa8429ab2379385",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 55,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V21_MISS_4",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "9c8d8e32d9361a10f04d2717938acf23445f4ffe44ddca65167fd897554fd3a5",
+      "prompt_hash": "b59fef95696ec5cba580bdd9950b48cbe8896e95615f5a158fc56c6332c5d20d",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 55,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V23_FIX_compliant_win_10",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "e8995f34a5b49533fd9d52568613f332b490e313a25a7017a1f14c031eb0e886",
+      "prompt_hash": "67c0a780d15d9b65a13da093e8258e866b5e89855e2e903cf43cde97ef2a6df2",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V23_FIX_risk_limit_11",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "94c6cc8b1e55bdd7cd115906371608c7db24230d224df691da888fdf02bcd1bf",
+      "prompt_hash": "dfbf7eb7ead2e01c24cdb74590c8f8905e91f850cec7ee1e7c68890613250abb",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V23_FIX_stale_data_12",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "3a03d2fb8eadcba5217c3e24ff569cb0f56a002a952494bba37286ae37432a57",
+      "prompt_hash": "473beb1f27b3574421859ca158b3ec916db94ee7299c027398ef5818e8aa1b69",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V23_FIX_cost_gate_13",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "bff3e3830aaef3e74f86024c1383fde79d9f5d44c9acb75cf65b4e372412d705",
+      "prompt_hash": "0e9357b7d116c47909ee477e14065881ed725797e630c6d3c0e2fc1e2d4609e9",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V23_FIX_missing_stop_14",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "2aab5e264ec25551d263b32cbffd2268f420350e4aa475d7fa26b361fadb2506",
+      "prompt_hash": "23a774a3325abb0a90d26781c6d52d56d6d5c182906f04852822cc0de21dc3f0",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 56,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V23_FIX_invalid_size_15",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "bb18eca1790c34c0e3bd5f8c8b5862337afc2910e8aa4a8687b04e038401c4ee",
+      "prompt_hash": "df08677bea7b83ba051f2cefd857bc9574867535cd733fdd4c086539334d4f2b",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V23_FIX_hard_block_16",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "603c0df5094fd72251297a85d4f2ad295343ad9e0fc62e5fe231c88f2dbd7bfb",
+      "prompt_hash": "c76ce3e4f01b2ed4bd659cd4ef599a0910cd001544a362b56781cada9e931e16",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 58,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V23_FIX_late_entry_17",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "195681d195ee9529377150c4756c076cf065a396eb70f37391d33adb6a1a3ee8",
+      "prompt_hash": "d837713aaf25a265898146ba008c59f960510dcc55a5956327e798a2adab92a4",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 57,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V23_FIX_prohibited_averaging_18",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "bdb3e811d6468cfabd8eff2acd22f99d24d28097c69218b7fe8a3215a15a3210",
+      "prompt_hash": "91915a3496041361bbe239d09622b5e86cd541736028f1d49d19fd3a3504edd9",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 58,
+      "status": "INVALID_OR_EMPTY"
+    },
+    {
+      "trade_id": "CAL_V23_FIX_stop_widening_19",
+      "evidence_packet_delivered": true,
+      "evidence_packet_hash": "f5eb0ecf1cd4683f73e222461ac838d707efee2848e0f5e0b5ad7bd689763325",
+      "prompt_hash": "5b276e6d04064503e111b8d59e8b23f911b3fd651597a8c8f0c77296baeec68d",
+      "response_hash": "58709cb22f0f36e33f44479d611405916979dfe58ff0a2ae4c9612b34355d389",
+      "nonempty_evidence_field_count": 58,
+      "status": "INVALID_OR_EMPTY"
+    }
+  ],
+  "recommendation_gate": "NEXUS_PRIVATE_REFLECTION_V23_QUALITY_FAILED",
+  "formal_walk_forward_executed": false,
+  "oos_executed": false,
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "deployment_started": false,
+  "mainnet": false,
+  "real_money": false,
+  "provider_rate_limited_count": 80,
+  "avg_completeness_ratio": 0.9966346153846153,
+  "calibration_case_count_persisted": 80,
+  "prior_real_provider_smoke": {
+    "n": 5,
+    "evidence_packet_delivery_ratio": 1.0,
+    "blind_valid_schema_ratio": 1.0,
+    "evidence_sufficient_case_count": 5,
+    "informative_classification_ratio_overall": 1.0,
+    "informative_classification_ratio_on_sufficient_cases": 1.0,
+    "blind_agreement_ratio_on_sufficient_cases": 0.8,
+    "critic_resolution_ratio": 0.0,
+    "note": "Earlier same-day smoke proved full evidence delivery works when Groq responds; full 80-case run hit provider 429 on both Groq keys."
+  },
+  "provider_rate_limit_blocked_full_recalibration": true,
+  "evidence_delivery_repair_verified_by_unit_tests_and_prompt_serialization": true
+}

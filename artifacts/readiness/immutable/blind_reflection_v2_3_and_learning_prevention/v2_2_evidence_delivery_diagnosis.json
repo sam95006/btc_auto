@@ -1,0 +1,11 @@
+{
+  "schema": "v2_2_evidence_delivery_diagnosis",
+  "preserved_label": "BLIND_REFLECTION_V2_2_EVIDENCE_DELIVERY_INCOMPLETE_RESULT",
+  "sealed_path": "artifacts/readiness/immutable/edge_discovery_diagnostics_v2/blind_reflection_v2_2_calibration.json",
+  "finding": "V2.2 built structured evidence packets but Groq prompt primarily received missing_evidence=[...] without full sanitized evidence packet serialization.",
+  "not_a_provider_intelligence_failure": true,
+  "deterministic_anchors_removed": true,
+  "evidence_transport_incomplete": true,
+  "classification_quality_not_independently_assessable": true,
+  "v2_2_not_overwritten": true
+}

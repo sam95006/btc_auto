@@ -1,0 +1,20 @@
+{
+  "schema": "conditional_vwap_confirmation",
+  "conditional_vwap_confirmation_executed": false,
+  "vwap_confirmation_status": "VWAP_DEVELOPMENT_SKIPPED_GATES_FAILED",
+  "vwap_completed_trade_count": 0,
+  "vwap_positive_fold_count": 0,
+  "vwap_fold_count": 0,
+  "vwap_net_expectancy": null,
+  "vwap_net_profit_factor": null,
+  "vwap_adverse_profit_factor": null,
+  "vwap_largest_symbol_contribution": null,
+  "vwap_largest_regime_contribution": null,
+  "formal_walk_forward_executed": false,
+  "oos_executed": false,
+  "event_definition_unchanged": true,
+  "parameter_unchanged": true,
+  "cost_model_unchanged": true,
+  "risk_model_unchanged": true,
+  "confirmation_interval_unchanged": true
+}

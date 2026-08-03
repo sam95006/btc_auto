@@ -1,0 +1,26 @@
+{
+  "schema": "calibration_sample_manifest",
+  "blind_reflection_v2_3_calibration_count": 80,
+  "real_trade_case_count": 60,
+  "control_fixture_count": 20,
+  "groups": [
+    "REAL_HISTORICAL_SIMULATED_TRADES",
+    "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE"
+  ],
+  "control_fixtures_excluded_from_strategy_performance_metrics": true,
+  "class_label_not_sent_to_ai": true,
+  "trade_ids_sample": [
+    "CAL_V21_MKT_0",
+    "CAL_V21_MKT_1",
+    "CAL_V21_MKT_2",
+    "CAL_V21_MKT_3",
+    "CAL_V21_MKT_4",
+    "CAL_V21_MKT_5",
+    "CAL_V21_MKT_6",
+    "CAL_V21_MKT_7",
+    "CAL_V21_MKT_8",
+    "CAL_V21_MKT_9",
+    "CAL_V21_MKT_10",
+    "CAL_V21_MKT_11"
+  ]
+}
