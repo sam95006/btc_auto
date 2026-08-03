@@ -1,0 +1,23 @@
+{
+  "schema": "reflection_calibration_summary_v1",
+  "reflection_calibration_trade_count": 40,
+  "evidence_completeness_ratio": 0.5637820512820513,
+  "deterministic_classifiable_count": 40,
+  "AI_classified_count": 40,
+  "undetermined_count": 0,
+  "deterministic_AI_agreement_count": 14,
+  "deterministic_AI_disagreement_count": 26,
+  "critic_agreement_count": 26,
+  "critic_disagreement_count": 0,
+  "invalid_schema_count": 0,
+  "deterministic_counts": {
+    "PROCESS_COMPLIANT": 35,
+    "PROCESS_NONCOMPLIANT": 5
+  },
+  "ai_process_counts": {
+    "GOOD_PROCESS_LOSS": 40
+  },
+  "control_fixtures_labeled": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+  "reserved_oos_used": false,
+  "synthetic_market_performance": false
+}

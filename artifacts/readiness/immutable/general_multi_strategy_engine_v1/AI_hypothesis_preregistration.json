@@ -1,0 +1,1269 @@
+{
+  "schema": "ai_hypothesis_preregistration_v1",
+  "created_before_execution": true,
+  "post_result_hypothesis_insertion_forbidden": true,
+  "max_hypotheses": 12,
+  "generated_hypothesis_count": 12,
+  "preregistered_hypothesis_count": 12,
+  "strategy_family_count": 9,
+  "strategy_families": [
+    "BREAKOUT",
+    "CROSS_SECTIONAL",
+    "DERIVATIVES",
+    "MEAN_REVERSION",
+    "MOMENTUM",
+    "REVERSAL",
+    "STRUCTURE",
+    "TREND",
+    "VOLATILITY"
+  ],
+  "hypotheses": [
+    {
+      "strategy_id": "DEV_H01_TREND_CONTINUATION",
+      "hypothesis_id": "DEV_H01_TREND_CONTINUATION",
+      "strategy_family": "TREND",
+      "strategy_version": "dev_v1",
+      "economic_mechanism": "trend_pullback_continuation",
+      "component_id": "TREND_CONTINUATION",
+      "required_data_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "eligible_symbol_profile": {
+        "market_size_classes": [
+          "MAINSTREAM",
+          "MID_SIZE",
+          "SMALL",
+          "MEME"
+        ],
+        "params": {
+          "stop_definition": "1.0_atr",
+          "target_definition": "2.2_atr",
+          "cooldown_15m_bars": 24
+        }
+      },
+      "excluded_symbol_conditions": [
+        "INSTRUMENT_METADATA_INVALID",
+        "RESERVED_INTERVAL_OVERLAP"
+      ],
+      "eligible_regimes": [
+        "TRENDING_UP",
+        "TRENDING_DOWN"
+      ],
+      "excluded_regimes": [
+        "CHAOS"
+      ],
+      "context_timeframe": "60m",
+      "event_timeframe": "15m",
+      "entry_timeframe": "15m",
+      "execution_resolution_timeframe": "15m",
+      "context_definition": "context_via_TREND_CONTINUATION",
+      "event_definition": "event_via_TREND_CONTINUATION",
+      "confirmation_definition": "deterministic_confirmation_bar",
+      "entry_definition": "next_open_after_confirm",
+      "late_entry_definition": "reject_if_extension_atr_gt_1.2",
+      "stop_definition": "1.0_atr",
+      "target_definition": "2.2_atr",
+      "exit_definition": "stop_or_target_or_max_hold",
+      "maximum_holding_period": 48,
+      "cost_buffer_definition": "taker_round_trip_plus_spread_slip",
+      "spread_limit_definition": {
+        "max_spread_bps": 8
+      },
+      "slippage_limit_definition": {
+        "max_slip_bps": 8
+      },
+      "liquidity_requirement": {
+        "min_turnover_usd": 1000000
+      },
+      "risk_model_reference": "ISOLATED_25X_MARGIN_20_MAXLOSS_3",
+      "position_size_model_reference": "FIXED_MARGIN_20_USDT",
+      "development_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "replay_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "excluded_interval_ids": [
+        "SEPTEMBER_H3_OOS",
+        "CONSUMED_FAILED_HOLDOUT",
+        "H3_CLOSED_HISTORICAL_HOLDOUT"
+      ],
+      "parameter_source": "component_library_economic_prior_not_post_result",
+      "economic_rationale": "Capture continuation after shallow pullback in established trend.",
+      "preregistration_timestamp": "2026-08-03T09:17:21Z",
+      "strategy_checksum": "c69098c934b6f897c415251d29f5ac0ea5e15333a752216f0fa15a319bc492d6",
+      "semantic_checksum": "540868050d230b320e4bf25a3adbd38091c98a6b7687d71a31d1bf4e3ee07eda",
+      "AI_provider_identities": {
+        "proposal": "GROQ_MAIN_REASONER",
+        "normalize": "CEREBRAS_RESEARCH_NORMALIZER",
+        "critic": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "reflection": "GROQ_REFLECTION_REASONER"
+      },
+      "prompt_schema_versions": {
+        "hypothesis_propose_v1": "hypothesis_propose_v1",
+        "lesson_normalize_v1": "lesson_normalize_v1",
+        "critic_v1": "critic_v1",
+        "reflection_v1": "reflection_v1"
+      },
+      "development_window": {
+        "start_ms": 1739007000000,
+        "end_ms": 1785663000000
+      },
+      "forbidden_windows": {
+        "september_oos": [
+          1785663000001,
+          1789551000000
+        ]
+      },
+      "parameter_values": {
+        "stop_definition": "1.0_atr",
+        "target_definition": "2.2_atr",
+        "cooldown_15m_bars": 24
+      }
+    },
+    {
+      "strategy_id": "DEV_H02_STRUCTURAL_RETEST",
+      "hypothesis_id": "DEV_H02_STRUCTURAL_RETEST",
+      "strategy_family": "STRUCTURE",
+      "strategy_version": "dev_v1",
+      "economic_mechanism": "broken_level_retest",
+      "component_id": "STRUCTURAL_RETEST",
+      "required_data_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "eligible_symbol_profile": {
+        "market_size_classes": [
+          "MAINSTREAM",
+          "MID_SIZE",
+          "SMALL",
+          "MEME"
+        ],
+        "params": {
+          "stop_definition": "beyond_structure",
+          "target_definition": "1.8_r"
+        }
+      },
+      "excluded_symbol_conditions": [
+        "INSTRUMENT_METADATA_INVALID",
+        "RESERVED_INTERVAL_OVERLAP"
+      ],
+      "eligible_regimes": [
+        "TRENDING_UP",
+        "TRENDING_DOWN",
+        "RANGE"
+      ],
+      "excluded_regimes": [
+        "CHAOS"
+      ],
+      "context_timeframe": "60m",
+      "event_timeframe": "15m",
+      "entry_timeframe": "15m",
+      "execution_resolution_timeframe": "15m",
+      "context_definition": "context_via_STRUCTURAL_RETEST",
+      "event_definition": "event_via_STRUCTURAL_RETEST",
+      "confirmation_definition": "deterministic_confirmation_bar",
+      "entry_definition": "next_open_after_confirm",
+      "late_entry_definition": "reject_if_extension_atr_gt_1.2",
+      "stop_definition": "beyond_structure",
+      "target_definition": "1.8_r",
+      "exit_definition": "stop_or_target_or_max_hold",
+      "maximum_holding_period": 48,
+      "cost_buffer_definition": "taker_round_trip_plus_spread_slip",
+      "spread_limit_definition": {
+        "max_spread_bps": 8
+      },
+      "slippage_limit_definition": {
+        "max_slip_bps": 8
+      },
+      "liquidity_requirement": {
+        "min_turnover_usd": 1000000
+      },
+      "risk_model_reference": "ISOLATED_25X_MARGIN_20_MAXLOSS_3",
+      "position_size_model_reference": "FIXED_MARGIN_20_USDT",
+      "development_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "replay_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "excluded_interval_ids": [
+        "SEPTEMBER_H3_OOS",
+        "CONSUMED_FAILED_HOLDOUT",
+        "H3_CLOSED_HISTORICAL_HOLDOUT"
+      ],
+      "parameter_source": "component_library_economic_prior_not_post_result",
+      "economic_rationale": "Enter on retest of recently broken structure with defined invalidation.",
+      "preregistration_timestamp": "2026-08-03T09:17:21Z",
+      "strategy_checksum": "413837e525bad7bf60155a5cbc82c0e5b9ceffb03537ce1731872721d3c89a94",
+      "semantic_checksum": "5752c10ffff1d00d6bbb97ea3a49c2e6a2ae3a8f20fe0a29a1002a2458148d96",
+      "AI_provider_identities": {
+        "proposal": "GROQ_MAIN_REASONER",
+        "normalize": "CEREBRAS_RESEARCH_NORMALIZER",
+        "critic": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "reflection": "GROQ_REFLECTION_REASONER"
+      },
+      "prompt_schema_versions": {
+        "hypothesis_propose_v1": "hypothesis_propose_v1",
+        "lesson_normalize_v1": "lesson_normalize_v1",
+        "critic_v1": "critic_v1",
+        "reflection_v1": "reflection_v1"
+      },
+      "development_window": {
+        "start_ms": 1739007000000,
+        "end_ms": 1785663000000
+      },
+      "forbidden_windows": {
+        "september_oos": [
+          1785663000001,
+          1789551000000
+        ]
+      },
+      "parameter_values": {
+        "stop_definition": "beyond_structure",
+        "target_definition": "1.8_r"
+      }
+    },
+    {
+      "strategy_id": "DEV_H03_BREAKOUT",
+      "hypothesis_id": "DEV_H03_BREAKOUT",
+      "strategy_family": "BREAKOUT",
+      "strategy_version": "dev_v1",
+      "economic_mechanism": "range_break_with_volume",
+      "component_id": "BREAKOUT",
+      "required_data_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "eligible_symbol_profile": {
+        "market_size_classes": [
+          "MAINSTREAM",
+          "MID_SIZE",
+          "SMALL",
+          "MEME"
+        ],
+        "params": {
+          "stop_definition": "range_mid",
+          "target_definition": "range_height",
+          "max_spread_bps": 6
+        }
+      },
+      "excluded_symbol_conditions": [
+        "INSTRUMENT_METADATA_INVALID",
+        "RESERVED_INTERVAL_OVERLAP"
+      ],
+      "eligible_regimes": [
+        "RANGE",
+        "VOL_EXPAND"
+      ],
+      "excluded_regimes": [
+        "CHAOS"
+      ],
+      "context_timeframe": "60m",
+      "event_timeframe": "15m",
+      "entry_timeframe": "15m",
+      "execution_resolution_timeframe": "15m",
+      "context_definition": "context_via_BREAKOUT",
+      "event_definition": "event_via_BREAKOUT",
+      "confirmation_definition": "deterministic_confirmation_bar",
+      "entry_definition": "next_open_after_confirm",
+      "late_entry_definition": "reject_if_extension_atr_gt_1.2",
+      "stop_definition": "range_mid",
+      "target_definition": "range_height",
+      "exit_definition": "stop_or_target_or_max_hold",
+      "maximum_holding_period": 48,
+      "cost_buffer_definition": "taker_round_trip_plus_spread_slip",
+      "spread_limit_definition": {
+        "max_spread_bps": 6
+      },
+      "slippage_limit_definition": {
+        "max_slip_bps": 8
+      },
+      "liquidity_requirement": {
+        "min_turnover_usd": 1000000
+      },
+      "risk_model_reference": "ISOLATED_25X_MARGIN_20_MAXLOSS_3",
+      "position_size_model_reference": "FIXED_MARGIN_20_USDT",
+      "development_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "replay_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "excluded_interval_ids": [
+        "SEPTEMBER_H3_OOS",
+        "CONSUMED_FAILED_HOLDOUT",
+        "H3_CLOSED_HISTORICAL_HOLDOUT"
+      ],
+      "parameter_source": "component_library_economic_prior_not_post_result",
+      "economic_rationale": "Break of compressed range with volume expansion; reject late extension.",
+      "preregistration_timestamp": "2026-08-03T09:17:21Z",
+      "strategy_checksum": "ff10f722b1eacf790bac224f6c76fb315934f59f52614eb383e4432072610a91",
+      "semantic_checksum": "d003acb065d10cf95c4be5f3e826eb6bf2b82d8f802d71748c4fd55e9c7e38a0",
+      "AI_provider_identities": {
+        "proposal": "GROQ_MAIN_REASONER",
+        "normalize": "CEREBRAS_RESEARCH_NORMALIZER",
+        "critic": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "reflection": "GROQ_REFLECTION_REASONER"
+      },
+      "prompt_schema_versions": {
+        "hypothesis_propose_v1": "hypothesis_propose_v1",
+        "lesson_normalize_v1": "lesson_normalize_v1",
+        "critic_v1": "critic_v1",
+        "reflection_v1": "reflection_v1"
+      },
+      "development_window": {
+        "start_ms": 1739007000000,
+        "end_ms": 1785663000000
+      },
+      "forbidden_windows": {
+        "september_oos": [
+          1785663000001,
+          1789551000000
+        ]
+      },
+      "parameter_values": {
+        "stop_definition": "range_mid",
+        "target_definition": "range_height",
+        "max_spread_bps": 6
+      }
+    },
+    {
+      "strategy_id": "DEV_H04_FAILED_BREAKOUT",
+      "hypothesis_id": "DEV_H04_FAILED_BREAKOUT",
+      "strategy_family": "BREAKOUT",
+      "strategy_version": "dev_v1",
+      "economic_mechanism": "failed_break_reclaim",
+      "component_id": "FAILED_BREAKOUT",
+      "required_data_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "eligible_symbol_profile": {
+        "market_size_classes": [
+          "MAINSTREAM",
+          "MID_SIZE",
+          "SMALL",
+          "MEME"
+        ],
+        "params": {
+          "stop_definition": "sweep_extreme",
+          "target_definition": "range_mid"
+        }
+      },
+      "excluded_symbol_conditions": [
+        "INSTRUMENT_METADATA_INVALID",
+        "RESERVED_INTERVAL_OVERLAP"
+      ],
+      "eligible_regimes": [
+        "RANGE",
+        "VOL_EXPAND"
+      ],
+      "excluded_regimes": [
+        "CHAOS"
+      ],
+      "context_timeframe": "60m",
+      "event_timeframe": "15m",
+      "entry_timeframe": "15m",
+      "execution_resolution_timeframe": "15m",
+      "context_definition": "context_via_FAILED_BREAKOUT",
+      "event_definition": "event_via_FAILED_BREAKOUT",
+      "confirmation_definition": "deterministic_confirmation_bar",
+      "entry_definition": "next_open_after_confirm",
+      "late_entry_definition": "reject_if_extension_atr_gt_1.2",
+      "stop_definition": "sweep_extreme",
+      "target_definition": "range_mid",
+      "exit_definition": "stop_or_target_or_max_hold",
+      "maximum_holding_period": 48,
+      "cost_buffer_definition": "taker_round_trip_plus_spread_slip",
+      "spread_limit_definition": {
+        "max_spread_bps": 8
+      },
+      "slippage_limit_definition": {
+        "max_slip_bps": 8
+      },
+      "liquidity_requirement": {
+        "min_turnover_usd": 1000000
+      },
+      "risk_model_reference": "ISOLATED_25X_MARGIN_20_MAXLOSS_3",
+      "position_size_model_reference": "FIXED_MARGIN_20_USDT",
+      "development_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "replay_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "excluded_interval_ids": [
+        "SEPTEMBER_H3_OOS",
+        "CONSUMED_FAILED_HOLDOUT",
+        "H3_CLOSED_HISTORICAL_HOLDOUT"
+      ],
+      "parameter_source": "component_library_economic_prior_not_post_result",
+      "economic_rationale": "Fade failed breakouts that reclaim range interior quickly.",
+      "preregistration_timestamp": "2026-08-03T09:17:21Z",
+      "strategy_checksum": "883bdeff6a400e16b7e1639d4581907d4e3f2fd51eeee79fe426a3b88937d095",
+      "semantic_checksum": "774c5ee5eb6a0eaa88716d25e9e8dc779c148f2f31c0608a8c1d032c6881f03d",
+      "AI_provider_identities": {
+        "proposal": "GROQ_MAIN_REASONER",
+        "normalize": "CEREBRAS_RESEARCH_NORMALIZER",
+        "critic": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "reflection": "GROQ_REFLECTION_REASONER"
+      },
+      "prompt_schema_versions": {
+        "hypothesis_propose_v1": "hypothesis_propose_v1",
+        "lesson_normalize_v1": "lesson_normalize_v1",
+        "critic_v1": "critic_v1",
+        "reflection_v1": "reflection_v1"
+      },
+      "development_window": {
+        "start_ms": 1739007000000,
+        "end_ms": 1785663000000
+      },
+      "forbidden_windows": {
+        "september_oos": [
+          1785663000001,
+          1789551000000
+        ]
+      },
+      "parameter_values": {
+        "stop_definition": "sweep_extreme",
+        "target_definition": "range_mid"
+      }
+    },
+    {
+      "strategy_id": "DEV_H05_MOMENTUM_ACCEL",
+      "hypothesis_id": "DEV_H05_MOMENTUM_ACCEL",
+      "strategy_family": "MOMENTUM",
+      "strategy_version": "dev_v1",
+      "economic_mechanism": "atr_acceleration_thrust",
+      "component_id": "MOMENTUM_ACCELERATION",
+      "required_data_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "eligible_symbol_profile": {
+        "market_size_classes": [
+          "MAINSTREAM",
+          "MID_SIZE",
+          "SMALL",
+          "MEME"
+        ],
+        "params": {
+          "stop_definition": "1.3_atr",
+          "target_definition": "2.5_atr"
+        }
+      },
+      "excluded_symbol_conditions": [
+        "INSTRUMENT_METADATA_INVALID",
+        "RESERVED_INTERVAL_OVERLAP"
+      ],
+      "eligible_regimes": [
+        "TRENDING_UP",
+        "TRENDING_DOWN",
+        "VOL_EXPAND"
+      ],
+      "excluded_regimes": [
+        "CHAOS"
+      ],
+      "context_timeframe": "60m",
+      "event_timeframe": "15m",
+      "entry_timeframe": "15m",
+      "execution_resolution_timeframe": "15m",
+      "context_definition": "context_via_MOMENTUM_ACCELERATION",
+      "event_definition": "event_via_MOMENTUM_ACCELERATION",
+      "confirmation_definition": "deterministic_confirmation_bar",
+      "entry_definition": "next_open_after_confirm",
+      "late_entry_definition": "reject_if_extension_atr_gt_1.2",
+      "stop_definition": "1.3_atr",
+      "target_definition": "2.5_atr",
+      "exit_definition": "stop_or_target_or_max_hold",
+      "maximum_holding_period": 48,
+      "cost_buffer_definition": "taker_round_trip_plus_spread_slip",
+      "spread_limit_definition": {
+        "max_spread_bps": 8
+      },
+      "slippage_limit_definition": {
+        "max_slip_bps": 8
+      },
+      "liquidity_requirement": {
+        "min_turnover_usd": 1000000
+      },
+      "risk_model_reference": "ISOLATED_25X_MARGIN_20_MAXLOSS_3",
+      "position_size_model_reference": "FIXED_MARGIN_20_USDT",
+      "development_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "replay_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "excluded_interval_ids": [
+        "SEPTEMBER_H3_OOS",
+        "CONSUMED_FAILED_HOLDOUT",
+        "H3_CLOSED_HISTORICAL_HOLDOUT"
+      ],
+      "parameter_source": "component_library_economic_prior_not_post_result",
+      "economic_rationale": "Enter when short-horizon momentum accelerates with liquidity.",
+      "preregistration_timestamp": "2026-08-03T09:17:21Z",
+      "strategy_checksum": "0134d7346863d9fff0969a1389eca741f3880c179a98311282ecd14a17fa0a1f",
+      "semantic_checksum": "041462ade93e3fd6e4c6847ff347f7c3cb56fce121bbea499cf50a5de7f79422",
+      "AI_provider_identities": {
+        "proposal": "GROQ_MAIN_REASONER",
+        "normalize": "CEREBRAS_RESEARCH_NORMALIZER",
+        "critic": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "reflection": "GROQ_REFLECTION_REASONER"
+      },
+      "prompt_schema_versions": {
+        "hypothesis_propose_v1": "hypothesis_propose_v1",
+        "lesson_normalize_v1": "lesson_normalize_v1",
+        "critic_v1": "critic_v1",
+        "reflection_v1": "reflection_v1"
+      },
+      "development_window": {
+        "start_ms": 1739007000000,
+        "end_ms": 1785663000000
+      },
+      "forbidden_windows": {
+        "september_oos": [
+          1785663000001,
+          1789551000000
+        ]
+      },
+      "parameter_values": {
+        "stop_definition": "1.3_atr",
+        "target_definition": "2.5_atr"
+      }
+    },
+    {
+      "strategy_id": "DEV_H06_VOL_EXPANSION",
+      "hypothesis_id": "DEV_H06_VOL_EXPANSION",
+      "strategy_family": "VOLATILITY",
+      "strategy_version": "dev_v1",
+      "economic_mechanism": "atr_percentile_expansion",
+      "component_id": "VOLATILITY_EXPANSION",
+      "required_data_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "eligible_symbol_profile": {
+        "market_size_classes": [
+          "MAINSTREAM",
+          "MID_SIZE",
+          "SMALL",
+          "MEME"
+        ],
+        "params": {
+          "stop_definition": "1.5_atr",
+          "target_definition": "2.0_atr",
+          "max_slip_bps": 10
+        }
+      },
+      "excluded_symbol_conditions": [
+        "INSTRUMENT_METADATA_INVALID",
+        "RESERVED_INTERVAL_OVERLAP"
+      ],
+      "eligible_regimes": [
+        "VOL_EXPAND"
+      ],
+      "excluded_regimes": [
+        "CHAOS"
+      ],
+      "context_timeframe": "60m",
+      "event_timeframe": "15m",
+      "entry_timeframe": "15m",
+      "execution_resolution_timeframe": "15m",
+      "context_definition": "context_via_VOLATILITY_EXPANSION",
+      "event_definition": "event_via_VOLATILITY_EXPANSION",
+      "confirmation_definition": "deterministic_confirmation_bar",
+      "entry_definition": "next_open_after_confirm",
+      "late_entry_definition": "reject_if_extension_atr_gt_1.2",
+      "stop_definition": "1.5_atr",
+      "target_definition": "2.0_atr",
+      "exit_definition": "stop_or_target_or_max_hold",
+      "maximum_holding_period": 48,
+      "cost_buffer_definition": "taker_round_trip_plus_spread_slip",
+      "spread_limit_definition": {
+        "max_spread_bps": 8
+      },
+      "slippage_limit_definition": {
+        "max_slip_bps": 10
+      },
+      "liquidity_requirement": {
+        "min_turnover_usd": 1000000
+      },
+      "risk_model_reference": "ISOLATED_25X_MARGIN_20_MAXLOSS_3",
+      "position_size_model_reference": "FIXED_MARGIN_20_USDT",
+      "development_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "replay_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "excluded_interval_ids": [
+        "SEPTEMBER_H3_OOS",
+        "CONSUMED_FAILED_HOLDOUT",
+        "H3_CLOSED_HISTORICAL_HOLDOUT"
+      ],
+      "parameter_source": "component_library_economic_prior_not_post_result",
+      "economic_rationale": "Trade expansion from low-vol compression with adverse-first exits.",
+      "preregistration_timestamp": "2026-08-03T09:17:21Z",
+      "strategy_checksum": "6b49125eaeb29f408ee9952fc9dd795d09bf3b8b2ad0cee2ff36c94b13775200",
+      "semantic_checksum": "4bef113ff32d674e13390e65cc7db23e199ce0e1817bcb83b08828d6d6aa1ee5",
+      "AI_provider_identities": {
+        "proposal": "GROQ_MAIN_REASONER",
+        "normalize": "CEREBRAS_RESEARCH_NORMALIZER",
+        "critic": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "reflection": "GROQ_REFLECTION_REASONER"
+      },
+      "prompt_schema_versions": {
+        "hypothesis_propose_v1": "hypothesis_propose_v1",
+        "lesson_normalize_v1": "lesson_normalize_v1",
+        "critic_v1": "critic_v1",
+        "reflection_v1": "reflection_v1"
+      },
+      "development_window": {
+        "start_ms": 1739007000000,
+        "end_ms": 1785663000000
+      },
+      "forbidden_windows": {
+        "september_oos": [
+          1785663000001,
+          1789551000000
+        ]
+      },
+      "parameter_values": {
+        "stop_definition": "1.5_atr",
+        "target_definition": "2.0_atr",
+        "max_slip_bps": 10
+      }
+    },
+    {
+      "strategy_id": "DEV_H07_VWAP_MR",
+      "hypothesis_id": "DEV_H07_VWAP_MR",
+      "strategy_family": "MEAN_REVERSION",
+      "strategy_version": "dev_v1",
+      "economic_mechanism": "vwap_deviation_revert",
+      "component_id": "VWAP_MEAN_REVERSION",
+      "required_data_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "eligible_symbol_profile": {
+        "market_size_classes": [
+          "MAINSTREAM",
+          "MID_SIZE",
+          "SMALL",
+          "MEME"
+        ],
+        "params": {
+          "stop_definition": "1.0_atr",
+          "target_definition": "vwap",
+          "max_spread_bps": 5
+        }
+      },
+      "excluded_symbol_conditions": [
+        "INSTRUMENT_METADATA_INVALID",
+        "RESERVED_INTERVAL_OVERLAP"
+      ],
+      "eligible_regimes": [
+        "RANGE",
+        "LOW_VOL"
+      ],
+      "excluded_regimes": [
+        "CHAOS"
+      ],
+      "context_timeframe": "60m",
+      "event_timeframe": "15m",
+      "entry_timeframe": "15m",
+      "execution_resolution_timeframe": "15m",
+      "context_definition": "context_via_VWAP_MEAN_REVERSION",
+      "event_definition": "event_via_VWAP_MEAN_REVERSION",
+      "confirmation_definition": "deterministic_confirmation_bar",
+      "entry_definition": "next_open_after_confirm",
+      "late_entry_definition": "reject_if_extension_atr_gt_1.2",
+      "stop_definition": "1.0_atr",
+      "target_definition": "vwap",
+      "exit_definition": "stop_or_target_or_max_hold",
+      "maximum_holding_period": 48,
+      "cost_buffer_definition": "taker_round_trip_plus_spread_slip",
+      "spread_limit_definition": {
+        "max_spread_bps": 5
+      },
+      "slippage_limit_definition": {
+        "max_slip_bps": 8
+      },
+      "liquidity_requirement": {
+        "min_turnover_usd": 1000000
+      },
+      "risk_model_reference": "ISOLATED_25X_MARGIN_20_MAXLOSS_3",
+      "position_size_model_reference": "FIXED_MARGIN_20_USDT",
+      "development_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "replay_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "excluded_interval_ids": [
+        "SEPTEMBER_H3_OOS",
+        "CONSUMED_FAILED_HOLDOUT",
+        "H3_CLOSED_HISTORICAL_HOLDOUT"
+      ],
+      "parameter_source": "component_library_economic_prior_not_post_result",
+      "economic_rationale": "Fade stretched deviations from session VWAP in non-trend regimes.",
+      "preregistration_timestamp": "2026-08-03T09:17:21Z",
+      "strategy_checksum": "b16a2029d6bc635c3eb36a969a9e072f39e43cbd7e52d97f750583e9c2af8826",
+      "semantic_checksum": "310c24682c69777883bb0cbfd910fa9c0c1496e6155a8b114ab34e136892a1ef",
+      "AI_provider_identities": {
+        "proposal": "GROQ_MAIN_REASONER",
+        "normalize": "CEREBRAS_RESEARCH_NORMALIZER",
+        "critic": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "reflection": "GROQ_REFLECTION_REASONER"
+      },
+      "prompt_schema_versions": {
+        "hypothesis_propose_v1": "hypothesis_propose_v1",
+        "lesson_normalize_v1": "lesson_normalize_v1",
+        "critic_v1": "critic_v1",
+        "reflection_v1": "reflection_v1"
+      },
+      "development_window": {
+        "start_ms": 1739007000000,
+        "end_ms": 1785663000000
+      },
+      "forbidden_windows": {
+        "september_oos": [
+          1785663000001,
+          1789551000000
+        ]
+      },
+      "parameter_values": {
+        "stop_definition": "1.0_atr",
+        "target_definition": "vwap",
+        "max_spread_bps": 5
+      }
+    },
+    {
+      "strategy_id": "DEV_H08_STRUCT_MR",
+      "hypothesis_id": "DEV_H08_STRUCT_MR",
+      "strategy_family": "MEAN_REVERSION",
+      "strategy_version": "dev_v1",
+      "economic_mechanism": "range_extreme_revert",
+      "component_id": "STRUCTURAL_MEAN_REVERSION",
+      "required_data_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "eligible_symbol_profile": {
+        "market_size_classes": [
+          "MAINSTREAM",
+          "MID_SIZE",
+          "SMALL",
+          "MEME"
+        ],
+        "params": {
+          "stop_definition": "outside_range",
+          "target_definition": "range_mid"
+        }
+      },
+      "excluded_symbol_conditions": [
+        "INSTRUMENT_METADATA_INVALID",
+        "RESERVED_INTERVAL_OVERLAP"
+      ],
+      "eligible_regimes": [
+        "RANGE"
+      ],
+      "excluded_regimes": [
+        "CHAOS"
+      ],
+      "context_timeframe": "60m",
+      "event_timeframe": "15m",
+      "entry_timeframe": "15m",
+      "execution_resolution_timeframe": "15m",
+      "context_definition": "context_via_STRUCTURAL_MEAN_REVERSION",
+      "event_definition": "event_via_STRUCTURAL_MEAN_REVERSION",
+      "confirmation_definition": "deterministic_confirmation_bar",
+      "entry_definition": "next_open_after_confirm",
+      "late_entry_definition": "reject_if_extension_atr_gt_1.2",
+      "stop_definition": "outside_range",
+      "target_definition": "range_mid",
+      "exit_definition": "stop_or_target_or_max_hold",
+      "maximum_holding_period": 48,
+      "cost_buffer_definition": "taker_round_trip_plus_spread_slip",
+      "spread_limit_definition": {
+        "max_spread_bps": 8
+      },
+      "slippage_limit_definition": {
+        "max_slip_bps": 8
+      },
+      "liquidity_requirement": {
+        "min_turnover_usd": 1000000
+      },
+      "risk_model_reference": "ISOLATED_25X_MARGIN_20_MAXLOSS_3",
+      "position_size_model_reference": "FIXED_MARGIN_20_USDT",
+      "development_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "replay_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "excluded_interval_ids": [
+        "SEPTEMBER_H3_OOS",
+        "CONSUMED_FAILED_HOLDOUT",
+        "H3_CLOSED_HISTORICAL_HOLDOUT"
+      ],
+      "parameter_source": "component_library_economic_prior_not_post_result",
+      "economic_rationale": "Fade touches of established range extremes with tight invalidation.",
+      "preregistration_timestamp": "2026-08-03T09:17:21Z",
+      "strategy_checksum": "866492029f5044282782a8ecfae4a4aea63d9e11d6127969cc846051f2acb07c",
+      "semantic_checksum": "028327a8cadb6b322dbd3fac6b1b8715f743f6e94c91cd5f400b6e88dcfd2978",
+      "AI_provider_identities": {
+        "proposal": "GROQ_MAIN_REASONER",
+        "normalize": "CEREBRAS_RESEARCH_NORMALIZER",
+        "critic": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "reflection": "GROQ_REFLECTION_REASONER"
+      },
+      "prompt_schema_versions": {
+        "hypothesis_propose_v1": "hypothesis_propose_v1",
+        "lesson_normalize_v1": "lesson_normalize_v1",
+        "critic_v1": "critic_v1",
+        "reflection_v1": "reflection_v1"
+      },
+      "development_window": {
+        "start_ms": 1739007000000,
+        "end_ms": 1785663000000
+      },
+      "forbidden_windows": {
+        "september_oos": [
+          1785663000001,
+          1789551000000
+        ]
+      },
+      "parameter_values": {
+        "stop_definition": "outside_range",
+        "target_definition": "range_mid"
+      }
+    },
+    {
+      "strategy_id": "DEV_H09_REL_STRENGTH",
+      "hypothesis_id": "DEV_H09_REL_STRENGTH",
+      "strategy_family": "CROSS_SECTIONAL",
+      "strategy_version": "dev_v1",
+      "economic_mechanism": "vs_btc_relative_strength",
+      "component_id": "RELATIVE_STRENGTH",
+      "required_data_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "eligible_symbol_profile": {
+        "market_size_classes": [
+          "MAINSTREAM",
+          "MID_SIZE",
+          "SMALL",
+          "MEME"
+        ],
+        "params": {
+          "stop_definition": "1.2_atr",
+          "target_definition": "2.0_atr"
+        }
+      },
+      "excluded_symbol_conditions": [
+        "INSTRUMENT_METADATA_INVALID",
+        "RESERVED_INTERVAL_OVERLAP"
+      ],
+      "eligible_regimes": [
+        "TRENDING_UP",
+        "TRENDING_DOWN"
+      ],
+      "excluded_regimes": [
+        "CHAOS"
+      ],
+      "context_timeframe": "60m",
+      "event_timeframe": "15m",
+      "entry_timeframe": "15m",
+      "execution_resolution_timeframe": "15m",
+      "context_definition": "context_via_RELATIVE_STRENGTH",
+      "event_definition": "event_via_RELATIVE_STRENGTH",
+      "confirmation_definition": "deterministic_confirmation_bar",
+      "entry_definition": "next_open_after_confirm",
+      "late_entry_definition": "reject_if_extension_atr_gt_1.2",
+      "stop_definition": "1.2_atr",
+      "target_definition": "2.0_atr",
+      "exit_definition": "stop_or_target_or_max_hold",
+      "maximum_holding_period": 48,
+      "cost_buffer_definition": "taker_round_trip_plus_spread_slip",
+      "spread_limit_definition": {
+        "max_spread_bps": 8
+      },
+      "slippage_limit_definition": {
+        "max_slip_bps": 8
+      },
+      "liquidity_requirement": {
+        "min_turnover_usd": 1000000
+      },
+      "risk_model_reference": "ISOLATED_25X_MARGIN_20_MAXLOSS_3",
+      "position_size_model_reference": "FIXED_MARGIN_20_USDT",
+      "development_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "replay_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "excluded_interval_ids": [
+        "SEPTEMBER_H3_OOS",
+        "CONSUMED_FAILED_HOLDOUT",
+        "H3_CLOSED_HISTORICAL_HOLDOUT"
+      ],
+      "parameter_source": "component_library_economic_prior_not_post_result",
+      "economic_rationale": "Prefer symbols showing strength/weakness versus BTC in trend regimes.",
+      "preregistration_timestamp": "2026-08-03T09:17:21Z",
+      "strategy_checksum": "e0128ed36e197b379599a00e27e69a1351aa6fe770a59a21b33cb76ae68962b8",
+      "semantic_checksum": "403fe519f3c4a6f0ea6ef06378727a90a0c2b647162e695fc8202cecfcbc94f0",
+      "AI_provider_identities": {
+        "proposal": "GROQ_MAIN_REASONER",
+        "normalize": "CEREBRAS_RESEARCH_NORMALIZER",
+        "critic": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "reflection": "GROQ_REFLECTION_REASONER"
+      },
+      "prompt_schema_versions": {
+        "hypothesis_propose_v1": "hypothesis_propose_v1",
+        "lesson_normalize_v1": "lesson_normalize_v1",
+        "critic_v1": "critic_v1",
+        "reflection_v1": "reflection_v1"
+      },
+      "development_window": {
+        "start_ms": 1739007000000,
+        "end_ms": 1785663000000
+      },
+      "forbidden_windows": {
+        "september_oos": [
+          1785663000001,
+          1789551000000
+        ]
+      },
+      "parameter_values": {
+        "stop_definition": "1.2_atr",
+        "target_definition": "2.0_atr"
+      }
+    },
+    {
+      "strategy_id": "DEV_H10_XS_MOMENTUM",
+      "hypothesis_id": "DEV_H10_XS_MOMENTUM",
+      "strategy_family": "CROSS_SECTIONAL",
+      "strategy_version": "dev_v1",
+      "economic_mechanism": "cross_sectional_rank_momentum",
+      "component_id": "CROSS_SECTIONAL_MOMENTUM",
+      "required_data_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "eligible_symbol_profile": {
+        "market_size_classes": [
+          "MAINSTREAM",
+          "MID_SIZE",
+          "SMALL",
+          "MEME"
+        ],
+        "params": {
+          "stop_definition": "1.2_atr",
+          "target_definition": "2.0_atr",
+          "min_turnover": 2000000
+        }
+      },
+      "excluded_symbol_conditions": [
+        "INSTRUMENT_METADATA_INVALID",
+        "RESERVED_INTERVAL_OVERLAP"
+      ],
+      "eligible_regimes": [
+        "TRENDING_UP",
+        "TRENDING_DOWN"
+      ],
+      "excluded_regimes": [
+        "CHAOS"
+      ],
+      "context_timeframe": "60m",
+      "event_timeframe": "15m",
+      "entry_timeframe": "15m",
+      "execution_resolution_timeframe": "15m",
+      "context_definition": "context_via_CROSS_SECTIONAL_MOMENTUM",
+      "event_definition": "event_via_CROSS_SECTIONAL_MOMENTUM",
+      "confirmation_definition": "deterministic_confirmation_bar",
+      "entry_definition": "next_open_after_confirm",
+      "late_entry_definition": "reject_if_extension_atr_gt_1.2",
+      "stop_definition": "1.2_atr",
+      "target_definition": "2.0_atr",
+      "exit_definition": "stop_or_target_or_max_hold",
+      "maximum_holding_period": 48,
+      "cost_buffer_definition": "taker_round_trip_plus_spread_slip",
+      "spread_limit_definition": {
+        "max_spread_bps": 8
+      },
+      "slippage_limit_definition": {
+        "max_slip_bps": 8
+      },
+      "liquidity_requirement": {
+        "min_turnover_usd": 2000000
+      },
+      "risk_model_reference": "ISOLATED_25X_MARGIN_20_MAXLOSS_3",
+      "position_size_model_reference": "FIXED_MARGIN_20_USDT",
+      "development_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "replay_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "excluded_interval_ids": [
+        "SEPTEMBER_H3_OOS",
+        "CONSUMED_FAILED_HOLDOUT",
+        "H3_CLOSED_HISTORICAL_HOLDOUT"
+      ],
+      "parameter_source": "component_library_economic_prior_not_post_result",
+      "economic_rationale": "Rank-based momentum bucket entries among research-eligible names.",
+      "preregistration_timestamp": "2026-08-03T09:17:21Z",
+      "strategy_checksum": "09656fe9f59f75a46bbd1500a331a9eb9516a46d0fe786dc1ca9556251163707",
+      "semantic_checksum": "29944cf3c26ccc16c486a6eb685dd957df1fec4bbc776b139ba688d73d3bf387",
+      "AI_provider_identities": {
+        "proposal": "GROQ_MAIN_REASONER",
+        "normalize": "CEREBRAS_RESEARCH_NORMALIZER",
+        "critic": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "reflection": "GROQ_REFLECTION_REASONER"
+      },
+      "prompt_schema_versions": {
+        "hypothesis_propose_v1": "hypothesis_propose_v1",
+        "lesson_normalize_v1": "lesson_normalize_v1",
+        "critic_v1": "critic_v1",
+        "reflection_v1": "reflection_v1"
+      },
+      "development_window": {
+        "start_ms": 1739007000000,
+        "end_ms": 1785663000000
+      },
+      "forbidden_windows": {
+        "september_oos": [
+          1785663000001,
+          1789551000000
+        ]
+      },
+      "parameter_values": {
+        "stop_definition": "1.2_atr",
+        "target_definition": "2.0_atr",
+        "min_turnover": 2000000
+      }
+    },
+    {
+      "strategy_id": "DEV_H11_FUNDING_OI_CONT",
+      "hypothesis_id": "DEV_H11_FUNDING_OI_CONT",
+      "strategy_family": "DERIVATIVES",
+      "strategy_version": "dev_v1",
+      "economic_mechanism": "funding_oi_aligned_continuation",
+      "component_id": "FUNDING_OI_CONTINUATION",
+      "required_data_capabilities": [
+        "DERIVATIVES_HISTORY_ELIGIBLE",
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "eligible_symbol_profile": {
+        "market_size_classes": [
+          "MAINSTREAM",
+          "MID_SIZE",
+          "SMALL",
+          "MEME"
+        ],
+        "params": {
+          "stop_definition": "1.2_atr",
+          "target_definition": "2.0_atr"
+        }
+      },
+      "excluded_symbol_conditions": [
+        "INSTRUMENT_METADATA_INVALID",
+        "RESERVED_INTERVAL_OVERLAP"
+      ],
+      "eligible_regimes": [
+        "TRENDING_UP",
+        "TRENDING_DOWN"
+      ],
+      "excluded_regimes": [
+        "CHAOS"
+      ],
+      "context_timeframe": "60m",
+      "event_timeframe": "15m",
+      "entry_timeframe": "15m",
+      "execution_resolution_timeframe": "15m",
+      "context_definition": "context_via_FUNDING_OI_CONTINUATION",
+      "event_definition": "event_via_FUNDING_OI_CONTINUATION",
+      "confirmation_definition": "deterministic_confirmation_bar",
+      "entry_definition": "next_open_after_confirm",
+      "late_entry_definition": "reject_if_extension_atr_gt_1.2",
+      "stop_definition": "1.2_atr",
+      "target_definition": "2.0_atr",
+      "exit_definition": "stop_or_target_or_max_hold",
+      "maximum_holding_period": 48,
+      "cost_buffer_definition": "taker_round_trip_plus_spread_slip",
+      "spread_limit_definition": {
+        "max_spread_bps": 8
+      },
+      "slippage_limit_definition": {
+        "max_slip_bps": 8
+      },
+      "liquidity_requirement": {
+        "min_turnover_usd": 1000000
+      },
+      "risk_model_reference": "ISOLATED_25X_MARGIN_20_MAXLOSS_3",
+      "position_size_model_reference": "FIXED_MARGIN_20_USDT",
+      "development_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "replay_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "excluded_interval_ids": [
+        "SEPTEMBER_H3_OOS",
+        "CONSUMED_FAILED_HOLDOUT",
+        "H3_CLOSED_HISTORICAL_HOLDOUT"
+      ],
+      "parameter_source": "component_library_economic_prior_not_post_result",
+      "economic_rationale": "Continue when funding and OI confirm directional pressure.",
+      "preregistration_timestamp": "2026-08-03T09:17:21Z",
+      "strategy_checksum": "5f458acf71caf33677384684e56d44e9ac183127fc55ba97a50181f0f436aa75",
+      "semantic_checksum": "4cd2d26b5e7c16d98c28e99d88c2efa52d26c47b5522ee8fe5ca132b041d230a",
+      "AI_provider_identities": {
+        "proposal": "GROQ_MAIN_REASONER",
+        "normalize": "CEREBRAS_RESEARCH_NORMALIZER",
+        "critic": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "reflection": "GROQ_REFLECTION_REASONER"
+      },
+      "prompt_schema_versions": {
+        "hypothesis_propose_v1": "hypothesis_propose_v1",
+        "lesson_normalize_v1": "lesson_normalize_v1",
+        "critic_v1": "critic_v1",
+        "reflection_v1": "reflection_v1"
+      },
+      "development_window": {
+        "start_ms": 1739007000000,
+        "end_ms": 1785663000000
+      },
+      "forbidden_windows": {
+        "september_oos": [
+          1785663000001,
+          1789551000000
+        ]
+      },
+      "parameter_values": {
+        "stop_definition": "1.2_atr",
+        "target_definition": "2.0_atr"
+      }
+    },
+    {
+      "strategy_id": "DEV_H12_LIQ_SWEEP",
+      "hypothesis_id": "DEV_H12_LIQ_SWEEP",
+      "strategy_family": "REVERSAL",
+      "strategy_version": "dev_v1",
+      "economic_mechanism": "liquidity_sweep_reclaim",
+      "component_id": "LIQUIDITY_SWEEP_REVERSAL",
+      "required_data_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "eligible_symbol_profile": {
+        "market_size_classes": [
+          "MAINSTREAM",
+          "MID_SIZE",
+          "SMALL",
+          "MEME"
+        ],
+        "params": {
+          "stop_definition": "sweep_extreme",
+          "target_definition": "1.6_r"
+        }
+      },
+      "excluded_symbol_conditions": [
+        "INSTRUMENT_METADATA_INVALID",
+        "RESERVED_INTERVAL_OVERLAP"
+      ],
+      "eligible_regimes": [
+        "RANGE",
+        "VOL_EXPAND"
+      ],
+      "excluded_regimes": [
+        "CHAOS"
+      ],
+      "context_timeframe": "60m",
+      "event_timeframe": "15m",
+      "entry_timeframe": "15m",
+      "execution_resolution_timeframe": "15m",
+      "context_definition": "context_via_LIQUIDITY_SWEEP_REVERSAL",
+      "event_definition": "event_via_LIQUIDITY_SWEEP_REVERSAL",
+      "confirmation_definition": "deterministic_confirmation_bar",
+      "entry_definition": "next_open_after_confirm",
+      "late_entry_definition": "reject_if_extension_atr_gt_1.2",
+      "stop_definition": "sweep_extreme",
+      "target_definition": "1.6_r",
+      "exit_definition": "stop_or_target_or_max_hold",
+      "maximum_holding_period": 48,
+      "cost_buffer_definition": "taker_round_trip_plus_spread_slip",
+      "spread_limit_definition": {
+        "max_spread_bps": 8
+      },
+      "slippage_limit_definition": {
+        "max_slip_bps": 8
+      },
+      "liquidity_requirement": {
+        "min_turnover_usd": 1000000
+      },
+      "risk_model_reference": "ISOLATED_25X_MARGIN_20_MAXLOSS_3",
+      "position_size_model_reference": "FIXED_MARGIN_20_USDT",
+      "development_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "replay_interval_ids": [
+        "DEV_RESEARCH_V2_V3_SPAN"
+      ],
+      "excluded_interval_ids": [
+        "SEPTEMBER_H3_OOS",
+        "CONSUMED_FAILED_HOLDOUT",
+        "H3_CLOSED_HISTORICAL_HOLDOUT"
+      ],
+      "parameter_source": "component_library_economic_prior_not_post_result",
+      "economic_rationale": "Enter after liquidity sweep and reclaim of prior structure.",
+      "preregistration_timestamp": "2026-08-03T09:17:21Z",
+      "strategy_checksum": "3b4540ac664d4a04d69a2e9a9f22f6aa08094265e6bf7f7b2ec3ff9ab8cf9f28",
+      "semantic_checksum": "ce2fc02b184f4c15c2e159bead7d11b845b43d847d647da684e1bb72fcbd6d36",
+      "AI_provider_identities": {
+        "proposal": "GROQ_MAIN_REASONER",
+        "normalize": "CEREBRAS_RESEARCH_NORMALIZER",
+        "critic": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "reflection": "GROQ_REFLECTION_REASONER"
+      },
+      "prompt_schema_versions": {
+        "hypothesis_propose_v1": "hypothesis_propose_v1",
+        "lesson_normalize_v1": "lesson_normalize_v1",
+        "critic_v1": "critic_v1",
+        "reflection_v1": "reflection_v1"
+      },
+      "development_window": {
+        "start_ms": 1739007000000,
+        "end_ms": 1785663000000
+      },
+      "forbidden_windows": {
+        "september_oos": [
+          1785663000001,
+          1789551000000
+        ]
+      },
+      "parameter_values": {
+        "stop_definition": "sweep_extreme",
+        "target_definition": "1.6_r"
+      }
+    }
+  ],
+  "component_registry_ref": "strategy_component_registry_v1",
+  "formal_walk_forward_forbidden_in_this_task": true,
+  "oos_creation_forbidden": true,
+  "demo_forbidden": true,
+  "sealed_at": "2026-08-03T09:17:21Z",
+  "source_commit": "f84acc38558e43fa947ad419b2ebd0a1d7134006",
+  "research_symbols_for_dev": [
+    "0GUSDT",
+    "10000SATSUSDT",
+    "1000PEPEUSDT",
+    "1000RATSUSDT",
+    "1000XECUSDT",
+    "ACEUSDT",
+    "ADAUSDT",
+    "BTCUSDT",
+    "DOGEUSDT",
+    "ETHUSDT",
+    "HYPEUSDT",
+    "SOLUSDT",
+    "SOXLUSDT",
+    "XAUUSDT",
+    "XRPUSDT",
+    "ZECUSDT"
+  ]
+}

@@ -31,6 +31,8 @@ LESSON_STATUSES = frozenset(
         "RISK_REVIEWED",
         "REJECTED",
         "REVOKED",
+        "INTEGRATION_PROOF_ONLY",
+        "PROPOSED_INSUFFICIENT_SOURCE_EVIDENCE",
     }
 )
 

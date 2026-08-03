@@ -1,0 +1,29 @@
+{
+  "schema": "research_vs_demo_eligibility_v1",
+  "fleet_architecture": false,
+  "one_dynamic_universe": true,
+  "historical_research_eligible_may_include_small_meme": true,
+  "future_demo_execution_eligible_stricter": true,
+  "demo_gates_not_weakened_for_research_count": true,
+  "research_basis": [
+    "listing_age",
+    "candle_coverage",
+    "volume",
+    "turnover",
+    "spread_history",
+    "estimated_slippage",
+    "instrument_validity",
+    "chronology",
+    "data_completeness",
+    "capability_requirements"
+  ],
+  "demo_extra_basis": [
+    "current_liquidity",
+    "current_spread",
+    "current_slippage",
+    "current_open_interest",
+    "current_instrument_status",
+    "current_execution_quality_proof"
+  ],
+  "eligibility_not_based_on_backtest_results": true
+}

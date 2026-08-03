@@ -4,8 +4,8 @@
   "alternate_entrypoint": "app.app",
   "route_import_discrepancy_classification": "SCANNER_USED_WRONG_APP_ENTRYPOINT",
   "wrong_entrypoint_note": "backend.api.server has no app attribute; do not import app from it",
-  "route_count": 238,
-  "route_count_core": 237,
+  "route_count": 239,
+  "route_count_core": 238,
   "optional_routes": [
     "/ws/nexus"
   ],
@@ -168,6 +168,7 @@
     "/api/nexus/replay/sessions/<session_id>",
     "/api/nexus/replay/status",
     "/api/nexus/research-gate",
+    "/api/nexus/research/observability",
     "/api/nexus/revenue-plan",
     "/api/nexus/review-cases",
     "/api/nexus/review-cases/<case_id>",
@@ -408,6 +409,7 @@
     "/api/nexus/replay/sessions/<session_id>",
     "/api/nexus/replay/status",
     "/api/nexus/research-gate",
+    "/api/nexus/research/observability",
     "/api/nexus/revenue-plan",
     "/api/nexus/review-cases",
     "/api/nexus/review-cases/<case_id>",

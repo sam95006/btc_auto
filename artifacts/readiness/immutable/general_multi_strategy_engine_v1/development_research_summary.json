@@ -1,0 +1,1571 @@
+{
+  "schema": "development_research_summary_v1",
+  "mode": "DEVELOPMENT_RESEARCH_MODE",
+  "updated_at": "2026-08-03T09:17:26Z",
+  "source_commit": "f84acc38558e43fa947ad419b2ebd0a1d7134006",
+  "strategy_spec_schema_version": "NEXUS_STRATEGY_SPEC_V1",
+  "registered_component_count": 16,
+  "generated_hypothesis_count": 12,
+  "preregistered_hypothesis_count": 12,
+  "executed_hypothesis_count": 12,
+  "strategy_family_count": 9,
+  "status_counts": {
+    "DISCOVERY_NO_GROSS_EDGE": 8,
+    "DISCOVERY_INSUFFICIENT_SAMPLE": 3,
+    "DISCOVERY_FOLD_CONCENTRATED": 1
+  },
+  "hypotheses": [
+    {
+      "hypothesis_id": "DEV_H01_TREND_CONTINUATION",
+      "strategy_family": "TREND",
+      "economic_mechanism": "trend_pullback_continuation",
+      "strategy_checksum": "c69098c934b6f897c415251d29f5ac0ea5e15333a752216f0fa15a319bc492d6",
+      "semantic_checksum": "540868050d230b320e4bf25a3adbd38091c98a6b7687d71a31d1bf4e3ee07eda",
+      "eligible_symbol_count": 16,
+      "candidate_count": 109,
+      "cost_gate_pass_count": 109,
+      "entry_count": 63,
+      "completed_trade_count": 63,
+      "gross_pnl": -21.34728057,
+      "net_pnl": -42.7830379,
+      "gross_expectancy": -0.3388457233333333,
+      "net_expectancy": -0.6790958396825396,
+      "profit_factor": 0.69468,
+      "adverse_profit_factor": 0.69468,
+      "win_rate": 0.3333333333333333,
+      "maximum_drawdown": -55.68710205,
+      "maximum_consecutive_losses": null,
+      "development_fold_count": 4,
+      "positive_development_fold_count": 1,
+      "largest_fold_profit_contribution": 1.0,
+      "largest_symbol_profit_contribution": 0.32748714053840167,
+      "largest_regime_profit_contribution": 0.5577951546120428,
+      "fees": 10.18711761,
+      "slippage": 5.555266826540027,
+      "funding": 0.13810602,
+      "lookahead_violation_count": 0,
+      "risk_limit_breach_count": 0,
+      "invalid_position_size_count": 0,
+      "liquidation_policy_breach_count": 0,
+      "evidence_v2_complete_count": 63,
+      "process_compliant_count": 0,
+      "process_noncompliant_count": 63,
+      "process_evidence_insufficient_count": 0,
+      "execution_constraints": {
+        "margin_mode": "ISOLATED",
+        "leverage": 25,
+        "position_margin_usdt": 20.0,
+        "max_loss_risk_per_trade": 3.0,
+        "taker_fee_rate": 0.00055
+      },
+      "formal_walk_forward_executed": false,
+      "oos_reservation_created": false,
+      "oos_executed": false,
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "mode": "DEVELOPMENT_RESEARCH_MODE",
+      "cost_to_gross_profit_ratio": null,
+      "development_status": "DISCOVERY_NO_GROSS_EDGE",
+      "evidence_sample": [
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_0GUSDT_1780084800000_0",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_0GUSDT_1781812800000_1",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_10000SATSUSDT_1782766800000_2",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_10000SATSUSDT_1785052800000_3",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_1000PEPEUSDT_1782100800000_4",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_1000PEPEUSDT_1784512800000_5",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_1000PEPEUSDT_1785142800000_6",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_1000RATSUSDT_1781920800000_7",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_1000XECUSDT_1782694800000_8",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_1000XECUSDT_1782838800000_9",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_ACEUSDT_1784296800000_10",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_ACEUSDT_1785520800000_11",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_ADAUSDT_1739151900000_12",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_ADAUSDT_1739565900000_13",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_ADAUSDT_1741707900000_14",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_ADAUSDT_1755063900000_15",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_ADAUSDT_1782099900000_16",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_BTCUSDT_1741707900000_17",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_DOGEUSDT_1739565900000_18",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H01_TREND_CONTINUATION_DOGEUSDT_1741707900000_19",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        }
+      ]
+    },
+    {
+      "hypothesis_id": "DEV_H02_STRUCTURAL_RETEST",
+      "strategy_family": "STRUCTURE",
+      "economic_mechanism": "broken_level_retest",
+      "strategy_checksum": "413837e525bad7bf60155a5cbc82c0e5b9ceffb03537ce1731872721d3c89a94",
+      "semantic_checksum": "5752c10ffff1d00d6bbb97ea3a49c2e6a2ae3a8f20fe0a29a1002a2458148d96",
+      "eligible_symbol_count": 16,
+      "candidate_count": 919,
+      "cost_gate_pass_count": 919,
+      "entry_count": 846,
+      "completed_trade_count": 846,
+      "gross_pnl": -177.30468294,
+      "net_pnl": -917.01914643,
+      "gross_expectancy": -0.2095800034751773,
+      "net_expectancy": -1.0839469815957448,
+      "profit_factor": 0.609718,
+      "adverse_profit_factor": 0.609718,
+      "win_rate": 0.26122931442080377,
+      "maximum_drawdown": -943.00083314,
+      "maximum_consecutive_losses": null,
+      "development_fold_count": 4,
+      "positive_development_fold_count": 0,
+      "largest_fold_profit_contribution": 0.0,
+      "largest_symbol_profit_contribution": 0.1721429598482149,
+      "largest_regime_profit_contribution": 0.5386060900622748,
+      "fees": 352.08811898,
+      "slippage": 192.09292077962945,
+      "funding": 3.4405029,
+      "lookahead_violation_count": 0,
+      "risk_limit_breach_count": 0,
+      "invalid_position_size_count": 0,
+      "liquidation_policy_breach_count": 0,
+      "evidence_v2_complete_count": 80,
+      "process_compliant_count": 0,
+      "process_noncompliant_count": 80,
+      "process_evidence_insufficient_count": 0,
+      "execution_constraints": {
+        "margin_mode": "ISOLATED",
+        "leverage": 25,
+        "position_margin_usdt": 20.0,
+        "max_loss_risk_per_trade": 3.0,
+        "taker_fee_rate": 0.00055
+      },
+      "formal_walk_forward_executed": false,
+      "oos_reservation_created": false,
+      "oos_executed": false,
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "mode": "DEVELOPMENT_RESEARCH_MODE",
+      "cost_to_gross_profit_ratio": null,
+      "development_status": "DISCOVERY_NO_GROSS_EDGE",
+      "evidence_sample": [
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_0GUSDT_1779544800000_0",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_0GUSDT_1779814800000_1",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_0GUSDT_1780246800000_2",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_0GUSDT_1780660800000_3",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_0GUSDT_1781308800000_4",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_0GUSDT_1781506800000_5",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_0GUSDT_1782352800000_6",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_0GUSDT_1782568800000_7",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_0GUSDT_1783306800000_8",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_0GUSDT_1784206800000_9",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_0GUSDT_1785160800000_10",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_10000SATSUSDT_1778914800000_11",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_10000SATSUSDT_1780246800000_12",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_10000SATSUSDT_1780696800000_13",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_10000SATSUSDT_1780984800000_14",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_10000SATSUSDT_1781704800000_15",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_10000SATSUSDT_1781830800000_16",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_10000SATSUSDT_1783306800000_17",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_10000SATSUSDT_1783828800000_18",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H02_STRUCTURAL_RETEST_10000SATSUSDT_1784152800000_19",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        }
+      ]
+    },
+    {
+      "hypothesis_id": "DEV_H03_BREAKOUT",
+      "strategy_family": "BREAKOUT",
+      "economic_mechanism": "range_break_with_volume",
+      "strategy_checksum": "ff10f722b1eacf790bac224f6c76fb315934f59f52614eb383e4432072610a91",
+      "semantic_checksum": "d003acb065d10cf95c4be5f3e826eb6bf2b82d8f802d71748c4fd55e9c7e38a0",
+      "eligible_symbol_count": 16,
+      "candidate_count": 0,
+      "cost_gate_pass_count": 0,
+      "entry_count": 0,
+      "completed_trade_count": 0,
+      "gross_pnl": null,
+      "net_pnl": null,
+      "gross_expectancy": null,
+      "net_expectancy": null,
+      "profit_factor": null,
+      "adverse_profit_factor": null,
+      "win_rate": null,
+      "maximum_drawdown": null,
+      "maximum_consecutive_losses": null,
+      "development_fold_count": 4,
+      "positive_development_fold_count": 0,
+      "largest_fold_profit_contribution": 0.0,
+      "largest_symbol_profit_contribution": 0.0,
+      "largest_regime_profit_contribution": 0.0,
+      "fees": 0,
+      "slippage": 0,
+      "funding": 0,
+      "lookahead_violation_count": 0,
+      "risk_limit_breach_count": 0,
+      "invalid_position_size_count": 0,
+      "liquidation_policy_breach_count": 0,
+      "evidence_v2_complete_count": 0,
+      "process_compliant_count": 0,
+      "process_noncompliant_count": 0,
+      "process_evidence_insufficient_count": 0,
+      "execution_constraints": {
+        "margin_mode": "ISOLATED",
+        "leverage": 25,
+        "position_margin_usdt": 20.0,
+        "max_loss_risk_per_trade": 3.0,
+        "taker_fee_rate": 0.00055
+      },
+      "formal_walk_forward_executed": false,
+      "oos_reservation_created": false,
+      "oos_executed": false,
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "mode": "DEVELOPMENT_RESEARCH_MODE",
+      "cost_to_gross_profit_ratio": null,
+      "development_status": "DISCOVERY_INSUFFICIENT_SAMPLE",
+      "evidence_sample": []
+    },
+    {
+      "hypothesis_id": "DEV_H04_FAILED_BREAKOUT",
+      "strategy_family": "BREAKOUT",
+      "economic_mechanism": "failed_break_reclaim",
+      "strategy_checksum": "883bdeff6a400e16b7e1639d4581907d4e3f2fd51eeee79fe426a3b88937d095",
+      "semantic_checksum": "774c5ee5eb6a0eaa88716d25e9e8dc779c148f2f31c0608a8c1d032c6881f03d",
+      "eligible_symbol_count": 16,
+      "candidate_count": 0,
+      "cost_gate_pass_count": 0,
+      "entry_count": 0,
+      "completed_trade_count": 0,
+      "gross_pnl": null,
+      "net_pnl": null,
+      "gross_expectancy": null,
+      "net_expectancy": null,
+      "profit_factor": null,
+      "adverse_profit_factor": null,
+      "win_rate": null,
+      "maximum_drawdown": null,
+      "maximum_consecutive_losses": null,
+      "development_fold_count": 4,
+      "positive_development_fold_count": 0,
+      "largest_fold_profit_contribution": 0.0,
+      "largest_symbol_profit_contribution": 0.0,
+      "largest_regime_profit_contribution": 0.0,
+      "fees": 0,
+      "slippage": 0,
+      "funding": 0,
+      "lookahead_violation_count": 0,
+      "risk_limit_breach_count": 0,
+      "invalid_position_size_count": 0,
+      "liquidation_policy_breach_count": 0,
+      "evidence_v2_complete_count": 0,
+      "process_compliant_count": 0,
+      "process_noncompliant_count": 0,
+      "process_evidence_insufficient_count": 0,
+      "execution_constraints": {
+        "margin_mode": "ISOLATED",
+        "leverage": 25,
+        "position_margin_usdt": 20.0,
+        "max_loss_risk_per_trade": 3.0,
+        "taker_fee_rate": 0.00055
+      },
+      "formal_walk_forward_executed": false,
+      "oos_reservation_created": false,
+      "oos_executed": false,
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "mode": "DEVELOPMENT_RESEARCH_MODE",
+      "cost_to_gross_profit_ratio": null,
+      "development_status": "DISCOVERY_INSUFFICIENT_SAMPLE",
+      "evidence_sample": []
+    },
+    {
+      "hypothesis_id": "DEV_H05_MOMENTUM_ACCEL",
+      "strategy_family": "MOMENTUM",
+      "economic_mechanism": "atr_acceleration_thrust",
+      "strategy_checksum": "0134d7346863d9fff0969a1389eca741f3880c179a98311282ecd14a17fa0a1f",
+      "semantic_checksum": "041462ade93e3fd6e4c6847ff347f7c3cb56fce121bbea499cf50a5de7f79422",
+      "eligible_symbol_count": 16,
+      "candidate_count": 109,
+      "cost_gate_pass_count": 109,
+      "entry_count": 63,
+      "completed_trade_count": 63,
+      "gross_pnl": -21.34728057,
+      "net_pnl": -42.7830379,
+      "gross_expectancy": -0.3388457233333333,
+      "net_expectancy": -0.6790958396825396,
+      "profit_factor": 0.69468,
+      "adverse_profit_factor": 0.69468,
+      "win_rate": 0.3333333333333333,
+      "maximum_drawdown": -55.68710205,
+      "maximum_consecutive_losses": null,
+      "development_fold_count": 4,
+      "positive_development_fold_count": 1,
+      "largest_fold_profit_contribution": 1.0,
+      "largest_symbol_profit_contribution": 0.32748714053840167,
+      "largest_regime_profit_contribution": 0.5577951546120428,
+      "fees": 10.18711761,
+      "slippage": 5.555266826540027,
+      "funding": 0.13810602,
+      "lookahead_violation_count": 0,
+      "risk_limit_breach_count": 0,
+      "invalid_position_size_count": 0,
+      "liquidation_policy_breach_count": 0,
+      "evidence_v2_complete_count": 63,
+      "process_compliant_count": 0,
+      "process_noncompliant_count": 63,
+      "process_evidence_insufficient_count": 0,
+      "execution_constraints": {
+        "margin_mode": "ISOLATED",
+        "leverage": 25,
+        "position_margin_usdt": 20.0,
+        "max_loss_risk_per_trade": 3.0,
+        "taker_fee_rate": 0.00055
+      },
+      "formal_walk_forward_executed": false,
+      "oos_reservation_created": false,
+      "oos_executed": false,
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "mode": "DEVELOPMENT_RESEARCH_MODE",
+      "cost_to_gross_profit_ratio": null,
+      "development_status": "DISCOVERY_NO_GROSS_EDGE",
+      "evidence_sample": [
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_0GUSDT_1780084800000_0",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_0GUSDT_1781812800000_1",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_10000SATSUSDT_1782766800000_2",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_10000SATSUSDT_1785052800000_3",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_1000PEPEUSDT_1782100800000_4",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_1000PEPEUSDT_1784512800000_5",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_1000PEPEUSDT_1785142800000_6",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_1000RATSUSDT_1781920800000_7",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_1000XECUSDT_1782694800000_8",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_1000XECUSDT_1782838800000_9",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_ACEUSDT_1784296800000_10",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_ACEUSDT_1785520800000_11",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_ADAUSDT_1739151900000_12",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_ADAUSDT_1739565900000_13",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_ADAUSDT_1741707900000_14",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_ADAUSDT_1755063900000_15",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_ADAUSDT_1782099900000_16",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_BTCUSDT_1741707900000_17",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_DOGEUSDT_1739565900000_18",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H05_MOMENTUM_ACCEL_DOGEUSDT_1741707900000_19",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        }
+      ]
+    },
+    {
+      "hypothesis_id": "DEV_H06_VOL_EXPANSION",
+      "strategy_family": "VOLATILITY",
+      "economic_mechanism": "atr_percentile_expansion",
+      "strategy_checksum": "6b49125eaeb29f408ee9952fc9dd795d09bf3b8b2ad0cee2ff36c94b13775200",
+      "semantic_checksum": "4bef113ff32d674e13390e65cc7db23e199ce0e1817bcb83b08828d6d6aa1ee5",
+      "eligible_symbol_count": 16,
+      "candidate_count": 0,
+      "cost_gate_pass_count": 0,
+      "entry_count": 0,
+      "completed_trade_count": 0,
+      "gross_pnl": null,
+      "net_pnl": null,
+      "gross_expectancy": null,
+      "net_expectancy": null,
+      "profit_factor": null,
+      "adverse_profit_factor": null,
+      "win_rate": null,
+      "maximum_drawdown": null,
+      "maximum_consecutive_losses": null,
+      "development_fold_count": 4,
+      "positive_development_fold_count": 0,
+      "largest_fold_profit_contribution": 0.0,
+      "largest_symbol_profit_contribution": 0.0,
+      "largest_regime_profit_contribution": 0.0,
+      "fees": 0,
+      "slippage": 0,
+      "funding": 0,
+      "lookahead_violation_count": 0,
+      "risk_limit_breach_count": 0,
+      "invalid_position_size_count": 0,
+      "liquidation_policy_breach_count": 0,
+      "evidence_v2_complete_count": 0,
+      "process_compliant_count": 0,
+      "process_noncompliant_count": 0,
+      "process_evidence_insufficient_count": 0,
+      "execution_constraints": {
+        "margin_mode": "ISOLATED",
+        "leverage": 25,
+        "position_margin_usdt": 20.0,
+        "max_loss_risk_per_trade": 3.0,
+        "taker_fee_rate": 0.00055
+      },
+      "formal_walk_forward_executed": false,
+      "oos_reservation_created": false,
+      "oos_executed": false,
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "mode": "DEVELOPMENT_RESEARCH_MODE",
+      "cost_to_gross_profit_ratio": null,
+      "development_status": "DISCOVERY_INSUFFICIENT_SAMPLE",
+      "evidence_sample": []
+    },
+    {
+      "hypothesis_id": "DEV_H07_VWAP_MR",
+      "strategy_family": "MEAN_REVERSION",
+      "economic_mechanism": "vwap_deviation_revert",
+      "strategy_checksum": "b16a2029d6bc635c3eb36a969a9e072f39e43cbd7e52d97f750583e9c2af8826",
+      "semantic_checksum": "310c24682c69777883bb0cbfd910fa9c0c1496e6155a8b114ab34e136892a1ef",
+      "eligible_symbol_count": 16,
+      "candidate_count": 1105,
+      "cost_gate_pass_count": 1105,
+      "entry_count": 1038,
+      "completed_trade_count": 1038,
+      "gross_pnl": -157.48832057,
+      "net_pnl": -1059.15874489,
+      "gross_expectancy": -0.1517228521868979,
+      "net_expectancy": -1.020384147292871,
+      "profit_factor": 0.637054,
+      "adverse_profit_factor": 0.637054,
+      "win_rate": 0.23795761078998073,
+      "maximum_drawdown": -1089.00736821,
+      "maximum_consecutive_losses": null,
+      "development_fold_count": 4,
+      "positive_development_fold_count": 0,
+      "largest_fold_profit_contribution": 0.0,
+      "largest_symbol_profit_contribution": 0.13975638546509067,
+      "largest_regime_profit_contribution": 1.0,
+      "fees": 448.93313638,
+      "slippage": 244.98460915075034,
+      "funding": 3.59883793,
+      "lookahead_violation_count": 0,
+      "risk_limit_breach_count": 0,
+      "invalid_position_size_count": 0,
+      "liquidation_policy_breach_count": 0,
+      "evidence_v2_complete_count": 80,
+      "process_compliant_count": 0,
+      "process_noncompliant_count": 80,
+      "process_evidence_insufficient_count": 0,
+      "execution_constraints": {
+        "margin_mode": "ISOLATED",
+        "leverage": 25,
+        "position_margin_usdt": 20.0,
+        "max_loss_risk_per_trade": 3.0,
+        "taker_fee_rate": 0.00055
+      },
+      "formal_walk_forward_executed": false,
+      "oos_reservation_created": false,
+      "oos_executed": false,
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "mode": "DEVELOPMENT_RESEARCH_MODE",
+      "cost_to_gross_profit_ratio": null,
+      "development_status": "DISCOVERY_NO_GROSS_EDGE",
+      "evidence_sample": [
+        {
+          "trade_id": "DEV_H07_VWAP_MR_0GUSDT_1780066800000_0",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_0GUSDT_1780516800000_1",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_0GUSDT_1780822800000_2",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_0GUSDT_1781344800000_3",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_0GUSDT_1781632800000_4",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_0GUSDT_1782586800000_5",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_0GUSDT_1783450800000_6",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_0GUSDT_1783864800000_7",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_0GUSDT_1784296800000_8",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_0GUSDT_1784422800000_9",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_0GUSDT_1784458800000_10",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_0GUSDT_1784512800000_11",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_0GUSDT_1784548800000_12",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_10000SATSUSDT_1778896800000_13",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_10000SATSUSDT_1779418800000_14",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_10000SATSUSDT_1779454800000_15",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_10000SATSUSDT_1779832800000_16",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_10000SATSUSDT_1780264800000_17",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_10000SATSUSDT_1780354800000_18",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H07_VWAP_MR_10000SATSUSDT_1780498800000_19",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        }
+      ]
+    },
+    {
+      "hypothesis_id": "DEV_H08_STRUCT_MR",
+      "strategy_family": "MEAN_REVERSION",
+      "economic_mechanism": "range_extreme_revert",
+      "strategy_checksum": "866492029f5044282782a8ecfae4a4aea63d9e11d6127969cc846051f2acb07c",
+      "semantic_checksum": "028327a8cadb6b322dbd3fac6b1b8715f743f6e94c91cd5f400b6e88dcfd2978",
+      "eligible_symbol_count": 16,
+      "candidate_count": 1104,
+      "cost_gate_pass_count": 1104,
+      "entry_count": 1037,
+      "completed_trade_count": 1037,
+      "gross_pnl": -156.71429553,
+      "net_pnl": -1098.22376153,
+      "gross_expectancy": -0.1511227536451302,
+      "net_expectancy": -1.0590393071648987,
+      "profit_factor": 0.627471,
+      "adverse_profit_factor": 0.627471,
+      "win_rate": 0.2381870781099325,
+      "maximum_drawdown": -1127.66846757,
+      "maximum_consecutive_losses": null,
+      "development_fold_count": 4,
+      "positive_development_fold_count": 0,
+      "largest_fold_profit_contribution": 0.0,
+      "largest_symbol_profit_contribution": 0.13985677499691945,
+      "largest_regime_profit_contribution": 1.0,
+      "fees": 448.45929567,
+      "slippage": 244.72589097292635,
+      "funding": 3.59838877,
+      "lookahead_violation_count": 0,
+      "risk_limit_breach_count": 0,
+      "invalid_position_size_count": 0,
+      "liquidation_policy_breach_count": 0,
+      "evidence_v2_complete_count": 80,
+      "process_compliant_count": 0,
+      "process_noncompliant_count": 80,
+      "process_evidence_insufficient_count": 0,
+      "execution_constraints": {
+        "margin_mode": "ISOLATED",
+        "leverage": 25,
+        "position_margin_usdt": 20.0,
+        "max_loss_risk_per_trade": 3.0,
+        "taker_fee_rate": 0.00055
+      },
+      "formal_walk_forward_executed": false,
+      "oos_reservation_created": false,
+      "oos_executed": false,
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "mode": "DEVELOPMENT_RESEARCH_MODE",
+      "cost_to_gross_profit_ratio": null,
+      "development_status": "DISCOVERY_NO_GROSS_EDGE",
+      "evidence_sample": [
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_0GUSDT_1780066800000_0",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_0GUSDT_1780516800000_1",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_0GUSDT_1780822800000_2",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_0GUSDT_1781344800000_3",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_0GUSDT_1781632800000_4",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_0GUSDT_1782586800000_5",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_0GUSDT_1783450800000_6",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_0GUSDT_1783864800000_7",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_0GUSDT_1784296800000_8",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_0GUSDT_1784422800000_9",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_0GUSDT_1784458800000_10",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_0GUSDT_1784512800000_11",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_0GUSDT_1784548800000_12",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_10000SATSUSDT_1778896800000_13",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_10000SATSUSDT_1779418800000_14",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_10000SATSUSDT_1779454800000_15",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_10000SATSUSDT_1779832800000_16",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_10000SATSUSDT_1780264800000_17",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_10000SATSUSDT_1780354800000_18",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H08_STRUCT_MR_10000SATSUSDT_1780498800000_19",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        }
+      ]
+    },
+    {
+      "hypothesis_id": "DEV_H09_REL_STRENGTH",
+      "strategy_family": "CROSS_SECTIONAL",
+      "economic_mechanism": "vs_btc_relative_strength",
+      "strategy_checksum": "e0128ed36e197b379599a00e27e69a1351aa6fe770a59a21b33cb76ae68962b8",
+      "semantic_checksum": "403fe519f3c4a6f0ea6ef06378727a90a0c2b647162e695fc8202cecfcbc94f0",
+      "eligible_symbol_count": 16,
+      "candidate_count": 109,
+      "cost_gate_pass_count": 109,
+      "entry_count": 63,
+      "completed_trade_count": 63,
+      "gross_pnl": -21.34728057,
+      "net_pnl": -42.7830379,
+      "gross_expectancy": -0.3388457233333333,
+      "net_expectancy": -0.6790958396825396,
+      "profit_factor": 0.69468,
+      "adverse_profit_factor": 0.69468,
+      "win_rate": 0.3333333333333333,
+      "maximum_drawdown": -55.68710205,
+      "maximum_consecutive_losses": null,
+      "development_fold_count": 4,
+      "positive_development_fold_count": 1,
+      "largest_fold_profit_contribution": 1.0,
+      "largest_symbol_profit_contribution": 0.32748714053840167,
+      "largest_regime_profit_contribution": 0.5577951546120428,
+      "fees": 10.18711761,
+      "slippage": 5.555266826540027,
+      "funding": 0.13810602,
+      "lookahead_violation_count": 0,
+      "risk_limit_breach_count": 0,
+      "invalid_position_size_count": 0,
+      "liquidation_policy_breach_count": 0,
+      "evidence_v2_complete_count": 63,
+      "process_compliant_count": 0,
+      "process_noncompliant_count": 63,
+      "process_evidence_insufficient_count": 0,
+      "execution_constraints": {
+        "margin_mode": "ISOLATED",
+        "leverage": 25,
+        "position_margin_usdt": 20.0,
+        "max_loss_risk_per_trade": 3.0,
+        "taker_fee_rate": 0.00055
+      },
+      "formal_walk_forward_executed": false,
+      "oos_reservation_created": false,
+      "oos_executed": false,
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "mode": "DEVELOPMENT_RESEARCH_MODE",
+      "cost_to_gross_profit_ratio": null,
+      "development_status": "DISCOVERY_NO_GROSS_EDGE",
+      "evidence_sample": [
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_0GUSDT_1780084800000_0",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_0GUSDT_1781812800000_1",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_10000SATSUSDT_1782766800000_2",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_10000SATSUSDT_1785052800000_3",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_1000PEPEUSDT_1782100800000_4",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_1000PEPEUSDT_1784512800000_5",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_1000PEPEUSDT_1785142800000_6",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_1000RATSUSDT_1781920800000_7",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_1000XECUSDT_1782694800000_8",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_1000XECUSDT_1782838800000_9",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_ACEUSDT_1784296800000_10",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_ACEUSDT_1785520800000_11",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_ADAUSDT_1739151900000_12",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_ADAUSDT_1739565900000_13",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_ADAUSDT_1741707900000_14",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_ADAUSDT_1755063900000_15",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_ADAUSDT_1782099900000_16",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_BTCUSDT_1741707900000_17",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_DOGEUSDT_1739565900000_18",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H09_REL_STRENGTH_DOGEUSDT_1741707900000_19",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        }
+      ]
+    },
+    {
+      "hypothesis_id": "DEV_H10_XS_MOMENTUM",
+      "strategy_family": "CROSS_SECTIONAL",
+      "economic_mechanism": "cross_sectional_rank_momentum",
+      "strategy_checksum": "09656fe9f59f75a46bbd1500a331a9eb9516a46d0fe786dc1ca9556251163707",
+      "semantic_checksum": "29944cf3c26ccc16c486a6eb685dd957df1fec4bbc776b139ba688d73d3bf387",
+      "eligible_symbol_count": 16,
+      "candidate_count": 109,
+      "cost_gate_pass_count": 109,
+      "entry_count": 63,
+      "completed_trade_count": 63,
+      "gross_pnl": -21.34728057,
+      "net_pnl": -42.7830379,
+      "gross_expectancy": -0.3388457233333333,
+      "net_expectancy": -0.6790958396825396,
+      "profit_factor": 0.69468,
+      "adverse_profit_factor": 0.69468,
+      "win_rate": 0.3333333333333333,
+      "maximum_drawdown": -55.68710205,
+      "maximum_consecutive_losses": null,
+      "development_fold_count": 4,
+      "positive_development_fold_count": 1,
+      "largest_fold_profit_contribution": 1.0,
+      "largest_symbol_profit_contribution": 0.32748714053840167,
+      "largest_regime_profit_contribution": 0.5577951546120428,
+      "fees": 10.18711761,
+      "slippage": 5.555266826540027,
+      "funding": 0.13810602,
+      "lookahead_violation_count": 0,
+      "risk_limit_breach_count": 0,
+      "invalid_position_size_count": 0,
+      "liquidation_policy_breach_count": 0,
+      "evidence_v2_complete_count": 63,
+      "process_compliant_count": 0,
+      "process_noncompliant_count": 63,
+      "process_evidence_insufficient_count": 0,
+      "execution_constraints": {
+        "margin_mode": "ISOLATED",
+        "leverage": 25,
+        "position_margin_usdt": 20.0,
+        "max_loss_risk_per_trade": 3.0,
+        "taker_fee_rate": 0.00055
+      },
+      "formal_walk_forward_executed": false,
+      "oos_reservation_created": false,
+      "oos_executed": false,
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "mode": "DEVELOPMENT_RESEARCH_MODE",
+      "cost_to_gross_profit_ratio": null,
+      "development_status": "DISCOVERY_NO_GROSS_EDGE",
+      "evidence_sample": [
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_0GUSDT_1780084800000_0",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_0GUSDT_1781812800000_1",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_10000SATSUSDT_1782766800000_2",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_10000SATSUSDT_1785052800000_3",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_1000PEPEUSDT_1782100800000_4",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_1000PEPEUSDT_1784512800000_5",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_1000PEPEUSDT_1785142800000_6",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_1000RATSUSDT_1781920800000_7",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_1000XECUSDT_1782694800000_8",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_1000XECUSDT_1782838800000_9",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_ACEUSDT_1784296800000_10",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_ACEUSDT_1785520800000_11",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_ADAUSDT_1739151900000_12",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_ADAUSDT_1739565900000_13",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_ADAUSDT_1741707900000_14",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_ADAUSDT_1755063900000_15",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_ADAUSDT_1782099900000_16",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_BTCUSDT_1741707900000_17",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_DOGEUSDT_1739565900000_18",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H10_XS_MOMENTUM_DOGEUSDT_1741707900000_19",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        }
+      ]
+    },
+    {
+      "hypothesis_id": "DEV_H11_FUNDING_OI_CONT",
+      "strategy_family": "DERIVATIVES",
+      "economic_mechanism": "funding_oi_aligned_continuation",
+      "strategy_checksum": "5f458acf71caf33677384684e56d44e9ac183127fc55ba97a50181f0f436aa75",
+      "semantic_checksum": "4cd2d26b5e7c16d98c28e99d88c2efa52d26c47b5522ee8fe5ca132b041d230a",
+      "eligible_symbol_count": 16,
+      "candidate_count": 154,
+      "cost_gate_pass_count": 154,
+      "entry_count": 99,
+      "completed_trade_count": 99,
+      "gross_pnl": 16.71424149,
+      "net_pnl": -21.70558846,
+      "gross_expectancy": 0.1688307221212121,
+      "net_expectancy": -0.2192483682828283,
+      "profit_factor": 0.895109,
+      "adverse_profit_factor": 0.895109,
+      "win_rate": 0.3838383838383838,
+      "maximum_drawdown": -69.5006952,
+      "maximum_consecutive_losses": null,
+      "development_fold_count": 4,
+      "positive_development_fold_count": 2,
+      "largest_fold_profit_contribution": 0.9459183331955939,
+      "largest_symbol_profit_contribution": 0.22800980485479674,
+      "largest_regime_profit_contribution": 0.5171549137063545,
+      "fees": 18.2531774,
+      "slippage": 9.957562223337167,
+      "funding": 0.25152808,
+      "lookahead_violation_count": 0,
+      "risk_limit_breach_count": 0,
+      "invalid_position_size_count": 0,
+      "liquidation_policy_breach_count": 0,
+      "evidence_v2_complete_count": 80,
+      "process_compliant_count": 0,
+      "process_noncompliant_count": 80,
+      "process_evidence_insufficient_count": 0,
+      "execution_constraints": {
+        "margin_mode": "ISOLATED",
+        "leverage": 25,
+        "position_margin_usdt": 20.0,
+        "max_loss_risk_per_trade": 3.0,
+        "taker_fee_rate": 0.00055
+      },
+      "formal_walk_forward_executed": false,
+      "oos_reservation_created": false,
+      "oos_executed": false,
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "mode": "DEVELOPMENT_RESEARCH_MODE",
+      "cost_to_gross_profit_ratio": 1.7028752229268627,
+      "development_status": "DISCOVERY_FOLD_CONCENTRATED",
+      "evidence_sample": [
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_0GUSDT_1780084800000_0",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_0GUSDT_1780678800000_1",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_0GUSDT_1781812800000_2",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_0GUSDT_1784782800000_3",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_10000SATSUSDT_1780678800000_4",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_10000SATSUSDT_1782766800000_5",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_10000SATSUSDT_1785052800000_6",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_1000PEPEUSDT_1782100800000_7",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_1000PEPEUSDT_1784512800000_8",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_1000PEPEUSDT_1785142800000_9",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_1000RATSUSDT_1779832800000_10",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_1000RATSUSDT_1781920800000_11",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_1000XECUSDT_1782694800000_12",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_1000XECUSDT_1782838800000_13",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_ACEUSDT_1780516800000_14",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_ACEUSDT_1781488800000_15",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_ACEUSDT_1781812800000_16",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_ACEUSDT_1784296800000_17",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_ACEUSDT_1785520800000_18",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H11_FUNDING_OI_CONT_ADAUSDT_1739151900000_19",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        }
+      ]
+    },
+    {
+      "hypothesis_id": "DEV_H12_LIQ_SWEEP",
+      "strategy_family": "REVERSAL",
+      "economic_mechanism": "liquidity_sweep_reclaim",
+      "strategy_checksum": "3b4540ac664d4a04d69a2e9a9f22f6aa08094265e6bf7f7b2ec3ff9ab8cf9f28",
+      "semantic_checksum": "ce2fc02b184f4c15c2e159bead7d11b845b43d847d647da684e1bb72fcbd6d36",
+      "eligible_symbol_count": 16,
+      "candidate_count": 1104,
+      "cost_gate_pass_count": 1104,
+      "entry_count": 1037,
+      "completed_trade_count": 1037,
+      "gross_pnl": -156.71429553,
+      "net_pnl": -1098.22376153,
+      "gross_expectancy": -0.1511227536451302,
+      "net_expectancy": -1.0590393071648987,
+      "profit_factor": 0.627471,
+      "adverse_profit_factor": 0.627471,
+      "win_rate": 0.2381870781099325,
+      "maximum_drawdown": -1127.66846757,
+      "maximum_consecutive_losses": null,
+      "development_fold_count": 4,
+      "positive_development_fold_count": 0,
+      "largest_fold_profit_contribution": 0.0,
+      "largest_symbol_profit_contribution": 0.13985677499691945,
+      "largest_regime_profit_contribution": 1.0,
+      "fees": 448.45929567,
+      "slippage": 244.72589097292635,
+      "funding": 3.59838877,
+      "lookahead_violation_count": 0,
+      "risk_limit_breach_count": 0,
+      "invalid_position_size_count": 0,
+      "liquidation_policy_breach_count": 0,
+      "evidence_v2_complete_count": 80,
+      "process_compliant_count": 0,
+      "process_noncompliant_count": 80,
+      "process_evidence_insufficient_count": 0,
+      "execution_constraints": {
+        "margin_mode": "ISOLATED",
+        "leverage": 25,
+        "position_margin_usdt": 20.0,
+        "max_loss_risk_per_trade": 3.0,
+        "taker_fee_rate": 0.00055
+      },
+      "formal_walk_forward_executed": false,
+      "oos_reservation_created": false,
+      "oos_executed": false,
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "mode": "DEVELOPMENT_RESEARCH_MODE",
+      "cost_to_gross_profit_ratio": null,
+      "development_status": "DISCOVERY_NO_GROSS_EDGE",
+      "evidence_sample": [
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_0GUSDT_1780066800000_0",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_0GUSDT_1780516800000_1",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_0GUSDT_1780822800000_2",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_0GUSDT_1781344800000_3",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_0GUSDT_1781632800000_4",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_0GUSDT_1782586800000_5",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_0GUSDT_1783450800000_6",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_0GUSDT_1783864800000_7",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_0GUSDT_1784296800000_8",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_0GUSDT_1784422800000_9",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_0GUSDT_1784458800000_10",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_0GUSDT_1784512800000_11",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_0GUSDT_1784548800000_12",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_10000SATSUSDT_1778896800000_13",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_10000SATSUSDT_1779418800000_14",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_10000SATSUSDT_1779454800000_15",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_10000SATSUSDT_1779832800000_16",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_10000SATSUSDT_1780264800000_17",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_10000SATSUSDT_1780354800000_18",
+          "completeness": 0.5769230769230769,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        },
+        {
+          "trade_id": "DEV_H12_LIQ_SWEEP_10000SATSUSDT_1780498800000_19",
+          "completeness": 0.5897435897435898,
+          "deterministic_process_status": "PROCESS_NONCOMPLIANT"
+        }
+      ]
+    }
+  ],
+  "formal_walk_forward_executed": false,
+  "oos_reservation_created": false,
+  "oos_executed": false,
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "post_result_hypothesis_insertion": false,
+  "integration_lessons_influence_policy": false
+}

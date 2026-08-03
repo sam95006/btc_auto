@@ -1,12 +1,12 @@
 {
   "schema_version": "nexus_readiness_sot_v1",
-  "updated_at": "2026-08-03T08:53:06Z",
+  "updated_at": "2026-08-03T09:20:58Z",
   "pr": 24,
   "pr_draft": true,
   "pr_merged": false,
   "pr_head": "bd1c1fb0ab762830a86e95596fb0235d19ff8d0b",
   "edge_research_v3_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-  "system_stage": "REAL_FOUR_AI_LEARNING_LOOP_VERIFICATION_V1",
+  "system_stage": "GENERAL_MULTI_STRATEGY_RESEARCH_ENGINE_V1",
   "current_approved_strategies": {
     "PRIMARY_QUALIFICATION_COHORT": "H3E",
     "CONFIRMATORY_COHORT": "H3D",
@@ -122,7 +122,7 @@
   "risk_review_packet_ready": false,
   "shadow_status": "NOT_APPLIED",
   "qualification_complete": false,
-  "recommendation": "NEXUS_REAL_AI_LEARNING_LOOP_VERIFIED_READY_FOR_STRATEGY_ENGINE",
+  "recommendation": "NEXUS_STRATEGY_ENGINE_V1_NO_PROMISING_MECHANISM",
   "canonical_files": [
     "docs/04_readiness/NEXUS_READINESS_SOT.md",
     "artifacts/readiness/NEXUS_READINESS_SOT.json",
@@ -309,5 +309,27 @@
   "mainnet": false,
   "real_money": false,
   "deployment_started": false,
-  "exchange_write_attempt_count": 0
+  "exchange_write_attempt_count": 0,
+  "real_ai_loop": {
+    "transport_and_delivery_verified": true,
+    "semantic_trade_learning_quality": "CALIBRATION_REQUIRED",
+    "providers": {
+      "groq_main_status": "REAL_API_PASS",
+      "groq_reflection_status": "REAL_API_PASS",
+      "cerebras_status": "REAL_API_PASS",
+      "sambanova_status": "REAL_API_PASS",
+      "models": {
+        "GROQ_MAIN_REASONER": "llama-3.3-70b-versatile",
+        "GROQ_REFLECTION_REASONER": "llama-3.3-70b-versatile",
+        "CEREBRAS_RESEARCH_NORMALIZER": "gemma-4-31b",
+        "SAMBANOVA_INDEPENDENT_CRITIC": "Meta-Llama-3.3-70B-Instruct"
+      }
+    }
+  },
+  "general_multi_strategy_engine_v1": {
+    "recommendation": "NEXUS_STRATEGY_ENGINE_V1_NO_PROMISING_MECHANISM",
+    "executed_hypothesis_count": 12,
+    "recommended_candidate_count": 0,
+    "reflection_calibration_trade_count": 40
+  }
 }

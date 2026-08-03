@@ -1,0 +1,343 @@
+{
+  "schema": "strategy_component_registry_v1",
+  "validated_strategies": false,
+  "component_count": 16,
+  "components": [
+    {
+      "component_id": "TREND_CONTINUATION",
+      "strategy_family": "TREND",
+      "required_data": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "valid_regimes": [
+        "TRENDING_UP",
+        "TRENDING_DOWN"
+      ],
+      "invalid_regimes": [
+        "RANGE",
+        "CHAOS"
+      ],
+      "entry_event": "pullback_then_resume",
+      "cost_dependency": "spread_and_taker",
+      "liquidity_dependency": "turnover_floor",
+      "known_failure_modes": [
+        "late_entry",
+        "regime_flip"
+      ],
+      "validated_strategy": false
+    },
+    {
+      "component_id": "STRUCTURAL_RETEST",
+      "strategy_family": "STRUCTURE",
+      "required_data": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "valid_regimes": [
+        "TRENDING_UP",
+        "TRENDING_DOWN",
+        "RANGE"
+      ],
+      "invalid_regimes": [
+        "CHAOS"
+      ],
+      "entry_event": "retest_of_broken_level",
+      "cost_dependency": "spread_and_taker",
+      "liquidity_dependency": "spread_cap",
+      "known_failure_modes": [
+        "false_structure",
+        "stop_too_tight"
+      ],
+      "validated_strategy": false
+    },
+    {
+      "component_id": "BREAKOUT",
+      "strategy_family": "BREAKOUT",
+      "required_data": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "valid_regimes": [
+        "RANGE",
+        "VOL_EXPAND"
+      ],
+      "invalid_regimes": [
+        "CHAOS"
+      ],
+      "entry_event": "range_high_low_break",
+      "cost_dependency": "slippage_sensitive",
+      "liquidity_dependency": "volume_expansion",
+      "known_failure_modes": [
+        "fakeout",
+        "cost_dominated"
+      ],
+      "validated_strategy": false
+    },
+    {
+      "component_id": "FAILED_BREAKOUT",
+      "strategy_family": "BREAKOUT",
+      "required_data": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "valid_regimes": [
+        "RANGE",
+        "VOL_EXPAND"
+      ],
+      "invalid_regimes": [
+        "STRONG_TREND"
+      ],
+      "entry_event": "break_then_reclaim",
+      "cost_dependency": "spread_and_taker",
+      "liquidity_dependency": "spread_cap",
+      "known_failure_modes": [
+        "continuation_after_fail"
+      ],
+      "validated_strategy": false
+    },
+    {
+      "component_id": "MOMENTUM_ACCELERATION",
+      "strategy_family": "MOMENTUM",
+      "required_data": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "valid_regimes": [
+        "TRENDING_UP",
+        "TRENDING_DOWN",
+        "VOL_EXPAND"
+      ],
+      "invalid_regimes": [
+        "RANGE"
+      ],
+      "entry_event": "atr_acceleration",
+      "cost_dependency": "slippage_sensitive",
+      "liquidity_dependency": "turnover_floor",
+      "known_failure_modes": [
+        "exhaustion"
+      ],
+      "validated_strategy": false
+    },
+    {
+      "component_id": "VOLATILITY_EXPANSION",
+      "strategy_family": "VOLATILITY",
+      "required_data": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "valid_regimes": [
+        "VOL_EXPAND"
+      ],
+      "invalid_regimes": [
+        "LOW_VOL"
+      ],
+      "entry_event": "atr_percentile_break",
+      "cost_dependency": "wide_spread_risk",
+      "liquidity_dependency": "volume_expansion",
+      "known_failure_modes": [
+        "whipsaw"
+      ],
+      "validated_strategy": false
+    },
+    {
+      "component_id": "VWAP_MEAN_REVERSION",
+      "strategy_family": "MEAN_REVERSION",
+      "required_data": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "valid_regimes": [
+        "RANGE",
+        "LOW_VOL"
+      ],
+      "invalid_regimes": [
+        "STRONG_TREND"
+      ],
+      "entry_event": "deviation_from_vwap",
+      "cost_dependency": "cost_sensitive_mean_reversion",
+      "liquidity_dependency": "spread_cap",
+      "known_failure_modes": [
+        "trend_day"
+      ],
+      "validated_strategy": false
+    },
+    {
+      "component_id": "STRUCTURAL_MEAN_REVERSION",
+      "strategy_family": "MEAN_REVERSION",
+      "required_data": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "valid_regimes": [
+        "RANGE"
+      ],
+      "invalid_regimes": [
+        "STRONG_TREND"
+      ],
+      "entry_event": "touch_range_extreme",
+      "cost_dependency": "cost_sensitive_mean_reversion",
+      "liquidity_dependency": "spread_cap",
+      "known_failure_modes": [
+        "range_break"
+      ],
+      "validated_strategy": false
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH",
+      "strategy_family": "CROSS_SECTIONAL",
+      "required_data": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "valid_regimes": [
+        "TRENDING_UP",
+        "TRENDING_DOWN"
+      ],
+      "invalid_regimes": [
+        "CHAOS"
+      ],
+      "entry_event": "vs_btc_strength",
+      "cost_dependency": "spread_and_taker",
+      "liquidity_dependency": "turnover_floor",
+      "known_failure_modes": [
+        "beta_collapse"
+      ],
+      "validated_strategy": false
+    },
+    {
+      "component_id": "CROSS_SECTIONAL_MOMENTUM",
+      "strategy_family": "CROSS_SECTIONAL",
+      "required_data": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "valid_regimes": [
+        "TRENDING_UP",
+        "TRENDING_DOWN"
+      ],
+      "invalid_regimes": [
+        "CHAOS"
+      ],
+      "entry_event": "rank_momentum_bucket",
+      "cost_dependency": "turnover_cost",
+      "liquidity_dependency": "turnover_floor",
+      "known_failure_modes": [
+        "crowding"
+      ],
+      "validated_strategy": false
+    },
+    {
+      "component_id": "LIQUIDITY_SWEEP_REVERSAL",
+      "strategy_family": "REVERSAL",
+      "required_data": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "valid_regimes": [
+        "RANGE",
+        "VOL_EXPAND"
+      ],
+      "invalid_regimes": [
+        "STRONG_TREND"
+      ],
+      "entry_event": "sweep_then_reclaim",
+      "cost_dependency": "slippage_sensitive",
+      "liquidity_dependency": "depth_sensitive",
+      "known_failure_modes": [
+        "true_break"
+      ],
+      "validated_strategy": false
+    },
+    {
+      "component_id": "FUNDING_OI_CONTINUATION",
+      "strategy_family": "DERIVATIVES",
+      "required_data": [
+        "DERIVATIVES_HISTORY_ELIGIBLE"
+      ],
+      "valid_regimes": [
+        "TRENDING_UP",
+        "TRENDING_DOWN"
+      ],
+      "invalid_regimes": [
+        "RANGE"
+      ],
+      "entry_event": "funding_oi_aligned",
+      "cost_dependency": "funding_aware",
+      "liquidity_dependency": "oi_floor",
+      "known_failure_modes": [
+        "crowded_unwind"
+      ],
+      "validated_strategy": false
+    },
+    {
+      "component_id": "FUNDING_OI_CONTRARIAN",
+      "strategy_family": "DERIVATIVES",
+      "required_data": [
+        "DERIVATIVES_HISTORY_ELIGIBLE"
+      ],
+      "valid_regimes": [
+        "RANGE",
+        "VOL_EXPAND"
+      ],
+      "invalid_regimes": [
+        "STRONG_TREND"
+      ],
+      "entry_event": "extreme_funding_fade",
+      "cost_dependency": "funding_aware",
+      "liquidity_dependency": "oi_floor",
+      "known_failure_modes": [
+        "squeeze_continuation"
+      ],
+      "validated_strategy": false
+    },
+    {
+      "component_id": "REGIME_TRANSITION_VETO",
+      "strategy_family": "REGIME_CONTROL",
+      "required_data": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "valid_regimes": [
+        "ANY"
+      ],
+      "invalid_regimes": [],
+      "entry_event": "veto_on_regime_shift",
+      "cost_dependency": "none",
+      "liquidity_dependency": "none",
+      "known_failure_modes": [
+        "lagged_regime"
+      ],
+      "validated_strategy": false
+    },
+    {
+      "component_id": "MARK_INDEX_BASIS_ANOMALY",
+      "strategy_family": "DERIVATIVES",
+      "required_data": [
+        "DERIVATIVES_HISTORY_ELIGIBLE",
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "valid_regimes": [
+        "ANY"
+      ],
+      "invalid_regimes": [],
+      "entry_event": "basis_dislocation",
+      "cost_dependency": "basis_cost",
+      "liquidity_dependency": "oi_floor",
+      "known_failure_modes": [
+        "persistent_basis"
+      ],
+      "validated_strategy": false
+    },
+    {
+      "component_id": "VOLUME_EXPANSION_EVENT",
+      "strategy_family": "VOLUME",
+      "required_data": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "valid_regimes": [
+        "VOL_EXPAND",
+        "TRENDING_UP",
+        "TRENDING_DOWN"
+      ],
+      "invalid_regimes": [
+        "LOW_VOL"
+      ],
+      "entry_event": "volume_zscore_spike",
+      "cost_dependency": "slippage_sensitive",
+      "liquidity_dependency": "volume_expansion",
+      "known_failure_modes": [
+        "one_bar_spike"
+      ],
+      "validated_strategy": false
+    }
+  ]
+}

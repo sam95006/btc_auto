@@ -575,6 +575,40 @@ def register_nexus_routes(app):
         snap = runtime_store.load_snapshot()
         return jsonify(snap.get("upgrade_pipeline") or {})
 
+    @app.route("/api/nexus/research/observability")
+    def nexus_research_observability():
+        """Read-only functional research observability — no secrets."""
+        try:
+            from pathlib import Path
+            import json
+
+            path = (
+                Path(__file__).resolve().parents[2]
+                / "artifacts"
+                / "readiness"
+                / "immutable"
+                / "general_multi_strategy_engine_v1"
+                / "functional_observability_status.json"
+            )
+            if path.is_file():
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            else:
+                from backend.nexus_strategy_engine.observability import observability_contract
+
+                payload = {
+                    "schema": "functional_research_observability_status_v1",
+                    "status": "NOT_GENERATED_YET",
+                    "contract": observability_contract(),
+                    "secrets_present_in_payload": False,
+                    "read_only": True,
+                }
+            blob = json.dumps(payload)
+            if any(x in blob for x in ("gsk_", "csk-", "Bearer ")):
+                return jsonify({"error": "secret_leak_blocked"}), 500
+            return jsonify(payload)
+        except Exception as exc:
+            return jsonify({"error": "observability_unavailable", "detail": str(exc)[:120]}), 500
+
     @app.route("/api/nexus/performance-report")
     def nexus_performance_report():
         try:

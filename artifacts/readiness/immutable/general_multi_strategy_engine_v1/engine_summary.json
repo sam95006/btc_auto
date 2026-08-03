@@ -1,0 +1,142 @@
+{
+  "schema": "general_multi_strategy_engine_v1_summary",
+  "stage": "GENERAL_MULTI_STRATEGY_RESEARCH_ENGINE_V1",
+  "updated_at": "2026-08-03T09:17:26Z",
+  "source_commit": "f84acc38558e43fa947ad419b2ebd0a1d7134006",
+  "recommendation": "NEXUS_STRATEGY_ENGINE_V1_NO_PROMISING_MECHANISM",
+  "coverage": {
+    "schema": "research_universe_coverage_v1",
+    "fleet_architecture": false,
+    "dynamic_universe_symbol_count": 676,
+    "price_history_eligible_count": 99,
+    "derivatives_history_eligible_count": 99,
+    "historical_research_eligible_count": 99,
+    "mainstream_research_eligible_count": 94,
+    "mid_size_research_eligible_count": 5,
+    "small_research_eligible_count": 0,
+    "meme_research_eligible_count": 5,
+    "development_loaded_symbol_count": 16,
+    "development_loaded_symbols": [
+      "0GUSDT",
+      "10000SATSUSDT",
+      "1000PEPEUSDT",
+      "1000RATSUSDT",
+      "1000XECUSDT",
+      "ACEUSDT",
+      "ADAUSDT",
+      "BTCUSDT",
+      "DOGEUSDT",
+      "ETHUSDT",
+      "HYPEUSDT",
+      "SOLUSDT",
+      "SOXLUSDT",
+      "XAUUSDT",
+      "XRPUSDT",
+      "ZECUSDT"
+    ],
+    "development_meme_loaded": [
+      "10000SATSUSDT",
+      "1000PEPEUSDT",
+      "DOGEUSDT"
+    ],
+    "development_mid_loaded": [
+      "0GUSDT",
+      "ADAUSDT",
+      "HYPEUSDT",
+      "SOXLUSDT",
+      "ZECUSDT"
+    ],
+    "historical_record_count": 935989,
+    "historical_dataset_checksum": "4e0115e9a61c95d14af7fd7b8e381dae813b464897adb1a4d883f87b8d4f8b93",
+    "loaded_record_count_for_dev": 483973,
+    "enrichment_targets": {
+      "historical_research_eligible_count": 150,
+      "mid_size_research_eligible_count": 25,
+      "small_research_eligible_count": 15,
+      "meme_research_eligible_count": 8
+    },
+    "enrichment_status": "PARTIAL_PRIOR_CAPABILITY_SEALED_PLUS_LOCAL_CACHE",
+    "blockers_to_150": [
+      "download_queue_pending_remaining_high",
+      "listing_age_or_turnover_gates",
+      "this_task_uses_sealed_99_plus_local_cache_for_dev_execution"
+    ],
+    "demo_gates_not_weakened": true
+  },
+  "providers": {
+    "groq_main_status": "REAL_API_PASS",
+    "groq_reflection_status": "REAL_API_PASS",
+    "cerebras_status": "REAL_API_PASS",
+    "sambanova_status": "REAL_API_PASS",
+    "models": {
+      "GROQ_MAIN_REASONER": "llama-3.3-70b-versatile",
+      "GROQ_REFLECTION_REASONER": "llama-3.3-70b-versatile",
+      "CEREBRAS_RESEARCH_NORMALIZER": "gemma-4-31b",
+      "SAMBANOVA_INDEPENDENT_CRITIC": "Meta-Llama-3.3-70B-Instruct"
+    }
+  },
+  "calibration": {
+    "schema": "reflection_calibration_summary_v1",
+    "reflection_calibration_trade_count": 40,
+    "evidence_completeness_ratio": 0.5637820512820513,
+    "deterministic_classifiable_count": 40,
+    "AI_classified_count": 40,
+    "undetermined_count": 0,
+    "deterministic_AI_agreement_count": 14,
+    "deterministic_AI_disagreement_count": 26,
+    "critic_agreement_count": 26,
+    "critic_disagreement_count": 0,
+    "invalid_schema_count": 0,
+    "deterministic_counts": {
+      "PROCESS_COMPLIANT": 35,
+      "PROCESS_NONCOMPLIANT": 5
+    },
+    "ai_process_counts": {
+      "GOOD_PROCESS_LOSS": 40
+    },
+    "control_fixtures_labeled": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+    "reserved_oos_used": false,
+    "synthetic_market_performance": false
+  },
+  "development": {
+    "executed_hypothesis_count": 12,
+    "status_counts": {
+      "DISCOVERY_NO_GROSS_EDGE": 8,
+      "DISCOVERY_INSUFFICIENT_SAMPLE": 3,
+      "DISCOVERY_FOLD_CONCENTRATED": 1
+    },
+    "recommended_candidate_count": 0,
+    "recommended_candidate_ids": []
+  },
+  "learning": {
+    "prior_integration_sealed": true,
+    "semantic_trade_learning_quality": "CALIBRATION_REQUIRED",
+    "transport_and_delivery_verified": true,
+    "calibration": {
+      "undetermined_count": 0,
+      "evidence_completeness_ratio": 0.5637820512820513,
+      "deterministic_AI_agreement_count": 14
+    },
+    "new_lesson_record_count": 0,
+    "note": "New Lessons from evidence V2 deferred until classification quality improves; integration Lessons sealed"
+  },
+  "formal_walk_forward_executed": false,
+  "oos_reservation_created": false,
+  "oos_executed": false,
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "H3_status": "REJECTED_CURRENT_POLICY",
+  "H5A_status": "INSUFFICIENT_SAMPLE",
+  "H5B_status": "INSUFFICIENT_SAMPLE",
+  "H5C_status": "INSUFFICIENT_SAMPLE",
+  "september_h3_oos_status": "OOS_WINDOW_NOT_MATURE_RESEARCH_CONFIRMATION_ONLY",
+  "wallet_delta_classification": "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST",
+  "remaining_unattributed_delta": -0.97052039,
+  "trading_db_status": "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED",
+  "demo_forward_status": "BLOCKED",
+  "shadow_status": "NOT_APPLIED",
+  "deployment_started": false,
+  "mainnet": false,
+  "real_money": false,
+  "secret_leak_count": 0
+}
