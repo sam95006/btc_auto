@@ -1,0 +1,8 @@
+{
+  "schema": "future_qualification_candidates_v1_1",
+  "recommended_candidate_count": 0,
+  "recommended_candidate_ids": [],
+  "candidates": [],
+  "formal_walk_forward_authorized": false,
+  "oos_reservation_authorized": false
+}

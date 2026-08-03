@@ -1,0 +1,132 @@
+{
+  "schema": "semantic_collision_audit_v1",
+  "V1_EXECUTION_INTERPRETATION": "GENERIC_FAMILY_EXECUTOR_RESULTS_NOT_COMPONENT_DISTINCT",
+  "hypothesis_count": 12,
+  "distinct_strategy_pair_count": 66,
+  "semantic_collision_pair_count": 10,
+  "exact_trade_set_collision_count": 0,
+  "exact_metric_collision_count": 7,
+  "collisions": [
+    {
+      "flag": "SEMANTIC_EXECUTION_COLLISION",
+      "hypothesis_a": "DEV_H01_TREND_CONTINUATION",
+      "hypothesis_b": "DEV_H05_MOMENTUM_ACCEL",
+      "family_a": "TREND",
+      "family_b": "MOMENTUM",
+      "candidate_set_jaccard": null,
+      "completed_trade_set_jaccard": 0.02439,
+      "metric_identity_equal": true,
+      "exit_rule_identity_equal": true,
+      "known_family_bucket_collision": true
+    },
+    {
+      "flag": "SEMANTIC_EXECUTION_COLLISION",
+      "hypothesis_a": "DEV_H01_TREND_CONTINUATION",
+      "hypothesis_b": "DEV_H09_REL_STRENGTH",
+      "family_a": "TREND",
+      "family_b": "CROSS_SECTIONAL",
+      "candidate_set_jaccard": null,
+      "completed_trade_set_jaccard": 0.02439,
+      "metric_identity_equal": true,
+      "exit_rule_identity_equal": true,
+      "known_family_bucket_collision": true
+    },
+    {
+      "flag": "SEMANTIC_EXECUTION_COLLISION",
+      "hypothesis_a": "DEV_H01_TREND_CONTINUATION",
+      "hypothesis_b": "DEV_H10_XS_MOMENTUM",
+      "family_a": "TREND",
+      "family_b": "CROSS_SECTIONAL",
+      "candidate_set_jaccard": null,
+      "completed_trade_set_jaccard": 0.02439,
+      "metric_identity_equal": true,
+      "exit_rule_identity_equal": true,
+      "known_family_bucket_collision": true
+    },
+    {
+      "flag": "SEMANTIC_EXECUTION_COLLISION",
+      "hypothesis_a": "DEV_H03_BREAKOUT",
+      "hypothesis_b": "DEV_H04_FAILED_BREAKOUT",
+      "family_a": "BREAKOUT",
+      "family_b": "BREAKOUT",
+      "candidate_set_jaccard": null,
+      "completed_trade_set_jaccard": 1.0,
+      "metric_identity_equal": true,
+      "exit_rule_identity_equal": true,
+      "known_family_bucket_collision": true
+    },
+    {
+      "flag": "SEMANTIC_EXECUTION_COLLISION",
+      "hypothesis_a": "DEV_H03_BREAKOUT",
+      "hypothesis_b": "DEV_H06_VOL_EXPANSION",
+      "family_a": "BREAKOUT",
+      "family_b": "VOLATILITY",
+      "candidate_set_jaccard": null,
+      "completed_trade_set_jaccard": 1.0,
+      "metric_identity_equal": true,
+      "exit_rule_identity_equal": true,
+      "known_family_bucket_collision": true
+    },
+    {
+      "flag": "SEMANTIC_EXECUTION_COLLISION",
+      "hypothesis_a": "DEV_H04_FAILED_BREAKOUT",
+      "hypothesis_b": "DEV_H06_VOL_EXPANSION",
+      "family_a": "BREAKOUT",
+      "family_b": "VOLATILITY",
+      "candidate_set_jaccard": null,
+      "completed_trade_set_jaccard": 1.0,
+      "metric_identity_equal": true,
+      "exit_rule_identity_equal": true,
+      "known_family_bucket_collision": true
+    },
+    {
+      "flag": "SEMANTIC_EXECUTION_COLLISION",
+      "hypothesis_a": "DEV_H05_MOMENTUM_ACCEL",
+      "hypothesis_b": "DEV_H09_REL_STRENGTH",
+      "family_a": "MOMENTUM",
+      "family_b": "CROSS_SECTIONAL",
+      "candidate_set_jaccard": null,
+      "completed_trade_set_jaccard": 0.02439,
+      "metric_identity_equal": true,
+      "exit_rule_identity_equal": true,
+      "known_family_bucket_collision": true
+    },
+    {
+      "flag": "SEMANTIC_EXECUTION_COLLISION",
+      "hypothesis_a": "DEV_H05_MOMENTUM_ACCEL",
+      "hypothesis_b": "DEV_H10_XS_MOMENTUM",
+      "family_a": "MOMENTUM",
+      "family_b": "CROSS_SECTIONAL",
+      "candidate_set_jaccard": null,
+      "completed_trade_set_jaccard": 0.02439,
+      "metric_identity_equal": true,
+      "exit_rule_identity_equal": true,
+      "known_family_bucket_collision": true
+    },
+    {
+      "flag": "SEMANTIC_EXECUTION_COLLISION",
+      "hypothesis_a": "DEV_H08_STRUCT_MR",
+      "hypothesis_b": "DEV_H12_LIQ_SWEEP",
+      "family_a": "MEAN_REVERSION",
+      "family_b": "REVERSAL",
+      "candidate_set_jaccard": null,
+      "completed_trade_set_jaccard": 0.02439,
+      "metric_identity_equal": true,
+      "exit_rule_identity_equal": true,
+      "known_family_bucket_collision": true
+    },
+    {
+      "flag": "SEMANTIC_EXECUTION_COLLISION",
+      "hypothesis_a": "DEV_H09_REL_STRENGTH",
+      "hypothesis_b": "DEV_H10_XS_MOMENTUM",
+      "family_a": "CROSS_SECTIONAL",
+      "family_b": "CROSS_SECTIONAL",
+      "candidate_set_jaccard": null,
+      "completed_trade_set_jaccard": 0.02439,
+      "metric_identity_equal": true,
+      "exit_rule_identity_equal": true,
+      "known_family_bucket_collision": true
+    }
+  ],
+  "note": "Collided hypotheses must not be interpreted as independent evidence"
+}

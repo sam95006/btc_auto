@@ -44,8 +44,10 @@ def test_component_registry_complete_and_unvalidated():
 
 def test_strategy_checksum_stable():
     drafts = default_hypothesis_drafts()
-    a = freeze_spec(drafts[0])
-    b = freeze_spec(drafts[0])
+    draft = dict(drafts[0])
+    draft["preregistration_timestamp"] = "2026-07-30T00:00:00Z"
+    a = freeze_spec(draft)
+    b = freeze_spec(draft)
     assert a["strategy_checksum"] == b["strategy_checksum"] == compute_strategy_checksum(a)
     assert a["semantic_checksum"] == compute_semantic_checksum(a)
     assert validate_spec(a) == []

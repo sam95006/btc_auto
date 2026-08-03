@@ -582,15 +582,26 @@ def register_nexus_routes(app):
             from pathlib import Path
             import json
 
+            root = Path(__file__).resolve().parents[2]
+            path_v11 = (
+                root
+                / "artifacts"
+                / "readiness"
+                / "immutable"
+                / "strategy_engine_semantic_repair_v1_1"
+                / "functional_observability_status.json"
+            )
             path = (
-                Path(__file__).resolve().parents[2]
+                root
                 / "artifacts"
                 / "readiness"
                 / "immutable"
                 / "general_multi_strategy_engine_v1"
                 / "functional_observability_status.json"
             )
-            if path.is_file():
+            if path_v11.is_file():
+                payload = json.loads(path_v11.read_text(encoding="utf-8"))
+            elif path.is_file():
                 payload = json.loads(path.read_text(encoding="utf-8"))
             else:
                 from backend.nexus_strategy_engine.observability import observability_contract

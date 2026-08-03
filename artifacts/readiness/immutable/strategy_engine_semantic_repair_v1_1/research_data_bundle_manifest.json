@@ -1,0 +1,381 @@
+{
+  "schema": "research_data_bundle_manifest_v1",
+  "data_bundle_version": "NEXUS_RESEARCH_DATA_BUNDLE_V1",
+  "actual_loaded_dataset_count": 16,
+  "actual_price_dataset_count": 16,
+  "actual_derivatives_dataset_count": 16,
+  "multi_timeframe_ready_count": 16,
+  "data_integrity_failure_count": 0,
+  "actual_mainstream_dataset_count": 6,
+  "actual_mid_size_dataset_count": 3,
+  "actual_small_dataset_count": 2,
+  "actual_meme_dataset_count": 5,
+  "full_dataset_checksum": "25dfab276fb7936844dcc4cc5847aca04906cf37005e8fc16edc07ef1afc38c5",
+  "acquisition_targets": {
+    "actual_price_dataset_count": 60,
+    "actual_derivatives_dataset_count": 20,
+    "mainstream": 25,
+    "mid_size": 15,
+    "small": 10,
+    "meme": 8
+  },
+  "blockers": [
+    "local_cache_limited_to_h5_plus_ga_partitions",
+    "bulk_historical_download_not_authorized_in_this_repair_task",
+    "derivatives_ready_requires_actual_funding_oi_mark_index_not_registry_label"
+  ],
+  "symbols": [
+    {
+      "symbol": "0GUSDT",
+      "status": "DERIVATIVES_MULTI_TIMEFRAME_READY",
+      "size_class": "SMALL",
+      "required_feature_status": {
+        "price_15": "OK",
+        "price_60": "OK",
+        "price_240": "OK",
+        "funding": "OK",
+        "open_interest": "OK",
+        "mark": "OK",
+        "index": "OK"
+      },
+      "integrity_15": {
+        "record_count": 8000,
+        "missing_interval_count": 0,
+        "duplicate_interval_count": 0,
+        "non_monotonic_count": 0,
+        "full_partition_checksum": "5cfbc3541b75e6e06ef9bd478f48b8361b0e523c5a3fe5930e5266f1b3ca9158",
+        "valid": true
+      }
+    },
+    {
+      "symbol": "10000SATSUSDT",
+      "status": "DERIVATIVES_MULTI_TIMEFRAME_READY",
+      "size_class": "MEME",
+      "required_feature_status": {
+        "price_15": "OK",
+        "price_60": "OK",
+        "price_240": "OK",
+        "funding": "OK",
+        "open_interest": "OK",
+        "mark": "OK",
+        "index": "OK"
+      },
+      "integrity_15": {
+        "record_count": 8000,
+        "missing_interval_count": 0,
+        "duplicate_interval_count": 0,
+        "non_monotonic_count": 0,
+        "full_partition_checksum": "4f9707f52d674e3134930ad8a365570be94fa066fa6e5e3189041c45196f5a1f",
+        "valid": true
+      }
+    },
+    {
+      "symbol": "1000PEPEUSDT",
+      "status": "DERIVATIVES_MULTI_TIMEFRAME_READY",
+      "size_class": "MEME",
+      "required_feature_status": {
+        "price_15": "OK",
+        "price_60": "OK",
+        "price_240": "OK",
+        "funding": "OK",
+        "open_interest": "OK",
+        "mark": "OK",
+        "index": "OK"
+      },
+      "integrity_15": {
+        "record_count": 8000,
+        "missing_interval_count": 0,
+        "duplicate_interval_count": 0,
+        "non_monotonic_count": 0,
+        "full_partition_checksum": "88d898c73d5489e5ac514ca8430c4fa449e5205c79c1f6a6a02dba5fb854f107",
+        "valid": true
+      }
+    },
+    {
+      "symbol": "1000RATSUSDT",
+      "status": "DERIVATIVES_MULTI_TIMEFRAME_READY",
+      "size_class": "MEME",
+      "required_feature_status": {
+        "price_15": "OK",
+        "price_60": "OK",
+        "price_240": "OK",
+        "funding": "OK",
+        "open_interest": "OK",
+        "mark": "OK",
+        "index": "OK"
+      },
+      "integrity_15": {
+        "record_count": 8000,
+        "missing_interval_count": 0,
+        "duplicate_interval_count": 0,
+        "non_monotonic_count": 0,
+        "full_partition_checksum": "390fbfdca1ff22297219364dcf25a573eb17fcf1916544928923781fa0774e66",
+        "valid": true
+      }
+    },
+    {
+      "symbol": "1000XECUSDT",
+      "status": "DERIVATIVES_MULTI_TIMEFRAME_READY",
+      "size_class": "MEME",
+      "required_feature_status": {
+        "price_15": "OK",
+        "price_60": "OK",
+        "price_240": "OK",
+        "funding": "OK",
+        "open_interest": "OK",
+        "mark": "OK",
+        "index": "OK"
+      },
+      "integrity_15": {
+        "record_count": 8000,
+        "missing_interval_count": 0,
+        "duplicate_interval_count": 0,
+        "non_monotonic_count": 0,
+        "full_partition_checksum": "7f5af2d9711a70ffd8e110a0ba01ba6c870cb06f58835dd757f788cbd39b7ca6",
+        "valid": true
+      }
+    },
+    {
+      "symbol": "ACEUSDT",
+      "status": "DERIVATIVES_MULTI_TIMEFRAME_READY",
+      "size_class": "SMALL",
+      "required_feature_status": {
+        "price_15": "OK",
+        "price_60": "OK",
+        "price_240": "OK",
+        "funding": "OK",
+        "open_interest": "OK",
+        "mark": "OK",
+        "index": "OK"
+      },
+      "integrity_15": {
+        "record_count": 8000,
+        "missing_interval_count": 0,
+        "duplicate_interval_count": 0,
+        "non_monotonic_count": 0,
+        "full_partition_checksum": "de13833266c0807428a31504d18deda536125e19c597388aed001685cb29f766",
+        "valid": true
+      }
+    },
+    {
+      "symbol": "ADAUSDT",
+      "status": "PRICE_MULTI_TIMEFRAME_READY",
+      "size_class": "MAINSTREAM",
+      "required_feature_status": {
+        "price_15": "OK",
+        "price_60": "OK",
+        "price_240": "OK",
+        "funding": "OK",
+        "open_interest": "OK",
+        "mark": "MISSING",
+        "index": "MISSING"
+      },
+      "integrity_15": {
+        "record_count": 51841,
+        "missing_interval_count": 0,
+        "duplicate_interval_count": 0,
+        "non_monotonic_count": 0,
+        "full_partition_checksum": "c9dae37086d8ee31e64515d9f16e25dad888db5621f0bf0de20b4247aa103b3e",
+        "valid": true
+      }
+    },
+    {
+      "symbol": "BTCUSDT",
+      "status": "PRICE_MULTI_TIMEFRAME_READY",
+      "size_class": "MAINSTREAM",
+      "required_feature_status": {
+        "price_15": "OK",
+        "price_60": "OK",
+        "price_240": "OK",
+        "funding": "OK",
+        "open_interest": "OK",
+        "mark": "MISSING",
+        "index": "MISSING"
+      },
+      "integrity_15": {
+        "record_count": 51841,
+        "missing_interval_count": 0,
+        "duplicate_interval_count": 0,
+        "non_monotonic_count": 0,
+        "full_partition_checksum": "0a35a4d9b388e14f700c0a17de2ac26ba1a967c1926c6388405b2456e32d9a84",
+        "valid": true
+      }
+    },
+    {
+      "symbol": "DOGEUSDT",
+      "status": "PRICE_MULTI_TIMEFRAME_READY",
+      "size_class": "MEME",
+      "required_feature_status": {
+        "price_15": "OK",
+        "price_60": "OK",
+        "price_240": "OK",
+        "funding": "OK",
+        "open_interest": "OK",
+        "mark": "MISSING",
+        "index": "MISSING"
+      },
+      "integrity_15": {
+        "record_count": 51841,
+        "missing_interval_count": 0,
+        "duplicate_interval_count": 0,
+        "non_monotonic_count": 0,
+        "full_partition_checksum": "1080f7dcd5de7a776a192b86badf86c72df1c3e0683a787aa91d6f40473ad5f7",
+        "valid": true
+      }
+    },
+    {
+      "symbol": "ETHUSDT",
+      "status": "PRICE_MULTI_TIMEFRAME_READY",
+      "size_class": "MAINSTREAM",
+      "required_feature_status": {
+        "price_15": "OK",
+        "price_60": "OK",
+        "price_240": "OK",
+        "funding": "OK",
+        "open_interest": "OK",
+        "mark": "MISSING",
+        "index": "MISSING"
+      },
+      "integrity_15": {
+        "record_count": 51841,
+        "missing_interval_count": 0,
+        "duplicate_interval_count": 0,
+        "non_monotonic_count": 0,
+        "full_partition_checksum": "5b6fef6a7f751bf28d22be8f19f5ccebef54af4093bfbab77fb704feffdf3b19",
+        "valid": true
+      }
+    },
+    {
+      "symbol": "HYPEUSDT",
+      "status": "PRICE_MULTI_TIMEFRAME_READY",
+      "size_class": "MID_SIZE",
+      "required_feature_status": {
+        "price_15": "OK",
+        "price_60": "OK",
+        "price_240": "OK",
+        "funding": "OK",
+        "open_interest": "OK",
+        "mark": "MISSING",
+        "index": "MISSING"
+      },
+      "integrity_15": {
+        "record_count": 51841,
+        "missing_interval_count": 0,
+        "duplicate_interval_count": 0,
+        "non_monotonic_count": 0,
+        "full_partition_checksum": "5963d2e6f0bac95a8b29967ba557c99326b84fd45f6b9bb46aae8216c7c8e99c",
+        "valid": true
+      }
+    },
+    {
+      "symbol": "SOLUSDT",
+      "status": "PRICE_MULTI_TIMEFRAME_READY",
+      "size_class": "MAINSTREAM",
+      "required_feature_status": {
+        "price_15": "OK",
+        "price_60": "OK",
+        "price_240": "OK",
+        "funding": "OK",
+        "open_interest": "OK",
+        "mark": "MISSING",
+        "index": "MISSING"
+      },
+      "integrity_15": {
+        "record_count": 51841,
+        "missing_interval_count": 0,
+        "duplicate_interval_count": 0,
+        "non_monotonic_count": 0,
+        "full_partition_checksum": "c5e7a592c23d3e3a85459ddb4e69d34a688d42c5b271fa52187985b2ba8233b2",
+        "valid": true
+      }
+    },
+    {
+      "symbol": "SOXLUSDT",
+      "status": "PRICE_MULTI_TIMEFRAME_READY",
+      "size_class": "MID_SIZE",
+      "required_feature_status": {
+        "price_15": "OK",
+        "price_60": "OK",
+        "price_240": "OK",
+        "funding": "OK",
+        "open_interest": "OK",
+        "mark": "MISSING",
+        "index": "MISSING"
+      },
+      "integrity_15": {
+        "record_count": 7201,
+        "missing_interval_count": 0,
+        "duplicate_interval_count": 0,
+        "non_monotonic_count": 0,
+        "full_partition_checksum": "27b53fa9697559742705f2f16a380c451158f68b593846faac16f9dfaa055ca1",
+        "valid": true
+      }
+    },
+    {
+      "symbol": "XAUUSDT",
+      "status": "PRICE_MULTI_TIMEFRAME_READY",
+      "size_class": "MAINSTREAM",
+      "required_feature_status": {
+        "price_15": "OK",
+        "price_60": "OK",
+        "price_240": "OK",
+        "funding": "OK",
+        "open_interest": "OK",
+        "mark": "MISSING",
+        "index": "MISSING"
+      },
+      "integrity_15": {
+        "record_count": 14044,
+        "missing_interval_count": 0,
+        "duplicate_interval_count": 0,
+        "non_monotonic_count": 0,
+        "full_partition_checksum": "e6b93279f8a1a867cd830977cde960aabbdbc609fd7eb69d085a537f784346a8",
+        "valid": true
+      }
+    },
+    {
+      "symbol": "XRPUSDT",
+      "status": "PRICE_MULTI_TIMEFRAME_READY",
+      "size_class": "MAINSTREAM",
+      "required_feature_status": {
+        "price_15": "OK",
+        "price_60": "OK",
+        "price_240": "OK",
+        "funding": "OK",
+        "open_interest": "OK",
+        "mark": "MISSING",
+        "index": "MISSING"
+      },
+      "integrity_15": {
+        "record_count": 51841,
+        "missing_interval_count": 0,
+        "duplicate_interval_count": 0,
+        "non_monotonic_count": 0,
+        "full_partition_checksum": "c16e89b792dab999dfcaf52174e5b85b66466674fb70bab081870a8634260f8a",
+        "valid": true
+      }
+    },
+    {
+      "symbol": "ZECUSDT",
+      "status": "PRICE_MULTI_TIMEFRAME_READY",
+      "size_class": "MID_SIZE",
+      "required_feature_status": {
+        "price_15": "OK",
+        "price_60": "OK",
+        "price_240": "OK",
+        "funding": "OK",
+        "open_interest": "OK",
+        "mark": "MISSING",
+        "index": "MISSING"
+      },
+      "integrity_15": {
+        "record_count": 51841,
+        "missing_interval_count": 0,
+        "duplicate_interval_count": 0,
+        "non_monotonic_count": 0,
+        "full_partition_checksum": "f697ce37525d16a2a15c3df4bfba509971625139538d15de5412f03a0f31bd04",
+        "valid": true
+      }
+    }
+  ]
+}

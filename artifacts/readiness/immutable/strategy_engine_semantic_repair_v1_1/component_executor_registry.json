@@ -1,0 +1,188 @@
+{
+  "schema": "component_executor_registry_v1_1",
+  "registered_component_count": 16,
+  "implemented_component_count": 16,
+  "not_implemented_component_count": 0,
+  "components": [
+    {
+      "component_id": "TREND_CONTINUATION",
+      "implemented": true,
+      "status": "IMPLEMENTED",
+      "executor_class": "TrendContinuationExecutor",
+      "executor_checksum": "00e2068190fb903d766de8dbaa5dc8acee004acc5935646077e67e963f096279",
+      "required_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "silent_family_fallback": false
+    },
+    {
+      "component_id": "STRUCTURAL_RETEST",
+      "implemented": true,
+      "status": "IMPLEMENTED",
+      "executor_class": "StructuralRetestExecutor",
+      "executor_checksum": "ddcd279e3b362662eb3173b3643630f3d23090799859d3086453be5d70f96d43",
+      "required_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "silent_family_fallback": false
+    },
+    {
+      "component_id": "BREAKOUT",
+      "implemented": true,
+      "status": "IMPLEMENTED",
+      "executor_class": "BreakoutExecutor",
+      "executor_checksum": "3fadcc5fcce9cbc0be4c62bb706fad8a7f4d1a5790cd235d0ddfcd90cfefb475",
+      "required_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "silent_family_fallback": false
+    },
+    {
+      "component_id": "FAILED_BREAKOUT",
+      "implemented": true,
+      "status": "IMPLEMENTED",
+      "executor_class": "FailedBreakoutExecutor",
+      "executor_checksum": "3d510d3364e73d09954489912acb4ec67ed49641dac18b58bc20877d48c30df4",
+      "required_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "silent_family_fallback": false
+    },
+    {
+      "component_id": "MOMENTUM_ACCELERATION",
+      "implemented": true,
+      "status": "IMPLEMENTED",
+      "executor_class": "MomentumAccelerationExecutor",
+      "executor_checksum": "ab04cc29c7f8d145bf555e9078ac9160e86f2a8edb20134fb59dc0c77077f49e",
+      "required_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "silent_family_fallback": false
+    },
+    {
+      "component_id": "VOLATILITY_EXPANSION",
+      "implemented": true,
+      "status": "IMPLEMENTED",
+      "executor_class": "VolatilityExpansionExecutor",
+      "executor_checksum": "36b568296fb2eefc2aac2a12d9951520253fe64b830d9bb07ed79df8dc58b35f",
+      "required_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "silent_family_fallback": false
+    },
+    {
+      "component_id": "VWAP_MEAN_REVERSION",
+      "implemented": true,
+      "status": "IMPLEMENTED",
+      "executor_class": "VwapMeanReversionExecutor",
+      "executor_checksum": "f45e87f70bddee5ea4f1d4bacb48e87649cd1018f98251e5cba38b9ee52a0c22",
+      "required_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "silent_family_fallback": false
+    },
+    {
+      "component_id": "STRUCTURAL_MEAN_REVERSION",
+      "implemented": true,
+      "status": "IMPLEMENTED",
+      "executor_class": "StructuralMeanReversionExecutor",
+      "executor_checksum": "82f77971460e06d30d4fa68c79177a2a6a853833b49cfe4dea2e6df7fe15fdd7",
+      "required_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "silent_family_fallback": false
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH",
+      "implemented": true,
+      "status": "IMPLEMENTED",
+      "executor_class": "RelativeStrengthExecutor",
+      "executor_checksum": "3734e13ab568390b62d00ed516efec81f473c3a8a3b12a6f4188ed1445dd0a35",
+      "required_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "silent_family_fallback": false
+    },
+    {
+      "component_id": "CROSS_SECTIONAL_MOMENTUM",
+      "implemented": true,
+      "status": "IMPLEMENTED",
+      "executor_class": "CrossSectionalMomentumExecutor",
+      "executor_checksum": "27fcde5becf7dc34d360e5fc3d4cf7519461ac1b77b1d9c283c63bc79b1b687f",
+      "required_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "silent_family_fallback": false
+    },
+    {
+      "component_id": "LIQUIDITY_SWEEP_REVERSAL",
+      "implemented": true,
+      "status": "IMPLEMENTED",
+      "executor_class": "LiquiditySweepExecutor",
+      "executor_checksum": "80a8936194b3b56c612dc0d1db233b9b90aaaeb043e09c8b8680279277ab38f1",
+      "required_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "silent_family_fallback": false
+    },
+    {
+      "component_id": "FUNDING_OI_CONTINUATION",
+      "implemented": true,
+      "status": "IMPLEMENTED",
+      "executor_class": "FundingOiContinuationExecutor",
+      "executor_checksum": "fab5341bc653c2ec99f9b357d716dabb5d391d9a4c9cee25f37b2f4891d86319",
+      "required_capabilities": [
+        "DERIVATIVES_HISTORY_ELIGIBLE",
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "silent_family_fallback": false
+    },
+    {
+      "component_id": "FUNDING_OI_CONTRARIAN",
+      "implemented": true,
+      "status": "IMPLEMENTED",
+      "executor_class": "FundingOiContrarianExecutor",
+      "executor_checksum": "1f7cccfb94f5a8f1cfdbc884d33debb126a8a4d611ae58a6455b53b7732d9925",
+      "required_capabilities": [
+        "DERIVATIVES_HISTORY_ELIGIBLE",
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "silent_family_fallback": false
+    },
+    {
+      "component_id": "REGIME_TRANSITION_VETO",
+      "implemented": true,
+      "status": "IMPLEMENTED",
+      "executor_class": "RegimeTransitionVetoExecutor",
+      "executor_checksum": "28ffb1b7cc975a6f3b6ba4f1c6d02055de38cdf36c9eb60aac5c4a50928161b0",
+      "required_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "silent_family_fallback": false
+    },
+    {
+      "component_id": "MARK_INDEX_BASIS_ANOMALY",
+      "implemented": true,
+      "status": "IMPLEMENTED",
+      "executor_class": "MarkIndexBasisExecutor",
+      "executor_checksum": "553fad2fbb707decc08ec0bcc3145e66616a72f541e9d701c282d119850595d6",
+      "required_capabilities": [
+        "DERIVATIVES_HISTORY_ELIGIBLE",
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "silent_family_fallback": false
+    },
+    {
+      "component_id": "VOLUME_EXPANSION_EVENT",
+      "implemented": true,
+      "status": "IMPLEMENTED",
+      "executor_class": "VolumeExpansionExecutor",
+      "executor_checksum": "fa3cd92b8863683f16a89275bab13a7c041c91f838f15bbc8e3d07d2373a25e9",
+      "required_capabilities": [
+        "PRICE_HISTORY_ELIGIBLE"
+      ],
+      "silent_family_fallback": false
+    }
+  ],
+  "family_bucket_dispatch_removed": true
+}
