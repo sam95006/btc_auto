@@ -1,10 +1,10 @@
 {
   "schema_version": "nexus_readiness_sot_v1",
-  "updated_at": "2026-08-03T09:20:58Z",
+  "updated_at": "2026-08-03T09:21:32Z",
   "pr": 24,
   "pr_draft": true,
   "pr_merged": false,
-  "pr_head": "bd1c1fb0ab762830a86e95596fb0235d19ff8d0b",
+  "pr_head": "edd7eef7870059a04ecb5e0ec1f90d64d5a9aea7",
   "edge_research_v3_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
   "system_stage": "GENERAL_MULTI_STRATEGY_RESEARCH_ENGINE_V1",
   "current_approved_strategies": {
