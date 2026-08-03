@@ -6,7 +6,9 @@ Updated: 2026-08-03T07:15:00Z
 
 `H5_RESEARCH_INSUFFICIENT_SAMPLE`
 
-PR #24 research package: `artifacts/readiness/immutable/dynamic_universe_ai_learning_h5_v1/`
+PR #24 head: 46a419149a6a6a7f530d0f806c13816979dbf122
+
+Immutable package: `artifacts/readiness/immutable/dynamic_universe_ai_learning_h5_v1/`
 
 ## H3 status
 
