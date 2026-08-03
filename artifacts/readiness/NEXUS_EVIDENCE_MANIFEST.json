@@ -1,6 +1,6 @@
 {
   "schema_version": "nexus_evidence_manifest_v1",
-  "updated_at": "2026-08-03T09:17:27Z",
+  "updated_at": "2026-08-03T14:20:45Z",
   "entries": [
     {
       "evidence_id": "6H_FINAL_ZERO_EXECUTION::artifacts/readiness/immutable/6h_final/NEXUS_6H_V2_FINAL_REPORT.md",
@@ -1120,5 +1120,12 @@
   "D_real_runtime_defects_remaining": 0,
   "pr_head": "05957249aaf0085082fa5ba2110db6e5255726f1",
   "repair_commit": "4aebf540178c0fe6a6ff5a72156f9e865f0eda9d",
-  "trading_db_status": "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED"
+  "trading_db_status": "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED",
+  "packages": {
+    "strategy_engine_broad_coverage_v1_2": {
+      "path": "artifacts/readiness/immutable/strategy_engine_broad_coverage_v1_2/",
+      "stage": "STRATEGY_ENGINE_V1_2_BROAD_RESEARCH_COVERAGE",
+      "recommendation": "NEXUS_STRATEGY_ENGINE_V12_NO_PROMISING_AFTER_BROAD_COVERAGE"
+    }
+  }
 }

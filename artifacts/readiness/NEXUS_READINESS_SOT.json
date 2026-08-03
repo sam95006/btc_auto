@@ -1,12 +1,12 @@
 {
   "schema_version": "nexus_readiness_sot_v1",
-  "updated_at": "2026-08-03T12:23:12Z",
+  "updated_at": "2026-08-03T14:20:45Z",
   "pr": 24,
   "pr_draft": true,
   "pr_merged": false,
   "pr_head": "edd7eef7870059a04ecb5e0ec1f90d64d5a9aea7",
   "edge_research_v3_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-  "system_stage": "STRATEGY_ENGINE_V1_1_SEMANTIC_REPAIR",
+  "system_stage": "STRATEGY_ENGINE_V1_2_BROAD_RESEARCH_COVERAGE",
   "current_approved_strategies": {
     "PRIMARY_QUALIFICATION_COHORT": "H3E",
     "CONFIRMATORY_COHORT": "H3D",
@@ -122,7 +122,7 @@
   "risk_review_packet_ready": false,
   "shadow_status": "NOT_APPLIED",
   "qualification_complete": false,
-  "recommendation": "NEXUS_STRATEGY_ENGINE_V11_RESEARCH_COVERAGE_INSUFFICIENT",
+  "recommendation": "NEXUS_STRATEGY_ENGINE_V12_NO_PROMISING_AFTER_BROAD_COVERAGE",
   "canonical_files": [
     "docs/04_readiness/NEXUS_READINESS_SOT.md",
     "artifacts/readiness/NEXUS_READINESS_SOT.json",
@@ -343,5 +343,19 @@
     "semantic_collision_pair_count": 10,
     "evidence_completeness_ratio": 0.9957264957264957,
     "deterministic_AI_agreement_ratio": 1.0
+  },
+  "strategy_engine_v1_2": {
+    "strict_component_conformance": "PASS",
+    "actual_price_dataset_count": 65,
+    "actual_derivatives_dataset_count": 25,
+    "DISCOVERY_PROMISING_count": 0,
+    "recommended_candidate_count": 0,
+    "real_reflection_quality_targets_met": true,
+    "formal_walk_forward_executed": false,
+    "immutable_package": "artifacts/readiness/immutable/strategy_engine_broad_coverage_v1_2/"
+  },
+  "strategy_engine_v1_1_preserved": {
+    "recommendation": "NEXUS_STRATEGY_ENGINE_V11_RESEARCH_COVERAGE_INSUFFICIENT",
+    "immutable_package": "artifacts/readiness/immutable/strategy_engine_semantic_repair_v1_1/"
   }
 }
