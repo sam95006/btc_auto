@@ -46,7 +46,14 @@
   "source_plan_checksum": "0e1297342e9cd58c63f2a658ce3f9f86a348d19e3814447299550f63d2db2401",
   "created_at": "2026-08-02T15:57:33Z",
   "download_manifest_ref": "artifacts/readiness/immutable/h3_oos_v1/dataset_provenance_checksum_manifest.json",
-  "data_integrity": "FAIL",
-  "classification": "DATA_INVALID",
-  "downloaded_at": "2026-08-03T05:04:38Z"
+  "data_integrity": "FAIL_WINDOW_NOT_MATURE",
+  "classification": "OOS_WINDOW_NOT_MATURE",
+  "downloaded_at": "2026-08-03T05:04:38Z",
+  "corrected_reason": "RESERVED_END_IS_IN_THE_FUTURE",
+  "partial_dataset_sealed": true,
+  "partial_dataset_classification": "PRELIMINARY_PARTIAL_NOT_FOR_ANALYSIS",
+  "prior_founder_approval_exhausted": true,
+  "next_execution_requires_new_founder_phrase": true,
+  "maturity_gate_required": true,
+  "updated_at": "2026-08-03T05:21:13Z"
 }

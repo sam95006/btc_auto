@@ -67,13 +67,14 @@ def test_oos_reservation_terminal_download_state():
     r = load_oos_reservation()
     assert r["reservation_id"] == "OOS_H3_UNTOUCHED_V1_RESERVED"
     assert r["download_requires_exact_phrase"] == FOUNDER_OOS_APPROVAL_PHRASE
-    # After Founder-approved download gate: downloaded may be true with DATA_INVALID;
-    # execution must remain false until a complete reserved window is sealed.
+    # Premature partial download sealed as WINDOW_NOT_MATURE; execution remains false.
     assert r["executed"] is False
     if r.get("downloaded") is True:
         assert isinstance(r.get("checksum"), str) and len(r["checksum"]) == 64
-        assert r.get("classification") == "DATA_INVALID"
-        assert r.get("data_integrity") == "FAIL"
+        assert r.get("classification") == "OOS_WINDOW_NOT_MATURE"
+        assert "FAIL" in str(r.get("data_integrity") or "")
+        assert r.get("prior_founder_approval_exhausted") is True
+        assert r.get("partial_dataset_sealed") is True
     else:
         assert r["checksum"] is None
 
@@ -105,14 +106,23 @@ def test_mainnet_and_real_money_forbidden_in_sot():
         "NEXUS_NEW_OOS_PLAN_READY",
         "NEXUS_H3_OOS_APPROVAL_REQUIRED",
         "NEXUS_H3_OOS_DATA_INVALID",
+        "NEXUS_H3_OOS_WAITING_FOR_RESERVED_WINDOW_CLOSE",
+        "NEXUS_OOS_RESERVATION_CONTAMINATED_REPLACEMENT_REQUIRED",
+        "NEXUS_WALLET_DELTA_FORENSIC_MANUAL_REVIEW_REQUIRED",
         "NEXUS_H3_OOS_FAILED_RETURN_TO_RESEARCH",
         "NEXUS_H3_OOS_INSUFFICIENT_NEW_RESERVATION_REQUIRED",
         "NEXUS_H3_OOS_VALIDATED_RISK_REVIEW_REQUIRED",
         "NEXUS_H3_OOS_EXECUTION_INVALID",
     }
-    assert sot["account_state"]["wallet_delta_classification"] == "UNKNOWN"
+    assert sot["account_state"]["wallet_delta_classification"] in {
+        "UNKNOWN",
+        "WALLET_DELTA_FULLY_ATTRIBUTED",
+        "WALLET_DELTA_PARTIALLY_ATTRIBUTED",
+        "WALLET_DELTA_UNATTRIBUTED_API_HISTORY_INCOMPLETE",
+        "WALLET_DELTA_UNATTRIBUTED_ACCOUNT_EPOCH_MISMATCH",
+        "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST",
+    }
     assert sot["account_state"]["wallet_delta_unattributed"] == -0.97052039
-    assert sot["wallet_delta_classification"] == "UNKNOWN"
     assert sot["wallet_delta_unattributed"] == -0.97052039
     assert sot["shadow_status"] == "NOT_APPLIED"
     assert sot["qualification_complete"] is False
@@ -128,12 +138,15 @@ def test_h3_oos_v1_immutable_package_present_when_downloaded():
         "policy_checksum_manifest.json",
         "dataset_provenance_checksum_manifest.json",
         "consumed_oos_registry_entry.json",
+        "semantic_correction_window_not_mature.json",
     ):
         assert (base / name).is_file(), name
     summary = json.loads((base / "oos_summary.json").read_text(encoding="utf-8"))
-    assert summary["recommendation"] == "NEXUS_H3_OOS_DATA_INVALID"
+    assert summary["recommendation"] == "NEXUS_H3_OOS_WAITING_FOR_RESERVED_WINDOW_CLOSE"
+    assert summary["classification"] == "OOS_WINDOW_NOT_MATURE"
     assert summary["executed"] is False
-    assert summary["h3e"]["primary_status"] == "OOS_DATA_INVALID"
+    assert summary["h3e"]["primary_status"] == "NOT_EXECUTED_WINDOW_NOT_MATURE"
+    assert summary["consumed_oos_registry_status"] == "NOT_CONSUMED"
     assert summary["shadow_status"] == "NOT_APPLIED"
     pol = json.loads((base / "policy_checksum_manifest.json").read_text(encoding="utf-8"))
     assert pol["h3e_policy_unchanged"] is True

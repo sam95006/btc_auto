@@ -1,12 +1,12 @@
 {
   "schema_version": "nexus_readiness_sot_v1",
-  "updated_at": "2026-08-03T05:06:01Z",
+  "updated_at": "2026-08-03T05:31:00Z",
   "pr": 24,
   "pr_draft": true,
   "pr_merged": false,
-  "pr_head": "c2668ac81be1e2eea882ee0ea59bb0a519a507d7",
+  "pr_head": "8e15900ea423daaa793bd388514ae8f57b6b55e9",
   "edge_research_v3_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-  "system_stage": "H3_OOS_DATA_INVALID_NEW_RESERVATION_REQUIRED",
+  "system_stage": "H3_OOS_WAITING_FOR_RESERVED_WINDOW_CLOSE",
   "current_approved_strategies": {
     "PRIMARY_QUALIFICATION_COHORT": "H3E",
     "CONFIRMATORY_COHORT": "H3D",
@@ -72,16 +72,24 @@
     "reservation_id": "OOS_H3_UNTOUCHED_V1_RESERVED",
     "reserved_start": 1785663000001,
     "reserved_end": 1789551000000,
-    "downloaded": true,
+    "reserved_start_local": "2026-08-02T17:30:00.001+08:00",
+    "reserved_end_local": "2026-09-16T17:30:00+08:00",
+    "downloaded_partial": true,
     "executed": false,
-    "checksum": "9cc83d2997fc98a0d43f43324acbc7a73266b4c38a32379e640301dedc85e3d2",
-    "classification": "DATA_INVALID",
-    "data_integrity": "FAIL",
-    "primary_status": "OOS_DATA_INVALID",
-    "dataset_record_count": 515,
-    "immutable_package": "artifacts/readiness/immutable/h3_oos_v1/",
-    "requires_phrase": "APPROVE_NEXUS_H3_UNTOUCHED_OOS_V1",
-    "note": "Reserved window still open until 2026-09-16; only partial history available at download time. Execution not started."
+    "classification": "OOS_WINDOW_NOT_MATURE",
+    "previous_classification": "OOS_DATA_INVALID",
+    "corrected_reason": "RESERVED_END_IS_IN_THE_FUTURE",
+    "stop_class": "PREMATURE_DATA_GATE_STOP",
+    "primary_status": "NOT_EXECUTED_WINDOW_NOT_MATURE",
+    "strategy_result": "NOT_YET_DETERMINED",
+    "partial_dataset_record_count": 515,
+    "partial_dataset_checksum": "9cc83d2997fc98a0d43f43324acbc7a73266b4c38a32379e640301dedc85e3d2",
+    "partial_dataset_sealed": true,
+    "partial_data_used_for_tuning": false,
+    "partial_data_used_for_performance_analysis": false,
+    "prior_founder_approval_exhausted": true,
+    "maturity_gate_required": true,
+    "immutable_package": "artifacts/readiness/immutable/h3_oos_v1/"
   },
   "safety": {
     "EXCHANGE_WRITE": false,
@@ -96,20 +104,22 @@
     "NO_CANARY": true
   },
   "account_state": {
-    "wallet_delta_classification": "UNKNOWN",
-    "wallet_delta_unattributed": -0.97052039
+    "wallet_delta_classification": "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST",
+    "wallet_delta_unattributed": -0.97052039,
+    "known_component_total": 0.0,
+    "forensic_report": "artifacts/readiness/immutable/wallet_delta_forensic/wallet_delta_forensic_report.json"
   },
   "blockers": [
-    "oos_data_invalid_incomplete_reserved_window",
-    "wallet_delta_UNKNOWN",
-    "risk_review_packet_not_ready",
-    "trading_db_prior_local_state_not_recovered"
+    "oos_window_not_mature_until_after_2026-09-16",
+    "wallet_delta_unattributed",
+    "trading_db_prior_local_state_not_recovered",
+    "risk_review_packet_not_ready"
   ],
-  "next_permitted_action": "Create a new future untouched OOS reservation after reserved_end is fully available historically; do not retune on this partial download; no Shadow/Demo",
+  "next_permitted_action": "Wait for reserved window close + maturity gate PASS; new Founder phrase required; continue read-only wallet forensic if new evidence appears",
   "risk_review_packet_ready": false,
   "shadow_status": "NOT_APPLIED",
   "qualification_complete": false,
-  "recommendation": "NEXUS_H3_OOS_DATA_INVALID",
+  "recommendation": "NEXUS_H3_OOS_WAITING_FOR_RESERVED_WINDOW_CLOSE",
   "canonical_files": [
     "docs/04_readiness/NEXUS_READINESS_SOT.md",
     "artifacts/readiness/NEXUS_READINESS_SOT.json",
@@ -124,7 +134,7 @@
     "bytes_removed": 82686411,
     "unknown_review_required_count": 54
   },
-  "wallet_delta_classification": "UNKNOWN",
+  "wallet_delta_classification": "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST",
   "wallet_delta_unattributed": -0.97052039,
   "broken_reference_count": 0,
   "orphan_manifest_entry_count": 0,
@@ -152,7 +162,7 @@
   "route_count": 238,
   "runtime_import_error_count": 0,
   "local_footprint_note": "G_DRIVE_REPO_GIT_CORRUPTED_DURING_INTERRUPTED_GC; rebuilt via shallow clone; trading.db local file lost",
-  "current_system_stage": "H3_OOS_DATA_INVALID_NEW_RESERVATION_REQUIRED",
+  "current_system_stage": "H3_OOS_WAITING_FOR_RESERVED_WINDOW_CLOSE",
   "storage_cleanup_commit": "4aebf540178c0fe6a6ff5a72156f9e865f0eda9d",
   "route_contract_difference_count": 0,
   "local_footprint": {
@@ -169,15 +179,16 @@
   "full_suite_collection_errors": 0,
   "full_suite_test_failures": 0,
   "trading_db_status": "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED",
-  "canonical_workspace_path_note": "G:\\\u6211\u7684\u96f2\u7aef\u786c\u789f\\btc_bot",
+  "canonical_workspace_path_note": "G:\\\\\u6211\u7684\u96f2\u7aef\u786c\u789f\\\\btc_bot",
   "repair_commit": "4aebf540178c0fe6a6ff5a72156f9e865f0eda9d",
-  "tests_collected": 1996,
-  "tests_passed": 1995,
+  "tests_collected": 2007,
+  "tests_passed": 2006,
   "tests_skipped": 1,
   "skipped_test": "tests/test_market_geometry_qualification.py:: (line 113) cost gate blocked on fixture",
   "runtime_startup_status": "PASS",
   "health_status": 200,
   "frontend_typecheck_status": "PASS",
   "frontend_build_status": "PASS",
-  "risk_review_status": "NOT_APPLICABLE_DATA_INVALID"
+  "risk_review_status": "NOT_APPLICABLE_WINDOW_NOT_MATURE",
+  "schema_contract_difference_count": 0
 }

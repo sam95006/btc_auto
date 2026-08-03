@@ -28,6 +28,10 @@ from backend.nexus_demo_execution.historical_market_data import (
     interval_ms,
 )
 from backend.nexus_demo_execution.microstructure_history import fetch_or_load_micro_bundle
+from backend.nexus_demo_execution.oos_maturity_gate import (
+    STATUS_NOT_MATURE,
+    assess_reservation_maturity,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 READINESS = ROOT / "artifacts" / "readiness"
@@ -38,10 +42,13 @@ RUNTIME_OOS = ROOT / ".nexus_runtime" / "oos" / "OOS_H3_UNTOUCHED_V1_RESERVED"
 H3E_EXPECT = "bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33"
 H3D_EXPECT = "d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7"
 
-# Completeness: require >= 95% of expected bars for each symbol×interval across full reserved window.
-COMPLETENESS_RATIO = 0.95
-# Minimum absolute bars for any qualification attempt (well below full window → still invalid if window unfinished).
+# Completeness: require >= 99.9% of expected bars for each symbol×interval across full reserved window.
+COMPLETENESS_RATIO = 0.999
+# Minimum absolute bars unused when maturity gate owns completeness.
 MIN_BARS_ANY = 500
+
+# Prior Founder approval for the premature attempt is exhausted.
+PRIOR_APPROVAL_PHRASE_EXHAUSTED = True
 
 
 def _utc_now() -> str:
@@ -113,8 +120,42 @@ def _scan_prior_cache_contamination(start_ms: int, end_ms: int) -> dict[str, Any
 
 
 def main() -> int:
-    phrase = os.environ.get("NEXUS_FOUNDER_OOS_PHRASE") or FOUNDER_OOS_APPROVAL_PHRASE
-    assert_phrase_allows_oos(phrase)
+    # Maturity gate runs before any network download.
+    reservation_peek = json.loads(RESERVATION_PATH.read_text(encoding="utf-8"))
+    maturity = assess_reservation_maturity(reservation=reservation_peek)
+    _write(IMMUTABLE / "maturity_assessment_latest.json", maturity.to_dict())
+    if maturity.status == STATUS_NOT_MATURE:
+        print(
+            json.dumps(
+                {
+                    "status": STATUS_NOT_MATURE,
+                    "reason": maturity.reason,
+                    "reservation_window_closed": maturity.reservation_window_closed,
+                    "maximum_timeframe_closed": maturity.maximum_timeframe_closed,
+                    "provider_lag_satisfied": maturity.provider_lag_satisfied,
+                    "network_download_attempt_count": 0,
+                    "prior_founder_approval_reuse_allowed": False,
+                },
+                indent=2,
+            )
+        )
+        return 0
+
+    # New explicit Founder phrase required after premature attempt exhausted prior approval.
+    phrase = os.environ.get("NEXUS_FOUNDER_OOS_PHRASE")
+    if PRIOR_APPROVAL_PHRASE_EXHAUSTED and not phrase:
+        print(
+            json.dumps(
+                {
+                    "status": "OOS_NEW_FOUNDER_APPROVAL_REQUIRED",
+                    "note": "Prior APPROVE_NEXUS_H3_UNTOUCHED_OOS_V1 exhausted by premature preflight; set NEXUS_FOUNDER_OOS_PHRASE for a new exact approval.",
+                    "maturity": maturity.to_dict(),
+                },
+                indent=2,
+            )
+        )
+        return 4
+    assert_phrase_allows_oos(phrase or FOUNDER_OOS_APPROVAL_PHRASE)
 
     started = time.time()
     h3e_before = load_frozen_policy(PRIMARY_POLICY_ID)
@@ -264,8 +305,14 @@ def main() -> int:
     )
 
     reservation_remaining_ms = max(0, end_ms - now_ms)
+    window_still_open = reservation_remaining_ms > 0 or now_ms <= end_ms
     data_integrity = "PASS" if not invalid_flags else "FAIL"
-    classification = "DATA_INVALID" if data_integrity != "PASS" else "DATA_OK_READY_TO_EXECUTE"
+    if window_still_open or data_integrity != "PASS":
+        # Prefer maturity semantics over "DATA_INVALID" (which implies corruption/strategy fail).
+        classification = "OOS_WINDOW_NOT_MATURE" if window_still_open else "OOS_DATA_INVALID"
+        data_integrity = "FAIL_WINDOW_NOT_MATURE" if window_still_open else data_integrity
+    else:
+        classification = "DATA_OK_READY_TO_EXECUTE"
 
     download_manifest = {
         "reservation_id": "OOS_H3_UNTOUCHED_V1_RESERVED",
@@ -343,14 +390,24 @@ def main() -> int:
     }
     _write(IMMUTABLE / "policy_checksum_manifest.json", policy_manifest)
 
-    # Do not execute simulations when data invalid.
+    # Do not execute simulations when window immature or data incomplete.
     executed = False
-    primary_status = "OOS_DATA_INVALID"
-    confirmatory_status = "OOS_DATA_INVALID"
+    if classification == "OOS_WINDOW_NOT_MATURE":
+        primary_status = "NOT_EXECUTED_WINDOW_NOT_MATURE"
+        confirmatory_status = "NOT_EXECUTED_WINDOW_NOT_MATURE"
+        recommendation = "NEXUS_H3_OOS_WAITING_FOR_RESERVED_WINDOW_CLOSE"
+        risk_review_status = "NOT_APPLICABLE_WINDOW_NOT_MATURE"
+        consumed_status = "NOT_CONSUMED"
+        note = "No simulation; reserved window not mature"
+    else:
+        primary_status = "OOS_DATA_INVALID"
+        confirmatory_status = "OOS_DATA_INVALID"
+        recommendation = "NEXUS_H3_OOS_DATA_INVALID"
+        risk_review_status = "NOT_APPLICABLE_DATA_INVALID"
+        consumed_status = "SKIPPED_DATA_INVALID"
+        note = "Execution blocked: incomplete or invalid dataset after window close"
     exploratory_status = "EXPLORATORY_NOT_QUALIFICATION_EVIDENCE"
-    recommendation = "NEXUS_H3_OOS_DATA_INVALID"
     consumed_classification = "NOT_CONSUMED_EXECUTION_NOT_STARTED"
-    consumed_status = "SKIPPED_DATA_INVALID"
 
     if classification == "DATA_OK_READY_TO_EXECUTE":
         # Placeholder — full sim path only when completeness PASS.
@@ -391,7 +448,7 @@ def main() -> int:
             "maximum_consecutive_losses": None,
             "liquidation_incident_count": 0,
             "risk_limit_breach_count": 0,
-            "note": "Execution blocked: reserved window not fully available / incomplete dataset",
+            "note": note,
         },
         "h3d": {
             "confirmatory_status": confirmatory_status,
@@ -411,7 +468,7 @@ def main() -> int:
         "consumed_oos_registry_status": consumed_status,
         "consumed_oos_classification": consumed_classification,
         "risk_review_packet_ready": False,
-        "risk_review_status": "NOT_APPLICABLE_DATA_INVALID",
+        "risk_review_status": risk_review_status,
         "wallet_delta_classification": "UNKNOWN",
         "wallet_delta_unattributed": -0.97052039,
         "trading_db_status": "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED",
@@ -443,7 +500,10 @@ def main() -> int:
         "runner_version": "h3_oos_v1_download_gate",
         "result_checksums": {"oos_summary": _sha_obj(summary)},
         "primary_verdict": primary_status,
-        "note": "Execution not started because data_integrity=FAIL (reserved window still open / incomplete).",
+        "note": (
+            "Execution never started; maturity/completeness gate stop "
+            f"(classification={classification})."
+        ),
     }
     _write(IMMUTABLE / "consumed_oos_registry_entry.json", consumed_registry)
 

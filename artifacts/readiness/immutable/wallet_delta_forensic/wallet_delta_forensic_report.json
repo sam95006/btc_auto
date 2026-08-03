@@ -1,0 +1,100 @@
+{
+  "schema": "wallet_delta_forensic_readonly_v1",
+  "updated_at": "2026-08-03T05:21:14Z",
+  "wallet_delta_original": -0.97052039,
+  "wallet_delta_total": -0.97052039,
+  "wallet_delta_classification": "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST",
+  "known_components": {
+    "realized_pnl": 0.0,
+    "trading_fees": 0.0,
+    "funding": 0.0,
+    "transfers": 0.0,
+    "rebates": 0.0,
+    "other_ledger_adjustments": 0.0
+  },
+  "known_component_total": 0.0,
+  "remaining_unattributed_delta": -0.97052039,
+  "reconciliation_tolerance": 1e-08,
+  "ledger_record_count": 3,
+  "ledger": [
+    {
+      "timestamp": null,
+      "transaction_type": "SEALED_SUMMARY::closed_pnl",
+      "symbol": null,
+      "order_id": null,
+      "execution_id": null,
+      "currency": "USDT",
+      "amount": null,
+      "fee": null,
+      "funding": null,
+      "realized_pnl": null,
+      "source_endpoint": "immutable/post_12h_forensic/wallet_delta_final_attempt.json",
+      "source_checksum": "cb4827ac39e4bcd2d0dbadacf365cdf82f2eced3f3036a9489f32b1f271a208e",
+      "account_epoch": null,
+      "account_fingerprint": null,
+      "summary_count": 1
+    },
+    {
+      "timestamp": null,
+      "transaction_type": "SEALED_SUMMARY::executions",
+      "symbol": null,
+      "order_id": null,
+      "execution_id": null,
+      "currency": "USDT",
+      "amount": null,
+      "fee": null,
+      "funding": null,
+      "realized_pnl": null,
+      "source_endpoint": "immutable/post_12h_forensic/wallet_delta_final_attempt.json",
+      "source_checksum": "cb4827ac39e4bcd2d0dbadacf365cdf82f2eced3f3036a9489f32b1f271a208e",
+      "account_epoch": null,
+      "account_fingerprint": null,
+      "summary_count": 2
+    },
+    {
+      "timestamp": null,
+      "transaction_type": "SEALED_SUMMARY::transaction_log",
+      "symbol": null,
+      "order_id": null,
+      "execution_id": null,
+      "currency": "USDT",
+      "amount": null,
+      "fee": null,
+      "funding": null,
+      "realized_pnl": null,
+      "source_endpoint": "immutable/post_12h_forensic/wallet_delta_final_attempt.json",
+      "source_checksum": "cb4827ac39e4bcd2d0dbadacf365cdf82f2eced3f3036a9489f32b1f271a208e",
+      "account_epoch": null,
+      "account_fingerprint": null,
+      "summary_count": 2
+    }
+  ],
+  "list_counts_from_sealed_evidence": {
+    "closed_pnl": 1,
+    "executions": 2,
+    "transaction_log": 2
+  },
+  "account_epoch_match": null,
+  "account_fingerprint_match": null,
+  "history_pagination_complete": false,
+  "trading_db_status": "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED",
+  "readonly_api_probe": {
+    "attempted": false,
+    "available": false,
+    "error": "NO_DEMO_CREDENTIALS_IN_ENV"
+  },
+  "equation": {
+    "ending_minus_starting": -0.97052039,
+    "equals_components_plus_residual": true,
+    "note": "Sealed forensic attempt recorded attributed=0; residual equals full delta."
+  },
+  "source_refs": [
+    "artifacts/readiness/immutable/post_12h_forensic/wallet_delta_final_attempt.json",
+    "artifacts/readiness/immutable/post_12h_forensic/NEXUS_12H_V3_POST_FORENSIC_RETURN.json"
+  ],
+  "session_id": "NEXUS-DEMO-12H-V3-20260801T181517Z-12hv3c01",
+  "exchange_write_attempt_count": 0,
+  "mainnet": false,
+  "real_money": false,
+  "report_checksum": "3fbdc9f3362a6dcb8dc77c8fb783e8dd3385a4d60f7849a0a17132baaeb0068e"
+}

@@ -1,6 +1,6 @@
 {
   "schema_version": "nexus_evidence_manifest_v1",
-  "updated_at": "2026-08-03T05:06:01Z",
+  "updated_at": "2026-08-03T05:22:14Z",
   "entries": [
     {
       "evidence_id": "6H_FINAL_ZERO_EXECUTION::artifacts/readiness/immutable/6h_final/NEXUS_6H_V2_FINAL_REPORT.md",
@@ -241,7 +241,7 @@
       "path": "artifacts/readiness/NEXUS_READINESS_SOT.json",
       "evidence_type": "CANONICAL_STATE",
       "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-      "checksum": "5c13585456c2f6908042b2f8ffe68defa00e74d3676a5af1c6ca9882593f8024",
+      "checksum": "7adc5b1d989961ef06f266c2a3ada6583c535b332738bc4f435854ab6ac9b78e",
       "retention_reason": "single_machine_readable_readiness_state",
       "canonical_or_historical": "canonical",
       "supersedes": [
@@ -256,7 +256,7 @@
       "path": "docs/04_readiness/NEXUS_READINESS_SOT.md",
       "evidence_type": "CANONICAL_STATE",
       "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
-      "checksum": "bce8530b3cfd38b0637f9714a548cfbba9800895a411487f84119eceb994f689",
+      "checksum": "b6da4c73c87bffcd5313ce13ef3ba695487042ffde3f9bb8dd62628232752817",
       "retention_reason": "single_human_readable_readiness_summary",
       "canonical_or_historical": "canonical",
       "supersedes": [],
@@ -290,18 +290,6 @@
       "status": "ACTIVE"
     },
     {
-      "evidence_id": "H3_OOS_V1_TERMINAL::artifacts/readiness/immutable/h3_oos_v1/oos_summary.json",
-      "path": "artifacts/readiness/immutable/h3_oos_v1/oos_summary.json",
-      "evidence_type": "H3_OOS_V1_TERMINAL",
-      "source_commit": "c2668ac81be1e2eea882ee0ea59bb0a519a507d7",
-      "checksum": "66095bab814a32e6932f51a92ca0bbae47c8bcb65d8d39dee8d6bba95619c4e3",
-      "retention_reason": "irreversible_milestone",
-      "canonical_or_historical": "canonical",
-      "supersedes": [],
-      "superseded_by": null,
-      "status": "PRESENT"
-    },
-    {
       "evidence_id": "H3_OOS_V1_POLICY::artifacts/readiness/immutable/h3_oos_v1/policy_checksum_manifest.json",
       "path": "artifacts/readiness/immutable/h3_oos_v1/policy_checksum_manifest.json",
       "evidence_type": "H3_OOS_V1_POLICY",
@@ -326,11 +314,11 @@
       "status": "PRESENT"
     },
     {
-      "evidence_id": "H3_OOS_V1_REGISTRY::artifacts/readiness/immutable/h3_oos_v1/consumed_oos_registry_entry.json",
-      "path": "artifacts/readiness/immutable/h3_oos_v1/consumed_oos_registry_entry.json",
-      "evidence_type": "H3_OOS_V1_REGISTRY",
-      "source_commit": "c2668ac81be1e2eea882ee0ea59bb0a519a507d7",
-      "checksum": "111414ddfeadeb2450541e7e6575dee8f85ed2efc92fc91211f9a082ca437e9d",
+      "evidence_id": "H3_OOS_V1_SEMANTIC_CORRECTION::artifacts/readiness/immutable/h3_oos_v1/semantic_correction_window_not_mature.json",
+      "path": "artifacts/readiness/immutable/h3_oos_v1/semantic_correction_window_not_mature.json",
+      "evidence_type": "H3_OOS_V1_SEMANTIC_CORRECTION",
+      "source_commit": "8e15900ea423daaa793bd388514ae8f57b6b55e9",
+      "checksum": "2d26dab6f1117804da015e953d06b3225b60f52659ee362c41d2ca8d9c4be96a",
       "retention_reason": "irreversible_milestone",
       "canonical_or_historical": "canonical",
       "supersedes": [],
@@ -338,11 +326,59 @@
       "status": "PRESENT"
     },
     {
-      "evidence_id": "OOS_RESERVATION::artifacts/readiness/OOS_H3_UNTOUCHED_V1_RESERVATION.json",
+      "evidence_id": "H3_OOS_V1_MATURITY::artifacts/readiness/immutable/h3_oos_v1/maturity_assessment_latest.json",
+      "path": "artifacts/readiness/immutable/h3_oos_v1/maturity_assessment_latest.json",
+      "evidence_type": "H3_OOS_V1_MATURITY",
+      "source_commit": "8e15900ea423daaa793bd388514ae8f57b6b55e9",
+      "checksum": "5cd8417282dccaeca9c814310f7b7bd6b0b2e7a6f9ac74d348b7318372f11cf7",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "WALLET_DELTA_FORENSIC::artifacts/readiness/immutable/wallet_delta_forensic/wallet_delta_forensic_report.json",
+      "path": "artifacts/readiness/immutable/wallet_delta_forensic/wallet_delta_forensic_report.json",
+      "evidence_type": "WALLET_DELTA_FORENSIC",
+      "source_commit": "8e15900ea423daaa793bd388514ae8f57b6b55e9",
+      "checksum": "e66fbe504fdb1413cac4c598b9cc61cd9e755e4c6d6f140c07f42b172b9dc2d9",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H3_OOS_V1_UPDATED::artifacts/readiness/immutable/h3_oos_v1/oos_summary.json",
+      "path": "artifacts/readiness/immutable/h3_oos_v1/oos_summary.json",
+      "evidence_type": "H3_OOS_V1_UPDATED",
+      "source_commit": "8e15900ea423daaa793bd388514ae8f57b6b55e9",
+      "checksum": "ac7432eb72a8af3ec7e09ede6261204c31c1ebb325f23e8b8000eb609bf39b3a",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H3_OOS_V1_UPDATED::artifacts/readiness/immutable/h3_oos_v1/consumed_oos_registry_entry.json",
+      "path": "artifacts/readiness/immutable/h3_oos_v1/consumed_oos_registry_entry.json",
+      "evidence_type": "H3_OOS_V1_UPDATED",
+      "source_commit": "8e15900ea423daaa793bd388514ae8f57b6b55e9",
+      "checksum": "336c161d9e7daf1572227fcb495aa7b4c6c7d3bc11f0ed663828efc3ec178889",
+      "retention_reason": "irreversible_milestone",
+      "canonical_or_historical": "canonical",
+      "supersedes": [],
+      "superseded_by": null,
+      "status": "PRESENT"
+    },
+    {
+      "evidence_id": "H3_OOS_V1_UPDATED::artifacts/readiness/OOS_H3_UNTOUCHED_V1_RESERVATION.json",
       "path": "artifacts/readiness/OOS_H3_UNTOUCHED_V1_RESERVATION.json",
-      "evidence_type": "OOS_RESERVATION",
-      "source_commit": "c2668ac81be1e2eea882ee0ea59bb0a519a507d7",
-      "checksum": "2b0a42cd11f03b1b53ea94ea7b395e41955877f9474d5eb3bafbd045e6aa5b3f",
+      "evidence_type": "H3_OOS_V1_UPDATED",
+      "source_commit": "8e15900ea423daaa793bd388514ae8f57b6b55e9",
+      "checksum": "433da4c59129ec506a72998b14e78627fdf86c28e891e31308447b924839c0b1",
       "retention_reason": "irreversible_milestone",
       "canonical_or_historical": "canonical",
       "supersedes": [],

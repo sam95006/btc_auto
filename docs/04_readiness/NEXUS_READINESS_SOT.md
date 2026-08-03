@@ -1,56 +1,51 @@
 # NEXUS Readiness Source of Truth
 
-Updated: 2026-08-03T05:06:01Z
+Updated: 2026-08-03T05:22:14Z
 
 ## Current system stage
 
-H3_OOS_DATA_INVALID_NEW_RESERVATION_REQUIRED
+H3_OOS_WAITING_FOR_RESERVED_WINDOW_CLOSE
 
-PR #24 — Draft, not merged. Head: c2668ac81be1e2eea882ee0ea59bb0a519a507d7.
+PR #24 — Draft. Head at update time: 8e15900ea423daaa793bd388514ae8f57b6b55e9.
 
-Canonical workspace: G:\我的雲端硬碟\btc_bot (tc_bot.code-workspace).
+Canonical workspace: G:\我的雲端硬碟\btc_bot.
 
-## OOS terminal result (H3 untouched V1)
+## Strategy result
+
+**NOT_YET_DETERMINED** — H3E/H3D/H3G were not examined. The premature OOS attempt stopped before simulation.
+
+## OOS reservation
 
 - reservation_id=OOS_H3_UNTOUCHED_V1_RESERVED
-- reserved_start=1785663000001 (2026-08-02T09:30:00.001Z)
-- reserved_end=1789551000000 (2026-09-16T09:30:00Z)
-- downloaded=	rue · executed=alse
-- classification=DATA_INVALID
-- primary_status=OOS_DATA_INVALID
-- dataset_record_count=515
-- dataset_checksum=9cc83d2997fc98a0d43f43324acbc7a73266b4c38a32379e640301dedc85e3d2
-- Reason: reserved window still open at download time; available history is a small incomplete subset. No H3E/H3D/H3G simulation executed.
-- Immutable package: rtifacts/readiness/immutable/h3_oos_v1/
+- reserved_start_local=2026-08-02T17:30:00.001+08:00
+- reserved_end_local=2026-09-16T17:30:00+08:00
+- classification=OOS_WINDOW_NOT_MATURE (corrected from OOS_DATA_INVALID)
+- stop_class=PREMATURE_DATA_GATE_STOP
+- reason=RESERVED_END_IS_IN_THE_FUTURE
+- downloaded_partial=	rue · executed=alse · consumed=alse
+- partial_dataset_record_count=515
+- partial_dataset_checksum=9cc83d2997fc98a0d43f43324acbc7a73266b4c38a32379e640301dedc85e3d2
+- partial sealed as PRELIMINARY_PARTIAL_NOT_FOR_ANALYSIS (not for tuning/performance/research)
+- prior Founder approval exhausted; next run needs a **new** exact phrase **after** maturity gate PASS
 
-## Frozen policy checksums
+## Frozen policies
 
-- H3E=ca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33 · unchanged=	rue
-- H3D=d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7 · unchanged=	rue
+- H3E=ca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33 unchanged=	rue
+- H3D=d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7 unchanged=	rue
 
-## Approved / rejected strategies (pre-OOS walk-forward state unchanged)
+## Wallet delta forensic (read-only)
 
-- **PRIMARY_QUALIFICATION_COHORT:** H3E (WALK_FORWARD_VALIDATED) — policy H3E_OOS_POLICY_V1_FROZEN
-- **CONFIRMATORY_COHORT:** H3D (WALK_FORWARD_VALIDATED) — policy H3D_OOS_POLICY_V1_FROZEN
-- **EXPLORATORY_ONLY:** H3G (REPLAY_VALIDATED)
-
-## Safety state
-
-- EXCHANGE_WRITE=false · DEMO_AUTONOMOUS_ENABLED=false · MAINNET=false · REAL_MONEY=false
-- NO 6H / 12H / 24H / Shadow / Canary
-- shadow_status=NOT_APPLIED
-- risk_review_packet_ready=alse
-
-## Account state
-
-- wallet_delta_classification=UNKNOWN
-- wallet_delta_unattributed=-0.97052039
+- wallet_delta_original=-0.97052039
+- classification=WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST
+- remaining_unattributed_delta=-0.97052039
 - trading_db_status=TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED
+- report: rtifacts/readiness/immutable/wallet_delta_forensic/wallet_delta_forensic_report.json
 
-## Next permitted action
+## Safety
 
-Create a **new** future untouched OOS reservation only after a complete historical reserved window is available. Do not retune H3 policies using this partial download. Do not start Shadow/Demo/timed sessions.
+- EXCHANGE_WRITE=false · MAINNET=false · REAL_MONEY=false
+- NO Shadow / Demo canary / 6H / 12H / 24H
 
 ## Recommendation
 
-NEXUS_H3_OOS_DATA_INVALID
+NEXUS_H3_OOS_WAITING_FOR_RESERVED_WINDOW_CLOSE

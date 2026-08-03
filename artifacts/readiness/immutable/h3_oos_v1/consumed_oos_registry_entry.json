@@ -1,6 +1,6 @@
 {
   "reservation_id": "OOS_H3_UNTOUCHED_V1_RESERVED",
-  "status": "SKIPPED_DATA_INVALID",
+  "status": "NOT_CONSUMED",
   "classification": "NOT_CONSUMED_EXECUTION_NOT_STARTED",
   "dataset_checksum": "9cc83d2997fc98a0d43f43324acbc7a73266b4c38a32379e640301dedc85e3d2",
   "policy_checksums": {
@@ -13,8 +13,9 @@
   "source_commit": "c2668ac81be1e2eea882ee0ea59bb0a519a507d7",
   "runner_version": "h3_oos_v1_download_gate",
   "result_checksums": {
-    "oos_summary": "5a05b1a0352a55ddda27ff6df472382de0000c9a7420534aa6ddfe8346415ac8"
+    "oos_summary": "ac7432eb72a8af3ec7e09ede6261204c31c1ebb325f23e8b8000eb609bf39b3a"
   },
-  "primary_verdict": "OOS_DATA_INVALID",
-  "note": "Execution not started because data_integrity=FAIL (reserved window still open / incomplete)."
+  "primary_verdict": "NOT_EXECUTED_WINDOW_NOT_MATURE",
+  "note": "Execution never started; premature window stop reclassified from DATA_INVALID to OOS_WINDOW_NOT_MATURE",
+  "updated_at": "2026-08-03T05:21:13Z"
 }

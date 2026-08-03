@@ -1,13 +1,13 @@
 {
   "schema": "h3_oos_v1_terminal_summary",
-  "updated_at": "2026-08-03T05:04:38Z",
+  "updated_at": "2026-08-03T05:21:13Z",
   "reservation_id": "OOS_H3_UNTOUCHED_V1_RESERVED",
   "reserved_start": 1785663000001,
   "reserved_end": 1789551000000,
   "downloaded": true,
   "executed": false,
-  "classification": "DATA_INVALID",
-  "recommendation": "NEXUS_H3_OOS_DATA_INVALID",
+  "classification": "OOS_WINDOW_NOT_MATURE",
+  "recommendation": "NEXUS_H3_OOS_WAITING_FOR_RESERVED_WINDOW_CLOSE",
   "dataset_provider": "bybit",
   "dataset_symbols": [
     "BTCUSDT",
@@ -28,7 +28,7 @@
   "overlap_consumed_oos": false,
   "lookahead_violation_count": 0,
   "h3e": {
-    "primary_status": "OOS_DATA_INVALID",
+    "primary_status": "NOT_EXECUTED_WINDOW_NOT_MATURE",
     "candidate_count": 0,
     "cost_gate_pass_count": 0,
     "completed_trade_count": 0,
@@ -41,10 +41,10 @@
     "maximum_consecutive_losses": null,
     "liquidation_incident_count": 0,
     "risk_limit_breach_count": 0,
-    "note": "Execution blocked: reserved window not fully available / incomplete dataset"
+    "note": "No simulation; reserved window not mature at attempt time"
   },
   "h3d": {
-    "confirmatory_status": "OOS_DATA_INVALID",
+    "confirmatory_status": "NOT_EXECUTED_WINDOW_NOT_MATURE",
     "completed_trade_count": 0,
     "net_expectancy": null,
     "profit_factor": null,
@@ -58,11 +58,11 @@
     "profit_factor": null,
     "maximum_drawdown": null
   },
-  "consumed_oos_registry_status": "SKIPPED_DATA_INVALID",
+  "consumed_oos_registry_status": "NOT_CONSUMED",
   "consumed_oos_classification": "NOT_CONSUMED_EXECUTION_NOT_STARTED",
   "risk_review_packet_ready": false,
-  "risk_review_status": "NOT_APPLICABLE_DATA_INVALID",
-  "wallet_delta_classification": "UNKNOWN",
+  "risk_review_status": "NOT_APPLICABLE_WINDOW_NOT_MATURE",
+  "wallet_delta_classification": "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST",
   "wallet_delta_unattributed": -0.97052039,
   "trading_db_status": "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED",
   "shadow_status": "NOT_APPLIED",
@@ -99,5 +99,10 @@
     "XRPUSDT_240:INCOMPLETE_coverage=0.0186",
     "DOGEUSDT_240:INCOMPLETE_coverage=0.0186"
   ],
-  "reservation_remaining_ms": 3817525135
+  "reservation_remaining_ms": 3817525135,
+  "previous_classification": "DATA_INVALID",
+  "previous_recommendation": "NEXUS_H3_OOS_DATA_INVALID",
+  "corrected_reason": "RESERVED_END_IS_IN_THE_FUTURE",
+  "stop_class": "PREMATURE_DATA_GATE_STOP",
+  "semantic_correction_ref": "artifacts/readiness/immutable/h3_oos_v1/semantic_correction_window_not_mature.json"
 }
