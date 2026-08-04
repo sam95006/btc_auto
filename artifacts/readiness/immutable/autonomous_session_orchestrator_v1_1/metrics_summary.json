@@ -1,0 +1,10 @@
+{
+  "events_processed": 153.0,
+  "checkpoint_count": 18.0,
+  "restart_count": 3.0,
+  "recovery_duration_ms": 1833.615,
+  "memory_growth_bytes": 1904640.0,
+  "cpu_time_ms": 1156.25,
+  "ledger_size_bytes": 172032.0,
+  "snapshot_size_bytes": 5178668.0
+}
