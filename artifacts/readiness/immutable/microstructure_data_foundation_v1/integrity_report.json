@@ -1,0 +1,12 @@
+{
+  "schema": "microstructure_integrity_report",
+  "duplicate_count": 0,
+  "out_of_order_count": 64,
+  "parse_error_count": 0,
+  "gap_suspected_count": 0,
+  "reconnect_count": 4,
+  "checksum_reproducible": true,
+  "heartbeat_ok": true,
+  "zero_liquidation_ok_if_quiet": true,
+  "aggressive_trade_expected_on_active_symbols": true
+}
