@@ -1,0 +1,25 @@
+{
+  "contract_version": "execution_contract_v1_1",
+  "cost_bridge_samples_total": 25,
+  "cost_bridge_samples_verified": 25,
+  "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "execution_mode": "SIMULATED_NO_EXCHANGE_WRITE",
+  "finished_at": "2026-08-04T16:28:36Z",
+  "generated_at": "2026-08-04T16:28:36Z",
+  "generated_execution_scenario_count": 10000,
+  "invariants": {
+    "scenarios_ok": 10000,
+    "scenarios_with_violations": 0,
+    "total_violations": 0
+  },
+  "mainnet": false,
+  "real_money": false,
+  "recommendation": "NEXUS_EXECUTION_SIMULATOR_V11_PASS",
+  "scenario_kind_count": 31,
+  "schema": "autonomous_execution_simulator_v1_1_readiness",
+  "seed": 20260805,
+  "simulator_version": "autonomous_execution_simulator_v1_1",
+  "started_at": "2026-08-04T16:28:34Z"
+}

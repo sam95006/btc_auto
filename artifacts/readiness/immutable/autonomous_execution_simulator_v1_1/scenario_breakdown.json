@@ -1,0 +1,222 @@
+{
+  "scenario_breakdown": {
+    "cancel_after_partial": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CANCELLED": 322
+      }
+    },
+    "cancel_before_fill": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CANCELLED": 322
+      }
+    },
+    "cross_margin_attempt": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 322
+      }
+    },
+    "duplicate_intent": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "DUPLICATE_IGNORED": 323
+      }
+    },
+    "expired_limit_gtc_short": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "EXPIRED": 323
+      }
+    },
+    "fok_partial_reject": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 229,
+        "UNFILLED": 94
+      }
+    },
+    "full_close": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CLOSED": 322
+      }
+    },
+    "funding_credit": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 323
+      }
+    },
+    "funding_debit": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CLOSED": 322
+      }
+    },
+    "instrument_halted": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 323
+      }
+    },
+    "ioc_no_fill": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "EXPIRED": 323
+      }
+    },
+    "leverage_100_attempt": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 323
+      }
+    },
+    "liquidation_distance_reject": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "LIQUIDATED_SIMULATED": 322
+      }
+    },
+    "market_buy": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CLOSED": 322
+      }
+    },
+    "market_sell": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CLOSED": 322
+      }
+    },
+    "marketable_limit_buy": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 323
+      }
+    },
+    "marketable_limit_sell": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 322
+      }
+    },
+    "min_notional_violation": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 322
+      }
+    },
+    "missing_index_price": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 322
+      }
+    },
+    "non_marketable_limit_buy": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "UNFILLED": 323
+      }
+    },
+    "non_marketable_limit_sell": {
+      "count": 324,
+      "invariant_violations": 0,
+      "outcomes": {
+        "UNFILLED": 324
+      }
+    },
+    "partial_fill_market": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 322
+      }
+    },
+    "position_reduction": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 323
+      }
+    },
+    "quantity_step_violation": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 322
+      }
+    },
+    "reduce_only_violation": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 323
+      }
+    },
+    "risk_override_attempt": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 323
+      }
+    },
+    "same_bar_stop_target": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "BLOCKED_AMBIGUOUS": 322
+      }
+    },
+    "stale_mark_price": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 322
+      }
+    },
+    "stop_market_arm": {
+      "count": 324,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 324
+      }
+    },
+    "take_profit_market_arm": {
+      "count": 324,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 324
+      }
+    },
+    "tick_size_violation": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 322
+      }
+    }
+  }
+}
