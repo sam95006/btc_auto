@@ -6,9 +6,11 @@ on:
   push:
     branches:
       - feature/demo-autonomous-6h-v2-readiness
+      - feature/nexus-private-core-integration-spine-v1
   pull_request:
     branches:
       - feature/nexus-single-service-consolidation
+      - feature/demo-autonomous-6h-v2-readiness
   workflow_dispatch:
 
 permissions:
