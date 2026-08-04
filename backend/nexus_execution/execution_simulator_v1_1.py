@@ -754,7 +754,7 @@ class AutonomousExecutionSimulatorV11:
 
 def build_default_simulator(**overrides: Any) -> AutonomousExecutionSimulatorV11:
     """Return a simulator configured with the bounded validation defaults."""
-    kwargs = {
+    kwargs: dict[str, Any] = {
         "max_positions": 2,
         "max_intents": 2,
         "leverage": 25,
