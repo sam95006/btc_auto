@@ -1,0 +1,406 @@
+{
+  "schema": "scenario_matrix_result_v1_1",
+  "recommendation": "NEXUS_AUTONOMOUS_HARNESS_V1_1_PASS",
+  "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+  "real_learning_claimed": false,
+  "canonical_classes": [
+    "GOOD_PROCESS_WIN",
+    "GOOD_PROCESS_LOSS",
+    "BAD_PROCESS_WIN",
+    "BAD_PROCESS_LOSS",
+    "UNDETERMINED"
+  ],
+  "canonical_classification_count": 5,
+  "scenario_count": 16,
+  "scenario_pass_count": 16,
+  "scenario_failure_count": 0,
+  "scenarios": {
+    "VALID_PROCESS_LOSS": {
+      "status": "PASS",
+      "detail": {
+        "first": {
+          "status": "COMPLETE",
+          "classification": "GOOD_PROCESS_LOSS",
+          "process_evidence": {
+            "rule_violation_ids": [],
+            "missing_evidence_ids": [],
+            "risk_gate_results": {
+              "status": "PASS"
+            },
+            "cost_gate_results": {
+              "status": "PASS"
+            },
+            "data_quality_results": {
+              "status": "PASS"
+            },
+            "prohibited_action_results": [],
+            "entry_rule_compliance": "PASS",
+            "exit_rule_compliance": "PASS"
+          },
+          "state": "CLOSED",
+          "lifecycle_id": "A1",
+          "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
+        },
+        "later_not_suppressed": true
+      }
+    },
+    "STALE_DATA_BLOCK": {
+      "status": "PASS",
+      "detail": {
+        "status": "BLOCKED",
+        "risk": {
+          "allowed": false,
+          "reason": "STALE_DATA_BLOCK"
+        },
+        "state": "CLOSED",
+        "lifecycle_id": "B1"
+      }
+    },
+    "COST_DESTROYED_BLOCK": {
+      "status": "PASS",
+      "detail": {
+        "status": "BLOCKED",
+        "risk": {
+          "allowed": false,
+          "reason": "COST_DESTROYED_BLOCK"
+        },
+        "state": "CLOSED",
+        "lifecycle_id": "C1"
+      }
+    },
+    "DUPLICATE_INTENT_IDEMPOTENCY": {
+      "status": "PASS",
+      "detail": {
+        "first": {
+          "status": "COMPLETE",
+          "classification": "GOOD_PROCESS_WIN",
+          "process_evidence": {
+            "rule_violation_ids": [],
+            "missing_evidence_ids": [],
+            "risk_gate_results": {
+              "status": "PASS"
+            },
+            "cost_gate_results": {
+              "status": "PASS"
+            },
+            "data_quality_results": {
+              "status": "PASS"
+            },
+            "prohibited_action_results": [],
+            "entry_rule_compliance": "PASS",
+            "exit_rule_compliance": "PASS"
+          },
+          "state": "CLOSED",
+          "lifecycle_id": "D1",
+          "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
+        },
+        "second": {
+          "status": "DUPLICATE_IGNORED",
+          "lifecycle_id": "D1",
+          "state": "CLOSED",
+          "duplicate_source_candidate_id": "D1"
+        }
+      }
+    },
+    "PROVIDER_UNAVAILABLE_FAIL_CLOSED": {
+      "status": "PASS",
+      "detail": {
+        "status": "BLOCKED",
+        "risk": {
+          "allowed": false,
+          "reason": "PROVIDER_UNAVAILABLE_FAIL_CLOSED"
+        },
+        "state": "CLOSED",
+        "lifecycle_id": "E1"
+      }
+    },
+    "REPEATED_BAD_PROCESS_SIGNATURE": {
+      "status": "PASS",
+      "detail": {
+        "source": {
+          "status": "COMPLETE",
+          "classification": "BAD_PROCESS_LOSS",
+          "process_evidence": {
+            "rule_violation_ids": [
+              "ENTRY_WITHOUT_COST_GATE"
+            ],
+            "missing_evidence_ids": [],
+            "risk_gate_results": {
+              "status": "PASS"
+            },
+            "cost_gate_results": {
+              "status": "FAIL",
+              "result": "DESTROYED"
+            },
+            "data_quality_results": {
+              "status": "PASS"
+            },
+            "prohibited_action_results": [],
+            "entry_rule_compliance": "FAIL",
+            "exit_rule_compliance": "PASS"
+          },
+          "state": "CLOSED",
+          "lifecycle_id": "F1",
+          "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
+        },
+        "later": {
+          "status": "BLOCKED",
+          "risk": {
+            "allowed": false,
+            "reason": "REPEATED_BAD_PROCESS_SIGNATURE_BLOCK"
+          },
+          "state": "CLOSED",
+          "lifecycle_id": "F2"
+        }
+      },
+      "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
+    },
+    "HARD_RISK_OVERRIDE": {
+      "status": "PASS",
+      "detail": {
+        "status": "BLOCKED",
+        "risk": {
+          "allowed": false,
+          "reason": "HARD_RISK_OVERRIDE_REJECTED",
+          "rejected_actions": [
+            "leverage_increase",
+            "stop_widening"
+          ],
+          "order_or_policy_mutation": false
+        },
+        "state": "CLOSED",
+        "lifecycle_id": "G1"
+      }
+    },
+    "RESTART_RECOVERY": {
+      "status": "PASS",
+      "detail": {
+        "restored_complete": {
+          "status": "COMPLETE",
+          "classification": "GOOD_PROCESS_WIN",
+          "process_evidence": {
+            "rule_violation_ids": [],
+            "missing_evidence_ids": [],
+            "risk_gate_results": {
+              "status": "PASS"
+            },
+            "cost_gate_results": {
+              "status": "PASS"
+            },
+            "data_quality_results": {
+              "status": "PASS"
+            },
+            "prohibited_action_results": [],
+            "entry_rule_compliance": "PASS",
+            "exit_rule_compliance": "PASS"
+          },
+          "state": "CLOSED",
+          "lifecycle_id": "H_NEW",
+          "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
+        },
+        "dup": {
+          "status": "DUPLICATE_IGNORED",
+          "lifecycle_id": "H_NEW",
+          "duplicate_source_candidate_id": "H_DUP",
+          "closed_duplicate_lifecycle_id": "H_DUP",
+          "state": "CLOSED",
+          "audit_event": {
+            "event_type": "DUPLICATE_INTENT_IGNORED",
+            "timestamp": "2026-08-04T13:06:30Z",
+            "intent_key": "H_NEW",
+            "source_candidate_id": "H_DUP",
+            "canonical_lifecycle_id": "H_NEW",
+            "closed_duplicate_lifecycle_id": "H_DUP"
+          }
+        }
+      }
+    },
+    "BAD_PROCESS_WIN_CLASSIFICATION": {
+      "status": "PASS",
+      "detail": {
+        "status": "COMPLETE",
+        "classification": "BAD_PROCESS_WIN",
+        "process_evidence": {
+          "rule_violation_ids": [
+            "ENTRY_WITHOUT_COST_GATE"
+          ],
+          "missing_evidence_ids": [],
+          "risk_gate_results": {
+            "status": "PASS"
+          },
+          "cost_gate_results": {
+            "status": "FAIL",
+            "result": "DESTROYED"
+          },
+          "data_quality_results": {
+            "status": "PASS"
+          },
+          "prohibited_action_results": [],
+          "entry_rule_compliance": "FAIL",
+          "exit_rule_compliance": "PASS"
+        },
+        "state": "CLOSED",
+        "lifecycle_id": "BPW1",
+        "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
+      }
+    },
+    "UNDETERMINED_MISSING_EVIDENCE": {
+      "status": "PASS",
+      "detail": {
+        "status": "COMPLETE",
+        "classification": "UNDETERMINED",
+        "process_evidence": {
+          "note": "insufficient_process_evidence"
+        },
+        "state": "CLOSED",
+        "lifecycle_id": "UND1",
+        "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
+      }
+    },
+    "CROSS_CANDIDATE_DUPLICATE_INTENT": {
+      "status": "PASS",
+      "detail": {
+        "first": {
+          "status": "COMPLETE",
+          "classification": "GOOD_PROCESS_WIN",
+          "process_evidence": {
+            "rule_violation_ids": [],
+            "missing_evidence_ids": [],
+            "risk_gate_results": {
+              "status": "PASS"
+            },
+            "cost_gate_results": {
+              "status": "PASS"
+            },
+            "data_quality_results": {
+              "status": "PASS"
+            },
+            "prohibited_action_results": [],
+            "entry_rule_compliance": "PASS",
+            "exit_rule_compliance": "PASS"
+          },
+          "state": "CLOSED",
+          "lifecycle_id": "X1",
+          "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
+        },
+        "second": {
+          "status": "DUPLICATE_IGNORED",
+          "lifecycle_id": "X1",
+          "duplicate_source_candidate_id": "X2",
+          "closed_duplicate_lifecycle_id": "X2",
+          "state": "CLOSED",
+          "audit_event": {
+            "event_type": "DUPLICATE_INTENT_IGNORED",
+            "timestamp": "2026-08-04T13:06:30Z",
+            "intent_key": "SHARED_X",
+            "source_candidate_id": "X2",
+            "canonical_lifecycle_id": "X1",
+            "closed_duplicate_lifecycle_id": "X2"
+          }
+        },
+        "orphan_lifecycle_count": 0
+      }
+    },
+    "LEDGER_CORRUPTION_FAIL_CLOSED": {
+      "status": "PASS",
+      "detail": {
+        "status": "BLOCKED",
+        "risk": {
+          "allowed": false,
+          "reason": "LEDGER_CORRUPTION_FAIL_CLOSED"
+        },
+        "state": "CLOSED",
+        "lifecycle_id": "LC1"
+      }
+    },
+    "PARTIAL_STATE_RESTORE": {
+      "status": "PASS",
+      "detail": {
+        "status": "BLOCKED",
+        "risk": {
+          "allowed": false,
+          "reason": "PARTIAL_STATE_RESTORE_BLOCKED"
+        },
+        "state": "CLOSED",
+        "lifecycle_id": "PS1"
+      }
+    },
+    "SAME_BAR_STOP_TARGET_ADVERSE_FIRST": {
+      "status": "PASS",
+      "detail": {
+        "status": "BLOCKED",
+        "risk": {
+          "allowed": false,
+          "reason": "SAME_BAR_STOP_TARGET_ADVERSE_FIRST"
+        },
+        "state": "CLOSED",
+        "lifecycle_id": "SB1"
+      }
+    },
+    "LESSON_TARGETED_NOT_GLOBAL": {
+      "status": "PASS",
+      "detail": {
+        "blocked": {
+          "status": "BLOCKED",
+          "risk": {
+            "allowed": false,
+            "reason": "REPEATED_BAD_PROCESS_SIGNATURE_BLOCK"
+          },
+          "state": "CLOSED",
+          "lifecycle_id": "LT2"
+        },
+        "other": {
+          "status": "COMPLETE",
+          "classification": "GOOD_PROCESS_WIN",
+          "process_evidence": {
+            "rule_violation_ids": [],
+            "missing_evidence_ids": [],
+            "risk_gate_results": {
+              "status": "PASS"
+            },
+            "cost_gate_results": {
+              "status": "PASS"
+            },
+            "data_quality_results": {
+              "status": "PASS"
+            },
+            "prohibited_action_results": [],
+            "entry_rule_compliance": "PASS",
+            "exit_rule_compliance": "PASS"
+          },
+          "state": "CLOSED",
+          "lifecycle_id": "LT3",
+          "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
+        }
+      }
+    },
+    "WALLET_STATE_AMBIGUOUS_BLOCK": {
+      "status": "PASS",
+      "detail": {
+        "status": "BLOCKED",
+        "risk": {
+          "allowed": false,
+          "reason": "WALLET_STATE_AMBIGUOUS_BLOCK"
+        },
+        "state": "CLOSED",
+        "lifecycle_id": "W1"
+      }
+    }
+  },
+  "exchange_write_attempt_count": 0,
+  "demo_order_count": 0,
+  "orphan_lifecycle_count": 0,
+  "state_machine_status": "PASS",
+  "BAD_PROCESS_WIN_test_status": "PASS",
+  "UNDETERMINED_test_status": "PASS",
+  "cross_candidate_idempotency_status": "PASS",
+  "valid_process_loss_status": "PASS",
+  "stale_data_block_status": "PASS",
+  "cost_destroyed_block_status": "PASS",
+  "duplicate_intent_idempotency_status": "PASS",
+  "provider_unavailable_fail_closed_status": "PASS",
+  "repeated_bad_process_fixture_status": "PASS",
+  "hard_risk_override_status": "PASS",
+  "restart_recovery_status": "PASS",
+  "created_at": "2026-08-04T13:06:30Z"
+}

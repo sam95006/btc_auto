@@ -1,0 +1,12 @@
+{
+  "durability_status": "NEXUS_RUNTIME_DURABILITY_V1_PASS",
+  "ledger_hash_chain_status": "PASS",
+  "ledger_idempotency_status": "PASS",
+  "ledger_replay_status": "PASS",
+  "corruption_detection_status": "CORRUPTION_DETECTED",
+  "restore_drill_status": "RECOVERED_EXACT",
+  "ambiguous_state_fail_closed_status": "PASS",
+  "old_trading_db_recovered": false,
+  "wallet_delta_attribution_changed": false,
+  "created_at": "2026-08-04T13:06:35Z"
+}
