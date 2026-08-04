@@ -72,21 +72,36 @@ class RuntimeDurabilityV1:
             encoding="utf-8",
         )
 
-    def create_snapshot(self, ledger: PrivateEventLedger) -> dict[str, Any]:
-        chain = ledger.verify_hash_chain()
-        if chain.get("ledger_hash_chain_status") != "PASS":
-            return {"status": "CORRUPTION_DETECTED", "chain": chain}
-        if ledger.integrity_check() != "ok":
-            return {"status": "CORRUPTION_DETECTED", "integrity": ledger.integrity_check()}
+    def create_snapshot(self, ledger: PrivateEventLedger, *, fast: bool = False) -> dict[str, Any]:
+        if not fast:
+            chain = ledger.verify_hash_chain()
+            if chain.get("ledger_hash_chain_status") != "PASS":
+                return {"status": "CORRUPTION_DETECTED", "chain": chain}
+            if ledger.integrity_check() != "ok":
+                return {"status": "CORRUPTION_DETECTED", "integrity": ledger.integrity_check()}
+        else:
+            chain = {"ledger_hash_chain_status": "DEFERRED_TO_FINAL"}
 
         self._generation += 1
         gen = self._generation
         snap_dir = self.backup_root / f"snapshot_{gen:06d}"
         snap_dir.mkdir(parents=True, exist_ok=True)
         dest = snap_dir / "private_event_ledger.sqlite3"
-        # Safe snapshot via vacuum-into or file copy after checkpoint
-        ledger._conn.execute("PRAGMA wal_checkpoint(FULL)")
+        if not fast:
+            ledger._conn.execute("PRAGMA wal_checkpoint(FULL)")
+        else:
+            try:
+                ledger._conn.execute("PRAGMA wal_checkpoint(PASSIVE)")
+            except Exception:
+                pass
+        # Ensure pending writes are on disk before copy.
+        ledger._conn.commit()
         shutil.copy2(self.ledger_path, dest)
+        # Also copy wal/shm if present for consistency under fast mode
+        for suffix in ("-wal", "-shm"):
+            side = Path(str(self.ledger_path) + suffix)
+            if side.exists():
+                shutil.copy2(side, Path(str(dest) + suffix))
         checksum = _file_sha(dest)
         pointer = {
             "generation": gen,
@@ -94,7 +109,8 @@ class RuntimeDurabilityV1:
             "source_ledger_position": ledger.event_count(),
             "snapshot_checksum": checksum,
             "snapshot_path": str(dest),
-            "ledger_hash_chain_status": "PASS",
+            "ledger_hash_chain_status": chain.get("ledger_hash_chain_status"),
+            "fast": fast,
         }
         (snap_dir / "snapshot_manifest.json").write_text(json.dumps(pointer, indent=2) + "\n", encoding="utf-8")
         self.lkg_path.write_text(json.dumps(pointer, indent=2) + "\n", encoding="utf-8")

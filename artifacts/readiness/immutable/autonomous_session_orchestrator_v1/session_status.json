@@ -1,0 +1,190 @@
+{
+  "schema": "autonomous_session_orchestrator_v1",
+  "session_6h_status": "PASS",
+  "session_12h_status": "PASS",
+  "restart_recovery_status": "PASS",
+  "kill_switch_status": "READY",
+  "session_a": {
+    "session_id": "SESSION_A_6H",
+    "status": "COMPLETED",
+    "logical_hours": 6,
+    "accelerated_wall_clock": true,
+    "injections": [
+      "process_restart",
+      "provider_outage",
+      "stale_data",
+      "duplicate_intent",
+      "process_restart_done"
+    ],
+    "sim": {
+      "order_created_count": 20,
+      "partially_filled_count": 0,
+      "filled_count": 20,
+      "cancelled_count": 0,
+      "rejected_count": 0,
+      "unfilled_count": 0,
+      "simulated_position_open_count": 10,
+      "simulated_position_closed_count": 10,
+      "simulated_liquidation_count": 0,
+      "open_ambiguous_position_count": 0,
+      "unclosed_intent_count": 0,
+      "exchange_write_attempt_count": 0,
+      "demo_order_count": 0,
+      "max_positions": 1,
+      "max_intents": 1,
+      "leverage": 25,
+      "margin_mode": "ISOLATED",
+      "fill_policy": "TRADE_THROUGH_ONE_TICK_REQUIRED; TOUCH_ALONE_INSUFFICIENT; SAME_BAR_STOP_TARGET=BLOCKED_AMBIGUOUS",
+      "fee_policy": {
+        "taker": 0.00055,
+        "maker": 0.0002
+      }
+    },
+    "checkpoint": {
+      "checkpoint": {
+        "session_id": "SESSION_A_6H",
+        "status": "RUNNING",
+        "checkpoint_count": 3,
+        "sim": {
+          "order_created_count": 20,
+          "partially_filled_count": 0,
+          "filled_count": 20,
+          "cancelled_count": 0,
+          "rejected_count": 0,
+          "unfilled_count": 0,
+          "simulated_position_open_count": 10,
+          "simulated_position_closed_count": 10,
+          "simulated_liquidation_count": 0,
+          "open_ambiguous_position_count": 0,
+          "unclosed_intent_count": 0,
+          "exchange_write_attempt_count": 0,
+          "demo_order_count": 0,
+          "max_positions": 1,
+          "max_intents": 1,
+          "leverage": 25,
+          "margin_mode": "ISOLATED",
+          "fill_policy": "TRADE_THROUGH_ONE_TICK_REQUIRED; TOUCH_ALONE_INSUFFICIENT; SAME_BAR_STOP_TARGET=BLOCKED_AMBIGUOUS",
+          "fee_policy": {
+            "taker": 0.00055,
+            "maker": 0.0002
+          }
+        },
+        "created_at": "2026-08-04T13:54:33Z"
+      },
+      "snapshot": {
+        "status": "SNAPSHOT_OK",
+        "generation": 3,
+        "created_at": "2026-08-04T13:54:33Z",
+        "source_ledger_position": 24,
+        "snapshot_checksum": "853988f9923e86cab21bb26dfffb59aa8040bd8641f91135d6a4dfa7152c2a4f",
+        "snapshot_path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\tmp\\sessA_69cvh2u9\\durability\\backups\\snapshot_000003\\private_event_ledger.sqlite3",
+        "ledger_hash_chain_status": "PASS",
+        "fast": false
+      }
+    },
+    "exchange_write_attempt_count": 0,
+    "open_ambiguous_position_count": 0,
+    "unclosed_intent_count": 0,
+    "orphan_lifecycle_count": 0,
+    "duplicate_position_count": 0,
+    "kill_switch_status": "READY",
+    "restart_recovery_status": "PASS",
+    "created_at": "2026-08-04T13:54:33Z",
+    "session_pass": true
+  },
+  "session_b": {
+    "session_id": "SESSION_B_12H",
+    "status": "COMPLETED",
+    "logical_hours": 12,
+    "accelerated_wall_clock": true,
+    "injections": [
+      "ledger_interrupt",
+      "snapshot_corruption",
+      "partial_fill",
+      "cancel_replace",
+      "same_bar_ambiguity",
+      "risk_override"
+    ],
+    "sim": {
+      "order_created_count": 29,
+      "partially_filled_count": 1,
+      "filled_count": 28,
+      "cancelled_count": 0,
+      "rejected_count": 2,
+      "unfilled_count": 0,
+      "simulated_position_open_count": 14,
+      "simulated_position_closed_count": 14,
+      "simulated_liquidation_count": 0,
+      "open_ambiguous_position_count": 0,
+      "unclosed_intent_count": 0,
+      "exchange_write_attempt_count": 0,
+      "demo_order_count": 0,
+      "max_positions": 2,
+      "max_intents": 2,
+      "leverage": 25,
+      "margin_mode": "ISOLATED",
+      "fill_policy": "TRADE_THROUGH_ONE_TICK_REQUIRED; TOUCH_ALONE_INSUFFICIENT; SAME_BAR_STOP_TARGET=BLOCKED_AMBIGUOUS",
+      "fee_policy": {
+        "taker": 0.00055,
+        "maker": 0.0002
+      }
+    },
+    "checkpoint": {
+      "checkpoint": {
+        "session_id": "SESSION_B_12H",
+        "status": "RUNNING",
+        "checkpoint_count": 4,
+        "sim": {
+          "order_created_count": 29,
+          "partially_filled_count": 1,
+          "filled_count": 28,
+          "cancelled_count": 0,
+          "rejected_count": 2,
+          "unfilled_count": 0,
+          "simulated_position_open_count": 14,
+          "simulated_position_closed_count": 14,
+          "simulated_liquidation_count": 0,
+          "open_ambiguous_position_count": 0,
+          "unclosed_intent_count": 0,
+          "exchange_write_attempt_count": 0,
+          "demo_order_count": 0,
+          "max_positions": 2,
+          "max_intents": 2,
+          "leverage": 25,
+          "margin_mode": "ISOLATED",
+          "fill_policy": "TRADE_THROUGH_ONE_TICK_REQUIRED; TOUCH_ALONE_INSUFFICIENT; SAME_BAR_STOP_TARGET=BLOCKED_AMBIGUOUS",
+          "fee_policy": {
+            "taker": 0.00055,
+            "maker": 0.0002
+          }
+        },
+        "created_at": "2026-08-04T13:54:34Z"
+      },
+      "snapshot": {
+        "status": "SNAPSHOT_OK",
+        "generation": 4,
+        "created_at": "2026-08-04T13:54:34Z",
+        "source_ledger_position": 33,
+        "snapshot_checksum": "5c9aa28d5aa33f82b6194216fcf2a05d8d47329dbcea705c3d8f2d6608bb1664",
+        "snapshot_path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\tmp\\sessB_54trowah\\durability\\backups\\snapshot_000004\\private_event_ledger.sqlite3",
+        "ledger_hash_chain_status": "PASS",
+        "fast": false
+      }
+    },
+    "exchange_write_attempt_count": 0,
+    "open_ambiguous_position_count": 0,
+    "unclosed_intent_count": 0,
+    "orphan_lifecycle_count": 0,
+    "duplicate_position_count": 0,
+    "kill_switch_status": "READY",
+    "restart_recovery_status": "PASS",
+    "created_at": "2026-08-04T13:54:34Z",
+    "session_pass": true
+  },
+  "open_ambiguous_position_count": 0,
+  "unclosed_intent_count": 0,
+  "orphan_lifecycle_count": 0,
+  "duplicate_position_count": 0,
+  "exchange_write_attempt_count": 0,
+  "created_at": "2026-08-04T13:54:34Z"
+}

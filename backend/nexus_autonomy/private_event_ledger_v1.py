@@ -25,6 +25,7 @@ AGGREGATE_TYPES = (
     "LESSON",
     "PROVIDER_REQUEST",
     "DATA_CAPTURE_SESSION",
+    "SNAPSHOT",
 )
 
 SCHEMA_VERSION = "private_event_ledger_v1"
@@ -203,6 +204,76 @@ class PrivateEventLedger:
                 self._conn.rollback()
                 raise
             return AppendResult(status="APPENDED", event_id=event_id, sequence_number=seq, duplicate=False)
+
+    def append_many_scale(self, items: list[dict[str, Any]], *, commit_every: int = 1000) -> int:
+        """High-throughput append for scale validation only. Still hash-chained and idempotent-keyed."""
+        n = 0
+        with self._lock:
+            prev = self._last_hash()
+            cur = self._conn.execute("SELECT IFNULL(MAX(sequence_number),0) AS m FROM events")
+            seq = int(cur.fetchone()["m"])
+            self._conn.execute("BEGIN IMMEDIATE")
+            try:
+                for item in items:
+                    seq += 1
+                    payload_json = json.dumps(item["payload"], sort_keys=True, default=str, separators=(",", ":"))
+                    payload_hash = _sha(payload_json)
+                    created_at = _utc()
+                    idem = item.get("idempotency_key")
+                    event_id = _sha(f"{item['aggregate_id']}|{item['event_type']}|{created_at}|{payload_hash}|{seq}")[:32]
+                    material = "|".join(
+                        [
+                            event_id,
+                            item["aggregate_id"],
+                            item["aggregate_type"],
+                            item["event_type"],
+                            str(seq),
+                            prev,
+                            created_at,
+                            item.get("source") or "scale",
+                            SCHEMA_VERSION,
+                            idem or "",
+                            payload_hash,
+                            item.get("payload_redaction_status") or "REDACTED_SAFE",
+                        ]
+                    )
+                    event_hash = _sha(material)
+                    self._conn.execute(
+                        """
+                        INSERT INTO events(
+                          sequence_number, event_id, aggregate_id, aggregate_type, event_type,
+                          previous_event_hash, event_hash, created_at, source,
+                          schema_version, idempotency_key, payload_hash,
+                          payload_redaction_status, payload_json
+                        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                        """,
+                        (
+                            seq,
+                            event_id,
+                            item["aggregate_id"],
+                            item["aggregate_type"],
+                            item["event_type"],
+                            prev,
+                            event_hash,
+                            created_at,
+                            item.get("source") or "scale",
+                            SCHEMA_VERSION,
+                            idem,
+                            payload_hash,
+                            item.get("payload_redaction_status") or "REDACTED_SAFE",
+                            payload_json,
+                        ),
+                    )
+                    prev = event_hash
+                    n += 1
+                    if n % commit_every == 0:
+                        self._conn.commit()
+                        self._conn.execute("BEGIN IMMEDIATE")
+                self._conn.commit()
+            except Exception:
+                self._conn.rollback()
+                raise
+        return n
 
     def event_count(self) -> int:
         return int(self._conn.execute("SELECT COUNT(*) AS c FROM events").fetchone()["c"])
