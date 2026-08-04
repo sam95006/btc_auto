@@ -122,26 +122,22 @@ class ClosedLoopHarness:
 
     def run_happy_path(self, candidate: dict[str, Any], *, pnl: float) -> dict[str, Any]:
         lid = candidate["candidate_id"]
-        intent_key = candidate.get("idempotency_key") or lid
-        # Global idempotency across harness
-        for existing in self.lifecycles.values():
-            if intent_key in existing.intent_keys and existing.state not in {"OBSERVED"}:
-                return {"status": "DUPLICATE_IGNORED", "lifecycle_id": existing.lifecycle_id, "state": existing.state}
-
         lc = self._lc(lid)
-        if lc.state != "OBSERVED" and intent_key in lc.intent_keys:
+        intent_key = candidate.get("idempotency_key") or lid
+        if intent_key in lc.intent_keys:
             return {"status": "DUPLICATE_IGNORED", "lifecycle_id": lid, "state": lc.state}
-
-        chain = [
-            "CANDIDATE_CREATED",
-            "EVIDENCE_READY",
-            "AI_REVIEW_PENDING",
-            "AI_REVIEW_COMPLETE",
-            "RISK_REVIEW_PENDING",
-        ]
-        for st in chain:
-            if lc.state != st:
-                lc.transition(st, reason=st.lower(), evidence=candidate, idempotency_key=f"{lid}:{st}")
+        # Advance sequentially from OBSERVED to RISK_REVIEW_PENDING.
+        while lc.state != "RISK_REVIEW_PENDING":
+            nxt = {
+                "OBSERVED": "CANDIDATE_CREATED",
+                "CANDIDATE_CREATED": "EVIDENCE_READY",
+                "EVIDENCE_READY": "AI_REVIEW_PENDING",
+                "AI_REVIEW_PENDING": "AI_REVIEW_COMPLETE",
+                "AI_REVIEW_COMPLETE": "RISK_REVIEW_PENDING",
+            }.get(lc.state)
+            if nxt is None:
+                raise ValueError(f"cannot_advance_from {lc.state}")
+            lc.transition(nxt, reason="advance", evidence=candidate, idempotency_key=f"{lid}:{nxt}")
 
         risk = DeterministicRisk.evaluate(candidate, ai_request=candidate.get("ai_request"))
         if not risk["allowed"]:
@@ -149,21 +145,21 @@ class ClosedLoopHarness:
             lc.transition("CLOSED", reason="blocked_closed", evidence=risk, idempotency_key=f"{lid}:closed")
             return {"status": "BLOCKED", "risk": risk, "state": lc.state, "lifecycle_id": lid}
 
+        if intent_key in {k for l in self.lifecycles.values() for k in l.intent_keys}:
+            return {"status": "DUPLICATE_IGNORED", "lifecycle_id": lid, "state": lc.state}
         lc.intent_keys.add(intent_key)
-        for st in [
-            "ORDER_INTENT_CREATED",
-            "SIMULATED_OPEN",
-            "SIMULATED_MANAGING",
-            "SIMULATED_EXITED",
-            "REFLECTION_PENDING",
-            "REFLECTION_COMPLETE",
+        for st, reason in [
+            ("ORDER_INTENT_CREATED", "intent"),
+            ("SIMULATED_OPEN", "open"),
+            ("SIMULATED_MANAGING", "manage"),
+            ("SIMULATED_EXITED", "exit"),
+            ("REFLECTION_PENDING", "reflect_pending"),
+            ("REFLECTION_COMPLETE", "reflect_done"),
         ]:
-            lc.transition(st, reason=st.lower(), evidence={"pnl": pnl}, idempotency_key=f"{lid}:{st}")
+            lc.transition(st, reason=reason, evidence={"pnl": pnl}, idempotency_key=f"{lid}:{st}")
 
-        classification = (
-            "BAD_PROCESS_LOSS"
-            if candidate.get("bad_process") and pnl < 0
-            else ("GOOD_PROCESS_LOSS" if pnl < 0 else "GOOD_PROCESS_WIN")
+        classification = "GOOD_PROCESS_LOSS" if pnl < 0 and not candidate.get("bad_process") else (
+            "BAD_PROCESS_LOSS" if candidate.get("bad_process") and pnl < 0 else "GOOD_PROCESS_WIN"
         )
         if candidate.get("bad_process"):
             lesson_id = f"LES_{lid}"
@@ -172,24 +168,9 @@ class ClosedLoopHarness:
                 "signature": candidate.get("error_signature") or "SIG_DEFAULT",
                 "effect": "TEMPORARY_COMPONENT_CONTEXT_BLOCK",
             }
-            lc.transition(
-                "LESSON_PENDING",
-                reason="lesson",
-                evidence={"classification": classification},
-                idempotency_key=f"{lid}:lp",
-            )
-            lc.transition(
-                "LESSON_STORED",
-                reason="stored",
-                evidence={"lesson_id": lesson_id},
-                idempotency_key=f"{lid}:ls",
-            )
-        lc.transition(
-            "CLOSED",
-            reason="done",
-            evidence={"classification": classification},
-            idempotency_key=f"{lid}:closed",
-        )
+            lc.transition("LESSON_PENDING", reason="lesson", evidence={"classification": classification}, idempotency_key=f"{lid}:lp")
+            lc.transition("LESSON_STORED", reason="stored", evidence={"lesson_id": lesson_id}, idempotency_key=f"{lid}:ls")
+        lc.transition("CLOSED", reason="done", evidence={"classification": classification}, idempotency_key=f"{lid}:closed")
         return {
             "status": "COMPLETE",
             "classification": classification,
