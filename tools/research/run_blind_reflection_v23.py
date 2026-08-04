@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Quota-aware Blind Reflection V2.3 + sealed VWAP confirmation.
+"""Private Core Continuity V3 — provider-specific V2.3 resume + VWAP terminal + alpha gate.
 
-Preserves prior immutable V2.3 package. VWAP runs independently of provider capacity.
-No WF/OOS/Demo/Shadow/deploy/mainnet/real money.
+Preserves prior immutable packages. Intermediate progress -> .nexus_runtime.
+Creates exactly one final immutable continuation package only when V2.3 + learning proof complete.
+No WF/OOS/Demo/Shadow/deploy/mainnet/real money. No public product changes.
 """
 from __future__ import annotations
 
@@ -15,10 +16,11 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
-PRIOR = ROOT / "artifacts/readiness/immutable/blind_reflection_v2_3_and_learning_prevention"
-IMMUTABLE = ROOT / "artifacts/readiness/immutable/blind_reflection_v2_3_quota_recovery_and_vwap"
+PRIOR_V23 = ROOT / "artifacts/readiness/immutable/blind_reflection_v2_3_and_learning_prevention"
+PRIOR_QUOTA = ROOT / "artifacts/readiness/immutable/blind_reflection_v2_3_quota_recovery_and_vwap"
 EDGE_V2 = ROOT / "artifacts/readiness/immutable/edge_discovery_diagnostics_v2"
 RUNTIME = ROOT / ".nexus_runtime/research/blind_reflection_v23"
+FINAL_IMMUTABLE = ROOT / "artifacts/readiness/immutable/blind_reflection_v2_3_provider_split_complete"
 
 
 def _utc() -> str:
@@ -46,22 +48,28 @@ def _git_head() -> str:
 def pick_recommendation(
     *,
     impl_ok: bool,
-    provider_blocked: bool,
     quality_evaluated: bool,
     quality_passed: bool,
     learning_ok: bool | None,
+    provider_partial: bool,
+    alpha_selected: bool,
 ) -> str:
     if not impl_ok:
         return "NEXUS_PRIVATE_CORE_DATA_OR_IMPLEMENTATION_INVALID"
-    if provider_blocked or not quality_evaluated:
-        return "NEXUS_PRIVATE_REFLECTION_V23_PROVIDER_CAPACITY_BLOCKED"
+    if quality_evaluated and quality_passed and learning_ok:
+        return "NEXUS_PRIVATE_V23_COMPLETE_LEARNING_PREVENTION_VERIFIED"
     if quality_evaluated and not quality_passed:
-        return "NEXUS_PRIVATE_REFLECTION_V23_QUALITY_FAILED_WITH_VALID_SAMPLE"
-    if learning_ok is False:
-        return "NEXUS_PRIVATE_REPEATED_ERROR_PREVENTION_PROOF_FAILED"
-    if quality_passed and learning_ok:
-        return "NEXUS_PRIVATE_REFLECTION_V23_VERIFIED_AND_LEARNING_PROOF_COMPLETE"
-    return "NEXUS_PRIVATE_REFLECTION_V23_PROVIDER_CAPACITY_BLOCKED"
+        return "NEXUS_PRIVATE_V23_VALID_SAMPLE_QUALITY_FAILED"
+    if quality_passed and learning_ok is False:
+        return "NEXUS_PRIVATE_LEARNING_PREVENTION_PROOF_FAILED"
+    if provider_partial or not quality_evaluated:
+        # Prefer partial capacity while calibration incomplete; alpha selection is additive.
+        if alpha_selected and not quality_evaluated:
+            return "NEXUS_PRIVATE_V23_PARTIAL_PROVIDER_CAPACITY"
+        return "NEXUS_PRIVATE_V23_PARTIAL_PROVIDER_CAPACITY"
+    if alpha_selected and quality_evaluated and quality_passed:
+        return "NEXUS_PRIVATE_NEXT_ALPHA_DATA_FAMILY_SELECTED"
+    return "NEXUS_PRIVATE_V23_PARTIAL_PROVIDER_CAPACITY"
 
 
 def main() -> int:
@@ -75,58 +83,24 @@ def main() -> int:
     except Exception:
         pass
 
-    assert PRIOR.is_dir(), "prior V2.3 package must be preserved"
+    assert PRIOR_V23.is_dir(), "prior V2.3 package must be preserved"
+    assert PRIOR_QUOTA.is_dir(), "quota recovery package must be preserved"
     assert EDGE_V2.is_dir()
-    IMMUTABLE.mkdir(parents=True, exist_ok=True)
     RUNTIME.mkdir(parents=True, exist_ok=True)
 
+    from backend.nexus_edge_discovery.alpha_data_family_feasibility_v1 import audit_alpha_data_families
     from backend.nexus_edge_discovery.blind_reflection_v23 import build_calibration_set_v23
-    from backend.nexus_edge_discovery.conditional_vwap_confirmation import run_conditional_vwap_confirmation
+    from backend.nexus_edge_discovery.conditional_vwap_confirmation import (
+        build_vwap_taxonomy_correction_record,
+    )
     from backend.nexus_edge_discovery.learning_prevention_proof import (
         run_good_process_loss_non_suppression_test,
         run_learning_prevention_proof,
     )
     from backend.nexus_edge_discovery.quota_aware_v23 import run_quota_aware_calibration
-    from backend.nexus_edge_discovery.ratio_metrics import make_ratio
-    from backend.nexus_strategy_engine.data_bundle import load_research_data_bundles
     from backend.nexus_strategy_engine.hypotheses_v1_2 import default_v12_hypothesis_drafts
 
-    prior = json.loads((PRIOR / "blind_reflection_v2_3_result.json").read_text(encoding="utf-8"))
-    semantic = {
-        "schema": "v2_3_provider_capacity_semantic_correction",
-        "V2_3_RESULT_INTERPRETATION": "CALIBRATION_INCOMPLETE_PROVIDER_CAPACITY",
-        "prior_package": str(PRIOR.relative_to(ROOT)).replace("\\", "/"),
-        "prior_recommendation_was": "NEXUS_PRIVATE_REFLECTION_V23_QUALITY_FAILED",
-        "corrected_recommendation_class": "NEXUS_PRIVATE_REFLECTION_V23_CALIBRATION_INCOMPLETE_PROVIDER_CAPACITY",
-        "not_model_quality_failure": True,
-        "reason": "provider_successful_response_count=0 with provider_429_count=80; quality cannot be assessed",
-        "preserved_raw_counts": {
-            "blind_reflection_v2_3_calibration_count": prior.get("blind_reflection_v2_3_calibration_count"),
-            "provider_rate_limited_count": prior.get("provider_rate_limited_count"),
-            "blind_valid_schema_ratio": prior.get("blind_valid_schema_ratio"),
-            "evidence_packet_delivery_ratio": prior.get("evidence_packet_delivery_ratio"),
-        },
-        "corrected_metrics": {
-            "input_evidence_packet_count": 80,
-            "input_evidence_eligible_count": 80,
-            "input_evidence_ineligible_count": 0,
-            "provider_successful_response_count": 0,
-            "provider_429_count": int(prior.get("provider_rate_limited_count") or 80),
-            "AI_evidence_sufficiency_assessed_count": 0,
-            "AI_evidence_sufficient_count": 0,
-            "AI_evidence_insufficient_count": 0,
-            "critic_resolution_ratio": make_ratio(0, 0),
-            "critic_resolution_status": "NOT_APPLICABLE",
-            "critic_resolution_denominator": 0,
-        },
-        "canary_evidence_only": prior.get("prior_real_provider_smoke"),
-        "canary_label": "CANARY_EVIDENCE_ONLY",
-        "prior_immutable_not_overwritten": True,
-        "created_at": _utc(),
-    }
-    _write(IMMUTABLE / "v2_3_provider_capacity_semantic_correction.json", semantic)
-
-    # Frozen calibration sample (same builder, checksumed)
+    # Frozen calibration sample (same builder; do not resample)
     hyps = default_v12_hypothesis_drafts()
     market_rows = []
     for i in range(70):
@@ -162,85 +136,55 @@ def main() -> int:
         control_count=20,
     )
     assert len(packets) == 80
-    manifest = {
-        "schema": "calibration_manifest",
-        "frozen": True,
-        "blind_reflection_v2_3_calibration_count": 80,
-        "real_trade_case_count": sum(
-            1
-            for p in packets
-            if p.get("control_fixture_label") != "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE"
-        ),
-        "control_fixture_count": sum(
-            1
-            for p in packets
-            if p.get("control_fixture_label") == "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE"
-        ),
-        "case_ids": [p.get("trade_id") for p in packets],
-        "do_not_replace_difficult_cases_after_output": True,
-        "formal_gate_requires_80_successful_provider_assessments": True,
-    }
-    manifest["calibration_manifest_checksum"] = _sha(
-        {"ids": manifest["case_ids"], "n": 80, "schema": "calibration_manifest"}
-    )
-    _write(IMMUTABLE / "calibration_manifest.json", manifest)
+    # Prefer frozen checksum from prior quota package if present
+    prior_manifest_path = PRIOR_QUOTA / "calibration_manifest.json"
+    if prior_manifest_path.is_file():
+        prior_manifest = json.loads(prior_manifest_path.read_text(encoding="utf-8"))
+        manifest_checksum = str(prior_manifest.get("calibration_manifest_checksum") or "")
+        prior_ids = list(prior_manifest.get("case_ids") or [])
+        now_ids = [p.get("trade_id") for p in packets]
+        assert prior_ids == now_ids, "frozen 80-case manifest must not change"
+    else:
+        manifest_checksum = _sha(
+            {"ids": [p.get("trade_id") for p in packets], "n": 80, "schema": "calibration_manifest"}
+        )
 
-    print("1) quota-aware resumable calibration...", flush=True)
+    print("1) provider-specific quota-aware resume...", flush=True)
     use_real = os.getenv("NEXUS_V23_FORCE_MOCK", "0") != "1"
     cal = run_quota_aware_calibration(
         root=ROOT,
         packets=packets,
-        manifest_checksum=str(manifest["calibration_manifest_checksum"]),
+        manifest_checksum=manifest_checksum,
         use_real_ai=use_real,
         max_batches_this_invocation=int(os.getenv("NEXUS_V23_MAX_BATCHES", "3")),
     )
-    _write(IMMUTABLE / "quota_preflight_summary.json", cal.get("preflight") or {})
-    _write(IMMUTABLE / "calibration_resume_summary.json", {
-        "schema": "calibration_resume_summary",
-        "stage": cal.get("stage"),
+    quality = cal.get("quality") or {}
+    summary_state = cal.get("state_summary") or {}
+    _write(RUNTIME / "preflight_groq.json", cal.get("preflight_groq") or {})
+    _write(RUNTIME / "preflight_sambanova.json", cal.get("preflight_sambanova") or {})
+    _write(RUNTIME / "calibration_resume_summary.json", {
+        "schema": "calibration_resume_summary_v3",
         "checkpoint_status": cal.get("checkpoint_status"),
-        **(cal.get("state_summary") or {}),
+        **summary_state,
         "checkpoint_path": ".nexus_runtime/blind_reflection_v23_checkpoint.json",
         "checkpoint_committed": False,
     })
-    quality = cal.get("quality") or {}
-    if cal.get("stage") == "PROVIDER_CAPACITY_BLOCKED":
-        quality = dict(quality)
-        quality["V2_3_quality_status"] = "INCOMPLETE_PROVIDER_CAPACITY"
-        quality["V2_3_RESULT_INTERPRETATION"] = "CALIBRATION_INCOMPLETE_PROVIDER_CAPACITY"
-        quality["quality_gates_evaluated"] = False
-        quality["quality_gates_passed"] = False
-    _write(IMMUTABLE / "final_v2_3_quality_result.json", quality)
-
-    ratio_audit = {
-        "schema": "ratio_denominator_audit",
-        "rules": {
-            "empty_denominator_is_NOT_APPLICABLE": True,
-            "never_report_1_0_for_empty_set": True,
-            "provider_429_does_not_increment_AI_insufficient_or_undetermined": True,
-        },
-        "ratios": {
-            "evidence_packet_delivery_ratio": quality.get("evidence_packet_delivery_ratio"),
-            "blind_valid_schema_ratio": quality.get("blind_valid_schema_ratio"),
-            "informative_classification_ratio": quality.get("informative_classification_ratio"),
-            "informative_classification_ratio_on_sufficient_cases": quality.get(
-                "informative_classification_ratio_on_sufficient_cases"
-            ),
-            "blind_agreement_ratio_on_sufficient_cases": quality.get(
-                "blind_agreement_ratio_on_sufficient_cases"
-            ),
-            "critic_resolution_ratio": quality.get("critic_resolution_ratio"),
-        },
-        "critic_resolution_status": quality.get("critic_resolution_status"),
-        "critic_resolution_denominator": quality.get("critic_resolution_denominator"),
-    }
-    _write(IMMUTABLE / "ratio_denominator_audit.json", ratio_audit)
+    _write(RUNTIME / "quality_snapshot.json", quality)
 
     quality_passed = bool(quality.get("quality_gates_passed"))
     quality_evaluated = bool(quality.get("quality_gates_evaluated"))
-    provider_blocked = quality.get("V2_3_quality_status") == "INCOMPLETE_PROVIDER_CAPACITY" or cal.get(
-        "stage"
-    ) == "PROVIDER_CAPACITY_BLOCKED"
+    provider_partial = (
+        quality.get("V2_3_quality_status") == "INCOMPLETE_PROVIDER_CAPACITY"
+        or summary_state.get("groq_stage") in {
+            "GROQ_CAPACITY_BLOCKED",
+            "INVOCATION_BATCH_LIMIT_REACHED",
+            "GROQ_CALIBRATION_BATCH",
+            "GROQ_CANARY",
+        }
+        or summary_state.get("sambanova_stage") == "SAMBANOVA_CAPACITY_BLOCKED"
+        or int(summary_state.get("reflection_pending_case_count") or 0) > 0
+        or int(summary_state.get("critic_pending_count") or 0) > 0
+    )
 
     print("2) learning proofs (only if quality gates pass)...", flush=True)
     if quality_passed:
@@ -268,58 +212,111 @@ def main() -> int:
             "schema": "real_historical_learning_chain_proof",
             "real_historical_chain_proof_status": "SKIPPED_QUALITY_GATES_NOT_PASSED",
             "REAL_HISTORICAL_CHAIN_PROOF": "SKIPPED",
-            "bad_process_source_count": 0,
+            "genuine_bad_process_source_trade_count": 0,
             "lesson_created_count": 0,
         }
         gpl = run_good_process_loss_non_suppression_test(packets)
         learning_ok = None
-    _write(IMMUTABLE / "control_learning_chain_proof.json", control)
-    _write(IMMUTABLE / "real_historical_learning_chain_proof.json", real)
-    _write(IMMUTABLE / "good_process_loss_non_suppression_result.json", gpl)
+    _write(RUNTIME / "control_learning_chain_proof.json", control)
+    _write(RUNTIME / "real_historical_learning_chain_proof.json", real)
+    _write(RUNTIME / "good_process_loss_non_suppression_result.json", gpl)
 
-    print("3) sealed VWAP development confirmation (independent of provider quota)...", flush=True)
-    try:
-        bundles = load_research_data_bundles(ROOT)
-    except Exception as exc:
-        print(f"bundle load failed: {exc}", flush=True)
-        bundles = []
-    vwap = run_conditional_vwap_confirmation(
-        root=ROOT,
-        bundles=bundles,
-        universe_snapshot_id="v23_quota_universe",
-        data_checksum="v23_quota_data",
-        research_universe_snapshot_checksum="v23_quota_universe",
-        gates_passed=True,
-        require_reflection_quality=False,
-    )
-    _write(IMMUTABLE / "sealed_vwap_development_confirmation.json", vwap)
+    print("3) VWAP taxonomy correction (non-mutating; preserve sealed metrics)...", flush=True)
+    sealed_vwap_path = PRIOR_QUOTA / "sealed_vwap_development_confirmation.json"
+    if sealed_vwap_path.is_file():
+        sealed_vwap = json.loads(sealed_vwap_path.read_text(encoding="utf-8"))
+    else:
+        sealed_vwap = {}
+    vwap_correction = build_vwap_taxonomy_correction_record(sealed_vwap)
+    _write(RUNTIME / "vwap_taxonomy_correction.json", vwap_correction)
+    # Also place alongside sealed package without overwriting sealed metrics file
+    _write(PRIOR_QUOTA / "vwap_taxonomy_correction.json", vwap_correction)
+
+    print("4) alpha data family feasibility (no strategies, no paid buy)...", flush=True)
+    alpha = audit_alpha_data_families()
+    _write(RUNTIME / "alpha_data_family_feasibility_v1.json", alpha)
+    _write(PRIOR_QUOTA / "alpha_data_family_feasibility_v1.json", alpha)
 
     recommendation = pick_recommendation(
         impl_ok=True,
-        provider_blocked=bool(provider_blocked),
         quality_evaluated=quality_evaluated,
         quality_passed=quality_passed,
         learning_ok=learning_ok,
+        provider_partial=provider_partial,
+        alpha_selected=int(alpha.get("selected_next_data_family_count") or 0) > 0,
     )
-    summary = {
-        "schema": "blind_reflection_v2_3_quota_recovery_and_vwap_summary",
+
+    track_a = {
+        "schema": "nexus_private_core_continuity_v3_track_a",
         "created_at": _utc(),
         "git_head_at_run": _git_head(),
         "recommendation": recommendation,
-        "V2_3_quality_status": quality.get("V2_3_quality_status"),
-        "provider_blocked": provider_blocked,
-        "vwap_confirmation_status": vwap.get("vwap_confirmation_status"),
-        "conditional_vwap_confirmation_executed": vwap.get("conditional_vwap_confirmation_executed"),
+        "quality": {
+            "quality_gates_evaluated": quality_evaluated,
+            "quality_gates_passed": quality_passed,
+            "V2_3_quality_status": quality.get("V2_3_quality_status"),
+            "evidence_packet_constructible_count": quality.get("evidence_packet_constructible_count"),
+            "evidence_packet_constructible_ratio": quality.get("evidence_packet_constructible_ratio"),
+            "reflection_prompt_attempt_count": quality.get("reflection_prompt_attempt_count"),
+            "reflection_prompt_with_packet_count": quality.get("reflection_prompt_with_packet_count"),
+            "reflection_prompt_delivery_ratio_on_attempts": quality.get(
+                "reflection_prompt_delivery_ratio_on_attempts"
+            ),
+            "reflection_successful_case_count": quality.get("reflection_successful_case_count"),
+            "frozen_calibration_case_count": quality.get("frozen_calibration_case_count"),
+            "full_calibration_completion_ratio": quality.get("full_calibration_completion_ratio"),
+            "critic_resolution_ratio": quality.get("critic_resolution_ratio"),
+            "critic_resolution_status": quality.get("critic_resolution_status"),
+        },
+        "transport": quality.get("transport") or summary_state.get("transport"),
+        "groq_stage": summary_state.get("groq_stage"),
+        "sambanova_stage": summary_state.get("sambanova_stage"),
+        "exit_reason": summary_state.get("exit_reason") or quality.get("exit_reason"),
+        "learning": {
+            "real_historical_chain_proof_status": real.get("real_historical_chain_proof_status"),
+            "control_chain_proof_status": control.get("control_chain_proof_status"),
+            "good_process_loss_non_suppression_status": gpl.get(
+                "good_process_loss_non_suppression_status"
+            ),
+        },
+        "vwap": {
+            "vwap_terminal_status": vwap_correction.get("vwap_terminal_status"),
+            "vwap_taxonomy_correction_status": vwap_correction.get("vwap_taxonomy_correction_status"),
+            "vwap_gross_expectancy": sealed_vwap.get("vwap_gross_expectancy"),
+            "vwap_net_expectancy": sealed_vwap.get("vwap_net_expectancy"),
+            "vwap_net_profit_factor": sealed_vwap.get("vwap_net_profit_factor"),
+            "vwap_formal_qualification_started": False,
+        },
+        "alpha": {
+            "selected_next_data_family_ids": alpha.get("selected_next_data_family_ids"),
+            "selected_next_data_family_count": alpha.get("selected_next_data_family_count"),
+            "paid_data_purchased": False,
+            "new_strategy_generated_count": 0,
+        },
         "formal_walk_forward_executed": False,
         "oos_executed": False,
         "demo_order_count": 0,
+        "exchange_write_attempt_count": 0,
         "deployment_started": False,
-        "LOCAL_FRONTEND_BUILD": "ENVIRONMENT_CRASH_NOT_PASS",
-        "CI_frontend_build_executed": False,
-        "CI_frontend_build_status": "NOT_EXECUTED_STUB_CHECK_ONLY",
+        "mainnet": False,
+        "real_money": False,
+        "final_immutable_package_created": False,
     }
-    _write(RUNTIME / "summary.json", summary)
-    print(json.dumps(summary, indent=2), flush=True)
+
+    if quality_passed and learning_ok:
+        FINAL_IMMUTABLE.mkdir(parents=True, exist_ok=True)
+        _write(FINAL_IMMUTABLE / "final_v2_3_quality_result.json", quality)
+        _write(FINAL_IMMUTABLE / "control_learning_chain_proof.json", control)
+        _write(FINAL_IMMUTABLE / "real_historical_learning_chain_proof.json", real)
+        _write(FINAL_IMMUTABLE / "good_process_loss_non_suppression_result.json", gpl)
+        _write(FINAL_IMMUTABLE / "vwap_taxonomy_correction.json", vwap_correction)
+        _write(FINAL_IMMUTABLE / "alpha_data_family_feasibility_v1.json", alpha)
+        _write(FINAL_IMMUTABLE / "track_a_summary.json", track_a)
+        track_a["final_immutable_package_created"] = True
+        track_a["final_immutable_package"] = str(FINAL_IMMUTABLE.relative_to(ROOT)).replace("\\", "/")
+
+    _write(RUNTIME / "track_a_summary.json", track_a)
+    print(json.dumps(track_a, indent=2, default=str), flush=True)
     return 0
 
 
