@@ -202,6 +202,12 @@ class ScenarioRunner:
         return units * spec.tick_size
 
     def run(self, kind: str, scenario_id: int) -> ScenarioInvariantResult:
+        result, _ = self.run_with_counters(kind, scenario_id)
+        return result
+
+    def run_with_counters(
+        self, kind: str, scenario_id: int
+    ) -> tuple[ScenarioInvariantResult, dict[str, int]]:
         result = ScenarioInvariantResult(scenario_id=scenario_id, kind=kind, outcome="OK")
         sim = AutonomousExecutionSimulatorV11(max_positions=1, max_intents=1)
         symbol = self._pick_symbol()
@@ -220,7 +226,34 @@ class ScenarioRunner:
             result.invariant_violations.append(f"exception:{type(exc).__name__}:{exc}")
             result.outcome = "SIMULATOR_EXCEPTION"
 
-        return result
+        # Additionally surface simulator-side derived signals that are not incremented
+        # by counters but matter for the readiness invariants.
+        counters = dict(sim.counters.as_dict())
+        counters["position_open_count"] = sum(
+            1 for p in sim.positions.values() if p.state in {"OPEN", "OPENING", "REDUCING", "CLOSED", "LIQUIDATED_SIMULATED"}
+        )
+        counters["position_closed_count"] = sum(
+            1 for p in sim.positions.values() if p.state == "CLOSED"
+        )
+        counters["simulated_liquidation_count"] = sum(
+            1 for p in sim.positions.values() if p.state == "LIQUIDATED_SIMULATED"
+        )
+        # residual_exposure_count: positions in a *terminal* state (CLOSED /
+        # LIQUIDATED_SIMULATED) that still hold non-zero qty. This is the
+        # invariant defect condition; legitimate OPEN positions are not defects.
+        counters["residual_exposure_count"] = sum(
+            1 for p in sim.positions.values()
+            if p.state in {"CLOSED", "LIQUIDATED_SIMULATED"} and p.qty != 0
+        )
+        # scenarios_ending_open_position: informational — how many scenarios
+        # deliberately end with a live open position (marketable limit, partial
+        # fill, position reduction, etc.). Kept separate from residual_exposure
+        # to avoid conflating intent with defect.
+        counters["scenarios_ending_open_position"] = sum(
+            1 for p in sim.positions.values()
+            if p.state in {"OPEN", "OPENING", "REDUCING"} and p.qty != 0
+        )
+        return result, counters
 
     # --- scenario dispatch ---------------------------------------------
 
@@ -878,7 +911,7 @@ def run_fuzz(
 
     runner = ScenarioRunner(seed=seed)
     for scenario_id, kind in plan:
-        result = runner.run(kind, scenario_id)
+        result, run_counters = runner.run_with_counters(kind, scenario_id)
         bucket = scenario_breakdown.setdefault(
             kind,
             {"count": 0, "invariant_violations": 0, "outcomes": {}},
@@ -892,13 +925,10 @@ def run_fuzz(
             bucket["invariant_violations"] += len(result.invariant_violations)
         else:
             invariants["scenarios_ok"] += 1
-        # Aggregate per-run counters. Because each run gets a fresh simulator we
-        # can safely sum here.
-        if scenario_id % sample_stride == 0 and len(cost_bridge_sample) < cost_sample_size:
-            snap_sim = AutonomousExecutionSimulatorV11(max_positions=1, max_intents=1)
-            snap = snap_sim.report()
-            for k, v in snap["counters"].items():
-                aggregate_counters[k] = aggregate_counters.get(k, 0) + v
+        # Aggregate the *per-scenario* simulator counters so the readiness report
+        # can quote precise system-wide totals for order/position/risk events.
+        for k, v in run_counters.items():
+            aggregate_counters[k] = aggregate_counters.get(k, 0) + v
 
     # Second pass: collect deterministic cost-bridge samples from a fresh
     # canonical round-trip so the sample survives seed changes gracefully.
@@ -952,15 +982,12 @@ def run_fuzz(
         })
 
     finished = _utc()
-    # Refresh counters from a probe simulator to record the *shape* of counters
-    # tracked (values here are 0 because each scenario got a fresh sim).
-    probe = AutonomousExecutionSimulatorV11(max_positions=2, max_intents=2).report()
 
     return FuzzReport(
         generated_execution_scenario_count=target_scenarios,
         seed=seed,
         invariants=invariants,
-        counters=probe["counters"],
+        counters=aggregate_counters,
         exchange_write_attempt_count=security_boundary.exchange_write_attempt_count(),
         demo_order_count=security_boundary.demo_order_count(),
         mainnet=security_boundary.is_mainnet(),
@@ -1018,6 +1045,7 @@ def write_readiness_artifacts(root: Path, *, report: FuzzReport) -> dict[str, Pa
         recommendation = "NEXUS_EXECUTION_RISK_MODEL_INVALID"
     if any(not s["cost_bridge_ok"] for s in report.cost_bridge_sample):
         recommendation = "NEXUS_EXECUTION_COST_MODEL_INVALID"
+    c = report.counters
     readiness = {
         "schema": "autonomous_execution_simulator_v1_1_readiness",
         "simulator_version": SIMULATOR_VERSION,
@@ -1035,6 +1063,32 @@ def write_readiness_artifacts(root: Path, *, report: FuzzReport) -> dict[str, Pa
         "seed": report.seed,
         "cost_bridge_samples_verified": sum(1 for s in report.cost_bridge_sample if s["cost_bridge_ok"]),
         "cost_bridge_samples_total": len(report.cost_bridge_sample),
+        "order_created_count": c.get("order_created_count", 0),
+        "partially_filled_count": c.get("partially_filled_count", 0),
+        "filled_count": c.get("filled_count", 0),
+        "cancelled_count": c.get("cancelled_count", 0),
+        "rejected_count": c.get("rejected_count", 0),
+        "expired_count": c.get("expired_count", 0),
+        "unfilled_count": c.get("unfilled_count", 0),
+        "position_open_count": c.get("position_open_count", 0),
+        "position_closed_count": c.get("position_closed_count", 0),
+        "simulated_liquidation_count": c.get("simulated_liquidation_count", 0),
+        "duplicate_position_count": c.get("duplicate_position_count", 0),
+        "residual_exposure_count": c.get("residual_exposure_count", 0),
+        "cost_bridge_failure_count": c.get("cost_bridge_failure_count", 0),
+        "risk_limit_bypass_count": c.get("risk_limit_bypass_count", 0),
+        "duplicate_intent_ignored_count": c.get("duplicate_intent_ignored_count", 0),
+        "same_bar_ambiguous_count": c.get("same_bar_ambiguous_count", 0),
+        "tick_size_violation_count": c.get("tick_size_violation_count", 0),
+        "quantity_step_violation_count": c.get("quantity_step_violation_count", 0),
+        "min_notional_violation_count": c.get("min_notional_violation_count", 0),
+        "instrument_halted_count": c.get("instrument_halted_count", 0),
+        "stale_mark_reject_count": c.get("stale_mark_reject_count", 0),
+        "missing_index_reject_count": c.get("missing_index_reject_count", 0),
+        "funding_debit_count": c.get("funding_debit_count", 0),
+        "funding_credit_count": c.get("funding_credit_count", 0),
+        "cancel_replace_count": c.get("cancel_replace_count", 0),
+        "reduce_only_violation_count": c.get("reduce_only_violation_count", 0),
         "started_at": report.started_at,
         "finished_at": report.finished_at,
         "generated_at": _utc(),
