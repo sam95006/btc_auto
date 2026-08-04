@@ -83,6 +83,44 @@ INJECTION_CATALOG: tuple[str, ...] = (
     "pause_during_pending_intent",
 )
 
+# Injections safe to compose in a single long-running (24h/72h/168h) session.
+# Terminal / hard-fail injections (kill switch, unrecoverable clock jump,
+# process termination without valid LKG, disk hard limit) are exercised in
+# dedicated focused tests where the expected outcome is BLOCKED/FAILED_SAFE.
+LONG_SESSION_INJECTIONS: tuple[str, ...] = (
+    "groq_429",
+    "sambanova_429",
+    "provider_timeout",
+    "provider_invalid_schema",
+    "stale_market_data",
+    "missing_market_data",
+    "duplicate_candidate",
+    "duplicate_order_intent",
+    "ledger_lock_contention",
+    "interrupted_ledger_append",
+    "snapshot_corruption",
+    "missing_latest_snapshot",
+    "disk_soft_limit",
+    "network_loss",
+    "partial_fill_before_crash",
+    "filled_order_before_snapshot",
+    "exit_event_before_position_snapshot",
+    "reflection_interruption",
+    "lesson_storage_interruption",
+    "pause_during_pending_intent",
+)
+
+# Injections that must terminate the session in a fail-closed state
+# (BLOCKED or FAILED_SAFE). Exercised in dedicated focused tests, one at a
+# time, and asserted via ``expected_terminal_state``.
+TERMINAL_INJECTIONS: tuple[str, ...] = (
+    "kill_switch_during_open_position",
+    "clock_jump_forward",
+    "clock_jump_backward",
+    "process_termination",
+    "disk_hard_limit",
+)
+
 
 # ---------------------------------------------------------------------------
 # Utilities
@@ -453,19 +491,36 @@ class AutonomousSessionOrchestratorV11:
             # from the very first candidate onward.
             self._checkpoint(reason="initial_checkpoint")
 
-    def request_pause(self, *, reason: str) -> None:
+    def request_pause(self, *, reason: str, full_checkpoint: bool = False) -> None:
         with self._lock:
             assert self.session_id is not None
             self._transition(
                 "PAUSING",
                 reason=reason,
-                idempotency_key=f"pausing:{self.session_id}:{self.checkpoint_count}",
+                idempotency_key=f"pausing:{self.session_id}:{reason}:{self.checkpoint_count}",
             )
-            self._checkpoint(reason="pause_requested")
+            if full_checkpoint:
+                # Only take a full LKG-updating checkpoint when caller asks
+                # for it (long-running "graceful pause" scenario). Mid-intent
+                # pauses should not overwrite the LKG with an unclosed intent.
+                self._checkpoint(reason=f"pause_full:{reason}")
+            else:
+                # Lightweight ledger-only transition record — no snapshot.
+                self._ledger_append(
+                    aggregate_id=self.session_id,
+                    aggregate_type="DATA_CAPTURE_SESSION",
+                    event_type="SESSION_PAUSE",
+                    payload={
+                        "reason": reason,
+                        "state_before": "RUNNING",
+                        "at": _utc(),
+                    },
+                    idempotency_key=f"pause:{self.session_id}:{reason}:{self.checkpoint_count}",
+                )
             self._transition(
                 "PAUSED",
                 reason=reason,
-                idempotency_key=f"paused:{self.session_id}:{self.checkpoint_count}",
+                idempotency_key=f"paused:{self.session_id}:{reason}:{self.checkpoint_count}",
             )
 
     def request_resume(self, *, reason: str) -> None:
