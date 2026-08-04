@@ -707,8 +707,8 @@
       "status": "PRESENT"
     },
     {
-      "evidence_id": "REAL_FOUR_AI_LOOP_V1::artifacts\\readiness\\immutable\\goal_alignment_real_ai_broad_data_v1\\real_provider_verified_summary.json",
-      "path": "artifacts\\readiness\\immutable\\goal_alignment_real_ai_broad_data_v1\\real_provider_verified_summary.json",
+      "evidence_id": "REAL_FOUR_AI_LOOP_V1::artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/real_provider_verified_summary.json",
+      "path": "artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/real_provider_verified_summary.json",
       "evidence_type": "REAL_FOUR_AI_LEARNING_LOOP_VERIFICATION_V1",
       "source_commit": "6d717108ca6d59dd3fe2744cfd36bec5ed2dfef8",
       "checksum": "db8c920a4720e6e89c1b58b183158850a2b423b51147ae1170c00c2ae0b9e804",
@@ -719,8 +719,8 @@
       "status": "PRESENT"
     },
     {
-      "evidence_id": "REAL_FOUR_AI_LOOP_V1::artifacts\\readiness\\immutable\\goal_alignment_real_ai_broad_data_v1\\real_reflection_run_summary.json",
-      "path": "artifacts\\readiness\\immutable\\goal_alignment_real_ai_broad_data_v1\\real_reflection_run_summary.json",
+      "evidence_id": "REAL_FOUR_AI_LOOP_V1::artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/real_reflection_run_summary.json",
+      "path": "artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/real_reflection_run_summary.json",
       "evidence_type": "REAL_FOUR_AI_LEARNING_LOOP_VERIFICATION_V1",
       "source_commit": "6d717108ca6d59dd3fe2744cfd36bec5ed2dfef8",
       "checksum": "d3b5c81ea3ba257567eeb9555328102907da934b53805ee45df24a80c5a82040",
@@ -731,8 +731,8 @@
       "status": "PRESENT"
     },
     {
-      "evidence_id": "REAL_FOUR_AI_LOOP_V1::artifacts\\readiness\\immutable\\goal_alignment_real_ai_broad_data_v1\\real_lesson_memory_summary.json",
-      "path": "artifacts\\readiness\\immutable\\goal_alignment_real_ai_broad_data_v1\\real_lesson_memory_summary.json",
+      "evidence_id": "REAL_FOUR_AI_LOOP_V1::artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/real_lesson_memory_summary.json",
+      "path": "artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/real_lesson_memory_summary.json",
       "evidence_type": "REAL_FOUR_AI_LEARNING_LOOP_VERIFICATION_V1",
       "source_commit": "6d717108ca6d59dd3fe2744cfd36bec5ed2dfef8",
       "checksum": "db4bee785f21c977d36d7a7315310d9289a79cbbefddd455198e38e558cb5519",
@@ -743,8 +743,8 @@
       "status": "PRESENT"
     },
     {
-      "evidence_id": "REAL_FOUR_AI_LOOP_V1::artifacts\\readiness\\immutable\\goal_alignment_real_ai_broad_data_v1\\real_lesson_delivery_proof.json",
-      "path": "artifacts\\readiness\\immutable\\goal_alignment_real_ai_broad_data_v1\\real_lesson_delivery_proof.json",
+      "evidence_id": "REAL_FOUR_AI_LOOP_V1::artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/real_lesson_delivery_proof.json",
+      "path": "artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/real_lesson_delivery_proof.json",
       "evidence_type": "REAL_FOUR_AI_LEARNING_LOOP_VERIFICATION_V1",
       "source_commit": "6d717108ca6d59dd3fe2744cfd36bec5ed2dfef8",
       "checksum": "bff3abe58d1f7762ce91bd3e5f78be41348e5c52cda10f86ba07056cc584b0a1",
@@ -755,8 +755,8 @@
       "status": "PRESENT"
     },
     {
-      "evidence_id": "REAL_FOUR_AI_LOOP_V1::artifacts\\readiness\\immutable\\goal_alignment_real_ai_broad_data_v1\\provider_failure_summary.json",
-      "path": "artifacts\\readiness\\immutable\\goal_alignment_real_ai_broad_data_v1\\provider_failure_summary.json",
+      "evidence_id": "REAL_FOUR_AI_LOOP_V1::artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/provider_failure_summary.json",
+      "path": "artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/provider_failure_summary.json",
       "evidence_type": "REAL_FOUR_AI_LEARNING_LOOP_VERIFICATION_V1",
       "source_commit": "6d717108ca6d59dd3fe2744cfd36bec5ed2dfef8",
       "checksum": "458d611bd883c6a5d9f58638de79aef92e990126888ce46726763cca1801068c",
@@ -767,8 +767,8 @@
       "status": "PRESENT"
     },
     {
-      "evidence_id": "REAL_FOUR_AI_LOOP_V1::artifacts\\readiness\\immutable\\goal_alignment_real_ai_broad_data_v1\\goal_alignment_summary.json",
-      "path": "artifacts\\readiness\\immutable\\goal_alignment_real_ai_broad_data_v1\\goal_alignment_summary.json",
+      "evidence_id": "REAL_FOUR_AI_LOOP_V1::artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/goal_alignment_summary.json",
+      "path": "artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/goal_alignment_summary.json",
       "evidence_type": "REAL_FOUR_AI_LEARNING_LOOP_VERIFICATION_V1",
       "source_commit": "6d717108ca6d59dd3fe2744cfd36bec5ed2dfef8",
       "checksum": "c3011f9688f40fb4bf20a0d2a3bc0d84eae24004f6e876a7a0f8956426e45927",
@@ -779,8 +779,8 @@
       "status": "PRESENT"
     },
     {
-      "evidence_id": "REAL_FOUR_AI_LOOP_V1::artifacts\\readiness\\immutable\\goal_alignment_real_ai_broad_data_v1\\learning_loop_integration_proof.json",
-      "path": "artifacts\\readiness\\immutable\\goal_alignment_real_ai_broad_data_v1\\learning_loop_integration_proof.json",
+      "evidence_id": "REAL_FOUR_AI_LOOP_V1::artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/learning_loop_integration_proof.json",
+      "path": "artifacts/readiness/immutable/goal_alignment_real_ai_broad_data_v1/learning_loop_integration_proof.json",
       "evidence_type": "REAL_FOUR_AI_LEARNING_LOOP_VERIFICATION_V1",
       "source_commit": "6d717108ca6d59dd3fe2744cfd36bec5ed2dfef8",
       "checksum": "7804467cbe0b7fed5bd96f600abb90b51c879aa522872f37cf93bc71d3eb0490",

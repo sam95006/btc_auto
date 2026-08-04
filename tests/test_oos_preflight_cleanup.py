@@ -46,6 +46,7 @@ def test_manifest_paths_exist():
         path = e.get("path")
         if not path:
             continue
+        path = str(path).replace("\\", "/")
         if not (ROOT / path).is_file():
             missing.append(path)
     assert missing == [], missing

@@ -55,6 +55,8 @@ def orphan_count() -> int:
         if e.get("status") == "SOURCE_MISSING":
             continue
         path = e.get("path")
-        if path and not (ROOT / path).is_file():
-            n += 1
+        if path:
+            path = str(path).replace("\\", "/")
+            if not (ROOT / path).is_file():
+                n += 1
     return n
