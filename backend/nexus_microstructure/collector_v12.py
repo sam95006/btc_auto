@@ -494,7 +494,10 @@ def run_bounded_capture_v12(
             except Exception:
                 pass
         hb.check_timeouts()
-        clock.sample()
+        try:
+            clock.sample()
+        except Exception:
+            pass
         # Budget uses on-disk compressed bytes (+ open-partition snapshots), not uncompressed lines.
         closed_c = sum(getattr(w, "session_compressed_bytes", 0) for w in writers.values())
         open_c = 0
