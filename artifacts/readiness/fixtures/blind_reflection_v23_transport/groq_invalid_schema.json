@@ -1,0 +1,9 @@
+{
+  "fixture_key": "GROQ_REFLECTION_REASONER:INVALID_SCHEMA",
+  "result_status": "INVALID_SCHEMA",
+  "smoke_map": "INVALID_SCHEMA",
+  "body": {
+    "not": "a valid reflection"
+  },
+  "latency_ms": 20
+}

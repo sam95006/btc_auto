@@ -1,0 +1,12 @@
+{
+  "fixture_key": "GROQ_REFLECTION_REASONER:RATE_LIMITED",
+  "result_status": "RATE_LIMITED",
+  "http_status": 429,
+  "headers": {
+    "retry-after": "42",
+    "x-ratelimit-reset": "42"
+  },
+  "smoke_map": "RATE_LIMITED",
+  "body": null,
+  "latency_ms": 12
+}

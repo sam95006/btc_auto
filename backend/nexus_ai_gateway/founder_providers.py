@@ -272,10 +272,15 @@ class OpenAICompatProvider:
             except urllib.error.HTTPError as exc:
                 latency = int((time.perf_counter() - t0) * 1000)
                 body = ""
+                err_headers: dict[str, str] = {}
                 try:
                     body = exc.read().decode("utf-8", errors="ignore")[:200]
                 except Exception:
                     pass
+                try:
+                    err_headers = {k.lower(): v for k, v in (exc.headers.items() if exc.headers else [])}
+                except Exception:
+                    err_headers = {}
                 status = "UNKNOWN"
                 if exc.code in (401, 403):
                     status = "PROVIDER_UNAVAILABLE"
@@ -284,11 +289,33 @@ class OpenAICompatProvider:
                 elif exc.code == 404:
                     status = "MODEL_UNAVAILABLE"
                 last_status = status
+                retry_after_s = None
+                if status == "RATE_LIMITED":
+                    try:
+                        from backend.nexus_edge_discovery.provider_transport_v23 import (
+                            parse_retry_after,
+                        )
+
+                        retry_after_s = parse_retry_after(err_headers, body=body)
+                    except Exception:
+                        retry_after_s = 900.0
                 last_meta = {
                     "model_id": model_id,
                     "http_status": exc.code,
                     "latency_ms": latency,
-                    "rate_limit_header_present": False,
+                    "rate_limit_header_present": bool(
+                        err_headers.get("retry-after")
+                        or any(k.startswith("x-ratelimit") for k in err_headers)
+                    ),
+                    "headers": {k: err_headers[k] for k in err_headers if k in {
+                        "retry-after",
+                        "x-ratelimit-reset",
+                        "x-ratelimit-reset-requests",
+                        "x-ratelimit-reset-tokens",
+                        "x-ratelimit-remaining",
+                        "x-ratelimit-limit",
+                    }},
+                    "retry_after_s": retry_after_s,
                     "error_snippet_redacted": redact_for_external(body),
                     "smoke_map": {
                         401: "AUTH_FAILED",
@@ -299,7 +326,17 @@ class OpenAICompatProvider:
                     "attempt": attempt + 1,
                 }
                 if status == "RATE_LIMITED" and attempt < 4:
-                    time.sleep(1.5 * (2**attempt))
+                    # Exponential backoff with jitter; prefer Retry-After when present
+                    try:
+                        from backend.nexus_edge_discovery.provider_transport_v23 import (
+                            exponential_backoff_with_jitter,
+                        )
+
+                        wait = float(retry_after_s) if retry_after_s is not None else exponential_backoff_with_jitter(attempt)
+                        # Cap in-request sleep so callers can schedule resume instead
+                        time.sleep(min(wait, 8.0))
+                    except Exception:
+                        time.sleep(1.5 * (2**attempt))
                     continue
                 return None, status, last_meta
             except TimeoutError:
@@ -515,6 +552,10 @@ class FounderAIGateway:
             "result_status": status,
             "can_approve_order": False,
             "smoke_map": meta.get("smoke_map"),
+            "retry_after_s": meta.get("retry_after_s"),
+            "headers": meta.get("headers") or {},
+            "http_status": meta.get("http_status"),
+            "error_snippet_redacted": meta.get("error_snippet_redacted"),
         }
         self.records.append(rec)
         order_permission = "ALLOW"
