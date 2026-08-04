@@ -36,8 +36,20 @@ def percentile(sorted_vals: list[float], p: float) -> float | None:
 def sample_bybit_clock_offset() -> dict[str, Any]:
     """Estimate local_wall - server_time using Bybit public /v5/market/time."""
     t0 = utc_ms()
-    with urllib.request.urlopen(BYBIT_SERVER_TIME, timeout=10) as resp:
-        payload = json.loads(resp.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(BYBIT_SERVER_TIME, timeout=10) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+    except Exception as exc:  # network DNS/timeout must not kill capture
+        t1 = utc_ms()
+        return {
+            "local_request_ms": t0,
+            "local_response_ms": t1,
+            "server_ms": None,
+            "local_minus_server_clock_offset_ms": None,
+            "rtt_ms": t1 - t0,
+            "sample_error": type(exc).__name__,
+            "sample_ok": False,
+        }
     t1 = utc_ms()
     result = payload.get("result") or {}
     # Bybit returns timeSecond and/or timeNano
@@ -56,6 +68,7 @@ def sample_bybit_clock_offset() -> dict[str, Any]:
         "server_ms": server_ms,
         "local_minus_server_clock_offset_ms": offset,
         "rtt_ms": t1 - t0,
+        "sample_ok": True,
     }
 
 
