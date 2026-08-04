@@ -249,4 +249,76 @@ def run_conditional_vwap_confirmation(
         "vwap_risk_limit_breach_count": int(result.get("risk_limit_breach_count") or 0),
         "recommend_later_formal_qualification_wave_only": status
         == "VWAP_DEVELOPMENT_CONFIRMED_PROMISING",
+        **vwap_taxonomy_correction_fields(
+            confirmation_status=status,
+            gross_expectancy=result.get("gross_expectancy"),
+            net_expectancy=result.get("net_expectancy"),
+            development_status=result.get("development_status"),
+        ),
+    }
+
+
+def vwap_taxonomy_correction_fields(
+    *,
+    confirmation_status: str,
+    gross_expectancy: Any,
+    net_expectancy: Any,
+    development_status: Any,
+) -> dict[str, Any]:
+    """Non-mutating taxonomy correction when gross>0 and net<=0."""
+    try:
+        g = float(gross_expectancy) if gross_expectancy is not None else None
+        n = float(net_expectancy) if net_expectancy is not None else None
+    except Exception:
+        g, n = None, None
+    cost_destroyed = (
+        confirmation_status == "VWAP_DEVELOPMENT_COST_DESTROYED"
+        or (g is not None and g > 0 and n is not None and n <= 0)
+    )
+    primary = None
+    if cost_destroyed:
+        primary = "VWAP_RAW_EDGE_PRESENT_BUT_COST_DESTROYED"
+    correction = {
+        "vwap_taxonomy_correction_status": "APPLIED" if cost_destroyed else "NOT_REQUIRED",
+        "vwap_terminal_status": (
+            "VWAP_RESEARCH_LINE_TERMINAL_CURRENT_EXECUTION_MODEL"
+            if cost_destroyed
+            else confirmation_status
+        ),
+        "vwap_canonical_interpretation": primary,
+        "vwap_confirmation_status_preserved": confirmation_status,
+        "vwap_development_status_preserved": development_status,
+        "do_not_use_DISCOVERY_NO_GROSS_EDGE_as_primary_when_gross_positive": True,
+        "primary_failure_reason_corrected": primary,
+        "historical_metrics_unchanged": True,
+        "vwap_retuned": False,
+        "vwap_rerun_with_lower_fees": False,
+        "vwap_formal_qualification_started": False,
+        "formal_walk_forward_for_vwap": False,
+    }
+    return correction
+
+
+def build_vwap_taxonomy_correction_record(sealed: dict[str, Any]) -> dict[str, Any]:
+    """Standalone non-mutating correction record for sealed VWAP outputs."""
+    fields = vwap_taxonomy_correction_fields(
+        confirmation_status=str(sealed.get("vwap_confirmation_status") or ""),
+        gross_expectancy=sealed.get("vwap_gross_expectancy"),
+        net_expectancy=sealed.get("vwap_net_expectancy"),
+        development_status=sealed.get("development_status"),
+    )
+    return {
+        "schema": "vwap_taxonomy_correction_v1",
+        "source_schema": sealed.get("schema"),
+        "vwap_gross_expectancy": sealed.get("vwap_gross_expectancy"),
+        "vwap_net_expectancy": sealed.get("vwap_net_expectancy"),
+        "vwap_net_profit_factor": sealed.get("vwap_net_profit_factor"),
+        "vwap_confirmation_status": sealed.get("vwap_confirmation_status"),
+        "development_status_was": sealed.get("development_status"),
+        "rejected_primary_label": "DISCOVERY_NO_GROSS_EDGE",
+        "rejected_primary_label_reason": (
+            "gross_expectancy>0 implies raw edge present; net<=0 is cost destruction"
+        ),
+        **fields,
+        "mutates_sealed_metrics": False,
     }
