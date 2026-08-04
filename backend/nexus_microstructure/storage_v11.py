@@ -72,7 +72,10 @@ class StreamingPartitionWriter:
         self._prev_partition_id: str | None = None
         self.partition_count = 0
         self.closed = False
-        self.session_bytes_written = 0
+        self.session_bytes_written = 0  # serialized uncompressed line bytes flushed
+        self.session_compressed_bytes = 0  # filesystem compressed bytes observed
+        self.session_manifest_bytes = 0
+        self._open_compressed_snapshot = 0
         self.full_records_retained_in_memory = False
         self.storage_tree_scanned_per_event = False
 
@@ -87,6 +90,7 @@ class StreamingPartitionWriter:
         self._first_ex = self._last_ex = None
         self._first_rx = self._last_rx = None
         self._partition_bytes = 0
+        self._open_compressed_snapshot = 0
         self.partition_count += 1
 
     def _manifest(self, *, checksum_match: bool | None = None) -> dict[str, Any]:
@@ -123,6 +127,9 @@ class StreamingPartitionWriter:
             self._partition_bytes += len(chunk)
             self.session_bytes_written += len(chunk)
         self._fh.flush()
+        if self._path is not None and self._path.exists():
+            # Track on-disk compressed size of the open partition (truthful budget input).
+            self._open_compressed_snapshot = self._path.stat().st_size
         self._buf.clear()
         self._buf_bytes = 0
         self._last_flush = time.time()
@@ -174,7 +181,10 @@ class StreamingPartitionWriter:
         man = self._manifest(checksum_match=match)
         man["replayed_checksum"] = replayed
         man_path = self._path.with_suffix(".manifest.json")
-        man_path.write_text(json.dumps(man, indent=2) + "\n", encoding="utf-8")
+        man_text = json.dumps(man, indent=2) + "\n"
+        man_path.write_text(man_text, encoding="utf-8")
+        self.session_compressed_bytes += int(man.get("compressed_bytes") or 0)
+        self.session_manifest_bytes += len(man_text.encode("utf-8"))
         self.partitions.append(man)
         self._prev_partition_id = man["partition_id"]
         self._fh = None
@@ -191,6 +201,8 @@ class StreamingPartitionWriter:
             "partition_count": len(self.partitions),
             "partitions": self.partitions,
             "session_bytes_written": self.session_bytes_written,
+            "session_compressed_bytes": self.session_compressed_bytes,
+            "session_manifest_bytes": self.session_manifest_bytes,
             "writers_closed": True,
             "buffers_flushed": True,
             "manifest_complete": all(p.get("checksum_match") is not None for p in self.partitions),
