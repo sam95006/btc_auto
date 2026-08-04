@@ -1,0 +1,14 @@
+{
+  "schema": "v1_interpretation_correction",
+  "MICROSTRUCTURE_V1_RESULT": "BOUNDED_CONNECTIVITY_AND_STORAGE_SMOKE_PASS",
+  "LONG_RUNNING_DATA_INTEGRITY_NOT_YET_VERIFIED": true,
+  "preserved_legacy_counters": {
+    "out_of_order_count": 64,
+    "gap_suspected_count": 0,
+    "reconnect_count": 4
+  },
+  "legacy_counter_classification": "LEGACY_GLOBAL_OR_WRITER_SUMMED_COUNTERS",
+  "legacy_counter_validity": "NOT_VALID_FOR_SYMBOL_LEVEL_OR_SESSION_LEVEL_INTERPRETATION",
+  "mutates_v1_package": false,
+  "created_at": "2026-08-04T05:36:39Z"
+}

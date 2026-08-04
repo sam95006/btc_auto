@@ -1,0 +1,15 @@
+{
+  "schema": "storage_architecture_report",
+  "full_records_retained_in_memory": false,
+  "storage_tree_scanned_per_event": false,
+  "partition_by": [
+    "exchange",
+    "family",
+    "symbol",
+    "UTC_hour",
+    "max_bytes"
+  ],
+  "soak_partition_count": 14,
+  "capacity_partition_count": 35,
+  "maximum_partition_bytes": 33554432
+}
