@@ -1,15 +1,15 @@
 {
-  "schema": "private_core_observability_v1",
-  "created_at": "2026-08-04T14:21:25Z",
+  "schema": "private_observability_v1_1",
+  "created_at": "2026-08-04T14:40:15Z",
   "private_core_stage": "V7_INTEGRATION_SPINE",
   "V2_3_progress": {
     "frozen_calibration_case_count": 80,
-    "groq_success_count": 50,
-    "groq_pending_count": 30,
-    "groq_429_count": 15,
+    "groq_success_count": 51,
+    "groq_pending_count": 29,
+    "groq_429_count": 16,
     "sambanova_success_count": 16,
     "sambanova_pending_count": 9,
-    "sambanova_429_count": 12,
+    "sambanova_429_count": 13,
     "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY"
   },
   "Provider_transport": {
@@ -19,10 +19,16 @@
   "Integration_Spine": "NEXUS_PRIVATE_CORE_INTEGRATION_SPINE_V1",
   "Event_Ledger": {
     "ledger_event_count": 100000,
+    "hash_chain": "PASS",
     "status": "NEXUS_RUNTIME_DURABILITY_V11_SCALE_PASS"
   },
   "Runtime_Durability": "NEXUS_RUNTIME_DURABILITY_V1",
-  "Microstructure_campaign": "BOUNDED_ACCUMULATION_PLANNED",
+  "Microstructure_campaign": {
+    "campaign_id": "ms_accum_v7_bounded_24h",
+    "status": "PLANNED",
+    "trade_event_count": 0,
+    "liquidation_event_count": 0
+  },
   "Event_Study_readiness": "NOT_READY",
   "Harness": "V1_1",
   "Risk_bans": [
@@ -42,7 +48,23 @@
   "secrets_present": false,
   "account_information_present": false,
   "strategy_parameters_present": false,
+  "PR_state": {
+    "stacked_pr_number": 27,
+    "stacked_pr_head": "b32f14b",
+    "stacked_pr_status": "DRAFT_UNMERGED",
+    "ci_run": 30919672978,
+    "ci_status": "success"
+  },
   "Private_Core_stage": "V8_EXECUTION_AND_REPLAY",
+  "V2_3_Provider_progress": {
+    "groq_success": 51,
+    "groq_pending": 29,
+    "samba_success": 16,
+    "samba_pending": 9,
+    "next_resume_groq": "2026-08-04T14:53:24Z",
+    "next_resume_samba": "2026-08-04T14:53:50Z",
+    "terminal": "INCOMPLETE_PROVIDER_CAPACITY"
+  },
   "historical_replay": "NEXUS_HISTORICAL_INTEGRATION_REPLAY_V1_PASS",
   "Execution_Simulator": "NEXUS_EXECUTION_SIMULATOR_V1_PASS",
   "Session_Orchestrator": {
@@ -50,7 +72,8 @@
     "session_12h_status": "PASS"
   },
   "Snapshots": {
-    "snapshot_count": 100
+    "snapshot_count": 100,
+    "last_known_good_restore_count": 8
   },
   "Recovery": {
     "exact": 4,
@@ -58,5 +81,21 @@
     "ambiguous": 4,
     "corrupt": 4
   },
+  "risk_bans": [
+    "stop_widening",
+    "risk_increase",
+    "leverage_increase"
+  ],
+  "formal_trading_state": {
+    "demo_order_count": 0,
+    "exchange_write_attempt_count": 0,
+    "mainnet": false,
+    "real_money": false
+  },
+  "last_successful_checkpoint": "2026-08-04T14:38:50Z",
+  "open_simulated_positions": 0,
+  "pending_simulated_intents": 0,
+  "ambiguous_state_count": 0,
+  "ledger_chain_status": "PASS",
   "foundation_durability_reclassified": "NEXUS_RUNTIME_DURABILITY_V1_FOUNDATION_PASS"
 }
