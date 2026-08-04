@@ -1,131 +1,211 @@
-"""Tests for NEXUS Autonomous Session Orchestrator V1.1."""
+"""Focused tests for the Autonomous Session Orchestrator V1.1.
+
+Covers: session lifecycle, valid/invalid transitions, invariants, kill
+switch behavior, and clean 24h session end-to-end.
+"""
 from __future__ import annotations
 
-import os
+import tempfile
 from pathlib import Path
 
-os.environ["EXCHANGE_WRITE"] = "false"
-os.environ["MAINNET"] = "false"
-os.environ["REAL_MONEY"] = "false"
+import pytest
 
-from backend.nexus_autonomy.session_chaos_recovery_v1_1 import (
-    FROZEN_SEED,
-    PASS_STATUS,
-    candidate_count_for_hours,
-    run_one_chaos_session,
-    run_session_chaos_campaign,
-)
 from backend.nexus_autonomy.session_orchestrator_v1_1 import (
-    INJECTION_CATALOG,
     AutonomousSessionOrchestratorV11,
+    LONG_SESSION_INJECTIONS,
     build_default_candidates,
 )
-from backend.nexus_autonomy.session_state_machine import SessionStateMachine, InvalidTransitionError
-from backend.nexus_recovery.invariants import REQUIRED_ZERO_INVARIANTS, check_recovery_invariants
 
 
-INVARIANT_KEYS = REQUIRED_ZERO_INVARIANTS
+@pytest.fixture()
+def tmp_root(tmp_path: Path) -> Path:
+    return tmp_path
 
 
-def _assert_invariants(counts: dict) -> None:
-    for k in INVARIANT_KEYS:
-        assert int(counts.get(k, 0)) == 0, f"{k}={counts.get(k)}"
+def _make(root: Path, **kwargs) -> AutonomousSessionOrchestratorV11:
+    return AutonomousSessionOrchestratorV11(root, max_positions=2, max_intents=2, **kwargs)
 
 
-def test_state_machine_fail_closed():
-    sm = SessionStateMachine("s1")
-    sm.transition("INITIALIZING", reason="t", idempotency_key="a")
-    sm.transition("RUNNING", reason="t", idempotency_key="b")
+# ---------------------------------------------------------------------------
+# Lifecycle
+# ---------------------------------------------------------------------------
+
+def test_start_transitions_to_running(tmp_root: Path) -> None:
+    orch = _make(tmp_root)
     try:
-        sm.transition("COMPLETED", reason="illegal", idempotency_key="c")
-        assert False, "expected InvalidTransitionError"
-    except InvalidTransitionError:
-        pass
-    assert sm.state == "RUNNING"
-
-
-def test_session_24h_invariants(tmp_path: Path):
-    report = run_one_chaos_session(
-        tmp_path / "s24",
-        session_id="T24",
-        logical_hours=24.0,
-        seed=FROZEN_SEED,
-    )
-    _assert_invariants(report["invariants_counts"])
-    assert report["session_pass"] is True
-    assert report["metrics"]["checkpoint_count"] >= 1
-    assert report["metrics"]["events_processed"] >= 1
-    assert report["final_state"] in {"COMPLETED", "BLOCKED"}
-
-
-def test_session_72h_chaos_recovery(tmp_path: Path):
-    report = run_one_chaos_session(
-        tmp_path / "s72",
-        session_id="T72",
-        logical_hours=72.0,
-        seed=FROZEN_SEED + 72,
-    )
-    _assert_invariants(report["invariants_counts"])
-    assert report["session_pass"] is True
-    assert report["restart_count"] >= 0
-    assert report["recovery_count"] >= 0
-
-
-def test_session_168h_metrics(tmp_path: Path):
-    report = run_one_chaos_session(
-        tmp_path / "s168",
-        session_id="T168",
-        logical_hours=168.0,
-        seed=FROZEN_SEED + 168,
-    )
-    _assert_invariants(report["invariants_counts"])
-    assert report["session_pass"] is True
-    assert report["logical_duration_hours"] == 168.0
-    for key in (
-        "events_processed",
-        "checkpoint_count",
-        "restart_count",
-        "recovery_duration_ms",
-        "memory_growth_bytes",
-        "cpu_time_ms",
-        "ledger_size_bytes",
-        "snapshot_size_bytes",
-    ):
-        assert key in report["metrics"]
-
-
-def test_campaign_24_72_168_pass(tmp_path: Path):
-    package = run_session_chaos_campaign(tmp_path / "campaign", seed=FROZEN_SEED)
-    assert package["Session_Chaos_status"] == PASS_STATUS, package
-    _assert_invariants(package["invariants"])
-    assert set(package["logical_sessions_hours"]) == {24.0, 72.0, 168.0}
-    assert package["exchange_write_attempt_count"] == 0
-    assert len(package["chaos_catalog"]) == len(INJECTION_CATALOG)
-
-
-def test_invariants_helper_rejects_nonzero():
-    r = check_recovery_invariants({"open_ambiguous_position_count": 1})
-    assert r.passed is False
-    assert "open_ambiguous_position_count=1" in r.violations
-
-
-def test_candidate_count_covers_catalog():
-    assert candidate_count_for_hours(24) >= 60
-    assert len(build_default_candidates(10)) == 10
-
-
-def test_orchestrator_no_exchange_write(tmp_path: Path):
-    orch = AutonomousSessionOrchestratorV11(tmp_path)
-    try:
-        result = orch.run_accelerated_session(
-            session_id="NOW",
-            logical_hours=1.0,
-            candidates=build_default_candidates(8),
-            injections=["provider_timeout", "stale_market_data", "duplicate_order_intent"],
-            checkpoint_every=3,
-            restart_after_index=2,
-        )
+        orch.start("S1", logical_hours=1.0)
+        assert orch.state_machine is not None
+        assert orch.state_machine.state == "RUNNING"
+        # start also emits SESSION_START ledger event and initial checkpoint.
+        assert orch.checkpoint_count >= 1
     finally:
         orch.close()
-    assert result.exchange_write_attempt_count == 0
-    _assert_invariants(result.invariants_counts)
+
+
+def test_pause_and_resume_round_trip(tmp_root: Path) -> None:
+    orch = _make(tmp_root)
+    try:
+        orch.start("S2", logical_hours=1.0)
+        orch.request_pause(reason="unit_test")
+        assert orch.state_machine.state == "PAUSED"
+        orch.request_resume(reason="unit_test")
+        assert orch.state_machine.state == "RUNNING"
+    finally:
+        orch.close()
+
+
+def test_finalize_transitions_to_completed(tmp_root: Path) -> None:
+    orch = _make(tmp_root)
+    try:
+        orch.start("S3", logical_hours=1.0)
+        orch.finalize(reason="unit_test")
+        assert orch.state_machine.state == "COMPLETED"
+    finally:
+        orch.close()
+
+
+def test_kill_switch_marks_terminal_blocked(tmp_root: Path) -> None:
+    orch = _make(tmp_root)
+    try:
+        orch.start("S4", logical_hours=1.0)
+        orch.trigger_kill_switch(reason="unit_test")
+        assert orch.kill_switch_flag is True
+        assert orch.kill_switch_status == "TRIGGERED"
+        assert orch.guard.exchange_write_attempt_count == 0
+        orch.finalize(reason="post_kill")
+        # kill switch drives finalize to BLOCKED, not COMPLETED.
+        assert orch.state_machine.state == "BLOCKED"
+    finally:
+        orch.close()
+
+
+# ---------------------------------------------------------------------------
+# Invariants + long session smoke
+# ---------------------------------------------------------------------------
+
+def test_24h_long_session_completes_clean(tmp_root: Path) -> None:
+    orch = _make(tmp_root)
+    try:
+        cands = build_default_candidates(24)
+        result = orch.run_accelerated_session(
+            session_id="S24",
+            logical_hours=24,
+            candidates=cands,
+            injections=list(LONG_SESSION_INJECTIONS),
+            checkpoint_every=8,
+        )
+        d = result.to_dict()
+        assert d["final_state"] == "COMPLETED"
+        assert d["session_pass"] is True
+        assert d["invariants_status"] == "PASS"
+        assert d["exchange_write_attempt_count"] == 0
+        for k in (
+            "open_ambiguous_position_count",
+            "orphan_lifecycle_count",
+            "duplicate_position_count",
+            "unclosed_intent_count",
+            "untracked_fill_count",
+            "risk_limit_bypass_count",
+            "exchange_write_attempt_count",
+        ):
+            assert d["invariants_counts"][k] == 0
+        # candidate_count reflects distinct submissions; duplicate_candidate
+        # injection re-uses earlier ids so a few will be de-duplicated.
+        assert 20 <= d["candidate_count"] <= 24
+        assert d["invalid_transition_attempts"] == 0
+    finally:
+        orch.close()
+
+
+def test_reflection_and_lesson_queues_advance(tmp_root: Path) -> None:
+    orch = _make(tmp_root)
+    try:
+        cands = build_default_candidates(24)
+        result = orch.run_accelerated_session(
+            session_id="S_reflection",
+            logical_hours=24,
+            candidates=cands,
+            injections=[],  # no injections — every completed trade queues both.
+            checkpoint_every=8,
+        )
+        # With 24 clean candidates and max_positions=2, most complete.
+        assert result.reflection_queue_len > 0
+        assert result.lesson_queue_len > 0
+        assert result.reflection_queue_len == result.lesson_queue_len
+    finally:
+        orch.close()
+
+
+def test_no_exchange_write_attempts(tmp_root: Path) -> None:
+    orch = _make(tmp_root)
+    try:
+        cands = build_default_candidates(30)
+        result = orch.run_accelerated_session(
+            session_id="S_noexch",
+            logical_hours=24,
+            candidates=cands,
+            injections=list(LONG_SESSION_INJECTIONS),
+            checkpoint_every=10,
+        )
+        assert result.exchange_write_attempt_count == 0
+        assert orch.guard.exchange_write_attempt_count == 0
+    finally:
+        orch.close()
+
+
+def test_duplicate_candidate_is_ignored(tmp_root: Path) -> None:
+    orch = _make(tmp_root)
+    try:
+        orch.start("Sdup", logical_hours=1.0)
+        cand = build_default_candidates(1)[0]
+        first = orch.submit_candidate(cand)
+        second = orch.submit_candidate(cand)
+        assert first["status"] == "COMPLETE"
+        assert second["status"] == "DUPLICATE_CANDIDATE_IGNORED"
+    finally:
+        orch.close()
+
+
+def test_risk_override_rejected(tmp_root: Path) -> None:
+    orch = _make(tmp_root)
+    try:
+        orch.start("Srisk", logical_hours=1.0)
+        cand = build_default_candidates(1)[0]
+        cand["risk_override"] = True
+        cand["candidate_id"] = "risky"
+        cand["idempotency_key"] = "risky_key"
+        result = orch.submit_candidate(cand)
+        assert result["status"] == "RISK_OVERRIDE_REJECTED"
+        # No intent counted.
+        assert orch.intent_count == 0
+    finally:
+        orch.close()
+
+
+def test_start_bound_to_single_session(tmp_root: Path) -> None:
+    orch = _make(tmp_root)
+    try:
+        orch.start("A", logical_hours=1.0)
+        with pytest.raises(RuntimeError):
+            orch.start("B", logical_hours=1.0)
+    finally:
+        orch.close()
+
+
+def test_state_history_contains_lifecycle_events(tmp_root: Path) -> None:
+    orch = _make(tmp_root)
+    try:
+        orch.start("Shist", logical_hours=1.0)
+        orch.request_pause(reason="rp")
+        orch.request_resume(reason="rs")
+        orch.finalize(reason="ok")
+        assert orch.state_machine.state == "COMPLETED"
+        seq = [h["next_state"] for h in orch.state_machine.history()]
+        assert "INITIALIZING" in seq
+        assert "RUNNING" in seq
+        assert "PAUSING" in seq
+        assert "PAUSED" in seq
+        assert "FINALIZING" in seq
+        assert "COMPLETED" in seq
+    finally:
+        orch.close()

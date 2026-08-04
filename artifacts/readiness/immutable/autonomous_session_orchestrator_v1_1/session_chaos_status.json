@@ -36,14 +36,14 @@
     "pause_during_pending_intent"
   ],
   "metrics_summary": {
-    "events_processed": 153.0,
-    "checkpoint_count": 18.0,
-    "restart_count": 3.0,
-    "recovery_duration_ms": 1833.615,
-    "memory_growth_bytes": 1904640.0,
-    "cpu_time_ms": 1156.25,
-    "ledger_size_bytes": 172032.0,
-    "snapshot_size_bytes": 5178668.0
+    "events_processed": 505.0,
+    "checkpoint_count": 69.0,
+    "restart_count": 13.0,
+    "recovery_duration_ms": 1714.8890000000001,
+    "memory_growth_bytes": 4370432.0,
+    "cpu_time_ms": 843.75,
+    "ledger_size_bytes": 401408.0,
+    "snapshot_size_bytes": 21110610.0
   },
   "invariants": {
     "open_ambiguous_position_count": 0,
@@ -72,21 +72,21 @@
         "exchange_write_attempt_count": 0
       },
       "metrics": {
-        "events_processed": 52,
-        "checkpoint_count": 7,
-        "restart_count": 1,
-        "recovery_duration_ms": 840.249,
-        "memory_growth_bytes": 1323008,
-        "cpu_time_ms": 531.25,
-        "ledger_size_bytes": 57344,
-        "snapshot_size_bytes": 1647986,
-        "accelerated_wall_time_seconds": 0.840249,
+        "events_processed": 105,
+        "checkpoint_count": 20,
+        "restart_count": 3,
+        "recovery_duration_ms": 424.835,
+        "memory_growth_bytes": 1839104,
+        "cpu_time_ms": 171.875,
+        "ledger_size_bytes": 86016,
+        "snapshot_size_bytes": 4739516,
+        "accelerated_wall_time_seconds": 0.424835,
         "logical_hours": 24.0
       },
-      "checkpoint_count": 7,
-      "restart_count": 1,
+      "checkpoint_count": 20,
+      "restart_count": 3,
       "recovery_count": 2,
-      "kill_switch_status": "READY",
+      "kill_switch_status": "TRIGGERED",
       "exchange_write_attempt_count": 0
     },
     "SESSION_72H": {
@@ -105,21 +105,21 @@
         "exchange_write_attempt_count": 0
       },
       "metrics": {
-        "events_processed": 51,
-        "checkpoint_count": 6,
-        "restart_count": 1,
-        "recovery_duration_ms": 545.682,
-        "memory_growth_bytes": 0,
-        "cpu_time_ms": 281.25,
-        "ledger_size_bytes": 57344,
-        "snapshot_size_bytes": 2092869,
-        "accelerated_wall_time_seconds": 0.545682,
+        "events_processed": 178,
+        "checkpoint_count": 22,
+        "restart_count": 4,
+        "recovery_duration_ms": 487.469,
+        "memory_growth_bytes": 761856,
+        "cpu_time_ms": 265.625,
+        "ledger_size_bytes": 143360,
+        "snapshot_size_bytes": 7303792,
+        "accelerated_wall_time_seconds": 0.487469,
         "logical_hours": 72.0
       },
-      "checkpoint_count": 6,
-      "restart_count": 1,
+      "checkpoint_count": 22,
+      "restart_count": 4,
       "recovery_count": 2,
-      "kill_switch_status": "READY",
+      "kill_switch_status": "TRIGGERED",
       "exchange_write_attempt_count": 0
     },
     "SESSION_168H": {
@@ -138,24 +138,24 @@
         "exchange_write_attempt_count": 0
       },
       "metrics": {
-        "events_processed": 50,
-        "checkpoint_count": 5,
-        "restart_count": 1,
-        "recovery_duration_ms": 447.684,
-        "memory_growth_bytes": 581632,
-        "cpu_time_ms": 343.75,
-        "ledger_size_bytes": 57344,
-        "snapshot_size_bytes": 1437813,
-        "accelerated_wall_time_seconds": 0.447684,
+        "events_processed": 222,
+        "checkpoint_count": 27,
+        "restart_count": 6,
+        "recovery_duration_ms": 802.585,
+        "memory_growth_bytes": 1769472,
+        "cpu_time_ms": 406.25,
+        "ledger_size_bytes": 172032,
+        "snapshot_size_bytes": 9067302,
+        "accelerated_wall_time_seconds": 0.802585,
         "logical_hours": 168.0
       },
-      "checkpoint_count": 5,
-      "restart_count": 1,
-      "recovery_count": 2,
-      "kill_switch_status": "READY",
+      "checkpoint_count": 27,
+      "restart_count": 6,
+      "recovery_count": 4,
+      "kill_switch_status": "TRIGGERED",
       "exchange_write_attempt_count": 0
     }
   },
   "mode": "ACCELERATED_HISTORICAL_REPLAY_SIMULATED_NO_EXCHANGE_WRITE",
-  "created_at": "2026-08-04T16:22:48Z"
+  "created_at": "2026-08-04T16:38:55Z"
 }
