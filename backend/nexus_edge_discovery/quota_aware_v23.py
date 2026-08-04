@@ -28,6 +28,20 @@ from backend.nexus_edge_discovery.blind_reflection_v23 import (
     normalize_critic_verdict,
     serialize_evidence_to_prompt,
 )
+from backend.nexus_edge_discovery.provider_transport_v23 import (
+    DEFAULT_RETRY_AFTER_S,
+    PROFILES,
+    ProviderTransportController,
+    ReplayFixtureStore,
+    dedupe_pending_against_success,
+    detect_checkpoint_corruption,
+    exponential_backoff_with_jitter,
+    is_ai_quality_failure,
+    is_transport_failure,
+    parse_retry_after,
+    repair_checkpoint_overlap,
+    validate_terminal_denominators,
+)
 from backend.nexus_edge_discovery.ratio_metrics import make_ratio
 from backend.nexus_strategy_engine.evidence_v2 import deterministic_process_baseline
 
@@ -53,13 +67,6 @@ CHECKPOINT_NAME = "blind_reflection_v23_checkpoint.json"
 MAX_TRANSPORT_RETRIES = 3
 BATCH_SIZE = 5
 CANARY_SIZE = 5
-DEFAULT_RETRY_AFTER_S = 900
-PROFILES = (
-    "GROQ_REFLECTION_REASONER",
-    "SAMBANOVA_INDEPENDENT_CRITIC",
-    "CEREBRAS_RESEARCH_NORMALIZER",
-    "GROQ_MAIN_REASONER",
-)
 
 
 def _utc() -> str:
@@ -80,7 +87,28 @@ def load_checkpoint(root: Path) -> dict[str, Any] | None:
     path = checkpoint_path(root)
     if not path.is_file():
         return None
-    return json.loads(path.read_text(encoding="utf-8"))
+    try:
+        raw = path.read_text(encoding="utf-8")
+        if not raw.strip() or "\x00" in raw:
+            return {
+                "_checkpoint_load_error": "corrupt_empty_or_null",
+                "schema_version": 0,
+                "case_ids": [],
+            }
+        state = json.loads(raw)
+    except (json.JSONDecodeError, OSError, UnicodeError) as exc:
+        return {
+            "_checkpoint_load_error": type(exc).__name__,
+            "schema_version": 0,
+            "case_ids": [],
+        }
+    if not isinstance(state, dict):
+        return {
+            "_checkpoint_load_error": "not_a_dict",
+            "schema_version": 0,
+            "case_ids": [],
+        }
+    return state
 
 
 def save_checkpoint(root: Path, state: dict[str, Any]) -> None:
@@ -89,7 +117,83 @@ def save_checkpoint(root: Path, state: dict[str, Any]) -> None:
     safe = dict(state)
     for banned in ("api_key", "raw_prompt", "raw_response", "Authorization"):
         safe.pop(banned, None)
+    # Persist transport controller snapshots if present
+    controllers = safe.pop("_transport_controllers", None)
+    if isinstance(controllers, dict):
+        safe.setdefault("transport_controllers", {})
+        for pid, ctrl in controllers.items():
+            if hasattr(ctrl, "to_dict"):
+                safe["transport_controllers"][pid] = ctrl.to_dict()
     path.write_text(json.dumps(safe, indent=2, ensure_ascii=False, default=str) + "\n", encoding="utf-8")
+
+
+def _controllers_from_state(state: dict[str, Any]) -> dict[str, ProviderTransportController]:
+    out: dict[str, ProviderTransportController] = {}
+    snap = state.get("transport_controllers") or {}
+    for pid in PROFILES:
+        ctrl = ProviderTransportController(profile_id=pid)
+        row = snap.get(pid) or {}
+        nrb = row.get("next_resume_not_before") or (
+            (state.get("transport") or {}).get(pid) or {}
+        ).get("next_resume_not_before")
+        if nrb:
+            try:
+                ctrl.next_resume_not_before = datetime.strptime(
+                    str(nrb), "%Y-%m-%dT%H:%M:%SZ"
+                ).replace(tzinfo=timezone.utc)
+            except Exception:
+                pass
+        qra = row.get("quota_reset_at")
+        if qra:
+            try:
+                ctrl.quota_reset_at = datetime.strptime(
+                    str(qra), "%Y-%m-%dT%H:%M:%SZ"
+                ).replace(tzinfo=timezone.utc)
+            except Exception:
+                pass
+        circuit = row.get("circuit") or {}
+        if circuit.get("state"):
+            ctrl.circuit.state = str(circuit["state"])
+            ctrl.circuit.consecutive_failures = int(circuit.get("consecutive_failures") or 0)
+            ctrl.circuit.last_failure_status = circuit.get("last_failure_status")
+        out[pid] = ctrl
+    state["_transport_controllers"] = out
+    return out
+
+
+def _apply_retry_after_to_transport(
+    state: dict[str, Any],
+    profile: str,
+    *,
+    headers: dict[str, Any] | None = None,
+    body: str | None = None,
+    meta: dict[str, Any] | None = None,
+) -> float:
+    ctrl = (state.get("_transport_controllers") or {}).get(profile)
+    if ctrl is None:
+        ctrl = ProviderTransportController(profile_id=profile)
+        state.setdefault("_transport_controllers", {})[profile] = ctrl
+    hdrs = dict(headers or {})
+    if meta:
+        # Founder gateway may surface retry_after_s / response headers
+        if meta.get("headers"):
+            hdrs.update({str(k).lower(): v for k, v in dict(meta["headers"]).items()})
+        if meta.get("retry_after_s") is not None and "retry-after" not in hdrs:
+            hdrs["retry-after"] = str(meta["retry_after_s"])
+    wait = ctrl.apply_rate_limit(hdrs, body=body)
+    t = state["transport"][profile]
+    t["retry_after"] = wait
+    t["next_resume_not_before"] = (
+        ctrl.next_resume_not_before.strftime("%Y-%m-%dT%H:%M:%SZ")
+        if ctrl.next_resume_not_before
+        else None
+    )
+    t["quota_reset_at"] = (
+        ctrl.quota_reset_at.strftime("%Y-%m-%dT%H:%M:%SZ") if ctrl.quota_reset_at else None
+    )
+    t["circuit"] = ctrl.circuit.to_dict()
+    t["token_bucket"] = ctrl.bucket.to_dict()
+    return wait
 
 
 def _empty_provider_transport(profile_id: str, model_id: str = "") -> dict[str, Any]:
@@ -245,29 +349,66 @@ def migrate_checkpoint_v2_to_v3(state: dict[str, Any], *, model_id: str) -> dict
     return out
 
 
-def _bump_transport(state: dict[str, Any], profile: str, status: str) -> None:
+def _bump_transport(
+    state: dict[str, Any],
+    profile: str,
+    status: str,
+    *,
+    meta: dict[str, Any] | None = None,
+) -> None:
     t = state["transport"][profile]
     t["attempt_count"] = int(t.get("attempt_count") or 0) + 1
     t["last_attempt_at"] = _utc()
-    if status in {"OK", "SUCCESS"}:
+    # Never treat 429 / transport as AI quality failure marker
+    if is_ai_quality_failure(status):
+        t["invalid_schema_count"] = int(t.get("invalid_schema_count") or 0) + 1
+        t["last_exit_reason"] = "PROVIDER_SCHEMA_FAILURE"
+    elif status in {"OK", "SUCCESS"}:
         t["success_count"] = int(t.get("success_count") or 0) + 1
         t["last_exit_reason"] = "SUCCESS"
+        ctrl = (state.get("_transport_controllers") or {}).get(profile)
+        if ctrl:
+            ctrl.on_result("SUCCESS")
+            t["circuit"] = ctrl.circuit.to_dict()
+            t["token_bucket"] = ctrl.bucket.to_dict()
     elif status == "RATE_LIMITED":
         t["HTTP_429_count"] = int(t.get("HTTP_429_count") or 0) + 1
         t["last_exit_reason"] = "PROVIDER_RATE_LIMITED"
-        t["retry_after"] = DEFAULT_RETRY_AFTER_S
-        t["next_resume_not_before"] = (
-            datetime.now(timezone.utc) + timedelta(seconds=DEFAULT_RETRY_AFTER_S)
-        ).strftime("%Y-%m-%dT%H:%M:%SZ")
+        _apply_retry_after_to_transport(state, profile, meta=meta)
     elif status == "TIMEOUT":
         t["timeout_count"] = int(t.get("timeout_count") or 0) + 1
         t["last_exit_reason"] = "PROVIDER_TIMEOUT"
+        ctrl = (state.get("_transport_controllers") or {}).get(profile)
+        if ctrl:
+            ctrl.on_result("TIMEOUT")
+            wait = exponential_backoff_with_jitter(
+                max(0, ctrl.circuit.consecutive_failures - 1), rng=ctrl.rng
+            )
+            ctrl.schedule_resume(wait, reason="TIMEOUT")
+            t["retry_after"] = wait
+            t["next_resume_not_before"] = (
+                ctrl.next_resume_not_before.strftime("%Y-%m-%dT%H:%M:%SZ")
+                if ctrl.next_resume_not_before
+                else None
+            )
+            t["circuit"] = ctrl.circuit.to_dict()
     elif status == "INVALID_SCHEMA":
         t["invalid_schema_count"] = int(t.get("invalid_schema_count") or 0) + 1
         t["last_exit_reason"] = "PROVIDER_SCHEMA_FAILURE"
+        ctrl = (state.get("_transport_controllers") or {}).get(profile)
+        if ctrl:
+            ctrl.on_result("INVALID_SCHEMA")
+            t["circuit"] = ctrl.circuit.to_dict()
+    elif status in {"CIRCUIT_OPEN", "TOKEN_BUCKET_WAIT", "QUOTA_RESET_WAIT"}:
+        t["other_failure_count"] = int(t.get("other_failure_count") or 0) + 1
+        t["last_exit_reason"] = status
+        # Do not increment HTTP_429 for circuit/bucket waits
     else:
         t["other_failure_count"] = int(t.get("other_failure_count") or 0) + 1
         t["last_exit_reason"] = status or "PROVIDER_OTHER_FAILURE"
+        if status == "RATE_LIMITED":
+            t["HTTP_429_count"] = int(t.get("HTTP_429_count") or 0) + 1
+            _apply_retry_after_to_transport(state, profile, meta=meta)
 
 
 def provider_preflight(gw: FounderAIGateway, profile: str) -> dict[str, Any]:
@@ -294,22 +435,31 @@ def provider_preflight(gw: FounderAIGateway, profile: str) -> dict[str, Any]:
     )
     status = str(rec.get("result_status") or "")
     ok = body is not None and status in {"OK", "SUCCESS"}
-    retry_after = DEFAULT_RETRY_AFTER_S if status == "RATE_LIMITED" else None
+    wait = None
     next_resume = None
-    if retry_after:
+    if status == "RATE_LIMITED":
+        wait = parse_retry_after(
+            rec.get("headers") or {},
+            body=str(rec.get("error_snippet_redacted") or ""),
+            default_s=float(rec.get("retry_after_s") or DEFAULT_RETRY_AFTER_S),
+        )
+        if rec.get("retry_after_s") is not None:
+            wait = float(rec["retry_after_s"])
         next_resume = (
-            datetime.now(timezone.utc) + timedelta(seconds=retry_after)
+            datetime.now(timezone.utc) + timedelta(seconds=wait)
         ).strftime("%Y-%m-%dT%H:%M:%SZ")
     return {
         "profile_id": profile,
         "provider_preflight_status": "PASS" if ok else ("RATE_LIMITED" if status == "RATE_LIMITED" else status or "FAIL"),
         "result_status": status,
-        "retry_after": retry_after,
+        "retry_after": wait,
         "next_resume_not_before": next_resume,
         "mass_batch_blocked": not ok,
         "timestamp": _utc(),
         "api_key_recorded": False,
         "env_name": ENV_GROQ_REFLECTION if "GROQ" in profile else ENV_SAMBANOVA,
+        "transport_only": is_transport_failure(status),
+        "ai_quality_failure": is_ai_quality_failure(status),
     }
 
 
@@ -623,7 +773,7 @@ def evaluate_quality(state: dict[str, Any]) -> dict[str, Any]:
         "reason": "critic_adjudication_incomplete",
     }
 
-    return {
+    result = {
         "schema": "final_v2_3_quality_result_v3",
         "V2_3_quality_status": v23_status,
         "V2_3_RESULT_INTERPRETATION": (
@@ -699,7 +849,17 @@ def evaluate_quality(state: dict[str, Any]) -> dict[str, Any]:
         "groq_stage": state.get("groq_stage"),
         "sambanova_stage": state.get("sambanova_stage"),
         "exit_reason": state.get("exit_reason"),
+        "http_429_never_ai_quality_failure": True,
     }
+    denom_check = validate_terminal_denominators(result)
+    result["terminal_denominator_validation"] = denom_check
+    if not denom_check.get("valid"):
+        # Do not fabricate VERIFIED when denominators are invalid
+        if result["V2_3_TERMINAL_STATUS"] == "VERIFIED":
+            result["V2_3_TERMINAL_STATUS"] = "INCOMPLETE"
+            result["quality_gates_passed"] = False
+            result["V2_3_quality_status"] = "INCOMPLETE"
+    return result
 
 
 def run_quota_aware_calibration(
@@ -710,32 +870,74 @@ def run_quota_aware_calibration(
     use_real_ai: bool = True,
     max_batches_this_invocation: int = 3,
     run_critic: bool = True,
+    replay_fixtures: ReplayFixtureStore | Path | None = None,
 ) -> dict[str, Any]:
     packets_by_id = {str(p.get("trade_id")): p for p in packets}
     assert len(packets) == 80
     prev = os.environ.get("NEXUS_AI_MOCK")
     os.environ["NEXUS_AI_MOCK"] = "0" if use_real_ai else "1"
+    if isinstance(replay_fixtures, Path):
+        replay_store: ReplayFixtureStore | None = ReplayFixtureStore.from_dir(replay_fixtures)
+    elif isinstance(replay_fixtures, ReplayFixtureStore):
+        replay_store = replay_fixtures
+    else:
+        default_fx = root / "artifacts" / "readiness" / "fixtures" / "blind_reflection_v23_transport"
+        replay_store = ReplayFixtureStore.from_dir(default_fx) if (
+            os.getenv("NEXUS_V23_REPLAY_FIXTURES") == "1" and default_fx.is_dir()
+        ) else None
     try:
         gw = FounderAIGateway.from_env(mock_for_ci=not use_real_ai)
         model_id = os.getenv("NEXUS_GROQ_REFLECTION_MODEL", "llama-3.3-70b-versatile")
         state = load_checkpoint(root)
+        corruption = detect_checkpoint_corruption(state) if state is not None else {
+            "corrupt": False,
+            "issues": [],
+            "recoverable": True,
+            "recommended_action": "NONE",
+        }
+        if state is not None and state.get("_checkpoint_load_error"):
+            corruption = {
+                "corrupt": True,
+                "issues": [str(state.get("_checkpoint_load_error"))],
+                "recoverable": False,
+                "recommended_action": "REBUILD_FROM_MANIFEST",
+            }
         if state is None or state.get("calibration_manifest_checksum") != manifest_checksum:
-            state = build_initial_checkpoint(
-                packets=packets, manifest_checksum=manifest_checksum, model_id=model_id
-            )
+            if state is not None and corruption.get("corrupt") and not corruption.get("recoverable"):
+                # Rebuild while preserving nothing unsafe from corrupt blob
+                state = build_initial_checkpoint(
+                    packets=packets, manifest_checksum=manifest_checksum, model_id=model_id
+                )
+                state["checkpoint_corruption_report"] = corruption
+            elif state is None or state.get("calibration_manifest_checksum") != manifest_checksum:
+                state = build_initial_checkpoint(
+                    packets=packets, manifest_checksum=manifest_checksum, model_id=model_id
+                )
         else:
-            state = migrate_checkpoint_v2_to_v3(state, model_id=model_id)
-            state = repair_delivery_counters(state)
-            # Resume pending without re-billing successes
-            pending = []
-            for cid in state.get("case_ids") or frozen_case_ids(packets):
-                if cid in state.get("completed_case_ids", []):
-                    continue
+            if corruption.get("corrupt") and not corruption.get("recoverable"):
+                state = build_initial_checkpoint(
+                    packets=packets, manifest_checksum=manifest_checksum, model_id=model_id
+                )
+                state["checkpoint_corruption_report"] = corruption
+            else:
+                state = migrate_checkpoint_v2_to_v3(state, model_id=model_id)
+                state = repair_delivery_counters(state)
+                state = repair_checkpoint_overlap(state)
+                if corruption.get("corrupt"):
+                    state["checkpoint_corruption_report"] = corruption
+            # Resume pending without re-billing successes (dedupe)
+            case_ids = list(state.get("case_ids") or frozen_case_ids(packets))
+            completed = list(state.get("completed_case_ids") or [])
+            pending = dedupe_pending_against_success(
+                case_ids=case_ids,
+                completed_case_ids=completed,
+                pending_case_ids=None,
+            )
+            for cid in list(pending):
                 retries = int((state.get("transport_retries_by_case") or {}).get(cid) or 0)
                 if retries >= MAX_TRANSPORT_RETRIES:
                     if cid not in state["requires_founder_resume_ids"]:
                         state["requires_founder_resume_ids"].append(cid)
-                pending.append(cid)
             state["pending_case_ids"] = pending
             state["critic_pending_ids"] = [
                 cid
@@ -743,28 +945,32 @@ def run_quota_aware_calibration(
                 if cid not in (state.get("critic_resolved_ids") or [])
             ]
 
+        _controllers_from_state(state)
         preflight_groq = None
         preflight_sn = None
         batches_run = 0
         state["exit_reason"] = None
 
-        # Respect Groq next_resume only for Groq work
+        # Respect Groq next_resume only for Groq work (do NOT return early —
+        # SambaNova / Cerebras / Groq-Main queues stay independent).
+        groq_ctrl = state["_transport_controllers"]["GROQ_REFLECTION_REASONER"]
         groq_nrb = (state["transport"]["GROQ_REFLECTION_REASONER"].get("next_resume_not_before"))
-        if groq_nrb and use_real_ai and state["pending_case_ids"]:
+        groq_wait = False
+        if groq_nrb and use_real_ai and state["pending_case_ids"] and replay_store is None:
             try:
                 nrb_dt = datetime.strptime(groq_nrb, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
                 if datetime.now(timezone.utc) < nrb_dt:
                     state["groq_stage"] = "GROQ_CAPACITY_BLOCKED"
-                    state["exit_reason"] = "PROVIDER_RATE_LIMITED"
-                    save_checkpoint(root, state)
-                    return _result(state, preflight_groq, preflight_sn, "WAITING_GROQ_RETRY_AFTER")
+                    if state.get("exit_reason") is None:
+                        state["exit_reason"] = "PROVIDER_RATE_LIMITED"
+                    groq_wait = True
             except Exception:
                 pass
 
         # GROQ queue
-        if state["pending_case_ids"]:
+        if state["pending_case_ids"] and not groq_wait:
             state["groq_stage"] = "GROQ_PREFLIGHT"
-            if use_real_ai:
+            if use_real_ai and replay_store is None:
                 preflight_groq = provider_preflight(gw, "GROQ_REFLECTION_REASONER")
             else:
                 preflight_groq = {
@@ -773,8 +979,12 @@ def run_quota_aware_calibration(
                     "profile_id": "GROQ_REFLECTION_REASONER",
                 }
             if preflight_groq.get("mass_batch_blocked"):
-                _bump_transport(state, "GROQ_REFLECTION_REASONER", preflight_groq.get("result_status") or "RATE_LIMITED")
-                # undo double-count from preflight-only? preflight is an attempt
+                _bump_transport(
+                    state,
+                    "GROQ_REFLECTION_REASONER",
+                    preflight_groq.get("result_status") or "RATE_LIMITED",
+                    meta=preflight_groq,
+                )
                 state["groq_stage"] = "GROQ_CAPACITY_BLOCKED"
                 state["exit_reason"] = "PROVIDER_RATE_LIMITED"
                 save_checkpoint(root, state)
@@ -803,9 +1013,40 @@ def run_quota_aware_calibration(
                         batch = state["pending_case_ids"][:BATCH_SIZE]
 
                     capacity_hit = False
+                    enforce_gates = use_real_ai and replay_store is None
                     for cid in batch:
+                        # Successful-case dedupe guard
+                        if cid in state.get("completed_case_ids", []):
+                            continue
+                        if enforce_gates:
+                            allowed, gate_reason = groq_ctrl.can_invoke()
+                            if not allowed:
+                                _bump_transport(state, "GROQ_REFLECTION_REASONER", gate_reason)
+                                if gate_reason in {"CIRCUIT_OPEN", "QUOTA_RESET_WAIT", "TOKEN_BUCKET_WAIT"}:
+                                    capacity_hit = True
+                                    state["groq_stage"] = "GROQ_CAPACITY_BLOCKED"
+                                    state["exit_reason"] = gate_reason
+                                    break
                         packet = packets_by_id[cid]
-                        if use_real_ai:
+                        if replay_store is not None:
+                            reflection, rec = replay_store.invoke(
+                                profile_id="GROQ_REFLECTION_REASONER",
+                                trade_id=cid,
+                                prompt_schema_version="blind_reflection_v2_3",
+                            )
+                            san = build_sanitized_evidence_packet(packet)
+                            ej, eh, n = serialize_evidence_to_prompt(san)
+                            prompt = build_blind_prompt(trade_id=cid, evidence_json=ej)
+                            transport_meta = {
+                                "evidence_packet_constructible": n >= 15,
+                                "reflection_prompt_with_packet": True,
+                                "evidence_packet_hash": eh,
+                                "prompt_hash": _sha(prompt),
+                                "nonempty_evidence_field_count": n,
+                                "result_status": rec.get("result_status"),
+                                "replay": True,
+                            }
+                        elif use_real_ai:
                             reflection, rec, transport_meta = _invoke_reflection(gw, packet)
                         else:
                             from backend.nexus_edge_discovery.blind_reflection_v23 import (
@@ -830,7 +1071,14 @@ def run_quota_aware_calibration(
                             state["reflection_prompt_with_packet_count"] = int(
                                 state.get("reflection_prompt_with_packet_count") or 0
                             ) + 1
-                        _bump_transport(state, "GROQ_REFLECTION_REASONER", st if reflection is None else "SUCCESS" if st in {"OK", "SUCCESS"} else st)
+                        bump_status = (
+                            "SUCCESS"
+                            if reflection is not None and st in {"OK", "SUCCESS"}
+                            else st
+                        )
+                        _bump_transport(
+                            state, "GROQ_REFLECTION_REASONER", bump_status, meta=rec
+                        )
                         if reflection is not None and st in {"OK", "SUCCESS"}:
                             _record_success(state, packet, reflection, transport_meta)
                         else:
@@ -841,12 +1089,18 @@ def run_quota_aware_calibration(
                                 state["failed_transport_case_ids"].append(cid)
                             if retries[cid] >= MAX_TRANSPORT_RETRIES and cid not in state["requires_founder_resume_ids"]:
                                 state["requires_founder_resume_ids"].append(cid)
-                            if st == "RATE_LIMITED":
+                            if st == "RATE_LIMITED" or is_transport_failure(st):
+                                # 429 is capacity — never AI quality failure
+                                assert not is_ai_quality_failure(st)
                                 capacity_hit = True
                                 state["groq_stage"] = "GROQ_CAPACITY_BLOCKED"
-                                state["exit_reason"] = "PROVIDER_RATE_LIMITED"
+                                state["exit_reason"] = (
+                                    "PROVIDER_RATE_LIMITED"
+                                    if st == "RATE_LIMITED"
+                                    else st
+                                )
                                 break
-                        if use_real_ai:
+                        if use_real_ai and replay_store is None:
                             time.sleep(0.35)
                     save_checkpoint(root, state)
                     batches_run += 1
@@ -864,10 +1118,11 @@ def run_quota_aware_calibration(
             state["groq_stage"] = "GROQ_COMPLETE"
 
         # SAMBANOVA critic queue — independent
+        sn_ctrl = state["_transport_controllers"]["SAMBANOVA_INDEPENDENT_CRITIC"]
         if run_critic and state.get("critic_pending_ids"):
             sn_nrb = state["transport"]["SAMBANOVA_INDEPENDENT_CRITIC"].get("next_resume_not_before")
             sn_wait = False
-            if sn_nrb and use_real_ai:
+            if sn_nrb and use_real_ai and replay_store is None:
                 try:
                     nrb_dt = datetime.strptime(sn_nrb, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
                     if datetime.now(timezone.utc) < nrb_dt:
@@ -877,7 +1132,7 @@ def run_quota_aware_calibration(
                     pass
             if not sn_wait:
                 state["sambanova_stage"] = "SAMBANOVA_PREFLIGHT"
-                if use_real_ai:
+                if use_real_ai and replay_store is None:
                     preflight_sn = provider_preflight(gw, "SAMBANOVA_INDEPENDENT_CRITIC")
                 else:
                     preflight_sn = {
@@ -890,6 +1145,7 @@ def run_quota_aware_calibration(
                         state,
                         "SAMBANOVA_INDEPENDENT_CRITIC",
                         preflight_sn.get("result_status") or "RATE_LIMITED",
+                        meta=preflight_sn,
                     )
                     state["sambanova_stage"] = "SAMBANOVA_CAPACITY_BLOCKED"
                 else:
@@ -899,6 +1155,11 @@ def run_quota_aware_calibration(
                         if critic_batches >= max_batches_this_invocation:
                             if state.get("exit_reason") is None:
                                 state["exit_reason"] = "INVOCATION_BATCH_LIMIT_REACHED"
+                            break
+                        allowed, gate_reason = sn_ctrl.can_invoke()
+                        if use_real_ai and replay_store is None and not allowed:
+                            _bump_transport(state, "SAMBANOVA_INDEPENDENT_CRITIC", gate_reason)
+                            state["sambanova_stage"] = "SAMBANOVA_CAPACITY_BLOCKED"
                             break
                         packet = packets_by_id[cid]
                         row = state["case_results"][cid]
@@ -916,7 +1177,14 @@ def run_quota_aware_calibration(
                         state["critic_prompt_with_packet_count"] = int(
                             state.get("critic_prompt_with_packet_count") or 0
                         ) + 1
-                        if use_real_ai:
+                        if replay_store is not None:
+                            critic, crit_rec = replay_store.invoke(
+                                profile_id="SAMBANOVA_INDEPENDENT_CRITIC",
+                                trade_id=cid,
+                                prompt_schema_version="critic_v2_3",
+                            )
+                            st = str(crit_rec.get("result_status") or "")
+                        elif use_real_ai:
                             critic, crit_rec, _ = gw.invoke_profile(
                                 profile_id="SAMBANOVA_INDEPENDENT_CRITIC",
                                 prompt=critic_prompt,
@@ -935,7 +1203,12 @@ def run_quota_aware_calibration(
                             }
                             st = "OK"
                             crit_rec = {"result_status": "OK"}
-                        _bump_transport(state, "SAMBANOVA_INDEPENDENT_CRITIC", st if critic is None else ("SUCCESS" if st in {"OK", "SUCCESS"} else st))
+                        _bump_transport(
+                            state,
+                            "SAMBANOVA_INDEPENDENT_CRITIC",
+                            st if critic is None else ("SUCCESS" if st in {"OK", "SUCCESS"} else st),
+                            meta=crit_rec,
+                        )
                         if critic and st in {"OK", "SUCCESS"}:
                             verdict = normalize_critic_verdict(
                                 critic.get("critic_verdict") or critic.get("verdict"),
@@ -946,11 +1219,12 @@ def run_quota_aware_calibration(
                             row["critic_status"] = "RESOLVED"
                             state["critic_resolved_ids"].append(cid)
                             state["critic_pending_ids"] = [x for x in state["critic_pending_ids"] if x != cid]
-                        elif st == "RATE_LIMITED":
+                        elif st == "RATE_LIMITED" or is_transport_failure(st):
+                            assert not is_ai_quality_failure(st)
                             row["critic_status"] = "PROVIDER_BLOCKED"
                             state["sambanova_stage"] = "SAMBANOVA_CAPACITY_BLOCKED"
                             break
-                        if use_real_ai:
+                        if use_real_ai and replay_store is None:
                             time.sleep(0.4)
                         critic_batches += 1
                     if not state["critic_pending_ids"] and state["sambanova_stage"] != "SAMBANOVA_CAPACITY_BLOCKED":

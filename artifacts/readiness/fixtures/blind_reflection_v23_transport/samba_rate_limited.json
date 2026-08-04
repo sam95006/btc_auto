@@ -1,0 +1,10 @@
+{
+  "fixture_key": "SAMBANOVA_INDEPENDENT_CRITIC:RATE_LIMITED",
+  "result_status": "RATE_LIMITED",
+  "http_status": 429,
+  "headers": {
+    "retry-after": "77"
+  },
+  "smoke_map": "RATE_LIMITED",
+  "body": null
+}
