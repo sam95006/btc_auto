@@ -1,0 +1,21 @@
+{
+  "schema": "NEXUS_OUTCOME_REVIEW_TEMPLATE_V1",
+  "fields": {
+    "decision_id": {"required": true},
+    "outcome_summary": {"required": true},
+    "process_vs_luck_notes": {"required": true},
+    "counterfactual_notes": {"required": false},
+    "human_ai_calibration_notes": {"required": false},
+    "closed_decision_loop": {
+      "requires": [
+        "decision_created",
+        "supporting_evidence",
+        "contradicting_evidence",
+        "invalidation_conditions",
+        "action_or_explicit_no_action",
+        "outcome_review"
+      ]
+    }
+  },
+  "fabricated_reviews_forbidden": true
+}

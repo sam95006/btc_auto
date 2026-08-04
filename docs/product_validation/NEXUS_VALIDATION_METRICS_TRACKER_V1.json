@@ -1,0 +1,47 @@
+{
+  "schema": "NEXUS_VALIDATION_METRICS_TRACKER_V1",
+  "north_star": "CLOSED_DECISION_LOOPS_PER_ACTIVE_PAID_USER",
+  "closed_decision_loop_requires": [
+    "decision_created",
+    "supporting_evidence",
+    "contradicting_evidence",
+    "invalidation_conditions",
+    "action_or_explicit_no_action",
+    "outcome_review"
+  ],
+  "metrics": [
+    "participant_activation",
+    "weekly_decision_creation",
+    "thesis_completion",
+    "outcome_review_rate",
+    "research_time_saved",
+    "thesis_alert_usefulness",
+    "second_month_payment_intent",
+    "retention_30_90_180"
+  ],
+  "willingness_to_pay_test": {
+    "items": [
+      "stated_willingness_to_pay",
+      "paid_pilot_commitment",
+      "second_month_renewal",
+      "annual_commitment_interest",
+      "cancellation_reason",
+      "replacement_tool_spending",
+      "time_value_saved"
+    ],
+    "all_prices": "UNVALIDATED_HYPOTHESIS"
+  },
+  "gates_defined_before_results": {
+    "CONTINUE": "Activation + weekly Decision creation + Outcome Review meet pre-set thresholds; second-month intent positive for majority of active cohort",
+    "ITERATE": "Users engage but Decision Object friction or alert noise blocks loops",
+    "PIVOT": "ICP contradicts launch ICP with real interview evidence; or only chat usage without Decisions",
+    "KILL": "No paid/renewal signal after 8 weeks; demand collapses to signals/auto-trading; privacy/boundary breach pressure"
+  },
+  "actual_validation_placeholder": {
+    "real_participant_count": 0,
+    "interview_completed_count": 0,
+    "paid_pilot_count": 0,
+    "fabricated_result_count": 0
+  },
+  "fabricated_results_forbidden": true
+}

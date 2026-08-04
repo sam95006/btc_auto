@@ -1,0 +1,19 @@
+{
+  "schema": "NEXUS_DECISION_MEMO_TEMPLATE_V1",
+  "decision_object_fields": {
+    "context_snapshot": {"required": true, "notes": "point-in-time context + freshness"},
+    "thesis": {"required": true},
+    "evidence": {"required": true, "type": "array"},
+    "contradicting_evidence": {"required": true, "type": "array"},
+    "unknowns": {"required": true, "type": "array"},
+    "decision_or_explicit_no_action": {"required": true},
+    "risk": {"required": true},
+    "invalidation": {"required": true},
+    "human_judgment": {"required": true},
+    "ai_judgment": {"required": false, "notes": "embedded copilot; optional early weeks"},
+    "outcome": {"required": false},
+    "review": {"required": false}
+  },
+  "standalone_generic_chat_forbidden": true,
+  "fabricated_entries_forbidden": true
+}

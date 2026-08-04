@@ -1,0 +1,12 @@
+{
+  "schema": "NEXUS_THESIS_MONITOR_TEMPLATE_V1",
+  "fields": {
+    "thesis_id": {"required": true},
+    "invalidation_conditions": {"required": true, "type": "array"},
+    "alert_candidates": {"type": "array"},
+    "evidence_drift_notes": {"type": "string"},
+    "user_acknowledged": {"type": "boolean"},
+    "auto_trade_triggered": {"const": false}
+  },
+  "notes": "Alerts are advisory only; user remains final decision-maker."
+}
