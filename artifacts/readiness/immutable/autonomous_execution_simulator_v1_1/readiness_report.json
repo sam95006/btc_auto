@@ -6,8 +6,8 @@
   "demo_order_count": 0,
   "exchange_write_attempt_count": 0,
   "execution_mode": "SIMULATED_NO_EXCHANGE_WRITE",
-  "finished_at": "2026-08-04T16:28:36Z",
-  "generated_at": "2026-08-04T16:28:36Z",
+  "finished_at": "2026-08-04T16:30:01Z",
+  "generated_at": "2026-08-04T16:30:01Z",
   "generated_execution_scenario_count": 10000,
   "invariants": {
     "scenarios_ok": 10000,
@@ -21,5 +21,5 @@
   "schema": "autonomous_execution_simulator_v1_1_readiness",
   "seed": 20260805,
   "simulator_version": "autonomous_execution_simulator_v1_1",
-  "started_at": "2026-08-04T16:28:34Z"
+  "started_at": "2026-08-04T16:30:00Z"
 }
