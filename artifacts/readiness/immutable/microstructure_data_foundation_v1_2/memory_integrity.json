@@ -1,0 +1,65 @@
+{
+  "seg1": {
+    "memory_growth_status": "INSTRUMENTATION_FAILED",
+    "process_RSS_start_bytes": 0,
+    "process_RSS_end_bytes": 0,
+    "process_RSS_peak_bytes": 0,
+    "Python_heap_start_bytes": 437246,
+    "Python_heap_end_bytes": 14851612,
+    "Python_heap_peak_bytes": 25414040
+  },
+  "seg2": {
+    "memory_growth_status": "INSTRUMENTATION_FAILED",
+    "process_RSS_start_bytes": 0,
+    "process_RSS_end_bytes": 0,
+    "process_RSS_peak_bytes": 0,
+    "Python_heap_start_bytes": 4305,
+    "Python_heap_end_bytes": 17603965,
+    "Python_heap_peak_bytes": 29430700
+  },
+  "rss_fix_note": "Win64 GetProcessMemoryInfo requires typed argtypes; K32GetProcessMemoryInfo preferred",
+  "revalidate": {
+    "process_RSS_start_bytes": 36716544,
+    "process_RSS_end_bytes": 94781440,
+    "process_RSS_peak_bytes": 98996224,
+    "Python_heap_start_bytes": 440482,
+    "Python_heap_end_bytes": 20422007,
+    "Python_heap_peak_bytes": 32640320,
+    "RSS_growth_bytes": 58064896,
+    "RSS_growth_per_million_events": 857742757.9584903,
+    "heap_growth_bytes": 19981525,
+    "heap_growth_per_million_events": 295169879.6070611,
+    "memory_growth_status": "LINEAR_GROWTH_DETECTED",
+    "sample_count": 177
+  },
+  "extended_run_memory_as_loaded": {
+    "memory_growth_status": "INSTRUMENTATION_FAILED"
+  },
+  "revalidate_v2": {
+    "process_RSS_start_bytes": 35504128,
+    "process_RSS_end_bytes": 48398336,
+    "process_RSS_peak_bytes": 51421184,
+    "Python_heap_start_bytes": 444615,
+    "Python_heap_end_bytes": 0,
+    "Python_heap_peak_bytes": 482858,
+    "RSS_growth_bytes": 12894208,
+    "RSS_growth_per_million_events": 412958237.25339484,
+    "heap_growth_bytes": -444615,
+    "heap_growth_per_million_events": -14239527.286702538,
+    "late_rss_slope_bytes_per_sec": 17371.98454728457,
+    "late_rss_range_bytes": 9883648,
+    "memory_growth_status": "LIKELY_BOUNDED_NEEDS_LONGER_RUN",
+    "sample_count": 142
+  },
+  "revalidate_v2_heartbeat": {
+    "heartbeat_mode": "BYBIT_APPLICATION_PING_WITH_REQUEST_ID",
+    "heartbeat_status": "HEARTBEAT_VERIFIED",
+    "heartbeat_send_count": 73,
+    "heartbeat_ack_count": 73,
+    "heartbeat_timeout_count": 0,
+    "last_heartbeat_sent_at": 1785845633.2812793,
+    "last_heartbeat_ack_at": 1785845633.3325005,
+    "heartbeat_round_trip_p50_ms": 54.97932434082031,
+    "heartbeat_round_trip_p95_ms": 110.79645156860352
+  }
+}

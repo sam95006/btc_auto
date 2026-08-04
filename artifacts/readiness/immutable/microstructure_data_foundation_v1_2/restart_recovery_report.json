@@ -1,0 +1,57 @@
+{
+  "schema": "restart_recovery_report",
+  "segment1": {
+    "events": 52137,
+    "clean": true,
+    "checksum": true,
+    "heartbeat": {
+      "heartbeat_mode": "BYBIT_APPLICATION_PING_WITH_REQUEST_ID",
+      "heartbeat_status": "HEARTBEAT_VERIFIED",
+      "heartbeat_send_count": 180,
+      "heartbeat_ack_count": 180,
+      "heartbeat_timeout_count": 0,
+      "last_heartbeat_sent_at": 1785834170.941866,
+      "last_heartbeat_ack_at": 1785834170.989606,
+      "heartbeat_round_trip_p50_ms": 47.98412322998047,
+      "heartbeat_round_trip_p95_ms": 49.72958564758301
+    },
+    "memory": {
+      "memory_growth_status": "INSTRUMENTATION_FAILED",
+      "process_RSS_start_bytes": 0,
+      "process_RSS_end_bytes": 0,
+      "process_RSS_peak_bytes": 0,
+      "Python_heap_start_bytes": 437246,
+      "Python_heap_end_bytes": 14851612,
+      "Python_heap_peak_bytes": 25414040
+    }
+  },
+  "segment2": {
+    "events": 59011,
+    "clean": true,
+    "checksum": true,
+    "resumed": true,
+    "heartbeat": {
+      "heartbeat_mode": "BYBIT_APPLICATION_PING_WITH_REQUEST_ID",
+      "heartbeat_status": "HEARTBEAT_VERIFIED",
+      "heartbeat_send_count": 180,
+      "heartbeat_ack_count": 180,
+      "heartbeat_timeout_count": 0,
+      "last_heartbeat_sent_at": 1785835979.2884862,
+      "last_heartbeat_ack_at": 1785835979.3376358,
+      "heartbeat_round_trip_p50_ms": 48.409223556518555,
+      "heartbeat_round_trip_p95_ms": 52.24442481994629
+    },
+    "memory": {
+      "memory_growth_status": "INSTRUMENTATION_FAILED",
+      "process_RSS_start_bytes": 0,
+      "process_RSS_end_bytes": 0,
+      "process_RSS_peak_bytes": 0,
+      "Python_heap_start_bytes": 4305,
+      "Python_heap_end_bytes": 17603965,
+      "Python_heap_peak_bytes": 29430700
+    }
+  },
+  "restart_recovery_status": "PASS",
+  "cross_partition_checksum_status": "PASS",
+  "deletion_executed": false
+}

@@ -1,0 +1,17 @@
+{
+  "seg_restart": {},
+  "extended": {
+    "soft_limit_bytes": 1717986918,
+    "hard_limit_bytes": 2147483648,
+    "minimum_free_disk_bytes": 536870912,
+    "current_compressed_partition_bytes": 28296222,
+    "current_manifest_bytes": 69050,
+    "estimated_next_hour_bytes": 14182957.541231574,
+    "estimated_next_day_bytes": 340390980.9895578,
+    "mode": "NORMAL",
+    "stop_requested": false,
+    "storage_tree_scanned_per_event": false
+  },
+  "hard_limit_bytes": 2147483648,
+  "storage_tree_scanned_per_event": false
+}

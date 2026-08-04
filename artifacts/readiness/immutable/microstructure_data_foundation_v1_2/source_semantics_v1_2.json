@@ -10,7 +10,7 @@
       "source_field": "S",
       "canonical_field": "aggressor_side",
       "documented_semantics": "Side of taker. Buy, Sell",
-      "documentation_checked_at": "2026-08-04T07:27:14Z",
+      "documentation_checked_at": "2026-08-04T11:44:54Z",
       "documentation_url": "https://bybit-exchange.github.io/docs/v5/websocket/public/trade",
       "mapping_status": "VERIFIED"
     },
@@ -19,7 +19,7 @@
       "source_field": "i",
       "canonical_field": "trade_id",
       "documented_semantics": "Trade ID",
-      "documentation_checked_at": "2026-08-04T07:27:14Z",
+      "documentation_checked_at": "2026-08-04T11:44:54Z",
       "documentation_url": "https://bybit-exchange.github.io/docs/v5/websocket/public/trade",
       "mapping_status": "VERIFIED"
     },
@@ -28,7 +28,7 @@
       "source_field": "T",
       "canonical_field": "exchange_timestamp",
       "documented_semantics": "Timestamp (ms) that the order is filled",
-      "documentation_checked_at": "2026-08-04T07:27:14Z",
+      "documentation_checked_at": "2026-08-04T11:44:54Z",
       "documentation_url": "https://bybit-exchange.github.io/docs/v5/websocket/public/trade",
       "mapping_status": "VERIFIED"
     },
@@ -37,7 +37,7 @@
       "source_field": "seq",
       "canonical_field": "cross_sequence",
       "documented_semantics": "cross sequence; multiple messages may share seq",
-      "documentation_checked_at": "2026-08-04T07:27:14Z",
+      "documentation_checked_at": "2026-08-04T11:44:54Z",
       "documentation_url": "https://bybit-exchange.github.io/docs/v5/websocket/public/trade",
       "mapping_status": "VERIFIED_NOT_STRICT_GAP_SOURCE"
     },
@@ -46,7 +46,7 @@
       "source_field": "S",
       "canonical_field": "liquidation_side",
       "documented_semantics": "Position side of the liquidated position when documented",
-      "documentation_checked_at": "2026-08-04T07:27:14Z",
+      "documentation_checked_at": "2026-08-04T11:44:54Z",
       "documentation_url": "https://bybit-exchange.github.io/docs/v5/websocket/public/all-liquidation",
       "mapping_status": "BEST_EFFORT"
     }
@@ -57,7 +57,7 @@
       "source_field": "S",
       "canonical_field": "source_taker_side",
       "documented_semantics": "Side of taker. Buy, Sell",
-      "documentation_checked_at": "2026-08-04T07:27:14Z",
+      "documentation_checked_at": "2026-08-04T11:44:54Z",
       "mapping_status": "VERIFIED"
     },
     {
@@ -65,7 +65,7 @@
       "source_field": "S",
       "canonical_field": "aggressor_side",
       "documented_semantics": "Mapped from taker side to AGGRESSOR_BUY/SELL",
-      "documentation_checked_at": "2026-08-04T07:27:14Z",
+      "documentation_checked_at": "2026-08-04T11:44:54Z",
       "mapping_status": "VERIFIED"
     },
     {
@@ -73,7 +73,7 @@
       "source_field": "S",
       "canonical_field": "source_position_side",
       "documented_semantics": "Official liquidation side field preserved as source_position_side",
-      "documentation_checked_at": "2026-08-04T07:27:14Z",
+      "documentation_checked_at": "2026-08-04T11:44:54Z",
       "mapping_status": "LEGACY_PRESERVED"
     },
     {
@@ -81,7 +81,7 @@
       "source_field": "S",
       "canonical_field": "liquidated_position_side",
       "documented_semantics": "Best-effort map from source position side; not inverted",
-      "documentation_checked_at": "2026-08-04T07:27:14Z",
+      "documentation_checked_at": "2026-08-04T11:44:54Z",
       "mapping_status": "BEST_EFFORT"
     },
     {
@@ -89,7 +89,7 @@
       "source_field": null,
       "canonical_field": "forced_order_side",
       "documented_semantics": "Not explicitly provided as forced order side → UNKNOWN",
-      "documentation_checked_at": "2026-08-04T07:27:14Z",
+      "documentation_checked_at": "2026-08-04T11:44:54Z",
       "mapping_status": "UNKNOWN_WHEN_UNAVAILABLE"
     }
   ],

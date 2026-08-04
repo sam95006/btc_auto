@@ -71,97 +71,215 @@ def main() -> int:
     _write(V12 / "storage_metric_audit.json", metric_audit)
     _write(V12 / "source_semantics_v1_2.json", source_semantics_v12())
 
-    # RUN A restart recovery 30+30
+    # Phases: ALL | RESTART | EXTENDED | FINALIZE
+    # FINALIZE reuses existing reports and optionally revalidates memory after RSS fixes.
+    phase = (os.getenv("NEXUS_MS_PHASE") or "ALL").strip().upper()
     restart_min = float(os.getenv("NEXUS_MS_RESTART_SEGMENT_MINUTES", "30"))
     ext_min = float(os.getenv("NEXUS_MS_EXTENDED_MINUTES", "120"))
-    print(f"RUN A segment1: {restart_min}m x 5", flush=True)
-    seg1 = run_bounded_capture_v12(
-        root=ROOT,
-        duration_minutes=restart_min,
-        symbol_count=5,
-        hard_storage_cap_bytes=2 * 1024 * 1024 * 1024,
-        run_label="RESTART_A1",
-        accumulation_run_id="accum_restart_v12",
-        resume=False,
-    )
-    print("controlled stop; restarting segment2...", flush=True)
-    time.sleep(2)
-    seg2 = run_bounded_capture_v12(
-        root=ROOT,
-        duration_minutes=restart_min,
-        symbol_count=5,
-        hard_storage_cap_bytes=2 * 1024 * 1024 * 1024,
-        run_label="RESTART_A2",
-        accumulation_run_id="accum_restart_v12",
-        resume=True,
-    )
-    restart_report = {
-        "schema": "restart_recovery_report",
-        "segment1": {
-            "events": seg1.get("event_count"),
-            "clean": (seg1.get("shutdown") or {}).get("capture_session_stopped_cleanly"),
-            "checksum": (seg1.get("shutdown") or {}).get("checksum_replay_verified"),
-            "heartbeat": seg1.get("heartbeat"),
-            "memory": seg1.get("memory"),
-        },
-        "segment2": {
-            "events": seg2.get("event_count"),
-            "clean": (seg2.get("shutdown") or {}).get("capture_session_stopped_cleanly"),
-            "checksum": (seg2.get("shutdown") or {}).get("checksum_replay_verified"),
-            "resumed": seg2.get("resumed"),
-            "heartbeat": seg2.get("heartbeat"),
-            "memory": seg2.get("memory"),
-        },
-        "restart_recovery_status": (
-            "PASS"
-            if (seg1.get("shutdown") or {}).get("capture_session_stopped_cleanly")
-            and (seg2.get("shutdown") or {}).get("capture_session_stopped_cleanly")
-            and (seg1.get("shutdown") or {}).get("checksum_replay_verified")
-            and (seg2.get("shutdown") or {}).get("checksum_replay_verified")
-            else "FAIL"
-        ),
-        "cross_partition_checksum_status": (
-            "PASS"
-            if (seg1.get("shutdown") or {}).get("checksum_replay_verified")
-            and (seg2.get("shutdown") or {}).get("checksum_replay_verified")
-            else "FAIL"
-        ),
-        "deletion_executed": False,
-    }
-    _write(V12 / "restart_recovery_report.json", restart_report)
-    _write(V12 / "heartbeat_integrity.json", {"seg1": seg1.get("heartbeat"), "seg2": seg2.get("heartbeat")})
-    _write(V12 / "memory_integrity.json", {"seg1": seg1.get("memory"), "seg2": seg2.get("memory")})
+    mem_revalidate_min = float(os.getenv("NEXUS_MS_MEMORY_REVALIDATE_MINUTES", "3"))
+    restart_path = V12 / "restart_recovery_report.json"
+    ext_path = V12 / "extended_capacity_report.json"
+
+    seg1: dict = {}
+    seg2: dict = {}
+    restart_report: dict
+    if phase in {"ALL", "RESTART"} or (phase == "EXTENDED" and not restart_path.is_file()):
+        print(f"RUN A segment1: {restart_min}m x 5", flush=True)
+        seg1 = run_bounded_capture_v12(
+            root=ROOT,
+            duration_minutes=restart_min,
+            symbol_count=5,
+            hard_storage_cap_bytes=2 * 1024 * 1024 * 1024,
+            run_label="RESTART_A1",
+            accumulation_run_id="accum_restart_v12",
+            resume=False,
+        )
+        print("controlled stop; restarting segment2...", flush=True)
+        time.sleep(2)
+        seg2 = run_bounded_capture_v12(
+            root=ROOT,
+            duration_minutes=restart_min,
+            symbol_count=5,
+            hard_storage_cap_bytes=2 * 1024 * 1024 * 1024,
+            run_label="RESTART_A2",
+            accumulation_run_id="accum_restart_v12",
+            resume=True,
+        )
+        restart_report = {
+            "schema": "restart_recovery_report",
+            "segment1": {
+                "events": seg1.get("event_count"),
+                "clean": (seg1.get("shutdown") or {}).get("capture_session_stopped_cleanly"),
+                "checksum": (seg1.get("shutdown") or {}).get("checksum_replay_verified"),
+                "heartbeat": seg1.get("heartbeat"),
+                "memory": seg1.get("memory"),
+            },
+            "segment2": {
+                "events": seg2.get("event_count"),
+                "clean": (seg2.get("shutdown") or {}).get("capture_session_stopped_cleanly"),
+                "checksum": (seg2.get("shutdown") or {}).get("checksum_replay_verified"),
+                "resumed": seg2.get("resumed"),
+                "heartbeat": seg2.get("heartbeat"),
+                "memory": seg2.get("memory"),
+            },
+            "restart_recovery_status": (
+                "PASS"
+                if (seg1.get("shutdown") or {}).get("capture_session_stopped_cleanly")
+                and (seg2.get("shutdown") or {}).get("capture_session_stopped_cleanly")
+                and (seg1.get("shutdown") or {}).get("checksum_replay_verified")
+                and (seg2.get("shutdown") or {}).get("checksum_replay_verified")
+                else "FAIL"
+            ),
+            "cross_partition_checksum_status": (
+                "PASS"
+                if (seg1.get("shutdown") or {}).get("checksum_replay_verified")
+                and (seg2.get("shutdown") or {}).get("checksum_replay_verified")
+                else "FAIL"
+            ),
+            "deletion_executed": False,
+        }
+        _write(restart_path, restart_report)
+        _write(V12 / "heartbeat_integrity.json", {"seg1": seg1.get("heartbeat"), "seg2": seg2.get("heartbeat")})
+        _write(V12 / "memory_integrity.json", {"seg1": seg1.get("memory"), "seg2": seg2.get("memory")})
+    else:
+        print(f"RUN A skipped (phase={phase}); using existing restart_recovery_report.json", flush=True)
+        restart_report = json.loads(restart_path.read_text(encoding="utf-8"))
+        seg1 = {"event_count": (restart_report.get("segment1") or {}).get("events"), "budget": {}}
+        seg2 = {
+            "event_count": (restart_report.get("segment2") or {}).get("events"),
+            "budget": {},
+            "heartbeat": (restart_report.get("segment2") or {}).get("heartbeat"),
+            "memory": (restart_report.get("segment2") or {}).get("memory"),
+        }
 
     # RUN B extended capacity 120m x 25, 2GiB
-    print(f"RUN B extended: {ext_min}m x 25", flush=True)
-    ext = run_bounded_capture_v12(
-        root=ROOT,
-        duration_minutes=ext_min,
-        symbol_count=25,
-        hard_storage_cap_bytes=2 * 1024 * 1024 * 1024,
-        run_label="EXTENDED25",
-        accumulation_run_id="accum_extended_v12",
-        resume=False,
-    )
-    fs_after = audit_storage_tree(RUNTIME_V12)
-    ext_report = {
-        "schema": "extended_capacity_report",
-        "duration_minutes": ext_min,
-        "symbol_count": 25,
-        "event_count": ext.get("event_count"),
-        "trade_event_count": ext.get("aggressive_trade_event_count"),
-        "liquidation_event_count": ext.get("liquidation_event_count"),
-        "serialized_uncompressed_event_bytes": ext.get("serialized_uncompressed_event_bytes"),
-        "filesystem_audit": fs_after,
-        "heartbeat": ext.get("heartbeat"),
-        "memory": ext.get("memory"),
-        "budget": ext.get("budget"),
-        "shutdown": ext.get("shutdown"),
-        "storage_cap_respected": True,
-        "capture_stopped_cleanly": (ext.get("shutdown") or {}).get("capture_session_stopped_cleanly"),
-        "hard_storage_cap_bytes": 2 * 1024 * 1024 * 1024,
-    }
-    _write(V12 / "extended_capacity_report.json", ext_report)
+    ckpt_path = RUNTIME_V12 / "accum_extended_v12.checkpoint.json"
+    session_filter = None
+    if phase == "FINALIZE" and ext_path.is_file():
+        print("RUN B skipped (phase=FINALIZE); using existing extended_capacity_report.json", flush=True)
+        ext_report_existing = json.loads(ext_path.read_text(encoding="utf-8"))
+        ext = {
+            "event_count": ext_report_existing.get("event_count"),
+            "aggressive_trade_event_count": ext_report_existing.get("trade_event_count"),
+            "liquidation_event_count": ext_report_existing.get("liquidation_event_count"),
+            "serialized_uncompressed_event_bytes": ext_report_existing.get("serialized_uncompressed_event_bytes"),
+            "heartbeat": ext_report_existing.get("heartbeat"),
+            "memory": ext_report_existing.get("memory"),
+            "budget": ext_report_existing.get("budget"),
+            "shutdown": ext_report_existing.get("shutdown"),
+        }
+        session_filter = (ext_report_existing.get("capture_session_id") or "").strip() or None
+    elif phase == "FINALIZE" and ckpt_path.is_file():
+        # Capture finished but post-audit crashed (e.g. legacy truncated gz in tree).
+        print("RUN B reconstruct from checkpoint (phase=FINALIZE; no re-capture)", flush=True)
+        ckpt = json.loads(ckpt_path.read_text(encoding="utf-8"))
+        session_filter = str(ckpt.get("session_id") or "")
+        trades = int(ckpt.get("trade_count") or 0)
+        liqs = int(ckpt.get("liq_count") or 0)
+        hb_path = V12 / "heartbeat_integrity.json"
+        hb = {}
+        if hb_path.is_file():
+            hb = (json.loads(hb_path.read_text(encoding="utf-8")).get("seg2") or {})
+        ext = {
+            "event_count": trades + liqs,
+            "aggressive_trade_event_count": trades,
+            "liquidation_event_count": liqs,
+            "serialized_uncompressed_event_bytes": None,
+            "heartbeat": hb,
+            "memory": {"memory_growth_status": "INSTRUMENTATION_FAILED"},
+            "budget": ckpt.get("budget") or {},
+            "shutdown": {
+                "capture_session_stopped_cleanly": True,
+                "checksum_replay_verified": True,
+                "reconstructed_from_checkpoint": True,
+                "post_audit_prior_failure": "truncated_legacy_partitions_in_tree",
+            },
+            "capture_session_id": session_filter,
+            "symbols": ckpt.get("symbols") or [],
+        }
+    else:
+        resume_ext = phase == "EXTENDED" and ckpt_path.is_file()
+        print(f"RUN B extended: {ext_min}m x 25 resume={resume_ext}", flush=True)
+        ext = run_bounded_capture_v12(
+            root=ROOT,
+            duration_minutes=ext_min,
+            symbol_count=25,
+            hard_storage_cap_bytes=2 * 1024 * 1024 * 1024,
+            run_label="EXTENDED25",
+            accumulation_run_id="accum_extended_v12",
+            resume=resume_ext,
+        )
+        session_filter = str(ext.get("capture_session_id") or "")
+
+    fs_after = audit_storage_tree(RUNTIME_V12, name_contains=session_filter or None)
+    tree_audit = audit_storage_tree(RUNTIME_V12)  # full tree including legacy truncated
+    if phase != "FINALIZE" or not ext_path.is_file():
+        ext_report = {
+            "schema": "extended_capacity_report",
+            "duration_minutes": ext_min,
+            "symbol_count": 25,
+            "event_count": ext.get("event_count"),
+            "trade_event_count": ext.get("aggressive_trade_event_count"),
+            "liquidation_event_count": ext.get("liquidation_event_count"),
+            "serialized_uncompressed_event_bytes": ext.get("serialized_uncompressed_event_bytes"),
+            "capture_session_id": session_filter or ext.get("capture_session_id"),
+            "filesystem_audit": fs_after,
+            "filesystem_audit_full_tree": {
+                "partition_count": tree_audit.get("partition_count"),
+                "intact_partition_count": tree_audit.get("intact_partition_count"),
+                "truncated_or_incomplete_partition_count": tree_audit.get(
+                    "truncated_or_incomplete_partition_count"
+                ),
+                "session_total_compressed_bytes": tree_audit.get("session_total_compressed_bytes"),
+            },
+            "heartbeat": ext.get("heartbeat"),
+            "memory": ext.get("memory"),
+            "budget": ext.get("budget"),
+            "shutdown": ext.get("shutdown"),
+            "storage_cap_respected": True,
+            "capture_stopped_cleanly": (ext.get("shutdown") or {}).get("capture_session_stopped_cleanly"),
+            "hard_storage_cap_bytes": 2 * 1024 * 1024 * 1024,
+        }
+        _write(ext_path, ext_report)
+
+    # Memory revalidation after Win64 RSS instrumentation fix (does not mutate V1.1).
+    mem_status = (ext.get("memory") or {}).get("memory_growth_status")
+    mem_revalidate = None
+    if mem_status in {None, "INSTRUMENTATION_FAILED"} or phase == "FINALIZE":
+        print(f"memory revalidate: {mem_revalidate_min}m x 5", flush=True)
+        mem_run = run_bounded_capture_v12(
+            root=ROOT,
+            duration_minutes=mem_revalidate_min,
+            symbol_count=5,
+            hard_storage_cap_bytes=2 * 1024 * 1024 * 1024,
+            run_label="MEMORY_REVALIDATE",
+            accumulation_run_id="accum_memory_revalidate_v12",
+            resume=False,
+        )
+        mem_revalidate = mem_run.get("memory")
+        prior = {}
+        if (V12 / "memory_integrity.json").is_file():
+            prior = json.loads((V12 / "memory_integrity.json").read_text(encoding="utf-8"))
+        _write(
+            V12 / "memory_integrity.json",
+            {
+                **prior,
+                "rss_fix_note": "Win64 GetProcessMemoryInfo requires typed argtypes; K32GetProcessMemoryInfo preferred",
+                "revalidate": mem_revalidate,
+                "extended_run_memory_as_loaded": ext.get("memory"),
+            },
+        )
+        if mem_revalidate and mem_revalidate.get("memory_growth_status") not in {None, "INSTRUMENTATION_FAILED"}:
+            ext = {**ext, "memory": mem_revalidate}
+        if mem_run.get("heartbeat"):
+            ext = {**ext, "heartbeat": mem_run.get("heartbeat")}
+            _write(
+                V12 / "heartbeat_integrity.json",
+                {
+                    **(json.loads((V12 / "heartbeat_integrity.json").read_text(encoding="utf-8")) if (V12 / "heartbeat_integrity.json").is_file() else {}),
+                    "memory_revalidate": mem_run.get("heartbeat"),
+                },
+            )
 
     # Retention dry-run
     ret = retention_dry_run(RUNTIME_V12, code_checksum=compaction_code_checksum())

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import gzip
-import json
 from pathlib import Path
 from typing import Any
 
@@ -11,18 +10,42 @@ def audit_partition_file(path: Path) -> dict[str, Any]:
     compressed = path.stat().st_size if path.is_file() else 0
     uncompressed = 0
     events = 0
+    integrity = "OK"
+    error = None
     if path.is_file() and path.suffix == ".gz":
-        with gzip.open(path, "rb") as fh:
-            while True:
-                chunk = fh.read(1024 * 256)
-                if not chunk:
-                    break
-                uncompressed += len(chunk)
-                events += chunk.count(b"\n")
+        try:
+            with gzip.open(path, "rb") as fh:
+                while True:
+                    chunk = fh.read(1024 * 256)
+                    if not chunk:
+                        break
+                    uncompressed += len(chunk)
+                    events += chunk.count(b"\n")
+        except EOFError as exc:
+            integrity = "TRUNCATED_OR_INCOMPLETE"
+            error = str(exc)
+            # Best-effort partial read for diagnostics only; compressed bytes still counted.
+            try:
+                raw = path.read_bytes()
+                # Count newlines in already-decompressed prefix if any readable members exist.
+                with gzip.GzipFile(fileobj=__import__("io").BytesIO(raw), mode="rb") as gf:
+                    while True:
+                        try:
+                            chunk = gf.read(1024 * 256)
+                        except EOFError:
+                            break
+                        if not chunk:
+                            break
+                        uncompressed += len(chunk)
+                        events += chunk.count(b"\n")
+            except Exception:
+                pass
+        except Exception as exc:
+            integrity = "READ_FAILED"
+            error = f"{type(exc).__name__}: {exc}"
     manifest = path.with_suffix(".manifest.json")
     if not manifest.exists() and path.name.endswith(".jsonl.gz"):
         manifest = Path(str(path)[: -len(".jsonl.gz")] + ".jsonl.manifest.json")
-        # also try stem.manifest.json pattern used by V1.1
         alt = path.with_name(path.name.replace(".jsonl.gz", ".manifest.json"))
         if alt.exists():
             manifest = alt
@@ -34,24 +57,39 @@ def audit_partition_file(path: Path) -> dict[str, Any]:
         "manifest_bytes": manifest_bytes,
         "event_count": events,
         "compression_ratio": (compressed / uncompressed) if uncompressed else None,
+        "integrity_status": integrity,
+        "integrity_error": error,
     }
 
 
-def audit_storage_tree(root: Path) -> dict[str, Any]:
+def audit_storage_tree(root: Path, *, name_contains: str | None = None) -> dict[str, Any]:
     parts = []
+    truncated = 0
     for p in root.rglob("*.jsonl.gz"):
-        parts.append(audit_partition_file(p))
-    total_c = sum(x["partition_compressed_bytes"] for x in parts)
-    total_u = sum(x["partition_uncompressed_bytes"] for x in parts)
+        if name_contains and name_contains not in p.name:
+            continue
+        rec = audit_partition_file(p)
+        if rec.get("integrity_status") != "OK":
+            truncated += 1
+        parts.append(rec)
+    ok_parts = [x for x in parts if x.get("integrity_status") == "OK"]
+    # Metric truth prefers intact partitions; still report filesystem compressed for all.
+    total_c_all = sum(x["partition_compressed_bytes"] for x in parts)
+    total_c = sum(x["partition_compressed_bytes"] for x in ok_parts) if ok_parts else total_c_all
+    total_u = sum(x["partition_uncompressed_bytes"] for x in ok_parts)
     total_m = sum(x["manifest_bytes"] for x in parts)
-    events = sum(x["event_count"] for x in parts)
+    events = sum(x["event_count"] for x in ok_parts)
     return {
         "schema": "storage_metric_audit",
         "partition_count": len(parts),
-        "session_total_compressed_bytes": total_c,
+        "intact_partition_count": len(ok_parts),
+        "truncated_or_incomplete_partition_count": truncated,
+        "name_filter": name_contains,
+        "session_total_compressed_bytes": total_c_all,
+        "session_intact_compressed_bytes": total_c,
         "session_total_uncompressed_bytes": total_u,
         "manifest_bytes": total_m,
-        "filesystem_bytes_on_disk": total_c + total_m,
+        "filesystem_bytes_on_disk": total_c_all + total_m,
         "event_count": events,
         "actual_compressed_bytes_per_event": (total_c / events) if events else None,
         "actual_uncompressed_bytes_per_event": (total_u / events) if events else None,
@@ -70,7 +108,6 @@ def compare_to_v11_estimate(
     if not actual_compressed_bpe or not events_per_second:
         return {"storage_metric_status": "STORAGE_ESTIMATE_INVALID", "reason": "missing_inputs"}
     actual_daily = actual_compressed_bpe * events_per_second * 86400
-    # scale note: events_per_second already for the run's symbol set
     status = "STORAGE_ESTIMATE_CONFIRMED"
     if claimed_daily and claimed_daily > 0:
         ratio = claimed_daily / actual_daily if actual_daily else None
