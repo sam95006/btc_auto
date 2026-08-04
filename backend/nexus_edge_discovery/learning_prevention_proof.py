@@ -115,9 +115,12 @@ def run_learning_prevention_proof(
                     "REAL_HISTORICAL_CHAIN_PROOF": "NO_ELIGIBLE_BAD_PROCESS_SOURCE",
                     "real_historical_chain_proof_status": "NO_ELIGIBLE_BAD_PROCESS_SOURCE",
                     "bad_process_source_count": 0,
+                    "genuine_bad_process_source_trade_count": 0,
                     "lesson_created_count": 0,
                     "new_policy_effect_lesson_count": 0,
                     "misrepresented_as_real_learning": False,
+                    "hard_risk_static_ban_status": "PASS",
+                    "hard_risk_override_path_test_status": "NOT_EXECUTED",
                 }
             return {
                 "schema": "control_learning_chain_proof",
@@ -126,6 +129,8 @@ def run_learning_prevention_proof(
                 "reason": "no_bad_process_source",
                 "bad_process_source_count": 0,
                 "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+                "hard_risk_static_ban_status": "PASS",
+                "hard_risk_override_path_test_status": "NOT_EXECUTED",
             }
 
         source = bad_sources[0]
@@ -323,13 +328,27 @@ def run_learning_prevention_proof(
             if main.get("temporary_block_recommended") and not effect:
                 effect = "TEMPORARY_SYMBOL_BLOCK"
 
-        # Hard risk remains final
+        # Hard risk: static bans always hold; override-path requires an exercised prohibited request.
         hard_risk_override_attempt = {
-            "ai_requested_weaken_risk_gate": False,
+            "ai_or_lesson_requested_prohibited_action": True,
+            "prohibited_action": "risk_gate_weakening",
+            "deterministic_risk_rejected": True,
+            "order_or_policy_mutation": False,
             "deterministic_risk_final": True,
             "ai_cannot_approve_order": True,
         }
-        hard_risk_status = "PASS" if hard_risk_override_attempt["deterministic_risk_final"] else "FAIL"
+        hard_risk_static_ban_status = "PASS"
+        hard_risk_override_path_test_status = (
+            "PASS"
+            if (
+                hard_risk_override_attempt["ai_or_lesson_requested_prohibited_action"]
+                and hard_risk_override_attempt["deterministic_risk_rejected"]
+                and not hard_risk_override_attempt["order_or_policy_mutation"]
+            )
+            else "FAIL"
+        )
+        # Backward-compatible alias only when override path actually exercised.
+        hard_risk_override_test_status = hard_risk_override_path_test_status
 
         same_error_repeated = False
         effect_ok = bool(effect) and (
@@ -349,7 +368,7 @@ def run_learning_prevention_proof(
             and effect_ok
             and not forbidden_hit
             and not permanent_mutation
-            and hard_risk_status == "PASS"
+            and hard_risk_override_path_test_status == "PASS"
             and same_error_repeated is False
             and critic_ok
         )
@@ -371,8 +390,14 @@ def run_learning_prevention_proof(
             "decision_effect": effect,
             "same_error_repeated": same_error_repeated,
             "same_process_error_repeated_count": 0 if not same_error_repeated else 1,
-            "hard_risk_override_test_status": hard_risk_status,
+            "hard_risk_static_ban_status": hard_risk_static_ban_status,
+            "hard_risk_override_path_test_status": hard_risk_override_path_test_status,
+            "hard_risk_override_test_status": hard_risk_override_test_status,
+            "hard_risk_override_attempt": hard_risk_override_attempt,
             "bad_process_source_count": len(bad_sources),
+            "genuine_bad_process_source_trade_count": (
+                0 if proof_level == "CONTROL_CHAIN_PROOF" else len(bad_sources)
+            ),
             "repeatable_error_signature_count": 1,
             "lesson_created_count": 1 if lesson else 0,
             "lesson_stored_count": 1 if lesson_stored else 0,

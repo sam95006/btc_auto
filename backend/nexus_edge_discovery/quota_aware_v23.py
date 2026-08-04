@@ -595,11 +595,33 @@ def evaluate_quality(state: dict[str, Any]) -> dict[str, Any]:
         "EVIDENCE_PACKET_AMBIGUOUS": 0,
         "TAXONOMY_AMBIGUOUS": 0,
         "OUTCOME_PROCESS_MAPPING_ERROR": 0,
+        "BOTH_SUPPORTED": 0,
+        "BOTH_UNSUPPORTED": 0,
         "CRITIC_UNRESOLVED": 0,
         "PROVIDER_BLOCKED": 0,
     }
+    unadjudicated = 0
+    provider_blocked_disagreements = 0
     for d in disagreements:
-        conflict_counts[d["conflict_type"]] = conflict_counts.get(d["conflict_type"], 0) + 1
+        # Before Critic adjudication, do not invent confirmed root-cause zeros.
+        if sn_blocked or d.get("sambanova_verdict") in {None, ""}:
+            d["conflict_type"] = "PROVIDER_BLOCKED" if sn_blocked else "CRITIC_UNRESOLVED"
+            d["adjudication_status"] = (
+                "PROVIDER_BLOCKED" if sn_blocked else "NOT_YET_ADJUDICATED"
+            )
+            unadjudicated += 1
+            if sn_blocked:
+                provider_blocked_disagreements += 1
+        else:
+            d["adjudication_status"] = "ADJUDICATED"
+            conflict_counts[d["conflict_type"]] = conflict_counts.get(d["conflict_type"], 0) + 1
+
+    adjudication_complete = unadjudicated == 0
+    not_yet = {
+        "status": "NOT_YET_ADJUDICATED",
+        "value": None,
+        "reason": "critic_adjudication_incomplete",
+    }
 
     return {
         "schema": "final_v2_3_quality_result_v3",
@@ -608,6 +630,17 @@ def evaluate_quality(state: dict[str, Any]) -> dict[str, Any]:
             "CALIBRATION_INCOMPLETE_PROVIDER_CAPACITY"
             if v23_status == "INCOMPLETE_PROVIDER_CAPACITY"
             else v23_status
+        ),
+        "V2_3_TERMINAL_STATUS": (
+            "VERIFIED"
+            if quality_ok
+            else (
+                "VALID_SAMPLE_QUALITY_FAILED"
+                if quality_gates_evaluated and not quality_ok
+                else "INCOMPLETE_PROVIDER_CAPACITY"
+                if v23_status == "INCOMPLETE_PROVIDER_CAPACITY"
+                else "INCOMPLETE"
+            )
         ),
         "quality_gates_evaluated": quality_gates_evaluated,
         "quality_gates_passed": quality_ok,
@@ -623,6 +656,9 @@ def evaluate_quality(state: dict[str, Any]) -> dict[str, Any]:
         "undetermined_count": undetermined,
         "agreement_count": agree,
         "disagreement_count": disagree,
+        "disagreement_case_count": disagree,
+        "unadjudicated_disagreement_count": unadjudicated,
+        "provider_blocked_disagreement_count": provider_blocked_disagreements,
         "blind_valid_schema_ratio": schema_ratio,
         "informative_classification_ratio_overall": informative_overall,
         "informative_classification_ratio_on_sufficient_cases": informative_on_suf,
@@ -633,14 +669,31 @@ def evaluate_quality(state: dict[str, Any]) -> dict[str, Any]:
         "missing_evidence_invention_count": invention,
         "deterministic_answer_leak_count": leak,
         "secret_leak_count": secret_leak,
-        "disagreement_case_count": disagree,
         "disagreement_analysis": disagreements[:40],
-        "AI_misclassification_count": conflict_counts["AI_MISCLASSIFICATION"],
-        "deterministic_baseline_too_coarse_count": conflict_counts["DETERMINISTIC_BASELINE_TOO_COARSE"],
-        "evidence_packet_ambiguous_count": conflict_counts["EVIDENCE_PACKET_AMBIGUOUS"],
-        "taxonomy_ambiguous_count": conflict_counts["TAXONOMY_AMBIGUOUS"],
-        "critic_unresolved_count": conflict_counts["CRITIC_UNRESOLVED"],
-        "provider_blocked_disagreement_count": conflict_counts["PROVIDER_BLOCKED"],
+        "AI_misclassification_count": (
+            conflict_counts["AI_MISCLASSIFICATION"] if adjudication_complete else not_yet
+        ),
+        "deterministic_baseline_too_coarse_count": (
+            conflict_counts["DETERMINISTIC_BASELINE_TOO_COARSE"]
+            if adjudication_complete
+            else not_yet
+        ),
+        "evidence_packet_ambiguous_count": (
+            conflict_counts["EVIDENCE_PACKET_AMBIGUOUS"] if adjudication_complete else not_yet
+        ),
+        "taxonomy_ambiguous_count": (
+            conflict_counts["TAXONOMY_AMBIGUOUS"] if adjudication_complete else not_yet
+        ),
+        "outcome_process_mapping_error_count": (
+            conflict_counts["OUTCOME_PROCESS_MAPPING_ERROR"]
+            if adjudication_complete
+            else not_yet
+        ),
+        "critic_unresolved_count": (
+            conflict_counts["CRITIC_UNRESOLVED"]
+            if adjudication_complete
+            else unadjudicated
+        ),
         "canonical_classes": list(CANONICAL_CLASSES),
         "transport": state.get("transport"),
         "groq_stage": state.get("groq_stage"),

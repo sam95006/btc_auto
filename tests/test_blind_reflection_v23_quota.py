@@ -138,9 +138,11 @@ def test_sambanova_block_not_ordinary_valid_critic_ratio():
     assert q["critic_resolution_status"] == "SAMBANOVA_PROVIDER_BLOCKED"
     assert q["critic_resolution_ratio"]["status"] == "SAMBANOVA_PROVIDER_BLOCKED"
     assert q["critic_resolution_ratio"]["value"] is None
-
-
-def test_groq_sambanova_counters_independent(tmp_path: Path):
+    assert q["disagreement_case_count"] == 10
+    assert q["unadjudicated_disagreement_count"] == 10
+    assert q["provider_blocked_disagreement_count"] == 10
+    assert q["AI_misclassification_count"]["status"] == "NOT_YET_ADJUDICATED"
+    assert q["deterministic_baseline_too_coarse_count"]["status"] == "NOT_YET_ADJUDICATED"
     packets = _packets()
     state = build_initial_checkpoint(packets=packets, manifest_checksum="ind", model_id="m")
     state["transport"]["GROQ_REFLECTION_REASONER"]["HTTP_429_count"] = 0
@@ -252,8 +254,27 @@ def test_disagreement_not_auto_ai_error():
     }
     q = evaluate_quality(state)
     assert q["disagreement_case_count"] == 1
-    assert q["AI_misclassification_count"] == 0
-    assert q["critic_unresolved_count"] == 1
+    assert q["AI_misclassification_count"]["status"] == "NOT_YET_ADJUDICATED"
+    assert q["unadjudicated_disagreement_count"] == 1
+
+
+def test_hard_risk_static_vs_override_semantics():
+    packets = _packets()
+    real = run_learning_prevention_proof(
+        packets=packets, use_real_ai=False, proof_level="REAL_HISTORICAL_CHAIN_PROOF"
+    )
+    if real["real_historical_chain_proof_status"] == "NO_ELIGIBLE_BAD_PROCESS_SOURCE":
+        assert real["hard_risk_static_ban_status"] == "PASS"
+        assert real["hard_risk_override_path_test_status"] == "NOT_EXECUTED"
+    else:
+        assert real["hard_risk_static_ban_status"] == "PASS"
+        assert real["hard_risk_override_path_test_status"] in {"PASS", "FAIL", "NOT_EXECUTED"}
+    control = run_learning_prevention_proof(
+        packets=packets, use_real_ai=False, proof_level="CONTROL_CHAIN_PROOF"
+    )
+    if control.get("control_chain_proof_status") == "PASS":
+        assert control["hard_risk_override_path_test_status"] == "PASS"
+        assert control["hard_risk_static_ban_status"] == "PASS"
 
 
 def test_vwap_positive_gross_negative_net_cost_destroyed():

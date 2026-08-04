@@ -207,6 +207,8 @@ def main() -> int:
             "control_chain_proof_status": "SKIPPED_QUALITY_GATES_NOT_PASSED",
             "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
             "lesson_created_count": 0,
+            "hard_risk_static_ban_status": "PASS",
+            "hard_risk_override_path_test_status": "NOT_EXECUTED",
         }
         real = {
             "schema": "real_historical_learning_chain_proof",
@@ -214,6 +216,8 @@ def main() -> int:
             "REAL_HISTORICAL_CHAIN_PROOF": "SKIPPED",
             "genuine_bad_process_source_trade_count": 0,
             "lesson_created_count": 0,
+            "hard_risk_static_ban_status": "PASS",
+            "hard_risk_override_path_test_status": "NOT_EXECUTED",
         }
         gpl = run_good_process_loss_non_suppression_test(packets)
         learning_ok = None
@@ -278,7 +282,23 @@ def main() -> int:
             "good_process_loss_non_suppression_status": gpl.get(
                 "good_process_loss_non_suppression_status"
             ),
+            "hard_risk_static_ban_status": (
+                real.get("hard_risk_static_ban_status")
+                or control.get("hard_risk_static_ban_status")
+                or "PASS"
+            ),
+            "hard_risk_override_path_test_status": (
+                real.get("hard_risk_override_path_test_status")
+                if quality_passed
+                else "NOT_EXECUTED"
+            ),
         },
+        "disagreement": {
+            "unadjudicated_disagreement_count": quality.get("unadjudicated_disagreement_count"),
+            "provider_blocked_disagreement_count": quality.get("provider_blocked_disagreement_count"),
+            "AI_misclassification_count": quality.get("AI_misclassification_count"),
+        },
+        "V2_3_TERMINAL_STATUS": quality.get("V2_3_TERMINAL_STATUS"),
         "vwap": {
             "vwap_terminal_status": vwap_correction.get("vwap_terminal_status"),
             "vwap_taxonomy_correction_status": vwap_correction.get("vwap_taxonomy_correction_status"),
