@@ -220,27 +220,21 @@ jobs:
           python-version: "3.11"
       - run: pip install -r requirements.txt flask pytest
       - name: Full Python suite
-        id: pytest_full
-        continue-on-error: true
         run: |
           set +e
           python -m pytest tests -q --tb=line
           code=$?
           if [ "$code" -eq 0 ]; then
-            echo "CI_python_full_suite_status=PASS" >> "$GITHUB_ENV"
             echo "CI_python_full_suite_status=PASS"
           else
-            echo "CI_python_full_suite_status=FAIL" >> "$GITHUB_ENV"
             echo "CI_python_full_suite_status=FAIL"
           fi
-          echo "CI_python_full_suite_executed=true" >> "$GITHUB_ENV"
           echo "CI_python_full_suite_executed=true"
           exit $code
       - name: Record CI python truth
         if: always()
         run: |
           echo "CI_python_full_suite_executed=true"
-          echo "CI_python_full_suite_status=${{ env.CI_python_full_suite_status }}"
 
   browser-tests:
     runs-on: ubuntu-latest
