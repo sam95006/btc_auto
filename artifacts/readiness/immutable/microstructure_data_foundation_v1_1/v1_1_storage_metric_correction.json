@@ -1,0 +1,20 @@
+{
+  "schema": "v1_1_storage_metric_correction",
+  "created_at": "2026-08-04T07:40:00Z",
+  "v11_package_mutated": false,
+  "note": "Non-mutating correction. V1.1 session_bytes_written tracked serialized uncompressed line bytes; compressed_bytes_per_event must use on-disk gzip sizes.",
+  "filesystem_audit_of_v11_runtime_partitions": {
+    "partition_count": 49,
+    "session_total_compressed_bytes": 16706158,
+    "session_total_uncompressed_bytes": 202709677,
+    "manifest_bytes": 54161,
+    "event_count": 248001,
+    "actual_compressed_bytes_per_event": 67.36326869649719,
+    "actual_uncompressed_bytes_per_event": 817.3744339740565,
+    "actual_compression_ratio": 0.08241421054605104
+  },
+  "storage_metric_status": "STORAGE_ESTIMATE_OVERSTATED",
+  "reason": "Prior estimates derived from uncompressed serialized event bytes (~817 B/event) while actual gzip compressed footprint is ~67 B/event (~12x overstatement on byte/event basis).",
+  "source_package": "artifacts/readiness/immutable/microstructure_data_foundation_v1_1/",
+  "correction_recorded_in": "artifacts/readiness/immutable/microstructure_data_foundation_v1_2/storage_metric_audit.json"
+}
