@@ -1,0 +1,131 @@
+{
+  "checksum_errors": [],
+  "future_data_exclusion_violation_case": {
+    "status": "FUTURE_DATA_VIOLATION",
+    "proposed_start_ms": 1699999999000,
+    "proposed_end_ms": 1700086400000,
+    "as_of_ms": 1700000000000,
+    "future_data_excluded": false,
+    "allowed": false
+  },
+  "future_data_exclusion_valid_case": {
+    "status": "FUTURE_DATA_EXCLUDED",
+    "proposed_start_ms": 1699136000000,
+    "proposed_end_ms": 1699568000000,
+    "as_of_ms": 1700000000000,
+    "future_data_excluded": true,
+    "allowed": true
+  },
+  "reserved_vs_consumed": {
+    "status": "NO_CONSUMED_OVERLAP",
+    "allowed": true,
+    "hits": []
+  },
+  "oos_non_consumption": {
+    "status": "OOS_NON_CONSUMPTION_PROVEN",
+    "proven": true,
+    "reserved_count": 1,
+    "consumed_count": 1,
+    "data_count": 1,
+    "violations": [],
+    "registry_checksums": {
+      "data": "21e54dda3111bf186f4081abe05fec260ac789445a81a8a577b46e07f2be0f24",
+      "consumed": "a07d72165ee73d059e44f4114becbdf6b22f197283195208fc199cfae5986448",
+      "reserved": "78bb7ff322b439543a75c56ba88a838cb03ee55fb72f7cfe21c2f18cb1921b03"
+    },
+    "oos_executed": false,
+    "formal_walk_forward_executed": false
+  },
+  "founder_gate_missing": {
+    "required_scope": "formal_qualification_v1",
+    "authorized": false,
+    "actor": null,
+    "token_fingerprint": null,
+    "reason": "FOUNDER_AUTHORIZATION_MISSING",
+    "metadata": {}
+  },
+  "stage_advance_attempts": {
+    "CANDIDATE_FREEZE": {
+      "allowed": false,
+      "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+      "stage": "CANDIDATE_FREEZE",
+      "current_status": "BLOCKED",
+      "formal_walk_forward_executed": false,
+      "oos_executed": false
+    },
+    "REPLAY": {
+      "allowed": false,
+      "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+      "stage": "REPLAY",
+      "current_status": "BLOCKED",
+      "formal_walk_forward_executed": false,
+      "oos_executed": false
+    },
+    "CHRONOLOGICAL_WALK_FORWARD": {
+      "allowed": false,
+      "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+      "stage": "CHRONOLOGICAL_WALK_FORWARD",
+      "current_status": "BLOCKED",
+      "formal_walk_forward_executed": false,
+      "oos_executed": false
+    },
+    "CONCENTRATION_REVIEW": {
+      "allowed": false,
+      "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+      "stage": "CONCENTRATION_REVIEW",
+      "current_status": "BLOCKED",
+      "formal_walk_forward_executed": false,
+      "oos_executed": false
+    },
+    "COST_STRESS": {
+      "allowed": false,
+      "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+      "stage": "COST_STRESS",
+      "current_status": "BLOCKED",
+      "formal_walk_forward_executed": false,
+      "oos_executed": false
+    },
+    "RISK_REVIEW": {
+      "allowed": false,
+      "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+      "stage": "RISK_REVIEW",
+      "current_status": "BLOCKED",
+      "formal_walk_forward_executed": false,
+      "oos_executed": false
+    },
+    "UNTOUCHED_OOS_RESERVATION": {
+      "allowed": false,
+      "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+      "stage": "UNTOUCHED_OOS_RESERVATION",
+      "current_status": "BLOCKED",
+      "formal_walk_forward_executed": false,
+      "oos_executed": false
+    },
+    "OOS_EXECUTION_AUTHORIZATION": {
+      "allowed": false,
+      "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+      "stage": "OOS_EXECUTION_AUTHORIZATION",
+      "current_status": "BLOCKED",
+      "formal_walk_forward_executed": false,
+      "oos_executed": false
+    },
+    "DEMO_ELIGIBILITY": {
+      "allowed": false,
+      "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+      "stage": "DEMO_ELIGIBILITY",
+      "current_status": "BLOCKED",
+      "formal_walk_forward_executed": false,
+      "oos_executed": false
+    }
+  },
+  "promote_attempt": {
+    "allowed": false,
+    "reason": "PROMOTION_BLOCKED_V1",
+    "all_stages_passed": false,
+    "founder_authorized": false,
+    "selected_strategy": null,
+    "formal_walk_forward_executed": false,
+    "oos_executed": false,
+    "demo_eligibility": false
+  }
+}

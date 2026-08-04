@@ -1,0 +1,22 @@
+{
+  "schema": "NEXUS_FORMAL_QUALIFICATION_INFRASTRUCTURE_V1",
+  "status": "BLOCKED_READY",
+  "Qualification_Infrastructure_status": "BLOCKED_READY",
+  "all_stages_blocked": true,
+  "formal_walk_forward_executed": false,
+  "oos_executed": false,
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "selected_strategy": null,
+  "strategy_promoted": false,
+  "demo_eligibility": false,
+  "prohibitions": {
+    "formal_walk_forward": "NOT_EXECUTED",
+    "oos_download_or_execution": "NOT_EXECUTED",
+    "demo_shadow_exchange_writes": "NOT_ATTEMPTED",
+    "real_strategy_selection": "NOT_PERFORMED",
+    "promotion": "BLOCKED"
+  },
+  "created_at": "2026-08-04T16:15:55Z",
+  "updated_at": "2026-08-04T16:15:55Z"
+}
