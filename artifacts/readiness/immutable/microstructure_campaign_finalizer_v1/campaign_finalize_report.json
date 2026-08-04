@@ -1,0 +1,255 @@
+{
+  "schema": "microstructure_campaign_finalize_report_v1",
+  "finalizer_status": {
+    "schema": "microstructure_campaign_finalizer_v1",
+    "Microstructure_Finalizer_status": "PASS",
+    "campaign_id": "ms_syn_finalizer_clean_v1",
+    "clean_campaign_finalization": true,
+    "valid_capture_hours": 1.1666666666666667,
+    "connection_gap_seconds": 120,
+    "complete_UTC_hours": 1,
+    "partial_UTC_hours": 1,
+    "symbol_coverage": [
+      "BTCUSDT",
+      "ETHUSDT"
+    ],
+    "symbol_count": 2,
+    "clock_quality": "GOOD",
+    "heartbeat_quality": "GOOD",
+    "memory_quality": "GOOD",
+    "checksum_replay_verified": true,
+    "partition_completeness_status": "COMPLETE",
+    "truncated_tail_detected": false,
+    "cross_partition_linkage_status": "PASS",
+    "storage_cap_outcome": "WITHIN_CAPS",
+    "campaign_resume_metadata": {
+      "resumable": true,
+      "last_checkpoint_at": "2026-08-01T11:05:00Z",
+      "last_partition_id": "syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260801_11_1",
+      "checkpoint_path": "synthetic://checkpoint.json",
+      "accumulation_run_id": "accum_syn_clean",
+      "capture_session_ids": [
+        "syn_sess_clean_001"
+      ],
+      "resume_token": "syn-resume-clean",
+      "clean_shutdown": true
+    },
+    "integrity_status": "PASS",
+    "event_study_readiness_status": "NOT_READY",
+    "event_study_real_execution": false,
+    "new_strategy_generated_count": 0,
+    "profitability_claim_count": 0,
+    "synthetic_fixtures_only": true,
+    "live_campaign_interfered": false,
+    "critical_findings": [
+      "event_study_hold_gates_unmet",
+      "wall_clock_exceeds_valid_capture_expected"
+    ],
+    "remaining_blockers": [
+      "calendar_days",
+      "complete_UTC_day_coverage",
+      "symbol_diversity",
+      "liquidation_event_count",
+      "Founder_authorization"
+    ],
+    "created_at": "2026-08-04T16:16:39Z"
+  },
+  "data_quality_audit": {
+    "schema": "microstructure_campaign_data_quality_audit_v1",
+    "valid_capture_seconds": 4200,
+    "valid_capture_hours": 1.1666666666666667,
+    "wall_elapsed_seconds": 4500,
+    "connection_gap_seconds": 120,
+    "connection_gap_accounting": {
+      "connection_gap_seconds": 120,
+      "gap_events": [
+        {
+          "at": "2026-08-01T10:30:00Z",
+          "gap_seconds": 120,
+          "reason": "ws_reconnect"
+        }
+      ],
+      "note": "valid_capture_seconds excludes connection gaps; wall clock is not used as capture depth"
+    },
+    "complete_UTC_hours": 1,
+    "partial_UTC_hours": 1,
+    "UTC_hour_count": 2,
+    "hours": [
+      {
+        "UTC_hour": "20260801_10",
+        "status": "COMPLETE",
+        "span_ms": 3570000,
+        "partition_count": 3
+      },
+      {
+        "UTC_hour": "20260801_11",
+        "status": "PARTIAL",
+        "span_ms": 1200000,
+        "partition_count": 1
+      }
+    ],
+    "symbol_coverage": [
+      "BTCUSDT",
+      "ETHUSDT"
+    ],
+    "symbol_count": 2,
+    "trade_event_count": 90,
+    "liquidation_event_count": 8,
+    "clock_quality": "GOOD",
+    "server_clock_sample_count": 12,
+    "local_minus_server_clock_offset_ms_p95": 18.5,
+    "heartbeat_quality": "GOOD",
+    "heartbeat_status": "HEARTBEAT_VERIFIED",
+    "heartbeat_send_count": 40,
+    "heartbeat_ack_count": 40,
+    "heartbeat_timeout_count": null,
+    "memory_quality": "GOOD",
+    "memory_growth_status": "STABLE",
+    "process_RSS_peak_bytes": 120000000,
+    "RSS_growth_per_million_events": 0.0,
+    "checksum_replay": {
+      "checksum_replay_verified": true,
+      "partitions_replayed": 4,
+      "failures": []
+    },
+    "partition_completeness": {
+      "partition_count": 4,
+      "intact_partition_count": 4,
+      "truncated_or_incomplete_partition_count": 0,
+      "checksum_mismatch_count": 0,
+      "missing_manifest_count": 0,
+      "partition_completeness_status": "COMPLETE"
+    },
+    "truncated_tail_detection": {
+      "truncated_tail_detected": false,
+      "truncated_partition_count": 0,
+      "partition_ids": []
+    },
+    "cross_partition_linkage": {
+      "cross_partition_linkage_status": "PASS",
+      "chains_checked": 3,
+      "partitions_checked": 4,
+      "linkage_breaks": 0,
+      "issues": []
+    },
+    "storage_cap": {
+      "storage_cap_outcome": "WITHIN_CAPS",
+      "compressed_bytes": 3333,
+      "soft_storage_cap_bytes": 805306368,
+      "hard_storage_cap_bytes": 1073741824,
+      "storage_cap_respected": true,
+      "budget_status": "NORMAL"
+    },
+    "campaign_resume_metadata": {
+      "resumable": true,
+      "last_checkpoint_at": "2026-08-01T11:05:00Z",
+      "last_partition_id": "syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260801_11_1",
+      "checkpoint_path": "synthetic://checkpoint.json",
+      "accumulation_run_id": "accum_syn_clean",
+      "capture_session_ids": [
+        "syn_sess_clean_001"
+      ],
+      "resume_token": "syn-resume-clean",
+      "clean_shutdown": true
+    },
+    "integrity_status": "PASS",
+    "partitions": [
+      {
+        "partition_id": "syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260801_10_0",
+        "symbol": "BTCUSDT",
+        "family": "AGGRESSIVE_TRADE_FLOW",
+        "UTC_hour": "20260801_10",
+        "integrity_status": "OK",
+        "checksum_match": true,
+        "truncated_tail": false,
+        "previous_partition_id": null
+      },
+      {
+        "partition_id": "syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260801_11_1",
+        "symbol": "BTCUSDT",
+        "family": "AGGRESSIVE_TRADE_FLOW",
+        "UTC_hour": "20260801_11",
+        "integrity_status": "OK",
+        "checksum_match": true,
+        "truncated_tail": false,
+        "previous_partition_id": "syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260801_10_0"
+      },
+      {
+        "partition_id": "syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260801_10_0",
+        "symbol": "ETHUSDT",
+        "family": "AGGRESSIVE_TRADE_FLOW",
+        "UTC_hour": "20260801_10",
+        "integrity_status": "OK",
+        "checksum_match": true,
+        "truncated_tail": false,
+        "previous_partition_id": null
+      },
+      {
+        "partition_id": "syn_sess_clean_001_LIQUIDATION_EVENTS_BTCUSDT_20260801_10_0",
+        "symbol": "BTCUSDT",
+        "family": "LIQUIDATION_EVENTS",
+        "UTC_hour": "20260801_10",
+        "integrity_status": "OK",
+        "checksum_match": true,
+        "truncated_tail": false,
+        "previous_partition_id": null
+      }
+    ],
+    "created_at": "2026-08-04T16:16:39Z"
+  },
+  "event_study_readiness": {
+    "schema": "event_study_readiness_v1",
+    "event_study_readiness_status": "NOT_READY",
+    "event_study_real_execution": false,
+    "hold_gates": {
+      "calendar_days": 14,
+      "complete_UTC_day_coverage": true,
+      "symbol_diversity": 25,
+      "liquidation_event_count": 500,
+      "integrity_status": "PASS",
+      "Founder_authorization": true
+    },
+    "gate_results": {
+      "calendar_days": {
+        "required": 14,
+        "actual": 0.2,
+        "passed": false
+      },
+      "complete_UTC_day_coverage": {
+        "required": true,
+        "actual": false,
+        "passed": false
+      },
+      "symbol_diversity": {
+        "required": 25,
+        "actual": 2,
+        "passed": false
+      },
+      "liquidation_event_count": {
+        "required": 500,
+        "actual": 8,
+        "passed": false
+      },
+      "integrity_status": {
+        "required": "PASS",
+        "actual": "PASS",
+        "passed": true
+      },
+      "Founder_authorization": {
+        "required": true,
+        "actual": false,
+        "passed": false
+      }
+    },
+    "blockers": [
+      "calendar_days",
+      "complete_UTC_day_coverage",
+      "symbol_diversity",
+      "liquidation_event_count",
+      "Founder_authorization"
+    ],
+    "note": "Event Study remains blocked until frozen hold gates and Founder authorization are satisfied",
+    "created_at": "2026-08-04T16:16:39Z"
+  },
+  "created_at": "2026-08-04T16:16:39Z"
+}

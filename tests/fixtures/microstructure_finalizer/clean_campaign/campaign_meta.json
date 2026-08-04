@@ -1,0 +1,62 @@
+{
+  "campaign_id": "ms_syn_finalizer_clean_v1",
+  "accumulation_run_id": "accum_syn_clean",
+  "valid_capture_seconds": 4200,
+  "connection_gap_seconds": 120,
+  "wall_elapsed_seconds": 4500,
+  "calendar_days": 0.2,
+  "complete_UTC_day_coverage": false,
+  "Founder_authorization": false,
+  "symbol_coverage": [
+    "BTCUSDT",
+    "ETHUSDT"
+  ],
+  "trade_event_count": 90,
+  "liquidation_event_count": 8,
+  "config": {
+    "soft_storage_cap_bytes": 805306368,
+    "hard_storage_cap_bytes": 1073741824,
+    "duration_hours": 24,
+    "symbol_count": 25
+  },
+  "clock": {
+    "server_clock_sample_count": 12,
+    "local_minus_server_clock_offset_ms_p95": 18.5
+  },
+  "heartbeat": {
+    "heartbeat_status": "HEARTBEAT_VERIFIED",
+    "heartbeat_send_count": 40,
+    "heartbeat_ack_count": 40,
+    "heartbeat_timeout_count": 0
+  },
+  "memory": {
+    "memory_growth_status": "STABLE",
+    "process_RSS_peak_bytes": 120000000,
+    "RSS_growth_per_million_events": 0.0
+  },
+  "budget": {
+    "status": "NORMAL"
+  },
+  "gap_events": [
+    {
+      "at": "2026-08-01T10:30:00Z",
+      "gap_seconds": 120,
+      "reason": "ws_reconnect"
+    }
+  ],
+  "resume": {
+    "resumable": true,
+    "last_checkpoint_at": "2026-08-01T11:05:00Z",
+    "last_partition_id": "syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260801_11_1",
+    "checkpoint_path": "synthetic://checkpoint.json",
+    "accumulation_run_id": "accum_syn_clean",
+    "capture_session_ids": [
+      "syn_sess_clean_001"
+    ],
+    "resume_token": "syn-resume-clean",
+    "clean_shutdown": true
+  },
+  "session_ids": [
+    "syn_sess_clean_001"
+  ]
+}

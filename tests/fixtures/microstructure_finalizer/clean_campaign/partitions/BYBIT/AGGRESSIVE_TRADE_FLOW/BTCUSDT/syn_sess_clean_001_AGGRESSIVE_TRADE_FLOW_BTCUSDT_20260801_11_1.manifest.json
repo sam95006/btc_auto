@@ -1,0 +1,19 @@
+{
+  "partition_id": "syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260801_11_1",
+  "exchange": "BYBIT",
+  "family": "AGGRESSIVE_TRADE_FLOW",
+  "symbol": "BTCUSDT",
+  "UTC_hour": "20260801_11",
+  "schema_version": "microstructure_data_foundation_v1_1",
+  "record_count": 20,
+  "first_exchange_timestamp": 1785582000000,
+  "last_exchange_timestamp": 1785583200000,
+  "first_receive_timestamp": 1785582000003,
+  "last_receive_timestamp": 1785583200003,
+  "uncompressed_bytes": 7368,
+  "compressed_bytes": 748,
+  "rolling_checksum": "321d22f624f0b3ba9e0c1a7f152256360279df5bc8a6869dc78d5b2f77197e9b",
+  "previous_partition_id": "syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260801_10_0",
+  "capture_session_id": "syn_sess_clean_001",
+  "path": "tests\\fixtures\\microstructure_finalizer\\clean_campaign\\partitions\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\BTCUSDT\\syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260801_11_1.jsonl.gz"
+}

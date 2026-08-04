@@ -1,0 +1,19 @@
+{
+  "partition_id": "syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260801_10_0",
+  "exchange": "BYBIT",
+  "family": "AGGRESSIVE_TRADE_FLOW",
+  "symbol": "ETHUSDT",
+  "UTC_hour": "20260801_10",
+  "schema_version": "microstructure_data_foundation_v1_1",
+  "record_count": 30,
+  "first_exchange_timestamp": 1785578400000,
+  "last_exchange_timestamp": 1785581970000,
+  "first_receive_timestamp": 1785578400003,
+  "last_receive_timestamp": 1785581970003,
+  "uncompressed_bytes": 11067,
+  "compressed_bytes": 979,
+  "rolling_checksum": "28af7092b7645317dda3f994894b264c74d65e9376ba710fd0fd22c8490aec9b",
+  "previous_partition_id": null,
+  "capture_session_id": "syn_sess_clean_001",
+  "path": "tests\\fixtures\\microstructure_finalizer\\clean_campaign\\partitions\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\ETHUSDT\\syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260801_10_0.jsonl.gz"
+}
