@@ -1,0 +1,161 @@
+{
+  "schema": "autonomous_session_orchestrator_v1_1",
+  "package": "NEXUS_AUTONOMOUS_SESSION_ORCHESTRATOR_V1_1",
+  "Session_Chaos_status": "NEXUS_AUTONOMOUS_SESSION_ORCHESTRATOR_V1_1_PASS",
+  "seed": 911001,
+  "logical_sessions_hours": [
+    24.0,
+    72.0,
+    168.0
+  ],
+  "chaos_catalog": [
+    "groq_429",
+    "sambanova_429",
+    "provider_timeout",
+    "provider_invalid_schema",
+    "stale_market_data",
+    "missing_market_data",
+    "clock_jump_forward",
+    "clock_jump_backward",
+    "duplicate_candidate",
+    "duplicate_order_intent",
+    "ledger_lock_contention",
+    "interrupted_ledger_append",
+    "snapshot_corruption",
+    "missing_latest_snapshot",
+    "disk_soft_limit",
+    "disk_hard_limit",
+    "process_termination",
+    "network_loss",
+    "partial_fill_before_crash",
+    "filled_order_before_snapshot",
+    "exit_event_before_position_snapshot",
+    "reflection_interruption",
+    "lesson_storage_interruption",
+    "kill_switch_during_open_position",
+    "pause_during_pending_intent"
+  ],
+  "metrics_summary": {
+    "events_processed": 153.0,
+    "checkpoint_count": 18.0,
+    "restart_count": 3.0,
+    "recovery_duration_ms": 1833.615,
+    "memory_growth_bytes": 1904640.0,
+    "cpu_time_ms": 1156.25,
+    "ledger_size_bytes": 172032.0,
+    "snapshot_size_bytes": 5178668.0
+  },
+  "invariants": {
+    "open_ambiguous_position_count": 0,
+    "orphan_lifecycle_count": 0,
+    "duplicate_position_count": 0,
+    "unclosed_intent_count": 0,
+    "untracked_fill_count": 0,
+    "risk_limit_bypass_count": 0,
+    "exchange_write_attempt_count": 0
+  },
+  "exchange_write_attempt_count": 0,
+  "sessions": {
+    "SESSION_24H": {
+      "session_id": "SESSION_24H",
+      "logical_duration_hours": 24.0,
+      "final_state": "BLOCKED",
+      "session_pass": true,
+      "invariants_status": "PASS",
+      "invariants_counts": {
+        "open_ambiguous_position_count": 0,
+        "orphan_lifecycle_count": 0,
+        "duplicate_position_count": 0,
+        "unclosed_intent_count": 0,
+        "untracked_fill_count": 0,
+        "risk_limit_bypass_count": 0,
+        "exchange_write_attempt_count": 0
+      },
+      "metrics": {
+        "events_processed": 52,
+        "checkpoint_count": 7,
+        "restart_count": 1,
+        "recovery_duration_ms": 840.249,
+        "memory_growth_bytes": 1323008,
+        "cpu_time_ms": 531.25,
+        "ledger_size_bytes": 57344,
+        "snapshot_size_bytes": 1647986,
+        "accelerated_wall_time_seconds": 0.840249,
+        "logical_hours": 24.0
+      },
+      "checkpoint_count": 7,
+      "restart_count": 1,
+      "recovery_count": 2,
+      "kill_switch_status": "READY",
+      "exchange_write_attempt_count": 0
+    },
+    "SESSION_72H": {
+      "session_id": "SESSION_72H",
+      "logical_duration_hours": 72.0,
+      "final_state": "BLOCKED",
+      "session_pass": true,
+      "invariants_status": "PASS",
+      "invariants_counts": {
+        "open_ambiguous_position_count": 0,
+        "orphan_lifecycle_count": 0,
+        "duplicate_position_count": 0,
+        "unclosed_intent_count": 0,
+        "untracked_fill_count": 0,
+        "risk_limit_bypass_count": 0,
+        "exchange_write_attempt_count": 0
+      },
+      "metrics": {
+        "events_processed": 51,
+        "checkpoint_count": 6,
+        "restart_count": 1,
+        "recovery_duration_ms": 545.682,
+        "memory_growth_bytes": 0,
+        "cpu_time_ms": 281.25,
+        "ledger_size_bytes": 57344,
+        "snapshot_size_bytes": 2092869,
+        "accelerated_wall_time_seconds": 0.545682,
+        "logical_hours": 72.0
+      },
+      "checkpoint_count": 6,
+      "restart_count": 1,
+      "recovery_count": 2,
+      "kill_switch_status": "READY",
+      "exchange_write_attempt_count": 0
+    },
+    "SESSION_168H": {
+      "session_id": "SESSION_168H",
+      "logical_duration_hours": 168.0,
+      "final_state": "BLOCKED",
+      "session_pass": true,
+      "invariants_status": "PASS",
+      "invariants_counts": {
+        "open_ambiguous_position_count": 0,
+        "orphan_lifecycle_count": 0,
+        "duplicate_position_count": 0,
+        "unclosed_intent_count": 0,
+        "untracked_fill_count": 0,
+        "risk_limit_bypass_count": 0,
+        "exchange_write_attempt_count": 0
+      },
+      "metrics": {
+        "events_processed": 50,
+        "checkpoint_count": 5,
+        "restart_count": 1,
+        "recovery_duration_ms": 447.684,
+        "memory_growth_bytes": 581632,
+        "cpu_time_ms": 343.75,
+        "ledger_size_bytes": 57344,
+        "snapshot_size_bytes": 1437813,
+        "accelerated_wall_time_seconds": 0.447684,
+        "logical_hours": 168.0
+      },
+      "checkpoint_count": 5,
+      "restart_count": 1,
+      "recovery_count": 2,
+      "kill_switch_status": "READY",
+      "exchange_write_attempt_count": 0
+    }
+  },
+  "mode": "ACCELERATED_HISTORICAL_REPLAY_SIMULATED_NO_EXCHANGE_WRITE",
+  "created_at": "2026-08-04T16:22:48Z"
+}
