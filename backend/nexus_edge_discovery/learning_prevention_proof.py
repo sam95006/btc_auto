@@ -81,23 +81,51 @@ def run_learning_prevention_proof(
     *,
     packets: list[dict[str, Any]],
     use_real_ai: bool = False,
+    proof_level: str = "CONTROL_CHAIN_PROOF",
 ) -> dict[str, Any]:
-    """Chain: BAD_PROCESS → Lesson → retrieve → Main Reasoner cites → safe effect."""
+    """Chain: BAD_PROCESS → Lesson → retrieve → Main Reasoner cites → safe effect.
+
+    proof_level:
+      CONTROL_CHAIN_PROOF — fixture mechanics only; label CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING
+      REAL_HISTORICAL_CHAIN_PROOF — requires genuine non-fixture BAD_PROCESS source
+    """
+    assert proof_level in {"CONTROL_CHAIN_PROOF", "REAL_HISTORICAL_CHAIN_PROOF"}
     prev = os.environ.get("NEXUS_AI_MOCK")
     os.environ["NEXUS_AI_MOCK"] = "0" if use_real_ai else "1"
     try:
         bad_sources = []
         for p in packets:
             base = deterministic_process_baseline(p)
-            if base["deterministic_process_status"] == "PROCESS_NONCOMPLIANT":
-                bad_sources.append(p)
+            if base["deterministic_process_status"] != "PROCESS_NONCOMPLIANT":
+                continue
+            is_ctrl = p.get("control_fixture_label") == "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE" or str(
+                p.get("trade_id") or ""
+            ).startswith(("CAL_V21_FIX", "CAL_V23_FIX", "CAL_V21_MISS"))
+            if proof_level == "CONTROL_CHAIN_PROOF":
+                if is_ctrl:
+                    bad_sources.append(p)
+            else:
+                if not is_ctrl:
+                    bad_sources.append(p)
         if not bad_sources:
+            if proof_level == "REAL_HISTORICAL_CHAIN_PROOF":
+                return {
+                    "schema": "real_historical_learning_chain_proof",
+                    "proof_level": proof_level,
+                    "REAL_HISTORICAL_CHAIN_PROOF": "NO_ELIGIBLE_BAD_PROCESS_SOURCE",
+                    "real_historical_chain_proof_status": "NO_ELIGIBLE_BAD_PROCESS_SOURCE",
+                    "bad_process_source_count": 0,
+                    "lesson_created_count": 0,
+                    "new_policy_effect_lesson_count": 0,
+                    "misrepresented_as_real_learning": False,
+                }
             return {
-                "schema": "learning_prevention_chain",
-                "repeated_process_error_prevention_proof_status": "FAIL",
+                "schema": "control_learning_chain_proof",
+                "proof_level": proof_level,
+                "control_chain_proof_status": "FAIL",
                 "reason": "no_bad_process_source",
                 "bad_process_source_count": 0,
-                "new_policy_effect_lesson_count": 0,
+                "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
             }
 
         source = bad_sources[0]
@@ -326,8 +354,14 @@ def run_learning_prevention_proof(
             and critic_ok
         )
 
-        return {
-            "schema": "learning_prevention_chain",
+        schema_name = (
+            "control_learning_chain_proof"
+            if proof_level == "CONTROL_CHAIN_PROOF"
+            else "real_historical_learning_chain_proof"
+        )
+        out = {
+            "schema": schema_name,
+            "proof_level": proof_level,
             "repeated_error_source_trade_id": source.get("trade_id"),
             "repeatable_error_signature": sig,
             "lesson_id": lesson_id,
@@ -336,6 +370,7 @@ def run_learning_prevention_proof(
             "lesson_cited_by_main_reasoner": cited,
             "decision_effect": effect,
             "same_error_repeated": same_error_repeated,
+            "same_process_error_repeated_count": 0 if not same_error_repeated else 1,
             "hard_risk_override_test_status": hard_risk_status,
             "bad_process_source_count": len(bad_sources),
             "repeatable_error_signature_count": 1,
@@ -359,6 +394,15 @@ def run_learning_prevention_proof(
             "main_rec_status": (main_rec or {}).get("result_status"),
             "rec_status": (rec or {}).get("result_status"),
         }
+        if proof_level == "CONTROL_CHAIN_PROOF":
+            out["label"] = "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
+            out["control_chain_proof_status"] = "PASS" if proof_pass else "FAIL"
+            out["misrepresented_as_real_learning"] = False
+            out["real_historical_chain_proof_status"] = "NOT_CLAIMED"
+        else:
+            out["real_historical_chain_proof_status"] = "PASS" if proof_pass else "FAIL"
+            out["control_chain_proof_status"] = "NOT_THIS_PROOF"
+        return out
     finally:
         if prev is None:
             os.environ.pop("NEXUS_AI_MOCK", None)

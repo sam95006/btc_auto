@@ -1,0 +1,48 @@
+{
+  "schema": "conditional_vwap_confirmation",
+  "conditional_vwap_confirmation_executed": true,
+  "proposal_id": "EDGE_PROP_VWAP_MEAN_REVERSION",
+  "vwap_confirmation_status": "VWAP_DEVELOPMENT_COST_DESTROYED",
+  "vwap_completed_trade_count": 709,
+  "vwap_positive_fold_count": 1,
+  "vwap_fold_count": 5,
+  "vwap_net_expectancy": -0.8006843437658675,
+  "vwap_gross_expectancy": 0.2159585352891396,
+  "vwap_net_profit_factor": 0.686771,
+  "vwap_adverse_profit_factor": 0.686771,
+  "vwap_largest_symbol_contribution": 0.1274201313160591,
+  "vwap_largest_regime_contribution": 1.0,
+  "development_status": "DISCOVERY_NO_GROSS_EDGE",
+  "confirmation_interval": {
+    "start_ms": 1781515800000,
+    "end_ms": 1785663000000
+  },
+  "registry_checksum": "e6756315aa48a14acd406d58308c00b5b89c6473644e8651816eb8a23e144cdf",
+  "pre_checksums": {
+    "strategy_checksum": "d63e1b855ce16468f39ceee4ad83c9a7131001a2f7137e8a45007086747a3ecd",
+    "semantic_checksum": "99f4b94f0d7e0aba843e569c86739bb5cc263913816f305a161cf19e1694b672",
+    "event_definition": "v11_event_VWAP_MEAN_REVERSION",
+    "component_id": "VWAP_MEAN_REVERSION"
+  },
+  "post_checksums": {
+    "strategy_checksum": "d63e1b855ce16468f39ceee4ad83c9a7131001a2f7137e8a45007086747a3ecd",
+    "semantic_checksum": "99f4b94f0d7e0aba843e569c86739bb5cc263913816f305a161cf19e1694b672",
+    "event_definition": "v11_event_VWAP_MEAN_REVERSION",
+    "component_id": "VWAP_MEAN_REVERSION"
+  },
+  "event_definition_unchanged": true,
+  "parameter_unchanged": true,
+  "cost_model_unchanged": true,
+  "risk_model_unchanged": true,
+  "confirmation_interval_unchanged": true,
+  "strategy_checksum_unchanged": true,
+  "semantic_checksum_unchanged": true,
+  "formal_walk_forward_executed": false,
+  "oos_executed": false,
+  "demo_authorization": false,
+  "strategy_promotion": false,
+  "independent_of_reflection_quality": true,
+  "vwap_lookahead_violation_count": 0,
+  "vwap_risk_limit_breach_count": 0,
+  "recommend_later_formal_qualification_wave_only": false
+}

@@ -26,6 +26,10 @@ ALLOWED_STATUSES = frozenset(
 )
 
 
+# Provider quota must not block deterministic historical research.
+VWAP_INDEPENDENT_OF_REFLECTION_QUALITY = True
+
+
 def _filter_bundle_interval(bundle: ResearchDataBundle, start_ms: int, end_ms: int) -> ResearchDataBundle:
     def _cut_candles(rows: list[Any] | None) -> list[Any]:
         if not rows:
@@ -117,9 +121,15 @@ def run_conditional_vwap_confirmation(
     universe_snapshot_id: str,
     data_checksum: str,
     research_universe_snapshot_checksum: str,
-    gates_passed: bool,
+    gates_passed: bool = True,
+    require_reflection_quality: bool = False,
 ) -> dict[str, Any]:
-    if not gates_passed:
+    """Execute sealed VWAP development confirmation.
+
+    By default runs independently of Blind Reflection provider capacity.
+    Set require_reflection_quality=True only for legacy gated callers.
+    """
+    if require_reflection_quality and not gates_passed:
         return {
             "schema": "conditional_vwap_confirmation",
             "conditional_vwap_confirmation_executed": False,
@@ -139,6 +149,7 @@ def run_conditional_vwap_confirmation(
             "cost_model_unchanged": True,
             "risk_model_unchanged": True,
             "confirmation_interval_unchanged": True,
+            "independent_of_reflection_quality": False,
         }
 
     registry_path = root / "artifacts/readiness/immutable/edge_discovery_diagnostics_v2/development_interval_registry.json"
@@ -233,6 +244,9 @@ def run_conditional_vwap_confirmation(
         "oos_executed": False,
         "demo_authorization": False,
         "strategy_promotion": False,
+        "independent_of_reflection_quality": True,
+        "vwap_lookahead_violation_count": int(result.get("lookahead_violation_count") or 0),
+        "vwap_risk_limit_breach_count": int(result.get("risk_limit_breach_count") or 0),
         "recommend_later_formal_qualification_wave_only": status
         == "VWAP_DEVELOPMENT_CONFIRMED_PROMISING",
     }

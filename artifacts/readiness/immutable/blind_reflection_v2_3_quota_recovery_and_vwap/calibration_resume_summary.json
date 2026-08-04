@@ -1,0 +1,16 @@
+{
+  "schema": "calibration_resume_summary",
+  "stage": "PROVIDER_CAPACITY_BLOCKED",
+  "checkpoint_status": "SAVED",
+  "calibration_completed_case_count": 10,
+  "calibration_pending_case_count": 70,
+  "provider_429_count": 0,
+  "provider_attempt_count": 10,
+  "provider_successful_response_count": 10,
+  "retry_after": 900,
+  "next_resume_not_before": "2026-08-04T02:44:08Z",
+  "critic_case_count": 5,
+  "critic_resolved_count": 0,
+  "checkpoint_path": ".nexus_runtime/blind_reflection_v23_checkpoint.json",
+  "checkpoint_committed": false
+}

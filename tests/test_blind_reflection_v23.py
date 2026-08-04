@@ -187,13 +187,16 @@ def test_learning_prevention_and_gpl_non_suppression():
         universe_snapshot_id="u",
         data_checksum="d",
     )
-    learning = run_learning_prevention_proof(packets=packets, use_real_ai=False)
-    assert learning["repeated_process_error_prevention_proof_status"] == "PASS"
+    learning = run_learning_prevention_proof(
+        packets=packets, use_real_ai=False, proof_level="CONTROL_CHAIN_PROOF"
+    )
+    assert learning["control_chain_proof_status"] == "PASS"
     assert learning["lesson_retrieved"] is True
     assert learning["lesson_cited_by_main_reasoner"] is True
     assert learning["same_error_repeated"] is False
     assert learning["hard_risk_override_test_status"] == "PASS"
     assert learning["permanent_policy_mutation"] is False
+    assert learning["label"] == "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
     gpl = run_good_process_loss_non_suppression_test(packets)
     assert gpl["good_process_loss_non_suppression_status"] == "PASS"
     assert gpl["auto_block_all_similar_valid_trades"] is False
