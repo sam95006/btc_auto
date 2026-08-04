@@ -1,0 +1,54 @@
+{
+  "schema": "microstructure_campaign_finalizer_v1",
+  "Microstructure_Finalizer_status": "PASS",
+  "campaign_id": "ms_syn_finalizer_clean_v1",
+  "clean_campaign_finalization": true,
+  "valid_capture_hours": 1.1666666666666667,
+  "connection_gap_seconds": 120,
+  "complete_UTC_hours": 1,
+  "partial_UTC_hours": 1,
+  "symbol_coverage": [
+    "BTCUSDT",
+    "ETHUSDT"
+  ],
+  "symbol_count": 2,
+  "clock_quality": "GOOD",
+  "heartbeat_quality": "GOOD",
+  "memory_quality": "GOOD",
+  "checksum_replay_verified": true,
+  "partition_completeness_status": "COMPLETE",
+  "truncated_tail_detected": false,
+  "cross_partition_linkage_status": "PASS",
+  "storage_cap_outcome": "WITHIN_CAPS",
+  "campaign_resume_metadata": {
+    "resumable": true,
+    "last_checkpoint_at": "2026-08-01T11:05:00Z",
+    "last_partition_id": "syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260801_11_1",
+    "checkpoint_path": "synthetic://checkpoint.json",
+    "accumulation_run_id": "accum_syn_clean",
+    "capture_session_ids": [
+      "syn_sess_clean_001"
+    ],
+    "resume_token": "syn-resume-clean",
+    "clean_shutdown": true
+  },
+  "integrity_status": "PASS",
+  "event_study_readiness_status": "NOT_READY",
+  "event_study_real_execution": false,
+  "new_strategy_generated_count": 0,
+  "profitability_claim_count": 0,
+  "synthetic_fixtures_only": true,
+  "live_campaign_interfered": false,
+  "critical_findings": [
+    "event_study_hold_gates_unmet",
+    "wall_clock_exceeds_valid_capture_expected"
+  ],
+  "remaining_blockers": [
+    "calendar_days",
+    "complete_UTC_day_coverage",
+    "symbol_diversity",
+    "liquidation_event_count",
+    "Founder_authorization"
+  ],
+  "created_at": "2026-08-04T16:16:39Z"
+}
