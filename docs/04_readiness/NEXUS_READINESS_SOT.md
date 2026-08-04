@@ -1,78 +1,58 @@
 # NEXUS Readiness Source of Truth
 
-Updated: 2026-08-04T03:45:00Z
+Updated: 2026-08-04T04:20:00Z
 
 ## Current system stage
 
-`BLIND_REFLECTION_V2_3_PROVIDER_SPLIT_CONTINUITY_V3`
+`BLIND_REFLECTION_V2_3_CONTINUITY_V4_IN_PROGRESS`
 
 Canonical workspace: `G:\我的雲端硬碟\btc_bot`
 
 Private Core PR: `#24` (Draft, unmerged)
 
-## Evidence delivery metrics (do not conflate)
+## Calibration progress (checkpoint; not a terminal package)
 
-| Metric | Meaning |
-| --- | --- |
-| `evidence_packet_constructible_ratio` | Frozen packets can be serialized (80/80) |
-| `reflection_prompt_delivery_ratio_on_attempts` | Attempted Reflection calls included the packet |
-| `full_calibration_completion_ratio` | Successful Reflection / 80 |
-| `critic_prompt_delivery_ratio_on_attempts` | Attempted Critic calls included the packet |
+- Groq Reflection successes: see `.nexus_runtime/blind_reflection_v23_checkpoint.json`
+- Do **not** mint Git commits or immutable packages for partial batches (37/80, 42/80, …)
+- Terminal package only after 80/80 + Critic adjudication (or formal quality fail)
 
-Pending cases are **not** Provider-delivered.
+## Disagreement accounting
 
-## Provider-specific transport
+While SambaNova Critic is blocked/unresolved:
 
-Separate counters/stages for:
+- `unadjudicated_disagreement_count`
+- `provider_blocked_disagreement_count` (when provider-blocked)
 
-- `GROQ_REFLECTION_REASONER`
-- `SAMBANOVA_INDEPENDENT_CRITIC`
-- `CEREBRAS_RESEARCH_NORMALIZER`
-- `GROQ_MAIN_REASONER`
+Root-cause fields remain `NOT_YET_ADJUDICATED` (not confirmed zero):
 
-A SambaNova 429 must not increment Groq counters.
+- AI_misclassification_count
+- deterministic_baseline_too_coarse_count
+- evidence_packet_ambiguous_count
+- taxonomy_ambiguous_count
+- outcome_process_mapping_error_count
 
-`INVOCATION_BATCH_LIMIT_REACHED` is not a Provider rate limit.
+## Hard risk semantics
 
-Critic `0/N` under SambaNova transport block → `SAMBANOVA_PROVIDER_BLOCKED` (not ordinary `VALID`).
+- `hard_risk_static_ban_status=PASS` (bans held)
+- `hard_risk_override_path_test_status=NOT_EXECUTED` until Learning Prevention exercises a prohibited request path
 
-## Interpretation correction (preserved)
+## VWAP
 
-Prior all-429 run is **not** model-quality failure.
+`VWAP_RESEARCH_LINE_TERMINAL_CURRENT_EXECUTION_MODEL`
 
-`V2_3_RESULT_INTERPRETATION = CALIBRATION_INCOMPLETE_PROVIDER_CAPACITY`
+## Microstructure Data Foundation V1
 
-## VWAP terminal taxonomy
+Approved capture foundation only (no strategies):
 
-Sealed confirmation preserved. Non-mutating correction:
-
-- `VWAP_RAW_EDGE_PRESENT_BUT_COST_DESTROYED`
-- `VWAP_DEVELOPMENT_COST_DESTROYED`
-- `VWAP_RESEARCH_LINE_TERMINAL_CURRENT_EXECUTION_MODEL`
-
-Do not keep `DISCOVERY_NO_GROSS_EDGE` as primary when gross expectancy > 0 and net < 0.
-
-No VWAP retune / formal WF / OOS.
-
-## Next alpha research gate
-
-`NEXUS_ALPHA_DATA_FAMILY_FEASIBILITY_V1` — research-source decision only.
-
-Selected proposal (Founder approval before acquisition):
-
-- `LIQUIDATION_EVENTS`
 - `AGGRESSIVE_TRADE_FLOW`
+- `LIQUIDATION_EVENTS`
 
-No paid purchase, no prohibited scrape, no new candle strategies in this stage.
+Package: `artifacts/readiness/immutable/microstructure_data_foundation_v1/`
 
-## Runtime / packages
+Raw events: `.nexus_runtime/microstructure/` (not committed)
 
-- Checkpoint: `.nexus_runtime/blind_reflection_v23_checkpoint.json` (not committed)
-- Prior packages preserved under `artifacts/readiness/immutable/`
-- Final immutable continuation package only after full V2.3 + learning-prevention evaluation
+## Formal blockers
 
-## Formal blockers preserved
+Demo/WF/OOS/Shadow/deploy/mainnet/real money blocked.
 
-Demo/WF/OOS/Shadow/deploy/mainnet/real money remain blocked.
-
-Public product PR `#26` remains frozen pending real Founder-led ICP recruitment.
+Public product PR `#26` frozen pending Founder-led ICP recruitment.
