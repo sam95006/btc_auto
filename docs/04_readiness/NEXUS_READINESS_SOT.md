@@ -1,58 +1,51 @@
 # NEXUS Readiness Source of Truth
 
-Updated: 2026-08-04T04:20:00Z
+Updated: 2026-08-04T06:00:00Z
 
 ## Current system stage
 
-`BLIND_REFLECTION_V2_3_CONTINUITY_V4_IN_PROGRESS`
-
-Canonical workspace: `G:\我的雲端硬碟\btc_bot`
+`BLIND_REFLECTION_V2_3_CONTINUITY_V5_IN_PROGRESS`
++ `MICROSTRUCTURE_DATA_FOUNDATION_V1_1`
 
 Private Core PR: `#24` (Draft, unmerged)
 
-## Calibration progress (checkpoint; not a terminal package)
+## V2.3
 
-- Groq Reflection successes: see `.nexus_runtime/blind_reflection_v23_checkpoint.json`
-- Do **not** mint Git commits or immutable packages for partial batches (37/80, 42/80, …)
-- Terminal package only after 80/80 + Critic adjudication (or formal quality fail)
+Checkpoint: `.nexus_runtime/blind_reflection_v23_checkpoint.json`
 
-## Disagreement accounting
+- No Git commit / immutable package for partial batch progress
+- Terminal package only after 80/80 + Critic adjudication
 
-While SambaNova Critic is blocked/unresolved:
+## Microstructure V1
 
-- `unadjudicated_disagreement_count`
-- `provider_blocked_disagreement_count` (when provider-blocked)
+Package preserved:
 
-Root-cause fields remain `NOT_YET_ADJUDICATED` (not confirmed zero):
+`artifacts/readiness/immutable/microstructure_data_foundation_v1/`
 
-- AI_misclassification_count
-- deterministic_baseline_too_coarse_count
-- evidence_packet_ambiguous_count
-- taxonomy_ambiguous_count
-- outcome_process_mapping_error_count
+Interpretation:
 
-## Hard risk semantics
+- `MICROSTRUCTURE_V1_RESULT=BOUNDED_CONNECTIVITY_AND_STORAGE_SMOKE_PASS`
+- `LONG_RUNNING_DATA_INTEGRITY_NOT_YET_VERIFIED`
+- Legacy `out_of_order_count=64`, `reconnect_count=4` classified as
+  `LEGACY_GLOBAL_OR_WRITER_SUMMED_COUNTERS`
 
-- `hard_risk_static_ban_status=PASS` (bans held)
-- `hard_risk_override_path_test_status=NOT_EXECUTED` until Learning Prevention exercises a prohibited request path
+## Microstructure V1.1
 
-## VWAP
+Package:
 
-`VWAP_RESEARCH_LINE_TERMINAL_CURRENT_EXECUTION_MODEL`
+`artifacts/readiness/immutable/microstructure_data_foundation_v1_1/`
 
-## Microstructure Data Foundation V1
+Hardening:
 
-Approved capture foundation only (no strategies):
-
-- `AGGRESSIVE_TRADE_FLOW`
-- `LIQUIDATION_EVENTS`
-
-Package: `artifacts/readiness/immutable/microstructure_data_foundation_v1/`
-
-Raw events: `.nexus_runtime/microstructure/` (not committed)
+- symbol-scoped ordering
+- clock offset + latency (negative values retained)
+- session-level reconnect accounting
+- streaming partitioned storage (no full in-memory records)
+- clean shutdown proof
+- aggressor side mapped from Bybit `publicTrade.S` (Side of taker)
 
 ## Formal blockers
 
 Demo/WF/OOS/Shadow/deploy/mainnet/real money blocked.
 
-Public product PR `#26` frozen pending Founder-led ICP recruitment.
+PR `#26` frozen pending Founder-led ICP recruitment.
