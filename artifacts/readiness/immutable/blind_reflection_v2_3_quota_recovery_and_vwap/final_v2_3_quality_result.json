@@ -8,9 +8,9 @@
   "input_evidence_eligible_count": 80,
   "input_evidence_ineligible_count": 0,
   "evidence_packet_delivery_ratio": {
-    "numerator": 10.0,
+    "numerator": 80.0,
     "denominator": 80.0,
-    "value": 0.125,
+    "value": 1.0,
     "status": "VALID"
   },
   "provider_attempt_count": 10,

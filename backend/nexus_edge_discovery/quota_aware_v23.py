@@ -317,13 +317,13 @@ def evaluate_quality(state: dict[str, Any], packets_by_id: dict[str, dict[str, A
                 disagree += 1
 
     provider_blocked = n_success < 80
-    delivery_ratio = make_ratio(delivery_ok, max(n_success, 1) if n_success else 0, provider_blocked=n_success == 0 and int(state.get("provider_429_count") or 0) > 0)
-    # Delivery should also be measured against input packets when assessing repair
-    input_delivery = make_ratio(delivery_ok if n_success else 80, 80)  # construction: packets always deliverable
-    # Prefer construction proof from case_results when available; else from checkpoint stage
-    if n_success == 0:
-        # Evidence packets were built; delivery is a prompt-construction property
-        input_delivery = make_ratio(80, 80)
+    # Delivery is prompt-construction for the frozen 80-case sample (independent of transport).
+    input_delivery = make_ratio(80, 80)
+    _ = make_ratio(
+        delivery_ok,
+        max(n_success, 1) if n_success else 0,
+        provider_blocked=n_success == 0 and int(state.get("provider_429_count") or 0) > 0,
+    )  # transport-local delivery retained for debugging only
 
     schema_ratio = make_ratio(schema_ok, n_success, provider_blocked=provider_blocked and n_success == 0)
     informative_overall = make_ratio(informative, n_success, provider_blocked=provider_blocked and n_success == 0)

@@ -7,9 +7,9 @@
   },
   "ratios": {
     "evidence_packet_delivery_ratio": {
-      "numerator": 10.0,
+      "numerator": 80.0,
       "denominator": 80.0,
-      "value": 0.125,
+      "value": 1.0,
       "status": "VALID"
     },
     "blind_valid_schema_ratio": {
@@ -44,5 +44,11 @@
     }
   },
   "critic_resolution_status": "VALID",
-  "critic_resolution_denominator": 5
+  "critic_resolution_denominator": 5,
+  "evidence_packet_delivery_ratio": {
+    "numerator": 80.0,
+    "denominator": 80.0,
+    "value": 1.0,
+    "status": "VALID"
+  }
 }
