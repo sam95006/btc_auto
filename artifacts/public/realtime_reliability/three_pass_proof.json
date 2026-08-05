@@ -182,7 +182,8 @@
     "digest": "dc30583502e8935d0eb4b5dc3cd43fc6d37ae91c5a784a7fddaac1357bb65423",
     "findings": []
   },
-  "generated_at": "2026-08-05T16:48:38Z",
+  "generated_at": "2026-08-05T16:49:16Z",
   "note": "pass_digests_intentionally_independent; gate is per-pass ok + feature_proof",
-  "lane_head": "4993bcdbe5bcfb04968aa3e93675ef7d829738fb"
+  "lane_head": "1158d2ee5113c7dc467771d7e4f9fc2ef09406dd",
+  "implementation_commit": "9066731e40d91a29d1c8c28bf4caa1c6049292ae"
 }
