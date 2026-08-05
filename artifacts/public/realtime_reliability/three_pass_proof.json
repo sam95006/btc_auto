@@ -182,6 +182,7 @@
     "digest": "dc30583502e8935d0eb4b5dc3cd43fc6d37ae91c5a784a7fddaac1357bb65423",
     "findings": []
   },
-  "generated_at": "2026-08-05T16:47:42Z",
-  "note": "pass_digests_intentionally_independent; gate is per-pass ok + feature_proof"
+  "generated_at": "2026-08-05T16:48:15Z",
+  "note": "pass_digests_intentionally_independent; gate is per-pass ok + feature_proof",
+  "lane_head": "9066731e40d91a29d1c8c28bf4caa1c6049292ae"
 }

@@ -67,6 +67,7 @@
     "three_pass_ok": true
   },
   "artifact_policy": "no_star_status_json",
-  "generated_at": "2026-08-05T16:47:42Z",
-  "head_sha_note": "fill_after_commit"
+  "generated_at": "2026-08-05T16:48:15Z",
+  "head_sha_note": "pinned",
+  "lane_head": "9066731e40d91a29d1c8c28bf4caa1c6049292ae"
 }
