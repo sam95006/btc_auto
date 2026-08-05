@@ -557,6 +557,7 @@ def run_scaled_closed_loop(
 
     def _rotate_epoch(*, reason: str) -> None:
         nonlocal epoch, adapter, orch, epoch_root, restart_count
+        nonlocal seen_decisions, seen_intents, seen_positions
         _accumulate_writes()
         prev = epoch_root
         # Drop references before deleting durable roots (Windows file locks).
@@ -568,6 +569,10 @@ def run_scaled_closed_loop(
             pass
         orch = None  # type: ignore[assignment]
         adapter = None  # type: ignore[assignment]
+        # Fresh epoch ⇒ fresh Decision IDs; drop cross-epoch ID sets to bound RAM.
+        seen_decisions = set()
+        seen_intents = set()
+        seen_positions = set()
         epoch += 1
         adapter, orch, epoch_root = _new_orch(epoch)
         try:
