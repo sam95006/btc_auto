@@ -1,0 +1,448 @@
+{
+  "schema": "v15_continuous_autonomy_ops_pass2",
+  "pass": 2,
+  "overall_status": "PASS",
+  "proofs_passed": 8,
+  "proofs_total": 8,
+  "failed": [],
+  "proofs": [
+    {
+      "proof_id": "neg_missing_founder_auth",
+      "status": "PASS",
+      "passed": true,
+      "detail": {
+        "result": {
+          "status": "DENIED",
+          "reason": "founder_auth_proof_missing",
+          "op": "start",
+          "founder_authorization_present": false,
+          "state": "COLD",
+          "exchange_write_attempt_count": 0,
+          "demo_order_count": 0,
+          "shadow_order_count": 0,
+          "mainnet_attempt_count": 0,
+          "real_money_attempt_count": 0,
+          "formal_walk_forward_executed": false,
+          "oos_reservation_created": false,
+          "oos_executed": false,
+          "oos_consumed": false,
+          "strategy_promoted": false,
+          "PR27_merged": false,
+          "qualification_advanced": false
+        }
+      }
+    },
+    {
+      "proof_id": "neg_spoofed_founder_auth",
+      "status": "PASS",
+      "passed": true,
+      "detail": {
+        "result": {
+          "status": "DENIED",
+          "reason": "founder_auth_proof_unknown",
+          "op": "start",
+          "founder_authorization_present": false,
+          "state": "COLD",
+          "exchange_write_attempt_count": 0,
+          "demo_order_count": 0,
+          "shadow_order_count": 0,
+          "mainnet_attempt_count": 0,
+          "real_money_attempt_count": 0,
+          "formal_walk_forward_executed": false,
+          "oos_reservation_created": false,
+          "oos_executed": false,
+          "oos_consumed": false,
+          "strategy_promoted": false,
+          "PR27_merged": false,
+          "qualification_advanced": false
+        }
+      }
+    },
+    {
+      "proof_id": "neg_idempotency_replay",
+      "status": "PASS",
+      "passed": true,
+      "detail": {
+        "first": {
+          "status": "PASS",
+          "op": "start",
+          "duplicate": false,
+          "idempotency_key": "idem-1",
+          "state_before": "COLD",
+          "state_after": "RUNNING",
+          "state": "RUNNING",
+          "founder_authorization_present": true,
+          "auth_reason": "founder_auth_verified",
+          "ledger": {
+            "status": "APPENDED",
+            "event_id": "f78a7f5ef142ed9c071a055071e0163c",
+            "sequence_number": 1,
+            "duplicate": false
+          },
+          "checkpoint": {
+            "status": "SNAPSHOT_OK",
+            "count": 1,
+            "detail": {
+              "status": "SNAPSHOT_OK",
+              "generation": 1,
+              "created_at": "2026-08-05T15:19:26Z",
+              "source_ledger_position": 1,
+              "max_sequence": 1,
+              "snapshot_checksum": "3c01e560f8b9c7b535d50a75d4d162381a79208d5be724347cd3166ab80ed548",
+              "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v15_j_7yodvtlb\\pass2\\neg_idempotency_replay\\neg_idem\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+              "ledger_hash_chain_status": "PASS",
+              "schema": "durability_v2",
+              "position_source": "checksummed_main_file",
+              "wal_policy": "forbid_non_empty_companion_wal",
+              "latency_s": 0.017673499998636544
+            }
+          },
+          "gate": {
+            "allowed": true,
+            "reason": "safety_gate_pass"
+          },
+          "kill_engaged": false,
+          "exchange_write": false,
+          "exchange_write_attempt_count": 0,
+          "demo_order_count": 0,
+          "shadow_order_count": 0,
+          "mainnet_attempt_count": 0,
+          "real_money_attempt_count": 0,
+          "formal_walk_forward_executed": false,
+          "oos_reservation_created": false,
+          "oos_executed": false,
+          "oos_consumed": false,
+          "strategy_promoted": false,
+          "PR27_merged": false,
+          "qualification_advanced": false
+        },
+        "second": {
+          "status": "DUPLICATE_IGNORED",
+          "op": "start",
+          "duplicate": true,
+          "idempotency_key": "idem-1",
+          "state_before": "COLD",
+          "state_after": "RUNNING",
+          "state": "RUNNING",
+          "founder_authorization_present": true,
+          "auth_reason": "founder_auth_verified",
+          "ledger": {
+            "status": "APPENDED",
+            "event_id": "f78a7f5ef142ed9c071a055071e0163c",
+            "sequence_number": 1,
+            "duplicate": false
+          },
+          "checkpoint": {
+            "status": "SNAPSHOT_OK",
+            "count": 1,
+            "detail": {
+              "status": "SNAPSHOT_OK",
+              "generation": 1,
+              "created_at": "2026-08-05T15:19:26Z",
+              "source_ledger_position": 1,
+              "max_sequence": 1,
+              "snapshot_checksum": "3c01e560f8b9c7b535d50a75d4d162381a79208d5be724347cd3166ab80ed548",
+              "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v15_j_7yodvtlb\\pass2\\neg_idempotency_replay\\neg_idem\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+              "ledger_hash_chain_status": "PASS",
+              "schema": "durability_v2",
+              "position_source": "checksummed_main_file",
+              "wal_policy": "forbid_non_empty_companion_wal",
+              "latency_s": 0.017673499998636544
+            }
+          },
+          "gate": {
+            "allowed": true,
+            "reason": "safety_gate_pass"
+          },
+          "kill_engaged": false,
+          "exchange_write": false,
+          "exchange_write_attempt_count": 0,
+          "demo_order_count": 0,
+          "shadow_order_count": 0,
+          "mainnet_attempt_count": 0,
+          "real_money_attempt_count": 0,
+          "formal_walk_forward_executed": false,
+          "oos_reservation_created": false,
+          "oos_executed": false,
+          "oos_consumed": false,
+          "strategy_promoted": false,
+          "PR27_merged": false,
+          "qualification_advanced": false
+        }
+      }
+    },
+    {
+      "proof_id": "neg_exchange_write_trap",
+      "status": "PASS",
+      "passed": true,
+      "detail": {
+        "result": {
+          "status": "DENIED",
+          "reason": "hard_ban:demo_order",
+          "executed": false,
+          "gate": {
+            "allowed": false,
+            "reason": "hard_ban:demo_order",
+            "op": "exchange_write_trap",
+            "gate": "SafetyGateV15",
+            "hard_bans": {
+              "demo": true,
+              "shadow": true,
+              "exchange_write": true,
+              "mainnet": true,
+              "real_money": true,
+              "PR27_merge": true,
+              "formal_walk_forward_execution": true,
+              "real_oos_reservation": true,
+              "real_oos_execution": true,
+              "real_oos_consumption": true,
+              "strategy_promotion": true,
+              "fabricated_edge": true,
+              "G_source_deletion": true
+            },
+            "exchange_write_attempt_count": 1,
+            "demo_order_count": 0,
+            "shadow_order_count": 0,
+            "mainnet_attempt_count": 0,
+            "real_money_attempt_count": 0,
+            "formal_walk_forward_executed": false,
+            "oos_reservation_created": false,
+            "oos_executed": false,
+            "oos_consumed": false,
+            "strategy_promoted": false,
+            "PR27_merged": false,
+            "qualification_advanced": false
+          },
+          "exchange_write_attempt_count": 1,
+          "demo_order_count": 0,
+          "shadow_order_count": 0,
+          "mainnet_attempt_count": 0,
+          "real_money_attempt_count": 0,
+          "formal_walk_forward_executed": false,
+          "oos_reservation_created": false,
+          "oos_executed": false,
+          "oos_consumed": false,
+          "strategy_promoted": false,
+          "PR27_merged": false,
+          "qualification_advanced": false
+        }
+      }
+    },
+    {
+      "proof_id": "neg_qualification_advance_refused",
+      "status": "PASS",
+      "passed": true,
+      "detail": {
+        "result": {
+          "status": "DENIED",
+          "reason": "qualification_advance_banned",
+          "stage": "oos_reservation",
+          "executed": false,
+          "qualification_blocks": {
+            "block": "qualification_blocks",
+            "status": "ALL_BLOCKED",
+            "stages": {
+              "candidate_freeze": "BLOCKED",
+              "replay": "BLOCKED",
+              "walk_forward": "BLOCKED",
+              "risk_review": "BLOCKED",
+              "oos_reservation": "BLOCKED",
+              "demo_eligibility": "BLOCKED"
+            },
+            "all_blocked": true,
+            "qualification_advanced": false,
+            "formal_walk_forward_executed": false,
+            "oos_reservation_created": false,
+            "oos_executed": false,
+            "strategy_promoted": false,
+            "observed_at": "2026-08-05T15:19:26Z",
+            "exchange_write": false,
+            "exchange_write_attempt_count": 0,
+            "demo_order_count": 0,
+            "shadow_order_count": 0,
+            "mainnet_attempt_count": 0,
+            "real_money_attempt_count": 0,
+            "oos_consumed": false,
+            "PR27_merged": false
+          },
+          "exchange_write_attempt_count": 0,
+          "demo_order_count": 0,
+          "shadow_order_count": 0,
+          "mainnet_attempt_count": 0,
+          "real_money_attempt_count": 0,
+          "formal_walk_forward_executed": false,
+          "oos_reservation_created": false,
+          "oos_executed": false,
+          "oos_consumed": false,
+          "strategy_promoted": false,
+          "PR27_merged": false,
+          "qualification_advanced": false
+        },
+        "blocks": {
+          "block": "qualification_blocks",
+          "status": "ALL_BLOCKED",
+          "stages": {
+            "candidate_freeze": "BLOCKED",
+            "replay": "BLOCKED",
+            "walk_forward": "BLOCKED",
+            "risk_review": "BLOCKED",
+            "oos_reservation": "BLOCKED",
+            "demo_eligibility": "BLOCKED"
+          },
+          "all_blocked": true,
+          "qualification_advanced": false,
+          "formal_walk_forward_executed": false,
+          "oos_reservation_created": false,
+          "oos_executed": false,
+          "strategy_promoted": false,
+          "observed_at": "2026-08-05T15:19:26Z",
+          "exchange_write": false,
+          "exchange_write_attempt_count": 0,
+          "demo_order_count": 0,
+          "shadow_order_count": 0,
+          "mainnet_attempt_count": 0,
+          "real_money_attempt_count": 0,
+          "oos_consumed": false,
+          "PR27_merged": false,
+          "control_state": "RUNNING",
+          "read_only": true,
+          "mutation": false
+        }
+      }
+    },
+    {
+      "proof_id": "neg_kill_blocks_resume",
+      "status": "PASS",
+      "passed": true,
+      "detail": {
+        "result": {
+          "status": "DENIED",
+          "reason": "kill_switch_engaged",
+          "op": "resume",
+          "gate": {
+            "allowed": false,
+            "reason": "kill_switch_engaged",
+            "op": "resume",
+            "state": "KILLED",
+            "gate": "SafetyGateV15",
+            "exchange_write_attempt_count": 0,
+            "demo_order_count": 0,
+            "shadow_order_count": 0,
+            "mainnet_attempt_count": 0,
+            "real_money_attempt_count": 0,
+            "formal_walk_forward_executed": false,
+            "oos_reservation_created": false,
+            "oos_executed": false,
+            "oos_consumed": false,
+            "strategy_promoted": false,
+            "PR27_merged": false,
+            "qualification_advanced": false
+          },
+          "state": "KILLED",
+          "exchange_write_attempt_count": 0,
+          "demo_order_count": 0,
+          "shadow_order_count": 0,
+          "mainnet_attempt_count": 0,
+          "real_money_attempt_count": 0,
+          "formal_walk_forward_executed": false,
+          "oos_reservation_created": false,
+          "oos_executed": false,
+          "oos_consumed": false,
+          "strategy_promoted": false,
+          "PR27_merged": false,
+          "qualification_advanced": false
+        }
+      }
+    },
+    {
+      "proof_id": "neg_unsafe_transition_refused",
+      "status": "PASS",
+      "passed": true,
+      "detail": {
+        "result": {
+          "status": "DENIED",
+          "reason": "unsafe_transition",
+          "op": "pause",
+          "gate": {
+            "allowed": false,
+            "reason": "unsafe_transition",
+            "op": "pause",
+            "state": "COLD",
+            "allowed_from": [
+              "RUNNING"
+            ],
+            "gate": "SafetyGateV15",
+            "exchange_write_attempt_count": 0,
+            "demo_order_count": 0,
+            "shadow_order_count": 0,
+            "mainnet_attempt_count": 0,
+            "real_money_attempt_count": 0,
+            "formal_walk_forward_executed": false,
+            "oos_reservation_created": false,
+            "oos_executed": false,
+            "oos_consumed": false,
+            "strategy_promoted": false,
+            "PR27_merged": false,
+            "qualification_advanced": false
+          },
+          "state": "COLD",
+          "exchange_write_attempt_count": 0,
+          "demo_order_count": 0,
+          "shadow_order_count": 0,
+          "mainnet_attempt_count": 0,
+          "real_money_attempt_count": 0,
+          "formal_walk_forward_executed": false,
+          "oos_reservation_created": false,
+          "oos_executed": false,
+          "oos_consumed": false,
+          "strategy_promoted": false,
+          "PR27_merged": false,
+          "qualification_advanced": false
+        }
+      }
+    },
+    {
+      "proof_id": "neg_no_status_json_artifact",
+      "status": "PASS",
+      "passed": true,
+      "detail": {
+        "banned_files": [],
+        "owned_mentions": [],
+        "artifact_dir": "D:\\NEXUS_RUNTIME\\worktrees\\v15_j_autonomy_ops\\artifacts\\readiness\\immutable\\v15_continuous_autonomy_ops"
+      }
+    }
+  ],
+  "exchange_write_attempt_count": 0,
+  "demo_order_count": 0,
+  "shadow_order_count": 0,
+  "mainnet_attempt_count": 0,
+  "real_money_attempt_count": 0,
+  "formal_walk_forward_executed": false,
+  "oos_reservation_created": false,
+  "oos_executed": false,
+  "oos_consumed": false,
+  "strategy_promoted": false,
+  "PR27_merged": false,
+  "qualification_advanced": false,
+  "hard_bans": {
+    "demo": true,
+    "shadow": true,
+    "exchange_write": true,
+    "mainnet": true,
+    "real_money": true,
+    "PR27_merge": true,
+    "formal_walk_forward_execution": true,
+    "real_oos_reservation": true,
+    "real_oos_execution": true,
+    "real_oos_consumption": true,
+    "strategy_promotion": true,
+    "fabricated_edge": true,
+    "G_source_deletion": true
+  },
+  "owned_paths": [
+    "backend/nexus_autonomy/continuous_ops_control_v15/",
+    "tools/research/run_continuous_autonomy_ops_v15.py",
+    "tests/test_continuous_autonomy_ops_v15.py",
+    "artifacts/readiness/immutable/v15_continuous_autonomy_ops/"
+  ]
+}
