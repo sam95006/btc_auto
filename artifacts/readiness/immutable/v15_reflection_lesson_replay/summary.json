@@ -1,0 +1,27 @@
+{
+  "REAL_LESSON_PREVENTION_STATUS": "BLOCKED",
+  "V2_3_complete": false,
+  "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+  "auto_integrate": false,
+  "base_commit": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
+  "branch": "feature/v15-reflection-lesson-replay",
+  "classification_class_counts": {
+    "BAD_PROCESS_LOSS": 6,
+    "BAD_PROCESS_WIN": 2,
+    "GOOD_PROCESS_LOSS": 2,
+    "GOOD_PROCESS_WIN": 3,
+    "UNDETERMINED": 2
+  },
+  "digest": "c5f4a3752a381956d2204a7b0132033872767774ece098d93b0f3b976a98d69e",
+  "head_commit": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
+  "lane": "V15-I",
+  "lane_name": "REFLECTION_AND_LESSON_REPLAY_LAB",
+  "loss_is_not_automatic_bad_process": true,
+  "new_policy_effect_lesson_count": 0,
+  "pass": true,
+  "pr27_merged": false,
+  "replay_lab_status": "PASS",
+  "status": "NEXUS_V15_I_LESSON_REPLAY_LAB_PASS_REAL_BLOCKED",
+  "two_pass_ok": true,
+  "wrote_status_json": false
+}

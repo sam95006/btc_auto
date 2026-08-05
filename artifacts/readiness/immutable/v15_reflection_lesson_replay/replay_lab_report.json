@@ -1,0 +1,253 @@
+{
+  "REAL_LESSON_PREVENTION_STATUS": "NOT_THIS_PROOF_REMAINS_BLOCKED",
+  "bad_process_sim_count": 4,
+  "classification_matrix": {
+    "combined": {
+      "class_counts": {
+        "BAD_PROCESS_LOSS": 6,
+        "BAD_PROCESS_WIN": 2,
+        "GOOD_PROCESS_LOSS": 2,
+        "GOOD_PROCESS_WIN": 3,
+        "UNDETERMINED": 2
+      },
+      "loss_is_not_automatic_bad_process": true,
+      "required_classes_present": {
+        "BAD_PROCESS_LOSS": true,
+        "BAD_PROCESS_WIN": true,
+        "GOOD_PROCESS_LOSS": true,
+        "GOOD_PROCESS_WIN": true,
+        "UNDETERMINED": true
+      }
+    },
+    "historical_simulated": {
+      "class_counts": {
+        "BAD_PROCESS_LOSS": 3,
+        "BAD_PROCESS_WIN": 1,
+        "GOOD_PROCESS_LOSS": 1,
+        "GOOD_PROCESS_WIN": 2,
+        "UNDETERMINED": 1
+      },
+      "required_classes_present": {
+        "BAD_PROCESS_LOSS": true,
+        "BAD_PROCESS_WIN": true,
+        "GOOD_PROCESS_LOSS": true,
+        "GOOD_PROCESS_WIN": true,
+        "UNDETERMINED": true
+      },
+      "rows": [
+        {
+          "is_fixture": false,
+          "pnl": 18.25,
+          "process_classification": "GOOD_PROCESS_WIN",
+          "source_kind": "HISTORICAL_SIMULATED_COMPLETED_TRADE",
+          "trade_id": "V15I_SIM_hist_good_win_001"
+        },
+        {
+          "is_fixture": false,
+          "pnl": -6.4,
+          "process_classification": "GOOD_PROCESS_LOSS",
+          "source_kind": "HISTORICAL_SIMULATED_COMPLETED_TRADE",
+          "trade_id": "V15I_SIM_hist_good_loss_002"
+        },
+        {
+          "is_fixture": false,
+          "pnl": -11.0,
+          "process_classification": "BAD_PROCESS_LOSS",
+          "source_kind": "HISTORICAL_SIMULATED_COMPLETED_TRADE",
+          "trade_id": "V15I_SIM_hist_bad_stale_loss_003"
+        },
+        {
+          "is_fixture": false,
+          "pnl": -4.2,
+          "process_classification": "BAD_PROCESS_LOSS",
+          "source_kind": "HISTORICAL_SIMULATED_COMPLETED_TRADE",
+          "trade_id": "V15I_SIM_hist_bad_stale_later_004"
+        },
+        {
+          "is_fixture": false,
+          "pnl": 3.1,
+          "process_classification": "BAD_PROCESS_WIN",
+          "source_kind": "HISTORICAL_SIMULATED_COMPLETED_TRADE",
+          "trade_id": "V15I_SIM_hist_bad_cost_win_005"
+        },
+        {
+          "is_fixture": false,
+          "pnl": -0.5,
+          "process_classification": "UNDETERMINED",
+          "source_kind": "HISTORICAL_SIMULATED_COMPLETED_TRADE",
+          "trade_id": "V15I_SIM_hist_undetermined_006"
+        },
+        {
+          "is_fixture": false,
+          "pnl": -9.75,
+          "process_classification": "BAD_PROCESS_LOSS",
+          "source_kind": "HISTORICAL_SIMULATED_COMPLETED_TRADE",
+          "trade_id": "V15I_SIM_hist_missing_stop_007"
+        },
+        {
+          "is_fixture": false,
+          "pnl": 7.8,
+          "process_classification": "GOOD_PROCESS_WIN",
+          "source_kind": "HISTORICAL_SIMULATED_COMPLETED_TRADE",
+          "trade_id": "V15I_SIM_hist_good_win_008"
+        }
+      ]
+    },
+    "labeled_fixtures": {
+      "class_counts": {
+        "BAD_PROCESS_LOSS": 3,
+        "BAD_PROCESS_WIN": 1,
+        "GOOD_PROCESS_LOSS": 1,
+        "GOOD_PROCESS_WIN": 1,
+        "UNDETERMINED": 1
+      },
+      "clearly_labelled": true,
+      "required_classes_present": {
+        "BAD_PROCESS_LOSS": true,
+        "BAD_PROCESS_WIN": true,
+        "GOOD_PROCESS_LOSS": true,
+        "GOOD_PROCESS_WIN": true,
+        "UNDETERMINED": true
+      },
+      "rows": [
+        {
+          "is_fixture": true,
+          "pnl": 12.5,
+          "process_classification": "GOOD_PROCESS_WIN",
+          "source_kind": "LABELED_FIXTURE_CONTROL",
+          "trade_id": "V15I_FIX_good_win"
+        },
+        {
+          "is_fixture": true,
+          "pnl": -8.0,
+          "process_classification": "GOOD_PROCESS_LOSS",
+          "source_kind": "LABELED_FIXTURE_CONTROL",
+          "trade_id": "V15I_FIX_good_loss"
+        },
+        {
+          "is_fixture": true,
+          "pnl": -15.0,
+          "process_classification": "BAD_PROCESS_LOSS",
+          "source_kind": "LABELED_FIXTURE_CONTROL",
+          "trade_id": "V15I_FIX_bad_stale_loss"
+        },
+        {
+          "is_fixture": true,
+          "pnl": -3.0,
+          "process_classification": "BAD_PROCESS_LOSS",
+          "source_kind": "LABELED_FIXTURE_CONTROL",
+          "trade_id": "V15I_FIX_bad_stale_later"
+        },
+        {
+          "is_fixture": true,
+          "pnl": 4.0,
+          "process_classification": "BAD_PROCESS_WIN",
+          "source_kind": "LABELED_FIXTURE_CONTROL",
+          "trade_id": "V15I_FIX_bad_cost_win"
+        },
+        {
+          "is_fixture": true,
+          "pnl": -1.0,
+          "process_classification": "UNDETERMINED",
+          "source_kind": "LABELED_FIXTURE_CONTROL",
+          "trade_id": "V15I_FIX_undetermined"
+        },
+        {
+          "is_fixture": true,
+          "pnl": -2.0,
+          "process_classification": "BAD_PROCESS_LOSS",
+          "source_kind": "LABELED_FIXTURE_CONTROL",
+          "trade_id": "V15I_FIX_missing_stop"
+        }
+      ]
+    }
+  },
+  "combined_packet_count": 15,
+  "control_fixture_label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "fixture_as_real_policy_effect_proof": false,
+  "fixture_controls_manifest": {
+    "clearly_labelled": true,
+    "fixture_count": 7,
+    "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+    "real_policy_effect_proof": false,
+    "real_trading_learning": false,
+    "schema": "v15_i_labeled_fixture_controls",
+    "trade_ids": [
+      "V15I_FIX_good_win",
+      "V15I_FIX_good_loss",
+      "V15I_FIX_bad_stale_loss",
+      "V15I_FIX_bad_stale_later",
+      "V15I_FIX_bad_cost_win",
+      "V15I_FIX_undetermined",
+      "V15I_FIX_missing_stop"
+    ]
+  },
+  "good_process_loss_non_suppression": {
+    "auto_block_all_similar_valid_trades": false,
+    "block_created": false,
+    "good_process_loss_count": 2,
+    "good_process_loss_non_suppression_status": "PASS",
+    "source_trade_id": "V15I_SIM_hist_good_loss_002"
+  },
+  "hard_risk_override_attempt": {
+    "ai_or_lesson_requested_prohibited_action": true,
+    "allowed_to_proceed": false,
+    "deterministic_rejected": true,
+    "deterministic_risk_final": true,
+    "deterministic_risk_rejected": true,
+    "fixture_label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+    "forbidden": true,
+    "mutation_applied": false,
+    "order_or_policy_mutation": false,
+    "requested_effect": "increase_leverage"
+  },
+  "hard_risk_override_path_test_status": "PASS",
+  "historical_simulated_trade_count": 8,
+  "label": "LESSON_REPLAY_LAB_NOT_REAL_POLICY_EFFECT",
+  "labeled_fixture_count": 7,
+  "mainnet": false,
+  "misrepresented_as_real_learning": false,
+  "new_policy_effect_lesson_count": 0,
+  "proof_digest": "f4ae7ac7d96c342cc91838e545e10851a8e257a8531629418aa2b7bdccf74bca",
+  "real_money": false,
+  "repeat_error_observations": [
+    {
+      "first_trade_id": "V15I_SIM_hist_bad_stale_loss_003",
+      "later_trade_id": "V15I_SIM_hist_bad_stale_later_004",
+      "policy_effect_emitted": false,
+      "signature": "ERR|stale_or_invalid_data"
+    }
+  ],
+  "replay_lab_status": "PASS",
+  "schema": "v15_i_lesson_replay_lab_report",
+  "simulated_trades_manifest": {
+    "all_completed": true,
+    "exchange_write_attempt_count": 0,
+    "fixture_misrepresented_as_real": false,
+    "historical_sim_label": "HISTORICAL_SIMULATED_TRADE_NOT_LIVE_EXCHANGE",
+    "live_market": false,
+    "mainnet": false,
+    "oos_reserved": false,
+    "process_record_label": "GENUINE_HISTORICAL_PROCESS_RECORD_SIMULATED",
+    "real_money": false,
+    "schema": "v15_i_historical_simulated_trades",
+    "trade_count": 8,
+    "trade_ids": [
+      "V15I_SIM_hist_good_win_001",
+      "V15I_SIM_hist_good_loss_002",
+      "V15I_SIM_hist_bad_stale_loss_003",
+      "V15I_SIM_hist_bad_stale_later_004",
+      "V15I_SIM_hist_bad_cost_win_005",
+      "V15I_SIM_hist_undetermined_006",
+      "V15I_SIM_hist_missing_stop_007",
+      "V15I_SIM_hist_good_win_008"
+    ]
+  },
+  "unique_bad_signatures": [
+    "ERR|stale_or_invalid_data",
+    "ERR|cost_gate_failed",
+    "ERR|invalid_or_absent_stop"
+  ]
+}
