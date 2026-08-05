@@ -1,7 +1,7 @@
 {
   "schema": "v12_closed_loop_redteam",
   "program_id": "NEXUS_V12_CLOSED_LOOP_REDTEAM",
-  "created_at": "2026-08-05T07:50:57Z",
+  "created_at": "2026-08-05T07:51:08Z",
   "lane": "V12-F",
   "branch": "feature/v12-closed-loop-redteam",
   "base_head": "e4e96299840da2e5152cf2850135cebc67d66cd0",
@@ -153,7 +153,7 @@
       "critical": false,
       "attack_blocked": true,
       "evidence": {
-        "initial_sha": "2992580f67470e3dc0967f140d04912c1d7cabbccbc8708721967349b769f4cd",
+        "initial_sha": "fe165994ab8d2885c21a1d8c74350c6af8ef17120d2004e3ca059cbee9a5113f",
         "tamper_verify_fails": true,
         "missing_digest_fails": true
       }
@@ -300,6 +300,6 @@
   "passed": true,
   "critical_findings": [],
   "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v12_f_closed_loop_redteam",
-  "commit": "fc776ac0a137ea36e8f58a119ddaf12d78ba59b9",
-  "head": "fc776ac0a137ea36e8f58a119ddaf12d78ba59b9"
+  "commit": "21cec23903e557ab7f530425cba4168bf3495b65",
+  "head": "21cec23903e557ab7f530425cba4168bf3495b65"
 }
