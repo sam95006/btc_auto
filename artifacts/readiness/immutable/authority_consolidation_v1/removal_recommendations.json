@@ -1,0 +1,1136 @@
+{
+  "generated_at": "2026-08-05T03:35:56Z",
+  "lane": "V11_H_AUTHORITY_CONSOLIDATION",
+  "policy": {
+    "delete_now_allowed": false,
+    "mass_delete_compatibility_modules": "BANNED",
+    "phase": "recommend_only"
+  },
+  "queues": {
+    "future_remove": [
+      {
+        "authority_id": "private_core.execution.simulator_v1_1",
+        "delete_now": false,
+        "domain": "execution",
+        "module": "backend.nexus_autonomy.execution_simulator_v1",
+        "notes": "Older V1 simulator; parallel fee/fill/risk constants vs canonical engine.",
+        "preconditions": [
+          "All Private Core callers for domain=execution route through canonical authority",
+          "CI gate remains green after caller migration",
+          "Readiness artifacts regenerated without referencing removed module",
+          "Founder approval for deletion wave"
+        ],
+        "recommended_action": "future_remove",
+        "role": "compatibility_shim",
+        "severity": "high",
+        "symbol": "AutonomousExecutionSimulatorV1"
+      },
+      {
+        "authority_id": "private_core.fill.engine_v1_1",
+        "delete_now": false,
+        "domain": "fill",
+        "module": "backend.nexus_autonomy.execution_simulator_v1",
+        "notes": "V1 simulator embeds fill logic; supersede via orchestrator adapter.",
+        "preconditions": [
+          "All Private Core callers for domain=fill route through canonical authority",
+          "CI gate remains green after caller migration",
+          "Readiness artifacts regenerated without referencing removed module",
+          "Founder approval for deletion wave"
+        ],
+        "recommended_action": "future_remove",
+        "role": "compatibility_shim",
+        "severity": "high",
+        "symbol": null
+      },
+      {
+        "authority_id": "private_core.risk.gates_v1_1",
+        "delete_now": false,
+        "domain": "risk",
+        "module": "backend.nexus_autonomy.execution_simulator_v1",
+        "notes": "V1 simulator duplicates forbidden-action risk constants.",
+        "preconditions": [
+          "All Private Core callers for domain=risk route through canonical authority",
+          "CI gate remains green after caller migration",
+          "Readiness artifacts regenerated without referencing removed module",
+          "Founder approval for deletion wave"
+        ],
+        "recommended_action": "future_remove",
+        "role": "compatibility_shim",
+        "severity": "high",
+        "symbol": "FORBIDDEN_ACTIONS"
+      },
+      {
+        "authority_id": "private_core.checkpoint.session_recovery",
+        "delete_now": false,
+        "domain": "checkpoint",
+        "module": "backend.nexus_autonomy.session_orchestrator_v1",
+        "notes": "V1 orchestrator checkpoint method; prefer V1.1 + recovery invariants.",
+        "preconditions": [
+          "All Private Core callers for domain=checkpoint route through canonical authority",
+          "CI gate remains green after caller migration",
+          "Readiness artifacts regenerated without referencing removed module",
+          "Founder approval for deletion wave"
+        ],
+        "recommended_action": "future_remove",
+        "role": "obsolete_entry",
+        "severity": "medium",
+        "symbol": "checkpoint"
+      }
+    ],
+    "migrate_callers": [
+      {
+        "authority_id": "private_core.cost.model_v1_1",
+        "delete_now": false,
+        "domain": "cost",
+        "module": "backend.nexus_strategy_engine.cost_semantics",
+        "notes": "Divergent COST_MODEL_VERSION string (NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1 vs founder-conservative-v1-1-*). Contract drift risk for strategy↔execution evidence.",
+        "preconditions": [
+          "Inventory imports of competitor for domain=cost",
+          "Replace with canonical module imports",
+          "Keep competitor as thin re-export shim until delete wave"
+        ],
+        "recommended_action": "migrate_callers",
+        "role": "parallel_lane",
+        "severity": "critical",
+        "symbol": "COST_MODEL_VERSION"
+      },
+      {
+        "authority_id": "private_core.fill.engine_v1_1",
+        "delete_now": false,
+        "domain": "fill",
+        "module": "backend.nexus_autonomy.execution_simulator_v1_1",
+        "notes": "Embedded fill policy duplicates fill_engine semantics.",
+        "preconditions": [
+          "Inventory imports of competitor for domain=fill",
+          "Replace with canonical module imports",
+          "Keep competitor as thin re-export shim until delete wave"
+        ],
+        "recommended_action": "migrate_callers",
+        "role": "compatibility_shim",
+        "severity": "critical",
+        "symbol": "AutonomousExecutionSimulatorV1_1"
+      },
+      {
+        "authority_id": "private_core.provider.retry_policy_v1",
+        "delete_now": false,
+        "domain": "provider_retry",
+        "module": "backend.nexus_edge_discovery.provider_transport_v23",
+        "notes": "Reflection V2.3 transport implements its own backoff/retry rather than importing backend.nexus_provider.retry_policy.",
+        "preconditions": [
+          "Inventory imports of competitor for domain=provider_retry",
+          "Replace with canonical module imports",
+          "Keep competitor as thin re-export shim until delete wave"
+        ],
+        "recommended_action": "migrate_callers",
+        "role": "parallel_lane",
+        "severity": "critical",
+        "symbol": "exponential_backoff_with_jitter"
+      },
+      {
+        "authority_id": "private_core.cost.model_v1_1",
+        "delete_now": false,
+        "domain": "cost",
+        "module": "backend.nexus_autonomy.execution_simulator_v1_1",
+        "notes": "Hard-coded TAKER_FEE/MAKER_FEE float path vs Decimal cost_model.",
+        "preconditions": [
+          "Inventory imports of competitor for domain=cost",
+          "Replace with canonical module imports",
+          "Keep competitor as thin re-export shim until delete wave"
+        ],
+        "recommended_action": "migrate_callers",
+        "role": "compatibility_shim",
+        "severity": "high",
+        "symbol": "TAKER_FEE"
+      },
+      {
+        "authority_id": "private_core.execution.simulator_v1_1",
+        "delete_now": false,
+        "domain": "execution",
+        "module": "backend.nexus_autonomy.execution_simulator_v1_1",
+        "notes": "Documented COMPATIBILITY ADAPTER ONLY; still contains full fill/cost/risk logic and can be mistaken for a second authority.",
+        "preconditions": [
+          "Inventory imports of competitor for domain=execution",
+          "Replace with canonical module imports",
+          "Keep competitor as thin re-export shim until delete wave"
+        ],
+        "recommended_action": "migrate_callers",
+        "role": "compatibility_shim",
+        "severity": "high",
+        "symbol": "AutonomousExecutionSimulatorV1_1"
+      },
+      {
+        "authority_id": "private_core.provider.retry_policy_v1",
+        "delete_now": false,
+        "domain": "provider_retry",
+        "module": "tools.research.stage4_provider_chain",
+        "notes": "Stage4 research circuit breaker; parallel to ProviderCircuitBreaker.",
+        "preconditions": [
+          "Inventory imports of competitor for domain=provider_retry",
+          "Replace with canonical module imports",
+          "Keep competitor as thin re-export shim until delete wave"
+        ],
+        "recommended_action": "migrate_callers",
+        "role": "fixture_tool",
+        "severity": "high",
+        "symbol": "Stage4ProviderCircuitBreaker"
+      },
+      {
+        "authority_id": "private_core.risk.gates_v1_1",
+        "delete_now": false,
+        "domain": "risk",
+        "module": "backend.nexus_autonomy.execution_simulator_v1_1",
+        "notes": "Duplicated forbidden-action set inside compat simulator.",
+        "preconditions": [
+          "Inventory imports of competitor for domain=risk",
+          "Replace with canonical module imports",
+          "Keep competitor as thin re-export shim until delete wave"
+        ],
+        "recommended_action": "migrate_callers",
+        "role": "compatibility_shim",
+        "severity": "high",
+        "symbol": "FORBIDDEN_ACTIONS"
+      },
+      {
+        "authority_id": "private_core.checkpoint.session_recovery",
+        "delete_now": false,
+        "domain": "checkpoint",
+        "module": "backend.nexus_edge_discovery.quota_aware_v23",
+        "notes": "Edge-discovery checkpoint helpers; overlaps reflection checkpoint.",
+        "preconditions": [
+          "Inventory imports of competitor for domain=checkpoint",
+          "Replace with canonical module imports",
+          "Keep competitor as thin re-export shim until delete wave"
+        ],
+        "recommended_action": "migrate_callers",
+        "role": "compatibility_shim",
+        "severity": "medium",
+        "symbol": "checkpoint_path"
+      },
+      {
+        "authority_id": "private_core.fill.engine_v1_1",
+        "delete_now": false,
+        "domain": "fill",
+        "module": "backend.nexus_autonomy.execution_models_v1_1",
+        "notes": "Shared V1.1 fill policy docs/models for compat simulator.",
+        "preconditions": [
+          "Inventory imports of competitor for domain=fill",
+          "Replace with canonical module imports",
+          "Keep competitor as thin re-export shim until delete wave"
+        ],
+        "recommended_action": "migrate_callers",
+        "role": "compatibility_shim",
+        "severity": "medium",
+        "symbol": "FILL_POLICY_DOC"
+      },
+      {
+        "authority_id": "private_core.provider.retry_policy_v1",
+        "delete_now": false,
+        "domain": "provider_retry",
+        "module": "backend.nexus_real_shadow.http_client",
+        "notes": "Shadow HTTP client embeds independent retry/backoff/circuit.",
+        "preconditions": [
+          "Inventory imports of competitor for domain=provider_retry",
+          "Replace with canonical module imports",
+          "Keep competitor as thin re-export shim until delete wave"
+        ],
+        "recommended_action": "migrate_callers",
+        "role": "parallel_lane",
+        "severity": "medium",
+        "symbol": "CircuitBreakerState"
+      }
+    ],
+    "quarantine": [
+      {
+        "authority_id": "private_core.execution.simulator_v1_1",
+        "delete_now": false,
+        "domain": "execution",
+        "module": "backend.autonomy.pure_ai_execution",
+        "notes": "Legacy autonomy execution bridge; not Session→Execution adapter.",
+        "preconditions": [
+          "Document lane boundary in AGENTS / ownership contract",
+          "Ensure CI import-graph forbids Session traffic into quarantined module"
+        ],
+        "recommended_action": "quarantine",
+        "role": "legacy_product",
+        "severity": "medium",
+        "symbol": null
+      },
+      {
+        "authority_id": "private_core.execution.simulator_v1_1",
+        "delete_now": false,
+        "domain": "execution",
+        "module": "backend.trading.binance_spot_testnet_execution_engine",
+        "notes": "Binance spot testnet execution engine; product lane.",
+        "preconditions": [
+          "Document lane boundary in AGENTS / ownership contract",
+          "Ensure CI import-graph forbids Session traffic into quarantined module"
+        ],
+        "recommended_action": "quarantine",
+        "role": "legacy_product",
+        "severity": "medium",
+        "symbol": null
+      },
+      {
+        "authority_id": "private_core.execution.simulator_v1_1",
+        "delete_now": false,
+        "domain": "execution",
+        "module": "backend.trading.binance_testnet_execution_engine",
+        "notes": "Binance testnet execution engine; product lane, not Private Core Session authority.",
+        "preconditions": [
+          "Document lane boundary in AGENTS / ownership contract",
+          "Ensure CI import-graph forbids Session traffic into quarantined module"
+        ],
+        "recommended_action": "quarantine",
+        "role": "legacy_product",
+        "severity": "medium",
+        "symbol": null
+      },
+      {
+        "authority_id": "private_core.execution.simulator_v1_1",
+        "delete_now": false,
+        "domain": "execution",
+        "module": "backend.trading.paper_order_execution_engine",
+        "notes": "Product paper execution path outside Private Core simulated contract.",
+        "preconditions": [
+          "Document lane boundary in AGENTS / ownership contract",
+          "Ensure CI import-graph forbids Session traffic into quarantined module"
+        ],
+        "recommended_action": "quarantine",
+        "role": "legacy_product",
+        "severity": "medium",
+        "symbol": null
+      },
+      {
+        "authority_id": "private_core.risk.gates_v1_1",
+        "delete_now": false,
+        "domain": "risk",
+        "module": "backend.risk.risk_control_engine",
+        "notes": "Product risk engine; out of Session simulated gate scope.",
+        "preconditions": [
+          "Document lane boundary in AGENTS / ownership contract",
+          "Ensure CI import-graph forbids Session traffic into quarantined module"
+        ],
+        "recommended_action": "quarantine",
+        "role": "legacy_product",
+        "severity": "medium",
+        "symbol": null
+      },
+      {
+        "authority_id": "private_core.provider.retry_policy_v1",
+        "delete_now": false,
+        "domain": "provider_retry",
+        "module": "backend.trading.binance_rate_limit_guard",
+        "notes": "Exchange-specific rate-limit guard outside provider package.",
+        "preconditions": [
+          "Document lane boundary in AGENTS / ownership contract",
+          "Ensure CI import-graph forbids Session traffic into quarantined module"
+        ],
+        "recommended_action": "quarantine",
+        "role": "legacy_product",
+        "severity": "low",
+        "symbol": null
+      }
+    ],
+    "retain_compat": [
+      {
+        "authority_id": "private_core.lifecycle.session_sm_v1_1",
+        "delete_now": false,
+        "domain": "lifecycle",
+        "module": "backend.nexus_private_control.state_machine",
+        "notes": "Founder control-plane lifecycle uses a different state vocabulary (IDLE/STARTING/.../KILLED) vs Session SM. Dual lifecycle authorities.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "critical",
+        "symbol": "CANONICAL_STATES"
+      },
+      {
+        "authority_id": "private_core.checkpoint.session_recovery",
+        "delete_now": false,
+        "domain": "checkpoint",
+        "module": "backend.nexus_private_control.checkpoint",
+        "notes": "Control-plane local checkpoint store; different schema/root.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "high",
+        "symbol": "CheckpointStore"
+      },
+      {
+        "authority_id": "private_core.checkpoint.session_recovery",
+        "delete_now": false,
+        "domain": "checkpoint",
+        "module": "backend.nexus_reflection.checkpoint",
+        "notes": "Blind Reflection V2.3 checkpoint schema v4; provider-resume authority.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "high",
+        "symbol": "checkpoint_path"
+      },
+      {
+        "authority_id": "private_core.cost.model_v1_1",
+        "delete_now": false,
+        "domain": "cost",
+        "module": "backend.nexus_demo_execution.trade_geometry",
+        "notes": "Demo geometry cost estimator; separate fee constants.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "high",
+        "symbol": "estimate_costs"
+      },
+      {
+        "authority_id": "private_core.checkpoint.session_recovery",
+        "delete_now": false,
+        "domain": "checkpoint",
+        "module": "backend.nexus_reflection.v23_resume_v10",
+        "notes": "V10 resume checkpoint destination helper.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "medium",
+        "symbol": "checkpoint_dest"
+      },
+      {
+        "authority_id": "private_core.cost.model_v1_1",
+        "delete_now": false,
+        "domain": "cost",
+        "module": "backend.nexus_demo_execution.fee_rate",
+        "notes": "Demo fee-rate helpers; must not override simulated cost bridge.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "medium",
+        "symbol": null
+      },
+      {
+        "authority_id": "private_core.execution.simulator_v1_1",
+        "delete_now": false,
+        "domain": "execution",
+        "module": "backend.nexus_real_shadow.real_price_shadow",
+        "notes": "Shadow-lane fill simulation; must not feed Session orchestrator authority.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "medium",
+        "symbol": "simulate_fill"
+      },
+      {
+        "authority_id": "private_core.fill.engine_v1_1",
+        "delete_now": false,
+        "domain": "fill",
+        "module": "backend.nexus_real_shadow.real_price_shadow",
+        "notes": "Independent shadow fill path.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "medium",
+        "symbol": "simulate_fill"
+      },
+      {
+        "authority_id": "private_core.lifecycle.session_sm_v1_1",
+        "delete_now": false,
+        "domain": "lifecycle",
+        "module": "backend.nexus_autonomy.qualification_promotion_sm",
+        "notes": "Qualification promotion state machine; separate from Session lifecycle.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "medium",
+        "symbol": null
+      },
+      {
+        "authority_id": "private_core.lifecycle.session_sm_v1_1",
+        "delete_now": false,
+        "domain": "lifecycle",
+        "module": "backend.nexus_research.demo_autonomous.position_lifecycle",
+        "notes": "Demo position lifecycle; not Session orchestrator authority.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "medium",
+        "symbol": "DemoPositionLifecycleController"
+      },
+      {
+        "authority_id": "private_core.lifecycle.session_sm_v1_1",
+        "delete_now": false,
+        "domain": "lifecycle",
+        "module": "backend.nexus_research.demo_execution.state_machine",
+        "notes": "Demo order lifecycle (17 states); lane-local.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "medium",
+        "symbol": "DemoOrderStateMachine"
+      },
+      {
+        "authority_id": "private_core.risk.gates_v1_1",
+        "delete_now": false,
+        "domain": "risk",
+        "module": "backend.nexus_demo_execution.risk_sizing",
+        "notes": "Demo sizing helpers.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "medium",
+        "symbol": null
+      },
+      {
+        "authority_id": "private_core.risk.gates_v1_1",
+        "delete_now": false,
+        "domain": "risk",
+        "module": "backend.nexus_research.risk_engine",
+        "notes": "Research risk engine; must not override execution risk_gates.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "medium",
+        "symbol": null
+      },
+      {
+        "authority_id": "private_core.cost.model_v1_1",
+        "delete_now": false,
+        "domain": "cost",
+        "module": "backend.nexus_edge_discovery.taxonomy_audit",
+        "notes": "Taxonomy audit references a cost model version for evidence labeling only.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "fixture_tool",
+        "severity": "low",
+        "symbol": "COST_MODEL_VERSION"
+      },
+      {
+        "authority_id": "private_core.lifecycle.session_sm_v1_1",
+        "delete_now": false,
+        "domain": "lifecycle",
+        "module": "backend.nexus_research.demo_exchange.state_machine",
+        "notes": "Demo exchange account state machine.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "low",
+        "symbol": "DemoStateMachine"
+      },
+      {
+        "authority_id": "private_core.provider.retry_policy_v1",
+        "delete_now": false,
+        "domain": "provider_retry",
+        "module": "backend.nexus_research.runtime_supervisor",
+        "notes": "Job registry retry/backoff; not LLM provider transport.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "low",
+        "symbol": null
+      },
+      {
+        "authority_id": "private_core.risk.gates_v1_1",
+        "delete_now": false,
+        "domain": "risk",
+        "module": "backend.nexus_research.demo_exchange.identity",
+        "notes": "Demo identity helpers may reference risk/margin fields; not Session risk_gates.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "low",
+        "symbol": null
+      }
+    ]
+  },
+  "recommendation_count": 37,
+  "recommendations": [
+    {
+      "authority_id": "private_core.execution.simulator_v1_1",
+      "delete_now": false,
+      "domain": "execution",
+      "module": "backend.nexus_autonomy.execution_simulator_v1",
+      "notes": "Older V1 simulator; parallel fee/fill/risk constants vs canonical engine.",
+      "preconditions": [
+        "All Private Core callers for domain=execution route through canonical authority",
+        "CI gate remains green after caller migration",
+        "Readiness artifacts regenerated without referencing removed module",
+        "Founder approval for deletion wave"
+      ],
+      "recommended_action": "future_remove",
+      "role": "compatibility_shim",
+      "severity": "high",
+      "symbol": "AutonomousExecutionSimulatorV1"
+    },
+    {
+      "authority_id": "private_core.fill.engine_v1_1",
+      "delete_now": false,
+      "domain": "fill",
+      "module": "backend.nexus_autonomy.execution_simulator_v1",
+      "notes": "V1 simulator embeds fill logic; supersede via orchestrator adapter.",
+      "preconditions": [
+        "All Private Core callers for domain=fill route through canonical authority",
+        "CI gate remains green after caller migration",
+        "Readiness artifacts regenerated without referencing removed module",
+        "Founder approval for deletion wave"
+      ],
+      "recommended_action": "future_remove",
+      "role": "compatibility_shim",
+      "severity": "high",
+      "symbol": null
+    },
+    {
+      "authority_id": "private_core.risk.gates_v1_1",
+      "delete_now": false,
+      "domain": "risk",
+      "module": "backend.nexus_autonomy.execution_simulator_v1",
+      "notes": "V1 simulator duplicates forbidden-action risk constants.",
+      "preconditions": [
+        "All Private Core callers for domain=risk route through canonical authority",
+        "CI gate remains green after caller migration",
+        "Readiness artifacts regenerated without referencing removed module",
+        "Founder approval for deletion wave"
+      ],
+      "recommended_action": "future_remove",
+      "role": "compatibility_shim",
+      "severity": "high",
+      "symbol": "FORBIDDEN_ACTIONS"
+    },
+    {
+      "authority_id": "private_core.checkpoint.session_recovery",
+      "delete_now": false,
+      "domain": "checkpoint",
+      "module": "backend.nexus_autonomy.session_orchestrator_v1",
+      "notes": "V1 orchestrator checkpoint method; prefer V1.1 + recovery invariants.",
+      "preconditions": [
+        "All Private Core callers for domain=checkpoint route through canonical authority",
+        "CI gate remains green after caller migration",
+        "Readiness artifacts regenerated without referencing removed module",
+        "Founder approval for deletion wave"
+      ],
+      "recommended_action": "future_remove",
+      "role": "obsolete_entry",
+      "severity": "medium",
+      "symbol": "checkpoint"
+    },
+    {
+      "authority_id": "private_core.cost.model_v1_1",
+      "delete_now": false,
+      "domain": "cost",
+      "module": "backend.nexus_strategy_engine.cost_semantics",
+      "notes": "Divergent COST_MODEL_VERSION string (NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1 vs founder-conservative-v1-1-*). Contract drift risk for strategy↔execution evidence.",
+      "preconditions": [
+        "Inventory imports of competitor for domain=cost",
+        "Replace with canonical module imports",
+        "Keep competitor as thin re-export shim until delete wave"
+      ],
+      "recommended_action": "migrate_callers",
+      "role": "parallel_lane",
+      "severity": "critical",
+      "symbol": "COST_MODEL_VERSION"
+    },
+    {
+      "authority_id": "private_core.fill.engine_v1_1",
+      "delete_now": false,
+      "domain": "fill",
+      "module": "backend.nexus_autonomy.execution_simulator_v1_1",
+      "notes": "Embedded fill policy duplicates fill_engine semantics.",
+      "preconditions": [
+        "Inventory imports of competitor for domain=fill",
+        "Replace with canonical module imports",
+        "Keep competitor as thin re-export shim until delete wave"
+      ],
+      "recommended_action": "migrate_callers",
+      "role": "compatibility_shim",
+      "severity": "critical",
+      "symbol": "AutonomousExecutionSimulatorV1_1"
+    },
+    {
+      "authority_id": "private_core.provider.retry_policy_v1",
+      "delete_now": false,
+      "domain": "provider_retry",
+      "module": "backend.nexus_edge_discovery.provider_transport_v23",
+      "notes": "Reflection V2.3 transport implements its own backoff/retry rather than importing backend.nexus_provider.retry_policy.",
+      "preconditions": [
+        "Inventory imports of competitor for domain=provider_retry",
+        "Replace with canonical module imports",
+        "Keep competitor as thin re-export shim until delete wave"
+      ],
+      "recommended_action": "migrate_callers",
+      "role": "parallel_lane",
+      "severity": "critical",
+      "symbol": "exponential_backoff_with_jitter"
+    },
+    {
+      "authority_id": "private_core.cost.model_v1_1",
+      "delete_now": false,
+      "domain": "cost",
+      "module": "backend.nexus_autonomy.execution_simulator_v1_1",
+      "notes": "Hard-coded TAKER_FEE/MAKER_FEE float path vs Decimal cost_model.",
+      "preconditions": [
+        "Inventory imports of competitor for domain=cost",
+        "Replace with canonical module imports",
+        "Keep competitor as thin re-export shim until delete wave"
+      ],
+      "recommended_action": "migrate_callers",
+      "role": "compatibility_shim",
+      "severity": "high",
+      "symbol": "TAKER_FEE"
+    },
+    {
+      "authority_id": "private_core.execution.simulator_v1_1",
+      "delete_now": false,
+      "domain": "execution",
+      "module": "backend.nexus_autonomy.execution_simulator_v1_1",
+      "notes": "Documented COMPATIBILITY ADAPTER ONLY; still contains full fill/cost/risk logic and can be mistaken for a second authority.",
+      "preconditions": [
+        "Inventory imports of competitor for domain=execution",
+        "Replace with canonical module imports",
+        "Keep competitor as thin re-export shim until delete wave"
+      ],
+      "recommended_action": "migrate_callers",
+      "role": "compatibility_shim",
+      "severity": "high",
+      "symbol": "AutonomousExecutionSimulatorV1_1"
+    },
+    {
+      "authority_id": "private_core.provider.retry_policy_v1",
+      "delete_now": false,
+      "domain": "provider_retry",
+      "module": "tools.research.stage4_provider_chain",
+      "notes": "Stage4 research circuit breaker; parallel to ProviderCircuitBreaker.",
+      "preconditions": [
+        "Inventory imports of competitor for domain=provider_retry",
+        "Replace with canonical module imports",
+        "Keep competitor as thin re-export shim until delete wave"
+      ],
+      "recommended_action": "migrate_callers",
+      "role": "fixture_tool",
+      "severity": "high",
+      "symbol": "Stage4ProviderCircuitBreaker"
+    },
+    {
+      "authority_id": "private_core.risk.gates_v1_1",
+      "delete_now": false,
+      "domain": "risk",
+      "module": "backend.nexus_autonomy.execution_simulator_v1_1",
+      "notes": "Duplicated forbidden-action set inside compat simulator.",
+      "preconditions": [
+        "Inventory imports of competitor for domain=risk",
+        "Replace with canonical module imports",
+        "Keep competitor as thin re-export shim until delete wave"
+      ],
+      "recommended_action": "migrate_callers",
+      "role": "compatibility_shim",
+      "severity": "high",
+      "symbol": "FORBIDDEN_ACTIONS"
+    },
+    {
+      "authority_id": "private_core.checkpoint.session_recovery",
+      "delete_now": false,
+      "domain": "checkpoint",
+      "module": "backend.nexus_edge_discovery.quota_aware_v23",
+      "notes": "Edge-discovery checkpoint helpers; overlaps reflection checkpoint.",
+      "preconditions": [
+        "Inventory imports of competitor for domain=checkpoint",
+        "Replace with canonical module imports",
+        "Keep competitor as thin re-export shim until delete wave"
+      ],
+      "recommended_action": "migrate_callers",
+      "role": "compatibility_shim",
+      "severity": "medium",
+      "symbol": "checkpoint_path"
+    },
+    {
+      "authority_id": "private_core.fill.engine_v1_1",
+      "delete_now": false,
+      "domain": "fill",
+      "module": "backend.nexus_autonomy.execution_models_v1_1",
+      "notes": "Shared V1.1 fill policy docs/models for compat simulator.",
+      "preconditions": [
+        "Inventory imports of competitor for domain=fill",
+        "Replace with canonical module imports",
+        "Keep competitor as thin re-export shim until delete wave"
+      ],
+      "recommended_action": "migrate_callers",
+      "role": "compatibility_shim",
+      "severity": "medium",
+      "symbol": "FILL_POLICY_DOC"
+    },
+    {
+      "authority_id": "private_core.provider.retry_policy_v1",
+      "delete_now": false,
+      "domain": "provider_retry",
+      "module": "backend.nexus_real_shadow.http_client",
+      "notes": "Shadow HTTP client embeds independent retry/backoff/circuit.",
+      "preconditions": [
+        "Inventory imports of competitor for domain=provider_retry",
+        "Replace with canonical module imports",
+        "Keep competitor as thin re-export shim until delete wave"
+      ],
+      "recommended_action": "migrate_callers",
+      "role": "parallel_lane",
+      "severity": "medium",
+      "symbol": "CircuitBreakerState"
+    },
+    {
+      "authority_id": "private_core.execution.simulator_v1_1",
+      "delete_now": false,
+      "domain": "execution",
+      "module": "backend.autonomy.pure_ai_execution",
+      "notes": "Legacy autonomy execution bridge; not Session→Execution adapter.",
+      "preconditions": [
+        "Document lane boundary in AGENTS / ownership contract",
+        "Ensure CI import-graph forbids Session traffic into quarantined module"
+      ],
+      "recommended_action": "quarantine",
+      "role": "legacy_product",
+      "severity": "medium",
+      "symbol": null
+    },
+    {
+      "authority_id": "private_core.execution.simulator_v1_1",
+      "delete_now": false,
+      "domain": "execution",
+      "module": "backend.trading.binance_spot_testnet_execution_engine",
+      "notes": "Binance spot testnet execution engine; product lane.",
+      "preconditions": [
+        "Document lane boundary in AGENTS / ownership contract",
+        "Ensure CI import-graph forbids Session traffic into quarantined module"
+      ],
+      "recommended_action": "quarantine",
+      "role": "legacy_product",
+      "severity": "medium",
+      "symbol": null
+    },
+    {
+      "authority_id": "private_core.execution.simulator_v1_1",
+      "delete_now": false,
+      "domain": "execution",
+      "module": "backend.trading.binance_testnet_execution_engine",
+      "notes": "Binance testnet execution engine; product lane, not Private Core Session authority.",
+      "preconditions": [
+        "Document lane boundary in AGENTS / ownership contract",
+        "Ensure CI import-graph forbids Session traffic into quarantined module"
+      ],
+      "recommended_action": "quarantine",
+      "role": "legacy_product",
+      "severity": "medium",
+      "symbol": null
+    },
+    {
+      "authority_id": "private_core.execution.simulator_v1_1",
+      "delete_now": false,
+      "domain": "execution",
+      "module": "backend.trading.paper_order_execution_engine",
+      "notes": "Product paper execution path outside Private Core simulated contract.",
+      "preconditions": [
+        "Document lane boundary in AGENTS / ownership contract",
+        "Ensure CI import-graph forbids Session traffic into quarantined module"
+      ],
+      "recommended_action": "quarantine",
+      "role": "legacy_product",
+      "severity": "medium",
+      "symbol": null
+    },
+    {
+      "authority_id": "private_core.risk.gates_v1_1",
+      "delete_now": false,
+      "domain": "risk",
+      "module": "backend.risk.risk_control_engine",
+      "notes": "Product risk engine; out of Session simulated gate scope.",
+      "preconditions": [
+        "Document lane boundary in AGENTS / ownership contract",
+        "Ensure CI import-graph forbids Session traffic into quarantined module"
+      ],
+      "recommended_action": "quarantine",
+      "role": "legacy_product",
+      "severity": "medium",
+      "symbol": null
+    },
+    {
+      "authority_id": "private_core.provider.retry_policy_v1",
+      "delete_now": false,
+      "domain": "provider_retry",
+      "module": "backend.trading.binance_rate_limit_guard",
+      "notes": "Exchange-specific rate-limit guard outside provider package.",
+      "preconditions": [
+        "Document lane boundary in AGENTS / ownership contract",
+        "Ensure CI import-graph forbids Session traffic into quarantined module"
+      ],
+      "recommended_action": "quarantine",
+      "role": "legacy_product",
+      "severity": "low",
+      "symbol": null
+    },
+    {
+      "authority_id": "private_core.lifecycle.session_sm_v1_1",
+      "delete_now": false,
+      "domain": "lifecycle",
+      "module": "backend.nexus_private_control.state_machine",
+      "notes": "Founder control-plane lifecycle uses a different state vocabulary (IDLE/STARTING/.../KILLED) vs Session SM. Dual lifecycle authorities.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "parallel_lane",
+      "severity": "critical",
+      "symbol": "CANONICAL_STATES"
+    },
+    {
+      "authority_id": "private_core.checkpoint.session_recovery",
+      "delete_now": false,
+      "domain": "checkpoint",
+      "module": "backend.nexus_private_control.checkpoint",
+      "notes": "Control-plane local checkpoint store; different schema/root.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "parallel_lane",
+      "severity": "high",
+      "symbol": "CheckpointStore"
+    },
+    {
+      "authority_id": "private_core.checkpoint.session_recovery",
+      "delete_now": false,
+      "domain": "checkpoint",
+      "module": "backend.nexus_reflection.checkpoint",
+      "notes": "Blind Reflection V2.3 checkpoint schema v4; provider-resume authority.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "parallel_lane",
+      "severity": "high",
+      "symbol": "checkpoint_path"
+    },
+    {
+      "authority_id": "private_core.cost.model_v1_1",
+      "delete_now": false,
+      "domain": "cost",
+      "module": "backend.nexus_demo_execution.trade_geometry",
+      "notes": "Demo geometry cost estimator; separate fee constants.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "parallel_lane",
+      "severity": "high",
+      "symbol": "estimate_costs"
+    },
+    {
+      "authority_id": "private_core.checkpoint.session_recovery",
+      "delete_now": false,
+      "domain": "checkpoint",
+      "module": "backend.nexus_reflection.v23_resume_v10",
+      "notes": "V10 resume checkpoint destination helper.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "parallel_lane",
+      "severity": "medium",
+      "symbol": "checkpoint_dest"
+    },
+    {
+      "authority_id": "private_core.cost.model_v1_1",
+      "delete_now": false,
+      "domain": "cost",
+      "module": "backend.nexus_demo_execution.fee_rate",
+      "notes": "Demo fee-rate helpers; must not override simulated cost bridge.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "parallel_lane",
+      "severity": "medium",
+      "symbol": null
+    },
+    {
+      "authority_id": "private_core.execution.simulator_v1_1",
+      "delete_now": false,
+      "domain": "execution",
+      "module": "backend.nexus_real_shadow.real_price_shadow",
+      "notes": "Shadow-lane fill simulation; must not feed Session orchestrator authority.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "parallel_lane",
+      "severity": "medium",
+      "symbol": "simulate_fill"
+    },
+    {
+      "authority_id": "private_core.fill.engine_v1_1",
+      "delete_now": false,
+      "domain": "fill",
+      "module": "backend.nexus_real_shadow.real_price_shadow",
+      "notes": "Independent shadow fill path.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "parallel_lane",
+      "severity": "medium",
+      "symbol": "simulate_fill"
+    },
+    {
+      "authority_id": "private_core.lifecycle.session_sm_v1_1",
+      "delete_now": false,
+      "domain": "lifecycle",
+      "module": "backend.nexus_autonomy.qualification_promotion_sm",
+      "notes": "Qualification promotion state machine; separate from Session lifecycle.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "parallel_lane",
+      "severity": "medium",
+      "symbol": null
+    },
+    {
+      "authority_id": "private_core.lifecycle.session_sm_v1_1",
+      "delete_now": false,
+      "domain": "lifecycle",
+      "module": "backend.nexus_research.demo_autonomous.position_lifecycle",
+      "notes": "Demo position lifecycle; not Session orchestrator authority.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "parallel_lane",
+      "severity": "medium",
+      "symbol": "DemoPositionLifecycleController"
+    },
+    {
+      "authority_id": "private_core.lifecycle.session_sm_v1_1",
+      "delete_now": false,
+      "domain": "lifecycle",
+      "module": "backend.nexus_research.demo_execution.state_machine",
+      "notes": "Demo order lifecycle (17 states); lane-local.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "parallel_lane",
+      "severity": "medium",
+      "symbol": "DemoOrderStateMachine"
+    },
+    {
+      "authority_id": "private_core.risk.gates_v1_1",
+      "delete_now": false,
+      "domain": "risk",
+      "module": "backend.nexus_demo_execution.risk_sizing",
+      "notes": "Demo sizing helpers.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "parallel_lane",
+      "severity": "medium",
+      "symbol": null
+    },
+    {
+      "authority_id": "private_core.risk.gates_v1_1",
+      "delete_now": false,
+      "domain": "risk",
+      "module": "backend.nexus_research.risk_engine",
+      "notes": "Research risk engine; must not override execution risk_gates.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "parallel_lane",
+      "severity": "medium",
+      "symbol": null
+    },
+    {
+      "authority_id": "private_core.cost.model_v1_1",
+      "delete_now": false,
+      "domain": "cost",
+      "module": "backend.nexus_edge_discovery.taxonomy_audit",
+      "notes": "Taxonomy audit references a cost model version for evidence labeling only.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "fixture_tool",
+      "severity": "low",
+      "symbol": "COST_MODEL_VERSION"
+    },
+    {
+      "authority_id": "private_core.lifecycle.session_sm_v1_1",
+      "delete_now": false,
+      "domain": "lifecycle",
+      "module": "backend.nexus_research.demo_exchange.state_machine",
+      "notes": "Demo exchange account state machine.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "parallel_lane",
+      "severity": "low",
+      "symbol": "DemoStateMachine"
+    },
+    {
+      "authority_id": "private_core.provider.retry_policy_v1",
+      "delete_now": false,
+      "domain": "provider_retry",
+      "module": "backend.nexus_research.runtime_supervisor",
+      "notes": "Job registry retry/backoff; not LLM provider transport.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "parallel_lane",
+      "severity": "low",
+      "symbol": null
+    },
+    {
+      "authority_id": "private_core.risk.gates_v1_1",
+      "delete_now": false,
+      "domain": "risk",
+      "module": "backend.nexus_research.demo_exchange.identity",
+      "notes": "Demo identity helpers may reference risk/margin fields; not Session risk_gates.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "parallel_lane",
+      "severity": "low",
+      "symbol": null
+    }
+  ],
+  "registry_version": "v11.lane_h.1",
+  "schema": "nexus_removal_recommendations_v1"
+}

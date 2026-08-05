@@ -1,0 +1,151 @@
+{
+  "blocker_count": 5,
+  "blockers": [
+    {
+      "canonical": "founder-conservative-v1-1-2026-08-05",
+      "code": "COST_MODEL_VERSION_DIVERGENCE",
+      "competitor_module": "backend.nexus_strategy_engine.cost_semantics",
+      "competitor_version": "NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1",
+      "domain": "cost",
+      "recommendation": "Align strategy cost_semantics versioning with execution cost_model or explicitly namespace as research-proxy (not Session cost authority).",
+      "severity": "critical"
+    },
+    {
+      "code": "DUAL_LIFECYCLE_VOCABULARY",
+      "control_plane_states": [
+        "IDLE",
+        "STARTING",
+        "RUNNING",
+        "PAUSED",
+        "RECOVERING",
+        "STOPPING",
+        "STOPPED",
+        "KILLED",
+        "FAILED_SAFE"
+      ],
+      "domain": "lifecycle",
+      "recommendation": "Keep scoped (session vs control-plane). Block any code that maps states by identical name without an explicit adapter contract.",
+      "session_states": [
+        "CREATED",
+        "INITIALIZING",
+        "RUNNING",
+        "PAUSING",
+        "PAUSED",
+        "RECOVERING",
+        "FINALIZING",
+        "COMPLETED",
+        "BLOCKED",
+        "FAILED_SAFE"
+      ],
+      "severity": "critical"
+    },
+    {
+      "code": "PARALLEL_RETRY_IMPLEMENTATION",
+      "domain": "provider_retry",
+      "module": "backend.nexus_edge_discovery.provider_transport_v23",
+      "recommendation": "Import parse_retry_after / backoff_with_jitter from backend.nexus_provider.retry_policy; deprecate local copy.",
+      "severity": "critical"
+    },
+    {
+      "code": "MULTI_SCOPE_AUTHORITY",
+      "domain": "lifecycle",
+      "message": "Domain lifecycle has multiple legitimate scoped authorities; requires explicit adapter contracts before deletion waves.",
+      "severity": "critical",
+      "source": "scope_contention"
+    },
+    {
+      "code": "MULTI_SCOPE_AUTHORITY",
+      "domain": "checkpoint",
+      "message": "Domain checkpoint has multiple legitimate scoped authorities; requires explicit adapter contracts before deletion waves.",
+      "severity": "critical",
+      "source": "scope_contention"
+    }
+  ],
+  "ci_gate_passed": true,
+  "ci_gate_violations": [],
+  "critical_findings": [
+    {
+      "domain": "fill",
+      "kind": "registry_critical_competitor",
+      "module": "backend.nexus_autonomy.execution_simulator_v1_1",
+      "notes": "Embedded fill policy duplicates fill_engine semantics.",
+      "recommended_action": "migrate_callers",
+      "symbol": "AutonomousExecutionSimulatorV1_1"
+    },
+    {
+      "domain": "cost",
+      "kind": "registry_critical_competitor",
+      "module": "backend.nexus_strategy_engine.cost_semantics",
+      "notes": "Divergent COST_MODEL_VERSION string (NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1 vs founder-conservative-v1-1-*). Contract drift risk for strategy↔execution evidence.",
+      "recommended_action": "migrate_callers",
+      "symbol": "COST_MODEL_VERSION"
+    },
+    {
+      "domain": "lifecycle",
+      "kind": "registry_critical_competitor",
+      "module": "backend.nexus_private_control.state_machine",
+      "notes": "Founder control-plane lifecycle uses a different state vocabulary (IDLE/STARTING/.../KILLED) vs Session SM. Dual lifecycle authorities.",
+      "recommended_action": "retain_compat",
+      "symbol": "CANONICAL_STATES"
+    },
+    {
+      "domain": "provider_retry",
+      "kind": "registry_critical_competitor",
+      "module": "backend.nexus_edge_discovery.provider_transport_v23",
+      "notes": "Reflection V2.3 transport implements its own backoff/retry rather than importing backend.nexus_provider.retry_policy.",
+      "recommended_action": "migrate_callers",
+      "symbol": "exponential_backoff_with_jitter"
+    },
+    {
+      "kind": "circular_import_scc",
+      "scc_count": 3,
+      "sccs": [
+        [
+          "backend.nexus_execution",
+          "backend.nexus_execution.execution_simulator_v1_1",
+          "backend.nexus_execution.orchestrator_adapter_v1"
+        ],
+        [
+          "backend.nexus_demo_execution.geometry_event_sim",
+          "backend.nexus_demo_execution.structural_geometry_qualify"
+        ],
+        [
+          "backend.nexus_research.features.feature_seed",
+          "backend.nexus_research.features.registry"
+        ]
+      ],
+      "severity": "high"
+    }
+  ],
+  "drift_severity_counts": {
+    "critical": 3,
+    "high": 3
+  },
+  "generated_at": "2026-08-05T03:35:25Z",
+  "graph_summary": {
+    "circular_scc_count": 3,
+    "claim_count": 60,
+    "critical_finding_count": 5,
+    "domain_count": 7,
+    "domains_with_duplicates": [
+      "checkpoint",
+      "cost",
+      "execution",
+      "fill",
+      "lifecycle",
+      "provider_retry",
+      "risk"
+    ],
+    "edge_count": 3865,
+    "node_count": 38
+  },
+  "lane": "V11_H_AUTHORITY_CONSOLIDATION",
+  "pass_id": "pass1",
+  "removal_queues": {
+    "future_remove": 4,
+    "migrate_callers": 10,
+    "quarantine": 6,
+    "retain_compat": 17
+  },
+  "schema": "nexus_authority_consolidation_pass_v1"
+}

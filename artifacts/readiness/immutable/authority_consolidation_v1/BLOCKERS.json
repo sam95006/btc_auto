@@ -1,0 +1,66 @@
+{
+  "blocker_count": 5,
+  "blockers": [
+    {
+      "canonical": "founder-conservative-v1-1-2026-08-05",
+      "code": "COST_MODEL_VERSION_DIVERGENCE",
+      "competitor_module": "backend.nexus_strategy_engine.cost_semantics",
+      "competitor_version": "NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1",
+      "domain": "cost",
+      "recommendation": "Align strategy cost_semantics versioning with execution cost_model or explicitly namespace as research-proxy (not Session cost authority).",
+      "severity": "critical"
+    },
+    {
+      "code": "DUAL_LIFECYCLE_VOCABULARY",
+      "control_plane_states": [
+        "IDLE",
+        "STARTING",
+        "RUNNING",
+        "PAUSED",
+        "RECOVERING",
+        "STOPPING",
+        "STOPPED",
+        "KILLED",
+        "FAILED_SAFE"
+      ],
+      "domain": "lifecycle",
+      "recommendation": "Keep scoped (session vs control-plane). Block any code that maps states by identical name without an explicit adapter contract.",
+      "session_states": [
+        "CREATED",
+        "INITIALIZING",
+        "RUNNING",
+        "PAUSING",
+        "PAUSED",
+        "RECOVERING",
+        "FINALIZING",
+        "COMPLETED",
+        "BLOCKED",
+        "FAILED_SAFE"
+      ],
+      "severity": "critical"
+    },
+    {
+      "code": "PARALLEL_RETRY_IMPLEMENTATION",
+      "domain": "provider_retry",
+      "module": "backend.nexus_edge_discovery.provider_transport_v23",
+      "recommendation": "Import parse_retry_after / backoff_with_jitter from backend.nexus_provider.retry_policy; deprecate local copy.",
+      "severity": "critical"
+    },
+    {
+      "code": "MULTI_SCOPE_AUTHORITY",
+      "domain": "lifecycle",
+      "message": "Domain lifecycle has multiple legitimate scoped authorities; requires explicit adapter contracts before deletion waves.",
+      "severity": "critical",
+      "source": "scope_contention"
+    },
+    {
+      "code": "MULTI_SCOPE_AUTHORITY",
+      "domain": "checkpoint",
+      "message": "Domain checkpoint has multiple legitimate scoped authorities; requires explicit adapter contracts before deletion waves.",
+      "severity": "critical",
+      "source": "scope_contention"
+    }
+  ],
+  "ci_gate_passed": true,
+  "generated_at": "2026-08-05T03:35:56Z"
+}

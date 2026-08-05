@@ -1,0 +1,143 @@
+{
+  "blockers": [
+    {
+      "canonical": "founder-conservative-v1-1-2026-08-05",
+      "code": "COST_MODEL_VERSION_DIVERGENCE",
+      "competitor_module": "backend.nexus_strategy_engine.cost_semantics",
+      "competitor_version": "NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1",
+      "domain": "cost",
+      "recommendation": "Align strategy cost_semantics versioning with execution cost_model or explicitly namespace as research-proxy (not Session cost authority).",
+      "severity": "critical"
+    },
+    {
+      "code": "DUAL_LIFECYCLE_VOCABULARY",
+      "control_plane_states": [
+        "IDLE",
+        "STARTING",
+        "RUNNING",
+        "PAUSED",
+        "RECOVERING",
+        "STOPPING",
+        "STOPPED",
+        "KILLED",
+        "FAILED_SAFE"
+      ],
+      "domain": "lifecycle",
+      "recommendation": "Keep scoped (session vs control-plane). Block any code that maps states by identical name without an explicit adapter contract.",
+      "session_states": [
+        "CREATED",
+        "INITIALIZING",
+        "RUNNING",
+        "PAUSING",
+        "PAUSED",
+        "RECOVERING",
+        "FINALIZING",
+        "COMPLETED",
+        "BLOCKED",
+        "FAILED_SAFE"
+      ],
+      "severity": "critical"
+    },
+    {
+      "code": "PARALLEL_RETRY_IMPLEMENTATION",
+      "domain": "provider_retry",
+      "module": "backend.nexus_edge_discovery.provider_transport_v23",
+      "recommendation": "Import parse_retry_after / backoff_with_jitter from backend.nexus_provider.retry_policy; deprecate local copy.",
+      "severity": "critical"
+    }
+  ],
+  "finding_count": 6,
+  "findings": [
+    {
+      "canonical": "founder-conservative-v1-1-2026-08-05",
+      "code": "COST_MODEL_VERSION_DIVERGENCE",
+      "competitor_module": "backend.nexus_strategy_engine.cost_semantics",
+      "competitor_version": "NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1",
+      "domain": "cost",
+      "recommendation": "Align strategy cost_semantics versioning with execution cost_model or explicitly namespace as research-proxy (not Session cost authority).",
+      "severity": "critical"
+    },
+    {
+      "code": "COMPAT_SIM_HARDCODED_FEE",
+      "domain": "cost",
+      "module": "backend.nexus_autonomy.execution_simulator_v1_1",
+      "observed_taker_fee": 0.00055,
+      "recommendation": "Route callers to nexus_execution.cost_model; keep shim read-only.",
+      "severity": "high"
+    },
+    {
+      "code": "DUAL_LIFECYCLE_VOCABULARY",
+      "control_plane_states": [
+        "IDLE",
+        "STARTING",
+        "RUNNING",
+        "PAUSED",
+        "RECOVERING",
+        "STOPPING",
+        "STOPPED",
+        "KILLED",
+        "FAILED_SAFE"
+      ],
+      "domain": "lifecycle",
+      "recommendation": "Keep scoped (session vs control-plane). Block any code that maps states by identical name without an explicit adapter contract.",
+      "session_states": [
+        "CREATED",
+        "INITIALIZING",
+        "RUNNING",
+        "PAUSING",
+        "PAUSED",
+        "RECOVERING",
+        "FINALIZING",
+        "COMPLETED",
+        "BLOCKED",
+        "FAILED_SAFE"
+      ],
+      "severity": "critical"
+    },
+    {
+      "code": "PARALLEL_RETRY_IMPLEMENTATION",
+      "domain": "provider_retry",
+      "module": "backend.nexus_edge_discovery.provider_transport_v23",
+      "recommendation": "Import parse_retry_after / backoff_with_jitter from backend.nexus_provider.retry_policy; deprecate local copy.",
+      "severity": "critical"
+    },
+    {
+      "code": "STAGE4_PARALLEL_CIRCUIT_BREAKER",
+      "domain": "provider_retry",
+      "module": "tools.research.stage4_provider_chain",
+      "recommendation": "Prefer backend.nexus_provider.circuit_breaker for new code.",
+      "severity": "high"
+    },
+    {
+      "code": "MULTI_CHECKPOINT_SCHEMAS",
+      "domain": "checkpoint",
+      "modules": [
+        {
+          "CHECKPOINT_SCHEMA_V4": "blind_reflection_v23_checkpoint_v4",
+          "exists": true,
+          "module": "backend.nexus_reflection.checkpoint"
+        },
+        {
+          "exists": true,
+          "module": "backend.nexus_private_control.checkpoint"
+        },
+        {
+          "exists": true,
+          "module": "backend.nexus_recovery.crash_recovery"
+        }
+      ],
+      "recommendation": "Do not cross-resume between reflection / control-plane / session recovery without an explicit schema adapter. Future: publish checkpoint schema IDs in nexus_contracts.",
+      "severity": "high"
+    }
+  ],
+  "generated_at": "2026-08-05T03:35:41Z",
+  "lane": "V11_H_AUTHORITY_CONSOLIDATION",
+  "note": "passed=false indicates contract drift blockers for consolidation readiness; Lane H does not auto-fix competitor modules.",
+  "passed": false,
+  "registry_version": "v11.lane_h.1",
+  "schema": "nexus_contract_drift_report_v1",
+  "severity_counts": {
+    "critical": 3,
+    "high": 3
+  }
+}
