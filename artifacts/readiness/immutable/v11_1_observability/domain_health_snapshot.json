@@ -1,0 +1,209 @@
+{
+  "schema": "v11_1_private_observability_domain_health",
+  "created_at": "2026-08-05T04:07:51Z",
+  "founder_private": true,
+  "read_only": true,
+  "public_routes": false,
+  "public_product_exposure": false,
+  "execution_mutation_endpoint": false,
+  "secrets_present": false,
+  "account_information_present": false,
+  "strategy_parameters_present": false,
+  "domains": {
+    "decision_lifecycle": {
+      "domain": "decision_lifecycle",
+      "slo_ok": false,
+      "max_evidence_age_seconds": 420.0,
+      "stale": true,
+      "data_quality_ok": false,
+      "dq_detail": "incomplete_evidence",
+      "blocked_ambiguous_count": 2,
+      "failure_trap": true,
+      "active_alert_classes": [
+        "ambiguous_state",
+        "data_quality",
+        "failure_state",
+        "staleness"
+      ],
+      "canonical_states_known": true
+    },
+    "session_lifecycle": {
+      "domain": "session_lifecycle",
+      "slo_ok": false,
+      "terminal_failure_states": [
+        "FAILED_SAFE"
+      ],
+      "failed_safe": true,
+      "active_alert_classes": [
+        "failure_state"
+      ],
+      "canonical_states_known": true
+    },
+    "risk_gates": {
+      "domain": "risk_gates",
+      "slo_ok": false,
+      "gates_intact": false,
+      "max_leverage_ceiling": 50,
+      "forbidden_action_count": 9,
+      "forbidden_actions_sample": [
+        "auto_add_margin",
+        "averaging_down",
+        "cross_margin",
+        "duplicate_exposure",
+        "leverage_increase"
+      ],
+      "detail": "adversarial_forbidden_action_bypass_attempt",
+      "active_alert_classes": [
+        "failure_state"
+      ],
+      "order_or_policy_mutation": false
+    },
+    "execution_simulator": {
+      "domain": "execution_simulator",
+      "slo_ok": true,
+      "mutation_endpoint_count": 0,
+      "read_only_observability": true,
+      "execution_mutation_endpoint": false,
+      "active_alert_classes": []
+    },
+    "provider_health": {
+      "domain": "provider_health",
+      "slo_ok": false,
+      "transport_status": "RATE_LIMITED",
+      "terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+      "success_count": 10,
+      "pending_count": 70,
+      "capacity_blocked": true,
+      "known_transport_statuses": [
+        "BUCKET_THROTTLED",
+        "CIRCUIT_OPEN",
+        "DEDUP_SKIPPED",
+        "IDEMPOTENT_REPLAY",
+        "INVALID_JSON",
+        "INVALID_SCHEMA",
+        "OTHER_FAILURE",
+        "RATE_LIMITED",
+        "SUCCESS",
+        "TIMEOUT"
+      ],
+      "active_alert_classes": [
+        "provider_capacity"
+      ],
+      "secrets_present": false
+    },
+    "reflection_queue": {
+      "domain": "reflection_queue",
+      "slo_ok": false,
+      "pending_count": 70,
+      "success_count": 10,
+      "stale_queue": true,
+      "terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+      "active_alert_classes": [
+        "provider_capacity",
+        "staleness"
+      ]
+    },
+    "lesson_gate": {
+      "domain": "lesson_gate",
+      "slo_ok": false,
+      "gate": {
+        "policy_effect_lesson_allowed": false,
+        "new_policy_effect_lesson_count": 0,
+        "lesson_prevention_blocked_reason": "V2_3_TERMINAL_NOT_VERIFIED",
+        "risk_limits_changed": false,
+        "leverage_changed": false
+      },
+      "unauthorized_lesson_count": 1,
+      "active_alert_classes": [
+        "data_quality",
+        "failure_state"
+      ]
+    },
+    "ledger_snapshot_checkpoint": {
+      "domain": "ledger_snapshot_checkpoint",
+      "slo_ok": false,
+      "ambiguous_state": true,
+      "ambiguous_count": 1,
+      "ambiguous_status_token": "BLOCKED_AMBIGUOUS_STATE",
+      "data_quality_ok": false,
+      "checkpoint_ok": false,
+      "active_alert_classes": [
+        "ambiguous_state",
+        "data_quality",
+        "failure_state"
+      ]
+    },
+    "microstructure_health": {
+      "domain": "microstructure_health",
+      "slo_ok": false,
+      "integrity_ok": false,
+      "event_study_started": false,
+      "event_study_readiness": "NOT_READY",
+      "detail": "adversarial_integrity_degraded",
+      "active_alert_classes": [
+        "data_quality"
+      ]
+    },
+    "storage_budget": {
+      "domain": "storage_budget",
+      "slo_ok": false,
+      "floor_ok": false,
+      "mode": "STORAGE_BUDGET_BLOCKED",
+      "free_bytes": 1,
+      "minimum_free_disk_bytes": 32212254720,
+      "stop_reason": "minimum_free_disk_fail",
+      "active_alert_classes": [
+        "storage_floor"
+      ]
+    },
+    "kill_switch_readiness": {
+      "domain": "kill_switch_readiness",
+      "slo_ok": true,
+      "reachable": true,
+      "kill_switch_engaged": true,
+      "health_healthy_flag": false,
+      "observability_read_only": true,
+      "public_api_exposed": false,
+      "active_alert_classes": []
+    },
+    "qualification_block_state": {
+      "domain": "qualification_block_state",
+      "slo_ok": true,
+      "all_stages_blocked": true,
+      "stages": {
+        "CANDIDATE_FREEZE": "BLOCKED",
+        "REPLAY": "BLOCKED",
+        "WALK_FORWARD": "BLOCKED",
+        "RISK_REVIEW": "BLOCKED",
+        "OOS_RESERVATION": "BLOCKED",
+        "DEMO_ELIGIBILITY": "BLOCKED"
+      },
+      "hard_bans_intact": true,
+      "hard_ban_count": 12,
+      "active_alert_classes": []
+    }
+  },
+  "domain_order": [
+    "decision_lifecycle",
+    "session_lifecycle",
+    "risk_gates",
+    "execution_simulator",
+    "provider_health",
+    "reflection_queue",
+    "lesson_gate",
+    "ledger_snapshot_checkpoint",
+    "microstructure_health",
+    "storage_budget",
+    "kill_switch_readiness",
+    "qualification_block_state"
+  ],
+  "alert_classes_supported": [
+    "failure_state",
+    "staleness",
+    "data_quality",
+    "ambiguous_state",
+    "storage_floor",
+    "provider_capacity"
+  ],
+  "pass_number": 2
+}
