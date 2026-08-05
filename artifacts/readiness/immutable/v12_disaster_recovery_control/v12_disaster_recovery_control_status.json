@@ -4,8 +4,8 @@
   "lane": "V12-D",
   "branch": "feature/v12-disaster-recovery-control",
   "base": "e4e96299840da2e5152cf2850135cebc67d66cd0",
-  "head": "2f1764fc8fabd5b257e280ef691c986e8ebfcca0",
-  "created_at": "2026-08-05T07:49:16Z",
+  "head": "0b93f7946c257ffad6215068991266b24ae7d604",
+  "created_at": "2026-08-05T07:49:36Z",
   "overall_status": "NEXUS_V12_DISASTER_RECOVERY_CONTROL_PASS",
   "blockers": [],
   "counters": {
@@ -748,5 +748,7 @@
   ],
   "execution_mode": "SIMULATED_FAIL_CLOSED_NO_EXCHANGE_WRITE",
   "PR27_draft_unmerged": true,
-  "auto_integration": false
+  "auto_integration": false,
+  "feature_commit": "2f1764fc8fabd5b257e280ef691c986e8ebfcca0",
+  "artifact_refresh_commit": "0b93f7946c257ffad6215068991266b24ae7d604"
 }
