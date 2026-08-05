@@ -22,7 +22,7 @@
       "code_version_freeze": {
         "code_checksum": "546748ff7d95fb9e07e9581f727a2284b0e5abd205d6f666dd3a36a832f04573",
         "code_ref": "backend/nexus_formal_wf_plan",
-        "code_version": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
+        "code_version": "3573ecc30cfb33b98193e177e80c187418331446",
         "executed": false,
         "frozen": false,
         "note": "Code version must freeze before formal WF; freeze not applied here.",
@@ -37,7 +37,7 @@
         "planned": true,
         "rule_kind": "cost_version_freeze"
       },
-      "created_at": "2026-08-05T15:18:23Z",
+      "created_at": "2026-08-05T15:19:36Z",
       "dataset_freeze": {
         "category_required": "DEVELOPMENT",
         "dataset_checksum": "b49051f5054d518c064a7c09d933e840389e7cd9bca6df5b0077445ba68f0688",
@@ -348,8 +348,8 @@
         "planned": true,
         "rule_kind": "parameter_freeze"
       },
-      "plan_checksum": "351b26deb4bb044f2fb120dadad38bf5d5428a35f66628df7fce4b214fef687d",
-      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_a93aa39aaa56",
+      "plan_checksum": "962fe701259f7569ed26b588fe814e09c8edd8f2ecf5dd3f2a4250011ff97f7e",
+      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_faf0d7a30694",
       "plan_kind": "FORMAL_WALK_FORWARD",
       "profitability_claim": false,
       "purge_intervals": {
@@ -509,7 +509,7 @@
       "code_version_freeze": {
         "code_checksum": "546748ff7d95fb9e07e9581f727a2284b0e5abd205d6f666dd3a36a832f04573",
         "code_ref": "backend/nexus_formal_wf_plan",
-        "code_version": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
+        "code_version": "3573ecc30cfb33b98193e177e80c187418331446",
         "executed": false,
         "frozen": false,
         "note": "Code version must freeze before formal WF; freeze not applied here.",
@@ -524,7 +524,7 @@
         "planned": true,
         "rule_kind": "cost_version_freeze"
       },
-      "created_at": "2026-08-05T15:18:23Z",
+      "created_at": "2026-08-05T15:19:36Z",
       "dataset_freeze": {
         "category_required": "DEVELOPMENT",
         "dataset_checksum": "b49051f5054d518c064a7c09d933e840389e7cd9bca6df5b0077445ba68f0688",
@@ -624,8 +624,8 @@
         "planned": true,
         "rule_kind": "parameter_freeze"
       },
-      "plan_checksum": "3df3291842beca35dd66191f62f76dc59b97c480324754af8f36984124bf74d9",
-      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_002_83c8a9fff16f",
+      "plan_checksum": "9ee4c7b5163ed4a768f04e166ce3f92940002996a42b9abf94bda62830888715",
+      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_002_48007021385d",
       "plan_kind": "FORMAL_WALK_FORWARD",
       "profitability_claim": false,
       "purge_intervals": {
