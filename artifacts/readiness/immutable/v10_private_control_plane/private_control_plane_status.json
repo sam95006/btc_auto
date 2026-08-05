@@ -1,0 +1,33 @@
+{
+  "schema": "v10_private_control_plane_status",
+  "created_at": "2026-08-05T03:07:09Z",
+  "lane": "A",
+  "lane_name": "PRIVATE_CONTROL_PLANE",
+  "branch": "feature/v10-private-control-plane",
+  "package": "backend.nexus_private_control",
+  "status": "PASS",
+  "all_controls_ok": true,
+  "secret_leak_count": 0,
+  "exchange_write_attempt_count": 0,
+  "intentional_write_trap_blocked": true,
+  "demo_order_count": 0,
+  "shadow_order_count": 0,
+  "mainnet": false,
+  "real_money": false,
+  "public_api_exposed": false,
+  "formal_walk_forward_executed": false,
+  "oos_executed": false,
+  "owned_paths": [
+    "backend/nexus_private_control",
+    "tools/research/run_private_control_plane_v10.py",
+    "tests/test_private_control_plane_v10.py",
+    "artifacts/readiness/immutable/v10_private_control_plane"
+  ],
+  "prohibited_paths_untouched": [
+    "frontend",
+    "backend/nexus_demo_execution",
+    "other_v10_lane_owned_paths",
+    "pr26_public_surfaces"
+  ],
+  "base_commit": "752905784e9d26a84dbc17ae6460d8a15761b320"
+}
