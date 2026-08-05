@@ -1,7 +1,7 @@
 {
   "schema": "microstructure_integrity_recovery_v11_forensic_rca",
   "campaign_id": "ms_accum_v7_bounded_24h",
-  "created_at": "2026-08-05T03:36:07Z",
+  "created_at": "2026-08-05T03:37:45Z",
   "partitions_root": "D:\\NEXUS\\btc_bot\\.nexus_runtime\\microstructure\\finalize_roots\\ms_accum_v7_bounded_24h\\partitions",
   "partition_count": 663,
   "reported_v1": {
@@ -31,7 +31,16 @@
     "MIGRATION_ARTIFACT": 113,
     "MANIFEST_BUG": 43,
     "FINALIZER_FALSE_POSITIVE": 113,
-    "LINKAGE_SEMANTICS_BUG": 50,
+    "LINKAGE_SEMANTICS_BUG": 113,
+    "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+  },
+  "primary_classification_counts": {
+    "ACTUAL_DATA_CORRUPTION": 0,
+    "EXPECTED_OPEN_TAIL": 113,
+    "MIGRATION_ARTIFACT": 0,
+    "MANIFEST_BUG": 43,
+    "FINALIZER_FALSE_POSITIVE": 0,
+    "LINKAGE_SEMANTICS_BUG": 0,
     "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
   },
   "classifications": {
@@ -42,7 +51,16 @@
       "MIGRATION_ARTIFACT": 113,
       "MANIFEST_BUG": 43,
       "FINALIZER_FALSE_POSITIVE": 113,
-      "LINKAGE_SEMANTICS_BUG": 50,
+      "LINKAGE_SEMANTICS_BUG": 113,
+      "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+    },
+    "primary_classification_counts": {
+      "ACTUAL_DATA_CORRUPTION": 0,
+      "EXPECTED_OPEN_TAIL": 113,
+      "MIGRATION_ARTIFACT": 0,
+      "MANIFEST_BUG": 43,
+      "FINALIZER_FALSE_POSITIVE": 0,
+      "LINKAGE_SEMANTICS_BUG": 0,
       "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
     },
     "findings": [
@@ -51,12 +69,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -83,12 +103,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -143,12 +165,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -203,12 +227,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -246,12 +272,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -306,12 +334,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -366,12 +396,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -426,12 +458,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -486,12 +520,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -546,12 +582,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -606,12 +644,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -649,12 +689,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -664,12 +706,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -707,12 +751,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -722,12 +768,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -737,12 +785,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -769,12 +819,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -784,12 +836,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -827,12 +881,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -842,12 +898,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -885,12 +943,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -900,12 +960,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -943,12 +1005,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -958,12 +1022,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1001,12 +1067,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1016,12 +1084,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1059,12 +1129,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1074,12 +1146,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1117,12 +1191,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1132,12 +1208,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1175,12 +1253,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1190,12 +1270,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1233,12 +1315,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1248,12 +1332,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1263,12 +1349,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1295,12 +1383,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1310,12 +1400,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1370,12 +1462,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1385,12 +1479,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1428,12 +1524,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1443,12 +1541,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1458,12 +1558,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1490,12 +1592,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1505,12 +1609,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1559,12 +1665,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1574,12 +1682,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1606,12 +1716,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1621,12 +1733,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1647,12 +1761,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1673,12 +1789,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1688,12 +1806,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1731,12 +1851,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1768,12 +1890,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1800,12 +1924,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1843,12 +1969,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1869,12 +1997,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1940,12 +2070,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -1983,12 +2115,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -2104,12 +2238,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -2147,12 +2283,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -2190,12 +2328,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -2205,12 +2345,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -2293,12 +2435,14 @@
         "classifications": [
           "EXPECTED_OPEN_TAIL",
           "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
           "MIGRATION_ARTIFACT"
         ],
         "primary_classification": "EXPECTED_OPEN_TAIL",
         "evidence": [
           "gzip_EOF_without_manifest_last_in_session_symbol_chain",
           "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
           "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
         ],
         "failure": true
@@ -2314,7 +2458,8 @@
         ],
         "failure": true
       }
-    ]
+    ],
+    "note": "classification_counts are multi-label (one partition may carry several labels); primary_classification_counts are mutually exclusive per finding."
   },
   "linkage_v1": {
     "cross_partition_linkage_status": "FAIL",
@@ -2633,6 +2778,15 @@
     "open_tail_linkage_exempt_count": 113,
     "issues": [],
     "semantics": "v11_closed_chain_with_open_tail_boundaries"
+  },
+  "fixes_verified": {
+    "path_inferred_identity": true,
+    "open_tail_exempt_from_checksum_failure": true,
+    "open_tail_exempt_from_linkage_break": true,
+    "durable_writer_open_marker": true,
+    "atomic_manifest_finalize": true,
+    "v11_linkage_breaks": 0,
+    "true_checksum_mismatch_count": 0
   },
   "event_study_readiness_status": "NOT_READY",
   "event_study_real_execution": false,

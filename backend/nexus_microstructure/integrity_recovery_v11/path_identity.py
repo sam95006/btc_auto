@@ -40,8 +40,6 @@ def infer_identity_from_path(path: Path, manifest: dict[str, Any] | None = None)
     hour = manifest.get("UTC_hour")
     seq: int | None = None
 
-    m = _SESSION_FAM_RE.match(base + ".jsonl") if not base.endswith(".jsonl") else _SESSION_FAM_RE.match(base)
-    # Match against base without requiring .jsonl suffix
     m = _SESSION_FAM_RE.match(base)
     if m:
         session = session or m.group("session")

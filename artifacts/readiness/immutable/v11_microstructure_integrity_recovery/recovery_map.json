@@ -1,7 +1,7 @@
 {
   "schema": "microstructure_integrity_recovery_v11_recovery_map",
   "campaign_id": "ms_accum_v7_bounded_24h",
-  "created_at": "2026-08-05T03:36:07Z",
+  "created_at": "2026-08-05T03:37:45Z",
   "raw_bytes_modified": false,
   "silent_repair_executed": false,
   "event_study_readiness_status": "NOT_READY",
@@ -13,7 +13,7 @@
     "MIGRATION_ARTIFACT": 113,
     "MANIFEST_BUG": 43,
     "FINALIZER_FALSE_POSITIVE": 113,
-    "LINKAGE_SEMANTICS_BUG": 50,
+    "LINKAGE_SEMANTICS_BUG": 113,
     "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
   },
   "linkage_v1_breaks": 167,
@@ -34,6 +34,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -88,6 +89,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -329,6 +331,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -570,6 +573,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -806,6 +810,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -1197,6 +1202,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -1453,6 +1459,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -1829,6 +1836,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -2070,6 +2078,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -2311,6 +2320,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -2567,6 +2577,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -2983,6 +2994,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -3062,6 +3074,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -3583,6 +3596,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -3617,6 +3631,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -3786,6 +3801,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -3825,6 +3841,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -3859,6 +3876,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -4065,6 +4083,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -4099,6 +4118,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -4305,6 +4325,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -4339,6 +4360,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -4650,6 +4672,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -4684,6 +4707,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -4890,6 +4914,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -4924,6 +4949,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -5130,6 +5156,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -5164,6 +5191,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -5385,6 +5413,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -5419,6 +5448,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -5625,6 +5655,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -5659,6 +5690,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -5865,6 +5897,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -5899,6 +5932,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -6098,6 +6132,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -6137,6 +6172,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -6171,6 +6207,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -6517,6 +6554,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -6551,6 +6589,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -6757,6 +6796,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -6791,6 +6831,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -6960,6 +7001,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -6999,6 +7041,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -7033,6 +7076,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -7286,6 +7330,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -7455,6 +7500,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -7569,6 +7615,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -7603,6 +7650,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -7759,6 +7807,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -7900,6 +7949,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -8039,6 +8089,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -8140,6 +8191,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -8253,6 +8305,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -8307,6 +8360,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -8498,6 +8552,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -8684,6 +8739,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -8942,6 +8998,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -9043,6 +9100,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -9657,6 +9715,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -9848,6 +9907,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -10054,6 +10114,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -10193,6 +10254,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",
@@ -10441,6 +10503,7 @@
       "classifications": [
         "EXPECTED_OPEN_TAIL",
         "FINALIZER_FALSE_POSITIVE",
+        "LINKAGE_SEMANTICS_BUG",
         "MIGRATION_ARTIFACT"
       ],
       "disposition": "SEAL_AS_OPEN_TAIL_SIDECAR_ONLY",

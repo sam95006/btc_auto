@@ -122,9 +122,12 @@ def main(argv: list[str] | None = None) -> int:
 
     print(json.dumps({
         "status": result["status"]["Microstructure_Integrity_Recovery_V11_status"],
+        "pass": args.pass_number,
         "classification_counts": result["status"]["classification_counts"],
+        "primary_classification_counts": result["status"].get("primary_classification_counts"),
         "v11_measured": result["status"]["v11_measured"],
         "reported_v1": result["status"]["reported_v1"],
+        "fixes_verified": result["status"].get("fixes_verified"),
         "event_study_readiness_status": "NOT_READY",
         "remaining_blockers": result["status"]["remaining_blockers"],
         "output_dir": str(args.output_dir),

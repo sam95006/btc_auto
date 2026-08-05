@@ -9,10 +9,7 @@ from backend.nexus_microstructure.integrity_recovery_v11.checksum import (
     compare_checksum,
     replay_gzip_sha256,
 )
-from backend.nexus_microstructure.integrity_recovery_v11.path_identity import (
-    infer_identity_from_path,
-    partition_id_from_gz,
-)
+from backend.nexus_microstructure.integrity_recovery_v11.path_identity import infer_identity_from_path
 from backend.nexus_microstructure.integrity_recovery_v11.writer_v11 import (
     manifest_path_for,
     open_marker_for,
@@ -249,8 +246,19 @@ def classify_campaign_partitions(
         for c in row["classifications"]:
             counts[c] = counts.get(c, 0) + 1
 
+    primary_counts: dict[str, int] = {k: 0 for k in counts}
+    for f in findings:
+        pc = f.get("primary_classification")
+        if pc:
+            primary_counts[pc] = primary_counts.get(pc, 0) + 1
+
     return {
         "finding_count": len(findings),
         "classification_counts": counts,
+        "primary_classification_counts": primary_counts,
         "findings": findings,
+        "note": (
+            "classification_counts are multi-label (one partition may carry several labels); "
+            "primary_classification_counts are mutually exclusive per finding."
+        ),
     }
