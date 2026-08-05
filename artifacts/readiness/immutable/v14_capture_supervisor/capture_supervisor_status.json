@@ -1,0 +1,124 @@
+{
+  "schema": "v14_a_capture_supervisor_status",
+  "lane": "V14-A",
+  "lane_name": "LIVE_CAPTURE_INTEGRITY_SUPERVISOR",
+  "created_at": "2026-08-05T11:19:46Z",
+  "branch": "feature/v14-live-capture-integrity-supervisor",
+  "base_head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "git_head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "campaign_id": "ms_accum_v13_integrity_14d",
+  "evidence_class": "REAL_LIVE_CAMPAIGN_READONLY",
+  "pass1_all_passed": true,
+  "pass2_all_passed": true,
+  "both_passes_ok": true,
+  "integrity_status": "DEGRADED",
+  "process_status": "DEGRADED",
+  "ws_status": "HEALTHY",
+  "safe_stop_required": false,
+  "safe_stop_executed": false,
+  "restart_recommended": false,
+  "restart_executed": false,
+  "metrics": {
+    "partition_count": 66,
+    "sealed_count": 28,
+    "open_tail_count": 38,
+    "symbol_count": 25,
+    "missing_hours": [
+      "20260805_10"
+    ],
+    "campaign_bytes": 12977911,
+    "free_gib": 214.7,
+    "bytes_per_second": 4709.787500818411,
+    "trade_count": 157071,
+    "liq_count": 53,
+    "process_status": "DEGRADED",
+    "ws_status": "HEALTHY",
+    "integrity_status": "DEGRADED",
+    "safe_stop_required": false
+  },
+  "critical_findings": [],
+  "high_findings": [
+    {
+      "code": "HEALTH_STALE",
+      "severity": "HIGH",
+      "summary": "Health file older than 300s",
+      "evidence": {
+        "checked_at": "2026-08-05T11:08:37Z",
+        "age_seconds": 666.244742
+      },
+      "recommendation": "Refresh health sampler; treat WS health as degraded until fresh",
+      "observed_at": "2026-08-05T11:19:43Z"
+    },
+    {
+      "code": "HOURLY_GAPS",
+      "severity": "HIGH",
+      "summary": "Missing completed UTC hours: ['20260805_10']",
+      "evidence": {
+        "missing_hours": [
+          "20260805_10"
+        ],
+        "expected_hours": [
+          "20260805_09",
+          "20260805_10",
+          "20260805_11"
+        ],
+        "present_hours": [
+          "20260805_09",
+          "20260805_11"
+        ]
+      },
+      "recommendation": "Investigate WS gap / hour rotation; do not fill gaps with synthetic data",
+      "observed_at": "2026-08-05T11:19:43Z"
+    },
+    {
+      "code": "HEARTBEAT_PROXY_STALE",
+      "severity": "HIGH",
+      "summary": "Health sampler heartbeat proxy stale",
+      "evidence": {
+        "health_age_seconds": 666.288575,
+        "threshold": 180
+      },
+      "recommendation": null,
+      "observed_at": "2026-08-05T11:19:43Z"
+    },
+    {
+      "code": "STALE_OPEN_TAILS",
+      "severity": "HIGH",
+      "summary": "7 open-tail partitions outside current hour exceed stale threshold",
+      "evidence": {
+        "stale_count": 7,
+        "stale_seconds": 3600,
+        "examples": [
+          "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\ETHUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_ETHUSDT_20260805_09_0.jsonl.gz",
+          "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\HOMEUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_HOMEUSDT_20260805_09_0.jsonl.gz",
+          "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\HYPEUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_HYPEUSDT_20260805_09_0.jsonl.gz",
+          "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\PUMPFUNUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_PUMPFUNUSDT_20260805_09_0.jsonl.gz",
+          "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\SOLUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_SOLUSDT_20260805_09_0.jsonl.gz",
+          "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\SPCXUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_SPCXUSDT_20260805_09_0.jsonl.gz",
+          "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\XAUTUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_XAUTUSDT_20260805_09_0.jsonl.gz"
+        ]
+      },
+      "recommendation": "Retain open tails; fence on resume; do not rewrite or delete",
+      "observed_at": "2026-08-05T11:19:45Z"
+    }
+  ],
+  "blockers": [],
+  "secret_leak_count": 0,
+  "event_study_readiness_status": "NOT_READY",
+  "event_study_real_execution": false,
+  "exchange_write_attempt_count": 0,
+  "demo_used": false,
+  "mainnet_used": false,
+  "shadow_used": false,
+  "PR27_merged": false,
+  "collector_modified": false,
+  "auto_integration": false,
+  "owned_paths_only": true,
+  "readiness": "PASS",
+  "changed_files": [
+    "artifacts/readiness/immutable/v14_capture_supervisor/",
+    "backend/nexus_capture_supervisor/",
+    "tests/capture_supervisor/",
+    "tools/operations/capture_supervisor/"
+  ]
+}

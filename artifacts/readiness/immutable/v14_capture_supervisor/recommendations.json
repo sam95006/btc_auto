@@ -1,0 +1,36 @@
+{
+  "schema": "v14_a_capture_supervisor_recommendation",
+  "observed_at": "2026-08-05T11:19:45Z",
+  "ops_role": "observe_recommend_only",
+  "stop_execution_owner": "local_Coordinator",
+  "restart_execution_owner": "local_Coordinator",
+  "safe_stop_required": false,
+  "safe_stop_executed": false,
+  "restart_recommended": false,
+  "restart_executed": false,
+  "restart_mode": null,
+  "primary_reason": "HEALTH_STALE",
+  "reasons": [
+    "HEALTH_STALE",
+    "HOURLY_GAPS",
+    "HEARTBEAT_PROXY_STALE",
+    "STALE_OPEN_TAILS"
+  ],
+  "critical_count": 0,
+  "high_count": 4,
+  "actions": [
+    "persist_supervisor_observation",
+    "notify_coordinator"
+  ],
+  "forbidden_actions": [
+    "supervisor_executes_live_stop",
+    "supervisor_executes_restart",
+    "exchange_write",
+    "event_study_execution",
+    "raw_partition_rewrite",
+    "open_tail_deletion",
+    "dual_writer_start"
+  ],
+  "exchange_write_attempt_count": 0,
+  "event_study_readiness_status": "NOT_READY"
+}

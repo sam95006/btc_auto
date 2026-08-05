@@ -1,0 +1,1139 @@
+{
+  "schema": "v14_a_capture_supervisor_pass1",
+  "lane": "V14-A",
+  "pass": 1,
+  "created_at": "2026-08-05T11:19:46Z",
+  "all_passed": true,
+  "evidence_class": "REAL_LIVE_CAMPAIGN_READONLY",
+  "observation": {
+    "schema": "v14_a_live_capture_integrity_supervisor",
+    "lane": "V14-A",
+    "lane_name": "LIVE_CAPTURE_INTEGRITY_SUPERVISOR",
+    "observed_at": "2026-08-05T11:19:45Z",
+    "campaign_id": "ms_accum_v13_integrity_14d",
+    "ops_role": "observe_recommend_only",
+    "hard_bans": [
+      "no_PR27_merge",
+      "no_deploy",
+      "no_WF_OOS",
+      "no_Demo_Shadow",
+      "no_exchange_write",
+      "no_mainnet",
+      "no_real_money",
+      "no_V13A_collector_modification",
+      "no_Event_Study_execution",
+      "no_auto_integrate_V13_V14_parent",
+      "no_live_stop_execution_from_supervisor"
+    ],
+    "paths": {
+      "campaign_id": "ms_accum_v13_integrity_14d",
+      "runtime_root": "D:\\NEXUS_RUNTIME",
+      "capture_worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration",
+      "partitions_root": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2",
+      "registry_path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\campaigns\\registry.json",
+      "checkpoint_path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\ms_accum_v13_integrity_14d.checkpoint.json",
+      "launch_json": "D:\\NEXUS_RUNTIME\\ms_accum_v13_integrity_14d_launch.json",
+      "stdout_log": "D:\\NEXUS_RUNTIME\\ms_accum_v13_integrity_14d_stdout.log",
+      "stderr_log": "D:\\NEXUS_RUNTIME\\ms_accum_v13_integrity_14d_stderr.log"
+    },
+    "path_meta": {
+      "launch_status": "OK",
+      "launch_pid": 12372,
+      "live_capture_started": true,
+      "notes": [],
+      "silent_fallback": false,
+      "launch": {
+        "schema": "coordinator_ms_accum_v13_integrity_14d_launch",
+        "campaign_id": "ms_accum_v13_integrity_14d",
+        "live_capture_started": true,
+        "capture_start_UTC": "2026-08-05T09:42:05Z",
+        "capture_start_local": "2026-08-05T17:42:08.513158+08:00",
+        "capture_PID": 12372,
+        "parent_PID": 32156,
+        "symbol_count": 25,
+        "universe_checksum": "7012751888331eafd26cf023861e331190a3bacf2f03be55a5d0a7fef189ccaf",
+        "free_space_at_start_gib": 214.97,
+        "storage_cap_gib": 40,
+        "free_space_floor_gib": 100,
+        "event_study_readiness": "NOT_READY",
+        "exchange_write_attempt_count": 0,
+        "trading_credentials_loaded": false,
+        "gate": {
+          "ops_both_passes_ok": true,
+          "synthetic_preflight_ok": true,
+          "free_gib": 214.97,
+          "floor_ok": true,
+          "hard_cap_gib": 40,
+          "symbol_count": 25,
+          "design_symbol_count": 25,
+          "exchange_write_attempt_count": 0
+        },
+        "stdout_log": "D:\\NEXUS_RUNTIME\\ms_accum_v13_integrity_14d_stdout.log",
+        "stderr_log": "D:\\NEXUS_RUNTIME\\ms_accum_v13_integrity_14d_stderr.log",
+        "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration",
+        "V13_INTEGRATED_HEAD": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+        "note": "Public-readonly Bybit WS via collector_v12 segment runner; Coordinator-authorized.",
+        "capture_worker_PID": 4400,
+        "early_data_file_count": 29,
+        "early_bytes": 3235412,
+        "integrity_status": "LIVE_WRITING",
+        "_path": "D:\\NEXUS_RUNTIME\\ms_accum_v13_integrity_14d_launch.json",
+        "status": "OK"
+      }
+    },
+    "process_liveness": {
+      "schema": "v14_a_process_liveness",
+      "observed_at": "2026-08-05T11:19:43Z",
+      "campaign_id": "ms_accum_v13_integrity_14d",
+      "status": "DEGRADED",
+      "parent": {
+        "pid": 12372,
+        "alive": true,
+        "reason": "open_process_ok"
+      },
+      "worker": {
+        "pid": 4400,
+        "alive": true,
+        "reason": "open_process_ok"
+      },
+      "health_status": "OK",
+      "health_age_seconds": 666.244742,
+      "health_stale": true,
+      "live_capture_started": true,
+      "findings": [
+        {
+          "code": "HEALTH_STALE",
+          "severity": "HIGH",
+          "summary": "Health file older than 300s",
+          "evidence": {
+            "checked_at": "2026-08-05T11:08:37Z",
+            "age_seconds": 666.244742
+          },
+          "recommendation": "Refresh health sampler; treat WS health as degraded until fresh",
+          "observed_at": "2026-08-05T11:19:43Z"
+        }
+      ],
+      "mute_collector": true,
+      "exchange_write_attempt_count": 0
+    },
+    "ws_health": {
+      "schema": "v14_a_ws_health",
+      "observed_at": "2026-08-05T11:19:43Z",
+      "campaign_id": "ms_accum_v13_integrity_14d",
+      "status": "HEALTHY",
+      "integrity_status": "LIVE_WRITING",
+      "data_bytes": 8625074,
+      "data_file_count": 86,
+      "checkpoint_status": "OK",
+      "checkpoint_age_seconds": 32.07443141937256,
+      "gap_proxy_seconds": 32.07443141937256,
+      "trade_count": 157071,
+      "liq_count": 53,
+      "thresholds": {
+        "ws_gap_warn_seconds": 120,
+        "ws_gap_critical_seconds": 600,
+        "checkpoint_stale_seconds": 600
+      },
+      "findings": [],
+      "note": "Read-only inference; supervisor does not attach to Bybit WS",
+      "exchange_write_attempt_count": 0
+    },
+    "partition_accounting": {
+      "schema": "v14_a_partition_accounting",
+      "observed_at": "2026-08-05T11:19:43Z",
+      "campaign_id": "ms_accum_v13_integrity_14d",
+      "status": "FINDINGS",
+      "partitions_root": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2",
+      "partition_count": 66,
+      "sealed_count": 28,
+      "open_tail_count": 38,
+      "total_compressed_bytes": 11623657,
+      "symbol_count": 25,
+      "symbols": [
+        "ADAUSDT",
+        "AMZNUSDT",
+        "BANKUSDT",
+        "BTCUSDT",
+        "CLUSDT",
+        "CYSUSDT",
+        "DOGEUSDT",
+        "ETHUSDT",
+        "HOMEUSDT",
+        "HYPEUSDT",
+        "KORUUSDT",
+        "MUUSDT",
+        "PUMPFUNUSDT",
+        "SKHYNIXUSDT",
+        "SKHYUSDT",
+        "SNDKUSDT",
+        "SNXXUSDT",
+        "SOLUSDT",
+        "SOXLUSDT",
+        "SPCXUSDT",
+        "XAGUSDT",
+        "XAUTUSDT",
+        "XAUUSDT",
+        "XRPUSDT",
+        "ZECUSDT"
+      ],
+      "family_counts": {
+        "AGGRESSIVE_TRADE_FLOW": 50,
+        "LIQUIDATION_EVENTS": 16
+      },
+      "expected_hours": [
+        "20260805_09",
+        "20260805_10",
+        "20260805_11"
+      ],
+      "missing_hours": [
+        "20260805_10"
+      ],
+      "hourly": [
+        {
+          "UTC_hour": "20260805_09",
+          "partition_count": 35,
+          "open_tail_count": 7,
+          "sealed_count": 28,
+          "symbols": [
+            "ADAUSDT",
+            "AMZNUSDT",
+            "BANKUSDT",
+            "BTCUSDT",
+            "CLUSDT",
+            "CYSUSDT",
+            "DOGEUSDT",
+            "ETHUSDT",
+            "HOMEUSDT",
+            "HYPEUSDT",
+            "KORUUSDT",
+            "MUUSDT",
+            "PUMPFUNUSDT",
+            "SKHYNIXUSDT",
+            "SKHYUSDT",
+            "SNDKUSDT",
+            "SNXXUSDT",
+            "SOLUSDT",
+            "SOXLUSDT",
+            "SPCXUSDT",
+            "XAGUSDT",
+            "XAUTUSDT",
+            "XAUUSDT",
+            "XRPUSDT",
+            "ZECUSDT"
+          ],
+          "bytes": 6769942
+        },
+        {
+          "UTC_hour": "20260805_11",
+          "partition_count": 31,
+          "open_tail_count": 31,
+          "sealed_count": 0,
+          "symbols": [
+            "ADAUSDT",
+            "AMZNUSDT",
+            "BANKUSDT",
+            "BTCUSDT",
+            "CLUSDT",
+            "CYSUSDT",
+            "DOGEUSDT",
+            "ETHUSDT",
+            "HOMEUSDT",
+            "HYPEUSDT",
+            "KORUUSDT",
+            "MUUSDT",
+            "PUMPFUNUSDT",
+            "SKHYNIXUSDT",
+            "SKHYUSDT",
+            "SNDKUSDT",
+            "SNXXUSDT",
+            "SOLUSDT",
+            "SOXLUSDT",
+            "SPCXUSDT",
+            "XAGUSDT",
+            "XAUTUSDT",
+            "XAUUSDT",
+            "XRPUSDT",
+            "ZECUSDT"
+          ],
+          "bytes": 4853715
+        }
+      ],
+      "daily": [
+        {
+          "day_key": "20260805",
+          "hours_present": [
+            "20260805_09",
+            "20260805_11"
+          ],
+          "hours_present_count": 2,
+          "expected_hours_per_day": 24,
+          "completeness_ratio": 0.0833,
+          "complete": false,
+          "partition_count": 66,
+          "open_tails": 38,
+          "sealed": 28,
+          "status": "IN_PROGRESS"
+        }
+      ],
+      "target_calendar_days": 14,
+      "days_observed": 1,
+      "findings": [
+        {
+          "code": "HOURLY_GAPS",
+          "severity": "HIGH",
+          "summary": "Missing completed UTC hours: ['20260805_10']",
+          "evidence": {
+            "missing_hours": [
+              "20260805_10"
+            ],
+            "expected_hours": [
+              "20260805_09",
+              "20260805_10",
+              "20260805_11"
+            ],
+            "present_hours": [
+              "20260805_09",
+              "20260805_11"
+            ]
+          },
+          "recommendation": "Investigate WS gap / hour rotation; do not fill gaps with synthetic data",
+          "observed_at": "2026-08-05T11:19:43Z"
+        }
+      ],
+      "silent_fallback": false
+    },
+    "clock_heartbeat": {
+      "schema": "v14_a_clock_heartbeat",
+      "observed_at": "2026-08-05T11:19:43Z",
+      "campaign_id": "ms_accum_v13_integrity_14d",
+      "clock_status": "OK",
+      "heartbeat_status": "STALE",
+      "health_age_seconds": 666.288575,
+      "skew_ms": 0.0,
+      "newest_partition_hour": "20260805_11",
+      "checkpoint_trade_count": 157071,
+      "registry_clock_quality": null,
+      "thresholds": {
+        "heartbeat_stale_seconds": 180,
+        "clock_skew_warn_ms": 5000,
+        "clock_skew_critical_ms": 60000
+      },
+      "findings": [
+        {
+          "code": "HEARTBEAT_PROXY_STALE",
+          "severity": "HIGH",
+          "summary": "Health sampler heartbeat proxy stale",
+          "evidence": {
+            "health_age_seconds": 666.288575,
+            "threshold": 180
+          },
+          "recommendation": null,
+          "observed_at": "2026-08-05T11:19:43Z"
+        }
+      ],
+      "silent_fallback": false
+    },
+    "storage": {
+      "schema": "v14_a_storage_projection",
+      "observed_at": "2026-08-05T11:19:45Z",
+      "disk_root": "D:\\",
+      "free_bytes": 230528663552,
+      "free_gib": 214.7,
+      "total_bytes": 261340786688,
+      "campaign_bytes": 12977911,
+      "campaign_gib": 0.0121,
+      "bytes_per_second": 4709.787500818411,
+      "bytes_per_hour": 16955235.00294628,
+      "projected_campaign_bytes_horizon": 419903551,
+      "projected_free_bytes_horizon": 230121737911,
+      "hours_to_hard_cap": 2532.356233431089,
+      "hours_to_floor": 7263.5077679902215,
+      "horizon_hours": 24.0,
+      "floor_ok": true,
+      "under_soft_cap": true,
+      "under_hard_cap": true,
+      "hard_cap_bytes": 42949672960,
+      "soft_cap_bytes": 34359738368,
+      "floor_bytes": 107374182400,
+      "status": "OK",
+      "findings": [],
+      "velocity": {
+        "method": "sleep_sample",
+        "bytes": 12977911,
+        "file_count": 95,
+        "bytes_before": 12968461,
+        "file_count_before": 95,
+        "delta_bytes": 9450,
+        "delta_seconds": 2.006459951400757,
+        "bytes_per_second": 4709.787500818411,
+        "sampled_at": "2026-08-05T11:19:45Z"
+      }
+    },
+    "manifest_sampling": {
+      "schema": "v14_a_manifest_checksum_sample",
+      "observed_at": "2026-08-05T11:19:45Z",
+      "campaign_id": "ms_accum_v13_integrity_14d",
+      "status": "PASS",
+      "partition_count": 66,
+      "sealed_count": 28,
+      "open_tail_count": 38,
+      "sealed_ratio": 0.4242,
+      "sample_size": 28,
+      "sample_max": 32,
+      "mismatch_count": 0,
+      "unreadable_count": 0,
+      "samples": [
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\BTCUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "BTCUSDT",
+          "manifest_checksum": "fb97f0d38395962e9e823ad6f162e56ce30535c3f08a0cbef4c1a19a52d494ee",
+          "file_sha256": "c1638c0efd79370e96f7f36a6c0bb9616c363ffe74ec1c5c6d2bad9aef93884e",
+          "record_count": 3429,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "fb97f0d38395962e9e823ad6f162e56ce30535c3f08a0cbef4c1a19a52d494ee"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\SPCXUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SPCXUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "SPCXUSDT",
+          "manifest_checksum": "fbf302bb90d0f6b3634af5968ff30e31d05d955d6f8b8e23dfdc1deed9e62244",
+          "file_sha256": "d36e5a4ed7a13649640a7adea8bc324bfc24a0b315bbd2efdc05f6797d057960",
+          "record_count": 5149,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SPCXUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "fbf302bb90d0f6b3634af5968ff30e31d05d955d6f8b8e23dfdc1deed9e62244"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\XAUUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_XAUUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "XAUUSDT",
+          "manifest_checksum": "27bde03f49ccd68bbf24fc0e1b2177d382c0f716f5d3e3bdb7457f7fecffed2d",
+          "file_sha256": "2f636a69ce036a4397f93a64ada2452b7930944e9f741905bcfc43582469068b",
+          "record_count": 799,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_XAUUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "27bde03f49ccd68bbf24fc0e1b2177d382c0f716f5d3e3bdb7457f7fecffed2d"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\ZECUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_ZECUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "ZECUSDT",
+          "manifest_checksum": "d5fc2dd8acd9a6c37bb5ebc9b02b285d8a50d60cd18d300a286603a85b37f8dc",
+          "file_sha256": "d54be85aef67dd68c92fcc748810bea77fd2c741a395d93705c592ffa10ac554",
+          "record_count": 2191,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_ZECUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "d5fc2dd8acd9a6c37bb5ebc9b02b285d8a50d60cd18d300a286603a85b37f8dc"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\XAGUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_XAGUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "XAGUSDT",
+          "manifest_checksum": "4ec7c1180054420aca65719dcda796987722c1a8e9ec202490196af5f2243235",
+          "file_sha256": "054cb5c14b60a31fcf01f71ddd7b4ffda78be345fe98a5c77a1709bc094837a8",
+          "record_count": 498,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_XAGUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "4ec7c1180054420aca65719dcda796987722c1a8e9ec202490196af5f2243235"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\SNXXUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SNXXUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "SNXXUSDT",
+          "manifest_checksum": "14d12f6965374a92724ec919bd427c76f3c2ec0fb4f738ad188e2d50a453e324",
+          "file_sha256": "e153f5f9542b1747381ee8ab992a98b4e91380158ad26954d3dd4498fb301761",
+          "record_count": 1273,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SNXXUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "14d12f6965374a92724ec919bd427c76f3c2ec0fb4f738ad188e2d50a453e324"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\ETHUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "ETHUSDT",
+          "manifest_checksum": "22f5cb78f418f1abe4b6a9b66b98b85d340094bfcf76f01c483fa5f7a42e6b44",
+          "file_sha256": "e4949656e13aec8a857945787005ac4e9de22375c9e81554ce15267b6803a3b6",
+          "record_count": 5401,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "22f5cb78f418f1abe4b6a9b66b98b85d340094bfcf76f01c483fa5f7a42e6b44"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\HOMEUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_HOMEUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "HOMEUSDT",
+          "manifest_checksum": "4a8549bdcda71ccb24e94d99a20c7d70e1291db693b933831ea1e138f668d32d",
+          "file_sha256": "8e2071874e5df5b3a2f40bf705c6050594632dd0a157e7805fc079b08a1a2d72",
+          "record_count": 20484,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_HOMEUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "4a8549bdcda71ccb24e94d99a20c7d70e1291db693b933831ea1e138f668d32d"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\XRPUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_XRPUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "XRPUSDT",
+          "manifest_checksum": "9f423628143c5a363ab67b3493d2ed0bc2010b15c43e72cb923aba9b01de2eb9",
+          "file_sha256": "5f2f9f7a68f9412da8c734bb42f964662d6259edd4fd45166705c75353361b99",
+          "record_count": 1022,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_XRPUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "9f423628143c5a363ab67b3493d2ed0bc2010b15c43e72cb923aba9b01de2eb9"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\HYPEUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_HYPEUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "HYPEUSDT",
+          "manifest_checksum": "88a83484eb8ec0c4e705d641cd791cb62f147079eed46eab8ee3280167652c34",
+          "file_sha256": "c4b28871a159fe2a8c0fb23f3a7ba8bb2791e5ddd27b85d63aeaeb7719d28a60",
+          "record_count": 4439,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_HYPEUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "88a83484eb8ec0c4e705d641cd791cb62f147079eed46eab8ee3280167652c34"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\BANKUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_BANKUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "BANKUSDT",
+          "manifest_checksum": "72ccb1793e59637719e4f4a6635a6370a14c7ef9d5cc2d8259b0ebd5fdef4121",
+          "file_sha256": "83cbec76807a62151532b29903b5543244ee67fd532223eab6490fe261a7e289",
+          "record_count": 5834,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_BANKUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "72ccb1793e59637719e4f4a6635a6370a14c7ef9d5cc2d8259b0ebd5fdef4121"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\SKHYUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SKHYUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "SKHYUSDT",
+          "manifest_checksum": "fb2aefacf249a22f714924173c38984d5383c9757ffd1d7ba2481e48bd785d25",
+          "file_sha256": "11d9c233978971c102083e7d8755c23708ce39f461f87a2168fe895483bacdf4",
+          "record_count": 909,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SKHYUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "fb2aefacf249a22f714924173c38984d5383c9757ffd1d7ba2481e48bd785d25"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\SOXLUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SOXLUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "SOXLUSDT",
+          "manifest_checksum": "7cdc0ef288b6611a4ce74873b2292f34226a669d0a8426710cb47fbc7334e94f",
+          "file_sha256": "1b230715e2f543ec1d5b17ab136d5847bbfc555d494772bb678ec792bb7cb224",
+          "record_count": 5951,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SOXLUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "7cdc0ef288b6611a4ce74873b2292f34226a669d0a8426710cb47fbc7334e94f"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\XAUTUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_XAUTUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "XAUTUSDT",
+          "manifest_checksum": "5ca4eefb3d2bc69ab41d4a11d1e187a81b165a2ba0dee2c3f3f2edeafe4d600d",
+          "file_sha256": "db2246778e16b35e038824941ef7cd1392807afd7bea559925e04ea65d4c2d2d",
+          "record_count": 600,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_XAUTUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "5ca4eefb3d2bc69ab41d4a11d1e187a81b165a2ba0dee2c3f3f2edeafe4d600d"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\KORUUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_KORUUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "KORUUSDT",
+          "manifest_checksum": "8c6f4e0222b2bc85bf4383dd8c238a909d7011a4af54decde954d5688b9c3cd8",
+          "file_sha256": "7ec57660720af094af6531eafdf3dc4b5201e7a5da3b0f6d5c1dab117b87e2f0",
+          "record_count": 1166,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_KORUUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "8c6f4e0222b2bc85bf4383dd8c238a909d7011a4af54decde954d5688b9c3cd8"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\DOGEUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_DOGEUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "DOGEUSDT",
+          "manifest_checksum": "25b8e0373b8500bc10426c7a268bd909c9dce36946b94ed7ffa199b5cf86db4a",
+          "file_sha256": "ee15d3d9a8f7a3dd0bd48a896ceca8cb753595b8639c539fd4b12901edb6dc75",
+          "record_count": 657,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_DOGEUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "25b8e0373b8500bc10426c7a268bd909c9dce36946b94ed7ffa199b5cf86db4a"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\PUMPFUNUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_PUMPFUNUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "PUMPFUNUSDT",
+          "manifest_checksum": "c276648551c20de0b694cf2d5dfd30ffcbc3149acd784051934630c2623bdcbe",
+          "file_sha256": "d079639019b6e288b56487733102e82ce66e34b90fc8d792982c7dd4cf6862ea",
+          "record_count": 5985,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_PUMPFUNUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "c276648551c20de0b694cf2d5dfd30ffcbc3149acd784051934630c2623bdcbe"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\AMZNUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_AMZNUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "AMZNUSDT",
+          "manifest_checksum": "e58951d376211530bf2fce8ced1ba155a7d2a6a0d3a04964ae8bfc951271adf5",
+          "file_sha256": "5e29714373951546c90febf003be72e8cdda4a98e257989668c858064d612534",
+          "record_count": 186,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_AMZNUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "e58951d376211530bf2fce8ced1ba155a7d2a6a0d3a04964ae8bfc951271adf5"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\CLUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_CLUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "CLUSDT",
+          "manifest_checksum": "00fb821def9f64b12c2a31decdbb23951ba6f07b0f77f088ef99ee959ae5bc7f",
+          "file_sha256": "059963250481d1e8657dcb0a2a2ff2a0f72e63d6aa4d5c9dfb0ce86d586c84e9",
+          "record_count": 1193,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_CLUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "00fb821def9f64b12c2a31decdbb23951ba6f07b0f77f088ef99ee959ae5bc7f"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\CYSUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_CYSUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "CYSUSDT",
+          "manifest_checksum": "130b581bfb90ba74e74e1ea699628c62bd536301b414e0ea1551a02dff210612",
+          "file_sha256": "7b559573036e0c5b9ab0bf8173c1db62818ad2ac08c8b2c9f59d9ea1ef6cf9ed",
+          "record_count": 13,
+          "partition_id": "ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_CYSUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "130b581bfb90ba74e74e1ea699628c62bd536301b414e0ea1551a02dff210612"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\CYSUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_CYSUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "CYSUSDT",
+          "manifest_checksum": "cc0633ef4ed23b57d51a8dded54d7239994e4e6c8f50e7cef9af384cd5d59f4f",
+          "file_sha256": "96957a721a8c230341b0ceb16ede3509ef500524d1d2f9083cde976cb100f149",
+          "record_count": 12837,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_CYSUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "cc0633ef4ed23b57d51a8dded54d7239994e4e6c8f50e7cef9af384cd5d59f4f"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\SOLUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SOLUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "SOLUSDT",
+          "manifest_checksum": "aa975f9c9d1ca09c09352794f757dbd434e29839ecf75cf35c5945942aa4de91",
+          "file_sha256": "40c8af6927aef8735d8d210c2087e111d0c9a8f6a1bcd52a100dd864777e00d6",
+          "record_count": 1450,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SOLUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "aa975f9c9d1ca09c09352794f757dbd434e29839ecf75cf35c5945942aa4de91"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\MUUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_MUUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "MUUSDT",
+          "manifest_checksum": "7809cc305125200cd0f3f3988698dd0f29ebf74827dc34b99f3bd25c6da46136",
+          "file_sha256": "030642538623ec9ec6c5d39669116507e6d66dcc2c5595b2b9f817811aa04094",
+          "record_count": 1198,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_MUUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "7809cc305125200cd0f3f3988698dd0f29ebf74827dc34b99f3bd25c6da46136"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\ADAUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_ADAUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "ADAUSDT",
+          "manifest_checksum": "cd27eb17ddbcb57e8adf6e944a26df4e0c5773a5253a2495c18d96f2a5c933e9",
+          "file_sha256": "199ffb6365c6ce1632e5d6c21a1d8b16f6b152ed2bab6567cd6fac9aaa943047",
+          "record_count": 11,
+          "partition_id": "ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_ADAUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "cd27eb17ddbcb57e8adf6e944a26df4e0c5773a5253a2495c18d96f2a5c933e9"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\SKHYNIXUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SKHYNIXUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "SKHYNIXUSDT",
+          "manifest_checksum": "d55fa8b60204f0b37b2f623765636eba90a82cedf8d1d81ae8e256ebe0ae6157",
+          "file_sha256": "82ce7ba6b4d3880b56c7faf42ce9a9ba62abecd2d9a1c379a99d4e9e732ed28a",
+          "record_count": 1578,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SKHYNIXUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "d55fa8b60204f0b37b2f623765636eba90a82cedf8d1d81ae8e256ebe0ae6157"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\ADAUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_ADAUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "ADAUSDT",
+          "manifest_checksum": "81388c8721eedefb54c5f90b996c279e1578a877a91b2162320f05468b0cba30",
+          "file_sha256": "1ea4e1449f77e1b84b5f8c11a2a907620cf8ced2560e5063d547cce35b203e0e",
+          "record_count": 6304,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_ADAUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "81388c8721eedefb54c5f90b996c279e1578a877a91b2162320f05468b0cba30"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\BTCUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_BTCUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "BTCUSDT",
+          "manifest_checksum": "42735a18bdeda7f91e6618f22935dd7a238f2e843366e7220f5367700eb24ce8",
+          "file_sha256": "c8bee743288e73d5caf541ed15f29e51ec2694a3cab580dc5f9491d845b4ff1c",
+          "record_count": 1,
+          "partition_id": "ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_BTCUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "42735a18bdeda7f91e6618f22935dd7a238f2e843366e7220f5367700eb24ce8"
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\SNDKUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SNDKUSDT_20260805_09_0.jsonl.gz",
+          "manifest_present": true,
+          "UTC_hour": "20260805_09",
+          "symbol": "SNDKUSDT",
+          "manifest_checksum": "551fca6f09d4e5d074b1fa48f49396059b69582f54196bd00fbf939914707329",
+          "file_sha256": "69650c10f6ea87a353d9841cf7e9057c58dc7749ef8bed168e7b802b9cbffdbd",
+          "record_count": 2572,
+          "partition_id": "ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SNDKUSDT_20260805_09_0.jsonl",
+          "file_sha_match": null,
+          "sample_status": "CHECKSUM_FIELD_PRESENT_NO_FILE_DIGEST",
+          "rolling_or_record_checksum": "551fca6f09d4e5d074b1fa48f49396059b69582f54196bd00fbf939914707329"
+        }
+      ],
+      "findings": [],
+      "silent_fallback": false
+    },
+    "open_tail": {
+      "schema": "v14_a_open_tail_accounting",
+      "observed_at": "2026-08-05T11:19:45Z",
+      "campaign_id": "ms_accum_v13_integrity_14d",
+      "status": "FINDINGS",
+      "open_tail_count": 38,
+      "expected_current_hour_open_tails": 31,
+      "stale_open_tail_count": 7,
+      "interrupted_finalize_count": 0,
+      "current_utc_hour": "20260805_11",
+      "policy": {
+        "mutate_open_tails": false,
+        "rewrite_raw": false,
+        "delete_open_tails": false,
+        "resume_fence": true
+      },
+      "examples": [
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\ADAUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_ADAUSDT_20260805_11_1.jsonl.gz",
+          "UTC_hour": "20260805_11",
+          "symbol": "ADAUSDT",
+          "open_marker_present": false,
+          "manifest_present": false
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\AMZNUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_AMZNUSDT_20260805_11_1.jsonl.gz",
+          "UTC_hour": "20260805_11",
+          "symbol": "AMZNUSDT",
+          "open_marker_present": false,
+          "manifest_present": false
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\BANKUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_BANKUSDT_20260805_11_1.jsonl.gz",
+          "UTC_hour": "20260805_11",
+          "symbol": "BANKUSDT",
+          "open_marker_present": false,
+          "manifest_present": false
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\BTCUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260805_11_1.jsonl.gz",
+          "UTC_hour": "20260805_11",
+          "symbol": "BTCUSDT",
+          "open_marker_present": false,
+          "manifest_present": false
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\CLUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_CLUSDT_20260805_11_1.jsonl.gz",
+          "UTC_hour": "20260805_11",
+          "symbol": "CLUSDT",
+          "open_marker_present": false,
+          "manifest_present": false
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\CYSUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_CYSUSDT_20260805_11_1.jsonl.gz",
+          "UTC_hour": "20260805_11",
+          "symbol": "CYSUSDT",
+          "open_marker_present": false,
+          "manifest_present": false
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\DOGEUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_DOGEUSDT_20260805_11_1.jsonl.gz",
+          "UTC_hour": "20260805_11",
+          "symbol": "DOGEUSDT",
+          "open_marker_present": false,
+          "manifest_present": false
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\ETHUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260805_11_1.jsonl.gz",
+          "UTC_hour": "20260805_11",
+          "symbol": "ETHUSDT",
+          "open_marker_present": false,
+          "manifest_present": false
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\HOMEUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_HOMEUSDT_20260805_11_1.jsonl.gz",
+          "UTC_hour": "20260805_11",
+          "symbol": "HOMEUSDT",
+          "open_marker_present": false,
+          "manifest_present": false
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\HYPEUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_HYPEUSDT_20260805_11_1.jsonl.gz",
+          "UTC_hour": "20260805_11",
+          "symbol": "HYPEUSDT",
+          "open_marker_present": false,
+          "manifest_present": false
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\KORUUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_KORUUSDT_20260805_11_1.jsonl.gz",
+          "UTC_hour": "20260805_11",
+          "symbol": "KORUUSDT",
+          "open_marker_present": false,
+          "manifest_present": false
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\MUUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_MUUSDT_20260805_11_1.jsonl.gz",
+          "UTC_hour": "20260805_11",
+          "symbol": "MUUSDT",
+          "open_marker_present": false,
+          "manifest_present": false
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\PUMPFUNUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_PUMPFUNUSDT_20260805_11_1.jsonl.gz",
+          "UTC_hour": "20260805_11",
+          "symbol": "PUMPFUNUSDT",
+          "open_marker_present": false,
+          "manifest_present": false
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\SKHYNIXUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SKHYNIXUSDT_20260805_11_1.jsonl.gz",
+          "UTC_hour": "20260805_11",
+          "symbol": "SKHYNIXUSDT",
+          "open_marker_present": false,
+          "manifest_present": false
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\SKHYUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SKHYUSDT_20260805_11_1.jsonl.gz",
+          "UTC_hour": "20260805_11",
+          "symbol": "SKHYUSDT",
+          "open_marker_present": false,
+          "manifest_present": false
+        },
+        {
+          "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\SNDKUSDT\\ms12_ACCUM24_1785922926_AGGRESSIVE_TRADE_FLOW_SNDKUSDT_20260805_11_1.jsonl.gz",
+          "UTC_hour": "20260805_11",
+          "symbol": "SNDKUSDT",
+          "open_marker_present": false,
+          "manifest_present": false
+        }
+      ],
+      "findings": [
+        {
+          "code": "STALE_OPEN_TAILS",
+          "severity": "HIGH",
+          "summary": "7 open-tail partitions outside current hour exceed stale threshold",
+          "evidence": {
+            "stale_count": 7,
+            "stale_seconds": 3600,
+            "examples": [
+              "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\ETHUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_ETHUSDT_20260805_09_0.jsonl.gz",
+              "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\HOMEUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_HOMEUSDT_20260805_09_0.jsonl.gz",
+              "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\HYPEUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_HYPEUSDT_20260805_09_0.jsonl.gz",
+              "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\PUMPFUNUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_PUMPFUNUSDT_20260805_09_0.jsonl.gz",
+              "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\SOLUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_SOLUSDT_20260805_09_0.jsonl.gz",
+              "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\SPCXUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_SPCXUSDT_20260805_09_0.jsonl.gz",
+              "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\XAUTUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_XAUTUSDT_20260805_09_0.jsonl.gz"
+            ]
+          },
+          "recommendation": "Retain open tails; fence on resume; do not rewrite or delete",
+          "observed_at": "2026-08-05T11:19:45Z"
+        }
+      ],
+      "silent_fallback": false
+    },
+    "duplicate_writer": {
+      "schema": "v14_a_duplicate_writer_detection",
+      "observed_at": "2026-08-05T11:19:45Z",
+      "campaign_id": "ms_accum_v13_integrity_14d",
+      "status": "OK",
+      "parent": {
+        "pid": 12372,
+        "alive": true,
+        "reason": "open_process_ok"
+      },
+      "worker": {
+        "pid": 4400,
+        "alive": true,
+        "reason": "open_process_ok"
+      },
+      "session_counts": {
+        "ms12_ACCUM24_1785922926": 66
+      },
+      "session_count": 1,
+      "duplicate_partition_id_count": 0,
+      "launch_health_pid_mismatch": false,
+      "findings": [],
+      "policy": {
+        "exclusive_partition_ids": true,
+        "allow_concurrent_writers": false
+      },
+      "silent_fallback": false,
+      "exchange_write_attempt_count": 0
+    },
+    "event_study_readiness_status": "NOT_READY",
+    "event_study_real_execution": false,
+    "exchange_write_attempt_count": 0,
+    "collector_modified": false,
+    "live_stop_executed": false,
+    "restart_executed": false,
+    "recommendations": {
+      "schema": "v14_a_capture_supervisor_recommendation",
+      "observed_at": "2026-08-05T11:19:45Z",
+      "ops_role": "observe_recommend_only",
+      "stop_execution_owner": "local_Coordinator",
+      "restart_execution_owner": "local_Coordinator",
+      "safe_stop_required": false,
+      "safe_stop_executed": false,
+      "restart_recommended": false,
+      "restart_executed": false,
+      "restart_mode": null,
+      "primary_reason": "HEALTH_STALE",
+      "reasons": [
+        "HEALTH_STALE",
+        "HOURLY_GAPS",
+        "HEARTBEAT_PROXY_STALE",
+        "STALE_OPEN_TAILS"
+      ],
+      "critical_count": 0,
+      "high_count": 4,
+      "actions": [
+        "persist_supervisor_observation",
+        "notify_coordinator"
+      ],
+      "forbidden_actions": [
+        "supervisor_executes_live_stop",
+        "supervisor_executes_restart",
+        "exchange_write",
+        "event_study_execution",
+        "raw_partition_rewrite",
+        "open_tail_deletion",
+        "dual_writer_start"
+      ],
+      "exchange_write_attempt_count": 0,
+      "event_study_readiness_status": "NOT_READY"
+    },
+    "findings": [
+      {
+        "code": "HEALTH_STALE",
+        "severity": "HIGH",
+        "summary": "Health file older than 300s",
+        "evidence": {
+          "checked_at": "2026-08-05T11:08:37Z",
+          "age_seconds": 666.244742
+        },
+        "recommendation": "Refresh health sampler; treat WS health as degraded until fresh",
+        "observed_at": "2026-08-05T11:19:43Z"
+      },
+      {
+        "code": "HOURLY_GAPS",
+        "severity": "HIGH",
+        "summary": "Missing completed UTC hours: ['20260805_10']",
+        "evidence": {
+          "missing_hours": [
+            "20260805_10"
+          ],
+          "expected_hours": [
+            "20260805_09",
+            "20260805_10",
+            "20260805_11"
+          ],
+          "present_hours": [
+            "20260805_09",
+            "20260805_11"
+          ]
+        },
+        "recommendation": "Investigate WS gap / hour rotation; do not fill gaps with synthetic data",
+        "observed_at": "2026-08-05T11:19:43Z"
+      },
+      {
+        "code": "HEARTBEAT_PROXY_STALE",
+        "severity": "HIGH",
+        "summary": "Health sampler heartbeat proxy stale",
+        "evidence": {
+          "health_age_seconds": 666.288575,
+          "threshold": 180
+        },
+        "recommendation": null,
+        "observed_at": "2026-08-05T11:19:43Z"
+      },
+      {
+        "code": "STALE_OPEN_TAILS",
+        "severity": "HIGH",
+        "summary": "7 open-tail partitions outside current hour exceed stale threshold",
+        "evidence": {
+          "stale_count": 7,
+          "stale_seconds": 3600,
+          "examples": [
+            "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\ETHUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_ETHUSDT_20260805_09_0.jsonl.gz",
+            "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\HOMEUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_HOMEUSDT_20260805_09_0.jsonl.gz",
+            "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\HYPEUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_HYPEUSDT_20260805_09_0.jsonl.gz",
+            "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\PUMPFUNUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_PUMPFUNUSDT_20260805_09_0.jsonl.gz",
+            "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\SOLUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_SOLUSDT_20260805_09_0.jsonl.gz",
+            "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\SPCXUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_SPCXUSDT_20260805_09_0.jsonl.gz",
+            "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\XAUTUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_XAUTUSDT_20260805_09_0.jsonl.gz"
+          ]
+        },
+        "recommendation": "Retain open tails; fence on resume; do not rewrite or delete",
+        "observed_at": "2026-08-05T11:19:45Z"
+      }
+    ],
+    "critical_findings": [],
+    "high_findings": [
+      {
+        "code": "HEALTH_STALE",
+        "severity": "HIGH",
+        "summary": "Health file older than 300s",
+        "evidence": {
+          "checked_at": "2026-08-05T11:08:37Z",
+          "age_seconds": 666.244742
+        },
+        "recommendation": "Refresh health sampler; treat WS health as degraded until fresh",
+        "observed_at": "2026-08-05T11:19:43Z"
+      },
+      {
+        "code": "HOURLY_GAPS",
+        "severity": "HIGH",
+        "summary": "Missing completed UTC hours: ['20260805_10']",
+        "evidence": {
+          "missing_hours": [
+            "20260805_10"
+          ],
+          "expected_hours": [
+            "20260805_09",
+            "20260805_10",
+            "20260805_11"
+          ],
+          "present_hours": [
+            "20260805_09",
+            "20260805_11"
+          ]
+        },
+        "recommendation": "Investigate WS gap / hour rotation; do not fill gaps with synthetic data",
+        "observed_at": "2026-08-05T11:19:43Z"
+      },
+      {
+        "code": "HEARTBEAT_PROXY_STALE",
+        "severity": "HIGH",
+        "summary": "Health sampler heartbeat proxy stale",
+        "evidence": {
+          "health_age_seconds": 666.288575,
+          "threshold": 180
+        },
+        "recommendation": null,
+        "observed_at": "2026-08-05T11:19:43Z"
+      },
+      {
+        "code": "STALE_OPEN_TAILS",
+        "severity": "HIGH",
+        "summary": "7 open-tail partitions outside current hour exceed stale threshold",
+        "evidence": {
+          "stale_count": 7,
+          "stale_seconds": 3600,
+          "examples": [
+            "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\ETHUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_ETHUSDT_20260805_09_0.jsonl.gz",
+            "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\HOMEUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_HOMEUSDT_20260805_09_0.jsonl.gz",
+            "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\HYPEUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_HYPEUSDT_20260805_09_0.jsonl.gz",
+            "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\PUMPFUNUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_PUMPFUNUSDT_20260805_09_0.jsonl.gz",
+            "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\SOLUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_SOLUSDT_20260805_09_0.jsonl.gz",
+            "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\SPCXUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_SPCXUSDT_20260805_09_0.jsonl.gz",
+            "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\LIQUIDATION_EVENTS\\XAUTUSDT\\ms12_ACCUM24_1785922926_LIQUIDATION_EVENTS_XAUTUSDT_20260805_09_0.jsonl.gz"
+          ]
+        },
+        "recommendation": "Retain open tails; fence on resume; do not rewrite or delete",
+        "observed_at": "2026-08-05T11:19:45Z"
+      }
+    ],
+    "integrity_status": "DEGRADED"
+  },
+  "pytest": {
+    "passed": true,
+    "returncode": 0,
+    "stdout_tail": "..........                                                               [100%]\n10 passed in 0.31s\n",
+    "stderr_tail": ""
+  },
+  "metrics": {
+    "partition_count": 66,
+    "sealed_count": 28,
+    "open_tail_count": 38,
+    "symbol_count": 25,
+    "missing_hours": [
+      "20260805_10"
+    ],
+    "campaign_bytes": 12977911,
+    "free_gib": 214.7,
+    "bytes_per_second": 4709.787500818411,
+    "trade_count": 157071,
+    "liq_count": 53,
+    "process_status": "DEGRADED",
+    "ws_status": "HEALTHY",
+    "integrity_status": "DEGRADED",
+    "safe_stop_required": false
+  },
+  "event_study_readiness_status": "NOT_READY",
+  "exchange_write_attempt_count": 0,
+  "collector_modified": false
+}
