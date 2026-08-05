@@ -1,0 +1,12 @@
+{
+  "raw_modified": false,
+  "classification_counts": {
+    "ACTUAL_DATA_CORRUPTION": 0,
+    "EXPECTED_OPEN_TAIL": 113,
+    "MIGRATION_ARTIFACT": 113,
+    "MANIFEST_BUG": 43,
+    "FINALIZER_FALSE_POSITIVE": 113,
+    "LINKAGE_SEMANTICS_BUG": 113,
+    "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "microstructure_operations_v13_a_storage_budget",
+  "soft_limit_bytes": 34359738368,
+  "hard_limit_bytes": 42949672960,
+  "hard_cap_gib": 40,
+  "minimum_free_disk_bytes": 107374182400,
+  "storage_floor_gib": 100,
+  "disk_root": "D:\\",
+  "storage_cap_configured": true,
+  "current_compressed_partition_bytes": 0,
+  "current_manifest_bytes": 0,
+  "current_total_bytes": 0,
+  "mode": "NORMAL",
+  "stop_requested": false,
+  "stop_reason": null,
+  "minimum_free_disk": {
+    "schema": "microstructure_operations_v13_a_minimum_free_disk",
+    "path": "D:\\",
+    "free_bytes": 235040759808,
+    "free_gib": 218.899,
+    "minimum_free_disk_bytes": 107374182400,
+    "minimum_free_disk_gib": 100.0,
+    "status": "PASS",
+    "passed": true
+  },
+  "live_free_bytes": 235040759808,
+  "deletion_executed": false
+}
