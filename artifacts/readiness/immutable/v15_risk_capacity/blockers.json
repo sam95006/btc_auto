@@ -1,0 +1,26 @@
+[
+  {
+    "blocker_id": "QUALIFICATION_NOT_AUTHORIZED",
+    "detail": "qualification_ready_count forced 0; research labels only"
+  },
+  {
+    "blocker_id": "STRATEGY_PROMOTION_BANNED",
+    "detail": "AI and deterministic engine cannot promote strategies"
+  },
+  {
+    "blocker_id": "AI_CANNOT_OVERRIDE",
+    "detail": "protected review fields refuse AI mutation"
+  },
+  {
+    "blocker_id": "OOS_AND_FORMAL_WF_BANNED",
+    "detail": "engine uses synthetic development fixtures only"
+  },
+  {
+    "blocker_id": "NO_STATUS_JSON",
+    "detail": "V15-H does not emit *_status.json artifacts"
+  },
+  {
+    "blocker_id": "NO_AUTO_INTEGRATE",
+    "detail": "lane does not merge into PR #27 or parent tip"
+  }
+]

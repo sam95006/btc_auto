@@ -1,0 +1,97 @@
+{
+  "ai_override_applied_count": 0,
+  "critical_remaining_count": 0,
+  "deterministic_fingerprint_probe": "cd48b08e143d042b6eaa7de5c3bc1e58ef62b792e1aee2a393be9b5751113f20",
+  "findings": [
+    {
+      "detail": "dimensions=['cancel_replace', 'fees', 'funding', 'instrument_concentration', 'latency', 'liquidation_distance', 'liquidity_collapse', 'market_impact', 'max_drawdown_assumptions', 'missing_data', 'partial_fills', 'position_concentration', 'queue_position', 'regime_concentration', 'slippage', 'spread', 'stale_data', 'trade_size_capacity']",
+      "finding_id": "ADV_DIMENSION_COVERAGE",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "all required cost components present on every candidate",
+      "finding_id": "ADV_FULL_COST_COMPONENTS",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "expectancy, capacity, concentrations, drawdown, liquidation, data quality, fingerprint",
+      "finding_id": "ADV_REQUIRED_OUTPUTS",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "authority=backend.nexus_execution.cost_model; formula_mutated=false",
+      "finding_id": "ADV_CANONICAL_COST_AUTHORITY",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "all labels allowed",
+      "finding_id": "ADV_LABEL_ALLOWLIST",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "qualification_ready_count=0",
+      "finding_id": "ADV_QUALIFICATION_READY_ZERO",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "strategy_promoted_count=0; strategy_selected_count=0",
+      "finding_id": "ADV_NO_STRATEGY_PROMOTION",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "applied=0 attempted=14",
+      "finding_id": "ADV_AI_CANNOT_OVERRIDE",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "fingerprint_match=True",
+      "finding_id": "ADV_DETERMINISTIC_FINGERPRINT",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "oos/wf/demo/shadow/exchange/profitability/qualified/pr27/ai/status-json bans held",
+      "finding_id": "ADV_HARD_BAN_COMPLIANCE",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "label_histogram={'CAPACITY_LIMITED': 0, 'CONCENTRATION_BLOCKED': 1, 'COST_DESTROYED': 7, 'DATA_QUALITY_BLOCKED': 2, 'DEVELOPMENT_REVIEW_ONLY': 0, 'DRAWDOWN_ASSUMPTION_UNSAFE': 1, 'FRAGILE_TO_EXECUTION': 1, 'INSUFFICIENT_SAMPLE': 1, 'LIQUIDATION_DISTANCE_UNSAFE': 1, 'RISK_CAPACITY_OBSERVED': 0}",
+      "finding_id": "ADV_NEGATIVE_PATH_COVERAGE",
+      "severity": "HIGH",
+      "status": "PASS"
+    },
+    {
+      "detail": "all candidates declare synthetic development evidence class",
+      "finding_id": "ADV_NO_FIXTURE_AS_LIVE_EDGE",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "CostBridge verified; market impact explicitly outside bridge",
+      "finding_id": "ADV_NO_SILENT_COST_FALLBACK",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "status_json_files=[]",
+      "finding_id": "ADV_NO_STATUS_JSON",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    }
+  ],
+  "hard_ban_count": 17,
+  "pass_ok": true,
+  "qualification_ready_count": 0,
+  "remaining_count": 0,
+  "schema": "FOUNDER_V15_H_ADVERSARIAL_REVIEW",
+  "strategy_promoted_count": 0
+}

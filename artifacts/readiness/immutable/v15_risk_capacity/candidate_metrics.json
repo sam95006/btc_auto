@@ -1,0 +1,820 @@
+[
+  {
+    "ai_override_applied": false,
+    "ai_override_attempted": true,
+    "break_even_cost": "48.000000000",
+    "candidate_id": "RC01",
+    "capacity_estimate": {
+      "capacity_limited": true,
+      "capacity_notional_usdt": "300.0000",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": {
+        "impact_bps": "1.414213562373095048801688724",
+        "net_pnl": "0.7029437251522859414379735312",
+        "size_scale": "0.5"
+      },
+      "maximum_viable_size_scale": "0.5"
+    },
+    "concentration_review": {
+      "concentration_blocked": false,
+      "instrument_concentration": "0.22",
+      "instrument_limit": "0.4",
+      "position_concentration": "0.18",
+      "position_limit": "0.35",
+      "regime_concentration": "0.30",
+      "regime_limit": "0.55"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "13.200000000",
+      "exit_fee": "13.200000000",
+      "funding_cost": "2.40000000",
+      "market_impact_approximation": "4.8000000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "9.600000",
+      "spread_cost": "4.800000"
+    },
+    "data_quality_review": {
+      "age_stale": false,
+      "data_age_sec": "30",
+      "data_quality_blocked": false,
+      "max_age_sec": "120.0",
+      "missing_data": false,
+      "stale_data": false
+    },
+    "deterministic_fingerprint": "7f6efb4e11cf5ad3a0dfcb08705975c68ec79f252263124084c22291cdcdd1bf",
+    "drawdown_review": {
+      "assumed_max_drawdown": "0.08",
+      "drawdown_assumption_unsafe": false,
+      "limit": "0.2"
+    },
+    "fragility_score": "0.9743589743589743589743589744",
+    "gross_expectancy": "48.0000",
+    "label": "COST_DESTROYED",
+    "liquidation_distance_review": {
+      "liquidation_distance_pct": "12.0",
+      "liquidation_distance_unsafe": false,
+      "min_distance_pct": "5.0"
+    },
+    "mechanism_family": "ORDER_FLOW_IMBALANCE",
+    "net_expectancy": "0.000000000",
+    "strategy_promoted": false
+  },
+  {
+    "ai_override_applied": false,
+    "ai_override_attempted": true,
+    "break_even_cost": "86.400000000",
+    "candidate_id": "RC02",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "0.000",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": null,
+      "maximum_viable_size_scale": "0"
+    },
+    "concentration_review": {
+      "concentration_blocked": false,
+      "instrument_concentration": "0.25",
+      "instrument_limit": "0.4",
+      "position_concentration": "0.20",
+      "position_limit": "0.35",
+      "regime_concentration": "0.35",
+      "regime_limit": "0.55"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "23.760000000",
+      "exit_fee": "23.760000000",
+      "funding_cost": "4.32000000",
+      "market_impact_approximation": "8.6400000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "17.280000",
+      "spread_cost": "8.640000"
+    },
+    "data_quality_review": {
+      "age_stale": false,
+      "data_age_sec": "45",
+      "data_quality_blocked": false,
+      "max_age_sec": "120.0",
+      "missing_data": false,
+      "stale_data": false
+    },
+    "deterministic_fingerprint": "9bd932fa85dda92eb1c9059a25bda01afa5cf115b0a609cb7abc6e07d144c579",
+    "drawdown_review": {
+      "assumed_max_drawdown": "0.10",
+      "drawdown_assumption_unsafe": false,
+      "limit": "0.2"
+    },
+    "fragility_score": "1",
+    "gross_expectancy": "57.6000",
+    "label": "COST_DESTROYED",
+    "liquidation_distance_review": {
+      "liquidation_distance_pct": "9.0",
+      "liquidation_distance_unsafe": false,
+      "min_distance_pct": "5.0"
+    },
+    "mechanism_family": "ABSORPTION",
+    "net_expectancy": "-28.800000000",
+    "strategy_promoted": false
+  },
+  {
+    "ai_override_applied": false,
+    "ai_override_attempted": true,
+    "break_even_cost": "89.60000000",
+    "candidate_id": "RC03",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "32000.00",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": {
+        "impact_bps": "8.944271909999158785636694674",
+        "net_pnl": "945.7932368640753728069521571",
+        "size_scale": "20"
+      },
+      "maximum_viable_size_scale": "20"
+    },
+    "concentration_review": {
+      "concentration_blocked": false,
+      "instrument_concentration": "0.30",
+      "instrument_limit": "0.4",
+      "position_concentration": "0.28",
+      "position_limit": "0.35",
+      "regime_concentration": "0.40",
+      "regime_limit": "0.55"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "24.64000000",
+      "exit_fee": "24.64000000",
+      "funding_cost": "4.4800000",
+      "market_impact_approximation": "8.960000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "17.92000",
+      "spread_cost": "8.96000"
+    },
+    "data_quality_review": {
+      "age_stale": false,
+      "data_age_sec": "20",
+      "data_quality_blocked": false,
+      "max_age_sec": "120.0",
+      "missing_data": false,
+      "stale_data": false
+    },
+    "deterministic_fingerprint": "a7e9a7a5fa00188ea63e2e78469fa2ac194d530fefb1ecc72e5cf8538b72a800",
+    "drawdown_review": {
+      "assumed_max_drawdown": "0.12",
+      "drawdown_assumption_unsafe": false,
+      "limit": "0.2"
+    },
+    "fragility_score": "0.5384615384615384615384615385",
+    "gross_expectancy": "168.000",
+    "label": "FRAGILE_TO_EXECUTION",
+    "liquidation_distance_review": {
+      "liquidation_distance_pct": "6.5",
+      "liquidation_distance_unsafe": false,
+      "min_distance_pct": "5.0"
+    },
+    "mechanism_family": "LIQUIDATION_CASCADE",
+    "net_expectancy": "78.40000000",
+    "strategy_promoted": false
+  },
+  {
+    "ai_override_applied": false,
+    "ai_override_attempted": true,
+    "break_even_cost": "61.44000000",
+    "candidate_id": "RC04",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "0.00",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": null,
+      "maximum_viable_size_scale": "0"
+    },
+    "concentration_review": {
+      "concentration_blocked": false,
+      "instrument_concentration": "0.28",
+      "instrument_limit": "0.4",
+      "position_concentration": "0.22",
+      "position_limit": "0.35",
+      "regime_concentration": "0.45",
+      "regime_limit": "0.55"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "16.89600000",
+      "exit_fee": "16.89600000",
+      "funding_cost": "3.0720000",
+      "market_impact_approximation": "6.144000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "12.28800",
+      "spread_cost": "6.14400"
+    },
+    "data_quality_review": {
+      "age_stale": false,
+      "data_age_sec": "55",
+      "data_quality_blocked": false,
+      "max_age_sec": "120.0",
+      "missing_data": false,
+      "stale_data": false
+    },
+    "deterministic_fingerprint": "d1bc7daf15b8a5f45b90d66713608abb0e3b97f9b60c875b36f8054836384b3e",
+    "drawdown_review": {
+      "assumed_max_drawdown": "0.15",
+      "drawdown_assumption_unsafe": false,
+      "limit": "0.2"
+    },
+    "fragility_score": "0.9743589743589743589743589744",
+    "gross_expectancy": "48.000",
+    "label": "COST_DESTROYED",
+    "liquidation_distance_review": {
+      "liquidation_distance_pct": "8.0",
+      "liquidation_distance_unsafe": false,
+      "min_distance_pct": "5.0"
+    },
+    "mechanism_family": "SPREAD_SHOCK",
+    "net_expectancy": "-13.44000000",
+    "strategy_promoted": false
+  },
+  {
+    "ai_override_applied": false,
+    "ai_override_attempted": true,
+    "break_even_cost": "57.600000000",
+    "candidate_id": "RC05",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "0.000",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": null,
+      "maximum_viable_size_scale": "0"
+    },
+    "concentration_review": {
+      "concentration_blocked": false,
+      "instrument_concentration": "0.32",
+      "instrument_limit": "0.4",
+      "position_concentration": "0.25",
+      "position_limit": "0.35",
+      "regime_concentration": "0.38",
+      "regime_limit": "0.55"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "15.840000000",
+      "exit_fee": "15.840000000",
+      "funding_cost": "2.88000000",
+      "market_impact_approximation": "5.7600000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "11.520000",
+      "spread_cost": "5.760000"
+    },
+    "data_quality_review": {
+      "age_stale": false,
+      "data_age_sec": "40",
+      "data_quality_blocked": false,
+      "max_age_sec": "120.0",
+      "missing_data": false,
+      "stale_data": false
+    },
+    "deterministic_fingerprint": "4c468497725cd48491576e424a88883a1cdaa5a0bda5edf1949ced5a6d7f188a",
+    "drawdown_review": {
+      "assumed_max_drawdown": "0.09",
+      "drawdown_assumption_unsafe": false,
+      "limit": "0.2"
+    },
+    "fragility_score": "1",
+    "gross_expectancy": "19.2000",
+    "label": "COST_DESTROYED",
+    "liquidation_distance_review": {
+      "liquidation_distance_pct": "11.0",
+      "liquidation_distance_unsafe": false,
+      "min_distance_pct": "5.0"
+    },
+    "mechanism_family": "FUNDING_BASIS",
+    "net_expectancy": "-38.400000000",
+    "strategy_promoted": false
+  },
+  {
+    "ai_override_applied": false,
+    "ai_override_attempted": true,
+    "break_even_cost": "123.200000",
+    "candidate_id": "RC06",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "56000",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": {
+        "impact_bps": "8.944271909999158785636694674",
+        "net_pnl": "1960.465700688103637609559216",
+        "size_scale": "20"
+      },
+      "maximum_viable_size_scale": "20"
+    },
+    "concentration_review": {
+      "concentration_blocked": true,
+      "instrument_concentration": "0.55",
+      "instrument_limit": "0.4",
+      "position_concentration": "0.48",
+      "position_limit": "0.35",
+      "regime_concentration": "0.70",
+      "regime_limit": "0.55"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "33.880000",
+      "exit_fee": "33.880000",
+      "funding_cost": "6.16000",
+      "market_impact_approximation": "12.3200",
+      "partial_fill_cost": "0",
+      "slippage_cost": "24.640",
+      "spread_cost": "12.320"
+    },
+    "data_quality_review": {
+      "age_stale": false,
+      "data_age_sec": "35",
+      "data_quality_blocked": false,
+      "max_age_sec": "120.0",
+      "missing_data": false,
+      "stale_data": false
+    },
+    "deterministic_fingerprint": "e8df4b1715da19806b74b954a2282a7ceea4ffe61911f8661dbdf50e3577ee81",
+    "drawdown_review": {
+      "assumed_max_drawdown": "0.14",
+      "drawdown_assumption_unsafe": false,
+      "limit": "0.2"
+    },
+    "fragility_score": "0.4615384615384615384615384615",
+    "gross_expectancy": "264.00",
+    "label": "CONCENTRATION_BLOCKED",
+    "liquidation_distance_review": {
+      "liquidation_distance_pct": "7.0",
+      "liquidation_distance_unsafe": false,
+      "min_distance_pct": "5.0"
+    },
+    "mechanism_family": "CONCENTRATION_HOT",
+    "net_expectancy": "140.800000",
+    "strategy_promoted": false
+  },
+  {
+    "ai_override_applied": false,
+    "ai_override_attempted": true,
+    "break_even_cost": "84.000000",
+    "candidate_id": "RC07",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "0",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": null,
+      "maximum_viable_size_scale": "0"
+    },
+    "concentration_review": {
+      "concentration_blocked": false,
+      "instrument_concentration": "0.25",
+      "instrument_limit": "0.4",
+      "position_concentration": "0.20",
+      "position_limit": "0.35",
+      "regime_concentration": "0.40",
+      "regime_limit": "0.55"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "23.100000",
+      "exit_fee": "23.100000",
+      "funding_cost": "4.20000",
+      "market_impact_approximation": "8.4000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "16.800",
+      "spread_cost": "8.400"
+    },
+    "data_quality_review": {
+      "age_stale": false,
+      "data_age_sec": "50",
+      "data_quality_blocked": false,
+      "max_age_sec": "120.0",
+      "missing_data": false,
+      "stale_data": false
+    },
+    "deterministic_fingerprint": "4f99eff8c0811f38d7a3d0d6c0eb800d48ed92b332c20cf1b7c5a4a99894c83f",
+    "drawdown_review": {
+      "assumed_max_drawdown": "0.35",
+      "drawdown_assumption_unsafe": true,
+      "limit": "0.2"
+    },
+    "fragility_score": "1",
+    "gross_expectancy": "60.00",
+    "label": "DRAWDOWN_ASSUMPTION_UNSAFE",
+    "liquidation_distance_review": {
+      "liquidation_distance_pct": "10.0",
+      "liquidation_distance_unsafe": false,
+      "min_distance_pct": "5.0"
+    },
+    "mechanism_family": "DRAWDOWN_UNSAFE",
+    "net_expectancy": "-24.000000",
+    "strategy_promoted": false
+  },
+  {
+    "ai_override_applied": false,
+    "ai_override_attempted": true,
+    "break_even_cost": "57.20000000",
+    "candidate_id": "RC08",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "22000.00",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": {
+        "impact_bps": "8.944271909999158785636694674",
+        "net_pnl": "538.7876467480481174615810647",
+        "size_scale": "20"
+      },
+      "maximum_viable_size_scale": "20"
+    },
+    "concentration_review": {
+      "concentration_blocked": false,
+      "instrument_concentration": "0.22",
+      "instrument_limit": "0.4",
+      "position_concentration": "0.18",
+      "position_limit": "0.35",
+      "regime_concentration": "0.33",
+      "regime_limit": "0.55"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "15.73000000",
+      "exit_fee": "15.73000000",
+      "funding_cost": "2.8600000",
+      "market_impact_approximation": "5.720000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "11.44000",
+      "spread_cost": "5.72000"
+    },
+    "data_quality_review": {
+      "age_stale": false,
+      "data_age_sec": "25",
+      "data_quality_blocked": false,
+      "max_age_sec": "120.0",
+      "missing_data": false,
+      "stale_data": false
+    },
+    "deterministic_fingerprint": "303dc924690124a0c972005c96b67d2cbab803d99b42098fedd139f4401b7afb",
+    "drawdown_review": {
+      "assumed_max_drawdown": "0.10",
+      "drawdown_assumption_unsafe": false,
+      "limit": "0.2"
+    },
+    "fragility_score": "0.5384615384615384615384615385",
+    "gross_expectancy": "104.0000",
+    "label": "LIQUIDATION_DISTANCE_UNSAFE",
+    "liquidation_distance_review": {
+      "liquidation_distance_pct": "2.5",
+      "liquidation_distance_unsafe": true,
+      "min_distance_pct": "5.0"
+    },
+    "mechanism_family": "LIQUIDATION_NEAR",
+    "net_expectancy": "46.80000000",
+    "strategy_promoted": false
+  },
+  {
+    "ai_override_applied": false,
+    "ai_override_attempted": true,
+    "break_even_cost": "28.800000000",
+    "candidate_id": "RC09",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "0.000",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": null,
+      "maximum_viable_size_scale": "0"
+    },
+    "concentration_review": {
+      "concentration_blocked": false,
+      "instrument_concentration": "0.20",
+      "instrument_limit": "0.4",
+      "position_concentration": "0.15",
+      "position_limit": "0.35",
+      "regime_concentration": "0.30",
+      "regime_limit": "0.55"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "7.920000000",
+      "exit_fee": "7.920000000",
+      "funding_cost": "1.44000000",
+      "market_impact_approximation": "2.8800000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "5.760000",
+      "spread_cost": "2.880000"
+    },
+    "data_quality_review": {
+      "age_stale": false,
+      "data_age_sec": "10",
+      "data_quality_blocked": true,
+      "max_age_sec": "120.0",
+      "missing_data": true,
+      "stale_data": false
+    },
+    "deterministic_fingerprint": "99f3cf40845e0eab284840c2d69be0b7a8fa909e3557f47d3e9345933d067e89",
+    "drawdown_review": {
+      "assumed_max_drawdown": "0.08",
+      "drawdown_assumption_unsafe": false,
+      "limit": "0.2"
+    },
+    "fragility_score": "0.9743589743589743589743589744",
+    "gross_expectancy": "21.6000",
+    "label": "DATA_QUALITY_BLOCKED",
+    "liquidation_distance_review": {
+      "liquidation_distance_pct": "14.0",
+      "liquidation_distance_unsafe": false,
+      "min_distance_pct": "5.0"
+    },
+    "mechanism_family": "MISSING_DATA_BLOCK",
+    "net_expectancy": "-7.200000000",
+    "strategy_promoted": false
+  },
+  {
+    "ai_override_applied": false,
+    "ai_override_attempted": true,
+    "break_even_cost": "230.4000000",
+    "candidate_id": "RC10",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "64000.0",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": {
+        "impact_bps": "6.324555320336758663997787088",
+        "net_pnl": "77.81122709720540190745492752",
+        "size_scale": "10"
+      },
+      "maximum_viable_size_scale": "10"
+    },
+    "concentration_review": {
+      "concentration_blocked": false,
+      "instrument_concentration": "0.21",
+      "instrument_limit": "0.4",
+      "position_concentration": "0.16",
+      "position_limit": "0.35",
+      "regime_concentration": "0.32",
+      "regime_limit": "0.55"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "63.3600000",
+      "exit_fee": "63.3600000",
+      "funding_cost": "11.520000",
+      "market_impact_approximation": "23.04000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "46.0800",
+      "spread_cost": "23.0400"
+    },
+    "data_quality_review": {
+      "age_stale": true,
+      "data_age_sec": "600",
+      "data_quality_blocked": true,
+      "max_age_sec": "120.0",
+      "missing_data": false,
+      "stale_data": true
+    },
+    "deterministic_fingerprint": "1da084a5c0c15479374df6209ef0bc6ab7a9ef7c1ba3fd361fb3b82c4ae3ab44",
+    "drawdown_review": {
+      "assumed_max_drawdown": "0.09",
+      "drawdown_assumption_unsafe": false,
+      "limit": "0.2"
+    },
+    "fragility_score": "0.6666666666666666666666666667",
+    "gross_expectancy": "288.00",
+    "label": "DATA_QUALITY_BLOCKED",
+    "liquidation_distance_review": {
+      "liquidation_distance_pct": "13.0",
+      "liquidation_distance_unsafe": false,
+      "min_distance_pct": "5.0"
+    },
+    "mechanism_family": "STALE_DATA_BLOCK",
+    "net_expectancy": "57.6000000",
+    "strategy_promoted": false
+  },
+  {
+    "ai_override_applied": false,
+    "ai_override_attempted": true,
+    "break_even_cost": "37.440000000",
+    "candidate_id": "RC11",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "0.000",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": null,
+      "maximum_viable_size_scale": "0"
+    },
+    "concentration_review": {
+      "concentration_blocked": false,
+      "instrument_concentration": "0.24",
+      "instrument_limit": "0.4",
+      "position_concentration": "0.19",
+      "position_limit": "0.35",
+      "regime_concentration": "0.36",
+      "regime_limit": "0.55"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "10.296000000",
+      "exit_fee": "10.296000000",
+      "funding_cost": "1.87200000",
+      "market_impact_approximation": "3.7440000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "7.488000",
+      "spread_cost": "3.744000"
+    },
+    "data_quality_review": {
+      "age_stale": false,
+      "data_age_sec": "60",
+      "data_quality_blocked": false,
+      "max_age_sec": "120.0",
+      "missing_data": false,
+      "stale_data": false
+    },
+    "deterministic_fingerprint": "cf177398317686bcd55db45c61a400042e80babcfab62df94b08d11d8f1e0b46",
+    "drawdown_review": {
+      "assumed_max_drawdown": "0.11",
+      "drawdown_assumption_unsafe": false,
+      "limit": "0.2"
+    },
+    "fragility_score": "1",
+    "gross_expectancy": "18.7200",
+    "label": "COST_DESTROYED",
+    "liquidation_distance_review": {
+      "liquidation_distance_pct": "8.5",
+      "liquidation_distance_unsafe": false,
+      "min_distance_pct": "5.0"
+    },
+    "mechanism_family": "LATENCY_FRAGILE",
+    "net_expectancy": "-18.720000000",
+    "strategy_promoted": false
+  },
+  {
+    "ai_override_applied": false,
+    "ai_override_attempted": true,
+    "break_even_cost": "16.800000000",
+    "candidate_id": "RC12",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "0.000",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": null,
+      "maximum_viable_size_scale": "0"
+    },
+    "concentration_review": {
+      "concentration_blocked": false,
+      "instrument_concentration": "0.23",
+      "instrument_limit": "0.4",
+      "position_concentration": "0.17",
+      "position_limit": "0.35",
+      "regime_concentration": "0.34",
+      "regime_limit": "0.55"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "4.620000000",
+      "exit_fee": "4.620000000",
+      "funding_cost": "0.84000000",
+      "market_impact_approximation": "1.6800000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "3.360000",
+      "spread_cost": "1.680000"
+    },
+    "data_quality_review": {
+      "age_stale": false,
+      "data_age_sec": "70",
+      "data_quality_blocked": false,
+      "max_age_sec": "120.0",
+      "missing_data": false,
+      "stale_data": false
+    },
+    "deterministic_fingerprint": "3777ac995cc57fd7dd252b4ed7f95d8ab4a1782c87a534d3fff9a1549f99f84f",
+    "drawdown_review": {
+      "assumed_max_drawdown": "0.10",
+      "drawdown_assumption_unsafe": false,
+      "limit": "0.2"
+    },
+    "fragility_score": "1",
+    "gross_expectancy": "1.4000",
+    "label": "INSUFFICIENT_SAMPLE",
+    "liquidation_distance_review": {
+      "liquidation_distance_pct": "9.5",
+      "liquidation_distance_unsafe": false,
+      "min_distance_pct": "5.0"
+    },
+    "mechanism_family": "LOW_EDGE_COST_DESTROY",
+    "net_expectancy": "-15.400000000",
+    "strategy_promoted": false
+  },
+  {
+    "ai_override_applied": false,
+    "ai_override_attempted": true,
+    "break_even_cost": "448.0000000",
+    "candidate_id": "RC13",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "0.0",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": null,
+      "maximum_viable_size_scale": "0"
+    },
+    "concentration_review": {
+      "concentration_blocked": false,
+      "instrument_concentration": "0.27",
+      "instrument_limit": "0.4",
+      "position_concentration": "0.21",
+      "position_limit": "0.35",
+      "regime_concentration": "0.42",
+      "regime_limit": "0.55"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "123.2000000",
+      "exit_fee": "123.2000000",
+      "funding_cost": "22.400000",
+      "market_impact_approximation": "44.80000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "89.6000",
+      "spread_cost": "44.8000"
+    },
+    "data_quality_review": {
+      "age_stale": false,
+      "data_age_sec": "48",
+      "data_quality_blocked": false,
+      "max_age_sec": "120.0",
+      "missing_data": false,
+      "stale_data": false
+    },
+    "deterministic_fingerprint": "c550903e355ab769b47bc18b7a716bda581f8d82f0601515071944be8cae06e9",
+    "drawdown_review": {
+      "assumed_max_drawdown": "0.13",
+      "drawdown_assumption_unsafe": false,
+      "limit": "0.2"
+    },
+    "fragility_score": "0.9743589743589743589743589744",
+    "gross_expectancy": "420.00",
+    "label": "COST_DESTROYED",
+    "liquidation_distance_review": {
+      "liquidation_distance_pct": "7.5",
+      "liquidation_distance_unsafe": false,
+      "min_distance_pct": "5.0"
+    },
+    "mechanism_family": "CAPACITY_SIZE_FRAGILE",
+    "net_expectancy": "-28.0000000",
+    "strategy_promoted": false
+  },
+  {
+    "ai_override_applied": false,
+    "ai_override_attempted": true,
+    "break_even_cost": "30.240000000",
+    "candidate_id": "RC14",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "0.000",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": null,
+      "maximum_viable_size_scale": "0"
+    },
+    "concentration_review": {
+      "concentration_blocked": false,
+      "instrument_concentration": "0.19",
+      "instrument_limit": "0.4",
+      "position_concentration": "0.14",
+      "position_limit": "0.35",
+      "regime_concentration": "0.28",
+      "regime_limit": "0.55"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "8.316000000",
+      "exit_fee": "8.316000000",
+      "funding_cost": "1.51200000",
+      "market_impact_approximation": "3.0240000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "6.048000",
+      "spread_cost": "3.024000"
+    },
+    "data_quality_review": {
+      "age_stale": false,
+      "data_age_sec": "22",
+      "data_quality_blocked": false,
+      "max_age_sec": "120.0",
+      "missing_data": false,
+      "stale_data": false
+    },
+    "deterministic_fingerprint": "135df4d937525e15710d950f3e6133e5ff3507a5dba394e863d534b53dd96efa",
+    "drawdown_review": {
+      "assumed_max_drawdown": "0.07",
+      "drawdown_assumption_unsafe": false,
+      "limit": "0.2"
+    },
+    "fragility_score": "1",
+    "gross_expectancy": "17.6400",
+    "label": "COST_DESTROYED",
+    "liquidation_distance_review": {
+      "liquidation_distance_pct": "15.0",
+      "liquidation_distance_unsafe": false,
+      "min_distance_pct": "5.0"
+    },
+    "mechanism_family": "QUEUE_SENSITIVE_MAKER",
+    "net_expectancy": "-12.600000000",
+    "strategy_promoted": false
+  }
+]

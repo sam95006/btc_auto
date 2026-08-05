@@ -1,0 +1,122 @@
+{
+  "all_refused": true,
+  "flags": {
+    "ai_override_applied": false,
+    "auto_integrate_attempted": false,
+    "canonical_cost_formula_mutated": false,
+    "demo_order_count": 0,
+    "exchange_write_attempt_count": 0,
+    "formal_walk_forward_executed": false,
+    "mainnet_client_created_count": 0,
+    "oos_consumed": false,
+    "oos_executed": false,
+    "pr27_merge_attempted": false,
+    "profitability_claimed": false,
+    "qualification_ready_count": 0,
+    "qualified_claimed": false,
+    "shadow_order_count": 0,
+    "status_json_written": false,
+    "strategy_promoted": false,
+    "strategy_selected": false
+  },
+  "hard_bans": [
+    "no_ai_override",
+    "no_auto_integrate_pr27",
+    "no_canonical_cost_formula_mutation",
+    "no_demo_orders",
+    "no_exchange_write",
+    "no_fabricated_edge_claims",
+    "no_formal_walk_forward",
+    "no_mainnet",
+    "no_oos_consumption",
+    "no_pr27_merge",
+    "no_profitability_claims",
+    "no_qualified_claims",
+    "no_real_money",
+    "no_shadow_orders",
+    "no_status_json_artifact",
+    "no_strategy_promotion",
+    "no_strategy_selection"
+  ],
+  "probes": {
+    "force_ai_override": {
+      "action": "AI_OVERRIDE",
+      "ai_override_applied": false,
+      "ai_override_attempted": true,
+      "allowed": false,
+      "applied": false,
+      "attempted_fields": [
+        "label",
+        "net_expectancy"
+      ],
+      "candidate_id": "SYN_V15H_PROBE",
+      "reason": "AI_CANNOT_OVERRIDE_DETERMINISTIC_RISK_CAPACITY_REVIEW"
+    },
+    "force_auto_integrate": {
+      "action": "AUTO_INTEGRATE",
+      "allowed": false,
+      "auto_integrate_attempted": false,
+      "executed": false,
+      "reason": "AUTO_INTEGRATE_BANNED_V15_H"
+    },
+    "force_demo": {
+      "action": "DEMO_ORDER",
+      "allowed": false,
+      "candidate_id": "SYN_V15H_PROBE",
+      "demo_order_count": 0,
+      "executed": false,
+      "reason": "DEMO_ORDERS_BANNED_V15_H"
+    },
+    "force_exchange_write": {
+      "action": "EXCHANGE_WRITE",
+      "allowed": false,
+      "exchange_write_attempt_count": 0,
+      "executed": false,
+      "reason": "EXCHANGE_WRITES_BANNED_V15_H"
+    },
+    "force_oos_consume": {
+      "action": "OOS_CONSUMPTION",
+      "allowed": false,
+      "candidate_id": "SYN_V15H_PROBE",
+      "executed": false,
+      "oos_consumed": false,
+      "oos_executed": false,
+      "reason": "OOS_BANNED_V15_H"
+    },
+    "force_promote": {
+      "action": "STRATEGY_PROMOTION",
+      "allowed": false,
+      "candidate_id": "SYN_V15H_PROBE",
+      "promoted": false,
+      "reason": "STRATEGY_PROMOTION_BANNED_V15_H"
+    },
+    "force_qualify": {
+      "action": "QUALIFY",
+      "allowed": false,
+      "candidate_id": "SYN_V15H_PROBE",
+      "qualified": false,
+      "reason": "QUALIFIED_OUTPUT_BANNED_V15_H"
+    },
+    "force_select": {
+      "action": "STRATEGY_SELECTION",
+      "allowed": false,
+      "candidate_id": "SYN_V15H_PROBE",
+      "reason": "STRATEGY_SELECTION_BANNED_V15_H",
+      "selected": false
+    },
+    "force_status_json": {
+      "action": "WRITE_STATUS_JSON",
+      "allowed": false,
+      "reason": "STATUS_JSON_ARTIFACT_BANNED_V15_H",
+      "status_json_written": false,
+      "written": false
+    },
+    "force_walk_forward": {
+      "action": "FORMAL_WALK_FORWARD",
+      "allowed": false,
+      "candidate_id": "SYN_V15H_PROBE",
+      "executed": false,
+      "reason": "FORMAL_WALK_FORWARD_BANNED_V15_H"
+    }
+  }
+}
