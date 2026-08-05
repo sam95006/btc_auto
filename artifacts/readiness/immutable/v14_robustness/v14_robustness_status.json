@@ -12,8 +12,12 @@
       "sha": "5f55dc72f6d728c770f16950b5c35d28f1b60cad"
     },
     {
+      "role": "proof_stamp",
+      "sha": "fde0aca7f5f649af0bde4de44e236103e7a2d95a"
+    },
+    {
       "role": "lane_tip",
-      "sha": "5f55dc72f6d728c770f16950b5c35d28f1b60cad"
+      "sha": "fde0aca7f5f649af0bde4de44e236103e7a2d95a"
     }
   ],
   "cost_destroyed_count": 1,
@@ -28,7 +32,7 @@
   "fixture_source": "synthetic_sanitized",
   "formal_walk_forward_executed": false,
   "hard_bans_honored": true,
-  "head_commit_at_run": "5f55dc72f6d728c770f16950b5c35d28f1b60cad",
+  "head_commit_at_run": "fde0aca7f5f649af0bde4de44e236103e7a2d95a",
   "high_findings": 0,
   "implementation_commit": "5f55dc72f6d728c770f16950b5c35d28f1b60cad",
   "insufficient_sample_count": 3,
@@ -41,7 +45,7 @@
     "MULTIPLE_TESTING_REJECTED": 2
   },
   "lane": "V14-D",
-  "lane_head_commit": "5f55dc72f6d728c770f16950b5c35d28f1b60cad",
+  "lane_head_commit": "fde0aca7f5f649af0bde4de44e236103e7a2d95a",
   "lane_name": "ROBUSTNESS_AND_MULTIPLE_TESTING_LAB",
   "mainnet": false,
   "multiple_testing_rejected_count": 2,
@@ -60,7 +64,7 @@
     "PASS_2"
   ],
   "pr27_merged": false,
-  "proof_stamp_commit": "5f55dc72f6d728c770f16950b5c35d28f1b60cad",
+  "proof_stamp_commit": "fde0aca7f5f649af0bde4de44e236103e7a2d95a",
   "pushed": true,
   "pytest_passed": true,
   "qualification_ready_count": 0,
@@ -75,6 +79,6 @@
   "status": "PASS",
   "total_bh_discoveries": 6,
   "total_family_tests": 10,
-  "updated_at": "2026-08-05T11:20:56Z",
+  "updated_at": "2026-08-05T11:21:22Z",
   "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v14_d_robustness"
 }
