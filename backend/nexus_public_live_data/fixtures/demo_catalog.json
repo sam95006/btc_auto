@@ -1,0 +1,87 @@
+{
+  "schema": "public_live_data_adapter_v1",
+  "mode": "FIXTURE",
+  "banner": "DEMO_DATA",
+  "disclaimer": "DEMO_DATA — fixture catalog only. Not live market data. Not trading advice. Not investment advice.",
+  "generated_at": "2026-08-05T12:00:00Z",
+  "fields": {
+    "market.last_price.BTCUSDT": {
+      "value": 64500.0,
+      "unit": "USD",
+      "source_field": "result.list[0].lastPrice",
+      "as_of": "2026-08-05T12:00:00Z"
+    },
+    "market.last_price.ETHUSDT": {
+      "value": 3420.5,
+      "unit": "USD",
+      "source_field": "result.list[0].lastPrice",
+      "as_of": "2026-08-05T12:00:00Z"
+    },
+    "market.last_price.SOLUSDT": {
+      "value": 148.2,
+      "unit": "USD",
+      "source_field": "result.list[0].lastPrice",
+      "as_of": "2026-08-05T12:00:00Z"
+    },
+    "market.mark_price.BTCUSDT": {
+      "value": 64505.0,
+      "unit": "USD",
+      "source_field": "result.list[0].markPrice",
+      "as_of": "2026-08-05T12:00:00Z"
+    },
+    "market.funding_rate.BTCUSDT": {
+      "value": 0.0001,
+      "unit": "rate",
+      "source_field": "result.list[0].fundingRate",
+      "as_of": "2026-08-05T12:00:00Z"
+    },
+    "system.runtime_health": {
+      "value": "DEMO_OK",
+      "unit": "status",
+      "source_field": "health.status",
+      "as_of": "2026-08-05T12:00:00Z"
+    },
+    "system.capture_campaign_health": {
+      "value": "DEMO_COLLECTING",
+      "unit": "status",
+      "source_field": "campaign.health",
+      "as_of": "2026-08-05T12:00:00Z"
+    },
+    "system.reflection_v23_progress": {
+      "value": "DEMO_CHECKPOINT",
+      "unit": "status",
+      "source_field": "checkpoint.status",
+      "as_of": "2026-08-05T12:00:00Z"
+    },
+    "system.qualification_state": {
+      "value": "BLOCKED",
+      "unit": "status",
+      "source_field": "qualification.state",
+      "as_of": "2026-08-05T12:00:00Z"
+    },
+    "system.event_study_readiness": {
+      "value": "NOT_READY",
+      "unit": "status",
+      "source_field": "event_study.readiness",
+      "as_of": "2026-08-05T12:00:00Z"
+    },
+    "system.qualification_ready_count": {
+      "value": 0,
+      "unit": "count",
+      "source_field": "qualification.ready_count",
+      "as_of": "2026-08-05T12:00:00Z"
+    },
+    "decision.cloud.freshness": {
+      "value": "DEMO_AGING",
+      "unit": "band",
+      "source_field": "freshness.band",
+      "as_of": "2026-08-05T12:00:00Z"
+    },
+    "decision.cloud.availability": {
+      "value": "DEMO_AVAILABLE",
+      "unit": "status",
+      "source_field": "availability.status",
+      "as_of": "2026-08-05T12:00:00Z"
+    }
+  }
+}
