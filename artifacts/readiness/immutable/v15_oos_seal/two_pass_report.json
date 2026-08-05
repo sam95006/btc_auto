@@ -1,0 +1,23 @@
+{
+  "both_passes_ok": true,
+  "oos_consumed": false,
+  "oos_downloaded": false,
+  "oos_executed": false,
+  "oos_reserved": false,
+  "pass2_adversarial": {
+    "binding_mutation_rejected": true,
+    "flag_injection_detected": true,
+    "force_overwrite_refused": true,
+    "founder_spoof_rejected": true,
+    "hard_bans_all_refused": true
+  },
+  "pass2_adversarial_ok": true,
+  "pass2_stability": {
+    "bindings_checksum_stable": true,
+    "flags_stable_false": true,
+    "pass1_ok_stable": true,
+    "plan_checksum_stable": true,
+    "seal_stable": true
+  },
+  "schema": "FOUNDER_V15_G_OOS_RESERVATION_SEAL_CONTROL"
+}

@@ -1,0 +1,21 @@
+{
+  "Founder_authorization_present": false,
+  "auto_integrated": false,
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "formal_walk_forward_executed": false,
+  "founder_authorization_present": false,
+  "mainnet": false,
+  "oos_consumed": false,
+  "oos_downloaded": false,
+  "oos_executed": false,
+  "oos_reservation_created": false,
+  "oos_reserved": false,
+  "oos_touched": false,
+  "pr27_merged": false,
+  "qualification_ready_count": 0,
+  "real_money": false,
+  "schema": "FOUNDER_V15_G_OOS_RESERVATION_SEAL_CONTROL",
+  "strategy_promoted": false,
+  "strategy_selected": false
+}

@@ -1,0 +1,136 @@
+{
+  "allowed_count": 5,
+  "audit_checksum": "faf57b92bcd32a43caacb8df9500f6a2d0600e2e51d20a4ba22c23188f8f7dc6",
+  "denied_count": 4,
+  "event_count": 9,
+  "events": [
+    {
+      "action": "INTERVAL_PLAN_BUILD",
+      "actor": "seal_control",
+      "allowed": true,
+      "detail": {
+        "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+        "plan_status": "PLANNED_NOT_RESERVED"
+      },
+      "event_checksum": "c4e96b3b6f9aba193fb825ac9e9aa6fb4c923933dc3959d82bf9e77d2b03dee7",
+      "seq": 1,
+      "ts": "2026-08-05T15:18:11Z"
+    },
+    {
+      "action": "BINDINGS_STAMP",
+      "actor": "seal_control",
+      "allowed": true,
+      "detail": {
+        "bindings_checksum": "a177c2dd0419fc963f0e7fae953b98726fb668dede427d6aaa4e5601ee67ae39"
+      },
+      "event_checksum": "64e721539bc5234378a78bda69b23e23e5193de0bf3b6bbcdf20d23d3db9b26c",
+      "seq": 2,
+      "ts": "2026-08-05T15:18:11Z"
+    },
+    {
+      "action": "LINEAGE_SEAL",
+      "actor": "seal_control",
+      "allowed": true,
+      "detail": {
+        "seal": "ef1b63ed662fdc102367ee789e02c370d41311ec575b0cbb6ee8c80120725b43",
+        "status": "PLAN_SEALED_NOT_RESERVED"
+      },
+      "event_checksum": "b6b0c305188cfdf71ee6588d37cdd14afbe9448a5154a311fbb4c3328cdf34f7",
+      "seq": 3,
+      "ts": "2026-08-05T15:18:11Z"
+    },
+    {
+      "action": "NON_CONSUMPTION_PROOF",
+      "actor": "seal_control",
+      "allowed": true,
+      "detail": {
+        "status": "OOS_NON_CONSUMPTION_PROVEN"
+      },
+      "event_checksum": "20bfe430098a12d92f9468702c970563a4b98deca762faa93f0b9fedff4c3588",
+      "seq": 4,
+      "ts": "2026-08-05T15:18:11Z"
+    },
+    {
+      "action": "FOUNDER_AUTH_EVALUATE",
+      "actor": "seal_control",
+      "allowed": true,
+      "detail": {
+        "authorized": false,
+        "spoof_rejected": true
+      },
+      "event_checksum": "b02f2355dde73550946a2c9e173bd3fcd582954cd45a616436460ea4a13f96d9",
+      "seq": 5,
+      "ts": "2026-08-05T15:18:11Z"
+    },
+    {
+      "action": "REAL_OOS_RESERVATION_ATTEMPT",
+      "actor": "adversary_probe",
+      "allowed": false,
+      "detail": {
+        "action": "REAL_OOS_RESERVATION",
+        "allowed": false,
+        "executed": false,
+        "oos_consumed": false,
+        "oos_downloaded": false,
+        "oos_executed": false,
+        "oos_reserved": false,
+        "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+        "reason": "REAL_OOS_RESERVATION_BANNED_V15_G"
+      },
+      "event_checksum": "d1b43b49d118162ef2705f2b5c5e567ce82e5f03a4f0438661abe0d7244dff8f",
+      "seq": 6,
+      "ts": "2026-08-05T15:18:11Z"
+    },
+    {
+      "action": "OOS_DOWNLOAD_ATTEMPT",
+      "actor": "adversary_probe",
+      "allowed": false,
+      "detail": {
+        "action": "OOS_DOWNLOAD",
+        "allowed": false,
+        "executed": false,
+        "oos_downloaded": false,
+        "oos_reserved": false,
+        "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+        "reason": "OOS_DOWNLOAD_BANNED_V15_G"
+      },
+      "event_checksum": "9d69663cf828210f5e0c18cbe9a3fe915114b6fcf7f79265ca3d2f38897c166f",
+      "seq": 7,
+      "ts": "2026-08-05T15:18:11Z"
+    },
+    {
+      "action": "OOS_EXECUTION_ATTEMPT",
+      "actor": "adversary_probe",
+      "allowed": false,
+      "detail": {
+        "action": "OOS_EXECUTION",
+        "allowed": false,
+        "executed": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+        "reason": "OOS_EXECUTION_BANNED_V15_G"
+      },
+      "event_checksum": "1f1cf6fab0da5f951a3deea15dc3ddf58d2d63f23e3ec7cacbbd0c6166813973",
+      "seq": 8,
+      "ts": "2026-08-05T15:18:11Z"
+    },
+    {
+      "action": "OOS_CONSUMPTION_ATTEMPT",
+      "actor": "adversary_probe",
+      "allowed": false,
+      "detail": {
+        "action": "OOS_CONSUMPTION",
+        "allowed": false,
+        "executed": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+        "reason": "OOS_CONSUMPTION_BANNED_V15_G"
+      },
+      "event_checksum": "7f7aba78b82aa2da7a282d13568e84e46e6edfb1b8ca249e6ef3a71b8f1d69cd",
+      "seq": 9,
+      "ts": "2026-08-05T15:18:11Z"
+    }
+  ]
+}

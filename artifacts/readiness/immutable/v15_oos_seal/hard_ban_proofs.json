@@ -1,0 +1,191 @@
+{
+  "hard_bans": [
+    "no_real_oos_reservation",
+    "no_oos_download",
+    "no_oos_execution",
+    "no_oos_consumption",
+    "no_formal_walk_forward",
+    "no_strategy_selection",
+    "no_strategy_promotion",
+    "no_demo_orders",
+    "no_shadow_orders",
+    "no_exchange_writes",
+    "no_pr27_merge",
+    "no_mainnet",
+    "no_real_money",
+    "no_profitability_claims",
+    "no_auto_integrate",
+    "no_status_json_report"
+  ],
+  "probe": {
+    "all_refused": true,
+    "flags": {
+      "Founder_authorization_present": false,
+      "auto_integrated": false,
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "formal_walk_forward_executed": false,
+      "founder_authorization_present": false,
+      "mainnet": false,
+      "oos_consumed": false,
+      "oos_downloaded": false,
+      "oos_executed": false,
+      "oos_reservation_created": false,
+      "oos_reserved": false,
+      "oos_touched": false,
+      "pr27_merged": false,
+      "qualification_ready_count": 0,
+      "real_money": false,
+      "strategy_promoted": false,
+      "strategy_selected": false
+    },
+    "hard_bans": [
+      "no_real_oos_reservation",
+      "no_oos_download",
+      "no_oos_execution",
+      "no_oos_consumption",
+      "no_formal_walk_forward",
+      "no_strategy_selection",
+      "no_strategy_promotion",
+      "no_demo_orders",
+      "no_shadow_orders",
+      "no_exchange_writes",
+      "no_pr27_merge",
+      "no_mainnet",
+      "no_real_money",
+      "no_profitability_claims",
+      "no_auto_integrate",
+      "no_status_json_report"
+    ],
+    "probes": {
+      "force_auto_integrate": {
+        "action": "AUTO_INTEGRATE",
+        "allowed": false,
+        "auto_integrated": false,
+        "executed": false,
+        "reason": "AUTO_INTEGRATE_BANNED_V15_G"
+      },
+      "force_demo": {
+        "action": "DEMO_ORDER",
+        "allowed": false,
+        "demo_order_count": 0,
+        "executed": false,
+        "reason": "DEMO_ORDERS_BANNED_V15_G"
+      },
+      "force_exchange_write": {
+        "action": "EXCHANGE_WRITE",
+        "allowed": false,
+        "exchange_write_attempt_count": 0,
+        "executed": false,
+        "reason": "EXCHANGE_WRITES_BANNED_V15_G"
+      },
+      "force_oos_consumption": {
+        "action": "OOS_CONSUMPTION",
+        "allowed": false,
+        "executed": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+        "reason": "OOS_CONSUMPTION_BANNED_V15_G"
+      },
+      "force_oos_download": {
+        "action": "OOS_DOWNLOAD",
+        "allowed": false,
+        "executed": false,
+        "oos_downloaded": false,
+        "oos_reserved": false,
+        "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+        "reason": "OOS_DOWNLOAD_BANNED_V15_G"
+      },
+      "force_oos_execution": {
+        "action": "OOS_EXECUTION",
+        "allowed": false,
+        "executed": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+        "reason": "OOS_EXECUTION_BANNED_V15_G"
+      },
+      "force_promote": {
+        "allowed": false,
+        "promoted": false,
+        "reason": "STRATEGY_PROMOTION_BANNED_V15_G"
+      },
+      "force_real_oos_reservation": {
+        "action": "REAL_OOS_RESERVATION",
+        "allowed": false,
+        "executed": false,
+        "oos_consumed": false,
+        "oos_downloaded": false,
+        "oos_executed": false,
+        "oos_reserved": false,
+        "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+        "reason": "REAL_OOS_RESERVATION_BANNED_V15_G"
+      },
+      "force_select": {
+        "allowed": false,
+        "reason": "STRATEGY_SELECTION_BANNED_V15_G",
+        "selected": false
+      },
+      "force_walk_forward": {
+        "action": "FORMAL_WALK_FORWARD",
+        "allowed": false,
+        "executed": false,
+        "formal_walk_forward_executed": false,
+        "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+        "reason": "FORMAL_WALK_FORWARD_BANNED_V15_G"
+      }
+    },
+    "required_false_flags": {
+      "flags": {
+        "oos_consumed": false,
+        "oos_downloaded": false,
+        "oos_executed": false,
+        "oos_reserved": false
+      },
+      "ok": true,
+      "violations": []
+    }
+  },
+  "refusal_attempts": {
+    "consumption": {
+      "action": "OOS_CONSUMPTION",
+      "allowed": false,
+      "executed": false,
+      "oos_consumed": false,
+      "oos_executed": false,
+      "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+      "reason": "OOS_CONSUMPTION_BANNED_V15_G"
+    },
+    "download": {
+      "action": "OOS_DOWNLOAD",
+      "allowed": false,
+      "executed": false,
+      "oos_downloaded": false,
+      "oos_reserved": false,
+      "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+      "reason": "OOS_DOWNLOAD_BANNED_V15_G"
+    },
+    "execution": {
+      "action": "OOS_EXECUTION",
+      "allowed": false,
+      "executed": false,
+      "oos_consumed": false,
+      "oos_executed": false,
+      "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+      "reason": "OOS_EXECUTION_BANNED_V15_G"
+    },
+    "reservation": {
+      "action": "REAL_OOS_RESERVATION",
+      "allowed": false,
+      "executed": false,
+      "oos_consumed": false,
+      "oos_downloaded": false,
+      "oos_executed": false,
+      "oos_reserved": false,
+      "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+      "reason": "REAL_OOS_RESERVATION_BANNED_V15_G"
+    }
+  },
+  "schema": "FOUNDER_V15_G_OOS_RESERVATION_SEAL_CONTROL"
+}

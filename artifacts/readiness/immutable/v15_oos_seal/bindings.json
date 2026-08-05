@@ -1,0 +1,40 @@
+{
+  "all_required_bindings_present": true,
+  "binding_kinds_present": [
+    "candidate",
+    "code",
+    "parameter",
+    "dataset"
+  ],
+  "bindings_checksum": "a177c2dd0419fc963f0e7fae953b98726fb668dede427d6aaa4e5601ee67ae39",
+  "candidate": {
+    "candidate_checksum": "cc1954b09f85f57c08c02eeb8369d5f30b2cf0cb55701a7bbc3cd0319dad3e93",
+    "candidate_id": "SYNTHETIC_V15G_OOS_PLAN_CANDIDATE",
+    "candidate_semantic_checksum": "52b056dd3c4246e35d41203d11fcb793eb21aaca94d7781c635e7ee7423982ca",
+    "kind": "candidate"
+  },
+  "code": {
+    "code_checksum": "07a48282480245c215555e1ce486fb0247ec36fb0333884c4df75b497799d766",
+    "code_ref": "backend/nexus_oos_seal_control",
+    "kind": "code"
+  },
+  "dataset": {
+    "dataset_checksum": "b2868da4b986f4055205056f51fed8d19998bbe73cff5caa19e95ae5e81bfed4",
+    "dataset_id": "SYNTHETIC_V15G_PLAN_DATASET",
+    "dataset_semantic_checksum": "fc8073802bc25a8f7ea4b7d501cd89605a42dcbae3a88bd366d9c2aa939107bd",
+    "fixture_only": true,
+    "kind": "dataset",
+    "real_market_data": false
+  },
+  "parameter": {
+    "kind": "parameter",
+    "parameter_checksum": "a0457b4b0c9766dddeb4c8e3dd5368ca14f32515c419abea7fffc54ceefb8a84",
+    "parameter_source": "synthetic_fixture",
+    "parameters": {
+      "fixture_marker": true,
+      "lookback": 24,
+      "threshold": 0.0
+    }
+  },
+  "plan_checksum": "1bcc13da2ee65ebc41d752836ab3a463ba9cb7c95e7e0a0d20ac74351e05949a"
+}
