@@ -1,0 +1,18 @@
+[
+  {
+    "blocker_id": "QUALIFICATION_NOT_AUTHORIZED",
+    "detail": "qualification_ready_count forced 0; research labels only"
+  },
+  {
+    "blocker_id": "OOS_AND_FORMAL_WF_BANNED",
+    "detail": "lab uses synthetic development fixtures only"
+  },
+  {
+    "blocker_id": "NO_CANONICAL_COST_FORMULA_MUTATION",
+    "detail": "consumes backend.nexus_execution.cost_model; impact is labeled research approx"
+  },
+  {
+    "blocker_id": "NO_AUTO_INTEGRATE",
+    "detail": "lane does not merge into PR #27 or parent tip"
+  }
+]

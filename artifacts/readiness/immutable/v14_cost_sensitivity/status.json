@@ -1,0 +1,115 @@
+{
+  "adversarial_pass_ok": true,
+  "adversarial_remaining_count": 0,
+  "auto_integrate_attempted": false,
+  "base_sha": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "blockers": [
+    {
+      "blocker_id": "QUALIFICATION_NOT_AUTHORIZED",
+      "detail": "qualification_ready_count forced 0; research labels only"
+    },
+    {
+      "blocker_id": "OOS_AND_FORMAL_WF_BANNED",
+      "detail": "lab uses synthetic development fixtures only"
+    },
+    {
+      "blocker_id": "NO_CANONICAL_COST_FORMULA_MUTATION",
+      "detail": "consumes backend.nexus_execution.cost_model; impact is labeled research approx"
+    },
+    {
+      "blocker_id": "NO_AUTO_INTEGRATE",
+      "detail": "lane does not merge into PR #27 or parent tip"
+    }
+  ],
+  "branch": "feature/v14-cost-execution-sensitivity",
+  "campaign": "v14_e_cost_execution_sensitivity",
+  "candidate_count": 12,
+  "canonical_cost_authority": "backend.nexus_execution.cost_model",
+  "canonical_cost_authority_count": 1,
+  "canonical_cost_formula_mutated": false,
+  "capacity_limited_count": 0,
+  "code_checksum": "aa51835ef164b1818497bab735c2df87de729bbcd1cedd37f8657150621fe22e",
+  "cost_destroyed_count": 7,
+  "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+  "cost_sensitivity_observed_count": 2,
+  "created_at": "2026-08-05T11:17:22Z",
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "formal_walk_forward_executed": false,
+  "fragile_to_execution_count": 1,
+  "hard_bans": [
+    "no_auto_integrate_pr27",
+    "no_canonical_cost_formula_mutation",
+    "no_demo_orders",
+    "no_exchange_write",
+    "no_fabricated_edge_claims",
+    "no_formal_walk_forward",
+    "no_g_source_deletion",
+    "no_mainnet",
+    "no_oos_consumption",
+    "no_pr27_merge",
+    "no_profitability_claims",
+    "no_qualified_claims",
+    "no_real_money",
+    "no_shadow_orders",
+    "no_strategy_promotion"
+  ],
+  "label_histogram": {
+    "CAPACITY_LIMITED": 0,
+    "COST_DESTROYED": 7,
+    "COST_SENSITIVITY_OBSERVED": 2,
+    "DATA_QUALITY_BLOCKED": 1,
+    "DEVELOPMENT_REVIEW_ONLY": 0,
+    "FRAGILE_TO_EXECUTION": 1,
+    "INSUFFICIENT_SAMPLE": 1
+  },
+  "lane": "V14-E",
+  "lane_head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "mainnet_client_created_count": 0,
+  "oos_consumed": false,
+  "oos_executed": false,
+  "pass": true,
+  "pass_id": 2,
+  "pr27_merge_attempted": false,
+  "profitability_claimed": false,
+  "qualification_ready_count": 0,
+  "qualified_claimed": false,
+  "required_cost_components": [
+    "entry_fee",
+    "exit_fee",
+    "spread_cost",
+    "slippage_cost",
+    "funding_cost",
+    "partial_fill_cost",
+    "cancel_replace_cost",
+    "market_impact_approximation"
+  ],
+  "required_output_keys": [
+    "gross_expectancy",
+    "cost_components",
+    "net_expectancy",
+    "break_even_cost",
+    "maximum_viable_spread",
+    "maximum_viable_slippage",
+    "capacity_estimate",
+    "fragility_score"
+  ],
+  "scenario_point_count": 47,
+  "schema": "FOUNDER_V14_E_COST_EXECUTION_SENSITIVITY_LAB",
+  "sensitivity_dimensions": [
+    "maker_taker_mix",
+    "spread",
+    "slippage",
+    "market_impact",
+    "partial_fills",
+    "cancel_replace",
+    "funding",
+    "latency",
+    "queue_position",
+    "liquidity_collapse",
+    "trade_size_scaling"
+  ],
+  "shadow_order_count": 0,
+  "status": "NEXUS_V14_E_COST_SENSITIVITY_PASS",
+  "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v14_e_cost_sensitivity"
+}
