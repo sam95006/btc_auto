@@ -1,0 +1,94 @@
+{
+  "bar_count": 49,
+  "decision_count": 3,
+  "decisions": [
+    {
+      "confirmation_ready_ts_ms": 1700000660000,
+      "data_trust_at_decision": 0.92,
+      "decision_id": "V16B_DEC_001",
+      "decision_ts_ms": 1700000600000,
+      "entry_price": 100.86492140577552,
+      "entry_ts_ms": 1700000600000,
+      "exit_price": 102.15591584956849,
+      "exit_ts_ms": 1700001800000,
+      "is_fixture": true,
+      "labels": [
+        "COUNTERFACTUAL_FIXTURE_NOT_REAL_LEDGER"
+      ],
+      "ledger_fingerprint": "e07844ec60f2ebb82c5f7902e0cfd7acc47059c42c8d19ed8de1466bb0b1cb06",
+      "regime_at_decision": "TREND",
+      "side": "LONG",
+      "size": 1.0,
+      "stop_price": 99.35194758468889,
+      "strategy_expert": "TREND",
+      "symbol": "BTCUSDT",
+      "take_profit_price": 103.38654444091989,
+      "trade_id": "V16B_TRD_001"
+    },
+    {
+      "confirmation_ready_ts_ms": null,
+      "data_trust_at_decision": 0.3,
+      "decision_id": "V16B_DEC_002",
+      "decision_ts_ms": 1700002520000,
+      "entry_price": 100.22792130608995,
+      "entry_ts_ms": 1700002520000,
+      "exit_price": 100.40684565842926,
+      "exit_ts_ms": 1700002700000,
+      "is_fixture": true,
+      "labels": [
+        "COUNTERFACTUAL_FIXTURE_NOT_REAL_LEDGER"
+      ],
+      "ledger_fingerprint": "4d69e16d89f8b211c6db0c9488b99c33545c7c6168579e80216022ecd1adc47e",
+      "regime_at_decision": "VOL_EXPANSION",
+      "side": "LONG",
+      "size": 0.5,
+      "stop_price": 99.22564209302905,
+      "strategy_expert": "BREAKOUT",
+      "symbol": "BTCUSDT",
+      "take_profit_price": 102.23247973221176,
+      "trade_id": "V16B_TRD_002"
+    },
+    {
+      "confirmation_ready_ts_ms": 1700000900000,
+      "data_trust_at_decision": 0.92,
+      "decision_id": "V16B_DEC_003",
+      "decision_ts_ms": 1700000840000,
+      "entry_price": 101.77591946621676,
+      "entry_ts_ms": 1700000840000,
+      "exit_price": 103.2027604081841,
+      "exit_ts_ms": 1700001560000,
+      "is_fixture": true,
+      "labels": [
+        "COUNTERFACTUAL_FIXTURE_NOT_REAL_LEDGER"
+      ],
+      "ledger_fingerprint": "2a9aa288499c4fc66417e9e105a07f9d526e05480e0506967cc1c20747dc6285",
+      "regime_at_decision": "TREND",
+      "side": "SHORT",
+      "size": 2.0,
+      "stop_price": 103.8114378555411,
+      "strategy_expert": "MEAN_REVERSION",
+      "symbol": "ETHUSDT",
+      "take_profit_price": 98.72264188223026,
+      "trade_id": "V16B_TRD_003"
+    }
+  ],
+  "fixture_checksum": "707b9f584d03ae48f4e53fb68f925aec711dbe6db0848de62537e205d3e50ada",
+  "fixture_label": "COUNTERFACTUAL_FIXTURE_NOT_REAL_LEDGER",
+  "is_fixture": true,
+  "is_real_ledger": false,
+  "real_performance": false,
+  "schema": "v16_b_counterfactual_fixtures",
+  "seed": "v16b-counterfactual-default",
+  "strategy_experts_catalog": [
+    "TREND",
+    "MEAN_REVERSION",
+    "BREAKOUT",
+    "LIQUIDATION",
+    "FUNDING",
+    "OPEN_INTEREST",
+    "EVENT",
+    "VOLATILITY",
+    "CROSS_ASSET",
+    "DEFENSIVE_NO_TRADE"
+  ]
+}

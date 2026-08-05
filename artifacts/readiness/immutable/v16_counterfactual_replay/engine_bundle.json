@@ -1,0 +1,30 @@
+{
+  "base_commit": "f01407e5d7c7e4c00e0eb1616dc5ef74d91a58b5",
+  "branch": "feature/v16-counterfactual-replay-engine",
+  "counterfactual_profit_is_not_real_performance": true,
+  "created_at": "2026-08-05T18:56:07Z",
+  "digest": "266c4035af0cc4f9771ff3d34d3b256b6292f61080fff6273eefc56510adcb3f",
+  "fingerprint": "08b45e7755df5ef10a5247312148f55fb3e0c4e16d4e2723ebe4fa6849d06ac4",
+  "git_head": "444c95d156381d5d96b8de71b028071a1285eb80",
+  "hard_bans": [
+    "no_future_leakage",
+    "no_rewrite_real_ledger",
+    "no_counterfactual_profit_as_real_performance",
+    "no_status_json_lane_artifact",
+    "no_status_report_artifact",
+    "no_demo_shadow_exchange_write",
+    "no_mainnet_real_money",
+    "no_oos_walkforward",
+    "no_auto_integrate",
+    "no_secret_logging",
+    "no_silent_impute_missing_bars",
+    "no_pit_bypass"
+  ],
+  "lane": "V16-B",
+  "lane_name": "COUNTERFACTUAL_REPLAY_ENGINE",
+  "lane_result": "PASS",
+  "profitability_claimed": false,
+  "schema": "v16_b_counterfactual_replay_engine",
+  "wrote_status_json": false,
+  "wrote_status_report": false
+}
