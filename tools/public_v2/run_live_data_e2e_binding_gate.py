@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PUB2-B three-pass live data e2e binding gate. Prints JSON to stdout. No *_status.json."""
+"""PUB2-B three-pass live data e2e binding gate. Prints JSON to stdout. Does NOT write *_status.json."""
 from __future__ import annotations
 
 import json

@@ -11,30 +11,10 @@ export function MemberEvidencePage() {
   ]);
 
   return (
-    <MemberPageChrome
-      titleKey="pages.evidence.title"
-      subtitleKey="pages.evidence.subtitle"
-    >
-      {items.length === 0 ? (
-        <EmptyState label="No evidence rows" />
-      ) : (
-        <ul className="member-list">
-          {items.map((e) => (
-            <li key={`${e.decisionId}-${e.id}`} className="member-panel">
-              <div className="member-card-meta">
-                <strong>{e.title}</strong>
-                <span className="member-chip">{e.polarity}</span>
-              </div>
-              <p>{e.summary}</p>
-              <p className="muted sm">
-                {e.source} · {e.asOf} · {e.freshness} · Decision{" "}
-                <DecisionLink id={e.decisionId} />
-              </p>
-            </li>
-          ))}
-        </ul>
-      )}
-
+    <MemberPageChrome titleKey="pages.evidence.title" subtitleKey="pages.evidence.subtitle">
+      {loading ? <p className="muted">Loading live bindings...</p> : null}
+      <LiveSlotStrip bindings={items} />
+      <EmptyState label="Evidence rows UNAVAILABLE - no synthetic live citations" />
     </MemberPageChrome>
   );
 }

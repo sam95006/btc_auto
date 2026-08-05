@@ -2,17 +2,15 @@ import { MemberPageChrome, EmptyState } from "../../member/MemberPageChrome";
 import { LiveSlotStrip, usePageSlots } from "../../member/LiveSlotStrip";
 
 export function MemberDecisionFeedPage() {
-  if (decisions.length === 0) {
-    return (
-      <MemberPageChrome
-        titleKey="pages.decisions.title"
-        subtitleKey="pages.decisions.emptySubtitle"
-      >
-        <EmptyState label="No Decisions in DEMO catalog" />
-      </MemberPageChrome>
-    );
-  }
-
+  const { loading, items } = usePageSlots([
+    ["decisions.feed_table", "availability", "Decision cloud"],
+    ["decisions.feed_table", "freshness", "Feed freshness"],
+    ["decisions.summary_card", "availability", "Summary"],
+    ["decisions.posture_chip", "availability", "Posture"],
+    ["decisions.confidence_gauge", "freshness", "Confidence"],
+    ["decisions.freshness_chip", "freshness", "Freshness chip"],
+    ["decisions.posture_chart", "btc", "BTC context"],
+  ]);
 
   return (
     <MemberPageChrome

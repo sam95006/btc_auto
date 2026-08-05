@@ -452,13 +452,18 @@ def _independent_cross_review_probes() -> dict[str, Any]:
     # 8) Org privilege escalation: billing_viewer cannot mint org_owner.
     owner = svc.register_member("owner-p3@example.com", "Owner")
     viewer = svc.register_member("viewer-p3@example.com", "Viewer")
-    svc.assign_org_roles(owner["account_id"], "org_p3", ["org_owner"])
-    svc.assign_org_roles(viewer["account_id"], "org_p3", ["org_billing_viewer"])
+    org = svc.create_org(owner_account_id=owner["account_id"], name="Org P3")
+    svc.add_org_member(
+        actor_account_id=owner["account_id"],
+        org_id=org["org_id"],
+        member_account_id=viewer["account_id"],
+        roles=["org_billing_viewer"],
+    )
     _expect(
         "org_privilege_escalation",
         lambda: svc.assign_org_roles(
             viewer["account_id"],
-            "org_p3",
+            org["org_id"],
             ["org_owner"],
             actor_account_id=viewer["account_id"],
         ),

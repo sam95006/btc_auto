@@ -132,12 +132,17 @@ def test_org_billing_viewer_cannot_escalate():
     )
     owner = svc.register_member("o@example.com", "O")
     viewer = svc.register_member("v@example.com", "V")
-    svc.assign_org_roles(owner["account_id"], "org1", ["org_owner"])
-    svc.assign_org_roles(viewer["account_id"], "org1", ["org_billing_viewer"])
+    org = svc.create_org(owner_account_id=owner["account_id"], name="Org1")
+    svc.add_org_member(
+        actor_account_id=owner["account_id"],
+        org_id=org["org_id"],
+        member_account_id=viewer["account_id"],
+        roles=["org_billing_viewer"],
+    )
     with pytest.raises(HardBanViolation):
         svc.assign_org_roles(
             viewer["account_id"],
-            "org1",
+            org["org_id"],
             ["org_admin"],
             actor_account_id=viewer["account_id"],
         )

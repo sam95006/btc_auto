@@ -234,7 +234,7 @@ export const thesisMonitors: Array<ThesisMonitorItem & { demo: true }> = decisio
     decisionId: d.id,
     thesis: d.thesis,
     status: d.outcomeClass === "PENDING" ? "ACTIVE" : "CLOSED",
-    invalidation: d.risks[0]?.label -  "No open invalidation",
+    invalidation: d.risks[0]?.label ?? "No open invalidation",
     lastChecked: AS_OF,
     driftNote: d.counterEvidenceCount > 0 ? "Counter-evidence present" : "Stable",
     demo: true,
