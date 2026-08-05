@@ -1,0 +1,51 @@
+{
+  "created_at": "2026-08-05T03:07:08Z",
+  "fault_classes_covered": [
+    "process_crashes",
+    "partial_fills",
+    "duplicate_intents",
+    "clock_jumps",
+    "provider_outages",
+    "storage_limits",
+    "ledger_corruption",
+    "snapshot_corruption"
+  ],
+  "probe_pass": true,
+  "probes": {
+    "clock_jump_backward": {
+      "exchange_write_attempt_count": 0,
+      "final_state": "COMPLETED",
+      "invariants_status": "PASS",
+      "probe_pass": true,
+      "session_pass": true
+    },
+    "clock_jump_forward": {
+      "exchange_write_attempt_count": 0,
+      "final_state": "COMPLETED",
+      "invariants_status": "PASS",
+      "probe_pass": true,
+      "session_pass": true
+    },
+    "disk_hard_limit": {
+      "exchange_write_attempt_count": 0,
+      "final_state": "BLOCKED",
+      "invariants_status": "PASS",
+      "probe_pass": true,
+      "session_pass": true
+    },
+    "ledger_corruption_probe": {
+      "corrupted_bytes": 32,
+      "path_exists": true,
+      "probe_pass": true,
+      "recovery_reason": "lkg_and_ledger_consistent",
+      "recovery_status": "RECOVERED"
+    },
+    "snapshot_corruption_probe": {
+      "path_exists": true,
+      "probe_pass": true,
+      "recovery_reason": "snapshot_corruption",
+      "recovery_status": "BLOCKED_AMBIGUOUS"
+    }
+  },
+  "schema": "v10_session_scale_focused_probes"
+}
