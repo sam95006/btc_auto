@@ -1,0 +1,1410 @@
+{
+  "created_at": "2026-08-05T15:14:26Z",
+  "evaluations": [
+    {
+      "bh_adjusted_p": 0.06,
+      "block_bootstrap_intervals": {
+        "hi": 0.021500153590379593,
+        "lo": 0.01880845524023012,
+        "mean": 0.020107680147719385,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_intervals": {
+        "hi": 0.02081451574861075,
+        "lo": 0.019630625161185803,
+        "mean": 0.020230813223128766,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_stable": true,
+      "candidacy_group": "G_PROMISING",
+      "experiment_id": "EXP_PROM_001",
+      "failed_sibling_ids": [
+        "EXP_PROM_FAIL_A",
+        "EXP_PROM_FAIL_B"
+      ],
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "label": "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+      "mechanism_semantic_id": "MECH_OFI_ABSORPTION",
+      "oos_consumed": false,
+      "p_value": 0.004,
+      "qualification_claim": false,
+      "research_family": "ORDER_FLOW_IMBALANCE",
+      "result_label": "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+      "role": "promising",
+      "sibling_retention_ok": true,
+      "stability_axes": {
+        "all_stability_axes_ok": true,
+        "capacity_sensitivity": {
+          "axis": "capacity_sensitivity",
+          "capacity_assumptions": {
+            "size_alt": 0.15,
+            "size_btc": 0.2,
+            "size_eth": 0.2
+          },
+          "concentration_limit": 0.8,
+          "development_only": true,
+          "dominant_bucket": "size_btc",
+          "dominant_share": 0.36363636363636365,
+          "fragile": false,
+          "stable": true
+        },
+        "cost_sensitivity": {
+          "axis": "cost_sensitivity",
+          "destroyed": false,
+          "development_only": true,
+          "gross_pnl": 1.4,
+          "net_pnl": 0.9,
+          "not_oos_claim": true,
+          "stable": true,
+          "total_cost": 1.6
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood_stability": {
+          "axis": "parameter_neighborhood_stability",
+          "development_only": true,
+          "neighbor_count": 4,
+          "radius": 0.15,
+          "relative_dispersion": 0.13619444300482536,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime_stability": {
+          "axis": "regime_stability",
+          "concentration": 0.36363636363636365,
+          "development_only": true,
+          "dominant_regime": "RANGE",
+          "max_concentration_allowed": 0.55,
+          "positive_regime_share": 1.0,
+          "regime_count": 4,
+          "stable": true
+        },
+        "symbol_stability": {
+          "axis": "symbol_stability",
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 1.0,
+          "stable": true,
+          "symbol_count": 4
+        },
+        "turnover_stability": {
+          "axis": "turnover_stability",
+          "development_only": true,
+          "gross_pnl": 1.4,
+          "max_ratio": 0.85,
+          "stable": true,
+          "turnover_cost": 0.4,
+          "turnover_cost_to_gross_ratio": 0.28571428571428575
+        }
+      }
+    },
+    {
+      "bh_adjusted_p": 0.525,
+      "block_bootstrap_intervals": {
+        "hi": -0.001960045061190052,
+        "lo": -0.00582354287358488,
+        "mean": -0.003914929138052911,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_intervals": {
+        "hi": -0.0029211298780320552,
+        "lo": -0.004707724270653661,
+        "mean": -0.0039020836309208713,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_stable": false,
+      "candidacy_group": "G_PROMISING",
+      "experiment_id": "EXP_PROM_FAIL_A",
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "label": "COST_DESTROYED",
+      "mechanism_semantic_id": "MECH_OFI_ABSORPTION",
+      "oos_consumed": false,
+      "p_value": 0.42,
+      "qualification_claim": false,
+      "research_family": "ORDER_FLOW_IMBALANCE",
+      "result_label": "COST_DESTROYED",
+      "role": "failed_sibling",
+      "stability_axes": {
+        "all_stability_axes_ok": false,
+        "capacity_sensitivity": {
+          "axis": "capacity_sensitivity",
+          "capacity_assumptions": {
+            "size_alt": 0.15,
+            "size_btc": 0.2,
+            "size_eth": 0.2
+          },
+          "concentration_limit": 0.8,
+          "development_only": true,
+          "dominant_bucket": "size_btc",
+          "dominant_share": 0.36363636363636365,
+          "fragile": false,
+          "stable": true
+        },
+        "cost_sensitivity": {
+          "axis": "cost_sensitivity",
+          "destroyed": true,
+          "development_only": true,
+          "gross_pnl": 0.2,
+          "net_pnl": -0.3,
+          "not_oos_claim": true,
+          "stable": false,
+          "total_cost": 1.8
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood_stability": {
+          "axis": "parameter_neighborhood_stability",
+          "development_only": true,
+          "neighbor_count": 4,
+          "radius": 0.15,
+          "relative_dispersion": 0.28708466100913116,
+          "sign_agreement": 0.75,
+          "stable": true
+        },
+        "regime_stability": {
+          "axis": "regime_stability",
+          "concentration": 0.625,
+          "development_only": true,
+          "dominant_regime": "TREND",
+          "max_concentration_allowed": 0.55,
+          "positive_regime_share": 0.25,
+          "regime_count": 4,
+          "stable": false
+        },
+        "symbol_stability": {
+          "axis": "symbol_stability",
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 0.25,
+          "stable": false,
+          "symbol_count": 4
+        },
+        "turnover_stability": {
+          "axis": "turnover_stability",
+          "development_only": true,
+          "gross_pnl": 0.2,
+          "max_ratio": 0.85,
+          "stable": false,
+          "turnover_cost": 0.45,
+          "turnover_cost_to_gross_ratio": 2.25
+        }
+      }
+    },
+    {
+      "bh_adjusted_p": 0.6346153846153846,
+      "block_bootstrap_intervals": {
+        "hi": -0.008347503568445458,
+        "lo": -0.011393548092344491,
+        "mean": -0.010028472831452872,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_intervals": {
+        "hi": -0.009605669653091136,
+        "lo": -0.010920110613909864,
+        "mean": -0.010253479021775359,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_stable": false,
+      "candidacy_group": "G_PROMISING",
+      "experiment_id": "EXP_PROM_FAIL_B",
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "label": "COST_DESTROYED",
+      "mechanism_semantic_id": "MECH_OFI_ABSORPTION",
+      "oos_consumed": false,
+      "p_value": 0.55,
+      "qualification_claim": false,
+      "research_family": "ORDER_FLOW_IMBALANCE",
+      "result_label": "COST_DESTROYED",
+      "role": "failed_sibling",
+      "stability_axes": {
+        "all_stability_axes_ok": false,
+        "capacity_sensitivity": {
+          "axis": "capacity_sensitivity",
+          "capacity_assumptions": {
+            "size_alt": 0.1,
+            "size_btc": 0.25,
+            "size_eth": 0.2
+          },
+          "concentration_limit": 0.8,
+          "development_only": true,
+          "dominant_bucket": "size_btc",
+          "dominant_share": 0.45454545454545453,
+          "fragile": false,
+          "stable": true
+        },
+        "cost_sensitivity": {
+          "axis": "cost_sensitivity",
+          "destroyed": true,
+          "development_only": true,
+          "gross_pnl": 0.1,
+          "net_pnl": -0.45,
+          "not_oos_claim": true,
+          "stable": false,
+          "total_cost": 1.9
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood_stability": {
+          "axis": "parameter_neighborhood_stability",
+          "development_only": true,
+          "neighbor_count": 4,
+          "radius": 0.15,
+          "relative_dispersion": 0.21655667943929582,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime_stability": {
+          "axis": "regime_stability",
+          "concentration": 0.6315789473684211,
+          "development_only": true,
+          "dominant_regime": "TREND",
+          "max_concentration_allowed": 0.55,
+          "positive_regime_share": 0.25,
+          "regime_count": 4,
+          "stable": false
+        },
+        "symbol_stability": {
+          "axis": "symbol_stability",
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 0.0,
+          "stable": false,
+          "symbol_count": 4
+        },
+        "turnover_stability": {
+          "axis": "turnover_stability",
+          "development_only": true,
+          "gross_pnl": 0.1,
+          "max_ratio": 0.85,
+          "stable": false,
+          "turnover_cost": 0.47500000000000003,
+          "turnover_cost_to_gross_ratio": 4.75
+        }
+      }
+    },
+    {
+      "bh_adjusted_p": 0.0775,
+      "block_bootstrap_intervals": {
+        "hi": 0.012906224902953116,
+        "lo": 0.011277598111653554,
+        "mean": 0.012144597882228571,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_intervals": {
+        "hi": 0.012775149250420045,
+        "lo": 0.011894551352642986,
+        "mean": 0.012327928296899802,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_stable": true,
+      "candidacy_group": "G_DUP",
+      "experiment_id": "EXP_DUP_001",
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "label": "DUPLICATE_EXPERIMENT",
+      "mechanism_semantic_id": "MECH_LIQ_CASCADE_V1",
+      "oos_consumed": false,
+      "p_value": 0.03,
+      "qualification_claim": false,
+      "research_family": "LIQUIDATION_CASCADE",
+      "result_label": "DUPLICATE_EXPERIMENT",
+      "role": "duplicate_primary",
+      "stability_axes": {
+        "all_stability_axes_ok": true,
+        "capacity_sensitivity": {
+          "axis": "capacity_sensitivity",
+          "capacity_assumptions": {
+            "size_btc": 0.3,
+            "size_eth": 0.25
+          },
+          "concentration_limit": 0.8,
+          "development_only": true,
+          "dominant_bucket": "size_btc",
+          "dominant_share": 0.5454545454545454,
+          "fragile": false,
+          "stable": true
+        },
+        "cost_sensitivity": {
+          "axis": "cost_sensitivity",
+          "destroyed": false,
+          "development_only": true,
+          "gross_pnl": 0.8,
+          "net_pnl": 0.4,
+          "not_oos_claim": true,
+          "stable": true,
+          "total_cost": 1.0
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood_stability": {
+          "axis": "parameter_neighborhood_stability",
+          "development_only": true,
+          "neighbor_count": 3,
+          "radius": 0.15,
+          "relative_dispersion": 0.024749865480470937,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime_stability": {
+          "axis": "regime_stability",
+          "concentration": 0.4166666666666667,
+          "development_only": true,
+          "dominant_regime": "TREND",
+          "max_concentration_allowed": 0.55,
+          "positive_regime_share": 1.0,
+          "regime_count": 3,
+          "stable": true
+        },
+        "symbol_stability": {
+          "axis": "symbol_stability",
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 1.0,
+          "stable": true,
+          "symbol_count": 2
+        },
+        "turnover_stability": {
+          "axis": "turnover_stability",
+          "development_only": true,
+          "gross_pnl": 0.8,
+          "max_ratio": 0.85,
+          "stable": true,
+          "turnover_cost": 0.25,
+          "turnover_cost_to_gross_ratio": 0.3125
+        }
+      }
+    },
+    {
+      "bh_adjusted_p": 0.0775,
+      "block_bootstrap_intervals": {
+        "hi": 0.011243976858763959,
+        "lo": 0.009521706600955627,
+        "mean": 0.010338565202811827,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_intervals": {
+        "hi": 0.010785612945708817,
+        "lo": 0.010083707401773062,
+        "mean": 0.010453323697899792,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_stable": true,
+      "candidacy_group": "G_DUP",
+      "experiment_id": "EXP_DUP_002",
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "label": "DUPLICATE_EXPERIMENT",
+      "mechanism_semantic_id": "MECH_LIQ_CASCADE_V1",
+      "oos_consumed": false,
+      "p_value": 0.031,
+      "qualification_claim": false,
+      "research_family": "LIQUIDATION_CASCADE",
+      "result_label": "DUPLICATE_EXPERIMENT",
+      "role": "duplicate_clone",
+      "stability_axes": {
+        "all_stability_axes_ok": true,
+        "capacity_sensitivity": {
+          "axis": "capacity_sensitivity",
+          "capacity_assumptions": {
+            "size_btc": 0.3,
+            "size_eth": 0.25
+          },
+          "concentration_limit": 0.8,
+          "development_only": true,
+          "dominant_bucket": "size_btc",
+          "dominant_share": 0.5454545454545454,
+          "fragile": false,
+          "stable": true
+        },
+        "cost_sensitivity": {
+          "axis": "cost_sensitivity",
+          "destroyed": false,
+          "development_only": true,
+          "gross_pnl": 0.81,
+          "net_pnl": 0.41,
+          "not_oos_claim": true,
+          "stable": true,
+          "total_cost": 1.01
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood_stability": {
+          "axis": "parameter_neighborhood_stability",
+          "development_only": true,
+          "neighbor_count": 3,
+          "radius": 0.15,
+          "relative_dispersion": 0.14737559900880323,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime_stability": {
+          "axis": "regime_stability",
+          "concentration": 0.4166666666666667,
+          "development_only": true,
+          "dominant_regime": "TREND",
+          "max_concentration_allowed": 0.55,
+          "positive_regime_share": 1.0,
+          "regime_count": 3,
+          "stable": true
+        },
+        "symbol_stability": {
+          "axis": "symbol_stability",
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 1.0,
+          "stable": true,
+          "symbol_count": 2
+        },
+        "turnover_stability": {
+          "axis": "turnover_stability",
+          "development_only": true,
+          "gross_pnl": 0.81,
+          "max_ratio": 0.85,
+          "stable": true,
+          "turnover_cost": 0.2525,
+          "turnover_cost_to_gross_ratio": 0.3117283950617284
+        }
+      }
+    },
+    {
+      "bh_adjusted_p": 0.075,
+      "block_bootstrap_intervals": {
+        "hi": 0.023686213686786584,
+        "lo": 0.020837635156430077,
+        "mean": 0.02226584430140585,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_intervals": {
+        "hi": 0.023262304945211813,
+        "lo": 0.021857541444195848,
+        "mean": 0.0225572646949789,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_stable": true,
+      "candidacy_group": "G_CHERRY",
+      "experiment_id": "EXP_CHERRY_FAV",
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "label": "FAVORABLE_SELECTION_BLOCKED",
+      "mechanism_semantic_id": "MECH_FUNDING_BASIS",
+      "oos_consumed": false,
+      "p_value": 0.01,
+      "qualification_claim": false,
+      "research_family": "FUNDING_BASIS_DISLOCATION",
+      "result_label": "FAVORABLE_SELECTION_BLOCKED",
+      "role": "cherry_favorable",
+      "stability_axes": {
+        "all_stability_axes_ok": true,
+        "capacity_sensitivity": {
+          "axis": "capacity_sensitivity",
+          "capacity_assumptions": {
+            "size_btc": 0.35,
+            "size_eth": 0.2
+          },
+          "concentration_limit": 0.8,
+          "development_only": true,
+          "dominant_bucket": "size_btc",
+          "dominant_share": 0.6363636363636362,
+          "fragile": false,
+          "stable": true
+        },
+        "cost_sensitivity": {
+          "axis": "cost_sensitivity",
+          "destroyed": false,
+          "development_only": true,
+          "gross_pnl": 1.6,
+          "net_pnl": 1.1,
+          "not_oos_claim": true,
+          "stable": true,
+          "total_cost": 1.4000000000000001
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood_stability": {
+          "axis": "parameter_neighborhood_stability",
+          "development_only": true,
+          "neighbor_count": 3,
+          "radius": 0.15,
+          "relative_dispersion": 0.056200211758001224,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime_stability": {
+          "axis": "regime_stability",
+          "concentration": 0.4545454545454546,
+          "development_only": true,
+          "dominant_regime": "RANGE",
+          "max_concentration_allowed": 0.55,
+          "positive_regime_share": 1.0,
+          "regime_count": 3,
+          "stable": true
+        },
+        "symbol_stability": {
+          "axis": "symbol_stability",
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 1.0,
+          "stable": true,
+          "symbol_count": 2
+        },
+        "turnover_stability": {
+          "axis": "turnover_stability",
+          "development_only": true,
+          "gross_pnl": 1.6,
+          "max_ratio": 0.85,
+          "stable": true,
+          "turnover_cost": 0.35000000000000003,
+          "turnover_cost_to_gross_ratio": 0.21875
+        }
+      }
+    },
+    {
+      "bh_adjusted_p": 0.6535714285714286,
+      "block_bootstrap_intervals": {
+        "hi": -0.01064177666870925,
+        "lo": -0.012903262534092404,
+        "mean": -0.011793983235561523,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_intervals": {
+        "hi": -0.011223502864341713,
+        "lo": -0.012472499725183096,
+        "mean": -0.011816869353873162,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_stable": false,
+      "candidacy_group": "G_CHERRY",
+      "experiment_id": "EXP_CHERRY_OMIT_A",
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "label": "COST_DESTROYED",
+      "mechanism_semantic_id": "MECH_FUNDING_BASIS",
+      "oos_consumed": false,
+      "p_value": 0.61,
+      "qualification_claim": false,
+      "research_family": "FUNDING_BASIS_DISLOCATION",
+      "result_label": "COST_DESTROYED",
+      "role": "cherry_omitted",
+      "stability_axes": {
+        "all_stability_axes_ok": false,
+        "capacity_sensitivity": {
+          "axis": "capacity_sensitivity",
+          "capacity_assumptions": {
+            "size_btc": 0.35,
+            "size_eth": 0.2
+          },
+          "concentration_limit": 0.8,
+          "development_only": true,
+          "dominant_bucket": "size_btc",
+          "dominant_share": 0.6363636363636362,
+          "fragile": false,
+          "stable": true
+        },
+        "cost_sensitivity": {
+          "axis": "cost_sensitivity",
+          "destroyed": true,
+          "development_only": true,
+          "gross_pnl": 0.05,
+          "net_pnl": -0.4,
+          "not_oos_claim": true,
+          "stable": false,
+          "total_cost": 1.44
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood_stability": {
+          "axis": "parameter_neighborhood_stability",
+          "development_only": true,
+          "neighbor_count": 3,
+          "radius": 0.15,
+          "relative_dispersion": 0.15341401758268777,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime_stability": {
+          "axis": "regime_stability",
+          "concentration": 0.5714285714285714,
+          "development_only": true,
+          "dominant_regime": "TREND",
+          "max_concentration_allowed": 0.55,
+          "positive_regime_share": 0.0,
+          "regime_count": 3,
+          "stable": false
+        },
+        "symbol_stability": {
+          "axis": "symbol_stability",
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 0.0,
+          "stable": false,
+          "symbol_count": 2
+        },
+        "turnover_stability": {
+          "axis": "turnover_stability",
+          "development_only": true,
+          "gross_pnl": 0.05,
+          "max_ratio": 0.85,
+          "stable": false,
+          "turnover_cost": 0.36,
+          "turnover_cost_to_gross_ratio": 7.199999999999999
+        }
+      }
+    },
+    {
+      "bh_adjusted_p": 0.7,
+      "block_bootstrap_intervals": {
+        "hi": -0.013839194131469428,
+        "lo": -0.016133815390609693,
+        "mean": -0.014899168257063096,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_intervals": {
+        "hi": -0.014419101569027664,
+        "lo": -0.015597008697868944,
+        "mean": -0.014965647599996327,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_stable": false,
+      "candidacy_group": "G_CHERRY",
+      "experiment_id": "EXP_CHERRY_OMIT_B",
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "label": "COST_DESTROYED",
+      "mechanism_semantic_id": "MECH_FUNDING_BASIS",
+      "oos_consumed": false,
+      "p_value": 0.7,
+      "qualification_claim": false,
+      "research_family": "FUNDING_BASIS_DISLOCATION",
+      "result_label": "COST_DESTROYED",
+      "role": "cherry_omitted",
+      "stability_axes": {
+        "all_stability_axes_ok": false,
+        "capacity_sensitivity": {
+          "axis": "capacity_sensitivity",
+          "capacity_assumptions": {
+            "size_btc": 0.35,
+            "size_eth": 0.2
+          },
+          "concentration_limit": 0.8,
+          "development_only": true,
+          "dominant_bucket": "size_btc",
+          "dominant_share": 0.6363636363636362,
+          "fragile": false,
+          "stable": true
+        },
+        "cost_sensitivity": {
+          "axis": "cost_sensitivity",
+          "destroyed": true,
+          "development_only": true,
+          "gross_pnl": 0.02,
+          "net_pnl": -0.5,
+          "not_oos_claim": true,
+          "stable": false,
+          "total_cost": 1.48
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood_stability": {
+          "axis": "parameter_neighborhood_stability",
+          "development_only": true,
+          "neighbor_count": 3,
+          "radius": 0.15,
+          "relative_dispersion": 0.0423524940655824,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime_stability": {
+          "axis": "regime_stability",
+          "concentration": 0.5555555555555555,
+          "development_only": true,
+          "dominant_regime": "TREND",
+          "max_concentration_allowed": 0.55,
+          "positive_regime_share": 0.0,
+          "regime_count": 3,
+          "stable": false
+        },
+        "symbol_stability": {
+          "axis": "symbol_stability",
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 0.0,
+          "stable": false,
+          "symbol_count": 2
+        },
+        "turnover_stability": {
+          "axis": "turnover_stability",
+          "development_only": true,
+          "gross_pnl": 0.02,
+          "max_ratio": 0.85,
+          "stable": false,
+          "turnover_cost": 0.37,
+          "turnover_cost_to_gross_ratio": 18.5
+        }
+      }
+    },
+    {
+      "bh_adjusted_p": 0.0775,
+      "block_bootstrap_intervals": {
+        "hi": 0.010686173033168924,
+        "lo": 0.006256998302534142,
+        "mean": 0.008474836557261098,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_intervals": {
+        "hi": 0.010038749564458438,
+        "lo": 0.007751720010445791,
+        "mean": 0.008803209229288442,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_stable": true,
+      "candidacy_group": "G_FRAGILE",
+      "experiment_id": "EXP_FRAG_001",
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "label": "REGIME_FRAGILE",
+      "mechanism_semantic_id": "MECH_REGIME_MR",
+      "oos_consumed": false,
+      "p_value": 0.02,
+      "qualification_claim": false,
+      "research_family": "REGIME_MEAN_REVERSION",
+      "result_label": "REGIME_FRAGILE",
+      "role": "fragile",
+      "stability_axes": {
+        "all_stability_axes_ok": false,
+        "capacity_sensitivity": {
+          "axis": "capacity_sensitivity",
+          "capacity_assumptions": {
+            "size_alt": 0.05,
+            "size_btc": 0.9,
+            "size_eth": 0.05
+          },
+          "concentration_limit": 0.8,
+          "development_only": true,
+          "dominant_bucket": "size_btc",
+          "dominant_share": 0.9,
+          "fragile": true,
+          "stable": false
+        },
+        "cost_sensitivity": {
+          "axis": "cost_sensitivity",
+          "destroyed": false,
+          "development_only": true,
+          "gross_pnl": 0.9,
+          "net_pnl": 0.35,
+          "not_oos_claim": true,
+          "stable": true,
+          "total_cost": 1.2
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood_stability": {
+          "axis": "parameter_neighborhood_stability",
+          "development_only": true,
+          "neighbor_count": 4,
+          "radius": 0.15,
+          "relative_dispersion": 0.6035801045682986,
+          "sign_agreement": 0.75,
+          "stable": false
+        },
+        "regime_stability": {
+          "axis": "regime_stability",
+          "concentration": 0.975609756097561,
+          "development_only": true,
+          "dominant_regime": "RANGE",
+          "max_concentration_allowed": 0.55,
+          "positive_regime_share": 0.3333333333333333,
+          "regime_count": 3,
+          "stable": false
+        },
+        "symbol_stability": {
+          "axis": "symbol_stability",
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 0.3333333333333333,
+          "stable": false,
+          "symbol_count": 3
+        },
+        "turnover_stability": {
+          "axis": "turnover_stability",
+          "development_only": true,
+          "gross_pnl": 0.9,
+          "max_ratio": 0.85,
+          "stable": true,
+          "turnover_cost": 0.3,
+          "turnover_cost_to_gross_ratio": 0.3333333333333333
+        }
+      }
+    },
+    {
+      "bh_adjusted_p": 0.10714285714285714,
+      "block_bootstrap_intervals": {
+        "hi": 0.0033559550639912106,
+        "lo": 0.0015822583688636634,
+        "mean": 0.002520861503411453,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_intervals": {
+        "hi": 0.0030521674632217914,
+        "lo": 0.0022229512370271643,
+        "mean": 0.0026450137808866907,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_stable": true,
+      "candidacy_group": "G_COST",
+      "experiment_id": "EXP_COST_001",
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "label": "COST_DESTROYED",
+      "mechanism_semantic_id": "MECH_SPREAD_SHOCK",
+      "oos_consumed": false,
+      "p_value": 0.05,
+      "qualification_claim": false,
+      "research_family": "SPREAD_SHOCK",
+      "result_label": "COST_DESTROYED",
+      "role": "cost_destroyed",
+      "stability_axes": {
+        "all_stability_axes_ok": false,
+        "capacity_sensitivity": {
+          "axis": "capacity_sensitivity",
+          "capacity_assumptions": {
+            "size_btc": 0.4,
+            "size_eth": 0.3
+          },
+          "concentration_limit": 0.8,
+          "development_only": true,
+          "dominant_bucket": "size_btc",
+          "dominant_share": 0.5714285714285715,
+          "fragile": false,
+          "stable": true
+        },
+        "cost_sensitivity": {
+          "axis": "cost_sensitivity",
+          "destroyed": true,
+          "development_only": true,
+          "gross_pnl": 0.6,
+          "net_pnl": -0.1,
+          "not_oos_claim": true,
+          "stable": false,
+          "total_cost": 10.0
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood_stability": {
+          "axis": "parameter_neighborhood_stability",
+          "development_only": true,
+          "neighbor_count": 3,
+          "radius": 0.15,
+          "relative_dispersion": 0.2499425968103754,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime_stability": {
+          "axis": "regime_stability",
+          "concentration": 0.5,
+          "development_only": true,
+          "dominant_regime": "RANGE",
+          "max_concentration_allowed": 0.55,
+          "positive_regime_share": 1.0,
+          "regime_count": 3,
+          "stable": true
+        },
+        "symbol_stability": {
+          "axis": "symbol_stability",
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 1.0,
+          "stable": true,
+          "symbol_count": 2
+        },
+        "turnover_stability": {
+          "axis": "turnover_stability",
+          "development_only": true,
+          "gross_pnl": 0.6,
+          "max_ratio": 0.85,
+          "stable": false,
+          "turnover_cost": 2.5,
+          "turnover_cost_to_gross_ratio": 4.166666666666667
+        }
+      }
+    },
+    {
+      "bh_adjusted_p": 0.15,
+      "block_bootstrap_intervals": {
+        "hi": 0.002719604932878139,
+        "lo": 0.0003550113059538676,
+        "mean": 0.0015732007003453155,
+        "sign_agreement": 0.985
+      },
+      "bootstrap_intervals": {
+        "hi": 0.0023764491299265106,
+        "lo": 0.0011061971179293852,
+        "mean": 0.0017416122532553449,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_stable": true,
+      "candidacy_group": "G_FDR",
+      "experiment_id": "EXP_FDR_001",
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "label": "MULTIPLE_TESTING_REJECTED",
+      "mechanism_semantic_id": "MECH_VOL_COMPRESS",
+      "oos_consumed": false,
+      "p_value": 0.08,
+      "qualification_claim": false,
+      "research_family": "VOL_EXPANSION_COMPRESSION",
+      "result_label": "MULTIPLE_TESTING_REJECTED",
+      "role": "fdr_weak",
+      "stability_axes": {
+        "all_stability_axes_ok": false,
+        "capacity_sensitivity": {
+          "axis": "capacity_sensitivity",
+          "capacity_assumptions": {
+            "size_btc": 0.2,
+            "size_eth": 0.2
+          },
+          "concentration_limit": 0.8,
+          "development_only": true,
+          "dominant_bucket": "size_btc",
+          "dominant_share": 0.5,
+          "fragile": false,
+          "stable": true
+        },
+        "cost_sensitivity": {
+          "axis": "cost_sensitivity",
+          "destroyed": false,
+          "development_only": true,
+          "gross_pnl": 0.3,
+          "net_pnl": 0.05,
+          "not_oos_claim": true,
+          "stable": true,
+          "total_cost": 0.8
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood_stability": {
+          "axis": "parameter_neighborhood_stability",
+          "development_only": true,
+          "neighbor_count": 3,
+          "radius": 0.15,
+          "relative_dispersion": 0.6808721196608222,
+          "sign_agreement": 1.0,
+          "stable": false
+        },
+        "regime_stability": {
+          "axis": "regime_stability",
+          "concentration": 0.5,
+          "development_only": true,
+          "dominant_regime": "RANGE",
+          "max_concentration_allowed": 0.55,
+          "positive_regime_share": 1.0,
+          "regime_count": 3,
+          "stable": true
+        },
+        "symbol_stability": {
+          "axis": "symbol_stability",
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 1.0,
+          "stable": true,
+          "symbol_count": 2
+        },
+        "turnover_stability": {
+          "axis": "turnover_stability",
+          "development_only": true,
+          "gross_pnl": 0.3,
+          "max_ratio": 0.85,
+          "stable": true,
+          "turnover_cost": 0.2,
+          "turnover_cost_to_gross_ratio": 0.6666666666666667
+        }
+      }
+    },
+    {
+      "bh_adjusted_p": 0.19999999999999998,
+      "block_bootstrap_intervals": {
+        "hi": 0.0047563207553951575,
+        "lo": 0.0024375454569833294,
+        "mean": 0.003521067747321323,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_intervals": {
+        "hi": 0.004346415350379746,
+        "lo": 0.003180423727397788,
+        "mean": 0.0037781215650514693,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_stable": true,
+      "candidacy_group": "G_FDR",
+      "experiment_id": "EXP_FDR_002",
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "label": "MULTIPLE_TESTING_REJECTED",
+      "mechanism_semantic_id": "MECH_VOL_COMPRESS",
+      "oos_consumed": false,
+      "p_value": 0.12,
+      "qualification_claim": false,
+      "research_family": "VOL_EXPANSION_COMPRESSION",
+      "result_label": "MULTIPLE_TESTING_REJECTED",
+      "role": "fdr_weak",
+      "stability_axes": {
+        "all_stability_axes_ok": true,
+        "capacity_sensitivity": {
+          "axis": "capacity_sensitivity",
+          "capacity_assumptions": {
+            "size_btc": 0.2,
+            "size_eth": 0.2
+          },
+          "concentration_limit": 0.8,
+          "development_only": true,
+          "dominant_bucket": "size_btc",
+          "dominant_share": 0.5,
+          "fragile": false,
+          "stable": true
+        },
+        "cost_sensitivity": {
+          "axis": "cost_sensitivity",
+          "destroyed": false,
+          "development_only": true,
+          "gross_pnl": 0.3,
+          "net_pnl": 0.05,
+          "not_oos_claim": true,
+          "stable": true,
+          "total_cost": 0.8
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood_stability": {
+          "axis": "parameter_neighborhood_stability",
+          "development_only": true,
+          "neighbor_count": 3,
+          "radius": 0.15,
+          "relative_dispersion": 0.20170894329105682,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime_stability": {
+          "axis": "regime_stability",
+          "concentration": 0.5,
+          "development_only": true,
+          "dominant_regime": "RANGE",
+          "max_concentration_allowed": 0.55,
+          "positive_regime_share": 1.0,
+          "regime_count": 3,
+          "stable": true
+        },
+        "symbol_stability": {
+          "axis": "symbol_stability",
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 1.0,
+          "stable": true,
+          "symbol_count": 2
+        },
+        "turnover_stability": {
+          "axis": "turnover_stability",
+          "development_only": true,
+          "gross_pnl": 0.3,
+          "max_ratio": 0.85,
+          "stable": true,
+          "turnover_cost": 0.2,
+          "turnover_cost_to_gross_ratio": 0.6666666666666667
+        }
+      }
+    },
+    {
+      "bh_adjusted_p": 0.225,
+      "block_bootstrap_intervals": {
+        "hi": 0.0026582910958100024,
+        "lo": 0.0004763077907759306,
+        "mean": 0.0015600661581023309,
+        "sign_agreement": 0.99
+      },
+      "bootstrap_intervals": {
+        "hi": 0.002233109249640206,
+        "lo": 0.0011318014552080314,
+        "mean": 0.001695002098980208,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_stable": true,
+      "candidacy_group": "G_FDR",
+      "experiment_id": "EXP_FDR_003",
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "label": "MULTIPLE_TESTING_REJECTED",
+      "mechanism_semantic_id": "MECH_VOL_COMPRESS",
+      "oos_consumed": false,
+      "p_value": 0.15,
+      "qualification_claim": false,
+      "research_family": "VOL_EXPANSION_COMPRESSION",
+      "result_label": "MULTIPLE_TESTING_REJECTED",
+      "role": "fdr_weak",
+      "stability_axes": {
+        "all_stability_axes_ok": false,
+        "capacity_sensitivity": {
+          "axis": "capacity_sensitivity",
+          "capacity_assumptions": {
+            "size_btc": 0.2,
+            "size_eth": 0.2
+          },
+          "concentration_limit": 0.8,
+          "development_only": true,
+          "dominant_bucket": "size_btc",
+          "dominant_share": 0.5,
+          "fragile": false,
+          "stable": true
+        },
+        "cost_sensitivity": {
+          "axis": "cost_sensitivity",
+          "destroyed": false,
+          "development_only": true,
+          "gross_pnl": 0.3,
+          "net_pnl": 0.05,
+          "not_oos_claim": true,
+          "stable": true,
+          "total_cost": 0.8
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood_stability": {
+          "axis": "parameter_neighborhood_stability",
+          "development_only": true,
+          "neighbor_count": 3,
+          "radius": 0.15,
+          "relative_dispersion": 0.7711727798761252,
+          "sign_agreement": 1.0,
+          "stable": false
+        },
+        "regime_stability": {
+          "axis": "regime_stability",
+          "concentration": 0.5,
+          "development_only": true,
+          "dominant_regime": "RANGE",
+          "max_concentration_allowed": 0.55,
+          "positive_regime_share": 1.0,
+          "regime_count": 3,
+          "stable": true
+        },
+        "symbol_stability": {
+          "axis": "symbol_stability",
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 1.0,
+          "stable": true,
+          "symbol_count": 2
+        },
+        "turnover_stability": {
+          "axis": "turnover_stability",
+          "development_only": true,
+          "gross_pnl": 0.3,
+          "max_ratio": 0.85,
+          "stable": true,
+          "turnover_cost": 0.2,
+          "turnover_cost_to_gross_ratio": 0.6666666666666667
+        }
+      }
+    },
+    {
+      "bh_adjusted_p": 0.3,
+      "block_bootstrap_intervals": {
+        "hi": 0.004836011077219522,
+        "lo": 0.0024700665235539107,
+        "mean": 0.0036500993882299685,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_intervals": {
+        "hi": 0.004218985682969398,
+        "lo": 0.002984795354635707,
+        "mean": 0.0036048641094235095,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_stable": true,
+      "candidacy_group": "G_FDR",
+      "experiment_id": "EXP_FDR_004",
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "label": "MULTIPLE_TESTING_REJECTED",
+      "mechanism_semantic_id": "MECH_VOL_COMPRESS",
+      "oos_consumed": false,
+      "p_value": 0.22,
+      "qualification_claim": false,
+      "research_family": "VOL_EXPANSION_COMPRESSION",
+      "result_label": "MULTIPLE_TESTING_REJECTED",
+      "role": "fdr_weak",
+      "stability_axes": {
+        "all_stability_axes_ok": true,
+        "capacity_sensitivity": {
+          "axis": "capacity_sensitivity",
+          "capacity_assumptions": {
+            "size_btc": 0.2,
+            "size_eth": 0.2
+          },
+          "concentration_limit": 0.8,
+          "development_only": true,
+          "dominant_bucket": "size_btc",
+          "dominant_share": 0.5,
+          "fragile": false,
+          "stable": true
+        },
+        "cost_sensitivity": {
+          "axis": "cost_sensitivity",
+          "destroyed": false,
+          "development_only": true,
+          "gross_pnl": 0.3,
+          "net_pnl": 0.05,
+          "not_oos_claim": true,
+          "stable": true,
+          "total_cost": 0.8
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood_stability": {
+          "axis": "parameter_neighborhood_stability",
+          "development_only": true,
+          "neighbor_count": 3,
+          "radius": 0.15,
+          "relative_dispersion": 0.1692005995794423,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime_stability": {
+          "axis": "regime_stability",
+          "concentration": 0.5,
+          "development_only": true,
+          "dominant_regime": "RANGE",
+          "max_concentration_allowed": 0.55,
+          "positive_regime_share": 1.0,
+          "regime_count": 3,
+          "stable": true
+        },
+        "symbol_stability": {
+          "axis": "symbol_stability",
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 1.0,
+          "stable": true,
+          "symbol_count": 2
+        },
+        "turnover_stability": {
+          "axis": "turnover_stability",
+          "development_only": true,
+          "gross_pnl": 0.3,
+          "max_ratio": 0.85,
+          "stable": true,
+          "turnover_cost": 0.2,
+          "turnover_cost_to_gross_ratio": 0.6666666666666667
+        }
+      }
+    },
+    {
+      "bh_adjusted_p": 0.0775,
+      "block_bootstrap_intervals": {
+        "hi": 0.007577741704133617,
+        "lo": 0.006028576504991174,
+        "mean": 0.006743819673765089,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_intervals": {
+        "hi": 0.007265692233086561,
+        "lo": 0.00636704559450062,
+        "mean": 0.006808744283960329,
+        "sign_agreement": 1.0
+      },
+      "bootstrap_stable": true,
+      "candidacy_group": "G_REVIEW",
+      "experiment_id": "EXP_REVIEW_001",
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "label": "DEVELOPMENT_REVIEW",
+      "mechanism_semantic_id": "MECH_LEAD_LAG",
+      "oos_consumed": false,
+      "p_value": 0.025,
+      "qualification_claim": false,
+      "research_family": "CROSS_ASSET_LEAD_LAG",
+      "result_label": "DEVELOPMENT_REVIEW",
+      "role": "review",
+      "stability_axes": {
+        "all_stability_axes_ok": true,
+        "capacity_sensitivity": {
+          "axis": "capacity_sensitivity",
+          "capacity_assumptions": {
+            "size_alt": 0.2,
+            "size_btc": 0.25,
+            "size_eth": 0.25
+          },
+          "concentration_limit": 0.8,
+          "development_only": true,
+          "dominant_bucket": "size_btc",
+          "dominant_share": 0.35714285714285715,
+          "fragile": false,
+          "stable": true
+        },
+        "cost_sensitivity": {
+          "axis": "cost_sensitivity",
+          "destroyed": false,
+          "development_only": true,
+          "gross_pnl": 0.7,
+          "net_pnl": 0.35,
+          "not_oos_claim": true,
+          "stable": true,
+          "total_cost": 0.9
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood_stability": {
+          "axis": "parameter_neighborhood_stability",
+          "development_only": true,
+          "neighbor_count": 4,
+          "radius": 0.15,
+          "relative_dispersion": 0.09924229429346487,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime_stability": {
+          "axis": "regime_stability",
+          "concentration": 0.36363636363636365,
+          "development_only": true,
+          "dominant_regime": "RANGE",
+          "max_concentration_allowed": 0.55,
+          "positive_regime_share": 1.0,
+          "regime_count": 4,
+          "stable": true
+        },
+        "symbol_stability": {
+          "axis": "symbol_stability",
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 1.0,
+          "stable": true,
+          "symbol_count": 3
+        },
+        "turnover_stability": {
+          "axis": "turnover_stability",
+          "development_only": true,
+          "gross_pnl": 0.7,
+          "max_ratio": 0.85,
+          "stable": true,
+          "turnover_cost": 0.225,
+          "turnover_cost_to_gross_ratio": 0.32142857142857145
+        }
+      }
+    }
+  ],
+  "experiment_count": 15,
+  "label_histogram": {
+    "CAPACITY_FRAGILE": 0,
+    "COST_DESTROYED": 5,
+    "DEVELOPMENT_PROMISING_NOT_QUALIFIED": 1,
+    "DEVELOPMENT_REVIEW": 1,
+    "DUPLICATE_EXPERIMENT": 2,
+    "FAVORABLE_SELECTION_BLOCKED": 1,
+    "INSUFFICIENT_STABILITY": 0,
+    "MULTIPLE_TESTING_REJECTED": 4,
+    "REGIME_FRAGILE": 1,
+    "REJECTED": 0,
+    "SIBLING_RETENTION_FAILED": 0
+  },
+  "schema": "v15_d_evaluations"
+}

@@ -1,0 +1,73 @@
+{
+  "adjusted_p": [
+    0.06,
+    0.525,
+    0.6346153846153846,
+    0.0775,
+    0.0775,
+    0.075,
+    0.6535714285714286,
+    0.7,
+    0.0775,
+    0.10714285714285714,
+    0.15,
+    0.19999999999999998,
+    0.225,
+    0.3,
+    0.0775
+  ],
+  "axis": "false_discovery_adjustment",
+  "development_only": true,
+  "discoveries": [
+    {
+      "bh_threshold": 0.006666666666666667,
+      "index": 0,
+      "p_value": 0.004,
+      "rank": 1
+    },
+    {
+      "bh_threshold": 0.013333333333333334,
+      "index": 5,
+      "p_value": 0.01,
+      "rank": 2
+    },
+    {
+      "bh_threshold": 0.020000000000000004,
+      "index": 8,
+      "p_value": 0.02,
+      "rank": 3
+    },
+    {
+      "bh_threshold": 0.02666666666666667,
+      "index": 14,
+      "p_value": 0.025,
+      "rank": 4
+    },
+    {
+      "bh_threshold": 0.03333333333333333,
+      "index": 3,
+      "p_value": 0.03,
+      "rank": 5
+    },
+    {
+      "bh_threshold": 0.04000000000000001,
+      "index": 4,
+      "p_value": 0.031,
+      "rank": 6
+    }
+  ],
+  "discovery_count": 6,
+  "formal_walk_forward": false,
+  "method": "benjamini_hochberg",
+  "n_tests": 15,
+  "not_oos_claim": true,
+  "q": 0.1,
+  "rejected_indices": [
+    0,
+    3,
+    4,
+    5,
+    8,
+    14
+  ]
+}

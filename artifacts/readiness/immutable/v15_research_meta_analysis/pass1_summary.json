@@ -1,0 +1,43 @@
+{
+  "auto_integrate": false,
+  "axes_coverage_ok": true,
+  "banned_claim_scan": {
+    "banned_claim_count": 0,
+    "hits": [],
+    "ok": true,
+    "scanned_code_roots": [
+      "backend/nexus_research_meta_analysis/",
+      "tools/research/meta_analysis/",
+      "tests/research_meta_analysis/"
+    ],
+    "schema": "v15_d_banned_claim_scan"
+  },
+  "demo_order_count": 0,
+  "deterministic_fixture_replay": true,
+  "duplicate_pair_count": 1,
+  "exchange_write_attempt_count": 0,
+  "experiment_count": 15,
+  "fdr_n_tests": 15,
+  "formal_walk_forward_executed": false,
+  "label_histogram": {
+    "CAPACITY_FRAGILE": 0,
+    "COST_DESTROYED": 5,
+    "DEVELOPMENT_PROMISING_NOT_QUALIFIED": 1,
+    "DEVELOPMENT_REVIEW": 1,
+    "DUPLICATE_EXPERIMENT": 2,
+    "FAVORABLE_SELECTION_BLOCKED": 1,
+    "INSUFFICIENT_STABILITY": 0,
+    "MULTIPLE_TESTING_REJECTED": 4,
+    "REGIME_FRAGILE": 1,
+    "REJECTED": 0,
+    "SIBLING_RETENTION_FAILED": 0
+  },
+  "lane_status_json_written": false,
+  "oos_consumed": false,
+  "oos_executed": false,
+  "oos_reserved": false,
+  "pass": "PASS_1",
+  "promising_packet_count": 1,
+  "qualification_ready_count": 0,
+  "silent_selection_blocked": true
+}

@@ -1,0 +1,57 @@
+{
+  "batch_digest": "8f968ec6ed01e374",
+  "candidacy_groups": {
+    "G_CHERRY": [
+      "EXP_CHERRY_FAV",
+      "EXP_CHERRY_OMIT_A",
+      "EXP_CHERRY_OMIT_B"
+    ],
+    "G_COST": [
+      "EXP_COST_001"
+    ],
+    "G_DUP": [
+      "EXP_DUP_001",
+      "EXP_DUP_002"
+    ],
+    "G_FDR": [
+      "EXP_FDR_001",
+      "EXP_FDR_002",
+      "EXP_FDR_003",
+      "EXP_FDR_004"
+    ],
+    "G_FRAGILE": [
+      "EXP_FRAG_001"
+    ],
+    "G_PROMISING": [
+      "EXP_PROM_001",
+      "EXP_PROM_FAIL_A",
+      "EXP_PROM_FAIL_B"
+    ],
+    "G_REVIEW": [
+      "EXP_REVIEW_001"
+    ]
+  },
+  "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V15D_2026_08_05",
+  "experiment_count": 15,
+  "experiment_ids": [
+    "EXP_PROM_001",
+    "EXP_PROM_FAIL_A",
+    "EXP_PROM_FAIL_B",
+    "EXP_DUP_001",
+    "EXP_DUP_002",
+    "EXP_CHERRY_FAV",
+    "EXP_CHERRY_OMIT_A",
+    "EXP_CHERRY_OMIT_B",
+    "EXP_FRAG_001",
+    "EXP_COST_001",
+    "EXP_FDR_001",
+    "EXP_FDR_002",
+    "EXP_FDR_003",
+    "EXP_FDR_004",
+    "EXP_REVIEW_001"
+  ],
+  "fixture_synthetic": true,
+  "formal_walk_forward": false,
+  "not_oos": true,
+  "schema": "v15_d_fixture_manifest"
+}

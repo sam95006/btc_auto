@@ -1,0 +1,103 @@
+{
+  "axis": "favorable_run_selection_detection",
+  "blocked_attempts": [
+    {
+      "blocked": true,
+      "candidacy_group": "G_CHERRY",
+      "extra_member_ids": [],
+      "omitted_member_ids": [
+        "EXP_CHERRY_OMIT_A",
+        "EXP_CHERRY_OMIT_B"
+      ],
+      "reason": "silent_favorable_run_selection",
+      "selected_experiment_id": "EXP_CHERRY_FAV"
+    }
+  ],
+  "development_only": true,
+  "groups": [
+    {
+      "candidacy_group": "G_CHERRY",
+      "failed_sibling_count": 2,
+      "favorable_count": 1,
+      "member_count": 3,
+      "member_ids": [
+        "EXP_CHERRY_FAV",
+        "EXP_CHERRY_OMIT_A",
+        "EXP_CHERRY_OMIT_B"
+      ]
+    },
+    {
+      "candidacy_group": "G_COST",
+      "failed_sibling_count": 0,
+      "favorable_count": 0,
+      "member_count": 1,
+      "member_ids": [
+        "EXP_COST_001"
+      ]
+    },
+    {
+      "candidacy_group": "G_DUP",
+      "failed_sibling_count": 0,
+      "favorable_count": 0,
+      "member_count": 2,
+      "member_ids": [
+        "EXP_DUP_001",
+        "EXP_DUP_002"
+      ]
+    },
+    {
+      "candidacy_group": "G_FDR",
+      "failed_sibling_count": 0,
+      "favorable_count": 0,
+      "member_count": 4,
+      "member_ids": [
+        "EXP_FDR_001",
+        "EXP_FDR_002",
+        "EXP_FDR_003",
+        "EXP_FDR_004"
+      ]
+    },
+    {
+      "candidacy_group": "G_FRAGILE",
+      "failed_sibling_count": 0,
+      "favorable_count": 1,
+      "member_count": 1,
+      "member_ids": [
+        "EXP_FRAG_001"
+      ]
+    },
+    {
+      "candidacy_group": "G_PROMISING",
+      "failed_sibling_count": 2,
+      "favorable_count": 1,
+      "member_count": 3,
+      "member_ids": [
+        "EXP_PROM_001",
+        "EXP_PROM_FAIL_A",
+        "EXP_PROM_FAIL_B"
+      ]
+    },
+    {
+      "candidacy_group": "G_REVIEW",
+      "failed_sibling_count": 0,
+      "favorable_count": 1,
+      "member_count": 1,
+      "member_ids": [
+        "EXP_REVIEW_001"
+      ]
+    }
+  ],
+  "not_oos_claim": true,
+  "silent_detail": {
+    "blocked": true,
+    "candidacy_group": "G_CHERRY",
+    "extra_member_ids": [],
+    "omitted_member_ids": [
+      "EXP_CHERRY_OMIT_A",
+      "EXP_CHERRY_OMIT_B"
+    ],
+    "reason": "silent_favorable_run_selection",
+    "selected_experiment_id": "EXP_CHERRY_FAV"
+  },
+  "silent_selection_blocked": true
+}
