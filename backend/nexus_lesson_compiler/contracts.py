@@ -112,3 +112,5 @@ class ReflectionFixture:
     author_model: str
     author_version: str
     narrative: str
+    # V16-A lineage: process class that produced this reflection (optional → fail-closed when set).
+    source_process_class: str | None = None

@@ -38,9 +38,16 @@ class LessonPromotionStateMachine:
         now_epoch: int = 1_700_000_000,
     ) -> None:
         self.lesson = deepcopy(lesson)
-        self.state = str(lesson.get("state") or "CANDIDATE")
+        # Accept compiler lineage field ``status`` when firewall ``state`` absent.
+        raw_state = lesson.get("state")
+        if raw_state is None and lesson.get("status") is not None:
+            raw_state = lesson.get("status")
+        self.state = str(raw_state or "CANDIDATE").strip().upper()
         if self.state not in PROMOTION_STATES:
             self.state = "CANDIDATE"
+        # Keep both fields aligned so cross-lane intake cannot diverge.
+        self.lesson["state"] = self.state
+        self.lesson["status"] = self.state
         self.history: list[dict[str, Any]] = []
         self.record_store = record_store or ImmutablePromotionRecordStore()
         self.now_epoch = now_epoch
@@ -198,6 +205,7 @@ class LessonPromotionStateMachine:
         # Apply legal non-ACTIVE transition.
         self.state = to_state
         self.lesson["state"] = to_state
+        self.lesson["status"] = to_state
         if to_state == "ACTIVE":  # pragma: no cover — unreachable
             self.real_lesson_active = False
 

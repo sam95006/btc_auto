@@ -67,6 +67,21 @@ def validate_node_record(node: dict[str, Any]) -> dict[str, Any]:
         raise SchemaError("node_lineage_hash_invalid")
     if not isinstance(node.get("version_pins"), dict):
         raise SchemaError("node_version_pins_must_be_dict")
+    payload = node.get("payload") or {}
+    # V16-B lineage: COUNTERFACTUAL nodes cannot claim real ledger performance.
+    if kind == "COUNTERFACTUAL":
+        if payload.get("is_real_performance") is True or payload.get("real_ledger") is True:
+            raise SchemaError("counterfactual_cannot_claim_real_performance")
+        if payload.get("counterfactual_profit_is_not_real_performance") is False:
+            raise SchemaError("counterfactual_must_disclaim_real_performance")
+        # Require explicit disclaimer flag when PnL-like fields are present.
+        pnl_keys = ("pnl", "net_pnl", "profit", "hypothetical_pnl", "cf_pnl")
+        if any(k in payload for k in pnl_keys):
+            if payload.get("counterfactual_profit_is_not_real_performance") is not True:
+                raise SchemaError("counterfactual_pnl_requires_disclaimer")
+    if kind == "OUTCOME":
+        if payload.get("source") == "COUNTERFACTUAL" and payload.get("is_real_performance") is True:
+            raise SchemaError("outcome_cannot_launder_counterfactual_as_real")
     return {"ok": True, "node_id": node["node_id"], "kind": kind}
 
 

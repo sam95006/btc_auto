@@ -227,6 +227,31 @@ class StrategyExpertRouter:
                 side=side,
             )
 
+        # V16-C / V16-G cross-lane: unsafe regime or abstention cannot emit entries.
+        formal = str(ctx.regime_formal_state or "CLEAR").upper()
+        verdict = str(ctx.abstention_verdict or "").upper()
+        if (
+            ctx.trading_unsafe
+            or formal in {"UNKNOWN", "MIXED"}
+            or float(ctx.regime.regime_confidence) < 0.25
+            or verdict in {"WAIT", "ABSTAIN", "BLOCK"}
+        ) and side in ("LONG", "SHORT"):
+            if verdict == "WAIT":
+                side = "WAIT" if not ctx.open_position_side else "REDUCE"
+            elif verdict == "BLOCK":
+                side = "ABSTAIN" if not ctx.open_position_side else "REDUCE"
+            else:
+                side = "ABSTAIN" if not ctx.open_position_side else "REDUCE"
+            trace.add(
+                "cross_lane_no_trade_coerce",
+                "regime/abstention safety coerced side to no-trade",
+                side=side,
+                regime_formal_state=formal,
+                trading_unsafe=ctx.trading_unsafe,
+                abstention_verdict=verdict or None,
+                regime_confidence=ctx.regime.regime_confidence,
+            )
+
         no_trade = side in NO_TRADE_SIDES or winner.expert_id == DEFENSIVE_EXPERT
         if winner.expert_id == DEFENSIVE_EXPERT and side not in NO_TRADE_SIDES:
             # Defensive cannot emit LONG/SHORT.

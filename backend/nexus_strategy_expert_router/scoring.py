@@ -73,6 +73,16 @@ def score_expert(ctx: MarketContext, expert_id: str) -> ExpertScore:
         if ctx.lesson_forced_abstain:
             adjusted = max(adjusted, 2.5)
             blocks.append("lesson_forced_abstain_boost")
+        if ctx.trading_unsafe or str(ctx.regime_formal_state or "").upper() in {
+            "UNKNOWN",
+            "MIXED",
+        }:
+            adjusted = max(adjusted, 2.2)
+            blocks.append("regime_unsafe_defensive_boost")
+        verdict = str(ctx.abstention_verdict or "").upper()
+        if verdict in {"WAIT", "ABSTAIN", "BLOCK"}:
+            adjusted = max(adjusted, 2.4)
+            blocks.append(f"abstention_{verdict.lower()}_defensive_boost")
         # Soft baseline so defensive remains rankable but loses healthy regimes.
         adjusted = max(adjusted, 0.05)
 
@@ -104,6 +114,21 @@ def score_expert(ctx: MarketContext, expert_id: str) -> ExpertScore:
         if float(ctx.regime.regime_freshness) < 0.35:
             eligible = False
             blocks.append("regime_stale")
+        # V16-C binding: UNKNOWN/MIXED / trading_unsafe / low confidence must not enter.
+        formal = str(ctx.regime_formal_state or "CLEAR").upper()
+        if formal in {"UNKNOWN", "MIXED"}:
+            eligible = False
+            blocks.append(f"regime_formal_{formal.lower()}")
+        if ctx.trading_unsafe:
+            eligible = False
+            blocks.append("regime_trading_unsafe")
+        if float(ctx.regime.regime_confidence) < 0.25:
+            eligible = False
+            blocks.append("regime_confidence_too_low")
+        verdict = str(ctx.abstention_verdict or "").upper()
+        if verdict in {"WAIT", "ABSTAIN", "BLOCK"}:
+            eligible = False
+            blocks.append(f"abstention_{verdict.lower()}")
 
     # Ineligible entry experts keep score for ranking transparency but cannot win entries.
     if not eligible and expert_id != DEFENSIVE_EXPERT:

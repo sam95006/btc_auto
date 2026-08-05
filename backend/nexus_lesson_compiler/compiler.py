@@ -10,12 +10,14 @@ from backend.nexus_lesson_compiler.constants import (
     ALLOWED_CONDITION_OPS,
     ALLOWED_REGIMES,
     ALLOWED_SCOPES,
+    ANTI_PATTERN_ACTION_KINDS,
     BANNED_ACTION_TARGETS,
     CATALOG_VERSION,
     EXPECTED_FIXTURE_COUNT,
     FORBIDDEN_LESSON_STATUSES,
     LESSON_STATUS_CANDIDATE,
     MIN_LESSON_COUNT,
+    NON_LEARNING_PROCESS_CLASSES,
     REQUIRED_LESSON_FIELDS,
 )
 from backend.nexus_lesson_compiler.contracts import (
@@ -114,6 +116,14 @@ def compile_reflection(
 
     conditions = _validate_conditions(fixture.conditions)
     then_action = _validate_then_action(fixture.then_action)
+
+    # V16-A lineage gate: BAD_PROCESS_WIN / INSUFFICIENT_EVIDENCE cannot mint ALLOW lessons.
+    process_class = str(fixture.source_process_class or "").strip().upper() or None
+    if process_class in NON_LEARNING_PROCESS_CLASSES:
+        if then_action.action_kind not in ANTI_PATTERN_ACTION_KINDS:
+            raise LessonCompileError(
+                f"process_class_lineage_forbids_action:{process_class}:{then_action.action_kind}"
+            )
 
     scope = str(fixture.scope or "").strip().upper()
     if scope not in ALLOWED_SCOPES:
@@ -228,6 +238,11 @@ def compile_raw_dict(payload: dict[str, Any]) -> LessonRule:
             author_model=str(payload.get("author_model") or ""),
             author_version=str(payload.get("author_version") or ""),
             narrative=str(payload.get("narrative") or ""),
+            source_process_class=(
+                str(payload.get("source_process_class")).strip().upper()
+                if payload.get("source_process_class")
+                else None
+            ),
         )
     except (TypeError, ValueError) as exc:
         raise LessonCompileError(f"payload_coerce_failed:{exc}") from exc

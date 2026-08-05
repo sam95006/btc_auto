@@ -92,6 +92,16 @@ ALLOWED_REGIMES = frozenset(
     }
 )
 
+# Process classes that must never seed "ALLOW" lessons (lucky bad process ≠ edge).
+NON_LEARNING_PROCESS_CLASSES = frozenset(
+    {
+        "BAD_PROCESS_WIN",
+        "INSUFFICIENT_EVIDENCE",
+    }
+)
+# Only restrictive actions may be compiled from non-learning process classes.
+ANTI_PATTERN_ACTION_KINDS = frozenset({"BLOCK", "ABSTAIN", "WAIT", "REDUCE", "DEFER"})
+
 # Action kinds that would mutate production risk / leverage — hard reject.
 BANNED_ACTION_TARGETS = frozenset(
     {

@@ -15,6 +15,10 @@ from backend.nexus_lesson_validation_firewall.firewall import (
     run_three_pass,
     summarize_for_return,
 )
+from backend.nexus_lesson_validation_firewall.intake import (
+    FirewallIntakeError,
+    intake_from_compiler_lesson,
+)
 
 __all__ = [
     "BRANCH",
@@ -25,6 +29,8 @@ __all__ = [
     "PROMOTION_STATES",
     "SCHEMA_ID",
     "LessonValidationFirewall",
+    "FirewallIntakeError",
+    "intake_from_compiler_lesson",
     "run_three_pass",
     "summarize_for_return",
 ]

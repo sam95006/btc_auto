@@ -48,6 +48,10 @@ class MarketContext:
     risk_gate_reason: str = "PASS"
     open_position_side: str | None = None
     requested_leverage: int | None = None
+    # Cross-lane bindings (V16-C formal regime + V16-G abstention).
+    regime_formal_state: str = "CLEAR"
+    trading_unsafe: bool = False
+    abstention_verdict: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -66,6 +70,9 @@ class MarketContext:
             "risk_gate_reason": self.risk_gate_reason,
             "open_position_side": self.open_position_side,
             "requested_leverage": self.requested_leverage,
+            "regime_formal_state": self.regime_formal_state,
+            "trading_unsafe": self.trading_unsafe,
+            "abstention_verdict": self.abstention_verdict,
         }
 
 

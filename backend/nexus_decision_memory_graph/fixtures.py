@@ -122,7 +122,12 @@ def build_linked_decision_fixture(
     counterfactual = g.seal_node(
         kind="COUNTERFACTUAL",
         as_of_ms=t0 + 5,
-        payload={"summary": "no-entry alt", "data_class": "FIXTURE"},
+        payload={
+            "summary": "no-entry alt",
+            "data_class": "FIXTURE",
+            "counterfactual_profit_is_not_real_performance": True,
+            "is_real_performance": False,
+        },
     )
     validation = g.seal_node(
         kind="VALIDATION",
