@@ -49,6 +49,7 @@
     "no_g_deletion",
     "no_auto_integrate"
   ],
+  "head_commit": "215dd01e389a586c893c04cb971ccec97ba83366",
   "high_findings": [
     "PASS1: 50k durable DecisionLifecycle roots saturated NTFS (~4 cand/s at 7.5k); fixed via periodic epoch-root hygiene rotation + streaming counters (no full results list)",
     "PASS1: fixture symbols beyond DEFAULT_INSTRUMENTS required InstrumentSpec injection into AutonomousExecutionSimulatorV11 to avoid UNKNOWN_INSTRUMENT"
@@ -66,6 +67,7 @@
     "unclosed_intent_count": 0,
     "untracked_fill_count": 0
   },
+  "lane_head_commit": "215dd01e389a586c893c04cb971ccec97ba83366",
   "ontology": [
     "MONITORING",
     "EXITED",
