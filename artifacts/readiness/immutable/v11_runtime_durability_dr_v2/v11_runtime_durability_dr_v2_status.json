@@ -1,14 +1,14 @@
 {
   "schema": "v11_runtime_durability_dr_v2",
-  "pass_id": 1,
-  "created_at": "2026-08-05T03:35:00Z",
+  "pass_id": 2,
+  "created_at": "2026-08-05T03:37:39Z",
   "overall_status": "NEXUS_RUNTIME_DURABILITY_DR_V2_PASS",
   "blockers": [],
   "scale_config": {
     "mode": "evidence",
-    "events": 50000,
-    "snapshots": 200,
-    "drills": 50,
+    "events": 75000,
+    "snapshots": 250,
+    "drills": 64,
     "full_capability_events": 1000000,
     "full_capability_snapshots": 1000,
     "full_capability_drills": 100
@@ -27,24 +27,31 @@
     ]
   },
   "metrics": {
-    "append_p50_s": 7.399999958579428e-05,
-    "append_p95_s": 0.00010300000030838419,
-    "append_p99_s": 0.0001797010004429465,
-    "append_eps": 10517.145060394772,
-    "replay_eps": 106162.2984686696,
+    "append_p50_s": 0.0001494999996793922,
+    "append_p95_s": 0.00031690000014350517,
+    "append_p99_s": 0.0004382099997383177,
+    "append_p50_ms": 0.1494999996793922,
+    "append_p95_ms": 0.31690000014350517,
+    "append_p99_ms": 0.4382099997383177,
+    "append_eps": 5827.643254835145,
+    "replay_eps": 98675.13065435814,
     "snapshot_latency": {
       "name": "snapshot",
-      "count": 200,
-      "p50_s": 0.047154800000043906,
-      "p95_s": 0.07406643500021343,
-      "p99_s": 0.857595289000164,
-      "min_s": 0.03447989999949641,
-      "max_s": 0.9435216000001674,
-      "mean_s": 0.07534376200002953
+      "count": 250,
+      "p50_s": 0.07088395000027958,
+      "p95_s": 0.11093422499993706,
+      "p99_s": 1.5916221669996664,
+      "min_s": 0.05323450000014418,
+      "max_s": 1.752144799999769,
+      "mean_s": 0.13129086440001264
     },
-    "restore_latency_s": 3.9541105999996944,
-    "memory_growth_bytes": 92823552,
-    "disk_growth_bytes": 5265974842
+    "snapshot_p50_ms": 70.88395000027958,
+    "snapshot_p95_ms": 110.93422499993706,
+    "restore_latency_s": 6.027280099999189,
+    "restore_latency_ms": 6027.280099999189,
+    "memory_growth_bytes": 133230592,
+    "disk_growth_bytes": 9740633312,
+    "disk_growth_note": "O(snapshots * ledger_size); full independent snapshot copies for DR integrity"
   },
   "requirements": {
     "no_silent_recovery_guess": true,
@@ -57,49 +64,49 @@
   },
   "scale_bench": {
     "status": "PASS",
-    "events_appended": 50000,
-    "snapshots_ok": 200,
-    "snapshots_requested": 200,
-    "append_wall_s": 4.754141899999922,
-    "append_eps": 10517.145060394772,
+    "events_appended": 75000,
+    "snapshots_ok": 250,
+    "snapshots_requested": 250,
+    "append_wall_s": 12.869696499999918,
+    "append_eps": 5827.643254835145,
     "append_latency": {
-      "sample_count": 20400,
-      "p50_s": 7.399999958579428e-05,
-      "p95_s": 0.00010300000030838419,
-      "p99_s": 0.0001797010004429465
+      "sample_count": 20600,
+      "p50_s": 0.0001494999996793922,
+      "p95_s": 0.00031690000014350517,
+      "p99_s": 0.0004382099997383177
     },
-    "replay_events": 50200,
-    "replay_s": 0.47286090000034164,
-    "replay_eps": 106162.2984686696,
+    "replay_events": 75250,
+    "replay_s": 0.7626035000002958,
+    "replay_eps": 98675.13065435814,
     "snapshot_latency": {
       "name": "snapshot",
-      "count": 200,
-      "p50_s": 0.047154800000043906,
-      "p95_s": 0.07406643500021343,
-      "p99_s": 0.857595289000164,
-      "min_s": 0.03447989999949641,
-      "max_s": 0.9435216000001674,
-      "mean_s": 0.07534376200002953
+      "count": 250,
+      "p50_s": 0.07088395000027958,
+      "p95_s": 0.11093422499993706,
+      "p99_s": 1.5916221669996664,
+      "min_s": 0.05323450000014418,
+      "max_s": 1.752144799999769,
+      "mean_s": 0.13129086440001264
     },
-    "restore_latency_s": 3.9541105999996944,
+    "restore_latency_s": 6.027280099999189,
     "restore_status": "RECOVERED_EXACT",
     "hash_chain": {
       "ledger_hash_chain_status": "PASS",
-      "event_count": 50200
+      "event_count": 75250
     },
-    "memory_rss_before": 28872704,
-    "memory_rss_after": 121696256,
-    "memory_growth_bytes": 92823552,
+    "memory_rss_before": 28835840,
+    "memory_rss_after": 162066432,
+    "memory_growth_bytes": 133230592,
     "disk_before_bytes": 86336,
-    "disk_after_bytes": 5266061178,
-    "disk_growth_bytes": 5265974842,
-    "snap_every_hint": 250
+    "disk_after_bytes": 9740719648,
+    "disk_growth_bytes": 9740633312,
+    "snap_every_hint": 300
   },
   "recovery_drills": {
     "status": "PASS",
-    "passed": 50,
-    "total": 50,
-    "drills_requested": 50
+    "passed": 64,
+    "total": 64,
+    "drills_requested": 64
   },
   "injection_matrix": {
     "status": "PASS",
@@ -118,10 +125,10 @@
             "event_count": 20,
             "max_sequence": 20,
             "live_ok_before": false,
-            "latency_s": 0.026146199999857345
+            "latency_s": 0.03251100000034057
           },
           "assessment": {
-            "assessed_at": "2026-08-05T03:34:25Z",
+            "assessed_at": "2026-08-05T03:36:33Z",
             "exchange_write_attempt_count": 0,
             "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
             "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
@@ -157,10 +164,10 @@
             "event_count": 20,
             "max_sequence": 20,
             "live_ok_before": false,
-            "latency_s": 0.026021399999990535
+            "latency_s": 0.034753299999465526
           },
           "assessment": {
-            "assessed_at": "2026-08-05T03:34:25Z",
+            "assessed_at": "2026-08-05T03:36:33Z",
             "exchange_write_attempt_count": 0,
             "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
             "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
@@ -203,10 +210,10 @@
             "event_count": 20,
             "max_sequence": 20,
             "live_ok_before": false,
-            "latency_s": 0.027040599999963888
+            "latency_s": 0.03258000000005268
           },
           "assessment": {
-            "assessed_at": "2026-08-05T03:34:25Z",
+            "assessed_at": "2026-08-05T03:36:34Z",
             "exchange_write_attempt_count": 0,
             "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
             "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
@@ -261,8 +268,8 @@
         "passed": true,
         "detail": {
           "reason": "snapshot_checksum_mismatch",
-          "expected": "aa65772aaca3dbf284e4ebe5f71d09039f9b09517655ada62817ba7df6ae77e2",
-          "actual": "059923e41910575723ae81d4013b65b5d064658e123ac73108c9d3c608144cf9"
+          "expected": "e5915c9d90d4db2ca9cb1001ead86f95a8a9461f4de05d39d9b10c8773b822c9",
+          "actual": "0733f0867902d4b5735eec58953d9f9c1cef4b690197552f2d4b4fcae5c9b518"
         }
       },
       {
@@ -274,11 +281,11 @@
           "reason": "latest_snapshot_missing",
           "pointer": {
             "generation": 1,
-            "created_at": "2026-08-05T03:34:26Z",
+            "created_at": "2026-08-05T03:36:34Z",
             "source_ledger_position": 20,
             "max_sequence": 20,
-            "snapshot_checksum": "6b39c3843a16c2dc0d47f1e04bbed5d2f1693cce21bd57e81abeb51fa24ad1a0",
-            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_dur_v2_7wad0g1p\\matrix\\latest_missing\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+            "snapshot_checksum": "7be2d3559c492ba9fa7e7aff9294c72e747db6c54c1ad72aa379a8f3f7e33401",
+            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_dur_v2_df63qa2e\\matrix\\latest_missing\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
             "ledger_hash_chain_status": "PASS",
             "schema": "durability_v2"
           }
@@ -292,7 +299,7 @@
         "detail": {
           "reason": "snapshot_checksum_mismatch",
           "expected": "0000000000000000000000000000000000000000000000000000000000000000",
-          "actual": "f53871995738bec8d1f20a0eedc0906a75a7dd11cd2a59cc8b117ae0544c44de"
+          "actual": "4117241b5f9e21b80775b9490f8a31f993ec9d5caa11e43acda56e9207b0b524"
         }
       },
       {
@@ -381,7 +388,7 @@
         "passed": true,
         "detail": {
           "reason": "process_kill_during_checkpoint",
-          "partial_marker": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_dur_v2_7wad0g1p\\matrix\\process_kill_during_checkpoint\\durability\\checkpoint_partial.marker"
+          "partial_marker": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_dur_v2_df63qa2e\\matrix\\process_kill_during_checkpoint\\durability\\checkpoint_partial.marker"
         }
       }
     ]

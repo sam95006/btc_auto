@@ -55,6 +55,12 @@ def _utc() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _s_to_ms(v: float | None) -> float | None:
+    if v is None:
+        return None
+    return float(v) * 1000.0
+
+
 def _rss_bytes() -> int:
     # Windows: use psutil-like fallback via ctypes / resource may be unavailable.
     try:
@@ -110,9 +116,9 @@ def resolve_scale(*, mode: str | None = None) -> dict[str, int]:
         snapshots = 20
         drills = 16  # one per injection kind
     else:  # evidence — substantial non-trivial
-        events = 50_000
-        snapshots = 200
-        drills = 50
+        events = 75_000
+        snapshots = 250
+        drills = 64
 
     events = int(os.environ.get("NEXUS_DURABILITY_V2_EVENTS", events))
     snapshots = int(os.environ.get("NEXUS_DURABILITY_V2_SNAPSHOTS", snapshots))
@@ -317,12 +323,19 @@ def build_report(
             "append_p50_s": (bench.get("append_latency") or {}).get("p50_s"),
             "append_p95_s": (bench.get("append_latency") or {}).get("p95_s"),
             "append_p99_s": (bench.get("append_latency") or {}).get("p99_s"),
+            "append_p50_ms": _s_to_ms((bench.get("append_latency") or {}).get("p50_s")),
+            "append_p95_ms": _s_to_ms((bench.get("append_latency") or {}).get("p95_s")),
+            "append_p99_ms": _s_to_ms((bench.get("append_latency") or {}).get("p99_s")),
             "append_eps": bench.get("append_eps"),
             "replay_eps": bench.get("replay_eps"),
             "snapshot_latency": bench.get("snapshot_latency"),
+            "snapshot_p50_ms": _s_to_ms((bench.get("snapshot_latency") or {}).get("p50_s")),
+            "snapshot_p95_ms": _s_to_ms((bench.get("snapshot_latency") or {}).get("p95_s")),
             "restore_latency_s": bench.get("restore_latency_s"),
+            "restore_latency_ms": _s_to_ms(bench.get("restore_latency_s")),
             "memory_growth_bytes": bench.get("memory_growth_bytes"),
             "disk_growth_bytes": bench.get("disk_growth_bytes"),
+            "disk_growth_note": "O(snapshots * ledger_size); full independent snapshot copies for DR integrity",
         },
         "requirements": {
             "no_silent_recovery_guess": True,

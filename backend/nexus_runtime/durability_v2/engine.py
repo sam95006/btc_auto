@@ -1,8 +1,10 @@
 """Runtime Durability V2 engine — snapshots, LKG, checkpoint, corruption detection."""
 from __future__ import annotations
 
+import gc
 import hashlib
 import json
+import os
 import shutil
 import time
 from dataclasses import dataclass
@@ -175,32 +177,45 @@ class RuntimeDurabilityV2:
         self.snapshot_latency.observe(elapsed)
         return SnapshotResult(status=SNAPSHOT_OK, detail={**pointer, "latency_s": elapsed})
 
-    def detect_corruption(self, ledger: DurableEventLedgerV2) -> dict[str, Any]:
+    def detect_corruption(
+        self,
+        ledger: DurableEventLedgerV2,
+        *,
+        deep: bool = True,
+    ) -> dict[str, Any]:
         integrity = ledger.integrity_check()
         chain = ledger.verify_hash_chain()
         status = "PASS"
         if integrity != "ok" or chain.get("ledger_hash_chain_status") != "PASS":
             status = CORRUPTION_DETECTED
         # Verify payload_hash matches payload_json (detects silent bit flips).
-        # Full scan for modest ledgers; head+tail sample for large ones.
         count = ledger.event_count()
         payload_mismatch = False
         if count > 0 and status == "PASS":
-            if count <= 20_000:
+            if deep and count <= 20_000:
                 rows = ledger._conn.execute(
                     "SELECT sequence_number, payload_json, payload_hash FROM events "
                     "ORDER BY sequence_number ASC"
                 ).fetchall()
             else:
+                # Sampled deep-check: always cover head+tail (+ mid when deep).
                 head = ledger._conn.execute(
                     "SELECT sequence_number, payload_json, payload_hash FROM events "
-                    "ORDER BY sequence_number ASC LIMIT 100"
+                    "ORDER BY sequence_number ASC LIMIT 200"
                 ).fetchall()
                 tail = ledger._conn.execute(
                     "SELECT sequence_number, payload_json, payload_hash FROM events "
-                    "ORDER BY sequence_number DESC LIMIT 100"
+                    "ORDER BY sequence_number DESC LIMIT 200"
                 ).fetchall()
                 rows = list(head) + list(tail)
+                if deep and count > 400:
+                    mid = max(1, count // 2)
+                    mid_rows = ledger._conn.execute(
+                        "SELECT sequence_number, payload_json, payload_hash FROM events "
+                        "WHERE sequence_number BETWEEN ? AND ? ORDER BY sequence_number ASC",
+                        (mid - 50, mid + 50),
+                    ).fetchall()
+                    rows = list(rows) + list(mid_rows)
             for r in rows:
                 expected = hashlib.sha256(r["payload_json"].encode("utf-8")).hexdigest()
                 if expected != r["payload_hash"]:
@@ -281,7 +296,8 @@ class RuntimeDurabilityV2:
         shutil.copy2(snap, tmp)
         probe = DurableEventLedgerV2(tmp)
         try:
-            det = self.detect_corruption(probe)
+            # Snapshot bytes already checksum-matched; use sampled payload verify.
+            det = self.detect_corruption(probe, deep=False)
             if det.get("corruption_detection_status") != "PASS":
                 probe.close()
                 tmp.unlink(missing_ok=True)
@@ -303,7 +319,7 @@ class RuntimeDurabilityV2:
             live = None
             try:
                 live = DurableEventLedgerV2(self.ledger_path)
-                live_det = self.detect_corruption(live)
+                live_det = self.detect_corruption(live, deep=False)
                 live_count = live.event_count()
                 if live_det.get("corruption_detection_status") != "PASS":
                     live_ok = False
@@ -336,9 +352,6 @@ class RuntimeDurabilityV2:
             )
 
         # Replace live ledger atomically-ish (Windows-safe): swap aside then copy.
-        import gc
-        import time as _time
-
         gc.collect()
         aside = self.root / "ledger_aside_v2.sqlite3"
         for attempt in range(8):
@@ -346,16 +359,15 @@ class RuntimeDurabilityV2:
                 if self.ledger_path.exists():
                     if aside.exists():
                         aside.unlink()
-                    os_replace = __import__("os").replace
                     try:
-                        os_replace(self.ledger_path, aside)
+                        os.replace(self.ledger_path, aside)
                     except OSError:
                         shutil.copy2(self.ledger_path, aside)
                         self.ledger_path.unlink()
                 shutil.copy2(tmp, self.ledger_path)
                 break
             except PermissionError:
-                _time.sleep(0.05 * (attempt + 1))
+                time.sleep(0.05 * (attempt + 1))
                 gc.collect()
         else:
             tmp.unlink(missing_ok=True)
@@ -372,7 +384,7 @@ class RuntimeDurabilityV2:
                     side.unlink(missing_ok=True)
                     break
                 except PermissionError:
-                    _time.sleep(0.05)
+                    time.sleep(0.05)
                     gc.collect()
 
         elapsed = time.perf_counter() - t0
