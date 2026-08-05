@@ -4,8 +4,8 @@
   "lane": "V12-D",
   "branch": "feature/v12-disaster-recovery-control",
   "base": "e4e96299840da2e5152cf2850135cebc67d66cd0",
-  "head": "e4e96299840da2e5152cf2850135cebc67d66cd0",
-  "created_at": "2026-08-05T07:48:29Z",
+  "head": "2f1764fc8fabd5b257e280ef691c986e8ebfcca0",
+  "created_at": "2026-08-05T07:49:16Z",
   "overall_status": "NEXUS_V12_DISASTER_RECOVERY_CONTROL_PASS",
   "blockers": [],
   "counters": {
@@ -30,16 +30,16 @@
           "snapshot": {
             "status": "SNAPSHOT_OK",
             "generation": 1,
-            "created_at": "2026-08-05T07:48:27Z",
+            "created_at": "2026-08-05T07:49:15Z",
             "source_ledger_position": 12,
             "max_sequence": 12,
-            "snapshot_checksum": "8968610b945864aaf7b5d720bc94bd1948ca04e20108ffb68ac361e82cc4e392",
-            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_3bzrkejc\\matrix\\proofs\\cold_restart\\cold\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+            "snapshot_checksum": "fa112533a5e9632a6f3b429dffdc7720c78ccd8a76ad86127cc9819ee7ba8185",
+            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\cold_restart\\cold\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
             "ledger_hash_chain_status": "PASS",
             "schema": "durability_v2",
             "position_source": "checksummed_main_file",
             "wal_policy": "forbid_non_empty_companion_wal",
-            "latency_s": 0.008881399997335393
+            "latency_s": 0.010478100000909762
           },
           "state": "RUNNING"
         },
@@ -55,7 +55,7 @@
           "recovery": {
             "status": "NO_RECOVERY_NEEDED",
             "assessment": {
-              "assessed_at": "2026-08-05T07:48:28Z",
+              "assessed_at": "2026-08-05T07:49:15Z",
               "exchange_write_attempt_count": 0,
               "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
               "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
@@ -110,16 +110,16 @@
           "snapshot": {
             "status": "SNAPSHOT_OK",
             "generation": 1,
-            "created_at": "2026-08-05T07:48:28Z",
+            "created_at": "2026-08-05T07:49:15Z",
             "source_ledger_position": 8,
             "max_sequence": 8,
-            "snapshot_checksum": "c83e77db96ea93e6ea66c5f722814469eb10981cd6f18024c68c5f25cb37ba0c",
-            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_3bzrkejc\\matrix\\proofs\\warm_restart\\warm\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+            "snapshot_checksum": "7aa47055bddcb2f553441ff50b06df3ffb46e6e5ec93230ef5b712cb75d41d58",
+            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\warm_restart\\warm\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
             "ledger_hash_chain_status": "PASS",
             "schema": "durability_v2",
             "position_source": "checksummed_main_file",
             "wal_policy": "forbid_non_empty_companion_wal",
-            "latency_s": 0.00817779999852064
+            "latency_s": 0.011179000000993256
           },
           "state": "RUNNING"
         },
@@ -135,7 +135,7 @@
           "event_count": 8,
           "max_sequence": 8,
           "assessment": {
-            "assessed_at": "2026-08-05T07:48:28Z",
+            "assessed_at": "2026-08-05T07:49:15Z",
             "exchange_write_attempt_count": 0,
             "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
             "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
@@ -183,16 +183,16 @@
           "snapshot": {
             "status": "SNAPSHOT_OK",
             "generation": 1,
-            "created_at": "2026-08-05T07:48:28Z",
+            "created_at": "2026-08-05T07:49:15Z",
             "source_ledger_position": 10,
             "max_sequence": 10,
-            "snapshot_checksum": "220b23f203381476b05f3fc227bba27b42a23f85f5fb31b1cf3f75f2755c9c0c",
-            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_3bzrkejc\\matrix\\proofs\\lkg_restore\\lkg\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+            "snapshot_checksum": "545b393995092d046994bb1593edba8ed3d47338f3b2ab3abdc784647490ced1",
+            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\lkg_restore\\lkg\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
             "ledger_hash_chain_status": "PASS",
             "schema": "durability_v2",
             "position_source": "checksummed_main_file",
             "wal_policy": "forbid_non_empty_companion_wal",
-            "latency_s": 0.008600999997725012
+            "latency_s": 0.010005899999669055
           },
           "state": "RUNNING"
         },
@@ -204,7 +204,7 @@
             "event_count": 10,
             "max_sequence": 10,
             "live_ok_before": false,
-            "latency_s": 0.05704110000078799
+            "latency_s": 0.0792053000004671
           },
           "silent_recovery_guess": false,
           "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
@@ -234,16 +234,16 @@
           "snapshot": {
             "status": "SNAPSHOT_OK",
             "generation": 1,
-            "created_at": "2026-08-05T07:48:28Z",
+            "created_at": "2026-08-05T07:49:15Z",
             "source_ledger_position": 9,
             "max_sequence": 9,
-            "snapshot_checksum": "dc1930035e4991e1f21764e53351c5e5cc2da2e2f538a1915e03290d8b519e4b",
-            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_3bzrkejc\\matrix\\proofs\\checkpoint_restore\\ckpt\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+            "snapshot_checksum": "158e818b898f8a62665f2405564d8649af6fa4f324e0ee8d597fce934df5264e",
+            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\checkpoint_restore\\ckpt\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
             "ledger_hash_chain_status": "PASS",
             "schema": "durability_v2",
             "position_source": "checksummed_main_file",
             "wal_policy": "forbid_non_empty_companion_wal",
-            "latency_s": 0.007936300000437768
+            "latency_s": 0.011396300000342308
           },
           "state": "RUNNING"
         },
@@ -255,7 +255,7 @@
             "event_count": 9,
             "max_sequence": 9,
             "live_ok_before": false,
-            "latency_s": 0.02676920000158134
+            "latency_s": 0.036857299997791415
           },
           "silent_recovery_guess": false,
           "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
@@ -302,32 +302,32 @@
           "snapshot": {
             "status": "SNAPSHOT_OK",
             "generation": 1,
-            "created_at": "2026-08-05T07:48:28Z",
+            "created_at": "2026-08-05T07:49:15Z",
             "source_ledger_position": 7,
             "max_sequence": 7,
-            "snapshot_checksum": "f69bbc380a6525fd6ed437fa5c9d8b4af676e4081744dccd98fc1036208e14e5",
-            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_3bzrkejc\\matrix\\proofs\\ledger_tail_reconciliation\\tail\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+            "snapshot_checksum": "9ecf28ca7b09620be3c1b4a28b41420deb06bcd6600511a00032f28344658d32",
+            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\ledger_tail_reconciliation\\tail\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
             "ledger_hash_chain_status": "PASS",
             "schema": "durability_v2",
             "position_source": "checksummed_main_file",
             "wal_policy": "forbid_non_empty_companion_wal",
-            "latency_s": 0.007531600000220351
+            "latency_s": 0.010646700000506826
           },
           "state": "RUNNING"
         },
         "snapshot": {
           "status": "SNAPSHOT_OK",
           "generation": 2,
-          "created_at": "2026-08-05T07:48:28Z",
+          "created_at": "2026-08-05T07:49:15Z",
           "source_ledger_position": 8,
           "max_sequence": 8,
-          "snapshot_checksum": "29e500f80efac7a98081e2430a949a0a95eb238741f2f98b695f318175d37394",
-          "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_3bzrkejc\\matrix\\proofs\\ledger_tail_reconciliation\\tail\\dr\\durability\\snapshots\\snapshot_000002\\event_ledger_v2.sqlite3",
+          "snapshot_checksum": "dfe1e026441c9d7430df4ba17dcc305d897b382305d25bd76ca7b0a21bc761d2",
+          "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\ledger_tail_reconciliation\\tail\\dr\\durability\\snapshots\\snapshot_000002\\event_ledger_v2.sqlite3",
           "ledger_hash_chain_status": "PASS",
           "schema": "durability_v2",
           "position_source": "checksummed_main_file",
           "wal_policy": "forbid_non_empty_companion_wal",
-          "latency_s": 0.01057280000168248
+          "latency_s": 0.011839399998279987
         },
         "reconcile": {
           "status": "PASS",
@@ -380,11 +380,11 @@
             "reason": "latest_snapshot_missing",
             "pointer": {
               "generation": 1,
-              "created_at": "2026-08-05T07:48:28Z",
+              "created_at": "2026-08-05T07:49:15Z",
               "source_ledger_position": 4,
               "max_sequence": 4,
-              "snapshot_checksum": "3bf254925077ddc0d8312b94a7915eea23f0968231248378a0f7bc8a349a73e4",
-              "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_3bzrkejc\\matrix\\proofs\\ambiguous_state_blocking\\amb_miss\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+              "snapshot_checksum": "1a4e6e8511ec678a2ae8314e55a047ae9d23f633467558ed1ef9bf5874bc6cb0",
+              "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\ambiguous_state_blocking\\amb_miss\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
               "ledger_hash_chain_status": "PASS",
               "schema": "durability_v2",
               "position_source": "checksummed_main_file",
@@ -416,7 +416,7 @@
             "event_count": 6,
             "max_sequence": 6,
             "live_ok_before": false,
-            "latency_s": 0.05058149999968009
+            "latency_s": 0.06990089999817428
           },
           "silent_recovery_guess": false,
           "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
@@ -489,16 +489,16 @@
           "snapshot": {
             "status": "SNAPSHOT_OK",
             "generation": 1,
-            "created_at": "2026-08-05T07:48:28Z",
+            "created_at": "2026-08-05T07:49:16Z",
             "source_ledger_position": 11,
             "max_sequence": 11,
-            "snapshot_checksum": "148b7a34b3e7a4ab7835b8b3c1f1ee9b50cde5c50ca0624b00a8e4741bcf21dc",
-            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_3bzrkejc\\matrix\\proofs\\storage_migration_recovery\\mig_src\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+            "snapshot_checksum": "da45065e3d47b9823a10e2f4ce367e59823c4d02e2cead6b7bd9c8aa2dd079a1",
+            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\storage_migration_recovery\\mig_src\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
             "ledger_hash_chain_status": "PASS",
             "schema": "durability_v2",
             "position_source": "checksummed_main_file",
             "wal_policy": "forbid_non_empty_companion_wal",
-            "latency_s": 0.00806400000146823
+            "latency_s": 0.008221600000979379
           },
           "state": "RUNNING"
         },
@@ -517,10 +517,10 @@
             "checkpoint": {
               "checkpoint_id": "ckpt-000001",
               "lkg_generation": 1,
-              "created_at": "2026-08-05T07:48:28Z",
+              "created_at": "2026-08-05T07:49:16Z",
               "ledger_position": 11,
-              "snapshot_checksum": "148b7a34b3e7a4ab7835b8b3c1f1ee9b50cde5c50ca0624b00a8e4741bcf21dc",
-              "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_3bzrkejc\\matrix\\proofs\\storage_migration_recovery\\mig_src\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+              "snapshot_checksum": "da45065e3d47b9823a10e2f4ce367e59823c4d02e2cead6b7bd9c8aa2dd079a1",
+              "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\storage_migration_recovery\\mig_src\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
               "lkg_seal": true,
               "schema": "durability_v2_checkpoint_sealed"
             },
@@ -552,16 +552,16 @@
             "checkpoint": {
               "checkpoint_id": "ckpt-000001",
               "lkg_generation": 1,
-              "created_at": "2026-08-05T07:48:28Z",
+              "created_at": "2026-08-05T07:49:16Z",
               "ledger_position": 11,
-              "snapshot_checksum": "148b7a34b3e7a4ab7835b8b3c1f1ee9b50cde5c50ca0624b00a8e4741bcf21dc",
-              "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_3bzrkejc\\matrix\\proofs\\storage_migration_recovery\\mig_dest\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+              "snapshot_checksum": "da45065e3d47b9823a10e2f4ce367e59823c4d02e2cead6b7bd9c8aa2dd079a1",
+              "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\storage_migration_recovery\\mig_dest\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
               "lkg_seal": true,
               "schema": "durability_v2_checkpoint_sealed"
             },
             "lkg_generation": 1
           },
-          "dest_root": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_3bzrkejc\\matrix\\proofs\\storage_migration_recovery\\mig_dest\\dr\\durability",
+          "dest_root": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\storage_migration_recovery\\mig_dest\\dr\\durability",
           "event_count": 11
         },
         "restart": {
@@ -571,7 +571,7 @@
           "recovery": {
             "status": "NO_RECOVERY_NEEDED",
             "assessment": {
-              "assessed_at": "2026-08-05T07:48:28Z",
+              "assessed_at": "2026-08-05T07:49:16Z",
               "exchange_write_attempt_count": 0,
               "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
               "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
@@ -638,32 +638,32 @@
           "snapshot": {
             "status": "SNAPSHOT_OK",
             "generation": 1,
-            "created_at": "2026-08-05T07:48:28Z",
+            "created_at": "2026-08-05T07:49:16Z",
             "source_ledger_position": 7,
             "max_sequence": 7,
-            "snapshot_checksum": "b08717277125637ebe554cbe43a92b9f95d1cb0904a5e14a602ac7b9feedf463",
-            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_3bzrkejc\\matrix\\invariants\\position_vs_checksummed_ledger\\inv_pos\\tail\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+            "snapshot_checksum": "8a766105fc161bbe1b8d489d4447c3df481847da800d1910a0a48953ca33a76d",
+            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\invariants\\position_vs_checksummed_ledger\\inv_pos\\tail\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
             "ledger_hash_chain_status": "PASS",
             "schema": "durability_v2",
             "position_source": "checksummed_main_file",
             "wal_policy": "forbid_non_empty_companion_wal",
-            "latency_s": 0.007703399998717941
+            "latency_s": 0.06605709999712417
           },
           "state": "RUNNING"
         },
         "snapshot": {
           "status": "SNAPSHOT_OK",
           "generation": 2,
-          "created_at": "2026-08-05T07:48:29Z",
+          "created_at": "2026-08-05T07:49:16Z",
           "source_ledger_position": 8,
           "max_sequence": 8,
-          "snapshot_checksum": "1b8171e9e4e3f620bc8e0d32d8b78e1b6eee4a42792f4d1765da735542d67560",
-          "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_3bzrkejc\\matrix\\invariants\\position_vs_checksummed_ledger\\inv_pos\\tail\\dr\\durability\\snapshots\\snapshot_000002\\event_ledger_v2.sqlite3",
+          "snapshot_checksum": "c43239dce3860a035220aa8b761d8f0192858dab85df765ad9d4a997687bb390",
+          "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\invariants\\position_vs_checksummed_ledger\\inv_pos\\tail\\dr\\durability\\snapshots\\snapshot_000002\\event_ledger_v2.sqlite3",
           "ledger_hash_chain_status": "PASS",
           "schema": "durability_v2",
           "position_source": "checksummed_main_file",
           "wal_policy": "forbid_non_empty_companion_wal",
-          "latency_s": 0.010239999999612337
+          "latency_s": 0.013008499998250045
         },
         "reconcile": {
           "status": "PASS",
