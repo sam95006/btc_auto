@@ -1,23 +1,24 @@
 import { MemberPageChrome } from "../../member/MemberPageChrome";
-import { NotificationPrefsStub } from "../../components/NotificationPrefsStub";
+import { LiveSlotStrip, usePageSlots } from "../../member/LiveSlotStrip";
 
 export function MemberNotificationSettingsPage() {
+  const { loading, items } = usePageSlots([
+    ["notify.settings_table", "freshness", "Notify freshness"],
+    ["notify.decision_chip", "availability", "Decision notify"],
+    ["notify.risk_chip", "qual", "Risk notify"],
+    ["notify.stale_chip", "freshness", "Stale notify"],
+  ]);
+
   return (
     <MemberPageChrome
       title="Notification Settings"
-      subtitle="Local browser preferences · digest-first · no spam defaults · no cross-device sync in DEMO"
+      subtitle="Digest-first · no spam defaults · lineage-bound readiness"
     >
-      <NotificationPrefsStub />
-      <section className="member-panel">
-        <h2 className="nx-sec-title">Alert classes</h2>
-        <ul>
-          <li>Thesis Integrity Monitor candidates</li>
-          <li>Risk / invalidation condition changes</li>
-          <li>Outcome Review reminders</li>
-          <li>Freshness / availability notices</li>
-        </ul>
-        <p className="muted sm">Push remains blocked until real OS/browser permission is granted.</p>
-      </section>
+      {loading ? <p className="muted">Loading live bindings...</p> : null}
+      <LiveSlotStrip bindings={items} />
+      <p className="muted sm">
+        Preference persistence UNAVAILABLE until auth binds · no synthetic live prefs.
+      </p>
     </MemberPageChrome>
   );
 }

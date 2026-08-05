@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { DemoDataBadge } from "../components/DemoDataBadge";
-import { MEMBER_DEMO_BANNER } from "./demoCatalog";
+
+export const MEMBER_LIVE_BANNER =
+  "LIVE · lineage-bound · UNAVAILABLE never shown as 0 · STALE always indicated · no DEMO merge · local/staging";
 
 export function MemberPageChrome({
   title,
@@ -17,11 +18,13 @@ export function MemberPageChrome({
       <header className="page-header member-page-header">
         <div className="member-title-row">
           <h1>{title}</h1>
-          <DemoDataBadge />
+          <span className="member-chip member-chip-live" role="status">
+            LIVE
+          </span>
         </div>
         {subtitle ? <p className="page-sub">{subtitle}</p> : null}
-        <p className="member-demo-banner" role="status">
-          {MEMBER_DEMO_BANNER}
+        <p className="member-demo-banner member-live-banner" role="status">
+          {MEMBER_LIVE_BANNER}
         </p>
       </header>
       {children}
@@ -41,7 +44,7 @@ export function EmptyState({ label }: { label: string }) {
   return (
     <div className="member-empty" role="status">
       <p>{label}</p>
-      <p className="muted sm">Empty state · DEMO catalog bound · no fabricated LIVE values</p>
+      <p className="muted sm">Empty · UNAVAILABLE · no synthetic live values · no zero fill</p>
     </div>
   );
 }

@@ -1,34 +1,22 @@
-import { DecisionLink, MemberPageChrome } from "../../member/MemberPageChrome";
-import { alerts } from "../../member/demoCatalog";
+import { MemberPageChrome, EmptyState } from "../../member/MemberPageChrome";
+import { LiveSlotStrip, usePageSlots } from "../../member/LiveSlotStrip";
 
 export function MemberAlertsPage() {
+  const { loading, items } = usePageSlots([
+    ["alerts.notification_list", "capture", "Capture alerts"],
+    ["alerts.severity_chip", "qual", "Severity"],
+    ["alerts.kind_table", "runtime", "Runtime"],
+    ["alerts.count_gauge", "ready_count", "Alert gauge"],
+  ]);
+
   return (
     <MemberPageChrome
       title="Alerts"
-      subtitle="Thesis · risk · freshness · outcome alerts · Shadow observation only"
+      subtitle="Thesis · risk · freshness · outcome alerts · observation only"
     >
-      <ul className="member-list">
-        {alerts.map((a) => (
-          <li key={a.id} className="member-panel">
-            <div className="member-card-meta">
-              <strong>{a.title}</strong>
-              <span className={`member-chip ${a.severity === "HIGH" ? "warn" : ""}`}>
-                {a.kind} · {a.severity}
-              </span>
-            </div>
-            <p>{a.body}</p>
-            <p className="muted sm">
-              {a.createdAt}
-              {a.decisionId ? (
-                <>
-                  {" "}
-                  · <DecisionLink id={a.decisionId} />
-                </>
-              ) : null}
-            </p>
-          </li>
-        ))}
-      </ul>
+      {loading ? <p className="muted">Loading live bindings...</p> : null}
+      <LiveSlotStrip bindings={items} />
+      <EmptyState label="Alert list UNAVAILABLE - no synthetic live alerts" />
     </MemberPageChrome>
   );
 }

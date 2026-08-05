@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
 import { MemberPageChrome } from "../../member/MemberPageChrome";
-import { alerts, decisions, marketOverviewCards } from "../../member/demoCatalog";
 import { MEMBER_NAV } from "../../member/routes";
+import { BoundLiveValue, useLiveBindings } from "../../public_v2_live_binding";
 
 export function MemberHomePage() {
-  const open = decisions.filter((d) => d.outcomeClass === "PENDING").length;
-  const warn = alerts.filter((a) => a.severity !== "INFO").length;
+  const { slot, loading } = useLiveBindings();
+  const hero = slot("home.hero_decision_summary", "posture");
+  const market = slot("home.market_context_card", "btc");
+  const fresh = slot("home.freshness_chip", "freshness");
+  const risk = slot("home.risk_open_chip", "qual");
 
   return (
     <MemberPageChrome
@@ -16,8 +19,8 @@ export function MemberHomePage() {
         <p className="member-kicker">Public Member Platform</p>
         <h2 className="member-hero-title">Decision Integrity · not automated trading</h2>
         <p className="muted">
-          Record Context → Thesis → Evidence → Decision → Monitor → Outcome → Review. You remain the
-          final decision-maker. No exchange orders from this product.
+          Record Context to Thesis to Evidence to Decision to Monitor to Outcome to Review. You
+          remain the final decision-maker. No exchange orders from this product.
         </p>
         <div className="member-cta-row">
           <Link className="member-btn primary" to="/decisions">
@@ -32,23 +35,12 @@ export function MemberHomePage() {
         </div>
       </section>
 
-      <section className="member-stat-grid" aria-label="Home metrics">
-        <article className="member-stat">
-          <strong>{open}</strong>
-          <span>Open Decisions</span>
-        </article>
-        <article className="member-stat">
-          <strong>{warn}</strong>
-          <span>Active alerts</span>
-        </article>
-        <article className="member-stat">
-          <strong>{marketOverviewCards.length}</strong>
-          <span>Market context cards</span>
-        </article>
-        <article className="member-stat">
-          <strong>DEMO</strong>
-          <span>Data mode</span>
-        </article>
+      <section className="member-stat-grid" aria-label="Home live bindings">
+        {loading ? <p className="muted">Loading live bindings...</p> : null}
+        <BoundLiveValue binding={hero} label="Decision cloud" />
+        <BoundLiveValue binding={market} label="BTC last" />
+        <BoundLiveValue binding={fresh} label="Freshness" />
+        <BoundLiveValue binding={risk} label="Qualification" />
       </section>
 
       <section className="member-panel" aria-label="Navigate">

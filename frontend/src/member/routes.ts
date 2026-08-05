@@ -1,4 +1,4 @@
-/** Member Platform route inventory — visual IA aligned to product pages. */
+/** Member Platform route inventory - visual IA aligned to product pages. */
 export const MEMBER_NAV = [
   { to: "/home", label: "Home", short: "Home" },
   { to: "/market", label: "Market Overview", short: "Market" },

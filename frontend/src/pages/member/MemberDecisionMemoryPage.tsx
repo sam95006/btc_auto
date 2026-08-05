@@ -1,30 +1,22 @@
-import { Link } from "react-router-dom";
-import { DecisionLink, MemberPageChrome } from "../../member/MemberPageChrome";
-import { decisions } from "../../member/demoCatalog";
+import { MemberPageChrome, EmptyState } from "../../member/MemberPageChrome";
+import { LiveSlotStrip, usePageSlots } from "../../member/LiveSlotStrip";
 
 export function MemberDecisionMemoryPage() {
+  const { loading, items } = usePageSlots([
+    ["memory.decision_table", "availability", "Memory availability"],
+    ["memory.summary_card", "freshness", "Summary"],
+    ["memory.freshness_chip", "freshness", "Freshness"],
+    ["memory.timeline_chart", "btc", "Timeline"],
+  ]);
+
   return (
     <MemberPageChrome
       title="Decision Memory"
-      subtitle="Longitudinal Decision Graph (public) · never private Founder Lesson Memory"
+      subtitle="Public Decision history surface · no private Lesson Memory"
     >
-      <ul className="member-feed">
-        {decisions.map((d) => (
-          <li key={d.id} className="member-feed-item">
-            <div className="member-feed-top">
-              <DecisionLink id={d.id}>{d.title}</DecisionLink>
-              <span className="member-chip">{d.outcomeClass}</span>
-            </div>
-            <p className="muted sm">
-              {d.symbol} · posture {d.posture} · updated {d.updatedAt}
-            </p>
-          </li>
-        ))}
-      </ul>
-      <p className="muted sm">
-        Replay stays versioned on Decision Objects.{" "}
-        <Link to="/outcome-review">Continue to Outcome Review</Link>
-      </p>
+      {loading ? <p className="muted">Loading live bindings...</p> : null}
+      <LiveSlotStrip bindings={items} />
+      <EmptyState label="Decision memory UNAVAILABLE - no synthetic live history" />
     </MemberPageChrome>
   );
 }

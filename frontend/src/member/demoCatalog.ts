@@ -1,7 +1,7 @@
 /**
  * DEMO DATA - READ ONLY - NOT INVESTMENT ADVICE
  * Public Member Platform fixtures only. demo: true on every record.
- * No live fabrications — UI must show DEMO DATA when this catalog is bound.
+ * No live fabrications - UI must show DEMO DATA when this catalog is bound.
  */
 
 import type {
@@ -38,7 +38,7 @@ export const marketOverviewCards: Array<MarketOverviewCard & { demo: true }> = [
     id: "mkt-fresh",
     label: "Feed freshness",
     value: "DEMO",
-    hint: "Fixture mode — not LIVE lineage",
+    hint: "Fixture mode - not LIVE lineage",
     freshness: "DEMO",
     demo: true,
   },
@@ -216,7 +216,7 @@ export const decisions: Array<PublicDecisionDetail & { demo: true }> = [
         source: "public_mark",
         asOf: AS_OF,
         polarity: "CONTRADICTING",
-        summary: "Counterfactual for calibration — not private fills.",
+        summary: "Counterfactual for calibration - not private fills.",
         freshness: "DEMO",
       },
     ],
@@ -234,7 +234,7 @@ export const thesisMonitors: Array<ThesisMonitorItem & { demo: true }> = decisio
     decisionId: d.id,
     thesis: d.thesis,
     status: d.outcomeClass === "PENDING" ? "ACTIVE" : "CLOSED",
-    invalidation: d.risks[0]?.label ?? "No open invalidation",
+    invalidation: d.risks[0]?.label -  "No open invalidation",
     lastChecked: AS_OF,
     driftNote: d.counterEvidenceCount > 0 ? "Counter-evidence present" : "Stable",
     demo: true,
@@ -276,7 +276,7 @@ export const alerts: Array<MemberAlert & { demo: true }> = [
     id: "al-4",
     kind: "FRESHNESS",
     title: "Feed freshness · DEMO mode",
-    body: "Values bound to DEMO DATA catalog — not LIVE lineage.",
+    body: "Values bound to DEMO DATA catalog - not LIVE lineage.",
     createdAt: AS_OF,
     severity: "INFO",
     demo: true,
