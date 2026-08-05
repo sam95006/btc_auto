@@ -9,8 +9,8 @@
     "any_plan_executed": false,
     "as_of_ms": 1700000000000,
     "bundle_schema": "NEXUS_V15F_WF_PLAN_CANDIDATE_BUNDLE",
-    "code_version": "ec05f2c046e8cf9310fd47237dc085be05edf20b",
-    "created_at": "2026-08-05T15:19:39Z",
+    "code_version": "20f179b6db556252718f9caefbd2ed204a303e7e",
+    "created_at": "2026-08-05T15:20:53Z",
     "demo_order_count": 0,
     "dimensions_covered": [
       "training_windows",
@@ -64,7 +64,7 @@
     },
     "exchange_write_attempt_count": 0,
     "execute_attempts": {
-      "WF_PLAN_SYN_V15F_WF_CAND_001_7b795130622d": {
+      "WF_PLAN_SYN_V15F_WF_CAND_001_f5ca778199dc": {
         "Founder_authorization_present": false,
         "allowed": false,
         "candidate_id": "SYN_V15F_WF_CAND_001",
@@ -76,7 +76,7 @@
         "oos_consumed": false,
         "oos_executed": false,
         "oos_reservation_created": false,
-        "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_7b795130622d",
+        "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_f5ca778199dc",
         "plan_status": "PLAN_READY_EXECUTION_BLOCKED",
         "profitability_claim": false,
         "qualification_ready_count": 0,
@@ -87,7 +87,7 @@
         "strategy_promoted": false,
         "strategy_selected": false
       },
-      "WF_PLAN_SYN_V15F_WF_CAND_002_6d2def54318b": {
+      "WF_PLAN_SYN_V15F_WF_CAND_002_0697fa6b4df5": {
         "Founder_authorization_present": false,
         "allowed": false,
         "candidate_id": "SYN_V15F_WF_CAND_002",
@@ -99,7 +99,7 @@
         "oos_consumed": false,
         "oos_executed": false,
         "oos_reservation_created": false,
-        "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_002_6d2def54318b",
+        "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_002_0697fa6b4df5",
         "plan_status": "PLAN_READY_EXECUTION_BLOCKED",
         "profitability_claim": false,
         "qualification_ready_count": 0,
@@ -127,7 +127,7 @@
           "oos_consumed": false,
           "oos_executed": false,
           "oos_reservation_created": false,
-          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_7b795130622d",
+          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_f5ca778199dc",
           "plan_status": "PLAN_READY_EXECUTION_BLOCKED",
           "profitability_claim": false,
           "qualification_ready_count": 0,
@@ -150,7 +150,7 @@
           "oos_consumed": false,
           "oos_executed": false,
           "oos_reservation_created": false,
-          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_002_6d2def54318b",
+          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_002_0697fa6b4df5",
           "plan_status": "PLAN_READY_EXECUTION_BLOCKED",
           "profitability_claim": false,
           "qualification_ready_count": 0,
@@ -166,7 +166,7 @@
           "executed": false,
           "fold_id": "WF_PLAN_FOLD_00",
           "formal_walk_forward_executed": false,
-          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_7b795130622d",
+          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_f5ca778199dc",
           "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
           "status": "BLOCKED"
         },
@@ -175,7 +175,7 @@
           "executed": false,
           "fold_id": "WF_PLAN_FOLD_01",
           "formal_walk_forward_executed": false,
-          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_7b795130622d",
+          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_f5ca778199dc",
           "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
           "status": "BLOCKED"
         },
@@ -184,7 +184,7 @@
           "executed": false,
           "fold_id": "WF_PLAN_FOLD_02",
           "formal_walk_forward_executed": false,
-          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_7b795130622d",
+          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_f5ca778199dc",
           "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
           "status": "BLOCKED"
         },
@@ -193,7 +193,7 @@
           "executed": false,
           "fold_id": "WF_PLAN_FOLD_03",
           "formal_walk_forward_executed": false,
-          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_7b795130622d",
+          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_f5ca778199dc",
           "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
           "status": "BLOCKED"
         },
@@ -202,7 +202,7 @@
           "executed": false,
           "fold_id": "WF_PLAN_FOLD_04",
           "formal_walk_forward_executed": false,
-          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_7b795130622d",
+          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_f5ca778199dc",
           "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
           "status": "BLOCKED"
         },
@@ -211,7 +211,7 @@
           "executed": false,
           "fold_id": "WF_PLAN_FOLD_05",
           "formal_walk_forward_executed": false,
-          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_7b795130622d",
+          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_f5ca778199dc",
           "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
           "status": "BLOCKED"
         },
@@ -220,7 +220,7 @@
           "executed": false,
           "fold_id": "WF_PLAN_FOLD_06",
           "formal_walk_forward_executed": false,
-          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_7b795130622d",
+          "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_f5ca778199dc",
           "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
           "status": "BLOCKED"
         }
@@ -258,8 +258,8 @@
     "oos_reservation_created": false,
     "plan_count": 2,
     "plan_ids": [
-      "WF_PLAN_SYN_V15F_WF_CAND_001_7b795130622d",
-      "WF_PLAN_SYN_V15F_WF_CAND_002_6d2def54318b"
+      "WF_PLAN_SYN_V15F_WF_CAND_001_f5ca778199dc",
+      "WF_PLAN_SYN_V15F_WF_CAND_002_0697fa6b4df5"
     ],
     "plans": [
       {
@@ -282,7 +282,7 @@
         "code_version_freeze": {
           "code_checksum": "546748ff7d95fb9e07e9581f727a2284b0e5abd205d6f666dd3a36a832f04573",
           "code_ref": "backend/nexus_formal_wf_plan",
-          "code_version": "ec05f2c046e8cf9310fd47237dc085be05edf20b",
+          "code_version": "20f179b6db556252718f9caefbd2ed204a303e7e",
           "executed": false,
           "frozen": false,
           "note": "Code version must freeze before formal WF; freeze not applied here.",
@@ -297,7 +297,7 @@
           "planned": true,
           "rule_kind": "cost_version_freeze"
         },
-        "created_at": "2026-08-05T15:19:39Z",
+        "created_at": "2026-08-05T15:20:53Z",
         "dataset_freeze": {
           "category_required": "DEVELOPMENT",
           "dataset_checksum": "b49051f5054d518c064a7c09d933e840389e7cd9bca6df5b0077445ba68f0688",
@@ -608,8 +608,8 @@
           "planned": true,
           "rule_kind": "parameter_freeze"
         },
-        "plan_checksum": "b324a738c634d543c7378474fed41a7b4cf99cdd531c6dbee93510b059f59197",
-        "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_7b795130622d",
+        "plan_checksum": "5597d438d70c8d5a304cad34242f13cdb8ba03ceda1fb8e63659ec79451cedaa",
+        "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_f5ca778199dc",
         "plan_kind": "FORMAL_WALK_FORWARD",
         "profitability_claim": false,
         "purge_intervals": {
@@ -769,7 +769,7 @@
         "code_version_freeze": {
           "code_checksum": "546748ff7d95fb9e07e9581f727a2284b0e5abd205d6f666dd3a36a832f04573",
           "code_ref": "backend/nexus_formal_wf_plan",
-          "code_version": "ec05f2c046e8cf9310fd47237dc085be05edf20b",
+          "code_version": "20f179b6db556252718f9caefbd2ed204a303e7e",
           "executed": false,
           "frozen": false,
           "note": "Code version must freeze before formal WF; freeze not applied here.",
@@ -784,7 +784,7 @@
           "planned": true,
           "rule_kind": "cost_version_freeze"
         },
-        "created_at": "2026-08-05T15:19:39Z",
+        "created_at": "2026-08-05T15:20:53Z",
         "dataset_freeze": {
           "category_required": "DEVELOPMENT",
           "dataset_checksum": "b49051f5054d518c064a7c09d933e840389e7cd9bca6df5b0077445ba68f0688",
@@ -884,8 +884,8 @@
           "planned": true,
           "rule_kind": "parameter_freeze"
         },
-        "plan_checksum": "3ec07533120493e616e9bd7924140bcb61abf80f1be1248c61761a60f70e487a",
-        "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_002_6d2def54318b",
+        "plan_checksum": "af5e14c7f1aaeea1d017800a0896fe4d3bea166b7d2b31383f41cf377674ab2f",
+        "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_002_0697fa6b4df5",
         "plan_kind": "FORMAL_WALK_FORWARD",
         "profitability_claim": false,
         "purge_intervals": {
@@ -958,7 +958,7 @@
         "executed": false,
         "fold_id": "WF_PLAN_FOLD_00",
         "formal_walk_forward_executed": false,
-        "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_7b795130622d",
+        "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_f5ca778199dc",
         "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
         "status": "BLOCKED"
       },
@@ -967,7 +967,7 @@
         "executed": false,
         "fold_id": "WF_PLAN_FOLD_01",
         "formal_walk_forward_executed": false,
-        "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_7b795130622d",
+        "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_f5ca778199dc",
         "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
         "status": "BLOCKED"
       },
@@ -976,7 +976,7 @@
         "executed": false,
         "fold_id": "WF_PLAN_FOLD_02",
         "formal_walk_forward_executed": false,
-        "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_7b795130622d",
+        "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_f5ca778199dc",
         "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
         "status": "BLOCKED"
       }
@@ -993,7 +993,7 @@
       "oos_consumed": false,
       "oos_executed": false,
       "oos_reservation_created": false,
-      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_7b795130622d",
+      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_f5ca778199dc",
       "plan_status": "PLAN_READY_EXECUTION_BLOCKED",
       "profitability_claim": false,
       "qualification_ready_count": 0,
