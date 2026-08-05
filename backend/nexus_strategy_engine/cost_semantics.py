@@ -58,6 +58,7 @@ def cost_semantics_summary() -> dict[str, Any]:
         "schema": "execution_cost_semantics_v1_1",
         "cost_model_version": COST_MODEL_VERSION,
         "authority": "backend.nexus_execution.cost_model",
+        "formula_authority": "backend.nexus_execution.cost_model",
         "legacy_proxy_label": RESEARCH_PROXY_LABEL_LEGACY,
         "observed_vs_proxy_separated": True,
         "configured_max_spread_is_not_observed_history": True,

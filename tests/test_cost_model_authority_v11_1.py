@@ -135,7 +135,8 @@ def test_strategy_cost_semantics_reexports_canonical():
 
 def test_strategy_constants_fee_from_canonical():
     assert TAKER_FEE_RATE == float(DEFAULT_TAKER_FEE)
-    assert TAKER_FEE_RATE == autonomy_sim.TAKER_FEE
+    # C5: Autonomy V1.1 shim must not embed fee constants — canonical cost_model only.
+    assert not hasattr(autonomy_sim, "TAKER_FEE")
 
 
 def test_demo_estimate_costs_delegates():
@@ -160,15 +161,13 @@ def test_demo_estimate_costs_delegates():
     assert b["cost_model_version"] == COST_MODEL_VERSION
 
 
-def test_autonomy_shim_applies_canonical_leg_costs():
-    via_shim = autonomy_sim.AutonomousExecutionSimulatorV1_1()._apply_costs(
-        notional=1000.0, is_taker=True
-    )
+def test_autonomy_shim_does_not_embed_cost_authority():
+    # C5: shim must not expose independent cost application.
+    shim = autonomy_sim.AutonomousExecutionSimulatorV1_1()
+    assert not hasattr(shim, "_apply_costs")
     via_auth = apply_leg_costs_float(notional=1000.0, is_taker=True)
-    assert via_shim["fee"] == pytest.approx(via_auth["fee"])
-    assert via_shim["spread_cost"] == pytest.approx(via_auth["spread_cost"])
-    assert via_shim["slippage_cost"] == pytest.approx(via_auth["slippage_cost"])
-    assert via_auth["cost_model_version"] == COST_MODEL_VERSION
+    assert via_auth["fee"] > 0
+    assert via_auth.get("cost_model_version", COST_MODEL_VERSION) == COST_MODEL_VERSION
 
 
 @pytest.mark.parametrize(

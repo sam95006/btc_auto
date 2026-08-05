@@ -40,7 +40,18 @@ def _llm_gateway_instance():
 def _dialogue_service():
     global _dialogue
     if _dialogue is None:
-        _dialogue = StationDialogueService(StationChatLog(runtime_store), llm_gateway=_llm_gateway_instance())
+        from backend.services.nexus_runtime import nexus_runtime
+
+        _dialogue = StationDialogueService(
+            StationChatLog(runtime_store),
+            llm_gateway=_llm_gateway_instance(),
+            runtime_ops={
+                "refresh_live_exchange_state": nexus_runtime.refresh_live_exchange_state,
+                "flatten_all_positions": nexus_runtime.flatten_all_positions,
+                "resume_trading": nexus_runtime.resume_trading,
+                "reset_testnet_sandbox": nexus_runtime.reset_testnet_sandbox,
+            },
+        )
     return _dialogue
 
 

@@ -33,17 +33,17 @@ class ChatFlattenCommandTests(unittest.TestCase):
             "message": args[2],
             "source": kwargs.get("source"),
         }
-        service = StationDialogueService(chat_log, llm_gateway=None)
-        flat_result = {"ok": True, "closed": [], "failed": [], "skipped": []}
-
-        with patch(
-            "backend.services.nexus_runtime.nexus_runtime.flatten_all_positions",
-            return_value=flat_result,
-        ) as flatten_mock:
-            with patch(
-                "backend.services.nexus_runtime.nexus_runtime.refresh_live_exchange_state",
-            ):
-                result = service.handle_player_message("WORLD", "整體平倉", snapshot={})
+        flatten_mock = MagicMock(return_value={"ok": True, "closed": [], "failed": [], "skipped": []})
+        refresh_mock = MagicMock()
+        service = StationDialogueService(
+            chat_log,
+            llm_gateway=None,
+            runtime_ops={
+                "flatten_all_positions": flatten_mock,
+                "refresh_live_exchange_state": refresh_mock,
+            },
+        )
+        result = service.handle_player_message("WORLD", "整體平倉", snapshot={})
 
         self.assertTrue(result.get("ok"))
         self.assertEqual(result.get("command"), "flatten_all")
