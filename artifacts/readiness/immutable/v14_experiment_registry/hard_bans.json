@@ -1,0 +1,33 @@
+{
+  "hard_ban_flags": {
+    "auto_integration": false,
+    "demo_order": false,
+    "exchange_write": false,
+    "formal_walk_forward_executed": false,
+    "learning_claim": false,
+    "mainnet": false,
+    "oos_executed": false,
+    "profitability_claim": false,
+    "real_money": false,
+    "shadow_order": false,
+    "simulated_only": true
+  },
+  "hard_bans": {
+    "auto_integration": false,
+    "demo_orders": false,
+    "deployment": false,
+    "exchange_write": false,
+    "fabricated_ai_learning": false,
+    "fabricated_strategy_edge": false,
+    "formal_walk_forward": false,
+    "mainnet": false,
+    "pr27_merge": false,
+    "profit_guarantee": false,
+    "real_money": false,
+    "real_oos_consumption": false,
+    "real_oos_execution": false,
+    "shadow_orders": false,
+    "silent_cherry_picking": false,
+    "strategy_promotion": false
+  }
+}
