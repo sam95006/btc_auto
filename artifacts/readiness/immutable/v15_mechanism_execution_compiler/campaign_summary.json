@@ -1,0 +1,89 @@
+{
+  "adversarial_remaining_count": 0,
+  "auto_integrate": false,
+  "auto_integrate_attempted": false,
+  "base_sha": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
+  "blockers": [
+    {
+      "blocker_id": "QUALIFICATION_NOT_AUTHORIZED",
+      "detail": "qualification_ready_count forced 0; executors are development-only"
+    },
+    {
+      "blocker_id": "OOS_AND_FORMAL_WF_BANNED",
+      "detail": "synthetic development fixtures only; no OOS consumption"
+    },
+    {
+      "blocker_id": "NO_AUTO_INTEGRATE",
+      "detail": "lane artifacts only; coordinator must not auto-integrate"
+    },
+    {
+      "blocker_id": "NO_LIVE_ORDERS",
+      "detail": "executors never emit demo/shadow/exchange writes"
+    }
+  ],
+  "branch": "feature/v15-mechanism-execution-compiler",
+  "campaign": "MECHANISM_EXECUTION_COMPILER",
+  "campaign_digest": "90067a21fcace8ea6df6831c28792cc919761be75ef855be2bdb5347c8857504",
+  "code_checksum": "317701eb84aab215bebe9a0927f523e9726a5f7d8da6e010fb4e863436a338c1",
+  "created_at": "2026-08-05T15:15:43Z",
+  "critical_remaining": 0,
+  "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+  "demo_order_count": 0,
+  "edge_claim_count": 0,
+  "edge_claimed": false,
+  "exchange_write_attempt_count": 0,
+  "formal_walk_forward_executed": false,
+  "hard_bans": [
+    "no_auto_integrate",
+    "no_demo_orders",
+    "no_edge_claims",
+    "no_exchange_write",
+    "no_formal_walk_forward",
+    "no_mainnet",
+    "no_oos_consumption",
+    "no_param_only_mechanism_collapse",
+    "no_pr27_merge",
+    "no_profitability_claims",
+    "no_qualified_claims",
+    "no_real_money",
+    "no_shadow_orders",
+    "no_strategy_promotion"
+  ],
+  "high_remaining": 0,
+  "label_histogram": {
+    "CONTROL_OVERLAY_ONLY": 1,
+    "COST_GATED": 0,
+    "EXECUTOR_COMPILED_DEV_ONLY": 0,
+    "NEGATIVE_TEST_COVERED": 0,
+    "REJECTED_COMPILE": 0,
+    "REPLAY_STABLE": 41,
+    "RISK_INCOMPATIBLE_ON_SYNTHETIC": 0
+  },
+  "lane": "V15-B",
+  "lane_head": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
+  "mainnet_touch_count": 0,
+  "mechanism_executor_count": 42,
+  "non_claims": [
+    "No predictive edge claim",
+    "No profitability claim",
+    "No qualification claim",
+    "Development / synthetic executor surface only",
+    "qualification_ready_count must remain 0",
+    "Executors are not live trading strategies"
+  ],
+  "oos_consumed": false,
+  "oos_executed": false,
+  "pass": true,
+  "pass_1_ok": true,
+  "pass_2_ok": true,
+  "pr27_merge_attempted": false,
+  "profitability_claim_count": 0,
+  "profitability_claimed": false,
+  "qualification_ready_count": 0,
+  "qualified_claimed": false,
+  "schema": "v15_b_mechanism_execution_compiler",
+  "shadow_order_count": 0,
+  "status": "NEXUS_V15_B_MECH_COMPILER_PASS",
+  "status_json_written": false,
+  "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v15_b_mech_compiler"
+}

@@ -1,0 +1,3149 @@
+[
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Synthetic micro notional only; top-book capacity saturates quickly.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "High \u2014 spread and impact dominate sub-minute holds.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Near-touch order-flow imbalance proxies short-horizon supply/demand pressure; continuation is hypothesized while replenishment lags.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Near-touch order-flow imbalance proxies short-horizon supply/demand pressure; continuation is hypothesized while replenishment lags.",
+      "mechanism_id": "MECH_OFI_TOPBOOK_PRESSURE_CONTINUATION_V4",
+      "rationale_sha256": "14290d32f057761f19f15f8fb2cef1051e54785bea1f4d918b173bfd49d20106",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Enter with sign(ofi_top) when |ofi_top| exceeds development threshold.",
+    "executor_id": "EXEC_MECH_OFI_TOPBOOK_PRESSURE_CONTINUATION_V4",
+    "exit_hypothesis": "Exit after hold_bars or when ofi_top sign flips.",
+    "failure_condition": "Fails when passive replenishment absorbs imbalance without mid move.",
+    "family": "ORDER_FLOW_IMBALANCE",
+    "feature_contract": {
+      "hold_bars": 6,
+      "horizon_bars": 3,
+      "primary_feature": "ofi_top",
+      "secondary_feature": "spread_bps"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: ofi_top[t] and mid[t] only. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "ofi_top",
+        "mid",
+        "spread_bps",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_OFI_TOPBOOK_PRESSURE_CONTINUATION_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_OFI_TOPBOOK_PRESSURE_CONTINUATION_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "book_snapshot_stale",
+        "spread_shock_active",
+        "data_quality_gap"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "FLOW_MICROSTRUCTURE"
+    },
+    "signal_contract": {
+      "direction_mode": "continuation",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "signed_threshold"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Assumes local book represents actionable liquidity.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium \u2014 requires enough displacement to clear fees.",
+      "spread_impact_gate": false
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Cumulative OFI diverging from mid path implies hidden inventory pressure; subsequent mid catch-up is the research hypothesis.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Cumulative OFI diverging from mid path implies hidden inventory pressure; subsequent mid catch-up is the research hypothesis.",
+      "mechanism_id": "MECH_OFI_CUMULATIVE_DIVERGENCE_V4",
+      "rationale_sha256": "5e4dbc780266f83de80215db932cf87021bdb616af957591675fe53c0f74447c",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Enter toward OFI when cum OFI and mid_return disagree in sign.",
+    "executor_id": "EXEC_MECH_OFI_CUMULATIVE_DIVERGENCE_V4",
+    "exit_hypothesis": "Exit when divergence gap closes or hold_bars elapse.",
+    "failure_condition": "Fails when mid is driven by cross-venue prints not in local book.",
+    "family": "ORDER_FLOW_IMBALANCE",
+    "feature_contract": {
+      "hold_bars": 12,
+      "horizon_bars": 8,
+      "primary_feature": "ofi_cum",
+      "secondary_feature": "mid_return"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: ofi_cum[t] vs mid_return over lagged window ending at t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "ofi_cum",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_OFI_CUMULATIVE_DIVERGENCE_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_OFI_CUMULATIVE_DIVERGENCE_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "cross_venue_gap",
+        "clock_skew",
+        "ofi_reset_event"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "FLOW_MICROSTRUCTURE"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "divergence"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Only thin synthetic size; extremes coincide with thin books.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "High \u2014 mistimed fades pay spread twice.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Extreme one-sided OFI often exhausts aggressive inventory; fade after extreme is a distinct exhaustion mechanism, not a threshold tweak.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Extreme one-sided OFI often exhausts aggressive inventory; fade after extreme is a distinct exhaustion mechanism, not a threshold tweak.",
+      "mechanism_id": "MECH_OFI_EXHAUSTION_AFTER_EXTREME_V4",
+      "rationale_sha256": "16a598eb69620dccd57baaa2dc89eb83058620736978ef473d11408573a9018b",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade sign(ofi_top) after extreme percentile on rolling window.",
+    "executor_id": "EXEC_MECH_OFI_EXHAUSTION_AFTER_EXTREME_V4",
+    "exit_hypothesis": "Exit on mean-reversion of ofi_top or hold_bars.",
+    "failure_condition": "Fails during cascade regimes where extremes persist.",
+    "family": "ORDER_FLOW_IMBALANCE",
+    "feature_contract": {
+      "hold_bars": 8,
+      "horizon_bars": 5,
+      "primary_feature": "ofi_top",
+      "secondary_feature": "aggression_ratio"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: extreme ofi_top measured on completed bars <= t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "ofi_top",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_OFI_EXHAUSTION_AFTER_EXTREME_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_OFI_EXHAUSTION_AFTER_EXTREME_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "liquidation_cascade_active",
+        "regime_stress"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "FLOW_MICROSTRUCTURE"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "exhaustion_fade"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Assumes aggressor flow is not dominated by one large account.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium-high; persistence windows often coincide with wider spreads.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Sustained aggressor dominance across consecutive windows implies initiative continuation until liquidity replenishes.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Sustained aggressor dominance across consecutive windows implies initiative continuation until liquidity replenishes.",
+      "mechanism_id": "MECH_AGGRESSION_PERSISTENCE_CONTINUATION_V4",
+      "rationale_sha256": "7a64455b861b404387bc5d744002c0f766aeb3a9e8e516ddf5cd1e62bdc8e8c5",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Enter with aggression sign when persistence stays elevated.",
+    "executor_id": "EXEC_MECH_AGGRESSION_PERSISTENCE_CONTINUATION_V4",
+    "exit_hypothesis": "Exit when persistence decays below baseline or hold_bars.",
+    "failure_condition": "Fails when persistence is spoofed by bursty cancel/replace.",
+    "family": "AGGRESSION_PERSISTENCE",
+    "feature_contract": {
+      "hold_bars": 10,
+      "horizon_bars": 6,
+      "primary_feature": "aggression_persistence",
+      "secondary_feature": "aggression_ratio"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: aggression_persistence[t] from bars <= t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "aggression_persistence",
+        "aggression_ratio",
+        "vol_z",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_AGGRESSION_PERSISTENCE_CONTINUATION_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_AGGRESSION_PERSISTENCE_CONTINUATION_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "cancel_replace_storm",
+        "data_quality_gap"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "FLOW_MICROSTRUCTURE"
+    },
+    "signal_contract": {
+      "direction_mode": "continuation",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "persistence_continue"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Synthetic research size only.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "High \u2014 false fades in impulse trains destroy net.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Decay of previously elevated aggression persistence marks initiative loss; fade of the prior aggressor side is hypothesized.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Decay of previously elevated aggression persistence marks initiative loss; fade of the prior aggressor side is hypothesized.",
+      "mechanism_id": "MECH_AGGRESSION_PERSISTENCE_DECAY_FADE_V4",
+      "rationale_sha256": "3997a05934335359e41cb0ec3b492e10569600e1193fc1242d6ef6ce6c727668",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade prior aggressor when persistence drops after elevated stretch.",
+    "executor_id": "EXEC_MECH_AGGRESSION_PERSISTENCE_DECAY_FADE_V4",
+    "exit_hypothesis": "Exit on re-acceleration of persistence or hold_bars.",
+    "failure_condition": "Fails when decay is a pause before second impulse.",
+    "family": "AGGRESSION_PERSISTENCE",
+    "feature_contract": {
+      "hold_bars": 9,
+      "horizon_bars": 7,
+      "primary_feature": "aggression_persistence",
+      "secondary_feature": "aggression_ratio_lag"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: persistence[t] vs persistence[t-k]; no future decay peek. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "aggression_persistence",
+        "aggression_ratio_lag",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_AGGRESSION_PERSISTENCE_DECAY_FADE_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_AGGRESSION_PERSISTENCE_DECAY_FADE_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "second_impulse_within_horizon",
+        "regime_trend"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "FLOW_MICROSTRUCTURE"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "persistence_decay_fade"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Assumes side classification is stable at bar close.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "High around flip moments (spread shock common).",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Aggression-side flip after one-sided exhaustion encodes a flow reversal event distinct from simple OFI thresholds.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Aggression-side flip after one-sided exhaustion encodes a flow reversal event distinct from simple OFI thresholds.",
+      "mechanism_id": "MECH_FLOW_REVERSAL_AGGRESSION_FLIP_V4",
+      "rationale_sha256": "c8ed9aba7340e5dbfe137d7846c18573a617460f1f141b63e8efd88701a6e128",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Enter with new aggression side after flip following exhaustion.",
+    "executor_id": "EXEC_MECH_FLOW_REVERSAL_AGGRESSION_FLIP_V4",
+    "exit_hypothesis": "Exit if side flips again or hold_bars elapse.",
+    "failure_condition": "Fails on noisy side chatter without inventory transfer.",
+    "family": "FLOW_REVERSAL",
+    "feature_contract": {
+      "hold_bars": 7,
+      "horizon_bars": 4,
+      "primary_feature": "aggression_side",
+      "secondary_feature": "aggression_side_lag"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: side flip detected on completed bars <= t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "aggression_side",
+        "aggression_side_lag",
+        "ofi_top",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_FLOW_REVERSAL_AGGRESSION_FLIP_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_FLOW_REVERSAL_AGGRESSION_FLIP_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "side_label_unstable",
+        "spread_shock_active"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "FLOW_MICROSTRUCTURE"
+    },
+    "signal_contract": {
+      "direction_mode": "continuation",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "side_flip"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Net flow measured on synthetic single-venue tape.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium.",
+      "spread_impact_gate": false
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Net signed flow sign change after sustained imbalance hypothesizes mean-reverting inventory rebalancing.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Net signed flow sign change after sustained imbalance hypothesizes mean-reverting inventory rebalancing.",
+      "mechanism_id": "MECH_FLOW_REVERSAL_NET_FLOW_SIGN_CHANGE_V4",
+      "rationale_sha256": "867bd0429eee8cedad1767637cd39bf60cab0d20155aafd6c8cb039089e43cd5",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Enter opposite prior net_flow after sign change confirmation.",
+    "executor_id": "EXEC_MECH_FLOW_REVERSAL_NET_FLOW_SIGN_CHANGE_V4",
+    "exit_hypothesis": "Exit when net_flow reverts to prior regime or hold_bars.",
+    "failure_condition": "Fails in trend regimes where sign changes are noise.",
+    "family": "FLOW_REVERSAL",
+    "feature_contract": {
+      "hold_bars": 8,
+      "horizon_bars": 5,
+      "primary_feature": "net_flow",
+      "secondary_feature": "net_flow_lag"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: net_flow sign change using lags ending at t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "net_flow",
+        "net_flow_lag",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_FLOW_REVERSAL_NET_FLOW_SIGN_CHANGE_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_FLOW_REVERSAL_NET_FLOW_SIGN_CHANGE_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "regime_trend",
+        "missing_trade_tape"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "FLOW_MICROSTRUCTURE"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "net_flow_sign_change"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Near-zero capacity in true cascades; synthetic probe only.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Very high \u2014 impact and partial fills dominate.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Forced liquidation bursts create liquidity voids; short-horizon continuation with cascade direction is hypothesized.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Forced liquidation bursts create liquidity voids; short-horizon continuation with cascade direction is hypothesized.",
+      "mechanism_id": "MECH_LIQ_CASCADE_CONTINUATION_V4",
+      "rationale_sha256": "5f06e83af26da5c0bb4f7d1af4495f261a3e1100661bc3a1257e7686f2ea0b0c",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Enter with liq_side when intensity spikes and depth_gap widens.",
+    "executor_id": "EXEC_MECH_LIQ_CASCADE_CONTINUATION_V4",
+    "exit_hypothesis": "Exit when intensity decays or hold_bars.",
+    "failure_condition": "Fails when cascade is immediately backstopped by passive capital.",
+    "family": "LIQUIDATION_CASCADE",
+    "feature_contract": {
+      "hold_bars": 5,
+      "horizon_bars": 2,
+      "primary_feature": "liquidation_intensity",
+      "secondary_feature": "depth_gap"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: liquidation events with exchange_ts_ms <= as_of_ms. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "liquidation_intensity",
+        "liq_side",
+        "depth_gap",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_LIQ_CASCADE_CONTINUATION_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_LIQ_CASCADE_CONTINUATION_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "missing_liq_feed",
+        "clock_quality_bad"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "LIQUIDATION_STRESS"
+    },
+    "signal_contract": {
+      "direction_mode": "continuation",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "liq_intensity_continue"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Research-only; not sized for live cascade participation.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Extreme.",
+      "spread_impact_gate": false
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Acceleration of liquidation intensity (second difference) marks cascade phase transition \u2014 distinct from level-threshold cascade detection.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Acceleration of liquidation intensity (second difference) marks cascade phase transition \u2014 distinct from level-threshold cascade detection.",
+      "mechanism_id": "MECH_LIQ_CASCADE_ACCELERATION_V4",
+      "rationale_sha256": "fc14a5da7ab754423fe737a91f33b544753faa2c6f55f78023789def53c52917",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Enter with aggression sign when intensity acceleration positive.",
+    "executor_id": "EXEC_MECH_LIQ_CASCADE_ACCELERATION_V4",
+    "exit_hypothesis": "Exit when acceleration turns negative or hold_bars.",
+    "failure_condition": "Fails on single-print spikes without follow-through.",
+    "family": "LIQUIDATION_CASCADE",
+    "feature_contract": {
+      "hold_bars": 4,
+      "horizon_bars": 2,
+      "primary_feature": "liquidation_intensity",
+      "secondary_feature": "liquidation_intensity_lag"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: intensity acceleration from lags <= t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "liquidation_intensity",
+        "liquidation_intensity_lag",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_LIQ_CASCADE_ACCELERATION_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_LIQ_CASCADE_ACCELERATION_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "single_print_spike",
+        "feed_dup_events"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "LIQUIDATION_STRESS"
+    },
+    "signal_contract": {
+      "direction_mode": "continuation",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "liq_acceleration"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Assumes some restored depth post-event.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "High \u2014 timing errors vs second wave are costly.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "After cascade intensity collapses, exhausted forced flow often allows partial snapback as opportunistic liquidity returns.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "After cascade intensity collapses, exhausted forced flow often allows partial snapback as opportunistic liquidity returns.",
+      "mechanism_id": "MECH_POST_LIQ_SNAPBACK_V4",
+      "rationale_sha256": "0f7c30f392dc7708ee9b0b5d55dfca9f3ac62b5dc739e63a4e911dafabf59db6",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade cascade direction after intensity collapse from peak.",
+    "executor_id": "EXEC_MECH_POST_LIQ_SNAPBACK_V4",
+    "exit_hypothesis": "Exit on snapback completion proxy or hold_bars.",
+    "failure_condition": "Fails when secondary cascade wave arrives.",
+    "family": "POST_LIQUIDATION_EXHAUSTION",
+    "feature_contract": {
+      "hold_bars": 10,
+      "horizon_bars": 6,
+      "primary_feature": "liquidation_intensity",
+      "secondary_feature": "liquidation_intensity_lag"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: post-cascade window starts only after intensity peak at <= t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "liquidation_intensity",
+        "liquidation_intensity_lag",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_POST_LIQ_SNAPBACK_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_POST_LIQ_SNAPBACK_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "secondary_cascade",
+        "depth_still_void"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "LIQUIDATION_STRESS"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "post_liq_snapback"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Low participation; synthetic small size.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium \u2014 quieter tape but still pay spread.",
+      "spread_impact_gate": false
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Post-cascade volume drought signals exhausted participants; range compression / quiet fade differs from immediate snapback timing.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Post-cascade volume drought signals exhausted participants; range compression / quiet fade differs from immediate snapback timing.",
+      "mechanism_id": "MECH_POST_LIQ_VOLUME_DROUGHT_V4",
+      "rationale_sha256": "a0ff357afcd998baa1fb0c73500598c6bf90e5405c997fedc475db4c85c650e8",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Enter mean-revert when volume drought follows prior liq spike.",
+    "executor_id": "EXEC_MECH_POST_LIQ_VOLUME_DROUGHT_V4",
+    "exit_hypothesis": "Exit when volume normalizes or hold_bars.",
+    "failure_condition": "Fails if drought is merely a data gap mislabeled as quiet.",
+    "family": "POST_LIQUIDATION_EXHAUSTION",
+    "feature_contract": {
+      "hold_bars": 12,
+      "horizon_bars": 8,
+      "primary_feature": "volume",
+      "secondary_feature": "liquidation_intensity_lag"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: drought measured on completed post-event bars <= t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "volume",
+        "liquidation_intensity_lag",
+        "range_compression",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_POST_LIQ_VOLUME_DROUGHT_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_POST_LIQ_VOLUME_DROUGHT_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "data_quality_gap",
+        "misclassified_quiet"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "LIQUIDATION_STRESS"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "post_liq_drought"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Passive size must exceed probe notional.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium-high.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Large passive liquidity absorbs aggressive flow without price progress; subsequent reversal is hypothesized.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Large passive liquidity absorbs aggressive flow without price progress; subsequent reversal is hypothesized.",
+      "mechanism_id": "MECH_ABSORPTION_PASSIVE_REVERSAL_V4",
+      "rationale_sha256": "5624d714e5371f3e4d4b851609dc3e1ce888526f9a0e0d2b0e56a68650a2348d",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade aggression when absorption high and mid_return muted.",
+    "executor_id": "EXEC_MECH_ABSORPTION_PASSIVE_REVERSAL_V4",
+    "exit_hypothesis": "Exit on mid displacement or hold_bars.",
+    "failure_condition": "Fails when absorption is temporary before breakthrough.",
+    "family": "ABSORPTION",
+    "feature_contract": {
+      "hold_bars": 11,
+      "horizon_bars": 6,
+      "primary_feature": "absorption_score",
+      "secondary_feature": "mid_return"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: absorption_score[t] vs mid_return[t] contemporaneous. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "absorption_score",
+        "aggression_ratio",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_ABSORPTION_PASSIVE_REVERSAL_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_ABSORPTION_PASSIVE_REVERSAL_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "breakthrough_continuation",
+        "spoof_absorption"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "FLOW_MICROSTRUCTURE"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "absorption_fade"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Assumes detectable refresh pattern in synthetic book.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "High near defended levels (adverse selection).",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Repeated refreshes at a defended price level (iceberg-like) imply level defense; fade away-from-level aggression is distinct from score-only absorption.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Repeated refreshes at a defended price level (iceberg-like) imply level defense; fade away-from-level aggression is distinct from score-only absorption.",
+      "mechanism_id": "MECH_ABSORPTION_ICEBERG_LEVEL_DEFENSE_V4",
+      "rationale_sha256": "a70bbd5de25256d502bfe0e5d8f0af5b068156ab52977100c48e669eacf15855",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade aggression into defended level when refresh_count elevated.",
+    "executor_id": "EXEC_MECH_ABSORPTION_ICEBERG_LEVEL_DEFENSE_V4",
+    "exit_hypothesis": "Exit if level breaks with displacement or hold_bars.",
+    "failure_condition": "Fails when iceberg pulls and level breaks.",
+    "family": "ABSORPTION",
+    "feature_contract": {
+      "hold_bars": 9,
+      "horizon_bars": 5,
+      "primary_feature": "level_refresh_count",
+      "secondary_feature": "distance_to_level_bps"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: level refreshes counted on bars <= t; no future level discovery. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "level_refresh_count",
+        "distance_to_level_bps",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_ABSORPTION_ICEBERG_LEVEL_DEFENSE_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_ABSORPTION_ICEBERG_LEVEL_DEFENSE_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "level_break",
+        "refresh_feed_noise"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "FLOW_MICROSTRUCTURE"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "iceberg_level_fade"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Capacity collapses with depth; research probe only.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Extreme \u2014 impact approximation central.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Sudden visible-depth withdrawal raises impact and gap risk; short-horizon adverse selection dominates unless carefully gated.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Sudden visible-depth withdrawal raises impact and gap risk; short-horizon adverse selection dominates unless carefully gated.",
+      "mechanism_id": "MECH_LIQUIDITY_WITHDRAWAL_ADVERSE_V4",
+      "rationale_sha256": "69c8934d31a5596ee30f9d83a168705cdb31ea7486808428a2ad690b8e6e925e",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Avoid-or-fade: enter reduced-risk fade only after withdrawal confirms.",
+    "executor_id": "EXEC_MECH_LIQUIDITY_WITHDRAWAL_ADVERSE_V4",
+    "exit_hypothesis": "Exit when depth restores or hold_bars.",
+    "failure_condition": "Fails when withdrawal precedes informative breakout.",
+    "family": "LIQUIDITY_WITHDRAWAL",
+    "feature_contract": {
+      "hold_bars": 5,
+      "horizon_bars": 3,
+      "primary_feature": "depth_withdrawal",
+      "secondary_feature": "impact_bps"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: depth_withdrawal[t] from book deltas <= t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "depth_withdrawal",
+        "spread_bps",
+        "impact_bps",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_LIQUIDITY_WITHDRAWAL_ADVERSE_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_LIQUIDITY_WITHDRAWAL_ADVERSE_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "depth_restore_fast",
+        "feed_book_desync"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "LIQUIDITY_FRAGILITY"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "depth_withdrawal_adverse"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Near-zero actionable size.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Very high.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Thin-book gap risk after gradual depth erosion differs from sudden withdrawal spikes; focuses on cumulative thinness, not one-shot pull.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Thin-book gap risk after gradual depth erosion differs from sudden withdrawal spikes; focuses on cumulative thinness, not one-shot pull.",
+      "mechanism_id": "MECH_LIQUIDITY_THIN_BOOK_GAP_RISK_V4",
+      "rationale_sha256": "f9dfb9c9120ed21af76230482d1572a6024762775c740b3a26d6b15e4a6ee6c0",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Stand-aside / micro fade when depth_gap and spread jointly elevated.",
+    "executor_id": "EXEC_MECH_LIQUIDITY_THIN_BOOK_GAP_RISK_V4",
+    "exit_hypothesis": "Exit on depth replenishment proxy or hold_bars.",
+    "failure_condition": "Fails when thin book still trends informatively.",
+    "family": "LIQUIDITY_WITHDRAWAL",
+    "feature_contract": {
+      "hold_bars": 6,
+      "horizon_bars": 4,
+      "primary_feature": "depth_gap",
+      "secondary_feature": "spread_bps"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: cumulative depth_gap path ending at t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "depth_gap",
+        "spread_bps",
+        "vol_z",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_LIQUIDITY_THIN_BOOK_GAP_RISK_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_LIQUIDITY_THIN_BOOK_GAP_RISK_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "trend_informative_thin_book",
+        "dq_gap"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "LIQUIDITY_FRAGILITY"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "thin_book_gap"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Quotes unreliable; tiny synthetic size.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Extreme \u2014 the shock IS the cost.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Transient spread shocks mark liquidity stress; fade after normalization is hypothesized but often cost-dominated.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Transient spread shocks mark liquidity stress; fade after normalization is hypothesized but often cost-dominated.",
+      "mechanism_id": "MECH_SPREAD_SHOCK_FADE_V4",
+      "rationale_sha256": "9537149cd91cfb7f2bdcdc31bb02c697421c8d9b5112b98faef42cdd0626691a",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade mid move accompanying transient spread_shock after peak.",
+    "executor_id": "EXEC_MECH_SPREAD_SHOCK_FADE_V4",
+    "exit_hypothesis": "Exit when spread normalizes or hold_bars.",
+    "failure_condition": "Fails when shock is start of lasting stress regime.",
+    "family": "SPREAD_SHOCK",
+    "feature_contract": {
+      "hold_bars": 7,
+      "horizon_bars": 4,
+      "primary_feature": "spread_shock",
+      "secondary_feature": "spread_bps"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: spread_shock[t] vs prior median ending at t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "spread_shock",
+        "spread_bps",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_SPREAD_SHOCK_FADE_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_SPREAD_SHOCK_FADE_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "stress_regime_persist",
+        "quote_flicker"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "LIQUIDITY_FRAGILITY"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "spread_shock_fade"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Research-only.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Extreme.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "When spread shock coincides with rising vol_z, stress continuation differs from fade-to-normal; this is the stress-continuation branch.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "When spread shock coincides with rising vol_z, stress continuation differs from fade-to-normal; this is the stress-continuation branch.",
+      "mechanism_id": "MECH_SPREAD_SHOCK_STRESS_CONTINUATION_V4",
+      "rationale_sha256": "ca83e61fa38d40b5ae74afc7720de3abe05e99a077b4faf04347c1cd9839cab4",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Continue with aggression when spread_shock and vol_z co-elevate.",
+    "executor_id": "EXEC_MECH_SPREAD_SHOCK_STRESS_CONTINUATION_V4",
+    "exit_hypothesis": "Exit when vol_z compresses or hold_bars.",
+    "failure_condition": "Fails on quote-only shocks without trade aggression.",
+    "family": "SPREAD_SHOCK",
+    "feature_contract": {
+      "hold_bars": 6,
+      "horizon_bars": 3,
+      "primary_feature": "spread_shock",
+      "secondary_feature": "vol_z"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: joint spread_shock and vol_z at t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "spread_shock",
+        "vol_z",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_SPREAD_SHOCK_STRESS_CONTINUATION_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_SPREAD_SHOCK_STRESS_CONTINUATION_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "quote_only_shock",
+        "aggression_absent"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "LIQUIDITY_FRAGILITY"
+    },
+    "signal_contract": {
+      "direction_mode": "continuation",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "spread_shock_stress_continue"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Assumes continuous trading; gaps not modeled beyond synthetic.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "High \u2014 wider spreads in expansion.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Volatility expansion with directional mid displacement hypothesizes breakout continuation under elevated realized vol.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Volatility expansion with directional mid displacement hypothesizes breakout continuation under elevated realized vol.",
+      "mechanism_id": "MECH_VOL_EXPANSION_BREAKOUT_CONTINUATION_V4",
+      "rationale_sha256": "b4b5fd37f8b65bf32fd3a7c11e625e534eb352a7a0f1533840a8bcc6770b185a",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Enter with mid_return sign when vol_z expands above baseline.",
+    "executor_id": "EXEC_MECH_VOL_EXPANSION_BREAKOUT_CONTINUATION_V4",
+    "exit_hypothesis": "Exit on vol compression or hold_bars.",
+    "failure_condition": "Fails on expansion without directional conviction (whipsaw).",
+    "family": "VOL_EXPANSION",
+    "feature_contract": {
+      "hold_bars": 10,
+      "horizon_bars": 6,
+      "primary_feature": "vol_z",
+      "secondary_feature": "mid_return"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: vol_z and range_expansion on bars <= t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "vol_z",
+        "mid_return",
+        "range_expansion",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_VOL_EXPANSION_BREAKOUT_CONTINUATION_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_VOL_EXPANSION_BREAKOUT_CONTINUATION_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "whipsaw_expansion",
+        "gap_open"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "VOLATILITY_REGIME"
+    },
+    "signal_contract": {
+      "direction_mode": "continuation",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "vol_expand_continue"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Synthetic.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium-high.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Vol expansion that re-opens a compressed range without clean trend may mean-revert to range mid \u2014 distinct from breakout continuation.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Vol expansion that re-opens a compressed range without clean trend may mean-revert to range mid \u2014 distinct from breakout continuation.",
+      "mechanism_id": "MECH_VOL_EXPANSION_RANGE_REOPEN_V4",
+      "rationale_sha256": "c2573b438b2c02db851accbbc2d8c9ce23f9cdff0202769ed44c7bb3b1bd3509",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade zscore_return when expansion follows prior compression without trend label.",
+    "executor_id": "EXEC_MECH_VOL_EXPANSION_RANGE_REOPEN_V4",
+    "exit_hypothesis": "Exit toward range mid proxy or hold_bars.",
+    "failure_condition": "Fails when expansion is true regime shift to trend.",
+    "family": "VOL_EXPANSION",
+    "feature_contract": {
+      "hold_bars": 12,
+      "horizon_bars": 8,
+      "primary_feature": "vol_z",
+      "secondary_feature": "zscore_return"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: prior compression lag known at t; no future range bounds. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "vol_z",
+        "range_compression_lag",
+        "zscore_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_VOL_EXPANSION_RANGE_REOPEN_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_VOL_EXPANSION_RANGE_REOPEN_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "regime_trend",
+        "true_breakout"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "VOLATILITY_REGIME"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "vol_expand_reopen_fade"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Assumes coil measured on stable bar grid.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium.",
+      "spread_impact_gate": false
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Sustained range compression (coil) precedes breakout attempts; direction taken from first decisive mid displacement.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Sustained range compression (coil) precedes breakout attempts; direction taken from first decisive mid displacement.",
+      "mechanism_id": "MECH_VOL_COMPRESSION_COIL_BREAKOUT_V4",
+      "rationale_sha256": "67e535d75a2323a6ed1b4874c54aa34cf977d435dd15e6f938f26c1a470693ea",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Enter with breakout mid_return after elevated compression.",
+    "executor_id": "EXEC_MECH_VOL_COMPRESSION_COIL_BREAKOUT_V4",
+    "exit_hypothesis": "Exit on failed follow-through or hold_bars.",
+    "failure_condition": "Fails on false breakouts from coils.",
+    "family": "VOL_COMPRESSION",
+    "feature_contract": {
+      "hold_bars": 14,
+      "horizon_bars": 10,
+      "primary_feature": "range_compression",
+      "secondary_feature": "mid_return"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: compression window ending at t; breakout bar <= t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "range_compression",
+        "mid_return",
+        "volume",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_VOL_COMPRESSION_COIL_BREAKOUT_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_VOL_COMPRESSION_COIL_BREAKOUT_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "false_break",
+        "compression_misread_dq"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "VOLATILITY_REGIME"
+    },
+    "signal_contract": {
+      "direction_mode": "continuation",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "compression_breakout"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Synthetic.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "High \u2014 double spread around failure.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Failed squeeze after compression (break then immediate reclaim) is a failure-fade mechanism distinct from coil breakout continuation.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Failed squeeze after compression (break then immediate reclaim) is a failure-fade mechanism distinct from coil breakout continuation.",
+      "mechanism_id": "MECH_VOL_COMPRESSION_SQUEEZE_FAILURE_FADE_V4",
+      "rationale_sha256": "7694530ba6af788f9bc44c21dfc44c0d68fc0543af3c3cf960447b3ba36ff353",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade original breakout direction after reclaim confirmation.",
+    "executor_id": "EXEC_MECH_VOL_COMPRESSION_SQUEEZE_FAILURE_FADE_V4",
+    "exit_hypothesis": "Exit toward coil mid or hold_bars.",
+    "failure_condition": "Fails when reclaim is pause before second break.",
+    "family": "VOL_COMPRESSION",
+    "feature_contract": {
+      "hold_bars": 11,
+      "horizon_bars": 7,
+      "primary_feature": "range_compression",
+      "secondary_feature": "breakout_fail_flag"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: failure confirmed only after reclaim bar <= t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "range_compression",
+        "breakout_fail_flag",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_VOL_COMPRESSION_SQUEEZE_FAILURE_FADE_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_VOL_COMPRESSION_SQUEEZE_FAILURE_FADE_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "second_break",
+        "low_volume_noise"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "VOLATILITY_REGIME"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "compression_fail_fade"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Assumes funding print latency modeled via receive_ts.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Includes explicit funding_cost component dominance.",
+      "spread_impact_gate": false
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Extreme funding encodes crowding stress; mean-reversion of funding dislocation is hypothesized after extremes.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Extreme funding encodes crowding stress; mean-reversion of funding dislocation is hypothesized after extremes.",
+      "mechanism_id": "MECH_FUNDING_EXTREME_MEAN_REVERT_V4",
+      "rationale_sha256": "52b2ed5437c81380314819f26ff06bd5e84e1db9a13e8004b692e3a38bcf08ff",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade funding_z sign at extremes.",
+    "executor_id": "EXEC_MECH_FUNDING_EXTREME_MEAN_REVERT_V4",
+    "exit_hypothesis": "Exit as funding_z normalizes or hold_bars.",
+    "failure_condition": "Fails during squeeze regimes where extremes persist/expand.",
+    "family": "FUNDING_DISLOCATION",
+    "feature_contract": {
+      "hold_bars": 16,
+      "horizon_bars": 12,
+      "primary_feature": "funding_z",
+      "secondary_feature": "oi_change"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: funding_z known only after funding print receive_ts_ms <= as_of_ms. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "funding_z",
+        "oi_change",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_FUNDING_EXTREME_MEAN_REVERT_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_FUNDING_EXTREME_MEAN_REVERT_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "squeeze_persist",
+        "funding_print_stale"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "FUNDING_BASIS"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "funding_extreme_fade"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Squeeze capacity hostile; research probe only.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Funding + impact both material.",
+      "spread_impact_gate": false
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Crowding with rising OI and extreme funding can continue into squeeze \u2014 opposite economic branch from funding mean-revert.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Crowding with rising OI and extreme funding can continue into squeeze \u2014 opposite economic branch from funding mean-revert.",
+      "mechanism_id": "MECH_FUNDING_CROWDING_SQUEEZE_CONTINUATION_V4",
+      "rationale_sha256": "5a211045f87b8642fb7275a1bef79dacc40355f9aa22251ba277e69e184a261b",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Continue against crowded side when funding extreme and oi rising.",
+    "executor_id": "EXEC_MECH_FUNDING_CROWDING_SQUEEZE_CONTINUATION_V4",
+    "exit_hypothesis": "Exit on funding normalization or hold_bars.",
+    "failure_condition": "Fails when crowding unwinds abruptly (snapback).",
+    "family": "FUNDING_DISLOCATION",
+    "feature_contract": {
+      "hold_bars": 14,
+      "horizon_bars": 10,
+      "primary_feature": "funding_z",
+      "secondary_feature": "oi_change"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: funding and oi prints eligible only if received <= as_of_ms. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "funding_z",
+        "oi_change",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_FUNDING_CROWDING_SQUEEZE_CONTINUATION_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_FUNDING_CROWDING_SQUEEZE_CONTINUATION_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "crowding_unwind",
+        "oi_feed_lag"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "FUNDING_BASIS"
+    },
+    "signal_contract": {
+      "direction_mode": "continuation",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "funding_squeeze_continue"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Assumes index integrity.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium \u2014 basis trades pay two legs in reality; synthetic single-leg proxy.",
+      "spread_impact_gate": false
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Mark-index basis premium extremes often mean-revert as cash-and-carry inventory rebalances (research hypothesis, not edge claim).",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Mark-index basis premium extremes often mean-revert as cash-and-carry inventory rebalances (research hypothesis, not edge claim).",
+      "mechanism_id": "MECH_BASIS_PREMIUM_MEAN_REVERT_V4",
+      "rationale_sha256": "a09253fcf123aec3c060e4b8187310cec784be5a546e7a840e1706b7ea3efc7d",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade basis_bps sign at dislocation extremes.",
+    "executor_id": "EXEC_MECH_BASIS_PREMIUM_MEAN_REVERT_V4",
+    "exit_hypothesis": "Exit toward basis median proxy or hold_bars.",
+    "failure_condition": "Fails when basis dislocation is structural (halts, index issues).",
+    "family": "BASIS_DISLOCATION",
+    "feature_contract": {
+      "hold_bars": 15,
+      "horizon_bars": 10,
+      "primary_feature": "basis_bps",
+      "secondary_feature": "funding_z"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: basis_bps from mark/index prints <= as_of_ms. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "basis_bps",
+        "funding_z",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_BASIS_PREMIUM_MEAN_REVERT_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_BASIS_PREMIUM_MEAN_REVERT_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "index_fault",
+        "structural_basis_shift"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "FUNDING_BASIS"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "basis_fade"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Short window only.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "High.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Sudden basis shocks with aggressive flow may continue briefly before arbitrage inventory arrives \u2014 momentum branch distinct from premium MR.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Sudden basis shocks with aggressive flow may continue briefly before arbitrage inventory arrives \u2014 momentum branch distinct from premium MR.",
+      "mechanism_id": "MECH_BASIS_SHOCK_MOMENTUM_V4",
+      "rationale_sha256": "2b0470706cc676c122688b448136c1637ea9179a4dcb04665fd82951da37dd0d",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Continue with basis shock direction when aggression confirms.",
+    "executor_id": "EXEC_MECH_BASIS_SHOCK_MOMENTUM_V4",
+    "exit_hypothesis": "Exit when shock decelerates or hold_bars.",
+    "failure_condition": "Fails when arb inventory arrives instantly.",
+    "family": "BASIS_DISLOCATION",
+    "feature_contract": {
+      "hold_bars": 7,
+      "horizon_bars": 4,
+      "primary_feature": "basis_bps",
+      "secondary_feature": "basis_bps_lag"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: basis shock delta from lags <= t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "basis_bps",
+        "basis_bps_lag",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_BASIS_SHOCK_MOMENTUM_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_BASIS_SHOCK_MOMENTUM_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "instant_arb",
+        "index_desync"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "FUNDING_BASIS"
+    },
+    "signal_contract": {
+      "direction_mode": "continuation",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "basis_shock_momentum"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Assumes synchronous clocks across symbols.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium \u2014 two-symbol costs; synthetic single proxy used.",
+      "spread_impact_gate": false
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Lead-lag between related instruments (e.g. BTC\u2192alt) may transfer short-horizon information; PIT alignment is mandatory.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Lead-lag between related instruments (e.g. BTC\u2192alt) may transfer short-horizon information; PIT alignment is mandatory.",
+      "mechanism_id": "MECH_CROSS_ASSET_BTC_ALT_LEAD_LAG_V4",
+      "rationale_sha256": "6481df96fb8a6783f4d8697a23ba0e02de5714c637cfc6ca7d15ffa858843e71",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Enter follower with lagged leader sign when lead_lag_score elevated.",
+    "executor_id": "EXEC_MECH_CROSS_ASSET_BTC_ALT_LEAD_LAG_V4",
+    "exit_hypothesis": "Exit after hold_bars or score decay.",
+    "failure_condition": "Fails when leader move already fully priced into follower.",
+    "family": "CROSS_ASSET_LEAD_LAG",
+    "feature_contract": {
+      "hold_bars": 9,
+      "horizon_bars": 5,
+      "primary_feature": "lead_lag_score",
+      "secondary_feature": "lead_return"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: leader bars must be received <= as_of_ms before follower signal. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "lead_return",
+        "lag_return",
+        "lead_lag_score",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_CROSS_ASSET_BTC_ALT_LEAD_LAG_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_CROSS_ASSET_BTC_ALT_LEAD_LAG_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "clock_skew",
+        "leader_already_priced"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "CROSS_ASSET"
+    },
+    "signal_contract": {
+      "direction_mode": "continuation",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "lead_lag_transfer"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Pair trading capacity constrained; research probe.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium.",
+      "spread_impact_gate": false
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Cross-correlation breakdown between paired assets creates relative-value dislocation distinct from directional lead-lag transfer.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Cross-correlation breakdown between paired assets creates relative-value dislocation distinct from directional lead-lag transfer.",
+      "mechanism_id": "MECH_CROSS_ASSET_CORR_BREAKDOWN_RV_V4",
+      "rationale_sha256": "d887255b7f65c3cd3dc7877370f288d00ccf79775141e1260e7ca5e03c30167e",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade pair_residual when cross_corr drops from elevated baseline.",
+    "executor_id": "EXEC_MECH_CROSS_ASSET_CORR_BREAKDOWN_RV_V4",
+    "exit_hypothesis": "Exit as residual normalizes or hold_bars.",
+    "failure_condition": "Fails on structural de-pairing (narrative divergence).",
+    "family": "CROSS_ASSET_LEAD_LAG",
+    "feature_contract": {
+      "hold_bars": 13,
+      "horizon_bars": 9,
+      "primary_feature": "cross_corr",
+      "secondary_feature": "pair_residual"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: corr window ending at t; no future residual peek. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "cross_corr",
+        "pair_residual",
+        "vol_z",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_CROSS_ASSET_CORR_BREAKDOWN_RV_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_CROSS_ASSET_CORR_BREAKDOWN_RV_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "structural_depair",
+        "corr_estimation_unstable"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "CROSS_ASSET"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "corr_breakdown_rv"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Regime classifier must be PIT-safe.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium.",
+      "spread_impact_gate": false
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Range regimes favor mean reversion of z-scored returns; trend regimes destroy it \u2014 conditioning is the mechanism.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Range regimes favor mean reversion of z-scored returns; trend regimes destroy it \u2014 conditioning is the mechanism.",
+      "mechanism_id": "MECH_REGIME_RANGE_ZSCORE_REVERT_V4",
+      "rationale_sha256": "6d2ec6992057da52b8261b102fc82b94ee79d7950d37f7840a42b92b3f631622",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade zscore_return only when regime_label==RANGE.",
+    "executor_id": "EXEC_MECH_REGIME_RANGE_ZSCORE_REVERT_V4",
+    "exit_hypothesis": "Exit toward zero zscore or hold_bars.",
+    "failure_condition": "Fails on silent regime transition mid-hold.",
+    "family": "REGIME_COND_MEAN_REVERSION",
+    "feature_contract": {
+      "hold_bars": 14,
+      "horizon_bars": 10,
+      "primary_feature": "zscore_return",
+      "secondary_feature": "regime_label"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: regime_label available_at_ms <= as_of_ms. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "regime_label",
+        "zscore_return",
+        "vol_z",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_REGIME_RANGE_ZSCORE_REVERT_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_REGIME_RANGE_ZSCORE_REVERT_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "regime_transition",
+        "label_stale"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "VOLATILITY_REGIME"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "regime_range_mr"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "N/A \u2014 control overlay.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Low direct; opportunity-cost oriented.",
+      "spread_impact_gate": false
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Detecting RANGE\u2192TREND transition shuts down MR and optionally flips to stand-aside \u2014 a control mechanism, not a param variant of range MR.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Detecting RANGE\u2192TREND transition shuts down MR and optionally flips to stand-aside \u2014 a control mechanism, not a param variant of range MR.",
+      "mechanism_id": "MECH_REGIME_TRANSITION_MR_SHUTDOWN_V4",
+      "rationale_sha256": "edf3243bff8fd12f07087e19f06cb3be3a810a94ee4da9ed68eb88f1df54dd7d",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Flatten / no new MR entries when RANGE\u2192TREND transition fires.",
+    "executor_id": "EXEC_MECH_REGIME_TRANSITION_MR_SHUTDOWN_V4",
+    "exit_hypothesis": "Forced flat on transition; hold_bars unused when shutdown.",
+    "failure_condition": "Fails on noisy label chatter causing over-shutdown.",
+    "family": "REGIME_COND_MEAN_REVERSION",
+    "feature_contract": {
+      "hold_bars": 2,
+      "horizon_bars": 2,
+      "primary_feature": "regime_label",
+      "secondary_feature": "regime_label_lag"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: transition uses regime_label[t] vs [t-1] only. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "regime_label",
+        "regime_label_lag",
+        "zscore_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_REGIME_TRANSITION_MR_SHUTDOWN_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_REGIME_TRANSITION_MR_SHUTDOWN_V4"
+    },
+    "risk_compatibility": {
+      "compatible": false,
+      "control_overlay_only": true,
+      "invalidating_conditions": [
+        "label_chatter",
+        "partial_regime_availability"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "CONTROL_OVERLAY"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "regime_transition_shutdown"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Break levels congested; synthetic small size.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium-high.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Break of recent range high with volume confirmation hypothesizes follow-through continuation.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Break of recent range high with volume confirmation hypothesizes follow-through continuation.",
+      "mechanism_id": "MECH_BREAKOUT_RANGE_HIGH_FOLLOWTHROUGH_V4",
+      "rationale_sha256": "d3eb21ee69d9ac110c7857a9329ee20879511427dafd6506b5c369a60f92a7cc",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Enter long on range_high_break with volume confirmation.",
+    "executor_id": "EXEC_MECH_BREAKOUT_RANGE_HIGH_FOLLOWTHROUGH_V4",
+    "exit_hypothesis": "Exit on failed follow-through or hold_bars.",
+    "failure_condition": "Fails on liquidity-driven false breaks.",
+    "family": "BREAKOUT_CONTINUATION",
+    "feature_contract": {
+      "hold_bars": 10,
+      "horizon_bars": 6,
+      "primary_feature": "range_high_break",
+      "secondary_feature": "volume"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: range_high computed on lookback ending at t-1; break bar at t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "range_high_break",
+        "volume",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_BREAKOUT_RANGE_HIGH_FOLLOWTHROUGH_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_BREAKOUT_RANGE_HIGH_FOLLOWTHROUGH_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "false_break",
+        "volume_unconfirmed"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "BREAKOUT_STRUCTURE"
+    },
+    "signal_contract": {
+      "direction_mode": "long_only",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "range_high_breakout"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Synthetic.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "High in expanding vol.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Breakout continuation conditioned on simultaneous vol expansion differs from pure price level breaks.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Breakout continuation conditioned on simultaneous vol expansion differs from pure price level breaks.",
+      "mechanism_id": "MECH_BREAKOUT_VOL_CONFIRMED_CONTINUATION_V4",
+      "rationale_sha256": "a8b7b5310381114f06f91da582b7f61f87e1e4dae60b680d571301133608d21b",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Enter with break direction when vol_z confirms expansion.",
+    "executor_id": "EXEC_MECH_BREAKOUT_VOL_CONFIRMED_CONTINUATION_V4",
+    "exit_hypothesis": "Exit when vol_z collapses or hold_bars.",
+    "failure_condition": "Fails on vol expansion without directional persistence.",
+    "family": "BREAKOUT_CONTINUATION",
+    "feature_contract": {
+      "hold_bars": 9,
+      "horizon_bars": 5,
+      "primary_feature": "range_high_break",
+      "secondary_feature": "vol_z"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: vol_z and break flags at t only. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "range_high_break",
+        "vol_z",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_BREAKOUT_VOL_CONFIRMED_CONTINUATION_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_BREAKOUT_VOL_CONFIRMED_CONTINUATION_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "vol_whipsaw",
+        "aggression_absent"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "BREAKOUT_STRUCTURE"
+    },
+    "signal_contract": {
+      "direction_mode": "continuation",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "vol_confirmed_breakout"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Synthetic.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "High.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Break then reclaim of range boundary hypothesizes snapback into range.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Break then reclaim of range boundary hypothesizes snapback into range.",
+      "mechanism_id": "MECH_FAILED_BREAKOUT_SNAPBACK_V4",
+      "rationale_sha256": "1045c62b58648fe63b4ec36d5171b53e4e7959e4fefe80eb104629ea4a9960e2",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade breakout direction after breakout_fail_flag.",
+    "executor_id": "EXEC_MECH_FAILED_BREAKOUT_SNAPBACK_V4",
+    "exit_hypothesis": "Exit toward range mid proxy or hold_bars.",
+    "failure_condition": "Fails when failure is pause before successful second break.",
+    "family": "FAILED_BREAKOUT",
+    "feature_contract": {
+      "hold_bars": 8,
+      "horizon_bars": 5,
+      "primary_feature": "breakout_fail_flag",
+      "secondary_feature": "mid_return"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: fail flag requires reclaim bar <= t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "breakout_fail_flag",
+        "mid_return",
+        "range_compression",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_FAILED_BREAKOUT_SNAPBACK_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_FAILED_BREAKOUT_SNAPBACK_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "second_break_success",
+        "low_liquidity_noise"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "BREAKOUT_STRUCTURE"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "failed_break_snapback"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Requires absorption metric integrity.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium-high.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Failed break accompanied by absorption score spike implies defensive inventory \u2014 reverse entry distinct from pure snapback timing.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Failed break accompanied by absorption score spike implies defensive inventory \u2014 reverse entry distinct from pure snapback timing.",
+      "mechanism_id": "MECH_FAILED_BREAKOUT_ABSORPTION_REVERSE_V4",
+      "rationale_sha256": "de69886dad26dc10e79b7eb5b253ed097dcb2685572d0163fd1082b95ab4d37a",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Reverse after fail when absorption_score elevated.",
+    "executor_id": "EXEC_MECH_FAILED_BREAKOUT_ABSORPTION_REVERSE_V4",
+    "exit_hypothesis": "Exit on absorption collapse or hold_bars.",
+    "failure_condition": "Fails when absorption is spoofed.",
+    "family": "FAILED_BREAKOUT",
+    "feature_contract": {
+      "hold_bars": 9,
+      "horizon_bars": 6,
+      "primary_feature": "breakout_fail_flag",
+      "secondary_feature": "absorption_score"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: absorption and fail flag at t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "breakout_fail_flag",
+        "absorption_score",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_FAILED_BREAKOUT_ABSORPTION_REVERSE_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_FAILED_BREAKOUT_ABSORPTION_REVERSE_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "spoof_absorption",
+        "fail_flag_noise"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "BREAKOUT_STRUCTURE"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "failed_break_absorption"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Synthetic tape.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium.",
+      "spread_impact_gate": false
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Rising volume with falling price divergence hypothesizes distribution / continuation lower or mean-revert depending on regime \u2014 here fade of sell climax.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Rising volume with falling price divergence hypothesizes distribution / continuation lower or mean-revert depending on regime \u2014 here fade of sell climax.",
+      "mechanism_id": "MECH_VOL_PRICE_BEARISH_DIVERGENCE_V4",
+      "rationale_sha256": "f22cada403a5f836b241aee0e2706b357a1e22d1a7873f8f0298145bbeca40a6",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade negative mid_return when volume elevated (climax fade).",
+    "executor_id": "EXEC_MECH_VOL_PRICE_BEARISH_DIVERGENCE_V4",
+    "exit_hypothesis": "Exit on divergence collapse or hold_bars.",
+    "failure_condition": "Fails in informational selloffs with persistent volume.",
+    "family": "VOLUME_PRICE_DIVERGENCE",
+    "feature_contract": {
+      "hold_bars": 11,
+      "horizon_bars": 7,
+      "primary_feature": "volume_price_div",
+      "secondary_feature": "volume"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: divergence score ending at t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "volume",
+        "mid_return",
+        "volume_price_div",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_VOL_PRICE_BEARISH_DIVERGENCE_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_VOL_PRICE_BEARISH_DIVERGENCE_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "informational_selloff",
+        "volume_feed_gap"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "VOLUME_OI"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "vp_bearish_div_fade"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Synthetic.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium.",
+      "spread_impact_gate": false
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Price rising on volume drought divergence hypothesizes fragile advance and fade \u2014 distinct from climax-volume divergence.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Price rising on volume drought divergence hypothesizes fragile advance and fade \u2014 distinct from climax-volume divergence.",
+      "mechanism_id": "MECH_VOL_PRICE_BULLISH_DROUGHT_DIVERGENCE_V4",
+      "rationale_sha256": "bd0957acd71320c3be7e104aded568e9def887148d1f3f0a1d619cd5012efe89",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade positive mid_return when volume_drought true.",
+    "executor_id": "EXEC_MECH_VOL_PRICE_BULLISH_DROUGHT_DIVERGENCE_V4",
+    "exit_hypothesis": "Exit when volume returns or hold_bars.",
+    "failure_condition": "Fails on quiet grind trends.",
+    "family": "VOLUME_PRICE_DIVERGENCE",
+    "feature_contract": {
+      "hold_bars": 12,
+      "horizon_bars": 8,
+      "primary_feature": "volume_drought",
+      "secondary_feature": "mid_return"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: drought vs price path ending at t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "volume",
+        "mid_return",
+        "volume_drought",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_VOL_PRICE_BULLISH_DROUGHT_DIVERGENCE_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_VOL_PRICE_BULLISH_DROUGHT_DIVERGENCE_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "quiet_grind_trend",
+        "volume_miscalibrated"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "VOLUME_OI"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "vp_drought_fade"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "OI feed latency must be modeled.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium.",
+      "spread_impact_gate": false
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "OI surge with stalled mid implies leverage build without price discovery; subsequent displacement risk is the research object.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "OI surge with stalled mid implies leverage build without price discovery; subsequent displacement risk is the research object.",
+      "mechanism_id": "MECH_OI_SURGE_PRICE_STALL_V4",
+      "rationale_sha256": "57c4b4868b63a099db9217bc3695c789a392310deba9d4386b2893fe9b1e0171",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Stand-aside / reduced probe fade when oi surges and mid stalls.",
+    "executor_id": "EXEC_MECH_OI_SURGE_PRICE_STALL_V4",
+    "exit_hypothesis": "Exit on mid displacement or hold_bars.",
+    "failure_condition": "Fails when OI surge is hedging not speculative.",
+    "family": "OI_DISLOCATION",
+    "feature_contract": {
+      "hold_bars": 13,
+      "horizon_bars": 9,
+      "primary_feature": "oi_change",
+      "secondary_feature": "mid_return"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: oi prints received <= as_of_ms. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "oi_change",
+        "mid_return",
+        "funding_z",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_OI_SURGE_PRICE_STALL_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_OI_SURGE_PRICE_STALL_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "hedge_oi",
+        "oi_print_stale"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "VOLUME_OI"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "oi_surge_stall"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Research-only.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "High.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "OI flush aligned with liquidation intensity marks forced de-leveraging; continuation with flush direction differs from surge-stall.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "OI flush aligned with liquidation intensity marks forced de-leveraging; continuation with flush direction differs from surge-stall.",
+      "mechanism_id": "MECH_OI_FLUSH_LIQUIDATION_ALIGNED_V4",
+      "rationale_sha256": "259f40c0bfb2b4e7bbf63409b952465d0c05ceaa46325e496abefb6705ca7f49",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Continue with aggression when oi flush and liq intensity co-occur.",
+    "executor_id": "EXEC_MECH_OI_FLUSH_LIQUIDATION_ALIGNED_V4",
+    "exit_hypothesis": "Exit when oi stabilizes or hold_bars.",
+    "failure_condition": "Fails on reporting artifacts in OI.",
+    "family": "OI_DISLOCATION",
+    "feature_contract": {
+      "hold_bars": 7,
+      "horizon_bars": 4,
+      "primary_feature": "oi_change",
+      "secondary_feature": "liquidation_intensity"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: oi flush and liq intensity at t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "oi_change",
+        "liquidation_intensity",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_OI_FLUSH_LIQUIDATION_ALIGNED_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_OI_FLUSH_LIQUIDATION_ALIGNED_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "oi_artifact",
+        "liq_feed_missing"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "VOLUME_OI"
+    },
+    "signal_contract": {
+      "direction_mode": "continuation",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "oi_flush_continue"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Impact model is approximate synthetic.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "The mechanism IS cost structure \u2014 net often destroyed.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Bid vs ask impact asymmetry after large prints may mean-revert as liquidity restocks the depleted side.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Bid vs ask impact asymmetry after large prints may mean-revert as liquidity restocks the depleted side.",
+      "mechanism_id": "MECH_IMPACT_ASYMMETRY_FADE_V4",
+      "rationale_sha256": "8fcec8dc4385be5bba9552d8c84021980eccc50064b05e39a9d43ce271c6a2d1",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade toward restock side when impact_asymmetry elevated.",
+    "executor_id": "EXEC_MECH_IMPACT_ASYMMETRY_FADE_V4",
+    "exit_hypothesis": "Exit as asymmetry normalizes or hold_bars.",
+    "failure_condition": "Fails when asymmetry reflects lasting information.",
+    "family": "MARKET_IMPACT_ASYMMETRY",
+    "feature_contract": {
+      "hold_bars": 8,
+      "horizon_bars": 5,
+      "primary_feature": "impact_asymmetry",
+      "secondary_feature": "impact_bps"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: impact estimates from prints <= t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "impact_bid_bps",
+        "impact_ask_bps",
+        "impact_asymmetry",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_IMPACT_ASYMMETRY_FADE_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_IMPACT_ASYMMETRY_FADE_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "info_driven_asymmetry",
+        "impact_model_unstable"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "IMPACT_PRINT"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "impact_asym_fade"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Cannot participate in the large print itself; after-print only.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Very high.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Persistence of impact after a large print hypothesizes short continuation before mean reversion \u2014 distinct from asymmetry fade.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Persistence of impact after a large print hypothesizes short continuation before mean reversion \u2014 distinct from asymmetry fade.",
+      "mechanism_id": "MECH_IMPACT_PERSISTENCE_AFTER_PRINT_V4",
+      "rationale_sha256": "f8eb4b269465558b4e9b57d529d9ee6deb098bf082cff98f2af42e3daf67c18a",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Continue with print direction briefly when impact_bps elevated.",
+    "executor_id": "EXEC_MECH_IMPACT_PERSISTENCE_AFTER_PRINT_V4",
+    "exit_hypothesis": "Exit quickly (short hold) as persistence decays.",
+    "failure_condition": "Fails when print is immediately faded by passive rebound.",
+    "family": "MARKET_IMPACT_ASYMMETRY",
+    "feature_contract": {
+      "hold_bars": 4,
+      "horizon_bars": 2,
+      "primary_feature": "impact_bps",
+      "secondary_feature": "large_print_flag"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: large_print_flag at t; no future impact path in signal. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "impact_bps",
+        "large_print_flag",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_IMPACT_PERSISTENCE_AFTER_PRINT_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_IMPACT_PERSISTENCE_AFTER_PRINT_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "immediate_passive_rebound",
+        "print_flag_noise"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "IMPACT_PRINT"
+    },
+    "signal_contract": {
+      "direction_mode": "continuation",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "impact_persist_continue"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Session capacity lower; synthetic tiny size.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "High due to thinness.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Asia-open thin liquidity windows elevate gap/impact risk; behavior is session-structured, not a feature-threshold clone.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Asia-open thin liquidity windows elevate gap/impact risk; behavior is session-structured, not a feature-threshold clone.",
+      "mechanism_id": "MECH_TOD_ASIA_OPEN_THIN_LIQUIDITY_V4",
+      "rationale_sha256": "dfc941564046889d1b19b7758eee9eefe1d6069ca19210d79bea3312d4059551",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Stand-aside / micro mean-revert only inside Asia-open bucket when depth thin.",
+    "executor_id": "EXEC_MECH_TOD_ASIA_OPEN_THIN_LIQUIDITY_V4",
+    "exit_hypothesis": "Exit by bucket end or hold_bars.",
+    "failure_condition": "Fails on Asia sessions with atypical deep liquidity.",
+    "family": "TIME_OF_DAY",
+    "feature_contract": {
+      "hold_bars": 8,
+      "horizon_bars": 6,
+      "primary_feature": "tod_bucket",
+      "secondary_feature": "depth_gap"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: tod_bucket from exchange_ts_ms only; no calendar lookahead. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "tod_bucket",
+        "depth_gap",
+        "spread_bps",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_TOD_ASIA_OPEN_THIN_LIQUIDITY_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_TOD_ASIA_OPEN_THIN_LIQUIDITY_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "atypical_deep_asia",
+        "clock_tz_misconfig"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "TIME_OF_DAY"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "tod_asia_thin"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Synthetic.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Medium-high.",
+      "spread_impact_gate": true
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "US-open window often expands realized vol; continuation with opening displacement is a TOD-conditioned mechanism.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "US-open window often expands realized vol; continuation with opening displacement is a TOD-conditioned mechanism.",
+      "mechanism_id": "MECH_TOD_US_OPEN_VOL_EXPANSION_V4",
+      "rationale_sha256": "5c0791cf846ea3b5ff20972d47366306b4597c5513da1d26d2eafd1c99fbc414",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Continue with mid_return inside US-open bucket when vol_z expands.",
+    "executor_id": "EXEC_MECH_TOD_US_OPEN_VOL_EXPANSION_V4",
+    "exit_hypothesis": "Exit after hold_bars or bucket exit.",
+    "failure_condition": "Fails on quiet US opens.",
+    "family": "TIME_OF_DAY",
+    "feature_contract": {
+      "hold_bars": 8,
+      "horizon_bars": 5,
+      "primary_feature": "tod_bucket",
+      "secondary_feature": "vol_z"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: tod_bucket from exchange_ts_ms; vol_z at t. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "tod_bucket",
+        "vol_z",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_TOD_US_OPEN_VOL_EXPANSION_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_TOD_US_OPEN_VOL_EXPANSION_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "quiet_us_open",
+        "holiday_session"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "TIME_OF_DAY"
+    },
+    "signal_contract": {
+      "direction_mode": "continuation",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "tod_us_vol"
+    },
+    "source_lane": "V14-C"
+  },
+  {
+    "catalog_version": "v15b.1.0",
+    "cost_dependency": {
+      "capacity_assumptions": "Crowded window; research probe only.",
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components_required": [
+        "entry_fee",
+        "exit_fee",
+        "spread_cost",
+        "slippage_cost",
+        "market_impact_approximation"
+      ],
+      "cost_sensitivity": "Funding_cost central.",
+      "spread_impact_gate": false
+    },
+    "deterministic_replay": {
+      "digest_algorithm": "sha256",
+      "replay_seed": 20260805,
+      "requires_identical_pass_digests": true
+    },
+    "economic_rationale": "Funding settlement windows create distinctive inventory reshuffles; behavior near settlement differs from Asia/US open TOD mechanisms.",
+    "economic_rationale_linkage": {
+      "economic_rationale": "Funding settlement windows create distinctive inventory reshuffles; behavior near settlement differs from Asia/US open TOD mechanisms.",
+      "mechanism_id": "MECH_TOD_FUNDING_SETTLEMENT_WINDOW_V4",
+      "rationale_sha256": "0acf1c3cb335551c8ba208f0e93ce8a04715d64b46982f5770dbac637268f673",
+      "source_lane": "V14-C"
+    },
+    "entry_hypothesis": "Fade funding_z inside settlement bucket when oi_change elevated.",
+    "executor_id": "EXEC_MECH_TOD_FUNDING_SETTLEMENT_WINDOW_V4",
+    "exit_hypothesis": "Exit after settlement window or hold_bars.",
+    "failure_condition": "Fails when settlement is uneventful.",
+    "family": "TIME_OF_DAY",
+    "feature_contract": {
+      "hold_bars": 6,
+      "horizon_bars": 4,
+      "primary_feature": "tod_bucket",
+      "secondary_feature": "funding_z"
+    },
+    "input_contract": {
+      "as_of_rule": "exchange_ts_ms<=as_of_ms AND receive_ts_ms<=as_of_ms",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "pit_semantics": "Only bars with exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms; signal uses strictly contemporaneous or lagged features: settlement bucket from exchange_ts; funding print eligibility by receive_ts. No future mid/feature peeking for signal formation.",
+      "required_fields": [
+        "tod_bucket",
+        "funding_z",
+        "oi_change",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "mechanism_id": "MECH_TOD_FUNDING_SETTLEMENT_WINDOW_V4",
+    "negative_test": {
+      "assertion": "Executor must reject cosmetic param-only clones, future-bar peeking, and any qualification/profitability claim vocabulary.",
+      "rejects": "param_clone_collapse_or_lookahead_or_qualification_claim",
+      "test_id": "NEG_MECH_TOD_FUNDING_SETTLEMENT_WINDOW_V4"
+    },
+    "risk_compatibility": {
+      "compatible": true,
+      "control_overlay_only": false,
+      "invalidating_conditions": [
+        "uneventful_settlement",
+        "funding_print_missing"
+      ],
+      "max_leverage_dev": 1.0,
+      "position_notional_cap_dev": 1000.0,
+      "risk_profile": "TIME_OF_DAY"
+    },
+    "signal_contract": {
+      "direction_mode": "fade",
+      "future_bar_reference_allowed": false,
+      "lookahead_forbidden": true,
+      "signal_kind": "tod_funding_settlement"
+    },
+    "source_lane": "V14-C"
+  }
+]
