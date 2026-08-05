@@ -43,12 +43,12 @@
     "no_auto_integrate"
   ],
   "hard_bans_honored": true,
-  "head_commit_at_run": "647919a28ccc3214260908ef81274e48d317ed3d",
+  "head_commit_at_run": "a3fa852fab705c892665cfdc074a274418ccaf39",
   "high_findings": [],
   "infrastructure_status": "BLOCKED_READY",
   "ingested_candidate_count": 7,
   "lane": "V14-H",
-  "lane_head_commit": "647919a28ccc3214260908ef81274e48d317ed3d",
+  "lane_head_commit": "a3fa852fab705c892665cfdc074a274418ccaf39",
   "lane_name": "CANDIDATE_TRIAGE_CONTROL",
   "mainnet": false,
   "metrics": {
