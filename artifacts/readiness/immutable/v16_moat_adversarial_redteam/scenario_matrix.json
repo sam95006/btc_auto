@@ -1,0 +1,65 @@
+{
+  "schema": "v16_moat_adversarial_redteam",
+  "attack_ids": [
+    "future_leakage",
+    "fake_regime_confidence",
+    "ai_high_confidence_overrides_stale_data",
+    "counterfactual_counted_as_real_pnl",
+    "good_process_loss_mislabeled_bad",
+    "bad_process_win_treated_as_good_lesson",
+    "lesson_activated_without_validation",
+    "public_ui_proprietary_threshold_leak",
+    "member_accessing_founder_data",
+    "invalid_ai_json",
+    "provider_timeout",
+    "duplicate_candidate",
+    "duplicate_order_intent",
+    "replay_mutates_real_ledger",
+    "graph_identity_collision",
+    "cherry_picking",
+    "strategy_thrashing",
+    "no_trade_expert_bypass",
+    "unavailable_shown_as_0",
+    "fixture_as_live",
+    "model_agreement_replaces_deterministic_risk",
+    "embedded_secrets",
+    "exchange_write",
+    "mainnet_client"
+  ],
+  "passes": [
+    {
+      "pass_id": 1,
+      "disposition_counts": {
+        "FIXED": 22,
+        "EXPLICITLY_BLOCKED": 2,
+        "PLATFORM_BLOCKED_NOT_PASS": 0
+      },
+      "survivor_count": 2,
+      "critical_open_count": 0,
+      "high_open_count": 0
+    },
+    {
+      "pass_id": 2,
+      "disposition_counts": {
+        "FIXED": 22,
+        "EXPLICITLY_BLOCKED": 2,
+        "PLATFORM_BLOCKED_NOT_PASS": 0
+      },
+      "survivor_count": 2,
+      "critical_open_count": 0,
+      "high_open_count": 0
+    },
+    {
+      "pass_id": 3,
+      "disposition_counts": {
+        "FIXED": 22,
+        "EXPLICITLY_BLOCKED": 2,
+        "PLATFORM_BLOCKED_NOT_PASS": 0
+      },
+      "survivor_count": 2,
+      "critical_open_count": 0,
+      "high_open_count": 0
+    }
+  ],
+  "unstable": []
+}
