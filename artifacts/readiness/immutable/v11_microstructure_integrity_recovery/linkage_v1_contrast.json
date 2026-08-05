@@ -1,0 +1,309 @@
+{
+  "cross_partition_linkage_status": "FAIL",
+  "chains_checked": 84,
+  "partitions_checked": 663,
+  "linkage_breaks": 167,
+  "issues": [
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_1000RATSUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_1000PEPEUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ADAUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_1000RATSUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_BLESSUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ADAUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_BLESSUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_CLUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_DOGEUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_CLUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ENAUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_DOGEUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ENAUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_HOMEUSDT_20260804_13_4.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_HYPEUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_HOMEUSDT_20260804_13_4.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_KORUUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_HYPEUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_MUUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_KORUUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_PUMPFUNUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_MUUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SKHYNIXUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_PUMPFUNUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SKHYUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SKHYNIXUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SNDKUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SKHYUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SNXXUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SNDKUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SOLUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SNXXUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SOXLUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SOLUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SPCXUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SOXLUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_XAUTUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SPCXUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_XAUUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_XAUTUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_XRPUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_XAUUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ZECUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_XRPUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_1000RATSUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ZECUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_ADAUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_1000RATSUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_CLUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_ADAUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_ETHUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_CLUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_HOMEUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_ETHUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_KORUUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_HOMEUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_MUUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_KORUUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_PUMPFUNUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_MUUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SKHYUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_PUMPFUNUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SNDKUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SKHYUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SNXXUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SNDKUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SOXLUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SNXXUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SPCXUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SOXLUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_XAUTUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SPCXUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_XAUUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_XAUTUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_XRPUSDT_20260804_13_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_XAUUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_1000PEPEUSDT_20260804_14_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_XRPUSDT_20260804_13_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_1000RATSUSDT_20260804_14_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_1000PEPEUSDT_20260804_14_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_ADAUSDT_20260804_14_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_1000RATSUSDT_20260804_14_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_BANKUSDT_20260804_14_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_ADAUSDT_20260804_14_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_BLESSUSDT_20260804_14_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_BANKUSDT_20260804_14_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_14_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_BLESSUSDT_20260804_14_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_CLUSDT_20260804_14_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_14_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_DOGEUSDT_20260804_14_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_CLUSDT_20260804_14_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_ENAUSDT_20260804_14_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_DOGEUSDT_20260804_14_0.jsonl",
+      "claimed_previous": null
+    },
+    {
+      "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260804_14_0.jsonl",
+      "issue": "linkage_break",
+      "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_ENAUSDT_20260804_14_0.jsonl",
+      "claimed_previous": null
+    }
+  ],
+  "semantics": "v1_legacy"
+}

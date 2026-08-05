@@ -1,0 +1,2642 @@
+{
+  "schema": "microstructure_integrity_recovery_v11_forensic_rca",
+  "campaign_id": "ms_accum_v7_bounded_24h",
+  "created_at": "2026-08-05T03:36:07Z",
+  "partitions_root": "D:\\NEXUS\\btc_bot\\.nexus_runtime\\microstructure\\finalize_roots\\ms_accum_v7_bounded_24h\\partitions",
+  "partition_count": 663,
+  "reported_v1": {
+    "checksum_failure_count": 50,
+    "truncated_tail_count": 113,
+    "cross_partition_link_failure_count": 167
+  },
+  "v11_measured": {
+    "open_tail_count": 113,
+    "true_checksum_mismatch_count": 0,
+    "manifest_bug_count": 43,
+    "intact_closed_count": 507,
+    "linkage_breaks_v1_reproduced": 167,
+    "linkage_breaks_v11": 0
+  },
+  "root_cause_summary": [
+    "All V1 checksum_failures sampled are TRUNCATED_OR_INCOMPLETE open tails (capped list of 50), not rolling_checksum mismatches.",
+    "All truncated partitions lack manifests and are last in their (session,family,symbol) chain \u2192 EXPECTED_OPEN_TAIL from unclean stop / migration stop.",
+    "Finalize-root truncated bytes match source tree sizes \u2192 not migration copy corruption.",
+    "V1 linkage collapses missing-manifest partitions (null symbol/session) and sorts empty UTC_hour first \u2192 LINKAGE_SEMANTICS_BUG / FINALIZER_FALSE_POSITIVE.",
+    "43 intact gzips missing manifests \u2192 MANIFEST_BUG (finalize race after gzip close).",
+    "True CHECKSUM_MISMATCH count on this campaign: 0."
+  ],
+  "classification_counts": {
+    "ACTUAL_DATA_CORRUPTION": 0,
+    "EXPECTED_OPEN_TAIL": 113,
+    "MIGRATION_ARTIFACT": 113,
+    "MANIFEST_BUG": 43,
+    "FINALIZER_FALSE_POSITIVE": 113,
+    "LINKAGE_SEMANTICS_BUG": 50,
+    "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+  },
+  "classifications": {
+    "finding_count": 156,
+    "classification_counts": {
+      "ACTUAL_DATA_CORRUPTION": 0,
+      "EXPECTED_OPEN_TAIL": 113,
+      "MIGRATION_ARTIFACT": 113,
+      "MANIFEST_BUG": 43,
+      "FINALIZER_FALSE_POSITIVE": 113,
+      "LINKAGE_SEMANTICS_BUG": 50,
+      "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+    },
+    "findings": [
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_1000PEPEUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_1000PEPEUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_1000PEPEUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_1000PEPEUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_1000RATSUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_1000RATSUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_1000RATSUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_1000RATSUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ADAUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_ADAUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_ADAUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_ADAUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_BANKUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_BANKUSDT_20260804_15_2.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_BANKUSDT_20260805_01_20.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_BLESSUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_BLESSUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_BLESSUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_BLESSUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_15_2.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260805_01_19.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_CLUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_CLUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_CLUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_CLUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_DOGEUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_DOGEUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_DOGEUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_DOGEUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ENAUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_ENAUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_ENAUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_ENAUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260804_15_2.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260805_01_20.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_HOMEUSDT_20260804_13_4.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_HOMEUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_HOMEUSDT_20260804_15_4.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_HOMEUSDT_20260805_01_31.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_HYPEUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_HYPEUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_HYPEUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_HYPEUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_KORUUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_KORUUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_KORUUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_KORUUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_MUUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_MUUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_MUUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_MUUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_PUMPFUNUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_PUMPFUNUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_PUMPFUNUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_PUMPFUNUSDT_20260805_01_17.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SKHYNIXUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_SKHYNIXUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_SKHYNIXUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_SKHYNIXUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SKHYUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_SKHYUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_SKHYUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_SKHYUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SNDKUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_SNDKUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_SNDKUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_SNDKUSDT_20260805_01_11.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SNXXUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_SNXXUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_SNXXUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_SNXXUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SOLUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_SOLUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_SOLUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_SOLUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SOXLUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_SOXLUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_SOXLUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_SOXLUSDT_20260805_01_12.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SPCXUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_SPCXUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_SPCXUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_SPCXUSDT_20260805_01_18.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_XAUTUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_XAUUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_XAUUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_XAUUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_XAUUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_XRPUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_XRPUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_XRPUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_XRPUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ZECUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_ZECUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_AGGRESSIVE_TRADE_FLOW_ZECUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_AGGRESSIVE_TRADE_FLOW_ZECUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_1000PEPEUSDT_20260804_23_2.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_1000RATSUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_LIQUIDATION_EVENTS_1000RATSUSDT_20260804_15_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_1000RATSUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_ADAUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_ADAUSDT_20260804_23_5.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_LIQUIDATION_EVENTS_BANKUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_BANKUSDT_20260805_01_8.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_LIQUIDATION_EVENTS_BLESSUSDT_20260804_15_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_BLESSUSDT_20260804_23_6.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_LIQUIDATION_EVENTS_BTCUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_BTCUSDT_20260805_00_8.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_CLUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_CLUSDT_20260805_00_3.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_LIQUIDATION_EVENTS_DOGEUSDT_20260804_15_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_DOGEUSDT_20260805_00_2.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_LIQUIDATION_EVENTS_ENAUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_ENAUSDT_20260805_01_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_ETHUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_LIQUIDATION_EVENTS_ETHUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_ETHUSDT_20260805_00_8.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_HOMEUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_LIQUIDATION_EVENTS_HOMEUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_HOMEUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_LIQUIDATION_EVENTS_HYPEUSDT_20260804_15_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_HYPEUSDT_20260805_00_7.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_KORUUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_KORUUSDT_20260805_00_4.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_MUUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_LIQUIDATION_EVENTS_MUUSDT_20260804_15_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_MUUSDT_20260805_01_2.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_PUMPFUNUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_LIQUIDATION_EVENTS_PUMPFUNUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_PUMPFUNUSDT_20260805_01_9.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_SKHYNIXUSDT_20260805_01_5.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SKHYUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_SKHYUSDT_20260805_00_3.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SNDKUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_SNDKUSDT_20260805_01_7.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SNXXUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_SNXXUSDT_20260805_01_6.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_LIQUIDATION_EVENTS_SOLUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_SOLUSDT_20260805_00_8.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SOXLUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_LIQUIDATION_EVENTS_SOXLUSDT_20260804_15_1.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_SOXLUSDT_20260805_01_10.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SPCXUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_LIQUIDATION_EVENTS_SPCXUSDT_20260804_15_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_SPCXUSDT_20260804_23_8.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_XAUTUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_XAUUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_XAUUSDT_20260805_01_3.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_XRPUSDT_20260804_13_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "LINKAGE_SEMANTICS_BUG",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "v1_linkage_chained_across_missing_identity_or_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_XRPUSDT_20260805_00_6.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785854272_LIQUIDATION_EVENTS_ZECUSDT_20260804_14_0.jsonl",
+        "classifications": [
+          "EXPECTED_OPEN_TAIL",
+          "FINALIZER_FALSE_POSITIVE",
+          "MIGRATION_ARTIFACT"
+        ],
+        "primary_classification": "EXPECTED_OPEN_TAIL",
+        "evidence": [
+          "gzip_EOF_without_manifest_last_in_session_symbol_chain",
+          "v1_checksum_failures_list_includes_open_tail",
+          "finalize_root_byte_identical_to_source_open_tail_not_copy_corruption"
+        ],
+        "failure": true
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785856716_LIQUIDATION_EVENTS_ZECUSDT_20260805_01_6.jsonl",
+        "classifications": [
+          "MANIFEST_BUG"
+        ],
+        "primary_classification": "MANIFEST_BUG",
+        "evidence": [
+          "gzip_ok_but_manifest_missing_finalize_race"
+        ],
+        "failure": true
+      }
+    ]
+  },
+  "linkage_v1": {
+    "cross_partition_linkage_status": "FAIL",
+    "chains_checked": 84,
+    "partitions_checked": 663,
+    "linkage_breaks": 167,
+    "issues": [
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_1000RATSUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_1000PEPEUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ADAUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_1000RATSUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_BLESSUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ADAUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_BLESSUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_CLUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_DOGEUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_CLUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ENAUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_DOGEUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ENAUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_HOMEUSDT_20260804_13_4.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_HYPEUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_HOMEUSDT_20260804_13_4.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_KORUUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_HYPEUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_MUUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_KORUUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_PUMPFUNUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_MUUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SKHYNIXUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_PUMPFUNUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SKHYUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SKHYNIXUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SNDKUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SKHYUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SNXXUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SNDKUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SOLUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SNXXUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SOXLUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SOLUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SPCXUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SOXLUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_XAUTUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_SPCXUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_XAUUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_XAUTUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_XRPUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_XAUUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ZECUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_XRPUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_1000RATSUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_AGGRESSIVE_TRADE_FLOW_ZECUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_ADAUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_1000RATSUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_CLUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_ADAUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_ETHUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_CLUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_HOMEUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_ETHUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_KORUUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_HOMEUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_MUUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_KORUUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_PUMPFUNUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_MUUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SKHYUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_PUMPFUNUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SNDKUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SKHYUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SNXXUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SNDKUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SOXLUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SNXXUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SPCXUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SOXLUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_XAUTUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_SPCXUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_XAUUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_XAUTUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_XRPUSDT_20260804_13_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_XAUUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_1000PEPEUSDT_20260804_14_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785848904_LIQUIDATION_EVENTS_XRPUSDT_20260804_13_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_1000RATSUSDT_20260804_14_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_1000PEPEUSDT_20260804_14_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_ADAUSDT_20260804_14_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_1000RATSUSDT_20260804_14_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_BANKUSDT_20260804_14_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_ADAUSDT_20260804_14_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_BLESSUSDT_20260804_14_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_BANKUSDT_20260804_14_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_14_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_BLESSUSDT_20260804_14_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_CLUSDT_20260804_14_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_14_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_DOGEUSDT_20260804_14_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_CLUSDT_20260804_14_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_ENAUSDT_20260804_14_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_DOGEUSDT_20260804_14_0.jsonl",
+        "claimed_previous": null
+      },
+      {
+        "partition_id": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260804_14_0.jsonl",
+        "issue": "linkage_break",
+        "expected_previous": "ms12_ACCUM24_1785853783_AGGRESSIVE_TRADE_FLOW_ENAUSDT_20260804_14_0.jsonl",
+        "claimed_previous": null
+      }
+    ],
+    "semantics": "v1_legacy"
+  },
+  "linkage_v11": {
+    "cross_partition_linkage_status": "PASS",
+    "chains_checked": 156,
+    "partitions_checked": 663,
+    "linkage_breaks": 0,
+    "open_tail_linkage_exempt_count": 113,
+    "issues": [],
+    "semantics": "v11_closed_chain_with_open_tail_boundaries"
+  },
+  "event_study_readiness_status": "NOT_READY",
+  "event_study_real_execution": false,
+  "raw_bytes_modified": false,
+  "silent_repair_executed": false,
+  "new_strategy_generated_count": 0
+}

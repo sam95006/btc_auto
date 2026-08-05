@@ -1,0 +1,9 @@
+{
+  "cross_partition_linkage_status": "PASS",
+  "chains_checked": 156,
+  "partitions_checked": 663,
+  "linkage_breaks": 0,
+  "open_tail_linkage_exempt_count": 113,
+  "issues": [],
+  "semantics": "v11_closed_chain_with_open_tail_boundaries"
+}
