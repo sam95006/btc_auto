@@ -1,6 +1,6 @@
 {
   "count": 5,
-  "created_at": "2026-08-05T07:47:56Z",
+  "created_at": "2026-08-05T07:48:49Z",
   "envelopes": [
     {
       "ai_provider_model_identifiers": [
@@ -73,15 +73,15 @@
         ],
         "terminal_status": "CLOSED"
       },
-      "code_version": "e4e96299840da2e5152cf2850135cebc67d66cd0",
+      "code_version": "4e94ad5211cf32fca63c44dabc471f8390148599",
       "cost_version": "founder-conservative-v1-1-2026-08-05",
       "decision_id": "dec_v12e_f4d0df9a425978da",
       "decision_schema_version": "nexus_decision_object_v11",
       "demo_order": false,
       "deterministic_replay_result": {
-        "fingerprint": "f1920595979aa67f9a16ec04e93d8b1d0e540939a22ca21a738a728a1a2018f5",
+        "fingerprint": "ad08bfc1d677563a2d9c859606a0362dd1e9502538296635c1c822c35849f8cf",
         "match": true,
-        "peer_fingerprint": "f1920595979aa67f9a16ec04e93d8b1d0e540939a22ca21a738a728a1a2018f5"
+        "peer_fingerprint": "ad08bfc1d677563a2d9c859606a0362dd1e9502538296635c1c822c35849f8cf"
       },
       "evidence_binding_hash": "f3408a33024fff2bb401817fc12e794c50e3d96fcf12b42ce37645f251c9ed09",
       "exchange_write": false,
@@ -121,7 +121,7 @@
         "classification_provenance"
       ],
       "real_money": false,
-      "replay_fingerprint": "f1920595979aa67f9a16ec04e93d8b1d0e540939a22ca21a738a728a1a2018f5",
+      "replay_fingerprint": "ad08bfc1d677563a2d9c859606a0362dd1e9502538296635c1c822c35849f8cf",
       "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
       "risk_gates_fingerprint": "d76e401ec9dc88d09cba9369f6e1b265eed1d6e275a2d5825223d8a87a8b18cd",
       "risk_version": "private_core.risk.gates_v1_1",
@@ -201,15 +201,15 @@
         ],
         "terminal_status": "CLOSED"
       },
-      "code_version": "e4e96299840da2e5152cf2850135cebc67d66cd0",
+      "code_version": "4e94ad5211cf32fca63c44dabc471f8390148599",
       "cost_version": "founder-conservative-v1-1-2026-08-05",
       "decision_id": "dec_v12e_3e54e835da918537",
       "decision_schema_version": "nexus_decision_object_v11",
       "demo_order": false,
       "deterministic_replay_result": {
-        "fingerprint": "67290ad5f2b8a3d3834dca7942c534e8bfbc42dc4ed5f0dcfc90e64cbf339e96",
+        "fingerprint": "afafb2a1c917880667875a0e9a5d638c9fb2dafb0cabf4049e479cd3661faa0a",
         "match": true,
-        "peer_fingerprint": "67290ad5f2b8a3d3834dca7942c534e8bfbc42dc4ed5f0dcfc90e64cbf339e96"
+        "peer_fingerprint": "afafb2a1c917880667875a0e9a5d638c9fb2dafb0cabf4049e479cd3661faa0a"
       },
       "evidence_binding_hash": "799f6d480389a816ab3e234cc73fd08e0151029e5b8bba6d3a059f520573308a",
       "exchange_write": false,
@@ -249,7 +249,7 @@
         "classification_provenance"
       ],
       "real_money": false,
-      "replay_fingerprint": "67290ad5f2b8a3d3834dca7942c534e8bfbc42dc4ed5f0dcfc90e64cbf339e96",
+      "replay_fingerprint": "afafb2a1c917880667875a0e9a5d638c9fb2dafb0cabf4049e479cd3661faa0a",
       "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
       "risk_gates_fingerprint": "d76e401ec9dc88d09cba9369f6e1b265eed1d6e275a2d5825223d8a87a8b18cd",
       "risk_version": "private_core.risk.gates_v1_1",
@@ -329,15 +329,15 @@
         ],
         "terminal_status": "CLOSED"
       },
-      "code_version": "e4e96299840da2e5152cf2850135cebc67d66cd0",
+      "code_version": "4e94ad5211cf32fca63c44dabc471f8390148599",
       "cost_version": "founder-conservative-v1-1-2026-08-05",
       "decision_id": "dec_v12e_f0b9cd18f5ab2f95",
       "decision_schema_version": "nexus_decision_object_v11",
       "demo_order": false,
       "deterministic_replay_result": {
-        "fingerprint": "b72c41129721f73de8e12d1f08bff73cfee5f9710f8fb711bb6395edae30a46e",
+        "fingerprint": "ae76446163e43609ac85216cd6f462aaecd3bf612600de03015236fafb97b6e5",
         "match": true,
-        "peer_fingerprint": "b72c41129721f73de8e12d1f08bff73cfee5f9710f8fb711bb6395edae30a46e"
+        "peer_fingerprint": "ae76446163e43609ac85216cd6f462aaecd3bf612600de03015236fafb97b6e5"
       },
       "evidence_binding_hash": "2f21d53bff07fe3c8314d361733be86153bb87ebe63dcb4a06405de00daec50b",
       "exchange_write": false,
@@ -377,7 +377,7 @@
         "classification_provenance"
       ],
       "real_money": false,
-      "replay_fingerprint": "b72c41129721f73de8e12d1f08bff73cfee5f9710f8fb711bb6395edae30a46e",
+      "replay_fingerprint": "ae76446163e43609ac85216cd6f462aaecd3bf612600de03015236fafb97b6e5",
       "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
       "risk_gates_fingerprint": "d76e401ec9dc88d09cba9369f6e1b265eed1d6e275a2d5825223d8a87a8b18cd",
       "risk_version": "private_core.risk.gates_v1_1",
@@ -457,15 +457,15 @@
         ],
         "terminal_status": "CLOSED"
       },
-      "code_version": "e4e96299840da2e5152cf2850135cebc67d66cd0",
+      "code_version": "4e94ad5211cf32fca63c44dabc471f8390148599",
       "cost_version": "founder-conservative-v1-1-2026-08-05",
       "decision_id": "dec_v12e_1fcd00ea734ac092",
       "decision_schema_version": "nexus_decision_object_v11",
       "demo_order": false,
       "deterministic_replay_result": {
-        "fingerprint": "dddb20bad10afdefa42c03b5a8247fe23796ee552da9e6312e8499829eb4d8cf",
+        "fingerprint": "9e01de459b22589886739004f17790427e49a7cd6c4e89b84e473ef0ac1b2933",
         "match": true,
-        "peer_fingerprint": "dddb20bad10afdefa42c03b5a8247fe23796ee552da9e6312e8499829eb4d8cf"
+        "peer_fingerprint": "9e01de459b22589886739004f17790427e49a7cd6c4e89b84e473ef0ac1b2933"
       },
       "evidence_binding_hash": "1a1326a13b2183cd7e97668ba72de3731fcc1b9b6e7377e42f0e89230b2de9c3",
       "exchange_write": false,
@@ -505,7 +505,7 @@
         "classification_provenance"
       ],
       "real_money": false,
-      "replay_fingerprint": "dddb20bad10afdefa42c03b5a8247fe23796ee552da9e6312e8499829eb4d8cf",
+      "replay_fingerprint": "9e01de459b22589886739004f17790427e49a7cd6c4e89b84e473ef0ac1b2933",
       "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
       "risk_gates_fingerprint": "d76e401ec9dc88d09cba9369f6e1b265eed1d6e275a2d5825223d8a87a8b18cd",
       "risk_version": "private_core.risk.gates_v1_1",
@@ -585,15 +585,15 @@
         ],
         "terminal_status": "CLOSED"
       },
-      "code_version": "e4e96299840da2e5152cf2850135cebc67d66cd0",
+      "code_version": "4e94ad5211cf32fca63c44dabc471f8390148599",
       "cost_version": "founder-conservative-v1-1-2026-08-05",
       "decision_id": "dec_v12e_1fd720376c3167e1",
       "decision_schema_version": "nexus_decision_object_v11",
       "demo_order": false,
       "deterministic_replay_result": {
-        "fingerprint": "7b8b1bb7d112e20274fb18bc156b5948130db4964aa046023494a747383b387c",
+        "fingerprint": "9c9bcfde717c6eb9b08f573e2389c937580dcf89120e15076b39f75bae0871c3",
         "match": true,
-        "peer_fingerprint": "7b8b1bb7d112e20274fb18bc156b5948130db4964aa046023494a747383b387c"
+        "peer_fingerprint": "9c9bcfde717c6eb9b08f573e2389c937580dcf89120e15076b39f75bae0871c3"
       },
       "evidence_binding_hash": "fd1ec41fd519b7a4b8fb1596ba3c47bf378b2d4c4596154c64c31a054def90bf",
       "exchange_write": false,
@@ -633,7 +633,7 @@
         "classification_provenance"
       ],
       "real_money": false,
-      "replay_fingerprint": "7b8b1bb7d112e20274fb18bc156b5948130db4964aa046023494a747383b387c",
+      "replay_fingerprint": "9c9bcfde717c6eb9b08f573e2389c937580dcf89120e15076b39f75bae0871c3",
       "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
       "risk_gates_fingerprint": "d76e401ec9dc88d09cba9369f6e1b265eed1d6e275a2d5825223d8a87a8b18cd",
       "risk_version": "private_core.risk.gates_v1_1",
