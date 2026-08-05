@@ -52,13 +52,18 @@ def main() -> int:
     from backend.nexus_microstructure.ops_v13.controller import MicrostructureOperationsControllerV13
     from backend.nexus_microstructure.ops_v13.synthetic_harness import run_all_preflight_scenarios
 
-    work = ROOT / ".nexus_runtime" / "microstructure" / "ops_v13_coord_launch"
+    # Fresh dirs each launch — durable clock guard rejects reuse of stale writer state.
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    work = ROOT / ".nexus_runtime" / "microstructure" / f"ops_v13_coord_launch_{stamp}"
+    synth_root = ROOT / ".nexus_runtime" / "microstructure" / f"preflight_v13_{stamp}"
+    work.mkdir(parents=True, exist_ok=True)
+    synth_root.mkdir(parents=True, exist_ok=True)
     ctrl = MicrostructureOperationsControllerV13(ROOT, work_root=work, disk_root="D:\\")
     ops = ctrl.run_both_passes()
     design = build_campaign_design()
     free = shutil.disk_usage("D:/").free
     floor_ok = free >= FLOOR
-    synth = run_all_preflight_scenarios(ROOT / ".nexus_runtime" / "microstructure" / "preflight_v13")
+    synth = run_all_preflight_scenarios(synth_root)
     synth_ok = bool(synth.get("all_passed"))
     ops_ok = bool(ops.get("all_passed"))
 
