@@ -7,7 +7,7 @@ export const MEMBER_LIVE_BANNER =
 
 /**
  * Member chrome: PUB2-J i18n title keys + PUB2-B LIVE lineage banner.
- * DemoDataBadge / MEMBER_DEMO_BANNER intentionally omitted — LIVE surface must not merge DEMO.
+ * Demo badge / demo banner intentionally omitted — LIVE surface must not merge DEMO.
  */
 export function MemberPageChrome({
   titleKey,
