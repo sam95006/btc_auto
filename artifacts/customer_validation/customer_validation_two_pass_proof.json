@@ -1,0 +1,160 @@
+{
+  "counters": {
+    "completed_interview_count": 0,
+    "fabricated_result_count": 0,
+    "paid_pilot_count": 0,
+    "real_participant_count": 0
+  },
+  "digests_match": true,
+  "hard_bans_honored": true,
+  "note": "No *_status.json emitted by design.",
+  "ok": true,
+  "pass1": {
+    "collection_lengths": {
+      "consents": 0,
+      "conversion_evidence": 0,
+      "decision_object_deliveries": 0,
+      "interviews": 0,
+      "objections": 0,
+      "participants": 0,
+      "problem_rankings": 0,
+      "retention_evidence": 0,
+      "weekly_reviews": 0,
+      "workflow_maps": 0,
+      "wtp_evidence": 0
+    },
+    "counters": {
+      "completed_interview_count": 0,
+      "fabricated_result_count": 0,
+      "paid_pilot_count": 0,
+      "real_participant_count": 0
+    },
+    "digest_sha256": "73ff6d6482d9b6a0a255500fa0e1d8ae09fd3fbed02f44807b1abcda4bdc232f",
+    "hard_bans": [
+      "no_merge_pr_26",
+      "no_merge_pr_27",
+      "no_live_public_deployment",
+      "no_app_store_submission",
+      "no_google_play_submission",
+      "no_live_billing",
+      "no_real_iap_products",
+      "no_production_customer_database",
+      "no_custodial_wallet",
+      "no_copy_trading",
+      "no_automated_customer_trading",
+      "no_fabricated_participants",
+      "no_fabricated_interviews",
+      "no_fabricated_paid_pilots",
+      "no_exchange_write",
+      "no_mainnet",
+      "no_real_money",
+      "no_demo_order",
+      "no_shadow_order"
+    ],
+    "hard_bans_honored": true,
+    "production_customer_database": false,
+    "required_zero_counters": [
+      "real_participant_count",
+      "completed_interview_count",
+      "paid_pilot_count"
+    ],
+    "required_zeros_ok": true,
+    "schema": "NEXUS_CUSTOMER_VALIDATION_INTEGRITY_V1",
+    "status_json_emitted": false,
+    "target_cohort": {
+      "max": 20,
+      "min": 10
+    },
+    "tools": [
+      "registry",
+      "consent",
+      "interview",
+      "problem_ranking",
+      "workflow",
+      "decision_object_concierge",
+      "weekly_review",
+      "retention_evidence",
+      "wtp_evidence",
+      "objection_taxonomy",
+      "conversion_evidence"
+    ],
+    "workspace": "D:\\NEXUS_RUNTIME\\worktrees\\pub_i_validation\\tools\\customer_validation\\workspace"
+  },
+  "pass1_digest": "73ff6d6482d9b6a0a255500fa0e1d8ae09fd3fbed02f44807b1abcda4bdc232f",
+  "pass2": {
+    "collection_lengths": {
+      "consents": 0,
+      "conversion_evidence": 0,
+      "decision_object_deliveries": 0,
+      "interviews": 0,
+      "objections": 0,
+      "participants": 0,
+      "problem_rankings": 0,
+      "retention_evidence": 0,
+      "weekly_reviews": 0,
+      "workflow_maps": 0,
+      "wtp_evidence": 0
+    },
+    "counters": {
+      "completed_interview_count": 0,
+      "fabricated_result_count": 0,
+      "paid_pilot_count": 0,
+      "real_participant_count": 0
+    },
+    "digest_sha256": "73ff6d6482d9b6a0a255500fa0e1d8ae09fd3fbed02f44807b1abcda4bdc232f",
+    "hard_bans": [
+      "no_merge_pr_26",
+      "no_merge_pr_27",
+      "no_live_public_deployment",
+      "no_app_store_submission",
+      "no_google_play_submission",
+      "no_live_billing",
+      "no_real_iap_products",
+      "no_production_customer_database",
+      "no_custodial_wallet",
+      "no_copy_trading",
+      "no_automated_customer_trading",
+      "no_fabricated_participants",
+      "no_fabricated_interviews",
+      "no_fabricated_paid_pilots",
+      "no_exchange_write",
+      "no_mainnet",
+      "no_real_money",
+      "no_demo_order",
+      "no_shadow_order"
+    ],
+    "hard_bans_honored": true,
+    "production_customer_database": false,
+    "required_zero_counters": [
+      "real_participant_count",
+      "completed_interview_count",
+      "paid_pilot_count"
+    ],
+    "required_zeros_ok": true,
+    "schema": "NEXUS_CUSTOMER_VALIDATION_INTEGRITY_V1",
+    "status_json_emitted": false,
+    "target_cohort": {
+      "max": 20,
+      "min": 10
+    },
+    "tools": [
+      "registry",
+      "consent",
+      "interview",
+      "problem_ranking",
+      "workflow",
+      "decision_object_concierge",
+      "weekly_review",
+      "retention_evidence",
+      "wtp_evidence",
+      "objection_taxonomy",
+      "conversion_evidence"
+    ],
+    "workspace": "D:\\NEXUS_RUNTIME\\worktrees\\pub_i_validation\\tools\\customer_validation\\workspace"
+  },
+  "pass2_digest": "73ff6d6482d9b6a0a255500fa0e1d8ae09fd3fbed02f44807b1abcda4bdc232f",
+  "pass_count": 2,
+  "required_zeros_ok": true,
+  "schema": "NEXUS_CUSTOMER_VALIDATION_TWO_PASS_V1",
+  "status_json_emitted": false
+}

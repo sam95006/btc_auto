@@ -39,9 +39,11 @@
   },
   "actual_validation_placeholder": {
     "real_participant_count": 0,
-    "interview_completed_count": 0,
+    "completed_interview_count": 0,
     "paid_pilot_count": 0,
     "fabricated_result_count": 0
   },
+  "ops_tools_package": "tools/customer_validation/",
+  "production_customer_database": false,
   "fabricated_results_forbidden": true
 }

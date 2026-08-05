@@ -1,0 +1,12 @@
+{
+  "schema": "NEXUS_CUSTOMER_VALIDATION_WORKSPACE_V1",
+  "production_customer_database": false,
+  "fabricated_participants_forbidden": true,
+  "target_icp_cohort_size": {"min": 10, "max": 20},
+  "note": "Empty until Founder enrolls genuine ICP participants.",
+  "required_initial_counters": {
+    "real_participant_count": 0,
+    "completed_interview_count": 0,
+    "paid_pilot_count": 0
+  }
+}

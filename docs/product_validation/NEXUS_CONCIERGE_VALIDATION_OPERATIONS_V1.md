@@ -37,9 +37,29 @@ AI Copilot is embedded in these workflows. No standalone generic chat workflow.
 6. Hold weekly Founder review using the weekly template
 7. Apply CONTINUE / ITERATE / PIVOT / KILL gates without post-hoc rewriting
 
+## Ops tooling
+
+Executable local tools live under `tools/customer_validation/`:
+
+- participant registry, consent, interview workflow
+- problem ranking, current workflow map
+- Decision Object Concierge delivery log
+- weekly Founder review
+- retention / WTP / objection taxonomy / conversion evidence
+- hard-ban guards + two-pass integrity (`run_ops.py`)
+
+Initial counters must remain zero until genuine enrollments:
+
+`real_participant_count=0`, `completed_interview_count=0`, `paid_pilot_count=0`
+
 ## Forbidden
 
 - Public UI build-out
 - Public API / billing / portfolio connector
 - Private Core exposure
 - Invented interview or WTP outcomes
+- Production customer database
+- Live billing / real IAP
+- Fabricated participants, interviews, or paid pilots
+- Automated customer trading / copy trading / custody
+- Emitting `*_status.json` from this track
