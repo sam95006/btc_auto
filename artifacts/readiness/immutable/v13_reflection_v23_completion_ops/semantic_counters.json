@@ -1,0 +1,15 @@
+{
+  "schema": "v13_v23_semantic_counters",
+  "created_at": "2026-08-05T08:31:55Z",
+  "ok": true,
+  "issues": [],
+  "groq_success_count": 53,
+  "completed_case_count": 53,
+  "pending_case_count": 27,
+  "critic_success_count": 16,
+  "critic_resolved_count": 16,
+  "critic_pending_count": 10,
+  "fixture_sot_aligned": true,
+  "refused_inflated_counter": false,
+  "V2_3_complete": false
+}
