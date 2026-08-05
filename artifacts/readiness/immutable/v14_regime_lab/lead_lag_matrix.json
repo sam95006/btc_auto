@@ -1,0 +1,251 @@
+{
+  "as_of_ms": 1720002341000,
+  "created_at": "2026-08-05T11:17:06Z",
+  "non_claim": "Cross-asset lead-lag is descriptive research only.",
+  "pair_count": 3,
+  "pairs": [
+    {
+      "as_of_ms": 1720002341000,
+      "availability": "AVAILABLE",
+      "bar_ms": 60000,
+      "best_corr": -0.9681158778295301,
+      "best_lag": 3,
+      "common_return_timestamps": 18,
+      "follower": "ETHUSDT",
+      "follower_eligible_bars": 20,
+      "lags": {
+        "-1": {
+          "corr": 0.9383514190686947,
+          "lag_bars": -1,
+          "n_pairs": 17
+        },
+        "-2": {
+          "corr": 0.8709400590886689,
+          "lag_bars": -2,
+          "n_pairs": 16
+        },
+        "-3": {
+          "corr": 0.4135293980368147,
+          "lag_bars": -3,
+          "n_pairs": 15
+        },
+        "-4": {
+          "corr": -0.2733686973087289,
+          "lag_bars": -4,
+          "n_pairs": 14
+        },
+        "-5": {
+          "corr": -0.8544957269850256,
+          "lag_bars": -5,
+          "n_pairs": 13
+        },
+        "0": {
+          "corr": 0.539890936646488,
+          "lag_bars": 0,
+          "n_pairs": 18
+        },
+        "1": {
+          "corr": -0.06885691551612576,
+          "lag_bars": 1,
+          "n_pairs": 17
+        },
+        "2": {
+          "corr": -0.6599769883361842,
+          "lag_bars": 2,
+          "n_pairs": 16
+        },
+        "3": {
+          "corr": -0.9681158778295301,
+          "lag_bars": 3,
+          "n_pairs": 15
+        },
+        "4": {
+          "corr": -0.7632996205196667,
+          "lag_bars": 4,
+          "n_pairs": 14
+        },
+        "5": {
+          "corr": -0.1912283124010321,
+          "lag_bars": 5,
+          "n_pairs": 13
+        }
+      },
+      "leader": "BTCUSDT",
+      "leader_eligible_bars": 19,
+      "lookback_end_ms": 1720002341000,
+      "lookback_start_ms": 1720001141000,
+      "max_lag_bars": 5,
+      "non_claim": "Descriptive lead-lag research only; not a trading edge.",
+      "predictive_edge_claimed": false,
+      "regime_schema_version": "regime_lab_v14_f_1",
+      "schema": "v14_f_lead_lag_pair",
+      "strategy_signal": false,
+      "trading_claim": false
+    },
+    {
+      "as_of_ms": 1720002341000,
+      "availability": "AVAILABLE",
+      "bar_ms": 60000,
+      "best_corr": 0.9948452834211755,
+      "best_lag": -3,
+      "common_return_timestamps": 18,
+      "follower": "SOLUSDT",
+      "follower_eligible_bars": 20,
+      "lags": {
+        "-1": {
+          "corr": 0.256684329274365,
+          "lag_bars": -1,
+          "n_pairs": 17
+        },
+        "-2": {
+          "corr": 0.8201070276867083,
+          "lag_bars": -2,
+          "n_pairs": 16
+        },
+        "-3": {
+          "corr": 0.9948452834211755,
+          "lag_bars": -3,
+          "n_pairs": 15
+        },
+        "-4": {
+          "corr": 0.6897389542474196,
+          "lag_bars": -4,
+          "n_pairs": 14
+        },
+        "-5": {
+          "corr": 0.06898708097562092,
+          "lag_bars": -5,
+          "n_pairs": 13
+        },
+        "0": {
+          "corr": -0.4166507328131484,
+          "lag_bars": 0,
+          "n_pairs": 18
+        },
+        "1": {
+          "corr": -0.9067409142804992,
+          "lag_bars": 1,
+          "n_pairs": 17
+        },
+        "2": {
+          "corr": -0.9683051549663124,
+          "lag_bars": 2,
+          "n_pairs": 16
+        },
+        "3": {
+          "corr": -0.5922008405663703,
+          "lag_bars": 3,
+          "n_pairs": 15
+        },
+        "4": {
+          "corr": 0.07265325347238423,
+          "lag_bars": 4,
+          "n_pairs": 14
+        },
+        "5": {
+          "corr": 0.7080731082354191,
+          "lag_bars": 5,
+          "n_pairs": 13
+        }
+      },
+      "leader": "BTCUSDT",
+      "leader_eligible_bars": 19,
+      "lookback_end_ms": 1720002341000,
+      "lookback_start_ms": 1720001141000,
+      "max_lag_bars": 5,
+      "non_claim": "Descriptive lead-lag research only; not a trading edge.",
+      "predictive_edge_claimed": false,
+      "regime_schema_version": "regime_lab_v14_f_1",
+      "schema": "v14_f_lead_lag_pair",
+      "strategy_signal": false,
+      "trading_claim": false
+    },
+    {
+      "as_of_ms": 1720002341000,
+      "availability": "AVAILABLE",
+      "bar_ms": 60000,
+      "best_corr": -0.9711339377091109,
+      "best_lag": 3,
+      "common_return_timestamps": 19,
+      "follower": "SOLUSDT",
+      "follower_eligible_bars": 20,
+      "lags": {
+        "-1": {
+          "corr": 0.919890146760833,
+          "lag_bars": -1,
+          "n_pairs": 18
+        },
+        "-2": {
+          "corr": 0.8996348055810182,
+          "lag_bars": -2,
+          "n_pairs": 17
+        },
+        "-3": {
+          "corr": 0.40142059228871896,
+          "lag_bars": -3,
+          "n_pairs": 16
+        },
+        "-4": {
+          "corr": -0.2999591261916182,
+          "lag_bars": -4,
+          "n_pairs": 15
+        },
+        "-5": {
+          "corr": -0.8141200617912242,
+          "lag_bars": -5,
+          "n_pairs": 14
+        },
+        "0": {
+          "corr": 0.5343738368303123,
+          "lag_bars": 0,
+          "n_pairs": 19
+        },
+        "1": {
+          "corr": -0.14597736933226763,
+          "lag_bars": 1,
+          "n_pairs": 18
+        },
+        "2": {
+          "corr": -0.7660543676105686,
+          "lag_bars": 2,
+          "n_pairs": 17
+        },
+        "3": {
+          "corr": -0.9711339377091109,
+          "lag_bars": 3,
+          "n_pairs": 16
+        },
+        "4": {
+          "corr": -0.7442229162312584,
+          "lag_bars": 4,
+          "n_pairs": 15
+        },
+        "5": {
+          "corr": -0.16827322675756823,
+          "lag_bars": 5,
+          "n_pairs": 14
+        }
+      },
+      "leader": "ETHUSDT",
+      "leader_eligible_bars": 20,
+      "lookback_end_ms": 1720002341000,
+      "lookback_start_ms": 1720001141000,
+      "max_lag_bars": 5,
+      "non_claim": "Descriptive lead-lag research only; not a trading edge.",
+      "predictive_edge_claimed": false,
+      "regime_schema_version": "regime_lab_v14_f_1",
+      "schema": "v14_f_lead_lag_pair",
+      "strategy_signal": false,
+      "trading_claim": false
+    }
+  ],
+  "predictive_edge_claimed": false,
+  "schema": "v14_f_lead_lag_matrix",
+  "strategy_signal": false,
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT"
+  ],
+  "trading_claim": false
+}

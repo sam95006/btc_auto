@@ -1,0 +1,32 @@
+{
+  "adversarial_ok": true,
+  "created_at": "2026-08-05T11:17:06Z",
+  "critical_count": 0,
+  "empty_regime_ok": true,
+  "findings": [
+    {
+      "code": "FIXTURE_SYNTHETIC_ONLY",
+      "detail": "Regime/lead-lag proofs use synthetic fixtures; old campaign is RO forensic probe only — not claimed as live capture validation. No predictive edge or trading claim.",
+      "severity": "INFO",
+      "status": "ACKNOWLEDGED"
+    }
+  ],
+  "high_count": 0,
+  "pass": "PASS_2",
+  "pit_proof": {
+    "as_of_ms": 1720001200000,
+    "fingerprint_baseline": "02e5612abf537792817e0a4394dddcbefca004877c44bb0769e84d279c3464df",
+    "fingerprint_with_future": "02e5612abf537792817e0a4394dddcbefca004877c44bb0769e84d279c3464df",
+    "future_bar_exchange_timestamp": 1720001210000,
+    "lead_lag_fingerprint_baseline": "86914245f89f72cce3445ccc4392cb8c104f377b4572f751342b357fc3ab2c9f",
+    "lead_lag_fingerprint_with_future": "86914245f89f72cce3445ccc4392cb8c104f377b4572f751342b357fc3ab2c9f",
+    "lead_lag_pit_holds": true,
+    "pit_holds": true,
+    "predictive_edge_claimed": false,
+    "regime_pit_holds": true,
+    "schema": "v14_f_pit_proof",
+    "seed": "v14f-pass2-pit",
+    "symbol": "BTCUSDT"
+  },
+  "seed_divergence_ok": true
+}
