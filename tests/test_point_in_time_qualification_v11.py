@@ -69,6 +69,22 @@ def test_future_data_exclusion_detects_violations() -> None:
     assert violation["allowed"] is False
     assert violation["status"] == "FUTURE_DATA_VIOLATION"
 
+    nested = dict(dataset)
+    nested["records"] = [
+        dict(
+            dataset["records"][0],
+            evidence={
+                "bar_close_ts_ms": as_of + 86_400_000,
+                "nested_available_as_of_ms": as_of + 1,
+                "child": {"availability_timestamp_ms": as_of + 9},
+            },
+        )
+    ]
+    nested_violation = prove_future_data_exclusion(nested, as_of_ms=as_of)
+    assert nested_violation["allowed"] is False
+    assert nested_violation["violation_count"] >= 3
+    assert nested_violation["nested_scan"] is True
+
 
 def test_candidate_parameter_code_dataset_semantic_checksums() -> None:
     candidate = synthetic_candidate_fixture()
@@ -117,10 +133,14 @@ def test_oos_non_consumption_proof_fails_on_overlap() -> None:
 
 
 def test_oos_cryptographic_seal_is_deterministic_and_unconsumed() -> None:
+    from backend.nexus_qualification.pit_v11.infrastructure import OOSSealLineage, reset_oos_seal_lineage
+
+    reset_oos_seal_lineage()
+    lineage = OOSSealLineage()
     regs = synthetic_interval_registries()
     dataset = synthetic_dataset_lineage()
     checksums = semantic_checksums(synthetic_candidate_fixture(), dataset, "code-sha")
-    seal = build_oos_cryptographic_seal(regs, checksums)
+    seal = build_oos_cryptographic_seal(regs, checksums, lineage_key="test_det", lineage=lineage)
     expected_payload = {
         "reserved_registry_checksum": regs["reserved"].checksum(),
         "candidate_checksum": checksums["candidate_checksum"],
@@ -131,6 +151,18 @@ def test_oos_cryptographic_seal_is_deterministic_and_unconsumed() -> None:
     assert seal["seal"] == sha_obj(expected_payload)
     assert seal["oos_revealed_to_candidate"] is False
     assert seal["oos_consumed"] is False
+    # Identical recompute OK; reserved mutation fails closed.
+    again = build_oos_cryptographic_seal(regs, checksums, lineage_key="test_det", lineage=lineage)
+    assert again["seal"] == seal["seal"]
+    assert again["status"] == "SEALED_NOT_CONSUMED"
+    old = regs["reserved"].intervals[0]
+    regs["reserved"].intervals[0] = IntervalRecord(
+        old.interval_id, old.label, old.start_ms, old.end_ms + 1, old.category
+    )
+    rejected = build_oos_cryptographic_seal(regs, checksums, lineage_key="test_det", lineage=lineage)
+    assert rejected["status"] == "SEAL_REGENERATION_REJECTED_RESERVED_MUTATION"
+    assert rejected["allowed"] is False
+    assert rejected["seal"] is None
 
 
 def test_founder_authorization_gate_fails_closed() -> None:
@@ -138,10 +170,18 @@ def test_founder_authorization_gate_fails_closed() -> None:
     missing = gate.evaluate(None)
     assert missing["authorized"] is False
     assert missing["reason"] == "FOUNDER_AUTHORIZATION_MISSING"
+    assert missing["auth_proof"]
+    assert gate.verify_bound_result(missing)["valid"] is True
 
     denied = gate.evaluate({"founder_authorization_token": "fake", "scope": "founder_v11_pit_qualification"})
     assert denied["authorized"] is False
     assert denied["reason"] == "FOUNDER_AUTHORIZATION_DENIED_BLOCKED_ONLY_V11"
+
+    spoofed = dict(denied)
+    spoofed["authorized"] = True
+    spoof_check = gate.verify_bound_result(spoofed)
+    assert spoof_check["valid"] is False
+    assert spoof_check["spoof_rejected"] is True
 
 
 def test_promotion_state_machine_never_promotes() -> None:
@@ -152,6 +192,12 @@ def test_promotion_state_machine_never_promotes() -> None:
     assert result["formal_walk_forward_executed"] is False
     assert result["oos_executed"] is False
     assert result["demo_order_count"] == 0
+    assert "founder" in json.dumps(result).lower()
+    assert result["founder_authorized"] is False
+    spoofed = {"authorized": True, "reason": "SPOOF", "required_scope": sm.founder_gate.required_scope}
+    spoof_promote = sm.attempt_promote(spoofed)
+    assert spoof_promote["allowed"] is False
+    assert spoof_promote["founder_auth_verified"] is False
     assert all(status == STAGE_STATUS_BLOCKED_READY for status in sm.stages.values())
 
 

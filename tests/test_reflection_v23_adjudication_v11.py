@@ -39,16 +39,28 @@ def test_provider_specific_queues_retry_after_quota_and_circuit():
         sleep_fn=lambda _s: None,
         time_fn=lambda: now,
     )
-    scheduler.enqueue(GROQ_REFLECTION_REASONER, ["a"])
+    scheduler.enqueue(GROQ_REFLECTION_REASONER, ["a", "b"])
     scheduler.enqueue(SAMBANOVA_INDEPENDENT_CRITIC, ["b"])
-    groq = record_provider_outcome(
+    # Critic before Reasoner SUCCESS for same case must fail closed.
+    critic_blocked = record_provider_outcome(
+        scheduler,
+        profile_id=SAMBANOVA_INDEPENDENT_CRITIC,
+        case_id="b",
+        prompt_hash="p2",
+        schema_version="critic_v2_3",
+        result_status="SUCCESS",
+        response_payload={"critic_verdict": "BOTH_SUPPORTED"},
+    )
+    assert critic_blocked["dispatch_allowed"] is False
+    assert critic_blocked["reason"] == "REASONER_SUCCESS_REQUIRED"
+    groq_b = record_provider_outcome(
         scheduler,
         profile_id=GROQ_REFLECTION_REASONER,
-        case_id="a",
-        prompt_hash="p1",
+        case_id="b",
+        prompt_hash="p1b",
         schema_version="blind_reflection_v2_3",
-        http_status=429,
-        headers={"Retry-After": "15"},
+        result_status="SUCCESS",
+        response_payload={"ok": True},
     )
     samba = record_provider_outcome(
         scheduler,
@@ -59,9 +71,19 @@ def test_provider_specific_queues_retry_after_quota_and_circuit():
         result_status="SUCCESS",
         response_payload={"critic_verdict": "BOTH_SUPPORTED"},
     )
+    groq = record_provider_outcome(
+        scheduler,
+        profile_id=GROQ_REFLECTION_REASONER,
+        case_id="a",
+        prompt_hash="p1",
+        schema_version="blind_reflection_v2_3",
+        http_status=429,
+        headers={"Retry-After": "15"},
+    )
     snap = scheduler.snapshot()
     assert groq["transport_status"] == "RATE_LIMITED"
     assert groq["quality_neutral_transport"] is True
+    assert groq_b["transport_status"] == "SUCCESS"
     assert samba["transport_status"] == "SUCCESS"
     assert snap[GROQ_REFLECTION_REASONER]["HTTP_429_count"] == 1
     assert snap[SAMBANOVA_INDEPENDENT_CRITIC]["success_count"] == 1

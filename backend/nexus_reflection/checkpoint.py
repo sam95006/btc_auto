@@ -78,6 +78,39 @@ def compute_integrity_checksum(state: dict[str, Any]) -> str:
     return _sha(integrity_payload(state))
 
 
+def validate_counter_invariants(state: dict[str, Any]) -> dict[str, Any]:
+    """Enforce success_count reconciliation with completed/resolved case lists.
+
+    Inflated transport counters must not survive checksum-only integrity checks.
+    """
+    issues: list[str] = []
+    transport = state.get("transport") or {}
+    groq = transport.get("GROQ_REFLECTION_REASONER") or {}
+    critic = transport.get("SAMBANOVA_INDEPENDENT_CRITIC") or {}
+    completed = list(state.get("completed_case_ids") or [])
+    resolved = list(state.get("critic_resolved_ids") or [])
+    groq_success = int(groq.get("success_count") or 0)
+    critic_success = int(critic.get("success_count") or 0)
+    if groq_success != len(completed):
+        issues.append(
+            f"GROQ_SUCCESS_COUNT_DRIFT:success_count={groq_success}"
+            f":completed_case_ids={len(completed)}"
+        )
+    if critic_success != len(resolved):
+        issues.append(
+            f"CRITIC_SUCCESS_COUNT_DRIFT:success_count={critic_success}"
+            f":critic_resolved_ids={len(resolved)}"
+        )
+    return {
+        "ok": not issues,
+        "issues": issues,
+        "groq_success_count": groq_success,
+        "completed_case_count": len(completed),
+        "critic_success_count": critic_success,
+        "critic_resolved_count": len(resolved),
+    }
+
+
 def sanitize_checkpoint(state: dict[str, Any]) -> dict[str, Any]:
     """Strip secrets / raw prompts / raw responses recursively."""
 
@@ -183,6 +216,13 @@ def migrate_checkpoint(state: dict[str, Any], *, model_id: str = "") -> dict[str
     out = _ensure_v4_fields(state)
     out["legacy_provenance"] = provenance
     out["checkpoint_migration_status"] = "MIGRATED" if provenance else "CURRENT"
+    counter_probe = validate_counter_invariants(out)
+    out["counter_invariants"] = counter_probe
+    if not counter_probe["ok"]:
+        out["checkpoint_counter_invariant_status"] = "FAIL_CLOSED_DRIFT"
+        out["checkpoint_integrity_status"] = "COUNTER_DRIFT"
+    else:
+        out["checkpoint_counter_invariant_status"] = "OK"
     return out
 
 
@@ -238,10 +278,20 @@ def detect_corruption(raw_text: str | None, *, expected_manifest: str | None = N
             "stored_manifest": state.get("calibration_manifest_checksum"),
             "expected_manifest": expected_manifest,
         }
+    counter_probe = validate_counter_invariants(state)
+    if not counter_probe["ok"]:
+        return {
+            "checkpoint_integrity_status": "COUNTER_DRIFT",
+            "ok": False,
+            "reason": "SUCCESS_COUNT_CASE_LIST_DRIFT",
+            "counter_invariants": counter_probe,
+            "state": state,
+        }
     return {
         "checkpoint_integrity_status": "OK",
         "ok": True,
         "reason": None,
+        "counter_invariants": counter_probe,
         "state": state,
     }
 

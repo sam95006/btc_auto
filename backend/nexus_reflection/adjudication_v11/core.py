@@ -125,6 +125,16 @@ def build_critic_order(state: dict[str, Any]) -> list[str]:
     return pending
 
 
+def _reasoner_success_for_case(scheduler: ProviderScheduler, case_id: str) -> bool:
+    """True only when Groq Reasoner has a recorded SUCCESS for this case_id."""
+    if scheduler.deduper.already_completed(GROQ_REFLECTION_REASONER, case_id):
+        return True
+    groq_q = scheduler.queues.get(GROQ_REFLECTION_REASONER)
+    if groq_q is not None and case_id in groq_q.completed:
+        return True
+    return False
+
+
 def record_provider_outcome(
     scheduler: ProviderScheduler,
     *,
@@ -138,6 +148,17 @@ def record_provider_outcome(
     response_payload: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Record one provider attempt with queue isolation and success dedupe."""
+    # R3-E-CRITIC-BEFORE-REASONER: Critic dispatch authority requires Reasoner SUCCESS.
+    if profile_id == SAMBANOVA_INDEPENDENT_CRITIC and not _reasoner_success_for_case(
+        scheduler, case_id
+    ):
+        return {
+            "profile_id": profile_id,
+            "case_id": case_id,
+            "dispatch_allowed": False,
+            "transport_status": "CRITIC_BEFORE_REASONER_BLOCKED",
+            "reason": "REASONER_SUCCESS_REQUIRED",
+        }
     decision, idempotency_key = scheduler.begin_attempt(
         profile_id,
         case_id,

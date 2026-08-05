@@ -223,12 +223,61 @@ def compute_code_checksum(root: Path | None = None) -> str:
     return sha_obj(payload)
 
 
+_TIMESTAMP_EXACT_KEYS = frozenset(
+    {
+        "available_as_of_ms",
+        "as_of_ms",
+        "availability_timestamp_ms",
+        "source_timestamp_ms",
+        "retrieval_timestamp_ms",
+        "bar_close_ts_ms",
+        "nested_available_as_of_ms",
+    }
+)
+
+
+def _is_timestamp_key(key: str) -> bool:
+    k = str(key)
+    if k in _TIMESTAMP_EXACT_KEYS:
+        return True
+    return k.endswith("_timestamp_ms") or k.endswith("_ts_ms") or k.endswith("_as_of_ms")
+
+
+def _walk_future_timestamps(node: Any, *, as_of_ms: int, path: str = "") -> list[dict[str, Any]]:
+    """Recursively collect timestamp fields whose value exceeds as_of_ms."""
+    found: list[dict[str, Any]] = []
+    if isinstance(node, dict):
+        for key, value in node.items():
+            child_path = f"{path}.{key}" if path else str(key)
+            if _is_timestamp_key(str(key)):
+                try:
+                    ts = int(value)
+                except (TypeError, ValueError):
+                    ts = None
+                if ts is not None and ts > as_of_ms:
+                    found.append({"path": child_path, "key": str(key), "value_ms": ts, "as_of_ms": as_of_ms})
+            found.extend(_walk_future_timestamps(value, as_of_ms=as_of_ms, path=child_path))
+    elif isinstance(node, list):
+        for idx, item in enumerate(node):
+            found.extend(_walk_future_timestamps(item, as_of_ms=as_of_ms, path=f"{path}[{idx}]"))
+    return found
+
+
 def prove_future_data_exclusion(dataset: dict[str, Any], *, as_of_ms: int) -> dict[str, Any]:
-    violations = [
-        r
-        for r in dataset["records"]
-        if max(r["source_timestamp_ms"], r["retrieval_timestamp_ms"], r["availability_timestamp_ms"]) > as_of_ms
-    ]
+    """Fail closed on any top-level or nested evidence timestamp after as_of."""
+    violations: list[dict[str, Any]] = []
+    for r in dataset.get("records") or []:
+        for hit in _walk_future_timestamps(r, as_of_ms=as_of_ms, path=str(r.get("record_id") or "record")):
+            violations.append({"record_id": r.get("record_id"), "kind": "nested_or_top", **hit})
+    for hit in _walk_future_timestamps(
+        {k: v for k, v in dataset.items() if k != "records"},
+        as_of_ms=as_of_ms,
+        path="dataset",
+    ):
+        # Dataset as_of_ms is the cutoff itself, never a violation.
+        if hit.get("key") == "as_of_ms" and int(hit.get("value_ms") or 0) == as_of_ms:
+            continue
+        violations.append({"record_id": None, "kind": "dataset", **hit})
     return {
         "status": "FUTURE_DATA_EXCLUDED" if not violations else "FUTURE_DATA_VIOLATION",
         "allowed": not violations,
@@ -236,6 +285,7 @@ def prove_future_data_exclusion(dataset: dict[str, Any], *, as_of_ms: int) -> di
         "as_of_ms": as_of_ms,
         "violation_count": len(violations),
         "violations": violations,
+        "nested_scan": True,
     }
 
 
@@ -258,7 +308,32 @@ def prove_oos_non_consumption(registries: dict[str, IntervalRegistry]) -> dict[s
     }
 
 
-def build_oos_cryptographic_seal(registries: dict[str, IntervalRegistry], checksums: dict[str, str]) -> dict[str, Any]:
+@dataclass
+class OOSSealLineage:
+    """Write-once OOS seal authority with anti-regeneration fail-closed checks."""
+
+    seals: dict[str, dict[str, Any]] = field(default_factory=dict)
+
+    def reset(self) -> None:
+        self.seals.clear()
+
+
+_DEFAULT_OOS_SEAL_LINEAGE = OOSSealLineage()
+
+
+def reset_oos_seal_lineage(lineage: OOSSealLineage | None = None) -> None:
+    (lineage or _DEFAULT_OOS_SEAL_LINEAGE).reset()
+
+
+def build_oos_cryptographic_seal(
+    registries: dict[str, IntervalRegistry],
+    checksums: dict[str, str],
+    *,
+    lineage_key: str = "default",
+    lineage: OOSSealLineage | None = None,
+) -> dict[str, Any]:
+    """Create a write-once OOS seal; regenerating after reserved mutation fails closed."""
+    store = lineage if lineage is not None else _DEFAULT_OOS_SEAL_LINEAGE
     seal_payload = {
         "reserved_registry_checksum": registries["reserved"].checksum(),
         "candidate_checksum": checksums["candidate_checksum"],
@@ -266,13 +341,68 @@ def build_oos_cryptographic_seal(registries: dict[str, IntervalRegistry], checks
         "status": "SEALED_NOT_CONSUMED",
         "fixture_only": True,
     }
-    return {
+    computed_seal = sha_obj(seal_payload)
+    prior = store.seals.get(lineage_key)
+    if prior is not None:
+        reserved_mutated = prior["reserved_registry_checksum"] != seal_payload["reserved_registry_checksum"]
+        checksum_mutated = (
+            prior["candidate_checksum"] != seal_payload["candidate_checksum"]
+            or prior["dataset_semantic_checksum"] != seal_payload["dataset_semantic_checksum"]
+        )
+        if reserved_mutated or checksum_mutated or prior["seal"] != computed_seal:
+            return {
+                "reserved_registry_checksum": seal_payload["reserved_registry_checksum"],
+                "candidate_checksum": seal_payload["candidate_checksum"],
+                "dataset_semantic_checksum": seal_payload["dataset_semantic_checksum"],
+                "status": "SEAL_REGENERATION_REJECTED_RESERVED_MUTATION"
+                if reserved_mutated
+                else "SEAL_REGENERATION_REJECTED",
+                "fixture_only": True,
+                "seal_algorithm": "sha256_json_canonical",
+                "seal": None,
+                "prior_seal": prior["seal"],
+                "computed_seal_rejected": computed_seal,
+                "allowed": False,
+                "fail_closed": True,
+                "write_once": True,
+                "lineage_key": lineage_key,
+                "oos_revealed_to_candidate": False,
+                "oos_consumed": False,
+            }
+        # Identical recompute is allowed and returns the persisted seal.
+        return {
+            **seal_payload,
+            "seal_algorithm": "sha256_json_canonical",
+            "seal": prior["seal"],
+            "allowed": True,
+            "fail_closed": False,
+            "write_once": True,
+            "lineage_key": lineage_key,
+            "lineage_verified": True,
+            "oos_revealed_to_candidate": False,
+            "oos_consumed": False,
+        }
+
+    result = {
         **seal_payload,
         "seal_algorithm": "sha256_json_canonical",
-        "seal": sha_obj(seal_payload),
+        "seal": computed_seal,
+        "allowed": True,
+        "fail_closed": False,
+        "write_once": True,
+        "lineage_key": lineage_key,
+        "lineage_verified": True,
         "oos_revealed_to_candidate": False,
         "oos_consumed": False,
     }
+    store.seals[lineage_key] = {
+        "seal": computed_seal,
+        "reserved_registry_checksum": seal_payload["reserved_registry_checksum"],
+        "candidate_checksum": seal_payload["candidate_checksum"],
+        "dataset_semantic_checksum": seal_payload["dataset_semantic_checksum"],
+        "status": "SEALED_NOT_CONSUMED",
+    }
+    return result
 
 
 @dataclass
@@ -280,6 +410,48 @@ class FounderAuthorizationGate:
     authorized: bool = False
     reason: str = "FOUNDER_AUTHORIZATION_MISSING"
     required_scope: str = "founder_v11_pit_qualification"
+    _binding_secret: str = field(default="v11_pit_founder_gate_binding_v1", repr=False)
+
+    def _binding_payload(self, body: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "authorized": bool(body.get("authorized")),
+            "reason": str(body.get("reason") or ""),
+            "required_scope": str(body.get("required_scope") or self.required_scope),
+            "binding_domain": self._binding_secret,
+        }
+
+    def bind_result(self, body: dict[str, Any]) -> str:
+        return sha_obj(self._binding_payload(body))
+
+    def verify_bound_result(self, body: dict[str, Any] | None) -> dict[str, Any]:
+        """Integrity-check a founder-auth dict; spoofed authorized=True fails closed."""
+        if not isinstance(body, dict):
+            return {
+                "valid": False,
+                "authorized": False,
+                "reason": "FOUNDER_AUTH_PROOF_MISSING",
+                "spoof_rejected": False,
+            }
+        claimed = dict(body)
+        proof = claimed.get("auth_proof") or claimed.get("auth_binding")
+        expected = self.bind_result(claimed)
+        if proof != expected:
+            return {
+                "valid": False,
+                "authorized": False,
+                "reason": "FOUNDER_AUTH_PROOF_INVALID_OR_SPOOFED",
+                "spoof_rejected": bool(claimed.get("authorized") is True),
+                "expected_auth_proof": expected,
+                "provided_auth_proof": proof,
+            }
+        # Even a valid binding never grants promotion in V11 blocked-only infra.
+        return {
+            "valid": True,
+            "authorized": False,
+            "reason": claimed.get("reason") or self.reason,
+            "spoof_rejected": False,
+            "bound_authorized_claim": bool(claimed.get("authorized")),
+        }
 
     def evaluate(self, request: dict[str, Any] | None) -> dict[str, Any]:
         req = dict(request or {})
@@ -292,11 +464,14 @@ class FounderAuthorizationGate:
         return self.to_dict()
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        body = {
             "authorized": self.authorized,
             "reason": self.reason,
             "required_scope": self.required_scope,
         }
+        body["auth_proof"] = self.bind_result(body)
+        body["auth_binding"] = body["auth_proof"]
+        return body
 
 
 @dataclass
@@ -304,8 +479,13 @@ class PromotionStateMachine:
     state: str = "BLOCKED_READY"
     stages: dict[str, str] = field(default_factory=lambda: {s: STAGE_STATUS_BLOCKED_READY for s in QUALIFICATION_STAGES})
     history: list[dict[str, Any]] = field(default_factory=list)
+    founder_gate: FounderAuthorizationGate = field(default_factory=FounderAuthorizationGate)
 
-    def attempt_promote(self) -> dict[str, Any]:
+    def attempt_promote(self, founder_auth_result: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Always BLOCKED_READY; requires integrity-bound Founder gate proof consultation."""
+        if founder_auth_result is None:
+            founder_auth_result = self.founder_gate.evaluate(None)
+        proof = self.founder_gate.verify_bound_result(founder_auth_result)
         result = {
             "allowed": False,
             "reason": "PROMOTION_BLOCKED_READY_V11_INFRASTRUCTURE_ONLY",
@@ -314,7 +494,15 @@ class PromotionStateMachine:
             "formal_walk_forward_executed": False,
             "oos_executed": False,
             "demo_order_count": 0,
+            "founder_authorization_gate": deepcopy(founder_auth_result),
+            "founder_auth_verified": bool(proof.get("valid")),
+            "founder_auth_proof": proof,
+            "founder_authorized": False,
         }
+        # Spoofed authorized=True must never open a promotion path.
+        if founder_auth_result.get("authorized") is True and not proof.get("valid"):
+            result["reason"] = "FOUNDER_AUTH_SPOOF_REJECTED_PROMOTION_BLOCKED"
+            result["allowed"] = False
         self.state = "PROMOTION_BLOCKED_READY"
         self.history.append({"event": "attempt_promote", "result": deepcopy(result)})
         return result
@@ -325,6 +513,7 @@ class PromotionStateMachine:
             "stages": dict(self.stages),
             "stage_order": list(QUALIFICATION_STAGES),
             "history": deepcopy(self.history),
+            "founder_gate": self.founder_gate.to_dict(),
         }
 
 
@@ -333,7 +522,8 @@ class PointInTimeQualificationV11:
         self.status = PIT_STATUS_BLOCKED_READY
         self.created_at = _utc()
         self.founder_gate = FounderAuthorizationGate()
-        self.promotion_sm = PromotionStateMachine()
+        self.promotion_sm = PromotionStateMachine(founder_gate=self.founder_gate)
+        self.oos_seal_lineage = OOSSealLineage()
         self.proofs: dict[str, Any] = {}
         self.summary_payload: dict[str, Any] | None = None
 
@@ -346,9 +536,14 @@ class PointInTimeQualificationV11:
 
         future_proof = prove_future_data_exclusion(dataset, as_of_ms=as_of_ms)
         oos_proof = prove_oos_non_consumption(registries)
-        oos_seal = build_oos_cryptographic_seal(registries, checksums)
+        oos_seal = build_oos_cryptographic_seal(
+            registries,
+            checksums,
+            lineage_key=f"bootstrap:{as_of_ms}",
+            lineage=self.oos_seal_lineage,
+        )
         founder = self.founder_gate.evaluate(None)
-        promotion_attempt = self.promotion_sm.attempt_promote()
+        promotion_attempt = self.promotion_sm.attempt_promote(founder)
 
         self.proofs = {
             "future_data_exclusion": future_proof,
