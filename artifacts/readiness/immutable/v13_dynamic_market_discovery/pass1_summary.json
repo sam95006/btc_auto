@@ -1,0 +1,155 @@
+{
+  "created_at": "2026-08-05T08:31:05Z",
+  "demo_order_count": 0,
+  "era_comparison_checksum": "90855b7f96c45ddea8f3bb48b3b77443d95eaccfed38ec1c1d51e2a6203e90bc",
+  "eras": {
+    "era_2024_06_01": {
+      "as_of_ms": 1717200000000,
+      "availability_timestamp": "2024-06-01T00:00:00Z",
+      "eligible_count": 5,
+      "eligible_universe": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "GHOSTUSDT",
+        "PEPEUSDT",
+        "SOLUSDT"
+      ],
+      "lineage_id": "bb7e6647fe8143feebe57e68401e85bc",
+      "rejected_count": 2,
+      "rejected_universe": [
+        "BROKENUSDT",
+        "THINUSDT"
+      ],
+      "rejection_reason_counts": {
+        "FUNDING_UNAVAILABLE": 1,
+        "INCOMPLETE_DATA": 1,
+        "INSUFFICIENT_DEPTH": 1,
+        "INSUFFICIENT_LIQUIDITY": 1,
+        "INSUFFICIENT_VOLUME": 1,
+        "INVALID_MIN_NOTIONAL": 1,
+        "INVALID_QTY_STEP": 1,
+        "INVALID_TICK_SIZE": 1,
+        "MAPPING_MISSING": 1,
+        "OPEN_INTEREST_MISSING_OR_LOW": 1,
+        "SPREAD_TOO_WIDE": 1
+      },
+      "retrieval_timestamp": "2026-08-05T08:31:05Z",
+      "snapshot_id": "era_2024_06_01",
+      "universe_checksum": "b1a11b09567354946fcdf0872c7273ab618e8c306015bd195d3a11fb978ff551",
+      "used_today_for_past": false
+    },
+    "era_2024_12_01": {
+      "as_of_ms": 1733020800000,
+      "availability_timestamp": "2024-12-01T02:40:00Z",
+      "eligible_count": 4,
+      "eligible_universe": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "PEPEUSDT",
+        "SOLUSDT"
+      ],
+      "lineage_id": "a11fe4d48452e79c7bf5bccff09154e6",
+      "rejected_count": 3,
+      "rejected_universe": [
+        "BROKENUSDT",
+        "GHOSTUSDT",
+        "THINUSDT"
+      ],
+      "rejection_reason_counts": {
+        "DELISTED": 1,
+        "FUNDING_UNAVAILABLE": 1,
+        "INCOMPLETE_DATA": 1,
+        "INSUFFICIENT_DEPTH": 1,
+        "INSUFFICIENT_LIQUIDITY": 1,
+        "INSUFFICIENT_VOLUME": 1,
+        "INVALID_MIN_NOTIONAL": 1,
+        "INVALID_QTY_STEP": 1,
+        "INVALID_TICK_SIZE": 1,
+        "MAPPING_MISSING": 1,
+        "NOT_AVAILABLE": 1,
+        "OPEN_INTEREST_MISSING_OR_LOW": 1,
+        "SPREAD_TOO_WIDE": 1
+      },
+      "retrieval_timestamp": "2026-08-05T08:31:05Z",
+      "snapshot_id": "era_2024_12_01",
+      "universe_checksum": "ef93ca6c1631d27b63e827b56b9975b5bdc3cdccdbe79ffed360f8786ee9b890",
+      "used_today_for_past": false
+    },
+    "era_2025_03_01": {
+      "as_of_ms": 1740787200000,
+      "availability_timestamp": "2025-03-01T00:00:00Z",
+      "eligible_count": 5,
+      "eligible_universe": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "LATEUSDT",
+        "PEPEUSDT",
+        "SOLUSDT"
+      ],
+      "lineage_id": "8bce61c937feefa23dd6f2168d60918c",
+      "rejected_count": 4,
+      "rejected_universe": [
+        "BROKENUSDT",
+        "GHOSTUSDT",
+        "PREUSDT",
+        "THINUSDT"
+      ],
+      "rejection_reason_counts": {
+        "DELISTED": 1,
+        "FUNDING_UNAVAILABLE": 2,
+        "INCOMPLETE_DATA": 2,
+        "INSUFFICIENT_DEPTH": 2,
+        "INSUFFICIENT_LIQUIDITY": 2,
+        "INSUFFICIENT_VOLUME": 2,
+        "INVALID_MIN_NOTIONAL": 1,
+        "INVALID_QTY_STEP": 1,
+        "INVALID_TICK_SIZE": 1,
+        "MAPPING_MISSING": 2,
+        "NOT_AVAILABLE": 2,
+        "NOT_YET_LISTED": 1,
+        "OPEN_INTEREST_MISSING_OR_LOW": 2,
+        "SPREAD_TOO_WIDE": 2
+      },
+      "retrieval_timestamp": "2026-08-05T08:31:05Z",
+      "snapshot_id": "era_2025_03_01",
+      "universe_checksum": "a97349d1cca61c924ed325324f487583f4652a5d8400bf5d8c4ed62e62758646",
+      "used_today_for_past": false
+    }
+  },
+  "evaluation_dimensions": [
+    "availability",
+    "listing_timestamp",
+    "delisting_state",
+    "liquidity",
+    "volume",
+    "spread",
+    "depth",
+    "open_interest",
+    "funding_availability",
+    "data_completeness",
+    "staleness",
+    "symbol_mapping",
+    "contract_specification",
+    "minimum_notional",
+    "tick_size",
+    "quantity_step"
+  ],
+  "exchange_write_attempt_count": 0,
+  "fixture_files": [
+    "backend/nexus_market_discovery/fixtures/era_2024_06_01.json",
+    "backend/nexus_market_discovery/fixtures/era_2024_12_01.json",
+    "backend/nexus_market_discovery/fixtures/era_2025_03_01.json",
+    "backend/nexus_market_discovery/fixtures/index.json"
+  ],
+  "hard_bans": [
+    "no_exchange_writes",
+    "no_demo",
+    "no_pr27_merge",
+    "no_today_universe_for_past_as_of",
+    "no_future_observation_leak"
+  ],
+  "pass": 1,
+  "pr27_merged": false,
+  "schema": "v13_d_pass1_discovery_summary",
+  "universe_id": "NEXUS_PIT_DYNAMIC_LINEAR_USDT_UNIVERSE"
+}

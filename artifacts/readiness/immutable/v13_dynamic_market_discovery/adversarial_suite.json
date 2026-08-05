@@ -1,0 +1,65 @@
+{
+  "all_pass": true,
+  "failed": 0,
+  "passed": 9,
+  "probe_count": 9,
+  "probes": [
+    {
+      "detail": {
+        "future": "today_or_future_universe_used_for_past_as_of",
+        "live": "today_or_future_universe_used_for_past_as_of"
+      },
+      "future_snapshot_blocked": true,
+      "live_today_blocked": true,
+      "pass": true,
+      "probe": "today_for_past_banned"
+    },
+    {
+      "pass": true,
+      "probe": "future_observation_leak",
+      "reasons": [
+        "FUTURE_OBSERVATION_LEAK"
+      ]
+    },
+    {
+      "detail": "no_historical_snapshot_for_as_of:1707200000000:refusing_to_use_future_or_today_universe",
+      "pass": true,
+      "probe": "no_snapshot_before_era"
+    },
+    {
+      "checksum": "ef93ca6c1631d27b63e827b56b9975b5bdc3cdccdbe79ffed360f8786ee9b890",
+      "pass": true,
+      "probe": "deterministic_checksum"
+    },
+    {
+      "ghost_after_eligible": false,
+      "ghost_before_eligible": true,
+      "ghost_delisted_reason": true,
+      "pass": true,
+      "probe": "delisting_dynamics"
+    },
+    {
+      "late_era_knows_late": true,
+      "mid_has_late": false,
+      "pass": true,
+      "probe": "late_listing_excluded"
+    },
+    {
+      "original_checksum": "40b2467f44b577b58740c540296f866a0148c16413be0dc95cb87c92bb80f117",
+      "pass": true,
+      "probe": "snapshot_tamper_detect",
+      "tampered_checksum": "701830fee5e61cc9c35baa0618afd5064b0497e47097dbd819066557f9e25179"
+    },
+    {
+      "detail": "unsupported_source_kind:live_bybit_today:fixtures_only_for_pit",
+      "pass": true,
+      "probe": "non_fixture_source_rejected"
+    },
+    {
+      "detail": "live_public_metadata_forbidden_for_historical_as_of:use_sanitized_pit_fixtures_instead",
+      "pass": true,
+      "probe": "live_public_metadata_banned_for_past"
+    }
+  ],
+  "schema": "v13_d_adversarial_suite"
+}
