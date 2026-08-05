@@ -1,6 +1,8 @@
 {
   "allowed_claimant_keys": [
     "checkpoint::backend.nexus_autonomy.session_orchestrator_v1",
+    "checkpoint::backend.nexus_checkpoint.store",
+    "checkpoint::backend.nexus_decision.checkpoint",
     "checkpoint::backend.nexus_edge_discovery.quota_aware_v23",
     "checkpoint::backend.nexus_private_control.checkpoint",
     "checkpoint::backend.nexus_recovery.crash_recovery",
@@ -28,6 +30,7 @@
     "fill::backend.nexus_real_shadow.real_price_shadow",
     "lifecycle::backend.nexus_autonomy.qualification_promotion_sm",
     "lifecycle::backend.nexus_autonomy.session_state_machine",
+    "lifecycle::backend.nexus_decision.state_machine",
     "lifecycle::backend.nexus_private_control.state_machine",
     "lifecycle::backend.nexus_research.demo_autonomous.position_lifecycle",
     "lifecycle::backend.nexus_research.demo_exchange.state_machine",
@@ -141,19 +144,19 @@
       "authority_id": "private_core.cost.model_v1_1",
       "domain": "cost",
       "module": "backend.nexus_strategy_engine.cost_semantics",
-      "role": "parallel_lane"
+      "role": "compatibility_shim"
     },
     {
       "authority_id": "private_core.cost.model_v1_1",
       "domain": "cost",
       "module": "backend.nexus_demo_execution.trade_geometry",
-      "role": "parallel_lane"
+      "role": "compatibility_shim"
     },
     {
       "authority_id": "private_core.cost.model_v1_1",
       "domain": "cost",
       "module": "backend.nexus_demo_execution.fee_rate",
-      "role": "parallel_lane"
+      "role": "compatibility_shim"
     },
     {
       "authority_id": "private_core.cost.model_v1_1",
@@ -224,6 +227,12 @@
     {
       "authority_id": "private_core.lifecycle.session_sm_v1_1",
       "domain": "lifecycle",
+      "module": "backend.nexus_decision.state_machine",
+      "role": "parallel_lane"
+    },
+    {
+      "authority_id": "private_core.lifecycle.session_sm_v1_1",
+      "domain": "lifecycle",
       "module": "backend.nexus_research.demo_execution.state_machine",
       "role": "parallel_lane"
     },
@@ -246,37 +255,49 @@
       "role": "parallel_lane"
     },
     {
-      "authority_id": "private_core.checkpoint.session_recovery",
+      "authority_id": "private_core.checkpoint.envelope_v1",
       "domain": "checkpoint",
-      "module": "backend.nexus_recovery.crash_recovery",
+      "module": "backend.nexus_checkpoint.store",
       "role": "canonical"
     },
     {
-      "authority_id": "private_core.checkpoint.session_recovery",
+      "authority_id": "private_core.checkpoint.envelope_v1",
+      "domain": "checkpoint",
+      "module": "backend.nexus_recovery.crash_recovery",
+      "role": "parallel_lane"
+    },
+    {
+      "authority_id": "private_core.checkpoint.envelope_v1",
       "domain": "checkpoint",
       "module": "backend.nexus_private_control.checkpoint",
       "role": "parallel_lane"
     },
     {
-      "authority_id": "private_core.checkpoint.session_recovery",
+      "authority_id": "private_core.checkpoint.envelope_v1",
       "domain": "checkpoint",
       "module": "backend.nexus_reflection.checkpoint",
       "role": "parallel_lane"
     },
     {
-      "authority_id": "private_core.checkpoint.session_recovery",
+      "authority_id": "private_core.checkpoint.envelope_v1",
+      "domain": "checkpoint",
+      "module": "backend.nexus_decision.checkpoint",
+      "role": "parallel_lane"
+    },
+    {
+      "authority_id": "private_core.checkpoint.envelope_v1",
       "domain": "checkpoint",
       "module": "backend.nexus_edge_discovery.quota_aware_v23",
       "role": "compatibility_shim"
     },
     {
-      "authority_id": "private_core.checkpoint.session_recovery",
+      "authority_id": "private_core.checkpoint.envelope_v1",
       "domain": "checkpoint",
       "module": "backend.nexus_reflection.v23_resume_v10",
       "role": "parallel_lane"
     },
     {
-      "authority_id": "private_core.checkpoint.session_recovery",
+      "authority_id": "private_core.checkpoint.envelope_v1",
       "domain": "checkpoint",
       "module": "backend.nexus_autonomy.session_orchestrator_v1",
       "role": "obsolete_entry"
@@ -291,7 +312,7 @@
       "authority_id": "private_core.provider.retry_policy_v1",
       "domain": "provider_retry",
       "module": "backend.nexus_edge_discovery.provider_transport_v23",
-      "role": "parallel_lane"
+      "role": "adapter_lane"
     },
     {
       "authority_id": "private_core.provider.retry_policy_v1",
@@ -318,13 +339,13 @@
       "role": "parallel_lane"
     }
   ],
-  "generated_at": "2026-08-05T03:56:37Z",
+  "generated_at": "2026-08-05T07:30:33Z",
   "lane": "V11_H_AUTHORITY_CONSOLIDATION",
   "policy": {
     "known_competitor": "ALLOW_WITH_RECOMMENDATION",
     "mass_delete": "BANNED",
     "new_unregistered_claimant": "FAIL"
   },
-  "registry": "v11.lane_h.1",
+  "registry": "v11.lane_h.1.lifecycle_v11_1",
   "schema": "nexus_duplicate_authority_baseline_v1"
 }

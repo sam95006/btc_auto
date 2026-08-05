@@ -2,7 +2,7 @@
   "allowed_competitor_hit_count": 31,
   "allowed_competitor_hits": [
     {
-      "classification": "parallel_lane",
+      "classification": "compatibility_shim",
       "domain": "cost",
       "key": "cost::backend.nexus_demo_execution.trade_geometry",
       "module": "backend.nexus_demo_execution.trade_geometry"
@@ -14,7 +14,7 @@
       "module": "backend.nexus_edge_discovery.taxonomy_audit"
     },
     {
-      "classification": "parallel_lane",
+      "classification": "compatibility_shim",
       "domain": "cost",
       "key": "cost::backend.nexus_strategy_engine.cost_semantics",
       "module": "backend.nexus_strategy_engine.cost_semantics"
@@ -86,12 +86,6 @@
       "module": "backend.nexus_autonomy.execution_simulator_v1"
     },
     {
-      "classification": "compatibility_shim",
-      "domain": "risk",
-      "key": "risk::backend.nexus_autonomy.execution_simulator_v1_1",
-      "module": "backend.nexus_autonomy.execution_simulator_v1_1"
-    },
-    {
       "classification": "parallel_lane",
       "domain": "risk",
       "key": "risk::backend.nexus_research.demo_exchange.identity",
@@ -140,7 +134,7 @@
       "module": "backend.nexus_research.demo_execution.state_machine"
     },
     {
-      "classification": "parallel_lane",
+      "classification": "adapter_lane",
       "domain": "provider_retry",
       "key": "provider_retry::backend.nexus_edge_discovery.provider_transport_v23",
       "module": "backend.nexus_edge_discovery.provider_transport_v23"
@@ -178,6 +172,12 @@
     {
       "classification": "parallel_lane",
       "domain": "checkpoint",
+      "key": "checkpoint::backend.nexus_recovery.crash_recovery",
+      "module": "backend.nexus_recovery.crash_recovery"
+    },
+    {
+      "classification": "parallel_lane",
+      "domain": "checkpoint",
       "key": "checkpoint::backend.nexus_reflection.checkpoint",
       "module": "backend.nexus_reflection.checkpoint"
     },
@@ -188,12 +188,12 @@
       "module": "backend.nexus_reflection.v23_resume_v10"
     }
   ],
-  "baseline_claimant_count": 45,
-  "generated_at": "2026-08-05T03:56:54Z",
+  "baseline_claimant_count": 48,
+  "generated_at": "2026-08-05T07:30:49Z",
   "graph_summary": {
-    "circular_scc_count": 3,
-    "claim_count": 62,
-    "critical_finding_count": 5,
+    "circular_scc_count": 0,
+    "claim_count": 66,
+    "critical_finding_count": 0,
     "domain_count": 7,
     "domains_with_duplicates": [
       "checkpoint",
@@ -204,8 +204,8 @@
       "provider_retry",
       "risk"
     ],
-    "edge_count": 4146,
-    "node_count": 40
+    "edge_count": 4300,
+    "node_count": 43
   },
   "lane": "V11_H_AUTHORITY_CONSOLIDATION",
   "passed": true,
