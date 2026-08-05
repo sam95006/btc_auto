@@ -1,10 +1,8 @@
-# Customer Validation Workspace (PUB-I)
+# Customer Validation Workspace (PUB2-G / PUB-I)
 
-Local Founder-run JSON workspace only.
+Local JSON ledgers only. **Not** a production customer database.
 
-- Not a production customer database
-- Starts empty: `real_participant_count=0`
-- Do not fabricate participants, interviews, or paid pilots
-- Enroll only genuine ICP users with Founder attestation
+All collections start empty. Counters remain `0` until the Founder enrolls
+genuine ICP participants and they complete Concierge workflow steps.
 
-Collections are empty JSON arrays until real enrollments occur.
+Do not invent participants, interviews, WTP outcomes, or paid pilots.

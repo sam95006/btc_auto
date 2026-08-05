@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NEXUS Concierge Validation — Local/Staging</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a222c;
+      --text: #e7eef7;
+      --muted: #9aadbf;
+      --accent: #3d9a7a;
+      --warn: #c9a227;
+      --line: #2a3644;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "IBM Plex Sans", sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #1c2a33, var(--bg));
+      color: var(--text);
+      min-height: 100vh;
+    }
+    main { max-width: 920px; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
+    h1 { font-size: 1.6rem; letter-spacing: 0.02em; margin: 0 0 0.35rem; }
+    .eyebrow { color: var(--accent); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.12em; }
+    .lead { color: var(--muted); margin: 0 0 1.5rem; max-width: 42rem; }
+    .banner {
+      border: 1px solid var(--warn);
+      color: #f3e2a0;
+      background: rgba(201, 162, 39, 0.08);
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.25rem;
+      border-radius: 4px;
+    }
+    .grid { display: grid; gap: 0.75rem; }
+    .step {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.5rem;
+      align-items: center;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+    }
+    .step h2 { font-size: 0.95rem; margin: 0; font-weight: 600; }
+    .step p { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.8rem; }
+    .count {
+      font-variant-numeric: tabular-nums;
+      font-size: 1.25rem;
+      color: var(--accent);
+      min-width: 2.5rem;
+      text-align: right;
+    }
+    .meta { margin-top: 1.5rem; color: var(--muted); font-size: 0.8rem; }
+    code { color: #b7d4c8; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">PUB2-G · Local / Staging only</div>
+    <h1>NEXUS Customer Validation Concierge</h1>
+    <p class="lead">
+      Founder-run workflow for real ICP participants. Counters stay at zero until
+      genuine people complete each step. No fabricated results. No live billing.
+      No exchange writes.
+    </p>
+    <div class="banner" role="status">
+      Hard bans active: no production customer DB, no fabricated metrics,
+      no App Store / Play submission from this surface.
+    </div>
+    <div id="steps" class="grid" aria-live="polite"></div>
+    <p class="meta">
+      API: <code>/api/public/v2/concierge-validation</code>
+      · UI refreshes counters from workspace (default empty).
+    </p>
+  </main>
+  <script>
+    const API = "/api/public/v2/concierge-validation";
+    async function load() {
+      const [spineRes, counterRes] = await Promise.all([
+        fetch(API + "/spine"),
+        fetch(API + "/counters"),
+      ]);
+      const spine = await spineRes.json();
+      const counters = await counterRes.json();
+      const root = document.getElementById("steps");
+      root.innerHTML = "";
+      (spine.steps || []).forEach((step) => {
+        const el = document.createElement("article");
+        el.className = "step";
+        el.innerHTML =
+          "<div><h2>" + step.step.replaceAll("_", " ") + "</h2>" +
+          "<p>" + (step.note || "") + "</p></div>" +
+          "<div class='count' aria-label='" + step.counter_key + "'>" +
+          String(step.count ?? 0) + "</div>";
+        root.appendChild(el);
+      });
+      if (counters.all_zero) {
+        const zero = document.createElement("p");
+        zero.className = "meta";
+        zero.textContent = "All counters are 0 — awaiting real participant activity.";
+        root.appendChild(zero);
+      }
+    }
+    load().catch((err) => {
+      document.getElementById("steps").textContent = "Failed to load spine: " + err;
+    });
+  </script>
+</body>
+</html>

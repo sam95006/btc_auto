@@ -17,6 +17,7 @@ COLLECTIONS = (
     "interviews",
     "problem_rankings",
     "workflow_maps",
+    "watchlist_onboardings",
     "decision_object_deliveries",
     "weekly_reviews",
     "retention_evidence",
@@ -55,11 +56,24 @@ def ensure_workspace(workspace: Path | str | None = None) -> Path:
         meta.write_text(
             json.dumps(
                 {
-                    "schema": "NEXUS_CUSTOMER_VALIDATION_WORKSPACE_V1",
+                    "schema": "NEXUS_CUSTOMER_VALIDATION_WORKSPACE_V2",
+                    "lane": "PUB2-G",
                     "production_customer_database": False,
                     "fabricated_participants_forbidden": True,
                     "target_icp_cohort_size": {"min": 10, "max": 20},
                     "note": "Empty until Founder enrolls genuine ICP participants.",
+                    "workflow_steps": [
+                        "consent",
+                        "interview",
+                        "problem_ranking",
+                        "watchlist_onboarding",
+                        "decision_object_delivery",
+                        "weekly_review",
+                        "retention",
+                        "willingness_to_pay",
+                        "objections",
+                        "pilot_conversion",
+                    ],
                 },
                 indent=2,
             )

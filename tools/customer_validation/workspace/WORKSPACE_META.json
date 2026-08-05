@@ -1,5 +1,6 @@
 {
-  "schema": "NEXUS_CUSTOMER_VALIDATION_WORKSPACE_V1",
+  "schema": "NEXUS_CUSTOMER_VALIDATION_WORKSPACE_V2",
+  "lane": "PUB2-G",
   "production_customer_database": false,
   "fabricated_participants_forbidden": true,
   "target_icp_cohort_size": {"min": 10, "max": 20},
@@ -7,6 +8,28 @@
   "required_initial_counters": {
     "real_participant_count": 0,
     "completed_interview_count": 0,
-    "paid_pilot_count": 0
-  }
+    "paid_pilot_count": 0,
+    "watchlist_onboarding_count": 0,
+    "consent_count": 0,
+    "problem_ranking_count": 0,
+    "decision_object_delivery_count": 0,
+    "weekly_review_count": 0,
+    "retention_evidence_count": 0,
+    "wtp_evidence_count": 0,
+    "objection_count": 0,
+    "pilot_conversion_intent_count": 0,
+    "fabricated_result_count": 0
+  },
+  "workflow_steps": [
+    "consent",
+    "interview",
+    "problem_ranking",
+    "watchlist_onboarding",
+    "decision_object_delivery",
+    "weekly_review",
+    "retention",
+    "willingness_to_pay",
+    "objections",
+    "pilot_conversion"
+  ]
 }
