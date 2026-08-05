@@ -22,7 +22,7 @@
   "code_checksum": "c45c02ba6e6b39ddd4729cd916f0d02864de74087728af649f7c77274ffa0af1",
   "cost_destroyed_count": 2,
   "cost_model_version": "founder-conservative-v1-1-2026-08-05",
-  "created_at": "2026-08-05T08:37:25Z",
+  "created_at": "2026-08-05T08:37:29Z",
   "demo_order_count": 0,
   "development_promising_count": 2,
   "exchange_write_attempt_count": 0,
@@ -50,7 +50,7 @@
     "RESEARCH_SIGNAL_ONLY": 2
   },
   "lane": "V13-C",
-  "lane_head": "595a701bdf6b4934cc89d5b6c04ebc517cb3f0ea",
+  "lane_head": "c8ec67ab665b9197eef799336bdcf170a87a86bb",
   "mechanism_family_count": 10,
   "oos_consumed": false,
   "oos_executed": false,
