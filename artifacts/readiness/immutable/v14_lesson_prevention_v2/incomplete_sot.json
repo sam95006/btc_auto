@@ -1,0 +1,11 @@
+{
+  "checkpoint_found": true,
+  "checkpoint_path": "D:\\NEXUS\\btc_bot\\.nexus_runtime\\blind_reflection_v23_checkpoint.json",
+  "groq_success_count": 53,
+  "mutated": false,
+  "pending_case_count": 27,
+  "read_only": true,
+  "sambanova_success_count": 16,
+  "stage": "PROVIDER_CAPACITY_BLOCKED",
+  "trust": "canonical_checkpoint_counters_over_summaries"
+}

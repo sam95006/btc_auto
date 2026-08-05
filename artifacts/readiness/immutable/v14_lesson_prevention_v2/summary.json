@@ -1,0 +1,13 @@
+{
+  "REAL_LESSON_PREVENTION_STATUS": "BLOCKED",
+  "V2_3_complete": false,
+  "auto_integrate": false,
+  "digest": "4a25ac0dd04d047afce9709a9a444c798b724297cb45fbf7fde0a3cc38ec8186",
+  "head_commit": "7fb338d148c0d96b1898afeffb69b089f0786f12",
+  "lane": "V14-G",
+  "mechanics_proof_status": "PASS",
+  "new_policy_effect_lesson_count": 0,
+  "pass": true,
+  "pr27_merged": false,
+  "status": "NEXUS_V14_G_LESSON_PREVENTION_PROOF_V2_PASS_REAL_BLOCKED"
+}
