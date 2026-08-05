@@ -18,6 +18,7 @@
     "execution::backend.nexus_autonomy.closed_loop_redteam_v12.constants",
     "execution::backend.nexus_autonomy.execution_simulator_v1",
     "execution::backend.nexus_autonomy.execution_simulator_v1_1",
+    "execution::backend.nexus_autonomy.repro_safety_redteam_v13.constants",
     "execution::backend.nexus_autonomy.security_mutation_v11.constants",
     "execution::backend.nexus_execution.execution_simulator_v1_1",
     "execution::backend.nexus_real_shadow.real_price_shadow",
@@ -109,6 +110,12 @@
       "authority_id": "private_core.execution.simulator_v1_1",
       "domain": "execution",
       "module": "backend.nexus_autonomy.closed_loop_redteam_v12.constants",
+      "role": "fixture_tool"
+    },
+    {
+      "authority_id": "private_core.execution.simulator_v1_1",
+      "domain": "execution",
+      "module": "backend.nexus_autonomy.repro_safety_redteam_v13.constants",
       "role": "fixture_tool"
     },
     {
@@ -346,7 +353,7 @@
       "role": "parallel_lane"
     }
   ],
-  "generated_at": "2026-08-05T08:18:12Z",
+  "generated_at": "2026-08-05T09:32:22Z",
   "lane": "V11_H_AUTHORITY_CONSOLIDATION",
   "policy": {
     "known_competitor": "ALLOW_WITH_RECOMMENDATION",
