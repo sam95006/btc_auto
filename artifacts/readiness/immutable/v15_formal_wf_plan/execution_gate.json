@@ -1,0 +1,118 @@
+{
+  "all_attempts_refused": true,
+  "attempt_count": 9,
+  "attempts": [
+    {
+      "Founder_authorization_present": false,
+      "allowed": false,
+      "candidate_id": "SYN_V15F_WF_CAND_001",
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "executed": false,
+      "formal_walk_forward_executed": false,
+      "mainnet": false,
+      "oos_consumed": false,
+      "oos_executed": false,
+      "oos_reservation_created": false,
+      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_a93aa39aaa56",
+      "plan_status": "PLAN_READY_EXECUTION_BLOCKED",
+      "profitability_claim": false,
+      "qualification_ready_count": 0,
+      "real_money": false,
+      "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
+      "shadow_order_count": 0,
+      "status": "BLOCKED",
+      "strategy_promoted": false,
+      "strategy_selected": false
+    },
+    {
+      "Founder_authorization_present": false,
+      "allowed": false,
+      "candidate_id": "SYN_V15F_WF_CAND_002",
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "executed": false,
+      "formal_walk_forward_executed": false,
+      "mainnet": false,
+      "oos_consumed": false,
+      "oos_executed": false,
+      "oos_reservation_created": false,
+      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_002_83c8a9fff16f",
+      "plan_status": "PLAN_READY_EXECUTION_BLOCKED",
+      "profitability_claim": false,
+      "qualification_ready_count": 0,
+      "real_money": false,
+      "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
+      "shadow_order_count": 0,
+      "status": "BLOCKED",
+      "strategy_promoted": false,
+      "strategy_selected": false
+    },
+    {
+      "allowed": false,
+      "executed": false,
+      "fold_id": "WF_PLAN_FOLD_00",
+      "formal_walk_forward_executed": false,
+      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_a93aa39aaa56",
+      "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
+      "status": "BLOCKED"
+    },
+    {
+      "allowed": false,
+      "executed": false,
+      "fold_id": "WF_PLAN_FOLD_01",
+      "formal_walk_forward_executed": false,
+      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_a93aa39aaa56",
+      "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
+      "status": "BLOCKED"
+    },
+    {
+      "allowed": false,
+      "executed": false,
+      "fold_id": "WF_PLAN_FOLD_02",
+      "formal_walk_forward_executed": false,
+      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_a93aa39aaa56",
+      "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
+      "status": "BLOCKED"
+    },
+    {
+      "allowed": false,
+      "executed": false,
+      "fold_id": "WF_PLAN_FOLD_03",
+      "formal_walk_forward_executed": false,
+      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_a93aa39aaa56",
+      "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
+      "status": "BLOCKED"
+    },
+    {
+      "allowed": false,
+      "executed": false,
+      "fold_id": "WF_PLAN_FOLD_04",
+      "formal_walk_forward_executed": false,
+      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_a93aa39aaa56",
+      "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
+      "status": "BLOCKED"
+    },
+    {
+      "allowed": false,
+      "executed": false,
+      "fold_id": "WF_PLAN_FOLD_05",
+      "formal_walk_forward_executed": false,
+      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_a93aa39aaa56",
+      "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
+      "status": "BLOCKED"
+    },
+    {
+      "allowed": false,
+      "executed": false,
+      "fold_id": "WF_PLAN_FOLD_06",
+      "formal_walk_forward_executed": false,
+      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_a93aa39aaa56",
+      "reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
+      "status": "BLOCKED"
+    }
+  ],
+  "block_reason": "FORMAL_WALK_FORWARD_EXECUTION_BANNED_V15_F",
+  "execution_status": "BLOCKED",
+  "formal_walk_forward_executed": false
+}

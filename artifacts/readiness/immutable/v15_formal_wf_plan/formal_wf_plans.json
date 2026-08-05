@@ -1,0 +1,684 @@
+{
+  "formal_walk_forward_executed": false,
+  "plan_count": 2,
+  "plans": [
+    {
+      "Founder_authorization_present": false,
+      "all_unevaluated": true,
+      "any_freeze_applied": false,
+      "as_of_ms": 1700000000000,
+      "candidate_freeze_rules": {
+        "candidate_id": "SYN_V15F_WF_CAND_001",
+        "executed": false,
+        "frozen": false,
+        "note": "Candidate freeze is planned only; formal freeze/selection remains blocked.",
+        "planned": true,
+        "promotion_allowed": false,
+        "rule_kind": "candidate_freeze",
+        "selection_allowed": false,
+        "semantic_checksum": "1ed8dab4ad6d80de168718d7766c56eb19b7ffb25e3ea68a22fffaf9a57f09e6"
+      },
+      "candidate_id": "SYN_V15F_WF_CAND_001",
+      "code_version_freeze": {
+        "code_checksum": "546748ff7d95fb9e07e9581f727a2284b0e5abd205d6f666dd3a36a832f04573",
+        "code_ref": "backend/nexus_formal_wf_plan",
+        "code_version": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
+        "executed": false,
+        "frozen": false,
+        "note": "Code version must freeze before formal WF; freeze not applied here.",
+        "planned": true,
+        "rule_kind": "code_version_freeze"
+      },
+      "cost_version_freeze": {
+        "cost_version": "private_core.cost_model_v1_1",
+        "executed": false,
+        "frozen": false,
+        "note": "Cost model version must be pinned before formal WF; pin not applied here.",
+        "planned": true,
+        "rule_kind": "cost_version_freeze"
+      },
+      "created_at": "2026-08-05T15:18:23Z",
+      "dataset_freeze": {
+        "category_required": "DEVELOPMENT",
+        "dataset_checksum": "b49051f5054d518c064a7c09d933e840389e7cd9bca6df5b0077445ba68f0688",
+        "dataset_id": "SYNTHETIC_DEV_DATASET_V15F",
+        "executed": false,
+        "frozen": false,
+        "note": "Dataset freeze plans DEVELOPMENT-only data; OOS remains untouched.",
+        "oos_reserved_forbidden": true,
+        "oos_untouched_forbidden": true,
+        "planned": true,
+        "rule_kind": "dataset_freeze"
+      },
+      "demo_order_count": 0,
+      "dimensions": [
+        "training_windows",
+        "validation_windows",
+        "embargo",
+        "purge_intervals",
+        "parameter_freeze_rules",
+        "candidate_freeze_rules",
+        "cost_version_freeze",
+        "code_version_freeze",
+        "dataset_freeze",
+        "failure_thresholds",
+        "minimum_sample_sizes",
+        "regime_requirements",
+        "symbol_requirements"
+      ],
+      "discovery_label": "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+      "embargo": {
+        "embargo_days": 2,
+        "embargo_ms": 172800000,
+        "executed": false,
+        "kind": "embargo",
+        "purpose": "Separate training labels from validation to reduce leakage"
+      },
+      "exchange_write_attempt_count": 0,
+      "executed": false,
+      "failure_thresholds": {
+        "evaluated": false,
+        "executed": false,
+        "max_cost_drag_pct": 100.0,
+        "max_drawdown_pct": 20.0,
+        "max_regime_fragility_score": 0.75,
+        "min_positive_fold_ratio": 0.5,
+        "note": "Thresholds are planned gates only; no fold metrics are evaluated."
+      },
+      "fixture_only": true,
+      "fold_count": 7,
+      "folds": [
+        {
+          "embargo": {
+            "embargo_days": 2,
+            "end_ms": 1676412799999,
+            "executed": false,
+            "start_ms": 1676240000000
+          },
+          "fold_id": "WF_PLAN_FOLD_00",
+          "fold_index": 0,
+          "formal_walk_forward_executed": false,
+          "purge_interval": {
+            "end_ms": 1676499199999,
+            "executed": false,
+            "purge_days": 1,
+            "start_ms": 1676412800000
+          },
+          "role": "planned_not_executed",
+          "training_window": {
+            "duration_ms": 7776000000,
+            "end_ms": 1676239999999,
+            "executed": false,
+            "start_ms": 1668464000000
+          },
+          "validation_window": {
+            "duration_ms": 2592000000,
+            "end_ms": 1679091199999,
+            "executed": false,
+            "start_ms": 1676499200000
+          }
+        },
+        {
+          "embargo": {
+            "embargo_days": 2,
+            "end_ms": 1679004799999,
+            "executed": false,
+            "start_ms": 1678832000000
+          },
+          "fold_id": "WF_PLAN_FOLD_01",
+          "fold_index": 1,
+          "formal_walk_forward_executed": false,
+          "purge_interval": {
+            "end_ms": 1679091199999,
+            "executed": false,
+            "purge_days": 1,
+            "start_ms": 1679004800000
+          },
+          "role": "planned_not_executed",
+          "training_window": {
+            "duration_ms": 7776000000,
+            "end_ms": 1678831999999,
+            "executed": false,
+            "start_ms": 1671056000000
+          },
+          "validation_window": {
+            "duration_ms": 2592000000,
+            "end_ms": 1681683199999,
+            "executed": false,
+            "start_ms": 1679091200000
+          }
+        },
+        {
+          "embargo": {
+            "embargo_days": 2,
+            "end_ms": 1681596799999,
+            "executed": false,
+            "start_ms": 1681424000000
+          },
+          "fold_id": "WF_PLAN_FOLD_02",
+          "fold_index": 2,
+          "formal_walk_forward_executed": false,
+          "purge_interval": {
+            "end_ms": 1681683199999,
+            "executed": false,
+            "purge_days": 1,
+            "start_ms": 1681596800000
+          },
+          "role": "planned_not_executed",
+          "training_window": {
+            "duration_ms": 7776000000,
+            "end_ms": 1681423999999,
+            "executed": false,
+            "start_ms": 1673648000000
+          },
+          "validation_window": {
+            "duration_ms": 2592000000,
+            "end_ms": 1684275199999,
+            "executed": false,
+            "start_ms": 1681683200000
+          }
+        },
+        {
+          "embargo": {
+            "embargo_days": 2,
+            "end_ms": 1684188799999,
+            "executed": false,
+            "start_ms": 1684016000000
+          },
+          "fold_id": "WF_PLAN_FOLD_03",
+          "fold_index": 3,
+          "formal_walk_forward_executed": false,
+          "purge_interval": {
+            "end_ms": 1684275199999,
+            "executed": false,
+            "purge_days": 1,
+            "start_ms": 1684188800000
+          },
+          "role": "planned_not_executed",
+          "training_window": {
+            "duration_ms": 7776000000,
+            "end_ms": 1684015999999,
+            "executed": false,
+            "start_ms": 1676240000000
+          },
+          "validation_window": {
+            "duration_ms": 2592000000,
+            "end_ms": 1686867199999,
+            "executed": false,
+            "start_ms": 1684275200000
+          }
+        },
+        {
+          "embargo": {
+            "embargo_days": 2,
+            "end_ms": 1686780799999,
+            "executed": false,
+            "start_ms": 1686608000000
+          },
+          "fold_id": "WF_PLAN_FOLD_04",
+          "fold_index": 4,
+          "formal_walk_forward_executed": false,
+          "purge_interval": {
+            "end_ms": 1686867199999,
+            "executed": false,
+            "purge_days": 1,
+            "start_ms": 1686780800000
+          },
+          "role": "planned_not_executed",
+          "training_window": {
+            "duration_ms": 7776000000,
+            "end_ms": 1686607999999,
+            "executed": false,
+            "start_ms": 1678832000000
+          },
+          "validation_window": {
+            "duration_ms": 2592000000,
+            "end_ms": 1689459199999,
+            "executed": false,
+            "start_ms": 1686867200000
+          }
+        },
+        {
+          "embargo": {
+            "embargo_days": 2,
+            "end_ms": 1689372799999,
+            "executed": false,
+            "start_ms": 1689200000000
+          },
+          "fold_id": "WF_PLAN_FOLD_05",
+          "fold_index": 5,
+          "formal_walk_forward_executed": false,
+          "purge_interval": {
+            "end_ms": 1689459199999,
+            "executed": false,
+            "purge_days": 1,
+            "start_ms": 1689372800000
+          },
+          "role": "planned_not_executed",
+          "training_window": {
+            "duration_ms": 7776000000,
+            "end_ms": 1689199999999,
+            "executed": false,
+            "start_ms": 1681424000000
+          },
+          "validation_window": {
+            "duration_ms": 2592000000,
+            "end_ms": 1692051199999,
+            "executed": false,
+            "start_ms": 1689459200000
+          }
+        },
+        {
+          "embargo": {
+            "embargo_days": 2,
+            "end_ms": 1691964799999,
+            "executed": false,
+            "start_ms": 1691792000000
+          },
+          "fold_id": "WF_PLAN_FOLD_06",
+          "fold_index": 6,
+          "formal_walk_forward_executed": false,
+          "purge_interval": {
+            "end_ms": 1692051199999,
+            "executed": false,
+            "purge_days": 1,
+            "start_ms": 1691964800000
+          },
+          "role": "planned_not_executed",
+          "training_window": {
+            "duration_ms": 7776000000,
+            "end_ms": 1691791999999,
+            "executed": false,
+            "start_ms": 1684016000000
+          },
+          "validation_window": {
+            "duration_ms": 2592000000,
+            "end_ms": 1694643199999,
+            "executed": false,
+            "start_ms": 1692051200000
+          }
+        }
+      ],
+      "formal_walk_forward_executed": false,
+      "hard_bans": [
+        "no_formal_walk_forward_execution",
+        "no_oos_execution",
+        "no_oos_reservation",
+        "no_oos_consumption",
+        "no_demo_orders",
+        "no_shadow_orders",
+        "no_exchange_writes",
+        "no_mainnet",
+        "no_real_money",
+        "no_strategy_selection",
+        "no_strategy_promotion",
+        "no_profitability_claims",
+        "no_fabricated_edge",
+        "no_fabricated_ai_learning",
+        "no_pr_merge",
+        "no_deployment",
+        "no_public_product_changes"
+      ],
+      "lane": "V15-F",
+      "mainnet": false,
+      "minimum_sample_sizes": {
+        "executed": false,
+        "measured": false,
+        "min_regime_observations": 30,
+        "min_symbols_per_fold": 1,
+        "min_train_bars": 500,
+        "min_validation_bars": 100,
+        "note": "Sample floors are plan constraints; sample counts are not measured here."
+      },
+      "note": "Formal Walk-forward plan compiled only. Status PLAN_READY_EXECUTION_BLOCKED. formal_walk_forward_executed=false always.",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "oos_reservation_created": false,
+      "parameter_freeze_rules": {
+        "executed": false,
+        "frozen": false,
+        "mutation_allowed_after_plan": false,
+        "note": "Parameters must freeze before any future formal WF execution; not applied here.",
+        "parameter_checksum": "fce86e7f5ae516d89a32f31582baf2dc58da6815c0fbac90ad640e3cc71f8c6b",
+        "parameters_snapshot": {
+          "fixture_marker": true,
+          "lookback": 24,
+          "threshold": 0.15
+        },
+        "planned": true,
+        "rule_kind": "parameter_freeze"
+      },
+      "plan_checksum": "351b26deb4bb044f2fb120dadad38bf5d5428a35f66628df7fce4b214fef687d",
+      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_001_a93aa39aaa56",
+      "plan_kind": "FORMAL_WALK_FORWARD",
+      "profitability_claim": false,
+      "purge_intervals": {
+        "executed": false,
+        "kind": "purge",
+        "purge_days": 1,
+        "purge_ms": 86400000,
+        "purpose": "Purge overlapping label horizons across train/validation boundary"
+      },
+      "qualification_ready_count": 0,
+      "real_money": false,
+      "regime_requirements": {
+        "allow_single_regime_claim": false,
+        "evaluated": false,
+        "executed": false,
+        "min_regimes_covered": 2,
+        "note": "Regime coverage is a planned requirement; coverage is not computed here.",
+        "required_regimes": [
+          "TRENDING",
+          "MEAN_REVERTING",
+          "HIGH_VOL"
+        ]
+      },
+      "schema": "FOUNDER_V15_F_FORMAL_WALK_FORWARD_PLAN_COMPILER",
+      "schema_version": 1,
+      "shadow_order_count": 0,
+      "status": "PLAN_READY_EXECUTION_BLOCKED",
+      "strategy_promoted": false,
+      "strategy_selected": false,
+      "symbol_requirements": {
+        "evaluated": false,
+        "executed": false,
+        "min_symbols": 2,
+        "note": "Symbol requirements are planned; universe membership is not verified here.",
+        "oos_symbols_forbidden": true,
+        "required_symbols": [
+          "BTCUSDT",
+          "ETHUSDT"
+        ],
+        "universe_category": "DEVELOPMENT"
+      },
+      "training_windows": [
+        {
+          "duration_ms": 7776000000,
+          "end_ms": 1676239999999,
+          "executed": false,
+          "start_ms": 1668464000000
+        },
+        {
+          "duration_ms": 7776000000,
+          "end_ms": 1678831999999,
+          "executed": false,
+          "start_ms": 1671056000000
+        },
+        {
+          "duration_ms": 7776000000,
+          "end_ms": 1681423999999,
+          "executed": false,
+          "start_ms": 1673648000000
+        },
+        {
+          "duration_ms": 7776000000,
+          "end_ms": 1684015999999,
+          "executed": false,
+          "start_ms": 1676240000000
+        },
+        {
+          "duration_ms": 7776000000,
+          "end_ms": 1686607999999,
+          "executed": false,
+          "start_ms": 1678832000000
+        },
+        {
+          "duration_ms": 7776000000,
+          "end_ms": 1689199999999,
+          "executed": false,
+          "start_ms": 1681424000000
+        },
+        {
+          "duration_ms": 7776000000,
+          "end_ms": 1691791999999,
+          "executed": false,
+          "start_ms": 1684016000000
+        }
+      ],
+      "validation_windows": [
+        {
+          "duration_ms": 2592000000,
+          "end_ms": 1679091199999,
+          "executed": false,
+          "start_ms": 1676499200000
+        },
+        {
+          "duration_ms": 2592000000,
+          "end_ms": 1681683199999,
+          "executed": false,
+          "start_ms": 1679091200000
+        },
+        {
+          "duration_ms": 2592000000,
+          "end_ms": 1684275199999,
+          "executed": false,
+          "start_ms": 1681683200000
+        },
+        {
+          "duration_ms": 2592000000,
+          "end_ms": 1686867199999,
+          "executed": false,
+          "start_ms": 1684275200000
+        },
+        {
+          "duration_ms": 2592000000,
+          "end_ms": 1689459199999,
+          "executed": false,
+          "start_ms": 1686867200000
+        },
+        {
+          "duration_ms": 2592000000,
+          "end_ms": 1692051199999,
+          "executed": false,
+          "start_ms": 1689459200000
+        },
+        {
+          "duration_ms": 2592000000,
+          "end_ms": 1694643199999,
+          "executed": false,
+          "start_ms": 1692051200000
+        }
+      ],
+      "window_spec": {
+        "development_interval": {
+          "end_ms": 1694816000000,
+          "start_ms": 1668464000000
+        },
+        "step_days": 30,
+        "training_days": 90,
+        "validation_days": 30
+      }
+    },
+    {
+      "Founder_authorization_present": false,
+      "all_unevaluated": true,
+      "any_freeze_applied": false,
+      "as_of_ms": 1700000000000,
+      "candidate_freeze_rules": {
+        "candidate_id": "SYN_V15F_WF_CAND_002",
+        "executed": false,
+        "frozen": false,
+        "note": "Candidate freeze is planned only; formal freeze/selection remains blocked.",
+        "planned": true,
+        "promotion_allowed": false,
+        "rule_kind": "candidate_freeze",
+        "selection_allowed": false,
+        "semantic_checksum": "489ef1bfeaddcadff753ece07c71a7e9b244a006c71cddd1efb0bd66daafa8f7"
+      },
+      "candidate_id": "SYN_V15F_WF_CAND_002",
+      "code_version_freeze": {
+        "code_checksum": "546748ff7d95fb9e07e9581f727a2284b0e5abd205d6f666dd3a36a832f04573",
+        "code_ref": "backend/nexus_formal_wf_plan",
+        "code_version": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
+        "executed": false,
+        "frozen": false,
+        "note": "Code version must freeze before formal WF; freeze not applied here.",
+        "planned": true,
+        "rule_kind": "code_version_freeze"
+      },
+      "cost_version_freeze": {
+        "cost_version": "private_core.cost_model_v1_1",
+        "executed": false,
+        "frozen": false,
+        "note": "Cost model version must be pinned before formal WF; pin not applied here.",
+        "planned": true,
+        "rule_kind": "cost_version_freeze"
+      },
+      "created_at": "2026-08-05T15:18:23Z",
+      "dataset_freeze": {
+        "category_required": "DEVELOPMENT",
+        "dataset_checksum": "b49051f5054d518c064a7c09d933e840389e7cd9bca6df5b0077445ba68f0688",
+        "dataset_id": "SYNTHETIC_DEV_DATASET_V15F",
+        "executed": false,
+        "frozen": false,
+        "note": "Dataset freeze plans DEVELOPMENT-only data; OOS remains untouched.",
+        "oos_reserved_forbidden": true,
+        "oos_untouched_forbidden": true,
+        "planned": true,
+        "rule_kind": "dataset_freeze"
+      },
+      "demo_order_count": 0,
+      "dimensions": [
+        "training_windows",
+        "validation_windows",
+        "embargo",
+        "purge_intervals",
+        "parameter_freeze_rules",
+        "candidate_freeze_rules",
+        "cost_version_freeze",
+        "code_version_freeze",
+        "dataset_freeze",
+        "failure_thresholds",
+        "minimum_sample_sizes",
+        "regime_requirements",
+        "symbol_requirements"
+      ],
+      "discovery_label": "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+      "embargo": {
+        "embargo_days": 2,
+        "embargo_ms": 172800000,
+        "executed": false,
+        "kind": "embargo",
+        "purpose": "Separate training labels from validation to reduce leakage"
+      },
+      "exchange_write_attempt_count": 0,
+      "executed": false,
+      "failure_thresholds": {
+        "evaluated": false,
+        "executed": false,
+        "max_cost_drag_pct": 100.0,
+        "max_drawdown_pct": 20.0,
+        "max_regime_fragility_score": 0.75,
+        "min_positive_fold_ratio": 0.5,
+        "note": "Thresholds are planned gates only; no fold metrics are evaluated."
+      },
+      "fixture_only": true,
+      "fold_count": 0,
+      "folds": [],
+      "formal_walk_forward_executed": false,
+      "hard_bans": [
+        "no_formal_walk_forward_execution",
+        "no_oos_execution",
+        "no_oos_reservation",
+        "no_oos_consumption",
+        "no_demo_orders",
+        "no_shadow_orders",
+        "no_exchange_writes",
+        "no_mainnet",
+        "no_real_money",
+        "no_strategy_selection",
+        "no_strategy_promotion",
+        "no_profitability_claims",
+        "no_fabricated_edge",
+        "no_fabricated_ai_learning",
+        "no_pr_merge",
+        "no_deployment",
+        "no_public_product_changes"
+      ],
+      "lane": "V15-F",
+      "mainnet": false,
+      "minimum_sample_sizes": {
+        "executed": false,
+        "measured": false,
+        "min_regime_observations": 30,
+        "min_symbols_per_fold": 1,
+        "min_train_bars": 500,
+        "min_validation_bars": 100,
+        "note": "Sample floors are plan constraints; sample counts are not measured here."
+      },
+      "note": "Formal Walk-forward plan compiled only. Status PLAN_READY_EXECUTION_BLOCKED. formal_walk_forward_executed=false always.",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "oos_reservation_created": false,
+      "parameter_freeze_rules": {
+        "executed": false,
+        "frozen": false,
+        "mutation_allowed_after_plan": false,
+        "note": "Parameters must freeze before any future formal WF execution; not applied here.",
+        "parameter_checksum": "fce86e7f5ae516d89a32f31582baf2dc58da6815c0fbac90ad640e3cc71f8c6b",
+        "parameters_snapshot": {
+          "fixture_marker": true,
+          "lookback": 24,
+          "threshold": 0.15
+        },
+        "planned": true,
+        "rule_kind": "parameter_freeze"
+      },
+      "plan_checksum": "3df3291842beca35dd66191f62f76dc59b97c480324754af8f36984124bf74d9",
+      "plan_id": "WF_PLAN_SYN_V15F_WF_CAND_002_83c8a9fff16f",
+      "plan_kind": "FORMAL_WALK_FORWARD",
+      "profitability_claim": false,
+      "purge_intervals": {
+        "executed": false,
+        "kind": "purge",
+        "purge_days": 1,
+        "purge_ms": 86400000,
+        "purpose": "Purge overlapping label horizons across train/validation boundary"
+      },
+      "qualification_ready_count": 0,
+      "real_money": false,
+      "regime_requirements": {
+        "allow_single_regime_claim": false,
+        "evaluated": false,
+        "executed": false,
+        "min_regimes_covered": 2,
+        "note": "Regime coverage is a planned requirement; coverage is not computed here.",
+        "required_regimes": [
+          "TRENDING",
+          "MEAN_REVERTING",
+          "HIGH_VOL"
+        ]
+      },
+      "schema": "FOUNDER_V15_F_FORMAL_WALK_FORWARD_PLAN_COMPILER",
+      "schema_version": 1,
+      "shadow_order_count": 0,
+      "status": "PLAN_READY_EXECUTION_BLOCKED",
+      "strategy_promoted": false,
+      "strategy_selected": false,
+      "symbol_requirements": {
+        "evaluated": false,
+        "executed": false,
+        "min_symbols": 1,
+        "note": "Symbol requirements are planned; universe membership is not verified here.",
+        "oos_symbols_forbidden": true,
+        "required_symbols": [
+          "BTCUSDT"
+        ],
+        "universe_category": "DEVELOPMENT"
+      },
+      "training_windows": [],
+      "validation_windows": [],
+      "window_spec": {
+        "development_interval": {
+          "end_ms": 1694816000000,
+          "start_ms": 1684448000000
+        },
+        "step_days": 30,
+        "training_days": 90,
+        "validation_days": 30
+      }
+    }
+  ],
+  "schema": "FOUNDER_V15_F_FORMAL_WALK_FORWARD_PLAN_COMPILER",
+  "status": "PLAN_READY_EXECUTION_BLOCKED"
+}
