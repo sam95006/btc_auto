@@ -484,7 +484,7 @@
   },
   "demo_order_count": 0,
   "exchange_write_attempt_count": 0,
-  "finished_at": "2026-08-04T16:43:05Z",
+  "finished_at": "2026-08-05T02:54:10Z",
   "generated_execution_scenario_count": 10000,
   "invariants": {
     "scenarios_ok": 10000,
@@ -716,5 +716,5 @@
   "schema": "autonomous_execution_simulator_v1_1_fuzz",
   "seed": 20260805,
   "simulator_version": "autonomous_execution_simulator_v1_1",
-  "started_at": "2026-08-04T16:43:05Z"
+  "started_at": "2026-08-05T02:54:09Z"
 }

@@ -13,10 +13,10 @@
   "execution_mode": "SIMULATED_NO_EXCHANGE_WRITE",
   "expired_count": 646,
   "filled_count": 6453,
-  "finished_at": "2026-08-04T16:43:05Z",
+  "finished_at": "2026-08-05T02:54:10Z",
   "funding_credit_count": 323,
   "funding_debit_count": 0,
-  "generated_at": "2026-08-04T16:43:05Z",
+  "generated_at": "2026-08-05T02:54:10Z",
   "generated_execution_scenario_count": 10000,
   "instrument_halted_count": 323,
   "invariants": {
@@ -45,7 +45,7 @@
   "simulated_liquidation_count": 322,
   "simulator_version": "autonomous_execution_simulator_v1_1",
   "stale_mark_reject_count": 322,
-  "started_at": "2026-08-04T16:43:05Z",
+  "started_at": "2026-08-05T02:54:09Z",
   "tick_size_violation_count": 322,
   "unfilled_count": 924
 }
