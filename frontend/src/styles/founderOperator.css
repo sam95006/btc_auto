@@ -1,0 +1,139 @@
+/* PUB-E Founder Private Operator — same design language, separate surface */
+
+.nx-founder-operator-shell {
+  min-height: 100vh;
+  background: var(--nx-bg-0, #0a0e13);
+  color: var(--nx-text, #e8eef6);
+}
+
+.nx-founder-safety {
+  padding: 0.45rem 1rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-align: center;
+  background: var(--nx-accent-soft, rgba(201, 162, 39, 0.12));
+  border-bottom: 1px solid var(--nx-border, rgba(148, 163, 184, 0.16));
+  color: var(--nx-accent, #c9a227);
+}
+
+.nx-founder-body {
+  display: flex;
+  min-height: calc(100vh - 2rem);
+}
+
+.nx-founder-nav {
+  width: 220px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--nx-border, rgba(148, 163, 184, 0.16));
+  background: var(--nx-bg-1, #0f141b);
+}
+
+.nx-founder-nav a {
+  display: block;
+  padding: 0.35rem 0.75rem;
+  color: var(--nx-text-2, #a8b4c4);
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.nx-founder-nav a.active,
+.nx-founder-nav a:hover {
+  color: var(--nx-text, #e8eef6);
+  background: var(--nx-bg-3, #1b2330);
+}
+
+.nx-founder-gate-denied .nx-card,
+.nx-founder-operator .nx-card {
+  background: var(--nx-bg-2, #151b24);
+  border: 1px solid var(--nx-border, rgba(148, 163, 184, 0.16));
+  border-radius: var(--nx-r-md, 10px);
+  padding: 1rem;
+}
+
+.nx-founder-banner-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.nx-founder-ban-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.nx-founder-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.85rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.nx-founder-jump a {
+  color: var(--nx-accent, #c9a227);
+  font-size: 0.8rem;
+}
+
+.nx-founder-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.85rem;
+}
+
+.nx-founder-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.nx-founder-panel-head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.nx-founder-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem 0.75rem;
+  margin: 0.65rem 0;
+  font-size: 0.78rem;
+}
+
+.nx-founder-metrics dt {
+  color: var(--nx-text-3, #6f7d90);
+}
+
+.nx-founder-metrics dd {
+  margin: 0;
+  color: var(--nx-text, #e8eef6);
+}
+
+.nx-founder-notes {
+  margin: 0.4rem 0 0.6rem;
+  padding-left: 1.1rem;
+}
+
+.tag-ok {
+  background: var(--nx-long-soft, rgba(34, 197, 94, 0.12));
+  color: var(--nx-long, #22c55e);
+}
+
+.tag-bad {
+  background: var(--nx-short-soft, rgba(239, 68, 68, 0.12));
+  color: var(--nx-short, #ef4444);
+}
+
+@media (max-width: 800px) {
+  .nx-founder-body {
+    flex-direction: column;
+  }
+  .nx-founder-nav {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--nx-border, rgba(148, 163, 184, 0.16));
+  }
+}

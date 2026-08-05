@@ -3,11 +3,16 @@
  * Public Decision Integrity pages. No private trading controls.
  * Forbidden routes: /trade, /orders, /arm, /routing-edit
  * No external reference embed; no runtime dependency on reference URL.
+ *
+ * PUB-E: Founder private operator mounts in a separate shell (never inside member SidebarNav).
  */
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppFooter } from "./components/AppFooter";
 import { SafetyBanner } from "./components/SafetyBanner";
 import { SidebarNav } from "./components/SidebarNav";
+import { FounderOperatorShell } from "./founder/FounderOperatorShell";
+import { FounderOperatorPage } from "./founder/FounderOperatorPage";
+import { FounderRuntimePage } from "./pages/FounderRuntimePage";
 import {
   MemberAccountDeletionPage,
   MemberAccountPage,
@@ -28,7 +33,7 @@ import {
   MemberThesisMonitorPage,
 } from "./pages/member";
 
-export default function App() {
+function MemberShell() {
   return (
     <div className="app-shell member-shell nx-member-platform">
       <SafetyBanner />
@@ -65,5 +70,21 @@ export default function App() {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Member Platform (PUB-D) + Founder Private Operator (PUB-E).
+ * Founder operator never mounts inside member SidebarNav.
+ */
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/founder/operator" element={<FounderOperatorShell />}>
+        <Route index element={<FounderOperatorPage />} />
+      </Route>
+      <Route path="/founder/runtime" element={<FounderRuntimePage />} />
+      <Route path="/*" element={<MemberShell />} />
+    </Routes>
   );
 }

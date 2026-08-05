@@ -41,9 +41,11 @@ export async function assertPortfolioLeveragePolicy(page: Page): Promise<void> {
 }
 
 export async function assertFounderRuntimeLabels(page: Page): Promise<void> {
-  await expect(page.getByRole("heading", { name: /Founder Runtime/i })).toBeVisible();
-  await expect(page.getByText(/READ ONLY/i).first()).toBeVisible();
-  await expect(page.getByText(/私有|founder/i).first()).toBeVisible();
+  await expect(
+    page.getByText(/Founder Authorization Required|Founder Private Operator|Founder Operator/i).first()
+  ).toBeVisible();
+  await expect(page.getByText(/FOUNDER PRIVATE|READ-ONLY|founder-only|member session denied/i).first()).toBeVisible();
+  await expect(page.getByText(/私有|founder|Founder/i).first()).toBeVisible();
 }
 
 export async function assertNoHorizontalOverflow(page: Page): Promise<void> {

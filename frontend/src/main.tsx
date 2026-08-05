@@ -8,6 +8,7 @@ import "./styles/phase2Tokens.css";
 import "./styles/wave4ProductTokens.css";
 import "./styles/global.css";
 import "./styles/memberPlatform.css";
+import "./styles/founderOperator.css";
 
 installAssetLoadRecovery();
 
