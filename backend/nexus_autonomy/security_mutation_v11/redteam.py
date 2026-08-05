@@ -476,18 +476,21 @@ def write_remediation_artifacts(
         for r in (production_ast.get("results") or [])
     ]
 
+    prod_surv = payload.get("production_ast_survivor_count")
+    prod_total = int((payload.get("production_ast") or {}).get("mutant_total") or 0)
+    prod_surv_ok = prod_surv is not None and int(prod_surv) == 0
     findings_status = {
         "G_MUTATION_DEPTH_WRAPPER_ONLY": (
             "FIXED"
             if payload.get("wrapper_only_pass_forbidden")
-            and int(payload.get("production_ast_survivor_count") or -1) == 0
-            and int((payload.get("production_ast") or {}).get("mutant_total") or 0) > 0
+            and prod_surv_ok
+            and prod_total > 0
             and payload.get("passed")
             else "REMAINING"
         ),
         "PRODUCTION_AST_MUTANT_SURVIVED": (
             "FIXED"
-            if int(payload.get("production_ast_survivor_count") or -1) == 0
+            if prod_surv_ok
             and bool((payload.get("production_ast") or {}).get("required_detect_kills_ok"))
             else "REMAINING"
         ),
