@@ -3,15 +3,17 @@
 Stages: Observe → Understand → Challenge → Decide → Record → Monitor → Review → Calibrate → Improve
 
 Hard bans enforced in-process:
-  - no orders / exchange writes
-  - no strategy parameter mutation
+  - no exchange writes / no strategy parameter mutation
   - fail-closed on invalid transitions / evidence loss / ambiguous state
+  - Intent/Position IDs only via DecisionExecutionBridge (canonical adapter)
+  - RiskLimits / FORBIDDEN_ACTIONS via nexus_execution.risk_gates (no opaque bypass)
 """
 from __future__ import annotations
 
 import threading
 import uuid
 from datetime import datetime, timezone
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -23,12 +25,19 @@ from backend.nexus_decision.evidence import (
     evidence_binding_hash,
     validate_evidence_completeness,
 )
+from backend.nexus_decision.execution_bridge import (
+    BRIDGE_MODULE,
+    DecisionExecutionBridge,
+    DecisionExecutionBridgeError,
+)
 from backend.nexus_decision.ledger_link import DecisionLedgerLink
 from backend.nexus_decision.state_machine import (
     CANONICAL_STATES,
     DecisionStateMachine,
     InvalidTransitionError,
 )
+from backend.nexus_execution.cost_model import COST_MODEL_VERSION
+from backend.nexus_execution.risk_gates import FORBIDDEN_ACTIONS
 
 ORCHESTRATOR_SCHEMA = "NEXUS_DECISION_LIFECYCLE_ORCHESTRATOR_V11"
 
@@ -71,7 +80,12 @@ class DecisionLifecycleOrchestrator:
         "improve",
     )
 
-    def __init__(self, root: Path | str) -> None:
+    def __init__(
+        self,
+        root: Path | str,
+        *,
+        bridge: DecisionExecutionBridge | None = None,
+    ) -> None:
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
         self._lock = threading.RLock()
@@ -80,9 +94,14 @@ class DecisionLifecycleOrchestrator:
         self._idempotency_index: dict[str, str] = {}  # key -> decision_id
         self._checkpoints = DecisionCheckpointStore(self.root / "checkpoints")
         self._ledger = DecisionLedgerLink(self.root / "ledger")
+        self._bridge = bridge or DecisionExecutionBridge(self.root / "execution_bridge")
         self._order_attempt_count = 0
         self._strategy_mutation_attempt_count = 0
         self._exchange_write_attempt_count = 0
+
+    @property
+    def bridge(self) -> DecisionExecutionBridge:
+        return self._bridge
 
     # ------------------------------------------------------------------
     # Guards
@@ -258,19 +277,79 @@ class DecisionLifecycleOrchestrator:
         self,
         decision_id: str,
         *,
-        deterministic_risk_result: dict[str, Any],
+        deterministic_risk_result: dict[str, Any] | None = None,
+        execution_intent: dict[str, Any] | None = None,
+        cost_model_version: str | None = None,
+        mark_price: Any = 100,
         idempotency_key: str,
         reason: str = "",
     ) -> dict[str, Any]:
-        """Decide stage: RISK_REVIEWED then APPROVED_SIMULATED / REJECTED / BLOCKED."""
+        """Decide stage: RISK_REVIEWED then APPROVED_SIMULATED / REJECTED / BLOCKED.
+
+        Risk authority is ``backend.nexus_execution.risk_gates`` via the bridge.
+        Opaque ``deterministic_risk_result`` alone cannot approve (AUTH_DECISION_RISK_BYPASS).
+        Intent IDs are minted only by the canonical execution adapter (not Decision).
+        """
         with self._lock:
             obj, sm = self._require(decision_id)
-            if not deterministic_risk_result:
-                return self._block(decision_id, reason="decide_missing_risk_result", key=idempotency_key)
             self._assert_evidence_intact(obj)
+
+            # Idempotent replay after restart: same decide key returns existing approval.
+            if sm.state == "APPROVED_SIMULATED" and f"{idempotency_key}:outcome" in {
+                r.get("idempotency_key") for r in sm.history()
+            }:
+                return {"status": "APPROVED_SIMULATED", "decision": obj.to_dict(), "duplicate": True}
 
             risk_key = f"{idempotency_key}:risk"
             approve_key = f"{idempotency_key}:outcome"
+
+            intent_req = dict(execution_intent or {})
+            intent_req.setdefault(
+                "idempotency_key",
+                f"decintent:{decision_id}:{obj.candidate_id}",
+            )
+            intent_req.setdefault("symbol", "BTCUSDT")
+            intent_req.setdefault("side", "BUY")
+            intent_req.setdefault("order_type", "MARKET")
+            intent_req.setdefault("qty", Decimal("0.1"))
+            intent_req.setdefault("leverage", int(self._bridge.risk_limits.leverage))
+            intent_req.setdefault("margin_mode", "ISOLATED")
+            if intent_req.get("requested_actions") is None:
+                intent_req["requested_actions"] = tuple(
+                    (deterministic_risk_result or {}).get("requested_actions") or ()
+                )
+
+            # Canonical risk gate — opaque allowed=True cannot bypass FORBIDDEN_ACTIONS.
+            try:
+                gate = self._bridge.evaluate_risk(intent_req)
+            except DecisionExecutionBridgeError as exc:
+                raise DecisionLifecycleError(str(exc)) from exc
+
+            advisory = dict(deterministic_risk_result or {})
+            # Merge gate result as authoritative deterministic_risk_result evidence.
+            authoritative_risk = {
+                **advisory,
+                "allowed": bool(gate["allowed"]) and advisory.get("allowed", True) is not False,
+                "reason": gate.get("reason"),
+                "detail": gate.get("detail"),
+                "authority": gate.get("authority"),
+                "forbidden_actions_catalog": list(FORBIDDEN_ACTIONS),
+                "cost_model_version": COST_MODEL_VERSION,
+            }
+            # Explicit advisory reject still wins.
+            if advisory.get("allowed") is False:
+                authoritative_risk["allowed"] = False
+                authoritative_risk["reasons"] = list(
+                    advisory.get("reasons") or [gate.get("reason") or "RISK_REJECTED"]
+                )
+            if advisory.get("ambiguous") is True:
+                authoritative_risk["ambiguous"] = True
+            if not gate["allowed"]:
+                authoritative_risk["allowed"] = False
+                authoritative_risk["reasons"] = list(
+                    advisory.get("reasons") or [gate.get("reason") or "RISK_GATE_REJECTED"]
+                )
+
             try:
                 rec1 = sm.transition(
                     "RISK_REVIEWED",
@@ -280,20 +359,25 @@ class DecisionLifecycleOrchestrator:
                 )
             except InvalidTransitionError as exc:
                 raise DecisionLifecycleError(str(exc)) from exc
-            obj.deterministic_risk_result = dict(deterministic_risk_result)
+            obj.deterministic_risk_result = authoritative_risk
             obj.decision_status = "RISK_REVIEWED"
             obj.transition_history.append(rec1.to_dict())
             obj.touch()
-            self._link(obj, "DECISION_RISK_REVIEWED", risk_key, {"risk": deterministic_risk_result.get("allowed")})
+            self._link(
+                obj,
+                "DECISION_RISK_REVIEWED",
+                risk_key,
+                {"risk": authoritative_risk.get("allowed"), "authority": gate.get("authority")},
+            )
 
-            allowed = bool(deterministic_risk_result.get("allowed"))
-            ambiguous = bool(deterministic_risk_result.get("ambiguous"))
-            if ambiguous:
+            if authoritative_risk.get("ambiguous"):
                 out = self._block(decision_id, reason="decide_risk_ambiguous", key=approve_key)
                 self._checkpoint_unlocked(decision_id)
                 return out
-            if not allowed:
-                reject_reasons = list(deterministic_risk_result.get("reasons") or ["RISK_REJECTED"])
+            if not authoritative_risk.get("allowed"):
+                reject_reasons = list(
+                    authoritative_risk.get("reasons") or ["RISK_REJECTED"]
+                )
                 try:
                     rec2 = sm.transition(
                         "REJECTED",
@@ -311,6 +395,24 @@ class DecisionLifecycleOrchestrator:
                 self._checkpoint_unlocked(decision_id)
                 return {"status": "REJECTED", "decision": obj.to_dict()}
 
+            # ADV_DECISION_APPROVED_TWICE: candidate-level uniqueness.
+            other = self._bridge.approved_decision_for_candidate(obj.candidate_id)
+            if other and other != decision_id:
+                raise DecisionLifecycleError(
+                    f"candidate_already_approved:{obj.candidate_id}:owner={other}"
+                )
+
+            try:
+                binding = self._bridge.approve_intent(
+                    decision_id=decision_id,
+                    candidate_id=obj.candidate_id,
+                    intent_req=intent_req,
+                    cost_model_version=cost_model_version or COST_MODEL_VERSION,
+                    mark_price=mark_price,
+                )
+            except DecisionExecutionBridgeError as exc:
+                raise DecisionLifecycleError(str(exc)) from exc
+
             try:
                 rec2 = sm.transition(
                     "APPROVED_SIMULATED",
@@ -321,25 +423,34 @@ class DecisionLifecycleOrchestrator:
             except InvalidTransitionError as exc:
                 raise DecisionLifecycleError(str(exc)) from exc
             obj.decision_status = "APPROVED_SIMULATED"
-            obj.intent_id = obj.intent_id or f"intent_{uuid.uuid4().hex[:12]}"
+            # Authoritative Intent identity = OrderIntent.idempotency_key (execution-owned).
+            obj.intent_id = binding.intent_idempotency_key
+            obj.cost_model_version = binding.cost_model_version
+            obj.linkage_authority = BRIDGE_MODULE
             obj.transition_history.append(rec2.to_dict())
             obj.touch()
             self._link(
                 obj,
                 "DECISION_APPROVED_SIMULATED",
                 approve_key,
-                {"intent_id": obj.intent_id, "orders_placed": False},
+                {
+                    "intent_id": obj.intent_id,
+                    "order_id": binding.order_id,
+                    "cost_model_version": obj.cost_model_version,
+                    "linkage_authority": BRIDGE_MODULE,
+                    "orders_placed": False,
+                    "exchange_write": False,
+                },
             )
             self._checkpoint_unlocked(decision_id)
             return {"status": "APPROVED_SIMULATED", "decision": obj.to_dict()}
 
     def record(self, decision_id: str, *, idempotency_key: str, reason: str = "") -> dict[str, Any]:
-        """Record stage: durable ledger linkage for approved decisions; advance to MONITORING."""
+        """Record stage: bind Position via bridge; advance to MONITORING."""
         with self._lock:
             obj, sm = self._require(decision_id)
             self._assert_evidence_intact(obj)
             if sm.state == "REJECTED":
-                # Rejected decisions are recorded as closed-path ledger events without MONITORING.
                 evt = self._ledger.append(
                     decision_id=decision_id,
                     event_type="DECISION_RECORDED_REJECTED",
@@ -351,6 +462,33 @@ class DecisionLifecycleOrchestrator:
                 obj.touch()
                 self._checkpoint_unlocked(decision_id)
                 return {"status": "RECORDED_REJECTED", "decision": obj.to_dict()}
+
+            if sm.state != "APPROVED_SIMULATED":
+                # Fail closed before any bridge side-effects (invalid skip-ahead).
+                try:
+                    sm.transition(
+                        "MONITORING",
+                        stage="record",
+                        reason=reason or "record_to_monitor",
+                        idempotency_key=idempotency_key,
+                    )
+                except InvalidTransitionError as exc:
+                    raise DecisionLifecycleError(str(exc)) from exc
+                raise DecisionLifecycleError(f"unexpected_record_state:{sm.state}")
+
+            # ADV_PARTIAL_FILL_DURING_DECISION_TRANSITION
+            try:
+                # Restart-safe: rehydrate OrderIntent ownership into the live simulator.
+                self._bridge.rehydrate_execution_intent(decision_id)
+                self._bridge.assert_no_partial_fill_during_transition(decision_id)
+                binding = self._bridge.ensure_position_after_simulated_fill(decision_id)
+            except DecisionExecutionBridgeError as exc:
+                return self._block(
+                    decision_id,
+                    reason=str(exc),
+                    key=f"{idempotency_key}:partial_or_fill_block",
+                )
+
             try:
                 rec = sm.transition(
                     "MONITORING",
@@ -360,7 +498,10 @@ class DecisionLifecycleOrchestrator:
                 )
             except InvalidTransitionError as exc:
                 raise DecisionLifecycleError(str(exc)) from exc
-            obj.position_id = obj.position_id or f"pos_{uuid.uuid4().hex[:12]}"
+            # Position ID only from PositionRecord via bridge — never decorative.
+            obj.position_id = binding.position_id
+            obj.intent_id = binding.intent_idempotency_key
+            obj.linkage_authority = BRIDGE_MODULE
             obj.decision_status = "MONITORING"
             obj.transition_history.append(rec.to_dict())
             obj.touch()
@@ -368,7 +509,11 @@ class DecisionLifecycleOrchestrator:
                 obj,
                 "DECISION_RECORDED_MONITORING",
                 idempotency_key,
-                {"position_id": obj.position_id, "intent_id": obj.intent_id},
+                {
+                    "position_id": obj.position_id,
+                    "intent_id": obj.intent_id,
+                    "linkage_authority": BRIDGE_MODULE,
+                },
             )
             self._checkpoint_unlocked(decision_id)
             return {"status": "MONITORING", "decision": obj.to_dict()}
@@ -384,12 +529,22 @@ class DecisionLifecycleOrchestrator:
         with self._lock:
             obj, sm = self._require(decision_id)
             self._assert_evidence_intact(obj)
+            try:
+                self._bridge.sync_decision_with_execution(decision_id, sm.state)
+            except DecisionExecutionBridgeError as exc:
+                return self._block(decision_id, reason=str(exc), key=f"{idempotency_key}:sync")
+
             if not exit:
-                # Heartbeat monitor — no state change, ledger ping only.
                 self._link(obj, "DECISION_MONITOR_HEARTBEAT", idempotency_key, {"heartbeat": True})
                 obj.touch()
                 self._checkpoint_unlocked(decision_id)
                 return {"status": "MONITORING", "decision": obj.to_dict(), "heartbeat": True}
+
+            try:
+                self._bridge.mark_exit_evidence(decision_id)
+            except DecisionExecutionBridgeError as exc:
+                return self._block(decision_id, reason=str(exc), key=f"{idempotency_key}:exit")
+
             try:
                 rec = sm.transition(
                     "EXITED",
@@ -403,7 +558,12 @@ class DecisionLifecycleOrchestrator:
             obj.decision_status = "EXITED"
             obj.transition_history.append(rec.to_dict())
             obj.touch()
-            self._link(obj, "DECISION_EXITED", idempotency_key, {"exit_id": obj.exit_id})
+            self._link(
+                obj,
+                "DECISION_EXITED",
+                idempotency_key,
+                {"exit_id": obj.exit_id, "exit_evidence": True},
+            )
             self._checkpoint_unlocked(decision_id)
             return {"status": "EXITED", "decision": obj.to_dict()}
 
@@ -418,6 +578,11 @@ class DecisionLifecycleOrchestrator:
         with self._lock:
             obj, sm = self._require(decision_id)
             self._assert_evidence_intact(obj)
+            # VOCAB_MONITORING_SKIP_EXIT: cannot review from MONITORING.
+            if sm.state == "MONITORING":
+                raise DecisionLifecycleError(
+                    "invalid_transition:MONITORING->UNDER_REVIEW:exit_evidence_required"
+                )
             try:
                 rec = sm.transition(
                     "UNDER_REVIEW",
@@ -477,6 +642,17 @@ class DecisionLifecycleOrchestrator:
         with self._lock:
             obj, sm = self._require(decision_id)
             self._assert_evidence_intact(obj)
+            # ADV_DECISION_CLOSED_POSITION_OPEN — refuse CLOSED while position open.
+            try:
+                # Probe as if CLOSED to catch forbidden pairs before transition.
+                self._bridge.sync_decision_with_execution(decision_id, "CLOSED")
+            except DecisionExecutionBridgeError as exc:
+                raise DecisionLifecycleError(str(exc)) from exc
+            # If we had a position binding, exit evidence is mandatory (unless REJECTED path).
+            binding = self._bridge.binding_for(decision_id)
+            if binding and binding.position_id and sm.state not in {"REJECTED", "BLOCKED_AMBIGUOUS"}:
+                if not binding.exit_evidence and sm.state not in {"EXITED", "UNDER_REVIEW", "CALIBRATED"}:
+                    raise DecisionLifecycleError("exit_evidence_required_before_close")
             try:
                 rec = sm.transition(
                     "CLOSED",
@@ -576,6 +752,8 @@ class DecisionLifecycleOrchestrator:
             self._decisions[decision_id] = obj
             self._machines[decision_id] = sm
             self._idempotency_index[obj.idempotency_key] = decision_id
+            # Restart-safe: rehydrate Decision↔Intent ownership from durable bridge state.
+            self._bridge.restore_from_disk()
             self._link(
                 obj,
                 "DECISION_RECOVERED",
@@ -619,6 +797,9 @@ class DecisionLifecycleOrchestrator:
                 "orders_permitted": False,
                 "strategy_mutation_permitted": False,
                 "public_api_exposed": False,
+                "cost_model_version": COST_MODEL_VERSION,
+                "linkage_authority": BRIDGE_MODULE,
+                "bridge": self._bridge.report(),
             }
 
     # ------------------------------------------------------------------

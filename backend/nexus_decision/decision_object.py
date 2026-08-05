@@ -85,6 +85,10 @@ class DecisionObject:
     checkpoint_seq: int = 0
     blocked_reason: str | None = None
     evidence_binding_hash: str | None = None
+    # Bound to backend.nexus_execution.cost_model.COST_MODEL_VERSION on approve.
+    cost_model_version: str | None = None
+    # Provenance: intent/position IDs must come from the DecisionExecutionBridge.
+    linkage_authority: str | None = None
 
     def validate(self) -> None:
         payload = self.to_dict()
@@ -240,6 +244,8 @@ class DecisionObject:
             checkpoint_seq=int(data.get("checkpoint_seq") or 0),
             blocked_reason=data.get("blocked_reason"),
             evidence_binding_hash=data.get("evidence_binding_hash"),
+            cost_model_version=data.get("cost_model_version"),
+            linkage_authority=data.get("linkage_authority"),
         )
         obj.validate()
         return obj

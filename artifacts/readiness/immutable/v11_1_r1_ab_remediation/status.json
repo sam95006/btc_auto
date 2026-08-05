@@ -1,0 +1,24 @@
+{
+  "schema": "v11_1_r1_ab_remediation_status",
+  "created_at": "2026-08-05T04:13:10Z",
+  "lane": "R1AB",
+  "lane_name": "DECISION_EXECUTION_BRIDGE_REMEDIATION",
+  "branch": "feature/v11_1-r1-ab-remediation",
+  "status": "PASS",
+  "base_commit": "5b1d47543523f7e5be88da63256904171ce45165",
+  "r1_review_agent": "1ed44f16-adcd-48d3-ad8a-115b24a195eb",
+  "secret_leak_count": 0,
+  "orders_permitted": false,
+  "exchange_write": false,
+  "mainnet": false,
+  "real_money": false,
+  "public_api_exposed": false,
+  "owned_paths": [
+    "backend/nexus_decision",
+    "backend/nexus_strategy_engine/cost_semantics.py",
+    "tests/test_r1_ab_decision_execution_remediation_v11_1.py",
+    "tools/architecture/ci_gate_decision_execution_bridge.py",
+    "artifacts/readiness/immutable/v11_1_r1_ab_remediation"
+  ],
+  "coordinates_with": ["C1", "C2", "C5"]
+}

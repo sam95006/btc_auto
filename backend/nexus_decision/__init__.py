@@ -12,6 +12,11 @@ from backend.nexus_decision.decision_object import (
     DecisionObject,
     DecisionObjectError,
 )
+from backend.nexus_decision.execution_bridge import (
+    BRIDGE_MODULE,
+    DecisionExecutionBridge,
+    DecisionExecutionBridgeError,
+)
 from backend.nexus_decision.orchestrator import (
     DecisionLifecycleError,
     DecisionLifecycleOrchestrator,
@@ -24,8 +29,11 @@ from backend.nexus_decision.state_machine import (
 )
 
 __all__ = [
+    "BRIDGE_MODULE",
     "CANONICAL_STATES",
     "DECISION_OBJECT_REQUIRED_FIELDS",
+    "DecisionExecutionBridge",
+    "DecisionExecutionBridgeError",
     "DecisionLifecycleError",
     "DecisionLifecycleOrchestrator",
     "DecisionObject",

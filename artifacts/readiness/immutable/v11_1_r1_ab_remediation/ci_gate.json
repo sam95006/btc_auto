@@ -1,0 +1,14 @@
+{
+  "schema": "v11_1_r1_ab_ci_gate_decision_execution_bridge",
+  "created_at": "2026-08-05T04:13:10Z",
+  "status": "PASS",
+  "remaining": [],
+  "checks": [
+    "no_decorative_intent_mint",
+    "no_decorative_position_mint",
+    "bridge_module_present",
+    "risk_gate_invoked",
+    "cost_model_bound",
+    "monitoring_requires_exit"
+  ]
+}
