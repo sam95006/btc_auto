@@ -1,7 +1,7 @@
 {
   "schema": "v14_research_redteam",
   "program_id": "NEXUS_V14_RESEARCH_SECURITY_REDTEAM",
-  "created_at": "2026-08-05T11:20:47Z",
+  "created_at": "2026-08-05T11:21:00Z",
   "lane": "V14-L",
   "branch": "feature/v14-research-security-redteam",
   "base_head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
@@ -814,6 +814,6 @@
   "critical_findings": [],
   "high_findings": [],
   "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v14_l_research_redteam",
-  "commit": "cc1588dba3e62d2b687efef330c4f136cec68ddb",
-  "head": "cc1588dba3e62d2b687efef330c4f136cec68ddb"
+  "commit": "b27680a0610a37e4c31c8ada40efd8a815292b7a",
+  "head": "b27680a0610a37e4c31c8ada40efd8a815292b7a"
 }
