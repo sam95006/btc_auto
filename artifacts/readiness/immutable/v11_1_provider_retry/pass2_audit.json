@@ -1,8 +1,8 @@
 {
   "pass_id": "pass2",
-  "generated_at": "2026-08-05T04:07:41Z",
+  "generated_at": "2026-08-05T04:08:05Z",
   "branch": "feature/v11_1-provider-retry-authority",
-  "commit": "d580a9c7f754b7dca7a65a7fde6f89d76476af3d",
+  "commit": "d30dec423411e7d54bb042b844880b3550a3e4ed",
   "adversarial_checks": [
     "false_PASS_on_parallel_import_only",
     "fixture_only_proof",
@@ -17,7 +17,7 @@
   },
   "tests": {
     "exit_code": 0,
-    "stdout_tail": ".....................................                                    [100%]\n37 passed in 4.39s",
+    "stdout_tail": ".....................................                                    [100%]\n37 passed in 3.61s",
     "stderr_tail": "",
     "passed": true
   },

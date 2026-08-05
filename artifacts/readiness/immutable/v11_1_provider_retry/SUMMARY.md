@@ -1,11 +1,11 @@
 # V11.1 C3 — Provider Retry Authority Consolidation
 
-Generated: 2026-08-05T04:07:41Z
+Generated: 2026-08-05T04:08:05Z
 
 ## Branch / commit
 
 - branch: `feature/v11_1-provider-retry-authority`
-- commit: `d580a9c7f754b7dca7a65a7fde6f89d76476af3d`
+- commit: `d30dec423411e7d54bb042b844880b3550a3e4ed`
 
 ## Required metrics
 

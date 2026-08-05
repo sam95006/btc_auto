@@ -1,8 +1,8 @@
 {
   "pass_id": "pass1",
-  "generated_at": "2026-08-05T04:07:33Z",
+  "generated_at": "2026-08-05T04:07:59Z",
   "branch": "feature/v11_1-provider-retry-authority",
-  "commit": "d580a9c7f754b7dca7a65a7fde6f89d76476af3d",
+  "commit": "d30dec423411e7d54bb042b844880b3550a3e4ed",
   "metrics": {
     "canonical_retry_authority_count": 1,
     "parallel_retry_implementation_count": 0,
@@ -10,7 +10,7 @@
   },
   "tests": {
     "exit_code": 0,
-    "stdout_tail": ".....................................                                    [100%]\n37 passed in 5.93s",
+    "stdout_tail": ".....................................                                    [100%]\n37 passed in 4.35s",
     "stderr_tail": "",
     "passed": true
   },
