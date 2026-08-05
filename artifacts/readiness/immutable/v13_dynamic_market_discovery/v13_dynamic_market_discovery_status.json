@@ -2,7 +2,7 @@
   "artifacts_dir": "artifacts/readiness/immutable/v13_dynamic_market_discovery",
   "base_commit": "abd2195ef6d79f609dd261b5e9c5402599625a64",
   "branch": "feature/v13-dynamic-market-discovery",
-  "created_at": "2026-08-05T08:31:06Z",
+  "created_at": "2026-08-05T08:31:56Z",
   "demo": false,
   "demo_order_count": 0,
   "evaluation_dimensions": [
@@ -25,7 +25,7 @@
   ],
   "exchange_write": false,
   "exchange_write_attempt_count": 0,
-  "feature_commit": "abd2195ef6d79f609dd261b5e9c5402599625a64",
+  "feature_commit": "3b3991032dae0ffc9a15871885cfc7e6f26caf18",
   "hard_bans": [
     "no_exchange_writes",
     "no_demo",
@@ -34,9 +34,9 @@
     "no_future_observation_leak"
   ],
   "hard_bans_honored": true,
-  "head_commit_at_run": "abd2195ef6d79f609dd261b5e9c5402599625a64",
+  "head_commit_at_run": "3b3991032dae0ffc9a15871885cfc7e6f26caf18",
   "lane": "V13-D",
-  "lane_head_commit": "abd2195ef6d79f609dd261b5e9c5402599625a64",
+  "lane_head_commit": "3b3991032dae0ffc9a15871885cfc7e6f26caf18",
   "lane_name": "DYNAMIC_MARKET_DISCOVERY",
   "mainnet": false,
   "owned_paths": [
@@ -59,7 +59,7 @@
           "PEPEUSDT",
           "SOLUSDT"
         ],
-        "lineage_id": "bb7e6647fe8143feebe57e68401e85bc",
+        "lineage_id": "363fdcb7cfcd2531972f6e60a40b7fbb",
         "rejected_count": 2,
         "rejected_universe": [
           "BROKENUSDT",
@@ -78,7 +78,7 @@
           "OPEN_INTEREST_MISSING_OR_LOW": 1,
           "SPREAD_TOO_WIDE": 1
         },
-        "retrieval_timestamp": "2026-08-05T08:31:05Z",
+        "retrieval_timestamp": "2026-08-05T08:31:54Z",
         "snapshot_id": "era_2024_06_01",
         "universe_checksum": "b1a11b09567354946fcdf0872c7273ab618e8c306015bd195d3a11fb978ff551",
         "used_today_for_past": false
@@ -93,7 +93,7 @@
           "PEPEUSDT",
           "SOLUSDT"
         ],
-        "lineage_id": "a11fe4d48452e79c7bf5bccff09154e6",
+        "lineage_id": "937b57f7260a0c81bcc01f26ba864cec",
         "rejected_count": 3,
         "rejected_universe": [
           "BROKENUSDT",
@@ -115,7 +115,7 @@
           "OPEN_INTEREST_MISSING_OR_LOW": 1,
           "SPREAD_TOO_WIDE": 1
         },
-        "retrieval_timestamp": "2026-08-05T08:31:05Z",
+        "retrieval_timestamp": "2026-08-05T08:31:54Z",
         "snapshot_id": "era_2024_12_01",
         "universe_checksum": "ef93ca6c1631d27b63e827b56b9975b5bdc3cdccdbe79ffed360f8786ee9b890",
         "used_today_for_past": false
@@ -131,7 +131,7 @@
           "PEPEUSDT",
           "SOLUSDT"
         ],
-        "lineage_id": "8bce61c937feefa23dd6f2168d60918c",
+        "lineage_id": "980fbbd7284dafa998d7125d47b35eda",
         "rejected_count": 4,
         "rejected_universe": [
           "BROKENUSDT",
@@ -155,7 +155,7 @@
           "OPEN_INTEREST_MISSING_OR_LOW": 2,
           "SPREAD_TOO_WIDE": 2
         },
-        "retrieval_timestamp": "2026-08-05T08:31:05Z",
+        "retrieval_timestamp": "2026-08-05T08:31:54Z",
         "snapshot_id": "era_2025_03_01",
         "universe_checksum": "a97349d1cca61c924ed325324f487583f4652a5d8400bf5d8c4ed62e62758646",
         "used_today_for_past": false
@@ -172,7 +172,7 @@
   "point_in_time": true,
   "pr27_merged": false,
   "pytest": {
-    "elapsed_s": 0.578,
+    "elapsed_s": 1.138,
     "exit_code": 0,
     "passed": true
   },

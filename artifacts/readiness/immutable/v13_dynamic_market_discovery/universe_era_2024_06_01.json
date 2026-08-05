@@ -669,10 +669,10 @@
     "as_of_timestamp": "2024-06-01T00:00:00Z",
     "availability_ms": 1717200000000,
     "availability_timestamp": "2024-06-01T00:00:00Z",
-    "code_version": "abd2195ef6d79f609dd261b5e9c5402599625a64",
+    "code_version": "3b3991032dae0ffc9a15871885cfc7e6f26caf18",
     "demo": false,
     "exchange_write": false,
-    "lineage_id": "bb7e6647fe8143feebe57e68401e85bc",
+    "lineage_id": "363fdcb7cfcd2531972f6e60a40b7fbb",
     "parent_lineage_id": null,
     "pit_guarantees": {
       "future_observation_rejected": true,
@@ -680,7 +680,7 @@
       "uses_historical_snapshot_only": true
     },
     "pr27_merged": false,
-    "retrieval_timestamp": "2026-08-05T08:31:05Z",
+    "retrieval_timestamp": "2026-08-05T08:31:54Z",
     "schema": "nexus_pit_market_discovery_lineage_v1",
     "snapshot_id": "era_2024_06_01",
     "source_checksum": "f92fa1d740dcc91aabc95c8b2ea22016f3ae088a49feff76bcc6ac3c49a06840",
@@ -976,8 +976,8 @@
     "OPEN_INTEREST_MISSING_OR_LOW": 1,
     "SPREAD_TOO_WIDE": 1
   },
-  "result_checksum": "6ed4a5c3fec0263c6c8aba7445275f1c65fa5ef077065774782e8661dab4b46b",
-  "retrieval_timestamp": "2026-08-05T08:31:05Z",
+  "result_checksum": "2b748796d0891679c1daf358bf979269b3e76a54624dc5db804a237c3ff9e683",
+  "retrieval_timestamp": "2026-08-05T08:31:54Z",
   "schema": "nexus_pit_market_discovery_v1",
   "snapshot_id": "era_2024_06_01",
   "source_checksum": "f92fa1d740dcc91aabc95c8b2ea22016f3ae088a49feff76bcc6ac3c49a06840",
