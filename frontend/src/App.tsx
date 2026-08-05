@@ -25,6 +25,7 @@ import {
   MemberDecisionMemoryPage,
   MemberEvidencePage,
   MemberHomePage,
+  MemberIntelligencePage,
   MemberMarketOverviewPage,
   MemberMembershipPage,
   MemberNexAiPage,
@@ -50,6 +51,7 @@ function MemberShell() {
               <Route path="/home" element={<MemberHomePage />} />
               <Route path="/market" element={<MemberMarketOverviewPage />} />
               <Route path="/overview" element={<Navigate to="/market" replace />} />
+              <Route path="/intelligence" element={<MemberIntelligencePage />} />
               <Route path="/decisions" element={<MemberDecisionFeedPage />} />
               <Route path="/decisions/:decisionId" element={<MemberDecisionDetailPage />} />
               <Route path="/evidence" element={<MemberEvidencePage />} />

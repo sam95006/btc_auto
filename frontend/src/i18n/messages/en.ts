@@ -17,6 +17,8 @@ export const en: Record<MessageKey, string> = {
   "nav.home.short": "Home",
   "nav.market": "Market Overview",
   "nav.market.short": "Market",
+  "nav.intel": "Intelligence",
+  "nav.intel.short": "Intel",
   "nav.decisions": "Decision Feed",
   "nav.decisions.short": "Decisions",
   "nav.evidence": "Evidence",
@@ -63,6 +65,9 @@ export const en: Record<MessageKey, string> = {
   "pages.home.navLabel": "Navigate",
   "pages.market.title": "Market Overview",
   "pages.market.subtitle": "Public context snapshots and system freshness · not a trading blotter",
+  "pages.intel.title": "Member Intelligence Experience",
+  "pages.intel.subtitle":
+    "Funnel · LONG/SHORT/WAIT/ABSTAIN · regimes · why suggested · contradicting evidence · similar-case stats · whether actually ordered",
   "pages.decisions.title": "Decision Feed",
   "pages.decisions.subtitle":
     "Atomic Decision Objects · record intent · never place exchange orders",

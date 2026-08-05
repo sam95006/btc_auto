@@ -14,6 +14,8 @@ export const zhTW = {
   "nav.home.short": "首頁",
   "nav.market": "市場總覽",
   "nav.market.short": "市場",
+  "nav.intel": "情報體驗",
+  "nav.intel.short": "情報",
   "nav.decisions": "決策動態",
   "nav.decisions.short": "決策",
   "nav.evidence": "證據",
@@ -59,6 +61,9 @@ export const zhTW = {
   "pages.home.navLabel": "導覽連結",
   "pages.market.title": "市場總覽",
   "pages.market.subtitle": "公開情境快照與系統新鮮度 · 非交易看板",
+  "pages.intel.title": "會員情報體驗",
+  "pages.intel.subtitle":
+    "漏斗 · LONG/SHORT/WAIT/ABSTAIN · Regime · 建議理由 · 反證 · 相似案例 · 是否真下單 · 狀態誠實區分",
   "pages.decisions.title": "決策動態",
   "pages.decisions.subtitle": "原子決策物件 · 記錄意圖 · 永不下交易所訂單",
   "pages.decisions.emptySubtitle": "公開決策物件",

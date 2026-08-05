@@ -1,5 +1,6 @@
 export { MemberHomePage } from "./MemberHomePage";
 export { MemberMarketOverviewPage } from "./MemberMarketOverviewPage";
+export { MemberIntelligencePage } from "./MemberIntelligencePage";
 export { MemberDecisionFeedPage } from "./MemberDecisionFeedPage";
 export { MemberDecisionDetailPage } from "./MemberDecisionDetailPage";
 export { MemberEvidencePage } from "./MemberEvidencePage";

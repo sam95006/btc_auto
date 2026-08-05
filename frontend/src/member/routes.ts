@@ -4,6 +4,7 @@ import type { MessageKey } from "../i18n";
 export const MEMBER_NAV = [
   { to: "/home", labelKey: "nav.home", shortKey: "nav.home.short" },
   { to: "/market", labelKey: "nav.market", shortKey: "nav.market.short" },
+  { to: "/intelligence", labelKey: "nav.intel", shortKey: "nav.intel.short" },
   { to: "/decisions", labelKey: "nav.decisions", shortKey: "nav.decisions.short" },
   { to: "/evidence", labelKey: "nav.evidence", shortKey: "nav.evidence.short" },
   {

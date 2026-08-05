@@ -5,39 +5,55 @@ import { useT, type MessageKey } from "../i18n";
 export const MEMBER_LIVE_BANNER =
   "LIVE · lineage-bound · UNAVAILABLE never shown as 0 · STALE always indicated · no DEMO merge · local/staging";
 
+export const MEMBER_DEMO_BANNER =
+  "DEMO_DATA · fixture catalog · never Live · UNAVAILABLE never shown as 0 · AI suggestion ≠ filled order · no 60% guarantee";
+
 /**
- * Member chrome: PUB2-J i18n title keys + PUB2-B LIVE lineage banner.
- * Demo badge / demo banner intentionally omitted — LIVE surface must not merge DEMO.
+ * Member chrome: PUB2-J i18n title keys + honest mode chip.
+ * chromeMode defaults to LIVE for live-bound pages; DEMO_DATA/replay must not claim LIVE.
  */
 export function MemberPageChrome({
   titleKey,
   subtitleKey,
   title,
   subtitle,
+  chromeMode = "LIVE",
   children,
 }: {
   titleKey?: MessageKey;
   subtitleKey?: MessageKey;
   title?: string;
   subtitle?: string;
+  chromeMode?: string;
   children: ReactNode;
 }) {
   const t = useT();
   const resolvedTitle = titleKey ? t(titleKey) : title ?? "";
   const resolvedSubtitle = subtitleKey ? t(subtitleKey) : subtitle;
+  const mode = (chromeMode || "LIVE").toUpperCase();
+  const isLive = mode === "LIVE";
+  const chipClass = isLive ? "member-chip member-chip-live" : "member-chip member-chip-demo";
+  const banner = isLive ? MEMBER_LIVE_BANNER : MEMBER_DEMO_BANNER;
 
   return (
-    <div className="page-stack member-page">
+    <div className="page-stack member-page" data-chrome-mode={mode}>
       <header className="page-header member-page-header">
         <div className="member-title-row">
           <h1>{resolvedTitle}</h1>
-          <span className="member-chip member-chip-live" role="status">
-            LIVE
+          <span className={chipClass} role="status" data-chrome-label={mode}>
+            {mode}
           </span>
         </div>
         {resolvedSubtitle ? <p className="page-sub">{resolvedSubtitle}</p> : null}
-        <p className="member-demo-banner member-live-banner" role="status">
-          {MEMBER_LIVE_BANNER}
+        <p
+          className={
+            isLive
+              ? "member-demo-banner member-live-banner"
+              : "member-demo-banner member-demo-data-banner"
+          }
+          role="status"
+        >
+          {banner}
         </p>
       </header>
       {children}

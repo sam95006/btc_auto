@@ -491,6 +491,130 @@ a.member-btn {
   color: var(--text-muted);
 }
 
+.member-chip-demo {
+  border-color: rgba(245, 158, 11, 0.55);
+  color: var(--warning, #f59e0b);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.member-demo-data-banner {
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.member-intel-page {
+  display: grid;
+  gap: var(--dash-gap, 1rem);
+}
+
+.member-intel-state-matrix {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2, 0.5rem);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.member-intel-feed {
+  display: grid;
+  gap: var(--dash-gap, 1rem);
+}
+
+.member-intel-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card, 0.5rem);
+  padding: var(--space-3, 0.75rem);
+  background: var(--bg-inset, transparent);
+  display: grid;
+  gap: var(--space-3, 0.75rem);
+}
+
+.member-intel-card-head,
+.member-intel-funnel-head,
+.member-intel-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.member-intel-posture {
+  margin: 0.15rem 0;
+  font-family: var(--mono, ui-monospace, monospace);
+  letter-spacing: 0.04em;
+}
+
+.member-intel-chip,
+.member-intel-mode-chip {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-badge, 0.25rem);
+  padding: 0.15rem 0.45rem;
+  background: var(--bg-inset);
+  font-size: var(--fs-xs, 0.75rem);
+  font-family: var(--mono, ui-monospace, monospace);
+  letter-spacing: 0.03em;
+}
+
+.member-intel-chip-hint {
+  font-family: var(--font-sans, inherit);
+  color: var(--text-muted);
+  letter-spacing: 0;
+  white-space: normal;
+  max-width: 16rem;
+}
+
+.member-intel-ai_suggestion,
+.member-intel-ready,
+.member-intel-observing,
+.member-intel-ai_analyzing,
+.member-intel-risk_review {
+  border-color: rgba(59, 130, 246, 0.45);
+  color: #60a5fa;
+}
+
+.member-intel-blocked,
+.member-intel-abstained,
+.member-intel-unavailable {
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #f87171;
+}
+
+.member-intel-demo_data,
+.member-intel-simulation,
+.member-intel-historical_replay,
+.member-intel-stale {
+  border-color: rgba(245, 158, 11, 0.5);
+  color: var(--warning, #f59e0b);
+}
+
+.member-intel-funnel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.member-intel-funnel-label {
+  display: block;
+  color: var(--text-muted);
+  font-size: var(--fs-xs, 0.75rem);
+}
+
+.member-intel-funnel-count {
+  font-family: var(--mono, ui-monospace, monospace);
+}
+
+.member-intel-funnel-unavailable {
+  font-family: var(--mono, ui-monospace, monospace);
+  color: #f87171;
+}
+
 .member-ux-matrix-list {
   list-style: none;
   margin: 0;
