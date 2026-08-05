@@ -1,0 +1,19 @@
+{
+  "lane": "PUB-J",
+  "passes": [
+    {
+      "id": 1,
+      "path": "D:/NEXUS_RUNTIME/worktrees/pub_j_flutter/artifacts/readiness/immutable/pub_j_flutter_mobile_foundation/PASS1_REVIEW.json"
+    },
+    {
+      "id": 2,
+      "path": "D:/NEXUS_RUNTIME/worktrees/pub_j_flutter/artifacts/readiness/immutable/pub_j_flutter_mobile_foundation/PASS2_REVIEW.json"
+    }
+  ],
+  "overall_pass": true,
+  "notes": [
+    "No *_status.json artifacts emitted",
+    "Hard bans: no exchange / private-core / trading",
+    "iOS signed build blocked on non-macOS"
+  ]
+}

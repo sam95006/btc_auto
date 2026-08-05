@@ -1,0 +1,18 @@
+{
+  "@@locale": "en",
+  "appName": "NEXUS",
+  "demoData": "DEMO_DATA",
+  "home": "Home",
+  "markets": "Markets",
+  "decisions": "Decisions",
+  "evidence": "Evidence",
+  "risks": "Risks",
+  "alerts": "Alerts",
+  "memory": "Decision Memory",
+  "outcome": "Outcome Review",
+  "nexAi": "NEX AI",
+  "membership": "Membership",
+  "account": "Account",
+  "privacy": "Privacy",
+  "notifications": "Notification Settings"
+}

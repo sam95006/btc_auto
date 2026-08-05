@@ -1,0 +1,18 @@
+{
+  "lane": "PUB-J",
+  "app_path": "apps/nexus_public_mobile",
+  "hard_ban_violation_count": 0,
+  "hard_ban_violations": [],
+  "missing_structure": [],
+  "status_json_leaks": [],
+  "required_screen_count": 14,
+  "toolchain": {
+    "flutter_available": false,
+    "dart_available": false,
+    "adb_available": false,
+    "android_sdk_hint": false,
+    "ios_signed_build": "IOS_SIGNED_BUILD_PLATFORM_BLOCKED",
+    "ios_project_config": "IOS_PROJECT_CONFIG_PASS"
+  },
+  "pass": true
+}

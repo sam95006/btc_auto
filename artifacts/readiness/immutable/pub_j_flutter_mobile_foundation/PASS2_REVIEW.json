@@ -1,0 +1,40 @@
+{
+  "pass": 2,
+  "timestamp_utc": "2026-08-05T15:19:12.753954+00:00",
+  "verify": {
+    "cmd": [
+      "C:\\Users\\user\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "D:\\NEXUS_RUNTIME\\worktrees\\pub_j_flutter\\tools\\public_mobile\\verify_pub_j_hard_bans.py"
+    ],
+    "exit_code": 0,
+    "stdout_tail": "{\n  \"pass\": true,\n  \"report\": \"D:\\\\NEXUS_RUNTIME\\\\worktrees\\\\pub_j_flutter\\\\artifacts\\\\readiness\\\\immutable\\\\pub_j_flutter_mobile_foundation\\\\HARD_BAN_VERIFY_REPORT.json\"\n}\n",
+    "stderr_tail": ""
+  },
+  "flutter_toolchain": [
+    {
+      "cmd": [
+        "flutter"
+      ],
+      "exit_code": 0,
+      "skipped": true,
+      "reason": "FLUTTER_SDK_UNAVAILABLE"
+    }
+  ],
+  "ios": {
+    "IOS_PROJECT_CONFIG_PASS": true,
+    "IOS_SIGNED_BUILD_PLATFORM_BLOCKED": true,
+    "reason": "Windows host cannot produce signed iOS builds"
+  },
+  "pytest": {
+    "cmd": [
+      "C:\\Users\\user\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/public_mobile"
+    ],
+    "exit_code": 0,
+    "stdout_tail": "........                                                                 [100%]\n8 passed in 0.15s\n",
+    "stderr_tail": ""
+  }
+}

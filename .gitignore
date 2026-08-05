@@ -38,3 +38,16 @@ scratch/
 !/static/nexus/assets/
 !/static/nexus/assets/**
 tools/deploy/*.ps1
+
+# Flutter / Dart (PUB-J)
+apps/nexus_public_mobile/.dart_tool/
+apps/nexus_public_mobile/.packages
+apps/nexus_public_mobile/.flutter-plugins
+apps/nexus_public_mobile/.flutter-plugins-dependencies
+apps/nexus_public_mobile/.pub-cache/
+apps/nexus_public_mobile/.pub/
+apps/nexus_public_mobile/build/
+apps/nexus_public_mobile/**/Generated.xcconfig
+apps/nexus_public_mobile/**/flutter_export_environment.sh
+*.iml
+.idea/

@@ -1,0 +1,6 @@
+# iOS project configuration present (Info.plist, Podfile, Runner sources, Xcodeproj).
+# Signed IPA / Archive builds require macOS + Apple signing — blocked on this Windows host.
+IOS_PROJECT_CONFIG_PASS=true
+IOS_SIGNED_BUILD_PLATFORM_BLOCKED=true
+BUNDLE_ID=com.nexus.publicmobile
+MIN_IOS=13.0

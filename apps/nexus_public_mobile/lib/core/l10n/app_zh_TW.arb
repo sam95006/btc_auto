@@ -1,0 +1,18 @@
+{
+  "@@locale": "zh_TW",
+  "appName": "NEXUS",
+  "demoData": "示範資料",
+  "home": "首頁",
+  "markets": "市場",
+  "decisions": "決策",
+  "evidence": "證據",
+  "risks": "風險條件",
+  "alerts": "警示",
+  "memory": "決策記憶",
+  "outcome": "結果回顧",
+  "nexAi": "NEX AI",
+  "membership": "會員",
+  "account": "帳戶",
+  "privacy": "隱私",
+  "notifications": "通知設定"
+}
