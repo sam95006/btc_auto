@@ -1,0 +1,23 @@
+{
+  "liquidity_collapse_events": 12,
+  "logical_day_span": {
+    "distinct_days": 365,
+    "max": 364,
+    "min": 0
+  },
+  "symbol_count": 5,
+  "symbols": [
+    "BNBUSDT",
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "XRPUSDT"
+  ],
+  "vol_regime_count": 4,
+  "vol_regimes": [
+    "CRISIS",
+    "HIGH",
+    "LOW",
+    "MEDIUM"
+  ]
+}

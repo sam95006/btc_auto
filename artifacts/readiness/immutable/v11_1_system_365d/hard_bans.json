@@ -1,0 +1,27 @@
+{
+  "attestations": {
+    "edge_claimed": false,
+    "exchange_write_attempted": false,
+    "formal_walk_forward_executed": false,
+    "oos_consumed": false,
+    "strategy_profitability_measured": false,
+    "strategy_selected": false
+  },
+  "edge_claim": false,
+  "formal_walk_forward_executed": false,
+  "hard_bans": [
+    "no_strategy_profitability_measurement",
+    "no_strategy_selection",
+    "no_formal_walk_forward",
+    "no_oos_consumption",
+    "no_edge_claim",
+    "no_exchange_write",
+    "no_mainnet",
+    "no_real_money",
+    "no_merge_deploy"
+  ],
+  "oos_consumed": false,
+  "profitability_measured": false,
+  "strategy_selected": false,
+  "system_correctness_only": true
+}
