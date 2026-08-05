@@ -1,0 +1,305 @@
+{
+  "schema": "v12_closed_loop_redteam",
+  "program_id": "NEXUS_V12_CLOSED_LOOP_REDTEAM",
+  "created_at": "2026-08-05T07:49:06Z",
+  "lane": "V12-F",
+  "branch": "feature/v12-closed-loop-redteam",
+  "base_head": "e4e96299840da2e5152cf2850135cebc67d66cd0",
+  "execution_mode": "SIMULATED_FAIL_CLOSED_NO_EXCHANGE_WRITE",
+  "owned_paths": [
+    "backend/nexus_autonomy/closed_loop_redteam_v12/",
+    "tools/research/run_closed_loop_redteam_v12.py",
+    "tests/test_closed_loop_redteam_v12.py",
+    "artifacts/readiness/immutable/v12_closed_loop_redteam/"
+  ],
+  "prohibited_paths": [
+    "frontend/",
+    "backend/nexus_demo_execution/",
+    "G:/",
+    "PR27",
+    "deploy/"
+  ],
+  "hard_bans": [
+    "no_auto_integration_into_PR27",
+    "no_demo_orders",
+    "no_exchange_write",
+    "no_mainnet_client",
+    "no_merge",
+    "no_deploy"
+  ],
+  "scenario_ids": [
+    "duplicate_candidate_decision_intent",
+    "partial_fill_crash",
+    "exit_before_position_snapshot",
+    "reflection_before_exit",
+    "lesson_before_verified_reflection",
+    "checkpoint_rollback",
+    "ledger_fork",
+    "oos_authorization_spoof",
+    "exchange_write_attempts",
+    "mainnet_profile_confusion"
+  ],
+  "scenarios": [
+    {
+      "scenario_id": "duplicate_candidate_decision_intent",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "duplicate_ignored",
+      "critical": false,
+      "attack_blocked": true,
+      "evidence": {
+        "decision_duplicate": true,
+        "intent_duplicate": true,
+        "candidate_key_duplicate": true,
+        "decision_status": "DUPLICATE_IGNORED",
+        "intent_status": "DUPLICATE_IGNORED"
+      }
+    },
+    {
+      "scenario_id": "partial_fill_crash",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "owner_only_duplicate_ignored",
+      "critical": false,
+      "attack_blocked": true,
+      "evidence": {
+        "partial_fill": true,
+        "filled_qty": "0.04",
+        "retry_status": "DUPLICATE_IGNORED",
+        "retry_state": "RECOVERED_OWNER_WITHOUT_ORDER",
+        "no_double_order": true
+      }
+    },
+    {
+      "scenario_id": "exit_before_position_snapshot",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "exit_skip_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "evidence": {
+        "exit_open_blocked": true,
+        "closed_open_blocked": true,
+        "skip_review_blocked": true,
+        "skip_closed_blocked": true,
+        "orchestrator_review_blocked": true
+      }
+    },
+    {
+      "scenario_id": "reflection_before_exit",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "reflection_before_exit_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "evidence": {
+        "sm_blocked": true,
+        "legal_path_ok": true,
+        "orchestrator_blocked": true
+      }
+    },
+    {
+      "scenario_id": "lesson_before_verified_reflection",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "lesson_gate_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "evidence": {
+        "incomplete": {
+          "lesson_gate_schema": "v11_lesson_gate",
+          "policy_effect_lesson_allowed": false,
+          "lesson_prevention_executed": false,
+          "lesson_prevention_blocked_reason": "V2_3_TERMINAL_NOT_VERIFIED",
+          "V2_3_TERMINAL_STATUS": "INCOMPLETE",
+          "quality_gates_passed": false,
+          "fixture_label": null,
+          "new_policy_effect_lesson_count": 0,
+          "risk_limits_changed": false,
+          "leverage_changed": false,
+          "position_size_changed": false,
+          "stops_changed": false,
+          "strategy_parameters_changed": false,
+          "promotion_state_changed": false,
+          "false_learning_claim": false
+        },
+        "failed": {
+          "lesson_gate_schema": "v11_lesson_gate",
+          "policy_effect_lesson_allowed": false,
+          "lesson_prevention_executed": false,
+          "lesson_prevention_blocked_reason": "V2_3_TERMINAL_NOT_VERIFIED",
+          "V2_3_TERMINAL_STATUS": "FAILED",
+          "quality_gates_passed": true,
+          "fixture_label": null,
+          "new_policy_effect_lesson_count": 0,
+          "risk_limits_changed": false,
+          "leverage_changed": false,
+          "position_size_changed": false,
+          "stops_changed": false,
+          "strategy_parameters_changed": false,
+          "promotion_state_changed": false,
+          "false_learning_claim": false
+        },
+        "verified_no_quality_allowed": false,
+        "learning_incomplete": "BLOCKED_V2_3_INCOMPLETE",
+        "learning_failed": "BLOCKED_V2_3_FAILED"
+      }
+    },
+    {
+      "scenario_id": "checkpoint_rollback",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "checkpoint_tamper_detected",
+      "critical": false,
+      "attack_blocked": true,
+      "evidence": {
+        "initial_sha": "94574423e4e9aba2b5d145b76a74a70170deb179ae0d20ab2f277445414993b3",
+        "tamper_verify_fails": true,
+        "missing_digest_fails": true
+      }
+    },
+    {
+      "scenario_id": "ledger_fork",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "ledger_fork_detected",
+      "critical": false,
+      "attack_blocked": true,
+      "evidence": {
+        "clean": {
+          "ledger_hash_chain_status": "PASS",
+          "event_count": 5
+        },
+        "broken": {
+          "ledger_hash_chain_status": "CORRUPTION_DETECTED",
+          "broken_at_sequence": 3
+        },
+        "broken_at_sequence": 3
+      }
+    },
+    {
+      "scenario_id": "oos_authorization_spoof",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "oos_spoof_rejected",
+      "critical": false,
+      "attack_blocked": true,
+      "evidence": {
+        "spoof": {
+          "valid": false,
+          "authorized": false,
+          "reason": "FOUNDER_AUTH_PROOF_INVALID_OR_SPOOFED",
+          "spoof_rejected": true,
+          "expected_auth_proof": "ee155674e77c0b4972e16ea809259fcc13929a03a5bf15a1d69910fd040f7c18",
+          "provided_auth_proof": "deadbeef"
+        },
+        "missing": {
+          "valid": false,
+          "authorized": false,
+          "reason": "FOUNDER_AUTH_PROOF_INVALID_OR_SPOOFED",
+          "spoof_rejected": true,
+          "expected_auth_proof": "6c8252fcdc2fd6d9426b1a7d59bc76d14d9162c0a05d5d44ce1ed43fd117110d",
+          "provided_auth_proof": null
+        },
+        "honest_authorized": false,
+        "honest_valid": true
+      }
+    },
+    {
+      "scenario_id": "exchange_write_attempts",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "exchange_write_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "evidence": {
+        "orchestrator_blocked": true,
+        "order_blocked": true,
+        "trap_probe_fired": 0,
+        "trap_blocked": false,
+        "workflow_exchange_write_attempt_count": 0,
+        "orchestrator_counter": 1
+      }
+    },
+    {
+      "scenario_id": "mainnet_profile_confusion",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "profile_confusion_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "evidence": {
+        "demo_on_mainnet": {
+          "profile": "demo",
+          "ok": false,
+          "fail_closed": true,
+          "reasons": [
+            "demo_mainnet_profile_confused",
+            "writes_require_explicit_founder_flag",
+            "demo_host_rejected:api.bybit.com"
+          ],
+          "mainnet_fallback_used": false,
+          "demo_mainnet_confused": true,
+          "writes_enabled": false,
+          "secret_echoed": false
+        },
+        "mainnet_on_demo": {
+          "profile": "mainnet",
+          "ok": false,
+          "fail_closed": true,
+          "reasons": [
+            "demo_mainnet_profile_confused",
+            "mainnet_profile_blocked_by_security_boundary"
+          ],
+          "mainnet_fallback_used": false,
+          "demo_mainnet_confused": true,
+          "writes_enabled": false,
+          "secret_echoed": false
+        },
+        "demo_missing_fallback": {
+          "profile": "demo",
+          "ok": false,
+          "fail_closed": true,
+          "reasons": [
+            "mainnet_fallback_rejected",
+            "demo_credentials_missing"
+          ],
+          "mainnet_fallback_used": true,
+          "demo_mainnet_confused": false,
+          "writes_enabled": false,
+          "secret_echoed": false
+        }
+      }
+    }
+  ],
+  "scenario_pass_count": 10,
+  "scenario_total_count": 10,
+  "attack_blocked_count": 10,
+  "attack_total_count": 10,
+  "findings": {
+    "critical_finding_count": 0,
+    "unresolved_critical_count": 0,
+    "items": []
+  },
+  "exchange_write_attempt_count": 0,
+  "secret_leak_count": 0,
+  "mainnet_client_created_count": 0,
+  "demo_order_count": 0,
+  "real_money": false,
+  "mainnet": false,
+  "auto_integration": false,
+  "PR27_draft_unmerged": true,
+  "label": "CLOSED_LOOP_REDTEAM_CONTROL_NOT_REAL_TRADING",
+  "secret_scan": {
+    "raw_hit_count": 1,
+    "real_leak_count": 0,
+    "real_leaks": []
+  },
+  "recommendation": "NEXUS_V12_CLOSED_LOOP_REDTEAM_PASS",
+  "Closed_Loop_Redteam_status": "NEXUS_V12_CLOSED_LOOP_REDTEAM_PASS",
+  "passed": true,
+  "critical_findings": [],
+  "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v12_f_closed_loop_redteam",
+  "commit": "e4e96299840da2e5152cf2850135cebc67d66cd0",
+  "head": "e4e96299840da2e5152cf2850135cebc67d66cd0"
+}
