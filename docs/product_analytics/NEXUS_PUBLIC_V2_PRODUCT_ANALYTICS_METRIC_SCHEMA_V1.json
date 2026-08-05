@@ -1,0 +1,246 @@
+{
+  "fabricated_results_forbidden": true,
+  "lane": "PUB2-I",
+  "metrics": [
+    {
+      "aggregation": "count_distinct_subject_or_event",
+      "consent_purpose": "product_analytics",
+      "description": "Counter-Evidence panel engagement",
+      "empty_observation": {
+        "count": 0,
+        "status": "NO_OBSERVATIONS",
+        "value": null
+      },
+      "events": [
+        {
+          "allowed_props": [
+            "decision_id_hash",
+            "engagement_kind"
+          ],
+          "event_name": "counter_evidence_engagement"
+        }
+      ],
+      "metric_id": "counter_evidence_engagement",
+      "value_policy": "observed_only_never_fabricated"
+    },
+    {
+      "aggregation": "count_distinct_subject_or_event",
+      "consent_purpose": "product_analytics",
+      "description": "Customer validation conversion step (Founder-enrolled only)",
+      "empty_observation": {
+        "count": 0,
+        "status": "NO_OBSERVATIONS",
+        "value": null
+      },
+      "events": [
+        {
+          "allowed_props": [
+            "conversion_step"
+          ],
+          "event_name": "validation_conversion"
+        }
+      ],
+      "metric_id": "customer_validation_conversion",
+      "value_policy": "observed_only_never_fabricated"
+    },
+    {
+      "aggregation": "count_distinct_subject_or_event",
+      "consent_purpose": "product_analytics",
+      "description": "Outcome / Decision review completed",
+      "empty_observation": {
+        "count": 0,
+        "status": "NO_OBSERVATIONS",
+        "value": null
+      },
+      "events": [
+        {
+          "allowed_props": [
+            "decision_id_hash",
+            "review_kind"
+          ],
+          "event_name": "decision_review_completed"
+        }
+      ],
+      "metric_id": "decision_review_completion",
+      "value_policy": "observed_only_never_fabricated"
+    },
+    {
+      "aggregation": "count_distinct_subject_or_event",
+      "consent_purpose": "product_analytics",
+      "description": "Supporting Evidence panel engagement",
+      "empty_observation": {
+        "count": 0,
+        "status": "NO_OBSERVATIONS",
+        "value": null
+      },
+      "events": [
+        {
+          "allowed_props": [
+            "decision_id_hash",
+            "engagement_kind"
+          ],
+          "event_name": "evidence_engagement"
+        }
+      ],
+      "metric_id": "evidence_engagement",
+      "value_policy": "observed_only_never_fabricated"
+    },
+    {
+      "aggregation": "count_distinct_subject_or_event",
+      "consent_purpose": "product_analytics",
+      "description": "First Public Decision Object opened by a consented subject",
+      "empty_observation": {
+        "count": 0,
+        "status": "NO_OBSERVATIONS",
+        "value": null
+      },
+      "events": [
+        {
+          "allowed_props": [
+            "decision_id_hash",
+            "surface"
+          ],
+          "event_name": "decision_first_opened"
+        }
+      ],
+      "metric_id": "first_decision_opened",
+      "value_policy": "observed_only_never_fabricated"
+    },
+    {
+      "aggregation": "count_distinct_subject_or_event",
+      "consent_purpose": "product_analytics",
+      "description": "Retention cohort checkpoint observation",
+      "empty_observation": {
+        "count": 0,
+        "status": "NO_OBSERVATIONS",
+        "value": null
+      },
+      "events": [
+        {
+          "allowed_props": [
+            "cohort_day",
+            "returned"
+          ],
+          "event_name": "retention_checkpoint"
+        }
+      ],
+      "metric_id": "retention",
+      "value_policy": "observed_only_never_fabricated"
+    },
+    {
+      "aggregation": "count_distinct_subject_or_event",
+      "consent_purpose": "product_analytics",
+      "description": "Declared product task completed successfully",
+      "empty_observation": {
+        "count": 0,
+        "status": "NO_OBSERVATIONS",
+        "value": null
+      },
+      "events": [
+        {
+          "allowed_props": [
+            "task_id",
+            "success"
+          ],
+          "event_name": "task_success"
+        }
+      ],
+      "metric_id": "task_success",
+      "value_policy": "observed_only_never_fabricated"
+    },
+    {
+      "aggregation": "count_distinct_subject_or_event",
+      "consent_purpose": "product_analytics",
+      "description": "Stated upgrade / paid-intent signal (no live billing)",
+      "empty_observation": {
+        "count": 0,
+        "status": "NO_OBSERVATIONS",
+        "value": null
+      },
+      "events": [
+        {
+          "allowed_props": [
+            "intent_kind",
+            "tier_interest"
+          ],
+          "event_name": "upgrade_intent"
+        }
+      ],
+      "metric_id": "upgrade_intent",
+      "value_policy": "observed_only_never_fabricated"
+    },
+    {
+      "aggregation": "count_distinct_subject_or_event",
+      "consent_purpose": "product_analytics",
+      "description": "Member activated at least one watchlist symbol",
+      "empty_observation": {
+        "count": 0,
+        "status": "NO_OBSERVATIONS",
+        "value": null
+      },
+      "events": [
+        {
+          "allowed_props": [
+            "symbol_count_bucket",
+            "source_surface"
+          ],
+          "event_name": "watchlist_activation"
+        }
+      ],
+      "metric_id": "watchlist_activation",
+      "value_policy": "observed_only_never_fabricated"
+    },
+    {
+      "aggregation": "count_distinct_subject_or_event",
+      "consent_purpose": "product_analytics",
+      "description": "Consented active session heartbeat (WAU input)",
+      "empty_observation": {
+        "count": 0,
+        "status": "NO_OBSERVATIONS",
+        "value": null
+      },
+      "events": [
+        {
+          "allowed_props": [
+            "surface"
+          ],
+          "event_name": "session_active"
+        }
+      ],
+      "metric_id": "weekly_active_use",
+      "value_policy": "observed_only_never_fabricated"
+    }
+  ],
+  "north_star": {
+    "closed_decision_loop_requires": [
+      "decision_created",
+      "supporting_evidence",
+      "contradicting_evidence",
+      "invalidation_conditions",
+      "action_or_explicit_no_action",
+      "outcome_review"
+    ],
+    "current_observation": {
+      "count": 0,
+      "note": "Scaffolding only \u2014 no fabricated north-star value",
+      "status": "NO_OBSERVATIONS",
+      "value": null
+    },
+    "definition": "Closed Decision loops per active paid user. A closed loop requires all closed_decision_loop_requires steps.",
+    "metric_id": "closed_decision_loops_per_active_paid_user",
+    "name": "CLOSED_DECISION_LOOPS_PER_ACTIVE_PAID_USER",
+    "value_policy": "observed_only_never_fabricated"
+  },
+  "package": "NEXUS_PUBLIC_PRODUCT_ANALYTICS_NORTHSTAR_V1",
+  "privacy": {
+    "consent_purpose": "product_analytics",
+    "default_consent": "denied",
+    "live_billing": false,
+    "pii_props_forbidden": true,
+    "production_customer_database": false,
+    "subject_id_policy": "hmac_sha256_salted_pseudonym"
+  },
+  "schema": "public_product_analytics_metric_schema_v1",
+  "schema_version": "1.0.0",
+  "status_json_forbidden": true
+}

@@ -1,0 +1,436 @@
+{
+  "fabricated_metrics": false,
+  "lane": "PUB2-I",
+  "ok": true,
+  "package": "NEXUS_PUBLIC_PRODUCT_ANALYTICS_NORTHSTAR_V1",
+  "pass1": {
+    "digest": "b9594ba400c353d4a85357a13a94d9c6e25896a3b1083cb56e74edc2bd0d8dcb",
+    "dropped_without_consent": 1,
+    "hard_ban": {
+      "assert": {
+        "fabricated_metrics_forbidden": true,
+        "hard_bans": [
+          "no_merge_pr_26",
+          "no_merge_pr_27",
+          "no_live_public_deployment",
+          "no_app_store_submission",
+          "no_google_play_submission",
+          "no_live_billing",
+          "no_real_iap_products",
+          "no_production_customer_database",
+          "no_custodial_wallet",
+          "no_copy_trading",
+          "no_automated_customer_trading",
+          "no_fabricated_metrics",
+          "no_fabricated_participants",
+          "no_fabricated_wau",
+          "no_fabricated_conversion_rates",
+          "no_pii_in_analytics_props",
+          "no_tracking_without_consent",
+          "no_exchange_write",
+          "no_mainnet",
+          "no_real_money",
+          "no_demo_order",
+          "no_shadow_order",
+          "no_status_json_emission",
+          "no_private_core_exposure"
+        ],
+        "hard_bans_honored": true,
+        "live_billing": false,
+        "ok": true,
+        "production_customer_database": false,
+        "status_json_forbidden": true
+      },
+      "claims": {
+        "hits": [],
+        "ok": true
+      },
+      "critical": [],
+      "critical_count": 0,
+      "env": {
+        "flags": {
+          "DEMO_ORDERS": "false",
+          "EXCHANGE_WRITE": "false",
+          "MAINNET": "false",
+          "NEXUS_FABRICATE_METRICS": "false",
+          "NEXUS_LIVE_BILLING": "false",
+          "NEXUS_LIVE_PUBLIC_DEPLOY": "false",
+          "NEXUS_PRODUCTION_CUSTOMER_DB": "false",
+          "REAL_MONEY": "false",
+          "SHADOW_ORDERS": "false"
+        },
+        "hard_bans": [
+          "no_merge_pr_26",
+          "no_merge_pr_27",
+          "no_live_public_deployment",
+          "no_app_store_submission",
+          "no_google_play_submission",
+          "no_live_billing",
+          "no_real_iap_products",
+          "no_production_customer_database",
+          "no_custodial_wallet",
+          "no_copy_trading",
+          "no_automated_customer_trading",
+          "no_fabricated_metrics",
+          "no_fabricated_participants",
+          "no_fabricated_wau",
+          "no_fabricated_conversion_rates",
+          "no_pii_in_analytics_props",
+          "no_tracking_without_consent",
+          "no_exchange_write",
+          "no_mainnet",
+          "no_real_money",
+          "no_demo_order",
+          "no_shadow_order",
+          "no_status_json_emission",
+          "no_private_core_exposure"
+        ],
+        "ok": true,
+        "violations": []
+      },
+      "hard_bans": [
+        "no_merge_pr_26",
+        "no_merge_pr_27",
+        "no_live_public_deployment",
+        "no_app_store_submission",
+        "no_google_play_submission",
+        "no_live_billing",
+        "no_real_iap_products",
+        "no_production_customer_database",
+        "no_custodial_wallet",
+        "no_copy_trading",
+        "no_automated_customer_trading",
+        "no_fabricated_metrics",
+        "no_fabricated_participants",
+        "no_fabricated_wau",
+        "no_fabricated_conversion_rates",
+        "no_pii_in_analytics_props",
+        "no_tracking_without_consent",
+        "no_exchange_write",
+        "no_mainnet",
+        "no_real_money",
+        "no_demo_order",
+        "no_shadow_order",
+        "no_status_json_emission",
+        "no_private_core_exposure"
+      ],
+      "imports": {
+        "hits": [],
+        "ok": true
+      },
+      "ok": true,
+      "status_json": {
+        "hits": [],
+        "ok": true
+      }
+    },
+    "name": "implementation",
+    "north_star_status": "NO_OBSERVATIONS",
+    "ok": true,
+    "pass": 1,
+    "recorded_events": 1,
+    "schema_errors": [],
+    "schema_path_exists": true,
+    "schema_version": "1.0.0",
+    "snapshot_event_total": 1
+  },
+  "pass2": {
+    "digest": "63c8b8091ce53bfa9476053807fe9849ee62aff87dc05cdff56823303a838500",
+    "findings": [
+      {
+        "attack": "fabricated_subject",
+        "result": "FIXED"
+      },
+      {
+        "attack": "pii_prop",
+        "result": "FIXED"
+      },
+      {
+        "attack": "production_db",
+        "result": "FIXED"
+      },
+      {
+        "attack": "status_json",
+        "result": "FIXED"
+      },
+      {
+        "attack": "fabricate_wau",
+        "result": "FIXED"
+      }
+    ],
+    "hard_ban": {
+      "assert": {
+        "fabricated_metrics_forbidden": true,
+        "hard_bans": [
+          "no_merge_pr_26",
+          "no_merge_pr_27",
+          "no_live_public_deployment",
+          "no_app_store_submission",
+          "no_google_play_submission",
+          "no_live_billing",
+          "no_real_iap_products",
+          "no_production_customer_database",
+          "no_custodial_wallet",
+          "no_copy_trading",
+          "no_automated_customer_trading",
+          "no_fabricated_metrics",
+          "no_fabricated_participants",
+          "no_fabricated_wau",
+          "no_fabricated_conversion_rates",
+          "no_pii_in_analytics_props",
+          "no_tracking_without_consent",
+          "no_exchange_write",
+          "no_mainnet",
+          "no_real_money",
+          "no_demo_order",
+          "no_shadow_order",
+          "no_status_json_emission",
+          "no_private_core_exposure"
+        ],
+        "hard_bans_honored": true,
+        "live_billing": false,
+        "ok": true,
+        "production_customer_database": false,
+        "status_json_forbidden": true
+      },
+      "claims": {
+        "hits": [],
+        "ok": true
+      },
+      "critical": [],
+      "critical_count": 0,
+      "env": {
+        "flags": {
+          "DEMO_ORDERS": "false",
+          "EXCHANGE_WRITE": "false",
+          "MAINNET": "false",
+          "NEXUS_FABRICATE_METRICS": "false",
+          "NEXUS_LIVE_BILLING": "false",
+          "NEXUS_LIVE_PUBLIC_DEPLOY": "false",
+          "NEXUS_PRODUCTION_CUSTOMER_DB": "false",
+          "REAL_MONEY": "false",
+          "SHADOW_ORDERS": "false"
+        },
+        "hard_bans": [
+          "no_merge_pr_26",
+          "no_merge_pr_27",
+          "no_live_public_deployment",
+          "no_app_store_submission",
+          "no_google_play_submission",
+          "no_live_billing",
+          "no_real_iap_products",
+          "no_production_customer_database",
+          "no_custodial_wallet",
+          "no_copy_trading",
+          "no_automated_customer_trading",
+          "no_fabricated_metrics",
+          "no_fabricated_participants",
+          "no_fabricated_wau",
+          "no_fabricated_conversion_rates",
+          "no_pii_in_analytics_props",
+          "no_tracking_without_consent",
+          "no_exchange_write",
+          "no_mainnet",
+          "no_real_money",
+          "no_demo_order",
+          "no_shadow_order",
+          "no_status_json_emission",
+          "no_private_core_exposure"
+        ],
+        "ok": true,
+        "violations": []
+      },
+      "hard_bans": [
+        "no_merge_pr_26",
+        "no_merge_pr_27",
+        "no_live_public_deployment",
+        "no_app_store_submission",
+        "no_google_play_submission",
+        "no_live_billing",
+        "no_real_iap_products",
+        "no_production_customer_database",
+        "no_custodial_wallet",
+        "no_copy_trading",
+        "no_automated_customer_trading",
+        "no_fabricated_metrics",
+        "no_fabricated_participants",
+        "no_fabricated_wau",
+        "no_fabricated_conversion_rates",
+        "no_pii_in_analytics_props",
+        "no_tracking_without_consent",
+        "no_exchange_write",
+        "no_mainnet",
+        "no_real_money",
+        "no_demo_order",
+        "no_shadow_order",
+        "no_status_json_emission",
+        "no_private_core_exposure"
+      ],
+      "imports": {
+        "hits": [],
+        "ok": true
+      },
+      "ok": true,
+      "status_json": {
+        "hits": [],
+        "ok": true
+      }
+    },
+    "name": "adversarial",
+    "ok": true,
+    "pass": 2,
+    "survivor_count": 0
+  },
+  "pass3": {
+    "digest": "1d11f56c26b608b116d1c800275c872384c9320e6a7cf9eda66068476cea3756",
+    "empty_north_star": {
+      "count": 0,
+      "metric_id": "closed_decision_loops_per_active_paid_user",
+      "name": "CLOSED_DECISION_LOOPS_PER_ACTIVE_PAID_USER",
+      "note": "Closed loops per active paid user require genuine paid cohort evidence; scaffolding refuses fabricated north-star rates.",
+      "status": "NO_OBSERVATIONS",
+      "value": null
+    },
+    "findings": [
+      {
+        "attack": "empty_snapshot_honest",
+        "result": "FIXED"
+      },
+      {
+        "attack": "forged_snapshot",
+        "result": "FIXED"
+      },
+      {
+        "attack": "unknown_event",
+        "result": "FIXED"
+      },
+      {
+        "attack": "schema_complete",
+        "result": "FIXED"
+      }
+    ],
+    "hard_ban": {
+      "assert": {
+        "fabricated_metrics_forbidden": true,
+        "hard_bans": [
+          "no_merge_pr_26",
+          "no_merge_pr_27",
+          "no_live_public_deployment",
+          "no_app_store_submission",
+          "no_google_play_submission",
+          "no_live_billing",
+          "no_real_iap_products",
+          "no_production_customer_database",
+          "no_custodial_wallet",
+          "no_copy_trading",
+          "no_automated_customer_trading",
+          "no_fabricated_metrics",
+          "no_fabricated_participants",
+          "no_fabricated_wau",
+          "no_fabricated_conversion_rates",
+          "no_pii_in_analytics_props",
+          "no_tracking_without_consent",
+          "no_exchange_write",
+          "no_mainnet",
+          "no_real_money",
+          "no_demo_order",
+          "no_shadow_order",
+          "no_status_json_emission",
+          "no_private_core_exposure"
+        ],
+        "hard_bans_honored": true,
+        "live_billing": false,
+        "ok": true,
+        "production_customer_database": false,
+        "status_json_forbidden": true
+      },
+      "claims": {
+        "hits": [],
+        "ok": true
+      },
+      "critical": [],
+      "critical_count": 0,
+      "env": {
+        "flags": {
+          "DEMO_ORDERS": "false",
+          "EXCHANGE_WRITE": "false",
+          "MAINNET": "false",
+          "NEXUS_FABRICATE_METRICS": "false",
+          "NEXUS_LIVE_BILLING": "false",
+          "NEXUS_LIVE_PUBLIC_DEPLOY": "false",
+          "NEXUS_PRODUCTION_CUSTOMER_DB": "false",
+          "REAL_MONEY": "false",
+          "SHADOW_ORDERS": "false"
+        },
+        "hard_bans": [
+          "no_merge_pr_26",
+          "no_merge_pr_27",
+          "no_live_public_deployment",
+          "no_app_store_submission",
+          "no_google_play_submission",
+          "no_live_billing",
+          "no_real_iap_products",
+          "no_production_customer_database",
+          "no_custodial_wallet",
+          "no_copy_trading",
+          "no_automated_customer_trading",
+          "no_fabricated_metrics",
+          "no_fabricated_participants",
+          "no_fabricated_wau",
+          "no_fabricated_conversion_rates",
+          "no_pii_in_analytics_props",
+          "no_tracking_without_consent",
+          "no_exchange_write",
+          "no_mainnet",
+          "no_real_money",
+          "no_demo_order",
+          "no_shadow_order",
+          "no_status_json_emission",
+          "no_private_core_exposure"
+        ],
+        "ok": true,
+        "violations": []
+      },
+      "hard_bans": [
+        "no_merge_pr_26",
+        "no_merge_pr_27",
+        "no_live_public_deployment",
+        "no_app_store_submission",
+        "no_google_play_submission",
+        "no_live_billing",
+        "no_real_iap_products",
+        "no_production_customer_database",
+        "no_custodial_wallet",
+        "no_copy_trading",
+        "no_automated_customer_trading",
+        "no_fabricated_metrics",
+        "no_fabricated_participants",
+        "no_fabricated_wau",
+        "no_fabricated_conversion_rates",
+        "no_pii_in_analytics_props",
+        "no_tracking_without_consent",
+        "no_exchange_write",
+        "no_mainnet",
+        "no_real_money",
+        "no_demo_order",
+        "no_shadow_order",
+        "no_status_json_emission",
+        "no_private_core_exposure"
+      ],
+      "imports": {
+        "hits": [],
+        "ok": true
+      },
+      "ok": true,
+      "status_json": {
+        "hits": [],
+        "ok": true
+      }
+    },
+    "name": "break_attempts",
+    "ok": true,
+    "pass": 3,
+    "survivor_count": 0
+  },
+  "status_json_emitted": false
+}
