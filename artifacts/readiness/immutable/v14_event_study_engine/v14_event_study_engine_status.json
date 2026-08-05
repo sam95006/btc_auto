@@ -5,7 +5,7 @@
   "base_commit": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
   "branch": "feature/v14-event-study-engine",
   "case_count": 5,
-  "created_at": "2026-08-05T11:15:26Z",
+  "created_at": "2026-08-05T11:16:00Z",
   "critical_finding_details": [],
   "critical_findings": 0,
   "definition_count": 8,
@@ -16,11 +16,11 @@
   "fixture_source": "synthetic_sanitized",
   "formal_walk_forward_executed": false,
   "hard_bans_honored": true,
-  "head_commit_at_run": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "head_commit_at_run": "cf8424b0b8505b42eb7b07877b7734dc9e8d6d2d",
   "high_finding_details": [],
   "high_findings": 0,
   "lane": "V14-B",
-  "lane_head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "lane_head": "cf8424b0b8505b42eb7b07877b7734dc9e8d6d2d",
   "lane_name": "EVENT_STUDY_ENGINE",
   "mainnet": false,
   "metrics": {
@@ -68,7 +68,7 @@
   "shadow_order_count": 0,
   "status": "PASS",
   "tests": {
-    "elapsed_s": 0.613,
+    "elapsed_s": 0.78,
     "exit_code": 0,
     "pytest_passed": true
   },
