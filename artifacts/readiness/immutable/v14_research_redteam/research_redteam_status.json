@@ -1,0 +1,819 @@
+{
+  "schema": "v14_research_redteam",
+  "program_id": "NEXUS_V14_RESEARCH_SECURITY_REDTEAM",
+  "created_at": "2026-08-05T11:20:15Z",
+  "lane": "V14-L",
+  "branch": "feature/v14-research-security-redteam",
+  "base_head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "pass_number": 2,
+  "execution_mode": "SIMULATED_FAIL_CLOSED_NO_EXCHANGE_WRITE",
+  "owned_paths": [
+    "backend/nexus_research_redteam/",
+    "tools/research/redteam_v14/",
+    "tests/redteam_v14/",
+    "artifacts/readiness/immutable/v14_research_redteam/"
+  ],
+  "prohibited_paths": [
+    "frontend/",
+    "backend/nexus_demo_execution/",
+    "G:/",
+    "PR27",
+    "deploy/"
+  ],
+  "hard_bans": [
+    "no_auto_integration_into_PR27",
+    "no_demo_orders",
+    "no_exchange_write",
+    "no_mainnet_client",
+    "no_merge",
+    "no_deploy",
+    "no_platform_blocked_mutation_as_pass",
+    "no_fixture_as_real_performance",
+    "no_provider_failure_as_quality_failure",
+    "no_surviving_critical_mutation_as_pass"
+  ],
+  "scenario_ids": [
+    "future_data_leakage",
+    "oos_consumption",
+    "fabricated_universe",
+    "counter_inflation",
+    "result_cherry_picking",
+    "candidate_relabeling",
+    "cost_omission",
+    "fixture_as_real",
+    "provider_failure_as_quality_failure",
+    "founder_auth_spoof",
+    "exchange_write_bypass",
+    "mainnet_profile_confusion",
+    "secret_leakage",
+    "checkpoint_rollback",
+    "ledger_fork"
+  ],
+  "fixture_ids": [
+    "property_fuzz_research_seals",
+    "schema_mutation_result",
+    "result_mutation",
+    "checkpoint_mutation",
+    "ledger_fork"
+  ],
+  "scenarios": [
+    {
+      "scenario_id": "future_data_leakage",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "future_data_leakage_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "clean": {
+          "status": "FUTURE_DATA_EXCLUDED",
+          "allowed": true,
+          "future_data_excluded": true,
+          "as_of_ms": 1700000000000,
+          "violation_count": 0,
+          "violations": [],
+          "nested_scan": true
+        },
+        "dirty": {
+          "status": "FUTURE_DATA_VIOLATION",
+          "allowed": false,
+          "future_data_excluded": false,
+          "as_of_ms": 1700000000000,
+          "violation_count": 1,
+          "violations": [
+            {
+              "record_id": "r2",
+              "kind": "nested_or_top",
+              "path": "r2.payload.nested.decision_ts_ms",
+              "key": "decision_ts_ms",
+              "value_ms": 1700000000999,
+              "as_of_ms": 1700000000000
+            }
+          ],
+          "nested_scan": true
+        }
+      }
+    },
+    {
+      "scenario_id": "oos_consumption",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "oos_consumption_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "clean": {
+          "status": "OOS_NON_CONSUMPTION_PROVEN",
+          "proven": true,
+          "oos_consumed": false,
+          "oos_executed": false,
+          "formal_walk_forward_executed": false,
+          "violations": [],
+          "registry_checksums": {
+            "reserved": "f3015fd0f09b0613fd50072793611165390c7c3ad95e4ef89dc0bdaf2ee2363e",
+            "consumed": "e88be54aaeaa1f7d721a76072a36a36ca38d8ec153b37b04fd54a4df1cd523e5"
+          }
+        },
+        "dirty": {
+          "status": "OOS_NON_CONSUMPTION_FAILED",
+          "proven": false,
+          "oos_consumed": false,
+          "oos_executed": false,
+          "formal_walk_forward_executed": false,
+          "violations": [
+            {
+              "reserved": {
+                "interval_id": "oos_1",
+                "label": "oos_holdout",
+                "start_ms": 1000,
+                "end_ms": 2000,
+                "category": "oos"
+              },
+              "consumed": {
+                "interval_id": "sneak_1",
+                "label": "sneak_consume",
+                "start_ms": 1500,
+                "end_ms": 1800,
+                "category": "consumed"
+              }
+            }
+          ],
+          "registry_checksums": {
+            "reserved": "f3015fd0f09b0613fd50072793611165390c7c3ad95e4ef89dc0bdaf2ee2363e",
+            "consumed": "67227710ace325f54413300dcbc7fff785a2a03e52a2aca956b976a78f857b86"
+          }
+        }
+      }
+    },
+    {
+      "scenario_id": "fabricated_universe",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "fabricated_universe_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "pit": [
+          "AAAUSDT"
+        ],
+        "honest": {
+          "ok": true,
+          "status": "PASS",
+          "fabricated": [],
+          "claimed": [
+            "AAAUSDT"
+          ],
+          "pit_members": [
+            "AAAUSDT"
+          ]
+        },
+        "attack": {
+          "ok": false,
+          "status": "FABRICATED_UNIVERSE",
+          "fabricated": [
+            "FUTUREUSDT"
+          ],
+          "claimed": [
+            "AAAUSDT",
+            "FUTUREUSDT"
+          ],
+          "pit_members": [
+            "AAAUSDT"
+          ]
+        }
+      }
+    },
+    {
+      "scenario_id": "counter_inflation",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "counter_inflation_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "honest": {
+          "ok": true,
+          "status": "PASS",
+          "inflated": {}
+        },
+        "inflated": {
+          "ok": false,
+          "status": "COUNTER_INFLATION",
+          "inflated": {
+            "evaluated": {
+              "reported": 99,
+              "sealed": 10
+            },
+            "invented": {
+              "reported": 5,
+              "sealed": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "scenario_id": "result_cherry_picking",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "cherry_picking_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "honest": {
+          "ok": true,
+          "status": "PASS",
+          "is_subset": false,
+          "improved": false,
+          "disclosed_subset": false,
+          "full_metric": 0.2,
+          "reported_metric": 0.2
+        },
+        "attack": {
+          "ok": false,
+          "status": "RESULT_CHERRY_PICKING",
+          "is_subset": true,
+          "improved": true,
+          "disclosed_subset": false,
+          "full_metric": 0.2,
+          "reported_metric": 0.9
+        },
+        "disclosed": {
+          "ok": true,
+          "status": "PASS",
+          "is_subset": true,
+          "improved": true,
+          "disclosed_subset": true,
+          "full_metric": 0.2,
+          "reported_metric": 0.9
+        }
+      }
+    },
+    {
+      "scenario_id": "candidate_relabeling",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "candidate_relabeling_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "honest": {
+          "ok": true,
+          "status": "PASS",
+          "remapped": {}
+        },
+        "swapped": {
+          "ok": false,
+          "status": "CANDIDATE_RELABELING",
+          "remapped": {
+            "cand_a": {
+              "sealed": "mean_reversion",
+              "reported": "momentum"
+            },
+            "cand_b": {
+              "sealed": "momentum",
+              "reported": "mean_reversion"
+            }
+          }
+        },
+        "renamed": {
+          "ok": false,
+          "status": "CANDIDATE_RELABELING",
+          "remapped": {
+            "cand_a": {
+              "sealed": "mean_reversion",
+              "reported": "winner_relabel"
+            }
+          }
+        }
+      }
+    },
+    {
+      "scenario_id": "cost_omission",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "cost_omission_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "clean": {
+          "ok": true,
+          "status": "PASS",
+          "missing": []
+        },
+        "missing_version": {
+          "ok": false,
+          "status": "COST_OMISSION",
+          "missing": [
+            "cost_model_version"
+          ]
+        },
+        "missing_summary": {
+          "ok": false,
+          "status": "COST_OMISSION",
+          "missing": [
+            "cost_summary",
+            "cost_summary.total_cost_null"
+          ]
+        },
+        "null_total": {
+          "ok": false,
+          "status": "COST_OMISSION",
+          "missing": [
+            "cost_summary.total_cost_null"
+          ]
+        }
+      }
+    },
+    {
+      "scenario_id": "fixture_as_real",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "fixture_as_real_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "honest": {
+          "ok": true,
+          "status": "PASS",
+          "fixture_label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+          "claims_real_performance": false,
+          "is_control_fixture": true
+        },
+        "attack_claim": {
+          "ok": false,
+          "status": "FIXTURE_AS_REAL",
+          "fixture_label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+          "claims_real_performance": true,
+          "is_control_fixture": true
+        },
+        "attack_relabel": {
+          "ok": false,
+          "status": "FIXTURE_AS_REAL",
+          "fixture_label": "REAL_HISTORICAL_MARKET_PERFORMANCE",
+          "claims_real_performance": false,
+          "is_control_fixture": true
+        }
+      }
+    },
+    {
+      "scenario_id": "provider_failure_as_quality_failure",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "provider_failure_as_quality_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "transport": {
+          "TIMEOUT": {
+            "classify": {
+              "ok": true,
+              "bucket": "TRANSPORT_FAILURE",
+              "provider_status": "TIMEOUT",
+              "is_transport_failure": true,
+              "is_ai_quality_failure": false
+            },
+            "detect": {
+              "ok": true,
+              "status": "PASS",
+              "provider_status": "TIMEOUT",
+              "is_transport_failure": true,
+              "is_ai_quality_failure": false,
+              "claimed_as_quality": null
+            },
+            "attack": {
+              "ok": false,
+              "status": "PROVIDER_FAILURE_AS_QUALITY",
+              "provider_status": "TIMEOUT",
+              "is_transport_failure": true,
+              "is_ai_quality_failure": false,
+              "claimed_as_quality": true
+            }
+          },
+          "RATE_LIMITED": {
+            "classify": {
+              "ok": true,
+              "bucket": "TRANSPORT_FAILURE",
+              "provider_status": "RATE_LIMITED",
+              "is_transport_failure": true,
+              "is_ai_quality_failure": false
+            },
+            "detect": {
+              "ok": true,
+              "status": "PASS",
+              "provider_status": "RATE_LIMITED",
+              "is_transport_failure": true,
+              "is_ai_quality_failure": false,
+              "claimed_as_quality": null
+            },
+            "attack": {
+              "ok": false,
+              "status": "PROVIDER_FAILURE_AS_QUALITY",
+              "provider_status": "RATE_LIMITED",
+              "is_transport_failure": true,
+              "is_ai_quality_failure": false,
+              "claimed_as_quality": true
+            }
+          },
+          "CIRCUIT_OPEN": {
+            "classify": {
+              "ok": true,
+              "bucket": "TRANSPORT_FAILURE",
+              "provider_status": "CIRCUIT_OPEN",
+              "is_transport_failure": true,
+              "is_ai_quality_failure": false
+            },
+            "detect": {
+              "ok": true,
+              "status": "PASS",
+              "provider_status": "CIRCUIT_OPEN",
+              "is_transport_failure": true,
+              "is_ai_quality_failure": false,
+              "claimed_as_quality": null
+            },
+            "attack": {
+              "ok": false,
+              "status": "PROVIDER_FAILURE_AS_QUALITY",
+              "provider_status": "CIRCUIT_OPEN",
+              "is_transport_failure": true,
+              "is_ai_quality_failure": false,
+              "claimed_as_quality": true
+            }
+          },
+          "PROVIDER_UNAVAILABLE": {
+            "classify": {
+              "ok": true,
+              "bucket": "TRANSPORT_FAILURE",
+              "provider_status": "PROVIDER_UNAVAILABLE",
+              "is_transport_failure": true,
+              "is_ai_quality_failure": false
+            },
+            "detect": {
+              "ok": true,
+              "status": "PASS",
+              "provider_status": "PROVIDER_UNAVAILABLE",
+              "is_transport_failure": true,
+              "is_ai_quality_failure": false,
+              "claimed_as_quality": null
+            },
+            "attack": {
+              "ok": false,
+              "status": "PROVIDER_FAILURE_AS_QUALITY",
+              "provider_status": "PROVIDER_UNAVAILABLE",
+              "is_transport_failure": true,
+              "is_ai_quality_failure": false,
+              "claimed_as_quality": true
+            }
+          }
+        },
+        "quality": {
+          "ok": true,
+          "bucket": "AI_QUALITY_FAILURE",
+          "provider_status": "INVALID_SCHEMA",
+          "is_transport_failure": false,
+          "is_ai_quality_failure": true
+        }
+      }
+    },
+    {
+      "scenario_id": "founder_auth_spoof",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "founder_auth_spoof_rejected",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "spoof": {
+          "valid": false,
+          "authorized": false,
+          "reason": "FOUNDER_AUTH_PROOF_INVALID_OR_SPOOFED",
+          "spoof_rejected": true,
+          "expected_auth_proof": "ee155674e77c0b4972e16ea809259fcc13929a03a5bf15a1d69910fd040f7c18",
+          "provided_auth_proof": "deadbeef"
+        },
+        "bound": {
+          "valid": true,
+          "authorized": false,
+          "reason": "FAKE",
+          "spoof_rejected": false,
+          "bound_authorized_claim": true
+        },
+        "missing": {
+          "authorized": false,
+          "reason": "FOUNDER_AUTHORIZATION_MISSING",
+          "required_scope": "founder_v11_pit_qualification",
+          "auth_proof": "f77779a35c6ade1f4cf0d2c897764dbdd881c34354105c463a17bea520a65ff1",
+          "auth_binding": "f77779a35c6ade1f4cf0d2c897764dbdd881c34354105c463a17bea520a65ff1"
+        }
+      }
+    },
+    {
+      "scenario_id": "exchange_write_bypass",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "exchange_write_bypass_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "orch_blocked": true,
+        "order_blocked": true,
+        "trap_raised": true,
+        "trap_attempts": 1
+      }
+    },
+    {
+      "scenario_id": "mainnet_profile_confusion",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "mainnet_profile_separated",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "demo_on_mainnet": {
+          "profile": "demo",
+          "ok": false,
+          "fail_closed": true,
+          "reasons": [
+            "demo_mainnet_profile_confused",
+            "writes_require_explicit_founder_flag",
+            "demo_host_rejected:api.bybit.com"
+          ],
+          "mainnet_fallback_used": false,
+          "demo_mainnet_confused": true,
+          "writes_enabled": false,
+          "secret_echoed": false
+        },
+        "mainnet_requested": {
+          "profile": "mainnet",
+          "ok": false,
+          "fail_closed": true,
+          "reasons": [
+            "mainnet_profile_blocked_by_security_boundary"
+          ],
+          "mainnet_fallback_used": false,
+          "demo_mainnet_confused": false,
+          "writes_enabled": false,
+          "secret_echoed": false
+        },
+        "fallback": {
+          "profile": "demo",
+          "ok": false,
+          "fail_closed": true,
+          "reasons": [
+            "mainnet_fallback_rejected",
+            "demo_credentials_missing"
+          ],
+          "mainnet_fallback_used": true,
+          "demo_mainnet_confused": false,
+          "writes_enabled": false,
+          "secret_echoed": false
+        }
+      }
+    },
+    {
+      "scenario_id": "secret_leakage",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "secret_leakage_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "findings": [
+          "pattern:api_key",
+          "credential_assignment"
+        ],
+        "detected": true,
+        "not_echoed": true,
+        "redacted_changed": true,
+        "public_keys": [
+          "api_key",
+          "strategy_param_alpha",
+          "ok_field"
+        ]
+      }
+    },
+    {
+      "scenario_id": "checkpoint_rollback",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "checkpoint_rollback_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "verify_ok": true,
+        "seal_mismatch": true,
+        "rollback_detected": true,
+        "advance_ok": true,
+        "sealed_sequence": 4,
+        "rolled_sequence": 2
+      }
+    },
+    {
+      "scenario_id": "ledger_fork",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "ledger_fork_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "clean": {
+          "ledger_hash_chain_status": "PASS",
+          "event_count": 4
+        },
+        "broken": {
+          "ledger_hash_chain_status": "CORRUPTION_DETECTED",
+          "broken_at_sequence": 2
+        },
+        "detected": true
+      }
+    }
+  ],
+  "fixtures": [
+    {
+      "fixture_id": "property_fuzz_research_seals",
+      "passed": true,
+      "rounds": 64,
+      "clean_ok": 64,
+      "mutant_blocked": 64,
+      "failures": []
+    },
+    {
+      "fixture_id": "schema_mutation_result",
+      "passed": true,
+      "mutations": [
+        {
+          "key": "result_id",
+          "blocked": true,
+          "status": "RESULT_MISSING_KEYS"
+        },
+        {
+          "key": "candidate_ids",
+          "blocked": true,
+          "status": "RESULT_MISSING_KEYS"
+        },
+        {
+          "key": "universe_members",
+          "blocked": true,
+          "status": "RESULT_MISSING_KEYS"
+        },
+        {
+          "key": "as_of_ms",
+          "blocked": true,
+          "status": "RESULT_MISSING_KEYS"
+        },
+        {
+          "key": "counters",
+          "blocked": true,
+          "status": "RESULT_MISSING_KEYS"
+        },
+        {
+          "key": "metrics",
+          "blocked": true,
+          "status": "RESULT_MISSING_KEYS"
+        },
+        {
+          "key": "cost_model_version",
+          "blocked": true,
+          "status": "RESULT_MISSING_KEYS"
+        },
+        {
+          "key": "cost_summary",
+          "blocked": true,
+          "status": "RESULT_MISSING_KEYS"
+        },
+        {
+          "key": "fixture_label",
+          "blocked": true,
+          "status": "RESULT_MISSING_KEYS"
+        },
+        {
+          "key": "provider_status",
+          "blocked": true,
+          "status": "RESULT_MISSING_KEYS"
+        }
+      ]
+    },
+    {
+      "fixture_id": "result_mutation",
+      "passed": true,
+      "honest": {
+        "ok": true,
+        "status": "PASS",
+        "seal": "fb520fff7bcf80a432dee9579a7d182ef081437bcacc74b4028744f167057b85"
+      },
+      "attack": {
+        "ok": false,
+        "status": "RESULT_SEAL_MISMATCH",
+        "expected": "fb520fff7bcf80a432dee9579a7d182ef081437bcacc74b4028744f167057b85",
+        "actual": "cc2696debfa1528e0b2bc852ba4cb35a17ef122e98684b6f3ce72850a23fce8c"
+      },
+      "swap": {
+        "ok": false,
+        "status": "RESULT_SEAL_MISMATCH",
+        "expected": "fb520fff7bcf80a432dee9579a7d182ef081437bcacc74b4028744f167057b85",
+        "actual": "cc82e530cd385f3a9af69e585859237d1a9b6ed920078b5f16a98e4d08789345"
+      },
+      "seal": "fb520fff7bcf80a432dee9579a7d182ef081437bcacc74b4028744f167057b85"
+    },
+    {
+      "fixture_id": "checkpoint_mutation",
+      "passed": true,
+      "pin_match": true,
+      "diverged": true,
+      "rollback_detected": true,
+      "digest_detects": true,
+      "seal": "4e36a60f64bc584ea25297f2959bd1ed9e44fa868ff60ba5767e633cb29f54f9"
+    },
+    {
+      "fixture_id": "ledger_fork",
+      "passed": true,
+      "clean_ok": true,
+      "detected": true,
+      "clean": {
+        "ledger_hash_chain_status": "PASS",
+        "event_count": 4
+      },
+      "broken": {
+        "ledger_hash_chain_status": "CORRUPTION_DETECTED",
+        "broken_at_sequence": 2
+      }
+    }
+  ],
+  "production_ast": {
+    "passed": true,
+    "killed": 5,
+    "survivors": 0,
+    "equivalent": 3,
+    "errors": 0,
+    "platform_blocked_count": 0,
+    "platform_blocked_pass_count": 0,
+    "required_kill_status": {
+      "persist_scan_secrets_noop": "killed",
+      "persist_json_accept_scalars": "killed",
+      "public_assert_schema_noop": "killed",
+      "public_redact_identity": "killed",
+      "write_trap_install_noop": "killed"
+    },
+    "unresolved_blockers": []
+  },
+  "scenario_pass_count": 15,
+  "scenario_total_count": 15,
+  "fixture_pass_count": 5,
+  "fixture_total_count": 5,
+  "attack_blocked_count": 15,
+  "attack_total_count": 15,
+  "platform_blocked_count": 0,
+  "platform_blocked_pass_count": 0,
+  "findings": {
+    "critical_finding_count": 0,
+    "unresolved_critical_count": 0,
+    "high_finding_count": 0,
+    "items": []
+  },
+  "exchange_write_attempt_count": 0,
+  "secret_leak_count": 0,
+  "mainnet_client_created_count": 0,
+  "demo_order_count": 0,
+  "real_money": false,
+  "mainnet": false,
+  "auto_integration": false,
+  "PR27_draft_unmerged": true,
+  "remaining_blockers": [
+    "V14_lanes_incomplete",
+    "no_qualified_strategy_edge",
+    "event_study_NOT_READY",
+    "PR27_draft_unmerged",
+    "auto_integration_forbidden",
+    "qualification_ready_count_must_remain_0",
+    "oos_executed_must_remain_false"
+  ],
+  "label": "RESEARCH_SECURITY_REDTEAM_CONTROL_NOT_REAL_TRADING",
+  "secret_scan": {
+    "raw_hit_count": 2,
+    "real_leak_count": 0,
+    "real_leaks": []
+  },
+  "recommendation": "NEXUS_V14_RESEARCH_SECURITY_REDTEAM_PASS",
+  "Research_Security_Redteam_status": "NEXUS_V14_RESEARCH_SECURITY_REDTEAM_PASS",
+  "passed": true,
+  "critical_findings": [],
+  "high_findings": [],
+  "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v14_l_research_redteam",
+  "commit": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a"
+}
