@@ -38,7 +38,7 @@
       "window_alignment": "floor(exchange_timestamp / window_ms) * window_ms"
     }
   },
-  "created_at": "2026-08-05T08:33:08Z",
+  "created_at": "2026-08-05T08:33:49Z",
   "feature_count": 12,
   "feature_schema_version": "micro_feature_lab_v13_e_1",
   "features": {
