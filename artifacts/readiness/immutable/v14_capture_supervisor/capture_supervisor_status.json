@@ -5,7 +5,7 @@
   "created_at": "2026-08-05T11:20:30Z",
   "branch": "feature/v14-live-capture-integrity-supervisor",
   "base_head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
-  "git_head": "fcd5c66ef6b19b73c75bf0d3399188d5ff731714",
+  "git_head": "150e2dde39096f7eabbfbd11a34b2c4d0d0649b7",
   "campaign_id": "ms_accum_v13_integrity_14d",
   "evidence_class": "REAL_LIVE_CAMPAIGN_READONLY",
   "pass1_all_passed": true,
@@ -115,5 +115,7 @@
   "auto_integration": false,
   "owned_paths_only": true,
   "readiness": "PASS",
-  "changed_files": []
+  "changed_files": [],
+  "proof_stamped_at": "2026-08-05T11:20:53Z",
+  "proof_stamp_head": "150e2dde39096f7eabbfbd11a34b2c4d0d0649b7"
 }
