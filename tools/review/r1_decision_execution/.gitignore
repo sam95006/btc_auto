@@ -1,0 +1,2 @@
+# Ephemeral Lane A/B merge cache for R1 imports — do not commit.
+.lane_overlay_cache/
