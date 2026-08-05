@@ -71,5 +71,7 @@
   "PR27_merged": false,
   "G_deleted": false,
   "owned_paths_only": true,
-  "secret_leak_count": 0
+  "secret_leak_count": 0,
+  "head": "ab7aa5704cb9ff8b028ae2cd3207b42def2dcfaf",
+  "commit": "ab7aa5704cb9ff8b028ae2cd3207b42def2dcfaf"
 }
