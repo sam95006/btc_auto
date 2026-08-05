@@ -22,7 +22,7 @@
   ],
   "completed_lifecycle_count": 650,
   "cost_model_version": "founder-conservative-v1-1-2026-08-05",
-  "created_at": "2026-08-05T07:49:07Z",
+  "created_at": "2026-08-05T08:17:51Z",
   "demo_shadow_mainnet": false,
   "digest": "3e3a5b2ad571c1edc506fb602d853f82f96f8efed6709d885f8fe3c1f2c8e34d",
   "error_count": 0,
@@ -77,8 +77,8 @@
       "candidate_id": "hist_cand_12001_0000",
       "completed_lifecycle": true,
       "cost_model_version": "founder-conservative-v1-1-2026-08-05",
-      "decision_id": "dec_2d1c897fa9264708",
-      "exit_id": "exit_f86bda551066",
+      "decision_id": "dec_2dd5abdd03e84ba9",
+      "exit_id": "exit_b7abe4aae47e",
       "intent_id": "v12intent:hist_cand_12001_0000",
       "lesson_gate": {
         "V2_3_TERMINAL_STATUS": "INCOMPLETE_PROVIDER_CAPACITY",
@@ -131,8 +131,8 @@
       "candidate_id": "hist_cand_12001_0001",
       "completed_lifecycle": true,
       "cost_model_version": "founder-conservative-v1-1-2026-08-05",
-      "decision_id": "dec_0d227ac3b2f4444a",
-      "exit_id": "exit_138047a04dc7",
+      "decision_id": "dec_9f6dfd1a262e492c",
+      "exit_id": "exit_60ca78a89803",
       "intent_id": "v12intent:hist_cand_12001_0001",
       "lesson_gate": {
         "V2_3_TERMINAL_STATUS": "INCOMPLETE_PROVIDER_CAPACITY",
@@ -185,8 +185,8 @@
       "candidate_id": "hist_cand_12001_0002",
       "completed_lifecycle": true,
       "cost_model_version": "founder-conservative-v1-1-2026-08-05",
-      "decision_id": "dec_767c43b8754f4713",
-      "exit_id": "exit_adb9183562d9",
+      "decision_id": "dec_4d48d1337d714f49",
+      "exit_id": "exit_0abbe8b81a7b",
       "intent_id": "v12intent:hist_cand_12001_0002",
       "lesson_gate": {
         "V2_3_TERMINAL_STATUS": "INCOMPLETE_PROVIDER_CAPACITY",
@@ -240,7 +240,7 @@
     {
       "candidate_id": "hist_cand_12001_0650",
       "completed_lifecycle": false,
-      "decision_id": "dec_39743ecbae7d4873",
+      "decision_id": "dec_91371fba9343474e",
       "intent_id": null,
       "lesson_gate": null,
       "ontology": [
@@ -260,7 +260,7 @@
     {
       "candidate_id": "hist_cand_12001_0651",
       "completed_lifecycle": false,
-      "decision_id": "dec_b101b413638048e1",
+      "decision_id": "dec_8208495ec81248af",
       "intent_id": null,
       "lesson_gate": null,
       "ontology": [
@@ -280,7 +280,7 @@
     {
       "candidate_id": "hist_cand_12001_0652",
       "completed_lifecycle": false,
-      "decision_id": "dec_21a5bd1b8a2c4f5d",
+      "decision_id": "dec_c9b317694e654537",
       "intent_id": null,
       "lesson_gate": null,
       "ontology": [
@@ -305,6 +305,6 @@
     "candidates": 1000,
     "completed_lifecycles": 500
   },
-  "work_root": "C:\\Users\\user\\AppData\\Local\\Temp\\v12_closed_loop_cz6q0hcd",
+  "work_root": "D:\\NEXUS\\btc_bot\\.nexus_runtime\\tmp\\v12_closed_loop_mtci9ids",
   "work_root_ephemeral": true
 }

@@ -1,5 +1,5 @@
 {
-  "allowed_competitor_hit_count": 31,
+  "allowed_competitor_hit_count": 32,
   "allowed_competitor_hits": [
     {
       "classification": "compatibility_shim",
@@ -18,6 +18,12 @@
       "domain": "cost",
       "key": "cost::backend.nexus_strategy_engine.cost_semantics",
       "module": "backend.nexus_strategy_engine.cost_semantics"
+    },
+    {
+      "classification": "fixture_tool",
+      "domain": "execution",
+      "key": "execution::backend.nexus_autonomy.closed_loop_redteam_v12.constants",
+      "module": "backend.nexus_autonomy.closed_loop_redteam_v12.constants"
     },
     {
       "classification": "compatibility_shim",
@@ -188,11 +194,11 @@
       "module": "backend.nexus_reflection.v23_resume_v10"
     }
   ],
-  "baseline_claimant_count": 48,
-  "generated_at": "2026-08-05T07:30:49Z",
+  "baseline_claimant_count": 49,
+  "generated_at": "2026-08-05T08:18:23Z",
   "graph_summary": {
     "circular_scc_count": 0,
-    "claim_count": 66,
+    "claim_count": 67,
     "critical_finding_count": 0,
     "domain_count": 7,
     "domains_with_duplicates": [
@@ -204,8 +210,8 @@
       "provider_retry",
       "risk"
     ],
-    "edge_count": 4300,
-    "node_count": 43
+    "edge_count": 4442,
+    "node_count": 44
   },
   "lane": "V11_H_AUTHORITY_CONSOLIDATION",
   "passed": true,

@@ -150,6 +150,17 @@ def _records() -> tuple[AuthorityRecord, ...]:
                     ),
                     recommended_action="retain_compat",
                 ),
+                CompetitorRecord(
+                    module="backend.nexus_autonomy.closed_loop_redteam_v12.constants",
+                    symbol=None,
+                    role="fixture_tool",
+                    severity="low",
+                    notes=(
+                        "V12-F closed-loop red-team fixture constants only; "
+                        "attack harness labels/paths — not Session→Execution authority."
+                    ),
+                    recommended_action="retain_compat",
+                ),
             ),
             notes=(
                 "Cross-lane Session→Execution bridge is "
