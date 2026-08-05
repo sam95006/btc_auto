@@ -1,0 +1,26 @@
+{
+  "lane": "PUB-F",
+  "branch": "feature/public-v1-realtime-transport",
+  "base_commit": "39e6b1ae1a40698d02c4cb8de4d80fc412309cfc",
+  "recommendation": "NEXUS_PUBLIC_V1_REALTIME_TRANSPORT_PASS",
+  "two_pass_ok": true,
+  "private_event_stream_exposure": false,
+  "transports": [
+    "sse",
+    "websocket",
+    "polling"
+  ],
+  "features": [
+    "sequence",
+    "resume_tokens",
+    "heartbeat",
+    "staleness",
+    "reconnect_backoff",
+    "polling_fallback",
+    "duplicate_suppression",
+    "out_of_order_handling"
+  ],
+  "artifact_policy": "no_star_status_json",
+  "generated_at": "2026-08-05T15:20:04Z",
+  "head_sha_note": "fill_after_commit"
+}

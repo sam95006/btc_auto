@@ -1,0 +1,59 @@
+{
+  "schema": "public_realtime_transport_fixture_v1",
+  "stream_id": "public.decision.feed",
+  "note": "LOCAL/STAGING fixture events only — no private Founder streams, no exchange writes.",
+  "events": [
+    {
+      "kind": "availability",
+      "topic": "public.decision.feed",
+      "payload": {"status": "available", "surface": "decision_feed"}
+    },
+    {
+      "kind": "decision_update",
+      "topic": "public.decision.feed",
+      "payload": {
+        "decision_id": "dec_pub_demo_001",
+        "status": "open",
+        "posture": "observe",
+        "thesis_statement": "Range-bound BTC with elevated uncertainty."
+      }
+    },
+    {
+      "kind": "thesis_alert",
+      "topic": "public.decision.feed",
+      "payload": {
+        "decision_id": "dec_pub_demo_001",
+        "alert_code": "EVIDENCE_DRIFT",
+        "severity": "low",
+        "message": "Supporting evidence aging; review recommended."
+      }
+    },
+    {
+      "kind": "freshness_change",
+      "topic": "public.decision.feed",
+      "payload": {
+        "decision_id": "dec_pub_demo_001",
+        "freshness_band": "aging",
+        "freshness_seconds": 420
+      }
+    },
+    {
+      "kind": "evidence_refresh",
+      "topic": "public.decision.feed",
+      "payload": {
+        "decision_id": "dec_pub_demo_001",
+        "evidence_count": 3,
+        "counter_evidence_count": 1
+      }
+    },
+    {
+      "kind": "outcome_review",
+      "topic": "public.decision.feed",
+      "payload": {
+        "decision_id": "dec_pub_demo_000",
+        "classification": "UNDETERMINED",
+        "note": "Fixture classification only."
+      }
+    }
+  ]
+}

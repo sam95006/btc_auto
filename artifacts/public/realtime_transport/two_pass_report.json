@@ -1,0 +1,242 @@
+{
+  "schema": "pub_f_realtime_two_pass",
+  "lane": "PUB-F",
+  "branch": "feature/public-v1-realtime-transport",
+  "base_commit": "39e6b1ae1a40698d02c4cb8de4d80fc412309cfc",
+  "schema_version": "public_realtime_transport_v1",
+  "pass_count": 2,
+  "digests": [
+    "04dd547c449eacbef1dc34c167f5b6aae23060fd930219270764fded5c368b8f",
+    "04dd547c449eacbef1dc34c167f5b6aae23060fd930219270764fded5c368b8f"
+  ],
+  "passes_match": true,
+  "two_pass_ok": true,
+  "pass1": {
+    "pass": 1,
+    "pass_ok": true,
+    "critical_count": 0,
+    "hard_ban": {
+      "ok": true,
+      "critical_count": 0,
+      "critical": [],
+      "env": {
+        "ok": true,
+        "flags": {
+          "EXCHANGE_WRITE": "false",
+          "MAINNET": "false",
+          "REAL_MONEY": "false",
+          "DEMO_ORDERS": "false",
+          "SHADOW_ORDERS": "false",
+          "NEXUS_LIVE_BILLING": "false",
+          "AUTO_INTEGRATE": "false",
+          "NEXUS_LIVE_PUBLIC_DEPLOY": "false"
+        },
+        "environment": "LOCAL",
+        "violations": [],
+        "hard_bans": [
+          "no_private_event_stream_exposure",
+          "no_live_public_deployment",
+          "no_app_store_submission",
+          "no_google_play_submission",
+          "no_live_billing",
+          "no_real_iap_products",
+          "no_production_customer_database",
+          "no_custodial_wallet",
+          "no_copy_trading",
+          "no_automated_customer_trading",
+          "no_customer_trading",
+          "no_exchange_write",
+          "no_demo_order",
+          "no_shadow_order",
+          "no_mainnet",
+          "no_real_money",
+          "no_PR26_merge",
+          "no_PR27_merge",
+          "no_private_core_direct_imports",
+          "no_order_placement",
+          "no_account_secrets",
+          "no_strategy_parameters_in_payloads",
+          "no_private_lesson_memory",
+          "no_fabricated_edge",
+          "no_auto_integrate"
+        ]
+      },
+      "imports": {
+        "ok": true,
+        "hits": []
+      },
+      "claims": {
+        "ok": true,
+        "hits": []
+      },
+      "private_topics": {
+        "ok": true,
+        "hits": []
+      },
+      "hard_bans": [
+        "no_private_event_stream_exposure",
+        "no_live_public_deployment",
+        "no_app_store_submission",
+        "no_google_play_submission",
+        "no_live_billing",
+        "no_real_iap_products",
+        "no_production_customer_database",
+        "no_custodial_wallet",
+        "no_copy_trading",
+        "no_automated_customer_trading",
+        "no_customer_trading",
+        "no_exchange_write",
+        "no_demo_order",
+        "no_shadow_order",
+        "no_mainnet",
+        "no_real_money",
+        "no_PR26_merge",
+        "no_PR27_merge",
+        "no_private_core_direct_imports",
+        "no_order_placement",
+        "no_account_secrets",
+        "no_strategy_parameters_in_payloads",
+        "no_private_lesson_memory",
+        "no_fabricated_edge",
+        "no_auto_integrate"
+      ]
+    },
+    "mechanics": {
+      "schema": "pub_f_realtime_mechanics_proof_v1",
+      "ok": true,
+      "checks": {
+        "fixture_events_loaded": 6,
+        "polling_count": 6,
+        "sse_chunks": 8,
+        "ws_frames": 8,
+        "resume_after_seq2_count": 4,
+        "duplicate_suppressed": true,
+        "ooo_reordered": true,
+        "reconnect_recorded": true,
+        "polling_fallback": true,
+        "private_topic_refused": true,
+        "heartbeat_in_sse": true,
+        "staleness_present": true
+      }
+    },
+    "digest": "04dd547c449eacbef1dc34c167f5b6aae23060fd930219270764fded5c368b8f",
+    "findings": []
+  },
+  "pass2": {
+    "pass": 2,
+    "pass_ok": true,
+    "critical_count": 0,
+    "hard_ban": {
+      "ok": true,
+      "critical_count": 0,
+      "critical": [],
+      "env": {
+        "ok": true,
+        "flags": {
+          "EXCHANGE_WRITE": "false",
+          "MAINNET": "false",
+          "REAL_MONEY": "false",
+          "DEMO_ORDERS": "false",
+          "SHADOW_ORDERS": "false",
+          "NEXUS_LIVE_BILLING": "false",
+          "AUTO_INTEGRATE": "false",
+          "NEXUS_LIVE_PUBLIC_DEPLOY": "false"
+        },
+        "environment": "LOCAL",
+        "violations": [],
+        "hard_bans": [
+          "no_private_event_stream_exposure",
+          "no_live_public_deployment",
+          "no_app_store_submission",
+          "no_google_play_submission",
+          "no_live_billing",
+          "no_real_iap_products",
+          "no_production_customer_database",
+          "no_custodial_wallet",
+          "no_copy_trading",
+          "no_automated_customer_trading",
+          "no_customer_trading",
+          "no_exchange_write",
+          "no_demo_order",
+          "no_shadow_order",
+          "no_mainnet",
+          "no_real_money",
+          "no_PR26_merge",
+          "no_PR27_merge",
+          "no_private_core_direct_imports",
+          "no_order_placement",
+          "no_account_secrets",
+          "no_strategy_parameters_in_payloads",
+          "no_private_lesson_memory",
+          "no_fabricated_edge",
+          "no_auto_integrate"
+        ]
+      },
+      "imports": {
+        "ok": true,
+        "hits": []
+      },
+      "claims": {
+        "ok": true,
+        "hits": []
+      },
+      "private_topics": {
+        "ok": true,
+        "hits": []
+      },
+      "hard_bans": [
+        "no_private_event_stream_exposure",
+        "no_live_public_deployment",
+        "no_app_store_submission",
+        "no_google_play_submission",
+        "no_live_billing",
+        "no_real_iap_products",
+        "no_production_customer_database",
+        "no_custodial_wallet",
+        "no_copy_trading",
+        "no_automated_customer_trading",
+        "no_customer_trading",
+        "no_exchange_write",
+        "no_demo_order",
+        "no_shadow_order",
+        "no_mainnet",
+        "no_real_money",
+        "no_PR26_merge",
+        "no_PR27_merge",
+        "no_private_core_direct_imports",
+        "no_order_placement",
+        "no_account_secrets",
+        "no_strategy_parameters_in_payloads",
+        "no_private_lesson_memory",
+        "no_fabricated_edge",
+        "no_auto_integrate"
+      ]
+    },
+    "mechanics": {
+      "schema": "pub_f_realtime_mechanics_proof_v1",
+      "ok": true,
+      "checks": {
+        "fixture_events_loaded": 6,
+        "polling_count": 6,
+        "sse_chunks": 8,
+        "ws_frames": 8,
+        "resume_after_seq2_count": 4,
+        "duplicate_suppressed": true,
+        "ooo_reordered": true,
+        "reconnect_recorded": true,
+        "polling_fallback": true,
+        "private_topic_refused": true,
+        "heartbeat_in_sse": true,
+        "staleness_present": true
+      }
+    },
+    "digest": "04dd547c449eacbef1dc34c167f5b6aae23060fd930219270764fded5c368b8f",
+    "findings": [],
+    "digests_match": true,
+    "pass1_digest": "04dd547c449eacbef1dc34c167f5b6aae23060fd930219270764fded5c368b8f",
+    "findings_fixed": [],
+    "remaining_residuals": [],
+    "note": "residuals_list_is_critical_only"
+  },
+  "generated_at": "2026-08-05T15:20:04Z"
+}

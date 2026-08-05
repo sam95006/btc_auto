@@ -1,0 +1,18 @@
+{
+  "schema": "pub_f_realtime_mechanics_proof_v1",
+  "ok": true,
+  "checks": {
+    "fixture_events_loaded": 6,
+    "polling_count": 6,
+    "sse_chunks": 8,
+    "ws_frames": 8,
+    "resume_after_seq2_count": 4,
+    "duplicate_suppressed": true,
+    "ooo_reordered": true,
+    "reconnect_recorded": true,
+    "polling_fallback": true,
+    "private_topic_refused": true,
+    "heartbeat_in_sse": true,
+    "staleness_present": true
+  }
+}
