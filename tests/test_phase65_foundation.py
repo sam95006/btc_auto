@@ -14,7 +14,7 @@ def test_feature_seed_nonzero_definitions():
     import backend.nexus_research.features.feature_seed as seed_mod
 
     seed_mod._SEEDED = False  # noqa: SLF001
-    result = seed_default_feature_definitions(force=True)
+    result = seed_default_feature_definitions(force=True, registry=reg_mod.get_feature_registry())
     registry = reg_mod.get_feature_registry()
     defs = registry.list_definitions()
     assert result["count"] > 0

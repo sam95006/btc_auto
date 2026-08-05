@@ -1,0 +1,8 @@
+{
+  "schema": "FOUNDER_C6_RUNTIME_STARTUP",
+  "generated_at": "2026-08-05T04:08:48Z",
+  "runtime_startup_status": "PASS",
+  "entrypoint": "run.app",
+  "health_path": "/health",
+  "health_status_code": 200
+}

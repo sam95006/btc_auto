@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from backend.nexus_execution import security_boundary
+import backend.nexus_execution.security_boundary as security_boundary
 from backend.nexus_execution.book_model_v11 import BOOK_MODEL_VERSION, FILL_ACCURACY_CLAIM
 from backend.nexus_execution.microstructure_realism_v11.adapter import (
     ADAPTER_ID,

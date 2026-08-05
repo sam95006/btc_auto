@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from decimal import Decimal, ROUND_DOWN, getcontext
 from typing import Any, Callable
 
-from backend.nexus_execution import security_boundary
+import backend.nexus_execution.security_boundary as security_boundary
 from backend.nexus_execution.book_model_v11 import (
     BOOK_MODEL_VERSION,
     FILL_ACCURACY_CLAIM,

@@ -130,8 +130,12 @@ def extract_imports(path: Path, root: Path) -> list[dict[str, Any]]:
     except (OSError, SyntaxError):
         return []
     mod = module_from_path(path, root)
+    # TYPE_CHECKING-only imports are typing contracts, not runtime edges.
+    typecheck_ids = _type_checking_subtree_ids(tree)
     edges: list[dict[str, Any]] = []
     for node in ast.walk(tree):
+        if id(node) in typecheck_ids:
+            continue
         if isinstance(node, ast.Import):
             for alias in node.names:
                 edges.append(
@@ -157,6 +161,23 @@ def extract_imports(path: Path, root: Path) -> list[dict[str, Any]]:
                 }
             )
     return edges
+
+
+def _is_type_checking_test(test: ast.AST) -> bool:
+    if isinstance(test, ast.Name) and test.id == "TYPE_CHECKING":
+        return True
+    if isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING":
+        return True
+    return False
+
+
+def _type_checking_subtree_ids(tree: ast.AST) -> set[int]:
+    skip: set[int] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.If) and _is_type_checking_test(node.test):
+            for child in ast.walk(node):
+                skip.add(id(child))
+    return skip
 
 
 def find_cycles(edges: list[dict[str, Any]], keep_prefix: str = "backend.") -> list[list[str]]:

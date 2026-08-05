@@ -15,6 +15,7 @@ from backend.nexus_demo_execution.geometry_event_sim import (
     simulate_trade,
     summarize_trades,
 )
+from backend.nexus_demo_execution.geometry_qualification_pipeline import run_qualification_pipeline
 from backend.nexus_demo_execution.runtime_identity import (
     PERSISTENT_LAST_WRITER_NAME,
     PERSISTENT_ORIGIN_NAME,
@@ -24,7 +25,6 @@ from backend.nexus_demo_execution.runtime_identity import (
 )
 from backend.nexus_demo_execution.structural_geometry_qualify import (
     CandidateEvidence,
-    run_qualification_pipeline,
     synthesize_structure_candidates,
 )
 from backend.nexus_demo_execution.wallet_delta_reconcile import FOUNDER_CLASSIFICATIONS, reconcile_wallet_delta

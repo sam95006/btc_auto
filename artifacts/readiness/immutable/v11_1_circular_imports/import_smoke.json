@@ -1,0 +1,18 @@
+{
+  "schema": "FOUNDER_C6_IMPORT_SMOKE",
+  "generated_at": "2026-08-05T04:08:48Z",
+  "import_smoke_status": "PASS",
+  "modules": [
+    "backend.nexus_execution",
+    "backend.nexus_execution.execution_simulator_v1_1",
+    "backend.nexus_execution.orchestrator_adapter_v1",
+    "backend.nexus_demo_execution.geometry_contracts",
+    "backend.nexus_demo_execution.structural_geometry_qualify",
+    "backend.nexus_demo_execution.geometry_event_sim",
+    "backend.nexus_demo_execution.geometry_qualification_pipeline",
+    "backend.nexus_research.features.feature_contracts",
+    "backend.nexus_research.features.registry",
+    "backend.nexus_research.features.feature_seed"
+  ],
+  "failures": []
+}

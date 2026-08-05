@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from backend.nexus_execution import security_boundary
+import backend.nexus_execution.security_boundary as security_boundary
 from backend.nexus_execution.orchestrator_adapter_v1 import (
     ADAPTER_ID,
     CANONICAL_EXECUTION_ENGINE,

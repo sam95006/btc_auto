@@ -10,13 +10,13 @@ import statistics
 from dataclasses import dataclass
 from typing import Any, Literal
 
+from backend.nexus_demo_execution.geometry_contracts import CandidateEvidence
 from backend.nexus_demo_execution.session_limits import (
     MIN_NET_REWARD_RISK_RATIO,
     MIN_NET_REWARD_TO_COST,
     TAKER_FEE_RATE_DEFAULT,
 )
 from backend.nexus_demo_execution.structural_geometry_qualify import (
-    CandidateEvidence,
     evaluate_structural_geometry,
 )
 

@@ -1,13 +1,13 @@
 """Structural Geometry offline qualification tests — no live arming."""
 from __future__ import annotations
 
+from backend.nexus_demo_execution.geometry_qualification_pipeline import run_qualification_pipeline
 from backend.nexus_demo_execution.session_limits import MIN_NET_REWARD_RISK_RATIO, MIN_NET_REWARD_TO_COST
 from backend.nexus_demo_execution.structural_geometry_qualify import (
     CandidateEvidence,
     compare_ab,
     evaluate_fixed_geometry,
     evaluate_structural_geometry,
-    run_qualification_pipeline,
     synthesize_structure_candidates,
 )
 

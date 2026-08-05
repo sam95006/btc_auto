@@ -1,0 +1,9 @@
+{
+  "schema": "FOUNDER_C6_CIRCULAR_IMPORT_PASS",
+  "pass_id": "pass1",
+  "generated_at": "2026-08-05T04:08:46Z",
+  "circular_SCC_count": 0,
+  "sccs": [],
+  "edge_count": 4158,
+  "status": "PASS"
+}

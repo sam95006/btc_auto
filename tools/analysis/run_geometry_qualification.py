@@ -9,8 +9,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from backend.nexus_demo_execution.structural_geometry_qualify import (  # noqa: E402
+from backend.nexus_demo_execution.geometry_qualification_pipeline import (  # noqa: E402
     run_qualification_pipeline,
+)
+from backend.nexus_demo_execution.structural_geometry_qualify import (  # noqa: E402
     synthesize_structure_candidates,
 )
 

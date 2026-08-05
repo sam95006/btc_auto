@@ -32,7 +32,7 @@ from decimal import Decimal, getcontext
 from pathlib import Path
 from typing import Any, Callable
 
-from backend.nexus_execution import security_boundary
+import backend.nexus_execution.security_boundary as security_boundary
 from backend.nexus_execution.contracts import (
     CONTRACT_VERSION,
     CompletedTrade,

@@ -5,8 +5,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from backend.nexus_demo_execution.structural_geometry_qualify import (
+from backend.nexus_demo_execution.geometry_qualification_pipeline import (
     run_qualification_pipeline,
+)
+from backend.nexus_demo_execution.structural_geometry_qualify import (
     synthesize_structure_candidates,
 )
 

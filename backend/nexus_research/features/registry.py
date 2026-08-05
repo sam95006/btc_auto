@@ -28,42 +28,16 @@ import time
 from dataclasses import asdict, dataclass, field
 from typing import Any, Optional
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Namespace constants
-# ─────────────────────────────────────────────────────────────────────────────
-
-class Namespace:
-    NATURAL = "NATURAL"
-    SHADOW = "SHADOW"
-    REPLAY_VALIDATION = "REPLAY_VALIDATION"
-    VALIDATION = "VALIDATION"
-
-    _ALL = {NATURAL, SHADOW, REPLAY_VALIDATION, VALIDATION}
-
-    @classmethod
-    def valid(cls, ns: str) -> bool:
-        return ns in cls._ALL
+from backend.nexus_research.features.feature_contracts import (
+    FeatureDefinition,
+    Namespace,
+    utc_iso,
+)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Data structures
 # ─────────────────────────────────────────────────────────────────────────────
-
-@dataclass
-class FeatureDefinition:
-    """Metadata about a registered feature."""
-    name: str
-    namespace: str
-    description: str = ""
-    version: str = "1.0"
-    tags: list[str] = field(default_factory=list)
-    experimental: bool = False
-    registered_at: str = field(default_factory=lambda: _utc_iso())
-
-    def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
-
 
 @dataclass
 class FeatureObservation:
@@ -95,7 +69,7 @@ class FeatureSnapshot:
     namespace: str
     observations: list[FeatureObservation]
     snapshot_hash: str = ""
-    created_at: str = field(default_factory=lambda: _utc_iso())
+    created_at: str = field(default_factory=utc_iso)
 
     def __post_init__(self) -> None:
         if not self.snapshot_hash:
@@ -124,7 +98,7 @@ class FeatureSnapshot:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _utc_iso() -> str:
-    return datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f") + "Z"
+    return utc_iso()
 
 
 def _canonical_json(obj: Any) -> str:
@@ -277,15 +251,14 @@ _REGISTRY: Optional[FeatureRegistry] = None
 
 
 def get_feature_registry() -> FeatureRegistry:
+    """Return the process singleton. Seeding is composition-root / DI responsibility.
+
+    Call ``seed_default_feature_definitions(registry=...)`` from bootstrap — do not
+    import feature_seed here (that recreates the registry ↔ seed SCC).
+    """
     global _REGISTRY
     if _REGISTRY is None:
         with _REGISTRY_LOCK:
             if _REGISTRY is None:
                 _REGISTRY = FeatureRegistry()
-                try:
-                    from backend.nexus_research.features.feature_seed import seed_default_feature_definitions
-
-                    seed_default_feature_definitions()
-                except Exception:  # noqa: BLE001
-                    pass
     return _REGISTRY
