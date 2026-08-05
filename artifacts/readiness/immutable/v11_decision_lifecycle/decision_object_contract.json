@@ -1,0 +1,107 @@
+{
+  "schema": "v11_decision_object_contract",
+  "created_at": "2026-08-05T03:32:45Z",
+  "required_fields": [
+    "decision_id",
+    "candidate_id",
+    "market_context_id",
+    "point_in_time_timestamp",
+    "evidence_ids",
+    "evidence_hashes",
+    "data_freshness",
+    "data_completeness",
+    "AI_reasoner_outputs",
+    "independent_critic_output",
+    "deterministic_risk_result",
+    "decision_status",
+    "rejection_reasons",
+    "intent_id",
+    "position_id",
+    "exit_id",
+    "reflection_id",
+    "lesson_ids",
+    "created_at",
+    "updated_at",
+    "schema_version",
+    "idempotency_key"
+  ],
+  "canonical_states": [
+    "OBSERVED",
+    "UNDERSTANDING",
+    "CHALLENGED",
+    "RISK_REVIEWED",
+    "APPROVED_SIMULATED",
+    "REJECTED",
+    "MONITORING",
+    "EXITED",
+    "UNDER_REVIEW",
+    "CALIBRATED",
+    "CLOSED",
+    "BLOCKED_AMBIGUOUS"
+  ],
+  "valid_transitions": {
+    "OBSERVED": [
+      "BLOCKED_AMBIGUOUS",
+      "REJECTED",
+      "UNDERSTANDING"
+    ],
+    "UNDERSTANDING": [
+      "BLOCKED_AMBIGUOUS",
+      "CHALLENGED",
+      "REJECTED"
+    ],
+    "CHALLENGED": [
+      "BLOCKED_AMBIGUOUS",
+      "REJECTED",
+      "RISK_REVIEWED"
+    ],
+    "RISK_REVIEWED": [
+      "APPROVED_SIMULATED",
+      "BLOCKED_AMBIGUOUS",
+      "REJECTED"
+    ],
+    "APPROVED_SIMULATED": [
+      "BLOCKED_AMBIGUOUS",
+      "MONITORING"
+    ],
+    "MONITORING": [
+      "BLOCKED_AMBIGUOUS",
+      "EXITED",
+      "UNDER_REVIEW"
+    ],
+    "EXITED": [
+      "BLOCKED_AMBIGUOUS",
+      "CLOSED",
+      "UNDER_REVIEW"
+    ],
+    "UNDER_REVIEW": [
+      "BLOCKED_AMBIGUOUS",
+      "CALIBRATED",
+      "CLOSED"
+    ],
+    "CALIBRATED": [
+      "CLOSED"
+    ],
+    "REJECTED": [
+      "CLOSED",
+      "UNDER_REVIEW"
+    ],
+    "BLOCKED_AMBIGUOUS": [
+      "CLOSED"
+    ],
+    "CLOSED": []
+  },
+  "lifecycle": [
+    "Observe",
+    "Understand",
+    "Challenge",
+    "Decide",
+    "Record",
+    "Monitor",
+    "Review",
+    "Calibrate",
+    "Improve"
+  ],
+  "orders_permitted": false,
+  "strategy_mutation_permitted": false
+}
