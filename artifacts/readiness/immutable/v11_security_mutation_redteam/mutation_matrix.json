@@ -1,0 +1,650 @@
+{
+  "schema": "v11_security_mutation_redteam",
+  "subject_ids": [
+    "exchange_write_prevention",
+    "risk_limits",
+    "idempotency",
+    "ledger_hashes",
+    "snapshot_recovery",
+    "checkpoint_migration",
+    "public_private_boundary",
+    "demo_mainnet_separation",
+    "path_traversal",
+    "symlink_escape",
+    "secret_redaction",
+    "provider_prompt_leakage",
+    "unsafe_deserialization",
+    "credential_confusion",
+    "network_egress",
+    "import_graph"
+  ],
+  "mutation_outcomes": [
+    {
+      "mutation_id": "exchange_write_prevention::noop_trap",
+      "subject_id": "exchange_write_prevention",
+      "operator": "noop_trap",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "exchange_write_prevention::noop_trap::attack_0::oracle",
+        "exchange_write_prevention::noop_trap::attack_1::oracle",
+        "exchange_write_prevention::noop_trap::attack_2::oracle",
+        "exchange_write_prevention::noop_trap::attack_3::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 4
+      }
+    },
+    {
+      "mutation_id": "exchange_write_prevention::never_block",
+      "subject_id": "exchange_write_prevention",
+      "operator": "never_block",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "exchange_write_prevention::never_block::attack_0",
+        "exchange_write_prevention::never_block::attack_1",
+        "exchange_write_prevention::never_block::attack_2",
+        "exchange_write_prevention::never_block::attack_3"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 4
+      }
+    },
+    {
+      "mutation_id": "risk_limits::raise_ceiling_1000x",
+      "subject_id": "risk_limits",
+      "operator": "raise_ceiling_1000x",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "risk_limits::raise_ceiling_1000x::attack_0",
+        "risk_limits::raise_ceiling_1000x::attack_1"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 2
+      }
+    },
+    {
+      "mutation_id": "risk_limits::always_claim_safe",
+      "subject_id": "risk_limits",
+      "operator": "always_claim_safe",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "risk_limits::always_claim_safe::attack_0::oracle",
+        "risk_limits::always_claim_safe::attack_1::oracle",
+        "risk_limits::always_claim_safe::attack_2::oracle",
+        "risk_limits::always_claim_safe::attack_3::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 4
+      }
+    },
+    {
+      "mutation_id": "idempotency::clear_intent_owners",
+      "subject_id": "idempotency",
+      "operator": "clear_intent_owners",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "idempotency::clear_intent_owners::attack_0"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 1
+      }
+    },
+    {
+      "mutation_id": "idempotency::always_claim_safe",
+      "subject_id": "idempotency",
+      "operator": "always_claim_safe",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "idempotency::always_claim_safe::attack_0::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 1
+      }
+    },
+    {
+      "mutation_id": "ledger_hashes::skip_tamper_detect",
+      "subject_id": "ledger_hashes",
+      "operator": "skip_tamper_detect",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "ledger_hashes::skip_tamper_detect::attack_0"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 1
+      }
+    },
+    {
+      "mutation_id": "ledger_hashes::always_claim_safe",
+      "subject_id": "ledger_hashes",
+      "operator": "always_claim_safe",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "ledger_hashes::always_claim_safe::attack_0::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 1
+      }
+    },
+    {
+      "mutation_id": "snapshot_recovery::ignore_checksum",
+      "subject_id": "snapshot_recovery",
+      "operator": "ignore_checksum",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "snapshot_recovery::ignore_checksum::attack_0"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 1
+      }
+    },
+    {
+      "mutation_id": "snapshot_recovery::always_claim_safe",
+      "subject_id": "snapshot_recovery",
+      "operator": "always_claim_safe",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "snapshot_recovery::always_claim_safe::attack_0::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 1
+      }
+    },
+    {
+      "mutation_id": "checkpoint_migration::trust_all_schemas",
+      "subject_id": "checkpoint_migration",
+      "operator": "trust_all_schemas",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "checkpoint_migration::trust_all_schemas::attack_0",
+        "checkpoint_migration::trust_all_schemas::attack_1"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 2
+      }
+    },
+    {
+      "mutation_id": "checkpoint_migration::always_claim_safe",
+      "subject_id": "checkpoint_migration",
+      "operator": "always_claim_safe",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "checkpoint_migration::always_claim_safe::attack_0::oracle",
+        "checkpoint_migration::always_claim_safe::attack_1::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 2
+      }
+    },
+    {
+      "mutation_id": "public_private_boundary::allow_private_fields",
+      "subject_id": "public_private_boundary",
+      "operator": "allow_private_fields",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "public_private_boundary::allow_private_fields::attack_0",
+        "public_private_boundary::allow_private_fields::attack_1",
+        "public_private_boundary::allow_private_fields::attack_2"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 3
+      }
+    },
+    {
+      "mutation_id": "public_private_boundary::always_claim_safe",
+      "subject_id": "public_private_boundary",
+      "operator": "always_claim_safe",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "public_private_boundary::always_claim_safe::attack_0::oracle",
+        "public_private_boundary::always_claim_safe::attack_1::oracle",
+        "public_private_boundary::always_claim_safe::attack_2::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 3
+      }
+    },
+    {
+      "mutation_id": "demo_mainnet_separation::ignore_confusion",
+      "subject_id": "demo_mainnet_separation",
+      "operator": "ignore_confusion",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "demo_mainnet_separation::ignore_confusion::attack_0::oracle",
+        "demo_mainnet_separation::ignore_confusion::attack_1::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 2
+      }
+    },
+    {
+      "mutation_id": "demo_mainnet_separation::always_claim_safe",
+      "subject_id": "demo_mainnet_separation",
+      "operator": "always_claim_safe",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "demo_mainnet_separation::always_claim_safe::attack_0::oracle",
+        "demo_mainnet_separation::always_claim_safe::attack_1::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 2
+      }
+    },
+    {
+      "mutation_id": "path_traversal::skip_dotdot_token_check",
+      "subject_id": "path_traversal",
+      "operator": "skip_dotdot_token_check",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "path_traversal::skip_dotdot_token_check::attack_2"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 1
+      }
+    },
+    {
+      "mutation_id": "path_traversal::allow_all_paths",
+      "subject_id": "path_traversal",
+      "operator": "allow_all_paths",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "path_traversal::allow_all_paths::attack_0",
+        "path_traversal::allow_all_paths::attack_1",
+        "path_traversal::allow_all_paths::attack_2"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 3
+      }
+    },
+    {
+      "mutation_id": "path_traversal::always_claim_safe",
+      "subject_id": "path_traversal",
+      "operator": "always_claim_safe",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "path_traversal::always_claim_safe::attack_0::oracle",
+        "path_traversal::always_claim_safe::attack_1::oracle",
+        "path_traversal::always_claim_safe::attack_2::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 3
+      }
+    },
+    {
+      "mutation_id": "symlink_escape::follow_without_jail",
+      "subject_id": "symlink_escape",
+      "operator": "follow_without_jail",
+      "killed": true,
+      "equivalent": true,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [],
+      "detail": "symlink_unavailable_platform_skip",
+      "severity": "info",
+      "evidence": {
+        "platform_skip": true
+      }
+    },
+    {
+      "mutation_id": "symlink_escape::always_claim_safe",
+      "subject_id": "symlink_escape",
+      "operator": "always_claim_safe",
+      "killed": true,
+      "equivalent": true,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [],
+      "detail": "symlink_unavailable_platform_skip",
+      "severity": "info",
+      "evidence": {
+        "platform_skip": true
+      }
+    },
+    {
+      "mutation_id": "secret_redaction::no_redact",
+      "subject_id": "secret_redaction",
+      "operator": "no_redact",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "secret_redaction::no_redact::attack_0"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 1
+      }
+    },
+    {
+      "mutation_id": "secret_redaction::always_claim_safe",
+      "subject_id": "secret_redaction",
+      "operator": "always_claim_safe",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "secret_redaction::always_claim_safe::attack_0::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 1
+      }
+    },
+    {
+      "mutation_id": "provider_prompt_leakage::allow_raw_provider",
+      "subject_id": "provider_prompt_leakage",
+      "operator": "allow_raw_provider",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "provider_prompt_leakage::allow_raw_provider::attack_0",
+        "provider_prompt_leakage::allow_raw_provider::attack_1",
+        "provider_prompt_leakage::allow_raw_provider::attack_2"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 3
+      }
+    },
+    {
+      "mutation_id": "provider_prompt_leakage::always_claim_safe",
+      "subject_id": "provider_prompt_leakage",
+      "operator": "always_claim_safe",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "provider_prompt_leakage::always_claim_safe::attack_0::oracle",
+        "provider_prompt_leakage::always_claim_safe::attack_1::oracle",
+        "provider_prompt_leakage::always_claim_safe::attack_2::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 3
+      }
+    },
+    {
+      "mutation_id": "unsafe_deserialization::allow_pickle",
+      "subject_id": "unsafe_deserialization",
+      "operator": "allow_pickle",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "unsafe_deserialization::allow_pickle::attack_0"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 1
+      }
+    },
+    {
+      "mutation_id": "unsafe_deserialization::always_claim_safe",
+      "subject_id": "unsafe_deserialization",
+      "operator": "always_claim_safe",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "unsafe_deserialization::always_claim_safe::attack_0::oracle",
+        "unsafe_deserialization::always_claim_safe::attack_1::oracle",
+        "unsafe_deserialization::always_claim_safe::attack_2::oracle",
+        "unsafe_deserialization::always_claim_safe::attack_3::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 4
+      }
+    },
+    {
+      "mutation_id": "credential_confusion::ignore_mainnet_fallback",
+      "subject_id": "credential_confusion",
+      "operator": "ignore_mainnet_fallback",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "credential_confusion::ignore_mainnet_fallback::attack_0::oracle",
+        "credential_confusion::ignore_mainnet_fallback::attack_1",
+        "credential_confusion::ignore_mainnet_fallback::attack_2::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 3
+      }
+    },
+    {
+      "mutation_id": "credential_confusion::always_claim_safe",
+      "subject_id": "credential_confusion",
+      "operator": "always_claim_safe",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "credential_confusion::always_claim_safe::attack_0::oracle",
+        "credential_confusion::always_claim_safe::attack_1::oracle",
+        "credential_confusion::always_claim_safe::attack_2::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 3
+      }
+    },
+    {
+      "mutation_id": "network_egress::allow_exchange_write_hosts",
+      "subject_id": "network_egress",
+      "operator": "allow_exchange_write_hosts",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "network_egress::allow_exchange_write_hosts::attack_0",
+        "network_egress::allow_exchange_write_hosts::attack_2"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 2
+      }
+    },
+    {
+      "mutation_id": "network_egress::always_claim_safe",
+      "subject_id": "network_egress",
+      "operator": "always_claim_safe",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "network_egress::always_claim_safe::attack_0::oracle",
+        "network_egress::always_claim_safe::attack_1::oracle",
+        "network_egress::always_claim_safe::attack_2::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 3
+      }
+    },
+    {
+      "mutation_id": "import_graph::blind_pass",
+      "subject_id": "import_graph",
+      "operator": "blind_pass",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "import_graph::blind_pass::attack_0::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 1
+      }
+    },
+    {
+      "mutation_id": "import_graph::always_claim_safe",
+      "subject_id": "import_graph",
+      "operator": "always_claim_safe",
+      "killed": true,
+      "equivalent": false,
+      "survivor": false,
+      "unresolved_blocker": false,
+      "blocker_reason": "",
+      "kill_cases": [
+        "import_graph::always_claim_safe::attack_0::oracle"
+      ],
+      "detail": "killed_by_kill_suite",
+      "severity": "info",
+      "evidence": {
+        "kill_case_count": 1
+      }
+    }
+  ],
+  "survivors": []
+}

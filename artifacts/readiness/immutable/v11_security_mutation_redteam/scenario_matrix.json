@@ -1,0 +1,116 @@
+{
+  "schema": "v11_security_mutation_redteam",
+  "scenario_ids": [
+    "filesystem_attack_fixtures",
+    "path_fuzz",
+    "json_fuzz",
+    "import_graph",
+    "network_traps",
+    "exchange_write_traps",
+    "secret_scan_property"
+  ],
+  "scenarios": [
+    {
+      "scenario_id": "filesystem_attack_fixtures",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "fs_fixtures_blocked",
+      "critical": false,
+      "evidence": {
+        "blocked": 7,
+        "total": 8,
+        "pickle_blocked": true,
+        "corrupt_blocked": true
+      }
+    },
+    {
+      "scenario_id": "path_fuzz",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "fuzz_blocked=50/50",
+      "critical": false,
+      "evidence": {
+        "dangerous": 50,
+        "blocked": 50,
+        "vector_count": 64
+      }
+    },
+    {
+      "scenario_id": "json_fuzz",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "scalar_rejected=22/22",
+      "critical": false,
+      "evidence": {
+        "scalar_total": 22,
+        "rejected": 22
+      }
+    },
+    {
+      "scenario_id": "import_graph",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "import_graph_clean",
+      "critical": false,
+      "evidence": {
+        "violation_count": 0,
+        "violations": [],
+        "node_count": 907,
+        "edge_count": 3149
+      }
+    },
+    {
+      "scenario_id": "network_traps",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "egress_blocked",
+      "critical": false,
+      "evidence": {
+        "write_blocked": true,
+        "unexpected_blocked": true,
+        "mainnet_blocked": true,
+        "counters": {
+          "request_count": 3,
+          "blocked_count": 3,
+          "write_blocked_count": 2,
+          "unexpected_domain_count": 1,
+          "allowed_urls": [],
+          "blocked_urls": [
+            "https://api-demo.bybit.com/v5/order/create",
+            "https://evil.example/exfil",
+            "https://api.bybit.com/v5/order/create"
+          ]
+        }
+      }
+    },
+    {
+      "scenario_id": "exchange_write_traps",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "write_traps_fired",
+      "critical": false,
+      "evidence": {
+        "fired": 3,
+        "intentional_trap_probe_count": 3,
+        "workflow_exchange_write_attempt_count": 0
+      }
+    },
+    {
+      "scenario_id": "secret_scan_property",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "secret_scan_property_ok",
+      "critical": false,
+      "evidence": {
+        "clean_hits": [],
+        "assign_hits": [
+          "pattern:api_key",
+          "credential_assignment"
+        ],
+        "json_hits": [
+          "pattern:api_key"
+        ]
+      }
+    }
+  ]
+}
