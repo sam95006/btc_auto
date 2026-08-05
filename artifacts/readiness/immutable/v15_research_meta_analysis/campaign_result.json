@@ -5,7 +5,7 @@
   "axes_coverage_ok": true,
   "base_commit": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
   "branch": "feature/v15-research-meta-analysis",
-  "created_at": "2026-08-05T15:14:27Z",
+  "created_at": "2026-08-05T15:16:50Z",
   "critical_findings": 0,
   "demo_order_count": 0,
   "deterministic_fixture_replay": true,
@@ -17,7 +17,7 @@
   "fixture_source": "synthetic_sanitized",
   "formal_walk_forward_executed": false,
   "hard_bans_honored": true,
-  "head_commit_at_run": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
+  "head_commit_at_run": "5dae4808e889f928cbeb0808ee4f39e7baa05c32",
   "high_findings": 0,
   "label_histogram": {
     "CAPACITY_FRAGILE": 0,
@@ -78,6 +78,6 @@
   "secret_leak_count": 0,
   "shadow_order_count": 0,
   "silent_selection_blocked": true,
-  "updated_at": "2026-08-05T15:14:27Z",
+  "updated_at": "2026-08-05T15:16:50Z",
   "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v15_d_meta_analysis"
 }
