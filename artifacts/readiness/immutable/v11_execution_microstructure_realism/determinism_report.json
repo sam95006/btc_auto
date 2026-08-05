@@ -1,0 +1,29 @@
+{
+  "counts_identical": true,
+  "created_at": "2026-08-05T03:35:35Z",
+  "invariants_identical": true,
+  "pass_reports": [
+    {
+      "count": 250000,
+      "invariants": {
+        "scenarios_ok": 250000,
+        "scenarios_with_violations": 0,
+        "total_violations": 0
+      },
+      "pass": true,
+      "pass_number": 1
+    },
+    {
+      "count": 250000,
+      "invariants": {
+        "scenarios_ok": 250000,
+        "scenarios_with_violations": 0,
+        "total_violations": 0
+      },
+      "pass": true,
+      "pass_number": 2
+    }
+  ],
+  "passes": 2,
+  "schema": "v11_execution_microstructure_realism_determinism"
+}

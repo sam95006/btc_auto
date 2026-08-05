@@ -1,0 +1,11 @@
+{
+  "generated_execution_scenario_count": 250000,
+  "invariants": {
+    "scenarios_ok": 250000,
+    "scenarios_with_violations": 0,
+    "total_violations": 0
+  },
+  "pass": true,
+  "pass_number": 1,
+  "seed": 20260805
+}

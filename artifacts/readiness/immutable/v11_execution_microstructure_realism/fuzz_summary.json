@@ -1,0 +1,242 @@
+{
+  "adapter_id": "NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1",
+  "book_model_version": "book_model_v11_2026-08-05",
+  "canonical_execution_engine": "backend.nexus_execution.execution_simulator_v1_1.AutonomousExecutionSimulatorV11",
+  "canonical_execution_engine_count": 1,
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "fill_accuracy_claim": "SIMULATED_ONLY_NO_VERIFIED_HISTORICAL_ORDER_BOOK_ACCURACY_CLAIM",
+  "finished_at": "2026-08-05T03:35:34Z",
+  "generated_execution_scenario_count": 250000,
+  "harness_version": "microstructure_realism_v11_harness",
+  "invariants": {
+    "scenarios_ok": 250000,
+    "scenarios_with_violations": 0,
+    "total_violations": 0
+  },
+  "latency_summary": {
+    "ack_to_first_fill_ms": {
+      "p50": 55,
+      "p95": 250,
+      "p99": 250
+    },
+    "cancel_replace_rtt_ms": {
+      "p50": 100,
+      "p95": 400,
+      "p99": 400
+    },
+    "count": 20833,
+    "decision_to_ack_ms": {
+      "p50": 25,
+      "p95": 150,
+      "p99": 150
+    }
+  },
+  "mainnet": false,
+  "mode": "FULL",
+  "pass": true,
+  "real_money": false,
+  "recommendation": "NEXUS_V11_EXECUTION_MICROSTRUCTURE_REALISM_PASS",
+  "scenario_breakdown": {
+    "cancel_replace_latency": {
+      "count": 10417,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 10417
+      }
+    },
+    "cost_bridge_round_trip": {
+      "count": 10418,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 10418
+      }
+    },
+    "depth_ladder_walk": {
+      "count": 10417,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 10417
+      }
+    },
+    "duplicate_intent_no_exposure": {
+      "count": 10416,
+      "invariant_violations": 0,
+      "outcomes": {
+        "DUPLICATE_IGNORED": 10416
+      }
+    },
+    "empty_book_reject": {
+      "count": 10417,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 10417
+      }
+    },
+    "funding_timestamp_credit": {
+      "count": 10416,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 10416
+      }
+    },
+    "funding_timestamp_debit": {
+      "count": 10416,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 10416
+      }
+    },
+    "latency_distribution_sample": {
+      "count": 10416,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 10416
+      }
+    },
+    "liquidation_distance_degrade": {
+      "count": 10418,
+      "invariant_violations": 0,
+      "outcomes": {
+        "DEGRADED": 10418
+      }
+    },
+    "mark_index_divergence": {
+      "count": 10417,
+      "invariant_violations": 0,
+      "outcomes": {
+        "OK": 10417
+      }
+    },
+    "market_buy_via_book": {
+      "count": 10417,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 10417
+      }
+    },
+    "market_impact_full": {
+      "count": 10416,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 10416
+      }
+    },
+    "market_impact_partial": {
+      "count": 10418,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 4492,
+        "PARTIALLY_FILLED": 5926
+      }
+    },
+    "market_sell_via_book": {
+      "count": 10417,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 10417
+      }
+    },
+    "missing_book_reject": {
+      "count": 10416,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 10416
+      }
+    },
+    "no_candle_touch_fill": {
+      "count": 10416,
+      "invariant_violations": 0,
+      "outcomes": {
+        "UNFILLED": 10416
+      }
+    },
+    "partial_fill_progression": {
+      "count": 10416,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 10416
+      }
+    },
+    "qty_non_negative_close": {
+      "count": 10418,
+      "invariant_violations": 0,
+      "outcomes": {
+        "OK": 10418
+      }
+    },
+    "queue_position_limit": {
+      "count": 10416,
+      "invariant_violations": 0,
+      "outcomes": {
+        "UNFILLED": 10416
+      }
+    },
+    "reduce_only_cannot_increase": {
+      "count": 10416,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 10416
+      }
+    },
+    "same_bar_ambiguous_blocked": {
+      "count": 10417,
+      "invariant_violations": 0,
+      "outcomes": {
+        "BLOCKED_AMBIGUOUS": 10417
+      }
+    },
+    "stale_book_reject": {
+      "count": 10416,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 10416
+      }
+    },
+    "top_of_book_spread_market": {
+      "count": 10416,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 10416
+      }
+    },
+    "trade_through_limit_fill": {
+      "count": 10417,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 10417
+      }
+    }
+  },
+  "scenario_kind_count": 24,
+  "scenario_kinds": [
+    "stale_book_reject",
+    "missing_book_reject",
+    "empty_book_reject",
+    "top_of_book_spread_market",
+    "depth_ladder_walk",
+    "market_impact_partial",
+    "market_impact_full",
+    "queue_position_limit",
+    "latency_distribution_sample",
+    "cancel_replace_latency",
+    "partial_fill_progression",
+    "mark_index_divergence",
+    "funding_timestamp_debit",
+    "funding_timestamp_credit",
+    "liquidation_distance_degrade",
+    "no_candle_touch_fill",
+    "same_bar_ambiguous_blocked",
+    "trade_through_limit_fill",
+    "market_buy_via_book",
+    "market_sell_via_book",
+    "duplicate_intent_no_exposure",
+    "reduce_only_cannot_increase",
+    "cost_bridge_round_trip",
+    "qty_non_negative_close"
+  ],
+  "schema": "v11_execution_microstructure_realism_fuzz",
+  "seed": 20260805,
+  "started_at": "2026-08-05T03:34:56Z",
+  "target_scenarios": 250000
+}

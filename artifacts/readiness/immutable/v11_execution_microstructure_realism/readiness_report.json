@@ -1,0 +1,52 @@
+{
+  "adapter_id": "NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1",
+  "canonical_execution_engine": "backend.nexus_execution.execution_simulator_v1_1.AutonomousExecutionSimulatorV11",
+  "exchange_write_attempt_count": 0,
+  "fill_accuracy_claim": "SIMULATED_ONLY_NO_VERIFIED_HISTORICAL_ORDER_BOOK_ACCURACY_CLAIM",
+  "fuzz": {
+    "generated_execution_scenario_count": 250000,
+    "invariants": {
+      "scenarios_ok": 250000,
+      "scenarios_with_violations": 0,
+      "total_violations": 0
+    },
+    "latency_summary": {
+      "ack_to_first_fill_ms": {
+        "p50": 55,
+        "p95": 250,
+        "p99": 250
+      },
+      "cancel_replace_rtt_ms": {
+        "p50": 100,
+        "p95": 400,
+        "p99": 400
+      },
+      "count": 20833,
+      "decision_to_ack_ms": {
+        "p50": 25,
+        "p95": 150,
+        "p99": 150
+      }
+    },
+    "pass": true,
+    "target_scenarios": 250000
+  },
+  "generated_at": "2026-08-05T03:35:35Z",
+  "package": "NEXUS_V11_EXECUTION_MICROSTRUCTURE_REALISM",
+  "pass_number": 2,
+  "recommendation": "NEXUS_V11_EXECUTION_MICROSTRUCTURE_REALISM_PASS",
+  "schema": "v11_execution_microstructure_realism_readiness",
+  "secret_scan": {
+    "created_at": "2026-08-05T03:35:35Z",
+    "files_scanned": 9,
+    "hits": [],
+    "owned_paths": [
+      "backend/nexus_execution/book_model_v11.py",
+      "backend/nexus_execution/microstructure_realism_v11",
+      "tools/research/run_execution_microstructure_realism_v11.py",
+      "tests/test_execution_microstructure_realism_v11.py"
+    ],
+    "schema": "v11_execution_microstructure_realism_secret_scan",
+    "secret_leak_count": 0
+  }
+}
