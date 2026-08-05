@@ -1,0 +1,310 @@
+{
+  "adapter_id": "NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1",
+  "auto_integrate_pr27": false,
+  "blocked_count": 0,
+  "blockers": [],
+  "bridge_module": "backend.nexus_decision.execution_bridge",
+  "bridge_schema": "nexus_decision_execution_bridge_v11_1",
+  "candidate_count": 1000,
+  "canonical_engine": "backend.nexus_execution.execution_simulator_v1_1.AutonomousExecutionSimulatorV11",
+  "canonical_path": [
+    "Candidate",
+    "Decision",
+    "Risk",
+    "SimulatedIntent",
+    "SimulatedOrder",
+    "Fill",
+    "Position",
+    "Exit",
+    "Reflection",
+    "LessonGate",
+    "Closure"
+  ],
+  "completed_lifecycle_count": 650,
+  "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+  "created_at": "2026-08-05T07:49:07Z",
+  "demo_shadow_mainnet": false,
+  "digest": "3e3a5b2ad571c1edc506fb602d853f82f96f8efed6709d885f8fe3c1f2c8e34d",
+  "error_count": 0,
+  "errors": [],
+  "exchange_write_attempt_count": 0,
+  "formal_walkforward_oos": false,
+  "hard_bans": [
+    "no_exchange_write",
+    "no_demo_shadow_mainnet_real_money",
+    "no_formal_walkforward_oos",
+    "no_profitability_claims",
+    "no_decorative_intent_position_ids",
+    "no_auto_integrate_pr27",
+    "no_g_deletion"
+  ],
+  "invariants": {
+    "adapter_id": "NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1",
+    "bridge_module": "backend.nexus_decision.execution_bridge",
+    "bridge_schema": "nexus_decision_execution_bridge_v11_1",
+    "canonical_engine": "backend.nexus_execution.execution_simulator_v1_1.AutonomousExecutionSimulatorV11",
+    "canonical_path_complete_on_completed": true,
+    "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+    "decorative_id_violations": 0,
+    "exchange_write_attempt_count": 0,
+    "false_learning_claim_count": 0,
+    "lesson_gate_blocks_policy_effect": true,
+    "linkage_authority_bridge": true,
+    "ontology_complete_on_completed": true,
+    "order_attempt_count_via_decision": 0,
+    "strategy_mutation_attempt_count": 0
+  },
+  "lesson_gate_summary": {
+    "applied_count": 650,
+    "false_learning_claim_count": 0,
+    "fixture_label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+    "policy_effect_allowed_count": 0,
+    "policy_effect_blocked_count": 650
+  },
+  "ontology": [
+    "MONITORING",
+    "EXITED",
+    "UNDER_REVIEW",
+    "CALIBRATED",
+    "CLOSED"
+  ],
+  "package": "NEXUS_V12_FOUNDER_PRIVATE_CLOSED_LOOP",
+  "pass": true,
+  "profitability_claimed": false,
+  "rejected_count": 350,
+  "sample_completed": [
+    {
+      "candidate_id": "hist_cand_12001_0000",
+      "completed_lifecycle": true,
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "decision_id": "dec_2d1c897fa9264708",
+      "exit_id": "exit_f86bda551066",
+      "intent_id": "v12intent:hist_cand_12001_0000",
+      "lesson_gate": {
+        "V2_3_TERMINAL_STATUS": "INCOMPLETE_PROVIDER_CAPACITY",
+        "false_learning_claim": false,
+        "fixture_label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+        "lesson_gate_schema": "v11_lesson_gate",
+        "lesson_prevention_blocked_reason": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+        "lesson_prevention_executed": false,
+        "leverage_changed": false,
+        "new_policy_effect_lesson_count": 0,
+        "policy_effect_lesson_allowed": false,
+        "position_size_changed": false,
+        "promotion_state_changed": false,
+        "quality_gates_passed": false,
+        "risk_limits_changed": false,
+        "stops_changed": false,
+        "strategy_parameters_changed": false
+      },
+      "lesson_ids": [
+        "process_note_0000"
+      ],
+      "linkage_authority": "backend.nexus_decision.execution_bridge",
+      "ontology": [
+        "MONITORING",
+        "EXITED",
+        "UNDER_REVIEW",
+        "CALIBRATED",
+        "CLOSED"
+      ],
+      "order_id": "70f3f2d630a509a2e2182acf",
+      "outcome": "COMPLETED",
+      "position_id": "d60411ebe1baabd10b8013c2",
+      "reflection_id": "refl_hist_0000",
+      "stages": [
+        "Candidate",
+        "Decision",
+        "Risk",
+        "SimulatedIntent",
+        "SimulatedOrder",
+        "Fill",
+        "Position",
+        "Exit",
+        "Reflection",
+        "LessonGate",
+        "Closure"
+      ],
+      "terminal_status": "CLOSED"
+    },
+    {
+      "candidate_id": "hist_cand_12001_0001",
+      "completed_lifecycle": true,
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "decision_id": "dec_0d227ac3b2f4444a",
+      "exit_id": "exit_138047a04dc7",
+      "intent_id": "v12intent:hist_cand_12001_0001",
+      "lesson_gate": {
+        "V2_3_TERMINAL_STATUS": "INCOMPLETE_PROVIDER_CAPACITY",
+        "false_learning_claim": false,
+        "fixture_label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+        "lesson_gate_schema": "v11_lesson_gate",
+        "lesson_prevention_blocked_reason": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+        "lesson_prevention_executed": false,
+        "leverage_changed": false,
+        "new_policy_effect_lesson_count": 0,
+        "policy_effect_lesson_allowed": false,
+        "position_size_changed": false,
+        "promotion_state_changed": false,
+        "quality_gates_passed": false,
+        "risk_limits_changed": false,
+        "stops_changed": false,
+        "strategy_parameters_changed": false
+      },
+      "lesson_ids": [
+        "process_note_0001"
+      ],
+      "linkage_authority": "backend.nexus_decision.execution_bridge",
+      "ontology": [
+        "MONITORING",
+        "EXITED",
+        "UNDER_REVIEW",
+        "CALIBRATED",
+        "CLOSED"
+      ],
+      "order_id": "26da9739f1f6aa6fcbc7cae5",
+      "outcome": "COMPLETED",
+      "position_id": "822b2fa68c4cf1a47278f533",
+      "reflection_id": "refl_hist_0001",
+      "stages": [
+        "Candidate",
+        "Decision",
+        "Risk",
+        "SimulatedIntent",
+        "SimulatedOrder",
+        "Fill",
+        "Position",
+        "Exit",
+        "Reflection",
+        "LessonGate",
+        "Closure"
+      ],
+      "terminal_status": "CLOSED"
+    },
+    {
+      "candidate_id": "hist_cand_12001_0002",
+      "completed_lifecycle": true,
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "decision_id": "dec_767c43b8754f4713",
+      "exit_id": "exit_adb9183562d9",
+      "intent_id": "v12intent:hist_cand_12001_0002",
+      "lesson_gate": {
+        "V2_3_TERMINAL_STATUS": "INCOMPLETE_PROVIDER_CAPACITY",
+        "false_learning_claim": false,
+        "fixture_label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+        "lesson_gate_schema": "v11_lesson_gate",
+        "lesson_prevention_blocked_reason": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+        "lesson_prevention_executed": false,
+        "leverage_changed": false,
+        "new_policy_effect_lesson_count": 0,
+        "policy_effect_lesson_allowed": false,
+        "position_size_changed": false,
+        "promotion_state_changed": false,
+        "quality_gates_passed": false,
+        "risk_limits_changed": false,
+        "stops_changed": false,
+        "strategy_parameters_changed": false
+      },
+      "lesson_ids": [
+        "process_note_0002"
+      ],
+      "linkage_authority": "backend.nexus_decision.execution_bridge",
+      "ontology": [
+        "MONITORING",
+        "EXITED",
+        "UNDER_REVIEW",
+        "CALIBRATED",
+        "CLOSED"
+      ],
+      "order_id": "74bb1804aa7734aa9d522c73",
+      "outcome": "COMPLETED",
+      "position_id": "c8c341dc04b73af7ccfec0de",
+      "reflection_id": "refl_hist_0002",
+      "stages": [
+        "Candidate",
+        "Decision",
+        "Risk",
+        "SimulatedIntent",
+        "SimulatedOrder",
+        "Fill",
+        "Position",
+        "Exit",
+        "Reflection",
+        "LessonGate",
+        "Closure"
+      ],
+      "terminal_status": "CLOSED"
+    }
+  ],
+  "sample_rejected": [
+    {
+      "candidate_id": "hist_cand_12001_0650",
+      "completed_lifecycle": false,
+      "decision_id": "dec_39743ecbae7d4873",
+      "intent_id": null,
+      "lesson_gate": null,
+      "ontology": [
+        "REJECTED",
+        "CLOSED"
+      ],
+      "outcome": "REJECTED_CLOSED",
+      "position_id": null,
+      "stages": [
+        "Candidate",
+        "Decision",
+        "Risk",
+        "Closure"
+      ],
+      "terminal_status": "CLOSED"
+    },
+    {
+      "candidate_id": "hist_cand_12001_0651",
+      "completed_lifecycle": false,
+      "decision_id": "dec_b101b413638048e1",
+      "intent_id": null,
+      "lesson_gate": null,
+      "ontology": [
+        "REJECTED",
+        "CLOSED"
+      ],
+      "outcome": "REJECTED_CLOSED",
+      "position_id": null,
+      "stages": [
+        "Candidate",
+        "Decision",
+        "Risk",
+        "Closure"
+      ],
+      "terminal_status": "CLOSED"
+    },
+    {
+      "candidate_id": "hist_cand_12001_0652",
+      "completed_lifecycle": false,
+      "decision_id": "dec_21a5bd1b8a2c4f5d",
+      "intent_id": null,
+      "lesson_gate": null,
+      "ontology": [
+        "REJECTED",
+        "CLOSED"
+      ],
+      "outcome": "REJECTED_CLOSED",
+      "position_id": null,
+      "stages": [
+        "Candidate",
+        "Decision",
+        "Risk",
+        "Closure"
+      ],
+      "terminal_status": "CLOSED"
+    }
+  ],
+  "schema": "v12_founder_private_closed_loop",
+  "seed": 12001,
+  "status": "NEXUS_V12_CLOSED_LOOP_PASS",
+  "targets": {
+    "candidates": 1000,
+    "completed_lifecycles": 500
+  },
+  "work_root": "C:\\Users\\user\\AppData\\Local\\Temp\\v12_closed_loop_cz6q0hcd",
+  "work_root_ephemeral": true
+}
