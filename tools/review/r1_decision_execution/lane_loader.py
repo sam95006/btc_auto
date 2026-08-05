@@ -212,14 +212,14 @@ class LaneImportContext:
             while p in sys.path:
                 sys.path.remove(p)
         review = str(_REVIEW_ROOT)
+        while review in sys.path:
+            sys.path.remove(review)
         if review not in sys.path:
             sys.path.insert(0, review)
         doomed = [
             k
             for k in list(sys.modules)
-            if k == "backend"
-            or k.startswith("backend.nexus_decision")
-            or k.startswith("backend.nexus_execution")
+            if k == "backend" or k.startswith("backend.")
         ]
         for k in doomed:
             sys.modules.pop(k, None)

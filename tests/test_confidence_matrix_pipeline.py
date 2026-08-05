@@ -27,7 +27,11 @@ class ConfidenceMatrixPipelineTests(unittest.TestCase):
 
     @patch("backend.risk.dynamic_asset_allocator.HARD_MAX_LEVERAGE", 100.0)
     @patch("backend.risk.dynamic_asset_allocator.ABSOLUTE_MAX_LEVERAGE", 100.0)
+    @patch("config.autonomy_bounds_config.HARD_MAX_LEVERAGE", 100.0)
+    @patch("config.leverage_config.MAX_SYSTEM_LEVERAGE", 100)
     def test_allocator_tiers(self, *_mocks):
+        from backend.risk.dynamic_asset_allocator import DynamicAssetAllocator
+
         alloc = DynamicAssetAllocator()
         low = alloc.allocate(65, fleet="RADAR", available_balance=1000)
         high = alloc.allocate(90, fleet="RADAR", available_balance=1000)
@@ -37,7 +41,13 @@ class ConfidenceMatrixPipelineTests(unittest.TestCase):
     @patch("backend.risk.dynamic_asset_allocator.HARD_MAX_LEVERAGE", 100.0)
     @patch("backend.risk.dynamic_asset_allocator.ABSOLUTE_MAX_LEVERAGE", 100.0)
     @patch("backend.risk.dynamic_asset_allocator.HARD_MAX_MARGIN_USD", 500.0)
+    @patch("config.autonomy_bounds_config.HARD_MAX_LEVERAGE", 100.0)
+    @patch("config.leverage_config.MAX_SYSTEM_LEVERAGE", 100)
     def test_allocator_confidence_table_btc_100x(self, *_mocks):
+        # Import inside the test so review-path sys.modules purges cannot leave a
+        # stale class bound to an unpatched module object.
+        from backend.risk.dynamic_asset_allocator import DynamicAssetAllocator
+
         alloc = DynamicAssetAllocator()
         result = alloc.allocate(95, fleet="BTC", available_balance=10000, deployable_pool=3000)
         self.assertEqual(result["leverage_mode"], "confidence_table")

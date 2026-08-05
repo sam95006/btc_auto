@@ -454,18 +454,18 @@ def scenario_duplicate_partition_identity(root: Path) -> ScenarioResult:
         buffer_max_events=1,
         flush_interval_s=0.01,
     )
-    from backend.nexus_microstructure.integrity_recovery_v11.writer_v11 import (
-        PartitionIdentityConflict,
-    )
-
     w1.accept(_evt("BTCUSDT", base, 1))
     conflict_blocked = False
     conflict_error = None
     try:
         w2.accept(_evt("BTCUSDT", base + 1, 2))
-    except PartitionIdentityConflict as exc:
-        conflict_blocked = True
-        conflict_error = str(exc)
+    except Exception as exc:  # noqa: BLE001 — class identity may diverge after review path swaps
+        msg = str(exc)
+        if "PARTITION_IDENTITY_CONFLICT" in msg or exc.__class__.__name__ == "PartitionIdentityConflict":
+            conflict_blocked = True
+            conflict_error = msg
+        else:
+            raise
     w1.close()
     try:
         w2.close()
