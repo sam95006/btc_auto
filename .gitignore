@@ -28,6 +28,9 @@ data/external_alpha/reports/*
 !data/external_alpha/reports/*github_deploy_readiness*.json
 data/external_alpha/stage3_demo_learning/
 data/external_alpha/stage3_demo_learning/**
+# Allow Flutter public DTO data layer (negates blanket data/ ignore)
+!apps/nexus_public_mobile/lib/data/
+!apps/nexus_public_mobile/lib/data/**
 node_modules/
 .vscode/
 .cursor/
