@@ -1,0 +1,23 @@
+{
+  "schema": "microstructure_operations_v10_bounded_resume_decision",
+  "campaign_id": "ms_accum_v7_bounded_24h",
+  "allow_bounded_resume": false,
+  "checkpoint": {
+    "schema": "microstructure_operations_v10_bounded_resume_checkpoint",
+    "campaign_id": "ms_accum_v7_bounded_24h",
+    "resumable": false,
+    "last_checkpoint_at": "2026-08-05T03:06:40Z",
+    "last_partition_id": null,
+    "capture_session_ids": [
+      "ms12_ACCUM24_1785856716"
+    ],
+    "valid_capture_seconds": 0,
+    "connection_gap_seconds": 0,
+    "clean_shutdown": false,
+    "bounded": true,
+    "live_capture_started": false,
+    "note": "Resume metadata only; does not start capture"
+  },
+  "live_capture_started": false,
+  "reason": "resume_blocked_or_missing"
+}

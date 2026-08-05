@@ -1,0 +1,28 @@
+{
+  "schema": "storage_budget_controller_v10",
+  "soft_limit_bytes": 805306368,
+  "hard_limit_bytes": 1073741824,
+  "minimum_free_disk_bytes": 32212254720,
+  "disk_root": "D:\\",
+  "storage_cap_configured": true,
+  "current_compressed_partition_bytes": 0,
+  "current_manifest_bytes": 0,
+  "current_total_bytes": 0,
+  "estimated_next_hour_bytes": 0.0,
+  "estimated_next_day_bytes": 0.0,
+  "mode": "NORMAL",
+  "stop_requested": false,
+  "stop_reason": null,
+  "minimum_free_disk": {
+    "schema": "minimum_free_disk_controller_v10",
+    "path": "D:\\",
+    "free_bytes": 250447028224,
+    "free_gib": 233.247,
+    "minimum_free_disk_bytes": 32212254720,
+    "minimum_free_disk_gib": 30.0,
+    "status": "PASS",
+    "passed": true
+  },
+  "storage_tree_scanned_per_event": false,
+  "deletion_executed": false
+}

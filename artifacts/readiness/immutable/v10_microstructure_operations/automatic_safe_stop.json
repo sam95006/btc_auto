@@ -1,0 +1,11 @@
+{
+  "schema": "microstructure_operations_v10_automatic_safe_stop",
+  "safe_stop_required": false,
+  "safe_stop_executed": false,
+  "reasons": [],
+  "primary_reason": null,
+  "exchange_write_attempt_count": 0,
+  "live_capture_started": false,
+  "event_study_real_execution": false,
+  "created_at": "2026-08-05T03:06:40Z"
+}

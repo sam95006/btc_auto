@@ -1,0 +1,88 @@
+{
+  "schema": "microstructure_operations_v10_campaign_registry",
+  "campaign_count": 2,
+  "campaigns": {
+    "ms_accum_v7_bounded_24h": {
+      "campaign_id": "ms_accum_v7_bounded_24h",
+      "status": "FINALIZED",
+      "finalized": true,
+      "session_ids": [],
+      "started_at": null,
+      "finalized_at": "2026-08-05T03:06:40Z",
+      "last_updated_at": "2026-08-05T03:06:40Z",
+      "config": {
+        "duration_hours": 24,
+        "symbol_count": 25,
+        "soft_storage_cap_bytes": 805306368,
+        "hard_storage_cap_bytes": 1073741824,
+        "minimum_free_disk_bytes": 32212254720,
+        "families": [
+          "AGGRESSIVE_TRADE_FLOW",
+          "LIQUIDATION_EVENTS"
+        ],
+        "capture_mode": "BYBIT_PUBLIC_READONLY",
+        "exchange_write": false,
+        "event_study_allowed": false,
+        "strategy_generation_allowed": false
+      },
+      "storage_cap_configured": true,
+      "resume_checkpoint": {
+        "resumable": false,
+        "last_checkpoint_at": null,
+        "last_partition_id": null,
+        "checkpoint_path": null,
+        "accumulation_run_id": null,
+        "capture_session_ids": [
+          "ms12_ACCUM24_1785856716"
+        ],
+        "resume_token": null,
+        "clean_shutdown": null
+      },
+      "safe_stop": null,
+      "integrity_score": null,
+      "event_study_readiness_status": "NOT_READY",
+      "live_capture_started": false,
+      "new_strategy_generated_count": 0,
+      "exchange_write_attempt_count": 0,
+      "finalizer_status": "FAIL",
+      "integrity_status": "FAIL",
+      "finalizer_artifact_dir": "D:\\NEXUS_RUNTIME\\worktrees\\v10-microstructure-operations\\artifacts\\readiness\\immutable\\microstructure_campaign_finalizer_v1_real_ms_accum_v7"
+    },
+    "ms_accum_v10_bounded_next": {
+      "campaign_id": "ms_accum_v10_bounded_next",
+      "status": "PLANNED",
+      "finalized": false,
+      "session_ids": [],
+      "started_at": null,
+      "finalized_at": null,
+      "last_updated_at": "2026-08-05T03:06:40Z",
+      "config": {
+        "duration_hours": 24,
+        "symbol_count": 25,
+        "soft_storage_cap_bytes": 805306368,
+        "hard_storage_cap_bytes": 1073741824,
+        "minimum_free_disk_bytes": 32212254720,
+        "families": [
+          "AGGRESSIVE_TRADE_FLOW",
+          "LIQUIDATION_EVENTS"
+        ],
+        "capture_mode": "BYBIT_PUBLIC_READONLY",
+        "exchange_write": false,
+        "event_study_allowed": false,
+        "strategy_generation_allowed": false
+      },
+      "storage_cap_configured": true,
+      "resume_checkpoint": null,
+      "safe_stop": null,
+      "integrity_score": null,
+      "event_study_readiness_status": "NOT_READY",
+      "live_capture_started": false,
+      "new_strategy_generated_count": 0,
+      "exchange_write_attempt_count": 0
+    }
+  },
+  "updated_at": "2026-08-05T03:06:40Z",
+  "event_study_readiness_status": "NOT_READY",
+  "event_study_real_execution": false,
+  "new_strategy_generated_count": 0
+}

@@ -1,0 +1,53 @@
+{
+  "schema": "microstructure_operations_v10_capture_start_gates",
+  "decision": "DRY_RUN_ONLY",
+  "live_capture_started": false,
+  "live_capture_would_start": false,
+  "enable_live_capture": false,
+  "all_hard_gates_passed": true,
+  "gate_results": {
+    "d_free_space_ge_30_gib": {
+      "required": true,
+      "passed": true,
+      "detail": {
+        "schema": "minimum_free_disk_controller_v10",
+        "path": "D:\\",
+        "free_bytes": 250447028224,
+        "free_gib": 233.247,
+        "minimum_free_disk_bytes": 32212254720,
+        "minimum_free_disk_gib": 30.0,
+        "status": "PASS",
+        "passed": true
+      }
+    },
+    "previous_campaign_finalized": {
+      "required": true,
+      "passed": true
+    },
+    "storage_cap_configured": {
+      "required": true,
+      "passed": true
+    },
+    "minimum_free_disk_controller": {
+      "required": "PASS",
+      "passed": true,
+      "status": "PASS",
+      "detail": {
+        "schema": "minimum_free_disk_controller_v10",
+        "path": "D:\\",
+        "free_bytes": 250447028224,
+        "free_gib": 233.247,
+        "minimum_free_disk_bytes": 32212254720,
+        "minimum_free_disk_gib": 30.0,
+        "status": "PASS",
+        "passed": true
+      }
+    }
+  },
+  "blockers": [],
+  "event_study_readiness_status": "NOT_READY",
+  "event_study_real_execution": false,
+  "new_strategy_generated_count": 0,
+  "exchange_write_attempt_count": 0,
+  "note": "New bounded capture segment may begin ONLY when all hard gates PASS and enable_live_capture is set; default path is dry-run/controller scaffolding."
+}
