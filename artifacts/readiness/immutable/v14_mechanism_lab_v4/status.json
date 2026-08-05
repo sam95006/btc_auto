@@ -20,7 +20,7 @@
   "branch": "feature/v14-strategy-mechanism-lab-v4",
   "campaign": "STRATEGY_MECHANISM_LAB_V4",
   "code_checksum": "1d01db112d428305f95c5e912cb4723e9893b58d22e3589920dd4361eb8d6454",
-  "created_at": "2026-08-05T11:19:11Z",
+  "created_at": "2026-08-05T11:19:52Z",
   "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
   "demo_order_count": 0,
   "edge_claim_count": 0,
@@ -52,7 +52,7 @@
     "RESEARCH_SIGNAL_ONLY": 0
   },
   "lane": "V14-C",
-  "lane_head": "de73edd7f13dfbc2c054c04c8d19f70a1e761263",
+  "lane_head": "0f1ff46172a37453d9b4c630a5a2fb51764b5902",
   "mainnet_touch_count": 0,
   "mechanism_count": 42,
   "mechanism_family_count": 20,
