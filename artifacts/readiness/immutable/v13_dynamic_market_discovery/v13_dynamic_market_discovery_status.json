@@ -2,7 +2,7 @@
   "artifacts_dir": "artifacts/readiness/immutable/v13_dynamic_market_discovery",
   "base_commit": "abd2195ef6d79f609dd261b5e9c5402599625a64",
   "branch": "feature/v13-dynamic-market-discovery",
-  "created_at": "2026-08-05T08:32:36Z",
+  "created_at": "2026-08-05T08:32:53Z",
   "demo": false,
   "demo_order_count": 0,
   "evaluation_dimensions": [
@@ -25,7 +25,7 @@
   ],
   "exchange_write": false,
   "exchange_write_attempt_count": 0,
-  "feature_commit": "5b73d4360dacd81350a54c9b6abaed53570f28ee",
+  "feature_commit": "0d8af24c8aa908671d7bf237927afc44b173da06",
   "hard_bans": [
     "no_exchange_writes",
     "no_demo",
@@ -34,9 +34,9 @@
     "no_future_observation_leak"
   ],
   "hard_bans_honored": true,
-  "head_commit_at_run": "5b73d4360dacd81350a54c9b6abaed53570f28ee",
+  "head_commit_at_run": "0d8af24c8aa908671d7bf237927afc44b173da06",
   "lane": "V13-D",
-  "lane_head_commit": "5b73d4360dacd81350a54c9b6abaed53570f28ee",
+  "lane_head_commit": "0d8af24c8aa908671d7bf237927afc44b173da06",
   "lane_name": "DYNAMIC_MARKET_DISCOVERY",
   "mainnet": false,
   "owned_paths": [
