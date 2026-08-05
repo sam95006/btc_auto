@@ -1,0 +1,1018 @@
+{
+  "Founder_authorization_present": false,
+  "allowed_dossier_statuses": [
+    "DEVELOPMENT_REVIEW",
+    "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+  ],
+  "auto_integrated": false,
+  "created_at": "2026-08-05T15:15:11Z",
+  "demo_eligibility": false,
+  "demo_order_count": 0,
+  "demo_ready_output_count": 0,
+  "dossier_builder_status": "DOSSIER_BUILDER_READY",
+  "dossiers": {
+    "all_fixture_only": true,
+    "all_have_failed_siblings": true,
+    "all_required_fields_present": true,
+    "allowed_statuses_only": true,
+    "bundle_digest": "e95a241fe52e4ea7b6bb83099618b9e05fc7032eec421636e66c33a7f789789b",
+    "demo_ready_count": 0,
+    "dossier_count": 2,
+    "dossiers": [
+      {
+        "as_of_ms": 1700000000000,
+        "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V15_E_DOSSIER_ONLY",
+        "candidate_checksum": "2a0ee5d2efb3734130fe22091d5b09176dfcfd8423ad4c1b80f84dde50f5e086",
+        "candidate_id": "SYN_V15E_REVIEW_001",
+        "capacity_assumptions": {
+          "fixture_only": true,
+          "liquidity_floor_usd": 500000,
+          "max_notional_usd": 10000,
+          "max_participation_rate": 0.02,
+          "thin_market_block": true
+        },
+        "code_checksum": "75b6f7c0ee22441e160274d81989aaa697ab85ae51655d0cb34a04e4fdbc21a2",
+        "cost_breakdown": {
+          "canonical_cost_authority_consumed": true,
+          "cost_destroyed": false,
+          "fees": 0.0004,
+          "fixture_only": true,
+          "funding": 5e-05,
+          "gross_expectancy": 0.35,
+          "impact": 0.0001,
+          "net_expectancy": 0.05,
+          "slippage": 0.0003,
+          "spread": 0.0002
+        },
+        "cost_version": "canonical_cost_model_v11_1",
+        "data_lineage": {
+          "as_of_ms": 1700000000000,
+          "campaign_id": "syn_v15e_dev_bundle",
+          "fixture_only": true,
+          "pit_semantics": "exchange_timestamp_and_receive_timestamp_le_as_of_ms",
+          "source": "synthetic_fixture_bundle"
+        },
+        "demo_ready": false,
+        "development_intervals": [
+          {
+            "category": "development_only",
+            "end_ms": 1694816000000,
+            "label": "dev_window_a",
+            "start_ms": 1692224000000
+          },
+          {
+            "category": "development_only",
+            "end_ms": 1697408000000,
+            "label": "dev_window_b",
+            "start_ms": 1694816000000
+          }
+        ],
+        "dossier_checksum": "15ae4486fd3726fa42caf7f933f18b9c58eb012fd321fc669ae31f4eca59d573",
+        "dossier_status": "DEVELOPMENT_REVIEW",
+        "economic_rationale": "Fixture absorption hypothesis: transient liquidity absorption may produce short-horizon mean reversion under thin books.",
+        "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+        "execution_version": "autonomous_execution_simulator_v1_1",
+        "failed_sibling_experiments": [
+          {
+            "experiment_id": "SYN_V15E_REVIEW_001_SIB_FAIL_COST",
+            "fixture_only": true,
+            "outcome": "COST_DESTROYED",
+            "reason": "net_expectancy_negative_under_canonical_cost"
+          },
+          {
+            "experiment_id": "SYN_V15E_REVIEW_001_SIB_FAIL_REGIME",
+            "fixture_only": true,
+            "outcome": "REGIME_FRAGILE",
+            "reason": "signal_collapsed_in_liq_thin_regime"
+          },
+          {
+            "experiment_id": "SYN_V15E_REVIEW_001_SIB_FAIL_SAMPLE",
+            "fixture_only": true,
+            "outcome": "INSUFFICIENT_SAMPLE",
+            "reason": "bootstrap_ci_unstable_below_min_n"
+          }
+        ],
+        "feature_ids": [
+          "aggressive_buy_sell_imbalance",
+          "trade_intensity",
+          "price_impact",
+          "spread_shock_z"
+        ],
+        "feature_version": "v15_e_feature_surface_1",
+        "fixture_only": true,
+        "formal_walk_forward_executed": false,
+        "known_failure_conditions": [
+          "future_data_leak",
+          "cost_destruction",
+          "regime_flip",
+          "universe_checksum_mismatch",
+          "sibling_cost_collapse"
+        ],
+        "multiple_testing_status": "PENDING_DEVELOPMENT_CORRECTION",
+        "oos_touched": false,
+        "parameter_checksum": "f7f77099c9e2e289969b7f62fc61fcc09ca8a1e35c7f6af3af299642970f751f",
+        "parameters": {
+          "entry_z": 1.5,
+          "exit_z": 0.25,
+          "lookback_bars": 20
+        },
+        "profitability_claim": false,
+        "promoted": false,
+        "qualification_ready": false,
+        "qualified": false,
+        "regime_breakdown": {
+          "fixture_only": true,
+          "fragile": true,
+          "funding_stress": {
+            "net_expectancy": 0.05500000000000001,
+            "sample_n": 108
+          },
+          "liq_thin": {
+            "net_expectancy": 0.020000000000000004,
+            "sample_n": 106
+          },
+          "vol_high": {
+            "net_expectancy": 0.04000000000000001,
+            "sample_n": 106
+          }
+        },
+        "remaining_blockers": [
+          "formal_walk_forward_blocked",
+          "oos_reservation_blocked",
+          "multiple_testing_correction_incomplete",
+          "capacity_stress_incomplete"
+        ],
+        "risk_version": "deterministic_risk_gate_v1",
+        "sample_n": 320,
+        "schema": "FOUNDER_V15_E_CANDIDATE_DOSSIER_BUILDER",
+        "selected": false,
+        "semantic_mechanism": {
+          "deterministic": true,
+          "fixture_only": true,
+          "mechanism_family": "absorption",
+          "mechanism_semantic_id": "MECH_ABSORPTION_V4"
+        },
+        "symbol_breakdown": {
+          "FIXTUREBTCUSDT": {
+            "gross_expectancy": 0.35,
+            "net_expectancy": 0.05,
+            "sample_n": 106
+          },
+          "FIXTUREETHUSDT": {
+            "gross_expectancy": 0.35,
+            "net_expectancy": 0.05,
+            "sample_n": 106
+          },
+          "SYNTHUSDT": {
+            "gross_expectancy": 0.35,
+            "net_expectancy": 0.05,
+            "sample_n": 106
+          }
+        },
+        "universe_checksum": "a51c2d1aa216c591937373c2269ab71363757c4a70102d2808e9c328deabc29d"
+      },
+      {
+        "as_of_ms": 1700000000000,
+        "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V15_E_DOSSIER_ONLY",
+        "candidate_checksum": "093bf953efa898f70b27c562e036bc7126b3816aa193b68078aa8dc6c2669643",
+        "candidate_id": "SYN_V15E_PROMISING_002",
+        "capacity_assumptions": {
+          "fixture_only": true,
+          "liquidity_floor_usd": 500000,
+          "max_notional_usd": 25000,
+          "max_participation_rate": 0.02,
+          "thin_market_block": true
+        },
+        "code_checksum": "c6db0e159fe2f628c6ca6407d9176103789eb4e8d8b3dc15801fa8931d0140af",
+        "cost_breakdown": {
+          "canonical_cost_authority_consumed": true,
+          "cost_destroyed": false,
+          "fees": 0.0004,
+          "fixture_only": true,
+          "funding": 5e-05,
+          "gross_expectancy": 0.7,
+          "impact": 0.0001,
+          "net_expectancy": 0.25,
+          "slippage": 0.0003,
+          "spread": 0.0002
+        },
+        "cost_version": "canonical_cost_model_v11_1",
+        "data_lineage": {
+          "as_of_ms": 1700000000000,
+          "campaign_id": "syn_v15e_dev_bundle",
+          "fixture_only": true,
+          "pit_semantics": "exchange_timestamp_and_receive_timestamp_le_as_of_ms",
+          "source": "synthetic_fixture_bundle"
+        },
+        "demo_ready": false,
+        "development_intervals": [
+          {
+            "category": "development_only",
+            "end_ms": 1694816000000,
+            "label": "dev_window_a",
+            "start_ms": 1692224000000
+          },
+          {
+            "category": "development_only",
+            "end_ms": 1697408000000,
+            "label": "dev_window_b",
+            "start_ms": 1694816000000
+          }
+        ],
+        "dossier_checksum": "70aa8ee4a337781b672b111ad732faeecb9b4c8314fea3f786dea5f278c74b17",
+        "dossier_status": "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+        "economic_rationale": "Fixture liquidity-withdrawal hypothesis: sudden top-of-book withdrawal may precede short-lived continuation in aggressive flow.",
+        "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+        "execution_version": "autonomous_execution_simulator_v1_1",
+        "failed_sibling_experiments": [
+          {
+            "experiment_id": "SYN_V15E_PROMISING_002_SIB_FAIL_COST",
+            "fixture_only": true,
+            "outcome": "COST_DESTROYED",
+            "reason": "net_expectancy_negative_under_canonical_cost"
+          },
+          {
+            "experiment_id": "SYN_V15E_PROMISING_002_SIB_FAIL_REGIME",
+            "fixture_only": true,
+            "outcome": "REGIME_FRAGILE",
+            "reason": "signal_collapsed_in_liq_thin_regime"
+          },
+          {
+            "experiment_id": "SYN_V15E_PROMISING_002_SIB_FAIL_SAMPLE",
+            "fixture_only": true,
+            "outcome": "INSUFFICIENT_SAMPLE",
+            "reason": "bootstrap_ci_unstable_below_min_n"
+          }
+        ],
+        "feature_ids": [
+          "aggressive_buy_sell_imbalance",
+          "trade_intensity",
+          "price_impact",
+          "spread_shock_z"
+        ],
+        "feature_version": "v15_e_feature_surface_1",
+        "fixture_only": true,
+        "formal_walk_forward_executed": false,
+        "known_failure_conditions": [
+          "future_data_leak",
+          "cost_destruction",
+          "regime_flip",
+          "universe_checksum_mismatch",
+          "sibling_cost_collapse"
+        ],
+        "multiple_testing_status": "DEVELOPMENT_SURVIVED_FAMILYWISE_SCREEN",
+        "oos_touched": false,
+        "parameter_checksum": "8bfab2a6bd1e7131ba88de7f3188da367571c33cbb72d833965a1a2eb1130eb8",
+        "parameters": {
+          "entry_z": 2.0,
+          "exit_z": 0.5,
+          "lookback_bars": 12
+        },
+        "profitability_claim": false,
+        "promoted": false,
+        "qualification_ready": false,
+        "qualified": false,
+        "regime_breakdown": {
+          "fixture_only": true,
+          "fragile": false,
+          "funding_stress": {
+            "net_expectancy": 0.275,
+            "sample_n": 214
+          },
+          "liq_thin": {
+            "net_expectancy": 0.1,
+            "sample_n": 213
+          },
+          "vol_high": {
+            "net_expectancy": 0.2,
+            "sample_n": 213
+          }
+        },
+        "remaining_blockers": [
+          "formal_walk_forward_blocked",
+          "oos_reservation_blocked",
+          "qualification_ready_forbidden",
+          "strategy_promotion_banned"
+        ],
+        "risk_version": "deterministic_risk_gate_v1",
+        "sample_n": 640,
+        "schema": "FOUNDER_V15_E_CANDIDATE_DOSSIER_BUILDER",
+        "selected": false,
+        "semantic_mechanism": {
+          "deterministic": true,
+          "fixture_only": true,
+          "mechanism_family": "liquidity_withdrawal",
+          "mechanism_semantic_id": "MECH_LIQUIDITY_WITHDRAWAL_V4"
+        },
+        "symbol_breakdown": {
+          "FIXTUREBTCUSDT": {
+            "gross_expectancy": 0.7,
+            "net_expectancy": 0.25,
+            "sample_n": 213
+          },
+          "FIXTUREETHUSDT": {
+            "gross_expectancy": 0.7,
+            "net_expectancy": 0.25,
+            "sample_n": 213
+          },
+          "SYNTHUSDT": {
+            "gross_expectancy": 0.7,
+            "net_expectancy": 0.25,
+            "sample_n": 213
+          }
+        },
+        "universe_checksum": "a51c2d1aa216c591937373c2269ab71363757c4a70102d2808e9c328deabc29d"
+      }
+    ],
+    "forbidden_output_count": 0,
+    "promoted_count": 0,
+    "qualification_ready_count": 0,
+    "qualified_count": 0,
+    "schema": "FOUNDER_V15_E_CANDIDATE_DOSSIER_BUILDER",
+    "status_ceiling_ok": true,
+    "status_histogram": {
+      "DEVELOPMENT_PROMISING_NOT_QUALIFIED": 1,
+      "DEVELOPMENT_REVIEW": 1
+    }
+  },
+  "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+  "exchange_write_attempt_count": 0,
+  "forbidden_output_statuses": [
+    "QUALIFIED",
+    "PROMOTED",
+    "DEMO_READY",
+    "WALK_FORWARD_READY",
+    "OOS_READY"
+  ],
+  "formal_walk_forward_executed": false,
+  "founder_authorization_present": false,
+  "hard_bans": [
+    "no_formal_walk_forward",
+    "no_real_oos_reservation",
+    "no_real_oos_consumption",
+    "no_strategy_selection",
+    "no_strategy_promotion",
+    "no_demo_orders",
+    "no_shadow_orders",
+    "no_exchange_writes",
+    "no_pr27_merge",
+    "no_mainnet",
+    "no_real_money",
+    "no_profitability_claims",
+    "no_qualified_output",
+    "no_promoted_output",
+    "no_demo_ready_output",
+    "no_auto_integrate",
+    "no_status_json_lane_reports"
+  ],
+  "infrastructure_status": "BLOCKED_READY",
+  "ingest": {
+    "as_of_ms": 1700000000000,
+    "bundle_checksum": "1a0b581339a0feb1be016d488f1853bc7cb96174a39398bbe08defe8c5dcae65",
+    "candidate_ids": [
+      "SYN_V15E_REVIEW_001",
+      "SYN_V15E_PROMISING_002"
+    ],
+    "fixture_only": true,
+    "input_candidate_count": 2,
+    "qualification_ready_count": 0
+  },
+  "lane": "V15-E",
+  "lane_status_json_written": false,
+  "mainnet": false,
+  "oos_consumed": false,
+  "oos_executed": false,
+  "oos_reservation_created": false,
+  "oos_touched": false,
+  "owned_paths": [
+    "backend/nexus_candidate_dossier",
+    "tools/research/candidate_dossier",
+    "tests/candidate_dossier",
+    "artifacts/readiness/immutable/v15_candidate_dossier"
+  ],
+  "pr27_merged": false,
+  "profitability_claim_count": 0,
+  "prohibitions": {
+    "auto_integrate": "BANNED",
+    "demo_orders": "NOT_ATTEMPTED",
+    "demo_ready_output": "FORBIDDEN",
+    "exchange_writes": "NOT_ATTEMPTED",
+    "formal_walk_forward": "NOT_EXECUTED",
+    "lane_status_json": "BANNED",
+    "oos_consumption": "NOT_CONSUMED",
+    "oos_execution": "NOT_EXECUTED",
+    "oos_reservation": "NOT_CREATED",
+    "pr27_merge": "NOT_PERFORMED",
+    "promoted_output": "FORBIDDEN",
+    "qualified_output": "FORBIDDEN",
+    "shadow_orders": "NOT_ATTEMPTED",
+    "status_ceiling": "DEVELOPMENT_REVIEW|DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+    "strategy_promotion": "BLOCKED",
+    "strategy_selection": "NOT_PERFORMED"
+  },
+  "promoted_output_count": 0,
+  "promoted_strategy": null,
+  "proofs": {
+    "all_demo_ready_refused": true,
+    "all_have_failed_siblings": true,
+    "all_promotes_refused": true,
+    "all_qualifies_refused": true,
+    "all_required_fields_present": true,
+    "all_selects_refused": true,
+    "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V15_E_DOSSIER_ONLY",
+    "demo_ready_attempts": {
+      "SYN_V15E_PROMISING_002": {
+        "allowed": false,
+        "candidate_id": "SYN_V15E_PROMISING_002",
+        "demo_ready": false,
+        "forbidden_status": "DEMO_READY",
+        "reason": "DEMO_READY_OUTPUT_BANNED_V15_E"
+      },
+      "SYN_V15E_REVIEW_001": {
+        "allowed": false,
+        "candidate_id": "SYN_V15E_REVIEW_001",
+        "demo_ready": false,
+        "forbidden_status": "DEMO_READY",
+        "reason": "DEMO_READY_OUTPUT_BANNED_V15_E"
+      }
+    },
+    "dossier_bundle": {
+      "all_fixture_only": true,
+      "all_have_failed_siblings": true,
+      "all_required_fields_present": true,
+      "allowed_statuses_only": true,
+      "bundle_digest": "e95a241fe52e4ea7b6bb83099618b9e05fc7032eec421636e66c33a7f789789b",
+      "demo_ready_count": 0,
+      "dossier_count": 2,
+      "dossiers": [
+        {
+          "as_of_ms": 1700000000000,
+          "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V15_E_DOSSIER_ONLY",
+          "candidate_checksum": "2a0ee5d2efb3734130fe22091d5b09176dfcfd8423ad4c1b80f84dde50f5e086",
+          "candidate_id": "SYN_V15E_REVIEW_001",
+          "capacity_assumptions": {
+            "fixture_only": true,
+            "liquidity_floor_usd": 500000,
+            "max_notional_usd": 10000,
+            "max_participation_rate": 0.02,
+            "thin_market_block": true
+          },
+          "code_checksum": "75b6f7c0ee22441e160274d81989aaa697ab85ae51655d0cb34a04e4fdbc21a2",
+          "cost_breakdown": {
+            "canonical_cost_authority_consumed": true,
+            "cost_destroyed": false,
+            "fees": 0.0004,
+            "fixture_only": true,
+            "funding": 5e-05,
+            "gross_expectancy": 0.35,
+            "impact": 0.0001,
+            "net_expectancy": 0.05,
+            "slippage": 0.0003,
+            "spread": 0.0002
+          },
+          "cost_version": "canonical_cost_model_v11_1",
+          "data_lineage": {
+            "as_of_ms": 1700000000000,
+            "campaign_id": "syn_v15e_dev_bundle",
+            "fixture_only": true,
+            "pit_semantics": "exchange_timestamp_and_receive_timestamp_le_as_of_ms",
+            "source": "synthetic_fixture_bundle"
+          },
+          "demo_ready": false,
+          "development_intervals": [
+            {
+              "category": "development_only",
+              "end_ms": 1694816000000,
+              "label": "dev_window_a",
+              "start_ms": 1692224000000
+            },
+            {
+              "category": "development_only",
+              "end_ms": 1697408000000,
+              "label": "dev_window_b",
+              "start_ms": 1694816000000
+            }
+          ],
+          "dossier_checksum": "15ae4486fd3726fa42caf7f933f18b9c58eb012fd321fc669ae31f4eca59d573",
+          "dossier_status": "DEVELOPMENT_REVIEW",
+          "economic_rationale": "Fixture absorption hypothesis: transient liquidity absorption may produce short-horizon mean reversion under thin books.",
+          "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+          "execution_version": "autonomous_execution_simulator_v1_1",
+          "failed_sibling_experiments": [
+            {
+              "experiment_id": "SYN_V15E_REVIEW_001_SIB_FAIL_COST",
+              "fixture_only": true,
+              "outcome": "COST_DESTROYED",
+              "reason": "net_expectancy_negative_under_canonical_cost"
+            },
+            {
+              "experiment_id": "SYN_V15E_REVIEW_001_SIB_FAIL_REGIME",
+              "fixture_only": true,
+              "outcome": "REGIME_FRAGILE",
+              "reason": "signal_collapsed_in_liq_thin_regime"
+            },
+            {
+              "experiment_id": "SYN_V15E_REVIEW_001_SIB_FAIL_SAMPLE",
+              "fixture_only": true,
+              "outcome": "INSUFFICIENT_SAMPLE",
+              "reason": "bootstrap_ci_unstable_below_min_n"
+            }
+          ],
+          "feature_ids": [
+            "aggressive_buy_sell_imbalance",
+            "trade_intensity",
+            "price_impact",
+            "spread_shock_z"
+          ],
+          "feature_version": "v15_e_feature_surface_1",
+          "fixture_only": true,
+          "formal_walk_forward_executed": false,
+          "known_failure_conditions": [
+            "future_data_leak",
+            "cost_destruction",
+            "regime_flip",
+            "universe_checksum_mismatch",
+            "sibling_cost_collapse"
+          ],
+          "multiple_testing_status": "PENDING_DEVELOPMENT_CORRECTION",
+          "oos_touched": false,
+          "parameter_checksum": "f7f77099c9e2e289969b7f62fc61fcc09ca8a1e35c7f6af3af299642970f751f",
+          "parameters": {
+            "entry_z": 1.5,
+            "exit_z": 0.25,
+            "lookback_bars": 20
+          },
+          "profitability_claim": false,
+          "promoted": false,
+          "qualification_ready": false,
+          "qualified": false,
+          "regime_breakdown": {
+            "fixture_only": true,
+            "fragile": true,
+            "funding_stress": {
+              "net_expectancy": 0.05500000000000001,
+              "sample_n": 108
+            },
+            "liq_thin": {
+              "net_expectancy": 0.020000000000000004,
+              "sample_n": 106
+            },
+            "vol_high": {
+              "net_expectancy": 0.04000000000000001,
+              "sample_n": 106
+            }
+          },
+          "remaining_blockers": [
+            "formal_walk_forward_blocked",
+            "oos_reservation_blocked",
+            "multiple_testing_correction_incomplete",
+            "capacity_stress_incomplete"
+          ],
+          "risk_version": "deterministic_risk_gate_v1",
+          "sample_n": 320,
+          "schema": "FOUNDER_V15_E_CANDIDATE_DOSSIER_BUILDER",
+          "selected": false,
+          "semantic_mechanism": {
+            "deterministic": true,
+            "fixture_only": true,
+            "mechanism_family": "absorption",
+            "mechanism_semantic_id": "MECH_ABSORPTION_V4"
+          },
+          "symbol_breakdown": {
+            "FIXTUREBTCUSDT": {
+              "gross_expectancy": 0.35,
+              "net_expectancy": 0.05,
+              "sample_n": 106
+            },
+            "FIXTUREETHUSDT": {
+              "gross_expectancy": 0.35,
+              "net_expectancy": 0.05,
+              "sample_n": 106
+            },
+            "SYNTHUSDT": {
+              "gross_expectancy": 0.35,
+              "net_expectancy": 0.05,
+              "sample_n": 106
+            }
+          },
+          "universe_checksum": "a51c2d1aa216c591937373c2269ab71363757c4a70102d2808e9c328deabc29d"
+        },
+        {
+          "as_of_ms": 1700000000000,
+          "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V15_E_DOSSIER_ONLY",
+          "candidate_checksum": "093bf953efa898f70b27c562e036bc7126b3816aa193b68078aa8dc6c2669643",
+          "candidate_id": "SYN_V15E_PROMISING_002",
+          "capacity_assumptions": {
+            "fixture_only": true,
+            "liquidity_floor_usd": 500000,
+            "max_notional_usd": 25000,
+            "max_participation_rate": 0.02,
+            "thin_market_block": true
+          },
+          "code_checksum": "c6db0e159fe2f628c6ca6407d9176103789eb4e8d8b3dc15801fa8931d0140af",
+          "cost_breakdown": {
+            "canonical_cost_authority_consumed": true,
+            "cost_destroyed": false,
+            "fees": 0.0004,
+            "fixture_only": true,
+            "funding": 5e-05,
+            "gross_expectancy": 0.7,
+            "impact": 0.0001,
+            "net_expectancy": 0.25,
+            "slippage": 0.0003,
+            "spread": 0.0002
+          },
+          "cost_version": "canonical_cost_model_v11_1",
+          "data_lineage": {
+            "as_of_ms": 1700000000000,
+            "campaign_id": "syn_v15e_dev_bundle",
+            "fixture_only": true,
+            "pit_semantics": "exchange_timestamp_and_receive_timestamp_le_as_of_ms",
+            "source": "synthetic_fixture_bundle"
+          },
+          "demo_ready": false,
+          "development_intervals": [
+            {
+              "category": "development_only",
+              "end_ms": 1694816000000,
+              "label": "dev_window_a",
+              "start_ms": 1692224000000
+            },
+            {
+              "category": "development_only",
+              "end_ms": 1697408000000,
+              "label": "dev_window_b",
+              "start_ms": 1694816000000
+            }
+          ],
+          "dossier_checksum": "70aa8ee4a337781b672b111ad732faeecb9b4c8314fea3f786dea5f278c74b17",
+          "dossier_status": "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "economic_rationale": "Fixture liquidity-withdrawal hypothesis: sudden top-of-book withdrawal may precede short-lived continuation in aggressive flow.",
+          "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+          "execution_version": "autonomous_execution_simulator_v1_1",
+          "failed_sibling_experiments": [
+            {
+              "experiment_id": "SYN_V15E_PROMISING_002_SIB_FAIL_COST",
+              "fixture_only": true,
+              "outcome": "COST_DESTROYED",
+              "reason": "net_expectancy_negative_under_canonical_cost"
+            },
+            {
+              "experiment_id": "SYN_V15E_PROMISING_002_SIB_FAIL_REGIME",
+              "fixture_only": true,
+              "outcome": "REGIME_FRAGILE",
+              "reason": "signal_collapsed_in_liq_thin_regime"
+            },
+            {
+              "experiment_id": "SYN_V15E_PROMISING_002_SIB_FAIL_SAMPLE",
+              "fixture_only": true,
+              "outcome": "INSUFFICIENT_SAMPLE",
+              "reason": "bootstrap_ci_unstable_below_min_n"
+            }
+          ],
+          "feature_ids": [
+            "aggressive_buy_sell_imbalance",
+            "trade_intensity",
+            "price_impact",
+            "spread_shock_z"
+          ],
+          "feature_version": "v15_e_feature_surface_1",
+          "fixture_only": true,
+          "formal_walk_forward_executed": false,
+          "known_failure_conditions": [
+            "future_data_leak",
+            "cost_destruction",
+            "regime_flip",
+            "universe_checksum_mismatch",
+            "sibling_cost_collapse"
+          ],
+          "multiple_testing_status": "DEVELOPMENT_SURVIVED_FAMILYWISE_SCREEN",
+          "oos_touched": false,
+          "parameter_checksum": "8bfab2a6bd1e7131ba88de7f3188da367571c33cbb72d833965a1a2eb1130eb8",
+          "parameters": {
+            "entry_z": 2.0,
+            "exit_z": 0.5,
+            "lookback_bars": 12
+          },
+          "profitability_claim": false,
+          "promoted": false,
+          "qualification_ready": false,
+          "qualified": false,
+          "regime_breakdown": {
+            "fixture_only": true,
+            "fragile": false,
+            "funding_stress": {
+              "net_expectancy": 0.275,
+              "sample_n": 214
+            },
+            "liq_thin": {
+              "net_expectancy": 0.1,
+              "sample_n": 213
+            },
+            "vol_high": {
+              "net_expectancy": 0.2,
+              "sample_n": 213
+            }
+          },
+          "remaining_blockers": [
+            "formal_walk_forward_blocked",
+            "oos_reservation_blocked",
+            "qualification_ready_forbidden",
+            "strategy_promotion_banned"
+          ],
+          "risk_version": "deterministic_risk_gate_v1",
+          "sample_n": 640,
+          "schema": "FOUNDER_V15_E_CANDIDATE_DOSSIER_BUILDER",
+          "selected": false,
+          "semantic_mechanism": {
+            "deterministic": true,
+            "fixture_only": true,
+            "mechanism_family": "liquidity_withdrawal",
+            "mechanism_semantic_id": "MECH_LIQUIDITY_WITHDRAWAL_V4"
+          },
+          "symbol_breakdown": {
+            "FIXTUREBTCUSDT": {
+              "gross_expectancy": 0.7,
+              "net_expectancy": 0.25,
+              "sample_n": 213
+            },
+            "FIXTUREETHUSDT": {
+              "gross_expectancy": 0.7,
+              "net_expectancy": 0.25,
+              "sample_n": 213
+            },
+            "SYNTHUSDT": {
+              "gross_expectancy": 0.7,
+              "net_expectancy": 0.25,
+              "sample_n": 213
+            }
+          },
+          "universe_checksum": "a51c2d1aa216c591937373c2269ab71363757c4a70102d2808e9c328deabc29d"
+        }
+      ],
+      "forbidden_output_count": 0,
+      "promoted_count": 0,
+      "qualification_ready_count": 0,
+      "qualified_count": 0,
+      "schema": "FOUNDER_V15_E_CANDIDATE_DOSSIER_BUILDER",
+      "status_ceiling_ok": true,
+      "status_histogram": {
+        "DEVELOPMENT_PROMISING_NOT_QUALIFIED": 1,
+        "DEVELOPMENT_REVIEW": 1
+      }
+    },
+    "forbidden_statuses_absent": true,
+    "hard_ban_probe": {
+      "all_refused": true,
+      "flags": {
+        "Founder_authorization_present": false,
+        "auto_integrated": false,
+        "demo_eligibility": false,
+        "demo_order_count": 0,
+        "demo_ready_output_count": 0,
+        "exchange_write_attempt_count": 0,
+        "formal_walk_forward_executed": false,
+        "founder_authorization_present": false,
+        "lane_status_json_written": false,
+        "mainnet": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "oos_reservation_created": false,
+        "oos_touched": false,
+        "pr27_merged": false,
+        "profitability_claim_count": 0,
+        "promoted_output_count": 0,
+        "qualification_ready_count": 0,
+        "qualified_output_count": 0,
+        "real_money": false,
+        "shadow_order_count": 0,
+        "strategy_promoted": false,
+        "strategy_selected": false
+      },
+      "hard_bans": [
+        "no_formal_walk_forward",
+        "no_real_oos_reservation",
+        "no_real_oos_consumption",
+        "no_strategy_selection",
+        "no_strategy_promotion",
+        "no_demo_orders",
+        "no_shadow_orders",
+        "no_exchange_writes",
+        "no_pr27_merge",
+        "no_mainnet",
+        "no_real_money",
+        "no_profitability_claims",
+        "no_qualified_output",
+        "no_promoted_output",
+        "no_demo_ready_output",
+        "no_auto_integrate",
+        "no_status_json_lane_reports"
+      ],
+      "probes": {
+        "force_auto_integrate": {
+          "action": "AUTO_INTEGRATE",
+          "allowed": false,
+          "auto_integrated": false,
+          "executed": false,
+          "reason": "AUTO_INTEGRATE_BANNED_V15_E"
+        },
+        "force_demo": {
+          "action": "DEMO_ORDER",
+          "allowed": false,
+          "candidate_id": "SYN_V15E_REVIEW_001",
+          "demo_eligibility": false,
+          "demo_order_count": 0,
+          "executed": false,
+          "reason": "DEMO_ORDERS_BANNED_V15_E"
+        },
+        "force_demo_ready": {
+          "allowed": false,
+          "candidate_id": "SYN_V15E_REVIEW_001",
+          "demo_ready": false,
+          "forbidden_status": "DEMO_READY",
+          "reason": "DEMO_READY_OUTPUT_BANNED_V15_E"
+        },
+        "force_exchange_write": {
+          "action": "EXCHANGE_WRITE",
+          "allowed": false,
+          "exchange_write_attempt_count": 0,
+          "executed": false,
+          "reason": "EXCHANGE_WRITES_BANNED_V15_E"
+        },
+        "force_oos_consume": {
+          "action": "OOS_CONSUMPTION",
+          "allowed": false,
+          "candidate_id": "SYN_V15E_REVIEW_001",
+          "executed": false,
+          "oos_consumed": false,
+          "oos_executed": false,
+          "oos_reservation_created": false,
+          "oos_touched": false,
+          "reason": "FORMAL_QUALIFICATION_BLOCKED_V15_E_DOSSIER_ONLY"
+        },
+        "force_oos_reservation": {
+          "action": "OOS_RESERVATION",
+          "allowed": false,
+          "candidate_id": "SYN_V15E_REVIEW_001",
+          "executed": false,
+          "oos_consumed": false,
+          "oos_executed": false,
+          "oos_reservation_created": false,
+          "oos_touched": false,
+          "reason": "FORMAL_QUALIFICATION_BLOCKED_V15_E_DOSSIER_ONLY"
+        },
+        "force_promote": {
+          "allowed": false,
+          "candidate_id": "SYN_V15E_REVIEW_001",
+          "promoted": false,
+          "reason": "STRATEGY_PROMOTION_BANNED_V15_E"
+        },
+        "force_qualify": {
+          "allowed": false,
+          "candidate_id": "SYN_V15E_REVIEW_001",
+          "forbidden_status": "QUALIFIED",
+          "qualified": false,
+          "reason": "QUALIFIED_OUTPUT_BANNED_V15_E"
+        },
+        "force_select": {
+          "allowed": false,
+          "candidate_id": "SYN_V15E_REVIEW_001",
+          "reason": "STRATEGY_SELECTION_BANNED_V15_E",
+          "selected": false
+        },
+        "force_shadow": {
+          "action": "SHADOW_ORDER",
+          "allowed": false,
+          "candidate_id": "SYN_V15E_REVIEW_001",
+          "executed": false,
+          "reason": "SHADOW_ORDERS_BANNED_V15_E",
+          "shadow_order_count": 0
+        },
+        "force_status_json": {
+          "action": "WRITE_LANE_STATUS_JSON",
+          "allowed": false,
+          "executed": false,
+          "lane_status_json_written": false,
+          "path": "v15_e_status.json",
+          "reason": "LANE_STATUS_JSON_BANNED_V15_E"
+        },
+        "force_walk_forward": {
+          "action": "FORMAL_WALK_FORWARD",
+          "allowed": false,
+          "candidate_id": "SYN_V15E_REVIEW_001",
+          "executed": false,
+          "formal_walk_forward_executed": false,
+          "reason": "FORMAL_QUALIFICATION_BLOCKED_V15_E_DOSSIER_ONLY"
+        }
+      }
+    },
+    "histogram_covers_all_allowed": true,
+    "promote_attempts": {
+      "SYN_V15E_PROMISING_002": {
+        "allowed": false,
+        "candidate_id": "SYN_V15E_PROMISING_002",
+        "promoted": false,
+        "reason": "STRATEGY_PROMOTION_BANNED_V15_E"
+      },
+      "SYN_V15E_REVIEW_001": {
+        "allowed": false,
+        "candidate_id": "SYN_V15E_REVIEW_001",
+        "promoted": false,
+        "reason": "STRATEGY_PROMOTION_BANNED_V15_E"
+      }
+    },
+    "qualify_attempts": {
+      "SYN_V15E_PROMISING_002": {
+        "allowed": false,
+        "candidate_id": "SYN_V15E_PROMISING_002",
+        "forbidden_status": "QUALIFIED",
+        "qualified": false,
+        "reason": "QUALIFIED_OUTPUT_BANNED_V15_E"
+      },
+      "SYN_V15E_REVIEW_001": {
+        "allowed": false,
+        "candidate_id": "SYN_V15E_REVIEW_001",
+        "forbidden_status": "QUALIFIED",
+        "qualified": false,
+        "reason": "QUALIFIED_OUTPUT_BANNED_V15_E"
+      }
+    },
+    "required_fields": [
+      "semantic_mechanism",
+      "economic_rationale",
+      "data_lineage",
+      "universe_checksum",
+      "feature_version",
+      "code_checksum",
+      "parameter_checksum",
+      "cost_version",
+      "risk_version",
+      "execution_version",
+      "development_intervals",
+      "failed_sibling_experiments",
+      "regime_breakdown",
+      "symbol_breakdown",
+      "cost_breakdown",
+      "capacity_assumptions",
+      "known_failure_conditions",
+      "multiple_testing_status",
+      "remaining_blockers",
+      "dossier_status"
+    ],
+    "select_attempts": {
+      "SYN_V15E_PROMISING_002": {
+        "allowed": false,
+        "candidate_id": "SYN_V15E_PROMISING_002",
+        "reason": "STRATEGY_SELECTION_BANNED_V15_E",
+        "selected": false
+      },
+      "SYN_V15E_REVIEW_001": {
+        "allowed": false,
+        "candidate_id": "SYN_V15E_REVIEW_001",
+        "reason": "STRATEGY_SELECTION_BANNED_V15_E",
+        "selected": false
+      }
+    },
+    "status_ceiling_ok": true,
+    "status_json_write_refused": {
+      "action": "WRITE_LANE_STATUS_JSON",
+      "allowed": false,
+      "executed": false,
+      "lane_status_json_written": false,
+      "path": "v15_e_status.json",
+      "reason": "LANE_STATUS_JSON_BANNED_V15_E"
+    }
+  },
+  "qualification_ready_count": 0,
+  "qualification_status": "BLOCKED",
+  "qualified_output_count": 0,
+  "real_money": false,
+  "required_dossier_fields": [
+    "semantic_mechanism",
+    "economic_rationale",
+    "data_lineage",
+    "universe_checksum",
+    "feature_version",
+    "code_checksum",
+    "parameter_checksum",
+    "cost_version",
+    "risk_version",
+    "execution_version",
+    "development_intervals",
+    "failed_sibling_experiments",
+    "regime_breakdown",
+    "symbol_breakdown",
+    "cost_breakdown",
+    "capacity_assumptions",
+    "known_failure_conditions",
+    "multiple_testing_status",
+    "remaining_blockers",
+    "dossier_status"
+  ],
+  "schema": "FOUNDER_V15_E_CANDIDATE_DOSSIER_BUILDER",
+  "selected_strategy": null,
+  "shadow_order_count": 0,
+  "strategy_promoted": false,
+  "strategy_selected": false,
+  "updated_at": "2026-08-05T15:15:11Z"
+}

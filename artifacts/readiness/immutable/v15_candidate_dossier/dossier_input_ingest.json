@@ -1,0 +1,11 @@
+{
+  "as_of_ms": 1700000000000,
+  "bundle_checksum": "1a0b581339a0feb1be016d488f1853bc7cb96174a39398bbe08defe8c5dcae65",
+  "candidate_ids": [
+    "SYN_V15E_REVIEW_001",
+    "SYN_V15E_PROMISING_002"
+  ],
+  "fixture_only": true,
+  "input_candidate_count": 2,
+  "qualification_ready_count": 0
+}
