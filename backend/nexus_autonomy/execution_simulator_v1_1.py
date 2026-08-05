@@ -34,11 +34,19 @@ from backend.nexus_autonomy.execution_models_v1_1 import (
     SimOrderV11,
     SimPositionV11,
 )
+from backend.nexus_execution.cost_model import (
+    COST_MODEL_VERSION,
+    DEFAULT_SLIPPAGE_BPS_FLOAT,
+    DEFAULT_SPREAD_BPS_FLOAT,
+    MAKER_FEE,
+    TAKER_FEE,
+    apply_leg_costs_float,
+    net_pnl_float,
+)
 
-TAKER_FEE = 0.00055
-MAKER_FEE = 0.00020
-DEFAULT_SPREAD_BPS = 1.0
-DEFAULT_SLIP_BPS = 2.0
+# Re-exported from canonical cost_model — do not redefine fee formulas here.
+DEFAULT_SPREAD_BPS = DEFAULT_SPREAD_BPS_FLOAT
+DEFAULT_SLIP_BPS = DEFAULT_SLIPPAGE_BPS_FLOAT
 MAX_LEVERAGE_CEILING = 50
 DEFAULT_LEVERAGE = 25
 MARGIN_MODE = "ISOLATED"
@@ -157,14 +165,14 @@ class AutonomousExecutionSimulatorV1_1:
         )
 
     def _apply_costs(self, *, notional: float, is_taker: bool) -> dict[str, float]:
-        fee_rate = TAKER_FEE if is_taker else MAKER_FEE
-        return {
-            "entry_fee": notional * fee_rate,
-            "fee": notional * fee_rate,
-            "spread_cost": notional * (DEFAULT_SPREAD_BPS / 10000.0),
-            "slippage_cost": notional * (DEFAULT_SLIP_BPS / 10000.0),
-            "fee_rate": fee_rate,
-        }
+        """Delegate single-leg costs to canonical ``nexus_execution.cost_model``."""
+        return apply_leg_costs_float(
+            notional=notional,
+            is_taker=is_taker,
+            fee_rate=TAKER_FEE if is_taker else MAKER_FEE,
+            spread_bps=DEFAULT_SPREAD_BPS,
+            slippage_bps=DEFAULT_SLIP_BPS,
+        )
 
     def _liquidation_price(self, *, side: str, entry: float, leverage: int) -> float:
         # Isolated approx: long liq below entry, short above.
@@ -697,15 +705,15 @@ class AutonomousExecutionSimulatorV1_1:
                 gross = (p.entry_price - fill_px) * (prev_qty - p.qty)
 
             if p.state == "CLOSED":
-                net = (
-                    gross
-                    - p.entry_fee
-                    - p.exit_fee
-                    - p.spread_cost
-                    - p.slippage_cost
-                    - p.funding_paid
+                net = net_pnl_float(
+                    gross_pnl=gross,
+                    entry_fee=p.entry_fee,
+                    exit_fee=p.exit_fee,
+                    spread_cost=p.spread_cost,
+                    slippage_cost=p.slippage_cost,
+                    funding_cost=p.funding_paid,
                 )
-                # gross - all costs == net
+                # gross - all costs == net (canonical identity)
                 all_costs = p.entry_fee + p.exit_fee + p.spread_cost + p.slippage_cost + p.funding_paid
                 assert abs((gross - all_costs) - net) < 1e-9
                 p.realized_pnl = net
@@ -723,6 +731,7 @@ class AutonomousExecutionSimulatorV1_1:
                     "net_pnl": net,
                     "residual_qty": p.residual_qty,
                     "cost_identity_ok": abs((gross - all_costs) - net) < 1e-9,
+                    "cost_model_version": COST_MODEL_VERSION,
                 }
             break
 

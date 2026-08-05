@@ -18,6 +18,7 @@ from backend.nexus_autonomy.process_classification import (
     classify_completed_trade,
     control_fixture_process_evidence,
 )
+from backend.nexus_execution.cost_model import COST_MODEL_VERSION
 
 
 PROVIDER_LABEL = "PROVIDER_FIXTURE_NOT_REAL_AI_EVALUATION"
@@ -100,7 +101,7 @@ def expand_historical_candidates(sources: list[dict[str, Any]], *, target: int =
                         "original_timestamp": src["original_timestamp"],
                         "replay_timestamp": _utc(),
                         "Evidence_version": "evidence_v2_dev",
-                        "cost_model_version": "founder-conservative-v1-2026-07-31",
+                        "cost_model_version": COST_MODEL_VERSION,
                         "risk_model_version": "isolated-25x-max2",
                         "strategy_checksum": strategy_checksum,
                         "semantic_checksum": semantic_checksum,

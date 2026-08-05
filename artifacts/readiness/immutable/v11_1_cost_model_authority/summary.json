@@ -1,0 +1,182 @@
+{
+  "branch": "feature/v11_1-cost-model-authority",
+  "canonical_authority": "backend.nexus_execution.cost_model",
+  "ci_gate_passed": true,
+  "contract": {
+    "authority": "backend.nexus_execution.cost_model",
+    "cancel_replace_penalty": "0.01",
+    "cost_uncertainty_buffer_rate": "0.0002",
+    "funding_unavailable_buffer_rate": "0.0001",
+    "maker_fee": "0.0002",
+    "partial_fill_penalty": "0.005",
+    "schema": "nexus_cost_model_contract_v1",
+    "slippage_bps": "2.0",
+    "spread_bps": "1.0",
+    "taker_fee": "0.00055",
+    "version": "founder-conservative-v1-1-2026-08-05"
+  },
+  "cost_domain_critical_count": 0,
+  "cost_domain_findings": [],
+  "cost_model_schema": "nexus_cost_model_contract_v1",
+  "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+  "critical_high_findings_open": [
+    {
+      "code": "DUAL_LIFECYCLE_VOCABULARY",
+      "control_plane_states": [
+        "IDLE",
+        "STARTING",
+        "RUNNING",
+        "PAUSED",
+        "RECOVERING",
+        "STOPPING",
+        "STOPPED",
+        "KILLED",
+        "FAILED_SAFE"
+      ],
+      "domain": "lifecycle",
+      "recommendation": "Keep scoped (session vs control-plane). Block any code that maps states by identical name without an explicit adapter contract.",
+      "session_states": [
+        "CREATED",
+        "INITIALIZING",
+        "RUNNING",
+        "PAUSING",
+        "PAUSED",
+        "RECOVERING",
+        "FINALIZING",
+        "COMPLETED",
+        "BLOCKED",
+        "FAILED_SAFE"
+      ],
+      "severity": "critical"
+    },
+    {
+      "code": "PARALLEL_RETRY_IMPLEMENTATION",
+      "domain": "provider_retry",
+      "module": "backend.nexus_edge_discovery.provider_transport_v23",
+      "recommendation": "Import parse_retry_after / backoff_with_jitter from backend.nexus_provider.retry_policy; deprecate local copy.",
+      "severity": "critical"
+    },
+    {
+      "code": "STAGE4_PARALLEL_CIRCUIT_BREAKER",
+      "domain": "provider_retry",
+      "module": "tools.research.stage4_provider_chain",
+      "recommendation": "Prefer backend.nexus_provider.circuit_breaker for new code.",
+      "severity": "high"
+    },
+    {
+      "code": "MULTI_CHECKPOINT_SCHEMAS",
+      "domain": "checkpoint",
+      "modules": [
+        {
+          "CHECKPOINT_SCHEMA_V4": "blind_reflection_v23_checkpoint_v4",
+          "exists": true,
+          "module": "backend.nexus_reflection.checkpoint"
+        },
+        {
+          "exists": true,
+          "module": "backend.nexus_private_control.checkpoint"
+        },
+        {
+          "exists": true,
+          "module": "backend.nexus_recovery.crash_recovery"
+        }
+      ],
+      "recommendation": "Do not cross-resume between reflection / control-plane / session recovery without an explicit schema adapter. Future: publish checkpoint schema IDs in nexus_contracts.",
+      "severity": "high"
+    }
+  ],
+  "divergence": {
+    "canonical_cost_authority": "backend.nexus_execution.cost_model",
+    "canonical_cost_authority_count": 1,
+    "cost_formula_divergence_count": 0,
+    "cost_version_divergence_count": 0,
+    "findings": [],
+    "passed": true,
+    "schema": "nexus_cost_formula_divergence_v1"
+  },
+  "generated_at": "2026-08-05T04:07:45Z",
+  "hard_bans_observed": [
+    "no_PR_merge",
+    "no_deploy",
+    "no_WF_OOS",
+    "no_Demo_Shadow_exchange_write",
+    "no_mainnet",
+    "no_real_money",
+    "no_G_deletion",
+    "no_PR26_changes"
+  ],
+  "lane": "FOUNDER_C1_COST_MODEL_AUTHORITY",
+  "metrics": {
+    "canonical_cost_authority": "backend.nexus_execution.cost_model",
+    "canonical_cost_authority_count": 1,
+    "cost_bridge_failure_count": 0,
+    "cost_formula_divergence_count": 0,
+    "cost_model_schema": "nexus_cost_model_contract_v1",
+    "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+    "cost_version_divergence_count": 0,
+    "passed": true
+  },
+  "pass1": {
+    "cost_version_divergence_resolved": true,
+    "implemented": true,
+    "tests_run": true
+  },
+  "pass2": {
+    "adversarial_review": true,
+    "checks": [
+      "false_PASS_guard",
+      "fixture_only_divergence",
+      "silent_fallback_rejected",
+      "schema_drift_rejected",
+      "secrets_scan_module",
+      "negative_tests",
+      "pytest_rerun"
+    ],
+    "pytest_rerun_passed": true
+  },
+  "passed": true,
+  "pytest": {
+    "passed": true,
+    "returncode": 0
+  },
+  "registry_cost_status": "active_compat_present",
+  "remaining_blockers_outside_cost": [
+    {
+      "code": "DUAL_LIFECYCLE_VOCABULARY",
+      "control_plane_states": [
+        "IDLE",
+        "STARTING",
+        "RUNNING",
+        "PAUSED",
+        "RECOVERING",
+        "STOPPING",
+        "STOPPED",
+        "KILLED",
+        "FAILED_SAFE"
+      ],
+      "domain": "lifecycle",
+      "recommendation": "Keep scoped (session vs control-plane). Block any code that maps states by identical name without an explicit adapter contract.",
+      "session_states": [
+        "CREATED",
+        "INITIALIZING",
+        "RUNNING",
+        "PAUSING",
+        "PAUSED",
+        "RECOVERING",
+        "FINALIZING",
+        "COMPLETED",
+        "BLOCKED",
+        "FAILED_SAFE"
+      ],
+      "severity": "critical"
+    },
+    {
+      "code": "PARALLEL_RETRY_IMPLEMENTATION",
+      "domain": "provider_retry",
+      "module": "backend.nexus_edge_discovery.provider_transport_v23",
+      "recommendation": "Import parse_retry_after / backoff_with_jitter from backend.nexus_provider.retry_policy; deprecate local copy.",
+      "severity": "critical"
+    }
+  ],
+  "schema": "v11_1_cost_model_authority_summary_v1"
+}

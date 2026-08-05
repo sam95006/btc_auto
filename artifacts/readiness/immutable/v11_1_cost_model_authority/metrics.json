@@ -1,0 +1,10 @@
+{
+  "canonical_cost_authority": "backend.nexus_execution.cost_model",
+  "canonical_cost_authority_count": 1,
+  "cost_bridge_failure_count": 0,
+  "cost_formula_divergence_count": 0,
+  "cost_model_schema": "nexus_cost_model_contract_v1",
+  "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+  "cost_version_divergence_count": 0,
+  "passed": true
+}

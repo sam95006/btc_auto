@@ -10,11 +10,10 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from backend.nexus_demo_execution.session_limits import (
-    COST_UNCERTAINTY_BUFFER_RATE,
-    FUNDING_CONSERVATIVE_BUFFER_RATE,
     MIN_NET_REWARD_RISK_RATIO,
     MIN_NET_REWARD_TO_COST,
 )
+from backend.nexus_execution.cost_model import estimate_round_trip_costs_float
 
 NET_RR_MIN = MIN_NET_REWARD_RISK_RATIO
 NET_REWARD_TO_COST_MIN = MIN_NET_REWARD_TO_COST
@@ -74,23 +73,15 @@ def estimate_costs(
     slippage_bps: float,
     funding_rate: float | None,
 ) -> dict[str, float]:
-    entry_fee = notional * fee_rate
-    exit_fee = notional * fee_rate
-    slip = notional * (max(spread_bps, 0.0) + max(slippage_bps, 0.0)) / 10000.0
-    if funding_rate is None:
-        funding = notional * FUNDING_CONSERVATIVE_BUFFER_RATE
-    else:
-        funding = abs(notional * funding_rate)
-    uncertainty = notional * COST_UNCERTAINTY_BUFFER_RATE
-    total = entry_fee + exit_fee + slip + funding + uncertainty
-    return {
-        "entry_fee": entry_fee,
-        "exit_fee": exit_fee,
-        "slippage": slip,
-        "funding": funding,
-        "uncertainty": uncertainty,
-        "total_cost": total,
-    }
+    """Delegate fee/spread/slip/funding math to canonical cost_model authority."""
+    return estimate_round_trip_costs_float(
+        notional=notional,
+        fee_rate=fee_rate,
+        spread_bps=max(spread_bps, 0.0),
+        slippage_bps=max(slippage_bps, 0.0),
+        funding_rate=funding_rate,
+        include_uncertainty_buffer=True,
+    )
 
 
 def min_stop_distance_price(

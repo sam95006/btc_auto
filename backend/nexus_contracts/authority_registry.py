@@ -210,50 +210,57 @@ def _records() -> tuple[AuthorityRecord, ...]:
             domain="cost",
             authority_id="private_core.cost.model_v1_1",
             canonical_module="backend.nexus_execution.cost_model",
-            canonical_symbol="COST_MODEL_VERSION",
-            contract_module="backend.nexus_execution.contracts",
+            canonical_symbol="CostModelContract",
+            contract_module="backend.nexus_execution.cost_model",
             scope="private_core_simulated_session",
-            status="contested",
+            status="active_compat_present",
             invariants=(
                 "exact_decimal_cost_bridge",
                 "gross_minus_components_equals_net",
+                "canonical_cost_authority_count==1",
+                "cost_formula_divergence_count==0",
+                "cost_version_divergence_count==0",
             ),
-            contract_keys=("CostBridge", "COST_MODEL_VERSION"),
+            contract_keys=(
+                "CostModelContract",
+                "CostBridge",
+                "COST_MODEL_VERSION",
+                "compose_cost_bridge",
+            ),
             competitors=(
                 CompetitorRecord(
                     module="backend.nexus_strategy_engine.cost_semantics",
                     symbol="COST_MODEL_VERSION",
-                    role="parallel_lane",
-                    severity="critical",
+                    role="compatibility_shim",
+                    severity="low",
                     notes=(
-                        "Divergent COST_MODEL_VERSION string "
-                        "(NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1 vs founder-conservative-v1-1-*). "
-                        "Contract drift risk for strategy↔execution evidence."
+                        "Re-exports COST_MODEL_VERSION from nexus_execution.cost_model; "
+                        "annotates observed-vs-proxy sources only — no independent formulas."
                     ),
-                    recommended_action="migrate_callers",
+                    recommended_action="retain_compat",
                 ),
                 CompetitorRecord(
                     module="backend.nexus_demo_execution.trade_geometry",
                     symbol="estimate_costs",
-                    role="parallel_lane",
-                    severity="high",
-                    notes="Demo geometry cost estimator; separate fee constants.",
+                    role="compatibility_shim",
+                    severity="medium",
+                    notes="Delegates to estimate_round_trip_costs_float (canonical).",
                     recommended_action="retain_compat",
                 ),
                 CompetitorRecord(
                     module="backend.nexus_demo_execution.fee_rate",
                     symbol=None,
-                    role="parallel_lane",
+                    role="compatibility_shim",
                     severity="medium",
-                    notes="Demo fee-rate helpers; must not override simulated cost bridge.",
+                    notes="Demo fee-rate fetch/cache; rates feed canonical cost_model, must not override bridge.",
                     recommended_action="retain_compat",
                 ),
                 CompetitorRecord(
                     module="backend.nexus_autonomy.execution_simulator_v1_1",
                     symbol="TAKER_FEE",
                     role="compatibility_shim",
-                    severity="high",
-                    notes="Hard-coded TAKER_FEE/MAKER_FEE float path vs Decimal cost_model.",
+                    severity="medium",
+                    notes="TAKER_FEE/MAKER_FEE/_apply_costs/net_pnl re-exported or delegated from cost_model.",
                     recommended_action="migrate_callers",
                 ),
                 CompetitorRecord(
@@ -265,7 +272,10 @@ def _records() -> tuple[AuthorityRecord, ...]:
                     recommended_action="retain_compat",
                 ),
             ),
-            notes="Canonical version string: founder-conservative-v1-1-2026-08-05",
+            notes=(
+                "Canonical CostModelContract version: founder-conservative-v1-1-2026-08-05. "
+                "Legacy labels migrate via migrate_cost_model_version()."
+            ),
         ),
         AuthorityRecord(
             domain="risk",

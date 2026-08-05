@@ -1,6 +1,12 @@
 """DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION session constants."""
 from __future__ import annotations
 
+from backend.nexus_execution.cost_model import (
+    DEFAULT_COST_UNCERTAINTY_BUFFER_RATE,
+    DEFAULT_FUNDING_UNAVAILABLE_BUFFER_RATE,
+    DEFAULT_TAKER_FEE,
+)
+
 SESSION_GATE_NAME = "DEMO_AUTONOMOUS_6H_V2_BOUNDED_VALIDATION"
 # Legacy alias still recognized by start() for one-release compatibility.
 SESSION_GATE_NAME_LEGACY = "DEMO_AUTONOMOUS_6H_BOUNDED_VALIDATION"
@@ -40,12 +46,12 @@ MAX_HOLD_SEC = 30 * 60
 CYCLE_INTERVAL_SEC = 120
 SUPERVISOR_POLL_SEC = 10
 
-# Cost gate — floors must not be lowered.
-TAKER_FEE_RATE_DEFAULT = 0.00055  # used only after fee-rate fetch fails → BLOCK
+# Cost gate — floors must not be lowered. Rates from canonical cost_model.
+TAKER_FEE_RATE_DEFAULT = float(DEFAULT_TAKER_FEE)  # used only after fee-rate fetch fails → BLOCK
 MIN_NET_REWARD_TO_COST = 1.5
 MIN_NET_REWARD_RISK_RATIO = 1.2
-FUNDING_CONSERVATIVE_BUFFER_RATE = 0.0001  # per hold window when funding UNAVAILABLE
-COST_UNCERTAINTY_BUFFER_RATE = 0.0002
+FUNDING_CONSERVATIVE_BUFFER_RATE = float(DEFAULT_FUNDING_UNAVAILABLE_BUFFER_RATE)
+COST_UNCERTAINTY_BUFFER_RATE = float(DEFAULT_COST_UNCERTAINTY_BUFFER_RATE)
 
 POLICY_VERSION = "demo-autonomous-6h-v2-bounded"
 SCHEMA_VERSION = "demo_validation_session_v2"

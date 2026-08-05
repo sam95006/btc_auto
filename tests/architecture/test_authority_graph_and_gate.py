@@ -40,11 +40,21 @@ def test_ci_gate_passes_on_baseline():
     assert report["violation_count"] == 0
 
 
-def test_drift_report_detects_cost_divergence():
+def test_drift_report_cost_version_aligned():
     report = run_drift_checks(ROOT)
     codes = {f["code"] for f in report["findings"]}
-    assert "COST_MODEL_VERSION_DIVERGENCE" in codes
+    assert "COST_MODEL_VERSION_DIVERGENCE" not in codes
+    # Lifecycle dual vocabulary remains an open Lane H critical (out of scope for C1).
     assert "DUAL_LIFECYCLE_VOCABULARY" in codes
+
+
+def test_cost_authority_registry_active():
+    registry = build_canonical_registry()
+    cost = registry["by_domain"]["cost"]
+    assert cost["status"] == "active_compat_present"
+    assert cost["canonical_module"] == "backend.nexus_execution.cost_model"
+    assert cost["canonical_symbol"] == "CostModelContract"
+    assert "cost" not in registry["summary"]["contested_domains"]
 
 
 def test_removal_recommendations_never_delete_now():

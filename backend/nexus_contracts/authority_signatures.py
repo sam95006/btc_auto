@@ -49,8 +49,10 @@ DOMAIN_SIGNATURES: dict[str, tuple[dict[str, Any], ...]] = {
     ),
     "cost": (
         {"kind": "assign", "name": "COST_MODEL_VERSION"},
+        {"kind": "class", "name": "CostModelContract"},
         {"kind": "func", "name": "estimate_costs"},
         {"kind": "func", "name": "annotate_trade_costs"},
+        {"kind": "func", "name": "compose_cost_bridge"},
         {"kind": "func", "name_re": r".*cost_bridge.*"},
     ),
     "risk": (

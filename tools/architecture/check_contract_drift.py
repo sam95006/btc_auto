@@ -121,38 +121,112 @@ def check_cost_drift(root: Path) -> list[dict[str, Any]]:
             }
         )
         return findings
+
     v_exec = getattr(exec_cost, "COST_MODEL_VERSION", None)
-    v_strat = None
-    if not isinstance(strat_cost, dict):
-        v_strat = getattr(strat_cost, "COST_MODEL_VERSION", None)
-    if v_exec and v_strat and v_exec != v_strat:
+    authority = getattr(exec_cost, "CANONICAL_COST_AUTHORITY", None)
+    authority_count = getattr(exec_cost, "CANONICAL_COST_AUTHORITY_COUNT", None)
+    contract_cls = getattr(exec_cost, "CostModelContract", None)
+    if authority != "backend.nexus_execution.cost_model":
         findings.append(
             {
                 "domain": "cost",
                 "severity": "critical",
-                "code": "COST_MODEL_VERSION_DIVERGENCE",
-                "canonical": v_exec,
-                "competitor_module": "backend.nexus_strategy_engine.cost_semantics",
-                "competitor_version": v_strat,
-                "recommendation": (
-                    "Align strategy cost_semantics versioning with execution cost_model "
-                    "or explicitly namespace as research-proxy (not Session cost authority)."
-                ),
+                "code": "CANONICAL_COST_AUTHORITY_MISMATCH",
+                "expected": "backend.nexus_execution.cost_model",
+                "observed": authority,
             }
         )
-    # Compat simulator fee floats vs Decimal model
+    if authority_count != 1:
+        findings.append(
+            {
+                "domain": "cost",
+                "severity": "critical",
+                "code": "CANONICAL_COST_AUTHORITY_COUNT_NOT_ONE",
+                "observed": authority_count,
+            }
+        )
+    if contract_cls is None:
+        findings.append(
+            {
+                "domain": "cost",
+                "severity": "critical",
+                "code": "COST_MODEL_CONTRACT_MISSING",
+                "module": "backend.nexus_execution.cost_model",
+            }
+        )
+
+    v_strat = None
+    if not isinstance(strat_cost, dict):
+        v_strat = getattr(strat_cost, "COST_MODEL_VERSION", None)
+        strat_file = _module_file(root, "backend.nexus_strategy_engine.cost_semantics")
+        strat_text = strat_file.read_text(encoding="utf-8") if strat_file.exists() else ""
+        imports_canonical = "backend.nexus_execution.cost_model" in strat_text
+        # Independent string assignment of COST_MODEL_VERSION (not a re-export).
+        assigned = _read_assign(strat_file, "COST_MODEL_VERSION") if strat_file.exists() else None
+        if assigned is not None and not imports_canonical:
+            findings.append(
+                {
+                    "domain": "cost",
+                    "severity": "critical",
+                    "code": "COST_MODEL_VERSION_DIVERGENCE",
+                    "canonical": v_exec,
+                    "competitor_module": "backend.nexus_strategy_engine.cost_semantics",
+                    "competitor_version": assigned,
+                    "recommendation": (
+                        "Re-export COST_MODEL_VERSION from backend.nexus_execution.cost_model."
+                    ),
+                }
+            )
+        elif v_exec and v_strat and v_exec != v_strat:
+            findings.append(
+                {
+                    "domain": "cost",
+                    "severity": "critical",
+                    "code": "COST_MODEL_VERSION_DIVERGENCE",
+                    "canonical": v_exec,
+                    "competitor_module": "backend.nexus_strategy_engine.cost_semantics",
+                    "competitor_version": v_strat,
+                    "recommendation": (
+                        "Align strategy cost_semantics versioning with execution cost_model."
+                    ),
+                }
+            )
+        elif not imports_canonical:
+            findings.append(
+                {
+                    "domain": "cost",
+                    "severity": "high",
+                    "code": "COST_SEMANTICS_NOT_BRIDGED",
+                    "module": "backend.nexus_strategy_engine.cost_semantics",
+                    "recommendation": "Import COST_MODEL_VERSION from nexus_execution.cost_model.",
+                }
+            )
+
+    # Compat simulator must not hard-code fee constants independently.
     compat = _module_file(root, "backend.nexus_autonomy.execution_simulator_v1_1")
     if compat.exists():
-        taker = _read_assign(compat, "TAKER_FEE")
-        if taker is not None:
+        text = compat.read_text(encoding="utf-8")
+        uses_canonical = "backend.nexus_execution.cost_model" in text
+        taker_assign = _read_assign(compat, "TAKER_FEE")
+        if taker_assign is not None and not uses_canonical:
             findings.append(
                 {
                     "domain": "cost",
                     "severity": "high",
                     "code": "COMPAT_SIM_HARDCODED_FEE",
                     "module": "backend.nexus_autonomy.execution_simulator_v1_1",
-                    "observed_taker_fee": taker,
+                    "observed_taker_fee": taker_assign,
                     "recommendation": "Route callers to nexus_execution.cost_model; keep shim read-only.",
+                }
+            )
+        elif not uses_canonical:
+            findings.append(
+                {
+                    "domain": "cost",
+                    "severity": "high",
+                    "code": "COMPAT_SIM_COST_NOT_BRIDGED",
+                    "module": "backend.nexus_autonomy.execution_simulator_v1_1",
+                    "recommendation": "Import fee/cost helpers from nexus_execution.cost_model.",
                 }
             )
     return findings

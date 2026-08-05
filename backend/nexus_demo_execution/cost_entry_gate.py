@@ -5,10 +5,12 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from backend.nexus_demo_execution.session_limits import (
-    COST_UNCERTAINTY_BUFFER_RATE,
-    FUNDING_CONSERVATIVE_BUFFER_RATE,
     MIN_NET_REWARD_RISK_RATIO,
     MIN_NET_REWARD_TO_COST,
+)
+from backend.nexus_execution.cost_model import (
+    COST_MODEL_VERSION,
+    estimate_round_trip_costs_float,
 )
 
 
@@ -121,19 +123,24 @@ def evaluate_cost_gate(
         gross_tp = (entry_price - take_profit) * qty
         gross_sl = (stop_loss - entry_price) * qty
 
-    entry_fee = notional * fee_rate
-    exit_fee = notional * fee_rate
+    # Market impact bps are applied per leg by the canonical cost authority.
+    costs = estimate_round_trip_costs_float(
+        notional=notional,
+        fee_rate=float(fee_rate),
+        spread_bps=0.0,
+        slippage_bps=max(float(slippage_bps), 0.0),
+        funding_rate=funding_rate,
+        include_uncertainty_buffer=True,
+    )
+    entry_fee = costs["entry_fee"]
+    exit_fee = costs["exit_fee"]
     round_trip_fee = entry_fee + exit_fee
-    slippage = notional * (float(slippage_bps) / 10000.0)
-
+    slippage = costs["slippage"]
+    funding_cost = costs["funding"]
     if funding_rate is None:
-        funding_cost = notional * FUNDING_CONSERVATIVE_BUFFER_RATE
         labels.append("FUNDING_UNAVAILABLE_USING_CONSERVATIVE_BUFFER")
-    else:
-        funding_cost = abs(notional * funding_rate)
-
-    uncertainty = notional * COST_UNCERTAINTY_BUFFER_RATE
-    total_cost = round_trip_fee + slippage + funding_cost + uncertainty
+    uncertainty = costs["uncertainty"]
+    total_cost = costs["total_cost"]
     net_reward = gross_tp - total_cost
     net_risk = gross_sl + total_cost
     rr = (net_reward / net_risk) if net_risk > 0 else 0.0
@@ -157,6 +164,7 @@ def evaluate_cost_gate(
         "maker_fee_rate": meta.get("maker_fee_rate"),
         "taker_fee_rate": meta.get("taker_fee_rate", fee_rate),
         "default_fee_fallback_used": fee_status == "FEE_RATE_CONFIGURED_CONSERVATIVE",
+        "cost_model_version": COST_MODEL_VERSION,
     }
 
     if net_reward <= 0:
