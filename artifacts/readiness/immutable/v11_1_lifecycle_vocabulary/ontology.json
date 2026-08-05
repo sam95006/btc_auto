@@ -1,0 +1,898 @@
+{
+  "by_scope": {
+    "control_plane": {
+      "display_name": "ControlPlane",
+      "notes": "Founder process-control lifecycle. Homonymous tokens with Session (RUNNING/PAUSED/RECOVERING/FAILED_SAFE) are NOT identical; adapter required.",
+      "owner_module": "backend.nexus_private_control.state_machine",
+      "role": "process_control",
+      "scope_id": "control_plane",
+      "states": [
+        "IDLE",
+        "STARTING",
+        "RUNNING",
+        "PAUSED",
+        "RECOVERING",
+        "STOPPING",
+        "STOPPED",
+        "KILLED",
+        "FAILED_SAFE"
+      ],
+      "terminals": [
+        "FAILED_SAFE",
+        "KILLED",
+        "STOPPED"
+      ],
+      "transitions": {
+        "FAILED_SAFE": [],
+        "IDLE": [
+          "FAILED_SAFE",
+          "STARTING"
+        ],
+        "KILLED": [],
+        "PAUSED": [
+          "FAILED_SAFE",
+          "KILLED",
+          "RECOVERING",
+          "RUNNING",
+          "STOPPING"
+        ],
+        "RECOVERING": [
+          "FAILED_SAFE",
+          "KILLED",
+          "RUNNING",
+          "STOPPING"
+        ],
+        "RUNNING": [
+          "FAILED_SAFE",
+          "KILLED",
+          "PAUSED",
+          "RECOVERING",
+          "STOPPING"
+        ],
+        "STARTING": [
+          "FAILED_SAFE",
+          "KILLED",
+          "RUNNING"
+        ],
+        "STOPPED": [],
+        "STOPPING": [
+          "FAILED_SAFE",
+          "KILLED",
+          "STOPPED"
+        ]
+      }
+    },
+    "decision": {
+      "display_name": "Decision",
+      "notes": "Observe→…→CLOSED. BLOCKED_AMBIGUOUS is adjudicated before CLOSED.",
+      "owner_module": "backend.nexus_decision.state_machine",
+      "role": "trading_loop",
+      "scope_id": "decision",
+      "states": [
+        "OBSERVED",
+        "UNDERSTANDING",
+        "CHALLENGED",
+        "RISK_REVIEWED",
+        "APPROVED_SIMULATED",
+        "REJECTED",
+        "MONITORING",
+        "EXITED",
+        "UNDER_REVIEW",
+        "CALIBRATED",
+        "CLOSED",
+        "BLOCKED_AMBIGUOUS"
+      ],
+      "terminals": [
+        "CLOSED"
+      ],
+      "transitions": {
+        "APPROVED_SIMULATED": [
+          "BLOCKED_AMBIGUOUS",
+          "MONITORING"
+        ],
+        "BLOCKED_AMBIGUOUS": [
+          "CLOSED"
+        ],
+        "CALIBRATED": [
+          "CLOSED"
+        ],
+        "CHALLENGED": [
+          "BLOCKED_AMBIGUOUS",
+          "REJECTED",
+          "RISK_REVIEWED"
+        ],
+        "CLOSED": [],
+        "EXITED": [
+          "BLOCKED_AMBIGUOUS",
+          "CLOSED",
+          "UNDER_REVIEW"
+        ],
+        "MONITORING": [
+          "BLOCKED_AMBIGUOUS",
+          "EXITED",
+          "UNDER_REVIEW"
+        ],
+        "OBSERVED": [
+          "BLOCKED_AMBIGUOUS",
+          "REJECTED",
+          "UNDERSTANDING"
+        ],
+        "REJECTED": [
+          "CLOSED",
+          "UNDER_REVIEW"
+        ],
+        "RISK_REVIEWED": [
+          "APPROVED_SIMULATED",
+          "BLOCKED_AMBIGUOUS",
+          "REJECTED"
+        ],
+        "UNDERSTANDING": [
+          "BLOCKED_AMBIGUOUS",
+          "CHALLENGED",
+          "REJECTED"
+        ],
+        "UNDER_REVIEW": [
+          "BLOCKED_AMBIGUOUS",
+          "CALIBRATED",
+          "CLOSED"
+        ]
+      }
+    },
+    "intent": {
+      "display_name": "Intent",
+      "notes": "OrderIntent lifecycle between Decision approval and Order admission.",
+      "owner_module": "backend.nexus_contracts.lifecycle.ontology",
+      "role": "trading_loop",
+      "scope_id": "intent",
+      "states": [
+        "DRAFT",
+        "SUBMITTED",
+        "ACCEPTED",
+        "WORKING",
+        "PARTIAL",
+        "FILLED",
+        "CANCELLED",
+        "REJECTED",
+        "EXPIRED",
+        "SUPERSEDED",
+        "BLOCKED_AMBIGUOUS"
+      ],
+      "terminals": [
+        "CANCELLED",
+        "EXPIRED",
+        "FILLED",
+        "REJECTED",
+        "SUPERSEDED"
+      ],
+      "transitions": {
+        "ACCEPTED": [
+          "BLOCKED_AMBIGUOUS",
+          "CANCELLED",
+          "EXPIRED",
+          "REJECTED",
+          "WORKING"
+        ],
+        "BLOCKED_AMBIGUOUS": [
+          "CANCELLED",
+          "SUPERSEDED"
+        ],
+        "CANCELLED": [],
+        "DRAFT": [
+          "BLOCKED_AMBIGUOUS",
+          "CANCELLED",
+          "REJECTED",
+          "SUBMITTED"
+        ],
+        "EXPIRED": [],
+        "FILLED": [],
+        "PARTIAL": [
+          "BLOCKED_AMBIGUOUS",
+          "CANCELLED",
+          "EXPIRED",
+          "FILLED",
+          "PARTIAL"
+        ],
+        "REJECTED": [],
+        "SUBMITTED": [
+          "ACCEPTED",
+          "BLOCKED_AMBIGUOUS",
+          "CANCELLED",
+          "EXPIRED",
+          "REJECTED"
+        ],
+        "SUPERSEDED": [],
+        "WORKING": [
+          "BLOCKED_AMBIGUOUS",
+          "CANCELLED",
+          "EXPIRED",
+          "FILLED",
+          "PARTIAL"
+        ]
+      }
+    },
+    "order": {
+      "display_name": "Order",
+      "notes": "Simulated order states from execution_contract_v1_1.",
+      "owner_module": "backend.nexus_execution.contracts",
+      "role": "trading_loop",
+      "scope_id": "order",
+      "states": [
+        "ACCEPTED",
+        "CANCELLED",
+        "CANCEL_PENDING",
+        "CREATED",
+        "EXPIRED",
+        "FILLED",
+        "PARTIALLY_FILLED",
+        "REJECTED"
+      ],
+      "terminals": [
+        "CANCELLED",
+        "EXPIRED",
+        "FILLED",
+        "REJECTED"
+      ],
+      "transitions": {
+        "ACCEPTED": [
+          "CANCELLED",
+          "CANCEL_PENDING",
+          "EXPIRED",
+          "FILLED",
+          "PARTIALLY_FILLED",
+          "REJECTED"
+        ],
+        "CANCELLED": [],
+        "CANCEL_PENDING": [
+          "CANCELLED",
+          "FILLED"
+        ],
+        "CREATED": [
+          "ACCEPTED",
+          "REJECTED"
+        ],
+        "EXPIRED": [],
+        "FILLED": [],
+        "PARTIALLY_FILLED": [
+          "CANCELLED",
+          "CANCEL_PENDING",
+          "EXPIRED",
+          "FILLED",
+          "PARTIALLY_FILLED"
+        ],
+        "REJECTED": []
+      }
+    },
+    "position": {
+      "display_name": "Position",
+      "notes": "Simulated position states; CLOSED forbids residual qty > 0.",
+      "owner_module": "backend.nexus_execution.contracts",
+      "role": "trading_loop",
+      "scope_id": "position",
+      "states": [
+        "BLOCKED_AMBIGUOUS",
+        "CLOSED",
+        "LIQUIDATED_SIMULATED",
+        "NONE",
+        "OPEN",
+        "OPENING",
+        "REDUCING"
+      ],
+      "terminals": [
+        "CLOSED",
+        "LIQUIDATED_SIMULATED",
+        "NONE"
+      ],
+      "transitions": {
+        "BLOCKED_AMBIGUOUS": [
+          "CLOSED"
+        ],
+        "CLOSED": [],
+        "LIQUIDATED_SIMULATED": [],
+        "NONE": [
+          "OPENING"
+        ],
+        "OPEN": [
+          "CLOSED",
+          "LIQUIDATED_SIMULATED",
+          "REDUCING"
+        ],
+        "OPENING": [
+          "BLOCKED_AMBIGUOUS",
+          "OPEN"
+        ],
+        "REDUCING": [
+          "CLOSED",
+          "LIQUIDATED_SIMULATED",
+          "OPEN"
+        ]
+      }
+    },
+    "reflection": {
+      "display_name": "Reflection",
+      "notes": "COMPLETE requires exit evidence; never before Decision EXITED/CLOSED path.",
+      "owner_module": "backend.nexus_contracts.lifecycle.ontology",
+      "role": "trading_loop",
+      "scope_id": "reflection",
+      "states": [
+        "PENDING",
+        "IN_PROGRESS",
+        "AWAITING_EXIT_EVIDENCE",
+        "COMPLETE",
+        "INCOMPLETE",
+        "BLOCKED_AMBIGUOUS",
+        "FAILED_SAFE"
+      ],
+      "terminals": [
+        "COMPLETE",
+        "FAILED_SAFE",
+        "INCOMPLETE"
+      ],
+      "transitions": {
+        "AWAITING_EXIT_EVIDENCE": [
+          "BLOCKED_AMBIGUOUS",
+          "COMPLETE",
+          "FAILED_SAFE",
+          "INCOMPLETE",
+          "IN_PROGRESS"
+        ],
+        "BLOCKED_AMBIGUOUS": [
+          "FAILED_SAFE",
+          "INCOMPLETE"
+        ],
+        "COMPLETE": [],
+        "FAILED_SAFE": [],
+        "INCOMPLETE": [],
+        "IN_PROGRESS": [
+          "AWAITING_EXIT_EVIDENCE",
+          "BLOCKED_AMBIGUOUS",
+          "COMPLETE",
+          "FAILED_SAFE",
+          "INCOMPLETE"
+        ],
+        "PENDING": [
+          "AWAITING_EXIT_EVIDENCE",
+          "BLOCKED_AMBIGUOUS",
+          "FAILED_SAFE",
+          "IN_PROGRESS"
+        ]
+      }
+    },
+    "session": {
+      "display_name": "Session",
+      "notes": "Session orchestration authority for Private Core simulated sessions.",
+      "owner_module": "backend.nexus_autonomy.session_state_machine",
+      "role": "trading_loop",
+      "scope_id": "session",
+      "states": [
+        "CREATED",
+        "INITIALIZING",
+        "RUNNING",
+        "PAUSING",
+        "PAUSED",
+        "RECOVERING",
+        "FINALIZING",
+        "COMPLETED",
+        "BLOCKED",
+        "FAILED_SAFE"
+      ],
+      "terminals": [
+        "BLOCKED",
+        "COMPLETED",
+        "FAILED_SAFE"
+      ],
+      "transitions": {
+        "BLOCKED": [],
+        "COMPLETED": [],
+        "CREATED": [
+          "BLOCKED",
+          "FAILED_SAFE",
+          "INITIALIZING"
+        ],
+        "FAILED_SAFE": [],
+        "FINALIZING": [
+          "BLOCKED",
+          "COMPLETED",
+          "FAILED_SAFE"
+        ],
+        "INITIALIZING": [
+          "BLOCKED",
+          "FAILED_SAFE",
+          "RUNNING"
+        ],
+        "PAUSED": [
+          "BLOCKED",
+          "FAILED_SAFE",
+          "FINALIZING",
+          "RECOVERING",
+          "RUNNING"
+        ],
+        "PAUSING": [
+          "BLOCKED",
+          "FAILED_SAFE",
+          "PAUSED"
+        ],
+        "RECOVERING": [
+          "BLOCKED",
+          "FAILED_SAFE",
+          "FINALIZING",
+          "RUNNING"
+        ],
+        "RUNNING": [
+          "BLOCKED",
+          "FAILED_SAFE",
+          "FINALIZING",
+          "PAUSING",
+          "RECOVERING"
+        ]
+      }
+    }
+  },
+  "homonym_tokens_session_control": [
+    "FAILED_SAFE",
+    "PAUSED",
+    "RECOVERING",
+    "RUNNING"
+  ],
+  "intent_unresolved_states": [
+    "ACCEPTED",
+    "BLOCKED_AMBIGUOUS",
+    "DRAFT",
+    "PARTIAL",
+    "SUBMITTED",
+    "WORKING"
+  ],
+  "policy": {
+    "collapse_to_single_fsm": false,
+    "exchange_write": false,
+    "mainnet": false,
+    "mass_delete_competitors": false,
+    "real_money": false,
+    "silent_homonym_mapping": false
+  },
+  "position_open_like_states": [
+    "OPEN",
+    "OPENING",
+    "REDUCING"
+  ],
+  "process_control_scopes": [
+    "control_plane"
+  ],
+  "schema": "nexus_lifecycle_ontology_v11_1",
+  "scopes": [
+    {
+      "display_name": "Decision",
+      "notes": "Observe→…→CLOSED. BLOCKED_AMBIGUOUS is adjudicated before CLOSED.",
+      "owner_module": "backend.nexus_decision.state_machine",
+      "role": "trading_loop",
+      "scope_id": "decision",
+      "states": [
+        "OBSERVED",
+        "UNDERSTANDING",
+        "CHALLENGED",
+        "RISK_REVIEWED",
+        "APPROVED_SIMULATED",
+        "REJECTED",
+        "MONITORING",
+        "EXITED",
+        "UNDER_REVIEW",
+        "CALIBRATED",
+        "CLOSED",
+        "BLOCKED_AMBIGUOUS"
+      ],
+      "terminals": [
+        "CLOSED"
+      ],
+      "transitions": {
+        "APPROVED_SIMULATED": [
+          "BLOCKED_AMBIGUOUS",
+          "MONITORING"
+        ],
+        "BLOCKED_AMBIGUOUS": [
+          "CLOSED"
+        ],
+        "CALIBRATED": [
+          "CLOSED"
+        ],
+        "CHALLENGED": [
+          "BLOCKED_AMBIGUOUS",
+          "REJECTED",
+          "RISK_REVIEWED"
+        ],
+        "CLOSED": [],
+        "EXITED": [
+          "BLOCKED_AMBIGUOUS",
+          "CLOSED",
+          "UNDER_REVIEW"
+        ],
+        "MONITORING": [
+          "BLOCKED_AMBIGUOUS",
+          "EXITED",
+          "UNDER_REVIEW"
+        ],
+        "OBSERVED": [
+          "BLOCKED_AMBIGUOUS",
+          "REJECTED",
+          "UNDERSTANDING"
+        ],
+        "REJECTED": [
+          "CLOSED",
+          "UNDER_REVIEW"
+        ],
+        "RISK_REVIEWED": [
+          "APPROVED_SIMULATED",
+          "BLOCKED_AMBIGUOUS",
+          "REJECTED"
+        ],
+        "UNDERSTANDING": [
+          "BLOCKED_AMBIGUOUS",
+          "CHALLENGED",
+          "REJECTED"
+        ],
+        "UNDER_REVIEW": [
+          "BLOCKED_AMBIGUOUS",
+          "CALIBRATED",
+          "CLOSED"
+        ]
+      }
+    },
+    {
+      "display_name": "Session",
+      "notes": "Session orchestration authority for Private Core simulated sessions.",
+      "owner_module": "backend.nexus_autonomy.session_state_machine",
+      "role": "trading_loop",
+      "scope_id": "session",
+      "states": [
+        "CREATED",
+        "INITIALIZING",
+        "RUNNING",
+        "PAUSING",
+        "PAUSED",
+        "RECOVERING",
+        "FINALIZING",
+        "COMPLETED",
+        "BLOCKED",
+        "FAILED_SAFE"
+      ],
+      "terminals": [
+        "BLOCKED",
+        "COMPLETED",
+        "FAILED_SAFE"
+      ],
+      "transitions": {
+        "BLOCKED": [],
+        "COMPLETED": [],
+        "CREATED": [
+          "BLOCKED",
+          "FAILED_SAFE",
+          "INITIALIZING"
+        ],
+        "FAILED_SAFE": [],
+        "FINALIZING": [
+          "BLOCKED",
+          "COMPLETED",
+          "FAILED_SAFE"
+        ],
+        "INITIALIZING": [
+          "BLOCKED",
+          "FAILED_SAFE",
+          "RUNNING"
+        ],
+        "PAUSED": [
+          "BLOCKED",
+          "FAILED_SAFE",
+          "FINALIZING",
+          "RECOVERING",
+          "RUNNING"
+        ],
+        "PAUSING": [
+          "BLOCKED",
+          "FAILED_SAFE",
+          "PAUSED"
+        ],
+        "RECOVERING": [
+          "BLOCKED",
+          "FAILED_SAFE",
+          "FINALIZING",
+          "RUNNING"
+        ],
+        "RUNNING": [
+          "BLOCKED",
+          "FAILED_SAFE",
+          "FINALIZING",
+          "PAUSING",
+          "RECOVERING"
+        ]
+      }
+    },
+    {
+      "display_name": "Intent",
+      "notes": "OrderIntent lifecycle between Decision approval and Order admission.",
+      "owner_module": "backend.nexus_contracts.lifecycle.ontology",
+      "role": "trading_loop",
+      "scope_id": "intent",
+      "states": [
+        "DRAFT",
+        "SUBMITTED",
+        "ACCEPTED",
+        "WORKING",
+        "PARTIAL",
+        "FILLED",
+        "CANCELLED",
+        "REJECTED",
+        "EXPIRED",
+        "SUPERSEDED",
+        "BLOCKED_AMBIGUOUS"
+      ],
+      "terminals": [
+        "CANCELLED",
+        "EXPIRED",
+        "FILLED",
+        "REJECTED",
+        "SUPERSEDED"
+      ],
+      "transitions": {
+        "ACCEPTED": [
+          "BLOCKED_AMBIGUOUS",
+          "CANCELLED",
+          "EXPIRED",
+          "REJECTED",
+          "WORKING"
+        ],
+        "BLOCKED_AMBIGUOUS": [
+          "CANCELLED",
+          "SUPERSEDED"
+        ],
+        "CANCELLED": [],
+        "DRAFT": [
+          "BLOCKED_AMBIGUOUS",
+          "CANCELLED",
+          "REJECTED",
+          "SUBMITTED"
+        ],
+        "EXPIRED": [],
+        "FILLED": [],
+        "PARTIAL": [
+          "BLOCKED_AMBIGUOUS",
+          "CANCELLED",
+          "EXPIRED",
+          "FILLED",
+          "PARTIAL"
+        ],
+        "REJECTED": [],
+        "SUBMITTED": [
+          "ACCEPTED",
+          "BLOCKED_AMBIGUOUS",
+          "CANCELLED",
+          "EXPIRED",
+          "REJECTED"
+        ],
+        "SUPERSEDED": [],
+        "WORKING": [
+          "BLOCKED_AMBIGUOUS",
+          "CANCELLED",
+          "EXPIRED",
+          "FILLED",
+          "PARTIAL"
+        ]
+      }
+    },
+    {
+      "display_name": "Order",
+      "notes": "Simulated order states from execution_contract_v1_1.",
+      "owner_module": "backend.nexus_execution.contracts",
+      "role": "trading_loop",
+      "scope_id": "order",
+      "states": [
+        "ACCEPTED",
+        "CANCELLED",
+        "CANCEL_PENDING",
+        "CREATED",
+        "EXPIRED",
+        "FILLED",
+        "PARTIALLY_FILLED",
+        "REJECTED"
+      ],
+      "terminals": [
+        "CANCELLED",
+        "EXPIRED",
+        "FILLED",
+        "REJECTED"
+      ],
+      "transitions": {
+        "ACCEPTED": [
+          "CANCELLED",
+          "CANCEL_PENDING",
+          "EXPIRED",
+          "FILLED",
+          "PARTIALLY_FILLED",
+          "REJECTED"
+        ],
+        "CANCELLED": [],
+        "CANCEL_PENDING": [
+          "CANCELLED",
+          "FILLED"
+        ],
+        "CREATED": [
+          "ACCEPTED",
+          "REJECTED"
+        ],
+        "EXPIRED": [],
+        "FILLED": [],
+        "PARTIALLY_FILLED": [
+          "CANCELLED",
+          "CANCEL_PENDING",
+          "EXPIRED",
+          "FILLED",
+          "PARTIALLY_FILLED"
+        ],
+        "REJECTED": []
+      }
+    },
+    {
+      "display_name": "Position",
+      "notes": "Simulated position states; CLOSED forbids residual qty > 0.",
+      "owner_module": "backend.nexus_execution.contracts",
+      "role": "trading_loop",
+      "scope_id": "position",
+      "states": [
+        "BLOCKED_AMBIGUOUS",
+        "CLOSED",
+        "LIQUIDATED_SIMULATED",
+        "NONE",
+        "OPEN",
+        "OPENING",
+        "REDUCING"
+      ],
+      "terminals": [
+        "CLOSED",
+        "LIQUIDATED_SIMULATED",
+        "NONE"
+      ],
+      "transitions": {
+        "BLOCKED_AMBIGUOUS": [
+          "CLOSED"
+        ],
+        "CLOSED": [],
+        "LIQUIDATED_SIMULATED": [],
+        "NONE": [
+          "OPENING"
+        ],
+        "OPEN": [
+          "CLOSED",
+          "LIQUIDATED_SIMULATED",
+          "REDUCING"
+        ],
+        "OPENING": [
+          "BLOCKED_AMBIGUOUS",
+          "OPEN"
+        ],
+        "REDUCING": [
+          "CLOSED",
+          "LIQUIDATED_SIMULATED",
+          "OPEN"
+        ]
+      }
+    },
+    {
+      "display_name": "Reflection",
+      "notes": "COMPLETE requires exit evidence; never before Decision EXITED/CLOSED path.",
+      "owner_module": "backend.nexus_contracts.lifecycle.ontology",
+      "role": "trading_loop",
+      "scope_id": "reflection",
+      "states": [
+        "PENDING",
+        "IN_PROGRESS",
+        "AWAITING_EXIT_EVIDENCE",
+        "COMPLETE",
+        "INCOMPLETE",
+        "BLOCKED_AMBIGUOUS",
+        "FAILED_SAFE"
+      ],
+      "terminals": [
+        "COMPLETE",
+        "FAILED_SAFE",
+        "INCOMPLETE"
+      ],
+      "transitions": {
+        "AWAITING_EXIT_EVIDENCE": [
+          "BLOCKED_AMBIGUOUS",
+          "COMPLETE",
+          "FAILED_SAFE",
+          "INCOMPLETE",
+          "IN_PROGRESS"
+        ],
+        "BLOCKED_AMBIGUOUS": [
+          "FAILED_SAFE",
+          "INCOMPLETE"
+        ],
+        "COMPLETE": [],
+        "FAILED_SAFE": [],
+        "INCOMPLETE": [],
+        "IN_PROGRESS": [
+          "AWAITING_EXIT_EVIDENCE",
+          "BLOCKED_AMBIGUOUS",
+          "COMPLETE",
+          "FAILED_SAFE",
+          "INCOMPLETE"
+        ],
+        "PENDING": [
+          "AWAITING_EXIT_EVIDENCE",
+          "BLOCKED_AMBIGUOUS",
+          "FAILED_SAFE",
+          "IN_PROGRESS"
+        ]
+      }
+    },
+    {
+      "display_name": "ControlPlane",
+      "notes": "Founder process-control lifecycle. Homonymous tokens with Session (RUNNING/PAUSED/RECOVERING/FAILED_SAFE) are NOT identical; adapter required.",
+      "owner_module": "backend.nexus_private_control.state_machine",
+      "role": "process_control",
+      "scope_id": "control_plane",
+      "states": [
+        "IDLE",
+        "STARTING",
+        "RUNNING",
+        "PAUSED",
+        "RECOVERING",
+        "STOPPING",
+        "STOPPED",
+        "KILLED",
+        "FAILED_SAFE"
+      ],
+      "terminals": [
+        "FAILED_SAFE",
+        "KILLED",
+        "STOPPED"
+      ],
+      "transitions": {
+        "FAILED_SAFE": [],
+        "IDLE": [
+          "FAILED_SAFE",
+          "STARTING"
+        ],
+        "KILLED": [],
+        "PAUSED": [
+          "FAILED_SAFE",
+          "KILLED",
+          "RECOVERING",
+          "RUNNING",
+          "STOPPING"
+        ],
+        "RECOVERING": [
+          "FAILED_SAFE",
+          "KILLED",
+          "RUNNING",
+          "STOPPING"
+        ],
+        "RUNNING": [
+          "FAILED_SAFE",
+          "KILLED",
+          "PAUSED",
+          "RECOVERING",
+          "STOPPING"
+        ],
+        "STARTING": [
+          "FAILED_SAFE",
+          "KILLED",
+          "RUNNING"
+        ],
+        "STOPPED": [],
+        "STOPPING": [
+          "FAILED_SAFE",
+          "KILLED",
+          "STOPPED"
+        ]
+      }
+    }
+  ],
+  "trading_loop_scopes": [
+    "decision",
+    "session",
+    "intent",
+    "order",
+    "position",
+    "reflection"
+  ],
+  "version": "v11.1.lifecycle_vocabulary.1"
+}

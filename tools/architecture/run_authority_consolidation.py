@@ -51,42 +51,36 @@ def run_pass(root: Path, out: Path, pass_id: str) -> dict[str, Any]:
         blockers.append({"source": "ci_gate", **v})
 
     # Contested domains without a scoped adapter are consolidation blockers.
-    # Checkpoint resolved in V11.1 C4 via canonical envelope + adapters
-    # (status active_compat_present) — only emit MULTI_SCOPE_AUTHORITY when still contested.
+    # Lifecycle is resolved when the V11.1 Session↔ControlPlane adapter is present.
+    lifecycle_adapter_ok = False
+    try:
+        from backend.nexus_contracts.lifecycle.adapters import adapter_contract_present
+
+        lifecycle_adapter_ok = bool(adapter_contract_present())
+    except Exception:  # noqa: BLE001
+        lifecycle_adapter_ok = False
+
     for domain in registry["summary"]["contested_domains"]:
-        if domain == "lifecycle":
+        if domain == "lifecycle" and lifecycle_adapter_ok:
+            continue
+        if domain in {"lifecycle", "checkpoint"}:
+            code = (
+                "MULTI_SCOPE_AUTHORITY_LIFECYCLE"
+                if domain == "lifecycle"
+                else "MULTI_SCOPE_AUTHORITY"
+            )
             blockers.append(
                 {
                     "source": "scope_contention",
                     "domain": domain,
                     "severity": "critical",
-                    "code": "MULTI_SCOPE_AUTHORITY",
+                    "code": code,
                     "message": (
                         f"Domain {domain} has multiple legitimate scoped authorities; "
                         "requires explicit adapter contracts before deletion waves."
                     ),
                 }
             )
-        elif domain == "checkpoint":
-            blockers.append(
-                {
-                    "source": "scope_contention",
-                    "domain": domain,
-                    "severity": "critical",
-                    "code": "MULTI_SCOPE_AUTHORITY_CHECKPOINT",
-                    "message": (
-                        "Domain checkpoint remains contested; canonical envelope + "
-                        "adapters required before deletion waves."
-                    ),
-                }
-            )
-
-    ckpt = (registry.get("by_domain") or {}).get("checkpoint") or {}
-    if ckpt.get("status") == "active_compat_present" and ckpt.get("canonical_module", "").endswith(
-        "nexus_checkpoint.store"
-    ):
-        # Explicit resolution evidence for Lane H / C4.
-        pass
 
     summary = {
         "schema": "nexus_authority_consolidation_pass_v1",

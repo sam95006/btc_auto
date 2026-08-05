@@ -1,0 +1,45 @@
+{
+  "invariants": [
+    {
+      "code": "INV_DECISION_CLOSED_POSITION_OPEN",
+      "rule": "Decision CLOSED forbids Position OPEN/OPENING/REDUCING",
+      "severity": "critical"
+    },
+    {
+      "code": "INV_SESSION_COMPLETED_UNRESOLVED_INTENT",
+      "rule": "Session COMPLETED forbids unresolved Intent",
+      "severity": "critical"
+    },
+    {
+      "code": "INV_REFLECTION_COMPLETE_BEFORE_EXIT",
+      "rule": "Reflection COMPLETE requires exit evidence (Decision EXITED|CLOSED or exit_evidence=true)",
+      "severity": "critical"
+    },
+    {
+      "code": "INV_POSITION_CLOSED_RESIDUAL_QTY",
+      "rule": "Position CLOSED forbids residual quantity > 0",
+      "severity": "critical"
+    },
+    {
+      "code": "INV_SESSION_COMPLETED_OPEN_POSITION",
+      "rule": "Session COMPLETED forbids open-like Position",
+      "severity": "critical"
+    },
+    {
+      "code": "INV_DECISION_CLOSED_NONTERMINAL_ORDER",
+      "rule": "Decision CLOSED forbids non-terminal Order",
+      "severity": "critical"
+    },
+    {
+      "code": "INV_SESSION_CONTROL_ADAPTER",
+      "rule": "Session+ControlPlane joint snapshot must pass explicit adapter (no silent homonym)",
+      "severity": "critical"
+    },
+    {
+      "code": "INV_INTENT_RESOLVED_ORDER_CONSISTENCY",
+      "rule": "Intent FILLED implies Order FILLED (when order_state present)",
+      "severity": "high"
+    }
+  ],
+  "schema": "nexus_cross_lifecycle_invariants_v11_1"
+}

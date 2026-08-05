@@ -1,0 +1,71 @@
+{
+  "collapse_to_single_fsm": false,
+  "edge_count": 9,
+  "edges": [
+    {
+      "from_scope": "decision",
+      "from_states": "APPROVED_SIMULATED",
+      "gate": "decision_approved_simulated",
+      "to_scope": "intent",
+      "to_states": "DRAFT|SUBMITTED"
+    },
+    {
+      "from_scope": "intent",
+      "from_states": "ACCEPTED|WORKING",
+      "gate": "intent_admitted_to_simulator",
+      "to_scope": "order",
+      "to_states": "CREATED|ACCEPTED"
+    },
+    {
+      "from_scope": "order",
+      "from_states": "PARTIALLY_FILLED|FILLED",
+      "gate": "fill_applied",
+      "to_scope": "position",
+      "to_states": "OPENING|OPEN|REDUCING"
+    },
+    {
+      "from_scope": "position",
+      "from_states": "CLOSED|LIQUIDATED_SIMULATED",
+      "gate": "exit_fill_recorded",
+      "to_scope": "decision",
+      "to_states": "EXITED"
+    },
+    {
+      "from_scope": "decision",
+      "from_states": "EXITED",
+      "gate": "exit_evidence_available",
+      "to_scope": "reflection",
+      "to_states": "PENDING|IN_PROGRESS"
+    },
+    {
+      "from_scope": "reflection",
+      "from_states": "COMPLETE|INCOMPLETE|FAILED_SAFE",
+      "gate": "reflection_terminal",
+      "to_scope": "decision",
+      "to_states": "UNDER_REVIEW|CALIBRATED|CLOSED"
+    },
+    {
+      "from_scope": "session",
+      "from_states": "RUNNING|PAUSED|RECOVERING|FINALIZING",
+      "gate": "session_hosts_decisions",
+      "to_scope": "decision",
+      "to_states": "*"
+    },
+    {
+      "from_scope": "session",
+      "from_states": "FINALIZING",
+      "gate": "session_finalize_requires_resolved_intents",
+      "to_scope": "intent",
+      "to_states": "FILLED|CANCELLED|REJECTED|EXPIRED|SUPERSEDED"
+    },
+    {
+      "from_scope": "session",
+      "from_states": "*",
+      "gate": "adapter_only_never_silent_homonym",
+      "to_scope": "control_plane",
+      "to_states": "*"
+    }
+  ],
+  "note": "Edges describe allowed hand-offs between independent lifecycles. They do not merge state machines or equate homonymous tokens.",
+  "schema": "nexus_lifecycle_cross_scope_transitions_v11_1"
+}

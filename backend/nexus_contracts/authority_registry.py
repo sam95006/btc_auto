@@ -10,7 +10,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Iterable
 
 REGISTRY_SCHEMA = "nexus_canonical_authority_registry_v1"
-REGISTRY_VERSION = "v11.lane_h.1"
+REGISTRY_VERSION = "v11.lane_h.1.lifecycle_v11_1"
 
 AUTHORITY_DOMAINS: tuple[str, ...] = (
     "execution",
@@ -347,24 +347,43 @@ def _records() -> tuple[AuthorityRecord, ...]:
             authority_id="private_core.lifecycle.session_sm_v1_1",
             canonical_module="backend.nexus_autonomy.session_state_machine",
             canonical_symbol="CANONICAL_STATES",
-            contract_module="backend.nexus_autonomy.session_state_machine",
+            contract_module="backend.nexus_contracts.lifecycle",
             scope="private_core_session_orchestration",
-            status="contested",
+            status="active_compat_present",
             invariants=(
                 "fail_closed_invalid_transition",
                 "terminal_COMPLETED_BLOCKED_FAILED_SAFE",
+                "adapter_required_for_session_control_homonyms",
+                "cross_lifecycle_invariants_v11_1",
             ),
-            contract_keys=("CANONICAL_STATES", "TERMINAL_STATES", "VALID_TRANSITIONS"),
+            contract_keys=(
+                "CANONICAL_STATES",
+                "TERMINAL_STATES",
+                "VALID_TRANSITIONS",
+                "ADAPTER_CONTRACT_ID",
+                "CROSS_LIFECYCLE_INVARIANTS",
+                "TERMINAL_COMPATIBILITY_TABLE",
+            ),
             competitors=(
                 CompetitorRecord(
                     module="backend.nexus_private_control.state_machine",
                     symbol="CANONICAL_STATES",
                     role="parallel_lane",
-                    severity="critical",
+                    severity="medium",
                     notes=(
-                        "Founder control-plane lifecycle uses a different state vocabulary "
-                        "(IDLE/STARTING/.../KILLED) vs Session SM. Dual lifecycle authorities."
+                        "Scoped ControlPlane lifecycle (IDLE/STARTING/.../KILLED). "
+                        "Dual vocabulary retained; mediated by "
+                        "backend.nexus_contracts.lifecycle.adapters "
+                        "(ADAPTER_CONTRACT_ID). Silent homonym mapping banned."
                     ),
+                    recommended_action="retain_compat",
+                ),
+                CompetitorRecord(
+                    module="backend.nexus_decision.state_machine",
+                    symbol="CANONICAL_STATES",
+                    role="parallel_lane",
+                    severity="low",
+                    notes="Decision lifecycle — trading-loop peer under ontology, not Session competitor.",
                     recommended_action="retain_compat",
                 ),
                 CompetitorRecord(
@@ -401,8 +420,10 @@ def _records() -> tuple[AuthorityRecord, ...]:
                 ),
             ),
             notes=(
-                "Two legitimate Private Core lifecycles exist (Session vs Control Plane). "
-                "They must remain scoped; do not merge silently."
+                "Multi-scope lifecycle ontology V11.1: Decision/Session/Intent/Order/"
+                "Position/Reflection remain independent FSMs. Session↔ControlPlane "
+                "require explicit adapter; DUAL_LIFECYCLE_VOCABULARY and "
+                "MULTI_SCOPE_AUTHORITY_LIFECYCLE resolved when adapter present."
             ),
         ),
         AuthorityRecord(

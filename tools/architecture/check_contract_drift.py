@@ -238,17 +238,55 @@ def check_lifecycle_drift(root: Path) -> list[dict[str, Any]]:
     control_sm = _module_file(root, "backend.nexus_private_control.state_machine")
     s_states = _read_assign(session_sm, "CANONICAL_STATES") if session_sm.exists() else None
     c_states = _read_assign(control_sm, "CANONICAL_STATES") if control_sm.exists() else None
-    if s_states and c_states and set(s_states) != set(c_states):
+    if not (s_states and c_states and set(s_states) != set(c_states)):
+        return findings
+
+    # Dual vocabularies are intentional (scoped). Critical only when the V11.1
+    # adapter contract is missing or fails its own presence checks.
+    adapter_mod = _safe_import("backend.nexus_contracts.lifecycle.adapters")
+    adapter_ok = False
+    adapter_detail: str | None = None
+    if isinstance(adapter_mod, dict) and "__import_error__" in adapter_mod:
+        adapter_detail = adapter_mod["__import_error__"]
+    elif adapter_mod is not None and hasattr(adapter_mod, "adapter_contract_present"):
+        try:
+            adapter_ok = bool(adapter_mod.adapter_contract_present())
+        except Exception as exc:  # noqa: BLE001
+            adapter_detail = f"{type(exc).__name__}: {exc}"
+    else:
+        adapter_detail = "adapter_contract_present_missing"
+
+    base = {
+        "domain": "lifecycle",
+        "session_states": list(s_states) if isinstance(s_states, (list, tuple)) else s_states,
+        "control_plane_states": list(c_states) if isinstance(c_states, (list, tuple)) else c_states,
+        "adapter_module": "backend.nexus_contracts.lifecycle.adapters",
+        "adapter_contract_present": adapter_ok,
+    }
+    if adapter_ok:
         findings.append(
             {
-                "domain": "lifecycle",
+                **base,
+                "severity": "informational",
+                "code": "DUAL_LIFECYCLE_VOCABULARY_SCOPED",
+                "resolved_code": "DUAL_LIFECYCLE_VOCABULARY",
+                "recommendation": (
+                    "Scoped dual vocabulary retained. Homonymous tokens must use "
+                    "ControlPlaneSessionAdapter; silent name identity remains banned."
+                ),
+            }
+        )
+    else:
+        findings.append(
+            {
+                **base,
                 "severity": "critical",
                 "code": "DUAL_LIFECYCLE_VOCABULARY",
-                "session_states": list(s_states) if isinstance(s_states, (list, tuple)) else s_states,
-                "control_plane_states": list(c_states) if isinstance(c_states, (list, tuple)) else c_states,
+                "adapter_error": adapter_detail,
                 "recommendation": (
-                    "Keep scoped (session vs control-plane). Block any code that maps states "
-                    "by identical name without an explicit adapter contract."
+                    "Keep scoped (session vs control-plane). Publish explicit adapter "
+                    "contract under backend.nexus_contracts.lifecycle.adapters before "
+                    "any state mapping."
                 ),
             }
         )

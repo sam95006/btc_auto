@@ -1,0 +1,52 @@
+{
+  "forbidden": [
+    {
+      "action": "silent_resume_from_BLOCKED_AMBIGUOUS",
+      "allowed": false
+    },
+    {
+      "action": "equate_session_BLOCKED_with_decision_BLOCKED_AMBIGUOUS",
+      "allowed": false,
+      "reason": "Different scopes and semantics; no adapter identity."
+    },
+    {
+      "action": "control_plane_BLOCKED_AMBIGUOUS_token",
+      "allowed": false,
+      "reason": "ControlPlane vocabulary has no BLOCKED_AMBIGUOUS."
+    }
+  ],
+  "order_note": "Order scope uses REJECTED/CANCELLED/EXPIRED rather than BLOCKED_AMBIGUOUS in execution_contract_v1_1; Order is intentionally excluded from BLOCKED_AMBIGUOUS_SCOPES.",
+  "schema": "nexus_lifecycle_blocked_ambiguous_v11_1",
+  "tokens": {
+    "BLOCKED": {
+      "meaning": "Session fail-closed terminal. No further trading-loop progress. Maps via adapter to ControlPlane FAILED_SAFE or KILLED only.",
+      "resume_allowed": false,
+      "scopes": [
+        "session"
+      ],
+      "terminal": true
+    },
+    "BLOCKED_AMBIGUOUS": {
+      "adjudication_required": true,
+      "meaning": "Ambiguous evidence / race / partial observability. Must not auto-advance to success terminals. Allowed exits: CLOSED/CANCELLED/SUPERSEDED/INCOMPLETE/FAILED_SAFE per owning scope transitions only.",
+      "resume_allowed": false,
+      "scopes": [
+        "decision",
+        "intent",
+        "position",
+        "reflection"
+      ],
+      "terminal": false
+    },
+    "FAILED_SAFE": {
+      "meaning": "Hard fail-closed terminal shared as token but scoped via adapter.",
+      "resume_allowed": false,
+      "scopes": [
+        "session",
+        "control_plane",
+        "reflection"
+      ],
+      "terminal": true
+    }
+  }
+}

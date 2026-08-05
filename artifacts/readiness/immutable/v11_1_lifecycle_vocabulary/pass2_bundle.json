@@ -1,0 +1,1599 @@
+{
+  "adapter": {
+    "allowed_pair_count": 12,
+    "contract_id": "nexus.lifecycle.session_control_plane_adapter_v11_1",
+    "control_module": "backend.nexus_private_control.state_machine",
+    "mappings": [
+      {
+        "control_plane": "IDLE",
+        "relation": "session_implies_control",
+        "session": "CREATED"
+      },
+      {
+        "control_plane": "STARTING",
+        "relation": "session_implies_control",
+        "session": "CREATED"
+      },
+      {
+        "control_plane": "STARTING",
+        "relation": "equivalent",
+        "session": "INITIALIZING"
+      },
+      {
+        "control_plane": "RUNNING",
+        "relation": "equivalent",
+        "session": "RUNNING"
+      },
+      {
+        "control_plane": "RUNNING",
+        "relation": "session_implies_control",
+        "session": "PAUSING"
+      },
+      {
+        "control_plane": "PAUSED",
+        "relation": "equivalent",
+        "session": "PAUSED"
+      },
+      {
+        "control_plane": "RECOVERING",
+        "relation": "equivalent",
+        "session": "RECOVERING"
+      },
+      {
+        "control_plane": "STOPPING",
+        "relation": "equivalent",
+        "session": "FINALIZING"
+      },
+      {
+        "control_plane": "STOPPED",
+        "relation": "equivalent",
+        "session": "COMPLETED"
+      },
+      {
+        "control_plane": "FAILED_SAFE",
+        "relation": "session_implies_control",
+        "session": "BLOCKED"
+      },
+      {
+        "control_plane": "KILLED",
+        "relation": "session_implies_control",
+        "session": "BLOCKED"
+      },
+      {
+        "control_plane": "FAILED_SAFE",
+        "relation": "equivalent",
+        "session": "FAILED_SAFE"
+      },
+      {
+        "control_plane": "KILLED",
+        "relation": "none",
+        "session": "COMPLETED"
+      }
+    ],
+    "policy": {
+      "collapse_scopes": false,
+      "silent_homonym_mapping": false,
+      "unmapped_pair": "REJECT"
+    },
+    "session_module": "backend.nexus_autonomy.session_state_machine"
+  },
+  "adversarial_review": {
+    "created_at": "2026-08-05T04:08:45Z",
+    "critical_count": 0,
+    "finding_count": 0,
+    "findings": [],
+    "high_count": 0,
+    "pass_id": "pass2",
+    "passed": true,
+    "schema": "v11_1_lifecycle_vocabulary_adversarial_review"
+  },
+  "blocked_ambiguous": {
+    "forbidden": [
+      {
+        "action": "silent_resume_from_BLOCKED_AMBIGUOUS",
+        "allowed": false
+      },
+      {
+        "action": "equate_session_BLOCKED_with_decision_BLOCKED_AMBIGUOUS",
+        "allowed": false,
+        "reason": "Different scopes and semantics; no adapter identity."
+      },
+      {
+        "action": "control_plane_BLOCKED_AMBIGUOUS_token",
+        "allowed": false,
+        "reason": "ControlPlane vocabulary has no BLOCKED_AMBIGUOUS."
+      }
+    ],
+    "order_note": "Order scope uses REJECTED/CANCELLED/EXPIRED rather than BLOCKED_AMBIGUOUS in execution_contract_v1_1; Order is intentionally excluded from BLOCKED_AMBIGUOUS_SCOPES.",
+    "schema": "nexus_lifecycle_blocked_ambiguous_v11_1",
+    "tokens": {
+      "BLOCKED": {
+        "meaning": "Session fail-closed terminal. No further trading-loop progress. Maps via adapter to ControlPlane FAILED_SAFE or KILLED only.",
+        "resume_allowed": false,
+        "scopes": [
+          "session"
+        ],
+        "terminal": true
+      },
+      "BLOCKED_AMBIGUOUS": {
+        "adjudication_required": true,
+        "meaning": "Ambiguous evidence / race / partial observability. Must not auto-advance to success terminals. Allowed exits: CLOSED/CANCELLED/SUPERSEDED/INCOMPLETE/FAILED_SAFE per owning scope transitions only.",
+        "resume_allowed": false,
+        "scopes": [
+          "decision",
+          "intent",
+          "position",
+          "reflection"
+        ],
+        "terminal": false
+      },
+      "FAILED_SAFE": {
+        "meaning": "Hard fail-closed terminal shared as token but scoped via adapter.",
+        "resume_allowed": false,
+        "scopes": [
+          "session",
+          "control_plane",
+          "reflection"
+        ],
+        "terminal": true
+      }
+    }
+  },
+  "compatibility": {
+    "row_count": 33,
+    "rows": [
+      {
+        "note": "flat book after decision close",
+        "scope_a": "decision",
+        "scope_b": "position",
+        "state_a": "CLOSED",
+        "state_b": "CLOSED",
+        "status": "compatible"
+      },
+      {
+        "note": "no position opened",
+        "scope_a": "decision",
+        "scope_b": "position",
+        "state_a": "CLOSED",
+        "state_b": "NONE",
+        "status": "compatible"
+      },
+      {
+        "note": "simulated liquidation closed",
+        "scope_a": "decision",
+        "scope_b": "position",
+        "state_a": "CLOSED",
+        "state_b": "LIQUIDATED_SIMULATED",
+        "status": "compatible"
+      },
+      {
+        "note": "INV_DECISION_CLOSED_POSITION_OPEN",
+        "scope_a": "decision",
+        "scope_b": "position",
+        "state_a": "CLOSED",
+        "state_b": "OPEN",
+        "status": "incompatible"
+      },
+      {
+        "note": "INV_DECISION_CLOSED_POSITION_OPEN",
+        "scope_a": "decision",
+        "scope_b": "position",
+        "state_a": "CLOSED",
+        "state_b": "OPENING",
+        "status": "incompatible"
+      },
+      {
+        "note": "INV_DECISION_CLOSED_POSITION_OPEN",
+        "scope_a": "decision",
+        "scope_b": "position",
+        "state_a": "CLOSED",
+        "state_b": "REDUCING",
+        "status": "incompatible"
+      },
+      {
+        "note": "must adjudicate before CLOSED",
+        "scope_a": "decision",
+        "scope_b": "position",
+        "state_a": "CLOSED",
+        "state_b": "BLOCKED_AMBIGUOUS",
+        "status": "ambiguous"
+      },
+      {
+        "note": "intent resolved",
+        "scope_a": "session",
+        "scope_b": "intent",
+        "state_a": "COMPLETED",
+        "state_b": "FILLED",
+        "status": "compatible"
+      },
+      {
+        "note": "intent cancelled",
+        "scope_a": "session",
+        "scope_b": "intent",
+        "state_a": "COMPLETED",
+        "state_b": "CANCELLED",
+        "status": "compatible"
+      },
+      {
+        "note": "intent rejected",
+        "scope_a": "session",
+        "scope_b": "intent",
+        "state_a": "COMPLETED",
+        "state_b": "REJECTED",
+        "status": "compatible"
+      },
+      {
+        "note": "intent expired",
+        "scope_a": "session",
+        "scope_b": "intent",
+        "state_a": "COMPLETED",
+        "state_b": "EXPIRED",
+        "status": "compatible"
+      },
+      {
+        "note": "intent superseded",
+        "scope_a": "session",
+        "scope_b": "intent",
+        "state_a": "COMPLETED",
+        "state_b": "SUPERSEDED",
+        "status": "compatible"
+      },
+      {
+        "note": "INV_SESSION_COMPLETED_UNRESOLVED_INTENT",
+        "scope_a": "session",
+        "scope_b": "intent",
+        "state_a": "COMPLETED",
+        "state_b": "WORKING",
+        "status": "incompatible"
+      },
+      {
+        "note": "INV_SESSION_COMPLETED_UNRESOLVED_INTENT",
+        "scope_a": "session",
+        "scope_b": "intent",
+        "state_a": "COMPLETED",
+        "state_b": "DRAFT",
+        "status": "incompatible"
+      },
+      {
+        "note": "INV_SESSION_COMPLETED_UNRESOLVED_INTENT",
+        "scope_a": "session",
+        "scope_b": "intent",
+        "state_a": "COMPLETED",
+        "state_b": "SUBMITTED",
+        "status": "incompatible"
+      },
+      {
+        "note": "INV_SESSION_COMPLETED_UNRESOLVED_INTENT",
+        "scope_a": "session",
+        "scope_b": "intent",
+        "state_a": "COMPLETED",
+        "state_b": "ACCEPTED",
+        "status": "incompatible"
+      },
+      {
+        "note": "INV_SESSION_COMPLETED_UNRESOLVED_INTENT",
+        "scope_a": "session",
+        "scope_b": "intent",
+        "state_a": "COMPLETED",
+        "state_b": "PARTIAL",
+        "status": "incompatible"
+      },
+      {
+        "note": "INV_SESSION_COMPLETED_UNRESOLVED_INTENT",
+        "scope_a": "session",
+        "scope_b": "intent",
+        "state_a": "COMPLETED",
+        "state_b": "BLOCKED_AMBIGUOUS",
+        "status": "incompatible"
+      },
+      {
+        "note": "flat",
+        "scope_a": "session",
+        "scope_b": "position",
+        "state_a": "COMPLETED",
+        "state_b": "CLOSED",
+        "status": "compatible"
+      },
+      {
+        "note": "never opened",
+        "scope_a": "session",
+        "scope_b": "position",
+        "state_a": "COMPLETED",
+        "state_b": "NONE",
+        "status": "compatible"
+      },
+      {
+        "note": "INV_SESSION_COMPLETED_OPEN_POSITION",
+        "scope_a": "session",
+        "scope_b": "position",
+        "state_a": "COMPLETED",
+        "state_b": "OPEN",
+        "status": "incompatible"
+      },
+      {
+        "note": "exit evidence present",
+        "scope_a": "reflection",
+        "scope_b": "decision",
+        "state_a": "COMPLETE",
+        "state_b": "EXITED",
+        "status": "compatible"
+      },
+      {
+        "note": "exit evidence present",
+        "scope_a": "reflection",
+        "scope_b": "decision",
+        "state_a": "COMPLETE",
+        "state_b": "CLOSED",
+        "status": "compatible"
+      },
+      {
+        "note": "INV_REFLECTION_COMPLETE_BEFORE_EXIT",
+        "scope_a": "reflection",
+        "scope_b": "decision",
+        "state_a": "COMPLETE",
+        "state_b": "MONITORING",
+        "status": "incompatible"
+      },
+      {
+        "note": "INV_REFLECTION_COMPLETE_BEFORE_EXIT",
+        "scope_a": "reflection",
+        "scope_b": "decision",
+        "state_a": "COMPLETE",
+        "state_b": "APPROVED_SIMULATED",
+        "status": "incompatible"
+      },
+      {
+        "note": "INV_REFLECTION_COMPLETE_BEFORE_EXIT",
+        "scope_a": "reflection",
+        "scope_b": "decision",
+        "state_a": "COMPLETE",
+        "state_b": "OBSERVED",
+        "status": "incompatible"
+      },
+      {
+        "note": "qty must be 0 separately",
+        "scope_a": "position",
+        "scope_b": "session",
+        "state_a": "CLOSED",
+        "state_b": "COMPLETED",
+        "status": "compatible"
+      },
+      {
+        "note": "other positions may remain",
+        "scope_a": "position",
+        "scope_b": "session",
+        "state_a": "CLOSED",
+        "state_b": "RUNNING",
+        "status": "compatible"
+      },
+      {
+        "note": "adapter equivalent",
+        "scope_a": "session",
+        "scope_b": "control_plane",
+        "state_a": "COMPLETED",
+        "state_b": "STOPPED",
+        "status": "compatible"
+      },
+      {
+        "note": "adapter relation=none",
+        "scope_a": "session",
+        "scope_b": "control_plane",
+        "state_a": "COMPLETED",
+        "state_b": "KILLED",
+        "status": "incompatible"
+      },
+      {
+        "note": "adapter equivalent",
+        "scope_a": "session",
+        "scope_b": "control_plane",
+        "state_a": "FAILED_SAFE",
+        "state_b": "FAILED_SAFE",
+        "status": "compatible"
+      },
+      {
+        "note": "adapter session_implies_control",
+        "scope_a": "session",
+        "scope_b": "control_plane",
+        "state_a": "BLOCKED",
+        "state_b": "FAILED_SAFE",
+        "status": "compatible"
+      },
+      {
+        "note": "unmapped",
+        "scope_a": "session",
+        "scope_b": "control_plane",
+        "state_a": "BLOCKED",
+        "state_b": "STOPPED",
+        "status": "incompatible"
+      }
+    ],
+    "schema": "nexus_lifecycle_terminal_compatibility_v11_1",
+    "status_counts": {
+      "ambiguous": 1,
+      "compatible": 17,
+      "incompatible": 15
+    }
+  },
+  "consolidation_blockers_lifecycle": [],
+  "content_sha256": "2067085e15c186d8fafe9fcedd7a5838cd7ff938d1794e7ca6d7fe8b08c4bb02",
+  "drift_findings": [
+    {
+      "adapter_contract_present": true,
+      "adapter_module": "backend.nexus_contracts.lifecycle.adapters",
+      "code": "DUAL_LIFECYCLE_VOCABULARY_SCOPED",
+      "control_plane_states": [
+        "IDLE",
+        "STARTING",
+        "RUNNING",
+        "PAUSED",
+        "RECOVERING",
+        "STOPPING",
+        "STOPPED",
+        "KILLED",
+        "FAILED_SAFE"
+      ],
+      "domain": "lifecycle",
+      "recommendation": "Scoped dual vocabulary retained. Homonymous tokens must use ControlPlaneSessionAdapter; silent name identity remains banned.",
+      "resolved_code": "DUAL_LIFECYCLE_VOCABULARY",
+      "session_states": [
+        "CREATED",
+        "INITIALIZING",
+        "RUNNING",
+        "PAUSING",
+        "PAUSED",
+        "RECOVERING",
+        "FINALIZING",
+        "COMPLETED",
+        "BLOCKED",
+        "FAILED_SAFE"
+      ],
+      "severity": "informational"
+    }
+  ],
+  "invariants": {
+    "invariants": [
+      {
+        "code": "INV_DECISION_CLOSED_POSITION_OPEN",
+        "rule": "Decision CLOSED forbids Position OPEN/OPENING/REDUCING",
+        "severity": "critical"
+      },
+      {
+        "code": "INV_SESSION_COMPLETED_UNRESOLVED_INTENT",
+        "rule": "Session COMPLETED forbids unresolved Intent",
+        "severity": "critical"
+      },
+      {
+        "code": "INV_REFLECTION_COMPLETE_BEFORE_EXIT",
+        "rule": "Reflection COMPLETE requires exit evidence (Decision EXITED|CLOSED or exit_evidence=true)",
+        "severity": "critical"
+      },
+      {
+        "code": "INV_POSITION_CLOSED_RESIDUAL_QTY",
+        "rule": "Position CLOSED forbids residual quantity > 0",
+        "severity": "critical"
+      },
+      {
+        "code": "INV_SESSION_COMPLETED_OPEN_POSITION",
+        "rule": "Session COMPLETED forbids open-like Position",
+        "severity": "critical"
+      },
+      {
+        "code": "INV_DECISION_CLOSED_NONTERMINAL_ORDER",
+        "rule": "Decision CLOSED forbids non-terminal Order",
+        "severity": "critical"
+      },
+      {
+        "code": "INV_SESSION_CONTROL_ADAPTER",
+        "rule": "Session+ControlPlane joint snapshot must pass explicit adapter (no silent homonym)",
+        "severity": "critical"
+      },
+      {
+        "code": "INV_INTENT_RESOLVED_ORDER_CONSISTENCY",
+        "rule": "Intent FILLED implies Order FILLED (when order_state present)",
+        "severity": "high"
+      }
+    ],
+    "schema": "nexus_cross_lifecycle_invariants_v11_1"
+  },
+  "metrics": {
+    "adapter_allowed_pairs": 12,
+    "adversarial_critical": 0,
+    "adversarial_high": 0,
+    "compatibility_rows": 33,
+    "invariant_count": 8,
+    "negative_fixture_count": 5,
+    "positive_fixture_count": 2,
+    "scope_count": 7,
+    "trading_loop_scope_count": 6,
+    "transition_edges": 9
+  },
+  "ontology": {
+    "by_scope": {
+      "control_plane": {
+        "display_name": "ControlPlane",
+        "notes": "Founder process-control lifecycle. Homonymous tokens with Session (RUNNING/PAUSED/RECOVERING/FAILED_SAFE) are NOT identical; adapter required.",
+        "owner_module": "backend.nexus_private_control.state_machine",
+        "role": "process_control",
+        "scope_id": "control_plane",
+        "states": [
+          "IDLE",
+          "STARTING",
+          "RUNNING",
+          "PAUSED",
+          "RECOVERING",
+          "STOPPING",
+          "STOPPED",
+          "KILLED",
+          "FAILED_SAFE"
+        ],
+        "terminals": [
+          "FAILED_SAFE",
+          "KILLED",
+          "STOPPED"
+        ],
+        "transitions": {
+          "FAILED_SAFE": [],
+          "IDLE": [
+            "FAILED_SAFE",
+            "STARTING"
+          ],
+          "KILLED": [],
+          "PAUSED": [
+            "FAILED_SAFE",
+            "KILLED",
+            "RECOVERING",
+            "RUNNING",
+            "STOPPING"
+          ],
+          "RECOVERING": [
+            "FAILED_SAFE",
+            "KILLED",
+            "RUNNING",
+            "STOPPING"
+          ],
+          "RUNNING": [
+            "FAILED_SAFE",
+            "KILLED",
+            "PAUSED",
+            "RECOVERING",
+            "STOPPING"
+          ],
+          "STARTING": [
+            "FAILED_SAFE",
+            "KILLED",
+            "RUNNING"
+          ],
+          "STOPPED": [],
+          "STOPPING": [
+            "FAILED_SAFE",
+            "KILLED",
+            "STOPPED"
+          ]
+        }
+      },
+      "decision": {
+        "display_name": "Decision",
+        "notes": "Observe→…→CLOSED. BLOCKED_AMBIGUOUS is adjudicated before CLOSED.",
+        "owner_module": "backend.nexus_decision.state_machine",
+        "role": "trading_loop",
+        "scope_id": "decision",
+        "states": [
+          "OBSERVED",
+          "UNDERSTANDING",
+          "CHALLENGED",
+          "RISK_REVIEWED",
+          "APPROVED_SIMULATED",
+          "REJECTED",
+          "MONITORING",
+          "EXITED",
+          "UNDER_REVIEW",
+          "CALIBRATED",
+          "CLOSED",
+          "BLOCKED_AMBIGUOUS"
+        ],
+        "terminals": [
+          "CLOSED"
+        ],
+        "transitions": {
+          "APPROVED_SIMULATED": [
+            "BLOCKED_AMBIGUOUS",
+            "MONITORING"
+          ],
+          "BLOCKED_AMBIGUOUS": [
+            "CLOSED"
+          ],
+          "CALIBRATED": [
+            "CLOSED"
+          ],
+          "CHALLENGED": [
+            "BLOCKED_AMBIGUOUS",
+            "REJECTED",
+            "RISK_REVIEWED"
+          ],
+          "CLOSED": [],
+          "EXITED": [
+            "BLOCKED_AMBIGUOUS",
+            "CLOSED",
+            "UNDER_REVIEW"
+          ],
+          "MONITORING": [
+            "BLOCKED_AMBIGUOUS",
+            "EXITED",
+            "UNDER_REVIEW"
+          ],
+          "OBSERVED": [
+            "BLOCKED_AMBIGUOUS",
+            "REJECTED",
+            "UNDERSTANDING"
+          ],
+          "REJECTED": [
+            "CLOSED",
+            "UNDER_REVIEW"
+          ],
+          "RISK_REVIEWED": [
+            "APPROVED_SIMULATED",
+            "BLOCKED_AMBIGUOUS",
+            "REJECTED"
+          ],
+          "UNDERSTANDING": [
+            "BLOCKED_AMBIGUOUS",
+            "CHALLENGED",
+            "REJECTED"
+          ],
+          "UNDER_REVIEW": [
+            "BLOCKED_AMBIGUOUS",
+            "CALIBRATED",
+            "CLOSED"
+          ]
+        }
+      },
+      "intent": {
+        "display_name": "Intent",
+        "notes": "OrderIntent lifecycle between Decision approval and Order admission.",
+        "owner_module": "backend.nexus_contracts.lifecycle.ontology",
+        "role": "trading_loop",
+        "scope_id": "intent",
+        "states": [
+          "DRAFT",
+          "SUBMITTED",
+          "ACCEPTED",
+          "WORKING",
+          "PARTIAL",
+          "FILLED",
+          "CANCELLED",
+          "REJECTED",
+          "EXPIRED",
+          "SUPERSEDED",
+          "BLOCKED_AMBIGUOUS"
+        ],
+        "terminals": [
+          "CANCELLED",
+          "EXPIRED",
+          "FILLED",
+          "REJECTED",
+          "SUPERSEDED"
+        ],
+        "transitions": {
+          "ACCEPTED": [
+            "BLOCKED_AMBIGUOUS",
+            "CANCELLED",
+            "EXPIRED",
+            "REJECTED",
+            "WORKING"
+          ],
+          "BLOCKED_AMBIGUOUS": [
+            "CANCELLED",
+            "SUPERSEDED"
+          ],
+          "CANCELLED": [],
+          "DRAFT": [
+            "BLOCKED_AMBIGUOUS",
+            "CANCELLED",
+            "REJECTED",
+            "SUBMITTED"
+          ],
+          "EXPIRED": [],
+          "FILLED": [],
+          "PARTIAL": [
+            "BLOCKED_AMBIGUOUS",
+            "CANCELLED",
+            "EXPIRED",
+            "FILLED",
+            "PARTIAL"
+          ],
+          "REJECTED": [],
+          "SUBMITTED": [
+            "ACCEPTED",
+            "BLOCKED_AMBIGUOUS",
+            "CANCELLED",
+            "EXPIRED",
+            "REJECTED"
+          ],
+          "SUPERSEDED": [],
+          "WORKING": [
+            "BLOCKED_AMBIGUOUS",
+            "CANCELLED",
+            "EXPIRED",
+            "FILLED",
+            "PARTIAL"
+          ]
+        }
+      },
+      "order": {
+        "display_name": "Order",
+        "notes": "Simulated order states from execution_contract_v1_1.",
+        "owner_module": "backend.nexus_execution.contracts",
+        "role": "trading_loop",
+        "scope_id": "order",
+        "states": [
+          "ACCEPTED",
+          "CANCELLED",
+          "CANCEL_PENDING",
+          "CREATED",
+          "EXPIRED",
+          "FILLED",
+          "PARTIALLY_FILLED",
+          "REJECTED"
+        ],
+        "terminals": [
+          "CANCELLED",
+          "EXPIRED",
+          "FILLED",
+          "REJECTED"
+        ],
+        "transitions": {
+          "ACCEPTED": [
+            "CANCELLED",
+            "CANCEL_PENDING",
+            "EXPIRED",
+            "FILLED",
+            "PARTIALLY_FILLED",
+            "REJECTED"
+          ],
+          "CANCELLED": [],
+          "CANCEL_PENDING": [
+            "CANCELLED",
+            "FILLED"
+          ],
+          "CREATED": [
+            "ACCEPTED",
+            "REJECTED"
+          ],
+          "EXPIRED": [],
+          "FILLED": [],
+          "PARTIALLY_FILLED": [
+            "CANCELLED",
+            "CANCEL_PENDING",
+            "EXPIRED",
+            "FILLED",
+            "PARTIALLY_FILLED"
+          ],
+          "REJECTED": []
+        }
+      },
+      "position": {
+        "display_name": "Position",
+        "notes": "Simulated position states; CLOSED forbids residual qty > 0.",
+        "owner_module": "backend.nexus_execution.contracts",
+        "role": "trading_loop",
+        "scope_id": "position",
+        "states": [
+          "BLOCKED_AMBIGUOUS",
+          "CLOSED",
+          "LIQUIDATED_SIMULATED",
+          "NONE",
+          "OPEN",
+          "OPENING",
+          "REDUCING"
+        ],
+        "terminals": [
+          "CLOSED",
+          "LIQUIDATED_SIMULATED",
+          "NONE"
+        ],
+        "transitions": {
+          "BLOCKED_AMBIGUOUS": [
+            "CLOSED"
+          ],
+          "CLOSED": [],
+          "LIQUIDATED_SIMULATED": [],
+          "NONE": [
+            "OPENING"
+          ],
+          "OPEN": [
+            "CLOSED",
+            "LIQUIDATED_SIMULATED",
+            "REDUCING"
+          ],
+          "OPENING": [
+            "BLOCKED_AMBIGUOUS",
+            "OPEN"
+          ],
+          "REDUCING": [
+            "CLOSED",
+            "LIQUIDATED_SIMULATED",
+            "OPEN"
+          ]
+        }
+      },
+      "reflection": {
+        "display_name": "Reflection",
+        "notes": "COMPLETE requires exit evidence; never before Decision EXITED/CLOSED path.",
+        "owner_module": "backend.nexus_contracts.lifecycle.ontology",
+        "role": "trading_loop",
+        "scope_id": "reflection",
+        "states": [
+          "PENDING",
+          "IN_PROGRESS",
+          "AWAITING_EXIT_EVIDENCE",
+          "COMPLETE",
+          "INCOMPLETE",
+          "BLOCKED_AMBIGUOUS",
+          "FAILED_SAFE"
+        ],
+        "terminals": [
+          "COMPLETE",
+          "FAILED_SAFE",
+          "INCOMPLETE"
+        ],
+        "transitions": {
+          "AWAITING_EXIT_EVIDENCE": [
+            "BLOCKED_AMBIGUOUS",
+            "COMPLETE",
+            "FAILED_SAFE",
+            "INCOMPLETE",
+            "IN_PROGRESS"
+          ],
+          "BLOCKED_AMBIGUOUS": [
+            "FAILED_SAFE",
+            "INCOMPLETE"
+          ],
+          "COMPLETE": [],
+          "FAILED_SAFE": [],
+          "INCOMPLETE": [],
+          "IN_PROGRESS": [
+            "AWAITING_EXIT_EVIDENCE",
+            "BLOCKED_AMBIGUOUS",
+            "COMPLETE",
+            "FAILED_SAFE",
+            "INCOMPLETE"
+          ],
+          "PENDING": [
+            "AWAITING_EXIT_EVIDENCE",
+            "BLOCKED_AMBIGUOUS",
+            "FAILED_SAFE",
+            "IN_PROGRESS"
+          ]
+        }
+      },
+      "session": {
+        "display_name": "Session",
+        "notes": "Session orchestration authority for Private Core simulated sessions.",
+        "owner_module": "backend.nexus_autonomy.session_state_machine",
+        "role": "trading_loop",
+        "scope_id": "session",
+        "states": [
+          "CREATED",
+          "INITIALIZING",
+          "RUNNING",
+          "PAUSING",
+          "PAUSED",
+          "RECOVERING",
+          "FINALIZING",
+          "COMPLETED",
+          "BLOCKED",
+          "FAILED_SAFE"
+        ],
+        "terminals": [
+          "BLOCKED",
+          "COMPLETED",
+          "FAILED_SAFE"
+        ],
+        "transitions": {
+          "BLOCKED": [],
+          "COMPLETED": [],
+          "CREATED": [
+            "BLOCKED",
+            "FAILED_SAFE",
+            "INITIALIZING"
+          ],
+          "FAILED_SAFE": [],
+          "FINALIZING": [
+            "BLOCKED",
+            "COMPLETED",
+            "FAILED_SAFE"
+          ],
+          "INITIALIZING": [
+            "BLOCKED",
+            "FAILED_SAFE",
+            "RUNNING"
+          ],
+          "PAUSED": [
+            "BLOCKED",
+            "FAILED_SAFE",
+            "FINALIZING",
+            "RECOVERING",
+            "RUNNING"
+          ],
+          "PAUSING": [
+            "BLOCKED",
+            "FAILED_SAFE",
+            "PAUSED"
+          ],
+          "RECOVERING": [
+            "BLOCKED",
+            "FAILED_SAFE",
+            "FINALIZING",
+            "RUNNING"
+          ],
+          "RUNNING": [
+            "BLOCKED",
+            "FAILED_SAFE",
+            "FINALIZING",
+            "PAUSING",
+            "RECOVERING"
+          ]
+        }
+      }
+    },
+    "homonym_tokens_session_control": [
+      "FAILED_SAFE",
+      "PAUSED",
+      "RECOVERING",
+      "RUNNING"
+    ],
+    "intent_unresolved_states": [
+      "ACCEPTED",
+      "BLOCKED_AMBIGUOUS",
+      "DRAFT",
+      "PARTIAL",
+      "SUBMITTED",
+      "WORKING"
+    ],
+    "policy": {
+      "collapse_to_single_fsm": false,
+      "exchange_write": false,
+      "mainnet": false,
+      "mass_delete_competitors": false,
+      "real_money": false,
+      "silent_homonym_mapping": false
+    },
+    "position_open_like_states": [
+      "OPEN",
+      "OPENING",
+      "REDUCING"
+    ],
+    "process_control_scopes": [
+      "control_plane"
+    ],
+    "schema": "nexus_lifecycle_ontology_v11_1",
+    "scopes": [
+      {
+        "display_name": "Decision",
+        "notes": "Observe→…→CLOSED. BLOCKED_AMBIGUOUS is adjudicated before CLOSED.",
+        "owner_module": "backend.nexus_decision.state_machine",
+        "role": "trading_loop",
+        "scope_id": "decision",
+        "states": [
+          "OBSERVED",
+          "UNDERSTANDING",
+          "CHALLENGED",
+          "RISK_REVIEWED",
+          "APPROVED_SIMULATED",
+          "REJECTED",
+          "MONITORING",
+          "EXITED",
+          "UNDER_REVIEW",
+          "CALIBRATED",
+          "CLOSED",
+          "BLOCKED_AMBIGUOUS"
+        ],
+        "terminals": [
+          "CLOSED"
+        ],
+        "transitions": {
+          "APPROVED_SIMULATED": [
+            "BLOCKED_AMBIGUOUS",
+            "MONITORING"
+          ],
+          "BLOCKED_AMBIGUOUS": [
+            "CLOSED"
+          ],
+          "CALIBRATED": [
+            "CLOSED"
+          ],
+          "CHALLENGED": [
+            "BLOCKED_AMBIGUOUS",
+            "REJECTED",
+            "RISK_REVIEWED"
+          ],
+          "CLOSED": [],
+          "EXITED": [
+            "BLOCKED_AMBIGUOUS",
+            "CLOSED",
+            "UNDER_REVIEW"
+          ],
+          "MONITORING": [
+            "BLOCKED_AMBIGUOUS",
+            "EXITED",
+            "UNDER_REVIEW"
+          ],
+          "OBSERVED": [
+            "BLOCKED_AMBIGUOUS",
+            "REJECTED",
+            "UNDERSTANDING"
+          ],
+          "REJECTED": [
+            "CLOSED",
+            "UNDER_REVIEW"
+          ],
+          "RISK_REVIEWED": [
+            "APPROVED_SIMULATED",
+            "BLOCKED_AMBIGUOUS",
+            "REJECTED"
+          ],
+          "UNDERSTANDING": [
+            "BLOCKED_AMBIGUOUS",
+            "CHALLENGED",
+            "REJECTED"
+          ],
+          "UNDER_REVIEW": [
+            "BLOCKED_AMBIGUOUS",
+            "CALIBRATED",
+            "CLOSED"
+          ]
+        }
+      },
+      {
+        "display_name": "Session",
+        "notes": "Session orchestration authority for Private Core simulated sessions.",
+        "owner_module": "backend.nexus_autonomy.session_state_machine",
+        "role": "trading_loop",
+        "scope_id": "session",
+        "states": [
+          "CREATED",
+          "INITIALIZING",
+          "RUNNING",
+          "PAUSING",
+          "PAUSED",
+          "RECOVERING",
+          "FINALIZING",
+          "COMPLETED",
+          "BLOCKED",
+          "FAILED_SAFE"
+        ],
+        "terminals": [
+          "BLOCKED",
+          "COMPLETED",
+          "FAILED_SAFE"
+        ],
+        "transitions": {
+          "BLOCKED": [],
+          "COMPLETED": [],
+          "CREATED": [
+            "BLOCKED",
+            "FAILED_SAFE",
+            "INITIALIZING"
+          ],
+          "FAILED_SAFE": [],
+          "FINALIZING": [
+            "BLOCKED",
+            "COMPLETED",
+            "FAILED_SAFE"
+          ],
+          "INITIALIZING": [
+            "BLOCKED",
+            "FAILED_SAFE",
+            "RUNNING"
+          ],
+          "PAUSED": [
+            "BLOCKED",
+            "FAILED_SAFE",
+            "FINALIZING",
+            "RECOVERING",
+            "RUNNING"
+          ],
+          "PAUSING": [
+            "BLOCKED",
+            "FAILED_SAFE",
+            "PAUSED"
+          ],
+          "RECOVERING": [
+            "BLOCKED",
+            "FAILED_SAFE",
+            "FINALIZING",
+            "RUNNING"
+          ],
+          "RUNNING": [
+            "BLOCKED",
+            "FAILED_SAFE",
+            "FINALIZING",
+            "PAUSING",
+            "RECOVERING"
+          ]
+        }
+      },
+      {
+        "display_name": "Intent",
+        "notes": "OrderIntent lifecycle between Decision approval and Order admission.",
+        "owner_module": "backend.nexus_contracts.lifecycle.ontology",
+        "role": "trading_loop",
+        "scope_id": "intent",
+        "states": [
+          "DRAFT",
+          "SUBMITTED",
+          "ACCEPTED",
+          "WORKING",
+          "PARTIAL",
+          "FILLED",
+          "CANCELLED",
+          "REJECTED",
+          "EXPIRED",
+          "SUPERSEDED",
+          "BLOCKED_AMBIGUOUS"
+        ],
+        "terminals": [
+          "CANCELLED",
+          "EXPIRED",
+          "FILLED",
+          "REJECTED",
+          "SUPERSEDED"
+        ],
+        "transitions": {
+          "ACCEPTED": [
+            "BLOCKED_AMBIGUOUS",
+            "CANCELLED",
+            "EXPIRED",
+            "REJECTED",
+            "WORKING"
+          ],
+          "BLOCKED_AMBIGUOUS": [
+            "CANCELLED",
+            "SUPERSEDED"
+          ],
+          "CANCELLED": [],
+          "DRAFT": [
+            "BLOCKED_AMBIGUOUS",
+            "CANCELLED",
+            "REJECTED",
+            "SUBMITTED"
+          ],
+          "EXPIRED": [],
+          "FILLED": [],
+          "PARTIAL": [
+            "BLOCKED_AMBIGUOUS",
+            "CANCELLED",
+            "EXPIRED",
+            "FILLED",
+            "PARTIAL"
+          ],
+          "REJECTED": [],
+          "SUBMITTED": [
+            "ACCEPTED",
+            "BLOCKED_AMBIGUOUS",
+            "CANCELLED",
+            "EXPIRED",
+            "REJECTED"
+          ],
+          "SUPERSEDED": [],
+          "WORKING": [
+            "BLOCKED_AMBIGUOUS",
+            "CANCELLED",
+            "EXPIRED",
+            "FILLED",
+            "PARTIAL"
+          ]
+        }
+      },
+      {
+        "display_name": "Order",
+        "notes": "Simulated order states from execution_contract_v1_1.",
+        "owner_module": "backend.nexus_execution.contracts",
+        "role": "trading_loop",
+        "scope_id": "order",
+        "states": [
+          "ACCEPTED",
+          "CANCELLED",
+          "CANCEL_PENDING",
+          "CREATED",
+          "EXPIRED",
+          "FILLED",
+          "PARTIALLY_FILLED",
+          "REJECTED"
+        ],
+        "terminals": [
+          "CANCELLED",
+          "EXPIRED",
+          "FILLED",
+          "REJECTED"
+        ],
+        "transitions": {
+          "ACCEPTED": [
+            "CANCELLED",
+            "CANCEL_PENDING",
+            "EXPIRED",
+            "FILLED",
+            "PARTIALLY_FILLED",
+            "REJECTED"
+          ],
+          "CANCELLED": [],
+          "CANCEL_PENDING": [
+            "CANCELLED",
+            "FILLED"
+          ],
+          "CREATED": [
+            "ACCEPTED",
+            "REJECTED"
+          ],
+          "EXPIRED": [],
+          "FILLED": [],
+          "PARTIALLY_FILLED": [
+            "CANCELLED",
+            "CANCEL_PENDING",
+            "EXPIRED",
+            "FILLED",
+            "PARTIALLY_FILLED"
+          ],
+          "REJECTED": []
+        }
+      },
+      {
+        "display_name": "Position",
+        "notes": "Simulated position states; CLOSED forbids residual qty > 0.",
+        "owner_module": "backend.nexus_execution.contracts",
+        "role": "trading_loop",
+        "scope_id": "position",
+        "states": [
+          "BLOCKED_AMBIGUOUS",
+          "CLOSED",
+          "LIQUIDATED_SIMULATED",
+          "NONE",
+          "OPEN",
+          "OPENING",
+          "REDUCING"
+        ],
+        "terminals": [
+          "CLOSED",
+          "LIQUIDATED_SIMULATED",
+          "NONE"
+        ],
+        "transitions": {
+          "BLOCKED_AMBIGUOUS": [
+            "CLOSED"
+          ],
+          "CLOSED": [],
+          "LIQUIDATED_SIMULATED": [],
+          "NONE": [
+            "OPENING"
+          ],
+          "OPEN": [
+            "CLOSED",
+            "LIQUIDATED_SIMULATED",
+            "REDUCING"
+          ],
+          "OPENING": [
+            "BLOCKED_AMBIGUOUS",
+            "OPEN"
+          ],
+          "REDUCING": [
+            "CLOSED",
+            "LIQUIDATED_SIMULATED",
+            "OPEN"
+          ]
+        }
+      },
+      {
+        "display_name": "Reflection",
+        "notes": "COMPLETE requires exit evidence; never before Decision EXITED/CLOSED path.",
+        "owner_module": "backend.nexus_contracts.lifecycle.ontology",
+        "role": "trading_loop",
+        "scope_id": "reflection",
+        "states": [
+          "PENDING",
+          "IN_PROGRESS",
+          "AWAITING_EXIT_EVIDENCE",
+          "COMPLETE",
+          "INCOMPLETE",
+          "BLOCKED_AMBIGUOUS",
+          "FAILED_SAFE"
+        ],
+        "terminals": [
+          "COMPLETE",
+          "FAILED_SAFE",
+          "INCOMPLETE"
+        ],
+        "transitions": {
+          "AWAITING_EXIT_EVIDENCE": [
+            "BLOCKED_AMBIGUOUS",
+            "COMPLETE",
+            "FAILED_SAFE",
+            "INCOMPLETE",
+            "IN_PROGRESS"
+          ],
+          "BLOCKED_AMBIGUOUS": [
+            "FAILED_SAFE",
+            "INCOMPLETE"
+          ],
+          "COMPLETE": [],
+          "FAILED_SAFE": [],
+          "INCOMPLETE": [],
+          "IN_PROGRESS": [
+            "AWAITING_EXIT_EVIDENCE",
+            "BLOCKED_AMBIGUOUS",
+            "COMPLETE",
+            "FAILED_SAFE",
+            "INCOMPLETE"
+          ],
+          "PENDING": [
+            "AWAITING_EXIT_EVIDENCE",
+            "BLOCKED_AMBIGUOUS",
+            "FAILED_SAFE",
+            "IN_PROGRESS"
+          ]
+        }
+      },
+      {
+        "display_name": "ControlPlane",
+        "notes": "Founder process-control lifecycle. Homonymous tokens with Session (RUNNING/PAUSED/RECOVERING/FAILED_SAFE) are NOT identical; adapter required.",
+        "owner_module": "backend.nexus_private_control.state_machine",
+        "role": "process_control",
+        "scope_id": "control_plane",
+        "states": [
+          "IDLE",
+          "STARTING",
+          "RUNNING",
+          "PAUSED",
+          "RECOVERING",
+          "STOPPING",
+          "STOPPED",
+          "KILLED",
+          "FAILED_SAFE"
+        ],
+        "terminals": [
+          "FAILED_SAFE",
+          "KILLED",
+          "STOPPED"
+        ],
+        "transitions": {
+          "FAILED_SAFE": [],
+          "IDLE": [
+            "FAILED_SAFE",
+            "STARTING"
+          ],
+          "KILLED": [],
+          "PAUSED": [
+            "FAILED_SAFE",
+            "KILLED",
+            "RECOVERING",
+            "RUNNING",
+            "STOPPING"
+          ],
+          "RECOVERING": [
+            "FAILED_SAFE",
+            "KILLED",
+            "RUNNING",
+            "STOPPING"
+          ],
+          "RUNNING": [
+            "FAILED_SAFE",
+            "KILLED",
+            "PAUSED",
+            "RECOVERING",
+            "STOPPING"
+          ],
+          "STARTING": [
+            "FAILED_SAFE",
+            "KILLED",
+            "RUNNING"
+          ],
+          "STOPPED": [],
+          "STOPPING": [
+            "FAILED_SAFE",
+            "KILLED",
+            "STOPPED"
+          ]
+        }
+      }
+    ],
+    "trading_loop_scopes": [
+      "decision",
+      "session",
+      "intent",
+      "order",
+      "position",
+      "reflection"
+    ],
+    "version": "v11.1.lifecycle_vocabulary.1"
+  },
+  "secret_scan": {
+    "created_at": "2026-08-05T04:08:22Z",
+    "hits": [],
+    "scanned_owned_paths": [
+      "backend/nexus_contracts/lifecycle",
+      "backend/nexus_contracts/authority_registry.py",
+      "tools/architecture/check_contract_drift.py",
+      "tools/architecture/run_authority_consolidation.py",
+      "tools/architecture/run_lifecycle_vocabulary_v11_1.py",
+      "tests/architecture/test_lifecycle_vocabulary_v11_1.py",
+      "artifacts/readiness/immutable/v11_1_lifecycle_vocabulary"
+    ],
+    "schema": "v11_1_lifecycle_vocabulary_secret_scan",
+    "secret_leak_count": 0
+  },
+  "status": {
+    "DUAL_LIFECYCLE_VOCABULARY_resolved": true,
+    "MULTI_SCOPE_AUTHORITY_LIFECYCLE_resolved": true,
+    "adapter_contract_id": "nexus.lifecycle.session_control_plane_adapter_v11_1",
+    "adversarial_passed": true,
+    "branch": "feature/v11_1-lifecycle-vocabulary",
+    "collapse_to_single_fsm": false,
+    "created_at": "2026-08-05T04:08:45Z",
+    "lifecycle_registry_status": "active_compat_present",
+    "ontology_version": "v11.1.lifecycle_vocabulary.1",
+    "pass_id": "pass2",
+    "passed": true,
+    "schema": "v11_1_lifecycle_vocabulary_status",
+    "secret_leak_count": 0,
+    "validation_matrix_passed": true
+  },
+  "transitions": {
+    "collapse_to_single_fsm": false,
+    "edge_count": 9,
+    "edges": [
+      {
+        "from_scope": "decision",
+        "from_states": "APPROVED_SIMULATED",
+        "gate": "decision_approved_simulated",
+        "to_scope": "intent",
+        "to_states": "DRAFT|SUBMITTED"
+      },
+      {
+        "from_scope": "intent",
+        "from_states": "ACCEPTED|WORKING",
+        "gate": "intent_admitted_to_simulator",
+        "to_scope": "order",
+        "to_states": "CREATED|ACCEPTED"
+      },
+      {
+        "from_scope": "order",
+        "from_states": "PARTIALLY_FILLED|FILLED",
+        "gate": "fill_applied",
+        "to_scope": "position",
+        "to_states": "OPENING|OPEN|REDUCING"
+      },
+      {
+        "from_scope": "position",
+        "from_states": "CLOSED|LIQUIDATED_SIMULATED",
+        "gate": "exit_fill_recorded",
+        "to_scope": "decision",
+        "to_states": "EXITED"
+      },
+      {
+        "from_scope": "decision",
+        "from_states": "EXITED",
+        "gate": "exit_evidence_available",
+        "to_scope": "reflection",
+        "to_states": "PENDING|IN_PROGRESS"
+      },
+      {
+        "from_scope": "reflection",
+        "from_states": "COMPLETE|INCOMPLETE|FAILED_SAFE",
+        "gate": "reflection_terminal",
+        "to_scope": "decision",
+        "to_states": "UNDER_REVIEW|CALIBRATED|CLOSED"
+      },
+      {
+        "from_scope": "session",
+        "from_states": "RUNNING|PAUSED|RECOVERING|FINALIZING",
+        "gate": "session_hosts_decisions",
+        "to_scope": "decision",
+        "to_states": "*"
+      },
+      {
+        "from_scope": "session",
+        "from_states": "FINALIZING",
+        "gate": "session_finalize_requires_resolved_intents",
+        "to_scope": "intent",
+        "to_states": "FILLED|CANCELLED|REJECTED|EXPIRED|SUPERSEDED"
+      },
+      {
+        "from_scope": "session",
+        "from_states": "*",
+        "gate": "adapter_only_never_silent_homonym",
+        "to_scope": "control_plane",
+        "to_states": "*"
+      }
+    ],
+    "note": "Edges describe allowed hand-offs between independent lifecycles. They do not merge state machines or equate homonymous tokens.",
+    "schema": "nexus_lifecycle_cross_scope_transitions_v11_1"
+  },
+  "validation_matrix": {
+    "created_at": "2026-08-05T04:08:22Z",
+    "passed": true,
+    "row_count": 7,
+    "rows": [
+      {
+        "critical_count": 1,
+        "expected_codes": [
+          "INV_DECISION_CLOSED_POSITION_OPEN"
+        ],
+        "id": "neg_decision_closed_position_open",
+        "kind": "negative",
+        "observed_codes": [
+          "INV_DECISION_CLOSED_POSITION_OPEN"
+        ],
+        "ok": true,
+        "valid": false
+      },
+      {
+        "critical_count": 1,
+        "expected_codes": [
+          "INV_SESSION_COMPLETED_UNRESOLVED_INTENT"
+        ],
+        "id": "neg_session_completed_unresolved_intent",
+        "kind": "negative",
+        "observed_codes": [
+          "INV_SESSION_COMPLETED_UNRESOLVED_INTENT"
+        ],
+        "ok": true,
+        "valid": false
+      },
+      {
+        "critical_count": 1,
+        "expected_codes": [
+          "INV_REFLECTION_COMPLETE_BEFORE_EXIT"
+        ],
+        "id": "neg_reflection_complete_before_exit",
+        "kind": "negative",
+        "observed_codes": [
+          "INV_REFLECTION_COMPLETE_BEFORE_EXIT"
+        ],
+        "ok": true,
+        "valid": false
+      },
+      {
+        "critical_count": 1,
+        "expected_codes": [
+          "INV_POSITION_CLOSED_RESIDUAL_QTY"
+        ],
+        "id": "neg_position_closed_residual_qty",
+        "kind": "negative",
+        "observed_codes": [
+          "INV_POSITION_CLOSED_RESIDUAL_QTY"
+        ],
+        "ok": true,
+        "valid": false
+      },
+      {
+        "critical_count": 1,
+        "expected_codes": [
+          "INV_SESSION_CONTROL_ADAPTER"
+        ],
+        "id": "neg_session_control_silent_homonym",
+        "kind": "negative",
+        "observed_codes": [
+          "INV_SESSION_CONTROL_ADAPTER"
+        ],
+        "ok": true,
+        "valid": false
+      },
+      {
+        "critical_count": 0,
+        "id": "pos_happy_flat_close",
+        "kind": "positive",
+        "ok": true,
+        "valid": true,
+        "violations": []
+      },
+      {
+        "critical_count": 0,
+        "id": "pos_running_open",
+        "kind": "positive",
+        "ok": true,
+        "valid": true,
+        "violations": []
+      }
+    ],
+    "schema": "v11_1_lifecycle_vocabulary_validation_matrix"
+  }
+}

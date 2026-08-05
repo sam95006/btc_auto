@@ -1,0 +1,16 @@
+{
+  "DUAL_LIFECYCLE_VOCABULARY_resolved": true,
+  "MULTI_SCOPE_AUTHORITY_LIFECYCLE_resolved": true,
+  "adapter_contract_id": "nexus.lifecycle.session_control_plane_adapter_v11_1",
+  "adversarial_passed": true,
+  "branch": "feature/v11_1-lifecycle-vocabulary",
+  "collapse_to_single_fsm": false,
+  "created_at": "2026-08-05T04:08:22Z",
+  "lifecycle_registry_status": "active_compat_present",
+  "ontology_version": "v11.1.lifecycle_vocabulary.1",
+  "pass_id": "pass1",
+  "passed": true,
+  "schema": "v11_1_lifecycle_vocabulary_status",
+  "secret_leak_count": 0,
+  "validation_matrix_passed": true
+}
