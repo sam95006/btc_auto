@@ -1,0 +1,26 @@
+{
+  "schema": "v10_security_dr_redteam",
+  "created_at": "2026-08-05T03:07:01Z",
+  "recommendation": "NEXUS_V10_SECURITY_DR_REDTEAM_PASS",
+  "passed": true,
+  "scenario_pass_count": 12,
+  "scenario_total_count": 12,
+  "exchange_write_attempt_count": 0,
+  "secret_leak_count": 0,
+  "mainnet_client_created_count": 0,
+  "critical_findings": [],
+  "owned_paths": [
+    "backend/nexus_autonomy/security_dr_redteam_v10.py",
+    "backend/nexus_autonomy/security_dr_scenarios_v10.py",
+    "tools/research/run_security_dr_redteam_v10.py",
+    "tools/ci/scan_security_dr_redteam_v10.py",
+    "tests/test_security_dr_redteam_v10.py",
+    "artifacts/readiness/immutable/v10_security_dr_redteam/"
+  ],
+  "prohibited_paths": [
+    "frontend/",
+    "backend/nexus_demo_execution/",
+    "G:/",
+    "PR26"
+  ]
+}
