@@ -95,28 +95,52 @@ def test_unsafe_deserialization_suite() -> None:
     assert r["raw_unsafe_loads_count"] == 0
 
 
-def test_cost_model_divergence_confirmed_on_base() -> None:
+def test_cost_model_divergence_resolved_on_integrated_tip() -> None:
     r = verify_cost_model_divergence(ROOT)
-    assert r["confirmed"] is True
-    assert r["execution_version"] != r["strategy_version"]
+    # C1 remediation: divergence must not confirm (strategy may delegate without a local constant).
+    assert r["confirmed"] is False
+    assert r["severity"] != "critical"
+    assert r["execution_version"] is not None
 
 
-def test_sccs_detectable() -> None:
+def test_sccs_cleared_on_integrated_tip() -> None:
     sccs = find_backend_sccs(ROOT)
-    # Base tree should include the known execution / demo / research cycles
     assert isinstance(sccs, list)
-    assert len(sccs) >= 1
+    # Original Lane H SCCs (execution self-cycle, demo geometry, research features) must be gone.
+    forbidden_substrings = (
+        "nexus_execution",
+        "nexus_demo_execution",
+        "nexus_research.features",
+    )
+    for scc in sccs:
+        joined = " ".join(scc)
+        assert not any(s in joined for s in forbidden_substrings), scc
+    # Any residual product-lane SCC must be broken for the single-tip gate.
+    assert len(sccs) == 0, sccs
 
 
-def test_lane_g_depth_audit_wrapper_only() -> None:
+def test_lane_g_depth_audit_production_ast_required() -> None:
+    """Post-GAST: wrapper-only mutation depth is forbidden on the integrated tip."""
     origins = resolve_origin_roots()
-    if not (origins["g"] / "artifacts/readiness/immutable/v11_security_mutation_redteam/findings_summary.json").is_file():
-        pytest.skip("Lane G origin worktree artifacts unavailable")
-    audit = audit_lane_g_mutation_depth(origins["g"])
-    assert audit["mutation_depth"] == "wrapper_in_memory"
-    assert audit["finding"] is not None
-    assert audit["finding"]["code"] == "G_MUTATION_DEPTH_WRAPPER_ONLY"
-    assert audit["finding"]["severity"] == "critical"
+    gast_status = ROOT / "artifacts/readiness/immutable/v11_1_g_ast_mutation"
+    if not gast_status.is_dir():
+        pytest.skip("GAST artifacts unavailable on tip")
+    # Prefer integrated GAST proof over historical Lane G wrapper audit.
+    survivors = None
+    for p in gast_status.rglob("*.json"):
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if isinstance(data, dict) and "production_ast_survivor_count" in data:
+            survivors = data["production_ast_survivor_count"]
+            break
+        if isinstance(data, dict) and data.get("metrics", {}).get("production_ast_survivor_count") is not None:
+            survivors = data["metrics"]["production_ast_survivor_count"]
+            break
+    if survivors is None and (origins["g"] / "artifacts/readiness/immutable/v11_security_mutation_redteam/findings_summary.json").is_file():
+        pytest.skip("GAST survivor metric not found; Lane G origin alone is not production proof")
+    assert survivors == 0
 
 
 def test_negative_campaign_does_not_claim_pass_when_critical() -> None:

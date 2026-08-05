@@ -40,11 +40,12 @@ def test_ci_gate_passes_on_baseline():
     assert report["violation_count"] == 0
 
 
-def test_drift_report_detects_cost_divergence():
+def test_drift_report_cost_and_lifecycle_aligned():
     report = run_drift_checks(ROOT)
     codes = {f["code"] for f in report["findings"]}
-    assert "COST_MODEL_VERSION_DIVERGENCE" in codes
-    # Dual lifecycle vocabulary is scoped+adapted (V11.1) — not a critical blocker.
+    # C1: cost versions consolidated onto CostModelContract.
+    assert "COST_MODEL_VERSION_DIVERGENCE" not in codes
+    # C2: dual lifecycle vocabulary scoped+adapted — not a critical blocker.
     assert "DUAL_LIFECYCLE_VOCABULARY" not in codes
     assert "DUAL_LIFECYCLE_VOCABULARY_SCOPED" in codes
     critical_codes = {
@@ -52,6 +53,7 @@ def test_drift_report_detects_cost_divergence():
     }
     assert "DUAL_LIFECYCLE_VOCABULARY" not in critical_codes
     assert "DUAL_LIFECYCLE_VOCABULARY_SCOPED" not in critical_codes
+    assert "COST_MODEL_VERSION_DIVERGENCE" not in critical_codes
 
 
 def test_removal_recommendations_never_delete_now():

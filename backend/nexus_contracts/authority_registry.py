@@ -213,54 +213,58 @@ def _records() -> tuple[AuthorityRecord, ...]:
             domain="cost",
             authority_id="private_core.cost.model_v1_1",
             canonical_module="backend.nexus_execution.cost_model",
-            canonical_symbol="COST_MODEL_VERSION",
-            contract_module="backend.nexus_execution.contracts",
+            canonical_symbol="CostModelContract",
+            contract_module="backend.nexus_execution.cost_model",
             scope="private_core_simulated_session",
-            status="contested",
+            status="active_compat_present",
             invariants=(
                 "exact_decimal_cost_bridge",
                 "gross_minus_components_equals_net",
+                "canonical_cost_authority_count==1",
+                "cost_formula_divergence_count==0",
+                "cost_version_divergence_count==0",
             ),
-            contract_keys=("CostBridge", "COST_MODEL_VERSION"),
+            contract_keys=(
+                "CostModelContract",
+                "CostBridge",
+                "COST_MODEL_VERSION",
+                "compose_cost_bridge",
+            ),
             competitors=(
                 CompetitorRecord(
                     module="backend.nexus_strategy_engine.cost_semantics",
                     symbol="COST_MODEL_VERSION",
-                    role="parallel_lane",
-                    severity="critical",
+                    role="compatibility_shim",
+                    severity="low",
                     notes=(
-                        "Divergent COST_MODEL_VERSION string "
-                        "(NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1 vs founder-conservative-v1-1-*). "
-                        "Contract drift risk for strategy↔execution evidence."
+                        "Re-exports COST_MODEL_VERSION from nexus_execution.cost_model; "
+                        "annotates observed-vs-proxy sources only — no independent formulas."
                     ),
-                    recommended_action="migrate_callers",
+                    recommended_action="retain_compat",
                 ),
                 CompetitorRecord(
                     module="backend.nexus_demo_execution.trade_geometry",
                     symbol="estimate_costs",
-                    role="parallel_lane",
-                    severity="high",
-                    notes="Demo geometry cost estimator; separate fee constants.",
+                    role="compatibility_shim",
+                    severity="medium",
+                    notes="Delegates to estimate_round_trip_costs_float (canonical).",
                     recommended_action="retain_compat",
                 ),
                 CompetitorRecord(
                     module="backend.nexus_demo_execution.fee_rate",
                     symbol=None,
-                    role="parallel_lane",
+                    role="compatibility_shim",
                     severity="medium",
-                    notes="Demo fee-rate helpers; must not override simulated cost bridge.",
+                    notes="Demo fee-rate fetch/cache; rates feed canonical cost_model, must not override bridge.",
                     recommended_action="retain_compat",
                 ),
                 CompetitorRecord(
                     module="backend.nexus_autonomy.execution_simulator_v1_1",
                     symbol="TAKER_FEE",
                     role="compatibility_shim",
-                    severity="low",
-                    notes=(
-                        "TAKER_FEE/MAKER_FEE removed from shim; costs delegated to "
-                        "nexus_execution.cost_model via canonical simulator."
-                    ),
-                    recommended_action="retain_compat",
+                    severity="medium",
+                    notes="TAKER_FEE/MAKER_FEE/_apply_costs/net_pnl re-exported or delegated from cost_model.",
+                    recommended_action="migrate_callers",
                 ),
                 CompetitorRecord(
                     module="backend.nexus_edge_discovery.taxonomy_audit",
@@ -271,7 +275,10 @@ def _records() -> tuple[AuthorityRecord, ...]:
                     recommended_action="retain_compat",
                 ),
             ),
-            notes="Canonical version string: founder-conservative-v1-1-2026-08-05",
+            notes=(
+                "Canonical CostModelContract version: founder-conservative-v1-1-2026-08-05. "
+                "Legacy labels migrate via migrate_cost_model_version()."
+            ),
         ),
         AuthorityRecord(
             domain="risk",
@@ -428,62 +435,99 @@ def _records() -> tuple[AuthorityRecord, ...]:
         ),
         AuthorityRecord(
             domain="checkpoint",
-            authority_id="private_core.checkpoint.session_recovery",
-            canonical_module="backend.nexus_recovery.crash_recovery",
-            canonical_symbol="recover_from_checkpoint",
-            contract_module="backend.nexus_recovery.invariants",
-            scope="private_core_session_recovery",
-            status="contested",
+            authority_id="private_core.checkpoint.envelope_v1",
+            canonical_module="backend.nexus_checkpoint.store",
+            canonical_symbol="CanonicalCheckpointStore",
+            contract_module="backend.nexus_checkpoint.envelope",
+            scope="private_core_canonical_envelope",
+            status="active_compat_present",
             invariants=(
                 "ambiguous_state_routes_to_BLOCKED_AMBIGUOUS",
                 "no_silent_resume",
+                "atomic_temp_fsync_rename",
+                "checksum_verify_on_read_write",
+                "lkg_pointer_required_for_restore",
+                "no_destructive_live_v23_migration",
+                "CANONICAL_CHECKPOINT_ENVELOPE_COUNT==1",
             ),
-            contract_keys=("RecoveryOutcome", "check_recovery_invariants"),
+            contract_keys=(
+                "build_envelope",
+                "validate_envelope",
+                "detect_corruption",
+                "CanonicalCheckpointStore",
+                "REQUIRED_ENVELOPE_FIELDS",
+            ),
             competitors=(
+                CompetitorRecord(
+                    module="backend.nexus_recovery.crash_recovery",
+                    symbol="recover_from_checkpoint",
+                    role="parallel_lane",
+                    severity="medium",
+                    notes=(
+                        "Session crash recovery consumes durability LKG; must restore via "
+                        "envelope/LKG contracts — does not own envelope schema."
+                    ),
+                    recommended_action="migrate_callers",
+                ),
                 CompetitorRecord(
                     module="backend.nexus_private_control.checkpoint",
                     symbol="CheckpointStore",
                     role="parallel_lane",
-                    severity="high",
-                    notes="Control-plane local checkpoint store; different schema/root.",
+                    severity="medium",
+                    notes=(
+                        "Control-plane payload owner; wrap via "
+                        "adapters.wrap_control_plane_payload before cross-domain resume."
+                    ),
                     recommended_action="retain_compat",
                 ),
                 CompetitorRecord(
                     module="backend.nexus_reflection.checkpoint",
                     symbol="checkpoint_path",
                     role="parallel_lane",
-                    severity="high",
-                    notes="Blind Reflection V2.3 checkpoint schema v4; provider-resume authority.",
+                    severity="medium",
+                    notes=(
+                        "Blind Reflection V2.3 payload schema v4 owner; wrap via "
+                        "adapters.wrap_reflection_payload (dry-run before live migrate)."
+                    ),
+                    recommended_action="retain_compat",
+                ),
+                CompetitorRecord(
+                    module="backend.nexus_decision.checkpoint",
+                    symbol="DecisionCheckpointStore",
+                    role="parallel_lane",
+                    severity="medium",
+                    notes="Decision lifecycle payload owner; wrap via adapters.wrap_decision_payload.",
                     recommended_action="retain_compat",
                 ),
                 CompetitorRecord(
                     module="backend.nexus_edge_discovery.quota_aware_v23",
                     symbol="checkpoint_path",
                     role="compatibility_shim",
-                    severity="medium",
-                    notes="Edge-discovery checkpoint helpers; overlaps reflection checkpoint.",
+                    severity="low",
+                    notes="Edge-discovery checkpoint helpers; overlaps reflection payload path.",
                     recommended_action="migrate_callers",
                 ),
                 CompetitorRecord(
                     module="backend.nexus_reflection.v23_resume_v10",
                     symbol="checkpoint_dest",
                     role="parallel_lane",
-                    severity="medium",
-                    notes="V10 resume checkpoint destination helper.",
+                    severity="low",
+                    notes="V10 resume destination helper; payload-scoped.",
                     recommended_action="retain_compat",
                 ),
                 CompetitorRecord(
                     module="backend.nexus_autonomy.session_orchestrator_v1",
                     symbol="checkpoint",
                     role="obsolete_entry",
-                    severity="medium",
-                    notes="V1 orchestrator checkpoint method; prefer V1.1 + recovery invariants.",
+                    severity="low",
+                    notes="V1 orchestrator checkpoint method; prefer envelope store + V1.1 recovery.",
                     recommended_action="future_remove",
                 ),
             ),
             notes=(
-                "Checkpoint authorities are domain-scoped (session / control-plane / reflection). "
-                "Cross-domain resume is a blocker if schemas mix."
+                "V11.1 C4: one canonical envelope (nexus_checkpoint_envelope_v1). "
+                "Subsystems retain payload schema ownership; cross-domain resume requires "
+                "explicit adapters. Live V2.3 migration is dry-run only."
             ),
         ),
         AuthorityRecord(
@@ -493,29 +537,36 @@ def _records() -> tuple[AuthorityRecord, ...]:
             canonical_symbol="parse_retry_after",
             contract_module="backend.nexus_provider",
             scope="private_core_provider_transport",
-            status="contested",
+            status="active",
             invariants=(
                 "retry_after_http_date_or_seconds",
                 "bounded_jittered_exponential_backoff",
+                "429_never_ai_quality_failure",
+                "single_retry_algorithm_authority",
             ),
             contract_keys=(
                 "parse_retry_after",
                 "parse_rate_limit_reset",
+                "parse_quota_reset_at",
                 "backoff_with_jitter",
+                "exponential_backoff_with_jitter",
+                "compute_resume_wait_s",
+                "next_resume_iso",
                 "ProviderCircuitBreaker",
                 "TokenBucket",
+                "classify_transport_status",
             ),
             competitors=(
                 CompetitorRecord(
                     module="backend.nexus_edge_discovery.provider_transport_v23",
-                    symbol="exponential_backoff_with_jitter",
-                    role="parallel_lane",
-                    severity="critical",
+                    symbol="CircuitBreaker",
+                    role="adapter_lane",
+                    severity="low",
                     notes=(
-                        "Reflection V2.3 transport implements its own backoff/retry rather than "
-                        "importing backend.nexus_provider.retry_policy."
+                        "V2.3 transport facade: re-exports / wraps canonical "
+                        "backend.nexus_provider.retry_policy + ProviderCircuitBreaker."
                     ),
-                    recommended_action="migrate_callers",
+                    recommended_action="retain_compat",
                 ),
                 CompetitorRecord(
                     module="tools.research.stage4_provider_chain",
@@ -550,7 +601,10 @@ def _records() -> tuple[AuthorityRecord, ...]:
                     recommended_action="retain_compat",
                 ),
             ),
-            notes="Canonical provider retry lives in backend.nexus_provider; lanes should import it.",
+            notes=(
+                "Canonical provider retry lives in backend.nexus_provider.retry_policy; "
+                "lanes must import it. Provider-specific VALUES may differ; algorithm must not."
+            ),
         ),
     )
 

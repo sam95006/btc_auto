@@ -23,12 +23,14 @@ CHANNEL_CAPTAIN = {
 
 
 class StationDialogueService:
-    def __init__(self, chat_log, llm_gateway=None):
+    def __init__(self, chat_log, llm_gateway=None, runtime_ops=None):
         self.chat_log = chat_log
         self.llm_gateway = llm_gateway
         self.engine = StationConversationEngine()
         self._last_refresh = {}
         self._last_world = 0.0
+        # Injected ops break the import cycle with backend.services.nexus_runtime.
+        self._runtime_ops = runtime_ops or {}
 
     def handle_player_message(self, channel, message, snapshot, player_name=None):
         text = str(message or "").strip()[:500]
@@ -134,27 +136,32 @@ class StationDialogueService:
         return {"ok": True, "channel": channel_key, "messages": stored}
 
     def _execute_flatten_all(self, text):
-        from backend.services.nexus_runtime import nexus_runtime
-
+        ops = self._runtime_ops
+        refresh = ops.get("refresh_live_exchange_state")
+        flatten = ops.get("flatten_all_positions")
+        if refresh is None or flatten is None:
+            return {"ok": False, "error": "runtime_ops_not_bound"}
         try:
-            nexus_runtime.refresh_live_exchange_state(force=True)
+            refresh(force=True)
         except Exception:
             pass
-        return nexus_runtime.flatten_all_positions(
+        return flatten(
             reason="chat_flatten_all",
             source="player_chat",
             trigger_text=str(text or "")[:120],
         )
 
     def _execute_resume_trading(self, text):
-        from backend.services.nexus_runtime import nexus_runtime
-
-        return nexus_runtime.resume_trading(source="player_chat")
+        resume = self._runtime_ops.get("resume_trading")
+        if resume is None:
+            return {"ok": False, "error": "runtime_ops_not_bound"}
+        return resume(source="player_chat")
 
     def _execute_reset_testnet_sandbox(self, text):
-        from backend.services.nexus_runtime import nexus_runtime
-
-        return nexus_runtime.reset_testnet_sandbox(source="player_chat", clear_loss_history=True)
+        reset = self._runtime_ops.get("reset_testnet_sandbox")
+        if reset is None:
+            return {"ok": False, "error": "runtime_ops_not_bound"}
+        return reset(source="player_chat", clear_loss_history=True)
 
     def _llm_player_reply(self, channel_key, text, snapshot):
         if not self.llm_gateway or not getattr(self.llm_gateway, "enabled", lambda: False)():

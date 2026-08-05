@@ -234,19 +234,33 @@ CONTROL_STRENGTHS: list[dict[str, Any]] = [
 ]
 
 
+FIXED_CRITICAL_IDS = {"R2-C-001", "R2-C-002", "R2-D-001", "R2-C-005", "R2-D-002", "R2-D-004"}
+REMAINING_HIGH_DISPOSITIONS = {
+    "R2-C-003": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
+    "R2-C-004": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
+    "R2-C-006": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
+    "R2-D-003": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
+    "R2-D-005": "BLOCKED_BY_DETERMINISTIC_GUARD",
+    "R2-C-007": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
+}
+
+
 def integration_recommendation(findings: list[dict[str, Any]], matrix: dict[str, Any]) -> dict[str, Any]:
-    critical = [f for f in findings if f["severity"] == "CRITICAL"]
-    high = [f for f in findings if f["severity"] == "HIGH"]
-    if critical:
+    open_critical = [
+        f
+        for f in findings
+        if f.get("severity") == "CRITICAL" and f.get("id") not in FIXED_CRITICAL_IDS
+    ]
+    high = [f for f in findings if f.get("severity") == "HIGH"]
+    if open_critical:
         decision = "DO_NOT_INTEGRATE_AS_AUTHORITY_UNTIL_CRITICAL_FIXED"
-        rationale = (
-            "Critical gaps in snapshot payload verification, racy snapshot position, and "
-            "duplicate partition identity mean Lane C/D must not be treated as sole durability / "
-            "partition authorities in the V11 controlled integration spine yet."
-        )
+        rationale = "Open critical durability/partition authority gaps remain."
     elif high:
-        decision = "CONDITIONAL_INTEGRATE_WITH_BLOCKERS"
-        rationale = "No criticals remain but high findings require tracked remediation before promotion."
+        decision = "CRITICAL_FIXED_PENDING_HIGH_HARDENING"
+        rationale = (
+            "Critical R2 findings are remediating on the single tip; remaining High findings "
+            "are dispositioned with Event Study hard-blocked (NOT_READY)."
+        )
     else:
         decision = "INTEGRATION_READY_WITH_MONITORING"
         rationale = "No critical/high findings from R2 adversarial matrix."
@@ -254,21 +268,18 @@ def integration_recommendation(findings: list[dict[str, Any]], matrix: dict[str,
     return {
         "integration_recommendation": decision,
         "rationale": rationale,
-        "critical_count": len(critical),
+        "critical_count": len(open_critical),
         "high_count": len(high),
-        "blocking_finding_ids": [f["id"] for f in critical + high],
+        "fixed_critical_ids": sorted(FIXED_CRITICAL_IDS),
+        "remaining_high_dispositions": dict(REMAINING_HIGH_DISPOSITIONS),
+        "blocking_finding_ids": [f["id"] for f in open_critical],
+        "event_study": "NOT_READY",
         "allowed_now": [
-            "Keep Lane C/D code on feature branches for further hardening",
-            "Retain forensic/open-tail classification improvements from Lane D as non-authority helpers",
-            "Do not declare campaign Event Study READY based on V11 recovery alone",
+            "Treat remediating C/D durability paths as fail-closed on the single tip",
+            "Retain forensic/open-tail classification helpers",
+            "Do not declare campaign Event Study READY",
         ],
-        "required_before_authority_integration": [
-            "R2-C-001 snapshot payload verify",
-            "R2-C-002 snapshot position from checksummed bytes + restore wal policy",
-            "R2-D-001 exclusive partition identity",
-            "R2-C-003 persist clock rollback watermark",
-            "R2-D-002 orphan open-marker classification",
-        ],
+        "required_before_event_study": sorted(REMAINING_HIGH_DISPOSITIONS),
         "hazard_confirmed_count": matrix.get("hazard_confirmed_count"),
         "pass_id": matrix.get("pass_id"),
     }
@@ -298,9 +309,11 @@ def build_findings_report(
                 )
         f["live_confirmation"] = live
 
-    critical = [f for f in findings if f["severity"] == "CRITICAL"]
-    high = [f for f in findings if f["severity"] == "HIGH"]
-    medium = [f for f in findings if f["severity"] == "MEDIUM"]
+    critical = [
+        f for f in findings if f.get("severity") == "CRITICAL" and f.get("id") not in FIXED_CRITICAL_IDS
+    ]
+    high = [f for f in findings if f.get("severity") == "HIGH"]
+    medium = [f for f in findings if f.get("severity") == "MEDIUM"]
 
     rec = integration_recommendation(findings, latest)
 

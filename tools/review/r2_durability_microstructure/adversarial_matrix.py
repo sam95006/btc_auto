@@ -454,28 +454,44 @@ def scenario_duplicate_partition_identity(root: Path) -> ScenarioResult:
         buffer_max_events=1,
         flush_interval_s=0.01,
     )
+    from backend.nexus_microstructure.integrity_recovery_v11.writer_v11 import (
+        PartitionIdentityConflict,
+    )
+
     w1.accept(_evt("BTCUSDT", base, 1))
-    w2.accept(_evt("BTCUSDT", base + 1, 2))
+    conflict_blocked = False
+    conflict_error = None
+    try:
+        w2.accept(_evt("BTCUSDT", base + 1, 2))
+    except PartitionIdentityConflict as exc:
+        conflict_blocked = True
+        conflict_error = str(exc)
     w1.close()
-    w2.close()
+    try:
+        w2.close()
+    except Exception:
+        pass
     gz_files = list(root.rglob("*.jsonl.gz"))
     parts = discover_partitions_v11(root)
-    hazard = len(gz_files) == 1 and len(parts) == 1
+    # Post R2-D-001: exclusive create must block silent overwrite.
+    hazard = (not conflict_blocked) and len(gz_files) == 1 and len(parts) == 1
     return ScenarioResult(
         scenario_id="duplicate_partition_identity",
         title="Duplicate partition identity",
         lane="D",
         severity_if_confirmed="CRITICAL",
         hazard_confirmed=hazard,
-        control_ok=False,
+        control_ok=conflict_blocked,
         summary=(
-            "partition_id is deterministic from session+family+symbol+hour+local_seq with no "
-            "exclusive create; concurrent writers silently overwrite the same .jsonl.gz path."
+            "partition_id exclusive create must reject concurrent writers; "
+            "silent overwrite of the same .jsonl.gz path is forbidden."
         ),
         evidence={
             "gz_file_count": len(gz_files),
             "discovered_count": len(parts),
             "partition_ids": [p["partition_id"] for p in parts],
+            "overwrite_blocked": conflict_blocked,
+            "conflict_error": conflict_error,
         },
     )
 

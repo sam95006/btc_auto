@@ -254,7 +254,16 @@ class NexusRuntime:
         self.llm_gateway = LLMGateway()
         self.advisory_services = AdvisoryServices()
         self.station_chat_log = StationChatLog(runtime_store)
-        self.station_dialogue = StationDialogueService(self.station_chat_log, llm_gateway=self.llm_gateway)
+        self.station_dialogue = StationDialogueService(
+            self.station_chat_log,
+            llm_gateway=self.llm_gateway,
+            runtime_ops={
+                "refresh_live_exchange_state": self.refresh_live_exchange_state,
+                "flatten_all_positions": self.flatten_all_positions,
+                "resume_trading": self.resume_trading,
+                "reset_testnet_sandbox": self.reset_testnet_sandbox,
+            },
+        )
         self.spot_client = BinanceSpotTestnetClient()
         self.futures_client = BinanceFuturesTestnetClient()
         self.market_context_service = MarketContextService(self.spot_client, self.futures_client)
