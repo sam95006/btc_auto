@@ -162,6 +162,42 @@ def run_adversarial_review(report: dict[str, Any] | None = None) -> dict[str, An
         )
     )
 
+    # Pass-2: label vocabulary coverage across allowlist (not every label required,
+    # but factory must exercise cost-destroyed and keep qualification at zero).
+    hist = report.get("label_histogram") or {}
+    qrc_check = report.get("qualification_ready_count")
+    coverage_ok = (
+        int(hist.get("RAW_EDGE_PRESENT_BUT_COST_DESTROYED") or 0) >= 1
+        and qrc_check == 0
+        and all(lbl in ALLOWED_LABELS for lbl in hist)
+    )
+    findings.append(
+        _finding(
+            "ADV_LABEL_COVERAGE_PASS2",
+            severity="HIGH",
+            status="PASS" if coverage_ok else "REMAINING",
+            detail=(
+                "cost_destroyed exercised and all histogram keys allowlisted; "
+                f"histogram={hist}"
+            ),
+        )
+    )
+
+    # Pass-2: no candidate may claim profitability
+    profit_claim = any(
+        str(c.get("label", "")).upper() in {"PROFITABLE", "QUALIFIED", "OOS_PASS"}
+        or c.get("profitability_claimed") is True
+        for c in report["candidates"]
+    )
+    findings.append(
+        _finding(
+            "ADV_NO_PROFITABILITY_CLAIM",
+            severity="CRITICAL",
+            status="PASS" if not profit_claim else "REMAINING",
+            detail="no profitability/qualified claim labels on candidates",
+        )
+    )
+
     remaining = [f for f in findings if f["status"] == "REMAINING"]
     return {
         "schema": "v13_c_strategy_discovery_adversarial_v1",

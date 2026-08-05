@@ -41,34 +41,40 @@ def classify_candidate(result: dict[str, Any]) -> str:
 
     gross = float(result.get("gross_pnl") or 0.0)
     net = float(result.get("net_pnl") or 0.0)
+
+    stability = result.get("stability_measures") or {}
+    fold_pos = int(stability.get("positive_fold_count") or 0)
+    fold_n = int(stability.get("fold_count") or 0)
+    sign_flip = bool(stability.get("sign_flip_across_folds"))
+    research_signal_only = bool(result.get("research_signal_only"))
+
+    # Explicit signal-only research track takes precedence over cost taxonomy.
+    if research_signal_only and trade_count >= MIN_SAMPLE_TRADES:
+        return _assert_label_legal("RESEARCH_SIGNAL_ONLY")
+
+    # Cost destruction is the primary measured failure when gross edge exists.
+    if gross > 0 and net <= 0:
+        _ = COST_DESTROY_RATIO
+        return _assert_label_legal("RAW_EDGE_PRESENT_BUT_COST_DESTROYED")
+
+    if net > 0 and fold_n > 0 and fold_pos >= max(2, fold_n // 2) and not sign_flip:
+        # Development-promising on synthetic folds — NEVER qualified.
+        return _assert_label_legal("DEVELOPMENT_PROMISING_NOT_QUALIFIED")
+
     regime_breakdown = result.get("regime_breakdown") or {}
     if regime_breakdown and trade_count > 0:
         top = max(int(v) for v in regime_breakdown.values())
         if top / trade_count >= REGIME_FRAGILITY_SHARE:
             return _assert_label_legal("REGIME_FRAGILE")
 
-    if gross > 0 and net <= 0:
-        return _assert_label_legal("RAW_EDGE_PRESENT_BUT_COST_DESTROYED")
-
-    stability = result.get("stability_measures") or {}
-    fold_pos = int(stability.get("positive_fold_count") or 0)
-    fold_n = int(stability.get("fold_count") or 0)
-    sign_flip = bool(stability.get("sign_flip_across_folds"))
+    if gross > 0 and net > 0:
+        return _assert_label_legal("RESEARCH_SIGNAL_ONLY")
 
     if gross <= 0 and net <= 0:
-        # Observable signal may still exist without positive gross expectancy.
         if abs(gross) < 1e-9 and trade_count >= MIN_SAMPLE_TRADES:
             return _assert_label_legal("RESEARCH_SIGNAL_ONLY")
         return _assert_label_legal("REJECTED")
 
-    if net > 0 and fold_n > 0 and fold_pos >= max(2, fold_n // 2) and not sign_flip:
-        # Development-promising on synthetic folds — NEVER qualified.
-        return _assert_label_legal("DEVELOPMENT_PROMISING_NOT_QUALIFIED")
-
-    if gross > 0 and net > 0:
-        return _assert_label_legal("RESEARCH_SIGNAL_ONLY")
-
-    _ = COST_DESTROY_RATIO  # documented threshold identity
     return _assert_label_legal("REJECTED")
 
 

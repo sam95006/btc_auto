@@ -120,6 +120,36 @@ def test_artifacts_and_runtime_status(tmp_path: Path) -> None:
     assert '"qualification_ready_count": 0' in text
 
 
+def test_pass2_label_priority_cost_before_regime() -> None:
+    label = classify_candidate(
+        {
+            "trade_count": 40,
+            "gross_pnl": 5.0,
+            "net_pnl": -2.0,
+            "regime_breakdown": {"RANGE": 38, "TREND": 2},
+            "stability_measures": {
+                "fold_count": 4,
+                "positive_fold_count": 0,
+                "sign_flip_across_folds": False,
+            },
+        }
+    )
+    assert label == "RAW_EDGE_PRESENT_BUT_COST_DESTROYED"
+
+
+def test_pass2_label_coverage_includes_cost_destroyed() -> None:
+    report = run_discovery_factory(pass_id=2)
+    hist = report["label_histogram"]
+    assert hist["RAW_EDGE_PRESENT_BUT_COST_DESTROYED"] >= 1
+    assert report["qualification_ready_count"] == 0
+    assert report["development_promising_count"] >= 0
+    for c in report["candidates"]:
+        assert c["label"] in ALLOWED_LABELS
+        assert "PROFITABLE" not in c["label"]
+        if c["label"] == "DEVELOPMENT_PROMISING_NOT_QUALIFIED":
+            assert c["qualified"] is False
+
+
 def test_illegal_qualified_flag_rejected() -> None:
     from backend.nexus_strategy_discovery_factory_v3.classifier import enforce_no_qualification
 

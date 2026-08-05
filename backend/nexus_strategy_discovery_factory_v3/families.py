@@ -76,8 +76,8 @@ FAMILY_SPECS: tuple[MechanismFamilySpec, ...] = (
             "mean-reversion of dislocation is hypothesized after extremes."
         ),
         required_features=("funding_z", "basis_bps", "oi_change"),
-        signal_horizon_bars=16,
-        holding_bars=32,
+        signal_horizon_bars=8,
+        holding_bars=16,
         profile="cost_destroyed",
     ),
     MechanismFamilySpec(

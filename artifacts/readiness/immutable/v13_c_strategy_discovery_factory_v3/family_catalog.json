@@ -54,7 +54,7 @@
   {
     "economic_prior": "Funding and basis dislocations encode crowding / carry stress; mean-reversion of dislocation is hypothesized after extremes.",
     "family_id": "FUNDING_BASIS_DISLOCATION",
-    "holding_bars": 32,
+    "holding_bars": 16,
     "profile": "cost_destroyed",
     "required_features": [
       "funding_z",
@@ -62,7 +62,7 @@
       "oi_change"
     ],
     "semantic_mechanism_id": "MECH_FUNDING_BASIS_DISLOCATION_V1",
-    "signal_horizon_bars": 16
+    "signal_horizon_bars": 8
   },
   {
     "economic_prior": "Volatility regime transitions (expansion vs compression) alter expected range; breakout/mean-revert conditioned on vol state.",

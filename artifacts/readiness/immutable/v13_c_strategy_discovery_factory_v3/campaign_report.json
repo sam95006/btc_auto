@@ -18,16 +18,16 @@
   "candidate_configuration_count": 10,
   "candidates": [
     {
-      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "code_checksum": "c45c02ba6e6b39ddd4729cd916f0d02864de74087728af649f7c77274ffa0af1",
       "cost_components": {
         "cancel_replace_cost": "0",
         "entry_fee": "22.1586034294166699025",
         "exit_fee": "22.1586034294166699025",
-        "funding_cost": "4.028836987166667255",
-        "market_impact_approximation": "8.035122678259057645843952860",
-        "partial_fill_cost": "0.410",
-        "slippage_cost": "16.115347948666669020",
-        "spread_cost": "39.93031217646401739556207773"
+        "funding_cost": "0.00000000000000",
+        "market_impact_approximation": "2.0144184935833336275",
+        "partial_fill_cost": "0",
+        "slippage_cost": "8.057673974333334510",
+        "spread_cost": "8.057673974333334510"
       },
       "cost_model_version": "founder-conservative-v1-1-2026-08-05",
       "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
@@ -36,23 +36,24 @@
       "failure_reasons": [],
       "family_id": "ORDER_FLOW_IMBALANCE",
       "formal_walk_forward_executed": false,
-      "gross_pnl": 100.72092467916669,
+      "gross_pnl": 241.73021923000005,
       "implementation_rejected": false,
-      "label": "REGIME_FRAGILE",
+      "label": "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
       "multiple_comparison_metadata": {
         "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
         "configs_tested_for_family": 1,
         "family_count": 10,
         "total_candidates": 10
       },
-      "net_pnl": -12.115901970223069,
+      "net_pnl": 179.2832459289167,
       "oos_executed": false,
-      "parameter_checksum": "47c0f3c3aac209c2d0c25097a1f199ee6200a5ed935c3139d72d822c3bc24ee5",
+      "parameter_checksum": "6337e227397bd05d20eea0664ea0257b0746c988119e1f9cb953e21eac265238",
       "parameters": {
         "cancel_replace_cycles": 0,
         "cooldown_bars": 4,
         "extra_fills": 1,
         "family_id": "ORDER_FLOW_IMBALANCE",
+        "force_research_signal": false,
         "holding_bars": 8,
         "notional_usdt": 500.0,
         "profile": "promising",
@@ -72,21 +73,22 @@
         "RANGE": 62,
         "TREND": 20
       },
+      "research_signal_only": false,
       "semantic_mechanism_id": "MECH_OFI_TOPBOOK_PRESSURE_V1",
       "stability_measures": {
         "development_folds_only": true,
         "fold_count": 4,
         "fold_net_pnls": [
-          -2.095231676073078,
-          -3.3493948858534246,
-          -3.4994729136475167,
-          -3.1718024946490506
+          43.81343692484587,
+          43.373953341159066,
+          43.455975923029705,
+          48.63987973988205
         ],
         "formal_walk_forward": false,
-        "positive_fold_count": 0,
+        "positive_fold_count": 4,
         "sign_flip_across_folds": false
       },
-      "status": "REGIME_FRAGILE",
+      "status": "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
       "trade_count": 82,
       "trades_sample": [
         {
@@ -94,16 +96,16 @@
             "cancel_replace_cost": "0",
             "entry_fee": "0.272197628491552445",
             "exit_fee": "0.272197628491552445",
-            "funding_cost": "0.04949047790755499",
-            "market_impact_approximation": "0.05034233703278345933706054336",
-            "partial_fill_cost": "0.005",
-            "slippage_cost": "0.19796191163021996",
-            "spread_cost": "0.4183908640486381487775496634"
+            "funding_cost": "0.0000000000000",
+            "market_impact_approximation": "0.024745238953777495",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.09898095581510998",
+            "spread_cost": "0.09898095581510998"
           },
           "entry_ts_ms": 1700002520000,
           "exit_ts_ms": 1700003000000,
-          "gross_pnl": "1.23726194768887475",
-          "net_pnl": "-0.02831889991342669811461020676",
+          "gross_pnl": "2.96942867445329940",
+          "net_pnl": "2.202326266886197055",
           "regime": "TREND",
           "side": "SHORT",
           "signal": -0.9981419108803714
@@ -113,16 +115,16 @@
             "cancel_replace_cost": "0",
             "entry_fee": "0.271606223352626580",
             "exit_fee": "0.271606223352626580",
-            "funding_cost": "0.04938294970047756",
-            "market_impact_approximation": "0.1114995907124806395325924975",
-            "partial_fill_cost": "0.005",
-            "slippage_cost": "0.19753179880191024",
-            "spread_cost": "0.4636586504113432790037382486"
+            "funding_cost": "0.0000000000000",
+            "market_impact_approximation": "0.02469147485023878",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.09876589940095512",
+            "spread_cost": "0.09876589940095512"
           },
           "entry_ts_ms": 1700003000000,
           "exit_ts_ms": 1700003480000,
-          "gross_pnl": "1.23457374251193900",
-          "net_pnl": "-0.1357116938195258785363307461",
+          "gross_pnl": "2.96297698202865360",
+          "net_pnl": "2.197541261671251420",
           "regime": "RANGE",
           "side": "LONG",
           "signal": 0.9351845765335449
@@ -132,16 +134,16 @@
             "cancel_replace_cost": "0",
             "entry_fee": "0.271369624038084660",
             "exit_fee": "0.271369624038084660",
-            "funding_cost": "0.04933993164328812",
-            "market_impact_approximation": "0.08220784599446582154779705405",
-            "partial_fill_cost": "0.005",
-            "slippage_cost": "0.19735972657315248",
-            "spread_cost": "0.2321882517947442280746258770"
+            "funding_cost": "0.0000000000000",
+            "market_impact_approximation": "0.02466996582164406",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.09867986328657624",
+            "spread_cost": "0.09867986328657624"
           },
           "entry_ts_ms": 1700003300000,
           "exit_ts_ms": 1700003780000,
-          "gross_pnl": "1.23349829108220300",
-          "net_pnl": "0.1246632870003830303775770690",
+          "gross_pnl": "2.96039589859728720",
+          "net_pnl": "2.195626958126321340",
           "regime": "RANGE",
           "side": "SHORT",
           "signal": -0.8937068944549437
@@ -149,43 +151,42 @@
       ]
     },
     {
-      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "code_checksum": "c45c02ba6e6b39ddd4729cd916f0d02864de74087728af649f7c77274ffa0af1",
       "cost_components": {
-        "cancel_replace_cost": "0",
-        "entry_fee": "0",
-        "exit_fee": "0",
-        "funding_cost": "0",
-        "market_impact_approximation": "0",
-        "partial_fill_cost": "0",
-        "slippage_cost": "0",
-        "spread_cost": "0"
+        "cancel_replace_cost": "0.65",
+        "entry_fee": "17.5810304605605364585",
+        "exit_fee": "17.5810304605605364585",
+        "funding_cost": "3.196550992829188447",
+        "market_impact_approximation": "25.572407942633507576",
+        "partial_fill_cost": "0.325",
+        "slippage_cost": "12.786203971316753788",
+        "spread_cost": "32.65463587429932360070756193"
       },
       "cost_model_version": "founder-conservative-v1-1-2026-08-05",
       "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
       "data_quality_blocked": false,
       "economic_prior": "Forced liquidation bursts create liquidity voids and short-horizon continuation or snapback; requires event timing integrity.",
-      "failure_reasons": [
-        "ALL_EVENTS_IN_DATA_QUALITY_GAP"
-      ],
+      "failure_reasons": [],
       "family_id": "LIQUIDATION_CASCADE",
       "formal_walk_forward_executed": false,
-      "gross_pnl": 0.0,
+      "gross_pnl": 11.18792847490216,
       "implementation_rejected": false,
-      "label": "INSUFFICIENT_SAMPLE",
+      "label": "RAW_EDGE_PRESENT_BUT_COST_DESTROYED",
       "multiple_comparison_metadata": {
         "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
         "configs_tested_for_family": 1,
         "family_count": 10,
         "total_candidates": 10
       },
-      "net_pnl": 0.0,
+      "net_pnl": -99.15893122729769,
       "oos_executed": false,
-      "parameter_checksum": "e842606bf472b6b266c971dd7811a253cb0035ccc20f70d0cefc7f148112534b",
+      "parameter_checksum": "2b64df727a29794b036d213b747aa970517ec2fbbb509cc10379a79befe87a20",
       "parameters": {
         "cancel_replace_cycles": 1,
         "cooldown_bars": 4,
         "extra_fills": 1,
         "family_id": "LIQUIDATION_CASCADE",
+        "force_research_signal": false,
         "holding_bars": 6,
         "notional_usdt": 500.0,
         "profile": "cost_destroyed",
@@ -201,31 +202,98 @@
       },
       "qualification_ready": false,
       "qualified": false,
-      "regime_breakdown": {},
+      "regime_breakdown": {
+        "RANGE": 39,
+        "TREND": 26
+      },
+      "research_signal_only": false,
       "semantic_mechanism_id": "MECH_LIQ_CASCADE_RESPONSE_V1",
       "stability_measures": {
         "development_folds_only": true,
         "fold_count": 4,
-        "fold_net_pnls": [],
+        "fold_net_pnls": [
+          -23.791232432938337,
+          -24.589567139997307,
+          -24.948067607961875,
+          -25.83006404640017
+        ],
         "formal_walk_forward": false,
         "positive_fold_count": 0,
         "sign_flip_across_folds": false
       },
-      "status": "INSUFFICIENT_SAMPLE",
-      "trade_count": 0,
-      "trades_sample": []
+      "status": "RAW_EDGE_PRESENT_BUT_COST_DESTROYED",
+      "trade_count": 65,
+      "trades_sample": [
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0.01",
+            "entry_fee": "0.272197628491552445",
+            "exit_fee": "0.272197628491552445",
+            "funding_cost": "0.04949047790755499",
+            "market_impact_approximation": "0.39592382326043992",
+            "partial_fill_cost": "0.005",
+            "slippage_cost": "0.19796191163021996",
+            "spread_cost": "0.4183908640486381487775496634"
+          },
+          "entry_ts_ms": 1700002520000,
+          "exit_ts_ms": 1700002880000,
+          "gross_pnl": "0.173216672676442465",
+          "net_pnl": "-1.447945661153515443777549663",
+          "regime": "TREND",
+          "side": "SHORT",
+          "signal": -1.0
+        },
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0.01",
+            "entry_fee": "0.272305226350161180",
+            "exit_fee": "0.272305226350161180",
+            "funding_cost": "0.04951004115457476",
+            "market_impact_approximation": "0.39608032923659808",
+            "partial_fill_cost": "0.005",
+            "slippage_cost": "0.19804016461829904",
+            "spread_cost": "0.3752475772139668013796623276"
+          },
+          "entry_ts_ms": 1700003120000,
+          "exit_ts_ms": 1700003480000,
+          "gross_pnl": "0.173285144041011660",
+          "net_pnl": "-1.405203420882749381379662328",
+          "regime": "RANGE",
+          "side": "LONG",
+          "signal": 1.0
+        },
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0.01",
+            "entry_fee": "0.271125067948834220",
+            "exit_fee": "0.271125067948834220",
+            "funding_cost": "0.04929546689978804",
+            "market_impact_approximation": "0.39436373519830432",
+            "partial_fill_cost": "0.005",
+            "slippage_cost": "0.19718186759915216",
+            "spread_cost": "0.2861986722703770028593851902"
+          },
+          "entry_ts_ms": 1700003720000,
+          "exit_ts_ms": 1700004080000,
+          "gross_pnl": "0.172534134149258140",
+          "net_pnl": "-1.311755743716031822859385190",
+          "regime": "RANGE",
+          "side": "LONG",
+          "signal": 1.0
+        }
+      ]
     },
     {
-      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "code_checksum": "c45c02ba6e6b39ddd4729cd916f0d02864de74087728af649f7c77274ffa0af1",
       "cost_components": {
         "cancel_replace_cost": "0",
-        "entry_fee": "16.7541339815061603435",
-        "exit_fee": "16.7541339815061603435",
-        "funding_cost": "3.046206178455665517",
-        "market_impact_approximation": "6.349255664752274131221345019",
+        "entry_fee": "18.1091517109711427175",
+        "exit_fee": "18.1091517109711427175",
+        "funding_cost": "0.00000000000000",
+        "market_impact_approximation": "0.82314325958959739625",
         "partial_fill_cost": "0",
-        "slippage_cost": "12.184824713822662068",
-        "spread_cost": "32.69426471484049407310849866"
+        "slippage_cost": "6.585146076716779170",
+        "spread_cost": "6.585146076716779170"
       },
       "cost_model_version": "founder-conservative-v1-1-2026-08-05",
       "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
@@ -234,23 +302,24 @@
       "failure_reasons": [],
       "family_id": "ABSORPTION",
       "formal_walk_forward_executed": false,
-      "gross_pnl": 1.5231030892278328,
+      "gross_pnl": 0.32925730383583895,
       "implementation_rejected": false,
-      "label": "REGIME_FRAGILE",
+      "label": "RESEARCH_SIGNAL_ONLY",
       "multiple_comparison_metadata": {
         "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
         "configs_tested_for_family": 1,
         "family_count": 10,
         "total_candidates": 10
       },
-      "net_pnl": -86.25971614565559,
+      "net_pnl": -49.8824815311296,
       "oos_executed": false,
-      "parameter_checksum": "4214021273fca657f7719d28a6f10af5acac6923c316018b4ac6fabd3da9a44d",
+      "parameter_checksum": "5ca43ebf9d8da70bd1dc3b87fb01f7df3e24d576d788e6f25e7f71f633389cdc",
       "parameters": {
         "cancel_replace_cycles": 0,
         "cooldown_bars": 6,
         "extra_fills": 0,
         "family_id": "ABSORPTION",
+        "force_research_signal": true,
         "holding_bars": 12,
         "notional_usdt": 500.0,
         "profile": "signal_only",
@@ -267,41 +336,61 @@
       "qualification_ready": false,
       "qualified": false,
       "regime_breakdown": {
-        "RANGE": 55,
-        "TREND": 7
+        "RANGE": 59,
+        "TREND": 8
       },
+      "research_signal_only": true,
       "semantic_mechanism_id": "MECH_ABSORPTION_PASSIVE_DEFENSE_V1",
       "stability_measures": {
         "development_folds_only": true,
         "fold_count": 4,
         "fold_net_pnls": [
-          -20.843641126018515,
-          -20.423215047322657,
-          -21.89139077936566,
-          -23.10146919294875
+          -11.92665238882954,
+          -11.848351468942123,
+          -11.816060868339235,
+          -14.291416805018704
         ],
         "formal_walk_forward": false,
         "positive_fold_count": 0,
         "sign_flip_across_folds": false
       },
-      "status": "REGIME_FRAGILE",
-      "trade_count": 62,
+      "status": "RESEARCH_SIGNAL_ONLY",
+      "trade_count": 67,
       "trades_sample": [
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.272853962807389315",
+            "exit_fee": "0.272853962807389315",
+            "funding_cost": "0.0000000000000",
+            "market_impact_approximation": "0.0124024528548813325",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.09921962283905066",
+            "spread_cost": "0.09921962283905066"
+          },
+          "entry_ts_ms": 1700002460000,
+          "exit_ts_ms": 1700003180000,
+          "gross_pnl": "0.004960981141952533",
+          "net_pnl": "-0.7515886430058087495",
+          "regime": "RANGE",
+          "side": "LONG",
+          "signal": 1.0
+        },
         {
           "cost_components": {
             "cancel_replace_cost": "0",
             "entry_fee": "0.270851348704989910",
             "exit_fee": "0.270851348704989910",
-            "funding_cost": "0.04924569976454362",
-            "market_impact_approximation": "0.1629655555607658043684705122",
+            "funding_cost": "0.0000000000000",
+            "market_impact_approximation": "0.012311424941135905",
             "partial_fill_cost": "0",
-            "slippage_cost": "0.19698279905817448",
-            "spread_cost": "0.37210520822508019334387076"
+            "slippage_cost": "0.09849139952908724",
+            "spread_cost": "0.09849139952908724"
           },
           "entry_ts_ms": 1700002820000,
           "exit_ts_ms": 1700003540000,
-          "gross_pnl": "0.024622849882271810",
-          "net_pnl": "-1.298379110136272107712341272",
+          "gross_pnl": "0.004924569976454362",
+          "net_pnl": "-0.746072351432835843",
           "regime": "RANGE",
           "side": "SHORT",
           "signal": -1.0
@@ -311,52 +400,33 @@
             "cancel_replace_cost": "0",
             "entry_fee": "0.2719087302534445425",
             "exit_fee": "0.2719087302534445425",
-            "funding_cost": "0.049437950955171735",
-            "market_impact_approximation": "0.1689058298746208806699625657",
+            "funding_cost": "0.00000000000000",
+            "market_impact_approximation": "0.01235948773879293375",
             "partial_fill_cost": "0",
-            "slippage_cost": "0.19775180382068694",
-            "spread_cost": "0.6888376469133691134263046554"
+            "slippage_cost": "0.098875901910343470",
+            "spread_cost": "0.098875901910343470"
           },
           "entry_ts_ms": 1700003180000,
           "exit_ts_ms": 1700003900000,
-          "gross_pnl": "0.0247189754775858675",
-          "net_pnl": "-1.624031716593151886596267221",
+          "gross_pnl": "0.0049437950955171735",
+          "net_pnl": "-0.74898495697085178525",
           "regime": "RANGE",
-          "side": "LONG",
-          "signal": 1.0
-        },
-        {
-          "cost_components": {
-            "cancel_replace_cost": "0",
-            "entry_fee": "0.2709760046152409470",
-            "exit_fee": "0.2709760046152409470",
-            "funding_cost": "0.049268364475498354",
-            "market_impact_approximation": "0.07952621427218915822015454522",
-            "partial_fill_cost": "0",
-            "slippage_cost": "0.197073457901993416",
-            "spread_cost": "0.8264340611577737241494485222"
-          },
-          "entry_ts_ms": 1700003540000,
-          "exit_ts_ms": 1700004260000,
-          "gross_pnl": "0.0246341822377491770",
-          "net_pnl": "-1.669619924800187369369603067",
-          "regime": "RANGE",
-          "side": "LONG",
-          "signal": 1.0
+          "side": "SHORT",
+          "signal": -1.0
         }
       ]
     },
     {
-      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "code_checksum": "c45c02ba6e6b39ddd4729cd916f0d02864de74087728af649f7c77274ffa0af1",
       "cost_components": {
         "cancel_replace_cost": "0",
         "entry_fee": "12.1610800632500035615",
         "exit_fee": "12.1610800632500035615",
-        "funding_cost": "2.211105466045455193",
-        "market_impact_approximation": "4.129015496944170755382536108",
-        "partial_fill_cost": "0.225",
-        "slippage_cost": "8.844421864181820772",
-        "spread_cost": "22.37519678060430925701776532"
+        "funding_cost": "0.00000000000000",
+        "market_impact_approximation": "1.1055527330227275965",
+        "partial_fill_cost": "0",
+        "slippage_cost": "4.422210932090910386",
+        "spread_cost": "4.422210932090910386"
       },
       "cost_model_version": "founder-conservative-v1-1-2026-08-05",
       "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
@@ -365,23 +435,24 @@
       "failure_reasons": [],
       "family_id": "AGGRESSION_PERSISTENCE",
       "formal_walk_forward_executed": false,
-      "gross_pnl": 55.27763665113638,
+      "gross_pnl": 132.6663279627273,
       "implementation_rejected": false,
-      "label": "REGIME_FRAGILE",
+      "label": "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
       "multiple_comparison_metadata": {
         "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
         "configs_tested_for_family": 1,
         "family_count": 10,
         "total_candidates": 10
       },
-      "net_pnl": -6.8292630831393835,
+      "net_pnl": 98.39419323902275,
       "oos_executed": false,
-      "parameter_checksum": "adb3d9b00eaba8f18bb530c2831a5e4131291cee8f6508ae89b94b3eda7cb32e",
+      "parameter_checksum": "78a1d80d1edfce0e272adb55023d9c0eb424065417f86a477b8fc0e1a2a41af7",
       "parameters": {
         "cancel_replace_cycles": 0,
         "cooldown_bars": 8,
         "extra_fills": 1,
         "family_id": "AGGRESSION_PERSISTENCE",
+        "force_research_signal": false,
         "holding_bars": 10,
         "notional_usdt": 500.0,
         "profile": "promising",
@@ -401,21 +472,22 @@
         "RANGE": 39,
         "TREND": 6
       },
+      "research_signal_only": false,
       "semantic_mechanism_id": "MECH_AGGRESSION_PERSISTENCE_V1",
       "stability_measures": {
         "development_folds_only": true,
         "fold_count": 4,
         "fold_net_pnls": [
-          -1.963393792111027,
-          -1.5486260977872515,
-          -2.7731432677161236,
-          -0.5440999255249812
+          24.09128744751275,
+          23.866909735883162,
+          23.918553238288283,
+          26.517442817338562
         ],
         "formal_walk_forward": false,
-        "positive_fold_count": 0,
+        "positive_fold_count": 4,
         "sign_flip_across_folds": false
       },
-      "status": "REGIME_FRAGILE",
+      "status": "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
       "trade_count": 45,
       "trades_sample": [
         {
@@ -423,16 +495,16 @@
             "cancel_replace_cost": "0",
             "entry_fee": "0.271232802176938635",
             "exit_fee": "0.271232802176938635",
-            "funding_cost": "0.04931505494126157",
-            "market_impact_approximation": "0.04931505494126157",
-            "partial_fill_cost": "0.005",
-            "slippage_cost": "0.19726021976504628",
-            "spread_cost": "0.5775664213794220843646500978"
+            "funding_cost": "0.0000000000000",
+            "market_impact_approximation": "0.024657527470630785",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.09863010988252314",
+            "spread_cost": "0.09863010988252314"
           },
           "entry_ts_ms": 1700002940000,
           "exit_ts_ms": 1700003540000,
-          "gross_pnl": "1.23287637353153925",
-          "net_pnl": "-0.1880459818493295243646500978",
+          "gross_pnl": "2.95890329647569420",
+          "net_pnl": "2.194519944886139865",
           "regime": "RANGE",
           "side": "LONG",
           "signal": 1.0
@@ -442,16 +514,16 @@
             "cancel_replace_cost": "0",
             "entry_fee": "0.2710898522025631630",
             "exit_fee": "0.2710898522025631630",
-            "funding_cost": "0.049289064036829666",
-            "market_impact_approximation": "0.1102579216043159457002860681",
-            "partial_fill_cost": "0.005",
-            "slippage_cost": "0.197156256147318664",
-            "spread_cost": "0.7389644495684495233680712774"
+            "funding_cost": "0.00000000000000",
+            "market_impact_approximation": "0.024644532018414833",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.098578128073659332",
+            "spread_cost": "0.098578128073659332"
           },
           "entry_ts_ms": 1700003480000,
           "exit_ts_ms": 1700004080000,
-          "gross_pnl": "1.232226600920741650",
-          "net_pnl": "-0.4106207948412984750683573455",
+          "gross_pnl": "2.957343842209779960",
+          "net_pnl": "2.1933633496389201370",
           "regime": "RANGE",
           "side": "LONG",
           "signal": 1.0
@@ -461,16 +533,16 @@
             "cancel_replace_cost": "0",
             "entry_fee": "0.2699213395865349330",
             "exit_fee": "0.2699213395865349330",
-            "funding_cost": "0.049076607197551806",
-            "market_impact_approximation": "0.049076607197551806",
-            "partial_fill_cost": "0.005",
-            "slippage_cost": "0.196306428790207224",
-            "spread_cost": "0.3243583727730215688768832876"
+            "funding_cost": "0.00000000000000",
+            "market_impact_approximation": "0.024538303598775903",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.098153214395103612",
+            "spread_cost": "0.098153214395103612"
           },
           "entry_ts_ms": 1700004320000,
           "exit_ts_ms": 1700004920000,
-          "gross_pnl": "1.226915179938795150",
-          "net_pnl": "0.0632544848073928791231167124",
+          "gross_pnl": "2.944596431853108360",
+          "net_pnl": "2.1839090202910553670",
           "regime": "RANGE",
           "side": "LONG",
           "signal": 1.0
@@ -478,16 +550,16 @@
       ]
     },
     {
-      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "code_checksum": "c45c02ba6e6b39ddd4729cd916f0d02864de74087728af649f7c77274ffa0af1",
       "cost_components": {
-        "cancel_replace_cost": "0.08",
-        "entry_fee": "2.1547817823007263480",
-        "exit_fee": "2.1547817823007263480",
-        "funding_cost": "0.391778505872859336",
-        "market_impact_approximation": "3.134228046982874688",
-        "partial_fill_cost": "0.040",
-        "slippage_cost": "1.567114023491437344",
-        "spread_cost": "4.392866841425450401317566076"
+        "cancel_replace_cost": "0.44",
+        "entry_fee": "11.8917838052373087255",
+        "exit_fee": "11.8917838052373087255",
+        "funding_cost": "2.162142510043147041",
+        "market_impact_approximation": "17.297140080345176328",
+        "partial_fill_cost": "0.220",
+        "slippage_cost": "8.648570040172588164",
+        "spread_cost": "22.18195542354497500965958831"
       },
       "cost_model_version": "founder-conservative-v1-1-2026-08-05",
       "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
@@ -496,29 +568,30 @@
       "failure_reasons": [],
       "family_id": "FUNDING_BASIS_DISLOCATION",
       "formal_walk_forward_executed": false,
-      "gross_pnl": 1.3712247705550076,
+      "gross_pnl": 7.567498785151015,
       "implementation_rejected": false,
-      "label": "INSUFFICIENT_SAMPLE",
+      "label": "RAW_EDGE_PRESENT_BUT_COST_DESTROYED",
       "multiple_comparison_metadata": {
         "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
         "configs_tested_for_family": 1,
         "family_count": 10,
         "total_candidates": 10
       },
-      "net_pnl": -12.544326211819067,
+      "net_pnl": -67.16587687942949,
       "oos_executed": false,
-      "parameter_checksum": "fc35439870a2c69b8f70e3c8ecd0d1324eb827e5d3d4b96e25e53590df06a051",
+      "parameter_checksum": "4bf46787ac5ee53a86cd3106130e530a384bb00ffda18cbbcf58e2bcfeab10ec",
       "parameters": {
         "cancel_replace_cycles": 1,
-        "cooldown_bars": 16,
+        "cooldown_bars": 8,
         "extra_fills": 1,
         "family_id": "FUNDING_BASIS_DISLOCATION",
-        "holding_bars": 32,
+        "force_research_signal": false,
+        "holding_bars": 16,
         "notional_usdt": 500.0,
         "profile": "cost_destroyed",
         "qty": 0.01,
         "semantic_mechanism_id": "MECH_FUNDING_BASIS_DISLOCATION_V1",
-        "signal_horizon_bars": 16
+        "signal_horizon_bars": 8
       },
       "point_in_time_proof": {
         "future_bar_reference_count": 0,
@@ -529,120 +602,125 @@
       "qualification_ready": false,
       "qualified": false,
       "regime_breakdown": {
-        "TREND": 8
+        "RANGE": 30,
+        "TREND": 14
       },
+      "research_signal_only": false,
       "semantic_mechanism_id": "MECH_FUNDING_BASIS_DISLOCATION_V1",
       "stability_measures": {
         "development_folds_only": true,
         "fold_count": 4,
         "fold_net_pnls": [
-          -2.791232949299852,
-          -3.550881449638101,
-          -3.032026192529065,
-          -3.170185620352049
+          -17.22973121593031,
+          -16.82447419951046,
+          -15.948459312744644,
+          -17.163212151244075
         ],
         "formal_walk_forward": false,
         "positive_fold_count": 0,
         "sign_flip_across_folds": false
       },
-      "status": "INSUFFICIENT_SAMPLE",
-      "trade_count": 8,
+      "status": "RAW_EDGE_PRESENT_BUT_COST_DESTROYED",
+      "trade_count": 44,
       "trades_sample": [
         {
           "cost_components": {
             "cancel_replace_cost": "0.01",
-            "entry_fee": "0.272197628491552445",
-            "exit_fee": "0.272197628491552445",
-            "funding_cost": "0.04949047790755499",
-            "market_impact_approximation": "0.39592382326043992",
+            "entry_fee": "0.272853962807389315",
+            "exit_fee": "0.272853962807389315",
+            "funding_cost": "0.04960981141952533",
+            "market_impact_approximation": "0.39687849135620264",
             "partial_fill_cost": "0.005",
-            "slippage_cost": "0.19796191163021996",
-            "spread_cost": "0.4183908640486381487775496634"
+            "slippage_cost": "0.19843924567810132",
+            "spread_cost": "0.7115470311854739462063693158"
           },
-          "entry_ts_ms": 1700002520000,
-          "exit_ts_ms": 1700004440000,
-          "gross_pnl": "0.173216672676442465",
-          "net_pnl": "-1.447945661153515443777549663",
-          "regime": "TREND",
+          "entry_ts_ms": 1700002460000,
+          "exit_ts_ms": 1700003420000,
+          "gross_pnl": "0.173634339968338655",
+          "net_pnl": "-1.743548165285743211206369316",
+          "regime": "RANGE",
           "side": "LONG",
-          "signal": 0.40855135612854526
+          "signal": 0.20384376756160297
         },
         {
           "cost_components": {
             "cancel_replace_cost": "0.01",
-            "entry_fee": "0.268639719729740425",
-            "exit_fee": "0.268639719729740425",
-            "funding_cost": "0.04884358540540735",
-            "market_impact_approximation": "0.3907486832432588",
+            "entry_fee": "0.272305226350161180",
+            "exit_fee": "0.272305226350161180",
+            "funding_cost": "0.04951004115457476",
+            "market_impact_approximation": "0.39608032923659808",
             "partial_fill_cost": "0.005",
-            "slippage_cost": "0.1953743416216294",
-            "spread_cost": "0.3269937873354859351297214008"
+            "slippage_cost": "0.19804016461829904",
+            "spread_cost": "0.3752475772139668013796623276"
           },
-          "entry_ts_ms": 1700005400000,
-          "exit_ts_ms": 1700007320000,
-          "gross_pnl": "0.170952548918925725",
-          "net_pnl": "-1.343287288146336610129721401",
-          "regime": "TREND",
+          "entry_ts_ms": 1700003120000,
+          "exit_ts_ms": 1700004080000,
+          "gross_pnl": "0.173285144041011660",
+          "net_pnl": "-1.405203420882749381379662328",
+          "regime": "RANGE",
           "side": "SHORT",
-          "signal": -0.3762757683660857
+          "signal": -0.2932380687740099
         },
         {
           "cost_components": {
             "cancel_replace_cost": "0.01",
-            "entry_fee": "0.269972473283498810",
-            "exit_fee": "0.269972473283498810",
-            "funding_cost": "0.04908590423336342",
-            "market_impact_approximation": "0.39268723386690736",
+            "entry_fee": "0.271125067948834220",
+            "exit_fee": "0.271125067948834220",
+            "funding_cost": "0.04929546689978804",
+            "market_impact_approximation": "0.39436373519830432",
             "partial_fill_cost": "0.005",
-            "slippage_cost": "0.19634361693345368",
-            "spread_cost": "0.8225487669074313670307852238"
+            "slippage_cost": "0.19718186759915216",
+            "spread_cost": "0.2861986722703770028593851902"
           },
-          "entry_ts_ms": 1700009660000,
-          "exit_ts_ms": 1700011580000,
-          "gross_pnl": "0.171800664816771970",
-          "net_pnl": "-1.843809803691381477030785224",
-          "regime": "TREND",
-          "side": "LONG",
-          "signal": 0.3941751254476083
+          "entry_ts_ms": 1700003720000,
+          "exit_ts_ms": 1700004680000,
+          "gross_pnl": "0.172534134149258140",
+          "net_pnl": "-1.311755743716031822859385190",
+          "regime": "RANGE",
+          "side": "SHORT",
+          "signal": -0.3058148477705696
         }
       ]
     },
     {
-      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "code_checksum": "c45c02ba6e6b39ddd4729cd916f0d02864de74087728af649f7c77274ffa0af1",
       "cost_components": {
         "cancel_replace_cost": "0",
         "entry_fee": "7.2981740401949110600",
         "exit_fee": "7.2981740401949110600",
-        "funding_cost": "1.326940734580892920",
-        "market_impact_approximation": "2.501974268349847559147377673",
+        "funding_cost": "0.00000000000000",
+        "market_impact_approximation": "0.99520555093566969000",
         "partial_fill_cost": "0",
-        "slippage_cost": "5.307762938323571680",
-        "spread_cost": "13.87344435845521453621129644"
+        "slippage_cost": "2.653881469161785840",
+        "spread_cost": "2.653881469161785840"
       },
       "cost_model_version": "founder-conservative-v1-1-2026-08-05",
       "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
       "data_quality_blocked": false,
       "economic_prior": "Volatility regime transitions (expansion vs compression) alter expected range; breakout/mean-revert conditioned on vol state.",
-      "failure_reasons": [],
+      "failure_reasons": [
+        "REGIME_CONCENTRATION_AND_FOLD_INSTABILITY"
+      ],
       "family_id": "VOL_EXPANSION_COMPRESSION",
       "formal_walk_forward_executed": false,
-      "gross_pnl": 0.2855085786563841,
+      "gross_pnl": 39.29022227570565,
       "implementation_rejected": false,
-      "label": "RAW_EDGE_PRESENT_BUT_COST_DESTROYED",
+      "label": "REGIME_FRAGILE",
       "multiple_comparison_metadata": {
         "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
         "configs_tested_for_family": 1,
         "family_count": 10,
         "total_candidates": 10
       },
-      "net_pnl": -37.32096180144296,
+      "net_pnl": 18.390905706056586,
       "oos_executed": false,
-      "parameter_checksum": "44a1eea714c07ad7ebea75f23022c26c3af01c4b9a466b9161bc2f71686b2735",
+      "parameter_checksum": "cfe8d58126ca272da4b78807e2b0daf3e72bf676ae8aa6075f1eecabec5e4e68",
       "parameters": {
         "cancel_replace_cycles": 0,
         "cooldown_bars": 12,
         "extra_fills": 0,
         "family_id": "VOL_EXPANSION_COMPRESSION",
+        "force_research_signal": false,
         "holding_bars": 16,
         "notional_usdt": 500.0,
         "profile": "regime_fragile",
@@ -662,21 +740,22 @@
         "RANGE": 11,
         "TREND": 16
       },
+      "research_signal_only": false,
       "semantic_mechanism_id": "MECH_VOL_EXPAND_COMPRESS_V1",
       "stability_measures": {
         "development_folds_only": true,
         "fold_count": 4,
         "fold_net_pnls": [
-          -7.514295468802834,
-          -5.962100996432941,
-          -9.197695946905235,
-          -14.646869389301957
+          6.434221027795583,
+          10.58301369832996,
+          2.205400571128621,
+          -0.8317295911975775
         ],
         "formal_walk_forward": false,
-        "positive_fold_count": 0,
-        "sign_flip_across_folds": false
+        "positive_fold_count": 1,
+        "sign_flip_across_folds": true
       },
-      "status": "RAW_EDGE_PRESENT_BUT_COST_DESTROYED",
+      "status": "REGIME_FRAGILE",
       "trade_count": 27,
       "trades_sample": [
         {
@@ -684,16 +763,16 @@
             "cancel_replace_cost": "0",
             "entry_fee": "0.272197628491552445",
             "exit_fee": "0.272197628491552445",
-            "funding_cost": "0.04949047790755499",
-            "market_impact_approximation": "0.05034233703278345933706054336",
+            "funding_cost": "0.0000000000000",
+            "market_impact_approximation": "0.0371178584306662425",
             "partial_fill_cost": "0",
-            "slippage_cost": "0.19796191163021996",
-            "spread_cost": "0.4183908640486381487775496634"
+            "slippage_cost": "0.09898095581510998",
+            "spread_cost": "0.09898095581510998"
           },
           "entry_ts_ms": 1700002520000,
           "exit_ts_ms": 1700003480000,
-          "gross_pnl": "-0.59388573489065988",
-          "net_pnl": "-1.854466582492961328114610206",
+          "gross_pnl": "-0.24745238953777495",
+          "net_pnl": "-1.0269274165817660425",
           "regime": "TREND",
           "side": "LONG",
           "signal": 1.0
@@ -703,16 +782,16 @@
             "cancel_replace_cost": "0",
             "entry_fee": "0.271125067948834220",
             "exit_fee": "0.271125067948834220",
-            "funding_cost": "0.04929546689978804",
-            "market_impact_approximation": "0.1380698934351473880916739088",
+            "funding_cost": "0.0000000000000",
+            "market_impact_approximation": "0.03697160017484103",
             "partial_fill_cost": "0",
-            "slippage_cost": "0.19718186759915216",
-            "spread_cost": "0.2861986722703770028593851902"
+            "slippage_cost": "0.09859093379957608",
+            "spread_cost": "0.09859093379957608"
           },
           "entry_ts_ms": 1700003720000,
           "exit_ts_ms": 1700004680000,
-          "gross_pnl": "0.88731840419618472",
-          "net_pnl": "-0.3256776319059483109510590990",
+          "gross_pnl": "3.94363735198304320",
+          "net_pnl": "3.167233748311381570",
           "regime": "RANGE",
           "side": "SHORT",
           "signal": -1.0
@@ -722,16 +801,16 @@
             "cancel_replace_cost": "0",
             "entry_fee": "0.2696799686471506825",
             "exit_fee": "0.2696799686471506825",
-            "funding_cost": "0.049032721572209215",
-            "market_impact_approximation": "0.113381562214629855910513531",
+            "funding_cost": "0.00000000000000",
+            "market_impact_approximation": "0.03677454117915691125",
             "partial_fill_cost": "0",
-            "slippage_cost": "0.19613088628883686",
-            "spread_cost": "0.4507956011668164831247016344"
+            "slippage_cost": "0.098065443144418430",
+            "spread_cost": "0.098065443144418430"
           },
           "entry_ts_ms": 1700004740000,
           "exit_ts_ms": 1700005700000,
-          "gross_pnl": "0.882588988299765870",
-          "net_pnl": "-0.4661117202370279090352151654",
+          "gross_pnl": "3.922617725776737200",
+          "net_pnl": "3.15035236101444206375",
           "regime": "RANGE",
           "side": "SHORT",
           "signal": -1.0
@@ -739,7 +818,7 @@
       ]
     },
     {
-      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "code_checksum": "c45c02ba6e6b39ddd4729cd916f0d02864de74087728af649f7c77274ffa0af1",
       "cost_components": {
         "cancel_replace_cost": "0",
         "entry_fee": "0",
@@ -768,12 +847,13 @@
       },
       "net_pnl": 0.0,
       "oos_executed": false,
-      "parameter_checksum": "72b7792033d5bab30a34633452738f77b59f88c64534ec0906bcc8fbbfbbd969",
+      "parameter_checksum": "d93e90375b3e48618ff3f5060b44b874e23d302f50bff430b52d02e7059c76fc",
       "parameters": {
         "cancel_replace_cycles": 0,
         "cooldown_bars": 4,
         "extra_fills": 0,
         "family_id": "LIQUIDITY_WITHDRAWAL",
+        "force_research_signal": false,
         "holding_bars": 5,
         "notional_usdt": 500.0,
         "profile": "dq_block",
@@ -799,7 +879,7 @@
       "trade_count": 0
     },
     {
-      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "code_checksum": "c45c02ba6e6b39ddd4729cd916f0d02864de74087728af649f7c77274ffa0af1",
       "cost_components": {
         "cancel_replace_cost": "0",
         "entry_fee": "1.6241104268243992225",
@@ -828,12 +908,13 @@
       },
       "net_pnl": -13.972256721744134,
       "oos_executed": false,
-      "parameter_checksum": "a8682f6cefc1071b37c08273704a5302f62c75b30bfa5e67a283580a80fa91f5",
+      "parameter_checksum": "fc2132eb91b0bd28c5fe7881efd5e558a9cc539ae798f44e676aeaa3a416c75d",
       "parameters": {
         "cancel_replace_cycles": 0,
         "cooldown_bars": 4,
         "extra_fills": 0,
         "family_id": "SPREAD_SHOCK",
+        "force_research_signal": false,
         "holding_bars": 8,
         "notional_usdt": 500.0,
         "profile": "thin_sample",
@@ -853,6 +934,7 @@
         "RANGE": 5,
         "TREND": 1
       },
+      "research_signal_only": false,
       "semantic_mechanism_id": "MECH_SPREAD_SHOCK_V1",
       "stability_measures": {
         "development_folds_only": true,
@@ -930,16 +1012,16 @@
       ]
     },
     {
-      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "code_checksum": "c45c02ba6e6b39ddd4729cd916f0d02864de74087728af649f7c77274ffa0af1",
       "cost_components": {
         "cancel_replace_cost": "0",
         "entry_fee": "15.6739875923656021810",
         "exit_fee": "15.6739875923656021810",
-        "funding_cost": "2.849815925884654942",
-        "market_impact_approximation": "5.913432130527464118693025781",
+        "funding_cost": "0.00000000000000",
+        "market_impact_approximation": "0.71245398147116373550",
         "partial_fill_cost": "0",
-        "slippage_cost": "11.399263703538619768",
-        "spread_cost": "28.50412368783954676531708193"
+        "slippage_cost": "5.699631851769309884",
+        "spread_cost": "5.699631851769309884"
       },
       "cost_model_version": "founder-conservative-v1-1-2026-08-05",
       "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
@@ -948,23 +1030,24 @@
       "failure_reasons": [],
       "family_id": "CROSS_ASSET_LEAD_LAG",
       "formal_walk_forward_executed": false,
-      "gross_pnl": 1.4249079629423276,
+      "gross_pnl": 0.2849815925884655,
       "implementation_rejected": false,
-      "label": "REGIME_FRAGILE",
+      "label": "RESEARCH_SIGNAL_ONLY",
       "multiple_comparison_metadata": {
         "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
         "configs_tested_for_family": 1,
         "family_count": 10,
         "total_candidates": 10
       },
-      "net_pnl": -78.58970266957917,
+      "net_pnl": -43.174711277152525,
       "oos_executed": false,
-      "parameter_checksum": "fd98ea8ae050c9f639fb89acb4498b219d4deb194539a9b0ef57a77d48f8f697",
+      "parameter_checksum": "c66134b4c0b788c826b4bab04d2c87af20c9706461885111895eefe58ae45063",
       "parameters": {
         "cancel_replace_cycles": 0,
         "cooldown_bars": 5,
         "extra_fills": 0,
         "family_id": "CROSS_ASSET_LEAD_LAG",
+        "force_research_signal": true,
         "holding_bars": 10,
         "notional_usdt": 500.0,
         "profile": "signal_only",
@@ -984,21 +1067,22 @@
         "RANGE": 42,
         "TREND": 16
       },
+      "research_signal_only": true,
       "semantic_mechanism_id": "MECH_CROSS_ASSET_LEAD_LAG_V1",
       "stability_measures": {
         "development_folds_only": true,
         "fold_count": 4,
         "fold_net_pnls": [
-          -18.357970627455,
-          -19.517313328676778,
-          -18.804164943696087,
-          -21.910253769751296
+          -10.431234180318135,
+          -10.361437372927366,
+          -10.342560254211373,
+          -12.03947946969565
         ],
         "formal_walk_forward": false,
         "positive_fold_count": 0,
         "sign_flip_across_folds": false
       },
-      "status": "REGIME_FRAGILE",
+      "status": "RESEARCH_SIGNAL_ONLY",
       "trade_count": 58,
       "trades_sample": [
         {
@@ -1006,16 +1090,16 @@
             "cancel_replace_cost": "0",
             "entry_fee": "0.272305226350161180",
             "exit_fee": "0.272305226350161180",
-            "funding_cost": "0.04951004115457476",
-            "market_impact_approximation": "0.04951004115457476",
+            "funding_cost": "0.0000000000000",
+            "market_impact_approximation": "0.01237751028864369",
             "partial_fill_cost": "0",
-            "slippage_cost": "0.19804016461829904",
-            "spread_cost": "0.3752475772139668013796623276"
+            "slippage_cost": "0.09902008230914952",
+            "spread_cost": "0.09902008230914952"
           },
           "entry_ts_ms": 1700003120000,
           "exit_ts_ms": 1700003720000,
-          "gross_pnl": "0.024755020577287380",
-          "net_pnl": "-1.192163256264450341379662328",
+          "gross_pnl": "0.004951004115457476",
+          "net_pnl": "-0.750077123491807614",
           "regime": "RANGE",
           "side": "LONG",
           "signal": 0.5860311230262814
@@ -1025,16 +1109,16 @@
             "cancel_replace_cost": "0",
             "entry_fee": "0.271125067948834220",
             "exit_fee": "0.271125067948834220",
-            "funding_cost": "0.04929546689978804",
-            "market_impact_approximation": "0.1380698934351473880916739088",
+            "funding_cost": "0.0000000000000",
+            "market_impact_approximation": "0.01232386672494701",
             "partial_fill_cost": "0",
-            "slippage_cost": "0.19718186759915216",
-            "spread_cost": "0.2861986722703770028593851902"
+            "slippage_cost": "0.09859093379957608",
+            "spread_cost": "0.09859093379957608"
           },
           "entry_ts_ms": 1700003720000,
           "exit_ts_ms": 1700004320000,
-          "gross_pnl": "0.024647733449894020",
-          "net_pnl": "-1.188348302652239010951059099",
+          "gross_pnl": "0.004929546689978804",
+          "net_pnl": "-0.746826323531788806",
           "regime": "RANGE",
           "side": "LONG",
           "signal": 0.4765352097401711
@@ -1044,16 +1128,16 @@
             "cancel_replace_cost": "0",
             "entry_fee": "0.2701088440288480",
             "exit_fee": "0.2701088440288480",
-            "funding_cost": "0.049110698914336",
-            "market_impact_approximation": "0.1507073274296041988413093154",
+            "funding_cost": "0.00000000000",
+            "market_impact_approximation": "0.012277674728584",
             "partial_fill_cost": "0",
-            "slippage_cost": "0.196442795657344",
-            "spread_cost": "0.3246980481737596573031682650"
+            "slippage_cost": "0.098221397828672",
+            "spread_cost": "0.098221397828672"
           },
           "entry_ts_ms": 1700004080000,
           "exit_ts_ms": 1700004680000,
-          "gross_pnl": "0.0245553494571680",
-          "net_pnl": "-1.236621208775571856144477580",
+          "gross_pnl": "0.0049110698914336",
+          "net_pnl": "-0.7440270885521904",
           "regime": "RANGE",
           "side": "SHORT",
           "signal": -0.6102044123365088
@@ -1061,7 +1145,7 @@
       ]
     },
     {
-      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "code_checksum": "c45c02ba6e6b39ddd4729cd916f0d02864de74087728af649f7c77274ffa0af1",
       "cost_components": {
         "cancel_replace_cost": "0",
         "entry_fee": "0",
@@ -1090,12 +1174,13 @@
       },
       "net_pnl": -18.2,
       "oos_executed": false,
-      "parameter_checksum": "8daf823276524353394d6a04c0f9e30aef6585a33da77715b0e193e7666664f3",
+      "parameter_checksum": "05e00cb1e91aec27afbe8c7202ca0777388aca26759e673e039a19930035a4a4",
       "parameters": {
         "cancel_replace_cycles": 0,
         "cooldown_bars": 10,
         "extra_fills": 0,
         "family_id": "REGIME_MEAN_REVERSION",
+        "force_research_signal": false,
         "holding_bars": 14,
         "notional_usdt": 500.0,
         "profile": "reject",
@@ -1125,8 +1210,8 @@
       "trade_count": 20
     }
   ],
-  "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
-  "cost_destroyed_count": 1,
+  "code_checksum": "c45c02ba6e6b39ddd4729cd916f0d02864de74087728af649f7c77274ffa0af1",
+  "cost_destroyed_count": 2,
   "cost_model_version": "founder-conservative-v1-1-2026-08-05",
   "data_lineage": {
     "bar_count": 480,
@@ -1148,7 +1233,7 @@
     "series_checksum": "116a9f8837a80244320486c3e69bf7580ccef30a1453863eb80aaa7b39511e67"
   },
   "demo_order_count": 0,
-  "development_promising_count": 0,
+  "development_promising_count": 2,
   "exchange_write_attempt_count": 0,
   "family_catalog": [
     {
@@ -1206,7 +1291,7 @@
     {
       "economic_prior": "Funding and basis dislocations encode crowding / carry stress; mean-reversion of dislocation is hypothesized after extremes.",
       "family_id": "FUNDING_BASIS_DISLOCATION",
-      "holding_bars": 32,
+      "holding_bars": 16,
       "profile": "cost_destroyed",
       "required_features": [
         "funding_z",
@@ -1214,7 +1299,7 @@
         "oi_change"
       ],
       "semantic_mechanism_id": "MECH_FUNDING_BASIS_DISLOCATION_V1",
-      "signal_horizon_bars": 16
+      "signal_horizon_bars": 8
     },
     {
       "economic_prior": "Volatility regime transitions (expansion vs compression) alter expected range; breakout/mean-revert conditioned on vol state.",
@@ -1298,12 +1383,12 @@
   ],
   "label_histogram": {
     "DATA_QUALITY_BLOCKED": 1,
-    "DEVELOPMENT_PROMISING_NOT_QUALIFIED": 0,
-    "INSUFFICIENT_SAMPLE": 3,
-    "RAW_EDGE_PRESENT_BUT_COST_DESTROYED": 1,
-    "REGIME_FRAGILE": 4,
+    "DEVELOPMENT_PROMISING_NOT_QUALIFIED": 2,
+    "INSUFFICIENT_SAMPLE": 1,
+    "RAW_EDGE_PRESENT_BUT_COST_DESTROYED": 2,
+    "REGIME_FRAGILE": 1,
     "REJECTED": 1,
-    "RESEARCH_SIGNAL_ONLY": 0
+    "RESEARCH_SIGNAL_ONLY": 2
   },
   "mechanism_families": [
     "ORDER_FLOW_IMBALANCE",
@@ -1321,7 +1406,7 @@
   "oos_consumed": false,
   "oos_executed": false,
   "package": "NEXUS_COST_AWARE_STRATEGY_DISCOVERY_FACTORY_V3",
-  "pass_id": 1,
+  "pass_id": 2,
   "pr27_merge_attempted": false,
   "profitability_claimed": false,
   "qualification_ready_count": 0,

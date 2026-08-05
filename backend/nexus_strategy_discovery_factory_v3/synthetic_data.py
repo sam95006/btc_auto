@@ -165,21 +165,22 @@ def signal_for_family(family_id: str, bar: SynthBar, prev: SynthBar | None) -> f
             return None
         return max(-1.0, min(1.0, bar.ofi))
     if family_id == "LIQUIDATION_CASCADE":
-        if bar.liquidation_intensity < 0.35:
+        # Event-like but frequent enough on synthetic stress bars for cost study.
+        if abs(bar.vol_z) < 0.7 and bar.liquidation_intensity < 0.05:
             return None
         return 1.0 if bar.ofi >= 0 else -1.0
     if family_id == "ABSORPTION":
-        if bar.absorption < 0.35 or bar.aggression < 0.55:
+        if bar.absorption < 0.25 or bar.aggression < 0.45:
             return None
         # Absorb aggressors → fade
-        return -1.0 if bar.aggression > 0.65 else 1.0
+        return -1.0 if bar.aggression > 0.55 else 1.0
     if family_id == "AGGRESSION_PERSISTENCE":
         if bar.aggression_persistence < 0.65:
             return None
         return 1.0 if bar.aggression >= 0.5 else -1.0
     if family_id == "FUNDING_BASIS_DISLOCATION":
         score = 0.6 * bar.funding_z + 0.4 * (bar.basis_bps / 20.0)
-        if abs(score) < 1.1:
+        if abs(score) < 0.55:
             return None
         return max(-1.0, min(1.0, -score / 3.0))  # fade dislocation
     if family_id == "VOL_EXPANSION_COMPRESSION":

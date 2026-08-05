@@ -1,5 +1,5 @@
 {
-  "finding_count": 8,
+  "finding_count": 10,
   "findings": [
     {
       "detail": "all mechanism families present with unique semantic IDs",
@@ -46,6 +46,18 @@
     {
       "detail": "DEVELOPMENT_PROMISING_NOT_QUALIFIED never sets qualified flags",
       "finding_id": "ADV_PROMISING_NOT_QUALIFIED",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "cost_destroyed exercised and all histogram keys allowlisted; histogram={'DATA_QUALITY_BLOCKED': 1, 'DEVELOPMENT_PROMISING_NOT_QUALIFIED': 2, 'INSUFFICIENT_SAMPLE': 1, 'RAW_EDGE_PRESENT_BUT_COST_DESTROYED': 2, 'REGIME_FRAGILE': 1, 'REJECTED': 1, 'RESEARCH_SIGNAL_ONLY': 2}",
+      "finding_id": "ADV_LABEL_COVERAGE_PASS2",
+      "severity": "HIGH",
+      "status": "PASS"
+    },
+    {
+      "detail": "no profitability/qualified claim labels on candidates",
+      "finding_id": "ADV_NO_PROFITABILITY_CLAIM",
       "severity": "CRITICAL",
       "status": "PASS"
     }

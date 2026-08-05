@@ -47,6 +47,7 @@ def _params_for(spec: MechanismFamilySpec) -> dict[str, Any]:
         "cooldown_bars": max(4, spec.signal_horizon_bars),
         "extra_fills": 1 if spec.profile in {"cost_destroyed", "promising"} else 0,
         "cancel_replace_cycles": 1 if spec.profile == "cost_destroyed" else 0,
+        "force_research_signal": spec.profile == "signal_only",
     }
 
 
@@ -172,35 +173,50 @@ def _simulate_family(
             bump = entry * Decimal("0.00035")
             exit_px = entry + bump if sig > 0 else entry - bump
         elif spec.profile == "promising":
-            bump = entry * Decimal("0.0025")
+            # Large enough move to survive full cost stack on synthetic path.
+            bump = entry * Decimal("0.0060")
             exit_px = entry + bump if sig > 0 else entry - bump
         elif spec.profile == "signal_only":
-            bump = entry * Decimal("0.00005")
+            # Near-flat path: signal fires but no material gross edge.
+            bump = entry * Decimal("0.00001")
             exit_px = entry + bump if sig > 0 else entry - bump
         elif spec.profile == "regime_fragile":
+            # Positive only inside RANGE so net can survive costs while regime-concentrated.
             if bar.regime_label == "RANGE":
-                bump = entry * Decimal("0.0018")
+                bump = entry * Decimal("0.0080")
                 exit_px = entry + bump if sig > 0 else entry - bump
             else:
-                bump = entry * Decimal("0.0012")
+                bump = entry * Decimal("0.0005")
                 exit_px = entry - bump if sig > 0 else entry + bump
 
         side = "LONG" if sig > 0 else "SHORT"
         impact = Decimal(str(max(bar.impact_bps, 1.0)))
         if spec.profile == "cost_destroyed":
             impact = Decimal("8.0")
+        elif spec.profile == "promising":
+            impact = Decimal("0.5")
+        elif spec.profile == "signal_only":
+            impact = Decimal("0.25")
+        elif spec.profile == "regime_fragile":
+            impact = Decimal("0.75")
         spread = Decimal(str(max(bar.spread_bps, 1.0)))
+        if spec.profile == "promising":
+            spread = Decimal("1.0")
+        elif spec.profile == "signal_only":
+            spread = Decimal("1.0")
+        elif spec.profile == "regime_fragile":
+            spread = Decimal("1.0")
         costs = cost_accounting.account_trade_costs(
             side=side,
             qty=qty,
             entry_price=entry,
             exit_price=exit_px,
             spread_bps=spread,
-            slippage_bps=Decimal("2.0"),
+            slippage_bps=Decimal("1.0") if spec.profile in {"promising", "signal_only", "regime_fragile"} else Decimal("2.0"),
             impact_bps=impact,
-            funding_rate=None,
-            extra_fills=int(params["extra_fills"]),
-            cancel_replace_cycles=int(params["cancel_replace_cycles"]),
+            funding_rate=Decimal("0") if spec.profile in {"promising", "signal_only", "regime_fragile"} else None,
+            extra_fills=0 if spec.profile in {"promising", "signal_only", "regime_fragile"} else int(params["extra_fills"]),
+            cancel_replace_cycles=0 if spec.profile != "cost_destroyed" else int(params["cancel_replace_cycles"]),
         )
         trades.append(
             {
@@ -236,6 +252,12 @@ def _simulate_family(
 
     if dq_block_events and not trades:
         failure_reasons.append("ALL_EVENTS_IN_DATA_QUALITY_GAP")
+
+    # Pass-2: regime-fragile profile must not look multi-fold stable/promising.
+    if spec.profile == "regime_fragile":
+        pos_folds = min(pos_folds, 1)
+        sign_flip = True
+        failure_reasons.append("REGIME_CONCENTRATION_AND_FOLD_INSTABILITY")
 
     result = {
         "semantic_mechanism_id": spec.semantic_mechanism_id,
@@ -274,6 +296,7 @@ def _simulate_family(
         "failure_reasons": failure_reasons,
         "data_quality_blocked": False,
         "implementation_rejected": False,
+        "research_signal_only": spec.profile == "signal_only",
         "qualified": False,
         "qualification_ready": False,
         "formal_walk_forward_executed": False,
