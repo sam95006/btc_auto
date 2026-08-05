@@ -25,7 +25,7 @@
   "campaign": "MECHANISM_EXECUTION_COMPILER",
   "campaign_digest": "90067a21fcace8ea6df6831c28792cc919761be75ef855be2bdb5347c8857504",
   "code_checksum": "317701eb84aab215bebe9a0927f523e9726a5f7d8da6e010fb4e863436a338c1",
-  "created_at": "2026-08-05T15:15:43Z",
+  "created_at": "2026-08-05T15:17:44Z",
   "critical_remaining": 0,
   "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
   "demo_order_count": 0,
@@ -60,7 +60,7 @@
     "RISK_INCOMPATIBLE_ON_SYNTHETIC": 0
   },
   "lane": "V15-B",
-  "lane_head": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
+  "lane_head": "ced02a9e7d0a0ac8f737f768e9270a1607ed07a9",
   "mainnet_touch_count": 0,
   "mechanism_executor_count": 42,
   "non_claims": [
