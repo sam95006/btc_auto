@@ -1,4 +1,4 @@
-"""Hard-ban + member-path secret scans for Founder Operator live binding (PUB2-D)."""
+"""Hard-ban scanners for UX-C Founder Operator Diagnostics."""
 from __future__ import annotations
 
 import ast
@@ -8,11 +8,9 @@ from pathlib import Path
 from typing import Any
 
 OWNED_PATHS: tuple[str, ...] = (
-    "backend/founder_operator",
+    "backend/founder_operator/diagnostics",
     "backend/api/founder_private_routes.py",
     "frontend/src/founder",
-    "tests/test_founder_operator_ui_v1.py",
-    "tests/test_founder_operator_live_binding_v2.py",
     "tests/test_founder_operator_diagnostics_v16.py",
 )
 
@@ -47,16 +45,6 @@ HARD_BANS: tuple[str, ...] = (
     "observe_authorize_research_only",
 )
 
-FORBIDDEN_MEMBER_IMPORTS: tuple[str, ...] = (
-    "backend.founder_operator",
-    "frontend/src/founder",
-)
-
-SECRET_KEY_PATTERN = re.compile(
-    r"(?i)\b(api[_-]?key|api[_-]?secret|private[_-]?key|wallet[_-]?address|"
-    r"exchange[_-]?credentials|lesson[_-]?memory[_-]?raw)\b"
-)
-
 BANNED_BEHAVIOR_PATTERNS = [
     re.compile(r"(?i)\bplace_order\b"),
     re.compile(r"(?i)\bsubmit_order\b"),
@@ -64,12 +52,20 @@ BANNED_BEHAVIOR_PATTERNS = [
     re.compile(r"(?i)\bEXCHANGE_WRITE\s*=\s*True\b"),
     re.compile(r"(?i)\bMAINNET\s*=\s*True\b"),
     re.compile(r"(?i)\bREAL_MONEY\s*=\s*True\b"),
+    re.compile(r"(?i)\bmainnet_shortcut\s*=\s*True\b"),
+    re.compile(r"(?i)\breal_trade_shortcut\s*=\s*True\b"),
     re.compile(r"(?i)\bfabricat(?:e|ed|ing)_live\b"),
+]
+
+STATUS_JSON_WRITE_PATTERNS = [
+    re.compile(r"(?i)artifacts/readiness/.+status\.json"),
+    re.compile(r"(?i)write_text\([^\)]*status\.json"),
+    re.compile(r"(?i)open\([^\)]*status\.json[^\)]*[\"']w"),
 ]
 
 
 def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[2]
+    return Path(__file__).resolve().parents[3]
 
 
 def _iter_files(root: Path, rel: str) -> list[Path]:
@@ -101,11 +97,12 @@ def _is_ban_allowlist(text: str, start: int, end: int) -> bool:
             "assert",
             "no_exchange",
             "no_fabricat",
-            "fabricate_live",
-            "memberAccessible",
+            "no_status_json",
+            "statusjsonreport",
+            "mainnetshortcut",
+            "realtradeshortcut",
+            "memberaccessible",
             "member_accessible",
-            "prefer_simulated",
-            "explicit simulated",
         )
     )
 
@@ -113,10 +110,13 @@ def _is_ban_allowlist(text: str, start: int, end: int) -> bool:
 def scan_owned_write_behaviors(root: Path | None = None) -> dict[str, Any]:
     root = root or _repo_root()
     hits: list[dict[str, str]] = []
-    skip_names = {"hard_bans.py"}
+    skip_names = {"hard_bans.py", "diagnostics_hard_bans.py"}
     for rel in OWNED_PATHS:
         for path in _iter_files(root, rel):
             if path.name in skip_names:
+                continue
+            # This file may itself scan patterns — allow when path is this module
+            if path.name == "hard_bans.py" and "diagnostics" in str(path):
                 continue
             try:
                 text = path.read_text(encoding="utf-8", errors="ignore")
@@ -135,25 +135,54 @@ def scan_owned_write_behaviors(root: Path | None = None) -> dict[str, Any]:
     return {"ok": len(hits) == 0, "hits": hits, "ban": "no_exchange_write"}
 
 
-def scan_member_paths_for_founder_imports(root: Path | None = None) -> dict[str, Any]:
-    """Member / public product paths must not import Founder operator live bindings."""
+def scan_no_status_json_report(root: Path | None = None) -> dict[str, Any]:
+    """Owned diagnostics code must not write status JSON reports."""
+    root = root or _repo_root()
+    hits: list[dict[str, str]] = []
+    for rel in ("backend/founder_operator/diagnostics",):
+        for path in _iter_files(root, rel):
+            if path.name in {"hard_bans.py", "three_pass.py"}:
+                continue
+            try:
+                text = path.read_text(encoding="utf-8", errors="ignore")
+            except OSError:
+                continue
+            for pat in STATUS_JSON_WRITE_PATTERNS:
+                for m in pat.finditer(text):
+                    if _is_ban_allowlist(text, m.start(), m.end()):
+                        continue
+                    hits.append(
+                        {
+                            "file": str(path.relative_to(root)).replace("\\", "/"),
+                            "match": m.group(0)[:100],
+                        }
+                    )
+    # Also ensure no lane status artifact was committed under diagnostics
+    art = root / "artifacts" / "readiness" / "immutable"
+    if art.is_dir():
+        for p in art.rglob("*founder*diagnos*"):
+            if p.is_file() and p.suffix == ".json":
+                hits.append(
+                    {
+                        "file": str(p.relative_to(root)).replace("\\", "/"),
+                        "match": "status_json_artifact_present",
+                    }
+                )
+    return {"ok": len(hits) == 0, "hits": hits, "ban": "no_status_json_report"}
+
+
+def scan_member_paths_for_diagnostics(root: Path | None = None) -> dict[str, Any]:
     root = root or _repo_root()
     hits: list[dict[str, str]] = []
     needles = (
-        "backend.founder_operator",
-        "founder_operator.live_bindings",
-        "founder_operator.snapshot",
-        "/api/nexus/founder/operator",
-        "fetchFounderOperator",
-        "FounderOperatorPage",
-        "FounderOperatorShell",
-        "FounderDiagnosticsPage",
-        "fetchFounderDiagnostics",
+        "backend.founder_operator.diagnostics",
         "/api/nexus/founder/diagnostics",
+        "fetchFounderDiagnostics",
+        "FounderDiagnosticsPage",
+        "NEXUS_FOUNDER_OPERATOR_DIAGNOSTICS_V16",
     )
     for rel in MEMBER_PATH_GLOBS:
         for path in _iter_files(root, rel):
-            # privacy page may mention keys as banned topics — allowlisted separately
             try:
                 text = path.read_text(encoding="utf-8", errors="ignore")
             except OSError:
@@ -166,7 +195,6 @@ def scan_member_paths_for_founder_imports(root: Path | None = None) -> dict[str,
                             "needle": needle,
                         }
                     )
-            # AST import scan for python member/public modules
             if path.suffix == ".py":
                 try:
                     tree = ast.parse(text, filename=str(path))
@@ -179,9 +207,7 @@ def scan_member_paths_for_founder_imports(root: Path | None = None) -> dict[str,
                     elif isinstance(node, ast.ImportFrom) and node.module:
                         mods = [node.module]
                     for mod in mods:
-                        if mod == "backend.founder_operator" or mod.startswith(
-                            "backend.founder_operator."
-                        ):
+                        if mod.startswith("backend.founder_operator.diagnostics"):
                             hits.append(
                                 {
                                     "file": str(path.relative_to(root)).replace("\\", "/"),
@@ -195,37 +221,6 @@ def scan_member_paths_for_founder_imports(root: Path | None = None) -> dict[str,
     }
 
 
-def scan_member_paths_for_secret_literals(root: Path | None = None) -> dict[str, Any]:
-    """Member paths must not embed private secret field assignments from founder surfaces."""
-    root = root or _repo_root()
-    hits: list[dict[str, str]] = []
-    # Look for assignment-like secret materialization, not educational mentions.
-    assign_pat = re.compile(
-        r"(?i)(apiKey|api_key|private_key|privateKey|walletAddress|wallet_address|"
-        r"exchange_credentials|exchangeCredentials)\s*[:=]\s*['\"][^'\"]+['\"]"
-    )
-    for rel in MEMBER_PATH_GLOBS:
-        for path in _iter_files(root, rel):
-            try:
-                text = path.read_text(encoding="utf-8", errors="ignore")
-            except OSError:
-                continue
-            for m in assign_pat.finditer(text):
-                if _is_ban_allowlist(text, m.start(), m.end()):
-                    continue
-                hits.append(
-                    {
-                        "file": str(path.relative_to(root)).replace("\\", "/"),
-                        "match": m.group(0)[:80],
-                    }
-                )
-    return {
-        "ok": len(hits) == 0,
-        "hits": hits,
-        "ban": "no_private_secrets_in_member_paths",
-    }
-
-
 def env_hard_ban_guard() -> dict[str, Any]:
     flags = {
         "EXCHANGE_WRITE": os.environ.get("EXCHANGE_WRITE", "false").lower(),
@@ -234,6 +229,8 @@ def env_hard_ban_guard() -> dict[str, Any]:
         "DEMO_ORDERS": os.environ.get("DEMO_ORDERS", "false").lower(),
         "SHADOW_ORDERS": os.environ.get("SHADOW_ORDERS", "false").lower(),
         "FABRICATE_LIVE": os.environ.get("FABRICATE_LIVE", "false").lower(),
+        "NEXUS_MAINNET_SHORTCUT": os.environ.get("NEXUS_MAINNET_SHORTCUT", "false").lower(),
+        "NEXUS_REAL_TRADE_SHORTCUT": os.environ.get("NEXUS_REAL_TRADE_SHORTCUT", "false").lower(),
     }
     truthy = {"1", "true", "yes", "on"}
     violations = [k for k, v in flags.items() if v in truthy]
@@ -245,8 +242,8 @@ def run_hard_ban_pass(root: Path | str | None = None, *, pass_number: int = 1) -
     checks = {
         "env": env_hard_ban_guard(),
         "owned_behaviors": scan_owned_write_behaviors(root_path),
-        "member_imports": scan_member_paths_for_founder_imports(root_path),
-        "member_secrets": scan_member_paths_for_secret_literals(root_path),
+        "member_imports": scan_member_paths_for_diagnostics(root_path),
+        "no_status_json": scan_no_status_json_report(root_path),
     }
     ok = all(bool(v.get("ok")) for v in checks.values())
     return {
@@ -254,16 +251,5 @@ def run_hard_ban_pass(root: Path | str | None = None, *, pass_number: int = 1) -
         "ok": ok,
         "hard_bans": list(HARD_BANS),
         "checks": checks,
-        "lane": "PUB2-D",
-    }
-
-
-def run_three_passes(root: Path | str | None = None) -> dict[str, Any]:
-    passes = [run_hard_ban_pass(root, pass_number=i) for i in (1, 2, 3)]
-    return {
-        "ok": all(p["ok"] for p in passes),
-        "passes": passes,
-        "pass_count": 3,
-        "lane": "PUB2-D",
-        "lane_name": "FOUNDER_OPERATOR_UI_LIVE_BINDING",
+        "lane": "UX-C",
     }

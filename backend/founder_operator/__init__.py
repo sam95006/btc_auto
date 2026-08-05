@@ -6,6 +6,10 @@ PUB2-D: panels bind to real/simulated operational surfaces.
 """
 from __future__ import annotations
 
+from backend.founder_operator.diagnostics.panels import (
+    DIAGNOSTIC_PANEL_IDS,
+    build_founder_diagnostics_snapshot,
+)
 from backend.founder_operator.live_bindings import (
     SURFACE_IDS,
     bind_all_operator_surfaces,
@@ -18,10 +22,12 @@ from backend.founder_operator.snapshot import (
 )
 
 __all__ = [
+    "DIAGNOSTIC_PANEL_IDS",
     "OPERATOR_PANEL_IDS",
     "SURFACE_IDS",
     "assert_no_forbidden_keys",
     "bind_all_operator_surfaces",
     "bind_operator_surface",
+    "build_founder_diagnostics_snapshot",
     "build_founder_operator_snapshot",
 ]

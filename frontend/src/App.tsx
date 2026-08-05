@@ -11,6 +11,7 @@ import { SkipToContentLabeled } from "./a11y";
 import { AppFooter } from "./components/AppFooter";
 import { SafetyBanner } from "./components/SafetyBanner";
 import { SidebarNav } from "./components/SidebarNav";
+import { FounderDiagnosticsPage } from "./founder/FounderDiagnosticsPage";
 import { FounderOperatorShell } from "./founder/FounderOperatorShell";
 import { FounderOperatorPage } from "./founder/FounderOperatorPage";
 import { useT } from "./i18n";
@@ -88,6 +89,9 @@ export default function App() {
     <Routes>
       <Route path="/founder/operator" element={<FounderOperatorShell />}>
         <Route index element={<FounderOperatorPage />} />
+      </Route>
+      <Route path="/founder/diagnostics" element={<FounderOperatorShell />}>
+        <Route index element={<FounderDiagnosticsPage />} />
       </Route>
       <Route path="/founder/runtime" element={<FounderRuntimePage />} />
       <Route path="/*" element={<MemberShell />} />

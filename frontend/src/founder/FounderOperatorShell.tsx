@@ -1,6 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { FounderAuthGate } from "./FounderAuthGate";
-import { FOUNDER_OPERATOR_NAV } from "./types";
+import { FOUNDER_DIAGNOSTICS_NAV, FOUNDER_OPERATOR_NAV } from "./types";
 
 /**
  * Separate Founder-only shell — same design tokens, different IA.
@@ -31,8 +31,24 @@ export function FounderOperatorShell() {
               ))}
             </div>
             <div className="nav-group">
+              <div className="nav-label">V16 診斷</div>
+              <NavLink
+                to="/founder/diagnostics"
+                end
+                className={({ isActive }) => (isActive ? "active" : undefined)}
+              >
+                Diagnostics
+              </NavLink>
+              {FOUNDER_DIAGNOSTICS_NAV.map((item) => (
+                <a key={item.id} href={`/founder/diagnostics${item.hash}`}>
+                  {item.label}
+                </a>
+              ))}
+            </div>
+            <div className="nav-group">
               <div className="nav-label">邊界</div>
-              <span className="muted sm">member session → denied</span>
+              <span className="muted sm">member session → 403</span>
+              <span className="muted sm">observe/research only</span>
             </div>
           </nav>
           <div className="main-column">

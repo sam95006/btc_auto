@@ -135,6 +135,31 @@
   color: var(--nx-short, #ef4444);
 }
 
+.nx-founder-json {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 12rem;
+  overflow: auto;
+  font-size: 0.68rem;
+}
+
+.nx-founder-auth-btn {
+  margin-top: 0.35rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--nx-border, rgba(148, 163, 184, 0.28));
+  border-radius: var(--nx-r-sm, 6px);
+  background: var(--nx-bg-3, #1b2330);
+  color: var(--nx-text, #e8eef6);
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+
+.nx-founder-auth-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 @media (max-width: 800px) {
   .nx-founder-body {
     flex-direction: column;
