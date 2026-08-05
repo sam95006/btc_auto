@@ -73,7 +73,7 @@ def test_register_roles_entitlements_session_consent_export_delete(svc: PublicAu
     with pytest.raises(HardBanViolation):
         svc.sessions.authenticate(session["token"])
 
-    # MFA enroll → challenge → verify
+    # MFA enroll → challenge → verify → session requires consumed challenge
     enrolled = svc.mfa.enroll_factor(account_id, "totp", label="primary")
     confirmed = svc.mfa.confirm_enrollment(
         account_id,
@@ -81,6 +81,16 @@ def test_register_roles_entitlements_session_consent_export_delete(svc: PublicAu
         enrollment_secret=enrolled["enrollment_secret_once"],
     )
     assert confirmed["status"] == "enabled"
+    # Persisted factor must not retain enrollment secret (Pass-2).
+    stored = svc.store.get_mfa_factor(enrolled["factor_id"])
+    assert stored is not None
+    assert "enrollment_secret_once" not in (stored.metadata or {})
+
+    with pytest.raises(HardBanViolation):
+        svc.create_session_rate_limited(
+            account_id, tier="Pro", member_roles=["member"]
+        )
+
     challenge = svc.mfa.create_challenge(account_id, enrolled["factor_id"])
     verified = svc.mfa.verify_challenge(
         account_id,
@@ -90,10 +100,14 @@ def test_register_roles_entitlements_session_consent_export_delete(svc: PublicAu
     assert verified["verified"] is True
     assert svc.mfa.mfa_status(account_id)["enabled_factor_count"] == 1
 
-    # New session for export/delete path
     session2 = svc.create_session_rate_limited(
-        account_id, tier="Pro", member_roles=["member"]
+        account_id,
+        tier="Pro",
+        member_roles=["member"],
+        mfa_challenge_id=challenge["challenge_id"],
     )
+    assert session2["mfa_verified"] is True
+    assert session2["private_execution_access"] is False
     export = svc.lifecycle.export_account_data(account_id)
     assert export["schema"] == "public_account_export_v2"
     assert export["account"]["email"] == "member@example.com"

@@ -77,11 +77,15 @@ class MfaService:
             metadata={
                 "provider": "NONE_NON_PRODUCTION",
                 "enrollment_mode": "abstraction_stub",
-                # Returned once for local verify_stub; not persisted as raw secret.
-                "enrollment_secret_once": stub_secret,
             },
         )
         self.store.put_mfa_factor(factor)
+        # Adversarial Pass-2: never persist enrollment_secret_once in store metadata.
+        persisted = self.store.get_mfa_factor(factor.factor_id)
+        if persisted and "enrollment_secret_once" in (persisted.metadata or {}):
+            raise HardBanViolation(
+                "HARD BAN: MFA enrollment secret must not be persisted in store metadata"
+            )
         self.store.append_audit(
             "mfa.enroll_started",
             "ALLOW",

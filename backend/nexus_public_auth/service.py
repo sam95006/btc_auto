@@ -189,13 +189,33 @@ class PublicAuthMembershipService:
         tier: str,
         member_roles: list[str],
         ttl_seconds: int = 3600,
+        mfa_challenge_id: Optional[str] = None,
+        require_mfa: Optional[bool] = None,
     ) -> dict[str, Any]:
         self.rate_limiter.check("session_create", account_id)
+        account = self.store.get_account(account_id)
+        if account is None:
+            raise HardBanViolation("account not found")
+        policy_mfa = False
+        if require_mfa is None:
+            # Enterprise org policy: MFA required once factors are enrolled.
+            try:
+                policy_mfa = has_feature(account.tier, "mfa_required_org_policy")
+            except HardBanViolation:
+                policy_mfa = False
+            enabled = [
+                f
+                for f in self.store.list_mfa_factors(account_id)
+                if getattr(f, "status", None) == "enabled"
+            ]
+            require_mfa = bool(policy_mfa and enabled) or bool(enabled)
         return self.sessions.create_session(
             account_id,
             tier=tier,
             member_roles=member_roles,
             ttl_seconds=ttl_seconds,
+            mfa_challenge_id=mfa_challenge_id,
+            require_mfa=bool(require_mfa),
         )
 
     def authenticate_rate_limited(self, token: str) -> dict[str, Any]:

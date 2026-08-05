@@ -28,6 +28,8 @@ class SessionService:
         tier: str,
         member_roles: list[str],
         ttl_seconds: int = 3600,
+        mfa_challenge_id: Optional[str] = None,
+        require_mfa: bool = False,
     ) -> dict[str, Any]:
         account = self.store.get_account(account_id)
         if account is None:
@@ -35,14 +37,43 @@ class SessionService:
         if account.status != "active":
             raise HardBanViolation(f"account status {account.status} cannot create session")
         roles = normalize_member_roles(member_roles or account.member_roles)
+
+        enabled_factors = [
+            f
+            for f in self.store.list_mfa_factors(account_id)
+            if getattr(f, "status", None) == "enabled"
+        ]
+        mfa_required = bool(require_mfa) or bool(enabled_factors)
+        mfa_verified = False
+        if mfa_required:
+            if not mfa_challenge_id:
+                raise HardBanViolation(
+                    "MFA challenge required before session create (mfa-ready policy)"
+                )
+            challenge = self.store.get_mfa_challenge(mfa_challenge_id)
+            if challenge is None or challenge.account_id != account_id:
+                raise HardBanViolation("MFA challenge not found for session create")
+            if not challenge.consumed:
+                raise HardBanViolation(
+                    "MFA challenge must be verified before session create"
+                )
+            mfa_verified = True
+
         issued = self.issuer.issue(
             account_id=account_id,
             tier=tier or account.tier,
             member_roles=roles,
             ttl_seconds=ttl_seconds,
+            extra_claims={"mfa_verified": mfa_verified} if mfa_verified else None,
         )
         validate_public_issuer(issued["issuer"])
         validate_public_realm(issued["realm"])
+        # Adversarial: refuse if issued token somehow claims private execution.
+        payload = self.issuer.verify(issued["token"])
+        if payload.get("private_execution_access") is True:
+            raise HardBanViolation(
+                "HARD BAN: session token must never grant private execution access"
+            )
         expires_at = datetime.fromtimestamp(
             issued["expires_at_epoch"], tz=timezone.utc
         ).isoformat()
@@ -60,7 +91,11 @@ class SessionService:
             "session.create",
             "ALLOW",
             account_id=account_id,
-            metadata={"session_id": session.session_id, "jti": session.token_jti},
+            metadata={
+                "session_id": session.session_id,
+                "jti": session.token_jti,
+                "mfa_verified": mfa_verified,
+            },
         )
         return {
             "session_id": session.session_id,
@@ -69,6 +104,8 @@ class SessionService:
             "expires_at": expires_at,
             "realm": session.realm,
             "issuer": session.issuer,
+            "mfa_verified": mfa_verified,
+            "private_execution_access": False,
         }
 
     def revoke_session(self, session_id: str, *, reason: str = "user_revoke") -> dict[str, Any]:

@@ -68,6 +68,41 @@ def test_cannot_override_issuer_claims():
         )
 
 
+def test_cannot_inject_private_execution_claim():
+    issuer = PublicJwtIssuer(secret="public-test-secret-value")
+    with pytest.raises(HardBanViolation):
+        issuer.issue(
+            account_id="acct_x",
+            tier="Enterprise",
+            member_roles=["member"],
+            extra_claims={"private_execution_access": True},
+        )
+    issued = issuer.issue(
+        account_id="acct_x",
+        tier="Enterprise",
+        member_roles=["member"],
+    )
+    payload = issuer.verify(issued["token"])
+    assert payload["private_execution_access"] is False
+
+
+def test_mfa_blocks_session_without_verified_challenge():
+    store = PublicAuthStore()
+    svc = PublicAuthMembershipService(store=store)
+    reg = svc.register_member("mfa-gate@example.com", "Gate")
+    enrolled = svc.mfa.enroll_factor(reg["account_id"], "totp")
+    svc.mfa.confirm_enrollment(
+        reg["account_id"],
+        enrolled["factor_id"],
+        enrollment_secret=enrolled["enrollment_secret_once"],
+    )
+    with pytest.raises(HardBanViolation):
+        svc.sessions.create_session(
+            reg["account_id"], tier="Free", member_roles=["member"]
+        )
+
+
+
 def test_private_founder_role_rejected():
     with pytest.raises(HardBanViolation):
         normalize_member_roles(["founder_admin"])

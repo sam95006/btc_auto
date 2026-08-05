@@ -80,14 +80,34 @@ class PublicJwtIssuer:
             "token_use": "public_member_session",
         }
         if extra_claims:
-            # Never allow private realm / issuer override via extra claims.
-            blocked = {"iss", "realm", "aud", "token_use"}
-            for key in blocked:
-                if key in extra_claims:
+            # Never allow private realm / issuer / execution override via extra claims.
+            blocked = {
+                "iss",
+                "realm",
+                "aud",
+                "token_use",
+                "private_execution",
+                "private_execution_access",
+                "exchange_write",
+                "execution_scopes",
+                "founder",
+                "operator",
+            }
+            for key, value in extra_claims.items():
+                key_l = str(key).strip().lower()
+                if key_l in blocked or key_l.startswith("private_") or "execution" in key_l:
                     raise HardBanViolation(
-                        f"HARD BAN: cannot override protected claim {key!r} on public tokens"
+                        f"HARD BAN: cannot inject protected/private claim {key!r} on public tokens"
+                    )
+                if isinstance(value, str) and (
+                    "private" in value.lower() or "execution" in value.lower()
+                ):
+                    raise HardBanViolation(
+                        f"HARD BAN: cannot inject private/execution claim value on public tokens"
                     )
             payload.update(extra_claims)
+        # Fail-closed: public tokens never advertise private execution.
+        payload["private_execution_access"] = False
         token = self._sign(header, payload)
         return {
             "token": token,
@@ -111,6 +131,16 @@ class PublicJwtIssuer:
             raise HardBanViolation("public JWT audience mismatch")
         if payload.get("token_use") != "public_member_session":
             refuse_private_admin_session_reuse()
+        if payload.get("private_execution_access") is True:
+            raise HardBanViolation(
+                "HARD BAN: public token must never grant private execution access"
+            )
+        for key in payload:
+            key_l = str(key).lower()
+            if key_l.startswith("private_") and key_l != "private_execution_access":
+                raise HardBanViolation(
+                    f"HARD BAN: public token carries private claim {key!r}"
+                )
         if int(payload.get("exp", 0)) < int(time.time()):
             raise HardBanViolation("public JWT expired")
         return payload

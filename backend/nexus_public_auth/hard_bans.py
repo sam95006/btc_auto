@@ -268,6 +268,11 @@ def _adversarial_probes() -> dict[str, Any]:
         has_feature,
         refuse_private_execution_entitlement,
     )
+    from backend.nexus_public_auth.jwt_issuer import PublicJwtIssuer
+    from backend.nexus_public_auth.mfa import MfaService
+    from backend.nexus_public_auth.store import PublicAuthStore
+    from backend.nexus_public_auth.service import PublicAuthMembershipService
+    from backend.nexus_public_auth.rate_limit import AuthRateLimiter
 
     for banned in sorted(PRIVATE_EXECUTION_FEATURE_DENYLIST)[:6]:
         for tier in ("Free", "Pro", "Elite", "Enterprise"):
@@ -276,6 +281,61 @@ def _adversarial_probes() -> dict[str, Any]:
                 lambda t=tier, f=banned: has_feature(t, f),
             )
     _expect("refuse_private_execution_helper", refuse_private_execution_entitlement)
+
+    # JWT must refuse private-execution claim injection (false-PASS / exposure).
+    issuer = PublicJwtIssuer(secret="pass2-adversarial-public-secret")
+    _expect(
+        "jwt_private_execution_claim",
+        lambda: issuer.issue(
+            account_id="acct_p2",
+            tier="Enterprise",
+            member_roles=["member"],
+            extra_claims={"private_execution_access": True},
+        ),
+    )
+    _expect(
+        "jwt_exchange_write_claim",
+        lambda: issuer.issue(
+            account_id="acct_p2",
+            tier="Elite",
+            member_roles=["member"],
+            extra_claims={"exchange_write": True},
+        ),
+    )
+
+    # MFA enrollment secret must not silently persist in store metadata.
+    store = PublicAuthStore()
+    svc = PublicAuthMembershipService(
+        store=store,
+        rate_limiter=AuthRateLimiter(limits={"register": 20}),
+    )
+    reg = svc.register_member("p2secret@example.com", "P2")
+    mfa = MfaService(store)
+    enrolled = mfa.enroll_factor(reg["account_id"], "totp")
+    persisted = store.get_mfa_factor(enrolled["factor_id"])
+    if persisted and "enrollment_secret_once" in (persisted.metadata or {}):
+        probes.append(
+            {
+                "name": "mfa_secret_not_persisted",
+                "ok": False,
+                "detail": "enrollment_secret_once persisted",
+            }
+        )
+    else:
+        probes.append({"name": "mfa_secret_not_persisted", "ok": True, "detail": "ok"})
+
+    # Session create after MFA enroll without challenge must fail (no silent bypass).
+    mfa.confirm_enrollment(
+        reg["account_id"],
+        enrolled["factor_id"],
+        enrollment_secret=enrolled["enrollment_secret_once"],
+    )
+    _expect(
+        "session_requires_mfa_challenge",
+        lambda: svc.sessions.create_session(
+            reg["account_id"], tier="Free", member_roles=["member"]
+        ),
+    )
 
     ok = all(p["ok"] for p in probes)
     return {"executed": True, "ok": ok, "probes": probes, "pass_kind": "adversarial"}

@@ -69,6 +69,9 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
                 account_id,
                 tier=account.tier,
                 member_roles=list(account.member_roles),
+                mfa_challenge_id=str(body["mfa_challenge_id"])
+                if body.get("mfa_challenge_id")
+                else None,
             )
             return jsonify({"ok": True, "session": session})
         except HardBanViolation as exc:
