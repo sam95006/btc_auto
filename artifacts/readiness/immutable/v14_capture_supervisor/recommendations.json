@@ -1,6 +1,6 @@
 {
   "schema": "v14_a_capture_supervisor_recommendation",
-  "observed_at": "2026-08-05T11:19:45Z",
+  "observed_at": "2026-08-05T11:20:29Z",
   "ops_role": "observe_recommend_only",
   "stop_execution_owner": "local_Coordinator",
   "restart_execution_owner": "local_Coordinator",

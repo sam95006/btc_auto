@@ -2,7 +2,7 @@
   "schema": "v14_a_live_capture_integrity_supervisor",
   "lane": "V14-A",
   "lane_name": "LIVE_CAPTURE_INTEGRITY_SUPERVISOR",
-  "observed_at": "2026-08-05T11:19:45Z",
+  "observed_at": "2026-08-05T11:20:29Z",
   "campaign_id": "ms_accum_v13_integrity_14d",
   "ops_role": "observe_recommend_only",
   "hard_bans": [
@@ -76,7 +76,7 @@
   },
   "process_liveness": {
     "schema": "v14_a_process_liveness",
-    "observed_at": "2026-08-05T11:19:43Z",
+    "observed_at": "2026-08-05T11:20:27Z",
     "campaign_id": "ms_accum_v13_integrity_14d",
     "status": "DEGRADED",
     "parent": {
@@ -90,7 +90,7 @@
       "reason": "open_process_ok"
     },
     "health_status": "OK",
-    "health_age_seconds": 666.244742,
+    "health_age_seconds": 710.087705,
     "health_stale": true,
     "live_capture_started": true,
     "findings": [
@@ -100,10 +100,10 @@
         "summary": "Health file older than 300s",
         "evidence": {
           "checked_at": "2026-08-05T11:08:37Z",
-          "age_seconds": 666.244742
+          "age_seconds": 710.087705
         },
         "recommendation": "Refresh health sampler; treat WS health as degraded until fresh",
-        "observed_at": "2026-08-05T11:19:43Z"
+        "observed_at": "2026-08-05T11:20:27Z"
       }
     ],
     "mute_collector": true,
@@ -111,16 +111,16 @@
   },
   "ws_health": {
     "schema": "v14_a_ws_health",
-    "observed_at": "2026-08-05T11:19:43Z",
+    "observed_at": "2026-08-05T11:20:27Z",
     "campaign_id": "ms_accum_v13_integrity_14d",
     "status": "HEALTHY",
     "integrity_status": "LIVE_WRITING",
     "data_bytes": 8625074,
     "data_file_count": 86,
     "checkpoint_status": "OK",
-    "checkpoint_age_seconds": 32.07443141937256,
-    "gap_proxy_seconds": 32.07443141937256,
-    "trade_count": 157071,
+    "checkpoint_age_seconds": 15.087949514389038,
+    "gap_proxy_seconds": 15.087949514389038,
+    "trade_count": 161614,
     "liq_count": 53,
     "thresholds": {
       "ws_gap_warn_seconds": 120,
@@ -133,14 +133,14 @@
   },
   "partition_accounting": {
     "schema": "v14_a_partition_accounting",
-    "observed_at": "2026-08-05T11:19:43Z",
+    "observed_at": "2026-08-05T11:20:27Z",
     "campaign_id": "ms_accum_v13_integrity_14d",
     "status": "FINDINGS",
     "partitions_root": "D:\\NEXUS_RUNTIME\\worktrees\\v13_single_tip_integration\\.nexus_runtime\\microstructure\\v1_2",
     "partition_count": 66,
     "sealed_count": 28,
     "open_tail_count": 38,
-    "total_compressed_bytes": 11623657,
+    "total_compressed_bytes": 11851366,
     "symbol_count": 25,
     "symbols": [
       "ADAUSDT",
@@ -248,7 +248,7 @@
           "XRPUSDT",
           "ZECUSDT"
         ],
-        "bytes": 4853715
+        "bytes": 5081424
       }
     ],
     "daily": [
@@ -290,21 +290,21 @@
           ]
         },
         "recommendation": "Investigate WS gap / hour rotation; do not fill gaps with synthetic data",
-        "observed_at": "2026-08-05T11:19:43Z"
+        "observed_at": "2026-08-05T11:20:27Z"
       }
     ],
     "silent_fallback": false
   },
   "clock_heartbeat": {
     "schema": "v14_a_clock_heartbeat",
-    "observed_at": "2026-08-05T11:19:43Z",
+    "observed_at": "2026-08-05T11:20:27Z",
     "campaign_id": "ms_accum_v13_integrity_14d",
     "clock_status": "OK",
     "heartbeat_status": "STALE",
-    "health_age_seconds": 666.288575,
+    "health_age_seconds": 710.132562,
     "skew_ms": 0.0,
     "newest_partition_hour": "20260805_11",
-    "checkpoint_trade_count": 157071,
+    "checkpoint_trade_count": 161614,
     "registry_clock_quality": null,
     "thresholds": {
       "heartbeat_stale_seconds": 180,
@@ -317,30 +317,30 @@
         "severity": "HIGH",
         "summary": "Health sampler heartbeat proxy stale",
         "evidence": {
-          "health_age_seconds": 666.288575,
+          "health_age_seconds": 710.132562,
           "threshold": 180
         },
         "recommendation": null,
-        "observed_at": "2026-08-05T11:19:43Z"
+        "observed_at": "2026-08-05T11:20:27Z"
       }
     ],
     "silent_fallback": false
   },
   "storage": {
     "schema": "v14_a_storage_projection",
-    "observed_at": "2026-08-05T11:19:45Z",
+    "observed_at": "2026-08-05T11:20:29Z",
     "disk_root": "D:\\",
-    "free_bytes": 230528663552,
-    "free_gib": 214.7,
+    "free_bytes": 230502158336,
+    "free_gib": 214.67,
     "total_bytes": 261340786688,
-    "campaign_bytes": 12977911,
-    "campaign_gib": 0.0121,
-    "bytes_per_second": 4709.787500818411,
-    "bytes_per_hour": 16955235.00294628,
-    "projected_campaign_bytes_horizon": 419903551,
-    "projected_free_bytes_horizon": 230121737911,
-    "hours_to_hard_cap": 2532.356233431089,
-    "hours_to_floor": 7263.5077679902215,
+    "campaign_bytes": 13207188,
+    "campaign_gib": 0.0123,
+    "bytes_per_second": 5010.015375634134,
+    "bytes_per_hour": 18036055.35228288,
+    "projected_campaign_bytes_horizon": 446072516,
+    "projected_free_bytes_horizon": 230069293007,
+    "hours_to_hard_cap": 2380.590707522163,
+    "hours_to_floor": 6826.768577221919,
     "horizon_hours": 24.0,
     "floor_ok": true,
     "under_soft_cap": true,
@@ -352,19 +352,19 @@
     "findings": [],
     "velocity": {
       "method": "sleep_sample",
-      "bytes": 12977911,
+      "bytes": 13207188,
       "file_count": 95,
-      "bytes_before": 12968461,
+      "bytes_before": 13197115,
       "file_count_before": 95,
-      "delta_bytes": 9450,
-      "delta_seconds": 2.006459951400757,
-      "bytes_per_second": 4709.787500818411,
-      "sampled_at": "2026-08-05T11:19:45Z"
+      "delta_bytes": 10073,
+      "delta_seconds": 2.010572671890259,
+      "bytes_per_second": 5010.015375634134,
+      "sampled_at": "2026-08-05T11:20:29Z"
     }
   },
   "manifest_sampling": {
     "schema": "v14_a_manifest_checksum_sample",
-    "observed_at": "2026-08-05T11:19:45Z",
+    "observed_at": "2026-08-05T11:20:29Z",
     "campaign_id": "ms_accum_v13_integrity_14d",
     "status": "PASS",
     "partition_count": 66,
@@ -746,7 +746,7 @@
   },
   "open_tail": {
     "schema": "v14_a_open_tail_accounting",
-    "observed_at": "2026-08-05T11:19:45Z",
+    "observed_at": "2026-08-05T11:20:29Z",
     "campaign_id": "ms_accum_v13_integrity_14d",
     "status": "FINDINGS",
     "open_tail_count": 38,
@@ -893,14 +893,14 @@
           ]
         },
         "recommendation": "Retain open tails; fence on resume; do not rewrite or delete",
-        "observed_at": "2026-08-05T11:19:45Z"
+        "observed_at": "2026-08-05T11:20:29Z"
       }
     ],
     "silent_fallback": false
   },
   "duplicate_writer": {
     "schema": "v14_a_duplicate_writer_detection",
-    "observed_at": "2026-08-05T11:19:45Z",
+    "observed_at": "2026-08-05T11:20:29Z",
     "campaign_id": "ms_accum_v13_integrity_14d",
     "status": "OK",
     "parent": {
@@ -935,7 +935,7 @@
   "restart_executed": false,
   "recommendations": {
     "schema": "v14_a_capture_supervisor_recommendation",
-    "observed_at": "2026-08-05T11:19:45Z",
+    "observed_at": "2026-08-05T11:20:29Z",
     "ops_role": "observe_recommend_only",
     "stop_execution_owner": "local_Coordinator",
     "restart_execution_owner": "local_Coordinator",
@@ -976,10 +976,10 @@
       "summary": "Health file older than 300s",
       "evidence": {
         "checked_at": "2026-08-05T11:08:37Z",
-        "age_seconds": 666.244742
+        "age_seconds": 710.087705
       },
       "recommendation": "Refresh health sampler; treat WS health as degraded until fresh",
-      "observed_at": "2026-08-05T11:19:43Z"
+      "observed_at": "2026-08-05T11:20:27Z"
     },
     {
       "code": "HOURLY_GAPS",
@@ -1000,18 +1000,18 @@
         ]
       },
       "recommendation": "Investigate WS gap / hour rotation; do not fill gaps with synthetic data",
-      "observed_at": "2026-08-05T11:19:43Z"
+      "observed_at": "2026-08-05T11:20:27Z"
     },
     {
       "code": "HEARTBEAT_PROXY_STALE",
       "severity": "HIGH",
       "summary": "Health sampler heartbeat proxy stale",
       "evidence": {
-        "health_age_seconds": 666.288575,
+        "health_age_seconds": 710.132562,
         "threshold": 180
       },
       "recommendation": null,
-      "observed_at": "2026-08-05T11:19:43Z"
+      "observed_at": "2026-08-05T11:20:27Z"
     },
     {
       "code": "STALE_OPEN_TAILS",
@@ -1031,7 +1031,7 @@
         ]
       },
       "recommendation": "Retain open tails; fence on resume; do not rewrite or delete",
-      "observed_at": "2026-08-05T11:19:45Z"
+      "observed_at": "2026-08-05T11:20:29Z"
     }
   ],
   "critical_findings": [],
@@ -1042,10 +1042,10 @@
       "summary": "Health file older than 300s",
       "evidence": {
         "checked_at": "2026-08-05T11:08:37Z",
-        "age_seconds": 666.244742
+        "age_seconds": 710.087705
       },
       "recommendation": "Refresh health sampler; treat WS health as degraded until fresh",
-      "observed_at": "2026-08-05T11:19:43Z"
+      "observed_at": "2026-08-05T11:20:27Z"
     },
     {
       "code": "HOURLY_GAPS",
@@ -1066,18 +1066,18 @@
         ]
       },
       "recommendation": "Investigate WS gap / hour rotation; do not fill gaps with synthetic data",
-      "observed_at": "2026-08-05T11:19:43Z"
+      "observed_at": "2026-08-05T11:20:27Z"
     },
     {
       "code": "HEARTBEAT_PROXY_STALE",
       "severity": "HIGH",
       "summary": "Health sampler heartbeat proxy stale",
       "evidence": {
-        "health_age_seconds": 666.288575,
+        "health_age_seconds": 710.132562,
         "threshold": 180
       },
       "recommendation": null,
-      "observed_at": "2026-08-05T11:19:43Z"
+      "observed_at": "2026-08-05T11:20:27Z"
     },
     {
       "code": "STALE_OPEN_TAILS",
@@ -1097,7 +1097,7 @@
         ]
       },
       "recommendation": "Retain open tails; fence on resume; do not rewrite or delete",
-      "observed_at": "2026-08-05T11:19:45Z"
+      "observed_at": "2026-08-05T11:20:29Z"
     }
   ],
   "integrity_status": "DEGRADED"

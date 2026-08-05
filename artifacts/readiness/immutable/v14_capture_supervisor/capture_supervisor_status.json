@@ -2,10 +2,10 @@
   "schema": "v14_a_capture_supervisor_status",
   "lane": "V14-A",
   "lane_name": "LIVE_CAPTURE_INTEGRITY_SUPERVISOR",
-  "created_at": "2026-08-05T11:19:46Z",
+  "created_at": "2026-08-05T11:20:30Z",
   "branch": "feature/v14-live-capture-integrity-supervisor",
   "base_head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
-  "git_head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "git_head": "fcd5c66ef6b19b73c75bf0d3399188d5ff731714",
   "campaign_id": "ms_accum_v13_integrity_14d",
   "evidence_class": "REAL_LIVE_CAMPAIGN_READONLY",
   "pass1_all_passed": true,
@@ -26,10 +26,10 @@
     "missing_hours": [
       "20260805_10"
     ],
-    "campaign_bytes": 12977911,
-    "free_gib": 214.7,
-    "bytes_per_second": 4709.787500818411,
-    "trade_count": 157071,
+    "campaign_bytes": 13207188,
+    "free_gib": 214.67,
+    "bytes_per_second": 5010.015375634134,
+    "trade_count": 161614,
     "liq_count": 53,
     "process_status": "DEGRADED",
     "ws_status": "HEALTHY",
@@ -44,10 +44,10 @@
       "summary": "Health file older than 300s",
       "evidence": {
         "checked_at": "2026-08-05T11:08:37Z",
-        "age_seconds": 666.244742
+        "age_seconds": 710.087705
       },
       "recommendation": "Refresh health sampler; treat WS health as degraded until fresh",
-      "observed_at": "2026-08-05T11:19:43Z"
+      "observed_at": "2026-08-05T11:20:27Z"
     },
     {
       "code": "HOURLY_GAPS",
@@ -68,18 +68,18 @@
         ]
       },
       "recommendation": "Investigate WS gap / hour rotation; do not fill gaps with synthetic data",
-      "observed_at": "2026-08-05T11:19:43Z"
+      "observed_at": "2026-08-05T11:20:27Z"
     },
     {
       "code": "HEARTBEAT_PROXY_STALE",
       "severity": "HIGH",
       "summary": "Health sampler heartbeat proxy stale",
       "evidence": {
-        "health_age_seconds": 666.288575,
+        "health_age_seconds": 710.132562,
         "threshold": 180
       },
       "recommendation": null,
-      "observed_at": "2026-08-05T11:19:43Z"
+      "observed_at": "2026-08-05T11:20:27Z"
     },
     {
       "code": "STALE_OPEN_TAILS",
@@ -99,7 +99,7 @@
         ]
       },
       "recommendation": "Retain open tails; fence on resume; do not rewrite or delete",
-      "observed_at": "2026-08-05T11:19:45Z"
+      "observed_at": "2026-08-05T11:20:29Z"
     }
   ],
   "blockers": [],
@@ -115,10 +115,5 @@
   "auto_integration": false,
   "owned_paths_only": true,
   "readiness": "PASS",
-  "changed_files": [
-    "artifacts/readiness/immutable/v14_capture_supervisor/",
-    "backend/nexus_capture_supervisor/",
-    "tests/capture_supervisor/",
-    "tools/operations/capture_supervisor/"
-  ]
+  "changed_files": []
 }
