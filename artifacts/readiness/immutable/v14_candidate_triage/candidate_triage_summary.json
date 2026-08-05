@@ -1,0 +1,2242 @@
+{
+  "Founder_authorization_present": false,
+  "allowed_triage_statuses": [
+    "REJECTED",
+    "DATA_BLOCKED",
+    "COST_DESTROYED",
+    "SAMPLE_BLOCKED",
+    "REGIME_FRAGILE",
+    "DEVELOPMENT_REVIEW",
+    "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+  ],
+  "auto_integrated": false,
+  "created_at": "2026-08-05T11:15:48Z",
+  "demo_eligibility": false,
+  "demo_order_count": 0,
+  "demo_ready_output_count": 0,
+  "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+  "exchange_write_attempt_count": 0,
+  "forbidden_output_statuses": [
+    "QUALIFIED",
+    "PROMOTED",
+    "DEMO_READY"
+  ],
+  "formal_walk_forward_executed": false,
+  "founder_authorization_present": false,
+  "hard_bans": [
+    "no_formal_walk_forward",
+    "no_real_oos_reservation",
+    "no_real_oos_consumption",
+    "no_strategy_selection",
+    "no_strategy_promotion",
+    "no_demo_orders",
+    "no_shadow_orders",
+    "no_exchange_writes",
+    "no_pr27_merge",
+    "no_mainnet",
+    "no_real_money",
+    "no_profitability_claims",
+    "no_qualified_output",
+    "no_promoted_output",
+    "no_demo_ready_output",
+    "no_auto_integrate"
+  ],
+  "infrastructure_status": "BLOCKED_READY",
+  "ingest": {
+    "all_candidates_connected": true,
+    "as_of_ms": 1700000000000,
+    "bundle_checksum": "6efd36cf006f8b1546e40d1ceeca18693ae7ef2fbcbd5838ff712f424f1f00f3",
+    "candidate_ids": [
+      "SYN_V14H_DATA_001",
+      "SYN_V14H_SAMPLE_002",
+      "SYN_V14H_COST_003",
+      "SYN_V14H_REGIME_004",
+      "SYN_V14H_REJECT_005",
+      "SYN_V14H_REVIEW_006",
+      "SYN_V14H_PROMISING_007"
+    ],
+    "fixture_only": true,
+    "ingested_candidate_count": 7,
+    "qualification_ready_count": 0
+  },
+  "lane": "V14-H",
+  "mainnet": false,
+  "oos_consumed": false,
+  "oos_executed": false,
+  "oos_reservation_created": false,
+  "oos_touched": false,
+  "owned_paths": [
+    "backend/nexus_candidate_triage",
+    "tools/research/candidate_triage",
+    "tests/candidate_triage",
+    "artifacts/readiness/immutable/v14_candidate_triage"
+  ],
+  "pr27_merged": false,
+  "prohibitions": {
+    "auto_integrate": "BANNED",
+    "demo_orders": "NOT_ATTEMPTED",
+    "demo_ready_output": "FORBIDDEN",
+    "exchange_writes": "NOT_ATTEMPTED",
+    "formal_walk_forward": "NOT_EXECUTED",
+    "oos_consumption": "NOT_CONSUMED",
+    "oos_execution": "NOT_EXECUTED",
+    "oos_reservation": "NOT_CREATED",
+    "pr27_merge": "NOT_PERFORMED",
+    "promoted_output": "FORBIDDEN",
+    "qualified_output": "FORBIDDEN",
+    "strategy_promotion": "BLOCKED",
+    "strategy_selection": "NOT_PERFORMED"
+  },
+  "promoted_output_count": 0,
+  "promoted_strategy": null,
+  "proofs": {
+    "all_candidates_connected": true,
+    "all_demo_ready_refused": true,
+    "all_promotes_refused": true,
+    "all_qualification_plans_not_executed": true,
+    "all_qualifies_refused": true,
+    "all_selects_refused": true,
+    "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+    "blocked_qualification_plans": [
+      {
+        "candidate_id": "SYN_V14H_DATA_001",
+        "connected": true,
+        "demo_eligibility_plan": {
+          "demo_eligibility_granted": false,
+          "demo_order_count": 0,
+          "plan_kind": "DEMO_ELIGIBILITY",
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "fixture_only": true,
+        "formal_qualification_status": "BLOCKED",
+        "oos_reservation_plan": {
+          "note": "Plan only; real OOS neither reserved nor consumed.",
+          "oos_consumed": false,
+          "oos_executed": false,
+          "oos_reservation_created": false,
+          "plan_kind": "OOS_RESERVATION",
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "qualification_ready": false,
+        "risk_review_plan": {
+          "plan_kind": "RISK_REVIEW",
+          "risk_review_executed": false,
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "source": "v14_h_blocked_qualification_plans",
+        "status": "PLANNED_NOT_EXECUTED",
+        "surface": "blocked_qualification_planning",
+        "walk_forward_plan": {
+          "folds": [
+            {
+              "end_ms": 1696112000000,
+              "fold_id": "WF_FOLD_TRAIN",
+              "start_ms": 1694816000000
+            },
+            {
+              "end_ms": 1697408000000,
+              "fold_id": "WF_FOLD_TEST",
+              "start_ms": 1696112000001
+            }
+          ],
+          "formal_walk_forward_executed": false,
+          "note": "Plan only; formal WF remains BLOCKED.",
+          "plan_kind": "WALK_FORWARD",
+          "status": "PLANNED_NOT_EXECUTED"
+        }
+      },
+      {
+        "candidate_id": "SYN_V14H_SAMPLE_002",
+        "connected": true,
+        "demo_eligibility_plan": {
+          "demo_eligibility_granted": false,
+          "demo_order_count": 0,
+          "plan_kind": "DEMO_ELIGIBILITY",
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "fixture_only": true,
+        "formal_qualification_status": "BLOCKED",
+        "oos_reservation_plan": {
+          "note": "Plan only; real OOS neither reserved nor consumed.",
+          "oos_consumed": false,
+          "oos_executed": false,
+          "oos_reservation_created": false,
+          "plan_kind": "OOS_RESERVATION",
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "qualification_ready": false,
+        "risk_review_plan": {
+          "plan_kind": "RISK_REVIEW",
+          "risk_review_executed": false,
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "source": "v14_h_blocked_qualification_plans",
+        "status": "PLANNED_NOT_EXECUTED",
+        "surface": "blocked_qualification_planning",
+        "walk_forward_plan": {
+          "folds": [
+            {
+              "end_ms": 1696112000000,
+              "fold_id": "WF_FOLD_TRAIN",
+              "start_ms": 1694816000000
+            },
+            {
+              "end_ms": 1697408000000,
+              "fold_id": "WF_FOLD_TEST",
+              "start_ms": 1696112000001
+            }
+          ],
+          "formal_walk_forward_executed": false,
+          "note": "Plan only; formal WF remains BLOCKED.",
+          "plan_kind": "WALK_FORWARD",
+          "status": "PLANNED_NOT_EXECUTED"
+        }
+      },
+      {
+        "candidate_id": "SYN_V14H_COST_003",
+        "connected": true,
+        "demo_eligibility_plan": {
+          "demo_eligibility_granted": false,
+          "demo_order_count": 0,
+          "plan_kind": "DEMO_ELIGIBILITY",
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "fixture_only": true,
+        "formal_qualification_status": "BLOCKED",
+        "oos_reservation_plan": {
+          "note": "Plan only; real OOS neither reserved nor consumed.",
+          "oos_consumed": false,
+          "oos_executed": false,
+          "oos_reservation_created": false,
+          "plan_kind": "OOS_RESERVATION",
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "qualification_ready": false,
+        "risk_review_plan": {
+          "plan_kind": "RISK_REVIEW",
+          "risk_review_executed": false,
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "source": "v14_h_blocked_qualification_plans",
+        "status": "PLANNED_NOT_EXECUTED",
+        "surface": "blocked_qualification_planning",
+        "walk_forward_plan": {
+          "folds": [
+            {
+              "end_ms": 1696112000000,
+              "fold_id": "WF_FOLD_TRAIN",
+              "start_ms": 1694816000000
+            },
+            {
+              "end_ms": 1697408000000,
+              "fold_id": "WF_FOLD_TEST",
+              "start_ms": 1696112000001
+            }
+          ],
+          "formal_walk_forward_executed": false,
+          "note": "Plan only; formal WF remains BLOCKED.",
+          "plan_kind": "WALK_FORWARD",
+          "status": "PLANNED_NOT_EXECUTED"
+        }
+      },
+      {
+        "candidate_id": "SYN_V14H_REGIME_004",
+        "connected": true,
+        "demo_eligibility_plan": {
+          "demo_eligibility_granted": false,
+          "demo_order_count": 0,
+          "plan_kind": "DEMO_ELIGIBILITY",
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "fixture_only": true,
+        "formal_qualification_status": "BLOCKED",
+        "oos_reservation_plan": {
+          "note": "Plan only; real OOS neither reserved nor consumed.",
+          "oos_consumed": false,
+          "oos_executed": false,
+          "oos_reservation_created": false,
+          "plan_kind": "OOS_RESERVATION",
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "qualification_ready": false,
+        "risk_review_plan": {
+          "plan_kind": "RISK_REVIEW",
+          "risk_review_executed": false,
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "source": "v14_h_blocked_qualification_plans",
+        "status": "PLANNED_NOT_EXECUTED",
+        "surface": "blocked_qualification_planning",
+        "walk_forward_plan": {
+          "folds": [
+            {
+              "end_ms": 1696112000000,
+              "fold_id": "WF_FOLD_TRAIN",
+              "start_ms": 1694816000000
+            },
+            {
+              "end_ms": 1697408000000,
+              "fold_id": "WF_FOLD_TEST",
+              "start_ms": 1696112000001
+            }
+          ],
+          "formal_walk_forward_executed": false,
+          "note": "Plan only; formal WF remains BLOCKED.",
+          "plan_kind": "WALK_FORWARD",
+          "status": "PLANNED_NOT_EXECUTED"
+        }
+      },
+      {
+        "candidate_id": "SYN_V14H_REJECT_005",
+        "connected": true,
+        "demo_eligibility_plan": {
+          "demo_eligibility_granted": false,
+          "demo_order_count": 0,
+          "plan_kind": "DEMO_ELIGIBILITY",
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "fixture_only": true,
+        "formal_qualification_status": "BLOCKED",
+        "oos_reservation_plan": {
+          "note": "Plan only; real OOS neither reserved nor consumed.",
+          "oos_consumed": false,
+          "oos_executed": false,
+          "oos_reservation_created": false,
+          "plan_kind": "OOS_RESERVATION",
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "qualification_ready": false,
+        "risk_review_plan": {
+          "plan_kind": "RISK_REVIEW",
+          "risk_review_executed": false,
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "source": "v14_h_blocked_qualification_plans",
+        "status": "PLANNED_NOT_EXECUTED",
+        "surface": "blocked_qualification_planning",
+        "walk_forward_plan": {
+          "folds": [
+            {
+              "end_ms": 1696112000000,
+              "fold_id": "WF_FOLD_TRAIN",
+              "start_ms": 1694816000000
+            },
+            {
+              "end_ms": 1697408000000,
+              "fold_id": "WF_FOLD_TEST",
+              "start_ms": 1696112000001
+            }
+          ],
+          "formal_walk_forward_executed": false,
+          "note": "Plan only; formal WF remains BLOCKED.",
+          "plan_kind": "WALK_FORWARD",
+          "status": "PLANNED_NOT_EXECUTED"
+        }
+      },
+      {
+        "candidate_id": "SYN_V14H_REVIEW_006",
+        "connected": true,
+        "demo_eligibility_plan": {
+          "demo_eligibility_granted": false,
+          "demo_order_count": 0,
+          "plan_kind": "DEMO_ELIGIBILITY",
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "fixture_only": true,
+        "formal_qualification_status": "BLOCKED",
+        "oos_reservation_plan": {
+          "note": "Plan only; real OOS neither reserved nor consumed.",
+          "oos_consumed": false,
+          "oos_executed": false,
+          "oos_reservation_created": false,
+          "plan_kind": "OOS_RESERVATION",
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "qualification_ready": false,
+        "risk_review_plan": {
+          "plan_kind": "RISK_REVIEW",
+          "risk_review_executed": false,
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "source": "v14_h_blocked_qualification_plans",
+        "status": "PLANNED_NOT_EXECUTED",
+        "surface": "blocked_qualification_planning",
+        "walk_forward_plan": {
+          "folds": [
+            {
+              "end_ms": 1696112000000,
+              "fold_id": "WF_FOLD_TRAIN",
+              "start_ms": 1694816000000
+            },
+            {
+              "end_ms": 1697408000000,
+              "fold_id": "WF_FOLD_TEST",
+              "start_ms": 1696112000001
+            }
+          ],
+          "formal_walk_forward_executed": false,
+          "note": "Plan only; formal WF remains BLOCKED.",
+          "plan_kind": "WALK_FORWARD",
+          "status": "PLANNED_NOT_EXECUTED"
+        }
+      },
+      {
+        "candidate_id": "SYN_V14H_PROMISING_007",
+        "connected": true,
+        "demo_eligibility_plan": {
+          "demo_eligibility_granted": false,
+          "demo_order_count": 0,
+          "plan_kind": "DEMO_ELIGIBILITY",
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "fixture_only": true,
+        "formal_qualification_status": "BLOCKED",
+        "oos_reservation_plan": {
+          "note": "Plan only; real OOS neither reserved nor consumed.",
+          "oos_consumed": false,
+          "oos_executed": false,
+          "oos_reservation_created": false,
+          "plan_kind": "OOS_RESERVATION",
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "qualification_ready": false,
+        "risk_review_plan": {
+          "plan_kind": "RISK_REVIEW",
+          "risk_review_executed": false,
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        "source": "v14_h_blocked_qualification_plans",
+        "status": "PLANNED_NOT_EXECUTED",
+        "surface": "blocked_qualification_planning",
+        "walk_forward_plan": {
+          "folds": [
+            {
+              "end_ms": 1696112000000,
+              "fold_id": "WF_FOLD_TRAIN",
+              "start_ms": 1694816000000
+            },
+            {
+              "end_ms": 1697408000000,
+              "fold_id": "WF_FOLD_TEST",
+              "start_ms": 1696112000001
+            }
+          ],
+          "formal_walk_forward_executed": false,
+          "note": "Plan only; formal WF remains BLOCKED.",
+          "plan_kind": "WALK_FORWARD",
+          "status": "PLANNED_NOT_EXECUTED"
+        }
+      }
+    ],
+    "connection_surfaces": [
+      "mechanism_definitions",
+      "feature_lab",
+      "dynamic_universe",
+      "cost_sensitivity",
+      "robustness_results",
+      "blocked_qualification_planning"
+    ],
+    "connections": [
+      {
+        "all_surfaces_connected": true,
+        "candidate_id": "SYN_V14H_DATA_001",
+        "connections": {
+          "blocked_qualification_planning": {
+            "candidate_id": "SYN_V14H_DATA_001",
+            "connected": true,
+            "demo_eligibility_plan": {
+              "demo_eligibility_granted": false,
+              "demo_order_count": 0,
+              "plan_kind": "DEMO_ELIGIBILITY",
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "fixture_only": true,
+            "formal_qualification_status": "BLOCKED",
+            "oos_reservation_plan": {
+              "note": "Plan only; real OOS neither reserved nor consumed.",
+              "oos_consumed": false,
+              "oos_executed": false,
+              "oos_reservation_created": false,
+              "plan_kind": "OOS_RESERVATION",
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "qualification_ready": false,
+            "risk_review_plan": {
+              "plan_kind": "RISK_REVIEW",
+              "risk_review_executed": false,
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "source": "v14_h_blocked_qualification_plans",
+            "status": "PLANNED_NOT_EXECUTED",
+            "surface": "blocked_qualification_planning",
+            "walk_forward_plan": {
+              "folds": [
+                {
+                  "end_ms": 1696112000000,
+                  "fold_id": "WF_FOLD_TRAIN",
+                  "start_ms": 1694816000000
+                },
+                {
+                  "end_ms": 1697408000000,
+                  "fold_id": "WF_FOLD_TEST",
+                  "start_ms": 1696112000001
+                }
+              ],
+              "formal_walk_forward_executed": false,
+              "note": "Plan only; formal WF remains BLOCKED.",
+              "plan_kind": "WALK_FORWARD",
+              "status": "PLANNED_NOT_EXECUTED"
+            }
+          },
+          "cost_sensitivity": {
+            "canonical_cost_authority_consumed": true,
+            "canonical_cost_formulas_modified": false,
+            "connected": true,
+            "cost_destroyed": false,
+            "fixture_only": true,
+            "gross_expectancy": 0.4,
+            "missing_fields": [],
+            "net_expectancy": 0.1,
+            "source": "fixture_cost_sensitivity_v14e_compatible",
+            "surface": "cost_sensitivity"
+          },
+          "dynamic_universe": {
+            "connected": true,
+            "fixture_only": true,
+            "live_exchange_called": false,
+            "pit_membership_ok": true,
+            "pit_symbols": [
+              "FIXTUREBTCUSDT",
+              "SYNTHUSDT"
+            ],
+            "requested_symbols": [
+              "SYNTHUSDT",
+              "FIXTUREBTCUSDT"
+            ],
+            "source": "nexus_dynamic_universe+fixture_instruments",
+            "surface": "dynamic_universe",
+            "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE"
+          },
+          "feature_lab": {
+            "catalog_feature_count": 12,
+            "catalog_version": "v13_e_feature_catalog_1",
+            "connected": true,
+            "fixture_only": true,
+            "missing_feature_ids": [],
+            "predictive_edge_claimed": false,
+            "requested_feature_ids": [
+              "aggressive_buy_sell_imbalance",
+              "trade_intensity",
+              "price_impact"
+            ],
+            "source": "nexus_micro_feature_lab",
+            "surface": "feature_lab"
+          },
+          "mechanism_definitions": {
+            "connected": true,
+            "cosmetic_parameter_variant": false,
+            "deterministic": true,
+            "fixture_only": true,
+            "mechanism_family": "order_flow_imbalance",
+            "mechanism_semantic_id": "MECH_ORDER_FLOW_IMBALANCE_V4",
+            "missing_fields": [],
+            "source": "fixture_mechanism_contract_v14c_compatible",
+            "surface": "mechanism_definitions"
+          },
+          "robustness_results": {
+            "bootstrap_stable": false,
+            "connected": true,
+            "fixture_only": true,
+            "formal_walk_forward_executed": false,
+            "label": "DATA_QUALITY_BLOCKED",
+            "label_allowed": true,
+            "multiple_testing_rejected": false,
+            "oos_consumed": false,
+            "qualification_claim": false,
+            "regime_stable": true,
+            "sample_sufficient": true,
+            "source": "fixture_robustness_v14d_compatible",
+            "surface": "robustness_results"
+          }
+        },
+        "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+        "surface_order": [
+          "mechanism_definitions",
+          "feature_lab",
+          "dynamic_universe",
+          "cost_sensitivity",
+          "robustness_results",
+          "blocked_qualification_planning"
+        ]
+      },
+      {
+        "all_surfaces_connected": true,
+        "candidate_id": "SYN_V14H_SAMPLE_002",
+        "connections": {
+          "blocked_qualification_planning": {
+            "candidate_id": "SYN_V14H_SAMPLE_002",
+            "connected": true,
+            "demo_eligibility_plan": {
+              "demo_eligibility_granted": false,
+              "demo_order_count": 0,
+              "plan_kind": "DEMO_ELIGIBILITY",
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "fixture_only": true,
+            "formal_qualification_status": "BLOCKED",
+            "oos_reservation_plan": {
+              "note": "Plan only; real OOS neither reserved nor consumed.",
+              "oos_consumed": false,
+              "oos_executed": false,
+              "oos_reservation_created": false,
+              "plan_kind": "OOS_RESERVATION",
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "qualification_ready": false,
+            "risk_review_plan": {
+              "plan_kind": "RISK_REVIEW",
+              "risk_review_executed": false,
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "source": "v14_h_blocked_qualification_plans",
+            "status": "PLANNED_NOT_EXECUTED",
+            "surface": "blocked_qualification_planning",
+            "walk_forward_plan": {
+              "folds": [
+                {
+                  "end_ms": 1696112000000,
+                  "fold_id": "WF_FOLD_TRAIN",
+                  "start_ms": 1694816000000
+                },
+                {
+                  "end_ms": 1697408000000,
+                  "fold_id": "WF_FOLD_TEST",
+                  "start_ms": 1696112000001
+                }
+              ],
+              "formal_walk_forward_executed": false,
+              "note": "Plan only; formal WF remains BLOCKED.",
+              "plan_kind": "WALK_FORWARD",
+              "status": "PLANNED_NOT_EXECUTED"
+            }
+          },
+          "cost_sensitivity": {
+            "canonical_cost_authority_consumed": true,
+            "canonical_cost_formulas_modified": false,
+            "connected": true,
+            "cost_destroyed": false,
+            "fixture_only": true,
+            "gross_expectancy": 0.5,
+            "missing_fields": [],
+            "net_expectancy": 0.2,
+            "source": "fixture_cost_sensitivity_v14e_compatible",
+            "surface": "cost_sensitivity"
+          },
+          "dynamic_universe": {
+            "connected": true,
+            "fixture_only": true,
+            "live_exchange_called": false,
+            "pit_membership_ok": true,
+            "pit_symbols": [
+              "FIXTUREBTCUSDT",
+              "SYNTHUSDT"
+            ],
+            "requested_symbols": [
+              "SYNTHUSDT",
+              "FIXTUREBTCUSDT"
+            ],
+            "source": "nexus_dynamic_universe+fixture_instruments",
+            "surface": "dynamic_universe",
+            "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE"
+          },
+          "feature_lab": {
+            "catalog_feature_count": 12,
+            "catalog_version": "v13_e_feature_catalog_1",
+            "connected": true,
+            "fixture_only": true,
+            "missing_feature_ids": [],
+            "predictive_edge_claimed": false,
+            "requested_feature_ids": [
+              "aggressive_buy_sell_imbalance",
+              "trade_intensity",
+              "price_impact"
+            ],
+            "source": "nexus_micro_feature_lab",
+            "surface": "feature_lab"
+          },
+          "mechanism_definitions": {
+            "connected": true,
+            "cosmetic_parameter_variant": false,
+            "deterministic": true,
+            "fixture_only": true,
+            "mechanism_family": "spread_shock",
+            "mechanism_semantic_id": "MECH_SPREAD_SHOCK_V4",
+            "missing_fields": [],
+            "source": "fixture_mechanism_contract_v14c_compatible",
+            "surface": "mechanism_definitions"
+          },
+          "robustness_results": {
+            "bootstrap_stable": false,
+            "connected": true,
+            "fixture_only": true,
+            "formal_walk_forward_executed": false,
+            "label": "INSUFFICIENT_SAMPLE",
+            "label_allowed": true,
+            "multiple_testing_rejected": false,
+            "oos_consumed": false,
+            "qualification_claim": false,
+            "regime_stable": true,
+            "sample_sufficient": false,
+            "source": "fixture_robustness_v14d_compatible",
+            "surface": "robustness_results"
+          }
+        },
+        "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+        "surface_order": [
+          "mechanism_definitions",
+          "feature_lab",
+          "dynamic_universe",
+          "cost_sensitivity",
+          "robustness_results",
+          "blocked_qualification_planning"
+        ]
+      },
+      {
+        "all_surfaces_connected": true,
+        "candidate_id": "SYN_V14H_COST_003",
+        "connections": {
+          "blocked_qualification_planning": {
+            "candidate_id": "SYN_V14H_COST_003",
+            "connected": true,
+            "demo_eligibility_plan": {
+              "demo_eligibility_granted": false,
+              "demo_order_count": 0,
+              "plan_kind": "DEMO_ELIGIBILITY",
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "fixture_only": true,
+            "formal_qualification_status": "BLOCKED",
+            "oos_reservation_plan": {
+              "note": "Plan only; real OOS neither reserved nor consumed.",
+              "oos_consumed": false,
+              "oos_executed": false,
+              "oos_reservation_created": false,
+              "plan_kind": "OOS_RESERVATION",
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "qualification_ready": false,
+            "risk_review_plan": {
+              "plan_kind": "RISK_REVIEW",
+              "risk_review_executed": false,
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "source": "v14_h_blocked_qualification_plans",
+            "status": "PLANNED_NOT_EXECUTED",
+            "surface": "blocked_qualification_planning",
+            "walk_forward_plan": {
+              "folds": [
+                {
+                  "end_ms": 1696112000000,
+                  "fold_id": "WF_FOLD_TRAIN",
+                  "start_ms": 1694816000000
+                },
+                {
+                  "end_ms": 1697408000000,
+                  "fold_id": "WF_FOLD_TEST",
+                  "start_ms": 1696112000001
+                }
+              ],
+              "formal_walk_forward_executed": false,
+              "note": "Plan only; formal WF remains BLOCKED.",
+              "plan_kind": "WALK_FORWARD",
+              "status": "PLANNED_NOT_EXECUTED"
+            }
+          },
+          "cost_sensitivity": {
+            "canonical_cost_authority_consumed": true,
+            "canonical_cost_formulas_modified": false,
+            "connected": true,
+            "cost_destroyed": true,
+            "fixture_only": true,
+            "gross_expectancy": 0.8,
+            "missing_fields": [],
+            "net_expectancy": -0.3,
+            "source": "fixture_cost_sensitivity_v14e_compatible",
+            "surface": "cost_sensitivity"
+          },
+          "dynamic_universe": {
+            "connected": true,
+            "fixture_only": true,
+            "live_exchange_called": false,
+            "pit_membership_ok": true,
+            "pit_symbols": [
+              "FIXTUREBTCUSDT",
+              "SYNTHUSDT"
+            ],
+            "requested_symbols": [
+              "SYNTHUSDT",
+              "FIXTUREBTCUSDT"
+            ],
+            "source": "nexus_dynamic_universe+fixture_instruments",
+            "surface": "dynamic_universe",
+            "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE"
+          },
+          "feature_lab": {
+            "catalog_feature_count": 12,
+            "catalog_version": "v13_e_feature_catalog_1",
+            "connected": true,
+            "fixture_only": true,
+            "missing_feature_ids": [],
+            "predictive_edge_claimed": false,
+            "requested_feature_ids": [
+              "aggressive_buy_sell_imbalance",
+              "trade_intensity",
+              "price_impact"
+            ],
+            "source": "nexus_micro_feature_lab",
+            "surface": "feature_lab"
+          },
+          "mechanism_definitions": {
+            "connected": true,
+            "cosmetic_parameter_variant": false,
+            "deterministic": true,
+            "fixture_only": true,
+            "mechanism_family": "aggression_persistence",
+            "mechanism_semantic_id": "MECH_AGGRESSION_PERSISTENCE_V4",
+            "missing_fields": [],
+            "source": "fixture_mechanism_contract_v14c_compatible",
+            "surface": "mechanism_definitions"
+          },
+          "robustness_results": {
+            "bootstrap_stable": false,
+            "connected": true,
+            "fixture_only": true,
+            "formal_walk_forward_executed": false,
+            "label": "COST_DESTROYED",
+            "label_allowed": true,
+            "multiple_testing_rejected": false,
+            "oos_consumed": false,
+            "qualification_claim": false,
+            "regime_stable": true,
+            "sample_sufficient": true,
+            "source": "fixture_robustness_v14d_compatible",
+            "surface": "robustness_results"
+          }
+        },
+        "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+        "surface_order": [
+          "mechanism_definitions",
+          "feature_lab",
+          "dynamic_universe",
+          "cost_sensitivity",
+          "robustness_results",
+          "blocked_qualification_planning"
+        ]
+      },
+      {
+        "all_surfaces_connected": true,
+        "candidate_id": "SYN_V14H_REGIME_004",
+        "connections": {
+          "blocked_qualification_planning": {
+            "candidate_id": "SYN_V14H_REGIME_004",
+            "connected": true,
+            "demo_eligibility_plan": {
+              "demo_eligibility_granted": false,
+              "demo_order_count": 0,
+              "plan_kind": "DEMO_ELIGIBILITY",
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "fixture_only": true,
+            "formal_qualification_status": "BLOCKED",
+            "oos_reservation_plan": {
+              "note": "Plan only; real OOS neither reserved nor consumed.",
+              "oos_consumed": false,
+              "oos_executed": false,
+              "oos_reservation_created": false,
+              "plan_kind": "OOS_RESERVATION",
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "qualification_ready": false,
+            "risk_review_plan": {
+              "plan_kind": "RISK_REVIEW",
+              "risk_review_executed": false,
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "source": "v14_h_blocked_qualification_plans",
+            "status": "PLANNED_NOT_EXECUTED",
+            "surface": "blocked_qualification_planning",
+            "walk_forward_plan": {
+              "folds": [
+                {
+                  "end_ms": 1696112000000,
+                  "fold_id": "WF_FOLD_TRAIN",
+                  "start_ms": 1694816000000
+                },
+                {
+                  "end_ms": 1697408000000,
+                  "fold_id": "WF_FOLD_TEST",
+                  "start_ms": 1696112000001
+                }
+              ],
+              "formal_walk_forward_executed": false,
+              "note": "Plan only; formal WF remains BLOCKED.",
+              "plan_kind": "WALK_FORWARD",
+              "status": "PLANNED_NOT_EXECUTED"
+            }
+          },
+          "cost_sensitivity": {
+            "canonical_cost_authority_consumed": true,
+            "canonical_cost_formulas_modified": false,
+            "connected": true,
+            "cost_destroyed": false,
+            "fixture_only": true,
+            "gross_expectancy": 0.45,
+            "missing_fields": [],
+            "net_expectancy": 0.15,
+            "source": "fixture_cost_sensitivity_v14e_compatible",
+            "surface": "cost_sensitivity"
+          },
+          "dynamic_universe": {
+            "connected": true,
+            "fixture_only": true,
+            "live_exchange_called": false,
+            "pit_membership_ok": true,
+            "pit_symbols": [
+              "FIXTUREBTCUSDT",
+              "SYNTHUSDT"
+            ],
+            "requested_symbols": [
+              "SYNTHUSDT",
+              "FIXTUREBTCUSDT"
+            ],
+            "source": "nexus_dynamic_universe+fixture_instruments",
+            "surface": "dynamic_universe",
+            "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE"
+          },
+          "feature_lab": {
+            "catalog_feature_count": 12,
+            "catalog_version": "v13_e_feature_catalog_1",
+            "connected": true,
+            "fixture_only": true,
+            "missing_feature_ids": [],
+            "predictive_edge_claimed": false,
+            "requested_feature_ids": [
+              "aggressive_buy_sell_imbalance",
+              "trade_intensity",
+              "price_impact"
+            ],
+            "source": "nexus_micro_feature_lab",
+            "surface": "feature_lab"
+          },
+          "mechanism_definitions": {
+            "connected": true,
+            "cosmetic_parameter_variant": false,
+            "deterministic": true,
+            "fixture_only": true,
+            "mechanism_family": "regime_conditioned_mean_reversion",
+            "mechanism_semantic_id": "MECH_REGIME_MEAN_REVERSION_V4",
+            "missing_fields": [],
+            "source": "fixture_mechanism_contract_v14c_compatible",
+            "surface": "mechanism_definitions"
+          },
+          "robustness_results": {
+            "bootstrap_stable": false,
+            "connected": true,
+            "fixture_only": true,
+            "formal_walk_forward_executed": false,
+            "label": "DEVELOPMENT_FRAGILE",
+            "label_allowed": true,
+            "multiple_testing_rejected": false,
+            "oos_consumed": false,
+            "qualification_claim": false,
+            "regime_stable": false,
+            "sample_sufficient": true,
+            "source": "fixture_robustness_v14d_compatible",
+            "surface": "robustness_results"
+          }
+        },
+        "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+        "surface_order": [
+          "mechanism_definitions",
+          "feature_lab",
+          "dynamic_universe",
+          "cost_sensitivity",
+          "robustness_results",
+          "blocked_qualification_planning"
+        ]
+      },
+      {
+        "all_surfaces_connected": true,
+        "candidate_id": "SYN_V14H_REJECT_005",
+        "connections": {
+          "blocked_qualification_planning": {
+            "candidate_id": "SYN_V14H_REJECT_005",
+            "connected": true,
+            "demo_eligibility_plan": {
+              "demo_eligibility_granted": false,
+              "demo_order_count": 0,
+              "plan_kind": "DEMO_ELIGIBILITY",
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "fixture_only": true,
+            "formal_qualification_status": "BLOCKED",
+            "oos_reservation_plan": {
+              "note": "Plan only; real OOS neither reserved nor consumed.",
+              "oos_consumed": false,
+              "oos_executed": false,
+              "oos_reservation_created": false,
+              "plan_kind": "OOS_RESERVATION",
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "qualification_ready": false,
+            "risk_review_plan": {
+              "plan_kind": "RISK_REVIEW",
+              "risk_review_executed": false,
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "source": "v14_h_blocked_qualification_plans",
+            "status": "PLANNED_NOT_EXECUTED",
+            "surface": "blocked_qualification_planning",
+            "walk_forward_plan": {
+              "folds": [
+                {
+                  "end_ms": 1696112000000,
+                  "fold_id": "WF_FOLD_TRAIN",
+                  "start_ms": 1694816000000
+                },
+                {
+                  "end_ms": 1697408000000,
+                  "fold_id": "WF_FOLD_TEST",
+                  "start_ms": 1696112000001
+                }
+              ],
+              "formal_walk_forward_executed": false,
+              "note": "Plan only; formal WF remains BLOCKED.",
+              "plan_kind": "WALK_FORWARD",
+              "status": "PLANNED_NOT_EXECUTED"
+            }
+          },
+          "cost_sensitivity": {
+            "canonical_cost_authority_consumed": true,
+            "canonical_cost_formulas_modified": false,
+            "connected": true,
+            "cost_destroyed": false,
+            "fixture_only": true,
+            "gross_expectancy": -0.2,
+            "missing_fields": [],
+            "net_expectancy": -0.5,
+            "source": "fixture_cost_sensitivity_v14e_compatible",
+            "surface": "cost_sensitivity"
+          },
+          "dynamic_universe": {
+            "connected": true,
+            "fixture_only": true,
+            "live_exchange_called": false,
+            "pit_membership_ok": true,
+            "pit_symbols": [
+              "FIXTUREBTCUSDT",
+              "SYNTHUSDT"
+            ],
+            "requested_symbols": [
+              "SYNTHUSDT",
+              "FIXTUREBTCUSDT"
+            ],
+            "source": "nexus_dynamic_universe+fixture_instruments",
+            "surface": "dynamic_universe",
+            "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE"
+          },
+          "feature_lab": {
+            "catalog_feature_count": 12,
+            "catalog_version": "v13_e_feature_catalog_1",
+            "connected": true,
+            "fixture_only": true,
+            "missing_feature_ids": [],
+            "predictive_edge_claimed": false,
+            "requested_feature_ids": [
+              "aggressive_buy_sell_imbalance",
+              "trade_intensity",
+              "price_impact"
+            ],
+            "source": "nexus_micro_feature_lab",
+            "surface": "feature_lab"
+          },
+          "mechanism_definitions": {
+            "connected": true,
+            "cosmetic_parameter_variant": false,
+            "deterministic": true,
+            "fixture_only": true,
+            "mechanism_family": "failed_breakout",
+            "mechanism_semantic_id": "MECH_FAILED_BREAKOUT_V4",
+            "missing_fields": [],
+            "source": "fixture_mechanism_contract_v14c_compatible",
+            "surface": "mechanism_definitions"
+          },
+          "robustness_results": {
+            "bootstrap_stable": false,
+            "connected": true,
+            "fixture_only": true,
+            "formal_walk_forward_executed": false,
+            "label": "MULTIPLE_TESTING_REJECTED",
+            "label_allowed": true,
+            "multiple_testing_rejected": true,
+            "oos_consumed": false,
+            "qualification_claim": false,
+            "regime_stable": true,
+            "sample_sufficient": true,
+            "source": "fixture_robustness_v14d_compatible",
+            "surface": "robustness_results"
+          }
+        },
+        "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+        "surface_order": [
+          "mechanism_definitions",
+          "feature_lab",
+          "dynamic_universe",
+          "cost_sensitivity",
+          "robustness_results",
+          "blocked_qualification_planning"
+        ]
+      },
+      {
+        "all_surfaces_connected": true,
+        "candidate_id": "SYN_V14H_REVIEW_006",
+        "connections": {
+          "blocked_qualification_planning": {
+            "candidate_id": "SYN_V14H_REVIEW_006",
+            "connected": true,
+            "demo_eligibility_plan": {
+              "demo_eligibility_granted": false,
+              "demo_order_count": 0,
+              "plan_kind": "DEMO_ELIGIBILITY",
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "fixture_only": true,
+            "formal_qualification_status": "BLOCKED",
+            "oos_reservation_plan": {
+              "note": "Plan only; real OOS neither reserved nor consumed.",
+              "oos_consumed": false,
+              "oos_executed": false,
+              "oos_reservation_created": false,
+              "plan_kind": "OOS_RESERVATION",
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "qualification_ready": false,
+            "risk_review_plan": {
+              "plan_kind": "RISK_REVIEW",
+              "risk_review_executed": false,
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "source": "v14_h_blocked_qualification_plans",
+            "status": "PLANNED_NOT_EXECUTED",
+            "surface": "blocked_qualification_planning",
+            "walk_forward_plan": {
+              "folds": [
+                {
+                  "end_ms": 1696112000000,
+                  "fold_id": "WF_FOLD_TRAIN",
+                  "start_ms": 1694816000000
+                },
+                {
+                  "end_ms": 1697408000000,
+                  "fold_id": "WF_FOLD_TEST",
+                  "start_ms": 1696112000001
+                }
+              ],
+              "formal_walk_forward_executed": false,
+              "note": "Plan only; formal WF remains BLOCKED.",
+              "plan_kind": "WALK_FORWARD",
+              "status": "PLANNED_NOT_EXECUTED"
+            }
+          },
+          "cost_sensitivity": {
+            "canonical_cost_authority_consumed": true,
+            "canonical_cost_formulas_modified": false,
+            "connected": true,
+            "cost_destroyed": false,
+            "fixture_only": true,
+            "gross_expectancy": 0.35,
+            "missing_fields": [],
+            "net_expectancy": 0.05,
+            "source": "fixture_cost_sensitivity_v14e_compatible",
+            "surface": "cost_sensitivity"
+          },
+          "dynamic_universe": {
+            "connected": true,
+            "fixture_only": true,
+            "live_exchange_called": false,
+            "pit_membership_ok": true,
+            "pit_symbols": [
+              "FIXTUREBTCUSDT",
+              "SYNTHUSDT"
+            ],
+            "requested_symbols": [
+              "SYNTHUSDT",
+              "FIXTUREBTCUSDT"
+            ],
+            "source": "nexus_dynamic_universe+fixture_instruments",
+            "surface": "dynamic_universe",
+            "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE"
+          },
+          "feature_lab": {
+            "catalog_feature_count": 12,
+            "catalog_version": "v13_e_feature_catalog_1",
+            "connected": true,
+            "fixture_only": true,
+            "missing_feature_ids": [],
+            "predictive_edge_claimed": false,
+            "requested_feature_ids": [
+              "aggressive_buy_sell_imbalance",
+              "trade_intensity",
+              "price_impact"
+            ],
+            "source": "nexus_micro_feature_lab",
+            "surface": "feature_lab"
+          },
+          "mechanism_definitions": {
+            "connected": true,
+            "cosmetic_parameter_variant": false,
+            "deterministic": true,
+            "fixture_only": true,
+            "mechanism_family": "absorption",
+            "mechanism_semantic_id": "MECH_ABSORPTION_V4",
+            "missing_fields": [],
+            "source": "fixture_mechanism_contract_v14c_compatible",
+            "surface": "mechanism_definitions"
+          },
+          "robustness_results": {
+            "bootstrap_stable": false,
+            "connected": true,
+            "fixture_only": true,
+            "formal_walk_forward_executed": false,
+            "label": "DEVELOPMENT_FRAGILE",
+            "label_allowed": true,
+            "multiple_testing_rejected": false,
+            "oos_consumed": false,
+            "qualification_claim": false,
+            "regime_stable": true,
+            "sample_sufficient": true,
+            "source": "fixture_robustness_v14d_compatible",
+            "surface": "robustness_results"
+          }
+        },
+        "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+        "surface_order": [
+          "mechanism_definitions",
+          "feature_lab",
+          "dynamic_universe",
+          "cost_sensitivity",
+          "robustness_results",
+          "blocked_qualification_planning"
+        ]
+      },
+      {
+        "all_surfaces_connected": true,
+        "candidate_id": "SYN_V14H_PROMISING_007",
+        "connections": {
+          "blocked_qualification_planning": {
+            "candidate_id": "SYN_V14H_PROMISING_007",
+            "connected": true,
+            "demo_eligibility_plan": {
+              "demo_eligibility_granted": false,
+              "demo_order_count": 0,
+              "plan_kind": "DEMO_ELIGIBILITY",
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "fixture_only": true,
+            "formal_qualification_status": "BLOCKED",
+            "oos_reservation_plan": {
+              "note": "Plan only; real OOS neither reserved nor consumed.",
+              "oos_consumed": false,
+              "oos_executed": false,
+              "oos_reservation_created": false,
+              "plan_kind": "OOS_RESERVATION",
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "qualification_ready": false,
+            "risk_review_plan": {
+              "plan_kind": "RISK_REVIEW",
+              "risk_review_executed": false,
+              "status": "PLANNED_NOT_EXECUTED"
+            },
+            "source": "v14_h_blocked_qualification_plans",
+            "status": "PLANNED_NOT_EXECUTED",
+            "surface": "blocked_qualification_planning",
+            "walk_forward_plan": {
+              "folds": [
+                {
+                  "end_ms": 1696112000000,
+                  "fold_id": "WF_FOLD_TRAIN",
+                  "start_ms": 1694816000000
+                },
+                {
+                  "end_ms": 1697408000000,
+                  "fold_id": "WF_FOLD_TEST",
+                  "start_ms": 1696112000001
+                }
+              ],
+              "formal_walk_forward_executed": false,
+              "note": "Plan only; formal WF remains BLOCKED.",
+              "plan_kind": "WALK_FORWARD",
+              "status": "PLANNED_NOT_EXECUTED"
+            }
+          },
+          "cost_sensitivity": {
+            "canonical_cost_authority_consumed": true,
+            "canonical_cost_formulas_modified": false,
+            "connected": true,
+            "cost_destroyed": false,
+            "fixture_only": true,
+            "gross_expectancy": 0.7,
+            "missing_fields": [],
+            "net_expectancy": 0.25,
+            "source": "fixture_cost_sensitivity_v14e_compatible",
+            "surface": "cost_sensitivity"
+          },
+          "dynamic_universe": {
+            "connected": true,
+            "fixture_only": true,
+            "live_exchange_called": false,
+            "pit_membership_ok": true,
+            "pit_symbols": [
+              "FIXTUREBTCUSDT",
+              "SYNTHUSDT"
+            ],
+            "requested_symbols": [
+              "SYNTHUSDT",
+              "FIXTUREBTCUSDT"
+            ],
+            "source": "nexus_dynamic_universe+fixture_instruments",
+            "surface": "dynamic_universe",
+            "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE"
+          },
+          "feature_lab": {
+            "catalog_feature_count": 12,
+            "catalog_version": "v13_e_feature_catalog_1",
+            "connected": true,
+            "fixture_only": true,
+            "missing_feature_ids": [],
+            "predictive_edge_claimed": false,
+            "requested_feature_ids": [
+              "aggressive_buy_sell_imbalance",
+              "trade_intensity",
+              "price_impact"
+            ],
+            "source": "nexus_micro_feature_lab",
+            "surface": "feature_lab"
+          },
+          "mechanism_definitions": {
+            "connected": true,
+            "cosmetic_parameter_variant": false,
+            "deterministic": true,
+            "fixture_only": true,
+            "mechanism_family": "liquidity_withdrawal",
+            "mechanism_semantic_id": "MECH_LIQUIDITY_WITHDRAWAL_V4",
+            "missing_fields": [],
+            "source": "fixture_mechanism_contract_v14c_compatible",
+            "surface": "mechanism_definitions"
+          },
+          "robustness_results": {
+            "bootstrap_stable": true,
+            "connected": true,
+            "fixture_only": true,
+            "formal_walk_forward_executed": false,
+            "label": "DEVELOPMENT_ROBUST",
+            "label_allowed": true,
+            "multiple_testing_rejected": false,
+            "oos_consumed": false,
+            "qualification_claim": false,
+            "regime_stable": true,
+            "sample_sufficient": true,
+            "source": "fixture_robustness_v14d_compatible",
+            "surface": "robustness_results"
+          }
+        },
+        "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+        "surface_order": [
+          "mechanism_definitions",
+          "feature_lab",
+          "dynamic_universe",
+          "cost_sensitivity",
+          "robustness_results",
+          "blocked_qualification_planning"
+        ]
+      }
+    ],
+    "demo_ready_attempts": {
+      "SYN_V14H_COST_003": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_COST_003",
+        "demo_ready": false,
+        "forbidden_status": "DEMO_READY",
+        "reason": "DEMO_READY_OUTPUT_BANNED_V14_H"
+      },
+      "SYN_V14H_DATA_001": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_DATA_001",
+        "demo_ready": false,
+        "forbidden_status": "DEMO_READY",
+        "reason": "DEMO_READY_OUTPUT_BANNED_V14_H"
+      },
+      "SYN_V14H_PROMISING_007": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_PROMISING_007",
+        "demo_ready": false,
+        "forbidden_status": "DEMO_READY",
+        "reason": "DEMO_READY_OUTPUT_BANNED_V14_H"
+      },
+      "SYN_V14H_REGIME_004": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_REGIME_004",
+        "demo_ready": false,
+        "forbidden_status": "DEMO_READY",
+        "reason": "DEMO_READY_OUTPUT_BANNED_V14_H"
+      },
+      "SYN_V14H_REJECT_005": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_REJECT_005",
+        "demo_ready": false,
+        "forbidden_status": "DEMO_READY",
+        "reason": "DEMO_READY_OUTPUT_BANNED_V14_H"
+      },
+      "SYN_V14H_REVIEW_006": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_REVIEW_006",
+        "demo_ready": false,
+        "forbidden_status": "DEMO_READY",
+        "reason": "DEMO_READY_OUTPUT_BANNED_V14_H"
+      },
+      "SYN_V14H_SAMPLE_002": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_SAMPLE_002",
+        "demo_ready": false,
+        "forbidden_status": "DEMO_READY",
+        "reason": "DEMO_READY_OUTPUT_BANNED_V14_H"
+      }
+    },
+    "forbidden_statuses_absent": true,
+    "hard_ban_probe": {
+      "all_refused": true,
+      "flags": {
+        "Founder_authorization_present": false,
+        "auto_integrated": false,
+        "demo_eligibility": false,
+        "demo_order_count": 0,
+        "demo_ready_output_count": 0,
+        "exchange_write_attempt_count": 0,
+        "formal_walk_forward_executed": false,
+        "founder_authorization_present": false,
+        "mainnet": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "oos_reservation_created": false,
+        "oos_touched": false,
+        "pr27_merged": false,
+        "promoted_output_count": 0,
+        "qualification_ready_count": 0,
+        "qualified_output_count": 0,
+        "real_money": false,
+        "strategy_promoted": false,
+        "strategy_selected": false
+      },
+      "hard_bans": [
+        "no_formal_walk_forward",
+        "no_real_oos_reservation",
+        "no_real_oos_consumption",
+        "no_strategy_selection",
+        "no_strategy_promotion",
+        "no_demo_orders",
+        "no_shadow_orders",
+        "no_exchange_writes",
+        "no_pr27_merge",
+        "no_mainnet",
+        "no_real_money",
+        "no_profitability_claims",
+        "no_qualified_output",
+        "no_promoted_output",
+        "no_demo_ready_output",
+        "no_auto_integrate"
+      ],
+      "probes": {
+        "force_auto_integrate": {
+          "action": "AUTO_INTEGRATE",
+          "allowed": false,
+          "auto_integrated": false,
+          "executed": false,
+          "reason": "AUTO_INTEGRATE_BANNED_V14_H"
+        },
+        "force_demo": {
+          "action": "DEMO_ORDER",
+          "allowed": false,
+          "candidate_id": "SYN_V14H_DATA_001",
+          "demo_eligibility": false,
+          "demo_order_count": 0,
+          "executed": false,
+          "reason": "DEMO_ORDERS_BANNED_V14_H"
+        },
+        "force_demo_ready": {
+          "allowed": false,
+          "candidate_id": "SYN_V14H_DATA_001",
+          "demo_ready": false,
+          "forbidden_status": "DEMO_READY",
+          "reason": "DEMO_READY_OUTPUT_BANNED_V14_H"
+        },
+        "force_exchange_write": {
+          "action": "EXCHANGE_WRITE",
+          "allowed": false,
+          "exchange_write_attempt_count": 0,
+          "executed": false,
+          "reason": "EXCHANGE_WRITES_BANNED_V14_H"
+        },
+        "force_oos_consume": {
+          "action": "OOS_CONSUMPTION",
+          "allowed": false,
+          "candidate_id": "SYN_V14H_DATA_001",
+          "executed": false,
+          "oos_consumed": false,
+          "oos_executed": false,
+          "oos_reservation_created": false,
+          "oos_touched": false,
+          "reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY"
+        },
+        "force_oos_reservation": {
+          "action": "OOS_RESERVATION",
+          "allowed": false,
+          "candidate_id": "SYN_V14H_DATA_001",
+          "executed": false,
+          "oos_consumed": false,
+          "oos_executed": false,
+          "oos_reservation_created": false,
+          "oos_touched": false,
+          "reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY"
+        },
+        "force_promote": {
+          "allowed": false,
+          "candidate_id": "SYN_V14H_DATA_001",
+          "promoted": false,
+          "reason": "STRATEGY_PROMOTION_BANNED_V14_H"
+        },
+        "force_qualify": {
+          "allowed": false,
+          "candidate_id": "SYN_V14H_DATA_001",
+          "forbidden_status": "QUALIFIED",
+          "qualified": false,
+          "reason": "QUALIFIED_OUTPUT_BANNED_V14_H"
+        },
+        "force_select": {
+          "allowed": false,
+          "candidate_id": "SYN_V14H_DATA_001",
+          "reason": "STRATEGY_SELECTION_BANNED_V14_H",
+          "selected": false
+        },
+        "force_walk_forward": {
+          "action": "FORMAL_WALK_FORWARD",
+          "allowed": false,
+          "candidate_id": "SYN_V14H_DATA_001",
+          "executed": false,
+          "formal_walk_forward_executed": false,
+          "reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+          "status": "PLANNED_NOT_EXECUTED"
+        }
+      }
+    },
+    "histogram_covers_all_allowed": true,
+    "promote_attempts": {
+      "SYN_V14H_COST_003": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_COST_003",
+        "promoted": false,
+        "reason": "STRATEGY_PROMOTION_BANNED_V14_H"
+      },
+      "SYN_V14H_DATA_001": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_DATA_001",
+        "promoted": false,
+        "reason": "STRATEGY_PROMOTION_BANNED_V14_H"
+      },
+      "SYN_V14H_PROMISING_007": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_PROMISING_007",
+        "promoted": false,
+        "reason": "STRATEGY_PROMOTION_BANNED_V14_H"
+      },
+      "SYN_V14H_REGIME_004": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_REGIME_004",
+        "promoted": false,
+        "reason": "STRATEGY_PROMOTION_BANNED_V14_H"
+      },
+      "SYN_V14H_REJECT_005": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_REJECT_005",
+        "promoted": false,
+        "reason": "STRATEGY_PROMOTION_BANNED_V14_H"
+      },
+      "SYN_V14H_REVIEW_006": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_REVIEW_006",
+        "promoted": false,
+        "reason": "STRATEGY_PROMOTION_BANNED_V14_H"
+      },
+      "SYN_V14H_SAMPLE_002": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_SAMPLE_002",
+        "promoted": false,
+        "reason": "STRATEGY_PROMOTION_BANNED_V14_H"
+      }
+    },
+    "qualify_attempts": {
+      "SYN_V14H_COST_003": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_COST_003",
+        "forbidden_status": "QUALIFIED",
+        "qualified": false,
+        "reason": "QUALIFIED_OUTPUT_BANNED_V14_H"
+      },
+      "SYN_V14H_DATA_001": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_DATA_001",
+        "forbidden_status": "QUALIFIED",
+        "qualified": false,
+        "reason": "QUALIFIED_OUTPUT_BANNED_V14_H"
+      },
+      "SYN_V14H_PROMISING_007": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_PROMISING_007",
+        "forbidden_status": "QUALIFIED",
+        "qualified": false,
+        "reason": "QUALIFIED_OUTPUT_BANNED_V14_H"
+      },
+      "SYN_V14H_REGIME_004": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_REGIME_004",
+        "forbidden_status": "QUALIFIED",
+        "qualified": false,
+        "reason": "QUALIFIED_OUTPUT_BANNED_V14_H"
+      },
+      "SYN_V14H_REJECT_005": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_REJECT_005",
+        "forbidden_status": "QUALIFIED",
+        "qualified": false,
+        "reason": "QUALIFIED_OUTPUT_BANNED_V14_H"
+      },
+      "SYN_V14H_REVIEW_006": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_REVIEW_006",
+        "forbidden_status": "QUALIFIED",
+        "qualified": false,
+        "reason": "QUALIFIED_OUTPUT_BANNED_V14_H"
+      },
+      "SYN_V14H_SAMPLE_002": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_SAMPLE_002",
+        "forbidden_status": "QUALIFIED",
+        "qualified": false,
+        "reason": "QUALIFIED_OUTPUT_BANNED_V14_H"
+      }
+    },
+    "select_attempts": {
+      "SYN_V14H_COST_003": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_COST_003",
+        "reason": "STRATEGY_SELECTION_BANNED_V14_H",
+        "selected": false
+      },
+      "SYN_V14H_DATA_001": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_DATA_001",
+        "reason": "STRATEGY_SELECTION_BANNED_V14_H",
+        "selected": false
+      },
+      "SYN_V14H_PROMISING_007": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_PROMISING_007",
+        "reason": "STRATEGY_SELECTION_BANNED_V14_H",
+        "selected": false
+      },
+      "SYN_V14H_REGIME_004": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_REGIME_004",
+        "reason": "STRATEGY_SELECTION_BANNED_V14_H",
+        "selected": false
+      },
+      "SYN_V14H_REJECT_005": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_REJECT_005",
+        "reason": "STRATEGY_SELECTION_BANNED_V14_H",
+        "selected": false
+      },
+      "SYN_V14H_REVIEW_006": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_REVIEW_006",
+        "reason": "STRATEGY_SELECTION_BANNED_V14_H",
+        "selected": false
+      },
+      "SYN_V14H_SAMPLE_002": {
+        "allowed": false,
+        "candidate_id": "SYN_V14H_SAMPLE_002",
+        "reason": "STRATEGY_SELECTION_BANNED_V14_H",
+        "selected": false
+      }
+    },
+    "triage": {
+      "all_fixture_only": true,
+      "allowed_statuses_only": true,
+      "demo_ready_count": 0,
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "forbidden_output_count": 0,
+      "promoted_count": 0,
+      "qualification_ready_count": 0,
+      "qualified_count": 0,
+      "results": [
+        {
+          "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+          "candidate_checksum": "0af6e32595e73593e85e67c77f3dd0f52c8fe14cea596410895a9879d0600f65",
+          "candidate_id": "SYN_V14H_DATA_001",
+          "demo_ready": false,
+          "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+          "fixture_only": true,
+          "formal_walk_forward_executed": false,
+          "gross_expectancy": 0.4,
+          "mechanism_semantic_id": "MECH_ORDER_FLOW_IMBALANCE_V4",
+          "net_expectancy": 0.1,
+          "oos_touched": false,
+          "priority_order": [
+            "DATA_BLOCKED",
+            "SAMPLE_BLOCKED",
+            "COST_DESTROYED",
+            "REGIME_FRAGILE",
+            "REJECTED",
+            "DEVELOPMENT_REVIEW",
+            "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+          ],
+          "promoted": false,
+          "qualification_ready": false,
+          "qualified": false,
+          "reasons": [
+            "data_quality_or_pit_failed",
+            "development_review_required"
+          ],
+          "robustness_label": "DATA_QUALITY_BLOCKED",
+          "sample_n": 400,
+          "selected": false,
+          "signal_hits": [
+            "DATA_BLOCKED",
+            "DEVELOPMENT_REVIEW"
+          ],
+          "triage_status": "DATA_BLOCKED"
+        },
+        {
+          "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+          "candidate_checksum": "70462cd68a071de0eaba42ad30003001a31a88f0b1dbd89b46ebaa6007beec8d",
+          "candidate_id": "SYN_V14H_SAMPLE_002",
+          "demo_ready": false,
+          "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+          "fixture_only": true,
+          "formal_walk_forward_executed": false,
+          "gross_expectancy": 0.5,
+          "mechanism_semantic_id": "MECH_SPREAD_SHOCK_V4",
+          "net_expectancy": 0.2,
+          "oos_touched": false,
+          "priority_order": [
+            "DATA_BLOCKED",
+            "SAMPLE_BLOCKED",
+            "COST_DESTROYED",
+            "REGIME_FRAGILE",
+            "REJECTED",
+            "DEVELOPMENT_REVIEW",
+            "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+          ],
+          "promoted": false,
+          "qualification_ready": false,
+          "qualified": false,
+          "reasons": [
+            "insufficient_sample",
+            "development_review_required"
+          ],
+          "robustness_label": "INSUFFICIENT_SAMPLE",
+          "sample_n": 40,
+          "selected": false,
+          "signal_hits": [
+            "SAMPLE_BLOCKED",
+            "DEVELOPMENT_REVIEW"
+          ],
+          "triage_status": "SAMPLE_BLOCKED"
+        },
+        {
+          "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+          "candidate_checksum": "4cef07cd14e7c71d9eb0536018062f180dabd01b2e17e5ee54270ff837f9669b",
+          "candidate_id": "SYN_V14H_COST_003",
+          "demo_ready": false,
+          "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+          "fixture_only": true,
+          "formal_walk_forward_executed": false,
+          "gross_expectancy": 0.8,
+          "mechanism_semantic_id": "MECH_AGGRESSION_PERSISTENCE_V4",
+          "net_expectancy": -0.3,
+          "oos_touched": false,
+          "priority_order": [
+            "DATA_BLOCKED",
+            "SAMPLE_BLOCKED",
+            "COST_DESTROYED",
+            "REGIME_FRAGILE",
+            "REJECTED",
+            "DEVELOPMENT_REVIEW",
+            "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+          ],
+          "promoted": false,
+          "qualification_ready": false,
+          "qualified": false,
+          "reasons": [
+            "net_expectancy_destroyed_by_cost"
+          ],
+          "robustness_label": "COST_DESTROYED",
+          "sample_n": 500,
+          "selected": false,
+          "signal_hits": [
+            "COST_DESTROYED"
+          ],
+          "triage_status": "COST_DESTROYED"
+        },
+        {
+          "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+          "candidate_checksum": "42b62e1c36807ab8a90fcbcc410fb0a75c790bb73c8f09113a293d3bd122fa70",
+          "candidate_id": "SYN_V14H_REGIME_004",
+          "demo_ready": false,
+          "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+          "fixture_only": true,
+          "formal_walk_forward_executed": false,
+          "gross_expectancy": 0.45,
+          "mechanism_semantic_id": "MECH_REGIME_MEAN_REVERSION_V4",
+          "net_expectancy": 0.15,
+          "oos_touched": false,
+          "priority_order": [
+            "DATA_BLOCKED",
+            "SAMPLE_BLOCKED",
+            "COST_DESTROYED",
+            "REGIME_FRAGILE",
+            "REJECTED",
+            "DEVELOPMENT_REVIEW",
+            "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+          ],
+          "promoted": false,
+          "qualification_ready": false,
+          "qualified": false,
+          "reasons": [
+            "regime_fragility",
+            "development_review_required"
+          ],
+          "robustness_label": "DEVELOPMENT_FRAGILE",
+          "sample_n": 350,
+          "selected": false,
+          "signal_hits": [
+            "REGIME_FRAGILE",
+            "DEVELOPMENT_REVIEW"
+          ],
+          "triage_status": "REGIME_FRAGILE"
+        },
+        {
+          "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+          "candidate_checksum": "6c6727976e02d30fdac2119a83bc1dadab598fe2be3b1258828e0bb2f53315ff",
+          "candidate_id": "SYN_V14H_REJECT_005",
+          "demo_ready": false,
+          "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+          "fixture_only": true,
+          "formal_walk_forward_executed": false,
+          "gross_expectancy": -0.2,
+          "mechanism_semantic_id": "MECH_FAILED_BREAKOUT_V4",
+          "net_expectancy": -0.5,
+          "oos_touched": false,
+          "priority_order": [
+            "DATA_BLOCKED",
+            "SAMPLE_BLOCKED",
+            "COST_DESTROYED",
+            "REGIME_FRAGILE",
+            "REJECTED",
+            "DEVELOPMENT_REVIEW",
+            "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+          ],
+          "promoted": false,
+          "qualification_ready": false,
+          "qualified": false,
+          "reasons": [
+            "rejected_or_multiple_testing"
+          ],
+          "robustness_label": "MULTIPLE_TESTING_REJECTED",
+          "sample_n": 300,
+          "selected": false,
+          "signal_hits": [
+            "REJECTED"
+          ],
+          "triage_status": "REJECTED"
+        },
+        {
+          "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+          "candidate_checksum": "2af48af609c47a18645ee35125e5de696e9443887815335a2efa2c5736acefa2",
+          "candidate_id": "SYN_V14H_REVIEW_006",
+          "demo_ready": false,
+          "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+          "fixture_only": true,
+          "formal_walk_forward_executed": false,
+          "gross_expectancy": 0.35,
+          "mechanism_semantic_id": "MECH_ABSORPTION_V4",
+          "net_expectancy": 0.05,
+          "oos_touched": false,
+          "priority_order": [
+            "DATA_BLOCKED",
+            "SAMPLE_BLOCKED",
+            "COST_DESTROYED",
+            "REGIME_FRAGILE",
+            "REJECTED",
+            "DEVELOPMENT_REVIEW",
+            "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+          ],
+          "promoted": false,
+          "qualification_ready": false,
+          "qualified": false,
+          "reasons": [
+            "development_review_required"
+          ],
+          "robustness_label": "DEVELOPMENT_FRAGILE",
+          "sample_n": 280,
+          "selected": false,
+          "signal_hits": [
+            "DEVELOPMENT_REVIEW"
+          ],
+          "triage_status": "DEVELOPMENT_REVIEW"
+        },
+        {
+          "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+          "candidate_checksum": "219816b3ab7b3bd176ec5486d1dfb2d1ee88a676bf23447c48c8d47c98475ae7",
+          "candidate_id": "SYN_V14H_PROMISING_007",
+          "demo_ready": false,
+          "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+          "fixture_only": true,
+          "formal_walk_forward_executed": false,
+          "gross_expectancy": 0.7,
+          "mechanism_semantic_id": "MECH_LIQUIDITY_WITHDRAWAL_V4",
+          "net_expectancy": 0.25,
+          "oos_touched": false,
+          "priority_order": [
+            "DATA_BLOCKED",
+            "SAMPLE_BLOCKED",
+            "COST_DESTROYED",
+            "REGIME_FRAGILE",
+            "REJECTED",
+            "DEVELOPMENT_REVIEW",
+            "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+          ],
+          "promoted": false,
+          "qualification_ready": false,
+          "qualified": false,
+          "reasons": [
+            "development_promising_not_qualified"
+          ],
+          "robustness_label": "DEVELOPMENT_ROBUST",
+          "sample_n": 600,
+          "selected": false,
+          "signal_hits": [
+            "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+          ],
+          "triage_status": "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+        }
+      ],
+      "schema": "FOUNDER_V14_H_CANDIDATE_TRIAGE_CONTROL",
+      "status_histogram": {
+        "COST_DESTROYED": 1,
+        "DATA_BLOCKED": 1,
+        "DEVELOPMENT_PROMISING_NOT_QUALIFIED": 1,
+        "DEVELOPMENT_REVIEW": 1,
+        "REGIME_FRAGILE": 1,
+        "REJECTED": 1,
+        "SAMPLE_BLOCKED": 1
+      },
+      "triaged_count": 7
+    }
+  },
+  "qualification_ready_count": 0,
+  "qualification_status": "BLOCKED",
+  "qualified_output_count": 0,
+  "real_money": false,
+  "schema": "FOUNDER_V14_H_CANDIDATE_TRIAGE_CONTROL",
+  "selected_strategy": null,
+  "status": "TRIAGE_READY",
+  "strategy_promoted": false,
+  "strategy_selected": false,
+  "triage": {
+    "all_fixture_only": true,
+    "allowed_statuses_only": true,
+    "demo_ready_count": 0,
+    "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+    "forbidden_output_count": 0,
+    "promoted_count": 0,
+    "qualification_ready_count": 0,
+    "qualified_count": 0,
+    "results": [
+      {
+        "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+        "candidate_checksum": "0af6e32595e73593e85e67c77f3dd0f52c8fe14cea596410895a9879d0600f65",
+        "candidate_id": "SYN_V14H_DATA_001",
+        "demo_ready": false,
+        "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+        "fixture_only": true,
+        "formal_walk_forward_executed": false,
+        "gross_expectancy": 0.4,
+        "mechanism_semantic_id": "MECH_ORDER_FLOW_IMBALANCE_V4",
+        "net_expectancy": 0.1,
+        "oos_touched": false,
+        "priority_order": [
+          "DATA_BLOCKED",
+          "SAMPLE_BLOCKED",
+          "COST_DESTROYED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "DEVELOPMENT_REVIEW",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+        ],
+        "promoted": false,
+        "qualification_ready": false,
+        "qualified": false,
+        "reasons": [
+          "data_quality_or_pit_failed",
+          "development_review_required"
+        ],
+        "robustness_label": "DATA_QUALITY_BLOCKED",
+        "sample_n": 400,
+        "selected": false,
+        "signal_hits": [
+          "DATA_BLOCKED",
+          "DEVELOPMENT_REVIEW"
+        ],
+        "triage_status": "DATA_BLOCKED"
+      },
+      {
+        "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+        "candidate_checksum": "70462cd68a071de0eaba42ad30003001a31a88f0b1dbd89b46ebaa6007beec8d",
+        "candidate_id": "SYN_V14H_SAMPLE_002",
+        "demo_ready": false,
+        "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+        "fixture_only": true,
+        "formal_walk_forward_executed": false,
+        "gross_expectancy": 0.5,
+        "mechanism_semantic_id": "MECH_SPREAD_SHOCK_V4",
+        "net_expectancy": 0.2,
+        "oos_touched": false,
+        "priority_order": [
+          "DATA_BLOCKED",
+          "SAMPLE_BLOCKED",
+          "COST_DESTROYED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "DEVELOPMENT_REVIEW",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+        ],
+        "promoted": false,
+        "qualification_ready": false,
+        "qualified": false,
+        "reasons": [
+          "insufficient_sample",
+          "development_review_required"
+        ],
+        "robustness_label": "INSUFFICIENT_SAMPLE",
+        "sample_n": 40,
+        "selected": false,
+        "signal_hits": [
+          "SAMPLE_BLOCKED",
+          "DEVELOPMENT_REVIEW"
+        ],
+        "triage_status": "SAMPLE_BLOCKED"
+      },
+      {
+        "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+        "candidate_checksum": "4cef07cd14e7c71d9eb0536018062f180dabd01b2e17e5ee54270ff837f9669b",
+        "candidate_id": "SYN_V14H_COST_003",
+        "demo_ready": false,
+        "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+        "fixture_only": true,
+        "formal_walk_forward_executed": false,
+        "gross_expectancy": 0.8,
+        "mechanism_semantic_id": "MECH_AGGRESSION_PERSISTENCE_V4",
+        "net_expectancy": -0.3,
+        "oos_touched": false,
+        "priority_order": [
+          "DATA_BLOCKED",
+          "SAMPLE_BLOCKED",
+          "COST_DESTROYED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "DEVELOPMENT_REVIEW",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+        ],
+        "promoted": false,
+        "qualification_ready": false,
+        "qualified": false,
+        "reasons": [
+          "net_expectancy_destroyed_by_cost"
+        ],
+        "robustness_label": "COST_DESTROYED",
+        "sample_n": 500,
+        "selected": false,
+        "signal_hits": [
+          "COST_DESTROYED"
+        ],
+        "triage_status": "COST_DESTROYED"
+      },
+      {
+        "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+        "candidate_checksum": "42b62e1c36807ab8a90fcbcc410fb0a75c790bb73c8f09113a293d3bd122fa70",
+        "candidate_id": "SYN_V14H_REGIME_004",
+        "demo_ready": false,
+        "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+        "fixture_only": true,
+        "formal_walk_forward_executed": false,
+        "gross_expectancy": 0.45,
+        "mechanism_semantic_id": "MECH_REGIME_MEAN_REVERSION_V4",
+        "net_expectancy": 0.15,
+        "oos_touched": false,
+        "priority_order": [
+          "DATA_BLOCKED",
+          "SAMPLE_BLOCKED",
+          "COST_DESTROYED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "DEVELOPMENT_REVIEW",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+        ],
+        "promoted": false,
+        "qualification_ready": false,
+        "qualified": false,
+        "reasons": [
+          "regime_fragility",
+          "development_review_required"
+        ],
+        "robustness_label": "DEVELOPMENT_FRAGILE",
+        "sample_n": 350,
+        "selected": false,
+        "signal_hits": [
+          "REGIME_FRAGILE",
+          "DEVELOPMENT_REVIEW"
+        ],
+        "triage_status": "REGIME_FRAGILE"
+      },
+      {
+        "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+        "candidate_checksum": "6c6727976e02d30fdac2119a83bc1dadab598fe2be3b1258828e0bb2f53315ff",
+        "candidate_id": "SYN_V14H_REJECT_005",
+        "demo_ready": false,
+        "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+        "fixture_only": true,
+        "formal_walk_forward_executed": false,
+        "gross_expectancy": -0.2,
+        "mechanism_semantic_id": "MECH_FAILED_BREAKOUT_V4",
+        "net_expectancy": -0.5,
+        "oos_touched": false,
+        "priority_order": [
+          "DATA_BLOCKED",
+          "SAMPLE_BLOCKED",
+          "COST_DESTROYED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "DEVELOPMENT_REVIEW",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+        ],
+        "promoted": false,
+        "qualification_ready": false,
+        "qualified": false,
+        "reasons": [
+          "rejected_or_multiple_testing"
+        ],
+        "robustness_label": "MULTIPLE_TESTING_REJECTED",
+        "sample_n": 300,
+        "selected": false,
+        "signal_hits": [
+          "REJECTED"
+        ],
+        "triage_status": "REJECTED"
+      },
+      {
+        "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+        "candidate_checksum": "2af48af609c47a18645ee35125e5de696e9443887815335a2efa2c5736acefa2",
+        "candidate_id": "SYN_V14H_REVIEW_006",
+        "demo_ready": false,
+        "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+        "fixture_only": true,
+        "formal_walk_forward_executed": false,
+        "gross_expectancy": 0.35,
+        "mechanism_semantic_id": "MECH_ABSORPTION_V4",
+        "net_expectancy": 0.05,
+        "oos_touched": false,
+        "priority_order": [
+          "DATA_BLOCKED",
+          "SAMPLE_BLOCKED",
+          "COST_DESTROYED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "DEVELOPMENT_REVIEW",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+        ],
+        "promoted": false,
+        "qualification_ready": false,
+        "qualified": false,
+        "reasons": [
+          "development_review_required"
+        ],
+        "robustness_label": "DEVELOPMENT_FRAGILE",
+        "sample_n": 280,
+        "selected": false,
+        "signal_hits": [
+          "DEVELOPMENT_REVIEW"
+        ],
+        "triage_status": "DEVELOPMENT_REVIEW"
+      },
+      {
+        "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+        "candidate_checksum": "219816b3ab7b3bd176ec5486d1dfb2d1ee88a676bf23447c48c8d47c98475ae7",
+        "candidate_id": "SYN_V14H_PROMISING_007",
+        "demo_ready": false,
+        "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+        "fixture_only": true,
+        "formal_walk_forward_executed": false,
+        "gross_expectancy": 0.7,
+        "mechanism_semantic_id": "MECH_LIQUIDITY_WITHDRAWAL_V4",
+        "net_expectancy": 0.25,
+        "oos_touched": false,
+        "priority_order": [
+          "DATA_BLOCKED",
+          "SAMPLE_BLOCKED",
+          "COST_DESTROYED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "DEVELOPMENT_REVIEW",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+        ],
+        "promoted": false,
+        "qualification_ready": false,
+        "qualified": false,
+        "reasons": [
+          "development_promising_not_qualified"
+        ],
+        "robustness_label": "DEVELOPMENT_ROBUST",
+        "sample_n": 600,
+        "selected": false,
+        "signal_hits": [
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+        ],
+        "triage_status": "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+      }
+    ],
+    "schema": "FOUNDER_V14_H_CANDIDATE_TRIAGE_CONTROL",
+    "status_histogram": {
+      "COST_DESTROYED": 1,
+      "DATA_BLOCKED": 1,
+      "DEVELOPMENT_PROMISING_NOT_QUALIFIED": 1,
+      "DEVELOPMENT_REVIEW": 1,
+      "REGIME_FRAGILE": 1,
+      "REJECTED": 1,
+      "SAMPLE_BLOCKED": 1
+    },
+    "triaged_count": 7
+  },
+  "triage_control_status": "TRIAGE_READY",
+  "updated_at": "2026-08-05T11:15:48Z"
+}

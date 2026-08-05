@@ -1,0 +1,17 @@
+{
+  "all_candidates_connected": true,
+  "as_of_ms": 1700000000000,
+  "bundle_checksum": "6efd36cf006f8b1546e40d1ceeca18693ae7ef2fbcbd5838ff712f424f1f00f3",
+  "candidate_ids": [
+    "SYN_V14H_DATA_001",
+    "SYN_V14H_SAMPLE_002",
+    "SYN_V14H_COST_003",
+    "SYN_V14H_REGIME_004",
+    "SYN_V14H_REJECT_005",
+    "SYN_V14H_REVIEW_006",
+    "SYN_V14H_PROMISING_007"
+  ],
+  "fixture_only": true,
+  "ingested_candidate_count": 7,
+  "qualification_ready_count": 0
+}

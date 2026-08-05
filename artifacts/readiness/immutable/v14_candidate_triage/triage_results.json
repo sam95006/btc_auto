@@ -1,0 +1,274 @@
+{
+  "all_fixture_only": true,
+  "allowed_statuses_only": true,
+  "demo_ready_count": 0,
+  "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+  "forbidden_output_count": 0,
+  "promoted_count": 0,
+  "qualification_ready_count": 0,
+  "qualified_count": 0,
+  "results": [
+    {
+      "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+      "candidate_checksum": "0af6e32595e73593e85e67c77f3dd0f52c8fe14cea596410895a9879d0600f65",
+      "candidate_id": "SYN_V14H_DATA_001",
+      "demo_ready": false,
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "fixture_only": true,
+      "formal_walk_forward_executed": false,
+      "gross_expectancy": 0.4,
+      "mechanism_semantic_id": "MECH_ORDER_FLOW_IMBALANCE_V4",
+      "net_expectancy": 0.1,
+      "oos_touched": false,
+      "priority_order": [
+        "DATA_BLOCKED",
+        "SAMPLE_BLOCKED",
+        "COST_DESTROYED",
+        "REGIME_FRAGILE",
+        "REJECTED",
+        "DEVELOPMENT_REVIEW",
+        "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+      ],
+      "promoted": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "reasons": [
+        "data_quality_or_pit_failed",
+        "development_review_required"
+      ],
+      "robustness_label": "DATA_QUALITY_BLOCKED",
+      "sample_n": 400,
+      "selected": false,
+      "signal_hits": [
+        "DATA_BLOCKED",
+        "DEVELOPMENT_REVIEW"
+      ],
+      "triage_status": "DATA_BLOCKED"
+    },
+    {
+      "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+      "candidate_checksum": "70462cd68a071de0eaba42ad30003001a31a88f0b1dbd89b46ebaa6007beec8d",
+      "candidate_id": "SYN_V14H_SAMPLE_002",
+      "demo_ready": false,
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "fixture_only": true,
+      "formal_walk_forward_executed": false,
+      "gross_expectancy": 0.5,
+      "mechanism_semantic_id": "MECH_SPREAD_SHOCK_V4",
+      "net_expectancy": 0.2,
+      "oos_touched": false,
+      "priority_order": [
+        "DATA_BLOCKED",
+        "SAMPLE_BLOCKED",
+        "COST_DESTROYED",
+        "REGIME_FRAGILE",
+        "REJECTED",
+        "DEVELOPMENT_REVIEW",
+        "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+      ],
+      "promoted": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "reasons": [
+        "insufficient_sample",
+        "development_review_required"
+      ],
+      "robustness_label": "INSUFFICIENT_SAMPLE",
+      "sample_n": 40,
+      "selected": false,
+      "signal_hits": [
+        "SAMPLE_BLOCKED",
+        "DEVELOPMENT_REVIEW"
+      ],
+      "triage_status": "SAMPLE_BLOCKED"
+    },
+    {
+      "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+      "candidate_checksum": "4cef07cd14e7c71d9eb0536018062f180dabd01b2e17e5ee54270ff837f9669b",
+      "candidate_id": "SYN_V14H_COST_003",
+      "demo_ready": false,
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "fixture_only": true,
+      "formal_walk_forward_executed": false,
+      "gross_expectancy": 0.8,
+      "mechanism_semantic_id": "MECH_AGGRESSION_PERSISTENCE_V4",
+      "net_expectancy": -0.3,
+      "oos_touched": false,
+      "priority_order": [
+        "DATA_BLOCKED",
+        "SAMPLE_BLOCKED",
+        "COST_DESTROYED",
+        "REGIME_FRAGILE",
+        "REJECTED",
+        "DEVELOPMENT_REVIEW",
+        "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+      ],
+      "promoted": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "reasons": [
+        "net_expectancy_destroyed_by_cost"
+      ],
+      "robustness_label": "COST_DESTROYED",
+      "sample_n": 500,
+      "selected": false,
+      "signal_hits": [
+        "COST_DESTROYED"
+      ],
+      "triage_status": "COST_DESTROYED"
+    },
+    {
+      "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+      "candidate_checksum": "42b62e1c36807ab8a90fcbcc410fb0a75c790bb73c8f09113a293d3bd122fa70",
+      "candidate_id": "SYN_V14H_REGIME_004",
+      "demo_ready": false,
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "fixture_only": true,
+      "formal_walk_forward_executed": false,
+      "gross_expectancy": 0.45,
+      "mechanism_semantic_id": "MECH_REGIME_MEAN_REVERSION_V4",
+      "net_expectancy": 0.15,
+      "oos_touched": false,
+      "priority_order": [
+        "DATA_BLOCKED",
+        "SAMPLE_BLOCKED",
+        "COST_DESTROYED",
+        "REGIME_FRAGILE",
+        "REJECTED",
+        "DEVELOPMENT_REVIEW",
+        "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+      ],
+      "promoted": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "reasons": [
+        "regime_fragility",
+        "development_review_required"
+      ],
+      "robustness_label": "DEVELOPMENT_FRAGILE",
+      "sample_n": 350,
+      "selected": false,
+      "signal_hits": [
+        "REGIME_FRAGILE",
+        "DEVELOPMENT_REVIEW"
+      ],
+      "triage_status": "REGIME_FRAGILE"
+    },
+    {
+      "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+      "candidate_checksum": "6c6727976e02d30fdac2119a83bc1dadab598fe2be3b1258828e0bb2f53315ff",
+      "candidate_id": "SYN_V14H_REJECT_005",
+      "demo_ready": false,
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "fixture_only": true,
+      "formal_walk_forward_executed": false,
+      "gross_expectancy": -0.2,
+      "mechanism_semantic_id": "MECH_FAILED_BREAKOUT_V4",
+      "net_expectancy": -0.5,
+      "oos_touched": false,
+      "priority_order": [
+        "DATA_BLOCKED",
+        "SAMPLE_BLOCKED",
+        "COST_DESTROYED",
+        "REGIME_FRAGILE",
+        "REJECTED",
+        "DEVELOPMENT_REVIEW",
+        "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+      ],
+      "promoted": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "reasons": [
+        "rejected_or_multiple_testing"
+      ],
+      "robustness_label": "MULTIPLE_TESTING_REJECTED",
+      "sample_n": 300,
+      "selected": false,
+      "signal_hits": [
+        "REJECTED"
+      ],
+      "triage_status": "REJECTED"
+    },
+    {
+      "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+      "candidate_checksum": "2af48af609c47a18645ee35125e5de696e9443887815335a2efa2c5736acefa2",
+      "candidate_id": "SYN_V14H_REVIEW_006",
+      "demo_ready": false,
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "fixture_only": true,
+      "formal_walk_forward_executed": false,
+      "gross_expectancy": 0.35,
+      "mechanism_semantic_id": "MECH_ABSORPTION_V4",
+      "net_expectancy": 0.05,
+      "oos_touched": false,
+      "priority_order": [
+        "DATA_BLOCKED",
+        "SAMPLE_BLOCKED",
+        "COST_DESTROYED",
+        "REGIME_FRAGILE",
+        "REJECTED",
+        "DEVELOPMENT_REVIEW",
+        "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+      ],
+      "promoted": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "reasons": [
+        "development_review_required"
+      ],
+      "robustness_label": "DEVELOPMENT_FRAGILE",
+      "sample_n": 280,
+      "selected": false,
+      "signal_hits": [
+        "DEVELOPMENT_REVIEW"
+      ],
+      "triage_status": "DEVELOPMENT_REVIEW"
+    },
+    {
+      "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+      "candidate_checksum": "219816b3ab7b3bd176ec5486d1dfb2d1ee88a676bf23447c48c8d47c98475ae7",
+      "candidate_id": "SYN_V14H_PROMISING_007",
+      "demo_ready": false,
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "fixture_only": true,
+      "formal_walk_forward_executed": false,
+      "gross_expectancy": 0.7,
+      "mechanism_semantic_id": "MECH_LIQUIDITY_WITHDRAWAL_V4",
+      "net_expectancy": 0.25,
+      "oos_touched": false,
+      "priority_order": [
+        "DATA_BLOCKED",
+        "SAMPLE_BLOCKED",
+        "COST_DESTROYED",
+        "REGIME_FRAGILE",
+        "REJECTED",
+        "DEVELOPMENT_REVIEW",
+        "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+      ],
+      "promoted": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "reasons": [
+        "development_promising_not_qualified"
+      ],
+      "robustness_label": "DEVELOPMENT_ROBUST",
+      "sample_n": 600,
+      "selected": false,
+      "signal_hits": [
+        "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+      ],
+      "triage_status": "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+    }
+  ],
+  "schema": "FOUNDER_V14_H_CANDIDATE_TRIAGE_CONTROL",
+  "status_histogram": {
+    "COST_DESTROYED": 1,
+    "DATA_BLOCKED": 1,
+    "DEVELOPMENT_PROMISING_NOT_QUALIFIED": 1,
+    "DEVELOPMENT_REVIEW": 1,
+    "REGIME_FRAGILE": 1,
+    "REJECTED": 1,
+    "SAMPLE_BLOCKED": 1
+  },
+  "triaged_count": 7
+}

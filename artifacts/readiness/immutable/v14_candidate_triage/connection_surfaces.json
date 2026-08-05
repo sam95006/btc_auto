@@ -1,0 +1,938 @@
+{
+  "all_candidates_connected": true,
+  "connections": [
+    {
+      "all_surfaces_connected": true,
+      "candidate_id": "SYN_V14H_DATA_001",
+      "connections": {
+        "blocked_qualification_planning": {
+          "candidate_id": "SYN_V14H_DATA_001",
+          "connected": true,
+          "demo_eligibility_plan": {
+            "demo_eligibility_granted": false,
+            "demo_order_count": 0,
+            "plan_kind": "DEMO_ELIGIBILITY",
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "fixture_only": true,
+          "formal_qualification_status": "BLOCKED",
+          "oos_reservation_plan": {
+            "note": "Plan only; real OOS neither reserved nor consumed.",
+            "oos_consumed": false,
+            "oos_executed": false,
+            "oos_reservation_created": false,
+            "plan_kind": "OOS_RESERVATION",
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "qualification_ready": false,
+          "risk_review_plan": {
+            "plan_kind": "RISK_REVIEW",
+            "risk_review_executed": false,
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "source": "v14_h_blocked_qualification_plans",
+          "status": "PLANNED_NOT_EXECUTED",
+          "surface": "blocked_qualification_planning",
+          "walk_forward_plan": {
+            "folds": [
+              {
+                "end_ms": 1696112000000,
+                "fold_id": "WF_FOLD_TRAIN",
+                "start_ms": 1694816000000
+              },
+              {
+                "end_ms": 1697408000000,
+                "fold_id": "WF_FOLD_TEST",
+                "start_ms": 1696112000001
+              }
+            ],
+            "formal_walk_forward_executed": false,
+            "note": "Plan only; formal WF remains BLOCKED.",
+            "plan_kind": "WALK_FORWARD",
+            "status": "PLANNED_NOT_EXECUTED"
+          }
+        },
+        "cost_sensitivity": {
+          "canonical_cost_authority_consumed": true,
+          "canonical_cost_formulas_modified": false,
+          "connected": true,
+          "cost_destroyed": false,
+          "fixture_only": true,
+          "gross_expectancy": 0.4,
+          "missing_fields": [],
+          "net_expectancy": 0.1,
+          "source": "fixture_cost_sensitivity_v14e_compatible",
+          "surface": "cost_sensitivity"
+        },
+        "dynamic_universe": {
+          "connected": true,
+          "fixture_only": true,
+          "live_exchange_called": false,
+          "pit_membership_ok": true,
+          "pit_symbols": [
+            "FIXTUREBTCUSDT",
+            "SYNTHUSDT"
+          ],
+          "requested_symbols": [
+            "SYNTHUSDT",
+            "FIXTUREBTCUSDT"
+          ],
+          "source": "nexus_dynamic_universe+fixture_instruments",
+          "surface": "dynamic_universe",
+          "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE"
+        },
+        "feature_lab": {
+          "catalog_feature_count": 12,
+          "catalog_version": "v13_e_feature_catalog_1",
+          "connected": true,
+          "fixture_only": true,
+          "missing_feature_ids": [],
+          "predictive_edge_claimed": false,
+          "requested_feature_ids": [
+            "aggressive_buy_sell_imbalance",
+            "trade_intensity",
+            "price_impact"
+          ],
+          "source": "nexus_micro_feature_lab",
+          "surface": "feature_lab"
+        },
+        "mechanism_definitions": {
+          "connected": true,
+          "cosmetic_parameter_variant": false,
+          "deterministic": true,
+          "fixture_only": true,
+          "mechanism_family": "order_flow_imbalance",
+          "mechanism_semantic_id": "MECH_ORDER_FLOW_IMBALANCE_V4",
+          "missing_fields": [],
+          "source": "fixture_mechanism_contract_v14c_compatible",
+          "surface": "mechanism_definitions"
+        },
+        "robustness_results": {
+          "bootstrap_stable": false,
+          "connected": true,
+          "fixture_only": true,
+          "formal_walk_forward_executed": false,
+          "label": "DATA_QUALITY_BLOCKED",
+          "label_allowed": true,
+          "multiple_testing_rejected": false,
+          "oos_consumed": false,
+          "qualification_claim": false,
+          "regime_stable": true,
+          "sample_sufficient": true,
+          "source": "fixture_robustness_v14d_compatible",
+          "surface": "robustness_results"
+        }
+      },
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "surface_order": [
+        "mechanism_definitions",
+        "feature_lab",
+        "dynamic_universe",
+        "cost_sensitivity",
+        "robustness_results",
+        "blocked_qualification_planning"
+      ]
+    },
+    {
+      "all_surfaces_connected": true,
+      "candidate_id": "SYN_V14H_SAMPLE_002",
+      "connections": {
+        "blocked_qualification_planning": {
+          "candidate_id": "SYN_V14H_SAMPLE_002",
+          "connected": true,
+          "demo_eligibility_plan": {
+            "demo_eligibility_granted": false,
+            "demo_order_count": 0,
+            "plan_kind": "DEMO_ELIGIBILITY",
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "fixture_only": true,
+          "formal_qualification_status": "BLOCKED",
+          "oos_reservation_plan": {
+            "note": "Plan only; real OOS neither reserved nor consumed.",
+            "oos_consumed": false,
+            "oos_executed": false,
+            "oos_reservation_created": false,
+            "plan_kind": "OOS_RESERVATION",
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "qualification_ready": false,
+          "risk_review_plan": {
+            "plan_kind": "RISK_REVIEW",
+            "risk_review_executed": false,
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "source": "v14_h_blocked_qualification_plans",
+          "status": "PLANNED_NOT_EXECUTED",
+          "surface": "blocked_qualification_planning",
+          "walk_forward_plan": {
+            "folds": [
+              {
+                "end_ms": 1696112000000,
+                "fold_id": "WF_FOLD_TRAIN",
+                "start_ms": 1694816000000
+              },
+              {
+                "end_ms": 1697408000000,
+                "fold_id": "WF_FOLD_TEST",
+                "start_ms": 1696112000001
+              }
+            ],
+            "formal_walk_forward_executed": false,
+            "note": "Plan only; formal WF remains BLOCKED.",
+            "plan_kind": "WALK_FORWARD",
+            "status": "PLANNED_NOT_EXECUTED"
+          }
+        },
+        "cost_sensitivity": {
+          "canonical_cost_authority_consumed": true,
+          "canonical_cost_formulas_modified": false,
+          "connected": true,
+          "cost_destroyed": false,
+          "fixture_only": true,
+          "gross_expectancy": 0.5,
+          "missing_fields": [],
+          "net_expectancy": 0.2,
+          "source": "fixture_cost_sensitivity_v14e_compatible",
+          "surface": "cost_sensitivity"
+        },
+        "dynamic_universe": {
+          "connected": true,
+          "fixture_only": true,
+          "live_exchange_called": false,
+          "pit_membership_ok": true,
+          "pit_symbols": [
+            "FIXTUREBTCUSDT",
+            "SYNTHUSDT"
+          ],
+          "requested_symbols": [
+            "SYNTHUSDT",
+            "FIXTUREBTCUSDT"
+          ],
+          "source": "nexus_dynamic_universe+fixture_instruments",
+          "surface": "dynamic_universe",
+          "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE"
+        },
+        "feature_lab": {
+          "catalog_feature_count": 12,
+          "catalog_version": "v13_e_feature_catalog_1",
+          "connected": true,
+          "fixture_only": true,
+          "missing_feature_ids": [],
+          "predictive_edge_claimed": false,
+          "requested_feature_ids": [
+            "aggressive_buy_sell_imbalance",
+            "trade_intensity",
+            "price_impact"
+          ],
+          "source": "nexus_micro_feature_lab",
+          "surface": "feature_lab"
+        },
+        "mechanism_definitions": {
+          "connected": true,
+          "cosmetic_parameter_variant": false,
+          "deterministic": true,
+          "fixture_only": true,
+          "mechanism_family": "spread_shock",
+          "mechanism_semantic_id": "MECH_SPREAD_SHOCK_V4",
+          "missing_fields": [],
+          "source": "fixture_mechanism_contract_v14c_compatible",
+          "surface": "mechanism_definitions"
+        },
+        "robustness_results": {
+          "bootstrap_stable": false,
+          "connected": true,
+          "fixture_only": true,
+          "formal_walk_forward_executed": false,
+          "label": "INSUFFICIENT_SAMPLE",
+          "label_allowed": true,
+          "multiple_testing_rejected": false,
+          "oos_consumed": false,
+          "qualification_claim": false,
+          "regime_stable": true,
+          "sample_sufficient": false,
+          "source": "fixture_robustness_v14d_compatible",
+          "surface": "robustness_results"
+        }
+      },
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "surface_order": [
+        "mechanism_definitions",
+        "feature_lab",
+        "dynamic_universe",
+        "cost_sensitivity",
+        "robustness_results",
+        "blocked_qualification_planning"
+      ]
+    },
+    {
+      "all_surfaces_connected": true,
+      "candidate_id": "SYN_V14H_COST_003",
+      "connections": {
+        "blocked_qualification_planning": {
+          "candidate_id": "SYN_V14H_COST_003",
+          "connected": true,
+          "demo_eligibility_plan": {
+            "demo_eligibility_granted": false,
+            "demo_order_count": 0,
+            "plan_kind": "DEMO_ELIGIBILITY",
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "fixture_only": true,
+          "formal_qualification_status": "BLOCKED",
+          "oos_reservation_plan": {
+            "note": "Plan only; real OOS neither reserved nor consumed.",
+            "oos_consumed": false,
+            "oos_executed": false,
+            "oos_reservation_created": false,
+            "plan_kind": "OOS_RESERVATION",
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "qualification_ready": false,
+          "risk_review_plan": {
+            "plan_kind": "RISK_REVIEW",
+            "risk_review_executed": false,
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "source": "v14_h_blocked_qualification_plans",
+          "status": "PLANNED_NOT_EXECUTED",
+          "surface": "blocked_qualification_planning",
+          "walk_forward_plan": {
+            "folds": [
+              {
+                "end_ms": 1696112000000,
+                "fold_id": "WF_FOLD_TRAIN",
+                "start_ms": 1694816000000
+              },
+              {
+                "end_ms": 1697408000000,
+                "fold_id": "WF_FOLD_TEST",
+                "start_ms": 1696112000001
+              }
+            ],
+            "formal_walk_forward_executed": false,
+            "note": "Plan only; formal WF remains BLOCKED.",
+            "plan_kind": "WALK_FORWARD",
+            "status": "PLANNED_NOT_EXECUTED"
+          }
+        },
+        "cost_sensitivity": {
+          "canonical_cost_authority_consumed": true,
+          "canonical_cost_formulas_modified": false,
+          "connected": true,
+          "cost_destroyed": true,
+          "fixture_only": true,
+          "gross_expectancy": 0.8,
+          "missing_fields": [],
+          "net_expectancy": -0.3,
+          "source": "fixture_cost_sensitivity_v14e_compatible",
+          "surface": "cost_sensitivity"
+        },
+        "dynamic_universe": {
+          "connected": true,
+          "fixture_only": true,
+          "live_exchange_called": false,
+          "pit_membership_ok": true,
+          "pit_symbols": [
+            "FIXTUREBTCUSDT",
+            "SYNTHUSDT"
+          ],
+          "requested_symbols": [
+            "SYNTHUSDT",
+            "FIXTUREBTCUSDT"
+          ],
+          "source": "nexus_dynamic_universe+fixture_instruments",
+          "surface": "dynamic_universe",
+          "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE"
+        },
+        "feature_lab": {
+          "catalog_feature_count": 12,
+          "catalog_version": "v13_e_feature_catalog_1",
+          "connected": true,
+          "fixture_only": true,
+          "missing_feature_ids": [],
+          "predictive_edge_claimed": false,
+          "requested_feature_ids": [
+            "aggressive_buy_sell_imbalance",
+            "trade_intensity",
+            "price_impact"
+          ],
+          "source": "nexus_micro_feature_lab",
+          "surface": "feature_lab"
+        },
+        "mechanism_definitions": {
+          "connected": true,
+          "cosmetic_parameter_variant": false,
+          "deterministic": true,
+          "fixture_only": true,
+          "mechanism_family": "aggression_persistence",
+          "mechanism_semantic_id": "MECH_AGGRESSION_PERSISTENCE_V4",
+          "missing_fields": [],
+          "source": "fixture_mechanism_contract_v14c_compatible",
+          "surface": "mechanism_definitions"
+        },
+        "robustness_results": {
+          "bootstrap_stable": false,
+          "connected": true,
+          "fixture_only": true,
+          "formal_walk_forward_executed": false,
+          "label": "COST_DESTROYED",
+          "label_allowed": true,
+          "multiple_testing_rejected": false,
+          "oos_consumed": false,
+          "qualification_claim": false,
+          "regime_stable": true,
+          "sample_sufficient": true,
+          "source": "fixture_robustness_v14d_compatible",
+          "surface": "robustness_results"
+        }
+      },
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "surface_order": [
+        "mechanism_definitions",
+        "feature_lab",
+        "dynamic_universe",
+        "cost_sensitivity",
+        "robustness_results",
+        "blocked_qualification_planning"
+      ]
+    },
+    {
+      "all_surfaces_connected": true,
+      "candidate_id": "SYN_V14H_REGIME_004",
+      "connections": {
+        "blocked_qualification_planning": {
+          "candidate_id": "SYN_V14H_REGIME_004",
+          "connected": true,
+          "demo_eligibility_plan": {
+            "demo_eligibility_granted": false,
+            "demo_order_count": 0,
+            "plan_kind": "DEMO_ELIGIBILITY",
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "fixture_only": true,
+          "formal_qualification_status": "BLOCKED",
+          "oos_reservation_plan": {
+            "note": "Plan only; real OOS neither reserved nor consumed.",
+            "oos_consumed": false,
+            "oos_executed": false,
+            "oos_reservation_created": false,
+            "plan_kind": "OOS_RESERVATION",
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "qualification_ready": false,
+          "risk_review_plan": {
+            "plan_kind": "RISK_REVIEW",
+            "risk_review_executed": false,
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "source": "v14_h_blocked_qualification_plans",
+          "status": "PLANNED_NOT_EXECUTED",
+          "surface": "blocked_qualification_planning",
+          "walk_forward_plan": {
+            "folds": [
+              {
+                "end_ms": 1696112000000,
+                "fold_id": "WF_FOLD_TRAIN",
+                "start_ms": 1694816000000
+              },
+              {
+                "end_ms": 1697408000000,
+                "fold_id": "WF_FOLD_TEST",
+                "start_ms": 1696112000001
+              }
+            ],
+            "formal_walk_forward_executed": false,
+            "note": "Plan only; formal WF remains BLOCKED.",
+            "plan_kind": "WALK_FORWARD",
+            "status": "PLANNED_NOT_EXECUTED"
+          }
+        },
+        "cost_sensitivity": {
+          "canonical_cost_authority_consumed": true,
+          "canonical_cost_formulas_modified": false,
+          "connected": true,
+          "cost_destroyed": false,
+          "fixture_only": true,
+          "gross_expectancy": 0.45,
+          "missing_fields": [],
+          "net_expectancy": 0.15,
+          "source": "fixture_cost_sensitivity_v14e_compatible",
+          "surface": "cost_sensitivity"
+        },
+        "dynamic_universe": {
+          "connected": true,
+          "fixture_only": true,
+          "live_exchange_called": false,
+          "pit_membership_ok": true,
+          "pit_symbols": [
+            "FIXTUREBTCUSDT",
+            "SYNTHUSDT"
+          ],
+          "requested_symbols": [
+            "SYNTHUSDT",
+            "FIXTUREBTCUSDT"
+          ],
+          "source": "nexus_dynamic_universe+fixture_instruments",
+          "surface": "dynamic_universe",
+          "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE"
+        },
+        "feature_lab": {
+          "catalog_feature_count": 12,
+          "catalog_version": "v13_e_feature_catalog_1",
+          "connected": true,
+          "fixture_only": true,
+          "missing_feature_ids": [],
+          "predictive_edge_claimed": false,
+          "requested_feature_ids": [
+            "aggressive_buy_sell_imbalance",
+            "trade_intensity",
+            "price_impact"
+          ],
+          "source": "nexus_micro_feature_lab",
+          "surface": "feature_lab"
+        },
+        "mechanism_definitions": {
+          "connected": true,
+          "cosmetic_parameter_variant": false,
+          "deterministic": true,
+          "fixture_only": true,
+          "mechanism_family": "regime_conditioned_mean_reversion",
+          "mechanism_semantic_id": "MECH_REGIME_MEAN_REVERSION_V4",
+          "missing_fields": [],
+          "source": "fixture_mechanism_contract_v14c_compatible",
+          "surface": "mechanism_definitions"
+        },
+        "robustness_results": {
+          "bootstrap_stable": false,
+          "connected": true,
+          "fixture_only": true,
+          "formal_walk_forward_executed": false,
+          "label": "DEVELOPMENT_FRAGILE",
+          "label_allowed": true,
+          "multiple_testing_rejected": false,
+          "oos_consumed": false,
+          "qualification_claim": false,
+          "regime_stable": false,
+          "sample_sufficient": true,
+          "source": "fixture_robustness_v14d_compatible",
+          "surface": "robustness_results"
+        }
+      },
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "surface_order": [
+        "mechanism_definitions",
+        "feature_lab",
+        "dynamic_universe",
+        "cost_sensitivity",
+        "robustness_results",
+        "blocked_qualification_planning"
+      ]
+    },
+    {
+      "all_surfaces_connected": true,
+      "candidate_id": "SYN_V14H_REJECT_005",
+      "connections": {
+        "blocked_qualification_planning": {
+          "candidate_id": "SYN_V14H_REJECT_005",
+          "connected": true,
+          "demo_eligibility_plan": {
+            "demo_eligibility_granted": false,
+            "demo_order_count": 0,
+            "plan_kind": "DEMO_ELIGIBILITY",
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "fixture_only": true,
+          "formal_qualification_status": "BLOCKED",
+          "oos_reservation_plan": {
+            "note": "Plan only; real OOS neither reserved nor consumed.",
+            "oos_consumed": false,
+            "oos_executed": false,
+            "oos_reservation_created": false,
+            "plan_kind": "OOS_RESERVATION",
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "qualification_ready": false,
+          "risk_review_plan": {
+            "plan_kind": "RISK_REVIEW",
+            "risk_review_executed": false,
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "source": "v14_h_blocked_qualification_plans",
+          "status": "PLANNED_NOT_EXECUTED",
+          "surface": "blocked_qualification_planning",
+          "walk_forward_plan": {
+            "folds": [
+              {
+                "end_ms": 1696112000000,
+                "fold_id": "WF_FOLD_TRAIN",
+                "start_ms": 1694816000000
+              },
+              {
+                "end_ms": 1697408000000,
+                "fold_id": "WF_FOLD_TEST",
+                "start_ms": 1696112000001
+              }
+            ],
+            "formal_walk_forward_executed": false,
+            "note": "Plan only; formal WF remains BLOCKED.",
+            "plan_kind": "WALK_FORWARD",
+            "status": "PLANNED_NOT_EXECUTED"
+          }
+        },
+        "cost_sensitivity": {
+          "canonical_cost_authority_consumed": true,
+          "canonical_cost_formulas_modified": false,
+          "connected": true,
+          "cost_destroyed": false,
+          "fixture_only": true,
+          "gross_expectancy": -0.2,
+          "missing_fields": [],
+          "net_expectancy": -0.5,
+          "source": "fixture_cost_sensitivity_v14e_compatible",
+          "surface": "cost_sensitivity"
+        },
+        "dynamic_universe": {
+          "connected": true,
+          "fixture_only": true,
+          "live_exchange_called": false,
+          "pit_membership_ok": true,
+          "pit_symbols": [
+            "FIXTUREBTCUSDT",
+            "SYNTHUSDT"
+          ],
+          "requested_symbols": [
+            "SYNTHUSDT",
+            "FIXTUREBTCUSDT"
+          ],
+          "source": "nexus_dynamic_universe+fixture_instruments",
+          "surface": "dynamic_universe",
+          "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE"
+        },
+        "feature_lab": {
+          "catalog_feature_count": 12,
+          "catalog_version": "v13_e_feature_catalog_1",
+          "connected": true,
+          "fixture_only": true,
+          "missing_feature_ids": [],
+          "predictive_edge_claimed": false,
+          "requested_feature_ids": [
+            "aggressive_buy_sell_imbalance",
+            "trade_intensity",
+            "price_impact"
+          ],
+          "source": "nexus_micro_feature_lab",
+          "surface": "feature_lab"
+        },
+        "mechanism_definitions": {
+          "connected": true,
+          "cosmetic_parameter_variant": false,
+          "deterministic": true,
+          "fixture_only": true,
+          "mechanism_family": "failed_breakout",
+          "mechanism_semantic_id": "MECH_FAILED_BREAKOUT_V4",
+          "missing_fields": [],
+          "source": "fixture_mechanism_contract_v14c_compatible",
+          "surface": "mechanism_definitions"
+        },
+        "robustness_results": {
+          "bootstrap_stable": false,
+          "connected": true,
+          "fixture_only": true,
+          "formal_walk_forward_executed": false,
+          "label": "MULTIPLE_TESTING_REJECTED",
+          "label_allowed": true,
+          "multiple_testing_rejected": true,
+          "oos_consumed": false,
+          "qualification_claim": false,
+          "regime_stable": true,
+          "sample_sufficient": true,
+          "source": "fixture_robustness_v14d_compatible",
+          "surface": "robustness_results"
+        }
+      },
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "surface_order": [
+        "mechanism_definitions",
+        "feature_lab",
+        "dynamic_universe",
+        "cost_sensitivity",
+        "robustness_results",
+        "blocked_qualification_planning"
+      ]
+    },
+    {
+      "all_surfaces_connected": true,
+      "candidate_id": "SYN_V14H_REVIEW_006",
+      "connections": {
+        "blocked_qualification_planning": {
+          "candidate_id": "SYN_V14H_REVIEW_006",
+          "connected": true,
+          "demo_eligibility_plan": {
+            "demo_eligibility_granted": false,
+            "demo_order_count": 0,
+            "plan_kind": "DEMO_ELIGIBILITY",
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "fixture_only": true,
+          "formal_qualification_status": "BLOCKED",
+          "oos_reservation_plan": {
+            "note": "Plan only; real OOS neither reserved nor consumed.",
+            "oos_consumed": false,
+            "oos_executed": false,
+            "oos_reservation_created": false,
+            "plan_kind": "OOS_RESERVATION",
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "qualification_ready": false,
+          "risk_review_plan": {
+            "plan_kind": "RISK_REVIEW",
+            "risk_review_executed": false,
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "source": "v14_h_blocked_qualification_plans",
+          "status": "PLANNED_NOT_EXECUTED",
+          "surface": "blocked_qualification_planning",
+          "walk_forward_plan": {
+            "folds": [
+              {
+                "end_ms": 1696112000000,
+                "fold_id": "WF_FOLD_TRAIN",
+                "start_ms": 1694816000000
+              },
+              {
+                "end_ms": 1697408000000,
+                "fold_id": "WF_FOLD_TEST",
+                "start_ms": 1696112000001
+              }
+            ],
+            "formal_walk_forward_executed": false,
+            "note": "Plan only; formal WF remains BLOCKED.",
+            "plan_kind": "WALK_FORWARD",
+            "status": "PLANNED_NOT_EXECUTED"
+          }
+        },
+        "cost_sensitivity": {
+          "canonical_cost_authority_consumed": true,
+          "canonical_cost_formulas_modified": false,
+          "connected": true,
+          "cost_destroyed": false,
+          "fixture_only": true,
+          "gross_expectancy": 0.35,
+          "missing_fields": [],
+          "net_expectancy": 0.05,
+          "source": "fixture_cost_sensitivity_v14e_compatible",
+          "surface": "cost_sensitivity"
+        },
+        "dynamic_universe": {
+          "connected": true,
+          "fixture_only": true,
+          "live_exchange_called": false,
+          "pit_membership_ok": true,
+          "pit_symbols": [
+            "FIXTUREBTCUSDT",
+            "SYNTHUSDT"
+          ],
+          "requested_symbols": [
+            "SYNTHUSDT",
+            "FIXTUREBTCUSDT"
+          ],
+          "source": "nexus_dynamic_universe+fixture_instruments",
+          "surface": "dynamic_universe",
+          "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE"
+        },
+        "feature_lab": {
+          "catalog_feature_count": 12,
+          "catalog_version": "v13_e_feature_catalog_1",
+          "connected": true,
+          "fixture_only": true,
+          "missing_feature_ids": [],
+          "predictive_edge_claimed": false,
+          "requested_feature_ids": [
+            "aggressive_buy_sell_imbalance",
+            "trade_intensity",
+            "price_impact"
+          ],
+          "source": "nexus_micro_feature_lab",
+          "surface": "feature_lab"
+        },
+        "mechanism_definitions": {
+          "connected": true,
+          "cosmetic_parameter_variant": false,
+          "deterministic": true,
+          "fixture_only": true,
+          "mechanism_family": "absorption",
+          "mechanism_semantic_id": "MECH_ABSORPTION_V4",
+          "missing_fields": [],
+          "source": "fixture_mechanism_contract_v14c_compatible",
+          "surface": "mechanism_definitions"
+        },
+        "robustness_results": {
+          "bootstrap_stable": false,
+          "connected": true,
+          "fixture_only": true,
+          "formal_walk_forward_executed": false,
+          "label": "DEVELOPMENT_FRAGILE",
+          "label_allowed": true,
+          "multiple_testing_rejected": false,
+          "oos_consumed": false,
+          "qualification_claim": false,
+          "regime_stable": true,
+          "sample_sufficient": true,
+          "source": "fixture_robustness_v14d_compatible",
+          "surface": "robustness_results"
+        }
+      },
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "surface_order": [
+        "mechanism_definitions",
+        "feature_lab",
+        "dynamic_universe",
+        "cost_sensitivity",
+        "robustness_results",
+        "blocked_qualification_planning"
+      ]
+    },
+    {
+      "all_surfaces_connected": true,
+      "candidate_id": "SYN_V14H_PROMISING_007",
+      "connections": {
+        "blocked_qualification_planning": {
+          "candidate_id": "SYN_V14H_PROMISING_007",
+          "connected": true,
+          "demo_eligibility_plan": {
+            "demo_eligibility_granted": false,
+            "demo_order_count": 0,
+            "plan_kind": "DEMO_ELIGIBILITY",
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "fixture_only": true,
+          "formal_qualification_status": "BLOCKED",
+          "oos_reservation_plan": {
+            "note": "Plan only; real OOS neither reserved nor consumed.",
+            "oos_consumed": false,
+            "oos_executed": false,
+            "oos_reservation_created": false,
+            "plan_kind": "OOS_RESERVATION",
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "qualification_ready": false,
+          "risk_review_plan": {
+            "plan_kind": "RISK_REVIEW",
+            "risk_review_executed": false,
+            "status": "PLANNED_NOT_EXECUTED"
+          },
+          "source": "v14_h_blocked_qualification_plans",
+          "status": "PLANNED_NOT_EXECUTED",
+          "surface": "blocked_qualification_planning",
+          "walk_forward_plan": {
+            "folds": [
+              {
+                "end_ms": 1696112000000,
+                "fold_id": "WF_FOLD_TRAIN",
+                "start_ms": 1694816000000
+              },
+              {
+                "end_ms": 1697408000000,
+                "fold_id": "WF_FOLD_TEST",
+                "start_ms": 1696112000001
+              }
+            ],
+            "formal_walk_forward_executed": false,
+            "note": "Plan only; formal WF remains BLOCKED.",
+            "plan_kind": "WALK_FORWARD",
+            "status": "PLANNED_NOT_EXECUTED"
+          }
+        },
+        "cost_sensitivity": {
+          "canonical_cost_authority_consumed": true,
+          "canonical_cost_formulas_modified": false,
+          "connected": true,
+          "cost_destroyed": false,
+          "fixture_only": true,
+          "gross_expectancy": 0.7,
+          "missing_fields": [],
+          "net_expectancy": 0.25,
+          "source": "fixture_cost_sensitivity_v14e_compatible",
+          "surface": "cost_sensitivity"
+        },
+        "dynamic_universe": {
+          "connected": true,
+          "fixture_only": true,
+          "live_exchange_called": false,
+          "pit_membership_ok": true,
+          "pit_symbols": [
+            "FIXTUREBTCUSDT",
+            "SYNTHUSDT"
+          ],
+          "requested_symbols": [
+            "SYNTHUSDT",
+            "FIXTUREBTCUSDT"
+          ],
+          "source": "nexus_dynamic_universe+fixture_instruments",
+          "surface": "dynamic_universe",
+          "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE"
+        },
+        "feature_lab": {
+          "catalog_feature_count": 12,
+          "catalog_version": "v13_e_feature_catalog_1",
+          "connected": true,
+          "fixture_only": true,
+          "missing_feature_ids": [],
+          "predictive_edge_claimed": false,
+          "requested_feature_ids": [
+            "aggressive_buy_sell_imbalance",
+            "trade_intensity",
+            "price_impact"
+          ],
+          "source": "nexus_micro_feature_lab",
+          "surface": "feature_lab"
+        },
+        "mechanism_definitions": {
+          "connected": true,
+          "cosmetic_parameter_variant": false,
+          "deterministic": true,
+          "fixture_only": true,
+          "mechanism_family": "liquidity_withdrawal",
+          "mechanism_semantic_id": "MECH_LIQUIDITY_WITHDRAWAL_V4",
+          "missing_fields": [],
+          "source": "fixture_mechanism_contract_v14c_compatible",
+          "surface": "mechanism_definitions"
+        },
+        "robustness_results": {
+          "bootstrap_stable": true,
+          "connected": true,
+          "fixture_only": true,
+          "formal_walk_forward_executed": false,
+          "label": "DEVELOPMENT_ROBUST",
+          "label_allowed": true,
+          "multiple_testing_rejected": false,
+          "oos_consumed": false,
+          "qualification_claim": false,
+          "regime_stable": true,
+          "sample_sufficient": true,
+          "source": "fixture_robustness_v14d_compatible",
+          "surface": "robustness_results"
+        }
+      },
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "surface_order": [
+        "mechanism_definitions",
+        "feature_lab",
+        "dynamic_universe",
+        "cost_sensitivity",
+        "robustness_results",
+        "blocked_qualification_planning"
+      ]
+    }
+  ],
+  "schema": "FOUNDER_V14_H_CANDIDATE_TRIAGE_CONTROL",
+  "surfaces": [
+    "mechanism_definitions",
+    "feature_lab",
+    "dynamic_universe",
+    "cost_sensitivity",
+    "robustness_results",
+    "blocked_qualification_planning"
+  ]
+}
