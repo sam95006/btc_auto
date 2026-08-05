@@ -1,0 +1,55 @@
+{
+  "by_family": {
+    "ABSORPTION": [
+      "CAND_MT_BORDER_001",
+      "CAND_MT_REJECT_001"
+    ],
+    "AGGRESSION_PERSISTENCE": [
+      "CAND_COST_001"
+    ],
+    "FUNDING_BASIS_DISLOCATION": [
+      "CAND_FRAGILE_001"
+    ],
+    "LIQUIDATION_CASCADE": [
+      "CAND_SAMPLE_001"
+    ],
+    "LIQUIDITY_WITHDRAWAL": [
+      "CAND_EXTRA_001"
+    ],
+    "ORDER_FLOW_IMBALANCE": [
+      "CAND_ROBUST_001",
+      "CAND_ROBUST_002"
+    ],
+    "SPREAD_SHOCK": [
+      "CAND_EXTRA_002"
+    ],
+    "VOL_EXPANSION_COMPRESSION": [
+      "CAND_DATA_BLOCK_001"
+    ]
+  },
+  "by_parent": {
+    "CAND_MT_REJECT_001": [
+      "CAND_MT_BORDER_001"
+    ],
+    "CAND_ROBUST_001": [
+      "CAND_ROBUST_002"
+    ]
+  },
+  "candidate_count": 10,
+  "development_only": true,
+  "digest_checksum": "bd32bdc5c39b93d7277d2799ce9073de7386a888cf82902f338553886526bf7a",
+  "family_coverage": {
+    "ABSORPTION": 2,
+    "AGGRESSION_PERSISTENCE": 1,
+    "CROSS_ASSET_LEAD_LAG": 0,
+    "FUNDING_BASIS_DISLOCATION": 1,
+    "LIQUIDATION_CASCADE": 1,
+    "LIQUIDITY_WITHDRAWAL": 1,
+    "ORDER_FLOW_IMBALANCE": 2,
+    "REGIME_MEAN_REVERSION": 0,
+    "SPREAD_SHOCK": 1,
+    "VOL_EXPANSION_COMPRESSION": 1
+  },
+  "not_oos_claim": true,
+  "schema": "v14_d_lineage_index"
+}

@@ -1,0 +1,480 @@
+{
+  "development_only": true,
+  "families": {
+    "ABSORPTION": {
+      "bh": {
+        "adjusted_p": [
+          0.42,
+          0.18
+        ],
+        "development_only": true,
+        "discoveries": [],
+        "discovery_count": 0,
+        "formal_walk_forward": false,
+        "method": "benjamini_hochberg",
+        "n_tests": 2,
+        "not_oos_claim": true,
+        "q": 0.1,
+        "rejected_indices": []
+      },
+      "bonferroni": {
+        "alpha": 0.05,
+        "development_only": true,
+        "fail_indices": [
+          0,
+          1
+        ],
+        "method": "bonferroni",
+        "n_tests": 2,
+        "not_oos_claim": true,
+        "pass_indices": [],
+        "per_test_alpha": 0.025
+      },
+      "bonferroni_alpha": 0.05,
+      "family_id": "ABSORPTION",
+      "fdr_q": 0.1,
+      "formal_walk_forward": false,
+      "n_tests": 2,
+      "oos_consumed": false,
+      "per_candidate": [
+        {
+          "bh_adjusted_p": 0.42,
+          "bh_discovery": false,
+          "bonferroni_pass": false,
+          "candidate_id": "CAND_MT_REJECT_001",
+          "development_only": true,
+          "family_test_count": 2,
+          "hypothesis": "H0_no_dev_edge::CAND_MT_REJECT_001",
+          "not_oos_significance": true,
+          "raw_p": 0.42
+        },
+        {
+          "bh_adjusted_p": 0.18,
+          "bh_discovery": false,
+          "bonferroni_pass": false,
+          "candidate_id": "CAND_MT_BORDER_001",
+          "development_only": true,
+          "family_test_count": 2,
+          "hypothesis": "H0_no_dev_edge::CAND_MT_BORDER_001",
+          "not_oos_significance": true,
+          "raw_p": 0.09
+        }
+      ],
+      "qualification_claim": false,
+      "schema": "v14_d_multiple_comparison_metadata"
+    },
+    "AGGRESSION_PERSISTENCE": {
+      "bh": {
+        "adjusted_p": [
+          0.01
+        ],
+        "development_only": true,
+        "discoveries": [
+          {
+            "bh_threshold": 0.1,
+            "index": 0,
+            "p_value": 0.01,
+            "rank": 1
+          }
+        ],
+        "discovery_count": 1,
+        "formal_walk_forward": false,
+        "method": "benjamini_hochberg",
+        "n_tests": 1,
+        "not_oos_claim": true,
+        "q": 0.1,
+        "rejected_indices": [
+          0
+        ]
+      },
+      "bonferroni": {
+        "alpha": 0.05,
+        "development_only": true,
+        "fail_indices": [],
+        "method": "bonferroni",
+        "n_tests": 1,
+        "not_oos_claim": true,
+        "pass_indices": [
+          0
+        ],
+        "per_test_alpha": 0.05
+      },
+      "bonferroni_alpha": 0.05,
+      "family_id": "AGGRESSION_PERSISTENCE",
+      "fdr_q": 0.1,
+      "formal_walk_forward": false,
+      "n_tests": 1,
+      "oos_consumed": false,
+      "per_candidate": [
+        {
+          "bh_adjusted_p": 0.01,
+          "bh_discovery": true,
+          "bonferroni_pass": true,
+          "candidate_id": "CAND_COST_001",
+          "development_only": true,
+          "family_test_count": 1,
+          "hypothesis": "H0_no_dev_edge::CAND_COST_001",
+          "not_oos_significance": true,
+          "raw_p": 0.01
+        }
+      ],
+      "qualification_claim": false,
+      "schema": "v14_d_multiple_comparison_metadata"
+    },
+    "FUNDING_BASIS_DISLOCATION": {
+      "bh": {
+        "adjusted_p": [
+          0.005
+        ],
+        "development_only": true,
+        "discoveries": [
+          {
+            "bh_threshold": 0.1,
+            "index": 0,
+            "p_value": 0.005,
+            "rank": 1
+          }
+        ],
+        "discovery_count": 1,
+        "formal_walk_forward": false,
+        "method": "benjamini_hochberg",
+        "n_tests": 1,
+        "not_oos_claim": true,
+        "q": 0.1,
+        "rejected_indices": [
+          0
+        ]
+      },
+      "bonferroni": {
+        "alpha": 0.05,
+        "development_only": true,
+        "fail_indices": [],
+        "method": "bonferroni",
+        "n_tests": 1,
+        "not_oos_claim": true,
+        "pass_indices": [
+          0
+        ],
+        "per_test_alpha": 0.05
+      },
+      "bonferroni_alpha": 0.05,
+      "family_id": "FUNDING_BASIS_DISLOCATION",
+      "fdr_q": 0.1,
+      "formal_walk_forward": false,
+      "n_tests": 1,
+      "oos_consumed": false,
+      "per_candidate": [
+        {
+          "bh_adjusted_p": 0.005,
+          "bh_discovery": true,
+          "bonferroni_pass": true,
+          "candidate_id": "CAND_FRAGILE_001",
+          "development_only": true,
+          "family_test_count": 1,
+          "hypothesis": "H0_no_dev_edge::CAND_FRAGILE_001",
+          "not_oos_significance": true,
+          "raw_p": 0.005
+        }
+      ],
+      "qualification_claim": false,
+      "schema": "v14_d_multiple_comparison_metadata"
+    },
+    "LIQUIDATION_CASCADE": {
+      "bh": {
+        "adjusted_p": [
+          0.02
+        ],
+        "development_only": true,
+        "discoveries": [
+          {
+            "bh_threshold": 0.1,
+            "index": 0,
+            "p_value": 0.02,
+            "rank": 1
+          }
+        ],
+        "discovery_count": 1,
+        "formal_walk_forward": false,
+        "method": "benjamini_hochberg",
+        "n_tests": 1,
+        "not_oos_claim": true,
+        "q": 0.1,
+        "rejected_indices": [
+          0
+        ]
+      },
+      "bonferroni": {
+        "alpha": 0.05,
+        "development_only": true,
+        "fail_indices": [],
+        "method": "bonferroni",
+        "n_tests": 1,
+        "not_oos_claim": true,
+        "pass_indices": [
+          0
+        ],
+        "per_test_alpha": 0.05
+      },
+      "bonferroni_alpha": 0.05,
+      "family_id": "LIQUIDATION_CASCADE",
+      "fdr_q": 0.1,
+      "formal_walk_forward": false,
+      "n_tests": 1,
+      "oos_consumed": false,
+      "per_candidate": [
+        {
+          "bh_adjusted_p": 0.02,
+          "bh_discovery": true,
+          "bonferroni_pass": true,
+          "candidate_id": "CAND_SAMPLE_001",
+          "development_only": true,
+          "family_test_count": 1,
+          "hypothesis": "H0_no_dev_edge::CAND_SAMPLE_001",
+          "not_oos_significance": true,
+          "raw_p": 0.02
+        }
+      ],
+      "qualification_claim": false,
+      "schema": "v14_d_multiple_comparison_metadata"
+    },
+    "LIQUIDITY_WITHDRAWAL": {
+      "bh": {
+        "adjusted_p": [
+          0.15
+        ],
+        "development_only": true,
+        "discoveries": [],
+        "discovery_count": 0,
+        "formal_walk_forward": false,
+        "method": "benjamini_hochberg",
+        "n_tests": 1,
+        "not_oos_claim": true,
+        "q": 0.1,
+        "rejected_indices": []
+      },
+      "bonferroni": {
+        "alpha": 0.05,
+        "development_only": true,
+        "fail_indices": [
+          0
+        ],
+        "method": "bonferroni",
+        "n_tests": 1,
+        "not_oos_claim": true,
+        "pass_indices": [],
+        "per_test_alpha": 0.05
+      },
+      "bonferroni_alpha": 0.05,
+      "family_id": "LIQUIDITY_WITHDRAWAL",
+      "fdr_q": 0.1,
+      "formal_walk_forward": false,
+      "n_tests": 1,
+      "oos_consumed": false,
+      "per_candidate": [
+        {
+          "bh_adjusted_p": 0.15,
+          "bh_discovery": false,
+          "bonferroni_pass": false,
+          "candidate_id": "CAND_EXTRA_001",
+          "development_only": true,
+          "family_test_count": 1,
+          "hypothesis": "H0_no_dev_edge::CAND_EXTRA_001",
+          "not_oos_significance": true,
+          "raw_p": 0.15
+        }
+      ],
+      "qualification_claim": false,
+      "schema": "v14_d_multiple_comparison_metadata"
+    },
+    "ORDER_FLOW_IMBALANCE": {
+      "bh": {
+        "adjusted_p": [
+          0.006,
+          0.006
+        ],
+        "development_only": true,
+        "discoveries": [
+          {
+            "bh_threshold": 0.05,
+            "index": 0,
+            "p_value": 0.004,
+            "rank": 1
+          },
+          {
+            "bh_threshold": 0.1,
+            "index": 1,
+            "p_value": 0.006,
+            "rank": 2
+          }
+        ],
+        "discovery_count": 2,
+        "formal_walk_forward": false,
+        "method": "benjamini_hochberg",
+        "n_tests": 2,
+        "not_oos_claim": true,
+        "q": 0.1,
+        "rejected_indices": [
+          0,
+          1
+        ]
+      },
+      "bonferroni": {
+        "alpha": 0.05,
+        "development_only": true,
+        "fail_indices": [],
+        "method": "bonferroni",
+        "n_tests": 2,
+        "not_oos_claim": true,
+        "pass_indices": [
+          0,
+          1
+        ],
+        "per_test_alpha": 0.025
+      },
+      "bonferroni_alpha": 0.05,
+      "family_id": "ORDER_FLOW_IMBALANCE",
+      "fdr_q": 0.1,
+      "formal_walk_forward": false,
+      "n_tests": 2,
+      "oos_consumed": false,
+      "per_candidate": [
+        {
+          "bh_adjusted_p": 0.006,
+          "bh_discovery": true,
+          "bonferroni_pass": true,
+          "candidate_id": "CAND_ROBUST_001",
+          "development_only": true,
+          "family_test_count": 2,
+          "hypothesis": "H0_no_dev_edge::CAND_ROBUST_001",
+          "not_oos_significance": true,
+          "raw_p": 0.004
+        },
+        {
+          "bh_adjusted_p": 0.006,
+          "bh_discovery": true,
+          "bonferroni_pass": true,
+          "candidate_id": "CAND_ROBUST_002",
+          "development_only": true,
+          "family_test_count": 2,
+          "hypothesis": "H0_no_dev_edge::CAND_ROBUST_002",
+          "not_oos_significance": true,
+          "raw_p": 0.006
+        }
+      ],
+      "qualification_claim": false,
+      "schema": "v14_d_multiple_comparison_metadata"
+    },
+    "SPREAD_SHOCK": {
+      "bh": {
+        "adjusted_p": [
+          0.2
+        ],
+        "development_only": true,
+        "discoveries": [],
+        "discovery_count": 0,
+        "formal_walk_forward": false,
+        "method": "benjamini_hochberg",
+        "n_tests": 1,
+        "not_oos_claim": true,
+        "q": 0.1,
+        "rejected_indices": []
+      },
+      "bonferroni": {
+        "alpha": 0.05,
+        "development_only": true,
+        "fail_indices": [
+          0
+        ],
+        "method": "bonferroni",
+        "n_tests": 1,
+        "not_oos_claim": true,
+        "pass_indices": [],
+        "per_test_alpha": 0.05
+      },
+      "bonferroni_alpha": 0.05,
+      "family_id": "SPREAD_SHOCK",
+      "fdr_q": 0.1,
+      "formal_walk_forward": false,
+      "n_tests": 1,
+      "oos_consumed": false,
+      "per_candidate": [
+        {
+          "bh_adjusted_p": 0.2,
+          "bh_discovery": false,
+          "bonferroni_pass": false,
+          "candidate_id": "CAND_EXTRA_002",
+          "development_only": true,
+          "family_test_count": 1,
+          "hypothesis": "H0_no_dev_edge::CAND_EXTRA_002",
+          "not_oos_significance": true,
+          "raw_p": 0.2
+        }
+      ],
+      "qualification_claim": false,
+      "schema": "v14_d_multiple_comparison_metadata"
+    },
+    "VOL_EXPANSION_COMPRESSION": {
+      "bh": {
+        "adjusted_p": [
+          0.03
+        ],
+        "development_only": true,
+        "discoveries": [
+          {
+            "bh_threshold": 0.1,
+            "index": 0,
+            "p_value": 0.03,
+            "rank": 1
+          }
+        ],
+        "discovery_count": 1,
+        "formal_walk_forward": false,
+        "method": "benjamini_hochberg",
+        "n_tests": 1,
+        "not_oos_claim": true,
+        "q": 0.1,
+        "rejected_indices": [
+          0
+        ]
+      },
+      "bonferroni": {
+        "alpha": 0.05,
+        "development_only": true,
+        "fail_indices": [],
+        "method": "bonferroni",
+        "n_tests": 1,
+        "not_oos_claim": true,
+        "pass_indices": [
+          0
+        ],
+        "per_test_alpha": 0.05
+      },
+      "bonferroni_alpha": 0.05,
+      "family_id": "VOL_EXPANSION_COMPRESSION",
+      "fdr_q": 0.1,
+      "formal_walk_forward": false,
+      "n_tests": 1,
+      "oos_consumed": false,
+      "per_candidate": [
+        {
+          "bh_adjusted_p": 0.03,
+          "bh_discovery": true,
+          "bonferroni_pass": true,
+          "candidate_id": "CAND_DATA_BLOCK_001",
+          "development_only": true,
+          "family_test_count": 1,
+          "hypothesis": "H0_no_dev_edge::CAND_DATA_BLOCK_001",
+          "not_oos_significance": true,
+          "raw_p": 0.03
+        }
+      ],
+      "qualification_claim": false,
+      "schema": "v14_d_multiple_comparison_metadata"
+    }
+  },
+  "family_count": 8,
+  "not_oos_claim": true,
+  "schema": "v14_d_family_comparison_bundle",
+  "total_bh_discoveries": 6,
+  "total_tests": 10
+}

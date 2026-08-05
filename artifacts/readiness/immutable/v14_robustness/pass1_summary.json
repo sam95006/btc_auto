@@ -1,0 +1,33 @@
+{
+  "auto_integrate": false,
+  "banned_claim_scan": {
+    "banned_claim_count": 0,
+    "hits": [],
+    "ok": true,
+    "scanned_code_roots": [
+      "backend/nexus_research_validation/",
+      "tools/research/robustness/",
+      "tests/research_validation/"
+    ],
+    "schema": "v14_d_banned_claim_scan"
+  },
+  "candidate_count": 10,
+  "cluster_count": 9,
+  "demo_order_count": 0,
+  "deterministic_fixture_replay": true,
+  "exchange_write_attempt_count": 0,
+  "formal_walk_forward_executed": false,
+  "label_histogram": {
+    "COST_DESTROYED": 1,
+    "DATA_QUALITY_BLOCKED": 1,
+    "DEVELOPMENT_FRAGILE": 1,
+    "DEVELOPMENT_ROBUST": 2,
+    "INSUFFICIENT_SAMPLE": 3,
+    "MULTIPLE_TESTING_REJECTED": 2
+  },
+  "oos_consumed": false,
+  "oos_executed": false,
+  "pass": "PASS_1",
+  "qualification_ready_count": 0,
+  "total_family_tests": 10
+}

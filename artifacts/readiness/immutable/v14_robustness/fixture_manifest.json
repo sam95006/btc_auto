@@ -1,0 +1,32 @@
+{
+  "batch_digest": "53d8b0f63bcac70cb67e6707d748ddca77572f2016f070e5b04e106e64ebd53b",
+  "candidate_count": 10,
+  "candidate_ids": [
+    "CAND_ROBUST_001",
+    "CAND_ROBUST_002",
+    "CAND_SAMPLE_001",
+    "CAND_MT_REJECT_001",
+    "CAND_COST_001",
+    "CAND_FRAGILE_001",
+    "CAND_DATA_BLOCK_001",
+    "CAND_MT_BORDER_001",
+    "CAND_EXTRA_001",
+    "CAND_EXTRA_002"
+  ],
+  "families_represented": [
+    "ABSORPTION",
+    "AGGRESSION_PERSISTENCE",
+    "FUNDING_BASIS_DISLOCATION",
+    "LIQUIDATION_CASCADE",
+    "LIQUIDITY_WITHDRAWAL",
+    "ORDER_FLOW_IMBALANCE",
+    "SPREAD_SHOCK",
+    "VOL_EXPANSION_COMPRESSION"
+  ],
+  "fixture_synthetic": true,
+  "formal_walk_forward": false,
+  "not_real_strategy_candidates": true,
+  "oos_consumed": false,
+  "qualification_claim": false,
+  "schema": "v14_d_fixture_manifest"
+}
