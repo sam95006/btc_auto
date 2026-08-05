@@ -18,13 +18,13 @@
     "fixture_source":  "synthetic_sanitized",
     "formal_walk_forward_executed":  false,
     "hard_bans_honored":  true,
-    "head_commit_at_run":  "7fc09951813be23d9301b73e6965e69b441f6b3c",
+    "head_commit_at_run":  "ee357b2c1fe67ea4ba5caaf103e4dc7166cad4c7",
     "high_finding_details":  [
 
                              ],
     "high_findings":  0,
     "lane":  "V14-B",
-    "lane_head":  "7fc09951813be23d9301b73e6965e69b441f6b3c",
+    "lane_head":  "ee357b2c1fe67ea4ba5caaf103e4dc7166cad4c7",
     "lane_name":  "EVENT_STUDY_ENGINE",
     "mainnet":  false,
     "metrics":  {
