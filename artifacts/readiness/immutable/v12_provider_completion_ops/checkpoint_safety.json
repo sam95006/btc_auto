@@ -1,6 +1,6 @@
 {
   "schema": "v12_provider_checkpoint_safety",
-  "created_at": "2026-08-05T07:48:12Z",
+  "created_at": "2026-08-05T07:48:30Z",
   "source": "synthetic_incomplete_sot",
   "checkpoint_path": null,
   "checksum_sha256": "5fba17c4f80d589512dea096ebee5af21731b5077502eb709185542b6c3c8ed9",

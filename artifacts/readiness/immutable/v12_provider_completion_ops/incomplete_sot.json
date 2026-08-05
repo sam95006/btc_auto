@@ -1,6 +1,6 @@
 {
   "schema": "v12_provider_completion_ops_incomplete_sot",
-  "created_at": "2026-08-05T07:48:12Z",
+  "created_at": "2026-08-05T07:48:30Z",
   "V2_3_complete": false,
   "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
   "case_id_count": 80,

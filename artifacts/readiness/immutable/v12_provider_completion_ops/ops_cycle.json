@@ -1,6 +1,6 @@
 {
   "schema": "v12_provider_ops_cycle",
-  "created_at": "2026-08-05T07:48:12Z",
+  "created_at": "2026-08-05T07:48:30Z",
   "lane": "V12-C",
   "lane_name": "PROVIDER_COMPLETION_OPS",
   "package": "backend.nexus_provider_ops",
@@ -18,7 +18,7 @@
   ],
   "incomplete_sot": {
     "schema": "v12_provider_completion_ops_incomplete_sot",
-    "created_at": "2026-08-05T07:48:12Z",
+    "created_at": "2026-08-05T07:48:30Z",
     "V2_3_complete": false,
     "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
     "case_id_count": 80,
@@ -40,7 +40,7 @@
   },
   "queue_health": {
     "schema": "v12_provider_queue_health",
-    "created_at": "2026-08-05T07:48:12Z",
+    "created_at": "2026-08-05T07:48:30Z",
     "overall_status": "DEGRADED_INCOMPLETE",
     "V2_3_complete": false,
     "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
@@ -75,15 +75,15 @@
   },
   "retry_after_obs": {
     "schema": "v12_provider_retry_after_obs_map",
-    "created_at": "2026-08-05T07:48:12Z",
+    "created_at": "2026-08-05T07:48:30Z",
     "lanes": {
       "GROQ_REFLECTION_REASONER": {
         "schema": "v12_provider_retry_after_obs",
-        "created_at": "2026-08-05T07:48:12Z",
+        "created_at": "2026-08-05T07:48:30Z",
         "profile_id": "GROQ_REFLECTION_REASONER",
         "http_status": 429,
         "retry_after_s": 900.0,
-        "next_resume_not_before": "2026-08-05T08:03:12Z",
+        "next_resume_not_before": "2026-08-05T08:03:30Z",
         "rate_limited": true,
         "headers_observed": {
           "Retry-After": "900"
@@ -93,11 +93,11 @@
       },
       "SAMBANOVA_INDEPENDENT_CRITIC": {
         "schema": "v12_provider_retry_after_obs",
-        "created_at": "2026-08-05T07:48:12Z",
+        "created_at": "2026-08-05T07:48:30Z",
         "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
         "http_status": 429,
         "retry_after_s": 900.0,
-        "next_resume_not_before": "2026-08-05T08:03:12Z",
+        "next_resume_not_before": "2026-08-05T08:03:30Z",
         "rate_limited": true,
         "headers_observed": {
           "Retry-After": "900"
@@ -112,7 +112,7 @@
   },
   "capacity_windows": {
     "schema": "v12_provider_capacity_windows",
-    "created_at": "2026-08-05T07:48:12Z",
+    "created_at": "2026-08-05T07:48:30Z",
     "V2_3_complete": false,
     "lanes": {
       "GROQ_REFLECTION_REASONER": {
@@ -123,9 +123,9 @@
         "pending_count": 27,
         "retry_after_s": 900.0,
         "window_open_in_s": 900.0,
-        "window_open_at": "2026-08-05T08:03:12Z",
+        "window_open_at": "2026-08-05T08:03:30Z",
         "estimated_drain_s": 135.0,
-        "window_close_at": "2026-08-05T08:05:27Z",
+        "window_close_at": "2026-08-05T08:05:45Z",
         "window_status": "CLOSED_WAITING",
         "real_resume_authorized": false
       },
@@ -137,9 +137,9 @@
         "pending_count": 10,
         "retry_after_s": 900.0,
         "window_open_in_s": 900.0,
-        "window_open_at": "2026-08-05T08:03:12Z",
+        "window_open_at": "2026-08-05T08:03:30Z",
         "estimated_drain_s": 100.0,
-        "window_close_at": "2026-08-05T08:04:52Z",
+        "window_close_at": "2026-08-05T08:05:10Z",
         "window_status": "CLOSED_WAITING",
         "real_resume_authorized": false
       }
@@ -155,7 +155,7 @@
   },
   "checkpoint_safety": {
     "schema": "v12_provider_checkpoint_safety",
-    "created_at": "2026-08-05T07:48:12Z",
+    "created_at": "2026-08-05T07:48:30Z",
     "source": "synthetic_incomplete_sot",
     "checkpoint_path": null,
     "checksum_sha256": "5fba17c4f80d589512dea096ebee5af21731b5077502eb709185542b6c3c8ed9",
@@ -181,7 +181,7 @@
   },
   "completed_case_dedupe": {
     "schema": "v12_provider_completed_case_dedupe",
-    "created_at": "2026-08-05T07:48:12Z",
+    "created_at": "2026-08-05T07:48:30Z",
     "case_id_count": 80,
     "completed_case_count": 53,
     "pending_before_dedupe": 28,
@@ -225,7 +225,7 @@
   },
   "manual_control": {
     "schema": "v12_provider_manual_control",
-    "created_at": "2026-08-05T07:48:12Z",
+    "created_at": "2026-08-05T07:48:30Z",
     "lanes": {
       "GROQ_REFLECTION_REASONER": {
         "paused": false
@@ -240,14 +240,14 @@
         "action": "pause",
         "profile_id": "GROQ_REFLECTION_REASONER",
         "reason": "ops_cycle_demo_pause",
-        "at": "2026-08-05T07:48:12Z",
+        "at": "2026-08-05T07:48:30Z",
         "affects_real_resume_ownership": false
       },
       {
         "action": "resume_ops_scheduling",
         "profile_id": "GROQ_REFLECTION_REASONER",
         "reason": "ops_cycle_demo_resume",
-        "at": "2026-08-05T07:48:12Z",
+        "at": "2026-08-05T07:48:30Z",
         "affects_real_resume_ownership": false,
         "real_resume_executed": false,
         "note": "Manual resume clears ops pause only; local Coordinator owns real resume."
@@ -256,14 +256,14 @@
         "action": "pause",
         "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
         "reason": "ops_cycle_demo_pause",
-        "at": "2026-08-05T07:48:12Z",
+        "at": "2026-08-05T07:48:30Z",
         "affects_real_resume_ownership": false
       },
       {
         "action": "resume_ops_scheduling",
         "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
         "reason": "ops_cycle_demo_resume",
-        "at": "2026-08-05T07:48:12Z",
+        "at": "2026-08-05T07:48:30Z",
         "affects_real_resume_ownership": false,
         "real_resume_executed": false,
         "note": "Manual resume clears ops pause only; local Coordinator owns real resume."
@@ -277,14 +277,14 @@
       "action": "pause",
       "profile_id": "GROQ_REFLECTION_REASONER",
       "reason": "ops_cycle_demo_pause",
-      "at": "2026-08-05T07:48:12Z",
+      "at": "2026-08-05T07:48:30Z",
       "affects_real_resume_ownership": false
     },
     {
       "action": "resume_ops_scheduling",
       "profile_id": "GROQ_REFLECTION_REASONER",
       "reason": "ops_cycle_demo_resume",
-      "at": "2026-08-05T07:48:12Z",
+      "at": "2026-08-05T07:48:30Z",
       "affects_real_resume_ownership": false,
       "real_resume_executed": false,
       "note": "Manual resume clears ops pause only; local Coordinator owns real resume."
@@ -293,14 +293,14 @@
       "action": "pause",
       "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
       "reason": "ops_cycle_demo_pause",
-      "at": "2026-08-05T07:48:12Z",
+      "at": "2026-08-05T07:48:30Z",
       "affects_real_resume_ownership": false
     },
     {
       "action": "resume_ops_scheduling",
       "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
       "reason": "ops_cycle_demo_resume",
-      "at": "2026-08-05T07:48:12Z",
+      "at": "2026-08-05T07:48:30Z",
       "affects_real_resume_ownership": false,
       "real_resume_executed": false,
       "note": "Manual resume clears ops pause only; local Coordinator owns real resume."
@@ -308,7 +308,7 @@
   ],
   "resume_boundary": {
     "schema": "v12_provider_resume_boundary",
-    "created_at": "2026-08-05T07:48:12Z",
+    "created_at": "2026-08-05T07:48:30Z",
     "real_resume_owner": "local_Coordinator",
     "ops_role": "observability_and_manual_control_only",
     "ops_owns_real_resume": false,
@@ -323,7 +323,7 @@
         "owner": "local_Coordinator",
         "ops_role": "observability_and_manual_control_only",
         "reason": "ops_cycle_probe",
-        "at": "2026-08-05T07:48:12Z"
+        "at": "2026-08-05T07:48:30Z"
       },
       {
         "action": "execute_real_resume",
@@ -332,7 +332,7 @@
         "owner": "local_Coordinator",
         "callable_invoked": false,
         "fn_name": null,
-        "at": "2026-08-05T07:48:12Z"
+        "at": "2026-08-05T07:48:30Z"
       }
     ],
     "forbidden_real_resume_calls": [
@@ -349,7 +349,7 @@
     "owner": "local_Coordinator",
     "ops_role": "observability_and_manual_control_only",
     "reason": "ops_cycle_probe",
-    "at": "2026-08-05T07:48:12Z"
+    "at": "2026-08-05T07:48:30Z"
   },
   "ownership_theft_blocked": true,
   "real_resume_owner": "local_Coordinator",
