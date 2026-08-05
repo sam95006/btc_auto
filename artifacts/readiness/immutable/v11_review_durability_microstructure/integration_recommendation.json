@@ -1,0 +1,32 @@
+{
+  "integration_recommendation": "DO_NOT_INTEGRATE_AS_AUTHORITY_UNTIL_CRITICAL_FIXED",
+  "rationale": "Critical gaps in snapshot payload verification, racy snapshot position, and duplicate partition identity mean Lane C/D must not be treated as sole durability / partition authorities in the V11 controlled integration spine yet.",
+  "critical_count": 3,
+  "high_count": 7,
+  "blocking_finding_ids": [
+    "R2-C-001",
+    "R2-C-002",
+    "R2-D-001",
+    "R2-C-003",
+    "R2-C-004",
+    "R2-C-005",
+    "R2-C-006",
+    "R2-D-002",
+    "R2-D-003",
+    "R2-D-004"
+  ],
+  "allowed_now": [
+    "Keep Lane C/D code on feature branches for further hardening",
+    "Retain forensic/open-tail classification improvements from Lane D as non-authority helpers",
+    "Do not declare campaign Event Study READY based on V11 recovery alone"
+  ],
+  "required_before_authority_integration": [
+    "R2-C-001 snapshot payload verify",
+    "R2-C-002 snapshot position from checksummed bytes + restore wal policy",
+    "R2-D-001 exclusive partition identity",
+    "R2-C-003 persist clock rollback watermark",
+    "R2-D-002 orphan open-marker classification"
+  ],
+  "hazard_confirmed_count": 10,
+  "pass_id": "PASS_2"
+}

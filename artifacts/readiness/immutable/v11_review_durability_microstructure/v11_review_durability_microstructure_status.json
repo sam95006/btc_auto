@@ -1,0 +1,47 @@
+{
+  "schema": "v11_review_durability_microstructure_status_v1",
+  "generated_at": "2026-08-05T04:01:49Z",
+  "review_status": "COMPLETE_TWO_PASSES",
+  "integration_recommendation": "DO_NOT_INTEGRATE_AS_AUTHORITY_UNTIL_CRITICAL_FIXED",
+  "critical_finding_ids": [
+    "R2-C-001",
+    "R2-C-002",
+    "R2-D-001"
+  ],
+  "high_finding_ids": [
+    "R2-C-003",
+    "R2-C-004",
+    "R2-C-005",
+    "R2-C-006",
+    "R2-D-002",
+    "R2-D-003",
+    "R2-D-004"
+  ],
+  "remaining_blockers": [
+    "R2-C-001",
+    "R2-C-002",
+    "R2-D-001",
+    "R2-C-003",
+    "R2-C-004",
+    "R2-C-005",
+    "R2-C-006",
+    "R2-D-002",
+    "R2-D-003",
+    "R2-D-004"
+  ],
+  "origin": {
+    "base": "e4f30f9b8abaaade6151a75ef5ac6face53d5135",
+    "lane_c": "8fa0cc73338711ff991fd6997cadbcac5a5686b8",
+    "lane_d": "3d4f94d989efc6ef0e3e190842f700cceadb9581",
+    "review_head_before": "401606ecb5ec824063c5967b1c7396d3331032e7",
+    "branch": "feature/v11-review-durability-microstructure"
+  },
+  "artifacts": [
+    "findings.json",
+    "integration_recommendation.json",
+    "adversarial_matrix_pass1.json",
+    "adversarial_matrix_pass2.json",
+    "metrics.json",
+    "v11_review_durability_microstructure_status.json"
+  ]
+}
