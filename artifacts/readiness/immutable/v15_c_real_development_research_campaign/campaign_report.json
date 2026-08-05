@@ -1,0 +1,2700 @@
+{
+  "auto_integrate": false,
+  "base_commit": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
+  "branch": "feature/v15-real-development-research-campaign",
+  "campaign_id": "v15_c_real_development_research_campaign",
+  "code_checksum": "3b13b10474499b0be33bd77bc3806d52c6399359e25d5aefefd601d3fee78847",
+  "cost_model_authority": "backend.nexus_execution.cost_model",
+  "created_at": "2026-08-05T15:24:04Z",
+  "data_lineage": "FIXTURE_NOT_REAL",
+  "data_provenance": {
+    "data_lineage": "FIXTURE_NOT_REAL",
+    "fixture_synthetic": true,
+    "never_call_fixture_real": true,
+    "note": "Real historical fetch unavailable or incomplete; fixture labeled NOT REAL.",
+    "seed": 20260805,
+    "series_digest": "c7a3c979a24f2f113bdc29805adb4b15c5a91c4d2ebf5e402bd637d50cdce2d8"
+  },
+  "demo_order_count": 0,
+  "development_interval_id": "FIXTURE_NOT_REAL_DEV_REAL_HISTORICAL_V15C_2026_04_04_TO_2026_08_02",
+  "development_only": true,
+  "dynamic_universe": {
+    "interval": "60",
+    "symbol_partition": {
+      "BTCUSDT": {
+        "mechanism_count": 5,
+        "net_sum": -0.26871745499254673
+      },
+      "ETHUSDT": {
+        "mechanism_count": 5,
+        "net_sum": -0.8423906493835873
+      },
+      "SOLUSDT": {
+        "mechanism_count": 5,
+        "net_sum": -1.6108238650951068
+      }
+    },
+    "symbols": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "SOLUSDT"
+    ]
+  },
+  "edge_claim_count": 0,
+  "edge_claimed": false,
+  "env_guard": {
+    "flags": {
+      "AUTO_INTEGRATE": "false",
+      "DEMO_ORDERS": "false",
+      "EXCHANGE_WRITE": "false",
+      "FORMAL_WALK_FORWARD": "false",
+      "MAINNET": "false",
+      "OOS_CONSUME": "false",
+      "OOS_EXECUTE": "false",
+      "REAL_MONEY": "false",
+      "SHADOW_ORDERS": "false"
+    },
+    "hard_bans": [
+      "no_auto_integrate",
+      "no_demo_orders",
+      "no_exchange_write",
+      "no_formal_walk_forward",
+      "no_mainnet",
+      "no_oos_consumption",
+      "no_pr27_merge",
+      "no_profitability_claims",
+      "no_qualified_claims",
+      "no_real_money",
+      "no_shadow_orders",
+      "no_status_json_emit",
+      "no_strategy_promotion"
+    ],
+    "ok": true,
+    "violations": []
+  },
+  "evaluations": [
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:ofi_top"
+      ],
+      "family": "ORDER_FLOW_IMBALANCE",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_OFI_TOPBOOK_PRESSURE_CONTINUATION_V4",
+      "missing_required_features": [
+        "ofi_top"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "ofi_top",
+        "mid",
+        "spread_bps",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "signed_threshold",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:ofi_cum"
+      ],
+      "family": "ORDER_FLOW_IMBALANCE",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_OFI_CUMULATIVE_DIVERGENCE_V4",
+      "missing_required_features": [
+        "ofi_cum"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "ofi_cum",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "divergence",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:ofi_top",
+        "missing_feature:aggression_ratio"
+      ],
+      "family": "ORDER_FLOW_IMBALANCE",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_OFI_EXHAUSTION_AFTER_EXTREME_V4",
+      "missing_required_features": [
+        "ofi_top",
+        "aggression_ratio"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "ofi_top",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "exhaustion_fade",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:aggression_persistence",
+        "missing_feature:aggression_ratio",
+        "missing_feature:vol_z"
+      ],
+      "family": "AGGRESSION_PERSISTENCE",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_AGGRESSION_PERSISTENCE_CONTINUATION_V4",
+      "missing_required_features": [
+        "aggression_persistence",
+        "aggression_ratio",
+        "vol_z"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "aggression_persistence",
+        "aggression_ratio",
+        "vol_z",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "persistence_continue",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:aggression_persistence",
+        "missing_feature:aggression_ratio_lag"
+      ],
+      "family": "AGGRESSION_PERSISTENCE",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_AGGRESSION_PERSISTENCE_DECAY_FADE_V4",
+      "missing_required_features": [
+        "aggression_persistence",
+        "aggression_ratio_lag"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "aggression_persistence",
+        "aggression_ratio_lag",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "persistence_decay_fade",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:aggression_side",
+        "missing_feature:aggression_side_lag",
+        "missing_feature:ofi_top"
+      ],
+      "family": "FLOW_REVERSAL",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_FLOW_REVERSAL_AGGRESSION_FLIP_V4",
+      "missing_required_features": [
+        "aggression_side",
+        "aggression_side_lag",
+        "ofi_top"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "aggression_side",
+        "aggression_side_lag",
+        "ofi_top",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "side_flip",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:net_flow",
+        "missing_feature:net_flow_lag"
+      ],
+      "family": "FLOW_REVERSAL",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_FLOW_REVERSAL_NET_FLOW_SIGN_CHANGE_V4",
+      "missing_required_features": [
+        "net_flow",
+        "net_flow_lag"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "net_flow",
+        "net_flow_lag",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "net_flow_sign_change",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:liquidation_intensity",
+        "missing_feature:liq_side",
+        "missing_feature:depth_gap"
+      ],
+      "family": "LIQUIDATION_CASCADE",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_LIQ_CASCADE_CONTINUATION_V4",
+      "missing_required_features": [
+        "liquidation_intensity",
+        "liq_side",
+        "depth_gap"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "liquidation_intensity",
+        "liq_side",
+        "depth_gap",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "liq_intensity_continue",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:liquidation_intensity",
+        "missing_feature:liquidation_intensity_lag",
+        "missing_feature:aggression_ratio"
+      ],
+      "family": "LIQUIDATION_CASCADE",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_LIQ_CASCADE_ACCELERATION_V4",
+      "missing_required_features": [
+        "liquidation_intensity",
+        "liquidation_intensity_lag",
+        "aggression_ratio"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "liquidation_intensity",
+        "liquidation_intensity_lag",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "liq_acceleration",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:liquidation_intensity",
+        "missing_feature:liquidation_intensity_lag"
+      ],
+      "family": "POST_LIQUIDATION_EXHAUSTION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_POST_LIQ_SNAPBACK_V4",
+      "missing_required_features": [
+        "liquidation_intensity",
+        "liquidation_intensity_lag"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "liquidation_intensity",
+        "liquidation_intensity_lag",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "post_liq_snapback",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:volume",
+        "missing_feature:liquidation_intensity_lag"
+      ],
+      "family": "POST_LIQUIDATION_EXHAUSTION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_POST_LIQ_VOLUME_DROUGHT_V4",
+      "missing_required_features": [
+        "volume",
+        "liquidation_intensity_lag"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "volume",
+        "liquidation_intensity_lag",
+        "range_compression",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "post_liq_drought",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:absorption_score",
+        "missing_feature:aggression_ratio"
+      ],
+      "family": "ABSORPTION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_ABSORPTION_PASSIVE_REVERSAL_V4",
+      "missing_required_features": [
+        "absorption_score",
+        "aggression_ratio"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "absorption_score",
+        "aggression_ratio",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "absorption_fade",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:level_refresh_count",
+        "missing_feature:aggression_ratio"
+      ],
+      "family": "ABSORPTION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_ABSORPTION_ICEBERG_LEVEL_DEFENSE_V4",
+      "missing_required_features": [
+        "level_refresh_count",
+        "aggression_ratio"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "level_refresh_count",
+        "distance_to_level_bps",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "iceberg_level_fade",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:depth_withdrawal",
+        "missing_feature:impact_bps"
+      ],
+      "family": "LIQUIDITY_WITHDRAWAL",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_LIQUIDITY_WITHDRAWAL_ADVERSE_V4",
+      "missing_required_features": [
+        "depth_withdrawal",
+        "impact_bps"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "depth_withdrawal",
+        "spread_bps",
+        "impact_bps",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "depth_withdrawal_adverse",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:depth_gap",
+        "missing_feature:vol_z"
+      ],
+      "family": "LIQUIDITY_WITHDRAWAL",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_LIQUIDITY_THIN_BOOK_GAP_RISK_V4",
+      "missing_required_features": [
+        "depth_gap",
+        "vol_z"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "depth_gap",
+        "spread_bps",
+        "vol_z",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "thin_book_gap",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:spread_shock"
+      ],
+      "family": "SPREAD_SHOCK",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_SPREAD_SHOCK_FADE_V4",
+      "missing_required_features": [
+        "spread_shock"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "spread_shock",
+        "spread_bps",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "spread_shock_fade",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:spread_shock",
+        "missing_feature:vol_z",
+        "missing_feature:aggression_ratio"
+      ],
+      "family": "SPREAD_SHOCK",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_SPREAD_SHOCK_STRESS_CONTINUATION_V4",
+      "missing_required_features": [
+        "spread_shock",
+        "vol_z",
+        "aggression_ratio"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "spread_shock",
+        "vol_z",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "spread_shock_stress_continue",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:vol_z"
+      ],
+      "family": "VOL_EXPANSION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_VOL_EXPANSION_BREAKOUT_CONTINUATION_V4",
+      "missing_required_features": [
+        "vol_z"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "vol_z",
+        "mid_return",
+        "range_expansion",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "vol_expand_continue",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:vol_z",
+        "missing_feature:zscore_return"
+      ],
+      "family": "VOL_EXPANSION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_VOL_EXPANSION_RANGE_REOPEN_V4",
+      "missing_required_features": [
+        "vol_z",
+        "zscore_return"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "vol_z",
+        "range_compression_lag",
+        "zscore_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "vol_expand_reopen_fade",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:volume"
+      ],
+      "family": "VOL_COMPRESSION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_VOL_COMPRESSION_COIL_BREAKOUT_V4",
+      "missing_required_features": [
+        "volume"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "range_compression",
+        "mid_return",
+        "volume",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "compression_breakout",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "cost_destroyed": false,
+      "data_blocked": false,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [],
+      "family": "VOL_COMPRESSION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 1.1363759746845132,
+      "label": "MULTIPLE_TESTING_REJECTED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "MULTIPLE_TESTING_REJECTED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "bh_fdr_or_family_multiplicity_reject"
+        ]
+      },
+      "mechanism_id": "MECH_VOL_COMPRESSION_SQUEEZE_FAILURE_FADE_V4",
+      "missing_required_features": [],
+      "net_pnl": 0.08876876945240009,
+      "net_series_len": 271,
+      "observation_count": 2400,
+      "oos_consumed": false,
+      "p_value": 0.2981709084375362,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {
+        "RANGE": 257,
+        "TREND": 14
+      },
+      "regime_fragile": true,
+      "regime_top_share": 0.948339483394834,
+      "required_data": [
+        "range_compression",
+        "breakout_fail_flag",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "MULTIPLE_TESTING_REJECTED",
+      "sample_blocked": false,
+      "signal_kind": "compression_fail_fade",
+      "symbol_net": {
+        "BTCUSDT": 0.03969264011198432,
+        "ETHUSDT": -0.23641202711086667,
+        "SOLUSDT": 0.28548815645128245
+      },
+      "trade_count": 271
+    },
+    {
+      "cost_destroyed": false,
+      "data_blocked": false,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [],
+      "family": "FUNDING_DISLOCATION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": -0.1180055340146925,
+      "label": "REJECTED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "REJECTED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "economic_or_sign_failure_on_development"
+        ]
+      },
+      "mechanism_id": "MECH_FUNDING_EXTREME_MEAN_REVERT_V4",
+      "missing_required_features": [],
+      "net_pnl": -0.8047057141032175,
+      "net_series_len": 126,
+      "observation_count": 2400,
+      "oos_consumed": false,
+      "p_value": 0.3048629791808004,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {
+        "RANGE": 69,
+        "TREND": 57
+      },
+      "regime_fragile": false,
+      "regime_top_share": 0.5476190476190477,
+      "required_data": [
+        "funding_z",
+        "oi_change",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "REJECTED",
+      "sample_blocked": false,
+      "signal_kind": "funding_extreme_fade",
+      "symbol_net": {
+        "BTCUSDT": -0.23963985151726097,
+        "ETHUSDT": -0.20141016183572832,
+        "SOLUSDT": -0.3636557007502282
+      },
+      "trade_count": 126
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:aggression_ratio"
+      ],
+      "family": "FUNDING_DISLOCATION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_FUNDING_CROWDING_SQUEEZE_CONTINUATION_V4",
+      "missing_required_features": [
+        "aggression_ratio"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "funding_z",
+        "oi_change",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "funding_squeeze_continue",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:basis_bps"
+      ],
+      "family": "BASIS_DISLOCATION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_BASIS_PREMIUM_MEAN_REVERT_V4",
+      "missing_required_features": [
+        "basis_bps"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "basis_bps",
+        "funding_z",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "basis_fade",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:basis_bps",
+        "missing_feature:basis_bps_lag",
+        "missing_feature:aggression_ratio"
+      ],
+      "family": "BASIS_DISLOCATION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_BASIS_SHOCK_MOMENTUM_V4",
+      "missing_required_features": [
+        "basis_bps",
+        "basis_bps_lag",
+        "aggression_ratio"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "basis_bps",
+        "basis_bps_lag",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "basis_shock_momentum",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "cost_destroyed": true,
+      "data_blocked": false,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [],
+      "family": "CROSS_ASSET_LEAD_LAG",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.1163949496130699,
+      "label": "MULTIPLE_TESTING_REJECTED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "MULTIPLE_TESTING_REJECTED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "bh_fdr_or_family_multiplicity_reject"
+        ]
+      },
+      "mechanism_id": "MECH_CROSS_ASSET_BTC_ALT_LEAD_LAG_V4",
+      "missing_required_features": [],
+      "net_pnl": -1.5917428276433134,
+      "net_series_len": 291,
+      "observation_count": 2400,
+      "oos_consumed": false,
+      "p_value": 0.3887018683334829,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {
+        "RANGE": 140,
+        "TREND": 151
+      },
+      "regime_fragile": false,
+      "regime_top_share": 0.5189003436426117,
+      "required_data": [
+        "lead_return",
+        "lag_return",
+        "lead_lag_score",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "MULTIPLE_TESTING_REJECTED",
+      "sample_blocked": false,
+      "signal_kind": "lead_lag_transfer",
+      "symbol_net": {
+        "BTCUSDT": 0.0,
+        "ETHUSDT": -0.4822628544112707,
+        "SOLUSDT": -1.1094799732320426
+      },
+      "trade_count": 291
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:vol_z"
+      ],
+      "family": "CROSS_ASSET_LEAD_LAG",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_CROSS_ASSET_CORR_BREAKDOWN_RV_V4",
+      "missing_required_features": [
+        "vol_z"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "cross_corr",
+        "pair_residual",
+        "vol_z",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "corr_breakdown_rv",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:regime_label",
+        "missing_feature:zscore_return",
+        "missing_feature:vol_z"
+      ],
+      "family": "REGIME_COND_MEAN_REVERSION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_REGIME_RANGE_ZSCORE_REVERT_V4",
+      "missing_required_features": [
+        "regime_label",
+        "zscore_return",
+        "vol_z"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "regime_label",
+        "zscore_return",
+        "vol_z",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "regime_range_mr",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:regime_label",
+        "missing_feature:regime_label_lag",
+        "missing_feature:zscore_return"
+      ],
+      "family": "REGIME_COND_MEAN_REVERSION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_REGIME_TRANSITION_MR_SHUTDOWN_V4",
+      "missing_required_features": [
+        "regime_label",
+        "regime_label_lag",
+        "zscore_return"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "regime_label",
+        "regime_label_lag",
+        "zscore_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "regime_transition_shutdown",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:volume"
+      ],
+      "family": "BREAKOUT_CONTINUATION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_BREAKOUT_RANGE_HIGH_FOLLOWTHROUGH_V4",
+      "missing_required_features": [
+        "volume"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "range_high_break",
+        "volume",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "range_high_breakout",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:vol_z",
+        "missing_feature:aggression_ratio"
+      ],
+      "family": "BREAKOUT_CONTINUATION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_BREAKOUT_VOL_CONFIRMED_CONTINUATION_V4",
+      "missing_required_features": [
+        "vol_z",
+        "aggression_ratio"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "range_high_break",
+        "vol_z",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "vol_confirmed_breakout",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "cost_destroyed": false,
+      "data_blocked": false,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [],
+      "family": "FAILED_BREAKOUT",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "SAMPLE_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "SAMPLE_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "trade_or_observation_count_below_min"
+        ]
+      },
+      "mechanism_id": "MECH_FAILED_BREAKOUT_SNAPBACK_V4",
+      "missing_required_features": [],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "observation_count": 2400,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "regime_fragile": false,
+      "regime_top_share": 0.0,
+      "required_data": [
+        "breakout_fail_flag",
+        "mid_return",
+        "range_compression",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "SAMPLE_BLOCKED",
+      "sample_blocked": true,
+      "signal_kind": "failed_break_snapback",
+      "symbol_net": {
+        "BTCUSDT": 0.0,
+        "ETHUSDT": 0.0,
+        "SOLUSDT": 0.0
+      },
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:absorption_score",
+        "missing_feature:aggression_ratio"
+      ],
+      "family": "FAILED_BREAKOUT",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_FAILED_BREAKOUT_ABSORPTION_REVERSE_V4",
+      "missing_required_features": [
+        "absorption_score",
+        "aggression_ratio"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "breakout_fail_flag",
+        "absorption_score",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "failed_break_absorption",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:volume",
+        "missing_feature:volume_price_div"
+      ],
+      "family": "VOLUME_PRICE_DIVERGENCE",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_VOL_PRICE_BEARISH_DIVERGENCE_V4",
+      "missing_required_features": [
+        "volume",
+        "volume_price_div"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "volume",
+        "mid_return",
+        "volume_price_div",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "vp_bearish_div_fade",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:volume",
+        "missing_feature:volume_drought"
+      ],
+      "family": "VOLUME_PRICE_DIVERGENCE",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_VOL_PRICE_BULLISH_DROUGHT_DIVERGENCE_V4",
+      "missing_required_features": [
+        "volume",
+        "volume_drought"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "volume",
+        "mid_return",
+        "volume_drought",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "vp_drought_fade",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "cost_destroyed": true,
+      "data_blocked": false,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [],
+      "family": "OI_DISLOCATION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.38130529345459396,
+      "label": "MULTIPLE_TESTING_REJECTED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "MULTIPLE_TESTING_REJECTED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "bh_fdr_or_family_multiplicity_reject"
+        ]
+      },
+      "mechanism_id": "MECH_OI_SURGE_PRICE_STALL_V4",
+      "missing_required_features": [],
+      "net_pnl": -0.41425219717711004,
+      "net_series_len": 151,
+      "observation_count": 2400,
+      "oos_consumed": false,
+      "p_value": 0.6279976871881426,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {
+        "RANGE": 85,
+        "TREND": 66
+      },
+      "regime_fragile": true,
+      "regime_top_share": 0.5629139072847682,
+      "required_data": [
+        "oi_change",
+        "mid_return",
+        "funding_z",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "MULTIPLE_TESTING_REJECTED",
+      "sample_blocked": false,
+      "signal_kind": "oi_surge_stall",
+      "symbol_net": {
+        "BTCUSDT": -0.06877024358727007,
+        "ETHUSDT": 0.07769439397427841,
+        "SOLUSDT": -0.42317634756411837
+      },
+      "trade_count": 151
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:liquidation_intensity",
+        "missing_feature:aggression_ratio"
+      ],
+      "family": "OI_DISLOCATION",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_OI_FLUSH_LIQUIDATION_ALIGNED_V4",
+      "missing_required_features": [
+        "liquidation_intensity",
+        "aggression_ratio"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "oi_change",
+        "liquidation_intensity",
+        "aggression_ratio",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "oi_flush_continue",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:impact_bid_bps",
+        "missing_feature:impact_ask_bps",
+        "missing_feature:impact_asymmetry"
+      ],
+      "family": "MARKET_IMPACT_ASYMMETRY",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_IMPACT_ASYMMETRY_FADE_V4",
+      "missing_required_features": [
+        "impact_bid_bps",
+        "impact_ask_bps",
+        "impact_asymmetry"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "impact_bid_bps",
+        "impact_ask_bps",
+        "impact_asymmetry",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "impact_asym_fade",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:impact_bps",
+        "missing_feature:large_print_flag"
+      ],
+      "family": "MARKET_IMPACT_ASYMMETRY",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_IMPACT_PERSISTENCE_AFTER_PRINT_V4",
+      "missing_required_features": [
+        "impact_bps",
+        "large_print_flag"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "impact_bps",
+        "large_print_flag",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "impact_persist_continue",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:tod_bucket",
+        "missing_feature:depth_gap"
+      ],
+      "family": "TIME_OF_DAY",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_TOD_ASIA_OPEN_THIN_LIQUIDITY_V4",
+      "missing_required_features": [
+        "tod_bucket",
+        "depth_gap"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "tod_bucket",
+        "depth_gap",
+        "spread_bps",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "tod_asia_thin",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:tod_bucket",
+        "missing_feature:vol_z"
+      ],
+      "family": "TIME_OF_DAY",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_TOD_US_OPEN_VOL_EXPANSION_V4",
+      "missing_required_features": [
+        "tod_bucket",
+        "vol_z"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "tod_bucket",
+        "vol_z",
+        "mid_return",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "tod_us_vol",
+      "symbol_net": {},
+      "trade_count": 0
+    },
+    {
+      "data_blocked": true,
+      "data_lineage": "FIXTURE_NOT_REAL",
+      "failure_reasons": [
+        "missing_feature:tod_bucket"
+      ],
+      "family": "TIME_OF_DAY",
+      "fixture_used": true,
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "label": "DATA_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_BLOCKED",
+          "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "DEVELOPMENT_REVIEW",
+          "MULTIPLE_TESTING_REJECTED",
+          "REGIME_FRAGILE",
+          "REJECTED",
+          "SAMPLE_BLOCKED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_BLOCKED",
+        "oos_consumed": false,
+        "profitability_claimed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "required_features_unavailable_or_data_quality_gate"
+        ]
+      },
+      "mechanism_id": "MECH_TOD_FUNDING_SETTLEMENT_WINDOW_V4",
+      "missing_required_features": [
+        "tod_bucket"
+      ],
+      "net_pnl": 0.0,
+      "net_series_len": 0,
+      "oos_consumed": false,
+      "p_value": 1.0,
+      "profitability_claimed": false,
+      "qualification_claim": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "required_data": [
+        "tod_bucket",
+        "funding_z",
+        "oi_change",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ],
+      "result_label": "DATA_BLOCKED",
+      "sample_blocked": false,
+      "signal_kind": "tod_funding_settlement",
+      "symbol_net": {},
+      "trade_count": 0
+    }
+  ],
+  "exchange_write_attempt_count": 0,
+  "execution_sensitivity": {
+    "funding_asof": true,
+    "impact_bps_default": 2.0,
+    "spread_model": "hl_range_proxy_noted"
+  },
+  "experiment_registry_hooks": {
+    "artifact_dirname": "v15_c_real_development_research_campaign",
+    "campaign_id": "v15_c_real_development_research_campaign",
+    "panel_digest": "221e60c672980e5633927185b8f3f365f0dd775a3a37c31707c6514f7fdde901",
+    "registered": true
+  },
+  "fixture_never_called_real": true,
+  "fixture_used": true,
+  "formal_walk_forward_executed": false,
+  "hard_bans": [
+    "no_auto_integrate",
+    "no_demo_orders",
+    "no_exchange_write",
+    "no_formal_walk_forward",
+    "no_mainnet",
+    "no_oos_consumption",
+    "no_pr27_merge",
+    "no_profitability_claims",
+    "no_qualified_claims",
+    "no_real_money",
+    "no_shadow_orders",
+    "no_status_json_emit",
+    "no_strategy_promotion"
+  ],
+  "label_histogram": {
+    "COST_DESTROYED": 0,
+    "DATA_BLOCKED": 37,
+    "DEVELOPMENT_PROMISING_NOT_QUALIFIED": 0,
+    "DEVELOPMENT_REVIEW": 0,
+    "MULTIPLE_TESTING_REJECTED": 3,
+    "REGIME_FRAGILE": 0,
+    "REJECTED": 1,
+    "SAMPLE_BLOCKED": 1
+  },
+  "lane": "V15-C",
+  "lane_name": "REAL_DEVELOPMENT_RESEARCH_CAMPAIGN",
+  "mainnet_touch_count": 0,
+  "mechanism_count": 42,
+  "mechanism_family_count": 20,
+  "multiple_testing": {
+    "bh": {
+      "bh_adjusted_p": [
+        0.5182691577779772,
+        0.5182691577779772,
+        0.5182691577779772,
+        0.6279976871881426
+      ],
+      "discoveries": 0,
+      "n_tests": 4,
+      "q": 0.1,
+      "rejected_indices": []
+    },
+    "mt_rejected_count": 3,
+    "q": 0.1,
+    "testable_count": 4
+  },
+  "non_claims": [
+    "No predictive edge claim",
+    "No stable profitability claim",
+    "No qualification claim",
+    "Development-classified research surface only",
+    "qualification_ready_count must remain 0",
+    "Fixtures, if used, are never labeled REAL"
+  ],
+  "oos_consumed": false,
+  "oos_executed": false,
+  "package": "NEXUS_REAL_DEVELOPMENT_RESEARCH_CAMPAIGN_V15_C",
+  "panel_digest": "221e60c672980e5633927185b8f3f365f0dd775a3a37c31707c6514f7fdde901",
+  "pass_id": 2,
+  "pr27_merge_attempted": false,
+  "profitability_claim_count": 0,
+  "profitability_claimed": false,
+  "qualification_ready_count": 0,
+  "qualified_claimed": false,
+  "regime_partition": {
+    "RANGE": 551,
+    "TREND": 288
+  },
+  "schema": "v15_c_real_development_research_campaign",
+  "seed": 20260805,
+  "shadow_order_count": 0,
+  "status_json_emitted": false
+}

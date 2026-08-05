@@ -1,0 +1,25 @@
+{
+  "allowed_labels": [
+    "COST_DESTROYED",
+    "DATA_BLOCKED",
+    "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+    "DEVELOPMENT_REVIEW",
+    "MULTIPLE_TESTING_REJECTED",
+    "REGIME_FRAGILE",
+    "REJECTED",
+    "SAMPLE_BLOCKED"
+  ],
+  "created_at": "2026-08-05T15:24:04Z",
+  "label_histogram": {
+    "COST_DESTROYED": 0,
+    "DATA_BLOCKED": 37,
+    "DEVELOPMENT_PROMISING_NOT_QUALIFIED": 0,
+    "DEVELOPMENT_REVIEW": 0,
+    "MULTIPLE_TESTING_REJECTED": 3,
+    "REGIME_FRAGILE": 0,
+    "REJECTED": 1,
+    "SAMPLE_BLOCKED": 1
+  },
+  "qualification_ready_count": 0,
+  "schema": "v15_c_label_histogram"
+}

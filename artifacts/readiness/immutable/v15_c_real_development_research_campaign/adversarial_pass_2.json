@@ -1,0 +1,25 @@
+{
+  "adversarial_ok": true,
+  "banned_claim_scan": {
+    "banned_claim_count": 0,
+    "hits": [],
+    "ok": true,
+    "scanned_code_roots": [
+      "backend/nexus_dev_research_campaign_v15/",
+      "tools/research/dev_research_campaign_v15/",
+      "tests/dev_research_campaign_v15/"
+    ],
+    "schema": "v15_c_banned_claim_scan"
+  },
+  "created_at": "2026-08-05T15:24:04Z",
+  "critical_count": 0,
+  "findings": [],
+  "high_count": 0,
+  "pass": "pass_2",
+  "remaining_count": 0,
+  "status_json_scan": {
+    "offenders": [],
+    "ok": true,
+    "rule": "no_*_status.json"
+  }
+}
