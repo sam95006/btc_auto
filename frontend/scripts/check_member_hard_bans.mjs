@@ -32,6 +32,7 @@ const FORBIDDEN = [
 const ALLOWLIST = new Set([
   path.normalize("scripts/check_member_hard_bans.mjs"),
   path.normalize("scripts/check_ui_safety.mjs"),
+  path.normalize("scripts/check_member_ux_completion.mjs"),
 ]);
 
 function walk(dir, out = []) {
