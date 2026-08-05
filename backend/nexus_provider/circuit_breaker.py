@@ -80,6 +80,16 @@ class ProviderCircuitBreaker:
         self._half_open[provider] = False
         self._trip_count[provider] = int(self._trip_count.get(provider) or 0) + 1
 
+    def record_rate_limit(
+        self,
+        provider: str,
+        *,
+        cooldown_seconds: float | None = None,
+        now: float | None = None,
+    ) -> None:
+        """HTTP 429 / RATE_LIMITED opens the breaker immediately (capacity isolation)."""
+        self.trip(provider, seconds=cooldown_seconds, now=now)
+
     def status(self, provider: str, *, now: float | None = None) -> dict[str, Any]:
         now = time.monotonic() if now is None else now
         open_ = self.is_open(provider, now=now)

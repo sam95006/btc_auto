@@ -194,25 +194,72 @@ def check_provider_retry_drift(root: Path) -> list[dict[str, Any]]:
             }
         )
         return findings
-    # Detect parallel backoff in edge discovery via AST presence
-    edge = root / "backend" / "nexus_edge_discovery" / "provider_transport_v23.py"
-    if edge.exists():
-        text = edge.read_text(encoding="utf-8")
-        uses_canonical = "backend.nexus_provider" in text or "nexus_provider.retry_policy" in text
-        has_own = "exponential_backoff_with_jitter" in text or "def exponential_backoff" in text
-        if has_own and not uses_canonical:
-            findings.append(
-                {
-                    "domain": "provider_retry",
-                    "severity": "critical",
-                    "code": "PARALLEL_RETRY_IMPLEMENTATION",
-                    "module": "backend.nexus_edge_discovery.provider_transport_v23",
-                    "recommendation": (
-                        "Import parse_retry_after / backoff_with_jitter from "
-                        "backend.nexus_provider.retry_policy; deprecate local copy."
-                    ),
-                }
-            )
+
+    # Parallel algorithm authority: FunctionDef of retry primitives outside canonical package.
+    banned_defs = {
+        "parse_retry_after",
+        "parse_rate_limit_reset",
+        "parse_quota_reset_at",
+        "backoff_with_jitter",
+        "exponential_backoff_with_jitter",
+        "compute_resume_wait_s",
+    }
+    canonical_roots = {
+        "backend/nexus_provider/retry_policy.py",
+        "backend\\nexus_provider\\retry_policy.py",
+    }
+    scan_roots = [
+        root / "backend",
+        root / "tools" / "research",
+    ]
+    for scan_root in scan_roots:
+        if not scan_root.exists():
+            continue
+        for path in scan_root.rglob("*.py"):
+            rel = path.relative_to(root).as_posix()
+            if rel in {"backend/nexus_provider/retry_policy.py"}:
+                continue
+            if "nexus_provider" in rel.replace("\\", "/"):
+                # package re-exports / adapters allowed; only FunctionDef is banned outside retry_policy
+                pass
+            try:
+                text = path.read_text(encoding="utf-8", errors="replace")
+                tree = ast.parse(text)
+            except (OSError, SyntaxError):
+                continue
+            for node in tree.body:
+                if isinstance(node, ast.FunctionDef) and node.name in banned_defs:
+                    # Thin adapter wrapping canonical may keep the name only if it
+                    # clearly delegates (contains nexus_provider import in module).
+                    uses_canonical = (
+                        "backend.nexus_provider" in text
+                        or "nexus_provider.retry_policy" in text
+                    )
+                    # Adapter exception: call-through wrappers that import canonical
+                    # are allowed only when the FunctionDef body is tiny.
+                    stmts = list(node.body)
+                    if (
+                        stmts
+                        and isinstance(stmts[0], ast.Expr)
+                        and isinstance(getattr(stmts[0], "value", None), ast.Constant)
+                    ):
+                        stmts = stmts[1:]
+                    is_thin_adapter = uses_canonical and len(stmts) <= 4
+                    if not is_thin_adapter:
+                        findings.append(
+                            {
+                                "domain": "provider_retry",
+                                "severity": "critical",
+                                "code": "PARALLEL_RETRY_IMPLEMENTATION",
+                                "module": rel.replace("/", ".").removesuffix(".py"),
+                                "symbol": node.name,
+                                "recommendation": (
+                                    "Import parse_retry_after / backoff_with_jitter from "
+                                    "backend.nexus_provider.retry_policy; deprecate local copy."
+                                ),
+                            }
+                        )
+
     stage4 = root / "tools" / "research" / "stage4_provider_chain.py"
     if stage4.exists():
         text = stage4.read_text(encoding="utf-8")

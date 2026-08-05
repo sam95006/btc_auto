@@ -292,9 +292,7 @@ class OpenAICompatProvider:
                 retry_after_s = None
                 if status == "RATE_LIMITED":
                     try:
-                        from backend.nexus_edge_discovery.provider_transport_v23 import (
-                            parse_retry_after,
-                        )
+                        from backend.nexus_provider.retry_policy import parse_retry_after
 
                         retry_after_s = parse_retry_after(err_headers, body=body)
                     except Exception:
@@ -328,7 +326,7 @@ class OpenAICompatProvider:
                 if status == "RATE_LIMITED" and attempt < 4:
                     # Exponential backoff with jitter; prefer Retry-After when present
                     try:
-                        from backend.nexus_edge_discovery.provider_transport_v23 import (
+                        from backend.nexus_provider.retry_policy import (
                             exponential_backoff_with_jitter,
                         )
 

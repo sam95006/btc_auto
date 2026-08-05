@@ -500,29 +500,36 @@ def _records() -> tuple[AuthorityRecord, ...]:
             canonical_symbol="parse_retry_after",
             contract_module="backend.nexus_provider",
             scope="private_core_provider_transport",
-            status="contested",
+            status="active",
             invariants=(
                 "retry_after_http_date_or_seconds",
                 "bounded_jittered_exponential_backoff",
+                "429_never_ai_quality_failure",
+                "single_retry_algorithm_authority",
             ),
             contract_keys=(
                 "parse_retry_after",
                 "parse_rate_limit_reset",
+                "parse_quota_reset_at",
                 "backoff_with_jitter",
+                "exponential_backoff_with_jitter",
+                "compute_resume_wait_s",
+                "next_resume_iso",
                 "ProviderCircuitBreaker",
                 "TokenBucket",
+                "classify_transport_status",
             ),
             competitors=(
                 CompetitorRecord(
                     module="backend.nexus_edge_discovery.provider_transport_v23",
-                    symbol="exponential_backoff_with_jitter",
-                    role="parallel_lane",
-                    severity="critical",
+                    symbol="CircuitBreaker",
+                    role="adapter_lane",
+                    severity="low",
                     notes=(
-                        "Reflection V2.3 transport implements its own backoff/retry rather than "
-                        "importing backend.nexus_provider.retry_policy."
+                        "V2.3 transport facade: re-exports / wraps canonical "
+                        "backend.nexus_provider.retry_policy + ProviderCircuitBreaker."
                     ),
-                    recommended_action="migrate_callers",
+                    recommended_action="retain_compat",
                 ),
                 CompetitorRecord(
                     module="tools.research.stage4_provider_chain",
@@ -557,7 +564,10 @@ def _records() -> tuple[AuthorityRecord, ...]:
                     recommended_action="retain_compat",
                 ),
             ),
-            notes="Canonical provider retry lives in backend.nexus_provider; lanes should import it.",
+            notes=(
+                "Canonical provider retry lives in backend.nexus_provider.retry_policy; "
+                "lanes must import it. Provider-specific VALUES may differ; algorithm must not."
+            ),
         ),
     )
 

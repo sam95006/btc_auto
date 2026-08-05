@@ -1,0 +1,35 @@
+{
+  "pass_id": "pass2",
+  "generated_at": "2026-08-05T04:07:41Z",
+  "branch": "feature/v11_1-provider-retry-authority",
+  "commit": "d580a9c7f754b7dca7a65a7fde6f89d76476af3d",
+  "adversarial_checks": [
+    "false_PASS_on_parallel_import_only",
+    "fixture_only_proof",
+    "429_quality_pollution",
+    "schema_drift_retry_symbols",
+    "secret_leakage_scan_skipped_no_live_keys"
+  ],
+  "metrics": {
+    "canonical_retry_authority_count": 1,
+    "parallel_retry_implementation_count": 0,
+    "429_AI_quality_misclassification_count": 0
+  },
+  "tests": {
+    "exit_code": 0,
+    "stdout_tail": ".....................................                                    [100%]\n37 passed in 4.39s",
+    "stderr_tail": "",
+    "passed": true
+  },
+  "critical_findings": [],
+  "high_findings": [
+    {
+      "domain": "provider_retry",
+      "severity": "high",
+      "code": "STAGE4_PARALLEL_CIRCUIT_BREAKER",
+      "module": "tools.research.stage4_provider_chain",
+      "recommendation": "Prefer backend.nexus_provider.circuit_breaker for new code."
+    }
+  ],
+  "required_metrics_pass": true
+}

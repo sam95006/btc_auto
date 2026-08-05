@@ -1,26 +1,44 @@
 """Deterministic V2.3 provider transport: token-bucket, Retry-After, backoff, circuit, replay.
 
+Retry / backoff / quota / transport-classification AUTHORITY lives in
+``backend.nexus_provider``. This module adapts provider-specific VALUES and
+orchestrates queues; it must not redefine retry algorithms.
+
 Transport failures (429 / timeout / circuit) are never classified as AI quality failures.
 """
 from __future__ import annotations
 
 import hashlib
 import json
-import math
 import random
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
-DEFAULT_RETRY_AFTER_S = 900
+from backend.nexus_provider.circuit_breaker import ProviderCircuitBreaker
+from backend.nexus_provider.retry_policy import (
+    DEFAULT_RETRY_AFTER_S as _CANONICAL_DEFAULT_RETRY_AFTER_S,
+    MAX_BACKOFF_S as _CANONICAL_MAX_BACKOFF_S,
+    compute_resume_wait_s,
+    exponential_backoff_with_jitter,
+    next_resume_iso,
+    parse_quota_reset_at,
+    parse_retry_after as _canonical_parse_retry_after,
+)
+from backend.nexus_provider.token_bucket import TokenBucket
+from backend.nexus_provider.transport_status import (
+    is_quality_neutral_transport,
+)
+
+# Re-export canonical constants (provider VALUES may override at call sites).
+DEFAULT_RETRY_AFTER_S = float(_CANONICAL_DEFAULT_RETRY_AFTER_S)
 DEFAULT_BUCKET_CAPACITY = 5.0
 DEFAULT_BUCKET_REFILL_PER_S = 0.2  # ~12 req/min
 CIRCUIT_FAILURE_THRESHOLD = 3
 CIRCUIT_COOLDOWN_S = 60.0
-MAX_BACKOFF_S = 120.0
+MAX_BACKOFF_S = min(120.0, float(_CANONICAL_MAX_BACKOFF_S))
 CHECKPOINT_SCHEMA_V3 = "blind_reflection_v23_checkpoint_v3"
 PROFILES = (
     "GROQ_REFLECTION_REASONER",
@@ -58,168 +76,22 @@ def parse_retry_after(
     *,
     body: str | None = None,
     default_s: float = DEFAULT_RETRY_AFTER_S,
-    now: datetime | None = None,
+    now: datetime | float | None = None,
 ) -> float:
-    """Parse Retry-After / x-ratelimit-reset into seconds to wait (>=0)."""
-    now = now or _utc_now()
-    hdrs: dict[str, str] = {}
-    if headers:
-        for k, v in headers.items():
-            if k is None or v is None:
-                continue
-            hdrs[str(k).lower()] = str(v).strip()
-
-    for key in ("retry-after", "x-retry-after"):
-        raw = hdrs.get(key)
-        if not raw:
-            continue
-        try:
-            return max(0.0, float(raw))
-        except ValueError:
-            try:
-                dt = parsedate_to_datetime(raw)
-                if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-                return max(0.0, (dt - now).total_seconds())
-            except Exception:
-                continue
-
-    for key in (
-        "x-ratelimit-reset-requests",
-        "x-ratelimit-reset-tokens",
-        "x-ratelimit-reset",
-        "ratelimit-reset",
-    ):
-        raw = hdrs.get(key)
-        if not raw:
-            continue
-        try:
-            val = float(raw)
-        except ValueError:
-            continue
-        # Absolute unix epoch vs relative seconds heuristic.
-        if val > 1_000_000_000:
-            return max(0.0, val - now.timestamp())
-        return max(0.0, val)
-
-    if body:
-        low = body.lower()
-        # Common Groq/SambaNova JSON: {"error":{"message":"...try again in 12.5s..."}}
-        for marker in ("try again in ", "retry after ", "please retry after "):
-            idx = low.find(marker)
-            if idx < 0:
-                continue
-            frag = low[idx + len(marker) : idx + len(marker) + 32]
-            num = ""
-            for ch in frag:
-                if ch.isdigit() or ch == ".":
-                    num += ch
-                elif num:
-                    break
-            if num:
-                try:
-                    return max(0.0, float(num))
-                except ValueError:
-                    pass
-
-    return float(default_s)
-
-
-def parse_quota_reset_at(
-    headers: Mapping[str, Any] | None,
-    *,
-    now: datetime | None = None,
-) -> datetime | None:
-    """Return absolute UTC datetime when provider quota resets, if advertised."""
-    now = now or _utc_now()
-    if not headers:
-        return None
-    hdrs = {str(k).lower(): str(v).strip() for k, v in headers.items() if k is not None and v is not None}
-    for key in ("x-ratelimit-reset", "x-ratelimit-reset-requests", "x-ratelimit-reset-tokens"):
-        raw = hdrs.get(key)
-        if not raw:
-            continue
-        try:
-            val = float(raw)
-        except ValueError:
-            continue
-        if val > 1_000_000_000:
-            return datetime.fromtimestamp(val, tz=timezone.utc)
-        return now + timedelta(seconds=val)
-    raw = hdrs.get("retry-after")
-    if raw:
-        try:
-            return now + timedelta(seconds=float(raw))
-        except ValueError:
-            try:
-                dt = parsedate_to_datetime(raw)
-                if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-                return dt
-            except Exception:
-                return None
-    return None
-
-
-def exponential_backoff_with_jitter(
-    attempt: int,
-    *,
-    base_s: float = 1.0,
-    cap_s: float = MAX_BACKOFF_S,
-    jitter_ratio: float = 0.25,
-    rng: random.Random | None = None,
-) -> float:
-    """Full-jitter exponential backoff. attempt is 0-indexed."""
-    exp = min(cap_s, base_s * (2 ** max(0, attempt)))
-    span = exp * max(0.0, min(1.0, jitter_ratio))
-    r = rng or random
-    return max(0.0, exp - span + r.random() * (2 * span))
-
-
-@dataclass
-class TokenBucket:
-    """Provider-specific token bucket (capacity tokens, refill_per_s)."""
-
-    capacity: float = DEFAULT_BUCKET_CAPACITY
-    refill_per_s: float = DEFAULT_BUCKET_REFILL_PER_S
-    tokens: float = DEFAULT_BUCKET_CAPACITY
-    updated_at: float = field(default_factory=time.monotonic)
-    profile_id: str = ""
-
-    def _refill(self, now: float | None = None) -> None:
-        now = time.monotonic() if now is None else now
-        elapsed = max(0.0, now - self.updated_at)
-        self.tokens = min(self.capacity, self.tokens + elapsed * self.refill_per_s)
-        self.updated_at = now
-
-    def try_acquire(self, cost: float = 1.0, *, now: float | None = None) -> bool:
-        self._refill(now)
-        if self.tokens >= cost:
-            self.tokens -= cost
-            return True
-        return False
-
-    def time_until_available(self, cost: float = 1.0, *, now: float | None = None) -> float:
-        self._refill(now)
-        if self.tokens >= cost:
-            return 0.0
-        need = cost - self.tokens
-        if self.refill_per_s <= 0:
-            return math.inf
-        return need / self.refill_per_s
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "profile_id": self.profile_id,
-            "capacity": self.capacity,
-            "refill_per_s": self.refill_per_s,
-            "tokens": round(self.tokens, 4),
-        }
+    """Adapter: always returns a float using canonical retry authority."""
+    wait = _canonical_parse_retry_after(
+        headers, body=body, now=now, default_s=default_s
+    )
+    return float(wait if wait is not None else default_s)
 
 
 @dataclass
 class CircuitBreaker:
-    """Open after consecutive transport failures; half-open after cooldown."""
+    """Per-profile facade over canonical ``ProviderCircuitBreaker``.
+
+    Preserves the single-instance V2.3 API while algorithm authority remains
+    in ``backend.nexus_provider.circuit_breaker``.
+    """
 
     failure_threshold: int = CIRCUIT_FAILURE_THRESHOLD
     cooldown_s: float = CIRCUIT_COOLDOWN_S
@@ -228,42 +100,57 @@ class CircuitBreaker:
     state: str = "CLOSED"  # CLOSED | OPEN | HALF_OPEN
     last_failure_status: str | None = None
     profile_id: str = ""
+    _inner: ProviderCircuitBreaker = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self._inner = ProviderCircuitBreaker(
+            failure_threshold=self.failure_threshold,
+            cooldown_seconds=self.cooldown_s,
+        )
+
+    def _key(self) -> str:
+        return self.profile_id or "_default"
+
+    def _sync_from_inner(self, *, now: float | None = None) -> None:
+        st = self._inner.status(self._key(), now=now)
+        self.state = str(st["state"])
+        self.consecutive_failures = int(st["failures"])
+        if self.state == "OPEN":
+            rem = float(st.get("open_remaining_s") or 0.0)
+            mono = time.monotonic() if now is None else now
+            self.opened_at = mono - (self.cooldown_s - rem) if rem > 0 else mono
+        elif self.state == "CLOSED":
+            self.opened_at = None
 
     def allow(self, *, now: float | None = None) -> bool:
         now = time.monotonic() if now is None else now
-        if self.state == "CLOSED":
-            return True
-        if self.state == "OPEN":
-            if self.opened_at is None:
-                return False
-            if (now - self.opened_at) >= self.cooldown_s:
-                self.state = "HALF_OPEN"
-                return True
+        open_ = self._inner.is_open(self._key(), now=now)
+        self._sync_from_inner(now=now)
+        if open_:
             return False
-        # HALF_OPEN — allow one probe
+        # half-open or closed → allow probe / traffic
         return True
 
     def record_success(self) -> None:
-        self.consecutive_failures = 0
-        self.opened_at = None
-        self.state = "CLOSED"
+        self._inner.record_success(self._key())
         self.last_failure_status = None
+        self._sync_from_inner()
 
     def record_failure(self, status: str, *, now: float | None = None) -> None:
         now = time.monotonic() if now is None else now
         self.last_failure_status = status
-        # 429 opens circuit immediately for capacity isolation
         if status == "RATE_LIMITED":
-            self.consecutive_failures = self.failure_threshold
-            self.opened_at = now
-            self.state = "OPEN"
-            return
-        self.consecutive_failures += 1
-        if self.consecutive_failures >= self.failure_threshold or self.state == "HALF_OPEN":
-            self.opened_at = now
-            self.state = "OPEN"
+            self._inner.record_rate_limit(
+                self._key(), cooldown_seconds=self.cooldown_s, now=now
+            )
+        else:
+            self._inner.record_failure(
+                self._key(), cooldown_seconds=self.cooldown_s, now=now
+            )
+        self._sync_from_inner(now=now)
 
     def to_dict(self) -> dict[str, Any]:
+        self._sync_from_inner()
         return {
             "profile_id": self.profile_id,
             "state": self.state,
@@ -298,7 +185,11 @@ class ProviderTransportController:
         reason: str = "RETRY_AFTER",
     ) -> datetime:
         now = now or _utc_now()
-        target = now + timedelta(seconds=max(0.0, wait_s))
+        # next-resume timestamp authority: canonical ISO formatter
+        resume_iso = next_resume_iso(wait_s, now_dt=now)
+        target = datetime.strptime(resume_iso, "%Y-%m-%dT%H:%M:%SZ").replace(
+            tzinfo=timezone.utc
+        )
         if self.next_resume_not_before is None or target > self.next_resume_not_before:
             self.next_resume_not_before = target
         self.last_retry_after_s = wait_s
@@ -314,11 +205,12 @@ class ProviderTransportController:
         now: datetime | None = None,
     ) -> float:
         now = now or _utc_now()
-        wait = parse_retry_after(headers, body=body, now=now)
+        wait = compute_resume_wait_s(
+            headers, body=body, now=now, default_s=DEFAULT_RETRY_AFTER_S
+        )
         reset_at = parse_quota_reset_at(headers, now=now)
         if reset_at is not None:
             self.quota_reset_at = reset_at
-            wait = max(wait, (reset_at - now).total_seconds())
             self.schedule_resume(wait, now=now, reason="QUOTA_RESET")
         else:
             self.schedule_resume(wait, now=now, reason="RETRY_AFTER")
@@ -349,7 +241,9 @@ class ProviderTransportController:
         if status in TRANSPORT_ONLY_STATUSES | {"INVALID_SCHEMA", "UNKNOWN"}:
             self.circuit.record_failure(status)
             attempt = max(0, self.circuit.consecutive_failures - 1)
-            wait = exponential_backoff_with_jitter(attempt, rng=self.rng)
+            wait = exponential_backoff_with_jitter(
+                attempt, max_s=MAX_BACKOFF_S, rng=self.rng
+            )
             self.schedule_resume(wait, reason=status)
 
     def to_dict(self) -> dict[str, Any]:
@@ -366,13 +260,14 @@ class ProviderTransportController:
 
 
 def is_transport_failure(status: str | None) -> bool:
-    return str(status or "").upper() in TRANSPORT_ONLY_STATUSES
+    s = str(status or "").upper()
+    return s in TRANSPORT_ONLY_STATUSES or is_quality_neutral_transport(s)
 
 
 def is_ai_quality_failure(status: str | None) -> bool:
-    """429 / timeout / circuit are never AI quality failures."""
+    """429 / timeout / circuit are never AI quality failures (canonical taxonomy)."""
     s = str(status or "").upper()
-    if s in TRANSPORT_ONLY_STATUSES or s == "RATE_LIMITED" or "429" in s:
+    if s in TRANSPORT_ONLY_STATUSES or is_quality_neutral_transport(s) or "429" in s:
         return False
     return s == "INVALID_SCHEMA"
 

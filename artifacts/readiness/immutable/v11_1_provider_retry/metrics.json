@@ -1,0 +1,11 @@
+{
+  "schema": "v11_1_provider_retry_metrics_v1",
+  "generated_at": "2026-08-05T04:07:41Z",
+  "branch": "feature/v11_1-provider-retry-authority",
+  "commit": "d580a9c7f754b7dca7a65a7fde6f89d76476af3d",
+  "canonical_retry_authority_count": 1,
+  "parallel_retry_implementation_count": 0,
+  "429_AI_quality_misclassification_count": 0,
+  "tests_pass": true,
+  "required_metrics_pass": true
+}

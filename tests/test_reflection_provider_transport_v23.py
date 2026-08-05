@@ -134,12 +134,18 @@ def test_token_bucket_provider_specific():
 
 def test_exponential_backoff_with_jitter_deterministic():
     rng = random.Random(7)
-    waits = [exponential_backoff_with_jitter(i, base_s=1.0, rng=rng) for i in range(5)]
+    waits = [
+        exponential_backoff_with_jitter(i, base_s=1.0, max_s=120.0, rng=rng)
+        for i in range(5)
+    ]
     assert waits[0] >= 0
     assert waits[4] > waits[0]
     assert all(w <= 120.0 for w in waits)
     rng2 = random.Random(7)
-    waits2 = [exponential_backoff_with_jitter(i, base_s=1.0, rng=rng2) for i in range(5)]
+    waits2 = [
+        exponential_backoff_with_jitter(i, base_s=1.0, max_s=120.0, rng=rng2)
+        for i in range(5)
+    ]
     assert waits == waits2
 
 

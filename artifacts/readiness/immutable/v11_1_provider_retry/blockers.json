@@ -1,0 +1,15 @@
+{
+  "schema": "v11_1_provider_retry_blockers_v1",
+  "generated_at": "2026-08-05T04:07:41Z",
+  "remaining_blockers": [],
+  "high_findings_non_blocking": [
+    {
+      "domain": "provider_retry",
+      "severity": "high",
+      "code": "STAGE4_PARALLEL_CIRCUIT_BREAKER",
+      "module": "tools.research.stage4_provider_chain",
+      "recommendation": "Prefer backend.nexus_provider.circuit_breaker for new code."
+    }
+  ],
+  "notes": "STAGE4_PARALLEL_CIRCUIT_BREAKER is research-tool scoped and retained as migrate_callers; not counted in parallel_retry_implementation_count."
+}
