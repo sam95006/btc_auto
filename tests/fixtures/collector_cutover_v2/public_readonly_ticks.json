@@ -1,0 +1,32 @@
+{
+  "schema": "collector_cutover_v2_public_readonly_fixture",
+  "source": "public_market_data_shape_fixture",
+  "read_only": true,
+  "exchange_write": false,
+  "demo": false,
+  "mainnet": false,
+  "note": "Frozen public-data-shaped ticks for offline tests; no live exchange I/O.",
+  "ticks": [
+    {
+      "symbol": "BTCUSDT",
+      "exchange_timestamp": 1754265600000,
+      "price": "64000.5",
+      "size": "0.01",
+      "side": "Buy"
+    },
+    {
+      "symbol": "BTCUSDT",
+      "exchange_timestamp": 1754265600500,
+      "price": "64001.0",
+      "size": "0.02",
+      "side": "Sell"
+    },
+    {
+      "symbol": "BTCUSDT",
+      "exchange_timestamp": 1754265601000,
+      "price": "64000.8",
+      "size": "0.015",
+      "side": "Buy"
+    }
+  ]
+}

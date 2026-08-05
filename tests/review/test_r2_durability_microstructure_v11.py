@@ -52,13 +52,13 @@ REQUIRED_FOUNDER_SCENARIOS = {
     "restore_from_corrupted_lkg",
 }
 
-# High residuals after R2CD — must not silently enter production / Event Study.
+# High residuals after R2CD + Collector Cutover V2 — never silent PASS into Event Study.
 REMAINING_HIGH_DISPOSITIONS = {
-    "R2-C-003": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",  # clock-rollback process-local
+    "R2-C-003": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",  # ledger clock — Lane C
     "R2-C-004": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",  # fsync-interrupt false durability proof
     "R2-C-006": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",  # concurrent snapshot/WAL race
-    "R2-D-003": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",  # exchange clock rollback linkage
-    "R2-D-005": "BLOCKED_BY_DETERMINISTIC_GUARD",  # migration-while-open
+    "R2-D-003": "FIXED",  # Cutover V2 persistent clock + refuse backward hour
+    "R2-D-005": "FIXED",  # Cutover V2 migration refuses *.open trees
     "R2-C-007": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
 }
 
@@ -102,12 +102,10 @@ def test_manifest_before_file_close_control(tmp_path: Path):
 
 def test_partition_migrated_while_open(tmp_path: Path):
     r = scenario_partition_migrated_while_open(tmp_path)
-    # R2-D-005 disposition: BLOCKED_BY_DETERMINISTIC_GUARD or still detectable hazard
+    # R2-D-005 FIXED: Cutover V2 migration gate refuses open partitions
     assert r.control_ok is True
-    assert (
-        r.evidence.get("storage_gate_blocks_open_migration") is True
-        or r.hazard_confirmed is True
-    )
+    assert r.hazard_confirmed is False
+    assert r.evidence.get("storage_gate_blocks_open_migration") is True
 
 
 def test_duplicate_partition_identity(tmp_path: Path):
@@ -125,8 +123,11 @@ def test_missing_previous_link_control(tmp_path: Path):
 
 def test_clock_rollback_across_partition_rotation(tmp_path: Path):
     r = scenario_clock_rollback_across_partition_rotation(tmp_path)
-    # Linkage must FAIL (detect) — residual High is about exchange-clock semantics, not silent accept
-    assert r.evidence["linkage"]["status"] == "FAIL"
+    # R2-D-003 FIXED: Cutover V2 rejects backward hour without resume boundary
+    assert r.hazard_confirmed is False
+    assert r.control_ok is True
+    assert r.evidence.get("rollback_rejected") is True
+    assert r.evidence["linkage"]["status"] == "PASS"
 
 
 def test_restore_from_corrupted_lkg_control(tmp_path: Path):
@@ -194,7 +195,12 @@ def test_remaining_high_dispositions_complete():
         "R2-D-005",
         "R2-C-007",
     }
-    assert "FIXED" not in REMAINING_HIGH_DISPOSITIONS.values()
+    assert REMAINING_HIGH_DISPOSITIONS["R2-D-003"] == "FIXED"
+    assert REMAINING_HIGH_DISPOSITIONS["R2-D-005"] == "FIXED"
+    assert all(
+        d in {"FIXED", "BLOCKED_BY_DETERMINISTIC_GUARD", "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK"}
+        for d in REMAINING_HIGH_DISPOSITIONS.values()
+    )
 
 
 def test_static_findings_cover_authority_surfaces():

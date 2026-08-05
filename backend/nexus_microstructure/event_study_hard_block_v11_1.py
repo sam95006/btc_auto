@@ -4,12 +4,14 @@ from __future__ import annotations
 EVENT_STUDY_STATUS = "NOT_READY"
 
 REMAINING_HIGH_DISPOSITIONS = {
+    # Lane C durability — hard-block production until dedicated DR cutover.
     "R2-C-003": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
     "R2-C-004": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
     "R2-C-006": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
-    "R2-D-003": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
-    "R2-D-005": "BLOCKED_BY_DETERMINISTIC_GUARD",
     "R2-C-007": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
+    # Collector Cutover V2 fixed these High residuals in-scope.
+    "R2-D-003": "FIXED",
+    "R2-D-005": "FIXED",
 }
 
 

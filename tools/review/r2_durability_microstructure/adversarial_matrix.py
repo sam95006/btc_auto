@@ -376,10 +376,15 @@ def scenario_manifest_before_file_close(root: Path) -> ScenarioResult:
 
 
 def scenario_partition_migrated_while_open(root: Path) -> ScenarioResult:
-    """Copy/migrate an in-flight open partition; raw bytes must stay unmodified and classified."""
+    """Open-partition migration must be refused by Cutover V2 storage gate (R2-D-005 FIXED)."""
+    from backend.nexus_microstructure.collector_cutover_v2.migration_guard import (
+        OpenPartitionMigrationBlocked,
+        assert_migration_safe,
+    )
+    from backend.nexus_microstructure.collector_cutover_v2.writer_v2 import DurablePartitionWriterV2
+
     src = root / "src"
-    dst = root / "dst"
-    w = DurablePartitionWriterV11(
+    w = DurablePartitionWriterV2(
         src,
         exchange="BYBIT",
         family="AGGRESSIVE_TRADE_FLOW",
@@ -393,42 +398,30 @@ def scenario_partition_migrated_while_open(root: Path) -> ScenarioResult:
         w.accept(_evt("BTCUSDT", base + i * 1000, i))
     abandoned = w.abandon_open_without_finalize()
     assert abandoned is not None
-    src_sha = abandoned.read_bytes()
-    import shutil
-
-    shutil.copytree(src, dst)
-    dst_part = next(dst.rglob("*.jsonl.gz"))
-    unchanged = dst_part.read_bytes() == src_sha
-    parts = discover_partitions_v11(dst)
-    clf = classify_campaign_partitions(
-        parts, source_size_match={str(parts[0]["partition_id"]): True}
-    )
-    # Control: open tail preserved; migration artifact label available
-    control = (
-        unchanged
-        and parts[0]["is_open_tail"] is True
-        and clf["classification_counts"].get("EXPECTED_OPEN_TAIL", 0) >= 1
-        and clf["classification_counts"].get("MIGRATION_ARTIFACT", 0) >= 1
-    )
-    # Hazard: no writer/orchestrator lock prevents migrating open partitions in the first place
-    hazard = abandoned.exists() and open_marker_for(abandoned).exists() and control
+    blocked = False
+    try:
+        assert_migration_safe(src)
+    except OpenPartitionMigrationBlocked:
+        blocked = True
+    parts = discover_partitions_v11(src)
+    clf = classify_campaign_partitions(parts)
+    control = blocked and parts and parts[0].get("open_marker_present") is True
     return ScenarioResult(
         scenario_id="partition_migrated_while_open",
         title="Partition migrated while open",
         lane="D",
         severity_if_confirmed="MEDIUM",
-        hazard_confirmed=True,  # migration of open partitions is still possible (no gate)
+        hazard_confirmed=not blocked,
         control_ok=control,
         summary=(
-            "Open partitions can be byte-copied while .open is present; classifier correctly "
-            "labels EXPECTED_OPEN_TAIL + MIGRATION_ARTIFACT when sizes match, but there is no "
-            "storage-safety gate refusing migration of in-flight partitions."
+            "Cutover V2 migration/export gate refuses trees containing *.jsonl.gz.open "
+            "(R2-D-005 FIXED); open tails remain classified without silent repair."
         ),
         evidence={
-            "bytes_unchanged": unchanged,
             "classifications": clf["classification_counts"],
             "open_marker_on_source": open_marker_for(abandoned).is_file(),
-            "storage_gate_blocks_open_migration": False,
+            "storage_gate_blocks_open_migration": blocked,
+            "bytes_copied": 0,
         },
     )
 
@@ -537,8 +530,11 @@ def scenario_missing_previous_link(root: Path) -> ScenarioResult:
 
 
 def scenario_clock_rollback_across_partition_rotation(root: Path) -> ScenarioResult:
-    """Exchange timestamp moving backward rotates into a prior hour and confuses linkage order."""
-    w = DurablePartitionWriterV11(
+    """Cutover V2 refuses backward hour rotation without resume boundary (R2-D-003 FIXED)."""
+    from backend.nexus_microstructure.collector_cutover_v2.clock_guard import ClockRollbackRejected
+    from backend.nexus_microstructure.collector_cutover_v2.writer_v2 import DurablePartitionWriterV2
+
+    w = DurablePartitionWriterV2(
         root,
         exchange="BYBIT",
         family="AGGRESSIVE_TRADE_FLOW",
@@ -551,29 +547,29 @@ def scenario_clock_rollback_across_partition_rotation(root: Path) -> ScenarioRes
     t_back = t0 - 3_600_000
     for i in range(3):
         w.accept(_evt("BTCUSDT", t0 + i * 1000, i))
-    for i in range(3):
-        w.accept(_evt("BTCUSDT", t_back + i * 1000, 100 + i))
+    rejected = False
+    try:
+        w.accept(_evt("BTCUSDT", t_back, 100))
+    except ClockRollbackRejected:
+        rejected = True
     report = w.close()
     parts = discover_partitions_v11(root)
     link = audit_linkage_v11(parts)
-    hazard = (
-        report["partition_count"] >= 2
-        and link["cross_partition_linkage_status"] == "FAIL"
-    )
+    control = rejected and link["cross_partition_linkage_status"] == "PASS"
     return ScenarioResult(
         scenario_id="clock_rollback_across_partition_rotation",
         title="Clock rollback across partition rotation",
         lane="D",
         severity_if_confirmed="HIGH",
-        hazard_confirmed=hazard,
-        control_ok=False,
+        hazard_confirmed=not rejected,
+        control_ok=control,
         summary=(
-            "Writer accepts exchange_timestamp moving into a prior UTC hour, creating a "
-            "partition whose previous_link points forward in wall order; hour-sorted linkage "
-            "then reports FAIL."
+            "Cutover V2 persistent clock guard refuses exchange_timestamp moving into a prior "
+            "UTC hour without an explicit resume boundary (R2-D-003 FIXED)."
         ),
         evidence={
             "partition_count": report["partition_count"],
+            "rollback_rejected": rejected,
             "partitions": [
                 {
                     "UTC_hour": p.get("UTC_hour"),

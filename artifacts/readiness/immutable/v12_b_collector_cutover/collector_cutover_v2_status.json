@@ -1,0 +1,75 @@
+{
+  "schema": "microstructure_collector_cutover_v2_status",
+  "Collector_Cutover_V2_status": "PASS",
+  "created_at": "2026-08-05T07:49:44Z",
+  "branch": "feature/v12-microstructure-collector-cutover",
+  "base": "e4e96299840da2e5152cf2850135cebc67d66cd0",
+  "features": {
+    "exclusive_partition_ids": true,
+    "atomic_manifest_seal": true,
+    "open_tail_seal_policy": true,
+    "persistent_clock_guard": true,
+    "resume_safe_linkage": true,
+    "automatic_safe_stop": true,
+    "storage_controller": true,
+    "finalizer_v2_compatibility": true
+  },
+  "scenarios": {
+    "exclusive_partition_ids": "FIXED",
+    "atomic_manifest_seal": "FIXED",
+    "open_tail_on_kill": "PASS",
+    "persistent_clock_guard": "FIXED",
+    "resume_safe_linkage": "PASS",
+    "migration_open_partition_guard": "FIXED",
+    "storage_controller_safe_stop": "PASS",
+    "finalizer_v2_compat": "PASS"
+  },
+  "r2_high_dispositions": {
+    "R2-C-003": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
+    "R2-C-004": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
+    "R2-C-006": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
+    "R2-C-007": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
+    "R2-D-001": "FIXED",
+    "R2-D-002": "FIXED",
+    "R2-D-003": "FIXED",
+    "R2-D-004": "FIXED",
+    "R2-D-005": "FIXED"
+  },
+  "retained_classifications": {
+    "raw_modified": false,
+    "classification_counts": {
+      "ACTUAL_DATA_CORRUPTION": 0,
+      "EXPECTED_OPEN_TAIL": 113,
+      "MIGRATION_ARTIFACT": 113,
+      "MANIFEST_BUG": 43,
+      "FINALIZER_FALSE_POSITIVE": 113,
+      "LINKAGE_SEMANTICS_BUG": 113,
+      "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+    },
+    "ACTUAL_DATA_CORRUPTION": 0,
+    "EXPECTED_OPEN_TAIL": 113
+  },
+  "event_study_readiness_status": "NOT_READY",
+  "event_study_real_execution": false,
+  "event_study_gate": {
+    "event_study": "NOT_READY",
+    "remaining_high_dispositions": {
+      "R2-C-003": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
+      "R2-C-004": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
+      "R2-C-006": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
+      "R2-C-007": "DEFERRED_NON_PRODUCTION_WITH_HARD_BLOCK",
+      "R2-D-003": "FIXED",
+      "R2-D-005": "FIXED"
+    },
+    "raw_modified": false
+  },
+  "live_capture_started": false,
+  "exchange_write_attempt_count": 0,
+  "demo_used": false,
+  "mainnet_used": false,
+  "raw_prior_campaign_modified": false,
+  "PR27_merged": false,
+  "G_deleted": false,
+  "owned_paths_only": true,
+  "secret_leak_count": 0
+}

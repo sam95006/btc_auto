@@ -1,0 +1,230 @@
+{
+  "schema": "microstructure_campaign_finalizer_v2_compat",
+  "compatible_with": [
+    "microstructure_campaign_finalizer_v1",
+    "microstructure_collector_cutover_v2"
+  ],
+  "created_at": "2026-08-05T07:49:44Z",
+  "campaign_id": "ms_accum_v7_bounded_24h",
+  "v1_finalizer_integration": {
+    "package_present": true,
+    "previous_campaign_finalized": true,
+    "Microstructure_Finalizer_status": "FAIL",
+    "artifact_dir": "D:\\NEXUS_RUNTIME\\worktrees\\v12_b_collector_cutover\\artifacts\\readiness\\immutable\\microstructure_campaign_finalizer_v1_real_ms_accum_v7"
+  },
+  "retained_classifications": {
+    "raw_modified": false,
+    "classification_counts": {
+      "ACTUAL_DATA_CORRUPTION": 0,
+      "EXPECTED_OPEN_TAIL": 113,
+      "MIGRATION_ARTIFACT": 113,
+      "MANIFEST_BUG": 43,
+      "FINALIZER_FALSE_POSITIVE": 113,
+      "LINKAGE_SEMANTICS_BUG": 113,
+      "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+    },
+    "primary_classification_counts": {
+      "ACTUAL_DATA_CORRUPTION": 0,
+      "EXPECTED_OPEN_TAIL": 113,
+      "MIGRATION_ARTIFACT": 0,
+      "MANIFEST_BUG": 43,
+      "FINALIZER_FALSE_POSITIVE": 0,
+      "LINKAGE_SEMANTICS_BUG": 0,
+      "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+    }
+  },
+  "open_tail_seal_policy": {
+    "schema": "microstructure_collector_cutover_v2_open_tail_seal_policy",
+    "created_at": "2026-08-05T07:49:44Z",
+    "prior_campaign_raw_modified": false,
+    "prior_expected_open_tail_count": 113,
+    "retained_classification_counts": {
+      "ACTUAL_DATA_CORRUPTION": 0,
+      "EXPECTED_OPEN_TAIL": 113,
+      "MIGRATION_ARTIFACT": 113,
+      "MANIFEST_BUG": 43,
+      "FINALIZER_FALSE_POSITIVE": 113,
+      "LINKAGE_SEMANTICS_BUG": 113,
+      "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+    },
+    "dispositions": [
+      "LEAVE_UNSEALED_FORENSIC",
+      "SEAL_ON_GRACEFUL_STOP",
+      "RESUME_BOUNDARY",
+      "REQUIRES_FOUNDER_AUTH_TO_REBUILD_MANIFEST"
+    ],
+    "policy": {
+      "prior_campaign_open_tails": "LEAVE_UNSEALED_FORENSIC",
+      "new_capture_graceful_stop": "SEAL_ON_GRACEFUL_STOP",
+      "new_capture_kill_mid_write": "EXPECTED_OPEN_TAIL_or_INTERRUPTED_FINALIZE",
+      "resume_after_open_tail": "RESUME_BOUNDARY",
+      "manifest_rebuild": "REQUIRES_FOUNDER_AUTH_TO_REBUILD_MANIFEST"
+    },
+    "seal_protocol_v2": [
+      "flush_buffers",
+      "close_gzip_footer",
+      "write_seal_state_FINALIZING",
+      "atomic_manifest_replace",
+      "write_seal_state_SEALED",
+      "unlink_open_marker"
+    ],
+    "forbidden": [
+      "silent_repair_of_prior_open_tails",
+      "overwrite_prior_partition_bytes",
+      "event_study_start_from_unsealed_prior",
+      "claim_integrity_PASS_while_open_tails_unpolicyed"
+    ],
+    "integrity_status_with_prior_open_tails": "NOT_PASS_UNTIL_CUTOVER_AND_HOLD_GATES",
+    "event_study": "NOT_READY"
+  },
+  "cutover_writer": {
+    "schema": "microstructure_collector_cutover_v2_writer_close",
+    "family": "AGGRESSIVE_TRADE_FLOW",
+    "symbol": "ETHUSDT",
+    "partition_count": 1,
+    "partitions": [
+      {
+        "partition_id": "cutover_seal_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20250804_00_0",
+        "exchange": "PUBLIC",
+        "family": "AGGRESSIVE_TRADE_FLOW",
+        "symbol": "ETHUSDT",
+        "UTC_hour": "20250804_00",
+        "schema_version": "microstructure_collector_cutover_v2",
+        "record_count": 5,
+        "first_exchange_timestamp": 1754265600000,
+        "last_exchange_timestamp": 1754265604000,
+        "first_receive_timestamp": 1754265600002,
+        "last_receive_timestamp": 1754265604002,
+        "uncompressed_bytes": 1070,
+        "compressed_bytes": 330,
+        "compression_ratio": 0.308411214953271,
+        "rolling_checksum": "d9af2c8003f7fb6c992041e59661c695c8be09d51fb14da89051d3160c4f784b",
+        "replayed_checksum": "d9af2c8003f7fb6c992041e59661c695c8be09d51fb14da89051d3160c4f784b",
+        "previous_partition_id": null,
+        "capture_session_id": "cutover_seal",
+        "path": "D:\\NEXUS_RUNTIME\\worktrees\\v12_b_collector_cutover\\artifacts\\readiness\\tmp\\v12_b_collector_cutover_work\\seal\\PUBLIC\\AGGRESSIVE_TRADE_FLOW\\ETHUSDT\\cutover_seal_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20250804_00_0.jsonl.gz",
+        "checksum_match": true,
+        "open_tail": false,
+        "finalized": true,
+        "seal_protocol": "collector_cutover_v2"
+      }
+    ],
+    "session_bytes_written": 1070,
+    "session_manifest_bytes": 1177,
+    "session_compressed_bytes": 330,
+    "writers_closed": true,
+    "buffers_flushed": true,
+    "manifest_complete": true,
+    "checksum_replay_verified": true,
+    "graceful_stop": true,
+    "clock_watermark": {
+      "schema": "microstructure_collector_cutover_v2_clock_watermark",
+      "capture_session_id": "cutover_seal",
+      "last_accepted_exchange_ms": 1754265604000,
+      "last_accepted_utc_hour": "20250804_00",
+      "resume_boundary_armed": false,
+      "updated_at": "2026-08-05T07:49:44Z",
+      "persistent": true,
+      "process_local_only": false
+    },
+    "linkage": {
+      "schema": "microstructure_collector_cutover_v2_session_linkage",
+      "capture_session_id": "cutover_seal",
+      "last_sealed_partition_id": "cutover_seal_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20250804_00_0",
+      "resume_boundary_armed": false,
+      "open_tail_partition_ids": [],
+      "updated_at": "2026-08-05T07:49:44Z"
+    },
+    "exclusive_partition_ids": true,
+    "atomic_manifest_seal": true
+  },
+  "linkage_audit": {
+    "cross_partition_linkage_status": "PASS",
+    "chains_checked": 1,
+    "partitions_checked": 1,
+    "linkage_breaks": 0,
+    "open_tail_linkage_exempt_count": 0,
+    "issues": [],
+    "semantics": "v11_closed_chain_with_open_tail_boundaries",
+    "schema": "microstructure_collector_cutover_v2_resume_safe_linkage_audit",
+    "resume_boundary_armed": false,
+    "last_sealed_partition_id": "cutover_link_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20250804_00_0",
+    "open_tail_partition_ids": []
+  },
+  "storage_controller": {
+    "schema": "microstructure_collector_cutover_v2_storage_controller",
+    "created_at": "2026-08-05T07:49:44Z",
+    "storage_budget": {
+      "schema": "storage_budget_controller_v10",
+      "soft_limit_bytes": 200,
+      "hard_limit_bytes": 500,
+      "minimum_free_disk_bytes": 32212254720,
+      "disk_root": "D:\\",
+      "storage_cap_configured": true,
+      "current_compressed_partition_bytes": 600,
+      "current_manifest_bytes": 0,
+      "current_total_bytes": 600,
+      "estimated_next_hour_bytes": 0.0,
+      "estimated_next_day_bytes": 0.0,
+      "mode": "STORAGE_BUDGET_BLOCKED",
+      "stop_requested": true,
+      "stop_reason": "hard_storage_cap",
+      "minimum_free_disk": {
+        "schema": "minimum_free_disk_controller_v10",
+        "path": "D:\\",
+        "free_bytes": 236317413376,
+        "free_gib": 220.088,
+        "minimum_free_disk_bytes": 32212254720,
+        "minimum_free_disk_gib": 30.0,
+        "status": "PASS",
+        "passed": true
+      },
+      "storage_tree_scanned_per_event": false,
+      "deletion_executed": false
+    },
+    "migration_safety": {
+      "schema": "microstructure_collector_cutover_v2_migration_dry_run",
+      "root": "D:\\NEXUS_RUNTIME\\worktrees\\v12_b_collector_cutover\\artifacts\\readiness\\tmp\\v12_b_collector_cutover_work\\seal",
+      "open_marker_count": 0,
+      "open_markers": [],
+      "migration_allowed": true,
+      "would_block": false,
+      "created_at": "2026-08-05T07:49:44Z",
+      "r2_finding": "R2-D-005",
+      "disposition": "FIXED",
+      "bytes_copied": 0,
+      "raw_modified": false
+    },
+    "automatic_safe_stop": {
+      "schema": "microstructure_operations_v10_automatic_safe_stop",
+      "safe_stop_required": true,
+      "safe_stop_executed": false,
+      "reasons": [
+        "hard_storage_cap"
+      ],
+      "primary_reason": "hard_storage_cap",
+      "exchange_write_attempt_count": 0,
+      "live_capture_started": false,
+      "event_study_real_execution": false,
+      "created_at": "2026-08-05T07:49:44Z"
+    },
+    "safe_stop_required": true,
+    "deletion_executed": false,
+    "event_study_real_execution": false,
+    "live_capture_started": false
+  },
+  "event_study_readiness_status": "NOT_READY",
+  "event_study_real_execution": false,
+  "collector_cutover_required_features": {
+    "exclusive_partition_ids": true,
+    "atomic_manifest_seal": true,
+    "open_tail_seal_policy": true,
+    "persistent_clock_guard": true,
+    "resume_safe_linkage": true,
+    "automatic_safe_stop": true,
+    "storage_controller": true
+  },
+  "integrity_status": "NOT_PASS_PRIOR_OPEN_TAILS_RETAINED",
+  "silent_repair_executed": false,
+  "new_strategy_generated_count": 0
+}
