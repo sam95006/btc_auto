@@ -1,48 +1,56 @@
-"""Read-only Founder Operator snapshot builders.
+"""Read-only Founder Operator snapshot builders with live/sim binding (PUB2-D).
 
 Panels expose private operational *health / readiness* labels only.
 No strategy params, no wallet secrets, no exchange write controls.
 """
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 from typing import Any
 
-SCHEMA_ID = "NEXUS_FOUNDER_OPERATOR_UI_V1"
-
-OPERATOR_PANEL_IDS: tuple[str, ...] = (
-    "capture",
-    "provider",
-    "decision",
-    "execution_sim",
-    "risk",
-    "ledger",
-    "checkpoint",
-    "reflection",
-    "lesson",
-    "qualification",
-    "storage",
-    "kill_switch",
+from backend.founder_operator.live_bindings import (
+    PANEL_SUMMARIES,
+    PANEL_TITLES,
+    SURFACE_IDS,
+    bind_all_operator_surfaces,
+    binding_summary,
 )
+
+SCHEMA_ID = "NEXUS_FOUNDER_OPERATOR_UI_V2_LIVE"
+
+OPERATOR_PANEL_IDS: tuple[str, ...] = SURFACE_IDS
 
 # Fields that must never appear in operator payloads (member / public leak traps).
 FORBIDDEN_PAYLOAD_KEYS: frozenset[str] = frozenset({
     "api_key",
     "apiKey",
+    "api_secret",
+    "apiSecret",
     "secret",
     "secret_key",
     "private_key",
+    "privateKey",
     "wallet_address",
     "walletAddress",
     "strategy_id",
     "strategyId",
     "strategy_params",
+    "strategyParams",
     "prompt",
     "lesson_memory_raw",
+    "lessonMemoryRaw",
     "order_id",
+    "orderId",
     "position_id",
+    "positionId",
     "fill_id",
+    "fillId",
     "exchange_credentials",
+    "exchangeCredentials",
+    "authorization",
+    "password",
+    "token",
 })
 
 
@@ -50,191 +58,63 @@ def _utc() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
-def _panel(
-    panel_id: str,
-    *,
-    title: str,
-    health: str,
-    summary: str,
-    metrics: dict[str, Any],
-    notes: list[str] | None = None,
-) -> dict[str, Any]:
+def _panel_notes(panel_id: str, binding: dict[str, Any]) -> list[str]:
+    notes = list(binding.get("notes") or [])
+    extras: dict[str, list[str]] = {
+        "capture": ["No collector start from this UI."],
+        "provider": ["No provider routing editor.", "No live vendor key exposure."],
+        "decision": ["No decorative intent/position IDs minted here."],
+        "execution_sim": ["HARD BAN: no Demo/Shadow/exchange/mainnet writes."],
+        "risk": ["No Risk Governor editors on this surface."],
+        "lesson": ["Lesson Memory never crosses Publishing Gateway raw."],
+        "qualification": ["HARD BAN: no formal WF / real OOS execution."],
+        "storage": ["No raw campaign rewrite from this UI."],
+        "kill_switch": [
+            "Engage controls stay fail-closed outside verified Founder auth.",
+            "This panel never enables exchange cancel/flat from member session.",
+        ],
+    }
+    notes.extend(extras.get(panel_id, []))
+    return notes
+
+
+def _panel_from_binding(panel_id: str, binding: dict[str, Any]) -> dict[str, Any]:
     return {
         "id": panel_id,
-        "title": title,
-        "health": health,
-        "summary": summary,
-        "metrics": metrics,
-        "notes": notes or [],
+        "title": PANEL_TITLES[panel_id],
+        "health": str(binding.get("health") or "UNKNOWN"),
+        "summary": PANEL_SUMMARIES[panel_id],
+        "metrics": dict(binding.get("metrics") or {}),
+        "notes": _panel_notes(panel_id, binding),
         "readOnly": True,
         "exchangeWriteEnabled": False,
         "memberVisible": False,
+        "binding": {
+            "mode": binding.get("mode"),
+            "sourceSurface": binding.get("sourceSurface"),
+            "sourceEndpoint": binding.get("sourceEndpoint"),
+            "sourceField": binding.get("sourceField"),
+            "asOf": binding.get("asOf"),
+            "retrievedAt": binding.get("retrievedAt"),
+            "lineageId": binding.get("lineageId"),
+            "fabricated": False,
+            "demoData": bool(binding.get("demoData")),
+        },
     }
 
 
-def build_founder_operator_snapshot(*, actor_tier: str, identity_source: str) -> dict[str, Any]:
-    """Assemble Founder-only operator overview. Research / local fixtures only."""
-    panels = [
-        _panel(
-            "capture",
-            title="Capture Health",
-            health="DEGRADED",
-            summary="Live capture supervisor observability (read-only).",
-            metrics={
-                "processLiveness": "UNKNOWN",
-                "wsHealth": "UNKNOWN",
-                "hourlyPartitionOk": False,
-                "clockQuality": "UNKNOWN",
-            },
-            notes=["No collector start from this UI.", "LOCAL/STAGING fixture labels only."],
-        ),
-        _panel(
-            "provider",
-            title="Provider Health",
-            health="OK",
-            summary="Provider routing / shadow compare readiness.",
-            metrics={
-                "primaryProvider": "shadow_compare",
-                "fallbackArmed": True,
-                "latencyP50Ms": None,
-                "errorRate": None,
-            },
-            notes=["No provider routing editor.", "No live vendor key exposure."],
-        ),
-        _panel(
-            "decision",
-            title="Decision Lifecycle",
-            health="OK",
-            summary="Private Decision lifecycle ontology progress.",
-            metrics={
-                "activeDecisions": 0,
-                "monitoring": 0,
-                "underReview": 0,
-                "closed": 0,
-                "ontology": "MONITORING→EXITED→UNDER_REVIEW→CALIBRATED→CLOSED",
-            },
-            notes=["No decorative intent/position IDs minted here."],
-        ),
-        _panel(
-            "execution_sim",
-            title="Execution Simulation",
-            health="OK",
-            summary="Simulated execution state only — never live exchange.",
-            metrics={
-                "mode": "SIMULATION",
-                "openSimPositions": 0,
-                "pendingSimOrders": 0,
-                "realExecutionEnabled": False,
-                "armEnabled": False,
-            },
-            notes=["HARD BAN: no Demo/Shadow/exchange/mainnet writes."],
-        ),
-        _panel(
-            "risk",
-            title="Risk State",
-            health="OK",
-            summary="Private risk governor flags (observe only).",
-            metrics={
-                "governorMode": "OBSERVE",
-                "blocksActive": 0,
-                "capacityReview": "NOT_STARTED",
-                "editorsEnabled": False,
-            },
-            notes=["No Risk Governor editors on this surface."],
-        ),
-        _panel(
-            "ledger",
-            title="Ledger Health",
-            health="OK",
-            summary="Checksummed private event ledger health.",
-            metrics={
-                "checksumOk": True,
-                "tailSealed": False,
-                "partitionExclusive": True,
-                "writerConflict": False,
-            },
-        ),
-        _panel(
-            "checkpoint",
-            title="Checkpoint Health",
-            health="OK",
-            summary="Canonical checkpoint envelope authority status.",
-            metrics={
-                "lastCheckpointAt": None,
-                "resumeSafe": True,
-                "authorityScope": "founder_private",
-                "corruptionDetected": False,
-            },
-        ),
-        _panel(
-            "reflection",
-            title="Reflection Progress",
-            health="OK",
-            summary="Reflection V2.3 adjudication progress (private).",
-            metrics={
-                "casesPending": 0,
-                "casesAdjudicated": 0,
-                "providerTransport": "gated",
-                "terminalGateReady": False,
-            },
-        ),
-        _panel(
-            "lesson",
-            title="Lesson Gate",
-            health="BLOCKED",
-            summary="Lesson Memory gate — Founder-private only.",
-            metrics={
-                "lessonsQueued": 0,
-                "preventionProof": "NOT_READY",
-                "publicExportAllowed": False,
-                "memberReadable": False,
-            },
-            notes=["Lesson Memory never crosses Publishing Gateway raw."],
-        ),
-        _panel(
-            "qualification",
-            title="Qualification Blocks",
-            health="BLOCKED",
-            summary="Formal qualification control plane — blocked-ready.",
-            metrics={
-                "formalWfAllowed": False,
-                "oosReservationAllowed": False,
-                "blockedReady": True,
-                "promotionAllowed": False,
-            },
-            notes=["HARD BAN: no formal WF / real OOS execution."],
-        ),
-        _panel(
-            "storage",
-            title="Storage",
-            health="OK",
-            summary="Private storage velocity / capacity floor.",
-            metrics={
-                "floorGiB": 100,
-                "hardCapGiB": 40,
-                "usedGiB": None,
-                "velocityOk": True,
-            },
-            notes=["No raw campaign rewrite from this UI."],
-        ),
-        _panel(
-            "kill_switch",
-            title="Kill-Switch Readiness",
-            health="ARMED_READINESS",
-            summary="Kill-switch readiness only — no live engage from member paths.",
-            metrics={
-                "engaged": False,
-                "readiness": "READY_FOR_LOCAL_RESEARCH",
-                "blocksExchangeWrite": True,
-                "engageFromUi": False,
-                "memberAccessible": False,
-            },
-            notes=[
-                "Engage controls stay fail-closed outside verified Founder auth.",
-                "This panel never enables exchange cancel/flat from member session.",
-            ],
-        ),
-    ]
+def build_founder_operator_snapshot(
+    *,
+    actor_tier: str,
+    identity_source: str,
+    prefer_simulated: bool | None = None,
+) -> dict[str, Any]:
+    """Assemble Founder-only operator overview with live/sim surface bindings."""
+    if prefer_simulated is None:
+        prefer_simulated = os_prefer_simulated()
+    bindings = bind_all_operator_surfaces(prefer_simulated=prefer_simulated)
+    panels = [_panel_from_binding(pid, bindings[pid]) for pid in OPERATOR_PANEL_IDS]
+    summary = binding_summary(bindings)
 
     return {
         "schema": SCHEMA_ID,
@@ -252,6 +132,8 @@ def build_founder_operator_snapshot(*, actor_tier: str, identity_source: str) ->
         },
         "panels": panels,
         "panelIds": list(OPERATOR_PANEL_IDS),
+        "bindings": summary,
+        "liveBinding": True,
         "hardBans": [
             "no_demo_order",
             "no_shadow_order",
@@ -262,11 +144,23 @@ def build_founder_operator_snapshot(*, actor_tier: str, identity_source: str) ->
             "no_real_oos",
             "no_member_session_access",
             "no_strategy_promotion",
+            "no_fabricated_live_values",
+            "no_private_secrets_in_member_paths",
         ],
         "note": (
-            "Founder Private Operator UI — private operational health only; "
+            "Founder Private Operator UI — live/sim bound private operational health only; "
             "never bindable from a public member session."
         ),
+    }
+
+
+def os_prefer_simulated() -> bool:
+    """Allow tests / local research to force SIMULATED binds via env."""
+    return os.environ.get("NEXUS_FOUNDER_OPERATOR_FORCE_SIMULATED", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
     }
 
 

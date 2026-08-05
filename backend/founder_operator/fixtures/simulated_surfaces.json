@@ -1,0 +1,97 @@
+{
+  "schema": "NEXUS_FOUNDER_OPERATOR_SIMULATED_SURFACES_V1",
+  "researchOnly": true,
+  "fabricatedLiveForbidden": true,
+  "surfaces": {
+    "capture": {
+      "health": "DEGRADED",
+      "processLiveness": "SIM_ALIVE",
+      "wsHealth": "SIM_CONNECTED",
+      "hourlyPartitionOk": true,
+      "clockQuality": "SIM_STABLE"
+    },
+    "provider": {
+      "health": "OK",
+      "primaryProvider": "v23_shadow_compare",
+      "fallbackArmed": true,
+      "providerTransport": "gated",
+      "v23Protocol": "REFLECTION_V2_3",
+      "latencyP50Ms": null,
+      "errorRate": null
+    },
+    "decision": {
+      "health": "OK",
+      "activeDecisions": 0,
+      "monitoring": 0,
+      "underReview": 0,
+      "closed": 0,
+      "ontology": "MONITORING→EXITED→UNDER_REVIEW→CALIBRATED→CLOSED"
+    },
+    "execution_sim": {
+      "health": "OK",
+      "mode": "SIMULATION",
+      "openSimPositions": 0,
+      "pendingSimOrders": 0,
+      "realExecutionEnabled": false,
+      "armEnabled": false
+    },
+    "risk": {
+      "health": "OK",
+      "governorMode": "OBSERVE",
+      "blocksActive": 0,
+      "capacityReview": "NOT_STARTED",
+      "editorsEnabled": false
+    },
+    "ledger": {
+      "health": "OK",
+      "checksumOk": true,
+      "tailSealed": false,
+      "partitionExclusive": true,
+      "writerConflict": false
+    },
+    "checkpoint": {
+      "health": "OK",
+      "lastCheckpointAt": null,
+      "resumeSafe": true,
+      "authorityScope": "founder_private",
+      "corruptionDetected": false
+    },
+    "reflection": {
+      "health": "OK",
+      "casesPending": 0,
+      "casesAdjudicated": 0,
+      "providerTransport": "gated",
+      "terminalGateReady": false,
+      "v23Adjudication": "SIMULATED_IDLE"
+    },
+    "lesson": {
+      "health": "BLOCKED",
+      "lessonsQueued": 0,
+      "preventionProof": "NOT_READY",
+      "publicExportAllowed": false,
+      "memberReadable": false
+    },
+    "qualification": {
+      "health": "BLOCKED",
+      "formalWfAllowed": false,
+      "oosReservationAllowed": false,
+      "blockedReady": true,
+      "promotionAllowed": false
+    },
+    "storage": {
+      "health": "OK",
+      "floorGiB": 100,
+      "hardCapGiB": 40,
+      "usedGiB": null,
+      "velocityOk": true
+    },
+    "kill_switch": {
+      "health": "ARMED_READINESS",
+      "engaged": false,
+      "readiness": "READY_FOR_LOCAL_RESEARCH",
+      "blocksExchangeWrite": true,
+      "engageFromUi": false,
+      "memberAccessible": false
+    }
+  }
+}

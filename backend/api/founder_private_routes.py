@@ -4,8 +4,9 @@ Production / Zeabur: routes remain disabled until verified Founder auth exists.
 Client headers / query params cannot grant Founder access.
 Execution always disabled this phase.
 
-PUB-E: Founder Private Operator UI snapshot is Founder-authorized only
-and must never be readable from a member session.
+PUB-E / PUB2-D: Founder Private Operator UI snapshot is Founder-authorized
+only, live/sim bound to private operational surfaces, and must never be
+readable from a member session.
 """
 from __future__ import annotations
 

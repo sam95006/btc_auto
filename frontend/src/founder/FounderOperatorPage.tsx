@@ -13,6 +13,7 @@ function healthClass(health: string): string {
 
 function PanelCard({ panel }: { panel: FounderOperatorPanel }) {
   const metrics = Object.entries(panel.metrics || {});
+  const binding = panel.binding;
   return (
     <section className="nx-card nx-founder-panel" id={panel.id} aria-label={panel.title}>
       <div className="nx-founder-panel-head">
@@ -20,6 +21,16 @@ function PanelCard({ panel }: { panel: FounderOperatorPanel }) {
         <span className={`tag tag-${healthClass(panel.health)}`}>{panel.health}</span>
       </div>
       <p className="muted sm">{panel.summary}</p>
+      {binding ? (
+        <div className="nx-founder-binding" aria-label="Surface binding">
+          <span className={`tag tag-${binding.mode === "LIVE" ? "ok" : "warn"}`}>
+            bind={binding.mode}
+          </span>
+          <span className="muted sm mono">{binding.sourceSurface}</span>
+          <span className="muted sm mono">asOf={binding.asOf || "—"}</span>
+          <span className="muted sm mono">lineage={binding.lineageId.slice(0, 10)}</span>
+        </div>
+      ) : null}
       <dl className="nx-founder-metrics">
         {metrics.map(([k, v]) => (
           <div key={k}>
@@ -41,7 +52,7 @@ function PanelCard({ panel }: { panel: FounderOperatorPanel }) {
 }
 
 /**
- * Founder Private Operator overview — capture → kill-switch panels.
+ * Founder Private Operator overview — live/sim bound capture → kill-switch panels.
  */
 export function FounderOperatorPage() {
   const [snap, setSnap] = useState<FounderOperatorSnapshot | null>(null);
@@ -89,13 +100,19 @@ export function FounderOperatorPage() {
       <header>
         <h1>Founder Private Operator</h1>
         <p className="muted">
-          私有營運觀測 · {snap.actor.tier} · {snap.actor.identitySource} · {snap.generatedAt}
+          私有營運觀測 · live/sim bound · {snap.actor.tier} · {snap.actor.identitySource} ·{" "}
+          {snap.generatedAt}
         </p>
         <div className="nx-founder-banner-row">
           <span className="tag tag-warn">founder-only</span>
           <span className="tag">researchOnly={String(snap.researchOnly)}</span>
           <span className="tag">exchangeWrite={String(snap.exchangeWriteEnabled)}</span>
           <span className="tag">memberAccessible={String(snap.memberAccessible)}</span>
+          {snap.bindings ? (
+            <span className="tag">
+              binds L{snap.bindings.liveCount}/S{snap.bindings.simulatedCount}
+            </span>
+          ) : null}
         </div>
       </header>
 

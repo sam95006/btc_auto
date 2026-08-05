@@ -1,4 +1,4 @@
-/** PUB-E Founder Private Operator UI types — Founder-only, never member-bound. */
+/** PUB-E / PUB2-D Founder Private Operator UI types — Founder-only, never member-bound. */
 
 export type FounderPanelId =
   | "capture"
@@ -14,6 +14,18 @@ export type FounderPanelId =
   | "storage"
   | "kill_switch";
 
+export type FounderPanelBinding = {
+  mode: "LIVE" | "SIMULATED" | "UNAVAILABLE" | string;
+  sourceSurface: string;
+  sourceEndpoint?: string;
+  sourceField?: string;
+  asOf: string;
+  retrievedAt: string;
+  lineageId: string;
+  fabricated: boolean;
+  demoData?: boolean;
+};
+
 export type FounderOperatorPanel = {
   id: FounderPanelId | string;
   title: string;
@@ -24,6 +36,7 @@ export type FounderOperatorPanel = {
   readOnly: boolean;
   exchangeWriteEnabled: boolean;
   memberVisible: boolean;
+  binding?: FounderPanelBinding;
 };
 
 export type FounderOperatorSnapshot = {
@@ -41,6 +54,15 @@ export type FounderOperatorSnapshot = {
   panelIds: string[];
   hardBans: string[];
   note: string;
+  liveBinding?: boolean;
+  bindings?: {
+    panelCount: number;
+    liveCount: number;
+    simulatedCount: number;
+    unavailableCount: number;
+    fabricatedLiveValueCount: number;
+    memberAccessibleBindingCount: number;
+  };
   error?: string;
 };
 
@@ -57,7 +79,7 @@ export type FounderStatus = {
 
 export const FOUNDER_OPERATOR_NAV: { id: FounderPanelId; label: string; hash: string }[] = [
   { id: "capture", label: "Capture", hash: "#capture" },
-  { id: "provider", label: "Provider", hash: "#provider" },
+  { id: "provider", label: "V2.3", hash: "#provider" },
   { id: "decision", label: "Decision", hash: "#decision" },
   { id: "execution_sim", label: "Execution Sim", hash: "#execution_sim" },
   { id: "risk", label: "Risk", hash: "#risk" },
