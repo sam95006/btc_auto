@@ -67,6 +67,15 @@
           "role": "legacy_product",
           "severity": "medium",
           "symbol": null
+        },
+        {
+          "delete_now": false,
+          "module": "backend.nexus_autonomy.security_mutation_v11.constants",
+          "notes": "V11 security mutation red-team fixture constants only; must never become Session→Execution authority.",
+          "recommended_action": "retain_compat",
+          "role": "fixture_tool",
+          "severity": "low",
+          "symbol": null
         }
       ],
       "contract_keys": [
@@ -680,6 +689,15 @@
           "recommended_action": "quarantine",
           "role": "legacy_product",
           "severity": "medium",
+          "symbol": null
+        },
+        {
+          "delete_now": false,
+          "module": "backend.nexus_autonomy.security_mutation_v11.constants",
+          "notes": "V11 security mutation red-team fixture constants only; must never become Session→Execution authority.",
+          "recommended_action": "retain_compat",
+          "role": "fixture_tool",
+          "severity": "low",
           "symbol": null
         }
       ],

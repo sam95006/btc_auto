@@ -121,10 +121,10 @@
     "critical": 3,
     "high": 3
   },
-  "generated_at": "2026-08-05T03:35:25Z",
+  "generated_at": "2026-08-05T03:56:20Z",
   "graph_summary": {
     "circular_scc_count": 3,
-    "claim_count": 60,
+    "claim_count": 62,
     "critical_finding_count": 5,
     "domain_count": 7,
     "domains_with_duplicates": [
@@ -136,8 +136,8 @@
       "provider_retry",
       "risk"
     ],
-    "edge_count": 3865,
-    "node_count": 38
+    "edge_count": 4146,
+    "node_count": 40
   },
   "lane": "V11_H_AUTHORITY_CONSOLIDATION",
   "pass_id": "pass1",
@@ -145,7 +145,7 @@
     "future_remove": 4,
     "migrate_callers": 10,
     "quarantine": 6,
-    "retain_compat": 17
+    "retain_compat": 18
   },
   "schema": "nexus_authority_consolidation_pass_v1"
 }

@@ -139,6 +139,17 @@ def _records() -> tuple[AuthorityRecord, ...]:
                     notes="Binance spot testnet execution engine; product lane.",
                     recommended_action="quarantine",
                 ),
+                CompetitorRecord(
+                    module="backend.nexus_autonomy.security_mutation_v11.constants",
+                    symbol=None,
+                    role="fixture_tool",
+                    severity="low",
+                    notes=(
+                        "V11 security mutation red-team fixture constants only; "
+                        "must never become Session→Execution authority."
+                    ),
+                    recommended_action="retain_compat",
+                ),
             ),
             notes=(
                 "Cross-lane Session→Execution bridge is "

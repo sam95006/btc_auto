@@ -1,81 +1,38 @@
 # Authority Consolidation V1 — Lane H Summary
 
-Generated: 2026-08-05T03:35:56Z  
-Branch: `feature/v11-repository-authority-consolidation`  
-Base: `e4f30f9b8abaaade6151a75ef5ac6face53d5135`  
-Passes: 2  
-CI duplicate-authority gate: **PASSED** (known competitors baselined; new unregistered claimants fail)
+Generated: 2026-08-05T03:56:54Z
 
 ## Graph summary
 
-| Metric | Value |
-|--------|------:|
-| Domains scanned | 7 |
-| Authority claims | 60 |
-| Claimant modules (nodes) | 38 |
-| Import edges | 3865 |
-| Domains with duplicates | 7 (all) |
-| Circular import SCCs | 3 |
-| Critical graph findings | 5 |
-
-### Canonical authorities
-
-| Domain | Canonical |
-|--------|-----------|
-| execution | `backend.nexus_execution.execution_simulator_v1_1.AutonomousExecutionSimulatorV11` |
-| fill | `backend.nexus_execution.fill_engine.try_fill` |
-| cost | `backend.nexus_execution.cost_model.COST_MODEL_VERSION` |
-| risk | `backend.nexus_execution.risk_gates.RiskLimits` |
-| lifecycle | `backend.nexus_autonomy.session_state_machine` (Session scope) |
-| checkpoint | `backend.nexus_recovery.crash_recovery.recover_from_checkpoint` (Session recovery) |
-| provider_retry | `backend.nexus_provider.retry_policy` |
-
-### Domains with non-canonical claimants
-
-- **execution** (5): autonomy V1/V1.1 shims, paper + Binance testnet engines
-- **fill** (4): autonomy simulators/models, shadow `simulate_fill`
-- **cost** (3): strategy `cost_semantics`, demo `trade_geometry`, taxonomy audit
-- **risk** (5): product `risk_control_engine`, research/demo risk, autonomy shims
-- **lifecycle** (5): control-plane SM, demo SMs, qualification promotion SM
-- **checkpoint** (4): control-plane store, reflection v23/v10, edge-discovery helpers
-- **provider_retry** (4): edge-discovery transport, shadow HTTP, Stage4 breaker, research supervisor
+- Domains with duplicates: `['checkpoint', 'cost', 'execution', 'fill', 'lifecycle', 'provider_retry', 'risk']`
+- Authority claims: 62
+- Circular SCC count: 3
+- Critical graph findings: 5
 
 ## Critical findings
 
-1. **Fill duplication** — `nexus_autonomy.execution_simulator_v1_1` still embeds full fill policy (compat shim, not Session authority).
-2. **Cost contract divergence** — `COST_MODEL_VERSION` differs between execution (`founder-conservative-v1-1-2026-08-05`) and strategy (`NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1`).
-3. **Dual lifecycle vocabularies** — Session SM vs Private Control Plane SM share some names (`RUNNING`/`PAUSED`/`RECOVERING`/`FAILED_SAFE`) with incompatible full sets.
-4. **Parallel provider retry** — `nexus_edge_discovery.provider_transport_v23` implements local backoff instead of `nexus_provider.retry_policy`.
-5. **Circular import SCCs (3)** — execution package self-cycle; demo geometry pair; research features seed/registry.
+- **registry_critical_competitor**: {"kind": "registry_critical_competitor", "domain": "fill", "module": "backend.nexus_autonomy.execution_simulator_v1_1", "symbol": "AutonomousExecutionSimulatorV1_1", "notes": "Embedded fill policy duplicates fill_engine semantics.", "recommended_action": "migrate_callers"}
+- **registry_critical_competitor**: {"kind": "registry_critical_competitor", "domain": "cost", "module": "backend.nexus_strategy_engine.cost_semantics", "symbol": "COST_MODEL_VERSION", "notes": "Divergent COST_MODEL_VERSION string (NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1 vs founder-conservative-v1-1-*). Contract drift risk for strateg
+- **registry_critical_competitor**: {"kind": "registry_critical_competitor", "domain": "lifecycle", "module": "backend.nexus_private_control.state_machine", "symbol": "CANONICAL_STATES", "notes": "Founder control-plane lifecycle uses a different state vocabulary (IDLE/STARTING/.../KILLED) vs Session SM. Dual lifecycle authorities.", "
+- **registry_critical_competitor**: {"kind": "registry_critical_competitor", "domain": "provider_retry", "module": "backend.nexus_edge_discovery.provider_transport_v23", "symbol": "exponential_backoff_with_jitter", "notes": "Reflection V2.3 transport implements its own backoff/retry rather than importing backend.nexus_provider.retry_p
+- **circular_import_scc**: {"kind": "circular_import_scc", "severity": "high", "sccs": [["backend.nexus_execution", "backend.nexus_execution.execution_simulator_v1_1", "backend.nexus_execution.orchestrator_adapter_v1"], ["backend.nexus_demo_execution.geometry_event_sim", "backend.nexus_demo_execution.structural_geometry_quali
 
-## Blockers (5)
+## Blockers
 
-1. `COST_MODEL_VERSION_DIVERGENCE` (cost)
-2. `DUAL_LIFECYCLE_VOCABULARY` (lifecycle)
-3. `PARALLEL_RETRY_IMPLEMENTATION` (provider_retry)
-4. `MULTI_SCOPE_AUTHORITY` (lifecycle) — needs explicit adapter before delete waves
-5. `MULTI_SCOPE_AUTHORITY` (checkpoint) — session / control-plane / reflection schemas must not cross-resume
+- [critical] `COST_MODEL_VERSION_DIVERGENCE` domain=cost — Align strategy cost_semantics versioning with execution cost_model or explicitly namespace as research-proxy (not Session cost authority).
+- [critical] `DUAL_LIFECYCLE_VOCABULARY` domain=lifecycle — Keep scoped (session vs control-plane). Block any code that maps states by identical name without an explicit adapter contract.
+- [critical] `PARALLEL_RETRY_IMPLEMENTATION` domain=provider_retry — Import parse_retry_after / backoff_with_jitter from backend.nexus_provider.retry_policy; deprecate local copy.
+- [critical] `MULTI_SCOPE_AUTHORITY` domain=lifecycle — Domain lifecycle has multiple legitimate scoped authorities; requires explicit adapter contracts before deletion waves.
+- [critical] `MULTI_SCOPE_AUTHORITY` domain=checkpoint — Domain checkpoint has multiple legitimate scoped authorities; requires explicit adapter contracts before deletion waves.
 
-## Future removals (recommend only — no deletes)
+## Pass delta
 
-See `removal_recommendations.json`. Highest priority `future_remove` / `migrate_callers`:
-
-- `backend.nexus_autonomy.execution_simulator_v1` (+ fill/risk constants)
-- Migrate callers off `execution_simulator_v1_1` compat shim → `orchestrator_adapter_v1`
-- Align or namespace strategy `cost_semantics` vs execution `cost_model`
-- Point edge-discovery / Stage4 retry at `backend.nexus_provider`
-
-## How to re-run
-
-```bash
-python tools/architecture/run_authority_consolidation.py --passes 2
-python tools/architecture/ci_gate_duplicate_authorities.py
-python -m pytest tests/architecture -q
-```
+- Pass1 blockers: 5
+- Pass2 blockers: 5
+- CI gate passed: True
 
 ## Policy
 
-- Owned paths only: `backend/nexus_contracts/`, `tools/architecture/`, `tests/architecture/`, `artifacts/readiness/immutable/authority_consolidation_v1/`
-- No mass-delete of compatibility modules
-- No merge/deploy from this lane
-- Agents A–G paths untouched
+- No mass-delete of compatibility modules.
+- No merge/deploy from this lane.
+- Removals are recommendations only.

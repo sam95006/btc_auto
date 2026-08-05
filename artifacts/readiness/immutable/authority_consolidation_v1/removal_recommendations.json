@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-05T03:35:56Z",
+  "generated_at": "2026-08-05T03:56:54Z",
   "lane": "V11_H_AUTHORITY_CONSOLIDATION",
   "policy": {
     "delete_now_allowed": false,
@@ -529,6 +529,20 @@
         "symbol": "COST_MODEL_VERSION"
       },
       {
+        "authority_id": "private_core.execution.simulator_v1_1",
+        "delete_now": false,
+        "domain": "execution",
+        "module": "backend.nexus_autonomy.security_mutation_v11.constants",
+        "notes": "V11 security mutation red-team fixture constants only; must never become Session→Execution authority.",
+        "preconditions": [
+          "No deletion; periodic re-audit only"
+        ],
+        "recommended_action": "retain_compat",
+        "role": "fixture_tool",
+        "severity": "low",
+        "symbol": null
+      },
+      {
         "authority_id": "private_core.lifecycle.session_sm_v1_1",
         "delete_now": false,
         "domain": "lifecycle",
@@ -572,7 +586,7 @@
       }
     ]
   },
-  "recommendation_count": 37,
+  "recommendation_count": 38,
   "recommendations": [
     {
       "authority_id": "private_core.execution.simulator_v1_1",
@@ -1087,6 +1101,20 @@
       "role": "fixture_tool",
       "severity": "low",
       "symbol": "COST_MODEL_VERSION"
+    },
+    {
+      "authority_id": "private_core.execution.simulator_v1_1",
+      "delete_now": false,
+      "domain": "execution",
+      "module": "backend.nexus_autonomy.security_mutation_v11.constants",
+      "notes": "V11 security mutation red-team fixture constants only; must never become Session→Execution authority.",
+      "preconditions": [
+        "No deletion; periodic re-audit only"
+      ],
+      "recommended_action": "retain_compat",
+      "role": "fixture_tool",
+      "severity": "low",
+      "symbol": null
     },
     {
       "authority_id": "private_core.lifecycle.session_sm_v1_1",

@@ -130,7 +130,7 @@
       "severity": "high"
     }
   ],
-  "generated_at": "2026-08-05T03:35:41Z",
+  "generated_at": "2026-08-05T03:56:37Z",
   "lane": "V11_H_AUTHORITY_CONSOLIDATION",
   "note": "passed=false indicates contract drift blockers for consolidation readiness; Lane H does not auto-fix competitor modules.",
   "passed": false,

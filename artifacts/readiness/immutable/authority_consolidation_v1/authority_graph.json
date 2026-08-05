@@ -56,6 +56,15 @@
     },
     {
       "classification": "canonical_satellite",
+      "domain": "cost",
+      "lineno": 679,
+      "module": "backend.nexus_execution.microstructure_realism_v11.harness",
+      "path": "backend/nexus_execution/microstructure_realism_v11/harness.py",
+      "signature_kind": "func",
+      "symbol": "_cost_bridge_round_trip"
+    },
+    {
+      "classification": "canonical_satellite",
       "domain": "execution",
       "lineno": 38,
       "module": "backend.nexus_execution.orchestrator_adapter_v1",
@@ -188,6 +197,15 @@
       "path": "backend/nexus_autonomy/qualification_promotion_sm.py",
       "signature_kind": "class",
       "symbol": "PromotionStateMachine"
+    },
+    {
+      "classification": "fixture_tool",
+      "domain": "execution",
+      "lineno": 56,
+      "module": "backend.nexus_autonomy.security_mutation_v11.constants",
+      "path": "backend/nexus_autonomy/security_mutation_v11/constants.py",
+      "signature_kind": "assign",
+      "symbol": "EXECUTION_MODE"
     },
     {
       "classification": "canonical",
@@ -632,6 +650,15 @@
         "symbol": "compose_cost_bridge"
       },
       {
+        "classification": "canonical_satellite",
+        "domain": "cost",
+        "lineno": 679,
+        "module": "backend.nexus_execution.microstructure_realism_v11.harness",
+        "path": "backend/nexus_execution/microstructure_realism_v11/harness.py",
+        "signature_kind": "func",
+        "symbol": "_cost_bridge_round_trip"
+      },
+      {
         "classification": "fixture_tool",
         "domain": "cost",
         "lineno": 20,
@@ -722,6 +749,15 @@
         "path": "backend/nexus_autonomy/execution_simulator_v1_1.py",
         "signature_kind": "class",
         "symbol": "AutonomousExecutionSimulatorV1_1"
+      },
+      {
+        "classification": "fixture_tool",
+        "domain": "execution",
+        "lineno": 56,
+        "module": "backend.nexus_autonomy.security_mutation_v11.constants",
+        "path": "backend/nexus_autonomy/security_mutation_v11/constants.py",
+        "signature_kind": "assign",
+        "symbol": "EXECUTION_MODE"
       },
       {
         "classification": "legacy_product",
@@ -1243,11 +1279,12 @@
     },
     "cost": {
       "canonical_module": "backend.nexus_execution.cost_model",
-      "claimant_count": 4,
+      "claimant_count": 5,
       "claimant_modules": [
         "backend.nexus_demo_execution.trade_geometry",
         "backend.nexus_edge_discovery.taxonomy_audit",
         "backend.nexus_execution.cost_model",
+        "backend.nexus_execution.microstructure_realism_v11.harness",
         "backend.nexus_strategy_engine.cost_semantics"
       ],
       "duplicate_authority_signal": true,
@@ -1268,10 +1305,11 @@
     },
     "execution": {
       "canonical_module": "backend.nexus_execution.execution_simulator_v1_1",
-      "claimant_count": 8,
+      "claimant_count": 9,
       "claimant_modules": [
         "backend.nexus_autonomy.execution_simulator_v1",
         "backend.nexus_autonomy.execution_simulator_v1_1",
+        "backend.nexus_autonomy.security_mutation_v11.constants",
         "backend.nexus_execution.execution_simulator_v1_1",
         "backend.nexus_execution.orchestrator_adapter_v1",
         "backend.nexus_execution.security_boundary",
@@ -1288,6 +1326,10 @@
         {
           "classification": "compatibility_shim",
           "module": "backend.nexus_autonomy.execution_simulator_v1_1"
+        },
+        {
+          "classification": "fixture_tool",
+          "module": "backend.nexus_autonomy.security_mutation_v11.constants"
         },
         {
           "classification": "legacy_product",
@@ -1492,7 +1534,7 @@
       "severity": "high"
     }
   ],
-  "generated_at": "2026-08-05T03:35:41Z",
+  "generated_at": "2026-08-05T03:56:37Z",
   "import_edges": [
     {
       "kind": "from",
@@ -1511,6 +1553,36 @@
       "lineno": 28,
       "source": "backend.nexus_execution",
       "target": "backend.nexus_execution.orchestrator_adapter_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 16,
+      "source": "backend.nexus_execution.book_model_v11",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 18,
+      "source": "backend.nexus_execution.book_model_v11",
+      "target": "hashlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 19,
+      "source": "backend.nexus_execution.book_model_v11",
+      "target": "dataclasses"
+    },
+    {
+      "kind": "from",
+      "lineno": 20,
+      "source": "backend.nexus_execution.book_model_v11",
+      "target": "decimal"
+    },
+    {
+      "kind": "from",
+      "lineno": 21,
+      "source": "backend.nexus_execution.book_model_v11",
+      "target": "typing"
     },
     {
       "kind": "from",
@@ -1787,6 +1859,252 @@
       "lineno": 14,
       "source": "backend.nexus_execution.instrument",
       "target": "backend.nexus_execution.contracts"
+    },
+    {
+      "kind": "from",
+      "lineno": 13,
+      "source": "backend.nexus_execution.microstructure_realism_v11",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 15,
+      "source": "backend.nexus_execution.microstructure_realism_v11",
+      "target": "json"
+    },
+    {
+      "kind": "from",
+      "lineno": 16,
+      "source": "backend.nexus_execution.microstructure_realism_v11",
+      "target": "datetime"
+    },
+    {
+      "kind": "from",
+      "lineno": 17,
+      "source": "backend.nexus_execution.microstructure_realism_v11",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 18,
+      "source": "backend.nexus_execution.microstructure_realism_v11",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 20,
+      "source": "backend.nexus_execution.microstructure_realism_v11",
+      "target": "backend.nexus_execution"
+    },
+    {
+      "kind": "from",
+      "lineno": 21,
+      "source": "backend.nexus_execution.microstructure_realism_v11",
+      "target": "backend.nexus_execution.book_model_v11"
+    },
+    {
+      "kind": "from",
+      "lineno": 22,
+      "source": "backend.nexus_execution.microstructure_realism_v11",
+      "target": "backend.nexus_execution.microstructure_realism_v11.adapter"
+    },
+    {
+      "kind": "from",
+      "lineno": 28,
+      "source": "backend.nexus_execution.microstructure_realism_v11",
+      "target": "backend.nexus_execution.microstructure_realism_v11.config"
+    },
+    {
+      "kind": "from",
+      "lineno": 33,
+      "source": "backend.nexus_execution.microstructure_realism_v11",
+      "target": "backend.nexus_execution.microstructure_realism_v11.harness"
+    },
+    {
+      "kind": "from",
+      "lineno": 37,
+      "source": "backend.nexus_execution.microstructure_realism_v11",
+      "target": "backend.nexus_execution.microstructure_realism_v11.scenarios"
+    },
+    {
+      "kind": "from",
+      "lineno": 8,
+      "source": "backend.nexus_execution.microstructure_realism_v11.adapter",
+      "target": "__future__"
+    },
+    {
+      "kind": "from",
+      "lineno": 10,
+      "source": "backend.nexus_execution.microstructure_realism_v11.adapter",
+      "target": "decimal"
+    },
+    {
+      "kind": "from",
+      "lineno": 11,
+      "source": "backend.nexus_execution.microstructure_realism_v11.adapter",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 13,
+      "source": "backend.nexus_execution.microstructure_realism_v11.adapter",
+      "target": "backend.nexus_execution.book_model_v11"
+    },
+    {
+      "kind": "from",
+      "lineno": 19,
+      "source": "backend.nexus_execution.microstructure_realism_v11.adapter",
+      "target": "backend.nexus_execution.fill_engine"
+    },
+    {
+      "kind": "from",
+      "lineno": 20,
+      "source": "backend.nexus_execution.microstructure_realism_v11.adapter",
+      "target": "backend.nexus_execution.orchestrator_adapter_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 27,
+      "source": "backend.nexus_execution.microstructure_realism_v11.adapter",
+      "target": "backend.nexus_execution.execution_simulator_v1_1"
+    },
+    {
+      "kind": "from",
+      "lineno": 9,
+      "source": "backend.nexus_execution.microstructure_realism_v11.config",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 11,
+      "source": "backend.nexus_execution.microstructure_realism_v11.config",
+      "target": "os"
+    },
+    {
+      "kind": "from",
+      "lineno": 12,
+      "source": "backend.nexus_execution.microstructure_realism_v11.config",
+      "target": "dataclasses"
+    },
+    {
+      "kind": "from",
+      "lineno": 16,
+      "source": "backend.nexus_execution.microstructure_realism_v11.harness",
+      "target": "__future__"
+    },
+    {
+      "kind": "from",
+      "lineno": 18,
+      "source": "backend.nexus_execution.microstructure_realism_v11.harness",
+      "target": "dataclasses"
+    },
+    {
+      "kind": "from",
+      "lineno": 19,
+      "source": "backend.nexus_execution.microstructure_realism_v11.harness",
+      "target": "datetime"
+    },
+    {
+      "kind": "from",
+      "lineno": 20,
+      "source": "backend.nexus_execution.microstructure_realism_v11.harness",
+      "target": "decimal"
+    },
+    {
+      "kind": "from",
+      "lineno": 21,
+      "source": "backend.nexus_execution.microstructure_realism_v11.harness",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 23,
+      "source": "backend.nexus_execution.microstructure_realism_v11.harness",
+      "target": "backend.nexus_execution"
+    },
+    {
+      "kind": "from",
+      "lineno": 24,
+      "source": "backend.nexus_execution.microstructure_realism_v11.harness",
+      "target": "backend.nexus_execution.book_model_v11"
+    },
+    {
+      "kind": "from",
+      "lineno": 38,
+      "source": "backend.nexus_execution.microstructure_realism_v11.harness",
+      "target": "backend.nexus_execution.execution_simulator_v1_1"
+    },
+    {
+      "kind": "from",
+      "lineno": 39,
+      "source": "backend.nexus_execution.microstructure_realism_v11.harness",
+      "target": "backend.nexus_execution.instrument"
+    },
+    {
+      "kind": "from",
+      "lineno": 40,
+      "source": "backend.nexus_execution.microstructure_realism_v11.harness",
+      "target": "backend.nexus_execution.microstructure_realism_v11.adapter"
+    },
+    {
+      "kind": "from",
+      "lineno": 46,
+      "source": "backend.nexus_execution.microstructure_realism_v11.harness",
+      "target": "backend.nexus_execution.microstructure_realism_v11.config"
+    },
+    {
+      "kind": "from",
+      "lineno": 47,
+      "source": "backend.nexus_execution.microstructure_realism_v11.harness",
+      "target": "backend.nexus_execution.microstructure_realism_v11.latency"
+    },
+    {
+      "kind": "from",
+      "lineno": 52,
+      "source": "backend.nexus_execution.microstructure_realism_v11.harness",
+      "target": "backend.nexus_execution.microstructure_realism_v11.scenarios"
+    },
+    {
+      "kind": "from",
+      "lineno": 255,
+      "source": "backend.nexus_execution.microstructure_realism_v11.harness",
+      "target": "backend.nexus_execution.book_model_v11"
+    },
+    {
+      "kind": "from",
+      "lineno": 6,
+      "source": "backend.nexus_execution.microstructure_realism_v11.latency",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 8,
+      "source": "backend.nexus_execution.microstructure_realism_v11.latency",
+      "target": "hashlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 9,
+      "source": "backend.nexus_execution.microstructure_realism_v11.latency",
+      "target": "dataclasses"
+    },
+    {
+      "kind": "from",
+      "lineno": 10,
+      "source": "backend.nexus_execution.microstructure_realism_v11.latency",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 2,
+      "source": "backend.nexus_execution.microstructure_realism_v11.scenarios",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 4,
+      "source": "backend.nexus_execution.microstructure_realism_v11.scenarios",
+      "target": "random"
     },
     {
       "kind": "from",
@@ -3092,6 +3410,492 @@
     },
     {
       "kind": "from",
+      "lineno": 6,
+      "source": "backend.nexus_autonomy.security_mutation_v11",
+      "target": "__future__"
+    },
+    {
+      "kind": "from",
+      "lineno": 8,
+      "source": "backend.nexus_autonomy.security_mutation_v11",
+      "target": "backend.nexus_autonomy.security_mutation_v11.redteam"
+    },
+    {
+      "kind": "from",
+      "lineno": 2,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 4,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "hashlib"
+    },
+    {
+      "kind": "import",
+      "lineno": 5,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "json"
+    },
+    {
+      "kind": "import",
+      "lineno": 6,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "threading"
+    },
+    {
+      "kind": "from",
+      "lineno": 7,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 8,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 10,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "backend.nexus_autonomy.security_exceptions_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 16,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "backend.nexus_autonomy.security_import_graph_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 17,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "backend.nexus_autonomy.security_network_traps_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 18,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "backend.nexus_autonomy.security_persistence_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 24,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "backend.nexus_autonomy.security_public_private_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 25,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "backend.nexus_autonomy.security_write_traps_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 26,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "backend.nexus_autonomy.security_mutation_v11.fixtures"
+    },
+    {
+      "kind": "from",
+      "lineno": 31,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "backend.nexus_autonomy.security_mutation_v11.models"
+    },
+    {
+      "kind": "from",
+      "lineno": 270,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "backend.nexus_autonomy.execution_simulator_v1_1"
+    },
+    {
+      "kind": "from",
+      "lineno": 344,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "backend.nexus_autonomy.security_mutation_v11.constants"
+    },
+    {
+      "kind": "from",
+      "lineno": 345,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "backend.nexus_autonomy.security_mutation_v11.mutations"
+    },
+    {
+      "kind": "import",
+      "lineno": 151,
+      "source": "backend.nexus_autonomy.security_mutation_v11.adversarial",
+      "target": "urllib.request"
+    },
+    {
+      "kind": "from",
+      "lineno": 2,
+      "source": "backend.nexus_autonomy.security_mutation_v11.campaign",
+      "target": "__future__"
+    },
+    {
+      "kind": "from",
+      "lineno": 4,
+      "source": "backend.nexus_autonomy.security_mutation_v11.campaign",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 5,
+      "source": "backend.nexus_autonomy.security_mutation_v11.campaign",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 7,
+      "source": "backend.nexus_autonomy.security_mutation_v11.campaign",
+      "target": "backend.nexus_autonomy.security_mutation_v11.constants"
+    },
+    {
+      "kind": "from",
+      "lineno": 8,
+      "source": "backend.nexus_autonomy.security_mutation_v11.campaign",
+      "target": "backend.nexus_autonomy.security_mutation_v11.models"
+    },
+    {
+      "kind": "from",
+      "lineno": 9,
+      "source": "backend.nexus_autonomy.security_mutation_v11.campaign",
+      "target": "backend.nexus_autonomy.security_mutation_v11.mutations"
+    },
+    {
+      "kind": "from",
+      "lineno": 14,
+      "source": "backend.nexus_autonomy.security_mutation_v11.campaign",
+      "target": "backend.nexus_autonomy.security_mutation_v11.subjects"
+    },
+    {
+      "kind": "from",
+      "lineno": 2,
+      "source": "backend.nexus_autonomy.security_mutation_v11.constants",
+      "target": "__future__"
+    },
+    {
+      "kind": "from",
+      "lineno": 2,
+      "source": "backend.nexus_autonomy.security_mutation_v11.fixtures",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 4,
+      "source": "backend.nexus_autonomy.security_mutation_v11.fixtures",
+      "target": "json"
+    },
+    {
+      "kind": "import",
+      "lineno": 5,
+      "source": "backend.nexus_autonomy.security_mutation_v11.fixtures",
+      "target": "random"
+    },
+    {
+      "kind": "from",
+      "lineno": 6,
+      "source": "backend.nexus_autonomy.security_mutation_v11.fixtures",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 7,
+      "source": "backend.nexus_autonomy.security_mutation_v11.fixtures",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 2,
+      "source": "backend.nexus_autonomy.security_mutation_v11.models",
+      "target": "__future__"
+    },
+    {
+      "kind": "from",
+      "lineno": 4,
+      "source": "backend.nexus_autonomy.security_mutation_v11.models",
+      "target": "dataclasses"
+    },
+    {
+      "kind": "from",
+      "lineno": 5,
+      "source": "backend.nexus_autonomy.security_mutation_v11.models",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 6,
+      "source": "backend.nexus_autonomy.security_mutation_v11.mutations",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 8,
+      "source": "backend.nexus_autonomy.security_mutation_v11.mutations",
+      "target": "json"
+    },
+    {
+      "kind": "from",
+      "lineno": 9,
+      "source": "backend.nexus_autonomy.security_mutation_v11.mutations",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 10,
+      "source": "backend.nexus_autonomy.security_mutation_v11.mutations",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 12,
+      "source": "backend.nexus_autonomy.security_mutation_v11.mutations",
+      "target": "backend.nexus_autonomy.security_credential_boundary_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 13,
+      "source": "backend.nexus_autonomy.security_mutation_v11.mutations",
+      "target": "backend.nexus_autonomy.security_exceptions_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 14,
+      "source": "backend.nexus_autonomy.security_mutation_v11.mutations",
+      "target": "backend.nexus_autonomy.security_persistence_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 15,
+      "source": "backend.nexus_autonomy.security_mutation_v11.mutations",
+      "target": "backend.nexus_autonomy.security_mutation_v11.subjects"
+    },
+    {
+      "kind": "from",
+      "lineno": 157,
+      "source": "backend.nexus_autonomy.security_mutation_v11.mutations",
+      "target": "backend.nexus_autonomy.execution_simulator_v1_1"
+    },
+    {
+      "kind": "from",
+      "lineno": 177,
+      "source": "backend.nexus_autonomy.security_mutation_v11.mutations",
+      "target": "backend.nexus_autonomy.runtime_durability_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 2,
+      "source": "backend.nexus_autonomy.security_mutation_v11.redteam",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 4,
+      "source": "backend.nexus_autonomy.security_mutation_v11.redteam",
+      "target": "json"
+    },
+    {
+      "kind": "import",
+      "lineno": 5,
+      "source": "backend.nexus_autonomy.security_mutation_v11.redteam",
+      "target": "tempfile"
+    },
+    {
+      "kind": "from",
+      "lineno": 6,
+      "source": "backend.nexus_autonomy.security_mutation_v11.redteam",
+      "target": "datetime"
+    },
+    {
+      "kind": "from",
+      "lineno": 7,
+      "source": "backend.nexus_autonomy.security_mutation_v11.redteam",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 8,
+      "source": "backend.nexus_autonomy.security_mutation_v11.redteam",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 10,
+      "source": "backend.nexus_autonomy.security_mutation_v11.redteam",
+      "target": "backend.nexus_autonomy.security_mutation_v11.adversarial"
+    },
+    {
+      "kind": "from",
+      "lineno": 14,
+      "source": "backend.nexus_autonomy.security_mutation_v11.redteam",
+      "target": "backend.nexus_autonomy.security_mutation_v11.campaign"
+    },
+    {
+      "kind": "from",
+      "lineno": 15,
+      "source": "backend.nexus_autonomy.security_mutation_v11.redteam",
+      "target": "backend.nexus_autonomy.security_mutation_v11.constants"
+    },
+    {
+      "kind": "from",
+      "lineno": 30,
+      "source": "backend.nexus_autonomy.security_mutation_v11.redteam",
+      "target": "backend.nexus_autonomy.security_mutation_v11.models"
+    },
+    {
+      "kind": "from",
+      "lineno": 31,
+      "source": "backend.nexus_autonomy.security_mutation_v11.redteam",
+      "target": "backend.nexus_autonomy.security_mutation_v11.residuals"
+    },
+    {
+      "kind": "from",
+      "lineno": 32,
+      "source": "backend.nexus_autonomy.security_mutation_v11.redteam",
+      "target": "backend.nexus_autonomy.security_persistence_v1"
+    },
+    {
+      "kind": "import",
+      "lineno": 249,
+      "source": "backend.nexus_autonomy.security_mutation_v11.redteam",
+      "target": "shutil"
+    },
+    {
+      "kind": "from",
+      "lineno": 6,
+      "source": "backend.nexus_autonomy.security_mutation_v11.residuals",
+      "target": "__future__"
+    },
+    {
+      "kind": "from",
+      "lineno": 8,
+      "source": "backend.nexus_autonomy.security_mutation_v11.residuals",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 10,
+      "source": "backend.nexus_autonomy.security_mutation_v11.residuals",
+      "target": "backend.nexus_autonomy.security_mutation_v11.models"
+    },
+    {
+      "kind": "from",
+      "lineno": 6,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 8,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "hashlib"
+    },
+    {
+      "kind": "import",
+      "lineno": 9,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "json"
+    },
+    {
+      "kind": "from",
+      "lineno": 10,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "dataclasses"
+    },
+    {
+      "kind": "from",
+      "lineno": 11,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 12,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 14,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "backend.nexus_autonomy.security_credential_boundary_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 21,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "backend.nexus_autonomy.security_exceptions_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 27,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "backend.nexus_autonomy.security_import_graph_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 28,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "backend.nexus_autonomy.security_network_traps_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 29,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "backend.nexus_autonomy.security_persistence_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 36,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "backend.nexus_autonomy.security_public_private_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 40,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "backend.nexus_autonomy.security_write_traps_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 198,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "backend.nexus_autonomy.execution_simulator_v1_1"
+    },
+    {
+      "kind": "from",
+      "lineno": 220,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "backend.nexus_autonomy.execution_simulator_v1_1"
+    },
+    {
+      "kind": "from",
+      "lineno": 231,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "backend.nexus_autonomy.private_event_ledger_v1"
+    },
+    {
+      "kind": "from",
+      "lineno": 261,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "backend.nexus_autonomy.runtime_durability_v1"
+    },
+    {
+      "kind": "import",
+      "lineno": 293,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "urllib.request"
+    },
+    {
+      "kind": "from",
+      "lineno": 640,
+      "source": "backend.nexus_autonomy.security_mutation_v11.subjects",
+      "target": "backend.nexus_autonomy.security_mutation_v11.constants"
+    },
+    {
+      "kind": "from",
       "lineno": 2,
       "source": "backend.nexus_autonomy.security_network_traps_v1",
       "target": "__future__"
@@ -4059,6 +4863,150 @@
     {
       "kind": "from",
       "lineno": 6,
+      "source": "backend.nexus_recovery.dr_v2",
+      "target": "backend.nexus_recovery.dr_v2.recovery"
+    },
+    {
+      "kind": "from",
+      "lineno": 10,
+      "source": "backend.nexus_recovery.dr_v2",
+      "target": "backend.nexus_recovery.dr_v2.matrix"
+    },
+    {
+      "kind": "from",
+      "lineno": 2,
+      "source": "backend.nexus_recovery.dr_v2.matrix",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 4,
+      "source": "backend.nexus_recovery.dr_v2.matrix",
+      "target": "shutil"
+    },
+    {
+      "kind": "import",
+      "lineno": 5,
+      "source": "backend.nexus_recovery.dr_v2.matrix",
+      "target": "tempfile"
+    },
+    {
+      "kind": "import",
+      "lineno": 6,
+      "source": "backend.nexus_recovery.dr_v2.matrix",
+      "target": "threading"
+    },
+    {
+      "kind": "import",
+      "lineno": 7,
+      "source": "backend.nexus_recovery.dr_v2.matrix",
+      "target": "time"
+    },
+    {
+      "kind": "from",
+      "lineno": 8,
+      "source": "backend.nexus_recovery.dr_v2.matrix",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 9,
+      "source": "backend.nexus_recovery.dr_v2.matrix",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 11,
+      "source": "backend.nexus_recovery.dr_v2.matrix",
+      "target": "backend.nexus_recovery.dr_v2.recovery"
+    },
+    {
+      "kind": "from",
+      "lineno": 12,
+      "source": "backend.nexus_recovery.dr_v2.matrix",
+      "target": "backend.nexus_runtime.durability_v2.constants"
+    },
+    {
+      "kind": "from",
+      "lineno": 21,
+      "source": "backend.nexus_recovery.dr_v2.matrix",
+      "target": "backend.nexus_runtime.durability_v2.faults"
+    },
+    {
+      "kind": "from",
+      "lineno": 32,
+      "source": "backend.nexus_recovery.dr_v2.matrix",
+      "target": "backend.nexus_runtime.durability_v2.ledger"
+    },
+    {
+      "kind": "from",
+      "lineno": 2,
+      "source": "backend.nexus_recovery.dr_v2.recovery",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 4,
+      "source": "backend.nexus_recovery.dr_v2.recovery",
+      "target": "json"
+    },
+    {
+      "kind": "import",
+      "lineno": 5,
+      "source": "backend.nexus_recovery.dr_v2.recovery",
+      "target": "threading"
+    },
+    {
+      "kind": "import",
+      "lineno": 6,
+      "source": "backend.nexus_recovery.dr_v2.recovery",
+      "target": "time"
+    },
+    {
+      "kind": "from",
+      "lineno": 7,
+      "source": "backend.nexus_recovery.dr_v2.recovery",
+      "target": "dataclasses"
+    },
+    {
+      "kind": "from",
+      "lineno": 8,
+      "source": "backend.nexus_recovery.dr_v2.recovery",
+      "target": "datetime"
+    },
+    {
+      "kind": "from",
+      "lineno": 9,
+      "source": "backend.nexus_recovery.dr_v2.recovery",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 10,
+      "source": "backend.nexus_recovery.dr_v2.recovery",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 12,
+      "source": "backend.nexus_recovery.dr_v2.recovery",
+      "target": "backend.nexus_runtime.durability_v2.constants"
+    },
+    {
+      "kind": "from",
+      "lineno": 19,
+      "source": "backend.nexus_recovery.dr_v2.recovery",
+      "target": "backend.nexus_runtime.durability_v2.engine"
+    },
+    {
+      "kind": "from",
+      "lineno": 20,
+      "source": "backend.nexus_recovery.dr_v2.recovery",
+      "target": "backend.nexus_runtime.durability_v2.ledger"
+    },
+    {
+      "kind": "from",
+      "lineno": 6,
       "source": "backend.nexus_recovery.invariants",
       "target": "__future__"
     },
@@ -4106,6 +5054,252 @@
     },
     {
       "kind": "from",
+      "lineno": 11,
+      "source": "backend.nexus_runtime.durability_v2",
+      "target": "backend.nexus_runtime.durability_v2.ledger"
+    },
+    {
+      "kind": "from",
+      "lineno": 15,
+      "source": "backend.nexus_runtime.durability_v2",
+      "target": "backend.nexus_runtime.durability_v2.engine"
+    },
+    {
+      "kind": "from",
+      "lineno": 19,
+      "source": "backend.nexus_runtime.durability_v2",
+      "target": "backend.nexus_runtime.durability_v2.metrics"
+    },
+    {
+      "kind": "from",
+      "lineno": 23,
+      "source": "backend.nexus_runtime.durability_v2",
+      "target": "backend.nexus_runtime.durability_v2.constants"
+    },
+    {
+      "kind": "from",
+      "lineno": 2,
+      "source": "backend.nexus_runtime.durability_v2.constants",
+      "target": "__future__"
+    },
+    {
+      "kind": "from",
+      "lineno": 2,
+      "source": "backend.nexus_runtime.durability_v2.engine",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 4,
+      "source": "backend.nexus_runtime.durability_v2.engine",
+      "target": "gc"
+    },
+    {
+      "kind": "import",
+      "lineno": 5,
+      "source": "backend.nexus_runtime.durability_v2.engine",
+      "target": "hashlib"
+    },
+    {
+      "kind": "import",
+      "lineno": 6,
+      "source": "backend.nexus_runtime.durability_v2.engine",
+      "target": "json"
+    },
+    {
+      "kind": "import",
+      "lineno": 7,
+      "source": "backend.nexus_runtime.durability_v2.engine",
+      "target": "os"
+    },
+    {
+      "kind": "import",
+      "lineno": 8,
+      "source": "backend.nexus_runtime.durability_v2.engine",
+      "target": "shutil"
+    },
+    {
+      "kind": "import",
+      "lineno": 9,
+      "source": "backend.nexus_runtime.durability_v2.engine",
+      "target": "time"
+    },
+    {
+      "kind": "from",
+      "lineno": 10,
+      "source": "backend.nexus_runtime.durability_v2.engine",
+      "target": "dataclasses"
+    },
+    {
+      "kind": "from",
+      "lineno": 11,
+      "source": "backend.nexus_runtime.durability_v2.engine",
+      "target": "datetime"
+    },
+    {
+      "kind": "from",
+      "lineno": 12,
+      "source": "backend.nexus_runtime.durability_v2.engine",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 13,
+      "source": "backend.nexus_runtime.durability_v2.engine",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 15,
+      "source": "backend.nexus_runtime.durability_v2.engine",
+      "target": "backend.nexus_runtime.durability_v2.constants"
+    },
+    {
+      "kind": "from",
+      "lineno": 24,
+      "source": "backend.nexus_runtime.durability_v2.engine",
+      "target": "backend.nexus_runtime.durability_v2.ledger"
+    },
+    {
+      "kind": "from",
+      "lineno": 25,
+      "source": "backend.nexus_runtime.durability_v2.engine",
+      "target": "backend.nexus_runtime.durability_v2.metrics"
+    },
+    {
+      "kind": "from",
+      "lineno": 2,
+      "source": "backend.nexus_runtime.durability_v2.faults",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 4,
+      "source": "backend.nexus_runtime.durability_v2.faults",
+      "target": "json"
+    },
+    {
+      "kind": "import",
+      "lineno": 5,
+      "source": "backend.nexus_runtime.durability_v2.faults",
+      "target": "os"
+    },
+    {
+      "kind": "import",
+      "lineno": 6,
+      "source": "backend.nexus_runtime.durability_v2.faults",
+      "target": "shutil"
+    },
+    {
+      "kind": "from",
+      "lineno": 7,
+      "source": "backend.nexus_runtime.durability_v2.faults",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 8,
+      "source": "backend.nexus_runtime.durability_v2.faults",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 10,
+      "source": "backend.nexus_runtime.durability_v2.faults",
+      "target": "backend.nexus_runtime.durability_v2.engine"
+    },
+    {
+      "kind": "from",
+      "lineno": 11,
+      "source": "backend.nexus_runtime.durability_v2.faults",
+      "target": "backend.nexus_runtime.durability_v2.ledger"
+    },
+    {
+      "kind": "from",
+      "lineno": 6,
+      "source": "backend.nexus_runtime.durability_v2.ledger",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 8,
+      "source": "backend.nexus_runtime.durability_v2.ledger",
+      "target": "hashlib"
+    },
+    {
+      "kind": "import",
+      "lineno": 9,
+      "source": "backend.nexus_runtime.durability_v2.ledger",
+      "target": "json"
+    },
+    {
+      "kind": "import",
+      "lineno": 10,
+      "source": "backend.nexus_runtime.durability_v2.ledger",
+      "target": "sqlite3"
+    },
+    {
+      "kind": "import",
+      "lineno": 11,
+      "source": "backend.nexus_runtime.durability_v2.ledger",
+      "target": "threading"
+    },
+    {
+      "kind": "import",
+      "lineno": 12,
+      "source": "backend.nexus_runtime.durability_v2.ledger",
+      "target": "time"
+    },
+    {
+      "kind": "from",
+      "lineno": 13,
+      "source": "backend.nexus_runtime.durability_v2.ledger",
+      "target": "dataclasses"
+    },
+    {
+      "kind": "from",
+      "lineno": 14,
+      "source": "backend.nexus_runtime.durability_v2.ledger",
+      "target": "datetime"
+    },
+    {
+      "kind": "from",
+      "lineno": 15,
+      "source": "backend.nexus_runtime.durability_v2.ledger",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 16,
+      "source": "backend.nexus_runtime.durability_v2.ledger",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 18,
+      "source": "backend.nexus_runtime.durability_v2.ledger",
+      "target": "backend.nexus_runtime.durability_v2.constants"
+    },
+    {
+      "kind": "from",
+      "lineno": 2,
+      "source": "backend.nexus_runtime.durability_v2.metrics",
+      "target": "__future__"
+    },
+    {
+      "kind": "from",
+      "lineno": 4,
+      "source": "backend.nexus_runtime.durability_v2.metrics",
+      "target": "dataclasses"
+    },
+    {
+      "kind": "from",
+      "lineno": 5,
+      "source": "backend.nexus_runtime.durability_v2.metrics",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
       "lineno": 8,
       "source": "backend.nexus_runtime.process_guard",
       "target": "__future__"
@@ -4150,6 +5344,96 @@
       "kind": "from",
       "lineno": 20,
       "source": "backend.nexus_reflection",
+      "target": "backend.nexus_reflection.terminal_eval"
+    },
+    {
+      "kind": "from",
+      "lineno": 2,
+      "source": "backend.nexus_reflection.adjudication_v11",
+      "target": "__future__"
+    },
+    {
+      "kind": "from",
+      "lineno": 4,
+      "source": "backend.nexus_reflection.adjudication_v11",
+      "target": "backend.nexus_reflection.adjudication_v11.core"
+    },
+    {
+      "kind": "from",
+      "lineno": 7,
+      "source": "backend.nexus_reflection.adjudication_v11.core",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 9,
+      "source": "backend.nexus_reflection.adjudication_v11.core",
+      "target": "hashlib"
+    },
+    {
+      "kind": "import",
+      "lineno": 10,
+      "source": "backend.nexus_reflection.adjudication_v11.core",
+      "target": "json"
+    },
+    {
+      "kind": "from",
+      "lineno": 11,
+      "source": "backend.nexus_reflection.adjudication_v11.core",
+      "target": "datetime"
+    },
+    {
+      "kind": "from",
+      "lineno": 12,
+      "source": "backend.nexus_reflection.adjudication_v11.core",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 14,
+      "source": "backend.nexus_reflection.adjudication_v11.core",
+      "target": "backend.nexus_ai.idempotency"
+    },
+    {
+      "kind": "from",
+      "lineno": 15,
+      "source": "backend.nexus_reflection.adjudication_v11.core",
+      "target": "backend.nexus_ai.profiles"
+    },
+    {
+      "kind": "from",
+      "lineno": 22,
+      "source": "backend.nexus_reflection.adjudication_v11.core",
+      "target": "backend.nexus_ai.scheduler"
+    },
+    {
+      "kind": "from",
+      "lineno": 23,
+      "source": "backend.nexus_reflection.adjudication_v11.core",
+      "target": "backend.nexus_edge_discovery.blind_reflection_v23"
+    },
+    {
+      "kind": "from",
+      "lineno": 27,
+      "source": "backend.nexus_reflection.adjudication_v11.core",
+      "target": "backend.nexus_provider.retry_policy"
+    },
+    {
+      "kind": "from",
+      "lineno": 28,
+      "source": "backend.nexus_reflection.adjudication_v11.core",
+      "target": "backend.nexus_provider.transport_status"
+    },
+    {
+      "kind": "from",
+      "lineno": 31,
+      "source": "backend.nexus_reflection.adjudication_v11.core",
+      "target": "backend.nexus_reflection.disagreement"
+    },
+    {
+      "kind": "from",
+      "lineno": 36,
+      "source": "backend.nexus_reflection.adjudication_v11.core",
       "target": "backend.nexus_reflection.terminal_eval"
     },
     {
@@ -4264,6 +5548,18 @@
       "kind": "from",
       "lineno": 4,
       "source": "backend.nexus_reflection.lesson_gate",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 2,
+      "source": "backend.nexus_reflection.lesson_gate_v11",
+      "target": "__future__"
+    },
+    {
+      "kind": "from",
+      "lineno": 4,
+      "source": "backend.nexus_reflection.lesson_gate_v11",
       "target": "typing"
     },
     {
@@ -20174,6 +21470,78 @@
     },
     {
       "kind": "from",
+      "lineno": 9,
+      "source": "tools.research.run_decision_lifecycle_v11",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 11,
+      "source": "tools.research.run_decision_lifecycle_v11",
+      "target": "json"
+    },
+    {
+      "kind": "import",
+      "lineno": 12,
+      "source": "tools.research.run_decision_lifecycle_v11",
+      "target": "re"
+    },
+    {
+      "kind": "import",
+      "lineno": 13,
+      "source": "tools.research.run_decision_lifecycle_v11",
+      "target": "sys"
+    },
+    {
+      "kind": "import",
+      "lineno": 14,
+      "source": "tools.research.run_decision_lifecycle_v11",
+      "target": "tempfile"
+    },
+    {
+      "kind": "from",
+      "lineno": 15,
+      "source": "tools.research.run_decision_lifecycle_v11",
+      "target": "datetime"
+    },
+    {
+      "kind": "from",
+      "lineno": 16,
+      "source": "tools.research.run_decision_lifecycle_v11",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 17,
+      "source": "tools.research.run_decision_lifecycle_v11",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 87,
+      "source": "tools.research.run_decision_lifecycle_v11",
+      "target": "backend.nexus_decision"
+    },
+    {
+      "kind": "from",
+      "lineno": 88,
+      "source": "tools.research.run_decision_lifecycle_v11",
+      "target": "backend.nexus_decision.evidence"
+    },
+    {
+      "kind": "from",
+      "lineno": 296,
+      "source": "tools.research.run_decision_lifecycle_v11",
+      "target": "backend.nexus_decision.decision_object"
+    },
+    {
+      "kind": "from",
+      "lineno": 297,
+      "source": "tools.research.run_decision_lifecycle_v11",
+      "target": "backend.nexus_decision.state_machine"
+    },
+    {
+      "kind": "from",
       "lineno": 6,
       "source": "tools.research.run_dynamic_universe_ai_learning_h5_v1",
       "target": "__future__"
@@ -20483,6 +21851,54 @@
       "lineno": 13,
       "source": "tools.research.run_edge_research_v3",
       "target": "backend.nexus_demo_execution.microstructure_history"
+    },
+    {
+      "kind": "from",
+      "lineno": 14,
+      "source": "tools.research.run_execution_microstructure_realism_v11",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 16,
+      "source": "tools.research.run_execution_microstructure_realism_v11",
+      "target": "json"
+    },
+    {
+      "kind": "import",
+      "lineno": 17,
+      "source": "tools.research.run_execution_microstructure_realism_v11",
+      "target": "os"
+    },
+    {
+      "kind": "import",
+      "lineno": 18,
+      "source": "tools.research.run_execution_microstructure_realism_v11",
+      "target": "re"
+    },
+    {
+      "kind": "import",
+      "lineno": 19,
+      "source": "tools.research.run_execution_microstructure_realism_v11",
+      "target": "sys"
+    },
+    {
+      "kind": "from",
+      "lineno": 20,
+      "source": "tools.research.run_execution_microstructure_realism_v11",
+      "target": "datetime"
+    },
+    {
+      "kind": "from",
+      "lineno": 21,
+      "source": "tools.research.run_execution_microstructure_realism_v11",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 91,
+      "source": "tools.research.run_execution_microstructure_realism_v11",
+      "target": "backend.nexus_execution.microstructure_realism_v11"
     },
     {
       "kind": "from",
@@ -21302,6 +22718,54 @@
     },
     {
       "kind": "from",
+      "lineno": 7,
+      "source": "tools.research.run_microstructure_integrity_recovery_v11",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 9,
+      "source": "tools.research.run_microstructure_integrity_recovery_v11",
+      "target": "argparse"
+    },
+    {
+      "kind": "import",
+      "lineno": 10,
+      "source": "tools.research.run_microstructure_integrity_recovery_v11",
+      "target": "json"
+    },
+    {
+      "kind": "import",
+      "lineno": 11,
+      "source": "tools.research.run_microstructure_integrity_recovery_v11",
+      "target": "os"
+    },
+    {
+      "kind": "import",
+      "lineno": 12,
+      "source": "tools.research.run_microstructure_integrity_recovery_v11",
+      "target": "re"
+    },
+    {
+      "kind": "import",
+      "lineno": 13,
+      "source": "tools.research.run_microstructure_integrity_recovery_v11",
+      "target": "sys"
+    },
+    {
+      "kind": "from",
+      "lineno": 14,
+      "source": "tools.research.run_microstructure_integrity_recovery_v11",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 80,
+      "source": "tools.research.run_microstructure_integrity_recovery_v11",
+      "target": "backend.nexus_microstructure.integrity_recovery_v11.orchestrator"
+    },
+    {
+      "kind": "from",
       "lineno": 8,
       "source": "tools.research.run_microstructure_operations_v10",
       "target": "__future__"
@@ -21395,6 +22859,48 @@
       "lineno": 34,
       "source": "tools.research.run_oos_risk_audit",
       "target": "time"
+    },
+    {
+      "kind": "from",
+      "lineno": 7,
+      "source": "tools.research.run_point_in_time_qualification_v11",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 9,
+      "source": "tools.research.run_point_in_time_qualification_v11",
+      "target": "argparse"
+    },
+    {
+      "kind": "import",
+      "lineno": 10,
+      "source": "tools.research.run_point_in_time_qualification_v11",
+      "target": "json"
+    },
+    {
+      "kind": "import",
+      "lineno": 11,
+      "source": "tools.research.run_point_in_time_qualification_v11",
+      "target": "os"
+    },
+    {
+      "kind": "import",
+      "lineno": 12,
+      "source": "tools.research.run_point_in_time_qualification_v11",
+      "target": "sys"
+    },
+    {
+      "kind": "from",
+      "lineno": 13,
+      "source": "tools.research.run_point_in_time_qualification_v11",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 23,
+      "source": "tools.research.run_point_in_time_qualification_v11",
+      "target": "backend.nexus_qualification.pit_v11"
     },
     {
       "kind": "from",
@@ -21824,6 +23330,192 @@
     },
     {
       "kind": "from",
+      "lineno": 7,
+      "source": "tools.research.run_reflection_v23_adjudication_v11",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 9,
+      "source": "tools.research.run_reflection_v23_adjudication_v11",
+      "target": "json"
+    },
+    {
+      "kind": "import",
+      "lineno": 10,
+      "source": "tools.research.run_reflection_v23_adjudication_v11",
+      "target": "os"
+    },
+    {
+      "kind": "import",
+      "lineno": 11,
+      "source": "tools.research.run_reflection_v23_adjudication_v11",
+      "target": "shutil"
+    },
+    {
+      "kind": "import",
+      "lineno": 12,
+      "source": "tools.research.run_reflection_v23_adjudication_v11",
+      "target": "subprocess"
+    },
+    {
+      "kind": "import",
+      "lineno": 13,
+      "source": "tools.research.run_reflection_v23_adjudication_v11",
+      "target": "sys"
+    },
+    {
+      "kind": "from",
+      "lineno": 14,
+      "source": "tools.research.run_reflection_v23_adjudication_v11",
+      "target": "datetime"
+    },
+    {
+      "kind": "from",
+      "lineno": 15,
+      "source": "tools.research.run_reflection_v23_adjudication_v11",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 16,
+      "source": "tools.research.run_reflection_v23_adjudication_v11",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 119,
+      "source": "tools.research.run_reflection_v23_adjudication_v11",
+      "target": "backend.nexus_reflection.adjudication_v11"
+    },
+    {
+      "kind": "from",
+      "lineno": 123,
+      "source": "tools.research.run_reflection_v23_adjudication_v11",
+      "target": "backend.nexus_reflection.lesson_gate_v11"
+    },
+    {
+      "kind": "from",
+      "lineno": 14,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 16,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "argparse"
+    },
+    {
+      "kind": "import",
+      "lineno": 17,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "json"
+    },
+    {
+      "kind": "import",
+      "lineno": 18,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "os"
+    },
+    {
+      "kind": "import",
+      "lineno": 19,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "sys"
+    },
+    {
+      "kind": "import",
+      "lineno": 20,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "tempfile"
+    },
+    {
+      "kind": "import",
+      "lineno": 21,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "time"
+    },
+    {
+      "kind": "import",
+      "lineno": 22,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "traceback"
+    },
+    {
+      "kind": "from",
+      "lineno": 23,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "datetime"
+    },
+    {
+      "kind": "from",
+      "lineno": 24,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 25,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "typing"
+    },
+    {
+      "kind": "from",
+      "lineno": 41,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "backend.nexus_recovery.dr_v2.matrix"
+    },
+    {
+      "kind": "from",
+      "lineno": 42,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "backend.nexus_recovery.dr_v2.recovery"
+    },
+    {
+      "kind": "from",
+      "lineno": 43,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "backend.nexus_runtime.durability_v2.constants"
+    },
+    {
+      "kind": "from",
+      "lineno": 50,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "backend.nexus_runtime.durability_v2.engine"
+    },
+    {
+      "kind": "from",
+      "lineno": 51,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "backend.nexus_runtime.durability_v2.metrics"
+    },
+    {
+      "kind": "import",
+      "lineno": 28,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "resource"
+    },
+    {
+      "kind": "import",
+      "lineno": 67,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "psutil"
+    },
+    {
+      "kind": "import",
+      "lineno": 80,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "ctypes"
+    },
+    {
+      "kind": "from",
+      "lineno": 81,
+      "source": "tools.research.run_runtime_durability_dr_v2",
+      "target": "ctypes"
+    },
+    {
+      "kind": "from",
       "lineno": 3,
       "source": "tools.research.run_security_dr_redteam_v10",
       "target": "__future__"
@@ -21857,6 +23549,42 @@
       "lineno": 21,
       "source": "tools.research.run_security_dr_redteam_v10",
       "target": "backend.nexus_autonomy.security_dr_redteam_v10"
+    },
+    {
+      "kind": "from",
+      "lineno": 3,
+      "source": "tools.research.run_security_mutation_redteam_v11",
+      "target": "__future__"
+    },
+    {
+      "kind": "import",
+      "lineno": 5,
+      "source": "tools.research.run_security_mutation_redteam_v11",
+      "target": "json"
+    },
+    {
+      "kind": "import",
+      "lineno": 6,
+      "source": "tools.research.run_security_mutation_redteam_v11",
+      "target": "os"
+    },
+    {
+      "kind": "import",
+      "lineno": 7,
+      "source": "tools.research.run_security_mutation_redteam_v11",
+      "target": "sys"
+    },
+    {
+      "kind": "from",
+      "lineno": 8,
+      "source": "tools.research.run_security_mutation_redteam_v11",
+      "target": "pathlib"
+    },
+    {
+      "kind": "from",
+      "lineno": 21,
+      "source": "tools.research.run_security_mutation_redteam_v11",
+      "target": "backend.nexus_autonomy.security_mutation_v11.redteam"
     },
     {
       "kind": "from",
@@ -24704,6 +26432,10 @@
       "kind": "module"
     },
     {
+      "id": "backend.nexus_autonomy.security_mutation_v11.constants",
+      "kind": "module"
+    },
+    {
       "id": "backend.nexus_autonomy.session_state_machine",
       "kind": "module"
     },
@@ -24737,6 +26469,10 @@
     },
     {
       "id": "backend.nexus_execution.fill_engine",
+      "kind": "module"
+    },
+    {
+      "id": "backend.nexus_execution.microstructure_realism_v11.harness",
       "kind": "module"
     },
     {
@@ -24864,7 +26600,7 @@
     "backend/security",
     "tools/research"
   ],
-  "scanned_files": 524,
+  "scanned_files": 560,
   "schema": "nexus_authority_graph_v1",
   "stale_env_fallback_hit_count": 51,
   "stale_env_fallback_hits": [
@@ -25228,7 +26964,7 @@
   ],
   "summary": {
     "circular_scc_count": 3,
-    "claim_count": 60,
+    "claim_count": 62,
     "critical_finding_count": 5,
     "domain_count": 7,
     "domains_with_duplicates": [
@@ -25240,7 +26976,7 @@
       "provider_retry",
       "risk"
     ],
-    "edge_count": 3865,
-    "node_count": 38
+    "edge_count": 4146,
+    "node_count": 40
   }
 }

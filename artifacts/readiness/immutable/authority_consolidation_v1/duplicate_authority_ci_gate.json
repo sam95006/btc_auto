@@ -1,5 +1,5 @@
 {
-  "allowed_competitor_hit_count": 30,
+  "allowed_competitor_hit_count": 31,
   "allowed_competitor_hits": [
     {
       "classification": "parallel_lane",
@@ -30,6 +30,12 @@
       "domain": "execution",
       "key": "execution::backend.nexus_autonomy.execution_simulator_v1_1",
       "module": "backend.nexus_autonomy.execution_simulator_v1_1"
+    },
+    {
+      "classification": "fixture_tool",
+      "domain": "execution",
+      "key": "execution::backend.nexus_autonomy.security_mutation_v11.constants",
+      "module": "backend.nexus_autonomy.security_mutation_v11.constants"
     },
     {
       "classification": "legacy_product",
@@ -182,11 +188,11 @@
       "module": "backend.nexus_reflection.v23_resume_v10"
     }
   ],
-  "baseline_claimant_count": 44,
-  "generated_at": "2026-08-05T03:35:56Z",
+  "baseline_claimant_count": 45,
+  "generated_at": "2026-08-05T03:56:54Z",
   "graph_summary": {
     "circular_scc_count": 3,
-    "claim_count": 60,
+    "claim_count": 62,
     "critical_finding_count": 5,
     "domain_count": 7,
     "domains_with_duplicates": [
@@ -198,8 +204,8 @@
       "provider_retry",
       "risk"
     ],
-    "edge_count": 3865,
-    "node_count": 38
+    "edge_count": 4146,
+    "node_count": 40
   },
   "lane": "V11_H_AUTHORITY_CONSOLIDATION",
   "passed": true,

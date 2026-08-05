@@ -15,6 +15,7 @@
     "execution::backend.autonomy.pure_ai_execution",
     "execution::backend.nexus_autonomy.execution_simulator_v1",
     "execution::backend.nexus_autonomy.execution_simulator_v1_1",
+    "execution::backend.nexus_autonomy.security_mutation_v11.constants",
     "execution::backend.nexus_execution.execution_simulator_v1_1",
     "execution::backend.nexus_real_shadow.real_price_shadow",
     "execution::backend.trading.binance_spot_testnet_execution_engine",
@@ -93,6 +94,12 @@
       "domain": "execution",
       "module": "backend.trading.binance_spot_testnet_execution_engine",
       "role": "legacy_product"
+    },
+    {
+      "authority_id": "private_core.execution.simulator_v1_1",
+      "domain": "execution",
+      "module": "backend.nexus_autonomy.security_mutation_v11.constants",
+      "role": "fixture_tool"
     },
     {
       "authority_id": "private_core.fill.engine_v1_1",
@@ -311,7 +318,7 @@
       "role": "parallel_lane"
     }
   ],
-  "generated_at": "2026-08-05T03:35:41Z",
+  "generated_at": "2026-08-05T03:56:37Z",
   "lane": "V11_H_AUTHORITY_CONSOLIDATION",
   "policy": {
     "known_competitor": "ALLOW_WITH_RECOMMENDATION",
