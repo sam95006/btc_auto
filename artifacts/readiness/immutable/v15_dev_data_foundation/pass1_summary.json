@@ -1,0 +1,164 @@
+{
+  "availability_state_histogram": {
+    "AVAILABLE": 10,
+    "CONSUMED_FORBIDDEN": 1,
+    "METADATA_ONLY": 1,
+    "RESERVED_UNTOUCHED": 2,
+    "UNSUPPORTED": 2
+  },
+  "created_at": "2026-08-05T15:19:06Z",
+  "invented_history": false,
+  "inventory_checksum": "ebb34654960a4f230e258447725ad5ad075db936e8429dc29905723ce53cc7c5",
+  "missing_path_count": 0,
+  "oos_consumed": false,
+  "oos_exclusion_proof": {
+    "development_loadable_count": 9,
+    "oos_consumed": false,
+    "oos_excluded": true,
+    "oos_leaked_ids": [],
+    "schema": "v15_a_oos_exclusion_proof"
+  },
+  "overlap_check": {
+    "ok": true,
+    "oos_consumed": false,
+    "violations": []
+  },
+  "partition_category_histogram": {
+    "CONSUMED_FORBIDDEN": 1,
+    "DEVELOPMENT": 12,
+    "OOS_RESERVED": 1,
+    "OOS_UNTOUCHED": 1,
+    "VALIDATION_PLANNING": 1
+  },
+  "partitions": {
+    "categories": [
+      "DEVELOPMENT",
+      "VALIDATION_PLANNING",
+      "OOS_RESERVED",
+      "OOS_UNTOUCHED"
+    ],
+    "forbidden_consumed_intervals": [
+      {
+        "category": "CONSUMED_FORBIDDEN",
+        "consumable_for_development": false,
+        "end_ms": 1736415000000,
+        "end_utc": "2025-01-09T09:30:00Z",
+        "interval_id": "H3_CONSUMED_FAILED_HOLDOUT",
+        "notes": "Prior consumed failed holdout - immutable, never reuse as qualification",
+        "oos_consumable": false,
+        "start_ms": 1720863000000,
+        "start_utc": "2024-07-13T09:30:00Z"
+      }
+    ],
+    "formal_walk_forward": false,
+    "oos_consumed": false,
+    "oos_executed": false,
+    "overlap_policy": "DEVELOPMENT_and_VALIDATION_PLANNING_are_adjacent_non_overlapping;OOS_RESERVED_and_OOS_UNTOUCHED_never_loadable_for_development",
+    "partition_checksum": "521504c73845f5adba2fc8afbe2267ab31c1bc6bf1b3a5b1c48750befffe37be",
+    "partitions": [
+      {
+        "category": "DEVELOPMENT",
+        "consumable_for_development": true,
+        "consumable_for_validation_planning": false,
+        "end_ms": 1767000599999,
+        "end_utc": "2025-12-29T09:29:59Z",
+        "notes": "Primary development exploration window (first 60% of research V2/V3 span)",
+        "oos_consumable": false,
+        "partition_id": "DEV_EXPLORATION_PRIMARY",
+        "start_ms": 1739007000000,
+        "start_utc": "2025-02-08T09:30:00Z"
+      },
+      {
+        "category": "VALIDATION_PLANNING",
+        "consumable_for_development": false,
+        "consumable_for_validation_planning": true,
+        "end_ms": 1785663000000,
+        "end_utc": "2026-08-02T09:30:00Z",
+        "notes": "Validation planning only - not formal walk-forward, not OOS",
+        "oos_consumable": false,
+        "partition_id": "VALIDATION_PLANNING_PRIMARY",
+        "start_ms": 1767000600000,
+        "start_utc": "2025-12-29T09:30:00Z"
+      },
+      {
+        "category": "OOS_RESERVED",
+        "consumable_for_development": false,
+        "consumable_for_validation_planning": false,
+        "end_ms": 1789551000000,
+        "end_utc": "2026-09-16T09:30:00Z",
+        "notes": "Reserved September OOS - sealed, never consumed by V15-A",
+        "oos_consumable": false,
+        "partition_id": "SEPTEMBER_H3_OOS_RESERVED",
+        "start_ms": 1785663000001,
+        "start_utc": "2026-08-02T09:30:00Z"
+      },
+      {
+        "category": "OOS_UNTOUCHED",
+        "consumable_for_development": false,
+        "consumable_for_validation_planning": false,
+        "end_ms": 1821087000000,
+        "end_utc": "2027-09-16T09:30:00Z",
+        "notes": "Future untouched OOS reservation - do not open",
+        "oos_consumable": false,
+        "partition_id": "POST_SEPTEMBER_OOS_UNTOUCHED",
+        "start_ms": 1789551000001,
+        "start_utc": "2026-09-16T09:30:00Z"
+      }
+    ],
+    "schema": "nexus_pit_time_partition_v15_a"
+  },
+  "pass_number": 1,
+  "passed": true,
+  "pit_proof": {
+    "as_of_ms": 1767000599999,
+    "eligible_count": 10,
+    "eligible_ids": [
+      "72733bfbbd8517818c7aa02a387d3784",
+      "323bb6e56e369873f0a56822e6724866",
+      "9f366638d34dd7fcae15a8850a718e66",
+      "eb1a32b66ae82f4537a6ed6714295cee",
+      "da3c77b799c59883b2119b1726251a9b",
+      "b7761ace1ea37951c6dff2af5eacf3d7",
+      "d7cc5c4aebd5966efe5962cdfcef36c3",
+      "92e308375b80613bb310662b282ac83d",
+      "2154f3a07f6292043cb90b2e119c8d70",
+      "6e57947e402e37620b97b47f9b9ac762"
+    ],
+    "future_leak_count": 0,
+    "future_rejected_count": 3,
+    "leaked_ids": [],
+    "pit_holds": true,
+    "rejected": [
+      {
+        "reason": "NO_AVAILABILITY_MS",
+        "record_id": "4e0dd829eeeafdeb2d76eff2afc34c03"
+      },
+      {
+        "reason": "NO_AVAILABILITY_MS",
+        "record_id": "3cff0f6f22b46d486803570a18ca455a"
+      },
+      {
+        "reason": "NO_AVAILABILITY_MS",
+        "record_id": "81e0ce275e249d417bed036d64325c13"
+      },
+      {
+        "reason": "FUTURE_OBSERVATION_REJECTED",
+        "record_id": "c3eb628bfbcc982aa5daa9833174fb99"
+      },
+      {
+        "reason": "FUTURE_OBSERVATION_REJECTED",
+        "record_id": "8abc69bd3c4c53d14b2cd8f6fbfe8653"
+      },
+      {
+        "reason": "FUTURE_OBSERVATION_REJECTED",
+        "record_id": "e04d3253e86fec61c73002b707d5df8c"
+      }
+    ],
+    "rejected_count": 6,
+    "schema": "v15_a_pit_proof"
+  },
+  "record_count": 16,
+  "schema": "v15_a_pass1_summary",
+  "verify_failure_count": 0,
+  "verify_failures": []
+}

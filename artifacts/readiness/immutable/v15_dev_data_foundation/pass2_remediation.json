@@ -1,0 +1,32 @@
+{
+  "schema": "v15_a_pass2_remediation",
+  "pass_number": 2,
+  "fixed_findings": [
+    {
+      "severity": "HIGH",
+      "code": "PIT_FIXTURE_MISCLASSIFIED_AS_CONSUMED",
+      "detail": "era_2024_12_01 availability_ms falls inside consumed-holdout calendar; sanitized PIT fixtures were incorrectly bound to CONSUMED_FORBIDDEN",
+      "fix": "Remap CONSUMED_FORBIDDEN to DEVELOPMENT for sanitized_pit_fixture sources; consumed holdout registry remains forbidden",
+      "status": "FIXED"
+    },
+    {
+      "severity": "HIGH",
+      "code": "VALIDATION_PLANNING_UNCATALOGUED",
+      "detail": "VALIDATION_PLANNING partition existed in manifest but had no catalog seal record",
+      "fix": "Emit partition_seal records for all four categories; OOS seals remain RESERVED_UNTOUCHED and non-loadable",
+      "status": "FIXED"
+    },
+    {
+      "severity": "MEDIUM",
+      "code": "DEV_FILTER_LOADED_NON_DEV",
+      "detail": "filter_records_for_development could include VALIDATION_PLANNING seals",
+      "fix": "Require partition_category==DEVELOPMENT and honor loaded_for_development/seal flags",
+      "status": "FIXED"
+    }
+  ],
+  "unresolved_critical_count": 0,
+  "unresolved_high_count": 0,
+  "oos_consumed": false,
+  "invented_history": false,
+  "human_facing_v15_status_json": false
+}
