@@ -25,6 +25,13 @@ from backend.nexus_execution.security_boundary import (  # noqa: F401
     install_exchange_write_traps,
     record_exchange_write_attempt,
 )
+from backend.nexus_execution.orchestrator_adapter_v1 import (  # noqa: F401
+    ADAPTER_ID,
+    CANONICAL_EXECUTION_ENGINE,
+    CANONICAL_EXECUTION_ENGINE_COUNT,
+    NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1,
+    build_session_execution_adapter,
+)
 
 __all__ = [
     "EXECUTION_MODE",
@@ -33,4 +40,9 @@ __all__ = [
     "exchange_write_attempt_count",
     "install_exchange_write_traps",
     "record_exchange_write_attempt",
+    "ADAPTER_ID",
+    "CANONICAL_EXECUTION_ENGINE",
+    "CANONICAL_EXECUTION_ENGINE_COUNT",
+    "NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1",
+    "build_session_execution_adapter",
 ]

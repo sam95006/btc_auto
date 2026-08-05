@@ -1,4 +1,13 @@
-"""NEXUS Autonomous Execution Simulator V1.1 — local deterministic simulated broker.
+"""COMPATIBILITY ADAPTER ONLY — not an independent execution authority.
+
+Canonical execution engine (exactly one):
+  ``backend.nexus_execution.execution_simulator_v1_1.AutonomousExecutionSimulatorV11``
+
+Session / cross-lane traffic MUST use:
+  ``backend.nexus_execution.orchestrator_adapter_v1.NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1``
+
+This module remains for legacy unit tests and historical readiness artifacts.
+It must not be treated as a second fill / cost / risk / position authority.
 
 HISTORICAL_REPLAY_SIMULATED_NO_EXCHANGE_WRITE only.
 Never instantiates an authenticated exchange-write client.
