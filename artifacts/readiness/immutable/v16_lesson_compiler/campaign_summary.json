@@ -31,7 +31,7 @@
   "campaign_digest": "3480e212fb79f5f288ef246555df41d67d820fdc56e24761356878b787efbc00",
   "candidate_lesson_count": 8,
   "code_checksum": "f3d7b989fa1adc22e7989dda35a9e260eb5a78cc9a099646103c478e70d7fef3",
-  "created_at": "2026-08-05T18:51:35Z",
+  "created_at": "2026-08-05T18:52:03Z",
   "critical_remaining": 0,
   "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
   "demo_order_count": 0,
@@ -66,7 +66,7 @@
     "LESSON_CANDIDATE_COMPILED": 8
   },
   "lane": "V16-E",
-  "lane_head": "f01407e5d7c7e4c00e0eb1616dc5ef74d91a58b5",
+  "lane_head": "b4645d02eb20af81251c3cda231c598e1434dd16",
   "lesson_count": 8,
   "mainnet_touch_count": 0,
   "non_claims": [
