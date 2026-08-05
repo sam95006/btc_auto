@@ -90,6 +90,10 @@ class _OrderView:
         return float(self._order.filled_qty)
 
     @property
+    def avg_fill_price(self) -> float:
+        return float(self._order.avg_fill_price)
+
+    @property
     def symbol(self) -> str:
         return self._order.intent.symbol
 

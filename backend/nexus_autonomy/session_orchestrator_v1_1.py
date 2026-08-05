@@ -15,9 +15,10 @@ Design goals:
   * Recovery invariants: any non-zero invariant routes session to
     BLOCKED / FAILED_SAFE. Ambiguous state is never guessed.
 
-This orchestrator uses the existing Execution Simulator contract
-(``execution_simulator_v1.AutonomousExecutionSimulatorV1``) and does not
-modify it. Contract requirements are surfaced via ``contract_requirements``.
+This orchestrator routes all Session Candidate traffic through
+``NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1`` → canonical
+``AutonomousExecutionSimulatorV11`` (exactly one execution authority).
+Contract requirements are surfaced via ``contract_requirements``.
 """
 from __future__ import annotations
 
@@ -32,8 +33,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from backend.nexus_autonomy.execution_simulator_v1 import AutonomousExecutionSimulatorV1
 from backend.nexus_autonomy.private_event_ledger_v1 import PrivateEventLedger
+from backend.nexus_execution.orchestrator_adapter_v1 import (
+    NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1,
+    build_session_execution_adapter,
+)
 from backend.nexus_autonomy.process_classification import (
     classify_completed_trade,
     control_fixture_process_evidence,
@@ -268,7 +272,7 @@ class AutonomousSessionOrchestratorV11:
         self.root.mkdir(parents=True, exist_ok=True)
         self.durability = RuntimeDurabilityV1(self.root / "durability")
         self.ledger: PrivateEventLedger = self.durability.open_ledger()
-        self.sim = AutonomousExecutionSimulatorV1(
+        self.sim: NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1 = build_session_execution_adapter(
             max_positions=max_positions, max_intents=max_intents
         )
         self.clock = clock or AcceleratedLogicalClock()
