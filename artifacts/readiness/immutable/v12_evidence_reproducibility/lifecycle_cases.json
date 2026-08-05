@@ -69,13 +69,13 @@
         ],
         "terminal_status": "CLOSED"
       },
-      "code_version": "4e94ad5211cf32fca63c44dabc471f8390148599",
+      "code_version": "318371ce027c48dd633a57a32c9ebd0f1fe40018",
       "cost_version": "founder-conservative-v1-1-2026-08-05",
       "decision_id": "dec_v12e_f4d0df9a425978da",
       "deterministic_replay_result": {
-        "fingerprint": "ad08bfc1d677563a2d9c859606a0362dd1e9502538296635c1c822c35849f8cf",
+        "fingerprint": "e9e61e3f43d2866dd51e4565d1dd8ecb1632b5be9fbe8d6d5d175d9a5daca24b",
         "match": true,
-        "peer_fingerprint": "ad08bfc1d677563a2d9c859606a0362dd1e9502538296635c1c822c35849f8cf"
+        "peer_fingerprint": "e9e61e3f43d2866dd51e4565d1dd8ecb1632b5be9fbe8d6d5d175d9a5daca24b"
       },
       "fabricated_learning_proof": false,
       "input_evidence_hashes": {
@@ -102,7 +102,7 @@
       "post_replay_verify_ok": true,
       "pre_replay_verify_ok": true,
       "profitability_claim": false,
-      "replay_fingerprint": "ad08bfc1d677563a2d9c859606a0362dd1e9502538296635c1c822c35849f8cf",
+      "replay_fingerprint": "e9e61e3f43d2866dd51e4565d1dd8ecb1632b5be9fbe8d6d5d175d9a5daca24b",
       "replay_match": true,
       "risk_version": "private_core.risk.gates_v1_1",
       "seed": "v12e-case-000",
@@ -177,13 +177,13 @@
         ],
         "terminal_status": "CLOSED"
       },
-      "code_version": "4e94ad5211cf32fca63c44dabc471f8390148599",
+      "code_version": "318371ce027c48dd633a57a32c9ebd0f1fe40018",
       "cost_version": "founder-conservative-v1-1-2026-08-05",
       "decision_id": "dec_v12e_3e54e835da918537",
       "deterministic_replay_result": {
-        "fingerprint": "afafb2a1c917880667875a0e9a5d638c9fb2dafb0cabf4049e479cd3661faa0a",
+        "fingerprint": "e878039ceab089869963448817a7b62a5124dd675fef82a3bd56f4aab7d00b51",
         "match": true,
-        "peer_fingerprint": "afafb2a1c917880667875a0e9a5d638c9fb2dafb0cabf4049e479cd3661faa0a"
+        "peer_fingerprint": "e878039ceab089869963448817a7b62a5124dd675fef82a3bd56f4aab7d00b51"
       },
       "fabricated_learning_proof": false,
       "input_evidence_hashes": {
@@ -210,7 +210,7 @@
       "post_replay_verify_ok": true,
       "pre_replay_verify_ok": true,
       "profitability_claim": false,
-      "replay_fingerprint": "afafb2a1c917880667875a0e9a5d638c9fb2dafb0cabf4049e479cd3661faa0a",
+      "replay_fingerprint": "e878039ceab089869963448817a7b62a5124dd675fef82a3bd56f4aab7d00b51",
       "replay_match": true,
       "risk_version": "private_core.risk.gates_v1_1",
       "seed": "v12e-case-001",
@@ -285,13 +285,13 @@
         ],
         "terminal_status": "CLOSED"
       },
-      "code_version": "4e94ad5211cf32fca63c44dabc471f8390148599",
+      "code_version": "318371ce027c48dd633a57a32c9ebd0f1fe40018",
       "cost_version": "founder-conservative-v1-1-2026-08-05",
       "decision_id": "dec_v12e_f0b9cd18f5ab2f95",
       "deterministic_replay_result": {
-        "fingerprint": "ae76446163e43609ac85216cd6f462aaecd3bf612600de03015236fafb97b6e5",
+        "fingerprint": "53c76fee76abf49f3e86a0c4192e147928afaea7baf28db8f7cb0d1662d706a6",
         "match": true,
-        "peer_fingerprint": "ae76446163e43609ac85216cd6f462aaecd3bf612600de03015236fafb97b6e5"
+        "peer_fingerprint": "53c76fee76abf49f3e86a0c4192e147928afaea7baf28db8f7cb0d1662d706a6"
       },
       "fabricated_learning_proof": false,
       "input_evidence_hashes": {
@@ -318,7 +318,7 @@
       "post_replay_verify_ok": true,
       "pre_replay_verify_ok": true,
       "profitability_claim": false,
-      "replay_fingerprint": "ae76446163e43609ac85216cd6f462aaecd3bf612600de03015236fafb97b6e5",
+      "replay_fingerprint": "53c76fee76abf49f3e86a0c4192e147928afaea7baf28db8f7cb0d1662d706a6",
       "replay_match": true,
       "risk_version": "private_core.risk.gates_v1_1",
       "seed": "v12e-case-002",
@@ -393,13 +393,13 @@
         ],
         "terminal_status": "CLOSED"
       },
-      "code_version": "4e94ad5211cf32fca63c44dabc471f8390148599",
+      "code_version": "318371ce027c48dd633a57a32c9ebd0f1fe40018",
       "cost_version": "founder-conservative-v1-1-2026-08-05",
       "decision_id": "dec_v12e_1fcd00ea734ac092",
       "deterministic_replay_result": {
-        "fingerprint": "9e01de459b22589886739004f17790427e49a7cd6c4e89b84e473ef0ac1b2933",
+        "fingerprint": "efe30bb988a6609b032a610c932bba46826b7db472eaa48ca5830e4e65a9a091",
         "match": true,
-        "peer_fingerprint": "9e01de459b22589886739004f17790427e49a7cd6c4e89b84e473ef0ac1b2933"
+        "peer_fingerprint": "efe30bb988a6609b032a610c932bba46826b7db472eaa48ca5830e4e65a9a091"
       },
       "fabricated_learning_proof": false,
       "input_evidence_hashes": {
@@ -426,7 +426,7 @@
       "post_replay_verify_ok": true,
       "pre_replay_verify_ok": true,
       "profitability_claim": false,
-      "replay_fingerprint": "9e01de459b22589886739004f17790427e49a7cd6c4e89b84e473ef0ac1b2933",
+      "replay_fingerprint": "efe30bb988a6609b032a610c932bba46826b7db472eaa48ca5830e4e65a9a091",
       "replay_match": true,
       "risk_version": "private_core.risk.gates_v1_1",
       "seed": "v12e-case-003",
@@ -501,13 +501,13 @@
         ],
         "terminal_status": "CLOSED"
       },
-      "code_version": "4e94ad5211cf32fca63c44dabc471f8390148599",
+      "code_version": "318371ce027c48dd633a57a32c9ebd0f1fe40018",
       "cost_version": "founder-conservative-v1-1-2026-08-05",
       "decision_id": "dec_v12e_1fd720376c3167e1",
       "deterministic_replay_result": {
-        "fingerprint": "9c9bcfde717c6eb9b08f573e2389c937580dcf89120e15076b39f75bae0871c3",
+        "fingerprint": "2a05127c4d3df1da5c32112d2ec3febc9aee707f487ddb4fe4f25bf886ad17e7",
         "match": true,
-        "peer_fingerprint": "9c9bcfde717c6eb9b08f573e2389c937580dcf89120e15076b39f75bae0871c3"
+        "peer_fingerprint": "2a05127c4d3df1da5c32112d2ec3febc9aee707f487ddb4fe4f25bf886ad17e7"
       },
       "fabricated_learning_proof": false,
       "input_evidence_hashes": {
@@ -534,7 +534,7 @@
       "post_replay_verify_ok": true,
       "pre_replay_verify_ok": true,
       "profitability_claim": false,
-      "replay_fingerprint": "9c9bcfde717c6eb9b08f573e2389c937580dcf89120e15076b39f75bae0871c3",
+      "replay_fingerprint": "2a05127c4d3df1da5c32112d2ec3febc9aee707f487ddb4fe4f25bf886ad17e7",
       "replay_match": true,
       "risk_version": "private_core.risk.gates_v1_1",
       "seed": "v12e-case-004",
@@ -542,6 +542,6 @@
     }
   ],
   "completed_lifecycle_count": 5,
-  "created_at": "2026-08-05T07:48:49Z",
+  "created_at": "2026-08-05T07:49:12Z",
   "schema": "v12_evidence_repro_lifecycle_cases"
 }
