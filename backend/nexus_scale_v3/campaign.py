@@ -14,6 +14,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import tempfile
 from decimal import Decimal
 from pathlib import Path
@@ -461,8 +462,10 @@ def run_scaled_closed_loop(
             max(1, candidate_count - 2),
         )
 
-    def _new_orch(epoch: int) -> tuple[Any, DecisionLifecycleOrchestrator]:
+    def _new_orch(epoch: int) -> tuple[Any, DecisionLifecycleOrchestrator, Path]:
         epoch_root = root / f"epoch_{epoch}"
+        if epoch_root.exists():
+            shutil.rmtree(epoch_root, ignore_errors=True)
         simulator = AutonomousExecutionSimulatorV11(
             max_positions=2,
             max_intents=4,
@@ -479,12 +482,13 @@ def run_scaled_closed_loop(
         )
         bridge = DecisionExecutionBridge(epoch_root / "execution_bridge", adapter=adapter)
         orch = DecisionLifecycleOrchestrator(epoch_root / "decisions", bridge=bridge)
-        return adapter, orch
+        return adapter, orch, epoch_root
+
+    # Rotate epoch roots frequently so NTFS does not collapse under 50k decision files.
+    epoch_rotate_every = max(100, min(500, candidate_count // 20 or 100))
 
     epoch = 0
-    adapter, orch = _new_orch(epoch)
-    results: list[dict[str, Any]] = []
-    errors: list[dict[str, Any]] = []
+    adapter, orch, epoch_root = _new_orch(epoch)
     counters = empty_invariant_counts()
     extras: dict[str, int] = {}
     seen_decisions: set[str] = set()
@@ -493,39 +497,115 @@ def run_scaled_closed_loop(
     restart_count = 0
     checkpoint_count = 0
     exchange_writes = 0
+    completed_count = 0
+    rejected_count = 0
+    blocked_count = 0
+    error_count = 0
+    decorative_violations = 0
+    ontology_fail = 0
+    path_fail = 0
+    lesson_applied = 0
+    lesson_policy_allowed = 0
+    lesson_policy_blocked = 0
+    lesson_false_claim = 0
+    sample_completed: list[dict[str, Any]] = []
+    sample_rejected: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
 
     def _accumulate_writes() -> None:
         nonlocal exchange_writes
         exchange_writes += int(orch.exchange_write_attempt_count)
         exchange_writes += int(getattr(adapter, "exchange_write_attempt_count", 0) or 0)
 
+    def _rotate_epoch(*, reason: str) -> None:
+        nonlocal epoch, adapter, orch, epoch_root, restart_count
+        _accumulate_writes()
+        prev = epoch_root
+        epoch += 1
+        adapter, orch, epoch_root = _new_orch(epoch)
+        shutil.rmtree(prev, ignore_errors=True)
+        extras["epoch_rotations"] = int(extras.get("epoch_rotations", 0)) + 1
+        extras[f"epoch_rotate_{reason}"] = int(extras.get(f"epoch_rotate_{reason}", 0)) + 1
+        if reason == "restart":
+            restart_count += 1
+            extras["closed_loop_restart"] = 1
+            if not ckpt_path.exists():
+                counters["checkpoint_loss_count"] += 1
+
+    def _ingest(row: dict[str, Any]) -> None:
+        nonlocal completed_count, rejected_count, blocked_count, decorative_violations
+        nonlocal ontology_fail, path_fail
+        nonlocal lesson_applied, lesson_policy_allowed, lesson_policy_blocked, lesson_false_claim
+        stages = row.get("stages") or []
+        if "Position" in stages and "Exit" not in stages and row.get("outcome") != "BLOCKED_AFTER_RECORD":
+            counters["orphan_lifecycle_count"] += 1
+        if "SimulatedIntent" in stages and not row.get("intent_id") and row.get("completed_lifecycle"):
+            counters["unclosed_intent_count"] += 1
+        if "Fill" in stages and row.get("completed_lifecycle") and not row.get("order_id"):
+            counters["untracked_fill_count"] += 1
+        if row.get("outcome") == "REJECTED_CLOSED" and row.get("completed_lifecycle"):
+            counters["risk_limit_bypass_count"] += 1
+
+        if row.get("completed_lifecycle"):
+            completed_count += 1
+            if len(sample_completed) < 3:
+                sample_completed.append(row)
+            ontology = row.get("ontology") or []
+            if not all(s in ontology for s in REQUIRED_ONTOLOGY):
+                ontology_fail += 1
+            if not all(step in stages for step in CANONICAL_PATH):
+                path_fail += 1
+            intent = str(row.get("intent_id") or "")
+            pos = str(row.get("position_id") or "")
+            if intent.startswith("intent_") or pos.startswith("pos_") or not intent or not pos:
+                decorative_violations += 1
+            if "Reflection" not in stages or not row.get("reflection_id"):
+                counters["evidence_binding_failure_count"] += 1
+            if row.get("cost_model_version") != COST_MODEL_VERSION:
+                counters["cost_bridge_failure_count"] += 1
+            gate = row.get("lesson_gate")
+            if gate:
+                lesson_applied += 1
+                if gate.get("policy_effect_lesson_allowed"):
+                    lesson_policy_allowed += 1
+                else:
+                    lesson_policy_blocked += 1
+                if gate.get("false_learning_claim"):
+                    lesson_false_claim += 1
+        elif row.get("outcome") == "REJECTED_CLOSED":
+            rejected_count += 1
+            if len(sample_rejected) < 3:
+                sample_rejected.append(row)
+        elif row.get("outcome") in {"BLOCKED_AFTER_RECORD", "BLOCKED_ON_EXIT"}:
+            blocked_count += 1
+
     i = 0
     while i < len(candidates):
         cand = candidates[i]
         try:
-            results.append(
-                _run_one(
-                    orch,
-                    cand,
-                    counters=counters,
-                    seen_decisions=seen_decisions,
-                    seen_intents=seen_intents,
-                    seen_positions=seen_positions,
-                )
+            row = _run_one(
+                orch,
+                cand,
+                counters=counters,
+                seen_decisions=seen_decisions,
+                seen_intents=seen_intents,
+                seen_positions=seen_positions,
             )
+            _ingest(row)
         except Exception as exc:  # noqa: BLE001 — campaign must count fail-closed errors
-            errors.append({"candidate_id": cand["candidate_id"], "error": f"{type(exc).__name__}:{exc}"})
-            results.append(
-                {
-                    "candidate_id": cand["candidate_id"],
-                    "decision_id": None,
-                    "outcome": "ERROR",
-                    "terminal_status": "ERROR",
-                    "stages": ["Candidate"],
-                    "completed_lifecycle": False,
-                    "error": f"{type(exc).__name__}:{exc}",
-                }
-            )
+            error_count += 1
+            err = {
+                "candidate_id": cand["candidate_id"],
+                "decision_id": None,
+                "outcome": "ERROR",
+                "terminal_status": "ERROR",
+                "stages": ["Candidate"],
+                "completed_lifecycle": False,
+                "error": f"{type(exc).__name__}:{exc}",
+            }
+            if len(errors) < 20:
+                errors.append({"candidate_id": cand["candidate_id"], "error": err["error"]})
+            _ingest(err)
 
         i += 1
         if i % max(25, candidate_count // 40) == 0:
@@ -534,80 +614,37 @@ def run_scaled_closed_loop(
                 ckpt_path,
                 {
                     "index": i,
-                    "completed": sum(1 for r in results if r.get("completed_lifecycle")),
+                    "completed": completed_count,
                     "seed": seed,
                     "candidate_count": candidate_count,
+                    "epoch": epoch,
                 },
             )
 
-        # Mid-campaign restart recovery.
+        # Founder-required mid-campaign restart recovery (at least once).
         if restart_count == 0 and i >= restart_after_index:
             checkpoint_count += 1
             _write_checkpoint(
                 ckpt_path,
                 {
                     "index": i,
-                    "completed": sum(1 for r in results if r.get("completed_lifecycle")),
+                    "completed": completed_count,
                     "seed": seed,
                     "candidate_count": candidate_count,
                     "restart_boundary": True,
+                    "epoch": epoch,
                 },
             )
-            # Recreate orchestrator on a fresh epoch root (process restart simulation).
-            _accumulate_writes()
-            epoch += 1
-            adapter, orch = _new_orch(epoch)
-            restart_count += 1
-            extras["closed_loop_restart"] = 1
-            # Verify checkpoint still present (no loss).
-            if not ckpt_path.exists():
-                counters["checkpoint_loss_count"] += 1
+            _rotate_epoch(reason="restart")
+        elif i % epoch_rotate_every == 0 and i < len(candidates):
+            # Scale hygiene: recycle durable roots without losing campaign checkpoint.
+            _rotate_epoch(reason="hygiene")
 
-    completed = [r for r in results if r.get("completed_lifecycle")]
-    rejected = [r for r in results if r.get("outcome") == "REJECTED_CLOSED"]
-    blocked = [
-        r
-        for r in results
-        if r.get("outcome") in {"BLOCKED_AFTER_RECORD", "BLOCKED_ON_EXIT"}
-    ]
-
-    ontology_ok = all(
-        all(s in (r.get("ontology") or []) for s in REQUIRED_ONTOLOGY) for r in completed
-    )
-    path_ok = all(
-        all(step in (r.get("stages") or []) for step in CANONICAL_PATH) for r in completed
-    )
-    decorative_violations = 0
-    for r in completed:
-        intent = str(r.get("intent_id") or "")
-        pos = str(r.get("position_id") or "")
-        if intent.startswith("intent_") or pos.startswith("pos_"):
-            decorative_violations += 1
-        if not intent or not pos:
-            decorative_violations += 1
-
-    # Orphan / unclosed: completed path must leave no dangling MONITORING without EXIT.
-    for r in results:
-        stages = r.get("stages") or []
-        if "Position" in stages and "Exit" not in stages and r.get("outcome") != "BLOCKED_AFTER_RECORD":
-            counters["orphan_lifecycle_count"] += 1
-        if "SimulatedIntent" in stages and not r.get("intent_id") and r.get("completed_lifecycle"):
-            counters["unclosed_intent_count"] += 1
-        if "Fill" in stages and r.get("completed_lifecycle") and not r.get("order_id"):
-            counters["untracked_fill_count"] += 1
-
-    lesson_gates = [r["lesson_gate"] for r in completed if r.get("lesson_gate")]
     lesson_gate_summary = {
-        "applied_count": len(lesson_gates),
-        "policy_effect_allowed_count": sum(
-            1 for g in lesson_gates if g.get("policy_effect_lesson_allowed")
-        ),
-        "policy_effect_blocked_count": sum(
-            1 for g in lesson_gates if not g.get("policy_effect_lesson_allowed")
-        ),
-        "false_learning_claim_count": sum(
-            1 for g in lesson_gates if g.get("false_learning_claim")
-        ),
+        "applied_count": lesson_applied,
+        "policy_effect_allowed_count": lesson_policy_allowed,
+        "policy_effect_blocked_count": lesson_policy_blocked,
+        "false_learning_claim_count": lesson_false_claim,
         "fixture_label": CONTROL_FIXTURE_LABEL,
     }
 
@@ -616,38 +653,27 @@ def run_scaled_closed_loop(
     exchange_writes_final += int(getattr(adapter, "exchange_write_attempt_count", 0) or 0)
     counters["exchange_write_attempt_count"] = exchange_writes_final
 
-    # Evidence binding: every completed row must carry hashes path (stages include Reflection).
-    for r in completed:
-        if "Reflection" not in (r.get("stages") or []) or not r.get("reflection_id"):
-            counters["evidence_binding_failure_count"] += 1
-        if r.get("cost_model_version") != COST_MODEL_VERSION:
-            counters["cost_bridge_failure_count"] += 1
-
-    # Risk bypass: rejected candidates must not complete.
-    for r in results:
-        if r.get("outcome") == "REJECTED_CLOSED" and r.get("completed_lifecycle"):
-            counters["risk_limit_bypass_count"] += 1
-
     return {
         "schema": "v14_k_scaled_closed_loop",
         "seed": seed,
         "candidate_count": len(candidates),
-        "completed_lifecycle_count": len(completed),
-        "rejected_count": len(rejected),
-        "blocked_count": len(blocked),
-        "error_count": len(errors),
+        "completed_lifecycle_count": completed_count,
+        "rejected_count": rejected_count,
+        "blocked_count": blocked_count,
+        "error_count": error_count,
         "universe": uni,
         "restart_count": restart_count,
         "checkpoint_count": checkpoint_count,
+        "epoch_count": epoch + 1,
         "invariants_counts": dict(counters),
         "extras": extras,
-        "ontology_complete_on_completed": ontology_ok,
-        "canonical_path_complete_on_completed": path_ok,
+        "ontology_complete_on_completed": ontology_fail == 0 and completed_count > 0,
+        "canonical_path_complete_on_completed": path_fail == 0 and completed_count > 0,
         "decorative_id_violations": decorative_violations,
         "lesson_gate_summary": lesson_gate_summary,
         "exchange_write_attempt_count": exchange_writes_final,
-        "sample_completed": completed[:3],
-        "sample_rejected": rejected[:3],
+        "sample_completed": sample_completed,
+        "sample_rejected": sample_rejected,
         "errors": errors[:20],
         "bridge_schema": BRIDGE_SCHEMA,
         "bridge_module": BRIDGE_MODULE,
