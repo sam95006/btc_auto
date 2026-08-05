@@ -261,19 +261,27 @@ class AutonomousExecutionSimulatorV11:
         if intent.idempotency_key in self.intent_owners:
             self.counters.duplicate_intent_ignored_count += 1
             existing_id = self.intent_owners[intent.idempotency_key]
+            # Crash-recovery may restore intent ownership without the order
+            # record. Still refuse a second create (DUPLICATE_IGNORED) rather
+            # than KeyError or a second live order.
+            prior = self.orders.get(existing_id)
+            recovered_state = (
+                prior.state if prior is not None else "RECOVERED_OWNER_WITHOUT_ORDER"
+            )
             self.audit.append(
                 {
                     "ts": _utc(),
                     "action": "duplicate_intent_ignored",
                     "idempotency_key": intent.idempotency_key,
                     "canonical_order_id": existing_id,
+                    "order_record_present": prior is not None,
                 }
             )
             return {
                 "status": "DUPLICATE_IGNORED",
                 "order_id": existing_id,
                 "canonical_owner": existing_id,
-                "state": self.orders[existing_id].state,
+                "state": recovered_state,
             }
 
         spec = self.instruments.get(intent.symbol)
