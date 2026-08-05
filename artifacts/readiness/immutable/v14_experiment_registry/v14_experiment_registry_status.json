@@ -6,11 +6,12 @@
   "base_commit": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
   "base_head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
   "branch": "feature/v14-experiment-registry",
-  "commit": "cec4908181fae0bb14f3f709e6e20dc90602b3ed",
-  "created_at": "2026-08-05T11:17:46Z",
+  "commit": "b80635b0c3628e07ea42c5b2424abe83be5c46db",
+  "created_at": "2026-08-05T11:18:37Z",
   "demo_order_count": 0,
   "exchange_write_attempt_count": 0,
   "execution_mode": "SIMULATED_FAIL_CLOSED_NO_EXCHANGE_WRITE",
+  "feature_commit": "13ad8c485c0d2d81d6847b1e511cb2e1cf68ced0",
   "formal_walk_forward_executed": false,
   "hard_ban_flags": {
     "auto_integration": false,
@@ -43,10 +44,11 @@
     "silent_cherry_picking": false,
     "strategy_promotion": false
   },
-  "head": "cec4908181fae0bb14f3f709e6e20dc90602b3ed",
+  "head": "b80635b0c3628e07ea42c5b2424abe83be5c46db",
+  "head_at_campaign": "b80635b0c3628e07ea42c5b2424abe83be5c46db",
   "label": "EXPERIMENT_REGISTRY_CONTROL_NOT_REAL_TRADING",
   "lane": "V14-J",
-  "lane_head_commit": "cec4908181fae0bb14f3f709e6e20dc90602b3ed",
+  "lane_head_commit": "b80635b0c3628e07ea42c5b2424abe83be5c46db",
   "lane_name": "EXPERIMENT_REGISTRY_AND_REPRODUCIBILITY",
   "learning_claim_count": 0,
   "mainnet": false,
@@ -71,11 +73,11 @@
     "deploy/"
   ],
   "pytest": {
-    "elapsed_s": 2.894,
+    "elapsed_s": 1.787,
     "exit_code": 0,
     "passed": true,
     "passed_count": 17,
-    "tail": ".................                                                        [100%]\n17 passed in 1.88s"
+    "tail": ".................                                                        [100%]\n17 passed in 1.15s"
   },
   "pytest_passed": true,
   "qualification_ready_count": 0,
@@ -96,15 +98,15 @@
     {
       "detail": "record_sealed",
       "evidence": {
-        "identity_fingerprint": "68a65a79450dc4c1bc23d2b39287900442d8555c451107309001c0cb0e61539c",
-        "record_hash": "e4e16ff0fe04d0595f37c7949f68e7163483c3e47eb8a006e05b9bb2d2e9b982",
+        "identity_fingerprint": "6ba37272bed3460b619bcbe4c32055cb3d7c3d4df55231b9b13241adfc33863e",
+        "record_hash": "fe651c82e9f5e677da80cdbb0b2874f0df4e9eb6dc62935153d09729dd085248",
         "verify": {
           "development_only": true,
           "experiment_id": "exp_seal_1",
-          "identity_fingerprint": "68a65a79450dc4c1bc23d2b39287900442d8555c451107309001c0cb0e61539c",
+          "identity_fingerprint": "6ba37272bed3460b619bcbe4c32055cb3d7c3d4df55231b9b13241adfc33863e",
           "ok": true,
           "oos_consumed": false,
-          "record_hash": "e4e16ff0fe04d0595f37c7949f68e7163483c3e47eb8a006e05b9bb2d2e9b982"
+          "record_hash": "fe651c82e9f5e677da80cdbb0b2874f0df4e9eb6dc62935153d09729dd085248"
         }
       },
       "fail_closed": true,
@@ -242,7 +244,7 @@
       "detail": "reload_ok",
       "evidence": {
         "count": 7,
-        "registry_hash": "cc5e8cdb4cada2a4eaa25822907e14ef0fb0e8165538eba525db93602a69dff9"
+        "registry_hash": "8de0df69caa042a7e7ec17d13109cf2217850f4ddc01e8701cdcbb0556d746e7"
       },
       "fail_closed": true,
       "passed": true,
@@ -271,7 +273,7 @@
   "schema_version": 1,
   "secret_leak_count": 0,
   "secret_scan": {
-    "created_at": "2026-08-05T11:17:43Z",
+    "created_at": "2026-08-05T11:18:36Z",
     "hits": [],
     "scanned_owned_paths": [
       "backend/nexus_experiment_registry/",
@@ -286,7 +288,7 @@
   "silent_cherry_picking": false,
   "status": "PASS",
   "version_pins": {
-    "code_checksum": "cec4908181fae0bb14f3f709e6e20dc90602b3ed",
+    "code_checksum": "b80635b0c3628e07ea42c5b2424abe83be5c46db",
     "cost_version": "founder-conservative-v1-1-2026-08-05",
     "execution_version": "autonomous_execution_simulator_v1_1",
     "feature_version": "v14_j_feature_surface_1",

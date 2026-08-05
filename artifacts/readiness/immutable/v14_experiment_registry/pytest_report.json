@@ -1,7 +1,7 @@
 {
-  "elapsed_s": 2.894,
+  "elapsed_s": 1.787,
   "exit_code": 0,
   "passed": true,
   "passed_count": 17,
-  "tail": ".................                                                        [100%]\n17 passed in 1.88s"
+  "tail": ".................                                                        [100%]\n17 passed in 1.15s"
 }
