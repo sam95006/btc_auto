@@ -1,0 +1,236 @@
+{
+  "schema": "public_decision_cloud_v1",
+  "environment": "local_staging",
+  "read_only": true,
+  "generated_at": "2026-08-05T12:00:00Z",
+  "disclaimer": "Fixture marks only. Not live exchange data. Not trading advice. User remains final decision-maker.",
+  "market_overview": {
+    "as_of": "2026-08-05T12:00:00Z",
+    "source": "STAGING_FIXTURE",
+    "exchange_api_used": false,
+    "symbols": [
+      {
+        "symbol": "BTCUSDT",
+        "last_mark": 64500.0,
+        "change_24h_pct": 1.2,
+        "regime_label": "range_to_trend_probe",
+        "uncertainty_note": "Fixture mark; freshness advisory only"
+      },
+      {
+        "symbol": "ETHUSDT",
+        "last_mark": 3420.5,
+        "change_24h_pct": -0.4,
+        "regime_label": "mean_reversion_bias",
+        "uncertainty_note": "Fixture mark; freshness advisory only"
+      },
+      {
+        "symbol": "SOLUSDT",
+        "last_mark": 148.2,
+        "change_24h_pct": 2.1,
+        "regime_label": "high_beta_follow",
+        "uncertainty_note": "Fixture mark; freshness advisory only"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "decision_id": "dec_staging_001",
+      "schema_version": "public_decision_cloud_v1",
+      "owner_user_id": "staging_user_a",
+      "status": "committed",
+      "created_at": "2026-08-05T10:00:00Z",
+      "updated_at": "2026-08-05T11:30:00Z",
+      "context": {
+        "symbols": ["BTCUSDT"],
+        "regime_labels": ["range_to_trend_probe"],
+        "data_freshness_seconds": 120,
+        "sources": ["public_news_summary", "user_notes", "staging_fixture_mark"],
+        "uncertainty_notes": ["Funding print lag in fixture set"]
+      },
+      "thesis": {
+        "statement": "BTC holds above prior range mid while breadth improves; stand-aside until invalidation clears.",
+        "horizon": "3d-7d",
+        "catalysts": ["ETF flow print", "funding normalization"],
+        "what_would_change_mind": ["Clean break below range mid with rising volume"]
+      },
+      "decision": {
+        "posture": "stand_aside",
+        "rationale_human": "Wait for confirmation; do not chase.",
+        "rationale_ai_challenge": "Ask whether range mid is still meaningful after weekend gap.",
+        "places_orders": false
+      },
+      "risk": {
+        "invalidation_conditions": [
+          "BTC fixture mark closes below 62800 on daily",
+          "Breadth deteriorates for two consecutive sessions"
+        ],
+        "max_loss_framing": "User-defined advisory; no account linkage",
+        "time_stop": "Reassess within 7 days",
+        "advisory_only": true
+      },
+      "evidence": [
+        {
+          "evidence_id": "ev_001",
+          "polarity": "supporting",
+          "source": "public_market_commentary",
+          "timestamp": "2026-08-05T09:45:00Z",
+          "freshness_seconds": 900,
+          "summary": "Open interest consolidation without aggressive leverage spike (fixture narrative)."
+        },
+        {
+          "evidence_id": "ev_002",
+          "polarity": "supporting",
+          "source": "user_note",
+          "timestamp": "2026-08-05T10:05:00Z",
+          "freshness_seconds": 600,
+          "summary": "User notes ETF flow print aligned with thesis catalyst list."
+        }
+      ],
+      "counter_evidence": [
+        {
+          "evidence_id": "cev_001",
+          "polarity": "contradicting",
+          "source": "public_macro_headline",
+          "timestamp": "2026-08-05T09:50:00Z",
+          "freshness_seconds": 850,
+          "summary": "Risk-off headline cluster overnight; may invalidate stand-aside patience bias."
+        }
+      ],
+      "outcome": {
+        "recorded": true,
+        "recorded_at": "2026-08-05T11:00:00Z",
+        "result_label": "process_followed_no_position",
+        "user_confirmed": true,
+        "public_mark_reference": "BTCUSDT@64500_fixture",
+        "private_account_used": false
+      },
+      "review": {
+        "completed": true,
+        "completed_at": "2026-08-05T11:30:00Z",
+        "process_vs_outcome": "Process held; outcome neutral because no position by design.",
+        "calibration_notes": "AI challenge was useful; human kept final call.",
+        "lessons_public_graph": ["Stand-aside is a valid Decision posture"]
+      }
+    },
+    {
+      "decision_id": "dec_staging_002",
+      "schema_version": "public_decision_cloud_v1",
+      "owner_user_id": "staging_user_b",
+      "status": "monitoring",
+      "created_at": "2026-08-05T08:00:00Z",
+      "updated_at": "2026-08-05T11:45:00Z",
+      "context": {
+        "symbols": ["ETHUSDT"],
+        "regime_labels": ["mean_reversion_bias"],
+        "data_freshness_seconds": 240,
+        "sources": ["staging_fixture_mark", "user_notes"],
+        "uncertainty_notes": ["Correlation with BTC elevated"]
+      },
+      "thesis": {
+        "statement": "ETH mean-reverts toward VWAP band if BTC remains range-bound.",
+        "horizon": "1d-3d",
+        "catalysts": ["Funding flip", "Spot premium fade"],
+        "what_would_change_mind": ["BTC trend break with ETH beta expansion"]
+      },
+      "decision": {
+        "posture": "hold_watch",
+        "rationale_human": "Watch invalidation; record intent only.",
+        "rationale_ai_challenge": "Challenge whether VWAP band is still the right anchor.",
+        "places_orders": false
+      },
+      "risk": {
+        "invalidation_conditions": [
+          "ETH fixture mark breaks above 3550 with expanding volume",
+          "BTC leaves range mid decisively"
+        ],
+        "max_loss_framing": "Advisory only",
+        "time_stop": "48h",
+        "advisory_only": true
+      },
+      "evidence": [
+        {
+          "evidence_id": "ev_101",
+          "polarity": "supporting",
+          "source": "user_note",
+          "timestamp": "2026-08-05T08:10:00Z",
+          "freshness_seconds": 1100,
+          "summary": "User logged prior two sessions of mean-reversion behavior."
+        }
+      ],
+      "counter_evidence": [
+        {
+          "evidence_id": "cev_101",
+          "polarity": "contradicting",
+          "source": "public_market_commentary",
+          "timestamp": "2026-08-05T11:40:00Z",
+          "freshness_seconds": 120,
+          "summary": "Momentum commentary argues breakout risk; monitor closely."
+        }
+      ],
+      "outcome": {
+        "recorded": false,
+        "recorded_at": null,
+        "result_label": null,
+        "user_confirmed": false,
+        "public_mark_reference": null,
+        "private_account_used": false
+      },
+      "review": {
+        "completed": false,
+        "completed_at": null,
+        "process_vs_outcome": null,
+        "calibration_notes": null,
+        "lessons_public_graph": []
+      }
+    }
+  ],
+  "thesis_monitor": [
+    {
+      "monitor_id": "tm_001",
+      "decision_id": "dec_staging_002",
+      "thesis_summary": "ETH mean-reverts toward VWAP band if BTC remains range-bound.",
+      "invalidation_watch": [
+        "ETH fixture mark breaks above 3550 with expanding volume",
+        "BTC leaves range mid decisively"
+      ],
+      "alert_candidates": ["counter_evidence_freshness_spike"],
+      "auto_trades": false
+    }
+  ],
+  "decision_memory": [
+    {
+      "memory_id": "mem_001",
+      "decision_id": "dec_staging_001",
+      "kind": "public_decision_graph_edge",
+      "summary": "Stand-aside posture preserved when evidence mixed.",
+      "private_lesson_memory": false
+    },
+    {
+      "memory_id": "mem_002",
+      "decision_id": "dec_staging_002",
+      "kind": "thesis_supersession_candidate",
+      "summary": "Monitoring decision may supersede prior ETH watch notes.",
+      "private_lesson_memory": false
+    }
+  ],
+  "alerts": [
+    {
+      "alert_id": "al_001",
+      "class": "freshness",
+      "severity": "info",
+      "decision_id": "dec_staging_002",
+      "message": "Counter-evidence freshness is elevated; review thesis monitor.",
+      "created_at": "2026-08-05T11:46:00Z",
+      "actionable_trade": false
+    },
+    {
+      "alert_id": "al_002",
+      "class": "invalidation_watch",
+      "severity": "warn",
+      "decision_id": "dec_staging_002",
+      "message": "Invalidation proximity advisory from fixture marks.",
+      "created_at": "2026-08-05T11:47:00Z",
+      "actionable_trade": false
+    }
+  ]
+}

@@ -20,6 +20,7 @@ from backend.api.market_chart_routes import register_market_chart_routes
 from backend.api.market_intelligence_routes import register_market_intelligence_routes
 from backend.api.server import register_nexus_routes
 from backend.nexus_research.api_routes import register_nexus_research_routes
+from backend.nexus_public_decision_cloud.routes import register_public_decision_cloud_routes
 from backend.core.env_loader import load_env_file
 from backend.runtime.single_instance_guard import SingleInstanceError, SingleInstanceGuard
 from backend.security.secret_manager import initialize_security_foundation
@@ -45,6 +46,7 @@ register_market_scanner_routes(app)
 register_market_sector_routes(app)
 register_market_chart_routes(app)
 register_market_intelligence_routes(app)
+register_public_decision_cloud_routes(app)  # PUB-B: local/staging Decision Cloud (read-only)
 register_nexus_research_routes(app)  # Phase 5 Gate B: AI Review research routes
 try:
     from backend.nexus_research.sim_routes import register_gate_c_routes
