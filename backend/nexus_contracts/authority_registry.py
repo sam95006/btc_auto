@@ -10,7 +10,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Iterable
 
 REGISTRY_SCHEMA = "nexus_canonical_authority_registry_v1"
-REGISTRY_VERSION = "v11.lane_h.1"
+REGISTRY_VERSION = "v11.1.checkpoint_authority"
 
 AUTHORITY_DOMAINS: tuple[str, ...] = (
     "execution",
@@ -398,62 +398,99 @@ def _records() -> tuple[AuthorityRecord, ...]:
         ),
         AuthorityRecord(
             domain="checkpoint",
-            authority_id="private_core.checkpoint.session_recovery",
-            canonical_module="backend.nexus_recovery.crash_recovery",
-            canonical_symbol="recover_from_checkpoint",
-            contract_module="backend.nexus_recovery.invariants",
-            scope="private_core_session_recovery",
-            status="contested",
+            authority_id="private_core.checkpoint.envelope_v1",
+            canonical_module="backend.nexus_checkpoint.store",
+            canonical_symbol="CanonicalCheckpointStore",
+            contract_module="backend.nexus_checkpoint.envelope",
+            scope="private_core_canonical_envelope",
+            status="active_compat_present",
             invariants=(
                 "ambiguous_state_routes_to_BLOCKED_AMBIGUOUS",
                 "no_silent_resume",
+                "atomic_temp_fsync_rename",
+                "checksum_verify_on_read_write",
+                "lkg_pointer_required_for_restore",
+                "no_destructive_live_v23_migration",
+                "CANONICAL_CHECKPOINT_ENVELOPE_COUNT==1",
             ),
-            contract_keys=("RecoveryOutcome", "check_recovery_invariants"),
+            contract_keys=(
+                "build_envelope",
+                "validate_envelope",
+                "detect_corruption",
+                "CanonicalCheckpointStore",
+                "REQUIRED_ENVELOPE_FIELDS",
+            ),
             competitors=(
+                CompetitorRecord(
+                    module="backend.nexus_recovery.crash_recovery",
+                    symbol="recover_from_checkpoint",
+                    role="parallel_lane",
+                    severity="medium",
+                    notes=(
+                        "Session crash recovery consumes durability LKG; must restore via "
+                        "envelope/LKG contracts — does not own envelope schema."
+                    ),
+                    recommended_action="migrate_callers",
+                ),
                 CompetitorRecord(
                     module="backend.nexus_private_control.checkpoint",
                     symbol="CheckpointStore",
                     role="parallel_lane",
-                    severity="high",
-                    notes="Control-plane local checkpoint store; different schema/root.",
+                    severity="medium",
+                    notes=(
+                        "Control-plane payload owner; wrap via "
+                        "adapters.wrap_control_plane_payload before cross-domain resume."
+                    ),
                     recommended_action="retain_compat",
                 ),
                 CompetitorRecord(
                     module="backend.nexus_reflection.checkpoint",
                     symbol="checkpoint_path",
                     role="parallel_lane",
-                    severity="high",
-                    notes="Blind Reflection V2.3 checkpoint schema v4; provider-resume authority.",
+                    severity="medium",
+                    notes=(
+                        "Blind Reflection V2.3 payload schema v4 owner; wrap via "
+                        "adapters.wrap_reflection_payload (dry-run before live migrate)."
+                    ),
+                    recommended_action="retain_compat",
+                ),
+                CompetitorRecord(
+                    module="backend.nexus_decision.checkpoint",
+                    symbol="DecisionCheckpointStore",
+                    role="parallel_lane",
+                    severity="medium",
+                    notes="Decision lifecycle payload owner; wrap via adapters.wrap_decision_payload.",
                     recommended_action="retain_compat",
                 ),
                 CompetitorRecord(
                     module="backend.nexus_edge_discovery.quota_aware_v23",
                     symbol="checkpoint_path",
                     role="compatibility_shim",
-                    severity="medium",
-                    notes="Edge-discovery checkpoint helpers; overlaps reflection checkpoint.",
+                    severity="low",
+                    notes="Edge-discovery checkpoint helpers; overlaps reflection payload path.",
                     recommended_action="migrate_callers",
                 ),
                 CompetitorRecord(
                     module="backend.nexus_reflection.v23_resume_v10",
                     symbol="checkpoint_dest",
                     role="parallel_lane",
-                    severity="medium",
-                    notes="V10 resume checkpoint destination helper.",
+                    severity="low",
+                    notes="V10 resume destination helper; payload-scoped.",
                     recommended_action="retain_compat",
                 ),
                 CompetitorRecord(
                     module="backend.nexus_autonomy.session_orchestrator_v1",
                     symbol="checkpoint",
                     role="obsolete_entry",
-                    severity="medium",
-                    notes="V1 orchestrator checkpoint method; prefer V1.1 + recovery invariants.",
+                    severity="low",
+                    notes="V1 orchestrator checkpoint method; prefer envelope store + V1.1 recovery.",
                     recommended_action="future_remove",
                 ),
             ),
             notes=(
-                "Checkpoint authorities are domain-scoped (session / control-plane / reflection). "
-                "Cross-domain resume is a blocker if schemas mix."
+                "V11.1 C4: one canonical envelope (nexus_checkpoint_envelope_v1). "
+                "Subsystems retain payload schema ownership; cross-domain resume requires "
+                "explicit adapters. Live V2.3 migration is dry-run only."
             ),
         ),
         AuthorityRecord(

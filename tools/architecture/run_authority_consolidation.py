@@ -50,9 +50,11 @@ def run_pass(root: Path, out: Path, pass_id: str) -> dict[str, Any]:
     for v in gate.get("violations") or []:
         blockers.append({"source": "ci_gate", **v})
 
-    # Contested domains without a scoped adapter are consolidation blockers
+    # Contested domains without a scoped adapter are consolidation blockers.
+    # Checkpoint resolved in V11.1 C4 via canonical envelope + adapters
+    # (status active_compat_present) — only emit MULTI_SCOPE_AUTHORITY when still contested.
     for domain in registry["summary"]["contested_domains"]:
-        if domain in {"lifecycle", "checkpoint"}:
+        if domain == "lifecycle":
             blockers.append(
                 {
                     "source": "scope_contention",
@@ -65,6 +67,26 @@ def run_pass(root: Path, out: Path, pass_id: str) -> dict[str, Any]:
                     ),
                 }
             )
+        elif domain == "checkpoint":
+            blockers.append(
+                {
+                    "source": "scope_contention",
+                    "domain": domain,
+                    "severity": "critical",
+                    "code": "MULTI_SCOPE_AUTHORITY_CHECKPOINT",
+                    "message": (
+                        "Domain checkpoint remains contested; canonical envelope + "
+                        "adapters required before deletion waves."
+                    ),
+                }
+            )
+
+    ckpt = (registry.get("by_domain") or {}).get("checkpoint") or {}
+    if ckpt.get("status") == "active_compat_present" and ckpt.get("canonical_module", "").endswith(
+        "nexus_checkpoint.store"
+    ):
+        # Explicit resolution evidence for Lane H / C4.
+        pass
 
     summary = {
         "schema": "nexus_authority_consolidation_pass_v1",

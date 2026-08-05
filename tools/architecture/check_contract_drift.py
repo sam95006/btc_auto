@@ -231,33 +231,106 @@ def check_provider_retry_drift(root: Path) -> list[dict[str, Any]]:
 
 def check_checkpoint_drift(root: Path) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
-    paths = [
-        ("backend.nexus_reflection.checkpoint", "CHECKPOINT_SCHEMA_V4"),
-        ("backend.nexus_private_control.checkpoint", None),
-        ("backend.nexus_recovery.crash_recovery", None),
-    ]
-    present = []
-    for mod, key in paths:
-        fp = _module_file(root, mod)
-        if fp.exists():
-            entry: dict[str, Any] = {"module": mod, "exists": True}
-            if key:
-                entry[key] = _read_assign(fp, key)
-            present.append(entry)
-    if len(present) >= 2:
+    auth = get_authority("checkpoint")
+    canonical = _safe_import(auth.canonical_module)
+    if isinstance(canonical, dict) and "__import_error__" in canonical:
         findings.append(
             {
                 "domain": "checkpoint",
-                "severity": "high",
-                "code": "MULTI_CHECKPOINT_SCHEMAS",
-                "modules": present,
-                "recommendation": (
-                    "Do not cross-resume between reflection / control-plane / session recovery "
-                    "without an explicit schema adapter. Future: publish checkpoint schema IDs "
-                    "in nexus_contracts."
-                ),
+                "severity": "critical",
+                "code": "CANONICAL_ENVELOPE_IMPORT_FAILED",
+                "module": auth.canonical_module,
+                "detail": canonical["__import_error__"],
             }
         )
+        return findings
+    store_cls = getattr(canonical, auth.canonical_symbol, None)
+    if store_cls is None:
+        findings.append(
+            {
+                "domain": "checkpoint",
+                "severity": "critical",
+                "code": "CANONICAL_ENVELOPE_SYMBOL_MISSING",
+                "module": auth.canonical_module,
+                "symbol": auth.canonical_symbol,
+            }
+        )
+    envelope = _safe_import("backend.nexus_checkpoint")
+    if isinstance(envelope, dict) and "__import_error__" in envelope:
+        findings.append(
+            {
+                "domain": "checkpoint",
+                "severity": "critical",
+                "code": "ENVELOPE_PACKAGE_IMPORT_FAILED",
+                "detail": envelope["__import_error__"],
+            }
+        )
+    else:
+        count = getattr(envelope, "CANONICAL_CHECKPOINT_ENVELOPE_COUNT", None)
+        if count != 1:
+            findings.append(
+                {
+                    "domain": "checkpoint",
+                    "severity": "critical",
+                    "code": "ENVELOPE_COUNT_NOT_ONE",
+                    "observed": count,
+                }
+            )
+        schema = getattr(envelope, "ENVELOPE_SCHEMA", None)
+        if schema != "nexus_checkpoint_envelope_v1":
+            findings.append(
+                {
+                    "domain": "checkpoint",
+                    "severity": "critical",
+                    "code": "ENVELOPE_SCHEMA_MISMATCH",
+                    "expected": "nexus_checkpoint_envelope_v1",
+                    "observed": schema,
+                }
+            )
+
+    # Payload owners remain; document as informational when adapters exist.
+    payload_owners = [
+        ("backend.nexus_reflection.checkpoint", "CHECKPOINT_SCHEMA_V4"),
+        ("backend.nexus_private_control.checkpoint", None),
+        ("backend.nexus_decision.checkpoint", None),
+        ("backend.nexus_recovery.crash_recovery", None),
+    ]
+    present = []
+    for mod, key in payload_owners:
+        fp = _module_file(root, mod)
+        if fp.exists():
+            entry: dict[str, Any] = {"module": mod, "exists": True, "role": "payload_owner"}
+            if key:
+                entry[key] = _read_assign(fp, key)
+            present.append(entry)
+    adapters = root / "backend" / "nexus_checkpoint" / "adapters.py"
+    if len(present) >= 2:
+        if adapters.exists():
+            findings.append(
+                {
+                    "domain": "checkpoint",
+                    "severity": "informational",
+                    "code": "MULTI_PAYLOAD_SCHEMAS_ADAPTED",
+                    "modules": present,
+                    "adapter_module": "backend.nexus_checkpoint.adapters",
+                    "recommendation": (
+                        "Payload schemas remain subsystem-owned; cross-domain resume must "
+                        "go through nexus_checkpoint adapters into the canonical envelope."
+                    ),
+                }
+            )
+        else:
+            findings.append(
+                {
+                    "domain": "checkpoint",
+                    "severity": "critical",
+                    "code": "MULTI_SCOPE_AUTHORITY_CHECKPOINT",
+                    "modules": present,
+                    "recommendation": (
+                        "Publish canonical envelope + explicit adapters before deletion waves."
+                    ),
+                }
+            )
     return findings
 
 
