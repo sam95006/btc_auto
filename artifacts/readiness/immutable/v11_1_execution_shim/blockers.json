@@ -1,0 +1,12 @@
+{
+  "schema": "nexus_v11_1_execution_shim_blockers_v1",
+  "lane": "C5_EXECUTION_SHIM_AUTHORITY_REMOVAL",
+  "generated_at": "2026-08-05T04:05:00Z",
+  "remaining_blockers": [],
+  "deferred_non_blockers": [
+    "Draft PR creation deferred if gh unauthenticated",
+    "V1 autonomy simulator (execution_simulator_v1.py) still embeds parallel fill logic — out of C5 scope (V1.1 shim only)",
+    "Mass-delete of compatibility modules remains hard-banned"
+  ],
+  "unresolved_critical_authority_blocker_count": 0
+}

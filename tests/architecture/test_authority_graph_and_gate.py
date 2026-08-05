@@ -62,3 +62,19 @@ def test_removal_recommendations_never_delete_now():
     assert report["policy"]["delete_now_allowed"] is False
     assert all(not r["delete_now"] for r in report["recommendations"])
     assert report["recommendation_count"] > 0
+
+
+def test_execution_shim_authority_trap_gate_passes():
+    from tools.architecture.ci_gate_execution_shim_authority import evaluate
+
+    report = evaluate(ROOT)
+    assert report["passed"] is True, report["violations"]
+    assert report["canonical_execution_authority_count"] == 1
+    assert report["canonical_fill_authority_count"] == 1
+    assert report["shim_embedded_fill_authority_count"] == 0
+
+
+def test_compat_shim_no_longer_hardcodes_taker_fee():
+    report = run_drift_checks(ROOT)
+    codes = {f["code"] for f in report["findings"]}
+    assert "COMPAT_SIM_HARDCODED_FEE" not in codes

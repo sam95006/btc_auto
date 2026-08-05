@@ -1,0 +1,46 @@
+{
+  "schema": "nexus_v11_1_execution_shim_findings_v1",
+  "lane": "C5_EXECUTION_SHIM_AUTHORITY_REMOVAL",
+  "generated_at": "2026-08-05T04:05:00Z",
+  "critical_findings": [],
+  "high_findings": [
+    {
+      "id": "C5-H1",
+      "code": "LEGACY_SHIM_QUEUE_KWARGS_IGNORED",
+      "severity": "high",
+      "summary": "Shim try_fill accepts opposite_volume and latency_adverse_bps for API compatibility but does not translate them into canonical BarContext fields.",
+      "impact": "Legacy callers relying on shim-local queue/latency fill haircuts now receive canonical fill_engine semantics only.",
+      "mitigation": "Documented; Session traffic must use orchestrator_adapter_v1. Future adapter translation can map queue fields if canonical engine gains them.",
+      "blocks_merge": false
+    }
+  ],
+  "medium_findings": [
+    {
+      "id": "C5-M1",
+      "code": "AD_HOC_INSTRUMENT_AUTO_REGISTER",
+      "severity": "medium",
+      "summary": "Shim adapts unknown symbols by auto-registering InstrumentSpec onto the canonical engine.",
+      "impact": "Legacy fuzz symbols remain accepted; instrument universe is not a closed DEFAULT_INSTRUMENTS set for shim callers.",
+      "mitigation": "Adaptation is explicit and local to shim; Session adapter path still uses canonical defaults.",
+      "blocks_merge": false
+    },
+    {
+      "id": "C5-M2",
+      "code": "SIGNATURE_STILL_CLAIMS_TRY_FILL",
+      "severity": "medium",
+      "summary": "Authority graph still detects try_fill on the shim module as a fill-domain claim.",
+      "impact": "Competitor remains listed as compatibility_shim; severity lowered because body is delegation-only and CI traps enforce no embedded logic.",
+      "mitigation": "Registry notes updated; trap gate is the hard fail for reintroduction.",
+      "blocks_merge": false
+    }
+  ],
+  "low_findings": [
+    {
+      "id": "C5-L1",
+      "code": "LEGACY_10K_SCENARIO_SUITE_NARROWED",
+      "severity": "low",
+      "summary": "Former 10k generated scenarios in test_execution_simulator_v1_1.py were replaced with delegation/trap tests; fill semantics remain covered by test_execution_realism_v1_1_*.",
+      "blocks_merge": false
+    }
+  ]
+}

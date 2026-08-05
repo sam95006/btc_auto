@@ -1,0 +1,23 @@
+{
+  "schema": "nexus_v11_1_execution_shim_status_v1",
+  "lane": "C5_EXECUTION_SHIM_AUTHORITY_REMOVAL",
+  "generated_at": "2026-08-05T04:05:00Z",
+  "C5_execution_shim_status": "PASS",
+  "pass_1": "PASS",
+  "pass_2": "PASS",
+  "authority_trap_passed": true,
+  "canonical_execution_authority_count": 1,
+  "canonical_fill_authority_count": 1,
+  "shim_embedded_fill_authority_count": 0,
+  "branch": "feature/v11_1-execution-shim-remediation",
+  "base_head": "5b1d47543523f7e5be88da63256904171ce45165",
+  "changed_files": [
+    "backend/nexus_autonomy/execution_simulator_v1_1.py",
+    "backend/nexus_contracts/authority_registry.py",
+    "tools/architecture/ci_gate_execution_shim_authority.py",
+    "tests/test_execution_simulator_v1_1.py",
+    "tests/architecture/test_authority_graph_and_gate.py",
+    "artifacts/readiness/immutable/v11_1_execution_shim/"
+  ],
+  "hard_bans_intact": true
+}
