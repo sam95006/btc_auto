@@ -1,0 +1,12 @@
+{
+  "as_of_ms": 1720000055000,
+  "created_at": "2026-08-05T08:33:08Z",
+  "fingerprint_baseline": "976f6b24833e7c1ddab7e59d363b8640c8e754f0f8991cbd879f3e8559c4be56",
+  "fingerprint_with_future": "976f6b24833e7c1ddab7e59d363b8640c8e754f0f8991cbd879f3e8559c4be56",
+  "future_event_exchange_timestamp": 1720000065000,
+  "pit_holds": true,
+  "predictive_edge_claimed": false,
+  "schema": "v13_e_pit_proof",
+  "seed": "v13e-pit-campaign",
+  "symbol": "BTCUSDT"
+}

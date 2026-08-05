@@ -1,0 +1,197 @@
+{
+  "catalog_version": "v13_e_feature_catalog_1",
+  "common_semantics": {
+    "availability_semantics": {
+      "AVAILABLE": "window has >= min_events and side/price fields parseable where required",
+      "MISSING": "no eligible events in window at as_of_ms",
+      "NOT_YET_AVAILABLE": "eligible events exist in event-time but receive_timestamp > as_of_ms",
+      "PARTIAL": "window has events but below min_events or required fields missing for subset"
+    },
+    "missing_data_behavior": {
+      "availability": "MISSING",
+      "does_not_forward_fill": true,
+      "does_not_impute": true,
+      "does_not_invent_aggressor_side": true,
+      "value": null
+    },
+    "non_claims": [
+      "No predictive edge",
+      "No profitability",
+      "No strategy signal",
+      "Descriptive microstructure measurement only"
+    ],
+    "staleness_semantics": {
+      "note": "Staleness is a consumption warning, not a rewrite of the measurement",
+      "stale_after_ms": 120000,
+      "stale_does_not_change_value": true,
+      "stale_flag": "True when staleness_ms > stale_after_ms",
+      "staleness_ms": "as_of_ms - available_at_ms when available_at_ms is known"
+    },
+    "timestamp_semantics": {
+      "as_of_ms": "Point-in-Time cutoff: only events with exchange_timestamp <= as_of_ms AND receive_timestamp <= as_of_ms are eligible",
+      "available_at_ms": "max(receive_timestamp) among included events; feature is not available before all included events have been received",
+      "event_time_field": "exchange_timestamp",
+      "event_time_unit": "ms_epoch_utc",
+      "feature_event_timestamp": "max(exchange_timestamp) among events included in the window",
+      "receive_time_field": "receive_timestamp",
+      "receive_time_unit": "ms_epoch_utc",
+      "window_alignment": "floor(exchange_timestamp / window_ms) * window_ms"
+    }
+  },
+  "created_at": "2026-08-05T08:33:08Z",
+  "feature_count": 12,
+  "feature_schema_version": "micro_feature_lab_v13_e_1",
+  "features": {
+    "absorption_proxy": {
+      "definition": "Absorption proxy: abs(net_aggressive_notional) / (1e-12 + abs(price_change_fraction) * mid_price_proxy * total_volume). High values indicate large aggressive flow with small price move (descriptive only; not a liquidity claim).",
+      "feature_id": "absorption_proxy",
+      "inputs": [
+        "AGGRESSIVE_TRADE_FLOW"
+      ],
+      "min_events": 2,
+      "semantics_ref": "common_semantics",
+      "units": "dimensionless_absorption_ratio",
+      "value_type": "float",
+      "window_ms_default": 60000
+    },
+    "aggressive_buy_sell_imbalance": {
+      "definition": "Net aggressive notional imbalance in the window: (buy_aggressor_notional - sell_aggressor_notional) / (buy_aggressor_notional + sell_aggressor_notional). UNKNOWN aggressor sides are excluded from numerator and denominator.",
+      "feature_id": "aggressive_buy_sell_imbalance",
+      "inputs": [
+        "AGGRESSIVE_TRADE_FLOW"
+      ],
+      "min_events": 1,
+      "semantics_ref": "common_semantics",
+      "units": "dimensionless_ratio_in_[-1,1]",
+      "value_type": "float",
+      "window_ms_default": 60000
+    },
+    "cross_symbol_flow": {
+      "definition": "For a primary symbol, Pearson correlation of its per-sub-window net aggressive notional series with each peer symbol over the same parent window. Returns {peer: corr} for peers with >= 3 overlapping non-zero-variance sub-windows.",
+      "feature_id": "cross_symbol_flow",
+      "inputs": [
+        "AGGRESSIVE_TRADE_FLOW"
+      ],
+      "min_events": 3,
+      "semantics_ref": "common_semantics",
+      "sub_window_ms_default": 10000,
+      "units": "dimensionless_correlation_map",
+      "value_type": "object",
+      "window_ms_default": 60000
+    },
+    "flow_persistence": {
+      "definition": "Sign persistence of net aggressive notional across consecutive sub-windows of length sub_window_ms inside the parent window. fraction of adjacent sub-window pairs whose net-flow signs agree (zero-net sub-windows excluded from pairs).",
+      "feature_id": "flow_persistence",
+      "inputs": [
+        "AGGRESSIVE_TRADE_FLOW"
+      ],
+      "min_events": 2,
+      "semantics_ref": "common_semantics",
+      "sub_window_ms_default": 10000,
+      "units": "dimensionless_fraction_in_[0,1]",
+      "value_type": "float",
+      "window_ms_default": 60000
+    },
+    "flow_reversal": {
+      "definition": "Complement of flow_persistence among comparable adjacent pairs: 1 - persistence when comparable pairs exist; MISSING otherwise.",
+      "feature_id": "flow_reversal",
+      "inputs": [
+        "AGGRESSIVE_TRADE_FLOW"
+      ],
+      "min_events": 2,
+      "semantics_ref": "common_semantics",
+      "sub_window_ms_default": 10000,
+      "units": "dimensionless_fraction_in_[0,1]",
+      "value_type": "float",
+      "window_ms_default": 60000
+    },
+    "liquidation_clustering": {
+      "cluster_bucket_ms_default": 5000,
+      "definition": "Clustering proxy: max liquidations in any sub-bucket of length cluster_bucket_ms, divided by expected uniform count (liquidation_count * cluster_bucket_ms / window_ms). Equals 1 under uniform spacing; >1 indicates clustering.",
+      "feature_id": "liquidation_clustering",
+      "inputs": [
+        "LIQUIDATION_EVENTS"
+      ],
+      "min_events": 2,
+      "semantics_ref": "common_semantics",
+      "units": "dimensionless_cluster_ratio",
+      "value_type": "float",
+      "window_ms_default": 60000
+    },
+    "liquidation_intensity": {
+      "definition": "Liquidation arrival rate: liquidation_count / (window_ms / 1000).",
+      "feature_id": "liquidation_intensity",
+      "inputs": [
+        "LIQUIDATION_EVENTS"
+      ],
+      "min_events": 0,
+      "semantics_ref": "common_semantics",
+      "units": "liquidations_per_second",
+      "value_type": "float",
+      "window_ms_default": 60000
+    },
+    "price_impact": {
+      "definition": "Signed mid-path impact over the window: (last_trade_price - first_trade_price) / first_trade_price, using exchange event order within the window.",
+      "feature_id": "price_impact",
+      "inputs": [
+        "AGGRESSIVE_TRADE_FLOW"
+      ],
+      "min_events": 2,
+      "semantics_ref": "common_semantics",
+      "units": "fractional_price_change",
+      "value_type": "float",
+      "window_ms_default": 60000
+    },
+    "regime_context": {
+      "definition": "Descriptive regime label from trade intensity and realized vol terciles computed on the fixture/sample distribution within the extraction run: LOW_ACTIVITY | BALANCED | HIGH_ACTIVITY_HIGH_VOL | HIGH_ACTIVITY_LOW_VOL | SPARSE. Labels are relative to the provided sample, not market truth.",
+      "feature_id": "regime_context",
+      "inputs": [
+        "AGGRESSIVE_TRADE_FLOW"
+      ],
+      "min_events": 0,
+      "semantics_ref": "common_semantics",
+      "units": "categorical_label",
+      "value_type": "string",
+      "window_ms_default": 60000
+    },
+    "trade_intensity": {
+      "definition": "Trade arrival rate: trade_count / (window_ms / 1000). Counts AGGRESSIVE_TRADE_FLOW events in the window.",
+      "feature_id": "trade_intensity",
+      "inputs": [
+        "AGGRESSIVE_TRADE_FLOW"
+      ],
+      "min_events": 0,
+      "semantics_ref": "common_semantics",
+      "units": "trades_per_second",
+      "value_type": "float",
+      "window_ms_default": 60000
+    },
+    "trade_size_distribution": {
+      "definition": "Empirical size distribution of aggressive trades in the window: count, mean, std, p50, p90, p99 of notional (quote currency).",
+      "feature_id": "trade_size_distribution",
+      "inputs": [
+        "AGGRESSIVE_TRADE_FLOW"
+      ],
+      "min_events": 1,
+      "semantics_ref": "common_semantics",
+      "units": "quote_notional_statistics",
+      "value_type": "object",
+      "window_ms_default": 60000
+    },
+    "vol_adjusted_flow": {
+      "definition": "Net aggressive notional divided by realized volatility proxy (std of log returns of successive trade prices in the window). If realized_vol == 0, availability is PARTIAL and value is None.",
+      "feature_id": "vol_adjusted_flow",
+      "inputs": [
+        "AGGRESSIVE_TRADE_FLOW"
+      ],
+      "min_events": 3,
+      "semantics_ref": "common_semantics",
+      "units": "quote_notional_per_log_return_std",
+      "value_type": "float",
+      "window_ms_default": 60000
+    }
+  },
+  "predictive_edge_claimed": false,
+  "schema": "v13_e_micro_feature_catalog",
+  "strategy_signal": false
+}
