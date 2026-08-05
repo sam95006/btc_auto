@@ -1,6 +1,6 @@
 {
   "schema": "private_core_security_boundary_v1",
-  "created_at": "2026-08-04T16:19:28Z",
+  "created_at": "2026-08-05T04:14:53Z",
   "recommendation": "NEXUS_PRIVATE_SECURITY_BOUNDARY_V1_PASS",
   "violations": {
     "exchange_write_attempt_count": 0,
@@ -29,8 +29,8 @@
     ]
   },
   "audit": {
-    "import_graph_node_count": 753,
-    "import_graph_edge_count": 2674,
+    "import_graph_node_count": 926,
+    "import_graph_edge_count": 3207,
     "authenticated_write_method_count": 5,
     "write_method_trap_count": 5,
     "public_private_boundary_test_count": 2,

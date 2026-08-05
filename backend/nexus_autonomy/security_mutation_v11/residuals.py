@@ -7,22 +7,13 @@ from __future__ import annotations
 
 from typing import Any
 
+from backend.nexus_autonomy.security_mutation_v11.constants import H_GATE_HONESTY_NOTE
 from backend.nexus_autonomy.security_mutation_v11.models import Finding
 
 
 def residual_high_findings() -> list[Finding]:
     """Known residual risks after kill-suite PASS (explicit, not unresolved blockers)."""
     return [
-        Finding(
-            severity="high",
-            code="secret_scan_json_assignment_blind_spot",
-            detail=(
-                "scan_secrets_in_evidence credential_assignment regex misses JSON "
-                "quoted keys (\"api_key\": \"...\"); substring pattern:api_key still hits. "
-                "Do not rely on credential_assignment alone for JSON evidence."
-            ),
-            fail_closed=False,
-        ),
         Finding(
             severity="high",
             code="symlink_escape_platform_dependent",
@@ -35,12 +26,19 @@ def residual_high_findings() -> list[Finding]:
         ),
         Finding(
             severity="high",
-            code="mutation_surface_is_in_memory_wrappers",
+            code="wrapper_campaign_is_supplemental_only",
             detail=(
-                "Mutations are in-memory weakened subjects, not AST edits of production "
-                "modules. Surviving source-level mutants outside owned wrappers remain a "
-                "coverage gap for future mutmut/cosmic-ray integration."
+                "In-memory wrapper mutants remain as a supplemental kill suite. "
+                "PASS now requires production AST mutation "
+                "(production_ast_survivor_count=0, wrapper_only_pass_forbidden=true). "
+                "Do not treat wrapper-only evidence as production-module proof."
             ),
+            fail_closed=False,
+        ),
+        Finding(
+            severity="high",
+            code="DUPLICATE_GATE_BASELINE_FALSE_CONFIDENCE",
+            detail=H_GATE_HONESTY_NOTE,
             fail_closed=False,
         ),
     ]

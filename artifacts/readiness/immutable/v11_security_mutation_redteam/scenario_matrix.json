@@ -59,8 +59,8 @@
       "evidence": {
         "violation_count": 0,
         "violations": [],
-        "node_count": 910,
-        "edge_count": 3168
+        "node_count": 926,
+        "edge_count": 3207
       }
     },
     {
@@ -106,14 +106,10 @@
       "detail": "secret_scan_property_ok",
       "critical": false,
       "evidence": {
-        "clean_hits": [],
-        "assign_hits": [
-          "pattern:api_key",
-          "credential_assignment"
-        ],
-        "json_hits": [
-          "pattern:api_key"
-        ]
+        "clean_hit_count": 0,
+        "assign_ok": true,
+        "json_ok": true,
+        "json_assignment_ok": true
       }
     },
     {

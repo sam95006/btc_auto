@@ -118,12 +118,18 @@ def test_no_unresolved_survivors_after_kill_suite(workdir: Path):
     status = evaluate_security_mutation_redteam(root=ROOT, workdir=workdir)
     assert status["mutation_unresolved_blocker_count"] == 0, status.get("unresolved_blockers")
     assert status["mutation_killed_count"] == status["mutation_total"]
+    assert status["production_ast_survivor_count"] == 0, status.get("production_ast")
+    assert status["wrapper_only_pass_forbidden"] is True
+    assert status["h_gate_pass_is_not_authority_remediation"] is True
     assert status["recommendation"] == PASS_RECOMMENDATION
     assert status["passed"] is True
     assert status["critical_findings"] == []
     # Pass-2 residual highs are explicit, not silent
     assert status["findings"]["residual_high_count"] >= 1
     assert len(status["high_findings"]) >= 1
+    codes = {f["code"] for f in status["high_findings"]}
+    assert "DUPLICATE_GATE_BASELINE_FALSE_CONFIDENCE" in codes
+    assert "secret_scan_json_assignment_blind_spot" not in codes
 
 
 def test_pass2_scenarios_include_race_and_false_pass_guards():
@@ -151,6 +157,7 @@ def test_immutable_artifacts_written(tmp_path: Path):
     assert loaded["exchange_write_attempt_count"] == 0
     assert loaded["secret_leak_count"] == 0
     assert loaded["mainnet_client_created_count"] == 0
+    assert loaded["production_ast_survivor_count"] == 0
     summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
     assert "critical_findings" in summary
 
@@ -160,6 +167,7 @@ def test_run_end_to_end():
     assert status["exchange_write_attempt_count"] == 0
     assert status["secret_leak_count"] == 0
     assert status["mainnet_client_created_count"] == 0
+    assert status["production_ast_survivor_count"] == 0
     art = (
         ROOT
         / "artifacts"
@@ -169,8 +177,18 @@ def test_run_end_to_end():
         / "security_mutation_redteam_status.json"
     )
     assert art.is_file()
+    rem = (
+        ROOT
+        / "artifacts"
+        / "readiness"
+        / "immutable"
+        / "v11_1_g_ast_mutation"
+        / "g_ast_mutation_status.json"
+    )
+    assert rem.is_file()
 
 
 def test_owned_paths_declared():
     assert any("security_mutation_v11" in p for p in OWNED_PATHS)
     assert any("v11_security_mutation_redteam" in p for p in OWNED_PATHS)
+    assert any("v11_1_g_ast_mutation" in p for p in OWNED_PATHS)

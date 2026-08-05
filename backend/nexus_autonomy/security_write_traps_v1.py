@@ -110,10 +110,12 @@ class WriteTrapRegistry:
         self._patches: list[Any] = []
         self.write_method_trap_count = 0
         self.authenticated_write_method_count = 0
+        self.install_ok = False
 
     def install(self) -> WriteAttemptCounters:
         self.uninstall()
         self.counters = WriteAttemptCounters()
+        self.install_ok = False
         # Patch DemoWriteClient methods that exist.
         try:
             from backend.nexus_demo_execution import demo_write_client as dwc
@@ -147,6 +149,13 @@ class WriteTrapRegistry:
                 self.authenticated_write_method_count += 1
             except Exception:  # noqa: BLE001
                 continue
+
+        armed = self.write_method_trap_count > 0 or len(self._patches) > 0
+        self.install_ok = armed
+        # Fail-closed: never claim a successful arming when nothing was patched.
+        # (AST noop mutants that `return True` skip this path and are detect-killed.)
+        if not armed:
+            raise ExchangeWriteForbidden("write_trap_install_unarmed")
         return self.counters
 
     def uninstall(self) -> None:

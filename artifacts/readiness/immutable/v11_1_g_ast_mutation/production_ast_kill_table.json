@@ -1,0 +1,239 @@
+{
+  "schema": "v11_g_production_ast_kill_table_v1",
+  "production_ast": {
+    "schema": "v11_g_production_ast_mutation_v1",
+    "mutation_kind": "production_ast",
+    "tool": "custom_ast_mutator",
+    "mutmut_used": false,
+    "cosmic_ray_used": false,
+    "wrapper_only": false,
+    "wrapper_only_pass_forbidden": true,
+    "targets": [
+      "backend/nexus_autonomy/security_persistence_v1.py",
+      "backend/nexus_autonomy/security_credential_boundary_v1.py",
+      "backend/nexus_autonomy/security_public_private_v1.py",
+      "backend/nexus_autonomy/security_write_traps_v1.py"
+    ],
+    "mutant_total": 8,
+    "killed_count": 5,
+    "survivor_count": 0,
+    "equivalent_count": 3,
+    "error_count": 0,
+    "production_ast_survivor_count": 0,
+    "production_ast_killed_count": 5,
+    "survivor_ids": [],
+    "required_detect_kills": [
+      "persist_scan_secrets_noop",
+      "persist_json_accept_scalars",
+      "public_assert_schema_noop",
+      "public_redact_identity",
+      "write_trap_install_noop"
+    ],
+    "required_detect_kills_missing": [],
+    "required_detect_kills_ok": true,
+    "results": [
+      {
+        "mutant_id": "persist_drop_dotdot_token_check",
+        "target_rel": "backend/nexus_autonomy/security_persistence_v1.py",
+        "operator": "drop_dotdot_token_check",
+        "description": "Remove PurePosixPath '..' token rejection in assert_safe_relative_path",
+        "status": "equivalent",
+        "oracle": {
+          "hole_observed": false,
+          "property_holds": true,
+          "detail": "dotdot_still_blocked",
+          "path_traversal_blocked": true,
+          "killed": false,
+          "semantics": "kill_suite_detect_or_equivalent"
+        },
+        "mutation_kind": "production_ast"
+      },
+      {
+        "mutant_id": "persist_scan_secrets_noop",
+        "target_rel": "backend/nexus_autonomy/security_persistence_v1.py",
+        "operator": "return_empty_list",
+        "description": "scan_secrets_in_evidence always returns []",
+        "status": "killed",
+        "oracle": {
+          "hole_observed": true,
+          "property_holds": false,
+          "detail": "secrets_missed_HOLE",
+          "secret_detected": false,
+          "killed": true,
+          "semantics": "kill_suite_detect_or_equivalent"
+        },
+        "mutation_kind": "production_ast"
+      },
+      {
+        "mutant_id": "persist_json_accept_scalars",
+        "target_rel": "backend/nexus_autonomy/security_persistence_v1.py",
+        "operator": "drop_scalar_root_check",
+        "description": "fail_closed_json_loads accepts scalar roots",
+        "status": "killed",
+        "oracle": {
+          "hole_observed": true,
+          "property_holds": false,
+          "detail": "scalar_accepted_HOLE",
+          "scalar_json_blocked": false,
+          "killed": true,
+          "semantics": "kill_suite_detect_or_equivalent"
+        },
+        "mutation_kind": "production_ast"
+      },
+      {
+        "mutant_id": "cred_ignore_mainnet_fallback",
+        "target_rel": "backend/nexus_autonomy/security_credential_boundary_v1.py",
+        "operator": "force_mainnet_fallback_false",
+        "description": "Force mainnet_fallback=False after detection (hides demo→mainnet fallback)",
+        "status": "equivalent",
+        "oracle": {
+          "hole_observed": false,
+          "property_holds": true,
+          "detail": "fallback_or_confusion_still_fail_closed",
+          "writes_enabled": false,
+          "fail_closed": true,
+          "mainnet_fallback_used": true,
+          "demo_mainnet_confused": true,
+          "killed": false,
+          "semantics": "kill_suite_detect_or_equivalent"
+        },
+        "mutation_kind": "production_ast"
+      },
+      {
+        "mutant_id": "cred_force_writes_enabled",
+        "target_rel": "backend/nexus_autonomy/security_credential_boundary_v1.py",
+        "operator": "force_writes_enabled",
+        "description": "Force writes_enabled=True assignments",
+        "status": "equivalent",
+        "oracle": {
+          "hole_observed": false,
+          "property_holds": true,
+          "detail": "writes_still_disabled",
+          "writes_enabled": false,
+          "fail_closed": true,
+          "killed": false,
+          "semantics": "kill_suite_detect_or_equivalent"
+        },
+        "mutation_kind": "production_ast"
+      },
+      {
+        "mutant_id": "public_assert_schema_noop",
+        "target_rel": "backend/nexus_autonomy/security_public_private_v1.py",
+        "operator": "noop_assert_public_schema",
+        "description": "assert_public_schema becomes no-op",
+        "status": "killed",
+        "oracle": {
+          "hole_observed": true,
+          "property_holds": false,
+          "detail": "public_schema_noop_HOLE",
+          "killed": true,
+          "semantics": "kill_suite_detect_or_equivalent"
+        },
+        "mutation_kind": "production_ast"
+      },
+      {
+        "mutant_id": "public_redact_identity",
+        "target_rel": "backend/nexus_autonomy/security_public_private_v1.py",
+        "operator": "redact_identity",
+        "description": "redact_account_identifiers returns payload unchanged",
+        "status": "killed",
+        "oracle": {
+          "hole_observed": true,
+          "property_holds": false,
+          "detail": "redaction_identity_HOLE",
+          "secret_leak_count": 1,
+          "killed": true,
+          "semantics": "kill_suite_detect_or_equivalent"
+        },
+        "mutation_kind": "production_ast"
+      },
+      {
+        "mutant_id": "write_trap_install_noop",
+        "target_rel": "backend/nexus_autonomy/security_write_traps_v1.py",
+        "operator": "write_trap_noop",
+        "description": "install() becomes no-op success",
+        "status": "killed",
+        "oracle": {
+          "hole_observed": true,
+          "property_holds": false,
+          "detail": "install_noop_HOLE",
+          "write_method_trap_count": 0,
+          "patch_count": 0,
+          "install_result_type": "bool",
+          "killed": true,
+          "semantics": "kill_suite_detect_or_equivalent"
+        },
+        "mutation_kind": "production_ast"
+      }
+    ],
+    "exchange_write_attempt_count": 0,
+    "mainnet_client_created_count": 0,
+    "r4_semantics_note": "R4 review labeled hole_observed as 'survived' (resilience view). G kill-suite labels hole_observed as 'killed' (detection view) and property_holds as 'equivalent'. Fail-closed on silent survivors."
+  },
+  "kill_table": [
+    {
+      "mutant_id": "persist_drop_dotdot_token_check",
+      "target_rel": "backend/nexus_autonomy/security_persistence_v1.py",
+      "status": "equivalent",
+      "operator": "drop_dotdot_token_check",
+      "detail": "dotdot_still_blocked",
+      "r4_listed_survivor": false
+    },
+    {
+      "mutant_id": "persist_scan_secrets_noop",
+      "target_rel": "backend/nexus_autonomy/security_persistence_v1.py",
+      "status": "killed",
+      "operator": "return_empty_list",
+      "detail": "secrets_missed_HOLE",
+      "r4_listed_survivor": true
+    },
+    {
+      "mutant_id": "persist_json_accept_scalars",
+      "target_rel": "backend/nexus_autonomy/security_persistence_v1.py",
+      "status": "killed",
+      "operator": "drop_scalar_root_check",
+      "detail": "scalar_accepted_HOLE",
+      "r4_listed_survivor": true
+    },
+    {
+      "mutant_id": "cred_ignore_mainnet_fallback",
+      "target_rel": "backend/nexus_autonomy/security_credential_boundary_v1.py",
+      "status": "equivalent",
+      "operator": "force_mainnet_fallback_false",
+      "detail": "fallback_or_confusion_still_fail_closed",
+      "r4_listed_survivor": false
+    },
+    {
+      "mutant_id": "cred_force_writes_enabled",
+      "target_rel": "backend/nexus_autonomy/security_credential_boundary_v1.py",
+      "status": "equivalent",
+      "operator": "force_writes_enabled",
+      "detail": "writes_still_disabled",
+      "r4_listed_survivor": false
+    },
+    {
+      "mutant_id": "public_assert_schema_noop",
+      "target_rel": "backend/nexus_autonomy/security_public_private_v1.py",
+      "status": "killed",
+      "operator": "noop_assert_public_schema",
+      "detail": "public_schema_noop_HOLE",
+      "r4_listed_survivor": true
+    },
+    {
+      "mutant_id": "public_redact_identity",
+      "target_rel": "backend/nexus_autonomy/security_public_private_v1.py",
+      "status": "killed",
+      "operator": "redact_identity",
+      "detail": "redaction_identity_HOLE",
+      "r4_listed_survivor": true
+    },
+    {
+      "mutant_id": "write_trap_install_noop",
+      "target_rel": "backend/nexus_autonomy/security_write_traps_v1.py",
+      "status": "killed",
+      "operator": "write_trap_noop",
+      "detail": "install_noop_HOLE",
+      "r4_listed_survivor": true
+    }
+  ]
+}

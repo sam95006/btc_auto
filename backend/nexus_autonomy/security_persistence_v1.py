@@ -42,8 +42,19 @@ def scan_secrets_in_evidence(payload: Any) -> list[str]:
     for pat in SECRET_PATTERNS:
         if pat in lowered:
             findings.append(f"pattern:{pat.strip()}")
-    # High-entropy-looking assignments
-    if re.search(r"(api[_-]?key|api[_-]?secret|token)\s*[:=]\s*['\"][^'\"]{16,}", blob, re.I):
+    # High-entropy-looking assignments (python / env style)
+    assignment_hit = bool(
+        re.search(r"(api[_-]?key|api[_-]?secret|token)\s*[:=]\s*['\"][^'\"]{16,}", blob, re.I)
+    )
+    # JSON quoted-key assignments: "api_key": "...." (R4 secret_scan_json_assignment_blind_spot)
+    json_assignment_hit = bool(
+        re.search(
+            r'"(api[_-]?key|api[_-]?secret|token)"\s*:\s*"[^"]{16,}"',
+            blob,
+            re.I,
+        )
+    )
+    if assignment_hit or json_assignment_hit:
         findings.append("credential_assignment")
     if "begin private key" in lowered:
         findings.append("private_key_pem")

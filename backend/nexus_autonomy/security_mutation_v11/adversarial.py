@@ -214,15 +214,18 @@ def scenario_exchange_write_traps(workdir: Path) -> AdversarialScenarioResult:
 def scenario_secret_scan_property(workdir: Path) -> AdversarialScenarioResult:
     _ = workdir
     clean = {"symbol": "BTCUSDT", "status": "OK", "note": "no credentials"}
-    # Assignment form (non-JSON) exercises credential_assignment; JSON keys hit pattern:api_key.
+    # Assignment form (non-JSON) exercises credential_assignment; JSON quoted keys must too.
     dirty_assign = "api_key = '" + ("A" * 20) + "'"
     dirty_json = {"api_key": "ABCD" + "EFGH" * 4}
     clean_hits = scan_secrets_in_evidence(clean)
     assign_hits = scan_secrets_in_evidence(dirty_assign)
     json_hits = scan_secrets_in_evidence(dirty_json)
     assign_ok = "credential_assignment" in assign_hits
-    json_ok = any(h.startswith("pattern:") for h in json_hits)
-    passed = len(clean_hits) == 0 and assign_ok and json_ok
+    json_ok = "credential_assignment" in json_hits or any(
+        h.startswith("pattern:") for h in json_hits
+    )
+    json_assignment_ok = "credential_assignment" in json_hits
+    passed = len(clean_hits) == 0 and assign_ok and json_ok and json_assignment_ok
     return AdversarialScenarioResult(
         scenario_id="secret_scan_property",
         passed=passed,
@@ -230,9 +233,11 @@ def scenario_secret_scan_property(workdir: Path) -> AdversarialScenarioResult:
         detail="secret_scan_property_ok" if passed else "secret_scan_property_fail",
         critical=not passed,
         evidence={
-            "clean_hits": clean_hits,
-            "assign_hits": assign_hits,
-            "json_hits": json_hits,
+            # Codes only — never echo fixture secret material into status artifacts.
+            "clean_hit_count": len(clean_hits),
+            "assign_ok": assign_ok,
+            "json_ok": json_ok,
+            "json_assignment_ok": json_assignment_ok,
         },
     )
 

@@ -1,6 +1,6 @@
 {
   "schema": "v11_security_mutation_redteam",
-  "created_at": "2026-08-05T03:38:23Z",
+  "created_at": "2026-08-05T04:15:56Z",
   "recommendation": "NEXUS_V11_SECURITY_MUTATION_REDTEAM_PASS",
   "passed": true,
   "mutation_killed_count": 33,
@@ -11,17 +11,15 @@
   "scenario_total_count": 11,
   "real_subject_pass_count": 16,
   "real_subject_total": 16,
+  "production_ast_survivor_count": 0,
+  "production_ast_killed_count": 5,
+  "wrapper_only_pass_forbidden": true,
+  "h_gate_pass_is_not_authority_remediation": true,
   "exchange_write_attempt_count": 0,
   "secret_leak_count": 0,
   "mainnet_client_created_count": 0,
   "critical_findings": [],
   "high_findings": [
-    {
-      "severity": "high",
-      "code": "secret_scan_json_assignment_blind_spot",
-      "detail": "scan_secrets_in_evidence credential_assignment regex misses JSON quoted keys (\"api_key\": \"...\"); substring pattern:api_key still hits. Do not rely on credential_assignment alone for JSON evidence.",
-      "fail_closed": false
-    },
     {
       "severity": "high",
       "code": "symlink_escape_platform_dependent",
@@ -30,8 +28,14 @@
     },
     {
       "severity": "high",
-      "code": "mutation_surface_is_in_memory_wrappers",
-      "detail": "Mutations are in-memory weakened subjects, not AST edits of production modules. Surviving source-level mutants outside owned wrappers remain a coverage gap for future mutmut/cosmic-ray integration.",
+      "code": "wrapper_campaign_is_supplemental_only",
+      "detail": "In-memory wrapper mutants remain as a supplemental kill suite. PASS now requires production AST mutation (production_ast_survivor_count=0, wrapper_only_pass_forbidden=true). Do not treat wrapper-only evidence as production-module proof.",
+      "fail_closed": false
+    },
+    {
+      "severity": "high",
+      "code": "DUPLICATE_GATE_BASELINE_FALSE_CONFIDENCE",
+      "detail": "Lane H CI duplicate-authority gate PASS baselining known competitors does NOT clear critical multi-authority blockers. Treat H as audit/registry/gate only -- not runtime authority remediation. C1-C6 own cost/lifecycle/retry/checkpoint/shim/SCC remediation.",
       "fail_closed": false
     }
   ],
@@ -40,8 +44,11 @@
     "backend/nexus_autonomy/security_mutation_v11/",
     "tools/research/run_security_mutation_redteam_v11.py",
     "tools/ci/scan_security_mutation_v11.py",
+    "tools/ci/scan_production_ast_mutation_v11.py",
     "tests/test_security_mutation_redteam_v11.py",
-    "artifacts/readiness/immutable/v11_security_mutation_redteam/"
+    "tests/test_production_ast_mutation_v11.py",
+    "artifacts/readiness/immutable/v11_security_mutation_redteam/",
+    "artifacts/readiness/immutable/v11_1_g_ast_mutation/"
   ],
   "prohibited_paths": [
     "frontend/",

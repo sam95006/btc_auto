@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""CI scanner: fail closed on V11 Security Mutation Red Team violations + secret scan."""
+"""CI scanner: fail closed on V11 Security Mutation Red Team violations + secret scan.
+
+Requires production AST mutation depth (wrapper-only PASS forbidden).
+"""
 from __future__ import annotations
 
 import json
@@ -20,12 +23,15 @@ OWNED_GLOBS = [
     "backend/nexus_autonomy/security_mutation_v11",
     "tools/research/run_security_mutation_redteam_v11.py",
     "tools/ci/scan_security_mutation_v11.py",
+    "tools/ci/scan_production_ast_mutation_v11.py",
     "tests/test_security_mutation_redteam_v11.py",
+    "tests/test_production_ast_mutation_v11.py",
 ]
 
 SECRET_PATTERNS = [
     re.compile(r"(?i)api[_-]?key\s*[:=]\s*['\"]?[A-Za-z0-9_\-]{20,}"),
     re.compile(r"(?i)api[_-]?secret\s*[:=]\s*['\"]?[A-Za-z0-9_\-]{20,}"),
+    re.compile(r'(?i)"api[_-]?key"\s*:\s*"[A-Za-z0-9_\-]{20,}"'),
     re.compile(r"(?i)BYBIT_(?:DEMO_)?API_(?:KEY|SECRET)\s*=\s*[^\s'\"]{8,}"),
     re.compile(r"(?i)sk-[A-Za-z0-9]{20,}"),
     re.compile("BEGIN" + " PRIVATE KEY"),
@@ -59,11 +65,16 @@ def main() -> int:
     from backend.nexus_autonomy.security_mutation_v11.redteam import (
         evaluate_security_mutation_redteam,
         write_immutable_artifacts,
+        write_remediation_artifacts,
     )
 
     secret_hits = scan_owned_secrets()
-    status = evaluate_security_mutation_redteam(root=ROOT)
+    # TWO-PASS
+    pass1 = evaluate_security_mutation_redteam(root=ROOT)
+    pass2 = evaluate_security_mutation_redteam(root=ROOT)
+    status = pass2
     write_immutable_artifacts(root=ROOT, status=status)
+    write_remediation_artifacts(root=ROOT, status=status, pass1=pass1, pass2=pass2)
 
     report = {
         "recommendation": status.get("recommendation"),
@@ -73,6 +84,17 @@ def main() -> int:
         "mutation_unresolved_blocker_count": status.get("mutation_unresolved_blocker_count"),
         "scenario_pass_count": status.get("scenario_pass_count"),
         "scenario_total_count": status.get("scenario_total_count"),
+        "production_ast_survivor_count": status.get("production_ast_survivor_count"),
+        "production_ast_killed_count": status.get("production_ast_killed_count"),
+        "wrapper_only_pass_forbidden": status.get("wrapper_only_pass_forbidden"),
+        "h_gate_pass_is_not_authority_remediation": status.get(
+            "h_gate_pass_is_not_authority_remediation"
+        ),
+        "two_pass_deterministic": (
+            pass1.get("recommendation") == pass2.get("recommendation")
+            and pass1.get("production_ast_survivor_count")
+            == pass2.get("production_ast_survivor_count")
+        ),
         "exchange_write_attempt_count": status.get("exchange_write_attempt_count"),
         "secret_leak_count": len(secret_hits) + int(status.get("secret_leak_count") or 0),
         "mainnet_client_created_count": status.get("mainnet_client_created_count"),
@@ -91,6 +113,13 @@ def main() -> int:
         return 3
     if int(status.get("mainnet_client_created_count") or 0) != 0:
         return 5
+    survivor_count = status.get("production_ast_survivor_count")
+    if survivor_count is None or int(survivor_count) != 0:
+        return 6
+    if not status.get("wrapper_only_pass_forbidden"):
+        return 7
+    if not report["two_pass_deterministic"]:
+        return 8
     if status.get("recommendation") != PASS_RECOMMENDATION:
         return 1
     return 0
