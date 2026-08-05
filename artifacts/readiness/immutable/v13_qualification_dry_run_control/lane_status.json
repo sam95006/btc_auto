@@ -18,7 +18,7 @@
   "base_commit": "abd2195ef6d79f609dd261b5e9c5402599625a64",
   "both_passes_ok": true,
   "branch": "feature/v13-qualification-dry-run-control",
-  "created_at": "2026-08-05T08:34:30Z",
+  "created_at": "2026-08-05T08:34:49Z",
   "critical_findings": [],
   "demo_eligibility": false,
   "demo_order_count": 0,
@@ -42,12 +42,12 @@
     "no_profitability_claims"
   ],
   "hard_bans_honored": true,
-  "head_commit_at_run": "5cea8033669632c036596aedff8a2b68aa1720f7",
+  "head_commit_at_run": "82efd27e151b956d6c1128e3cb9985da8144872f",
   "high_findings": [],
   "infrastructure_status": "BLOCKED_READY",
   "ingested_candidate_count": 3,
   "lane": "V13-F",
-  "lane_head_commit": "5cea8033669632c036596aedff8a2b68aa1720f7",
+  "lane_head_commit": "82efd27e151b956d6c1128e3cb9985da8144872f",
   "lane_name": "QUALIFICATION_DRY_RUN_CONTROL",
   "mainnet": false,
   "metrics": {
@@ -79,7 +79,7 @@
     "backend/nexus_demo_execution/"
   ],
   "pytest": {
-    "elapsed_s": 0.99,
+    "elapsed_s": 0.907,
     "exit_code": 0,
     "passed": true
   },
