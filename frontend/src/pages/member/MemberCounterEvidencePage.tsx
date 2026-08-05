@@ -11,8 +11,9 @@ export function MemberCounterEvidencePage() {
 
   return (
     <MemberPageChrome
-      title="Counter Evidence"
-      subtitle="Contradicting evidence · required honesty surface"
+      titleKey="pages.counter.title"
+      subtitleKey="pages.counter.subtitle"
+
     >
       {loading ? <p className="muted">Loading live bindings...</p> : null}
       <LiveSlotStrip bindings={items} />

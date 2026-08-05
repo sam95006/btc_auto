@@ -11,8 +11,9 @@ export function MemberNotificationSettingsPage() {
 
   return (
     <MemberPageChrome
-      title="Notification Settings"
-      subtitle="Digest-first · no spam defaults · lineage-bound readiness"
+      titleKey="pages.notifications.title"
+      subtitleKey="pages.notifications.subtitle"
+
     >
       {loading ? <p className="muted">Loading live bindings...</p> : null}
       <LiveSlotStrip bindings={items} />

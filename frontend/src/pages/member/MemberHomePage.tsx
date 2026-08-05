@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useT } from "../../i18n";
 import { MemberPageChrome } from "../../member/MemberPageChrome";
 import {
   MemberFirstScreenPro,
@@ -16,12 +17,10 @@ import type { MemberUxState } from "../../member/uxStates";
 import { BoundLiveValue, useLiveBindings } from "../../public_v2_live_binding";
 
 /**
- * PUB2-C Member Home — first screen answers five Decision Integrity questions.
- * Simple / Pro views. States: fresh/stale/degraded/pending/unavailable/blocked/empty/error/loading.
- * PUB2-B live bindings retained as a mapped live strip (lineage, no fabricated LIVE).
- * Visual parity with external reference is NOT claimed without screenshots.
+ * PUB2-C first-screen UX + PUB2-B live bindings + PUB2-J i18n chrome keys.
  */
 export function MemberHomePage() {
+  const t = useT();
   const [view, setView] = useState<MemberViewMode>(() => loadMemberViewMode());
   const [shellOverride, setShellOverride] = useState<MemberUxState | "demo">("demo");
   const { slot, loading } = useLiveBindings();
@@ -52,10 +51,7 @@ export function MemberHomePage() {
   };
 
   return (
-    <MemberPageChrome
-      title="NEXUS Member Home"
-      subtitle="Crypto Decision Integrity · first screen answers before any chase impulse"
-    >
+    <MemberPageChrome titleKey="pages.home.title" subtitleKey="pages.home.subtitle">
       <div className="member-view-toggle" role="group" aria-label="Simple or Pro view">
         <button
           type="button"
@@ -107,7 +103,7 @@ export function MemberHomePage() {
         <MemberFirstScreenPro model={model} />
       )}
 
-      <section className="member-stat-grid" aria-label="Home live bindings">
+      <section className="member-stat-grid" aria-label={t("pages.home.metricsLabel")}>
         {loading ? <p className="muted">Loading live bindings...</p> : null}
         <BoundLiveValue binding={hero} label="Decision cloud" />
         <BoundLiveValue binding={market} label="BTC last" />
@@ -115,8 +111,8 @@ export function MemberHomePage() {
         <BoundLiveValue binding={risk} label="Qualification" />
       </section>
 
-      <section className="member-panel" aria-label="Navigate">
-        <h2 className="nx-sec-title">Navigate Decision loop</h2>
+      <section className="member-panel" aria-label={t("pages.home.navLabel")}>
+        <h2 className="nx-sec-title">{t("pages.home.navigate")}</h2>
         <p className="muted sm">
           Market Observation → Evidence → Counter Evidence → Risk → Decision → Thesis Monitor →
           Outcome Review → Decision Memory. No exchange orders from this product.
@@ -124,7 +120,7 @@ export function MemberHomePage() {
         <ul className="member-link-grid">
           {MEMBER_NAV.map((item) => (
             <li key={item.to}>
-              <Link to={item.to}>{item.label}</Link>
+              <Link to={item.to}>{t(item.labelKey)}</Link>
             </li>
           ))}
         </ul>

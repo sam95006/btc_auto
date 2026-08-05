@@ -7,11 +7,13 @@
  * PUB-E: Founder private operator mounts in a separate shell (never inside member SidebarNav).
  */
 import { Navigate, Route, Routes } from "react-router-dom";
+import { SkipToContentLabeled } from "./a11y";
 import { AppFooter } from "./components/AppFooter";
 import { SafetyBanner } from "./components/SafetyBanner";
 import { SidebarNav } from "./components/SidebarNav";
 import { FounderOperatorShell } from "./founder/FounderOperatorShell";
 import { FounderOperatorPage } from "./founder/FounderOperatorPage";
+import { useT } from "./i18n";
 import { FounderRuntimePage } from "./pages/FounderRuntimePage";
 import {
   MemberAccountDeletionPage,
@@ -34,13 +36,15 @@ import {
 } from "./pages/member";
 
 function MemberShell() {
+  const t = useT();
   return (
     <div className="app-shell member-shell nx-member-platform">
+      <SkipToContentLabeled label={t("a11y.skipToContent")} />
       <SafetyBanner />
       <div className="app-body app-body-no-rail">
         <SidebarNav />
         <div className="main-column">
-          <main className="main-content">
+          <main className="main-content" id="main-content" tabIndex={-1}>
             <Routes>
               <Route path="/" element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<MemberHomePage />} />

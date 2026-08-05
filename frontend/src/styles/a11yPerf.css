@@ -1,0 +1,229 @@
+/**
+ * PUB2-J accessibility + performance posture for Member Platform.
+ * WCAG 2.2 AA targets: focus, reduced motion, high contrast, 44px touch, overflow.
+ */
+
+:root {
+  --nx-touch-min: 44px;
+  --nx-focus-ring: 0 0 0 3px rgba(201, 162, 39, 0.85);
+  --nx-focus-outline: 2px solid #f5d76e;
+}
+
+/* Contrast-safe muted text on dark surfaces (≥4.5:1 vs #10161e / --bg-deep) */
+.nx-member-platform {
+  --text-muted: #aeb9c8;
+  --text-dim: #a3b0c0;
+  --nx-text-2: #c2ccd8;
+  --nx-text-3: #a3b0c0;
+  /* Link blue was 4.47:1 — bump for WCAG AA 4.5:1 */
+  --accent-blue: #5b9fd4;
+}
+
+.nx-member-platform .member-link-grid a,
+.nx-member-platform .member-inline-link,
+.nx-member-platform .member-feed-actions a,
+.nx-member-platform .member-feed-title,
+.nx-member-platform .member-thesis-snip a,
+.nx-member-platform main a:not(.member-btn) {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+/* Skip link — visible on keyboard focus only */
+.nx-skip-link {
+  position: absolute;
+  left: var(--space-3, 0.75rem);
+  top: var(--space-3, 0.75rem);
+  z-index: 10000;
+  padding: 0.6rem 1rem;
+  min-height: var(--nx-touch-min);
+  background: var(--bg-elevated, #151b24);
+  color: var(--text, #e8eef6);
+  border: 2px solid var(--accent, #c9a227);
+  border-radius: 8px;
+  text-decoration: none;
+  font: inherit;
+  transform: translateY(-200%);
+}
+
+.nx-skip-link:focus,
+.nx-skip-link:focus-visible {
+  transform: translateY(0);
+  outline: none;
+  box-shadow: var(--nx-focus-ring);
+}
+
+/* Keyboard focus — never remove without replacement */
+.nx-member-platform :focus-visible,
+.member-shell :focus-visible {
+  outline: var(--nx-focus-outline);
+  outline-offset: 2px;
+  box-shadow: var(--nx-focus-ring);
+}
+
+.nx-member-platform a:focus:not(:focus-visible),
+.nx-member-platform button:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Touch targets ≥ 44×44 (WCAG 2.2 AA / 2.5.8) */
+.nx-member-platform .member-btn,
+.nx-member-platform .nav-collapse-btn,
+.nx-member-platform .member-mobile-nav a,
+.nx-member-platform .member-mobile-nav summary,
+.nx-member-platform .sidebar-nav a,
+.nx-member-platform .nx-locale-switcher button {
+  min-height: var(--nx-touch-min);
+  min-width: var(--nx-touch-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.nx-member-platform .member-btn {
+  padding: 0.55rem 0.9rem;
+}
+
+.nx-member-platform .member-check input[type="checkbox"],
+.nx-member-platform .member-check input[type="radio"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 1.25rem;
+  min-height: 1.25rem;
+}
+
+.nx-member-platform .member-check {
+  min-height: var(--nx-touch-min);
+  align-items: center;
+}
+
+/* Prevent 375px horizontal overflow */
+.nx-member-platform,
+.nx-member-platform .main-content,
+.nx-member-platform .member-page,
+.nx-member-platform .member-panel,
+.nx-member-platform .member-hero-card,
+.nx-member-platform .member-feed-item {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.nx-member-platform .member-stat-grid,
+.nx-member-platform .member-card-grid,
+.nx-member-platform .member-link-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+}
+
+.nx-member-platform pre,
+.nx-member-platform code,
+.nx-member-platform .member-metric-value,
+.nx-member-platform .member-dl dd {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Locale switcher */
+.nx-locale-switcher {
+  display: inline-flex;
+  gap: 0.35rem;
+  margin: 0.5rem 0 0;
+  flex-wrap: wrap;
+}
+
+.nx-locale-switcher button {
+  appearance: none;
+  border: 1px solid var(--border, rgba(148, 163, 184, 0.28));
+  background: var(--bg-inset, #0f141b);
+  color: var(--text-muted, #a8b4c4);
+  border-radius: 8px;
+  padding: 0.35rem 0.65rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.nx-locale-switcher button[aria-pressed="true"] {
+  border-color: var(--accent-line, rgba(201, 162, 39, 0.55));
+  background: var(--accent-soft, rgba(201, 162, 39, 0.12));
+  color: var(--text, #e8eef6);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .nx-member-platform *,
+  .nx-member-platform *::before,
+  .nx-member-platform *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast / forced colors */
+@media (prefers-contrast: more) {
+  .nx-member-platform {
+    --border: #ffffff;
+    --border-strong: #ffffff;
+    --text-muted: #e8eef6;
+  }
+
+  .nx-member-platform .member-btn,
+  .nx-member-platform .sidebar-nav a,
+  .nx-member-platform .member-panel,
+  .nx-member-platform .member-hero-card {
+    border-width: 2px;
+  }
+
+  .nx-member-platform :focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 3px;
+  }
+}
+
+@media (forced-colors: active) {
+  .nx-member-platform .member-btn,
+  .nx-member-platform .sidebar-nav a,
+  .nx-skip-link {
+    forced-color-adjust: none;
+    border: 2px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+
+  .nx-member-platform :focus-visible {
+    outline: 3px solid Highlight;
+  }
+}
+
+/* 200% zoom resilience — reflow, no fixed clipped columns */
+@media (max-width: 900px), (min-resolution: 2dppx) {
+  .nx-member-platform .app-body {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 720px) {
+  .nx-member-platform .sidebar-nav {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .nx-member-platform .main-column {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .nx-member-platform .member-cta-row,
+  .nx-member-platform .member-feed-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nx-member-platform .member-cta-row .member-btn,
+  .nx-member-platform .member-feed-actions a {
+    width: 100%;
+    justify-content: center;
+  }
+}

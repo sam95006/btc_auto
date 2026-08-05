@@ -5,8 +5,7 @@ import { freshnessToUxState } from "../../member/uxStates";
 import { BoundLiveValue, useLiveBindings } from "../../public_v2_live_binding";
 
 /**
- * Market Overview — PUB2-B live lineage bindings (no DEMO fabrication in LIVE).
- * PUB2-C UX state chips derived from binding freshness labels.
+ * Market Overview — PUB2-B live lineage + PUB2-C UX chips + PUB2-J i18n chrome.
  */
 export function MemberMarketOverviewPage() {
   const { slot, loading } = useLiveBindings();
@@ -27,10 +26,7 @@ export function MemberMarketOverviewPage() {
   ];
 
   return (
-    <MemberPageChrome
-      title="Market Overview"
-      subtitle="Public live bindings with lineage · not a trading blotter"
-    >
+    <MemberPageChrome titleKey="pages.market.title" subtitleKey="pages.market.subtitle">
       {loading ? <p className="muted">Loading live bindings...</p> : null}
       <div className="member-card-grid">
         {cards.map((card) => (

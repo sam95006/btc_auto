@@ -9,8 +9,9 @@ export function MemberAccountDeletionPage() {
 
   return (
     <MemberPageChrome
-      title="Account Deletion"
-      subtitle="Request deletion / export · fail-closed until auth binds"
+      titleKey="pages.deletion.title"
+      subtitleKey="pages.deletion.subtitle"
+
     >
       {loading ? <p className="muted">Loading live bindings...</p> : null}
       <LiveSlotStrip bindings={items} />

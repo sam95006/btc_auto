@@ -11,8 +11,9 @@ export function MemberAlertsPage() {
 
   return (
     <MemberPageChrome
-      title="Alerts"
-      subtitle="Thesis · risk · freshness · outcome alerts · observation only"
+      titleKey="pages.alerts.title"
+      subtitleKey="pages.alerts.subtitle"
+
     >
       {loading ? <p className="muted">Loading live bindings...</p> : null}
       <LiveSlotStrip bindings={items} />

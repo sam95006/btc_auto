@@ -33,6 +33,8 @@ const ALLOWLIST = new Set([
   path.normalize("scripts/check_member_hard_bans.mjs"),
   path.normalize("scripts/check_ui_safety.mjs"),
   path.normalize("scripts/check_member_ux_completion.mjs"),
+  path.normalize("scripts/check_a11y_i18n_perf.mjs"),
+  path.normalize("scripts/measure_performance_budget.mjs"),
 ]);
 
 function walk(dir, out = []) {

@@ -11,8 +11,9 @@ export function MemberDecisionMemoryPage() {
 
   return (
     <MemberPageChrome
-      title="Decision Memory"
-      subtitle="Public Decision history surface · no private Lesson Memory"
+      titleKey="pages.memory.title"
+      subtitleKey="pages.memory.subtitle"
+
     >
       {loading ? <p className="muted">Loading live bindings...</p> : null}
       <LiveSlotStrip bindings={items} />

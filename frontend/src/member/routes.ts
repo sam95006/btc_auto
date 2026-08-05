@@ -1,28 +1,38 @@
-/** Member Platform route inventory - visual IA aligned to product pages. */
+import type { MessageKey } from "../i18n";
+
+/** Member Platform route inventory — labels resolved via i18n keys. */
 export const MEMBER_NAV = [
-  { to: "/home", label: "Home", short: "Home" },
-  { to: "/market", label: "Market Overview", short: "Market" },
-  { to: "/decisions", label: "Decision Feed", short: "Decisions" },
-  { to: "/evidence", label: "Evidence", short: "Evidence" },
-  { to: "/counter-evidence", label: "Counter Evidence", short: "Counter" },
-  { to: "/risk-conditions", label: "Risk Conditions", short: "Risk" },
-  { to: "/thesis-monitor", label: "Thesis Monitor", short: "Thesis" },
-  { to: "/alerts", label: "Alerts", short: "Alerts" },
-  { to: "/decision-memory", label: "Decision Memory", short: "Memory" },
-  { to: "/outcome-review", label: "Outcome Review", short: "Outcome" },
-  { to: "/nex-ai", label: "NEX AI", short: "NEX AI" },
-  { to: "/membership", label: "Membership", short: "Member" },
-  { to: "/account", label: "Account", short: "Account" },
-] as const;
+  { to: "/home", labelKey: "nav.home", shortKey: "nav.home.short" },
+  { to: "/market", labelKey: "nav.market", shortKey: "nav.market.short" },
+  { to: "/decisions", labelKey: "nav.decisions", shortKey: "nav.decisions.short" },
+  { to: "/evidence", labelKey: "nav.evidence", shortKey: "nav.evidence.short" },
+  {
+    to: "/counter-evidence",
+    labelKey: "nav.counterEvidence",
+    shortKey: "nav.counterEvidence.short",
+  },
+  { to: "/risk-conditions", labelKey: "nav.risk", shortKey: "nav.risk.short" },
+  { to: "/thesis-monitor", labelKey: "nav.thesis", shortKey: "nav.thesis.short" },
+  { to: "/alerts", labelKey: "nav.alerts", shortKey: "nav.alerts.short" },
+  { to: "/decision-memory", labelKey: "nav.memory", shortKey: "nav.memory.short" },
+  { to: "/outcome-review", labelKey: "nav.outcome", shortKey: "nav.outcome.short" },
+  { to: "/nex-ai", labelKey: "nav.nexAi", shortKey: "nav.nexAi.short" },
+  { to: "/membership", labelKey: "nav.membership", shortKey: "nav.membership.short" },
+  { to: "/account", labelKey: "nav.account", shortKey: "nav.account.short" },
+] as const satisfies ReadonlyArray<{
+  to: string;
+  labelKey: MessageKey;
+  shortKey: MessageKey;
+}>;
 
 export const MEMBER_ACCOUNT_SUBNAV = [
-  { to: "/account", label: "Account" },
-  { to: "/privacy", label: "Privacy" },
-  { to: "/account-deletion", label: "Account Deletion" },
-  { to: "/notification-settings", label: "Notification Settings" },
-] as const;
+  { to: "/account", labelKey: "nav.account" },
+  { to: "/privacy", labelKey: "nav.privacy" },
+  { to: "/account-deletion", labelKey: "nav.accountDeletion" },
+  { to: "/notification-settings", labelKey: "nav.notifications" },
+] as const satisfies ReadonlyArray<{ to: string; labelKey: MessageKey }>;
 
-/** Required page inventory for PUB-D acceptance. */
+/** Required page inventory for PUB-D acceptance (English identifiers). */
 export const REQUIRED_MEMBER_PAGES = [
   "Home",
   "Market Overview",

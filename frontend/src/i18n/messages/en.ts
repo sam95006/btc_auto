@@ -1,0 +1,117 @@
+import type { MessageKey } from "./zh-TW";
+import { zhTW } from "./zh-TW";
+
+/** English catalog — parity-checked against zh-TW keys. */
+export const en: Record<MessageKey, string> = {
+  "meta.lang": "en",
+  "meta.htmlLang": "en",
+  "brand.product": "NEXUS",
+  "brand.memberPlatform": "Member Platform",
+  "brand.decisionIntegrity": "Decision Integrity",
+  "a11y.skipToContent": "Skip to main content",
+  "a11y.mainNav": "Member Platform navigation",
+  "a11y.mobileNav": "Mobile primary navigation",
+  "a11y.accountNav": "Account",
+  "a11y.localeSwitcher": "Language",
+  "nav.home": "Home",
+  "nav.home.short": "Home",
+  "nav.market": "Market Overview",
+  "nav.market.short": "Market",
+  "nav.decisions": "Decision Feed",
+  "nav.decisions.short": "Decisions",
+  "nav.evidence": "Evidence",
+  "nav.evidence.short": "Evidence",
+  "nav.counterEvidence": "Counter Evidence",
+  "nav.counterEvidence.short": "Counter",
+  "nav.risk": "Risk Conditions",
+  "nav.risk.short": "Risk",
+  "nav.thesis": "Thesis Monitor",
+  "nav.thesis.short": "Thesis",
+  "nav.alerts": "Alerts",
+  "nav.alerts.short": "Alerts",
+  "nav.memory": "Decision Memory",
+  "nav.memory.short": "Memory",
+  "nav.outcome": "Outcome Review",
+  "nav.outcome.short": "Outcome",
+  "nav.nexAi": "NEX AI",
+  "nav.nexAi.short": "NEX AI",
+  "nav.membership": "Membership",
+  "nav.membership.short": "Member",
+  "nav.account": "Account",
+  "nav.account.short": "Account",
+  "nav.privacy": "Privacy",
+  "nav.accountDeletion": "Account Deletion",
+  "nav.notifications": "Notification Settings",
+  "nav.more": "More",
+  "pages.home.title": "NEXUS Member Home",
+  "pages.home.subtitle":
+    "Crypto Decision Integrity Platform · Decision Operating System for serious crypto investors",
+  "pages.home.heroKicker": "Public Member Platform",
+  "pages.home.heroTitle": "Decision Integrity · not automated trading",
+  "pages.home.heroBody":
+    "Record Context → Thesis → Evidence → Decision → Monitor → Outcome → Review. You remain the final decision-maker. No exchange orders from this product.",
+  "pages.home.ctaDecisions": "Open Decision Feed",
+  "pages.home.ctaThesis": "Thesis Monitor",
+  "pages.home.ctaOutcome": "Outcome Review",
+  "pages.home.openDecisions": "Open Decisions",
+  "pages.home.activeAlerts": "Active alerts",
+  "pages.home.marketCards": "Market context cards",
+  "pages.home.dataMode": "Data mode",
+  "pages.home.navigate": "Navigate",
+  "pages.home.summaryLabel": "Home summary",
+  "pages.home.metricsLabel": "Home metrics",
+  "pages.home.navLabel": "Navigate",
+  "pages.market.title": "Market Overview",
+  "pages.market.subtitle": "Public context snapshots and system freshness · not a trading blotter",
+  "pages.decisions.title": "Decision Feed",
+  "pages.decisions.subtitle":
+    "Atomic Decision Objects · record intent · never place exchange orders",
+  "pages.decisions.emptySubtitle": "Public Decision Objects",
+  "pages.detail.title": "Decision Detail",
+  "pages.evidence.title": "Evidence",
+  "pages.evidence.subtitle":
+    "Supporting evidence across Decision Objects · cited · no invention policy",
+  "pages.counter.title": "Counter Evidence",
+  "pages.counter.subtitle":
+    "Contradicting evidence · challenge before commit · Dual Calibration input",
+  "pages.risk.title": "Risk Conditions",
+  "pages.risk.subtitle":
+    "Invalidation and risk notes · advisory · user-owned · not exchange stops",
+  "pages.thesis.title": "Thesis Monitor",
+  "pages.thesis.subtitle": "Thesis Integrity Monitor · alert without auto-trading",
+  "pages.alerts.title": "Alerts",
+  "pages.alerts.subtitle":
+    "Thesis · risk · freshness · outcome alerts · Shadow observation only",
+  "pages.memory.title": "Decision Memory",
+  "pages.memory.subtitle":
+    "Longitudinal Decision Graph (public) · never private Founder Lesson Memory",
+  "pages.outcome.title": "Outcome Review",
+  "pages.outcome.subtitle":
+    "Process-vs-outcome calibration · counterfactual marks · user remains final judge",
+  "pages.nexAi.title": "NEX AI",
+  "pages.nexAi.subtitle":
+    "Conversation assist inside Decision Integrity workflows · not a standalone chat product",
+  "pages.nexAi.conversationLabel": "NEX AI conversation",
+  "pages.membership.title": "Membership",
+  "pages.membership.subtitle":
+    "Tier labels only · NO LIVE BILLING · LOCAL/STAGING · UNVALIDATED_HYPOTHESIS",
+  "pages.membership.noBilling": "No live billing",
+  "pages.account.title": "Account",
+  "pages.account.subtitle":
+    "Public identity realm stub · no shared private JWT · no production customer DB",
+  "pages.privacy.title": "Privacy",
+  "pages.privacy.subtitle":
+    "Public product privacy posture · staging stub · legal review required before launch",
+  "pages.deletion.title": "Account Deletion",
+  "pages.deletion.subtitle":
+    "Staging stub · no production customer database · irreversible only after real auth lane",
+  "pages.notifications.title": "Notification Settings",
+  "pages.notifications.subtitle":
+    "Local browser preferences · digest-first · no spam defaults · no cross-device sync in DEMO",
+  "empty.demoBound": "Empty state · DEMO catalog bound · no fabricated LIVE values",
+  "locale.zhTW": "繁體中文",
+  "locale.en": "English",
+};
+
+// Compile-time parity: en must cover every zh-TW key.
+void (zhTW satisfies Record<MessageKey, string>);

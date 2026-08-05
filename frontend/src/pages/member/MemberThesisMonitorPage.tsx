@@ -12,8 +12,8 @@ export function MemberThesisMonitorPage() {
 
   return (
     <MemberPageChrome
-      title="Thesis Monitor"
-      subtitle="Thesis Integrity Monitor · alert without auto-trading"
+      titleKey="pages.thesis.title"
+      subtitleKey="pages.thesis.subtitle"
     >
       {loading ? <p className="muted">Loading live bindings...</p> : null}
       <LiveSlotStrip bindings={items} />

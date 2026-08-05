@@ -11,8 +11,9 @@ export function MemberOutcomeReviewPage() {
 
   return (
     <MemberPageChrome
-      title="Outcome Review"
-      subtitle="Process vs outcome classification · user-owned review"
+      titleKey="pages.outcome.title"
+      subtitleKey="pages.outcome.subtitle"
+
     >
       {loading ? <p className="muted">Loading live bindings...</p> : null}
       <LiveSlotStrip bindings={items} />

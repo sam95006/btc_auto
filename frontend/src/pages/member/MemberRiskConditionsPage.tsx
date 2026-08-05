@@ -12,8 +12,8 @@ export function MemberRiskConditionsPage() {
 
   return (
     <MemberPageChrome
-      title="Risk Conditions"
-      subtitle="Invalidation and risk notes · advisory · user-owned · not exchange stops"
+      titleKey="pages.risk.title"
+      subtitleKey="pages.risk.subtitle"
     >
       {loading ? <p className="muted">Loading live bindings...</p> : null}
       <LiveSlotStrip bindings={items} />

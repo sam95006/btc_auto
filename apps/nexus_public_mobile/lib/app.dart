@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'core/a11y/a11y_settings.dart';
 import 'core/analytics/analytics_consent.dart';
@@ -33,7 +34,7 @@ class _NexusPublicAppState extends State<NexusPublicApp> {
   late final AnalyticsConsentStore _consent = AnalyticsConsentStore();
   late final A11ySettings _a11y = A11ySettings();
   ThemeMode _themeMode = ThemeMode.system;
-  Locale _locale = const Locale('en');
+  Locale _locale = AppStrings.defaultLocale;
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +64,7 @@ class _NexusPublicAppState extends State<NexusPublicApp> {
             data: media.copyWith(
               textScaler: TextScaler.linear(_a11y.textScale),
               boldText: _a11y.boldText,
+              disableAnimations: _a11y.reduceMotion,
             ),
             child: Column(
               children: [
