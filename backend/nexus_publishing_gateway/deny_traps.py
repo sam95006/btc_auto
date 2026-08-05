@@ -13,6 +13,46 @@ _SECRET_VALUE_RE = re.compile(
     r"(?i)(sk-[a-z0-9]{16,}|api[_-]?key\s*[:=]\s*\S+|bearer\s+[a-z0-9\-._~+/]+=*)"
 )
 
+# Short tokens that must NEVER be matched via JSON substring (value false positives).
+_BLOB_SCAN_DENYLIST: frozenset[str] = frozenset(
+    {
+        "strategy_id",
+        "strategy_ids",
+        "strategy_parameters",
+        "strategy_params",
+        "strategy_weights",
+        "lesson_id",
+        "lesson_ids",
+        "private_lesson_id",
+        "lesson_memory",
+        "raw_provider_prompt",
+        "raw_provider_response",
+        "system_prompt",
+        "order_id",
+        "order_ids",
+        "order_link_id",
+        "position_id",
+        "wallet_address",
+        "wallet_data",
+        "account_id",
+        "account_data",
+        "api_key",
+        "api_secret",
+        "api_passphrase",
+        "provider_secret",
+        "provider_secrets",
+        "private_key",
+        "execution_route",
+        "execution_routes",
+        "routing_table",
+        "private_risk",
+        "private_risk_internals",
+        "risk_governor_state",
+        "risk_internals",
+        "member_id",
+    }
+)
+
 
 def walk_keys(obj: Any, prefix: str = "") -> list[str]:
     keys: list[str] = []
@@ -30,7 +70,11 @@ def walk_keys(obj: Any, prefix: str = "") -> list[str]:
 
 
 def normalize_field_name(name: str) -> str:
-    return str(name).strip().lower().replace("-", "_")
+    """Normalize snake, kebab, and camelCase field names to snake_case."""
+    s = str(name).strip().replace("-", "_")
+    s = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", s)
+    s = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", s)
+    return s.lower().replace("__", "_")
 
 
 def find_denied_fields(payload: Any) -> list[str]:
@@ -48,9 +92,9 @@ def find_denied_fields(payload: Any) -> list[str]:
             hits.add(norm)
 
     blob = json.dumps(data, default=str)
+    # Only long/explicit private key markers in JSON text — avoids "order"/"route" value FPs.
     lower = blob.lower()
-    for denied in DENIED_PRIVATE_FIELDS:
-        # Key-style markers only (avoid false positives on free text where possible).
+    for denied in _BLOB_SCAN_DENYLIST:
         if f'"{denied}"' in lower or f"'{denied}'" in lower:
             hits.add(denied)
     if _SECRET_VALUE_RE.search(blob):
@@ -61,5 +105,6 @@ def find_denied_fields(payload: Any) -> list[str]:
 def assert_no_denied_fields(payload: Any, *, context: str = "publish") -> dict[str, Any]:
     hits = find_denied_fields(payload)
     if hits:
+        # Field names only — never echo values (side-channel safe).
         raise DenyTrapError(f"{context}:denied_fields:{','.join(hits)}")
     return {"ok": True, "context": context, "denied_hits": 0}
