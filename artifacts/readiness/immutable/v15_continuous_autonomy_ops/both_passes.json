@@ -4,7 +4,7 @@
   "lane": "V15-J",
   "branch": "feature/v15-continuous-autonomy-operations",
   "base": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
-  "lane_head": "fbe094fbfe69618ba9192e6f9fb6ff84f5c5d2e3",
+  "lane_head": "8d64a60b53446bd43029116b96fe0f66a895c837",
   "created_at": "2026-08-05T15:19:33Z",
   "pass1": {
     "overall_status": "PASS",
