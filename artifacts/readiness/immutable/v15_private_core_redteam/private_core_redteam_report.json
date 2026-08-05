@@ -1,7 +1,7 @@
 {
   "schema": "v15_private_core_redteam",
   "program_id": "NEXUS_V15_PRIVATE_CORE_FINAL_FALSE_PASS_REDTEAM",
-  "created_at": "2026-08-05T15:20:24Z",
+  "created_at": "2026-08-05T15:21:52Z",
   "lane": "V15-L",
   "branch": "feature/v15-private-core-final-redteam",
   "base_head": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
@@ -435,8 +435,8 @@
         "honest": {
           "ok": true,
           "status": "PASS",
-          "first_id": "dec_f389e12930984ff7",
-          "second_id": "dec_f389e12930984ff7",
+          "first_id": "dec_db269f7ac9a049c6",
+          "second_id": "dec_db269f7ac9a049c6",
           "second_duplicate": true,
           "created_twice": false
         },
@@ -451,7 +451,7 @@
         "first": {
           "status": "OBSERVED",
           "decision": {
-            "decision_id": "dec_f389e12930984ff7",
+            "decision_id": "dec_db269f7ac9a049c6",
             "candidate_id": "cand_dup",
             "market_context_id": "mkt_1",
             "point_in_time_timestamp": "2026-08-05T00:00:00Z",
@@ -488,12 +488,12 @@
             "exit_id": null,
             "reflection_id": null,
             "lesson_ids": [],
-            "created_at": "2026-08-05T15:20:22.016614Z",
-            "updated_at": "2026-08-05T15:20:22.016614Z",
+            "created_at": "2026-08-05T15:21:49.311828Z",
+            "updated_at": "2026-08-05T15:21:49.311828Z",
             "schema_version": "nexus_decision_object_v11",
             "idempotency_key": "v15l-dup-key-001",
             "ledger_event_ids": [
-              "e360e65ddb05cfbca05d49f153fb6762"
+              "57ba3f4be87d6a3e19b3c139e07400bd"
             ],
             "transition_history": [],
             "checkpoint_seq": 1,
@@ -507,7 +507,7 @@
         "second": {
           "status": "DUPLICATE_IGNORED",
           "decision": {
-            "decision_id": "dec_f389e12930984ff7",
+            "decision_id": "dec_db269f7ac9a049c6",
             "candidate_id": "cand_dup",
             "market_context_id": "mkt_1",
             "point_in_time_timestamp": "2026-08-05T00:00:00Z",
@@ -544,12 +544,12 @@
             "exit_id": null,
             "reflection_id": null,
             "lesson_ids": [],
-            "created_at": "2026-08-05T15:20:22.016614Z",
-            "updated_at": "2026-08-05T15:20:22.016614Z",
+            "created_at": "2026-08-05T15:21:49.311828Z",
+            "updated_at": "2026-08-05T15:21:49.311828Z",
             "schema_version": "nexus_decision_object_v11",
             "idempotency_key": "v15l-dup-key-001",
             "ledger_event_ids": [
-              "e360e65ddb05cfbca05d49f153fb6762"
+              "57ba3f4be87d6a3e19b3c139e07400bd"
             ],
             "transition_history": [],
             "checkpoint_seq": 1,
@@ -960,7 +960,7 @@
       "passed": true,
       "workers": 8,
       "unique_decision_ids": [
-        "dec_3bda82d904474d4a"
+        "dec_828286773ee34b42"
       ],
       "create_count": 1,
       "duplicate_count": 7,
@@ -1029,5 +1029,5 @@
   "critical_findings": [],
   "high_findings": [],
   "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v15_l_final_redteam",
-  "commit": "a7c14d9e9004e0e3a6399424fa3375fdea17e367"
+  "commit": "2f8dc503636424622ca05417f586dcd7d8688ba1"
 }
