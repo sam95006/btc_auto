@@ -219,3 +219,18 @@ def test_pass2_rejects_false_real_performance_claim():
     assert result["passed"] is False
     ids = {f["id"] for f in result["findings"]}
     assert "P2_FALSE_PASS_PROFIT" in ids or "P2_FALSE_PASS_CF_SUM" in ids
+
+
+def test_claim_scan_clean_on_valid_replay():
+    from backend.nexus_counterfactual_replay_v16.claim_scan import assert_no_forbidden_claims
+
+    replay = run_counterfactual_replay()
+    scan = assert_no_forbidden_claims(
+        {
+            "disclaimer": replay["disclaimer"],
+            "notes": [o["notes"] for r in replay["replays"] for o in r["outcomes"]],
+        }
+    )
+    assert scan["clean"] is True
+    dirty = assert_no_forbidden_claims({"x": "this is real performance alpha"})
+    assert dirty["clean"] is False

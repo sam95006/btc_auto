@@ -5,6 +5,7 @@ import hashlib
 import json
 from typing import Any, Callable
 
+from backend.nexus_counterfactual_replay_v16.claim_scan import assert_no_forbidden_claims
 from backend.nexus_counterfactual_replay_v16.constants import (
     ALTERNATE_PATHS,
     HARD_BANS,
@@ -282,6 +283,32 @@ def pass2_adversarial_leakage(bundle: dict[str, Any]) -> dict[str, Any]:
             }
         )
 
+    claim_scan = assert_no_forbidden_claims(
+        {
+            "disclaimer": replay.get("disclaimer"),
+            "flags": {
+                "profitability_claimed": replay.get("profitability_claimed"),
+                "is_real_performance": replay.get("is_real_performance"),
+                "counterfactual_profit_is_not_real_performance": replay.get(
+                    "counterfactual_profit_is_not_real_performance"
+                ),
+            },
+            "outcome_notes": [
+                o.get("notes")
+                for r in (replay.get("replays") or [])
+                for o in (r.get("outcomes") or [])
+            ],
+        }
+    )
+    if not claim_scan["clean"]:
+        findings.append(
+            {
+                "id": "P2_FORBIDDEN_CLAIM_SCAN",
+                "severity": "critical",
+                "detail": f"hits={claim_scan['hit_count']}",
+            }
+        )
+
     # Re-check PIT with as_of before future bar.
     from backend.nexus_counterfactual_replay_v16.fixtures import build_fixture_bars
 
@@ -305,9 +332,10 @@ def pass2_adversarial_leakage(bundle: dict[str, Any]) -> dict[str, Any]:
         "name": "adversarial_leakage",
         "findings": findings,
         "refuse_probes": probes,
+        "claim_scan": claim_scan,
         "critical_count": critical,
         "passed": critical == 0,
-        "digest": _digest({"findings": findings, "probes": probes}),
+        "digest": _digest({"findings": findings, "probes": probes, "claim_scan": claim_scan}),
     }
 
 
