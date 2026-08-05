@@ -1,0 +1,397 @@
+{
+  "schema": "v11_runtime_durability_dr_v2",
+  "pass_id": 1,
+  "created_at": "2026-08-05T03:35:00Z",
+  "overall_status": "NEXUS_RUNTIME_DURABILITY_DR_V2_PASS",
+  "blockers": [],
+  "scale_config": {
+    "mode": "evidence",
+    "events": 50000,
+    "snapshots": 200,
+    "drills": 50,
+    "full_capability_events": 1000000,
+    "full_capability_snapshots": 1000,
+    "full_capability_drills": 100
+  },
+  "full_capability": {
+    "events": 1000000,
+    "snapshots": 1000,
+    "recovery_drills": 100,
+    "documented": true,
+    "harness_supports_full_via_env": true,
+    "env": [
+      "NEXUS_DURABILITY_V2_MODE=full|evidence|smoke",
+      "NEXUS_DURABILITY_V2_EVENTS",
+      "NEXUS_DURABILITY_V2_SNAPSHOTS",
+      "NEXUS_DURABILITY_V2_DRILLS"
+    ]
+  },
+  "metrics": {
+    "append_p50_s": 7.399999958579428e-05,
+    "append_p95_s": 0.00010300000030838419,
+    "append_p99_s": 0.0001797010004429465,
+    "append_eps": 10517.145060394772,
+    "replay_eps": 106162.2984686696,
+    "snapshot_latency": {
+      "name": "snapshot",
+      "count": 200,
+      "p50_s": 0.047154800000043906,
+      "p95_s": 0.07406643500021343,
+      "p99_s": 0.857595289000164,
+      "min_s": 0.03447989999949641,
+      "max_s": 0.9435216000001674,
+      "mean_s": 0.07534376200002953
+    },
+    "restore_latency_s": 3.9541105999996944,
+    "memory_growth_bytes": 92823552,
+    "disk_growth_bytes": 5265974842
+  },
+  "requirements": {
+    "no_silent_recovery_guess": true,
+    "ambiguous_recovery_blocks": true,
+    "hash_corruption_detected": true,
+    "duplicates_idempotent": true,
+    "monotonic_sequence": true,
+    "no_evidence_loss_claim_without_proof": true,
+    "exchange_write_attempt_count": 0
+  },
+  "scale_bench": {
+    "status": "PASS",
+    "events_appended": 50000,
+    "snapshots_ok": 200,
+    "snapshots_requested": 200,
+    "append_wall_s": 4.754141899999922,
+    "append_eps": 10517.145060394772,
+    "append_latency": {
+      "sample_count": 20400,
+      "p50_s": 7.399999958579428e-05,
+      "p95_s": 0.00010300000030838419,
+      "p99_s": 0.0001797010004429465
+    },
+    "replay_events": 50200,
+    "replay_s": 0.47286090000034164,
+    "replay_eps": 106162.2984686696,
+    "snapshot_latency": {
+      "name": "snapshot",
+      "count": 200,
+      "p50_s": 0.047154800000043906,
+      "p95_s": 0.07406643500021343,
+      "p99_s": 0.857595289000164,
+      "min_s": 0.03447989999949641,
+      "max_s": 0.9435216000001674,
+      "mean_s": 0.07534376200002953
+    },
+    "restore_latency_s": 3.9541105999996944,
+    "restore_status": "RECOVERED_EXACT",
+    "hash_chain": {
+      "ledger_hash_chain_status": "PASS",
+      "event_count": 50200
+    },
+    "memory_rss_before": 28872704,
+    "memory_rss_after": 121696256,
+    "memory_growth_bytes": 92823552,
+    "disk_before_bytes": 86336,
+    "disk_after_bytes": 5266061178,
+    "disk_growth_bytes": 5265974842,
+    "snap_every_hint": 250
+  },
+  "recovery_drills": {
+    "status": "PASS",
+    "passed": 50,
+    "total": 50,
+    "drills_requested": 50
+  },
+  "injection_matrix": {
+    "status": "PASS",
+    "passed": 16,
+    "total": 16,
+    "results": [
+      {
+        "injection": "power_loss",
+        "expected": "CORRUPTION_DETECTED",
+        "actual": "CORRUPTION_DETECTED",
+        "passed": true,
+        "detail": {
+          "status": "RECOVERED_LAST_KNOWN_GOOD",
+          "detail": {
+            "generation": 1,
+            "event_count": 20,
+            "max_sequence": 20,
+            "live_ok_before": false,
+            "latency_s": 0.026146199999857345
+          },
+          "assessment": {
+            "assessed_at": "2026-08-05T03:34:25Z",
+            "exchange_write_attempt_count": 0,
+            "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+            "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+            "old_trading_db_recovered": false,
+            "wallet_delta_attribution_changed": false,
+            "silent_recovery_guess": false,
+            "evidence_loss_claimed_without_proof": false,
+            "live": {
+              "corruption_detection_status": "CORRUPTION_DETECTED",
+              "error": "database disk image is malformed"
+            },
+            "status": "CORRUPTION_DETECTED",
+            "recommendation": "RESTORE_LKG_OR_BLOCK"
+          },
+          "exchange_write_attempt_count": 0,
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false
+        }
+      },
+      {
+        "injection": "partial_write",
+        "expected": "CORRUPTION_DETECTED",
+        "actual": "CORRUPTION_DETECTED",
+        "passed": true,
+        "detail": {
+          "status": "RECOVERED_LAST_KNOWN_GOOD",
+          "detail": {
+            "generation": 1,
+            "event_count": 20,
+            "max_sequence": 20,
+            "live_ok_before": false,
+            "latency_s": 0.026021399999990535
+          },
+          "assessment": {
+            "assessed_at": "2026-08-05T03:34:25Z",
+            "exchange_write_attempt_count": 0,
+            "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+            "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+            "old_trading_db_recovered": false,
+            "wallet_delta_attribution_changed": false,
+            "silent_recovery_guess": false,
+            "evidence_loss_claimed_without_proof": false,
+            "live": {
+              "corruption_detection_status": "CORRUPTION_DETECTED",
+              "error": "database disk image is malformed"
+            },
+            "status": "CORRUPTION_DETECTED",
+            "recommendation": "RESTORE_LKG_OR_BLOCK"
+          },
+          "exchange_write_attempt_count": 0,
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false
+        }
+      },
+      {
+        "injection": "fsync_interruption",
+        "expected": "FSYNC_INTERRUPTED_OR_BLOCKED",
+        "actual": "FSYNC_INTERRUPTED_OR_BLOCKED",
+        "passed": true,
+        "detail": {}
+      },
+      {
+        "injection": "truncation",
+        "expected": "CORRUPTION_DETECTED",
+        "actual": "CORRUPTION_DETECTED",
+        "passed": true,
+        "detail": {
+          "status": "RECOVERED_LAST_KNOWN_GOOD",
+          "detail": {
+            "generation": 1,
+            "event_count": 20,
+            "max_sequence": 20,
+            "live_ok_before": false,
+            "latency_s": 0.027040599999963888
+          },
+          "assessment": {
+            "assessed_at": "2026-08-05T03:34:25Z",
+            "exchange_write_attempt_count": 0,
+            "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+            "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+            "old_trading_db_recovered": false,
+            "wallet_delta_attribution_changed": false,
+            "silent_recovery_guess": false,
+            "evidence_loss_claimed_without_proof": false,
+            "live": {
+              "corruption_detection_status": "CORRUPTION_DETECTED",
+              "error": "database disk image is malformed"
+            },
+            "status": "CORRUPTION_DETECTED",
+            "recommendation": "RESTORE_LKG_OR_BLOCK"
+          },
+          "exchange_write_attempt_count": 0,
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false
+        }
+      },
+      {
+        "injection": "bit_corruption",
+        "expected": "CORRUPTION_DETECTED",
+        "actual": "CORRUPTION_DETECTED",
+        "passed": true,
+        "detail": {
+          "corruption_detection_status": "CORRUPTION_DETECTED",
+          "integrity_check": "ok",
+          "ledger_hash_chain_status": "PASS",
+          "event_count": 20,
+          "payload_hash_mismatch": true
+        }
+      },
+      {
+        "injection": "hash_chain_corruption",
+        "expected": "CORRUPTION_DETECTED",
+        "actual": "CORRUPTION_DETECTED",
+        "passed": true,
+        "detail": {
+          "ledger_hash_chain_status": "CORRUPTION_DETECTED",
+          "reason": "hash_mismatch",
+          "broken_at_sequence": 1
+        }
+      },
+      {
+        "injection": "snapshot_corruption",
+        "expected": "CORRUPTION_DETECTED",
+        "actual": "CORRUPTION_DETECTED",
+        "passed": true,
+        "detail": {
+          "reason": "snapshot_checksum_mismatch",
+          "expected": "aa65772aaca3dbf284e4ebe5f71d09039f9b09517655ada62817ba7df6ae77e2",
+          "actual": "059923e41910575723ae81d4013b65b5d064658e123ac73108c9d3c608144cf9"
+        }
+      },
+      {
+        "injection": "latest_missing",
+        "expected": "BLOCKED_AMBIGUOUS_STATE",
+        "actual": "BLOCKED_AMBIGUOUS_STATE",
+        "passed": true,
+        "detail": {
+          "reason": "latest_snapshot_missing",
+          "pointer": {
+            "generation": 1,
+            "created_at": "2026-08-05T03:34:26Z",
+            "source_ledger_position": 20,
+            "max_sequence": 20,
+            "snapshot_checksum": "6b39c3843a16c2dc0d47f1e04bbed5d2f1693cce21bd57e81abeb51fa24ad1a0",
+            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_dur_v2_7wad0g1p\\matrix\\latest_missing\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+            "ledger_hash_chain_status": "PASS",
+            "schema": "durability_v2"
+          }
+        }
+      },
+      {
+        "injection": "lkg_corruption",
+        "expected": "CORRUPTION_DETECTED",
+        "actual": "CORRUPTION_DETECTED",
+        "passed": true,
+        "detail": {
+          "reason": "snapshot_checksum_mismatch",
+          "expected": "0000000000000000000000000000000000000000000000000000000000000000",
+          "actual": "f53871995738bec8d1f20a0eedc0906a75a7dd11cd2a59cc8b117ae0544c44de"
+        }
+      },
+      {
+        "injection": "concurrent_append",
+        "expected": "PASS",
+        "actual": "PASS",
+        "passed": true,
+        "detail": {
+          "status": "PASS",
+          "event_count": 260,
+          "expected_min_new": 240,
+          "chain": {
+            "ledger_hash_chain_status": "PASS",
+            "event_count": 260
+          },
+          "errors": []
+        }
+      },
+      {
+        "injection": "duplicate_event",
+        "expected": "PASS",
+        "actual": "PASS",
+        "passed": true,
+        "detail": {
+          "status": "PASS",
+          "first": "APPENDED",
+          "second": "DUPLICATE_IGNORED",
+          "event_count": 21
+        }
+      },
+      {
+        "injection": "out_of_order",
+        "expected": "PASS",
+        "actual": "PASS",
+        "passed": true,
+        "detail": {
+          "status": "PASS",
+          "sequences": [
+            21,
+            22
+          ],
+          "chain": {
+            "ledger_hash_chain_status": "PASS",
+            "event_count": 22
+          }
+        }
+      },
+      {
+        "injection": "clock_rollback",
+        "expected": "PASS",
+        "actual": "PASS",
+        "passed": true,
+        "detail": {
+          "status": "PASS",
+          "first": "APPENDED",
+          "second": "BLOCKED_CLOCK_ROLLBACK",
+          "second_reason": "wall=1699996400.0 last=1700000000.0"
+        }
+      },
+      {
+        "injection": "disk_soft_limit",
+        "expected": "DISK_LIMIT_BLOCKED",
+        "actual": "DISK_LIMIT_BLOCKED",
+        "passed": true,
+        "detail": {
+          "kind": "disk_soft_limit",
+          "used": 69895,
+          "limit": 1
+        }
+      },
+      {
+        "injection": "disk_hard_limit",
+        "expected": "DISK_LIMIT_BLOCKED",
+        "actual": "DISK_LIMIT_BLOCKED",
+        "passed": true,
+        "detail": {
+          "kind": "disk_hard_limit",
+          "used": 69895,
+          "limit": 1
+        }
+      },
+      {
+        "injection": "process_kill_during_checkpoint",
+        "expected": "CHECKPOINT_INTERRUPTED",
+        "actual": "CHECKPOINT_INTERRUPTED",
+        "passed": true,
+        "detail": {
+          "reason": "process_kill_during_checkpoint",
+          "partial_marker": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_dur_v2_7wad0g1p\\matrix\\process_kill_during_checkpoint\\durability\\checkpoint_partial.marker"
+        }
+      }
+    ]
+  },
+  "preserved_facts": {
+    "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+    "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+    "old_trading_db_recovered": false,
+    "wallet_delta_attribution_changed": false,
+    "silent_recovery_guess": false,
+    "evidence_loss_claimed_without_proof": false
+  }
+}
