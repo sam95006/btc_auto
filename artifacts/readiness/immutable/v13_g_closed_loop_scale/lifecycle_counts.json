@@ -1,0 +1,13 @@
+{
+  "blocked_count": 0,
+  "candidate_count": 10000,
+  "completed_lifecycle_count": 5500,
+  "created_at": "2026-08-05T09:00:28Z",
+  "error_count": 0,
+  "rejected_count": 4500,
+  "schema": "v13_g_closed_loop_scale_lifecycle_counts",
+  "targets": {
+    "candidates": 10000,
+    "completed_lifecycles": 5000
+  }
+}
