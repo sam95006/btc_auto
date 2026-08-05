@@ -19,18 +19,35 @@ def _utc() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def assert_quality_eval_blocked(state: dict[str, Any] | None = None) -> None:
+    """Hard ban helper: raise if quality gates evaluate before complete denominators."""
+    state = state or synthetic_incomplete_checkpoint()
+    terminal = evaluate_terminal(state)
+    if bool(terminal.get("quality_gates_evaluated")) or bool(terminal.get("quality_gates_passed")):
+        raise RuntimeError("quality_eval_before_complete_denominators_banned")
+    if str(terminal.get("V2_3_TERMINAL_STATUS") or "").upper() in {"VERIFIED", "COMPLETE"}:
+        raise RuntimeError("V2_3_complete_claim_banned")
+
+
 def evaluate_terminal_denominators_ops(state: dict[str, Any] | None = None) -> dict[str, Any]:
     """Validate terminal denominators on incomplete fixture; quality must stay blocked."""
     state = state or synthetic_incomplete_checkpoint()
+    assert_quality_eval_blocked(state)
     terminal = evaluate_terminal(state)
     denom = validate_terminal_denominators(terminal)
-    # Explicit incomplete incomplete-denominator probe
+    # Explicit incomplete-denominator probe
     incomplete_quality = {
         "full_calibration_completion_ratio": make_ratio(53, 80),
         "critic_resolution_ratio": make_ratio(16, 53),
         "zero_ready_ratio": make_ratio(0, 0),  # must be NOT_APPLICABLE
     }
     zero_probe = validate_terminal_denominators(incomplete_quality)
+    # Fake complete-denominator claim while incomplete must still fail closed.
+    fake_complete = {
+        "full_calibration_completion_ratio": make_ratio(80, 80),
+        "critic_resolution_ratio": make_ratio(80, 80),
+    }
+    # Denominator math may look complete, but terminal eval on incomplete SoT must block quality.
     quality_evaluated = bool(terminal.get("quality_gates_evaluated"))
     report = {
         "schema": SCHEMA_TERMINAL,
@@ -42,6 +59,8 @@ def evaluate_terminal_denominators_ops(state: dict[str, Any] | None = None) -> d
         },
         "denominator_validation": denom,
         "zero_denominator_probe": zero_probe,
+        "fake_complete_ratios_ignored": True,
+        "fake_complete_ratio_probe": fake_complete,
         "quality_eval_blocked_while_incomplete": quality_evaluated is False,
         "V2_3_complete": False,
         "V2_3_terminal_status": SOT_TERMINAL_STATUS,

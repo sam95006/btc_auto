@@ -46,6 +46,7 @@ def _window_for_profile(
         "pending_count": int(pending_count),
         "retry_after_s": retry_after_s,
         "quota_reset_s": quota_reset_s,
+        "capacity_wait_s": round(capacity_wait, 3),
         "window_open_in_s": round(open_in_s, 3),
         "window_open_at": window_open_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "estimated_drain_s": round(drain_s, 3) if drain_s is not None else None,
@@ -86,18 +87,33 @@ def evaluate_provider_windows(
             now=now,
         ),
     }
-    # Prove independence: windows must not share a single coupled open/close.
-    independent = (
-        lanes[GROQ_REFLECTION_REASONER]["window_open_in_s"]
-        != lanes[SAMBANOVA_INDEPENDENT_CRITIC]["window_open_in_s"]
-        or groq_quota_reset_s != sambanova_quota_reset_s
-        or True  # always independent by construction (separate TokenBucket instances)
-    )
+    # Independence proof: separate lane records + capacity waits track per-lane inputs.
+    g = lanes[GROQ_REFLECTION_REASONER]
+    s = lanes[SAMBANOVA_INDEPENDENT_CRITIC]
+    separate_buckets = id(g) != id(s)
+    g_cap = float(g["capacity_wait_s"])
+    s_cap = float(s["capacity_wait_s"])
+    g_input = max(float(groq_retry_after_s or 0.0), float(groq_quota_reset_s or 0.0))
+    s_input = max(float(sambanova_retry_after_s or 0.0), float(sambanova_quota_reset_s or 0.0))
+    inputs_differ = g_input != s_input
+    waits_track_inputs = (g_cap == g_input) and (s_cap == s_input)
+    waits_differ_when_inputs_differ = (not inputs_differ) or (g_cap != s_cap)
+    independent = separate_buckets and waits_track_inputs and waits_differ_when_inputs_differ
     return {
         "schema": SCHEMA_WINDOWS,
         "created_at": _utc(),
         "lanes": lanes,
         "independent_provider_windows": bool(independent),
+        "independence_proof": {
+            "separate_lane_records": separate_buckets,
+            "waits_track_inputs": waits_track_inputs,
+            "waits_differ_when_inputs_differ": waits_differ_when_inputs_differ,
+            "inputs_differ": inputs_differ,
+            "groq_capacity_wait_s": g_cap,
+            "sambanova_capacity_wait_s": s_cap,
+            "groq_window_open_in_s": float(g["window_open_in_s"]),
+            "sambanova_window_open_in_s": float(s["window_open_in_s"]),
+        },
         "any_window_open": any(v["window_status"] == "OPEN" for v in lanes.values()),
         "real_resume_authorized": False,
         "provider_lanes": list(PROVIDER_LANES),

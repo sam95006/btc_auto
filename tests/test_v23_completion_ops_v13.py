@@ -213,3 +213,87 @@ def test_ops_cycle_pass_and_hard_bans(tmp_path: Path) -> None:
     assert cycle["ownership_theft_blocked"] is True
     assert cycle["background_agent_sanitized_fixtures_only"] is True
     assert_no_secret_keys(status)
+
+
+# --- Pass 2 adversarial hardening ---
+
+
+def test_pass2_independent_windows_proof_rejects_coupled_waits() -> None:
+    same = evaluate_provider_windows(
+        groq_retry_after_s=900.0,
+        sambanova_retry_after_s=900.0,
+        groq_quota_reset_s=900.0,
+        sambanova_quota_reset_s=900.0,
+        verify_checkpoint=False,
+    )
+    assert same["independence_proof"]["separate_lane_records"] is True
+    assert same["independence_proof"]["waits_track_inputs"] is True
+    assert same["independent_provider_windows"] is True
+    differ = evaluate_provider_windows(
+        groq_retry_after_s=100.0,
+        sambanova_retry_after_s=100.0,
+        groq_quota_reset_s=100.0,
+        sambanova_quota_reset_s=900.0,
+        verify_checkpoint=False,
+    )
+    assert differ["independence_proof"]["inputs_differ"] is True
+    assert differ["independence_proof"]["waits_differ_when_inputs_differ"] is True
+    assert (
+        differ["lanes"][GROQ_REFLECTION_REASONER]["capacity_wait_s"]
+        != differ["lanes"][SAMBANOVA_INDEPENDENT_CRITIC]["capacity_wait_s"]
+    )
+
+
+def test_pass2_atomic_checkpoint_strips_secrets(tmp_path: Path) -> None:
+    fixture = synthetic_incomplete_checkpoint()
+    fixture["api_key"] = "SHOULD_NEVER_PERSIST"
+    fixture["transport"][GROQ_REFLECTION_REASONER]["authorization"] = "Bearer BAD"
+    path = tmp_path / "secret_probe.json"
+    atomic_write_checkpoint(path, fixture)
+    reloaded = json.loads(path.read_text(encoding="utf-8"))
+    blob = json.dumps(reloaded)
+    assert "SHOULD_NEVER_PERSIST" not in blob
+    assert "Bearer BAD" not in blob
+    assert "api_key" not in reloaded
+    assert "authorization" not in (reloaded.get("transport") or {}).get(
+        GROQ_REFLECTION_REASONER, {}
+    )
+
+
+def test_pass2_critic_resolved_without_reasoner_fails_counters() -> None:
+    bad = synthetic_incomplete_checkpoint()
+    # Critic claims resolution on a case Groq never completed.
+    bad["critic_resolved_ids"] = list(bad["critic_resolved_ids"]) + ["case_070"]
+    bad["transport"][SAMBANOVA_INDEPENDENT_CRITIC]["success_count"] = len(
+        bad["critic_resolved_ids"]
+    )
+    counters = validate_semantic_counters(bad)
+    assert counters["ok"] is False
+    assert any("critic_resolved_without_reasoner_success" in i for i in counters["issues"])
+
+
+def test_pass2_quality_and_lesson_hard_bans_raise() -> None:
+    from backend.nexus_v23_completion_ops.gates import assert_quality_eval_blocked
+
+    assert_quality_eval_blocked()
+    with pytest.raises(RuntimeError, match="V2_3_complete_status_banned"):
+        assert_incomplete_truth(
+            {"V2_3_complete": False, "V2_3_terminal_status": "VERIFIED"}
+        )
+    gates = evaluate_lesson_quality_gates(
+        terminal_status="INCOMPLETE_PROVIDER_CAPACITY",
+        quality_gates_passed=False,
+    )
+    assert gates["fixture_lesson_gate"]["new_policy_effect_lesson_count"] == 0
+    assert gates["incomplete_lesson_gate"]["new_policy_effect_lesson_count"] == 0
+
+
+def test_pass2_preflight_never_authorizes_real_resume() -> None:
+    pf = run_lane_preflights(
+        groq_headers={"Retry-After": "1", "x-ratelimit-reset": "1"},
+        sambanova_headers={"Retry-After": "1", "x-ratelimit-reset": "1"},
+    )
+    assert pf["real_provider_call_executed"] is False
+    for lane in pf["lanes"].values():
+        assert lane["ops_owns_real_resume"] is False
+        assert lane["real_provider_call_executed"] is False

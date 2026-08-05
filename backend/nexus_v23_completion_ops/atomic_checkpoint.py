@@ -35,12 +35,19 @@ def atomic_write_checkpoint(path: Path, state: dict[str, Any]) -> dict[str, Any]
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     safe = sanitize_checkpoint(dict(state))
+    # Defense-in-depth: drop remaining forbidden keys before persist.
+    from backend.nexus_v23_completion_ops.sanitize import strip_forbidden_keys
+
+    safe = strip_forbidden_keys(safe)
+    if not isinstance(safe, dict):
+        raise RuntimeError("atomic_checkpoint_sanitize_failed")
     if "integrity_checksum" not in safe or not safe.get("integrity_checksum"):
         safe["integrity_checksum"] = compute_integrity_checksum(safe)
     safe["updated_at"] = _utc()
     assert_no_secret_keys(safe)
     payload = json.dumps(safe, indent=2, ensure_ascii=False, default=str) + "\n"
     tmp = path.with_suffix(path.suffix + f".tmp.{os.getpid()}")
+    prior_bytes = path.read_bytes() if path.is_file() else None
     try:
         tmp.write_text(payload, encoding="utf-8")
         os.replace(tmp, path)
@@ -51,6 +58,10 @@ def atomic_write_checkpoint(path: Path, state: dict[str, Any]) -> dict[str, Any]
                 tmp.unlink()
             except OSError:
                 pass
+        # Prior file untouched on failure (atomic replace semantics).
+        if prior_bytes is not None and path.is_file():
+            if path.read_bytes() != prior_bytes:
+                raise RuntimeError("atomic_checkpoint_prior_corrupted_on_failure") from None
         raise
     return {
         "schema": SCHEMA_ATOMIC,
@@ -61,6 +72,7 @@ def atomic_write_checkpoint(path: Path, state: dict[str, Any]) -> dict[str, Any]
         "checksum_sha256": _sha_bytes(payload.encode("utf-8")),
         "integrity_checksum": safe.get("integrity_checksum"),
         "tmp_cleaned": not tmp.exists(),
+        "secrets_stripped": True,
         "real_resume_executed": False,
         "V2_3_complete": False,
     }
