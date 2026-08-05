@@ -1,7 +1,7 @@
 {
   "schema": "v14_universe_redteam",
   "program_id": "NEXUS_V14_UNIVERSE_LINEAGE_REDTEAM",
-  "created_at": "2026-08-05T11:17:12Z",
+  "created_at": "2026-08-05T11:17:49Z",
   "lane": "V14-I",
   "branch": "feature/v14-universe-lineage-redteam",
   "base_head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
@@ -578,8 +578,8 @@
     "exchange_write_attempt_count": 0,
     "demo_order_count": 0
   },
-  "commit": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
-  "lane_head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "commit": "0cc8b7dc4a214782060a78ddc5b75b13edb957d0",
+  "lane_head": "0cc8b7dc4a214782060a78ddc5b75b13edb957d0",
   "artifact_paths": {
     "status": "D:\\NEXUS_RUNTIME\\worktrees\\v14_i_universe_redteam\\artifacts\\readiness\\immutable\\v14_universe_redteam\\universe_redteam_status.json",
     "summary": "D:\\NEXUS_RUNTIME\\worktrees\\v14_i_universe_redteam\\artifacts\\readiness\\immutable\\v14_universe_redteam\\universe_redteam_summary.json"
