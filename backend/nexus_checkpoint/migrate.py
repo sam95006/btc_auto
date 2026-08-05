@@ -40,7 +40,7 @@ def migrate_legacy_to_envelope(
     source_runtime: str = "migration_v11_1",
 ) -> dict[str, Any]:
     """In-memory migration of a legacy checkpoint dict into the envelope."""
-    from backend.nexus_checkpoint.adapters import ADAPTERS
+    from .adapters import ADAPTERS
 
     adapter = ADAPTERS.get(payload_type)
     if adapter is None:

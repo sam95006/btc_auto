@@ -8,6 +8,7 @@ from typing import Any
 
 REVIEW_ROOT = Path(__file__).resolve().parents[3]
 WORKTREE_ROOT = REVIEW_ROOT.parent
+INTEGRATED_ROOT = REVIEW_ROOT  # this review package lives inside the integration worktree
 
 ORIGIN_REFLECTION_ROOT = WORKTREE_ROOT / "v11_reflection"
 ORIGIN_PIT_ROOT = WORKTREE_ROOT / "v11_pit_qualification"
@@ -32,6 +33,19 @@ def _ensure_root(root: Path, *, remove: Path | None = None) -> None:
     root_s = str(root)
     if root_s not in sys.path:
         sys.path.insert(0, root_s)
+
+
+def restore_integrated_imports() -> None:
+    """Undo origin-worktree path swaps so later tests import the integrated tip."""
+    purge_backend_modules()
+    for alien in (ORIGIN_REFLECTION_ROOT, ORIGIN_PIT_ROOT):
+        alien_s = str(alien)
+        while alien_s in sys.path:
+            sys.path.remove(alien_s)
+    root_s = str(INTEGRATED_ROOT)
+    while root_s in sys.path:
+        sys.path.remove(root_s)
+    sys.path.insert(0, root_s)
 
 
 def load_reflection_namespace() -> dict[str, Any]:

@@ -20,6 +20,7 @@ from tools.review.r3_reflection_qualification.origin_loader import (
     ORIGIN_PIT_ROOT,
     ORIGIN_REFLECTION_ROOT,
     REVIEW_ARTIFACT_REL,
+    restore_integrated_imports,
 )
 from tools.review.r3_reflection_qualification.probes import (
     probe_429_as_quality_failure,
@@ -39,6 +40,14 @@ from tools.review.r3_reflection_qualification.origin_loader import (
     load_pit_namespace,
     load_reflection_namespace,
 )
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _restore_integrated_imports_after_r3_review():
+    yield
+    restore_integrated_imports()
+
 
 
 def test_origin_worktrees_present():
