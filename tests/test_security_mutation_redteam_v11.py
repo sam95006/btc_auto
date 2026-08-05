@@ -117,9 +117,30 @@ def test_evaluate_counters_zero(workdir: Path):
 def test_no_unresolved_survivors_after_kill_suite(workdir: Path):
     status = evaluate_security_mutation_redteam(root=ROOT, workdir=workdir)
     assert status["mutation_unresolved_blocker_count"] == 0, status.get("unresolved_blockers")
+    assert status["mutation_killed_count"] == status["mutation_total"]
     assert status["recommendation"] == PASS_RECOMMENDATION
     assert status["passed"] is True
     assert status["critical_findings"] == []
+    # Pass-2 residual highs are explicit, not silent
+    assert status["findings"]["residual_high_count"] >= 1
+    assert len(status["high_findings"]) >= 1
+
+
+def test_pass2_scenarios_include_race_and_false_pass_guards():
+    assert "concurrent_idempotency" in SCENARIO_IDS
+    assert "false_pass_guards" in SCENARIO_IDS
+    assert "provider_public_leak" in SCENARIO_IDS
+    assert "checkpoint_digest" in SCENARIO_IDS
+    assert len(SCENARIO_IDS) >= 11
+
+
+def test_internal_dotdot_kills_skip_token_mutant(workdir: Path):
+    outcome = kill_mutant(
+        "path_traversal",
+        "path_traversal::skip_dotdot_token_check",
+        workdir,
+    )
+    assert outcome.killed
 
 
 def test_immutable_artifacts_written(tmp_path: Path):

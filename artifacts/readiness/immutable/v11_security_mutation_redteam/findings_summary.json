@@ -1,21 +1,40 @@
 {
   "schema": "v11_security_mutation_redteam",
-  "created_at": "2026-08-05T03:35:10Z",
+  "created_at": "2026-08-05T03:38:23Z",
   "recommendation": "NEXUS_V11_SECURITY_MUTATION_REDTEAM_PASS",
   "passed": true,
   "mutation_killed_count": 33,
   "mutation_survivor_count": 0,
   "mutation_unresolved_blocker_count": 0,
   "mutation_total": 33,
-  "scenario_pass_count": 7,
-  "scenario_total_count": 7,
+  "scenario_pass_count": 11,
+  "scenario_total_count": 11,
   "real_subject_pass_count": 16,
   "real_subject_total": 16,
   "exchange_write_attempt_count": 0,
   "secret_leak_count": 0,
   "mainnet_client_created_count": 0,
   "critical_findings": [],
-  "high_findings": [],
+  "high_findings": [
+    {
+      "severity": "high",
+      "code": "secret_scan_json_assignment_blind_spot",
+      "detail": "scan_secrets_in_evidence credential_assignment regex misses JSON quoted keys (\"api_key\": \"...\"); substring pattern:api_key still hits. Do not rely on credential_assignment alone for JSON evidence.",
+      "fail_closed": false
+    },
+    {
+      "severity": "high",
+      "code": "symlink_escape_platform_dependent",
+      "detail": "Windows may deny symlink creation without privilege; campaign marks symlink mutants equivalent/platform_skip. Re-run on symlink-capable host before treating symlink jail as production-proven.",
+      "fail_closed": false
+    },
+    {
+      "severity": "high",
+      "code": "mutation_surface_is_in_memory_wrappers",
+      "detail": "Mutations are in-memory weakened subjects, not AST edits of production modules. Surviving source-level mutants outside owned wrappers remain a coverage gap for future mutmut/cosmic-ray integration.",
+      "fail_closed": false
+    }
+  ],
   "unresolved_blockers": [],
   "owned_paths": [
     "backend/nexus_autonomy/security_mutation_v11/",

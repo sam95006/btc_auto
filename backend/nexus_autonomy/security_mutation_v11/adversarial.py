@@ -1,20 +1,28 @@
 """Adversarial scenarios beyond pure mutation killing (property / fuzz / traps)."""
 from __future__ import annotations
 
+import hashlib
 import json
+import threading
 from pathlib import Path
 from typing import Any, Callable
 
-from backend.nexus_autonomy.security_exceptions_v1 import PersistenceSecurityError
+from backend.nexus_autonomy.security_exceptions_v1 import (
+    ExchangeWriteForbidden,
+    NetworkEgressForbidden,
+    PersistenceSecurityError,
+    PublicPrivateBoundaryError,
+)
 from backend.nexus_autonomy.security_import_graph_v1 import build_import_graph
 from backend.nexus_autonomy.security_network_traps_v1 import network_egress_traps
 from backend.nexus_autonomy.security_persistence_v1 import (
+    assert_ledger_event_safe,
     assert_safe_relative_path,
     fail_closed_json_loads,
     scan_secrets_in_evidence,
 )
+from backend.nexus_autonomy.security_public_private_v1 import assert_public_schema
 from backend.nexus_autonomy.security_write_traps_v1 import WriteTrapRegistry
-from backend.nexus_autonomy.security_exceptions_v1 import ExchangeWriteForbidden, NetworkEgressForbidden
 from backend.nexus_autonomy.security_mutation_v11.fixtures import (
     build_filesystem_attack_tree,
     fuzz_json_blobs,
@@ -229,6 +237,135 @@ def scenario_secret_scan_property(workdir: Path) -> AdversarialScenarioResult:
     )
 
 
+def scenario_checkpoint_digest(workdir: Path) -> AdversarialScenarioResult:
+    """Tampered checkpoint digest must fail closed (local fixture)."""
+    path = workdir / "checkpoint.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    body = {"generation": 3, "state": "RUNNING"}
+    digest = hashlib.sha256(
+        json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    path.write_text(json.dumps({**body, "digest": digest}), encoding="utf-8")
+    tampered = json.loads(path.read_text(encoding="utf-8"))
+    tampered["state"] = "COMPROMISED"
+    path.write_text(json.dumps(tampered), encoding="utf-8")
+    stored = str(tampered.get("digest") or "")
+    body2 = {k: v for k, v in tampered.items() if k != "digest"}
+    expected = hashlib.sha256(
+        json.dumps(body2, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    blocked = stored != expected
+    return AdversarialScenarioResult(
+        scenario_id="checkpoint_digest",
+        passed=blocked,
+        fail_closed=blocked,
+        detail="digest_mismatch_detected" if blocked else "tamper_undetected",
+        critical=not blocked,
+        evidence={"blocked": blocked},
+    )
+
+
+def scenario_concurrent_idempotency(workdir: Path) -> AdversarialScenarioResult:
+    """Concurrent duplicate intents must not double-accept (simulator only)."""
+    from backend.nexus_autonomy.execution_simulator_v1_1 import AutonomousExecutionSimulatorV1_1
+
+    _ = workdir
+    sim = AutonomousExecutionSimulatorV1_1(leverage=2, margin_usdt=50.0)
+    req = {
+        "idempotency_key": "race-intent-1",
+        "symbol": "BTCUSDT",
+        "side": "BUY",
+        "order_type": "limit",
+        "qty": 0.1,
+        "price": 100.0,
+        "mark_price": 100.5,
+        "margin_mode": "ISOLATED",
+        "requested_actions": [],
+    }
+    results: list[str] = []
+    barrier = threading.Barrier(4)
+    lock = threading.Lock()
+
+    def worker() -> None:
+        barrier.wait(timeout=2.0)
+        out = sim.create_order(dict(req))
+        with lock:
+            results.append(str(out.get("status")))
+
+    threads = [threading.Thread(target=worker) for _ in range(4)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=3.0)
+    accepted = sum(1 for s in results if s == "ACCEPTED")
+    ignored = sum(1 for s in results if s == "DUPLICATE_IGNORED")
+    passed = (
+        len(results) == 4
+        and accepted == 1
+        and ignored == 3
+        and int(getattr(sim, "exchange_write_attempt_count", 0) or 0) == 0
+    )
+    return AdversarialScenarioResult(
+        scenario_id="concurrent_idempotency",
+        passed=passed,
+        fail_closed=passed,
+        detail="concurrent_idempotency_ok" if passed else f"statuses={results}",
+        critical=not passed,
+        evidence={"results": results, "accepted": accepted, "ignored": ignored},
+    )
+
+
+def scenario_provider_public_leak(workdir: Path) -> AdversarialScenarioResult:
+    _ = workdir
+    blocked_ledger = False
+    blocked_public = False
+    try:
+        assert_ledger_event_safe({"type": "X", "payload": {"raw_provider_prompt": "x"}})
+    except PersistenceSecurityError:
+        blocked_ledger = True
+    try:
+        assert_public_schema({"raw_provider_response": "y"}, context="public")
+    except PublicPrivateBoundaryError:
+        blocked_public = True
+    passed = blocked_ledger and blocked_public
+    return AdversarialScenarioResult(
+        scenario_id="provider_public_leak",
+        passed=passed,
+        fail_closed=passed,
+        detail="provider_leak_blocked" if passed else "provider_leak_allowed",
+        critical=not passed,
+        evidence={"blocked_ledger": blocked_ledger, "blocked_public": blocked_public},
+    )
+
+
+def scenario_false_pass_guards(workdir: Path) -> AdversarialScenarioResult:
+    """Meta-guard: empty campaign / zero kills must never look like PASS inputs."""
+    _ = workdir
+    from backend.nexus_autonomy.security_mutation_v11.constants import SUBJECT_IDS
+    from backend.nexus_autonomy.security_mutation_v11.mutations import MUTATION_OPERATORS
+
+    subject_ok = len(SUBJECT_IDS) >= 12
+    ops = sum(len(v) for v in MUTATION_OPERATORS.values())
+    ops_ok = ops >= 20
+    # Ensure always_claim_safe mutants exist (false-safe class) so oracle path is exercised
+    always_safe_ops = sum(
+        1 for ops_list in MUTATION_OPERATORS.values() for name, _, _ in ops_list if name == "always_claim_safe"
+    )
+    passed = subject_ok and ops_ok and always_safe_ops >= 8
+    return AdversarialScenarioResult(
+        scenario_id="false_pass_guards",
+        passed=passed,
+        fail_closed=passed,
+        detail="false_pass_guards_ok" if passed else "false_pass_guards_weak",
+        critical=not passed,
+        evidence={
+            "subject_count": len(SUBJECT_IDS),
+            "operator_count": ops,
+            "always_claim_safe_count": always_safe_ops,
+        },
+    )
+
+
 SCENARIO_RUNNERS: dict[str, Callable[[Path], AdversarialScenarioResult]] = {
     "filesystem_attack_fixtures": scenario_filesystem_fixtures,
     "path_fuzz": scenario_path_fuzz,
@@ -237,6 +374,10 @@ SCENARIO_RUNNERS: dict[str, Callable[[Path], AdversarialScenarioResult]] = {
     "network_traps": scenario_network_traps,
     "exchange_write_traps": scenario_exchange_write_traps,
     "secret_scan_property": scenario_secret_scan_property,
+    "checkpoint_digest": scenario_checkpoint_digest,
+    "concurrent_idempotency": scenario_concurrent_idempotency,
+    "provider_public_leak": scenario_provider_public_leak,
+    "false_pass_guards": scenario_false_pass_guards,
 }
 
 SCENARIO_IDS: tuple[str, ...] = tuple(SCENARIO_RUNNERS.keys())

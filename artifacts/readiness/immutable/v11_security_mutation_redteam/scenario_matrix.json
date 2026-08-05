@@ -7,7 +7,11 @@
     "import_graph",
     "network_traps",
     "exchange_write_traps",
-    "secret_scan_property"
+    "secret_scan_property",
+    "checkpoint_digest",
+    "concurrent_idempotency",
+    "provider_public_leak",
+    "false_pass_guards"
   ],
   "scenarios": [
     {
@@ -55,8 +59,8 @@
       "evidence": {
         "violation_count": 0,
         "violations": [],
-        "node_count": 907,
-        "edge_count": 3149
+        "node_count": 910,
+        "edge_count": 3168
       }
     },
     {
@@ -110,6 +114,56 @@
         "json_hits": [
           "pattern:api_key"
         ]
+      }
+    },
+    {
+      "scenario_id": "checkpoint_digest",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "digest_mismatch_detected",
+      "critical": false,
+      "evidence": {
+        "blocked": true
+      }
+    },
+    {
+      "scenario_id": "concurrent_idempotency",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "concurrent_idempotency_ok",
+      "critical": false,
+      "evidence": {
+        "results": [
+          "ACCEPTED",
+          "DUPLICATE_IGNORED",
+          "DUPLICATE_IGNORED",
+          "DUPLICATE_IGNORED"
+        ],
+        "accepted": 1,
+        "ignored": 3
+      }
+    },
+    {
+      "scenario_id": "provider_public_leak",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "provider_leak_blocked",
+      "critical": false,
+      "evidence": {
+        "blocked_ledger": true,
+        "blocked_public": true
+      }
+    },
+    {
+      "scenario_id": "false_pass_guards",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "false_pass_guards_ok",
+      "critical": false,
+      "evidence": {
+        "subject_count": 16,
+        "operator_count": 33,
+        "always_claim_safe_count": 15
       }
     }
   ]

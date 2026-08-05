@@ -28,6 +28,7 @@ from backend.nexus_autonomy.security_mutation_v11.constants import (
     SUBJECT_IDS,
 )
 from backend.nexus_autonomy.security_mutation_v11.models import Finding
+from backend.nexus_autonomy.security_mutation_v11.residuals import residual_high_findings
 from backend.nexus_autonomy.security_persistence_v1 import scan_secrets_in_evidence
 
 # Re-export for tests / tools
@@ -116,10 +117,26 @@ def evaluate_security_mutation_redteam(
             )
 
         critical = [f for f in findings if f.severity == "critical"]
-        high = [f for f in findings if f.severity == "high"]
+        # Pass-2 residual highs are informational (do not flip PASS→FAIL by themselves)
+        residual_highs = residual_high_findings()
+        high = [f for f in findings if f.severity == "high"] + residual_highs
 
         exchange_write_attempt_count = 0
         mainnet_client_created_count = 0
+
+        killed = int(campaign.get("mutation_killed_count") or 0)
+        total_mut = int(campaign.get("mutation_total") or 0)
+        kill_rate_ok = total_mut > 0 and killed == total_mut
+        if not kill_rate_ok and total_mut > 0:
+            findings.append(
+                Finding(
+                    severity="critical",
+                    code="mutation_kill_rate_incomplete",
+                    detail=f"killed={killed} total={total_mut}",
+                    fail_closed=True,
+                )
+            )
+            critical = [f for f in findings if f.severity == "critical"]
 
         status_body: dict[str, Any] = {
             "schema": SCHEMA,
@@ -146,7 +163,8 @@ def evaluate_security_mutation_redteam(
                 "critical_finding_count": len(critical),
                 "high_finding_count": len(high),
                 "unresolved_critical_count": len(critical),
-                "items": [f.to_dict() for f in findings],
+                "residual_high_count": len(residual_highs),
+                "items": [f.to_dict() for f in findings] + [f.to_dict() for f in residual_highs],
             },
             "exchange_write_attempt_count": exchange_write_attempt_count,
             "secret_leak_count": 0,
@@ -155,6 +173,7 @@ def evaluate_security_mutation_redteam(
             "real_money": False,
             "mainnet": False,
             "label": LABEL,
+            "pass_number": 2,
         }
 
         secret_hits = scan_secrets_in_evidence(status_body)
@@ -175,9 +194,14 @@ def evaluate_security_mutation_redteam(
             )
             findings.append(leak)
             critical.append(leak)
-            status_body["findings"]["items"] = [f.to_dict() for f in findings]
+            status_body["findings"]["items"] = [f.to_dict() for f in findings] + [
+                f.to_dict() for f in residual_highs
+            ]
             status_body["findings"]["critical_finding_count"] = len(critical)
             status_body["findings"]["unresolved_critical_count"] = len(critical)
+            status_body["findings"]["high_finding_count"] = len(
+                [f for f in status_body["findings"]["items"] if f.get("severity") == "high"]
+            )
 
         survivors_unresolved = int(campaign.get("mutation_unresolved_blocker_count") or 0)
         all_passed = (
@@ -186,6 +210,7 @@ def evaluate_security_mutation_redteam(
             and status_body["scenario_pass_count"] == status_body["scenario_total_count"]
             and status_body["findings"]["unresolved_critical_count"] == 0
             and survivors_unresolved == 0
+            and kill_rate_ok
             and exchange_write_attempt_count == 0
             and status_body["secret_leak_count"] == 0
             and mainnet_client_created_count == 0
