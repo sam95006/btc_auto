@@ -10,7 +10,7 @@
     "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
   ],
   "auto_integrated": false,
-  "created_at": "2026-08-05T11:15:48Z",
+  "created_at": "2026-08-05T11:16:32Z",
   "demo_eligibility": false,
   "demo_order_count": 0,
   "demo_ready_output_count": 0,
@@ -54,5 +54,5 @@
   "strategy_promoted": false,
   "strategy_selected": false,
   "triage_control_status": "TRIAGE_READY",
-  "updated_at": "2026-08-05T11:15:48Z"
+  "updated_at": "2026-08-05T11:16:32Z"
 }

@@ -17,11 +17,12 @@
   "base_commit": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
   "both_passes_ok": true,
   "branch": "feature/v14-candidate-triage-control",
-  "created_at": "2026-08-05T11:15:48Z",
+  "created_at": "2026-08-05T11:16:33Z",
   "critical_findings": [],
   "demo_eligibility": false,
   "demo_order_count": 0,
   "exchange_write_attempt_count": 0,
+  "feature_commit": "f2cf9b91abaa47c9952e9146dc24e5fec6a6bd98",
   "formal_walk_forward_executed": false,
   "hard_bans": [
     "no_formal_walk_forward",
@@ -42,12 +43,12 @@
     "no_auto_integrate"
   ],
   "hard_bans_honored": true,
-  "head_commit_at_run": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "head_commit_at_run": "f2cf9b91abaa47c9952e9146dc24e5fec6a6bd98",
   "high_findings": [],
   "infrastructure_status": "BLOCKED_READY",
   "ingested_candidate_count": 7,
   "lane": "V14-H",
-  "lane_head_commit": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "lane_head_commit": "f2cf9b91abaa47c9952e9146dc24e5fec6a6bd98",
   "lane_name": "CANDIDATE_TRIAGE_CONTROL",
   "mainnet": false,
   "metrics": {
@@ -123,6 +124,6 @@
   "strategy_promoted": false,
   "strategy_selected": false,
   "triage_control_status": "TRIAGE_READY",
-  "updated_at": "2026-08-05T11:15:48Z",
+  "updated_at": "2026-08-05T11:16:33Z",
   "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v14_h_candidate_triage"
 }
