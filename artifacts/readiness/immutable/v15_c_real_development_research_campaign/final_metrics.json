@@ -42,7 +42,7 @@
     "SAMPLE_BLOCKED": 1
   },
   "lane": "V15-C",
-  "lane_head": "1e881e6b548f46704541143ca703dc96ef0e2ab1",
+  "lane_head": "bd7f10ed2d81d0a8336c29494dc18e9b902bc19a",
   "lane_name": "REAL_DEVELOPMENT_RESEARCH_CAMPAIGN",
   "mainnet_touch_count": 0,
   "mechanism_count": 42,
@@ -63,7 +63,7 @@
   "pr27_merge_attempted": false,
   "profitability_claim_count": 0,
   "profitability_claimed": false,
-  "proof_stamp_head": "1e881e6b548f46704541143ca703dc96ef0e2ab1",
+  "proof_stamp_head": "bd7f10ed2d81d0a8336c29494dc18e9b902bc19a",
   "pytest_passed": true,
   "qualification_ready_count": 0,
   "qualified_claimed": false,
