@@ -274,22 +274,36 @@ def build_v12_readiness_matrix(
     critical_findings: list[Any] = []
     remaining_blockers: list[str] = []
 
+    def _normalize_lane_status(sib: dict[str, Any] | None) -> str:
+        if not sib:
+            return "STARTED"
+        if sib.get("passed") is False:
+            return "FAIL"
+        candidates = [
+            sib.get("recommendation"),
+            sib.get("Closed_Loop_Redteam_status"),
+            sib.get("Collector_Cutover_V2_status"),
+            sib.get("overall_status"),
+            sib.get("status"),
+        ]
+        # Also scan *status fields for *_PASS markers.
+        for k, v in sib.items():
+            if isinstance(v, str) and k.lower().endswith("status"):
+                candidates.append(v)
+        texts = [str(c).upper() for c in candidates if c]
+        if any(t.endswith("_PASS") or t in {"PASS", "PASSED", "COMPLETE", "READY"} for t in texts):
+            return "PASS"
+        if sib.get("passed") is True:
+            return "PASS"
+        if any("FAIL" in t or "CRITICAL" in t for t in texts):
+            return "FAIL"
+        if texts:
+            return "RETURNED"
+        return "STARTED"
+
     for lane_id, (branch, worktree) in worktrees.items():
         sib = lane_status if lane_id == "V12-F" else _read_sibling_lane_status(rt, sibling_files[lane_id])
-        if sib and (sib.get("passed") is True or str(sib.get("status", "")).upper() in {"PASS", "PASSED", "COMPLETE"}):
-            status = "PASS" if sib.get("passed", True) else str(sib.get("status") or "COMPLETE")
-            if sib.get("passed") is False:
-                status = "FAIL"
-            elif str(sib.get("recommendation") or "").endswith("_PASS") or sib.get("passed") is True:
-                status = "PASS"
-            elif str(sib.get("status") or "").upper() in {"PASS", "PASSED", "COMPLETE", "READY"}:
-                status = "PASS"
-            else:
-                status = str(sib.get("status") or "RETURNED")
-        elif sib:
-            status = "FAIL" if sib.get("passed") is False else str(sib.get("status") or "RETURNED")
-        else:
-            status = "STARTED"
+        status = _normalize_lane_status(sib)
 
         entry: dict[str, Any] = {
             "branch": branch,
@@ -297,21 +311,32 @@ def build_v12_readiness_matrix(
             "status": status,
         }
         if sib:
-            entry["recommendation"] = sib.get("recommendation") or sib.get("Closed_Loop_Redteam_status")
-            entry["passed"] = sib.get("passed")
+            entry["recommendation"] = (
+                sib.get("recommendation")
+                or sib.get("Closed_Loop_Redteam_status")
+                or sib.get("status")
+            )
+            entry["passed"] = True if status == "PASS" else (False if status == "FAIL" else sib.get("passed"))
             if sib.get("commit") or sib.get("head"):
                 entry["commit"] = sib.get("commit") or sib.get("head")
                 commits[lane_id] = entry["commit"]
-            if sib.get("scenario_pass_count") is not None:
-                test_statuses[lane_id] = {
-                    "scenario_pass_count": sib.get("scenario_pass_count"),
-                    "scenario_total_count": sib.get("scenario_total_count"),
-                    "passed": sib.get("passed"),
-                }
+            lane_tests: dict[str, Any] = {"passed": entry["passed"], "raw_status": sib.get("status")}
+            for key in (
+                "scenario_pass_count",
+                "scenario_total_count",
+                "attack_blocked_count",
+                "test_pass_count",
+                "counters",
+            ):
+                if key in sib:
+                    lane_tests[key] = sib[key]
+            test_statuses[lane_id] = lane_tests
             for cf in sib.get("critical_findings") or []:
                 critical_findings.append({"lane": lane_id, **(cf if isinstance(cf, dict) else {"detail": cf})})
-            if status not in {"PASS", "COMPLETE"} and lane_id != "V12-F":
-                remaining_blockers.append(f"{lane_id}_pending_or_failed")
+            if status == "FAIL":
+                remaining_blockers.append(f"{lane_id}_FAIL")
+            elif status not in {"PASS"} and lane_id != "V12-F":
+                remaining_blockers.append(f"{lane_id}_results_pending")
         else:
             remaining_blockers.append(f"{lane_id}_results_pending")
             test_statuses[lane_id] = "PENDING"
