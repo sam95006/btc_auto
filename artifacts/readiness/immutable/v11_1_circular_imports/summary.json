@@ -21,5 +21,6 @@
     "NO_MERGE_OR_DEPLOY_FROM_THIS_LANE",
     "WORKTREE_ONLY_v11_1_circular_imports",
     "CURSOR_NATIVE_ONLY"
-  ]
+  ],
+  "commit": "f96cab8b4566c6ae21e50454531123c83f259df8"
 }
