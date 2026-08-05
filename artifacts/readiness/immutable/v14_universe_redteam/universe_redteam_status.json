@@ -1,0 +1,587 @@
+{
+  "schema": "v14_universe_redteam",
+  "program_id": "NEXUS_V14_UNIVERSE_LINEAGE_REDTEAM",
+  "created_at": "2026-08-05T11:17:12Z",
+  "lane": "V14-I",
+  "branch": "feature/v14-universe-lineage-redteam",
+  "base_head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "pass_number": 2,
+  "execution_mode": "SIMULATED_FAIL_CLOSED_NO_EXCHANGE_WRITE",
+  "owned_paths": [
+    "backend/nexus_universe_redteam/",
+    "tools/research/universe_redteam/",
+    "tests/universe_redteam/",
+    "artifacts/readiness/immutable/v14_universe_redteam/"
+  ],
+  "prohibited_paths": [
+    "frontend/",
+    "backend/nexus_demo_execution/",
+    "G:/",
+    "PR27",
+    "deploy/"
+  ],
+  "hard_bans": [
+    "no_auto_integration_into_PR27",
+    "no_demo_orders",
+    "no_exchange_write",
+    "no_mainnet_client",
+    "no_merge",
+    "no_deploy",
+    "no_platform_blocked_mutation_as_pass",
+    "no_today_universe_for_past",
+    "no_fixture_as_real_performance",
+    "no_survivorship_only_reconstruction",
+    "no_silent_rename_without_lineage"
+  ],
+  "scenario_ids": [
+    "survivorship_bias",
+    "listing_date_leakage",
+    "delisting_leakage",
+    "rename_leakage",
+    "contract_spec_changes",
+    "today_universe_substitution",
+    "future_liquidity_leakage",
+    "future_funding_availability",
+    "mapping_drift",
+    "min_notional_drift"
+  ],
+  "fixture_ids": [
+    "property_fuzz_universe_checksums",
+    "schema_mutation_lineage",
+    "era_comparison_stability",
+    "adversarial_suite_reuse"
+  ],
+  "scenarios": [
+    {
+      "scenario_id": "survivorship_bias",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "survivorship_only_reconstruction_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "disposition": "BLOCKED_BY_CODE",
+      "critical_blocker_code": null,
+      "evidence": {
+        "attack": {
+          "ok": false,
+          "status": "SURVIVORSHIP_BIAS",
+          "dropped_historical": [
+            "GHOSTUSDT"
+          ],
+          "extra": [],
+          "claimed": [
+            "BTCUSDT",
+            "ETHUSDT",
+            "PEPEUSDT",
+            "SOLUSDT"
+          ],
+          "pit_eligible": [
+            "BTCUSDT",
+            "ETHUSDT",
+            "GHOSTUSDT",
+            "PEPEUSDT",
+            "SOLUSDT"
+          ],
+          "today_survivors": [
+            "BTCUSDT",
+            "ETHUSDT",
+            "LATEUSDT",
+            "PEPEUSDT",
+            "SOLUSDT"
+          ]
+        },
+        "honest": {
+          "ok": true,
+          "status": "PASS",
+          "dropped_historical": [],
+          "extra": [],
+          "claimed": [
+            "BTCUSDT",
+            "ETHUSDT",
+            "GHOSTUSDT",
+            "PEPEUSDT",
+            "SOLUSDT"
+          ],
+          "pit_eligible": [
+            "BTCUSDT",
+            "ETHUSDT",
+            "GHOSTUSDT",
+            "PEPEUSDT",
+            "SOLUSDT"
+          ],
+          "today_survivors": [
+            "BTCUSDT",
+            "ETHUSDT",
+            "LATEUSDT",
+            "PEPEUSDT",
+            "SOLUSDT"
+          ]
+        },
+        "ghost_in_pit": true,
+        "ghost_in_survivor_only": false
+      }
+    },
+    {
+      "scenario_id": "listing_date_leakage",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "listing_date_leakage_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "disposition": "BLOCKED_BY_CODE",
+      "critical_blocker_code": null,
+      "evidence": {
+        "late_in_mid": false,
+        "reasons": [
+          "NOT_YET_LISTED"
+        ],
+        "guard": {
+          "ok": false,
+          "status": "LISTING_DATE_LEAKAGE",
+          "symbol": "LATEUSDT",
+          "listing_ms": 1740787200000,
+          "as_of_ms": 1717200000000,
+          "claimed_eligible": true
+        }
+      }
+    },
+    {
+      "scenario_id": "delisting_leakage",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "delisting_leakage_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "disposition": "BLOCKED_BY_CODE",
+      "critical_blocker_code": null,
+      "evidence": {
+        "ghost_before": true,
+        "ghost_after": false,
+        "ghost_rejected": true,
+        "attack": {
+          "ok": false,
+          "status": "DELISTING_LEAKAGE",
+          "symbol": "GHOSTUSDT",
+          "delisting_ms": 1725000000000,
+          "as_of_ms": 1733020800000,
+          "claimed_eligible": true,
+          "premature_survivor_drop_hint": false
+        }
+      }
+    },
+    {
+      "scenario_id": "rename_leakage",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "rename_without_lineage_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "disposition": "BLOCKED_BY_CODE",
+      "critical_blocker_code": null,
+      "evidence": {
+        "pre_effective": {
+          "ok": false,
+          "status": "RENAME_LEAKAGE",
+          "old_symbol": "PEPEUSDT",
+          "new_symbol": "1000PEPEUSDT",
+          "rename_effective_ms": 1733020800000,
+          "as_of_ms": 1717200000000,
+          "rename_lineage_id": null,
+          "claimed_identity": "1000PEPEUSDT",
+          "used_new_before_effective": true,
+          "silent_rename": true
+        },
+        "silent": {
+          "ok": false,
+          "status": "RENAME_LEAKAGE",
+          "old_symbol": "PEPEUSDT",
+          "new_symbol": "1000PEPEUSDT",
+          "rename_effective_ms": 1733020800000,
+          "as_of_ms": 1733020800001,
+          "rename_lineage_id": null,
+          "claimed_identity": "1000PEPEUSDT",
+          "used_new_before_effective": false,
+          "silent_rename": true
+        },
+        "honest": {
+          "ok": true,
+          "status": "PASS",
+          "old_symbol": "PEPEUSDT",
+          "new_symbol": "1000PEPEUSDT",
+          "rename_effective_ms": 1733020800000,
+          "as_of_ms": 1733020800001,
+          "rename_lineage_id": "rename:pepe->1000pepe:v1",
+          "claimed_identity": "1000PEPEUSDT",
+          "used_new_before_effective": false,
+          "silent_rename": false
+        }
+      }
+    },
+    {
+      "scenario_id": "contract_spec_changes",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "contract_spec_change_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "disposition": "BLOCKED_BY_CODE",
+      "critical_blocker_code": null,
+      "evidence": {
+        "drift": {
+          "ok": false,
+          "status": "CONTRACT_SPEC_DRIFT",
+          "future_observation": true,
+          "drifted": true,
+          "sealed_spec": {
+            "tick_size": 0.1,
+            "qty_step": 0.001,
+            "minimum_notional": 5.0
+          },
+          "observed_spec": {
+            "tick_size": 0.5,
+            "qty_step": 0.001,
+            "minimum_notional": 5.0
+          }
+        },
+        "reasons": [
+          "FUTURE_OBSERVATION_LEAK"
+        ],
+        "seal_verify": {
+          "ok": false,
+          "status": "INSTRUMENT_SEAL_MISMATCH",
+          "expected": "d46d7746d5987e647bb0a9e91a5b2360d0d72c7f271052325fb1f401d2b52bef",
+          "actual": "896ce04a5262b51f1c9e84d0b07eb523b64a7270bdd425e488f30a1a1dd76c4c"
+        }
+      }
+    },
+    {
+      "scenario_id": "today_universe_substitution",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "today_universe_substitution_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "disposition": "BLOCKED_BY_CODE",
+      "critical_blocker_code": null,
+      "evidence": {
+        "guard": {
+          "ok": false,
+          "status": "TODAY_UNIVERSE_SUBSTITUTION",
+          "reasons": [
+            "today_or_future_universe_used_for_past_as_of",
+            "live_today_snapshot_rejected_for_historical_as_of"
+          ]
+        },
+        "production_detail": "today_or_future_universe_used_for_past_as_of",
+        "live_reject": true
+      }
+    },
+    {
+      "scenario_id": "future_liquidity_leakage",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "future_liquidity_leakage_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "disposition": "BLOCKED_BY_CODE",
+      "critical_blocker_code": null,
+      "evidence": {
+        "reasons": [
+          "FUTURE_OBSERVATION_LEAK"
+        ],
+        "guard": {
+          "ok": false,
+          "status": "FUTURE_LIQUIDITY_LEAKAGE",
+          "observation_ms": 1740787200000,
+          "as_of_ms": 1717200000000,
+          "liquidity_score": 0.99,
+          "claimed_from_future_era": true
+        }
+      }
+    },
+    {
+      "scenario_id": "future_funding_availability",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "future_funding_availability_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "disposition": "BLOCKED_BY_CODE",
+      "critical_blocker_code": null,
+      "evidence": {
+        "guard": {
+          "ok": false,
+          "status": "FUTURE_FUNDING_LEAKAGE",
+          "future_observation": true,
+          "upgraded_from_historical_false": true,
+          "funding_available": true,
+          "historical_funding_available": false
+        },
+        "reasons": [
+          "FUTURE_OBSERVATION_LEAK"
+        ]
+      }
+    },
+    {
+      "scenario_id": "mapping_drift",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "mapping_drift_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "disposition": "BLOCKED_BY_CODE",
+      "critical_blocker_code": null,
+      "evidence": {
+        "drift": {
+          "ok": false,
+          "status": "MAPPING_DRIFT",
+          "sealed_mapping": "bybit:linear:PEPEUSDT",
+          "observed_mapping": "bybit:linear:1000PEPEUSDT",
+          "future_observation": true
+        },
+        "seal_verify": {
+          "ok": false,
+          "status": "INSTRUMENT_SEAL_MISMATCH",
+          "expected": "841ad1794224a9a62b89df2177fba3a8c2fa3bef98c0e419663b44fd65652204",
+          "actual": "373fc7209d17bbfa46b9a2589f1e9a43f15a5293113b9c50e818e126d3d1d4a3"
+        }
+      }
+    },
+    {
+      "scenario_id": "min_notional_drift",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "min_notional_drift_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "disposition": "BLOCKED_BY_CODE",
+      "critical_blocker_code": null,
+      "evidence": {
+        "drift": {
+          "ok": false,
+          "status": "MIN_NOTIONAL_DRIFT",
+          "sealed_min_notional": 5.0,
+          "observed_min_notional": 50.0,
+          "future_observation": true
+        },
+        "seal_verify": {
+          "ok": false,
+          "status": "INSTRUMENT_SEAL_MISMATCH",
+          "expected": "59086186623c85b4bff0702f921fcc4e8e8159972df01f6b98542819a2d2217e",
+          "actual": "f3ba6a7545b09b99722f7976d950c6cc8c353a69326c4443f2c7ee729f1ad5d6"
+        }
+      }
+    }
+  ],
+  "fixtures": [
+    {
+      "fixture_id": "property_fuzz_universe_checksums",
+      "passed": true,
+      "evidence_class": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "stable_checksum": "ef93ca6c1631d27b63e827b56b9975b5bdc3cdccdbe79ffed360f8786ee9b890",
+      "tampered_differs": true,
+      "runs": 8
+    },
+    {
+      "fixture_id": "schema_mutation_lineage",
+      "passed": true,
+      "evidence_class": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "missing_keys": [],
+      "lineage_id_mutation_detected": true,
+      "instrument_seal_mutation_detected": true
+    },
+    {
+      "fixture_id": "era_comparison_stability",
+      "passed": true,
+      "evidence_class": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "appeared": [],
+      "disappeared": [
+        "GHOSTUSDT"
+      ],
+      "checksums_differ": true
+    },
+    {
+      "fixture_id": "adversarial_suite_reuse",
+      "passed": true,
+      "evidence_class": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "suite": {
+        "schema": "v13_d_adversarial_suite",
+        "probe_count": 9,
+        "passed": 9,
+        "failed": 0,
+        "all_pass": true,
+        "probes": [
+          {
+            "probe": "today_for_past_banned",
+            "pass": true,
+            "future_snapshot_blocked": true,
+            "live_today_blocked": true,
+            "detail": {
+              "future": "today_or_future_universe_used_for_past_as_of",
+              "live": "today_or_future_universe_used_for_past_as_of"
+            }
+          },
+          {
+            "probe": "future_observation_leak",
+            "pass": true,
+            "reasons": [
+              "FUTURE_OBSERVATION_LEAK"
+            ]
+          },
+          {
+            "probe": "no_snapshot_before_era",
+            "pass": true,
+            "detail": "no_historical_snapshot_for_as_of:1707200000000:refusing_to_use_future_or_today_universe"
+          },
+          {
+            "probe": "deterministic_checksum",
+            "pass": true,
+            "checksum": "ef93ca6c1631d27b63e827b56b9975b5bdc3cdccdbe79ffed360f8786ee9b890"
+          },
+          {
+            "probe": "delisting_dynamics",
+            "pass": true,
+            "ghost_before_eligible": true,
+            "ghost_after_eligible": false,
+            "ghost_delisted_reason": true
+          },
+          {
+            "probe": "late_listing_excluded",
+            "pass": true,
+            "mid_has_late": false,
+            "late_era_knows_late": true
+          },
+          {
+            "probe": "snapshot_tamper_detect",
+            "pass": true,
+            "original_checksum": "40b2467f44b577b58740c540296f866a0148c16413be0dc95cb87c92bb80f117",
+            "tampered_checksum": "701830fee5e61cc9c35baa0618afd5064b0497e47097dbd819066557f9e25179"
+          },
+          {
+            "probe": "non_fixture_source_rejected",
+            "pass": true,
+            "detail": "unsupported_source_kind:live_bybit_today:fixtures_only_for_pit"
+          },
+          {
+            "probe": "live_public_metadata_banned_for_past",
+            "pass": true,
+            "detail": "live_public_metadata_forbidden_for_historical_as_of:use_sanitized_pit_fixtures_instead"
+          }
+        ]
+      }
+    }
+  ],
+  "scenario_pass_count": 10,
+  "scenario_total_count": 10,
+  "fixture_pass_count": 4,
+  "fixture_total_count": 4,
+  "attack_blocked_count": 10,
+  "attack_total_count": 10,
+  "platform_blocked_count": 0,
+  "platform_blocked_pass_count": 0,
+  "exchange_write_attempt_count": 0,
+  "secret_leak_count": 0,
+  "mainnet_client_created_count": 0,
+  "demo_order_count": 0,
+  "real_money": false,
+  "mainnet": false,
+  "auto_integration": false,
+  "PR27_draft_unmerged": true,
+  "evidence_class": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+  "label": "UNIVERSE_LINEAGE_REDTEAM_CONTROL_NOT_REAL_TRADING",
+  "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v14_i_universe_redteam",
+  "pass2": {
+    "pass_number": 2,
+    "passed": true,
+    "checks": [
+      {
+        "check": "false_pass_search",
+        "ok": true
+      },
+      {
+        "check": "fixture_versus_real",
+        "ok": true
+      },
+      {
+        "check": "pit_leakage_search",
+        "ok": true
+      },
+      {
+        "check": "silent_fallback_search",
+        "ok": true
+      },
+      {
+        "check": "hard_ban_presence",
+        "ok": true
+      },
+      {
+        "check": "owned_paths",
+        "ok": true
+      },
+      {
+        "check": "secret_and_write_bans",
+        "ok": true
+      }
+    ],
+    "findings": [],
+    "critical_finding_count": 0,
+    "high_finding_count": 0,
+    "critical_findings": [],
+    "high_findings": []
+  },
+  "findings": {
+    "critical_finding_count": 0,
+    "unresolved_critical_count": 0,
+    "high_finding_count": 0,
+    "items": []
+  },
+  "remaining_blockers": [
+    "V14_lanes_incomplete",
+    "no_qualified_strategy_edge",
+    "event_study_NOT_READY",
+    "PR27_draft_unmerged",
+    "auto_integration_forbidden",
+    "qualification_ready_count_must_remain_0",
+    "oos_executed_must_remain_false",
+    "microstructure_14d_capture_in_progress"
+  ],
+  "secret_scan": {
+    "raw_hit_count": 0,
+    "real_leak_count": 0,
+    "real_leaks": []
+  },
+  "recommendation": "NEXUS_V14_UNIVERSE_LINEAGE_REDTEAM_PASS",
+  "Universe_Lineage_Redteam_status": "NEXUS_V14_UNIVERSE_LINEAGE_REDTEAM_PASS",
+  "passed": true,
+  "critical_findings": [],
+  "high_findings": [],
+  "metrics": {
+    "attack_blocked_count": 10,
+    "attack_total_count": 10,
+    "scenario_pass_count": 10,
+    "fixture_pass_count": 4,
+    "today_universe_used_for_past_count": 0,
+    "future_listing_leak_count": 0,
+    "delisted_symbol_leak_count": 0,
+    "universe_checksum_failure_count": 0,
+    "qualification_ready_count": 0,
+    "exchange_write_attempt_count": 0,
+    "demo_order_count": 0
+  },
+  "commit": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "lane_head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "artifact_paths": {
+    "status": "D:\\NEXUS_RUNTIME\\worktrees\\v14_i_universe_redteam\\artifacts\\readiness\\immutable\\v14_universe_redteam\\universe_redteam_status.json",
+    "summary": "D:\\NEXUS_RUNTIME\\worktrees\\v14_i_universe_redteam\\artifacts\\readiness\\immutable\\v14_universe_redteam\\universe_redteam_summary.json"
+  }
+}
