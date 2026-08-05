@@ -1,0 +1,70 @@
+{
+  "all_blocked": true,
+  "formal_candidate_freeze_executed": false,
+  "freeze_plan_count": 3,
+  "plans": [
+    {
+      "candidate_id": "SYN_V13F_DISC_001",
+      "code_checksum": "ff683cf7819de777f01233a164fd0c2a2064cba9674ebe89f7db304d8adfb9ef",
+      "dataset_checksum": "9f7bfdf63f0bd4606f9ed4516f85876500d9bc86d8c0796683d51016aff0b713",
+      "discovery_label": "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+      "fixture_only": true,
+      "formal_stage": "CANDIDATE_FREEZE",
+      "formal_stage_status": "BLOCKED",
+      "freeze_status": "PLANNED_NOT_EXECUTED",
+      "identity": {
+        "candidate_id": "SYN_V13F_DISC_001",
+        "preregistration_timestamp": "2026-01-01T00:00:00Z",
+        "semantic_mechanism_id": "order_flow_imbalance"
+      },
+      "note": "Freeze plan prepared from Discovery outputs; formal Candidate Freeze remains BLOCKED.",
+      "parameter_checksum": "fef8f1127bfb3cb787c1dee4ded28907293fa81e2f69deb8e005236a025fe703",
+      "promoted": false,
+      "qualified": false,
+      "selected": false,
+      "semantic_checksum": "67160f9e569e986fcadc7e5dc229ba6e28b1c05493166b303bbc61153fb076c8"
+    },
+    {
+      "candidate_id": "SYN_V13F_DISC_002",
+      "code_checksum": "dfffa381460b1dea6292fe93977daacd477e06c27ea6d814b8a896fafd6cd25b",
+      "dataset_checksum": "2b84743e9a0f474145e2fe1fc0e52611ebb32ba93ee4f083410ce32013b3bc1e",
+      "discovery_label": "RAW_EDGE_PRESENT_BUT_COST_DESTROYED",
+      "fixture_only": true,
+      "formal_stage": "CANDIDATE_FREEZE",
+      "formal_stage_status": "BLOCKED",
+      "freeze_status": "PLANNED_NOT_EXECUTED",
+      "identity": {
+        "candidate_id": "SYN_V13F_DISC_002",
+        "preregistration_timestamp": "2026-01-01T00:00:00Z",
+        "semantic_mechanism_id": "funding_dislocation"
+      },
+      "note": "Freeze plan prepared from Discovery outputs; formal Candidate Freeze remains BLOCKED.",
+      "parameter_checksum": "afe49407ff7c1454b9c287caf58d2b010b8045e88360a4fe6bc75fb06b0040fa",
+      "promoted": false,
+      "qualified": false,
+      "selected": false,
+      "semantic_checksum": "2619df70c46b5a133b980ff6534814286841f001b5e37f72f432f4699bc1f873"
+    },
+    {
+      "candidate_id": "SYN_V13F_DISC_003",
+      "code_checksum": "987d5d021877b20dcd34f7e73a3a7f47ef98882502baaaf333885b559422e14c",
+      "dataset_checksum": "156ff60002dfdc5231b8d952f15d14414df922cd97ef866fd53a0119f4f8f068",
+      "discovery_label": "REJECTED",
+      "fixture_only": true,
+      "formal_stage": "CANDIDATE_FREEZE",
+      "formal_stage_status": "BLOCKED",
+      "freeze_status": "PLANNED_NOT_EXECUTED",
+      "identity": {
+        "candidate_id": "SYN_V13F_DISC_003",
+        "preregistration_timestamp": "2026-01-01T00:00:00Z",
+        "semantic_mechanism_id": "cosmetic_variation_rejected"
+      },
+      "note": "Freeze plan prepared from Discovery outputs; formal Candidate Freeze remains BLOCKED.",
+      "parameter_checksum": "e48313572556331f5c7d0eafb3ac7eb4564a080d1c885cc3bb4c24ec3660faea",
+      "promoted": false,
+      "qualified": false,
+      "selected": false,
+      "semantic_checksum": "152f8c2577d6cbe684519984fdacdc90393f38f34ba164c7043e5d1240398be9"
+    }
+  ]
+}

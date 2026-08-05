@@ -1,0 +1,227 @@
+{
+  "all_plans_not_executed": true,
+  "demo_eligibility_granted": false,
+  "demo_eligibility_plans": [
+    {
+      "candidate_id": "SYN_V13F_DISC_001",
+      "criteria_satisfied_count": 0,
+      "demo_eligibility_granted": false,
+      "demo_order_count": 0,
+      "note": "Demo eligibility plan only; Demo eligibility remains BLOCKED / not granted.",
+      "plan_kind": "DEMO_ELIGIBILITY",
+      "planned_criteria": [
+        "formal_walk_forward_passed",
+        "risk_review_passed",
+        "oos_executed_and_passed",
+        "founder_authorization_present",
+        "no_hard_ban_violations"
+      ],
+      "status": "PLANNED_NOT_EXECUTED"
+    },
+    {
+      "candidate_id": "SYN_V13F_DISC_002",
+      "criteria_satisfied_count": 0,
+      "demo_eligibility_granted": false,
+      "demo_order_count": 0,
+      "note": "Demo eligibility plan only; Demo eligibility remains BLOCKED / not granted.",
+      "plan_kind": "DEMO_ELIGIBILITY",
+      "planned_criteria": [
+        "formal_walk_forward_passed",
+        "risk_review_passed",
+        "oos_executed_and_passed",
+        "founder_authorization_present",
+        "no_hard_ban_violations"
+      ],
+      "status": "PLANNED_NOT_EXECUTED"
+    },
+    {
+      "candidate_id": "SYN_V13F_DISC_003",
+      "criteria_satisfied_count": 0,
+      "demo_eligibility_granted": false,
+      "demo_order_count": 0,
+      "note": "Demo eligibility plan only; Demo eligibility remains BLOCKED / not granted.",
+      "plan_kind": "DEMO_ELIGIBILITY",
+      "planned_criteria": [
+        "formal_walk_forward_passed",
+        "risk_review_passed",
+        "oos_executed_and_passed",
+        "founder_authorization_present",
+        "no_hard_ban_violations"
+      ],
+      "status": "PLANNED_NOT_EXECUTED"
+    }
+  ],
+  "demo_order_count": 0,
+  "formal_walk_forward_executed": false,
+  "oos_consumed": false,
+  "oos_executed": false,
+  "oos_reservation_created": false,
+  "oos_reservation_plans": [
+    {
+      "as_of_ms": 1700000000000,
+      "candidate_id": "SYN_V13F_DISC_001",
+      "note": "OOS reservation plan only; real OOS is neither reserved nor consumed.",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "oos_reservation_created": false,
+      "plan_kind": "OOS_RESERVATION",
+      "proposed_interval": {
+        "category": "proposed_untouched_oos_plan_only",
+        "end_ms": 1699395200000,
+        "start_ms": 1697494400000
+      },
+      "real_oos_touched": false,
+      "status": "PLANNED_NOT_EXECUTED"
+    },
+    {
+      "as_of_ms": 1700000000000,
+      "candidate_id": "SYN_V13F_DISC_002",
+      "note": "OOS reservation plan only; real OOS is neither reserved nor consumed.",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "oos_reservation_created": false,
+      "plan_kind": "OOS_RESERVATION",
+      "proposed_interval": {
+        "category": "proposed_untouched_oos_plan_only",
+        "end_ms": 1699395200000,
+        "start_ms": 1697926400000
+      },
+      "real_oos_touched": false,
+      "status": "PLANNED_NOT_EXECUTED"
+    },
+    {
+      "as_of_ms": 1700000000000,
+      "candidate_id": "SYN_V13F_DISC_003",
+      "note": "OOS reservation plan only; real OOS is neither reserved nor consumed.",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "oos_reservation_created": false,
+      "plan_kind": "OOS_RESERVATION",
+      "proposed_interval": {
+        "category": "proposed_untouched_oos_plan_only",
+        "end_ms": 1699395200000,
+        "start_ms": 1698358400000
+      },
+      "real_oos_touched": false,
+      "status": "PLANNED_NOT_EXECUTED"
+    }
+  ],
+  "risk_review_plans": [
+    {
+      "candidate_id": "SYN_V13F_DISC_001",
+      "check_count": 5,
+      "note": "Risk Review plan only; formal Risk Review remains BLOCKED.",
+      "plan_kind": "RISK_REVIEW",
+      "planned_checks": [
+        "concentration_limits",
+        "cost_stress",
+        "drawdown_bound",
+        "regime_fragility",
+        "multiple_comparison_tax"
+      ],
+      "risk_review_executed": false,
+      "status": "PLANNED_NOT_EXECUTED"
+    },
+    {
+      "candidate_id": "SYN_V13F_DISC_002",
+      "check_count": 5,
+      "note": "Risk Review plan only; formal Risk Review remains BLOCKED.",
+      "plan_kind": "RISK_REVIEW",
+      "planned_checks": [
+        "concentration_limits",
+        "cost_stress",
+        "drawdown_bound",
+        "regime_fragility",
+        "multiple_comparison_tax"
+      ],
+      "risk_review_executed": false,
+      "status": "PLANNED_NOT_EXECUTED"
+    },
+    {
+      "candidate_id": "SYN_V13F_DISC_003",
+      "check_count": 5,
+      "note": "Risk Review plan only; formal Risk Review remains BLOCKED.",
+      "plan_kind": "RISK_REVIEW",
+      "planned_checks": [
+        "concentration_limits",
+        "cost_stress",
+        "drawdown_bound",
+        "regime_fragility",
+        "multiple_comparison_tax"
+      ],
+      "risk_review_executed": false,
+      "status": "PLANNED_NOT_EXECUTED"
+    }
+  ],
+  "walk_forward_plans": [
+    {
+      "as_of_ms": 1700000000000,
+      "candidate_id": "SYN_V13F_DISC_001",
+      "fold_count": 2,
+      "folds": [
+        {
+          "end_ms": 1696112000000,
+          "fold_id": "WF_FOLD_TRAIN",
+          "role": "train_plan",
+          "start_ms": 1694816000000
+        },
+        {
+          "end_ms": 1697408000000,
+          "fold_id": "WF_FOLD_TEST",
+          "role": "test_plan",
+          "start_ms": 1696112000001
+        }
+      ],
+      "formal_walk_forward_executed": false,
+      "note": "Walk-forward plan only; formal WF remains BLOCKED / not executed.",
+      "plan_kind": "WALK_FORWARD",
+      "status": "PLANNED_NOT_EXECUTED"
+    },
+    {
+      "as_of_ms": 1700000000000,
+      "candidate_id": "SYN_V13F_DISC_002",
+      "fold_count": 2,
+      "folds": [
+        {
+          "end_ms": 1696544000000,
+          "fold_id": "WF_FOLD_TRAIN",
+          "role": "train_plan",
+          "start_ms": 1695248000000
+        },
+        {
+          "end_ms": 1697840000000,
+          "fold_id": "WF_FOLD_TEST",
+          "role": "test_plan",
+          "start_ms": 1696544000001
+        }
+      ],
+      "formal_walk_forward_executed": false,
+      "note": "Walk-forward plan only; formal WF remains BLOCKED / not executed.",
+      "plan_kind": "WALK_FORWARD",
+      "status": "PLANNED_NOT_EXECUTED"
+    },
+    {
+      "as_of_ms": 1700000000000,
+      "candidate_id": "SYN_V13F_DISC_003",
+      "fold_count": 2,
+      "folds": [
+        {
+          "end_ms": 1697408000000,
+          "fold_id": "WF_FOLD_TRAIN",
+          "role": "train_plan",
+          "start_ms": 1696544000000
+        },
+        {
+          "end_ms": 1698272000000,
+          "fold_id": "WF_FOLD_TEST",
+          "role": "test_plan",
+          "start_ms": 1697408000001
+        }
+      ],
+      "formal_walk_forward_executed": false,
+      "note": "Walk-forward plan only; formal WF remains BLOCKED / not executed.",
+      "plan_kind": "WALK_FORWARD",
+      "status": "PLANNED_NOT_EXECUTED"
+    }
+  ]
+}

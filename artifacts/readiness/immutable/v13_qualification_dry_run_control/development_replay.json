@@ -1,0 +1,460 @@
+{
+  "all_deterministic": true,
+  "candidate_count": 3,
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "formal_walk_forward_executed": false,
+  "oos_touched": false,
+  "replay_kind": "DEVELOPMENT_ONLY",
+  "replays": [
+    {
+      "bar_count": 8,
+      "bars": [
+        {
+          "close": 108.05,
+          "fixture_only": true,
+          "high": 108.5,
+          "low": 107.5,
+          "open": 108.0,
+          "symbol": "SYNTHUSDT",
+          "ts_ms": 1694816000000,
+          "volume": 10.0
+        },
+        {
+          "close": 108.14999999999999,
+          "fixture_only": true,
+          "high": 108.6,
+          "low": 107.6,
+          "open": 108.1,
+          "symbol": "SYNTHUSDT",
+          "ts_ms": 1695140000000,
+          "volume": 11.0
+        },
+        {
+          "close": 108.25,
+          "fixture_only": true,
+          "high": 108.7,
+          "low": 107.7,
+          "open": 108.2,
+          "symbol": "SYNTHUSDT",
+          "ts_ms": 1695464000000,
+          "volume": 12.0
+        },
+        {
+          "close": 108.35,
+          "fixture_only": true,
+          "high": 108.8,
+          "low": 107.8,
+          "open": 108.3,
+          "symbol": "SYNTHUSDT",
+          "ts_ms": 1695788000000,
+          "volume": 13.0
+        },
+        {
+          "close": 108.45,
+          "fixture_only": true,
+          "high": 108.9,
+          "low": 107.9,
+          "open": 108.4,
+          "symbol": "SYNTHUSDT",
+          "ts_ms": 1696112000000,
+          "volume": 14.0
+        },
+        {
+          "close": 108.55,
+          "fixture_only": true,
+          "high": 109.0,
+          "low": 108.0,
+          "open": 108.5,
+          "symbol": "SYNTHUSDT",
+          "ts_ms": 1696436000000,
+          "volume": 15.0
+        },
+        {
+          "close": 108.64999999999999,
+          "fixture_only": true,
+          "high": 109.1,
+          "low": 108.1,
+          "open": 108.6,
+          "symbol": "SYNTHUSDT",
+          "ts_ms": 1696760000000,
+          "volume": 16.0
+        },
+        {
+          "close": 108.75,
+          "fixture_only": true,
+          "high": 109.2,
+          "low": 108.2,
+          "open": 108.7,
+          "symbol": "SYNTHUSDT",
+          "ts_ms": 1697084000000,
+          "volume": 17.0
+        }
+      ],
+      "candidate_id": "SYN_V13F_DISC_001",
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "fixture_only": true,
+      "formal_walk_forward": false,
+      "oos_touched": false,
+      "profitability_claimed": false,
+      "replay_fingerprint": "eaf71935d4b9d17eb832840c1efffa890cf3bb910e6672617b845e383a9918a9",
+      "replay_kind": "DEVELOPMENT_ONLY",
+      "signal_path": [
+        {
+          "bar_index": 0,
+          "signal": 1,
+          "ts_ms": 1694816000000
+        },
+        {
+          "bar_index": 1,
+          "signal": 0,
+          "ts_ms": 1695140000000
+        },
+        {
+          "bar_index": 2,
+          "signal": 0,
+          "ts_ms": 1695464000000
+        },
+        {
+          "bar_index": 3,
+          "signal": 1,
+          "ts_ms": 1695788000000
+        },
+        {
+          "bar_index": 4,
+          "signal": 0,
+          "ts_ms": 1696112000000
+        },
+        {
+          "bar_index": 5,
+          "signal": 0,
+          "ts_ms": 1696436000000
+        },
+        {
+          "bar_index": 6,
+          "signal": 1,
+          "ts_ms": 1696760000000
+        },
+        {
+          "bar_index": 7,
+          "signal": 0,
+          "ts_ms": 1697084000000
+        }
+      ]
+    },
+    {
+      "bar_count": 8,
+      "bars": [
+        {
+          "close": 108.05,
+          "fixture_only": true,
+          "high": 108.5,
+          "low": 107.5,
+          "open": 108.0,
+          "symbol": "SYNTHBTC",
+          "ts_ms": 1695248000000,
+          "volume": 10.0
+        },
+        {
+          "close": 108.14999999999999,
+          "fixture_only": true,
+          "high": 108.6,
+          "low": 107.6,
+          "open": 108.1,
+          "symbol": "SYNTHBTC",
+          "ts_ms": 1695572000000,
+          "volume": 11.0
+        },
+        {
+          "close": 108.25,
+          "fixture_only": true,
+          "high": 108.7,
+          "low": 107.7,
+          "open": 108.2,
+          "symbol": "SYNTHBTC",
+          "ts_ms": 1695896000000,
+          "volume": 12.0
+        },
+        {
+          "close": 108.35,
+          "fixture_only": true,
+          "high": 108.8,
+          "low": 107.8,
+          "open": 108.3,
+          "symbol": "SYNTHBTC",
+          "ts_ms": 1696220000000,
+          "volume": 13.0
+        },
+        {
+          "close": 108.45,
+          "fixture_only": true,
+          "high": 108.9,
+          "low": 107.9,
+          "open": 108.4,
+          "symbol": "SYNTHBTC",
+          "ts_ms": 1696544000000,
+          "volume": 14.0
+        },
+        {
+          "close": 108.55,
+          "fixture_only": true,
+          "high": 109.0,
+          "low": 108.0,
+          "open": 108.5,
+          "symbol": "SYNTHBTC",
+          "ts_ms": 1696868000000,
+          "volume": 15.0
+        },
+        {
+          "close": 108.64999999999999,
+          "fixture_only": true,
+          "high": 109.1,
+          "low": 108.1,
+          "open": 108.6,
+          "symbol": "SYNTHBTC",
+          "ts_ms": 1697192000000,
+          "volume": 16.0
+        },
+        {
+          "close": 108.75,
+          "fixture_only": true,
+          "high": 109.2,
+          "low": 108.2,
+          "open": 108.7,
+          "symbol": "SYNTHBTC",
+          "ts_ms": 1697516000000,
+          "volume": 17.0
+        }
+      ],
+      "candidate_id": "SYN_V13F_DISC_002",
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "fixture_only": true,
+      "formal_walk_forward": false,
+      "oos_touched": false,
+      "profitability_claimed": false,
+      "replay_fingerprint": "4d97530a2147dfb9c208c20979b0d95c9d6a57d1ce9de2caa6e6b4d8c6de68c1",
+      "replay_kind": "DEVELOPMENT_ONLY",
+      "signal_path": [
+        {
+          "bar_index": 0,
+          "signal": 1,
+          "ts_ms": 1695248000000
+        },
+        {
+          "bar_index": 1,
+          "signal": 0,
+          "ts_ms": 1695572000000
+        },
+        {
+          "bar_index": 2,
+          "signal": 0,
+          "ts_ms": 1695896000000
+        },
+        {
+          "bar_index": 3,
+          "signal": 1,
+          "ts_ms": 1696220000000
+        },
+        {
+          "bar_index": 4,
+          "signal": 0,
+          "ts_ms": 1696544000000
+        },
+        {
+          "bar_index": 5,
+          "signal": 0,
+          "ts_ms": 1696868000000
+        },
+        {
+          "bar_index": 6,
+          "signal": 1,
+          "ts_ms": 1697192000000
+        },
+        {
+          "bar_index": 7,
+          "signal": 0,
+          "ts_ms": 1697516000000
+        }
+      ]
+    },
+    {
+      "bar_count": 8,
+      "bars": [
+        {
+          "close": 108.05,
+          "fixture_only": true,
+          "high": 108.5,
+          "low": 107.5,
+          "open": 108.0,
+          "symbol": "SYNTHUSDT",
+          "ts_ms": 1696544000000,
+          "volume": 10.0
+        },
+        {
+          "close": 108.14999999999999,
+          "fixture_only": true,
+          "high": 108.6,
+          "low": 107.6,
+          "open": 108.1,
+          "symbol": "SYNTHUSDT",
+          "ts_ms": 1696760000000,
+          "volume": 11.0
+        },
+        {
+          "close": 108.25,
+          "fixture_only": true,
+          "high": 108.7,
+          "low": 107.7,
+          "open": 108.2,
+          "symbol": "SYNTHUSDT",
+          "ts_ms": 1696976000000,
+          "volume": 12.0
+        },
+        {
+          "close": 108.35,
+          "fixture_only": true,
+          "high": 108.8,
+          "low": 107.8,
+          "open": 108.3,
+          "symbol": "SYNTHUSDT",
+          "ts_ms": 1697192000000,
+          "volume": 13.0
+        },
+        {
+          "close": 108.45,
+          "fixture_only": true,
+          "high": 108.9,
+          "low": 107.9,
+          "open": 108.4,
+          "symbol": "SYNTHUSDT",
+          "ts_ms": 1697408000000,
+          "volume": 14.0
+        },
+        {
+          "close": 108.55,
+          "fixture_only": true,
+          "high": 109.0,
+          "low": 108.0,
+          "open": 108.5,
+          "symbol": "SYNTHUSDT",
+          "ts_ms": 1697624000000,
+          "volume": 15.0
+        },
+        {
+          "close": 108.64999999999999,
+          "fixture_only": true,
+          "high": 109.1,
+          "low": 108.1,
+          "open": 108.6,
+          "symbol": "SYNTHUSDT",
+          "ts_ms": 1697840000000,
+          "volume": 16.0
+        },
+        {
+          "close": 108.75,
+          "fixture_only": true,
+          "high": 109.2,
+          "low": 108.2,
+          "open": 108.7,
+          "symbol": "SYNTHUSDT",
+          "ts_ms": 1698056000000,
+          "volume": 17.0
+        }
+      ],
+      "candidate_id": "SYN_V13F_DISC_003",
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "fixture_only": true,
+      "formal_walk_forward": false,
+      "oos_touched": false,
+      "profitability_claimed": false,
+      "replay_fingerprint": "4a78ffcc1f3a0e23decb9ec205db5c005885a4c74828bea7fc5e45d173067cd2",
+      "replay_kind": "DEVELOPMENT_ONLY",
+      "signal_path": [
+        {
+          "bar_index": 0,
+          "signal": 1,
+          "ts_ms": 1696544000000
+        },
+        {
+          "bar_index": 1,
+          "signal": 0,
+          "ts_ms": 1696760000000
+        },
+        {
+          "bar_index": 2,
+          "signal": 0,
+          "ts_ms": 1696976000000
+        },
+        {
+          "bar_index": 3,
+          "signal": 1,
+          "ts_ms": 1697192000000
+        },
+        {
+          "bar_index": 4,
+          "signal": 0,
+          "ts_ms": 1697408000000
+        },
+        {
+          "bar_index": 5,
+          "signal": 0,
+          "ts_ms": 1697624000000
+        },
+        {
+          "bar_index": 6,
+          "signal": 1,
+          "ts_ms": 1697840000000
+        },
+        {
+          "bar_index": 7,
+          "signal": 0,
+          "ts_ms": 1698056000000
+        }
+      ]
+    }
+  ],
+  "verifications": [
+    {
+      "a": {
+        "bar_count": 8,
+        "fingerprint": "eaf71935d4b9d17eb832840c1efffa890cf3bb910e6672617b845e383a9918a9"
+      },
+      "b": {
+        "bar_count": 8,
+        "fingerprint": "eaf71935d4b9d17eb832840c1efffa890cf3bb910e6672617b845e383a9918a9"
+      },
+      "candidate_id": "SYN_V13F_DISC_001",
+      "fingerprint": "eaf71935d4b9d17eb832840c1efffa890cf3bb910e6672617b845e383a9918a9",
+      "match": true
+    },
+    {
+      "a": {
+        "bar_count": 8,
+        "fingerprint": "4d97530a2147dfb9c208c20979b0d95c9d6a57d1ce9de2caa6e6b4d8c6de68c1"
+      },
+      "b": {
+        "bar_count": 8,
+        "fingerprint": "4d97530a2147dfb9c208c20979b0d95c9d6a57d1ce9de2caa6e6b4d8c6de68c1"
+      },
+      "candidate_id": "SYN_V13F_DISC_002",
+      "fingerprint": "4d97530a2147dfb9c208c20979b0d95c9d6a57d1ce9de2caa6e6b4d8c6de68c1",
+      "match": true
+    },
+    {
+      "a": {
+        "bar_count": 8,
+        "fingerprint": "4a78ffcc1f3a0e23decb9ec205db5c005885a4c74828bea7fc5e45d173067cd2"
+      },
+      "b": {
+        "bar_count": 8,
+        "fingerprint": "4a78ffcc1f3a0e23decb9ec205db5c005885a4c74828bea7fc5e45d173067cd2"
+      },
+      "candidate_id": "SYN_V13F_DISC_003",
+      "fingerprint": "4a78ffcc1f3a0e23decb9ec205db5c005885a4c74828bea7fc5e45d173067cd2",
+      "match": true
+    }
+  ]
+}

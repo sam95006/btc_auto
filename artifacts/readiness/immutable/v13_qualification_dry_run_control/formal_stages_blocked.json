@@ -1,0 +1,30 @@
+{
+  "all_stages_blocked": true,
+  "block_reason": "STAGE_DEFAULT_BLOCKED_V13_F_DRY_RUN_CONTROL_ONLY",
+  "note": "All formal stages remain BLOCKED; only plans/replay/checksums run.",
+  "schema": "FOUNDER_V13_F_QUALIFICATION_DRY_RUN_CONTROL",
+  "stage_labels": {
+    "CANDIDATE_FREEZE": "Candidate Freeze",
+    "DEMO_ELIGIBILITY": "Demo eligibility",
+    "DEVELOPMENT_REPLAY": "Development Replay",
+    "OOS_RESERVATION": "OOS reservation",
+    "RISK_REVIEW": "Risk Review",
+    "WALK_FORWARD": "Walk-forward"
+  },
+  "stage_order": [
+    "CANDIDATE_FREEZE",
+    "DEVELOPMENT_REPLAY",
+    "WALK_FORWARD",
+    "RISK_REVIEW",
+    "OOS_RESERVATION",
+    "DEMO_ELIGIBILITY"
+  ],
+  "stages": {
+    "CANDIDATE_FREEZE": "BLOCKED",
+    "DEMO_ELIGIBILITY": "BLOCKED",
+    "DEVELOPMENT_REPLAY": "BLOCKED",
+    "OOS_RESERVATION": "BLOCKED",
+    "RISK_REVIEW": "BLOCKED",
+    "WALK_FORWARD": "BLOCKED"
+  }
+}
