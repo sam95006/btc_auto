@@ -1,0 +1,160 @@
+{
+  "created_at": "2026-08-05T11:15:26Z",
+  "definition_count": 8,
+  "definitions": {
+    "absorption_print": {
+      "control_window_bars": 16,
+      "economic_rationale": "High aggressive volume with muted price displacement (absorption).",
+      "event_id": "absorption_print",
+      "family": "ORDER_FLOW",
+      "missing_policy": "EXCLUDE_WITH_REASON",
+      "overlap_exclusion_bars": 8,
+      "pit_rule": "exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms",
+      "post_window_bars": 16,
+      "pre_window_bars": 8,
+      "required_fields": [
+        "symbol",
+        "side",
+        "notional",
+        "price_delta",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "aggressive_flow_burst": {
+      "control_window_bars": 16,
+      "economic_rationale": "Burst of same-side aggressive notional relative to recent baseline.",
+      "event_id": "aggressive_flow_burst",
+      "family": "ORDER_FLOW",
+      "missing_policy": "EXCLUDE_WITH_REASON",
+      "overlap_exclusion_bars": 8,
+      "pit_rule": "exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms",
+      "post_window_bars": 16,
+      "pre_window_bars": 8,
+      "required_fields": [
+        "symbol",
+        "side",
+        "notional",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "basis_dislocation": {
+      "control_window_bars": 16,
+      "economic_rationale": "Mark-index basis shock beyond recent volatility band.",
+      "event_id": "basis_dislocation",
+      "family": "DERIVATIVES",
+      "missing_policy": "EXCLUDE_WITH_REASON",
+      "overlap_exclusion_bars": 8,
+      "pit_rule": "exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms",
+      "post_window_bars": 16,
+      "pre_window_bars": 8,
+      "required_fields": [
+        "symbol",
+        "basis_bps",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "funding_dislocation": {
+      "control_window_bars": 16,
+      "economic_rationale": "Funding rate deviation from cross-sectional median.",
+      "event_id": "funding_dislocation",
+      "family": "DERIVATIVES",
+      "missing_policy": "EXCLUDE_WITH_REASON",
+      "overlap_exclusion_bars": 8,
+      "pit_rule": "exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms",
+      "post_window_bars": 16,
+      "pre_window_bars": 8,
+      "required_fields": [
+        "symbol",
+        "funding_rate",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "liquidation_cascade_onset": {
+      "control_window_bars": 16,
+      "economic_rationale": "Clustered forced liquidations exceeding intensity threshold.",
+      "event_id": "liquidation_cascade_onset",
+      "family": "LIQUIDATION",
+      "missing_policy": "EXCLUDE_WITH_REASON",
+      "overlap_exclusion_bars": 8,
+      "pit_rule": "exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms",
+      "post_window_bars": 16,
+      "pre_window_bars": 8,
+      "required_fields": [
+        "symbol",
+        "side",
+        "liq_notional",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "liquidity_withdrawal": {
+      "control_window_bars": 16,
+      "economic_rationale": "Sudden reduction in near-touch liquidity depth.",
+      "event_id": "liquidity_withdrawal",
+      "family": "MICROSTRUCTURE",
+      "missing_policy": "EXCLUDE_WITH_REASON",
+      "overlap_exclusion_bars": 8,
+      "pit_rule": "exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms",
+      "post_window_bars": 16,
+      "pre_window_bars": 8,
+      "required_fields": [
+        "symbol",
+        "depth_delta",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "oi_step_change": {
+      "control_window_bars": 16,
+      "economic_rationale": "Open-interest step change coinciding with aggressive flow.",
+      "event_id": "oi_step_change",
+      "family": "DERIVATIVES",
+      "missing_policy": "EXCLUDE_WITH_REASON",
+      "overlap_exclusion_bars": 8,
+      "pit_rule": "exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms",
+      "post_window_bars": 16,
+      "pre_window_bars": 8,
+      "required_fields": [
+        "symbol",
+        "oi_delta",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    },
+    "spread_shock": {
+      "control_window_bars": 16,
+      "economic_rationale": "Abrupt widening of quoted spread relative to rolling median.",
+      "event_id": "spread_shock",
+      "family": "MICROSTRUCTURE",
+      "missing_policy": "EXCLUDE_WITH_REASON",
+      "overlap_exclusion_bars": 8,
+      "pit_rule": "exchange_ts_ms <= as_of_ms AND receive_ts_ms <= as_of_ms",
+      "post_window_bars": 16,
+      "pre_window_bars": 8,
+      "required_fields": [
+        "symbol",
+        "spread_bps",
+        "exchange_ts_ms",
+        "receive_ts_ms"
+      ]
+    }
+  },
+  "event_ids": [
+    "aggressive_flow_burst",
+    "liquidation_cascade_onset",
+    "spread_shock",
+    "funding_dislocation",
+    "basis_dislocation",
+    "oi_step_change",
+    "absorption_print",
+    "liquidity_withdrawal"
+  ],
+  "is_trade": false,
+  "predictive_edge_claimed": false,
+  "real_event_study_execution": false,
+  "schema": "v14_b_event_definition_catalog"
+}

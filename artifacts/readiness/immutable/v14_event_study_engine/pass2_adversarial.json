@@ -1,0 +1,38 @@
+{
+  "adversarial_ok": true,
+  "created_at": "2026-08-05T11:15:26Z",
+  "critical_count": 0,
+  "engine_status": "ENGINE_READY",
+  "findings": [
+    {
+      "code": "FIXTURE_AND_FORENSIC_RO_ONLY",
+      "detail": "Engine proofs use synthetic fixtures; old campaign is RO forensic probe only. Real 14d Event Study remains BLOCKED.",
+      "severity": "INFO",
+      "status": "ACKNOWLEDGED"
+    }
+  ],
+  "high_count": 0,
+  "missing_policy_ok": true,
+  "pass": "PASS_2",
+  "pit_proof": {
+    "as_of_ms": 1720048000000,
+    "eligible_count": 15,
+    "future_event_count": 1,
+    "leaked_ids": [],
+    "pit_holds": true,
+    "schema": "v14_b_pit_proof"
+  },
+  "profitability_claimed": false,
+  "real_event_study_execution": false,
+  "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+  "replay": {
+    "engine_status": "ENGINE_READY",
+    "fingerprint": "aa08cc47e9a9a8cebc7e773cc389337ff086998da1eee8d2d75533811f47a48a",
+    "match": true,
+    "real_event_study_execution": false,
+    "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+    "schema": "v14_b_deterministic_study_proof",
+    "seed": "v14b-pass2-replay"
+  },
+  "seed_divergence_ok": true
+}

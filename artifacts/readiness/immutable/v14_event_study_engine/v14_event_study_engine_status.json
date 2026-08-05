@@ -1,0 +1,76 @@
+{
+  "adversarial_ok": true,
+  "artifacts_dir": "artifacts/readiness/immutable/v14_event_study_engine",
+  "auto_integrate": false,
+  "base_commit": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "branch": "feature/v14-event-study-engine",
+  "case_count": 5,
+  "created_at": "2026-08-05T11:15:26Z",
+  "critical_finding_details": [],
+  "critical_findings": 0,
+  "definition_count": 8,
+  "demo_order_count": 0,
+  "deterministic_replay_proven": true,
+  "engine_status": "ENGINE_READY",
+  "exchange_write_attempt_count": 0,
+  "fixture_source": "synthetic_sanitized",
+  "formal_walk_forward_executed": false,
+  "hard_bans_honored": true,
+  "head_commit_at_run": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "high_finding_details": [],
+  "high_findings": 0,
+  "lane": "V14-B",
+  "lane_head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "lane_name": "EVENT_STUDY_ENGINE",
+  "mainnet": false,
+  "metrics": {
+    "adversarial_ok": true,
+    "definition_count": 8,
+    "deterministic_replay": true,
+    "fixture_case_count": 5,
+    "pit_holds": true,
+    "pytest_passed": true
+  },
+  "old_campaign_mode": "READ_ONLY_FORENSIC",
+  "oos_executed": false,
+  "owned_paths": [
+    "backend/nexus_event_study",
+    "tools/research/event_study",
+    "tests/event_study",
+    "artifacts/readiness/immutable/v14_event_study_engine"
+  ],
+  "passes_completed": [
+    "PASS_1",
+    "PASS_2"
+  ],
+  "point_in_time_proven": true,
+  "pr27_merged": false,
+  "profitability_claim_count": 0,
+  "pytest_passed": true,
+  "raw_partitions_modified": false,
+  "raw_partitions_sealed": false,
+  "readiness": {
+    "engine_status": "ENGINE_READY",
+    "real_event_study_execution": false,
+    "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED"
+  },
+  "real_event_study_execution": false,
+  "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+  "real_money": false,
+  "remaining_blockers": [
+    {
+      "blocker_id": "REAL_EVENT_STUDY_BLOCKED",
+      "detail": "Hold conditions (14d calendar, UTC coverage, symbol diversity, liquidation depth, integrity PASS, Founder auth) not satisfied; real 14d Event Study not executed."
+    }
+  ],
+  "schema": "FOUNDER_V14_B_EVENT_STUDY_ENGINE",
+  "secret_leak_count": 0,
+  "shadow_order_count": 0,
+  "status": "PASS",
+  "tests": {
+    "elapsed_s": 0.613,
+    "exit_code": 0,
+    "pytest_passed": true
+  },
+  "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v14_b_event_study"
+}

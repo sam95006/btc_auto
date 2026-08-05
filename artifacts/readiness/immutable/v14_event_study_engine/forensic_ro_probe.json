@@ -1,0 +1,74 @@
+{
+  "artifact_dir": "D:/NEXUS_RUNTIME/worktrees/v14_b_event_study/artifacts/readiness/immutable/microstructure_campaign_finalizer_v1_real_ms_accum_v7",
+  "artifact_dir_exists": true,
+  "campaign_id": "ms_accum_v7_bounded_24h",
+  "created_at": "2026-08-05T11:15:26Z",
+  "event_study_readiness_from_old_campaign": {
+    "blockers": [
+      "calendar_days",
+      "complete_UTC_day_coverage",
+      "integrity_status",
+      "Founder_authorization"
+    ],
+    "created_at": "2026-08-05T02:57:11Z",
+    "event_study_readiness_status": "NOT_READY",
+    "event_study_real_execution": false,
+    "gate_results": {
+      "Founder_authorization": {
+        "actual": false,
+        "passed": false,
+        "required": true
+      },
+      "calendar_days": {
+        "actual": 0.0,
+        "passed": false,
+        "required": 14
+      },
+      "complete_UTC_day_coverage": {
+        "actual": false,
+        "passed": false,
+        "required": true
+      },
+      "integrity_status": {
+        "actual": "FAIL",
+        "passed": false,
+        "required": "PASS"
+      },
+      "liquidation_event_count": {
+        "actual": 1578,
+        "passed": true,
+        "required": 500
+      },
+      "symbol_diversity": {
+        "actual": 25,
+        "passed": true,
+        "required": 25
+      }
+    },
+    "hold_gates": {
+      "Founder_authorization": true,
+      "calendar_days": 14,
+      "complete_UTC_day_coverage": true,
+      "integrity_status": "PASS",
+      "liquidation_event_count": 500,
+      "symbol_diversity": 25
+    },
+    "note": "Event Study remains blocked until frozen hold gates and Founder authorization are satisfied",
+    "schema": "event_study_readiness_v1"
+  },
+  "files_sampled": [
+    "artifacts/readiness/immutable/microstructure_campaign_finalizer_v1_real_ms_accum_v7/campaign_finalize_report.json",
+    "artifacts/readiness/immutable/microstructure_campaign_finalizer_v1_real_ms_accum_v7/data_quality_audit.json",
+    "artifacts/readiness/immutable/microstructure_campaign_finalizer_v1_real_ms_accum_v7/event_study_readiness.json",
+    "artifacts/readiness/immutable/microstructure_campaign_finalizer_v1_real_ms_accum_v7/finalizer_status.json"
+  ],
+  "mode": "READ_ONLY_FORENSIC",
+  "notes": [
+    "no_seal_no_modify_old_raw_partitions",
+    "real_14d_event_study_not_executed"
+  ],
+  "raw_partitions_modified": false,
+  "raw_partitions_sealed": false,
+  "schema": "v14_b_forensic_ro_probe",
+  "write_attempt_count": 0
+}

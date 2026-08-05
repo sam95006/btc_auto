@@ -1,0 +1,215 @@
+{
+  "auto_integrate": false,
+  "case_count": 5,
+  "cases": [
+    {
+      "completeness_kept_count": 12,
+      "engine_status": "ENGINE_READY",
+      "fingerprint": "770466f7ea02ca0d06a1eecd8f81506ff7015c7b6de5c2a26d10ef105fbc7806",
+      "fixture_checksum": "6107d445a856074866b991268c9fad470803d90885b252e756f159c148e61856",
+      "input_event_count": 16,
+      "pit_holds": true,
+      "profitability_claimed": false,
+      "real_event_study_execution": false,
+      "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+      "replay_match": true,
+      "seed": "v14b-case-000"
+    },
+    {
+      "completeness_kept_count": 12,
+      "engine_status": "ENGINE_READY",
+      "fingerprint": "0aa428f5be246f079388cf719821a2ec107704bdfee3f0819202f45977af13f4",
+      "fixture_checksum": "9421a0fb1ded736fb327707849341f9dcab469f56033ee9ecc1907e3ca0efcca",
+      "input_event_count": 16,
+      "pit_holds": true,
+      "profitability_claimed": false,
+      "real_event_study_execution": false,
+      "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+      "replay_match": true,
+      "seed": "v14b-case-001"
+    },
+    {
+      "completeness_kept_count": 12,
+      "engine_status": "ENGINE_READY",
+      "fingerprint": "a3ca9d41d4e4e568f106738a58579300dce4a64c58f823c4f78c283cbe125a1d",
+      "fixture_checksum": "e2339cc7efe581bbc1bb68c5c1e7a67e1059a4ef871aefbb2f96fff097e86045",
+      "input_event_count": 16,
+      "pit_holds": true,
+      "profitability_claimed": false,
+      "real_event_study_execution": false,
+      "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+      "replay_match": true,
+      "seed": "v14b-case-002"
+    },
+    {
+      "completeness_kept_count": 12,
+      "engine_status": "ENGINE_READY",
+      "fingerprint": "41ebd2c54338d42c44c39d18f2ad78966a6fbf59b788af0c59c479e71366e149",
+      "fixture_checksum": "14d8ef75accb33f7a44fc2f829a6b3c1f5af6ac26058363e4019dbc9bff2862b",
+      "input_event_count": 16,
+      "pit_holds": true,
+      "profitability_claimed": false,
+      "real_event_study_execution": false,
+      "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+      "replay_match": true,
+      "seed": "v14b-case-003"
+    },
+    {
+      "completeness_kept_count": 12,
+      "engine_status": "ENGINE_READY",
+      "fingerprint": "4619eab100a1d3a1cd54a36ce44e98956a8d27d60826b4be91184c4b9f6ee037",
+      "fixture_checksum": "b51c86d4b208706d3659bd6c05790c6da4c61dd9e6e36067937ea8d2d5289136",
+      "input_event_count": 16,
+      "pit_holds": true,
+      "profitability_claimed": false,
+      "real_event_study_execution": false,
+      "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+      "replay_match": true,
+      "seed": "v14b-case-004"
+    }
+  ],
+  "definition_count": 8,
+  "demo_order_count": 0,
+  "deterministic_replay": true,
+  "engine_status": "ENGINE_READY",
+  "env_guard": {
+    "EXCHANGE_WRITE": "false",
+    "MAINNET": "false",
+    "REAL_MONEY": "false",
+    "ok": true
+  },
+  "exchange_write_attempt_count": 0,
+  "forensic": {
+    "artifact_dir": "D:/NEXUS_RUNTIME/worktrees/v14_b_event_study/artifacts/readiness/immutable/microstructure_campaign_finalizer_v1_real_ms_accum_v7",
+    "artifact_dir_exists": true,
+    "campaign_id": "ms_accum_v7_bounded_24h",
+    "event_study_readiness_from_old_campaign": {
+      "blockers": [
+        "calendar_days",
+        "complete_UTC_day_coverage",
+        "integrity_status",
+        "Founder_authorization"
+      ],
+      "created_at": "2026-08-05T02:57:11Z",
+      "event_study_readiness_status": "NOT_READY",
+      "event_study_real_execution": false,
+      "gate_results": {
+        "Founder_authorization": {
+          "actual": false,
+          "passed": false,
+          "required": true
+        },
+        "calendar_days": {
+          "actual": 0.0,
+          "passed": false,
+          "required": 14
+        },
+        "complete_UTC_day_coverage": {
+          "actual": false,
+          "passed": false,
+          "required": true
+        },
+        "integrity_status": {
+          "actual": "FAIL",
+          "passed": false,
+          "required": "PASS"
+        },
+        "liquidation_event_count": {
+          "actual": 1578,
+          "passed": true,
+          "required": 500
+        },
+        "symbol_diversity": {
+          "actual": 25,
+          "passed": true,
+          "required": 25
+        }
+      },
+      "hold_gates": {
+        "Founder_authorization": true,
+        "calendar_days": 14,
+        "complete_UTC_day_coverage": true,
+        "integrity_status": "PASS",
+        "liquidation_event_count": 500,
+        "symbol_diversity": 25
+      },
+      "note": "Event Study remains blocked until frozen hold gates and Founder authorization are satisfied",
+      "schema": "event_study_readiness_v1"
+    },
+    "files_sampled": [
+      "artifacts/readiness/immutable/microstructure_campaign_finalizer_v1_real_ms_accum_v7/campaign_finalize_report.json",
+      "artifacts/readiness/immutable/microstructure_campaign_finalizer_v1_real_ms_accum_v7/data_quality_audit.json",
+      "artifacts/readiness/immutable/microstructure_campaign_finalizer_v1_real_ms_accum_v7/event_study_readiness.json",
+      "artifacts/readiness/immutable/microstructure_campaign_finalizer_v1_real_ms_accum_v7/finalizer_status.json"
+    ],
+    "mode": "READ_ONLY_FORENSIC",
+    "notes": [
+      "no_seal_no_modify_old_raw_partitions",
+      "real_14d_event_study_not_executed"
+    ],
+    "raw_partitions_modified": false,
+    "raw_partitions_sealed": false,
+    "schema": "v14_b_forensic_ro_probe",
+    "write_attempt_count": 0
+  },
+  "pass": "PASS_1",
+  "pit_holds": true,
+  "pr27_merged": false,
+  "profitability_claim_count": 0,
+  "raw_partitions_modified": false,
+  "raw_partitions_sealed": false,
+  "real_event_study_execution": false,
+  "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+  "replay_results": [
+    {
+      "engine_status": "ENGINE_READY",
+      "fingerprint": "770466f7ea02ca0d06a1eecd8f81506ff7015c7b6de5c2a26d10ef105fbc7806",
+      "match": true,
+      "real_event_study_execution": false,
+      "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+      "schema": "v14_b_deterministic_study_proof",
+      "seed": "v14b-case-000"
+    },
+    {
+      "engine_status": "ENGINE_READY",
+      "fingerprint": "0aa428f5be246f079388cf719821a2ec107704bdfee3f0819202f45977af13f4",
+      "match": true,
+      "real_event_study_execution": false,
+      "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+      "schema": "v14_b_deterministic_study_proof",
+      "seed": "v14b-case-001"
+    },
+    {
+      "engine_status": "ENGINE_READY",
+      "fingerprint": "a3ca9d41d4e4e568f106738a58579300dce4a64c58f823c4f78c283cbe125a1d",
+      "match": true,
+      "real_event_study_execution": false,
+      "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+      "schema": "v14_b_deterministic_study_proof",
+      "seed": "v14b-case-002"
+    },
+    {
+      "engine_status": "ENGINE_READY",
+      "fingerprint": "41ebd2c54338d42c44c39d18f2ad78966a6fbf59b788af0c59c479e71366e149",
+      "match": true,
+      "real_event_study_execution": false,
+      "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+      "schema": "v14_b_deterministic_study_proof",
+      "seed": "v14b-case-003"
+    },
+    {
+      "engine_status": "ENGINE_READY",
+      "fingerprint": "4619eab100a1d3a1cd54a36ce44e98956a8d27d60826b4be91184c4b9f6ee037",
+      "match": true,
+      "real_event_study_execution": false,
+      "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+      "schema": "v14_b_deterministic_study_proof",
+      "seed": "v14b-case-004"
+    }
+  ],
+  "write_api_scan": {
+    "banned_callable_hits": [],
+    "ok": true,
+    "schema": "v14_b_forensic_write_api_scan"
+  }
+}
