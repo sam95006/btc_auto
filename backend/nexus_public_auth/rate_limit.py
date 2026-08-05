@@ -30,13 +30,15 @@ class AuthRateLimiter:
     def check(self, bucket: str, subject: str) -> dict[str, Any]:
         limit = int(self.limits.get(bucket, 30))
         now = time.monotonic()
-        key = (bucket, subject)
+        normalized_subject = (subject or "").strip().lower() or "anonymous"
+        # Collapse whitespace-only / empty subjects so they cannot bypass limits.
+        key = (bucket, normalized_subject)
         with self._lock:
             stamps = [t for t in self._hits.get(key, []) if now - t < self.window_seconds]
             if len(stamps) >= limit:
                 self._hits[key] = stamps
                 raise RateLimitExceeded(
-                    f"rate limit exceeded: bucket={bucket} subject={subject} "
+                    f"rate limit exceeded: bucket={bucket} subject={normalized_subject} "
                     f"limit={limit}/{self.window_seconds}s"
                 )
             stamps.append(now)
@@ -44,7 +46,7 @@ class AuthRateLimiter:
             remaining = max(0, limit - len(stamps))
             return {
                 "bucket": bucket,
-                "subject": subject,
+                "subject": normalized_subject,
                 "limit": limit,
                 "window_seconds": self.window_seconds,
                 "used": len(stamps),

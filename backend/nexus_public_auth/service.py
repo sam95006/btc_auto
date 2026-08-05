@@ -106,18 +106,57 @@ class PublicAuthMembershipService:
             "realm": PUBLIC_IDENTITY_REALM,
         }
 
-    def assign_org_roles(self, account_id: str, org_id: str, roles: list[str]) -> dict[str, Any]:
+    def assign_org_roles(
+        self,
+        account_id: str,
+        org_id: str,
+        roles: list[str],
+        *,
+        actor_account_id: Optional[str] = None,
+    ) -> dict[str, Any]:
+        from backend.nexus_public_auth.roles import (
+            ORG_PRIVILEGED_ROLES,
+            assert_org_role_assignment_allowed,
+        )
+
         account = self.store.get_account(account_id)
         if account is None:
             raise HardBanViolation("account not found")
         normalized = normalize_org_roles(roles)
+        privileged_targets = set(normalized) & ORG_PRIVILEGED_ROLES
+        if privileged_targets:
+            existing_privileged = False
+            with self.store._lock:
+                for acct in self.store.accounts.values():
+                    if set(acct.org_roles.get(org_id, [])) & ORG_PRIVILEGED_ROLES:
+                        existing_privileged = True
+                        break
+            if actor_account_id is None:
+                if existing_privileged:
+                    raise HardBanViolation(
+                        "HARD BAN: privileged org role assignment requires actor_account_id"
+                    )
+                # Non-production bootstrap of first org_owner/admin only.
+            else:
+                actor = self.store.get_account(actor_account_id)
+                if actor is None:
+                    raise HardBanViolation("actor account not found")
+                actor_roles = list(actor.org_roles.get(org_id, []))
+                assert_org_role_assignment_allowed(
+                    actor_roles=actor_roles, target_roles=normalized
+                )
         account.org_roles[org_id] = normalized
         self.store.update_account(account)
         self.store.append_audit(
             "roles.org.assign",
             "ALLOW",
             account_id=account_id,
-            metadata={"org_id": org_id, "roles": normalized},
+            metadata={
+                "org_id": org_id,
+                "roles": normalized,
+                "actor_account_id": actor_account_id,
+                "bootstrap": bool(privileged_targets and actor_account_id is None),
+            },
         )
         return {"account_id": account_id, "org_id": org_id, "roles": normalized}
 

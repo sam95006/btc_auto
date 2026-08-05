@@ -57,7 +57,13 @@ class SessionService:
                 raise HardBanViolation(
                     "MFA challenge must be verified before session create"
                 )
+            if challenge.session_bound:
+                raise HardBanViolation(
+                    "MFA challenge already bound to a session (replay refused)"
+                )
             mfa_verified = True
+        else:
+            challenge = None
 
         issued = self.issuer.issue(
             account_id=account_id,
@@ -87,6 +93,9 @@ class SessionService:
             issuer=PUBLIC_JWT_ISSUER,
         )
         self.store.put_session(session)
+        if challenge is not None:
+            challenge.session_bound = True
+            self.store.put_mfa_challenge(challenge)
         self.store.append_audit(
             "session.create",
             "ALLOW",
@@ -95,6 +104,7 @@ class SessionService:
                 "session_id": session.session_id,
                 "jti": session.token_jti,
                 "mfa_verified": mfa_verified,
+                "mfa_challenge_id": mfa_challenge_id,
             },
         )
         return {

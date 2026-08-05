@@ -40,6 +40,8 @@ class MfaChallenge:
     created_at: str = field(default_factory=_utcnow)
     expires_at: str = ""
     consumed: bool = False
+    # Bound to at most one session create after verification (Pass-3).
+    session_bound: bool = False
     # Stub challenge nonce — verify against local HMAC, not a live IdP.
     nonce: str = ""
 

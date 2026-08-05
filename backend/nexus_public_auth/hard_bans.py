@@ -425,6 +425,66 @@ def _independent_cross_review_probes() -> dict[str, Any]:
     _expect("p3_private_execution", refuse_private_execution_via_entitlement)
     _expect("p3_shared_jwt", refuse_shared_private_jwt_issuer)
 
+    # 7) MFA challenge replay for a second session must fail.
+    challenge2 = mfa.create_challenge(reg["account_id"], enrolled["factor_id"])
+    mfa.verify_challenge(
+        reg["account_id"],
+        challenge2["challenge_id"],
+        response_code=challenge2["stub_response_hint"],
+    )
+    svc.sessions.create_session(
+        reg["account_id"],
+        tier="Free",
+        member_roles=["member"],
+        mfa_challenge_id=challenge2["challenge_id"],
+    )
+
+    def _replay_challenge() -> None:
+        svc.sessions.create_session(
+            reg["account_id"],
+            tier="Free",
+            member_roles=["member"],
+            mfa_challenge_id=challenge2["challenge_id"],
+        )
+
+    _expect("mfa_challenge_session_replay", _replay_challenge)
+
+    # 8) Org privilege escalation: billing_viewer cannot mint org_owner.
+    owner = svc.register_member("owner-p3@example.com", "Owner")
+    viewer = svc.register_member("viewer-p3@example.com", "Viewer")
+    svc.assign_org_roles(owner["account_id"], "org_p3", ["org_owner"])
+    svc.assign_org_roles(viewer["account_id"], "org_p3", ["org_billing_viewer"])
+    _expect(
+        "org_privilege_escalation",
+        lambda: svc.assign_org_roles(
+            viewer["account_id"],
+            "org_p3",
+            ["org_owner"],
+            actor_account_id=viewer["account_id"],
+        ),
+    )
+
+    # 9) Runtime tier-matrix mutation toward private execution is detected.
+    from backend.nexus_public_auth import constants as auth_constants
+    from backend.nexus_public_auth.entitlements import assert_tier_matrix_immutable
+
+    original = auth_constants.TIER_FEATURES["Free"]
+    auth_constants.TIER_FEATURES["Free"] = frozenset(set(original) | {"private_execution"})
+    try:
+        _expect("tier_matrix_mutation", assert_tier_matrix_immutable)
+    finally:
+        auth_constants.TIER_FEATURES["Free"] = original
+
+    # 10) Empty-subject rate-limit bypass refused (collapsed to anonymous).
+    empty_limiter = AuthRateLimiter(window_seconds=60, limits={"register": 2})
+
+    def _empty_subject_burst() -> None:
+        empty_limiter.check("register", "")
+        empty_limiter.check("register", "   ")
+        empty_limiter.check("register", "")
+
+    _expect("rate_limit_empty_subject", _empty_subject_burst)
+
     # Ensure RateLimitExceeded is a HardBanViolation subclass for consistent handling.
     if not issubclass(RateLimitExceeded, HardBanViolation):
         probes.append(

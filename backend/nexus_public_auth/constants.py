@@ -133,6 +133,7 @@ HARD_BANS = frozenset(
 
 # Feature matrix — entitlement gates only; no payment collection;
 # never includes PRIVATE_EXECUTION_FEATURE_DENYLIST entries.
+# Runtime mutation of this map is refused by entitlements.assert_tier_matrix_immutable.
 TIER_FEATURES: dict[str, frozenset[str]] = {
     "Free": frozenset(
         {
@@ -197,6 +198,11 @@ TIER_FEATURES: dict[str, frozenset[str]] = {
             "mfa_required_org_policy",
         }
     ),
+}
+
+# Fingerprint of the clean matrix for Pass-3 mutation detection.
+TIER_FEATURES_FINGERPRINT = {
+    tier: tuple(sorted(features)) for tier, features in TIER_FEATURES.items()
 }
 
 BILLING_PROVIDER = "NONE_NON_PRODUCTION"

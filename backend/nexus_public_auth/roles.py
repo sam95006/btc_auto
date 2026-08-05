@@ -20,6 +20,10 @@ PRIVATE_ROLE_DENYLIST = frozenset(
     }
 )
 
+# Org roles that may assign privileged org roles (org security).
+ORG_PRIVILEGED_ASSIGNERS = frozenset({"org_owner", "org_admin"})
+ORG_PRIVILEGED_ROLES = frozenset({"org_owner", "org_admin"})
+
 
 def normalize_roles(roles: Iterable[str], allowed: frozenset[str], *, kind: str) -> list[str]:
     out: list[str] = []
@@ -54,3 +58,20 @@ def normalize_team_roles(roles: Iterable[str]) -> list[str]:
 
 def has_role(assigned: Iterable[str], required: str) -> bool:
     return required in set(assigned)
+
+
+def assert_org_role_assignment_allowed(
+    *,
+    actor_roles: Iterable[str],
+    target_roles: Iterable[str],
+) -> None:
+    """Refuse privilege escalation by org_billing_viewer / org_member."""
+    actor = set(normalize_org_roles(actor_roles)) if actor_roles else set()
+    targets = set(normalize_org_roles(target_roles))
+    if targets & ORG_PRIVILEGED_ROLES:
+        if not (actor & ORG_PRIVILEGED_ASSIGNERS):
+            raise HardBanViolation(
+                "HARD BAN: org privilege escalation refused — "
+                "only org_owner/org_admin may assign privileged org roles"
+            )
+

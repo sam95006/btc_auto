@@ -13,6 +13,7 @@ from backend.nexus_public_auth.constants import (
     MEMBERSHIP_TIERS,
     PRIVATE_EXECUTION_FEATURE_DENYLIST,
     TIER_FEATURES,
+    TIER_FEATURES_FINGERPRINT,
 )
 from backend.nexus_public_auth.hard_bans import HardBanViolation, refuse_live_billing
 
@@ -23,6 +24,24 @@ def assert_valid_tier(tier: str) -> str:
             f"unknown membership tier {tier!r}; allowed={list(MEMBERSHIP_TIERS)}"
         )
     return tier
+
+
+def assert_tier_matrix_immutable() -> None:
+    """Pass-3: detect runtime mutation that would sneak private execution features."""
+    for tier, expected in TIER_FEATURES_FINGERPRINT.items():
+        current = TIER_FEATURES.get(tier)
+        if current is None:
+            raise HardBanViolation(f"HARD BAN: tier matrix missing tier {tier}")
+        if tuple(sorted(current)) != expected:
+            raise HardBanViolation(
+                f"HARD BAN: tier matrix for {tier} mutated at runtime "
+                f"(private execution smuggling refused)"
+            )
+        overlap = set(current) & set(PRIVATE_EXECUTION_FEATURE_DENYLIST)
+        if overlap:
+            raise HardBanViolation(
+                f"HARD BAN: mutated tier {tier} grants private execution: {sorted(overlap)}"
+            )
 
 
 def assert_not_private_execution_feature(feature: str) -> None:
@@ -68,6 +87,7 @@ _assert_tier_matrix_clean()
 
 def features_for_tier(tier: str) -> frozenset[str]:
     assert_valid_tier(tier)
+    assert_tier_matrix_immutable()
     features = TIER_FEATURES[tier]
     overlap = features & PRIVATE_EXECUTION_FEATURE_DENYLIST
     if overlap:
