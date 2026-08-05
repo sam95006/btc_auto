@@ -1,0 +1,44 @@
+{
+  "schema": "NEXUS_QUALIFICATION_BLOCKED_STAGES_V10",
+  "stage_order": [
+    "CANDIDATE_FREEZE",
+    "REPLAY",
+    "WALK_FORWARD",
+    "RISK_REVIEW",
+    "OOS_RESERVATION",
+    "DEMO_ELIGIBILITY"
+  ],
+  "stage_labels": {
+    "CANDIDATE_FREEZE": "Candidate Freeze",
+    "REPLAY": "Replay",
+    "WALK_FORWARD": "Walk-forward",
+    "RISK_REVIEW": "Risk Review",
+    "OOS_RESERVATION": "OOS reservation",
+    "DEMO_ELIGIBILITY": "Demo eligibility"
+  },
+  "stages": {
+    "CANDIDATE_FREEZE": "BLOCKED",
+    "REPLAY": "BLOCKED",
+    "WALK_FORWARD": "BLOCKED",
+    "RISK_REVIEW": "BLOCKED",
+    "OOS_RESERVATION": "BLOCKED",
+    "DEMO_ELIGIBILITY": "BLOCKED"
+  },
+  "all_stages_blocked": true,
+  "block_reason": "STAGE_DEFAULT_BLOCKED_V10_CONTROL_PLANE_ONLY",
+  "hard_bans": [
+    "no_candidate_freeze_execution",
+    "no_replay_execution",
+    "no_walk_forward_execution",
+    "no_risk_review_execution",
+    "no_oos_reservation",
+    "no_oos_execution",
+    "no_september_reserved_oos_consumption",
+    "no_demo_eligibility_grant",
+    "no_demo_shadow_exchange_writes",
+    "no_strategy_selection",
+    "no_strategy_promotion",
+    "no_merge_deploy"
+  ],
+  "note": "All stages default BLOCKED. V10 control plane does not execute Candidate Freeze, Replay, Walk-forward, Risk Review, OOS reservation, or Demo eligibility."
+}
