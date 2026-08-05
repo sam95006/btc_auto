@@ -6,7 +6,7 @@
   "demo_order_count": 0,
   "exchange_write_attempt_count": 0,
   "fill_accuracy_claim": "SIMULATED_ONLY_NO_VERIFIED_HISTORICAL_ORDER_BOOK_ACCURACY_CLAIM",
-  "finished_at": "2026-08-05T03:35:34Z",
+  "finished_at": "2026-08-05T07:37:37Z",
   "generated_execution_scenario_count": 250000,
   "harness_version": "microstructure_realism_v11_harness",
   "invariants": {
@@ -237,6 +237,6 @@
   ],
   "schema": "v11_execution_microstructure_realism_fuzz",
   "seed": 20260805,
-  "started_at": "2026-08-05T03:34:56Z",
+  "started_at": "2026-08-05T07:37:09Z",
   "target_scenarios": 250000
 }

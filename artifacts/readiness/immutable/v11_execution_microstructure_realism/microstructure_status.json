@@ -3,7 +3,7 @@
   "book_model_version": "book_model_v11_2026-08-05",
   "canonical_execution_engine": "backend.nexus_execution.execution_simulator_v1_1.AutonomousExecutionSimulatorV11",
   "canonical_execution_engine_count": 1,
-  "created_at": "2026-08-05T03:35:35Z",
+  "created_at": "2026-08-05T07:37:37Z",
   "demo_order_count": 0,
   "exchange_write_attempt_count": 0,
   "execution_mode": "SIMULATED_NO_EXCHANGE_WRITE",
