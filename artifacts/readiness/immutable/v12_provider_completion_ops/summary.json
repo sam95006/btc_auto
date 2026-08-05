@@ -1,0 +1,26 @@
+{
+  "schema": "v12_provider_completion_ops_status_summary",
+  "created_at": "2026-08-05T07:47:46Z",
+  "lane": "V12-C",
+  "lane_name": "PROVIDER_COMPLETION_OPS",
+  "status": "PASS",
+  "V2_3_complete": false,
+  "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+  "groq_success_count": 53,
+  "groq_pending_count": 27,
+  "sambanova_success_count": 16,
+  "sambanova_pending_count": 10,
+  "real_resume_owner": "local_Coordinator",
+  "ops_owns_real_resume": false,
+  "secret_leak_count": 0,
+  "hard_bans": [
+    "no_real_provider_resume_ownership_theft",
+    "no_secret_logging",
+    "no_demo_exchange",
+    "no_pr27_merge",
+    "no_v2_3_complete_claim",
+    "no_exchange_writes",
+    "no_mainnet_real_money",
+    "no_public_product_surface"
+  ]
+}
