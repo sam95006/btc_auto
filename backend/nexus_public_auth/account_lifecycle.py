@@ -6,6 +6,7 @@ from copy import deepcopy
 from typing import Any, Optional
 
 from backend.nexus_public_auth.hard_bans import HardBanViolation
+from backend.nexus_public_auth.org_access import require_self_or_admin
 from backend.nexus_public_auth.sessions import SessionService
 from backend.nexus_public_auth.store import PublicAuthStore, _utcnow
 
@@ -15,7 +16,17 @@ class AccountLifecycleService:
         self.store = store
         self.sessions = sessions or SessionService(store)
 
-    def request_deletion(self, account_id: str, *, reason: str = "user_request") -> dict[str, Any]:
+    def request_deletion(
+        self,
+        account_id: str,
+        *,
+        reason: str = "user_request",
+        actor_account_id: Optional[str] = None,
+    ) -> dict[str, Any]:
+        actor = actor_account_id or account_id
+        require_self_or_admin(
+            actor_account_id=actor, target_account_id=account_id, store=self.store
+        )
         account = self.store.get_account(account_id)
         if account is None:
             raise HardBanViolation("account not found")
@@ -29,7 +40,7 @@ class AccountLifecycleService:
             "account.deletion_requested",
             "ALLOW",
             account_id=account_id,
-            metadata={"reason": reason, "sessions_revoked": revoked},
+            metadata={"reason": reason, "sessions_revoked": revoked, "actor": actor},
         )
         return {
             "account_id": account_id,
@@ -38,7 +49,16 @@ class AccountLifecycleService:
             "sessions_revoked": revoked,
         }
 
-    def finalize_deletion(self, account_id: str) -> dict[str, Any]:
+    def finalize_deletion(
+        self,
+        account_id: str,
+        *,
+        actor_account_id: Optional[str] = None,
+    ) -> dict[str, Any]:
+        actor = actor_account_id or account_id
+        require_self_or_admin(
+            actor_account_id=actor, target_account_id=account_id, store=self.store
+        )
         account = self.store.get_account(account_id)
         if account is None:
             raise HardBanViolation("account not found")
@@ -56,11 +76,20 @@ class AccountLifecycleService:
             "account.deleted",
             "ALLOW",
             account_id=account_id,
-            metadata={"scrubbed": True},
+            metadata={"scrubbed": True, "actor": actor},
         )
         return {"account_id": account_id, "status": "deleted"}
 
-    def export_account_data(self, account_id: str) -> dict[str, Any]:
+    def export_account_data(
+        self,
+        account_id: str,
+        *,
+        actor_account_id: Optional[str] = None,
+    ) -> dict[str, Any]:
+        actor = actor_account_id or account_id
+        require_self_or_admin(
+            actor_account_id=actor, target_account_id=account_id, store=self.store
+        )
         account = self.store.get_account(account_id)
         if account is None:
             raise HardBanViolation("account not found")
@@ -80,6 +109,7 @@ class AccountLifecycleService:
             "export_id": export_id,
             "exported_at": _utcnow(),
             "schema": "public_account_export_v2",
+            "actor_account_id": actor,
             "account": {
                 "account_id": account.account_id,
                 "email": account.email,
@@ -118,6 +148,6 @@ class AccountLifecycleService:
             "account.data_export",
             "ALLOW",
             account_id=account_id,
-            metadata={"export_id": export_id},
+            metadata={"export_id": export_id, "actor": actor},
         )
         return payload

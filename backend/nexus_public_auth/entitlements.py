@@ -16,6 +16,7 @@ from backend.nexus_public_auth.constants import (
     TIER_FEATURES_FINGERPRINT,
 )
 from backend.nexus_public_auth.hard_bans import HardBanViolation, refuse_live_billing
+from backend.nexus_public_auth.org_access import assert_no_private_execution_features
 
 
 def assert_valid_tier(tier: str) -> str:
@@ -89,6 +90,7 @@ def features_for_tier(tier: str) -> frozenset[str]:
     assert_valid_tier(tier)
     assert_tier_matrix_immutable()
     features = TIER_FEATURES[tier]
+    assert_no_private_execution_features(features)
     overlap = features & PRIVATE_EXECUTION_FEATURE_DENYLIST
     if overlap:
         raise HardBanViolation(

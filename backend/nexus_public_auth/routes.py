@@ -14,6 +14,7 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
 
     Mount only in LOCAL_OR_STAGING_ONLY contexts. Never enables live billing.
     Never grants private execution via entitlements.
+    PUB2-H: bearer ACL on consent/export/delete/audit/revoke.
     """
     assert_env_hard_bans()
     try:
@@ -38,6 +39,15 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
             status,
         )
 
+    def _bearer_account() -> dict[str, Any]:
+        token = str(
+            request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
+            or (request.get_json(silent=True) or {}).get("token", "")
+        )
+        if not token:
+            raise HardBanViolation("HARD BAN: bearer token required")
+        return svc.authenticate_rate_limited(token)
+
     @bp.get("/foundation")
     def foundation():
         return jsonify({"ok": True, "foundation": svc.foundation_status()})
@@ -46,10 +56,12 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     def register():
         body = request.get_json(silent=True) or {}
         try:
+            # Ignore client-supplied tier/roles — self-register is Free/member only.
             result = svc.register_member(
                 email=str(body.get("email", "")),
                 display_name=str(body.get("display_name", "")),
-                tier=str(body.get("tier", "Free")),
+                tier="Free",
+                member_roles=["member"],
             )
             return jsonify({"ok": True, "account": result})
         except HardBanViolation as exc:
@@ -81,6 +93,14 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     def revoke_session():
         body = request.get_json(silent=True) or {}
         try:
+            auth = _bearer_account()
+            session = svc.store.get_session(str(body.get("session_id", "")))
+            if session is None:
+                raise HardBanViolation("session not found")
+            if session.account_id != auth["account_id"] and "member_admin" not in set(
+                auth.get("member_roles") or []
+            ):
+                raise HardBanViolation("HARD BAN: cross-account session revoke denied")
             result = svc.sessions.revoke_session(
                 str(body.get("session_id", "")),
                 reason=str(body.get("reason", "user_revoke")),
@@ -113,10 +133,13 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     def consent():
         body = request.get_json(silent=True) or {}
         try:
-            account_id = str(body.get("account_id", ""))
-            svc.rate_limiter.check("consent", account_id or "anonymous")
+            auth = _bearer_account()
+            target = str(body.get("account_id", "") or auth["account_id"])
+            if target != auth["account_id"]:
+                raise HardBanViolation("HARD BAN: cross-account consent mutation denied")
+            svc.rate_limiter.check("consent", target)
             result = svc.consent.set_consent(
-                account_id,
+                target,
                 str(body.get("purpose", "")),
                 granted=bool(body.get("granted")),
                 version=str(body.get("version", "v1")),
@@ -129,9 +152,12 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     def export_data():
         body = request.get_json(silent=True) or {}
         try:
-            account_id = str(body.get("account_id", ""))
-            svc.rate_limiter.check("export", account_id or "anonymous")
-            payload = svc.lifecycle.export_account_data(account_id)
+            auth = _bearer_account()
+            target = str(body.get("account_id", "") or auth["account_id"])
+            svc.rate_limiter.check("export", target)
+            payload = svc.lifecycle.export_account_data(
+                target, actor_account_id=auth["account_id"]
+            )
             return jsonify({"ok": True, "export": payload})
         except HardBanViolation as exc:
             return _err(exc, 403)
@@ -140,11 +166,16 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     def delete_account():
         body = request.get_json(silent=True) or {}
         try:
-            account_id = str(body.get("account_id", ""))
-            svc.rate_limiter.check("delete", account_id or "anonymous")
-            pending = svc.lifecycle.request_deletion(account_id)
+            auth = _bearer_account()
+            target = str(body.get("account_id", "") or auth["account_id"])
+            svc.rate_limiter.check("delete", target)
+            pending = svc.lifecycle.request_deletion(
+                target, actor_account_id=auth["account_id"]
+            )
             if bool(body.get("finalize")):
-                final = svc.lifecycle.finalize_deletion(account_id)
+                final = svc.lifecycle.finalize_deletion(
+                    target, actor_account_id=auth["account_id"]
+                )
                 return jsonify({"ok": True, "pending": pending, "final": final})
             return jsonify({"ok": True, "pending": pending})
         except HardBanViolation as exc:
@@ -152,11 +183,24 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
 
     @bp.get("/audit/<account_id>")
     def audit(account_id: str):
-        return jsonify({"ok": True, "events": svc.store.list_audit(account_id=account_id)})
+        try:
+            auth = _bearer_account()
+            if account_id != auth["account_id"] and "member_admin" not in set(
+                auth.get("member_roles") or []
+            ):
+                raise HardBanViolation("HARD BAN: cross-account audit enumeration denied")
+            return jsonify({"ok": True, "events": svc.store.list_audit(account_id=account_id)})
+        except HardBanViolation as exc:
+            return _err(exc, 403)
 
     @bp.get("/mfa/<account_id>")
     def mfa_status(account_id: str):
         try:
+            auth = _bearer_account()
+            if account_id != auth["account_id"] and "member_admin" not in set(
+                auth.get("member_roles") or []
+            ):
+                raise HardBanViolation("HARD BAN: cross-account MFA status denied")
             return jsonify({"ok": True, "mfa": svc.mfa.mfa_status(account_id)})
         except HardBanViolation as exc:
             return _err(exc, 403)
@@ -165,8 +209,11 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     def mfa_enroll():
         body = request.get_json(silent=True) or {}
         try:
-            account_id = str(body.get("account_id", ""))
-            svc.rate_limiter.check("mfa_challenge", account_id or "anonymous")
+            auth = _bearer_account()
+            account_id = str(body.get("account_id", "") or auth["account_id"])
+            if account_id != auth["account_id"]:
+                raise HardBanViolation("HARD BAN: cross-account MFA enroll denied")
+            svc.rate_limiter.check("mfa_challenge", account_id)
             result = svc.mfa.enroll_factor(
                 account_id,
                 str(body.get("factor_type", "totp")),
@@ -180,8 +227,12 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     def mfa_confirm():
         body = request.get_json(silent=True) or {}
         try:
+            auth = _bearer_account()
+            account_id = str(body.get("account_id", "") or auth["account_id"])
+            if account_id != auth["account_id"]:
+                raise HardBanViolation("HARD BAN: cross-account MFA confirm denied")
             result = svc.mfa.confirm_enrollment(
-                str(body.get("account_id", "")),
+                account_id,
                 str(body.get("factor_id", "")),
                 enrollment_secret=str(body.get("enrollment_secret", "")),
             )
@@ -193,8 +244,11 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     def mfa_challenge():
         body = request.get_json(silent=True) or {}
         try:
-            account_id = str(body.get("account_id", ""))
-            svc.rate_limiter.check("mfa_challenge", account_id or "anonymous")
+            auth = _bearer_account()
+            account_id = str(body.get("account_id", "") or auth["account_id"])
+            if account_id != auth["account_id"]:
+                raise HardBanViolation("HARD BAN: cross-account MFA challenge denied")
+            svc.rate_limiter.check("mfa_challenge", account_id)
             result = svc.mfa.create_challenge(account_id, str(body.get("factor_id", "")))
             return jsonify({"ok": True, "challenge": result})
         except HardBanViolation as exc:
@@ -204,8 +258,11 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     def mfa_verify():
         body = request.get_json(silent=True) or {}
         try:
-            account_id = str(body.get("account_id", ""))
-            svc.rate_limiter.check("mfa_challenge", account_id or "anonymous")
+            auth = _bearer_account()
+            account_id = str(body.get("account_id", "") or auth["account_id"])
+            if account_id != auth["account_id"]:
+                raise HardBanViolation("HARD BAN: cross-account MFA verify denied")
+            svc.rate_limiter.check("mfa_challenge", account_id)
             result = svc.mfa.verify_challenge(
                 account_id,
                 str(body.get("challenge_id", "")),

@@ -75,6 +75,7 @@ class PublicAuthStore:
         self.accounts: dict[str, PublicAccount] = {}
         self.sessions: dict[str, PublicSession] = {}
         self.sessions_by_jti: dict[str, str] = {}
+        self.organizations: dict[str, Any] = {}
         self.audit: list[AuditEvent] = []
         self.exports: dict[str, dict[str, Any]] = {}
         self.mfa_factors: dict[str, Any] = {}
@@ -208,6 +209,7 @@ class PublicAuthStore:
                 "live_billing_enabled": self.live_billing_enabled,
                 "account_count": len(self.accounts),
                 "session_count": len(self.sessions),
+                "organization_count": len(self.organizations),
                 "audit_count": len(self.audit),
                 "mfa_factor_count": len(self.mfa_factors),
                 "mfa_challenge_count": len(self.mfa_challenges),

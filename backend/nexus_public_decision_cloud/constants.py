@@ -47,6 +47,7 @@ FORBIDDEN_PAYLOAD_KEYS = frozenset(
         "authorization",
         "strategy_parameters",
         "strategy_weights",
+        "strategy_id",
         "account_balance",
         "wallet_address",
         "bybit_api_key",
@@ -54,12 +55,34 @@ FORBIDDEN_PAYLOAD_KEYS = frozenset(
         "binance_api_key",
         "binance_api_secret",
         "lesson_memory_private",
+        "private_lesson_id",
+        "lesson_id",
+        "lesson_memory",
+        "raw_provider_prompt",
+        "raw_provider_response",
+        "system_prompt",
+        "prompt",
+        "prompts",
         "founder_fill",
         "order_id",
         "client_order_id",
         "exchange_order_id",
+        "execution_route",
+        "risk_governor_state",
     }
 )
+
+# Timing pad for decision lookup — blunt existence oracles (ms).
+DECISION_LOOKUP_TIMING_PAD_MS = 25
+
+# Opaque deny body — identical for missing / unauthorized / org-scoped denies.
+OPAQUE_DECISION_DENY = {
+    "ok": False,
+    "error": "decision_unavailable",
+    "read_only": True,
+    "customer_trading": False,
+    "exchange_api_used": False,
+}
 
 # Modules this package must never import (private-core / trading / exchange)
 PRIVATE_CORE_IMPORT_PREFIXES: tuple[str, ...] = (

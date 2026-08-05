@@ -30,6 +30,17 @@ def _method_not_allowed():
     ), 405
 
 
+def _caller_org_ids() -> set[str]:
+    raw = request.headers.get("X-NEXUS-Caller-Orgs", "")
+    return {p.strip() for p in raw.split(",") if p.strip()}
+
+
+def _decision_response(body: dict):
+    # Opaque deny uses identical 404 shape for missing and unauthorized.
+    code = 200 if body.get("ok") else 404
+    return _no_store(jsonify(body)), code
+
+
 def register_public_decision_cloud_routes(app: Flask) -> None:
     """Mount read-only Decision Cloud routes. Safe for local/staging."""
 
@@ -54,31 +65,31 @@ def register_public_decision_cloud_routes(app: Flask) -> None:
     @app.route(f"{prefix}/decisions")
     def decision_cloud_feed():
         status = request.args.get("status")
-        return _no_store(jsonify(service.decision_feed(status=status)))
+        return _no_store(
+            jsonify(service.decision_feed(status=status, caller_org_ids=_caller_org_ids()))
+        )
 
     @app.route(f"{prefix}/decisions/<decision_id>")
     def decision_cloud_detail(decision_id: str):
-        body = service.decision_detail(decision_id)
-        code = 200 if body.get("ok") else 404
-        return _no_store(jsonify(body)), code
+        body = service.decision_detail(decision_id, caller_org_ids=_caller_org_ids())
+        return _decision_response(body)
 
     @app.route(f"{prefix}/decisions/<decision_id>/evidence")
     def decision_cloud_evidence(decision_id: str):
-        body = service.evidence_for(decision_id)
-        code = 200 if body.get("ok") else 404
-        return _no_store(jsonify(body)), code
+        body = service.evidence_for(decision_id, caller_org_ids=_caller_org_ids())
+        return _decision_response(body)
 
     @app.route(f"{prefix}/decisions/<decision_id>/counter-evidence")
     def decision_cloud_counter_evidence(decision_id: str):
-        body = service.counter_evidence_for(decision_id)
-        code = 200 if body.get("ok") else 404
-        return _no_store(jsonify(body)), code
+        body = service.counter_evidence_for(
+            decision_id, caller_org_ids=_caller_org_ids()
+        )
+        return _decision_response(body)
 
     @app.route(f"{prefix}/decisions/<decision_id>/risk")
     def decision_cloud_risk(decision_id: str):
-        body = service.risk_for(decision_id)
-        code = 200 if body.get("ok") else 404
-        return _no_store(jsonify(body)), code
+        body = service.risk_for(decision_id, caller_org_ids=_caller_org_ids())
+        return _decision_response(body)
 
     @app.route(f"{prefix}/thesis-monitor")
     def decision_cloud_thesis_monitor():
@@ -91,7 +102,13 @@ def register_public_decision_cloud_routes(app: Flask) -> None:
     @app.route(f"{prefix}/outcome-review")
     def decision_cloud_outcome_review():
         decision_id = request.args.get("decision_id")
-        return _no_store(jsonify(service.outcome_review(decision_id=decision_id)))
+        return _no_store(
+            jsonify(
+                service.outcome_review(
+                    decision_id=decision_id, caller_org_ids=_caller_org_ids()
+                )
+            )
+        )
 
     @app.route(f"{prefix}/alerts")
     def decision_cloud_alerts():
@@ -99,4 +116,6 @@ def register_public_decision_cloud_routes(app: Flask) -> None:
 
     @app.route(f"{prefix}/freshness")
     def decision_cloud_freshness():
-        return _no_store(jsonify(service.freshness_report()))
+        return _no_store(
+            jsonify(service.freshness_report(caller_org_ids=_caller_org_ids()))
+        )

@@ -1,4 +1,4 @@
-"""Facade service composing PUB2-F public auth entitlement & org security."""
+"""Facade service composing PUB2-F auth + PUB2-H org/privacy ACL hardening."""
 from __future__ import annotations
 
 from typing import Any, Optional
@@ -26,12 +26,17 @@ from backend.nexus_public_auth.entitlements import (
 from backend.nexus_public_auth.hard_bans import HardBanViolation, assert_env_hard_bans
 from backend.nexus_public_auth.jwt_issuer import PublicJwtIssuer
 from backend.nexus_public_auth.mfa import MfaService
-from backend.nexus_public_auth.rate_limit import AuthRateLimiter, get_default_rate_limiter
-from backend.nexus_public_auth.roles import (
-    normalize_member_roles,
-    normalize_org_roles,
-    normalize_team_roles,
+from backend.nexus_public_auth.org_access import (
+    SELF_REGISTER_ROLES,
+    SELF_REGISTER_TIER,
+    add_org_member,
+    assign_org_roles_authorized,
+    assign_team_roles_authorized,
+    create_organization,
+    require_self_or_admin,
 )
+from backend.nexus_public_auth.rate_limit import AuthRateLimiter, get_default_rate_limiter
+from backend.nexus_public_auth.roles import normalize_member_roles
 from backend.nexus_public_auth.sessions import SessionService
 from backend.nexus_public_auth.store import PublicAuthStore, get_default_store
 
@@ -86,7 +91,19 @@ class PublicAuthMembershipService:
     ) -> dict[str, Any]:
         subject = (rate_subject or email or "anonymous").strip().lower() or "anonymous"
         self.rate_limiter.check("register", subject)
-        roles = normalize_member_roles(member_roles or ["member"])
+        # Self-registration is locked to Free + member (PUB2-H).
+        requested_roles = list(member_roles or ["member"])
+        if set(requested_roles) - SELF_REGISTER_ROLES:
+            raise HardBanViolation(
+                "HARD BAN: member privilege escalation blocked — "
+                "self-registration may only assign role 'member'"
+            )
+        if tier != SELF_REGISTER_TIER:
+            raise HardBanViolation(
+                "HARD BAN: member privilege escalation blocked — "
+                f"self-registration may only use tier {SELF_REGISTER_TIER!r}"
+            )
+        roles = normalize_member_roles(requested_roles)
         assert_valid_tier(tier)
         account = self.store.create_account(email, display_name, tier=tier)
         account.member_roles = roles
@@ -97,7 +114,6 @@ class PublicAuthMembershipService:
             account_id=account.account_id,
             metadata={"tier": tier, "member_roles": roles},
         )
-        # Terms + privacy must be explicitly consented later; default denied.
         return {
             "account_id": account.account_id,
             "email": account.email,
@@ -105,6 +121,70 @@ class PublicAuthMembershipService:
             "member_roles": roles,
             "realm": PUBLIC_IDENTITY_REALM,
         }
+
+    def elevate_member_roles(
+        self,
+        *,
+        actor_account_id: str,
+        target_account_id: str,
+        member_roles: list[str],
+    ) -> dict[str, Any]:
+        require_self_or_admin(
+            actor_account_id=actor_account_id,
+            target_account_id=target_account_id,
+            store=self.store,
+        )
+        actor = self.store.get_account(actor_account_id)
+        if actor is None:
+            raise HardBanViolation("actor account not found")
+        if "member_admin" not in set(actor.member_roles):
+            raise HardBanViolation(
+                "HARD BAN: member privilege escalation blocked — member_admin required"
+            )
+        target = self.store.get_account(target_account_id)
+        if target is None:
+            raise HardBanViolation("target account not found")
+        normalized = normalize_member_roles(member_roles)
+        target.member_roles = normalized
+        self.store.update_account(target)
+        self.store.append_audit(
+            "roles.member.elevate",
+            "ALLOW",
+            account_id=actor_account_id,
+            metadata={"target_account_id": target_account_id, "roles": normalized},
+        )
+        return {
+            "account_id": target_account_id,
+            "member_roles": normalized,
+            "actor_account_id": actor_account_id,
+        }
+
+    def create_org(self, *, owner_account_id: str, name: str) -> dict[str, Any]:
+        org = create_organization(
+            self.store, name=name, owner_account_id=owner_account_id
+        )
+        return {
+            "org_id": org.org_id,
+            "name": org.name,
+            "owner_account_id": org.owner_account_id,
+            "member_ids": list(org.member_ids),
+        }
+
+    def add_org_member(
+        self,
+        *,
+        actor_account_id: str,
+        org_id: str,
+        member_account_id: str,
+        roles: Optional[list[str]] = None,
+    ) -> dict[str, Any]:
+        return add_org_member(
+            self.store,
+            actor_account_id=actor_account_id,
+            org_id=org_id,
+            member_account_id=member_account_id,
+            roles=roles,
+        )
 
     def assign_org_roles(
         self,
@@ -114,66 +194,40 @@ class PublicAuthMembershipService:
         *,
         actor_account_id: Optional[str] = None,
     ) -> dict[str, Any]:
-        from backend.nexus_public_auth.roles import (
-            ORG_PRIVILEGED_ROLES,
-            assert_org_role_assignment_allowed,
+        if actor_account_id is None:
+            raise HardBanViolation(
+                "HARD BAN: unsigned org role assignment blocked — actor_account_id required"
+            )
+        return assign_org_roles_authorized(
+            self.store,
+            actor_account_id=actor_account_id,
+            target_account_id=account_id,
+            org_id=org_id,
+            roles=roles,
         )
 
-        account = self.store.get_account(account_id)
-        if account is None:
-            raise HardBanViolation("account not found")
-        normalized = normalize_org_roles(roles)
-        privileged_targets = set(normalized) & ORG_PRIVILEGED_ROLES
-        if privileged_targets:
-            existing_privileged = False
-            with self.store._lock:
-                for acct in self.store.accounts.values():
-                    if set(acct.org_roles.get(org_id, [])) & ORG_PRIVILEGED_ROLES:
-                        existing_privileged = True
-                        break
-            if actor_account_id is None:
-                if existing_privileged:
-                    raise HardBanViolation(
-                        "HARD BAN: privileged org role assignment requires actor_account_id"
-                    )
-                # Non-production bootstrap of first org_owner/admin only.
-            else:
-                actor = self.store.get_account(actor_account_id)
-                if actor is None:
-                    raise HardBanViolation("actor account not found")
-                actor_roles = list(actor.org_roles.get(org_id, []))
-                assert_org_role_assignment_allowed(
-                    actor_roles=actor_roles, target_roles=normalized
-                )
-        account.org_roles[org_id] = normalized
-        self.store.update_account(account)
-        self.store.append_audit(
-            "roles.org.assign",
-            "ALLOW",
-            account_id=account_id,
-            metadata={
-                "org_id": org_id,
-                "roles": normalized,
-                "actor_account_id": actor_account_id,
-                "bootstrap": bool(privileged_targets and actor_account_id is None),
-            },
+    def assign_team_roles(
+        self,
+        account_id: str,
+        team_id: str,
+        roles: list[str],
+        *,
+        actor_account_id: Optional[str] = None,
+        org_id: Optional[str] = None,
+    ) -> dict[str, Any]:
+        if actor_account_id is None or not org_id:
+            raise HardBanViolation(
+                "HARD BAN: unsigned team role assignment blocked — "
+                "actor_account_id and org_id required"
+            )
+        return assign_team_roles_authorized(
+            self.store,
+            actor_account_id=actor_account_id,
+            target_account_id=account_id,
+            team_id=team_id,
+            org_id=org_id,
+            roles=roles,
         )
-        return {"account_id": account_id, "org_id": org_id, "roles": normalized}
-
-    def assign_team_roles(self, account_id: str, team_id: str, roles: list[str]) -> dict[str, Any]:
-        account = self.store.get_account(account_id)
-        if account is None:
-            raise HardBanViolation("account not found")
-        normalized = normalize_team_roles(roles)
-        account.team_roles[team_id] = normalized
-        self.store.update_account(account)
-        self.store.append_audit(
-            "roles.team.assign",
-            "ALLOW",
-            account_id=account_id,
-            metadata={"team_id": team_id, "roles": normalized},
-        )
-        return {"account_id": account_id, "team_id": team_id, "roles": normalized}
 
     def set_tier_manual(self, account_id: str, target_tier: str, *, actor: str) -> dict[str, Any]:
         self.rate_limiter.check("tier_assign", account_id or actor)
@@ -237,7 +291,6 @@ class PublicAuthMembershipService:
             raise HardBanViolation("account not found")
         policy_mfa = False
         if require_mfa is None:
-            # Enterprise org policy: MFA required once factors are enrolled.
             try:
                 policy_mfa = has_feature(account.tier, "mfa_required_org_policy")
             except HardBanViolation:
@@ -258,7 +311,6 @@ class PublicAuthMembershipService:
         )
 
     def authenticate_rate_limited(self, token: str) -> dict[str, Any]:
-        # Subject is token prefix only for bucketing — never log full token.
         subject = (token or "")[:16] or "anonymous"
         self.rate_limiter.check("session_authenticate", subject)
         return self.sessions.authenticate(token)

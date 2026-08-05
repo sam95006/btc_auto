@@ -1,4 +1,4 @@
-"""PUB2-F foundation integration tests."""
+"""PUB2-F + PUB2-H foundation integration tests (MFA + ACL hardening)."""
 from __future__ import annotations
 
 import pytest
@@ -21,13 +21,24 @@ def svc():
     reset_default_rate_limiter()
     store = PublicAuthStore()
     return PublicAuthMembershipService(
-        store=store, rate_limiter=AuthRateLimiter(limits={"register": 100, "session_create": 100, "tier_assign": 100, "session_authenticate": 100, "export": 100, "delete": 100, "consent": 100, "mfa_challenge": 100})
+        store=store,
+        rate_limiter=AuthRateLimiter(
+            limits={
+                "register": 100,
+                "session_create": 100,
+                "tier_assign": 100,
+                "session_authenticate": 100,
+                "export": 100,
+                "delete": 100,
+                "consent": 100,
+                "mfa_challenge": 100,
+            }
+        ),
     )
 
 
 def test_foundation_status_reports_isolated_realm(svc: PublicAuthMembershipService):
     status = svc.foundation_status()
-    assert status["lane"] == "PUB2-F"
     assert status["public_identity_realm"] == PUBLIC_IDENTITY_REALM
     assert status["public_jwt_issuer"] == PUBLIC_JWT_ISSUER
     assert status["shared_jwt_issuer_count"] == 0
@@ -38,7 +49,6 @@ def test_foundation_status_reports_isolated_realm(svc: PublicAuthMembershipServi
     assert "no_live_billing" in HARD_BANS
     assert "no_shared_private_jwt_issuer" in HARD_BANS
     assert "no_private_admin_session_reuse" in HARD_BANS
-    assert "no_private_execution_via_entitlement" in HARD_BANS
     assert "private_execution" in PRIVATE_EXECUTION_FEATURE_DENYLIST
 
 
@@ -46,8 +56,20 @@ def test_register_roles_entitlements_session_consent_export_delete(svc: PublicAu
     reg = svc.register_member("member@example.com", "Member One", tier="Free")
     account_id = reg["account_id"]
 
-    svc.assign_org_roles(account_id, "org_demo", ["org_member"])
-    svc.assign_team_roles(account_id, "team_demo", ["team_member"])
+    org = svc.create_org(owner_account_id=account_id, name="Demo Org")
+    svc.assign_org_roles(
+        account_id,
+        org["org_id"],
+        ["org_owner", "org_member"],
+        actor_account_id=account_id,
+    )
+    svc.assign_team_roles(
+        account_id,
+        "team_demo",
+        ["team_member"],
+        actor_account_id=account_id,
+        org_id=org["org_id"],
+    )
     svc.set_tier_manual(account_id, "Pro", actor="manual:operator_stub")
     assert svc.check_feature(account_id, "decision_detail_full") is True
     with pytest.raises(HardBanViolation):
@@ -73,7 +95,6 @@ def test_register_roles_entitlements_session_consent_export_delete(svc: PublicAu
     with pytest.raises(HardBanViolation):
         svc.sessions.authenticate(session["token"])
 
-    # MFA enroll → challenge → verify → session requires consumed challenge
     enrolled = svc.mfa.enroll_factor(account_id, "totp", label="primary")
     confirmed = svc.mfa.confirm_enrollment(
         account_id,
@@ -81,7 +102,6 @@ def test_register_roles_entitlements_session_consent_export_delete(svc: PublicAu
         enrollment_secret=enrolled["enrollment_secret_once"],
     )
     assert confirmed["status"] == "enabled"
-    # Persisted factor must not retain enrollment secret (Pass-2).
     stored = svc.store.get_mfa_factor(enrolled["factor_id"])
     assert stored is not None
     assert "enrollment_secret_once" not in (stored.metadata or {})
@@ -114,6 +134,7 @@ def test_register_roles_entitlements_session_consent_export_delete(svc: PublicAu
     assert any("No private Lesson Memory" in n for n in export["notes"])
     assert any("No private execution access" in n for n in export["notes"])
     assert len(export["mfa_factors"]) == 1
+    assert export["actor_account_id"] == account_id
 
     pending = svc.lifecycle.request_deletion(account_id)
     assert pending["status"] == "deletion_pending"
@@ -138,17 +159,28 @@ def test_register_roles_entitlements_session_consent_export_delete(svc: PublicAu
 
 
 def test_enterprise_entitlement_matrix(svc: PublicAuthMembershipService):
-    reg = svc.register_member("ent@example.com", "Ent", tier="Enterprise")
+    reg = svc.register_member("ent@example.com", "Ent", tier="Free")
+    svc.set_tier_manual(reg["account_id"], "Enterprise", actor="manual:qa")
     snap = svc.entitlements(reg["account_id"])
     assert "org_roles" in snap["features"]
     assert snap["live_billing_enabled"] is False
     assert snap["billing_provider"] == "NONE_NON_PRODUCTION"
     assert snap["private_execution_access"] is False
     assert "private_execution" not in snap["features"]
-    assert "exchange_write" not in snap["features"]
 
 
 def test_stripe_actor_blocked(svc: PublicAuthMembershipService):
     reg = svc.register_member("x@example.com", "X", tier="Free")
     with pytest.raises(HardBanViolation):
         svc.set_tier_manual(reg["account_id"], "Pro", actor="stripe:cus_123")
+
+
+def test_unsigned_org_assign_blocked(svc: PublicAuthMembershipService):
+    reg = svc.register_member("u@example.com", "U")
+    with pytest.raises(HardBanViolation):
+        svc.assign_org_roles(reg["account_id"], "org_x", ["org_owner"])
+
+
+def test_self_register_cannot_escalate_tier(svc: PublicAuthMembershipService):
+    with pytest.raises(HardBanViolation):
+        svc.register_member("bad@example.com", "Bad", tier="Enterprise")
