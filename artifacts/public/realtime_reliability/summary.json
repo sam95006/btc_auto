@@ -1,0 +1,72 @@
+{
+  "lane": "PUB2-E",
+  "branch": "feature/public-v2-realtime-reliability",
+  "base_commit": "5e93f677ece9f283aeade98657b5e3d5736991b5",
+  "schema_version": "public_realtime_reliability_v2",
+  "recommendation": "NEXUS_PUBLIC_V2_REALTIME_RELIABILITY_PASS",
+  "three_pass_ok": true,
+  "private_event_stream_exposure": false,
+  "transports": [
+    "sse",
+    "websocket",
+    "polling"
+  ],
+  "features": [
+    "resume_tokens",
+    "sequence_continuity",
+    "duplicate_suppression",
+    "out_of_order_handling",
+    "heartbeat",
+    "reconnect",
+    "polling_fallback",
+    "backpressure",
+    "slow_client_isolation",
+    "stale_detection",
+    "public_only_event_filtering"
+  ],
+  "feature_proof": {
+    "resume_tokens": true,
+    "sequence_continuity": true,
+    "duplicate_suppression": true,
+    "out_of_order_handling": true,
+    "heartbeat": true,
+    "reconnect": true,
+    "polling_fallback": true,
+    "backpressure": true,
+    "slow_client_isolation": true,
+    "stale_detection": true,
+    "public_only_event_filtering": true
+  },
+  "metrics": {
+    "lane": "PUB2-E",
+    "pass_count": 3,
+    "passes_ok": [
+      true,
+      true,
+      true
+    ],
+    "feature_proof": {
+      "resume_tokens": true,
+      "sequence_continuity": true,
+      "duplicate_suppression": true,
+      "out_of_order_handling": true,
+      "heartbeat": true,
+      "reconnect": true,
+      "polling_fallback": true,
+      "backpressure": true,
+      "slow_client_isolation": true,
+      "stale_detection": true,
+      "public_only_event_filtering": true
+    },
+    "features_proven": 11,
+    "features_total": 11,
+    "hard_bans_count": 27,
+    "private_event_stream_exposure": false,
+    "isolation_pass1_ok": true,
+    "isolation_pass3_ok": true,
+    "three_pass_ok": true
+  },
+  "artifact_policy": "no_star_status_json",
+  "generated_at": "2026-08-05T16:47:42Z",
+  "head_sha_note": "fill_after_commit"
+}

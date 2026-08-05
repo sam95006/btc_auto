@@ -1,4 +1,4 @@
-"""Hard-ban enforcement for PUB-F Real-Time Transport."""
+"""Hard-ban enforcement for PUB2-E Realtime Reliability."""
 from __future__ import annotations
 
 import ast

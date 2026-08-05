@@ -1,18 +1,17 @@
-"""PUB-F Real-Time Transport — constants and hard bans.
+"""PUB2-E Realtime Reliability & Backpressure — constants and hard bans.
 
-LOCAL/STAGING public-safe streaming for Decision Integrity events.
-Never exposes private Founder event streams, never trades, never
-imports Private Core execution/research engines.
+Builds on PUB-F public-safe streaming with resume/sequence/heartbeat plus
+backpressure and slow-client isolation. LOCAL/STAGING only.
 """
 from __future__ import annotations
 
-SCHEMA_VERSION = "public_realtime_transport_v1"
+SCHEMA_VERSION = "public_realtime_reliability_v2"
 PACKAGE = "backend.nexus_public_realtime_transport"
-LANE = "PUB-F"
-LANE_NAME = "PUBLIC_REALTIME_TRANSPORT"
-BRANCH = "feature/public-v1-realtime-transport"
-BASE_COMMIT = "39e6b1ae1a40698d02c4cb8de4d80fc412309cfc"
-ARTIFACT_REL = "artifacts/public/realtime_transport"  # no *_status.json
+LANE = "PUB2-E"
+LANE_NAME = "PUBLIC_REALTIME_RELIABILITY_BACKPRESSURE"
+BRANCH = "feature/public-v2-realtime-reliability"
+BASE_COMMIT = "5e93f677ece9f283aeade98657b5e3d5736991b5"
+ARTIFACT_REL = "artifacts/public/realtime_reliability"  # no *_status.json
 
 DEPLOYMENT_ENVIRONMENTS: frozenset[str] = frozenset({"LOCAL", "STAGING"})
 FORBIDDEN_ENVIRONMENTS: frozenset[str] = frozenset({"PRODUCTION", "PROD", "MAINNET"})
@@ -23,6 +22,11 @@ STALE_AFTER_SECONDS = 45.0
 POLL_INTERVAL_SECONDS = 5.0
 RESUME_TOKEN_TTL_SECONDS = 3600.0
 SEQUENCE_BUFFER_CAPACITY = 512
+
+# Backpressure / slow-client isolation
+BACKPRESSURE_HIGH_WATERMARK = 32
+BACKPRESSURE_LOW_WATERMARK = 8
+SLOW_CLIENT_ISOLATE_AFTER_TICKS = 3
 
 # Reconnect / backoff (client protocol helpers)
 BACKOFF_INITIAL_SECONDS = 0.5
@@ -44,6 +48,8 @@ ALLOWED_EVENT_KINDS: frozenset[str] = frozenset(
         "evidence_refresh",
         "stream_end",
         "gap_notice",
+        "backpressure_notice",
+        "client_isolated",
     }
 )
 
@@ -69,6 +75,14 @@ FORBIDDEN_PRIVATE_TOPICS: frozenset[str] = frozenset(
         "binance.user_stream",
         "bybit.private",
     }
+)
+
+PUBLIC_TOPIC_PREFIXES: tuple[str, ...] = (
+    "public.",
+    "decision.",
+    "thesis.",
+    "evidence.",
+    "outcome.",
 )
 
 HARD_BANS: tuple[str, ...] = (
@@ -97,6 +111,8 @@ HARD_BANS: tuple[str, ...] = (
     "no_private_lesson_memory",
     "no_fabricated_edge",
     "no_auto_integrate",
+    "no_fabricated_customers",
+    "no_fabricated_metrics",
 )
 
 FORBIDDEN_PAYLOAD_KEYS: frozenset[str] = frozenset(
@@ -151,8 +167,11 @@ PRIVATE_CORE_IMPORT_PREFIXES: tuple[str, ...] = (
 OWNED_PATHS: tuple[str, ...] = (
     "backend/nexus_public_realtime_transport/",
     "tools/public/run_realtime_transport_hard_ban_passes.py",
+    "tools/public/run_realtime_reliability_three_passes.py",
     "tests/test_public_realtime_transport.py",
+    "tests/test_public_realtime_reliability_v2.py",
     "artifacts/public/realtime_transport/",
+    "artifacts/public/realtime_reliability/",
 )
 
 PROHIBITED_PATHS_UNTOUCHED: tuple[str, ...] = (
@@ -164,3 +183,17 @@ PROHIBITED_PATHS_UNTOUCHED: tuple[str, ...] = (
 )
 
 TRANSPORT_MODES: tuple[str, ...] = ("sse", "websocket", "polling")
+
+PROOF_FEATURES: tuple[str, ...] = (
+    "resume_tokens",
+    "sequence_continuity",
+    "duplicate_suppression",
+    "out_of_order_handling",
+    "heartbeat",
+    "reconnect",
+    "polling_fallback",
+    "backpressure",
+    "slow_client_isolation",
+    "stale_detection",
+    "public_only_event_filtering",
+)

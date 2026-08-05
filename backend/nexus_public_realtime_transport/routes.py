@@ -1,4 +1,4 @@
-"""Flask route helpers for PUB-F public realtime transport (LOCAL/STAGING)."""
+"""Flask route helpers for PUB2-E public realtime reliability (LOCAL/STAGING)."""
 from __future__ import annotations
 
 from typing import Any
@@ -32,16 +32,26 @@ def require_local_staging() -> dict[str, Any]:
     return guard
 
 
+def _attach_sse_headers(resp: Any) -> Any:
+    resp.headers["Cache-Control"] = "no-cache"
+    resp.headers["X-Public-Safe"] = "true"
+    resp.headers["X-Private-Event-Stream"] = "false"
+    resp.headers["X-Nexus-Lane"] = "PUB2-E"
+    return resp
+
+
 def register_public_realtime_routes(app: Any) -> None:
     """Optional Flask registration — SSE + polling. WS frame iterator available for adapters."""
     from flask import Response, jsonify, request
 
     @app.get("/api/public/v1/realtime/meta")
+    @app.get("/api/public/v2/realtime/meta")
     def public_realtime_meta():
         require_local_staging()
         return jsonify(get_hub().meta())
 
     @app.get("/api/public/v1/realtime/poll")
+    @app.get("/api/public/v2/realtime/poll")
     def public_realtime_poll():
         require_local_staging()
         hub = get_hub()
@@ -53,6 +63,7 @@ def register_public_realtime_routes(app: Any) -> None:
         return jsonify(body)
 
     @app.get("/api/public/v1/realtime/sse")
+    @app.get("/api/public/v2/realtime/sse")
     def public_realtime_sse():
         require_local_staging()
         hub = get_hub()
@@ -68,14 +79,10 @@ def register_public_realtime_routes(app: Any) -> None:
                 heartbeat_every=0.05,
             )
 
-        resp = Response(generate(), mimetype="text/event-stream")
-        resp.headers["Cache-Control"] = "no-cache"
-        resp.headers["X-Public-Safe"] = "true"
-        resp.headers["X-Private-Event-Stream"] = "false"
-        resp.headers["X-Nexus-Lane"] = "PUB-F"
-        return resp
+        return _attach_sse_headers(Response(generate(), mimetype="text/event-stream"))
 
     @app.get("/api/public/v1/realtime/ws-demo-frames")
+    @app.get("/api/public/v2/realtime/ws-demo-frames")
     def public_realtime_ws_demo_frames():
         """Expose WS frame encoding without opening a live production socket."""
         require_local_staging()

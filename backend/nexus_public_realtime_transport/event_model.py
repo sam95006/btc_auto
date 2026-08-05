@@ -16,7 +16,7 @@ from backend.nexus_public_realtime_transport.constants import (
 from backend.nexus_public_realtime_transport.hard_bans import refuse_private_topic
 from backend.nexus_public_realtime_transport.sanitize import assert_no_forbidden_keys
 
-_RESUME_SECRET = b"nexus-pub-f-local-staging-resume-v1"
+_RESUME_SECRET = b"nexus-pub2-e-local-staging-resume-v2"
 
 
 @dataclass(frozen=True)

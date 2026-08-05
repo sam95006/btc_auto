@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""PUB-F two-pass hard-ban + mechanics proof runner.
+"""PUB-F/PUB2-E hard-ban + mechanics proof runner (two-pass compatibility).
 
-Writes artifacts under artifacts/public/realtime_transport/.
+Prefer tools/public/run_realtime_reliability_three_passes.py for PUB2-E.
+Writes artifacts under artifacts/public/realtime_reliability/.
 Never writes *_status.json (Founder directive).
 """
 from __future__ import annotations

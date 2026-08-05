@@ -1,0 +1,53 @@
+{
+  "schema": "pub2_e_realtime_mechanics_proof_v1",
+  "ok": true,
+  "checks": {
+    "resume_tokens": true,
+    "sequence_continuity": true,
+    "duplicate_suppression": true,
+    "out_of_order_handling": true,
+    "heartbeat": true,
+    "reconnect": true,
+    "polling_fallback": true,
+    "backpressure": true,
+    "slow_client_isolation": true,
+    "stale_detection": true,
+    "public_only_event_filtering": true,
+    "private_topic_refused": true,
+    "hard_ban_scan_clean": true,
+    "fixture_events_loaded": 6,
+    "polling_count": 6,
+    "sse_chunks": 8,
+    "ws_frames": 8,
+    "resume_after_seq2_count": 4,
+    "fast_delivered": 40,
+    "slow_isolated": true
+  },
+  "isolation": {
+    "ok": true,
+    "slow_isolated": true,
+    "slow_isolation_reason": "sustained_backpressure",
+    "slow_forced_polling": true,
+    "fast_isolated": false,
+    "fast_delivered": 40,
+    "fast_seq_count": 40,
+    "fast_sequence_continuous": true,
+    "fanout": {
+      "clients_registered": 2,
+      "clients_isolated": 1,
+      "events_fanned_out": 40,
+      "offers_dropped": 2,
+      "offers_coalesced": 0,
+      "fast_clients_unblocked": 1
+    },
+    "backpressure_drops": 2
+  },
+  "public_filter": {
+    "admitted": 1,
+    "refused": 2
+  },
+  "hard_ban": {
+    "ok": true,
+    "critical_count": 0
+  }
+}

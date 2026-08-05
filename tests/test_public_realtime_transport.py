@@ -1,4 +1,4 @@
-"""Tests for PUB-F public realtime transport."""
+"""Tests for PUB2-E public realtime transport (PUB-F compatible suite)."""
 from __future__ import annotations
 
 import json

@@ -1,0 +1,187 @@
+{
+  "schema": "pub2_e_realtime_three_pass",
+  "lane": "PUB2-E",
+  "branch": "feature/public-v2-realtime-reliability",
+  "base_commit": "5e93f677ece9f283aeade98657b5e3d5736991b5",
+  "schema_version": "public_realtime_reliability_v2",
+  "pass_count": 3,
+  "digests": [
+    "03aac8557c94f67ab8f66ae7a20a20be3c2610ef75d316cb1f0beb20b2e27170",
+    "b75da37cd97dd1c10412906733cbba0ba8b0b1f559d5a4f20e58f6435dc70d01",
+    "dc30583502e8935d0eb4b5dc3cd43fc6d37ae91c5a784a7fddaac1357bb65423"
+  ],
+  "three_pass_ok": true,
+  "feature_proof": {
+    "resume_tokens": true,
+    "sequence_continuity": true,
+    "duplicate_suppression": true,
+    "out_of_order_handling": true,
+    "heartbeat": true,
+    "reconnect": true,
+    "polling_fallback": true,
+    "backpressure": true,
+    "slow_client_isolation": true,
+    "stale_detection": true,
+    "public_only_event_filtering": true
+  },
+  "pass1": {
+    "pass": 1,
+    "label": "implementation",
+    "pass_ok": true,
+    "critical_count": 0,
+    "result": {
+      "schema": "pub2_e_realtime_mechanics_proof_v1",
+      "ok": true,
+      "checks": {
+        "resume_tokens": true,
+        "sequence_continuity": true,
+        "duplicate_suppression": true,
+        "out_of_order_handling": true,
+        "heartbeat": true,
+        "reconnect": true,
+        "polling_fallback": true,
+        "backpressure": true,
+        "slow_client_isolation": true,
+        "stale_detection": true,
+        "public_only_event_filtering": true,
+        "private_topic_refused": true,
+        "hard_ban_scan_clean": true,
+        "fixture_events_loaded": 6,
+        "polling_count": 6,
+        "sse_chunks": 8,
+        "ws_frames": 8,
+        "resume_after_seq2_count": 4,
+        "fast_delivered": 40,
+        "slow_isolated": true
+      },
+      "isolation": {
+        "ok": true,
+        "slow_isolated": true,
+        "slow_isolation_reason": "sustained_backpressure",
+        "slow_forced_polling": true,
+        "fast_isolated": false,
+        "fast_delivered": 40,
+        "fast_seq_count": 40,
+        "fast_sequence_continuous": true,
+        "fanout": {
+          "clients_registered": 2,
+          "clients_isolated": 1,
+          "events_fanned_out": 40,
+          "offers_dropped": 2,
+          "offers_coalesced": 0,
+          "fast_clients_unblocked": 1
+        },
+        "backpressure_drops": 2
+      },
+      "public_filter": {
+        "admitted": 1,
+        "refused": 2
+      },
+      "hard_ban": {
+        "ok": true,
+        "critical_count": 0
+      }
+    },
+    "digest": "03aac8557c94f67ab8f66ae7a20a20be3c2610ef75d316cb1f0beb20b2e27170",
+    "findings": []
+  },
+  "pass2": {
+    "pass": 2,
+    "label": "adversarial",
+    "pass_ok": true,
+    "critical_count": 0,
+    "result": {
+      "schema": "pub2_e_realtime_adversarial_proof_v1",
+      "ok": true,
+      "checks": {
+        "attack_private_topic": true,
+        "attack_founder_topic": true,
+        "attack_forbidden_payload": true,
+        "attack_bad_kind": true,
+        "attack_expired_resume": true,
+        "attack_stream_mismatch": true,
+        "multi_slow_isolation": true,
+        "hard_ban_scan_clean": true,
+        "private_topic_refused": true,
+        "resume_tokens": true,
+        "sequence_continuity": true,
+        "duplicate_suppression": true,
+        "out_of_order_handling": true,
+        "heartbeat": true,
+        "reconnect": true,
+        "polling_fallback": true,
+        "backpressure": true,
+        "slow_client_isolation": true,
+        "stale_detection": true,
+        "public_only_event_filtering": true
+      },
+      "attacks": {
+        "private_topic": true,
+        "founder_topic": true,
+        "forbidden_payload": true,
+        "bad_kind": true,
+        "expired_resume": true,
+        "stream_mismatch": true
+      },
+      "multi_client": {
+        "s1_isolated": true,
+        "s2_isolated": true,
+        "fast_delivered": 30
+      }
+    },
+    "digest": "b75da37cd97dd1c10412906733cbba0ba8b0b1f559d5a4f20e58f6435dc70d01",
+    "findings": []
+  },
+  "pass3": {
+    "pass": 3,
+    "label": "independent_break",
+    "pass_ok": true,
+    "critical_count": 0,
+    "result": {
+      "schema": "pub2_e_realtime_break_proof_v1",
+      "ok": true,
+      "checks": {
+        "resume_tokens": true,
+        "sequence_continuity": true,
+        "duplicate_suppression": true,
+        "out_of_order_handling": true,
+        "heartbeat": true,
+        "reconnect": true,
+        "polling_fallback": true,
+        "backpressure": true,
+        "slow_client_isolation": true,
+        "stale_detection": true,
+        "public_only_event_filtering": true,
+        "private_topic_refused": true,
+        "hard_ban_scan_clean": true,
+        "delivered": 60,
+        "duplicates_suppressed": 10,
+        "ooo_buffered": 27,
+        "heartbeat_coalesced": 19
+      },
+      "isolation": {
+        "ok": true,
+        "slow_isolated": true,
+        "slow_isolation_reason": "sustained_backpressure",
+        "slow_forced_polling": true,
+        "fast_isolated": false,
+        "fast_delivered": 50,
+        "fast_seq_count": 50,
+        "fast_sequence_continuous": true,
+        "fanout": {
+          "clients_registered": 2,
+          "clients_isolated": 1,
+          "events_fanned_out": 50,
+          "offers_dropped": 2,
+          "offers_coalesced": 0,
+          "fast_clients_unblocked": 1
+        },
+        "backpressure_drops": 2
+      }
+    },
+    "digest": "dc30583502e8935d0eb4b5dc3cd43fc6d37ae91c5a784a7fddaac1357bb65423",
+    "findings": []
+  },
+  "generated_at": "2026-08-05T16:47:42Z",
+  "note": "pass_digests_intentionally_independent; gate is per-pass ok + feature_proof"
+}

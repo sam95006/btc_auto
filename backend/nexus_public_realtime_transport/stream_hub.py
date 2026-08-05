@@ -7,8 +7,10 @@ import time
 from pathlib import Path
 from typing import Any, Generator, Iterator
 
+from backend.nexus_public_realtime_transport.backpressure import BackpressureFanout
 from backend.nexus_public_realtime_transport.constants import (
     ALLOWED_EVENT_KINDS,
+    BACKPRESSURE_HIGH_WATERMARK,
     BASE_COMMIT,
     BRANCH,
     HARD_BANS,
@@ -17,8 +19,10 @@ from backend.nexus_public_realtime_transport.constants import (
     LANE_NAME,
     PACKAGE,
     POLL_INTERVAL_SECONDS,
+    PROOF_FEATURES,
     SCHEMA_VERSION,
     SEQUENCE_BUFFER_CAPACITY,
+    SLOW_CLIENT_ISOLATE_AFTER_TICKS,
 )
 from backend.nexus_public_realtime_transport.event_model import (
     PublicStreamEvent,
@@ -29,6 +33,7 @@ from backend.nexus_public_realtime_transport.event_model import (
     parse_resume_token,
 )
 from backend.nexus_public_realtime_transport.hard_bans import refuse_private_topic
+from backend.nexus_public_realtime_transport.public_filter import filter_public_event
 from backend.nexus_public_realtime_transport.sanitize import assert_no_forbidden_keys
 from backend.nexus_public_realtime_transport.staleness import classify_staleness
 
@@ -39,6 +44,7 @@ class PublicStreamHub:
     """LOCAL/STAGING public-safe event hub.
 
     Publishes only allow-listed kinds/topics. Private Founder streams are refused.
+    Fan-out uses per-client backpressure windows so slow clients are isolated.
     """
 
     def __init__(
@@ -46,6 +52,8 @@ class PublicStreamHub:
         *,
         stream_id: str = "public.decision.feed",
         capacity: int = SEQUENCE_BUFFER_CAPACITY,
+        backpressure_depth: int = BACKPRESSURE_HIGH_WATERMARK,
+        isolate_after_ticks: int = SLOW_CLIENT_ISOLATE_AFTER_TICKS,
     ) -> None:
         refuse_private_topic(stream_id)
         self.stream_id = stream_id
@@ -54,6 +62,10 @@ class PublicStreamHub:
         self._seq = 0
         self._events: list[PublicStreamEvent] = []
         self._last_event_ts_ms: int | None = None
+        self.fanout = BackpressureFanout(
+            max_depth=backpressure_depth,
+            isolate_after_ticks=isolate_after_ticks,
+        )
 
     def meta(self) -> dict[str, Any]:
         return {
@@ -72,12 +84,22 @@ class PublicStreamHub:
             "transports": ["sse", "websocket", "polling"],
             "allowed_event_kinds": sorted(ALLOWED_EVENT_KINDS),
             "hard_bans": list(HARD_BANS),
+            "features": list(PROOF_FEATURES),
+            "backpressure": True,
+            "slow_client_isolation": True,
             "environment": "local_staging",
         }
 
+    def register_client(self, client_id: str) -> dict[str, Any]:
+        window = self.fanout.register(client_id)
+        return window.snapshot()
+
+    def unregister_client(self, client_id: str) -> None:
+        self.fanout.unregister(client_id)
+
     def publish(self, *, kind: str, topic: str | None = None, payload: dict[str, Any] | None = None) -> PublicStreamEvent:
         topic_n = topic or self.stream_id
-        refuse_private_topic(topic_n)
+        filter_public_event(kind=kind, topic=topic_n, payload=payload)
         with self._lock:
             self._seq += 1
             evt = build_event(seq=self._seq, kind=kind, topic=topic_n, payload=payload)
@@ -85,6 +107,7 @@ class PublicStreamHub:
             if len(self._events) > self.capacity:
                 self._events = self._events[-self.capacity :]
             self._last_event_ts_ms = evt.ts_ms
+            self.fanout.publish(evt)
             return evt
 
     def load_fixture_feed(self, path: Path | None = None) -> int:
@@ -281,3 +304,53 @@ class PublicStreamHub:
             event_id=f"end:{cursor}",
         )
         yield encode_ws_frame(end, resume_token=self.resume_token(cursor))
+
+    def drain_client(self, client_id: str, *, limit: int = 50) -> list[dict[str, Any]]:
+        rows = self.fanout.drain(client_id, limit=limit)
+        return [e.to_dict() for e in rows]
+
+    def prove_slow_client_isolation(
+        self,
+        *,
+        burst: int = 80,
+        slow_drain_every: int = 0,
+        fast_drain_every: int = 1,
+    ) -> dict[str, Any]:
+        """Publish a burst while draining a fast client and starving a slow one.
+
+        Slow client must isolate under backpressure; fast client keeps sequence continuity.
+        """
+        self.register_client("fast")
+        self.register_client("slow")
+        fast_seqs: list[int] = []
+        for i in range(int(burst)):
+            self.publish(
+                kind="decision_update",
+                payload={"i": i, "proof": "slow_client_isolation"},
+            )
+            if fast_drain_every and (i + 1) % fast_drain_every == 0:
+                for evt in self.fanout.drain("fast", limit=BACKPRESSURE_HIGH_WATERMARK):
+                    fast_seqs.append(evt.seq)
+            if slow_drain_every and (i + 1) % slow_drain_every == 0:
+                self.fanout.drain("slow", limit=1)
+
+        # Final drain of whatever remains for fast client
+        for evt in self.fanout.drain("fast", limit=BACKPRESSURE_HIGH_WATERMARK * 4):
+            fast_seqs.append(evt.seq)
+
+        snap = self.fanout.snapshot()
+        slow = snap["clients"]["slow"]
+        fast = snap["clients"]["fast"]
+        continuous = all(fast_seqs[i] + 1 == fast_seqs[i + 1] for i in range(len(fast_seqs) - 1)) if len(fast_seqs) > 1 else True
+        return {
+            "ok": bool(slow["isolated"] and fast["isolated"] is False and continuous and len(fast_seqs) > 0),
+            "slow_isolated": slow["isolated"],
+            "slow_isolation_reason": slow["isolation_reason"],
+            "slow_forced_polling": slow["forced_polling"],
+            "fast_isolated": fast["isolated"],
+            "fast_delivered": fast["delivered"],
+            "fast_seq_count": len(fast_seqs),
+            "fast_sequence_continuous": continuous,
+            "fanout": snap["stats"],
+            "backpressure_drops": snap["stats"]["offers_dropped"],
+        }
