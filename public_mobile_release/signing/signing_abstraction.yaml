@@ -1,0 +1,39 @@
+# Signing abstraction — secrets never enter git
+schema_version: "1.0"
+submission_authorized: false
+
+principle: "Secrets injected at CI from secret manager; never commit keystores or API keys."
+
+providers:
+  ios:
+    identity_source: "secrets://nexus-public/ios/distribution-cert"
+    profile_source: "secrets://nexus-public/ios/provisioning-profile"
+    team_id_env: "NEXUS_IOS_TEAM_ID"
+    keychain_temp: true
+    upload_api_key_env: "NEXUS_ASC_API_KEY_ID"  # must remain unused while upload_enabled=false
+  android:
+    keystore_source: "secrets://nexus-public/android/upload-keystore"
+    keystore_password_env: "NEXUS_ANDROID_KEYSTORE_PASSWORD"
+    key_alias_env: "NEXUS_ANDROID_KEY_ALIAS"
+    key_password_env: "NEXUS_ANDROID_KEY_PASSWORD"
+    play_json_source: "secrets://nexus-public/android/play-service-account"  # unused until authorized
+
+local_dev:
+  ios: "automatic signing with personal team — debug only"
+  android: "debug.keystore — debug only"
+  forbid_commit_patterns:
+    - "*.p12"
+    - "*.mobileprovision"
+    - "*.jks"
+    - "*.keystore"
+    - "play-service-account*.json"
+    - "AuthKey_*.p8"
+
+ci_policy:
+  signed_artifacts_retention_days: 14
+  publish_to_stores: false
+  require_manual_founder_ack_for_upload: true
+
+invariants:
+  secrets_in_repo_count: 0
+  store_upload_from_ci_count: 0

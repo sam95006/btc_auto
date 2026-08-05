@@ -1,0 +1,43 @@
+# CI pipeline spec — public mobile release readiness
+schema_version: "1.0"
+workflow: public_v1_mobile_release_readiness.yml
+submission_authorized: false
+publish_to_stores: false
+
+jobs:
+  - id: package_gate
+    runs: "python tools/public_mobile_release/verify_store_readiness_package.py"
+    must_pass: true
+  - id: unit_tests
+    runs: "pytest tests/public_mobile_release -q"
+    must_pass: true
+  - id: hard_ban_scan
+    runs: "python -m backend.public_mobile_release.hard_bans"
+    must_pass: true
+  - id: ios_config_validation
+    runs: "python -m backend.public_mobile_release.ios_config_gate"
+    result_on_windows: "IOS_PROJECT_CONFIG_PASS"
+    signed_build: "IOS_SIGNED_BUILD_PLATFORM_BLOCKED"
+  - id: android_config_validation
+    runs: "python -m backend.public_mobile_release.android_config_gate"
+    assemble_release: false  # no Play upload; config validation only unless Flutter host present
+  - id: secret_scan
+    patterns_forbid:
+      - "BEGIN PRIVATE KEY"
+      - "-----BEGIN RSA"
+      - "AIza"
+      - "sk_live_"
+    must_find_count: 0
+
+forbidden_ci_steps:
+  - upload_to_app_store
+  - upload_to_play_store
+  - fastlane_deliver
+  - create_production_customer_db
+  - enable_live_billing
+
+artifacts:
+  allow:
+    - "verification reports under stdout"
+  deny:
+    - "*_status.json"

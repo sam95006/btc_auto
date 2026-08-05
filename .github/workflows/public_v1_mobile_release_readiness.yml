@@ -1,0 +1,67 @@
+name: Public V1 Mobile Release Readiness (PUB-L)
+
+on:
+  push:
+    branches:
+      - feature/public-v1-mobile-release-readiness
+    paths:
+      - "public_mobile_release/**"
+      - "backend/public_mobile_release/**"
+      - "tools/public_mobile_release/**"
+      - "tests/public_mobile_release/**"
+      - ".github/workflows/public_v1_mobile_release_readiness.yml"
+  pull_request:
+    paths:
+      - "public_mobile_release/**"
+      - "backend/public_mobile_release/**"
+      - "tools/public_mobile_release/**"
+      - "tests/public_mobile_release/**"
+      - ".github/workflows/public_v1_mobile_release_readiness.yml"
+  workflow_dispatch:
+
+jobs:
+  store-readiness-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Package two-pass verify
+        run: python tools/public_mobile_release/verify_store_readiness_package.py
+
+      - name: Hard ban scan
+        run: python -m backend.public_mobile_release.hard_bans
+
+      - name: iOS config validation
+        run: python -m backend.public_mobile_release.ios_config_gate
+
+      - name: Android config validation
+        run: python -m backend.public_mobile_release.android_config_gate
+
+      - name: Unit tests
+        run: pytest tests/public_mobile_release -q
+
+      - name: Forbid status json artifacts
+        run: |
+          if find public_mobile_release -name '*_status.json' | grep -q .; then
+            echo "STATUS_JSON_BANNED"
+            exit 1
+          fi
+          echo "STATUS_JSON_ABSENT_PASS"
+
+      - name: Forbid store upload tooling in workflow itself
+        run: |
+          if grep -E 'upload_to_app_store|upload_to_play_store|fastlane deliver' .github/workflows/public_v1_mobile_release_readiness.yml; then
+            echo "STORE_UPLOAD_STEP_BANNED"
+            exit 1
+          fi
+          echo "STORE_UPLOAD_ABSENT_PASS"
+
+      # HARD BAN: no App Store / Play upload steps in this workflow.

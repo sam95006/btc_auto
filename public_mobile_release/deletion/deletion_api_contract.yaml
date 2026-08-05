@@ -1,0 +1,49 @@
+# Account deletion API contract — public gateway only
+schema_version: "1.0"
+submission_authorized: false
+production_customer_db_enabled: false
+base_path: "/v1/account"
+
+endpoints:
+  - method: POST
+    path: "/deletion-requests"
+    auth: bearer_member
+    body:
+      confirmation_phrase: "DELETE"
+      reason_code: optional_string
+    responses:
+      202:
+        request_id: uuid
+        status: PENDING
+      401: unauthorized
+      409: deletion_already_in_progress
+  - method: GET
+    path: "/deletion-requests/{request_id}"
+    auth: bearer_member_or_signed_web_token
+    responses:
+      200:
+        request_id: uuid
+        status: [PENDING, VERIFYING, PURGING, COMPLETED, FAILED]
+        updated_at: iso8601
+  - method: POST
+    path: "/web-deletion-otp"
+    auth: none
+    body:
+      email: string
+    responses:
+      202:
+        otp_challenge_id: uuid
+        message: "If an account exists, a code was sent."
+
+states:
+  - PENDING
+  - VERIFYING
+  - PURGING
+  - COMPLETED
+  - FAILED
+
+forbidden:
+  - path_prefix: "/private/"
+  - path_prefix: "/execution/"
+  - path_prefix: "/lesson-memory/"
+  - exchange_write: true

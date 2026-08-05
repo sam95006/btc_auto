@@ -1,0 +1,74 @@
+# Data inventory — DRAFT for privacy nutrition / Data Safety forms
+# NOT legal advice. NOT legal approval.
+schema_version: "1.0"
+legal_approval_claimed: false
+submission_authorized: false
+product: "NEXUS Decision (public mobile)"
+last_reviewed: "2026-08-05"
+reviewer: "engineering_draft_only"
+
+categories:
+  - id: account
+    data_types:
+      - email
+      - user_id
+      - auth_tokens_device_bound
+    collected: true
+    shared_with_third_parties: false
+    purpose: ["app_functionality", "account_management"]
+    required_for_app: true
+    retention: "until_account_deletion_plus_legal_hold_window"
+  - id: decision_intelligence
+    data_types:
+      - decision_objects_user_authored
+      - thesis_notes
+      - outcome_reviews
+    collected: true
+    shared_with_third_parties: false
+    purpose: ["app_functionality"]
+    required_for_app: true
+    retention: "until_account_deletion_plus_replay_policy"
+  - id: diagnostics
+    data_types:
+      - crash_logs
+      - performance_metrics
+    collected: true
+    shared_with_third_parties: "optional_vendor_TBD"
+    purpose: ["app_functionality", "analytics"]
+    required_for_app: false
+    retention: "90_days_rolling"
+  - id: notifications
+    data_types:
+      - push_token
+      - alert_preferences
+    collected: true
+    shared_with_third_parties: "push_vendor_TBD"
+    purpose: ["app_functionality"]
+    required_for_app: false
+    retention: "until_token_invalid_or_account_deletion"
+  - id: payments_subscription
+    data_types:
+      - store_original_transaction_id
+      - entitlement_state
+    collected: false  # architecture ready; live billing banned
+    shared_with_third_parties: false
+    purpose: ["app_functionality"]
+    required_for_app: false
+    retention: "n/a_until_billing_enabled"
+    note: "real_iap_products_enabled=false"
+
+explicitly_not_collected:
+  - government_id
+  - precise_location
+  - contacts
+  - sms
+  - photos
+  - health
+  - financial_account_numbers
+  - exchange_api_keys
+  - private_core_lesson_memory
+  - wallet_seed_phrases
+
+ephemeral_on_device:
+  - last_synced_decision_cache
+  - review_demo_fixtures

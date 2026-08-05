@@ -1,0 +1,50 @@
+# iOS build configuration — NON_SUBMISSION
+schema_version: "1.0"
+platform: ios
+submission_authorized: false
+
+flavors:
+  - name: dev
+    bundle_id_key: bundle_id_dev
+    configuration: Debug
+    api_base_env: NEXUS_PUBLIC_API_BASE_DEV
+    review_demo_mode_allowed: true
+  - name: staging
+    bundle_id_key: bundle_id_staging
+    configuration: Release
+    api_base_env: NEXUS_PUBLIC_API_BASE_STAGING
+    review_demo_mode_allowed: true
+  - name: prod
+    bundle_id_key: bundle_id
+    configuration: Release
+    api_base_env: NEXUS_PUBLIC_API_BASE_PROD
+    review_demo_mode_allowed: false  # prod binary must not ship review-demo unless explicitly gated
+
+xcode:
+  project_name: NexusPublicDecision
+  scheme: NexusPublicDecision
+  deployment_target: "16.0"
+  swift_version: "5.9"
+  bitcode: false
+  app_store_connect_upload: false  # HARD BAN
+
+capabilities_declared:
+  - push_notifications  # architecture only; no production credentials
+  - associated_domains
+  - app_groups
+
+forbidden_capabilities:
+  - in_app_purchase_live_products  # until legal + product gate
+  - background_fetch_private_core
+  - keychain_sharing_with_private_operator
+
+build_outputs:
+  archive: false_by_default
+  ipa: false_by_default
+  signed_release: "IOS_SIGNED_BUILD_REQUIRES_MACOS_AND_CERTS"
+
+validation:
+  privacy_manifest_required: true
+  privacy_manifest_path: build/ios/PrivacyInfo.xcprivacy
+  info_plist_fragment: build/ios/Info.plist.fragment
+  export_options_template: build/ios/ExportOptions.plist.template

@@ -1,0 +1,57 @@
+# Regional feature flags — public mobile
+schema_version: "1.0"
+submission_authorized: false
+legal_approval_claimed: false
+default_region: "ZZ"  # unknown / unspecified
+
+# Region codes are ISO-like placeholders. Enabling a region for launch
+# requires separate legal review — this file does not authorize launch.
+
+regions:
+  ZZ:
+    membership_signup: true
+    live_market_read: true
+    subscription_purchase_ui: false
+    review_demo: true
+    age_minimum: 18
+    financial_disclaimer_variant: "generic_research"
+  US:
+    membership_signup: false  # blocked until counsel
+    live_market_read: true
+    subscription_purchase_ui: false
+    review_demo: true
+    age_minimum: 18
+    financial_disclaimer_variant: "us_research_only"
+  EU:
+    membership_signup: false
+    live_market_read: true
+    subscription_purchase_ui: false
+    review_demo: true
+    age_minimum: 18
+    financial_disclaimer_variant: "eu_research_gdpr"
+  TW:
+    membership_signup: false
+    live_market_read: true
+    subscription_purchase_ui: false
+    review_demo: true
+    age_minimum: 18
+    financial_disclaimer_variant: "tw_research_only"
+  CN:
+    membership_signup: false
+    live_market_read: false
+    subscription_purchase_ui: false
+    review_demo: false
+    age_minimum: 18
+    financial_disclaimer_variant: "blocked"
+
+global_overrides:
+  live_billing_enabled: false
+  real_iap_products_enabled: false
+  automated_customer_trading: false
+  copy_trading: false
+  custodial_wallet: false
+
+evaluation_order:
+  - global_overrides  # always win when false bans
+  - region
+  - env_flavor

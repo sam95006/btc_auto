@@ -54,3 +54,13 @@ apps/nexus_public_mobile/**/Generated.xcconfig
 apps/nexus_public_mobile/**/flutter_export_environment.sh
 *.iml
 .idea/
+
+# Store signing / secrets / human status (PUB-L)
+*.p12
+*.mobileprovision
+*.jks
+*.keystore
+play-service-account*.json
+AuthKey_*.p8
+public_mobile_release/**/*_status.json
+artifacts/**/pub_l*_status.json

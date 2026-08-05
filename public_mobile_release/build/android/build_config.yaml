@@ -1,0 +1,50 @@
+# Android build configuration — NON_SUBMISSION
+schema_version: "1.0"
+platform: android
+submission_authorized: false
+
+flavors:
+  - name: dev
+    application_id_suffix: ".dev"
+    build_type: debug
+    api_base_env: NEXUS_PUBLIC_API_BASE_DEV
+    review_demo_mode_allowed: true
+  - name: staging
+    application_id_suffix: ".staging"
+    build_type: release
+    api_base_env: NEXUS_PUBLIC_API_BASE_STAGING
+    review_demo_mode_allowed: true
+  - name: prod
+    application_id_suffix: ""
+    build_type: release
+    api_base_env: NEXUS_PUBLIC_API_BASE_PROD
+    review_demo_mode_allowed: false
+
+gradle:
+  min_sdk: 26
+  target_sdk: 35
+  compile_sdk: 35
+  ndk_abi_filters: ["armeabi-v7a", "arm64-v8a", "x86_64"]
+  minify_release: true
+  shrink_resources_release: true
+
+play_console:
+  upload_enabled: false  # HARD BAN
+  internal_testing_track_upload: false
+  production_track_upload: false
+
+permissions_declared:
+  - android.permission.INTERNET
+  - android.permission.POST_NOTIFICATIONS  # runtime; architecture only
+
+permissions_forbidden:
+  - android.permission.REQUEST_INSTALL_PACKAGES
+  - android.permission.QUERY_ALL_PACKAGES
+  - android.permission.READ_SMS
+  - android.permission.ACCESS_BACKGROUND_LOCATION
+
+validation:
+  manifest_fragment: build/android/AndroidManifest.xml.fragment
+  gradle_fragment: build/android/build.gradle.kts.fragment
+  proguard: build/android/proguard-rules.pro
+  data_safety_draft: privacy/data_safety_draft.md

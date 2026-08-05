@@ -1,0 +1,48 @@
+# Environment separation for public mobile clients
+schema_version: "1.0"
+submission_authorized: false
+live_billing_enabled: false
+real_iap_products_enabled: false
+production_customer_db_enabled: false
+
+environments:
+  - id: dev
+    api_base_env: NEXUS_PUBLIC_API_BASE_DEV
+    auth_issuer_env: NEXUS_PUBLIC_AUTH_ISSUER_DEV
+    allow_review_demo: true
+    allow_private_core_routes: false
+    allow_exchange_write: false
+  - id: staging
+    api_base_env: NEXUS_PUBLIC_API_BASE_STAGING
+    auth_issuer_env: NEXUS_PUBLIC_AUTH_ISSUER_STAGING
+    allow_review_demo: true
+    allow_private_core_routes: false
+    allow_exchange_write: false
+  - id: prod
+    api_base_env: NEXUS_PUBLIC_API_BASE_PROD
+    auth_issuer_env: NEXUS_PUBLIC_AUTH_ISSUER_PROD
+    allow_review_demo: false
+    allow_private_core_routes: false
+    allow_exchange_write: false
+
+separation_rules:
+  - distinct_api_hosts_per_env: true
+  - distinct_auth_issuers_per_env: true
+  - no_shared_jwt_issuer_with_private_core: true
+  - no_embedded_exchange_api_keys: true
+  - no_embedded_wallet_secrets: true
+  - client_may_only_call_public_gateway: true
+
+forbidden_env_names:
+  - BYBIT_API_KEY
+  - BYBIT_API_SECRET
+  - BINANCE_API_KEY
+  - NEXUS_PRIVATE_CONTROL_PLANE_URL
+  - NEXUS_LESSON_MEMORY_URL
+  - NEXUS_EXECUTION_ENGINE_URL
+
+required_client_build_flags:
+  SUBMISSION_AUTHORIZED: false
+  LIVE_BILLING_ENABLED: false
+  REAL_IAP_PRODUCTS_ENABLED: false
+  PRIVATE_CORE_ROUTE_EMBEDDED: false

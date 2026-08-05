@@ -1,0 +1,67 @@
+# Entitlement / restore / cancel / refund state machine
+schema_version: "1.0"
+live_billing_enabled: false
+real_iap_products_enabled: false
+submission_authorized: false
+
+states:
+  - NONE
+  - PENDING_VERIFY
+  - ACTIVE
+  - IN_GRACE
+  - ON_HOLD
+  - CANCELED_ACTIVE_UNTIL_EXPIRY
+  - EXPIRED
+  - REFUNDED
+  - REVOKED
+  - RESTORE_CONFLICT
+
+transitions:
+  - from: NONE
+    to: PENDING_VERIFY
+    on: purchase_started_or_restore
+  - from: PENDING_VERIFY
+    to: ACTIVE
+    on: verify_success
+  - from: PENDING_VERIFY
+    to: NONE
+    on: verify_failed
+  - from: ACTIVE
+    to: IN_GRACE
+    on: billing_retry
+  - from: ACTIVE
+    to: ON_HOLD
+    on: account_hold
+  - from: ACTIVE
+    to: CANCELED_ACTIVE_UNTIL_EXPIRY
+    on: user_canceled_auto_renew
+  - from: CANCELED_ACTIVE_UNTIL_EXPIRY
+    to: EXPIRED
+    on: period_end
+  - from: ACTIVE
+    to: REFUNDED
+    on: store_refund
+  - from: ACTIVE
+    to: REVOKED
+    on: store_revoke
+  - from: EXPIRED
+    to: PENDING_VERIFY
+    on: repurchase_or_restore
+  - from: RESTORE_CONFLICT
+    to: ACTIVE
+    on: manual_resolution
+
+feature_gates:
+  FREE_PREVIEW:
+    requires: NONE  # always available
+  FOUNDING_INVESTOR:
+    requires: ACTIVE  # hypothetical; not live
+
+server_notifications:
+  apple: "App Store Server Notifications V2 consumer — stub until billing enabled"
+  google: "Real-time developer notifications consumer — stub until billing enabled"
+
+invariants:
+  - billing_disabled_rejects_verify: true
+  - empty_product_allowlist_while_banned: true
+  - no_private_core_entitlement_source: true

@@ -1,0 +1,47 @@
+# NEXUS Public Mobile — Application Identifiers (NON-SUBMISSION)
+
+# These identifiers are reserved for future public builds.
+# They MUST NOT be submitted to stores from this package.
+
+schema_version: "1.0"
+submission_authorized: false
+legal_approval_claimed: false
+
+product:
+  display_name: "NEXUS Decision"
+  short_name: "NEXUS"
+  publisher_label: "NEXUS Public (placeholder)"
+
+ios:
+  bundle_id: "com.nexus.public.decision"
+  bundle_id_dev: "com.nexus.public.decision.dev"
+  bundle_id_staging: "com.nexus.public.decision.staging"
+  app_group: "group.com.nexus.public.decision"
+  team_id_placeholder: "TEAMID_PLACEHOLDER"
+  url_schemes:
+    - "nexusdecision"
+  associated_domains:
+    - "applinks:app.nexus.example"
+  minimum_os: "16.0"
+  uses_non_exempt_encryption_declared: false  # draft; counsel must confirm before submission
+
+android:
+  application_id: "com.nexus.public.decision"
+  application_id_dev: "com.nexus.public.decision.dev"
+  application_id_staging: "com.nexus.public.decision.staging"
+  namespace: "com.nexus.public.decision"
+  min_sdk: 26
+  target_sdk: 35
+  compile_sdk: 35
+  deep_link_hosts:
+    - "app.nexus.example"
+
+store_listings:
+  apple_sku_placeholder: "nexus.public.decision.ios"
+  google_package_name: "com.nexus.public.decision"
+  note: "SKU placeholders only — real_iap_products_enabled must remain false"
+
+invariants:
+  distinct_dev_staging_prod_ids: true
+  no_private_core_bundle_id: true
+  no_operator_ui_bundle_id: true

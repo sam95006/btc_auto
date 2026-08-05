@@ -1,0 +1,53 @@
+// Gradle Kotlin DSL fragment for public mobile flavors — NON_SUBMISSION
+// Merge into Flutter/Android host; do not enable Play upload from CI.
+
+android {
+    namespace = "com.nexus.public.decision"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "com.nexus.public.decision"
+        minSdk = 26
+        targetSdk = 35
+        versionCode = 1
+        versionName = "0.1.0-nonsubmission"
+        buildConfigField("boolean", "SUBMISSION_AUTHORIZED", "false")
+        buildConfigField("boolean", "LIVE_BILLING_ENABLED", "false")
+        buildConfigField("boolean", "REAL_IAP_PRODUCTS_ENABLED", "false")
+    }
+
+    flavorDimensions += "environment"
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+            buildConfigField("String", "API_BASE_ENV", "\"NEXUS_PUBLIC_API_BASE_DEV\"")
+            buildConfigField("boolean", "REVIEW_DEMO_ALLOWED", "true")
+        }
+        create("staging") {
+            dimension = "environment"
+            applicationIdSuffix = ".staging"
+            buildConfigField("String", "API_BASE_ENV", "\"NEXUS_PUBLIC_API_BASE_STAGING\"")
+            buildConfigField("boolean", "REVIEW_DEMO_ALLOWED", "true")
+        }
+        create("prod") {
+            dimension = "environment"
+            buildConfigField("String", "API_BASE_ENV", "\"NEXUS_PUBLIC_API_BASE_PROD\"")
+            buildConfigField("boolean", "REVIEW_DEMO_ALLOWED", "false")
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            // Signing config injected via CI secrets abstraction — never commit keystores.
+        }
+    }
+}
+
+// HARD BAN: no play publisher plugin upload tasks in this lane.
