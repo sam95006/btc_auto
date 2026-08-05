@@ -73,16 +73,41 @@ class MobileNotificationFoundation:
         alert: PublicAlert,
         device: DeviceRegistration,
         update_widgets: bool = True,
+        now_utc=None,
     ) -> NotificationDispatchResult:
+        # Refuse private / unknown deep links before any delivery attempt.
+        self.router.parse(alert.deep_link)
+
         prefs = self.preferences.get_or_default(member_id)
-        if not prefs.allows(kind=alert.kind, priority=alert.priority):
+        if not prefs.allows(kind=alert.kind, priority=alert.priority, now_utc=now_utc):
+            reason = "preference_suppressed"
+            channel = prefs.channels.get(alert.kind)
+            priority_ok = False
+            if channel and channel.enabled and prefs.push_enabled:
+                order = ["LOW", "NORMAL", "HIGH", "CRITICAL"]
+                priority_ok = order.index(alert.priority) >= order.index(channel.min_priority)
+            if priority_ok:
+                from backend.nexus_public_mobile_notify.preferences.store import in_quiet_hours
+
+                if alert.priority != "CRITICAL" and in_quiet_hours(
+                    start_utc=prefs.quiet_hours_start_utc,
+                    end_utc=prefs.quiet_hours_end_utc,
+                    now_utc=now_utc,
+                ):
+                    reason = "quiet_hours_suppressed"
             return NotificationDispatchResult(
                 alert=alert,
                 delivery=None,
-                skipped_reason="preference_suppressed",
+                skipped_reason=reason,
                 widget_hint=None,
             )
         delivery = self.push.send(alert=alert, device=device)
+        # Prototype deliveries must never look like production acknowledgements.
+        if delivery.status not in {"STUB_ACCEPTED", "MOCK_DELIVERED", "FILE_SINK_WRITTEN"}:
+            raise RuntimeError(f"unexpected push delivery status: {delivery.status}")
+        if delivery.provider_mode not in {"STUB", "MOCK_IN_MEMORY", "LOCAL_FILE_SINK"}:
+            raise RuntimeError(f"unexpected push provider mode: {delivery.provider_mode}")
+
         widget_hint = None
         if update_widgets and alert.decision_id:
             widget_hint = self._widget_hint(alert=alert, prefs=prefs, platform=device.platform)

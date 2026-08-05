@@ -4,10 +4,37 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 from typing import Any
 
 from backend.nexus_public_mobile_notify.constants import ALERT_KINDS, ALERT_PRIORITIES
 from backend.nexus_public_mobile_notify.hard_bans import assert_no_private_fields
+
+
+def _parse_hhmm(value: str) -> int:
+    hour, minute = value.split(":")
+    return int(hour) * 60 + int(minute)
+
+
+def in_quiet_hours(
+    *,
+    start_utc: str | None,
+    end_utc: str | None,
+    now_utc: datetime | None = None,
+) -> bool:
+    """Return True when now falls inside configured quiet hours (UTC, HH:MM)."""
+    if not start_utc or not end_utc:
+        return False
+    now = now_utc or datetime.now(timezone.utc)
+    minutes = now.hour * 60 + now.minute
+    start = _parse_hhmm(start_utc)
+    end = _parse_hhmm(end_utc)
+    if start == end:
+        return False
+    if start < end:
+        return start <= minutes < end
+    # Wraps midnight (e.g. 22:00 -> 07:00).
+    return minutes >= start or minutes < end
 
 
 @dataclass
@@ -49,7 +76,14 @@ class NotificationPreferences:
         assert_no_private_fields(d)
         return d
 
-    def allows(self, *, kind: str, priority: str) -> bool:
+    def allows(
+        self,
+        *,
+        kind: str,
+        priority: str,
+        now_utc: datetime | None = None,
+        bypass_quiet_hours: bool = False,
+    ) -> bool:
         if not self.push_enabled:
             return False
         if kind not in self.channels:
@@ -58,7 +92,20 @@ class NotificationPreferences:
         if not channel.enabled:
             return False
         order = ["LOW", "NORMAL", "HIGH", "CRITICAL"]
-        return order.index(priority) >= order.index(channel.min_priority)
+        if order.index(priority) < order.index(channel.min_priority):
+            return False
+        # CRITICAL may pierce quiet hours; all other priorities respect them.
+        if (
+            not bypass_quiet_hours
+            and priority != "CRITICAL"
+            and in_quiet_hours(
+                start_utc=self.quiet_hours_start_utc,
+                end_utc=self.quiet_hours_end_utc,
+                now_utc=now_utc,
+            )
+        ):
+            return False
+        return True
 
 
 class InMemoryPreferenceStore:

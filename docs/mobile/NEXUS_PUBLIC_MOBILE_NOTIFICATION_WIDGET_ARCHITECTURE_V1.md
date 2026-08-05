@@ -98,3 +98,11 @@ Private founder / execution / wallet / checkpoint routes are hard-banned.
 ```bash
 python -m pytest tests/public_mobile_notify -q
 ```
+
+## Pass-2 hardening
+
+- Deep links validated on every `dispatch` (private routes hard-banned)
+- Quiet hours enforced (CRITICAL may pierce)
+- Delivery statuses limited to STUB / MOCK / FILE_SINK acknowledgements
+- Machine-verifiable security invariants (`collect_security_invariants`)
+- No lane `*_status.json`; no production credential markers in owned paths
