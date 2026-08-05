@@ -141,8 +141,17 @@ def write_immutable_artifacts(
         ):
             raise RuntimeError(f"STATUS_JSON_ARTIFACT_BANNED:{paths[name].name}")
 
+    # Pass-2 hardening: do not persist full per-scenario dumps (fixture bulk ≠ edge).
+    report_for_disk = dict(report)
+    slim_full_candidates = []
+    for c in report.get("candidates") or []:
+        cc = dict(c)
+        cc.pop("scenario_evaluations", None)
+        slim_full_candidates.append(cc)
+    report_for_disk["candidates"] = slim_full_candidates
+    report_for_disk["scenario_evaluations_omitted"] = True
     paths["campaign_report"].write_text(
-        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        json.dumps(report_for_disk, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     paths["adversarial_review"].write_text(
         json.dumps(adversarial, indent=2, sort_keys=True) + "\n", encoding="utf-8"

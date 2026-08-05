@@ -8,6 +8,7 @@ from backend.nexus_risk_capacity.ai_gate import apply_ai_suggestion
 from backend.nexus_risk_capacity.constants import (
     ALLOWED_LABELS,
     ARTIFACT_DIRNAME,
+    BANNED_CLAIM_FRAGMENTS,
     CANONICAL_COST_AUTHORITY,
     HARD_BANS,
     REQUIRED_COST_COMPONENTS,
@@ -276,6 +277,55 @@ def run_adversarial_review(report: dict[str, Any] | None = None) -> dict[str, An
             severity="CRITICAL",
             status="PASS" if no_status else "REMAINING",
             detail=f"status_json_files={[p.name for p in status_json_files]}",
+        )
+    )
+
+    # False-PASS: banned claim fragments must never appear in labels/status.
+    claim_hits: list[str] = []
+    for c in report.get("candidates") or []:
+        blob = f"{c.get('label')}|{c.get('status')}"
+        upper = blob.upper()
+        for frag in BANNED_CLAIM_FRAGMENTS:
+            if frag in upper:
+                claim_hits.append(f"{c.get('candidate_id')}:{frag}")
+    findings.append(
+        _finding(
+            "ADV_NO_BANNED_CLAIM_FRAGMENTS",
+            severity="CRITICAL",
+            status="PASS" if not claim_hits else "REMAINING",
+            detail="none" if not claim_hits else ",".join(claim_hits),
+        )
+    )
+
+    # False-PASS: structural data-quality fixtures must not be concealed as observed.
+    dq_labels = {
+        c["candidate_id"]: c["label"]
+        for c in report.get("candidates") or []
+        if c.get("missing_data") or c.get("stale_data")
+    }
+    dq_ok = all(lbl == "DATA_QUALITY_BLOCKED" for lbl in dq_labels.values()) and len(dq_labels) >= 1
+    findings.append(
+        _finding(
+            "ADV_NO_STALE_DATA_CONCEALMENT",
+            severity="CRITICAL",
+            status="PASS" if dq_ok else "REMAINING",
+            detail=f"data_quality_candidates={dq_labels}",
+        )
+    )
+
+    # Schema drift: every required review dimension must appear in dimension_summaries.
+    schema_ok = True
+    for c in report.get("candidates") or []:
+        summaries = set((c.get("dimension_summaries") or {}).keys())
+        if summaries != set(REVIEW_DIMENSIONS):
+            schema_ok = False
+            break
+    findings.append(
+        _finding(
+            "ADV_NO_SCHEMA_DRIFT",
+            severity="CRITICAL",
+            status="PASS" if schema_ok else "REMAINING",
+            detail="every candidate dimension_summaries covers REVIEW_DIMENSIONS",
         )
     )
 

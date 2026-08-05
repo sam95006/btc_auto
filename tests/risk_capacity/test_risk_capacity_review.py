@@ -228,3 +228,31 @@ def test_negative_path_labels_present() -> None:
     assert hist["CONCENTRATION_BLOCKED"] >= 1
     assert hist["DRAWDOWN_ASSUMPTION_UNSAFE"] >= 1
     assert hist["LIQUIDATION_DISTANCE_UNSAFE"] >= 1
+
+
+def test_pass2_no_stale_concealment_or_banned_claims() -> None:
+    report = run_risk_capacity_review(pass_id=2)
+    for c in report["candidates"]:
+        if c.get("missing_data") or c.get("stale_data"):
+            assert c["label"] == "DATA_QUALITY_BLOCKED"
+        for frag in ("QUALIFIED", "PROMOTED", "DEMO_READY", "PROFITABLE"):
+            assert frag not in str(c.get("label", "")).upper()
+            assert frag not in str(c.get("status", "")).upper()
+    adv = run_adversarial_review(report)
+    ids = {f["finding_id"]: f["status"] for f in adv["findings"]}
+    assert ids["ADV_NO_STALE_DATA_CONCEALMENT"] == "PASS"
+    assert ids["ADV_NO_BANNED_CLAIM_FRAGMENTS"] == "PASS"
+    assert ids["ADV_NO_SCHEMA_DRIFT"] == "PASS"
+    assert adv["pass_ok"] is True
+
+
+def test_campaign_report_omits_scenario_dumps(tmp_path: Path) -> None:
+    import json
+
+    report = run_risk_capacity_review(pass_id=2)
+    adv = run_adversarial_review(report)
+    paths = write_immutable_artifacts(report, adv, root=tmp_path)
+    disk = json.loads(paths["campaign_report"].read_text(encoding="utf-8"))
+    assert disk.get("scenario_evaluations_omitted") is True
+    for c in disk["candidates"]:
+        assert "scenario_evaluations" not in c

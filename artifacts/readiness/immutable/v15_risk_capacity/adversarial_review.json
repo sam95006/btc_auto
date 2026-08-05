@@ -86,6 +86,24 @@
       "finding_id": "ADV_NO_STATUS_JSON",
       "severity": "CRITICAL",
       "status": "PASS"
+    },
+    {
+      "detail": "none",
+      "finding_id": "ADV_NO_BANNED_CLAIM_FRAGMENTS",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "data_quality_candidates={'RC09': 'DATA_QUALITY_BLOCKED', 'RC10': 'DATA_QUALITY_BLOCKED'}",
+      "finding_id": "ADV_NO_STALE_DATA_CONCEALMENT",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "every candidate dimension_summaries covers REVIEW_DIMENSIONS",
+      "finding_id": "ADV_NO_SCHEMA_DRIFT",
+      "severity": "CRITICAL",
+      "status": "PASS"
     }
   ],
   "hard_ban_count": 17,
