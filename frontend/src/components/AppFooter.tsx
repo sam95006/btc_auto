@@ -1,24 +1,17 @@
 import { NEXUS_UI_BUILD_INFO } from "../demo/buildInfo";
 
-/** Phase 4 product footer — engineering strings only in System Status / sr-only. */
+/** Member Platform product footer. */
 export function AppFooter() {
   const b = NEXUS_UI_BUILD_INFO;
   return (
-    <footer className="app-footer nx-footer-p4" aria-label="Product footer">
-      <span>NEXUS Market Intelligence · Live public market data for research use</span>
+    <footer className="app-footer nx-footer-member" aria-label="Product footer">
+      <span>
+        NEXUS Member Platform · Decision Integrity · NOT INVESTMENT ADVICE · NO LIVE TRADING ·
+        LOCAL/STAGING
+      </span>
       <span className="sr-only">{b.buildMarker}</span>
-      <span className="sr-only">{b.localTrackNote}</span>
-      <span className="sr-only">{b.phase4LegacyMarker}</span>
-      <span className="sr-only">{b.phase3LegacyMarker}</span>
-      <span className="sr-only">{b.phase2LegacyMarker}</span>
-      <span className="sr-only">{b.phase1LegacyMarker}</span>
-      <span className="sr-only">{b.mvp22dLegacyMarker}</span>
-      <span className="sr-only">{b.mvp22cLegacyMarker}</span>
-      <span className="sr-only">{b.mvp22bLegacyMarker}</span>
-      <span className="sr-only">{b.mvp22aLegacyMarker}</span>
-      <span className="sr-only">{b.syncCompatibilityMarker}</span>
       <span className="sr-only">
-        {b.uiVersion} · {b.backendState} · {b.stage419}
+        {b.uiVersion} · {b.backendState} · member-platform
       </span>
     </footer>
   );

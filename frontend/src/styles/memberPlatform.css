@@ -1,0 +1,327 @@
+/**
+ * Member Platform layout tokens — reuses fintech design tokens.
+ * Visual hierarchy: sidebar nav · page header · panels · chips.
+ * Reference URL is visual SoT only; never loaded at runtime.
+ */
+
+.member-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(59, 130, 196, 0.08), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, rgba(212, 160, 23, 0.06), transparent 50%),
+    var(--bg-deep);
+}
+
+.member-page-header .member-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.member-demo-banner {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: var(--fs-sm);
+}
+
+.member-hero-card,
+.member-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--card-pad);
+}
+
+.member-hero-card {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.member-kicker {
+  margin: 0;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.member-hero-title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 600;
+}
+
+.member-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.member-btn {
+  appearance: none;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--text);
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-input);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.member-btn.primary {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.member-btn.warn {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.member-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+a.member-btn {
+  color: inherit;
+}
+
+.member-stat-grid,
+.member-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--dash-gap);
+}
+
+.member-stat {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-1);
+}
+
+.member-stat strong {
+  font-size: var(--fs-xl);
+  font-family: var(--mono);
+}
+
+.member-stat span,
+.member-chip {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.member-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-badge);
+  background: var(--bg-inset);
+  white-space: nowrap;
+}
+
+.member-chip.warn {
+  border-color: rgba(245, 158, 11, 0.5);
+  color: var(--warning);
+}
+
+.member-card-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: flex-start;
+  margin-bottom: var(--space-2);
+}
+
+.member-card-meta h2 {
+  margin: 0;
+  font-size: var(--fs-md);
+}
+
+.member-metric-value {
+  margin: 0 0 var(--space-2);
+  font-family: var(--mono);
+  font-size: var(--fs-md);
+}
+
+.member-link-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-2);
+}
+
+.member-link-grid a,
+.member-inline-link,
+.member-feed-actions a {
+  color: var(--accent-blue);
+}
+
+.member-feed,
+.member-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--dash-gap);
+}
+
+.member-feed-item {
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  border-radius: var(--radius-card);
+  padding: var(--card-pad);
+}
+
+.member-feed-top {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.member-feed-title {
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.member-thesis-snip {
+  margin: var(--space-2) 0;
+  color: var(--text-muted);
+}
+
+.member-feed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  font-size: var(--fs-sm);
+}
+
+.member-empty {
+  border: 1px dashed var(--border-strong);
+  padding: var(--space-6);
+  text-align: center;
+  background: var(--bg-inset);
+}
+
+.member-dl {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.member-dl div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.member-dl dt {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.member-dl dd {
+  margin: 0;
+  font-family: var(--mono);
+}
+
+.member-check {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  margin: var(--space-4) 0;
+}
+
+.member-ok {
+  color: var(--pass);
+}
+
+.member-nex-panel {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 720px;
+}
+
+.member-nex-thread {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+  max-height: 420px;
+  overflow: auto;
+}
+
+.member-nex-turn {
+  border: 1px solid var(--border-soft);
+  background: var(--bg-inset);
+  padding: var(--space-3);
+  border-radius: var(--radius-card);
+}
+
+.member-nex-turn.nex {
+  border-color: var(--accent-line);
+}
+
+.member-nex-role {
+  display: inline-block;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.member-nex-compose {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.member-nex-compose textarea {
+  width: 100%;
+  resize: vertical;
+  background: var(--bg-deep);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: var(--space-3);
+  font: inherit;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.nx-nav-member .sidebar-product-sub {
+  font-size: var(--fs-xs);
+}
+
+@media (max-width: 900px) {
+  .member-feed-top,
+  .member-card-meta {
+    flex-direction: column;
+  }
+}

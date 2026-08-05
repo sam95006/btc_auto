@@ -9,6 +9,7 @@
     "typecheck": "tsc -b --pretty false",
     "preview": "vite preview",
     "check:safety": "node scripts/check_ui_safety.mjs",
+    "check:member-bans": "node scripts/check_member_hard_bans.mjs 1 && node scripts/check_member_hard_bans.mjs 2",
     "e2e": "playwright test",
     "e2e:a11y": "playwright test --grep @a11y",
     "e2e:visual": "playwright test --grep @visual"

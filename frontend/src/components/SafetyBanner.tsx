@@ -1,15 +1,18 @@
 /**
- * Phase 4 product chrome — separates Live market wording from execution status.
- * Execution disabled lives in System Status; market data remains Live public.
+ * Member Platform safety chrome — public Decision Integrity surface.
+ * No live trading · no external reference embed · DEMO mode disclosed when fixtures bound.
  */
 export function SafetyBanner() {
   return (
-    <div className="safety-banner nx-safety-p4" role="status">
-      <span className="nx-safety-primary">市場行情：LIVE（Bybit Public）</span>
+    <div className="safety-banner nx-safety-member" role="status">
+      <span className="nx-safety-primary">NEXUS Member · Decision Integrity</span>
       <span className="nx-safety-sep" aria-hidden>
         ·
       </span>
-      <span className="nx-safety-secondary">交易執行：Disabled · 研究模式</span>
+      <span className="nx-safety-secondary">
+        READ-ONLY vs exchanges · NOT INVESTMENT ADVICE · NO LIVE TRADING · DEMO DATA when fixtures
+        bound · LOCAL/STAGING ONLY
+      </span>
     </div>
   );
 }
