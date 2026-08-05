@@ -1,0 +1,5 @@
+{
+  "authorized": false,
+  "reason": "FOUNDER_AUTHORIZATION_MISSING",
+  "required_scope": "founder_v11_pit_qualification"
+}

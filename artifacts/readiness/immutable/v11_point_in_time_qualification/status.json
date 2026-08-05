@@ -1,0 +1,15 @@
+{
+  "schema": "FOUNDER_V11_POINT_IN_TIME_QUALIFICATION",
+  "status": "BLOCKED_READY",
+  "all_stages_blocked_ready": true,
+  "formal_walk_forward_executed": false,
+  "oos_reservation_created": false,
+  "oos_downloaded": false,
+  "oos_executed": false,
+  "oos_consumed": false,
+  "oos_metrics_computed": false,
+  "oos_revealed_to_candidate": false,
+  "demo_order_count": 0,
+  "selected_strategy": null,
+  "strategy_promoted": false
+}
