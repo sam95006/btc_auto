@@ -1,0 +1,56 @@
+{
+  "finding": {
+    "code": "G_MUTATION_DEPTH_WRAPPER_ONLY",
+    "detail": "Lane G kill-suite mutates in-memory subject wrappers only; it does not AST-mutate production Private Core security modules. A PASS with mutation_survivor_count=0 does not prove production-module mutant detection. R4 runs independent production AST mutation to close this gap for review evidence.",
+    "fail_closed": true,
+    "mutant_fn_count": 17,
+    "self_acknowledged_as_high": true,
+    "severity": "critical",
+    "wrapper_signals": [
+      "in-memory",
+      "in_memory",
+      "weakened subjects",
+      "without editing foreign-owned",
+      "Mutations never edit foreign-owned source files"
+    ]
+  },
+  "lane_g_high_findings": [
+    {
+      "code": "secret_scan_json_assignment_blind_spot",
+      "detail": "scan_secrets_in_evidence credential_assignment regex misses JSON quoted keys (\"api_key\": \"...\"); substring pattern:api_key still hits. Do not rely on credential_assignment alone for JSON evidence.",
+      "fail_closed": false,
+      "severity": "high"
+    },
+    {
+      "code": "symlink_escape_platform_dependent",
+      "detail": "Windows may deny symlink creation without privilege; campaign marks symlink mutants equivalent/platform_skip. Re-run on symlink-capable host before treating symlink jail as production-proven.",
+      "fail_closed": false,
+      "severity": "high"
+    },
+    {
+      "code": "mutation_surface_is_in_memory_wrappers",
+      "detail": "Mutations are in-memory weakened subjects, not AST edits of production modules. Surviving source-level mutants outside owned wrappers remain a coverage gap for future mutmut/cosmic-ray integration.",
+      "fail_closed": false,
+      "severity": "high"
+    }
+  ],
+  "lane_g_passed": true,
+  "lane_g_recommendation": "NEXUS_V11_SECURITY_MUTATION_REDTEAM_PASS",
+  "mutant_fn_count": 17,
+  "mutation_depth": "wrapper_in_memory",
+  "mutation_killed_count": 33,
+  "mutation_survivor_count": 0,
+  "origin_present": true,
+  "production_paths_mentioned_in_mutations": true,
+  "schema": "v11_r4_lane_g_depth_audit_v1",
+  "self_acknowledged_wrapper_high": true,
+  "uses_ast_unparse": false,
+  "wrapper_signals": [
+    "in-memory",
+    "in_memory",
+    "weakened subjects",
+    "without editing foreign-owned",
+    "Mutations never edit foreign-owned source files"
+  ],
+  "writes_production_sources": false
+}

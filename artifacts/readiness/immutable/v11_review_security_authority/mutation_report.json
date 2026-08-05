@@ -1,0 +1,131 @@
+{
+  "cosmic_ray_used": false,
+  "equivalent_count": 0,
+  "error_count": 0,
+  "exchange_write_attempt_count": 0,
+  "killed_count": 3,
+  "mainnet_client_created_count": 0,
+  "mutant_total": 8,
+  "mutation_kind": "production_ast",
+  "mutmut_used": false,
+  "results": [
+    {
+      "description": "Remove PurePosixPath '..' token rejection in assert_safe_relative_path",
+      "mutant_id": "persist_drop_dotdot_token_check",
+      "mutation_kind": "production_ast",
+      "operator": "drop_dotdot_token_check",
+      "oracle": {
+        "detail": "dotdot_still_blocked",
+        "killed": true,
+        "path_traversal_blocked": true
+      },
+      "status": "killed",
+      "target_rel": "backend/nexus_autonomy/security_persistence_v1.py"
+    },
+    {
+      "description": "scan_secrets_in_evidence always returns []",
+      "mutant_id": "persist_scan_secrets_noop",
+      "mutation_kind": "production_ast",
+      "operator": "return_empty_list",
+      "oracle": {
+        "detail": "secrets_missed_SURVIVOR",
+        "killed": false,
+        "secret_detected": false
+      },
+      "status": "survived",
+      "target_rel": "backend/nexus_autonomy/security_persistence_v1.py"
+    },
+    {
+      "description": "fail_closed_json_loads accepts scalar roots",
+      "mutant_id": "persist_json_accept_scalars",
+      "mutation_kind": "production_ast",
+      "operator": "drop_scalar_root_check",
+      "oracle": {
+        "detail": "scalar_accepted_SURVIVOR",
+        "killed": false,
+        "scalar_json_blocked": false
+      },
+      "status": "survived",
+      "target_rel": "backend/nexus_autonomy/security_persistence_v1.py"
+    },
+    {
+      "description": "Force mainnet_fallback=False after detection (hides demo\u2192mainnet fallback)",
+      "mutant_id": "cred_ignore_mainnet_fallback",
+      "mutation_kind": "production_ast",
+      "operator": "force_mainnet_fallback_false",
+      "oracle": {
+        "demo_mainnet_confused": true,
+        "detail": "fallback_or_confusion_still_fail_closed",
+        "fail_closed": true,
+        "killed": true,
+        "mainnet_fallback_used": true,
+        "writes_enabled": false
+      },
+      "status": "killed",
+      "target_rel": "backend/nexus_autonomy/security_credential_boundary_v1.py"
+    },
+    {
+      "description": "Force writes_enabled=True assignments",
+      "mutant_id": "cred_force_writes_enabled",
+      "mutation_kind": "production_ast",
+      "operator": "force_writes_enabled",
+      "oracle": {
+        "detail": "writes_still_disabled",
+        "fail_closed": true,
+        "killed": true,
+        "writes_enabled": false
+      },
+      "status": "killed",
+      "target_rel": "backend/nexus_autonomy/security_credential_boundary_v1.py"
+    },
+    {
+      "description": "assert_public_schema becomes no-op",
+      "mutant_id": "public_assert_schema_noop",
+      "mutation_kind": "production_ast",
+      "operator": "noop_assert_public_schema",
+      "oracle": {
+        "detail": "public_schema_noop_SURVIVOR",
+        "killed": false
+      },
+      "status": "survived",
+      "target_rel": "backend/nexus_autonomy/security_public_private_v1.py"
+    },
+    {
+      "description": "redact_account_identifiers returns payload unchanged",
+      "mutant_id": "public_redact_identity",
+      "mutation_kind": "production_ast",
+      "operator": "redact_identity",
+      "oracle": {
+        "detail": "redaction_identity_SURVIVOR",
+        "killed": false,
+        "secret_leak_count": 1
+      },
+      "status": "survived",
+      "target_rel": "backend/nexus_autonomy/security_public_private_v1.py"
+    },
+    {
+      "description": "install() becomes no-op success",
+      "mutant_id": "write_trap_install_noop",
+      "mutation_kind": "production_ast",
+      "operator": "write_trap_noop",
+      "oracle": {
+        "detail": "install_noop_SURVIVOR",
+        "install_result_type": "bool",
+        "killed": false,
+        "patch_count": 0,
+        "write_method_trap_count": 0
+      },
+      "status": "survived",
+      "target_rel": "backend/nexus_autonomy/security_write_traps_v1.py"
+    }
+  ],
+  "schema": "v11_r4_production_ast_mutation_v1",
+  "survivor_count": 5,
+  "targets": [
+    "backend/nexus_autonomy/security_persistence_v1.py",
+    "backend/nexus_autonomy/security_credential_boundary_v1.py",
+    "backend/nexus_autonomy/security_public_private_v1.py",
+    "backend/nexus_autonomy/security_write_traps_v1.py"
+  ],
+  "tool": "custom_ast_mutator"
+}

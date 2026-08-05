@@ -1,0 +1,1125 @@
+{
+  "adversarial_review": {
+    "critical_count": 14,
+    "false_pass_flag_count": 2,
+    "false_pass_flags": [
+      {
+        "code": "LANE_G_FALSE_CONFIDENCE_PASS",
+        "detail": "Lane G recommendation is PASS while mutation depth is wrapper-only. Treat as incomplete evidence for production security mutant detection."
+      },
+      {
+        "code": "G_PASS_DESPITE_PRODUCTION_AST_SURVIVORS",
+        "detail": "5 production AST mutants survived R4 oracles (['persist_scan_secrets_noop', 'persist_json_accept_scalars', 'public_assert_schema_noop', 'public_redact_identity', 'write_trap_install_noop']). Lane G PASS cannot stand as production-module mutation evidence."
+      }
+    ],
+    "high_count": 4,
+    "production_ast_killed": 3,
+    "production_ast_survivor_ids": [
+      "persist_scan_secrets_noop",
+      "persist_json_accept_scalars",
+      "public_assert_schema_noop",
+      "public_redact_identity",
+      "write_trap_install_noop"
+    ],
+    "production_ast_survivors": 5
+  },
+  "authority_review": {
+    "circular_import_sccs": [
+      [
+        "backend.nexus_execution",
+        "backend.nexus_execution.execution_simulator_v1_1",
+        "backend.nexus_execution.orchestrator_adapter_v1"
+      ],
+      [
+        "backend.nexus_demo_execution.geometry_event_sim",
+        "backend.nexus_demo_execution.structural_geometry_qualify"
+      ],
+      [
+        "backend.nexus_research.features.feature_seed",
+        "backend.nexus_research.features.registry"
+      ]
+    ],
+    "circular_scc_count": 3,
+    "cost_divergence": {
+      "code": "COST_MODEL_VERSION_DIVERGENCE",
+      "confirmed": true,
+      "execution_version": "founder-conservative-v1-1-2026-08-05",
+      "severity": "critical",
+      "strategy_version": "NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1"
+    },
+    "critical_finding_count": 8,
+    "duplicate_authority_gate": {
+      "blocker_count": 5,
+      "check": "duplicate_authority_gate",
+      "ci_gate_passed": true,
+      "critical_blocker_count": 5,
+      "critical_blockers": [
+        {
+          "canonical": "founder-conservative-v1-1-2026-08-05",
+          "code": "COST_MODEL_VERSION_DIVERGENCE",
+          "competitor_module": "backend.nexus_strategy_engine.cost_semantics",
+          "competitor_version": "NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1",
+          "domain": "cost",
+          "recommendation": "Align strategy cost_semantics versioning with execution cost_model or explicitly namespace as research-proxy (not Session cost authority).",
+          "severity": "critical"
+        },
+        {
+          "code": "DUAL_LIFECYCLE_VOCABULARY",
+          "control_plane_states": [
+            "IDLE",
+            "STARTING",
+            "RUNNING",
+            "PAUSED",
+            "RECOVERING",
+            "STOPPING",
+            "STOPPED",
+            "KILLED",
+            "FAILED_SAFE"
+          ],
+          "domain": "lifecycle",
+          "recommendation": "Keep scoped (session vs control-plane). Block any code that maps states by identical name without an explicit adapter contract.",
+          "session_states": [
+            "CREATED",
+            "INITIALIZING",
+            "RUNNING",
+            "PAUSING",
+            "PAUSED",
+            "RECOVERING",
+            "FINALIZING",
+            "COMPLETED",
+            "BLOCKED",
+            "FAILED_SAFE"
+          ],
+          "severity": "critical"
+        },
+        {
+          "code": "PARALLEL_RETRY_IMPLEMENTATION",
+          "domain": "provider_retry",
+          "module": "backend.nexus_edge_discovery.provider_transport_v23",
+          "recommendation": "Import parse_retry_after / backoff_with_jitter from backend.nexus_provider.retry_policy; deprecate local copy.",
+          "severity": "critical"
+        },
+        {
+          "code": "MULTI_SCOPE_AUTHORITY",
+          "domain": "lifecycle",
+          "message": "Domain lifecycle has multiple legitimate scoped authorities; requires explicit adapter contracts before deletion waves.",
+          "severity": "critical",
+          "source": "scope_contention"
+        },
+        {
+          "code": "MULTI_SCOPE_AUTHORITY",
+          "domain": "checkpoint",
+          "message": "Domain checkpoint has multiple legitimate scoped authorities; requires explicit adapter contracts before deletion waves.",
+          "severity": "critical",
+          "source": "scope_contention"
+        }
+      ],
+      "detail": "CI duplicate-authority gate PASSes by baselining known competitors; it does NOT clear critical multi-authority blockers. Integration must treat H as audit/registry/gate only \u2014 not runtime authority remediation.",
+      "false_confidence_risk": true
+    },
+    "fill_shim": {
+      "code": "AUTONOMY_SHIM_EMBEDS_FILL_AUTHORITY",
+      "confirmed": true,
+      "fill_token_count": 7,
+      "has_compat_marker": true,
+      "has_fill_logic": true,
+      "path": "backend/nexus_autonomy/execution_simulator_v1_1.py",
+      "severity": "critical"
+    },
+    "findings": [
+      {
+        "code": "COST_MODEL_VERSION_DIVERGENCE",
+        "detail": {
+          "code": "COST_MODEL_VERSION_DIVERGENCE",
+          "confirmed": true,
+          "execution_version": "founder-conservative-v1-1-2026-08-05",
+          "severity": "critical",
+          "strategy_version": "NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1"
+        },
+        "severity": "critical",
+        "source": "r4_independent_confirm"
+      },
+      {
+        "code": "AUTONOMY_SHIM_EMBEDS_FILL_AUTHORITY",
+        "detail": {
+          "code": "AUTONOMY_SHIM_EMBEDS_FILL_AUTHORITY",
+          "confirmed": true,
+          "fill_token_count": 7,
+          "has_compat_marker": true,
+          "has_fill_logic": true,
+          "path": "backend/nexus_autonomy/execution_simulator_v1_1.py",
+          "severity": "critical"
+        },
+        "severity": "critical",
+        "source": "r4_independent_confirm"
+      },
+      {
+        "code": "PARALLEL_RETRY_IMPLEMENTATION",
+        "detail": {
+          "canonical_retry_present": true,
+          "code": "PARALLEL_RETRY_IMPLEMENTATION",
+          "confirmed": true,
+          "edge_transport_present": true,
+          "imports_canonical": false,
+          "local_backoff_signals": true,
+          "severity": "critical"
+        },
+        "severity": "critical",
+        "source": "r4_independent_confirm"
+      },
+      {
+        "code": "CIRCULAR_IMPORT_SCC",
+        "detail": {
+          "circular_scc_count": 3,
+          "sccs": [
+            [
+              "backend.nexus_execution",
+              "backend.nexus_execution.execution_simulator_v1_1",
+              "backend.nexus_execution.orchestrator_adapter_v1"
+            ],
+            [
+              "backend.nexus_demo_execution.geometry_event_sim",
+              "backend.nexus_demo_execution.structural_geometry_qualify"
+            ],
+            [
+              "backend.nexus_research.features.feature_seed",
+              "backend.nexus_research.features.registry"
+            ]
+          ],
+          "source": "lane_h_artifact"
+        },
+        "severity": "high",
+        "source": "lane_h_artifact"
+      },
+      {
+        "code": "DUPLICATE_GATE_BASELINE_FALSE_CONFIDENCE",
+        "detail": {
+          "blocker_count": 5,
+          "check": "duplicate_authority_gate",
+          "ci_gate_passed": true,
+          "critical_blocker_count": 5,
+          "critical_blockers": [
+            {
+              "canonical": "founder-conservative-v1-1-2026-08-05",
+              "code": "COST_MODEL_VERSION_DIVERGENCE",
+              "competitor_module": "backend.nexus_strategy_engine.cost_semantics",
+              "competitor_version": "NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1",
+              "domain": "cost",
+              "recommendation": "Align strategy cost_semantics versioning with execution cost_model or explicitly namespace as research-proxy (not Session cost authority).",
+              "severity": "critical"
+            },
+            {
+              "code": "DUAL_LIFECYCLE_VOCABULARY",
+              "control_plane_states": [
+                "IDLE",
+                "STARTING",
+                "RUNNING",
+                "PAUSED",
+                "RECOVERING",
+                "STOPPING",
+                "STOPPED",
+                "KILLED",
+                "FAILED_SAFE"
+              ],
+              "domain": "lifecycle",
+              "recommendation": "Keep scoped (session vs control-plane). Block any code that maps states by identical name without an explicit adapter contract.",
+              "session_states": [
+                "CREATED",
+                "INITIALIZING",
+                "RUNNING",
+                "PAUSING",
+                "PAUSED",
+                "RECOVERING",
+                "FINALIZING",
+                "COMPLETED",
+                "BLOCKED",
+                "FAILED_SAFE"
+              ],
+              "severity": "critical"
+            },
+            {
+              "code": "PARALLEL_RETRY_IMPLEMENTATION",
+              "domain": "provider_retry",
+              "module": "backend.nexus_edge_discovery.provider_transport_v23",
+              "recommendation": "Import parse_retry_after / backoff_with_jitter from backend.nexus_provider.retry_policy; deprecate local copy.",
+              "severity": "critical"
+            },
+            {
+              "code": "MULTI_SCOPE_AUTHORITY",
+              "domain": "lifecycle",
+              "message": "Domain lifecycle has multiple legitimate scoped authorities; requires explicit adapter contracts before deletion waves.",
+              "severity": "critical",
+              "source": "scope_contention"
+            },
+            {
+              "code": "MULTI_SCOPE_AUTHORITY",
+              "domain": "checkpoint",
+              "message": "Domain checkpoint has multiple legitimate scoped authorities; requires explicit adapter contracts before deletion waves.",
+              "severity": "critical",
+              "source": "scope_contention"
+            }
+          ],
+          "detail": "CI duplicate-authority gate PASSes by baselining known competitors; it does NOT clear critical multi-authority blockers. Integration must treat H as audit/registry/gate only \u2014 not runtime authority remediation.",
+          "false_confidence_risk": true
+        },
+        "severity": "high",
+        "source": "r4_gate_semantics"
+      },
+      {
+        "code": "COST_MODEL_VERSION_DIVERGENCE",
+        "detail": {
+          "canonical": "founder-conservative-v1-1-2026-08-05",
+          "code": "COST_MODEL_VERSION_DIVERGENCE",
+          "competitor_module": "backend.nexus_strategy_engine.cost_semantics",
+          "competitor_version": "NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1",
+          "domain": "cost",
+          "recommendation": "Align strategy cost_semantics versioning with execution cost_model or explicitly namespace as research-proxy (not Session cost authority).",
+          "severity": "critical"
+        },
+        "domain": "cost",
+        "severity": "critical",
+        "source": "lane_h_blocker"
+      },
+      {
+        "code": "DUAL_LIFECYCLE_VOCABULARY",
+        "detail": {
+          "code": "DUAL_LIFECYCLE_VOCABULARY",
+          "control_plane_states": [
+            "IDLE",
+            "STARTING",
+            "RUNNING",
+            "PAUSED",
+            "RECOVERING",
+            "STOPPING",
+            "STOPPED",
+            "KILLED",
+            "FAILED_SAFE"
+          ],
+          "domain": "lifecycle",
+          "recommendation": "Keep scoped (session vs control-plane). Block any code that maps states by identical name without an explicit adapter contract.",
+          "session_states": [
+            "CREATED",
+            "INITIALIZING",
+            "RUNNING",
+            "PAUSING",
+            "PAUSED",
+            "RECOVERING",
+            "FINALIZING",
+            "COMPLETED",
+            "BLOCKED",
+            "FAILED_SAFE"
+          ],
+          "severity": "critical"
+        },
+        "domain": "lifecycle",
+        "severity": "critical",
+        "source": "lane_h_blocker"
+      },
+      {
+        "code": "PARALLEL_RETRY_IMPLEMENTATION",
+        "detail": {
+          "code": "PARALLEL_RETRY_IMPLEMENTATION",
+          "domain": "provider_retry",
+          "module": "backend.nexus_edge_discovery.provider_transport_v23",
+          "recommendation": "Import parse_retry_after / backoff_with_jitter from backend.nexus_provider.retry_policy; deprecate local copy.",
+          "severity": "critical"
+        },
+        "domain": "provider_retry",
+        "severity": "critical",
+        "source": "lane_h_blocker"
+      },
+      {
+        "code": "MULTI_SCOPE_AUTHORITY",
+        "detail": {
+          "code": "MULTI_SCOPE_AUTHORITY",
+          "domain": "lifecycle",
+          "message": "Domain lifecycle has multiple legitimate scoped authorities; requires explicit adapter contracts before deletion waves.",
+          "severity": "critical",
+          "source": "scope_contention"
+        },
+        "domain": "lifecycle",
+        "severity": "critical",
+        "source": "lane_h_blocker"
+      },
+      {
+        "code": "MULTI_SCOPE_AUTHORITY",
+        "detail": {
+          "code": "MULTI_SCOPE_AUTHORITY",
+          "domain": "checkpoint",
+          "message": "Domain checkpoint has multiple legitimate scoped authorities; requires explicit adapter contracts before deletion waves.",
+          "severity": "critical",
+          "source": "scope_contention"
+        },
+        "domain": "checkpoint",
+        "severity": "critical",
+        "source": "lane_h_blocker"
+      }
+    ],
+    "high_finding_count": 2,
+    "independent_r4_scc_count": 3,
+    "lane_h": {
+      "artifacts_present": true,
+      "blocker_count": 5,
+      "ci_gate_passed": true,
+      "graph_summary": {
+        "circular_scc_count": 3,
+        "claim_count": 60,
+        "critical_finding_count": 5,
+        "domain_count": 7,
+        "domains_with_duplicates": [
+          "checkpoint",
+          "cost",
+          "execution",
+          "fill",
+          "lifecycle",
+          "provider_retry",
+          "risk"
+        ],
+        "edge_count": 3865,
+        "node_count": 38
+      },
+      "registry_version": "v11.lane_h.1"
+    },
+    "parallel_retry": {
+      "canonical_retry_present": true,
+      "code": "PARALLEL_RETRY_IMPLEMENTATION",
+      "confirmed": true,
+      "edge_transport_present": true,
+      "imports_canonical": false,
+      "local_backoff_signals": true,
+      "severity": "critical"
+    },
+    "scc_source": "lane_h_artifact",
+    "schema": "v11_r4_authority_review_v1"
+  },
+  "counters": {
+    "authority_conflict_count": 8,
+    "circular_scc_count": 3,
+    "critical_finding_count": 14,
+    "exchange_write_attempt_count": 0,
+    "false_PASS_count": 2,
+    "high_finding_count": 4,
+    "mainnet_client_created_count": 0,
+    "production_ast_killed_count": 3,
+    "production_ast_survivor_count": 5,
+    "secret_leak_count": 0
+  },
+  "critical_findings": [
+    {
+      "code": "G_MUTATION_DEPTH_WRAPPER_ONLY",
+      "detail": "Lane G kill-suite mutates in-memory subject wrappers only; it does not AST-mutate production Private Core security modules. A PASS with mutation_survivor_count=0 does not prove production-module mutant detection. R4 runs independent production AST mutation to close this gap for review evidence.",
+      "fail_closed": true,
+      "mutant_fn_count": 17,
+      "pass": 1,
+      "self_acknowledged_as_high": true,
+      "severity": "critical",
+      "wrapper_signals": [
+        "in-memory",
+        "in_memory",
+        "weakened subjects",
+        "without editing foreign-owned",
+        "Mutations never edit foreign-owned source files"
+      ]
+    },
+    {
+      "code": "COST_MODEL_VERSION_DIVERGENCE",
+      "detail": {
+        "code": "COST_MODEL_VERSION_DIVERGENCE",
+        "confirmed": true,
+        "execution_version": "founder-conservative-v1-1-2026-08-05",
+        "severity": "critical",
+        "strategy_version": "NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1"
+      },
+      "pass": 1,
+      "severity": "critical",
+      "source": "r4_independent_confirm"
+    },
+    {
+      "code": "AUTONOMY_SHIM_EMBEDS_FILL_AUTHORITY",
+      "detail": {
+        "code": "AUTONOMY_SHIM_EMBEDS_FILL_AUTHORITY",
+        "confirmed": true,
+        "fill_token_count": 7,
+        "has_compat_marker": true,
+        "has_fill_logic": true,
+        "path": "backend/nexus_autonomy/execution_simulator_v1_1.py",
+        "severity": "critical"
+      },
+      "pass": 1,
+      "severity": "critical",
+      "source": "r4_independent_confirm"
+    },
+    {
+      "code": "PARALLEL_RETRY_IMPLEMENTATION",
+      "detail": {
+        "canonical_retry_present": true,
+        "code": "PARALLEL_RETRY_IMPLEMENTATION",
+        "confirmed": true,
+        "edge_transport_present": true,
+        "imports_canonical": false,
+        "local_backoff_signals": true,
+        "severity": "critical"
+      },
+      "pass": 1,
+      "severity": "critical",
+      "source": "r4_independent_confirm"
+    },
+    {
+      "code": "COST_MODEL_VERSION_DIVERGENCE",
+      "detail": {
+        "canonical": "founder-conservative-v1-1-2026-08-05",
+        "code": "COST_MODEL_VERSION_DIVERGENCE",
+        "competitor_module": "backend.nexus_strategy_engine.cost_semantics",
+        "competitor_version": "NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1",
+        "domain": "cost",
+        "recommendation": "Align strategy cost_semantics versioning with execution cost_model or explicitly namespace as research-proxy (not Session cost authority).",
+        "severity": "critical"
+      },
+      "domain": "cost",
+      "pass": 1,
+      "severity": "critical",
+      "source": "lane_h_blocker"
+    },
+    {
+      "code": "DUAL_LIFECYCLE_VOCABULARY",
+      "detail": {
+        "code": "DUAL_LIFECYCLE_VOCABULARY",
+        "control_plane_states": [
+          "IDLE",
+          "STARTING",
+          "RUNNING",
+          "PAUSED",
+          "RECOVERING",
+          "STOPPING",
+          "STOPPED",
+          "KILLED",
+          "FAILED_SAFE"
+        ],
+        "domain": "lifecycle",
+        "recommendation": "Keep scoped (session vs control-plane). Block any code that maps states by identical name without an explicit adapter contract.",
+        "session_states": [
+          "CREATED",
+          "INITIALIZING",
+          "RUNNING",
+          "PAUSING",
+          "PAUSED",
+          "RECOVERING",
+          "FINALIZING",
+          "COMPLETED",
+          "BLOCKED",
+          "FAILED_SAFE"
+        ],
+        "severity": "critical"
+      },
+      "domain": "lifecycle",
+      "pass": 1,
+      "severity": "critical",
+      "source": "lane_h_blocker"
+    },
+    {
+      "code": "PARALLEL_RETRY_IMPLEMENTATION",
+      "detail": {
+        "code": "PARALLEL_RETRY_IMPLEMENTATION",
+        "domain": "provider_retry",
+        "module": "backend.nexus_edge_discovery.provider_transport_v23",
+        "recommendation": "Import parse_retry_after / backoff_with_jitter from backend.nexus_provider.retry_policy; deprecate local copy.",
+        "severity": "critical"
+      },
+      "domain": "provider_retry",
+      "pass": 1,
+      "severity": "critical",
+      "source": "lane_h_blocker"
+    },
+    {
+      "code": "MULTI_SCOPE_AUTHORITY",
+      "detail": {
+        "code": "MULTI_SCOPE_AUTHORITY",
+        "domain": "lifecycle",
+        "message": "Domain lifecycle has multiple legitimate scoped authorities; requires explicit adapter contracts before deletion waves.",
+        "severity": "critical",
+        "source": "scope_contention"
+      },
+      "domain": "lifecycle",
+      "pass": 1,
+      "severity": "critical",
+      "source": "lane_h_blocker"
+    },
+    {
+      "code": "MULTI_SCOPE_AUTHORITY",
+      "detail": {
+        "code": "MULTI_SCOPE_AUTHORITY",
+        "domain": "checkpoint",
+        "message": "Domain checkpoint has multiple legitimate scoped authorities; requires explicit adapter contracts before deletion waves.",
+        "severity": "critical",
+        "source": "scope_contention"
+      },
+      "domain": "checkpoint",
+      "pass": 1,
+      "severity": "critical",
+      "source": "lane_h_blocker"
+    },
+    {
+      "code": "PRODUCTION_AST_MUTANT_SURVIVED",
+      "detail": {
+        "description": "scan_secrets_in_evidence always returns []",
+        "mutant_id": "persist_scan_secrets_noop",
+        "mutation_kind": "production_ast",
+        "operator": "return_empty_list",
+        "oracle": {
+          "detail": "secrets_missed_SURVIVOR",
+          "killed": false,
+          "secret_detected": false
+        },
+        "status": "survived",
+        "target_rel": "backend/nexus_autonomy/security_persistence_v1.py"
+      },
+      "fail_closed": true,
+      "pass": 1,
+      "severity": "critical"
+    },
+    {
+      "code": "PRODUCTION_AST_MUTANT_SURVIVED",
+      "detail": {
+        "description": "fail_closed_json_loads accepts scalar roots",
+        "mutant_id": "persist_json_accept_scalars",
+        "mutation_kind": "production_ast",
+        "operator": "drop_scalar_root_check",
+        "oracle": {
+          "detail": "scalar_accepted_SURVIVOR",
+          "killed": false,
+          "scalar_json_blocked": false
+        },
+        "status": "survived",
+        "target_rel": "backend/nexus_autonomy/security_persistence_v1.py"
+      },
+      "fail_closed": true,
+      "pass": 1,
+      "severity": "critical"
+    },
+    {
+      "code": "PRODUCTION_AST_MUTANT_SURVIVED",
+      "detail": {
+        "description": "assert_public_schema becomes no-op",
+        "mutant_id": "public_assert_schema_noop",
+        "mutation_kind": "production_ast",
+        "operator": "noop_assert_public_schema",
+        "oracle": {
+          "detail": "public_schema_noop_SURVIVOR",
+          "killed": false
+        },
+        "status": "survived",
+        "target_rel": "backend/nexus_autonomy/security_public_private_v1.py"
+      },
+      "fail_closed": true,
+      "pass": 1,
+      "severity": "critical"
+    },
+    {
+      "code": "PRODUCTION_AST_MUTANT_SURVIVED",
+      "detail": {
+        "description": "redact_account_identifiers returns payload unchanged",
+        "mutant_id": "public_redact_identity",
+        "mutation_kind": "production_ast",
+        "operator": "redact_identity",
+        "oracle": {
+          "detail": "redaction_identity_SURVIVOR",
+          "killed": false,
+          "secret_leak_count": 1
+        },
+        "status": "survived",
+        "target_rel": "backend/nexus_autonomy/security_public_private_v1.py"
+      },
+      "fail_closed": true,
+      "pass": 1,
+      "severity": "critical"
+    },
+    {
+      "code": "PRODUCTION_AST_MUTANT_SURVIVED",
+      "detail": {
+        "description": "install() becomes no-op success",
+        "mutant_id": "write_trap_install_noop",
+        "mutation_kind": "production_ast",
+        "operator": "write_trap_noop",
+        "oracle": {
+          "detail": "install_noop_SURVIVOR",
+          "install_result_type": "bool",
+          "killed": false,
+          "patch_count": 0,
+          "write_method_trap_count": 0
+        },
+        "status": "survived",
+        "target_rel": "backend/nexus_autonomy/security_write_traps_v1.py"
+      },
+      "fail_closed": true,
+      "pass": 1,
+      "severity": "critical"
+    }
+  ],
+  "generated_at": "2026-08-05T04:03:46Z",
+  "high_findings": [
+    {
+      "code": "CIRCULAR_IMPORT_SCC",
+      "detail": {
+        "circular_scc_count": 3,
+        "sccs": [
+          [
+            "backend.nexus_execution",
+            "backend.nexus_execution.execution_simulator_v1_1",
+            "backend.nexus_execution.orchestrator_adapter_v1"
+          ],
+          [
+            "backend.nexus_demo_execution.geometry_event_sim",
+            "backend.nexus_demo_execution.structural_geometry_qualify"
+          ],
+          [
+            "backend.nexus_research.features.feature_seed",
+            "backend.nexus_research.features.registry"
+          ]
+        ],
+        "source": "lane_h_artifact"
+      },
+      "pass": 1,
+      "severity": "high",
+      "source": "lane_h_artifact"
+    },
+    {
+      "code": "DUPLICATE_GATE_BASELINE_FALSE_CONFIDENCE",
+      "detail": {
+        "blocker_count": 5,
+        "check": "duplicate_authority_gate",
+        "ci_gate_passed": true,
+        "critical_blocker_count": 5,
+        "critical_blockers": [
+          {
+            "canonical": "founder-conservative-v1-1-2026-08-05",
+            "code": "COST_MODEL_VERSION_DIVERGENCE",
+            "competitor_module": "backend.nexus_strategy_engine.cost_semantics",
+            "competitor_version": "NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1",
+            "domain": "cost",
+            "recommendation": "Align strategy cost_semantics versioning with execution cost_model or explicitly namespace as research-proxy (not Session cost authority).",
+            "severity": "critical"
+          },
+          {
+            "code": "DUAL_LIFECYCLE_VOCABULARY",
+            "control_plane_states": [
+              "IDLE",
+              "STARTING",
+              "RUNNING",
+              "PAUSED",
+              "RECOVERING",
+              "STOPPING",
+              "STOPPED",
+              "KILLED",
+              "FAILED_SAFE"
+            ],
+            "domain": "lifecycle",
+            "recommendation": "Keep scoped (session vs control-plane). Block any code that maps states by identical name without an explicit adapter contract.",
+            "session_states": [
+              "CREATED",
+              "INITIALIZING",
+              "RUNNING",
+              "PAUSING",
+              "PAUSED",
+              "RECOVERING",
+              "FINALIZING",
+              "COMPLETED",
+              "BLOCKED",
+              "FAILED_SAFE"
+            ],
+            "severity": "critical"
+          },
+          {
+            "code": "PARALLEL_RETRY_IMPLEMENTATION",
+            "domain": "provider_retry",
+            "module": "backend.nexus_edge_discovery.provider_transport_v23",
+            "recommendation": "Import parse_retry_after / backoff_with_jitter from backend.nexus_provider.retry_policy; deprecate local copy.",
+            "severity": "critical"
+          },
+          {
+            "code": "MULTI_SCOPE_AUTHORITY",
+            "domain": "lifecycle",
+            "message": "Domain lifecycle has multiple legitimate scoped authorities; requires explicit adapter contracts before deletion waves.",
+            "severity": "critical",
+            "source": "scope_contention"
+          },
+          {
+            "code": "MULTI_SCOPE_AUTHORITY",
+            "domain": "checkpoint",
+            "message": "Domain checkpoint has multiple legitimate scoped authorities; requires explicit adapter contracts before deletion waves.",
+            "severity": "critical",
+            "source": "scope_contention"
+          }
+        ],
+        "detail": "CI duplicate-authority gate PASSes by baselining known competitors; it does NOT clear critical multi-authority blockers. Integration must treat H as audit/registry/gate only \u2014 not runtime authority remediation.",
+        "false_confidence_risk": true
+      },
+      "pass": 1,
+      "severity": "high",
+      "source": "r4_gate_semantics"
+    },
+    {
+      "code": "symlink_escape_platform_dependent",
+      "detail": "symlink_unavailable:OSError",
+      "fail_closed": false,
+      "pass": 1,
+      "severity": "high"
+    },
+    {
+      "code": "secret_scan_json_assignment_blind_spot",
+      "detail": "credential_assignment regex misses JSON \"api_key\": \"...\" form; substring patterns may still hit. Confirmed by R4 static suite.",
+      "fail_closed": false,
+      "pass": 1,
+      "severity": "high"
+    }
+  ],
+  "integration_recommendation": "BLOCK_TREATING_H_GATE_AS_AUTHORITY_REMEDIATION",
+  "lane_g_audit": {
+    "finding": {
+      "code": "G_MUTATION_DEPTH_WRAPPER_ONLY",
+      "detail": "Lane G kill-suite mutates in-memory subject wrappers only; it does not AST-mutate production Private Core security modules. A PASS with mutation_survivor_count=0 does not prove production-module mutant detection. R4 runs independent production AST mutation to close this gap for review evidence.",
+      "fail_closed": true,
+      "mutant_fn_count": 17,
+      "self_acknowledged_as_high": true,
+      "severity": "critical",
+      "wrapper_signals": [
+        "in-memory",
+        "in_memory",
+        "weakened subjects",
+        "without editing foreign-owned",
+        "Mutations never edit foreign-owned source files"
+      ]
+    },
+    "lane_g_high_findings": [
+      {
+        "code": "secret_scan_json_assignment_blind_spot",
+        "detail": "scan_secrets_in_evidence credential_assignment regex misses JSON quoted keys (\"api_key\": \"...\"); substring pattern:api_key still hits. Do not rely on credential_assignment alone for JSON evidence.",
+        "fail_closed": false,
+        "severity": "high"
+      },
+      {
+        "code": "symlink_escape_platform_dependent",
+        "detail": "Windows may deny symlink creation without privilege; campaign marks symlink mutants equivalent/platform_skip. Re-run on symlink-capable host before treating symlink jail as production-proven.",
+        "fail_closed": false,
+        "severity": "high"
+      },
+      {
+        "code": "mutation_surface_is_in_memory_wrappers",
+        "detail": "Mutations are in-memory weakened subjects, not AST edits of production modules. Surviving source-level mutants outside owned wrappers remain a coverage gap for future mutmut/cosmic-ray integration.",
+        "fail_closed": false,
+        "severity": "high"
+      }
+    ],
+    "lane_g_passed": true,
+    "lane_g_recommendation": "NEXUS_V11_SECURITY_MUTATION_REDTEAM_PASS",
+    "mutant_fn_count": 17,
+    "mutation_depth": "wrapper_in_memory",
+    "mutation_killed_count": 33,
+    "mutation_survivor_count": 0,
+    "origin_present": true,
+    "production_paths_mentioned_in_mutations": true,
+    "schema": "v11_r4_lane_g_depth_audit_v1",
+    "self_acknowledged_wrapper_high": true,
+    "uses_ast_unparse": false,
+    "wrapper_signals": [
+      "in-memory",
+      "in_memory",
+      "weakened subjects",
+      "without editing foreign-owned",
+      "Mutations never edit foreign-owned source files"
+    ],
+    "writes_production_sources": false
+  },
+  "pass": 1,
+  "production_ast_mutation": {
+    "cosmic_ray_used": false,
+    "equivalent_count": 0,
+    "error_count": 0,
+    "exchange_write_attempt_count": 0,
+    "killed_count": 3,
+    "mainnet_client_created_count": 0,
+    "mutant_total": 8,
+    "mutation_kind": "production_ast",
+    "mutmut_used": false,
+    "results": [
+      {
+        "description": "Remove PurePosixPath '..' token rejection in assert_safe_relative_path",
+        "mutant_id": "persist_drop_dotdot_token_check",
+        "mutation_kind": "production_ast",
+        "operator": "drop_dotdot_token_check",
+        "oracle": {
+          "detail": "dotdot_still_blocked",
+          "killed": true,
+          "path_traversal_blocked": true
+        },
+        "status": "killed",
+        "target_rel": "backend/nexus_autonomy/security_persistence_v1.py"
+      },
+      {
+        "description": "scan_secrets_in_evidence always returns []",
+        "mutant_id": "persist_scan_secrets_noop",
+        "mutation_kind": "production_ast",
+        "operator": "return_empty_list",
+        "oracle": {
+          "detail": "secrets_missed_SURVIVOR",
+          "killed": false,
+          "secret_detected": false
+        },
+        "status": "survived",
+        "target_rel": "backend/nexus_autonomy/security_persistence_v1.py"
+      },
+      {
+        "description": "fail_closed_json_loads accepts scalar roots",
+        "mutant_id": "persist_json_accept_scalars",
+        "mutation_kind": "production_ast",
+        "operator": "drop_scalar_root_check",
+        "oracle": {
+          "detail": "scalar_accepted_SURVIVOR",
+          "killed": false,
+          "scalar_json_blocked": false
+        },
+        "status": "survived",
+        "target_rel": "backend/nexus_autonomy/security_persistence_v1.py"
+      },
+      {
+        "description": "Force mainnet_fallback=False after detection (hides demo\u2192mainnet fallback)",
+        "mutant_id": "cred_ignore_mainnet_fallback",
+        "mutation_kind": "production_ast",
+        "operator": "force_mainnet_fallback_false",
+        "oracle": {
+          "demo_mainnet_confused": true,
+          "detail": "fallback_or_confusion_still_fail_closed",
+          "fail_closed": true,
+          "killed": true,
+          "mainnet_fallback_used": true,
+          "writes_enabled": false
+        },
+        "status": "killed",
+        "target_rel": "backend/nexus_autonomy/security_credential_boundary_v1.py"
+      },
+      {
+        "description": "Force writes_enabled=True assignments",
+        "mutant_id": "cred_force_writes_enabled",
+        "mutation_kind": "production_ast",
+        "operator": "force_writes_enabled",
+        "oracle": {
+          "detail": "writes_still_disabled",
+          "fail_closed": true,
+          "killed": true,
+          "writes_enabled": false
+        },
+        "status": "killed",
+        "target_rel": "backend/nexus_autonomy/security_credential_boundary_v1.py"
+      },
+      {
+        "description": "assert_public_schema becomes no-op",
+        "mutant_id": "public_assert_schema_noop",
+        "mutation_kind": "production_ast",
+        "operator": "noop_assert_public_schema",
+        "oracle": {
+          "detail": "public_schema_noop_SURVIVOR",
+          "killed": false
+        },
+        "status": "survived",
+        "target_rel": "backend/nexus_autonomy/security_public_private_v1.py"
+      },
+      {
+        "description": "redact_account_identifiers returns payload unchanged",
+        "mutant_id": "public_redact_identity",
+        "mutation_kind": "production_ast",
+        "operator": "redact_identity",
+        "oracle": {
+          "detail": "redaction_identity_SURVIVOR",
+          "killed": false,
+          "secret_leak_count": 1
+        },
+        "status": "survived",
+        "target_rel": "backend/nexus_autonomy/security_public_private_v1.py"
+      },
+      {
+        "description": "install() becomes no-op success",
+        "mutant_id": "write_trap_install_noop",
+        "mutation_kind": "production_ast",
+        "operator": "write_trap_noop",
+        "oracle": {
+          "detail": "install_noop_SURVIVOR",
+          "install_result_type": "bool",
+          "killed": false,
+          "patch_count": 0,
+          "write_method_trap_count": 0
+        },
+        "status": "survived",
+        "target_rel": "backend/nexus_autonomy/security_write_traps_v1.py"
+      }
+    ],
+    "schema": "v11_r4_production_ast_mutation_v1",
+    "survivor_count": 5,
+    "targets": [
+      "backend/nexus_autonomy/security_persistence_v1.py",
+      "backend/nexus_autonomy/security_credential_boundary_v1.py",
+      "backend/nexus_autonomy/security_public_private_v1.py",
+      "backend/nexus_autonomy/security_write_traps_v1.py"
+    ],
+    "tool": "custom_ast_mutator"
+  },
+  "recommendation": "NEXUS_V11_R4_SECURITY_AUTHORITY_INTEGRATION_BLOCKED",
+  "security_static": {
+    "checks": [
+      {
+        "blocked_count": 4,
+        "case_count": 4,
+        "check": "path_traversal",
+        "details": [
+          {
+            "blocked": true,
+            "path": "../etc/passwd",
+            "reason": "path_traversal"
+          },
+          {
+            "blocked": true,
+            "path": "..\\windows\\system32",
+            "reason": "path_traversal"
+          },
+          {
+            "blocked": true,
+            "path": "foo/../../escape",
+            "reason": "path_traversal"
+          },
+          {
+            "blocked": true,
+            "path": "/abs/path",
+            "reason": "path_escape"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "blocked": true,
+        "check": "symlink_escape",
+        "detail": "symlink_unavailable:OSError",
+        "passed": true,
+        "platform_skip": true,
+        "severity_note": "platform_dependent_on_windows",
+        "symlink_created": false
+      },
+      {
+        "check": "unsafe_deserialization",
+        "json_corrupt_blocked": true,
+        "passed": true,
+        "pickle_as_json_blocked": true,
+        "raw_pickle_yaml_loads_hits": [],
+        "raw_unsafe_loads_count": 0,
+        "scalar_blocked": true
+      },
+      {
+        "cases": [
+          {
+            "expect_hit": true,
+            "findings": [
+              "pattern:api_key"
+            ],
+            "hit": true,
+            "label": "json_key"
+          },
+          {
+            "expect_hit": true,
+            "findings": [
+              "pattern:api_key",
+              "credential_assignment"
+            ],
+            "hit": true,
+            "label": "assignment"
+          },
+          {
+            "expect_hit": false,
+            "findings": [],
+            "hit": false,
+            "label": "clean"
+          }
+        ],
+        "check": "secret_detection",
+        "credential_assignment_json_blind_spot": true,
+        "passed": true,
+        "secret_leak_count": 0
+      },
+      {
+        "check": "demo_mainnet_boundary",
+        "mainnet_client_created_count": 0,
+        "passed": true,
+        "scenarios": [
+          {
+            "demo_mainnet_confused": false,
+            "fail_closed": true,
+            "id": "demo_missing_creds_mainnet_present",
+            "mainnet_fallback_used": true,
+            "ok": true,
+            "reasons": [
+              "mainnet_fallback_rejected",
+              "demo_credentials_missing"
+            ],
+            "writes_enabled": false
+          },
+          {
+            "demo_mainnet_confused": true,
+            "fail_closed": true,
+            "id": "demo_profile_mainnet_host",
+            "mainnet_fallback_used": false,
+            "ok": true,
+            "reasons": [
+              "demo_mainnet_profile_confused",
+              "writes_require_explicit_founder_flag",
+              "demo_host_rejected:api.bybit.com"
+            ],
+            "writes_enabled": false
+          },
+          {
+            "demo_mainnet_confused": false,
+            "fail_closed": true,
+            "id": "public_readonly",
+            "mainnet_fallback_used": false,
+            "ok": true,
+            "reasons": [
+              "public_readonly_no_secrets_required"
+            ],
+            "writes_enabled": false
+          }
+        ]
+      },
+      {
+        "check": "import_graph",
+        "cycle_count": 3,
+        "cycles": [
+          [
+            "backend.nexus_research.features.feature_seed",
+            "backend.nexus_research.features.registry"
+          ],
+          [
+            "backend.coordination.station_dialogue_service",
+            "backend.services.nexus_runtime"
+          ],
+          [
+            "backend.nexus_demo_execution.geometry_event_sim",
+            "backend.nexus_demo_execution.structural_geometry_qualify"
+          ]
+        ],
+        "graph_keys": [
+          "import_graph_edge_count",
+          "import_graph_node_count",
+          "passed",
+          "scanned_files",
+          "violation_count",
+          "violations"
+        ],
+        "passed": true,
+        "raw_summary": {
+          "passed": true,
+          "violation_count": 0
+        }
+      }
+    ],
+    "exchange_write_attempt_count": 0,
+    "mainnet_client_created_count": 0,
+    "passed": true,
+    "schema": "v11_r4_security_static_v1",
+    "secret_leak_count": 0
+  }
+}
