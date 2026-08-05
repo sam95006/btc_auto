@@ -1,0 +1,1342 @@
+{
+  "artifact_dirname": "v13_c_strategy_discovery_factory_v3",
+  "blockers": [
+    {
+      "blocker_id": "QUALIFICATION_NOT_AUTHORIZED",
+      "detail": "qualification_ready_count forced 0 until formal Qualification separately authorized"
+    },
+    {
+      "blocker_id": "OOS_AND_FORMAL_WF_BANNED",
+      "detail": "factory uses synthetic development fixtures only"
+    },
+    {
+      "blocker_id": "NO_PROFITABILITY_OR_QUALIFIED_CLAIMS",
+      "detail": "labels exclude profitability and qualification claims"
+    }
+  ],
+  "campaign_id": "v13_c_strategy_discovery_factory_v3",
+  "candidate_configuration_count": 10,
+  "candidates": [
+    {
+      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "22.1586034294166699025",
+        "exit_fee": "22.1586034294166699025",
+        "funding_cost": "4.028836987166667255",
+        "market_impact_approximation": "8.035122678259057645843952860",
+        "partial_fill_cost": "0.410",
+        "slippage_cost": "16.115347948666669020",
+        "spread_cost": "39.93031217646401739556207773"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_blocked": false,
+      "economic_prior": "Top-of-book / near-touch imbalance proxies short-horizon supply-demand pressure; edge is microstructure-local and cost-sensitive.",
+      "failure_reasons": [],
+      "family_id": "ORDER_FLOW_IMBALANCE",
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 100.72092467916669,
+      "implementation_rejected": false,
+      "label": "REGIME_FRAGILE",
+      "multiple_comparison_metadata": {
+        "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
+        "configs_tested_for_family": 1,
+        "family_count": 10,
+        "total_candidates": 10
+      },
+      "net_pnl": -12.115901970223069,
+      "oos_executed": false,
+      "parameter_checksum": "47c0f3c3aac209c2d0c25097a1f199ee6200a5ed935c3139d72d822c3bc24ee5",
+      "parameters": {
+        "cancel_replace_cycles": 0,
+        "cooldown_bars": 4,
+        "extra_fills": 1,
+        "family_id": "ORDER_FLOW_IMBALANCE",
+        "holding_bars": 8,
+        "notional_usdt": 500.0,
+        "profile": "promising",
+        "qty": 0.01,
+        "semantic_mechanism_id": "MECH_OFI_TOPBOOK_PRESSURE_V1",
+        "signal_horizon_bars": 4
+      },
+      "point_in_time_proof": {
+        "future_bar_reference_count": 0,
+        "lookahead_forbidden": true,
+        "pit_status": "OK_DEVELOPMENT",
+        "signal_uses_bars_strictly_before_or_at_entry": true
+      },
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {
+        "RANGE": 62,
+        "TREND": 20
+      },
+      "semantic_mechanism_id": "MECH_OFI_TOPBOOK_PRESSURE_V1",
+      "stability_measures": {
+        "development_folds_only": true,
+        "fold_count": 4,
+        "fold_net_pnls": [
+          -2.095231676073078,
+          -3.3493948858534246,
+          -3.4994729136475167,
+          -3.1718024946490506
+        ],
+        "formal_walk_forward": false,
+        "positive_fold_count": 0,
+        "sign_flip_across_folds": false
+      },
+      "status": "REGIME_FRAGILE",
+      "trade_count": 82,
+      "trades_sample": [
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.272197628491552445",
+            "exit_fee": "0.272197628491552445",
+            "funding_cost": "0.04949047790755499",
+            "market_impact_approximation": "0.05034233703278345933706054336",
+            "partial_fill_cost": "0.005",
+            "slippage_cost": "0.19796191163021996",
+            "spread_cost": "0.4183908640486381487775496634"
+          },
+          "entry_ts_ms": 1700002520000,
+          "exit_ts_ms": 1700003000000,
+          "gross_pnl": "1.23726194768887475",
+          "net_pnl": "-0.02831889991342669811461020676",
+          "regime": "TREND",
+          "side": "SHORT",
+          "signal": -0.9981419108803714
+        },
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.271606223352626580",
+            "exit_fee": "0.271606223352626580",
+            "funding_cost": "0.04938294970047756",
+            "market_impact_approximation": "0.1114995907124806395325924975",
+            "partial_fill_cost": "0.005",
+            "slippage_cost": "0.19753179880191024",
+            "spread_cost": "0.4636586504113432790037382486"
+          },
+          "entry_ts_ms": 1700003000000,
+          "exit_ts_ms": 1700003480000,
+          "gross_pnl": "1.23457374251193900",
+          "net_pnl": "-0.1357116938195258785363307461",
+          "regime": "RANGE",
+          "side": "LONG",
+          "signal": 0.9351845765335449
+        },
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.271369624038084660",
+            "exit_fee": "0.271369624038084660",
+            "funding_cost": "0.04933993164328812",
+            "market_impact_approximation": "0.08220784599446582154779705405",
+            "partial_fill_cost": "0.005",
+            "slippage_cost": "0.19735972657315248",
+            "spread_cost": "0.2321882517947442280746258770"
+          },
+          "entry_ts_ms": 1700003300000,
+          "exit_ts_ms": 1700003780000,
+          "gross_pnl": "1.23349829108220300",
+          "net_pnl": "0.1246632870003830303775770690",
+          "regime": "RANGE",
+          "side": "SHORT",
+          "signal": -0.8937068944549437
+        }
+      ]
+    },
+    {
+      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0",
+        "exit_fee": "0",
+        "funding_cost": "0",
+        "market_impact_approximation": "0",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0",
+        "spread_cost": "0"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_blocked": false,
+      "economic_prior": "Forced liquidation bursts create liquidity voids and short-horizon continuation or snapback; requires event timing integrity.",
+      "failure_reasons": [
+        "ALL_EVENTS_IN_DATA_QUALITY_GAP"
+      ],
+      "family_id": "LIQUIDATION_CASCADE",
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "implementation_rejected": false,
+      "label": "INSUFFICIENT_SAMPLE",
+      "multiple_comparison_metadata": {
+        "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
+        "configs_tested_for_family": 1,
+        "family_count": 10,
+        "total_candidates": 10
+      },
+      "net_pnl": 0.0,
+      "oos_executed": false,
+      "parameter_checksum": "e842606bf472b6b266c971dd7811a253cb0035ccc20f70d0cefc7f148112534b",
+      "parameters": {
+        "cancel_replace_cycles": 1,
+        "cooldown_bars": 4,
+        "extra_fills": 1,
+        "family_id": "LIQUIDATION_CASCADE",
+        "holding_bars": 6,
+        "notional_usdt": 500.0,
+        "profile": "cost_destroyed",
+        "qty": 0.01,
+        "semantic_mechanism_id": "MECH_LIQ_CASCADE_RESPONSE_V1",
+        "signal_horizon_bars": 2
+      },
+      "point_in_time_proof": {
+        "future_bar_reference_count": 0,
+        "lookahead_forbidden": true,
+        "pit_status": "OK_DEVELOPMENT",
+        "signal_uses_bars_strictly_before_or_at_entry": true
+      },
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "semantic_mechanism_id": "MECH_LIQ_CASCADE_RESPONSE_V1",
+      "stability_measures": {
+        "development_folds_only": true,
+        "fold_count": 4,
+        "fold_net_pnls": [],
+        "formal_walk_forward": false,
+        "positive_fold_count": 0,
+        "sign_flip_across_folds": false
+      },
+      "status": "INSUFFICIENT_SAMPLE",
+      "trade_count": 0,
+      "trades_sample": []
+    },
+    {
+      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "16.7541339815061603435",
+        "exit_fee": "16.7541339815061603435",
+        "funding_cost": "3.046206178455665517",
+        "market_impact_approximation": "6.349255664752274131221345019",
+        "partial_fill_cost": "0",
+        "slippage_cost": "12.184824713822662068",
+        "spread_cost": "32.69426471484049407310849866"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_blocked": false,
+      "economic_prior": "Large passive liquidity absorbs aggressive flow without price progress; subsequent reversal is the hypothesized response.",
+      "failure_reasons": [],
+      "family_id": "ABSORPTION",
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 1.5231030892278328,
+      "implementation_rejected": false,
+      "label": "REGIME_FRAGILE",
+      "multiple_comparison_metadata": {
+        "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
+        "configs_tested_for_family": 1,
+        "family_count": 10,
+        "total_candidates": 10
+      },
+      "net_pnl": -86.25971614565559,
+      "oos_executed": false,
+      "parameter_checksum": "4214021273fca657f7719d28a6f10af5acac6923c316018b4ac6fabd3da9a44d",
+      "parameters": {
+        "cancel_replace_cycles": 0,
+        "cooldown_bars": 6,
+        "extra_fills": 0,
+        "family_id": "ABSORPTION",
+        "holding_bars": 12,
+        "notional_usdt": 500.0,
+        "profile": "signal_only",
+        "qty": 0.01,
+        "semantic_mechanism_id": "MECH_ABSORPTION_PASSIVE_DEFENSE_V1",
+        "signal_horizon_bars": 6
+      },
+      "point_in_time_proof": {
+        "future_bar_reference_count": 0,
+        "lookahead_forbidden": true,
+        "pit_status": "OK_DEVELOPMENT",
+        "signal_uses_bars_strictly_before_or_at_entry": true
+      },
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {
+        "RANGE": 55,
+        "TREND": 7
+      },
+      "semantic_mechanism_id": "MECH_ABSORPTION_PASSIVE_DEFENSE_V1",
+      "stability_measures": {
+        "development_folds_only": true,
+        "fold_count": 4,
+        "fold_net_pnls": [
+          -20.843641126018515,
+          -20.423215047322657,
+          -21.89139077936566,
+          -23.10146919294875
+        ],
+        "formal_walk_forward": false,
+        "positive_fold_count": 0,
+        "sign_flip_across_folds": false
+      },
+      "status": "REGIME_FRAGILE",
+      "trade_count": 62,
+      "trades_sample": [
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.270851348704989910",
+            "exit_fee": "0.270851348704989910",
+            "funding_cost": "0.04924569976454362",
+            "market_impact_approximation": "0.1629655555607658043684705122",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.19698279905817448",
+            "spread_cost": "0.37210520822508019334387076"
+          },
+          "entry_ts_ms": 1700002820000,
+          "exit_ts_ms": 1700003540000,
+          "gross_pnl": "0.024622849882271810",
+          "net_pnl": "-1.298379110136272107712341272",
+          "regime": "RANGE",
+          "side": "SHORT",
+          "signal": -1.0
+        },
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.2719087302534445425",
+            "exit_fee": "0.2719087302534445425",
+            "funding_cost": "0.049437950955171735",
+            "market_impact_approximation": "0.1689058298746208806699625657",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.19775180382068694",
+            "spread_cost": "0.6888376469133691134263046554"
+          },
+          "entry_ts_ms": 1700003180000,
+          "exit_ts_ms": 1700003900000,
+          "gross_pnl": "0.0247189754775858675",
+          "net_pnl": "-1.624031716593151886596267221",
+          "regime": "RANGE",
+          "side": "LONG",
+          "signal": 1.0
+        },
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.2709760046152409470",
+            "exit_fee": "0.2709760046152409470",
+            "funding_cost": "0.049268364475498354",
+            "market_impact_approximation": "0.07952621427218915822015454522",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.197073457901993416",
+            "spread_cost": "0.8264340611577737241494485222"
+          },
+          "entry_ts_ms": 1700003540000,
+          "exit_ts_ms": 1700004260000,
+          "gross_pnl": "0.0246341822377491770",
+          "net_pnl": "-1.669619924800187369369603067",
+          "regime": "RANGE",
+          "side": "LONG",
+          "signal": 1.0
+        }
+      ]
+    },
+    {
+      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "12.1610800632500035615",
+        "exit_fee": "12.1610800632500035615",
+        "funding_cost": "2.211105466045455193",
+        "market_impact_approximation": "4.129015496944170755382536108",
+        "partial_fill_cost": "0.225",
+        "slippage_cost": "8.844421864181820772",
+        "spread_cost": "22.37519678060430925701776532"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_blocked": false,
+      "economic_prior": "Sustained aggressor dominance across consecutive windows implies initiative continuation until liquidity replenishes.",
+      "failure_reasons": [],
+      "family_id": "AGGRESSION_PERSISTENCE",
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 55.27763665113638,
+      "implementation_rejected": false,
+      "label": "REGIME_FRAGILE",
+      "multiple_comparison_metadata": {
+        "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
+        "configs_tested_for_family": 1,
+        "family_count": 10,
+        "total_candidates": 10
+      },
+      "net_pnl": -6.8292630831393835,
+      "oos_executed": false,
+      "parameter_checksum": "adb3d9b00eaba8f18bb530c2831a5e4131291cee8f6508ae89b94b3eda7cb32e",
+      "parameters": {
+        "cancel_replace_cycles": 0,
+        "cooldown_bars": 8,
+        "extra_fills": 1,
+        "family_id": "AGGRESSION_PERSISTENCE",
+        "holding_bars": 10,
+        "notional_usdt": 500.0,
+        "profile": "promising",
+        "qty": 0.01,
+        "semantic_mechanism_id": "MECH_AGGRESSION_PERSISTENCE_V1",
+        "signal_horizon_bars": 8
+      },
+      "point_in_time_proof": {
+        "future_bar_reference_count": 0,
+        "lookahead_forbidden": true,
+        "pit_status": "OK_DEVELOPMENT",
+        "signal_uses_bars_strictly_before_or_at_entry": true
+      },
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {
+        "RANGE": 39,
+        "TREND": 6
+      },
+      "semantic_mechanism_id": "MECH_AGGRESSION_PERSISTENCE_V1",
+      "stability_measures": {
+        "development_folds_only": true,
+        "fold_count": 4,
+        "fold_net_pnls": [
+          -1.963393792111027,
+          -1.5486260977872515,
+          -2.7731432677161236,
+          -0.5440999255249812
+        ],
+        "formal_walk_forward": false,
+        "positive_fold_count": 0,
+        "sign_flip_across_folds": false
+      },
+      "status": "REGIME_FRAGILE",
+      "trade_count": 45,
+      "trades_sample": [
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.271232802176938635",
+            "exit_fee": "0.271232802176938635",
+            "funding_cost": "0.04931505494126157",
+            "market_impact_approximation": "0.04931505494126157",
+            "partial_fill_cost": "0.005",
+            "slippage_cost": "0.19726021976504628",
+            "spread_cost": "0.5775664213794220843646500978"
+          },
+          "entry_ts_ms": 1700002940000,
+          "exit_ts_ms": 1700003540000,
+          "gross_pnl": "1.23287637353153925",
+          "net_pnl": "-0.1880459818493295243646500978",
+          "regime": "RANGE",
+          "side": "LONG",
+          "signal": 1.0
+        },
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.2710898522025631630",
+            "exit_fee": "0.2710898522025631630",
+            "funding_cost": "0.049289064036829666",
+            "market_impact_approximation": "0.1102579216043159457002860681",
+            "partial_fill_cost": "0.005",
+            "slippage_cost": "0.197156256147318664",
+            "spread_cost": "0.7389644495684495233680712774"
+          },
+          "entry_ts_ms": 1700003480000,
+          "exit_ts_ms": 1700004080000,
+          "gross_pnl": "1.232226600920741650",
+          "net_pnl": "-0.4106207948412984750683573455",
+          "regime": "RANGE",
+          "side": "LONG",
+          "signal": 1.0
+        },
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.2699213395865349330",
+            "exit_fee": "0.2699213395865349330",
+            "funding_cost": "0.049076607197551806",
+            "market_impact_approximation": "0.049076607197551806",
+            "partial_fill_cost": "0.005",
+            "slippage_cost": "0.196306428790207224",
+            "spread_cost": "0.3243583727730215688768832876"
+          },
+          "entry_ts_ms": 1700004320000,
+          "exit_ts_ms": 1700004920000,
+          "gross_pnl": "1.226915179938795150",
+          "net_pnl": "0.0632544848073928791231167124",
+          "regime": "RANGE",
+          "side": "LONG",
+          "signal": 1.0
+        }
+      ]
+    },
+    {
+      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "cost_components": {
+        "cancel_replace_cost": "0.08",
+        "entry_fee": "2.1547817823007263480",
+        "exit_fee": "2.1547817823007263480",
+        "funding_cost": "0.391778505872859336",
+        "market_impact_approximation": "3.134228046982874688",
+        "partial_fill_cost": "0.040",
+        "slippage_cost": "1.567114023491437344",
+        "spread_cost": "4.392866841425450401317566076"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_blocked": false,
+      "economic_prior": "Funding and basis dislocations encode crowding / carry stress; mean-reversion of dislocation is hypothesized after extremes.",
+      "failure_reasons": [],
+      "family_id": "FUNDING_BASIS_DISLOCATION",
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 1.3712247705550076,
+      "implementation_rejected": false,
+      "label": "INSUFFICIENT_SAMPLE",
+      "multiple_comparison_metadata": {
+        "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
+        "configs_tested_for_family": 1,
+        "family_count": 10,
+        "total_candidates": 10
+      },
+      "net_pnl": -12.544326211819067,
+      "oos_executed": false,
+      "parameter_checksum": "fc35439870a2c69b8f70e3c8ecd0d1324eb827e5d3d4b96e25e53590df06a051",
+      "parameters": {
+        "cancel_replace_cycles": 1,
+        "cooldown_bars": 16,
+        "extra_fills": 1,
+        "family_id": "FUNDING_BASIS_DISLOCATION",
+        "holding_bars": 32,
+        "notional_usdt": 500.0,
+        "profile": "cost_destroyed",
+        "qty": 0.01,
+        "semantic_mechanism_id": "MECH_FUNDING_BASIS_DISLOCATION_V1",
+        "signal_horizon_bars": 16
+      },
+      "point_in_time_proof": {
+        "future_bar_reference_count": 0,
+        "lookahead_forbidden": true,
+        "pit_status": "OK_DEVELOPMENT",
+        "signal_uses_bars_strictly_before_or_at_entry": true
+      },
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {
+        "TREND": 8
+      },
+      "semantic_mechanism_id": "MECH_FUNDING_BASIS_DISLOCATION_V1",
+      "stability_measures": {
+        "development_folds_only": true,
+        "fold_count": 4,
+        "fold_net_pnls": [
+          -2.791232949299852,
+          -3.550881449638101,
+          -3.032026192529065,
+          -3.170185620352049
+        ],
+        "formal_walk_forward": false,
+        "positive_fold_count": 0,
+        "sign_flip_across_folds": false
+      },
+      "status": "INSUFFICIENT_SAMPLE",
+      "trade_count": 8,
+      "trades_sample": [
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0.01",
+            "entry_fee": "0.272197628491552445",
+            "exit_fee": "0.272197628491552445",
+            "funding_cost": "0.04949047790755499",
+            "market_impact_approximation": "0.39592382326043992",
+            "partial_fill_cost": "0.005",
+            "slippage_cost": "0.19796191163021996",
+            "spread_cost": "0.4183908640486381487775496634"
+          },
+          "entry_ts_ms": 1700002520000,
+          "exit_ts_ms": 1700004440000,
+          "gross_pnl": "0.173216672676442465",
+          "net_pnl": "-1.447945661153515443777549663",
+          "regime": "TREND",
+          "side": "LONG",
+          "signal": 0.40855135612854526
+        },
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0.01",
+            "entry_fee": "0.268639719729740425",
+            "exit_fee": "0.268639719729740425",
+            "funding_cost": "0.04884358540540735",
+            "market_impact_approximation": "0.3907486832432588",
+            "partial_fill_cost": "0.005",
+            "slippage_cost": "0.1953743416216294",
+            "spread_cost": "0.3269937873354859351297214008"
+          },
+          "entry_ts_ms": 1700005400000,
+          "exit_ts_ms": 1700007320000,
+          "gross_pnl": "0.170952548918925725",
+          "net_pnl": "-1.343287288146336610129721401",
+          "regime": "TREND",
+          "side": "SHORT",
+          "signal": -0.3762757683660857
+        },
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0.01",
+            "entry_fee": "0.269972473283498810",
+            "exit_fee": "0.269972473283498810",
+            "funding_cost": "0.04908590423336342",
+            "market_impact_approximation": "0.39268723386690736",
+            "partial_fill_cost": "0.005",
+            "slippage_cost": "0.19634361693345368",
+            "spread_cost": "0.8225487669074313670307852238"
+          },
+          "entry_ts_ms": 1700009660000,
+          "exit_ts_ms": 1700011580000,
+          "gross_pnl": "0.171800664816771970",
+          "net_pnl": "-1.843809803691381477030785224",
+          "regime": "TREND",
+          "side": "LONG",
+          "signal": 0.3941751254476083
+        }
+      ]
+    },
+    {
+      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "7.2981740401949110600",
+        "exit_fee": "7.2981740401949110600",
+        "funding_cost": "1.326940734580892920",
+        "market_impact_approximation": "2.501974268349847559147377673",
+        "partial_fill_cost": "0",
+        "slippage_cost": "5.307762938323571680",
+        "spread_cost": "13.87344435845521453621129644"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_blocked": false,
+      "economic_prior": "Volatility regime transitions (expansion vs compression) alter expected range; breakout/mean-revert conditioned on vol state.",
+      "failure_reasons": [],
+      "family_id": "VOL_EXPANSION_COMPRESSION",
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.2855085786563841,
+      "implementation_rejected": false,
+      "label": "RAW_EDGE_PRESENT_BUT_COST_DESTROYED",
+      "multiple_comparison_metadata": {
+        "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
+        "configs_tested_for_family": 1,
+        "family_count": 10,
+        "total_candidates": 10
+      },
+      "net_pnl": -37.32096180144296,
+      "oos_executed": false,
+      "parameter_checksum": "44a1eea714c07ad7ebea75f23022c26c3af01c4b9a466b9161bc2f71686b2735",
+      "parameters": {
+        "cancel_replace_cycles": 0,
+        "cooldown_bars": 12,
+        "extra_fills": 0,
+        "family_id": "VOL_EXPANSION_COMPRESSION",
+        "holding_bars": 16,
+        "notional_usdt": 500.0,
+        "profile": "regime_fragile",
+        "qty": 0.01,
+        "semantic_mechanism_id": "MECH_VOL_EXPAND_COMPRESS_V1",
+        "signal_horizon_bars": 12
+      },
+      "point_in_time_proof": {
+        "future_bar_reference_count": 0,
+        "lookahead_forbidden": true,
+        "pit_status": "OK_DEVELOPMENT",
+        "signal_uses_bars_strictly_before_or_at_entry": true
+      },
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {
+        "RANGE": 11,
+        "TREND": 16
+      },
+      "semantic_mechanism_id": "MECH_VOL_EXPAND_COMPRESS_V1",
+      "stability_measures": {
+        "development_folds_only": true,
+        "fold_count": 4,
+        "fold_net_pnls": [
+          -7.514295468802834,
+          -5.962100996432941,
+          -9.197695946905235,
+          -14.646869389301957
+        ],
+        "formal_walk_forward": false,
+        "positive_fold_count": 0,
+        "sign_flip_across_folds": false
+      },
+      "status": "RAW_EDGE_PRESENT_BUT_COST_DESTROYED",
+      "trade_count": 27,
+      "trades_sample": [
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.272197628491552445",
+            "exit_fee": "0.272197628491552445",
+            "funding_cost": "0.04949047790755499",
+            "market_impact_approximation": "0.05034233703278345933706054336",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.19796191163021996",
+            "spread_cost": "0.4183908640486381487775496634"
+          },
+          "entry_ts_ms": 1700002520000,
+          "exit_ts_ms": 1700003480000,
+          "gross_pnl": "-0.59388573489065988",
+          "net_pnl": "-1.854466582492961328114610206",
+          "regime": "TREND",
+          "side": "LONG",
+          "signal": 1.0
+        },
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.271125067948834220",
+            "exit_fee": "0.271125067948834220",
+            "funding_cost": "0.04929546689978804",
+            "market_impact_approximation": "0.1380698934351473880916739088",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.19718186759915216",
+            "spread_cost": "0.2861986722703770028593851902"
+          },
+          "entry_ts_ms": 1700003720000,
+          "exit_ts_ms": 1700004680000,
+          "gross_pnl": "0.88731840419618472",
+          "net_pnl": "-0.3256776319059483109510590990",
+          "regime": "RANGE",
+          "side": "SHORT",
+          "signal": -1.0
+        },
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.2696799686471506825",
+            "exit_fee": "0.2696799686471506825",
+            "funding_cost": "0.049032721572209215",
+            "market_impact_approximation": "0.113381562214629855910513531",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.19613088628883686",
+            "spread_cost": "0.4507956011668164831247016344"
+          },
+          "entry_ts_ms": 1700004740000,
+          "exit_ts_ms": 1700005700000,
+          "gross_pnl": "0.882588988299765870",
+          "net_pnl": "-0.4661117202370279090352151654",
+          "regime": "RANGE",
+          "side": "SHORT",
+          "signal": -1.0
+        }
+      ]
+    },
+    {
+      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0",
+        "exit_fee": "0",
+        "funding_cost": "0",
+        "market_impact_approximation": "0",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0",
+        "spread_cost": "0"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_blocked": true,
+      "failure_reasons": [
+        "DATA_QUALITY_BLOCKED_FEATURE_WINDOW"
+      ],
+      "family_id": "LIQUIDITY_WITHDRAWAL",
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 0.0,
+      "implementation_rejected": false,
+      "label": "DATA_QUALITY_BLOCKED",
+      "multiple_comparison_metadata": {
+        "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
+        "configs_tested_for_family": 1,
+        "family_count": 10
+      },
+      "net_pnl": 0.0,
+      "oos_executed": false,
+      "parameter_checksum": "72b7792033d5bab30a34633452738f77b59f88c64534ec0906bcc8fbbfbbd969",
+      "parameters": {
+        "cancel_replace_cycles": 0,
+        "cooldown_bars": 4,
+        "extra_fills": 0,
+        "family_id": "LIQUIDITY_WITHDRAWAL",
+        "holding_bars": 5,
+        "notional_usdt": 500.0,
+        "profile": "dq_block",
+        "qty": 0.01,
+        "semantic_mechanism_id": "MECH_LIQUIDITY_WITHDRAWAL_V1",
+        "signal_horizon_bars": 3
+      },
+      "point_in_time_proof": {
+        "future_bar_reference_count": 0,
+        "lookahead_forbidden": true,
+        "pit_status": "DATA_QUALITY_WINDOW_BLOCKED"
+      },
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {},
+      "semantic_mechanism_id": "MECH_LIQUIDITY_WITHDRAWAL_V1",
+      "stability_measures": {
+        "fold_count": 4,
+        "positive_fold_count": 0,
+        "sign_flip_across_folds": false
+      },
+      "status": "DATA_QUALITY_BLOCKED",
+      "trade_count": 0
+    },
+    {
+      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "1.6241104268243992225",
+        "exit_fee": "1.6241104268243992225",
+        "funding_cost": "0.295292804877163495",
+        "market_impact_approximation": "1.009541728429435214672363945",
+        "partial_fill_cost": "0",
+        "slippage_cost": "1.181171219508653980",
+        "spread_cost": "2.643646995625112838828589265"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_blocked": false,
+      "economic_prior": "Transient spread shocks mark liquidity stress; fade after normalization is hypothesized but often cost-dominated.",
+      "failure_reasons": [],
+      "family_id": "SPREAD_SHOCK",
+      "formal_walk_forward_executed": false,
+      "gross_pnl": -5.59438311965497,
+      "implementation_rejected": false,
+      "label": "INSUFFICIENT_SAMPLE",
+      "multiple_comparison_metadata": {
+        "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
+        "configs_tested_for_family": 1,
+        "family_count": 10,
+        "total_candidates": 10
+      },
+      "net_pnl": -13.972256721744134,
+      "oos_executed": false,
+      "parameter_checksum": "a8682f6cefc1071b37c08273704a5302f62c75b30bfa5e67a283580a80fa91f5",
+      "parameters": {
+        "cancel_replace_cycles": 0,
+        "cooldown_bars": 4,
+        "extra_fills": 0,
+        "family_id": "SPREAD_SHOCK",
+        "holding_bars": 8,
+        "notional_usdt": 500.0,
+        "profile": "thin_sample",
+        "qty": 0.01,
+        "semantic_mechanism_id": "MECH_SPREAD_SHOCK_V1",
+        "signal_horizon_bars": 4
+      },
+      "point_in_time_proof": {
+        "future_bar_reference_count": 0,
+        "lookahead_forbidden": true,
+        "pit_status": "OK_DEVELOPMENT",
+        "signal_uses_bars_strictly_before_or_at_entry": true
+      },
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {
+        "RANGE": 5,
+        "TREND": 1
+      },
+      "semantic_mechanism_id": "MECH_SPREAD_SHOCK_V1",
+      "stability_measures": {
+        "development_folds_only": true,
+        "fold_count": 4,
+        "fold_net_pnls": [
+          -3.9115495810827876,
+          -2.1519163710386557,
+          -2.8753913991457805,
+          -5.033399370476911
+        ],
+        "formal_walk_forward": false,
+        "positive_fold_count": 0,
+        "sign_flip_across_folds": false
+      },
+      "status": "INSUFFICIENT_SAMPLE",
+      "trade_count": 6,
+      "trades_sample": [
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.2719087302534445425",
+            "exit_fee": "0.2719087302534445425",
+            "funding_cost": "0.049437950955171735",
+            "market_impact_approximation": "0.1689058298746208806699625657",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.19775180382068694",
+            "spread_cost": "0.6888376469133691134263046554"
+          },
+          "entry_ts_ms": 1700003180000,
+          "exit_ts_ms": 1700003660000,
+          "gross_pnl": "-2.26279888901205",
+          "net_pnl": "-3.911549581082787754096267221",
+          "regime": "RANGE",
+          "side": "LONG",
+          "signal": 1.0
+        },
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.2696649581530096720",
+            "exit_fee": "0.2696649581530096720",
+            "funding_cost": "0.049029992391456304",
+            "market_impact_approximation": "0.1700914060481534113609885465",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.196119969565825216",
+            "spread_cost": "0.4157028019727615496380696050"
+          },
+          "entry_ts_ms": 1700004200000,
+          "exit_ts_ms": 1700004680000,
+          "gross_pnl": "-0.78164228475444",
+          "net_pnl": "-2.151916371038655824999058152",
+          "regime": "RANGE",
+          "side": "LONG",
+          "signal": 1.0
+        },
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.269660138092795725",
+            "exit_fee": "0.269660138092795725",
+            "funding_cost": "0.04902911601687195",
+            "market_impact_approximation": "0.1673573842383532405633730364",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.1961164640674878",
+            "spread_cost": "0.4285140873188758158411834924"
+          },
+          "entry_ts_ms": 1700004620000,
+          "exit_ts_ms": 1700005100000,
+          "gross_pnl": "-1.4950540713186",
+          "net_pnl": "-2.875391399145780256404556528",
+          "regime": "RANGE",
+          "side": "LONG",
+          "signal": 1.0
+        }
+      ]
+    },
+    {
+      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "15.6739875923656021810",
+        "exit_fee": "15.6739875923656021810",
+        "funding_cost": "2.849815925884654942",
+        "market_impact_approximation": "5.913432130527464118693025781",
+        "partial_fill_cost": "0",
+        "slippage_cost": "11.399263703538619768",
+        "spread_cost": "28.50412368783954676531708193"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_blocked": false,
+      "economic_prior": "Lead-lag between related instruments (e.g. BTC\u2192alt) may transfer short-horizon information; PIT alignment is mandatory.",
+      "failure_reasons": [],
+      "family_id": "CROSS_ASSET_LEAD_LAG",
+      "formal_walk_forward_executed": false,
+      "gross_pnl": 1.4249079629423276,
+      "implementation_rejected": false,
+      "label": "REGIME_FRAGILE",
+      "multiple_comparison_metadata": {
+        "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
+        "configs_tested_for_family": 1,
+        "family_count": 10,
+        "total_candidates": 10
+      },
+      "net_pnl": -78.58970266957917,
+      "oos_executed": false,
+      "parameter_checksum": "fd98ea8ae050c9f639fb89acb4498b219d4deb194539a9b0ef57a77d48f8f697",
+      "parameters": {
+        "cancel_replace_cycles": 0,
+        "cooldown_bars": 5,
+        "extra_fills": 0,
+        "family_id": "CROSS_ASSET_LEAD_LAG",
+        "holding_bars": 10,
+        "notional_usdt": 500.0,
+        "profile": "signal_only",
+        "qty": 0.01,
+        "semantic_mechanism_id": "MECH_CROSS_ASSET_LEAD_LAG_V1",
+        "signal_horizon_bars": 5
+      },
+      "point_in_time_proof": {
+        "future_bar_reference_count": 0,
+        "lookahead_forbidden": true,
+        "pit_status": "OK_DEVELOPMENT",
+        "signal_uses_bars_strictly_before_or_at_entry": true
+      },
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {
+        "RANGE": 42,
+        "TREND": 16
+      },
+      "semantic_mechanism_id": "MECH_CROSS_ASSET_LEAD_LAG_V1",
+      "stability_measures": {
+        "development_folds_only": true,
+        "fold_count": 4,
+        "fold_net_pnls": [
+          -18.357970627455,
+          -19.517313328676778,
+          -18.804164943696087,
+          -21.910253769751296
+        ],
+        "formal_walk_forward": false,
+        "positive_fold_count": 0,
+        "sign_flip_across_folds": false
+      },
+      "status": "REGIME_FRAGILE",
+      "trade_count": 58,
+      "trades_sample": [
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.272305226350161180",
+            "exit_fee": "0.272305226350161180",
+            "funding_cost": "0.04951004115457476",
+            "market_impact_approximation": "0.04951004115457476",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.19804016461829904",
+            "spread_cost": "0.3752475772139668013796623276"
+          },
+          "entry_ts_ms": 1700003120000,
+          "exit_ts_ms": 1700003720000,
+          "gross_pnl": "0.024755020577287380",
+          "net_pnl": "-1.192163256264450341379662328",
+          "regime": "RANGE",
+          "side": "LONG",
+          "signal": 0.5860311230262814
+        },
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.271125067948834220",
+            "exit_fee": "0.271125067948834220",
+            "funding_cost": "0.04929546689978804",
+            "market_impact_approximation": "0.1380698934351473880916739088",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.19718186759915216",
+            "spread_cost": "0.2861986722703770028593851902"
+          },
+          "entry_ts_ms": 1700003720000,
+          "exit_ts_ms": 1700004320000,
+          "gross_pnl": "0.024647733449894020",
+          "net_pnl": "-1.188348302652239010951059099",
+          "regime": "RANGE",
+          "side": "LONG",
+          "signal": 0.4765352097401711
+        },
+        {
+          "cost_components": {
+            "cancel_replace_cost": "0",
+            "entry_fee": "0.2701088440288480",
+            "exit_fee": "0.2701088440288480",
+            "funding_cost": "0.049110698914336",
+            "market_impact_approximation": "0.1507073274296041988413093154",
+            "partial_fill_cost": "0",
+            "slippage_cost": "0.196442795657344",
+            "spread_cost": "0.3246980481737596573031682650"
+          },
+          "entry_ts_ms": 1700004080000,
+          "exit_ts_ms": 1700004680000,
+          "gross_pnl": "0.0245553494571680",
+          "net_pnl": "-1.236621208775571856144477580",
+          "regime": "RANGE",
+          "side": "SHORT",
+          "signal": -0.6102044123365088
+        }
+      ]
+    },
+    {
+      "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0",
+        "exit_fee": "0",
+        "funding_cost": "0",
+        "market_impact_approximation": "0",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0",
+        "spread_cost": "0"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_blocked": false,
+      "failure_reasons": [
+        "ECONOMIC_PRIOR_INVALIDATED_ON_SYNTHETIC_REGIME_MIX"
+      ],
+      "family_id": "REGIME_MEAN_REVERSION",
+      "formal_walk_forward_executed": false,
+      "gross_pnl": -12.5,
+      "implementation_rejected": true,
+      "label": "REJECTED",
+      "multiple_comparison_metadata": {
+        "bonferroni_note": "single_config_per_family_no_multiplicity_inflation",
+        "configs_tested_for_family": 1,
+        "family_count": 10
+      },
+      "net_pnl": -18.2,
+      "oos_executed": false,
+      "parameter_checksum": "8daf823276524353394d6a04c0f9e30aef6585a33da77715b0e193e7666664f3",
+      "parameters": {
+        "cancel_replace_cycles": 0,
+        "cooldown_bars": 10,
+        "extra_fills": 0,
+        "family_id": "REGIME_MEAN_REVERSION",
+        "holding_bars": 14,
+        "notional_usdt": 500.0,
+        "profile": "reject",
+        "qty": 0.01,
+        "semantic_mechanism_id": "MECH_REGIME_COND_MEAN_REVERSION_V1",
+        "signal_horizon_bars": 10
+      },
+      "point_in_time_proof": {
+        "future_bar_reference_count": 0,
+        "lookahead_forbidden": true,
+        "pit_status": "OK_DEVELOPMENT"
+      },
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {
+        "RANGE": 4,
+        "STRESS": 2,
+        "TREND": 14
+      },
+      "semantic_mechanism_id": "MECH_REGIME_COND_MEAN_REVERSION_V1",
+      "stability_measures": {
+        "fold_count": 4,
+        "positive_fold_count": 0,
+        "sign_flip_across_folds": false
+      },
+      "status": "REJECTED",
+      "trade_count": 20
+    }
+  ],
+  "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+  "cost_destroyed_count": 1,
+  "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+  "data_lineage": {
+    "bar_count": 480,
+    "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+    "demo_order_count": 0,
+    "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V13C_2026_08_05",
+    "exchange_write_attempt_count": 0,
+    "formal_walk_forward_executed": false,
+    "oos_executed": false,
+    "point_in_time_proof": {
+      "as_of_ms": 1700000000000,
+      "future_bar_reference_count": 0,
+      "last_bar_ms": 1700028740000,
+      "lookahead_forbidden": true,
+      "pit_join_rule": "signal_uses_bars_strictly_before_entry_only"
+    },
+    "reserved_oos_consumed": false,
+    "seed": 20260805,
+    "series_checksum": "116a9f8837a80244320486c3e69bf7580ccef30a1453863eb80aaa7b39511e67"
+  },
+  "demo_order_count": 0,
+  "development_promising_count": 0,
+  "exchange_write_attempt_count": 0,
+  "family_catalog": [
+    {
+      "economic_prior": "Top-of-book / near-touch imbalance proxies short-horizon supply-demand pressure; edge is microstructure-local and cost-sensitive.",
+      "family_id": "ORDER_FLOW_IMBALANCE",
+      "holding_bars": 8,
+      "profile": "promising",
+      "required_features": [
+        "order_flow_imbalance",
+        "mid_return",
+        "spread_bps"
+      ],
+      "semantic_mechanism_id": "MECH_OFI_TOPBOOK_PRESSURE_V1",
+      "signal_horizon_bars": 4
+    },
+    {
+      "economic_prior": "Forced liquidation bursts create liquidity voids and short-horizon continuation or snapback; requires event timing integrity.",
+      "family_id": "LIQUIDATION_CASCADE",
+      "holding_bars": 6,
+      "profile": "cost_destroyed",
+      "required_features": [
+        "liquidation_intensity",
+        "aggression_ratio",
+        "depth_gap"
+      ],
+      "semantic_mechanism_id": "MECH_LIQ_CASCADE_RESPONSE_V1",
+      "signal_horizon_bars": 2
+    },
+    {
+      "economic_prior": "Large passive liquidity absorbs aggressive flow without price progress; subsequent reversal is the hypothesized response.",
+      "family_id": "ABSORPTION",
+      "holding_bars": 12,
+      "profile": "signal_only",
+      "required_features": [
+        "absorption_score",
+        "aggression_ratio",
+        "mid_return"
+      ],
+      "semantic_mechanism_id": "MECH_ABSORPTION_PASSIVE_DEFENSE_V1",
+      "signal_horizon_bars": 6
+    },
+    {
+      "economic_prior": "Sustained aggressor dominance across consecutive windows implies initiative continuation until liquidity replenishes.",
+      "family_id": "AGGRESSION_PERSISTENCE",
+      "holding_bars": 10,
+      "profile": "promising",
+      "required_features": [
+        "aggression_persistence",
+        "aggression_ratio",
+        "vol_z"
+      ],
+      "semantic_mechanism_id": "MECH_AGGRESSION_PERSISTENCE_V1",
+      "signal_horizon_bars": 8
+    },
+    {
+      "economic_prior": "Funding and basis dislocations encode crowding / carry stress; mean-reversion of dislocation is hypothesized after extremes.",
+      "family_id": "FUNDING_BASIS_DISLOCATION",
+      "holding_bars": 32,
+      "profile": "cost_destroyed",
+      "required_features": [
+        "funding_z",
+        "basis_bps",
+        "oi_change"
+      ],
+      "semantic_mechanism_id": "MECH_FUNDING_BASIS_DISLOCATION_V1",
+      "signal_horizon_bars": 16
+    },
+    {
+      "economic_prior": "Volatility regime transitions (expansion vs compression) alter expected range; breakout/mean-revert conditioned on vol state.",
+      "family_id": "VOL_EXPANSION_COMPRESSION",
+      "holding_bars": 16,
+      "profile": "regime_fragile",
+      "required_features": [
+        "vol_z",
+        "range_compression",
+        "mid_return"
+      ],
+      "semantic_mechanism_id": "MECH_VOL_EXPAND_COMPRESS_V1",
+      "signal_horizon_bars": 12
+    },
+    {
+      "economic_prior": "Sudden visible-depth withdrawal raises impact and gap risk; short-horizon adverse selection dominates unless carefully gated.",
+      "family_id": "LIQUIDITY_WITHDRAWAL",
+      "holding_bars": 5,
+      "profile": "dq_block",
+      "required_features": [
+        "depth_withdrawal",
+        "spread_bps",
+        "impact_bps"
+      ],
+      "semantic_mechanism_id": "MECH_LIQUIDITY_WITHDRAWAL_V1",
+      "signal_horizon_bars": 3
+    },
+    {
+      "economic_prior": "Transient spread shocks mark liquidity stress; fade after normalization is hypothesized but often cost-dominated.",
+      "family_id": "SPREAD_SHOCK",
+      "holding_bars": 8,
+      "profile": "thin_sample",
+      "required_features": [
+        "spread_shock",
+        "spread_bps",
+        "mid_return"
+      ],
+      "semantic_mechanism_id": "MECH_SPREAD_SHOCK_V1",
+      "signal_horizon_bars": 4
+    },
+    {
+      "economic_prior": "Lead-lag between related instruments (e.g. BTC\u2192alt) may transfer short-horizon information; PIT alignment is mandatory.",
+      "family_id": "CROSS_ASSET_LEAD_LAG",
+      "holding_bars": 10,
+      "profile": "signal_only",
+      "required_features": [
+        "lead_lag_score",
+        "cross_corr",
+        "mid_return"
+      ],
+      "semantic_mechanism_id": "MECH_CROSS_ASSET_LEAD_LAG_V1",
+      "signal_horizon_bars": 5
+    },
+    {
+      "economic_prior": "Range regimes favor mean reversion; trend regimes destroy it. Regime-conditioned evaluation is required to avoid false discovery.",
+      "family_id": "REGIME_MEAN_REVERSION",
+      "holding_bars": 14,
+      "profile": "reject",
+      "required_features": [
+        "regime_label",
+        "zscore_return",
+        "vol_z"
+      ],
+      "semantic_mechanism_id": "MECH_REGIME_COND_MEAN_REVERSION_V1",
+      "signal_horizon_bars": 10
+    }
+  ],
+  "formal_walk_forward_executed": false,
+  "hard_bans": [
+    "no_demo_orders",
+    "no_exchange_write",
+    "no_formal_walk_forward",
+    "no_mainnet",
+    "no_oos_consumption",
+    "no_pr27_merge",
+    "no_profitability_claims",
+    "no_qualified_claims",
+    "no_real_money",
+    "no_shadow_orders",
+    "no_strategy_promotion"
+  ],
+  "label_histogram": {
+    "DATA_QUALITY_BLOCKED": 1,
+    "DEVELOPMENT_PROMISING_NOT_QUALIFIED": 0,
+    "INSUFFICIENT_SAMPLE": 3,
+    "RAW_EDGE_PRESENT_BUT_COST_DESTROYED": 1,
+    "REGIME_FRAGILE": 4,
+    "REJECTED": 1,
+    "RESEARCH_SIGNAL_ONLY": 0
+  },
+  "mechanism_families": [
+    "ORDER_FLOW_IMBALANCE",
+    "LIQUIDATION_CASCADE",
+    "ABSORPTION",
+    "AGGRESSION_PERSISTENCE",
+    "FUNDING_BASIS_DISLOCATION",
+    "VOL_EXPANSION_COMPRESSION",
+    "LIQUIDITY_WITHDRAWAL",
+    "SPREAD_SHOCK",
+    "CROSS_ASSET_LEAD_LAG",
+    "REGIME_MEAN_REVERSION"
+  ],
+  "mechanism_family_count": 10,
+  "oos_consumed": false,
+  "oos_executed": false,
+  "package": "NEXUS_COST_AWARE_STRATEGY_DISCOVERY_FACTORY_V3",
+  "pass_id": 1,
+  "pr27_merge_attempted": false,
+  "profitability_claimed": false,
+  "qualification_ready_count": 0,
+  "qualified_claimed": false,
+  "rejected_count": 1,
+  "required_cost_components": [
+    "entry_fee",
+    "exit_fee",
+    "spread_cost",
+    "slippage_cost",
+    "funding_cost",
+    "partial_fill_cost",
+    "cancel_replace_cost",
+    "market_impact_approximation"
+  ],
+  "schema": "v13_c_strategy_discovery_factory_v3",
+  "seed": 20260805
+}

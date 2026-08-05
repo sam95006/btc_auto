@@ -1,0 +1,77 @@
+{
+  "adversarial_pass_ok": true,
+  "adversarial_remaining_count": 0,
+  "base_sha": "abd2195ef6d79f609dd261b5e9c5402599625a64",
+  "blockers": [
+    {
+      "blocker_id": "QUALIFICATION_NOT_AUTHORIZED",
+      "detail": "qualification_ready_count forced 0 until formal Qualification separately authorized"
+    },
+    {
+      "blocker_id": "OOS_AND_FORMAL_WF_BANNED",
+      "detail": "factory uses synthetic development fixtures only"
+    },
+    {
+      "blocker_id": "NO_PROFITABILITY_OR_QUALIFIED_CLAIMS",
+      "detail": "labels exclude profitability and qualification claims"
+    }
+  ],
+  "branch": "feature/v13-strategy-discovery-factory-v3",
+  "campaign": "COST_AWARE_STRATEGY_DISCOVERY_FACTORY_V3",
+  "candidate_configuration_count": 10,
+  "code_checksum": "f5512977642bcf70a20dae148377e8c61eab151571bc1537c31faae66e78bc31",
+  "cost_destroyed_count": 1,
+  "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+  "created_at": "2026-08-05T08:31:40Z",
+  "demo_order_count": 0,
+  "development_promising_count": 0,
+  "exchange_write_attempt_count": 0,
+  "formal_walk_forward_executed": false,
+  "hard_bans": [
+    "no_demo_orders",
+    "no_exchange_write",
+    "no_formal_walk_forward",
+    "no_mainnet",
+    "no_oos_consumption",
+    "no_pr27_merge",
+    "no_profitability_claims",
+    "no_qualified_claims",
+    "no_real_money",
+    "no_shadow_orders",
+    "no_strategy_promotion"
+  ],
+  "label_histogram": {
+    "DATA_QUALITY_BLOCKED": 1,
+    "DEVELOPMENT_PROMISING_NOT_QUALIFIED": 0,
+    "INSUFFICIENT_SAMPLE": 3,
+    "RAW_EDGE_PRESENT_BUT_COST_DESTROYED": 1,
+    "REGIME_FRAGILE": 4,
+    "REJECTED": 1,
+    "RESEARCH_SIGNAL_ONLY": 0
+  },
+  "lane": "V13-C",
+  "lane_head": "abd2195ef6d79f609dd261b5e9c5402599625a64",
+  "mechanism_family_count": 10,
+  "oos_consumed": false,
+  "oos_executed": false,
+  "pass": true,
+  "pass_id": 1,
+  "pr27_merge_attempted": false,
+  "profitability_claimed": false,
+  "qualification_ready_count": 0,
+  "qualified_claimed": false,
+  "rejected_count": 1,
+  "required_cost_components": [
+    "entry_fee",
+    "exit_fee",
+    "spread_cost",
+    "slippage_cost",
+    "funding_cost",
+    "partial_fill_cost",
+    "cancel_replace_cost",
+    "market_impact_approximation"
+  ],
+  "schema": "v13_c_strategy_discovery_factory_v3",
+  "status": "NEXUS_V13_C_STRATEGY_DISCOVERY_PASS",
+  "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v13_strategy_discovery"
+}
