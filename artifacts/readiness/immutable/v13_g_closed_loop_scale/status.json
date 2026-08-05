@@ -17,7 +17,7 @@
     "Closure"
   ],
   "completed_lifecycle_count": 5500,
-  "created_at": "2026-08-05T09:00:28Z",
+  "created_at": "2026-08-05T09:01:30Z",
   "digest": "9228ed3580d47637061f74ef6f6cded6e4f18c6139d4e8096eef6bc8294355cf",
   "error_count": 0,
   "exchange_write_attempt_count": 0,
@@ -46,6 +46,7 @@
     "no_decorative_intent_position_ids",
     "no_g_deletion"
   ],
+  "head_commit": "4d9b432ebdce790e2dcbd64cf2ea3d454b961239",
   "invariants": {
     "checkpoint_loss_count": 0,
     "cost_bridge_failure_count": 0,
@@ -59,6 +60,7 @@
     "unclosed_intent_count": 0,
     "untracked_fill_count": 0
   },
+  "lane_head_commit": "4d9b432ebdce790e2dcbd64cf2ea3d454b961239",
   "ontology": [
     "MONITORING",
     "EXITED",
@@ -69,6 +71,7 @@
   "pass": true,
   "profitability_claimed": false,
   "profitability_measured": false,
+  "pytest_passed": true,
   "rejected_count": 4500,
   "schema": "v13_g_closed_loop_scale_status",
   "status": "NEXUS_V13_G_CLOSED_LOOP_SCALE_PASS"
