@@ -1,4 +1,4 @@
-"""Restore integrated tip imports after the review test package finishes."""
+"""Run reviewer overlay tests last so origin path swaps cannot poison the suite."""
 from __future__ import annotations
 
 import sys
@@ -40,16 +40,16 @@ def _restore_tip_path() -> None:
     sys.path.insert(0, tip)
 
 
-def pytest_runtest_teardown(item, nextitem):  # noqa: ARG001
-    cur = str(getattr(item, "path", getattr(item, "fspath", ""))).replace("\\", "/")
-    try:
-        next_path = str(getattr(nextitem, "path", getattr(nextitem, "fspath", ""))).replace("\\", "/") if nextitem else ""
-    except Exception:
-        next_path = ""
-    if "/tests/review/" in cur and "/tests/review/" not in next_path:
-        _restore_tip_path()
-        _purge_backend()
-
+def pytest_collection_modifyitems(session, config, items):  # noqa: ARG001
+    reviews = []
+    others = []
+    for item in items:
+        path = str(getattr(item, "path", getattr(item, "fspath", ""))).replace("\\", "/")
+        if "/tests/review/" in path:
+            reviews.append(item)
+        else:
+            others.append(item)
+    items[:] = others + reviews
 
 
 def pytest_sessionfinish(session, exitstatus):  # noqa: ARG001
