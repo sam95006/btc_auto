@@ -1,6 +1,6 @@
 {
   "schema": "v13_v23_completion_ops_cycle",
-  "created_at": "2026-08-05T08:35:01Z",
+  "created_at": "2026-08-05T08:35:17Z",
   "lane": "V13-B",
   "lane_name": "REFLECTION_V23_COMPLETION_OPS",
   "package": "backend.nexus_v23_completion_ops",
@@ -20,7 +20,7 @@
   ],
   "incomplete_sot": {
     "schema": "v13_reflection_v23_completion_ops_incomplete_sot",
-    "created_at": "2026-08-05T08:35:01Z",
+    "created_at": "2026-08-05T08:35:17Z",
     "V2_3_complete": false,
     "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
     "case_id_count": 80,
@@ -49,11 +49,11 @@
   },
   "provider_preflight": {
     "schema": "v13_v23_provider_preflight_map",
-    "created_at": "2026-08-05T08:35:01Z",
+    "created_at": "2026-08-05T08:35:17Z",
     "lanes": {
       "GROQ_REFLECTION_REASONER": {
         "schema": "v13_v23_provider_preflight",
-        "created_at": "2026-08-05T08:35:01Z",
+        "created_at": "2026-08-05T08:35:17Z",
         "profile_id": "GROQ_REFLECTION_REASONER",
         "mode": "SANITIZED_FIXTURE",
         "provider_preflight_status": "RATE_LIMITED",
@@ -61,8 +61,8 @@
         "http_status": 429,
         "retry_after_s": 900.0,
         "quota_reset_s": 900.0,
-        "quota_reset_at": "2026-08-05T08:50:01Z",
-        "next_resume_not_before": "2026-08-05T08:50:01Z",
+        "quota_reset_at": "2026-08-05T08:50:17Z",
+        "next_resume_not_before": "2026-08-05T08:50:17Z",
         "mass_batch_blocked": true,
         "real_provider_call_executed": false,
         "real_resume_owner": "local_Coordinator",
@@ -73,7 +73,7 @@
       },
       "SAMBANOVA_INDEPENDENT_CRITIC": {
         "schema": "v13_v23_provider_preflight",
-        "created_at": "2026-08-05T08:35:01Z",
+        "created_at": "2026-08-05T08:35:17Z",
         "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
         "mode": "SANITIZED_FIXTURE",
         "provider_preflight_status": "RATE_LIMITED",
@@ -81,8 +81,8 @@
         "http_status": 429,
         "retry_after_s": 900.0,
         "quota_reset_s": 1200.0,
-        "quota_reset_at": "2026-08-05T08:55:01Z",
-        "next_resume_not_before": "2026-08-05T08:50:01Z",
+        "quota_reset_at": "2026-08-05T08:55:17Z",
+        "next_resume_not_before": "2026-08-05T08:50:17Z",
         "mass_batch_blocked": true,
         "real_provider_call_executed": false,
         "real_resume_owner": "local_Coordinator",
@@ -99,7 +99,7 @@
   },
   "queue_health": {
     "schema": "v13_v23_queue_health",
-    "created_at": "2026-08-05T08:35:01Z",
+    "created_at": "2026-08-05T08:35:17Z",
     "overall_status": "DEGRADED_INCOMPLETE",
     "V2_3_complete": false,
     "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
@@ -141,18 +141,18 @@
   },
   "retry_quota_obs": {
     "schema": "v13_v23_retry_quota_obs_map",
-    "created_at": "2026-08-05T08:35:01Z",
+    "created_at": "2026-08-05T08:35:17Z",
     "lanes": {
       "GROQ_REFLECTION_REASONER": {
         "schema": "v13_v23_retry_quota_obs",
-        "created_at": "2026-08-05T08:35:01Z",
+        "created_at": "2026-08-05T08:35:17Z",
         "profile_id": "GROQ_REFLECTION_REASONER",
         "http_status": 429,
         "retry_after_s": 900.0,
         "quota_reset_s": 900.0,
-        "quota_reset_at": "2026-08-05T08:50:01Z",
+        "quota_reset_at": "2026-08-05T08:50:17Z",
         "quota_reset_visible": true,
-        "next_resume_not_before": "2026-08-05T08:50:01Z",
+        "next_resume_not_before": "2026-08-05T08:50:17Z",
         "rate_limited": true,
         "headers_observed": {
           "Retry-After": "900",
@@ -162,14 +162,14 @@
       },
       "SAMBANOVA_INDEPENDENT_CRITIC": {
         "schema": "v13_v23_retry_quota_obs",
-        "created_at": "2026-08-05T08:35:01Z",
+        "created_at": "2026-08-05T08:35:17Z",
         "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
         "http_status": 429,
         "retry_after_s": 900.0,
         "quota_reset_s": 1200.0,
-        "quota_reset_at": "2026-08-05T08:55:01Z",
+        "quota_reset_at": "2026-08-05T08:55:17Z",
         "quota_reset_visible": true,
-        "next_resume_not_before": "2026-08-05T08:50:01Z",
+        "next_resume_not_before": "2026-08-05T08:50:17Z",
         "rate_limited": true,
         "headers_observed": {
           "Retry-After": "900",
@@ -186,7 +186,7 @@
   },
   "provider_windows": {
     "schema": "v13_v23_provider_windows",
-    "created_at": "2026-08-05T08:35:01Z",
+    "created_at": "2026-08-05T08:35:17Z",
     "lanes": {
       "GROQ_REFLECTION_REASONER": {
         "profile_id": "GROQ_REFLECTION_REASONER",
@@ -199,9 +199,9 @@
         "quota_reset_s": 900.0,
         "capacity_wait_s": 900.0,
         "window_open_in_s": 900.0,
-        "window_open_at": "2026-08-05T08:50:01Z",
+        "window_open_at": "2026-08-05T08:50:17Z",
         "estimated_drain_s": 135.0,
-        "window_close_at": "2026-08-05T08:52:16Z",
+        "window_close_at": "2026-08-05T08:52:32Z",
         "window_status": "CLOSED_WAITING",
         "real_resume_authorized": false
       },
@@ -216,9 +216,9 @@
         "quota_reset_s": 1200.0,
         "capacity_wait_s": 1200.0,
         "window_open_in_s": 1200.0,
-        "window_open_at": "2026-08-05T08:55:01Z",
+        "window_open_at": "2026-08-05T08:55:17Z",
         "estimated_drain_s": 100.0,
-        "window_close_at": "2026-08-05T08:56:41Z",
+        "window_close_at": "2026-08-05T08:56:57Z",
         "window_status": "CLOSED_WAITING",
         "real_resume_authorized": false
       }
@@ -244,7 +244,7 @@
   },
   "capacity_status": {
     "schema": "v13_v23_capacity_status",
-    "created_at": "2026-08-05T08:35:01Z",
+    "created_at": "2026-08-05T08:35:17Z",
     "overall_capacity_status": "INCOMPLETE_PROVIDER_CAPACITY",
     "lanes": {
       "GROQ_REFLECTION_REASONER": {
@@ -267,11 +267,11 @@
   },
   "atomic_checkpoint": {
     "schema": "v13_v23_atomic_checkpoint",
-    "created_at": "2026-08-05T08:35:01Z",
+    "created_at": "2026-08-05T08:35:17Z",
     "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_reflection_completion\\.nexus_runtime\\v13_b_fixtures\\blind_reflection_v23_checkpoint_fixture.json",
     "atomic_replace": true,
     "bytes_written": 4840,
-    "checksum_sha256": "89860711f1156f8c72100bf0a920486187cdeb26d7d48a1419d3b37cf8c7c279",
+    "checksum_sha256": "c2ef10f771e555dbaaafe0a40cabeaecdc261d28954a965ead4eb1c5de63a63f",
     "integrity_checksum": "41f6b6958d312ea1242b0ea24225e5e0c25285a5c3606a216c41b224601698cb",
     "tmp_cleaned": true,
     "secrets_stripped": true,
@@ -286,7 +286,7 @@
   },
   "semantic_counters": {
     "schema": "v13_v23_semantic_counters",
-    "created_at": "2026-08-05T08:35:01Z",
+    "created_at": "2026-08-05T08:35:17Z",
     "ok": true,
     "issues": [],
     "groq_success_count": 53,
@@ -301,7 +301,7 @@
   },
   "completed_case_dedupe": {
     "schema": "v13_v23_completed_case_dedupe",
-    "created_at": "2026-08-05T08:35:01Z",
+    "created_at": "2026-08-05T08:35:17Z",
     "case_id_count": 80,
     "completed_case_count": 53,
     "pending_before_dedupe": 28,
@@ -346,7 +346,7 @@
   },
   "critic_ordering": {
     "schema": "v13_v23_critic_ordering",
-    "created_at": "2026-08-05T08:35:01Z",
+    "created_at": "2026-08-05T08:35:17Z",
     "critic_order": [
       "case_016",
       "case_017",
@@ -417,7 +417,7 @@
   },
   "terminal_denominator_validation": {
     "schema": "v13_v23_terminal_denominator",
-    "created_at": "2026-08-05T08:35:01Z",
+    "created_at": "2026-08-05T08:35:17Z",
     "terminal_eval": {
       "V2_3_TERMINAL_STATUS": "INCOMPLETE_PROVIDER_CAPACITY",
       "quality_gates_evaluated": false,
@@ -452,7 +452,7 @@
   },
   "lesson_quality_gates": {
     "schema": "v13_v23_lesson_quality_gates",
-    "created_at": "2026-08-05T08:35:01Z",
+    "created_at": "2026-08-05T08:35:17Z",
     "fixture_lesson_gate": {
       "lesson_gate_schema": "v11_lesson_gate",
       "policy_effect_lesson_allowed": false,
@@ -496,7 +496,7 @@
   },
   "safe_pause_resume": {
     "schema": "v13_v23_safe_pause_resume",
-    "created_at": "2026-08-05T08:35:01Z",
+    "created_at": "2026-08-05T08:35:17Z",
     "lanes": {
       "GROQ_REFLECTION_REASONER": {
         "paused": false
@@ -511,7 +511,7 @@
         "action": "pause",
         "profile_id": "GROQ_REFLECTION_REASONER",
         "reason": "ops_cycle_demo_pause",
-        "at": "2026-08-05T08:35:01Z",
+        "at": "2026-08-05T08:35:17Z",
         "affects_real_resume_ownership": false,
         "real_resume_executed": false
       },
@@ -519,7 +519,7 @@
         "action": "resume_ops_scheduling",
         "profile_id": "GROQ_REFLECTION_REASONER",
         "reason": "ops_cycle_demo_resume",
-        "at": "2026-08-05T08:35:01Z",
+        "at": "2026-08-05T08:35:17Z",
         "affects_real_resume_ownership": false,
         "real_resume_executed": false,
         "note": "Safe resume clears ops pause only; local Coordinator owns real resume."
@@ -528,7 +528,7 @@
         "action": "pause",
         "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
         "reason": "ops_cycle_demo_pause",
-        "at": "2026-08-05T08:35:01Z",
+        "at": "2026-08-05T08:35:17Z",
         "affects_real_resume_ownership": false,
         "real_resume_executed": false
       },
@@ -536,7 +536,7 @@
         "action": "resume_ops_scheduling",
         "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
         "reason": "ops_cycle_demo_resume",
-        "at": "2026-08-05T08:35:01Z",
+        "at": "2026-08-05T08:35:17Z",
         "affects_real_resume_ownership": false,
         "real_resume_executed": false,
         "note": "Safe resume clears ops pause only; local Coordinator owns real resume."
@@ -550,7 +550,7 @@
       "action": "pause",
       "profile_id": "GROQ_REFLECTION_REASONER",
       "reason": "ops_cycle_demo_pause",
-      "at": "2026-08-05T08:35:01Z",
+      "at": "2026-08-05T08:35:17Z",
       "affects_real_resume_ownership": false,
       "real_resume_executed": false
     },
@@ -558,7 +558,7 @@
       "action": "resume_ops_scheduling",
       "profile_id": "GROQ_REFLECTION_REASONER",
       "reason": "ops_cycle_demo_resume",
-      "at": "2026-08-05T08:35:01Z",
+      "at": "2026-08-05T08:35:17Z",
       "affects_real_resume_ownership": false,
       "real_resume_executed": false,
       "note": "Safe resume clears ops pause only; local Coordinator owns real resume."
@@ -567,7 +567,7 @@
       "action": "pause",
       "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
       "reason": "ops_cycle_demo_pause",
-      "at": "2026-08-05T08:35:01Z",
+      "at": "2026-08-05T08:35:17Z",
       "affects_real_resume_ownership": false,
       "real_resume_executed": false
     },
@@ -575,7 +575,7 @@
       "action": "resume_ops_scheduling",
       "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
       "reason": "ops_cycle_demo_resume",
-      "at": "2026-08-05T08:35:01Z",
+      "at": "2026-08-05T08:35:17Z",
       "affects_real_resume_ownership": false,
       "real_resume_executed": false,
       "note": "Safe resume clears ops pause only; local Coordinator owns real resume."
@@ -583,7 +583,7 @@
   ],
   "resume_boundary": {
     "schema": "v13_v23_resume_boundary",
-    "created_at": "2026-08-05T08:35:01Z",
+    "created_at": "2026-08-05T08:35:17Z",
     "real_resume_owner": "local_Coordinator",
     "ops_role": "observability_and_manual_control_only_sanitized_fixtures",
     "ops_owns_real_resume": false,
@@ -598,7 +598,7 @@
         "owner": "local_Coordinator",
         "ops_role": "observability_and_manual_control_only_sanitized_fixtures",
         "reason": "ops_cycle_probe",
-        "at": "2026-08-05T08:35:01Z"
+        "at": "2026-08-05T08:35:17Z"
       },
       {
         "action": "execute_real_resume",
@@ -607,7 +607,7 @@
         "owner": "local_Coordinator",
         "callable_invoked": false,
         "fn_name": null,
-        "at": "2026-08-05T08:35:01Z"
+        "at": "2026-08-05T08:35:17Z"
       }
     ],
     "forbidden_real_resume_calls": [
@@ -625,7 +625,7 @@
     "owner": "local_Coordinator",
     "ops_role": "observability_and_manual_control_only_sanitized_fixtures",
     "reason": "ops_cycle_probe",
-    "at": "2026-08-05T08:35:01Z"
+    "at": "2026-08-05T08:35:17Z"
   },
   "ownership_theft_blocked": true,
   "real_resume_owner": "local_Coordinator",

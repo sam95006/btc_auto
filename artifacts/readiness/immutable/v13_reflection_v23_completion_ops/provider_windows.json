@@ -1,6 +1,6 @@
 {
   "schema": "v13_v23_provider_windows",
-  "created_at": "2026-08-05T08:35:01Z",
+  "created_at": "2026-08-05T08:35:17Z",
   "lanes": {
     "GROQ_REFLECTION_REASONER": {
       "profile_id": "GROQ_REFLECTION_REASONER",
@@ -13,9 +13,9 @@
       "quota_reset_s": 900.0,
       "capacity_wait_s": 900.0,
       "window_open_in_s": 900.0,
-      "window_open_at": "2026-08-05T08:50:01Z",
+      "window_open_at": "2026-08-05T08:50:17Z",
       "estimated_drain_s": 135.0,
-      "window_close_at": "2026-08-05T08:52:16Z",
+      "window_close_at": "2026-08-05T08:52:32Z",
       "window_status": "CLOSED_WAITING",
       "real_resume_authorized": false
     },
@@ -30,9 +30,9 @@
       "quota_reset_s": 1200.0,
       "capacity_wait_s": 1200.0,
       "window_open_in_s": 1200.0,
-      "window_open_at": "2026-08-05T08:55:01Z",
+      "window_open_at": "2026-08-05T08:55:17Z",
       "estimated_drain_s": 100.0,
-      "window_close_at": "2026-08-05T08:56:41Z",
+      "window_close_at": "2026-08-05T08:56:57Z",
       "window_status": "CLOSED_WAITING",
       "real_resume_authorized": false
     }
