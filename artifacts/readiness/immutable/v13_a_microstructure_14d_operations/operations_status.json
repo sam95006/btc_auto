@@ -5,7 +5,7 @@
   "created_at": "2026-08-05T08:32:59Z",
   "branch": "feature/v13-microstructure-14d-operations",
   "base_head": "abd2195ef6d79f609dd261b5e9c5402599625a64",
-  "git_head": "abd2195ef6d79f609dd261b5e9c5402599625a64",
+  "git_head": "e162c3c9eac885008e109a51f4d6291a847f02de",
   "campaign_id": "ms_accum_v13_integrity_14d",
   "target_calendar_days": 14,
   "symbol_count": 25,
@@ -94,5 +94,7 @@
     "live_capture_not_started_coordinator_only",
     "event_study_NOT_READY",
     "14d_live_data_not_yet_accumulated"
-  ]
+  ],
+  "pushed_to_origin": true,
+  "updated_at": "2026-08-05T08:34:13Z"
 }
