@@ -1,7 +1,5 @@
 {
-  "exit_code": 0,
+  "note": "pass3_pin",
   "passed": true,
-  "stderr_tail": "",
-  "stdout_tail": "...............                                                          [100%]\n15 passed in 0.25s",
   "tests": 15
 }
