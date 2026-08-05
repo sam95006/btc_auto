@@ -1,0 +1,100 @@
+{
+  "active_lesson_count": 0,
+  "adversarial_remaining_count": 0,
+  "auto_integrate": false,
+  "auto_integrate_attempted": false,
+  "base_sha": "f01407e5d7c7e4c00e0eb1616dc5ef74d91a58b5",
+  "blockers": [
+    {
+      "blocker_id": "LESSONS_CANDIDATE_ONLY",
+      "detail": "All compiled lessons remain CANDIDATE; ACTIVE real lessons banned"
+    },
+    {
+      "blocker_id": "NO_PRODUCTION_RISK_LEVERAGE_MUTATION",
+      "detail": "Compiler refuses rules that mutate production risk or leverage"
+    },
+    {
+      "blocker_id": "OOS_AND_FORMAL_WF_BANNED",
+      "detail": "Development fixtures only; no OOS consumption or formal WF"
+    },
+    {
+      "blocker_id": "NO_AUTO_INTEGRATE",
+      "detail": "Lane artifacts only; coordinator must not auto-integrate"
+    },
+    {
+      "blocker_id": "PROMOTION_PIPELINE_OWNED_BY_V16_F",
+      "detail": "Promotion past CANDIDATE is V16-F Lesson Validation Firewall only"
+    }
+  ],
+  "branch": "feature/v16-lesson-compiler",
+  "campaign": "LESSON_COMPILER",
+  "campaign_digest": "3480e212fb79f5f288ef246555df41d67d820fdc56e24761356878b787efbc00",
+  "candidate_lesson_count": 8,
+  "code_checksum": "f3d7b989fa1adc22e7989dda35a9e260eb5a78cc9a099646103c478e70d7fef3",
+  "created_at": "2026-08-05T18:51:35Z",
+  "critical_remaining": 0,
+  "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+  "demo_order_count": 0,
+  "edge_claim_count": 0,
+  "edge_claimed": false,
+  "exchange_write_attempt_count": 0,
+  "formal_walk_forward_executed": false,
+  "hard_bans": [
+    "no_active_real_lessons",
+    "no_auto_integrate",
+    "no_demo_orders",
+    "no_edge_claims",
+    "no_exchange_write",
+    "no_formal_walk_forward",
+    "no_lesson_promotion_to_active",
+    "no_mainnet",
+    "no_oos_consumption",
+    "no_pr26_merge",
+    "no_pr27_merge",
+    "no_private_core_deploy",
+    "no_production_leverage_mutation",
+    "no_production_risk_mutation",
+    "no_profitability_claims",
+    "no_qualified_claims",
+    "no_real_money",
+    "no_shadow_orders",
+    "no_status_json",
+    "no_strategy_promotion"
+  ],
+  "high_remaining": 0,
+  "label_histogram": {
+    "LESSON_CANDIDATE_COMPILED": 8
+  },
+  "lane": "V16-E",
+  "lane_head": "f01407e5d7c7e4c00e0eb1616dc5ef74d91a58b5",
+  "lesson_count": 8,
+  "mainnet_touch_count": 0,
+  "non_claims": [
+    "No predictive edge claim",
+    "No profitability claim",
+    "No qualification claim",
+    "Lessons are CANDIDATE only; never ACTIVE",
+    "Cannot mutate production risk or leverage",
+    "Compile errors fail-closed",
+    "No status JSON / runtime status report"
+  ],
+  "oos_consumed": false,
+  "oos_executed": false,
+  "pass": true,
+  "pass_1_ok": true,
+  "pass_2_ok": true,
+  "pass_3_ok": true,
+  "pr26_merge_attempted": false,
+  "pr27_merge_attempted": false,
+  "production_leverage_mutated": false,
+  "production_risk_mutated": false,
+  "profitability_claim_count": 0,
+  "profitability_claimed": false,
+  "qualification_ready_count": 0,
+  "qualified_claimed": false,
+  "schema": "v16_e_lesson_compiler",
+  "shadow_order_count": 0,
+  "status": "NEXUS_V16_E_LESSON_COMPILER_PASS",
+  "status_json_written": false,
+  "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v16_e_lesson_compiler"
+}

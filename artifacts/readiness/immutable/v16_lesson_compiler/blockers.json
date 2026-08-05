@@ -1,0 +1,22 @@
+[
+  {
+    "blocker_id": "LESSONS_CANDIDATE_ONLY",
+    "detail": "All compiled lessons remain CANDIDATE; ACTIVE real lessons banned"
+  },
+  {
+    "blocker_id": "NO_PRODUCTION_RISK_LEVERAGE_MUTATION",
+    "detail": "Compiler refuses rules that mutate production risk or leverage"
+  },
+  {
+    "blocker_id": "OOS_AND_FORMAL_WF_BANNED",
+    "detail": "Development fixtures only; no OOS consumption or formal WF"
+  },
+  {
+    "blocker_id": "NO_AUTO_INTEGRATE",
+    "detail": "Lane artifacts only; coordinator must not auto-integrate"
+  },
+  {
+    "blocker_id": "PROMOTION_PIPELINE_OWNED_BY_V16_F",
+    "detail": "Promotion past CANDIDATE is V16-F Lesson Validation Firewall only"
+  }
+]

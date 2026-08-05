@@ -1,0 +1,364 @@
+[
+  {
+    "affected_expert": "breakout_long",
+    "author_model": "nexus_reflection_fixture",
+    "author_version": "v16e.fixture.1",
+    "catalog_version": "v16e.1.0",
+    "compile_digest": "98b1b73b08c45003403e9a3466be79e437a36c5f0df4a4f80771dbe5ca986734",
+    "conditions": [
+      {
+        "field": "volatility_regime",
+        "op": "EQ",
+        "value": "EXPANSION"
+      },
+      {
+        "field": "long_crowding",
+        "op": "GT",
+        "value": 0.72
+      },
+      {
+        "field": "oi_confirmation",
+        "op": "IS_FALSE",
+        "value": false
+      }
+    ],
+    "confidence": 0.61,
+    "contradictory_evidence": [
+      "oi_spike_on_2_of_12_cases"
+    ],
+    "evidence_count": 12,
+    "expiry": {
+      "expires_at_ms": null,
+      "max_age_bars": 5000,
+      "revalidation_required": true
+    },
+    "lesson_id": "LESSON_REFL_DEV_BREAKOUT_CROWDING_001",
+    "mutates_production_leverage": false,
+    "mutates_production_risk": false,
+    "reflection_id": "REFL_DEV_BREAKOUT_CROWDING_001",
+    "regimes": [
+      "EXPANSION"
+    ],
+    "scope": "EXPERT",
+    "status": "CANDIDATE",
+    "then_action": {
+      "action_kind": "BLOCK",
+      "detail": "Block breakout_long when expansion + crowding without OI confirm",
+      "expert": "breakout_long",
+      "target": "entry_signal"
+    }
+  },
+  {
+    "affected_expert": "breakout_continuation",
+    "author_model": "nexus_reflection_fixture",
+    "author_version": "v16e.fixture.1",
+    "catalog_version": "v16e.1.0",
+    "compile_digest": "54883b469e2cb2c871cce54acbf0f3042ca7aad8bed3d78910b56867b667c152",
+    "conditions": [
+      {
+        "field": "breakout_failure_rate",
+        "op": "GT",
+        "value": 0.55
+      },
+      {
+        "field": "volume_confirm",
+        "op": "IS_FALSE",
+        "value": false
+      }
+    ],
+    "confidence": 0.58,
+    "contradictory_evidence": [
+      "thin_sample_crypto_alts"
+    ],
+    "evidence_count": 9,
+    "expiry": {
+      "expires_at_ms": null,
+      "max_age_bars": 3000,
+      "revalidation_required": true
+    },
+    "lesson_id": "LESSON_REFL_DEV_FAILED_BREAKOUT_002",
+    "mutates_production_leverage": false,
+    "mutates_production_risk": false,
+    "reflection_id": "REFL_DEV_FAILED_BREAKOUT_002",
+    "regimes": [
+      "TREND",
+      "EXPANSION"
+    ],
+    "scope": "STRATEGY_FAMILY",
+    "status": "CANDIDATE",
+    "then_action": {
+      "action_kind": "ABSTAIN",
+      "detail": "Abstain on failed-breakout regime without volume confirm",
+      "expert": "breakout_continuation",
+      "target": "entry_signal"
+    }
+  },
+  {
+    "affected_expert": "mean_revert_fade",
+    "author_model": "nexus_reflection_fixture",
+    "author_version": "v16e.fixture.1",
+    "catalog_version": "v16e.1.0",
+    "compile_digest": "18ad98cd8b4fa3b5bbe56bd58e23bae14fdff7edb9523e4ed9ce631c628b2109",
+    "conditions": [
+      {
+        "field": "liquidation_intensity",
+        "op": "GE",
+        "value": 0.8
+      },
+      {
+        "field": "spread_shock",
+        "op": "EQ",
+        "value": true
+      }
+    ],
+    "confidence": 0.66,
+    "contradictory_evidence": [
+      "fast_recovery_in_2_cases"
+    ],
+    "evidence_count": 15,
+    "expiry": {
+      "expires_at_ms": null,
+      "max_age_bars": 2000,
+      "revalidation_required": true
+    },
+    "lesson_id": "LESSON_REFL_DEV_LIQ_CASCADE_003",
+    "mutates_production_leverage": false,
+    "mutates_production_risk": false,
+    "reflection_id": "REFL_DEV_LIQ_CASCADE_003",
+    "regimes": [
+      "LIQUIDATION_STRESS"
+    ],
+    "scope": "REGIME",
+    "status": "CANDIDATE",
+    "then_action": {
+      "action_kind": "WAIT",
+      "detail": "Wait through liquidation cascade + spread shock before fade",
+      "expert": "mean_revert_fade",
+      "target": "entry_timing"
+    }
+  },
+  {
+    "affected_expert": "funding_carry",
+    "author_model": "nexus_reflection_fixture",
+    "author_version": "v16e.fixture.1",
+    "catalog_version": "v16e.1.0",
+    "compile_digest": "5a04d343312f940d91e2996766e071f72dc7906db5cd640c60ae503e49f10b29",
+    "conditions": [
+      {
+        "field": "funding_zscore",
+        "op": "GT",
+        "value": 2.5
+      },
+      {
+        "field": "basis_alignment",
+        "op": "IS_FALSE",
+        "value": false
+      }
+    ],
+    "confidence": 0.63,
+    "contradictory_evidence": [
+      "basis_caught_up_late_in_3_cases"
+    ],
+    "evidence_count": 11,
+    "expiry": {
+      "expires_at_ms": null,
+      "max_age_bars": 4000,
+      "revalidation_required": true
+    },
+    "lesson_id": "LESSON_REFL_DEV_FUNDING_DISLOC_004",
+    "mutates_production_leverage": false,
+    "mutates_production_risk": false,
+    "reflection_id": "REFL_DEV_FUNDING_DISLOC_004",
+    "regimes": [
+      "FUNDING_DISLOCATION"
+    ],
+    "scope": "EXPERT",
+    "status": "CANDIDATE",
+    "then_action": {
+      "action_kind": "BLOCK",
+      "detail": "Block funding carry when funding extreme without basis alignment",
+      "expert": "funding_carry",
+      "target": "entry_signal"
+    }
+  },
+  {
+    "affected_expert": "breakout_long",
+    "author_model": "nexus_reflection_fixture",
+    "author_version": "v16e.fixture.1",
+    "catalog_version": "v16e.1.0",
+    "compile_digest": "cc11911a7d6f1411993b558a0d0d44f6923de86405b3209ec1580e8b108ae09a",
+    "conditions": [
+      {
+        "field": "volatility_regime",
+        "op": "EQ",
+        "value": "COMPRESSION"
+      },
+      {
+        "field": "range_width_pct",
+        "op": "LT",
+        "value": 0.012
+      }
+    ],
+    "confidence": 0.55,
+    "contradictory_evidence": [
+      "false_break_then_trend_1_case"
+    ],
+    "evidence_count": 10,
+    "expiry": {
+      "expires_at_ms": null,
+      "max_age_bars": 2500,
+      "revalidation_required": true
+    },
+    "lesson_id": "LESSON_REFL_DEV_VOL_COMPRESS_005",
+    "mutates_production_leverage": false,
+    "mutates_production_risk": false,
+    "reflection_id": "REFL_DEV_VOL_COMPRESS_005",
+    "regimes": [
+      "COMPRESSION"
+    ],
+    "scope": "REGIME",
+    "status": "CANDIDATE",
+    "then_action": {
+      "action_kind": "DEFER",
+      "detail": "Defer breakout entries inside extreme compression ranges",
+      "expert": "breakout_long",
+      "target": "entry_timing"
+    }
+  },
+  {
+    "affected_expert": "order_flow_imbalance",
+    "author_model": "nexus_reflection_fixture",
+    "author_version": "v16e.fixture.1",
+    "catalog_version": "v16e.1.0",
+    "compile_digest": "40a06c04c83cef0653dd72d737b5ba10e3ed27305113881d17418d86ecfff123",
+    "conditions": [
+      {
+        "field": "aggression_flip",
+        "op": "EQ",
+        "value": true
+      },
+      {
+        "field": "depth_recovery",
+        "op": "IS_FALSE",
+        "value": false
+      }
+    ],
+    "confidence": 0.59,
+    "contradictory_evidence": [
+      "depth_refilled_within_2_bars_occasionally"
+    ],
+    "evidence_count": 14,
+    "expiry": {
+      "expires_at_ms": null,
+      "max_age_bars": 3500,
+      "revalidation_required": true
+    },
+    "lesson_id": "LESSON_REFL_DEV_FLOW_REVERSAL_006",
+    "mutates_production_leverage": false,
+    "mutates_production_risk": false,
+    "reflection_id": "REFL_DEV_FLOW_REVERSAL_006",
+    "regimes": [
+      "TREND",
+      "MEAN_REVERT"
+    ],
+    "scope": "EXPERT",
+    "status": "CANDIDATE",
+    "then_action": {
+      "action_kind": "REDUCE",
+      "detail": "Reduce flow-imbalance weight when aggression flips without depth recovery",
+      "expert": "order_flow_imbalance",
+      "target": "signal_weight"
+    }
+  },
+  {
+    "affected_expert": "cross_asset_lead_lag",
+    "author_model": "nexus_reflection_fixture",
+    "author_version": "v16e.fixture.1",
+    "catalog_version": "v16e.1.0",
+    "compile_digest": "7cc04878e790ad9ec2e373e375d9aad463bcc2748f983cf7c399e6e37e397a1e",
+    "conditions": [
+      {
+        "field": "lead_lag_confidence",
+        "op": "LT",
+        "value": 0.4
+      },
+      {
+        "field": "data_freshness_s",
+        "op": "GT",
+        "value": 30
+      }
+    ],
+    "confidence": 0.57,
+    "contradictory_evidence": [
+      "btc_eth_pair_still_worked_twice"
+    ],
+    "evidence_count": 8,
+    "expiry": {
+      "expires_at_ms": null,
+      "max_age_bars": 1500,
+      "revalidation_required": true
+    },
+    "lesson_id": "LESSON_REFL_DEV_CROSS_ASSET_007",
+    "mutates_production_leverage": false,
+    "mutates_production_risk": false,
+    "reflection_id": "REFL_DEV_CROSS_ASSET_007",
+    "regimes": [
+      "ANY"
+    ],
+    "scope": "STRATEGY_FAMILY",
+    "status": "CANDIDATE",
+    "then_action": {
+      "action_kind": "ABSTAIN",
+      "detail": "Abstain when lead-lag confidence low and data stale",
+      "expert": "cross_asset_lead_lag",
+      "target": "entry_signal"
+    }
+  },
+  {
+    "affected_expert": "time_of_day",
+    "author_model": "nexus_reflection_fixture",
+    "author_version": "v16e.fixture.1",
+    "catalog_version": "v16e.1.0",
+    "compile_digest": "8143bea19a5aa7dabac7418c695e29631bcf223168aa55cfa33d5ace5e7521a1",
+    "conditions": [
+      {
+        "field": "session_bucket",
+        "op": "IN",
+        "value": [
+          "ASIA_THIN",
+          "WEEKEND_GAP"
+        ]
+      },
+      {
+        "field": "spread_pct",
+        "op": "GT",
+        "value": 0.0008
+      }
+    ],
+    "confidence": 0.64,
+    "contradictory_evidence": [
+      "one_asia_open_continuation"
+    ],
+    "evidence_count": 13,
+    "expiry": {
+      "expires_at_ms": null,
+      "max_age_bars": 6000,
+      "revalidation_required": true
+    },
+    "lesson_id": "LESSON_REFL_DEV_TIME_OF_DAY_008",
+    "mutates_production_leverage": false,
+    "mutates_production_risk": false,
+    "reflection_id": "REFL_DEV_TIME_OF_DAY_008",
+    "regimes": [
+      "ANY"
+    ],
+    "scope": "EXPERT",
+    "status": "CANDIDATE",
+    "then_action": {
+      "action_kind": "BLOCK",
+      "detail": "Block time-of-day expert in thin/weekend sessions with wide spreads",
+      "expert": "time_of_day",
+      "target": "entry_signal"
+    }
+  }
+]
