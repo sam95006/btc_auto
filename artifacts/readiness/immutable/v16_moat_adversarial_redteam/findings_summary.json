@@ -1,9 +1,9 @@
 {
   "schema": "v16_moat_adversarial_redteam",
-  "generated_at": "2026-08-05T19:30:47Z",
+  "generated_at": "2026-08-05T19:30:52Z",
   "status": "BLOCKED",
   "recommendation": "NEXUS_V16_MOAT_ADVERSARIAL_REDTEAM_SURVIVORS_REMAIN",
-  "commit": "3f686ff52a9f7fe89dddfcd7ae7988d7b9b22c58",
+  "commit": "358ec146b79b44e68fffd3ec8768de973253cf09",
   "findings": [
     {
       "attack_id": "future_leakage",
