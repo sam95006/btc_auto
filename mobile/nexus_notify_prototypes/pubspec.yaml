@@ -1,0 +1,8 @@
+name: nexus_notify_prototypes
+description: PUB-K Flutter/Dart prototypes for push, widgets, preferences, deep links. No production credentials.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+dev_dependencies:
+  test: ^1.24.0
