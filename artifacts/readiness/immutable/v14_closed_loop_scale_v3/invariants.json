@@ -1,0 +1,13 @@
+{
+  "checkpoint_loss_count": 0,
+  "cost_bridge_failure_count": 0,
+  "duplicate_decision_count": 0,
+  "duplicate_intent_count": 0,
+  "duplicate_position_count": 0,
+  "evidence_binding_failure_count": 0,
+  "exchange_write_attempt_count": 0,
+  "orphan_lifecycle_count": 0,
+  "risk_limit_bypass_count": 0,
+  "unclosed_intent_count": 0,
+  "untracked_fill_count": 0
+}
