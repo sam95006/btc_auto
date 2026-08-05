@@ -4,15 +4,15 @@
     {
       "detail": "record_sealed",
       "evidence": {
-        "identity_fingerprint": "46a6044631d25cabe0c26e823b2ce15c39e0e693de4bd7ca802c25d9dbb7809b",
-        "record_hash": "93877356f613956fe42af75e7b7647e5d1a6ccf4c9de77d03eb0c33ace15f4bc",
+        "identity_fingerprint": "f092550ac1e347d95f797aaf4d761382bca7402d5dc2e172fac8b1754e70ebb1",
+        "record_hash": "00a1522ac468ec0f435e345a06f7fba7d37df1e10bfb7040026a82471b1f8c54",
         "verify": {
           "development_only": true,
           "experiment_id": "exp_seal_1",
-          "identity_fingerprint": "46a6044631d25cabe0c26e823b2ce15c39e0e693de4bd7ca802c25d9dbb7809b",
+          "identity_fingerprint": "f092550ac1e347d95f797aaf4d761382bca7402d5dc2e172fac8b1754e70ebb1",
           "ok": true,
           "oos_consumed": false,
-          "record_hash": "93877356f613956fe42af75e7b7647e5d1a6ccf4c9de77d03eb0c33ace15f4bc"
+          "record_hash": "00a1522ac468ec0f435e345a06f7fba7d37df1e10bfb7040026a82471b1f8c54"
         }
       },
       "fail_closed": true,
@@ -150,7 +150,7 @@
       "detail": "reload_ok",
       "evidence": {
         "count": 7,
-        "registry_hash": "bf932fba3650e4d7e0498f659501650f415112a0b966d8777a26611a36cb32fe"
+        "registry_hash": "d1e78f6eaff72a27603a7fca74f989fa1f97c3675a9fa01e2990c079df4c3942"
       },
       "fail_closed": true,
       "passed": true,
