@@ -22,5 +22,5 @@
   ],
   "artifact_policy": "no_star_status_json",
   "generated_at": "2026-08-05T15:20:04Z",
-  "head_sha_note": "fill_after_commit"
+  "lane_head": "099e28dbeb9f00b29fee215a52c4cb115dab67fc"
 }
