@@ -8,6 +8,7 @@ Fixes vs storage_v11:
 - partition_id strips .jsonl.gz cleanly
 - previous_partition_id maintained across hour rotation within writer
 - close() seals open tail; kill without close leaves .open + truncated gzip detectable
+- R2-D-001: exclusive O_EXCL create — duplicate partition_id fails closed (no overwrite)
 """
 from __future__ import annotations
 
@@ -22,6 +23,15 @@ from typing import Any
 
 from backend.nexus_microstructure.integrity_recovery_v11.checksum import replay_gzip_sha256
 from backend.nexus_microstructure.integrity_recovery_v11.path_identity import partition_id_from_gz
+
+
+class PartitionIdentityConflict(Exception):
+    """Raised when a partition_id path already exists (exclusive-create conflict)."""
+
+    def __init__(self, partition_id: str, path: Path) -> None:
+        self.partition_id = partition_id
+        self.path = Path(path)
+        super().__init__(f"PARTITION_IDENTITY_CONFLICT: {partition_id} path={path}")
 
 
 def _utc_hour_key(exchange_ts_ms: int) -> str:
@@ -55,6 +65,19 @@ def manifest_path_for(gz_path: Path) -> Path:
 
 def open_marker_for(gz_path: Path) -> Path:
     return Path(str(gz_path) + ".open")
+
+
+def _exclusive_gzip_create(path: Path) -> gzip.GzipFile:
+    """Create gzip file with O_EXCL — never overwrite an existing partition identity."""
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    if hasattr(os, "O_BINARY"):
+        flags |= os.O_BINARY
+    try:
+        fd = os.open(str(path), flags)
+    except FileExistsError as exc:
+        raise PartitionIdentityConflict(partition_id_from_gz(path), path) from exc
+    raw = os.fdopen(fd, "wb")
+    return gzip.GzipFile(filename=str(path), mode="wb", fileobj=raw)
 
 
 class DurablePartitionWriterV11:
@@ -110,8 +133,11 @@ class DurablePartitionWriterV11:
         seq = self.partition_count
         pid = f"{self.capture_session_id}_{self.family}_{self.symbol}_{hour}_{seq}"
         self._path = self.dir / f"{pid}.jsonl.gz"
-        self._fh = gzip.open(self._path, "wb")
-        open_marker_for(self._path).write_text(
+        marker = open_marker_for(self._path)
+        if self._path.exists() or marker.exists() or manifest_path_for(self._path).exists():
+            raise PartitionIdentityConflict(pid, self._path)
+        self._fh = _exclusive_gzip_create(self._path)
+        marker.write_text(
             json.dumps(
                 {
                     "status": "OPEN",

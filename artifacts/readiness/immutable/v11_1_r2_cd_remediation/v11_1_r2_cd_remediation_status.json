@@ -1,0 +1,42 @@
+{
+  "schema": "v11_1_r2_cd_remediation_status_v1",
+  "generated_at": "2026-08-05T04:12:15Z",
+  "head": "5b1d47543523f7e5be88da63256904171ce45165",
+  "branch": "feature/v11_1-r2-cd-remediation",
+  "base": "5b1d47543523f7e5be88da63256904171ce45165",
+  "r2_review_agent": "c5ab8d19-c5a6-4cd4-83f6-aa8df0294dbc",
+  "r2_recommendation_prior": "DO_NOT_INTEGRATE_AS_AUTHORITY_UNTIL_CRITICAL_FIXED",
+  "integration_recommendation": "CRITICAL_FIXED_PENDING_HIGH_HARDENING",
+  "critical_fixed": true,
+  "finding_matrix": {
+    "R2-C-001": "FIXED",
+    "R2-C-002": "FIXED",
+    "R2-D-001": "FIXED",
+    "R2-C-005": "FIXED",
+    "R2-D-002": "FIXED",
+    "R2-D-004": "FIXED",
+    "R2-C-003": "REMAINING",
+    "R2-C-004": "REMAINING",
+    "R2-C-006": "REMAINING",
+    "R2-D-003": "REMAINING",
+    "R2-D-005": "REMAINING",
+    "R2-C-007": "REMAINING"
+  },
+  "event_study_readiness_status": "NOT_READY",
+  "raw_campaign_evidence_modified": false,
+  "hard_bans": {
+    "no_raw_microstructure_campaign_mutation": true,
+    "no_event_study_ready_claim": true,
+    "no_silent_repair": true,
+    "cursor_native_only": true
+  },
+  "pass1": {
+    "all_critical_fixed": true,
+    "hardened_fixed": true
+  },
+  "pass2": {
+    "all_critical_fixed": true,
+    "hardened_fixed": true,
+    "delta_vs_pass1_critical": 0
+  }
+}

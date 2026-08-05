@@ -91,6 +91,24 @@ class DisasterRecoveryV2:
 
     def recover(self) -> dict[str, Any]:
         """Run recovery decision. Never silently guesses."""
+        # R2-C-005: reject unbound checkpoint before any restore guess.
+        if self.durability.checkpoint_path.exists():
+            seal = self.durability.validate_checkpoint_seal()
+            unbound_reasons = {
+                "checkpoint_unbound_missing_lkg_seal",
+                "checkpoint_without_lkg",
+                "checkpoint_unreadable",
+            }
+            if seal.get("reason") in unbound_reasons:
+                return {
+                    "status": BLOCKED_AMBIGUOUS_STATE,
+                    "reason": seal.get("reason") or "checkpoint_seal_failed",
+                    "seal": seal,
+                    "exchange_write_attempt_count": 0,
+                    "silent_recovery_guess": False,
+                    **PRESERVED_FACTS,
+                }
+
         assessment = self.assess()
         rec = assessment.get("recommendation")
         if rec == "NO_ACTION":

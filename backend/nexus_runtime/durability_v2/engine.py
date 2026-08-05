@@ -103,15 +103,15 @@ class RuntimeDurabilityV2:
         kill_during_checkpoint: bool = False,
     ) -> SnapshotResult:
         t0 = time.perf_counter()
+        # R2-C-001: fail-closed on payload bit-flip / deep corruption before any LKG advance.
         if verify_chain:
-            chain = ledger.verify_hash_chain()
-            if chain.get("ledger_hash_chain_status") != "PASS":
-                return SnapshotResult(status=CORRUPTION_DETECTED, detail={"chain": chain})
-            integrity = ledger.integrity_check()
-            if integrity != "ok":
-                return SnapshotResult(
-                    status=CORRUPTION_DETECTED, detail={"integrity": integrity}
-                )
+            det = self.detect_corruption(ledger, deep=True)
+            if det.get("corruption_detection_status") != "PASS":
+                return SnapshotResult(status=CORRUPTION_DETECTED, detail=det)
+            chain = {
+                "ledger_hash_chain_status": det.get("ledger_hash_chain_status", "PASS"),
+                "payload_hash_mismatch": bool(det.get("payload_hash_mismatch")),
+            }
         else:
             chain = {"ledger_hash_chain_status": "DEFERRED"}
 
@@ -127,38 +127,74 @@ class RuntimeDurabilityV2:
                 detail={"reason": "process_kill_during_checkpoint", "partial_marker": str(partial)},
             )
 
-        self._generation += 1
-        gen = self._generation
-        snap_dir = self.backup_root / f"snapshot_{gen:06d}"
-        snap_dir.mkdir(parents=True, exist_ok=True)
-        dest = snap_dir / "event_ledger_v2.sqlite3"
+        # R2-C-002: quiesce, checkpoint into main, copy main only, derive position from bytes.
+        with ledger._lock:
+            try:
+                ledger._conn.commit()
+            except Exception:
+                pass
+            # Must not hold an open write txn during TRUNCATE (SQLite will leave WAL intact).
+            truncated = False
+            for mode in ("TRUNCATE", "FULL", "RESTART"):
+                try:
+                    row = ledger._conn.execute(f"PRAGMA wal_checkpoint({mode})").fetchone()
+                    # row: (busy, log, checkpointed) — busy==0 and log==checkpointed ⇒ clean
+                    if row is not None and int(row[0] or 0) == 0:
+                        truncated = True
+                        if mode == "TRUNCATE":
+                            break
+                except Exception:
+                    continue
 
-        try:
-            ledger._conn.execute("PRAGMA wal_checkpoint(FULL)")
-        except Exception:
-            pass
-        ledger._conn.commit()
-        shutil.copy2(self.ledger_path, dest)
+            live_wal = Path(str(self.ledger_path) + "-wal")
+            wal_bytes = live_wal.stat().st_size if live_wal.exists() else 0
+            # Soft signal only: authority snapshot never includes companion -wal.
+            # Hard-fail only when checkpoint could not run at all AND wal is huge relative
+            # to an empty/header-only file ( > 1 KiB residual after best-effort).
+            if not truncated and wal_bytes > 1024:
+                return SnapshotResult(
+                    status=BLOCKED_AMBIGUOUS_STATE,
+                    detail={
+                        "reason": "wal_checkpoint_failed_non_empty_wal",
+                        "wal_bytes": wal_bytes,
+                    },
+                )
+
+            self._generation += 1
+            gen = self._generation
+            snap_dir = self.backup_root / f"snapshot_{gen:06d}"
+            snap_dir.mkdir(parents=True, exist_ok=True)
+            dest = snap_dir / "event_ledger_v2.sqlite3"
+            shutil.copy2(self.ledger_path, dest)
+
+        # Never promote companion -wal into authority snapshot (forbid silent divergence).
         for suffix in ("-wal", "-shm"):
-            side = Path(str(self.ledger_path) + suffix)
+            side = Path(str(dest) + suffix)
             if side.exists():
-                shutil.copy2(side, Path(str(dest) + suffix))
+                try:
+                    side.unlink()
+                except OSError:
+                    pass
 
+        snap_count, snap_max = self._count_events_in_sqlite(dest)
         checksum = file_sha256(dest)
         pointer = {
             "generation": gen,
             "created_at": _utc(),
-            "source_ledger_position": ledger.event_count(),
-            "max_sequence": ledger.max_sequence(),
+            "source_ledger_position": snap_count,
+            "max_sequence": snap_max,
             "snapshot_checksum": checksum,
             "snapshot_path": str(dest),
             "ledger_hash_chain_status": chain.get("ledger_hash_chain_status"),
             "schema": "durability_v2",
+            "position_source": "checksummed_main_file",
+            "wal_policy": "forbid_non_empty_companion_wal",
         }
         (snap_dir / "snapshot_manifest.json").write_text(
             json.dumps(pointer, indent=2) + "\n", encoding="utf-8"
         )
         self.lkg_path.write_text(json.dumps(pointer, indent=2) + "\n", encoding="utf-8")
+        # R2-C-005 / C4: checkpoint must seal to LKG generation + snapshot checksum.
         self.checkpoint_path.write_text(
             json.dumps(
                 {
@@ -166,6 +202,10 @@ class RuntimeDurabilityV2:
                     "lkg_generation": gen,
                     "created_at": _utc(),
                     "ledger_position": pointer["source_ledger_position"],
+                    "snapshot_checksum": checksum,
+                    "snapshot_path": str(dest),
+                    "lkg_seal": True,
+                    "schema": "durability_v2_checkpoint_sealed",
                 },
                 indent=2,
             )
@@ -176,6 +216,69 @@ class RuntimeDurabilityV2:
         elapsed = time.perf_counter() - t0
         self.snapshot_latency.observe(elapsed)
         return SnapshotResult(status=SNAPSHOT_OK, detail={**pointer, "latency_s": elapsed})
+
+    @staticmethod
+    def _count_events_in_sqlite(path: Path) -> tuple[int, int | None]:
+        """Read event_count / max_sequence strictly from a snapshot file (not live conn)."""
+        import sqlite3
+
+        uri = f"file:{path.as_posix()}?mode=ro"
+        conn = sqlite3.connect(uri, uri=True)
+        try:
+            count = int(conn.execute("SELECT COUNT(*) FROM events").fetchone()[0])
+            row = conn.execute("SELECT MAX(sequence_number) FROM events").fetchone()
+            max_seq = int(row[0]) if row and row[0] is not None else None
+            return count, max_seq
+        finally:
+            conn.close()
+
+    def validate_checkpoint_seal(self) -> dict[str, Any]:
+        """Reject unbound / mismatched checkpoint files (R2-C-005)."""
+        if not self.checkpoint_path.exists():
+            return {"status": "PASS", "reason": "no_checkpoint"}
+        try:
+            ckpt = json.loads(self.checkpoint_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            return {
+                "status": BLOCKED_AMBIGUOUS_STATE,
+                "reason": "checkpoint_unreadable",
+                "error": str(exc),
+            }
+        if not ckpt.get("lkg_seal") or ckpt.get("schema") != "durability_v2_checkpoint_sealed":
+            return {
+                "status": BLOCKED_AMBIGUOUS_STATE,
+                "reason": "checkpoint_unbound_missing_lkg_seal",
+                "checkpoint": ckpt,
+            }
+        if not self.lkg_path.exists():
+            return {
+                "status": BLOCKED_AMBIGUOUS_STATE,
+                "reason": "checkpoint_without_lkg",
+                "checkpoint": ckpt,
+            }
+        try:
+            lkg = json.loads(self.lkg_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            return {
+                "status": CORRUPTION_DETECTED,
+                "reason": "lkg_unreadable_during_checkpoint_seal",
+                "error": str(exc),
+            }
+        if int(ckpt.get("lkg_generation") or -1) != int(lkg.get("generation") or -2):
+            return {
+                "status": BLOCKED_AMBIGUOUS_STATE,
+                "reason": "checkpoint_lkg_generation_mismatch",
+                "checkpoint_generation": ckpt.get("lkg_generation"),
+                "lkg_generation": lkg.get("generation"),
+            }
+        if ckpt.get("snapshot_checksum") != lkg.get("snapshot_checksum"):
+            return {
+                "status": BLOCKED_AMBIGUOUS_STATE,
+                "reason": "checkpoint_snapshot_checksum_mismatch",
+                "checkpoint_checksum": ckpt.get("snapshot_checksum"),
+                "lkg_checksum": lkg.get("snapshot_checksum"),
+            }
+        return {"status": "PASS", "checkpoint": ckpt, "lkg_generation": lkg.get("generation")}
 
     def detect_corruption(
         self,
@@ -247,6 +350,21 @@ class RuntimeDurabilityV2:
     def restore_last_known_good(self, *, allow_ambiguous: bool = False) -> SnapshotResult:
         """Restore from LKG. Never silently guesses when state is ambiguous."""
         t0 = time.perf_counter()
+        # Only fail-closed on *unbound* checkpoints here; LKG/checksum mismatches
+        # continue into pointer validation (may be CORRUPTION_DETECTED).
+        if self.checkpoint_path.exists():
+            seal = self.validate_checkpoint_seal()
+            unbound_reasons = {
+                "checkpoint_unbound_missing_lkg_seal",
+                "checkpoint_without_lkg",
+                "checkpoint_unreadable",
+            }
+            if seal.get("reason") in unbound_reasons and not allow_ambiguous:
+                return SnapshotResult(
+                    status=BLOCKED_AMBIGUOUS_STATE,
+                    detail={"reason": "checkpoint_seal_failed", "seal": seal},
+                )
+
         if not self.lkg_path.exists():
             return SnapshotResult(
                 status=RECOVERY_FAILED, detail={"reason": "missing_lkg_pointer"}
@@ -266,6 +384,19 @@ class RuntimeDurabilityV2:
                 status=BLOCKED_AMBIGUOUS_STATE,
                 detail={"reason": "latest_snapshot_missing", "pointer": pointer},
             )
+
+        # R2-C-002: never silently drop companion -wal divergence beside the snapshot.
+        snap_wal = Path(str(snap) + "-wal")
+        if snap_wal.exists() and snap_wal.stat().st_size > 0:
+            if not allow_ambiguous:
+                return SnapshotResult(
+                    status=BLOCKED_AMBIGUOUS_STATE,
+                    detail={
+                        "reason": "snapshot_companion_wal_divergence",
+                        "wal_bytes": snap_wal.stat().st_size,
+                        "policy": "forbid_silent_wal_drop_on_restore",
+                    },
+                )
 
         actual = file_sha256(snap)
         if actual != pointer.get("snapshot_checksum"):

@@ -52,13 +52,20 @@ def discover_partitions_v11(partitions_root: Path) -> list[dict[str, Any]]:
         cmp = compare_checksum(expected, replay.get("replayed_checksum"))
         open_marker = open_marker_for(gz).is_file()
         truncated = bool(replay.get("truncated_tail"))
+        # Classic open-tail: truncated gzip without manifest.
         is_open_tail = truncated and not manifest_present
+        # R2-D-004: .open retained without manifest is interrupted finalize authority signal.
+        interrupted_finalize = open_marker and not manifest_present
+        # R2-D-002: manifest published but .open orphaned after finalize.
+        finalize_marker_orphan = open_marker and manifest_present
 
         integrity = replay["integrity_status"]
         if integrity == "OK" and expected and cmp["checksum_match"] is False:
             integrity = "CHECKSUM_MISMATCH"
         elif is_open_tail:
             integrity = "OPEN_TAIL_UNFINALIZED"
+        elif interrupted_finalize and integrity == "OK":
+            integrity = "INTERRUPTED_FINALIZE"
 
         found.append(
             {
@@ -83,6 +90,8 @@ def discover_partitions_v11(partitions_root: Path) -> list[dict[str, Any]]:
                 "integrity_status": integrity,
                 "truncated_tail": truncated,
                 "is_open_tail": is_open_tail,
+                "interrupted_finalize": interrupted_finalize,
+                "finalize_marker_orphan": finalize_marker_orphan,
                 "open_marker_present": open_marker,
                 "compressed_bytes": gz.stat().st_size if gz.is_file() else 0,
                 "manifest_present": manifest_present,
@@ -133,13 +142,41 @@ def classify_partition(
         labels.append("ACTUAL_DATA_CORRUPTION")
         evidence.append("manifest_claims_finalized_but_gzip_truncated")
 
+    # R2-D-004: open marker + no manifest ⇒ interrupted finalize (even if gzip replay OK).
+    if p.get("interrupted_finalize") or (
+        p.get("open_marker_present") and not p.get("manifest_present")
+    ):
+        if "EXPECTED_OPEN_TAIL" not in labels:
+            labels.append("INTERRUPTED_FINALIZE")
+            evidence.append("open_marker_present_without_manifest")
+        elif "INTERRUPTED_FINALIZE" not in labels and not p.get("truncated_tail"):
+            labels.append("INTERRUPTED_FINALIZE")
+            evidence.append("open_marker_present_without_manifest")
+
+    # R2-D-002: manifest present + orphan .open after finalize.
+    if p.get("finalize_marker_orphan") or (
+        p.get("open_marker_present") and p.get("manifest_present") and not p.get("truncated_tail")
+    ):
+        labels.append("FINALIZE_MARKER_ORPHAN")
+        evidence.append("open_marker_retained_after_manifest_publish")
+
     if (
         not p.get("truncated_tail")
+        and not p.get("open_marker_present")
         and p.get("integrity_status") == "OK"
         and not p.get("manifest_present")
     ):
         labels.append("MANIFEST_BUG")
         evidence.append("gzip_ok_but_manifest_missing_finalize_race")
+    elif (
+        not p.get("truncated_tail")
+        and p.get("open_marker_present")
+        and not p.get("manifest_present")
+        and p.get("integrity_status") in ("OK", "INTERRUPTED_FINALIZE")
+        and "INTERRUPTED_FINALIZE" not in labels
+    ):
+        labels.append("INTERRUPTED_FINALIZE")
+        evidence.append("gzip_ok_open_marker_no_manifest")
 
     if p.get("checksum_match") is False and p.get("integrity_status") == "CHECKSUM_MISMATCH":
         labels.append("ACTUAL_DATA_CORRUPTION")
@@ -166,6 +203,8 @@ def classify_partition(
     # Prefer most severe primary
     priority = [
         "ACTUAL_DATA_CORRUPTION",
+        "INTERRUPTED_FINALIZE",
+        "FINALIZE_MARKER_ORPHAN",
         "MANIFEST_BUG",
         "EXPECTED_OPEN_TAIL",
         "MIGRATION_ARTIFACT",
@@ -213,6 +252,8 @@ def classify_campaign_partitions(
     counts: dict[str, int] = {
         "ACTUAL_DATA_CORRUPTION": 0,
         "EXPECTED_OPEN_TAIL": 0,
+        "INTERRUPTED_FINALIZE": 0,
+        "FINALIZE_MARKER_ORPHAN": 0,
         "MIGRATION_ARTIFACT": 0,
         "MANIFEST_BUG": 0,
         "FINALIZER_FALSE_POSITIVE": 0,
@@ -226,7 +267,10 @@ def classify_campaign_partitions(
         failure_like = (
             p.get("is_open_tail")
             or p.get("truncated_tail")
-            or (not p.get("manifest_present") and p.get("integrity_status") == "OK")
+            or p.get("interrupted_finalize")
+            or p.get("finalize_marker_orphan")
+            or p.get("open_marker_present")
+            or (not p.get("manifest_present") and p.get("integrity_status") in ("OK", "INTERRUPTED_FINALIZE"))
             or p.get("checksum_match") is False
             or pid in legacy_checksum_ids
             or pid in legacy_linkage_ids

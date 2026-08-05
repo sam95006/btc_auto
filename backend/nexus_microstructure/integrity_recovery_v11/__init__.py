@@ -18,13 +18,17 @@ from backend.nexus_microstructure.integrity_recovery_v11.orchestrator import (
     run_forensic_rca,
     run_integrity_recovery,
 )
-from backend.nexus_microstructure.integrity_recovery_v11.writer_v11 import DurablePartitionWriterV11
+from backend.nexus_microstructure.integrity_recovery_v11.writer_v11 import (
+    DurablePartitionWriterV11,
+    PartitionIdentityConflict,
+)
 
 __all__ = [
     "SCHEMA",
     "CLASSIFICATIONS",
     "REFERENCE_CAMPAIGN_ID",
     "DurablePartitionWriterV11",
+    "PartitionIdentityConflict",
     "discover_partitions_v11",
     "classify_campaign_partitions",
     "audit_linkage_v11",
