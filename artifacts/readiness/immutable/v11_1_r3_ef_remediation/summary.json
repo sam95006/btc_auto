@@ -1,12 +1,12 @@
 {
   "schema": "v11_1_r3_ef_remediation_summary",
-  "created_at": "2026-08-05T04:10:19Z",
+  "created_at": "2026-08-05T04:11:33Z",
   "status": {
     "schema": "v11_1_r3_ef_remediation_status",
-    "created_at": "2026-08-05T04:10:19Z",
+    "created_at": "2026-08-05T04:11:33Z",
     "review": "FOUNDER_R3_EF_REMEDIATION",
     "branch": "feature/v11_1-r3-ef-remediation",
-    "git_head": "5b1d47543523f7e5be88da63256904171ce45165",
+    "git_head": "037f6226e850d7d8338beb03976fa6dde5d5047a",
     "base": "5b1d47543523f7e5be88da63256904171ce45165",
     "passes_completed": 2,
     "recommendation": "PASS_WITH_NOTES",
@@ -31,7 +31,7 @@
   },
   "recommendation": {
     "schema": "v11_1_r3_ef_remediation_recommendation",
-    "created_at": "2026-08-05T04:10:19Z",
+    "created_at": "2026-08-05T04:11:33Z",
     "recommendation": "PASS_WITH_NOTES",
     "rationale": "R3 E/F critical+high remediations cleared; Lesson gate and PROMOTION_BLOCKED_READY remain hard.",
     "critical_open": [],
