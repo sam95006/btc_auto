@@ -1,4 +1,4 @@
-"""Facade service composing the PUB-H public auth & membership foundation."""
+"""Facade service composing PUB2-F public auth entitlement & org security."""
 from __future__ import annotations
 
 from typing import Any, Optional
@@ -11,6 +11,7 @@ from backend.nexus_public_auth.constants import (
     HARD_BANS,
     LANE,
     PACKAGE,
+    PRIVATE_EXECUTION_FEATURE_DENYLIST,
     PUBLIC_IDENTITY_REALM,
     PUBLIC_JWT_ISSUER,
     SCHEMA,
@@ -24,6 +25,8 @@ from backend.nexus_public_auth.entitlements import (
 )
 from backend.nexus_public_auth.hard_bans import HardBanViolation, assert_env_hard_bans
 from backend.nexus_public_auth.jwt_issuer import PublicJwtIssuer
+from backend.nexus_public_auth.mfa import MfaService
+from backend.nexus_public_auth.rate_limit import AuthRateLimiter, get_default_rate_limiter
 from backend.nexus_public_auth.roles import (
     normalize_member_roles,
     normalize_org_roles,
@@ -34,15 +37,22 @@ from backend.nexus_public_auth.store import PublicAuthStore, get_default_store
 
 
 class PublicAuthMembershipService:
-    """Non-production public identity + membership foundation."""
+    """Non-production public identity + entitlement + org security foundation."""
 
-    def __init__(self, store: Optional[PublicAuthStore] = None, issuer: Optional[PublicJwtIssuer] = None):
+    def __init__(
+        self,
+        store: Optional[PublicAuthStore] = None,
+        issuer: Optional[PublicJwtIssuer] = None,
+        rate_limiter: Optional[AuthRateLimiter] = None,
+    ):
         assert_env_hard_bans()
         self.store = store or get_default_store()
         self.issuer = issuer or PublicJwtIssuer()
+        self.rate_limiter = rate_limiter or get_default_rate_limiter()
         self.sessions = SessionService(self.store, self.issuer)
         self.consent = ConsentService(self.store)
         self.lifecycle = AccountLifecycleService(self.store, self.sessions)
+        self.mfa = MfaService(self.store)
 
     def foundation_status(self) -> dict[str, Any]:
         return {
@@ -56,6 +66,10 @@ class PublicAuthMembershipService:
             "shared_jwt_issuer_count": 0,
             "live_billing_enabled": False,
             "production_customer_database": False,
+            "private_execution_access_via_entitlement": False,
+            "private_execution_feature_denylist": sorted(PRIVATE_EXECUTION_FEATURE_DENYLIST),
+            "mfa_ready": True,
+            "rate_limits": self.rate_limiter.snapshot(),
             "hard_bans": sorted(HARD_BANS),
             "store": self.store.snapshot(),
             "issuer_fingerprint": self.issuer.fingerprint(),
@@ -68,7 +82,10 @@ class PublicAuthMembershipService:
         *,
         tier: str = "Free",
         member_roles: Optional[list[str]] = None,
+        rate_subject: Optional[str] = None,
     ) -> dict[str, Any]:
+        subject = (rate_subject or email or "anonymous").strip().lower() or "anonymous"
+        self.rate_limiter.check("register", subject)
         roles = normalize_member_roles(member_roles or ["member"])
         assert_valid_tier(tier)
         account = self.store.create_account(email, display_name, tier=tier)
@@ -120,12 +137,17 @@ class PublicAuthMembershipService:
         return {"account_id": account_id, "team_id": team_id, "roles": normalized}
 
     def set_tier_manual(self, account_id: str, target_tier: str, *, actor: str) -> dict[str, Any]:
+        self.rate_limiter.check("tier_assign", account_id or actor)
         account = self.store.get_account(account_id)
         if account is None:
             raise HardBanViolation("account not found")
         change = assign_tier_manual(
             current_tier=account.tier, target_tier=target_tier, actor=actor
         )
+        if change.get("private_execution_access"):
+            raise HardBanViolation(
+                "HARD BAN: entitlements must never grant private execution access"
+            )
         account.tier = target_tier
         self.store.update_account(account)
         self.store.append_audit(
@@ -154,4 +176,30 @@ class PublicAuthMembershipService:
             raise HardBanViolation("account not found")
         snap = entitlement_snapshot(account.tier)
         snap["account_id"] = account_id
+        if snap.get("private_execution_access"):
+            raise HardBanViolation(
+                "HARD BAN: entitlements must never grant private execution access"
+            )
         return snap
+
+    def create_session_rate_limited(
+        self,
+        account_id: str,
+        *,
+        tier: str,
+        member_roles: list[str],
+        ttl_seconds: int = 3600,
+    ) -> dict[str, Any]:
+        self.rate_limiter.check("session_create", account_id)
+        return self.sessions.create_session(
+            account_id,
+            tier=tier,
+            member_roles=member_roles,
+            ttl_seconds=ttl_seconds,
+        )
+
+    def authenticate_rate_limited(self, token: str) -> dict[str, Any]:
+        # Subject is token prefix only for bucketing — never log full token.
+        subject = (token or "")[:16] or "anonymous"
+        self.rate_limiter.check("session_authenticate", subject)
+        return self.sessions.authenticate(token)

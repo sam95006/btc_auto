@@ -1,4 +1,4 @@
-"""Hard-ban enforcement for PUB-H public auth & membership foundation."""
+"""Hard-ban enforcement for PUB2-F public auth entitlement & org security."""
 from __future__ import annotations
 
 import os
@@ -8,16 +8,18 @@ from typing import Any
 
 from backend.nexus_public_auth.constants import (
     HARD_BANS,
+    PRIVATE_EXECUTION_FEATURE_DENYLIST,
     PRIVATE_ISSUER_DENYLIST,
     PRIVATE_REALM_DENYLIST,
     PRIVATE_SECRET_ENV_DENYLIST,
     PUBLIC_IDENTITY_REALM,
     PUBLIC_JWT_ISSUER,
+    TIER_FEATURES,
 )
 
 
 class HardBanViolation(RuntimeError):
-    """Raised when a PUB-H hard ban would be violated."""
+    """Raised when a PUB2-F hard ban would be violated."""
 
 
 BANNED_CLAIM_PATTERNS = [
@@ -28,6 +30,7 @@ BANNED_CLAIM_PATTERNS = [
     re.compile(r"(?i)\bgoogle\s+play\s+submission\b"),
     re.compile(r"(?i)\bshared[_\s-]?private[_\s-]?jwt\b"),
     re.compile(r"(?i)\breuse[_\s-]?private[_\s-]?admin[_\s-]?session\b"),
+    re.compile(r"(?i)\bentitlement\s+grants?\s+private\s+execution\b"),
 ]
 
 # Allowlist context tokens so ban documentation / negative tests do not false-trip.
@@ -61,6 +64,12 @@ _ALLOW_CONTEXT = (
     "flags",
     "env_hard_ban",
     "violations",
+    "private_execution",
+    "never grant",
+    "must never grant",
+    "non-goals",
+    "non_goals",
+    "subscriptions / invoices",
 )
 
 
@@ -74,6 +83,9 @@ def env_hard_ban_guard() -> dict[str, Any]:
         "SHARED_PRIVATE_JWT": os.environ.get("NEXUS_PUBLIC_SHARE_PRIVATE_JWT", "false").lower(),
         "REUSE_PRIVATE_ADMIN_SESSION": os.environ.get(
             "NEXUS_PUBLIC_REUSE_PRIVATE_ADMIN_SESSION", "false"
+        ).lower(),
+        "PRIVATE_EXECUTION_VIA_ENTITLEMENT": os.environ.get(
+            "NEXUS_PUBLIC_PRIVATE_EXECUTION_VIA_ENTITLEMENT", "false"
         ).lower(),
         "EXCHANGE_WRITE": os.environ.get("EXCHANGE_WRITE", "false").lower(),
         "MAINNET": os.environ.get("MAINNET", "false").lower(),
@@ -100,7 +112,7 @@ def assert_env_hard_bans() -> None:
 
 
 def refuse_live_billing() -> None:
-    raise HardBanViolation("HARD BAN: live billing refused in PUB-H non-production foundation")
+    raise HardBanViolation("HARD BAN: live billing refused in PUB2-F non-production foundation")
 
 
 def refuse_shared_private_jwt_issuer() -> None:
@@ -118,6 +130,12 @@ def refuse_private_admin_session_reuse() -> None:
 def refuse_production_customer_database() -> None:
     raise HardBanViolation(
         "HARD BAN: production customer database refused — LOCAL_OR_STAGING_ONLY store"
+    )
+
+
+def refuse_private_execution_via_entitlement() -> None:
+    raise HardBanViolation(
+        "HARD BAN: entitlements must never grant private execution access"
     )
 
 
@@ -148,12 +166,22 @@ def refuse_private_secret_env(env_name: str) -> None:
         refuse_shared_private_jwt_issuer()
 
 
+def assert_tier_matrix_excludes_private_execution() -> None:
+    for tier, features in TIER_FEATURES.items():
+        overlap = set(features) & set(PRIVATE_EXECUTION_FEATURE_DENYLIST)
+        if overlap:
+            raise HardBanViolation(
+                f"HARD BAN: tier {tier} grants private execution features: {sorted(overlap)}"
+            )
+
+
 def scan_owned_paths_for_banned_claims(root: Path) -> dict[str, Any]:
-    """Pass-1 / Pass-2 static scan of owned source for illicit claim language."""
+    """Pass-1 / Pass-2 / Pass-3 static scan of owned source for illicit claim language."""
     hits: list[dict[str, str]] = []
     code_roots = [
         "backend/nexus_public_auth/",
         "tests/public_auth/",
+        "docs/product_strategy/NEXUS_PUBLIC_AUTH_ENTITLEMENT_ORG_SECURITY_V2.md",
         "docs/product_strategy/NEXUS_PUBLIC_AUTH_MEMBERSHIP_FOUNDATION_V1.md",
     ]
     for rel in code_roots:
@@ -189,14 +217,17 @@ def scan_owned_paths_for_banned_claims(root: Path) -> dict[str, Any]:
 
 
 def run_hard_ban_pass(pass_id: int, root: Path) -> dict[str, Any]:
-    """Execute one hard-ban verification pass (1 or 2)."""
-    if pass_id not in (1, 2):
-        raise ValueError("pass_id must be 1 or 2")
+    """Execute one hard-ban verification pass (1, 2, or 3)."""
+    if pass_id not in (1, 2, 3):
+        raise ValueError("pass_id must be 1, 2, or 3")
     assert_env_hard_bans()
+    assert_tier_matrix_excludes_private_execution()
     scan = scan_owned_paths_for_banned_claims(root)
     adversarial: dict[str, Any] = {"executed": False}
     if pass_id == 2:
         adversarial = _adversarial_probes()
+    elif pass_id == 3:
+        adversarial = _independent_cross_review_probes()
     ok = scan["ok"] and adversarial.get("ok", True)
     return {
         "pass_id": pass_id,
@@ -205,6 +236,7 @@ def run_hard_ban_pass(pass_id: int, root: Path) -> dict[str, Any]:
         "scan": scan,
         "adversarial": adversarial,
         "hard_bans": sorted(HARD_BANS),
+        "private_execution_access_via_entitlement": False,
     }
 
 
@@ -223,6 +255,7 @@ def _adversarial_probes() -> dict[str, Any]:
     _expect("shared_private_jwt", refuse_shared_private_jwt_issuer)
     _expect("private_admin_session", refuse_private_admin_session_reuse)
     _expect("production_customer_db", refuse_production_customer_database)
+    _expect("private_execution_via_entitlement", refuse_private_execution_via_entitlement)
     _expect("private_issuer_label", lambda: validate_public_issuer("nexus-private-auth"))
     _expect("private_realm_label", lambda: validate_public_realm("nexus.private.identity.v1"))
     _expect(
@@ -230,5 +263,124 @@ def _adversarial_probes() -> dict[str, Any]:
         lambda: refuse_private_secret_env("NEXUS_PRIVATE_JWT_SECRET"),
     )
 
+    # Entitlement matrix must refuse private execution features for every tier.
+    from backend.nexus_public_auth.entitlements import (
+        has_feature,
+        refuse_private_execution_entitlement,
+    )
+
+    for banned in sorted(PRIVATE_EXECUTION_FEATURE_DENYLIST)[:6]:
+        for tier in ("Free", "Pro", "Elite", "Enterprise"):
+            _expect(
+                f"entitlement_{tier}_{banned}",
+                lambda t=tier, f=banned: has_feature(t, f),
+            )
+    _expect("refuse_private_execution_helper", refuse_private_execution_entitlement)
+
     ok = all(p["ok"] for p in probes)
-    return {"executed": True, "ok": ok, "probes": probes}
+    return {"executed": True, "ok": ok, "probes": probes, "pass_kind": "adversarial"}
+
+
+def _independent_cross_review_probes() -> dict[str, Any]:
+    """Pass-3: independent break attempts beyond Pass-2 summaries."""
+    probes: list[dict[str, Any]] = []
+
+    def _expect(name: str, fn) -> None:
+        try:
+            fn()
+            probes.append({"name": name, "ok": False, "detail": "did not raise"})
+        except HardBanViolation as exc:
+            probes.append({"name": name, "ok": True, "detail": str(exc)})
+
+    from backend.nexus_public_auth.entitlements import (
+        assign_tier_manual,
+        has_feature,
+        require_feature,
+    )
+    from backend.nexus_public_auth.mfa import MfaService
+    from backend.nexus_public_auth.rate_limit import AuthRateLimiter, RateLimitExceeded
+    from backend.nexus_public_auth.roles import normalize_org_roles
+    from backend.nexus_public_auth.service import PublicAuthMembershipService
+    from backend.nexus_public_auth.store import PublicAuthStore
+
+    # 1) Elite/Enterprise still cannot unlock execution scopes via feature names.
+    for feature in (
+        "private_execution_access",
+        "exchange_write",
+        "order_placement",
+        "autonomy_control",
+        "copy_trading",
+    ):
+        _expect(f"enterprise_cannot_{feature}", lambda f=feature: has_feature("Enterprise", f))
+        _expect(
+            f"elite_require_{feature}",
+            lambda f=feature: require_feature("Elite", f),
+        )
+
+    # 2) Stripe/IAP actors blocked even when targeting Free (no upgrade side-channel).
+    _expect(
+        "iap_actor_blocked",
+        lambda: assign_tier_manual(
+            current_tier="Free", target_tier="Enterprise", actor="iap:apple_tx"
+        ),
+    )
+
+    # 3) Private org role still blocked.
+    _expect("private_org_role", lambda: normalize_org_roles(["founder_admin"]))
+
+    # 4) Rate limiter trips under burst.
+    limiter = AuthRateLimiter(window_seconds=60, limits={"session_create": 3})
+
+    def _burst() -> None:
+        for i in range(5):
+            limiter.check("session_create", "acct_burst")
+
+    _expect("rate_limit_burst", _burst)
+
+    # 5) MFA verify fails on wrong code (no silent success).
+    store = PublicAuthStore()
+    svc = PublicAuthMembershipService(store=store)
+    reg = svc.register_member("pass3@example.com", "Pass3")
+    mfa = MfaService(store)
+    enrolled = mfa.enroll_factor(reg["account_id"], "totp", label="pass3")
+    confirmed = mfa.confirm_enrollment(
+        reg["account_id"],
+        enrolled["factor_id"],
+        enrollment_secret=enrolled["enrollment_secret_once"],
+    )
+    assert confirmed["status"] == "enabled"
+    challenge = mfa.create_challenge(reg["account_id"], enrolled["factor_id"])
+
+    def _bad_mfa() -> None:
+        mfa.verify_challenge(
+            reg["account_id"],
+            challenge["challenge_id"],
+            response_code="00000000000000000000000000000000",
+        )
+
+    _expect("mfa_wrong_code", _bad_mfa)
+
+    # 6) Re-run core refuse helpers so Pass-3 is not a summary-only pass.
+    _expect("p3_live_billing", refuse_live_billing)
+    _expect("p3_private_execution", refuse_private_execution_via_entitlement)
+    _expect("p3_shared_jwt", refuse_shared_private_jwt_issuer)
+
+    # Ensure RateLimitExceeded is a HardBanViolation subclass for consistent handling.
+    if not issubclass(RateLimitExceeded, HardBanViolation):
+        probes.append(
+            {
+                "name": "rate_limit_is_hard_ban",
+                "ok": False,
+                "detail": "RateLimitExceeded must subclass HardBanViolation",
+            }
+        )
+    else:
+        probes.append({"name": "rate_limit_is_hard_ban", "ok": True, "detail": "ok"})
+
+    ok = all(p["ok"] for p in probes)
+    return {
+        "executed": True,
+        "ok": ok,
+        "probes": probes,
+        "pass_kind": "independent_cross_review",
+    }

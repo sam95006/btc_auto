@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from backend.nexus_public_auth.hard_bans import HardBanViolation, assert_env_hard_bans
+from backend.nexus_public_auth.rate_limit import RateLimitExceeded
 from backend.nexus_public_auth.service import PublicAuthMembershipService
 
 
@@ -12,6 +13,7 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     Lazy Flask blueprint factory.
 
     Mount only in LOCAL_OR_STAGING_ONLY contexts. Never enables live billing.
+    Never grants private execution via entitlements.
     """
     assert_env_hard_bans()
     try:
@@ -23,7 +25,18 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     bp = Blueprint("nexus_public_auth", __name__, url_prefix="/api/public/auth")
 
     def _err(exc: Exception, code: int = 400):
-        return jsonify({"ok": False, "error": str(exc), "hard_ban": isinstance(exc, HardBanViolation)}), code
+        status = 429 if isinstance(exc, RateLimitExceeded) else code
+        return (
+            jsonify(
+                {
+                    "ok": False,
+                    "error": str(exc),
+                    "hard_ban": isinstance(exc, HardBanViolation),
+                    "rate_limited": isinstance(exc, RateLimitExceeded),
+                }
+            ),
+            status,
+        )
 
     @bp.get("/foundation")
     def foundation():
@@ -52,7 +65,7 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
             account = svc.store.get_account(account_id)
             if account is None:
                 raise HardBanViolation("account not found")
-            session = svc.sessions.create_session(
+            session = svc.create_session_rate_limited(
                 account_id,
                 tier=account.tier,
                 member_roles=list(account.member_roles),
@@ -76,10 +89,20 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     @bp.post("/me")
     def me():
         body = request.get_json(silent=True) or {}
-        token = str(body.get("token") or request.headers.get("Authorization", "").removeprefix("Bearer ").strip())
+        token = str(
+            body.get("token")
+            or request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
+        )
         try:
-            auth = svc.sessions.authenticate(token)
-            return jsonify({"ok": True, "auth": auth, "entitlements": svc.entitlements(auth["account_id"])})
+            auth = svc.authenticate_rate_limited(token)
+            return jsonify(
+                {
+                    "ok": True,
+                    "auth": auth,
+                    "entitlements": svc.entitlements(auth["account_id"]),
+                    "mfa": svc.mfa.mfa_status(auth["account_id"]),
+                }
+            )
         except HardBanViolation as exc:
             return _err(exc, 401)
 
@@ -87,8 +110,10 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     def consent():
         body = request.get_json(silent=True) or {}
         try:
+            account_id = str(body.get("account_id", ""))
+            svc.rate_limiter.check("consent", account_id or "anonymous")
             result = svc.consent.set_consent(
-                str(body.get("account_id", "")),
+                account_id,
                 str(body.get("purpose", "")),
                 granted=bool(body.get("granted")),
                 version=str(body.get("version", "v1")),
@@ -101,7 +126,9 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     def export_data():
         body = request.get_json(silent=True) or {}
         try:
-            payload = svc.lifecycle.export_account_data(str(body.get("account_id", "")))
+            account_id = str(body.get("account_id", ""))
+            svc.rate_limiter.check("export", account_id or "anonymous")
+            payload = svc.lifecycle.export_account_data(account_id)
             return jsonify({"ok": True, "export": payload})
         except HardBanViolation as exc:
             return _err(exc, 403)
@@ -110,9 +137,11 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     def delete_account():
         body = request.get_json(silent=True) or {}
         try:
-            pending = svc.lifecycle.request_deletion(str(body.get("account_id", "")))
+            account_id = str(body.get("account_id", ""))
+            svc.rate_limiter.check("delete", account_id or "anonymous")
+            pending = svc.lifecycle.request_deletion(account_id)
             if bool(body.get("finalize")):
-                final = svc.lifecycle.finalize_deletion(str(body.get("account_id", "")))
+                final = svc.lifecycle.finalize_deletion(account_id)
                 return jsonify({"ok": True, "pending": pending, "final": final})
             return jsonify({"ok": True, "pending": pending})
         except HardBanViolation as exc:
@@ -121,6 +150,67 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     @bp.get("/audit/<account_id>")
     def audit(account_id: str):
         return jsonify({"ok": True, "events": svc.store.list_audit(account_id=account_id)})
+
+    @bp.get("/mfa/<account_id>")
+    def mfa_status(account_id: str):
+        try:
+            return jsonify({"ok": True, "mfa": svc.mfa.mfa_status(account_id)})
+        except HardBanViolation as exc:
+            return _err(exc, 403)
+
+    @bp.post("/mfa/enroll")
+    def mfa_enroll():
+        body = request.get_json(silent=True) or {}
+        try:
+            account_id = str(body.get("account_id", ""))
+            svc.rate_limiter.check("mfa_challenge", account_id or "anonymous")
+            result = svc.mfa.enroll_factor(
+                account_id,
+                str(body.get("factor_type", "totp")),
+                label=str(body.get("label", "")),
+            )
+            return jsonify({"ok": True, "enrollment": result})
+        except HardBanViolation as exc:
+            return _err(exc, 403)
+
+    @bp.post("/mfa/confirm")
+    def mfa_confirm():
+        body = request.get_json(silent=True) or {}
+        try:
+            result = svc.mfa.confirm_enrollment(
+                str(body.get("account_id", "")),
+                str(body.get("factor_id", "")),
+                enrollment_secret=str(body.get("enrollment_secret", "")),
+            )
+            return jsonify({"ok": True, "factor": result})
+        except HardBanViolation as exc:
+            return _err(exc, 403)
+
+    @bp.post("/mfa/challenge")
+    def mfa_challenge():
+        body = request.get_json(silent=True) or {}
+        try:
+            account_id = str(body.get("account_id", ""))
+            svc.rate_limiter.check("mfa_challenge", account_id or "anonymous")
+            result = svc.mfa.create_challenge(account_id, str(body.get("factor_id", "")))
+            return jsonify({"ok": True, "challenge": result})
+        except HardBanViolation as exc:
+            return _err(exc, 403)
+
+    @bp.post("/mfa/verify")
+    def mfa_verify():
+        body = request.get_json(silent=True) or {}
+        try:
+            account_id = str(body.get("account_id", ""))
+            svc.rate_limiter.check("mfa_challenge", account_id or "anonymous")
+            result = svc.mfa.verify_challenge(
+                account_id,
+                str(body.get("challenge_id", "")),
+                response_code=str(body.get("response_code", "")),
+            )
+            return jsonify({"ok": True, "result": result})
+        except HardBanViolation as exc:
+            return _err(exc, 403)
 
     return bp
 

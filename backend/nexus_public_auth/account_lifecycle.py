@@ -79,7 +79,7 @@ class AccountLifecycleService:
         payload = {
             "export_id": export_id,
             "exported_at": _utcnow(),
-            "schema": "public_account_export_v1",
+            "schema": "public_account_export_v2",
             "account": {
                 "account_id": account.account_id,
                 "email": account.email,
@@ -94,12 +94,23 @@ class AccountLifecycleService:
                 "consent": deepcopy(account.consent),
             },
             "sessions": sessions,
+            "mfa_factors": [
+                {
+                    "factor_id": f.factor_id,
+                    "factor_type": f.factor_type,
+                    "label": f.label,
+                    "status": f.status,
+                    "verified_at": f.verified_at,
+                }
+                for f in self.store.list_mfa_factors(account_id)
+            ],
             "audit": self.store.list_audit(account_id=account_id),
             "notes": [
                 "NON_PRODUCTION export",
                 "No private Lesson Memory",
                 "No private checkpoint data",
                 "No exchange credentials",
+                "No private execution access",
             ],
         }
         self.store.save_export(export_id, payload)

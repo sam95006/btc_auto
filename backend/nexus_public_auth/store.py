@@ -77,6 +77,8 @@ class PublicAuthStore:
         self.sessions_by_jti: dict[str, str] = {}
         self.audit: list[AuditEvent] = []
         self.exports: dict[str, dict[str, Any]] = {}
+        self.mfa_factors: dict[str, Any] = {}
+        self.mfa_challenges: dict[str, Any] = {}
         self._assert_non_production()
 
     def _assert_non_production(self) -> None:
@@ -170,6 +172,34 @@ class PublicAuthStore:
             payload = self.exports.get(export_id)
             return deepcopy(payload) if payload else None
 
+    def put_mfa_factor(self, factor: Any) -> Any:
+        with self._lock:
+            self.mfa_factors[factor.factor_id] = factor
+        return deepcopy(factor)
+
+    def get_mfa_factor(self, factor_id: str) -> Optional[Any]:
+        with self._lock:
+            factor = self.mfa_factors.get(factor_id)
+            return deepcopy(factor) if factor else None
+
+    def list_mfa_factors(self, account_id: str) -> list[Any]:
+        with self._lock:
+            return [
+                deepcopy(f)
+                for f in self.mfa_factors.values()
+                if f.account_id == account_id
+            ]
+
+    def put_mfa_challenge(self, challenge: Any) -> Any:
+        with self._lock:
+            self.mfa_challenges[challenge.challenge_id] = challenge
+        return deepcopy(challenge)
+
+    def get_mfa_challenge(self, challenge_id: str) -> Optional[Any]:
+        with self._lock:
+            challenge = self.mfa_challenges.get(challenge_id)
+            return deepcopy(challenge) if challenge else None
+
     def snapshot(self) -> dict[str, Any]:
         with self._lock:
             return {
@@ -179,6 +209,8 @@ class PublicAuthStore:
                 "account_count": len(self.accounts),
                 "session_count": len(self.sessions),
                 "audit_count": len(self.audit),
+                "mfa_factor_count": len(self.mfa_factors),
+                "mfa_challenge_count": len(self.mfa_challenges),
             }
 
 

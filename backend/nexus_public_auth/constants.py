@@ -1,12 +1,13 @@
-"""PUB-H public auth & membership foundation — constants and hard bans."""
+"""PUB2-F public auth entitlement & organization security — constants and hard bans."""
 from __future__ import annotations
 
-LANE = "PUB-H"
-LANE_NAME = "AUTH_AND_MEMBERSHIP_FOUNDATION"
-PACKAGE = "NEXUS_PUBLIC_AUTH_MEMBERSHIP_FOUNDATION_V1"
-SCHEMA = "public_auth_membership_foundation_v1"
-BRANCH = "feature/public-v1-auth-membership-foundation"
-BASE_COMMIT = "39e6b1ae1a40698d02c4cb8de4d80fc412309cfc"
+LANE = "PUB2-F"
+LANE_NAME = "AUTH_ENTITLEMENT_AND_ORGANIZATION_SECURITY"
+PACKAGE = "NEXUS_PUBLIC_AUTH_ENTITLEMENT_ORG_SECURITY_V2"
+SCHEMA = "public_auth_entitlement_org_security_v2"
+BRANCH = "feature/public-v2-auth-entitlement-org-security"
+BASE_COMMIT = "5e93f677ece9f283aeade98657b5e3d5736991b5"
+PRIOR_FOUNDATION = "NEXUS_PUBLIC_AUTH_MEMBERSHIP_FOUNDATION_V1"
 
 # Separate public identity realm — must never equal private issuer realm.
 PUBLIC_IDENTITY_REALM = "nexus.public.identity.v1"
@@ -70,6 +71,46 @@ CONSENT_PURPOSES = frozenset(
     }
 )
 
+# MFA-ready factor types (abstraction only — no live SMS/TOTP provider required).
+MFA_FACTOR_TYPES = frozenset({"totp", "webauthn", "recovery_codes", "email_otp"})
+MFA_STATUS_VALUES = frozenset({"disabled", "pending_enrollment", "enabled"})
+
+# Auth API rate-limit defaults (in-memory, non-production).
+RATE_LIMIT_WINDOW_SECONDS = 60
+RATE_LIMIT_DEFAULTS: dict[str, int] = {
+    "register": 10,
+    "session_create": 30,
+    "session_authenticate": 60,
+    "mfa_challenge": 20,
+    "export": 5,
+    "delete": 5,
+    "consent": 30,
+    "tier_assign": 10,
+}
+
+# Features that must NEVER appear on any public entitlement tier.
+# Entitlements gate decision-product reads only — never private execution.
+PRIVATE_EXECUTION_FEATURE_DENYLIST = frozenset(
+    {
+        "private_execution",
+        "private_execution_access",
+        "execution_write",
+        "exchange_write",
+        "order_placement",
+        "live_trading",
+        "mainnet_trading",
+        "autonomy_control",
+        "founder_operator",
+        "checkpoint_mutate",
+        "lesson_memory_write",
+        "wallet_custody",
+        "copy_trading",
+        "strategy_promotion",
+        "demo_autonomous_control",
+        "shadow_control",
+    }
+)
+
 HARD_BANS = frozenset(
     {
         "no_live_billing",
@@ -78,6 +119,7 @@ HARD_BANS = frozenset(
         "no_live_public_deployment",
         "no_shared_private_jwt_issuer",
         "no_private_admin_session_reuse",
+        "no_private_execution_via_entitlement",
         "no_custodial_wallet",
         "no_copy_trading",
         "no_automated_customer_trading",
@@ -89,7 +131,8 @@ HARD_BANS = frozenset(
     }
 )
 
-# Feature matrix — entitlement gates only; no payment collection.
+# Feature matrix — entitlement gates only; no payment collection;
+# never includes PRIVATE_EXECUTION_FEATURE_DENYLIST entries.
 TIER_FEATURES: dict[str, frozenset[str]] = {
     "Free": frozenset(
         {
@@ -151,6 +194,7 @@ TIER_FEATURES: dict[str, frozenset[str]] = {
             "org_audit_export",
             "sso_placeholder",
             "priority_support_placeholder",
+            "mfa_required_org_policy",
         }
     ),
 }
