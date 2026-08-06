@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "nexus://pub17_a/global_market_source_contracts.schema.json",
+  "title": "NEXUS PUB17-A Global Market Source Contracts",
+  "schema_name": "pub17_a_global_market_source_contracts_v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "schema_version",
+    "lane",
+    "contracts",
+    "normalized_dtos"
+  ],
+  "properties": {
+    "schema": {
+      "const": "pub17_a_global_market_source_contracts_v1"
+    },
+    "schema_version": {
+      "const": "1"
+    },
+    "lane": {
+      "const": "PUB17-A"
+    },
+    "contracts": {
+      "type": "array",
+      "minItems": 13
+    },
+    "normalized_dtos": {
+      "type": "array",
+      "minItems": 13
+    },
+    "provider_required_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": true
+}
