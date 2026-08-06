@@ -1,7 +1,7 @@
 {
   "schema": "v18_f_shadow_decision_ledger_v1",
   "lane": "V18-F",
-  "tip_sha": "f282a56da4e111f74f4cfa65a0c7eef6203c377d",
+  "tip_sha": "6877774f345c24ea54e1879e04f1ab426f920810",
   "lifecycle_states": [
     "OBSERVED",
     "CANDIDATE",
