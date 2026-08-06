@@ -24,6 +24,7 @@ from backend.nexus_public_decision_cloud.routes import register_public_decision_
 from backend.nexus_public_decision_product.routes import register_public_decision_product_routes
 from backend.nexus_public_member_intel.routes import register_public_member_intel_routes
 from backend.nexus_pub17_market_pulse.routes import register_pub17_market_pulse_routes
+from backend.nexus_pub18_live_funnel.routes import register_pub18_live_funnel_routes
 from backend.nexus_customer_validation_concierge.routes import (
     register_customer_validation_concierge_routes,
 )
@@ -56,6 +57,7 @@ register_public_decision_cloud_routes(app)  # PUB-B: local/staging Decision Clou
 register_public_decision_product_routes(app)  # PUB2-A: customer-safe Decision Product E2E (read-only)
 register_public_member_intel_routes(app)  # UX-B: Member Web Intelligence Experience (read-only)
 register_pub17_market_pulse_routes(app)  # PUB17-B: Market Pulse + Top Opportunities (read-only)
+register_pub18_live_funnel_routes(app)  # PUB18-A: Live Funnel + Market Pulse (read-only)
 register_customer_validation_concierge_routes(app)  # PUB2-G: Concierge validation local/staging app
 register_nexus_research_routes(app)  # Phase 5 Gate B: AI Review research routes
 try:
