@@ -1,0 +1,40 @@
+{
+  "checks": {
+    "append_only": true,
+    "bounded_fixture_only": true,
+    "checksum": true,
+    "duplicate_detection": true,
+    "lineage": true,
+    "manifest": true,
+    "utc_only": true
+  },
+  "claims_15y_history_downloaded": false,
+  "disk_usage_bytes": 9032,
+  "duplicate_status": "DUPLICATE",
+  "ingested": 4,
+  "inventory": {
+    "claims_15y_history_downloaded": false,
+    "classification_set": [
+      "BOUNDED_OFFICIAL_SAMPLE",
+      "FIXTURE"
+    ],
+    "fixture_count": 3,
+    "official_sample_count": 1,
+    "source_ids": [
+      "fixture.binance.spot.kline.1m",
+      "official_sample.binance.public.rest.kline"
+    ],
+    "symbols": [
+      "BTCUSDT",
+      "ETHUSDT"
+    ],
+    "total_bounded_samples": 4
+  },
+  "manifest_path": "artifacts/readiness/immutable/v17_bronze_immutable_raw_lake/bronze_manifest.json",
+  "name": "implementation",
+  "pass": 1,
+  "required_fields_present": true,
+  "resume_offset_after": 4,
+  "schema": "v17_b_bronze_immutable_raw_lake_v1",
+  "status": "PASS"
+}

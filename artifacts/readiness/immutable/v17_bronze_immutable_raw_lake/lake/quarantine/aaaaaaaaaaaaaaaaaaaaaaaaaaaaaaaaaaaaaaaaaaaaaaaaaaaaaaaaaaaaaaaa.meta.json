@@ -1,0 +1,7 @@
+{
+  "schema": "v17_b_bronze_immutable_raw_lake_v1",
+  "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "reason": "verify_fail:content_hash_mismatch",
+  "quarantined_at": "2026-08-06T01:33:46Z",
+  "original_sha256": "d209eac28dce477012d303f4ca1f85089736606286ae5c0995a456899bcdcea6"
+}

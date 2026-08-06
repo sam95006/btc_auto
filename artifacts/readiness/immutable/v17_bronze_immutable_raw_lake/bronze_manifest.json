@@ -1,0 +1,124 @@
+{
+  "append_only": true,
+  "bounded_disk": true,
+  "built_at": "2026-08-06T01:33:46Z",
+  "claims_15y_history_downloaded": false,
+  "data_classification": "FIXTURE_AND_BOUNDED_OFFICIAL_SAMPLE_ONLY",
+  "disk_usage_bytes": 9032,
+  "entries": [
+    {
+      "bytes": 1648,
+      "content_hash": "64b745f7692ae515f0a47748edaf59b30312f29e2119c1d4f96579ac7b6ecf35",
+      "exchange_timestamp": "2024-01-01T00:00:00Z",
+      "ingested_timestamp": "2026-08-06T01:33:46Z",
+      "partition_hash": "26f120a1295d4ddb002ec1d7fe888a6e548c587d4a349f037cdc144b121743ad",
+      "path": "records/64b745f7692ae515f0a47748edaf59b30312f29e2119c1d4f96579ac7b6ecf35.json",
+      "source_id": "fixture.binance.spot.kline.1m",
+      "symbol_original": "BTCUSDT"
+    },
+    {
+      "bytes": 1647,
+      "content_hash": "087517ee42df7c20b707fa85674011de4112606eed8f0680ebff1e028a0a332e",
+      "exchange_timestamp": "2024-01-01T00:01:00Z",
+      "ingested_timestamp": "2026-08-06T01:33:46Z",
+      "partition_hash": "26f120a1295d4ddb002ec1d7fe888a6e548c587d4a349f037cdc144b121743ad",
+      "path": "records/087517ee42df7c20b707fa85674011de4112606eed8f0680ebff1e028a0a332e.json",
+      "source_id": "fixture.binance.spot.kline.1m",
+      "symbol_original": "BTCUSDT"
+    },
+    {
+      "bytes": 1647,
+      "content_hash": "c1c531658fc37d1f0982038abd57237fac02b455266c6c9cc6d0ed55571366cc",
+      "exchange_timestamp": "2024-01-01T00:02:00Z",
+      "ingested_timestamp": "2026-08-06T01:33:46Z",
+      "partition_hash": "26f120a1295d4ddb002ec1d7fe888a6e548c587d4a349f037cdc144b121743ad",
+      "path": "records/c1c531658fc37d1f0982038abd57237fac02b455266c6c9cc6d0ed55571366cc.json",
+      "source_id": "fixture.binance.spot.kline.1m",
+      "symbol_original": "BTCUSDT"
+    },
+    {
+      "bytes": 1734,
+      "content_hash": "f14cb0cf64ef551e35bca7bf71dc272a1cccc38835cec31dc18849375766e929",
+      "exchange_timestamp": "2024-06-15T12:00:00Z",
+      "ingested_timestamp": "2026-08-06T01:33:46Z",
+      "partition_hash": "dc7c575f7d362ac28cd1d72b5acaf5dfb33e3196172e14cbe0f552b5132310f4",
+      "path": "records/f14cb0cf64ef551e35bca7bf71dc272a1cccc38835cec31dc18849375766e929.json",
+      "source_id": "official_sample.binance.public.rest.kline",
+      "symbol_original": "ETHUSDT"
+    }
+  ],
+  "entry_count": 4,
+  "hard_ban_flags": {
+    "ai_may_mutate_raw_payload": false,
+    "demo": false,
+    "exchange_write": false,
+    "full_15y_history_claimed": false,
+    "historical_rewrite_allowed": false,
+    "mainnet": false,
+    "pr26_merged": false,
+    "pr27_merged": false,
+    "real_money": false
+  },
+  "hard_bans": [
+    "no_real_money",
+    "no_mainnet",
+    "no_exchange_write",
+    "no_historical_rewrite",
+    "no_ai_mutate_raw_payload",
+    "no_non_utc_timestamps",
+    "no_claim_15y_history_downloaded",
+    "no_full_history_ingest_this_round",
+    "no_oos",
+    "no_walkforward",
+    "no_fabricated_ai_learning",
+    "no_pr26_merge",
+    "no_pr27_merge",
+    "no_status_json_lane_artifact",
+    "no_acceleration_report_edit",
+    "no_auto_integrate"
+  ],
+  "inventory": {
+    "claims_15y_history_downloaded": false,
+    "classification_set": [
+      "BOUNDED_OFFICIAL_SAMPLE",
+      "FIXTURE"
+    ],
+    "fixture_count": 3,
+    "official_sample_count": 1,
+    "source_ids": [
+      "fixture.binance.spot.kline.1m",
+      "official_sample.binance.public.rest.kline"
+    ],
+    "symbols": [
+      "BTCUSDT",
+      "ETHUSDT"
+    ],
+    "total_bounded_samples": 4
+  },
+  "lake_root": "D:/NEXUS_RUNTIME/worktrees/v17_b_bronze_lake/artifacts/readiness/immutable/v17_bronze_immutable_raw_lake/lake",
+  "manifest_digest": "17e070439444c3bcb92087d77a74e8ede728c669e0400b2bc471dc22c4c92c7f",
+  "max_disk_bytes": 8388608,
+  "quarantine_count": 0,
+  "required_fields": [
+    "exchange_timestamp",
+    "received_timestamp",
+    "ingested_timestamp",
+    "source_id",
+    "symbol_original",
+    "payload",
+    "content_hash",
+    "partition_hash",
+    "schema_version",
+    "compression",
+    "license_reference"
+  ],
+  "resume_checkpoint": {
+    "last_content_hash": "f14cb0cf64ef551e35bca7bf71dc272a1cccc38835cec31dc18849375766e929",
+    "schema": "v17_b_bronze_resume_checkpoint_v1",
+    "source_offset": 3,
+    "updated_at": "2026-08-06T01:33:46Z"
+  },
+  "schema": "v17_b_bronze_manifest_v1",
+  "schema_version": "1.0.0",
+  "utc_only": true
+}
