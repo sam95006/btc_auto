@@ -2,6 +2,8 @@ import { NavLink } from "react-router-dom";
 import { useState } from "react";
 import { useI18n, useT, type LocaleCode } from "../i18n";
 import { usePublicEntitlements } from "../member/public_entitlements_v18_2";
+import { isPreviewEntitlementReviewAvailable } from "../member/previewEntitlementReview";
+import { usePreviewReviewPlan } from "../member/usePreviewReviewPlan";
 import {
   ENTERPRISE_ACTUAL_PANEL_NAV_V18_2_1,
   MOBILE_BOTTOM_PRIMARY_V18_2_1,
@@ -105,8 +107,10 @@ export function ActualPanelMobileBottomNav() {
 export function ActualPanelSidebarNav() {
   const t = useT();
   const [accountOpen, setAccountOpen] = useState(true);
-  const { dto } = usePublicEntitlements("FREE");
-  const plan = dto?.plan ?? "FREE";
+  const previewPlan = usePreviewReviewPlan("FREE");
+  const { dto } = usePublicEntitlements(previewPlan);
+  const plan = dto?.plan ?? previewPlan;
+  const showReviewLink = isPreviewEntitlementReviewAvailable();
   const showOrg = plan === "ENTERPRISE";
 
   const primary: NavItem[] = PRIMARY_ACTUAL_PANEL_NAV_V18_2_1.map((i) => ({
@@ -147,6 +151,16 @@ export function ActualPanelSidebarNav() {
         <div className="nav-group">
           <div className="nav-label">{t("nav.v182.utilityLabel")}</div>
           <Links items={utility} />
+          {showReviewLink ? (
+            <NavLink
+              to="/preview/v18_2_1/review"
+              className={({ isActive }) => (isActive ? "active" : undefined)}
+              data-testid="nav-membership-review"
+            >
+              <span className="nav-text-full">Membership review</span>
+              <span className="nav-text-short">Review</span>
+            </NavLink>
+          ) : null}
         </div>
         {enterprise.length ? (
           <div className="nav-group">

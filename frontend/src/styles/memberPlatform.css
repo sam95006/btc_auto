@@ -634,3 +634,51 @@ a.member-btn {
     flex-direction: column;
   }
 }
+
+.nx-membership-review .nx-review-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: var(--space-3);
+}
+
+.nx-membership-review .nx-review-plan-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: var(--space-3) 0;
+}
+
+.nx-membership-review .nx-review-plan-row button.active {
+  font-weight: 600;
+}
+
+.nx-membership-review .nx-review-mode-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.nx-membership-review .nx-review-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.nx-membership-review .nx-review-dl {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.nx-membership-review .nx-review-dl dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.nx-membership-review .nx-review-reset {
+  padding: 0.5rem 1rem;
+}
+

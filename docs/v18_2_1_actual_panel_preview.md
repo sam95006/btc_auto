@@ -21,6 +21,12 @@ VITE_MEMBER_SURFACE_V18_2_1=true npx vite preview --host 127.0.0.1 --port 4173
 
 Open: `http://127.0.0.1:4173/opportunities?member_surface_v18_2_1=1`
 
+## V18.2.2 membership review (preview build)
+
+Requires `VITE_PREVIEW_ENTITLEMENT_REVIEW=true` in addition to member surface flag. See [v18_2_2_remote_preview.md](./v18_2_2_remote_preview.md).
+
+- **Route:** `/preview/v18_2_1/review`
+
 ## Zeabur rollback
 
 1. Unset `VITE_MEMBER_SURFACE_V18_2_1` (or set to `false`) in service env.

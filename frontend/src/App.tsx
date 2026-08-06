@@ -23,6 +23,11 @@ import {
 function ActualPanelPreviewRedirect() {
   const loc = useLocation();
   const rest = loc.pathname.replace(/^\/preview\/v18_2_1\/?/, "") || "opportunities";
+  if (rest === "review" || rest === "/review") {
+    const params = new URLSearchParams(loc.search);
+    params.set(MEMBER_SURFACE_V18_2_1_FLAG, "1");
+    return <Navigate to={`/review?${params.toString()}${loc.hash}`} replace />;
+  }
   const path = rest.startsWith("/") ? rest : `/${rest}`;
   const params = new URLSearchParams(loc.search);
   params.set(MEMBER_SURFACE_V18_2_1_FLAG, "1");

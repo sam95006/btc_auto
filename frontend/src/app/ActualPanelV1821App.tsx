@@ -18,6 +18,7 @@ import { ScannerPage } from "../pages/ScannerPage";
 import { WatchlistPage } from "../pages/WatchlistPage";
 import { ActualPanelOverviewPage } from "../pages/actual_panel/ActualPanelOverviewPage";
 import { OpportunitiesPageV1821 } from "../pages/actual_panel/OpportunitiesPageV1821";
+import { MembershipReviewEntryGuard } from "../pages/actual_panel/MembershipEntitlementReviewPage";
 import {
   MemberAccountDeletionPage,
   MemberAccountPage,
@@ -54,6 +55,7 @@ export function ActualPanelV1821App() {
                       <Routes>
                         <Route path="/" element={<Navigate to="/opportunities" replace />} />
                         <Route path="/overview" element={<ActualPanelOverviewPage />} />
+                        <Route path="/review" element={<MembershipReviewEntryGuard />} />
                         <Route path="/opportunities" element={<OpportunitiesPageV1821 />} />
                         <Route path="/scanner" element={<ScannerPage />} />
                         <Route path="/alerts" element={<AlertsPage />} />
