@@ -1,0 +1,363 @@
+{
+  "banned_claim_scan": {
+    "hits": [],
+    "ok": true,
+    "scanned_owned_paths": [
+      "backend/nexus_pit_revision_v17/",
+      "tests/pit_revision_v17/",
+      "artifacts/readiness/immutable/v17_pit_revision/",
+      "tools/research/run_pit_revision_v17.py"
+    ]
+  },
+  "base": "66a0f7827d5709fc09bc8c7495e93a4089eb28de",
+  "branch": "feature/v17-point-in-time-revision",
+  "capabilities": [
+    "as_known_at",
+    "later_revisions",
+    "revision_lineage",
+    "late_arriving",
+    "backfill",
+    "label_revision",
+    "unavailable_at_time_guard"
+  ],
+  "content_sha256": "b6b3a02d87ff68adc5059fcfe3483d140a761e6d2cb6495d1abf7a4b38283a21",
+  "demo_queries": [
+    {
+      "as_known_at": 1700259200000,
+      "fixture_only": true,
+      "leakage_blocked": false,
+      "lineage": [
+        {
+          "content_hash": "d89e03146db8cc1692c0096e0eea4e0e6d3bfa500e750ad123dcc58dcacba761",
+          "fixture_only": true,
+          "kind": "OBSERVATION",
+          "label_name": null,
+          "notes": "initial close print",
+          "parent_revision_id": null,
+          "revision_id": "OBS_BTC_CLOSE_R1",
+          "series_id": "SYNTH.BTCUSDT.CLOSE",
+          "tags": [
+            "CONTROL_FIXTURE_NOT_REAL_MARKET_DATA",
+            "initial"
+          ],
+          "times": {
+            "available_time": 1700086400000,
+            "event_time": 1700000000000,
+            "ingest_time": 1700086400000,
+            "revision_time": 1700086400000
+          },
+          "value": 42000.0
+        }
+      ],
+      "reason": "as_known_at_revision_selected",
+      "revision_id": "OBS_BTC_CLOSE_R1",
+      "selected_revision": {
+        "content_hash": "d89e03146db8cc1692c0096e0eea4e0e6d3bfa500e750ad123dcc58dcacba761",
+        "fixture_only": true,
+        "kind": "OBSERVATION",
+        "label_name": null,
+        "notes": "initial close print",
+        "parent_revision_id": null,
+        "revision_id": "OBS_BTC_CLOSE_R1",
+        "series_id": "SYNTH.BTCUSDT.CLOSE",
+        "tags": [
+          "CONTROL_FIXTURE_NOT_REAL_MARKET_DATA",
+          "initial"
+        ],
+        "times": {
+          "available_time": 1700086400000,
+          "event_time": 1700000000000,
+          "ingest_time": 1700086400000,
+          "revision_time": 1700086400000
+        },
+        "value": 42000.0
+      },
+      "series_id": "SYNTH.BTCUSDT.CLOSE",
+      "status": "AVAILABLE",
+      "value": 42000.0
+    },
+    {
+      "as_known_at": 1700518400000,
+      "fixture_only": true,
+      "leakage_blocked": false,
+      "lineage": [
+        {
+          "content_hash": "d89e03146db8cc1692c0096e0eea4e0e6d3bfa500e750ad123dcc58dcacba761",
+          "fixture_only": true,
+          "kind": "OBSERVATION",
+          "label_name": null,
+          "notes": "initial close print",
+          "parent_revision_id": null,
+          "revision_id": "OBS_BTC_CLOSE_R1",
+          "series_id": "SYNTH.BTCUSDT.CLOSE",
+          "tags": [
+            "CONTROL_FIXTURE_NOT_REAL_MARKET_DATA",
+            "initial"
+          ],
+          "times": {
+            "available_time": 1700086400000,
+            "event_time": 1700000000000,
+            "ingest_time": 1700086400000,
+            "revision_time": 1700086400000
+          },
+          "value": 42000.0
+        },
+        {
+          "content_hash": "cac2664ce4389a46004a29619b7af15a7ea093fbe4982faa869552b73f23c78e",
+          "fixture_only": true,
+          "kind": "OBSERVATION",
+          "label_name": null,
+          "notes": "exchange restatement / later revision",
+          "parent_revision_id": "OBS_BTC_CLOSE_R1",
+          "revision_id": "OBS_BTC_CLOSE_R2",
+          "series_id": "SYNTH.BTCUSDT.CLOSE",
+          "tags": [
+            "CONTROL_FIXTURE_NOT_REAL_MARKET_DATA",
+            "later_revision"
+          ],
+          "times": {
+            "available_time": 1700086400000,
+            "event_time": 1700000000000,
+            "ingest_time": 1700432000000,
+            "revision_time": 1700432000000
+          },
+          "value": 41950.0
+        }
+      ],
+      "reason": "as_known_at_revision_selected",
+      "revision_id": "OBS_BTC_CLOSE_R2",
+      "selected_revision": {
+        "content_hash": "cac2664ce4389a46004a29619b7af15a7ea093fbe4982faa869552b73f23c78e",
+        "fixture_only": true,
+        "kind": "OBSERVATION",
+        "label_name": null,
+        "notes": "exchange restatement / later revision",
+        "parent_revision_id": "OBS_BTC_CLOSE_R1",
+        "revision_id": "OBS_BTC_CLOSE_R2",
+        "series_id": "SYNTH.BTCUSDT.CLOSE",
+        "tags": [
+          "CONTROL_FIXTURE_NOT_REAL_MARKET_DATA",
+          "later_revision"
+        ],
+        "times": {
+          "available_time": 1700086400000,
+          "event_time": 1700000000000,
+          "ingest_time": 1700432000000,
+          "revision_time": 1700432000000
+        },
+        "value": 41950.0
+      },
+      "series_id": "SYNTH.BTCUSDT.CLOSE",
+      "status": "AVAILABLE",
+      "value": 41950.0
+    },
+    {
+      "as_known_at": 1700345600000,
+      "fixture_only": true,
+      "leakage_blocked": true,
+      "lineage": [],
+      "reason": "no_revision_visible_at_as_known_at",
+      "revision_id": null,
+      "selected_revision": null,
+      "series_id": "SYNTH.ETHUSDT.CLOSE",
+      "status": "UNAVAILABLE_AT_TIME",
+      "value": null
+    },
+    {
+      "as_known_at": 1700432000000,
+      "fixture_only": true,
+      "leakage_blocked": false,
+      "lineage": [
+        {
+          "content_hash": "db3da16505d68ff0b9c5d71931ff79eb208472cfbe410605822e62513f9ce907",
+          "fixture_only": true,
+          "kind": "LABEL",
+          "label_name": "regime_v1",
+          "notes": "initial label",
+          "parent_revision_id": null,
+          "revision_id": "LABEL_REGIME_R1",
+          "series_id": "SYNTH.BTCUSDT.REGIME_LABEL",
+          "tags": [
+            "CONTROL_FIXTURE_NOT_REAL_MARKET_DATA",
+            "label"
+          ],
+          "times": {
+            "available_time": 1700345600000,
+            "event_time": 1700000000000,
+            "ingest_time": 1700345600000,
+            "revision_time": 1700345600000
+          },
+          "value": "TREND_UP"
+        }
+      ],
+      "reason": "as_known_at_revision_selected",
+      "revision_id": "LABEL_REGIME_R1",
+      "selected_revision": {
+        "content_hash": "db3da16505d68ff0b9c5d71931ff79eb208472cfbe410605822e62513f9ce907",
+        "fixture_only": true,
+        "kind": "LABEL",
+        "label_name": "regime_v1",
+        "notes": "initial label",
+        "parent_revision_id": null,
+        "revision_id": "LABEL_REGIME_R1",
+        "series_id": "SYNTH.BTCUSDT.REGIME_LABEL",
+        "tags": [
+          "CONTROL_FIXTURE_NOT_REAL_MARKET_DATA",
+          "label"
+        ],
+        "times": {
+          "available_time": 1700345600000,
+          "event_time": 1700000000000,
+          "ingest_time": 1700345600000,
+          "revision_time": 1700345600000
+        },
+        "value": "TREND_UP"
+      },
+      "series_id": "SYNTH.BTCUSDT.REGIME_LABEL",
+      "status": "AVAILABLE",
+      "value": "TREND_UP"
+    }
+  ],
+  "exchange_write_attempt_count": 0,
+  "fixture_only": true,
+  "fixture_summary": {
+    "control_label": "CONTROL_FIXTURE_NOT_REAL_MARKET_DATA",
+    "day_ms": 86400000,
+    "fixture_only": true,
+    "kinds": [
+      "BACKFILL",
+      "LABEL",
+      "LATE_ARRIVING",
+      "OBSERVATION"
+    ],
+    "real_market_data": false,
+    "record_count": 7,
+    "schema": "v17_d_fixture_summary",
+    "series_ids": [
+      "SYNTH.BTCUSDT.CLOSE",
+      "SYNTH.BTCUSDT.REGIME_LABEL",
+      "SYNTH.ETHUSDT.CLOSE",
+      "SYNTH.SOLUSDT.CLOSE"
+    ],
+    "t0_ms": 1700000000000
+  },
+  "formal_wf_executed": false,
+  "future_leakage_redteam": {
+    "attack_count": 12,
+    "blocked_count": 12,
+    "pass": true,
+    "survivor_count": 0,
+    "survivors": []
+  },
+  "generated_at": "2026-08-06T01:35:17Z",
+  "hard_ban_probe": {
+    "env": {
+      "flags": {
+        "AUTO_INTEGRATE": "false",
+        "EXCHANGE_WRITE": "false",
+        "FORMAL_WALK_FORWARD": "false",
+        "MAINNET": "false",
+        "OOS_CONSUME": "false",
+        "OOS_EXECUTE": "false",
+        "PR26_MERGE": "false",
+        "PR27_MERGE": "false",
+        "REAL_MONEY": "false"
+      },
+      "hard_bans": [
+        "no_acceleration_report_edit",
+        "no_auto_integrate",
+        "no_exchange_write",
+        "no_formal_wf",
+        "no_future_leakage",
+        "no_mainnet",
+        "no_oos_claims",
+        "no_pr26_merge",
+        "no_pr27_merge",
+        "no_real_money",
+        "no_research_query_without_as_known_at",
+        "no_status_json_lane_artifact",
+        "no_today_revision_for_past_backtest",
+        "no_unavailable_at_time_silent_fill"
+      ],
+      "ok": true,
+      "violations": []
+    },
+    "env_ok": true,
+    "exchange_write": {
+      "action": "EXCHANGE_WRITE",
+      "allowed": false,
+      "executed": false,
+      "reason": "EXCHANGE_WRITES_BANNED_V17_D"
+    },
+    "hard_bans": [
+      "no_today_revision_for_past_backtest",
+      "no_research_query_without_as_known_at",
+      "no_future_leakage",
+      "no_unavailable_at_time_silent_fill",
+      "no_real_money",
+      "no_mainnet",
+      "no_exchange_write",
+      "no_formal_wf",
+      "no_oos_claims",
+      "no_pr26_merge",
+      "no_pr27_merge",
+      "no_acceleration_report_edit",
+      "no_status_json_lane_artifact",
+      "no_auto_integrate"
+    ],
+    "report_edit": {
+      "action": "ACCELERATION_REPORT_EDIT",
+      "allowed": false,
+      "reason": "REPORT_EDIT_BANNED_V17_D",
+      "written": false
+    },
+    "schema": "v17_d_hard_ban_probe_matrix"
+  },
+  "hard_bans": [
+    "no_today_revision_for_past_backtest",
+    "no_research_query_without_as_known_at",
+    "no_future_leakage",
+    "no_unavailable_at_time_silent_fill",
+    "no_real_money",
+    "no_mainnet",
+    "no_exchange_write",
+    "no_formal_wf",
+    "no_oos_claims",
+    "no_pr26_merge",
+    "no_pr27_merge",
+    "no_acceleration_report_edit",
+    "no_status_json_lane_artifact",
+    "no_auto_integrate"
+  ],
+  "lane": "V17-D",
+  "lane_name": "POINT_IN_TIME_AND_REVISION_CONTROL",
+  "mainnet_client_count": 0,
+  "non_claims": [
+    "No formal Walk-Forward executed",
+    "No OOS consumption or sealed OOS metrics claimed",
+    "No exchange/mainnet/real-money capability",
+    "Synthetic fixtures only — not live market ingestion"
+  ],
+  "oos_claimed": false,
+  "pit_visibility_proof": {
+    "as_known_at": 1700259200000,
+    "future_count": 2,
+    "input_count": 3,
+    "leaked_revision_ids": [],
+    "pit_holds": true,
+    "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+    "schema": "v17_d_pit_visibility_proof",
+    "series_id": "SYNTH.BTCUSDT.CLOSE",
+    "visible_count": 1
+  },
+  "real_market_data": false,
+  "schema": "v17_d_pit_revision_control_v1",
+  "schema_version": "v1.0.0",
+  "status": "PASS",
+  "time_axes": [
+    "event_time",
+    "available_time",
+    "revision_time",
+    "ingest_time"
+  ]
+}
