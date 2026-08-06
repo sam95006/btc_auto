@@ -89,6 +89,46 @@ def test_aggregate_histogram_and_fault_counts():
     assert agg["contracts_with_multiple_reasons"] == 3
 
 
+def test_bybit_trade_count_gap_is_valid_safety_not_schema_error():
+    """After specs/metrics wired, missing Bybit trade_count is fail-closed safety."""
+    inst = InstrumentSnapshot(
+        symbol="BTCUSDT",
+        exchange="bybit",
+        status="Trading",
+        quote_coin="USDT",
+        base_coin="BTC",
+        launch_time_ms=AS_OF - 400 * 86_400_000,
+        tick_size=0.1,
+        lot_size=0.001,
+        min_notional=5.0,
+        turnover_24h=50_000_000,
+        trade_count_24h=None,  # Bybit public gap
+        spread_bps=1.0,
+        book_depth_usdt=100_000,
+        funding_available=True,
+        oi_available=True,
+        open_interest_value=2_000_000,
+        history_bars=120,
+        data_completeness=0.93,
+        data_trust_status="TRUSTED",
+        delisting_flag=False,
+        round_trip_cost_bps=12.0,
+        last_price=60000.0,
+    )
+    decision = classify_instrument(inst, as_of_ms=AS_OF)
+    row = classify_block_reasons(
+        inst,
+        decision,
+        source_adapter="bybit_public_v5",
+        normalization_status="OK",
+        pit_status="N/A",
+        data_class="LIVE_READ_ONLY",
+    )
+    assert decision.universe_class != "ELIGIBLE"
+    assert row["primary_block_reason"] == "VALID_SAFETY_BLOCK"
+    assert "ADAPTER_SCHEMA_ERROR" not in [row["primary_block_reason"], *row["secondary_block_reasons"]]
+
+
 def test_unknown_never_becomes_eligible_in_census_path():
     inst = InstrumentSnapshot(symbol="ZUSDT", status=None)
     decision = classify_instrument(inst, as_of_ms=AS_OF)

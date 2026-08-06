@@ -67,13 +67,16 @@ _CYCLE_ENRICHMENT_FIELDS: frozenset[str] = frozenset(
         "turnover_24h",
         "spread_bps",
         "book_depth_usdt",
-        "trade_count_24h",
         "history_bars",
         "data_completeness",
         "data_trust_status",
         "round_trip_cost_bps",
     }
 )
+
+# Present on some venues (e.g. Binance 24hr count) but NOT on Bybit public linear ticker.
+# Absence after live ticker enrichment is a known exchange gap → fail-closed safety, not schema drop.
+_KNOWN_EXCHANGE_GAP_FIELDS: frozenset[str] = frozenset({"trade_count_24h"})
 
 
 def _missing_fields(inst: InstrumentSnapshot) -> list[str]:
@@ -147,7 +150,8 @@ def _map_gate_to_block_reason(gate: str, detail: str, known: bool) -> str:
 
     if g == "trade_frequency":
         if not known:
-            return "ADAPTER_DATA_MISSING"
+            # Bybit public ticker does not publish 24h trade count — fail-closed safety.
+            return "VALID_SAFETY_BLOCK"
         return "LOW_LIQUIDITY"
 
     if g == "spread":
@@ -225,6 +229,11 @@ def classify_block_reasons(
     if enrich_hits:
         secondary.append("ADAPTER_DATA_MISSING")
         seen.add("ADAPTER_DATA_MISSING")
+
+    gap_hits = [f for f in missing if f in _KNOWN_EXCHANGE_GAP_FIELDS]
+    if gap_hits and "VALID_SAFETY_BLOCK" not in seen:
+        secondary.append("VALID_SAFETY_BLOCK")
+        seen.add("VALID_SAFETY_BLOCK")
 
     if normalization_status not in {"OK", "PASS", "NORMALIZED"}:
         secondary.append("NORMALIZATION_ERROR")

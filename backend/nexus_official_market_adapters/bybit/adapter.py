@@ -184,6 +184,15 @@ class BybitPublicV5Adapter(OfficialReadOnlyMarketAdapter):
         rows = (payload.get("result") or {}).get("list") or []
         instruments = []
         for row in rows:
+            price_filter = row.get("priceFilter") or {}
+            lot_filter = row.get("lotSizeFilter") or {}
+            launch_raw = row.get("launchTime")
+            launch_ms = None
+            if launch_raw not in (None, ""):
+                try:
+                    launch_ms = int(launch_raw)
+                except (TypeError, ValueError):
+                    launch_ms = None
             instruments.append(
                 {
                     "symbol": row.get("symbol"),
@@ -192,7 +201,14 @@ class BybitPublicV5Adapter(OfficialReadOnlyMarketAdapter):
                     "quote_coin": row.get("quoteCoin"),
                     "contract_type": row.get("contractType"),
                     "settle_coin": row.get("settleCoin"),
-                    "launch_time_ms": row.get("launchTime"),
+                    "launch_time_ms": launch_ms,
+                    "tick_size": safe_float(price_filter.get("tickSize")),
+                    "lot_size": safe_float(
+                        lot_filter.get("qtyStep") or lot_filter.get("minOrderQty")
+                    ),
+                    "min_notional": safe_float(lot_filter.get("minNotionalValue")),
+                    "price_filter": price_filter,
+                    "lot_size_filter": lot_filter,
                 }
             )
         return wrap_ok(
@@ -205,6 +221,32 @@ class BybitPublicV5Adapter(OfficialReadOnlyMarketAdapter):
             data_mode=self._mode,
             exchange_timestamp_ms=_exchange_ts(payload),
         )
+
+    def _normalize_ticker_row(self, row: dict[str, Any]) -> dict[str, Any]:
+        """Map Bybit ticker fields that V18.1 previously dropped (funding/OI/mark)."""
+        funding = safe_float(row.get("fundingRate"))
+        oi_value = safe_float(row.get("openInterestValue"))
+        oi_contracts = safe_float(row.get("openInterest"))
+        return {
+            "symbol": row.get("symbol"),
+            "last_price": safe_float(row.get("lastPrice")),
+            "bid1_price": safe_float(row.get("bid1Price")),
+            "ask1_price": safe_float(row.get("ask1Price")),
+            "bid1_size": safe_float(row.get("bid1Size")),
+            "ask1_size": safe_float(row.get("ask1Size")),
+            "volume_24h": safe_float(row.get("volume24h")),
+            "turnover_24h": safe_float(row.get("turnover24h")),
+            "price_24h_pct": safe_float(row.get("price24hPcnt")),
+            "mark_price": safe_float(row.get("markPrice")),
+            "index_price": safe_float(row.get("indexPrice")),
+            "funding_rate": funding,
+            "funding_available": funding is not None,
+            "open_interest": oi_contracts,
+            "open_interest_value": oi_value if oi_value is not None else oi_contracts,
+            "oi_available": (oi_value is not None) or (oi_contracts is not None),
+            # Public Bybit linear ticker does not publish 24h trade count — leave absent.
+            "trade_count_24h": None,
+        }
 
     def fetch_ticker(self, *, symbol: str) -> MarketObservation:
         payload = self._raw_json("/v5/market/tickers", {"category": "linear", "symbol": symbol})
@@ -221,15 +263,7 @@ class BybitPublicV5Adapter(OfficialReadOnlyMarketAdapter):
                 endpoint="/v5/market/tickers",
                 host=HOST,
             )
-        body = {
-            "symbol": row.get("symbol"),
-            "last_price": safe_float(row.get("lastPrice")),
-            "bid1_price": safe_float(row.get("bid1Price")),
-            "ask1_price": safe_float(row.get("ask1Price")),
-            "volume_24h": safe_float(row.get("volume24h")),
-            "turnover_24h": safe_float(row.get("turnover24h")),
-            "price_24h_pct": safe_float(row.get("price24hPcnt")),
-        }
+        body = self._normalize_ticker_row(row)
         return wrap_ok(
             capability="ticker",
             adapter_id=ADAPTER_ID,
@@ -240,6 +274,22 @@ class BybitPublicV5Adapter(OfficialReadOnlyMarketAdapter):
             data_mode=self._mode,
             exchange_timestamp_ms=_exchange_ts(payload),
             symbol=symbol,
+        )
+
+    def fetch_tickers(self, *, category: str = "linear") -> MarketObservation:
+        """Batch public tickers (one request) — used by universe enrichment."""
+        payload = self._raw_json("/v5/market/tickers", {"category": category})
+        rows = (payload.get("result") or {}).get("list") or []
+        tickers = [self._normalize_ticker_row(r) for r in rows if isinstance(r, dict)]
+        return wrap_ok(
+            capability="ticker",
+            adapter_id=ADAPTER_ID,
+            provider=PROVIDER,
+            endpoint="/v5/market/tickers",
+            host=HOST,
+            payload={"category": category, "tickers": tickers},
+            data_mode=self._mode,
+            exchange_timestamp_ms=_exchange_ts(payload),
         )
 
     def fetch_mark_index_price(self, *, symbol: str) -> MarketObservation:

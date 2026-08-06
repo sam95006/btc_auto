@@ -100,6 +100,20 @@ class TestHardBans:
             )
         assert c.counters.account_endpoint_count >= 1
 
+    def test_public_orderbook_allowlisted_not_blocked_by_order_marker(self):
+        """Regression: marker '/order' must not false-block '/v5/market/orderbook'."""
+        c = bybit_constitution()
+        c.validate_http_request(
+            method="GET",
+            url="https://api.bybit.com/v5/market/orderbook?category=linear&symbol=BTCUSDT",
+        )
+        assert c.counters.account_endpoint_count == 0
+        with pytest.raises(PublicMarketBoundaryError):
+            c.validate_http_request(
+                method="GET",
+                url="https://api.bybit.com/v5/order/create",
+            )
+
 
 class TestSafeFloatHonesty:
     def test_missing_not_zero(self):

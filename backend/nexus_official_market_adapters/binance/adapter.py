@@ -158,14 +158,31 @@ class BinanceUsdmPublicAdapter(OfficialReadOnlyMarketAdapter):
         symbols = payload.get("symbols") or []
         instruments = []
         for row in symbols:
+            filters = {str(f.get("filterType")): f for f in (row.get("filters") or []) if f.get("filterType")}
+            price_f = filters.get("PRICE_FILTER") or {}
+            lot_f = filters.get("LOT_SIZE") or filters.get("MARKET_LOT_SIZE") or {}
+            notional_f = filters.get("MIN_NOTIONAL") or filters.get("NOTIONAL") or {}
+            onboard = row.get("onboardDate")
+            launch_ms = int(onboard) if onboard is not None else None
+            status = row.get("status")
+            # Normalize Binance TRADING → Trading for universe gate vocabulary.
+            status_norm = "Trading" if str(status).upper() == "TRADING" else status
             instruments.append(
                 {
                     "symbol": row.get("symbol"),
-                    "status": row.get("status"),
+                    "status": status_norm,
                     "base_asset": row.get("baseAsset"),
+                    "base_coin": row.get("baseAsset"),
                     "quote_asset": row.get("quoteAsset"),
+                    "quote_coin": row.get("quoteAsset"),
                     "contract_type": row.get("contractType"),
                     "margin_asset": row.get("marginAsset"),
+                    "launch_time_ms": launch_ms,
+                    "tick_size": safe_float(price_f.get("tickSize")),
+                    "lot_size": safe_float(lot_f.get("stepSize") or lot_f.get("minQty")),
+                    "min_notional": safe_float(
+                        notional_f.get("notional") or notional_f.get("minNotional")
+                    ),
                 }
             )
         return wrap_ok(
@@ -196,13 +213,25 @@ class BinanceUsdmPublicAdapter(OfficialReadOnlyMarketAdapter):
                 endpoint="/fapi/v1/ticker/24hr",
                 host=HOST,
             )
+        bid = safe_float(row.get("bidPrice"))
+        ask = safe_float(row.get("askPrice"))
+        turnover = safe_float(row.get("quoteVolume"))
+        trade_count = row.get("count")
+        try:
+            trade_count_i = int(trade_count) if trade_count is not None else None
+        except (TypeError, ValueError):
+            trade_count_i = None
         body = {
             "symbol": row.get("symbol"),
             "last_price": safe_float(row.get("lastPrice")),
-            "bid_price": safe_float(row.get("bidPrice")),
-            "ask_price": safe_float(row.get("askPrice")),
+            "bid_price": bid,
+            "ask_price": ask,
+            "bid1_price": bid,
+            "ask1_price": ask,
             "volume": safe_float(row.get("volume")),
-            "quote_volume": safe_float(row.get("quoteVolume")),
+            "quote_volume": turnover,
+            "turnover_24h": turnover,
+            "trade_count_24h": trade_count_i,
             "price_change_percent": safe_float(row.get("priceChangePercent")),
         }
         close_time = row.get("closeTime")

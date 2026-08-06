@@ -82,15 +82,20 @@ class OfficialReadOnlyConstitution:
 
         normalized = path.rstrip("/") or "/"
         path_l = normalized.lower()
+
+        # Explicit public-market allowlist wins BEFORE substring account markers.
+        # (Prevents false block of /v5/market/orderbook via marker "/order".)
+        if normalized in self.allowlist_paths:
+            return
+
         for marker in ACCOUNT_PATH_MARKERS:
             if marker in path_l:
                 self.counters.account_endpoint_count += 1
                 raise PublicMarketBoundaryError(f"blocked account/private path: {normalized}")
 
-        if normalized not in self.allowlist_paths:
-            # Treat unknown market paths as private/unauthorized.
-            self.counters.account_endpoint_count += 1
-            raise PublicMarketBoundaryError(f"path not allowlisted: {normalized}")
+        # Treat unknown market paths as private/unauthorized.
+        self.counters.account_endpoint_count += 1
+        raise PublicMarketBoundaryError(f"path not allowlisted: {normalized}")
 
     def record_fabricated_live_attempt(self) -> None:
         self.counters.fabricated_live_value_count += 1
