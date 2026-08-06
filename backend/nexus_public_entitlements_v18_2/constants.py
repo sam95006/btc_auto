@@ -98,6 +98,8 @@ OWNED_PATHS = (
     "backend/nexus_public_entitlements_v18_2",
     "frontend/src/member/public_entitlements_v18_2",
     "frontend/src/member/navigationContractV18_2.ts",
+    "frontend/src/member/navigationContractV18_2_1.ts",
+    "frontend/src/member/memberSurfaceV1821Flag.ts",
     "frontend/src/member/UpgradeGate.tsx",
     "apps/nexus_public_mobile/lib/data/dto/public_entitlement_dto.dart",
 )

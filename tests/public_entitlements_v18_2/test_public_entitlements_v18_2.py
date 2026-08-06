@@ -85,6 +85,19 @@ def test_public_dto_brand_pricing_freeze():
     assert dto["limits"] == PLAN_LIMITS["VISITOR"]
 
 
+def test_navigation_contract_v18_2_1_actual_panel():
+    from backend.nexus_public_entitlements_v18_2.dto import navigation_contract_v18_2_1
+
+    nav = navigation_contract_v18_2_1()
+    paths = [i["path"] for i in nav["primary_nav"]]
+    assert paths[0] == "/overview"
+    assert "/opportunities" in paths
+    assert len(nav["primary_nav"]) == 5
+    assert nav["modes"] == ["SIMPLE", "EXPERT"]
+    assert nav["feature_flag"] == "member_surface_v18_2_1"
+    assert "/founder/runtime" in nav["forbidden_member_nav"]
+
+
 def test_navigation_contract_no_founder():
     nav = navigation_contract_v18_2()
     paths = [i["path"] for i in nav["primary_nav"]]

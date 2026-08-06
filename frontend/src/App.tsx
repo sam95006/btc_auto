@@ -2,89 +2,38 @@
  * NEXUS Member Platform shell — React (not Flutter).
  * Public Decision Integrity pages. No private trading controls.
  * Forbidden routes: /trade, /orders, /arm, /routing-edit
- * No external reference embed; no runtime dependency on reference URL.
  *
  * PUB-E: Founder private operator mounts in a separate shell (never inside member SidebarNav).
+ * V18.2.1: Stable Zeabur panel unless member_surface_v18_2_1 preview flag is on.
  */
-import { Navigate, Route, Routes } from "react-router-dom";
-import { SkipToContentLabeled } from "./a11y";
-import { AppFooter } from "./components/AppFooter";
-import { SafetyBanner } from "./components/SafetyBanner";
-import { SidebarNav } from "./components/SidebarNav";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { FounderDiagnosticsPage } from "./founder/FounderDiagnosticsPage";
 import { FounderLiveOpsPage } from "./founder/FounderLiveOpsPage";
 import { FounderOperatorShell } from "./founder/FounderOperatorShell";
 import { FounderOperatorPage } from "./founder/FounderOperatorPage";
-import { useT } from "./i18n";
 import { FounderRuntimePage } from "./pages/FounderRuntimePage";
+import { ActualPanelV1821App } from "./app/ActualPanelV1821App";
+import { LegacyMarketIntelligenceApp } from "./app/LegacyMarketIntelligenceApp";
+import { MemberPlatformApp } from "./app/MemberPlatformApp";
 import {
-  MemberAccountDeletionPage,
-  MemberAccountPage,
-  MemberAlertsPage,
-  MemberCounterEvidencePage,
-  MemberDecisionDetailPage,
-  MemberDecisionFeedPage,
-  MemberDecisionMemoryPage,
-  MemberEvidencePage,
-  MemberHomePage,
-  MemberIntelligencePage,
-  MemberMarketOverviewPage,
-  MemberMembershipPage,
-  MemberNexAiPage,
-  MemberNotificationSettingsPage,
-  MemberOrganizationPage,
-  MemberOutcomeReviewPage,
-  MemberPrivacyPage,
-  MemberRiskConditionsPage,
-  MemberScannerPage,
-  MemberThesisMonitorPage,
-  MemberWatchlistPage,
-} from "./pages/member";
+  isMemberSurfaceV1821Enabled,
+  MEMBER_SURFACE_V18_2_1_FLAG,
+} from "./member/memberSurfaceV1821Flag";
 
-function MemberShell() {
-  const t = useT();
-  return (
-    <div className="app-shell member-shell nx-member-platform">
-      <SkipToContentLabeled label={t("a11y.skipToContent")} />
-      <SafetyBanner />
-      <div className="app-body app-body-no-rail">
-        <SidebarNav />
-        <div className="main-column">
-          <main className="main-content" id="main-content" tabIndex={-1}>
-            <Routes>
-              <Route path="/" element={<Navigate to="/home" replace />} />
-              <Route path="/home" element={<MemberHomePage />} />
-              <Route path="/scanner" element={<MemberScannerPage />} />
-              <Route path="/watchlist" element={<MemberWatchlistPage />} />
-              <Route path="/organization" element={<MemberOrganizationPage />} />
-              <Route path="/market" element={<MemberMarketOverviewPage />} />
-              <Route path="/overview" element={<Navigate to="/market" replace />} />
-              <Route path="/intelligence" element={<MemberIntelligencePage />} />
-              <Route path="/decisions" element={<MemberDecisionFeedPage />} />
-              <Route path="/decisions/:decisionId" element={<MemberDecisionDetailPage />} />
-              <Route path="/evidence" element={<MemberEvidencePage />} />
-              <Route path="/counter-evidence" element={<MemberCounterEvidencePage />} />
-              <Route path="/risk-conditions" element={<MemberRiskConditionsPage />} />
-              <Route path="/thesis-monitor" element={<MemberThesisMonitorPage />} />
-              <Route path="/alerts" element={<MemberAlertsPage />} />
-              <Route path="/decision-memory" element={<MemberDecisionMemoryPage />} />
-              <Route path="/outcome-review" element={<MemberOutcomeReviewPage />} />
-              <Route path="/nex-ai" element={<MemberNexAiPage />} />
-              <Route path="/assistant" element={<Navigate to="/nex-ai" replace />} />
-              <Route path="/membership" element={<MemberMembershipPage />} />
-              <Route path="/account" element={<MemberAccountPage />} />
-              <Route path="/privacy" element={<MemberPrivacyPage />} />
-              <Route path="/account-deletion" element={<MemberAccountDeletionPage />} />
-              <Route path="/notification-settings" element={<MemberNotificationSettingsPage />} />
-              <Route path="/notifications" element={<Navigate to="/notification-settings" replace />} />
-              <Route path="*" element={<Navigate to="/home" replace />} />
-            </Routes>
-          </main>
-          <AppFooter />
-        </div>
-      </div>
-    </div>
-  );
+function ActualPanelPreviewRedirect() {
+  const loc = useLocation();
+  const rest = loc.pathname.replace(/^\/preview\/v18_2_1\/?/, "") || "opportunities";
+  const path = rest.startsWith("/") ? rest : `/${rest}`;
+  const params = new URLSearchParams(loc.search);
+  params.set(MEMBER_SURFACE_V18_2_1_FLAG, "1");
+  return <Navigate to={`${path}?${params.toString()}${loc.hash}`} replace />;
+}
+
+function RootSurfaceSwitch() {
+  if (isMemberSurfaceV1821Enabled()) {
+    return <ActualPanelV1821App />;
+  }
+  return <LegacyMarketIntelligenceApp />;
 }
 
 /**
@@ -104,7 +53,9 @@ export default function App() {
         <Route index element={<FounderLiveOpsPage />} />
       </Route>
       <Route path="/founder/runtime" element={<FounderRuntimePage />} />
-      <Route path="/*" element={<MemberShell />} />
+      <Route path="/preview/v18_2_1/*" element={<ActualPanelPreviewRedirect />} />
+      <Route path="/member-platform/*" element={<MemberPlatformApp />} />
+      <Route path="/*" element={<RootSurfaceSwitch />} />
     </Routes>
   );
 }

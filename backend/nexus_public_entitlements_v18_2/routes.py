@@ -10,7 +10,11 @@ from backend.nexus_public_entitlements_v18_2.authority import (
 )
 from backend.nexus_public_entitlements_v18_2.capability_registry import PUBLIC_CAPABILITY_REGISTRY
 from backend.nexus_public_entitlements_v18_2.constants import HARD_BANS, PACKAGE, SCHEMA
-from backend.nexus_public_entitlements_v18_2.dto import navigation_contract_v18_2, public_product_meta
+from backend.nexus_public_entitlements_v18_2.dto import (
+    navigation_contract_v18_2,
+    navigation_contract_v18_2_1,
+    public_product_meta,
+)
 from backend.nexus_public_entitlements_v18_2.hard_bans import run_entitlement_scans
 from backend.nexus_public_entitlements_v18_2.policy_matrix import policy_snapshot
 
@@ -110,7 +114,17 @@ def register_public_entitlements_v18_2_routes(app: Flask) -> None:
         @app.get(f"{base}/navigation-contract")
         def nav_contract():
             plan = _plan_from_request()
-            body = navigation_contract_v18_2(include_organization=plan == "ENTERPRISE")
+            surface = (request.args.get("surface") or "").strip().lower()
+            if surface in ("v18_2_1", "actual_panel", "member_surface_v18_2_1"):
+                body = navigation_contract_v18_2_1(include_organization=plan == "ENTERPRISE")
+            else:
+                body = navigation_contract_v18_2(include_organization=plan == "ENTERPRISE")
+            return _no_store(jsonify({"ok": True, **body}))
+
+        @app.get(f"{base}/navigation-contract/v18_2_1")
+        def nav_contract_v1821():
+            plan = _plan_from_request()
+            body = navigation_contract_v18_2_1(include_organization=plan == "ENTERPRISE")
             return _no_store(jsonify({"ok": True, **body}))
 
         @app.get(f"{base}/passes")
