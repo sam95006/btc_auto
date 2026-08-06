@@ -7,7 +7,7 @@
     "schema_fuzzing_public_dto_allowlist",
     "feature_reproducibility_hash_import_boundary"
   ],
-  "generated_at": "2026-08-06T02:29:28Z",
+  "generated_at": "2026-08-06T02:37:26Z",
   "hard_ban_inventory": {
     "exchange_write": false,
     "hard_bans": [
@@ -77,7 +77,7 @@
           "detail": "public tree does not vendor gold factory",
           "disposition": "FIXED",
           "evidence": {
-            "public_root": "D:\\NEXUS_RUNTIME\\worktrees\\v17_deep_license_inference"
+            "public_root": "D:\\NEXUS_RUNTIME\\worktrees\\public_v17_single_tip"
           },
           "severity": "HIGH",
           "survivor": false

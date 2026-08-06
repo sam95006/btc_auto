@@ -6,7 +6,7 @@
     "schema_fuzzing_public_dto_allowlist",
     "feature_reproducibility_hash_import_boundary"
   ],
-  "generated_at": "2026-08-06T02:29:28Z",
+  "generated_at": "2026-08-06T02:37:26Z",
   "schema": "v17_deep_license_inference_redteam_v1",
   "status": "PASS",
   "survivor_count": 0,
