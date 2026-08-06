@@ -108,6 +108,12 @@ PRIVATE_EXECUTION_FEATURE_DENYLIST = frozenset(
         "strategy_promotion",
         "demo_autonomous_control",
         "shadow_control",
+        # PUB17-D: members never buy execution / private Founder products
+        "auto_trading",
+        "exchange_execution",
+        "private_strategy",
+        "founder_portfolio_access",
+        "execution_controls",
     }
 )
 
@@ -128,6 +134,12 @@ HARD_BANS = frozenset(
         "no_real_money",
         "no_pr26_merge",
         "no_pr27_merge",
+        # PUB17-D subscription product boundary
+        "no_member_auto_trading",
+        "no_member_exchange_execution",
+        "no_member_private_strategy",
+        "no_member_founder_portfolio_access",
+        "no_member_execution_controls",
     }
 )
 

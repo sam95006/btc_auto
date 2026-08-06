@@ -1,4 +1,8 @@
 import type { MessageKey } from "../i18n";
+import {
+  assertMemberNavPathsClean,
+  countMemberExecutionControls,
+} from "./subscription/productBoundary";
 
 /** Member Platform route inventory — labels resolved via i18n keys. */
 export const MEMBER_NAV = [
@@ -25,6 +29,12 @@ export const MEMBER_NAV = [
   labelKey: MessageKey;
   shortKey: MessageKey;
 }>;
+
+// PUB17-D: refuse execution / private Founder nav destinations on member web.
+assertMemberNavPathsClean(MEMBER_NAV.map((i) => i.to));
+if (countMemberExecutionControls(MEMBER_NAV.map((i) => i.to)) !== 0) {
+  throw new Error("HARD BAN: member_execution_control_count must be 0");
+}
 
 export const MEMBER_ACCOUNT_SUBNAV = [
   { to: "/account", labelKey: "nav.account" },

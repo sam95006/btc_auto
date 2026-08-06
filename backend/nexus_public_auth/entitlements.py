@@ -64,6 +64,11 @@ def assert_not_private_execution_feature(feature: str) -> None:
         "checkpoint_mutate",
         "wallet_custody",
         "copy_trading",
+        "auto_trading",
+        "exchange_execution",
+        "private_strategy",
+        "founder_portfolio",
+        "execution_control",
     )
     if any(m in normalized for m in markers):
         raise HardBanViolation(
