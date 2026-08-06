@@ -1,0 +1,638 @@
+{
+  "auto_integrate_attempted": false,
+  "by_split": {
+    "DEMO": 1,
+    "DEVELOPMENT": 7,
+    "OOS_RESERVED": 1,
+    "REAL_PRIVATE": 1,
+    "SHADOW": 1,
+    "VALIDATION": 2,
+    "WALK_FORWARD_RESERVED": 1
+  },
+  "by_target": {
+    "ABSTENTION": 2,
+    "CANDIDATE_RANKING": 1,
+    "COUNTERFACTUAL": 1,
+    "ERROR_CLASSIFICATION": 2,
+    "LIQUIDITY_STRESS": 2,
+    "REGIME": 2,
+    "STRATEGY_ROUTING": 2,
+    "VOL_FORECAST": 2
+  },
+  "campaign_digest": "8d246709728ffd58b4ba98468b84e067ea4e3c5a6db26fb51ac077ecdb3c8597",
+  "contamination_survivors": 0,
+  "demo_order_placed": false,
+  "exchange_write_attempted": false,
+  "expected_fixture_samples": 14,
+  "formal_walk_forward_executed": false,
+  "hard_bans": [
+    "no_auto_integrate",
+    "no_cross_split_leak",
+    "no_demo_orders",
+    "no_exchange_write",
+    "no_formal_walk_forward",
+    "no_llm_sole_tick_consumer",
+    "no_lookahead_contamination",
+    "no_mainnet",
+    "no_oos_consumption",
+    "no_pr26_merge",
+    "no_pr27_merge",
+    "no_private_core_deploy",
+    "no_real_lesson_activation",
+    "no_real_money",
+    "no_real_promotion",
+    "no_reserved_split_training",
+    "no_shadow_orders",
+    "no_status_json",
+    "no_untouched_oos"
+  ],
+  "labels_only": true,
+  "llm_sole_tick_consumer": false,
+  "mainnet_touched": false,
+  "offline_benchmark_interface_ready": true,
+  "oos_consumed": false,
+  "pass_id": 3,
+  "pr26_merge_attempted": false,
+  "pr27_merge_attempted": false,
+  "real_lesson_activated": false,
+  "real_money_touched": false,
+  "real_promotion_executed": false,
+  "reserved_count": 5,
+  "sample_count": 14,
+  "samples": [
+    {
+      "catalog_version": "v17h.1.0",
+      "compile_digest": "4395d553f62814c51f5120a80dc1337768e944955bf4bc45fdb272cd49de0bc1",
+      "consumer_plan": {
+        "llm_reasoners": [
+          "regime_narrative_reasoner"
+        ],
+        "llm_sole_tick_consumer": false,
+        "numeric_stat_models": [
+          "rolling_vol_z",
+          "liquidity_stress_score"
+        ],
+        "tick_primary_consumer": "rolling_vol_z"
+      },
+      "feature_cutoff_ms": 1699999940000,
+      "features": {
+        "depth_imbalance": -0.1,
+        "ret_1m": 0.001,
+        "spread_bps": 2.5,
+        "vol_z": 1.2
+      },
+      "label_available_ms": 1700000300000,
+      "label_payload": {
+        "confidence": 0.61,
+        "regime": "COMPRESSION"
+      },
+      "labels_only": true,
+      "provenance": {
+        "license_class": "INTERNAL_SYNTHETIC",
+        "lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+        "source_id": "SYN_DEV_FIXTURE_V17H",
+        "synthetic": true
+      },
+      "sample_id": "TDS_DEV_REGIME_001",
+      "split": "DEVELOPMENT",
+      "symbol": "BTCUSDT",
+      "target_label": "REGIME",
+      "trainable": true,
+      "ts_ms": 1700000000000
+    },
+    {
+      "catalog_version": "v17h.1.0",
+      "compile_digest": "eb61cdda50ef452b6c87a003ff23f22f5029a3885c9d3b2177decb14781219df",
+      "consumer_plan": {
+        "llm_reasoners": [
+          "regime_narrative_reasoner"
+        ],
+        "llm_sole_tick_consumer": false,
+        "numeric_stat_models": [
+          "rolling_vol_z",
+          "liquidity_stress_score"
+        ],
+        "tick_primary_consumer": "rolling_vol_z"
+      },
+      "feature_cutoff_ms": 1700000000000,
+      "features": {
+        "depth_imbalance": -0.1,
+        "ret_1m": 0.001,
+        "spread_bps": 2.5,
+        "vol_z": 1.2
+      },
+      "label_available_ms": 1700000360000,
+      "label_payload": {
+        "horizon_bars": 12,
+        "realized_vol": 0.018
+      },
+      "labels_only": true,
+      "provenance": {
+        "license_class": "INTERNAL_SYNTHETIC",
+        "lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+        "source_id": "SYN_DEV_FIXTURE_V17H",
+        "synthetic": true
+      },
+      "sample_id": "TDS_DEV_VOL_002",
+      "split": "DEVELOPMENT",
+      "symbol": "BTCUSDT",
+      "target_label": "VOL_FORECAST",
+      "trainable": true,
+      "ts_ms": 1700000060000
+    },
+    {
+      "catalog_version": "v17h.1.0",
+      "compile_digest": "1c0f6f001eef79b5a2b2a2d536fc901f49fcd59181aa774952dc481d44434854",
+      "consumer_plan": {
+        "llm_reasoners": [
+          "regime_narrative_reasoner"
+        ],
+        "llm_sole_tick_consumer": false,
+        "numeric_stat_models": [
+          "rolling_vol_z",
+          "liquidity_stress_score"
+        ],
+        "tick_primary_consumer": "rolling_vol_z"
+      },
+      "feature_cutoff_ms": 1700000060000,
+      "features": {
+        "depth_imbalance": -0.1,
+        "ret_1m": 0.001,
+        "spread_bps": 2.5,
+        "vol_z": 1.2
+      },
+      "label_available_ms": 1700000420000,
+      "label_payload": {
+        "score": 0.72,
+        "stress_level": "ELEVATED"
+      },
+      "labels_only": true,
+      "provenance": {
+        "license_class": "INTERNAL_SYNTHETIC",
+        "lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+        "source_id": "SYN_DEV_FIXTURE_V17H",
+        "synthetic": true
+      },
+      "sample_id": "TDS_DEV_LIQ_003",
+      "split": "DEVELOPMENT",
+      "symbol": "BTCUSDT",
+      "target_label": "LIQUIDITY_STRESS",
+      "trainable": true,
+      "ts_ms": 1700000120000
+    },
+    {
+      "catalog_version": "v17h.1.0",
+      "compile_digest": "aed17902a0e5ee0cc3cd3d7483c57cda7237f2266ed6b73573d3087d0a7c6de1",
+      "consumer_plan": {
+        "llm_reasoners": [
+          "regime_narrative_reasoner"
+        ],
+        "llm_sole_tick_consumer": false,
+        "numeric_stat_models": [
+          "rolling_vol_z",
+          "liquidity_stress_score"
+        ],
+        "tick_primary_consumer": "rolling_vol_z"
+      },
+      "feature_cutoff_ms": 1700000120000,
+      "features": {
+        "depth_imbalance": -0.1,
+        "ret_1m": 0.001,
+        "spread_bps": 2.5,
+        "vol_z": 1.2
+      },
+      "label_available_ms": 1700000480000,
+      "label_payload": {
+        "candidate_id": "CAND_A",
+        "rank": 2
+      },
+      "labels_only": true,
+      "provenance": {
+        "license_class": "INTERNAL_SYNTHETIC",
+        "lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+        "source_id": "SYN_DEV_FIXTURE_V17H",
+        "synthetic": true
+      },
+      "sample_id": "TDS_DEV_RANK_004",
+      "split": "DEVELOPMENT",
+      "symbol": "BTCUSDT",
+      "target_label": "CANDIDATE_RANKING",
+      "trainable": true,
+      "ts_ms": 1700000180000
+    },
+    {
+      "catalog_version": "v17h.1.0",
+      "compile_digest": "235b7851837076629fdbe5fb2bb3adb0f5d28de0148fe133cc69d0b00427bbfa",
+      "consumer_plan": {
+        "llm_reasoners": [
+          "regime_narrative_reasoner"
+        ],
+        "llm_sole_tick_consumer": false,
+        "numeric_stat_models": [
+          "rolling_vol_z",
+          "liquidity_stress_score"
+        ],
+        "tick_primary_consumer": "rolling_vol_z"
+      },
+      "feature_cutoff_ms": 1700000180000,
+      "features": {
+        "depth_imbalance": -0.1,
+        "ret_1m": 0.001,
+        "spread_bps": 2.5,
+        "vol_z": 1.2
+      },
+      "label_available_ms": 1700000540000,
+      "label_payload": {
+        "expert": "breakout_long",
+        "route": "DEFER"
+      },
+      "labels_only": true,
+      "provenance": {
+        "license_class": "INTERNAL_SYNTHETIC",
+        "lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+        "source_id": "SYN_DEV_FIXTURE_V17H",
+        "synthetic": true
+      },
+      "sample_id": "TDS_VAL_ROUTE_005",
+      "split": "VALIDATION",
+      "symbol": "BTCUSDT",
+      "target_label": "STRATEGY_ROUTING",
+      "trainable": true,
+      "ts_ms": 1700000240000
+    },
+    {
+      "catalog_version": "v17h.1.0",
+      "compile_digest": "8737d7a8dab9339ab4a9357be1791d33b31d0bac8634725a24eb8bedfd5a4650",
+      "consumer_plan": {
+        "llm_reasoners": [
+          "regime_narrative_reasoner"
+        ],
+        "llm_sole_tick_consumer": false,
+        "numeric_stat_models": [
+          "rolling_vol_z",
+          "liquidity_stress_score"
+        ],
+        "tick_primary_consumer": "rolling_vol_z"
+      },
+      "feature_cutoff_ms": 1700000240000,
+      "features": {
+        "depth_imbalance": -0.1,
+        "ret_1m": 0.001,
+        "spread_bps": 2.5,
+        "vol_z": 1.2
+      },
+      "label_available_ms": 1700000600000,
+      "label_payload": {
+        "abstain": true,
+        "reason": "UNCERTAINTY_HIGH"
+      },
+      "labels_only": true,
+      "provenance": {
+        "license_class": "INTERNAL_SYNTHETIC",
+        "lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+        "source_id": "SYN_DEV_FIXTURE_V17H",
+        "synthetic": true
+      },
+      "sample_id": "TDS_VAL_ABSTAIN_006",
+      "split": "VALIDATION",
+      "symbol": "BTCUSDT",
+      "target_label": "ABSTENTION",
+      "trainable": true,
+      "ts_ms": 1700000300000
+    },
+    {
+      "catalog_version": "v17h.1.0",
+      "compile_digest": "025c69e66fb5cd1c610c8eb988fd23fa8950f8a6b89661c92d3af37e54f51336",
+      "consumer_plan": {
+        "llm_reasoners": [
+          "regime_narrative_reasoner"
+        ],
+        "llm_sole_tick_consumer": false,
+        "numeric_stat_models": [
+          "rolling_vol_z",
+          "liquidity_stress_score"
+        ],
+        "tick_primary_consumer": "rolling_vol_z"
+      },
+      "feature_cutoff_ms": 1700000300000,
+      "features": {
+        "depth_imbalance": -0.1,
+        "ret_1m": 0.001,
+        "spread_bps": 2.5,
+        "vol_z": 1.2
+      },
+      "label_available_ms": 1700000660000,
+      "label_payload": {
+        "process_class": "GOOD_PROCESS_LOSS"
+      },
+      "labels_only": true,
+      "provenance": {
+        "license_class": "INTERNAL_SYNTHETIC",
+        "lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+        "source_id": "SYN_DEV_FIXTURE_V17H",
+        "synthetic": true
+      },
+      "sample_id": "TDS_HASH_ERR_007",
+      "split": "DEVELOPMENT",
+      "symbol": "BTCUSDT",
+      "target_label": "ERROR_CLASSIFICATION",
+      "trainable": true,
+      "ts_ms": 1700000360000
+    },
+    {
+      "catalog_version": "v17h.1.0",
+      "compile_digest": "50e499addc68581255ffd428993866f2b115c86b5c637f565659fbdfc223f0dd",
+      "consumer_plan": {
+        "llm_reasoners": [
+          "regime_narrative_reasoner"
+        ],
+        "llm_sole_tick_consumer": false,
+        "numeric_stat_models": [
+          "rolling_vol_z",
+          "liquidity_stress_score"
+        ],
+        "tick_primary_consumer": "rolling_vol_z"
+      },
+      "feature_cutoff_ms": 1700000360000,
+      "features": {
+        "depth_imbalance": -0.1,
+        "ret_1m": 0.001,
+        "spread_bps": 2.5,
+        "vol_z": 1.2
+      },
+      "label_available_ms": 1700000720000,
+      "label_payload": {
+        "as_real_pnl": false,
+        "cf_delta_r": -0.3
+      },
+      "labels_only": true,
+      "provenance": {
+        "license_class": "INTERNAL_SYNTHETIC",
+        "lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+        "source_id": "SYN_DEV_FIXTURE_V17H",
+        "synthetic": true
+      },
+      "sample_id": "TDS_HASH_CF_008",
+      "split": "DEVELOPMENT",
+      "symbol": "BTCUSDT",
+      "target_label": "COUNTERFACTUAL",
+      "trainable": true,
+      "ts_ms": 1700000420000
+    },
+    {
+      "catalog_version": "v17h.1.0",
+      "compile_digest": "e9d641429271609807ff4da6422e4c9f1af5f1d94df4968b123cd7fef235f94c",
+      "consumer_plan": {
+        "llm_reasoners": [
+          "regime_narrative_reasoner"
+        ],
+        "llm_sole_tick_consumer": false,
+        "numeric_stat_models": [
+          "rolling_vol_z",
+          "liquidity_stress_score"
+        ],
+        "tick_primary_consumer": "rolling_vol_z"
+      },
+      "feature_cutoff_ms": 1700009940000,
+      "features": {
+        "depth_imbalance": -0.1,
+        "ret_1m": 0.001,
+        "spread_bps": 2.5,
+        "vol_z": 1.2
+      },
+      "label_available_ms": 1700010300000,
+      "label_payload": {
+        "confidence": 0.55,
+        "regime": "TREND"
+      },
+      "labels_only": true,
+      "provenance": {
+        "license_class": "INTERNAL_SYNTHETIC",
+        "lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+        "source_id": "SYN_DEV_FIXTURE_V17H",
+        "synthetic": true
+      },
+      "sample_id": "TDS_WF_RES_009",
+      "split": "WALK_FORWARD_RESERVED",
+      "symbol": "BTCUSDT",
+      "target_label": "REGIME",
+      "trainable": false,
+      "ts_ms": 1700010000000
+    },
+    {
+      "catalog_version": "v17h.1.0",
+      "compile_digest": "1f47461a043a1c596d850c76766a4279267d395cc439a6927abc3a4e10937d27",
+      "consumer_plan": {
+        "llm_reasoners": [
+          "regime_narrative_reasoner"
+        ],
+        "llm_sole_tick_consumer": false,
+        "numeric_stat_models": [
+          "rolling_vol_z",
+          "liquidity_stress_score"
+        ],
+        "tick_primary_consumer": "rolling_vol_z"
+      },
+      "feature_cutoff_ms": 1700019940000,
+      "features": {
+        "depth_imbalance": -0.1,
+        "ret_1m": 0.001,
+        "spread_bps": 2.5,
+        "vol_z": 1.2
+      },
+      "label_available_ms": 1700020300000,
+      "label_payload": {
+        "horizon_bars": 24,
+        "realized_vol": 0.022
+      },
+      "labels_only": true,
+      "provenance": {
+        "license_class": "INTERNAL_SYNTHETIC",
+        "lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+        "source_id": "SYN_DEV_FIXTURE_V17H",
+        "synthetic": true
+      },
+      "sample_id": "TDS_OOS_RES_010",
+      "split": "OOS_RESERVED",
+      "symbol": "BTCUSDT",
+      "target_label": "VOL_FORECAST",
+      "trainable": false,
+      "ts_ms": 1700020000000
+    },
+    {
+      "catalog_version": "v17h.1.0",
+      "compile_digest": "1646192a77550c41ba6208e00500b3229ec60a0ae97ece99c19e6abf57c84ae6",
+      "consumer_plan": {
+        "llm_reasoners": [
+          "regime_narrative_reasoner"
+        ],
+        "llm_sole_tick_consumer": false,
+        "numeric_stat_models": [
+          "rolling_vol_z",
+          "liquidity_stress_score"
+        ],
+        "tick_primary_consumer": "rolling_vol_z"
+      },
+      "feature_cutoff_ms": 1700029940000,
+      "features": {
+        "depth_imbalance": -0.1,
+        "ret_1m": 0.001,
+        "spread_bps": 2.5,
+        "vol_z": 1.2
+      },
+      "label_available_ms": 1700030300000,
+      "label_payload": {
+        "expert": "mean_revert",
+        "route": "WAIT"
+      },
+      "labels_only": true,
+      "provenance": {
+        "license_class": "INTERNAL_SYNTHETIC",
+        "lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+        "source_id": "SYN_DEV_FIXTURE_V17H",
+        "synthetic": true
+      },
+      "sample_id": "TDS_SHADOW_011",
+      "split": "SHADOW",
+      "symbol": "BTCUSDT",
+      "target_label": "STRATEGY_ROUTING",
+      "trainable": false,
+      "ts_ms": 1700030000000
+    },
+    {
+      "catalog_version": "v17h.1.0",
+      "compile_digest": "891e24f54129dacd09d54a2dea254c9ddfe9ec6164a2b87e0ff5195a1edec899",
+      "consumer_plan": {
+        "llm_reasoners": [
+          "regime_narrative_reasoner"
+        ],
+        "llm_sole_tick_consumer": false,
+        "numeric_stat_models": [
+          "rolling_vol_z",
+          "liquidity_stress_score"
+        ],
+        "tick_primary_consumer": "rolling_vol_z"
+      },
+      "feature_cutoff_ms": 1700039940000,
+      "features": {
+        "depth_imbalance": -0.1,
+        "ret_1m": 0.001,
+        "spread_bps": 2.5,
+        "vol_z": 1.2
+      },
+      "label_available_ms": 1700040300000,
+      "label_payload": {
+        "abstain": true,
+        "reason": "DEMO_CONTEXT"
+      },
+      "labels_only": true,
+      "provenance": {
+        "license_class": "INTERNAL_SYNTHETIC",
+        "lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+        "source_id": "SYN_DEV_FIXTURE_V17H",
+        "synthetic": true
+      },
+      "sample_id": "TDS_DEMO_012",
+      "split": "DEMO",
+      "symbol": "BTCUSDT",
+      "target_label": "ABSTENTION",
+      "trainable": false,
+      "ts_ms": 1700040000000
+    },
+    {
+      "catalog_version": "v17h.1.0",
+      "compile_digest": "740ea61cc7c35af10913a773651b7d4adc25b5a3a4702c314bdc492d8f7cea5e",
+      "consumer_plan": {
+        "llm_reasoners": [
+          "regime_narrative_reasoner"
+        ],
+        "llm_sole_tick_consumer": false,
+        "numeric_stat_models": [
+          "rolling_vol_z",
+          "liquidity_stress_score"
+        ],
+        "tick_primary_consumer": "rolling_vol_z"
+      },
+      "feature_cutoff_ms": 1700049940000,
+      "features": {
+        "depth_imbalance": -0.1,
+        "ret_1m": 0.001,
+        "spread_bps": 2.5,
+        "vol_z": 1.2
+      },
+      "label_available_ms": 1700050300000,
+      "label_payload": {
+        "process_class": "BAD_PROCESS_WIN"
+      },
+      "labels_only": true,
+      "provenance": {
+        "license_class": "INTERNAL_SYNTHETIC",
+        "lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+        "source_id": "SYN_DEV_FIXTURE_V17H",
+        "synthetic": true
+      },
+      "sample_id": "TDS_REAL_PRIV_013",
+      "split": "REAL_PRIVATE",
+      "symbol": "BTCUSDT",
+      "target_label": "ERROR_CLASSIFICATION",
+      "trainable": false,
+      "ts_ms": 1700050000000
+    },
+    {
+      "catalog_version": "v17h.1.0",
+      "compile_digest": "f1c44c74a708cc73c0245e74081783dbe349ce43f4d58090343932c2c31c3606",
+      "consumer_plan": {
+        "llm_reasoners": [
+          "regime_narrative_reasoner"
+        ],
+        "llm_sole_tick_consumer": false,
+        "numeric_stat_models": [
+          "rolling_vol_z",
+          "liquidity_stress_score"
+        ],
+        "tick_primary_consumer": "rolling_vol_z"
+      },
+      "feature_cutoff_ms": 1700000420000,
+      "features": {
+        "depth_imbalance": -0.1,
+        "ret_1m": 0.001,
+        "spread_bps": 2.5,
+        "vol_z": 1.2
+      },
+      "label_available_ms": 1700000780000,
+      "label_payload": {
+        "score": 0.21,
+        "stress_level": "NORMAL"
+      },
+      "labels_only": true,
+      "provenance": {
+        "license_class": "INTERNAL_SYNTHETIC",
+        "lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+        "source_id": "SYN_DEV_FIXTURE_V17H",
+        "synthetic": true
+      },
+      "sample_id": "TDS_DEV_LIQ_014",
+      "split": "DEVELOPMENT",
+      "symbol": "BTCUSDT",
+      "target_label": "LIQUIDITY_STRESS",
+      "trainable": true,
+      "ts_ms": 1700000480000
+    }
+  ],
+  "schema": "v17_h_training_dataset_compiler_campaign",
+  "shadow_order_placed": false,
+  "status_json_written": false,
+  "trainable_count": 9,
+  "trainable_sample_ids": [
+    "TDS_DEV_REGIME_001",
+    "TDS_DEV_VOL_002",
+    "TDS_DEV_LIQ_003",
+    "TDS_DEV_RANK_004",
+    "TDS_VAL_ROUTE_005",
+    "TDS_VAL_ABSTAIN_006",
+    "TDS_HASH_ERR_007",
+    "TDS_HASH_CF_008",
+    "TDS_DEV_LIQ_014"
+  ],
+  "untouched_oos_executed": false
+}

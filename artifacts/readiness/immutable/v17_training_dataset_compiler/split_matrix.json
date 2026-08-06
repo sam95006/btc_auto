@@ -1,0 +1,23 @@
+{
+  "by_split": {
+    "DEMO": 1,
+    "DEVELOPMENT": 7,
+    "OOS_RESERVED": 1,
+    "REAL_PRIVATE": 1,
+    "SHADOW": 1,
+    "VALIDATION": 2,
+    "WALK_FORWARD_RESERVED": 1
+  },
+  "schema": "v17_h_training_dataset_compiler_split_matrix",
+  "trainable_sample_ids": [
+    "TDS_DEV_REGIME_001",
+    "TDS_DEV_VOL_002",
+    "TDS_DEV_LIQ_003",
+    "TDS_DEV_RANK_004",
+    "TDS_VAL_ROUTE_005",
+    "TDS_VAL_ABSTAIN_006",
+    "TDS_HASH_ERR_007",
+    "TDS_HASH_CF_008",
+    "TDS_DEV_LIQ_014"
+  ]
+}
