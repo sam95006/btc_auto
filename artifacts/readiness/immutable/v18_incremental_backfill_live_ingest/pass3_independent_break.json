@@ -1,0 +1,28 @@
+{
+  "acceptance_zeros": {
+    "duplicate_unresolved_count": 0,
+    "future_timestamp_accept_count": 0,
+    "raw_rewrite_count": 0,
+    "silent_gap_fill_count": 0,
+    "unlicensed_ingest_count": 0
+  },
+  "claims_15y_complete": false,
+  "claims_all_exchange_history": false,
+  "claims_full_training_set": false,
+  "claims_strategy_validation_pass": false,
+  "classification_counts": {
+    "FIXTURE": 4,
+    "LIVE_READ_ONLY": 4,
+    "OFFICIAL_HISTORICAL_SAMPLE": 4
+  },
+  "data_classes_covered": [
+    "FIXTURE",
+    "LIVE_READ_ONLY",
+    "OFFICIAL_HISTORICAL_SAMPLE"
+  ],
+  "findings": [],
+  "name": "independent_break",
+  "pass": 3,
+  "real_or_fixture": "OFFICIAL_HISTORICAL_SAMPLE_AND_FIXTURE_AND_LIVE_READ_ONLY",
+  "status": "PASS"
+}

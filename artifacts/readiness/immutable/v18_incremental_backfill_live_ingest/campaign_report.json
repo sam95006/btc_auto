@@ -1,0 +1,260 @@
+{
+  "HEAD": "324e52f0573d7e3ad32feb2968274a52b8d8da75",
+  "acceleration_report_edited": false,
+  "acceptance_zeros": {
+    "duplicate_unresolved_count": 0,
+    "future_timestamp_accept_count": 0,
+    "raw_rewrite_count": 0,
+    "silent_gap_fill_count": 0,
+    "unlicensed_ingest_count": 0
+  },
+  "base": "324e52f0573d7e3ad32feb2968274a52b8d8da75",
+  "branch": "feature/v18-incremental-backfill-live-ingest",
+  "campaign_core_digest": "4a8a33b0d84e9a91931fa518737ccf11c8f88c85ec46f49fc72c4458bb83761d",
+  "capabilities": [
+    "incremental_backfill",
+    "date_partitioned_manifest",
+    "checkpoint",
+    "resume",
+    "checksum",
+    "dedupe",
+    "corrupt_quarantine",
+    "rate_limit_pause",
+    "disk_quota",
+    "retention",
+    "license_binding",
+    "partial_failure_recovery",
+    "live_append",
+    "bronze_silver_pit_wire"
+  ],
+  "claims_15y_complete": false,
+  "claims_all_exchange_history": false,
+  "claims_full_training_set": false,
+  "claims_strategy_validation_pass": false,
+  "classification_counts": {
+    "FIXTURE": 4,
+    "LIVE_READ_ONLY": 4,
+    "OFFICIAL_HISTORICAL_SAMPLE": 4
+  },
+  "demo": false,
+  "exchange_write": false,
+  "generated_at": "2026-08-06T03:04:42Z",
+  "hard_bans": [
+    "no_real_money",
+    "no_mainnet",
+    "no_exchange_write",
+    "no_demo",
+    "no_historical_rewrite",
+    "no_silent_gap_fill",
+    "no_unlicensed_ingest",
+    "no_future_timestamp_accept",
+    "no_claim_15y_complete",
+    "no_claim_all_exchange_history",
+    "no_claim_full_training_set",
+    "no_claim_strategy_validation_pass",
+    "no_pr26_merge",
+    "no_pr27_merge",
+    "no_acceleration_report_edit",
+    "no_auto_integrate",
+    "no_report_archive_rebuild"
+  ],
+  "lane": "V18-B",
+  "lane_name": "INCREMENTAL_BACKFILL_AND_LIVE_INGEST",
+  "mainnet": false,
+  "non_claims": [
+    "No 15y complete history claimed",
+    "No all-exchange history claimed",
+    "No full training set claimed",
+    "No strategy validation PASS claimed",
+    "Bounded 7/30/90d official sample / fixture / live-append only",
+    "No exchange write / demo / mainnet / real-money",
+    "No PR26 / PR27 merge",
+    "No acceleration report / archive rebuild"
+  ],
+  "owned_paths": [
+    "backend/nexus_incremental_backfill_live_ingest/",
+    "tests/incremental_backfill_live_ingest/",
+    "tools/research/incremental_backfill_live_ingest/",
+    "artifacts/readiness/immutable/v18_incremental_backfill_live_ingest/"
+  ],
+  "passes": [
+    {
+      "backfill": {
+        "processed": 8,
+        "window_days": 7
+      },
+      "capabilities_proven": {
+        "bronze_silver_pit_wire": true,
+        "checkpoint": true,
+        "checksum": true,
+        "corrupt_quarantine": true,
+        "date_partitioned_manifest": true,
+        "dedupe": true,
+        "disk_quota": true,
+        "incremental_backfill": true,
+        "license_binding": true,
+        "live_append": true,
+        "partial_failure_recovery": true,
+        "rate_limit_pause": true,
+        "resume": true,
+        "retention": true
+      },
+      "checks": {
+        "acceptance_zeros_ok": true,
+        "class_ok": true,
+        "ingested_ok": true,
+        "live_ok": true,
+        "resume_contract": true,
+        "symbols_ok": true
+      },
+      "inventory": {
+        "allowed_backfill_windows_days": [
+          7,
+          30,
+          90
+        ],
+        "claims_15y_complete": false,
+        "claims_all_exchange_history": false,
+        "claims_full_training_set": false,
+        "claims_strategy_validation_pass": false,
+        "dynamic_universe_later": true,
+        "fixture_count": 4,
+        "generated_at": "2026-08-06T03:04:42Z",
+        "hard_max_symbols": false,
+        "official_historical_sample_count": 4,
+        "priority_symbol_count": 4,
+        "priority_symbols": [
+          "BTCUSDT",
+          "ETHUSDT",
+          "SOLUSDT",
+          "PEPEUSDT"
+        ]
+      },
+      "live_append": {
+        "processed": 4
+      },
+      "name": "implementation",
+      "pass": 1,
+      "resume_noop_processed": 0,
+      "retention": {
+        "pruned_partition_count": 2,
+        "raw_rewritten": false
+      },
+      "schema": "v18_b_incremental_backfill_live_ingest_v1",
+      "snapshot": {
+        "acceptance_zeros": {
+          "duplicate_unresolved_count": 0,
+          "future_timestamp_accept_count": 0,
+          "raw_rewrite_count": 0,
+          "silent_gap_fill_count": 0,
+          "unlicensed_ingest_count": 0
+        },
+        "classification_counts": {
+          "DEGRADED": 1,
+          "FIXTURE": 4,
+          "LIVE_READ_ONLY": 4,
+          "OFFICIAL_HISTORICAL_SAMPLE": 4,
+          "STALE": 1,
+          "UNAVAILABLE": 1
+        },
+        "ingested_count": 12,
+        "live_append_count": 4,
+        "manifest_digest": "656fb3e620bd4de323a981d6322162b007ae764b983dd4bf12254e70699c0053"
+      },
+      "status": "PASS"
+    },
+    {
+      "adversarial_rewrite_tripped": true,
+      "findings": [],
+      "hard_ban_inventory": {
+        "banned_claims": [
+          "15y_complete",
+          "all_exchange_history",
+          "full_training_set",
+          "strategy_validation_PASS"
+        ],
+        "count": 17,
+        "enforced": true,
+        "hard_bans": [
+          "no_real_money",
+          "no_mainnet",
+          "no_exchange_write",
+          "no_demo",
+          "no_historical_rewrite",
+          "no_silent_gap_fill",
+          "no_unlicensed_ingest",
+          "no_future_timestamp_accept",
+          "no_claim_15y_complete",
+          "no_claim_all_exchange_history",
+          "no_claim_full_training_set",
+          "no_claim_strategy_validation_pass",
+          "no_pr26_merge",
+          "no_pr27_merge",
+          "no_acceleration_report_edit",
+          "no_auto_integrate",
+          "no_report_archive_rebuild"
+        ]
+      },
+      "name": "adversarial",
+      "pass": 2,
+      "quarantine_probe": {
+        "bronze": null,
+        "meta": {
+          "bytes": 16,
+          "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "quarantined_at": "2026-08-06T03:04:42Z",
+          "reason": "adversarial_corrupt"
+        },
+        "status": "QUARANTINED"
+      },
+      "rate_limit_probe": {
+        "max_weight": 1200,
+        "pause_event_count": 1,
+        "pause_reason": "http_429",
+        "paused": true,
+        "used_weight": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "acceptance_zeros": {
+        "duplicate_unresolved_count": 0,
+        "future_timestamp_accept_count": 0,
+        "raw_rewrite_count": 0,
+        "silent_gap_fill_count": 0,
+        "unlicensed_ingest_count": 0
+      },
+      "claims_15y_complete": false,
+      "claims_all_exchange_history": false,
+      "claims_full_training_set": false,
+      "claims_strategy_validation_pass": false,
+      "classification_counts": {
+        "FIXTURE": 4,
+        "LIVE_READ_ONLY": 4,
+        "OFFICIAL_HISTORICAL_SAMPLE": 4
+      },
+      "data_classes_covered": [
+        "FIXTURE",
+        "LIVE_READ_ONLY",
+        "OFFICIAL_HISTORICAL_SAMPLE"
+      ],
+      "findings": [],
+      "name": "independent_break",
+      "pass": 3,
+      "real_or_fixture": "OFFICIAL_HISTORICAL_SAMPLE_AND_FIXTURE_AND_LIVE_READ_ONLY",
+      "status": "PASS"
+    }
+  ],
+  "pr26_merged": false,
+  "pr27_merged": false,
+  "priority_symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "PEPEUSDT"
+  ],
+  "program_id": "NEXUS_V18_INCREMENTAL_BACKFILL_LIVE_INGEST",
+  "report_archive_rebuilt": false,
+  "schema": "v18_b_incremental_backfill_live_ingest_campaign_v1",
+  "status": "PASS"
+}
