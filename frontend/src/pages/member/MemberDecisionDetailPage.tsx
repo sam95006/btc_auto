@@ -1,6 +1,23 @@
-import { MemberPageChrome, EmptyState } from "../../member/MemberPageChrome";
+import { useMemo, useState } from "react";
+import { MemberPageChrome } from "../../member/MemberPageChrome";
 import { LiveSlotStrip, usePageSlots } from "../../member/LiveSlotStrip";
+import {
+  DecisionDetailTransparency,
+  buildDemoDecisionDetail,
+} from "../../member/decision_detail";
 
+type DetailVariant =
+  | "demo_wait"
+  | "demo_abstain"
+  | "provider_required"
+  | "stale"
+  | "unavailable";
+
+/**
+ * PUB18-B Decision Detail page — member learning transparency surface.
+ * Live slot strip retained for binding health; primary content is the
+ * twelve-field transparency panel (never private core).
+ */
 export function MemberDecisionDetailPage() {
   const { loading, items } = usePageSlots([
     ["detail.decision_summary", "availability", "Decision"],
@@ -15,14 +32,36 @@ export function MemberDecisionDetailPage() {
     ["detail.calibration_chart", "funding", "Calibration"],
   ]);
 
+  const [variant, setVariant] = useState<DetailVariant>("demo_wait");
+  const model = useMemo(() => buildDemoDecisionDetail(variant), [variant]);
+
   return (
     <MemberPageChrome
       titleKey="pages.detail.title"
-      subtitle="Public Decision Object · lineage-bound · no exchange controls"
+      subtitle="Decision Detail · Learning Transparency · no private graph / thresholds / CoT"
     >
+      <div className="member-detail-toolbar">
+        <label htmlFor="member-detail-variant">
+          Transparency fixture
+          <select
+            id="member-detail-variant"
+            value={variant}
+            onChange={(e) => setVariant(e.target.value as DetailVariant)}
+            data-testid="detail-variant-select"
+          >
+            <option value="demo_wait">DEMO WAIT</option>
+            <option value="demo_abstain">FIXTURE ABSTAIN</option>
+            <option value="stale">STALE</option>
+            <option value="provider_required">PROVIDER_REQUIRED</option>
+            <option value="unavailable">UNAVAILABLE</option>
+          </select>
+        </label>
+      </div>
+
+      <DecisionDetailTransparency model={model} />
+
       {loading ? <p className="muted">Loading live bindings...</p> : null}
       <LiveSlotStrip bindings={items} />
-      <EmptyState label="Decision detail UNAVAILABLE - no synthetic live object" />
     </MemberPageChrome>
   );
 }
