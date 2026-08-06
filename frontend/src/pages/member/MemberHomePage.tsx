@@ -3,26 +3,27 @@ import { Link } from "react-router-dom";
 import { useT } from "../../i18n";
 import { MemberPageChrome } from "../../member/MemberPageChrome";
 import {
-  MemberFirstScreenPro,
-  MemberFirstScreenSimple,
-} from "../../member/MemberFirstScreen";
-import { buildDemoFirstScreen } from "../../member/firstScreenAnswers";
+  MarketPulseFirstScreen,
+  buildDemoMarketPulseScreen,
+} from "../../member/pulse";
 import {
   loadMemberViewMode,
   saveMemberViewMode,
   type MemberViewMode,
 } from "../../member/memberViewPrefs";
 import { MEMBER_NAV } from "../../member/routes";
-import type { MemberUxState } from "../../member/uxStates";
 import { BoundLiveValue, useLiveBindings } from "../../public_v2_live_binding";
 
+type PulseVariant = "demo_wait" | "provider_required" | "unavailable" | "demo_long";
+
 /**
- * PUB2-C first-screen UX + PUB2-B live bindings + PUB2-J i18n chrome keys.
+ * PUB17-B member home — Market Pulse + Top Opportunities first screen.
+ * Nine answers only. No Founder private execution fields.
  */
 export function MemberHomePage() {
   const t = useT();
   const [view, setView] = useState<MemberViewMode>(() => loadMemberViewMode());
-  const [shellOverride, setShellOverride] = useState<MemberUxState | "demo">("demo");
+  const [pulseVariant, setPulseVariant] = useState<PulseVariant>("demo_wait");
   const { slot, loading } = useLiveBindings();
   const hero = slot("home.hero_decision_summary", "posture");
   const market = slot("home.market_context_card", "btc");
@@ -38,10 +39,9 @@ export function MemberHomePage() {
     return () => window.removeEventListener("nexus-member-view-mode", onView);
   }, []);
 
-  const model = useMemo(
-    () =>
-      buildDemoFirstScreen(shellOverride === "demo" ? undefined : shellOverride),
-    [shellOverride],
+  const pulseModel = useMemo(
+    () => buildDemoMarketPulseScreen(pulseVariant),
+    [pulseVariant],
   );
 
   const setMode = (mode: MemberViewMode) => {
@@ -72,36 +72,24 @@ export function MemberHomePage() {
       </div>
 
       {view === "pro" ? (
-        <div className="member-state-demo" aria-label="Shell state preview">
-          <label htmlFor="member-shell-state">
-            Shell state preview (local demo · not LIVE fabrication)
+        <div className="member-state-demo" aria-label="Pulse fixture preview">
+          <label htmlFor="member-pulse-variant">
+            Pulse fixture preview (local demo · never LIVE fabrication)
           </label>
           <select
-            id="member-shell-state"
-            value={shellOverride}
-            onChange={(e) =>
-              setShellOverride(e.target.value as MemberUxState | "demo")
-            }
+            id="member-pulse-variant"
+            value={pulseVariant}
+            onChange={(e) => setPulseVariant(e.target.value as PulseVariant)}
           >
-            <option value="demo">DEMO bound (default)</option>
-            <option value="fresh">fresh</option>
-            <option value="stale">stale</option>
-            <option value="degraded">degraded</option>
-            <option value="pending">pending</option>
-            <option value="unavailable">unavailable</option>
-            <option value="blocked">blocked</option>
-            <option value="empty">empty</option>
-            <option value="error">error</option>
-            <option value="loading">loading</option>
+            <option value="demo_wait">DEMO_DATA · WAIT</option>
+            <option value="demo_long">DEMO_DATA · LONG observe</option>
+            <option value="provider_required">PROVIDER_REQUIRED</option>
+            <option value="unavailable">UNAVAILABLE</option>
           </select>
         </div>
       ) : null}
 
-      {view === "simple" ? (
-        <MemberFirstScreenSimple model={model} />
-      ) : (
-        <MemberFirstScreenPro model={model} />
-      )}
+      <MarketPulseFirstScreen model={pulseModel} />
 
       <section className="member-stat-grid" aria-label={t("pages.home.metricsLabel")}>
         {loading ? <p className="muted">Loading live bindings...</p> : null}
@@ -114,8 +102,8 @@ export function MemberHomePage() {
       <section className="member-panel" aria-label={t("pages.home.navLabel")}>
         <h2 className="nx-sec-title">{t("pages.home.navigate")}</h2>
         <p className="muted sm">
-          Market Observation → Evidence → Counter Evidence → Risk → Decision → Thesis Monitor →
-          Outcome Review → Decision Memory. No exchange orders from this product.
+          Market Pulse → Evidence → Counter Evidence → Risk → Decision → Thesis Monitor →
+          Outcome Review → Decision Memory. Analysis only — no exchange orders.
         </p>
         <ul className="member-link-grid">
           {MEMBER_NAV.map((item) => (
