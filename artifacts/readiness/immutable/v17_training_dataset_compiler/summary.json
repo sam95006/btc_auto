@@ -28,7 +28,7 @@
     "survivors": []
   },
   "formal_walk_forward_executed": false,
-  "generated_at": "2026-08-06T01:35:41Z",
+  "generated_at": "2026-08-06T01:36:27Z",
   "hard_bans": [
     "no_auto_integrate",
     "no_cross_split_leak",
@@ -50,7 +50,7 @@
     "no_status_json",
     "no_untouched_oos"
   ],
-  "head": "66a0f7827d5709fc09bc8c7495e93a4089eb28de",
+  "head": "1d2350568688d584a0474fb46a1239e9b8d2d67a",
   "labels_only": true,
   "lane": "V17-H",
   "llm_sole_tick_consumer": false,
