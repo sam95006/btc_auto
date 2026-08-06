@@ -1,0 +1,15 @@
+{
+  "lifecycle_states": [
+    "OBSERVED",
+    "CANDIDATE",
+    "REVIEWED",
+    "SHADOW_READY",
+    "SHADOW_OPENED",
+    "SHADOW_MANAGING",
+    "SHADOW_CLOSED",
+    "OUTCOME_PENDING",
+    "OUTCOME_RECORDED",
+    "REFLECTION_PENDING",
+    "REFLECTED"
+  ]
+}
