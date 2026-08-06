@@ -201,14 +201,17 @@ def test_fixture_inventory_not_15y():
 
 
 def test_campaign_pass(tmp_path: Path):
-    # Run campaign against a temporary repo-like root with writable artifacts.
-    # Copy only what campaign needs: write under tmp as root.
-    report = run_campaign(ROOT)
+    # Isolate campaign writes to tmp so sealed repo artifacts stay immutable.
+    report = run_campaign(tmp_path)
     assert report["status"] == "PASS"
     assert report["claims_15y_history_downloaded"] is False
     assert report["real_or_fixture"] == "FIXTURE"
     assert report["data_classification"] == "FIXTURE_AND_BOUNDED_OFFICIAL_SAMPLE_ONLY"
-    art = ROOT / ARTIFACT_REL
+    art = tmp_path / ARTIFACT_REL
     assert (art / "campaign_report.json").exists()
     assert (art / "bronze_manifest.json").exists()
     assert not list(art.glob("*_status.json"))
+    # Sealed in-repo campaign artifacts from the lane commit must remain present.
+    sealed = ROOT / ARTIFACT_REL
+    assert (sealed / "campaign_report.json").exists()
+    assert (sealed / "bronze_manifest.json").exists()
