@@ -46,9 +46,9 @@ def register_public_entitlements_v18_2_routes(app: Flask) -> None:
         arg = request.args.get("plan")
         return normalize_plan(header or arg or "VISITOR")
 
-    def _register_routes(base: str) -> None:
-        @app.get(f"{base}/meta")
-        def meta():
+    def _register_routes(base: str, route_tag: str) -> None:
+        @app.get(f"{base}/meta", endpoint=f"public_entitlements_v18_2_meta_{route_tag}")
+        def entitlements_meta():
             body = {
                 "ok": True,
                 "schema": SCHEMA,
@@ -60,16 +60,16 @@ def register_public_entitlements_v18_2_routes(app: Flask) -> None:
             }
             return _no_store(jsonify(body))
 
-        @app.get(f"{base}/capabilities")
-        def capabilities():
+        @app.get(f"{base}/capabilities", endpoint=f"public_entitlements_v18_2_capabilities_{route_tag}")
+        def entitlements_capabilities():
             return _no_store(jsonify({"ok": True, **PUBLIC_CAPABILITY_REGISTRY.snapshot()}))
 
-        @app.get(f"{base}/policy")
-        def policy():
+        @app.get(f"{base}/policy", endpoint=f"public_entitlements_v18_2_policy_{route_tag}")
+        def entitlements_policy():
             return _no_store(jsonify({"ok": True, **policy_snapshot()}))
 
-        @app.get(f"{base}/me")
-        def me():
+        @app.get(f"{base}/me", endpoint=f"public_entitlements_v18_2_me_{route_tag}")
+        def entitlements_me():
             plan = _plan_from_request()
             org_role = request.args.get("org_role")
             dto = PUBLIC_ENTITLEMENT_AUTHORITY.build_dto(
@@ -80,8 +80,8 @@ def register_public_entitlements_v18_2_routes(app: Flask) -> None:
             nav = navigation_contract_v18_2(include_organization=plan == "ENTERPRISE")
             return _no_store(jsonify({"ok": True, "entitlement": dto, "navigation": nav}))
 
-        @app.post(f"{base}/check")
-        def check():
+        @app.post(f"{base}/check", endpoint=f"public_entitlements_v18_2_check_{route_tag}")
+        def entitlements_check():
             payload = request.get_json(silent=True) or {}
             plan = normalize_plan(payload.get("plan") or _plan_from_request())
             cap = str(payload.get("capability_id") or "").strip()
@@ -111,8 +111,11 @@ def register_public_entitlements_v18_2_routes(app: Flask) -> None:
                 )
             )
 
-        @app.get(f"{base}/navigation-contract")
-        def nav_contract():
+        @app.get(
+            f"{base}/navigation-contract",
+            endpoint=f"public_entitlements_v18_2_nav_contract_{route_tag}",
+        )
+        def entitlements_nav_contract():
             plan = _plan_from_request()
             surface = (request.args.get("surface") or "").strip().lower()
             if surface in ("v18_2_1", "actual_panel", "member_surface_v18_2_1"):
@@ -121,19 +124,22 @@ def register_public_entitlements_v18_2_routes(app: Flask) -> None:
                 body = navigation_contract_v18_2(include_organization=plan == "ENTERPRISE")
             return _no_store(jsonify({"ok": True, **body}))
 
-        @app.get(f"{base}/navigation-contract/v18_2_1")
-        def nav_contract_v1821():
+        @app.get(
+            f"{base}/navigation-contract/v18_2_1",
+            endpoint=f"public_entitlements_v18_2_nav_contract_v1821_{route_tag}",
+        )
+        def entitlements_nav_contract_v1821():
             plan = _plan_from_request()
             body = navigation_contract_v18_2_1(include_organization=plan == "ENTERPRISE")
             return _no_store(jsonify({"ok": True, **body}))
 
-        @app.get(f"{base}/passes")
-        def passes():
+        @app.get(f"{base}/passes", endpoint=f"public_entitlements_v18_2_passes_{route_tag}")
+        def entitlements_passes():
             from pathlib import Path
 
             root = Path(app.root_path).parent
             scans = run_entitlement_scans(root)
             return _no_store(jsonify({"ok": True, "scans": scans}))
 
-    _register_routes(prefix)
-    _register_routes(v1)
+    _register_routes(prefix, "api")
+    _register_routes(v1, "v1")
