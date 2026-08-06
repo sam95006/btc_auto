@@ -1,7 +1,7 @@
 {
   "schema": "v17_e_historical_universe_survivorship_v1",
   "schema_version": 1,
-  "generated_at": "2026-08-06T01:37:17Z",
+  "generated_at": "2026-08-06T01:37:18Z",
   "lane": "V17-E",
   "lane_name": "HISTORICAL_UNIVERSE_AND_SURVIVORSHIP_CONTROL",
   "program_id": "NEXUS_V17_HISTORICAL_UNIVERSE_SURVIVORSHIP",
@@ -10,8 +10,8 @@
   "recommendation": "NEXUS_V17_HISTORICAL_UNIVERSE_SURVIVORSHIP_PASS",
   "branch": "feature/v17-historical-universe-survivorship",
   "base_head": "66a0f7827d5709fc09bc8c7495e93a4089eb28de",
-  "commit": "d976da1ba788915adcd3d77ca9e7cf4831a06498",
-  "lane_head": "d976da1ba788915adcd3d77ca9e7cf4831a06498",
+  "commit": "e03efab5f2a288df97b2f631628c35eb9c98dd58",
+  "lane_head": "e03efab5f2a288df97b2f631628c35eb9c98dd58",
   "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v17_e_survivorship",
   "owned_paths": [
     "backend/nexus_historical_universe/",
@@ -499,5 +499,5 @@
     "exchange_write_attempt_count": 0,
     "mainnet_client_created_count": 0
   },
-  "evidence_checksum": "9667f76fd7f87460f6d09c6c65ef43de834a8db068044cc44a0d871959120e20"
+  "evidence_checksum": "d9a7be6f3490df56e7bf999e2ce412e095df93b1b034d805c995747682cb45e1"
 }
