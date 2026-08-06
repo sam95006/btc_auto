@@ -1,5 +1,5 @@
 {
-  "HEAD": "TEST_HEAD",
+  "HEAD": "8962469d272217db10cd3a64aa4ec3cd61dc2acb",
   "coverage": {
     "api_rate_limit_and_provider_outage_failover": true,
     "bounded_memory_disk_profiling_smoke": true,
