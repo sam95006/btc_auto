@@ -1,5 +1,7 @@
 import type {
   FounderDiagnosticsSnapshot,
+  FounderLiveOpsControlResult,
+  FounderLiveOpsSnapshot,
   FounderOperatorSnapshot,
   FounderStatus,
   ResearchAuthorizeResult,
@@ -59,6 +61,72 @@ export async function fetchFounderDiagnostics(): Promise<
     return body;
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "network_error" };
+  }
+}
+
+export async function fetchFounderLiveOps(): Promise<
+  FounderLiveOpsSnapshot | { ok: false; error: string }
+> {
+  try {
+    const res = await fetch("/api/nexus/founder/live-ops", {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    const body = (await res.json()) as FounderLiveOpsSnapshot & { error?: string };
+    if (!res.ok) {
+      return { ok: false, error: body.error || `http_${res.status}` };
+    }
+    return body;
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "network_error" };
+  }
+}
+
+/** Allowed live-ops controls only — never trade/risk/leverage/mainnet. */
+export async function postFounderLiveOpsControl(
+  control: string,
+  params?: Record<string, string>,
+): Promise<FounderLiveOpsControlResult> {
+  try {
+    const res = await fetch("/api/nexus/founder/live-ops/control", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+      body: JSON.stringify({ control, params: params || {} }),
+    });
+    const body = (await res.json()) as FounderLiveOpsControlResult;
+    if (!res.ok) {
+      return {
+        ok: false,
+        applied: false,
+        control,
+        error: body.error || `http_${res.status}`,
+        banned: body.banned,
+        exchangeWriteEnabled: false,
+        mainnetShortcut: false,
+        realExecutionEnabled: false,
+        founderOnly: true,
+        memberAccessible: false,
+        banned_control_count: 0,
+      };
+    }
+    return body;
+  } catch (err) {
+    return {
+      ok: false,
+      applied: false,
+      control,
+      error: err instanceof Error ? err.message : "network_error",
+      exchangeWriteEnabled: false,
+      founderOnly: true,
+      memberAccessible: false,
+      banned_control_count: 0,
+    };
   }
 }
 

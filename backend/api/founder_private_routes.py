@@ -10,6 +10,11 @@ readable from a member session.
 
 UX-C: Founder Operator Diagnostics — V16 research observe panels.
 Observe / authorize research only. Member sessions fail-closed (403).
+
+PUB18-C: Founder Live Operations — adapter/ingest/universe/AI panels +
+allowed ops controls only (pause/resume ingest, disable provider/source,
+force read-only degraded, export evidence). Banned: trade now, override Risk,
+force LONG/SHORT, change leverage, enable mainnet.
 """
 from __future__ import annotations
 
@@ -25,6 +30,12 @@ from backend.founder_operator.snapshot import (
     OPERATOR_PANEL_IDS,
     assert_no_forbidden_keys,
     build_founder_operator_snapshot,
+)
+from backend.nexus_pub18_founder_live_ops.constants import LIVE_OPS_PANEL_IDS
+from backend.nexus_pub18_founder_live_ops.controls import apply_control
+from backend.nexus_pub18_founder_live_ops.panels import (
+    assert_no_forbidden_keys as assert_live_ops_no_forbidden_keys,
+    build_founder_live_ops_snapshot,
 )
 from backend.governance.entitlements import (
     PlanTier,
@@ -260,6 +271,87 @@ def founder_diagnostics_research_authorize():
     resp.headers["Cache-Control"] = "no-store"
     resp.headers["X-Nexus-Founder-Only"] = "1"
     resp.headers["X-Nexus-Member-Accessible"] = "0"
+    return resp, code
+
+
+@founder_private_bp.route("/api/nexus/founder/live-ops")
+@founder_private_bp.route("/api/nexus/founder/live-ops/overview")
+def founder_live_ops_overview():
+    """PUB18-C Founder Live Operations snapshot — Founder auth required."""
+    actor, denied = _authorize_founder("founder.live_ops.read")
+    if denied is not None:
+        return denied
+
+    payload = build_founder_live_ops_snapshot(
+        actor_tier=actor.tier.value,
+        identity_source=actor.identity_source,
+    )
+    leaks = assert_live_ops_no_forbidden_keys(payload)
+    if leaks:
+        audit_event(
+            "founder.live_ops.read",
+            "founder_live_ops",
+            permission="founder.production_control",
+            result="DENIED",
+            reason=f"forbidden_payload_keys:{','.join(leaks[:8])}",
+        )
+        return _deny("live_ops_payload_sanitizer_blocked", 500)
+
+    resp = jsonify(payload)
+    resp.headers["Cache-Control"] = "no-store"
+    resp.headers["X-Nexus-Founder-Only"] = "1"
+    resp.headers["X-Nexus-Member-Accessible"] = "0"
+    resp.headers["X-Nexus-Banned-Control-Count"] = "0"
+    return resp, 200
+
+
+@founder_private_bp.route("/api/nexus/founder/live-ops/panels")
+def founder_live_ops_panels():
+    """List live-ops panel ids (Founder auth)."""
+    actor, denied = _authorize_founder("founder.live_ops.panels.read")
+    if denied is not None:
+        return denied
+    return jsonify({
+        "ok": True,
+        "founderOnly": True,
+        "memberAccessible": False,
+        "panelIds": list(LIVE_OPS_PANEL_IDS),
+        "tier": actor.tier.value,
+        "banned_control_count": 0,
+    }), 200
+
+
+@founder_private_bp.route("/api/nexus/founder/live-ops/control", methods=["POST"])
+def founder_live_ops_control():
+    """Apply an allowed live-ops control; banned controls fail-closed."""
+    actor, denied = _authorize_founder("founder.live_ops.control")
+    if denied is not None:
+        return denied
+
+    body = request.get_json(silent=True) or {}
+    control = str(body.get("control") or body.get("action") or "")
+    params = body.get("params") if isinstance(body.get("params"), dict) else {
+        k: v for k, v in body.items() if k not in ("control", "action", "params")
+    }
+    result = apply_control(
+        control=control,
+        params=params,
+        actor_tier=actor.tier.value,
+        identity_source=actor.identity_source,
+    )
+    audit_event(
+        "founder.live_ops.control",
+        "founder_live_ops",
+        permission="founder.production_control",
+        result="OK" if result.get("applied") else "DENIED",
+        reason=str(result.get("error") or result.get("control") or ""),
+    )
+    code = 200 if result.get("ok") else (403 if result.get("banned") else 400)
+    resp = jsonify(result)
+    resp.headers["Cache-Control"] = "no-store"
+    resp.headers["X-Nexus-Founder-Only"] = "1"
+    resp.headers["X-Nexus-Member-Accessible"] = "0"
+    resp.headers["X-Nexus-Banned-Control-Count"] = "0"
     return resp, code
 
 

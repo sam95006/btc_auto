@@ -12,6 +12,7 @@ import { AppFooter } from "./components/AppFooter";
 import { SafetyBanner } from "./components/SafetyBanner";
 import { SidebarNav } from "./components/SidebarNav";
 import { FounderDiagnosticsPage } from "./founder/FounderDiagnosticsPage";
+import { FounderLiveOpsPage } from "./founder/FounderLiveOpsPage";
 import { FounderOperatorShell } from "./founder/FounderOperatorShell";
 import { FounderOperatorPage } from "./founder/FounderOperatorPage";
 import { useT } from "./i18n";
@@ -92,6 +93,9 @@ export default function App() {
       </Route>
       <Route path="/founder/diagnostics" element={<FounderOperatorShell />}>
         <Route index element={<FounderDiagnosticsPage />} />
+      </Route>
+      <Route path="/founder/live-ops" element={<FounderOperatorShell />}>
+        <Route index element={<FounderLiveOpsPage />} />
       </Route>
       <Route path="/founder/runtime" element={<FounderRuntimePage />} />
       <Route path="/*" element={<MemberShell />} />

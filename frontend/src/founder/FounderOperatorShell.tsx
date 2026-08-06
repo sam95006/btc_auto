@@ -1,6 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { FounderAuthGate } from "./FounderAuthGate";
-import { FOUNDER_DIAGNOSTICS_NAV, FOUNDER_OPERATOR_NAV } from "./types";
+import { FOUNDER_DIAGNOSTICS_NAV, FOUNDER_LIVE_OPS_NAV, FOUNDER_OPERATOR_NAV } from "./types";
 
 /**
  * Separate Founder-only shell — same design tokens, different IA.
@@ -11,7 +11,7 @@ export function FounderOperatorShell() {
     <FounderAuthGate>
       <div className="app-shell nx-founder-operator-shell" data-surface="founder-private">
         <div className="nx-founder-safety" role="status">
-          FOUNDER PRIVATE · READ-ONLY OBSERVABILITY · NO EXCHANGE WRITE · NOT MEMBER-ACCESSIBLE
+          FOUNDER PRIVATE · LIVE OPS · NO TRADE/RISK/LEVERAGE/MAINNET · NOT MEMBER-ACCESSIBLE
         </div>
         <div className="app-body nx-founder-body">
           <nav className="sidebar-nav nx-founder-nav" aria-label="Founder operator">
@@ -46,9 +46,24 @@ export function FounderOperatorShell() {
               ))}
             </div>
             <div className="nav-group">
+              <div className="nav-label">PUB18 Live Ops</div>
+              <NavLink
+                to="/founder/live-ops"
+                end
+                className={({ isActive }) => (isActive ? "active" : undefined)}
+              >
+                Live Operations
+              </NavLink>
+              {FOUNDER_LIVE_OPS_NAV.map((item) => (
+                <a key={item.id} href={`/founder/live-ops${item.hash}`}>
+                  {item.label}
+                </a>
+              ))}
+            </div>
+            <div className="nav-group">
               <div className="nav-label">邊界</div>
               <span className="muted sm">member session → 403</span>
-              <span className="muted sm">observe/research only</span>
+              <span className="muted sm">banned_control_count=0</span>
             </div>
           </nav>
           <div className="main-column">
