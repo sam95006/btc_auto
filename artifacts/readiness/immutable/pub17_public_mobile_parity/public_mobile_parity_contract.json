@@ -1,0 +1,188 @@
+{
+  "schema": "pub17_public_mobile_parity_contract_v1",
+  "schema_version": "1",
+  "package": "backend.nexus_pub17_public_mobile_parity",
+  "hard_bans": [
+    "no_member_trade_controls",
+    "no_member_copy_trading",
+    "no_member_exchange_write",
+    "no_fabricated_live_values",
+    "no_provider_required_as_live",
+    "no_claim_time_dependent_complete",
+    "no_pr26_merge",
+    "no_pr27_merge",
+    "no_acceleration_report_edit"
+  ],
+  "public_market_pulse_answer_ids": [
+    "global_market_state",
+    "crypto_derivatives_risk",
+    "top_3_markets_contracts",
+    "ai_posture",
+    "supporting_evidence",
+    "counter_evidence",
+    "invalidation",
+    "data_freshness",
+    "analysis_vs_actual_trading"
+  ],
+  "mobile_market_pulse_required_fields": [
+    "schema_version",
+    "as_of",
+    "retrieved_at",
+    "availability",
+    "data_mode",
+    "market_state",
+    "crypto_pulse",
+    "global_pulse",
+    "ai_posture",
+    "data_freshness",
+    "provider_status",
+    "top_opportunities",
+    "evidence_summary",
+    "counter_evidence_summary",
+    "risk_explanation",
+    "lineage_id",
+    "demo",
+    "stale_indicator",
+    "execution_control_count",
+    "exchange_write_capability",
+    "customer_trading_capability_count"
+  ],
+  "public_to_mobile_semantic_map": {
+    "global_market_state": [
+      "market_state",
+      "global_pulse"
+    ],
+    "crypto_derivatives_risk": [
+      "crypto_pulse",
+      "risk_explanation"
+    ],
+    "top_3_markets_contracts": [
+      "top_opportunities"
+    ],
+    "ai_posture": [
+      "ai_posture"
+    ],
+    "supporting_evidence": [
+      "evidence_summary"
+    ],
+    "counter_evidence": [
+      "counter_evidence_summary"
+    ],
+    "invalidation": [
+      "risk_explanation"
+    ],
+    "data_freshness": [
+      "data_freshness",
+      "stale_indicator"
+    ],
+    "analysis_vs_actual_trading": [
+      "execution_control_count",
+      "exchange_write_capability",
+      "customer_trading_capability_count"
+    ]
+  },
+  "shared_freshness_states": [
+    "LIVE",
+    "FRESH",
+    "STALE",
+    "DEGRADED",
+    "UNAVAILABLE",
+    "PROVIDER_REQUIRED",
+    "BLOCKED",
+    "DEMO_DATA"
+  ],
+  "shared_availability_states": [
+    "AVAILABLE",
+    "CONTRACT_READY",
+    "PROVIDER_REQUIRED",
+    "UNAVAILABLE",
+    "BLOCKED",
+    "DEMO_DATA",
+    "STALE",
+    "DEGRADED"
+  ],
+  "public_normalized_source_dto_fields": [
+    "schema",
+    "schema_version",
+    "domain",
+    "source_id",
+    "status",
+    "mode",
+    "freshness",
+    "availability",
+    "provenance",
+    "license_visibility",
+    "value",
+    "unit",
+    "as_of",
+    "retrieved_at",
+    "lineage_id",
+    "fabricated"
+  ],
+  "mobile_required_page_labels": [
+    "Market Pulse",
+    "Opportunity",
+    "Regime",
+    "Evidence",
+    "Counter Evidence",
+    "Risk",
+    "Watchlist",
+    "Alerts",
+    "Global Brief",
+    "Data Freshness",
+    "Subscription Access"
+  ],
+  "shared_buyable_product_labels": [
+    "Market Data",
+    "AI Intelligence",
+    "Decision Context",
+    "Risk Explanation",
+    "Alerts",
+    "Historical Comparisons",
+    "Global Market Briefs"
+  ],
+  "shared_forbidden_product_labels": [
+    "Auto Trading",
+    "Copy Trading",
+    "Exchange Execution",
+    "Private Strategy",
+    "Founder Portfolio Access"
+  ],
+  "forbidden_member_control_markers": [
+    "trade_button",
+    "TradeButton",
+    "copy_trade",
+    "copy_trading",
+    "CopyTrading",
+    "place_order",
+    "submit_order",
+    "create_order",
+    "execute_trade",
+    "leverage_control",
+    "position_control",
+    "api_key_entry",
+    "EXCHANGE_WRITE=True",
+    "MAINNET=True",
+    "REAL_MONEY=True"
+  ],
+  "provider_required_rules": {
+    "status_or_provider_status": "PROVIDER_REQUIRED",
+    "value_must_be_null": true,
+    "mode_must_not_be_live": true,
+    "freshness_must_not_be_live": true,
+    "chrome_must_not_be_live": true,
+    "top_opportunities_must_be_empty": true,
+    "fabricated_must_be_false": true
+  },
+  "zero_capability_guarantees": {
+    "execution_control_count": 0,
+    "exchange_write_capability": 0,
+    "customer_trading_capability_count": 0,
+    "member_execution_control_count": 0
+  },
+  "notes": [
+    "Parity freezes field sets and honesty rules only.",
+    "PROVIDER_REQUIRED domains remain unbound — no fabricated Live numbers.",
+    "Time-dependent blockers are documented separately; not claimed complete."
+  ]
+}
