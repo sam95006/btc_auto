@@ -1,5 +1,5 @@
 {
-  "HEAD": "324e52f0573d7e3ad32feb2968274a52b8d8da75",
+  "HEAD": "18cc36d959c2faa863ce5479963e3e513c00b851",
   "acceleration_report_edited": false,
   "acceptance_zeros": {
     "duplicate_unresolved_count": 0,
@@ -38,7 +38,7 @@
   },
   "demo": false,
   "exchange_write": false,
-  "generated_at": "2026-08-06T03:04:42Z",
+  "generated_at": "2026-08-06T03:06:27Z",
   "hard_bans": [
     "no_real_money",
     "no_mainnet",
@@ -119,7 +119,7 @@
         "claims_strategy_validation_pass": false,
         "dynamic_universe_later": true,
         "fixture_count": 4,
-        "generated_at": "2026-08-06T03:04:42Z",
+        "generated_at": "2026-08-06T03:06:27Z",
         "hard_max_symbols": false,
         "official_historical_sample_count": 4,
         "priority_symbol_count": 4,
@@ -202,7 +202,7 @@
         "meta": {
           "bytes": 16,
           "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-          "quarantined_at": "2026-08-06T03:04:42Z",
+          "quarantined_at": "2026-08-06T03:06:27Z",
           "reason": "adversarial_corrupt"
         },
         "status": "QUARANTINED"

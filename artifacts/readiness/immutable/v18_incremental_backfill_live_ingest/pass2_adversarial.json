@@ -37,7 +37,7 @@
     "meta": {
       "bytes": 16,
       "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "quarantined_at": "2026-08-06T03:04:42Z",
+      "quarantined_at": "2026-08-06T03:06:27Z",
       "reason": "adversarial_corrupt"
     },
     "status": "QUARANTINED"
