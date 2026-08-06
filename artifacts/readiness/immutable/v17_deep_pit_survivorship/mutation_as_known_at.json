@@ -1,0 +1,91 @@
+{
+  "attack_count": 48,
+  "blocked_count": 48,
+  "findings_sample": [
+    {
+      "attack_id": "mutation_0_float_aka",
+      "blocked": true,
+      "detail": "revision=OBS_BTC_CLOSE_R2",
+      "mutation": "float_aka",
+      "status": "AVAILABLE",
+      "survivor": false
+    },
+    {
+      "attack_id": "mutation_1_aka_minus_one",
+      "blocked": true,
+      "detail": "revision=OBS_BTC_CLOSE_R2",
+      "mutation": "aka_minus_one",
+      "status": "AVAILABLE",
+      "survivor": false
+    },
+    {
+      "attack_id": "mutation_2_zero_aka",
+      "blocked": true,
+      "detail": "rejected_nonpositive",
+      "mutation": "zero_aka",
+      "status": "REJECTED",
+      "survivor": false
+    },
+    {
+      "attack_id": "mutation_3_zero_aka",
+      "blocked": true,
+      "detail": "rejected_nonpositive",
+      "mutation": "zero_aka",
+      "status": "REJECTED",
+      "survivor": false
+    },
+    {
+      "attack_id": "mutation_4_null_aka",
+      "blocked": true,
+      "detail": "missing_aka_rejected",
+      "mutation": "null_aka",
+      "status": "REJECTED",
+      "survivor": false
+    },
+    {
+      "attack_id": "mutation_5_allow_latest",
+      "blocked": true,
+      "detail": "today_banned",
+      "mutation": "allow_latest",
+      "status": "REJECTED",
+      "survivor": false
+    },
+    {
+      "attack_id": "mutation_6_aka_minus_one",
+      "blocked": true,
+      "detail": "revision=OBS_BTC_CLOSE_R2",
+      "mutation": "aka_minus_one",
+      "status": "AVAILABLE",
+      "survivor": false
+    },
+    {
+      "attack_id": "mutation_7_aka_plus_one",
+      "blocked": true,
+      "detail": "revision=OBS_BTC_CLOSE_R2",
+      "mutation": "aka_plus_one",
+      "status": "AVAILABLE",
+      "survivor": false
+    },
+    {
+      "attack_id": "mutation_8_allow_latest",
+      "blocked": true,
+      "detail": "today_banned",
+      "mutation": "allow_latest",
+      "status": "REJECTED",
+      "survivor": false
+    },
+    {
+      "attack_id": "mutation_9_wrong_series",
+      "blocked": true,
+      "detail": "status=UNAVAILABLE_AT_TIME",
+      "mutation": "wrong_series",
+      "status": "UNAVAILABLE_AT_TIME",
+      "survivor": false
+    }
+  ],
+  "pass": true,
+  "schema": "v17_deep_mutation_as_known_at_v1",
+  "seed": 17170008,
+  "survivor_count": 0,
+  "survivors": []
+}

@@ -1,0 +1,146 @@
+{
+  "attack_count": 7,
+  "attacks": [
+    {
+      "attack_id": "listing_minus_one_ms",
+      "blocked": true,
+      "detail": "as_of=1735689599999 listing=1735689600000",
+      "evidence": {
+        "attack": {
+          "as_of_ms": 1735689599999,
+          "attack_blocked": true,
+          "claimed_data_used": true,
+          "claimed_eligible": true,
+          "listing_ms": 1735689600000,
+          "ok": false,
+          "status": "PRE_LISTING_DATA",
+          "symbol": "LATEUSDT"
+        },
+        "in_eligible": false
+      },
+      "survivor": false
+    },
+    {
+      "attack_id": "listing_exact_ms_honest",
+      "blocked": true,
+      "detail": "status=PASS",
+      "evidence": {
+        "as_of_ms": 1735689600000,
+        "attack_blocked": false,
+        "claimed_data_used": true,
+        "claimed_eligible": true,
+        "listing_ms": 1735689600000,
+        "ok": true,
+        "status": "PASS",
+        "symbol": "LATEUSDT"
+      },
+      "survivor": false
+    },
+    {
+      "attack_id": "delisting_exact_ms",
+      "blocked": true,
+      "detail": "delist=1725000000000 ghost_eligible=False",
+      "evidence": {
+        "attack": {
+          "as_of_ms": 1725000000000,
+          "attack_blocked": true,
+          "claimed_eligible": true,
+          "delisting_ms": 1725000000000,
+          "ok": false,
+          "status": "IGNORE_DELISTINGS",
+          "symbol": "GHOSTUSDT"
+        },
+        "ghost_eligible": false
+      },
+      "survivor": false
+    },
+    {
+      "attack_id": "delisting_plus_one_ms",
+      "blocked": true,
+      "detail": "as_of=1725000000001",
+      "evidence": {
+        "as_of_ms": 1725000000001,
+        "attack_blocked": true,
+        "claimed_eligible": true,
+        "delisting_ms": 1725000000000,
+        "ok": false,
+        "status": "IGNORE_DELISTINGS",
+        "symbol": "GHOSTUSDT"
+      },
+      "survivor": false
+    },
+    {
+      "attack_id": "relist_future_into_past_era",
+      "blocked": true,
+      "detail": "late_in_past=False late_in_claim=True",
+      "evidence": {
+        "attack": {
+          "attack_blocked": true,
+          "claimed": [
+            "BTCUSDT",
+            "ETHUSDT",
+            "GHOSTUSDT",
+            "LATEUSDT",
+            "PEPEUSDT",
+            "SOLUSDT"
+          ],
+          "dropped_historical": [],
+          "ok": false,
+          "pit_eligible": [
+            "BTCUSDT",
+            "ETHUSDT",
+            "GHOSTUSDT",
+            "PEPEUSDT",
+            "SOLUSDT"
+          ],
+          "status": "TODAY_SURVIVORS_FOR_HISTORY",
+          "today_survivors": [
+            "BTCUSDT",
+            "ETHUSDT",
+            "LATEUSDT",
+            "PEPEUSDT",
+            "SOLUSDT"
+          ]
+        }
+      },
+      "survivor": false
+    },
+    {
+      "attack_id": "ghost_persists_across_eras",
+      "blocked": true,
+      "detail": "jun=True dec=False",
+      "evidence": {
+        "attack": {
+          "as_of_ms": 1733020800000,
+          "attack_blocked": true,
+          "claimed_eligible": true,
+          "delisting_ms": 1725000000000,
+          "ok": false,
+          "status": "IGNORE_DELISTINGS",
+          "symbol": "GHOSTUSDT"
+        },
+        "claimed": [
+          "BTCUSDT",
+          "ETHUSDT",
+          "GHOSTUSDT",
+          "PEPEUSDT",
+          "SOLUSDT"
+        ]
+      },
+      "survivor": false
+    },
+    {
+      "attack_id": "base_v17e_quartet_still_clean",
+      "base_attack_count": 4,
+      "base_survivors": [],
+      "blocked": true,
+      "detail": "base_survivors=[]",
+      "survivor": false
+    }
+  ],
+  "blocked_count": 7,
+  "pass": true,
+  "schema": "v17_deep_listing_delisting_v1",
+  "survivor_count": 0,
+  "survivors": []
+}

@@ -1,0 +1,55 @@
+{
+  "attack_count": 6,
+  "attacks": [
+    {
+      "attack_id": "collapse_cross_exchange_btcusdt",
+      "binance_id": "inst:binance:perp:linear:BTCUSDT:v1:4d67bbaf558cf37aafa09b71",
+      "blocked": true,
+      "bybit_id": "inst:bybit:perp:linear:BTCUSDT:v1:6f86df4ee9360d97b97e5e10",
+      "detail": "share=True same=False",
+      "survivor": false
+    },
+    {
+      "attack_id": "symbol_only_registry_merge",
+      "attack_map_size": 1,
+      "blocked": true,
+      "detail": "honest_count=2 attack_map_size=1",
+      "honest_count": 2,
+      "survivor": false
+    },
+    {
+      "attack_id": "collapse_spot_perp_btcusdt",
+      "blocked": true,
+      "detail": "same=False",
+      "perp_id": "inst:binance:perp:linear:BTCUSDT:v1:4d67bbaf558cf37aafa09b71",
+      "spot_id": "inst:binance:spot:na:BTCUSDT:v1:8b412e0c38ba17071298127d",
+      "survivor": false
+    },
+    {
+      "attack_id": "missing_exchange_component",
+      "blocked": true,
+      "detail": "missing_identity_component",
+      "status": "REJECTED",
+      "survivor": false
+    },
+    {
+      "attack_id": "cross_venue_liquidity_by_symbol",
+      "blocked": true,
+      "detail": "venue_interchange_refused",
+      "status": "VENUE_DISTINCT",
+      "survivor": false
+    },
+    {
+      "attack_id": "hard_ban_collapse_declared",
+      "blocked": true,
+      "detail": "ok",
+      "missing": [],
+      "survivor": false
+    }
+  ],
+  "blocked_count": 6,
+  "pass": true,
+  "schema": "v17_deep_symbol_collision_v1",
+  "survivor_count": 0,
+  "survivors": []
+}

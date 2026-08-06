@@ -1,0 +1,16 @@
+{
+  "HEAD": "a43317e2f85afde75e850ffa4ef465c834fd7a6a",
+  "attack_count": 89,
+  "blocked_count": 89,
+  "campaign_checksum": "eb31e0fb2b55ce5837fcda33ee5da94d45723e9bb7e7e6044307e75f782f99f3",
+  "coverage_areas": [
+    "property_mutation_as_known_at_revision",
+    "timestamp_boundary_dst_utc",
+    "cross_exchange_symbol_collision",
+    "listing_delisting_survivorship",
+    "future_leakage_redteam_expansion"
+  ],
+  "status": "PASS",
+  "survivor_count": 0,
+  "survivors": []
+}

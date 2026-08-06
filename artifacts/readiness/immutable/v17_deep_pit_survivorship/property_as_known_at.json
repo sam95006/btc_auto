@@ -1,0 +1,162 @@
+{
+  "case_count": 316,
+  "cases_sample": [
+    {
+      "case_id": "boundary:SYNTH.BTCUSDT.CLOSE:1700086399999",
+      "detail": "property_holds",
+      "ok": true,
+      "proof": {
+        "as_known_at": 1700086399999,
+        "future_count": 3,
+        "input_count": 3,
+        "leaked_revision_ids": [],
+        "pit_holds": true,
+        "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+        "schema": "v17_d_pit_visibility_proof",
+        "series_id": "SYNTH.BTCUSDT.CLOSE",
+        "visible_count": 0
+      },
+      "selected": null,
+      "survivor": false,
+      "visible_count": 0
+    },
+    {
+      "case_id": "boundary:SYNTH.BTCUSDT.REGIME_LABEL:1700086399999",
+      "detail": "property_holds",
+      "ok": true,
+      "proof": {
+        "as_known_at": 1700086399999,
+        "future_count": 2,
+        "input_count": 2,
+        "leaked_revision_ids": [],
+        "pit_holds": true,
+        "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+        "schema": "v17_d_pit_visibility_proof",
+        "series_id": "SYNTH.BTCUSDT.REGIME_LABEL",
+        "visible_count": 0
+      },
+      "selected": null,
+      "survivor": false,
+      "visible_count": 0
+    },
+    {
+      "case_id": "boundary:SYNTH.ETHUSDT.CLOSE:1700086399999",
+      "detail": "property_holds",
+      "ok": true,
+      "proof": {
+        "as_known_at": 1700086399999,
+        "future_count": 1,
+        "input_count": 1,
+        "leaked_revision_ids": [],
+        "pit_holds": true,
+        "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+        "schema": "v17_d_pit_visibility_proof",
+        "series_id": "SYNTH.ETHUSDT.CLOSE",
+        "visible_count": 0
+      },
+      "selected": null,
+      "survivor": false,
+      "visible_count": 0
+    },
+    {
+      "case_id": "boundary:SYNTH.SOLUSDT.CLOSE:1700086399999",
+      "detail": "property_holds",
+      "ok": true,
+      "proof": {
+        "as_known_at": 1700086399999,
+        "future_count": 1,
+        "input_count": 1,
+        "leaked_revision_ids": [],
+        "pit_holds": true,
+        "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+        "schema": "v17_d_pit_visibility_proof",
+        "series_id": "SYNTH.SOLUSDT.CLOSE",
+        "visible_count": 0
+      },
+      "selected": null,
+      "survivor": false,
+      "visible_count": 0
+    },
+    {
+      "case_id": "boundary:SYNTH.BTCUSDT.CLOSE:1700086400000",
+      "detail": "property_holds",
+      "ok": true,
+      "proof": {
+        "as_known_at": 1700086400000,
+        "future_count": 2,
+        "input_count": 3,
+        "leaked_revision_ids": [],
+        "pit_holds": true,
+        "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+        "schema": "v17_d_pit_visibility_proof",
+        "series_id": "SYNTH.BTCUSDT.CLOSE",
+        "visible_count": 1
+      },
+      "selected": "OBS_BTC_CLOSE_R1",
+      "survivor": false,
+      "visible_count": 1
+    },
+    {
+      "case_id": "boundary:SYNTH.BTCUSDT.REGIME_LABEL:1700086400000",
+      "detail": "property_holds",
+      "ok": true,
+      "proof": {
+        "as_known_at": 1700086400000,
+        "future_count": 2,
+        "input_count": 2,
+        "leaked_revision_ids": [],
+        "pit_holds": true,
+        "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+        "schema": "v17_d_pit_visibility_proof",
+        "series_id": "SYNTH.BTCUSDT.REGIME_LABEL",
+        "visible_count": 0
+      },
+      "selected": null,
+      "survivor": false,
+      "visible_count": 0
+    },
+    {
+      "case_id": "boundary:SYNTH.ETHUSDT.CLOSE:1700086400000",
+      "detail": "property_holds",
+      "ok": true,
+      "proof": {
+        "as_known_at": 1700086400000,
+        "future_count": 1,
+        "input_count": 1,
+        "leaked_revision_ids": [],
+        "pit_holds": true,
+        "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+        "schema": "v17_d_pit_visibility_proof",
+        "series_id": "SYNTH.ETHUSDT.CLOSE",
+        "visible_count": 0
+      },
+      "selected": null,
+      "survivor": false,
+      "visible_count": 0
+    },
+    {
+      "case_id": "boundary:SYNTH.SOLUSDT.CLOSE:1700086400000",
+      "detail": "property_holds",
+      "ok": true,
+      "proof": {
+        "as_known_at": 1700086400000,
+        "future_count": 1,
+        "input_count": 1,
+        "leaked_revision_ids": [],
+        "pit_holds": true,
+        "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+        "schema": "v17_d_pit_visibility_proof",
+        "series_id": "SYNTH.SOLUSDT.CLOSE",
+        "visible_count": 0
+      },
+      "selected": null,
+      "survivor": false,
+      "visible_count": 0
+    }
+  ],
+  "pass": true,
+  "schema": "v17_deep_property_as_known_at_v1",
+  "seed": 17170001,
+  "survivor_count": 0,
+  "survivors": []
+}
