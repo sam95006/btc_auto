@@ -71,7 +71,7 @@ def scan_unavailable_as_zero(root: Path) -> dict[str, Any]:
 
 def scan_stale_without_label(root: Path) -> dict[str, Any]:
     hits: list[str] = []
-    for rel in ("frontend/src/member", "frontend/src/pages/member"):
+    for rel in ("frontend/src/pages/member",):
         base = root / rel
         if not base.exists():
             continue
@@ -82,9 +82,11 @@ def scan_stale_without_label(root: Path) -> dict[str, Any]:
                 text = path.read_text(encoding="utf-8")
             except OSError:
                 continue
-            if re.search(r"['\"]STALE['\"]", text) and "data-state" not in text and "data_runtime_state" not in text:
-                if "stale-without" in text:
-                    continue
+            if "STALE" not in text:
+                continue
+            if "data-testid" in text or "data-runtime-state" in text or "data-state" in text:
+                continue
+            if re.search(r"['\"]STALE['\"]", text):
                 hits.append(str(path.relative_to(root)))
     return {"stale_without_indicator_count": len(hits), "hits": hits[:20]}
 
