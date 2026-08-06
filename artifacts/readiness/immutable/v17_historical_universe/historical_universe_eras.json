@@ -1,0 +1,2822 @@
+{
+  "era_2024_06_01": {
+    "schema": "v17_e_historical_universe_survivorship_v1",
+    "schema_version": 1,
+    "as_of_ms": 1717200000000,
+    "retrieval_timestamp": "FIXED",
+    "source_kind": "sanitized_fixture",
+    "coins_existing": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "GHOSTUSDT",
+      "PEPEUSDT",
+      "SOLUSDT",
+      "THINUSDT"
+    ],
+    "contracts_listed": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "GHOSTUSDT",
+      "PEPEUSDT",
+      "SOLUSDT",
+      "THINUSDT"
+    ],
+    "contracts_not_yet_listed": [
+      "LATEUSDT"
+    ],
+    "contracts_delisted": [],
+    "historical_eligible_universe": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "GHOSTUSDT",
+      "PEPEUSDT",
+      "SOLUSDT"
+    ],
+    "historical_excluded_universe": [
+      "LATEUSDT",
+      "THINUSDT"
+    ],
+    "eligible_count": 5,
+    "excluded_count": 2,
+    "eligible_details": [
+      {
+        "symbol": "BTCUSDT",
+        "canonical_instrument_id": "bybit:linear:BTCUSDT",
+        "as_of_ms": 1717200000000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1577836800000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1577836800000,
+        "contract_spec": {
+          "effective_ms": 1577836800000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.1,
+          "qty_step": 0.001,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1717200000000,
+          "liquidity_score": 0.99,
+          "turnover_usdt": 1000000000.0,
+          "depth_usdt": 50000000.0
+        },
+        "liquidity_observation_ms": 1717200000000,
+        "data_completeness": 1.0,
+        "data_completeness_observation_ms": 1717200000000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "ETHUSDT",
+        "canonical_instrument_id": "bybit:linear:ETHUSDT",
+        "as_of_ms": 1717200000000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1577836800000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1577836800000,
+        "contract_spec": {
+          "effective_ms": 1577836800000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.01,
+          "qty_step": 0.01,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1717200000000,
+          "liquidity_score": 0.95,
+          "turnover_usdt": 500000000.0,
+          "depth_usdt": 20000000.0
+        },
+        "liquidity_observation_ms": 1717200000000,
+        "data_completeness": 1.0,
+        "data_completeness_observation_ms": 1717200000000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "SOLUSDT",
+        "canonical_instrument_id": "bybit:linear:SOLUSDT",
+        "as_of_ms": 1717200000000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1640995200000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1640995200000,
+        "contract_spec": {
+          "effective_ms": 1640995200000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.001,
+          "qty_step": 0.1,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1717200000000,
+          "liquidity_score": 0.8,
+          "turnover_usdt": 80000000.0,
+          "depth_usdt": 4000000.0
+        },
+        "liquidity_observation_ms": 1717200000000,
+        "data_completeness": 0.95,
+        "data_completeness_observation_ms": 1717200000000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "PEPEUSDT",
+        "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+        "as_of_ms": 1717200000000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1704067200000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1704067200000,
+        "contract_spec": {
+          "effective_ms": 1704067200000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 1e-08,
+          "qty_step": 100.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1717200000000,
+          "liquidity_score": 0.4,
+          "turnover_usdt": 2000000.0,
+          "depth_usdt": 100000.0
+        },
+        "liquidity_observation_ms": 1717200000000,
+        "data_completeness": 0.7,
+        "data_completeness_observation_ms": 1717200000000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "GHOSTUSDT",
+        "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+        "as_of_ms": 1717200000000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1609459200000,
+        "delisting_ms": 1725000000000,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1609459200000,
+        "contract_spec": {
+          "effective_ms": 1609459200000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.0001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1717200000000,
+          "liquidity_score": 0.35,
+          "turnover_usdt": 1000000.0,
+          "depth_usdt": 50000.0
+        },
+        "liquidity_observation_ms": 1717200000000,
+        "data_completeness": 0.8,
+        "data_completeness_observation_ms": 1717200000000,
+        "eligible": true,
+        "exclusion_reasons": []
+      }
+    ],
+    "excluded_details": [
+      {
+        "symbol": "LATEUSDT",
+        "canonical_instrument_id": "bybit:linear:LATEUSDT",
+        "as_of_ms": 1717200000000,
+        "coin_exists": false,
+        "listing_state": "NOT_YET_LISTED",
+        "listed": false,
+        "not_yet_listed": true,
+        "delisted": false,
+        "listing_ms": 1735689600000,
+        "delisting_ms": null,
+        "tradable_state": null,
+        "tradable_effective_ms": null,
+        "contract_spec": null,
+        "liquidity": null,
+        "liquidity_observation_ms": null,
+        "data_completeness": null,
+        "data_completeness_observation_ms": null,
+        "eligible": false,
+        "exclusion_reasons": [
+          "COIN_NOT_YET_EXISTING",
+          "NOT_YET_LISTED",
+          "NO_TRADABLE_STATE_AS_OF",
+          "NO_CONTRACT_SPEC_AS_OF",
+          "NO_LIQUIDITY_OBSERVATION_AS_OF",
+          "NO_DATA_COMPLETENESS_AS_OF"
+        ]
+      },
+      {
+        "symbol": "THINUSDT",
+        "canonical_instrument_id": "bybit:linear:THINUSDT",
+        "as_of_ms": 1717200000000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1650000000000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1650000000000,
+        "contract_spec": {
+          "effective_ms": 1650000000000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1717200000000,
+          "liquidity_score": 0.01,
+          "turnover_usdt": 100.0,
+          "depth_usdt": 10.0
+        },
+        "liquidity_observation_ms": 1717200000000,
+        "data_completeness": 0.2,
+        "data_completeness_observation_ms": 1717200000000,
+        "eligible": false,
+        "exclusion_reasons": [
+          "LIQUIDITY_BELOW_THRESHOLD",
+          "DATA_INCOMPLETE"
+        ]
+      }
+    ],
+    "instrument_details": [
+      {
+        "symbol": "BTCUSDT",
+        "canonical_instrument_id": "bybit:linear:BTCUSDT",
+        "as_of_ms": 1717200000000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1577836800000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1577836800000,
+        "contract_spec": {
+          "effective_ms": 1577836800000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.1,
+          "qty_step": 0.001,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1717200000000,
+          "liquidity_score": 0.99,
+          "turnover_usdt": 1000000000.0,
+          "depth_usdt": 50000000.0
+        },
+        "liquidity_observation_ms": 1717200000000,
+        "data_completeness": 1.0,
+        "data_completeness_observation_ms": 1717200000000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "ETHUSDT",
+        "canonical_instrument_id": "bybit:linear:ETHUSDT",
+        "as_of_ms": 1717200000000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1577836800000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1577836800000,
+        "contract_spec": {
+          "effective_ms": 1577836800000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.01,
+          "qty_step": 0.01,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1717200000000,
+          "liquidity_score": 0.95,
+          "turnover_usdt": 500000000.0,
+          "depth_usdt": 20000000.0
+        },
+        "liquidity_observation_ms": 1717200000000,
+        "data_completeness": 1.0,
+        "data_completeness_observation_ms": 1717200000000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "SOLUSDT",
+        "canonical_instrument_id": "bybit:linear:SOLUSDT",
+        "as_of_ms": 1717200000000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1640995200000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1640995200000,
+        "contract_spec": {
+          "effective_ms": 1640995200000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.001,
+          "qty_step": 0.1,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1717200000000,
+          "liquidity_score": 0.8,
+          "turnover_usdt": 80000000.0,
+          "depth_usdt": 4000000.0
+        },
+        "liquidity_observation_ms": 1717200000000,
+        "data_completeness": 0.95,
+        "data_completeness_observation_ms": 1717200000000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "PEPEUSDT",
+        "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+        "as_of_ms": 1717200000000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1704067200000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1704067200000,
+        "contract_spec": {
+          "effective_ms": 1704067200000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 1e-08,
+          "qty_step": 100.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1717200000000,
+          "liquidity_score": 0.4,
+          "turnover_usdt": 2000000.0,
+          "depth_usdt": 100000.0
+        },
+        "liquidity_observation_ms": 1717200000000,
+        "data_completeness": 0.7,
+        "data_completeness_observation_ms": 1717200000000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "LATEUSDT",
+        "canonical_instrument_id": "bybit:linear:LATEUSDT",
+        "as_of_ms": 1717200000000,
+        "coin_exists": false,
+        "listing_state": "NOT_YET_LISTED",
+        "listed": false,
+        "not_yet_listed": true,
+        "delisted": false,
+        "listing_ms": 1735689600000,
+        "delisting_ms": null,
+        "tradable_state": null,
+        "tradable_effective_ms": null,
+        "contract_spec": null,
+        "liquidity": null,
+        "liquidity_observation_ms": null,
+        "data_completeness": null,
+        "data_completeness_observation_ms": null,
+        "eligible": false,
+        "exclusion_reasons": [
+          "COIN_NOT_YET_EXISTING",
+          "NOT_YET_LISTED",
+          "NO_TRADABLE_STATE_AS_OF",
+          "NO_CONTRACT_SPEC_AS_OF",
+          "NO_LIQUIDITY_OBSERVATION_AS_OF",
+          "NO_DATA_COMPLETENESS_AS_OF"
+        ]
+      },
+      {
+        "symbol": "GHOSTUSDT",
+        "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+        "as_of_ms": 1717200000000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1609459200000,
+        "delisting_ms": 1725000000000,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1609459200000,
+        "contract_spec": {
+          "effective_ms": 1609459200000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.0001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1717200000000,
+          "liquidity_score": 0.35,
+          "turnover_usdt": 1000000.0,
+          "depth_usdt": 50000.0
+        },
+        "liquidity_observation_ms": 1717200000000,
+        "data_completeness": 0.8,
+        "data_completeness_observation_ms": 1717200000000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "THINUSDT",
+        "canonical_instrument_id": "bybit:linear:THINUSDT",
+        "as_of_ms": 1717200000000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1650000000000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1650000000000,
+        "contract_spec": {
+          "effective_ms": 1650000000000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1717200000000,
+          "liquidity_score": 0.01,
+          "turnover_usdt": 100.0,
+          "depth_usdt": 10.0
+        },
+        "liquidity_observation_ms": 1717200000000,
+        "data_completeness": 0.2,
+        "data_completeness_observation_ms": 1717200000000,
+        "eligible": false,
+        "exclusion_reasons": [
+          "LIQUIDITY_BELOW_THRESHOLD",
+          "DATA_INCOMPLETE"
+        ]
+      }
+    ],
+    "listing_delisting_events_as_of": [
+      {
+        "event_type": "LISTING",
+        "symbol": "BTCUSDT",
+        "canonical_instrument_id": "bybit:linear:BTCUSDT",
+        "event_ms": 1577836800000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "ETHUSDT",
+        "canonical_instrument_id": "bybit:linear:ETHUSDT",
+        "event_ms": 1577836800000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "GHOSTUSDT",
+        "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+        "event_ms": 1609459200000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "SOLUSDT",
+        "canonical_instrument_id": "bybit:linear:SOLUSDT",
+        "event_ms": 1640995200000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "THINUSDT",
+        "canonical_instrument_id": "bybit:linear:THINUSDT",
+        "event_ms": 1650000000000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "PEPEUSDT",
+        "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+        "event_ms": 1704067200000,
+        "status_after": "Trading"
+      }
+    ],
+    "listing_delisting_events_full": {
+      "schema": "v17_e_listing_delisting_events_v1",
+      "event_count": 8,
+      "events": [
+        {
+          "event_type": "LISTING",
+          "symbol": "BTCUSDT",
+          "canonical_instrument_id": "bybit:linear:BTCUSDT",
+          "event_ms": 1577836800000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "ETHUSDT",
+          "canonical_instrument_id": "bybit:linear:ETHUSDT",
+          "event_ms": 1577836800000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "GHOSTUSDT",
+          "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+          "event_ms": 1609459200000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "SOLUSDT",
+          "canonical_instrument_id": "bybit:linear:SOLUSDT",
+          "event_ms": 1640995200000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "THINUSDT",
+          "canonical_instrument_id": "bybit:linear:THINUSDT",
+          "event_ms": 1650000000000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "PEPEUSDT",
+          "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+          "event_ms": 1704067200000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "DELISTING",
+          "symbol": "GHOSTUSDT",
+          "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+          "event_ms": 1725000000000,
+          "status_after": "Delisted"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "LATEUSDT",
+          "canonical_instrument_id": "bybit:linear:LATEUSDT",
+          "event_ms": 1735689600000,
+          "status_after": "Trading"
+        }
+      ],
+      "events_checksum": "acc3a56413eccb1cb7f0f0d56c3786fca90f6edc05990cf5b10e53269f8e5ecc"
+    },
+    "contract_spec_timeline_as_of": [
+      {
+        "symbol": "BTCUSDT",
+        "canonical_instrument_id": "bybit:linear:BTCUSDT",
+        "effective_ms": 1577836800000,
+        "contract_rule_version": "v1",
+        "tick_size": 0.1,
+        "qty_step": 0.001,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "ETHUSDT",
+        "canonical_instrument_id": "bybit:linear:ETHUSDT",
+        "effective_ms": 1577836800000,
+        "contract_rule_version": "v1",
+        "tick_size": 0.01,
+        "qty_step": 0.01,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "GHOSTUSDT",
+        "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+        "effective_ms": 1609459200000,
+        "contract_rule_version": "v1",
+        "tick_size": 0.0001,
+        "qty_step": 1.0,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "SOLUSDT",
+        "canonical_instrument_id": "bybit:linear:SOLUSDT",
+        "effective_ms": 1640995200000,
+        "contract_rule_version": "v1",
+        "tick_size": 0.001,
+        "qty_step": 0.1,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "THINUSDT",
+        "canonical_instrument_id": "bybit:linear:THINUSDT",
+        "effective_ms": 1650000000000,
+        "contract_rule_version": "v1",
+        "tick_size": 0.001,
+        "qty_step": 1.0,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "PEPEUSDT",
+        "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+        "effective_ms": 1704067200000,
+        "contract_rule_version": "v1",
+        "tick_size": 1e-08,
+        "qty_step": 100.0,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      }
+    ],
+    "contract_spec_timeline_full": {
+      "schema": "v17_e_contract_spec_timeline_v1",
+      "entry_count": 9,
+      "timeline": [
+        {
+          "symbol": "BTCUSDT",
+          "canonical_instrument_id": "bybit:linear:BTCUSDT",
+          "effective_ms": 1577836800000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.1,
+          "qty_step": 0.001,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "ETHUSDT",
+          "canonical_instrument_id": "bybit:linear:ETHUSDT",
+          "effective_ms": 1577836800000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.01,
+          "qty_step": 0.01,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "GHOSTUSDT",
+          "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+          "effective_ms": 1609459200000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.0001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "SOLUSDT",
+          "canonical_instrument_id": "bybit:linear:SOLUSDT",
+          "effective_ms": 1640995200000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.001,
+          "qty_step": 0.1,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "THINUSDT",
+          "canonical_instrument_id": "bybit:linear:THINUSDT",
+          "effective_ms": 1650000000000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "PEPEUSDT",
+          "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+          "effective_ms": 1704067200000,
+          "contract_rule_version": "v1",
+          "tick_size": 1e-08,
+          "qty_step": 100.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "BTCUSDT",
+          "canonical_instrument_id": "bybit:linear:BTCUSDT",
+          "effective_ms": 1720000000000,
+          "contract_rule_version": "v2",
+          "tick_size": 0.5,
+          "qty_step": 0.001,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": [
+            "tick_size",
+            "contract_rule_version"
+          ]
+        },
+        {
+          "symbol": "PEPEUSDT",
+          "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+          "effective_ms": 1733020800000,
+          "contract_rule_version": "v2_min_notional_bump",
+          "tick_size": 1e-07,
+          "qty_step": 100.0,
+          "minimum_notional": 50.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": [
+            "tick_size",
+            "minimum_notional",
+            "contract_rule_version"
+          ]
+        },
+        {
+          "symbol": "LATEUSDT",
+          "canonical_instrument_id": "bybit:linear:LATEUSDT",
+          "effective_ms": 1735689600000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        }
+      ],
+      "timeline_checksum": "cc6e61c1dc78cabe13b4d20bcc76bf69fca55cf4b580d387120d4ff9164bf518"
+    },
+    "thresholds": {
+      "min_liquidity_score": 0.05,
+      "min_data_completeness": 0.5
+    },
+    "universe_checksum": "ec34dc28fd9a644392f33ecc33d9febb404475b9c85bddc7d219af9e2033e0c7",
+    "hard_bans": [
+      "no_today_survivors_for_whole_history",
+      "no_pre_listing_data",
+      "no_ignoring_delistings",
+      "no_current_liquidity_substitution",
+      "no_exchange_write",
+      "no_mainnet",
+      "no_real_money",
+      "no_pr26_merge",
+      "no_pr27_merge",
+      "no_acceleration_report_edit"
+    ],
+    "exchange_write": false,
+    "mainnet": false,
+    "real_money": false,
+    "evidence_class": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+    "result_checksum": "47199447f4dfcdb9f4c452d35da60c1adf5aec66ab6e9c9b3c2e7a8642e024dc"
+  },
+  "era_2024_12_01": {
+    "schema": "v17_e_historical_universe_survivorship_v1",
+    "schema_version": 1,
+    "as_of_ms": 1733020800000,
+    "retrieval_timestamp": "FIXED",
+    "source_kind": "sanitized_fixture",
+    "coins_existing": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "GHOSTUSDT",
+      "PEPEUSDT",
+      "SOLUSDT",
+      "THINUSDT"
+    ],
+    "contracts_listed": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "PEPEUSDT",
+      "SOLUSDT",
+      "THINUSDT"
+    ],
+    "contracts_not_yet_listed": [
+      "LATEUSDT"
+    ],
+    "contracts_delisted": [
+      "GHOSTUSDT"
+    ],
+    "historical_eligible_universe": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "PEPEUSDT",
+      "SOLUSDT"
+    ],
+    "historical_excluded_universe": [
+      "GHOSTUSDT",
+      "LATEUSDT",
+      "THINUSDT"
+    ],
+    "eligible_count": 4,
+    "excluded_count": 3,
+    "eligible_details": [
+      {
+        "symbol": "BTCUSDT",
+        "canonical_instrument_id": "bybit:linear:BTCUSDT",
+        "as_of_ms": 1733020800000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1577836800000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1577836800000,
+        "contract_spec": {
+          "effective_ms": 1720000000000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.5,
+          "qty_step": 0.001,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v2"
+        },
+        "liquidity": {
+          "observation_ms": 1733020800000,
+          "liquidity_score": 0.995,
+          "turnover_usdt": 1200000000.0,
+          "depth_usdt": 60000000.0
+        },
+        "liquidity_observation_ms": 1733020800000,
+        "data_completeness": 1.0,
+        "data_completeness_observation_ms": 1733020800000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "ETHUSDT",
+        "canonical_instrument_id": "bybit:linear:ETHUSDT",
+        "as_of_ms": 1733020800000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1577836800000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1577836800000,
+        "contract_spec": {
+          "effective_ms": 1577836800000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.01,
+          "qty_step": 0.01,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1733020800000,
+          "liquidity_score": 0.96,
+          "turnover_usdt": 600000000.0,
+          "depth_usdt": 25000000.0
+        },
+        "liquidity_observation_ms": 1733020800000,
+        "data_completeness": 1.0,
+        "data_completeness_observation_ms": 1733020800000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "SOLUSDT",
+        "canonical_instrument_id": "bybit:linear:SOLUSDT",
+        "as_of_ms": 1733020800000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1640995200000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1640995200000,
+        "contract_spec": {
+          "effective_ms": 1640995200000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.001,
+          "qty_step": 0.1,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1733020800000,
+          "liquidity_score": 0.85,
+          "turnover_usdt": 100000000.0,
+          "depth_usdt": 5000000.0
+        },
+        "liquidity_observation_ms": 1733020800000,
+        "data_completeness": 0.98,
+        "data_completeness_observation_ms": 1733020800000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "PEPEUSDT",
+        "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+        "as_of_ms": 1733020800000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1704067200000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1704067200000,
+        "contract_spec": {
+          "effective_ms": 1733020800000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 1e-07,
+          "qty_step": 100.0,
+          "minimum_notional": 50.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v2_min_notional_bump"
+        },
+        "liquidity": {
+          "observation_ms": 1733020800000,
+          "liquidity_score": 0.55,
+          "turnover_usdt": 5000000.0,
+          "depth_usdt": 200000.0
+        },
+        "liquidity_observation_ms": 1733020800000,
+        "data_completeness": 0.85,
+        "data_completeness_observation_ms": 1733020800000,
+        "eligible": true,
+        "exclusion_reasons": []
+      }
+    ],
+    "excluded_details": [
+      {
+        "symbol": "LATEUSDT",
+        "canonical_instrument_id": "bybit:linear:LATEUSDT",
+        "as_of_ms": 1733020800000,
+        "coin_exists": false,
+        "listing_state": "NOT_YET_LISTED",
+        "listed": false,
+        "not_yet_listed": true,
+        "delisted": false,
+        "listing_ms": 1735689600000,
+        "delisting_ms": null,
+        "tradable_state": null,
+        "tradable_effective_ms": null,
+        "contract_spec": null,
+        "liquidity": null,
+        "liquidity_observation_ms": null,
+        "data_completeness": null,
+        "data_completeness_observation_ms": null,
+        "eligible": false,
+        "exclusion_reasons": [
+          "COIN_NOT_YET_EXISTING",
+          "NOT_YET_LISTED",
+          "NO_TRADABLE_STATE_AS_OF",
+          "NO_CONTRACT_SPEC_AS_OF",
+          "NO_LIQUIDITY_OBSERVATION_AS_OF",
+          "NO_DATA_COMPLETENESS_AS_OF"
+        ]
+      },
+      {
+        "symbol": "GHOSTUSDT",
+        "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+        "as_of_ms": 1733020800000,
+        "coin_exists": true,
+        "listing_state": "DELISTED",
+        "listed": false,
+        "not_yet_listed": false,
+        "delisted": true,
+        "listing_ms": 1609459200000,
+        "delisting_ms": 1725000000000,
+        "tradable_state": "Delisted",
+        "tradable_effective_ms": 1725000000000,
+        "contract_spec": {
+          "effective_ms": 1609459200000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.0001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1717200000000,
+          "liquidity_score": 0.35,
+          "turnover_usdt": 1000000.0,
+          "depth_usdt": 50000.0
+        },
+        "liquidity_observation_ms": 1717200000000,
+        "data_completeness": 0.8,
+        "data_completeness_observation_ms": 1717200000000,
+        "eligible": false,
+        "exclusion_reasons": [
+          "DELISTED",
+          "STATUS_Delisted"
+        ]
+      },
+      {
+        "symbol": "THINUSDT",
+        "canonical_instrument_id": "bybit:linear:THINUSDT",
+        "as_of_ms": 1733020800000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1650000000000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1650000000000,
+        "contract_spec": {
+          "effective_ms": 1650000000000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1733020800000,
+          "liquidity_score": 0.02,
+          "turnover_usdt": 200.0,
+          "depth_usdt": 20.0
+        },
+        "liquidity_observation_ms": 1733020800000,
+        "data_completeness": 0.3,
+        "data_completeness_observation_ms": 1733020800000,
+        "eligible": false,
+        "exclusion_reasons": [
+          "LIQUIDITY_BELOW_THRESHOLD",
+          "DATA_INCOMPLETE"
+        ]
+      }
+    ],
+    "instrument_details": [
+      {
+        "symbol": "BTCUSDT",
+        "canonical_instrument_id": "bybit:linear:BTCUSDT",
+        "as_of_ms": 1733020800000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1577836800000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1577836800000,
+        "contract_spec": {
+          "effective_ms": 1720000000000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.5,
+          "qty_step": 0.001,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v2"
+        },
+        "liquidity": {
+          "observation_ms": 1733020800000,
+          "liquidity_score": 0.995,
+          "turnover_usdt": 1200000000.0,
+          "depth_usdt": 60000000.0
+        },
+        "liquidity_observation_ms": 1733020800000,
+        "data_completeness": 1.0,
+        "data_completeness_observation_ms": 1733020800000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "ETHUSDT",
+        "canonical_instrument_id": "bybit:linear:ETHUSDT",
+        "as_of_ms": 1733020800000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1577836800000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1577836800000,
+        "contract_spec": {
+          "effective_ms": 1577836800000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.01,
+          "qty_step": 0.01,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1733020800000,
+          "liquidity_score": 0.96,
+          "turnover_usdt": 600000000.0,
+          "depth_usdt": 25000000.0
+        },
+        "liquidity_observation_ms": 1733020800000,
+        "data_completeness": 1.0,
+        "data_completeness_observation_ms": 1733020800000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "SOLUSDT",
+        "canonical_instrument_id": "bybit:linear:SOLUSDT",
+        "as_of_ms": 1733020800000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1640995200000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1640995200000,
+        "contract_spec": {
+          "effective_ms": 1640995200000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.001,
+          "qty_step": 0.1,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1733020800000,
+          "liquidity_score": 0.85,
+          "turnover_usdt": 100000000.0,
+          "depth_usdt": 5000000.0
+        },
+        "liquidity_observation_ms": 1733020800000,
+        "data_completeness": 0.98,
+        "data_completeness_observation_ms": 1733020800000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "PEPEUSDT",
+        "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+        "as_of_ms": 1733020800000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1704067200000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1704067200000,
+        "contract_spec": {
+          "effective_ms": 1733020800000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 1e-07,
+          "qty_step": 100.0,
+          "minimum_notional": 50.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v2_min_notional_bump"
+        },
+        "liquidity": {
+          "observation_ms": 1733020800000,
+          "liquidity_score": 0.55,
+          "turnover_usdt": 5000000.0,
+          "depth_usdt": 200000.0
+        },
+        "liquidity_observation_ms": 1733020800000,
+        "data_completeness": 0.85,
+        "data_completeness_observation_ms": 1733020800000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "LATEUSDT",
+        "canonical_instrument_id": "bybit:linear:LATEUSDT",
+        "as_of_ms": 1733020800000,
+        "coin_exists": false,
+        "listing_state": "NOT_YET_LISTED",
+        "listed": false,
+        "not_yet_listed": true,
+        "delisted": false,
+        "listing_ms": 1735689600000,
+        "delisting_ms": null,
+        "tradable_state": null,
+        "tradable_effective_ms": null,
+        "contract_spec": null,
+        "liquidity": null,
+        "liquidity_observation_ms": null,
+        "data_completeness": null,
+        "data_completeness_observation_ms": null,
+        "eligible": false,
+        "exclusion_reasons": [
+          "COIN_NOT_YET_EXISTING",
+          "NOT_YET_LISTED",
+          "NO_TRADABLE_STATE_AS_OF",
+          "NO_CONTRACT_SPEC_AS_OF",
+          "NO_LIQUIDITY_OBSERVATION_AS_OF",
+          "NO_DATA_COMPLETENESS_AS_OF"
+        ]
+      },
+      {
+        "symbol": "GHOSTUSDT",
+        "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+        "as_of_ms": 1733020800000,
+        "coin_exists": true,
+        "listing_state": "DELISTED",
+        "listed": false,
+        "not_yet_listed": false,
+        "delisted": true,
+        "listing_ms": 1609459200000,
+        "delisting_ms": 1725000000000,
+        "tradable_state": "Delisted",
+        "tradable_effective_ms": 1725000000000,
+        "contract_spec": {
+          "effective_ms": 1609459200000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.0001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1717200000000,
+          "liquidity_score": 0.35,
+          "turnover_usdt": 1000000.0,
+          "depth_usdt": 50000.0
+        },
+        "liquidity_observation_ms": 1717200000000,
+        "data_completeness": 0.8,
+        "data_completeness_observation_ms": 1717200000000,
+        "eligible": false,
+        "exclusion_reasons": [
+          "DELISTED",
+          "STATUS_Delisted"
+        ]
+      },
+      {
+        "symbol": "THINUSDT",
+        "canonical_instrument_id": "bybit:linear:THINUSDT",
+        "as_of_ms": 1733020800000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1650000000000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1650000000000,
+        "contract_spec": {
+          "effective_ms": 1650000000000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1733020800000,
+          "liquidity_score": 0.02,
+          "turnover_usdt": 200.0,
+          "depth_usdt": 20.0
+        },
+        "liquidity_observation_ms": 1733020800000,
+        "data_completeness": 0.3,
+        "data_completeness_observation_ms": 1733020800000,
+        "eligible": false,
+        "exclusion_reasons": [
+          "LIQUIDITY_BELOW_THRESHOLD",
+          "DATA_INCOMPLETE"
+        ]
+      }
+    ],
+    "listing_delisting_events_as_of": [
+      {
+        "event_type": "LISTING",
+        "symbol": "BTCUSDT",
+        "canonical_instrument_id": "bybit:linear:BTCUSDT",
+        "event_ms": 1577836800000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "ETHUSDT",
+        "canonical_instrument_id": "bybit:linear:ETHUSDT",
+        "event_ms": 1577836800000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "GHOSTUSDT",
+        "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+        "event_ms": 1609459200000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "SOLUSDT",
+        "canonical_instrument_id": "bybit:linear:SOLUSDT",
+        "event_ms": 1640995200000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "THINUSDT",
+        "canonical_instrument_id": "bybit:linear:THINUSDT",
+        "event_ms": 1650000000000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "PEPEUSDT",
+        "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+        "event_ms": 1704067200000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "DELISTING",
+        "symbol": "GHOSTUSDT",
+        "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+        "event_ms": 1725000000000,
+        "status_after": "Delisted"
+      }
+    ],
+    "listing_delisting_events_full": {
+      "schema": "v17_e_listing_delisting_events_v1",
+      "event_count": 8,
+      "events": [
+        {
+          "event_type": "LISTING",
+          "symbol": "BTCUSDT",
+          "canonical_instrument_id": "bybit:linear:BTCUSDT",
+          "event_ms": 1577836800000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "ETHUSDT",
+          "canonical_instrument_id": "bybit:linear:ETHUSDT",
+          "event_ms": 1577836800000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "GHOSTUSDT",
+          "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+          "event_ms": 1609459200000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "SOLUSDT",
+          "canonical_instrument_id": "bybit:linear:SOLUSDT",
+          "event_ms": 1640995200000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "THINUSDT",
+          "canonical_instrument_id": "bybit:linear:THINUSDT",
+          "event_ms": 1650000000000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "PEPEUSDT",
+          "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+          "event_ms": 1704067200000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "DELISTING",
+          "symbol": "GHOSTUSDT",
+          "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+          "event_ms": 1725000000000,
+          "status_after": "Delisted"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "LATEUSDT",
+          "canonical_instrument_id": "bybit:linear:LATEUSDT",
+          "event_ms": 1735689600000,
+          "status_after": "Trading"
+        }
+      ],
+      "events_checksum": "acc3a56413eccb1cb7f0f0d56c3786fca90f6edc05990cf5b10e53269f8e5ecc"
+    },
+    "contract_spec_timeline_as_of": [
+      {
+        "symbol": "BTCUSDT",
+        "canonical_instrument_id": "bybit:linear:BTCUSDT",
+        "effective_ms": 1577836800000,
+        "contract_rule_version": "v1",
+        "tick_size": 0.1,
+        "qty_step": 0.001,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "ETHUSDT",
+        "canonical_instrument_id": "bybit:linear:ETHUSDT",
+        "effective_ms": 1577836800000,
+        "contract_rule_version": "v1",
+        "tick_size": 0.01,
+        "qty_step": 0.01,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "GHOSTUSDT",
+        "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+        "effective_ms": 1609459200000,
+        "contract_rule_version": "v1",
+        "tick_size": 0.0001,
+        "qty_step": 1.0,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "SOLUSDT",
+        "canonical_instrument_id": "bybit:linear:SOLUSDT",
+        "effective_ms": 1640995200000,
+        "contract_rule_version": "v1",
+        "tick_size": 0.001,
+        "qty_step": 0.1,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "THINUSDT",
+        "canonical_instrument_id": "bybit:linear:THINUSDT",
+        "effective_ms": 1650000000000,
+        "contract_rule_version": "v1",
+        "tick_size": 0.001,
+        "qty_step": 1.0,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "PEPEUSDT",
+        "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+        "effective_ms": 1704067200000,
+        "contract_rule_version": "v1",
+        "tick_size": 1e-08,
+        "qty_step": 100.0,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "BTCUSDT",
+        "canonical_instrument_id": "bybit:linear:BTCUSDT",
+        "effective_ms": 1720000000000,
+        "contract_rule_version": "v2",
+        "tick_size": 0.5,
+        "qty_step": 0.001,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": [
+          "tick_size",
+          "contract_rule_version"
+        ]
+      },
+      {
+        "symbol": "PEPEUSDT",
+        "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+        "effective_ms": 1733020800000,
+        "contract_rule_version": "v2_min_notional_bump",
+        "tick_size": 1e-07,
+        "qty_step": 100.0,
+        "minimum_notional": 50.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": [
+          "tick_size",
+          "minimum_notional",
+          "contract_rule_version"
+        ]
+      }
+    ],
+    "contract_spec_timeline_full": {
+      "schema": "v17_e_contract_spec_timeline_v1",
+      "entry_count": 9,
+      "timeline": [
+        {
+          "symbol": "BTCUSDT",
+          "canonical_instrument_id": "bybit:linear:BTCUSDT",
+          "effective_ms": 1577836800000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.1,
+          "qty_step": 0.001,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "ETHUSDT",
+          "canonical_instrument_id": "bybit:linear:ETHUSDT",
+          "effective_ms": 1577836800000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.01,
+          "qty_step": 0.01,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "GHOSTUSDT",
+          "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+          "effective_ms": 1609459200000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.0001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "SOLUSDT",
+          "canonical_instrument_id": "bybit:linear:SOLUSDT",
+          "effective_ms": 1640995200000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.001,
+          "qty_step": 0.1,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "THINUSDT",
+          "canonical_instrument_id": "bybit:linear:THINUSDT",
+          "effective_ms": 1650000000000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "PEPEUSDT",
+          "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+          "effective_ms": 1704067200000,
+          "contract_rule_version": "v1",
+          "tick_size": 1e-08,
+          "qty_step": 100.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "BTCUSDT",
+          "canonical_instrument_id": "bybit:linear:BTCUSDT",
+          "effective_ms": 1720000000000,
+          "contract_rule_version": "v2",
+          "tick_size": 0.5,
+          "qty_step": 0.001,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": [
+            "tick_size",
+            "contract_rule_version"
+          ]
+        },
+        {
+          "symbol": "PEPEUSDT",
+          "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+          "effective_ms": 1733020800000,
+          "contract_rule_version": "v2_min_notional_bump",
+          "tick_size": 1e-07,
+          "qty_step": 100.0,
+          "minimum_notional": 50.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": [
+            "tick_size",
+            "minimum_notional",
+            "contract_rule_version"
+          ]
+        },
+        {
+          "symbol": "LATEUSDT",
+          "canonical_instrument_id": "bybit:linear:LATEUSDT",
+          "effective_ms": 1735689600000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        }
+      ],
+      "timeline_checksum": "cc6e61c1dc78cabe13b4d20bcc76bf69fca55cf4b580d387120d4ff9164bf518"
+    },
+    "thresholds": {
+      "min_liquidity_score": 0.05,
+      "min_data_completeness": 0.5
+    },
+    "universe_checksum": "5bd80d776b63031d2084a948a6c77d24824c15364eff30944305b723031a7c86",
+    "hard_bans": [
+      "no_today_survivors_for_whole_history",
+      "no_pre_listing_data",
+      "no_ignoring_delistings",
+      "no_current_liquidity_substitution",
+      "no_exchange_write",
+      "no_mainnet",
+      "no_real_money",
+      "no_pr26_merge",
+      "no_pr27_merge",
+      "no_acceleration_report_edit"
+    ],
+    "exchange_write": false,
+    "mainnet": false,
+    "real_money": false,
+    "evidence_class": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+    "result_checksum": "9bbaeb81386147a0595d1fdda6e7984ecc7bbd3f2345c590c3a2eb32544c6a36"
+  },
+  "era_2025_03_01": {
+    "schema": "v17_e_historical_universe_survivorship_v1",
+    "schema_version": 1,
+    "as_of_ms": 1740787200000,
+    "retrieval_timestamp": "FIXED",
+    "source_kind": "sanitized_fixture",
+    "coins_existing": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "GHOSTUSDT",
+      "LATEUSDT",
+      "PEPEUSDT",
+      "SOLUSDT",
+      "THINUSDT"
+    ],
+    "contracts_listed": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "LATEUSDT",
+      "PEPEUSDT",
+      "SOLUSDT",
+      "THINUSDT"
+    ],
+    "contracts_not_yet_listed": [],
+    "contracts_delisted": [
+      "GHOSTUSDT"
+    ],
+    "historical_eligible_universe": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "LATEUSDT",
+      "PEPEUSDT",
+      "SOLUSDT"
+    ],
+    "historical_excluded_universe": [
+      "GHOSTUSDT",
+      "THINUSDT"
+    ],
+    "eligible_count": 5,
+    "excluded_count": 2,
+    "eligible_details": [
+      {
+        "symbol": "BTCUSDT",
+        "canonical_instrument_id": "bybit:linear:BTCUSDT",
+        "as_of_ms": 1740787200000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1577836800000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1577836800000,
+        "contract_spec": {
+          "effective_ms": 1720000000000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.5,
+          "qty_step": 0.001,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v2"
+        },
+        "liquidity": {
+          "observation_ms": 1740787200000,
+          "liquidity_score": 0.997,
+          "turnover_usdt": 1400000000.0,
+          "depth_usdt": 70000000.0
+        },
+        "liquidity_observation_ms": 1740787200000,
+        "data_completeness": 1.0,
+        "data_completeness_observation_ms": 1740787200000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "ETHUSDT",
+        "canonical_instrument_id": "bybit:linear:ETHUSDT",
+        "as_of_ms": 1740787200000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1577836800000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1577836800000,
+        "contract_spec": {
+          "effective_ms": 1577836800000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.01,
+          "qty_step": 0.01,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1740787200000,
+          "liquidity_score": 0.97,
+          "turnover_usdt": 700000000.0,
+          "depth_usdt": 30000000.0
+        },
+        "liquidity_observation_ms": 1740787200000,
+        "data_completeness": 1.0,
+        "data_completeness_observation_ms": 1740787200000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "SOLUSDT",
+        "canonical_instrument_id": "bybit:linear:SOLUSDT",
+        "as_of_ms": 1740787200000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1640995200000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1640995200000,
+        "contract_spec": {
+          "effective_ms": 1640995200000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.001,
+          "qty_step": 0.1,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1740787200000,
+          "liquidity_score": 0.88,
+          "turnover_usdt": 120000000.0,
+          "depth_usdt": 6000000.0
+        },
+        "liquidity_observation_ms": 1740787200000,
+        "data_completeness": 0.99,
+        "data_completeness_observation_ms": 1740787200000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "PEPEUSDT",
+        "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+        "as_of_ms": 1740787200000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1704067200000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1704067200000,
+        "contract_spec": {
+          "effective_ms": 1733020800000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 1e-07,
+          "qty_step": 100.0,
+          "minimum_notional": 50.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v2_min_notional_bump"
+        },
+        "liquidity": {
+          "observation_ms": 1740787200000,
+          "liquidity_score": 0.6,
+          "turnover_usdt": 6000000.0,
+          "depth_usdt": 250000.0
+        },
+        "liquidity_observation_ms": 1740787200000,
+        "data_completeness": 0.9,
+        "data_completeness_observation_ms": 1740787200000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "LATEUSDT",
+        "canonical_instrument_id": "bybit:linear:LATEUSDT",
+        "as_of_ms": 1740787200000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1735689600000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1735689600000,
+        "contract_spec": {
+          "effective_ms": 1735689600000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1740787200000,
+          "liquidity_score": 0.92,
+          "turnover_usdt": 90000000.0,
+          "depth_usdt": 3000000.0
+        },
+        "liquidity_observation_ms": 1740787200000,
+        "data_completeness": 0.9,
+        "data_completeness_observation_ms": 1740787200000,
+        "eligible": true,
+        "exclusion_reasons": []
+      }
+    ],
+    "excluded_details": [
+      {
+        "symbol": "GHOSTUSDT",
+        "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+        "as_of_ms": 1740787200000,
+        "coin_exists": true,
+        "listing_state": "DELISTED",
+        "listed": false,
+        "not_yet_listed": false,
+        "delisted": true,
+        "listing_ms": 1609459200000,
+        "delisting_ms": 1725000000000,
+        "tradable_state": "Delisted",
+        "tradable_effective_ms": 1725000000000,
+        "contract_spec": {
+          "effective_ms": 1609459200000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.0001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1717200000000,
+          "liquidity_score": 0.35,
+          "turnover_usdt": 1000000.0,
+          "depth_usdt": 50000.0
+        },
+        "liquidity_observation_ms": 1717200000000,
+        "data_completeness": 0.8,
+        "data_completeness_observation_ms": 1717200000000,
+        "eligible": false,
+        "exclusion_reasons": [
+          "DELISTED",
+          "STATUS_Delisted"
+        ]
+      },
+      {
+        "symbol": "THINUSDT",
+        "canonical_instrument_id": "bybit:linear:THINUSDT",
+        "as_of_ms": 1740787200000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1650000000000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1650000000000,
+        "contract_spec": {
+          "effective_ms": 1650000000000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1733020800000,
+          "liquidity_score": 0.02,
+          "turnover_usdt": 200.0,
+          "depth_usdt": 20.0
+        },
+        "liquidity_observation_ms": 1733020800000,
+        "data_completeness": 0.3,
+        "data_completeness_observation_ms": 1733020800000,
+        "eligible": false,
+        "exclusion_reasons": [
+          "LIQUIDITY_BELOW_THRESHOLD",
+          "DATA_INCOMPLETE"
+        ]
+      }
+    ],
+    "instrument_details": [
+      {
+        "symbol": "BTCUSDT",
+        "canonical_instrument_id": "bybit:linear:BTCUSDT",
+        "as_of_ms": 1740787200000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1577836800000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1577836800000,
+        "contract_spec": {
+          "effective_ms": 1720000000000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.5,
+          "qty_step": 0.001,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v2"
+        },
+        "liquidity": {
+          "observation_ms": 1740787200000,
+          "liquidity_score": 0.997,
+          "turnover_usdt": 1400000000.0,
+          "depth_usdt": 70000000.0
+        },
+        "liquidity_observation_ms": 1740787200000,
+        "data_completeness": 1.0,
+        "data_completeness_observation_ms": 1740787200000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "ETHUSDT",
+        "canonical_instrument_id": "bybit:linear:ETHUSDT",
+        "as_of_ms": 1740787200000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1577836800000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1577836800000,
+        "contract_spec": {
+          "effective_ms": 1577836800000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.01,
+          "qty_step": 0.01,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1740787200000,
+          "liquidity_score": 0.97,
+          "turnover_usdt": 700000000.0,
+          "depth_usdt": 30000000.0
+        },
+        "liquidity_observation_ms": 1740787200000,
+        "data_completeness": 1.0,
+        "data_completeness_observation_ms": 1740787200000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "SOLUSDT",
+        "canonical_instrument_id": "bybit:linear:SOLUSDT",
+        "as_of_ms": 1740787200000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1640995200000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1640995200000,
+        "contract_spec": {
+          "effective_ms": 1640995200000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.001,
+          "qty_step": 0.1,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1740787200000,
+          "liquidity_score": 0.88,
+          "turnover_usdt": 120000000.0,
+          "depth_usdt": 6000000.0
+        },
+        "liquidity_observation_ms": 1740787200000,
+        "data_completeness": 0.99,
+        "data_completeness_observation_ms": 1740787200000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "PEPEUSDT",
+        "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+        "as_of_ms": 1740787200000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1704067200000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1704067200000,
+        "contract_spec": {
+          "effective_ms": 1733020800000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 1e-07,
+          "qty_step": 100.0,
+          "minimum_notional": 50.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v2_min_notional_bump"
+        },
+        "liquidity": {
+          "observation_ms": 1740787200000,
+          "liquidity_score": 0.6,
+          "turnover_usdt": 6000000.0,
+          "depth_usdt": 250000.0
+        },
+        "liquidity_observation_ms": 1740787200000,
+        "data_completeness": 0.9,
+        "data_completeness_observation_ms": 1740787200000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "LATEUSDT",
+        "canonical_instrument_id": "bybit:linear:LATEUSDT",
+        "as_of_ms": 1740787200000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1735689600000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1735689600000,
+        "contract_spec": {
+          "effective_ms": 1735689600000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1740787200000,
+          "liquidity_score": 0.92,
+          "turnover_usdt": 90000000.0,
+          "depth_usdt": 3000000.0
+        },
+        "liquidity_observation_ms": 1740787200000,
+        "data_completeness": 0.9,
+        "data_completeness_observation_ms": 1740787200000,
+        "eligible": true,
+        "exclusion_reasons": []
+      },
+      {
+        "symbol": "GHOSTUSDT",
+        "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+        "as_of_ms": 1740787200000,
+        "coin_exists": true,
+        "listing_state": "DELISTED",
+        "listed": false,
+        "not_yet_listed": false,
+        "delisted": true,
+        "listing_ms": 1609459200000,
+        "delisting_ms": 1725000000000,
+        "tradable_state": "Delisted",
+        "tradable_effective_ms": 1725000000000,
+        "contract_spec": {
+          "effective_ms": 1609459200000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.0001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1717200000000,
+          "liquidity_score": 0.35,
+          "turnover_usdt": 1000000.0,
+          "depth_usdt": 50000.0
+        },
+        "liquidity_observation_ms": 1717200000000,
+        "data_completeness": 0.8,
+        "data_completeness_observation_ms": 1717200000000,
+        "eligible": false,
+        "exclusion_reasons": [
+          "DELISTED",
+          "STATUS_Delisted"
+        ]
+      },
+      {
+        "symbol": "THINUSDT",
+        "canonical_instrument_id": "bybit:linear:THINUSDT",
+        "as_of_ms": 1740787200000,
+        "coin_exists": true,
+        "listing_state": "LISTED",
+        "listed": true,
+        "not_yet_listed": false,
+        "delisted": false,
+        "listing_ms": 1650000000000,
+        "delisting_ms": null,
+        "tradable_state": "Trading",
+        "tradable_effective_ms": 1650000000000,
+        "contract_spec": {
+          "effective_ms": 1650000000000,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "tick_size": 0.001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_rule_version": "v1"
+        },
+        "liquidity": {
+          "observation_ms": 1733020800000,
+          "liquidity_score": 0.02,
+          "turnover_usdt": 200.0,
+          "depth_usdt": 20.0
+        },
+        "liquidity_observation_ms": 1733020800000,
+        "data_completeness": 0.3,
+        "data_completeness_observation_ms": 1733020800000,
+        "eligible": false,
+        "exclusion_reasons": [
+          "LIQUIDITY_BELOW_THRESHOLD",
+          "DATA_INCOMPLETE"
+        ]
+      }
+    ],
+    "listing_delisting_events_as_of": [
+      {
+        "event_type": "LISTING",
+        "symbol": "BTCUSDT",
+        "canonical_instrument_id": "bybit:linear:BTCUSDT",
+        "event_ms": 1577836800000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "ETHUSDT",
+        "canonical_instrument_id": "bybit:linear:ETHUSDT",
+        "event_ms": 1577836800000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "GHOSTUSDT",
+        "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+        "event_ms": 1609459200000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "SOLUSDT",
+        "canonical_instrument_id": "bybit:linear:SOLUSDT",
+        "event_ms": 1640995200000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "THINUSDT",
+        "canonical_instrument_id": "bybit:linear:THINUSDT",
+        "event_ms": 1650000000000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "PEPEUSDT",
+        "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+        "event_ms": 1704067200000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "DELISTING",
+        "symbol": "GHOSTUSDT",
+        "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+        "event_ms": 1725000000000,
+        "status_after": "Delisted"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "LATEUSDT",
+        "canonical_instrument_id": "bybit:linear:LATEUSDT",
+        "event_ms": 1735689600000,
+        "status_after": "Trading"
+      }
+    ],
+    "listing_delisting_events_full": {
+      "schema": "v17_e_listing_delisting_events_v1",
+      "event_count": 8,
+      "events": [
+        {
+          "event_type": "LISTING",
+          "symbol": "BTCUSDT",
+          "canonical_instrument_id": "bybit:linear:BTCUSDT",
+          "event_ms": 1577836800000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "ETHUSDT",
+          "canonical_instrument_id": "bybit:linear:ETHUSDT",
+          "event_ms": 1577836800000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "GHOSTUSDT",
+          "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+          "event_ms": 1609459200000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "SOLUSDT",
+          "canonical_instrument_id": "bybit:linear:SOLUSDT",
+          "event_ms": 1640995200000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "THINUSDT",
+          "canonical_instrument_id": "bybit:linear:THINUSDT",
+          "event_ms": 1650000000000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "PEPEUSDT",
+          "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+          "event_ms": 1704067200000,
+          "status_after": "Trading"
+        },
+        {
+          "event_type": "DELISTING",
+          "symbol": "GHOSTUSDT",
+          "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+          "event_ms": 1725000000000,
+          "status_after": "Delisted"
+        },
+        {
+          "event_type": "LISTING",
+          "symbol": "LATEUSDT",
+          "canonical_instrument_id": "bybit:linear:LATEUSDT",
+          "event_ms": 1735689600000,
+          "status_after": "Trading"
+        }
+      ],
+      "events_checksum": "acc3a56413eccb1cb7f0f0d56c3786fca90f6edc05990cf5b10e53269f8e5ecc"
+    },
+    "contract_spec_timeline_as_of": [
+      {
+        "symbol": "BTCUSDT",
+        "canonical_instrument_id": "bybit:linear:BTCUSDT",
+        "effective_ms": 1577836800000,
+        "contract_rule_version": "v1",
+        "tick_size": 0.1,
+        "qty_step": 0.001,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "ETHUSDT",
+        "canonical_instrument_id": "bybit:linear:ETHUSDT",
+        "effective_ms": 1577836800000,
+        "contract_rule_version": "v1",
+        "tick_size": 0.01,
+        "qty_step": 0.01,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "GHOSTUSDT",
+        "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+        "effective_ms": 1609459200000,
+        "contract_rule_version": "v1",
+        "tick_size": 0.0001,
+        "qty_step": 1.0,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "SOLUSDT",
+        "canonical_instrument_id": "bybit:linear:SOLUSDT",
+        "effective_ms": 1640995200000,
+        "contract_rule_version": "v1",
+        "tick_size": 0.001,
+        "qty_step": 0.1,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "THINUSDT",
+        "canonical_instrument_id": "bybit:linear:THINUSDT",
+        "effective_ms": 1650000000000,
+        "contract_rule_version": "v1",
+        "tick_size": 0.001,
+        "qty_step": 1.0,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "PEPEUSDT",
+        "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+        "effective_ms": 1704067200000,
+        "contract_rule_version": "v1",
+        "tick_size": 1e-08,
+        "qty_step": 100.0,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      },
+      {
+        "symbol": "BTCUSDT",
+        "canonical_instrument_id": "bybit:linear:BTCUSDT",
+        "effective_ms": 1720000000000,
+        "contract_rule_version": "v2",
+        "tick_size": 0.5,
+        "qty_step": 0.001,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": [
+          "tick_size",
+          "contract_rule_version"
+        ]
+      },
+      {
+        "symbol": "PEPEUSDT",
+        "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+        "effective_ms": 1733020800000,
+        "contract_rule_version": "v2_min_notional_bump",
+        "tick_size": 1e-07,
+        "qty_step": 100.0,
+        "minimum_notional": 50.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": [
+          "tick_size",
+          "minimum_notional",
+          "contract_rule_version"
+        ]
+      },
+      {
+        "symbol": "LATEUSDT",
+        "canonical_instrument_id": "bybit:linear:LATEUSDT",
+        "effective_ms": 1735689600000,
+        "contract_rule_version": "v1",
+        "tick_size": 0.001,
+        "qty_step": 1.0,
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "contract_type": "LinearPerpetual",
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "changed_fields": []
+      }
+    ],
+    "contract_spec_timeline_full": {
+      "schema": "v17_e_contract_spec_timeline_v1",
+      "entry_count": 9,
+      "timeline": [
+        {
+          "symbol": "BTCUSDT",
+          "canonical_instrument_id": "bybit:linear:BTCUSDT",
+          "effective_ms": 1577836800000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.1,
+          "qty_step": 0.001,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "ETHUSDT",
+          "canonical_instrument_id": "bybit:linear:ETHUSDT",
+          "effective_ms": 1577836800000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.01,
+          "qty_step": 0.01,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "GHOSTUSDT",
+          "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+          "effective_ms": 1609459200000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.0001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "SOLUSDT",
+          "canonical_instrument_id": "bybit:linear:SOLUSDT",
+          "effective_ms": 1640995200000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.001,
+          "qty_step": 0.1,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "THINUSDT",
+          "canonical_instrument_id": "bybit:linear:THINUSDT",
+          "effective_ms": 1650000000000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "PEPEUSDT",
+          "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+          "effective_ms": 1704067200000,
+          "contract_rule_version": "v1",
+          "tick_size": 1e-08,
+          "qty_step": 100.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        },
+        {
+          "symbol": "BTCUSDT",
+          "canonical_instrument_id": "bybit:linear:BTCUSDT",
+          "effective_ms": 1720000000000,
+          "contract_rule_version": "v2",
+          "tick_size": 0.5,
+          "qty_step": 0.001,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": [
+            "tick_size",
+            "contract_rule_version"
+          ]
+        },
+        {
+          "symbol": "PEPEUSDT",
+          "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+          "effective_ms": 1733020800000,
+          "contract_rule_version": "v2_min_notional_bump",
+          "tick_size": 1e-07,
+          "qty_step": 100.0,
+          "minimum_notional": 50.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": [
+            "tick_size",
+            "minimum_notional",
+            "contract_rule_version"
+          ]
+        },
+        {
+          "symbol": "LATEUSDT",
+          "canonical_instrument_id": "bybit:linear:LATEUSDT",
+          "effective_ms": 1735689600000,
+          "contract_rule_version": "v1",
+          "tick_size": 0.001,
+          "qty_step": 1.0,
+          "minimum_notional": 5.0,
+          "minimum_order_qty": 0.001,
+          "contract_type": "LinearPerpetual",
+          "quote_coin": "USDT",
+          "settle_coin": "USDT",
+          "changed_fields": []
+        }
+      ],
+      "timeline_checksum": "cc6e61c1dc78cabe13b4d20bcc76bf69fca55cf4b580d387120d4ff9164bf518"
+    },
+    "thresholds": {
+      "min_liquidity_score": 0.05,
+      "min_data_completeness": 0.5
+    },
+    "universe_checksum": "8c6ba2e29047d3049d00e62f73a1d2d36f9e4a408b1026a57d84a237ba482205",
+    "hard_bans": [
+      "no_today_survivors_for_whole_history",
+      "no_pre_listing_data",
+      "no_ignoring_delistings",
+      "no_current_liquidity_substitution",
+      "no_exchange_write",
+      "no_mainnet",
+      "no_real_money",
+      "no_pr26_merge",
+      "no_pr27_merge",
+      "no_acceleration_report_edit"
+    ],
+    "exchange_write": false,
+    "mainnet": false,
+    "real_money": false,
+    "evidence_class": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+    "result_checksum": "e585549ac112ebdccdd175255a844a5cc6111f32ae6294bd22ed4c10e5f7aa8e"
+  }
+}

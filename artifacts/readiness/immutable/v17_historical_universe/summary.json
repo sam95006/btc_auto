@@ -1,0 +1,10 @@
+{
+  "lane": "V17-E",
+  "status": "PASS",
+  "passed": true,
+  "commit": "66a0f7827d5709fc09bc8c7495e93a4089eb28de",
+  "survivors": [],
+  "fixture_pass_count": 5,
+  "attack_blocked_count": 4,
+  "recommendation": "NEXUS_V17_HISTORICAL_UNIVERSE_SURVIVORSHIP_PASS"
+}

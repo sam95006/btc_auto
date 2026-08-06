@@ -1,0 +1,63 @@
+{
+  "schema": "v17_e_listing_delisting_events_v1",
+  "event_count": 8,
+  "events": [
+    {
+      "event_type": "LISTING",
+      "symbol": "BTCUSDT",
+      "canonical_instrument_id": "bybit:linear:BTCUSDT",
+      "event_ms": 1577836800000,
+      "status_after": "Trading"
+    },
+    {
+      "event_type": "LISTING",
+      "symbol": "ETHUSDT",
+      "canonical_instrument_id": "bybit:linear:ETHUSDT",
+      "event_ms": 1577836800000,
+      "status_after": "Trading"
+    },
+    {
+      "event_type": "LISTING",
+      "symbol": "GHOSTUSDT",
+      "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+      "event_ms": 1609459200000,
+      "status_after": "Trading"
+    },
+    {
+      "event_type": "LISTING",
+      "symbol": "SOLUSDT",
+      "canonical_instrument_id": "bybit:linear:SOLUSDT",
+      "event_ms": 1640995200000,
+      "status_after": "Trading"
+    },
+    {
+      "event_type": "LISTING",
+      "symbol": "THINUSDT",
+      "canonical_instrument_id": "bybit:linear:THINUSDT",
+      "event_ms": 1650000000000,
+      "status_after": "Trading"
+    },
+    {
+      "event_type": "LISTING",
+      "symbol": "PEPEUSDT",
+      "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+      "event_ms": 1704067200000,
+      "status_after": "Trading"
+    },
+    {
+      "event_type": "DELISTING",
+      "symbol": "GHOSTUSDT",
+      "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+      "event_ms": 1725000000000,
+      "status_after": "Delisted"
+    },
+    {
+      "event_type": "LISTING",
+      "symbol": "LATEUSDT",
+      "canonical_instrument_id": "bybit:linear:LATEUSDT",
+      "event_ms": 1735689600000,
+      "status_after": "Trading"
+    }
+  ],
+  "events_checksum": "acc3a56413eccb1cb7f0f0d56c3786fca90f6edc05990cf5b10e53269f8e5ecc"
+}

@@ -1,0 +1,503 @@
+{
+  "schema": "v17_e_historical_universe_survivorship_v1",
+  "schema_version": 1,
+  "generated_at": "2026-08-06T01:36:47Z",
+  "lane": "V17-E",
+  "lane_name": "HISTORICAL_UNIVERSE_AND_SURVIVORSHIP_CONTROL",
+  "program_id": "NEXUS_V17_HISTORICAL_UNIVERSE_SURVIVORSHIP",
+  "status": "PASS",
+  "passed": true,
+  "recommendation": "NEXUS_V17_HISTORICAL_UNIVERSE_SURVIVORSHIP_PASS",
+  "branch": "feature/v17-historical-universe-survivorship",
+  "base_head": "66a0f7827d5709fc09bc8c7495e93a4089eb28de",
+  "commit": "66a0f7827d5709fc09bc8c7495e93a4089eb28de",
+  "lane_head": "66a0f7827d5709fc09bc8c7495e93a4089eb28de",
+  "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v17_e_survivorship",
+  "owned_paths": [
+    "backend/nexus_historical_universe/",
+    "tools/historical_universe/",
+    "tests/historical_universe/",
+    "artifacts/readiness/immutable/v17_historical_universe/"
+  ],
+  "prohibited_paths": [
+    "frontend/",
+    "deploy/",
+    "G:/",
+    "PR26",
+    "PR27",
+    "acceleration_report"
+  ],
+  "hard_bans": [
+    "no_today_survivors_for_whole_history",
+    "no_pre_listing_data",
+    "no_ignoring_delistings",
+    "no_current_liquidity_substitution",
+    "no_exchange_write",
+    "no_mainnet",
+    "no_real_money",
+    "no_pr26_merge",
+    "no_pr27_merge",
+    "no_acceleration_report_edit"
+  ],
+  "execution_mode": "SIMULATED_FAIL_CLOSED_NO_EXCHANGE_WRITE",
+  "evidence_class": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+  "label": "HISTORICAL_UNIVERSE_SURVIVORSHIP_CONTROL_NOT_REAL_TRADING",
+  "exchange_write": false,
+  "mainnet": false,
+  "real_money": false,
+  "pr26_touched": false,
+  "pr27_touched": false,
+  "report_edited": false,
+  "fixture_ids": [
+    "multi_era_membership",
+    "listing_delisting_events",
+    "contract_spec_timeline",
+    "liquidity_pit_binding",
+    "data_completeness_gate"
+  ],
+  "fixtures": [
+    {
+      "fixture_id": "multi_era_membership",
+      "passed": true,
+      "evidence_class": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "ghost_eligible_mid": true,
+      "ghost_eligible_late": false,
+      "late_eligible_mid": false,
+      "late_listed_future": true,
+      "checksums_differ": true
+    },
+    {
+      "fixture_id": "listing_delisting_events",
+      "passed": true,
+      "evidence_class": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "event_count": 8,
+      "ghost_delist_present": true,
+      "late_listing_present": true,
+      "checksum_stable": true
+    },
+    {
+      "fixture_id": "contract_spec_timeline",
+      "passed": true,
+      "evidence_class": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "btc_spec_versions": 2,
+      "pepe_min_notional_bumps": 1,
+      "btc_mid_tick": 0.1,
+      "btc_post_tick": 0.5
+    },
+    {
+      "fixture_id": "liquidity_pit_binding",
+      "passed": true,
+      "evidence_class": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "thin_observation_ms": 1717200000000,
+      "thin_liquidity_score": 0.01,
+      "catalog_checksum": "eeba6e18da058e56eb0c725a34fe3d195eee888c971a7e2e8719412b8c621834",
+      "tamper_detected": true
+    },
+    {
+      "fixture_id": "data_completeness_gate",
+      "passed": true,
+      "evidence_class": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "thin_eligible": false,
+      "thin_completeness": 0.2,
+      "exclusion_reasons": [
+        "LIQUIDITY_BELOW_THRESHOLD",
+        "DATA_INCOMPLETE"
+      ],
+      "instrument_count": 7
+    }
+  ],
+  "fixture_pass_count": 5,
+  "fixture_total_count": 5,
+  "attack_ids": [
+    "today_survivors_for_history",
+    "pre_listing_data",
+    "ignore_delistings",
+    "current_liquidity_substitution"
+  ],
+  "attacks": [
+    {
+      "attack_id": "today_survivors_for_history",
+      "passed": true,
+      "attack_blocked": true,
+      "survivor": false,
+      "severity": "CRITICAL",
+      "detail": "today_survivors_reconstruction_blocked",
+      "evidence": {
+        "attack": {
+          "ok": false,
+          "status": "TODAY_SURVIVORS_FOR_HISTORY",
+          "attack_blocked": true,
+          "dropped_historical": [
+            "GHOSTUSDT"
+          ],
+          "claimed": [
+            "BTCUSDT",
+            "ETHUSDT",
+            "PEPEUSDT",
+            "SOLUSDT"
+          ],
+          "pit_eligible": [
+            "BTCUSDT",
+            "ETHUSDT",
+            "GHOSTUSDT",
+            "PEPEUSDT",
+            "SOLUSDT"
+          ],
+          "today_survivors": [
+            "BTCUSDT",
+            "ETHUSDT",
+            "LATEUSDT",
+            "PEPEUSDT",
+            "SOLUSDT",
+            "THINUSDT"
+          ]
+        },
+        "honest": {
+          "ok": true,
+          "status": "PASS",
+          "attack_blocked": false,
+          "dropped_historical": [],
+          "claimed": [
+            "BTCUSDT",
+            "ETHUSDT",
+            "GHOSTUSDT",
+            "PEPEUSDT",
+            "SOLUSDT"
+          ],
+          "pit_eligible": [
+            "BTCUSDT",
+            "ETHUSDT",
+            "GHOSTUSDT",
+            "PEPEUSDT",
+            "SOLUSDT"
+          ],
+          "today_survivors": [
+            "BTCUSDT",
+            "ETHUSDT",
+            "LATEUSDT",
+            "PEPEUSDT",
+            "SOLUSDT",
+            "THINUSDT"
+          ]
+        },
+        "ghost_in_pit": true,
+        "ghost_in_attack_claim": false,
+        "today_survivors": [
+          "BTCUSDT",
+          "ETHUSDT",
+          "LATEUSDT",
+          "PEPEUSDT",
+          "SOLUSDT",
+          "THINUSDT"
+        ],
+        "pit_eligible": [
+          "BTCUSDT",
+          "ETHUSDT",
+          "GHOSTUSDT",
+          "PEPEUSDT",
+          "SOLUSDT"
+        ]
+      }
+    },
+    {
+      "attack_id": "pre_listing_data",
+      "passed": true,
+      "attack_blocked": true,
+      "survivor": false,
+      "severity": "CRITICAL",
+      "detail": "pre_listing_data_blocked",
+      "evidence": {
+        "attack": {
+          "ok": false,
+          "status": "PRE_LISTING_DATA",
+          "attack_blocked": true,
+          "symbol": "LATEUSDT",
+          "listing_ms": 1735689600000,
+          "as_of_ms": 1717200000000,
+          "claimed_eligible": true,
+          "claimed_data_used": true
+        },
+        "honest": {
+          "ok": true,
+          "status": "PASS",
+          "attack_blocked": false,
+          "symbol": "LATEUSDT",
+          "listing_ms": 1735689600000,
+          "as_of_ms": 1717200000000,
+          "claimed_eligible": false,
+          "claimed_data_used": false
+        },
+        "late_in_eligible": false,
+        "late_not_yet_listed": true
+      }
+    },
+    {
+      "attack_id": "ignore_delistings",
+      "passed": true,
+      "attack_blocked": true,
+      "survivor": false,
+      "severity": "CRITICAL",
+      "detail": "ignore_delistings_blocked",
+      "evidence": {
+        "attack": {
+          "ok": false,
+          "status": "IGNORE_DELISTINGS",
+          "attack_blocked": true,
+          "symbol": "GHOSTUSDT",
+          "delisting_ms": 1725000000000,
+          "as_of_ms": 1733020800000,
+          "claimed_eligible": true
+        },
+        "honest": {
+          "ok": true,
+          "status": "PASS",
+          "attack_blocked": false,
+          "symbol": "GHOSTUSDT",
+          "delisting_ms": 1725000000000,
+          "as_of_ms": 1733020800000,
+          "claimed_eligible": false
+        },
+        "ghost_before_eligible": true,
+        "ghost_after_eligible": false,
+        "ghost_in_delisted_bucket": true
+      }
+    },
+    {
+      "attack_id": "current_liquidity_substitution",
+      "passed": true,
+      "attack_blocked": true,
+      "survivor": false,
+      "severity": "CRITICAL",
+      "detail": "current_liquidity_substitution_blocked",
+      "evidence": {
+        "attack": {
+          "ok": false,
+          "status": "CURRENT_LIQUIDITY_SUBSTITUTION",
+          "attack_blocked": true,
+          "as_of_ms": 1717200000000,
+          "liquidity_observation_ms": 1754438400000,
+          "claimed_liquidity_score": 0.95,
+          "historical_liquidity_score": 0.01,
+          "future_observation": true
+        },
+        "honest": {
+          "ok": true,
+          "status": "PASS",
+          "attack_blocked": false,
+          "as_of_ms": 1717200000000,
+          "liquidity_observation_ms": 1717200000000,
+          "claimed_liquidity_score": 0.01,
+          "historical_liquidity_score": 0.01,
+          "future_observation": false
+        },
+        "historical_liquidity_score": 0.01,
+        "today_liquidity_score": 0.95,
+        "pit_liquidity_score": 0.01,
+        "thin_excluded": true
+      }
+    }
+  ],
+  "attack_blocked_count": 4,
+  "attack_pass_count": 4,
+  "attack_total_count": 4,
+  "survivors": [],
+  "survivor_count": 0,
+  "era_summaries": {
+    "ERA_2024_06_01_MS": {
+      "as_of_ms": 1717200000000,
+      "coins_existing": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "GHOSTUSDT",
+        "PEPEUSDT",
+        "SOLUSDT",
+        "THINUSDT"
+      ],
+      "contracts_listed": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "GHOSTUSDT",
+        "PEPEUSDT",
+        "SOLUSDT",
+        "THINUSDT"
+      ],
+      "contracts_not_yet_listed": [
+        "LATEUSDT"
+      ],
+      "contracts_delisted": [],
+      "historical_eligible_universe": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "GHOSTUSDT",
+        "PEPEUSDT",
+        "SOLUSDT"
+      ],
+      "historical_excluded_universe": [
+        "LATEUSDT",
+        "THINUSDT"
+      ],
+      "universe_checksum": "ec34dc28fd9a644392f33ecc33d9febb404475b9c85bddc7d219af9e2033e0c7"
+    },
+    "ERA_2024_12_01_MS": {
+      "as_of_ms": 1733020800000,
+      "coins_existing": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "GHOSTUSDT",
+        "PEPEUSDT",
+        "SOLUSDT",
+        "THINUSDT"
+      ],
+      "contracts_listed": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "PEPEUSDT",
+        "SOLUSDT",
+        "THINUSDT"
+      ],
+      "contracts_not_yet_listed": [
+        "LATEUSDT"
+      ],
+      "contracts_delisted": [
+        "GHOSTUSDT"
+      ],
+      "historical_eligible_universe": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "PEPEUSDT",
+        "SOLUSDT"
+      ],
+      "historical_excluded_universe": [
+        "GHOSTUSDT",
+        "LATEUSDT",
+        "THINUSDT"
+      ],
+      "universe_checksum": "5bd80d776b63031d2084a948a6c77d24824c15364eff30944305b723031a7c86"
+    },
+    "ERA_2025_03_01_MS": {
+      "as_of_ms": 1740787200000,
+      "coins_existing": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "GHOSTUSDT",
+        "LATEUSDT",
+        "PEPEUSDT",
+        "SOLUSDT",
+        "THINUSDT"
+      ],
+      "contracts_listed": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "LATEUSDT",
+        "PEPEUSDT",
+        "SOLUSDT",
+        "THINUSDT"
+      ],
+      "contracts_not_yet_listed": [],
+      "contracts_delisted": [
+        "GHOSTUSDT"
+      ],
+      "historical_eligible_universe": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "LATEUSDT",
+        "PEPEUSDT",
+        "SOLUSDT"
+      ],
+      "historical_excluded_universe": [
+        "GHOSTUSDT",
+        "THINUSDT"
+      ],
+      "universe_checksum": "8c6ba2e29047d3049d00e62f73a1d2d36f9e4a408b1026a57d84a237ba482205"
+    }
+  },
+  "listing_delisting_events": {
+    "event_count": 8,
+    "events_checksum": "acc3a56413eccb1cb7f0f0d56c3786fca90f6edc05990cf5b10e53269f8e5ecc",
+    "events": [
+      {
+        "event_type": "LISTING",
+        "symbol": "BTCUSDT",
+        "canonical_instrument_id": "bybit:linear:BTCUSDT",
+        "event_ms": 1577836800000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "ETHUSDT",
+        "canonical_instrument_id": "bybit:linear:ETHUSDT",
+        "event_ms": 1577836800000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "GHOSTUSDT",
+        "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+        "event_ms": 1609459200000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "SOLUSDT",
+        "canonical_instrument_id": "bybit:linear:SOLUSDT",
+        "event_ms": 1640995200000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "THINUSDT",
+        "canonical_instrument_id": "bybit:linear:THINUSDT",
+        "event_ms": 1650000000000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "PEPEUSDT",
+        "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+        "event_ms": 1704067200000,
+        "status_after": "Trading"
+      },
+      {
+        "event_type": "DELISTING",
+        "symbol": "GHOSTUSDT",
+        "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+        "event_ms": 1725000000000,
+        "status_after": "Delisted"
+      },
+      {
+        "event_type": "LISTING",
+        "symbol": "LATEUSDT",
+        "canonical_instrument_id": "bybit:linear:LATEUSDT",
+        "event_ms": 1735689600000,
+        "status_after": "Trading"
+      }
+    ]
+  },
+  "contract_spec_timeline": {
+    "entry_count": 9,
+    "timeline_checksum": "cc6e61c1dc78cabe13b4d20bcc76bf69fca55cf4b580d387120d4ff9164bf518"
+  },
+  "fixture_catalog_checksum": "eeba6e18da058e56eb0c725a34fe3d195eee888c971a7e2e8719412b8c621834",
+  "today_survivor_symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "LATEUSDT",
+    "PEPEUSDT",
+    "SOLUSDT",
+    "THINUSDT"
+  ],
+  "builds": [
+    "Historical Eligible Universe",
+    "Historical Excluded Universe",
+    "Listing/Delisting Events",
+    "Contract Specification Timeline"
+  ],
+  "metrics": {
+    "fixture_pass_count": 5,
+    "attack_blocked_count": 4,
+    "survivor_count": 0,
+    "exchange_write_attempt_count": 0,
+    "mainnet_client_created_count": 0
+  },
+  "evidence_checksum": "8b3daba1f1ec23b14afdf03cce9d56f915ebd0bdb482557507fd00f17a8a9765"
+}
