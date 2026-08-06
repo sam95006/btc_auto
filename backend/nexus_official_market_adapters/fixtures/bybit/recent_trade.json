@@ -1,0 +1,28 @@
+{
+  "retCode": 0,
+  "retMsg": "OK",
+  "result": {
+    "category": "linear",
+    "list": [
+      {
+        "execId": "abc-1",
+        "symbol": "LINKUSDT",
+        "price": "14.532",
+        "size": "12.5",
+        "side": "Buy",
+        "time": "1700000001000",
+        "isBlockTrade": false
+      },
+      {
+        "execId": "abc-2",
+        "symbol": "LINKUSDT",
+        "price": "14.531",
+        "size": "8.0",
+        "side": "Sell",
+        "time": "1700000000500",
+        "isBlockTrade": false
+      }
+    ]
+  },
+  "time": 1700000002000
+}

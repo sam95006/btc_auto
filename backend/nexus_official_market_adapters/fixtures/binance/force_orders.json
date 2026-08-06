@@ -1,0 +1,12 @@
+[
+  {
+    "symbol": "BTCUSDT",
+    "side": "SELL",
+    "price": "40000.00",
+    "origQty": "0.500",
+    "executedQty": "0.500",
+    "averagePrice": "39990.00",
+    "status": "FILLED",
+    "time": 1699999900000
+  }
+]

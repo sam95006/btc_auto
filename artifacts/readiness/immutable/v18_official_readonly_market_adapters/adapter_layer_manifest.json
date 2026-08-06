@@ -1,0 +1,41 @@
+{
+  "schema": "v18_a_official_readonly_market_adapters_artifact_v1",
+  "lane": "V18-A",
+  "description": "Official public read-only market adapters (Bybit + Binance implemented; others contract-only).",
+  "official_adapters": [
+    "bybit_public_v5",
+    "binance_usdm_public"
+  ],
+  "contract_only_providers": [
+    "okx_public",
+    "coinbase_exchange_public",
+    "kraken_public"
+  ],
+  "capabilities": [
+    "instrument_catalog",
+    "ticker",
+    "mark_index_price",
+    "ohlcv",
+    "public_trades",
+    "funding",
+    "open_interest",
+    "order_book_summary",
+    "liquidation",
+    "listing_status",
+    "contract_specs"
+  ],
+  "hard_bans": [
+    "no_glassnode_paywall_scrape",
+    "no_coinglass_paywall_scrape",
+    "no_messari_paywall_scrape",
+    "no_rate_limit_bypass",
+    "no_unauthorized_data",
+    "no_fill_missing_with_zero",
+    "no_treat_rest_as_always_correct",
+    "no_api_key_for_public_endpoints",
+    "no_secret",
+    "no_account_order_wallet_endpoints",
+    "no_exchange_write"
+  ],
+  "data_modes": ["LIVE_READ_ONLY", "FIXTURE"]
+}
