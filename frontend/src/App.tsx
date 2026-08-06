@@ -32,10 +32,13 @@ import {
   MemberMembershipPage,
   MemberNexAiPage,
   MemberNotificationSettingsPage,
+  MemberOrganizationPage,
   MemberOutcomeReviewPage,
   MemberPrivacyPage,
   MemberRiskConditionsPage,
+  MemberScannerPage,
   MemberThesisMonitorPage,
+  MemberWatchlistPage,
 } from "./pages/member";
 
 function MemberShell() {
@@ -51,6 +54,9 @@ function MemberShell() {
             <Routes>
               <Route path="/" element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<MemberHomePage />} />
+              <Route path="/scanner" element={<MemberScannerPage />} />
+              <Route path="/watchlist" element={<MemberWatchlistPage />} />
+              <Route path="/organization" element={<MemberOrganizationPage />} />
               <Route path="/market" element={<MemberMarketOverviewPage />} />
               <Route path="/overview" element={<Navigate to="/market" replace />} />
               <Route path="/intelligence" element={<MemberIntelligencePage />} />

@@ -40,6 +40,18 @@ FRESHNESS_LABELS: tuple[str, ...] = (
     "LIVE_READ_ONLY",
 )
 
+# V18.2 UI data-state truth (member surfaces).
+UI_DATA_STATES: tuple[str, ...] = (
+    "LIVE",
+    "LIVE_PARTIAL_DEGRADED",
+    "DELAYED",
+    "STALE",
+    "STOPPED",
+    "UNAVAILABLE",
+    "FIXTURE",
+    "DEMO_DATA",
+)
+
 # Required snapshot fields (Founder §5.1).
 REQUIRED_SNAPSHOT_FIELDS: tuple[str, ...] = (
     "runtime_state",

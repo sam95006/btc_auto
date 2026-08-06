@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
 import { useI18n, useT, type LocaleCode } from "../i18n";
-import { MEMBER_ACCOUNT_SUBNAV, MEMBER_NAV } from "../member/routes";
+import { MEMBER_ACCOUNT_SUBNAV, MEMBER_NAV, MEMBER_UTILITY_NAV } from "../member/routes";
 
 type NavItem = { to: string; label: string; short: string };
 
@@ -90,6 +90,11 @@ export function SidebarNav() {
     label: t(i.labelKey),
     short: t(i.shortKey),
   }));
+  const utility: NavItem[] = MEMBER_UTILITY_NAV.map((i) => ({
+    to: i.to,
+    label: t(i.labelKey),
+    short: t(i.shortKey),
+  }));
   const account: NavItem[] = MEMBER_ACCOUNT_SUBNAV.map((i) => ({
     to: i.to,
     label: t(i.labelKey),
@@ -108,8 +113,12 @@ export function SidebarNav() {
           <LocaleSwitcher />
         </div>
         <div className="nav-group">
-          <div className="nav-label">{t("brand.decisionIntegrity")}</div>
+          <div className="nav-label">{t("nav.v182.primaryLabel")}</div>
           <Links items={primary} />
+        </div>
+        <div className="nav-group">
+          <div className="nav-label">{t("nav.v182.utilityLabel")}</div>
+          <Links items={utility} />
         </div>
         <div className="nav-group">
           <button

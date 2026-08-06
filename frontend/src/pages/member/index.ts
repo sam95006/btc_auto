@@ -1,4 +1,7 @@
 export { MemberHomePage } from "./MemberHomePage";
+export { MemberScannerPage } from "./MemberScannerPage";
+export { MemberWatchlistPage } from "./MemberWatchlistPage";
+export { MemberOrganizationPage } from "./MemberOrganizationPage";
 export { MemberMarketOverviewPage } from "./MemberMarketOverviewPage";
 export { MemberIntelligencePage } from "./MemberIntelligencePage";
 export { MemberDecisionFeedPage } from "./MemberDecisionFeedPage";
