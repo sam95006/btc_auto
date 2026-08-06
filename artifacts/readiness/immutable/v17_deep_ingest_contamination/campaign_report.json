@@ -1,5 +1,5 @@
 {
-  "HEAD": "6d854e683464095befba4927e58976a4ac01c16c",
+  "HEAD": "b3806ce70b6a7dffbc1d04e3a6134288874e2ddc",
   "base": "a43317e2f85afde75e850ffa4ef465c834fd7a6a",
   "branch": "feature/v17-deep-ingest-contamination",
   "claims_15y_history_downloaded": false,
@@ -266,9 +266,9 @@
         "entry_count": 8,
         "rss_available": false,
         "rss_bytes": null,
-        "tracemalloc_current_bytes": 16019,
-        "tracemalloc_peak_bytes": 411871,
-        "tracemalloc_peak_delta_bytes": 411871
+        "tracemalloc_current_bytes": 15901,
+        "tracemalloc_peak_bytes": 411753,
+        "tracemalloc_peak_delta_bytes": 411753
       },
       "schema": "v17_deep_bounded_resource_smoke_v1",
       "status": "PASS"

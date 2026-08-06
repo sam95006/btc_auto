@@ -1,5 +1,5 @@
 {
-  "HEAD": "6d854e683464095befba4927e58976a4ac01c16c",
+  "HEAD": "b3806ce70b6a7dffbc1d04e3a6134288874e2ddc",
   "coverage": {
     "api_rate_limit_and_provider_outage_failover": true,
     "bounded_memory_disk_profiling_smoke": true,

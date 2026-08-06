@@ -16,9 +16,9 @@
     "entry_count": 8,
     "rss_available": false,
     "rss_bytes": null,
-    "tracemalloc_current_bytes": 16019,
-    "tracemalloc_peak_bytes": 411871,
-    "tracemalloc_peak_delta_bytes": 411871
+    "tracemalloc_current_bytes": 15901,
+    "tracemalloc_peak_bytes": 411753,
+    "tracemalloc_peak_delta_bytes": 411753
   },
   "schema": "v17_deep_bounded_resource_smoke_v1",
   "status": "PASS"
