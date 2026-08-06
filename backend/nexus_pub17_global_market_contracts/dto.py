@@ -73,6 +73,16 @@ class FabricatedLiveValueError(ValueError):
     """Raised when a caller attempts to claim LIVE with fabricated / missing bind."""
 
 
+# License postures that must never surface as Live on member UI.
+_LICENSE_LIVE_FORBIDDEN_STATUSES = frozenset(
+    {
+        "LICENSE_REVIEW_REQUIRED",
+        "TRAINING_FORBIDDEN",
+        "REDISTRIBUTION_FORBIDDEN",
+    }
+)
+
+
 def _assert_no_fake_live(
     *,
     mode: str,
@@ -80,6 +90,7 @@ def _assert_no_fake_live(
     status: str,
     freshness: str,
     live_bind_attested: bool,
+    public_display_allowed: bool | None = None,
 ) -> None:
     if mode == "LIVE" and not live_bind_attested:
         raise FabricatedLiveValueError("fake_live_mode_without_real_bind")
@@ -94,6 +105,14 @@ def _assert_no_fake_live(
     if mode == "LIVE" and status == "CONTRACT_READY" and not live_bind_attested:
         # CONTRACT_READY alone is not a Live bind.
         raise FabricatedLiveValueError("contract_ready_is_not_live")
+    # Restricted license postures must never leak to member UI as Live —
+    # even if an attacker forges live_bind_attested.
+    if status in _LICENSE_LIVE_FORBIDDEN_STATUSES and (
+        mode == "LIVE" or freshness == "LIVE"
+    ):
+        raise FabricatedLiveValueError(f"license_status_cannot_be_live:{status}")
+    if public_display_allowed is False and (mode == "LIVE" or freshness == "LIVE"):
+        raise FabricatedLiveValueError("public_display_forbidden_cannot_be_live")
 
 
 def build_normalized_dto(
@@ -114,8 +133,17 @@ def build_normalized_dto(
     freshness=UNAVAILABLE|PROVIDER_REQUIRED. Live only when live_bind_attested.
     """
     status = str(contract.get("status") or "")
+    # TRAINING_FORBIDDEN / REDISTRIBUTION_FORBIDDEN are private registry
+    # postures; refuse them on the public DTO path (must not become Live).
+    if status in {"TRAINING_FORBIDDEN", "REDISTRIBUTION_FORBIDDEN"}:
+        raise FabricatedLiveValueError(f"private_license_status_refused:{status}")
     if status not in CONTRACT_STATUSES:
         raise ValueError(f"bad_status:{status}")
+
+    vis = contract.get("license_visibility") if isinstance(contract.get("license_visibility"), dict) else {}
+    public_display_allowed = contract.get("public_display_allowed")
+    if public_display_allowed is None and isinstance(vis, dict):
+        public_display_allowed = vis.get("public_display_allowed")
 
     retrieved = retrieved_at or utc_iso()
     if status == "PROVIDER_REQUIRED":
@@ -129,6 +157,20 @@ def build_normalized_dto(
         resolved_value = None
         resolved_as_of = None
         resolved_unit = None
+    elif status == "LICENSE_REVIEW_REQUIRED":
+        # Adapter contract OK only — never Live chrome / Live values on member UI.
+        if mode == "LIVE" or freshness == "LIVE":
+            raise FabricatedLiveValueError("license_review_cannot_be_live")
+        resolved_mode = mode or "CONTRACT"
+        if resolved_mode == "LIVE":
+            raise FabricatedLiveValueError("license_review_cannot_be_live")
+        resolved_freshness = freshness or "BLOCKED"
+        resolved_availability = availability or "BLOCKED"
+        resolved_value = None
+        resolved_as_of = None
+        resolved_unit = None
+        # Forged live_bind_attested must still fail closed for this status.
+        live_bind_attested = False
     else:
         resolved_mode = mode or "CONTRACT"
         resolved_freshness = freshness or "UNAVAILABLE"
@@ -143,6 +185,9 @@ def build_normalized_dto(
         status=status,
         freshness=resolved_freshness,
         live_bind_attested=live_bind_attested,
+        public_display_allowed=bool(public_display_allowed)
+        if public_display_allowed is not None
+        else None,
     )
 
     if resolved_mode not in MODES:
@@ -220,10 +265,20 @@ def validate_dto(dto: dict[str, Any]) -> list[str]:
             errors.append("provider_required_live_mode")
         if freshness == "LIVE":
             errors.append("provider_required_live_freshness")
+    if status in {"LICENSE_REVIEW_REQUIRED", "TRAINING_FORBIDDEN", "REDISTRIBUTION_FORBIDDEN"}:
+        if mode == "LIVE":
+            errors.append(f"license_status_live_mode:{status}")
+        if freshness == "LIVE":
+            errors.append(f"license_status_live_freshness:{status}")
+        if value is not None and mode == "LIVE":
+            errors.append(f"license_status_live_value:{status}")
     if mode == "LIVE" and value is None:
         errors.append("live_null_value")
     if mode == "CONTRACT" and freshness == "LIVE":
         errors.append("contract_mode_live_freshness")
     if dto.get("read_only") is False:
         errors.append("not_read_only")
+    vis = dto.get("license_visibility") if isinstance(dto.get("license_visibility"), dict) else {}
+    if vis.get("public_display_allowed") is False and mode == "LIVE":
+        errors.append("public_display_forbidden_live_mode")
     return errors

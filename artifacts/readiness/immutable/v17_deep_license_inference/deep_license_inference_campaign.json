@@ -1,0 +1,329 @@
+{
+  "attack_count": 18,
+  "branch": "feature/v17-deep-license-inference-attacks",
+  "coverage_areas": [
+    "license_enforcement_attacks",
+    "public_inference_leakage_attacks",
+    "schema_fuzzing_public_dto_allowlist",
+    "feature_reproducibility_hash_import_boundary"
+  ],
+  "generated_at": "2026-08-06T02:29:28Z",
+  "hard_ban_inventory": {
+    "exchange_write": false,
+    "hard_bans": [
+      "no_restricted_license_as_live",
+      "no_license_review_member_live",
+      "no_training_forbidden_member_live",
+      "no_redistribution_forbidden_member_live",
+      "no_private_threshold_inference",
+      "inference_attack_survivors_must_be_0",
+      "no_allowlist_schema_smuggle",
+      "no_private_gold_factory_exposure_in_public_tree",
+      "no_real_money",
+      "no_mainnet",
+      "no_exchange_write",
+      "no_pr26_merge",
+      "no_pr27_merge",
+      "no_acceleration_report_edit",
+      "no_auto_integrate"
+    ],
+    "mainnet": false,
+    "pr26_merged": false,
+    "pr27_merged": false,
+    "private_gold_factory_exposed_in_public_tree": false,
+    "real_money": false,
+    "report_edited": false,
+    "restricted_license_as_live": false
+  },
+  "hard_bans": [
+    "no_restricted_license_as_live",
+    "no_license_review_member_live",
+    "no_training_forbidden_member_live",
+    "no_redistribution_forbidden_member_live",
+    "no_private_threshold_inference",
+    "inference_attack_survivors_must_be_0",
+    "no_allowlist_schema_smuggle",
+    "no_private_gold_factory_exposure_in_public_tree",
+    "no_real_money",
+    "no_mainnet",
+    "no_exchange_write",
+    "no_pr26_merge",
+    "no_pr27_merge",
+    "no_acceleration_report_edit",
+    "no_auto_integrate"
+  ],
+  "lane": "V17-DEEP-LICENSE-INFERENCE",
+  "lane_name": "LICENSE_ENFORCEMENT_AND_PUBLIC_INFERENCE",
+  "non_claims": [
+    "No PR26/PR27 merge",
+    "No exchange/mainnet/real-money capability",
+    "No private gold factory copied into public tree",
+    "Private tip accessed via import boundary only when present",
+    "No acceleration report edit"
+  ],
+  "private_tip_sha": "a43317e2f85afde75e850ffa4ef465c834fd7a6a",
+  "program_id": "NEXUS_V17_DEEP_LICENSE_INFERENCE",
+  "public_base_sha": "41c0fad533df4e63ed738b8c583f75564aa58c8e",
+  "redteam_schema": "v17_deep_license_inference_redteam_v1",
+  "schema": "v17_deep_license_inference_campaign_v1",
+  "status": "PASS",
+  "suites": {
+    "feature_repro_boundary": {
+      "attack_count": 2,
+      "results": [
+        {
+          "attack_blocked": true,
+          "attack_id": "public_tree_no_gold_factory_vendor",
+          "detail": "public tree does not vendor gold factory",
+          "disposition": "FIXED",
+          "evidence": {
+            "public_root": "D:\\NEXUS_RUNTIME\\worktrees\\v17_deep_license_inference"
+          },
+          "severity": "HIGH",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "feature_repro_hash_import_boundary",
+          "detail": "private gold factory hash reproducible via import boundary",
+          "disposition": "FIXED",
+          "evidence": {
+            "copied_into_public_tree": false,
+            "hash": "sha256:1aefca37517811a8dbe776a9b0880506151f3ffb8f9beac9e6a8b8099e59a804",
+            "hashing_path": "D:\\NEXUS_RUNTIME\\worktrees\\v17_single_tip_integration\\backend\\nexus_gold_feature_factory\\hashing.py",
+            "private_tip_sha": "a43317e2f85afde75e850ffa4ef465c834fd7a6a"
+          },
+          "severity": "HIGH",
+          "survivor": false
+        }
+      ],
+      "schema": "v17_deep_feature_repro_boundary_v1",
+      "status": "PASS",
+      "survivor_count": 0,
+      "survivors": []
+    },
+    "license_enforcement": {
+      "attack_count": 6,
+      "results": [
+        {
+          "attack_blocked": true,
+          "attack_id": "license_review_required_as_live",
+          "detail": "blocked:HardBanViolation:restricted_license_as_live_banned:LICENSE_REVIEW_REQUIRED",
+          "disposition": "FIXED",
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "training_forbidden_as_live",
+          "detail": "blocked:HardBanViolation:restricted_license_as_live_banned:TRAINING_FORBIDDEN",
+          "disposition": "FIXED",
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "redistribution_forbidden_as_live",
+          "detail": "blocked:HardBanViolation:restricted_license_as_live_banned:REDISTRIBUTION_FORBIDDEN",
+          "disposition": "FIXED",
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "public_display_false_live_smuggle",
+          "detail": "blocked:FabricatedLiveValueError:public_display_forbidden_cannot_be_live",
+          "disposition": "FIXED",
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "license_review_value_smuggle",
+          "detail": "license review stayed non-Live",
+          "disposition": "FIXED",
+          "evidence": {
+            "mode": "CONTRACT",
+            "value": null
+          },
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "member_projection_license_chrome",
+          "detail": "all_restricted_blocked",
+          "disposition": "FIXED",
+          "evidence": {
+            "survivors": []
+          },
+          "severity": "CRITICAL",
+          "survivor": false
+        }
+      ],
+      "schema": "v17_deep_license_enforcement_redteam_v1",
+      "status": "PASS",
+      "survivor_count": 0,
+      "survivors": []
+    },
+    "public_inference": {
+      "attack_count": 5,
+      "results": [
+        {
+          "attack_blocked": true,
+          "attack_id": "baseline_pub17c_inference_redteam",
+          "detail": "baseline survivors=0",
+          "disposition": "FIXED",
+          "evidence": {
+            "attack_count": 5,
+            "survivor_count": 0
+          },
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "adaptive_ternary_search",
+          "detail": "200 adaptive probes did not recover private threshold",
+          "disposition": "FIXED",
+          "evidence": {
+            "queries": 200,
+            "suggestions": [
+              "WAIT"
+            ]
+          },
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "delta_response_oracle",
+          "detail": "threshold variants produce identical public digests",
+          "disposition": "FIXED",
+          "evidence": {
+            "thresholds": [
+              0.11,
+              0.33,
+              0.55,
+              0.77,
+              0.99
+            ]
+          },
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "nested_context_exfiltration",
+          "detail": "context smuggle keys dropped; secret not echoed",
+          "disposition": "FIXED",
+          "evidence": {
+            "keys_probed": [
+              "entry_threshold",
+              "proprietary_thresholds",
+              "exact_proprietary_threshold",
+              "private_thresholds",
+              "strategy_parameters"
+            ]
+          },
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "float_precision_ladder",
+          "detail": "precision ladder yields identical public digests",
+          "disposition": "FIXED",
+          "evidence": {
+            "probes": 9
+          },
+          "severity": "CRITICAL",
+          "survivor": false
+        }
+      ],
+      "schema": "v17_deep_inference_redteam_v1",
+      "status": "PASS",
+      "survivor_count": 0,
+      "survivors": []
+    },
+    "schema_fuzz": {
+      "attack_count": 5,
+      "results": [
+        {
+          "attack_blocked": true,
+          "attack_id": "dto_extra_keys",
+          "detail": "dirty DTO rejected: ['exchange_write_true']",
+          "disposition": "FIXED",
+          "evidence": {
+            "error_count": 1
+          },
+          "severity": "HIGH",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "dto_type_mutations",
+          "detail": "type mutations contained",
+          "disposition": "FIXED",
+          "evidence": {
+            "missed": [],
+            "mutations": [
+              "schema",
+              "fabricated",
+              "license_visibility",
+              "provenance",
+              "mode"
+            ]
+          },
+          "severity": "HIGH",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "allowlist_smuggle",
+          "detail": "allow-list dropped banned/unknown keys",
+          "disposition": "FIXED",
+          "evidence": {
+            "kept": [
+              "ai_public_suggestion",
+              "evidence_summary",
+              "market_state",
+              "payload"
+            ]
+          },
+          "severity": "HIGH",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "projection_roundtrip_unknown",
+          "detail": "projection keys \u2286 allow-list",
+          "disposition": "FIXED",
+          "evidence": {
+            "key_count": 30
+          },
+          "severity": "HIGH",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "dto_live_null_invariants",
+          "detail": "all DTOs valid",
+          "disposition": "FIXED",
+          "evidence": {
+            "bad": [],
+            "dto_count": 13
+          },
+          "severity": "HIGH",
+          "survivor": false
+        }
+      ],
+      "schema": "v17_deep_schema_fuzz_redteam_v1",
+      "status": "PASS",
+      "survivor_count": 0,
+      "survivors": []
+    }
+  },
+  "survivor_count": 0,
+  "survivors": []
+}
