@@ -1,8 +1,8 @@
 {
-  "HEAD": "a43317e2f85afde75e850ffa4ef465c834fd7a6a",
+  "HEAD": "360ee995d090623fa726590f449307fa98d2843b",
   "attack_count": 89,
   "blocked_count": 89,
-  "campaign_checksum": "eb31e0fb2b55ce5837fcda33ee5da94d45723e9bb7e7e6044307e75f782f99f3",
+  "campaign_checksum": "acb0777eaa9e9e756e0ce384569edf9ec1916984e5015a1e4082e87b981171eb",
   "coverage_areas": [
     "property_mutation_as_known_at_revision",
     "timestamp_boundary_dst_utc",
