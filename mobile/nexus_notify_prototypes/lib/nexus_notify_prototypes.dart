@@ -5,5 +5,6 @@ library nexus_notify_prototypes;
 export 'src/alert_kinds.dart';
 export 'src/deep_link.dart';
 export 'src/preferences.dart';
+export 'src/pub18_alert_engine.dart';
 export 'src/push_stub.dart';
 export 'src/widget_models.dart';
