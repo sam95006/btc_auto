@@ -2,7 +2,6 @@ import { NavLink } from "react-router-dom";
 import { useState } from "react";
 import { useI18n, useT, type LocaleCode } from "../i18n";
 import { usePublicEntitlements } from "../member/public_entitlements_v18_2";
-import { isPreviewEntitlementReviewAvailable } from "../member/previewEntitlementReview";
 import { usePreviewReviewPlan } from "../member/usePreviewReviewPlan";
 import {
   ENTERPRISE_ACTUAL_PANEL_NAV_V18_2_1,
@@ -110,7 +109,7 @@ export function ActualPanelSidebarNav() {
   const previewPlan = usePreviewReviewPlan("FREE");
   const { dto } = usePublicEntitlements(previewPlan);
   const plan = dto?.plan ?? previewPlan;
-  const showReviewLink = isPreviewEntitlementReviewAvailable();
+  // Membership review is preview-route only (/preview/v18_2_1/review) — not normal sidebar.
   const showOrg = plan === "ENTERPRISE";
 
   const primary: NavItem[] = PRIMARY_ACTUAL_PANEL_NAV_V18_2_1.map((i) => ({
@@ -136,6 +135,9 @@ export function ActualPanelSidebarNav() {
     short: t(i.labelKey),
   }));
 
+  const accountPaths = account.map((a) => a.to);
+  const utilityDedup = utility.filter((u) => !accountPaths.includes(u.to));
+
   return (
     <>
       <nav className="sidebar-nav sidebar-nav-compact nx-nav-member" aria-label={t("a11y.mainNav")}>
@@ -150,20 +152,10 @@ export function ActualPanelSidebarNav() {
         </div>
         <div className="nav-group">
           <div className="nav-label">{t("nav.v182.utilityLabel")}</div>
-          <Links items={utility} />
-          {showReviewLink ? (
-            <NavLink
-              to="/preview/v18_2_1/review"
-              className={({ isActive }) => (isActive ? "active" : undefined)}
-              data-testid="nav-membership-review"
-            >
-              <span className="nav-text-full">Membership review</span>
-              <span className="nav-text-short">Review</span>
-            </NavLink>
-          ) : null}
+          <Links items={utilityDedup} />
         </div>
         {enterprise.length ? (
-          <div className="nav-group">
+          <div className="nav-group" data-testid="nav-enterprise-org">
             <div className="nav-label">{t("nav.v182.enterpriseLabel")}</div>
             <Links items={enterprise} />
           </div>
@@ -179,7 +171,7 @@ export function ActualPanelSidebarNav() {
             {t("a11y.accountNav")} {accountOpen ? "▾" : "▸"}
           </button>
           {accountOpen ? (
-            <div id="actual-panel-account-nav">
+            <div id="actual-panel-account-nav" data-testid="nav-account-once">
               <Links items={account} />
             </div>
           ) : null}

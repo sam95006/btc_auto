@@ -14,15 +14,23 @@ test.describe("V18.2.1 actual panel preview", () => {
     await expect(page.getByTestId("opportunities-v1821")).toBeVisible();
   });
 
-  test("overview has six primary sections", async ({ page }) => {
+  test("overview has six primary product sections", async ({ page }) => {
     await page.goto("/overview?member_surface_v18_2_1=1");
     await expect(page.getByTestId("actual-panel-overview")).toBeVisible();
+    await expect(page.getByTestId("overview-global-header")).toBeVisible();
     await expect(page.getByTestId("overview-ticker")).toBeVisible();
-    await expect(page.getByTestId("overview-status-strip")).toBeVisible();
-    await expect(page.getByTestId("top-opportunities")).toBeVisible();
+    await expect(page.getByTestId("overview-market-hero")).toBeVisible();
     await expect(page.getByTestId("decision-funnel")).toBeVisible();
+    await expect(page.getByTestId("eligible-blocked-state")).toBeVisible();
+    await expect(page.getByTestId("top-opportunities")).toBeVisible();
     await expect(page.getByTestId("critical-alerts")).toBeVisible();
-    await expect(page.getByTestId("ask-ai")).toBeVisible();
+  });
+
+  test("density toggle uses 簡潔/專業", async ({ page }) => {
+    await page.goto("/overview?member_surface_v18_2_1=1");
+    const toggle = page.getByTestId("ui-density-toggle").first();
+    await expect(toggle.getByRole("button", { name: "簡潔" })).toBeVisible();
+    await expect(toggle.getByRole("button", { name: "專業" })).toBeVisible();
   });
 
   test("anomalies redirects to alerts", async ({ page }) => {

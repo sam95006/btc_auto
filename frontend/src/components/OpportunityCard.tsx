@@ -16,9 +16,13 @@ type Props = {
   defaultExpanded?: boolean;
 };
 
+function unavailable(v: unknown): boolean {
+  return v == null || v === "" || (typeof v === "number" && Number.isNaN(v));
+}
+
 /**
- * Product 7 Opportunity Card — evidence / contradicting / risk / invalidation / freshness.
- * Never coerces null or missing provider fields to numeric 0.
+ * Opportunity card — SIMPLE: Decision → Why → Risk → Invalidation → Freshness.
+ * Missing fields show UNAVAILABLE (never coerce to 0).
  */
 export function OpportunityCard({ candidate: c, simple = true, defaultExpanded = false }: Props) {
   const [open, setOpen] = useState(defaultExpanded);
@@ -30,7 +34,7 @@ export function OpportunityCard({ candidate: c, simple = true, defaultExpanded =
       ? "BLOCKED_OVEREXTENDED"
       : c.stage === "INSUFFICIENT_DATA"
         ? "PENDING_DATA"
-        : c.riskScore >= 70
+        : !unavailable(c.riskScore) && (c.riskScore as number) >= 70
           ? "ELEVATED_RISK"
           : "PASS_OBSERVE";
   const doNotChase =
@@ -44,6 +48,68 @@ export function OpportunityCard({ candidate: c, simple = true, defaultExpanded =
   const opp = c.opportunityScore;
   const conf = c.confirmationScore;
   const risk = c.riskScore;
+
+  const decisionText =
+    c.side === "LONG" || c.side === "SHORT"
+      ? `${sideLabelZh(c.side)} · ${STAGE_LABEL_ZH[c.stage] || c.stage}`
+      : "方向待確認";
+  const decisionClass =
+    c.side === "LONG" ? "long" : c.side === "SHORT" ? "short" : "unavailable";
+
+  const riskText = unavailable(risk)
+    ? "UNAVAILABLE"
+    : `${fmtNum(risk)}${(risk as number) >= 70 ? " · 偏高" : ""}`;
+  const invalidationText = displayOrPending(invalidation, "UNAVAILABLE");
+  const freshText = freshnessLabel(c.freshness) || "UNAVAILABLE";
+
+  if (simple) {
+    return (
+      <article
+        className={`nx-opp-card nx-opp-v1827-simple side-${c.side.toLowerCase()}`}
+        aria-label={`${c.symbol} opportunity`}
+        data-testid="opp-simple-card"
+      >
+        <div className="nx-opp-card-head">
+          <Link to={`/market/${c.symbol}`} className="nx-opp-sym mono">
+            {c.symbol.replace("USDT", "")}
+          </Link>
+          <FavoriteToggle symbol={c.symbol} />
+          <span className={`nx-side-mark side-${c.side.toLowerCase()}`}>
+            {c.side === "LONG" ? "▲" : c.side === "SHORT" ? "▼" : "●"}
+          </span>
+        </div>
+        <div className="nx-opp-simple-flow">
+          <div className="nx-opp-flow-row">
+            <span className="flow-k">決策</span>
+            <p className={`flow-v ${decisionClass}`}>{decisionText}</p>
+          </div>
+          <div className="nx-opp-flow-row">
+            <span className="flow-k">原因</span>
+            <p className="flow-v">{whyNow}</p>
+          </div>
+          <div className="nx-opp-flow-row">
+            <span className="flow-k">風險</span>
+            <p className={`flow-v ${unavailable(risk) ? "unavailable" : (risk as number) >= 70 ? "risk-hot" : ""}`}>
+              {riskText}
+            </p>
+          </div>
+          <div className="nx-opp-flow-row">
+            <span className="flow-k">失效</span>
+            <p className={`flow-v ${invalidationText === "UNAVAILABLE" ? "unavailable" : ""}`}>
+              {invalidationText}
+            </p>
+          </div>
+          <div className="nx-opp-flow-row">
+            <span className="flow-k">新鮮度</span>
+            <p className="flow-v">{freshText}</p>
+          </div>
+        </div>
+        <Link to={`/market/${c.symbol}`} className="nx-link" data-testid="opp-view-analysis">
+          查看分析 →
+        </Link>
+      </article>
+    );
+  }
 
   return (
     <article className={`nx-opp-card side-${c.side.toLowerCase()}`} aria-label={`${c.symbol} opportunity`}>
@@ -63,25 +129,27 @@ export function OpportunityCard({ candidate: c, simple = true, defaultExpanded =
         <div className="nx-opp-card-scores">
           <div>
             <span className="muted">機會</span>
-            <strong className="mono">{fmtNum(opp)}</strong>
+            <strong className="mono">{unavailable(opp) ? "UNAVAILABLE" : fmtNum(opp)}</strong>
           </div>
           <div>
             <span className="muted">信心</span>
-            <strong className="mono">{fmtNum(conf)}</strong>
+            <strong className="mono">{unavailable(conf) ? "UNAVAILABLE" : fmtNum(conf)}</strong>
           </div>
-          <div className={risk != null && risk >= 70 ? "hot" : undefined}>
+          <div className={!unavailable(risk) && (risk as number) >= 70 ? "hot" : undefined}>
             <span className="muted">風險</span>
-            <strong className="mono">{fmtNum(risk)}</strong>
+            <strong className="mono">{unavailable(risk) ? "UNAVAILABLE" : fmtNum(risk)}</strong>
           </div>
           <div>
             <span className="muted">價格</span>
-            <strong className="mono">{formatUsd(c.currentPrice)}</strong>
+            <strong className="mono">
+              {unavailable(c.currentPrice) ? "UNAVAILABLE" : formatUsd(c.currentPrice)}
+            </strong>
           </div>
         </div>
         <p className="nx-opp-why">{whyNow}</p>
         <div className="nx-opp-card-foot muted">
-          <span>{freshnessLabel(c.freshness)}</span>
-          <span>{displayOrPending(provider, "資料來源待接入")}</span>
+          <span>{freshText}</span>
+          <span>{displayOrPending(provider, "UNAVAILABLE")}</span>
         </div>
         <button
           type="button"
@@ -96,7 +164,7 @@ export function OpportunityCard({ candidate: c, simple = true, defaultExpanded =
       {open ? (
         <div className="nx-opp-card-evidence">
           <section>
-            <h4>Supporting Evidence</h4>
+            <h4>支持證據</h4>
             {supporting.length ? (
               <ul>
                 {supporting.map((r) => (
@@ -104,11 +172,11 @@ export function OpportunityCard({ candidate: c, simple = true, defaultExpanded =
                 ))}
               </ul>
             ) : (
-              <p className="muted">尚無支持證據</p>
+              <p className="muted">UNAVAILABLE</p>
             )}
           </section>
           <section>
-            <h4>Contradicting Evidence</h4>
+            <h4>反方證據</h4>
             {contradicting.length ? (
               <ul>
                 {contradicting.map((r) => (
@@ -123,49 +191,33 @@ export function OpportunityCard({ candidate: c, simple = true, defaultExpanded =
           </section>
           <dl className="nx-kv mono">
             <div>
-              <dt>market_phase</dt>
+              <dt>階段</dt>
               <dd>{STAGE_LABEL_ZH[c.stage] || c.stage}</dd>
             </div>
             <div>
-              <dt>risk_level</dt>
-              <dd>{fmtNum(risk)}</dd>
-            </div>
-            <div>
-              <dt>risk_gate_result</dt>
+              <dt>風險閘門</dt>
               <dd>{riskGate}</dd>
             </div>
             <div>
-              <dt>entry_condition</dt>
+              <dt>失效條件</dt>
+              <dd>{invalidationText}</dd>
+            </div>
+            <div>
+              <dt>勿追原因</dt>
+              <dd>{displayOrPending(doNotChase, "UNAVAILABLE")}</dd>
+            </div>
+            <div>
+              <dt>新鮮度</dt>
+              <dd>{freshText}</dd>
+            </div>
+            <div>
+              <dt>來源</dt>
+              <dd>{displayOrPending(provider, "UNAVAILABLE")}</dd>
+            </div>
+            <div>
+              <dt>詳情</dt>
               <dd>
-                {c.stage === "CONFIRMED"
-                  ? "條件已確認（研究觀察，非下單指令）"
-                  : "等待確認 — 非進場指令"}
-              </dd>
-            </div>
-            <div>
-              <dt>invalidation_condition</dt>
-              <dd>{displayOrPending(invalidation, "失效條件尚未提供")}</dd>
-            </div>
-            <div>
-              <dt>invalidation_price</dt>
-              <dd>資料尚不可用</dd>
-            </div>
-            <div>
-              <dt>do_not_chase_reason</dt>
-              <dd>{displayOrPending(doNotChase, "無特別追價警示")}</dd>
-            </div>
-            <div>
-              <dt>data_freshness</dt>
-              <dd>{freshnessLabel(c.freshness)}</dd>
-            </div>
-            <div>
-              <dt>provider_status</dt>
-              <dd>{displayOrPending(provider, "provider pending")}</dd>
-            </div>
-            <div>
-              <dt>decision_trace_link</dt>
-              <dd>
-                <Link to={`/market/${c.symbol}`}>打開 Symbol Workbench → AI Evidence</Link>
+                <Link to={`/market/${c.symbol}`}>標的工作台 →</Link>
               </dd>
             </div>
           </dl>

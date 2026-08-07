@@ -53,7 +53,7 @@ export function ActualPanelV1821App() {
                   <div className="main-column">
                     <main className="main-content" id="main-content" tabIndex={-1}>
                       <Routes>
-                        <Route path="/" element={<Navigate to="/opportunities" replace />} />
+                        <Route path="/" element={<Navigate to="/overview" replace />} />
                         <Route path="/overview" element={<ActualPanelOverviewPage />} />
                         <Route path="/review" element={<MembershipReviewEntryGuard />} />
                         <Route path="/opportunities" element={<OpportunitiesPageV1821 />} />
@@ -75,7 +75,7 @@ export function ActualPanelV1821App() {
                         <Route path="/settings/*" element={<SettingsRedirect />} />
                         <Route path="/home" element={<Navigate to="/overview" replace />} />
                         <Route path="/market" element={<Navigate to="/overview" replace />} />
-                        <Route path="*" element={<Navigate to="/opportunities" replace />} />
+                        <Route path="*" element={<Navigate to="/overview" replace />} />
                       </Routes>
                     </main>
                     <AppFooter />

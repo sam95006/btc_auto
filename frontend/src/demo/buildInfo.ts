@@ -10,11 +10,12 @@ export const NEXUS_UI_BUILD_INFO = {
   latestCommit: "pending",
   backendState: "HOLD",
   stage419: "BLOCKED",
-  displayLabel: "PRODUCT-7 · simple · evidence",
-  buildMarker: "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
-  /** Local-only Product 7.1 note — keep Product7 marker for Live parity. */
-  localTrackNote: "PRODUCT_7_1_LOCAL_PARITY · not deployed",
+  displayLabel: "V18.2.7 · member product reset",
+  buildMarker: "PUBLIC_V18_2_7_MEMBER_PRODUCT_RESET_HEAD",
+  /** Track note for remote QA build verification. */
+  localTrackNote: "V18_2_7_MEMBER_PRODUCT_RESET",
   phase4LegacyMarker: "NEXUS_UI_PRODUCT_AND_INTELLIGENCE_PHASE4",
+  product7LegacyMarker: "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
   phase3LegacyMarker: "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES",
   phase2LegacyMarker: "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE",
   phase1LegacyMarker: "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE1_MARKET_SCANNER",

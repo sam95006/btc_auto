@@ -1,11 +1,12 @@
-import { Link, useNavigate } from "react-router-dom";
+﻿import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { loadViewMode, saveViewMode, type ViewMode } from "../market/viewPrefs";
 import { loadEventPrefs, loadReadEventIds, type EventPrefs } from "../market/eventPrefs";
 import { useMarketScannerOverview } from "../market/useMarketScanner";
 import { fetchSectorsStatus } from "../market/sectorApi";
 import { EventBellButton, EventCenterDrawer } from "./EventCenter";
 import { SystemStatusDrawer } from "./SystemStatusDrawer";
+import { UiDensityToggle } from "../member/UiDensityToggle";
+import { mapMarketFreshnessDisplay } from "../market/dataTruthFreshness";
 
 function agoLabel(ts?: number | null) {
   if (!ts) return "—";
@@ -16,13 +17,12 @@ function agoLabel(ts?: number | null) {
 }
 
 /**
- * Phase 4 compact header — Live market wording separated from execution status.
+ * Compact global header — Founder funnel metric labels (discovery ≠ monitoring).
  */
 export function MarketTopTicker() {
   const navigate = useNavigate();
   const { status, events } = useMarketScannerOverview();
   const [q, setQ] = useState("");
-  const [view, setView] = useState<ViewMode>(() => loadViewMode());
   const [eventOpen, setEventOpen] = useState(false);
   const [sysOpen, setSysOpen] = useState(false);
   const [prefs, setPrefs] = useState<EventPrefs>(() => loadEventPrefs());
@@ -71,14 +71,11 @@ export function MarketTopTicker() {
     setQ("");
   };
 
-  const toggleView = () => {
-    const next: ViewMode = view === "simple" ? "advanced" : "simple";
-    setView(next);
-    saveViewMode(next);
-    window.dispatchEvent(new CustomEvent("nexus-view-mode", { detail: next }));
-  };
-
-  const fresh = status?.freshness || "—";
+  const freshDisp = mapMarketFreshnessDisplay(status?.freshness, {
+    wsConnected: status?.wsConnected,
+    lastError: status?.lastError,
+    source: status?.source,
+  });
   const deep = status?.symbolCount ?? "—";
   const updated = agoLabel(status?.lastCycleAt);
   void nowTick;
@@ -92,14 +89,28 @@ export function MarketTopTicker() {
           </Link>
         </div>
         <div className="mtt-center nx-top-meta">
-          <span className={`mtt-fresh-pill tone-${String(fresh).toLowerCase()}`} title="市場資料新鮮度">
-            市場資料 {fresh}
+          <span
+            className={`mtt-fresh-pill tone-${freshDisp.tone}`}
+            title="市場資料新鮮度（不作全局 LIVE 過度宣稱）"
+            data-testid="market-freshness-pill"
+            data-freshness-raw={freshDisp.raw}
+            data-global-live-overclaim={freshDisp.global_live_overclaim ? "1" : "0"}
+          >
+            市場資料 {freshDisp.label}
           </span>
-          <span className="mtt-meta-item" title="廣度市場">
-            市場涵蓋 {breadth ?? "—"}
+          <span
+            className="mtt-meta-item"
+            title="全市場發現：交易所／廣度列舉數（≠ 執行期驗證數）"
+            data-testid="metric-discovery"
+          >
+            全市場發現 {breadth ?? "—"}
           </span>
-          <span className="mtt-meta-item" title="深度掃描">
-            重點追蹤 {deep}
+          <span
+            className="mtt-meta-item"
+            title="即時監控：執行期深度追蹤池 symbolCount"
+            data-testid="metric-monitoring"
+          >
+            即時監控 {deep}
           </span>
           <span className="mtt-meta-item muted" title="最後更新">
             {updated}
@@ -109,9 +120,7 @@ export function MarketTopTicker() {
           </span>
         </div>
         <div className="mtt-right">
-          <button type="button" className="mtt-view-toggle" onClick={toggleView} title="Simple / Advanced">
-            {view === "simple" ? "簡易" : "進階"}
-          </button>
+          <UiDensityToggle className="nx-topbar-density" />
           <form className="mtt-search" onSubmit={onSearch}>
             <label className="sr-only" htmlFor="mtt-q">
               搜尋標的
@@ -144,8 +153,8 @@ export function MarketTopTicker() {
           <button
             type="button"
             className="mtt-icon"
-            title="解釋市場"
-            aria-label="Open AI Assistant"
+            title="NEX AI"
+            aria-label="Open NEX AI"
             onClick={() => {
               document.querySelector<HTMLButtonElement>(".floating-ai-fab")?.click();
             }}

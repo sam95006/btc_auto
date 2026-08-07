@@ -65,6 +65,20 @@ def _spread_bps(bid: float | None, ask: float | None, last: float | None) -> flo
     return ((ask - bid) / last) * 10_000.0
 
 
+def symbol_type_of(instrument: dict[str, Any] | None) -> str:
+    if not instrument:
+        return ""
+    return str(instrument.get("symbolType") or "").strip().lower()
+
+
+def asset_disposition(symbol_type: str) -> str:
+    """Crypto opportunity membership vs cross-asset context-only labeling."""
+    st = (symbol_type or "").strip().lower()
+    if st in cfg.NON_CRYPTO_SYMBOL_TYPES:
+        return cfg.CROSS_ASSET_DISPOSITION
+    return cfg.CRYPTO_OPPORTUNITY_DISPOSITION
+
+
 def classify_exclusion(
     ticker: dict[str, Any],
     instrument: dict[str, Any] | None,
@@ -82,6 +96,10 @@ def classify_exclusion(
         quote = str(instrument.get("quoteCoin") or "")
         if quote and quote != "USDT":
             return "UNSUPPORTED"
+        # Equity/ETF/commodity linear perps are listed on Bybit but are not crypto opportunities.
+        st = symbol_type_of(instrument)
+        if st in cfg.NON_CRYPTO_SYMBOL_TYPES:
+            return "NON_CRYPTO_ASSET"
         launch = instrument.get("launchTime")
         if launch not in (None, ""):
             try:
@@ -123,17 +141,32 @@ def build_universe(
 
     excluded: list[dict[str, str]] = []
     eligible: list[dict[str, Any]] = []
+    non_crypto_excluded = 0
+    cross_asset_sample: list[dict[str, str]] = []
     for row in tickers:
         sym = str(row.get("symbol") or "")
         if not sym:
             continue
-        reason = classify_exclusion(row, inst_by_sym.get(sym), now_ms)
+        inst = inst_by_sym.get(sym)
+        reason = classify_exclusion(row, inst, now_ms)
         if reason:
             excluded.append({"symbol": sym, "reason": reason})
+            if reason == "NON_CRYPTO_ASSET":
+                non_crypto_excluded += 1
+                if len(cross_asset_sample) < 20:
+                    st = symbol_type_of(inst)
+                    cross_asset_sample.append(
+                        {
+                            "symbol": sym,
+                            "symbolType": st,
+                            "disposition": asset_disposition(st),
+                        }
+                    )
             continue
         last = _f(row, "lastPrice") or 0.0
         bid = _f(row, "bid1Price")
         ask = _f(row, "ask1Price")
+        st = symbol_type_of(inst)
         eligible.append(
             {
                 "symbol": sym,
@@ -155,6 +188,8 @@ def build_universe(
                 "exchangeTimestamp": int(row["ts"]) if row.get("ts") not in (None, "") else now_ms,
                 "receivedAt": now_ms,
                 "source": "BYBIT_MAINNET_LINEAR",
+                "symbolType": st or "crypto",
+                "assetDisposition": asset_disposition(st),
             }
         )
 
@@ -164,6 +199,13 @@ def build_universe(
     for row in eligible[cfg.SYMBOL_LIMIT :]:
         excluded.append({"symbol": row["symbol"], "reason": "UNIVERSE_LIMIT"})
 
+    # Data-truth metric: non-crypto must never remain in crypto opportunity universe.
+    non_crypto_in_opportunity = sum(
+        1
+        for r in limited
+        if str(r.get("assetDisposition") or "") == cfg.CROSS_ASSET_DISPOSITION
+    )
+
     return {
         "source": "BYBIT_MAINNET_LINEAR",
         "generatedAt": now_ms,
@@ -172,6 +214,9 @@ def build_universe(
         "eligible_before_limit": before,
         "eligible_after_limit": len(limited),
         "excluded_count": len(excluded),
+        "non_crypto_excluded_count": non_crypto_excluded,
+        "non_crypto_symbol_in_crypto_opportunity_count": non_crypto_in_opportunity,
+        "cross_asset_excluded_sample": cross_asset_sample,
         "symbol_limit": cfg.SYMBOL_LIMIT,
         "ranking_basis": "turnover24h",
         "refresh_interval_sec": cfg.SNAPSHOT_INTERVAL_SEC,

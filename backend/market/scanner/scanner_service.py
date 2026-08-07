@@ -477,7 +477,17 @@ class MarketScannerService:
             age = int(time.time() * 1000) - self._last_cycle_at if self._last_cycle_at else None
             fresh = "COLLECTING"
             if self._last_cycle_at:
-                fresh = "LIVE" if (age or 0) < 45_000 else ("DELAYED" if (age or 0) < 120_000 else "STALE")
+                # Do not overclaim global LIVE when REST-only / errored / aged.
+                if self._last_error:
+                    fresh = "DEGRADED"
+                elif (age or 0) >= 120_000:
+                    fresh = "STALE"
+                elif (age or 0) >= 45_000:
+                    fresh = "DELAYED"
+                elif not self._ws_connected:
+                    fresh = "DEGRADED"
+                else:
+                    fresh = "LIVE"
             longs = sum(1 for c in self._candidates if c.get("side") == "LONG" and c.get("rank"))
             shorts = sum(1 for c in self._candidates if c.get("side") == "SHORT" and c.get("rank"))
             confirmed = sum(1 for c in self._candidates if c.get("stage") == "CONFIRMED")

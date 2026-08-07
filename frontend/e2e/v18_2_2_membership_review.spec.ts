@@ -25,9 +25,9 @@ test.describe("V18.2.2 membership entitlement review", () => {
 
   test("display modes simple and expert", async ({ page }) => {
     await page.goto("/review?member_surface_v18_2_1=1");
-    await expect(page.getByRole("button", { name: "簡潔模式" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "專業模式" })).toBeVisible();
-    await page.getByRole("button", { name: "專業模式" }).click();
+    await expect(page.getByRole("button", { name: "簡潔" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "專業" })).toBeVisible();
+    await page.getByRole("button", { name: "專業" }).click();
     await expect(page.getByText(/Current preview mode:.*EXPERT/)).toBeVisible();
   });
 
@@ -41,7 +41,7 @@ test.describe("V18.2.2 membership entitlement review", () => {
   test("reset state returns visitor simple", async ({ page }) => {
     await page.goto("/review?member_surface_v18_2_1=1");
     await page.getByTestId("review-plan-PRO").click();
-    await page.getByRole("button", { name: "專業模式" }).click();
+    await page.getByRole("button", { name: "專業" }).click();
     await page.getByTestId("review-reset-state").click();
     await expect(page.getByTestId("review-plan-VISITOR")).toHaveAttribute("aria-pressed", "true");
   });
@@ -49,11 +49,15 @@ test.describe("V18.2.2 membership entitlement review", () => {
   test("sidebar link from opportunities when review build", async ({ page }) => {
     await page.goto("/opportunities?member_surface_v18_2_1=1");
     const link = page.getByTestId("nav-membership-review");
-    if ((await link.count()) === 0) {
-      test.skip(true, "Review nav hidden — preview build flag off");
-    }
-    await link.click();
-    await expect(page.getByTestId("membership-entitlement-review")).toBeVisible();
+    // V18.2.7: Membership review removed from normal sidebar; route-only access remains.
+    await expect(link).toHaveCount(0);
+  });
+
+  test("review route still reachable without sidebar link", async ({ page }) => {
+    await page.goto("/preview/v18_2_1/review");
+    const review = page.getByTestId("membership-entitlement-review");
+    const blocked = page.getByTestId("membership-review-blocked");
+    await expect(review.or(blocked)).toBeVisible({ timeout: 15_000 });
   });
 });
 

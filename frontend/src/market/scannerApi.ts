@@ -19,6 +19,9 @@ export type MarketCandidate = {
   opportunityScore: number;
   confirmationScore: number;
   riskScore: number;
+  /** Bybit instrument symbolType when present (stock/commodity = non-crypto). */
+  symbolType?: string | null;
+  assetDisposition?: string | null;
   currentPrice?: number;
   priceChange1mPct?: number | null;
   priceChange5mPct?: number | null;
@@ -62,6 +65,8 @@ export type ScannerStatus = {
   confirmedCandidates?: number;
   highRiskCandidates?: number;
   breadth?: { rising: number; falling: number; neutral: number; insufficient: number };
+  /** Exchange/sector listing breadth — not the same as symbolCount. */
+  breadthMarketCount?: number;
   lastCycleAt?: number;
   generatedAt?: number;
   lastError?: string | null;
@@ -69,6 +74,9 @@ export type ScannerStatus = {
   researchOnly?: boolean;
   private_api?: boolean;
   trading_integration?: boolean;
+  wsConnected?: boolean;
+  transport?: string;
+  source?: string;
 };
 
 export type ScannerCharts = {

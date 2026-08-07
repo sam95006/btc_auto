@@ -257,7 +257,7 @@ export function AiCommander() {
       {open ? (
         <div className="floating-ai-panel panel-card nx-ai-p7" role="dialog" aria-label="AiCommander drawer">
           <div className="floating-ai-head">
-            <strong>AiCommander</strong>
+            <strong>NEX AI</strong>
             <span className="tag tag-warn">{modeLabel}</span>
             <button type="button" className="ro-nav-chip ghost" onClick={() => setOpen(false)}>
               關閉
@@ -313,9 +313,9 @@ export function AiCommander() {
         type="button"
         className="floating-ai-fab"
         aria-expanded={open}
-        aria-label="Open AiCommander"
+        aria-label="Open NEX AI"
         onClick={() => setOpen((v) => !v)}
-        title="AiCommander"
+        title="NEX AI"
       >
         AI
       </button>

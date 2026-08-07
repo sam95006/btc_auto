@@ -58,16 +58,17 @@
   --radius-badge: 2px;
   --radius-input: 3px;
 
-  /* Typography */
-  --font: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  /* Typography — Chinese-readable floor (no 10–11px body) */
+  --font: "Noto Sans TC", "IBM Plex Sans", "PingFang TC", "Microsoft JhengHei",
+    "Segoe UI", system-ui, sans-serif;
   --mono: "IBM Plex Mono", "Consolas", monospace;
-  --fs-xs: 0.68rem;
-  --fs-sm: 0.75rem;
-  --fs-base: 0.8125rem;
-  --fs-md: 0.875rem;
-  --fs-lg: 1rem;
-  --fs-xl: 1.15rem;
-  --fs-title: 1.25rem;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.8125rem;
+  --fs-base: 0.875rem;
+  --fs-md: 0.9375rem;
+  --fs-lg: 1.0625rem;
+  --fs-xl: 1.2rem;
+  --fs-title: 1.35rem;
 
   /* Density */
   --table-row-h: 2rem;

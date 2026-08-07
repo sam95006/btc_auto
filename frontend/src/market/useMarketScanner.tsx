@@ -9,6 +9,7 @@ import {
   type ScannerEvent,
   type ScannerStatus,
 } from "./scannerApi";
+import { partitionOpportunityCandidates } from "./cryptoOpportunityFilter";
 
 const POLL_MS = 12_000;
 
@@ -50,8 +51,15 @@ export function MarketScannerProvider({ children }: { children: ReactNode }) {
       ]);
       if (!mounted.current) return;
       setStatus(st);
-      setLongs((longBody.candidates || []).filter((c) => c.rank != null).slice(0, 5));
-      setShorts((shortBody.candidates || []).filter((c) => c.rank != null).slice(0, 5));
+      // Data-truth: drop equity/ETF (SOXL/SPCX…) from crypto opportunity ranking.
+      const longCrypto = partitionOpportunityCandidates(
+        (longBody.candidates || []).filter((c) => c.rank != null),
+      ).crypto;
+      const shortCrypto = partitionOpportunityCandidates(
+        (shortBody.candidates || []).filter((c) => c.rank != null),
+      ).crypto;
+      setLongs(longCrypto.slice(0, 5));
+      setShorts(shortCrypto.slice(0, 5));
       setEvents((ev.events || []).slice(0, 40));
       setCharts(ch);
       setError(null);

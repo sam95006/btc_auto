@@ -1,18 +1,14 @@
 /**
- * Member Platform safety chrome — public Decision Integrity surface.
- * No live trading · no external reference embed · DEMO mode disclosed when fixtures bound.
+ * Member Platform safety chrome — compact strip for product surface.
  */
 export function SafetyBanner() {
   return (
     <div className="safety-banner nx-safety-member" role="status">
-      <span className="nx-safety-primary">NEXUS Member · Decision Integrity</span>
+      <span className="nx-safety-primary">NEXUS · 市場情報</span>
       <span className="nx-safety-sep" aria-hidden>
         ·
       </span>
-      <span className="nx-safety-secondary">
-        READ-ONLY vs exchanges · NOT INVESTMENT ADVICE · NO LIVE TRADING · DEMO DATA when fixtures
-        bound · LOCAL/STAGING ONLY
-      </span>
+      <span className="nx-safety-secondary">唯讀研究 · 非投資建議 · 不下單</span>
     </div>
   );
 }

@@ -10,12 +10,21 @@ import {
 import { useScannerBoard } from "../market/useMarketScanner";
 import { formatUsd } from "../market/freshness";
 import { WatchStarButton } from "../components/WatchStarButton";
-import { loadViewMode, saveViewMode, type ViewMode } from "../market/viewPrefs";
+import { loadViewMode, type ViewMode } from "../market/viewPrefs";
 import {
   resolveColumnPreset,
   visibleColumns,
+  viewModeToPreset,
   type ColumnPreset,
 } from "../wave4/columnPresets";
+import { UiDensityToggle } from "../member/UiDensityToggle";
+import {
+  densityToViewMode,
+  loadUiDensity,
+  saveUiDensity,
+  type UiDensity,
+  viewModeToDensity,
+} from "../member/uiDensityPrefs";
 
 type Filter =
   | "ALL"
@@ -56,29 +65,50 @@ type ScannerPageProps = {
 };
 
 /**
- * Full market scanner board — Phase 2 product explorer (server ranking only).
+ * Full-market professional scanner — search + filters; SIMPLE vs EXPERT columns.
  */
 export function ScannerPage({ columnPreset, hideHeader = false }: ScannerPageProps = {}) {
   const { rows, status, error, loading } = useScannerBoard();
   const [filter, setFilter] = useState<Filter>("ALL");
   const [sort, setSort] = useState<SortKey>("opportunity");
   const [q, setQ] = useState("");
-  const [view, setView] = useState<ViewMode>(() => loadViewMode());
+  const [density, setDensity] = useState<UiDensity>(() => loadUiDensity());
+  const [view, setView] = useState<ViewMode>(() => densityToViewMode(loadUiDensity()) || loadViewMode());
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const advanced = view === "advanced";
-  const simple = view === "simple";
-  const preset = columnPreset ?? resolveColumnPreset();
+  const advanced = view === "advanced" || density === "EXPERT";
+  const simple = !advanced;
+  const preset = columnPreset ?? (advanced ? viewModeToPreset("advanced") : resolveColumnPreset());
   const cols = visibleColumns(preset);
   const showCol = (id: string) => cols.some((c) => c.id === id);
+
+  const onDensity = (d: UiDensity) => {
+    setDensity(d);
+    saveUiDensity(d);
+    setView(densityToViewMode(d));
+  };
 
   useEffect(() => {
     const onView = (e: Event) => {
       const mode = (e as CustomEvent<ViewMode>).detail;
-      if (mode === "simple" || mode === "advanced") setView(mode);
+      if (mode === "simple" || mode === "advanced") {
+        setView(mode);
+        setDensity(viewModeToDensity(mode));
+      }
+    };
+    const onDensityEvt = (e: Event) => {
+      const d = (e as CustomEvent<UiDensity>).detail;
+      if (d === "SIMPLE" || d === "EXPERT") {
+        setDensity(d);
+        setView(densityToViewMode(d));
+      }
     };
     window.addEventListener("nexus-view-mode", onView);
-    return () => window.removeEventListener("nexus-view-mode", onView);
+    window.addEventListener("nexus-ui-density", onDensityEvt);
+    return () => {
+      window.removeEventListener("nexus-view-mode", onView);
+      window.removeEventListener("nexus-ui-density", onDensityEvt);
+    };
   }, []);
 
   const filtered = useMemo(() => {
@@ -88,7 +118,7 @@ export function ScannerPage({ columnPreset, hideHeader = false }: ScannerPagePro
     if (filter === "LONG" || filter === "SHORT") list = list.filter((r) => r.side === filter);
     else if (filter === "FRESH") list = list.filter((r) => r.freshness === "LIVE");
     else if (filter === "HIGH_RISK")
-      list = list.filter((r) => r.stage === "OVEREXTENDED" || r.riskScore >= 70);
+      list = list.filter((r) => r.stage === "OVEREXTENDED" || (r.riskScore != null && r.riskScore >= 70));
     else if (filter !== "ALL") list = list.filter((r) => r.stage === (filter as CandidateStage));
 
     const sorters: Record<SortKey, (a: MarketCandidate, b: MarketCandidate) => number> = {
@@ -106,58 +136,97 @@ export function ScannerPage({ columnPreset, hideHeader = false }: ScannerPagePro
     return list;
   }, [rows, filter, sort, q]);
 
-  const filters: { id: Filter; label: string }[] = [
+  const primaryFilters: { id: Filter; label: string }[] = [
     { id: "ALL", label: "全部" },
     { id: "LONG", label: "做多" },
     { id: "SHORT", label: "做空" },
-    { id: "WATCHING", label: "觀察" },
-    { id: "AWAITING_CONFIRMATION", label: "等待確認" },
     { id: "CONFIRMED", label: "已確認" },
-    { id: "OVEREXTENDED", label: "過熱" },
-    { id: "FRESH", label: "新鮮" },
     { id: "HIGH_RISK", label: "高風險" },
   ];
 
+  const stageFilters: { id: Filter; label: string }[] = [
+    { id: "WATCHING", label: "觀察" },
+    { id: "AWAITING_CONFIRMATION", label: "等待確認" },
+    { id: "OVEREXTENDED", label: "過熱" },
+    { id: "FRESH", label: "新鮮" },
+  ];
+
   return (
-    <div className="page-stack nx-scanner-page nx-p2">
+    <div className="page-stack nx-scanner-page nx-scanner-v1827 nx-p2">
       {!hideHeader ? (
-        <header className="nx-ov-header">
-          <h1 className="nx-page-title">市場掃描</h1>
-          <p className="nx-status-line">
-            {filtered.length} / {rows.length} 結果 · {status?.freshness || "—"} · 約每{" "}
-            {status?.snapshotIntervalSec ?? 20} 秒掃描 · 更新{" "}
-            {status?.lastCycleAt ? new Date(status.lastCycleAt).toLocaleTimeString() : "—"}
-          </p>
-          <div className="nx-ov-meta">
-            <Link to="/overview">← 總覽</Link>
-            <Link to="/watchlist">關注</Link>
+        <header className="nx-ov-global-header">
+          <div>
+            <h1 className="nx-page-title">掃描器</h1>
+            <p className="nx-status-line muted" style={{ margin: "4px 0 0" }}>
+              {filtered.length} / {rows.length} · {status?.freshness || "UNAVAILABLE"} · 約每{" "}
+              {status?.snapshotIntervalSec ?? 20} 秒 ·{" "}
+              {status?.lastCycleAt ? new Date(status.lastCycleAt).toLocaleTimeString() : "—"}
+            </p>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+            <UiDensityToggle density={density} onDensityChange={onDensity} />
+            <Link to="/overview" className="nx-link">
+              總覽
+            </Link>
             <button
               type="button"
-              className="nx-text-btn"
-              onClick={() => {
-                const next: ViewMode = view === "simple" ? "advanced" : "simple";
-                setView(next);
-                saveViewMode(next);
-              }}
+              className="nx-text-btn mobile-only"
+              onClick={() => setFiltersOpen(true)}
             >
-              {advanced ? "簡易" : "進階"}
-            </button>
-            <button type="button" className="nx-text-btn mobile-only" onClick={() => setFiltersOpen(true)}>
               篩選
             </button>
           </div>
         </header>
       ) : (
         <p className="nx-status-line muted sm">
-          {filtered.length} / {rows.length} · {preset} 欄位 · {status?.freshness || "—"}
+          {filtered.length} / {rows.length} · {preset} 欄位 · {status?.freshness || "UNAVAILABLE"}
         </p>
       )}
 
       {error ? <div className="nx-banner-warn">{error}</div> : null}
 
-      <div className={`nx-scanner-toolbar ${filtersOpen ? "open" : ""}`}>
-        <div className="nx-filter-row desktop-only">
-          {filters.map((f) => (
+      <div className={`nx-scanner-toolbar nx-scanner-toolbar-v1827 ${filtersOpen ? "open" : ""}`}>
+        <div className="nx-scanner-filter-select">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="搜尋標的…"
+            className="nx-search"
+            aria-label="搜尋標的"
+          />
+          <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="排序">
+            <option value="opportunity">機會分數</option>
+            <option value="confirmation">確認程度</option>
+            <option value="risk">風險程度</option>
+            {advanced ? (
+              <>
+                <option value="oi">持倉變動</option>
+                <option value="price">價格動能</option>
+                <option value="turnover">交易活躍</option>
+                <option value="liquidity">流動性</option>
+                <option value="rankChange">排名變化</option>
+              </>
+            ) : null}
+            <option value="newest">最新</option>
+          </select>
+          <select
+            value={stageFilters.some((f) => f.id === filter) ? filter : ""}
+            onChange={(e) => {
+              const v = e.target.value as Filter | "";
+              setFilter(v || "ALL");
+            }}
+            aria-label="階段篩選"
+          >
+            <option value="">階段：不限</option>
+            {stageFilters.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="nx-filter-row desktop-only" role="group" aria-label="方向篩選">
+          {primaryFilters.map((f) => (
             <button
               key={f.id}
               type="button"
@@ -171,7 +240,7 @@ export function ScannerPage({ columnPreset, hideHeader = false }: ScannerPagePro
         {filtersOpen ? (
           <div className="nx-filter-sheet mobile-only">
             <div className="nx-filter-row">
-              {filters.map((f) => (
+              {[...primaryFilters, ...stageFilters].map((f) => (
                 <button
                   key={f.id}
                   type="button"
@@ -190,25 +259,6 @@ export function ScannerPage({ columnPreset, hideHeader = false }: ScannerPagePro
             </button>
           </div>
         ) : null}
-        <div className="nx-sort-row">
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="搜尋 symbol…"
-            className="nx-search"
-          />
-          <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="排序">
-            <option value="opportunity">機會分數</option>
-            <option value="confirmation">確認程度</option>
-            <option value="risk">風險程度</option>
-            <option value="oi">持倉變動</option>
-            <option value="price">價格動能</option>
-            <option value="turnover">交易活躍</option>
-            <option value="liquidity">流動性</option>
-            <option value="newest">最新</option>
-            <option value="rankChange">排名變化</option>
-          </select>
-        </div>
       </div>
 
       {/* Desktop table */}
@@ -270,13 +320,19 @@ export function ScannerPage({ columnPreset, hideHeader = false }: ScannerPagePro
                     </td>
                     <td>{STAGE_LABEL_ZH[r.stage]}</td>
                     {showCol("opportunity") ? (
-                      <td className="mono">{Math.round(r.opportunityScore)}</td>
+                      <td className="mono">
+                        {r.opportunityScore == null ? "UNAVAILABLE" : Math.round(r.opportunityScore)}
+                      </td>
                     ) : null}
                     {showCol("confirmation") ? (
-                      <td className="mono">{Math.round(r.confirmationScore)}</td>
+                      <td className="mono">
+                        {r.confirmationScore == null ? "UNAVAILABLE" : Math.round(r.confirmationScore)}
+                      </td>
                     ) : null}
                     {showCol("risk") ? (
-                      <td className="mono">{Math.round(r.riskScore)}</td>
+                      <td className="mono">
+                        {r.riskScore == null ? "UNAVAILABLE" : Math.round(r.riskScore)}
+                      </td>
                     ) : null}
                     {showCol("price5m") ? (
                       <td className="mono">{fmtPct(r.priceChange5mPct)}</td>

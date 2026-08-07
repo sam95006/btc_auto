@@ -23,5 +23,12 @@ export function displayOrPending(
 
 export function freshnessLabel(v: string | null | undefined): string {
   if (!v) return "更新時間未知";
+  const u = String(v).toUpperCase();
+  if (u === "LIVE" || u === "FRESH") return "即時";
+  if (u === "DEGRADED" || u === "LIVE_PARTIAL_DEGRADED") return "部分即時／資料降級";
+  if (u === "DELAYED") return "延遲";
+  if (u === "STALE") return "資料過期";
+  if (u === "COLLECTING") return "資料累積中";
+  if (u === "UNAVAILABLE") return "資料不可用";
   return v;
 }

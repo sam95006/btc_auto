@@ -29,3 +29,10 @@ BLACKLIST_SYMBOLS = frozenset(
         # reserved for unsupported / known-bad instruments
     }
 )
+
+# Bybit linear symbolType — empty/"innovation" are crypto; stock/commodity are cross-asset.
+# Equity/ETF perps (e.g. SOXLUSDT, SPCXUSDT) must not enter crypto Opportunities ranking.
+NON_CRYPTO_SYMBOL_TYPES = frozenset({"stock", "commodity"})
+CRYPTO_OPPORTUNITY_SYMBOL_TYPES = frozenset({"", "innovation"})
+CROSS_ASSET_DISPOSITION = "CROSS_ASSET_CONTEXT_ONLY"
+CRYPTO_OPPORTUNITY_DISPOSITION = "CRYPTO_OPPORTUNITY_ELIGIBLE"

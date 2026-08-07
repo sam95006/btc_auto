@@ -20,7 +20,7 @@ export const PRIMARY_ACTUAL_PANEL_NAV_V18_2_1 = [
 export const UTILITY_ACTUAL_PANEL_NAV_V18_2_1 = [
   { to: "/watchlist", labelKey: "nav.v182.watchlist", shortKey: "nav.v182.watchlist.short" },
   { to: "/assistant", labelKey: "nav.nexAi", shortKey: "nav.nexAi.short" },
-  { to: "/account", labelKey: "nav.account", shortKey: "nav.account.short" },
+  // Account lives only under account subnav — avoid duplicate 帳戶 entries.
 ] as const satisfies ReadonlyArray<{
   to: string;
   labelKey: MessageKey;

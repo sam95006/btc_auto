@@ -1,0 +1,872 @@
+/**
+ * V18.2.7 Full-Market Member Product Surface
+ * Deep graphite premium dark — exchange-grade MI, not research console.
+ * Scoped under .nx-actual-panel-v1821 to avoid legacy shell collisions.
+ */
+
+.nx-actual-panel-v1821 {
+  /* Graphite elevation */
+  --nx-g0: #0c0e12;
+  --nx-g1: #12151b;
+  --nx-g2: #181c24;
+  --nx-g3: #1e2430;
+  --nx-g4: #262d3a;
+  --nx-border: rgba(148, 163, 184, 0.12);
+  --nx-border-strong: rgba(148, 163, 184, 0.22);
+  --nx-text: #e8edf4;
+  --nx-text-2: #a8b3c4;
+  --nx-text-3: #6f7c90;
+
+  /* Semantics */
+  --nx-long: #3dd68c;
+  --nx-short: #f07178;
+  --nx-amber: #e6b422;
+  --nx-cyan: #5ec8d8;
+  --nx-brand: #c4a35a;
+  --nx-brand-soft: rgba(196, 163, 90, 0.14);
+  --nx-brand-line: rgba(196, 163, 90, 0.38);
+
+  /* 8px spacing rhythm */
+  --nx-sp-1: 8px;
+  --nx-sp-2: 16px;
+  --nx-sp-3: 24px;
+  --nx-sp-4: 32px;
+
+  /* Readable Chinese — no 10–11px body */
+  --nx-fs-body: 0.9375rem; /* 15px */
+  --nx-fs-sm: 0.8125rem; /* 13px — labels only */
+  --nx-fs-lg: 1.125rem;
+  --nx-fs-hero: 1.5rem;
+  --nx-lh: 1.55;
+
+  --font: "Noto Sans TC", "IBM Plex Sans", "PingFang TC", "Microsoft JhengHei",
+    "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", "Consolas", ui-monospace, monospace;
+
+  --bg-deep: var(--nx-g0);
+  --bg-panel: var(--nx-g1);
+  --bg-elevated: var(--nx-g2);
+  --bg-hover: var(--nx-g3);
+  --bg-inset: #0a0c10;
+  --border: var(--nx-border);
+  --border-strong: var(--nx-border-strong);
+  --text: var(--nx-text);
+  --text-muted: var(--nx-text-2);
+  --text-dim: var(--nx-text-3);
+  --accent: var(--nx-brand);
+  --accent-soft: var(--nx-brand-soft);
+  --accent-line: var(--nx-brand-line);
+  --bullish: var(--nx-long);
+  --bearish: var(--nx-short);
+  --warning: var(--nx-amber);
+  --accent-blue: var(--nx-cyan);
+
+  --sidebar-w: 200px;
+  --fs-base: var(--nx-fs-body);
+  --fs-sm: var(--nx-fs-sm);
+  --fs-md: var(--nx-fs-body);
+  --card-pad: var(--nx-sp-2);
+  --dash-gap: var(--nx-sp-2);
+  --radius-card: 6px;
+
+  background:
+    radial-gradient(900px 480px at 8% -8%, rgba(94, 200, 216, 0.05), transparent 55%),
+    radial-gradient(700px 400px at 92% 0%, rgba(196, 163, 90, 0.05), transparent 50%),
+    var(--nx-g0);
+  color: var(--nx-text);
+  font-family: var(--font);
+  font-size: var(--nx-fs-body);
+  line-height: var(--nx-lh);
+}
+
+/* —— Compact legal strip (not dominant) —— */
+.nx-actual-panel-v1821 .safety-banner.nx-safety-member {
+  min-height: 0;
+  padding: 4px 12px;
+  font-size: var(--nx-fs-sm);
+  line-height: 1.35;
+  background: var(--nx-g1);
+  border-bottom: 1px solid var(--nx-border);
+  color: var(--nx-text-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+}
+
+.nx-actual-panel-v1821 .nx-safety-primary {
+  color: var(--nx-text-2);
+  font-weight: 500;
+}
+
+.nx-actual-panel-v1821 .nx-safety-secondary {
+  color: var(--nx-text-3);
+}
+
+.nx-actual-panel-v1821 .app-footer.nx-footer-member {
+  padding: 10px 16px;
+  font-size: var(--nx-fs-sm);
+  color: var(--nx-text-3);
+  border-top: 1px solid var(--nx-border);
+  background: var(--nx-g0);
+}
+
+/* —— Compact global header —— */
+.nx-actual-panel-v1821 .market-top-ticker.nx-topbar-p4 {
+  min-height: 48px;
+  padding: 6px 12px;
+  background: var(--nx-g1);
+  border-bottom: 1px solid var(--nx-border);
+  gap: var(--nx-sp-1);
+}
+
+.nx-actual-panel-v1821 .mtt-brand {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--nx-text);
+  text-decoration: none;
+}
+
+.nx-actual-panel-v1821 .mtt-view-toggle {
+  display: none; /* replaced by segmented UiDensityToggle */
+}
+
+.nx-actual-panel-v1821 .nx-topbar-density {
+  flex-shrink: 0;
+}
+
+/* —— SIDEBAR —— */
+.nx-actual-panel-v1821 .sidebar-nav {
+  background: var(--nx-g1);
+  border-right: 1px solid var(--nx-border);
+  width: var(--sidebar-w);
+}
+
+.nx-actual-panel-v1821 .sidebar-product {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--nx-text);
+}
+
+.nx-actual-panel-v1821 .sidebar-product-sub {
+  color: var(--nx-cyan);
+  font-size: var(--nx-fs-sm);
+  letter-spacing: 0.02em;
+}
+
+.nx-actual-panel-v1821 .sidebar-nav a {
+  font-size: var(--nx-fs-body);
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+
+.nx-actual-panel-v1821 .sidebar-nav a.active {
+  background: var(--nx-brand-soft);
+  border-left: 2px solid var(--nx-brand);
+  color: var(--nx-text);
+}
+
+.nx-actual-panel-v1821 .nav-label {
+  font-size: var(--nx-fs-sm);
+  color: var(--nx-text-3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* —— Polished SIMPLE / EXPERT segmented control —— */
+.nx-ui-density-toggle {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--nx-border-strong, var(--border-strong));
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--nx-g0, var(--bg-inset));
+  padding: 2px;
+  gap: 2px;
+}
+
+.nx-ui-density-toggle button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--nx-text-2, var(--text-muted));
+  padding: 6px 14px;
+  font: inherit;
+  font-size: var(--nx-fs-sm, 0.8125rem);
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  line-height: 1.3;
+  min-height: 32px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nx-ui-density-toggle button:hover {
+  color: var(--nx-text, var(--text));
+}
+
+.nx-ui-density-toggle button.active {
+  background: var(--nx-brand-soft, var(--accent-soft));
+  color: var(--nx-text, var(--text));
+  box-shadow: inset 0 0 0 1px var(--nx-brand-line, var(--accent-line));
+}
+
+.nx-ui-density-toggle button:focus-visible {
+  outline: 2px solid var(--nx-cyan, #5ec8d8);
+  outline-offset: 1px;
+}
+
+/* —— Overview product surface —— */
+.nx-actual-panel-overview {
+  display: grid;
+  gap: var(--nx-sp-2);
+  max-width: 1280px;
+}
+
+.nx-ov-global-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nx-sp-1);
+  padding: var(--nx-sp-1) 0;
+}
+
+.nx-ov-global-header h1 {
+  margin: 0;
+  font-size: var(--nx-fs-lg);
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.nx-ov-global-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  color: var(--nx-text-2);
+  font-size: var(--nx-fs-sm);
+}
+
+.nx-ticker-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nx-ticker-chip {
+  background: var(--nx-g2);
+  border: 1px solid var(--nx-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.nx-ticker-sym {
+  font-weight: 600;
+  color: var(--nx-cyan);
+  font-size: var(--nx-fs-sm);
+}
+
+.nx-ticker-px {
+  font-size: var(--nx-fs-body);
+}
+
+/* Market State Hero */
+.nx-market-hero {
+  background: linear-gradient(165deg, var(--nx-g2) 0%, var(--nx-g1) 100%);
+  border: 1px solid var(--nx-border);
+  border-radius: 8px;
+  padding: var(--nx-sp-2) var(--nx-sp-3);
+  display: grid;
+  gap: 12px;
+}
+
+.nx-market-hero-regime {
+  margin: 0;
+  font-size: var(--nx-fs-hero);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+
+.nx-market-hero-regime.regime-偏多 {
+  color: var(--nx-long);
+}
+.nx-market-hero-regime.regime-偏空 {
+  color: var(--nx-short);
+}
+.nx-market-hero-regime.regime-多空混合,
+.nx-market-hero-regime.regime-低動能,
+.nx-market-hero-regime.regime-資料累積中 {
+  color: var(--nx-cyan);
+}
+
+.nx-market-hero-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px 16px;
+}
+
+.nx-market-hero-cell {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nx-market-hero-cell .label {
+  font-size: var(--nx-fs-sm);
+  color: var(--nx-text-3);
+}
+
+.nx-market-hero-cell .value {
+  font-size: var(--nx-fs-body);
+  font-weight: 560;
+  color: var(--nx-text);
+}
+
+.nx-market-hero-cell .value.amber {
+  color: var(--nx-amber);
+}
+.nx-market-hero-cell .value.long {
+  color: var(--nx-long);
+}
+.nx-market-hero-cell .value.short {
+  color: var(--nx-short);
+}
+.nx-market-hero-cell .value.cyan {
+  color: var(--nx-cyan);
+}
+
+.nx-market-hero-summary {
+  margin: 0;
+  color: var(--nx-text-2);
+  font-size: var(--nx-fs-body);
+}
+
+/* Funnel */
+.nx-funnel-visual {
+  background: var(--nx-g1);
+  border: 1px solid var(--nx-border);
+  border-radius: 8px;
+  padding: var(--nx-sp-2);
+}
+
+.nx-funnel-visual .nx-sec-title {
+  margin: 0 0 12px;
+  font-size: var(--nx-fs-body);
+  font-weight: 600;
+}
+
+.nx-actual-panel-v1821 .w4-funnel-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nx-actual-panel-v1821 .w4-funnel-step {
+  background: var(--nx-g2);
+  border: 1px solid var(--nx-border);
+  border-radius: 6px;
+  padding: 12px 10px;
+  display: grid;
+  gap: 4px;
+  text-align: center;
+  position: relative;
+}
+
+.nx-actual-panel-v1821 .w4-funnel-step strong {
+  font-size: 1.25rem;
+  font-family: var(--mono);
+  color: var(--nx-text);
+}
+
+.nx-actual-panel-v1821 .w4-funnel-step span {
+  font-size: var(--nx-fs-sm);
+  color: var(--nx-text-2);
+}
+
+.nx-actual-panel-v1821 .w4-funnel-step::after {
+  content: "→";
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--nx-text-3);
+  font-size: 0.75rem;
+  z-index: 1;
+}
+
+.nx-actual-panel-v1821 .w4-funnel-step:last-child::after {
+  content: none;
+}
+
+/* Eligible / Blocked */
+.nx-eligible-state {
+  background: var(--nx-g1);
+  border: 1px solid var(--nx-border);
+  border-radius: 8px;
+  padding: var(--nx-sp-2);
+  display: grid;
+  gap: 10px;
+}
+
+.nx-eligible-state.is-zero {
+  border-color: rgba(230, 180, 34, 0.35);
+  background: linear-gradient(180deg, rgba(230, 180, 34, 0.06), var(--nx-g1));
+}
+
+.nx-eligible-state.is-ready {
+  border-color: rgba(61, 214, 140, 0.28);
+}
+
+.nx-eligible-headline {
+  margin: 0;
+  font-size: var(--nx-fs-lg);
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.nx-eligible-state.is-zero .nx-eligible-headline {
+  color: var(--nx-amber);
+}
+
+.nx-block-reasons {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.nx-block-reasons li {
+  padding: 8px 10px;
+  background: var(--nx-g2);
+  border-radius: 4px;
+  border-left: 3px solid var(--nx-amber);
+  font-size: var(--nx-fs-body);
+  color: var(--nx-text-2);
+}
+
+.nx-watch-note {
+  margin: 0;
+  font-size: var(--nx-fs-sm);
+  color: var(--nx-text-3);
+}
+
+/* Section panels */
+.nx-ov-section {
+  background: var(--nx-g1);
+  border: 1px solid var(--nx-border);
+  border-radius: 8px;
+  padding: var(--nx-sp-2);
+}
+
+.nx-ov-section .nx-sec-title {
+  margin: 0;
+  font-size: var(--nx-fs-body);
+  font-weight: 600;
+}
+
+.nx-tops-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.nx-p7-top3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.nx-p7-alerts {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.nx-p7-alerts a {
+  display: block;
+  padding: 10px 12px;
+  background: var(--nx-g2);
+  border-radius: 4px;
+  border-left: 3px solid var(--nx-short);
+  color: inherit;
+  text-decoration: none;
+  font-size: var(--nx-fs-body);
+}
+
+.nx-p7-alerts a:hover {
+  background: var(--nx-g3);
+}
+
+.nx-link {
+  color: var(--nx-cyan);
+  text-decoration: none;
+  font-size: var(--nx-fs-sm);
+}
+
+.nx-link:hover {
+  text-decoration: underline;
+}
+
+.nx-banner-warn {
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(230, 180, 34, 0.4);
+  background: rgba(230, 180, 34, 0.08);
+  color: var(--nx-amber);
+  font-size: var(--nx-fs-body);
+}
+
+/* —— Opportunity cards: Decision → Why → Risk → Invalidation → Freshness —— */
+.nx-opp-card {
+  background: var(--nx-g2);
+  border: 1px solid var(--nx-border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.nx-opp-card.side-long {
+  border-top: 2px solid var(--nx-long);
+}
+.nx-opp-card.side-short {
+  border-top: 2px solid var(--nx-short);
+}
+
+.nx-opp-simple-flow {
+  display: grid;
+  gap: 8px;
+}
+
+.nx-opp-flow-row {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 8px;
+  align-items: start;
+}
+
+.nx-opp-flow-row .flow-k {
+  font-size: var(--nx-fs-sm);
+  color: var(--nx-text-3);
+  font-weight: 500;
+}
+
+.nx-opp-flow-row .flow-v {
+  font-size: var(--nx-fs-body);
+  color: var(--nx-text);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.nx-opp-flow-row .flow-v.long {
+  color: var(--nx-long);
+  font-weight: 600;
+}
+.nx-opp-flow-row .flow-v.short {
+  color: var(--nx-short);
+  font-weight: 600;
+}
+.nx-opp-flow-row .flow-v.risk-hot {
+  color: var(--nx-short);
+}
+.nx-opp-flow-row .flow-v.unavailable {
+  color: var(--nx-text-3);
+  font-style: italic;
+}
+
+.nx-opp-sym {
+  font-size: 1.05rem;
+  font-weight: 650;
+  color: var(--nx-text);
+  text-decoration: none;
+}
+
+.nx-side-mark.side-long {
+  color: var(--nx-long);
+}
+.nx-side-mark.side-short {
+  color: var(--nx-short);
+}
+
+.nx-opp-expert-layout {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) 1fr;
+  gap: 16px;
+}
+
+.nx-opp-expert-list {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.nx-opp-expert-list button {
+  appearance: none;
+  text-align: left;
+  border: 1px solid var(--nx-border);
+  background: var(--nx-g2);
+  color: var(--nx-text);
+  padding: 10px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--nx-fs-body);
+}
+
+.nx-opp-expert-list button.active {
+  border-color: var(--nx-brand-line);
+  background: var(--nx-brand-soft);
+}
+
+.nx-tab-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--nx-border);
+  padding-bottom: 8px;
+}
+
+.nx-tab-row button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--nx-text-2);
+  padding: 8px 12px;
+  font: inherit;
+  font-size: var(--nx-fs-sm);
+  cursor: pointer;
+  border-radius: 4px 4px 0 0;
+}
+
+.nx-tab-row button.active {
+  color: var(--nx-text);
+  background: var(--nx-g2);
+  box-shadow: inset 0 -2px 0 var(--nx-brand);
+}
+
+.nx-opp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+/* —— Scanner professional —— */
+.nx-actual-panel-v1821 .nx-scanner-page header,
+.nx-scanner-page.nx-scanner-v1827 header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.nx-scanner-toolbar-v1827 {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.nx-scanner-filter-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.nx-scanner-filter-select select,
+.nx-scanner-filter-select .nx-search {
+  background: var(--nx-g2);
+  border: 1px solid var(--nx-border);
+  color: var(--nx-text);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: var(--nx-fs-body);
+  min-height: 36px;
+}
+
+.nx-actual-panel-v1821 .nx-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nx-actual-panel-v1821 .nx-filter-row button {
+  appearance: none;
+  border: 1px solid var(--nx-border);
+  background: var(--nx-g2);
+  color: var(--nx-text-2);
+  padding: 6px 10px;
+  border-radius: 4px;
+  font: inherit;
+  font-size: var(--nx-fs-sm);
+  cursor: pointer;
+}
+
+.nx-actual-panel-v1821 .nx-filter-row button.active {
+  background: var(--nx-brand-soft);
+  border-color: var(--nx-brand-line);
+  color: var(--nx-text);
+}
+
+.nx-actual-panel-v1821 .nx-scanner-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--nx-fs-body);
+}
+
+.nx-actual-panel-v1821 .nx-scanner-table th,
+.nx-actual-panel-v1821 .nx-scanner-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--nx-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.nx-actual-panel-v1821 .nx-scanner-table th {
+  color: var(--nx-text-3);
+  font-size: var(--nx-fs-sm);
+  font-weight: 500;
+  background: var(--nx-g1);
+  position: sticky;
+  top: 0;
+}
+
+/* —— AI FAB compact —— */
+.nx-actual-panel-v1821 .floating-ai-fab {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--nx-g3);
+  border: 1px solid var(--nx-brand-line);
+  color: var(--nx-text);
+  font-size: 0.8rem;
+  font-weight: 650;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.nx-actual-panel-v1821 .floating-ai-panel {
+  max-width: min(380px, calc(100vw - 24px));
+  max-height: min(64vh, 520px);
+  background: var(--nx-g1);
+  border: 1px solid var(--nx-border-strong);
+}
+
+.nx-actual-panel-v1821 .floating-ai-head strong {
+  font-size: var(--nx-fs-body);
+}
+
+/* —— Entitlement presentation chips —— */
+.nx-plan-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: var(--nx-fs-sm);
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+  border: 1px solid var(--nx-border);
+  background: var(--nx-g2);
+  color: var(--nx-text-2);
+}
+
+.nx-plan-chip.plan-pro,
+.nx-plan-chip.plan-research {
+  border-color: var(--nx-brand-line);
+  color: var(--nx-brand);
+}
+
+.nx-plan-chip.plan-enterprise {
+  border-color: rgba(94, 200, 216, 0.45);
+  color: var(--nx-cyan);
+}
+
+/* —— Responsive —— */
+@media (max-width: 1280px) {
+  .nx-actual-panel-v1821 {
+    --sidebar-w: 180px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .nx-actual-panel-v1821 .w4-funnel-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .nx-actual-panel-v1821 .w4-funnel-step::after {
+    content: none;
+  }
+  .nx-opp-expert-layout {
+    grid-template-columns: 1fr;
+  }
+  .nx-ticker-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .nx-actual-panel-v1821 .sidebar-nav {
+    display: none;
+  }
+  .nx-actual-panel-v1821 .app-body {
+    padding-bottom: calc(var(--w4-mobile-nav-h, 3.25rem) + 8px);
+  }
+  .nx-actual-panel-v1821 .mtt-center .mtt-meta-item:nth-child(n + 3) {
+    display: none;
+  }
+  .nx-market-hero {
+    padding: 14px;
+  }
+  .nx-market-hero-regime {
+    font-size: 1.25rem;
+  }
+  .nx-opp-flow-row {
+    grid-template-columns: 64px 1fr;
+  }
+}
+
+@media (max-width: 430px) {
+  .nx-actual-panel-overview,
+  .nx-actual-panel-v1821 .main-content {
+    overflow-x: hidden;
+  }
+  .nx-ov-global-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .nx-market-hero-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .nx-actual-panel-v1821 .w4-funnel-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .nx-p7-top3,
+  .nx-opp-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Prevent horizontal overflow */
+.nx-actual-panel-v1821,
+.nx-actual-panel-v1821 .main-content,
+.nx-actual-panel-v1821 .page-stack {
+  max-width: 100%;
+  overflow-x: clip;
+}

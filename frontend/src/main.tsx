@@ -9,6 +9,7 @@ import "./styles/phase2Tokens.css";
 import "./styles/wave4ProductTokens.css";
 import "./styles/global.css";
 import "./styles/memberPlatform.css";
+import "./styles/v1827ProductSurface.css";
 import "./styles/a11yPerf.css";
 import "./styles/founderOperator.css";
 
