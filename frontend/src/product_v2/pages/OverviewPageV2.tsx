@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { STAGE_LABEL_ZH } from "../../market/scannerApi";
 import { buildFunnelDisplay, NO_DATA } from "../../wave4/noDataFunnel";
 import { usePublicEntitlements } from "../../member/public_entitlements_v18_2";
@@ -13,16 +13,19 @@ import {
   mapMarketFreshnessDisplay,
 } from "../../market/dataTruthFreshness";
 import { deriveRegime } from "../../market/marketSummary";
+import { useLiveMarketFeed } from "../../market/useLiveMarketFeed";
 import { useLiveMarketRanking } from "../useLiveMarketRanking";
 import {
   filterRankingRows,
+  formatDisplayRankScore,
   formatRankMove,
   type RankingTab,
 } from "../../market/liveMarketRanking";
 import { formatUsd } from "../../market/freshness";
+import { ActivityBar, MetricSpark, RankArrow } from "../MetricSpark";
 
 function agoLabel(ts?: number | null) {
-  if (!ts) return "?";
+  if (!ts) return "—";
   const sec = Math.max(0, Math.round((Date.now() - ts) / 1000));
   if (sec < 60) return `${sec}s`;
   if (sec < 3600) return `${Math.round(sec / 60)}m`;
@@ -30,29 +33,52 @@ function agoLabel(ts?: number | null) {
 }
 
 function fmtPct(v: number | null | undefined) {
-  if (v == null || Number.isNaN(v)) return "?";
+  if (v == null || Number.isNaN(v)) return "—";
   return `${v > 0 ? "+" : ""}${v.toFixed(2)}%`;
 }
 
 const TABS: { id: RankingTab; label: string }[] = [
-  { id: "ALL", label: "??" },
-  { id: "LONG", label: "??" },
-  { id: "SHORT", label: "??" },
-  { id: "MOVE", label: "??" },
+  { id: "ALL", label: "總榜" },
+  { id: "LONG", label: "多方" },
+  { id: "SHORT", label: "空方" },
+  { id: "MOVE", label: "異動" },
   { id: "OI", label: "OI" },
   { id: "ACTIVITY", label: "Activity" },
-  { id: "RISK", label: "??" },
+  { id: "RISK", label: "風險" },
 ];
 
-/** Product V2 Market Home ? Live Radar first, Market Now secondary. */
+const PULSE = ["BTCUSDT", "ETHUSDT", "SOLUSDT"] as const;
+
+function SkeletonBlock({ h = 18 }: { h?: number }) {
+  return <div className="mp2-skeleton" style={{ height: h }} aria-hidden />;
+}
+
+/** Product V2 Market Home - MARKET PULSE | LIVE RADAR | MARKET NOW (V18.2.15). */
 export function OverviewPageV2() {
   const ranking = useLiveMarketRanking();
-  const { status, events, loading, error, qualified_count, radar, rows } = ranking;
+  const feed = useLiveMarketFeed();
+  const { status, events, loading, error, qualified_count, radar, rows, closest_watch } = ranking;
   const previewPlan = usePreviewReviewPlan("FREE");
   const { dto } = usePublicEntitlements(previewPlan);
   const plan = dto?.plan ?? previewPlan;
   const [tab, setTab] = useState<RankingTab>("ALL");
   const [coverageOpen, setCoverageOpen] = useState(false);
+  const [reasonSym, setReasonSym] = useState<string | null>(null);
+  const sparkBuf = useRef<Record<string, number[]>>({});
+
+  useEffect(() => {
+    for (const sym of PULSE) {
+      const px = feed.bySymbol[sym]?.lastPrice ?? feed.bySymbol[sym]?.markPrice;
+      if (px == null || !Number.isFinite(px)) continue;
+      const arr = sparkBuf.current[sym] ?? [];
+      const last = arr[arr.length - 1];
+      if (last == null || Math.abs(last - px) > 1e-9) {
+        arr.push(px);
+        if (arr.length > 24) arr.shift();
+        sparkBuf.current[sym] = [...arr];
+      }
+    }
+  }, [feed.bySymbol]);
 
   const falseOppCount = eligibleZeroFalseOpportunityCount({
     eligible: status?.confirmedCandidates,
@@ -102,11 +128,11 @@ export function OverviewPageV2() {
   }).filter((m) => m.metric_name !== "candidate");
 
   const funnelLabels: Record<string, string> = {
-    market_discovery: "??",
-    data_valid: "??",
-    runtime_observable: "??",
-    safety_review: "??",
-    eligible: "??",
+    market_discovery: "全市場",
+    data_valid: "資料有效",
+    runtime_observable: "即時監控",
+    safety_review: "安全審查",
+    eligible: "Eligible",
   };
 
   const funnel = buildFunnelDisplay(
@@ -121,16 +147,16 @@ export function OverviewPageV2() {
   const rankFeed = useMemo(() => {
     const fromRank = ranking.events.slice(0, 8).map((e) => ({
       id: e.id,
-      text: `${e.symbol.replace("USDT", "")} � ${e.rank_event}${
+      text: `${e.symbol.replace("USDT", "")} · ${e.rank_event}${
         e.rank != null ? ` #${e.rank}` : ""
-      }${e.previous_rank != null ? ` (was #${e.previous_rank})` : ""} � ${e.primary_reason}`,
+      }${e.previous_rank != null ? ` (原 #${e.previous_rank})` : ""} · ${e.primary_reason}`,
       href: `/market/${e.symbol}`,
       when: agoLabel(e.timestamp),
       ts: e.timestamp,
     }));
     const fromMerged = events.slice(0, 6).map((e) => ({
       id: `m-${e.id}`,
-      text: `${e.symbol.replace("USDT", "")} � ${e.primary_reason}`,
+      text: `${e.symbol.replace("USDT", "")} · ${e.primary_reason}`,
       href: `/market/${e.symbol}`,
       when: agoLabel(e.timestamp),
       ts: e.timestamp ?? 0,
@@ -141,9 +167,12 @@ export function OverviewPageV2() {
       .slice(0, 8);
   }, [ranking.events, events]);
 
-  const breadthLine = status?.breadth
-    ? `? ${status.breadth.rising}?? ${status.breadth.falling}??? ${status.breadth.neutral}`
-    : "?";
+  const breadth = status?.breadth;
+  const rising = breadth?.rising ?? 0;
+  const falling = breadth?.falling ?? 0;
+  const neutral = breadth?.neutral ?? 0;
+  const breadthTotal = Math.max(1, rising + falling + neutral);
+  const reasonRow = displayRows.find((r) => r.symbol === reasonSym) ?? null;
 
   return (
     <div
@@ -157,11 +186,15 @@ export function OverviewPageV2() {
       data-ranking-universe={ranking.universe_size}
       data-ranking-active={ranking.active_count}
       data-ranking-qualified={qualifiedDisplay}
+      data-radar-eligible={ranking.radar_eligible_count}
+      data-scanner-visible={ranking.scanner_visible_count}
+      data-trade-eligible={ranking.trade_eligible_count}
+      data-radar-contract={ranking.radar_eligibility_contract}
     >
-      <header style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+      <header className="mp2-home-head">
         <div>
-          <h1 className="mp2-page-title">??</h1>
-          <p className="mp2-page-sub">??????? � ????</p>
+          <h1 className="mp2-page-title">{"市場"}</h1>
+          <p className="mp2-page-sub">{"即時脈動 · Live Radar · 市場現況"}</p>
         </div>
         <div className="muted" style={{ fontSize: "0.8125rem", textAlign: "right" }}>
           <div data-testid="overview-freshness">{freshDisp.label}</div>
@@ -172,24 +205,66 @@ export function OverviewPageV2() {
 
       {error ? <div className="mp2-banner">{error}</div> : null}
 
+      <section className="mp2-home-pulse" aria-label="MARKET PULSE" data-testid="market-home-pulse">
+        <p className="mp2-kicker">MARKET PULSE</p>
+        <div className="mp2-pulse-grid">
+          {PULSE.map((sym) => {
+            const row = feed.bySymbol[sym];
+            const px = row?.lastPrice ?? row?.markPrice;
+            const ch = row?.change24hPct;
+            const series = sparkBuf.current[sym] ?? [];
+            return (
+              <Link key={sym} to={`/market/${sym}`} className="mp2-pulse-card">
+                <div className="mp2-pulse-card-top">
+                  <span className="sym">{sym.replace("USDT", "")}</span>
+                  <MetricSpark values={series} positive={(ch ?? 0) >= 0} width={72} height={24} />
+                </div>
+                <div className="mp2-pulse-card-px mono">{px == null ? "—" : formatUsd(px)}</div>
+                <div className={`mono ${(ch ?? 0) >= 0 ? "pos" : "neg"}`}>{fmtPct(ch)}</div>
+              </Link>
+            );
+          })}
+          <div className="mp2-pulse-card mp2-pulse-meta">
+            <span className="sym">{"廣度"}</span>
+            <div className="mp2-breadth-bars" aria-hidden>
+              <span className="up" style={{ width: `${(rising / breadthTotal) * 100}%` }} />
+              <span className="flat" style={{ width: `${(neutral / breadthTotal) * 100}%` }} />
+              <span className="down" style={{ width: `${(falling / breadthTotal) * 100}%` }} />
+            </div>
+            <div className="muted" style={{ fontSize: "0.75rem" }}>
+              {"升"} {rising}{"／降"} {falling}{"／中性"} {neutral}
+            </div>
+          </div>
+          <div className="mp2-pulse-card mp2-pulse-meta">
+            <span className="sym">Regime</span>
+            <div className={`mp2-regime-badge${regime.includes("多") ? " pos" : regime.includes("空") ? " neg" : ""}`}>
+              {loading && !status ? <SkeletonBlock h={22} /> : regime}
+            </div>
+            <div className="muted" style={{ fontSize: "0.75rem" }}>
+              {"資料"} {freshDisp.label} {"·"} {trust}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div className="mp2-home-split" data-testid="market-home-layout">
         <section className="mp2-live-radar" aria-label="NEXUS LIVE RADAR" data-testid="live-radar">
           <header className="mp2-section-head">
             <div>
               <p className="mp2-kicker">NEXUS LIVE RADAR</p>
               <h2>
-                ???? � {ranking.active_count} ?
+                {"活躍異動"} {"·"} {ranking.radar_eligible_count}
                 <span className="muted" style={{ fontWeight: 500, fontSize: "0.8125rem", marginLeft: 8 }}>
-                  ?? {agoLabel(ranking.updated_at)}
+                  {"更新"} {agoLabel(ranking.updated_at)}
                 </span>
               </h2>
             </div>
             <Link to="/opportunities" className="mp2-btn mp2-btn-ghost">
-              ?? ?
+              {"探索"} {"→"}
             </Link>
           </header>
 
-          <div className="mp2-chip-row" role="tablist" aria-label="????">
+          <div className="mp2-chip-row" role="tablist" aria-label={"排行分頁"}>
             {TABS.map((t) => (
               <button
                 key={t.id}
@@ -202,99 +277,158 @@ export function OverviewPageV2() {
             ))}
           </div>
 
-          {loading && !displayRows.length ? <p className="muted">????</p> : null}
+          {loading && !displayRows.length ? (
+            <div className="mp2-skeleton-stack" aria-busy="true" aria-label={"載入中"}>
+              <SkeletonBlock h={36} />
+              <SkeletonBlock h={36} />
+              <SkeletonBlock h={36} />
+            </div>
+          ) : null}
+
           {!loading && !displayRows.length ? (
-            <p className="muted" data-testid="radar-empty">
-              ????????????
-            </p>
-          ) : (
-            <div className="mp2-scanner-wrap">
-              <table className="mp2-table" data-testid="live-radar-table">
-                <thead>
-                  <tr>
-                    <th>Rank</th>
-                    <th>Symbol</th>
-                    <th>Price</th>
-                    <th>24h</th>
-                    <th>NEX State</th>
-                    <th>Score</th>
-                    <th>Activity</th>
-                    <th>OI</th>
-                    <th>Funding</th>
-                    <th>Risk</th>
-                    <th>?</th>
-                    <th>Updated</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayRows.map((r) => (
-                    <tr key={r.candidate_id}>
-                      <td className="mono">{r.rank}</td>
-                      <td>
+            <div className="mp2-empty" data-testid="radar-empty">
+              <p>{"目前沒有明顯市場異動"}</p>
+              {closest_watch.length ? (
+                <div className="mp2-closest-watch" data-testid="closest-watch">
+                  <p className="mp2-kicker">Closest Watch</p>
+                  <ul>
+                    {closest_watch.map((r) => (
+                      <li key={r.candidate_id}>
                         <Link to={`/market/${r.symbol}`} className="mono">
                           {r.symbol.replace("USDT", "")}
                         </Link>
-                      </td>
-                      <td className="mono">{r.price == null ? "?" : formatUsd(r.price)}</td>
-                      <td className={`mono ${(r.change_24h ?? 0) >= 0 ? "pos" : "neg"}`}>
-                        {fmtPct(r.change_24h)}
-                      </td>
-                      <td>{STAGE_LABEL_ZH[r.stage] || r.stage}</td>
-                      <td className="mono">{Math.round(r.rank_score)}</td>
-                      <td className="mono">{r.activity_state}</td>
-                      <td className="mono">{fmtPct(r.oi_change)}</td>
-                      <td className="mono">
-                        {r.funding_rate == null ? "?" : `${(r.funding_rate * 100).toFixed(3)}%`}
-                      </td>
-                      <td className={`mono ${r.risk_score >= 70 ? "neg" : ""}`}>
-                        {Math.round(r.risk_score)}
-                      </td>
-                      <td className="mono">{formatRankMove(r)}</td>
-                      <td className="mono muted">{agoLabel(r.last_rank_update)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <span className="muted">{STAGE_LABEL_ZH[r.stage] || r.stage}</span>
+                        <span className="mono muted">{formatDisplayRankScore(r.rank_score)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="mp2-radar-list" data-testid="live-radar-table">
+              {displayRows.map((r) => (
+                <button
+                  key={r.candidate_id}
+                  type="button"
+                  className={`mp2-radar-row${reasonSym === r.symbol ? " is-open" : ""}`}
+                  onClick={() => setReasonSym((s) => (s === r.symbol ? null : r.symbol))}
+                >
+                  <span className="rank mono">#{r.rank}</span>
+                  <span className="sym-block">
+                    <Link
+                      to={`/market/${r.symbol}`}
+                      className="mono sym"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {r.symbol.replace("USDT", "")}
+                    </Link>
+                    <span className="muted stage">{STAGE_LABEL_ZH[r.stage] || r.stage}</span>
+                  </span>
+                  <MetricSpark
+                    values={[r.price_change_1m, r.price_change_5m, r.price_change_15m, r.change_24h]}
+                    positive={(r.change_24h ?? 0) >= 0}
+                  />
+                  <span className="mono px">{r.price == null ? "—" : formatUsd(r.price)}</span>
+                  <span className={`mono ch ${(r.change_24h ?? 0) >= 0 ? "pos" : "neg"}`}>
+                    {fmtPct(r.change_24h)}
+                  </span>
+                  <span className="act">
+                    <ActivityBar value={r.activity_metric} />
+                    <span className="muted">{r.activity_state}</span>
+                  </span>
+                  <span className="mono oi">{fmtPct(r.oi_change)}</span>
+                  <span className="mono fund">
+                    {r.funding_rate == null ? "—" : `${(r.funding_rate * 100).toFixed(3)}%`}
+                  </span>
+                  <span className="mono score">{formatDisplayRankScore(r.rank_score)}</span>
+                  <RankArrow event={r.rank_event} delta={r.rank_delta} />
+                </button>
+              ))}
             </div>
           )}
+
+          {reasonRow ? (
+            <aside className="mp2-radar-drawer" data-testid="radar-reason-drawer">
+              <p className="mp2-kicker">{"為什麼在榜"}</p>
+              <p>{reasonRow.primary_reason}</p>
+              {reasonRow.secondary_reason ? (
+                <p className="muted">{reasonRow.secondary_reason}</p>
+              ) : null}
+              <div className="mp2-actions">
+                <Link to={`/market/${reasonRow.symbol}`} className="mp2-btn mp2-btn-primary">
+                  {"開啟終端"}
+                </Link>
+                <span className="mono muted">{formatRankMove(reasonRow)}</span>
+              </div>
+            </aside>
+          ) : null}
+
+          {displayRows.length > 0 && closest_watch.length > 0 ? (
+            <div className="mp2-closest-watch muted-section" data-testid="closest-watch-secondary">
+              <p className="mp2-kicker">Closest Watch{"（未入 Radar）"}</p>
+              <div className="mp2-chip-row">
+                {closest_watch.map((r) => (
+                  <Link key={r.candidate_id} to={`/market/${r.symbol}`} className="mp2-btn mp2-btn-ghost">
+                    {r.symbol.replace("USDT", "")}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </section>
 
         <aside className="mp2-market-now" aria-label="MARKET NOW" data-testid="market-now">
           <p className="mp2-kicker">MARKET NOW</p>
-          <h2 className="mp2-page-title" style={{ fontSize: "1.05rem" }}>
-            {loading && !status ? "???" : regime}
-          </h2>
-          <dl className="mp2-term-dl">
-            <div>
-              <dt>??</dt>
-              <dd>{breadthLine}</dd>
+          <div className="mp2-now-visual">
+            <div className={`mp2-regime-hero${regime.includes("多") ? " pos" : regime.includes("空") ? " neg" : ""}`}>
+              {loading && !status ? <SkeletonBlock h={28} /> : regime}
             </div>
-            <div>
-              <dt>????</dt>
-              <dd className="mono">{status?.highRiskCandidates ?? "?"}</dd>
+            <div className="mp2-breadth-visual">
+              <div className="mp2-breadth-bars tall" aria-hidden>
+                <span className="up" style={{ width: `${(rising / breadthTotal) * 100}%` }} />
+                <span className="flat" style={{ width: `${(neutral / breadthTotal) * 100}%` }} />
+                <span className="down" style={{ width: `${(falling / breadthTotal) * 100}%` }} />
+              </div>
+              <div className="mp2-breadth-legend">
+                <span className="pos">{"升"} {rising}</span>
+                <span>{"中"} {neutral}</span>
+                <span className="neg">{"降"} {falling}</span>
+              </div>
             </div>
-            <div>
-              <dt>Data Trust</dt>
-              <dd>{trust}</dd>
+            <div className="mp2-now-stats">
+              <div>
+                <span className="lbl">{"高風險"}</span>
+                <span className="mono">{status?.highRiskCandidates ?? "—"}</span>
+              </div>
+              <div>
+                <span className="lbl">{"合格"}</span>
+                <span className="mono" data-testid="qualified-count">
+                  {qualifiedDisplay ?? 0}
+                </span>
+              </div>
+              <div>
+                <span className="lbl">Radar</span>
+                <span className="mono">{ranking.radar_eligible_count}</span>
+              </div>
+              <div>
+                <span className="lbl">{"資料"}</span>
+                <span>{trust}</span>
+              </div>
             </div>
-            <div>
-              <dt>????</dt>
-              <dd className="mono" data-testid="qualified-count">
-                {qualifiedDisplay ?? 0}
-              </dd>
-            </div>
-          </dl>
+          </div>
+
           {qualifiedDisplay === 0 ? (
             <div className="mp2-empty" data-testid="no-eligible-opportunities" style={{ marginTop: 12 }}>
-              ????? 0 ? Live Radar ??????
+              {"合格機會為 0；Live Radar 僅供觀察，非交易推薦。"}
             </div>
           ) : null}
 
           <p className="mp2-kicker" style={{ marginTop: 16 }}>
-            ????
+            {"異動動態"}
           </p>
           {rankFeed.length === 0 ? (
-            <p className="muted">??????</p>
+            <p className="muted">{"尚無排名事件"}</p>
           ) : (
             <ul className="mp2-feed">
               {rankFeed.map((a) => (
@@ -311,10 +445,10 @@ export function OverviewPageV2() {
 
           <div className="mp2-actions">
             <Link to="/scanner" className="mp2-btn mp2-btn-primary">
-              ?????
+              {"開啟掃描器"}
             </Link>
             <Link to="/alerts" className="mp2-btn">
-              ??
+              {"警報"}
             </Link>
           </div>
         </aside>
@@ -324,10 +458,10 @@ export function OverviewPageV2() {
         <header className="mp2-section-head">
           <div>
             <p className="mp2-kicker">Market Coverage</p>
-            <h2>??????</h2>
+            <h2>{"覆蓋漏斗"}</h2>
           </div>
           <button type="button" className="mp2-btn mp2-btn-ghost" onClick={() => setCoverageOpen((v) => !v)}>
-            {coverageOpen ? "??" : "??"}
+            {coverageOpen ? "收合" : "展開"}
           </button>
         </header>
         {coverageOpen ? (
@@ -345,7 +479,7 @@ export function OverviewPageV2() {
           )
         ) : (
           <p className="muted" style={{ fontSize: "0.8125rem" }}>
-            ?? ? ?? ? ?? ? ?? ? ??
+            {"全市場 → 資料有效 → 即時監控 → 安全審查 → Eligible"}
           </p>
         )}
       </section>

@@ -1,7 +1,7 @@
 {
   "source": "frontend/dist",
   "dest": "deploy/zeabur_stage3_demo_learning/static/operator_ui",
-  "marker": "PUBLIC_V18_2_14_EXCHANGE_TERMINAL_LIVE_RADAR_HEAD",
+  "marker": "PUBLIC_V18_2_15_EXCHANGE_VISUAL_TERMINAL_HEAD",
   "phase3_marker": "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES",
   "phase2_marker": "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE",
   "mvp22d_marker": "NEXUS_UI_MVP22D_ANOMALY_OUTCOME_RESEARCH",
@@ -10,19 +10,18 @@
   "mvp22a_marker": "NEXUS_UI_MVP22A_LIVE_MARKET_DATA",
   "legacy_marker": "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60",
   "marker_found": true,
-  "file_count": 4,
+  "file_count": 3,
   "current_assets": [
-    "index-C0bE0fQZ.js",
-    "index-CHcZRrIS.css"
+    "index-B0fMXpr2.js",
+    "index-Cgq0Tb1R.css"
   ],
   "retained_assets": [
-    "index-C0bE0fQZ.js",
-    "index-CHcZRrIS.css",
-    "index-CZHMu6Zr.js"
+    "index-B0fMXpr2.js",
+    "index-Cgq0Tb1R.css"
   ],
   "retained_generations": 3,
   "previous_assets": [
-    "index-CHcZRrIS.css",
-    "index-CZHMu6Zr.js"
+    "index-B0fMXpr2.js",
+    "index-Cgq0Tb1R.css"
   ]
 }

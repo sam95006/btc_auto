@@ -48,7 +48,9 @@ function EvidencePanel({ c, row }: { c: MarketCandidate | null; row: LiveRanking
     },
     {
       label: "NEX Rank Score",
-      value: row ? `${Math.round(row.rank_score)} (${row.rank_score_version})` : "—",
+      value: row
+        ? `${Math.round(Math.max(0, Math.min(100, row.rank_score)))} / 100 (${row.rank_score_version})`
+        : "—",
     },
     {
       label: "Funding",
@@ -207,7 +209,7 @@ function DecisionCenter({
           >
             <div>
               <dt className="muted">Score</dt>
-              <dd style={{ margin: 0 }}>{Math.round(row.rank_score)}</dd>
+              <dd style={{ margin: 0 }}>{Math.round(Math.max(0, Math.min(100, row.rank_score)))}</dd>
             </div>
             <div>
               <dt className="muted">機會</dt>
@@ -244,7 +246,7 @@ function DecisionCenter({
  */
 export function OpportunitiesPageV2() {
   const ranking = useLiveMarketRanking();
-  const { candidates, loading, error, status, qualified_count, radar, rows } = ranking;
+  const { candidates, loading, error, status, qualified_count, radar, rows, closest_watch } = ranking;
   const [tab, setTab] = useState<RankingTab>("ALL");
   const [focusSym, setFocusSym] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(true);
@@ -323,8 +325,33 @@ export function OpportunitiesPageV2() {
           <p className="mp2-kicker">
             Radar {display.length} · 合格 {qualified_count}
           </p>
-          {loading && !display.length ? <p className="muted">載入中…</p> : null}
-          {!loading && !display.length ? <p className="muted">暫無排名</p> : null}
+          {loading && !display.length ? (
+            <div className="mp2-skeleton-stack" aria-busy="true">
+              <div className="mp2-skeleton" style={{ height: 40 }} />
+              <div className="mp2-skeleton" style={{ height: 40 }} />
+            </div>
+          ) : null}
+          {!loading && !display.length ? (
+            <div className="mp2-empty" data-testid="radar-empty">
+              <p>目前沒有明顯市場異動</p>
+              {closest_watch.length ? (
+                <div className="mp2-closest-watch" data-testid="closest-watch">
+                  <p className="mp2-kicker">Closest Watch</p>
+                  {closest_watch.map((r) => (
+                    <button
+                      key={r.candidate_id}
+                      type="button"
+                      className="mp2-opp-nav-item"
+                      onClick={() => selectRow(r.symbol)}
+                    >
+                      <span className="sym">{r.symbol.replace("USDT", "")}</span>
+                      <span className="meta">{STAGE_LABEL_ZH[r.stage] || r.stage}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
           {display.map((r) => (
             <button
               key={r.candidate_id}

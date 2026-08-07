@@ -99,8 +99,12 @@ export function ScannerPageV2() {
             <tbody>
               {loading && !filtered.length ? (
                 <tr>
-                  <td colSpan={13} className="muted">
-                    載入中…
+                  <td colSpan={13}>
+                    <div className="mp2-skeleton-stack" aria-busy="true" aria-label="載入中">
+                      <div className="mp2-skeleton" style={{ height: 28 }} />
+                      <div className="mp2-skeleton" style={{ height: 28 }} />
+                      <div className="mp2-skeleton" style={{ height: 28 }} />
+                    </div>
                   </td>
                 </tr>
               ) : null}

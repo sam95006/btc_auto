@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useLiveMarketFeed } from "../market/useLiveMarketFeed";
 import { useMarketScannerOverview } from "../market/useMarketScanner";
 import { deriveRegime } from "../market/marketSummary";
 import { memberDataTrustLabel } from "../market/marketMetricFunnel";
 import { mapMarketFreshnessDisplay } from "../market/dataTruthFreshness";
+import { MetricSpark } from "./MetricSpark";
 
 const PULSE_SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"] as const;
 
@@ -20,16 +22,19 @@ function fmtPct(n: number | null | undefined) {
 }
 
 /**
- * Persistent MARKET PULSE under global nav — real ticker data only.
+ * Persistent MARKET PULSE under global nav — real ticker data + live spark.
  */
 export function MarketPulseBar() {
   const feed = useLiveMarketFeed();
   const { status, longs, shorts, loading, error } = useMarketScannerOverview();
   const [flash, setFlash] = useState<Record<string, "up" | "down" | "">>({});
   const prev = useRef<Record<string, number>>({});
+  const sparkBuf = useRef<Record<string, number[]>>({});
+  const [, tick] = useState(0);
 
   useEffect(() => {
     const nextFlash: Record<string, "up" | "down" | ""> = {};
+    let sparkChanged = false;
     for (const sym of PULSE_SYMBOLS) {
       const px = feed.bySymbol[sym]?.lastPrice ?? feed.bySymbol[sym]?.markPrice;
       if (px == null || !Number.isFinite(px)) continue;
@@ -38,7 +43,15 @@ export function MarketPulseBar() {
         nextFlash[sym] = px > p ? "up" : "down";
       }
       prev.current[sym] = px;
+      const arr = sparkBuf.current[sym] ?? [];
+      if (arr[arr.length - 1] !== px) {
+        arr.push(px);
+        if (arr.length > 20) arr.shift();
+        sparkBuf.current[sym] = arr;
+        sparkChanged = true;
+      }
     }
+    if (sparkChanged) tick((n) => n + 1);
     if (Object.keys(nextFlash).length) {
       setFlash((f) => ({ ...f, ...nextFlash }));
       const t = window.setTimeout(() => {
@@ -89,15 +102,17 @@ export function MarketPulseBar() {
         const ch = row?.change24hPct;
         const fl = flash[sym];
         return (
-          <div
+          <Link
             key={sym}
+            to={`/market/${sym}`}
             className={`mp2-pulse-item${fl === "up" ? " flash-up" : fl === "down" ? " flash-down" : ""}`}
             data-symbol={sym}
           >
             <span className="sym">{sym.replace("USDT", "")}</span>
             <span className="px mono">{fmtPrice(px)}</span>
             <span className={`ch mono ${(ch ?? 0) >= 0 ? "pos" : "neg"}`}>{fmtPct(ch)}</span>
-          </div>
+            <MetricSpark values={sparkBuf.current[sym] ?? []} positive={(ch ?? 0) >= 0} width={48} height={18} />
+          </Link>
         );
       })}
       <div className="mp2-pulse-item">

@@ -117,8 +117,8 @@ export function ResearchPageV2() {
       items.push({
         id: `rank-${r.candidate_id}`,
         title: `#${r.rank} ${r.symbol.replace("USDT", "")} · ${formatRankMove(r)}`,
-        excerpt: `${STAGE_LABEL_ZH[r.stage] || r.stage} · score ${Math.round(r.rank_score)} · ${r.primary_reason}`,
-        body: `排名分數 ${r.rank_score}（${r.rank_score_version}）。機會 ${Math.round(r.rank_score_components.opportunity)}／確認 ${Math.round(r.rank_score_components.confirmation)}／風險 ${Math.round(r.rank_score_components.risk)}。Activity ${r.activity_state} · OI ${r.oi_change ?? "—"} · Funding ${r.funding_rate ?? "—"}。`,
+        excerpt: `${STAGE_LABEL_ZH[r.stage] || r.stage} · score ${Math.round(Math.max(0, Math.min(100, r.rank_score)))} · ${r.primary_reason}`,
+        body: `排名分數 ${Math.round(Math.max(0, Math.min(100, r.rank_score)))}／100（${r.rank_score_version}）。機會 ${Math.round(r.rank_score_components.opportunity)}／確認 ${Math.round(r.rank_score_components.confirmation)}／風險 ${Math.round(r.rank_score_components.risk)}。Activity ${r.activity_state} · OI ${r.oi_change ?? "—"} · Funding ${r.funding_rate ?? "—"}。`,
         kind: "market",
         ts: r.last_rank_update,
         symbol: r.symbol,
@@ -302,7 +302,12 @@ export function ResearchPageV2() {
       <div className="mp2-research">
         <div className="mp2-research-feed" aria-label="研究資訊流">
           <p className="mp2-kicker">資訊流</p>
-          {loading && !filtered.length ? <p className="muted">載入中…</p> : null}
+          {loading && !filtered.length ? (
+            <div className="mp2-skeleton-stack" aria-busy="true" aria-label="載入中">
+              <div className="mp2-skeleton" style={{ height: 36 }} />
+              <div className="mp2-skeleton" style={{ height: 36 }} />
+            </div>
+          ) : null}
           {filtered.map((item) => (
             <button
               key={item.id}

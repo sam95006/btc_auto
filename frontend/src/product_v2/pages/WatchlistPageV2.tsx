@@ -5,6 +5,7 @@ import { fetchScannerCandidates, STAGE_LABEL_ZH, type MarketCandidate } from "..
 import { formatUsd } from "../../market/freshness";
 import { useLiveMarketRanking } from "../useLiveMarketRanking";
 import { formatRankMove } from "../../market/liveMarketRanking";
+import { MetricSpark } from "../MetricSpark";
 
 function fmtPct(v: number | null | undefined) {
   if (v == null || Number.isNaN(v)) return "—";
@@ -61,7 +62,12 @@ export function WatchlistPageV2() {
         <p className="mp2-page-sub">本機最多 {WATCHLIST_LIMIT} · Research only</p>
       </header>
 
-      {loading && symbols.length > 0 ? <p className="muted">載入中…</p> : null}
+      {loading && symbols.length > 0 ? (
+        <div className="mp2-skeleton-stack" aria-busy="true" aria-label="載入中">
+          <div className="mp2-skeleton" style={{ height: 32 }} />
+          <div className="mp2-skeleton" style={{ height: 32 }} />
+        </div>
+      ) : null}
 
       {items.length === 0 ? (
         <div className="mp2-empty">
@@ -78,6 +84,7 @@ export function WatchlistPageV2() {
             <thead>
               <tr>
                 <th>Symbol</th>
+                <th>Spark</th>
                 <th>Price</th>
                 <th>24h</th>
                 <th>NEX State</th>
@@ -103,6 +110,17 @@ export function WatchlistPageV2() {
                       ) : (
                         <strong className="mono">{it.symbol}</strong>
                       )}
+                    </td>
+                    <td>
+                      <MetricSpark
+                        values={[
+                          c?.priceChange1mPct,
+                          c?.priceChange5mPct,
+                          c?.priceChange15mPct,
+                          c?.change24hPct,
+                        ]}
+                        positive={(c?.change24hPct ?? 0) >= 0}
+                      />
                     </td>
                     <td className="mono">{c?.currentPrice == null ? "—" : formatUsd(c.currentPrice)}</td>
                     <td className={`mono ${(c?.change24hPct ?? 0) >= 0 ? "pos" : "neg"}`}>

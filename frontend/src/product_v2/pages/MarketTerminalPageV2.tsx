@@ -224,7 +224,12 @@ export function MarketTerminalPageV2() {
       </header>
 
       {error ? <div className="mp2-banner">{error}</div> : null}
-      {loading && !candidate && !snap ? <p className="muted">載入中…</p> : null}
+      {loading && !candidate && !snap ? (
+        <div className="mp2-skeleton-stack" aria-busy="true" aria-label="載入中">
+          <div className="mp2-skeleton" style={{ height: 28 }} />
+          <div className="mp2-skeleton" style={{ height: 220 }} />
+        </div>
+      ) : null}
 
       <div className="mp2-term-grid">
         <aside className="mp2-term-list" aria-label="市場清單">
@@ -441,14 +446,14 @@ export function MarketTerminalPageV2() {
             </p>
           </div>
           <div className="mp2-decision-block">
-            <h3>Why now</h3>
+            <h3>WHY NOW</h3>
             <p>{plainReason(candidate?.reasons?.[0] || "結構仍在觀察", false)}</p>
           </div>
           <div className="mp2-decision-block">
-            <h3>Supporting</h3>
+            <h3>SUPPORTING</h3>
             {supports.length ? (
               <ul>
-                {supports.map((s) => (
+                {supports.slice(0, 3).map((s) => (
                   <li key={s}>{s}</li>
                 ))}
               </ul>
@@ -457,10 +462,10 @@ export function MarketTerminalPageV2() {
             )}
           </div>
           <div className="mp2-decision-block against">
-            <h3>Contradicting</h3>
+            <h3>CONTRADICTING</h3>
             {against.length ? (
               <ul>
-                {against.map((s) => (
+                {against.slice(0, 3).map((s) => (
                   <li key={s}>{s}</li>
                 ))}
               </ul>
@@ -469,7 +474,7 @@ export function MarketTerminalPageV2() {
             )}
           </div>
           <div className="mp2-decision-block">
-            <h3>Invalidation</h3>
+            <h3>INVALIDATION</h3>
             <p>{candidate?.invalidationContext || "尚無明確失效條件"}</p>
           </div>
           <div className="mp2-actions">

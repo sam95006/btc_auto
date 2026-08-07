@@ -10,10 +10,10 @@ export const NEXUS_UI_BUILD_INFO = {
   latestCommit: "pending",
   backendState: "HOLD",
   stage419: "BLOCKED",
-  displayLabel: "V18.2.14 · Exchange Terminal + Live Radar",
-  buildMarker: "PUBLIC_V18_2_14_EXCHANGE_TERMINAL_LIVE_RADAR_HEAD",
+  displayLabel: "V18.2.15 · Exchange Visual Terminal + Live Radar",
+  buildMarker: "PUBLIC_V18_2_15_EXCHANGE_VISUAL_TERMINAL_HEAD",
   /** Track note for remote QA build verification. */
-  localTrackNote: "V18_2_14_EXCHANGE_TERMINAL_LIVE_RADAR",
+  localTrackNote: "V18_2_15_EXCHANGE_VISUAL_TERMINAL",
   /** Product generation — automated QA must equal 2. */
   member_product_generation: 2,
   memberProductGeneration: 2,
