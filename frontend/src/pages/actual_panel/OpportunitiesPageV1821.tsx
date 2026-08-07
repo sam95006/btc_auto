@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMarketScannerOverview } from "../../market/useMarketScanner";
 import type { MarketCandidate } from "../../market/scannerApi";
 import { displayOrPending, freshnessLabel, fmtNum } from "../../market/displayNull";
@@ -10,6 +10,7 @@ import { formatUsd } from "../../market/freshness";
 import { loadUiDensity } from "../../member/uiDensityPrefs";
 import { WatchStarButton } from "../../components/WatchStarButton";
 import { memberDataTrustLabel } from "../../market/marketMetricFunnel";
+import { deriveRegime } from "../../market/marketSummary";
 
 type DisclosureLevel = 1 | 2 | 3;
 
@@ -25,59 +26,127 @@ function agoLabel(ts?: number | null) {
   return `${Math.round(sec / 3600)}h`;
 }
 
-function ContextDrawer({ c }: { c: MarketCandidate }) {
+function EvidenceDrawer({ c, onClose }: { c: MarketCandidate; onClose?: () => void }) {
   const trust = memberDataTrustLabel({
     scannerFreshness: c.freshness,
     confirmedCandidates: c.stage === "CONFIRMED" ? 1 : 0,
   });
+  const regime = deriveRegime({
+    longCandidates: c.side === "LONG" ? 1 : 0,
+    shortCandidates: c.side === "SHORT" ? 1 : 0,
+    confirmedCandidates: c.stage === "CONFIRMED" ? 1 : 0,
+    highRiskCandidates: (c.riskScore ?? 0) >= 70 ? 1 : 0,
+    symbolCount: 1,
+    freshness: c.freshness,
+  });
+
+  const rows: { label: string; value: string; muted?: boolean }[] = [
+    {
+      label: "Funding",
+      value: c.fundingRate == null ? "尚無資料" : `${(c.fundingRate * 100).toFixed(4)}%`,
+      muted: c.fundingRate == null,
+    },
+    {
+      label: "OI 5m",
+      value:
+        c.oiChange5mPct == null
+          ? "尚無資料"
+          : `${c.oiChange5mPct > 0 ? "+" : ""}${c.oiChange5mPct.toFixed(2)}%`,
+      muted: c.oiChange5mPct == null,
+    },
+    {
+      label: "清算壓力（風險代理）",
+      value: unavailable(c.riskScore) ? "尚無資料" : String(Math.round(c.riskScore as number)),
+      muted: unavailable(c.riskScore),
+    },
+    {
+      label: "流動性（價差 bps）",
+      value: c.spreadBps == null ? "尚無資料" : c.spreadBps.toFixed(1),
+      muted: c.spreadBps == null,
+    },
+    {
+      label: "未平倉價值",
+      value: c.openInterestValue == null ? "尚無資料" : String(c.openInterestValue),
+      muted: c.openInterestValue == null,
+    },
+    {
+      label: "Order Flow 代理（週轉節奏）",
+      value: c.turnoverPace == null ? "尚無資料" : String(c.turnoverPace),
+      muted: c.turnoverPace == null,
+    },
+    { label: "Regime", value: regime },
+    {
+      label: "資料品質",
+      value: `${trust.label_zh} · ${freshnessLabel(c.freshness) || "未知"}`,
+    },
+    {
+      label: "歷史／更新",
+      value: `首次 ${agoLabel(c.firstSeenAt)} · 最近 ${agoLabel(c.lastUpdatedAt)}`,
+    },
+  ];
+
   return (
-    <aside className="v1829-opp-drawer" aria-label="標的上下文" data-testid="opp-context-drawer">
-      <div className="drawer-block">
-        <h3>Watchlist</h3>
-        <WatchStarButton symbol={c.symbol} />
-        <p className="muted" style={{ margin: "8px 0 0", fontSize: "0.8125rem" }}>
-          快速加入觀察 · 不代表建議
-        </p>
+    <aside className="v1829-opp-drawer" aria-label="證據抽屜" data-testid="opp-context-drawer">
+      <div className="drawer-block" style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+        <h3 style={{ margin: 0 }}>證據</h3>
+        {onClose ? (
+          <button type="button" className="v1829-btn v1829-btn-tertiary" onClick={onClose}>
+            收合
+          </button>
+        ) : null}
       </div>
-      <div className="drawer-block">
-        <h3>警報</h3>
-        <Link to="/alerts" className="v1829-btn v1829-btn-secondary" style={{ fontSize: "0.8125rem" }}>
-          調整警報
-        </Link>
-      </div>
-      <div className="drawer-block">
-        <h3>資料品質 · Data Trust</h3>
-        <p style={{ margin: 0 }}>{trust.label_zh}</p>
-        <p className="muted" style={{ margin: "4px 0 0", fontSize: "0.8125rem" }}>
-          {freshnessLabel(c.freshness) || "UNAVAILABLE"} · {agoLabel(c.lastUpdatedAt)}
-        </p>
-      </div>
+      {rows.map((r) => (
+        <div key={r.label} className="drawer-block">
+          <h3>{r.label}</h3>
+          <p className={r.muted ? "muted" : undefined} style={{ margin: 0, fontSize: "0.875rem" }}>
+            {r.value}
+          </p>
+        </div>
+      ))}
       <div className="drawer-block" style={{ borderBottom: 0 }}>
         <h3>最新變化</h3>
         <p style={{ margin: 0, fontSize: "0.875rem" }}>
           {plainReason(c.reasons?.[0] || "結構仍在觀察", true)}
-        </p>
-        <p className="muted" style={{ margin: "6px 0 0", fontSize: "0.8125rem" }}>
-          價 5m{" "}
-          {c.priceChange5mPct == null
-            ? "UNAVAILABLE"
-            : `${c.priceChange5mPct > 0 ? "+" : ""}${c.priceChange5mPct.toFixed(2)}%`}
         </p>
       </div>
     </aside>
   );
 }
 
-function DecisionWorkspace({ c, level }: { c: MarketCandidate; level: DisclosureLevel }) {
+function DecisionWorkspace({
+  c,
+  level,
+  onBack,
+  onOpenEvidence,
+}: {
+  c: MarketCandidate;
+  level: DisclosureLevel;
+  onBack?: () => void;
+  onOpenEvidence?: () => void;
+}) {
   const whyNow = plainReason(c.reasons?.[0] || "結構仍在觀察", level === 1);
   const supporting = (c.reasons || []).slice(0, 4).map((r) => plainReason(r, level === 1));
   const against = (c.conflicts || []).slice(0, 4).map((r) => plainReason(r, level === 1));
-  const invalidation = displayOrPending(c.invalidationContext, "UNAVAILABLE");
-  const riskText = unavailable(c.riskScore) ? "UNAVAILABLE" : fmtNum(c.riskScore);
+  const invalidation = displayOrPending(c.invalidationContext, "尚無明確失效條件");
+  const riskText = unavailable(c.riskScore) ? "尚無資料" : fmtNum(c.riskScore);
   const theme = themeBadgeLabel(c.symbol, c.source, c.symbolType);
+  const nowLine = `${sideLabelZh(c.side)} · ${STAGE_LABEL_ZH[c.stage] || c.stage} · ${
+    freshnessLabel(c.freshness) || "更新未知"
+  }${theme ? ` · ${theme}` : ""}`;
 
   return (
     <div className="v1829-opp-detail" data-testid="opp-decision-workspace">
+      {onBack ? (
+        <button
+          type="button"
+          className="v1829-btn v1829-btn-tertiary mobile-only"
+          style={{ marginBottom: 10, paddingLeft: 0 }}
+          onClick={onBack}
+        >
+          ← 返回清單
+        </button>
+      ) : null}
+
       <header style={{ marginBottom: 16 }}>
         <Link
           to={`/market/${c.symbol}`}
@@ -88,23 +157,23 @@ function DecisionWorkspace({ c, level }: { c: MarketCandidate; level: Disclosure
         </Link>
         <p className="muted" style={{ margin: "4px 0 0", fontSize: "0.875rem" }}>
           <span className={c.side === "LONG" ? "side-long" : c.side === "SHORT" ? "side-short" : ""}>
-            {sideLabelZh(c.side)}
+            {nowLine}
           </span>
-          {" · "}
-          {STAGE_LABEL_ZH[c.stage] || c.stage}
-          {" · "}
-          {freshnessLabel(c.freshness) || "UNAVAILABLE"}
-          {theme ? ` · ${theme}` : ""}
         </p>
       </header>
 
       <div className="v1829-decision-block">
-        <h3>為何現在？</h3>
+        <h3>目前</h3>
+        <p>{nowLine}</p>
+      </div>
+
+      <div className="v1829-decision-block">
+        <h3>為什麼</h3>
         <p>{whyNow}</p>
       </div>
 
       <div className="v1829-decision-block">
-        <h3>支持證據</h3>
+        <h3>支持</h3>
         {supporting.length ? (
           <ul style={{ margin: 0, paddingLeft: 18 }}>
             {supporting.map((r) => (
@@ -112,12 +181,12 @@ function DecisionWorkspace({ c, level }: { c: MarketCandidate; level: Disclosure
             ))}
           </ul>
         ) : (
-          <p className="muted">UNAVAILABLE</p>
+          <p className="muted">尚無支持證據</p>
         )}
       </div>
 
       <div className="v1829-decision-block against">
-        <h3>反方證據</h3>
+        <h3>反對</h3>
         {against.length ? (
           <ul style={{ margin: 0, paddingLeft: 18 }}>
             {against.map((r) => (
@@ -125,13 +194,13 @@ function DecisionWorkspace({ c, level }: { c: MarketCandidate; level: Disclosure
             ))}
           </ul>
         ) : (
-          <p className="muted">目前未偵測到明顯反方證據</p>
+          <p className="muted">目前未偵測到明顯反對證據</p>
         )}
       </div>
 
       <div className="v1829-decision-block">
-        <h3>失效條件</h3>
-        <p className={invalidation === "UNAVAILABLE" ? "muted" : undefined}>{invalidation}</p>
+        <h3>失效</h3>
+        <p className={invalidation.includes("尚無") ? "muted" : undefined}>{invalidation}</p>
       </div>
 
       <div className="v1829-decision-block">
@@ -146,6 +215,25 @@ function DecisionWorkspace({ c, level }: { c: MarketCandidate; level: Disclosure
         </p>
       </div>
 
+      <div className="v1829-action-strip" style={{ paddingTop: 0, marginBottom: 14 }}>
+        <Link to="/alerts" className="v1829-btn v1829-btn-primary">
+          設警報
+        </Link>
+        <WatchStarButton symbol={c.symbol} />
+        <Link to={`/market/${c.symbol}`} className="v1829-btn v1829-btn-secondary">
+          深入分析
+        </Link>
+        {onOpenEvidence ? (
+          <button
+            type="button"
+            className="v1829-btn v1829-btn-tertiary mobile-only"
+            onClick={onOpenEvidence}
+          >
+            證據 →
+          </button>
+        ) : null}
+      </div>
+
       {level >= 2 ? (
         <div className="v1829-decision-block">
           <h3>交易者指標</h3>
@@ -155,21 +243,21 @@ function DecisionWorkspace({ c, level }: { c: MarketCandidate; level: Disclosure
           >
             <div>
               <dt className="muted">機會分數</dt>
-              <dd>{unavailable(c.opportunityScore) ? "UNAVAILABLE" : fmtNum(c.opportunityScore)}</dd>
+              <dd>{unavailable(c.opportunityScore) ? "尚無資料" : fmtNum(c.opportunityScore)}</dd>
             </div>
             <div>
               <dt className="muted">確認分數</dt>
-              <dd>{unavailable(c.confirmationScore) ? "UNAVAILABLE" : fmtNum(c.confirmationScore)}</dd>
+              <dd>{unavailable(c.confirmationScore) ? "尚無資料" : fmtNum(c.confirmationScore)}</dd>
             </div>
             <div>
               <dt className="muted">價格</dt>
-              <dd>{unavailable(c.currentPrice) ? "UNAVAILABLE" : formatUsd(c.currentPrice)}</dd>
+              <dd>{unavailable(c.currentPrice) ? "尚無資料" : formatUsd(c.currentPrice)}</dd>
             </div>
             <div>
               <dt className="muted">價 5m</dt>
               <dd>
                 {c.priceChange5mPct == null
-                  ? "UNAVAILABLE"
+                  ? "尚無資料"
                   : `${c.priceChange5mPct > 0 ? "+" : ""}${c.priceChange5mPct.toFixed(2)}%`}
               </dd>
             </div>
@@ -181,7 +269,7 @@ function DecisionWorkspace({ c, level }: { c: MarketCandidate; level: Disclosure
         <div className="v1829-decision-block">
           <h3>研究細節</h3>
           <p className="muted" style={{ fontSize: "0.875rem" }}>
-            來源 {displayOrPending(c.source, "UNAVAILABLE")} · 階段 {STAGE_LABEL_ZH[c.stage] || c.stage}
+            來源 {displayOrPending(c.source, "尚無資料")} · 階段 {STAGE_LABEL_ZH[c.stage] || c.stage}
           </p>
           {c.scoreBreakdown ? (
             <p className="muted" style={{ fontSize: "0.8125rem" }}>
@@ -189,53 +277,19 @@ function DecisionWorkspace({ c, level }: { c: MarketCandidate; level: Disclosure
             </p>
           ) : (
             <p className="muted" style={{ fontSize: "0.8125rem" }}>
-              分數拆解 UNAVAILABLE
+              分數拆解尚無資料
             </p>
           )}
         </div>
       ) : null}
-
-      <details style={{ marginTop: 8 }}>
-        <summary style={{ cursor: "pointer", color: "var(--intel)", fontSize: "0.875rem" }}>
-          Funding / OI 與進階衍生（預設收合）
-        </summary>
-        <dl
-          className="nx-kv mono"
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8, fontSize: "0.875rem" }}
-        >
-          <div>
-            <dt className="muted">Funding</dt>
-            <dd>{c.fundingRate == null ? "UNAVAILABLE" : `${(c.fundingRate * 100).toFixed(4)}%`}</dd>
-          </div>
-          <div>
-            <dt className="muted">OI 5m</dt>
-            <dd>
-              {c.oiChange5mPct == null
-                ? "UNAVAILABLE"
-                : `${c.oiChange5mPct > 0 ? "+" : ""}${c.oiChange5mPct.toFixed(2)}%`}
-            </dd>
-          </div>
-          <div>
-            <dt className="muted">OI Value</dt>
-            <dd>{c.openInterestValue == null ? "UNAVAILABLE" : c.openInterestValue}</dd>
-          </div>
-          <div>
-            <dt className="muted">Spread</dt>
-            <dd>{c.spreadBps == null ? "UNAVAILABLE" : c.spreadBps.toFixed(1)}</dd>
-          </div>
-        </dl>
-      </details>
-
-      <p style={{ marginTop: 16 }}>
-        <Link to={`/market/${c.symbol}`}>開啟深度分析 →</Link>
-      </p>
     </div>
   );
 }
 
 /**
- * V18.2.9 Opportunities — ranked list + decision workspace + context drawer.
- * Progressive disclosure L1/L2/L3 — no SIMPLE/EXPERT chrome toggle.
+ * V18.2.9 UX — Opportunities master/detail workspace.
+ * LEFT list · CENTER decision · RIGHT optional evidence drawer.
+ * Mobile: list → fullscreen detail.
  */
 export function OpportunitiesPageV1821() {
   const { longs, shorts, loading, error, status } = useMarketScannerOverview();
@@ -243,6 +297,7 @@ export function OpportunitiesPageV1821() {
   const defaultLevel: DisclosureLevel = loadUiDensity() === "EXPERT" ? 2 : 1;
   const [level, setLevel] = useState<DisclosureLevel>(defaultLevel);
   const [drawerOpen, setDrawerOpen] = useState(true);
+  const [mobileDetail, setMobileDetail] = useState(false);
 
   const partitioned = partitionOpportunityCandidates([...longs, ...shorts]);
   const all = partitioned.crypto;
@@ -252,12 +307,21 @@ export function OpportunitiesPageV1821() {
     status?.confirmedCandidates === 0 ||
     (status?.confirmedCandidates == null && all.length === 0 && !loading);
 
+  useEffect(() => {
+    if (!focusId && all[0]) setFocusId(all[0].id);
+  }, [all, focusId]);
+
+  const selectRow = (id: string) => {
+    setFocusId(id);
+    setMobileDetail(true);
+  };
+
   return (
     <div
       className="page-stack"
       style={{ display: "contents" }}
       data-testid="opportunities-v1821"
-      data-product-gen="v18_2_9"
+      data-product-gen="v18_2_9_ux"
       data-non-crypto-in-crypto-opportunity-count={
         partitioned.non_crypto_symbol_in_crypto_opportunity_count
       }
@@ -267,7 +331,7 @@ export function OpportunitiesPageV1821() {
           <div style={{ flex: 1, minWidth: 200 }}>
             <h1 className="v1829-page-title">找機會</h1>
             <p className="v1829-page-sub" style={{ marginBottom: 0 }}>
-              決策工作區 · 為何現在／支持／反方證據／失效 · 非下單建議
+              主從工作區 · 目前／為什麼／支持／反對／失效／風險 · 非下單建議
             </p>
           </div>
           <button
@@ -276,7 +340,7 @@ export function OpportunitiesPageV1821() {
             onClick={() => setDrawerOpen((v) => !v)}
             aria-pressed={drawerOpen}
           >
-            {drawerOpen ? "收合上下文" : "展開上下文"}
+            {drawerOpen ? "收合證據" : "展開證據"}
           </button>
         </div>
         <div className="v1829-level-tabs" role="group" aria-label="資訊層級" style={{ marginTop: 12 }}>
@@ -301,9 +365,9 @@ export function OpportunitiesPageV1821() {
           data-testid="no-eligible-opportunities"
           style={{ borderLeft: "3px solid var(--semantic-info)" }}
         >
-          <p style={{ margin: 0, fontWeight: 600 }}>目前沒有通過安全門檻的標的</p>
+          <p style={{ margin: 0, fontWeight: 600 }}>目前沒有通過安全條件的市場機會</p>
           <p className="muted" style={{ margin: "8px 0 0", fontSize: "0.875rem" }}>
-            下列若出現僅為觀察候選，不代表合格可交易機會；不暗示做多／做空可執行。
+            下列若出現僅為觀察候選；不顯示假 Top3 可交易卡片。
           </p>
           <div className="v1829-action-strip">
             <Link to="/watchlist" className="v1829-btn v1829-btn-secondary">
@@ -319,11 +383,15 @@ export function OpportunitiesPageV1821() {
       {crossAsset.length ? (
         <div className="nx-banner-warn v1829-panel v1829-col-12" data-testid="cross-asset-context-only">
           跨資產標的（{crossAsset.map((c) => c.symbol.replace("USDT", "")).join(", ")}）·
-          CROSS_ASSET_CONTEXT_ONLY · 已自加密 Opportunities 排名移除
+          僅作上下文 · 已自加密 Opportunities 排名移除
         </div>
       ) : null}
 
-      <div className={`v1829-opp-workspace${drawerOpen ? "" : " drawer-closed"}`}>
+      <div
+        className={`v1829-opp-workspace${drawerOpen ? "" : " drawer-closed"}${
+          mobileDetail ? " mobile-detail" : ""
+        }`}
+      >
         <aside className="v1829-opp-list" aria-label="候選清單">
           {all.length === 0 && !loading ? (
             <p className="muted">暫無可展示候選</p>
@@ -334,7 +402,7 @@ export function OpportunitiesPageV1821() {
                 type="button"
                 className={`v1829-opp-row${focus?.id === c.id ? " is-active" : ""}`}
                 data-tradable={eligibleZero ? "false" : "observe"}
-                onClick={() => setFocusId(c.id)}
+                onClick={() => selectRow(c.id)}
               >
                 <span className="sym-line">
                   <span className="mono">{c.symbol.replace("USDT", "")}</span>
@@ -355,14 +423,21 @@ export function OpportunitiesPageV1821() {
         </aside>
 
         {focus ? (
-          <DecisionWorkspace c={focus} level={level} />
+          <DecisionWorkspace
+            c={focus}
+            level={level}
+            onBack={() => setMobileDetail(false)}
+            onOpenEvidence={() => setDrawerOpen(true)}
+          />
         ) : (
           <div className="v1829-opp-detail">
             <p className="muted">尚無候選可展示</p>
           </div>
         )}
 
-        {drawerOpen && focus ? <ContextDrawer c={focus} /> : null}
+        {drawerOpen && focus ? (
+          <EvidenceDrawer c={focus} onClose={() => setDrawerOpen(false)} />
+        ) : null}
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { useMarketAnomalies } from "../../market/useMarketAnomalies";
 import { useMarketScannerOverview } from "../../market/useMarketScanner";
-import { deriveRegime } from "../../market/marketSummary";
+import { buildMarketSummary, deriveRegime } from "../../market/marketSummary";
 import { fmtNum } from "../../market/displayNull";
 import type { MarketCandidate, ScannerStatus } from "../../market/scannerApi";
 import { STAGE_LABEL_ZH, plainReason } from "../../market/scannerApi";
@@ -85,8 +85,9 @@ function funnelEligibleZero(v: unknown): boolean {
 }
 
 /**
- * V18.2.9 Overview — human workflow (12-col).
- * MARKET NOW + ATTENTION → FUNNEL → FEED+ALERTS → PULSE → action strip.
+ * V18.2.9 UX — Overview as editorial market brief.
+ * L60–65% 市場現在 (posture + sentence + funnel) / R35–40% 需要注意.
+ * Below: ranked 值得關注 → 全市場動態 → recent alerts. Not six equal cards.
  */
 export function ActualPanelOverviewPage() {
   const { status, longs, shorts, events, loading, error } = useMarketScannerOverview();
@@ -121,6 +122,7 @@ export function ActualPanelOverviewPage() {
     [status],
   );
   const regime = deriveRegime(pulse);
+  const briefSentence = buildMarketSummary(pulse);
   const eligibleZero = funnelEligibleZero(status?.confirmedCandidates) && !loading;
   const watch = watchCandidates(longs, shorts);
   const falseOppCount = eligibleZeroFalseOpportunityCount({
@@ -166,13 +168,6 @@ export function ActualPanelOverviewPage() {
 
   const attention = attentionItems(status, loading, latestAlerts.length);
 
-  const majorChange =
-    (status?.highRiskCandidates ?? 0) > 0
-      ? `高風險標的增至 ${status?.highRiskCandidates}`
-      : eligibleZero
-        ? "合格標的仍為 0 — 市場維持防守"
-        : `合格標的 ${status?.confirmedCandidates ?? "—"}`;
-
   const metricDefs = buildMarketMetricFunnel({
     breadthMarketCount: discoveryCount,
     symbolCount: status?.symbolCount,
@@ -188,7 +183,7 @@ export function ActualPanelOverviewPage() {
     data_valid: "有效",
     runtime_observable: "即時",
     safety_review: "安全",
-    eligible: "Eligible",
+    eligible: "合格",
   };
 
   const funnel = buildFunnelDisplay(
@@ -216,9 +211,7 @@ export function ActualPanelOverviewPage() {
       (c) => c.oiChange5mPct != null && Number.isFinite(c.oiChange5mPct),
     );
     if (!withOi.length) return null;
-    const avg =
-      withOi.reduce((s, c) => s + (c.oiChange5mPct as number), 0) / withOi.length;
-    return avg;
+    return withOi.reduce((s, c) => s + (c.oiChange5mPct as number), 0) / withOi.length;
   }, [longs, shorts]);
 
   const volActivity = useMemo(() => {
@@ -226,119 +219,143 @@ export function ActualPanelOverviewPage() {
       (c) => c.priceChange5mPct != null && Number.isFinite(c.priceChange5mPct),
     );
     if (!withPx.length) return null;
-    const avgAbs =
-      withPx.reduce((s, c) => s + Math.abs(c.priceChange5mPct as number), 0) /
-      withPx.length;
-    return avgAbs;
+    return (
+      withPx.reduce((s, c) => s + Math.abs(c.priceChange5mPct as number), 0) / withPx.length
+    );
   }, [longs, shorts]);
 
-  const liqProxy = status?.highRiskCandidates ?? null;
+  const dynamicsLines = useMemo(() => {
+    const lines: string[] = [];
+    if (funding.status === "live" && funding.value) {
+      lines.push(`Funding 均勢 ${funding.value.display}`);
+    }
+    if (oiSample != null) {
+      lines.push(`OI 5m 均變 ${oiSample > 0 ? "+" : ""}${oiSample.toFixed(2)}%`);
+    }
+    if (volActivity != null) {
+      lines.push(`短線波動活動約 ${volActivity.toFixed(2)}%`);
+    }
+    if (status?.symbolCount != null) {
+      lines.push(`監控 ${status.symbolCount} 標的`);
+    }
+    if ((status?.highRiskCandidates ?? 0) > 0) {
+      lines.push(`高風險／清算壓力訊號 ${status?.highRiskCandidates}`);
+    }
+    if (status?.breadth) {
+      const b = status.breadth;
+      lines.push(`廣度 升 ${b.rising}／降 ${b.falling}／中性 ${b.neutral}`);
+    }
+    return lines;
+  }, [funding, oiSample, volActivity, status]);
 
   return (
     <div
-      className="v1829-overview"
+      className="v1829-overview v1829-brief"
       data-testid="actual-panel-overview"
-      data-product-gen="v18_2_9"
+      data-product-gen="v18_2_9_ux"
       data-eligible-zero-false-opportunity-count={falseOppCount}
       data-non-crypto-in-crypto-opportunity-count={0}
     >
-      {/* ROW1: L7 MARKET NOW + R5 ATTENTION */}
-      <section
-        className="v1829-panel v1829-col-7"
-        aria-label="現在市場"
-        data-testid="overview-market-hero"
-      >
-        <p className="v1829-kicker">市場怎麼了</p>
-        <h2>現在市場</h2>
-        <div className="v1829-market-now">
-          <div className="v1829-metric">
-            <span className="label">偏向</span>
-            <span className="value intel">{regime}</span>
-          </div>
-          <div className="v1829-metric">
-            <span className="label">風險</span>
-            <span className={`value ${(status?.highRiskCandidates ?? 0) > 0 ? "warn" : ""}`}>
-              {(status?.highRiskCandidates ?? 0) > 0
-                ? `高風險 ${status?.highRiskCandidates}`
-                : "無突出重大風險"}
-            </span>
-          </div>
-          <div className="v1829-metric">
-            <span className="label">Data Trust</span>
+      {/* Editorial hero: L ~62% market now · R ~38% attention */}
+      <div className="v1829-brief-hero" data-testid="overview-editorial-hero">
+        <section className="v1829-brief-now" aria-label="市場現在" data-testid="overview-market-hero">
+          <p className="v1829-kicker">市場現在</p>
+          <p
+            className={`v1829-brief-posture${
+              regime === "偏多" ? " pos" : regime === "偏空" ? " neg" : ""
+            }`}
+            data-testid="overview-posture"
+          >
+            {loading && !status ? "讀取中" : regime}
+          </p>
+          <p className="v1829-brief-lede">
+            {loading && !status ? "掃描器資料累積中…" : briefSentence}
+          </p>
+          <p className="v1829-brief-meta muted">
             <span
-              className={`value ${
-                trust.includes("降級") || trust === "不可用" || trust.includes("過期")
-                  ? "warn"
-                  : "intel"
-              }`}
-            >
-              {trust}
-            </span>
-          </div>
-          <div className="v1829-metric">
-            <span className="label">主要變化</span>
-            <span
-              className="value"
               data-testid="overview-freshness"
               data-global-live-overclaim={freshDisp.global_live_overclaim ? "1" : "0"}
             >
-              {majorChange}
-              <span className="muted" style={{ display: "block", fontSize: "0.8125rem", fontWeight: 400, marginTop: 2 }}>
-                {freshDisp.label}
-              </span>
+              {freshDisp.label}
             </span>
-          </div>
-        </div>
-        <p className="muted" style={{ marginTop: 12, fontSize: "0.8125rem" }}>
-          方案 {plan} · 全市場情報 · 唯讀
-        </p>
-        {error ? (
-          <div className="nx-banner-warn" role="status" style={{ marginTop: 10 }}>
-            掃描器暫不可用：{error}
-          </div>
-        ) : null}
-      </section>
+            {" · "}
+            {trust}
+            {" · "}
+            方案 {plan}
+          </p>
 
-      <section
-        className="v1829-panel v1829-col-5"
-        aria-label="需要關注"
-        data-testid="market-risks"
-      >
-        <p className="v1829-kicker">哪裡有風險</p>
-        <h2>需要關注</h2>
-        <ul className="v1829-attention-list">
-          {attention.map((r) => (
-            <li key={r}>{r}</li>
-          ))}
-        </ul>
-      </section>
-
-      {/* ROW2: FULL MARKET FUNNEL */}
-      <section
-        className="v1829-panel v1829-col-12"
-        aria-label="全市場漏斗"
-        data-testid="decision-funnel"
-      >
-        <h2>全市場漏斗</h2>
-        <p className="muted" style={{ marginTop: -4, marginBottom: 10, fontSize: "0.8125rem" }} data-testid="funnel-metric-definitions">
-          發現 → 有效 → 即時 → 安全 → Eligible
-        </p>
-        {!funnel.hasData ? (
-          <p className="muted">{NO_DATA}</p>
-        ) : (
-          <div className="v1829-funnel">
-            {funnel.stages.map((s) => (
-              <div
-                key={s.key}
-                className="v1829-funnel-step"
-                title={metricDefs.find((m) => m.metric_name === s.key)?.definition}
-              >
-                <strong className="mono">{s.display}</strong>
-                <span>{s.label}</span>
+          <div className="v1829-brief-funnel" aria-label="全市場漏斗" data-testid="decision-funnel">
+            <p className="v1829-brief-funnel-label" data-testid="funnel-metric-definitions">
+              發現 → 有效 → 即時 → 安全 → 合格
+            </p>
+            {!funnel.hasData ? (
+              <p className="muted">{NO_DATA}</p>
+            ) : (
+              <div className="v1829-funnel v1829-funnel-inline">
+                {funnel.stages.map((s) => (
+                  <div
+                    key={s.key}
+                    className="v1829-funnel-step"
+                    title={metricDefs.find((m) => m.metric_name === s.key)?.definition}
+                  >
+                    <strong className="mono">{s.display}</strong>
+                    <span>{s.label}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
+
+          {error ? (
+            <div className="nx-banner-warn" role="status" style={{ marginTop: 12 }}>
+              掃描器暫不可用：{error}
+            </div>
+          ) : null}
+
+          <div className="v1829-action-strip" data-testid="overview-primary-actions">
+            <Link to="/scanner" className="v1829-btn v1829-btn-primary">
+              掃描全市場
+            </Link>
+            <Link to="/alerts" className="v1829-btn v1829-btn-secondary">
+              建立警報
+            </Link>
+            <Link to="/watchlist" className="v1829-btn v1829-btn-tertiary">
+              觀察清單
+            </Link>
+          </div>
+        </section>
+
+        <aside className="v1829-brief-attention" aria-label="需要注意" data-testid="market-risks">
+          <p className="v1829-kicker">需要注意</p>
+          <h2 className="v1829-brief-aside-title">判斷優先級</h2>
+          <ol className="v1829-attention-list v1829-attention-ranked">
+            {attention.map((r, i) => (
+              <li key={r}>
+                <span className="rank mono">{i + 1}</span>
+                <span>{r}</span>
+              </li>
+            ))}
+          </ol>
+        </aside>
+      </div>
+
+      {/* Ranked watch — never fake Top3 tradable cards when eligible=0 */}
+      <section
+        className="v1829-brief-section"
+        aria-label="值得關注"
+        data-testid="top-opportunities"
+      >
+        <header className="v1829-brief-section-head">
+          <div>
+            <p className="v1829-kicker">值得關注</p>
+            <h2>
+              {eligibleZero ? "正在觀察" : "排名關注"}
+            </h2>
+          </div>
+          <Link to="/opportunities" className="v1829-btn v1829-btn-tertiary">
+            決策工作區 →
+          </Link>
+        </header>
 
         {eligibleZero ? (
           <div
@@ -346,115 +363,97 @@ export function ActualPanelOverviewPage() {
             data-testid="no-eligible-opportunities"
             data-eligible-zero-false-opportunity-count="0"
           >
-            <p>目前沒有通過安全門檻的標的</p>
+            <p>目前沒有通過安全條件的市場機會</p>
             <p className="secondary">
-              可先掃描全市場、查看觀察標的，或建立警報等待條件變化。不顯示可交易 Top3／做多／做空建議。
+              下列為正在觀察的候選，不是可交易 Top3，也不暗示做多／做空建議。
             </p>
-            <div className="v1829-action-strip" style={{ paddingTop: 8 }}>
-              <Link to="/watchlist" className="v1829-btn v1829-btn-secondary">
-                查看觀察標的
-              </Link>
-              <Link to="/alerts" className="v1829-btn v1829-btn-secondary">
-                建立警報
-              </Link>
-            </div>
           </div>
-        ) : (
-          <p className="muted" style={{ marginTop: 12, fontSize: "0.875rem" }}>
-            合格標的 {status?.confirmedCandidates ?? "UNAVAILABLE"} · 僅供研究觀察
-          </p>
-        )}
-
-        {/* Compact action strip — one primary */}
-        <div className="v1829-action-strip" data-testid="overview-primary-actions">
-          <Link to="/scanner" className="v1829-btn v1829-btn-primary">
-            掃描全市場
-          </Link>
-          <Link to="/alerts" className="v1829-btn v1829-btn-secondary">
-            建立警報
-          </Link>
-          <Link to="/watchlist" className="v1829-btn v1829-btn-secondary">
-            查看觀察清單
-          </Link>
-        </div>
-      </section>
-
-      {/* ROW3: L8 FEED + R4 ALERTS */}
-      <section
-        className="v1829-panel v1829-col-8"
-        aria-label="值得關注"
-        data-testid="top-opportunities"
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-          <div>
-            <p className="v1829-kicker">哪裡值得看</p>
-            <h2 style={{ margin: 0 }}>值得關注</h2>
-          </div>
-          <Link to="/opportunities" className="v1829-btn v1829-btn-tertiary">
-            全部 →
-          </Link>
-        </div>
-        {eligibleZero ? (
-          <p className="muted" data-testid="no-tradable-top3" style={{ marginTop: 8, fontSize: "0.8125rem" }}>
-            觀察清單 · 非交易機會
-          </p>
         ) : null}
+
         {watch.length === 0 ? (
-          <p className="muted" style={{ marginTop: 8 }}>
+          <p className="muted" data-testid="no-tradable-top3">
             {loading ? "載入中…" : "目前沒有可展示的關注標的"}
           </p>
         ) : (
-          <div data-testid="watch-candidates" style={{ marginTop: 8 }}>
-            <div className="v1829-feed-row v1829-feed-head desktop-only">
-              <span>標的</span>
-              <span>狀態</span>
-              <span>主要原因</span>
-              <span>風險</span>
-              <span>Trust</span>
-              <span>更新</span>
-            </div>
-            {watch.map((c) => (
-              <div
+          <ol className="v1829-ranked-list" data-testid="watch-candidates">
+            {watch.map((c, i) => (
+              <li
                 key={c.id}
-                className="v1829-feed-row"
+                className="v1829-ranked-item"
                 data-testid="watch-candidate-card"
                 data-tradable="false"
               >
-                <Link to={`/market/${c.symbol}`} className="sym mono">
-                  {c.symbol.replace("USDT", "")}
-                </Link>
-                <span>{STAGE_LABEL_ZH[c.stage] || c.stage}</span>
-                <span>{plainReason(c.reasons?.[0] || "結構仍在觀察", true)}</span>
-                <span className="mono">
-                  {c.riskScore == null ? "—" : fmtNum(c.riskScore)}
-                </span>
-                <span className="muted" style={{ fontSize: "0.8125rem" }}>
-                  {c.freshness === "LIVE" ? "即時" : c.freshness || "—"}
-                </span>
-                <span className="muted">{agoLabel(c.lastUpdatedAt)}</span>
-              </div>
+                <span className="rank mono">{i + 1}</span>
+                <div className="body">
+                  <div className="primary-line">
+                    <Link to={`/market/${c.symbol}`} className="sym mono">
+                      {c.symbol.replace("USDT", "")}
+                    </Link>
+                    <span className="stage">{STAGE_LABEL_ZH[c.stage] || c.stage}</span>
+                    <span className="muted mono">{agoLabel(c.lastUpdatedAt)}</span>
+                  </div>
+                  <p className="reason">{plainReason(c.reasons?.[0] || "結構仍在觀察", true)}</p>
+                </div>
+                <div className="risk-col">
+                  <span className="label">風險</span>
+                  <span className="mono">
+                    {c.riskScore == null ? "—" : fmtNum(c.riskScore)}
+                  </span>
+                </div>
+              </li>
             ))}
-          </div>
+          </ol>
         )}
       </section>
 
+      {/* Market dynamics — prose stream, not equal metric cards */}
       <section
-        className="v1829-panel v1829-col-4"
+        className="v1829-brief-section"
+        aria-label="全市場動態"
+        data-testid="market-pulse"
+      >
+        <header className="v1829-brief-section-head">
+          <div>
+            <p className="v1829-kicker">全市場動態</p>
+            <h2>此刻讀到什麼</h2>
+          </div>
+          <Link to="/scanner" className="v1829-btn v1829-btn-tertiary">
+            打開掃描器 →
+          </Link>
+        </header>
+        {dynamicsLines.length === 0 ? (
+          <p className="muted">動態尚未就緒</p>
+        ) : (
+          <ul className="v1829-dynamics-stream">
+            {dynamicsLines.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        )}
+        <p className="muted" style={{ marginTop: 10, fontSize: "0.8125rem" }}>
+          實測掃描池衍生 · 非假圖表
+        </p>
+      </section>
+
+      {/* Recent alerts — chronological strip */}
+      <section
+        className="v1829-brief-section"
         aria-label="最新警報"
         data-testid="critical-alerts"
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-          <h2 style={{ margin: 0 }}>最新警報</h2>
+        <header className="v1829-brief-section-head">
+          <div>
+            <p className="v1829-kicker">最近動態</p>
+            <h2>最新警報</h2>
+          </div>
           <Link to="/alerts" className="v1829-btn v1829-btn-tertiary">
-            警報 →
+            警報串流 →
           </Link>
-        </div>
+        </header>
         {latestAlerts.length === 0 ? (
-          <p className="muted" style={{ marginTop: 8 }}>
-            目前沒有最新警報
-          </p>
+          <p className="muted">目前沒有最新警報</p>
         ) : (
-          <ul className="v1829-timeline" style={{ marginTop: 8 }}>
+          <ul className="v1829-timeline">
             {latestAlerts.map((a) => (
               <li key={a.id}>
                 <span className="dot" aria-hidden />
@@ -466,46 +465,6 @@ export function ActualPanelOverviewPage() {
             ))}
           </ul>
         )}
-      </section>
-
-      {/* ROW4: MARKET PULSE — real data only */}
-      <section className="v1829-panel v1829-col-12" aria-label="市場脈動" data-testid="market-pulse">
-        <h2>市場脈動</h2>
-        <div className="v1829-pulse">
-          <div className="v1829-pulse-cell">
-            <div className="label">Funding</div>
-            <div className="value mono">
-              {funding.status === "live" && funding.value
-                ? funding.value.display
-                : "UNAVAILABLE"}
-            </div>
-          </div>
-          <div className="v1829-pulse-cell">
-            <div className="label">OI 5m 均變</div>
-            <div className="value mono">
-              {oiSample == null
-                ? "UNAVAILABLE"
-                : `${oiSample > 0 ? "+" : ""}${oiSample.toFixed(2)}%`}
-            </div>
-          </div>
-          <div className="v1829-pulse-cell">
-            <div className="label">波動活動</div>
-            <div className="value mono">
-              {volActivity == null ? "UNAVAILABLE" : `${volActivity.toFixed(2)}%`}
-            </div>
-          </div>
-          <div className="v1829-pulse-cell">
-            <div className="label">監控活動</div>
-            <div className="value mono">{status?.symbolCount ?? "UNAVAILABLE"}</div>
-          </div>
-          <div className="v1829-pulse-cell">
-            <div className="label">高風險／清算壓力</div>
-            <div className="value mono">{liqProxy == null ? "UNAVAILABLE" : liqProxy}</div>
-          </div>
-        </div>
-        <p className="muted" style={{ marginTop: 8, fontSize: "0.8125rem" }}>
-          實測掃描池衍生 · 非假圖表 · Funding／OI 為產業術語
-        </p>
       </section>
     </div>
   );
