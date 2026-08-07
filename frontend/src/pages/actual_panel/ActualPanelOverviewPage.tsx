@@ -43,7 +43,6 @@ function watchCandidates(longs: MarketCandidate[], shorts: MarketCandidate[]): M
     .slice(0, 8);
 }
 
-/** Public-safe attention items — risks / alert / degradation. */
 function attentionItems(
   status: ScannerStatus | null | undefined,
   loading: boolean,
@@ -85,9 +84,9 @@ function funnelEligibleZero(v: unknown): boolean {
 }
 
 /**
- * V18.2.9 UX — Overview as editorial market brief.
- * L60–65% 市場現在 (posture + sentence + funnel) / R35–40% 需要注意.
- * Below: ranked 值得關注 → 全市場動態 → recent alerts. Not six equal cards.
+ * V18.2.10 — Overview recomposed from zero.
+ * Compact header → market pulse → L~65% Market Now+funnel / R~35% 值得注意 →
+ * 正在觀察 ranked table → timeline. Actions nestled in sections.
  */
 export function ActualPanelOverviewPage() {
   const { status, longs, shorts, events, loading, error } = useMarketScannerOverview();
@@ -224,78 +223,87 @@ export function ActualPanelOverviewPage() {
     );
   }, [longs, shorts]);
 
-  const dynamicsLines = useMemo(() => {
-    const lines: string[] = [];
-    if (funding.status === "live" && funding.value) {
-      lines.push(`Funding 均勢 ${funding.value.display}`);
-    }
-    if (oiSample != null) {
-      lines.push(`OI 5m 均變 ${oiSample > 0 ? "+" : ""}${oiSample.toFixed(2)}%`);
-    }
-    if (volActivity != null) {
-      lines.push(`短線波動活動約 ${volActivity.toFixed(2)}%`);
-    }
-    if (status?.symbolCount != null) {
-      lines.push(`監控 ${status.symbolCount} 標的`);
-    }
-    if ((status?.highRiskCandidates ?? 0) > 0) {
-      lines.push(`高風險／清算壓力訊號 ${status?.highRiskCandidates}`);
-    }
-    if (status?.breadth) {
-      const b = status.breadth;
-      lines.push(`廣度 升 ${b.rising}／降 ${b.falling}／中性 ${b.neutral}`);
-    }
-    return lines;
-  }, [funding, oiSample, volActivity, status]);
+  const breadthLine = status?.breadth
+    ? `升 ${status.breadth.rising}／降 ${status.breadth.falling}／中性 ${status.breadth.neutral}`
+    : "—";
 
   return (
     <div
-      className="v1829-overview v1829-brief"
+      className="nx10-ov"
       data-testid="actual-panel-overview"
-      data-product-gen="v18_2_9_ux"
+      data-product-gen="v18_2_10"
       data-eligible-zero-false-opportunity-count={falseOppCount}
       data-non-crypto-in-crypto-opportunity-count={0}
     >
-      {/* Editorial hero: L ~62% market now · R ~38% attention */}
-      <div className="v1829-brief-hero" data-testid="overview-editorial-hero">
-        <section className="v1829-brief-now" aria-label="市場現在" data-testid="overview-market-hero">
-          <p className="v1829-kicker">市場現在</p>
+      <header className="nx10-ov-head">
+        <div>
+          <h1 className="nx10-page-title">總覽</h1>
+          <p className="nx10-page-sub">市場現況與觀察優先級 · 非交易建議</p>
+        </div>
+        <div className="nx10-ov-head-meta">
+          <span
+            data-testid="overview-freshness"
+            data-global-live-overclaim={freshDisp.global_live_overclaim ? "1" : "0"}
+          >
+            {freshDisp.label}
+          </span>
+          <span>{trust}</span>
+          <span>方案 {plan}</span>
+        </div>
+      </header>
+
+      <div className="nx10-pulse" aria-label="市場脈動" data-testid="market-pulse">
+        <div className="nx10-pulse-cell">
+          <span className="lbl">Funding</span>
+          <span className="val">
+            {funding.status === "live" && funding.value ? funding.value.display : "—"}
+          </span>
+        </div>
+        <div className="nx10-pulse-cell">
+          <span className="lbl">OI 5m</span>
+          <span className="val">
+            {oiSample == null ? "—" : `${oiSample > 0 ? "+" : ""}${oiSample.toFixed(2)}%`}
+          </span>
+        </div>
+        <div className="nx10-pulse-cell">
+          <span className="lbl">短線波動</span>
+          <span className="val">{volActivity == null ? "—" : `${volActivity.toFixed(2)}%`}</span>
+        </div>
+        <div className="nx10-pulse-cell">
+          <span className="lbl">廣度</span>
+          <span className="val" style={{ fontSize: "0.8125rem" }}>
+            {breadthLine}
+          </span>
+        </div>
+      </div>
+
+      <div className="nx10-ov-split" data-testid="overview-editorial-hero">
+        <section className="nx10-ov-now" aria-label="市場現在" data-testid="overview-market-hero">
+          <p className="nx10-kicker">Market Now</p>
           <p
-            className={`v1829-brief-posture${
+            className={`nx10-ov-posture${
               regime === "偏多" ? " pos" : regime === "偏空" ? " neg" : ""
             }`}
             data-testid="overview-posture"
           >
             {loading && !status ? "讀取中" : regime}
           </p>
-          <p className="v1829-brief-lede">
+          <p className="nx10-ov-lede">
             {loading && !status ? "掃描器資料累積中…" : briefSentence}
           </p>
-          <p className="v1829-brief-meta muted">
-            <span
-              data-testid="overview-freshness"
-              data-global-live-overclaim={freshDisp.global_live_overclaim ? "1" : "0"}
-            >
-              {freshDisp.label}
-            </span>
-            {" · "}
-            {trust}
-            {" · "}
-            方案 {plan}
-          </p>
 
-          <div className="v1829-brief-funnel" aria-label="全市場漏斗" data-testid="decision-funnel">
-            <p className="v1829-brief-funnel-label" data-testid="funnel-metric-definitions">
+          <div aria-label="全市場漏斗" data-testid="decision-funnel">
+            <p className="nx10-kicker" data-testid="funnel-metric-definitions">
               發現 → 有效 → 即時 → 安全 → 合格
             </p>
             {!funnel.hasData ? (
               <p className="muted">{NO_DATA}</p>
             ) : (
-              <div className="v1829-funnel v1829-funnel-inline">
+              <div className="nx10-funnel">
                 {funnel.stages.map((s) => (
                   <div
                     key={s.key}
-                    className="v1829-funnel-step"
+                    className="nx10-funnel-step"
                     title={metricDefs.find((m) => m.metric_name === s.key)?.definition}
                   >
                     <strong className="mono">{s.display}</strong>
@@ -312,61 +320,56 @@ export function ActualPanelOverviewPage() {
             </div>
           ) : null}
 
-          <div className="v1829-action-strip" data-testid="overview-primary-actions">
-            <Link to="/scanner" className="v1829-btn v1829-btn-primary">
+          <div className="nx10-actions" data-testid="overview-primary-actions">
+            <Link to="/scanner" className="nx10-btn nx10-btn-primary">
               掃描全市場
             </Link>
-            <Link to="/alerts" className="v1829-btn v1829-btn-secondary">
-              建立警報
-            </Link>
-            <Link to="/watchlist" className="v1829-btn v1829-btn-tertiary">
-              觀察清單
+            <Link to="/opportunities" className="nx10-btn nx10-btn-secondary">
+              找機會
             </Link>
           </div>
         </section>
 
-        <aside className="v1829-brief-attention" aria-label="需要注意" data-testid="market-risks">
-          <p className="v1829-kicker">需要注意</p>
-          <h2 className="v1829-brief-aside-title">判斷優先級</h2>
-          <ol className="v1829-attention-list v1829-attention-ranked">
+        <aside className="nx10-ov-attn" aria-label="值得注意" data-testid="market-risks">
+          <p className="nx10-kicker">值得注意</p>
+          <h2 className="nx10-page-title" style={{ fontSize: "1.05rem" }}>
+            優先處理
+          </h2>
+          <ol className="nx10-rank-list">
             {attention.map((r, i) => (
               <li key={r}>
-                <span className="rank mono">{i + 1}</span>
+                <span className="nx10-rank-n">{i + 1}</span>
                 <span>{r}</span>
               </li>
             ))}
           </ol>
+          <div className="nx10-actions">
+            <Link to="/alerts" className="nx10-btn nx10-btn-tertiary">
+              警報時間軸 →
+            </Link>
+          </div>
         </aside>
       </div>
 
-      {/* Ranked watch — never fake Top3 tradable cards when eligible=0 */}
-      <section
-        className="v1829-brief-section"
-        aria-label="值得關注"
-        data-testid="top-opportunities"
-      >
-        <header className="v1829-brief-section-head">
+      <section aria-label="正在觀察" data-testid="top-opportunities">
+        <header className="nx10-section-head">
           <div>
-            <p className="v1829-kicker">值得關注</p>
-            <h2>
-              {eligibleZero ? "正在觀察" : "排名關注"}
-            </h2>
+            <p className="nx10-kicker">正在觀察</p>
+            <h2>{eligibleZero ? "觀察候選（非可交易 Top3）" : "排名關注"}</h2>
           </div>
-          <Link to="/opportunities" className="v1829-btn v1829-btn-tertiary">
+          <Link to="/opportunities" className="nx10-btn nx10-btn-tertiary">
             決策工作區 →
           </Link>
         </header>
 
         {eligibleZero ? (
           <div
-            className="v1829-empty-eligible"
+            className="nx10-empty"
             data-testid="no-eligible-opportunities"
             data-eligible-zero-false-opportunity-count="0"
           >
-            <p>目前沒有通過安全條件的市場機會</p>
-            <p className="secondary">
-              下列為正在觀察的候選，不是可交易 Top3，也不暗示做多／做空建議。
-            </p>
+            <strong>目前沒有通過安全條件的市場機會</strong>
+            下列為正在觀察的候選，不是可交易 Top3。
           </div>
         ) : null}
 
@@ -375,92 +378,63 @@ export function ActualPanelOverviewPage() {
             {loading ? "載入中…" : "目前沒有可展示的關注標的"}
           </p>
         ) : (
-          <ol className="v1829-ranked-list" data-testid="watch-candidates">
-            {watch.map((c, i) => (
-              <li
-                key={c.id}
-                className="v1829-ranked-item"
-                data-testid="watch-candidate-card"
-                data-tradable="false"
-              >
-                <span className="rank mono">{i + 1}</span>
-                <div className="body">
-                  <div className="primary-line">
-                    <Link to={`/market/${c.symbol}`} className="sym mono">
+          <table className="nx10-watch-table" data-testid="watch-candidates">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>標的</th>
+                <th>階段</th>
+                <th>原因</th>
+                <th>風險</th>
+                <th>更新</th>
+              </tr>
+            </thead>
+            <tbody>
+              {watch.map((c, i) => (
+                <tr key={c.id} data-testid="watch-candidate-card" data-tradable="false">
+                  <td className="mono muted">{i + 1}</td>
+                  <td>
+                    <Link to={`/market/${c.symbol}`} className="mono">
                       {c.symbol.replace("USDT", "")}
                     </Link>
-                    <span className="stage">{STAGE_LABEL_ZH[c.stage] || c.stage}</span>
-                    <span className="muted mono">{agoLabel(c.lastUpdatedAt)}</span>
-                  </div>
-                  <p className="reason">{plainReason(c.reasons?.[0] || "結構仍在觀察", true)}</p>
-                </div>
-                <div className="risk-col">
-                  <span className="label">風險</span>
-                  <span className="mono">
-                    {c.riskScore == null ? "—" : fmtNum(c.riskScore)}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ol>
+                  </td>
+                  <td>{STAGE_LABEL_ZH[c.stage] || c.stage}</td>
+                  <td>{plainReason(c.reasons?.[0] || "結構仍在觀察", true)}</td>
+                  <td className="mono">{c.riskScore == null ? "—" : fmtNum(c.riskScore)}</td>
+                  <td className="mono muted">{agoLabel(c.lastUpdatedAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </section>
 
-      {/* Market dynamics — prose stream, not equal metric cards */}
-      <section
-        className="v1829-brief-section"
-        aria-label="全市場動態"
-        data-testid="market-pulse"
-      >
-        <header className="v1829-brief-section-head">
+      <section aria-label="最新動態" data-testid="critical-alerts">
+        <header className="nx10-section-head">
           <div>
-            <p className="v1829-kicker">全市場動態</p>
-            <h2>此刻讀到什麼</h2>
+            <p className="nx10-kicker">時間軸</p>
+            <h2>最新動態</h2>
           </div>
-          <Link to="/scanner" className="v1829-btn v1829-btn-tertiary">
-            打開掃描器 →
-          </Link>
-        </header>
-        {dynamicsLines.length === 0 ? (
-          <p className="muted">動態尚未就緒</p>
-        ) : (
-          <ul className="v1829-dynamics-stream">
-            {dynamicsLines.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-        )}
-        <p className="muted" style={{ marginTop: 10, fontSize: "0.8125rem" }}>
-          實測掃描池衍生 · 非假圖表
-        </p>
-      </section>
-
-      {/* Recent alerts — chronological strip */}
-      <section
-        className="v1829-brief-section"
-        aria-label="最新警報"
-        data-testid="critical-alerts"
-      >
-        <header className="v1829-brief-section-head">
-          <div>
-            <p className="v1829-kicker">最近動態</p>
-            <h2>最新警報</h2>
+          <div className="nx10-actions" style={{ marginTop: 0 }}>
+            <Link to="/watchlist" className="nx10-btn nx10-btn-tertiary">
+              觀察清單
+            </Link>
+            <Link to="/alerts" className="nx10-btn nx10-btn-tertiary">
+              全部警報 →
+            </Link>
           </div>
-          <Link to="/alerts" className="v1829-btn v1829-btn-tertiary">
-            警報串流 →
-          </Link>
         </header>
         {latestAlerts.length === 0 ? (
           <p className="muted">目前沒有最新警報</p>
         ) : (
-          <ul className="v1829-timeline">
+          <ul className="nx10-timeline">
             {latestAlerts.map((a) => (
               <li key={a.id}>
                 <span className="dot" aria-hidden />
                 <div>
                   <Link to={a.href}>{a.text}</Link>
-                  <span className="when">{a.when}</span>
                 </div>
+                <span className="when">{a.when}</span>
               </li>
             ))}
           </ul>

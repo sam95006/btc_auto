@@ -262,25 +262,25 @@ export function ScannerPage({ hideHeader = false }: ScannerPageProps = {}) {
       className="page-stack"
       style={{ display: "contents" }}
       data-testid="scanner-v1828"
-      data-product-gen="v18_2_9_ux"
+      data-product-gen="v18_2_10"
       data-density={density}
     >
       {!hideHeader ? (
-        <header className="v1829-panel v1829-col-12">
-          <h1 className="v1829-page-title">全市場掃描</h1>
-          <p className="v1829-page-sub" style={{ marginBottom: 0 }}>
+        <header className="nx10-panel">
+          <h1 className="nx10-page-title">全市場掃描</h1>
+          <p className="nx10-page-sub" style={{ marginBottom: 0 }}>
             專業工作台 · {filtered.length} / {rows.length} · {status?.freshness || "更新未知"} · 約每{" "}
             {status?.snapshotIntervalSec ?? 20} 秒更新
           </p>
         </header>
       ) : null}
 
-      {error ? <div className="nx-banner-warn v1829-panel v1829-col-12">{error}</div> : null}
+      {error ? <div className="nx-banner-warn nx10-panel">{error}</div> : null}
 
-      <div className={`v1829-scanner${selected ? "" : " no-drawer"}`}>
-        <div className={`v1829-scanner-main density-${density}`}>
-          <div className="v1829-scanner-sticky">
-            <div className="v1829-scanner-toolbar">
+      <div className={`nx10-scanner${selected ? "" : " no-drawer"}`}>
+        <div className={`nx10-scanner-main density-${density}`}>
+          <div className="nx10-scanner-sticky">
+            <div className="nx10-scanner-toolbar">
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -299,14 +299,14 @@ export function ScannerPage({ hideHeader = false }: ScannerPageProps = {}) {
               </select>
               <button
                 type="button"
-                className={`v1829-filter-chip${density === "compact" ? " active" : ""}`}
+                className={`nx10-chip-btn${density === "compact" ? " active" : ""}`}
                 onClick={() => setDensity((d) => (d === "compact" ? "comfortable" : "compact"))}
               >
                 {density === "compact" ? "緊湊" : "舒適"}
               </button>
               <button
                 type="button"
-                className={`v1829-filter-chip${showAdvanced ? " active" : ""}`}
+                className={`nx10-chip-btn${showAdvanced ? " active" : ""}`}
                 onClick={() => {
                   setShowAdvanced((v) => {
                     const next = !v;
@@ -328,29 +328,29 @@ export function ScannerPage({ hideHeader = false }: ScannerPageProps = {}) {
               </button>
               <button
                 type="button"
-                className={`v1829-filter-chip${colsOpen ? " active" : ""}`}
+                className={`nx10-chip-btn${colsOpen ? " active" : ""}`}
                 onClick={() => setColsOpen((v) => !v)}
               >
                 欄位
               </button>
               <button
                 type="button"
-                className="v1829-filter-chip mobile-only"
+                className="nx10-chip-btn mobile-only"
                 onClick={() => setFiltersOpen(true)}
               >
                 篩選
               </button>
-              <Link to="/alerts" className="v1829-btn v1829-btn-tertiary" style={{ minHeight: 28 }}>
+              <Link to="/alerts" className="nx10-btn nx10-btn-tertiary" style={{ minHeight: 28 }}>
                 設警報
               </Link>
             </div>
 
-            <div className="v1829-scanner-toolbar desktop-only" role="group" aria-label="語意篩選">
+            <div className="nx10-scanner-toolbar desktop-only" role="group" aria-label="語意篩選">
               {primaryFilters.map((f) => (
                 <button
                   key={f.id}
                   type="button"
-                  className={`v1829-filter-chip${filter === f.id ? " active" : ""}`}
+                  className={`nx10-chip-btn${filter === f.id ? " active" : ""}`}
                   onClick={() => setFilter(f.id)}
                 >
                   {f.label}
@@ -359,9 +359,9 @@ export function ScannerPage({ hideHeader = false }: ScannerPageProps = {}) {
             </div>
 
             {colsOpen ? (
-              <div className="v1829-col-picker" role="group" aria-label="欄位選擇">
+              <div className="nx10-col-picker" role="group" aria-label="欄位選擇">
                 {([...BEGINNER_COLS, ...ADVANCED_EXTRA] as ColId[]).map((id) => (
-                  <label key={id} className="v1829-col-picker-item">
+                  <label key={id} className="nx10-col-picker-item">
                     <input
                       type="checkbox"
                       checked={visibleCols.includes(id)}
@@ -376,13 +376,13 @@ export function ScannerPage({ hideHeader = false }: ScannerPageProps = {}) {
           </div>
 
           {filtersOpen ? (
-            <div className="v1829-filter-sheet mobile-only" role="dialog" aria-label="篩選">
-              <div className="v1829-scanner-toolbar">
+            <div className="nx10-filter-sheet mobile-only" role="dialog" aria-label="篩選">
+              <div className="nx10-scanner-toolbar">
                 {primaryFilters.map((f) => (
                   <button
                     key={f.id}
                     type="button"
-                    className={`v1829-filter-chip${filter === f.id ? " active" : ""}`}
+                    className={`nx10-chip-btn${filter === f.id ? " active" : ""}`}
                     onClick={() => {
                       setFilter(f.id);
                       setFiltersOpen(false);
@@ -392,14 +392,14 @@ export function ScannerPage({ hideHeader = false }: ScannerPageProps = {}) {
                   </button>
                 ))}
               </div>
-              <button type="button" className="v1829-btn v1829-btn-secondary" onClick={() => setFiltersOpen(false)}>
+              <button type="button" className="nx10-btn nx10-btn-secondary" onClick={() => setFiltersOpen(false)}>
                 關閉篩選
               </button>
             </div>
           ) : null}
 
-          <div className="desktop-only v1829-scanner-table-wrap">
-            <table className="v1829-scanner-table sticky-head">
+          <div className="desktop-only nx10-scanner-table-wrap">
+            <table className="nx10-scanner-table sticky-head">
               <thead>
                 <tr>
                   {activeCols.includes("symbol") ? (
@@ -542,7 +542,7 @@ export function ScannerPage({ hideHeader = false }: ScannerPageProps = {}) {
             </table>
           </div>
 
-          <div className="mobile-only v1829-scanner-mobile">
+          <div className="mobile-only nx10-scanner-mobile">
             {loading && filtered.length === 0 ? (
               <p className="muted">資料累積中…</p>
             ) : filtered.length === 0 ? (
@@ -552,7 +552,7 @@ export function ScannerPage({ hideHeader = false }: ScannerPageProps = {}) {
                 <button
                   key={r.id}
                   type="button"
-                  className={`v1829-scanner-compact-row${selected?.id === r.id ? " is-selected" : ""}`}
+                  className={`nx10-scanner-compact-row${selected?.id === r.id ? " is-selected" : ""}`}
                   onClick={() => setSelectedId(selected?.id === r.id ? null : r.id)}
                 >
                   <span className="mono sym">{r.symbol.replace("USDT", "")}</span>
@@ -566,14 +566,14 @@ export function ScannerPage({ hideHeader = false }: ScannerPageProps = {}) {
         </div>
 
         {selected ? (
-          <aside className="v1829-scanner-drawer" aria-label="掃描上下文" data-testid="scanner-context-drawer">
+          <aside className="nx10-scanner-drawer" aria-label="掃描上下文" data-testid="scanner-context-drawer">
             <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
               <strong className="mono" style={{ fontSize: "1.15rem" }}>
                 {selected.symbol.replace("USDT", "")}
               </strong>
               <button
                 type="button"
-                className="v1829-btn v1829-btn-tertiary"
+                className="nx10-btn nx10-btn-tertiary"
                 onClick={() => setSelectedId(null)}
               >
                 關閉
@@ -591,15 +591,15 @@ export function ScannerPage({ hideHeader = false }: ScannerPageProps = {}) {
                 : "無明顯衝突"}
               {showAdvanced ? ` · 價格 ${formatUsd(selected.currentPrice)}` : ""}
             </p>
-            <div className="v1829-action-strip" style={{ paddingTop: 0 }}>
+            <div className="nx10-actions" style={{ paddingTop: 0 }}>
               <WatchStarButton symbol={selected.symbol} />
-              <Link to="/alerts" className="v1829-btn v1829-btn-secondary">
+              <Link to="/alerts" className="nx10-btn nx10-btn-secondary">
                 設警報
               </Link>
-              <Link to="/opportunities" className="v1829-btn v1829-btn-secondary">
+              <Link to="/opportunities" className="nx10-btn nx10-btn-secondary">
                 決策工作區
               </Link>
-              <Link to={`/market/${selected.symbol}`} className="v1829-btn v1829-btn-tertiary">
+              <Link to={`/market/${selected.symbol}`} className="nx10-btn nx10-btn-tertiary">
                 深入分析 →
               </Link>
             </div>

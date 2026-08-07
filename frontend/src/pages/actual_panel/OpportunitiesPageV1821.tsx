@@ -86,24 +86,24 @@ function EvidenceDrawer({ c, onClose }: { c: MarketCandidate; onClose?: () => vo
   ];
 
   return (
-    <aside className="v1829-opp-drawer" aria-label="證據抽屜" data-testid="opp-context-drawer">
-      <div className="drawer-block" style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+    <aside className="nx10-opp-drawer" aria-label="證據抽屜" data-testid="opp-context-drawer">
+      <div className="nx10-drawer-block" style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
         <h3 style={{ margin: 0 }}>證據</h3>
         {onClose ? (
-          <button type="button" className="v1829-btn v1829-btn-tertiary" onClick={onClose}>
+          <button type="button" className="nx10-btn nx10-btn-tertiary" onClick={onClose}>
             收合
           </button>
         ) : null}
       </div>
       {rows.map((r) => (
-        <div key={r.label} className="drawer-block">
+        <div key={r.label} className="nx10-drawer-block">
           <h3>{r.label}</h3>
           <p className={r.muted ? "muted" : undefined} style={{ margin: 0, fontSize: "0.875rem" }}>
             {r.value}
           </p>
         </div>
       ))}
-      <div className="drawer-block" style={{ borderBottom: 0 }}>
+      <div className="nx10-drawer-block" style={{ borderBottom: 0 }}>
         <h3>最新變化</h3>
         <p style={{ margin: 0, fontSize: "0.875rem" }}>
           {plainReason(c.reasons?.[0] || "結構仍在觀察", true)}
@@ -135,11 +135,11 @@ function DecisionWorkspace({
   }${theme ? ` · ${theme}` : ""}`;
 
   return (
-    <div className="v1829-opp-detail" data-testid="opp-decision-workspace">
+    <div className="nx10-opp-detail" data-testid="opp-decision-workspace">
       {onBack ? (
         <button
           type="button"
-          className="v1829-btn v1829-btn-tertiary mobile-only"
+          className="nx10-btn nx10-btn-tertiary mobile-only"
           style={{ marginBottom: 10, paddingLeft: 0 }}
           onClick={onBack}
         >
@@ -162,17 +162,17 @@ function DecisionWorkspace({
         </p>
       </header>
 
-      <div className="v1829-decision-block">
+      <div className="nx10-decision">
         <h3>目前</h3>
         <p>{nowLine}</p>
       </div>
 
-      <div className="v1829-decision-block">
+      <div className="nx10-decision">
         <h3>為什麼</h3>
         <p>{whyNow}</p>
       </div>
 
-      <div className="v1829-decision-block">
+      <div className="nx10-decision">
         <h3>支持</h3>
         {supporting.length ? (
           <ul style={{ margin: 0, paddingLeft: 18 }}>
@@ -185,7 +185,7 @@ function DecisionWorkspace({
         )}
       </div>
 
-      <div className="v1829-decision-block against">
+      <div className="nx10-decision against">
         <h3>反對</h3>
         {against.length ? (
           <ul style={{ margin: 0, paddingLeft: 18 }}>
@@ -198,12 +198,12 @@ function DecisionWorkspace({
         )}
       </div>
 
-      <div className="v1829-decision-block">
+      <div className="nx10-decision">
         <h3>失效</h3>
         <p className={invalidation.includes("尚無") ? "muted" : undefined}>{invalidation}</p>
       </div>
 
-      <div className="v1829-decision-block">
+      <div className="nx10-decision">
         <h3>風險</h3>
         <p
           className={
@@ -215,18 +215,18 @@ function DecisionWorkspace({
         </p>
       </div>
 
-      <div className="v1829-action-strip" style={{ paddingTop: 0, marginBottom: 14 }}>
-        <Link to="/alerts" className="v1829-btn v1829-btn-primary">
+      <div className="nx10-actions" style={{ paddingTop: 0, marginBottom: 14 }}>
+        <Link to="/alerts" className="nx10-btn nx10-btn-primary">
           設警報
         </Link>
         <WatchStarButton symbol={c.symbol} />
-        <Link to={`/market/${c.symbol}`} className="v1829-btn v1829-btn-secondary">
+        <Link to={`/market/${c.symbol}`} className="nx10-btn nx10-btn-secondary">
           深入分析
         </Link>
         {onOpenEvidence ? (
           <button
             type="button"
-            className="v1829-btn v1829-btn-tertiary mobile-only"
+            className="nx10-btn nx10-btn-tertiary mobile-only"
             onClick={onOpenEvidence}
           >
             證據 →
@@ -235,7 +235,7 @@ function DecisionWorkspace({
       </div>
 
       {level >= 2 ? (
-        <div className="v1829-decision-block">
+        <div className="nx10-decision">
           <h3>交易者指標</h3>
           <dl
             className="nx-kv mono"
@@ -266,7 +266,7 @@ function DecisionWorkspace({
       ) : null}
 
       {level >= 3 ? (
-        <div className="v1829-decision-block">
+        <div className="nx10-decision">
           <h3>研究細節</h3>
           <p className="muted" style={{ fontSize: "0.875rem" }}>
             來源 {displayOrPending(c.source, "尚無資料")} · 階段 {STAGE_LABEL_ZH[c.stage] || c.stage}
@@ -321,29 +321,29 @@ export function OpportunitiesPageV1821() {
       className="page-stack"
       style={{ display: "contents" }}
       data-testid="opportunities-v1821"
-      data-product-gen="v18_2_9_ux"
+      data-product-gen="v18_2_10"
       data-non-crypto-in-crypto-opportunity-count={
         partitioned.non_crypto_symbol_in_crypto_opportunity_count
       }
     >
-      <header className="v1829-panel v1829-col-12" style={{ marginBottom: 0 }}>
+      <header className="nx10-panel" style={{ marginBottom: 0 }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-start" }}>
           <div style={{ flex: 1, minWidth: 200 }}>
-            <h1 className="v1829-page-title">找機會</h1>
-            <p className="v1829-page-sub" style={{ marginBottom: 0 }}>
+            <h1 className="nx10-page-title">找機會</h1>
+            <p className="nx10-page-sub" style={{ marginBottom: 0 }}>
               主從工作區 · 目前／為什麼／支持／反對／失效／風險 · 非下單建議
             </p>
           </div>
           <button
             type="button"
-            className="v1829-btn v1829-btn-tertiary v1829-drawer-toggle desktop-only"
+            className="nx10-btn nx10-btn-tertiary nx10-drawer-toggle desktop-only"
             onClick={() => setDrawerOpen((v) => !v)}
             aria-pressed={drawerOpen}
           >
             {drawerOpen ? "收合證據" : "展開證據"}
           </button>
         </div>
-        <div className="v1829-level-tabs" role="group" aria-label="資訊層級" style={{ marginTop: 12 }}>
+        <div className="nx10-level" role="group" aria-label="資訊層級" style={{ marginTop: 12 }}>
           <button type="button" className={level === 1 ? "active" : undefined} onClick={() => setLevel(1)}>
             L1 · 白話
           </button>
@@ -356,12 +356,12 @@ export function OpportunitiesPageV1821() {
         </div>
       </header>
 
-      {loading ? <p className="muted v1829-panel v1829-col-12">載入中…</p> : null}
-      {error ? <div className="nx-banner-warn v1829-panel v1829-col-12">掃描器暫不可用：{error}</div> : null}
+      {loading ? <p className="muted nx10-panel">載入中…</p> : null}
+      {error ? <div className="nx-banner-warn nx10-panel">掃描器暫不可用：{error}</div> : null}
 
       {eligibleZero && !loading ? (
         <div
-          className="v1829-panel v1829-col-12"
+          className="nx10-panel"
           data-testid="no-eligible-opportunities"
           style={{ borderLeft: "3px solid var(--semantic-info)" }}
         >
@@ -369,11 +369,11 @@ export function OpportunitiesPageV1821() {
           <p className="muted" style={{ margin: "8px 0 0", fontSize: "0.875rem" }}>
             下列若出現僅為觀察候選；不顯示假 Top3 可交易卡片。
           </p>
-          <div className="v1829-action-strip">
-            <Link to="/watchlist" className="v1829-btn v1829-btn-secondary">
+          <div className="nx10-actions">
+            <Link to="/watchlist" className="nx10-btn nx10-btn-secondary">
               查看觀察標的
             </Link>
-            <Link to="/alerts" className="v1829-btn v1829-btn-secondary">
+            <Link to="/alerts" className="nx10-btn nx10-btn-secondary">
               建立警報
             </Link>
           </div>
@@ -381,18 +381,18 @@ export function OpportunitiesPageV1821() {
       ) : null}
 
       {crossAsset.length ? (
-        <div className="nx-banner-warn v1829-panel v1829-col-12" data-testid="cross-asset-context-only">
+        <div className="nx-banner-warn nx10-panel" data-testid="cross-asset-context-only">
           跨資產標的（{crossAsset.map((c) => c.symbol.replace("USDT", "")).join(", ")}）·
           僅作上下文 · 已自加密 Opportunities 排名移除
         </div>
       ) : null}
 
       <div
-        className={`v1829-opp-workspace${drawerOpen ? "" : " drawer-closed"}${
+        className={`nx10-opp-ws${drawerOpen ? "" : " drawer-closed"}${
           mobileDetail ? " mobile-detail" : ""
         }`}
       >
-        <aside className="v1829-opp-list" aria-label="候選清單">
+        <aside className="nx10-opp-list" aria-label="候選清單">
           {all.length === 0 && !loading ? (
             <p className="muted">暫無可展示候選</p>
           ) : (
@@ -400,7 +400,7 @@ export function OpportunitiesPageV1821() {
               <button
                 key={c.id}
                 type="button"
-                className={`v1829-opp-row${focus?.id === c.id ? " is-active" : ""}`}
+                className={`nx10-opp-row${focus?.id === c.id ? " is-active" : ""}`}
                 data-tradable={eligibleZero ? "false" : "observe"}
                 onClick={() => selectRow(c.id)}
               >
@@ -430,7 +430,7 @@ export function OpportunitiesPageV1821() {
             onOpenEvidence={() => setDrawerOpen(true)}
           />
         ) : (
-          <div className="v1829-opp-detail">
+          <div className="nx10-opp-detail">
             <p className="muted">尚無候選可展示</p>
           </div>
         )}

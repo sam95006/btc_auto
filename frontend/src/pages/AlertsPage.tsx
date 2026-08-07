@@ -59,10 +59,21 @@ const KIND_LABEL: Record<AlertKind, string> = {
   watchlist: "自選",
 };
 
+function startOfDay(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
+function dayBucket(ts: number): "today" | "yesterday" | "earlier" {
+  const now = new Date();
+  const today = startOfDay(now);
+  const yesterday = today - 86400000;
+  if (ts >= today) return "today";
+  if (ts >= yesterday) return "yesterday";
+  return "earlier";
+}
+
 /**
- * V18.2.9 UX — Alerts as live chronological event stream.
- * Filters: All / Opportunities / Risk / Market / Data Quality / Watchlist.
- * NOT dashboard cards.
+ * V18.2.10 — Alerts as continuous event timeline grouped Today / Yesterday.
  */
 export function AlertsPage() {
   const anomalies = useMarketAnomalies();
@@ -181,6 +192,23 @@ export function AlertsPage() {
     return stream.filter((s) => s.kind === want);
   }, [stream, filter]);
 
+  const groups = useMemo(() => {
+    const today: StreamItem[] = [];
+    const yesterday: StreamItem[] = [];
+    const earlier: StreamItem[] = [];
+    for (const item of filtered) {
+      const b = dayBucket(item.ts || Date.now());
+      if (b === "today") today.push(item);
+      else if (b === "yesterday") yesterday.push(item);
+      else earlier.push(item);
+    }
+    return [
+      { id: "today", label: "今天", items: today },
+      { id: "yesterday", label: "昨天", items: yesterday },
+      { id: "earlier", label: "更早", items: earlier },
+    ].filter((g) => g.items.length > 0);
+  }, [filtered]);
+
   const markRead = (id: string) => {
     setReadIds((prev) => {
       const next = new Set(prev);
@@ -199,13 +227,48 @@ export function AlertsPage() {
     { id: "WATCHLIST", label: "自選" },
   ];
 
+  const renderItem = (item: StreamItem) => {
+    const isRead = readIds.has(item.id);
+    return (
+      <article
+        key={item.id}
+        className={`nx10-alert-item${isRead ? " is-read" : ""}`}
+        data-kind={item.kind}
+      >
+        <div className="time mono">{item.time}</div>
+        <div className="asset mono">
+          {item.symbol ? <Link to={item.href}>{item.asset}</Link> : item.asset}
+        </div>
+        <div className="type">{KIND_LABEL[item.kind]}</div>
+        <div className="meaning">
+          <p className="what">{item.what}</p>
+          <p className="why">{item.why}</p>
+        </div>
+        <div className="nx10-alert-actions">
+          <Link to={item.href} className="nx10-btn nx10-btn-tertiary" onClick={() => markRead(item.id)}>
+            查看
+          </Link>
+          <button
+            type="button"
+            className="nx10-btn nx10-btn-tertiary"
+            onClick={() => markRead(item.id)}
+            disabled={isRead}
+          >
+            {isRead ? "已讀" : "設為已讀"}
+          </button>
+          {item.symbol ? <WatchStarButton symbol={item.symbol} /> : null}
+        </div>
+      </article>
+    );
+  };
+
   return (
-    <div className="v1829-alerts" data-testid="alerts-v1829" data-product-gen="v18_2_9_ux">
-      <header className="v1829-alerts-head">
+    <div className="nx10-alerts" data-testid="alerts-v1829" data-product-gen="v18_2_10">
+      <header className="nx10-alerts-head">
         <div>
-          <h1 className="v1829-page-title">警報</h1>
-          <p className="v1829-page-sub" style={{ marginBottom: 0 }}>
-            即時事件串流 · 時間／標的／類型／意義 · 非儀表板卡片
+          <h1 className="nx10-page-title">警報</h1>
+          <p className="nx10-page-sub" style={{ marginBottom: 0 }}>
+            連續事件時間軸 · 今天／昨天分組 · 非卡片牆
           </p>
         </div>
         <p className="muted" style={{ margin: 0, fontSize: "0.8125rem" }}>
@@ -214,14 +277,14 @@ export function AlertsPage() {
         </p>
       </header>
 
-      <div className="v1829-alert-filters" role="tablist" aria-label="警報篩選">
+      <div className="nx10-alert-filters" role="tablist" aria-label="警報篩選">
         {filters.map((f) => (
           <button
             key={f.id}
             type="button"
             role="tab"
             aria-selected={filter === f.id}
-            className={`v1829-filter-chip${filter === f.id ? " active" : ""}`}
+            className={`nx10-chip-btn${filter === f.id ? " active" : ""}`}
             onClick={() => setFilter(f.id)}
           >
             {f.label}
@@ -230,56 +293,26 @@ export function AlertsPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="v1829-alerts-empty">
-          <p style={{ margin: 0, fontWeight: 600 }}>目前沒有新警報</p>
-          <p className="muted" style={{ margin: "8px 0 0", fontSize: "0.875rem" }}>
-            不會用假警報填空。可建立條件等待，或回到掃描器持續觀察。
-          </p>
-          <div className="v1829-action-strip">
-            <Link to="/scanner" className="v1829-btn v1829-btn-primary">
+        <div className="nx10-empty">
+          <strong>目前沒有新警報</strong>
+          不會用假警報填空。可建立條件等待，或回到掃描器持續觀察。
+          <div className="nx10-actions">
+            <Link to="/scanner" className="nx10-btn nx10-btn-primary">
               掃描全市場
             </Link>
-            <Link to="/watchlist" className="v1829-btn v1829-btn-secondary">
+            <Link to="/watchlist" className="nx10-btn nx10-btn-secondary">
               查看觀察清單
             </Link>
           </div>
         </div>
       ) : (
-        <div className="v1829-alert-stream" role="feed" aria-label="警報事件串流">
-          {filtered.map((item) => {
-            const isRead = readIds.has(item.id);
-            return (
-              <article
-                key={item.id}
-                className={`v1829-alert-item${isRead ? " is-read" : ""}`}
-                data-kind={item.kind}
-              >
-                <div className="time mono">{item.time}</div>
-                <div className="asset mono">
-                  {item.symbol ? <Link to={item.href}>{item.asset}</Link> : item.asset}
-                </div>
-                <div className="type">{KIND_LABEL[item.kind]}</div>
-                <div className="meaning">
-                  <p className="what">{item.what}</p>
-                  <p className="why">{item.why}</p>
-                </div>
-                <div className="v1829-alert-actions">
-                  <Link to={item.href} className="v1829-btn v1829-btn-tertiary" onClick={() => markRead(item.id)}>
-                    查看
-                  </Link>
-                  <button
-                    type="button"
-                    className="v1829-btn v1829-btn-tertiary"
-                    onClick={() => markRead(item.id)}
-                    disabled={isRead}
-                  >
-                    {isRead ? "已讀" : "設為已讀"}
-                  </button>
-                  {item.symbol ? <WatchStarButton symbol={item.symbol} /> : null}
-                </div>
-              </article>
-            );
-          })}
+        <div role="feed" aria-label="警報事件時間軸">
+          {groups.map((g) => (
+            <section key={g.id} className="nx10-day-group" aria-label={g.label}>
+              <h2 className="nx10-day-label">{g.label}</h2>
+              {g.items.map(renderItem)}
+            </section>
+          ))}
         </div>
       )}
     </div>

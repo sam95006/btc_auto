@@ -147,25 +147,25 @@ export function IntelligencePage() {
     }));
 
   return (
-    <div className="v1829-research" data-testid="research-v1829" data-product-gen="v18_2_9_ux">
-      <header className="v1829-research-head">
+    <div className="nx10-research" data-testid="research-v1829" data-product-gen="v18_2_10">
+      <header className="nx10-research-head">
         <div>
-          <h1 className="v1829-page-title">研究</h1>
-          <p className="v1829-page-sub" style={{ marginBottom: 0 }}>
+          <h1 className="nx10-page-title">研究</h1>
+          <p className="nx10-page-sub" style={{ marginBottom: 0 }}>
             閱讀／調查工作區 · 左側情報流 · 主文證據 · 右側上下文 · pending 不捏造
           </p>
         </div>
         <button
           type="button"
-          className="v1829-btn v1829-btn-tertiary desktop-only"
+          className="nx10-btn nx10-btn-tertiary desktop-only"
           onClick={() => setDrawerOpen((v) => !v)}
         >
           {drawerOpen ? "收合上下文" : "展開上下文"}
         </button>
       </header>
 
-      <div className={`v1829-research-workspace${drawerOpen ? "" : " drawer-closed"}`}>
-        <aside className="v1829-research-feed" aria-label="情報流">
+      <div className={`nx10-research-ws${drawerOpen ? "" : " drawer-closed"}`}>
+        <aside className="nx10-research-feed" aria-label="情報流">
           {loading && feed.length === 0 ? (
             <p className="muted">載入中…</p>
           ) : feed.length === 0 ? (
@@ -175,7 +175,7 @@ export function IntelligencePage() {
               <button
                 key={item.id}
                 type="button"
-                className={`v1829-feed-item${selected?.id === item.id ? " is-active" : ""}`}
+                className={`nx10-feed-item${selected?.id === item.id ? " is-active" : ""}`}
                 onClick={() => setSelectedId(item.id)}
               >
                 <span className="kind">{item.kind === "layer" ? "層" : item.kind === "anomaly" ? "異動" : item.kind === "event" ? "事件" : "候選"}</span>
@@ -186,12 +186,12 @@ export function IntelligencePage() {
           )}
         </aside>
 
-        <article className="v1829-research-article" aria-label="主文與證據">
+        <article className="nx10-research-article" aria-label="主文與證據">
           {!selected ? (
             <p className="muted">選擇左側項目開始閱讀</p>
           ) : (
             <>
-              <p className="v1829-kicker">
+              <p className="nx10-kicker">
                 {selected.kind === "layer"
                   ? "情報層"
                   : selected.kind === "anomaly"
@@ -200,13 +200,13 @@ export function IntelligencePage() {
                       ? "事件記錄"
                       : "候選閱讀"}
               </p>
-              <h2 className="v1829-article-title">{selected.title}</h2>
-              <p className="v1829-article-lede">{selected.excerpt}</p>
+              <h2 className="nx10-article-title">{selected.title}</h2>
+              <p className="nx10-article-lede">{selected.excerpt}</p>
 
               {selected.kind === "layer" ? (
-                <div className="v1829-article-body">
+                <div className="nx10-article-body">
                   <h3>情報層狀態</h3>
-                  <ul className="v1829-layer-list">
+                  <ul className="nx10-layer-list">
                     {layers.map((p) => (
                       <li key={p.name}>
                         <strong>{p.name}</strong>
@@ -224,7 +224,7 @@ export function IntelligencePage() {
               ) : null}
 
               {selectedCand ? (
-                <div className="v1829-article-body">
+                <div className="nx10-article-body">
                   <h3>證據摘錄</h3>
                   <ul>
                     {(selectedCand.reasons || []).slice(0, 5).map((r) => (
@@ -241,11 +241,11 @@ export function IntelligencePage() {
                       </ul>
                     </>
                   ) : null}
-                  <div className="v1829-action-strip">
-                    <Link to={`/market/${selectedCand.symbol}`} className="v1829-btn v1829-btn-primary">
+                  <div className="nx10-actions">
+                    <Link to={`/market/${selectedCand.symbol}`} className="nx10-btn nx10-btn-primary">
                       深入分析
                     </Link>
-                    <Link to="/opportunities" className="v1829-btn v1829-btn-secondary">
+                    <Link to="/opportunities" className="nx10-btn nx10-btn-secondary">
                       決策工作區
                     </Link>
                   </div>
@@ -253,13 +253,13 @@ export function IntelligencePage() {
               ) : null}
 
               {selectedAnom ? (
-                <div className="v1829-article-body">
+                <div className="nx10-article-body">
                   <h3>異動細節</h3>
                   <p>{selectedAnom.explanation || "尚無進一步說明"}</p>
                   {selectedAnom.symbol ? (
                     <Link
                       to={`/market/${selectedAnom.symbol}`}
-                      className="v1829-btn v1829-btn-secondary"
+                      className="nx10-btn nx10-btn-secondary"
                       style={{ marginTop: 12 }}
                     >
                       開啟標的 →
@@ -269,8 +269,8 @@ export function IntelligencePage() {
               ) : null}
 
               {selected.kind === "event" && selected.symbol ? (
-                <div className="v1829-action-strip">
-                  <Link to={`/market/${selected.symbol}`} className="v1829-btn v1829-btn-secondary">
+                <div className="nx10-actions">
+                  <Link to={`/market/${selected.symbol}`} className="nx10-btn nx10-btn-secondary">
                     開啟標的 →
                   </Link>
                 </div>
@@ -280,8 +280,8 @@ export function IntelligencePage() {
         </article>
 
         {drawerOpen ? (
-          <aside className="v1829-research-drawer" aria-label="研究上下文">
-            <div className="drawer-block">
+          <aside className="nx10-research-drawer" aria-label="研究上下文">
+            <div className="nx10-drawer-block">
               <h3>來源</h3>
               <p style={{ margin: 0, fontSize: "0.875rem" }}>
                 {selected?.kind === "layer"
@@ -293,20 +293,20 @@ export function IntelligencePage() {
                       : "候選引擎"}
               </p>
             </div>
-            <div className="drawer-block">
+            <div className="nx10-drawer-block">
               <h3>資料品質</h3>
               <p style={{ margin: 0, fontSize: "0.875rem" }}>
                 {status?.freshness ? `掃描 ${status.freshness}` : "更新狀態未知"}
               </p>
             </div>
-            <div className="drawer-block">
+            <div className="nx10-drawer-block">
               <h3>類比／相關</h3>
               {related.length === 0 ? (
                 <p className="muted" style={{ margin: 0, fontSize: "0.875rem" }}>
                   尚無相關候選
                 </p>
               ) : (
-                <ul className="v1829-related-list">
+                <ul className="nx10-related-list">
                   {related.map((r) => (
                     <li key={r.symbol}>
                       <Link to={r.href} className="mono">
@@ -318,16 +318,16 @@ export function IntelligencePage() {
                 </ul>
               )}
             </div>
-            <div className="drawer-block" style={{ borderBottom: 0 }}>
+            <div className="nx10-drawer-block" style={{ borderBottom: 0 }}>
               <h3>時間軸</h3>
-              <ul className="v1829-timeline">
+              <ul className="nx10-timeline">
                 {feed.slice(0, 6).map((t) => (
                   <li key={`tl-${t.id}`}>
                     <span className="dot" aria-hidden />
                     <div>
                       <button
                         type="button"
-                        className="v1829-timeline-link"
+                        className="nx10-timeline-link"
                         onClick={() => setSelectedId(t.id)}
                       >
                         {t.title}

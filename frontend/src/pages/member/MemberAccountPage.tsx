@@ -29,14 +29,14 @@ export function MemberAccountPage() {
         Profile fields UNAVAILABLE until auth realm binds · no synthetic live profile.
       </p>
 
-      <section className="v1828-ov-block" style={{ marginTop: 16 }} data-testid="account-display-settings">
+      <section className="nx10-panel" style={{ marginTop: 16 }} data-testid="account-display-settings">
         <h2 className="nx-sec-title" style={{ marginTop: 0 }}>
           顯示設定
         </h2>
         <p className="muted sm">{t("ui.density.accountHint")}</p>
         <div style={{ marginTop: 12 }}>
           {/* Density lives here only — not in command bar / overview chrome */}
-          <div className="v1828-account-density">
+          <div className="nx10-account-density">
             <UiDensityToggle density={density} onDensityChange={onDensity} />
           </div>
         </div>

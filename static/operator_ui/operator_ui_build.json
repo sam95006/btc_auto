@@ -1,7 +1,7 @@
 {
   "source": "frontend/dist",
   "dest": "static/operator_ui",
-  "marker": "PUBLIC_V18_2_9_HUMAN_PRODUCT_UX_HEAD",
+  "marker": "PUBLIC_V18_2_10_HUMAN_RECOMPOSITION_HEAD",
   "phase3_marker": "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES",
   "phase2_marker": "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE",
   "mvp22d_marker": "NEXUS_UI_MVP22D_ANOMALY_OUTCOME_RESEARCH",
@@ -12,18 +12,18 @@
   "marker_found": true,
   "file_count": 5,
   "current_assets": [
-    "index-CoNuDkHi.js",
-    "index-aJaS5tYw.css"
+    "index-Cj4eiXxr.css",
+    "index-DnvmTPof.js"
   ],
   "retained_assets": [
-    "index-B-PkYwuS.css",
+    "index-Cj4eiXxr.css",
     "index-CoNuDkHi.js",
-    "index-aJaS5tYw.css",
-    "index-iJ0ZyNMk.js"
+    "index-DnvmTPof.js",
+    "index-aJaS5tYw.css"
   ],
   "retained_generations": 3,
   "previous_assets": [
-    "index-B-PkYwuS.css",
-    "index-iJ0ZyNMk.js"
+    "index-CoNuDkHi.js",
+    "index-aJaS5tYw.css"
   ]
 }

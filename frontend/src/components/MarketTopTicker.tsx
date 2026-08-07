@@ -93,17 +93,17 @@ export function MarketTopTicker() {
 
   return (
     <>
-      <header className="v1828-command-bar" role="banner" data-testid="v1828-command-bar" data-product-gen="v18_2_9">
-        <div className="v1828-cmd-left">
-          <Link to="/overview" className="v1828-logo">
+      <header className="nx10-cmd" role="banner" data-testid="nx10-cmd" data-product-gen="v18_2_10">
+        <div className="nx10-cmd-left">
+          <Link to="/overview" className="nx10-logo">
             NEXUS
           </Link>
-          <form className="v1828-global-search" onSubmit={onSearch}>
-            <label className="sr-only" htmlFor="v1828-q">
+          <form className="nx10-search" onSubmit={onSearch}>
+            <label className="sr-only" htmlFor="nx10-q">
               全域搜尋標的
             </label>
             <input
-              id="v1828-q"
+              id="nx10-q"
               type="search"
               placeholder="搜尋標的…"
               value={q}
@@ -113,12 +113,12 @@ export function MarketTopTicker() {
           </form>
         </div>
 
-        <div className="v1828-cmd-center" aria-label="市場與掃描狀態">
-          <span className="v1828-cmd-pill v1828-cmd-regime" title="市場狀態">
+        <div className="nx10-cmd-center" aria-label="市場與掃描狀態">
+          <span className="nx10-chip nx10-chip" title="市場狀態">
             {regime}
           </span>
           <span
-            className={`v1828-cmd-pill tone-${freshDisp.tone}`}
+            className={`nx10-chip tone-${freshDisp.tone}`}
             title="市場資料新鮮度"
             data-testid="market-freshness-pill"
             data-freshness-raw={freshDisp.raw}
@@ -127,25 +127,25 @@ export function MarketTopTicker() {
             {freshDisp.label}
           </span>
           <span
-            className="v1828-cmd-meta"
+            className="nx10-meta"
             title="全市場發現 ≠ 即時監控"
             data-testid="metric-discovery"
           >
             發現 {breadth ?? "—"}
           </span>
           <span
-            className="v1828-cmd-meta"
+            className="nx10-meta"
             title="執行期深度追蹤池"
             data-testid="metric-monitoring"
           >
             監控 {deep}
           </span>
-          <span className="v1828-cmd-meta muted" title="掃描更新">
+          <span className="nx10-meta muted" title="掃描更新">
             掃描 {updated}
           </span>
         </div>
 
-        <div className="v1828-cmd-right">
+        <div className="nx10-cmd-right">
           <EventBellButton
             unread={unread}
             onClick={() => {
@@ -155,7 +155,7 @@ export function MarketTopTicker() {
           />
           <button
             type="button"
-            className="v1828-cmd-icon"
+            className="nx10-icon-btn"
             title="系統狀態"
             aria-label="系統狀態"
             onClick={() => setSysOpen(true)}
@@ -164,16 +164,16 @@ export function MarketTopTicker() {
           </button>
           <button
             type="button"
-            className="v1828-cmd-icon"
+            className="nx10-icon-btn"
             title="NEX AI"
             aria-label="Open NEX AI"
             onClick={() => {
-              document.querySelector<HTMLButtonElement>(".floating-ai-fab")?.click();
+              document.querySelector<HTMLButtonElement>(".nx10-ai-fab")?.click();
             }}
           >
             AI
           </button>
-          <Link to="/account" className="v1828-cmd-account" title="帳戶">
+          <Link to="/account" className="nx10-account-link" title="帳戶">
             帳戶
           </Link>
         </div>

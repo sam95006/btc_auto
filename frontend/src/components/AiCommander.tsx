@@ -308,32 +308,32 @@ export function AiCommander() {
         : "不可用";
 
   return (
-    <div className="floating-ai nx-ai-commander-w4 v1829-ai" aria-label="NEX AI 分析助手">
+    <div className="nx10-ai" aria-label="NEX AI 分析助手">
       {open ? (
-        <div className="floating-ai-panel panel-card nx-ai-p7 v1829-ai-panel" role="dialog" aria-label="NEX AI">
-          <div className="floating-ai-head">
+        <div className="nx10-ai-panel" role="dialog" aria-label="NEX AI">
+          <div className="nx10-ai-head">
             <strong>NEX AI</strong>
-            <span className="v1829-ai-mode">{modeLabel}</span>
-            <button type="button" className="v1829-btn v1829-btn-tertiary" onClick={() => setOpen(false)}>
+            <span className="nx10-ai-mode">{modeLabel}</span>
+            <button type="button" className="nx10-btn nx10-btn-tertiary" onClick={() => setOpen(false)}>
               關閉
             </button>
           </div>
-          <p className="muted sm" style={{ margin: "0 0 10px" }}>
+          <p className="muted" style={{ margin: "0 0 10px", fontSize: "0.75rem" }}>
             情境分析 · 無 LLM 時不捏造 · 非投資建議
           </p>
-          <div className="copilot-prompt-grid">
+          <div className="nx10-ai-prompts">
             {prompts.map((p) => (
               <button
                 key={p.id}
                 type="button"
-                className={`copilot-prompt-btn${active === p.id ? " active" : ""}`}
+                className={active === p.id ? "active" : undefined}
                 onClick={() => setActive(p.id)}
               >
                 {p.label}
               </button>
             ))}
           </div>
-          <div className="nx-ai-answer-frame v1829-ai-answer">
+          <div className="nx10-ai-answer">
             <h4>結論</h4>
             <p>{answer.conclusion}</p>
             <h4>支持</h4>
@@ -359,16 +359,18 @@ export function AiCommander() {
             <h4>新鮮度</h4>
             <p>{answer.freshness}</p>
             <h4>決策軌跡</h4>
-            <p className="mono sm">{answer.decisionTrace}</p>
+            <p className="mono" style={{ fontSize: "0.75rem" }}>
+              {answer.decisionTrace}
+            </p>
           </div>
-          <Link to="/assistant" className="nx-link sm">
+          <Link to="/assistant" className="nx10-btn nx10-btn-tertiary" style={{ marginTop: 8 }}>
             完整助理頁 →
           </Link>
         </div>
       ) : null}
       <button
         type="button"
-        className="floating-ai-fab v1829-ai-fab"
+        className="nx10-ai-fab"
         aria-expanded={open}
         aria-label="開啟 NEX AI 分析"
         onClick={() => setOpen((v) => !v)}

@@ -10,7 +10,7 @@ export function AppFooter() {
 
   return (
 
-    <footer className="app-footer nx-footer-member v1828-footer v1829-footer" aria-label="Product footer">
+    <footer className="app-footer nx-footer-member" aria-label="Product footer">
 
       <span>NEXUS · 全市場情報 · 非投資建議 · 不下單</span>
 
