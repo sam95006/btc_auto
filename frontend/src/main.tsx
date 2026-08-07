@@ -9,8 +9,8 @@ import "./styles/phase2Tokens.css";
 import "./styles/wave4ProductTokens.css";
 import "./styles/global.css";
 import "./styles/memberPlatform.css";
-/* V18.2.10: legacy v1827/v1828/v1829 layout CSS intentionally NOT loaded */
-import "./styles/v18210ProductSystem.css";
+/* V18.2.11 Product V2: legacy v1827/v1828/v1829/v18210 layout CSS intentionally NOT loaded */
+import "./styles/v18211MemberProductV2.css";
 import "./styles/a11yPerf.css";
 import "./styles/founderOperator.css";
 

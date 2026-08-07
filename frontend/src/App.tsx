@@ -4,7 +4,7 @@
  * Forbidden routes: /trade, /orders, /arm, /routing-edit
  *
  * PUB-E: Founder private operator mounts in a separate shell (never inside member SidebarNav).
- * V18.2.10 Preview: Actual Panel is default. Legacy shell only if flag explicitly off.
+ * V18.2.11 Preview: Member Product V2 is default. No silent fallback to Legacy / ActualPanel.
  */
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { FounderDiagnosticsPage } from "./founder/FounderDiagnosticsPage";
@@ -12,13 +12,9 @@ import { FounderLiveOpsPage } from "./founder/FounderLiveOpsPage";
 import { FounderOperatorShell } from "./founder/FounderOperatorShell";
 import { FounderOperatorPage } from "./founder/FounderOperatorPage";
 import { FounderRuntimePage } from "./pages/FounderRuntimePage";
-import { ActualPanelV1821App } from "./app/ActualPanelV1821App";
-import { LegacyMarketIntelligenceApp } from "./app/LegacyMarketIntelligenceApp";
+import { NexusMemberProductV2 } from "./app/NexusMemberProductV2";
 import { MemberPlatformApp } from "./app/MemberPlatformApp";
-import {
-  isMemberSurfaceV1821Enabled,
-  MEMBER_SURFACE_V18_2_1_FLAG,
-} from "./member/memberSurfaceV1821Flag";
+import { MEMBER_SURFACE_V18_2_1_FLAG } from "./member/memberSurfaceV1821Flag";
 
 function ActualPanelPreviewRedirect() {
   const loc = useLocation();
@@ -34,16 +30,10 @@ function ActualPanelPreviewRedirect() {
   return <Navigate to={`${path}?${params.toString()}${loc.hash}`} replace />;
 }
 
-function RootSurfaceSwitch() {
-  if (isMemberSurfaceV1821Enabled()) {
-    return <ActualPanelV1821App />;
-  }
-  return <LegacyMarketIntelligenceApp />;
-}
-
 /**
  * Member Platform (PUB-D) + Founder Private Operator (PUB-E).
- * Founder operator never mounts inside member SidebarNav.
+ * Founder operator never mounts inside member nav.
+ * Default Preview surface = Product V2 only.
  */
 export default function App() {
   return (
@@ -60,7 +50,7 @@ export default function App() {
       <Route path="/founder/runtime" element={<FounderRuntimePage />} />
       <Route path="/preview/v18_2_1/*" element={<ActualPanelPreviewRedirect />} />
       <Route path="/member-platform/*" element={<MemberPlatformApp />} />
-      <Route path="/*" element={<RootSurfaceSwitch />} />
+      <Route path="/*" element={<NexusMemberProductV2 />} />
     </Routes>
   );
 }
