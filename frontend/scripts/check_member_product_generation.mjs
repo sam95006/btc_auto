@@ -67,8 +67,8 @@ if (/RootSurfaceSwitch[\s\S]*ActualPanelV1821App/.test(appTsx) && !appTsx.includ
 }
 
 const buildInfo = fs.readFileSync(path.join(SRC, "demo", "buildInfo.ts"), "utf8");
-if (!buildInfo.includes("PUBLIC_V18_2_11_MEMBER_PRODUCT_V2_HEAD")) {
-  issues.push("buildInfo missing PUBLIC_V18_2_11_MEMBER_PRODUCT_V2_HEAD");
+if (!buildInfo.includes("PUBLIC_V18_2_12_EXCHANGE_GRADE_UI_HEAD")) {
+  issues.push("buildInfo missing PUBLIC_V18_2_12_EXCHANGE_GRADE_UI_HEAD");
 }
 if (!/member_product_generation:\s*2/.test(buildInfo) && !/memberProductGeneration:\s*2/.test(buildInfo)) {
   issues.push("buildInfo missing member_product_generation = 2");

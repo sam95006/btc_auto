@@ -31,7 +31,7 @@ function SettingsRedirect() {
 }
 
 /**
- * NEXUS Member Product V2 — presentation root (V18.2.11).
+ * NEXUS Member Product V2 — presentation root (V18.2.12).
  * Global top nav (no permanent left sidebar). Generation marker = 2.
  * Does NOT import old Overview/Opportunities/Scanner/Alerts/Intelligence page trees.
  */
@@ -52,7 +52,8 @@ export function NexusMemberProductV2() {
             <div
               className="mp2-shell"
               data-nexus-product-generation={MEMBER_PRODUCT_GENERATION}
-              data-member-surface="v18_2_11"
+              data-member-surface="v18_2_12"
+              data-mp2-theme="dark"
               data-testid="nexus-member-product-v2"
             >
               <SkipToContentLabeled label="跳至主要內容" />

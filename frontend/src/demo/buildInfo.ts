@@ -10,10 +10,10 @@ export const NEXUS_UI_BUILD_INFO = {
   latestCommit: "pending",
   backendState: "HOLD",
   stage419: "BLOCKED",
-  displayLabel: "V18.2.11 · Member Product V2",
-  buildMarker: "PUBLIC_V18_2_11_MEMBER_PRODUCT_V2_HEAD",
+  displayLabel: "V18.2.12 · Exchange-grade UI",
+  buildMarker: "PUBLIC_V18_2_12_EXCHANGE_GRADE_UI_HEAD",
   /** Track note for remote QA build verification. */
-  localTrackNote: "V18_2_11_MEMBER_PRODUCT_V2",
+  localTrackNote: "V18_2_12_EXCHANGE_GRADE_UI",
   /** Product generation — automated QA must equal 2. */
   member_product_generation: 2,
   memberProductGeneration: 2,
