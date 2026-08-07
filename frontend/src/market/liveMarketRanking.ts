@@ -138,13 +138,16 @@ export function deriveRankEvent(
 }
 
 function isRadarStage(stage: CandidateStage): boolean {
+  // Discovery surface: include warming / insufficient as public-safe observation.
   return (
     stage === "WATCHING" ||
     stage === "BUILDING" ||
     stage === "AWAITING_CONFIRMATION" ||
     stage === "CONFIRMED" ||
     stage === "OVEREXTENDED" ||
-    stage === "COOLING"
+    stage === "COOLING" ||
+    stage === "INSUFFICIENT_DATA" ||
+    stage === "EXPIRED"
   );
 }
 
