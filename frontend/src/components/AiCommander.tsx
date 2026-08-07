@@ -28,18 +28,14 @@ type AiAnswer = {
   decisionTrace: string;
 };
 
+/** Contextual prompts — not a dominant "Ask AI anything" demo wall. */
 const PROMPTS: { id: PromptId; label: string }[] = [
-  { id: "explain_page", label: "解釋目前頁面" },
-  { id: "find_long", label: "找多頭機會" },
-  { id: "find_short", label: "找空頭機會" },
-  { id: "explain_risk", label: "找風險" },
-  { id: "daily_brief", label: "每日簡報" },
-  { id: "why_blocked", label: "為何不能進場" },
-  { id: "market_pulse", label: "市場脈動" },
-  { id: "portfolio_summary", label: "組合摘要" },
-  { id: "alert_digest", label: "警報 digest" },
+  { id: "explain_page", label: "解釋此頁" },
+  { id: "market_pulse", label: "市場怎麼了" },
+  { id: "explain_risk", label: "目前風險" },
+  { id: "why_blocked", label: "為何未通過" },
   { id: "symbol_context", label: "標的上下文" },
-  { id: "learning_hint", label: "學習提示" },
+  { id: "alert_digest", label: "警報摘要" },
 ];
 
 function detectLlmAvailable(): boolean {
@@ -253,9 +249,9 @@ export function AiCommander() {
         : "UNAVAILABLE";
 
   return (
-    <div className="floating-ai nx-ai-commander-w4" aria-label="AiCommander">
+    <div className="floating-ai nx-ai-commander-w4 v1829-ai" aria-label="NEX AI">
       {open ? (
-        <div className="floating-ai-panel panel-card nx-ai-p7" role="dialog" aria-label="AiCommander drawer">
+        <div className="floating-ai-panel panel-card nx-ai-p7" role="dialog" aria-label="NEX AI drawer">
           <div className="floating-ai-head">
             <strong>NEX AI</strong>
             <span className="tag tag-warn">{modeLabel}</span>
@@ -263,7 +259,7 @@ export function AiCommander() {
               關閉
             </button>
           </div>
-          <p className="muted sm">無 LLM provider · 不會捏造答案 · 非投資建議</p>
+          <p className="muted sm">情境摘要 · 無 LLM 時不捏造 · 非投資建議</p>
           <div className="copilot-prompt-grid">
             {PROMPTS.map((p) => (
               <button

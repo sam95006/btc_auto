@@ -17,7 +17,7 @@ function agoLabel(ts?: number | null) {
 }
 
 /**
- * V18.2.8 top command bar — logo, search, market state, scan status, notifications, AI, Account.
+ * V18.2.9 top command bar — NEXUS | search | market state | notifications | NEX AI | account.
  * Density toggles live in Account display settings only (no mode-first UX).
  */
 export function MarketTopTicker() {
@@ -93,7 +93,7 @@ export function MarketTopTicker() {
 
   return (
     <>
-      <header className="v1828-command-bar" role="banner" data-testid="v1828-command-bar">
+      <header className="v1828-command-bar" role="banner" data-testid="v1828-command-bar" data-product-gen="v18_2_9">
         <div className="v1828-cmd-left">
           <Link to="/overview" className="v1828-logo">
             NEXUS

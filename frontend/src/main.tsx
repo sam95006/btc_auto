@@ -11,6 +11,7 @@ import "./styles/global.css";
 import "./styles/memberPlatform.css";
 import "./styles/v1827ProductSurface.css";
 import "./styles/v1828ProductShell.css";
+import "./styles/v1829HumanProduct.css";
 import "./styles/a11yPerf.css";
 import "./styles/founderOperator.css";
 

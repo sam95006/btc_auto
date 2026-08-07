@@ -10,10 +10,10 @@ export const NEXUS_UI_BUILD_INFO = {
   latestCommit: "pending",
   backendState: "HOLD",
   stage419: "BLOCKED",
-  displayLabel: "V18.2.8 · member product experience",
-  buildMarker: "PUBLIC_V18_2_8_PRODUCT_EXPERIENCE_HEAD",
+  displayLabel: "V18.2.9 · human-crafted member product",
+  buildMarker: "PUBLIC_V18_2_9_HUMAN_PRODUCT_EXPERIENCE_HEAD",
   /** Track note for remote QA build verification. */
-  localTrackNote: "V18_2_8_PRODUCT_EXPERIENCE",
+  localTrackNote: "V18_2_9_HUMAN_PRODUCT_EXPERIENCE",
   phase4LegacyMarker: "NEXUS_UI_PRODUCT_AND_INTELLIGENCE_PHASE4",
   product7LegacyMarker: "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
   phase3LegacyMarker: "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES",
