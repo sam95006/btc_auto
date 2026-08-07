@@ -1,7 +1,7 @@
 {
   "source": "frontend/dist",
   "dest": "static/operator_ui",
-  "marker": "PUBLIC_V18_2_7_MEMBER_PRODUCT_RESET_HEAD",
+  "marker": "PUBLIC_V18_2_8_PRODUCT_EXPERIENCE_HEAD",
   "phase3_marker": "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES",
   "phase2_marker": "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE",
   "mvp22d_marker": "NEXUS_UI_MVP22D_ANOMALY_OUTCOME_RESEARCH",
@@ -10,19 +10,18 @@
   "mvp22a_marker": "NEXUS_UI_MVP22A_LIVE_MARKET_DATA",
   "legacy_marker": "NEXUS_UI_MVP19_MARKET_INTELLIGENCE_76e8b60",
   "marker_found": true,
-  "file_count": 4,
+  "file_count": 3,
   "current_assets": [
-    "index-DN_vT3H1.js",
-    "index-DkhlVVcc.css"
+    "index-Do08LQoP.css",
+    "index-M3qZJEmx.js"
   ],
   "retained_assets": [
-    "index-BFN67O8Y.js",
-    "index-DN_vT3H1.js",
-    "index-DkhlVVcc.css"
+    "index-Do08LQoP.css",
+    "index-M3qZJEmx.js"
   ],
   "retained_generations": 3,
   "previous_assets": [
-    "index-BFN67O8Y.js",
-    "index-DkhlVVcc.css"
+    "index-Do08LQoP.css",
+    "index-M3qZJEmx.js"
   ]
 }

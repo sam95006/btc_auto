@@ -5,19 +5,20 @@ import { useMarketScannerOverview } from "../market/useMarketScanner";
 import { fetchSectorsStatus } from "../market/sectorApi";
 import { EventBellButton, EventCenterDrawer } from "./EventCenter";
 import { SystemStatusDrawer } from "./SystemStatusDrawer";
-import { UiDensityToggle } from "../member/UiDensityToggle";
 import { mapMarketFreshnessDisplay } from "../market/dataTruthFreshness";
+import { deriveRegime } from "../market/marketSummary";
 
 function agoLabel(ts?: number | null) {
   if (!ts) return "—";
   const sec = Math.max(0, Math.round((Date.now() - ts) / 1000));
-  if (sec < 5) return "剛剛更新";
-  if (sec < 60) return `${sec} 秒前更新`;
-  return `${Math.round(sec / 60)} 分鐘前更新`;
+  if (sec < 5) return "剛剛";
+  if (sec < 60) return `${sec}s`;
+  return `${Math.round(sec / 60)}m`;
 }
 
 /**
- * Compact global header — Founder funnel metric labels (discovery ≠ monitoring).
+ * V18.2.8 top command bar — logo, search, market state, scan status, notifications, AI, Account.
+ * Density toggles live in Account display settings only (no mode-first UX).
  */
 export function MarketTopTicker() {
   const navigate = useNavigate();
@@ -76,64 +77,75 @@ export function MarketTopTicker() {
     lastError: status?.lastError,
     source: status?.source,
   });
+  const pulse = {
+    longCandidates: status?.longCandidates,
+    shortCandidates: status?.shortCandidates,
+    confirmedCandidates: status?.confirmedCandidates,
+    highRiskCandidates: status?.highRiskCandidates,
+    breadth: status?.breadth,
+    symbolCount: status?.symbolCount,
+    freshness: status?.freshness,
+  };
+  const regime = deriveRegime(pulse);
   const deep = status?.symbolCount ?? "—";
   const updated = agoLabel(status?.lastCycleAt);
   void nowTick;
 
   return (
     <>
-      <header className="market-top-ticker nx-topbar-p2 nx-topbar-p4" role="banner">
-        <div className="mtt-left">
-          <Link to="/overview" className="brand-mark mtt-brand">
+      <header className="v1828-command-bar" role="banner" data-testid="v1828-command-bar">
+        <div className="v1828-cmd-left">
+          <Link to="/overview" className="v1828-logo">
             NEXUS
           </Link>
-        </div>
-        <div className="mtt-center nx-top-meta">
-          <span
-            className={`mtt-fresh-pill tone-${freshDisp.tone}`}
-            title="市場資料新鮮度（不作全局 LIVE 過度宣稱）"
-            data-testid="market-freshness-pill"
-            data-freshness-raw={freshDisp.raw}
-            data-global-live-overclaim={freshDisp.global_live_overclaim ? "1" : "0"}
-          >
-            市場資料 {freshDisp.label}
-          </span>
-          <span
-            className="mtt-meta-item"
-            title="全市場發現：交易所／廣度列舉數（≠ 執行期驗證數）"
-            data-testid="metric-discovery"
-          >
-            全市場發現 {breadth ?? "—"}
-          </span>
-          <span
-            className="mtt-meta-item"
-            title="即時監控：執行期深度追蹤池 symbolCount"
-            data-testid="metric-monitoring"
-          >
-            即時監控 {deep}
-          </span>
-          <span className="mtt-meta-item muted" title="最後更新">
-            {updated}
-          </span>
-          <span className="mtt-research-chip muted" title="執行狀態見系統狀態">
-            研究模式 · 不執行交易
-          </span>
-        </div>
-        <div className="mtt-right">
-          <UiDensityToggle className="nx-topbar-density" />
-          <form className="mtt-search" onSubmit={onSearch}>
-            <label className="sr-only" htmlFor="mtt-q">
-              搜尋標的
+          <form className="v1828-global-search" onSubmit={onSearch}>
+            <label className="sr-only" htmlFor="v1828-q">
+              全域搜尋標的
             </label>
             <input
-              id="mtt-q"
+              id="v1828-q"
               type="search"
-              placeholder="BTC…"
+              placeholder="搜尋標的…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               aria-label="搜尋標的"
             />
           </form>
+        </div>
+
+        <div className="v1828-cmd-center" aria-label="市場與掃描狀態">
+          <span className="v1828-cmd-pill v1828-cmd-regime" title="市場狀態">
+            {regime}
+          </span>
+          <span
+            className={`v1828-cmd-pill tone-${freshDisp.tone}`}
+            title="市場資料新鮮度"
+            data-testid="market-freshness-pill"
+            data-freshness-raw={freshDisp.raw}
+            data-global-live-overclaim={freshDisp.global_live_overclaim ? "1" : "0"}
+          >
+            {freshDisp.label}
+          </span>
+          <span
+            className="v1828-cmd-meta"
+            title="全市場發現 ≠ 即時監控"
+            data-testid="metric-discovery"
+          >
+            發現 {breadth ?? "—"}
+          </span>
+          <span
+            className="v1828-cmd-meta"
+            title="執行期深度追蹤池"
+            data-testid="metric-monitoring"
+          >
+            監控 {deep}
+          </span>
+          <span className="v1828-cmd-meta muted" title="掃描更新">
+            掃描 {updated}
+          </span>
+        </div>
+
+        <div className="v1828-cmd-right">
           <EventBellButton
             unread={unread}
             onClick={() => {
@@ -143,7 +155,7 @@ export function MarketTopTicker() {
           />
           <button
             type="button"
-            className="mtt-icon"
+            className="v1828-cmd-icon"
             title="系統狀態"
             aria-label="系統狀態"
             onClick={() => setSysOpen(true)}
@@ -152,7 +164,7 @@ export function MarketTopTicker() {
           </button>
           <button
             type="button"
-            className="mtt-icon"
+            className="v1828-cmd-icon"
             title="NEX AI"
             aria-label="Open NEX AI"
             onClick={() => {
@@ -161,6 +173,9 @@ export function MarketTopTicker() {
           >
             AI
           </button>
+          <Link to="/account" className="v1828-cmd-account" title="帳戶">
+            帳戶
+          </Link>
         </div>
       </header>
       <EventCenterDrawer
