@@ -5,11 +5,11 @@ Does NOT wire into running Shadow campaigns or lower Gate thresholds.
 """
 from __future__ import annotations
 
-SCHEMA = "v18_2_8_official_activity_metric_v2"
+SCHEMA = "v18_2_9_official_activity_metric_v2"
 SCHEMA_VERSION = 2
 PACKAGE = "nexus_activity_metric_v2"
 BRANCH = "feature/nexus-activity-metric-v2-isolated"
-BASE_COMMIT = "c266ade106b35501afd1fb8d0f603bce0e63be4c"
+BASE_COMMIT = "07ec7641f86e2a1324fe88a98a16d417ba34f885"
 
 # Quality states — partial warmup must be INSUFFICIENT_HISTORY, never zeroed LIVE.
 ACTIVITY_QUALITY_STATES: tuple[str, ...] = (

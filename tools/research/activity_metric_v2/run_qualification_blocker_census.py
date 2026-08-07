@@ -2,7 +2,7 @@
 """QUALIFICATION FUNNEL AUDIT — why qualification_ready_count=0.
 
 Produces blocker histogram by strategy family / mechanism / regime / data requirement.
-Writes: D:\\NEXUS_RUNTIME\\evidence_coordinator\\v18_2_8_qualification_blocker_census.json
+Writes: D:\\NEXUS_RUNTIME\\evidence_coordinator\\v18_2_9_qualification_blocker_census.json
 
 Formal WF: execute research-only ONLY if a candidate is truthfully ready; else formal_WF=false.
 Does NOT consume untouched OOS unless Formal WF actually passes.
@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-OUT_PATH = Path(r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_8_qualification_blocker_census.json")
+OUT_PATH = Path(r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_9_qualification_blocker_census.json")
 
 BLOCKER_CLASSES = (
     "DATA_BLOCKED",
@@ -252,7 +252,7 @@ def main() -> int:
         }
 
     report = {
-        "schema": "v18_2_8_qualification_blocker_census_v1",
+        "schema": "v18_2_9_qualification_blocker_census_v1",
         "generated_at": _utc(),
         "qualification_ready_count": 0,
         "why_zero": [

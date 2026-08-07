@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-OUT_PATH = Path(r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_8_demo_technical_readiness.json")
+OUT_PATH = Path(r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_9_demo_technical_readiness.json")
 
 
 def _utc() -> str:
@@ -61,7 +61,7 @@ def main() -> int:
     }
 
     report = {
-        "schema": "v18_2_8_demo_technical_readiness_v1",
+        "schema": "v18_2_9_demo_technical_readiness_v1",
         "generated_at": _utc(),
         "demo_order_armed": False,
         "autonomous_demo_order_allowed": False,
@@ -76,6 +76,7 @@ def main() -> int:
         "technical_smoke_ready": False,
         "note": (
             "Contract validation only. demo_order_armed must remain false. "
+            "Continue idempotency/reconciliation/reduce-only/kill-switch readiness only. "
             "No Demo/mainnet orders placed."
         ),
     }

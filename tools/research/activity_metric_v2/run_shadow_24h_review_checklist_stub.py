@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-OUT_PATH = Path(r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_8_shadow_24h_review_checklist.json")
+OUT_PATH = Path(r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_9_shadow_24h_review_checklist.json")
 
 TARGET_END = "2026-08-07T06:35:07Z"
 CAMPAIGN_ID = "shadow_24h_20260806T063504Z"
@@ -23,7 +23,7 @@ def main() -> int:
     before_target = now < target
 
     report = {
-        "schema": "v18_2_8_shadow_24h_review_checklist_v1",
+        "schema": "v18_2_9_shadow_24h_review_checklist_v1",
         "generated_at": _utc(),
         "campaign_id": CAMPAIGN_ID,
         "start": START,

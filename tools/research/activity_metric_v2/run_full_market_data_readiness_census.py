@@ -2,7 +2,7 @@
 """FULL-MARKET DATA READINESS CENSUS — Bybit linear public (dynamic discovery).
 
 Classifies each discovered market. No four-fleet language.
-Writes: D:\\NEXUS_RUNTIME\\evidence_coordinator\\v18_2_8_full_market_data_readiness.json
+Writes: D:\\NEXUS_RUNTIME\\evidence_coordinator\\v18_2_9_full_market_data_readiness.json
 """
 from __future__ import annotations
 
@@ -20,7 +20,10 @@ ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-OUT_PATH = Path(r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_8_full_market_data_readiness.json")
+OUT_PATH = Path(r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_9_full_market_data_readiness.json")
+BASELINE_V18_2_8 = Path(
+    r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_8_full_market_data_readiness.json"
+)
 BASE = "https://api.bybit.com"
 TIMEOUT = 20.0
 
@@ -36,6 +39,18 @@ CLASSES = (
     "BLOCKED",
 )
 
+# V18.2.8 baseline counts (for delta even if baseline file missing).
+V18_2_8_BASELINE_COUNTS = {
+    "DISCOVERED": 797,
+    "SUPPORTED": 729,
+    "HISTORY_AVAILABLE": 794,
+    "LIVE_AVAILABLE": 797,
+    "DATA_VALID": 797,
+    "RESEARCH_READY": 754,
+    "SHADOW_READY": 246,
+    "BLOCKED": 68,
+}
+
 
 def _utc() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -44,7 +59,7 @@ def _utc() -> str:
 def _get(path: str, params: dict[str, Any]) -> dict[str, Any]:
     qs = urllib.parse.urlencode(params)
     url = f"{BASE}{path}?{qs}"
-    req = urllib.request.Request(url, headers={"User-Agent": "NEXUS-census-v18.2.8/readonly"})
+    req = urllib.request.Request(url, headers={"User-Agent": "NEXUS-census-v18.2.9/readonly"})
     with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
@@ -218,8 +233,34 @@ def main() -> int:
     shadow_samples = [r["symbol"] for r in rows if r["shadow_ready"]][:25]
     blocked_samples = [r["symbol"] for r in rows if r["blocked"]][:25]
 
+    # Every blocked asset needs machine-readable blocker(s).
+    blocked_assets = [
+        {
+            "symbol": r["symbol"],
+            "status": r["status"],
+            "quote_coin": r["quote_coin"],
+            "blockers": list(r["block_reasons"]),
+            "classes": list(r["classes"]),
+        }
+        for r in rows
+        if r["blocked"]
+    ]
+
+    baseline_counts = dict(V18_2_8_BASELINE_COUNTS)
+    if BASELINE_V18_2_8.exists():
+        try:
+            prev = json.loads(BASELINE_V18_2_8.read_text(encoding="utf-8"))
+            if isinstance(prev.get("counts"), dict):
+                baseline_counts = {k: int(prev["counts"].get(k, 0)) for k in CLASSES}
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            pass
+
+    deltas = {
+        k: int(counts[k]) - int(baseline_counts.get(k, 0)) for k in CLASSES
+    }
+
     report = {
-        "schema": "v18_2_8_full_market_data_readiness_v1",
+        "schema": "v18_2_9_full_market_data_readiness_v1",
         "generated_at": _utc(),
         "as_of_ms": as_of_ms,
         "venue": "bybit",
@@ -242,7 +283,10 @@ def main() -> int:
             "shadow_ready": counts["SHADOW_READY"],
             "blocked": counts["BLOCKED"],
         },
+        "baseline_v18_2_8_counts": baseline_counts,
+        "deltas_vs_v18_2_8": deltas,
         "block_reason_histogram": dict(block_reason_hist.most_common()),
+        "blocked_assets": blocked_assets,
         "activity_metric_note": {
             "trade_count_24h_on_public_ticker": False,
             "volume24h_not_substituted": True,
@@ -250,6 +294,10 @@ def main() -> int:
             "official_activity_metric_v2_package": "backend/nexus_activity_metric_v2",
             "proxy_field": "trade_count_window",
             "proxy_version": "activity_metric_v2",
+            "real_validation_evidence": (
+                r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_9_activity_metric_real_validation.json"
+            ),
+            "wired_into_live_shadow": False,
         },
         "samples": {
             "shadow_ready": shadow_samples,
