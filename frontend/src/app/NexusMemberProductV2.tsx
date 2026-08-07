@@ -5,9 +5,9 @@ import { LiveMarketProvider } from "../market/useLiveMarketFeed";
 import { AnomalyOutcomeProvider } from "../market/useAnomalyOutcomes";
 import { MarketAnomalyProvider } from "../market/useMarketAnomalies";
 import { MarketScannerProvider } from "../market/useMarketScanner";
-import { NEXUS_UI_BUILD_INFO } from "../demo/buildInfo";
 import { MEMBER_PRODUCT_GENERATION } from "../product_v2/generation";
 import { ProductV2TopNav, ProductV2MobileNav } from "../product_v2/ProductV2TopNav";
+import { MarketPulseBar } from "../product_v2/MarketPulseBar";
 import { ProductV2AiDrawer } from "../product_v2/ProductV2AiDrawer";
 import { OverviewPageV2 } from "../product_v2/pages/OverviewPageV2";
 import { OpportunitiesPageV2 } from "../product_v2/pages/OpportunitiesPageV2";
@@ -16,7 +16,7 @@ import { AlertsPageV2 } from "../product_v2/pages/AlertsPageV2";
 import { ResearchPageV2 } from "../product_v2/pages/ResearchPageV2";
 import { WatchlistPageV2 } from "../product_v2/pages/WatchlistPageV2";
 import { AssistantPageV2 } from "../product_v2/pages/AssistantPageV2";
-import { MarketSymbolPage } from "../pages/MarketSymbolPage";
+import { MarketTerminalPageV2 } from "../product_v2/pages/MarketTerminalPageV2";
 import { MembershipReviewEntryGuard } from "../pages/actual_panel/MembershipEntitlementReviewPage";
 import {
   MemberAccountDeletionPage,
@@ -31,9 +31,8 @@ function SettingsRedirect() {
 }
 
 /**
- * NEXUS Member Product V2 — presentation root (V18.2.12).
- * Global top nav (no permanent left sidebar). Generation marker = 2.
- * Does NOT import old Overview/Opportunities/Scanner/Alerts/Intelligence page trees.
+ * NEXUS Member Product V2 — Exchange Terminal + Live Radar (V18.2.14).
+ * Generation marker = 2. Market terminal uses MarketTerminalPageV2 (not MarketSymbolPage).
  */
 export function NexusMemberProductV2() {
   const [aiOpen, setAiOpen] = useState(false);
@@ -52,12 +51,14 @@ export function NexusMemberProductV2() {
             <div
               className="mp2-shell"
               data-nexus-product-generation={MEMBER_PRODUCT_GENERATION}
-              data-member-surface="v18_2_12"
+              data-member-surface="v18_2_14"
               data-mp2-theme="dark"
               data-testid="nexus-member-product-v2"
+              data-build-marker="PUBLIC_V18_2_14_EXCHANGE_TERMINAL_LIVE_RADAR_HEAD"
             >
               <SkipToContentLabeled label="跳至主要內容" />
               <ProductV2TopNav onOpenAi={() => setAiOpen(true)} />
+              <MarketPulseBar />
               <main className="mp2-main" id="main-content" tabIndex={-1}>
                 <Routes>
                   <Route path="/" element={<Navigate to="/overview" replace />} />
@@ -68,7 +69,7 @@ export function NexusMemberProductV2() {
                   <Route path="/alerts" element={<AlertsPageV2 />} />
                   <Route path="/anomalies" element={<Navigate to="/alerts" replace />} />
                   <Route path="/intelligence" element={<ResearchPageV2 />} />
-                  <Route path="/market/:symbol" element={<MarketSymbolPage />} />
+                  <Route path="/market/:symbol" element={<MarketTerminalPageV2 />} />
                   <Route path="/watchlist" element={<WatchlistPageV2 />} />
                   <Route path="/assistant" element={<AssistantPageV2 />} />
                   <Route path="/nex-ai" element={<Navigate to="/assistant" replace />} />
@@ -86,8 +87,7 @@ export function NexusMemberProductV2() {
                 </Routes>
               </main>
               <footer className="mp2-footer">
-                {NEXUS_UI_BUILD_INFO.displayLabel} · {NEXUS_UI_BUILD_INFO.buildMarker} · generation{" "}
-                {MEMBER_PRODUCT_GENERATION} · READ ONLY · NOT INVESTMENT ADVICE
+                NEXUS · Live Market Intelligence · READ ONLY · NOT INVESTMENT ADVICE
               </footer>
               <ProductV2MobileNav />
               <ProductV2AiDrawer open={aiOpen} onClose={() => setAiOpen(false)} />

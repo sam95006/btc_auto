@@ -23,11 +23,20 @@ function promptsForPath(pathname: string): PromptDef[] {
     { id: "market_pulse", label: "市場怎麼了" },
     { id: "explain_risk", label: "目前風險" },
   ];
-  if (pathname.includes("/opportunities")) {
-    return [...base, { id: "why_blocked", label: "為何未通過" }, { id: "find_long", label: "做多候選" }, { id: "find_short", label: "做空候選" }];
+  if (pathname.includes("/opportunities") || pathname.includes("/overview")) {
+    return [
+      ...base,
+      { id: "why_blocked", label: "為何未合格" },
+      { id: "find_long", label: "多方 Radar" },
+      { id: "find_short", label: "空方 Radar" },
+      { id: "symbol_context", label: "解釋排名異動" },
+    ];
+  }
+  if (pathname.includes("/market/")) {
+    return [...base, { id: "symbol_context", label: "為何是此狀態" }, { id: "why_blocked", label: "為何未 READY" }];
   }
   if (pathname.includes("/scanner")) {
-    return [...base, { id: "why_blocked", label: "為何被擋" }, { id: "symbol_context", label: "如何讀列" }];
+    return [...base, { id: "why_blocked", label: "為何被擋" }, { id: "symbol_context", label: "比較前三名" }];
   }
   if (pathname.includes("/alerts")) {
     return [...base, { id: "alert_digest", label: "警報摘要" }];

@@ -4,8 +4,10 @@ import { useMarketAnomalies } from "../../market/useMarketAnomalies";
 import { useMarketScannerOverview } from "../../market/useMarketScanner";
 import { WatchStarButton } from "../../components/WatchStarButton";
 import { ANOMALY_TYPE_LABEL } from "../../market/anomalyTypes";
+import { useLiveMarketRanking } from "../useLiveMarketRanking";
+import { loadRankHistory } from "../../market/liveMarketRanking";
 
-type AlertKind = "opportunity" | "risk" | "market" | "data" | "watchlist";
+type AlertKind = "ranking" | "opportunity" | "risk" | "market" | "data" | "watchlist";
 
 type StreamItem = {
   id: string;
@@ -20,7 +22,7 @@ type StreamItem = {
   ts: number;
 };
 
-type FilterId = "ALL" | "OPPORTUNITY" | "RISK" | "MARKET" | "DATA" | "WATCHLIST";
+type FilterId = "ALL" | "RANKING" | "OPPORTUNITY" | "RISK" | "MARKET" | "DATA" | "WATCHLIST";
 
 const READ_KEY = "nexus.alerts.read.v2";
 
@@ -52,10 +54,11 @@ function saveReadIds(ids: Set<string>) {
 }
 
 const KIND_LABEL: Record<AlertKind, string> = {
-  opportunity: "機會",
+  ranking: "排名",
+  opportunity: "狀態",
   risk: "風險",
   market: "市場",
-  data: "資料品質",
+  data: "資料",
   watchlist: "自選",
 };
 
@@ -72,17 +75,37 @@ function dayBucket(ts: number): "today" | "yesterday" | "earlier" {
   return "earlier";
 }
 
-/**
- * Product V2 Alerts — chronological stream with Today grouping. Not cards.
- */
+/** Product V2 Alerts — ranking / state / risk / data events. */
 export function AlertsPageV2() {
   const anomalies = useMarketAnomalies();
   const { longs, shorts, events, status } = useMarketScannerOverview();
+  const ranking = useLiveMarketRanking();
   const [filter, setFilter] = useState<FilterId>("ALL");
   const [readIds, setReadIds] = useState<Set<string>>(() => loadReadIds());
 
   const stream = useMemo(() => {
     const items: StreamItem[] = [];
+
+    const hist = [...ranking.events, ...loadRankHistory()].slice(0, 40);
+    const seen = new Set<string>();
+    for (const e of hist) {
+      if (seen.has(e.id)) continue;
+      seen.add(e.id);
+      items.push({
+        id: `rank-${e.id}`,
+        kind: "ranking",
+        typeLabel: e.rank_event,
+        what: `${e.symbol.replace("USDT", "")} · ${e.rank_event}${
+          e.rank != null ? ` #${e.rank}` : ""
+        }${e.previous_rank != null ? `（原 #${e.previous_rank}）` : ""}`,
+        why: `${e.primary_reason} · ${e.market_change}`,
+        asset: e.symbol.replace("USDT", ""),
+        symbol: e.symbol,
+        href: `/market/${e.symbol}`,
+        time: agoLabel(e.timestamp),
+        ts: e.timestamp,
+      });
+    }
 
     for (const a of anomalies) {
       if (a.status !== "NEW" && a.status !== "ACTIVE" && a.status !== "COOLING") continue;
@@ -92,7 +115,7 @@ export function AlertsPageV2() {
       else if (type.includes("FUND") || type.includes("OI") || type.includes("VOL")) kind = "market";
       else if (type.includes("DATA") || type.includes("STALE") || type.includes("QUALITY")) kind = "data";
       else if (type.includes("WATCH")) kind = "watchlist";
-      else if (type.includes("OPP") || type.includes("CONFIRM") || type.includes("SIGNAL"))
+      else if (type.includes("OPP") || type.includes("CONFIRM") || type.includes("SIGNAL") || type.includes("STAGE"))
         kind = "opportunity";
 
       items.push({
@@ -110,9 +133,17 @@ export function AlertsPageV2() {
     }
 
     for (const e of events) {
+      const type = String(e.type || "").toUpperCase();
+      const kind: AlertKind = type.includes("RANK")
+        ? "ranking"
+        : type.includes("STAGE")
+          ? "opportunity"
+          : type.includes("OVER")
+            ? "risk"
+            : "market";
       items.push({
         id: `evt-${e.id}`,
-        kind: "market",
+        kind,
         typeLabel: e.type || "事件",
         what: `${e.symbol.replace("USDT", "")} · ${e.type || "事件"}`,
         why: e.explanation || "掃描事件",
@@ -125,7 +156,7 @@ export function AlertsPageV2() {
     }
 
     for (const c of [...longs, ...shorts].slice(0, 12)) {
-      if (c.stage === "CONFIRMED" || c.stage === "OVEREXTENDED") {
+      if (c.stage === "CONFIRMED" || c.stage === "OVEREXTENDED" || c.stage === "AWAITING_CONFIRMATION") {
         items.push({
           id: `cand-${c.id}`,
           kind: c.stage === "OVEREXTENDED" ? "risk" : "opportunity",
@@ -155,13 +186,29 @@ export function AlertsPageV2() {
       });
     }
 
+    const fresh = String(status?.freshness || "").toUpperCase();
+    if (fresh.includes("STALE") || fresh.includes("DEGRAD") || fresh.includes("DELAY")) {
+      items.push({
+        id: "data-fresh",
+        kind: "data",
+        typeLabel: "資料品質",
+        what: `資料 ${status?.freshness}`,
+        why: "解讀應更保守",
+        asset: "—",
+        href: "/scanner",
+        time: agoLabel(status?.lastCycleAt),
+        ts: status?.lastCycleAt ?? Date.now(),
+      });
+    }
+
     items.sort((a, b) => b.ts - a.ts);
-    return items;
-  }, [anomalies, events, longs, shorts, status]);
+    return items.filter((m, i, arr) => arr.findIndex((x) => x.id === m.id) === i);
+  }, [anomalies, events, longs, shorts, status, ranking.events]);
 
   const filtered = useMemo(() => {
     if (filter === "ALL") return stream;
     const map: Record<Exclude<FilterId, "ALL">, AlertKind> = {
+      RANKING: "ranking",
       OPPORTUNITY: "opportunity",
       RISK: "risk",
       MARKET: "market",
@@ -197,7 +244,8 @@ export function AlertsPageV2() {
 
   const filters: { id: FilterId; label: string }[] = [
     { id: "ALL", label: "全部" },
-    { id: "OPPORTUNITY", label: "機會" },
+    { id: "RANKING", label: "排名" },
+    { id: "OPPORTUNITY", label: "狀態" },
     { id: "RISK", label: "風險" },
     { id: "MARKET", label: "市場" },
     { id: "DATA", label: "資料" },
@@ -208,7 +256,7 @@ export function AlertsPageV2() {
     <div data-testid="product-v2-alerts" data-nexus-product-generation="2">
       <header>
         <h1 className="mp2-page-title">警報</h1>
-        <p className="mp2-page-sub">時間軸串流 · 今天優先 · 非下單通知</p>
+        <p className="mp2-page-sub">排名 · 狀態 · 風險 · 資料</p>
       </header>
 
       <div className="mp2-chip-row" style={{ marginTop: 12 }} role="group" aria-label="警報篩選">

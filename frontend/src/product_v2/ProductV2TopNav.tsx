@@ -12,19 +12,20 @@ import { useMarketScannerOverview } from "../market/useMarketScanner";
 import { loadEventPrefs, loadReadEventIds, type EventPrefs } from "../market/eventPrefs";
 import { EventBellButton, EventCenterDrawer } from "../components/EventCenter";
 import { SystemStatusDrawer } from "../components/SystemStatusDrawer";
+import { mapMarketFreshnessDisplay } from "../market/dataTruthFreshness";
 
 /** Desktop primary labels — Product V2 global top nav (Chinese). */
 const PRIMARY_LABELS: Record<string, string> = {
   "/overview": "市場",
-  "/opportunities": "機會",
+  "/opportunities": "探索",
   "/scanner": "掃描器",
   "/alerts": "警報",
   "/intelligence": "研究",
 };
 
 const MOBILE_SHORT: Record<string, string> = {
-  "/overview": "總覽",
-  "/opportunities": "機會",
+  "/overview": "市場",
+  "/opportunities": "探索",
   "/scanner": "掃描",
   "/alerts": "警報",
   "/intelligence": "研究",
@@ -37,7 +38,7 @@ const MOBILE_SHORT: Record<string, string> = {
 export function ProductV2TopNav({ onOpenAi }: { onOpenAi: () => void }) {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
-  const { events } = useMarketScannerOverview();
+  const { events, status, error } = useMarketScannerOverview();
   const [eventOpen, setEventOpen] = useState(false);
   const [sysOpen, setSysOpen] = useState(false);
   const [prefs, setPrefs] = useState<EventPrefs>(() => loadEventPrefs());
@@ -52,6 +53,18 @@ export function ProductV2TopNav({ onOpenAi }: { onOpenAi: () => void }) {
     const read = loadReadEventIds();
     return events.filter((e) => !read.has(e.id)).length;
   }, [events, readTick]);
+
+  const dataDot = useMemo(() => {
+    const fresh = mapMarketFreshnessDisplay(status?.freshness, {
+      wsConnected: status?.wsConnected,
+      lastError: status?.lastError ?? error,
+      source: status?.source,
+    });
+    const f = String(status?.freshness || "").toUpperCase();
+    if (error || f.includes("STALE") || f.includes("DEGRAD")) return "warn";
+    if (fresh.global_live_overclaim) return "warn";
+    return "ok";
+  }, [status, error]);
 
   const onSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -104,28 +117,40 @@ export function ProductV2TopNav({ onOpenAi }: { onOpenAi: () => void }) {
               aria-label="全域搜尋"
             />
           </form>
-          <NavLink to="/watchlist" className={({ isActive }) => (isActive ? "is-active" : undefined)}>
-            自選
+          <NavLink
+            to="/watchlist"
+            className={({ isActive }) => `mp2-icon-link${isActive ? " is-active" : ""}`}
+            title="自選"
+            aria-label="自選"
+          >
+            ★
           </NavLink>
-          <button type="button" className="mp2-util-btn" onClick={onOpenAi} aria-label="開啟 NEX AI 分析">
-            分析
+          <button
+            type="button"
+            className="mp2-util-btn mp2-icon-btn"
+            onClick={onOpenAi}
+            aria-label="開啟 NEX AI"
+            title="NEX AI"
+          >
+            AI
           </button>
           <span className="mp2-util-hide-sm">
-            <EventBellButton
-              unread={unread}
-              onClick={() => setEventOpen(true)}
-            />
+            <EventBellButton unread={unread} onClick={() => setEventOpen(true)} />
           </span>
           <button
             type="button"
-            className="mp2-util-btn mp2-util-hide-sm"
+            className={`mp2-data-dot mp2-util-hide-sm ${dataDot}`}
             onClick={() => setSysOpen(true)}
-            aria-label="系統狀態"
+            aria-label="資料狀態"
+            title="資料狀態"
+          />
+          <NavLink
+            to="/account"
+            className={({ isActive }) => `mp2-avatar${isActive ? " is-active" : ""}`}
+            aria-label="帳戶"
+            title="帳戶"
           >
-            狀態
-          </button>
-          <NavLink to="/account" className={({ isActive }) => (isActive ? "is-active" : undefined)}>
-            帳戶
+            <span aria-hidden>N</span>
           </NavLink>
         </div>
       </header>

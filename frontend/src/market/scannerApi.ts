@@ -34,8 +34,11 @@ export type MarketCandidate = {
   spreadBps?: number | null;
   openInterestValue?: number;
   change24hPct?: number;
+  volume24h?: number | null;
   markPrice?: number | null;
   indexPrice?: number | null;
+  /** Backend rankScore when present — display ranking prefers nex_rank_score_v1. */
+  rankScore?: number | null;
   reasons: string[];
   conflicts: string[];
   invalidationContext?: string;

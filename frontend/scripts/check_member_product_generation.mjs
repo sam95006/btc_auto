@@ -35,6 +35,7 @@ if (!fs.existsSync(appFile)) {
   const bannedImports = [
     "ActualPanelOverviewPage",
     "OpportunitiesPageV1821",
+    'from "../pages/MarketSymbolPage"',
     'from "../pages/ScannerPage"',
     'from "../pages/AlertsPage"',
     'from "../pages/IntelligencePage"',
@@ -46,6 +47,13 @@ if (!fs.existsSync(appFile)) {
     if (text.includes(ban)) {
       issues.push(`Product V2 imports old page-level layout: ${ban}`);
     }
+  }
+  if (!text.includes("MarketTerminalPageV2")) {
+    issues.push("Product V2 missing MarketTerminalPageV2 route");
+  }
+  const oppText = fs.readFileSync(path.join(SRC, "product_v2", "pages", "OpportunitiesPageV2.tsx"), "utf8");
+  if (/>\s*L1\s*</.test(oppText) || />\s*L2\s*</.test(oppText) || />\s*L3\s*</.test(oppText)) {
+    issues.push("OpportunitiesPageV2 still exposes L1/L2/L3 member UI");
   }
 }
 
@@ -67,8 +75,8 @@ if (/RootSurfaceSwitch[\s\S]*ActualPanelV1821App/.test(appTsx) && !appTsx.includ
 }
 
 const buildInfo = fs.readFileSync(path.join(SRC, "demo", "buildInfo.ts"), "utf8");
-if (!buildInfo.includes("PUBLIC_V18_2_12_EXCHANGE_GRADE_UI_HEAD")) {
-  issues.push("buildInfo missing PUBLIC_V18_2_12_EXCHANGE_GRADE_UI_HEAD");
+if (!buildInfo.includes("PUBLIC_V18_2_14_EXCHANGE_TERMINAL_LIVE_RADAR_HEAD")) {
+  issues.push("buildInfo missing PUBLIC_V18_2_14_EXCHANGE_TERMINAL_LIVE_RADAR_HEAD");
 }
 if (!/member_product_generation:\s*2/.test(buildInfo) && !/memberProductGeneration:\s*2/.test(buildInfo)) {
   issues.push("buildInfo missing member_product_generation = 2");
