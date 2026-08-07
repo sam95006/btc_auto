@@ -4,7 +4,7 @@
  * Forbidden routes: /trade, /orders, /arm, /routing-edit
  *
  * PUB-E: Founder private operator mounts in a separate shell (never inside member SidebarNav).
- * V18.2.1: Stable Zeabur panel unless member_surface_v18_2_1 preview flag is on.
+ * V18.2.10 Preview: Actual Panel is default. Legacy shell only if flag explicitly off.
  */
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { FounderDiagnosticsPage } from "./founder/FounderDiagnosticsPage";

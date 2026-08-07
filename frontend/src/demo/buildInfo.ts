@@ -10,10 +10,10 @@ export const NEXUS_UI_BUILD_INFO = {
   latestCommit: "pending",
   backendState: "HOLD",
   stage419: "BLOCKED",
-  displayLabel: "V18.2.10 · human recomposition",
+  displayLabel: "V18.2.10 · Actual Panel default ON",
   buildMarker: "PUBLIC_V18_2_10_HUMAN_RECOMPOSITION_HEAD",
   /** Track note for remote QA build verification. */
-  localTrackNote: "V18_2_10_HUMAN_RECOMPOSITION",
+  localTrackNote: "V18_2_10_SURFACE_DEFAULT_ON",
   phase4LegacyMarker: "NEXUS_UI_PRODUCT_AND_INTELLIGENCE_PHASE4",
   product7LegacyMarker: "NEXUS_UI_PRODUCT_7_PARALLEL_5H",
   phase3LegacyMarker: "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES",
