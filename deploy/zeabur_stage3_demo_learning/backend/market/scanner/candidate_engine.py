@@ -232,6 +232,8 @@ def score_symbol(snap: dict[str, Any], history: list[dict[str, Any]]) -> dict[st
         "indexPrice": snap.get("indexPrice"),
         "volume24h": snap.get("volume24h"),
         "openInterest": snap.get("openInterest"),
+        "symbolType": snap.get("symbolType"),
+        "assetDisposition": snap.get("assetDisposition"),
         "reasons": reasons[:4],
         "conflicts": conflicts[:4],
         "invalidationContext": conflicts[0] if conflicts else "條件減弱或資料不足時退出觀察",

@@ -25,6 +25,7 @@ from flask import Flask, abort, jsonify, render_template, request, send_from_dir
 from backend.api.operator_ui_cache import apply_operator_ui_cache_headers, is_operator_ui_html_path
 from backend.api.market_public_routes import register_market_public_routes
 from backend.api.market_scanner_routes import register_market_scanner_routes
+from backend.api.public_radar_routes import register_public_radar_routes
 from backend.api.market_sector_routes import register_market_sector_routes
 from backend.api.market_chart_routes import register_market_chart_routes
 from backend.api.market_intelligence_routes import register_market_intelligence_routes
@@ -116,7 +117,7 @@ def _nexus_static_cache_control(response):
         response = apply_operator_ui_cache_headers(
             response, request.path, spa_prefixes=_SPA_PREFIXES
         )
-    if request.path.startswith("/api/market/"):
+    if request.path.startswith("/api/market/") or request.path.startswith("/api/nexus/public/radar"):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
     return response
@@ -124,6 +125,7 @@ def _nexus_static_cache_control(response):
 
 register_market_public_routes(app)
 register_market_scanner_routes(app)
+register_public_radar_routes(app)  # V18.2.16 server-side Full-Market Live Radar
 register_market_sector_routes(app)
 register_market_chart_routes(app)
 register_market_intelligence_routes(app)

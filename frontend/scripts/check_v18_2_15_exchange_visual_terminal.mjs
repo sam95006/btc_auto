@@ -42,13 +42,13 @@ assert.ok(terminal.includes("CONTRADICTING"), "CONTRADICTING");
 assert.ok(terminal.includes("INVALIDATION"), "INVALIDATION");
 
 const buildInfo = fs.readFileSync(path.join(SRC, "demo", "buildInfo.ts"), "utf8");
-assert.ok(buildInfo.includes("PUBLIC_V18_2_15_EXCHANGE_VISUAL_TERMINAL_HEAD"), "marker");
+assert.ok(buildInfo.includes("PUBLIC_V18_2_16_SERVER_SIDE_LIVE_RADAR_HEAD"), "marker");
 
 const app = fs.readFileSync(path.join(SRC, "app", "NexusMemberProductV2.tsx"), "utf8");
-assert.ok(app.includes("PUBLIC_V18_2_15_EXCHANGE_VISUAL_TERMINAL_HEAD"), "app marker");
-assert.ok(app.includes('data-member-surface="v18_2_15"'), "surface marker");
+assert.ok(app.includes("PUBLIC_V18_2_16_SERVER_SIDE_LIVE_RADAR_HEAD"), "app marker");
+assert.ok(app.includes('data-member-surface="v18_2_16"'), "surface marker");
 
 const css = fs.readFileSync(path.join(SRC, "styles", "global.css"), "utf8");
 assert.ok(css.length > 0, "global.css utf-8 readable");
 
-console.log("PASS: v18.2.15 exchange visual terminal + radar contract checks");
+console.log("PASS: v18.2.15 compatibility gate (marker bumped to v18.2.16)");

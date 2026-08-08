@@ -102,10 +102,12 @@ def _nexus_static_cache_control(response):
 
 from backend.api.market_public_routes import register_market_public_routes
 from backend.api.market_scanner_routes import register_market_scanner_routes
+from backend.api.public_radar_routes import register_public_radar_routes
 from backend.api.operator_ui_cache import apply_operator_ui_cache_headers, is_operator_ui_html_path
 
 register_market_public_routes(app)
 register_market_scanner_routes(app)
+register_public_radar_routes(app)  # V18.2.16 server-side Full-Market Live Radar
 
 try:
     from backend.nexus_research.api_routes import register_nexus_research_routes

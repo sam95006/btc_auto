@@ -101,7 +101,7 @@ export type LiveRankingSnapshot = {
   fixed_symbol_dependency_count: typeof FIXED_SYMBOL_DEPENDENCY_COUNT;
   radar_eligibility_contract: typeof RADAR_ELIGIBILITY_CONTRACT;
   rank_score_semantics: "normalized_0_100_nex_rank_score_v1";
-  rank_persistence: "localStorage_prev_v1_hysteresis";
+  rank_persistence: "localStorage_prev_v1_hysteresis" | "server_jsonl_prev_v1_hysteresis";
 };
 
 const HISTORY_KEY = "nexus.live_rank.history.v1";

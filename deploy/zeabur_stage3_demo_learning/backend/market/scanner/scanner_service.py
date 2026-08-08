@@ -48,6 +48,8 @@ class MarketScannerService:
         self._latest: dict[str, dict[str, Any]] = {}
         self._universe_meta: dict[str, Any] = {}
         self._candidates: list[dict[str, Any]] = []
+        # Full scored universe (pre CANDIDATE_CAPACITY truncation) for Live Radar.
+        self._scored_all: list[dict[str, Any]] = []
         self._prev_candidates: dict[str, dict[str, Any]] = {}
         self._events: deque[dict[str, Any]] = deque(maxlen=cfg.EVENT_CAPACITY)
         self._event_keys: dict[str, int] = {}
@@ -301,6 +303,23 @@ class MarketScannerService:
                         pass
 
                 prev_snap = dict(self._prev_candidates)
+                # Preserve FULL scored universe for server-side Live Radar (not limit 40).
+                scored_full: list[dict[str, Any]] = []
+                for sc_row in scored:
+                    side = sc_row.get("side") or "NEUTRAL"
+                    cid = f"{sc_row.get('symbol')}:{side}"
+                    prev_full = self._prev_candidates.get(cid) or {}
+                    scored_full.append(
+                        {
+                            **sc_row,
+                            "id": cid,
+                            "rank": None,
+                            "previousRank": prev_full.get("rank"),
+                            "firstSeenAt": prev_full.get("firstSeenAt", now),
+                            "rankDelta": None,
+                        }
+                    )
+                self._scored_all = scored_full
                 ranked = rank_candidates(scored, self._prev_candidates)
                 self._emit_events(ranked)
                 try:
@@ -477,7 +496,17 @@ class MarketScannerService:
             age = int(time.time() * 1000) - self._last_cycle_at if self._last_cycle_at else None
             fresh = "COLLECTING"
             if self._last_cycle_at:
-                fresh = "LIVE" if (age or 0) < 45_000 else ("DELAYED" if (age or 0) < 120_000 else "STALE")
+                # Do not overclaim global LIVE when REST-only / errored / aged.
+                if self._last_error:
+                    fresh = "DEGRADED"
+                elif (age or 0) >= 120_000:
+                    fresh = "STALE"
+                elif (age or 0) >= 45_000:
+                    fresh = "DELAYED"
+                elif not self._ws_connected:
+                    fresh = "DEGRADED"
+                else:
+                    fresh = "LIVE"
             longs = sum(1 for c in self._candidates if c.get("side") == "LONG" and c.get("rank"))
             shorts = sum(1 for c in self._candidates if c.get("side") == "SHORT" and c.get("rank"))
             confirmed = sum(1 for c in self._candidates if c.get("stage") == "CONFIRMED")
@@ -552,6 +581,40 @@ class MarketScannerService:
                 "freshness": self.status().get("freshness"),
                 "count": len(rows),
                 "candidates": rows,
+                "cache": "no-store",
+            }
+
+    def all_scored_candidates(self) -> dict[str, Any]:
+        """FULL scanner-visible scored universe — not truncated to CANDIDATE_CAPACITY.
+
+        Used by FullMarketRadarService so ranking is over the entire monitored set
+        before any public API pagination.
+        """
+        with self._lock:
+            rows = list(self._scored_all)
+            meta = dict(self._universe_meta or {})
+            return {
+                "ok": True,
+                "read_only": True,
+                "researchOnly": True,
+                "source": "BYBIT_MAINNET_LINEAR",
+                "generatedAt": int(time.time() * 1000),
+                "freshness": self.status().get("freshness"),
+                "count": len(rows),
+                "candidates": rows,
+                "symbolCount": len(self._latest),
+                "symbolLimit": cfg.SYMBOL_LIMIT,
+                "eligibleBeforeLimit": meta.get("eligible_before_limit"),
+                "eligibleAfterLimit": meta.get("eligible_after_limit"),
+                "candidateCapacity": cfg.CANDIDATE_CAPACITY,
+                "fullUniverseNotCandidateCap": True,
+                "universeBlocker": (
+                    f"scanner_SYMBOL_LIMIT={cfg.SYMBOL_LIMIT}_caps_eligible_before_limit="
+                    f"{meta.get('eligible_before_limit')}"
+                    if isinstance(meta.get("eligible_before_limit"), int)
+                    and int(meta.get("eligible_before_limit") or 0) > cfg.SYMBOL_LIMIT
+                    else None
+                ),
                 "cache": "no-store",
             }
 

@@ -18,6 +18,7 @@ from backend.api.market_scanner_routes import register_market_scanner_routes
 from backend.api.market_sector_routes import register_market_sector_routes
 from backend.api.market_chart_routes import register_market_chart_routes
 from backend.api.market_intelligence_routes import register_market_intelligence_routes
+from backend.api.public_radar_routes import register_public_radar_routes
 from backend.api.server import register_nexus_routes
 from backend.nexus_research.api_routes import register_nexus_research_routes
 from backend.nexus_public_decision_cloud.routes import register_public_decision_cloud_routes
@@ -52,6 +53,7 @@ app = Flask(__name__)
 register_nexus_routes(app)
 register_market_public_routes(app)
 register_market_scanner_routes(app)
+register_public_radar_routes(app)  # V18.2.16: server-side Full-Market Live Radar
 register_market_sector_routes(app)
 register_market_chart_routes(app)
 register_market_intelligence_routes(app)

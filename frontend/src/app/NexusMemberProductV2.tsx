@@ -31,7 +31,7 @@ function SettingsRedirect() {
 }
 
 /**
- * NEXUS Member Product V2 — Exchange Visual Terminal + Live Radar (V18.2.15).
+ * NEXUS Member Product V2 — Server-Side Full-Market Live Radar (V18.2.16).
  * Generation marker = 2. Market terminal uses MarketTerminalPageV2 (not MarketSymbolPage).
  */
 export function NexusMemberProductV2() {
@@ -51,10 +51,10 @@ export function NexusMemberProductV2() {
             <div
               className="mp2-shell"
               data-nexus-product-generation={MEMBER_PRODUCT_GENERATION}
-              data-member-surface="v18_2_15"
+              data-member-surface="v18_2_16"
               data-mp2-theme="dark"
               data-testid="nexus-member-product-v2"
-              data-build-marker="PUBLIC_V18_2_15_EXCHANGE_VISUAL_TERMINAL_HEAD"
+              data-build-marker="PUBLIC_V18_2_16_SERVER_SIDE_LIVE_RADAR_HEAD"
             >
               <SkipToContentLabeled label="跳至主要內容" />
               <ProductV2TopNav onOpenAi={() => setAiOpen(true)} />

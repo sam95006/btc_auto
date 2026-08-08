@@ -75,8 +75,8 @@ if (/RootSurfaceSwitch[\s\S]*ActualPanelV1821App/.test(appTsx) && !appTsx.includ
 }
 
 const buildInfo = fs.readFileSync(path.join(SRC, "demo", "buildInfo.ts"), "utf8");
-if (!buildInfo.includes("PUBLIC_V18_2_15_EXCHANGE_VISUAL_TERMINAL_HEAD")) {
-  issues.push("buildInfo missing PUBLIC_V18_2_15_EXCHANGE_VISUAL_TERMINAL_HEAD");
+if (!buildInfo.includes("PUBLIC_V18_2_16_SERVER_SIDE_LIVE_RADAR_HEAD")) {
+  issues.push("buildInfo missing PUBLIC_V18_2_16_SERVER_SIDE_LIVE_RADAR_HEAD");
 }
 if (!/member_product_generation:\s*2/.test(buildInfo) && !/memberProductGeneration:\s*2/.test(buildInfo)) {
   issues.push("buildInfo missing member_product_generation = 2");

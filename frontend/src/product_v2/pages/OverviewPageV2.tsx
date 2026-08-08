@@ -190,6 +190,10 @@ export function OverviewPageV2() {
       data-scanner-visible={ranking.scanner_visible_count}
       data-trade-eligible={ranking.trade_eligible_count}
       data-radar-contract={ranking.radar_eligibility_contract}
+      data-rank-authority={ranking.rank_authority}
+      data-evaluated-count={ranking.evaluated_count}
+      data-monitored-count={ranking.monitored_count}
+      data-excluded-count={ranking.excluded_count}
     >
       <header className="mp2-home-head">
         <div>
@@ -255,7 +259,9 @@ export function OverviewPageV2() {
               <h2>
                 {"活躍異動"} {"·"} {ranking.radar_eligible_count}
                 <span className="muted" style={{ fontWeight: 500, fontSize: "0.8125rem", marginLeft: 8 }}>
-                  {"更新"} {agoLabel(ranking.updated_at)}
+                  {"評估"} {ranking.evaluated_count ?? ranking.scanner_visible_count}
+                  {" / 監控"} {ranking.monitored_count ?? ranking.universe_size}
+                  {" · 更新"} {agoLabel(ranking.updated_at)}
                 </span>
               </h2>
             </div>
@@ -410,6 +416,18 @@ export function OverviewPageV2() {
               <div>
                 <span className="lbl">Radar</span>
                 <span className="mono">{ranking.radar_eligible_count}</span>
+              </div>
+              <div>
+                <span className="lbl">{"評估"}</span>
+                <span className="mono" data-testid="evaluated-count">
+                  {ranking.evaluated_count ?? ranking.scanner_visible_count}
+                </span>
+              </div>
+              <div>
+                <span className="lbl">{"監控"}</span>
+                <span className="mono" data-testid="monitored-count">
+                  {ranking.monitored_count ?? ranking.universe_size}
+                </span>
               </div>
               <div>
                 <span className="lbl">{"資料"}</span>
