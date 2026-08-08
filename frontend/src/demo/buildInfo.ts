@@ -10,10 +10,10 @@ export const NEXUS_UI_BUILD_INFO = {
   latestCommit: "pending",
   backendState: "HOLD",
   stage419: "BLOCKED",
-  displayLabel: "V18.2.16 · Server-Side Full-Market Live Radar",
-  buildMarker: "PUBLIC_V18_2_16_SERVER_SIDE_LIVE_RADAR_HEAD",
+  displayLabel: "V18.2.18 · Paid Product Visual + True Market Series",
+  buildMarker: "PUBLIC_V18_2_18_PAID_PRODUCT_VISUAL_HEAD",
   /** Track note for remote QA build verification. */
-  localTrackNote: "V18_2_16_SERVER_SIDE_LIVE_RADAR",
+  localTrackNote: "V18_2_18_PAID_PRODUCT_VISUAL",
   /** Product generation — automated QA must equal 2. */
   member_product_generation: 2,
   memberProductGeneration: 2,

@@ -5,7 +5,14 @@ import { fetchScannerCandidates, STAGE_LABEL_ZH, type MarketCandidate } from "..
 import { formatUsd } from "../../market/freshness";
 import { useLiveMarketRanking } from "../useLiveMarketRanking";
 import { formatRankMove } from "../../market/liveMarketRanking";
+import { SERIES_PRESETS, seriesSparkPoints } from "../../market/marketSeries";
 import { MetricSpark } from "../MetricSpark";
+import { TokenIcon } from "../TokenIcon";
+import { useMarketSeriesBatch } from "../useMarketSeriesBatch";
+import { usePublicEntitlements } from "../../member/public_entitlements_v18_2";
+import { usePreviewReviewPlan } from "../../member/usePreviewReviewPlan";
+import { ContextualUpgrade } from "../ContextualUpgrade";
+import { FREE_WATCHLIST_SOFT_CAP, isFreePlan } from "../productCapabilities";
 
 function fmtPct(v: number | null | undefined) {
   if (v == null || Number.isNaN(v)) return "—";
@@ -20,13 +27,18 @@ function agoLabel(ts?: number | null) {
   return `${Math.round(sec / 3600)}h`;
 }
 
-/** Product V2 Watchlist — rank-aware personal workspace. */
+/** Product V2 Watchlist — true 24h/15m series sparks. */
 export function WatchlistPageV2() {
   const [items, setItems] = useState<WatchItem[]>(() => loadWatchlist().items);
   const [rows, setRows] = useState<MarketCandidate[]>([]);
   const [loading, setLoading] = useState(true);
   const ranking = useLiveMarketRanking();
+  const previewPlan = usePreviewReviewPlan("FREE");
+  const { dto } = usePublicEntitlements(previewPlan);
+  const plan = dto?.plan ?? previewPlan;
+  const free = isFreePlan(plan);
   const symbols = items.filter((i) => i.assetClass === "CRYPTO").map((i) => i.symbol);
+  const { seriesBySymbol } = useMarketSeriesBatch(symbols, "watchlist_24h", 90_000);
 
   useEffect(() => {
     let alive = true;
@@ -56,11 +68,19 @@ export function WatchlistPageV2() {
   }, [ranking.rows]);
 
   return (
-    <div data-testid="product-v2-watchlist" data-nexus-product-generation="2">
+    <div data-testid="product-v2-watchlist" data-nexus-product-generation="2" data-true-market-series="1">
       <header>
         <h1 className="mp2-page-title">自選</h1>
-        <p className="mp2-page-sub">本機最多 {WATCHLIST_LIMIT} · Research only</p>
+        <p className="mp2-page-sub">本機最多 {WATCHLIST_LIMIT} · Research only · 24h/15m series</p>
       </header>
+
+      {free && items.length >= FREE_WATCHLIST_SOFT_CAP ? (
+        <ContextualUpgrade
+          title="自選名額"
+          detail={`FREE 建議上限 ${FREE_WATCHLIST_SOFT_CAP}；PRO 解鎖完整自選與警報聯動。`}
+          required="PRO"
+        />
+      ) : null}
 
       {loading && symbols.length > 0 ? (
         <div className="mp2-skeleton-stack" aria-busy="true" aria-label="載入中">
@@ -100,27 +120,33 @@ export function WatchlistPageV2() {
               {items.map((it) => {
                 const c = rows.find((r) => r.symbol === it.symbol);
                 const rr = rankBySym.get(it.symbol);
+                const sparkPts = seriesSparkPoints(seriesBySymbol[it.symbol]);
                 return (
                   <tr key={`${it.assetClass}:${it.symbol}`}>
                     <td>
                       {it.assetClass === "CRYPTO" ? (
-                        <Link to={`/market/${it.symbol}`} className="mono">
-                          {it.symbol.replace("USDT", "")}
-                        </Link>
+                        <span className="mp2-sym-with-icon">
+                          <TokenIcon symbol={it.symbol} size={18} />
+                          <Link to={`/market/${it.symbol}`} className="mono">
+                            {it.symbol.replace("USDT", "")}
+                          </Link>
+                        </span>
                       ) : (
                         <strong className="mono">{it.symbol}</strong>
                       )}
                     </td>
                     <td>
-                      <MetricSpark
-                        values={[
-                          c?.priceChange1mPct,
-                          c?.priceChange5mPct,
-                          c?.priceChange15mPct,
-                          c?.change24hPct,
-                        ]}
-                        positive={(c?.change24hPct ?? 0) >= 0}
-                      />
+                      {sparkPts.length >= 2 ? (
+                        <MetricSpark
+                          points={sparkPts}
+                          expectedIntervalMs={SERIES_PRESETS.watchlist_24h.expectedIntervalMs}
+                          positive={(c?.change24hPct ?? 0) >= 0}
+                        />
+                      ) : (
+                        <span className="mp2-nodata" title="NO DATA">
+                          NO DATA
+                        </span>
+                      )}
                     </td>
                     <td className="mono">{c?.currentPrice == null ? "—" : formatUsd(c.currentPrice)}</td>
                     <td className={`mono ${(c?.change24hPct ?? 0) >= 0 ? "pos" : "neg"}`}>

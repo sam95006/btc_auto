@@ -32,10 +32,10 @@ assert.ok(overview.includes("monitored-count"), "monitored count");
 assert.ok([...overview].some((c) => c >= "\u4e00" && c <= "\u9fff"), "overview must contain CJK");
 
 const buildInfo = fs.readFileSync(path.join(SRC, "demo", "buildInfo.ts"), "utf8");
-assert.ok(buildInfo.includes("PUBLIC_V18_2_16_SERVER_SIDE_LIVE_RADAR_HEAD"), "marker");
+assert.ok(buildInfo.includes("PUBLIC_V18_2_18_PAID_PRODUCT_VISUAL_HEAD"), "marker");
 
 const app = fs.readFileSync(path.join(SRC, "app", "NexusMemberProductV2.tsx"), "utf8");
-assert.ok(app.includes("PUBLIC_V18_2_16_SERVER_SIDE_LIVE_RADAR_HEAD"), "app marker");
-assert.ok(app.includes('data-member-surface="v18_2_16"'), "surface marker");
+assert.ok(app.includes("PUBLIC_V18_2_18_PAID_PRODUCT_VISUAL_HEAD"), "app marker");
+assert.ok(app.includes('data-member-surface="v18_2_18"'), "surface marker");
 
-console.log("PASS: v18.2.16 server-side full-market live radar checks");
+console.log("PASS: v18.2.16 server-side full-market live radar checks (marker bumped to v18.2.18)");

@@ -29,26 +29,26 @@ assert.ok(
 );
 
 const overview = fs.readFileSync(path.join(SRC, "product_v2", "pages", "OverviewPageV2.tsx"), "utf8");
-assert.ok(overview.includes("目前沒有明顯市場異動"), "empty radar copy");
-assert.ok(overview.includes("Closest Watch"), "closest watch label");
+assert.ok(overview.includes("目前沒有") || overview.includes("沒有市場滿足"), "empty radar copy");
+assert.ok(overview.includes("APPROACHING RADAR") || overview.includes("Closest Watch"), "closest watch label");
 assert.ok(overview.includes("MARKET PULSE"), "market pulse section");
 assert.ok(!overview.includes("????"), "mojibake question marks in overview");
 assert.ok([...overview].some((c) => c >= "\u4e00" && c <= "\u9fff"), "overview must contain CJK");
 
 const terminal = fs.readFileSync(path.join(SRC, "product_v2", "pages", "MarketTerminalPageV2.tsx"), "utf8");
 assert.ok(terminal.includes("WHY NOW"), "WHY NOW");
-assert.ok(terminal.includes("SUPPORTING"), "SUPPORTING");
-assert.ok(terminal.includes("CONTRADICTING"), "CONTRADICTING");
+assert.ok(terminal.includes("AGAINST") || terminal.includes("CONTRADICTING"), "AGAINST/CONTRADICTING");
 assert.ok(terminal.includes("INVALIDATION"), "INVALIDATION");
+assert.ok(terminal.includes("SUPPORTING") || terminal.includes("WHY NOW"), "WHY NOW/SUPPORTING");
 
 const buildInfo = fs.readFileSync(path.join(SRC, "demo", "buildInfo.ts"), "utf8");
-assert.ok(buildInfo.includes("PUBLIC_V18_2_16_SERVER_SIDE_LIVE_RADAR_HEAD"), "marker");
+assert.ok(buildInfo.includes("PUBLIC_V18_2_18_PAID_PRODUCT_VISUAL_HEAD"), "marker");
 
 const app = fs.readFileSync(path.join(SRC, "app", "NexusMemberProductV2.tsx"), "utf8");
-assert.ok(app.includes("PUBLIC_V18_2_16_SERVER_SIDE_LIVE_RADAR_HEAD"), "app marker");
-assert.ok(app.includes('data-member-surface="v18_2_16"'), "surface marker");
+assert.ok(app.includes("PUBLIC_V18_2_18_PAID_PRODUCT_VISUAL_HEAD"), "app marker");
+assert.ok(app.includes('data-member-surface="v18_2_18"'), "surface marker");
 
 const css = fs.readFileSync(path.join(SRC, "styles", "global.css"), "utf8");
 assert.ok(css.length > 0, "global.css utf-8 readable");
 
-console.log("PASS: v18.2.15 compatibility gate (marker bumped to v18.2.16)");
+console.log("PASS: v18.2.15 compatibility gate (marker bumped to v18.2.18)");

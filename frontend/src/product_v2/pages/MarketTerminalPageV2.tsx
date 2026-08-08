@@ -18,6 +18,11 @@ import {
 } from "../../market/liveMarketRanking";
 import { memberDataTrustLabel } from "../../market/marketMetricFunnel";
 import { loadWatchlist } from "../../market/watchlistStore";
+import { usePublicEntitlements } from "../../member/public_entitlements_v18_2";
+import { usePreviewReviewPlan } from "../../member/usePreviewReviewPlan";
+import { ContextualUpgrade } from "../ContextualUpgrade";
+import { isFreePlan, requiresResearch } from "../productCapabilities";
+import { TokenIcon } from "../TokenIcon";
 
 type LowerTab = "overview" | "evidence" | "derivatives" | "liquidity" | "history" | "quality";
 
@@ -54,6 +59,11 @@ export function MarketTerminalPageV2() {
   const navigate = useNavigate();
   const sym = symbol.toUpperCase();
   const ranking = useLiveMarketRanking();
+  const previewPlan = usePreviewReviewPlan("FREE");
+  const { dto } = usePublicEntitlements(previewPlan);
+  const plan = dto?.plan ?? previewPlan;
+  const free = isFreePlan(plan);
+  const researchLocked = requiresResearch(plan);
   const [error, setError] = useState<string | null>(null);
   const [candidate, setCandidate] = useState<MarketCandidate | null>(null);
   const [snap, setSnap] = useState<Record<string, unknown> | null>(null);
@@ -167,6 +177,7 @@ export function MarketTerminalPageV2() {
     >
       <header className="mp2-term-header" data-testid="terminal-symbol-header">
         <div className="mp2-term-title">
+          <TokenIcon symbol={sym} size={28} />
           <h1 className="mono">{sym.replace("USDT", "")}</h1>
           <span className="muted">USDT Perp</span>
           {rankRow ? (
@@ -372,7 +383,13 @@ export function MarketTerminalPageV2() {
             {tab === "history" ? (
               <div data-testid="terminal-rank-history">
                 <p className="mp2-kicker">Ranking History</p>
-                {history.length === 0 ? (
+                {free ? (
+                  <ContextualUpgrade
+                    title="排名歷史"
+                    detail="PRO 解鎖完整 rank history 與進出 Radar 軌跡。"
+                    required="PRO"
+                  />
+                ) : history.length === 0 ? (
                   <p className="muted">尚無已記錄的排名事件（不回溯虛構）。</p>
                 ) : (
                   <ol className="mp2-rank-history">
@@ -389,7 +406,7 @@ export function MarketTerminalPageV2() {
                     ))}
                   </ol>
                 )}
-                {rankRow ? (
+                {!free && rankRow ? (
                   <p className="muted" style={{ marginTop: 8 }}>
                     目前 #{rankRow.rank}
                     {rankRow.entered_rank_at
@@ -401,6 +418,13 @@ export function MarketTerminalPageV2() {
               </div>
             ) : null}
             {tab === "quality" ? (
+              researchLocked ? (
+                <ContextualUpgrade
+                  title="資料品質工具"
+                  detail="RESEARCH 方案解鎖深度 freshness / source 診斷。"
+                  required="RESEARCH"
+                />
+              ) : (
               <dl className="mp2-term-dl">
                 <div>
                   <dt>資料信任</dt>
@@ -415,54 +439,51 @@ export function MarketTerminalPageV2() {
                   <dd className="mono">{candidate?.source || "BYBIT_PUBLIC"}</dd>
                 </div>
               </dl>
+              )
             ) : null}
           </div>
         </section>
 
         <aside className="mp2-term-decision" aria-label="NEXUS 決策面板" data-testid="nexus-decision-panel">
-          <p className="mp2-kicker">NEXUS DECISION</p>
-          <p className="mp2-term-state" data-testid="terminal-decision-state">
-            {state}
-          </p>
-          <p className="muted" style={{ fontSize: "0.8125rem" }}>
-            {candidate
-              ? `${STAGE_LABEL_ZH[candidate.stage] || candidate.stage} · ${sideLabelZh(candidate.side)}`
-              : "尚無決策狀態"}
-          </p>
+          <p className="mp2-kicker">NEXUS INTELLIGENCE</p>
+          <div className="mp2-decision-block">
+            <h3>STATE</h3>
+            <p className="mp2-term-state" data-testid="terminal-decision-state">
+              {state}
+            </p>
+            <p className="muted" style={{ fontSize: "0.8125rem" }}>
+              {candidate
+                ? `${STAGE_LABEL_ZH[candidate.stage] || candidate.stage} · ${sideLabelZh(candidate.side)}`
+                : "尚無決策狀態"}
+            </p>
+          </div>
           {rankRow ? (
             <div className="mp2-decision-block">
-              <h3>Rank</h3>
+              <h3>RANK</h3>
               <p className="mono">{formatRankMove(rankRow)}</p>
             </div>
           ) : null}
           <div className="mp2-decision-block">
-            <h3>Data Trust</h3>
+            <h3>TRUST</h3>
             <p>{trust.label_zh}</p>
           </div>
           <div className="mp2-decision-block">
-            <h3>Risk</h3>
+            <h3>RISK</h3>
             <p className={`mono ${(candidate?.riskScore ?? 0) >= 70 ? "neg" : ""}`}>
               {candidate?.riskScore == null ? "—" : Math.round(candidate.riskScore)}
             </p>
           </div>
           <div className="mp2-decision-block">
             <h3>WHY NOW</h3>
-            <p>{plainReason(candidate?.reasons?.[0] || "結構仍在觀察", false)}</p>
-          </div>
-          <div className="mp2-decision-block">
-            <h3>SUPPORTING</h3>
-            {supports.length ? (
-              <ul>
-                {supports.slice(0, 3).map((s) => (
-                  <li key={s}>{s}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="muted">尚無</p>
-            )}
+            <ul>
+              {supports.slice(0, 3).map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+              {!supports.length ? <li className="muted">結構仍在觀察</li> : null}
+            </ul>
           </div>
           <div className="mp2-decision-block against">
-            <h3>CONTRADICTING</h3>
+            <h3>AGAINST</h3>
             {against.length ? (
               <ul>
                 {against.slice(0, 3).map((s) => (

@@ -1,30 +1,76 @@
-/** Compact SVG spark from real metric series (no fabricated candles). */
+/** Compact SVG spark from true market series (timestamps + gap breaks). No invented candles. */
 
+export type SparkTimedPoint = { timestamp: number; value: number };
+
+function finiteValues(values: Array<number | null | undefined>): number[] {
+  return values.filter((v): v is number => v != null && Number.isFinite(v));
+}
+
+/**
+ * Render spark from equal-index values (legacy) OR timestamped closes with gap detection.
+ * Gaps (>1.5× expected interval) break the path; never invent equal-space ticks.
+ */
 export function MetricSpark({
   values,
+  points,
+  expectedIntervalMs,
   width = 64,
   height = 22,
   positive,
 }: {
-  values: Array<number | null | undefined>;
+  values?: Array<number | null | undefined>;
+  points?: SparkTimedPoint[];
+  expectedIntervalMs?: number;
   width?: number;
   height?: number;
   positive?: boolean | null;
 }) {
-  const pts = values.filter((v): v is number => v != null && Number.isFinite(v));
-  if (pts.length < 2) {
-    return <span className="mp2-spark mp2-spark-empty" aria-hidden style={{ width, height }} />;
+  const timed =
+    points && points.length
+      ? points.filter((p) => Number.isFinite(p.timestamp) && Number.isFinite(p.value))
+      : null;
+
+  if (timed && timed.length < 2) {
+    return (
+      <span className="mp2-spark mp2-spark-empty" aria-label="NO DATA" style={{ width, height }} title="NO DATA" />
+    );
   }
+
+  const pts = timed ? timed.map((p) => p.value) : finiteValues(values || []);
+  if (pts.length < 2) {
+    return (
+      <span className="mp2-spark mp2-spark-empty" aria-label="NO DATA" style={{ width, height }} title="NO DATA" />
+    );
+  }
+
   const min = Math.min(...pts);
   const max = Math.max(...pts);
   const span = max - min || 1;
-  const coords = pts
-    .map((v, i) => {
-      const x = (i / (pts.length - 1)) * (width - 2) + 1;
-      const y = height - 2 - ((v - min) / span) * (height - 4);
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
+  const t0 = timed ? timed[0].timestamp : 0;
+  const t1 = timed ? timed[timed.length - 1].timestamp : 1;
+  const tSpan = Math.max(1, t1 - t0);
+  const gapMs = (expectedIntervalMs || 0) * 1.5;
+
+  const segments: string[] = [];
+  let current: string[] = [];
+  for (let i = 0; i < pts.length; i++) {
+    const x = timed
+      ? ((timed[i].timestamp - t0) / tSpan) * (width - 2) + 1
+      : (i / (pts.length - 1)) * (width - 2) + 1;
+    const y = height - 2 - ((pts[i] - min) / span) * (height - 4);
+    if (timed && i > 0 && gapMs > 0 && timed[i].timestamp - timed[i - 1].timestamp > gapMs) {
+      if (current.length >= 2) segments.push(current.join(" "));
+      current = [];
+    }
+    current.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+  }
+  if (current.length >= 2) segments.push(current.join(" "));
+  if (!segments.length) {
+    return (
+      <span className="mp2-spark mp2-spark-empty" aria-label="NO DATA" style={{ width, height }} title="NO DATA" />
+    );
+  }
+
   const last = pts[pts.length - 1];
   const first = pts[0];
   const up = positive != null ? positive : last >= first;
@@ -35,8 +81,12 @@ export function MetricSpark({
       width={width}
       height={height}
       aria-hidden
+      data-spark-mode={timed ? "timestamped" : "index"}
+      data-spark-segments={segments.length}
     >
-      <polyline fill="none" stroke="currentColor" strokeWidth="1.5" points={coords} />
+      {segments.map((d, i) => (
+        <polyline key={i} fill="none" stroke="currentColor" strokeWidth="1.5" points={d} />
+      ))}
     </svg>
   );
 }

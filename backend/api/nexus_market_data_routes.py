@@ -78,6 +78,96 @@ def nexus_market_candles(symbol: str):
     return resp
 
 
+@nexus_market_data_bp.route("/api/nexus/markets/<symbol>/series")
+def nexus_market_series(symbol: str):
+    """GET /api/nexus/markets/<symbol>/series?interval=15m&limit=96
+
+    Public-safe true market series contract (official OHLCV only).
+    """
+    interval = (request.args.get("interval") or "15m").strip()
+    window_label = (request.args.get("window") or request.args.get("window_label") or "").strip() or None
+    try:
+        limit = min(300, max(1, int(request.args.get("limit") or 96)))
+    except (ValueError, TypeError):
+        limit = 96
+    try:
+        from backend.market.charts import bybit_public_charts as charts
+
+        body = charts.fetch_market_series(
+            symbol.upper().strip(),
+            interval=interval,
+            limit=limit,
+            window_label=window_label,
+        )
+        body["route"] = "nexus_market_series"
+    except Exception as exc:  # noqa: BLE001
+        body = {
+            "ok": False,
+            "contract": "MARKET_SERIES_CONTRACT_V1",
+            "symbol": symbol.upper().strip(),
+            "interval": interval,
+            "points": [],
+            "insufficient": True,
+            "fabricated": False,
+            "error": str(exc),
+            "researchOnly": True,
+        }
+    resp = jsonify(body)
+    _no_store(resp)
+    return resp
+
+
+@nexus_market_data_bp.route("/api/nexus/markets/series")
+def nexus_market_series_batch():
+    """GET /api/nexus/markets/series?symbols=BTCUSDT,ETHUSDT&interval=5m&limit=48
+
+    Batch public-safe series for Pulse / Radar / Watchlist sparks.
+    """
+    raw = (request.args.get("symbols") or "").strip()
+    symbols = [s.strip().upper() for s in raw.split(",") if s.strip()]
+    interval = (request.args.get("interval") or "5m").strip()
+    window_label = (request.args.get("window") or request.args.get("window_label") or "").strip() or None
+    try:
+        limit = min(300, max(1, int(request.args.get("limit") or 48)))
+    except (ValueError, TypeError):
+        limit = 48
+    try:
+        max_symbols = min(24, max(1, int(request.args.get("max") or 24)))
+    except (ValueError, TypeError):
+        max_symbols = 24
+    if not symbols:
+        body = {
+            "ok": False,
+            "error": "symbols_required",
+            "series": {},
+            "contract": "MARKET_SERIES_CONTRACT_V1",
+            "researchOnly": True,
+        }
+    else:
+        try:
+            from backend.market.charts import bybit_public_charts as charts
+
+            body = charts.fetch_market_series_batch(
+                symbols,
+                interval=interval,
+                limit=limit,
+                window_label=window_label,
+                max_symbols=max_symbols,
+            )
+            body["route"] = "nexus_market_series_batch"
+        except Exception as exc:  # noqa: BLE001
+            body = {
+                "ok": False,
+                "error": str(exc),
+                "series": {},
+                "contract": "MARKET_SERIES_CONTRACT_V1",
+                "researchOnly": True,
+            }
+    resp = jsonify(body)
+    _no_store(resp)
+    return resp
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Snapshot (ticker)
 # ─────────────────────────────────────────────────────────────────────────────

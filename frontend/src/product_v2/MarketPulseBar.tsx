@@ -5,7 +5,10 @@ import { useMarketScannerOverview } from "../market/useMarketScanner";
 import { deriveRegime } from "../market/marketSummary";
 import { memberDataTrustLabel } from "../market/marketMetricFunnel";
 import { mapMarketFreshnessDisplay } from "../market/dataTruthFreshness";
+import { SERIES_PRESETS, seriesSparkPoints } from "../market/marketSeries";
 import { MetricSpark } from "./MetricSpark";
+import { TokenIcon } from "./TokenIcon";
+import { useMarketSeriesBatch } from "./useMarketSeriesBatch";
 
 const PULSE_SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"] as const;
 
@@ -22,19 +25,17 @@ function fmtPct(n: number | null | undefined) {
 }
 
 /**
- * Persistent MARKET PULSE under global nav — real ticker data + live spark.
+ * Persistent MARKET PULSE — live ticker + true 24h/15m market series (not browser ticks).
  */
 export function MarketPulseBar() {
   const feed = useLiveMarketFeed();
   const { status, longs, shorts, loading, error } = useMarketScannerOverview();
+  const { seriesBySymbol } = useMarketSeriesBatch([...PULSE_SYMBOLS], "pulse_24h", 90_000);
   const [flash, setFlash] = useState<Record<string, "up" | "down" | "">>({});
   const prev = useRef<Record<string, number>>({});
-  const sparkBuf = useRef<Record<string, number[]>>({});
-  const [, tick] = useState(0);
 
   useEffect(() => {
     const nextFlash: Record<string, "up" | "down" | ""> = {};
-    let sparkChanged = false;
     for (const sym of PULSE_SYMBOLS) {
       const px = feed.bySymbol[sym]?.lastPrice ?? feed.bySymbol[sym]?.markPrice;
       if (px == null || !Number.isFinite(px)) continue;
@@ -43,15 +44,7 @@ export function MarketPulseBar() {
         nextFlash[sym] = px > p ? "up" : "down";
       }
       prev.current[sym] = px;
-      const arr = sparkBuf.current[sym] ?? [];
-      if (arr[arr.length - 1] !== px) {
-        arr.push(px);
-        if (arr.length > 20) arr.shift();
-        sparkBuf.current[sym] = arr;
-        sparkChanged = true;
-      }
     }
-    if (sparkChanged) tick((n) => n + 1);
     if (Object.keys(nextFlash).length) {
       setFlash((f) => ({ ...f, ...nextFlash }));
       const t = window.setTimeout(() => {
@@ -95,12 +88,14 @@ export function MarketPulseBar() {
   void shorts;
 
   return (
-    <div className="mp2-pulse-bar" data-testid="market-pulse-bar" aria-label="市場脈動">
+    <div className="mp2-pulse-bar" data-testid="market-pulse-bar" aria-label="市場脈動" data-series="pulse_24h">
       {PULSE_SYMBOLS.map((sym) => {
         const row = feed.bySymbol[sym];
         const px = row?.lastPrice ?? row?.markPrice;
         const ch = row?.change24hPct;
         const fl = flash[sym];
+        const series = seriesBySymbol[sym];
+        const sparkPts = seriesSparkPoints(series);
         return (
           <Link
             key={sym}
@@ -108,10 +103,21 @@ export function MarketPulseBar() {
             className={`mp2-pulse-item${fl === "up" ? " flash-up" : fl === "down" ? " flash-down" : ""}`}
             data-symbol={sym}
           >
+            <TokenIcon symbol={sym} size={16} />
             <span className="sym">{sym.replace("USDT", "")}</span>
             <span className="px mono">{fmtPrice(px)}</span>
             <span className={`ch mono ${(ch ?? 0) >= 0 ? "pos" : "neg"}`}>{fmtPct(ch)}</span>
-            <MetricSpark values={sparkBuf.current[sym] ?? []} positive={(ch ?? 0) >= 0} width={48} height={18} />
+            {sparkPts.length >= 2 ? (
+              <MetricSpark
+                points={sparkPts}
+                expectedIntervalMs={SERIES_PRESETS.pulse_24h.expectedIntervalMs}
+                positive={(ch ?? 0) >= 0}
+                width={48}
+                height={18}
+              />
+            ) : (
+              <span className="mp2-spark mp2-spark-empty" title="NO DATA" style={{ width: 48, height: 18 }} />
+            )}
           </Link>
         );
       })}

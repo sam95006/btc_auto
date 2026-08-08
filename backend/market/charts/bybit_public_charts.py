@@ -242,3 +242,135 @@ def funding_series_status(symbol: str = "BTCUSDT", *, limit: int = 100) -> dict[
         "generatedAt": int(time.time() * 1000),
         "cache": "no-store",
     }
+
+
+# Public-safe market series contract (V18.2.18) — official OHLCV only, never invent candles.
+MARKET_SERIES_CONTRACT = "MARKET_SERIES_CONTRACT_V1"
+_SERIES_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
+_SERIES_CACHE_TTL_S = 45.0
+
+
+def _interval_ms(interval: str) -> int:
+    iv = _norm_interval(interval)
+    table = {"1": 60_000, "3": 180_000, "5": 300_000, "15": 900_000, "60": 3_600_000, "240": 14_400_000, "D": 86_400_000}
+    return table.get(iv, 300_000)
+
+
+def bars_to_market_series(body: dict[str, Any], *, window_label: str | None = None) -> dict[str, Any]:
+    """Normalize Bybit OHLCV into the public market-series contract."""
+    bars = list(body.get("bars") or [])
+    points: list[dict[str, Any]] = []
+    for bar in bars:
+        try:
+            ts = int(bar["time"])
+            o = float(bar["open"])
+            h = float(bar["high"])
+            low = float(bar["low"])
+            c = float(bar["close"])
+            vol = bar.get("volume")
+            pt: dict[str, Any] = {
+                "timestamp": ts,
+                "o": o,
+                "h": h,
+                "l": low,
+                "c": c,
+            }
+            if vol is not None:
+                pt["volume"] = float(vol)
+            points.append(pt)
+        except (KeyError, TypeError, ValueError):
+            continue
+
+    interval = str(body.get("interval") or "5m")
+    window_start = points[0]["timestamp"] if points else None
+    window_end = points[-1]["timestamp"] if points else None
+    ok = bool(body.get("ok")) and len(points) >= 2
+    return {
+        "ok": ok,
+        "contract": MARKET_SERIES_CONTRACT,
+        "symbol": body.get("symbol"),
+        "interval": interval,
+        "window_label": window_label,
+        "window_start": window_start,
+        "window_end": window_end,
+        "source": body.get("source") or "BYBIT_MAINNET_LINEAR",
+        "freshness": body.get("freshness") or ("LIVE" if points else "NO_DATA"),
+        "point_count": len(points),
+        "insufficient": len(points) < 2,
+        "fabricated": False,
+        "invented_candles": False,
+        "equal_space_ticks": False,
+        "interval_ms": _interval_ms(interval),
+        "points": points,
+        "error": None if ok else (body.get("error") or ("insufficient_history" if points else "no_data")),
+        "generatedAt": body.get("generatedAt") or int(time.time() * 1000),
+        "researchOnly": True,
+        "private_api": False,
+    }
+
+
+def fetch_market_series(
+    symbol: str,
+    *,
+    interval: str = "15m",
+    limit: int = 96,
+    window_label: str | None = None,
+    use_cache: bool = True,
+) -> dict[str, Any]:
+    """Fetch official authorized history and return market-series contract."""
+    sym = symbol.upper().strip()
+    lim = max(1, min(int(limit or 96), _BAR_LIMIT))
+    cache_key = f"{sym}|{interval}|{lim}"
+    now = time.time()
+    if use_cache and cache_key in _SERIES_CACHE:
+        exp, cached = _SERIES_CACHE[cache_key]
+        if now < exp:
+            out = dict(cached)
+            out["cache"] = "hit"
+            return out
+
+    body = fetch_ohlcv(sym, interval=interval, limit=lim)
+    series = bars_to_market_series(body, window_label=window_label)
+    series["cache"] = "miss"
+    if series.get("ok"):
+        _SERIES_CACHE[cache_key] = (now + _SERIES_CACHE_TTL_S, series)
+    return series
+
+
+def fetch_market_series_batch(
+    symbols: list[str],
+    *,
+    interval: str = "5m",
+    limit: int = 48,
+    window_label: str | None = None,
+    max_symbols: int = 24,
+) -> dict[str, Any]:
+    """Batch public-safe series for Pulse / Radar / Watchlist (capped)."""
+    uniq: list[str] = []
+    seen: set[str] = set()
+    for raw in symbols:
+        sym = str(raw or "").upper().strip()
+        if not sym or sym in seen:
+            continue
+        seen.add(sym)
+        uniq.append(sym)
+        if len(uniq) >= max_symbols:
+            break
+    series_map: dict[str, Any] = {}
+    for sym in uniq:
+        series_map[sym] = fetch_market_series(
+            sym, interval=interval, limit=limit, window_label=window_label, use_cache=True
+        )
+    return {
+        "ok": True,
+        "contract": MARKET_SERIES_CONTRACT,
+        "interval": interval,
+        "limit": limit,
+        "window_label": window_label,
+        "count": len(series_map),
+        "series": series_map,
+        "fabricated": False,
+        "source": "BYBIT_MAINNET_LINEAR",
+        "generatedAt": int(time.time() * 1000),
+        "researchOnly": True,
+    }

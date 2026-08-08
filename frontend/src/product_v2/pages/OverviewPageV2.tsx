@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { STAGE_LABEL_ZH } from "../../market/scannerApi";
 import { buildFunnelDisplay, NO_DATA } from "../../wave4/noDataFunnel";
 import { usePublicEntitlements } from "../../member/public_entitlements_v18_2";
@@ -22,7 +22,12 @@ import {
   type RankingTab,
 } from "../../market/liveMarketRanking";
 import { formatUsd } from "../../market/freshness";
+import { SERIES_PRESETS, seriesSparkPoints } from "../../market/marketSeries";
 import { ActivityBar, MetricSpark, RankArrow } from "../MetricSpark";
+import { TokenIcon } from "../TokenIcon";
+import { useMarketSeriesBatch } from "../useMarketSeriesBatch";
+import { ContextualUpgrade } from "../ContextualUpgrade";
+import { FREE_RADAR_ROW_CAP, isFreePlan } from "../productCapabilities";
 
 function agoLabel(ts?: number | null) {
   if (!ts) return "—";
@@ -53,7 +58,7 @@ function SkeletonBlock({ h = 18 }: { h?: number }) {
   return <div className="mp2-skeleton" style={{ height: h }} aria-hidden />;
 }
 
-/** Product V2 Market Home - MARKET PULSE | LIVE RADAR | MARKET NOW (V18.2.15). */
+/** Product V2 Market Home — paid visual + true market series (V18.2.18). */
 export function OverviewPageV2() {
   const ranking = useLiveMarketRanking();
   const feed = useLiveMarketFeed();
@@ -61,24 +66,12 @@ export function OverviewPageV2() {
   const previewPlan = usePreviewReviewPlan("FREE");
   const { dto } = usePublicEntitlements(previewPlan);
   const plan = dto?.plan ?? previewPlan;
+  const free = isFreePlan(plan);
   const [tab, setTab] = useState<RankingTab>("ALL");
   const [coverageOpen, setCoverageOpen] = useState(false);
   const [reasonSym, setReasonSym] = useState<string | null>(null);
-  const sparkBuf = useRef<Record<string, number[]>>({});
 
-  useEffect(() => {
-    for (const sym of PULSE) {
-      const px = feed.bySymbol[sym]?.lastPrice ?? feed.bySymbol[sym]?.markPrice;
-      if (px == null || !Number.isFinite(px)) continue;
-      const arr = sparkBuf.current[sym] ?? [];
-      const last = arr[arr.length - 1];
-      if (last == null || Math.abs(last - px) > 1e-9) {
-        arr.push(px);
-        if (arr.length > 24) arr.shift();
-        sparkBuf.current[sym] = [...arr];
-      }
-    }
-  }, [feed.bySymbol]);
+  const pulseSeries = useMarketSeriesBatch([...PULSE], "pulse_24h", 90_000);
 
   const falseOppCount = eligibleZeroFalseOpportunityCount({
     eligible: status?.confirmedCandidates,
@@ -109,10 +102,23 @@ export function OverviewPageV2() {
     source: status?.source,
   });
 
-  const displayRows = useMemo(
-    () => filterRankingRows(radar.length ? radar : rows, tab).slice(0, 24),
+  const allFiltered = useMemo(
+    () => filterRankingRows(radar.length ? radar : rows, tab),
     [radar, rows, tab],
   );
+  const displayRows = useMemo(
+    () => (free ? allFiltered.slice(0, FREE_RADAR_ROW_CAP) : allFiltered.slice(0, 24)),
+    [allFiltered, free],
+  );
+  const radarSparkSyms = useMemo(() => displayRows.map((r) => r.symbol), [displayRows]);
+  const radarSeries = useMarketSeriesBatch(radarSparkSyms, "radar_4h", 90_000);
+
+  const movers = useMemo(() => {
+    const pool = [...(radar.length ? radar : rows)];
+    return [...pool]
+      .sort((a, b) => Math.abs(b.change_24h ?? 0) - Math.abs(a.change_24h ?? 0))
+      .slice(0, 8);
+  }, [radar, rows]);
 
   const qualifiedDisplay =
     status?.confirmedCandidates != null ? status.confirmedCandidates : qualified_count;
@@ -180,6 +186,8 @@ export function OverviewPageV2() {
       data-testid="product-v2-overview"
       data-nexus-product-generation="2"
       data-above-fold-card-count="0"
+      data-true-market-series="1"
+      data-browser-tick-spark="0"
       data-eligible-zero-false-opportunity-count={falseOppCount}
       data-non-crypto-in-crypto-opportunity-count={0}
       data-fixed-symbol-dependency-count={ranking.fixed_symbol_dependency_count}
@@ -203,25 +211,40 @@ export function OverviewPageV2() {
         <div className="muted" style={{ fontSize: "0.8125rem", textAlign: "right" }}>
           <div data-testid="overview-freshness">{freshDisp.label}</div>
           <div>{trust}</div>
-          <div>{plan}</div>
         </div>
       </header>
 
       {error ? <div className="mp2-banner">{error}</div> : null}
 
       <section className="mp2-home-pulse" aria-label="MARKET PULSE" data-testid="market-home-pulse">
-        <p className="mp2-kicker">MARKET PULSE</p>
+        <p className="mp2-kicker">MARKET PULSE · 24h / 15m</p>
         <div className="mp2-pulse-grid">
           {PULSE.map((sym) => {
             const row = feed.bySymbol[sym];
             const px = row?.lastPrice ?? row?.markPrice;
             const ch = row?.change24hPct;
-            const series = sparkBuf.current[sym] ?? [];
+            const series = pulseSeries.seriesBySymbol[sym];
+            const sparkPts = seriesSparkPoints(series);
             return (
               <Link key={sym} to={`/market/${sym}`} className="mp2-pulse-card">
                 <div className="mp2-pulse-card-top">
-                  <span className="sym">{sym.replace("USDT", "")}</span>
-                  <MetricSpark values={series} positive={(ch ?? 0) >= 0} width={72} height={24} />
+                  <span className="mp2-sym-with-icon">
+                    <TokenIcon symbol={sym} size={20} />
+                    <span className="sym">{sym.replace("USDT", "")}</span>
+                  </span>
+                  {sparkPts.length >= 2 ? (
+                    <MetricSpark
+                      points={sparkPts}
+                      expectedIntervalMs={SERIES_PRESETS.pulse_24h.expectedIntervalMs}
+                      positive={(ch ?? 0) >= 0}
+                      width={72}
+                      height={24}
+                    />
+                  ) : (
+                    <span className="mp2-nodata" title="NO DATA">
+                      NO DATA
+                    </span>
+                  )}
                 </div>
                 <div className="mp2-pulse-card-px mono">{px == null ? "—" : formatUsd(px)}</div>
                 <div className={`mono ${(ch ?? 0) >= 0 ? "pos" : "neg"}`}>{fmtPct(ch)}</div>
@@ -293,21 +316,48 @@ export function OverviewPageV2() {
 
           {!loading && !displayRows.length ? (
             <div className="mp2-empty" data-testid="radar-empty">
-              <p>{"目前沒有明顯市場異動"}</p>
+              <p>{"目前沒有市場滿足 Radar 條件。"}</p>
+              <p className="muted" style={{ fontSize: "0.8125rem" }}>
+                No markets currently satisfy Radar criteria.
+              </p>
               {closest_watch.length ? (
-                <div className="mp2-closest-watch" data-testid="closest-watch">
-                  <p className="mp2-kicker">Closest Watch</p>
+                <div className="mp2-closest-watch" data-testid="approaching-radar">
+                  <p className="mp2-kicker">APPROACHING RADAR</p>
                   <ul>
                     {closest_watch.map((r) => (
                       <li key={r.candidate_id}>
-                        <Link to={`/market/${r.symbol}`} className="mono">
-                          {r.symbol.replace("USDT", "")}
-                        </Link>
+                        <span className="mp2-sym-with-icon">
+                          <TokenIcon symbol={r.symbol} size={18} />
+                          <Link to={`/market/${r.symbol}`} className="mono">
+                            {r.symbol.replace("USDT", "")}
+                          </Link>
+                        </span>
                         <span className="muted">{STAGE_LABEL_ZH[r.stage] || r.stage}</span>
                         <span className="mono muted">{formatDisplayRankScore(r.rank_score)}</span>
                       </li>
                     ))}
                   </ul>
+                </div>
+              ) : null}
+              {movers.length ? (
+                <div className="mp2-movers-matrix" data-testid="market-movers" style={{ marginTop: 14 }}>
+                  <p className="mp2-kicker">MARKET MOVERS</p>
+                  <p className="muted" style={{ fontSize: "0.75rem", marginBottom: 8 }}>
+                    {"真實 24h 波動 · 非合格機會"}
+                  </p>
+                  <div className="mp2-movers-grid">
+                    {movers.map((r) => (
+                      <Link key={r.candidate_id} to={`/market/${r.symbol}`} className="mp2-mover-cell">
+                        <span className="mp2-sym-with-icon">
+                          <TokenIcon symbol={r.symbol} size={16} />
+                          <span className="mono">{r.symbol.replace("USDT", "")}</span>
+                        </span>
+                        <span className={`mono ${(r.change_24h ?? 0) >= 0 ? "pos" : "neg"}`}>
+                          {fmtPct(r.change_24h)}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               ) : null}
             </div>
@@ -322,19 +372,31 @@ export function OverviewPageV2() {
                 >
                   <span className="rank mono">#{r.rank}</span>
                   <span className="sym-block">
-                    <Link
-                      to={`/market/${r.symbol}`}
-                      className="mono sym"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {r.symbol.replace("USDT", "")}
-                    </Link>
+                    <span className="mp2-sym-with-icon">
+                      <TokenIcon symbol={r.symbol} size={18} />
+                      <Link
+                        to={`/market/${r.symbol}`}
+                        className="mono sym"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {r.symbol.replace("USDT", "")}
+                      </Link>
+                    </span>
                     <span className="muted stage">{STAGE_LABEL_ZH[r.stage] || r.stage}</span>
                   </span>
-                  <MetricSpark
-                    values={[r.price_change_1m, r.price_change_5m, r.price_change_15m, r.change_24h]}
-                    positive={(r.change_24h ?? 0) >= 0}
-                  />
+                  {seriesSparkPoints(radarSeries.seriesBySymbol[r.symbol]).length >= 2 ? (
+                    <MetricSpark
+                      points={seriesSparkPoints(radarSeries.seriesBySymbol[r.symbol])}
+                      expectedIntervalMs={SERIES_PRESETS.radar_4h.expectedIntervalMs}
+                      positive={(r.change_24h ?? 0) >= 0}
+                      width={64}
+                      height={22}
+                    />
+                  ) : (
+                    <span className="mp2-nodata" title="NO DATA">
+                      —
+                    </span>
+                  )}
                   <span className="mono px">{r.price == null ? "—" : formatUsd(r.price)}</span>
                   <span className={`mono ch ${(r.change_24h ?? 0) >= 0 ? "pos" : "neg"}`}>
                     {fmtPct(r.change_24h)}
@@ -354,6 +416,14 @@ export function OverviewPageV2() {
             </div>
           )}
 
+          {free && allFiltered.length > FREE_RADAR_ROW_CAP ? (
+            <ContextualUpgrade
+              title={"完整 Live Radar 深度"}
+              detail={`目前顯示前 ${FREE_RADAR_ROW_CAP} 名；PRO 解鎖即時完整榜單與排名歷史。`}
+              required="PRO"
+            />
+          ) : null}
+
           {reasonRow ? (
             <aside className="mp2-radar-drawer" data-testid="radar-reason-drawer">
               <p className="mp2-kicker">{"為什麼在榜"}</p>
@@ -371,12 +441,28 @@ export function OverviewPageV2() {
           ) : null}
 
           {displayRows.length > 0 && closest_watch.length > 0 ? (
-            <div className="mp2-closest-watch muted-section" data-testid="closest-watch-secondary">
-              <p className="mp2-kicker">Closest Watch{"（未入 Radar）"}</p>
+            <div className="mp2-closest-watch muted-section" data-testid="approaching-radar-secondary">
+              <p className="mp2-kicker">APPROACHING RADAR</p>
               <div className="mp2-chip-row">
                 {closest_watch.map((r) => (
                   <Link key={r.candidate_id} to={`/market/${r.symbol}`} className="mp2-btn mp2-btn-ghost">
                     {r.symbol.replace("USDT", "")}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {displayRows.length > 0 && movers.length > 0 ? (
+            <div className="mp2-movers-matrix muted-section" data-testid="market-movers-secondary">
+              <p className="mp2-kicker">MARKET MOVERS</p>
+              <div className="mp2-movers-grid compact">
+                {movers.slice(0, 6).map((r) => (
+                  <Link key={r.candidate_id} to={`/market/${r.symbol}`} className="mp2-mover-cell">
+                    <span className="mono">{r.symbol.replace("USDT", "")}</span>
+                    <span className={`mono ${(r.change_24h ?? 0) >= 0 ? "pos" : "neg"}`}>
+                      {fmtPct(r.change_24h)}
+                    </span>
                   </Link>
                 ))}
               </div>
@@ -402,37 +488,35 @@ export function OverviewPageV2() {
                 <span className="neg">{"降"} {falling}</span>
               </div>
             </div>
-            <div className="mp2-now-stats">
-              <div>
-                <span className="lbl">{"高風險"}</span>
-                <span className="mono">{status?.highRiskCandidates ?? "—"}</span>
+            <div className="mp2-now-stats visual">
+              <div className={`mp2-now-tile ${(status?.highRiskCandidates ?? 0) >= 8 ? "neg" : (status?.highRiskCandidates ?? 0) >= 3 ? "warn" : "pos"}`}>
+                <span className="lbl">{"市場風險"}</span>
+                <span className="mono big">{status?.highRiskCandidates ?? "—"}</span>
               </div>
-              <div>
+              <div className="mp2-now-tile">
+                <span className="lbl">Radar</span>
+                <span className="mono big">{ranking.radar_eligible_count}</span>
+              </div>
+              <div className="mp2-now-tile">
                 <span className="lbl">{"合格"}</span>
-                <span className="mono" data-testid="qualified-count">
+                <span className="mono big" data-testid="qualified-count">
                   {qualifiedDisplay ?? 0}
                 </span>
               </div>
-              <div>
-                <span className="lbl">Radar</span>
-                <span className="mono">{ranking.radar_eligible_count}</span>
-              </div>
-              <div>
-                <span className="lbl">{"評估"}</span>
-                <span className="mono" data-testid="evaluated-count">
-                  {ranking.evaluated_count ?? ranking.scanner_visible_count}
-                </span>
-              </div>
-              <div>
-                <span className="lbl">{"監控"}</span>
-                <span className="mono" data-testid="monitored-count">
-                  {ranking.monitored_count ?? ranking.universe_size}
-                </span>
-              </div>
-              <div>
+              <div className="mp2-now-tile">
                 <span className="lbl">{"資料"}</span>
-                <span>{trust}</span>
+                <span className="big" style={{ fontSize: "0.95rem" }}>
+                  {trust}
+                </span>
               </div>
+            </div>
+            <div className="mp2-now-counts muted">
+              <span data-testid="evaluated-count">
+                {"評估"} {ranking.evaluated_count ?? ranking.scanner_visible_count}
+              </span>
+              <span data-testid="monitored-count">
+                {"監控"} {ranking.monitored_count ?? ranking.universe_size}
+              </span>
             </div>
           </div>
 
