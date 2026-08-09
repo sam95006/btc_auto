@@ -1,9 +1,9 @@
 """Paid-beta retention constants — no fabricated identity, no production billing."""
 from __future__ import annotations
 
-PACKAGE = "NEXUS_PAID_BETA_IDENTITY_V18_2_21"
-SCHEMA = "paid_beta_identity_v18_2_21"
-MARKER = "PUBLIC_V18_2_21_PAID_BETA_IDENTITY_HEAD"
+PACKAGE = "NEXUS_CLOSED_BETA_READINESS_V18_2_22"
+SCHEMA = "closed_beta_readiness_v18_2_22"
+MARKER = "PUBLIC_V18_2_22_CLOSED_BETA_READINESS_HEAD"
 AUTH_REQUIRED_BLOCKER = "AUTH_REQUIRED_BLOCKER"
 
 ALERT_EVENT_TYPES = (

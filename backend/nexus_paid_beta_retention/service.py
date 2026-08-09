@@ -138,6 +138,12 @@ def since_last_visit(account_id: str) -> dict[str, Any]:
             "explain": "No prior authenticated visit on record — honest empty, nothing fabricated.",
         }
     items = [n for n in notes["items"] if int(n.get("ts") or 0) >= int(since_ts)]
+    try:
+        from backend.nexus_product_analytics.events import record_event
+
+        record_event("session_returned", account_id=account_id)
+    except Exception:
+        pass
     return {
         **visit,
         "notifications_since": items,

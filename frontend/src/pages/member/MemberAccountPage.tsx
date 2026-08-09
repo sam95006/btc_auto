@@ -11,7 +11,7 @@ import { usePreviewReviewPlan } from "../../member/usePreviewReviewPlan";
 import { usePublicEntitlements } from "../../member/public_entitlements_v18_2";
 import { MemberIdentityPanel } from "../../retention/MemberIdentityPanel";
 
-/** Account — identity + display settings + capability upgrade entry (no Billing activation). */
+/** Account — identity + closed-beta access + display settings (no live Billing). */
 export function MemberAccountPage() {
   const t = useT();
   const { loading, items } = usePageSlots([
@@ -47,9 +47,9 @@ export function MemberAccountPage() {
       </section>
 
       <section className="member-panel" style={{ marginTop: 16 }} data-testid="account-upgrade-entry">
-        <h2 className="nx-sec-title">方案能力</h2>
+        <h2 className="nx-sec-title">方案能力（預覽）</h2>
         <p className="muted sm">
-          目前預覽方案：{plan} · 價格未定 · Billing 尚未啟用 · 僅顯示已存在或標示即將推出的能力
+          伺服器 entitlement：{plan} · 價格未定 · Production Billing 未啟用 · 無假付費訂閱 · 前端非 plan 權威
         </p>
         <div className="mp2-capability-matrix">
           {(

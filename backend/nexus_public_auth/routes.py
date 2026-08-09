@@ -88,7 +88,15 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
             result = svc.login_with_password(
                 email=str(body.get("email", "")),
                 password=str(body.get("password", "")),
+                mfa_challenge_id=str(body["mfa_challenge_id"])
+                if body.get("mfa_challenge_id")
+                else None,
+                mfa_response_code=str(body["mfa_response_code"])
+                if body.get("mfa_response_code")
+                else None,
             )
+            if result.get("mfa_required") and not result.get("session"):
+                return jsonify({"ok": False, **result}), 401
             return jsonify({"ok": True, **result})
         except HardBanViolation as exc:
             return _err(exc, 401)
@@ -202,12 +210,35 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
         )
         try:
             auth = svc.authenticate_rate_limited(token)
+            account = svc.store.get_account(auth["account_id"])
+            beta_access = None
+            try:
+                from backend.nexus_closed_beta.service import get_closed_beta_service
+
+                beta_access = get_closed_beta_service().member_access_snapshot(auth["account_id"])
+            except Exception:
+                beta_access = None
             return jsonify(
                 {
                     "ok": True,
                     "auth": auth,
+                    "account": {
+                        "account_id": account.account_id if account else auth["account_id"],
+                        "email": account.email if account else None,
+                        "email_verified": bool(account.email_verified) if account else False,
+                        "display_name": account.display_name if account else None,
+                        "tier": account.tier if account else None,
+                        "member_roles": list(account.member_roles) if account else [],
+                        "status": account.status if account else None,
+                    },
                     "entitlements": svc.entitlements(auth["account_id"]),
                     "mfa": svc.mfa.mfa_status(auth["account_id"]),
+                    "beta_access": beta_access,
+                    "production_billing": False,
+                    "session": {
+                        "session_id": auth.get("session_id"),
+                        "expires_at": auth.get("expires_at"),
+                    },
                 }
             )
         except HardBanViolation as exc:

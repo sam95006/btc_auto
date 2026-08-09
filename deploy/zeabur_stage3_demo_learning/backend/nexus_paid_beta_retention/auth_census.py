@@ -57,7 +57,9 @@ def auth_commercial_census() -> dict[str, Any]:
     try:
         from backend.nexus_public_auth.mfa import MfaService  # noqa: F401
 
-        mfa = "PARTIAL"  # abstraction ready, no live TOTP/SMS vendor
+        # Abstraction + optional enroll/confirm/challenge ready; no live TOTP/SMS vendor.
+        # Normal beta: MFA optional (not mandated). member_admin: stronger when enrolled.
+        mfa = "PARTIAL"
     except Exception:
         mfa = "MISSING"
     try:
@@ -106,7 +108,9 @@ def auth_commercial_census() -> dict[str, Any]:
         "notes": [
             "Public auth realm (LOCAL_OR_STAGING_ONLY) with PBKDF2 password credentials.",
             "Signup/login/logout + email verify + forgot/reset tokens (inline staging delivery).",
+            "MFA PARTIAL: optional enroll for members; stronger challenge for member_admin when enrolled; no live TOTP vendor.",
             "Entitlement authority remains server-side; Production Billing not activated.",
+            "Closed beta invite entity binds INVITED/ACTIVE/REVOKED/EXPIRED server-side.",
         ],
     }
 

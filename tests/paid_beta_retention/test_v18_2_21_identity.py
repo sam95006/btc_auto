@@ -13,7 +13,7 @@ from backend.nexus_public_auth.tokens import AuthTokenStore
 
 
 def test_marker():
-    assert MARKER == "PUBLIC_V18_2_21_PAID_BETA_IDENTITY_HEAD"
+    assert MARKER == "PUBLIC_V18_2_22_CLOSED_BETA_READINESS_HEAD"
 
 
 def test_password_hash_not_plaintext():

@@ -182,6 +182,8 @@ class PublicAuthMembershipService:
         password: str,
         *,
         ttl_seconds: int = 3600,
+        mfa_challenge_id: Optional[str] = None,
+        mfa_response_code: Optional[str] = None,
     ) -> dict[str, Any]:
         subject = (email or "").strip().lower() or "anonymous"
         self.rate_limiter.check("login", subject)
@@ -191,11 +193,23 @@ class PublicAuthMembershipService:
             raise HardBanViolation(msg)
 
         if account is None or not account.password_hash:
+            try:
+                from backend.nexus_closed_beta.ops import record_ops
+
+                record_ops("auth_errors", detail="login_unknown_or_no_password")
+            except Exception:
+                pass
             _fail()
         import time as _time
 
         now = _time.time()
         if account.lockout_until_epoch and now < float(account.lockout_until_epoch):
+            try:
+                from backend.nexus_closed_beta.ops import record_ops
+
+                record_ops("auth_errors", detail="login_lockout")
+            except Exception:
+                pass
             raise HardBanViolation("account temporarily locked — too many failed logins")
         if not verify_password(password, account.password_hash or ""):
             account.failed_login_count = int(account.failed_login_count or 0) + 1
@@ -209,29 +223,88 @@ class PublicAuthMembershipService:
                 account_id=account.account_id,
                 metadata={"reason": "bad_password"},
             )
+            try:
+                from backend.nexus_closed_beta.ops import record_ops
+
+                record_ops("auth_errors", detail="bad_password")
+            except Exception:
+                pass
             _fail()
         account.failed_login_count = 0
         account.lockout_until_epoch = None
         self.store.update_account(account)
-        session = self.create_session_rate_limited(
-            account.account_id,
-            tier=account.tier,
-            member_roles=list(account.member_roles),
-            ttl_seconds=ttl_seconds,
-            require_mfa=False,
-        )
+
+        enabled = [
+            f
+            for f in self.store.list_mfa_factors(account.account_id)
+            if getattr(f, "status", None) == "enabled"
+        ]
+        is_admin = "member_admin" in set(account.member_roles or [])
+        # Optional MFA for normal members; stronger for member_admin when enrolled.
+        # Do NOT mandate enrollment for normal closed-beta users.
+        wants_mfa = bool(enabled) and (is_admin or bool(mfa_challenge_id) or bool(mfa_response_code))
+        # If admin has MFA enrolled, always require challenge completion.
+        if is_admin and enabled:
+            wants_mfa = True
+        # If non-admin optionally enrolled, require MFA when factors enabled (opt-in completion).
+        if (not is_admin) and enabled:
+            wants_mfa = True
+
+        if wants_mfa:
+            if not mfa_challenge_id:
+                factor_id = getattr(enabled[0], "factor_id", None) or enabled[0].get("factor_id")
+                challenge = self.mfa.create_challenge(account.account_id, str(factor_id))
+                return {
+                    "mfa_required": True,
+                    "mfa_recommended": False,
+                    "mfa_challenge": challenge,
+                    "account": {
+                        "account_id": account.account_id,
+                        "email": account.email,
+                        "display_name": account.display_name,
+                        "tier": account.tier,
+                        "email_verified": bool(account.email_verified),
+                        "member_roles": list(account.member_roles),
+                    },
+                    "session": None,
+                }
+            if mfa_response_code:
+                self.mfa.verify_challenge(
+                    account.account_id,
+                    mfa_challenge_id,
+                    response_code=str(mfa_response_code),
+                )
+            session = self.create_session_rate_limited(
+                account.account_id,
+                tier=account.tier,
+                member_roles=list(account.member_roles),
+                ttl_seconds=ttl_seconds,
+                mfa_challenge_id=mfa_challenge_id,
+                require_mfa=True,
+            )
+        else:
+            session = self.create_session_rate_limited(
+                account.account_id,
+                tier=account.tier,
+                member_roles=list(account.member_roles),
+                ttl_seconds=ttl_seconds,
+                require_mfa=False,
+            )
         self.store.append_audit(
             "account.login",
             "ALLOW",
             account_id=account.account_id,
-            metadata={"session_id": session["session_id"]},
+            metadata={"session_id": session["session_id"], "mfa": bool(wants_mfa)},
         )
         try:
             from backend.nexus_product_analytics.events import record_event
 
             record_event("login_completed", account_id=account.account_id)
+            record_event("session_started", account_id=account.account_id)
+            # session_returned is emitted by client/retention when prior visit exists.
         except Exception:
             pass
+        mfa_status = self.mfa.mfa_status(account.account_id)
         return {
             "account": {
                 "account_id": account.account_id,
@@ -242,6 +315,9 @@ class PublicAuthMembershipService:
                 "member_roles": list(account.member_roles),
             },
             "session": session,
+            "mfa": mfa_status,
+            "mfa_recommended": bool(is_admin and not enabled),
+            "mfa_required": False,
         }
 
     def logout(self, token: str) -> dict[str, Any]:

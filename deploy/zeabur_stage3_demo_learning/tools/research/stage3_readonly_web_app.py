@@ -40,7 +40,7 @@ _GATE_C_POST_ALLOWLIST = {
 }
 
 OPERATOR_UI_DIR = ROOT / "static" / "operator_ui"
-OPERATOR_BUILD_MARKER = "PUBLIC_V18_2_21_PAID_BETA_IDENTITY_HEAD"
+OPERATOR_BUILD_MARKER = "PUBLIC_V18_2_22_CLOSED_BETA_READINESS_HEAD"
 MVP22C_BUILD_MARKER = "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR"
 MVP22B_BUILD_MARKER = "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT"
 MVP22A_BUILD_MARKER = "NEXUS_UI_MVP22A_LIVE_MARKET_DATA"
@@ -139,6 +139,41 @@ register_market_sector_routes(app)
 register_market_chart_routes(app)
 register_market_intelligence_routes(app)
 try:
+    from backend.nexus_public_entitlements_v18_2.routes import register_public_entitlements_v18_2_routes
+
+    register_public_entitlements_v18_2_routes(app)
+except Exception as _e:
+    import logging as _log
+    _log.getLogger(__name__).warning("[stage3] entitlements routes not registered: %s", _e)
+try:
+    from backend.nexus_paid_beta_retention.routes import register_paid_beta_retention_routes
+
+    register_paid_beta_retention_routes(app)
+except Exception as _e:
+    import logging as _log
+    _log.getLogger(__name__).warning("[stage3] retention routes not registered: %s", _e)
+try:
+    from backend.nexus_product_analytics.routes import register_product_analytics_routes
+
+    register_product_analytics_routes(app)
+except Exception as _e:
+    import logging as _log
+    _log.getLogger(__name__).warning("[stage3] analytics routes not registered: %s", _e)
+try:
+    from backend.nexus_public_auth.routes import register_public_auth_routes
+
+    register_public_auth_routes(app)
+except Exception as _e:
+    import logging as _log
+    _log.getLogger(__name__).warning("[stage3] public auth routes not registered: %s", _e)
+try:
+    from backend.nexus_closed_beta.routes import register_closed_beta_routes
+
+    register_closed_beta_routes(app)
+except Exception as _e:
+    import logging as _log
+    _log.getLogger(__name__).warning("[stage3] closed beta routes not registered: %s", _e)
+try:
     register_nexus_research_routes(app)  # Phase 5 Gate B
 except Exception as _e:
     import logging as _log
@@ -176,6 +211,36 @@ _GATE_C_POST_ALLOWLIST.update({
     "/api/nexus/storage/probes",
     "/api/nexus/storage/persistence-validation",
     "/api/nexus/storage/recovery-verify",
+})
+
+# V18.2.22 closed-beta / auth / retention POSTs (staging invite-only; Billing OFF)
+_GATE_C_POST_ALLOWLIST.update({
+    "/api/public/auth/signup",
+    "/api/public/auth/register",
+    "/api/public/auth/login",
+    "/api/public/auth/logout",
+    "/api/public/auth/email/verify",
+    "/api/public/auth/email/resend",
+    "/api/public/auth/password/forgot",
+    "/api/public/auth/password/reset",
+    "/api/public/auth/me",
+    "/api/public/auth/session",
+    "/api/public/auth/mfa/enroll",
+    "/api/public/auth/mfa/confirm",
+    "/api/public/auth/mfa/challenge",
+    "/api/public/auth/mfa/verify",
+    "/api/public/auth/delete",
+    "/api/nexus/public/retention/watchlist/add",
+    "/api/nexus/public/retention/watchlist/remove",
+    "/api/nexus/public/retention/notifications/read",
+    "/api/nexus/public/retention/alert-prefs",
+    "/api/nexus/public/retention/alerts/ingest",
+    "/api/nexus/public/retention/onboarding/step",
+    "/api/nexus/public/retention/onboarding/dismiss",
+    "/api/nexus/public/analytics/event",
+    "/api/nexus/public/closed-beta/invites",
+    "/api/nexus/public/closed-beta/invites/redeem",
+    "/api/nexus/public/closed-beta/invites/revoke",
 })
 
 try:

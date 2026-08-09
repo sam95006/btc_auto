@@ -1,9 +1,9 @@
 {
   "source": "frontend/dist",
   "dest": "deploy/zeabur_stage3_demo_learning/static/operator_ui",
-  "marker": "PUBLIC_V18_2_21_PAID_BETA_IDENTITY_HEAD",
-  "phase3_marker": "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES",
-  "phase2_marker": "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE",
+  "marker": "PUBLIC_V18_2_22_CLOSED_BETA_READINESS_HEAD",
+  "phase3_marker": "NEXUS_UI_PRODUCT_TRANSFORMAT_PHASE3_SECTOR_CHART_EQUITIES",
+  "phase2_marker": "NEXUS_UI_PRODUCT_TRANSFORMAT_PHASE2_DECISION_EXPERIENCE",
   "mvp22d_marker": "NEXUS_UI_MVP22D_ANOMALY_OUTCOME_RESEARCH",
   "mvp22c_marker": "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR",
   "mvp22b_marker": "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT",
@@ -13,11 +13,11 @@
   "file_count": 3,
   "current_assets": [
     "index-DSkcOh2v.css",
-    "index-ZC92IKsN.js"
+    "index-Nr1Lvu93.js"
   ],
   "retained_assets": [
     "index-DSkcOh2v.css",
-    "index-ZC92IKsN.js"
+    "index-Nr1Lvu93.js"
   ],
   "retained_generations": 3,
   "previous_assets": [

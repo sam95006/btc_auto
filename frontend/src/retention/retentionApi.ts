@@ -1,7 +1,7 @@
 /** Retention API client — server-authoritative; AUTH_REQUIRED_BLOCKER when unauthenticated. */
 
 export const AUTH_REQUIRED_BLOCKER = "AUTH_REQUIRED_BLOCKER" as const;
-export const RETENTION_MARKER = "PUBLIC_V18_2_21_PAID_BETA_IDENTITY_HEAD" as const;
+export const RETENTION_MARKER = "PUBLIC_V18_2_22_CLOSED_BETA_READINESS_HEAD" as const;
 
 const BASE = "/api/nexus/public/retention";
 

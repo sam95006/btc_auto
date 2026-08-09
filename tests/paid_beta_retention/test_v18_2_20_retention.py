@@ -20,7 +20,7 @@ from backend.nexus_paid_beta_retention.watchlist_store import WatchlistStore
 
 
 def test_marker_and_event_types():
-    assert MARKER == "PUBLIC_V18_2_21_PAID_BETA_IDENTITY_HEAD"
+    assert MARKER == "PUBLIC_V18_2_22_CLOSED_BETA_READINESS_HEAD"
     assert "RADAR_NEW" in ALERT_EVENT_TYPES
     assert "WATCHLIST_EVENT" in ALERT_EVENT_TYPES
     assert len(ONBOARDING_STEPS) == 3

@@ -5,6 +5,7 @@ import threading
 import time
 from typing import Any, Optional
 
+# Core 7-event contract preserved; V18.2.22 adds session/watchlist/notification lifecycle.
 PRODUCT_EVENT_NAMES = frozenset(
     {
         "signup_completed",
@@ -14,6 +15,11 @@ PRODUCT_EVENT_NAMES = frozenset(
         "watchlist_added",
         "alert_opened",
         "returned_from_alert",
+        # V18.2.22 closed-beta readiness additions (minimal PII)
+        "session_started",
+        "session_returned",
+        "watchlist_removed",
+        "notification_read",
     }
 )
 

@@ -10,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.resolve(__dirname, "..", "src");
 const ROOT = path.resolve(__dirname, "..", "..");
 
-const marker = "PUBLIC_V18_2_21_PAID_BETA_IDENTITY_HEAD";
+const marker = "PUBLIC_V18_2_22_CLOSED_BETA_READINESS_HEAD";
 const markers = [
   marker,
   "PUBLIC_V18_2_19_VISUAL_ANALYTICS_HEAD",
@@ -23,7 +23,7 @@ assert.ok(markers.some((m) => buildInfo.includes(m)), "buildInfo marker");
 const app = fs.readFileSync(path.join(SRC, "app", "NexusMemberProductV2.tsx"), "utf8");
 assert.ok(markers.some((m) => app.includes(m)), "app marker");
 assert.ok(
-  app.includes('data-member-surface="v18_2_21"') ||
+  app.includes('data-member-surface="v18_2_22"') ||
     app.includes('data-member-surface="v18_2_19"') ||
     app.includes('data-member-surface="v18_2_18"'),
   "surface marker",

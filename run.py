@@ -65,11 +65,11 @@ register_pub17_market_pulse_routes(app)  # PUB17-B: Market Pulse + Top Opportuni
 register_pub18_live_funnel_routes(app)  # PUB18-A: Live Funnel + Market Pulse (read-only)
 register_runtime_snapshot_routes(app)  # V18.1 Phase B: Runtime Snapshot live binding (read-only)
 register_public_entitlements_v18_2_routes(app)  # V18.2 Track B: capability entitlements (read-only)
-register_paid_beta_retention_routes(app)  # V18.2.21: paid-beta identity + retention
+register_paid_beta_retention_routes(app)  # V18.2.22: closed-beta retention gates
 try:
     from backend.nexus_product_analytics.routes import register_product_analytics_routes
 
-    register_product_analytics_routes(app)  # V18.2.21: minimal product analytics contract
+    register_product_analytics_routes(app)  # V18.2.22: product analytics contract (+ session events)
 except Exception as _analytics_exc:  # noqa: BLE001
     print(f"[startup] Product analytics routes deferred: {_analytics_exc}")
 try:
@@ -78,6 +78,12 @@ try:
     register_public_auth_routes(app)  # LOCAL_OR_STAGING_ONLY public identity (no live billing)
 except Exception as _auth_exc:  # noqa: BLE001
     print(f"[startup] Public auth routes deferred: {_auth_exc}")
+try:
+    from backend.nexus_closed_beta.routes import register_closed_beta_routes
+
+    register_closed_beta_routes(app)  # V18.2.22: invite-only closed beta (Billing OFF)
+except Exception as _beta_exc:  # noqa: BLE001
+    print(f"[startup] Closed beta routes deferred: {_beta_exc}")
 register_customer_validation_concierge_routes(app)  # PUB2-G: Concierge validation local/staging app
 register_nexus_research_routes(app)  # Phase 5 Gate B: AI Review research routes
 try:

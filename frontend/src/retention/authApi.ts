@@ -57,19 +57,8 @@ async function authFetch(path: string, init: RequestInit = {}) {
   return { res, body };
 }
 
-export async function signupMember(email: string, password: string, displayName = "") {
-  return authFetch("/signup", {
-    method: "POST",
-    body: JSON.stringify({ email, password, display_name: displayName || email.split("@")[0] }),
-  });
-}
-
-export async function loginMember(email: string, password: string) {
-  const { res, body } = await authFetch("/login", {
-    method: "POST",
-    body: JSON.stringify({ email, password }),
-  });
-  if (res.ok && body?.ok && body?.session?.token) {
+function persistLoginBody(body: any, email: string) {
+  if (body?.session?.token) {
     const session: MemberSession = {
       accountId: String(body.account?.account_id || ""),
       email: String(body.account?.email || email),
@@ -80,6 +69,32 @@ export async function loginMember(email: string, password: string) {
       expiresAt: String(body.session.expires_at || ""),
     };
     saveMemberSession(session);
+  }
+}
+
+export async function signupMember(email: string, password: string, displayName = "") {
+  return authFetch("/signup", {
+    method: "POST",
+    body: JSON.stringify({ email, password, display_name: displayName || email.split("@")[0] }),
+  });
+}
+
+export async function loginMember(
+  email: string,
+  password: string,
+  opts?: { mfaChallengeId?: string; mfaResponseCode?: string },
+) {
+  const { res, body } = await authFetch("/login", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+      password,
+      mfa_challenge_id: opts?.mfaChallengeId || undefined,
+      mfa_response_code: opts?.mfaResponseCode || undefined,
+    }),
+  });
+  if (res.ok && body?.ok && body?.session?.token) {
+    persistLoginBody(body, email);
   }
   return { res, body };
 }
@@ -117,4 +132,28 @@ export async function resetPassword(token: string, password: string) {
 
 export async function fetchAuthMe() {
   return authFetch("/me", { method: "POST", body: "{}" });
+}
+
+export async function enrollMfa(factorType = "totp", label = "primary") {
+  const me = await fetchAuthMe();
+  const accountId = me.body?.account?.account_id || me.body?.auth?.account_id;
+  if (!accountId) return { res: me.res, body: { ok: false, error: "not_authenticated" } };
+  return authFetch("/mfa/enroll", {
+    method: "POST",
+    body: JSON.stringify({ account_id: accountId, factor_type: factorType, label }),
+  });
+}
+
+export async function confirmMfa(factorId: string, enrollmentSecret: string) {
+  const me = await fetchAuthMe();
+  const accountId = me.body?.account?.account_id || me.body?.auth?.account_id;
+  if (!accountId) return { res: me.res, body: { ok: false, error: "not_authenticated" } };
+  return authFetch("/mfa/confirm", {
+    method: "POST",
+    body: JSON.stringify({
+      account_id: accountId,
+      factor_id: factorId,
+      enrollment_secret: enrollmentSecret,
+    }),
+  });
 }

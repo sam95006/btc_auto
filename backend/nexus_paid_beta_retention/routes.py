@@ -24,7 +24,7 @@ from backend.nexus_paid_beta_retention.watchlist_store import get_watchlist_stor
 
 def _no_store(resp: Response) -> Response:
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-    resp.headers["X-NEXUS-Retention"] = "v18_2_21"
+    resp.headers["X-NEXUS-Retention"] = "v18_2_22"
     resp.headers["X-NEXUS-Member-Execution"] = "0"
     return resp
 
@@ -107,12 +107,31 @@ def register_paid_beta_retention_routes(app: Flask) -> None:
         if err:
             return err
         body = request.get_json(silent=True) or {}
-        get_watchlist_store().remove(
-            account_id,
-            str(body.get("symbol") or ""),
-            asset_class=str(body.get("asset_class") or "CRYPTO"),
-        )
-        return _no_store(jsonify({"ok": True, **enrich_watchlist(account_id)}))
+        try:
+            get_watchlist_store().remove(
+                account_id,
+                str(body.get("symbol") or ""),
+                asset_class=str(body.get("asset_class") or "CRYPTO"),
+            )
+            try:
+                from backend.nexus_product_analytics.events import record_event
+
+                record_event(
+                    "watchlist_removed",
+                    account_id=account_id,
+                    props={"symbol": str(body.get("symbol") or "").upper()},
+                )
+            except Exception:
+                pass
+            return _no_store(jsonify({"ok": True, **enrich_watchlist(account_id)}))
+        except Exception as exc:
+            try:
+                from backend.nexus_closed_beta.ops import record_ops
+
+                record_ops("watchlist_persistence_failures", detail=str(exc))
+            except Exception:
+                pass
+            return _no_store(jsonify({"ok": False, "error": "watchlist_remove_failed"})), 500
 
     @app.get(f"{prefix}/notifications")
     def retention_notifications():
@@ -128,8 +147,28 @@ def register_paid_beta_retention_routes(app: Flask) -> None:
         if err:
             return err
         body = request.get_json(silent=True) or {}
-        result = get_notification_center().mark_read(account_id, str(body.get("id") or ""))
-        return _no_store(jsonify(result)), (200 if result.get("ok") else 404)
+        try:
+            result = get_notification_center().mark_read(account_id, str(body.get("id") or ""))
+            if result.get("ok"):
+                try:
+                    from backend.nexus_product_analytics.events import record_event
+
+                    record_event(
+                        "notification_read",
+                        account_id=account_id,
+                        props={"id": str(body.get("id") or "")},
+                    )
+                except Exception:
+                    pass
+            return _no_store(jsonify(result)), (200 if result.get("ok") else 404)
+        except Exception as exc:
+            try:
+                from backend.nexus_closed_beta.ops import record_ops
+
+                record_ops("notification_failures", detail=str(exc))
+            except Exception:
+                pass
+            return _no_store(jsonify({"ok": False, "error": "notification_read_failed"})), 500
 
     @app.get(f"{prefix}/alert-prefs")
     def retention_alert_prefs():

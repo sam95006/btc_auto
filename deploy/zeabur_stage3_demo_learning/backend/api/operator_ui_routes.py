@@ -10,7 +10,7 @@ from flask import abort, jsonify, request, send_from_directory
 
 from backend.api.operator_ui_cache import apply_operator_ui_cache_headers, is_operator_ui_html_path
 
-OPERATOR_BUILD_MARKER = "PUBLIC_V18_2_21_PAID_BETA_IDENTITY_HEAD"
+OPERATOR_BUILD_MARKER = "PUBLIC_V18_2_22_CLOSED_BETA_READINESS_HEAD"
 PHASE4_BUILD_MARKER = "NEXUS_UI_PRODUCT_AND_INTELLIGENCE_PHASE4"
 PHASE3_BUILD_MARKER = "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES"
 PHASE2_BUILD_MARKER = "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE"
@@ -109,7 +109,7 @@ def register_operator_ui_routes(app) -> None:
             "legacy_build_marker": LEGACY_BUILD_MARKER,
             "ui_style": "Product Simple View · Evidence-first",
             "ui_version": "PRODUCT-7",
-            "public_name": "NEXUS ??Live Market Intelligence",
+            "public_name": "NEXUS — Live Market Intelligence",
             "legacy_nexus_path": "/nexus",
             "served_by": "nexus-web",
         }
