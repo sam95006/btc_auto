@@ -10,14 +10,24 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.resolve(__dirname, "..", "src");
 const ROOT = path.resolve(__dirname, "..", "..");
 
-const marker = "PUBLIC_V18_2_19_VISUAL_ANALYTICS_HEAD";
+const marker = "PUBLIC_V18_2_20_PAID_BETA_RETENTION_HEAD";
+const markers = [
+  marker,
+  "PUBLIC_V18_2_19_VISUAL_ANALYTICS_HEAD",
+  "PUBLIC_V18_2_18_PAID_PRODUCT_VISUAL_HEAD",
+];
 
 const buildInfo = fs.readFileSync(path.join(SRC, "demo", "buildInfo.ts"), "utf8");
-assert.ok(buildInfo.includes(marker) || buildInfo.includes("PUBLIC_V18_2_18_PAID_PRODUCT_VISUAL_HEAD"), "buildInfo marker");
+assert.ok(markers.some((m) => buildInfo.includes(m)), "buildInfo marker");
 
 const app = fs.readFileSync(path.join(SRC, "app", "NexusMemberProductV2.tsx"), "utf8");
-assert.ok(app.includes(marker) || app.includes("PUBLIC_V18_2_18_PAID_PRODUCT_VISUAL_HEAD"), "app marker");
-assert.ok(app.includes('data-member-surface="v18_2_19"') || app.includes('data-member-surface="v18_2_18"'), "surface marker");
+assert.ok(markers.some((m) => app.includes(m)), "app marker");
+assert.ok(
+  app.includes('data-member-surface="v18_2_20"') ||
+    app.includes('data-member-surface="v18_2_19"') ||
+    app.includes('data-member-surface="v18_2_18"'),
+  "surface marker",
+);
 
 const series = fs.readFileSync(path.join(SRC, "market", "marketSeries.ts"), "utf8");
 assert.ok(series.includes("MARKET_SERIES_CONTRACT_V1"), "series contract");

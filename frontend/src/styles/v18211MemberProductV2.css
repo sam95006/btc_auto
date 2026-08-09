@@ -1,15 +1,15 @@
 /**
- * NEXUS Member Product V2 — Visual Analytics Terminal (V18.2.19)
- * Brighter depth · stronger pos/neg · exchange density · no neon/glass.
+ * NEXUS Member Product V2 ? Visual Analytics Terminal (V18.2.20 retention + V18.2.19 analytics)
+ * Brighter depth ? stronger pos/neg ? exchange density ? no neon/glass.
  * Light mode: DISABLED in Preview.
- * Controlling layout CSS for Product V2 — do not load v1827–v18210 as layout.
+ * Controlling layout CSS for Product V2 ? do not load v1827?v18210 as layout.
  */
 
 :root,
 .mp2-shell {
   color-scheme: dark;
 
-  /* —— Core surfaces (brighter depth) —— */
+  /* ?? Core surfaces (brighter depth) ?? */
   --mp2-bg: #0d1117;
   --mp2-bg-elevated: #11161d;
   --mp2-surface: #161d26;
@@ -18,18 +18,18 @@
   --mp2-surface-raised: #1c2531;
   --mp2-surface-sunken: #0f141b;
 
-  /* —— Borders / dividers —— */
+  /* ?? Borders / dividers ?? */
   --mp2-border: rgba(179, 190, 204, 0.16);
   --mp2-border-soft: rgba(179, 190, 204, 0.1);
   --mp2-divider: rgba(179, 190, 204, 0.12);
 
-  /* —— Text —— */
+  /* ?? Text ?? */
   --mp2-ink: #f4f7fb;
   --mp2-ink-secondary: #b3becc;
   --mp2-ink-muted: #8b97a8;
   --mp2-ink-disabled: #5c6573;
 
-  /* —— NEX primary —— */
+  /* ?? NEX primary ?? */
   --mp2-cobalt: #5b7cfa;
   --mp2-cobalt-hover: #7a95fb;
   --mp2-cobalt-active: #4a68e0;
@@ -40,7 +40,7 @@
   --mp2-ai: #9a7bff;
   --mp2-data: #4cc9f0;
 
-  /* —— Semantics —— */
+  /* ?? Semantics ?? */
   --mp2-pos: #12d18a;
   --mp2-neg: #ff4d6a;
   --mp2-warn: #f2b84b;
@@ -49,20 +49,20 @@
   --mp2-neg-soft: rgba(255, 77, 106, 0.18);
   --mp2-warn-soft: rgba(242, 184, 75, 0.16);
 
-  /* —— Focus / overlay / shadow —— */
+  /* ?? Focus / overlay / shadow ?? */
   --mp2-focus: rgba(91, 124, 250, 0.5);
   --mp2-focus-ring: 0 0 0 2px var(--mp2-bg), 0 0 0 4px var(--mp2-focus);
   --mp2-overlay: rgba(8, 12, 18, 0.55);
   --mp2-shadow: 0 10px 32px rgba(0, 0, 0, 0.32);
   --mp2-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.22);
 
-  /* —— Motion —— */
+  /* ?? Motion ?? */
   --mp2-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --mp2-dur: 140ms;
   --mp2-dur-flash: 300ms;
   --mp2-dur-drawer: 200ms;
 
-  /* —— Type / layout / radius hierarchy —— */
+  /* ?? Type / layout / radius hierarchy ?? */
   --mp2-font: "Segoe UI", "PingFang TC", "Noto Sans TC", "Helvetica Neue", sans-serif;
   --mp2-mono: "Cascadia Mono", "Consolas", "SF Mono", ui-monospace, monospace;
   --mp2-nav-h: 52px;
@@ -78,7 +78,7 @@
   --mp2-fs-xs: 0.75rem;
 }
 
-/* Light mode intentionally not offered — Preview stays dark-only. */
+/* Light mode intentionally not offered ? Preview stays dark-only. */
 .mp2-shell[data-mp2-theme="light"],
 html[data-mp2-theme="light"] .mp2-shell {
   /* Force dark tokens if any stale light preference leaks in */
@@ -138,7 +138,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   color: var(--mp2-warn);
 }
 
-/* —— Top navigation (desktop) —— */
+/* ?? Top navigation (desktop) ?? */
 .mp2-topnav {
   position: sticky;
   top: 0;
@@ -288,7 +288,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   border-top: 1px solid var(--mp2-divider);
 }
 
-/* —— Mobile bottom nav —— */
+/* ?? Mobile bottom nav ?? */
 .mp2-mobile-nav {
   display: none;
   position: fixed;
@@ -383,7 +383,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   }
 }
 
-/* —— Shared page chrome —— */
+/* ?? Shared page chrome ?? */
 .mp2-page-title {
   margin: 0;
   font-size: 1.35rem;
@@ -423,7 +423,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   color: var(--mp2-ink);
 }
 
-/* —— Buttons: PRIMARY / SECONDARY / TERTIARY / DANGER —— */
+/* ?? Buttons: PRIMARY / SECONDARY / TERTIARY / DANGER ?? */
 .mp2-btn {
   display: inline-flex;
   align-items: center;
@@ -467,7 +467,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   opacity: 0.72;
 }
 
-/* PRIMARY — filled cobalt */
+/* PRIMARY ? filled cobalt */
 .mp2-btn-primary {
   background: var(--mp2-cobalt);
   border-color: var(--mp2-cobalt);
@@ -490,14 +490,14 @@ html[data-mp2-theme="light"] .mp2-shell {
   color: var(--mp2-ink-disabled) !important;
 }
 
-/* SECONDARY — subtle surface (default .mp2-btn) */
+/* SECONDARY ? subtle surface (default .mp2-btn) */
 .mp2-btn-secondary {
   background: var(--mp2-surface-raised);
   border-color: var(--mp2-border);
   color: var(--mp2-ink);
 }
 
-/* TERTIARY — text */
+/* TERTIARY ? text */
 .mp2-btn-ghost,
 .mp2-btn-tertiary {
   border-color: transparent;
@@ -537,7 +537,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   margin-top: 12px;
 }
 
-/* —— Segmented control / tabs / density —— */
+/* ?? Segmented control / tabs / density ?? */
 .mp2-level {
   display: inline-flex;
   border: 1px solid var(--mp2-border);
@@ -577,7 +577,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   cursor: not-allowed;
 }
 
-/* —— Tables —— */
+/* ?? Tables ?? */
 .mp2-table {
   width: 100%;
   border-collapse: collapse;
@@ -700,8 +700,8 @@ html[data-mp2-theme="light"] .mp2-shell {
   margin-bottom: 4px;
 }
 
-/* —— Overview ——
- * Above-fold card-like containers ≤ 2: pulse strip + editorial region.
+/* ?? Overview ??
+ * Above-fold card-like containers ? 2: pulse strip + editorial region.
  * Funnel uses divider steps (not a third card box).
  */
 .mp2-pulse {
@@ -711,7 +711,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   margin: 16px 0 0;
   background: var(--mp2-surface);
   border-radius: var(--mp2-radius);
-  /* single soft edge — avoid rigid double-box look */
+  /* single soft edge ? avoid rigid double-box look */
   box-shadow: inset 0 0 0 1px var(--mp2-border-soft);
 }
 .mp2-pulse-cell {
@@ -763,7 +763,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   display: flex;
   flex-wrap: wrap;
   gap: 0;
-  /* divider-based — not a bordered card */
+  /* divider-based ? not a bordered card */
   background: transparent;
   border: 0;
   border-top: 1px solid var(--mp2-divider);
@@ -809,7 +809,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   }
 }
 
-/* —— Opportunities 3-region —— */
+/* ?? Opportunities 3-region ?? */
 .mp2-opp {
   display: grid;
   grid-template-columns: minmax(180px, 23%) minmax(0, 54%) minmax(180px, 23%);
@@ -940,7 +940,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   }
 }
 
-/* —— Scanner terminal (desktop: zero card-per-row) —— */
+/* ?? Scanner terminal (desktop: zero card-per-row) ?? */
 .mp2-scanner-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -1024,7 +1024,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   cursor: not-allowed;
 }
 
-/* No bordered card wrap — table rows only on desktop */
+/* No bordered card wrap ? table rows only on desktop */
 .mp2-scanner-wrap {
   border: 0;
   background: transparent;
@@ -1042,7 +1042,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   }
 }
 
-/* —— Alerts stream —— */
+/* ?? Alerts stream ?? */
 .mp2-alert-day {
   margin-top: 18px;
 }
@@ -1089,7 +1089,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   }
 }
 
-/* —— Research —— */
+/* ?? Research ?? */
 .mp2-research {
   display: grid;
   grid-template-columns: minmax(200px, 28%) minmax(0, 44%) minmax(200px, 28%);
@@ -1167,7 +1167,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   }
 }
 
-/* —— Watchlist —— */
+/* ?? Watchlist ?? */
 .mp2-watch-row {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr 0.8fr 0.8fr 1.2fr auto;
@@ -1187,7 +1187,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   }
 }
 
-/* —— NEX AI drawer / dialogs —— */
+/* ?? NEX AI drawer / dialogs ?? */
 .mp2-ai-drawer {
   position: fixed;
   top: var(--mp2-nav-h);
@@ -1313,7 +1313,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   }
 }
 
-/* —— V18.2.14 Exchange Terminal additions —— */
+/* ?? V18.2.14 Exchange Terminal additions ?? */
 .mp2-btn {
   border-radius: var(--mp2-radius-btn) !important;
 }
@@ -1669,7 +1669,7 @@ html[data-mp2-theme="light"] .mp2-shell {
 }
 
 
-/* V18.2.15 — exchange visual terminal + live radar */
+/* V18.2.15 ? exchange visual terminal + live radar */
 .mp2-skeleton {
   border-radius: var(--mp2-radius);
   background: linear-gradient(90deg, var(--mp2-surface) 0%, var(--mp2-surface-hover) 50%, var(--mp2-surface) 100%);
@@ -1869,7 +1869,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   .mp2-radar-row .fresh { display: none; }
 }
 
-/* V18.2.18 — paid product visual extras */
+/* V18.2.18 ? paid product visual extras */
 .mp2-token-icon {
   display: inline-block;
   border-radius: 50%;
@@ -2016,7 +2016,7 @@ html[data-mp2-theme="light"] .mp2-shell {
   }
 }
 
-/* �X�X V18.2.19 Visual Analytics Terminal �X�X */
+/* ?X?X V18.2.19 Visual Analytics Terminal ?X?X */
 .mp2-shell .pos, .mp2-pulse-item .ch.pos, .mp2-pulse-card .pulse-ch.pos { color: var(--mp2-pos) !important; }
 .mp2-shell .neg, .mp2-pulse-item .ch.neg, .mp2-pulse-card .pulse-ch.neg { color: var(--mp2-neg) !important; }
 .mp2-pulse-card.pos { box-shadow: inset 0 -2px 0 var(--mp2-pos); }
@@ -2266,6 +2266,38 @@ html[data-mp2-theme="light"] .mp2-shell {
 .mp2-term-decision.denser .mp2-decision-block { padding-bottom: 8px; }
 
 .mp2-activity-bar.empty { opacity: 0.35; }
+
+.mp2-auth-blocker {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--mp2-border);
+  background: var(--mp2-surface);
+  border-radius: 8px;
+  max-width: 40rem;
+}
+
+.mp2-onboarding {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--mp2-border-soft);
+  background: linear-gradient(180deg, var(--mp2-surface), var(--mp2-bg-elevated));
+  border-radius: 8px;
+}
+
+.mp2-onboard-steps {
+  margin: 8px 0 10px 1.1rem;
+  padding: 0;
+  color: var(--mp2-ink-secondary);
+}
+
+.mp2-onboard-steps li.done {
+  color: var(--mp2-pos);
+}
+
+.mp2-notify-timeline {
+  max-height: 320px;
+  overflow: auto;
+}
 
 @media (max-width: 1100px) {
   .mp2-radar-cols { display: none; }

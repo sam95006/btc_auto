@@ -40,7 +40,7 @@ _GATE_C_POST_ALLOWLIST = {
 }
 
 OPERATOR_UI_DIR = ROOT / "static" / "operator_ui"
-OPERATOR_BUILD_MARKER = "NEXUS_UI_PRODUCT_AND_INTELLIGENCE_PHASE4"
+OPERATOR_BUILD_MARKER = "PUBLIC_V18_2_20_PAID_BETA_RETENTION_HEAD"
 MVP22C_BUILD_MARKER = "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR"
 MVP22B_BUILD_MARKER = "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT"
 MVP22A_BUILD_MARKER = "NEXUS_UI_MVP22A_LIVE_MARKET_DATA"
@@ -55,6 +55,15 @@ _SPA_PREFIXES = (
     "crypto",
     "equities",
     "anomalies",
+    "intelligence",
+    "research",
+    "notifications",
+    "notification-settings",
+    "onboarding",
+    "alerts",
+    "opportunities",
+    "account",
+    "organization",
     "anomaly-outcomes",
     "fleets",
     "signals",

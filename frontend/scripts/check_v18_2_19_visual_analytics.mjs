@@ -10,14 +10,24 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.resolve(__dirname, "..", "src");
 const ROOT = path.resolve(__dirname, "..", "..");
 
-const marker = "PUBLIC_V18_2_19_VISUAL_ANALYTICS_HEAD";
+const marker = "PUBLIC_V18_2_20_PAID_BETA_RETENTION_HEAD";
+const legacyMarkers = [
+  marker,
+  "PUBLIC_V18_2_19_VISUAL_ANALYTICS_HEAD",
+  "PUBLIC_V18_2_18_PAID_PRODUCT_VISUAL_HEAD",
+];
 
 const buildInfo = fs.readFileSync(path.join(SRC, "demo", "buildInfo.ts"), "utf8");
-assert.ok(buildInfo.includes(marker), "buildInfo marker");
+assert.ok(legacyMarkers.some((m) => buildInfo.includes(m)), "buildInfo marker");
 
 const app = fs.readFileSync(path.join(SRC, "app", "NexusMemberProductV2.tsx"), "utf8");
-assert.ok(app.includes(marker), "app marker");
-assert.ok(app.includes('data-member-surface="v18_2_19"'), "surface marker");
+assert.ok(legacyMarkers.some((m) => app.includes(m)), "app marker");
+assert.ok(
+  app.includes('data-member-surface="v18_2_20"') ||
+    app.includes('data-member-surface="v18_2_19"') ||
+    app.includes('data-member-surface="v18_2_18"'),
+  "surface marker",
+);
 
 const overview = fs.readFileSync(path.join(SRC, "product_v2", "pages", "OverviewPageV2.tsx"), "utf8");
 assert.ok(overview.includes("MarketStateVisual"), "market state visual");

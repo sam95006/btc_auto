@@ -40,6 +40,8 @@ import { ContextualUpgrade } from "../ContextualUpgrade";
 import { FREE_RADAR_ROW_CAP, isFreePlan } from "../productCapabilities";
 import { MarketStateVisual } from "../MarketStateVisual";
 import { MarketMapHeat, type MapMetric } from "../MarketMapHeat";
+import { OnboardingWizard } from "../../retention/OnboardingWizard";
+import { SinceLastVisitPanel } from "../../retention/SinceLastVisitPanel";
 
 function agoLabel(ts?: number | null) {
   if (!ts) return "—";
@@ -230,6 +232,8 @@ export function OverviewPageV2() {
       data-monitored-count={ranking.monitored_count}
       data-excluded-count={ranking.excluded_count}
     >
+      <OnboardingWizard />
+      <SinceLastVisitPanel />
       <header className="mp2-home-head">
         <div>
           <h1 className="mp2-page-title">{"市場"}</h1>

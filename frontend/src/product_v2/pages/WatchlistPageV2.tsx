@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import { loadWatchlist, removeWatch, WATCHLIST_LIMIT, type WatchItem } from "../../market/watchlistStore";
+import { WATCHLIST_LIMIT, type WatchItem } from "../../market/watchlistStore";
 import { fetchScannerCandidates, STAGE_LABEL_ZH, type MarketCandidate } from "../../market/scannerApi";
 import { formatUsd } from "../../market/freshness";
 import { useLiveMarketRanking } from "../useLiveMarketRanking";
@@ -13,6 +13,12 @@ import { usePublicEntitlements } from "../../member/public_entitlements_v18_2";
 import { usePreviewReviewPlan } from "../../member/usePreviewReviewPlan";
 import { ContextualUpgrade } from "../ContextualUpgrade";
 import { FREE_WATCHLIST_SOFT_CAP, isFreePlan } from "../productCapabilities";
+import { AuthRequiredBlocker } from "../../retention/AuthRequiredBlocker";
+import {
+  fetchServerWatchlist,
+  isAuthRequired,
+  removeServerWatch,
+} from "../../retention/retentionApi";
 
 function fmtPct(v: number | null | undefined) {
   if (v == null || Number.isNaN(v)) return "—";
@@ -27,9 +33,24 @@ function agoLabel(ts?: number | null) {
   return `${Math.round(sec / 3600)}h`;
 }
 
-/** Product V2 Watchlist — true 24h/15m series sparks. */
+type ServerWatchRow = WatchItem & {
+  price?: number | null;
+  change_24h_pct?: number | null;
+  rank?: number | null;
+  rank_delta?: number | null;
+  state?: string | null;
+  activity?: number | null;
+  risk?: number | null;
+  alerts?: number | null;
+  updated_at?: number | null;
+  event?: string | null;
+};
+
+/** Product V2 Watchlist — server-authoritative when authenticated. */
 export function WatchlistPageV2() {
-  const [items, setItems] = useState<WatchItem[]>(() => loadWatchlist().items);
+  const [authRequired, setAuthRequired] = useState(false);
+  const [items, setItems] = useState<ServerWatchRow[]>([]);
+  const [updatedAt, setUpdatedAt] = useState<number | null>(null);
   const [rows, setRows] = useState<MarketCandidate[]>([]);
   const [loading, setLoading] = useState(true);
   const ranking = useLiveMarketRanking();
@@ -40,9 +61,45 @@ export function WatchlistPageV2() {
   const symbols = items.filter((i) => i.assetClass === "CRYPTO").map((i) => i.symbol);
   const { seriesBySymbol } = useMarketSeriesBatch(symbols, "watchlist_24h", 90_000);
 
+  const reload = async () => {
+    const { res, body } = await fetchServerWatchlist();
+    if (res.status === 401 || isAuthRequired(body)) {
+      setAuthRequired(true);
+      setItems([]);
+      setUpdatedAt(null);
+      return;
+    }
+    setAuthRequired(false);
+    const list = ((body.items as ServerWatchRow[]) || []).map((it) => ({
+      ...it,
+      symbol: String(it.symbol || "").toUpperCase(),
+      assetClass: (it.assetClass || (it as { asset_class?: string }).asset_class || "CRYPTO") as WatchItem["assetClass"],
+    }));
+    setItems(list);
+    setUpdatedAt(body.updated_at ?? null);
+  };
+
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      try {
+        await reload();
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   useEffect(() => {
     let alive = true;
     const load = async () => {
+      if (symbols.length === 0) {
+        setRows([]);
+        return;
+      }
       try {
         const body = await fetchScannerCandidates(undefined, 40);
         if (!alive) return;
@@ -50,8 +107,6 @@ export function WatchlistPageV2() {
         setRows(symbols.map((s) => map.get(s)).filter(Boolean) as MarketCandidate[]);
       } catch {
         if (alive) setRows([]);
-      } finally {
-        if (alive) setLoading(false);
       }
     };
     void load();
@@ -67,11 +122,31 @@ export function WatchlistPageV2() {
     return m;
   }, [ranking.rows]);
 
+  if (authRequired) {
+    return (
+      <div data-testid="product-v2-watchlist" data-watchlist-authority="SERVER" data-nexus-product-generation="2">
+        <header>
+          <h1 className="mp2-page-title">自選</h1>
+          <p className="mp2-page-sub">伺服器權威 · 非本機 canonical</p>
+        </header>
+        <AuthRequiredBlocker title="自選需要登入" detail="伺服器自選不會在未登入時建立假身分或本機偽 canonical。" />
+      </div>
+    );
+  }
+
   return (
-    <div data-testid="product-v2-watchlist" data-nexus-product-generation="2" data-true-market-series="1">
+    <div
+      data-testid="product-v2-watchlist"
+      data-nexus-product-generation="2"
+      data-true-market-series="1"
+      data-watchlist-authority="SERVER"
+    >
       <header>
         <h1 className="mp2-page-title">自選</h1>
-        <p className="mp2-page-sub">本機最多 {WATCHLIST_LIMIT} · Research only · 24h/15m series</p>
+        <p className="mp2-page-sub">
+          伺服器最多 {WATCHLIST_LIMIT} · Research only · 24h/15m series
+          {updatedAt ? ` · updated ${agoLabel(updatedAt)}` : ""}
+        </p>
       </header>
 
       {free && items.length >= FREE_WATCHLIST_SOFT_CAP ? (
@@ -110,9 +185,10 @@ export function WatchlistPageV2() {
                 <th>NEX State</th>
                 <th>Live Rank</th>
                 <th>Δ</th>
+                <th>Activity</th>
                 <th>Risk</th>
+                <th>Alerts</th>
                 <th>Updated</th>
-                <th>警報</th>
                 <th />
               </tr>
             </thead>
@@ -121,6 +197,9 @@ export function WatchlistPageV2() {
                 const c = rows.find((r) => r.symbol === it.symbol);
                 const rr = rankBySym.get(it.symbol);
                 const sparkPts = seriesSparkPoints(seriesBySymbol[it.symbol]);
+                const price = it.price ?? c?.currentPrice;
+                const chg = it.change_24h_pct ?? c?.change24hPct;
+                const risk = it.risk ?? c?.riskScore;
                 return (
                   <tr key={`${it.assetClass}:${it.symbol}`}>
                     <td>
@@ -140,7 +219,7 @@ export function WatchlistPageV2() {
                         <MetricSpark
                           points={sparkPts}
                           expectedIntervalMs={SERIES_PRESETS.watchlist_24h.expectedIntervalMs}
-                          positive={(c?.change24hPct ?? 0) >= 0}
+                          positive={(chg ?? 0) >= 0}
                         />
                       ) : (
                         <span className="mp2-nodata" title="NO DATA">
@@ -148,27 +227,34 @@ export function WatchlistPageV2() {
                         </span>
                       )}
                     </td>
-                    <td className="mono">{c?.currentPrice == null ? "—" : formatUsd(c.currentPrice)}</td>
-                    <td className={`mono ${(c?.change24hPct ?? 0) >= 0 ? "pos" : "neg"}`}>
-                      {fmtPct(c?.change24hPct)}
+                    <td className="mono">{price == null ? "—" : formatUsd(Number(price))}</td>
+                    <td className={`mono ${(chg ?? 0) >= 0 ? "pos" : "neg"}`}>{fmtPct(chg == null ? null : Number(chg))}</td>
+                    <td>{it.state || (c ? STAGE_LABEL_ZH[c.stage] || c.stage : "尚無候選")}</td>
+                    <td className="mono">{it.rank != null ? `#${it.rank}` : rr ? `#${rr.rank}` : "—"}</td>
+                    <td className="mono">
+                      {it.rank_delta != null
+                        ? String(it.rank_delta)
+                        : rr
+                          ? formatRankMove(rr)
+                          : "—"}
                     </td>
-                    <td>{c ? STAGE_LABEL_ZH[c.stage] || c.stage : "尚無候選"}</td>
-                    <td className="mono">{rr ? `#${rr.rank}` : "—"}</td>
-                    <td className="mono">{rr ? formatRankMove(rr) : "—"}</td>
-                    <td className={`mono ${(c?.riskScore ?? 0) >= 70 ? "neg" : ""}`}>
-                      {c?.riskScore == null ? "—" : Math.round(c.riskScore)}
+                    <td className="mono">{it.activity == null ? "—" : Math.round(Number(it.activity))}</td>
+                    <td className={`mono ${(Number(risk) || 0) >= 70 ? "neg" : ""}`}>
+                      {risk == null ? "—" : Math.round(Number(risk))}
                     </td>
-                    <td className="mono muted">{agoLabel(c?.lastUpdatedAt)}</td>
-                    <td>
+                    <td className="mono">
                       <Link to="/alerts" className="mp2-btn mp2-btn-ghost" style={{ padding: "4px 8px" }}>
-                        設警報
+                        {it.alerts ?? 0}
                       </Link>
                     </td>
+                    <td className="mono muted">{agoLabel(it.updated_at ?? c?.lastUpdatedAt)}</td>
                     <td>
                       <button
                         type="button"
                         className="mp2-btn mp2-btn-ghost"
-                        onClick={() => setItems(removeWatch(it.symbol, it.assetClass).items)}
+                        onClick={() =>
+                          void removeServerWatch(it.symbol, it.assetClass).then(() => void reload())
+                        }
                       >
                         移除
                       </button>

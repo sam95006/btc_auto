@@ -28,6 +28,7 @@ from backend.nexus_pub17_market_pulse.routes import register_pub17_market_pulse_
 from backend.nexus_pub18_live_funnel.routes import register_pub18_live_funnel_routes
 from backend.nexus_runtime_snapshot_v18_1.routes import register_runtime_snapshot_routes
 from backend.nexus_public_entitlements_v18_2.routes import register_public_entitlements_v18_2_routes
+from backend.nexus_paid_beta_retention.routes import register_paid_beta_retention_routes
 from backend.nexus_customer_validation_concierge.routes import (
     register_customer_validation_concierge_routes,
 )
@@ -64,6 +65,13 @@ register_pub17_market_pulse_routes(app)  # PUB17-B: Market Pulse + Top Opportuni
 register_pub18_live_funnel_routes(app)  # PUB18-A: Live Funnel + Market Pulse (read-only)
 register_runtime_snapshot_routes(app)  # V18.1 Phase B: Runtime Snapshot live binding (read-only)
 register_public_entitlements_v18_2_routes(app)  # V18.2 Track B: capability entitlements (read-only)
+register_paid_beta_retention_routes(app)  # V18.2.20: paid-beta retention foundation
+try:
+    from backend.nexus_public_auth.routes import register_public_auth_routes
+
+    register_public_auth_routes(app)  # LOCAL_OR_STAGING_ONLY public identity (no live billing)
+except Exception as _auth_exc:  # noqa: BLE001
+    print(f"[startup] Public auth routes deferred: {_auth_exc}")
 register_customer_validation_concierge_routes(app)  # PUB2-G: Concierge validation local/staging app
 register_nexus_research_routes(app)  # Phase 5 Gate B: AI Review research routes
 try:

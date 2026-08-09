@@ -31,8 +31,8 @@ function SettingsRedirect() {
 }
 
 /**
- * NEXUS Member Product V2 — Visual Analytics Market Terminal (V18.2.19).
- * Generation marker = 2. Market terminal uses MarketTerminalPageV2 (not MarketSymbolPage).
+ * NEXUS Member Product V2 — Paid Beta Retention + Visual Analytics (V18.2.20).
+ * Generation marker = 2. Preserves V18.2.19 analytics; retention foundation added.
  */
 export function NexusMemberProductV2() {
   const [aiOpen, setAiOpen] = useState(false);
@@ -51,10 +51,10 @@ export function NexusMemberProductV2() {
             <div
               className="mp2-shell"
               data-nexus-product-generation={MEMBER_PRODUCT_GENERATION}
-              data-member-surface="v18_2_19"
+              data-member-surface="v18_2_20"
               data-mp2-theme="dark"
               data-testid="nexus-member-product-v2"
-              data-build-marker="PUBLIC_V18_2_19_VISUAL_ANALYTICS_HEAD"
+              data-build-marker="PUBLIC_V18_2_20_PAID_BETA_RETENTION_HEAD"
             >
               <SkipToContentLabeled label="跳至主要內容" />
               <ProductV2TopNav onOpenAi={() => setAiOpen(true)} />
@@ -69,6 +69,7 @@ export function NexusMemberProductV2() {
                   <Route path="/alerts" element={<AlertsPageV2 />} />
                   <Route path="/anomalies" element={<Navigate to="/alerts" replace />} />
                   <Route path="/intelligence" element={<ResearchPageV2 />} />
+                  <Route path="/research" element={<Navigate to="/intelligence" replace />} />
                   <Route path="/market/:symbol" element={<MarketTerminalPageV2 />} />
                   <Route path="/watchlist" element={<WatchlistPageV2 />} />
                   <Route path="/assistant" element={<AssistantPageV2 />} />
@@ -78,7 +79,7 @@ export function NexusMemberProductV2() {
                   <Route path="/privacy" element={<MemberPrivacyPage />} />
                   <Route path="/account-deletion" element={<MemberAccountDeletionPage />} />
                   <Route path="/notification-settings" element={<MemberNotificationSettingsPage />} />
-                  <Route path="/notifications" element={<Navigate to="/notification-settings" replace />} />
+                  <Route path="/notifications" element={<Navigate to="/alerts" replace />} />
                   <Route path="/settings" element={<SettingsRedirect />} />
                   <Route path="/settings/*" element={<SettingsRedirect />} />
                   <Route path="/home" element={<Navigate to="/overview" replace />} />

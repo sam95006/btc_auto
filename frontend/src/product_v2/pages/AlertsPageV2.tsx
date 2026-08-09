@@ -6,6 +6,8 @@ import { WatchStarButton } from "../../components/WatchStarButton";
 import { ANOMALY_TYPE_LABEL } from "../../market/anomalyTypes";
 import { useLiveMarketRanking } from "../useLiveMarketRanking";
 import { loadRankHistory } from "../../market/liveMarketRanking";
+import { NotificationCenterPanel } from "../../retention/NotificationCenterPanel";
+import { RETENTION_ALERT_EVENT_TYPES } from "../../retention/alertEventTypes";
 
 type AlertKind = "ranking" | "opportunity" | "risk" | "market" | "data" | "watchlist";
 
@@ -253,11 +255,17 @@ export function AlertsPageV2() {
   ];
 
   return (
-    <div data-testid="product-v2-alerts" data-nexus-product-generation="2">
+    <div data-testid="product-v2-alerts" data-nexus-product-generation="2" data-alert-contract="retention_v18_2_20">
       <header>
         <h1 className="mp2-page-title">警報</h1>
-        <p className="mp2-page-sub">排名 · 狀態 · 風險 · 資料</p>
+        <p className="mp2-page-sub">
+          排名 · 狀態 · 風險 · 資料 · {RETENTION_ALERT_EVENT_TYPES.length} event types
+        </p>
       </header>
+
+      <div style={{ marginTop: 12, marginBottom: 16 }}>
+        <NotificationCenterPanel />
+      </div>
 
       <div className="mp2-chip-row" style={{ marginTop: 12 }} role="group" aria-label="警報篩選">
         {filters.map((f) => (

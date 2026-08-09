@@ -10,10 +10,10 @@ export const NEXUS_UI_BUILD_INFO = {
   latestCommit: "pending",
   backendState: "HOLD",
   stage419: "BLOCKED",
-  displayLabel: "V18.2.19 · Visual Analytics Market Terminal",
-  buildMarker: "PUBLIC_V18_2_19_VISUAL_ANALYTICS_HEAD",
+  displayLabel: "V18.2.20 · Paid Beta Retention Foundation",
+  buildMarker: "PUBLIC_V18_2_20_PAID_BETA_RETENTION_HEAD",
   /** Track note for remote QA build verification. */
-  localTrackNote: "V18_2_19_VISUAL_ANALYTICS",
+  localTrackNote: "V18_2_20_PAID_BETA_RETENTION",
   /** Product generation — automated QA must equal 2. */
   member_product_generation: 2,
   memberProductGeneration: 2,
