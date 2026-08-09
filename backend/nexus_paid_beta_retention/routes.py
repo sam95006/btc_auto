@@ -24,7 +24,7 @@ from backend.nexus_paid_beta_retention.watchlist_store import get_watchlist_stor
 
 def _no_store(resp: Response) -> Response:
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-    resp.headers["X-NEXUS-Retention"] = "v18_2_20"
+    resp.headers["X-NEXUS-Retention"] = "v18_2_21"
     resp.headers["X-NEXUS-Member-Execution"] = "0"
     return resp
 
@@ -87,6 +87,16 @@ def register_paid_beta_retention_routes(app: Flask) -> None:
                 headline=f"Added {str(body.get('symbol') or '').upper()} to watchlist",
                 source="watchlist",
             )
+            try:
+                from backend.nexus_product_analytics.events import record_event
+
+                record_event(
+                    "watchlist_added",
+                    account_id=account_id,
+                    props={"symbol": str(body.get("symbol") or "").upper()},
+                )
+            except Exception:
+                pass
             return _no_store(jsonify({"ok": True, **enrich_watchlist(account_id), "mutated": result}))
         except ValueError as exc:
             return _no_store(jsonify({"ok": False, "error": str(exc)})), 400

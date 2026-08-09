@@ -22,12 +22,12 @@ def main() -> None:
     marker_js = None
     for p in (DIST / "assets").glob("index-*.js"):
         text = p.read_text(encoding="utf-8", errors="ignore")
-        if "PUBLIC_V18_2_20_PAID_BETA_RETENTION_HEAD" in text:
+        if "PUBLIC_V18_2_21_PAID_BETA_IDENTITY_HEAD" in text:
             marker_js = p.name
             break
     print("marker_js", marker_js)
     if not marker_js:
-        raise SystemExit("built JS missing V18.2.20 marker")
+        raise SystemExit("built JS missing V18.2.21 marker")
 
     for target in TARGETS:
         if target.exists():

@@ -2276,6 +2276,16 @@ html[data-mp2-theme="light"] .mp2-shell {
   max-width: 40rem;
 }
 
+.mp2-input {
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--mp2-border);
+  border-radius: 6px;
+  background: var(--mp2-bg-elevated, var(--mp2-surface));
+  color: var(--mp2-ink);
+  font: inherit;
+}
+
 .mp2-onboarding {
   margin: 0 0 16px;
   padding: 12px 14px;

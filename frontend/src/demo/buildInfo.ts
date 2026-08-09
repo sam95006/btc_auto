@@ -10,10 +10,10 @@ export const NEXUS_UI_BUILD_INFO = {
   latestCommit: "pending",
   backendState: "HOLD",
   stage419: "BLOCKED",
-  displayLabel: "V18.2.20 · Paid Beta Retention Foundation",
-  buildMarker: "PUBLIC_V18_2_20_PAID_BETA_RETENTION_HEAD",
+  displayLabel: "V18.2.21 · Paid Beta Identity + Retention",
+  buildMarker: "PUBLIC_V18_2_21_PAID_BETA_IDENTITY_HEAD",
   /** Track note for remote QA build verification. */
-  localTrackNote: "V18_2_20_PAID_BETA_RETENTION",
+  localTrackNote: "V18_2_21_PAID_BETA_IDENTITY",
   /** Product generation — automated QA must equal 2. */
   member_product_generation: 2,
   memberProductGeneration: 2,

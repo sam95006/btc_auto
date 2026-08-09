@@ -255,7 +255,7 @@ export function AlertsPageV2() {
   ];
 
   return (
-    <div data-testid="product-v2-alerts" data-nexus-product-generation="2" data-alert-contract="retention_v18_2_20">
+    <div data-testid="product-v2-alerts" data-nexus-product-generation="2" data-alert-contract="retention_v18_2_21">
       <header>
         <h1 className="mp2-page-title">警報</h1>
         <p className="mp2-page-sub">

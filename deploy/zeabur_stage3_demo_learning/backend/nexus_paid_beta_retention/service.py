@@ -127,13 +127,24 @@ def since_last_visit(account_id: str) -> dict[str, Any]:
     visit = get_visit_tracker().snapshot(account_id)
     notes = get_notification_center().list_for(account_id, limit=30)
     since_ts = visit.get("previous_visit_at")
-    items = notes["items"]
-    if since_ts:
-        items = [n for n in items if int(n.get("ts") or 0) >= int(since_ts)]
+    if not visit.get("has_previous") or since_ts is None:
+        return {
+            **visit,
+            "notifications_since": [],
+            "count": 0,
+            "insufficient_history": True,
+            "empty": True,
+            "fabricated": False,
+            "explain": "No prior authenticated visit on record — honest empty, nothing fabricated.",
+        }
+    items = [n for n in notes["items"] if int(n.get("ts") or 0) >= int(since_ts)]
     return {
         **visit,
         "notifications_since": items,
         "count": len(items),
+        "insufficient_history": False,
+        "empty": len(items) == 0,
+        "fabricated": False,
         "explain": "Changes since previous authenticated visit (server clock).",
     }
 

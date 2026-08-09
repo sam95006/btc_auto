@@ -65,7 +65,13 @@ register_pub17_market_pulse_routes(app)  # PUB17-B: Market Pulse + Top Opportuni
 register_pub18_live_funnel_routes(app)  # PUB18-A: Live Funnel + Market Pulse (read-only)
 register_runtime_snapshot_routes(app)  # V18.1 Phase B: Runtime Snapshot live binding (read-only)
 register_public_entitlements_v18_2_routes(app)  # V18.2 Track B: capability entitlements (read-only)
-register_paid_beta_retention_routes(app)  # V18.2.20: paid-beta retention foundation
+register_paid_beta_retention_routes(app)  # V18.2.21: paid-beta identity + retention
+try:
+    from backend.nexus_product_analytics.routes import register_product_analytics_routes
+
+    register_product_analytics_routes(app)  # V18.2.21: minimal product analytics contract
+except Exception as _analytics_exc:  # noqa: BLE001
+    print(f"[startup] Product analytics routes deferred: {_analytics_exc}")
 try:
     from backend.nexus_public_auth.routes import register_public_auth_routes
 

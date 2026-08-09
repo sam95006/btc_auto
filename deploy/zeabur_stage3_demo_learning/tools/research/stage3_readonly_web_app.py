@@ -40,7 +40,7 @@ _GATE_C_POST_ALLOWLIST = {
 }
 
 OPERATOR_UI_DIR = ROOT / "static" / "operator_ui"
-OPERATOR_BUILD_MARKER = "PUBLIC_V18_2_20_PAID_BETA_RETENTION_HEAD"
+OPERATOR_BUILD_MARKER = "PUBLIC_V18_2_21_PAID_BETA_IDENTITY_HEAD"
 MVP22C_BUILD_MARKER = "NEXUS_UI_MVP22C_MARKET_ANOMALY_RADAR"
 MVP22B_BUILD_MARKER = "NEXUS_UI_MVP22B_DERIVATIVES_CONTEXT"
 MVP22A_BUILD_MARKER = "NEXUS_UI_MVP22A_LIVE_MARKET_DATA"
@@ -76,10 +76,10 @@ _SPA_PREFIXES = (
     "academy",
     "calculator",
     "membership",
-    "ai-reviews",           # Phase 5 Gate B — AI Review Center
-    "simulation",           # Phase 5 Gate C — simulator view
-    "replay",               # Phase 5 Gate C — replay view
-    "research-performance", # Phase 6 Gate D — Research Performance Validation
+    "ai-reviews",           # Phase 5 Gate B ??AI Review Center
+    "simulation",           # Phase 5 Gate C ??simulator view
+    "replay",               # Phase 5 Gate C ??replay view
+    "research-performance", # Phase 6 Gate D ??Research Performance Validation
 )
 
 
@@ -172,7 +172,7 @@ _GATE_C_POST_ALLOWLIST.update({
     "/api/nexus/ai-reviews/manual-validation",
     "/api/nexus/review-cases/manual-research",
     "/api/nexus/review-cases/sweep",
-    # Phase 6.1 — persistence validation (research contract only)
+    # Phase 6.1 ??persistence validation (research contract only)
     "/api/nexus/storage/probes",
     "/api/nexus/storage/persistence-validation",
     "/api/nexus/storage/recovery-verify",
@@ -227,7 +227,7 @@ def ui_build():
         "legacy_build_marker": LEGACY_BUILD_MARKER,
         "ui_style": "Live Market Intelligence",
         "ui_version": "MVP-22D",
-        "public_name": "NEXUS — Live Market Intelligence",
+        "public_name": "NEXUS ??Live Market Intelligence",
         "legacy_nexus_path": "/nexus",
     }
     if meta_path.is_file():

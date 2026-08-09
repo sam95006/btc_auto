@@ -31,8 +31,8 @@ function SettingsRedirect() {
 }
 
 /**
- * NEXUS Member Product V2 — Paid Beta Retention + Visual Analytics (V18.2.20).
- * Generation marker = 2. Preserves V18.2.19 analytics; retention foundation added.
+ * NEXUS Member Product V2 — Paid Beta Identity + Retention (V18.2.21).
+ * Generation marker = 2. Preserves V18.2.19 analytics; identity + retention completed.
  */
 export function NexusMemberProductV2() {
   const [aiOpen, setAiOpen] = useState(false);
@@ -51,10 +51,10 @@ export function NexusMemberProductV2() {
             <div
               className="mp2-shell"
               data-nexus-product-generation={MEMBER_PRODUCT_GENERATION}
-              data-member-surface="v18_2_20"
+              data-member-surface="v18_2_21"
               data-mp2-theme="dark"
               data-testid="nexus-member-product-v2"
-              data-build-marker="PUBLIC_V18_2_20_PAID_BETA_RETENTION_HEAD"
+              data-build-marker="PUBLIC_V18_2_21_PAID_BETA_IDENTITY_HEAD"
             >
               <SkipToContentLabeled label="跳至主要內容" />
               <ProductV2TopNav onOpenAi={() => setAiOpen(true)} />

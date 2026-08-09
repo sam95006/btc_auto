@@ -11,14 +11,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.resolve(__dirname, "..", "src");
 const ROOT = path.resolve(__dirname, "..", "..");
 
-const marker = "PUBLIC_V18_2_20_PAID_BETA_RETENTION_HEAD";
+const marker = "PUBLIC_V18_2_21_PAID_BETA_IDENTITY_HEAD";
 
 const buildInfo = fs.readFileSync(path.join(SRC, "demo", "buildInfo.ts"), "utf8");
 assert.ok(buildInfo.includes(marker), "buildInfo marker");
 
 const app = fs.readFileSync(path.join(SRC, "app", "NexusMemberProductV2.tsx"), "utf8");
 assert.ok(app.includes(marker), "app marker");
-assert.ok(app.includes('data-member-surface="v18_2_20"'), "surface marker");
+assert.ok(app.includes('data-member-surface="v18_2_21"'), "surface marker");
 assert.ok(app.includes('path="/research"'), "research route");
 
 const watch = fs.readFileSync(path.join(SRC, "product_v2", "pages", "WatchlistPageV2.tsx"), "utf8");

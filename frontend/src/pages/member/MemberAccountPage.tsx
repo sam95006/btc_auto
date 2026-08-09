@@ -9,8 +9,9 @@ import { loadUiDensity, saveUiDensity, type UiDensity } from "../../member/uiDen
 import { PRODUCT_CAPABILITIES } from "../../product_v2/productCapabilities";
 import { usePreviewReviewPlan } from "../../member/usePreviewReviewPlan";
 import { usePublicEntitlements } from "../../member/public_entitlements_v18_2";
+import { MemberIdentityPanel } from "../../retention/MemberIdentityPanel";
 
-/** Account — display settings + capability upgrade entry (no Billing activation). */
+/** Account — identity + display settings + capability upgrade entry (no Billing activation). */
 export function MemberAccountPage() {
   const t = useT();
   const { loading, items } = usePageSlots([
@@ -31,9 +32,7 @@ export function MemberAccountPage() {
     <MemberPageChrome titleKey="pages.account.title" subtitleKey="pages.account.subtitle">
       {loading ? <p className="muted">Loading live bindings...</p> : null}
       <LiveSlotStrip bindings={items} />
-      <p className="muted sm">
-        Profile fields UNAVAILABLE until auth realm binds · no synthetic live profile.
-      </p>
+      <MemberIdentityPanel />
 
       <section className="nx10-panel" style={{ marginTop: 16 }} data-testid="account-display-settings">
         <h2 className="nx-sec-title" style={{ marginTop: 0 }}>
