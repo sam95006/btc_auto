@@ -1,6 +1,6 @@
 /**
- * NEXUS Member Product V2 — Paid Product Visual system (V18.2.18)
- * Brighter depth · semantic market colors · no neon/glass.
+ * NEXUS Member Product V2 — Visual Analytics Terminal (V18.2.19)
+ * Brighter depth · stronger pos/neg · exchange density · no neon/glass.
  * Light mode: DISABLED in Preview.
  * Controlling layout CSS for Product V2 — do not load v1827–v18210 as layout.
  */
@@ -41,12 +41,12 @@
   --mp2-data: #4cc9f0;
 
   /* —— Semantics —— */
-  --mp2-pos: #20c997;
-  --mp2-neg: #ff6174;
+  --mp2-pos: #12d18a;
+  --mp2-neg: #ff4d6a;
   --mp2-warn: #f2b84b;
   --mp2-info: #4cc9f0;
-  --mp2-pos-soft: rgba(32, 201, 151, 0.14);
-  --mp2-neg-soft: rgba(255, 97, 116, 0.14);
+  --mp2-pos-soft: rgba(18, 209, 138, 0.18);
+  --mp2-neg-soft: rgba(255, 77, 106, 0.18);
   --mp2-warn-soft: rgba(242, 184, 75, 0.16);
 
   /* —— Focus / overlay / shadow —— */
@@ -2014,4 +2014,266 @@ html[data-mp2-theme="light"] .mp2-shell {
   .mp2-movers-grid.compact {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* �X�X V18.2.19 Visual Analytics Terminal �X�X */
+.mp2-shell .pos, .mp2-pulse-item .ch.pos, .mp2-pulse-card .pulse-ch.pos { color: var(--mp2-pos) !important; }
+.mp2-shell .neg, .mp2-pulse-item .ch.neg, .mp2-pulse-card .pulse-ch.neg { color: var(--mp2-neg) !important; }
+.mp2-pulse-card.pos { box-shadow: inset 0 -2px 0 var(--mp2-pos); }
+.mp2-pulse-card.neg { box-shadow: inset 0 -2px 0 var(--mp2-neg); }
+.mp2-pulse-item .ch { font-weight: 650; }
+
+.mp2-market-state { display: grid; gap: 14px; margin-top: 6px; }
+.mp2-state-block {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--mp2-border-soft);
+}
+.mp2-state-block:last-child { border-bottom: 0; }
+.mp2-state-spark-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.mp2-regime-timeline {
+  display: flex;
+  height: 10px;
+  gap: 2px;
+  margin-top: 8px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--mp2-surface-sunken);
+}
+.mp2-regime-timeline .seg { background: var(--mp2-ink-disabled); min-width: 4px; }
+.mp2-regime-timeline .seg.pos { background: var(--mp2-pos); }
+.mp2-regime-timeline .seg.neg { background: var(--mp2-neg); }
+
+.mp2-pipeline { display: grid; gap: 8px; }
+.mp2-pipeline-stage { display: grid; gap: 3px; }
+.mp2-pipeline-bar-track {
+  height: 10px;
+  background: var(--mp2-surface-sunken);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.mp2-pipeline-bar {
+  display: block;
+  height: 100%;
+  background: var(--mp2-cobalt);
+  border-radius: 2px;
+}
+.mp2-pipeline-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--mp2-fs-xs);
+  color: var(--mp2-ink-muted);
+}
+.mp2-pipeline-meta .mono { color: var(--mp2-ink); }
+
+.mp2-risk-gauge { margin-top: 4px; }
+.mp2-risk-track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mp2-risk-track .end {
+  font-size: 0.625rem;
+  color: var(--mp2-ink-muted);
+  letter-spacing: 0.04em;
+}
+.mp2-risk-track .rail {
+  position: relative;
+  flex: 1;
+  height: 6px;
+  background: linear-gradient(90deg, var(--mp2-pos), var(--mp2-warn), var(--mp2-neg));
+  border-radius: 3px;
+}
+.mp2-risk-track .knob {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--mp2-ink);
+  border: 2px solid var(--mp2-bg-elevated);
+  box-shadow: var(--mp2-shadow-sm);
+}
+.mp2-risk-readout { margin-top: 6px; font-size: var(--mp2-fs-sm); }
+.mp2-risk-gauge.tone-low .mp2-risk-readout { color: var(--mp2-pos); }
+.mp2-risk-gauge.tone-mid .mp2-risk-readout { color: var(--mp2-warn); }
+.mp2-risk-gauge.tone-high .mp2-risk-readout { color: var(--mp2-neg); }
+
+.mp2-event-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: var(--mp2-fs-xs);
+  font-family: var(--mp2-mono);
+}
+
+.mp2-radar-cols {
+  display: grid;
+  grid-template-columns: 36px minmax(64px, 1fr) minmax(56px, 0.8fr) 72px 40px 28px 48px 40px 44px;
+  gap: 4px;
+  padding: 4px 6px;
+  font-size: 0.625rem;
+  color: var(--mp2-ink-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.mp2-radar-row.denser {
+  grid-template-columns: 36px minmax(64px, 1fr) minmax(56px, 0.8fr) 72px 40px 28px 48px 40px 44px;
+  padding: 6px;
+  gap: 4px;
+}
+.mp2-radar-row .spark-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+.mp2-radar-row .spark-cell .ch { font-size: 0.6875rem; }
+
+.mp2-risk-bar {
+  display: inline-block;
+  width: 40px;
+  height: 5px;
+  background: var(--mp2-surface-sunken);
+  border-radius: 2px;
+  overflow: hidden;
+  vertical-align: middle;
+}
+.mp2-risk-bar > span { display: block; height: 100%; background: var(--mp2-warn); }
+.mp2-risk-bar.lo > span { background: var(--mp2-pos); }
+.mp2-risk-bar.mid > span { background: var(--mp2-warn); }
+.mp2-risk-bar.hi > span { background: var(--mp2-neg); }
+.mp2-risk-bar.empty { opacity: 0.35; }
+
+.mp2-fund-scale {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 10px;
+  vertical-align: middle;
+}
+.mp2-fund-scale .track {
+  position: absolute;
+  left: 0; right: 0; top: 4px;
+  height: 2px;
+  background: var(--mp2-border);
+  border-radius: 1px;
+}
+.mp2-fund-scale .knob {
+  position: absolute;
+  top: 1px;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  border-radius: 50%;
+  background: var(--mp2-ink-muted);
+}
+.mp2-fund-scale.long .knob { background: var(--mp2-pos); }
+.mp2-fund-scale.short .knob { background: var(--mp2-neg); }
+.mp2-fund-scale.empty { color: var(--mp2-ink-muted); font-size: var(--mp2-fs-xs); }
+
+.mp2-oi-dir { font-size: 0.75rem; }
+.mp2-oi-dir.pos { color: var(--mp2-pos); }
+.mp2-oi-dir.neg { color: var(--mp2-neg); }
+.mp2-oi-dir.flat { color: var(--mp2-ink-muted); }
+
+.mp2-feed.mp2-event-compact {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.mp2-feed.mp2-event-compact li {
+  display: grid;
+  grid-template-columns: 36px minmax(56px, 1fr) 18px 36px minmax(0, 1.2fr);
+  gap: 6px;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--mp2-border-soft);
+  font-size: var(--mp2-fs-xs);
+}
+.mp2-feed.mp2-event-compact .metric {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mp2-feed.mp2-event-compact .dot { display: none; }
+
+.mp2-map-metric-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.mp2-map-metric-row button {
+  appearance: none;
+  border: 1px solid var(--mp2-border-soft);
+  background: var(--mp2-surface-sunken);
+  color: var(--mp2-ink-muted);
+  font: inherit;
+  font-size: var(--mp2-fs-xs);
+  padding: 4px 8px;
+  border-radius: var(--mp2-radius);
+  cursor: pointer;
+}
+.mp2-map-metric-row button.active {
+  color: var(--mp2-ink);
+  border-color: var(--mp2-cobalt);
+  background: var(--mp2-cobalt-soft);
+}
+.mp2-map-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.mp2-map-cell {
+  flex: 1 1 110px;
+  min-width: 100px;
+  max-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border-radius: var(--mp2-radius);
+  border: 1px solid var(--mp2-border-soft);
+  text-decoration: none !important;
+  color: inherit !important;
+  background: var(--mp2-surface-sunken);
+}
+.mp2-map-cell.pos {
+  background: rgba(18, 209, 138, calc(var(--mp2-heat, 0.2)));
+}
+.mp2-map-cell.neg {
+  background: rgba(255, 77, 106, calc(var(--mp2-heat, 0.2)));
+}
+.mp2-map-cell .val { font-size: var(--mp2-fs-sm); font-weight: 650; }
+.mp2-map-cell.empty { opacity: 0.55; }
+
+.mp2-term-list.denser li button {
+  display: grid;
+  grid-template-columns: 1fr 48px auto;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+}
+.mp2-term-metrics.denser > div { min-width: 64px; }
+.mp2-term-decision.denser .mp2-decision-block { padding-bottom: 8px; }
+
+.mp2-activity-bar.empty { opacity: 0.35; }
+
+@media (max-width: 1100px) {
+  .mp2-radar-cols { display: none; }
+  .mp2-radar-row.denser {
+    grid-template-columns: 36px 1fr 56px 44px;
+  }
+  .mp2-radar-row.denser .act,
+  .mp2-radar-row.denser .oi,
+  .mp2-radar-row.denser .fund,
+  .mp2-radar-row.denser .risk { display: none; }
 }

@@ -1,7 +1,7 @@
 {
   "source": "frontend/dist",
   "dest": "static/operator_ui",
-  "marker": "PUBLIC_V18_2_18_PAID_PRODUCT_VISUAL_HEAD",
+  "marker": "PUBLIC_V18_2_19_VISUAL_ANALYTICS_HEAD",
   "phase3_marker": "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE3_SECTOR_CHART_EQUITIES",
   "phase2_marker": "NEXUS_UI_PRODUCT_TRANSFORMATION_PHASE2_DECISION_EXPERIENCE",
   "mvp22d_marker": "NEXUS_UI_MVP22D_ANOMALY_OUTCOME_RESEARCH",
@@ -12,16 +12,16 @@
   "marker_found": true,
   "file_count": 3,
   "current_assets": [
-    "index-BdgFZOah.js",
-    "index-C-QOKRjy.css"
+    "index-C--ccHB1.js",
+    "index-CVZf07JG.css"
   ],
   "retained_assets": [
-    "index-BdgFZOah.js",
-    "index-C-QOKRjy.css"
+    "index-C--ccHB1.js",
+    "index-CVZf07JG.css"
   ],
   "retained_generations": 3,
   "previous_assets": [
-    "index-BdgFZOah.js",
-    "index-C-QOKRjy.css"
+    "index-C--ccHB1.js",
+    "index-CVZf07JG.css"
   ]
 }

@@ -23,6 +23,10 @@ import { usePreviewReviewPlan } from "../../member/usePreviewReviewPlan";
 import { ContextualUpgrade } from "../ContextualUpgrade";
 import { isFreePlan, requiresResearch } from "../productCapabilities";
 import { TokenIcon } from "../TokenIcon";
+import { ActivityBar, FundingScale, MetricSpark, OiDirection, RankStepSpark, RiskBar } from "../MetricSpark";
+import { rankStepPointsFromEvents } from "../../market/publicRadarApi";
+import { SERIES_PRESETS, seriesSparkPoints } from "../../market/marketSeries";
+import { useMarketSeriesBatch } from "../useMarketSeriesBatch";
 
 type LowerTab = "overview" | "evidence" | "derivatives" | "liquidity" | "history" | "quality";
 
@@ -51,8 +55,7 @@ function decisionState(c: MarketCandidate | null): string {
 }
 
 /**
- * Product V2 Market Terminal — exchange-density workspace (no order entry).
- * Reuses fetchScannerSymbol + NexusLiveCandleChart; mp2 composition only.
+ * Product V2 Market Terminal — exchange-density workspace (V18.2.19 visuals).
  */
 export function MarketTerminalPageV2() {
   const { symbol = "" } = useParams();
@@ -71,6 +74,8 @@ export function MarketTerminalPageV2() {
   const [tab, setTab] = useState<LowerTab>("overview");
   const [listQ, setListQ] = useState("");
   const [listMode, setListMode] = useState<"radar" | "watch">("radar");
+
+  const termSeries = useMarketSeriesBatch([sym], "pulse_24h", 90_000);
 
   useEffect(() => {
     let alive = true;
@@ -102,7 +107,15 @@ export function MarketTerminalPageV2() {
   }, [sym]);
 
   const rankRow: LiveRankingRow | undefined = ranking.rows.find((r) => r.symbol === sym);
-  const history = useMemo(() => rankHistoryForSymbol(sym), [sym, ranking.updated_at]);
+  const history = useMemo(
+    () => rankHistoryForSymbol(sym, ranking.events),
+    [sym, ranking.events, ranking.updated_at],
+  );
+  const stepPts = useMemo(
+    () => rankStepPointsFromEvents(ranking.events, sym),
+    [ranking.events, sym],
+  );
+  const sparkPts = seriesSparkPoints(termSeries.seriesBySymbol[sym]);
 
   const price =
     (snap?.lastPrice as number | undefined) ??
@@ -140,12 +153,12 @@ export function MarketTerminalPageV2() {
     if (listMode === "watch") {
       rows = rows.filter((r) => watchSymbols.has(r.symbol));
       if (!rows.length) {
-        // Still show watched symbols even if not currently ranked.
         return [...watchSymbols].map((s) => ({
           symbol: s,
           rank: null as number | null,
           price: null as number | null,
           change: null as number | null,
+          activity: null as number | null,
         }));
       }
     }
@@ -156,6 +169,7 @@ export function MarketTerminalPageV2() {
       rank: r.rank as number | null,
       price: r.price ?? null,
       change: r.change_24h ?? null,
+      activity: r.activity_metric ?? null,
     }));
   }, [ranking.rows, listQ, listMode, watchSymbols]);
 
@@ -170,10 +184,11 @@ export function MarketTerminalPageV2() {
 
   return (
     <div
-      className="mp2-terminal"
+      className="mp2-terminal denser"
       data-testid="product-v2-market-terminal"
       data-nexus-product-generation="2"
       data-market-terminal-v2="1"
+      data-fabricated-visual-count="0"
     >
       <header className="mp2-term-header" data-testid="terminal-symbol-header">
         <div className="mp2-term-title">
@@ -185,8 +200,19 @@ export function MarketTerminalPageV2() {
               {formatRankMove(rankRow)}
             </span>
           ) : null}
+          {sparkPts.length >= 2 ? (
+            <MetricSpark
+              points={sparkPts}
+              expectedIntervalMs={SERIES_PRESETS.pulse_24h.expectedIntervalMs}
+              positive={(ch24 ?? 0) >= 0}
+              width={80}
+              height={26}
+            />
+          ) : (
+            <span className="mp2-nodata">NO DATA</span>
+          )}
         </div>
-        <div className="mp2-term-metrics">
+        <div className="mp2-term-metrics denser">
           <div>
             <span className="lbl">Price</span>
             <span className="val mono">{formatUsd(price)}</span>
@@ -209,17 +235,16 @@ export function MarketTerminalPageV2() {
           </div>
           <div>
             <span className="lbl">Funding</span>
-            <span className="val mono">
-              {funding == null ? "—" : `${(Number(funding) * 100).toFixed(4)}%`}
-            </span>
+            <FundingScale rate={funding} />
           </div>
           <div>
             <span className="lbl">OI</span>
             <span className="val mono">{oi == null ? "—" : Number(oi).toLocaleString()}</span>
+            <OiDirection change={candidate?.oiChange5mPct} />
           </div>
           <div>
-            <span className="lbl">Spread</span>
-            <span className="val mono">{spread == null ? "—" : `${spread.toFixed(1)} bps`}</span>
+            <span className="lbl">Risk</span>
+            <RiskBar value={candidate?.riskScore ?? rankRow?.risk_score} />
           </div>
           <div>
             <span className="lbl">資料</span>
@@ -243,7 +268,7 @@ export function MarketTerminalPageV2() {
       ) : null}
 
       <div className="mp2-term-grid">
-        <aside className="mp2-term-list" aria-label="市場清單">
+        <aside className="mp2-term-list denser" aria-label="市場清單">
           <div className="mp2-term-list-tools">
             <input
               value={listQ}
@@ -280,6 +305,7 @@ export function MarketTerminalPageV2() {
                     {r.rank != null ? `#${r.rank} ` : ""}
                     {r.symbol.replace("USDT", "")}
                   </span>
+                  <ActivityBar value={r.activity} max={40} />
                   <span className={`mono ${(r.change ?? 0) >= 0 ? "pos" : "neg"}`}>
                     {r.change == null ? "—" : fmtPct(r.change)}
                   </span>
@@ -324,11 +350,15 @@ export function MarketTerminalPageV2() {
                 </div>
                 <div>
                   <p className="mp2-kicker">風險</p>
-                  <p className="mono">{candidate?.riskScore == null ? "—" : Math.round(candidate.riskScore)}</p>
+                  <RiskBar value={candidate?.riskScore} />
                 </div>
                 <div>
-                  <p className="mp2-kicker">更新</p>
-                  <p className="mono">{agoLabel(candidate?.lastUpdatedAt)}</p>
+                  <p className="mp2-kicker">Rank 軌跡</p>
+                  {stepPts.length >= 2 ? (
+                    <RankStepSpark points={stepPts} width={120} height={28} />
+                  ) : (
+                    <span className="mp2-nodata">NO DATA</span>
+                  )}
                 </div>
               </div>
             ) : null}
@@ -350,13 +380,15 @@ export function MarketTerminalPageV2() {
               <dl className="mp2-term-dl">
                 <div>
                   <dt>Funding</dt>
-                  <dd className="mono">
-                    {funding == null ? "—" : `${(Number(funding) * 100).toFixed(4)}%`}
+                  <dd>
+                    <FundingScale rate={funding} />
                   </dd>
                 </div>
                 <div>
                   <dt>OI 5m</dt>
-                  <dd className="mono">{fmtPct(candidate?.oiChange5mPct)}</dd>
+                  <dd className="mono">
+                    <OiDirection change={candidate?.oiChange5mPct} /> {fmtPct(candidate?.oiChange5mPct)}
+                  </dd>
                 </div>
                 <div>
                   <dt>未平倉</dt>
@@ -382,7 +414,7 @@ export function MarketTerminalPageV2() {
             ) : null}
             {tab === "history" ? (
               <div data-testid="terminal-rank-history">
-                <p className="mp2-kicker">Ranking History</p>
+                <p className="mp2-kicker">Ranking History · SERVER</p>
                 {free ? (
                   <ContextualUpgrade
                     title="排名歷史"
@@ -390,7 +422,7 @@ export function MarketTerminalPageV2() {
                     required="PRO"
                   />
                 ) : history.length === 0 ? (
-                  <p className="muted">尚無已記錄的排名事件（不回溯虛構）。</p>
+                  <p className="muted">NO DATA · 尚無已記錄的排名事件（不回溯虛構）。</p>
                 ) : (
                   <ol className="mp2-rank-history">
                     {history.slice(0, 24).map((h) => (
@@ -401,19 +433,15 @@ export function MarketTerminalPageV2() {
                           {h.rank != null ? `#${h.rank}` : "OUT"}
                         </span>
                         <span className="muted">{agoLabel(h.timestamp)}</span>
-                        <span>{h.primary_reason}</span>
+                        <span>{h.market_change || h.primary_reason}</span>
                       </li>
                     ))}
                   </ol>
                 )}
-                {!free && rankRow ? (
-                  <p className="muted" style={{ marginTop: 8 }}>
-                    目前 #{rankRow.rank}
-                    {rankRow.entered_rank_at
-                      ? ` · 進入 Radar ${agoLabel(rankRow.entered_rank_at)}`
-                      : ""}
-                    {rankRow.rank_delta != null ? ` · Δ ${rankRow.rank_delta}` : ""}
-                  </p>
+                {!free && stepPts.length >= 2 ? (
+                  <div style={{ marginTop: 10 }}>
+                    <RankStepSpark points={stepPts} width={220} height={36} />
+                  </div>
                 ) : null}
               </div>
             ) : null}
@@ -425,26 +453,26 @@ export function MarketTerminalPageV2() {
                   required="RESEARCH"
                 />
               ) : (
-              <dl className="mp2-term-dl">
-                <div>
-                  <dt>資料信任</dt>
-                  <dd>{trust.label_zh}</dd>
-                </div>
-                <div>
-                  <dt>Freshness</dt>
-                  <dd className="mono">{candidate?.freshness || ranking.status?.freshness || "—"}</dd>
-                </div>
-                <div>
-                  <dt>來源</dt>
-                  <dd className="mono">{candidate?.source || "BYBIT_PUBLIC"}</dd>
-                </div>
-              </dl>
+                <dl className="mp2-term-dl">
+                  <div>
+                    <dt>資料信任</dt>
+                    <dd>{trust.label_zh}</dd>
+                  </div>
+                  <div>
+                    <dt>Freshness</dt>
+                    <dd className="mono">{candidate?.freshness || ranking.status?.freshness || "—"}</dd>
+                  </div>
+                  <div>
+                    <dt>來源</dt>
+                    <dd className="mono">{candidate?.source || "BYBIT_PUBLIC"}</dd>
+                  </div>
+                </dl>
               )
             ) : null}
           </div>
         </section>
 
-        <aside className="mp2-term-decision" aria-label="NEXUS 決策面板" data-testid="nexus-decision-panel">
+        <aside className="mp2-term-decision denser" aria-label="NEXUS 決策面板" data-testid="nexus-decision-panel">
           <p className="mp2-kicker">NEXUS INTELLIGENCE</p>
           <div className="mp2-decision-block">
             <h3>STATE</h3>
@@ -461,6 +489,7 @@ export function MarketTerminalPageV2() {
             <div className="mp2-decision-block">
               <h3>RANK</h3>
               <p className="mono">{formatRankMove(rankRow)}</p>
+              {stepPts.length >= 2 ? <RankStepSpark points={stepPts} width={100} height={22} /> : null}
             </div>
           ) : null}
           <div className="mp2-decision-block">
@@ -469,9 +498,7 @@ export function MarketTerminalPageV2() {
           </div>
           <div className="mp2-decision-block">
             <h3>RISK</h3>
-            <p className={`mono ${(candidate?.riskScore ?? 0) >= 70 ? "neg" : ""}`}>
-              {candidate?.riskScore == null ? "—" : Math.round(candidate.riskScore)}
-            </p>
+            <RiskBar value={candidate?.riskScore ?? rankRow?.risk_score} />
           </div>
           <div className="mp2-decision-block">
             <h3>WHY NOW</h3>

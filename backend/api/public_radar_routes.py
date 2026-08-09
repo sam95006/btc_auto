@@ -1,8 +1,9 @@
-"""Public Full-Market Live Radar APIs (V18.2.16).
+"""Public Full-Market Live Radar APIs (V18.2.16 + V18.2.19 history).
 
 GET /api/nexus/public/radar
 GET /api/nexus/public/radar/events
 GET /api/nexus/public/radar/<symbol>
+GET /api/nexus/public/market-summary/history
 
 Read-only · rank_authority=SERVER · member_execution=0.
 """
@@ -43,6 +44,19 @@ def register_public_radar_routes(app: Flask) -> None:
             limit = 50
         symbol = (request.args.get("symbol") or "").strip() or None
         body = get_full_market_radar().public_events(limit=limit, symbol=symbol)
+        return _no_store(jsonify(body))
+
+    @app.route("/api/nexus/public/market-summary/history")
+    def nexus_public_market_summary_history():
+        try:
+            hours = float(request.args.get("hours") or 24)
+        except ValueError:
+            hours = 24.0
+        try:
+            limit = int(request.args.get("limit") or 400)
+        except ValueError:
+            limit = 400
+        body = get_full_market_radar().public_market_summary_history(hours=hours, limit=limit)
         return _no_store(jsonify(body))
 
     @app.route("/api/nexus/public/radar/<symbol>")

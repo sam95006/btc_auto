@@ -23,6 +23,10 @@ from backend.market.live_radar.nex_rank_score import (
     is_scanner_visible,
     is_trade_eligible,
 )
+from backend.market.live_radar.market_summary_history import (
+    derive_regime_label,
+    get_market_summary_history,
+)
 from backend.market.live_radar.rank_event_store import RankEventStore
 
 logger = logging.getLogger(__name__)
@@ -134,6 +138,7 @@ class FullMarketRadarService:
 
         try:
             snap = self._compute(now)
+            self._record_market_summary(snap, list(snap.get("events") or []))
             with self._lock:
                 self._snapshot = snap
                 self._snapshot_at = now
@@ -450,6 +455,41 @@ class FullMarketRadarService:
             "cache": "no-store",
         }
 
+    def _record_market_summary(self, snap: dict[str, Any], new_events: list[dict[str, Any]]) -> None:
+        """Persist real ~5m market-state point (no invented history)."""
+        try:
+            from backend.market.scanner.scanner_service import get_market_scanner
+
+            st = get_market_scanner().status()
+            breadth = st.get("breadth") if isinstance(st.get("breadth"), dict) else {}
+            regime = derive_regime_label(breadth, st.get("symbolCount"))
+            ev_new = sum(1 for e in new_events if e.get("rank_event") == "NEW")
+            ev_up = sum(1 for e in new_events if e.get("rank_event") == "UP")
+            ev_down = sum(1 for e in new_events if e.get("rank_event") == "DOWN")
+            ev_out = sum(1 for e in new_events if e.get("rank_event") == "OUT")
+            get_market_summary_history().maybe_record(
+                {
+                    "timestamp": int(snap.get("updated_at") or time.time() * 1000),
+                    "rising": breadth.get("rising"),
+                    "neutral": breadth.get("neutral"),
+                    "falling": breadth.get("falling"),
+                    "insufficient": breadth.get("insufficient"),
+                    "regime": regime,
+                    "market_risk": st.get("highRiskCandidates"),
+                    "scanner_count": snap.get("scanner_visible_count"),
+                    "radar_count": snap.get("radar_eligible_count"),
+                    "trade_count": snap.get("trade_eligible_count"),
+                    "qualified_count": snap.get("qualified_count"),
+                    "radar_eligible_count": snap.get("radar_eligible_count"),
+                    "events_new": ev_new,
+                    "events_up": ev_up,
+                    "events_down": ev_down,
+                    "events_out": ev_out,
+                }
+            )
+        except Exception:  # noqa: BLE001
+            logger.debug("market_summary_history_record_skipped", exc_info=True)
+
     def public_radar(
         self,
         *,
@@ -510,6 +550,11 @@ class FullMarketRadarService:
             "cache": "no-store",
             **({} if ok else {"error": "symbol_not_in_radar_snapshot"}),
         }
+
+    def public_market_summary_history(self, *, hours: float = 24.0, limit: int = 400) -> dict[str, Any]:
+        # Touch snapshot so a current point may be recorded if interval elapsed.
+        self.build_snapshot()
+        return get_market_summary_history().public_history(hours=hours, limit=limit)
 
 
 _SERVICE: FullMarketRadarService | None = None

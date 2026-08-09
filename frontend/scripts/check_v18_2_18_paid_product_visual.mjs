@@ -10,14 +10,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.resolve(__dirname, "..", "src");
 const ROOT = path.resolve(__dirname, "..", "..");
 
-const marker = "PUBLIC_V18_2_18_PAID_PRODUCT_VISUAL_HEAD";
+const marker = "PUBLIC_V18_2_19_VISUAL_ANALYTICS_HEAD";
 
 const buildInfo = fs.readFileSync(path.join(SRC, "demo", "buildInfo.ts"), "utf8");
-assert.ok(buildInfo.includes(marker), "buildInfo marker");
+assert.ok(buildInfo.includes(marker) || buildInfo.includes("PUBLIC_V18_2_18_PAID_PRODUCT_VISUAL_HEAD"), "buildInfo marker");
 
 const app = fs.readFileSync(path.join(SRC, "app", "NexusMemberProductV2.tsx"), "utf8");
-assert.ok(app.includes(marker), "app marker");
-assert.ok(app.includes('data-member-surface="v18_2_18"'), "surface marker");
+assert.ok(app.includes(marker) || app.includes("PUBLIC_V18_2_18_PAID_PRODUCT_VISUAL_HEAD"), "app marker");
+assert.ok(app.includes('data-member-surface="v18_2_19"') || app.includes('data-member-surface="v18_2_18"'), "surface marker");
 
 const series = fs.readFileSync(path.join(SRC, "market", "marketSeries.ts"), "utf8");
 assert.ok(series.includes("MARKET_SERIES_CONTRACT_V1"), "series contract");
@@ -40,7 +40,7 @@ assert.ok(overview.includes("data-browser-tick-spark=\"0\""), "browser tick flag
 assert.ok(overview.includes("data-true-market-series=\"1\""), "true series flag");
 assert.ok(overview.includes("radar_4h"), "radar 4h series");
 assert.ok(overview.includes("APPROACHING RADAR"), "approaching radar label");
-assert.ok(overview.includes("MARKET MOVERS"), "market movers");
+assert.ok(overview.includes("MARKET MAP") || overview.includes("MARKET MOVERS"), "market movers/map");
 assert.ok(overview.includes("TokenIcon"), "token icons");
 assert.ok(overview.includes("ContextualUpgrade"), "paid value surface");
 assert.ok([...overview].some((c) => c >= "\u4e00" && c <= "\u9fff"), "overview CJK");
@@ -60,7 +60,13 @@ assert.ok(terminal.includes("ContextualUpgrade"), "terminal paid surfaces");
 const css = fs.readFileSync(path.join(SRC, "styles", "v18211MemberProductV2.css"), "utf8");
 assert.ok(css.includes("#0d1117") || css.includes("#0D1117"), "canvas bg");
 assert.ok(css.includes("#5b7cfa") || css.includes("#5B7CFA"), "nex accent");
-assert.ok(css.includes("#20c997") || css.includes("#20C997"), "pos color");
+assert.ok(
+  css.includes("#20c997") ||
+    css.includes("#20C997") ||
+    css.includes("#12d18a") ||
+    css.includes("#12D18A"),
+  "pos color",
+);
 assert.ok(css.includes("17fr") && css.includes("57fr") && css.includes("26fr"), "terminal ratios");
 
 const backendCharts = fs.readFileSync(

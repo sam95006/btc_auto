@@ -106,7 +106,9 @@ export function MarketPulseBar() {
             <TokenIcon symbol={sym} size={16} />
             <span className="sym">{sym.replace("USDT", "")}</span>
             <span className="px mono">{fmtPrice(px)}</span>
-            <span className={`ch mono ${(ch ?? 0) >= 0 ? "pos" : "neg"}`}>{fmtPct(ch)}</span>
+            <span className={`ch mono ${(ch ?? 0) >= 0 ? "pos" : "neg"}`} style={{ fontWeight: 700 }}>
+              {fmtPct(ch)}
+            </span>
             {sparkPts.length >= 2 ? (
               <MetricSpark
                 points={sparkPts}

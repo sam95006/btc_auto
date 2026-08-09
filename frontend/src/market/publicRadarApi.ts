@@ -77,3 +77,15 @@ export function fetchPublicRadarSymbol(symbol: string) {
     error?: string;
   }>(`/api/nexus/public/radar/${encodeURIComponent(symbol)}`);
 }
+
+/** Build rank step points from SERVER events (ascending time). No localStorage. */
+export function rankStepPointsFromEvents(
+  events: LiveRankEvent[],
+  symbol: string,
+): { timestamp: number; value: number }[] {
+  const sym = symbol.toUpperCase();
+  return [...events]
+    .filter((e) => e.symbol === sym && e.rank != null && Number.isFinite(e.timestamp))
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .map((e) => ({ timestamp: e.timestamp, value: e.rank as number }));
+}

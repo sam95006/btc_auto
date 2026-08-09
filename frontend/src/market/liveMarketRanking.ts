@@ -279,8 +279,13 @@ function appendHistory(events: LiveRankEvent[]) {
   }
 }
 
-export function rankHistoryForSymbol(symbol: string): LiveRankEvent[] {
+/** @deprecated Prefer SERVER events via fetchPublicRadarEvents / ranking.events. */
+export function rankHistoryForSymbol(symbol: string, serverEvents?: LiveRankEvent[]): LiveRankEvent[] {
   const sym = symbol.toUpperCase();
+  if (serverEvents && serverEvents.length) {
+    return serverEvents.filter((e) => e.symbol === sym);
+  }
+  // Fallback only when server events not provided — still filters local buffer if present.
   return loadRankHistory().filter((e) => e.symbol === sym);
 }
 
