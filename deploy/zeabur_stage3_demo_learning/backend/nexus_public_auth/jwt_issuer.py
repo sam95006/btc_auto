@@ -184,3 +184,23 @@ def _pad_b64(segment: str) -> bytes:
 
 def build_issuer_from_env() -> PublicJwtIssuer:
     return PublicJwtIssuer()
+
+
+_DEFAULT_ISSUER: Optional[PublicJwtIssuer] = None
+_ISSUER_LOCK = __import__("threading").Lock()
+
+
+def get_default_issuer() -> PublicJwtIssuer:
+    """Process-wide issuer so login and retention auth share the same signing secret."""
+    global _DEFAULT_ISSUER
+    with _ISSUER_LOCK:
+        if _DEFAULT_ISSUER is None:
+            _DEFAULT_ISSUER = PublicJwtIssuer()
+        return _DEFAULT_ISSUER
+
+
+def reset_default_issuer() -> PublicJwtIssuer:
+    global _DEFAULT_ISSUER
+    with _ISSUER_LOCK:
+        _DEFAULT_ISSUER = PublicJwtIssuer()
+        return _DEFAULT_ISSUER

@@ -26,7 +26,7 @@ from backend.nexus_public_auth.entitlements import (
     require_feature,
 )
 from backend.nexus_public_auth.hard_bans import HardBanViolation, assert_env_hard_bans
-from backend.nexus_public_auth.jwt_issuer import PublicJwtIssuer
+from backend.nexus_public_auth.jwt_issuer import PublicJwtIssuer, get_default_issuer
 from backend.nexus_public_auth.mfa import MfaService
 from backend.nexus_public_auth.org_access import (
     SELF_REGISTER_ROLES,
@@ -62,7 +62,7 @@ class PublicAuthMembershipService:
     ):
         assert_env_hard_bans()
         self.store = store or get_default_store()
-        self.issuer = issuer or PublicJwtIssuer()
+        self.issuer = issuer or get_default_issuer()
         self.rate_limiter = rate_limiter or get_default_rate_limiter()
         self.tokens = tokens or get_default_token_store()
         self.sessions = SessionService(self.store, self.issuer)
@@ -559,3 +559,15 @@ class PublicAuthMembershipService:
         subject = (token or "")[:16] or "anonymous"
         self.rate_limiter.check("session_authenticate", subject)
         return self.sessions.authenticate(token)
+
+
+_DEFAULT_SERVICE: Optional[PublicAuthMembershipService] = None
+_SERVICE_LOCK = __import__("threading").Lock()
+
+
+def get_default_public_auth_service() -> PublicAuthMembershipService:
+    global _DEFAULT_SERVICE
+    with _SERVICE_LOCK:
+        if _DEFAULT_SERVICE is None:
+            _DEFAULT_SERVICE = PublicAuthMembershipService()
+        return _DEFAULT_SERVICE

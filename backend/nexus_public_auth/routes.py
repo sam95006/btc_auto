@@ -5,7 +5,10 @@ from typing import Any, Optional
 
 from backend.nexus_public_auth.hard_bans import HardBanViolation, assert_env_hard_bans
 from backend.nexus_public_auth.rate_limit import RateLimitExceeded
-from backend.nexus_public_auth.service import PublicAuthMembershipService
+from backend.nexus_public_auth.service import (
+    PublicAuthMembershipService,
+    get_default_public_auth_service,
+)
 
 
 def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] = None):
@@ -22,7 +25,7 @@ def create_public_auth_blueprint(service: Optional[PublicAuthMembershipService] 
     except ImportError as exc:  # pragma: no cover
         raise RuntimeError("Flask is required to mount public auth routes") from exc
 
-    svc = service or PublicAuthMembershipService()
+    svc = service or get_default_public_auth_service()
     bp = Blueprint("nexus_public_auth", __name__, url_prefix="/api/public/auth")
 
     def _err(exc: Exception, code: int = 400):

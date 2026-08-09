@@ -11,7 +11,7 @@ from backend.nexus_public_auth.hard_bans import (
     validate_public_issuer,
     validate_public_realm,
 )
-from backend.nexus_public_auth.jwt_issuer import PublicJwtIssuer
+from backend.nexus_public_auth.jwt_issuer import PublicJwtIssuer, get_default_issuer
 from backend.nexus_public_auth.roles import normalize_member_roles
 from backend.nexus_public_auth.store import PublicAuthStore, PublicSession, _new_id, _utcnow
 
@@ -19,7 +19,7 @@ from backend.nexus_public_auth.store import PublicAuthStore, PublicSession, _new
 class SessionService:
     def __init__(self, store: PublicAuthStore, issuer: Optional[PublicJwtIssuer] = None):
         self.store = store
-        self.issuer = issuer or PublicJwtIssuer()
+        self.issuer = issuer or get_default_issuer()
 
     def create_session(
         self,

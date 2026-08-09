@@ -32,9 +32,9 @@ def resolve_account_id(token: str) -> Optional[str]:
     if not token:
         return None
     try:
-        from backend.nexus_public_auth.service import PublicAuthMembershipService
+        from backend.nexus_public_auth.service import get_default_public_auth_service
 
-        svc = PublicAuthMembershipService()
+        svc = get_default_public_auth_service()
         auth = svc.authenticate_rate_limited(token)
         account_id = str(auth.get("account_id") or "").strip()
         return account_id or None
