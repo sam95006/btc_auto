@@ -69,6 +69,24 @@ function laneTagClass(label: string | null | undefined): string {
   return "tag-warn";
 }
 
+function ProvenanceFootnote({
+  fieldKey,
+  provenance,
+}: {
+  fieldKey: string;
+  provenance?: Record<string, { source_timestamp?: string | null; freshness_sec?: number | null; lane?: string | null; provenance?: string }>;
+}) {
+  const meta = provenance?.[fieldKey];
+  if (!meta) return null;
+  return (
+    <span className="muted sm mono">
+      {" "}
+      · {meta.provenance || "—"} · {meta.lane || "—"} · {meta.source_timestamp || "—"}
+      {meta.freshness_sec != null ? ` · ${Math.round(meta.freshness_sec)}s` : ""}
+    </span>
+  );
+}
+
 function DemoMonitorPanel({
   monitor,
   error,
@@ -102,6 +120,10 @@ function DemoMonitorPanel({
   const pos = monitor.active_position;
   const wallet = monitor.wallet;
   const acct = monitor.accounting;
+  const intel = monitor.trading_intel;
+  const perf = monitor.performance;
+  const learn = monitor.learning;
+  const prov = monitor.field_provenance;
   const empty = !monitor.feed_ready;
 
   return (
@@ -184,6 +206,16 @@ function DemoMonitorPanel({
             <dd className="mono">{fmt(pos.target)}</dd>
           </div>
           <div>
+            <dt>initial target</dt>
+            <dd className="mono">{fmt(pos.initial_target)}</dd>
+          </div>
+          <div>
+            <dt>dynamic profit zone</dt>
+            <dd className="mono">
+              {pos.dynamic_profit_zone ? JSON.stringify(pos.dynamic_profit_zone) : "—"}
+            </dd>
+          </div>
+          <div>
             <dt>unrealized PnL</dt>
             <dd className="mono">{fmt(pos.unrealized_pnl)}</dd>
           </div>
@@ -219,13 +251,155 @@ function DemoMonitorPanel({
       <dl className="nx-founder-metrics">
         <div>
           <dt>MFE</dt>
-          <dd className="mono">{fmt(monitor.mfe ?? pos.mfe)}</dd>
+          <dd className="mono">
+            {fmt(intel?.mfe ?? monitor.mfe ?? pos.mfe)}
+            <ProvenanceFootnote fieldKey="mfe" provenance={prov} />
+          </dd>
         </div>
         <div>
           <dt>MAE</dt>
-          <dd className="mono">{fmt(monitor.mae ?? pos.mae)}</dd>
+          <dd className="mono">
+            {fmt(intel?.mae ?? monitor.mae ?? pos.mae)}
+            <ProvenanceFootnote fieldKey="mae" provenance={prov} />
+          </dd>
+        </div>
+        <div>
+          <dt>MFE capture estimate</dt>
+          <dd className="mono">
+            {fmt(intel?.mfe_capture_estimate)}
+            <ProvenanceFootnote fieldKey="trading_intel.mfe_capture_estimate" provenance={prov} />
+          </dd>
         </div>
       </dl>
+
+      <h3 className="sm">Trading intelligence</h3>
+      <dl className="nx-founder-metrics">
+        <div>
+          <dt>side / state</dt>
+          <dd className="mono">
+            {fmt(intel?.side)} / {fmt(intel?.position_state ?? monitor.position_state)}
+            <ProvenanceFootnote fieldKey="trading_intel.side" provenance={prov} />
+          </dd>
+        </div>
+        <div>
+          <dt>entry / current / SL</dt>
+          <dd className="mono">
+            {fmt(intel?.entry)} / {fmt(intel?.current)} / {fmt(intel?.stop_loss)}
+            <ProvenanceFootnote fieldKey="trading_intel.entry" provenance={prov} />
+          </dd>
+        </div>
+        <div>
+          <dt>initial target / profit zone</dt>
+          <dd className="mono">
+            {fmt(intel?.initial_target)} /{" "}
+            {intel?.dynamic_profit_zone ? JSON.stringify(intel.dynamic_profit_zone) : "—"}
+            <ProvenanceFootnote fieldKey="trading_intel.initial_target" provenance={prov} />
+          </dd>
+        </div>
+        <div>
+          <dt>unrealized / est. net if closed</dt>
+          <dd className="mono">
+            {fmt(intel?.unrealized_pnl)} / {fmt(intel?.estimated_net_if_closed)}
+            <ProvenanceFootnote fieldKey="trading_intel.estimated_net_if_closed" provenance={prov} />
+          </dd>
+        </div>
+        <div>
+          <dt>remaining net edge</dt>
+          <dd className="mono">
+            {fmt(intel?.remaining_net_edge)}
+            <ProvenanceFootnote fieldKey="trading_intel.remaining_net_edge" provenance={prov} />
+          </dd>
+        </div>
+        <div>
+          <dt>continuation score</dt>
+          <dd className="mono">
+            {fmt(intel?.continuation_score)}
+            <ProvenanceFootnote fieldKey="trading_intel.continuation_score" provenance={prov} />
+          </dd>
+        </div>
+        <div>
+          <dt>giveback risk</dt>
+          <dd className="mono">
+            {fmt(intel?.giveback_risk)}
+            <ProvenanceFootnote fieldKey="trading_intel.giveback_risk" provenance={prov} />
+          </dd>
+        </div>
+        <div>
+          <dt>AI thesis</dt>
+          <dd className="mono">
+            {intel?.ai_thesis && typeof intel.ai_thesis === "object"
+              ? JSON.stringify(intel.ai_thesis)
+              : fmt(intel?.ai_thesis)}
+            <ProvenanceFootnote fieldKey="trading_intel.ai_thesis" provenance={prov} />
+          </dd>
+        </div>
+        <div>
+          <dt>last AI position review</dt>
+          <dd className="mono">
+            {intel?.last_ai_position_review && typeof intel.last_ai_position_review === "object"
+              ? JSON.stringify(intel.last_ai_position_review)
+              : fmt(intel?.last_ai_position_review)}
+            <ProvenanceFootnote fieldKey="trading_intel.last_ai_position_review" provenance={prov} />
+          </dd>
+        </div>
+        <div>
+          <dt>last exit reason</dt>
+          <dd className="mono">
+            {fmt(intel?.last_exit_reason ?? acct.last_exit_reason)}
+            <ProvenanceFootnote fieldKey="trading_intel.last_exit_reason" provenance={prov} />
+          </dd>
+        </div>
+      </dl>
+
+      <h3 className="sm">Performance</h3>
+      <dl className="nx-founder-metrics">
+        <div>
+          <dt>win rate (long / short / agg)</dt>
+          <dd className="mono">
+            {fmt(perf?.win_rate_long)} / {fmt(perf?.win_rate_short)} / {fmt(perf?.win_rate_aggregate)}
+            <ProvenanceFootnote fieldKey="performance.win_rate_aggregate" provenance={prov} />
+          </dd>
+        </div>
+        <div>
+          <dt>net PnL</dt>
+          <dd className="mono">
+            {fmt(perf?.net_pnl)}
+            <ProvenanceFootnote fieldKey="performance.net_pnl" provenance={prov} />
+          </dd>
+        </div>
+        <div>
+          <dt>profit factor</dt>
+          <dd className="mono">
+            {fmt(perf?.profit_factor)}
+            <ProvenanceFootnote fieldKey="performance.profit_factor" provenance={prov} />
+          </dd>
+        </div>
+      </dl>
+
+      <h3 className="sm">Learning</h3>
+      {learn?.mistake_signatures?.length || learn?.pending_candidate_lessons?.length ? (
+        <dl className="nx-founder-metrics">
+          <div>
+            <dt>mistake signatures</dt>
+            <dd className="mono">
+              <MetricValue value={learn.mistake_signatures} />
+              <ProvenanceFootnote fieldKey="learning.mistake_signatures" provenance={prov} />
+            </dd>
+          </div>
+          <div>
+            <dt>pending candidate lessons</dt>
+            <dd className="mono">
+              <MetricValue value={learn.pending_candidate_lessons} />
+              <ProvenanceFootnote
+                fieldKey="learning.pending_candidate_lessons"
+                provenance={prov}
+              />
+            </dd>
+          </div>
+        </dl>
+      ) : (
+        <p className="muted sm">No mistake signatures or pending candidate lessons in live feed.</p>
+      )}
 
       <h3 className="sm">Accounting</h3>
       <dl className="nx-founder-metrics">

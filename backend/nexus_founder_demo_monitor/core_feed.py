@@ -28,7 +28,7 @@ def build_monitor_from_core_evidence(doc: dict[str, Any]) -> dict[str, Any] | No
     provenance = f"AGENT_B_{directive}"
 
     out: dict[str, Any] = {
-        "schema": "v18_2_27_founder_demo_monitor_from_core_v1",
+        "schema": "v18_2_28_founder_demo_monitor_from_core_v1",
         "source_timestamp": source_ts,
         "generated_at": source_ts,
         "provenance": provenance,
@@ -97,5 +97,31 @@ def build_monitor_from_core_evidence(doc: dict[str, Any]) -> dict[str, Any] | No
     if isinstance(active, dict) and active.get("symbol"):
         out["active_position"] = active
         out["position_state"] = "OPEN"
+
+    fm = doc.get("FOUNDER_MONITOR")
+    if isinstance(fm, dict) and fm:
+        out["FOUNDER_MONITOR"] = fm
+        if fm.get("exit_reason") and "last_lifecycle" not in out:
+            out.setdefault("last_lifecycle", {})["exit_reason"] = fm.get("exit_reason")
+
+    ti = doc.get("TRADING_INTEL")
+    if isinstance(ti, dict) and ti:
+        out["trading_intel"] = ti
+
+    perf = doc.get("PERFORMANCE") or doc.get("RESEARCH_PERFORMANCE")
+    if isinstance(perf, dict) and perf:
+        out["performance"] = perf
+    else:
+        for ck_key in ("CHECKPOINT_30", "CHECKPOINT_25"):
+            ck = doc.get(ck_key)
+            if isinstance(ck, dict):
+                rp = ck.get("RESEARCH PERFORMANCE") or ck.get("RESEARCH_PERFORMANCE")
+                if isinstance(rp, dict) and rp:
+                    out["performance"] = rp
+                    break
+
+    learning = doc.get("LEARNING") or doc.get("LEARNING_MONITOR")
+    if isinstance(learning, dict) and learning:
+        out["learning"] = learning
 
     return out

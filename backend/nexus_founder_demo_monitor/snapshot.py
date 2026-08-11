@@ -1,4 +1,4 @@
-"""Build founder-only demo monitor display payload (V18.2.27)."""
+"""Build founder-only demo monitor display payload (V18.2.28)."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -17,6 +17,14 @@ from backend.nexus_founder_demo_monitor.provenance import (
     parse_source_timestamp,
 )
 from backend.nexus_founder_demo_monitor.sanitize import strip_forbidden_keys
+from backend.nexus_founder_demo_monitor.trading_intel import (
+    empty_learning,
+    empty_performance,
+    empty_trading_intel,
+    map_learning,
+    map_performance,
+    map_trading_intel,
+)
 
 
 def _utc() -> str:
@@ -63,6 +71,8 @@ def _empty_position() -> dict[str, Any]:
         "current": None,
         "stop": None,
         "target": None,
+        "initial_target": None,
+        "dynamic_profit_zone": None,
         "unrealized_pnl": None,
         "expected_net_target": None,
         "expected_time_to_target": None,
@@ -180,6 +190,12 @@ def _map_active_position(raw: dict[str, Any]) -> dict[str, Any]:
             "current": _num(item.get("current") or item.get("mark_price") or item.get("markPrice")),
             "stop": _num(item.get("stop") or item.get("stop_loss") or item.get("sl")),
             "target": _num(item.get("target") or item.get("tp") or item.get("take_profit")),
+            "initial_target": _num(
+                item.get("initial_target") or item.get("target") or item.get("tp")
+            ),
+            "dynamic_profit_zone": item.get("dynamic_profit_zone")
+            if isinstance(item.get("dynamic_profit_zone"), dict)
+            else None,
             "unrealized_pnl": unrealized,
             "expected_net_target": _num(
                 item.get("expected_net_target") or item.get("expected_target_net_pnl")
@@ -315,12 +331,18 @@ def _fail_closed_empty(*, status: str, note: str) -> dict[str, Any]:
         "mfe": None,
         "mae": None,
         "accounting": _empty_accounting(),
+        "trading_intel": empty_trading_intel(),
+        "performance": empty_performance(),
+        "learning": empty_learning(),
         "field_provenance": {},
         "display": {
             "live_position": False,
             "wallet": False,
             "MFE_MAE": False,
             "accounting_visible": False,
+            "trading_intel_visible": False,
+            "performance_visible": False,
+            "learning_visible": False,
         },
         "note": note,
     }
@@ -412,6 +434,15 @@ def build_founder_demo_monitor_snapshot(
     if position["open"] and position.get("estimated_net_if_closed") is None:
         position["estimated_net_if_closed"] = position.get("unrealized_pnl")
 
+    trading_intel = map_trading_intel(
+        raw,
+        position=position,
+        accounting=accounting,
+        position_state=position_state,
+    )
+    performance = map_performance(raw)
+    learning = map_learning(raw)
+
     display = {
         "live_position": bool(position.get("open")),
         "wallet": wallet.get("equity") is not None or wallet.get("wallet_balance") is not None,
@@ -427,6 +458,40 @@ def build_founder_demo_monitor_snapshot(
                 "wallet_reconciliation_status",
             )
         ),
+        "trading_intel_visible": any(
+            trading_intel.get(k) is not None
+            for k in (
+                "side",
+                "entry",
+                "current",
+                "stop_loss",
+                "initial_target",
+                "dynamic_profit_zone",
+                "unrealized_pnl",
+                "estimated_net_if_closed",
+                "mfe_capture_estimate",
+                "remaining_net_edge",
+                "continuation_score",
+                "giveback_risk",
+                "ai_thesis",
+                "last_ai_position_review",
+                "last_exit_reason",
+            )
+        )
+        or mfe is not None
+        or mae is not None,
+        "performance_visible": any(
+            performance.get(k) is not None
+            for k in (
+                "win_rate_long",
+                "win_rate_short",
+                "win_rate_aggregate",
+                "net_pnl",
+                "profit_factor",
+            )
+        ),
+        "learning_visible": bool(learning.get("mistake_signatures"))
+        or bool(learning.get("pending_candidate_lessons")),
     }
 
     feed_ready = status in ("FEED_READY", "FEED_FIXTURE_FALLBACK")
@@ -447,6 +512,29 @@ def build_founder_demo_monitor_snapshot(
         "accounting.exchange_closed_pnl": accounting.get("exchange_closed_pnl"),
         "accounting.fees": accounting.get("fees"),
         "accounting.wallet_delta": accounting.get("wallet_delta"),
+        "trading_intel.side": trading_intel.get("side"),
+        "trading_intel.position_state": trading_intel.get("position_state"),
+        "trading_intel.entry": trading_intel.get("entry"),
+        "trading_intel.current": trading_intel.get("current"),
+        "trading_intel.stop_loss": trading_intel.get("stop_loss"),
+        "trading_intel.initial_target": trading_intel.get("initial_target"),
+        "trading_intel.dynamic_profit_zone": trading_intel.get("dynamic_profit_zone"),
+        "trading_intel.unrealized_pnl": trading_intel.get("unrealized_pnl"),
+        "trading_intel.estimated_net_if_closed": trading_intel.get("estimated_net_if_closed"),
+        "trading_intel.mfe_capture_estimate": trading_intel.get("mfe_capture_estimate"),
+        "trading_intel.remaining_net_edge": trading_intel.get("remaining_net_edge"),
+        "trading_intel.continuation_score": trading_intel.get("continuation_score"),
+        "trading_intel.giveback_risk": trading_intel.get("giveback_risk"),
+        "trading_intel.ai_thesis": trading_intel.get("ai_thesis"),
+        "trading_intel.last_ai_position_review": trading_intel.get("last_ai_position_review"),
+        "trading_intel.last_exit_reason": trading_intel.get("last_exit_reason"),
+        "performance.win_rate_long": performance.get("win_rate_long"),
+        "performance.win_rate_short": performance.get("win_rate_short"),
+        "performance.win_rate_aggregate": performance.get("win_rate_aggregate"),
+        "performance.net_pnl": performance.get("net_pnl"),
+        "performance.profit_factor": performance.get("profit_factor"),
+        "learning.mistake_signatures": learning.get("mistake_signatures"),
+        "learning.pending_candidate_lessons": learning.get("pending_candidate_lessons"),
     }
 
     payload: dict[str, Any] = {
@@ -478,6 +566,9 @@ def build_founder_demo_monitor_snapshot(
         "mfe": mfe,
         "mae": mae,
         "accounting": accounting,
+        "trading_intel": trading_intel,
+        "performance": performance,
+        "learning": learning,
         "field_provenance": build_field_provenance_map(
             source_timestamp=source_timestamp,
             lane=lane_label,
@@ -486,12 +577,12 @@ def build_founder_demo_monitor_snapshot(
         ),
         "display": display,
         "note": (
-            "Founder-only real demo monitor — live Agent B core feed; "
+            "Founder-only real demo monitor — live Agent B core feed with trading intel; "
             "FLAT shown truthfully when no open position; fixture deprioritized."
             if fixture_removed
             else "Founder-only real demo monitor — fixture fallback (no live feed mounted)."
             if fixture_used
-            else "Founder-only real demo monitor — RESEARCH vs CANARY labeled."
+            else "Founder-only real demo monitor — RESEARCH vs CANARY labeled with trading intel."
         ),
     }
     return strip_forbidden_keys(payload)

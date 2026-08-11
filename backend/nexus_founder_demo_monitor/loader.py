@@ -93,6 +93,7 @@ def candidate_feed_paths() -> list[Path]:
         paths.extend(
             [
                 root_path / "founder_demo_monitor_live.json",
+                root_path / "v18_2_28_core.json",
                 root_path / "v18_2_27_core.json",
                 root_path / "v18_2_26_core.json",
             ]

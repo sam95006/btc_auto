@@ -204,7 +204,7 @@ export type FounderFieldProvenance = {
   provenance: string;
 };
 
-/** V18.2.27 Founder-only real demo monitor (members inaccessible). */
+/** V18.2.28 Founder-only real demo monitor (members inaccessible). */
 export type FounderDemoMonitorSnapshot = {
   schema: string;
   ok: boolean;
@@ -247,6 +247,8 @@ export type FounderDemoMonitorSnapshot = {
     current: number | null;
     stop: number | null;
     target: number | null;
+    initial_target?: number | null;
+    dynamic_profit_zone?: Record<string, unknown> | null;
     unrealized_pnl: number | null;
     expected_net_target: number | null;
     expected_time_to_target: string | null;
@@ -258,6 +260,37 @@ export type FounderDemoMonitorSnapshot = {
   };
   mfe: number | null;
   mae: number | null;
+  trading_intel?: {
+    side: string | null;
+    position_state: "FLAT" | "OPEN" | string;
+    entry: number | null;
+    current: number | null;
+    stop_loss: number | null;
+    initial_target: number | null;
+    dynamic_profit_zone: Record<string, unknown> | null;
+    unrealized_pnl: number | null;
+    estimated_net_if_closed: number | null;
+    mfe: number | null;
+    mae: number | null;
+    mfe_capture_estimate: number | null;
+    remaining_net_edge: number | null;
+    continuation_score: number | null;
+    giveback_risk: number | null;
+    ai_thesis: unknown;
+    last_ai_position_review: unknown;
+    last_exit_reason: string | null;
+  };
+  performance?: {
+    win_rate_long: number | null;
+    win_rate_short: number | null;
+    win_rate_aggregate: number | null;
+    net_pnl: number | null;
+    profit_factor: number | null;
+  };
+  learning?: {
+    mistake_signatures: unknown[];
+    pending_candidate_lessons: unknown[];
+  };
   accounting: {
     last_exit_reason: string | null;
     exchange_closed_pnl: number | null;
@@ -273,6 +306,9 @@ export type FounderDemoMonitorSnapshot = {
     wallet: boolean;
     MFE_MAE: boolean;
     accounting_visible: boolean;
+    trading_intel_visible?: boolean;
+    performance_visible?: boolean;
+    learning_visible?: boolean;
   };
   note?: string;
   error?: string;

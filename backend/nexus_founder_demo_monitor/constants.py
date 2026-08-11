@@ -1,12 +1,12 @@
-"""V18.2.27 Founder-only real-demo monitor contract constants."""
+"""V18.2.28 Founder-only real-demo monitor + trading intel contract constants."""
 from __future__ import annotations
 
 import os
 from pathlib import Path
 
-SCHEMA_ID = "NEXUS_FOUNDER_DEMO_MONITOR_V18_2_27"
-LANE = "V18.2.27"
-LANE_NAME = "Founder-only real demo monitor (live core feed)"
+SCHEMA_ID = "NEXUS_FOUNDER_DEMO_MONITOR_V18_2_28"
+LANE = "V18.2.28"
+LANE_NAME = "Founder-only real demo monitor (trading intel / live core feed)"
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _PKG = Path(__file__).resolve().parent
@@ -25,6 +25,7 @@ def _runtime_live_candidates() -> tuple[str, ...]:
         out.extend(
             [
                 str(env_root / "founder_demo_monitor_live.json"),
+                str(env_root / "v18_2_28_core.json"),
                 str(env_root / "v18_2_27_core.json"),
                 str(env_root / "v18_2_26_core.json"),
             ]
@@ -32,6 +33,7 @@ def _runtime_live_candidates() -> tuple[str, ...]:
     out.extend(
         [
             r"D:\NEXUS_RUNTIME\evidence_coordinator\founder_demo_monitor_live.json",
+            r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_28_core.json",
             r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_27_core.json",
             r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_26_core.json",
         ]
@@ -91,6 +93,7 @@ CORE_FEED_READY_NAMES = frozenset(
         "founder_demo_monitor_live.json",
         "v18_2_26_core.json",
         "v18_2_27_core.json",
+        "v18_2_28_core.json",
         "v18_2_25_core.json",
     }
 )
