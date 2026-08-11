@@ -196,7 +196,15 @@ export type FounderStatus = {
   error?: string;
 };
 
-/** V18.2.25 Founder-only real demo monitor (members inaccessible). */
+export type FounderFieldProvenance = {
+  value: unknown;
+  source_timestamp: string | null;
+  freshness_sec: number | null;
+  lane: string | null;
+  provenance: string;
+};
+
+/** V18.2.27 Founder-only real demo monitor (members inaccessible). */
 export type FounderDemoMonitorSnapshot = {
   schema: string;
   ok: boolean;
@@ -211,10 +219,16 @@ export type FounderDemoMonitorSnapshot = {
   feed_status: string;
   feed_source?: string | null;
   feed_source_stale?: string | null;
+  fixture_removed?: boolean;
+  fixture_used?: boolean;
+  position_state?: "FLAT" | "OPEN" | string;
+  source_timestamp?: string | null;
   generatedAt: string;
   actor?: { tier: string; identitySource: string };
   demo_uid_masked: string | null;
   lane_label: "PNL_BEARING_RESEARCH" | "EXECUTION_CANARY" | string | null;
+  thesis?: Record<string, unknown> | null;
+  field_provenance?: Record<string, FounderFieldProvenance>;
   wallet: {
     equity: number | null;
     wallet_balance: number | null;
@@ -225,6 +239,7 @@ export type FounderDemoMonitorSnapshot = {
   };
   active_position: {
     open: boolean;
+    state?: "FLAT" | "OPEN" | string;
     symbol: string | null;
     side: string | null;
     notional: number | null;
@@ -239,6 +254,7 @@ export type FounderDemoMonitorSnapshot = {
     hold_duration: string | null;
     mfe: number | null;
     mae: number | null;
+    estimated_net_if_closed?: number | null;
   };
   mfe: number | null;
   mae: number | null;

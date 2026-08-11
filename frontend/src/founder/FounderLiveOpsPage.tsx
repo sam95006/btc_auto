@@ -126,7 +126,31 @@ function DemoMonitorPanel({
         <span className="tag">
           equity {fmt(wallet.equity)} / Δ {fmt(wallet.delta)}
         </span>
+        {monitor.position_state ? (
+          <span className={`tag tag-${monitor.position_state === "FLAT" ? "warn" : "ok"}`}>
+            {monitor.position_state}
+          </span>
+        ) : null}
+        {monitor.source_timestamp ? (
+          <span className="tag mono sm">as-of {monitor.source_timestamp}</span>
+        ) : null}
+        {monitor.fixture_removed ? <span className="tag tag-ok">live feed</span> : null}
+        {monitor.fixture_used ? <span className="tag tag-warn">fixture fallback</span> : null}
       </div>
+
+      {monitor.thesis ? (
+        <>
+          <h3 className="sm">Thesis / horizon</h3>
+          <dl className="nx-founder-metrics">
+            {Object.entries(monitor.thesis).map(([k, v]) => (
+              <div key={k}>
+                <dt>{k}</dt>
+                <dd className="mono">{fmt(v)}</dd>
+              </div>
+            ))}
+          </dl>
+        </>
+      ) : null}
 
       <h3 className="sm">Active position</h3>
       {pos.open ? (
@@ -179,9 +203,16 @@ function DemoMonitorPanel({
             <dt>hold duration</dt>
             <dd className="mono">{fmt(pos.hold_duration)}</dd>
           </div>
+          <div>
+            <dt>est. net if closed</dt>
+            <dd className="mono">{fmt(pos.estimated_net_if_closed)}</dd>
+          </div>
         </dl>
       ) : (
-        <p className="muted sm">No open position{empty ? " (feed empty)" : " (flat)."}</p>
+        <p className="muted sm">
+          FLAT — no open position
+          {empty ? " (feed empty)" : " (live exchange verified)."}
+        </p>
       )}
 
       <h3 className="sm">MFE / MAE</h3>

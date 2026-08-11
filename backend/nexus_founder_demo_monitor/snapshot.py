@@ -1,4 +1,4 @@
-"""Build founder-only demo monitor display payload (V18.2.25)."""
+"""Build founder-only demo monitor display payload (V18.2.27)."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -12,6 +12,10 @@ from backend.nexus_founder_demo_monitor.constants import (
     SCHEMA_ID,
 )
 from backend.nexus_founder_demo_monitor.loader import load_raw_monitor_feed
+from backend.nexus_founder_demo_monitor.provenance import (
+    build_field_provenance_map,
+    parse_source_timestamp,
+)
 from backend.nexus_founder_demo_monitor.sanitize import strip_forbidden_keys
 
 
@@ -51,6 +55,7 @@ def _str_or_none(v: Any) -> str | None:
 def _empty_position() -> dict[str, Any]:
     return {
         "open": False,
+        "state": "FLAT",
         "symbol": None,
         "side": None,
         "notional": None,
@@ -65,6 +70,7 @@ def _empty_position() -> dict[str, Any]:
         "hold_duration": None,
         "mfe": None,
         "mae": None,
+        "estimated_net_if_closed": None,
     }
 
 
@@ -102,6 +108,32 @@ def _lane_label(raw: dict[str, Any]) -> str:
     return LANE_LABEL_RESEARCH
 
 
+def _position_state(raw: dict[str, Any], position: dict[str, Any]) -> str:
+    explicit = _str_or_none(raw.get("position_state"))
+    if explicit:
+        return explicit.upper()
+    return "OPEN" if position.get("open") else "FLAT"
+
+
+def _map_thesis(raw: dict[str, Any]) -> dict[str, Any] | None:
+    thesis = raw.get("thesis")
+    if isinstance(thesis, dict) and thesis:
+        return dict(thesis)
+    plan = raw.get("horizon_plan") or raw.get("plan")
+    if isinstance(plan, dict) and plan:
+        return {
+            "strategy_family": plan.get("strategy_family"),
+            "entry_horizon": plan.get("entry_horizon"),
+            "regime": plan.get("regime"),
+            "expected_target_move_pct": plan.get("expected_target_move_pct"),
+            "stop_move_pct": plan.get("stop_move_pct"),
+            "expected_time_to_target": plan.get("expected_time_to_target"),
+            "hard_max_hold": plan.get("hard_max_hold"),
+            "provenance": plan.get("provenance"),
+        }
+    return None
+
+
 def _map_active_position(raw: dict[str, Any]) -> dict[str, Any]:
     pos = _empty_position()
     candidates = raw.get("active_position") or raw.get("current_real_position") or raw.get(
@@ -116,12 +148,12 @@ def _map_active_position(raw: dict[str, Any]) -> dict[str, Any]:
             item = first
 
     if not item:
-        # Some feeds nest open fields at top level.
         if raw.get("symbol") and (raw.get("entry") or raw.get("entry_price")) and not raw.get(
             "exit"
         ):
             item = raw
         else:
+            pos["state"] = _position_state(raw, pos)
             return pos
 
     qty = _num(item.get("qty") or item.get("size") or item.get("position_qty"))
@@ -130,9 +162,17 @@ def _map_active_position(raw: dict[str, Any]) -> dict[str, Any]:
     if notional is None and qty is not None and entry is not None:
         notional = abs(qty * entry)
 
+    unrealized = _num(item.get("unrealized_pnl") or item.get("unrealisedPnl") or item.get("upnl"))
+    est_net = _num(
+        item.get("estimated_net_if_closed")
+        or raw.get("estimated_net_if_closed")
+        or unrealized
+    )
+
     pos.update(
         {
             "open": True,
+            "state": "OPEN",
             "symbol": _str_or_none(item.get("symbol")),
             "side": _str_or_none(item.get("side")),
             "notional": notional,
@@ -140,9 +180,7 @@ def _map_active_position(raw: dict[str, Any]) -> dict[str, Any]:
             "current": _num(item.get("current") or item.get("mark_price") or item.get("markPrice")),
             "stop": _num(item.get("stop") or item.get("stop_loss") or item.get("sl")),
             "target": _num(item.get("target") or item.get("tp") or item.get("take_profit")),
-            "unrealized_pnl": _num(
-                item.get("unrealized_pnl") or item.get("unrealisedPnl") or item.get("upnl")
-            ),
+            "unrealized_pnl": unrealized,
             "expected_net_target": _num(
                 item.get("expected_net_target") or item.get("expected_target_net_pnl")
             ),
@@ -150,13 +188,14 @@ def _map_active_position(raw: dict[str, Any]) -> dict[str, Any]:
                 item.get("expected_time_to_target") or item.get("eta_to_target")
             ),
             "strategy_horizon": _str_or_none(
-                item.get("strategy_horizon") or item.get("horizon")
+                item.get("strategy_horizon") or item.get("horizon") or raw.get("strategy_horizon")
             ),
             "hold_duration": _str_or_none(
                 item.get("hold_duration") or item.get("hold_sec") or item.get("hold_seconds")
             ),
             "mfe": _num(item.get("mfe") or item.get("MFE")),
             "mae": _num(item.get("mae") or item.get("MAE")),
+            "estimated_net_if_closed": est_net,
         }
     )
     return pos
@@ -187,9 +226,8 @@ def _map_accounting(raw: dict[str, Any]) -> dict[str, Any]:
     )
     fees = _num(life.get("fees") or last_wallet.get("fees"))
     wallet_delta = _num(life.get("wallet_delta") or last_wallet.get("delta"))
-    calculated_net = _num(life.get("calculated_net"))
-    if calculated_net is None and realized is not None and fees is not None:
-        # Prefer exchange realized; if realized already net of fees, keep as-is.
+    calculated_net = _num(life.get("calculated_net") or life.get("calculated_net_pnl"))
+    if calculated_net is None and realized is not None:
         calculated_net = realized
 
     acct.update(
@@ -216,8 +254,6 @@ def _map_accounting(raw: dict[str, Any]) -> dict[str, Any]:
             ),
         }
     )
-
-    # Enrich MFE/MAE from last lifecycle when flat.
     return acct
 
 
@@ -260,6 +296,9 @@ def _fail_closed_empty(*, status: str, note: str) -> dict[str, Any]:
         "feed_ready": False,
         "feed_status": status,
         "feed_source": None,
+        "fixture_removed": False,
+        "fixture_used": False,
+        "position_state": "FLAT",
         "generatedAt": _utc(),
         "demo_uid_masked": None,
         "lane_label": None,
@@ -272,9 +311,11 @@ def _fail_closed_empty(*, status: str, note: str) -> dict[str, Any]:
             "demo_account_type": None,
         },
         "active_position": _empty_position(),
+        "thesis": None,
         "mfe": None,
         "mae": None,
         "accounting": _empty_accounting(),
+        "field_provenance": {},
         "display": {
             "live_position": False,
             "wallet": False,
@@ -290,11 +331,13 @@ def build_founder_demo_monitor_snapshot(
     actor_tier: str,
     identity_source: str,
 ) -> dict[str, Any]:
-    raw, source, status = load_raw_monitor_feed()
+    raw, source, status, fixture_used = load_raw_monitor_feed()
 
-    # Directive: if Agent B campaign core feed not ready, fail-closed empty honestly.
-    # FEED_STALE_CORE (v23/v24) is treated as not-ready for live campaign display.
-    if raw is None or status in ("FEED_UNAVAILABLE", "FEED_UNPARSEABLE", "FEED_STALE_CORE"):
+    if raw is None or status in (
+        "FEED_UNAVAILABLE",
+        "FEED_UNPARSEABLE",
+        "FEED_STALE_CORE",
+    ):
         note = {
             "FEED_UNAVAILABLE": (
                 "Founder demo-monitor feed unavailable — Agent B campaign core/monitor "
@@ -304,23 +347,29 @@ def build_founder_demo_monitor_snapshot(
                 "Founder demo-monitor feed unparseable — fail-closed empty state."
             ),
             "FEED_STALE_CORE": (
-                "Agent B v18.2.25 core/monitor campaign feed not ready "
+                "Agent B core/monitor campaign feed not ready "
                 f"(stale source={source}). Fail-closed empty state; contract wired."
             ),
-        }.get(
-            status,
-            "Founder demo-monitor fail-closed empty state.",
-        )
+        }.get(status, "Founder demo-monitor fail-closed empty state.")
         payload = _fail_closed_empty(status=status, note=note)
         payload["actor"] = {"tier": actor_tier, "identitySource": identity_source}
         if source:
             payload["feed_source_stale"] = source
         return payload
 
-    # FEED_READY — map honestly from Agent B payload.
     wallet = _map_wallet(raw)
     position = _map_active_position(raw)
     accounting = _map_accounting(raw)
+    thesis = _map_thesis(raw)
+    position_state = _position_state(raw, position)
+    if not position["open"]:
+        position["state"] = "FLAT"
+
+    source_timestamp = parse_source_timestamp(raw) or _utc()
+    lane_label = _lane_label(raw)
+    provenance = _str_or_none(raw.get("provenance")) or _str_or_none(raw.get("_source_kind")) or (
+        "AGENT_B_LIVE_FEED"
+    )
 
     mfe = position.get("mfe")
     mae = position.get("mae")
@@ -338,14 +387,15 @@ def build_founder_demo_monitor_snapshot(
             accounting["last_exit_reason"] = _str_or_none(
                 life.get("exit_reason") or life.get("exit_reason_from_lifecycle")
             )
-        # When flat, surface last-lifecycle hold / horizon on accounting side only.
         if not position["open"]:
             if position.get("hold_duration") is None:
                 position["hold_duration"] = _str_or_none(
                     life.get("hold_duration") or life.get("hold_sec")
                 )
             if position.get("strategy_horizon") is None:
-                position["strategy_horizon"] = _str_or_none(life.get("strategy_horizon"))
+                position["strategy_horizon"] = _str_or_none(
+                    life.get("strategy_horizon") or raw.get("strategy_horizon")
+                )
             if position.get("expected_net_target") is None:
                 position["expected_net_target"] = _num(
                     life.get("expected_net_target") or life.get("expected_target_net_pnl")
@@ -354,9 +404,13 @@ def build_founder_demo_monitor_snapshot(
                 position["expected_time_to_target"] = _str_or_none(
                     life.get("expected_time_to_target")
                 )
+            if position.get("estimated_net_if_closed") is None:
+                position["estimated_net_if_closed"] = _num(
+                    raw.get("estimated_net_if_closed") or life.get("calculated_net")
+                )
 
-    uid = _str_or_none(raw.get("demo_uid") or raw.get("account_uid") or raw.get("uid"))
-    lane_label = _lane_label(raw)
+    if position["open"] and position.get("estimated_net_if_closed") is None:
+        position["estimated_net_if_closed"] = position.get("unrealized_pnl")
 
     display = {
         "live_position": bool(position.get("open")),
@@ -375,6 +429,26 @@ def build_founder_demo_monitor_snapshot(
         ),
     }
 
+    feed_ready = status in ("FEED_READY", "FEED_FIXTURE_FALLBACK")
+    fixture_removed = feed_ready and not fixture_used
+
+    field_values = {
+        "wallet.equity": wallet.get("equity"),
+        "wallet.wallet_balance": wallet.get("wallet_balance"),
+        "wallet.delta": wallet.get("delta"),
+        "position.state": position_state,
+        "position.unrealized_pnl": position.get("unrealized_pnl"),
+        "position.estimated_net_if_closed": position.get("estimated_net_if_closed"),
+        "position.strategy_horizon": position.get("strategy_horizon"),
+        "mfe": mfe,
+        "mae": mae,
+        "thesis": thesis,
+        "accounting.last_realized_trade": accounting.get("calculated_net"),
+        "accounting.exchange_closed_pnl": accounting.get("exchange_closed_pnl"),
+        "accounting.fees": accounting.get("fees"),
+        "accounting.wallet_delta": accounting.get("wallet_delta"),
+    }
+
     payload: dict[str, Any] = {
         "schema": SCHEMA_ID,
         "ok": True,
@@ -385,22 +459,39 @@ def build_founder_demo_monitor_snapshot(
         "mainnet": False,
         "real_money": False,
         "member_execution": 0,
-        "feed_ready": True,
+        "feed_ready": feed_ready,
         "feed_status": status,
         "feed_source": source,
+        "fixture_removed": fixture_removed,
+        "fixture_used": fixture_used,
+        "position_state": position_state,
+        "source_timestamp": source_timestamp,
         "generatedAt": _utc(),
         "actor": {"tier": actor_tier, "identitySource": identity_source},
-        "demo_uid_masked": mask_demo_uid(uid),
+        "demo_uid_masked": mask_demo_uid(
+            _str_or_none(raw.get("demo_uid") or raw.get("account_uid") or raw.get("uid"))
+        ),
         "lane_label": lane_label,
         "wallet": wallet,
         "active_position": position,
+        "thesis": thesis,
         "mfe": mfe,
         "mae": mae,
         "accounting": accounting,
+        "field_provenance": build_field_provenance_map(
+            source_timestamp=source_timestamp,
+            lane=lane_label,
+            provenance=provenance or "AGENT_B_LIVE_FEED",
+            fields=field_values,
+        ),
         "display": display,
         "note": (
-            "Founder-only real demo monitor — RESEARCH vs CANARY labeled; "
-            "members inaccessible; no fabricated accounting."
+            "Founder-only real demo monitor — live Agent B core feed; "
+            "FLAT shown truthfully when no open position; fixture deprioritized."
+            if fixture_removed
+            else "Founder-only real demo monitor — fixture fallback (no live feed mounted)."
+            if fixture_used
+            else "Founder-only real demo monitor — RESEARCH vs CANARY labeled."
         ),
     }
     return strip_forbidden_keys(payload)
