@@ -31,6 +31,10 @@ from backend.founder_operator.snapshot import (
     assert_no_forbidden_keys,
     build_founder_operator_snapshot,
 )
+from backend.nexus_founder_demo_monitor import (
+    assert_no_forbidden_keys as assert_demo_monitor_no_forbidden_keys,
+    build_founder_demo_monitor_snapshot,
+)
 from backend.nexus_pub18_founder_live_ops.constants import LIVE_OPS_PANEL_IDS
 from backend.nexus_pub18_founder_live_ops.controls import apply_control
 from backend.nexus_pub18_founder_live_ops.panels import (
@@ -272,6 +276,40 @@ def founder_diagnostics_research_authorize():
     resp.headers["X-Nexus-Founder-Only"] = "1"
     resp.headers["X-Nexus-Member-Accessible"] = "0"
     return resp, code
+
+
+@founder_private_bp.route("/api/nexus/founder/demo-monitor")
+def founder_demo_monitor():
+    """V18.2.25 Founder-only real demo monitor — Founder/Admin auth required.
+
+    Members fail-closed (403). Consumes Agent B core/monitor feed when ready;
+    otherwise returns an honest empty contract (no fabricated values).
+    """
+    actor, denied = _authorize_founder("founder.demo_monitor.read")
+    if denied is not None:
+        return denied
+
+    payload = build_founder_demo_monitor_snapshot(
+        actor_tier=actor.tier.value,
+        identity_source=actor.identity_source,
+    )
+    leaks = assert_demo_monitor_no_forbidden_keys(payload)
+    if leaks:
+        audit_event(
+            "founder.demo_monitor.read",
+            "founder_demo_monitor",
+            permission="founder.production_control",
+            result="DENIED",
+            reason=f"forbidden_payload_keys:{','.join(leaks[:8])}",
+        )
+        return _deny("demo_monitor_payload_sanitizer_blocked", 500)
+
+    resp = jsonify(payload)
+    resp.headers["Cache-Control"] = "no-store"
+    resp.headers["X-Nexus-Founder-Only"] = "1"
+    resp.headers["X-Nexus-Member-Accessible"] = "0"
+    resp.headers["X-Nexus-Demo-Monitor"] = "1"
+    return resp, 200
 
 
 @founder_private_bp.route("/api/nexus/founder/live-ops")

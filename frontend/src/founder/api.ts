@@ -1,4 +1,5 @@
 import type {
+  FounderDemoMonitorSnapshot,
   FounderDiagnosticsSnapshot,
   FounderLiveOpsControlResult,
   FounderLiveOpsSnapshot,
@@ -80,6 +81,34 @@ export async function fetchFounderLiveOps(): Promise<
     return body;
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "network_error" };
+  }
+}
+
+/** V18.2.25 Founder-only demo monitor — never invents PnL; empty when feed not ready. */
+export async function fetchFounderDemoMonitor(): Promise<
+  FounderDemoMonitorSnapshot | { ok: false; error: string; memberAccessible?: boolean }
+> {
+  try {
+    const res = await fetch("/api/nexus/founder/demo-monitor", {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    const body = (await res.json()) as FounderDemoMonitorSnapshot & { error?: string };
+    if (!res.ok) {
+      return {
+        ok: false,
+        error: body.error || `http_${res.status}`,
+        memberAccessible: false,
+      };
+    }
+    return body;
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "network_error",
+      memberAccessible: false,
+    };
   }
 }
 

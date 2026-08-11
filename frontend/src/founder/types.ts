@@ -196,6 +196,72 @@ export type FounderStatus = {
   error?: string;
 };
 
+/** V18.2.25 Founder-only real demo monitor (members inaccessible). */
+export type FounderDemoMonitorSnapshot = {
+  schema: string;
+  ok: boolean;
+  lane?: string;
+  laneName?: string;
+  founderOnly: boolean;
+  memberAccessible: boolean;
+  mainnet?: boolean;
+  real_money?: boolean;
+  member_execution?: number;
+  feed_ready: boolean;
+  feed_status: string;
+  feed_source?: string | null;
+  feed_source_stale?: string | null;
+  generatedAt: string;
+  actor?: { tier: string; identitySource: string };
+  demo_uid_masked: string | null;
+  lane_label: "PNL_BEARING_RESEARCH" | "EXECUTION_CANARY" | string | null;
+  wallet: {
+    equity: number | null;
+    wallet_balance: number | null;
+    available_balance: number | null;
+    delta: number | null;
+    settle_coin: string | null;
+    demo_account_type: string | null;
+  };
+  active_position: {
+    open: boolean;
+    symbol: string | null;
+    side: string | null;
+    notional: number | null;
+    entry: number | null;
+    current: number | null;
+    stop: number | null;
+    target: number | null;
+    unrealized_pnl: number | null;
+    expected_net_target: number | null;
+    expected_time_to_target: string | null;
+    strategy_horizon: string | null;
+    hold_duration: string | null;
+    mfe: number | null;
+    mae: number | null;
+  };
+  mfe: number | null;
+  mae: number | null;
+  accounting: {
+    last_exit_reason: string | null;
+    exchange_closed_pnl: number | null;
+    fees: number | null;
+    calculated_net: number | null;
+    wallet_delta: number | null;
+    wallet_reconciliation_status: string | null;
+    process_class?: string | null;
+    pnl_provenance?: string | null;
+  };
+  display: {
+    live_position: boolean;
+    wallet: boolean;
+    MFE_MAE: boolean;
+    accounting_visible: boolean;
+  };
+  note?: string;
+  error?: string;
+};
+
 export const FOUNDER_OPERATOR_NAV: { id: FounderPanelId; label: string; hash: string }[] = [
   { id: "capture", label: "Capture", hash: "#capture" },
   { id: "provider", label: "V2.3", hash: "#provider" },

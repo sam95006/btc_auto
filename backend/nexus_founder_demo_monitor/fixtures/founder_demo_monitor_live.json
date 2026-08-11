@@ -1,0 +1,27 @@
+{
+  "schema": "v18_2_26_founder_only_demo_monitor_v1",
+  "account_uid": "567649663",
+  "equity": "5022.70751813",
+  "wallet_balance": "5027.43833761",
+  "available_balance": "5027.43833761",
+  "settle_coin": "USDT",
+  "demo_account_type": "UNIFIED",
+  "lane_label": "PNL_BEARING_RESEARCH",
+  "current_real_position": [],
+  "mfe": null,
+  "mae": null,
+  "last_lifecycle": {
+    "symbol": "BTCUSDT",
+    "side": "LONG",
+    "entry": "64016.9",
+    "exit": "64016.9",
+    "qty": "0.001",
+    "realized_pnl": "-0.34309373",
+    "fees": "0.35259373",
+    "wallet_delta": "-0.34309373",
+    "wallet_recon_status": "WALLET_RECONCILIATION_PASS",
+    "exit_reason": "reduce_only_or_max_hold",
+    "process_class": "GOOD_PROCESS_LOSS",
+    "pnl_provenance": "EXCHANGE_REALIZED_PNL"
+  }
+}
