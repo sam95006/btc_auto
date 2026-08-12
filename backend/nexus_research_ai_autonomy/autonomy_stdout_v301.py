@@ -116,16 +116,17 @@ def log_error(
     error_class: str,
     service_status: str,
     next_retry: str | None,
+    error_detail: str | None = None,
 ) -> None:
-    _emit(
-        "ERROR",
-        {
-            "cycle": cycle,
-            "error_class": error_class,
-            "service_status": service_status,
-            "next_retry": next_retry,
-        },
-    )
+    fields = {
+        "cycle": cycle,
+        "error_class": error_class,
+        "service_status": service_status,
+        "next_retry": next_retry,
+    }
+    if error_detail:
+        fields["error_detail"] = error_detail
+    _emit("ERROR", fields)
 
 
 def log_order(
@@ -357,11 +358,17 @@ def observe_completed_tick(
             or result.get("reason")
             or "DEGRADED"
         )
+        error_detail = None
+        if isinstance(result, dict):
+            error_detail = result.get("detail") or result.get("import_error_detail")
+            if not error_detail and result.get("import_error_class"):
+                error_detail = f"{result.get('import_error_class')}"
         log_error(
             cycle=cycle_n,
             error_class=error_class,
             service_status=status,
             next_retry=next_cycle,
+            error_detail=error_detail,
         )
 
     if isinstance(result, dict) and result.get("executed"):

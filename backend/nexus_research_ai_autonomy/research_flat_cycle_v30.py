@@ -89,10 +89,7 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
         }
 
     try:
-        import tools.research.activity_metric_v2.run_v18_2_29_core as v29
-        import tools.research.activity_metric_v2.run_v18_2_27_core as v27
-        import tools.research.activity_metric_v2.run_v18_2_23_core as v23
-        import tools.research.activity_metric_v2.run_v18_2_22_core as v22
+        from backend.nexus_research_ai_autonomy import v30_production_cycle as prod
         from backend.nexus_demo_execution.demo_write_client import DemoWriteClient
         from backend.nexus_research_ai_autonomy.bybit_demo_real_transport import load_demo_env
         from backend.nexus_research_ai_autonomy.cloud_paths_v301 import resolve_demo_env_path
@@ -106,19 +103,21 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
             "market_scan_complete": False,
             "reason": "V29_IMPORT_FAILED",
             "detail": f"{type(exc).__name__}:{exc}"[:300],
+            "import_error_class": type(exc).__name__,
+            "import_error_detail": str(exc)[:300],
             "top_rejection_reasons": ["V29_IMPORT_FAILED"],
             "no_gate_lowering": True,
         }
 
     try:
         load_demo_env(resolve_demo_env_path())
-        account = v23.resolve_demo_account()
-        symbols, _ = v22.resolve_tracking()
-        symbols = symbols[: v27.TRACKING_CAP]
+        account = prod.resolve_demo_account()
+        symbols, _ = prod.resolve_tracking_symbols()
+        symbols = symbols[: prod.TRACKING_CAP]
         client = DemoWriteClient()
         equity = float(account.get("equity") or account.get("wallet_balance") or 5000.0)
-        market_pack = v29.scan_full_market_directional(client=client, symbols=symbols, equity=equity)
-        pnl = v29.run_research_demo_loop(account=account, market_pack=market_pack)
+        market_pack = prod.scan_full_market_directional(client=client, symbols=symbols, equity=equity)
+        pnl = prod.run_research_demo_loop(account=account, market_pack=market_pack)
 
         wait = bool(pnl.get("WAIT") or not pnl.get("executed"))
         cand_n = _candidate_count(market_pack if isinstance(market_pack, dict) else {})
