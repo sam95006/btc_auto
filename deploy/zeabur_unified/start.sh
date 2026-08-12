@@ -2,6 +2,10 @@
 # NEXUS V18.2.30.1 Unified Zeabur Runtime
 # Supervises: Gunicorn (Web) + ResearchAutonomyService (24/7 Demo)
 # One container / one /data / one trading engine.
+#
+# Process-scoped EXCHANGE_WRITE:
+#   - Autonomy child may receive EXCHANGE_WRITE=true (Demo only)
+#   - Web/Gunicorn always receives EXCHANGE_WRITE=false (public auth hard-ban safe)
 set -eu
 
 PORT="${PORT:-8080}"
@@ -29,9 +33,26 @@ export NEXUS_WEB_ONLY="${NEXUS_WEB_ONLY:-true}"
 export NEXUS_EMBEDDED_WORKER="${NEXUS_EMBEDDED_WORKER:-false}"
 export NEXUS_LEGACY_WORKER_DISABLED="${NEXUS_LEGACY_WORKER_DISABLED:-true}"
 export NEXUS_AUTONOMOUS_DEMO_AUTO_SEND="${NEXUS_AUTONOMOUS_DEMO_AUTO_SEND:-false}"
-export MAINNET="${MAINNET:-false}"
-export REAL_MONEY="${REAL_MONEY:-false}"
-export EXCHANGE_WRITE="${EXCHANGE_WRITE:-true}"
+export NEXUS_MEMBER_EXECUTION="${NEXUS_MEMBER_EXECUTION:-false}"
+export NEXUS_PRODUCTION_BILLING="${NEXUS_PRODUCTION_BILLING:-false}"
+# Legacy bounded-demo auto-trader flag — must stay false; V30 ResearchAutonomyService is authoritative
+export DEMO_AUTONOMOUS_ENABLED="${DEMO_AUTONOMOUS_ENABLED:-false}"
+export MAINNET=false
+export REAL_MONEY=false
+
+# Resolve autonomy write permission from supervisor input (do NOT leave true on global export)
+_RAW_AUTO_WRITE="${NEXUS_AUTONOMY_EXCHANGE_WRITE:-}"
+if [ -z "${_RAW_AUTO_WRITE}" ]; then
+  # Backward-compat: if Founder still set global EXCHANGE_WRITE=true in Zeabur, use it for autonomy only
+  _RAW_AUTO_WRITE="${EXCHANGE_WRITE:-true}"
+fi
+case "$(printf '%s' "${_RAW_AUTO_WRITE}" | tr '[:upper:]' '[:lower:]')" in
+  1|true|yes|on) AUTO_EXCHANGE_WRITE=true ;;
+  *) AUTO_EXCHANGE_WRITE=false ;;
+esac
+
+# CRITICAL: supervisor + Web default is write-disabled. Autonomy gets an override below.
+export EXCHANGE_WRITE=false
 
 cleanup() {
   if [ "$SHUTTING_DOWN" -eq 1 ]; then
@@ -73,14 +94,26 @@ cleanup() {
 
 trap cleanup INT TERM
 
+log "env_isolation auto_exchange_write=${AUTO_EXCHANGE_WRITE} web_exchange_write=false mainnet=false real_money=false"
 log "starting ResearchAutonomyService campaign_root=${CAMPAIGN_ROOT}"
+# Process-scoped: Demo write only for autonomy child
+EXCHANGE_WRITE="${AUTO_EXCHANGE_WRITE}" \
+MAINNET=false \
+REAL_MONEY=false \
 python -m backend.nexus_research_ai_autonomy.research_autonomy_service \
   --run \
   --campaign-root "${CAMPAIGN_ROOT}" \
   --cycle-sleep-sec "${CYCLE_SLEEP}" &
 AUTO_PID=$!
 
-log "starting Gunicorn PORT=${PORT}"
+log "starting Gunicorn PORT=${PORT} (EXCHANGE_WRITE=false)"
+# Process-scoped: Web never inherits execution-enabled state
+EXCHANGE_WRITE=false \
+MAINNET=false \
+REAL_MONEY=false \
+NEXUS_MEMBER_EXECUTION=false \
+NEXUS_PRODUCTION_BILLING=false \
+DEMO_AUTONOMOUS_ENABLED=false \
 gunicorn -c gunicorn.conf.py "app:app" &
 WEB_PID=$!
 
@@ -99,6 +132,7 @@ payload = {
   "autonomy_process_alive": True,
   "active_trade_engine": "ResearchAutonomyService",
   "legacy_worker_disabled": True,
+  "web_exchange_write": os.environ.get("EXCHANGE_WRITE", "false"),
   "exchange_domain": "api-demo.bybit.com",
 }
 (root / "unified_runtime_health.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -141,6 +175,7 @@ payload = {
   "overall": "RUNNING",
   "active_trade_engine": "ResearchAutonomyService",
   "legacy_worker_disabled": True,
+  "web_exchange_write": os.environ.get("EXCHANGE_WRITE", "false"),
   "exchange_domain": "api-demo.bybit.com",
   "last_autonomy_heartbeat": hb.get("last_heartbeat_at"),
   "last_cycle": hb.get("last_cycle_completed") or hb.get("last_cycle_started"),

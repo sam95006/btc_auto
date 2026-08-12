@@ -29,8 +29,19 @@ def main() -> int:
         py_compile.compile(str(f), doraise=True)
 
     assert (ROOT / "deploy/zeabur_unified/start.sh").is_file()
+    start = (ROOT / "deploy/zeabur_unified/start.sh").read_text(encoding="utf-8")
+    assert "NEXUS_AUTONOMY_EXCHANGE_WRITE" in start
+    assert "export EXCHANGE_WRITE=false" in start
+    assert "EXCHANGE_WRITE=\"${AUTO_EXCHANGE_WRITE}\"" in start
+    assert "gunicorn -c gunicorn.conf.py" in start
+    # Web child must force write false
+    assert "EXCHANGE_WRITE=false" in start
+    assert "NEXUS_MEMBER_EXECUTION=false" in start
     df = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     assert "deploy/zeabur_unified/start.sh" in df
+    assert "NEXUS_AUTONOMY_EXCHANGE_WRITE=true" in df
+    # Dockerfile must not bake global EXCHANGE_WRITE=true (Web hard-ban)
+    assert "EXCHANGE_WRITE=false" in df
     assert "gunicorn" not in df.split("CMD", 1)[-1].lower() or "start.sh" in df
 
     # ZEABUR feed candidates must not include D:\
