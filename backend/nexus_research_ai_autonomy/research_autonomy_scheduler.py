@@ -349,11 +349,17 @@ class ResearchAutonomyScheduler:
                 self._roll_24h_windows()
                 self._set_next_due()
                 self.save_state()
+                reconcile_public = (
+                    {k: v for k, v in recon.items() if k != "manager"}
+                    if isinstance(recon, dict)
+                    else None
+                )
                 return {
                     "ok": True if status != "DEGRADED" else False,
                     "service_status": status,
                     "duration_sec": duration,
                     "result": result,
+                    "reconcile": reconcile_public,
                     "health": self.health.to_dict(),
                 }
             except Exception as exc:  # noqa: BLE001

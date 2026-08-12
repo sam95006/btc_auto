@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from backend.nexus_research_ai_autonomy.ai_provider_health_v301 import AIProviderHealthRegistry
+from backend.nexus_research_ai_autonomy.autonomy_stdout_v301 import log_boot, observe_completed_tick
 from backend.nexus_research_ai_autonomy.boot_health_v301 import run_boot_health
 from backend.nexus_research_ai_autonomy.cloud_paths_v301 import (
     campaign_root as resolve_campaign_root,
@@ -145,6 +146,17 @@ class ResearchAutonomyService:
                 probe_ai=True,
             )
             _write_json(self.config.campaign_root / "autonomy" / "boot_health.json", self._boot)
+            exchange = (
+                (self._boot.get("exchange") or {}).get("domain")
+                or (self._boot.get("safety") or {}).get("demo_domain")
+                or "api-demo.bybit.com"
+            )
+            log_boot(
+                runtime=self.runtime_location,
+                boot_ready=bool(self._boot.get("BOOT_READY")),
+                exchange=str(exchange),
+                worker_id=self.worker_instance_id,
+            )
             if not self._boot.get("BOOT_READY"):
                 self.scheduler.health.service_status = "DEGRADED"
                 self.scheduler.health.degraded_reason = ",".join(self._boot.get("blockers") or ["BOOT_FAILED"])
@@ -159,6 +171,13 @@ class ResearchAutonomyService:
                     "worker_instance_id": self.worker_instance_id,
                     "runtime_location": self.runtime_location,
                 }
+        else:
+            log_boot(
+                runtime=self.runtime_location,
+                boot_ready=True,
+                exchange="api-demo.bybit.com",
+                worker_id=self.worker_instance_id,
+            )
 
         self.scheduler.start()
         recovery = self.scheduler.restart_recovery()
@@ -196,6 +215,7 @@ class ResearchAutonomyService:
             self._cycles_1h.append(now)
             self._persist_service_heartbeat(cycles=cycles, last=last, ai_agg=ai_agg)
             self._persist_founder_feed(last=last, ai_agg=ai_agg)
+            observe_completed_tick(cycle_n=cycles, last=last, health=self.scheduler.health)
 
             sleep_sec = float(self.config.cycle_sleep_sec)
             if last.get("service_status") == "MANAGING_POSITION":
