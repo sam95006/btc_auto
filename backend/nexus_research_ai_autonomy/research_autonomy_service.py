@@ -33,6 +33,7 @@ from backend.nexus_research_ai_autonomy.research_autonomy_scheduler import (
 )
 from backend.nexus_research_ai_autonomy.research_cycle_v30 import build_cycle_bindings
 from backend.nexus_research_ai_autonomy.research_flat_cycle_v30 import run_v29_opportunity_cycle
+from backend.nexus_research_ai_autonomy.trade_manage_v30 import make_manage_tick_fn
 from backend.runtime.single_instance_guard import SingleInstanceError, SingleInstanceGuard
 
 SCHEMA = "v18_2_30_1_research_autonomy_service_v1"
@@ -72,6 +73,7 @@ def _default_bindings(*, campaign_root: Path, dry: bool = False) -> dict[str, An
         demo_client=demo_client,
         dry=dry,
         flat_cycle_fn=run_v29_opportunity_cycle,
+        manage_tick_fn=make_manage_tick_fn(campaign_root),
     )
 
 

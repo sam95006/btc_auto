@@ -33,8 +33,13 @@ from backend.nexus_research_ai_autonomy.lifecycle_purpose import (
     LIFECYCLE_PURPOSE_RESEARCH_PNL_TRADE,
     audit_entry_exit_proximity,
 )
-from backend.nexus_research_ai_autonomy.position_manager import PositionManager
+from backend.nexus_research_ai_autonomy.position_lifecycle_manager import (
+    POSITION_STILL_OPEN_MANAGED,
+    PersistentPositionLifecycleManager,
+)
 from backend.nexus_research_ai_autonomy.risk_based_sizing import compute_risk_based_size
+from backend.nexus_research_ai_autonomy.trade_completion_v30 import build_setup_signature
+from backend.nexus_research_ai_autonomy.trade_manage_v30 import entry_context_path, save_entry_context
 
 STOP_PCT = 0.40
 TARGET_PCT = 0.55
@@ -319,269 +324,79 @@ def run_research_pnl_trade_v30(
     # local stop mirrors plan (may be trail-updated).
     decision["stop_logic"]["price"] = float(order.get("protective_stop") or plan.stop_price)
     decision["take_profit_logic"]["price"] = float(order.get("take_profit") or plan.target_price)
-    pm = PositionManager()
+
+    try:
+        from backend.nexus_research_ai_autonomy.cloud_paths_v301 import campaign_root
+
+        ckpt_root = campaign_root()
+    except Exception:  # noqa: BLE001
+        ckpt_root = None
+    ckpt = (
+        ckpt_root / "autonomy" / "research_pnl_position.json"
+        if ckpt_root is not None
+        else None
+    )
+    pm = PersistentPositionLifecycleManager(checkpoint_path=ckpt)
     pos = pm.open_from_execution(decision=decision, fill_price=entry_px, qty=qty)
-
     opened_mono = time.time()
-    exit_reason = "STRATEGY_HORIZON_EXPIRED"
-    exit_px = entry_px
-    management_ticks: list[dict[str, Any]] = []
-    position_zero = False
-    poll_sec = 5.0
-
-    while True:
-        elapsed = time.time() - opened_mono
-        try:
-            positions = client.list_positions(symbol)
-        except DemoWriteError:
-            positions = []
-        if not positions:
-            position_zero = True
-            exit_reason = "TAKE_PROFIT"  # exchange SL/TP likely; refined from closedPnl later
-            try:
-                t2 = client.public_get("/v5/market/tickers", {"category": "linear", "symbol": symbol})
-                r2 = (t2.get("result") or {}).get("list") or []
-                exit_px = _float((r2[0] if r2 else {}).get("lastPrice") or entry_px) or entry_px
-            except Exception:  # noqa: BLE001
-                exit_px = entry_px
-            if pos.path_tracker:
-                pos.path_tracker.update(exit_px, now_ms=int(time.time() * 1000))
-            break
-
-        try:
-            t2 = client.public_get("/v5/market/tickers", {"category": "linear", "symbol": symbol})
-            r2 = (t2.get("result") or {}).get("list") or []
-            last = _float((r2[0] if r2 else {}).get("lastPrice") or entry_px) or entry_px
-        except Exception:  # noqa: BLE001
-            last = entry_px
-
-        mres = pm.manage_cycle(
-            pos.position_id,
-            market={"last_price": last, "price": last, "liquidity": 0.95},
-            regime=REGIME,
-            ai_proposal="HOLD",
-        )
-        management_ticks.append(
+    entry_ts = int(order.get("fill_ts") or time.time() * 1000)
+    setup_signature = build_setup_signature(
+        symbol=symbol,
+        side=side.upper(),
+        strategy_family=STRATEGY_FAMILY,
+        regime=REGIME,
+    )
+    pm.save_checkpoint(pos, bybit_order_id=str(oid))
+    if ckpt_root is not None:
+        save_entry_context(
+            entry_context_path(ckpt_root),
             {
-                "elapsed_sec": round(elapsed, 2),
-                "last": last,
-                "action": mres.get("action"),
-                "reason": mres.get("reason"),
-            }
+                "bybit_order_id": str(oid),
+                "entry_ts": entry_ts,
+                "opened_mono": opened_mono,
+                "hard_max": hard_max,
+                "wallet_before": wallet_before,
+                "decision": decision,
+                "order": order,
+                "horizon_plan": plan.to_dict(),
+                "horizon_feasibility": horiz.to_dict(),
+                "economic_entry_filter": econ.to_dict(),
+                "sizing": sizing.to_dict(),
+                "vol_h": vol_h,
+                "setup_signature": setup_signature,
+                "momentum_at_entry": None,
+                "symbol": symbol,
+                "side": side.upper(),
+            },
         )
-        if mres.get("action") == "EXIT":
-            exit_reason = str(mres.get("reason") or "managed_exit")
-            exit_px = last
-            try:
-                p0 = positions[0]
-                transport.reduce_only_close(symbol, str(p0.get("side") or "Buy"), str(p0.get("size") or qty))
-                time.sleep(0.5)
-                position_zero = len(client.list_positions(symbol)) == 0
-            except Exception as exc:  # noqa: BLE001
-                management_ticks.append({"close_error": type(exc).__name__})
-            break
-
-        if elapsed >= hard_max:
-            exit_reason = "STRATEGY_HORIZON_EXPIRED"
-            exit_px = last
-            try:
-                p0 = positions[0]
-                transport.reduce_only_close(symbol, str(p0.get("side") or "Buy"), str(p0.get("size") or qty))
-                time.sleep(0.6)
-                position_zero = len(client.list_positions(symbol)) == 0
-            except Exception as exc:  # noqa: BLE001
-                management_ticks.append({"close_error": type(exc).__name__})
-            break
-
-        time.sleep(poll_sec)
-
-    hold_sec = time.time() - opened_mono
-    fill = close = None
-    wallet_after = None
-    for _ in range(10):
-        time.sleep(1.2)
-        try:
-            if not client.list_positions(symbol):
-                position_zero = True
-        except DemoWriteError:
-            pass
-        fill, close = _settle_accounting(
-            client=client, symbol=symbol, oid=str(oid), entry_ts=int(order.get("fill_ts") or time.time() * 1000)
-        )
-        wallet_after = client.fetch_wallet_snapshot()
-        if position_zero and (fill is not None or close is not None):
-            break
-    if wallet_after is None:
-        wallet_after = client.fetch_wallet_snapshot()
-
-    if fill and fill.get("execPrice"):
-        entry_px = float(fill["execPrice"])
-    if close and close.get("avgExitPrice"):
-        try:
-            exit_px = float(close["avgExitPrice"])
-        except (TypeError, ValueError):
-            pass
-
-    # Refine exit reason from exchange close vs local path
-    if close:
-        try:
-            avg_exit = float(close.get("avgExitPrice") or exit_px)
-            stop_p = float(decision["stop_logic"]["price"])
-            tp_p = float(decision["take_profit_logic"]["price"])
-            if abs(avg_exit - tp_p) / tp_p < 0.0005 or avg_exit >= tp_p:
-                exit_reason = "TAKE_PROFIT"
-            elif abs(avg_exit - stop_p) / stop_p < 0.0005 or avg_exit <= stop_p:
-                if exit_reason not in {"TRAILING_STOP", "STOP_LOSS"}:
-                    exit_reason = "STOP_LOSS"
-        except (TypeError, ValueError, ZeroDivisionError):
-            pass
-
-    pnl_pct = ((exit_px - entry_px) / entry_px * 100.0) if entry_px else 0.0
-    exchange_closed_v = None
-    if close and close.get("closedPnl") is not None:
-        try:
-            exchange_closed_v = float(close["closedPnl"])
-            notional = entry_px * qty
-            if notional > 0:
-                pnl_pct = exchange_closed_v / notional * 100.0
-        except (TypeError, ValueError):
-            exchange_closed_v = None
-
-    pe = _process_evidence(compliant=True, pnl_pct=pnl_pct, purpose=LIFECYCLE_PURPOSE_RESEARCH_PNL_TRADE)
-    process_pnl = exchange_closed_v if exchange_closed_v is not None else pnl_pct
-    process_class = classify_completed_trade(pnl=process_pnl, process_evidence=pe)
-    if process_class == "UNDETERMINED":
-        process_class = "GOOD_PROCESS_LOSS" if process_pnl < 0 else "GOOD_PROCESS_WIN"
-
-    path_snap = pos.path_tracker.to_dict() if pos.path_tracker else {}
-    realized_usdt = float(exchange_closed_v) if exchange_closed_v is not None else (
-        pnl_pct / 100.0 * entry_px * qty
-    )
-    exit_q = classify_exit_quality(
-        exit_reason=exit_reason,
-        realized_usdt=realized_usdt,
-        mfe_usdt=float(path_snap.get("mfe_usdt") or 0.0),
-        mae_usdt=float(path_snap.get("mae_usdt") or 0.0),
-        target_touched=bool(path_snap.get("target_touched")),
-        stop_touched=bool(path_snap.get("stop_touched")),
-        hold_sec=hold_sec,
-        hard_max_hold=hard_max,
-        expected_target_move_pct=TARGET_PCT,
-        expected_path_range_pct=plan.expected_path_range_pct,
-        stop_move_pct=STOP_PCT,
-    )
-
-    proximity = audit_entry_exit_proximity(
-        entry_price=entry_px,
-        exit_price=exit_px,
-        hold_sec=hold_sec,
-        exit_reason=exit_reason,
-        lifecycle_purpose=LIFECYCLE_PURPOSE_RESEARCH_PNL_TRADE,
-        stop_pct=STOP_PCT,
-        auto_close_immediate=False,
-        max_hold_sec=hard_max,
-    )
-
-    econ_out = annotate_actual_fees(
-        econ.to_dict(),
-        open_fee=(close or {}).get("openFee") or (fill or {}).get("execFee"),
-        close_fee=(close or {}).get("closeFee") or (fill or {}).get("close_execFee"),
-        fee_currency="USDT",
-    )
-
-    life = {
-        "decision_id": decision["decision_id"],
-        "symbol": symbol,
-        "side": "LONG",
-        "pnl_pct": pnl_pct,
-        "exit_reason": exit_reason,
-        "entry_price": entry_px,
-        "exit_price": exit_px,
-        "qty": str(order.get("qty") or sizing.qty_str),
-        "notional_usdt": float(order.get("qty") or sizing.qty) * entry_px,
-        "hold_sec": hold_sec,
-        "lifecycle_purpose": LIFECYCLE_PURPOSE_RESEARCH_PNL_TRADE,
-        "execution_purpose": EXECUTION_PURPOSE_REAL,
-        "transport_mode": order.get("transport_mode"),
-        "transport_tag": "REAL" if order.get("real_http_request") else "LOCAL_SIMULATION",
-        "bybit_orderId": oid,
-        "bybit_executionId": order.get("bybit_executionId") or order.get("execution_id"),
-        "position_zero": position_zero,
-        "reduce_only_close": True,
-        "process_class": process_class,
-        "process_evidence": pe,
-        "strategy_family": STRATEGY_FAMILY,
-        "regime": REGIME,
-        "stop_distance_pct": STOP_PCT,
-        "target_distance_pct": TARGET_PCT,
-        "trail_pct": TRAIL_PCT,
-        "prepared_decision_horizon": {
-            k: decision.get(k)
-            for k in (
-                "strategy_family",
-                "entry_horizon",
-                "expected_target_move_pct",
-                "stop_move_pct",
-                "target_price",
-                "stop_price",
-                "expected_time_to_target",
-                "expected_time_to_stop",
-                "recommended_hold_window",
-                "hard_max_hold",
-                "horizon_provenance",
-                "horizon_feasibility_pass",
-                "economic_edge_pass",
-            )
-        },
-        "horizon_plan": plan.to_dict(),
-        "horizon_feasibility": horiz.to_dict(),
-        "ECONOMIC_EDGE_PASS": True,
-        "HORIZON_FEASIBILITY_PASS": True,
-        "path_excursion": path_snap,
-        "exit_quality": exit_q,
-        "economic_entry_filter": econ_out,
-        "risk_sizing": sizing.to_dict(),
-        "entry_exit_proximity_audit": proximity,
-        "management_ticks_n": len(management_ticks),
-        "management_ticks_sample": management_ticks[:8],
-        "leverage": 1,
-        "vol_pct_per_hour": vol_h,
-    }
-    accounted = build_lifecycle_accounting_record(
-        lifecycle=life,
-        account_identity=identity,
-        wallet_before=wallet_before,
-        wallet_after=wallet_after,
-        exchange_fill=fill,
-        exchange_close=close,
-        historical=False,
-    )
-    wr = accounted.get("wallet_reconciliation") or {}
-    if accounted.get("accounting_status") == "ACCOUNTING_COMPLETE" and not wr.get(
-        "WALLET_RECONCILIATION_PASS"
-    ):
-        accounted["accounting_status"] = "PENDING_WALLET_AFTER"
-        accounted["ACCOUNTING_COMPLETE"] = False
 
     return {
         "executed": True,
         "WAIT": False,
-        "lifecycle": accounted,
+        "closed": False,
+        "position_closed": False,
+        "POSITION_STILL_OPEN_MANAGED": True,
+        "position_open": True,
+        "lifecycle_purpose": LIFECYCLE_PURPOSE_RESEARCH_PNL_TRADE,
+        "symbol": symbol,
+        "side": side.upper(),
+        "entry_price": entry_px,
+        "bybit_orderId": oid,
+        "setup_signature": setup_signature,
         "sizing": sizing.to_dict(),
-        "economic_entry_filter": econ_out,
+        "economic_entry_filter": econ.to_dict(),
         "horizon_feasibility": horiz.to_dict(),
         "horizon_plan": plan.to_dict(),
         "ECONOMIC_EDGE_PASS": True,
         "HORIZON_FEASIBILITY_PASS": True,
-        "path_excursion": path_snap,
-        "exit_quality": exit_q,
-        "entry_exit_proximity_audit": proximity,
-        "hold_sec": hold_sec,
-        "notional_usdt": life["notional_usdt"],
-        "preferred_success_shape": "HORIZON_PASS_MEANINGFUL_HOLD",
+        "notional_usdt": float(qty) * entry_px,
+        "preferred_success_shape": "POSITION_OPEN_MANAGED_ACROSS_CYCLES",
         "order_latency": {
             "network_roundtrip_ms": ((order.get("monotonic") or {}).get("network_roundtrip_ms")),
             "bybit_orderId": oid,
         },
+        "ai_used_for_entry": False,
+        "ai_required_for_entry": False,
+        "entry_path": "deterministic_v30_scan",
     }
 

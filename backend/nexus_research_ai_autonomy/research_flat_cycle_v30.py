@@ -128,6 +128,7 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
         # Deterministic V30 path: AI pipeline considered ready when not required,
         # or when probes show working.
         cycle_ai_ready = (not ai_required) or ai_working
+        ai_used = bool(pnl.get("ai_used_for_entry")) if isinstance(pnl, dict) else False
         return {
             "ok": True,
             "WAIT": wait,
@@ -135,12 +136,15 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
             "reason": pnl.get("reason") or pnl.get("block_code"),
             "position_open": bool(pnl.get("POSITION_STILL_OPEN_MANAGED") or pnl.get("position_open")),
             "POSITION_STILL_OPEN_MANAGED": bool(pnl.get("POSITION_STILL_OPEN_MANAGED")),
+            "closed": bool(pnl.get("closed")),
             "lifecycle": pnl.get("lifecycle"),
             "market_opportunity": market_pack,
             "market_scan_complete": True,
             "cycle_ai_ready": cycle_ai_ready,
             "ai_state": ai_state if ai_agg else ("AI_READY" if cycle_ai_ready else "AI_NOT_CONFIGURED"),
             "ai_failed": False,
+            "ai_used_for_current_entry": ai_used,
+            "ai_required_for_entry": bool(ai_required or pnl.get("ai_required_for_entry")),
             "candidate_count": cand_n,
             "top_rejection_reasons": reasons,
             "fallback_used": False,

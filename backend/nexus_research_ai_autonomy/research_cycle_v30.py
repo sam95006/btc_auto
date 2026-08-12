@@ -101,6 +101,7 @@ def run_manage_ticks(ctx: dict[str, Any]) -> dict[str, Any]:
     ticks: list[dict[str, Any]] = []
     closed = False
     last_action = "HOLD"
+    last_tick: dict[str, Any] = {}
     for i in range(max_ticks):
         tick_fn = ctx.get("manage_tick_fn")
         if callable(tick_fn):
@@ -113,6 +114,7 @@ def run_manage_ticks(ctx: dict[str, Any]) -> dict[str, Any]:
                 "POSITION_STILL_OPEN_MANAGED": True,
             }
         ticks.append(tick)
+        last_tick = tick
         last_action = str(tick.get("adaptive_action") or tick.get("action") or "HOLD")
         if tick.get("closed"):
             closed = True
@@ -120,7 +122,7 @@ def run_manage_ticks(ctx: dict[str, Any]) -> dict[str, Any]:
         if i + 1 < max_ticks and poll > 0 and not ctx.get("dry"):
             time.sleep(min(poll, 2.0) if ctx.get("fast_poll") else poll)
 
-    return {
+    out: dict[str, Any] = {
         "ok": True,
         "closed": closed,
         "action": last_action,
@@ -129,6 +131,26 @@ def run_manage_ticks(ctx: dict[str, Any]) -> dict[str, Any]:
         "POSITION_STILL_OPEN_MANAGED": (not closed),
         "adaptive_live_evaluation": True,
     }
+    if closed and last_tick:
+        for key in (
+            "lifecycle",
+            "position_closed",
+            "ACCOUNTING_COMPLETE",
+            "wallet_reconciliation",
+            "exit_reason",
+            "hold_sec",
+            "net_realized",
+            "MFE",
+            "MAE",
+            "exit_quality",
+            "process_class",
+            "Reflection_created",
+            "mistake_signature",
+            "CandidateLesson_created",
+        ):
+            if key in last_tick:
+                out[key] = last_tick[key]
+    return out
 
 
 def run_flat_opportunity_cycle(ctx: dict[str, Any]) -> dict[str, Any]:

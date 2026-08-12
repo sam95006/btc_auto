@@ -267,6 +267,70 @@ def run_research_demo_loop(*, account: dict[str, Any], market_pack: dict[str, An
     sym = selection.get("selected_symbol")
     side = selection.get("selected_side") or "LONG"
     preflight = selection.get("preflight") or {}
+
+    # Same-setup re-entry guard (production integrity only — does not lower any gates).
+    try:
+        from backend.nexus_research_ai_autonomy.cloud_paths_v301 import campaign_root
+        from backend.nexus_research_ai_autonomy.same_setup_reentry_guard import (
+            closure_path,
+            evaluate_same_setup_reentry,
+        )
+        from backend.nexus_research_ai_autonomy.trade_completion_v30 import build_setup_signature
+
+        load_demo_env(resolve_demo_env_path())
+        gate_client = DemoWriteClient()
+
+        # entry price evidence (exchange quote); if unavailable keep it None (still evidence-safe).
+        entry_px = float(preflight.get("entry_price") or 0)
+        if entry_px <= 0:
+            try:
+                tr = gate_client.public_get(
+                    "/v5/market/tickers", {"category": "linear", "symbol": sym}
+                )
+                rows = (tr.get("result") or {}).get("list") or []
+                entry_px = _float((rows[0] if rows else {}).get("lastPrice") or 0) or 0.0
+            except Exception:  # noqa: BLE001
+                entry_px = 0.0
+
+        croot = campaign_root()
+        setup_sig = build_setup_signature(symbol=str(sym), side=str(side))
+        reentry = evaluate_same_setup_reentry(
+            symbol=str(sym),
+            side=str(side),
+            setup_signature=setup_sig,
+            closure_path=closure_path(croot),
+            current_price=entry_px if entry_px > 0 else None,
+            current_regime="TREND_UP",
+            current_momentum=None,
+        )
+        if not reentry.get("pass"):
+            return {
+                "executed": False,
+                "WAIT": True,
+                "reason": reentry.get("reason") or "SAME_SETUP_REENTRY_BLOCKED",
+                "same_setup_reentry_guard": reentry,
+                "market_opportunity": market_pack,
+                "ai_used_for_entry": False,
+                "ai_required_for_entry": str(
+                    os.environ.get("NEXUS_AUTONOMY_REQUIRE_AI_ENTRY", "false")
+                ).lower()
+                in {"1", "true", "yes"},
+            }
+    except Exception:  # noqa: BLE001
+        # Fail-closed for safety: if guard can't run, don't manufacture new trades.
+        return {
+            "executed": False,
+            "WAIT": True,
+            "reason": "REENTRY_GUARD_UNAVAILABLE",
+            "same_setup_reentry_guard": {"pass": False, "error": "guard_exception"},
+            "market_opportunity": market_pack,
+            "ai_used_for_entry": False,
+            "ai_required_for_entry": str(
+                os.environ.get("NEXUS_AUTONOMY_REQUIRE_AI_ENTRY", "false")
+            ).lower()
+            in {"1", "true", "yes"},
+        }
+
     from backend.nexus_research_ai_autonomy.research_pnl_trade_v30 import run_research_pnl_trade_v30
 
     pnl = run_research_pnl_trade_v30(
@@ -278,6 +342,7 @@ def run_research_demo_loop(*, account: dict[str, Any], market_pack: dict[str, An
     )
     pnl["two_sided_selection"] = market_pack
     pnl["exchange_preflight"] = preflight
+    pnl["same_setup_reentry_guard"] = {"pass": True}
     return pnl
 
 
