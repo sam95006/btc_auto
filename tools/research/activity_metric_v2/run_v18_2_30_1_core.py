@@ -33,8 +33,9 @@ from backend.nexus_research_ai_autonomy.research_autonomy_service import Researc
 
 OUT = Path(r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_30_1_core.json")
 LIVE_FEED = Path(r"D:\NEXUS_RUNTIME\evidence_coordinator\founder_demo_monitor_live.json")
-DOCKERFILE = ROOT / "Dockerfile.autonomy"
-README = ROOT / "deploy" / "zeabur_autonomy_worker" / "README.md"
+DOCKERFILE = ROOT / "Dockerfile"
+START_SH = ROOT / "deploy" / "zeabur_unified" / "start.sh"
+README = ROOT / "deploy" / "zeabur_unified" / "ENV_MANIFEST.md"
 
 
 def _utc() -> str:
@@ -47,11 +48,14 @@ def _write_json(path: Path, obj: Any) -> None:
 
 
 def main() -> int:
-    assert DOCKERFILE.is_file(), "Dockerfile.autonomy missing"
+    assert DOCKERFILE.is_file(), "unified Dockerfile missing"
+    assert START_SH.is_file(), "deploy/zeabur_unified/start.sh missing"
     df = DOCKERFILE.read_text(encoding="utf-8")
     assert "research_autonomy_service" in df
     assert "--campaign-root" in df or "/data/campaigns/research_v18_2_30" in df
-    assert "CMD" in df and "gunicorn" not in df.split("CMD", 1)[-1].lower()
+    assert "deploy/zeabur_unified/start.sh" in df
+    start = START_SH.read_text(encoding="utf-8")
+    assert "research_autonomy_service" in start or "ResearchAutonomyService" in start
 
     with tempfile.TemporaryDirectory(prefix="nexus_v301_") as td:
         root = Path(td)
@@ -236,12 +240,13 @@ def main() -> int:
             "ai_required_for_v30_entry": ai_agg.get("ai_required_for_v30_entry"),
             "note": (
                 "V30 entry cycle is deterministic unless NEXUS_AUTONOMY_REQUIRE_AI_ENTRY=true. "
-                "Primary gap until Zeabur worker is live: SERVICE_NOT_RUNNING."
+                "Primary gap until unified Zeabur service on main is live: SERVICE_NOT_RUNNING."
             ),
             "requires_founder": (
-                "Create Zeabur service nexus-autonomy-worker from Dockerfile.autonomy; "
-                "mount volume /data; set BYBIT_DEMO_* secrets; EXCHANGE_WRITE=true; MAINNET=false; "
-                "REAL_MONEY=false; replicas=1; confirm heartbeat advances across cycles."
+                "Rebind nexus-member-preview-v18-2-1 to repo sam95006/btc_auto branch main, "
+                "root Dockerfile (unified Web+Autonomy); mount volume /data; set BYBIT_DEMO_* secrets; "
+                "EXCHANGE_WRITE=true; MAINNET=false; REAL_MONEY=false; replicas=1; "
+                "confirm heartbeat advances across cycles."
             ),
         },
     }

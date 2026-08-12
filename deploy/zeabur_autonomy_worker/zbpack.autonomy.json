@@ -1,7 +1,0 @@
-{
-  "python": {
-    "version": "3.11"
-  },
-  "dockerfile": "Dockerfile.autonomy",
-  "start_command": "python -m backend.nexus_research_ai_autonomy.research_autonomy_service --run --campaign-root /data/campaigns/research_v18_2_30 --cycle-sleep-sec 120"
-}

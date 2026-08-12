@@ -126,10 +126,12 @@ def test_ai_registry_classifies_quota(tmp_path: Path) -> None:
     assert agg["quota_exhausted"] is True
 
 
-def test_dockerfile_autonomy_exists() -> None:
+def test_unified_dockerfile_exists() -> None:
     root = Path(__file__).resolve().parents[2]
-    assert (root / "Dockerfile.autonomy").is_file()
-    text = (root / "Dockerfile.autonomy").read_text(encoding="utf-8")
+    assert (root / "Dockerfile").is_file()
+    text = (root / "Dockerfile").read_text(encoding="utf-8")
     assert "research_autonomy_service" in text
-    assert "gunicorn" not in text.lower() or "Do NOT start Gunicorn" in text
+    assert "deploy/zeabur_unified/start.sh" in text
     assert "/data/campaigns/research_v18_2_30" in text
+    start = (root / "deploy" / "zeabur_unified" / "start.sh").read_text(encoding="utf-8")
+    assert "ResearchAutonomyService" in start or "research_autonomy_service" in start
