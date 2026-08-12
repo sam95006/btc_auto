@@ -119,18 +119,30 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
         market_pack = prod.scan_full_market_directional(client=client, symbols=symbols, equity=equity)
 
         signal_quality = None
+        shadow_outcomes = None
+        counterfactual = None
         try:
             from backend.nexus_research_ai_autonomy.cloud_paths_v301 import campaign_root
+            from backend.nexus_research_ai_autonomy.counterfactual_strategy_v1 import (
+                run_counterfactual_research,
+            )
+            from backend.nexus_research_ai_autonomy.shadow_path_outcomes_v1 import (
+                refresh_mature_shadow_outcomes,
+            )
             from backend.nexus_research_ai_autonomy.signal_quality_cycle_v1 import (
                 run_signal_quality_shadow_cycle,
             )
 
+            croot = campaign_root()
             signal_quality = run_signal_quality_shadow_cycle(
                 client=client,
                 market_pack=market_pack,
                 equity=equity,
-                campaign_root_path=campaign_root(),
+                campaign_root_path=croot,
             )
+            # Evaluate mature horizons only (no future peek before horizon elapses)
+            shadow_outcomes = refresh_mature_shadow_outcomes(client, campaign_root=croot)
+            counterfactual = run_counterfactual_research(campaign_root=croot)
         except Exception as sq_exc:  # noqa: BLE001
             signal_quality = {"ok": False, "error": type(sq_exc).__name__, "detail": str(sq_exc)[:200]}
 
@@ -170,6 +182,8 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
             "no_gate_lowering": True,
             "no_manufactured_trades": True,
             "signal_quality_shadow": signal_quality,
+            "shadow_outcomes": shadow_outcomes,
+            "counterfactual_research": counterfactual,
             "raw": {
                 k: pnl.get(k)
                 for k in (

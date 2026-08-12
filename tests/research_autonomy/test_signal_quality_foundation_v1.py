@@ -195,3 +195,86 @@ def test_wait_remains_valid_action() -> None:
     e["spread_bps"] = 50.0
     edge = compute_expected_net_edge(enrichment=e, side="LONG")
     assert edge["expected_net_edge"] < edge["estimated_round_trip_fee"]
+
+
+def test_shadow_path_mfe_mae_fixed_entry() -> None:
+    from backend.nexus_research_ai_autonomy.shadow_path_outcomes_v1 import evaluate_path_mfe_mae
+
+    entry = 100.0
+    # Path goes up then down — entry fixed at 100
+    path = [
+        (1_000, 100.2),
+        (2_000, 100.6),  # +0.6% MFE
+        (3_000, 99.5),   # -0.5%
+    ]
+    out = evaluate_path_mfe_mae(
+        entry_price=entry,
+        direction="LONG",
+        path=path,
+        stop_pct=0.40,
+        target_pct=0.55,
+        notional=350.0,
+    )
+    assert out["MFE"] is not None and out["MFE"] > 0
+    assert out["MAE"] is not None and out["MAE"] < 0
+    assert out["post_cost_hypothetical"] is not None
+    # Cost must be subtracted
+    assert out["estimated_cost"] > 0
+    assert out["post_cost_hypothetical"] == pytest.approx(
+        out["gross_hypothetical"] - out["estimated_cost"], rel=1e-6
+    )
+
+
+def test_shadow_target_before_stop_detectable() -> None:
+    from backend.nexus_research_ai_autonomy.shadow_path_outcomes_v1 import evaluate_path_mfe_mae
+
+    path = [(1, 100.0), (2, 100.6)]  # +0.6% hits 0.55 target
+    out = evaluate_path_mfe_mae(
+        entry_price=100.0,
+        direction="LONG",
+        path=path,
+        stop_pct=0.40,
+        target_pct=0.55,
+        notional=350.0,
+    )
+    assert out["target_before_stop"] is True
+    assert out["stop_before_target"] is False
+
+
+def test_counterfactual_does_not_auto_promote(tmp_path: Path) -> None:
+    from backend.nexus_research_ai_autonomy.counterfactual_strategy_v1 import run_counterfactual_research
+
+    path = [(1, 100.0), (2, 100.3), (3, 99.7), (4, 100.8)]
+    records = [
+        {"entry_price": 100.0, "direction": "LONG", "path": path, "notional": 350.0},
+        {"entry_price": 100.0, "direction": "LONG", "path": path, "notional": 350.0},
+    ]
+    report = run_counterfactual_research(campaign_root=tmp_path, path_records=records)
+    assert report["auto_promotion"] is False
+    assert report["live_stop_pct_unchanged"] is True
+    assert report["ready_for_demo_reenable"] is False
+    assert all(c.get("auto_promoted") is False for c in report["research_configs"])
+    # All configs evaluated on same paths
+    assert len(report["research_configs"]) >= 3
+    for c in report["research_configs"]:
+        assert c["stats"]["sample_count"] == 2
+
+
+def test_immature_horizon_not_evaluated(tmp_path: Path) -> None:
+    """Horizons that have not elapsed must not fabricate outcomes."""
+    from backend.nexus_research_ai_autonomy.shadow_path_outcomes_v1 import evaluate_signal_horizons
+
+    class _NoClient:
+        def public_get(self, *_a, **_k):  # pragma: no cover
+            raise AssertionError("should not fetch before horizon matures")
+
+    now = int(time.time() * 1000)
+    sig = {
+        "signal_id": "sig_test",
+        "symbol": "APRUSDT",
+        "direction": "LONG",
+        "entry_price": 1.0,
+        "detected_at_ms": now,  # just created — no horizon mature
+    }
+    rows = evaluate_signal_horizons(_NoClient(), signal=sig, campaign_root=tmp_path, horizons=(60, 180))
+    assert rows == []
