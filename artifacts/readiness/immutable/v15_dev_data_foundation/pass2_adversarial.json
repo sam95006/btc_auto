@@ -1,0 +1,350 @@
+{
+  "checks": [
+    {
+      "check": "oos_reserved_load_blocked",
+      "evidence": {
+        "blocked": true,
+        "ok": false,
+        "partition_category": "OOS_RESERVED",
+        "status": "OOS_OR_CONSUMED_LOAD_BLOCKED"
+      },
+      "ok": true
+    },
+    {
+      "check": "oos_untouched_load_blocked",
+      "evidence": {
+        "blocked": true,
+        "ok": false,
+        "partition_category": "OOS_UNTOUCHED",
+        "status": "OOS_OR_CONSUMED_LOAD_BLOCKED"
+      },
+      "ok": true
+    },
+    {
+      "check": "invented_history_blocked",
+      "evidence": {
+        "claimed_available": true,
+        "ok": false,
+        "source_present": false,
+        "status": "INVENTED_HISTORY_BLOCKED"
+      },
+      "ok": true
+    },
+    {
+      "check": "invented_history_status",
+      "evidence": {
+        "claimed_available": true,
+        "ok": false,
+        "source_present": false,
+        "status": "INVENTED_HISTORY_BLOCKED"
+      },
+      "ok": true
+    },
+    {
+      "check": "today_for_past_blocked",
+      "evidence": {
+        "as_of_ms": 1717200000000,
+        "ok": false,
+        "snapshot_availability_ms": 1740787200000,
+        "status": "TODAY_OR_FUTURE_SNAPSHOT_FOR_PAST"
+      },
+      "ok": true
+    },
+    {
+      "check": "no_dev_oos_overlap",
+      "evidence": {
+        "ok": true,
+        "oos_consumed": false,
+        "violations": []
+      },
+      "ok": true
+    },
+    {
+      "check": "oos_excluded_from_dev_load",
+      "evidence": {
+        "development_loadable_count": 9,
+        "oos_consumed": false,
+        "oos_excluded": true,
+        "oos_leaked_ids": [],
+        "schema": "v15_a_oos_exclusion_proof"
+      },
+      "ok": true
+    },
+    {
+      "check": "record_hash_integrity",
+      "evidence": {
+        "failure_count": 0,
+        "failures": []
+      },
+      "ok": true
+    },
+    {
+      "check": "checksum_tamper_detection",
+      "evidence": {
+        "original": "a52ecdcfc58cc5b4ab8252fa66061766a3774642ba0db5b979d5e5614a31bcac",
+        "tampered": "7066e9c6c62cc378555e0df559e7352e905c18061f196688a57ae74d3e8d34be"
+      },
+      "ok": true
+    },
+    {
+      "check": "no_human_facing_v15_status_json",
+      "evidence": {
+        "banned_files": []
+      },
+      "ok": true
+    },
+    {
+      "check": "consumed_holdout_excluded",
+      "evidence": {
+        "consumed_catalog_count": 1,
+        "leaked": []
+      },
+      "ok": true
+    },
+    {
+      "check": "hard_ban_flags_clean",
+      "evidence": {
+        "violations": []
+      },
+      "ok": true
+    },
+    {
+      "check": "no_fabricated_edge_claim",
+      "evidence": {
+        "hits": []
+      },
+      "ok": true
+    },
+    {
+      "check": "oos_record_build_requires_catalog_flag",
+      "evidence": {},
+      "ok": true
+    }
+  ],
+  "critical_finding_count": 0,
+  "critical_findings": [],
+  "deterministic_replay": true,
+  "high_finding_count": 0,
+  "high_findings": [],
+  "pass_number": 2,
+  "passed": true,
+  "schema": "v15_a_pass2_adversarial",
+  "sweep_a": {
+    "check_pass_count": 14,
+    "check_total_count": 14,
+    "checks": [
+      {
+        "check": "oos_reserved_load_blocked",
+        "evidence": {
+          "blocked": true,
+          "ok": false,
+          "partition_category": "OOS_RESERVED",
+          "status": "OOS_OR_CONSUMED_LOAD_BLOCKED"
+        },
+        "ok": true
+      },
+      {
+        "check": "oos_untouched_load_blocked",
+        "evidence": {
+          "blocked": true,
+          "ok": false,
+          "partition_category": "OOS_UNTOUCHED",
+          "status": "OOS_OR_CONSUMED_LOAD_BLOCKED"
+        },
+        "ok": true
+      },
+      {
+        "check": "invented_history_blocked",
+        "evidence": {
+          "claimed_available": true,
+          "ok": false,
+          "source_present": false,
+          "status": "INVENTED_HISTORY_BLOCKED"
+        },
+        "ok": true
+      },
+      {
+        "check": "invented_history_status",
+        "evidence": {
+          "claimed_available": true,
+          "ok": false,
+          "source_present": false,
+          "status": "INVENTED_HISTORY_BLOCKED"
+        },
+        "ok": true
+      },
+      {
+        "check": "today_for_past_blocked",
+        "evidence": {
+          "as_of_ms": 1717200000000,
+          "ok": false,
+          "snapshot_availability_ms": 1740787200000,
+          "status": "TODAY_OR_FUTURE_SNAPSHOT_FOR_PAST"
+        },
+        "ok": true
+      },
+      {
+        "check": "no_dev_oos_overlap",
+        "evidence": {
+          "ok": true,
+          "oos_consumed": false,
+          "violations": []
+        },
+        "ok": true
+      },
+      {
+        "check": "oos_excluded_from_dev_load",
+        "evidence": {
+          "development_loadable_count": 9,
+          "oos_consumed": false,
+          "oos_excluded": true,
+          "oos_leaked_ids": [],
+          "schema": "v15_a_oos_exclusion_proof"
+        },
+        "ok": true
+      },
+      {
+        "check": "record_hash_integrity",
+        "evidence": {
+          "failure_count": 0,
+          "failures": []
+        },
+        "ok": true
+      },
+      {
+        "check": "checksum_tamper_detection",
+        "evidence": {
+          "original": "a52ecdcfc58cc5b4ab8252fa66061766a3774642ba0db5b979d5e5614a31bcac",
+          "tampered": "7066e9c6c62cc378555e0df559e7352e905c18061f196688a57ae74d3e8d34be"
+        },
+        "ok": true
+      },
+      {
+        "check": "no_human_facing_v15_status_json",
+        "evidence": {
+          "banned_files": []
+        },
+        "ok": true
+      },
+      {
+        "check": "consumed_holdout_excluded",
+        "evidence": {
+          "consumed_catalog_count": 1,
+          "leaked": []
+        },
+        "ok": true
+      },
+      {
+        "check": "hard_ban_flags_clean",
+        "evidence": {
+          "violations": []
+        },
+        "ok": true
+      },
+      {
+        "check": "no_fabricated_edge_claim",
+        "evidence": {
+          "hits": []
+        },
+        "ok": true
+      },
+      {
+        "check": "oos_record_build_requires_catalog_flag",
+        "evidence": {},
+        "ok": true
+      }
+    ],
+    "critical_finding_count": 0,
+    "critical_findings": [],
+    "findings": [],
+    "high_finding_count": 0,
+    "high_findings": [],
+    "partitions": {
+      "categories": [
+        "DEVELOPMENT",
+        "VALIDATION_PLANNING",
+        "OOS_RESERVED",
+        "OOS_UNTOUCHED"
+      ],
+      "forbidden_consumed_intervals": [
+        {
+          "category": "CONSUMED_FORBIDDEN",
+          "consumable_for_development": false,
+          "end_ms": 1736415000000,
+          "end_utc": "2025-01-09T09:30:00Z",
+          "interval_id": "H3_CONSUMED_FAILED_HOLDOUT",
+          "notes": "Prior consumed failed holdout - immutable, never reuse as qualification",
+          "oos_consumable": false,
+          "start_ms": 1720863000000,
+          "start_utc": "2024-07-13T09:30:00Z"
+        }
+      ],
+      "formal_walk_forward": false,
+      "oos_consumed": false,
+      "oos_executed": false,
+      "overlap_policy": "DEVELOPMENT_and_VALIDATION_PLANNING_are_adjacent_non_overlapping;OOS_RESERVED_and_OOS_UNTOUCHED_never_loadable_for_development",
+      "partition_checksum": "521504c73845f5adba2fc8afbe2267ab31c1bc6bf1b3a5b1c48750befffe37be",
+      "partitions": [
+        {
+          "category": "DEVELOPMENT",
+          "consumable_for_development": true,
+          "consumable_for_validation_planning": false,
+          "end_ms": 1767000599999,
+          "end_utc": "2025-12-29T09:29:59Z",
+          "notes": "Primary development exploration window (first 60% of research V2/V3 span)",
+          "oos_consumable": false,
+          "partition_id": "DEV_EXPLORATION_PRIMARY",
+          "start_ms": 1739007000000,
+          "start_utc": "2025-02-08T09:30:00Z"
+        },
+        {
+          "category": "VALIDATION_PLANNING",
+          "consumable_for_development": false,
+          "consumable_for_validation_planning": true,
+          "end_ms": 1785663000000,
+          "end_utc": "2026-08-02T09:30:00Z",
+          "notes": "Validation planning only - not formal walk-forward, not OOS",
+          "oos_consumable": false,
+          "partition_id": "VALIDATION_PLANNING_PRIMARY",
+          "start_ms": 1767000600000,
+          "start_utc": "2025-12-29T09:30:00Z"
+        },
+        {
+          "category": "OOS_RESERVED",
+          "consumable_for_development": false,
+          "consumable_for_validation_planning": false,
+          "end_ms": 1789551000000,
+          "end_utc": "2026-09-16T09:30:00Z",
+          "notes": "Reserved September OOS - sealed, never consumed by V15-A",
+          "oos_consumable": false,
+          "partition_id": "SEPTEMBER_H3_OOS_RESERVED",
+          "start_ms": 1785663000001,
+          "start_utc": "2026-08-02T09:30:00Z"
+        },
+        {
+          "category": "OOS_UNTOUCHED",
+          "consumable_for_development": false,
+          "consumable_for_validation_planning": false,
+          "end_ms": 1821087000000,
+          "end_utc": "2027-09-16T09:30:00Z",
+          "notes": "Future untouched OOS reservation - do not open",
+          "oos_consumable": false,
+          "partition_id": "POST_SEPTEMBER_OOS_UNTOUCHED",
+          "start_ms": 1789551000001,
+          "start_utc": "2026-09-16T09:30:00Z"
+        }
+      ],
+      "schema": "nexus_pit_time_partition_v15_a"
+    },
+    "pass_number": 2,
+    "passed": true,
+    "schema": "v15_a_adversarial_pass"
+  },
+  "sweep_b": {
+    "check_pass_count": 14,
+    "check_total_count": 14,
+    "critical_finding_count": 0,
+    "high_finding_count": 0,
+    "passed": true
+  }
+}

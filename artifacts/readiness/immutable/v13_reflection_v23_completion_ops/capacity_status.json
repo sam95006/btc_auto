@@ -1,0 +1,23 @@
+{
+  "schema": "v13_v23_capacity_status",
+  "created_at": "2026-08-05T08:35:17Z",
+  "overall_capacity_status": "INCOMPLETE_PROVIDER_CAPACITY",
+  "lanes": {
+    "GROQ_REFLECTION_REASONER": {
+      "capacity_status": "BLOCKED_WAITING",
+      "pending_count": 27,
+      "window_open_in_s": 900.0,
+      "real_resume_authorized": false
+    },
+    "SAMBANOVA_INDEPENDENT_CRITIC": {
+      "capacity_status": "BLOCKED_WAITING",
+      "pending_count": 10,
+      "window_open_in_s": 1200.0,
+      "real_resume_authorized": false
+    }
+  },
+  "V2_3_complete": false,
+  "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+  "real_resume_authorized": false,
+  "ops_may_schedule_observe_only": true
+}

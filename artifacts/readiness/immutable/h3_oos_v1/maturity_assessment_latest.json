@@ -1,0 +1,21 @@
+{
+  "reservation_id": "OOS_H3_UNTOUCHED_V1_RESERVED",
+  "reserved_start": 1785663000001,
+  "reserved_end": 1789551000000,
+  "now_ms": 1785734475068,
+  "reservation_window_closed": false,
+  "maximum_timeframe_closed": false,
+  "provider_lag_satisfied": false,
+  "all_symbol_timeframe_coverage_complete": false,
+  "missing_interval_count": 0,
+  "expected_record_count": 28335,
+  "actual_record_count": null,
+  "coverage_ratio_by_symbol_timeframe": {},
+  "latest_required_closed_candle_time": 1785715200000,
+  "provider_latest_available_time": null,
+  "data_integrity_status": "FAIL",
+  "status": "OOS_WINDOW_NOT_MATURE",
+  "reason": "RESERVED_END_IS_IN_THE_FUTURE",
+  "future_oos_execution_allowed": false,
+  "prior_founder_approval_reuse_allowed": false
+}

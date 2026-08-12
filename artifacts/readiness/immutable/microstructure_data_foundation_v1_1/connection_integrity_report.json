@@ -1,0 +1,55 @@
+{
+  "schema": "connection_integrity_report",
+  "soak": {
+    "connection_attempt_count": 1,
+    "connection_success_count": 1,
+    "disconnect_count": 1,
+    "websocket_error_count": 0,
+    "reconnect_attempt_count": 0,
+    "reconnect_success_count": 0,
+    "subscription_attempt_count": 1,
+    "subscription_success_count": 1,
+    "heartbeat_sent_count": 180,
+    "heartbeat_ack_count": 0,
+    "heartbeat_timeout_count": 0,
+    "connection_gap_count": 0,
+    "connection_gap_total_ms": 0,
+    "reconnect_events": []
+  },
+  "capacity": {
+    "connection_attempt_count": 1,
+    "connection_success_count": 1,
+    "disconnect_count": 1,
+    "websocket_error_count": 0,
+    "reconnect_attempt_count": 0,
+    "reconnect_success_count": 0,
+    "subscription_attempt_count": 1,
+    "subscription_success_count": 1,
+    "heartbeat_sent_count": 45,
+    "heartbeat_ack_count": 0,
+    "heartbeat_timeout_count": 0,
+    "connection_gap_count": 0,
+    "connection_gap_total_ms": 0,
+    "reconnect_events": []
+  },
+  "soak_shutdown": {
+    "websocket_closed": true,
+    "collector_thread_alive_after_join": false,
+    "writers_closed": true,
+    "buffers_flushed": true,
+    "manifest_complete": true,
+    "checksum_replay_verified": true,
+    "capture_session_stopped_cleanly": true,
+    "shutdown_failure_reasons": []
+  },
+  "capacity_shutdown": {
+    "websocket_closed": true,
+    "collector_thread_alive_after_join": false,
+    "writers_closed": true,
+    "buffers_flushed": true,
+    "manifest_complete": true,
+    "checksum_replay_verified": true,
+    "capture_session_stopped_cleanly": true,
+    "shutdown_failure_reasons": []
+  }
+}

@@ -1,0 +1,257 @@
+{
+  "schema": "execution_cost_bridge",
+  "hypotheses": [
+    {
+      "hypothesis_id": "V12_H01_TREND_CONTINUATION",
+      "diagnostic_status": "RAW_EDGE_COST_DESTROYED",
+      "gross_pnl": 16.55014171,
+      "gross_expectancy": 0.06620056683999997,
+      "gross_profit_factor": null,
+      "spread_cost": 51.23378275543033,
+      "slippage_cost": 54.66640247456965,
+      "entry_fee_cost": 48.496983985,
+      "exit_fee_cost": 48.496983985,
+      "funding_cost": 0.71013647,
+      "total_execution_cost": 203.60428967,
+      "net_pnl": -187.05414796,
+      "net_expectancy": -0.74821659184,
+      "net_profit_factor": 0.719227,
+      "cost_to_gross_edge_ratio": 12.30226865954733,
+      "cost_bridge_identity": {
+        "gross_minus_costs_equals_net": true,
+        "residual_after_fee_slip_funding": 51.23378275543033
+      }
+    },
+    {
+      "hypothesis_id": "V12_H02_STRUCTURAL_RETEST",
+      "diagnostic_status": "RAW_SIGNAL_NO_EDGE",
+      "gross_pnl": -147.78566177,
+      "gross_expectancy": -0.9413099475796177,
+      "gross_profit_factor": null,
+      "spread_cost": 7.5815038956267085,
+      "slippage_cost": 26.81762153437329,
+      "entry_fee_cost": 15.761927545,
+      "exit_fee_cost": 15.761927545,
+      "funding_cost": 0.62561404,
+      "total_execution_cost": 66.54859456,
+      "net_pnl": -214.33425633,
+      "net_expectancy": -1.3651863460509555,
+      "net_profit_factor": 0.47062,
+      "cost_to_gross_edge_ratio": null,
+      "cost_bridge_identity": {
+        "gross_minus_costs_equals_net": true,
+        "residual_after_fee_slip_funding": 7.5815038956267085
+      }
+    },
+    {
+      "hypothesis_id": "V12_H03_BREAKOUT",
+      "diagnostic_status": "RAW_SIGNAL_NO_EDGE",
+      "gross_pnl": -20.71278916,
+      "gross_expectancy": -0.73974247,
+      "gross_profit_factor": null,
+      "spread_cost": 1.5337576144927063,
+      "slippage_cost": 3.521505585507293,
+      "entry_fee_cost": 2.328518115,
+      "exit_fee_cost": 2.328518115,
+      "funding_cost": 0.09638427000000001,
+      "total_execution_cost": 9.8086837,
+      "net_pnl": -30.52147286,
+      "net_expectancy": -1.0900526021428572,
+      "net_profit_factor": 0.548879,
+      "cost_to_gross_edge_ratio": null,
+      "cost_bridge_identity": {
+        "gross_minus_costs_equals_net": true,
+        "residual_after_fee_slip_funding": 1.5337576144927063
+      }
+    },
+    {
+      "hypothesis_id": "V12_H04_FAILED_BREAKOUT",
+      "diagnostic_status": "RAW_SIGNAL_NO_EDGE",
+      "gross_pnl": -1777.40336143,
+      "gross_expectancy": -0.36096737640739235,
+      "gross_profit_factor": null,
+      "spread_cost": 1147.5156568292462,
+      "slippage_cost": 1287.3645824007544,
+      "entry_fee_cost": 1115.793778355,
+      "exit_fee_cost": 1115.793778355,
+      "funding_cost": 18.0383012,
+      "total_execution_cost": 4684.506097140001,
+      "net_pnl": -6461.90945857,
+      "net_expectancy": -1.3123292970288385,
+      "net_profit_factor": 0.529821,
+      "cost_to_gross_edge_ratio": null,
+      "cost_bridge_identity": {
+        "gross_minus_costs_equals_net": true,
+        "residual_after_fee_slip_funding": 1147.5156568292462
+      }
+    },
+    {
+      "hypothesis_id": "V12_H05_MOMENTUM_ACCEL",
+      "diagnostic_status": "RAW_SIGNAL_NO_EDGE",
+      "gross_pnl": -26.09272346,
+      "gross_expectancy": -1.1860328845454544,
+      "gross_profit_factor": null,
+      "spread_cost": 1.1662745399661882,
+      "slippage_cost": 2.3429120500338105,
+      "entry_fee_cost": 1.610882365,
+      "exit_fee_cost": 1.610882365,
+      "funding_cost": 0.02802835,
+      "total_execution_cost": 6.758979669999999,
+      "net_pnl": -32.85170313,
+      "net_expectancy": -1.493259233181818,
+      "net_profit_factor": 0.427134,
+      "cost_to_gross_edge_ratio": null,
+      "cost_bridge_identity": {
+        "gross_minus_costs_equals_net": true,
+        "residual_after_fee_slip_funding": 1.1662745399661882
+      }
+    },
+    {
+      "hypothesis_id": "V12_H06_VOL_EXPANSION",
+      "diagnostic_status": "RAW_SIGNAL_NO_EDGE",
+      "gross_pnl": -119.11090687,
+      "gross_expectancy": -0.10068546650042265,
+      "gross_profit_factor": null,
+      "spread_cost": 158.065648806933,
+      "slippage_cost": 243.78930318306695,
+      "entry_fee_cost": 184.08721945,
+      "exit_fee_cost": 184.08721945,
+      "funding_cost": 5.37539639,
+      "total_execution_cost": 775.4047872799999,
+      "net_pnl": -894.51569415,
+      "net_expectancy": -0.7561417532967033,
+      "net_profit_factor": 0.70591,
+      "cost_to_gross_edge_ratio": null,
+      "cost_bridge_identity": {
+        "gross_minus_costs_equals_net": true,
+        "residual_after_fee_slip_funding": 158.065648806933
+      }
+    },
+    {
+      "hypothesis_id": "V12_H07_VWAP_MR",
+      "diagnostic_status": "RAW_SIGNAL_NO_EDGE",
+      "gross_pnl": -61.41969001,
+      "gross_expectancy": -0.007887465007063058,
+      "gross_profit_factor": null,
+      "spread_cost": 1686.9961561943699,
+      "slippage_cost": 2320.9232805156307,
+      "entry_fee_cost": 2003.296141895,
+      "exit_fee_cost": 2003.296141895,
+      "funding_cost": 35.57783648,
+      "total_execution_cost": 8050.08955698,
+      "net_pnl": -8111.50924699,
+      "net_expectancy": -1.0416732049556954,
+      "net_profit_factor": 0.618556,
+      "cost_to_gross_edge_ratio": null,
+      "cost_bridge_identity": {
+        "gross_minus_costs_equals_net": true,
+        "residual_after_fee_slip_funding": 1686.9961561943699
+      }
+    },
+    {
+      "hypothesis_id": "V12_H08_STRUCT_MR",
+      "diagnostic_status": "RAW_SIGNAL_NO_EDGE",
+      "gross_pnl": -1304.50167116,
+      "gross_expectancy": -0.389985551916293,
+      "gross_profit_factor": null,
+      "spread_cost": 869.0070580731804,
+      "slippage_cost": 959.9088018468193,
+      "entry_fee_cost": 838.080915815,
+      "exit_fee_cost": 838.080915815,
+      "funding_cost": 11.74049073,
+      "total_execution_cost": 3516.8181822799997,
+      "net_pnl": -4821.31985344,
+      "net_expectancy": -1.4413512267384154,
+      "net_profit_factor": 0.49211,
+      "cost_to_gross_edge_ratio": null,
+      "cost_bridge_identity": {
+        "gross_minus_costs_equals_net": true,
+        "residual_after_fee_slip_funding": 869.0070580731804
+      }
+    },
+    {
+      "hypothesis_id": "V12_H09_REL_STRENGTH",
+      "diagnostic_status": "EXECUTION_GATE_STARVED",
+      "gross_pnl": null,
+      "gross_expectancy": null,
+      "gross_profit_factor": null,
+      "spread_cost": 0.0,
+      "slippage_cost": 0.0,
+      "entry_fee_cost": 0.0,
+      "exit_fee_cost": 0.0,
+      "funding_cost": 0.0,
+      "total_execution_cost": 0.0,
+      "net_pnl": null,
+      "net_expectancy": null,
+      "net_profit_factor": null,
+      "cost_to_gross_edge_ratio": null,
+      "cost_bridge_identity": {
+        "gross_minus_costs_equals_net": null,
+        "residual_after_fee_slip_funding": null
+      }
+    },
+    {
+      "hypothesis_id": "V12_H10_XS_MOMENTUM",
+      "diagnostic_status": "EXECUTION_GATE_STARVED",
+      "gross_pnl": null,
+      "gross_expectancy": null,
+      "gross_profit_factor": null,
+      "spread_cost": 0.0,
+      "slippage_cost": 0.0,
+      "entry_fee_cost": 0.0,
+      "exit_fee_cost": 0.0,
+      "funding_cost": 0.0,
+      "total_execution_cost": 0.0,
+      "net_pnl": null,
+      "net_expectancy": null,
+      "net_profit_factor": null,
+      "cost_to_gross_edge_ratio": null,
+      "cost_bridge_identity": {
+        "gross_minus_costs_equals_net": null,
+        "residual_after_fee_slip_funding": null
+      }
+    },
+    {
+      "hypothesis_id": "V12_H11_FUNDING_OI_CONT",
+      "diagnostic_status": "RARE_EDGE_INSUFFICIENT_SUPPORT",
+      "gross_pnl": 11.94946753,
+      "gross_expectancy": 1.70706679,
+      "gross_profit_factor": null,
+      "spread_cost": 0.6344033750412361,
+      "slippage_cost": 0.6344033849587631,
+      "entry_fee_cost": 0.58242119,
+      "exit_fee_cost": 0.58242119,
+      "funding_cost": 0.01484734,
+      "total_execution_cost": 2.4484964799999993,
+      "net_pnl": 9.50097105,
+      "net_expectancy": 1.3572815785714287,
+      "net_profit_factor": 1.919187,
+      "cost_to_gross_edge_ratio": 0.20490423308426692,
+      "cost_bridge_identity": {
+        "gross_minus_costs_equals_net": true,
+        "residual_after_fee_slip_funding": 0.6344033750412361
+      }
+    },
+    {
+      "hypothesis_id": "V12_H12_LIQ_SWEEP",
+      "diagnostic_status": "RAW_SIGNAL_NO_EDGE",
+      "gross_pnl": -702.34732877,
+      "gross_expectancy": -0.16537493024958794,
+      "gross_profit_factor": null,
+      "spread_cost": 1014.1768522026323,
+      "slippage_cost": 1144.3393043873675,
+      "entry_fee_cost": 989.384599295,
+      "exit_fee_cost": 989.384599295,
+      "funding_cost": 15.85394929,
+      "total_execution_cost": 4153.13930447,
+      "net_pnl": -4855.48663324,
+      "net_expectancy": -1.1432744603814458,
+      "net_profit_factor": 0.585774,
+      "cost_to_gross_edge_ratio": null,
+      "cost_bridge_identity": {
+        "gross_minus_costs_equals_net": true,
+        "residual_after_fee_slip_funding": 1014.1768522026323
+      }
+    }
+  ]
+}

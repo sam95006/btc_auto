@@ -1,0 +1,22 @@
+{
+  "schema": "v13_repro_safety_redteam",
+  "program_id": "NEXUS_V13_REPRO_SAFETY_REDTEAM",
+  "lane": "V13-H",
+  "branch": "feature/v13-reproducibility-safety-redteam",
+  "base_head": "abd2195ef6d79f609dd261b5e9c5402599625a64",
+  "pass_number": 2,
+  "passed": true,
+  "recommendation": "NEXUS_V13_REPRO_SAFETY_REDTEAM_PASS",
+  "scenario_pass_count": 13,
+  "scenario_total_count": 13,
+  "fixture_pass_count": 4,
+  "fixture_total_count": 4,
+  "attack_blocked_count": 13,
+  "platform_blocked_pass_count": 0,
+  "production_ast_survivors": 0,
+  "critical_finding_count": 0,
+  "exchange_write_attempt_count": 0,
+  "secret_leak_count": 0,
+  "mainnet_client_created_count": 0,
+  "created_at": "2026-08-05T08:35:55Z"
+}

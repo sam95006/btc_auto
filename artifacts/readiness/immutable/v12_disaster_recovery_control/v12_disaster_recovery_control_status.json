@@ -1,0 +1,754 @@
+{
+  "schema": "v12_disaster_recovery_control",
+  "program_id": "NEXUS_V12_DISASTER_RECOVERY_CONTROL",
+  "lane": "V12-D",
+  "branch": "feature/v12-disaster-recovery-control",
+  "base": "e4e96299840da2e5152cf2850135cebc67d66cd0",
+  "head": "0b93f7946c257ffad6215068991266b24ae7d604",
+  "created_at": "2026-08-05T07:49:36Z",
+  "overall_status": "NEXUS_V12_DISASTER_RECOVERY_CONTROL_PASS",
+  "blockers": [],
+  "counters": {
+    "proofs_passed": 8,
+    "proofs_total": 8,
+    "invariants_passed": 3,
+    "invariants_total": 3,
+    "exchange_write_attempt_count": 0,
+    "demo_order_count": 0,
+    "mainnet_attempt_count": 0,
+    "silent_recovery_guess_count": 0,
+    "PR27_merged": false
+  },
+  "proofs": [
+    {
+      "proof_id": "cold_restart",
+      "passed": true,
+      "detail": {
+        "seed": {
+          "status": "PASS",
+          "event_count": 12,
+          "snapshot": {
+            "status": "SNAPSHOT_OK",
+            "generation": 1,
+            "created_at": "2026-08-05T07:49:15Z",
+            "source_ledger_position": 12,
+            "max_sequence": 12,
+            "snapshot_checksum": "fa112533a5e9632a6f3b429dffdc7720c78ccd8a76ad86127cc9819ee7ba8185",
+            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\cold_restart\\cold\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+            "ledger_hash_chain_status": "PASS",
+            "schema": "durability_v2",
+            "position_source": "checksummed_main_file",
+            "wal_policy": "forbid_non_empty_companion_wal",
+            "latency_s": 0.010478100000909762
+          },
+          "state": "RUNNING"
+        },
+        "stop": {
+          "status": "PASS",
+          "state": "COLD",
+          "mode": "cold_stop"
+        },
+        "restart": {
+          "status": "PASS",
+          "mode": "cold_restart",
+          "state": "RUNNING",
+          "recovery": {
+            "status": "NO_RECOVERY_NEEDED",
+            "assessment": {
+              "assessed_at": "2026-08-05T07:49:15Z",
+              "exchange_write_attempt_count": 0,
+              "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+              "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+              "old_trading_db_recovered": false,
+              "wallet_delta_attribution_changed": false,
+              "silent_recovery_guess": false,
+              "evidence_loss_claimed_without_proof": false,
+              "live": {
+                "corruption_detection_status": "PASS",
+                "integrity_check": "ok",
+                "ledger_hash_chain_status": "PASS",
+                "event_count": 12
+              },
+              "event_count": 12,
+              "max_sequence": 12,
+              "status": "LIVE_HEALTHY",
+              "recommendation": "NO_ACTION"
+            },
+            "exchange_write_attempt_count": 0,
+            "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+            "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+            "old_trading_db_recovered": false,
+            "wallet_delta_attribution_changed": false,
+            "silent_recovery_guess": false,
+            "evidence_loss_claimed_without_proof": false
+          },
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false,
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "mainnet_attempt_count": 0,
+          "PR27_merged": false
+        },
+        "event_count": 12,
+        "chain": {
+          "ledger_hash_chain_status": "PASS",
+          "event_count": 12
+        }
+      }
+    },
+    {
+      "proof_id": "warm_restart",
+      "passed": true,
+      "detail": {
+        "seed": {
+          "status": "PASS",
+          "event_count": 8,
+          "snapshot": {
+            "status": "SNAPSHOT_OK",
+            "generation": 1,
+            "created_at": "2026-08-05T07:49:15Z",
+            "source_ledger_position": 8,
+            "max_sequence": 8,
+            "snapshot_checksum": "7aa47055bddcb2f553441ff50b06df3ffb46e6e5ec93230ef5b712cb75d41d58",
+            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\warm_restart\\warm\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+            "ledger_hash_chain_status": "PASS",
+            "schema": "durability_v2",
+            "position_source": "checksummed_main_file",
+            "wal_policy": "forbid_non_empty_companion_wal",
+            "latency_s": 0.011179000000993256
+          },
+          "state": "RUNNING"
+        },
+        "stop": {
+          "status": "PASS",
+          "state": "WARM",
+          "mode": "warm_stop"
+        },
+        "restart": {
+          "status": "PASS",
+          "mode": "warm_restart",
+          "state": "RUNNING",
+          "event_count": 8,
+          "max_sequence": 8,
+          "assessment": {
+            "assessed_at": "2026-08-05T07:49:15Z",
+            "exchange_write_attempt_count": 0,
+            "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+            "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+            "old_trading_db_recovered": false,
+            "wallet_delta_attribution_changed": false,
+            "silent_recovery_guess": false,
+            "evidence_loss_claimed_without_proof": false,
+            "live": {
+              "corruption_detection_status": "PASS",
+              "integrity_check": "ok",
+              "ledger_hash_chain_status": "PASS",
+              "event_count": 8
+            },
+            "event_count": 8,
+            "max_sequence": 8,
+            "status": "LIVE_HEALTHY",
+            "recommendation": "NO_ACTION"
+          },
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false,
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "mainnet_attempt_count": 0,
+          "PR27_merged": false
+        },
+        "before": 8,
+        "after": 9,
+        "chain": {
+          "ledger_hash_chain_status": "PASS",
+          "event_count": 9
+        }
+      }
+    },
+    {
+      "proof_id": "lkg_restore",
+      "passed": true,
+      "detail": {
+        "seed": {
+          "status": "PASS",
+          "event_count": 10,
+          "snapshot": {
+            "status": "SNAPSHOT_OK",
+            "generation": 1,
+            "created_at": "2026-08-05T07:49:15Z",
+            "source_ledger_position": 10,
+            "max_sequence": 10,
+            "snapshot_checksum": "545b393995092d046994bb1593edba8ed3d47338f3b2ab3abdc784647490ced1",
+            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\lkg_restore\\lkg\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+            "ledger_hash_chain_status": "PASS",
+            "schema": "durability_v2",
+            "position_source": "checksummed_main_file",
+            "wal_policy": "forbid_non_empty_companion_wal",
+            "latency_s": 0.010005899999669055
+          },
+          "state": "RUNNING"
+        },
+        "restore": {
+          "status": "PASS",
+          "restore_status": "RECOVERED_LAST_KNOWN_GOOD",
+          "detail": {
+            "generation": 1,
+            "event_count": 10,
+            "max_sequence": 10,
+            "live_ok_before": false,
+            "latency_s": 0.0792053000004671
+          },
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false,
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "mainnet_attempt_count": 0,
+          "PR27_merged": false
+        },
+        "chain": {
+          "ledger_hash_chain_status": "PASS",
+          "event_count": 10
+        },
+        "count": 10
+      }
+    },
+    {
+      "proof_id": "checkpoint_restore",
+      "passed": true,
+      "detail": {
+        "seed": {
+          "status": "PASS",
+          "event_count": 9,
+          "snapshot": {
+            "status": "SNAPSHOT_OK",
+            "generation": 1,
+            "created_at": "2026-08-05T07:49:15Z",
+            "source_ledger_position": 9,
+            "max_sequence": 9,
+            "snapshot_checksum": "158e818b898f8a62665f2405564d8649af6fa4f324e0ee8d597fce934df5264e",
+            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\checkpoint_restore\\ckpt\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+            "ledger_hash_chain_status": "PASS",
+            "schema": "durability_v2",
+            "position_source": "checksummed_main_file",
+            "wal_policy": "forbid_non_empty_companion_wal",
+            "latency_s": 0.011396300000342308
+          },
+          "state": "RUNNING"
+        },
+        "sealed_restore": {
+          "status": "PASS",
+          "restore_status": "RECOVERED_LAST_KNOWN_GOOD",
+          "detail": {
+            "generation": 1,
+            "event_count": 9,
+            "max_sequence": 9,
+            "live_ok_before": false,
+            "latency_s": 0.036857299997791415
+          },
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false,
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "mainnet_attempt_count": 0,
+          "PR27_merged": false
+        },
+        "unbound_blocked": {
+          "status": "BLOCKED_AMBIGUOUS_STATE",
+          "seal": {
+            "status": "BLOCKED_AMBIGUOUS_STATE",
+            "reason": "checkpoint_unbound_missing_lkg_seal",
+            "checkpoint": {
+              "checkpoint_id": "unbound",
+              "lkg_seal": false,
+              "schema": "not_sealed"
+            }
+          },
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false,
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "mainnet_attempt_count": 0,
+          "PR27_merged": false
+        }
+      }
+    },
+    {
+      "proof_id": "ledger_tail_reconciliation",
+      "passed": true,
+      "detail": {
+        "seed": {
+          "status": "PASS",
+          "event_count": 7,
+          "snapshot": {
+            "status": "SNAPSHOT_OK",
+            "generation": 1,
+            "created_at": "2026-08-05T07:49:15Z",
+            "source_ledger_position": 7,
+            "max_sequence": 7,
+            "snapshot_checksum": "9ecf28ca7b09620be3c1b4a28b41420deb06bcd6600511a00032f28344658d32",
+            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\ledger_tail_reconciliation\\tail\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+            "ledger_hash_chain_status": "PASS",
+            "schema": "durability_v2",
+            "position_source": "checksummed_main_file",
+            "wal_policy": "forbid_non_empty_companion_wal",
+            "latency_s": 0.010646700000506826
+          },
+          "state": "RUNNING"
+        },
+        "snapshot": {
+          "status": "SNAPSHOT_OK",
+          "generation": 2,
+          "created_at": "2026-08-05T07:49:15Z",
+          "source_ledger_position": 8,
+          "max_sequence": 8,
+          "snapshot_checksum": "dfe1e026441c9d7430df4ba17dcc305d897b382305d25bd76ca7b0a21bc761d2",
+          "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\ledger_tail_reconciliation\\tail\\dr\\durability\\snapshots\\snapshot_000002\\event_ledger_v2.sqlite3",
+          "ledger_hash_chain_status": "PASS",
+          "schema": "durability_v2",
+          "position_source": "checksummed_main_file",
+          "wal_policy": "forbid_non_empty_companion_wal",
+          "latency_s": 0.011839399998279987
+        },
+        "reconcile": {
+          "status": "PASS",
+          "claimed_position": 8,
+          "checksummed_file_count": 8,
+          "checksummed_max_sequence": 8,
+          "live_count": 8,
+          "position_source": "checksummed_main_file",
+          "tail_match": true,
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false,
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "mainnet_attempt_count": 0,
+          "PR27_merged": false
+        },
+        "race_appends_observed": 1
+      }
+    },
+    {
+      "proof_id": "ambiguous_state_blocking",
+      "passed": true,
+      "detail": {
+        "live_ahead": {
+          "status": "BLOCKED_AMBIGUOUS_STATE",
+          "detail": {
+            "reason": "live_ahead_of_lkg_would_discard_evidence",
+            "live_count": 6,
+            "lkg_count": 5,
+            "evidence_loss_claimed_without_proof": false
+          },
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false,
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "mainnet_attempt_count": 0,
+          "PR27_merged": false
+        },
+        "latest_missing": {
+          "status": "BLOCKED_AMBIGUOUS_STATE",
+          "detail": {
+            "reason": "latest_snapshot_missing",
+            "pointer": {
+              "generation": 1,
+              "created_at": "2026-08-05T07:49:15Z",
+              "source_ledger_position": 4,
+              "max_sequence": 4,
+              "snapshot_checksum": "1a4e6e8511ec678a2ae8314e55a047ae9d23f633467558ed1ef9bf5874bc6cb0",
+              "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\ambiguous_state_blocking\\amb_miss\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+              "ledger_hash_chain_status": "PASS",
+              "schema": "durability_v2",
+              "position_source": "checksummed_main_file",
+              "wal_policy": "forbid_non_empty_companion_wal"
+            }
+          },
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false,
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "mainnet_attempt_count": 0,
+          "PR27_merged": false
+        }
+      }
+    },
+    {
+      "proof_id": "kill_switch_after_recovery",
+      "passed": true,
+      "detail": {
+        "restore": {
+          "status": "PASS",
+          "restore_status": "RECOVERED_LAST_KNOWN_GOOD",
+          "detail": {
+            "generation": 1,
+            "event_count": 6,
+            "max_sequence": 6,
+            "live_ok_before": false,
+            "latency_s": 0.06990089999817428
+          },
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false,
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "mainnet_attempt_count": 0,
+          "PR27_merged": false
+        },
+        "kill": {
+          "status": "PASS",
+          "kill_switch_status": "TRIGGERED",
+          "kill_switch_reason": "post_recovery_founder_kill",
+          "state": "KILLED",
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false,
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "mainnet_attempt_count": 0,
+          "PR27_merged": false
+        },
+        "blocked_seed": {
+          "status": "KILL_SWITCH_BLOCKS",
+          "kill_switch_status": "TRIGGERED",
+          "kill_switch_reason": "post_recovery_founder_kill",
+          "state": "KILLED",
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false,
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "mainnet_attempt_count": 0,
+          "PR27_merged": false
+        },
+        "blocked_restart": {
+          "status": "KILL_SWITCH_BLOCKS",
+          "kill_switch_status": "TRIGGERED",
+          "kill_switch_reason": "post_recovery_founder_kill",
+          "state": "KILLED",
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false,
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "mainnet_attempt_count": 0,
+          "PR27_merged": false
+        }
+      }
+    },
+    {
+      "proof_id": "storage_migration_recovery",
+      "passed": true,
+      "detail": {
+        "seed": {
+          "status": "PASS",
+          "event_count": 11,
+          "snapshot": {
+            "status": "SNAPSHOT_OK",
+            "generation": 1,
+            "created_at": "2026-08-05T07:49:16Z",
+            "source_ledger_position": 11,
+            "max_sequence": 11,
+            "snapshot_checksum": "da45065e3d47b9823a10e2f4ce367e59823c4d02e2cead6b7bd9c8aa2dd079a1",
+            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\storage_migration_recovery\\mig_src\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+            "ledger_hash_chain_status": "PASS",
+            "schema": "durability_v2",
+            "position_source": "checksummed_main_file",
+            "wal_policy": "forbid_non_empty_companion_wal",
+            "latency_s": 0.008221600000979379
+          },
+          "state": "RUNNING"
+        },
+        "in_place_migration": {
+          "status": "PASS",
+          "migration": {
+            "status": "PASS",
+            "reason": "schema_bumped",
+            "schema_version": "durability_ledger_v12_control",
+            "migrated_from": "durability_ledger_v2",
+            "event_count": 11,
+            "migrated": true
+          },
+          "checkpoint_seal": {
+            "status": "PASS",
+            "checkpoint": {
+              "checkpoint_id": "ckpt-000001",
+              "lkg_generation": 1,
+              "created_at": "2026-08-05T07:49:16Z",
+              "ledger_position": 11,
+              "snapshot_checksum": "da45065e3d47b9823a10e2f4ce367e59823c4d02e2cead6b7bd9c8aa2dd079a1",
+              "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\storage_migration_recovery\\mig_src\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+              "lkg_seal": true,
+              "schema": "durability_v2_checkpoint_sealed"
+            },
+            "lkg_generation": 1
+          },
+          "state": "RUNNING",
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false,
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "mainnet_attempt_count": 0,
+          "PR27_merged": false
+        },
+        "copy_migration": {
+          "status": "PASS",
+          "migration": {
+            "status": "PASS",
+            "reason": "already_at_target",
+            "schema_version": "durability_ledger_v12_control",
+            "event_count": 11,
+            "migrated": false
+          },
+          "checkpoint_seal": {
+            "status": "PASS",
+            "checkpoint": {
+              "checkpoint_id": "ckpt-000001",
+              "lkg_generation": 1,
+              "created_at": "2026-08-05T07:49:16Z",
+              "ledger_position": 11,
+              "snapshot_checksum": "da45065e3d47b9823a10e2f4ce367e59823c4d02e2cead6b7bd9c8aa2dd079a1",
+              "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\storage_migration_recovery\\mig_dest\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+              "lkg_seal": true,
+              "schema": "durability_v2_checkpoint_sealed"
+            },
+            "lkg_generation": 1
+          },
+          "dest_root": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\proofs\\storage_migration_recovery\\mig_dest\\dr\\durability",
+          "event_count": 11
+        },
+        "restart": {
+          "status": "PASS",
+          "mode": "cold_restart",
+          "state": "RUNNING",
+          "recovery": {
+            "status": "NO_RECOVERY_NEEDED",
+            "assessment": {
+              "assessed_at": "2026-08-05T07:49:16Z",
+              "exchange_write_attempt_count": 0,
+              "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+              "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+              "old_trading_db_recovered": false,
+              "wallet_delta_attribution_changed": false,
+              "silent_recovery_guess": false,
+              "evidence_loss_claimed_without_proof": false,
+              "live": {
+                "corruption_detection_status": "PASS",
+                "integrity_check": "ok",
+                "ledger_hash_chain_status": "PASS",
+                "event_count": 11
+              },
+              "event_count": 11,
+              "max_sequence": 11,
+              "status": "LIVE_HEALTHY",
+              "recommendation": "NO_ACTION"
+            },
+            "exchange_write_attempt_count": 0,
+            "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+            "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+            "old_trading_db_recovered": false,
+            "wallet_delta_attribution_changed": false,
+            "silent_recovery_guess": false,
+            "evidence_loss_claimed_without_proof": false
+          },
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false,
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "mainnet_attempt_count": 0,
+          "PR27_merged": false
+        },
+        "schema": "durability_ledger_v12_control",
+        "count": 11,
+        "chain": {
+          "ledger_hash_chain_status": "PASS",
+          "event_count": 11
+        }
+      }
+    }
+  ],
+  "v11_1_invariants": [
+    {
+      "proof_id": "false_lkg_banned",
+      "passed": true,
+      "detail": {
+        "snapshot_status": "CORRUPTION_DETECTED",
+        "generation_advanced": false,
+        "lkg_advanced": false
+      }
+    },
+    {
+      "proof_id": "position_vs_checksummed_ledger",
+      "passed": true,
+      "detail": {
+        "seed": {
+          "status": "PASS",
+          "event_count": 7,
+          "snapshot": {
+            "status": "SNAPSHOT_OK",
+            "generation": 1,
+            "created_at": "2026-08-05T07:49:16Z",
+            "source_ledger_position": 7,
+            "max_sequence": 7,
+            "snapshot_checksum": "8a766105fc161bbe1b8d489d4447c3df481847da800d1910a0a48953ca33a76d",
+            "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\invariants\\position_vs_checksummed_ledger\\inv_pos\\tail\\dr\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+            "ledger_hash_chain_status": "PASS",
+            "schema": "durability_v2",
+            "position_source": "checksummed_main_file",
+            "wal_policy": "forbid_non_empty_companion_wal",
+            "latency_s": 0.06605709999712417
+          },
+          "state": "RUNNING"
+        },
+        "snapshot": {
+          "status": "SNAPSHOT_OK",
+          "generation": 2,
+          "created_at": "2026-08-05T07:49:16Z",
+          "source_ledger_position": 8,
+          "max_sequence": 8,
+          "snapshot_checksum": "c43239dce3860a035220aa8b761d8f0192858dab85df765ad9d4a997687bb390",
+          "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v12_d_lm0llxpa\\matrix\\invariants\\position_vs_checksummed_ledger\\inv_pos\\tail\\dr\\durability\\snapshots\\snapshot_000002\\event_ledger_v2.sqlite3",
+          "ledger_hash_chain_status": "PASS",
+          "schema": "durability_v2",
+          "position_source": "checksummed_main_file",
+          "wal_policy": "forbid_non_empty_companion_wal",
+          "latency_s": 0.013008499998250045
+        },
+        "reconcile": {
+          "status": "PASS",
+          "claimed_position": 8,
+          "checksummed_file_count": 8,
+          "checksummed_max_sequence": 8,
+          "live_count": 8,
+          "position_source": "checksummed_main_file",
+          "tail_match": true,
+          "silent_recovery_guess": false,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "evidence_loss_claimed_without_proof": false,
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "mainnet_attempt_count": 0,
+          "PR27_merged": false
+        },
+        "race_appends_observed": 1
+      }
+    },
+    {
+      "proof_id": "owner_only_duplicate_intent",
+      "passed": true,
+      "detail": {
+        "status": "PASS",
+        "owners_restored": 1,
+        "proofs": [
+          {
+            "idempotency_key": "owner-key-1",
+            "status": "DUPLICATE_IGNORED",
+            "state": "RECOVERED_OWNER_WITHOUT_ORDER",
+            "order_record_present": false
+          }
+        ],
+        "silent_recovery_guess": false,
+        "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+        "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+        "old_trading_db_recovered": false,
+        "wallet_delta_attribution_changed": false,
+        "evidence_loss_claimed_without_proof": false,
+        "demo_order_count": 0,
+        "exchange_write_attempt_count": 0,
+        "mainnet_attempt_count": 0,
+        "PR27_merged": false
+      }
+    }
+  ],
+  "hard_bans": {
+    "demo": true,
+    "exchange_write": true,
+    "mainnet": true,
+    "PR27_merge": true,
+    "silent_recovery_guess": true
+  },
+  "preserved_facts": {
+    "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+    "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+    "old_trading_db_recovered": false,
+    "wallet_delta_attribution_changed": false,
+    "silent_recovery_guess": false,
+    "evidence_loss_claimed_without_proof": false,
+    "demo_order_count": 0,
+    "exchange_write_attempt_count": 0,
+    "mainnet_attempt_count": 0,
+    "PR27_merged": false
+  },
+  "owned_paths": [
+    "backend/nexus_recovery/dr_control_v12/",
+    "tools/research/run_disaster_recovery_control_v12.py",
+    "tests/test_disaster_recovery_control_v12.py",
+    "artifacts/readiness/immutable/v12_disaster_recovery_control/"
+  ],
+  "prohibited": [
+    "Demo",
+    "exchange_write",
+    "mainnet",
+    "PR27_merge",
+    "silent_recovery_guess"
+  ],
+  "execution_mode": "SIMULATED_FAIL_CLOSED_NO_EXCHANGE_WRITE",
+  "PR27_draft_unmerged": true,
+  "auto_integration": false,
+  "feature_commit": "2f1764fc8fabd5b257e280ef691c986e8ebfcca0",
+  "artifact_refresh_commit": "0b93f7946c257ffad6215068991266b24ae7d604"
+}

@@ -1,0 +1,186 @@
+{
+  "schema": "v11_1_private_observability_slo_definitions",
+  "created_at": "2026-08-05T04:07:51Z",
+  "founder_private": true,
+  "read_only": true,
+  "domain_count": 12,
+  "domains": [
+    "decision_lifecycle",
+    "session_lifecycle",
+    "risk_gates",
+    "execution_simulator",
+    "provider_health",
+    "reflection_queue",
+    "lesson_gate",
+    "ledger_snapshot_checkpoint",
+    "microstructure_health",
+    "storage_budget",
+    "kill_switch_readiness",
+    "qualification_block_state"
+  ],
+  "slo_count": 13,
+  "slos": [
+    {
+      "slo_id": "slo.decision_lifecycle.no_failure_trap",
+      "domain": "decision_lifecycle",
+      "name": "Decision lifecycle fail-closed clarity",
+      "description": "Decision objects must not linger in unrecoverable failure traps without alert.",
+      "metric": "failure_or_blocked_count",
+      "threshold": "alert_if_>0_without_CLOSED_path",
+      "alert_classes": [
+        "failure_state",
+        "ambiguous_state"
+      ],
+      "severity_on_breach": "critical"
+    },
+    {
+      "slo_id": "slo.decision_lifecycle.evidence_fresh",
+      "domain": "decision_lifecycle",
+      "name": "Decision evidence freshness",
+      "description": "Evidence age must stay within 300s or raise staleness.",
+      "metric": "max_evidence_age_seconds",
+      "threshold": "<=300.0",
+      "alert_classes": [
+        "staleness",
+        "data_quality"
+      ],
+      "severity_on_breach": "critical"
+    },
+    {
+      "slo_id": "slo.session_lifecycle.no_failed_safe_unacked",
+      "domain": "session_lifecycle",
+      "name": "Session FAILED_SAFE / BLOCKED acknowledgment",
+      "description": "Session terminal failure states must surface as failure-state alerts.",
+      "metric": "session_failure_states",
+      "threshold": "alert_if_FAILED_SAFE_or_BLOCKED",
+      "alert_classes": [
+        "failure_state"
+      ],
+      "severity_on_breach": "critical"
+    },
+    {
+      "slo_id": "slo.risk_gates.forbidden_actions_blocked",
+      "domain": "risk_gates",
+      "name": "Risk gate hard bans intact",
+      "description": "Forbidden risk actions must remain rejected; gates healthy.",
+      "metric": "forbidden_action_pass_rate",
+      "threshold": "==1.0",
+      "alert_classes": [
+        "failure_state"
+      ],
+      "severity_on_breach": "critical"
+    },
+    {
+      "slo_id": "slo.execution_simulator.read_only",
+      "domain": "execution_simulator",
+      "name": "Execution simulator non-mutating observability",
+      "description": "Simulator health may be observed; no mutation endpoint exposed.",
+      "metric": "mutation_endpoint_count",
+      "threshold": "==0",
+      "alert_classes": [
+        "failure_state"
+      ],
+      "severity_on_breach": "critical"
+    },
+    {
+      "slo_id": "slo.provider.capacity_available",
+      "domain": "provider_health",
+      "name": "Provider capacity readiness",
+      "description": "Provider transport must not be capacity-blocked (429/circuit/bucket/incomplete).",
+      "metric": "provider_capacity_blocked",
+      "threshold": "==false",
+      "alert_classes": [
+        "provider_capacity"
+      ],
+      "severity_on_breach": "critical"
+    },
+    {
+      "slo_id": "slo.reflection.queue_progress",
+      "domain": "reflection_queue",
+      "name": "Reflection queue progress",
+      "description": "Reflection pending backlog must not indicate stalled provider capacity.",
+      "metric": "pending_ratio",
+      "threshold": "non_blocking_or_alert",
+      "alert_classes": [
+        "provider_capacity",
+        "staleness"
+      ],
+      "severity_on_breach": "critical"
+    },
+    {
+      "slo_id": "slo.lesson_gate.fail_closed",
+      "domain": "lesson_gate",
+      "name": "Lesson gate fail-closed",
+      "description": "Policy-effect lessons blocked unless VERIFIED + quality gates.",
+      "metric": "unauthorized_lesson_count",
+      "threshold": "==0",
+      "alert_classes": [
+        "failure_state",
+        "data_quality"
+      ],
+      "severity_on_breach": "critical"
+    },
+    {
+      "slo_id": "slo.durability.checkpoint_healthy",
+      "domain": "ledger_snapshot_checkpoint",
+      "name": "Ledger/snapshot/checkpoint health",
+      "description": "Checkpoint/ledger surfaces healthy; ambiguous durability blocks alerted.",
+      "metric": "ambiguous_or_corrupt",
+      "threshold": "==0_or_alerted",
+      "alert_classes": [
+        "ambiguous_state",
+        "data_quality",
+        "failure_state"
+      ],
+      "severity_on_breach": "critical"
+    },
+    {
+      "slo_id": "slo.microstructure.health_visible",
+      "domain": "microstructure_health",
+      "name": "Microstructure health visibility",
+      "description": "Microstructure integrity/event-study readiness observed without starting Event Study.",
+      "metric": "event_study_started",
+      "threshold": "==false",
+      "alert_classes": [
+        "data_quality"
+      ],
+      "severity_on_breach": "critical"
+    },
+    {
+      "slo_id": "slo.storage.floor_ok",
+      "domain": "storage_budget",
+      "name": "Storage floor / budget",
+      "description": "Free disk must meet minimum floor; hard-cap blocked mode must alert.",
+      "metric": "storage_floor_status",
+      "threshold": "PASS",
+      "alert_classes": [
+        "storage_floor"
+      ],
+      "severity_on_breach": "critical"
+    },
+    {
+      "slo_id": "slo.kill_switch.readiness",
+      "domain": "kill_switch_readiness",
+      "name": "Kill-switch readiness",
+      "description": "Kill-switch must be reachable and report engaged state when triggered.",
+      "metric": "kill_switch_reachable",
+      "threshold": "==true",
+      "alert_classes": [
+        "failure_state"
+      ],
+      "severity_on_breach": "critical"
+    },
+    {
+      "slo_id": "slo.qualification.all_blocked",
+      "domain": "qualification_block_state",
+      "name": "Qualification stages remain BLOCKED",
+      "description": "All qualification control stages must remain BLOCKED with hard bans intact.",
+      "metric": "all_stages_blocked",
+      "threshold": "==true",
+      "alert_classes": [
+        "failure_state"
+      ],
+      "severity_on_breach": "critical"
+    }
+  ]
+}

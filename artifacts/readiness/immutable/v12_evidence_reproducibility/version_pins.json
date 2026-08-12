@@ -1,0 +1,16 @@
+{
+  "checkpoint_version": {
+    "authority_id": "private_core.checkpoint.envelope_v1",
+    "schema": "nexus_checkpoint_envelope_v1",
+    "schema_version": 1
+  },
+  "checkpoint_version_id": "nexus_checkpoint_envelope_v1:1",
+  "code_version": "318371ce027c48dd633a57a32c9ebd0f1fe40018",
+  "cost_version": "founder-conservative-v1-1-2026-08-05",
+  "created_at": "2026-08-05T07:49:12Z",
+  "decision_schema_version": "nexus_decision_object_v11",
+  "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
+  "risk_gates_fingerprint": "d76e401ec9dc88d09cba9369f6e1b265eed1d6e275a2d5825223d8a87a8b18cd",
+  "risk_version": "private_core.risk.gates_v1_1",
+  "schema": "v12_evidence_repro_version_pins"
+}

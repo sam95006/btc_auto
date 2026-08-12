@@ -1,0 +1,22 @@
+{
+  "schema": "v14_research_redteam",
+  "program_id": "NEXUS_V14_RESEARCH_SECURITY_REDTEAM",
+  "lane": "V14-L",
+  "branch": "feature/v14-research-security-redteam",
+  "base_head": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "pass_number": 2,
+  "passed": true,
+  "recommendation": "NEXUS_V14_RESEARCH_SECURITY_REDTEAM_PASS",
+  "scenario_pass_count": 15,
+  "scenario_total_count": 15,
+  "fixture_pass_count": 5,
+  "fixture_total_count": 5,
+  "attack_blocked_count": 15,
+  "platform_blocked_pass_count": 0,
+  "production_ast_survivors": 0,
+  "critical_finding_count": 0,
+  "exchange_write_attempt_count": 0,
+  "secret_leak_count": 0,
+  "mainnet_client_created_count": 0,
+  "created_at": "2026-08-05T11:21:35Z"
+}

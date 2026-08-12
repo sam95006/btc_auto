@@ -1,0 +1,77 @@
+{
+  "registry": [
+    {
+      "component_id": "TREND_CONTINUATION",
+      "event_study_id": "6588f9f5e46c02cd2996723a198e463be5c4048b08baac5db038698e6cc415af",
+      "event_count": 2812,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "STRUCTURAL_RETEST",
+      "event_study_id": "b0c4248091da2053922422125491f5e96a199d704568286d1361a17e838cf12c",
+      "event_count": 10722,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "BREAKOUT",
+      "event_study_id": "e16989eaa0fb0c8834d7065245485f1a2a33e8d130ecb344f1622dd954e2fc8f",
+      "event_count": 6548,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "FAILED_BREAKOUT",
+      "event_study_id": "1dd51086fb3330c68a00e6b13795efe7dac9d7ac5e06f6e115ea8f00684cb649",
+      "event_count": 21756,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "MOMENTUM_ACCELERATION",
+      "event_study_id": "86fe1d7194988e0b94fc99bf4de4c026cd8f27b76eac812e8861dd1e878927a7",
+      "event_count": 2460,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "VOLATILITY_EXPANSION",
+      "event_study_id": "21e180a07bbe1cd1c1cb598e4a99dddc342f6b305794825843a7ca24bdf1aab2",
+      "event_count": 16531,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "VWAP_MEAN_REVERSION",
+      "event_study_id": "72ba6d8f8c5daae0b2c07ecc2d9e18e0f7663b5d997418e2dc62afc8b8940e9d",
+      "event_count": 18692,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "STRUCTURAL_MEAN_REVERSION",
+      "event_study_id": "4c8565254ed4169c825a4cf822501630c0fd44c437a5e548b8b314eb0e2a4f55",
+      "event_count": 9038,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH",
+      "event_study_id": "9609c62a9074691244cbf532fd87c7490f028f6a43a768bb37f9edf077641e9f",
+      "event_count": 26,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "CROSS_SECTIONAL_MOMENTUM",
+      "event_study_id": "4dda3fb5efa66532752726ebd8ef7ab213ad43f48a008fdbf44847357e3dadcc",
+      "event_count": 26,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "FUNDING_OI_CONTINUATION",
+      "event_study_id": "3f3a08af54bb0a5fdf8e7545094b8631c5ca1b33d4025aee2e6fa8365ced0d66",
+      "event_count": 1616,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "LIQUIDITY_SWEEP_REVERSAL",
+      "event_study_id": "7839ea01ddd93e3bc0e94723b90753fc90ef28894020145ceedc3db49d935f9d",
+      "event_count": 12934,
+      "observations_are_trades": false
+    }
+  ],
+  "engine": "NEXUS_EVENT_STUDY_ENGINE_V1"
+}

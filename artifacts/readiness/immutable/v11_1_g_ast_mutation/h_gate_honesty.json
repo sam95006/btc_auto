@@ -1,0 +1,7 @@
+{
+  "schema": "v11_g_h_gate_honesty_v1",
+  "h_gate_pass_is_not_authority_remediation": true,
+  "duplicate_gate_baseline_false_confidence_ack": true,
+  "note": "Lane H CI duplicate-authority gate PASS baselining known competitors does NOT clear critical multi-authority blockers. Treat H as audit/registry/gate only -- not runtime authority remediation. C1-C6 own cost/lifecycle/retry/checkpoint/shim/SCC remediation.",
+  "integration_recommendation": "BLOCK_TREATING_H_GATE_AS_AUTHORITY_REMEDIATION"
+}

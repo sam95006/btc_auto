@@ -1,0 +1,140 @@
+{
+  "schema": "v17_e_contract_spec_timeline_v1",
+  "entry_count": 9,
+  "timeline": [
+    {
+      "symbol": "BTCUSDT",
+      "canonical_instrument_id": "bybit:linear:BTCUSDT",
+      "effective_ms": 1577836800000,
+      "contract_rule_version": "v1",
+      "tick_size": 0.1,
+      "qty_step": 0.001,
+      "minimum_notional": 5.0,
+      "minimum_order_qty": 0.001,
+      "contract_type": "LinearPerpetual",
+      "quote_coin": "USDT",
+      "settle_coin": "USDT",
+      "changed_fields": []
+    },
+    {
+      "symbol": "ETHUSDT",
+      "canonical_instrument_id": "bybit:linear:ETHUSDT",
+      "effective_ms": 1577836800000,
+      "contract_rule_version": "v1",
+      "tick_size": 0.01,
+      "qty_step": 0.01,
+      "minimum_notional": 5.0,
+      "minimum_order_qty": 0.001,
+      "contract_type": "LinearPerpetual",
+      "quote_coin": "USDT",
+      "settle_coin": "USDT",
+      "changed_fields": []
+    },
+    {
+      "symbol": "GHOSTUSDT",
+      "canonical_instrument_id": "bybit:linear:GHOSTUSDT",
+      "effective_ms": 1609459200000,
+      "contract_rule_version": "v1",
+      "tick_size": 0.0001,
+      "qty_step": 1.0,
+      "minimum_notional": 5.0,
+      "minimum_order_qty": 0.001,
+      "contract_type": "LinearPerpetual",
+      "quote_coin": "USDT",
+      "settle_coin": "USDT",
+      "changed_fields": []
+    },
+    {
+      "symbol": "SOLUSDT",
+      "canonical_instrument_id": "bybit:linear:SOLUSDT",
+      "effective_ms": 1640995200000,
+      "contract_rule_version": "v1",
+      "tick_size": 0.001,
+      "qty_step": 0.1,
+      "minimum_notional": 5.0,
+      "minimum_order_qty": 0.001,
+      "contract_type": "LinearPerpetual",
+      "quote_coin": "USDT",
+      "settle_coin": "USDT",
+      "changed_fields": []
+    },
+    {
+      "symbol": "THINUSDT",
+      "canonical_instrument_id": "bybit:linear:THINUSDT",
+      "effective_ms": 1650000000000,
+      "contract_rule_version": "v1",
+      "tick_size": 0.001,
+      "qty_step": 1.0,
+      "minimum_notional": 5.0,
+      "minimum_order_qty": 0.001,
+      "contract_type": "LinearPerpetual",
+      "quote_coin": "USDT",
+      "settle_coin": "USDT",
+      "changed_fields": []
+    },
+    {
+      "symbol": "PEPEUSDT",
+      "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+      "effective_ms": 1704067200000,
+      "contract_rule_version": "v1",
+      "tick_size": 1e-08,
+      "qty_step": 100.0,
+      "minimum_notional": 5.0,
+      "minimum_order_qty": 0.001,
+      "contract_type": "LinearPerpetual",
+      "quote_coin": "USDT",
+      "settle_coin": "USDT",
+      "changed_fields": []
+    },
+    {
+      "symbol": "BTCUSDT",
+      "canonical_instrument_id": "bybit:linear:BTCUSDT",
+      "effective_ms": 1720000000000,
+      "contract_rule_version": "v2",
+      "tick_size": 0.5,
+      "qty_step": 0.001,
+      "minimum_notional": 5.0,
+      "minimum_order_qty": 0.001,
+      "contract_type": "LinearPerpetual",
+      "quote_coin": "USDT",
+      "settle_coin": "USDT",
+      "changed_fields": [
+        "tick_size",
+        "contract_rule_version"
+      ]
+    },
+    {
+      "symbol": "PEPEUSDT",
+      "canonical_instrument_id": "bybit:linear:PEPEUSDT",
+      "effective_ms": 1733020800000,
+      "contract_rule_version": "v2_min_notional_bump",
+      "tick_size": 1e-07,
+      "qty_step": 100.0,
+      "minimum_notional": 50.0,
+      "minimum_order_qty": 0.001,
+      "contract_type": "LinearPerpetual",
+      "quote_coin": "USDT",
+      "settle_coin": "USDT",
+      "changed_fields": [
+        "tick_size",
+        "minimum_notional",
+        "contract_rule_version"
+      ]
+    },
+    {
+      "symbol": "LATEUSDT",
+      "canonical_instrument_id": "bybit:linear:LATEUSDT",
+      "effective_ms": 1735689600000,
+      "contract_rule_version": "v1",
+      "tick_size": 0.001,
+      "qty_step": 1.0,
+      "minimum_notional": 5.0,
+      "minimum_order_qty": 0.001,
+      "contract_type": "LinearPerpetual",
+      "quote_coin": "USDT",
+      "settle_coin": "USDT",
+      "changed_fields": []
+    }
+  ],
+  "timeline_checksum": "cc6e61c1dc78cabe13b4d20bcc76bf69fca55cf4b580d387120d4ff9164bf518"
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "v14_a_capture_supervisor_readiness_summary",
+  "lane": "V14-A",
+  "readiness": "PASS",
+  "both_passes_ok": true,
+  "integrity_status": "DEGRADED",
+  "critical_count": 0,
+  "high_count": 4,
+  "blockers": [],
+  "created_at": "2026-08-05T11:20:30Z"
+}

@@ -1,0 +1,19 @@
+{
+  "partition_id": "syn_sess_degraded_001_LIQUIDATION_EVENTS_BTCUSDT_20260802_08_0",
+  "exchange": "BYBIT",
+  "family": "LIQUIDATION_EVENTS",
+  "symbol": "BTCUSDT",
+  "UTC_hour": "20260802_08",
+  "schema_version": "microstructure_data_foundation_v1_1",
+  "record_count": 3,
+  "first_exchange_timestamp": 1785657600000,
+  "last_exchange_timestamp": 1785659400000,
+  "first_receive_timestamp": 1785657600005,
+  "last_receive_timestamp": 1785659400005,
+  "uncompressed_bytes": 1095,
+  "compressed_bytes": 360,
+  "rolling_checksum": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+  "previous_partition_id": null,
+  "capture_session_id": "syn_sess_degraded_001",
+  "path": "tests\\fixtures\\microstructure_finalizer\\degraded_campaign\\partitions\\BYBIT\\LIQUIDATION_EVENTS\\BTCUSDT\\syn_sess_degraded_001_LIQUIDATION_EVENTS_BTCUSDT_20260802_08_0.jsonl.gz"
+}

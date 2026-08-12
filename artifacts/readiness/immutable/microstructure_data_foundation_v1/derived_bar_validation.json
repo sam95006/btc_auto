@@ -1,0 +1,28 @@
+{
+  "schema": "derived_bar_validation",
+  "derived_1s_bar_count": 2057,
+  "derived_5s_bar_count": 783,
+  "derived_1m_bar_count": 80,
+  "liquidation_1m_bar_count": 2,
+  "source_checksum_linkage_status": "PASS",
+  "signal_generated": false,
+  "strategy_generated": false,
+  "profitability_tested": false,
+  "sample_1s_bar": {
+    "symbol": "BTCUSDT",
+    "window_start": 1785816494000,
+    "window_end": 1785816495000,
+    "buy_aggressor_notional": 0.0,
+    "sell_aggressor_notional": 828.5927,
+    "net_aggressive_notional": -828.5927,
+    "trade_count": 1,
+    "volume": 0.013,
+    "record_count": 1,
+    "missing_status": "OK",
+    "schema_version": "microstructure_derived_bar_v1",
+    "source_partition_checksums": [
+      "a50ada49ce7eed43e1fe78f268cd8b8531db9a440cf71b4f4c91c08d8d72c5ea"
+    ],
+    "VWAP": 63737.90000000001
+  }
+}

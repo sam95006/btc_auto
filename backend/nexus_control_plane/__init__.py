@@ -1,0 +1,53 @@
+"""NEXUS Control Plane — unified read-only federation (no exchange write)."""
+from __future__ import annotations
+
+PACKAGE_PHASE = "unified-nexus-control-plane"
+SCHEMA_VERSION = "control-plane-canonical-v1"
+
+CONTROL_PLANE_LABELS = frozenset(
+    {
+        "CONTROL_PLANE=true",
+        "EXCHANGE_WRITE=false",
+        "MAINNET=false",
+        "REAL_MONEY=false",
+        "READ_ONLY_FEDERATION=true",
+    }
+)
+
+DATA_STATUS_LIVE = "LIVE"
+DATA_STATUS_STALE = "STALE"
+DATA_STATUS_MISSING = "MISSING"
+DATA_STATUS_UNKNOWN = "UNKNOWN"
+DATA_STATUS_UNAVAILABLE = "UNAVAILABLE"
+DATA_STATUS_SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE"
+DATA_STATUS_SCHEMA_MISMATCH = "SCHEMA_MISMATCH"
+DATA_STATUS_NOT_APPLICABLE = "NOT_APPLICABLE"
+
+ALLOWED_DATA_STATUSES = frozenset(
+    {
+        DATA_STATUS_LIVE,
+        DATA_STATUS_STALE,
+        DATA_STATUS_MISSING,
+        DATA_STATUS_UNKNOWN,
+        DATA_STATUS_UNAVAILABLE,
+        DATA_STATUS_SERVICE_UNAVAILABLE,
+        DATA_STATUS_SCHEMA_MISMATCH,
+        DATA_STATUS_NOT_APPLICABLE,
+    }
+)
+
+ROLE_MARKET_INTELLIGENCE = "market_intelligence"
+ROLE_DEMO_EXECUTION = "demo_execution"
+ROLE_LEARNING_ENGINE = "learning_engine"
+ROLE_CONTROL_PLANE = "control_plane"
+
+EXECUTION_OWNER_DEMO_VALIDATION = "DEMO_VALIDATION_SERVICE"
+
+LEGACY_STAGE3_LABELS = frozenset(
+    {
+        "LEGACY_STAGE3_RUNTIME",
+        "READ_ONLY",
+        "EXECUTION_DISABLED",
+        "NOT_EXECUTION_OWNER",
+    }
+)

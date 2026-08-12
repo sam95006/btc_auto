@@ -1,0 +1,325 @@
+{
+  "all_fixture_only": true,
+  "all_have_failed_siblings": true,
+  "all_required_fields_present": true,
+  "allowed_statuses_only": true,
+  "bundle_digest": "e95a241fe52e4ea7b6bb83099618b9e05fc7032eec421636e66c33a7f789789b",
+  "demo_ready_count": 0,
+  "dossier_count": 2,
+  "dossiers": [
+    {
+      "as_of_ms": 1700000000000,
+      "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V15_E_DOSSIER_ONLY",
+      "candidate_checksum": "2a0ee5d2efb3734130fe22091d5b09176dfcfd8423ad4c1b80f84dde50f5e086",
+      "candidate_id": "SYN_V15E_REVIEW_001",
+      "capacity_assumptions": {
+        "fixture_only": true,
+        "liquidity_floor_usd": 500000,
+        "max_notional_usd": 10000,
+        "max_participation_rate": 0.02,
+        "thin_market_block": true
+      },
+      "code_checksum": "75b6f7c0ee22441e160274d81989aaa697ab85ae51655d0cb34a04e4fdbc21a2",
+      "cost_breakdown": {
+        "canonical_cost_authority_consumed": true,
+        "cost_destroyed": false,
+        "fees": 0.0004,
+        "fixture_only": true,
+        "funding": 5e-05,
+        "gross_expectancy": 0.35,
+        "impact": 0.0001,
+        "net_expectancy": 0.05,
+        "slippage": 0.0003,
+        "spread": 0.0002
+      },
+      "cost_version": "canonical_cost_model_v11_1",
+      "data_lineage": {
+        "as_of_ms": 1700000000000,
+        "campaign_id": "syn_v15e_dev_bundle",
+        "fixture_only": true,
+        "pit_semantics": "exchange_timestamp_and_receive_timestamp_le_as_of_ms",
+        "source": "synthetic_fixture_bundle"
+      },
+      "demo_ready": false,
+      "development_intervals": [
+        {
+          "category": "development_only",
+          "end_ms": 1694816000000,
+          "label": "dev_window_a",
+          "start_ms": 1692224000000
+        },
+        {
+          "category": "development_only",
+          "end_ms": 1697408000000,
+          "label": "dev_window_b",
+          "start_ms": 1694816000000
+        }
+      ],
+      "dossier_checksum": "15ae4486fd3726fa42caf7f933f18b9c58eb012fd321fc669ae31f4eca59d573",
+      "dossier_status": "DEVELOPMENT_REVIEW",
+      "economic_rationale": "Fixture absorption hypothesis: transient liquidity absorption may produce short-horizon mean reversion under thin books.",
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "execution_version": "autonomous_execution_simulator_v1_1",
+      "failed_sibling_experiments": [
+        {
+          "experiment_id": "SYN_V15E_REVIEW_001_SIB_FAIL_COST",
+          "fixture_only": true,
+          "outcome": "COST_DESTROYED",
+          "reason": "net_expectancy_negative_under_canonical_cost"
+        },
+        {
+          "experiment_id": "SYN_V15E_REVIEW_001_SIB_FAIL_REGIME",
+          "fixture_only": true,
+          "outcome": "REGIME_FRAGILE",
+          "reason": "signal_collapsed_in_liq_thin_regime"
+        },
+        {
+          "experiment_id": "SYN_V15E_REVIEW_001_SIB_FAIL_SAMPLE",
+          "fixture_only": true,
+          "outcome": "INSUFFICIENT_SAMPLE",
+          "reason": "bootstrap_ci_unstable_below_min_n"
+        }
+      ],
+      "feature_ids": [
+        "aggressive_buy_sell_imbalance",
+        "trade_intensity",
+        "price_impact",
+        "spread_shock_z"
+      ],
+      "feature_version": "v15_e_feature_surface_1",
+      "fixture_only": true,
+      "formal_walk_forward_executed": false,
+      "known_failure_conditions": [
+        "future_data_leak",
+        "cost_destruction",
+        "regime_flip",
+        "universe_checksum_mismatch",
+        "sibling_cost_collapse"
+      ],
+      "multiple_testing_status": "PENDING_DEVELOPMENT_CORRECTION",
+      "oos_touched": false,
+      "parameter_checksum": "f7f77099c9e2e289969b7f62fc61fcc09ca8a1e35c7f6af3af299642970f751f",
+      "parameters": {
+        "entry_z": 1.5,
+        "exit_z": 0.25,
+        "lookback_bars": 20
+      },
+      "profitability_claim": false,
+      "promoted": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {
+        "fixture_only": true,
+        "fragile": true,
+        "funding_stress": {
+          "net_expectancy": 0.05500000000000001,
+          "sample_n": 108
+        },
+        "liq_thin": {
+          "net_expectancy": 0.020000000000000004,
+          "sample_n": 106
+        },
+        "vol_high": {
+          "net_expectancy": 0.04000000000000001,
+          "sample_n": 106
+        }
+      },
+      "remaining_blockers": [
+        "formal_walk_forward_blocked",
+        "oos_reservation_blocked",
+        "multiple_testing_correction_incomplete",
+        "capacity_stress_incomplete"
+      ],
+      "risk_version": "deterministic_risk_gate_v1",
+      "sample_n": 320,
+      "schema": "FOUNDER_V15_E_CANDIDATE_DOSSIER_BUILDER",
+      "selected": false,
+      "semantic_mechanism": {
+        "deterministic": true,
+        "fixture_only": true,
+        "mechanism_family": "absorption",
+        "mechanism_semantic_id": "MECH_ABSORPTION_V4"
+      },
+      "symbol_breakdown": {
+        "FIXTUREBTCUSDT": {
+          "gross_expectancy": 0.35,
+          "net_expectancy": 0.05,
+          "sample_n": 106
+        },
+        "FIXTUREETHUSDT": {
+          "gross_expectancy": 0.35,
+          "net_expectancy": 0.05,
+          "sample_n": 106
+        },
+        "SYNTHUSDT": {
+          "gross_expectancy": 0.35,
+          "net_expectancy": 0.05,
+          "sample_n": 106
+        }
+      },
+      "universe_checksum": "a51c2d1aa216c591937373c2269ab71363757c4a70102d2808e9c328deabc29d"
+    },
+    {
+      "as_of_ms": 1700000000000,
+      "block_reason": "FORMAL_QUALIFICATION_BLOCKED_V15_E_DOSSIER_ONLY",
+      "candidate_checksum": "093bf953efa898f70b27c562e036bc7126b3816aa193b68078aa8dc6c2669643",
+      "candidate_id": "SYN_V15E_PROMISING_002",
+      "capacity_assumptions": {
+        "fixture_only": true,
+        "liquidity_floor_usd": 500000,
+        "max_notional_usd": 25000,
+        "max_participation_rate": 0.02,
+        "thin_market_block": true
+      },
+      "code_checksum": "c6db0e159fe2f628c6ca6407d9176103789eb4e8d8b3dc15801fa8931d0140af",
+      "cost_breakdown": {
+        "canonical_cost_authority_consumed": true,
+        "cost_destroyed": false,
+        "fees": 0.0004,
+        "fixture_only": true,
+        "funding": 5e-05,
+        "gross_expectancy": 0.7,
+        "impact": 0.0001,
+        "net_expectancy": 0.25,
+        "slippage": 0.0003,
+        "spread": 0.0002
+      },
+      "cost_version": "canonical_cost_model_v11_1",
+      "data_lineage": {
+        "as_of_ms": 1700000000000,
+        "campaign_id": "syn_v15e_dev_bundle",
+        "fixture_only": true,
+        "pit_semantics": "exchange_timestamp_and_receive_timestamp_le_as_of_ms",
+        "source": "synthetic_fixture_bundle"
+      },
+      "demo_ready": false,
+      "development_intervals": [
+        {
+          "category": "development_only",
+          "end_ms": 1694816000000,
+          "label": "dev_window_a",
+          "start_ms": 1692224000000
+        },
+        {
+          "category": "development_only",
+          "end_ms": 1697408000000,
+          "label": "dev_window_b",
+          "start_ms": 1694816000000
+        }
+      ],
+      "dossier_checksum": "70aa8ee4a337781b672b111ad732faeecb9b4c8314fea3f786dea5f278c74b17",
+      "dossier_status": "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+      "economic_rationale": "Fixture liquidity-withdrawal hypothesis: sudden top-of-book withdrawal may precede short-lived continuation in aggressive flow.",
+      "evidence_class": "FIXTURE_AND_DEVELOPMENT_ONLY",
+      "execution_version": "autonomous_execution_simulator_v1_1",
+      "failed_sibling_experiments": [
+        {
+          "experiment_id": "SYN_V15E_PROMISING_002_SIB_FAIL_COST",
+          "fixture_only": true,
+          "outcome": "COST_DESTROYED",
+          "reason": "net_expectancy_negative_under_canonical_cost"
+        },
+        {
+          "experiment_id": "SYN_V15E_PROMISING_002_SIB_FAIL_REGIME",
+          "fixture_only": true,
+          "outcome": "REGIME_FRAGILE",
+          "reason": "signal_collapsed_in_liq_thin_regime"
+        },
+        {
+          "experiment_id": "SYN_V15E_PROMISING_002_SIB_FAIL_SAMPLE",
+          "fixture_only": true,
+          "outcome": "INSUFFICIENT_SAMPLE",
+          "reason": "bootstrap_ci_unstable_below_min_n"
+        }
+      ],
+      "feature_ids": [
+        "aggressive_buy_sell_imbalance",
+        "trade_intensity",
+        "price_impact",
+        "spread_shock_z"
+      ],
+      "feature_version": "v15_e_feature_surface_1",
+      "fixture_only": true,
+      "formal_walk_forward_executed": false,
+      "known_failure_conditions": [
+        "future_data_leak",
+        "cost_destruction",
+        "regime_flip",
+        "universe_checksum_mismatch",
+        "sibling_cost_collapse"
+      ],
+      "multiple_testing_status": "DEVELOPMENT_SURVIVED_FAMILYWISE_SCREEN",
+      "oos_touched": false,
+      "parameter_checksum": "8bfab2a6bd1e7131ba88de7f3188da367571c33cbb72d833965a1a2eb1130eb8",
+      "parameters": {
+        "entry_z": 2.0,
+        "exit_z": 0.5,
+        "lookback_bars": 12
+      },
+      "profitability_claim": false,
+      "promoted": false,
+      "qualification_ready": false,
+      "qualified": false,
+      "regime_breakdown": {
+        "fixture_only": true,
+        "fragile": false,
+        "funding_stress": {
+          "net_expectancy": 0.275,
+          "sample_n": 214
+        },
+        "liq_thin": {
+          "net_expectancy": 0.1,
+          "sample_n": 213
+        },
+        "vol_high": {
+          "net_expectancy": 0.2,
+          "sample_n": 213
+        }
+      },
+      "remaining_blockers": [
+        "formal_walk_forward_blocked",
+        "oos_reservation_blocked",
+        "qualification_ready_forbidden",
+        "strategy_promotion_banned"
+      ],
+      "risk_version": "deterministic_risk_gate_v1",
+      "sample_n": 640,
+      "schema": "FOUNDER_V15_E_CANDIDATE_DOSSIER_BUILDER",
+      "selected": false,
+      "semantic_mechanism": {
+        "deterministic": true,
+        "fixture_only": true,
+        "mechanism_family": "liquidity_withdrawal",
+        "mechanism_semantic_id": "MECH_LIQUIDITY_WITHDRAWAL_V4"
+      },
+      "symbol_breakdown": {
+        "FIXTUREBTCUSDT": {
+          "gross_expectancy": 0.7,
+          "net_expectancy": 0.25,
+          "sample_n": 213
+        },
+        "FIXTUREETHUSDT": {
+          "gross_expectancy": 0.7,
+          "net_expectancy": 0.25,
+          "sample_n": 213
+        },
+        "SYNTHUSDT": {
+          "gross_expectancy": 0.7,
+          "net_expectancy": 0.25,
+          "sample_n": 213
+        }
+      },
+      "universe_checksum": "a51c2d1aa216c591937373c2269ab71363757c4a70102d2808e9c328deabc29d"
+    }
+  ],
+  "forbidden_output_count": 0,
+  "promoted_count": 0,
+  "qualification_ready_count": 0,
+  "qualified_count": 0,
+  "schema": "FOUNDER_V15_E_CANDIDATE_DOSSIER_BUILDER",
+  "status_ceiling_ok": true,
+  "status_histogram": {
+    "DEVELOPMENT_PROMISING_NOT_QUALIFIED": 1,
+    "DEVELOPMENT_REVIEW": 1
+  }
+}

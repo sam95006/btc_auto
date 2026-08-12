@@ -1,0 +1,32 @@
+{
+  "adapter_id": "NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1",
+  "book_model_version": "book_model_v11_2026-08-05",
+  "canonical_execution_engine": "backend.nexus_execution.execution_simulator_v1_1.AutonomousExecutionSimulatorV11",
+  "contracts": [
+    "order_book_snapshots",
+    "top_of_book_spread",
+    "depth_ladder",
+    "queue_position_approximation",
+    "market_impact",
+    "latency_distribution",
+    "partial_fill_progression",
+    "cancel_replace_latency",
+    "mark_index_divergence",
+    "funding_timestamp",
+    "liquidation_distance_degradation",
+    "stale_book_rejection",
+    "missing_book_rejection"
+  ],
+  "fill_accuracy_claim": "SIMULATED_ONLY_NO_VERIFIED_HISTORICAL_ORDER_BOOK_ACCURACY_CLAIM",
+  "invariants": [
+    "cost_bridge_exact",
+    "position_qty_non_negative",
+    "reduce_only_cannot_increase",
+    "duplicate_intents_no_duplicate_exposure",
+    "stale_or_missing_book_fail_closed",
+    "no_candle_touch_equals_fill",
+    "same_bar_ambiguity_adverse_first_or_blocked",
+    "exchange_write_attempt_count_eq_0"
+  ],
+  "schema": "v11_execution_microstructure_realism_contracts"
+}

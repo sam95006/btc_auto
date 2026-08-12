@@ -1,0 +1,32 @@
+{
+  "cursors": {
+    "BTCUSDT": {
+      "content_hash": "a027b8e9d53acfe202ab7b14f4812dc9bfa36133a59fd8a4ba308dc1ccde428b",
+      "data_class": "OFFICIAL_HISTORICAL_SAMPLE",
+      "exchange_timestamp": "2024-06-15T12:00:00Z",
+      "mode": "backfill"
+    },
+    "ETHUSDT": {
+      "content_hash": "3607c89ffcda93dc194f83ae481e59576e5f3db3f1b30d939ce3436e3a6992c6",
+      "data_class": "FIXTURE",
+      "exchange_timestamp": "2024-03-01T00:00:00Z",
+      "mode": "backfill"
+    },
+    "PEPEUSDT": {
+      "content_hash": "ed4ccb51cc718411964de59c52234cd4d00b0ce3e35e265bf3e3b6b46681f75d",
+      "data_class": "OFFICIAL_HISTORICAL_SAMPLE",
+      "exchange_timestamp": "2024-06-15T12:03:00Z",
+      "mode": "backfill"
+    },
+    "SOLUSDT": {
+      "content_hash": "9aec9170ba074f0c966ce93803034c7c91c56dbb3f8986dd797ceabc01d096db",
+      "data_class": "OFFICIAL_HISTORICAL_SAMPLE",
+      "exchange_timestamp": "2024-06-15T12:02:00Z",
+      "mode": "backfill"
+    }
+  },
+  "last_content_hash": "3607c89ffcda93dc194f83ae481e59576e5f3db3f1b30d939ce3436e3a6992c6",
+  "schema": "v18_b_ingest_resume_checkpoint_v1",
+  "source_offset": 8801,
+  "updated_at": "2026-08-06T03:06:27Z"
+}

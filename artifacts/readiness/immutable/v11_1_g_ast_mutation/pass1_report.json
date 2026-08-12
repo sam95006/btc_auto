@@ -1,0 +1,1420 @@
+{
+  "schema": "v11_security_mutation_redteam",
+  "program_id": "NEXUS_V11_SECURITY_MUTATION_REDTEAM",
+  "created_at": "2026-08-05T04:16:38Z",
+  "lane": "G",
+  "branch": "feature/v11_1-g-ast-mutation-depth",
+  "execution_mode": "SIMULATED_FAIL_CLOSED_NO_EXCHANGE_WRITE",
+  "owned_paths": [
+    "backend/nexus_autonomy/security_mutation_v11/",
+    "tools/research/run_security_mutation_redteam_v11.py",
+    "tools/ci/scan_security_mutation_v11.py",
+    "tools/ci/scan_production_ast_mutation_v11.py",
+    "tests/test_security_mutation_redteam_v11.py",
+    "tests/test_production_ast_mutation_v11.py",
+    "artifacts/readiness/immutable/v11_security_mutation_redteam/",
+    "artifacts/readiness/immutable/v11_1_g_ast_mutation/"
+  ],
+  "prohibited_paths": [
+    "frontend/",
+    "backend/nexus_demo_execution/",
+    "G:/",
+    "PR26"
+  ],
+  "hard_bans": [
+    "no_exchange_write",
+    "no_demo_orders",
+    "no_mainnet_client",
+    "no_mass_dependency_upgrades",
+    "no_mutmut_cosmic_ray_required",
+    "no_wrapper_only_pass",
+    "no_treat_h_gate_as_authority_remediation",
+    "no_reimplement_c1_c6"
+  ],
+  "subject_ids": [
+    "exchange_write_prevention",
+    "risk_limits",
+    "idempotency",
+    "ledger_hashes",
+    "snapshot_recovery",
+    "checkpoint_migration",
+    "public_private_boundary",
+    "demo_mainnet_separation",
+    "path_traversal",
+    "symlink_escape",
+    "secret_redaction",
+    "provider_prompt_leakage",
+    "unsafe_deserialization",
+    "credential_confusion",
+    "network_egress",
+    "import_graph"
+  ],
+  "scenario_ids": [
+    "filesystem_attack_fixtures",
+    "path_fuzz",
+    "json_fuzz",
+    "import_graph",
+    "network_traps",
+    "exchange_write_traps",
+    "secret_scan_property",
+    "checkpoint_digest",
+    "concurrent_idempotency",
+    "provider_public_leak",
+    "false_pass_guards"
+  ],
+  "campaign": {
+    "subject_ids": [
+      "exchange_write_prevention",
+      "risk_limits",
+      "idempotency",
+      "ledger_hashes",
+      "snapshot_recovery",
+      "checkpoint_migration",
+      "public_private_boundary",
+      "demo_mainnet_separation",
+      "path_traversal",
+      "symlink_escape",
+      "secret_redaction",
+      "provider_prompt_leakage",
+      "unsafe_deserialization",
+      "credential_confusion",
+      "network_egress",
+      "import_graph"
+    ],
+    "real_subject_results": [
+      {
+        "subject_id": "exchange_write_prevention",
+        "passed": true,
+        "case_count": 4,
+        "cases": [
+          {
+            "i": 0,
+            "ok": true,
+            "label": null
+          },
+          {
+            "i": 1,
+            "ok": true,
+            "label": null
+          },
+          {
+            "i": 2,
+            "ok": true,
+            "label": null
+          },
+          {
+            "i": 3,
+            "ok": true,
+            "label": null
+          }
+        ]
+      },
+      {
+        "subject_id": "risk_limits",
+        "passed": true,
+        "case_count": 4,
+        "cases": [
+          {
+            "i": 0,
+            "ok": true,
+            "label": "forbidden_100x"
+          },
+          {
+            "i": 1,
+            "ok": true,
+            "label": "above_ceiling"
+          },
+          {
+            "i": 2,
+            "ok": true,
+            "label": "zero"
+          },
+          {
+            "i": 3,
+            "ok": true,
+            "label": "negative"
+          }
+        ]
+      },
+      {
+        "subject_id": "idempotency",
+        "passed": true,
+        "case_count": 1,
+        "cases": [
+          {
+            "i": 0,
+            "ok": true,
+            "label": null
+          }
+        ]
+      },
+      {
+        "subject_id": "ledger_hashes",
+        "passed": true,
+        "case_count": 1,
+        "cases": [
+          {
+            "i": 0,
+            "ok": true,
+            "label": "tamper"
+          }
+        ]
+      },
+      {
+        "subject_id": "snapshot_recovery",
+        "passed": true,
+        "case_count": 1,
+        "cases": [
+          {
+            "i": 0,
+            "ok": true,
+            "label": "corrupt"
+          }
+        ]
+      },
+      {
+        "subject_id": "checkpoint_migration",
+        "passed": true,
+        "case_count": 2,
+        "cases": [
+          {
+            "i": 0,
+            "ok": true,
+            "label": null
+          },
+          {
+            "i": 1,
+            "ok": true,
+            "label": null
+          }
+        ]
+      },
+      {
+        "subject_id": "public_private_boundary",
+        "passed": true,
+        "case_count": 3,
+        "cases": [
+          {
+            "i": 0,
+            "ok": true,
+            "label": null
+          },
+          {
+            "i": 1,
+            "ok": true,
+            "label": null
+          },
+          {
+            "i": 2,
+            "ok": true,
+            "label": null
+          }
+        ]
+      },
+      {
+        "subject_id": "demo_mainnet_separation",
+        "passed": true,
+        "case_count": 2,
+        "cases": [
+          {
+            "i": 0,
+            "ok": true,
+            "label": "demo_on_mainnet_host"
+          },
+          {
+            "i": 1,
+            "ok": true,
+            "label": "mainnet_on_demo_host"
+          }
+        ]
+      },
+      {
+        "subject_id": "path_traversal",
+        "passed": true,
+        "case_count": 3,
+        "cases": [
+          {
+            "i": 0,
+            "ok": true,
+            "label": "dotdot"
+          },
+          {
+            "i": 1,
+            "ok": true,
+            "label": "win_dotdot"
+          },
+          {
+            "i": 2,
+            "ok": true,
+            "label": "internal_dotdot"
+          }
+        ]
+      },
+      {
+        "subject_id": "symlink_escape",
+        "passed": true,
+        "case_count": 1,
+        "cases": [
+          {
+            "i": 0,
+            "ok": true,
+            "label": "symlink"
+          }
+        ]
+      },
+      {
+        "subject_id": "secret_redaction",
+        "passed": true,
+        "case_count": 1,
+        "cases": [
+          {
+            "i": 0,
+            "ok": true,
+            "label": null
+          }
+        ]
+      },
+      {
+        "subject_id": "provider_prompt_leakage",
+        "passed": true,
+        "case_count": 3,
+        "cases": [
+          {
+            "i": 0,
+            "ok": true,
+            "label": null
+          },
+          {
+            "i": 1,
+            "ok": true,
+            "label": null
+          },
+          {
+            "i": 2,
+            "ok": true,
+            "label": null
+          }
+        ]
+      },
+      {
+        "subject_id": "unsafe_deserialization",
+        "passed": true,
+        "case_count": 4,
+        "cases": [
+          {
+            "i": 0,
+            "ok": true,
+            "label": null
+          },
+          {
+            "i": 1,
+            "ok": true,
+            "label": null
+          },
+          {
+            "i": 2,
+            "ok": true,
+            "label": null
+          },
+          {
+            "i": 3,
+            "ok": true,
+            "label": null
+          }
+        ]
+      },
+      {
+        "subject_id": "credential_confusion",
+        "passed": true,
+        "case_count": 3,
+        "cases": [
+          {
+            "i": 0,
+            "ok": true,
+            "label": "missing_demo"
+          },
+          {
+            "i": 1,
+            "ok": true,
+            "label": "mainnet_fallback"
+          },
+          {
+            "i": 2,
+            "ok": true,
+            "label": "mainnet_request"
+          }
+        ]
+      },
+      {
+        "subject_id": "network_egress",
+        "passed": true,
+        "case_count": 3,
+        "cases": [
+          {
+            "i": 0,
+            "ok": true,
+            "label": null
+          },
+          {
+            "i": 1,
+            "ok": true,
+            "label": null
+          },
+          {
+            "i": 2,
+            "ok": true,
+            "label": null
+          }
+        ]
+      },
+      {
+        "subject_id": "import_graph",
+        "passed": true,
+        "case_count": 1,
+        "cases": [
+          {
+            "i": 0,
+            "ok": true,
+            "label": "repo_graph"
+          }
+        ]
+      }
+    ],
+    "real_subject_pass_count": 16,
+    "real_subject_total": 16,
+    "mutation_outcomes": [
+      {
+        "mutation_id": "exchange_write_prevention::noop_trap",
+        "subject_id": "exchange_write_prevention",
+        "operator": "noop_trap",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "exchange_write_prevention::noop_trap::attack_0::oracle",
+          "exchange_write_prevention::noop_trap::attack_1::oracle",
+          "exchange_write_prevention::noop_trap::attack_2::oracle",
+          "exchange_write_prevention::noop_trap::attack_3::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 4
+        }
+      },
+      {
+        "mutation_id": "exchange_write_prevention::never_block",
+        "subject_id": "exchange_write_prevention",
+        "operator": "never_block",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "exchange_write_prevention::never_block::attack_0",
+          "exchange_write_prevention::never_block::attack_1",
+          "exchange_write_prevention::never_block::attack_2",
+          "exchange_write_prevention::never_block::attack_3"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 4
+        }
+      },
+      {
+        "mutation_id": "risk_limits::raise_ceiling_1000x",
+        "subject_id": "risk_limits",
+        "operator": "raise_ceiling_1000x",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "risk_limits::raise_ceiling_1000x::attack_0",
+          "risk_limits::raise_ceiling_1000x::attack_1"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 2
+        }
+      },
+      {
+        "mutation_id": "risk_limits::always_claim_safe",
+        "subject_id": "risk_limits",
+        "operator": "always_claim_safe",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "risk_limits::always_claim_safe::attack_0::oracle",
+          "risk_limits::always_claim_safe::attack_1::oracle",
+          "risk_limits::always_claim_safe::attack_2::oracle",
+          "risk_limits::always_claim_safe::attack_3::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 4
+        }
+      },
+      {
+        "mutation_id": "idempotency::clear_intent_owners",
+        "subject_id": "idempotency",
+        "operator": "clear_intent_owners",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "idempotency::clear_intent_owners::attack_0"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 1
+        }
+      },
+      {
+        "mutation_id": "idempotency::always_claim_safe",
+        "subject_id": "idempotency",
+        "operator": "always_claim_safe",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "idempotency::always_claim_safe::attack_0::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 1
+        }
+      },
+      {
+        "mutation_id": "ledger_hashes::skip_tamper_detect",
+        "subject_id": "ledger_hashes",
+        "operator": "skip_tamper_detect",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "ledger_hashes::skip_tamper_detect::attack_0"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 1
+        }
+      },
+      {
+        "mutation_id": "ledger_hashes::always_claim_safe",
+        "subject_id": "ledger_hashes",
+        "operator": "always_claim_safe",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "ledger_hashes::always_claim_safe::attack_0::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 1
+        }
+      },
+      {
+        "mutation_id": "snapshot_recovery::ignore_checksum",
+        "subject_id": "snapshot_recovery",
+        "operator": "ignore_checksum",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "snapshot_recovery::ignore_checksum::attack_0"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 1
+        }
+      },
+      {
+        "mutation_id": "snapshot_recovery::always_claim_safe",
+        "subject_id": "snapshot_recovery",
+        "operator": "always_claim_safe",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "snapshot_recovery::always_claim_safe::attack_0::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 1
+        }
+      },
+      {
+        "mutation_id": "checkpoint_migration::trust_all_schemas",
+        "subject_id": "checkpoint_migration",
+        "operator": "trust_all_schemas",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "checkpoint_migration::trust_all_schemas::attack_0",
+          "checkpoint_migration::trust_all_schemas::attack_1"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 2
+        }
+      },
+      {
+        "mutation_id": "checkpoint_migration::always_claim_safe",
+        "subject_id": "checkpoint_migration",
+        "operator": "always_claim_safe",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "checkpoint_migration::always_claim_safe::attack_0::oracle",
+          "checkpoint_migration::always_claim_safe::attack_1::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 2
+        }
+      },
+      {
+        "mutation_id": "public_private_boundary::allow_private_fields",
+        "subject_id": "public_private_boundary",
+        "operator": "allow_private_fields",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "public_private_boundary::allow_private_fields::attack_0",
+          "public_private_boundary::allow_private_fields::attack_1",
+          "public_private_boundary::allow_private_fields::attack_2"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 3
+        }
+      },
+      {
+        "mutation_id": "public_private_boundary::always_claim_safe",
+        "subject_id": "public_private_boundary",
+        "operator": "always_claim_safe",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "public_private_boundary::always_claim_safe::attack_0::oracle",
+          "public_private_boundary::always_claim_safe::attack_1::oracle",
+          "public_private_boundary::always_claim_safe::attack_2::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 3
+        }
+      },
+      {
+        "mutation_id": "demo_mainnet_separation::ignore_confusion",
+        "subject_id": "demo_mainnet_separation",
+        "operator": "ignore_confusion",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "demo_mainnet_separation::ignore_confusion::attack_0::oracle",
+          "demo_mainnet_separation::ignore_confusion::attack_1::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 2
+        }
+      },
+      {
+        "mutation_id": "demo_mainnet_separation::always_claim_safe",
+        "subject_id": "demo_mainnet_separation",
+        "operator": "always_claim_safe",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "demo_mainnet_separation::always_claim_safe::attack_0::oracle",
+          "demo_mainnet_separation::always_claim_safe::attack_1::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 2
+        }
+      },
+      {
+        "mutation_id": "path_traversal::skip_dotdot_token_check",
+        "subject_id": "path_traversal",
+        "operator": "skip_dotdot_token_check",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "path_traversal::skip_dotdot_token_check::attack_2"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 1
+        }
+      },
+      {
+        "mutation_id": "path_traversal::allow_all_paths",
+        "subject_id": "path_traversal",
+        "operator": "allow_all_paths",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "path_traversal::allow_all_paths::attack_0",
+          "path_traversal::allow_all_paths::attack_1",
+          "path_traversal::allow_all_paths::attack_2"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 3
+        }
+      },
+      {
+        "mutation_id": "path_traversal::always_claim_safe",
+        "subject_id": "path_traversal",
+        "operator": "always_claim_safe",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "path_traversal::always_claim_safe::attack_0::oracle",
+          "path_traversal::always_claim_safe::attack_1::oracle",
+          "path_traversal::always_claim_safe::attack_2::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 3
+        }
+      },
+      {
+        "mutation_id": "symlink_escape::follow_without_jail",
+        "subject_id": "symlink_escape",
+        "operator": "follow_without_jail",
+        "killed": true,
+        "equivalent": true,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [],
+        "detail": "symlink_unavailable_platform_skip",
+        "severity": "info",
+        "evidence": {
+          "platform_skip": true
+        }
+      },
+      {
+        "mutation_id": "symlink_escape::always_claim_safe",
+        "subject_id": "symlink_escape",
+        "operator": "always_claim_safe",
+        "killed": true,
+        "equivalent": true,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [],
+        "detail": "symlink_unavailable_platform_skip",
+        "severity": "info",
+        "evidence": {
+          "platform_skip": true
+        }
+      },
+      {
+        "mutation_id": "secret_redaction::no_redact",
+        "subject_id": "secret_redaction",
+        "operator": "no_redact",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "secret_redaction::no_redact::attack_0"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 1
+        }
+      },
+      {
+        "mutation_id": "secret_redaction::always_claim_safe",
+        "subject_id": "secret_redaction",
+        "operator": "always_claim_safe",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "secret_redaction::always_claim_safe::attack_0::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 1
+        }
+      },
+      {
+        "mutation_id": "provider_prompt_leakage::allow_raw_provider",
+        "subject_id": "provider_prompt_leakage",
+        "operator": "allow_raw_provider",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "provider_prompt_leakage::allow_raw_provider::attack_0",
+          "provider_prompt_leakage::allow_raw_provider::attack_1",
+          "provider_prompt_leakage::allow_raw_provider::attack_2"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 3
+        }
+      },
+      {
+        "mutation_id": "provider_prompt_leakage::always_claim_safe",
+        "subject_id": "provider_prompt_leakage",
+        "operator": "always_claim_safe",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "provider_prompt_leakage::always_claim_safe::attack_0::oracle",
+          "provider_prompt_leakage::always_claim_safe::attack_1::oracle",
+          "provider_prompt_leakage::always_claim_safe::attack_2::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 3
+        }
+      },
+      {
+        "mutation_id": "unsafe_deserialization::allow_pickle",
+        "subject_id": "unsafe_deserialization",
+        "operator": "allow_pickle",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "unsafe_deserialization::allow_pickle::attack_0"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 1
+        }
+      },
+      {
+        "mutation_id": "unsafe_deserialization::always_claim_safe",
+        "subject_id": "unsafe_deserialization",
+        "operator": "always_claim_safe",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "unsafe_deserialization::always_claim_safe::attack_0::oracle",
+          "unsafe_deserialization::always_claim_safe::attack_1::oracle",
+          "unsafe_deserialization::always_claim_safe::attack_2::oracle",
+          "unsafe_deserialization::always_claim_safe::attack_3::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 4
+        }
+      },
+      {
+        "mutation_id": "credential_confusion::ignore_mainnet_fallback",
+        "subject_id": "credential_confusion",
+        "operator": "ignore_mainnet_fallback",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "credential_confusion::ignore_mainnet_fallback::attack_0::oracle",
+          "credential_confusion::ignore_mainnet_fallback::attack_1",
+          "credential_confusion::ignore_mainnet_fallback::attack_2::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 3
+        }
+      },
+      {
+        "mutation_id": "credential_confusion::always_claim_safe",
+        "subject_id": "credential_confusion",
+        "operator": "always_claim_safe",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "credential_confusion::always_claim_safe::attack_0::oracle",
+          "credential_confusion::always_claim_safe::attack_1::oracle",
+          "credential_confusion::always_claim_safe::attack_2::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 3
+        }
+      },
+      {
+        "mutation_id": "network_egress::allow_exchange_write_hosts",
+        "subject_id": "network_egress",
+        "operator": "allow_exchange_write_hosts",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "network_egress::allow_exchange_write_hosts::attack_0",
+          "network_egress::allow_exchange_write_hosts::attack_2"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 2
+        }
+      },
+      {
+        "mutation_id": "network_egress::always_claim_safe",
+        "subject_id": "network_egress",
+        "operator": "always_claim_safe",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "network_egress::always_claim_safe::attack_0::oracle",
+          "network_egress::always_claim_safe::attack_1::oracle",
+          "network_egress::always_claim_safe::attack_2::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 3
+        }
+      },
+      {
+        "mutation_id": "import_graph::blind_pass",
+        "subject_id": "import_graph",
+        "operator": "blind_pass",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "import_graph::blind_pass::attack_0::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 1
+        }
+      },
+      {
+        "mutation_id": "import_graph::always_claim_safe",
+        "subject_id": "import_graph",
+        "operator": "always_claim_safe",
+        "killed": true,
+        "equivalent": false,
+        "survivor": false,
+        "unresolved_blocker": false,
+        "blocker_reason": "",
+        "kill_cases": [
+          "import_graph::always_claim_safe::attack_0::oracle"
+        ],
+        "detail": "killed_by_kill_suite",
+        "severity": "info",
+        "evidence": {
+          "kill_case_count": 1
+        }
+      }
+    ],
+    "mutation_total": 33,
+    "mutation_killed_count": 33,
+    "mutation_survivor_count": 0,
+    "mutation_unresolved_blocker_count": 0,
+    "survivors": [],
+    "unresolved_blockers": [],
+    "real_failures": []
+  },
+  "scenarios": [
+    {
+      "scenario_id": "filesystem_attack_fixtures",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "fs_fixtures_blocked",
+      "critical": false,
+      "evidence": {
+        "blocked": 7,
+        "total": 8,
+        "pickle_blocked": true,
+        "corrupt_blocked": true
+      }
+    },
+    {
+      "scenario_id": "path_fuzz",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "fuzz_blocked=50/50",
+      "critical": false,
+      "evidence": {
+        "dangerous": 50,
+        "blocked": 50,
+        "vector_count": 64
+      }
+    },
+    {
+      "scenario_id": "json_fuzz",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "scalar_rejected=22/22",
+      "critical": false,
+      "evidence": {
+        "scalar_total": 22,
+        "rejected": 22
+      }
+    },
+    {
+      "scenario_id": "import_graph",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "import_graph_clean",
+      "critical": false,
+      "evidence": {
+        "violation_count": 0,
+        "violations": [],
+        "node_count": 926,
+        "edge_count": 3207
+      }
+    },
+    {
+      "scenario_id": "network_traps",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "egress_blocked",
+      "critical": false,
+      "evidence": {
+        "write_blocked": true,
+        "unexpected_blocked": true,
+        "mainnet_blocked": true,
+        "counters": {
+          "request_count": 3,
+          "blocked_count": 3,
+          "write_blocked_count": 2,
+          "unexpected_domain_count": 1,
+          "allowed_urls": [],
+          "blocked_urls": [
+            "https://api-demo.bybit.com/v5/order/create",
+            "https://evil.example/exfil",
+            "https://api.bybit.com/v5/order/create"
+          ]
+        }
+      }
+    },
+    {
+      "scenario_id": "exchange_write_traps",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "write_traps_fired",
+      "critical": false,
+      "evidence": {
+        "fired": 3,
+        "intentional_trap_probe_count": 3,
+        "workflow_exchange_write_attempt_count": 0
+      }
+    },
+    {
+      "scenario_id": "secret_scan_property",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "secret_scan_property_ok",
+      "critical": false,
+      "evidence": {
+        "clean_hit_count": 0,
+        "assign_ok": true,
+        "json_ok": true,
+        "json_assignment_ok": true
+      }
+    },
+    {
+      "scenario_id": "checkpoint_digest",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "digest_mismatch_detected",
+      "critical": false,
+      "evidence": {
+        "blocked": true
+      }
+    },
+    {
+      "scenario_id": "concurrent_idempotency",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "concurrent_idempotency_ok",
+      "critical": false,
+      "evidence": {
+        "results": [
+          "ACCEPTED",
+          "DUPLICATE_IGNORED",
+          "DUPLICATE_IGNORED",
+          "DUPLICATE_IGNORED"
+        ],
+        "accepted": 1,
+        "ignored": 3
+      }
+    },
+    {
+      "scenario_id": "provider_public_leak",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "provider_leak_blocked",
+      "critical": false,
+      "evidence": {
+        "blocked_ledger": true,
+        "blocked_public": true
+      }
+    },
+    {
+      "scenario_id": "false_pass_guards",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "false_pass_guards_ok",
+      "critical": false,
+      "evidence": {
+        "subject_count": 16,
+        "operator_count": 33,
+        "always_claim_safe_count": 15
+      }
+    }
+  ],
+  "scenario_pass_count": 11,
+  "scenario_total_count": 11,
+  "mutation_killed_count": 33,
+  "mutation_survivor_count": 0,
+  "mutation_unresolved_blocker_count": 0,
+  "mutation_total": 33,
+  "real_subject_pass_count": 16,
+  "real_subject_total": 16,
+  "production_ast": {
+    "schema": "v11_g_production_ast_mutation_v1",
+    "mutation_kind": "production_ast",
+    "tool": "custom_ast_mutator",
+    "mutmut_used": false,
+    "cosmic_ray_used": false,
+    "wrapper_only": false,
+    "wrapper_only_pass_forbidden": true,
+    "targets": [
+      "backend/nexus_autonomy/security_persistence_v1.py",
+      "backend/nexus_autonomy/security_credential_boundary_v1.py",
+      "backend/nexus_autonomy/security_public_private_v1.py",
+      "backend/nexus_autonomy/security_write_traps_v1.py"
+    ],
+    "mutant_total": 8,
+    "killed_count": 5,
+    "survivor_count": 0,
+    "equivalent_count": 3,
+    "error_count": 0,
+    "production_ast_survivor_count": 0,
+    "production_ast_killed_count": 5,
+    "survivor_ids": [],
+    "required_detect_kills": [
+      "persist_scan_secrets_noop",
+      "persist_json_accept_scalars",
+      "public_assert_schema_noop",
+      "public_redact_identity",
+      "write_trap_install_noop"
+    ],
+    "required_detect_kills_missing": [],
+    "required_detect_kills_ok": true,
+    "results": [
+      {
+        "mutant_id": "persist_drop_dotdot_token_check",
+        "target_rel": "backend/nexus_autonomy/security_persistence_v1.py",
+        "operator": "drop_dotdot_token_check",
+        "description": "Remove PurePosixPath '..' token rejection in assert_safe_relative_path",
+        "status": "equivalent",
+        "oracle": {
+          "hole_observed": false,
+          "property_holds": true,
+          "detail": "dotdot_still_blocked",
+          "path_traversal_blocked": true,
+          "killed": false,
+          "semantics": "kill_suite_detect_or_equivalent"
+        },
+        "mutation_kind": "production_ast"
+      },
+      {
+        "mutant_id": "persist_scan_secrets_noop",
+        "target_rel": "backend/nexus_autonomy/security_persistence_v1.py",
+        "operator": "return_empty_list",
+        "description": "scan_secrets_in_evidence always returns []",
+        "status": "killed",
+        "oracle": {
+          "hole_observed": true,
+          "property_holds": false,
+          "detail": "secrets_missed_HOLE",
+          "secret_detected": false,
+          "killed": true,
+          "semantics": "kill_suite_detect_or_equivalent"
+        },
+        "mutation_kind": "production_ast"
+      },
+      {
+        "mutant_id": "persist_json_accept_scalars",
+        "target_rel": "backend/nexus_autonomy/security_persistence_v1.py",
+        "operator": "drop_scalar_root_check",
+        "description": "fail_closed_json_loads accepts scalar roots",
+        "status": "killed",
+        "oracle": {
+          "hole_observed": true,
+          "property_holds": false,
+          "detail": "scalar_accepted_HOLE",
+          "scalar_json_blocked": false,
+          "killed": true,
+          "semantics": "kill_suite_detect_or_equivalent"
+        },
+        "mutation_kind": "production_ast"
+      },
+      {
+        "mutant_id": "cred_ignore_mainnet_fallback",
+        "target_rel": "backend/nexus_autonomy/security_credential_boundary_v1.py",
+        "operator": "force_mainnet_fallback_false",
+        "description": "Force mainnet_fallback=False after detection (hides demo→mainnet fallback)",
+        "status": "equivalent",
+        "oracle": {
+          "hole_observed": false,
+          "property_holds": true,
+          "detail": "fallback_or_confusion_still_fail_closed",
+          "writes_enabled": false,
+          "fail_closed": true,
+          "mainnet_fallback_used": true,
+          "demo_mainnet_confused": true,
+          "killed": false,
+          "semantics": "kill_suite_detect_or_equivalent"
+        },
+        "mutation_kind": "production_ast"
+      },
+      {
+        "mutant_id": "cred_force_writes_enabled",
+        "target_rel": "backend/nexus_autonomy/security_credential_boundary_v1.py",
+        "operator": "force_writes_enabled",
+        "description": "Force writes_enabled=True assignments",
+        "status": "equivalent",
+        "oracle": {
+          "hole_observed": false,
+          "property_holds": true,
+          "detail": "writes_still_disabled",
+          "writes_enabled": false,
+          "fail_closed": true,
+          "killed": false,
+          "semantics": "kill_suite_detect_or_equivalent"
+        },
+        "mutation_kind": "production_ast"
+      },
+      {
+        "mutant_id": "public_assert_schema_noop",
+        "target_rel": "backend/nexus_autonomy/security_public_private_v1.py",
+        "operator": "noop_assert_public_schema",
+        "description": "assert_public_schema becomes no-op",
+        "status": "killed",
+        "oracle": {
+          "hole_observed": true,
+          "property_holds": false,
+          "detail": "public_schema_noop_HOLE",
+          "killed": true,
+          "semantics": "kill_suite_detect_or_equivalent"
+        },
+        "mutation_kind": "production_ast"
+      },
+      {
+        "mutant_id": "public_redact_identity",
+        "target_rel": "backend/nexus_autonomy/security_public_private_v1.py",
+        "operator": "redact_identity",
+        "description": "redact_account_identifiers returns payload unchanged",
+        "status": "killed",
+        "oracle": {
+          "hole_observed": true,
+          "property_holds": false,
+          "detail": "redaction_identity_HOLE",
+          "secret_leak_count": 1,
+          "killed": true,
+          "semantics": "kill_suite_detect_or_equivalent"
+        },
+        "mutation_kind": "production_ast"
+      },
+      {
+        "mutant_id": "write_trap_install_noop",
+        "target_rel": "backend/nexus_autonomy/security_write_traps_v1.py",
+        "operator": "write_trap_noop",
+        "description": "install() becomes no-op success",
+        "status": "killed",
+        "oracle": {
+          "hole_observed": true,
+          "property_holds": false,
+          "detail": "install_noop_HOLE",
+          "write_method_trap_count": 0,
+          "patch_count": 0,
+          "install_result_type": "bool",
+          "killed": true,
+          "semantics": "kill_suite_detect_or_equivalent"
+        },
+        "mutation_kind": "production_ast"
+      }
+    ],
+    "exchange_write_attempt_count": 0,
+    "mainnet_client_created_count": 0,
+    "r4_semantics_note": "R4 review labeled hole_observed as 'survived' (resilience view). G kill-suite labels hole_observed as 'killed' (detection view) and property_holds as 'equivalent'. Fail-closed on silent survivors."
+  },
+  "production_ast_survivor_count": 0,
+  "production_ast_killed_count": 5,
+  "production_ast_equivalent_count": 3,
+  "wrapper_only_pass_forbidden": true,
+  "h_gate_pass_is_not_authority_remediation": true,
+  "duplicate_gate_baseline_false_confidence_ack": true,
+  "h_gate_honesty_note": "Lane H CI duplicate-authority gate PASS baselining known competitors does NOT clear critical multi-authority blockers. Treat H as audit/registry/gate only -- not runtime authority remediation. C1-C6 own cost/lifecycle/retry/checkpoint/shim/SCC remediation.",
+  "findings": {
+    "critical_finding_count": 0,
+    "high_finding_count": 3,
+    "unresolved_critical_count": 0,
+    "residual_high_count": 3,
+    "items": [
+      {
+        "severity": "high",
+        "code": "symlink_escape_platform_dependent",
+        "detail": "Windows may deny symlink creation without privilege; campaign marks symlink mutants equivalent/platform_skip. Re-run on symlink-capable host before treating symlink jail as production-proven.",
+        "fail_closed": false
+      },
+      {
+        "severity": "high",
+        "code": "wrapper_campaign_is_supplemental_only",
+        "detail": "In-memory wrapper mutants remain as a supplemental kill suite. PASS now requires production AST mutation (production_ast_survivor_count=0, wrapper_only_pass_forbidden=true). Do not treat wrapper-only evidence as production-module proof.",
+        "fail_closed": false
+      },
+      {
+        "severity": "high",
+        "code": "DUPLICATE_GATE_BASELINE_FALSE_CONFIDENCE",
+        "detail": "Lane H CI duplicate-authority gate PASS baselining known competitors does NOT clear critical multi-authority blockers. Treat H as audit/registry/gate only -- not runtime authority remediation. C1-C6 own cost/lifecycle/retry/checkpoint/shim/SCC remediation.",
+        "fail_closed": false
+      }
+    ]
+  },
+  "exchange_write_attempt_count": 0,
+  "secret_leak_count": 0,
+  "mainnet_client_created_count": 0,
+  "demo_order_count": 0,
+  "real_money": false,
+  "mainnet": false,
+  "label": "SECURITY_MUTATION_REDTEAM_CONTROL_NOT_REAL_TRADING",
+  "pass_number": 2,
+  "secret_scan": {
+    "raw_hit_count": 0,
+    "real_leak_count": 0,
+    "real_leaks": []
+  },
+  "recommendation": "NEXUS_V11_SECURITY_MUTATION_REDTEAM_PASS",
+  "Security_Mutation_Redteam_status": "NEXUS_V11_SECURITY_MUTATION_REDTEAM_PASS",
+  "passed": true,
+  "critical_findings": [],
+  "high_findings": [
+    {
+      "severity": "high",
+      "code": "symlink_escape_platform_dependent",
+      "detail": "Windows may deny symlink creation without privilege; campaign marks symlink mutants equivalent/platform_skip. Re-run on symlink-capable host before treating symlink jail as production-proven.",
+      "fail_closed": false
+    },
+    {
+      "severity": "high",
+      "code": "wrapper_campaign_is_supplemental_only",
+      "detail": "In-memory wrapper mutants remain as a supplemental kill suite. PASS now requires production AST mutation (production_ast_survivor_count=0, wrapper_only_pass_forbidden=true). Do not treat wrapper-only evidence as production-module proof.",
+      "fail_closed": false
+    },
+    {
+      "severity": "high",
+      "code": "DUPLICATE_GATE_BASELINE_FALSE_CONFIDENCE",
+      "detail": "Lane H CI duplicate-authority gate PASS baselining known competitors does NOT clear critical multi-authority blockers. Treat H as audit/registry/gate only -- not runtime authority remediation. C1-C6 own cost/lifecycle/retry/checkpoint/shim/SCC remediation.",
+      "fail_closed": false
+    }
+  ],
+  "unresolved_blockers": []
+}

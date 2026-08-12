@@ -1,0 +1,49 @@
+{
+  "schema": "clock_latency_report",
+  "soak": {
+    "clock": {
+      "server_clock_sample_count": 60,
+      "local_minus_server_clock_offset_ms_min": -687.0,
+      "local_minus_server_clock_offset_ms_p50": -661.5,
+      "local_minus_server_clock_offset_ms_p95": -647.95,
+      "local_minus_server_clock_offset_ms_max": -617.0
+    },
+    "latency": {
+      "raw_latency_min_ms": -619.0,
+      "raw_latency_p50_ms": -608.0,
+      "raw_latency_p95_ms": -590.0,
+      "raw_latency_p99_ms": -390.0,
+      "raw_latency_max_ms": -140.0,
+      "corrected_latency_min_ms": 33.0,
+      "corrected_latency_p50_ms": 50.0,
+      "corrected_latency_p95_ms": 69.0,
+      "corrected_latency_p99_ms": 271.0,
+      "corrected_latency_max_ms": 521.0,
+      "negative_raw_latency_count": 98030,
+      "negative_corrected_latency_count": 0
+    }
+  },
+  "capacity": {
+    "clock": {
+      "server_clock_sample_count": 15,
+      "local_minus_server_clock_offset_ms_min": -692.0,
+      "local_minus_server_clock_offset_ms_p50": -673.0,
+      "local_minus_server_clock_offset_ms_p95": -663.2,
+      "local_minus_server_clock_offset_ms_max": -659.0
+    },
+    "latency": {
+      "raw_latency_min_ms": -623.0,
+      "raw_latency_p50_ms": -619.0,
+      "raw_latency_p95_ms": -604.0,
+      "raw_latency_p99_ms": -535.0,
+      "raw_latency_max_ms": -130.0,
+      "corrected_latency_min_ms": 39.0,
+      "corrected_latency_p50_ms": 54.0,
+      "corrected_latency_p95_ms": 70.5,
+      "corrected_latency_p99_ms": 137.29999999998836,
+      "corrected_latency_max_ms": 547.0,
+      "negative_raw_latency_count": 149971,
+      "negative_corrected_latency_count": 0
+    }
+  }
+}

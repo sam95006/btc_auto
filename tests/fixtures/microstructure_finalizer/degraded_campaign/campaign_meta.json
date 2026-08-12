@@ -1,0 +1,41 @@
+{
+  "campaign_id": "ms_syn_finalizer_degraded_v1",
+  "valid_capture_seconds": 900,
+  "connection_gap_seconds": 600,
+  "wall_elapsed_seconds": 2000,
+  "calendar_days": 0.05,
+  "complete_UTC_day_coverage": false,
+  "Founder_authorization": false,
+  "symbol_coverage": [
+    "BTCUSDT"
+  ],
+  "config": {
+    "soft_storage_cap_bytes": 1000,
+    "hard_storage_cap_bytes": 5000
+  },
+  "clock": {
+    "server_clock_sample_count": 2,
+    "local_minus_server_clock_offset_ms_p95": 400.0
+  },
+  "heartbeat": {
+    "heartbeat_status": "HEARTBEAT_ACK_PARSING_FAILED",
+    "heartbeat_send_count": 5,
+    "heartbeat_ack_count": 0,
+    "heartbeat_timeout_count": 3
+  },
+  "memory": {
+    "memory_growth_status": "LINEAR_GROWTH_DETECTED",
+    "process_RSS_peak_bytes": 900000000
+  },
+  "budget": {
+    "status": "STORAGE_BUDGET_BLOCKED"
+  },
+  "resume": {
+    "resumable": true,
+    "last_partition_id": "syn_sess_degraded_001_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260802_08_0",
+    "clean_shutdown": false,
+    "capture_session_ids": [
+      "syn_sess_degraded_001"
+    ]
+  }
+}

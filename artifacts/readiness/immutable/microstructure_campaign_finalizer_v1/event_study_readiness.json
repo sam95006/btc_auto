@@ -1,0 +1,54 @@
+{
+  "schema": "event_study_readiness_v1",
+  "event_study_readiness_status": "NOT_READY",
+  "event_study_real_execution": false,
+  "hold_gates": {
+    "calendar_days": 14,
+    "complete_UTC_day_coverage": true,
+    "symbol_diversity": 25,
+    "liquidation_event_count": 500,
+    "integrity_status": "PASS",
+    "Founder_authorization": true
+  },
+  "gate_results": {
+    "calendar_days": {
+      "required": 14,
+      "actual": 0.2,
+      "passed": false
+    },
+    "complete_UTC_day_coverage": {
+      "required": true,
+      "actual": false,
+      "passed": false
+    },
+    "symbol_diversity": {
+      "required": 25,
+      "actual": 2,
+      "passed": false
+    },
+    "liquidation_event_count": {
+      "required": 500,
+      "actual": 8,
+      "passed": false
+    },
+    "integrity_status": {
+      "required": "PASS",
+      "actual": "PASS",
+      "passed": true
+    },
+    "Founder_authorization": {
+      "required": true,
+      "actual": false,
+      "passed": false
+    }
+  },
+  "blockers": [
+    "calendar_days",
+    "complete_UTC_day_coverage",
+    "symbol_diversity",
+    "liquidation_event_count",
+    "Founder_authorization"
+  ],
+  "note": "Event Study remains blocked until frozen hold gates and Founder authorization are satisfied",
+  "created_at": "2026-08-04T16:16:39Z"
+}

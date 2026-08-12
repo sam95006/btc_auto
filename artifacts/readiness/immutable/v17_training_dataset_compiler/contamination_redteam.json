@@ -1,0 +1,116 @@
+{
+  "attack_count": 13,
+  "blocked_count": 13,
+  "contamination_survivors": 0,
+  "expected_min_attacks": 12,
+  "findings": [
+    {
+      "attack_blocked": true,
+      "attack_id": "train_on_walk_forward_reserved",
+      "detail": "reserved_split_access_banned:train:WALK_FORWARD_RESERVED",
+      "disposition": "FIXED",
+      "severity": "CRITICAL",
+      "survivor": false
+    },
+    {
+      "attack_blocked": true,
+      "attack_id": "train_on_oos_reserved",
+      "detail": "reserved_split_access_banned:train:OOS_RESERVED",
+      "disposition": "FIXED",
+      "severity": "CRITICAL",
+      "survivor": false
+    },
+    {
+      "attack_blocked": true,
+      "attack_id": "lookahead_feature_leak",
+      "detail": "lookahead_feature_after_label",
+      "disposition": "FIXED",
+      "severity": "CRITICAL",
+      "survivor": false
+    },
+    {
+      "attack_blocked": true,
+      "attack_id": "llm_sole_tick_consumer",
+      "detail": "numeric_stat_model_required",
+      "disposition": "FIXED",
+      "severity": "CRITICAL",
+      "survivor": false
+    },
+    {
+      "attack_blocked": true,
+      "attack_id": "llm_primary_tick_consumer",
+      "detail": "tick_primary_must_be_numeric_stat",
+      "disposition": "FIXED",
+      "severity": "CRITICAL",
+      "survivor": false
+    },
+    {
+      "attack_blocked": true,
+      "attack_id": "reserved_in_trainable_filter",
+      "detail": "leaked=0 trainable=9",
+      "disposition": "FIXED",
+      "severity": "CRITICAL",
+      "survivor": false
+    },
+    {
+      "attack_blocked": true,
+      "attack_id": "shadow_demo_real_private_train_ban",
+      "detail": "SHADOW/DEMO/REAL_PRIVATE train access",
+      "disposition": "FIXED",
+      "severity": "CRITICAL",
+      "survivor": false
+    },
+    {
+      "attack_blocked": true,
+      "attack_id": "benchmark_on_oos_reserved",
+      "detail": "reserved_split_in_benchmark:OOS_RESERVED",
+      "disposition": "FIXED",
+      "severity": "CRITICAL",
+      "survivor": false
+    },
+    {
+      "attack_blocked": true,
+      "attack_id": "formal_walk_forward_execution",
+      "detail": "FORMAL_WF_BANNED_V17_H_COMPILER_ONLY",
+      "disposition": "FIXED",
+      "severity": "CRITICAL",
+      "survivor": false
+    },
+    {
+      "attack_blocked": true,
+      "attack_id": "untouched_oos_execution",
+      "detail": "UNTOUCHED_OOS_BANNED_V17_H_COMPILER_ONLY",
+      "disposition": "FIXED",
+      "severity": "CRITICAL",
+      "survivor": false
+    },
+    {
+      "attack_blocked": true,
+      "attack_id": "real_promotion_or_lesson_activation",
+      "detail": "promo=REAL_PROMOTION_BANNED_V17_H_COMPILER_ONLY; lesson=REAL_LESSON_ACTIVATION_BANNED_V17_H_COMPILER_ONLY",
+      "disposition": "FIXED",
+      "severity": "CRITICAL",
+      "survivor": false
+    },
+    {
+      "attack_blocked": true,
+      "attack_id": "hash_invents_reserved_split",
+      "detail": "hash path stays in DEVELOPMENT|VALIDATION",
+      "disposition": "FIXED",
+      "severity": "CRITICAL",
+      "survivor": false
+    },
+    {
+      "attack_blocked": true,
+      "attack_id": "offline_benchmark_no_qualification_claim",
+      "detail": "status=INTERFACE_READY rows=1",
+      "disposition": "FIXED",
+      "severity": "HIGH",
+      "survivor": false
+    }
+  ],
+  "schema": "v17_h_contamination_redteam",
+  "status": "PASS",
+  "survivor_count": 0,
+  "survivors": []
+}

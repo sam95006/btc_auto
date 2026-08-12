@@ -1,0 +1,36 @@
+{
+  "schema": "v12_provider_resume_boundary",
+  "created_at": "2026-08-05T07:48:30Z",
+  "real_resume_owner": "local_Coordinator",
+  "ops_role": "observability_and_manual_control_only",
+  "ops_owns_real_resume": false,
+  "real_resume_executed_by_ops": false,
+  "attempted_real_resume": true,
+  "blocked_attempt_count": 2,
+  "blocked_attempts": [
+    {
+      "action": "request_real_resume",
+      "allowed": false,
+      "blocked_reason": "OPS_NOT_REAL_RESUME_OWNER",
+      "owner": "local_Coordinator",
+      "ops_role": "observability_and_manual_control_only",
+      "reason": "ops_cycle_probe",
+      "at": "2026-08-05T07:48:30Z"
+    },
+    {
+      "action": "execute_real_resume",
+      "allowed": false,
+      "blocked_reason": "REAL_RESUME_OWNERSHIP_THEFT_BANNED",
+      "owner": "local_Coordinator",
+      "callable_invoked": false,
+      "fn_name": null,
+      "at": "2026-08-05T07:48:30Z"
+    }
+  ],
+  "forbidden_real_resume_calls": [
+    "allow_real_resume=True",
+    "real_provider_resume",
+    "resume_v23",
+    "run_quota_aware_calibration"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "storage_estimate",
+  "events_per_second": 22.08111111111111,
+  "compressed_bytes_per_event": 87.27927338600111,
+  "estimated_daily_storage": 166512095.99999997,
+  "estimated_30_day_storage": 4995362879.999999,
+  "estimated_365_day_storage": 60776915039.99999,
+  "storage_bytes_written": 1734501,
+  "storage_cap_bytes": 5368709120,
+  "raw_partitions_committed": false
+}

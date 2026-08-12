@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "nexus://v17_a/data_source_registry.schema.json",
+  "title": "NEXUS Data Source License Registry Document V17-A",
+  "schema_name": "v17_a_data_source_license_registry_v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "schema_version",
+    "lane",
+    "sources"
+  ],
+  "properties": {
+    "schema": {
+      "const": "v17_a_data_source_license_registry_v1"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "lane": {
+      "const": "V17-A"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "nexus://v17_a/data_source_record.schema.json",
+        "title": "NEXUS Data Source Record V17-A",
+        "description": "Machine-readable data source + license registry entry. Legal sources only: official APIs, founder-authorized commercial APIs, self-hosted/public chain, commercial-ok datasets.",
+        "schema_name": "v17_a_data_source_record_v1",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_id",
+          "provider",
+          "dataset",
+          "asset_class",
+          "market_type",
+          "exchange",
+          "available_from",
+          "available_until",
+          "resolution",
+          "access_method",
+          "license_type",
+          "commercial_use_allowed",
+          "redistribution_allowed",
+          "training_allowed",
+          "retention_allowed",
+          "revision_policy",
+          "point_in_time_capable",
+          "rate_limit",
+          "cost_class",
+          "owner",
+          "last_verified_at",
+          "status"
+        ],
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z0-9][a-z0-9_.-]*$"
+          },
+          "provider": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dataset": {
+            "type": "string",
+            "minLength": 1
+          },
+          "asset_class": {
+            "type": "string",
+            "minLength": 1
+          },
+          "market_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "exchange": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "available_from": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "available_until": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "resolution": {
+            "type": "string",
+            "minLength": 1
+          },
+          "access_method": {
+            "type": "string",
+            "enum": [
+              "commercial_ok_dataset",
+              "founder_authorized_commercial_api",
+              "local_fixture",
+              "official_bulk_download",
+              "official_rest_api",
+              "official_websocket",
+              "public_chain_rpc",
+              "self_hosted_node"
+            ]
+          },
+          "license_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "commercial_use_allowed": {
+            "type": "boolean"
+          },
+          "redistribution_allowed": {
+            "type": "boolean"
+          },
+          "training_allowed": {
+            "type": "boolean"
+          },
+          "retention_allowed": {
+            "type": "boolean"
+          },
+          "revision_policy": {
+            "type": "string",
+            "enum": [
+              "exchange_may_correct",
+              "immutable_append",
+              "not_applicable",
+              "unknown",
+              "vendor_may_revise"
+            ]
+          },
+          "point_in_time_capable": {
+            "type": "boolean"
+          },
+          "rate_limit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "cost_class": {
+            "type": "string",
+            "enum": [
+              "enterprise",
+              "free",
+              "freemium",
+              "paid",
+              "self_hosted",
+              "unknown"
+            ]
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "last_verified_at": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "APPROVED_PUBLIC",
+              "APPROVED_INTERNAL_ONLY",
+              "LICENSE_REVIEW_REQUIRED",
+              "REDISTRIBUTION_FORBIDDEN",
+              "TRAINING_FORBIDDEN",
+              "DEPRECATED",
+              "UNAVAILABLE"
+            ]
+          },
+          "adapter_contract_ok": {
+            "type": "boolean"
+          },
+          "public_display_allowed": {
+            "type": "boolean"
+          },
+          "authorization_claimed": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": true
+}

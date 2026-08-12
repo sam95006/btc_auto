@@ -1,0 +1,16 @@
+{
+  "auto_integration": false,
+  "demo_orders": false,
+  "deploy": false,
+  "exchange_write": false,
+  "fabricated_edge": false,
+  "formal_walk_forward": false,
+  "human_facing_v15_status_json": false,
+  "invented_history": false,
+  "mainnet": false,
+  "oos_consumption": false,
+  "oos_execution": false,
+  "pr26_merge": false,
+  "pr27_merge": false,
+  "real_money": false
+}

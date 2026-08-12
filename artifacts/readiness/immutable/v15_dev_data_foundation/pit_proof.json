@@ -1,0 +1,48 @@
+{
+  "as_of_ms": 1767000599999,
+  "eligible_count": 10,
+  "eligible_ids": [
+    "72733bfbbd8517818c7aa02a387d3784",
+    "323bb6e56e369873f0a56822e6724866",
+    "9f366638d34dd7fcae15a8850a718e66",
+    "eb1a32b66ae82f4537a6ed6714295cee",
+    "da3c77b799c59883b2119b1726251a9b",
+    "b7761ace1ea37951c6dff2af5eacf3d7",
+    "d7cc5c4aebd5966efe5962cdfcef36c3",
+    "92e308375b80613bb310662b282ac83d",
+    "2154f3a07f6292043cb90b2e119c8d70",
+    "6e57947e402e37620b97b47f9b9ac762"
+  ],
+  "future_leak_count": 0,
+  "future_rejected_count": 3,
+  "leaked_ids": [],
+  "pit_holds": true,
+  "rejected": [
+    {
+      "reason": "NO_AVAILABILITY_MS",
+      "record_id": "4e0dd829eeeafdeb2d76eff2afc34c03"
+    },
+    {
+      "reason": "NO_AVAILABILITY_MS",
+      "record_id": "3cff0f6f22b46d486803570a18ca455a"
+    },
+    {
+      "reason": "NO_AVAILABILITY_MS",
+      "record_id": "81e0ce275e249d417bed036d64325c13"
+    },
+    {
+      "reason": "FUTURE_OBSERVATION_REJECTED",
+      "record_id": "c3eb628bfbcc982aa5daa9833174fb99"
+    },
+    {
+      "reason": "FUTURE_OBSERVATION_REJECTED",
+      "record_id": "8abc69bd3c4c53d14b2cd8f6fbfe8653"
+    },
+    {
+      "reason": "FUTURE_OBSERVATION_REJECTED",
+      "record_id": "e04d3253e86fec61c73002b707d5df8c"
+    }
+  ],
+  "rejected_count": 6,
+  "schema": "v15_a_pit_proof"
+}

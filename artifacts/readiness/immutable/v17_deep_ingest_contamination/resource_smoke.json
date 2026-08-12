@@ -1,0 +1,25 @@
+{
+  "claims_15y_history_downloaded": false,
+  "disk_budget_enforced": true,
+  "disk_within_budget": true,
+  "fifteen_year_claim_banned": true,
+  "fixture_only": true,
+  "limits": {
+    "max_archive_entries": 64,
+    "max_disk_bytes": 4194304,
+    "max_memory_bytes": 33554432
+  },
+  "memory_within_documented_ceiling": true,
+  "note": "Bounded smoke only — documents fixture-round ceilings; NOT a production capacity or 15y history proof.",
+  "observed": {
+    "disk_used_bytes": 3991,
+    "entry_count": 8,
+    "rss_available": false,
+    "rss_bytes": null,
+    "tracemalloc_current_bytes": 15901,
+    "tracemalloc_peak_bytes": 411753,
+    "tracemalloc_peak_delta_bytes": 411753
+  },
+  "schema": "v17_deep_bounded_resource_smoke_v1",
+  "status": "PASS"
+}

@@ -1,46 +1,3 @@
-venv/
-__pycache__/
-*.py[cod]
-.pytest_cache/
-*.db
-*.db-shm
-*.db-wal
-*.db-journal
-*.snapshot.lock
-*.zip
-*.log
-.env
-.env.*
-*.key
-*.pem
-*.secret
-trading.db
-/data/
-logs/
-exports/
-data/
-!data/external_alpha/
-data/external_alpha/*
-!data/external_alpha/reports/
-data/external_alpha/reports/*
-!data/external_alpha/reports/*readiness*.json
-!data/external_alpha/reports/*preflight*.json
-!data/external_alpha/reports/*github_deploy_readiness*.json
-data/external_alpha/stage3_demo_learning/
-data/external_alpha/stage3_demo_learning/**
-# Allow Flutter public DTO data layer (negates blanket data/ ignore)
-!apps/nexus_public_mobile/lib/data/
-!apps/nexus_public_mobile/lib/data/**
-node_modules/
-.vscode/
-.cursor/
-.DS_Store
-archives/
-scratch/
-/assets/
-!/static/nexus/assets/
-!/static/nexus/assets/**
-tools/deploy/*.ps1
 
 # Flutter / Dart (PUB-J)
 apps/nexus_public_mobile/.dart_tool/
@@ -54,7 +11,6 @@ apps/nexus_public_mobile/**/Generated.xcconfig
 apps/nexus_public_mobile/**/flutter_export_environment.sh
 *.iml
 .idea/
-
 # Store signing / secrets / human status (PUB-L)
 *.p12
 *.mobileprovision
@@ -64,3 +20,15 @@ play-service-account*.json
 AuthKey_*.p8
 public_mobile_release/**/*_status.json
 artifacts/**/pub_l*_status.json
+# Raw market / microstructure caches — reproducible from manifests only
+**/market_cache/
+**/micro_cache/
+artifacts/**/market_cache/**
+artifacts/**/micro_cache/**
+artifacts/_gha_*/
+*.stdout.txt
+*_live.json
+12h_*.json
+pr24_*.json
+pr24_*.md
+DEPLOYMENT_COMMIT

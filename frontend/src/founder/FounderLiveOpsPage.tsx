@@ -123,6 +123,8 @@ function DemoMonitorPanel({
   const intel = monitor.trading_intel;
   const perf = monitor.performance;
   const learn = monitor.learning;
+  const autonomy = monitor.autonomy;
+  const aiHealth = monitor.ai_health;
   const prov = monitor.field_provenance;
   const empty = !monitor.feed_ready;
 
@@ -153,12 +155,92 @@ function DemoMonitorPanel({
             {monitor.position_state}
           </span>
         ) : null}
+        {autonomy?.runtime_location ? (
+          <span className="tag">RUNTIME {autonomy.runtime_location}</span>
+        ) : null}
+        {autonomy?.service_status ? (
+          <span className="tag tag-ok">AUTONOMY {autonomy.service_status}</span>
+        ) : null}
+        {aiHealth?.ai_state ? <span className="tag">AI {aiHealth.ai_state}</span> : null}
         {monitor.source_timestamp ? (
           <span className="tag mono sm">as-of {monitor.source_timestamp}</span>
         ) : null}
         {monitor.fixture_removed ? <span className="tag tag-ok">live feed</span> : null}
         {monitor.fixture_used ? <span className="tag tag-warn">fixture fallback</span> : null}
       </div>
+
+      <h3 className="sm">Autonomy status</h3>
+      <dl className="nx-founder-metrics">
+        <div>
+          <dt>runtime</dt>
+          <dd className="mono">
+            {fmt(autonomy?.runtime_location)}
+            <ProvenanceFootnote fieldKey="autonomy.runtime_location" provenance={prov} />
+          </dd>
+        </div>
+        <div>
+          <dt>status</dt>
+          <dd className="mono">
+            {fmt(autonomy?.service_status)}
+            <ProvenanceFootnote fieldKey="autonomy.service_status" provenance={prov} />
+          </dd>
+        </div>
+        <div>
+          <dt>last cycle</dt>
+          <dd className="mono">{fmt(autonomy?.last_cycle)}</dd>
+        </div>
+        <div>
+          <dt>next cycle</dt>
+          <dd className="mono">{fmt(autonomy?.next_cycle)}</dd>
+        </div>
+        <div>
+          <dt>cycles 24h</dt>
+          <dd className="mono">{fmt(autonomy?.cycles_24h)}</dd>
+        </div>
+        <div>
+          <dt>open position</dt>
+          <dd className="mono">{fmt(autonomy?.open_position)}</dd>
+        </div>
+        <div>
+          <dt>WAIT valid</dt>
+          <dd className="mono">{fmt(autonomy?.waiting_market_valid)}</dd>
+        </div>
+      </dl>
+
+      <h3 className="sm">AI health</h3>
+      <dl className="nx-founder-metrics">
+        <div>
+          <dt>state</dt>
+          <dd className="mono">
+            {fmt(aiHealth?.ai_state)}
+            <ProvenanceFootnote fieldKey="ai_health.ai_state" provenance={prov} />
+          </dd>
+        </div>
+        <div>
+          <dt>provider / model</dt>
+          <dd className="mono">
+            {fmt(aiHealth?.provider)} / {fmt(aiHealth?.model)}
+          </dd>
+        </div>
+        <div>
+          <dt>last success</dt>
+          <dd className="mono">{fmt(aiHealth?.last_success)}</dd>
+        </div>
+        <div>
+          <dt>429 / quota 24h</dt>
+          <dd className="mono">
+            {fmt(aiHealth?.rate_limits_24h)} / {fmt(aiHealth?.quota_errors_24h)}
+          </dd>
+        </div>
+        <div>
+          <dt>working</dt>
+          <dd className="mono">{fmt(aiHealth?.ai_calls_working)}</dd>
+        </div>
+        <div>
+          <dt>required for entry</dt>
+          <dd className="mono">{fmt(aiHealth?.ai_required_for_v30_entry)}</dd>
+        </div>
+      </dl>
 
       {monitor.thesis ? (
         <>
@@ -325,6 +407,31 @@ function DemoMonitorPanel({
           </dd>
         </div>
         <div>
+          <dt>direction ambiguity</dt>
+          <dd className="mono">
+            {fmt(intel?.direction_ambiguity_supported)} (Δ {fmt(intel?.direction_score_delta)})
+          </dd>
+        </div>
+        <div>
+          <dt>entry class / stop distance</dt>
+          <dd className="mono">
+            {fmt(intel?.last_entry_class)} / {fmt(intel?.stop_distance_pct)}%
+            {intel?.fee_to_stop_loss_ratio != null
+              ? ` (fee/stop ${fmt(intel?.fee_to_stop_loss_ratio)})`
+              : ""}
+          </dd>
+        </div>
+        <div>
+          <dt>profit lock</dt>
+          <dd className="mono">
+            {fmt(intel?.profit_lock_state)} level={fmt(intel?.profit_lock_level)} floor={fmt(intel?.protected_pnl_floor)}
+          </dd>
+        </div>
+        <div>
+          <dt>adaptive action</dt>
+          <dd className="mono">{fmt(intel?.adaptive_action)}</dd>
+        </div>
+        <div>
           <dt>AI thesis</dt>
           <dd className="mono">
             {intel?.ai_thesis && typeof intel.ai_thesis === "object"
@@ -373,6 +480,14 @@ function DemoMonitorPanel({
             {fmt(perf?.profit_factor)}
             <ProvenanceFootnote fieldKey="performance.profit_factor" provenance={prov} />
           </dd>
+        </div>
+        <div>
+          <dt>last 10 net pnl</dt>
+          <dd className="mono">{fmt(perf?.last_10?.net_pnl)}</dd>
+        </div>
+        <div>
+          <dt>last 30 net pnl</dt>
+          <dd className="mono">{fmt(perf?.last_30?.net_pnl)}</dd>
         </div>
       </dl>
 

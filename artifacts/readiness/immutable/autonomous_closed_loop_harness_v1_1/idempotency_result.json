@@ -1,0 +1,5 @@
+{
+  "cross_candidate_idempotency_status": "PASS",
+  "duplicate_intent_idempotency_status": "PASS",
+  "orphan_lifecycle_count": 0
+}

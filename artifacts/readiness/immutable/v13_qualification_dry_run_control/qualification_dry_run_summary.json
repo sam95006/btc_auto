@@ -1,0 +1,1294 @@
+{
+  "Founder_authorization_present": false,
+  "all_stages_blocked": true,
+  "blocked_stage_controller": {
+    "all_stages_blocked": true,
+    "attempt_count": 6,
+    "attempts": [
+      {
+        "Founder_authorization_present": false,
+        "allowed": false,
+        "demo_eligibility": false,
+        "demo_order_count": 0,
+        "exchange_write_attempt_count": 0,
+        "executed": false,
+        "formal_walk_forward_executed": false,
+        "founder_authorization_present": false,
+        "label": "Candidate Freeze",
+        "mainnet": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "oos_reservation_created": false,
+        "pr27_merged": false,
+        "qualification_ready_count": 0,
+        "real_money": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V13_F_DRY_RUN_CONTROL_ONLY",
+        "stage": "CANDIDATE_FREEZE",
+        "status": "BLOCKED",
+        "strategy_promoted": false,
+        "strategy_selected": false
+      },
+      {
+        "Founder_authorization_present": false,
+        "allowed": false,
+        "demo_eligibility": false,
+        "demo_order_count": 0,
+        "exchange_write_attempt_count": 0,
+        "executed": false,
+        "formal_walk_forward_executed": false,
+        "founder_authorization_present": false,
+        "label": "Development Replay",
+        "mainnet": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "oos_reservation_created": false,
+        "pr27_merged": false,
+        "qualification_ready_count": 0,
+        "real_money": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V13_F_DRY_RUN_CONTROL_ONLY",
+        "stage": "DEVELOPMENT_REPLAY",
+        "status": "BLOCKED",
+        "strategy_promoted": false,
+        "strategy_selected": false
+      },
+      {
+        "Founder_authorization_present": false,
+        "allowed": false,
+        "demo_eligibility": false,
+        "demo_order_count": 0,
+        "exchange_write_attempt_count": 0,
+        "executed": false,
+        "formal_walk_forward_executed": false,
+        "founder_authorization_present": false,
+        "label": "Walk-forward",
+        "mainnet": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "oos_reservation_created": false,
+        "pr27_merged": false,
+        "qualification_ready_count": 0,
+        "real_money": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V13_F_DRY_RUN_CONTROL_ONLY",
+        "stage": "WALK_FORWARD",
+        "status": "BLOCKED",
+        "strategy_promoted": false,
+        "strategy_selected": false
+      },
+      {
+        "Founder_authorization_present": false,
+        "allowed": false,
+        "demo_eligibility": false,
+        "demo_order_count": 0,
+        "exchange_write_attempt_count": 0,
+        "executed": false,
+        "formal_walk_forward_executed": false,
+        "founder_authorization_present": false,
+        "label": "Risk Review",
+        "mainnet": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "oos_reservation_created": false,
+        "pr27_merged": false,
+        "qualification_ready_count": 0,
+        "real_money": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V13_F_DRY_RUN_CONTROL_ONLY",
+        "stage": "RISK_REVIEW",
+        "status": "BLOCKED",
+        "strategy_promoted": false,
+        "strategy_selected": false
+      },
+      {
+        "Founder_authorization_present": false,
+        "allowed": false,
+        "demo_eligibility": false,
+        "demo_order_count": 0,
+        "exchange_write_attempt_count": 0,
+        "executed": false,
+        "formal_walk_forward_executed": false,
+        "founder_authorization_present": false,
+        "label": "OOS reservation",
+        "mainnet": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "oos_reservation_created": false,
+        "pr27_merged": false,
+        "qualification_ready_count": 0,
+        "real_money": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V13_F_DRY_RUN_CONTROL_ONLY",
+        "stage": "OOS_RESERVATION",
+        "status": "BLOCKED",
+        "strategy_promoted": false,
+        "strategy_selected": false
+      },
+      {
+        "Founder_authorization_present": false,
+        "allowed": false,
+        "demo_eligibility": false,
+        "demo_order_count": 0,
+        "exchange_write_attempt_count": 0,
+        "executed": false,
+        "formal_walk_forward_executed": false,
+        "founder_authorization_present": false,
+        "label": "Demo eligibility",
+        "mainnet": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "oos_reservation_created": false,
+        "pr27_merged": false,
+        "qualification_ready_count": 0,
+        "real_money": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V13_F_DRY_RUN_CONTROL_ONLY",
+        "stage": "DEMO_ELIGIBILITY",
+        "status": "BLOCKED",
+        "strategy_promoted": false,
+        "strategy_selected": false
+      }
+    ],
+    "block_reason": "STAGE_DEFAULT_BLOCKED_V13_F_DRY_RUN_CONTROL_ONLY",
+    "hard_bans": [
+      "no_formal_walk_forward",
+      "no_real_oos_reservation",
+      "no_real_oos_consumption",
+      "no_strategy_selection",
+      "no_strategy_promotion",
+      "no_demo_orders",
+      "no_shadow_orders",
+      "no_exchange_writes",
+      "no_pr27_merge",
+      "no_mainnet",
+      "no_real_money",
+      "no_profitability_claims"
+    ],
+    "stage_labels": {
+      "CANDIDATE_FREEZE": "Candidate Freeze",
+      "DEMO_ELIGIBILITY": "Demo eligibility",
+      "DEVELOPMENT_REPLAY": "Development Replay",
+      "OOS_RESERVATION": "OOS reservation",
+      "RISK_REVIEW": "Risk Review",
+      "WALK_FORWARD": "Walk-forward"
+    },
+    "stage_order": [
+      "CANDIDATE_FREEZE",
+      "DEVELOPMENT_REPLAY",
+      "WALK_FORWARD",
+      "RISK_REVIEW",
+      "OOS_RESERVATION",
+      "DEMO_ELIGIBILITY"
+    ],
+    "stages": {
+      "CANDIDATE_FREEZE": "BLOCKED",
+      "DEMO_ELIGIBILITY": "BLOCKED",
+      "DEVELOPMENT_REPLAY": "BLOCKED",
+      "OOS_RESERVATION": "BLOCKED",
+      "RISK_REVIEW": "BLOCKED",
+      "WALK_FORWARD": "BLOCKED"
+    }
+  },
+  "created_at": "2026-08-05T08:34:48Z",
+  "demo_eligibility": false,
+  "demo_order_count": 0,
+  "discovery_ingest": {
+    "as_of_ms": 1700000000000,
+    "bundle_checksum": "f504e6c9dd466605990a04afe5956f7ef059dd4f9d7eeaf5bacc1c900eb3b60f",
+    "candidate_ids": [
+      "SYN_V13F_DISC_001",
+      "SYN_V13F_DISC_002",
+      "SYN_V13F_DISC_003"
+    ],
+    "checksums": [
+      {
+        "candidate_id": "SYN_V13F_DISC_001",
+        "code_checksum": "ff683cf7819de777f01233a164fd0c2a2064cba9674ebe89f7db304d8adfb9ef",
+        "dataset_checksum": "9f7bfdf63f0bd4606f9ed4516f85876500d9bc86d8c0796683d51016aff0b713",
+        "discovery_label": "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+        "parameter_checksum": "fef8f1127bfb3cb787c1dee4ded28907293fa81e2f69deb8e005236a025fe703",
+        "semantic_checksum": "67160f9e569e986fcadc7e5dc229ba6e28b1c05493166b303bbc61153fb076c8"
+      },
+      {
+        "candidate_id": "SYN_V13F_DISC_002",
+        "code_checksum": "dfffa381460b1dea6292fe93977daacd477e06c27ea6d814b8a896fafd6cd25b",
+        "dataset_checksum": "2b84743e9a0f474145e2fe1fc0e52611ebb32ba93ee4f083410ce32013b3bc1e",
+        "discovery_label": "RAW_EDGE_PRESENT_BUT_COST_DESTROYED",
+        "parameter_checksum": "afe49407ff7c1454b9c287caf58d2b010b8045e88360a4fe6bc75fb06b0040fa",
+        "semantic_checksum": "2619df70c46b5a133b980ff6534814286841f001b5e37f72f432f4699bc1f873"
+      },
+      {
+        "candidate_id": "SYN_V13F_DISC_003",
+        "code_checksum": "987d5d021877b20dcd34f7e73a3a7f47ef98882502baaaf333885b559422e14c",
+        "dataset_checksum": "156ff60002dfdc5231b8d952f15d14414df922cd97ef866fd53a0119f4f8f068",
+        "discovery_label": "REJECTED",
+        "parameter_checksum": "e48313572556331f5c7d0eafb3ac7eb4564a080d1c885cc3bb4c24ec3660faea",
+        "semantic_checksum": "152f8c2577d6cbe684519984fdacdc90393f38f34ba164c7043e5d1240398be9"
+      }
+    ],
+    "fixture_only": true,
+    "ingested_candidate_count": 3,
+    "qualification_ready_count": 0,
+    "universe_checksum": "3cdd354a4ea69c2fa3162dcc2928668337f8ef833952eee8f5951e300964edd6"
+  },
+  "exchange_write_attempt_count": 0,
+  "formal_walk_forward_executed": false,
+  "founder_authorization_present": false,
+  "hard_bans": [
+    "no_formal_walk_forward",
+    "no_real_oos_reservation",
+    "no_real_oos_consumption",
+    "no_strategy_selection",
+    "no_strategy_promotion",
+    "no_demo_orders",
+    "no_shadow_orders",
+    "no_exchange_writes",
+    "no_pr27_merge",
+    "no_mainnet",
+    "no_real_money",
+    "no_profitability_claims"
+  ],
+  "infrastructure_status": "BLOCKED_READY",
+  "lane": "V13-F",
+  "mainnet": false,
+  "oos_consumed": false,
+  "oos_executed": false,
+  "oos_reservation_created": false,
+  "pr27_merged": false,
+  "prohibitions": {
+    "candidate_freeze": "PLANNED_NOT_EXECUTED_FORMAL_BLOCKED",
+    "demo_eligibility": "PLAN_ONLY_NOT_GRANTED",
+    "demo_shadow_exchange_writes": "NOT_ATTEMPTED",
+    "development_replay": "EXECUTED_DEVELOPMENT_ONLY",
+    "oos_consumption": "NOT_CONSUMED",
+    "oos_execution": "NOT_EXECUTED",
+    "oos_reservation": "PLAN_ONLY_NOT_CREATED",
+    "pr27_merge": "NOT_PERFORMED",
+    "risk_review": "PLAN_ONLY_NOT_EXECUTED",
+    "strategy_promotion": "BLOCKED",
+    "strategy_selection": "NOT_PERFORMED",
+    "walk_forward": "PLAN_ONLY_NOT_EXECUTED"
+  },
+  "proofs": {
+    "all_attempts_refused": true,
+    "all_promotes_refused": true,
+    "all_selects_refused": true,
+    "all_stages_blocked_after_attempts": true,
+    "candidate_freeze": {
+      "all_blocked": true,
+      "formal_candidate_freeze_executed": false,
+      "freeze_plan_count": 3,
+      "plans": [
+        {
+          "candidate_id": "SYN_V13F_DISC_001",
+          "code_checksum": "ff683cf7819de777f01233a164fd0c2a2064cba9674ebe89f7db304d8adfb9ef",
+          "dataset_checksum": "9f7bfdf63f0bd4606f9ed4516f85876500d9bc86d8c0796683d51016aff0b713",
+          "discovery_label": "DEVELOPMENT_PROMISING_NOT_QUALIFIED",
+          "fixture_only": true,
+          "formal_stage": "CANDIDATE_FREEZE",
+          "formal_stage_status": "BLOCKED",
+          "freeze_status": "PLANNED_NOT_EXECUTED",
+          "identity": {
+            "candidate_id": "SYN_V13F_DISC_001",
+            "preregistration_timestamp": "2026-01-01T00:00:00Z",
+            "semantic_mechanism_id": "order_flow_imbalance"
+          },
+          "note": "Freeze plan prepared from Discovery outputs; formal Candidate Freeze remains BLOCKED.",
+          "parameter_checksum": "fef8f1127bfb3cb787c1dee4ded28907293fa81e2f69deb8e005236a025fe703",
+          "promoted": false,
+          "qualified": false,
+          "selected": false,
+          "semantic_checksum": "67160f9e569e986fcadc7e5dc229ba6e28b1c05493166b303bbc61153fb076c8"
+        },
+        {
+          "candidate_id": "SYN_V13F_DISC_002",
+          "code_checksum": "dfffa381460b1dea6292fe93977daacd477e06c27ea6d814b8a896fafd6cd25b",
+          "dataset_checksum": "2b84743e9a0f474145e2fe1fc0e52611ebb32ba93ee4f083410ce32013b3bc1e",
+          "discovery_label": "RAW_EDGE_PRESENT_BUT_COST_DESTROYED",
+          "fixture_only": true,
+          "formal_stage": "CANDIDATE_FREEZE",
+          "formal_stage_status": "BLOCKED",
+          "freeze_status": "PLANNED_NOT_EXECUTED",
+          "identity": {
+            "candidate_id": "SYN_V13F_DISC_002",
+            "preregistration_timestamp": "2026-01-01T00:00:00Z",
+            "semantic_mechanism_id": "funding_dislocation"
+          },
+          "note": "Freeze plan prepared from Discovery outputs; formal Candidate Freeze remains BLOCKED.",
+          "parameter_checksum": "afe49407ff7c1454b9c287caf58d2b010b8045e88360a4fe6bc75fb06b0040fa",
+          "promoted": false,
+          "qualified": false,
+          "selected": false,
+          "semantic_checksum": "2619df70c46b5a133b980ff6534814286841f001b5e37f72f432f4699bc1f873"
+        },
+        {
+          "candidate_id": "SYN_V13F_DISC_003",
+          "code_checksum": "987d5d021877b20dcd34f7e73a3a7f47ef98882502baaaf333885b559422e14c",
+          "dataset_checksum": "156ff60002dfdc5231b8d952f15d14414df922cd97ef866fd53a0119f4f8f068",
+          "discovery_label": "REJECTED",
+          "fixture_only": true,
+          "formal_stage": "CANDIDATE_FREEZE",
+          "formal_stage_status": "BLOCKED",
+          "freeze_status": "PLANNED_NOT_EXECUTED",
+          "identity": {
+            "candidate_id": "SYN_V13F_DISC_003",
+            "preregistration_timestamp": "2026-01-01T00:00:00Z",
+            "semantic_mechanism_id": "cosmetic_variation_rejected"
+          },
+          "note": "Freeze plan prepared from Discovery outputs; formal Candidate Freeze remains BLOCKED.",
+          "parameter_checksum": "e48313572556331f5c7d0eafb3ac7eb4564a080d1c885cc3bb4c24ec3660faea",
+          "promoted": false,
+          "qualified": false,
+          "selected": false,
+          "semantic_checksum": "152f8c2577d6cbe684519984fdacdc90393f38f34ba164c7043e5d1240398be9"
+        }
+      ]
+    },
+    "checksum_errors": [],
+    "development_replay": {
+      "all_deterministic": true,
+      "candidate_count": 3,
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "formal_walk_forward_executed": false,
+      "oos_touched": false,
+      "replay_kind": "DEVELOPMENT_ONLY",
+      "replays": [
+        {
+          "bar_count": 8,
+          "bars": [
+            {
+              "close": 108.05,
+              "fixture_only": true,
+              "high": 108.5,
+              "low": 107.5,
+              "open": 108.0,
+              "symbol": "SYNTHUSDT",
+              "ts_ms": 1694816000000,
+              "volume": 10.0
+            },
+            {
+              "close": 108.14999999999999,
+              "fixture_only": true,
+              "high": 108.6,
+              "low": 107.6,
+              "open": 108.1,
+              "symbol": "SYNTHUSDT",
+              "ts_ms": 1695140000000,
+              "volume": 11.0
+            },
+            {
+              "close": 108.25,
+              "fixture_only": true,
+              "high": 108.7,
+              "low": 107.7,
+              "open": 108.2,
+              "symbol": "SYNTHUSDT",
+              "ts_ms": 1695464000000,
+              "volume": 12.0
+            },
+            {
+              "close": 108.35,
+              "fixture_only": true,
+              "high": 108.8,
+              "low": 107.8,
+              "open": 108.3,
+              "symbol": "SYNTHUSDT",
+              "ts_ms": 1695788000000,
+              "volume": 13.0
+            },
+            {
+              "close": 108.45,
+              "fixture_only": true,
+              "high": 108.9,
+              "low": 107.9,
+              "open": 108.4,
+              "symbol": "SYNTHUSDT",
+              "ts_ms": 1696112000000,
+              "volume": 14.0
+            },
+            {
+              "close": 108.55,
+              "fixture_only": true,
+              "high": 109.0,
+              "low": 108.0,
+              "open": 108.5,
+              "symbol": "SYNTHUSDT",
+              "ts_ms": 1696436000000,
+              "volume": 15.0
+            },
+            {
+              "close": 108.64999999999999,
+              "fixture_only": true,
+              "high": 109.1,
+              "low": 108.1,
+              "open": 108.6,
+              "symbol": "SYNTHUSDT",
+              "ts_ms": 1696760000000,
+              "volume": 16.0
+            },
+            {
+              "close": 108.75,
+              "fixture_only": true,
+              "high": 109.2,
+              "low": 108.2,
+              "open": 108.7,
+              "symbol": "SYNTHUSDT",
+              "ts_ms": 1697084000000,
+              "volume": 17.0
+            }
+          ],
+          "candidate_id": "SYN_V13F_DISC_001",
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "fixture_only": true,
+          "formal_walk_forward": false,
+          "oos_touched": false,
+          "profitability_claimed": false,
+          "replay_fingerprint": "eaf71935d4b9d17eb832840c1efffa890cf3bb910e6672617b845e383a9918a9",
+          "replay_kind": "DEVELOPMENT_ONLY",
+          "signal_path": [
+            {
+              "bar_index": 0,
+              "signal": 1,
+              "ts_ms": 1694816000000
+            },
+            {
+              "bar_index": 1,
+              "signal": 0,
+              "ts_ms": 1695140000000
+            },
+            {
+              "bar_index": 2,
+              "signal": 0,
+              "ts_ms": 1695464000000
+            },
+            {
+              "bar_index": 3,
+              "signal": 1,
+              "ts_ms": 1695788000000
+            },
+            {
+              "bar_index": 4,
+              "signal": 0,
+              "ts_ms": 1696112000000
+            },
+            {
+              "bar_index": 5,
+              "signal": 0,
+              "ts_ms": 1696436000000
+            },
+            {
+              "bar_index": 6,
+              "signal": 1,
+              "ts_ms": 1696760000000
+            },
+            {
+              "bar_index": 7,
+              "signal": 0,
+              "ts_ms": 1697084000000
+            }
+          ]
+        },
+        {
+          "bar_count": 8,
+          "bars": [
+            {
+              "close": 108.05,
+              "fixture_only": true,
+              "high": 108.5,
+              "low": 107.5,
+              "open": 108.0,
+              "symbol": "SYNTHBTC",
+              "ts_ms": 1695248000000,
+              "volume": 10.0
+            },
+            {
+              "close": 108.14999999999999,
+              "fixture_only": true,
+              "high": 108.6,
+              "low": 107.6,
+              "open": 108.1,
+              "symbol": "SYNTHBTC",
+              "ts_ms": 1695572000000,
+              "volume": 11.0
+            },
+            {
+              "close": 108.25,
+              "fixture_only": true,
+              "high": 108.7,
+              "low": 107.7,
+              "open": 108.2,
+              "symbol": "SYNTHBTC",
+              "ts_ms": 1695896000000,
+              "volume": 12.0
+            },
+            {
+              "close": 108.35,
+              "fixture_only": true,
+              "high": 108.8,
+              "low": 107.8,
+              "open": 108.3,
+              "symbol": "SYNTHBTC",
+              "ts_ms": 1696220000000,
+              "volume": 13.0
+            },
+            {
+              "close": 108.45,
+              "fixture_only": true,
+              "high": 108.9,
+              "low": 107.9,
+              "open": 108.4,
+              "symbol": "SYNTHBTC",
+              "ts_ms": 1696544000000,
+              "volume": 14.0
+            },
+            {
+              "close": 108.55,
+              "fixture_only": true,
+              "high": 109.0,
+              "low": 108.0,
+              "open": 108.5,
+              "symbol": "SYNTHBTC",
+              "ts_ms": 1696868000000,
+              "volume": 15.0
+            },
+            {
+              "close": 108.64999999999999,
+              "fixture_only": true,
+              "high": 109.1,
+              "low": 108.1,
+              "open": 108.6,
+              "symbol": "SYNTHBTC",
+              "ts_ms": 1697192000000,
+              "volume": 16.0
+            },
+            {
+              "close": 108.75,
+              "fixture_only": true,
+              "high": 109.2,
+              "low": 108.2,
+              "open": 108.7,
+              "symbol": "SYNTHBTC",
+              "ts_ms": 1697516000000,
+              "volume": 17.0
+            }
+          ],
+          "candidate_id": "SYN_V13F_DISC_002",
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "fixture_only": true,
+          "formal_walk_forward": false,
+          "oos_touched": false,
+          "profitability_claimed": false,
+          "replay_fingerprint": "4d97530a2147dfb9c208c20979b0d95c9d6a57d1ce9de2caa6e6b4d8c6de68c1",
+          "replay_kind": "DEVELOPMENT_ONLY",
+          "signal_path": [
+            {
+              "bar_index": 0,
+              "signal": 1,
+              "ts_ms": 1695248000000
+            },
+            {
+              "bar_index": 1,
+              "signal": 0,
+              "ts_ms": 1695572000000
+            },
+            {
+              "bar_index": 2,
+              "signal": 0,
+              "ts_ms": 1695896000000
+            },
+            {
+              "bar_index": 3,
+              "signal": 1,
+              "ts_ms": 1696220000000
+            },
+            {
+              "bar_index": 4,
+              "signal": 0,
+              "ts_ms": 1696544000000
+            },
+            {
+              "bar_index": 5,
+              "signal": 0,
+              "ts_ms": 1696868000000
+            },
+            {
+              "bar_index": 6,
+              "signal": 1,
+              "ts_ms": 1697192000000
+            },
+            {
+              "bar_index": 7,
+              "signal": 0,
+              "ts_ms": 1697516000000
+            }
+          ]
+        },
+        {
+          "bar_count": 8,
+          "bars": [
+            {
+              "close": 108.05,
+              "fixture_only": true,
+              "high": 108.5,
+              "low": 107.5,
+              "open": 108.0,
+              "symbol": "SYNTHUSDT",
+              "ts_ms": 1696544000000,
+              "volume": 10.0
+            },
+            {
+              "close": 108.14999999999999,
+              "fixture_only": true,
+              "high": 108.6,
+              "low": 107.6,
+              "open": 108.1,
+              "symbol": "SYNTHUSDT",
+              "ts_ms": 1696760000000,
+              "volume": 11.0
+            },
+            {
+              "close": 108.25,
+              "fixture_only": true,
+              "high": 108.7,
+              "low": 107.7,
+              "open": 108.2,
+              "symbol": "SYNTHUSDT",
+              "ts_ms": 1696976000000,
+              "volume": 12.0
+            },
+            {
+              "close": 108.35,
+              "fixture_only": true,
+              "high": 108.8,
+              "low": 107.8,
+              "open": 108.3,
+              "symbol": "SYNTHUSDT",
+              "ts_ms": 1697192000000,
+              "volume": 13.0
+            },
+            {
+              "close": 108.45,
+              "fixture_only": true,
+              "high": 108.9,
+              "low": 107.9,
+              "open": 108.4,
+              "symbol": "SYNTHUSDT",
+              "ts_ms": 1697408000000,
+              "volume": 14.0
+            },
+            {
+              "close": 108.55,
+              "fixture_only": true,
+              "high": 109.0,
+              "low": 108.0,
+              "open": 108.5,
+              "symbol": "SYNTHUSDT",
+              "ts_ms": 1697624000000,
+              "volume": 15.0
+            },
+            {
+              "close": 108.64999999999999,
+              "fixture_only": true,
+              "high": 109.1,
+              "low": 108.1,
+              "open": 108.6,
+              "symbol": "SYNTHUSDT",
+              "ts_ms": 1697840000000,
+              "volume": 16.0
+            },
+            {
+              "close": 108.75,
+              "fixture_only": true,
+              "high": 109.2,
+              "low": 108.2,
+              "open": 108.7,
+              "symbol": "SYNTHUSDT",
+              "ts_ms": 1698056000000,
+              "volume": 17.0
+            }
+          ],
+          "candidate_id": "SYN_V13F_DISC_003",
+          "demo_order_count": 0,
+          "exchange_write_attempt_count": 0,
+          "fixture_only": true,
+          "formal_walk_forward": false,
+          "oos_touched": false,
+          "profitability_claimed": false,
+          "replay_fingerprint": "4a78ffcc1f3a0e23decb9ec205db5c005885a4c74828bea7fc5e45d173067cd2",
+          "replay_kind": "DEVELOPMENT_ONLY",
+          "signal_path": [
+            {
+              "bar_index": 0,
+              "signal": 1,
+              "ts_ms": 1696544000000
+            },
+            {
+              "bar_index": 1,
+              "signal": 0,
+              "ts_ms": 1696760000000
+            },
+            {
+              "bar_index": 2,
+              "signal": 0,
+              "ts_ms": 1696976000000
+            },
+            {
+              "bar_index": 3,
+              "signal": 1,
+              "ts_ms": 1697192000000
+            },
+            {
+              "bar_index": 4,
+              "signal": 0,
+              "ts_ms": 1697408000000
+            },
+            {
+              "bar_index": 5,
+              "signal": 0,
+              "ts_ms": 1697624000000
+            },
+            {
+              "bar_index": 6,
+              "signal": 1,
+              "ts_ms": 1697840000000
+            },
+            {
+              "bar_index": 7,
+              "signal": 0,
+              "ts_ms": 1698056000000
+            }
+          ]
+        }
+      ],
+      "verifications": [
+        {
+          "a": {
+            "bar_count": 8,
+            "fingerprint": "eaf71935d4b9d17eb832840c1efffa890cf3bb910e6672617b845e383a9918a9"
+          },
+          "b": {
+            "bar_count": 8,
+            "fingerprint": "eaf71935d4b9d17eb832840c1efffa890cf3bb910e6672617b845e383a9918a9"
+          },
+          "candidate_id": "SYN_V13F_DISC_001",
+          "fingerprint": "eaf71935d4b9d17eb832840c1efffa890cf3bb910e6672617b845e383a9918a9",
+          "match": true
+        },
+        {
+          "a": {
+            "bar_count": 8,
+            "fingerprint": "4d97530a2147dfb9c208c20979b0d95c9d6a57d1ce9de2caa6e6b4d8c6de68c1"
+          },
+          "b": {
+            "bar_count": 8,
+            "fingerprint": "4d97530a2147dfb9c208c20979b0d95c9d6a57d1ce9de2caa6e6b4d8c6de68c1"
+          },
+          "candidate_id": "SYN_V13F_DISC_002",
+          "fingerprint": "4d97530a2147dfb9c208c20979b0d95c9d6a57d1ce9de2caa6e6b4d8c6de68c1",
+          "match": true
+        },
+        {
+          "a": {
+            "bar_count": 8,
+            "fingerprint": "4a78ffcc1f3a0e23decb9ec205db5c005885a4c74828bea7fc5e45d173067cd2"
+          },
+          "b": {
+            "bar_count": 8,
+            "fingerprint": "4a78ffcc1f3a0e23decb9ec205db5c005885a4c74828bea7fc5e45d173067cd2"
+          },
+          "candidate_id": "SYN_V13F_DISC_003",
+          "fingerprint": "4a78ffcc1f3a0e23decb9ec205db5c005885a4c74828bea7fc5e45d173067cd2",
+          "match": true
+        }
+      ]
+    },
+    "development_replay_deterministic": true,
+    "eligibility_plans": {
+      "all_plans_not_executed": true,
+      "demo_eligibility_granted": false,
+      "demo_eligibility_plans": [
+        {
+          "candidate_id": "SYN_V13F_DISC_001",
+          "criteria_satisfied_count": 0,
+          "demo_eligibility_granted": false,
+          "demo_order_count": 0,
+          "note": "Demo eligibility plan only; Demo eligibility remains BLOCKED / not granted.",
+          "plan_kind": "DEMO_ELIGIBILITY",
+          "planned_criteria": [
+            "formal_walk_forward_passed",
+            "risk_review_passed",
+            "oos_executed_and_passed",
+            "founder_authorization_present",
+            "no_hard_ban_violations"
+          ],
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        {
+          "candidate_id": "SYN_V13F_DISC_002",
+          "criteria_satisfied_count": 0,
+          "demo_eligibility_granted": false,
+          "demo_order_count": 0,
+          "note": "Demo eligibility plan only; Demo eligibility remains BLOCKED / not granted.",
+          "plan_kind": "DEMO_ELIGIBILITY",
+          "planned_criteria": [
+            "formal_walk_forward_passed",
+            "risk_review_passed",
+            "oos_executed_and_passed",
+            "founder_authorization_present",
+            "no_hard_ban_violations"
+          ],
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        {
+          "candidate_id": "SYN_V13F_DISC_003",
+          "criteria_satisfied_count": 0,
+          "demo_eligibility_granted": false,
+          "demo_order_count": 0,
+          "note": "Demo eligibility plan only; Demo eligibility remains BLOCKED / not granted.",
+          "plan_kind": "DEMO_ELIGIBILITY",
+          "planned_criteria": [
+            "formal_walk_forward_passed",
+            "risk_review_passed",
+            "oos_executed_and_passed",
+            "founder_authorization_present",
+            "no_hard_ban_violations"
+          ],
+          "status": "PLANNED_NOT_EXECUTED"
+        }
+      ],
+      "demo_order_count": 0,
+      "formal_walk_forward_executed": false,
+      "oos_consumed": false,
+      "oos_executed": false,
+      "oos_reservation_created": false,
+      "oos_reservation_plans": [
+        {
+          "as_of_ms": 1700000000000,
+          "candidate_id": "SYN_V13F_DISC_001",
+          "note": "OOS reservation plan only; real OOS is neither reserved nor consumed.",
+          "oos_consumed": false,
+          "oos_executed": false,
+          "oos_reservation_created": false,
+          "plan_kind": "OOS_RESERVATION",
+          "proposed_interval": {
+            "category": "proposed_untouched_oos_plan_only",
+            "end_ms": 1699395200000,
+            "start_ms": 1697494400000
+          },
+          "real_oos_touched": false,
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        {
+          "as_of_ms": 1700000000000,
+          "candidate_id": "SYN_V13F_DISC_002",
+          "note": "OOS reservation plan only; real OOS is neither reserved nor consumed.",
+          "oos_consumed": false,
+          "oos_executed": false,
+          "oos_reservation_created": false,
+          "plan_kind": "OOS_RESERVATION",
+          "proposed_interval": {
+            "category": "proposed_untouched_oos_plan_only",
+            "end_ms": 1699395200000,
+            "start_ms": 1697926400000
+          },
+          "real_oos_touched": false,
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        {
+          "as_of_ms": 1700000000000,
+          "candidate_id": "SYN_V13F_DISC_003",
+          "note": "OOS reservation plan only; real OOS is neither reserved nor consumed.",
+          "oos_consumed": false,
+          "oos_executed": false,
+          "oos_reservation_created": false,
+          "plan_kind": "OOS_RESERVATION",
+          "proposed_interval": {
+            "category": "proposed_untouched_oos_plan_only",
+            "end_ms": 1699395200000,
+            "start_ms": 1698358400000
+          },
+          "real_oos_touched": false,
+          "status": "PLANNED_NOT_EXECUTED"
+        }
+      ],
+      "risk_review_plans": [
+        {
+          "candidate_id": "SYN_V13F_DISC_001",
+          "check_count": 5,
+          "note": "Risk Review plan only; formal Risk Review remains BLOCKED.",
+          "plan_kind": "RISK_REVIEW",
+          "planned_checks": [
+            "concentration_limits",
+            "cost_stress",
+            "drawdown_bound",
+            "regime_fragility",
+            "multiple_comparison_tax"
+          ],
+          "risk_review_executed": false,
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        {
+          "candidate_id": "SYN_V13F_DISC_002",
+          "check_count": 5,
+          "note": "Risk Review plan only; formal Risk Review remains BLOCKED.",
+          "plan_kind": "RISK_REVIEW",
+          "planned_checks": [
+            "concentration_limits",
+            "cost_stress",
+            "drawdown_bound",
+            "regime_fragility",
+            "multiple_comparison_tax"
+          ],
+          "risk_review_executed": false,
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        {
+          "candidate_id": "SYN_V13F_DISC_003",
+          "check_count": 5,
+          "note": "Risk Review plan only; formal Risk Review remains BLOCKED.",
+          "plan_kind": "RISK_REVIEW",
+          "planned_checks": [
+            "concentration_limits",
+            "cost_stress",
+            "drawdown_bound",
+            "regime_fragility",
+            "multiple_comparison_tax"
+          ],
+          "risk_review_executed": false,
+          "status": "PLANNED_NOT_EXECUTED"
+        }
+      ],
+      "walk_forward_plans": [
+        {
+          "as_of_ms": 1700000000000,
+          "candidate_id": "SYN_V13F_DISC_001",
+          "fold_count": 2,
+          "folds": [
+            {
+              "end_ms": 1696112000000,
+              "fold_id": "WF_FOLD_TRAIN",
+              "role": "train_plan",
+              "start_ms": 1694816000000
+            },
+            {
+              "end_ms": 1697408000000,
+              "fold_id": "WF_FOLD_TEST",
+              "role": "test_plan",
+              "start_ms": 1696112000001
+            }
+          ],
+          "formal_walk_forward_executed": false,
+          "note": "Walk-forward plan only; formal WF remains BLOCKED / not executed.",
+          "plan_kind": "WALK_FORWARD",
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        {
+          "as_of_ms": 1700000000000,
+          "candidate_id": "SYN_V13F_DISC_002",
+          "fold_count": 2,
+          "folds": [
+            {
+              "end_ms": 1696544000000,
+              "fold_id": "WF_FOLD_TRAIN",
+              "role": "train_plan",
+              "start_ms": 1695248000000
+            },
+            {
+              "end_ms": 1697840000000,
+              "fold_id": "WF_FOLD_TEST",
+              "role": "test_plan",
+              "start_ms": 1696544000001
+            }
+          ],
+          "formal_walk_forward_executed": false,
+          "note": "Walk-forward plan only; formal WF remains BLOCKED / not executed.",
+          "plan_kind": "WALK_FORWARD",
+          "status": "PLANNED_NOT_EXECUTED"
+        },
+        {
+          "as_of_ms": 1700000000000,
+          "candidate_id": "SYN_V13F_DISC_003",
+          "fold_count": 2,
+          "folds": [
+            {
+              "end_ms": 1697408000000,
+              "fold_id": "WF_FOLD_TRAIN",
+              "role": "train_plan",
+              "start_ms": 1696544000000
+            },
+            {
+              "end_ms": 1698272000000,
+              "fold_id": "WF_FOLD_TEST",
+              "role": "test_plan",
+              "start_ms": 1697408000001
+            }
+          ],
+          "formal_walk_forward_executed": false,
+          "note": "Walk-forward plan only; formal WF remains BLOCKED / not executed.",
+          "plan_kind": "WALK_FORWARD",
+          "status": "PLANNED_NOT_EXECUTED"
+        }
+      ]
+    },
+    "future_data_excluded": true,
+    "future_data_exclusion_development": {
+      "all_excluded": true,
+      "results": [
+        {
+          "allowed": true,
+          "as_of_ms": 1700000000000,
+          "candidate_id": "SYN_V13F_DISC_001",
+          "future_data_excluded": true,
+          "proposed_end_ms": 1697408000000,
+          "proposed_start_ms": 1694816000000,
+          "status": "FUTURE_DATA_EXCLUDED"
+        },
+        {
+          "allowed": true,
+          "as_of_ms": 1700000000000,
+          "candidate_id": "SYN_V13F_DISC_002",
+          "future_data_excluded": true,
+          "proposed_end_ms": 1697840000000,
+          "proposed_start_ms": 1695248000000,
+          "status": "FUTURE_DATA_EXCLUDED"
+        },
+        {
+          "allowed": true,
+          "as_of_ms": 1700000000000,
+          "candidate_id": "SYN_V13F_DISC_003",
+          "future_data_excluded": true,
+          "proposed_end_ms": 1698272000000,
+          "proposed_start_ms": 1696544000000,
+          "status": "FUTURE_DATA_EXCLUDED"
+        }
+      ],
+      "status": "ALL_DEVELOPMENT_INTERVALS_EXCLUDE_FUTURE"
+    },
+    "future_data_exclusion_valid_case": {
+      "allowed": true,
+      "as_of_ms": 1700000000000,
+      "future_data_excluded": true,
+      "proposed_end_ms": 1699568000000,
+      "proposed_start_ms": 1699136000000,
+      "status": "FUTURE_DATA_EXCLUDED"
+    },
+    "future_data_exclusion_violation_case": {
+      "allowed": false,
+      "as_of_ms": 1700000000000,
+      "future_data_excluded": false,
+      "proposed_end_ms": 1700086400000,
+      "proposed_start_ms": 1699999999000,
+      "status": "FUTURE_DATA_VIOLATION"
+    },
+    "market_universe_pit": {
+      "as_of_ms": 1700000000000,
+      "ok": true,
+      "status": "UNIVERSE_PIT_OK",
+      "universe_checksum": "3cdd354a4ea69c2fa3162dcc2928668337f8ef833952eee8f5951e300964edd6",
+      "violations": []
+    },
+    "promote_attempts": {
+      "SYN_V13F_DISC_001": {
+        "allowed": false,
+        "candidate_id": "SYN_V13F_DISC_001",
+        "promoted": false,
+        "reason": "STRATEGY_PROMOTION_BANNED_V13_F"
+      },
+      "SYN_V13F_DISC_002": {
+        "allowed": false,
+        "candidate_id": "SYN_V13F_DISC_002",
+        "promoted": false,
+        "reason": "STRATEGY_PROMOTION_BANNED_V13_F"
+      },
+      "SYN_V13F_DISC_003": {
+        "allowed": false,
+        "candidate_id": "SYN_V13F_DISC_003",
+        "promoted": false,
+        "reason": "STRATEGY_PROMOTION_BANNED_V13_F"
+      }
+    },
+    "select_attempts": {
+      "SYN_V13F_DISC_001": {
+        "allowed": false,
+        "candidate_id": "SYN_V13F_DISC_001",
+        "reason": "STRATEGY_SELECTION_BANNED_V13_F",
+        "selected": false
+      },
+      "SYN_V13F_DISC_002": {
+        "allowed": false,
+        "candidate_id": "SYN_V13F_DISC_002",
+        "reason": "STRATEGY_SELECTION_BANNED_V13_F",
+        "selected": false
+      },
+      "SYN_V13F_DISC_003": {
+        "allowed": false,
+        "candidate_id": "SYN_V13F_DISC_003",
+        "reason": "STRATEGY_SELECTION_BANNED_V13_F",
+        "selected": false
+      }
+    },
+    "stage_execute_attempts": {
+      "CANDIDATE_FREEZE": {
+        "Founder_authorization_present": false,
+        "allowed": false,
+        "demo_eligibility": false,
+        "demo_order_count": 0,
+        "exchange_write_attempt_count": 0,
+        "executed": false,
+        "formal_walk_forward_executed": false,
+        "founder_authorization_present": false,
+        "label": "Candidate Freeze",
+        "mainnet": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "oos_reservation_created": false,
+        "pr27_merged": false,
+        "qualification_ready_count": 0,
+        "real_money": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V13_F_DRY_RUN_CONTROL_ONLY",
+        "stage": "CANDIDATE_FREEZE",
+        "status": "BLOCKED",
+        "strategy_promoted": false,
+        "strategy_selected": false
+      },
+      "DEMO_ELIGIBILITY": {
+        "Founder_authorization_present": false,
+        "allowed": false,
+        "demo_eligibility": false,
+        "demo_order_count": 0,
+        "exchange_write_attempt_count": 0,
+        "executed": false,
+        "formal_walk_forward_executed": false,
+        "founder_authorization_present": false,
+        "label": "Demo eligibility",
+        "mainnet": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "oos_reservation_created": false,
+        "pr27_merged": false,
+        "qualification_ready_count": 0,
+        "real_money": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V13_F_DRY_RUN_CONTROL_ONLY",
+        "stage": "DEMO_ELIGIBILITY",
+        "status": "BLOCKED",
+        "strategy_promoted": false,
+        "strategy_selected": false
+      },
+      "DEVELOPMENT_REPLAY": {
+        "Founder_authorization_present": false,
+        "allowed": false,
+        "demo_eligibility": false,
+        "demo_order_count": 0,
+        "exchange_write_attempt_count": 0,
+        "executed": false,
+        "formal_walk_forward_executed": false,
+        "founder_authorization_present": false,
+        "label": "Development Replay",
+        "mainnet": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "oos_reservation_created": false,
+        "pr27_merged": false,
+        "qualification_ready_count": 0,
+        "real_money": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V13_F_DRY_RUN_CONTROL_ONLY",
+        "stage": "DEVELOPMENT_REPLAY",
+        "status": "BLOCKED",
+        "strategy_promoted": false,
+        "strategy_selected": false
+      },
+      "OOS_RESERVATION": {
+        "Founder_authorization_present": false,
+        "allowed": false,
+        "demo_eligibility": false,
+        "demo_order_count": 0,
+        "exchange_write_attempt_count": 0,
+        "executed": false,
+        "formal_walk_forward_executed": false,
+        "founder_authorization_present": false,
+        "label": "OOS reservation",
+        "mainnet": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "oos_reservation_created": false,
+        "pr27_merged": false,
+        "qualification_ready_count": 0,
+        "real_money": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V13_F_DRY_RUN_CONTROL_ONLY",
+        "stage": "OOS_RESERVATION",
+        "status": "BLOCKED",
+        "strategy_promoted": false,
+        "strategy_selected": false
+      },
+      "RISK_REVIEW": {
+        "Founder_authorization_present": false,
+        "allowed": false,
+        "demo_eligibility": false,
+        "demo_order_count": 0,
+        "exchange_write_attempt_count": 0,
+        "executed": false,
+        "formal_walk_forward_executed": false,
+        "founder_authorization_present": false,
+        "label": "Risk Review",
+        "mainnet": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "oos_reservation_created": false,
+        "pr27_merged": false,
+        "qualification_ready_count": 0,
+        "real_money": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V13_F_DRY_RUN_CONTROL_ONLY",
+        "stage": "RISK_REVIEW",
+        "status": "BLOCKED",
+        "strategy_promoted": false,
+        "strategy_selected": false
+      },
+      "WALK_FORWARD": {
+        "Founder_authorization_present": false,
+        "allowed": false,
+        "demo_eligibility": false,
+        "demo_order_count": 0,
+        "exchange_write_attempt_count": 0,
+        "executed": false,
+        "formal_walk_forward_executed": false,
+        "founder_authorization_present": false,
+        "label": "Walk-forward",
+        "mainnet": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "oos_reservation_created": false,
+        "pr27_merged": false,
+        "qualification_ready_count": 0,
+        "real_money": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V13_F_DRY_RUN_CONTROL_ONLY",
+        "stage": "WALK_FORWARD",
+        "status": "BLOCKED",
+        "strategy_promoted": false,
+        "strategy_selected": false
+      }
+    }
+  },
+  "qualification_ready_count": 0,
+  "qualification_status": "BLOCKED",
+  "real_money": false,
+  "schema": "FOUNDER_V13_F_QUALIFICATION_DRY_RUN_CONTROL",
+  "selected_strategy": null,
+  "stage_order": [
+    "CANDIDATE_FREEZE",
+    "DEVELOPMENT_REPLAY",
+    "WALK_FORWARD",
+    "RISK_REVIEW",
+    "OOS_RESERVATION",
+    "DEMO_ELIGIBILITY"
+  ],
+  "stages": {
+    "CANDIDATE_FREEZE": "BLOCKED",
+    "DEMO_ELIGIBILITY": "BLOCKED",
+    "DEVELOPMENT_REPLAY": "BLOCKED",
+    "OOS_RESERVATION": "BLOCKED",
+    "RISK_REVIEW": "BLOCKED",
+    "WALK_FORWARD": "BLOCKED"
+  },
+  "status": "BLOCKED_READY",
+  "strategy_promoted": false,
+  "strategy_selected": false,
+  "updated_at": "2026-08-05T08:34:48Z"
+}

@@ -1,0 +1,20 @@
+{
+  "schema": "v11_review_reflection_qualification_recommendation",
+  "created_at": "2026-08-05T04:01:04Z",
+  "recommendation": "BLOCK_INTEGRATION",
+  "rationale": "Critical adversarial failures remain after Pass 2. Do not declare Lane E/F integrated PASS until remediation exists.",
+  "critical_open": [
+    "R3-E-CHECKPOINT-COUNTER-DRIFT",
+    "R3-F-NESTED-FUTURE-TIMESTAMP",
+    "R3-F-OOS-SEAL-REGENERATION"
+  ],
+  "high_open": [
+    "R3-E-CRITIC-BEFORE-REASONER",
+    "R3-F-FOUNDER-AUTH-SPOOF"
+  ],
+  "integration_gate": "FAIL_CLOSED",
+  "lanes": {
+    "E": "feature/v11-reflection-v23-adjudication",
+    "F": "feature/v11-point-in-time-qualification"
+  }
+}

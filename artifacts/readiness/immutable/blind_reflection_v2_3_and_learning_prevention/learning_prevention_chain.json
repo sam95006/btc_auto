@@ -1,0 +1,12 @@
+{
+  "schema": "learning_prevention_chain",
+  "repeated_process_error_prevention_proof_status": "SKIPPED_QUALITY_GATES_FAILED",
+  "bad_process_source_count": 0,
+  "repeatable_error_signature_count": 0,
+  "lesson_created_count": 0,
+  "lesson_stored_count": 0,
+  "lesson_retrieved_count": 0,
+  "main_reasoner_lesson_citation_count": 0,
+  "new_policy_effect_lesson_count": 0,
+  "note": "V2.3 quality gates failed; prevention proof not executed as authorizing path"
+}

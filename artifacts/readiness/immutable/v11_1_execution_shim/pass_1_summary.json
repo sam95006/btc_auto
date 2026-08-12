@@ -1,0 +1,46 @@
+{
+  "schema": "nexus_v11_1_execution_shim_pass1_v1",
+  "lane": "C5_EXECUTION_SHIM_AUTHORITY_REMOVAL",
+  "pass_number": 1,
+  "generated_at": "2026-08-05T04:00:00Z",
+  "status": "PASS",
+  "base_head": "5b1d47543523f7e5be88da63256904171ce45165",
+  "branch": "feature/v11_1-execution-shim-remediation",
+  "actions": [
+    "analyzed_autonomy_v1_1_shim_embedded_fill_cost_risk_position_authority",
+    "rewrote_shim_as_translate_adapt_validate_delegate",
+    "delegated_to_AutonomousExecutionSimulatorV11_via_orchestrator_adapter",
+    "added_ci_ast_authority_traps",
+    "updated_authority_registry_competitor_notes",
+    "replaced_legacy_10k_shim_authority_tests_with_delegation_and_trap_tests"
+  ],
+  "canonical_execution_engine": "backend.nexus_execution.execution_simulator_v1_1.AutonomousExecutionSimulatorV11",
+  "canonical_fill_engine": "backend.nexus_execution.fill_engine.try_fill",
+  "metrics": {
+    "canonical_execution_authority_count": 1,
+    "canonical_fill_authority_count": 1,
+    "shim_embedded_fill_authority_count": 0,
+    "shim_embedded_cost_authority_count": 0,
+    "shim_embedded_risk_authority_count": 0,
+    "shim_embedded_position_authority_count": 0,
+    "authority_trap_violation_count": 0,
+    "exchange_write_attempt_count": 0,
+    "demo_order_count": 0
+  },
+  "tests_run": [
+    "tests/test_execution_simulator_v1_1.py",
+    "tests/architecture/test_authority_graph_and_gate.py",
+    "tests/test_execution_realism_v1_1_fill_model.py",
+    "tests/test_execution_realism_v1_1_risk_gates.py"
+  ],
+  "tests_passed": true,
+  "hard_bans_observed": [
+    "no_pr_merge",
+    "no_deployment",
+    "no_oos",
+    "no_demo_order",
+    "no_exchange_write",
+    "no_mainnet",
+    "no_real_money"
+  ]
+}

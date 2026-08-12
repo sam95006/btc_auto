@@ -1,0 +1,269 @@
+{
+  "schema": "FOUNDER_V11_POINT_IN_TIME_QUALIFICATION",
+  "status": "BLOCKED_READY",
+  "created_at": "2026-08-05T03:28:27Z",
+  "updated_at": "2026-08-05T03:28:27Z",
+  "as_of_ms": 1700000000000,
+  "candidate": {
+    "candidate_id": "SYNTHETIC_V11_PIT_CANDIDATE",
+    "candidate_label": "synthetic_fixture_not_selected",
+    "model_family": "other_models_synthetic_fixture",
+    "strategy_family": "SYNTHETIC_POINT_IN_TIME_FAMILY",
+    "economic_mechanism": "synthetic_non_trading_placeholder",
+    "parameters": {
+      "lookback": 12,
+      "threshold": 0.0,
+      "fixture_marker": true
+    },
+    "parameter_source": "synthetic_fixture",
+    "code_ref": "backend/nexus_qualification/pit_v11",
+    "dataset_ref": "SYNTHETIC_PIT_DATASET_V11",
+    "preregistration_timestamp": "2026-01-01T00:00:00Z",
+    "fixture_only": true,
+    "selected": false,
+    "promoted": false,
+    "candidate_checksum": "fcd75e922a002bc6fc4238a5288f5e997354674d80c7acf03a6c92079be62dd4",
+    "candidate_semantic_checksum": "72925689cc71307beaf7bbb56a7e55d82f761ba6d73c9181b461854cfbbb44f8",
+    "parameter_checksum": "87024acc40c86a95c88bd5d91b4bfb83a22a02a2b41843c5eefdf1c4389b4332",
+    "code_checksum": "e1af1b248f9fe56d27669574ea597f74195e9e5b20e1ee363dcc8c82e20707de",
+    "dataset_checksum": "88c3580df905ce6ec4daef6707954a4995633a1829010a11374bddbb9db53ca7",
+    "dataset_semantic_checksum": "63222b8dbbd5b73b459983415c56398c381d29f15a9a25022b2012034a038a74"
+  },
+  "dataset_lineage": {
+    "dataset_id": "SYNTHETIC_PIT_DATASET_V11",
+    "dataset_version": "v11.synthetic.1",
+    "source": "synthetic_fixture_generator",
+    "source_timestamp_ms": 1698790400000,
+    "retrieval_timestamp_ms": 1699395200000,
+    "availability_timestamp_ms": 1699481600000,
+    "as_of_ms": 1700000000000,
+    "records": [
+      {
+        "record_id": "SYN_PIT_BAR_001",
+        "symbol": "SYNTHUSDT",
+        "source_timestamp_ms": 1698790400000,
+        "retrieval_timestamp_ms": 1699395200000,
+        "availability_timestamp_ms": 1699481600000,
+        "available_as_of_ms": 1699481600000,
+        "value_kind": "synthetic_ohlcv_bar",
+        "fixture_only": true
+      }
+    ],
+    "real_market_data": false,
+    "fixture_only": true,
+    "dataset_checksum": "88c3580df905ce6ec4daef6707954a4995633a1829010a11374bddbb9db53ca7",
+    "dataset_semantic_checksum": "63222b8dbbd5b73b459983415c56398c381d29f15a9a25022b2012034a038a74"
+  },
+  "checksums": {
+    "candidate_checksum": "fcd75e922a002bc6fc4238a5288f5e997354674d80c7acf03a6c92079be62dd4",
+    "candidate_semantic_checksum": "72925689cc71307beaf7bbb56a7e55d82f761ba6d73c9181b461854cfbbb44f8",
+    "parameter_checksum": "87024acc40c86a95c88bd5d91b4bfb83a22a02a2b41843c5eefdf1c4389b4332",
+    "code_checksum": "e1af1b248f9fe56d27669574ea597f74195e9e5b20e1ee363dcc8c82e20707de",
+    "dataset_checksum": "88c3580df905ce6ec4daef6707954a4995633a1829010a11374bddbb9db53ca7",
+    "dataset_semantic_checksum": "63222b8dbbd5b73b459983415c56398c381d29f15a9a25022b2012034a038a74"
+  },
+  "registries": {
+    "consumed": {
+      "kind": "consumed",
+      "interval_count": 1,
+      "checksum": "8c4a1ad19593cf7831601215e7f81b94ed4f5f66c5e6eb434424e271eceae13c",
+      "intervals": [
+        {
+          "interval_id": "SYN_V11_CONSUMED_DEV",
+          "label": "synthetic_consumed_development",
+          "start_ms": 1694816000000,
+          "end_ms": 1697408000000,
+          "category": "consumed"
+        }
+      ]
+    },
+    "reserved": {
+      "kind": "reserved",
+      "interval_count": 1,
+      "checksum": "560055f9d37839cd58e73c9dbb43e909a371dc298e33b8df06ea726ababd54e4",
+      "intervals": [
+        {
+          "interval_id": "SYN_V11_RESERVED_OOS",
+          "label": "synthetic_reserved_untouched_oos",
+          "start_ms": 1698272000000,
+          "end_ms": 1699136000000,
+          "category": "reserved"
+        }
+      ]
+    },
+    "availability": {
+      "kind": "availability",
+      "interval_count": 1,
+      "checksum": "f25db477d47f96630b43288a6c8e3e8cd81a1bdcd6df0ad9efd86fadaabf2656",
+      "intervals": [
+        {
+          "interval_id": "SYN_V11_AVAILABLE_PIT",
+          "label": "synthetic_available_before_as_of",
+          "start_ms": 1698790400000,
+          "end_ms": 1699481600000,
+          "category": "availability"
+        }
+      ]
+    }
+  },
+  "oos_cryptographic_seal": {
+    "reserved_registry_checksum": "560055f9d37839cd58e73c9dbb43e909a371dc298e33b8df06ea726ababd54e4",
+    "candidate_checksum": "fcd75e922a002bc6fc4238a5288f5e997354674d80c7acf03a6c92079be62dd4",
+    "dataset_semantic_checksum": "63222b8dbbd5b73b459983415c56398c381d29f15a9a25022b2012034a038a74",
+    "status": "SEALED_NOT_CONSUMED",
+    "fixture_only": true,
+    "seal_algorithm": "sha256_json_canonical",
+    "seal": "9e0dea64a352db8fa5a2b2d746bf5e111918ccb6b04fac5545f631d892fa5d3c",
+    "oos_revealed_to_candidate": false,
+    "oos_consumed": false
+  },
+  "oos_non_consumption_proof": {
+    "status": "OOS_NON_CONSUMPTION_PROVEN",
+    "proven": true,
+    "oos_consumed": false,
+    "oos_executed": false,
+    "formal_walk_forward_executed": false,
+    "violations": [],
+    "registry_checksums": {
+      "consumed": "8c4a1ad19593cf7831601215e7f81b94ed4f5f66c5e6eb434424e271eceae13c",
+      "reserved": "560055f9d37839cd58e73c9dbb43e909a371dc298e33b8df06ea726ababd54e4",
+      "availability": "f25db477d47f96630b43288a6c8e3e8cd81a1bdcd6df0ad9efd86fadaabf2656"
+    }
+  },
+  "founder_authorization_gate": {
+    "authorized": false,
+    "reason": "FOUNDER_AUTHORIZATION_MISSING",
+    "required_scope": "founder_v11_pit_qualification"
+  },
+  "promotion_state_machine": {
+    "state": "PROMOTION_BLOCKED_READY",
+    "stages": {
+      "DATASET_LINEAGE_REGISTERED": "BLOCKED_READY",
+      "POINT_IN_TIME_TIMESTAMPS_VERIFIED": "BLOCKED_READY",
+      "FUTURE_DATA_EXCLUSION_PROVEN": "BLOCKED_READY",
+      "CANDIDATE_SEMANTIC_CHECKSUMS_STAMPED": "BLOCKED_READY",
+      "INTERVAL_REGISTRIES_REGISTERED": "BLOCKED_READY",
+      "OOS_CRYPTOGRAPHIC_SEAL_CREATED": "BLOCKED_READY",
+      "OOS_NON_CONSUMPTION_PROVEN": "BLOCKED_READY",
+      "FOUNDER_AUTHORIZATION_GATE_EVALUATED": "BLOCKED_READY",
+      "PROMOTION_STATE_MACHINE_BLOCKED": "BLOCKED_READY"
+    },
+    "stage_order": [
+      "DATASET_LINEAGE_REGISTERED",
+      "POINT_IN_TIME_TIMESTAMPS_VERIFIED",
+      "FUTURE_DATA_EXCLUSION_PROVEN",
+      "CANDIDATE_SEMANTIC_CHECKSUMS_STAMPED",
+      "INTERVAL_REGISTRIES_REGISTERED",
+      "OOS_CRYPTOGRAPHIC_SEAL_CREATED",
+      "OOS_NON_CONSUMPTION_PROVEN",
+      "FOUNDER_AUTHORIZATION_GATE_EVALUATED",
+      "PROMOTION_STATE_MACHINE_BLOCKED"
+    ],
+    "history": [
+      {
+        "event": "attempt_promote",
+        "result": {
+          "allowed": false,
+          "reason": "PROMOTION_BLOCKED_READY_V11_INFRASTRUCTURE_ONLY",
+          "state": "PROMOTION_BLOCKED_READY",
+          "selected_strategy": null,
+          "formal_walk_forward_executed": false,
+          "oos_executed": false,
+          "demo_order_count": 0
+        }
+      }
+    ]
+  },
+  "stage_order": [
+    "DATASET_LINEAGE_REGISTERED",
+    "POINT_IN_TIME_TIMESTAMPS_VERIFIED",
+    "FUTURE_DATA_EXCLUSION_PROVEN",
+    "CANDIDATE_SEMANTIC_CHECKSUMS_STAMPED",
+    "INTERVAL_REGISTRIES_REGISTERED",
+    "OOS_CRYPTOGRAPHIC_SEAL_CREATED",
+    "OOS_NON_CONSUMPTION_PROVEN",
+    "FOUNDER_AUTHORIZATION_GATE_EVALUATED",
+    "PROMOTION_STATE_MACHINE_BLOCKED"
+  ],
+  "stages": {
+    "DATASET_LINEAGE_REGISTERED": "BLOCKED_READY",
+    "POINT_IN_TIME_TIMESTAMPS_VERIFIED": "BLOCKED_READY",
+    "FUTURE_DATA_EXCLUSION_PROVEN": "BLOCKED_READY",
+    "CANDIDATE_SEMANTIC_CHECKSUMS_STAMPED": "BLOCKED_READY",
+    "INTERVAL_REGISTRIES_REGISTERED": "BLOCKED_READY",
+    "OOS_CRYPTOGRAPHIC_SEAL_CREATED": "BLOCKED_READY",
+    "OOS_NON_CONSUMPTION_PROVEN": "BLOCKED_READY",
+    "FOUNDER_AUTHORIZATION_GATE_EVALUATED": "BLOCKED_READY",
+    "PROMOTION_STATE_MACHINE_BLOCKED": "BLOCKED_READY"
+  },
+  "all_stages_blocked_ready": true,
+  "formal_walk_forward_executed": false,
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "selected_strategy": null,
+  "strategy_selected": false,
+  "strategy_promoted": false,
+  "demo_eligibility": false,
+  "oos_reservation_created": false,
+  "oos_downloaded": false,
+  "oos_executed": false,
+  "oos_consumed": false,
+  "oos_metrics_computed": false,
+  "oos_revealed_to_candidate": false,
+  "hard_bans": {
+    "select_strategy": "NOT_PERFORMED",
+    "real_walk_forward": "NOT_EXECUTED",
+    "real_oos": "NOT_CONSUMED",
+    "demo": "NOT_RUN",
+    "promotion": "BLOCKED",
+    "fixtures": "SYNTHETIC_ONLY"
+  },
+  "proofs": {
+    "future_data_exclusion": {
+      "status": "FUTURE_DATA_EXCLUDED",
+      "allowed": true,
+      "future_data_excluded": true,
+      "as_of_ms": 1700000000000,
+      "violation_count": 0,
+      "violations": []
+    },
+    "oos_non_consumption": {
+      "status": "OOS_NON_CONSUMPTION_PROVEN",
+      "proven": true,
+      "oos_consumed": false,
+      "oos_executed": false,
+      "formal_walk_forward_executed": false,
+      "violations": [],
+      "registry_checksums": {
+        "consumed": "8c4a1ad19593cf7831601215e7f81b94ed4f5f66c5e6eb434424e271eceae13c",
+        "reserved": "560055f9d37839cd58e73c9dbb43e909a371dc298e33b8df06ea726ababd54e4",
+        "availability": "f25db477d47f96630b43288a6c8e3e8cd81a1bdcd6df0ad9efd86fadaabf2656"
+      }
+    },
+    "oos_cryptographic_seal": {
+      "reserved_registry_checksum": "560055f9d37839cd58e73c9dbb43e909a371dc298e33b8df06ea726ababd54e4",
+      "candidate_checksum": "fcd75e922a002bc6fc4238a5288f5e997354674d80c7acf03a6c92079be62dd4",
+      "dataset_semantic_checksum": "63222b8dbbd5b73b459983415c56398c381d29f15a9a25022b2012034a038a74",
+      "status": "SEALED_NOT_CONSUMED",
+      "fixture_only": true,
+      "seal_algorithm": "sha256_json_canonical",
+      "seal": "9e0dea64a352db8fa5a2b2d746bf5e111918ccb6b04fac5545f631d892fa5d3c",
+      "oos_revealed_to_candidate": false,
+      "oos_consumed": false
+    },
+    "founder_authorization_gate": {
+      "authorized": false,
+      "reason": "FOUNDER_AUTHORIZATION_MISSING",
+      "required_scope": "founder_v11_pit_qualification"
+    },
+    "promotion_attempt": {
+      "allowed": false,
+      "reason": "PROMOTION_BLOCKED_READY_V11_INFRASTRUCTURE_ONLY",
+      "state": "PROMOTION_BLOCKED_READY",
+      "selected_strategy": null,
+      "formal_walk_forward_executed": false,
+      "oos_executed": false,
+      "demo_order_count": 0
+    }
+  }
+}

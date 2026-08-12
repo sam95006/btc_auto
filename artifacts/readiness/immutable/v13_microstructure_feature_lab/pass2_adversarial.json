@@ -1,0 +1,29 @@
+{
+  "adversarial_ok": true,
+  "created_at": "2026-08-05T08:34:03Z",
+  "critical_count": 0,
+  "empty_imbalance_ok": true,
+  "findings": [
+    {
+      "code": "FIXTURE_SYNTHETIC_ONLY",
+      "detail": "Feature proofs use synthetic fixtures; old campaign is RO forensic probe only — not claimed as live capture validation.",
+      "severity": "INFO",
+      "status": "ACKNOWLEDGED"
+    }
+  ],
+  "high_count": 0,
+  "pass": "PASS_2",
+  "pit_proof": {
+    "as_of_ms": 1720000055000,
+    "fingerprint_baseline": "1be1e1aaf733b9df8b9fdbc49e691c53ab0339cdce3d6b4b0d9796582e9cf925",
+    "fingerprint_with_future": "1be1e1aaf733b9df8b9fdbc49e691c53ab0339cdce3d6b4b0d9796582e9cf925",
+    "future_event_exchange_timestamp": 1720000065000,
+    "pit_holds": true,
+    "predictive_edge_claimed": false,
+    "schema": "v13_e_pit_proof",
+    "seed": "v13e-pass2-pit",
+    "symbol": "BTCUSDT"
+  },
+  "seed_divergence_ok": true,
+  "unknown_side_ok": true
+}

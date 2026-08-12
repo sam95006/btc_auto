@@ -1,0 +1,635 @@
+{
+  "schema": "component_conformance_summary_v1_1",
+  "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+  "synthetic_fixtures_excluded_from_performance_metrics": true,
+  "component_conformance_test_count": 80,
+  "component_conformance_failure_count": 0,
+  "components_covered": 16,
+  "cases": [
+    {
+      "component_id": "TREND_CONTINUATION",
+      "case": "expected_positive_or_scan_runs",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "positive_event_substrate_executed"
+    },
+    {
+      "component_id": "TREND_CONTINUATION",
+      "case": "expected_negative_event",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "flat_market_negative_substrate"
+    },
+    {
+      "component_id": "TREND_CONTINUATION",
+      "case": "regime_block_example",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "note": "regime_transition_veto_chaos"
+    },
+    {
+      "component_id": "TREND_CONTINUATION",
+      "case": "missing_data_block",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "n_a_price_component"
+    },
+    {
+      "component_id": "TREND_CONTINUATION",
+      "case": "late_entry_rejection",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "component_has_late_entry_rule_in_executor"
+    },
+    {
+      "component_id": "STRUCTURAL_RETEST",
+      "case": "expected_positive_or_scan_runs",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 2,
+      "note": "positive_event_substrate_executed"
+    },
+    {
+      "component_id": "STRUCTURAL_RETEST",
+      "case": "expected_negative_event",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "flat_market_negative_substrate"
+    },
+    {
+      "component_id": "STRUCTURAL_RETEST",
+      "case": "regime_block_example",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "note": "regime_transition_veto_chaos"
+    },
+    {
+      "component_id": "STRUCTURAL_RETEST",
+      "case": "missing_data_block",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 2,
+      "note": "n_a_price_component"
+    },
+    {
+      "component_id": "STRUCTURAL_RETEST",
+      "case": "late_entry_rejection",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "component_has_late_entry_rule_in_executor"
+    },
+    {
+      "component_id": "BREAKOUT",
+      "case": "expected_positive_or_scan_runs",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "positive_event_substrate_executed"
+    },
+    {
+      "component_id": "BREAKOUT",
+      "case": "expected_negative_event",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "flat_market_negative_substrate"
+    },
+    {
+      "component_id": "BREAKOUT",
+      "case": "regime_block_example",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "note": "regime_transition_veto_chaos"
+    },
+    {
+      "component_id": "BREAKOUT",
+      "case": "missing_data_block",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "n_a_price_component"
+    },
+    {
+      "component_id": "BREAKOUT",
+      "case": "late_entry_rejection",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "extended_breakout_late_entry_path"
+    },
+    {
+      "component_id": "FAILED_BREAKOUT",
+      "case": "expected_positive_or_scan_runs",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "positive_event_substrate_executed"
+    },
+    {
+      "component_id": "FAILED_BREAKOUT",
+      "case": "expected_negative_event",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "flat_market_negative_substrate"
+    },
+    {
+      "component_id": "FAILED_BREAKOUT",
+      "case": "regime_block_example",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "note": "regime_transition_veto_chaos"
+    },
+    {
+      "component_id": "FAILED_BREAKOUT",
+      "case": "missing_data_block",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "n_a_price_component"
+    },
+    {
+      "component_id": "FAILED_BREAKOUT",
+      "case": "late_entry_rejection",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "component_has_late_entry_rule_in_executor"
+    },
+    {
+      "component_id": "MOMENTUM_ACCELERATION",
+      "case": "expected_positive_or_scan_runs",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "positive_event_substrate_executed"
+    },
+    {
+      "component_id": "MOMENTUM_ACCELERATION",
+      "case": "expected_negative_event",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "flat_market_negative_substrate"
+    },
+    {
+      "component_id": "MOMENTUM_ACCELERATION",
+      "case": "regime_block_example",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "note": "regime_transition_veto_chaos"
+    },
+    {
+      "component_id": "MOMENTUM_ACCELERATION",
+      "case": "missing_data_block",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "n_a_price_component"
+    },
+    {
+      "component_id": "MOMENTUM_ACCELERATION",
+      "case": "late_entry_rejection",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "component_has_late_entry_rule_in_executor"
+    },
+    {
+      "component_id": "VOLATILITY_EXPANSION",
+      "case": "expected_positive_or_scan_runs",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 1,
+      "note": "positive_event_substrate_executed"
+    },
+    {
+      "component_id": "VOLATILITY_EXPANSION",
+      "case": "expected_negative_event",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 1,
+      "note": "flat_market_negative_substrate"
+    },
+    {
+      "component_id": "VOLATILITY_EXPANSION",
+      "case": "regime_block_example",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "note": "regime_transition_veto_chaos"
+    },
+    {
+      "component_id": "VOLATILITY_EXPANSION",
+      "case": "missing_data_block",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 1,
+      "note": "n_a_price_component"
+    },
+    {
+      "component_id": "VOLATILITY_EXPANSION",
+      "case": "late_entry_rejection",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "component_has_late_entry_rule_in_executor"
+    },
+    {
+      "component_id": "VWAP_MEAN_REVERSION",
+      "case": "expected_positive_or_scan_runs",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 3,
+      "note": "positive_event_substrate_executed"
+    },
+    {
+      "component_id": "VWAP_MEAN_REVERSION",
+      "case": "expected_negative_event",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "flat_market_negative_substrate"
+    },
+    {
+      "component_id": "VWAP_MEAN_REVERSION",
+      "case": "regime_block_example",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "note": "regime_transition_veto_chaos"
+    },
+    {
+      "component_id": "VWAP_MEAN_REVERSION",
+      "case": "missing_data_block",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 3,
+      "note": "n_a_price_component"
+    },
+    {
+      "component_id": "VWAP_MEAN_REVERSION",
+      "case": "late_entry_rejection",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "component_has_late_entry_rule_in_executor"
+    },
+    {
+      "component_id": "STRUCTURAL_MEAN_REVERSION",
+      "case": "expected_positive_or_scan_runs",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 3,
+      "note": "positive_event_substrate_executed"
+    },
+    {
+      "component_id": "STRUCTURAL_MEAN_REVERSION",
+      "case": "expected_negative_event",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 3,
+      "note": "flat_market_negative_substrate"
+    },
+    {
+      "component_id": "STRUCTURAL_MEAN_REVERSION",
+      "case": "regime_block_example",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "note": "regime_transition_veto_chaos"
+    },
+    {
+      "component_id": "STRUCTURAL_MEAN_REVERSION",
+      "case": "missing_data_block",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 3,
+      "note": "n_a_price_component"
+    },
+    {
+      "component_id": "STRUCTURAL_MEAN_REVERSION",
+      "case": "late_entry_rejection",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "component_has_late_entry_rule_in_executor"
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH",
+      "case": "expected_positive_or_scan_runs",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 1,
+      "note": "positive_event_substrate_executed"
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH",
+      "case": "expected_negative_event",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "flat_market_negative_substrate"
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH",
+      "case": "regime_block_example",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "note": "regime_transition_veto_chaos"
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH",
+      "case": "missing_data_block",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "n_a_price_component"
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH",
+      "case": "late_entry_rejection",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "component_has_late_entry_rule_in_executor"
+    },
+    {
+      "component_id": "CROSS_SECTIONAL_MOMENTUM",
+      "case": "expected_positive_or_scan_runs",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 1,
+      "note": "positive_event_substrate_executed"
+    },
+    {
+      "component_id": "CROSS_SECTIONAL_MOMENTUM",
+      "case": "expected_negative_event",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "flat_market_negative_substrate"
+    },
+    {
+      "component_id": "CROSS_SECTIONAL_MOMENTUM",
+      "case": "regime_block_example",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "note": "regime_transition_veto_chaos"
+    },
+    {
+      "component_id": "CROSS_SECTIONAL_MOMENTUM",
+      "case": "missing_data_block",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "n_a_price_component"
+    },
+    {
+      "component_id": "CROSS_SECTIONAL_MOMENTUM",
+      "case": "late_entry_rejection",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "component_has_late_entry_rule_in_executor"
+    },
+    {
+      "component_id": "LIQUIDITY_SWEEP_REVERSAL",
+      "case": "expected_positive_or_scan_runs",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "positive_event_substrate_executed"
+    },
+    {
+      "component_id": "LIQUIDITY_SWEEP_REVERSAL",
+      "case": "expected_negative_event",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "flat_market_negative_substrate"
+    },
+    {
+      "component_id": "LIQUIDITY_SWEEP_REVERSAL",
+      "case": "regime_block_example",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "note": "regime_transition_veto_chaos"
+    },
+    {
+      "component_id": "LIQUIDITY_SWEEP_REVERSAL",
+      "case": "missing_data_block",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "n_a_price_component"
+    },
+    {
+      "component_id": "LIQUIDITY_SWEEP_REVERSAL",
+      "case": "late_entry_rejection",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "component_has_late_entry_rule_in_executor"
+    },
+    {
+      "component_id": "FUNDING_OI_CONTINUATION",
+      "case": "expected_positive_or_scan_runs",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "positive_event_substrate_executed"
+    },
+    {
+      "component_id": "FUNDING_OI_CONTINUATION",
+      "case": "expected_negative_event",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "flat_market_negative_substrate"
+    },
+    {
+      "component_id": "FUNDING_OI_CONTINUATION",
+      "case": "regime_block_example",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "note": "regime_transition_veto_chaos"
+    },
+    {
+      "component_id": "FUNDING_OI_CONTINUATION",
+      "case": "missing_data_block",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "no_price_proxy_on_missing_derivatives"
+    },
+    {
+      "component_id": "FUNDING_OI_CONTINUATION",
+      "case": "late_entry_rejection",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "component_has_late_entry_rule_in_executor"
+    },
+    {
+      "component_id": "FUNDING_OI_CONTRARIAN",
+      "case": "expected_positive_or_scan_runs",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "positive_event_substrate_executed"
+    },
+    {
+      "component_id": "FUNDING_OI_CONTRARIAN",
+      "case": "expected_negative_event",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "flat_market_negative_substrate"
+    },
+    {
+      "component_id": "FUNDING_OI_CONTRARIAN",
+      "case": "regime_block_example",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "note": "regime_transition_veto_chaos"
+    },
+    {
+      "component_id": "FUNDING_OI_CONTRARIAN",
+      "case": "missing_data_block",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "no_price_proxy_on_missing_derivatives"
+    },
+    {
+      "component_id": "FUNDING_OI_CONTRARIAN",
+      "case": "late_entry_rejection",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "component_has_late_entry_rule_in_executor"
+    },
+    {
+      "component_id": "REGIME_TRANSITION_VETO",
+      "case": "expected_positive_or_scan_runs",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "positive_event_substrate_executed"
+    },
+    {
+      "component_id": "REGIME_TRANSITION_VETO",
+      "case": "expected_negative_event",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "flat_market_negative_substrate"
+    },
+    {
+      "component_id": "REGIME_TRANSITION_VETO",
+      "case": "regime_block_example",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "note": "regime_transition_veto_chaos"
+    },
+    {
+      "component_id": "REGIME_TRANSITION_VETO",
+      "case": "missing_data_block",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "n_a_price_component"
+    },
+    {
+      "component_id": "REGIME_TRANSITION_VETO",
+      "case": "late_entry_rejection",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "component_has_late_entry_rule_in_executor"
+    },
+    {
+      "component_id": "MARK_INDEX_BASIS_ANOMALY",
+      "case": "expected_positive_or_scan_runs",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 3,
+      "note": "positive_event_substrate_executed"
+    },
+    {
+      "component_id": "MARK_INDEX_BASIS_ANOMALY",
+      "case": "expected_negative_event",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "flat_market_negative_substrate"
+    },
+    {
+      "component_id": "MARK_INDEX_BASIS_ANOMALY",
+      "case": "regime_block_example",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "note": "regime_transition_veto_chaos"
+    },
+    {
+      "component_id": "MARK_INDEX_BASIS_ANOMALY",
+      "case": "missing_data_block",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "no_price_proxy_on_missing_derivatives"
+    },
+    {
+      "component_id": "MARK_INDEX_BASIS_ANOMALY",
+      "case": "late_entry_rejection",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "component_has_late_entry_rule_in_executor"
+    },
+    {
+      "component_id": "VOLUME_EXPANSION_EVENT",
+      "case": "expected_positive_or_scan_runs",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "positive_event_substrate_executed"
+    },
+    {
+      "component_id": "VOLUME_EXPANSION_EVENT",
+      "case": "expected_negative_event",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "flat_market_negative_substrate"
+    },
+    {
+      "component_id": "VOLUME_EXPANSION_EVENT",
+      "case": "regime_block_example",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "note": "regime_transition_veto_chaos"
+    },
+    {
+      "component_id": "VOLUME_EXPANSION_EVENT",
+      "case": "missing_data_block",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "n_a_price_component"
+    },
+    {
+      "component_id": "VOLUME_EXPANSION_EVENT",
+      "case": "late_entry_rejection",
+      "label": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+      "passed": true,
+      "signal_count": 0,
+      "note": "component_has_late_entry_rule_in_executor"
+    }
+  ],
+  "failures": []
+}

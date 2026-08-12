@@ -1,0 +1,121 @@
+{
+  "post_forensic_commit": "d93ca1e2446a7aa3b73e332a99d5600e2d7cd73f",
+  "pr_head": "d93ca1e2446a7aa3b73e332a99d5600e2d7cd73f",
+  "push_status": "SUCCESS",
+  "force_push": false,
+  "ci_run": "https://github.com/sam95006/btc_auto/actions/runs/30738866697",
+  "ci_status": "PASS",
+  "failed_tests": 0,
+  "secret_leak_count": 0,
+  "deploy_run": "https://github.com/sam95006/btc_auto/actions/runs/30738943964",
+  "deployment_commit": "824817d5bd86d0abd6ae9b34cd9369788bbc5947",
+  "health_t0": 200,
+  "health_t60": "NOT_REMEASURED_AFTER_ROUTE_LIVE",
+  "health_t180": "NOT_REMEASURED_AFTER_ROUTE_LIVE",
+  "forensic_routes_live": true,
+  "account_state": "ACCOUNT_CONFIRMED_FLAT",
+  "reconciliation": "MATCH",
+  "wallet_delta_classification": "UNKNOWN",
+  "wallet_delta_attributed": 0.0,
+  "wallet_delta_unattributed": -0.97052039,
+  "wallet_delta_note": "Pre-session Same-Router Probe closedPnl/fees visible with NEXUS-PROBE-* ids before 12H start; no in-window ledger rows explain the intra-session -0.97052039. available\u2260wallet semantic gap observed. Do not attribute to 12H.",
+  "fixed_geometry_replay": {
+    "pass_rate": 0.0,
+    "pass_count": 0
+  },
+  "structural_geometry_replay": {
+    "pass_rate": 0.6003323639385126,
+    "pass_count": 1445,
+    "complete": 1445,
+    "missing": 481,
+    "invalid": 481,
+    "diagnostic_only": true,
+    "oos_claim_forbidden": true
+  },
+  "walk_forward_result": {
+    "stage": "WALK_FORWARD_VALIDATED",
+    "time_range": "t50%..t75%",
+    "candidate_count": 602,
+    "geometry_complete_rate": 0.5980066445182725,
+    "cost_gate_pass_rate": 0.5980066445182725,
+    "expected_net_rr": {
+      "mean": 2.1722620112219095,
+      "p50": 1.8139939156888243
+    },
+    "reward_to_cost": {
+      "mean": 16.859856826060163,
+      "p50": 18.306930693069337
+    },
+    "trade_simulation_count": 0,
+    "gross_pnl": null,
+    "fees": null,
+    "slippage": null,
+    "funding": null,
+    "net_pnl": null,
+    "profit_factor": null,
+    "maximum_drawdown": null,
+    "win_rate": null,
+    "expectancy": null,
+    "calibration": "NOT_APPLICABLE_NO_FILLS",
+    "look_ahead_contamination": false,
+    "status": "VALIDATED_FRAMEWORK"
+  },
+  "oos_result": {
+    "stage": "OOS_VALIDATED",
+    "time_range": "t75%..t100%",
+    "candidate_count": 602,
+    "geometry_complete_rate": 0.6013289036544851,
+    "cost_gate_pass_rate": 0.6013289036544851,
+    "expected_net_rr": {
+      "mean": 2.1701280020960056,
+      "p50": 1.8139939156888243
+    },
+    "reward_to_cost": {
+      "mean": 16.887759892773825,
+      "p50": 18.306930693069337
+    },
+    "trade_simulation_count": 0,
+    "gross_pnl": null,
+    "fees": null,
+    "slippage": null,
+    "funding": null,
+    "net_pnl": null,
+    "profit_factor": null,
+    "maximum_drawdown": null,
+    "win_rate": null,
+    "expectancy": null,
+    "calibration": "NOT_APPLICABLE_NO_FILLS",
+    "look_ahead_contamination": false,
+    "status": "VALIDATED_FRAMEWORK"
+  },
+  "risk_review_result": {
+    "stage": "RISK_REVIEWED",
+    "status": "PENDING_FOUNDER_RISK_SIGN_OFF",
+    "floors_unchanged": true,
+    "min_net_rr": 1.2,
+    "min_reward_to_cost": 1.5,
+    "no_threshold_tuning_between_folds": true,
+    "look_ahead_contamination": false
+  },
+  "shadow_result": {
+    "stage": "SHADOW_APPLIED",
+    "status": "NOT_APPLIED",
+    "note": "Shadow must not be classified as live; requires Founder arm after risk review.",
+    "shadow_equals_live": false
+  },
+  "instrument_qty_patch_verified": true,
+  "qualification_complete": false,
+  "recommendation": "NEXUS_GEOMETRY_QUALIFICATION_IN_PROGRESS",
+  "safety_freeze": {
+    "no_new_6h": true,
+    "no_new_12h": true,
+    "no_24h": true,
+    "no_mainnet": true,
+    "no_real_money": true,
+    "no_autonomous_canary": true,
+    "session_write_window_open": false,
+    "effective_demo_write_authorized": false,
+    "global_exchange_write_enabled": false,
+    "24H_GATE_APPROVED": false
+  }
+}

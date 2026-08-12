@@ -1,0 +1,9 @@
+{
+  "canonical_cost_authority": "backend.nexus_execution.cost_model",
+  "canonical_cost_authority_count": 1,
+  "cost_formula_divergence_count": 0,
+  "cost_version_divergence_count": 0,
+  "findings": [],
+  "passed": true,
+  "schema": "nexus_cost_formula_divergence_v1"
+}

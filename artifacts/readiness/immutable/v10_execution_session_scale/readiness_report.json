@@ -1,0 +1,103 @@
+{
+  "adapter_id": "NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1",
+  "canonical_execution_engine": "backend.nexus_execution.execution_simulator_v1_1.AutonomousExecutionSimulatorV11",
+  "exchange_write_attempt_count": 0,
+  "fuzz": {
+    "generated_execution_scenario_count": 100000,
+    "invariants": {
+      "scenarios_ok": 100000,
+      "scenarios_with_violations": 0,
+      "total_violations": 0
+    },
+    "pass": true,
+    "target_scenarios": 100000
+  },
+  "generated_at": "2026-08-05T03:07:08Z",
+  "package": "NEXUS_V10_EXECUTION_SESSION_SCALE",
+  "recommendation": "NEXUS_V10_EXECUTION_SESSION_SCALE_PASS",
+  "schema": "v10_execution_session_scale_readiness",
+  "secret_scan": {
+    "created_at": "2026-08-05T03:07:08Z",
+    "files_scanned": 8,
+    "hits": [],
+    "owned_paths": [
+      "backend/nexus_execution/scale_v10.py",
+      "backend/nexus_execution/scale_",
+      "backend/nexus_autonomy/session_scale_v10.py",
+      "tools/research/run_execution_session_scale_v10.py",
+      "tests/test_execution_session_scale_v10.py"
+    ],
+    "schema": "v10_execution_session_scale_secret_scan",
+    "secret_leak_count": 0
+  },
+  "session": {
+    "focused_probes": {
+      "created_at": "2026-08-05T03:07:08Z",
+      "fault_classes_covered": [
+        "process_crashes",
+        "partial_fills",
+        "duplicate_intents",
+        "clock_jumps",
+        "provider_outages",
+        "storage_limits",
+        "ledger_corruption",
+        "snapshot_corruption"
+      ],
+      "probe_pass": true,
+      "probes": {
+        "clock_jump_backward": {
+          "exchange_write_attempt_count": 0,
+          "final_state": "COMPLETED",
+          "invariants_status": "PASS",
+          "probe_pass": true,
+          "session_pass": true
+        },
+        "clock_jump_forward": {
+          "exchange_write_attempt_count": 0,
+          "final_state": "COMPLETED",
+          "invariants_status": "PASS",
+          "probe_pass": true,
+          "session_pass": true
+        },
+        "disk_hard_limit": {
+          "exchange_write_attempt_count": 0,
+          "final_state": "BLOCKED",
+          "invariants_status": "PASS",
+          "probe_pass": true,
+          "session_pass": true
+        },
+        "ledger_corruption_probe": {
+          "corrupted_bytes": 32,
+          "path_exists": true,
+          "probe_pass": true,
+          "recovery_reason": "lkg_and_ledger_consistent",
+          "recovery_status": "RECOVERED"
+        },
+        "snapshot_corruption_probe": {
+          "path_exists": true,
+          "probe_pass": true,
+          "recovery_reason": "snapshot_corruption",
+          "recovery_status": "BLOCKED_AMBIGUOUS"
+        }
+      },
+      "schema": "v10_session_scale_focused_probes"
+    },
+    "logical_sessions_hours": [
+      720.0,
+      2160.0
+    ],
+    "session_scale_pass": true,
+    "sessions": {
+      "SESSION_30D": {
+        "final_state": "COMPLETED",
+        "logical_duration_hours": 720.0,
+        "session_pass": true
+      },
+      "SESSION_90D": {
+        "final_state": "COMPLETED",
+        "logical_duration_hours": 2160.0,
+        "session_pass": true
+      }
+    }
+  }
+}

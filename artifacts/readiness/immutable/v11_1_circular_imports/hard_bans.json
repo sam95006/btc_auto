@@ -1,0 +1,13 @@
+{
+  "schema": "FOUNDER_C6_HARD_BANS",
+  "generated_at": "2026-08-05T04:08:48Z",
+  "hard_bans": [
+    "NO_RUNTIME_IMPORT_TRICKS_TO_HIDE_CYCLES",
+    "NO_LAZY_NESTED_IMPORT_AS_SOLE_REMEDIATION",
+    "NO_MASS_DELETE_COMPAT_MODULES",
+    "NO_MERGE_OR_DEPLOY_FROM_THIS_LANE",
+    "WORKTREE_ONLY_v11_1_circular_imports",
+    "CURSOR_NATIVE_ONLY"
+  ],
+  "enforcement": "Remediation used shared contracts, DI/protocols, composition roots, and submodule leaf imports. TYPE_CHECKING edges excluded from SCC graph. Nested auto-seed import removed from registry."
+}

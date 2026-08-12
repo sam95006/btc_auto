@@ -1,0 +1,79 @@
+{
+  "blockers": [
+    {
+      "detail": "DecisionLifecycleOrchestrator assigns intent_id locally on APPROVED_SIMULATED without creating backend.nexus_execution OrderIntent via the canonical adapter.",
+      "id": "AUTH_DECISION_MINTS_INTENT_ID",
+      "remediation_hint": "Require Decision\u2194Intent\u2194Position bridge + cross-lifecycle CI invariants before treating Lane A+B as jointly integrable.",
+      "severity": "critical"
+    },
+    {
+      "detail": "DecisionLifecycleOrchestrator assigns position_id on record\u2192MONITORING without PositionRecord authority from AutonomousExecutionSimulatorV11.",
+      "id": "AUTH_DECISION_MINTS_POSITION_ID",
+      "remediation_hint": "Require Decision\u2194Intent\u2194Position bridge + cross-lifecycle CI invariants before treating Lane A+B as jointly integrable.",
+      "severity": "critical"
+    },
+    {
+      "detail": "Decision decide() accepts an opaque deterministic_risk_result dict and never invokes backend.nexus_execution.risk_gates. Dual risk authority.",
+      "id": "AUTH_DECISION_RISK_BYPASS",
+      "remediation_hint": "Require Decision\u2194Intent\u2194Position bridge + cross-lifecycle CI invariants before treating Lane A+B as jointly integrable.",
+      "severity": "critical"
+    },
+    {
+      "detail": "Multiple cost model version strings observed: {'nexus_execution': 'founder-conservative-v1-1-2026-08-05', 'backend\\\\nexus_strategy_engine\\\\cost_semantics.py': 'NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1', 'backend\\\\nexus_strategy_engine\\\\cost_semantics.py:COST_MODEL_VERSION': 'NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1', 'base:backend\\\\nexus_strategy_engine\\\\cost_semantics.py:COST_MODEL_VERSION': 'NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1', 'base:backend\\\\nexus_strategy_engine\\\\cost_semantics.py:proxy': 'NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1'}",
+      "id": "AUTH_COST_MODEL_VERSION_MISMATCH",
+      "remediation_hint": "Require Decision\u2194Intent\u2194Position bridge + cross-lifecycle CI invariants before treating Lane A+B as jointly integrable.",
+      "severity": "critical"
+    },
+    {
+      "detail": "No Decision\u2194Intent\u2194Position bridge module exists. Lanes A and B are authority-isolated; mapping invariants are unenforceable at runtime.",
+      "id": "AUTH_NO_DECISION_EXECUTION_BRIDGE",
+      "remediation_hint": "Require Decision\u2194Intent\u2194Position bridge + cross-lifecycle CI invariants before treating Lane A+B as jointly integrable.",
+      "severity": "critical"
+    },
+    {
+      "detail": "Decision MONITORING may transition to UNDER_REVIEW (then CLOSED) without EXITED, enabling Decision CLOSED while a synthetic position_id remains conceptually open.",
+      "id": "VOCAB_MONITORING_SKIP_EXIT",
+      "remediation_hint": "Require Decision\u2194Intent\u2194Position bridge + cross-lifecycle CI invariants before treating Lane A+B as jointly integrable.",
+      "severity": "critical"
+    },
+    {
+      "detail": "Per-decision idempotency blocks re-approve with a new key, but nothing prevents two Decision Objects approving the same candidate_id with distinct intent_ids.",
+      "id": "ADV_DECISION_APPROVED_TWICE",
+      "remediation_hint": "Require Decision\u2194Intent\u2194Position bridge + cross-lifecycle CI invariants before treating Lane A+B as jointly integrable.",
+      "severity": "critical"
+    },
+    {
+      "detail": "Decision intent_id survives restart and decide replay is idempotent, but the Intent is a string token unbound to OrderIntent.idempotency_key \u2014 execution has zero knowledge of it.",
+      "id": "ADV_INTENT_REPLAY_AFTER_RESTART",
+      "remediation_hint": "Require Decision\u2194Intent\u2194Position bridge + cross-lifecycle CI invariants before treating Lane A+B as jointly integrable.",
+      "severity": "critical"
+    },
+    {
+      "detail": "Lane B can partially fill while Decision sits in APPROVED_SIMULATED; Decision freely advances to MONITORING and mints an unrelated position_id. No joint lock.",
+      "id": "ADV_PARTIAL_FILL_DURING_DECISION_TRANSITION",
+      "remediation_hint": "Require Decision\u2194Intent\u2194Position bridge + cross-lifecycle CI invariants before treating Lane A+B as jointly integrable.",
+      "severity": "critical"
+    },
+    {
+      "detail": "Canonical COST_MODEL_VERSION=founder-conservative-v1-1-2026-08-05; divergent versions=['NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1']. Decision approval does not bind or reject on cost version.",
+      "id": "ADV_COST_MODEL_VERSION_MISMATCH",
+      "remediation_hint": "Require Decision\u2194Intent\u2194Position bridge + cross-lifecycle CI invariants before treating Lane A+B as jointly integrable.",
+      "severity": "critical"
+    },
+    {
+      "detail": "Forbidden combination Position CLOSED + Decision MONITORING is constructible because Decision position_id is a decorative string, not a PositionRecord reference.",
+      "id": "ADV_POSITION_CLOSED_DECISION_MONITORING",
+      "remediation_hint": "Require Decision\u2194Intent\u2194Position bridge + cross-lifecycle CI invariants before treating Lane A+B as jointly integrable.",
+      "severity": "critical"
+    },
+    {
+      "detail": "Decision MONITORING\u2192UNDER_REVIEW\u2192CLOSED skips EXITED; synthetic position_id can remain OPEN with qty>0. Critical cross-lifecycle invariant absent.",
+      "id": "ADV_DECISION_CLOSED_POSITION_OPEN",
+      "remediation_hint": "Require Decision\u2194Intent\u2194Position bridge + cross-lifecycle CI invariants before treating Lane A+B as jointly integrable.",
+      "severity": "critical"
+    }
+  ],
+  "created_at": "2026-08-05T04:02:06Z",
+  "integration_recommendation": "BLOCK_INTEGRATION_CRITICAL_CROSS_LANE_GAPS",
+  "schema": "v11_review_decision_execution_blockers"
+}

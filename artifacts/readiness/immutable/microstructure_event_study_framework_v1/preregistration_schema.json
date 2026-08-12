@@ -1,0 +1,30 @@
+{
+  "schema": "event_study_preregistration_v1",
+  "required_fields": [
+    "research_question_id",
+    "economic_mechanism",
+    "required_data",
+    "event_definition_version",
+    "decision_timestamp_definition",
+    "forward_horizons",
+    "segmentation_plan",
+    "multiple_testing_plan",
+    "cost_dependency",
+    "failure_conditions",
+    "minimum_data_depth",
+    "minimum_event_count",
+    "checksum",
+    "registered_at"
+  ],
+  "hold_conditions": {
+    "calendar_days": 14,
+    "complete_UTC_day_coverage": true,
+    "symbol_diversity": 25,
+    "liquidation_event_count": 500,
+    "integrity_status": "PASS",
+    "Founder_authorization": true
+  },
+  "event_study_readiness_status": "NOT_READY",
+  "event_study_real_execution": false,
+  "created_at": "2026-08-04T13:06:35Z"
+}

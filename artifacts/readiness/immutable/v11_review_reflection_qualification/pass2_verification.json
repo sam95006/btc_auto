@@ -1,0 +1,294 @@
+{
+  "pass": 2,
+  "stability": {
+    "stable_count": 10,
+    "unstable_count": 0,
+    "rows": [
+      {
+        "finding_id": "R3-E-429-QUALITY-NEUTRAL",
+        "pass1_status": "PASS",
+        "pass2_status": "PASS",
+        "severity": "PASS",
+        "stable": true
+      },
+      {
+        "finding_id": "R3-E-CRITIC-BEFORE-REASONER",
+        "pass1_status": "FAIL",
+        "pass2_status": "FAIL",
+        "severity": "HIGH",
+        "stable": true
+      },
+      {
+        "finding_id": "R3-E-COMPLETED-CASE-DEDUPE",
+        "pass1_status": "PASS",
+        "pass2_status": "PASS",
+        "severity": "PASS",
+        "stable": true
+      },
+      {
+        "finding_id": "R3-E-CHECKPOINT-COUNTER-DRIFT",
+        "pass1_status": "FAIL",
+        "pass2_status": "FAIL",
+        "severity": "CRITICAL",
+        "stable": true
+      },
+      {
+        "finding_id": "R3-E-UNDETERMINED-PROCESS-MIGRATION",
+        "pass1_status": "PASS",
+        "pass2_status": "PASS",
+        "severity": "PASS",
+        "stable": true
+      },
+      {
+        "finding_id": "R3-E-LESSON-GATE-INCOMPLETE",
+        "pass1_status": "PASS",
+        "pass2_status": "PASS",
+        "severity": "PASS",
+        "stable": true
+      },
+      {
+        "finding_id": "R3-F-NESTED-FUTURE-TIMESTAMP",
+        "pass1_status": "FAIL",
+        "pass2_status": "FAIL",
+        "severity": "CRITICAL",
+        "stable": true
+      },
+      {
+        "finding_id": "R3-F-OOS-SEAL-REGENERATION",
+        "pass1_status": "FAIL",
+        "pass2_status": "FAIL",
+        "severity": "CRITICAL",
+        "stable": true
+      },
+      {
+        "finding_id": "R3-F-FOUNDER-AUTH-SPOOF",
+        "pass1_status": "FAIL",
+        "pass2_status": "FAIL",
+        "severity": "HIGH",
+        "stable": true
+      },
+      {
+        "finding_id": "R3-F-PROMOTION-BLOCKING",
+        "pass1_status": "PASS",
+        "pass2_status": "PASS",
+        "severity": "PASS",
+        "stable": true
+      }
+    ]
+  },
+  "findings": [
+    {
+      "finding_id": "R3-E-429-QUALITY-NEUTRAL",
+      "severity": "PASS",
+      "lane": "E",
+      "title": "HTTP 429 treated as quality-neutral transport",
+      "status": "PASS",
+      "detail": "Lane E marks 429 as RATE_LIMITED/quality-neutral. assert_429_not_quality_failure correctly rejects quality-field pollution, but V11 record_provider_outcome does not invoke that invariant itself.",
+      "evidence": {
+        "transport_status": "RATE_LIMITED",
+        "quality_neutral_transport": true,
+        "invariant_rejects_quality_pollution": true,
+        "wired_into_record_provider_outcome": false
+      },
+      "remediation": "Call assert_429_not_quality_failure inside record_provider_outcome when status is RATE_LIMITED and any quality fields are present."
+    },
+    {
+      "finding_id": "R3-E-CRITIC-BEFORE-REASONER",
+      "severity": "HIGH",
+      "lane": "E",
+      "title": "Critic can complete before Reasoner success",
+      "status": "FAIL",
+      "detail": "ProviderScheduler queues are independent; record_provider_outcome allows SAMBANOVA_INDEPENDENT_CRITIC SUCCESS with zero Groq completed cases. build_critic_order filters, but dispatch authority does not enforce ordering.",
+      "evidence": {
+        "critic_dispatch_allowed": true,
+        "critic_transport_status": "SUCCESS",
+        "critic_order_without_reasoner": []
+      },
+      "remediation": "Gate Critic begin_attempt on Reasoner SUCCESS for the same case_id (completed_case_ids / deduper), fail-closed otherwise."
+    },
+    {
+      "finding_id": "R3-E-COMPLETED-CASE-DEDUPE",
+      "severity": "PASS",
+      "lane": "E",
+      "title": "Completed-case replay blocked by deduper",
+      "status": "PASS",
+      "detail": "SuccessfulCallDeduper blocks second dispatch; dedupe_completed_cases preserves order.",
+      "evidence": {
+        "first_dispatch": true,
+        "second_dispatch": false,
+        "second_reason": "SUCCESSFUL_CASE_DEDUP",
+        "second_transport_status": "DEDUP_SKIPPED",
+        "pending_after_dedupe": [
+          "NEXT"
+        ]
+      },
+      "remediation": "Keep hydrate_deduper_from_state wired on every real resume path."
+    },
+    {
+      "finding_id": "R3-E-CHECKPOINT-COUNTER-DRIFT",
+      "severity": "CRITICAL",
+      "lane": "E",
+      "title": "Checkpoint integrity ignores success_count vs completed-case drift",
+      "status": "FAIL",
+      "detail": "integrity_checksum covers transport blob but does not enforce semantic consistency between success_count and completed_case_ids. evaluate_terminal trusts max(success_count, len(completed_case_ids)), so inflated counters can satisfy the groq_success>=80 capacity gate.",
+      "evidence": {
+        "checksum_ok_despite_drift": true,
+        "integrity_status": "OK",
+        "completed_case_count": 1,
+        "groq_success_count_used": 999,
+        "fixture_schema_separate_from_v4": true,
+        "fixture_schema": "v11_reflection_v23_adjudication_fixture_state"
+      },
+      "remediation": "Add semantic counter invariants to detect_corruption / migrate_checkpoint; refuse terminal evaluation when success_count != len(completed_case_ids) for Groq (and Critic resolved vs success)."
+    },
+    {
+      "finding_id": "R3-E-UNDETERMINED-PROCESS-MIGRATION",
+      "severity": "PASS",
+      "lane": "E",
+      "title": "Legacy UNDETERMINED_PROCESS migrates to UNDETERMINED",
+      "status": "PASS",
+      "detail": "migrate_process_classification preserves legacy raw while canonicalizing taxonomy.",
+      "evidence": {
+        "migrated": "UNDETERMINED",
+        "fixture_undetermined_case_ids": [
+          "V11_FIX_03"
+        ],
+        "flag": true
+      },
+      "remediation": "None required for migration helper; keep legacy raw in disagreement records."
+    },
+    {
+      "finding_id": "R3-E-LESSON-GATE-INCOMPLETE",
+      "severity": "PASS",
+      "lane": "E",
+      "title": "Lesson gate blocks policy-effect lessons while V2.3 incomplete",
+      "status": "PASS",
+      "detail": "apply_lesson_gate_v11 zeros lesson count for incomplete/fixture terminals.",
+      "evidence": {
+        "incomplete": {
+          "lesson_gate_schema": "v11_lesson_gate",
+          "policy_effect_lesson_allowed": false,
+          "lesson_prevention_executed": false,
+          "lesson_prevention_blocked_reason": "V2_3_TERMINAL_NOT_VERIFIED",
+          "V2_3_TERMINAL_STATUS": "INCOMPLETE_PROVIDER_CAPACITY",
+          "quality_gates_passed": false,
+          "fixture_label": null,
+          "new_policy_effect_lesson_count": 0,
+          "risk_limits_changed": false,
+          "leverage_changed": false,
+          "position_size_changed": false,
+          "stops_changed": false,
+          "strategy_parameters_changed": false,
+          "promotion_state_changed": false,
+          "false_learning_claim": false
+        },
+        "fixture_verified_still_blocked": {
+          "lesson_gate_schema": "v11_lesson_gate",
+          "policy_effect_lesson_allowed": false,
+          "lesson_prevention_executed": false,
+          "lesson_prevention_blocked_reason": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+          "V2_3_TERMINAL_STATUS": "VERIFIED",
+          "quality_gates_passed": true,
+          "fixture_label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+          "new_policy_effect_lesson_count": 0,
+          "risk_limits_changed": false,
+          "leverage_changed": false,
+          "position_size_changed": false,
+          "stops_changed": false,
+          "strategy_parameters_changed": false,
+          "promotion_state_changed": false,
+          "false_learning_claim": false
+        },
+        "lesson_prevention_executed_semantics_inverted": true
+      },
+      "remediation": "Optional: rename lesson_prevention_executed so True means prevention engaged when lessons are blocked."
+    },
+    {
+      "finding_id": "R3-F-NESTED-FUTURE-TIMESTAMP",
+      "severity": "CRITICAL",
+      "lane": "F",
+      "title": "Future timestamp hidden in nested evidence bypasses PIT exclusion",
+      "status": "FAIL",
+      "detail": "prove_future_data_exclusion only inspects top-level source/retrieval/availability fields on each record. Nested evidence timestamps after as_of are ignored.",
+      "evidence": {
+        "status": "FUTURE_DATA_EXCLUDED",
+        "allowed": true,
+        "violation_count": 0,
+        "nested_keys": [
+          "bar_close_ts_ms",
+          "child",
+          "nested_available_as_of_ms"
+        ]
+      },
+      "remediation": "Recursively scan record trees for *_timestamp_ms / available_as_of_ms / as_of_ms fields and fail closed on any value > as_of_ms."
+    },
+    {
+      "finding_id": "R3-F-OOS-SEAL-REGENERATION",
+      "severity": "CRITICAL",
+      "lane": "F",
+      "title": "OOS cryptographic seal can be regenerated after reserved-interval mutation",
+      "status": "FAIL",
+      "detail": "build_oos_cryptographic_seal always recomputes a fresh seal from current inputs. There is no persisted seal binding, anti-regeneration check, or seal lineage.",
+      "evidence": {
+        "seal1": "9e0dea64a352db8fa5a2b2d746bf5e111918ccb6b04fac5545f631d892fa5d3c",
+        "seal2": "0de5b0f313b3012ece50c1e635c9d91e4ca65de32634d452f2ad36285a8f6121",
+        "seal_changed": true,
+        "both_status": [
+          "SEALED_NOT_CONSUMED",
+          "SEALED_NOT_CONSUMED"
+        ]
+      },
+      "remediation": "Persist first seal under write-once semantics; verify regenerations against stored seal and fail closed on reserved-registry mutation after seal creation."
+    },
+    {
+      "finding_id": "R3-F-FOUNDER-AUTH-SPOOF",
+      "severity": "HIGH",
+      "lane": "F",
+      "title": "Founder auth result is spoofable and decoupled from promotion gate",
+      "status": "FAIL",
+      "detail": "evaluate() fail-closes authorization, but returned dicts are not integrity-bound. PromotionStateMachine.attempt_promote never consults FounderAuthorizationGate; blocking relies solely on unconditional PROMOTION_BLOCKED_READY.",
+      "evidence": {
+        "evaluate_authorized": false,
+        "evaluate_reason": "FOUNDER_AUTHORIZATION_DENIED_BLOCKED_ONLY_V11",
+        "spoofed_authorized": true,
+        "promote_allowed": false,
+        "promote_reason": "PROMOTION_BLOCKED_READY_V11_INFRASTRUCTURE_ONLY",
+        "promote_consults_founder_gate": false
+      },
+      "remediation": "Bind founder gate output to a checksum/HMAC and require that proof inside attempt_promote before any non-blocked transition is even considered."
+    },
+    {
+      "finding_id": "R3-F-PROMOTION-BLOCKING",
+      "severity": "PASS",
+      "lane": "F",
+      "title": "Promotion state machine remains BLOCKED_READY",
+      "status": "PASS",
+      "detail": "attempt_promote always denies; all qualification stages stay BLOCKED_READY.",
+      "evidence": {
+        "attempt": {
+          "allowed": false,
+          "reason": "PROMOTION_BLOCKED_READY_V11_INFRASTRUCTURE_ONLY",
+          "state": "PROMOTION_BLOCKED_READY",
+          "selected_strategy": null,
+          "formal_walk_forward_executed": false,
+          "oos_executed": false,
+          "demo_order_count": 0
+        },
+        "status": "BLOCKED_READY",
+        "all_stages_blocked_ready": true
+      },
+      "remediation": "Retain hard block until Founder-authorized post-OOS path exists."
+    }
+  ],
+  "critical_open": [
+    "R3-E-CHECKPOINT-COUNTER-DRIFT",
+    "R3-F-NESTED-FUTURE-TIMESTAMP",
+    "R3-F-OOS-SEAL-REGENERATION"
+  ],
+  "high_open": [
+    "R3-E-CRITIC-BEFORE-REASONER",
+    "R3-F-FOUNDER-AUTH-SPOOF"
+  ],
+  "recommendation": "BLOCK_INTEGRATION",
+  "rationale": "Critical adversarial failures remain after Pass 2. Do not declare Lane E/F integrated PASS until remediation exists."
+}

@@ -1,0 +1,107 @@
+{
+  "catalog": [
+    "groq_429",
+    "sambanova_429",
+    "provider_timeout",
+    "provider_invalid_schema",
+    "stale_market_data",
+    "missing_market_data",
+    "duplicate_candidate",
+    "duplicate_order_intent",
+    "ledger_lock_contention",
+    "interrupted_ledger_append",
+    "snapshot_corruption",
+    "missing_latest_snapshot",
+    "disk_soft_limit",
+    "network_loss",
+    "partial_fill_before_crash",
+    "filled_order_before_snapshot",
+    "exit_event_before_position_snapshot",
+    "reflection_interruption",
+    "lesson_storage_interruption",
+    "pause_during_pending_intent",
+    "process_termination",
+    "clock_jump_forward",
+    "clock_jump_backward",
+    "disk_hard_limit",
+    "ledger_corruption_probe",
+    "snapshot_corruption_probe"
+  ],
+  "fault_class_to_injections": {
+    "clock_jumps": [
+      "clock_jump_forward",
+      "clock_jump_backward"
+    ],
+    "duplicate_intents": [
+      "duplicate_order_intent",
+      "duplicate_candidate"
+    ],
+    "ledger_corruption": [
+      "interrupted_ledger_append",
+      "ledger_lock_contention",
+      "ledger_corruption_probe"
+    ],
+    "partial_fills": [
+      "partial_fill_before_crash"
+    ],
+    "process_crashes": [
+      "process_termination",
+      "partial_fill_before_crash"
+    ],
+    "provider_outages": [
+      "groq_429",
+      "sambanova_429",
+      "provider_timeout",
+      "provider_invalid_schema",
+      "network_loss"
+    ],
+    "snapshot_corruption": [
+      "snapshot_corruption",
+      "missing_latest_snapshot",
+      "snapshot_corruption_probe"
+    ],
+    "storage_limits": [
+      "disk_soft_limit",
+      "disk_hard_limit"
+    ]
+  },
+  "fault_classes": [
+    "process_crashes",
+    "partial_fills",
+    "duplicate_intents",
+    "clock_jumps",
+    "provider_outages",
+    "storage_limits",
+    "ledger_corruption",
+    "snapshot_corruption"
+  ],
+  "focused_terminal_injections": [
+    "clock_jump_forward",
+    "clock_jump_backward",
+    "disk_hard_limit"
+  ],
+  "long_session_injections": [
+    "groq_429",
+    "sambanova_429",
+    "provider_timeout",
+    "provider_invalid_schema",
+    "stale_market_data",
+    "missing_market_data",
+    "duplicate_candidate",
+    "duplicate_order_intent",
+    "ledger_lock_contention",
+    "interrupted_ledger_append",
+    "snapshot_corruption",
+    "missing_latest_snapshot",
+    "disk_soft_limit",
+    "network_loss",
+    "partial_fill_before_crash",
+    "filled_order_before_snapshot",
+    "exit_event_before_position_snapshot",
+    "reflection_interruption",
+    "lesson_storage_interruption",
+    "pause_during_pending_intent",
+    "process_termination"
+  ],
+  "schema": "v10_execution_session_scale_injection_matrix"
+}

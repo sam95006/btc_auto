@@ -1,0 +1,28 @@
+{
+  "schema": "blind_reflection_v2_2_calibration",
+  "engine": "BLIND_REFLECTION_V2_2",
+  "NEXUS_AI_MOCK": "0",
+  "blind_reflection_calibration_count": 60,
+  "blind_valid_schema_ratio": 1.0,
+  "blind_agreement_ratio": 0.0,
+  "blind_disagreement_ratio": 1.0,
+  "informative_classification_ratio": 0.0,
+  "undetermined_ratio": 1.0,
+  "critic_resolution_ratio": 0.0,
+  "critic_agreement_with_deterministic": 0,
+  "critic_agreement_with_Groq": 0,
+  "critic_independent_disagreement": 0,
+  "ai_process_counts": {
+    "UNDETERMINED_PROCESS": 60
+  },
+  "quality_targets_met": false,
+  "new_lesson_record_count": 0,
+  "new_policy_effect_lesson_count": 0,
+  "anchored_v2_1_preserved_as": "ANCHORED_CALIBRATION_RESULT",
+  "anchored_v2_1_not_overwritten": true,
+  "prompt_excludes_deterministic_answer": true,
+  "prompt_excludes_expected_family": true,
+  "critic_runs_only_after_independent_result": true,
+  "api_keys_exposed": false,
+  "sanitized_inputs_only": true
+}

@@ -1,0 +1,35 @@
+{
+  "hard_bans": [
+    "no_today_revision_for_past_backtest",
+    "no_research_query_without_as_known_at",
+    "no_future_leakage",
+    "no_unavailable_at_time_silent_fill",
+    "no_real_money",
+    "no_mainnet",
+    "no_exchange_write",
+    "no_formal_wf",
+    "no_oos_claims",
+    "no_pr26_merge",
+    "no_pr27_merge",
+    "no_acceleration_report_edit",
+    "no_status_json_lane_artifact",
+    "no_auto_integrate"
+  ],
+  "non_claims": [
+    "No formal Walk-Forward executed",
+    "No OOS consumption or sealed OOS metrics claimed",
+    "No exchange/mainnet/real-money capability",
+    "Synthetic fixtures only — not live market ingestion"
+  ],
+  "research_query_requires": [
+    "as_known_at"
+  ],
+  "schema": "v17_d_pit_revision_contract_v1",
+  "time_axes": [
+    "event_time",
+    "available_time",
+    "revision_time",
+    "ingest_time"
+  ],
+  "visibility_rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT"
+}

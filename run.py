@@ -186,12 +186,16 @@ def _looks_like_zeabur_runtime() -> bool:
 
 
 def _should_start_embedded_nexus_worker() -> bool:
-    """Start trading loop inside web when Zeabur runs a single service (no separate worker)."""
+    """Legacy Binance/nexus_runtime embedded worker — DISABLED for V30 unified runtime.
+
+    V30 ResearchAutonomyService is the sole trading engine (started by deploy/zeabur_unified/start.sh).
+    """
+    if _truthy_env("NEXUS_LEGACY_WORKER_DISABLED"):
+        return False
     if _truthy_env("NEXUS_WEB_ONLY"):
         return False
+    # Explicit opt-in only (never auto-start on Zeabur).
     if _truthy_env("NEXUS_EMBEDDED_WORKER"):
-        return True
-    if _looks_like_zeabur_runtime():
         return True
     return False
 

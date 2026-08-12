@@ -1,0 +1,62 @@
+{
+  "pass_id": "PASS_1",
+  "scenarios": {
+    "R2-C-001": {
+      "status": "FIXED",
+      "detect": "CORRUPTION_DETECTED",
+      "snapshot_status": "CORRUPTION_DETECTED",
+      "generation_advanced": false,
+      "lkg_advanced": false
+    },
+    "R2-C-002": {
+      "status": "FIXED",
+      "claimed": 6,
+      "file_count": 6,
+      "position_ok": true,
+      "wal_restore_status": "BLOCKED_AMBIGUOUS_STATE",
+      "wal_block_ok": true
+    },
+    "R2-D-001": {
+      "status": "FIXED",
+      "conflict_raised": true,
+      "gz_file_count": 1
+    },
+    "R2-C-005": {
+      "status": "FIXED",
+      "unbound_blocked": true,
+      "sealed_pass": true
+    },
+    "R2-D-002": {
+      "status": "FIXED",
+      "classifications": {
+        "ACTUAL_DATA_CORRUPTION": 0,
+        "EXPECTED_OPEN_TAIL": 0,
+        "INTERRUPTED_FINALIZE": 0,
+        "FINALIZE_MARKER_ORPHAN": 1,
+        "MIGRATION_ARTIFACT": 0,
+        "MANIFEST_BUG": 0,
+        "FINALIZER_FALSE_POSITIVE": 0,
+        "LINKAGE_SEMANTICS_BUG": 0,
+        "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+      },
+      "finding_count": 1
+    },
+    "R2-D-004": {
+      "status": "FIXED",
+      "interrupted_finalize": true,
+      "classifications": {
+        "ACTUAL_DATA_CORRUPTION": 0,
+        "EXPECTED_OPEN_TAIL": 0,
+        "INTERRUPTED_FINALIZE": 1,
+        "FINALIZE_MARKER_ORPHAN": 0,
+        "MIGRATION_ARTIFACT": 0,
+        "MANIFEST_BUG": 0,
+        "FINALIZER_FALSE_POSITIVE": 0,
+        "LINKAGE_SEMANTICS_BUG": 0,
+        "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+      }
+    }
+  },
+  "all_critical_fixed": true,
+  "hardened_fixed": true
+}

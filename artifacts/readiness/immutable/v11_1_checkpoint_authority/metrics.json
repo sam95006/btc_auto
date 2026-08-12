@@ -1,0 +1,32 @@
+{
+  "dry_run": {
+    "envelope_checkpoint_id": "a313a147-394d-4430-8954-cacef9b8981e",
+    "live_sha256": "bb367ee7d2b5106bc15be8d7b303a84b51ef2679a4cc9b08bbee67a489378bd7",
+    "live_untouched": true,
+    "status": "MIGRATION_DRY_RUN"
+  },
+  "generated_at": "2026-08-05T04:08:03Z",
+  "pass1_tests": {
+    "elapsed_s": 34.582,
+    "exit_code": 0,
+    "pass_id": "pass1",
+    "passed": true,
+    "tail": ".............................                                            [100%]\n29 passed in 33.63s"
+  },
+  "pass2_tests": {
+    "elapsed_s": 25.43,
+    "exit_code": 0,
+    "pass_id": "pass2",
+    "passed": true,
+    "tail": ".............................                                            [100%]\n29 passed in 24.60s"
+  },
+  "registry_version": "v11.1.checkpoint_authority",
+  "store": {
+    "lkg_present": true,
+    "restore_status": "RECOVERED_EXACT",
+    "write_latency_max_s": 0.05136749999928725,
+    "write_latency_p50_s": 0.043677800000295974,
+    "write_latency_p95_s": 0.05005669999991369,
+    "writes": 20
+  }
+}

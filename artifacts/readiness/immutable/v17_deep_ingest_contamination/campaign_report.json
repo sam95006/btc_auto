@@ -1,0 +1,587 @@
+{
+  "HEAD": "b3806ce70b6a7dffbc1d04e3a6134288874e2ddc",
+  "base": "a43317e2f85afde75e850ffa4ef465c834fd7a6a",
+  "branch": "feature/v17-deep-ingest-contamination",
+  "claims_15y_history_downloaded": false,
+  "coverage": {
+    "api_rate_limit_and_provider_outage_failover": true,
+    "bounded_memory_disk_profiling_smoke": true,
+    "corrupt_archive_recovery": true,
+    "dataset_split_contamination_attacks": true,
+    "duplicate_dataset_ingestion": true,
+    "revision_conflict_testing": true
+  },
+  "coverage_areas": [
+    "corrupt_archive_recovery",
+    "duplicate_dataset_ingestion",
+    "revision_conflict_testing",
+    "dataset_split_contamination_attacks",
+    "api_rate_limit_and_provider_outage_failover",
+    "bounded_memory_disk_profiling_smoke"
+  ],
+  "exchange_write": false,
+  "fixture_only": true,
+  "formal_wf_executed": false,
+  "hard_ban_inventory": {
+    "claims_15y_history_downloaded": false,
+    "exchange_write": false,
+    "formal_walk_forward": false,
+    "hard_bans": [
+      "no_real_money",
+      "no_mainnet",
+      "no_exchange_write",
+      "no_formal_walk_forward",
+      "no_untouched_oos",
+      "no_claim_15y_history_downloaded",
+      "no_full_history_ingest_this_round",
+      "no_pr26_merge",
+      "no_pr27_merge",
+      "no_acceleration_report_edit",
+      "no_auto_integrate",
+      "no_reserved_split_training",
+      "no_lookahead_contamination",
+      "no_cross_split_leak",
+      "no_silent_corrupt_resume"
+    ],
+    "mainnet": false,
+    "pr26_merged": false,
+    "pr27_merged": false,
+    "real_money": false,
+    "report_edited": false,
+    "untouched_oos": false
+  },
+  "hard_bans": [
+    "no_real_money",
+    "no_mainnet",
+    "no_exchange_write",
+    "no_formal_walk_forward",
+    "no_untouched_oos",
+    "no_claim_15y_history_downloaded",
+    "no_full_history_ingest_this_round",
+    "no_pr26_merge",
+    "no_pr27_merge",
+    "no_acceleration_report_edit",
+    "no_auto_integrate",
+    "no_reserved_split_training",
+    "no_lookahead_contamination",
+    "no_cross_split_leak",
+    "no_silent_corrupt_resume"
+  ],
+  "lane": "V17-DEEP-INGEST",
+  "lane_name": "INGEST_RECOVERY_AND_DATASET_CONTAMINATION",
+  "live_network": false,
+  "mainnet": false,
+  "module_schema": "v17_deep_ingest_contamination_v1",
+  "non_claims": [
+    "No formal Walk-Forward executed",
+    "No OOS consumption or sealed OOS metrics claimed",
+    "No 15y historical data download claimed",
+    "No exchange/mainnet/real-money capability",
+    "Synthetic fixtures only — not live market ingestion",
+    "Bounded memory/disk smoke only — not production capacity proof"
+  ],
+  "oos_claimed": false,
+  "owned_paths": [
+    "backend/nexus_deep_ingest_contamination/",
+    "tests/deep_ingest_contamination/",
+    "tools/research/deep_ingest_contamination/",
+    "artifacts/readiness/immutable/v17_deep_ingest_contamination/"
+  ],
+  "pr26_touched": false,
+  "pr27_touched": false,
+  "program_id": "NEXUS_V17_DEEP_INGEST_CONTAMINATION",
+  "proofs": {
+    "archive_recovery": {
+      "checkpoint": {
+        "entry_count": 3,
+        "last_entry_id": "e3",
+        "schema": "v17_deep_archive_resume_checkpoint_v1"
+      },
+      "name": "corrupt_archive_recovery",
+      "pass": true,
+      "recovery": {
+        "checkpoint": {
+          "entry_count": 3,
+          "last_entry_id": "e3",
+          "schema": "v17_deep_archive_resume_checkpoint_v1"
+        },
+        "fixture_only": true,
+        "quarantined": [
+          {
+            "entry_id": "e2",
+            "original_sha256": "0c61776be315bb674f302ee3c86afb9d697166efc17a3c0d6f1c257b48190959",
+            "quarantine_path": "quarantine/e2.bin",
+            "reason": "content_hash_mismatch",
+            "schema": "v17_deep_archive_quarantine_v1",
+            "status": "QUARANTINED"
+          }
+        ],
+        "quarantined_count": 1,
+        "silent_corrupt_resume": false,
+        "status": "RECOVERED_WITH_QUARANTINE",
+        "verified_count": 2
+      }
+    },
+    "duplicate_ingest": {
+      "duplicate": {
+        "action": "skipped",
+        "content_hash": "a0da1fce57d0e4f9f0ae4e4cbe040d34dcc046255c6c8d18e97f55aaed0655f0",
+        "dataset_id": "ds1",
+        "detail": "identical_content_hash",
+        "prior_ingest_id": "i1",
+        "status": "DUPLICATE"
+      },
+      "first": {
+        "action": "appended",
+        "content_hash": "a0da1fce57d0e4f9f0ae4e4cbe040d34dcc046255c6c8d18e97f55aaed0655f0",
+        "dataset_id": "ds1",
+        "detail": "new_dataset",
+        "prior_ingest_id": null,
+        "status": "INGESTED"
+      },
+      "id_conflict": {
+        "action": "id_conflict",
+        "content_hash": "1ddca3d1f7a33ce87c75de54e2b6a7ee0e52cf11cb8b8041e102b8477d5b1a23",
+        "dataset_id": "ds1",
+        "detail": "dataset_id_reused_with_different_hash",
+        "prior_ingest_id": "i1",
+        "status": "REJECTED"
+      },
+      "name": "duplicate_dataset_ingestion",
+      "pass": true,
+      "snapshot": {
+        "ingest_log_len": 1,
+        "max_batches": 32,
+        "unique_dataset_ids": 1,
+        "unique_hashes": 1
+      }
+    },
+    "provider_failover": {
+      "fixture_only": true,
+      "live_network": false,
+      "outage_failover": {
+        "call_log": [
+          {
+            "body": "unavailable",
+            "circuit_tripped": false,
+            "failover": true,
+            "headers": {},
+            "payload": null,
+            "provider": "fixture_primary",
+            "status": "OUTAGE",
+            "status_code": 503
+          },
+          {
+            "body": "",
+            "failover": true,
+            "headers": {},
+            "payload": {
+              "fixture": true,
+              "source": "fixture_secondary"
+            },
+            "provider": "fixture_secondary",
+            "status": "OK",
+            "status_code": 200
+          }
+        ],
+        "fixture_only": true,
+        "live_network": false,
+        "pass": true,
+        "result": {
+          "body": "",
+          "failover": true,
+          "headers": {},
+          "payload": {
+            "fixture": true,
+            "source": "fixture_secondary"
+          },
+          "provider": "fixture_secondary",
+          "status": "OK",
+          "status_code": 200
+        },
+        "retries_exhausted_at_max": true,
+        "scenario": "provider_outage_failover"
+      },
+      "pass": true,
+      "rate_limit_failover": {
+        "call_log": [
+          {
+            "body": "try again in 10 seconds",
+            "failover": true,
+            "headers": {
+              "retry-after": "10"
+            },
+            "payload": null,
+            "provider": "fixture_primary",
+            "resume_wait_s": 10.0,
+            "status": "RATE_LIMITED",
+            "status_code": 429
+          },
+          {
+            "body": "",
+            "failover": true,
+            "headers": {},
+            "payload": {
+              "fixture": true,
+              "source": "fixture_secondary"
+            },
+            "provider": "fixture_secondary",
+            "status": "OK",
+            "status_code": 200
+          }
+        ],
+        "fixture_only": true,
+        "live_network": false,
+        "pass": true,
+        "result": {
+          "body": "",
+          "failover": true,
+          "headers": {},
+          "payload": {
+            "fixture": true,
+            "source": "fixture_secondary"
+          },
+          "provider": "fixture_secondary",
+          "status": "OK",
+          "status_code": 200
+        },
+        "scenario": "rate_limit_failover"
+      }
+    },
+    "resource_smoke": {
+      "claims_15y_history_downloaded": false,
+      "disk_budget_enforced": true,
+      "disk_within_budget": true,
+      "fifteen_year_claim_banned": true,
+      "fixture_only": true,
+      "limits": {
+        "max_archive_entries": 64,
+        "max_disk_bytes": 4194304,
+        "max_memory_bytes": 33554432
+      },
+      "memory_within_documented_ceiling": true,
+      "note": "Bounded smoke only — documents fixture-round ceilings; NOT a production capacity or 15y history proof.",
+      "observed": {
+        "disk_used_bytes": 3991,
+        "entry_count": 8,
+        "rss_available": false,
+        "rss_bytes": null,
+        "tracemalloc_current_bytes": 15901,
+        "tracemalloc_peak_bytes": 411753,
+        "tracemalloc_peak_delta_bytes": 411753
+      },
+      "schema": "v17_deep_bounded_resource_smoke_v1",
+      "status": "PASS"
+    },
+    "revision_conflict": {
+      "name": "revision_conflict_testing",
+      "pass": true,
+      "proof": {
+        "ambiguous_tip_refused": true,
+        "attack_blocked": true,
+        "detail": "ambiguous_revision_tips:btc.mark:rev_a,rev_b",
+        "duplicate_revision_id_blocked": true,
+        "fork_detected": true,
+        "survivor": false,
+        "tip_count": 2
+      }
+    },
+    "split_contamination": {
+      "attack_count": 11,
+      "status": "PASS",
+      "survivor_count": 0,
+      "survivors": []
+    }
+  },
+  "real_money": false,
+  "redteam": {
+    "attack_count": 9,
+    "blocked_count": 9,
+    "findings": [
+      {
+        "attack_blocked": true,
+        "attack_id": "corrupt_archive_quarantine",
+        "detail": "status=RECOVERED_WITH_QUARANTINE q=1",
+        "disposition": "FIXED",
+        "severity": "CRITICAL",
+        "survivor": false
+      },
+      {
+        "attack_blocked": true,
+        "attack_id": "silent_corrupt_resume_banned",
+        "detail": "silent_corrupt_resume_banned",
+        "disposition": "FIXED",
+        "severity": "CRITICAL",
+        "survivor": false
+      },
+      {
+        "attack_blocked": true,
+        "attack_id": "bitflip_archive_quarantine",
+        "detail": "content_hash_mismatch",
+        "disposition": "FIXED",
+        "severity": "CRITICAL",
+        "survivor": false
+      },
+      {
+        "attack_blocked": true,
+        "attack_id": "duplicate_dataset_reingest",
+        "detail": "unique=1 log=1",
+        "disposition": "FIXED",
+        "severity": "CRITICAL",
+        "survivor": false
+      },
+      {
+        "attack_blocked": true,
+        "attack_id": "dataset_id_hash_conflict",
+        "detail": "dataset_id_reused_with_different_hash",
+        "disposition": "FIXED",
+        "severity": "CRITICAL",
+        "survivor": false
+      },
+      {
+        "attack_blocked": true,
+        "attack_id": "revision_fork_ambiguous_tip",
+        "detail": "ambiguous_revision_tips:btc.mark:rev_a,rev_b",
+        "disposition": "FIXED",
+        "severity": "CRITICAL",
+        "survivor": false
+      },
+      {
+        "attack_blocked": true,
+        "attack_id": "dataset_split_contamination_survivors_zero",
+        "detail": "survivors=[] attacks=11",
+        "disposition": "FIXED",
+        "severity": "CRITICAL",
+        "survivor": false
+      },
+      {
+        "attack_blocked": true,
+        "attack_id": "rate_limit_and_outage_failover",
+        "detail": "rate=True outage=True",
+        "disposition": "FIXED",
+        "severity": "HIGH",
+        "survivor": false
+      },
+      {
+        "attack_blocked": true,
+        "attack_id": "formal_wf_and_oos_banned",
+        "detail": "wf=formal_walk_forward_banned_this_round; oos=untouched_oos_banned_this_round",
+        "disposition": "FIXED",
+        "severity": "CRITICAL",
+        "survivor": false
+      }
+    ],
+    "provider_failover": {
+      "fixture_only": true,
+      "live_network": false,
+      "outage_failover": {
+        "call_log": [
+          {
+            "body": "unavailable",
+            "circuit_tripped": false,
+            "failover": true,
+            "headers": {},
+            "payload": null,
+            "provider": "fixture_primary",
+            "status": "OUTAGE",
+            "status_code": 503
+          },
+          {
+            "body": "",
+            "failover": true,
+            "headers": {},
+            "payload": {
+              "fixture": true,
+              "source": "fixture_secondary"
+            },
+            "provider": "fixture_secondary",
+            "status": "OK",
+            "status_code": 200
+          }
+        ],
+        "fixture_only": true,
+        "live_network": false,
+        "pass": true,
+        "result": {
+          "body": "",
+          "failover": true,
+          "headers": {},
+          "payload": {
+            "fixture": true,
+            "source": "fixture_secondary"
+          },
+          "provider": "fixture_secondary",
+          "status": "OK",
+          "status_code": 200
+        },
+        "retries_exhausted_at_max": true,
+        "scenario": "provider_outage_failover"
+      },
+      "pass": true,
+      "rate_limit_failover": {
+        "call_log": [
+          {
+            "body": "try again in 10 seconds",
+            "failover": true,
+            "headers": {
+              "retry-after": "10"
+            },
+            "payload": null,
+            "provider": "fixture_primary",
+            "resume_wait_s": 10.0,
+            "status": "RATE_LIMITED",
+            "status_code": 429
+          },
+          {
+            "body": "",
+            "failover": true,
+            "headers": {},
+            "payload": {
+              "fixture": true,
+              "source": "fixture_secondary"
+            },
+            "provider": "fixture_secondary",
+            "status": "OK",
+            "status_code": 200
+          }
+        ],
+        "fixture_only": true,
+        "live_network": false,
+        "pass": true,
+        "result": {
+          "body": "",
+          "failover": true,
+          "headers": {},
+          "payload": {
+            "fixture": true,
+            "source": "fixture_secondary"
+          },
+          "provider": "fixture_secondary",
+          "status": "OK",
+          "status_code": 200
+        },
+        "scenario": "rate_limit_failover"
+      }
+    },
+    "schema": "v17_deep_ingest_contamination_redteam_v1",
+    "split_contamination": {
+      "attack_count": 11,
+      "baseline_v17h": {
+        "attack_count": 13,
+        "status": "PASS",
+        "survivor_count": 0
+      },
+      "blocked_count": 11,
+      "expected_min_attacks": 10,
+      "findings": [
+        {
+          "attack_blocked": true,
+          "attack_id": "mutate_reserved_as_trainable",
+          "detail": "reserved_marked_trainable:TDS_DEV_REGIME_001_DEEP:OOS_RESERVED",
+          "disposition": "FIXED",
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "cross_split_id_collision",
+          "detail": "cross_split_id_collision:collide_x:DEVELOPMENT->VALIDATION",
+          "disposition": "FIXED",
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "train_walk_forward_reserved",
+          "detail": "reserved_split_access_banned:deep_train:WALK_FORWARD_RESERVED",
+          "disposition": "FIXED",
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "train_shadow_split",
+          "detail": "reserved_split_access_banned:deep_train:SHADOW",
+          "disposition": "FIXED",
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "lookahead_feature_after_label",
+          "detail": "lookahead_feature_after_label",
+          "disposition": "FIXED",
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "filter_drops_reserved",
+          "detail": "trainable_len=0",
+          "disposition": "FIXED",
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "hash_invents_reserved",
+          "detail": "hash stays DEVELOPMENT|VALIDATION",
+          "disposition": "FIXED",
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "llm_sole_tick_consumer",
+          "detail": "numeric_stat_model_required",
+          "disposition": "FIXED",
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "demo_split_train_ban",
+          "detail": "reserved_split_access_banned:smuggle:DEMO",
+          "disposition": "FIXED",
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "real_private_train_ban",
+          "detail": "reserved_split_access_banned:deep_train:REAL_PRIVATE",
+          "disposition": "FIXED",
+          "severity": "CRITICAL",
+          "survivor": false
+        },
+        {
+          "attack_blocked": true,
+          "attack_id": "baseline_v17h_contamination_clean",
+          "detail": "baseline_survivors=0",
+          "disposition": "FIXED",
+          "severity": "HIGH",
+          "survivor": false
+        }
+      ],
+      "schema": "v17_deep_split_contamination_redteam_v1",
+      "status": "PASS",
+      "survivor_count": 0,
+      "survivors": []
+    },
+    "status": "PASS",
+    "survivor_count": 0,
+    "survivors": []
+  },
+  "report_edited": false,
+  "resource_limits": {
+    "BOUNDED_MAX_ARCHIVE_ENTRIES": 64,
+    "BOUNDED_MAX_DISK_BYTES": 4194304,
+    "BOUNDED_MAX_MEMORY_BYTES": 33554432,
+    "claims_15y_history_downloaded": false,
+    "full_history_ingest_this_round": false
+  },
+  "schema": "v17_deep_ingest_contamination_campaign_v1",
+  "status": "PASS",
+  "survivor_count": 0,
+  "survivors": []
+}

@@ -1,0 +1,95 @@
+{
+  "attack_count": 22,
+  "base": {
+    "attack_count": 12,
+    "blocked_count": 12,
+    "pass": true,
+    "survivor_count": 0,
+    "survivors": []
+  },
+  "blocked_count": 22,
+  "expanded": {
+    "attack_count": 10,
+    "blocked_count": 10,
+    "findings": [
+      {
+        "attack_id": "expand_negative_as_known_at",
+        "blocked": true,
+        "detail": "no_research_query_without_as_known_at: AS_KNOWN_AT timestamp is mandatory",
+        "status": "REJECTED",
+        "survivor": false
+      },
+      {
+        "attack_id": "expand_zero_as_known_at",
+        "blocked": true,
+        "detail": "no_research_query_without_as_known_at: AS_KNOWN_AT timestamp is mandatory",
+        "status": "REJECTED",
+        "survivor": false
+      },
+      {
+        "attack_id": "expand_dict_none_as_known_at",
+        "blocked": true,
+        "detail": "no_research_query_without_as_known_at: AS_KNOWN_AT timestamp is mandatory",
+        "status": "REJECTED",
+        "survivor": false
+      },
+      {
+        "attack_id": "expand_boundary_ms_before_r2",
+        "blocked": true,
+        "detail": "revision=OBS_BTC_CLOSE_R1",
+        "status": "AVAILABLE",
+        "survivor": false
+      },
+      {
+        "attack_id": "expand_boundary_ms_at_r2",
+        "blocked": true,
+        "detail": "revision=OBS_BTC_CLOSE_R2",
+        "status": "AVAILABLE",
+        "survivor": false
+      },
+      {
+        "attack_id": "expand_future_ingest_axis",
+        "blocked": true,
+        "detail": "no_future_leakage:ingest_time=1700345600000>as_known_at=1700259200000",
+        "status": "REJECTED_FUTURE_LEAKAGE",
+        "survivor": false
+      },
+      {
+        "attack_id": "expand_label_lineage_no_future_child",
+        "blocked": true,
+        "detail": "lineage=['LABEL_REGIME_R1']",
+        "status": "AVAILABLE",
+        "survivor": false
+      },
+      {
+        "attack_id": "expand_allow_latest_before_tip",
+        "blocked": true,
+        "detail": "no_today_revision_for_past_backtest:as_known_at=1700518400000<latest_revision_time=1702592000000",
+        "status": "REJECTED",
+        "survivor": false
+      },
+      {
+        "attack_id": "expand_backfill_raise_on_unavailable",
+        "blocked": true,
+        "detail": "no_unavailable_at_time_silent_fill:series=SYNTH.SOLUSDT.CLOSE:as_known_at=1700432000000",
+        "status": "UNAVAILABLE_AT_TIME",
+        "survivor": false
+      },
+      {
+        "attack_id": "expand_visible_set_excludes_future",
+        "blocked": true,
+        "detail": "ids=['OBS_BTC_CLOSE_R1']",
+        "status": "VISIBLE_OK",
+        "survivor": false
+      }
+    ],
+    "pass": true,
+    "schema": "v17_deep_future_leakage_expand_v1",
+    "survivor_count": 0,
+    "survivors": []
+  },
+  "pass": true,
+  "schema": "v17_deep_future_leakage_combined_v1",
+  "survivor_count": 0,
+  "survivors": []
+}

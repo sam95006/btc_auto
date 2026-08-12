@@ -279,6 +279,17 @@ export type FounderDemoMonitorSnapshot = {
     ai_thesis: unknown;
     last_ai_position_review: unknown;
     last_exit_reason: string | null;
+    // V29 additions (null when not provided by backend).
+    direction_score_delta?: number | null;
+    direction_ambiguity_supported?: boolean | null;
+    last_entry_class?: string | null;
+    stop_distance_pct?: number | null;
+    fee_to_stop_loss_ratio?: number | null;
+    profit_lock_state?: boolean | null;
+    profit_lock_level?: number | null;
+    protected_pnl_floor?: number | null;
+    profit_lock_started_at?: number | null;
+    adaptive_action?: string | null;
   };
   performance?: {
     win_rate_long: number | null;
@@ -286,10 +297,76 @@ export type FounderDemoMonitorSnapshot = {
     win_rate_aggregate: number | null;
     net_pnl: number | null;
     profit_factor: number | null;
+    expectancy?: number | null;
+    average_win?: number | null;
+    average_loss?: number | null;
+    max_drawdown?: number | null;
+    sample_status?: string | null;
+    accounting_complete_trades?: number | null;
+    average_MFE_capture?: number | null;
+    last_10?: {
+      n?: number | null;
+      wins?: number | null;
+      losses?: number | null;
+      net_pnl?: number | null;
+      win_rate?: number | null;
+      win_rate_aggregate?: number | null;
+      profit_factor?: number | null;
+      avg_mfe_capture_ratio?: number | null;
+      max_drawdown_usdt?: number | null;
+    } | null;
+    last_30?: {
+      n?: number | null;
+      wins?: number | null;
+      losses?: number | null;
+      net_pnl?: number | null;
+      win_rate?: number | null;
+      win_rate_aggregate?: number | null;
+      profit_factor?: number | null;
+      avg_mfe_capture_ratio?: number | null;
+      max_drawdown_usdt?: number | null;
+    } | null;
   };
   learning?: {
     mistake_signatures: unknown[];
     pending_candidate_lessons: unknown[];
+    lesson_pipeline?: Record<string, unknown> | null;
+    repeat_after_validated_lesson?: number | null;
+  };
+  autonomy?: {
+    service_status: string | null;
+    last_cycle: string | null;
+    next_cycle: string | null;
+    cycles_24h: number | null;
+    errors_24h: number | null;
+    open_position: boolean | null;
+    exchange_connectivity: string | null;
+    market_data_health: string | null;
+    runtime_location?: string | null;
+    worker_instance_id?: string | null;
+    waiting_market_valid?: boolean | null;
+    top_rejection_reasons?: string[] | null;
+  };
+  ai_health?: {
+    provider: string | null;
+    model: string | null;
+    configured: boolean | null;
+    credential_present: boolean | null;
+    ai_state: string | null;
+    last_request: string | null;
+    last_success: string | null;
+    requests_24h: number | null;
+    successes_24h: number | null;
+    rate_limits_24h: number | null;
+    quota_errors_24h: number | null;
+    auth_errors_24h: number | null;
+    timeouts_24h: number | null;
+    last_error: string | null;
+    quota_exhausted: boolean | "UNKNOWN" | null;
+    rate_limited: boolean | null;
+    ai_calls_working: boolean | null;
+    ai_required_for_v30_entry?: boolean | null;
+    fallback_used?: boolean | null;
   };
   accounting: {
     last_exit_reason: string | null;
@@ -309,6 +386,8 @@ export type FounderDemoMonitorSnapshot = {
     trading_intel_visible?: boolean;
     performance_visible?: boolean;
     learning_visible?: boolean;
+    autonomy_visible?: boolean;
+    ai_health_visible?: boolean;
   };
   note?: string;
   error?: string;

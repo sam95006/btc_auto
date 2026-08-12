@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-08-05T04:08:03Z",
+  "metrics": {
+    "lkg_present": true,
+    "restore_status": "RECOVERED_EXACT",
+    "write_latency_max_s": 0.05136749999928725,
+    "write_latency_p50_s": 0.043677800000295974,
+    "write_latency_p95_s": 0.05005669999991369,
+    "writes": 20
+  },
+  "pass_id": "pass1",
+  "tests": {
+    "elapsed_s": 34.582,
+    "exit_code": 0,
+    "pass_id": "pass1",
+    "passed": true,
+    "tail": ".............................                                            [100%]\n29 passed in 33.63s"
+  }
+}

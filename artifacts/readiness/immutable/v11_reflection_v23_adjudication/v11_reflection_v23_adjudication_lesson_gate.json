@@ -1,0 +1,17 @@
+{
+  "lesson_gate_schema": "v11_lesson_gate",
+  "policy_effect_lesson_allowed": false,
+  "lesson_prevention_executed": false,
+  "lesson_prevention_blocked_reason": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+  "V2_3_TERMINAL_STATUS": "INCOMPLETE_PROVIDER_CAPACITY",
+  "quality_gates_passed": false,
+  "fixture_label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+  "new_policy_effect_lesson_count": 0,
+  "risk_limits_changed": false,
+  "leverage_changed": false,
+  "position_size_changed": false,
+  "stops_changed": false,
+  "strategy_parameters_changed": false,
+  "promotion_state_changed": false,
+  "false_learning_claim": false
+}

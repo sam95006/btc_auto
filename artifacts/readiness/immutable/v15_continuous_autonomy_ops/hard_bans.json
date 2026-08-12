@@ -1,0 +1,15 @@
+{
+  "demo": true,
+  "shadow": true,
+  "exchange_write": true,
+  "mainnet": true,
+  "real_money": true,
+  "PR27_merge": true,
+  "formal_walk_forward_execution": true,
+  "real_oos_reservation": true,
+  "real_oos_execution": true,
+  "real_oos_consumption": true,
+  "strategy_promotion": true,
+  "fabricated_edge": true,
+  "G_source_deletion": true
+}

@@ -1,0 +1,602 @@
+{
+  "access_audit": {
+    "allowed_count": 5,
+    "audit_checksum": "faf57b92bcd32a43caacb8df9500f6a2d0600e2e51d20a4ba22c23188f8f7dc6",
+    "denied_count": 4,
+    "event_count": 9,
+    "events": [
+      {
+        "action": "INTERVAL_PLAN_BUILD",
+        "actor": "seal_control",
+        "allowed": true,
+        "detail": {
+          "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+          "plan_status": "PLANNED_NOT_RESERVED"
+        },
+        "event_checksum": "c4e96b3b6f9aba193fb825ac9e9aa6fb4c923933dc3959d82bf9e77d2b03dee7",
+        "seq": 1,
+        "ts": "2026-08-05T15:18:11Z"
+      },
+      {
+        "action": "BINDINGS_STAMP",
+        "actor": "seal_control",
+        "allowed": true,
+        "detail": {
+          "bindings_checksum": "a177c2dd0419fc963f0e7fae953b98726fb668dede427d6aaa4e5601ee67ae39"
+        },
+        "event_checksum": "64e721539bc5234378a78bda69b23e23e5193de0bf3b6bbcdf20d23d3db9b26c",
+        "seq": 2,
+        "ts": "2026-08-05T15:18:11Z"
+      },
+      {
+        "action": "LINEAGE_SEAL",
+        "actor": "seal_control",
+        "allowed": true,
+        "detail": {
+          "seal": "ef1b63ed662fdc102367ee789e02c370d41311ec575b0cbb6ee8c80120725b43",
+          "status": "PLAN_SEALED_NOT_RESERVED"
+        },
+        "event_checksum": "b6b0c305188cfdf71ee6588d37cdd14afbe9448a5154a311fbb4c3328cdf34f7",
+        "seq": 3,
+        "ts": "2026-08-05T15:18:11Z"
+      },
+      {
+        "action": "NON_CONSUMPTION_PROOF",
+        "actor": "seal_control",
+        "allowed": true,
+        "detail": {
+          "status": "OOS_NON_CONSUMPTION_PROVEN"
+        },
+        "event_checksum": "20bfe430098a12d92f9468702c970563a4b98deca762faa93f0b9fedff4c3588",
+        "seq": 4,
+        "ts": "2026-08-05T15:18:11Z"
+      },
+      {
+        "action": "FOUNDER_AUTH_EVALUATE",
+        "actor": "seal_control",
+        "allowed": true,
+        "detail": {
+          "authorized": false,
+          "spoof_rejected": true
+        },
+        "event_checksum": "b02f2355dde73550946a2c9e173bd3fcd582954cd45a616436460ea4a13f96d9",
+        "seq": 5,
+        "ts": "2026-08-05T15:18:11Z"
+      },
+      {
+        "action": "REAL_OOS_RESERVATION_ATTEMPT",
+        "actor": "adversary_probe",
+        "allowed": false,
+        "detail": {
+          "action": "REAL_OOS_RESERVATION",
+          "allowed": false,
+          "executed": false,
+          "oos_consumed": false,
+          "oos_downloaded": false,
+          "oos_executed": false,
+          "oos_reserved": false,
+          "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+          "reason": "REAL_OOS_RESERVATION_BANNED_V15_G"
+        },
+        "event_checksum": "d1b43b49d118162ef2705f2b5c5e567ce82e5f03a4f0438661abe0d7244dff8f",
+        "seq": 6,
+        "ts": "2026-08-05T15:18:11Z"
+      },
+      {
+        "action": "OOS_DOWNLOAD_ATTEMPT",
+        "actor": "adversary_probe",
+        "allowed": false,
+        "detail": {
+          "action": "OOS_DOWNLOAD",
+          "allowed": false,
+          "executed": false,
+          "oos_downloaded": false,
+          "oos_reserved": false,
+          "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+          "reason": "OOS_DOWNLOAD_BANNED_V15_G"
+        },
+        "event_checksum": "9d69663cf828210f5e0c18cbe9a3fe915114b6fcf7f79265ca3d2f38897c166f",
+        "seq": 7,
+        "ts": "2026-08-05T15:18:11Z"
+      },
+      {
+        "action": "OOS_EXECUTION_ATTEMPT",
+        "actor": "adversary_probe",
+        "allowed": false,
+        "detail": {
+          "action": "OOS_EXECUTION",
+          "allowed": false,
+          "executed": false,
+          "oos_consumed": false,
+          "oos_executed": false,
+          "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+          "reason": "OOS_EXECUTION_BANNED_V15_G"
+        },
+        "event_checksum": "1f1cf6fab0da5f951a3deea15dc3ddf58d2d63f23e3ec7cacbbd0c6166813973",
+        "seq": 8,
+        "ts": "2026-08-05T15:18:11Z"
+      },
+      {
+        "action": "OOS_CONSUMPTION_ATTEMPT",
+        "actor": "adversary_probe",
+        "allowed": false,
+        "detail": {
+          "action": "OOS_CONSUMPTION",
+          "allowed": false,
+          "executed": false,
+          "oos_consumed": false,
+          "oos_executed": false,
+          "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+          "reason": "OOS_CONSUMPTION_BANNED_V15_G"
+        },
+        "event_checksum": "7f7aba78b82aa2da7a282d13568e84e46e6edfb1b8ca249e6ef3a71b8f1d69cd",
+        "seq": 9,
+        "ts": "2026-08-05T15:18:11Z"
+      }
+    ]
+  },
+  "bindings": {
+    "all_required_bindings_present": true,
+    "binding_kinds_present": [
+      "candidate",
+      "code",
+      "parameter",
+      "dataset"
+    ],
+    "bindings_checksum": "a177c2dd0419fc963f0e7fae953b98726fb668dede427d6aaa4e5601ee67ae39",
+    "candidate": {
+      "candidate_checksum": "cc1954b09f85f57c08c02eeb8369d5f30b2cf0cb55701a7bbc3cd0319dad3e93",
+      "candidate_id": "SYNTHETIC_V15G_OOS_PLAN_CANDIDATE",
+      "candidate_semantic_checksum": "52b056dd3c4246e35d41203d11fcb793eb21aaca94d7781c635e7ee7423982ca",
+      "kind": "candidate"
+    },
+    "code": {
+      "code_checksum": "07a48282480245c215555e1ce486fb0247ec36fb0333884c4df75b497799d766",
+      "code_ref": "backend/nexus_oos_seal_control",
+      "kind": "code"
+    },
+    "dataset": {
+      "dataset_checksum": "b2868da4b986f4055205056f51fed8d19998bbe73cff5caa19e95ae5e81bfed4",
+      "dataset_id": "SYNTHETIC_V15G_PLAN_DATASET",
+      "dataset_semantic_checksum": "fc8073802bc25a8f7ea4b7d501cd89605a42dcbae3a88bd366d9c2aa939107bd",
+      "fixture_only": true,
+      "kind": "dataset",
+      "real_market_data": false
+    },
+    "parameter": {
+      "kind": "parameter",
+      "parameter_checksum": "a0457b4b0c9766dddeb4c8e3dd5368ca14f32515c419abea7fffc54ceefb8a84",
+      "parameter_source": "synthetic_fixture",
+      "parameters": {
+        "fixture_marker": true,
+        "lookback": 24,
+        "threshold": 0.0
+      }
+    },
+    "plan_checksum": "1bcc13da2ee65ebc41d752836ab3a463ba9cb7c95e7e0a0d20ac74351e05949a"
+  },
+  "bindings_verify": {
+    "expected_bindings_checksum": "a177c2dd0419fc963f0e7fae953b98726fb668dede427d6aaa4e5601ee67ae39",
+    "intact": true,
+    "missing_kinds": [],
+    "provided_bindings_checksum": "a177c2dd0419fc963f0e7fae953b98726fb668dede427d6aaa4e5601ee67ae39"
+  },
+  "candidate": {
+    "candidate_id": "SYNTHETIC_V15G_OOS_PLAN_CANDIDATE",
+    "candidate_label": "synthetic_fixture_not_selected",
+    "code_ref": "backend/nexus_oos_seal_control",
+    "dataset_ref": "SYNTHETIC_V15G_PLAN_DATASET",
+    "economic_mechanism": "synthetic_non_trading_placeholder",
+    "fixture_only": true,
+    "model_family": "other_models_synthetic_fixture",
+    "parameter_source": "synthetic_fixture",
+    "parameters": {
+      "fixture_marker": true,
+      "lookback": 24,
+      "threshold": 0.0
+    },
+    "preregistration_timestamp": "2026-01-01T00:00:00Z",
+    "promoted": false,
+    "qualified": false,
+    "selected": false,
+    "strategy_family": "SYNTHETIC_OOS_SEAL_CONTROL_FAMILY"
+  },
+  "control_status": "SEAL_CONTROL_READY",
+  "created_at": "2026-08-05T15:18:11Z",
+  "dataset": {
+    "as_of_ms": 1700000000000,
+    "availability_timestamp_ms": 1699481600000,
+    "dataset_checksum": "b2868da4b986f4055205056f51fed8d19998bbe73cff5caa19e95ae5e81bfed4",
+    "dataset_id": "SYNTHETIC_V15G_PLAN_DATASET",
+    "dataset_semantic_checksum": "fc8073802bc25a8f7ea4b7d501cd89605a42dcbae3a88bd366d9c2aa939107bd",
+    "dataset_version": "v15g.synthetic.1",
+    "fixture_only": true,
+    "real_market_data": false,
+    "retrieval_timestamp_ms": 1699395200000,
+    "source": "synthetic_fixture_generator",
+    "source_timestamp_ms": 1698790400000
+  },
+  "evidence_class": "FIXTURE_AND_CONTROL_PLANE_ONLY",
+  "flags": {
+    "Founder_authorization_present": false,
+    "auto_integrated": false,
+    "demo_order_count": 0,
+    "exchange_write_attempt_count": 0,
+    "formal_walk_forward_executed": false,
+    "founder_authorization_present": false,
+    "mainnet": false,
+    "oos_consumed": false,
+    "oos_downloaded": false,
+    "oos_executed": false,
+    "oos_reservation_created": false,
+    "oos_reserved": false,
+    "oos_touched": false,
+    "pr27_merged": false,
+    "qualification_ready_count": 0,
+    "real_money": false,
+    "strategy_promoted": false,
+    "strategy_selected": false
+  },
+  "founder_authorization": {
+    "auth_proof": "605dea65c215d20dedb6c2d1ad1af67f12c5119fd40b9959fda7ef94db2a2c1d",
+    "authorized": false,
+    "oos_consumed": false,
+    "oos_downloaded": false,
+    "oos_executed": false,
+    "oos_reserved": false,
+    "real_oos_reservation_permitted": false,
+    "reason": "FOUNDER_AUTHORIZATION_MISSING",
+    "required_scope": "founder_v15_g_oos_reservation_seal"
+  },
+  "founder_spoof_check": {
+    "authorized": false,
+    "expected_auth_proof": "a50b954be6cc1a3767c5d45d375d1c11d44372b998a576346110b51fd9bb4277",
+    "provided_auth_proof": "deadbeef",
+    "reason": "FOUNDER_AUTH_PROOF_INVALID_OR_SPOOFED",
+    "spoof_rejected": true,
+    "valid": false
+  },
+  "hard_ban_probe": {
+    "all_refused": true,
+    "flags": {
+      "Founder_authorization_present": false,
+      "auto_integrated": false,
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "formal_walk_forward_executed": false,
+      "founder_authorization_present": false,
+      "mainnet": false,
+      "oos_consumed": false,
+      "oos_downloaded": false,
+      "oos_executed": false,
+      "oos_reservation_created": false,
+      "oos_reserved": false,
+      "oos_touched": false,
+      "pr27_merged": false,
+      "qualification_ready_count": 0,
+      "real_money": false,
+      "strategy_promoted": false,
+      "strategy_selected": false
+    },
+    "hard_bans": [
+      "no_real_oos_reservation",
+      "no_oos_download",
+      "no_oos_execution",
+      "no_oos_consumption",
+      "no_formal_walk_forward",
+      "no_strategy_selection",
+      "no_strategy_promotion",
+      "no_demo_orders",
+      "no_shadow_orders",
+      "no_exchange_writes",
+      "no_pr27_merge",
+      "no_mainnet",
+      "no_real_money",
+      "no_profitability_claims",
+      "no_auto_integrate",
+      "no_status_json_report"
+    ],
+    "probes": {
+      "force_auto_integrate": {
+        "action": "AUTO_INTEGRATE",
+        "allowed": false,
+        "auto_integrated": false,
+        "executed": false,
+        "reason": "AUTO_INTEGRATE_BANNED_V15_G"
+      },
+      "force_demo": {
+        "action": "DEMO_ORDER",
+        "allowed": false,
+        "demo_order_count": 0,
+        "executed": false,
+        "reason": "DEMO_ORDERS_BANNED_V15_G"
+      },
+      "force_exchange_write": {
+        "action": "EXCHANGE_WRITE",
+        "allowed": false,
+        "exchange_write_attempt_count": 0,
+        "executed": false,
+        "reason": "EXCHANGE_WRITES_BANNED_V15_G"
+      },
+      "force_oos_consumption": {
+        "action": "OOS_CONSUMPTION",
+        "allowed": false,
+        "executed": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+        "reason": "OOS_CONSUMPTION_BANNED_V15_G"
+      },
+      "force_oos_download": {
+        "action": "OOS_DOWNLOAD",
+        "allowed": false,
+        "executed": false,
+        "oos_downloaded": false,
+        "oos_reserved": false,
+        "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+        "reason": "OOS_DOWNLOAD_BANNED_V15_G"
+      },
+      "force_oos_execution": {
+        "action": "OOS_EXECUTION",
+        "allowed": false,
+        "executed": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+        "reason": "OOS_EXECUTION_BANNED_V15_G"
+      },
+      "force_promote": {
+        "allowed": false,
+        "promoted": false,
+        "reason": "STRATEGY_PROMOTION_BANNED_V15_G"
+      },
+      "force_real_oos_reservation": {
+        "action": "REAL_OOS_RESERVATION",
+        "allowed": false,
+        "executed": false,
+        "oos_consumed": false,
+        "oos_downloaded": false,
+        "oos_executed": false,
+        "oos_reserved": false,
+        "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+        "reason": "REAL_OOS_RESERVATION_BANNED_V15_G"
+      },
+      "force_select": {
+        "allowed": false,
+        "reason": "STRATEGY_SELECTION_BANNED_V15_G",
+        "selected": false
+      },
+      "force_walk_forward": {
+        "action": "FORMAL_WALK_FORWARD",
+        "allowed": false,
+        "executed": false,
+        "formal_walk_forward_executed": false,
+        "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+        "reason": "FORMAL_WALK_FORWARD_BANNED_V15_G"
+      }
+    },
+    "required_false_flags": {
+      "flags": {
+        "oos_consumed": false,
+        "oos_downloaded": false,
+        "oos_executed": false,
+        "oos_reserved": false
+      },
+      "ok": true,
+      "violations": []
+    }
+  },
+  "infrastructure_status": "BLOCKED_READY",
+  "lane": "V15-G",
+  "lane_name": "OOS_RESERVATION_AND_SEAL_CONTROL",
+  "non_consumption": {
+    "oos_consumed": false,
+    "oos_downloaded": false,
+    "oos_executed": false,
+    "oos_reserved": false,
+    "plan_checksum": "1bcc13da2ee65ebc41d752836ab3a463ba9cb7c95e7e0a0d20ac74351e05949a",
+    "proven": true,
+    "registry_checksums": {
+      "consumed_failed_holdout": "5c75884c796efbfcc5315889753bec3e4bc769d8fae4e81e9cce62ec496d48a5",
+      "development": "7405411f603db4a4d48c2f85984f34faba9e575093ce23f9a0f9b83bba5ee894",
+      "planned_oos": "5b0741da3e4ec2bf0fe644985505b469d40a185fbf82dc4a74fdc2eb5314606c"
+    },
+    "status": "OOS_NON_CONSUMPTION_PROVEN",
+    "violations": []
+  },
+  "oos_consumed": false,
+  "oos_downloaded": false,
+  "oos_executed": false,
+  "oos_reserved": false,
+  "pass1_ok": true,
+  "plan": {
+    "checks": {
+      "chronologically_later_than_development": true,
+      "no_overlap_with_consumed_failed": true,
+      "no_overlap_with_development": true,
+      "overlap_violations": []
+    },
+    "fixture_only": true,
+    "oos_consumed": false,
+    "oos_downloaded": false,
+    "oos_executed": false,
+    "oos_reserved": false,
+    "plan_checksum": "1bcc13da2ee65ebc41d752836ab3a463ba9cb7c95e7e0a0d20ac74351e05949a",
+    "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+    "plan_status": "PLANNED_NOT_RESERVED",
+    "real_oos_reservation_executed": false,
+    "registries": {
+      "consumed_failed_holdout": {
+        "checksum": "5c75884c796efbfcc5315889753bec3e4bc769d8fae4e81e9cce62ec496d48a5",
+        "interval_count": 1,
+        "intervals": [
+          {
+            "category": "consumed_failed_holdout",
+            "end_ms": 1691360000000,
+            "interval_id": "SYN_V15G_CONSUMED_FAILED",
+            "intervals": [
+              "60"
+            ],
+            "label": "synthetic_prior_failed_holdout",
+            "start_ms": 1689632000000,
+            "symbols": [
+              "SYNTHUSDT"
+            ]
+          }
+        ],
+        "kind": "consumed_failed_holdout"
+      },
+      "development": {
+        "checksum": "7405411f603db4a4d48c2f85984f34faba9e575093ce23f9a0f9b83bba5ee894",
+        "interval_count": 1,
+        "intervals": [
+          {
+            "category": "development",
+            "end_ms": 1697408000000,
+            "interval_id": "SYN_V15G_DEV_WINDOW",
+            "intervals": [
+              "15",
+              "60"
+            ],
+            "label": "synthetic_development_window",
+            "start_ms": 1692224000000,
+            "symbols": [
+              "SYNTHUSDT"
+            ]
+          }
+        ],
+        "kind": "development"
+      },
+      "planned_oos": {
+        "checksum": "5b0741da3e4ec2bf0fe644985505b469d40a185fbf82dc4a74fdc2eb5314606c",
+        "interval_count": 1,
+        "intervals": [
+          {
+            "category": "planned_oos",
+            "end_ms": 1699568000000,
+            "interval_id": "SYN_V15G_PLANNED_OOS",
+            "intervals": [
+              "15",
+              "60",
+              "240"
+            ],
+            "label": "synthetic_planned_oos_not_reserved",
+            "start_ms": 1698272000000,
+            "symbols": [
+              "SYNTHUSDT",
+              "SYNETHUSDT"
+            ]
+          }
+        ],
+        "kind": "planned_oos"
+      }
+    }
+  },
+  "proofs": {
+    "anti_regeneration_rejected": true,
+    "bindings_intact": true,
+    "consumption_refused": true,
+    "download_refused": true,
+    "execution_refused": true,
+    "founder_auth_absent": true,
+    "founder_auth_proof_valid": true,
+    "founder_spoof_rejected": true,
+    "hard_bans_all_refused": true,
+    "interval_plan_built": true,
+    "non_consumption_proven": true,
+    "real_reservation_refused": true,
+    "required_false_flags_ok": true,
+    "seal_allowed": "ef1b63ed662fdc102367ee789e02c370d41311ec575b0cbb6ee8c80120725b43",
+    "seal_recompute_idempotent": true,
+    "write_once_force_rejected": true
+  },
+  "refusal_attempts": {
+    "consumption": {
+      "action": "OOS_CONSUMPTION",
+      "allowed": false,
+      "executed": false,
+      "oos_consumed": false,
+      "oos_executed": false,
+      "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+      "reason": "OOS_CONSUMPTION_BANNED_V15_G"
+    },
+    "download": {
+      "action": "OOS_DOWNLOAD",
+      "allowed": false,
+      "executed": false,
+      "oos_downloaded": false,
+      "oos_reserved": false,
+      "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+      "reason": "OOS_DOWNLOAD_BANNED_V15_G"
+    },
+    "execution": {
+      "action": "OOS_EXECUTION",
+      "allowed": false,
+      "executed": false,
+      "oos_consumed": false,
+      "oos_executed": false,
+      "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+      "reason": "OOS_EXECUTION_BANNED_V15_G"
+    },
+    "reservation": {
+      "action": "REAL_OOS_RESERVATION",
+      "allowed": false,
+      "executed": false,
+      "oos_consumed": false,
+      "oos_downloaded": false,
+      "oos_executed": false,
+      "oos_reserved": false,
+      "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+      "reason": "REAL_OOS_RESERVATION_BANNED_V15_G"
+    }
+  },
+  "required_false_flags": {
+    "flags": {
+      "oos_consumed": false,
+      "oos_downloaded": false,
+      "oos_executed": false,
+      "oos_reserved": false
+    },
+    "ok": true,
+    "violations": []
+  },
+  "schema": "FOUNDER_V15_G_OOS_RESERVATION_SEAL_CONTROL",
+  "seal": {
+    "allowed": true,
+    "anti_regeneration": true,
+    "bindings_checksum": "a177c2dd0419fc963f0e7fae953b98726fb668dede427d6aaa4e5601ee67ae39",
+    "candidate_checksum": "cc1954b09f85f57c08c02eeb8369d5f30b2cf0cb55701a7bbc3cd0319dad3e93",
+    "code_checksum": "07a48282480245c215555e1ce486fb0247ec36fb0333884c4df75b497799d766",
+    "dataset_semantic_checksum": "fc8073802bc25a8f7ea4b7d501cd89605a42dcbae3a88bd366d9c2aa939107bd",
+    "fail_closed": false,
+    "fixture_only": true,
+    "lineage_key": "default",
+    "lineage_verified": true,
+    "oos_consumed": false,
+    "oos_downloaded": false,
+    "oos_executed": false,
+    "oos_reserved": false,
+    "parameter_checksum": "a0457b4b0c9766dddeb4c8e3dd5368ca14f32515c419abea7fffc54ceefb8a84",
+    "plan_checksum": "1bcc13da2ee65ebc41d752836ab3a463ba9cb7c95e7e0a0d20ac74351e05949a",
+    "seal": "ef1b63ed662fdc102367ee789e02c370d41311ec575b0cbb6ee8c80120725b43",
+    "seal_algorithm": "sha256_json_canonical",
+    "status": "PLAN_SEALED_NOT_RESERVED",
+    "write_once": true
+  },
+  "seal_anti_regeneration": {
+    "allowed": false,
+    "fail_closed": true,
+    "status": "SEAL_REGENERATION_REJECTED"
+  },
+  "seal_recompute": {
+    "allowed": true,
+    "seal": "ef1b63ed662fdc102367ee789e02c370d41311ec575b0cbb6ee8c80120725b43",
+    "status": "PLAN_SEALED_NOT_RESERVED"
+  },
+  "seal_write_once_force": {
+    "allowed": false,
+    "fail_closed": true,
+    "status": "SEAL_WRITE_ONCE_VIOLATION"
+  },
+  "updated_at": "2026-08-05T15:18:11Z"
+}

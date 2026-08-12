@@ -1,0 +1,71 @@
+{
+  "schema": "v13_v23_critic_ordering",
+  "created_at": "2026-08-05T08:35:17Z",
+  "critic_order": [
+    "case_016",
+    "case_017",
+    "case_018",
+    "case_019",
+    "case_020",
+    "case_021",
+    "case_022",
+    "case_023",
+    "case_024",
+    "case_025",
+    "case_026",
+    "case_027",
+    "case_028",
+    "case_029",
+    "case_030",
+    "case_031",
+    "case_032",
+    "case_033",
+    "case_034",
+    "case_035",
+    "case_036",
+    "case_037",
+    "case_038",
+    "case_039",
+    "case_040",
+    "case_041",
+    "case_042",
+    "case_043",
+    "case_044",
+    "case_045",
+    "case_046",
+    "case_047",
+    "case_048",
+    "case_049",
+    "case_050",
+    "case_051",
+    "case_052"
+  ],
+  "critic_order_count": 37,
+  "order_only_after_reasoner_success": true,
+  "expected_pending_critics_present": true,
+  "premature_critic_blocked": [
+    {
+      "case_id": "case_053",
+      "critic_dispatch_allowed": false,
+      "reason": "REASONER_SUCCESS_REQUIRED",
+      "transport_status": "CRITIC_BEFORE_REASONER_BLOCKED"
+    },
+    {
+      "case_id": "case_054",
+      "critic_dispatch_allowed": false,
+      "reason": "REASONER_SUCCESS_REQUIRED",
+      "transport_status": "CRITIC_BEFORE_REASONER_BLOCKED"
+    },
+    {
+      "case_id": "case_055",
+      "critic_dispatch_allowed": false,
+      "reason": "REASONER_SUCCESS_REQUIRED",
+      "transport_status": "CRITIC_BEFORE_REASONER_BLOCKED"
+    }
+  ],
+  "premature_blocked_count": 3,
+  "reasoner_profile": "GROQ_REFLECTION_REASONER",
+  "critic_profile": "SAMBANOVA_INDEPENDENT_CRITIC",
+  "groq_success_required": 53,
+  "V2_3_complete": false
+}

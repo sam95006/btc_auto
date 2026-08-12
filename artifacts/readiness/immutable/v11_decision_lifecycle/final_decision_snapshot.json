@@ -1,0 +1,162 @@
+{
+  "schema": "NEXUS_DECISION_LIFECYCLE_ORCHESTRATOR_V11",
+  "decision": {
+    "decision_id": "dec_ready_1",
+    "candidate_id": "cand_ready",
+    "market_context_id": "mctx_ready",
+    "point_in_time_timestamp": "2026-08-05T03:00:00Z",
+    "evidence_ids": [
+      "ev_0",
+      "ev_1"
+    ],
+    "evidence_hashes": [
+      "866cd7e70a0abafb2a4d1d939464c75eca1337d8fc3e53f8c10b891590d55178",
+      "34e28f9b84e61d2d950ae66f177f46514a3ed983aa9f10a8ea1090054b24c7eb"
+    ],
+    "data_freshness": {
+      "age_seconds": 5.0,
+      "stale": false
+    },
+    "data_completeness": {
+      "ratio": 1.0,
+      "required_fields": [
+        "mid",
+        "spread"
+      ],
+      "present_fields": [
+        "mid",
+        "spread"
+      ]
+    },
+    "AI_reasoner_outputs": [
+      {
+        "provider": "sim",
+        "view": "constructive"
+      }
+    ],
+    "independent_critic_output": {
+      "verdict": "pass",
+      "score": 0.8
+    },
+    "deterministic_risk_result": {
+      "allowed": true,
+      "reasons": []
+    },
+    "decision_status": "CLOSED",
+    "rejection_reasons": [],
+    "intent_id": "intent_107a5e0dfa5c",
+    "position_id": "pos_8263e7b00211",
+    "exit_id": "exit_2659142c6f81",
+    "reflection_id": "refl_eccf40d43eca",
+    "lesson_ids": [
+      "lesson_ready"
+    ],
+    "created_at": "2026-08-05T03:32:45.402965Z",
+    "updated_at": "2026-08-05T03:32:45.423346Z",
+    "schema_version": "nexus_decision_object_v11",
+    "idempotency_key": "ready-obs",
+    "ledger_event_ids": [
+      "dd9ab44d49b984b0e4cea911d9c863ad",
+      "5c00d7961058207de517249a83d56bd5",
+      "6914643a38e0ee5d26873e9b021726bb",
+      "d56bf5adb548cfe385b7555e4fbbb08d",
+      "75aa0634b6dace966a36637b1da0b3f3",
+      "f68242c9cff76d18b21aa1dd4bc5968e",
+      "2ca6e7a696a3af8ae3fc5c6e0c70db5e",
+      "9a1489f612e003d6cdeef813a36c53ab",
+      "0ae1a87c148d08e37746700b455937e9",
+      "aa990ee6bba29a28eff7c715f785bcf2"
+    ],
+    "transition_history": [
+      {
+        "previous_state": "OBSERVED",
+        "next_state": "UNDERSTANDING",
+        "timestamp": "2026-08-05T03:32:45.405267Z",
+        "reason": "understand",
+        "stage": "understand",
+        "idempotency_key": "ready-u",
+        "metadata": {}
+      },
+      {
+        "previous_state": "UNDERSTANDING",
+        "next_state": "CHALLENGED",
+        "timestamp": "2026-08-05T03:32:45.410732Z",
+        "reason": "challenge",
+        "stage": "challenge",
+        "idempotency_key": "ready-c",
+        "metadata": {}
+      },
+      {
+        "previous_state": "CHALLENGED",
+        "next_state": "RISK_REVIEWED",
+        "timestamp": "2026-08-05T03:32:45.412657Z",
+        "reason": "risk_reviewed",
+        "stage": "decide",
+        "idempotency_key": "ready-d:risk",
+        "metadata": {}
+      },
+      {
+        "previous_state": "RISK_REVIEWED",
+        "next_state": "APPROVED_SIMULATED",
+        "timestamp": "2026-08-05T03:32:45.413114Z",
+        "reason": "approved_simulated",
+        "stage": "decide",
+        "idempotency_key": "ready-d:outcome",
+        "metadata": {}
+      },
+      {
+        "previous_state": "APPROVED_SIMULATED",
+        "next_state": "MONITORING",
+        "timestamp": "2026-08-05T03:32:45.415362Z",
+        "reason": "record_to_monitor",
+        "stage": "record",
+        "idempotency_key": "ready-r",
+        "metadata": {}
+      },
+      {
+        "previous_state": "MONITORING",
+        "next_state": "EXITED",
+        "timestamp": "2026-08-05T03:32:45.417419Z",
+        "reason": "exit",
+        "stage": "monitor",
+        "idempotency_key": "ready-m",
+        "metadata": {}
+      },
+      {
+        "previous_state": "EXITED",
+        "next_state": "UNDER_REVIEW",
+        "timestamp": "2026-08-05T03:32:45.419390Z",
+        "reason": "review",
+        "stage": "review",
+        "idempotency_key": "ready-rev",
+        "metadata": {}
+      },
+      {
+        "previous_state": "UNDER_REVIEW",
+        "next_state": "CALIBRATED",
+        "timestamp": "2026-08-05T03:32:45.421356Z",
+        "reason": "calibrate",
+        "stage": "calibrate",
+        "idempotency_key": "ready-cal",
+        "metadata": {}
+      },
+      {
+        "previous_state": "CALIBRATED",
+        "next_state": "CLOSED",
+        "timestamp": "2026-08-05T03:32:45.423335Z",
+        "reason": "improve_close",
+        "stage": "improve",
+        "idempotency_key": "ready-imp",
+        "metadata": {}
+      }
+    ],
+    "checkpoint_seq": 9,
+    "blocked_reason": null,
+    "evidence_binding_hash": "d42af1e0a7b874b77bbb64448cc5e6d7f4c82d5a7333c7f1864723917267f49c"
+  },
+  "state": "CLOSED",
+  "is_terminal": true,
+  "order_attempt_count": 1,
+  "strategy_mutation_attempt_count": 1,
+  "exchange_write_attempt_count": 0
+}

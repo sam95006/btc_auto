@@ -1,0 +1,73 @@
+{
+  "schema": "final_v2_3_quality_result",
+  "V2_3_RESULT_INTERPRETATION": "CALIBRATION_INCOMPLETE_PROVIDER_CAPACITY",
+  "V2_3_quality_status": "INCOMPLETE_PROVIDER_CAPACITY",
+  "quality_gates_evaluated": false,
+  "quality_gates_passed": false,
+  "input_evidence_packet_count": 80,
+  "input_evidence_eligible_count": 80,
+  "input_evidence_ineligible_count": 0,
+  "evidence_packet_delivery_ratio": {
+    "numerator": 80.0,
+    "denominator": 80.0,
+    "value": 1.0,
+    "status": "VALID"
+  },
+  "provider_attempt_count": 10,
+  "provider_successful_response_count": 10,
+  "provider_429_count": 0,
+  "provider_timeout_count": 0,
+  "provider_schema_invalid_count": 0,
+  "provider_other_failure_count": 0,
+  "AI_evidence_sufficiency_assessed_count": 10,
+  "AI_evidence_sufficient_count": 10,
+  "AI_evidence_insufficient_count": 0,
+  "informative_classification_count": 10,
+  "undetermined_count": 0,
+  "agreement_count": 5,
+  "disagreement_count": 5,
+  "blind_valid_schema_ratio": {
+    "numerator": 10.0,
+    "denominator": 10.0,
+    "value": 1.0,
+    "status": "VALID"
+  },
+  "informative_classification_ratio": {
+    "numerator": 10.0,
+    "denominator": 10.0,
+    "value": 1.0,
+    "status": "VALID"
+  },
+  "informative_classification_ratio_on_sufficient_cases": {
+    "numerator": 10.0,
+    "denominator": 10.0,
+    "value": 1.0,
+    "status": "VALID"
+  },
+  "blind_agreement_ratio_on_sufficient_cases": {
+    "numerator": 5.0,
+    "denominator": 10.0,
+    "value": 0.5,
+    "status": "VALID"
+  },
+  "critic_resolution_ratio": {
+    "numerator": 0.0,
+    "denominator": 5.0,
+    "value": 0.0,
+    "status": "VALID"
+  },
+  "critic_resolution_status": "VALID",
+  "critic_resolution_denominator": 5,
+  "missing_evidence_invention_count": 0,
+  "deterministic_answer_leak_count": 0,
+  "secret_leak_count": 0,
+  "canonical_classes": [
+    "GOOD_PROCESS_WIN",
+    "GOOD_PROCESS_LOSS",
+    "BAD_PROCESS_WIN",
+    "BAD_PROCESS_LOSS",
+    "UNDETERMINED"
+  ],
+  "calibration_completed_case_count": 10,
+  "calibration_pending_case_count": 70
+}

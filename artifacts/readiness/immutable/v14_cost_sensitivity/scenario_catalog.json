@@ -1,0 +1,848 @@
+[
+  {
+    "adverse": false,
+    "dimension": "maker_taker_mix",
+    "label": "maker_maker",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "maker_taker_mix",
+    "label": "maker_exit_taker",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "maker_taker_mix",
+    "label": "taker_taker",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "spread",
+    "label": "spread_0p5bps",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "spread",
+    "label": "spread_1bps",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "spread",
+    "label": "spread_3bps",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "spread",
+    "label": "spread_8bps",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "spread",
+    "label": "spread_20bps",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "slippage",
+    "label": "slip_1bps",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "slippage",
+    "label": "slip_2bps",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "slippage",
+    "label": "slip_5bps",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "slippage",
+    "label": "slip_12bps",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "slippage",
+    "label": "slip_25bps",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "market_impact",
+    "label": "impact_1bps",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "market_impact",
+    "label": "impact_2bps",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "market_impact",
+    "label": "impact_8bps",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "market_impact",
+    "label": "impact_20bps",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "market_impact",
+    "label": "impact_40bps",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "partial_fills",
+    "label": "fills_0",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "partial_fills",
+    "label": "fills_1",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "partial_fills",
+    "label": "fills_3",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "partial_fills",
+    "label": "fills_8",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "cancel_replace",
+    "label": "cr_0",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "cancel_replace",
+    "label": "cr_1",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "cancel_replace",
+    "label": "cr_4",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "cancel_replace",
+    "label": "cr_10",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "funding",
+    "label": "funding_buffer",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "funding",
+    "label": "funding_1bp",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "funding",
+    "label": "funding_5bp",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "funding",
+    "label": "funding_20bp",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "latency",
+    "label": "lat_0ms",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "latency",
+    "label": "lat_50ms",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "latency",
+    "label": "lat_200ms",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "latency",
+    "label": "lat_500ms",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "latency",
+    "label": "lat_1500ms",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "queue_position",
+    "label": "queue_front",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "queue_position",
+    "label": "queue_mid",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "queue_position",
+    "label": "queue_back",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "liquidity_collapse",
+    "label": "liq_1x",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "liquidity_collapse",
+    "label": "liq_1p5x",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "liquidity_collapse",
+    "label": "liq_3x",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "liquidity_collapse",
+    "label": "liq_6x",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "trade_size_scaling",
+    "label": "size_0p5x",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": false,
+    "dimension": "trade_size_scaling",
+    "label": "size_1x",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "trade_size_scaling",
+    "label": "size_2x",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "trade_size_scaling",
+    "label": "size_5x",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  },
+  {
+    "adverse": true,
+    "dimension": "trade_size_scaling",
+    "label": "size_10x",
+    "param_keys": [
+      "cancel_replace_cycles",
+      "extra_fills",
+      "funding_rate",
+      "impact_bps",
+      "latency_ms",
+      "liquidity_collapse",
+      "maker_taker_mix",
+      "queue_position",
+      "size_scale",
+      "slippage_bps",
+      "spread_bps"
+    ]
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "schema": "microstructure_accumulation_campaign_v1_status",
+  "campaign_id": "ms_accum_1785848795",
+  "planned_duration_hours": 24,
+  "valid_capture_hours": 0.0,
+  "connection_gap_seconds": 0,
+  "complete_UTC_hours": 0,
+  "partial_UTC_hours": 0,
+  "trade_event_count": 0,
+  "liquidation_event_count": 0,
+  "compressed_bytes": 0,
+  "storage_cap_respected": true,
+  "memory_status": "NOT_STARTED",
+  "clock_status": "NOT_STARTED",
+  "checksum_status": "NOT_STARTED",
+  "accumulation_started": false,
+  "note": "24h capture starts only when NEXUS_MS_START_24H_ACCUMULATION=1 after durability ready",
+  "created_at": "2026-08-04T13:06:35Z"
+}

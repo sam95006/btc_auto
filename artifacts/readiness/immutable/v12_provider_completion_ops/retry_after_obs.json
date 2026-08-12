@@ -1,0 +1,37 @@
+{
+  "schema": "v12_provider_retry_after_obs_map",
+  "created_at": "2026-08-05T07:48:30Z",
+  "lanes": {
+    "GROQ_REFLECTION_REASONER": {
+      "schema": "v12_provider_retry_after_obs",
+      "created_at": "2026-08-05T07:48:30Z",
+      "profile_id": "GROQ_REFLECTION_REASONER",
+      "http_status": 429,
+      "retry_after_s": 900.0,
+      "next_resume_not_before": "2026-08-05T08:03:30Z",
+      "rate_limited": true,
+      "headers_observed": {
+        "Retry-After": "900"
+      },
+      "body_parsed": false,
+      "secret_logging": false
+    },
+    "SAMBANOVA_INDEPENDENT_CRITIC": {
+      "schema": "v12_provider_retry_after_obs",
+      "created_at": "2026-08-05T07:48:30Z",
+      "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+      "http_status": 429,
+      "retry_after_s": 900.0,
+      "next_resume_not_before": "2026-08-05T08:03:30Z",
+      "rate_limited": true,
+      "headers_observed": {
+        "Retry-After": "900"
+      },
+      "body_parsed": false,
+      "secret_logging": false
+    }
+  },
+  "max_retry_after_s": 900.0,
+  "any_rate_limited": true,
+  "secret_logging": false
+}

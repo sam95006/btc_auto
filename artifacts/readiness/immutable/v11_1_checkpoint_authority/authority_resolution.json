@@ -1,0 +1,25 @@
+{
+  "MULTI_SCOPE_AUTHORITY_CHECKPOINT_resolved": true,
+  "adapter_contracts": [
+    "control_plane",
+    "decision",
+    "microstructure",
+    "qualification",
+    "reflection",
+    "session"
+  ],
+  "after": "active_compat_present",
+  "before": "contested / MULTI_SCOPE_AUTHORITY",
+  "canonical_module": "backend.nexus_checkpoint.store",
+  "canonical_symbol": "CanonicalCheckpointStore",
+  "domain": "checkpoint",
+  "invariants": [
+    "ambiguous_state_routes_to_BLOCKED_AMBIGUOUS",
+    "no_silent_resume",
+    "atomic_temp_fsync_rename",
+    "checksum_verify_on_read_write",
+    "lkg_pointer_required_for_restore",
+    "no_destructive_live_v23_migration",
+    "CANONICAL_CHECKPOINT_ENVELOPE_COUNT==1"
+  ]
+}

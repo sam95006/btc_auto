@@ -1,0 +1,58 @@
+{
+  "schema": "autonomous_execution_simulator_v1",
+  "execution_status": "NEXUS_EXECUTION_SIMULATOR_V1_PASS",
+  "smoke": {
+    "create": {
+      "status": "ACCEPTED",
+      "order_id": "f3701988e24a42f11ff7ee14",
+      "state": "ACCEPTED"
+    },
+    "fill": {
+      "status": "FILLED",
+      "order_id": "f3701988e24a42f11ff7ee14",
+      "position_id": "b9fd0663490599b306632e1e",
+      "fill_price": 100.1,
+      "costs": {
+        "entry_fee": 0.0055055,
+        "spread_cost": 0.001001,
+        "slippage_cost": 0.002002,
+        "fee_rate": 0.00055
+      },
+      "liquidation_distance": 2500.0
+    },
+    "dup": {
+      "status": "DUPLICATE_IGNORED",
+      "order_id": "f3701988e24a42f11ff7ee14",
+      "canonical_owner": "f3701988e24a42f11ff7ee14"
+    },
+    "ambiguous": {
+      "status": "BLOCKED_AMBIGUOUS",
+      "reason": "SAME_BAR_STOP_TARGET_ADVERSE_FIRST"
+    }
+  },
+  "report": {
+    "order_created_count": 1,
+    "partially_filled_count": 0,
+    "filled_count": 1,
+    "cancelled_count": 0,
+    "rejected_count": 0,
+    "unfilled_count": 0,
+    "simulated_position_open_count": 1,
+    "simulated_position_closed_count": 0,
+    "simulated_liquidation_count": 0,
+    "open_ambiguous_position_count": 0,
+    "unclosed_intent_count": 0,
+    "exchange_write_attempt_count": 0,
+    "demo_order_count": 0,
+    "max_positions": 1,
+    "max_intents": 1,
+    "leverage": 25,
+    "margin_mode": "ISOLATED",
+    "fill_policy": "TRADE_THROUGH_ONE_TICK_REQUIRED; TOUCH_ALONE_INSUFFICIENT; SAME_BAR_STOP_TARGET=BLOCKED_AMBIGUOUS",
+    "fee_policy": {
+      "taker": 0.00055,
+      "maker": 0.0002
+    }
+  },
+  "created_at": "2026-08-04T13:54:32Z"
+}

@@ -1,0 +1,65 @@
+{
+  "schema": "v14_a_capture_supervisor_pass2",
+  "created_at": "2026-08-05T11:20:30Z",
+  "pass": 2,
+  "all_passed": true,
+  "negative_tests": [
+    {
+      "name": "neg_missing_partitions_root_no_silent_fallback",
+      "status": "PASS",
+      "report_status": "UNAVAILABLE"
+    },
+    {
+      "name": "neg_dead_pid_marks_down",
+      "status": "PASS",
+      "process_status": "DOWN"
+    },
+    {
+      "name": "neg_disk_floor_recommends_stop_not_execute",
+      "status": "PASS",
+      "storage_status": "STOP_REQUIRED",
+      "safe_stop_required": true,
+      "safe_stop_executed": false
+    },
+    {
+      "name": "neg_no_event_study_or_live_mutation_claims",
+      "status": "PASS"
+    },
+    {
+      "name": "neg_fixture_versus_real_classification",
+      "status": "PASS",
+      "evidence_class": "REAL_LIVE_CAMPAIGN_READONLY",
+      "live_capture_started": true
+    },
+    {
+      "name": "neg_owned_paths_only",
+      "status": "PASS",
+      "violations": []
+    },
+    {
+      "name": "neg_hard_bans_declared",
+      "status": "PASS",
+      "missing": []
+    },
+    {
+      "name": "neg_hourly_gap_not_silenced",
+      "status": "PASS",
+      "missing": [
+        "20260805_10"
+      ],
+      "codes": [
+        "HOURLY_GAPS"
+      ]
+    }
+  ],
+  "false_pass_search": {
+    "silent_fallback_search": "explicit_status_fields_required",
+    "schema_drift_search": "schema_constants_pinned",
+    "race_condition_search": "observe_only_no_writer_lock_taken",
+    "cost_omission_search": "n/a_observe_lane",
+    "pit_leakage_search": "supervisor_does_not_emit_future_day_complete_claims",
+    "secret_leakage_search": "delegated_to_secret_scan"
+  },
+  "event_study_readiness_status": "NOT_READY",
+  "exchange_write_attempt_count": 0
+}

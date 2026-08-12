@@ -1,0 +1,54 @@
+{
+  "schema": "ratio_denominator_audit",
+  "rules": {
+    "empty_denominator_is_NOT_APPLICABLE": true,
+    "never_report_1_0_for_empty_set": true,
+    "provider_429_does_not_increment_AI_insufficient_or_undetermined": true
+  },
+  "ratios": {
+    "evidence_packet_delivery_ratio": {
+      "numerator": 80.0,
+      "denominator": 80.0,
+      "value": 1.0,
+      "status": "VALID"
+    },
+    "blind_valid_schema_ratio": {
+      "numerator": 10.0,
+      "denominator": 10.0,
+      "value": 1.0,
+      "status": "VALID"
+    },
+    "informative_classification_ratio": {
+      "numerator": 10.0,
+      "denominator": 10.0,
+      "value": 1.0,
+      "status": "VALID"
+    },
+    "informative_classification_ratio_on_sufficient_cases": {
+      "numerator": 10.0,
+      "denominator": 10.0,
+      "value": 1.0,
+      "status": "VALID"
+    },
+    "blind_agreement_ratio_on_sufficient_cases": {
+      "numerator": 5.0,
+      "denominator": 10.0,
+      "value": 0.5,
+      "status": "VALID"
+    },
+    "critic_resolution_ratio": {
+      "numerator": 0.0,
+      "denominator": 5.0,
+      "value": 0.0,
+      "status": "VALID"
+    }
+  },
+  "critic_resolution_status": "VALID",
+  "critic_resolution_denominator": 5,
+  "evidence_packet_delivery_ratio": {
+    "numerator": 80.0,
+    "denominator": 80.0,
+    "value": 1.0,
+    "status": "VALID"
+  }
+}

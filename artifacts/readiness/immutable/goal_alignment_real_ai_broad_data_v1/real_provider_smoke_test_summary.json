@@ -1,0 +1,73 @@
+{
+  "results": [
+    {
+      "provider_profile": "GROQ_MAIN_REASONER",
+      "provider_name": "groq",
+      "endpoint_host": "api.groq.com",
+      "verified_model_id": "llama-3.3-70b-versatile",
+      "response_schema_version": "nexus_smoke_v1",
+      "request_hash": "7699c823584d3a1e7bb1713b916ca0e58f4e2dd9dc3eabb6dada3b240180195d",
+      "response_hash": "7efd7d1dcb5ea74a31fe970f7cbcccea85a390380d0ffb8d01114ac740557a53",
+      "latency_ms": 396,
+      "input_tokens": 108,
+      "output_tokens": 15,
+      "rate_limit_header_present": true,
+      "result_status": "REAL_API_PASS",
+      "tested_at": "2026-08-03T08:39:04Z",
+      "api_key_env_name": "GROQ_API_KEY_PRIMARY",
+      "api_key_present": true
+    },
+    {
+      "provider_profile": "GROQ_REFLECTION_REASONER",
+      "provider_name": "groq",
+      "endpoint_host": "api.groq.com",
+      "verified_model_id": "llama-3.3-70b-versatile",
+      "response_schema_version": "nexus_smoke_v1",
+      "request_hash": "7699c823584d3a1e7bb1713b916ca0e58f4e2dd9dc3eabb6dada3b240180195d",
+      "response_hash": "7efd7d1dcb5ea74a31fe970f7cbcccea85a390380d0ffb8d01114ac740557a53",
+      "latency_ms": 238,
+      "input_tokens": 108,
+      "output_tokens": 15,
+      "rate_limit_header_present": true,
+      "result_status": "REAL_API_PASS",
+      "tested_at": "2026-08-03T08:39:05Z",
+      "api_key_env_name": "GROQ_API_KEY_SECONDARY",
+      "api_key_present": true
+    },
+    {
+      "provider_profile": "CEREBRAS_RESEARCH_NORMALIZER",
+      "provider_name": "cerebras",
+      "endpoint_host": "api.cerebras.ai",
+      "verified_model_id": "gemma-4-31b",
+      "response_schema_version": "nexus_smoke_v1",
+      "request_hash": "7699c823584d3a1e7bb1713b916ca0e58f4e2dd9dc3eabb6dada3b240180195d",
+      "response_hash": "7efd7d1dcb5ea74a31fe970f7cbcccea85a390380d0ffb8d01114ac740557a53",
+      "latency_ms": 560,
+      "input_tokens": 158,
+      "output_tokens": 12,
+      "rate_limit_header_present": true,
+      "result_status": "REAL_API_PASS",
+      "tested_at": "2026-08-03T08:39:05Z",
+      "api_key_env_name": "CEREBRAS_API_KEY",
+      "api_key_present": true
+    },
+    {
+      "provider_profile": "SAMBANOVA_INDEPENDENT_CRITIC",
+      "provider_name": "sambanova",
+      "endpoint_host": "api.sambanova.ai",
+      "verified_model_id": "Meta-Llama-3.3-70B-Instruct",
+      "response_schema_version": "nexus_smoke_v1",
+      "request_hash": "7699c823584d3a1e7bb1713b916ca0e58f4e2dd9dc3eabb6dada3b240180195d",
+      "response_hash": "7efd7d1dcb5ea74a31fe970f7cbcccea85a390380d0ffb8d01114ac740557a53",
+      "latency_ms": 659,
+      "input_tokens": 128,
+      "output_tokens": 11,
+      "rate_limit_header_present": false,
+      "result_status": "REAL_API_PASS",
+      "tested_at": "2026-08-03T08:39:06Z",
+      "api_key_env_name": "SAMBANOVA_API_KEY",
+      "api_key_present": true
+    }
+  ],
+  "tested_at": "2026-08-03T08:39:06Z"
+}

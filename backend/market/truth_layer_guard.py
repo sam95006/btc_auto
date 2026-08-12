@@ -39,7 +39,11 @@ class TruthLayerGuard:
         )
 
         degraded_contexts = list(truth_layer_status.get("degraded_market_contexts", []) or [])
-        if len(degraded_contexts) > MAX_DEGRADED_CONTEXTS_FOR_FUTURES_AI:
+        degraded_set = {str(item).upper() for item in degraded_contexts}
+        fleet_set = {str(item).upper() for item in fleet_symbols}
+        too_many_degraded = len(degraded_contexts) > MAX_DEGRADED_CONTEXTS_FOR_FUTURES_AI
+        fleet_fully_degraded = bool(fleet_set) and fleet_set.issubset(degraded_set)
+        if too_many_degraded or fleet_fully_degraded:
             futures_ready = False
             stale_reasons.append("too_many_degraded_market_contexts")
 

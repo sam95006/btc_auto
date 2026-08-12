@@ -1,0 +1,720 @@
+{
+  "contract_version": "execution_contract_v1_1",
+  "cost_bridge_sample": [
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0055110",
+        "exit_fee": "0.0055440",
+        "funding_cost": "-0.001002",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0439170",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004020",
+        "spread_cost": "0.002010"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "c183cf375fa6810924c9c839",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0055660",
+        "exit_fee": "0.0055990",
+        "funding_cost": "0.001012",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0417330",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004060",
+        "spread_cost": "0.002030"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "8c996e89cd55499b081e91b9",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0056210",
+        "exit_fee": "0.0056540",
+        "funding_cost": "-0.001022",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0435970",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004100",
+        "spread_cost": "0.002050"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "a4a66e1e6a951b09a8f426a8",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0056760",
+        "exit_fee": "0.0057090",
+        "funding_cost": "0.001032",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0413730",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004140",
+        "spread_cost": "0.002070"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "ee57e3cd3e052743746c0ae6",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0057310",
+        "exit_fee": "0.0057640",
+        "funding_cost": "-0.001042",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0432770",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004180",
+        "spread_cost": "0.002090"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "a7ee030b1db47542f77c5098",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0057860",
+        "exit_fee": "0.0058190",
+        "funding_cost": "0.001052",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0410130",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004220",
+        "spread_cost": "0.002110"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "66acee3d8ba341b42cb34403",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0058410",
+        "exit_fee": "0.0058740",
+        "funding_cost": "-0.001062",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0429570",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004260",
+        "spread_cost": "0.002130"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "c61dfd82c9280e36713f5207",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0058960",
+        "exit_fee": "0.0059290",
+        "funding_cost": "0.001072",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0406530",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004300",
+        "spread_cost": "0.002150"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "bbf64d144c15ec262afa7985",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0059510",
+        "exit_fee": "0.0059840",
+        "funding_cost": "-0.001082",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0426370",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004340",
+        "spread_cost": "0.002170"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "e3d3900c03eceeb33aa8d7b0",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0060060",
+        "exit_fee": "0.0060390",
+        "funding_cost": "0.001092",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0402930",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004380",
+        "spread_cost": "0.002190"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "52bcfae0e2544b6b1ceb62ff",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0060610",
+        "exit_fee": "0.0060940",
+        "funding_cost": "-0.001102",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0423170",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004420",
+        "spread_cost": "0.002210"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "8c33a52f067e3dc2217fc101",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0061160",
+        "exit_fee": "0.0061490",
+        "funding_cost": "0.001112",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0399330",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004460",
+        "spread_cost": "0.002230"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "66be04669fdf9979f3c0a39f",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0061710",
+        "exit_fee": "0.0062040",
+        "funding_cost": "-0.001122",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0419970",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004500",
+        "spread_cost": "0.002250"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "ee0879182db8fb599d165a0d",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0062260",
+        "exit_fee": "0.0062590",
+        "funding_cost": "0.001132",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0395730",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004540",
+        "spread_cost": "0.002270"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "d085f2ccbbe6c261cc83ade7",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0062810",
+        "exit_fee": "0.0063140",
+        "funding_cost": "-0.001142",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0416770",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004580",
+        "spread_cost": "0.002290"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "f2dce9bc02ef4fd2f6143a89",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0063360",
+        "exit_fee": "0.0063690",
+        "funding_cost": "0.001152",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0392130",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004620",
+        "spread_cost": "0.002310"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "8e5151be160775a7b7654896",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0063910",
+        "exit_fee": "0.0064240",
+        "funding_cost": "-0.001162",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0413570",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004660",
+        "spread_cost": "0.002330"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "8f93f7396cf024578ef8b234",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0064460",
+        "exit_fee": "0.0064790",
+        "funding_cost": "0.001172",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0388530",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004700",
+        "spread_cost": "0.002350"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "19694e354997d724bb9e8ef9",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0065010",
+        "exit_fee": "0.0065340",
+        "funding_cost": "-0.001182",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0410370",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004740",
+        "spread_cost": "0.002370"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "6740e5d366b3ff218a8e54b4",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0065560",
+        "exit_fee": "0.0065890",
+        "funding_cost": "0.001192",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0384930",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004780",
+        "spread_cost": "0.002390"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "7f4a0b2e1380aaf57a99a280",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0066110",
+        "exit_fee": "0.0066440",
+        "funding_cost": "-0.001202",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0407170",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004820",
+        "spread_cost": "0.002410"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "d2125f224c7e095144e0de51",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0066660",
+        "exit_fee": "0.0066990",
+        "funding_cost": "0.001212",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0381330",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004860",
+        "spread_cost": "0.002430"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "d16920be2fd556ba6c8d2701",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0067210",
+        "exit_fee": "0.0067540",
+        "funding_cost": "-0.001222",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0403970",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004900",
+        "spread_cost": "0.002450"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "a60985da93811fe855d0c93b",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0067760",
+        "exit_fee": "0.0068090",
+        "funding_cost": "0.001232",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0377730",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004940",
+        "spread_cost": "0.002470"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "c33baadc344fef0b16146853",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "cost_bridge": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "0.0068310",
+        "exit_fee": "0.0068640",
+        "funding_cost": "-0.001242",
+        "gross_pnl": "0.06",
+        "net_pnl": "0.0400770",
+        "partial_fill_cost": "0",
+        "slippage_cost": "0.004980",
+        "spread_cost": "0.002490"
+      },
+      "cost_bridge_ok": true,
+      "position_id": "668c19b64329202d862f536d",
+      "qty": "0.1",
+      "side": "LONG",
+      "symbol": "BTCUSDT"
+    }
+  ],
+  "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+  "counters": {
+    "cancel_replace_count": 0,
+    "cancelled_count": 644,
+    "cost_bridge_failure_count": 0,
+    "duplicate_intent_ignored_count": 323,
+    "duplicate_position_count": 0,
+    "expired_count": 646,
+    "filled_count": 6453,
+    "funding_credit_count": 323,
+    "funding_debit_count": 0,
+    "instrument_halted_count": 323,
+    "min_notional_violation_count": 322,
+    "missing_index_reject_count": 322,
+    "order_created_count": 10002,
+    "partially_filled_count": 461,
+    "position_closed_count": 2259,
+    "position_open_count": 3871,
+    "quantity_step_violation_count": 322,
+    "reduce_only_violation_count": 0,
+    "rejected_count": 2902,
+    "residual_exposure_count": 0,
+    "risk_limit_bypass_count": 0,
+    "same_bar_ambiguous_count": 322,
+    "scenarios_ending_open_position": 1290,
+    "simulated_liquidation_count": 322,
+    "stale_mark_reject_count": 322,
+    "tick_size_violation_count": 322,
+    "unfilled_count": 924
+  },
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "finished_at": "2026-08-05T02:54:10Z",
+  "generated_execution_scenario_count": 10000,
+  "invariants": {
+    "scenarios_ok": 10000,
+    "scenarios_with_violations": 0,
+    "total_violations": 0
+  },
+  "mainnet": false,
+  "real_money": false,
+  "scenario_breakdown": {
+    "cancel_after_partial": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CANCELLED": 322
+      }
+    },
+    "cancel_before_fill": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CANCELLED": 322
+      }
+    },
+    "cross_margin_attempt": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 322
+      }
+    },
+    "duplicate_intent": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "DUPLICATE_IGNORED": 323
+      }
+    },
+    "expired_limit_gtc_short": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "EXPIRED": 323
+      }
+    },
+    "fok_partial_reject": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 229,
+        "UNFILLED": 94
+      }
+    },
+    "full_close": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CLOSED": 322
+      }
+    },
+    "funding_credit": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 323
+      }
+    },
+    "funding_debit": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CLOSED": 322
+      }
+    },
+    "instrument_halted": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 323
+      }
+    },
+    "ioc_no_fill": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "EXPIRED": 323
+      }
+    },
+    "leverage_100_attempt": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 323
+      }
+    },
+    "liquidation_distance_reject": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "LIQUIDATED_SIMULATED": 322
+      }
+    },
+    "market_buy": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CLOSED": 322
+      }
+    },
+    "market_sell": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CLOSED": 322
+      }
+    },
+    "marketable_limit_buy": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 323
+      }
+    },
+    "marketable_limit_sell": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 322
+      }
+    },
+    "min_notional_violation": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 322
+      }
+    },
+    "missing_index_price": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 322
+      }
+    },
+    "non_marketable_limit_buy": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "UNFILLED": 323
+      }
+    },
+    "non_marketable_limit_sell": {
+      "count": 324,
+      "invariant_violations": 0,
+      "outcomes": {
+        "UNFILLED": 324
+      }
+    },
+    "partial_fill_market": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 322
+      }
+    },
+    "position_reduction": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 323
+      }
+    },
+    "quantity_step_violation": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 322
+      }
+    },
+    "reduce_only_violation": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 323
+      }
+    },
+    "risk_override_attempt": {
+      "count": 323,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 323
+      }
+    },
+    "same_bar_stop_target": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "BLOCKED_AMBIGUOUS": 322
+      }
+    },
+    "stale_mark_price": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 322
+      }
+    },
+    "stop_market_arm": {
+      "count": 324,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 324
+      }
+    },
+    "take_profit_market_arm": {
+      "count": 324,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 324
+      }
+    },
+    "tick_size_violation": {
+      "count": 322,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 322
+      }
+    }
+  },
+  "schema": "autonomous_execution_simulator_v1_1_fuzz",
+  "seed": 20260805,
+  "simulator_version": "autonomous_execution_simulator_v1_1",
+  "started_at": "2026-08-05T02:54:09Z"
+}

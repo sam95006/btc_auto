@@ -11,6 +11,7 @@ import { MarketParityStrip } from "./MarketParityStrip";
 import type { MarketCandidate } from "../market/scannerApi";
 import { buildFunnelDisplay, NO_DATA } from "../wave4/noDataFunnel";
 import { portfolioLeverageBadge } from "../wave4/fixedLeverageLabels";
+import { useRealShadowRuntime } from "../wave5/useRealShadowRuntime";
 
 function TickerChip({ symbol }: { symbol: "BTC" | "ETH" | "SOL" }) {
   const live = useLivePrice(symbol);
@@ -43,6 +44,7 @@ function top3(longs: MarketCandidate[], shorts: MarketCandidate[]): MarketCandid
 export function ProductSimpleView() {
   const { status, longs, shorts, events, loading, error } = useMarketScannerOverview();
   const anomalies = useMarketAnomalies();
+  const { status: shadowRt, hasRealData: hasShadowRt } = useRealShadowRuntime();
 
   const pulse = useMemo(
     () => ({
@@ -99,22 +101,34 @@ export function ProductSimpleView() {
       .slice(0, 5);
   }, [anomalies, events, longs, shorts]);
 
-  const funnel = buildFunnelDisplay(
-    [
-      { key: "scanned", label: "掃描", value: status?.symbolCount },
-      { key: "eligible", label: "合格", value: status?.confirmedCandidates },
-      {
-        key: "candidates",
-        label: "候選",
-        value: (() => {
-          const n = (status?.longCandidates ?? 0) + (status?.shortCandidates ?? 0);
-          return n > 0 ? n : undefined;
-        })(),
-      },
-      { key: "risk", label: "高風險", value: status?.highRiskCandidates },
-    ],
-    Boolean(status) && !loading,
-  );
+  const funnel = hasShadowRt
+    ? buildFunnelDisplay(
+        [
+          { key: "scanned", label: "掃描", value: shadowRt?.funnel?.marketsScanned },
+          { key: "eligible", label: "合格", value: shadowRt?.funnel?.marketsEligible },
+          { key: "candidates", label: "候選", value: shadowRt?.funnel?.candidatesGenerated },
+          { key: "sixRole", label: "六角色", value: shadowRt?.funnel?.sixRoleReviewed },
+          { key: "riskPass", label: "風控通過", value: shadowRt?.funnel?.riskCriticPassed },
+          { key: "selected", label: "入選", value: shadowRt?.funnel?.portfolioSelected },
+        ],
+        true,
+      )
+    : buildFunnelDisplay(
+        [
+          { key: "scanned", label: "掃描", value: status?.symbolCount },
+          { key: "eligible", label: "合格", value: status?.confirmedCandidates },
+          {
+            key: "candidates",
+            label: "候選",
+            value: (() => {
+              const n = (status?.longCandidates ?? 0) + (status?.shortCandidates ?? 0);
+              return n > 0 ? n : undefined;
+            })(),
+          },
+          { key: "risk", label: "高風險", value: status?.highRiskCandidates },
+        ],
+        Boolean(status) && !loading,
+      );
 
   const posture =
     (status?.highRiskCandidates ?? 0) > 3
@@ -173,9 +187,13 @@ export function ProductSimpleView() {
       <section className="nx-p7-block w4-col-4" aria-label="Portfolio risk" data-testid="portfolio-risk">
         <h2 className="nx-sec-title">Portfolio／Risk</h2>
         <span className="w4-leverage-badge">{portfolioLeverageBadge()}</span>
-        <p className="muted sm">Shadow 0／2 · Pending 0／2</p>
         <p className="muted sm">
-          高風險候選 {status?.highRiskCandidates ?? NO_DATA} · <Link to="/portfolio">組合 →</Link>
+          Shadow {hasShadowRt ? (shadowRt?.funnel?.openShadowPositions ?? 0) : 0}／
+          {shadowRt?.max_open ?? 2} · NOT EXECUTED
+        </p>
+        <p className="muted sm">
+          {hasShadowRt ? "PUBLIC MARKET DATA · SHADOW" : `高風險候選 ${status?.highRiskCandidates ?? NO_DATA}`}{" "}
+          · <Link to="/portfolio">組合 →</Link>
         </p>
       </section>
 
@@ -232,7 +250,9 @@ export function ProductSimpleView() {
       <section className="nx-p7-block w4-col-12 w4-dq-strip" aria-label="Data quality summary" data-testid="data-quality">
         <p className="sm">
           核心市場資料{error ? "降級" : "正常"} · 外部來源離線提示 {dqOfflineHint} · 新鮮度{" "}
-          {status?.freshness || NO_DATA} · <Link to="/provider-shadow">Provider Health →</Link>
+          {(hasShadowRt ? shadowRt?.freshness : status?.freshness) || NO_DATA}
+          {hasShadowRt ? " · REAL_PUBLIC_SHADOW_RUNTIME" : ""} ·{" "}
+          <Link to="/provider-shadow">Provider Health →</Link>
         </p>
         <details>
           <summary className="muted sm">展開 Provider 診斷</summary>

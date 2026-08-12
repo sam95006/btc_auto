@@ -1,0 +1,11 @@
+{
+  "proofs_passed": 8,
+  "proofs_total": 8,
+  "invariants_passed": 3,
+  "invariants_total": 3,
+  "exchange_write_attempt_count": 0,
+  "demo_order_count": 0,
+  "mainnet_attempt_count": 0,
+  "silent_recovery_guess_count": 0,
+  "PR27_merged": false
+}

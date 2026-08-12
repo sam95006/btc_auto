@@ -1,0 +1,18 @@
+{
+  "created_at": "2026-08-05T15:24:04Z",
+  "data_lineage": "FIXTURE_NOT_REAL",
+  "development_interval_id": "FIXTURE_NOT_REAL_DEV_REAL_HISTORICAL_V15C_2026_04_04_TO_2026_08_02",
+  "fixture_never_called_real": true,
+  "fixture_used": true,
+  "oos_consumed": false,
+  "panel_digest": "221e60c672980e5633927185b8f3f365f0dd775a3a37c31707c6514f7fdde901",
+  "provenance": {
+    "data_lineage": "FIXTURE_NOT_REAL",
+    "fixture_synthetic": true,
+    "never_call_fixture_real": true,
+    "note": "Real historical fetch unavailable or incomplete; fixture labeled NOT REAL.",
+    "seed": 20260805,
+    "series_digest": "c7a3c979a24f2f113bdc29805adb4b15c5a91c4d2ebf5e402bd637d50cdce2d8"
+  },
+  "schema": "v15_c_data_provenance"
+}

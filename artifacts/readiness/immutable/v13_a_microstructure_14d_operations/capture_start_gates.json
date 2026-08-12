@@ -1,0 +1,48 @@
+{
+  "schema": "microstructure_operations_v13_a_capture_start_gates",
+  "decision": "DRY_RUN_ONLY",
+  "live_capture_started": false,
+  "live_capture_would_start": false,
+  "enable_live_capture": false,
+  "coordinator_authorized": false,
+  "all_hard_gates_passed": true,
+  "gate_results": {
+    "disk_floor_ge_100_gib": {
+      "required": true,
+      "passed": true,
+      "detail": {
+        "schema": "microstructure_operations_v13_a_minimum_free_disk",
+        "path": "D:\\",
+        "free_bytes": 235040759808,
+        "free_gib": 218.899,
+        "minimum_free_disk_bytes": 107374182400,
+        "minimum_free_disk_gib": 100.0,
+        "status": "PASS",
+        "passed": true
+      }
+    },
+    "previous_campaign_finalized": {
+      "required": true,
+      "passed": true
+    },
+    "storage_hard_cap_40_gib_configured": {
+      "required": true,
+      "passed": true,
+      "hard_cap_bytes": 42949672960
+    },
+    "preflight_synthetic_passed": {
+      "required": true,
+      "passed": true
+    },
+    "coordinator_authorized_for_live": {
+      "required_for_live": true,
+      "passed": false,
+      "note": "This agent lane never sets this true."
+    }
+  },
+  "blockers": [],
+  "event_study_readiness_status": "NOT_READY",
+  "event_study_real_execution": false,
+  "exchange_write_attempt_count": 0,
+  "note": "Live collector launch is Coordinator-only after synthetic preflight PASS. V13-A agent keeps live_capture_started=false."
+}

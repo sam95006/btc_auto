@@ -1,0 +1,241 @@
+# Founder-approved READ-ONLY Unified Control Plane deploy.
+# Does NOT overwrite Stage3 (6a3b81652fdef84a45a2a553) or Demo Validation (6a69ad539949111176cefe63).
+
+name: founder-approved-control-plane-deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type DEPLOY_UNIFIED_NEXUS_CONTROL_PLANE"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: founder-control-plane-deploy
+  cancel-in-progress: false
+
+env:
+  SERVICE_NAME: nexus-unified-control-plane
+  FORBIDDEN_STAGE3: 6a3b81652fdef84a45a2a553
+  FORBIDDEN_VALIDATION: 6a69ad539949111176cefe63
+  ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+  STAGE3_URL: https://nexus-stage3-bybit-demo-learning.zeabur.app
+  DEMO_VAL_URL: https://nexus-bybit-demo-val.zeabur.app
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [ "${{ github.event.inputs.confirm }}" != "DEPLOY_UNIFIED_NEXUS_CONTROL_PLANE" ]; then
+            echo "Confirmation mismatch"
+            exit 1
+          fi
+
+  tests:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/unified-nexus-control-plane
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt flask pytest
+      - run: python -m pytest tests/test_unified_nexus_control_plane.py -q --tb=line
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+  deploy:
+    needs: [validate, tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/unified-nexus-control-plane
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i -g zeabur@latest
+
+      - name: Resolve or create control-plane service
+        id: svc
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur context set project --id "$ZEABUR_PROJECT_ID" -y -i=false || true
+          # Prefer existing service by name
+          set +e
+          LIST=$(zeabur service list --json -i=false 2>/tmp/svc_list.txt)
+          set -e
+          SID=$(python - <<'PY'
+          import json,os,sys
+          raw=open('/tmp/svc_list.txt','r',encoding='utf-8',errors='replace').read()
+          # try parse any JSON array in output
+          start=raw.find('['); end=raw.rfind(']')
+          data=[]
+          if start>=0 and end>start:
+            try: data=json.loads(raw[start:end+1])
+            except Exception: data=[]
+          name=os.environ.get('SERVICE_NAME','nexus-unified-control-plane')
+          for s in data if isinstance(data,list) else []:
+            if isinstance(s,dict) and s.get('name')==name:
+              print(s.get('id') or s.get('_id') or ''); break
+          PY
+          )
+          if [ -z "$SID" ]; then
+            set +e
+            zeabur service create --name "$SERVICE_NAME" -i=false --json > /tmp/svc_create.txt 2>&1
+            set -e
+            SID=$(python - <<'PY'
+          import json,re
+          raw=open('/tmp/svc_create.txt',encoding='utf-8',errors='replace').read()
+          m=re.search(r'"id"\s*:\s*"([a-f0-9]{24})"', raw)
+          print(m.group(1) if m else '')
+          PY
+            )
+          fi
+          if [ -z "$SID" ] || [ "$SID" = "$FORBIDDEN_STAGE3" ] || [ "$SID" = "$FORBIDDEN_VALIDATION" ]; then
+            echo "BLOCKER: bad service id"
+            exit 1
+          fi
+          echo "service_id=$SID" >> "$GITHUB_OUTPUT"
+          echo "resolved=$SID"
+
+      - name: Set read-only env vars
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          SERVICE_ID: ${{ steps.svc.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          SHA=$(git rev-parse HEAD)
+          for kv in \
+            "CONTROL_PLANE=true" \
+            "CONTROL_PLANE_READ_ONLY=true" \
+            "EXCHANGE_WRITE=false" \
+            "MAINNET=false" \
+            "REAL_MONEY=false" \
+            "DEMO_AUTONOMOUS_ENABLED=false" \
+            "AUTONOMOUS_SEND=false" \
+            "BYBIT_DEMO=true" \
+            "NEXUS_WEB_ONLY=true" \
+            "NEXUS_EMBEDDED_WORKER=false" \
+            "FIXED_LEVERAGE=25" \
+            "NEXUS_STAGE3_URL=${STAGE3_URL}" \
+            "NEXUS_MARKET_INTELLIGENCE_URL=${STAGE3_URL}" \
+            "NEXUS_DEMO_VALIDATION_URL=${DEMO_VAL_URL}" \
+            "NEXUS_DEMO_EXECUTION_URL=${DEMO_VAL_URL}" \
+            "NEXUS_CONTROL_PLANE_SHA=${SHA}" \
+            "NEXUS_PR6_BRANCH_HEAD=2a647695e9cc6f90d54a92ce5c35fd8de3000aea" \
+            "NEXUS_OBSERVATION_CODE_SHA=9b6f57c1bc3afe988f0fc3829f62dad2ee510156" \
+            "NEXUS_OBSERVATION_DEPLOY_RUN=30509623012" \
+            "NEXUS_DATA_DIR=/tmp/nexus_control_plane" \
+            "PORT=8080"
+          do
+            KEY="${kv%%=*}"
+            VAL="${kv#*=}"
+            zeabur variable upsert --key "$KEY" --value "$VAL" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || \
+            zeabur variable create --key "$KEY" --value "$VAL" --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || true
+          done
+
+      - name: Build frontend + slim deploy context
+        run: |
+          set -euo pipefail
+          cd frontend && npm ci && npm run build && cd ..
+          CTX=/tmp/control_plane_ctx
+          rm -rf "$CTX" && mkdir -p "$CTX"
+          cp app.py run.py gunicorn.conf.py zbpack.json requirements.txt "$CTX/" || true
+          cp -r backend config static templates "$CTX/"
+          mkdir -p "$CTX/static/operator_ui"
+          cp -r frontend/dist/* "$CTX/static/operator_ui/" || true
+          cp deploy/zeabur_unified_control_plane/Dockerfile "$CTX/Dockerfile"
+          echo "ctx_files=$(find "$CTX" | wc -l)"
+
+      - name: Deploy
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          SERVICE_ID: ${{ steps.svc.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          (
+            cd /tmp/control_plane_ctx
+            zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json
+          ) > /tmp/deploy_out.txt 2>&1
+          sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/deploy_out.txt | tail -n 60
+          # restart optional
+          zeabur service restart --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false || true
+          sleep 50
+
+      - name: Domain
+        id: domain
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          SERVICE_ID: ${{ steps.svc.outputs.service_id }}
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          set +e
+          zeabur domain list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/dom.txt 2>&1
+          set -e
+          URL=$(python - <<'PY'
+          import re
+          raw=open('/tmp/dom.txt',encoding='utf-8',errors='replace').read()
+          m=re.search(r'https://[a-z0-9.-]+\.zeabur\.app', raw)
+          print(m.group(0) if m else '')
+          PY
+          )
+          if [ -z "$URL" ]; then
+            set +e
+            zeabur domain create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -g --domain nexus-unified-control-plane -y -i=false --json > /tmp/domc.txt 2>&1
+            set -e
+            URL=$(python - <<'PY'
+          import re
+          raw=open('/tmp/domc.txt',encoding='utf-8',errors='replace').read()
+          m=re.search(r'https://[a-z0-9.-]+\.zeabur\.app', raw)
+          print(m.group(0) if m else 'https://nexus-unified-control-plane.zeabur.app')
+          PY
+            )
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "bound=$URL"
+
+      - name: Smoke
+        env:
+          BASE: ${{ steps.domain.outputs.url }}
+        run: |
+          set -euo pipefail
+          BASE="${BASE:-https://nexus-unified-control-plane.zeabur.app}"
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -sS -o /tmp/h.json -w "%{http_code}" "$BASE/health" || echo 000)
+            echo "health_try=$i code=$code"
+            [ "$code" = "200" ] && break
+            sleep 15
+          done
+          test "$code" = "200"
+          curl -fsS "$BASE/api/nexus/control-plane/overview" | tee /tmp/ov.json | head -c 500
+          python - <<'PY'
+          import json
+          ov=json.load(open('/tmp/ov.json'))
+          assert ov.get('exchange_write') is False
+          assert ov.get('mainnet') is False
+          assert ov.get('real_money') is False
+          body=ov.get('overview') or {}
+          mode=body.get('system_mode') or {}
+          assert mode.get('execution_owner')=='DEMO_VALIDATION_SERVICE' or body.get('ownership')
+          print('smoke_ok')
+          PY
+          echo "CONTROL_PLANE_URL=$BASE" >> "$GITHUB_STEP_SUMMARY"

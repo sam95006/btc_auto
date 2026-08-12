@@ -1,0 +1,16 @@
+{
+  "schema": "accumulation_readiness",
+  "event_study_readiness_status": "NOT_READY",
+  "proposal_minimum_before_event_study": {
+    "calendar_days": 14,
+    "complete_utc_day_coverage": true,
+    "symbol_diversity_min": 25,
+    "liquidation_events_min": 500,
+    "integrity_status_required": "PASS",
+    "note": "Founder approval required; not met in this task"
+  },
+  "families": [
+    "AGGRESSIVE_TRADE_FLOW",
+    "LIQUIDATION_EVENTS"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "cancel_replace": true,
+  "checkpoint_corruption": true,
+  "clock_rollback": true,
+  "disk_pressure": true,
+  "kill_switch": true,
+  "ledger_interrupt": true,
+  "lesson_interrupt": true,
+  "multi_regime": true,
+  "multi_symbol": true,
+  "partial_fills": true,
+  "provider_outage": true,
+  "qualification_blocks": true,
+  "reflection_interrupt": true,
+  "restart_recovery": true
+}

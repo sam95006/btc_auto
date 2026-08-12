@@ -1,0 +1,285 @@
+{
+  "status": "PASS",
+  "passed": 16,
+  "total": 16,
+  "results": [
+    {
+      "injection": "power_loss",
+      "expected": "CORRUPTION_DETECTED",
+      "actual": "CORRUPTION_DETECTED",
+      "passed": true,
+      "detail": {
+        "status": "RECOVERED_LAST_KNOWN_GOOD",
+        "detail": {
+          "generation": 1,
+          "event_count": 20,
+          "max_sequence": 20,
+          "live_ok_before": false,
+          "latency_s": 0.03251100000034057
+        },
+        "assessment": {
+          "assessed_at": "2026-08-05T03:36:33Z",
+          "exchange_write_attempt_count": 0,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "silent_recovery_guess": false,
+          "evidence_loss_claimed_without_proof": false,
+          "live": {
+            "corruption_detection_status": "CORRUPTION_DETECTED",
+            "error": "database disk image is malformed"
+          },
+          "status": "CORRUPTION_DETECTED",
+          "recommendation": "RESTORE_LKG_OR_BLOCK"
+        },
+        "exchange_write_attempt_count": 0,
+        "silent_recovery_guess": false,
+        "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+        "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+        "old_trading_db_recovered": false,
+        "wallet_delta_attribution_changed": false,
+        "evidence_loss_claimed_without_proof": false
+      }
+    },
+    {
+      "injection": "partial_write",
+      "expected": "CORRUPTION_DETECTED",
+      "actual": "CORRUPTION_DETECTED",
+      "passed": true,
+      "detail": {
+        "status": "RECOVERED_LAST_KNOWN_GOOD",
+        "detail": {
+          "generation": 1,
+          "event_count": 20,
+          "max_sequence": 20,
+          "live_ok_before": false,
+          "latency_s": 0.034753299999465526
+        },
+        "assessment": {
+          "assessed_at": "2026-08-05T03:36:33Z",
+          "exchange_write_attempt_count": 0,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "silent_recovery_guess": false,
+          "evidence_loss_claimed_without_proof": false,
+          "live": {
+            "corruption_detection_status": "CORRUPTION_DETECTED",
+            "error": "database disk image is malformed"
+          },
+          "status": "CORRUPTION_DETECTED",
+          "recommendation": "RESTORE_LKG_OR_BLOCK"
+        },
+        "exchange_write_attempt_count": 0,
+        "silent_recovery_guess": false,
+        "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+        "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+        "old_trading_db_recovered": false,
+        "wallet_delta_attribution_changed": false,
+        "evidence_loss_claimed_without_proof": false
+      }
+    },
+    {
+      "injection": "fsync_interruption",
+      "expected": "FSYNC_INTERRUPTED_OR_BLOCKED",
+      "actual": "FSYNC_INTERRUPTED_OR_BLOCKED",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "injection": "truncation",
+      "expected": "CORRUPTION_DETECTED",
+      "actual": "CORRUPTION_DETECTED",
+      "passed": true,
+      "detail": {
+        "status": "RECOVERED_LAST_KNOWN_GOOD",
+        "detail": {
+          "generation": 1,
+          "event_count": 20,
+          "max_sequence": 20,
+          "live_ok_before": false,
+          "latency_s": 0.03258000000005268
+        },
+        "assessment": {
+          "assessed_at": "2026-08-05T03:36:34Z",
+          "exchange_write_attempt_count": 0,
+          "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+          "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+          "old_trading_db_recovered": false,
+          "wallet_delta_attribution_changed": false,
+          "silent_recovery_guess": false,
+          "evidence_loss_claimed_without_proof": false,
+          "live": {
+            "corruption_detection_status": "CORRUPTION_DETECTED",
+            "error": "database disk image is malformed"
+          },
+          "status": "CORRUPTION_DETECTED",
+          "recommendation": "RESTORE_LKG_OR_BLOCK"
+        },
+        "exchange_write_attempt_count": 0,
+        "silent_recovery_guess": false,
+        "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+        "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+        "old_trading_db_recovered": false,
+        "wallet_delta_attribution_changed": false,
+        "evidence_loss_claimed_without_proof": false
+      }
+    },
+    {
+      "injection": "bit_corruption",
+      "expected": "CORRUPTION_DETECTED",
+      "actual": "CORRUPTION_DETECTED",
+      "passed": true,
+      "detail": {
+        "corruption_detection_status": "CORRUPTION_DETECTED",
+        "integrity_check": "ok",
+        "ledger_hash_chain_status": "PASS",
+        "event_count": 20,
+        "payload_hash_mismatch": true
+      }
+    },
+    {
+      "injection": "hash_chain_corruption",
+      "expected": "CORRUPTION_DETECTED",
+      "actual": "CORRUPTION_DETECTED",
+      "passed": true,
+      "detail": {
+        "ledger_hash_chain_status": "CORRUPTION_DETECTED",
+        "reason": "hash_mismatch",
+        "broken_at_sequence": 1
+      }
+    },
+    {
+      "injection": "snapshot_corruption",
+      "expected": "CORRUPTION_DETECTED",
+      "actual": "CORRUPTION_DETECTED",
+      "passed": true,
+      "detail": {
+        "reason": "snapshot_checksum_mismatch",
+        "expected": "e5915c9d90d4db2ca9cb1001ead86f95a8a9461f4de05d39d9b10c8773b822c9",
+        "actual": "0733f0867902d4b5735eec58953d9f9c1cef4b690197552f2d4b4fcae5c9b518"
+      }
+    },
+    {
+      "injection": "latest_missing",
+      "expected": "BLOCKED_AMBIGUOUS_STATE",
+      "actual": "BLOCKED_AMBIGUOUS_STATE",
+      "passed": true,
+      "detail": {
+        "reason": "latest_snapshot_missing",
+        "pointer": {
+          "generation": 1,
+          "created_at": "2026-08-05T03:36:34Z",
+          "source_ledger_position": 20,
+          "max_sequence": 20,
+          "snapshot_checksum": "7be2d3559c492ba9fa7e7aff9294c72e747db6c54c1ad72aa379a8f3f7e33401",
+          "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_dur_v2_df63qa2e\\matrix\\latest_missing\\durability\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+          "ledger_hash_chain_status": "PASS",
+          "schema": "durability_v2"
+        }
+      }
+    },
+    {
+      "injection": "lkg_corruption",
+      "expected": "CORRUPTION_DETECTED",
+      "actual": "CORRUPTION_DETECTED",
+      "passed": true,
+      "detail": {
+        "reason": "snapshot_checksum_mismatch",
+        "expected": "0000000000000000000000000000000000000000000000000000000000000000",
+        "actual": "4117241b5f9e21b80775b9490f8a31f993ec9d5caa11e43acda56e9207b0b524"
+      }
+    },
+    {
+      "injection": "concurrent_append",
+      "expected": "PASS",
+      "actual": "PASS",
+      "passed": true,
+      "detail": {
+        "status": "PASS",
+        "event_count": 260,
+        "expected_min_new": 240,
+        "chain": {
+          "ledger_hash_chain_status": "PASS",
+          "event_count": 260
+        },
+        "errors": []
+      }
+    },
+    {
+      "injection": "duplicate_event",
+      "expected": "PASS",
+      "actual": "PASS",
+      "passed": true,
+      "detail": {
+        "status": "PASS",
+        "first": "APPENDED",
+        "second": "DUPLICATE_IGNORED",
+        "event_count": 21
+      }
+    },
+    {
+      "injection": "out_of_order",
+      "expected": "PASS",
+      "actual": "PASS",
+      "passed": true,
+      "detail": {
+        "status": "PASS",
+        "sequences": [
+          21,
+          22
+        ],
+        "chain": {
+          "ledger_hash_chain_status": "PASS",
+          "event_count": 22
+        }
+      }
+    },
+    {
+      "injection": "clock_rollback",
+      "expected": "PASS",
+      "actual": "PASS",
+      "passed": true,
+      "detail": {
+        "status": "PASS",
+        "first": "APPENDED",
+        "second": "BLOCKED_CLOCK_ROLLBACK",
+        "second_reason": "wall=1699996400.0 last=1700000000.0"
+      }
+    },
+    {
+      "injection": "disk_soft_limit",
+      "expected": "DISK_LIMIT_BLOCKED",
+      "actual": "DISK_LIMIT_BLOCKED",
+      "passed": true,
+      "detail": {
+        "kind": "disk_soft_limit",
+        "used": 69895,
+        "limit": 1
+      }
+    },
+    {
+      "injection": "disk_hard_limit",
+      "expected": "DISK_LIMIT_BLOCKED",
+      "actual": "DISK_LIMIT_BLOCKED",
+      "passed": true,
+      "detail": {
+        "kind": "disk_hard_limit",
+        "used": 69895,
+        "limit": 1
+      }
+    },
+    {
+      "injection": "process_kill_during_checkpoint",
+      "expected": "CHECKPOINT_INTERRUPTED",
+      "actual": "CHECKPOINT_INTERRUPTED",
+      "passed": true,
+      "detail": {
+        "reason": "process_kill_during_checkpoint",
+        "partial_marker": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_dur_v2_df63qa2e\\matrix\\process_kill_during_checkpoint\\durability\\checkpoint_partial.marker"
+      }
+    }
+  ]
+}

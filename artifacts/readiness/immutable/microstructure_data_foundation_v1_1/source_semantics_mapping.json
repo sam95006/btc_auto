@@ -1,0 +1,55 @@
+{
+  "schema": "source_semantics_mapping",
+  "aggressor_side_semantics_status": "AGGRESSOR_SIDE_SEMANTICS_VERIFIED",
+  "official_source_mapping_count": 5,
+  "verified_source_mapping_count": 3,
+  "unverified_source_mapping_count": 1,
+  "mappings": [
+    {
+      "source_topic": "publicTrade.{symbol}",
+      "source_field": "S",
+      "canonical_field": "aggressor_side",
+      "documented_semantics": "Side of taker. Buy, Sell",
+      "documentation_checked_at": "2026-08-04T05:37:00Z",
+      "documentation_url": "https://bybit-exchange.github.io/docs/v5/websocket/public/trade",
+      "mapping_status": "VERIFIED"
+    },
+    {
+      "source_topic": "publicTrade.{symbol}",
+      "source_field": "i",
+      "canonical_field": "trade_id",
+      "documented_semantics": "Trade ID",
+      "documentation_checked_at": "2026-08-04T05:37:00Z",
+      "documentation_url": "https://bybit-exchange.github.io/docs/v5/websocket/public/trade",
+      "mapping_status": "VERIFIED"
+    },
+    {
+      "source_topic": "publicTrade.{symbol}",
+      "source_field": "T",
+      "canonical_field": "exchange_timestamp",
+      "documented_semantics": "Timestamp (ms) that the order is filled",
+      "documentation_checked_at": "2026-08-04T05:37:00Z",
+      "documentation_url": "https://bybit-exchange.github.io/docs/v5/websocket/public/trade",
+      "mapping_status": "VERIFIED"
+    },
+    {
+      "source_topic": "publicTrade.{symbol}",
+      "source_field": "seq",
+      "canonical_field": "cross_sequence",
+      "documented_semantics": "cross sequence; multiple messages may share seq",
+      "documentation_checked_at": "2026-08-04T05:37:00Z",
+      "documentation_url": "https://bybit-exchange.github.io/docs/v5/websocket/public/trade",
+      "mapping_status": "VERIFIED_NOT_STRICT_GAP_SOURCE"
+    },
+    {
+      "source_topic": "allLiquidation.{symbol}",
+      "source_field": "S",
+      "canonical_field": "liquidation_side",
+      "documented_semantics": "Position side of the liquidated position when documented",
+      "documentation_checked_at": "2026-08-04T05:37:00Z",
+      "documentation_url": "https://bybit-exchange.github.io/docs/v5/websocket/public/all-liquidation",
+      "mapping_status": "BEST_EFFORT"
+    }
+  ],
+  "note": "publicTrade.S is Side of taker per official Bybit V5 docs; mapped to AGGRESSOR_BUY/SELL"
+}

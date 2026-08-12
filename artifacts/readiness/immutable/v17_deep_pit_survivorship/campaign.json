@@ -1,0 +1,779 @@
+{
+  "HEAD": "b3806ce70b6a7dffbc1d04e3a6134288874e2ddc",
+  "attack_count": 89,
+  "base": "a43317e2f85afde75e850ffa4ef465c834fd7a6a",
+  "blocked_count": 89,
+  "branch": "feature/v17-deep-pit-survivorship-attacks",
+  "campaign_checksum": "582f55c3227e646e132e7d5cdd5dd12d7662d9bbe175300095823d82f5017cad",
+  "coverage_areas": [
+    "property_mutation_as_known_at_revision",
+    "timestamp_boundary_dst_utc",
+    "cross_exchange_symbol_collision",
+    "listing_delisting_survivorship",
+    "future_leakage_redteam_expansion"
+  ],
+  "exchange_write": false,
+  "exchange_write_attempt_count": 0,
+  "fixture_only": true,
+  "formal_wf_executed": false,
+  "generated_at": "2026-08-06T02:36:00Z",
+  "hard_ban_inventory": {
+    "exchange_write": false,
+    "formal_walk_forward": false,
+    "hard_bans": [
+      "no_real_money",
+      "no_mainnet",
+      "no_exchange_write",
+      "no_formal_walk_forward",
+      "no_untouched_oos",
+      "no_pr26_merge",
+      "no_pr27_merge",
+      "no_acceleration_report_edit",
+      "no_auto_integrate",
+      "no_future_leakage",
+      "no_research_query_without_as_known_at",
+      "no_today_revision_for_past_backtest",
+      "no_today_survivors_for_whole_history",
+      "no_pre_listing_data",
+      "no_ignoring_delistings",
+      "no_current_liquidity_substitution",
+      "no_collapse_cross_exchange_symbols",
+      "no_collapse_spot_perp_identity",
+      "no_symbol_only_identity",
+      "no_tz_local_as_known_at",
+      "no_leap_second_aware_claim"
+    ],
+    "leap_second_policy": "UTC_CONTINUOUS_EPOCH_MS_NO_LEAP_SECOND_TABLE",
+    "mainnet": false,
+    "pr26_merged": false,
+    "pr27_merged": false,
+    "real_money": false,
+    "report_edited": false,
+    "untouched_oos": false
+  },
+  "hard_bans": [
+    "no_real_money",
+    "no_mainnet",
+    "no_exchange_write",
+    "no_formal_walk_forward",
+    "no_untouched_oos",
+    "no_pr26_merge",
+    "no_pr27_merge",
+    "no_acceleration_report_edit",
+    "no_auto_integrate",
+    "no_future_leakage",
+    "no_research_query_without_as_known_at",
+    "no_today_revision_for_past_backtest",
+    "no_today_survivors_for_whole_history",
+    "no_pre_listing_data",
+    "no_ignoring_delistings",
+    "no_current_liquidity_substitution",
+    "no_collapse_cross_exchange_symbols",
+    "no_collapse_spot_perp_identity",
+    "no_symbol_only_identity",
+    "no_tz_local_as_known_at",
+    "no_leap_second_aware_claim"
+  ],
+  "lane": "V17-DEEP-PIT-SURVIVORSHIP",
+  "lane_name": "PIT_SURVIVORSHIP_SYMBOL_COLLISION_ATTACKS",
+  "mainnet": false,
+  "mainnet_client_count": 0,
+  "module_schema": "v17_deep_pit_survivorship_v1",
+  "non_claims": [
+    "No formal Walk-Forward executed",
+    "No OOS consumption or sealed OOS metrics claimed",
+    "No exchange/mainnet/real-money capability",
+    "Synthetic fixtures only — not live market ingestion",
+    "Leap-second handling is UTC continuous epoch-ms (no leap-second table)"
+  ],
+  "oos_claimed": false,
+  "owned_paths": [
+    "backend/nexus_deep_pit_survivorship/",
+    "tests/deep_pit_survivorship/",
+    "tools/research/run_deep_pit_survivorship.py",
+    "artifacts/readiness/immutable/v17_deep_pit_survivorship/"
+  ],
+  "package": "backend.nexus_deep_pit_survivorship",
+  "passed": true,
+  "pr26_touched": false,
+  "pr27_touched": false,
+  "program_id": "NEXUS_V17_DEEP_PIT_SURVIVORSHIP",
+  "property_case_count": 316,
+  "real_market_data": false,
+  "real_money": false,
+  "report_edited": false,
+  "schema": "v17_deep_pit_survivorship_campaign_v1",
+  "sections": {
+    "axis_mutation": {
+      "attack_id": "mutate_revision_axes_past_aka",
+      "blocked": true,
+      "blocked_count": 3,
+      "detail": "axis_mutations_checked",
+      "survivor": false,
+      "survivors": []
+    },
+    "future_leakage": {
+      "attack_count": 22,
+      "base": {
+        "attack_count": 12,
+        "blocked_count": 12,
+        "pass": true,
+        "survivor_count": 0,
+        "survivors": []
+      },
+      "blocked_count": 22,
+      "expanded": {
+        "attack_count": 10,
+        "blocked_count": 10,
+        "findings": [
+          {
+            "attack_id": "expand_negative_as_known_at",
+            "blocked": true,
+            "detail": "no_research_query_without_as_known_at: AS_KNOWN_AT timestamp is mandatory",
+            "status": "REJECTED",
+            "survivor": false
+          },
+          {
+            "attack_id": "expand_zero_as_known_at",
+            "blocked": true,
+            "detail": "no_research_query_without_as_known_at: AS_KNOWN_AT timestamp is mandatory",
+            "status": "REJECTED",
+            "survivor": false
+          },
+          {
+            "attack_id": "expand_dict_none_as_known_at",
+            "blocked": true,
+            "detail": "no_research_query_without_as_known_at: AS_KNOWN_AT timestamp is mandatory",
+            "status": "REJECTED",
+            "survivor": false
+          },
+          {
+            "attack_id": "expand_boundary_ms_before_r2",
+            "blocked": true,
+            "detail": "revision=OBS_BTC_CLOSE_R1",
+            "status": "AVAILABLE",
+            "survivor": false
+          },
+          {
+            "attack_id": "expand_boundary_ms_at_r2",
+            "blocked": true,
+            "detail": "revision=OBS_BTC_CLOSE_R2",
+            "status": "AVAILABLE",
+            "survivor": false
+          },
+          {
+            "attack_id": "expand_future_ingest_axis",
+            "blocked": true,
+            "detail": "no_future_leakage:ingest_time=1700345600000>as_known_at=1700259200000",
+            "status": "REJECTED_FUTURE_LEAKAGE",
+            "survivor": false
+          },
+          {
+            "attack_id": "expand_label_lineage_no_future_child",
+            "blocked": true,
+            "detail": "lineage=['LABEL_REGIME_R1']",
+            "status": "AVAILABLE",
+            "survivor": false
+          },
+          {
+            "attack_id": "expand_allow_latest_before_tip",
+            "blocked": true,
+            "detail": "no_today_revision_for_past_backtest:as_known_at=1700518400000<latest_revision_time=1702592000000",
+            "status": "REJECTED",
+            "survivor": false
+          },
+          {
+            "attack_id": "expand_backfill_raise_on_unavailable",
+            "blocked": true,
+            "detail": "no_unavailable_at_time_silent_fill:series=SYNTH.SOLUSDT.CLOSE:as_known_at=1700432000000",
+            "status": "UNAVAILABLE_AT_TIME",
+            "survivor": false
+          },
+          {
+            "attack_id": "expand_visible_set_excludes_future",
+            "blocked": true,
+            "detail": "ids=['OBS_BTC_CLOSE_R1']",
+            "status": "VISIBLE_OK",
+            "survivor": false
+          }
+        ],
+        "pass": true,
+        "schema": "v17_deep_future_leakage_expand_v1",
+        "survivor_count": 0,
+        "survivors": []
+      },
+      "pass": true,
+      "schema": "v17_deep_future_leakage_combined_v1",
+      "survivor_count": 0,
+      "survivors": []
+    },
+    "listing_delisting": {
+      "attack_count": 7,
+      "attacks": [
+        {
+          "attack_id": "listing_minus_one_ms",
+          "blocked": true,
+          "detail": "as_of=1735689599999 listing=1735689600000",
+          "evidence": {
+            "attack": {
+              "as_of_ms": 1735689599999,
+              "attack_blocked": true,
+              "claimed_data_used": true,
+              "claimed_eligible": true,
+              "listing_ms": 1735689600000,
+              "ok": false,
+              "status": "PRE_LISTING_DATA",
+              "symbol": "LATEUSDT"
+            },
+            "in_eligible": false
+          },
+          "survivor": false
+        },
+        {
+          "attack_id": "listing_exact_ms_honest",
+          "blocked": true,
+          "detail": "status=PASS",
+          "evidence": {
+            "as_of_ms": 1735689600000,
+            "attack_blocked": false,
+            "claimed_data_used": true,
+            "claimed_eligible": true,
+            "listing_ms": 1735689600000,
+            "ok": true,
+            "status": "PASS",
+            "symbol": "LATEUSDT"
+          },
+          "survivor": false
+        },
+        {
+          "attack_id": "delisting_exact_ms",
+          "blocked": true,
+          "detail": "delist=1725000000000 ghost_eligible=False",
+          "evidence": {
+            "attack": {
+              "as_of_ms": 1725000000000,
+              "attack_blocked": true,
+              "claimed_eligible": true,
+              "delisting_ms": 1725000000000,
+              "ok": false,
+              "status": "IGNORE_DELISTINGS",
+              "symbol": "GHOSTUSDT"
+            },
+            "ghost_eligible": false
+          },
+          "survivor": false
+        },
+        {
+          "attack_id": "delisting_plus_one_ms",
+          "blocked": true,
+          "detail": "as_of=1725000000001",
+          "evidence": {
+            "as_of_ms": 1725000000001,
+            "attack_blocked": true,
+            "claimed_eligible": true,
+            "delisting_ms": 1725000000000,
+            "ok": false,
+            "status": "IGNORE_DELISTINGS",
+            "symbol": "GHOSTUSDT"
+          },
+          "survivor": false
+        },
+        {
+          "attack_id": "relist_future_into_past_era",
+          "blocked": true,
+          "detail": "late_in_past=False late_in_claim=True",
+          "evidence": {
+            "attack": {
+              "attack_blocked": true,
+              "claimed": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "GHOSTUSDT",
+                "LATEUSDT",
+                "PEPEUSDT",
+                "SOLUSDT"
+              ],
+              "dropped_historical": [],
+              "ok": false,
+              "pit_eligible": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "GHOSTUSDT",
+                "PEPEUSDT",
+                "SOLUSDT"
+              ],
+              "status": "TODAY_SURVIVORS_FOR_HISTORY",
+              "today_survivors": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "LATEUSDT",
+                "PEPEUSDT",
+                "SOLUSDT"
+              ]
+            }
+          },
+          "survivor": false
+        },
+        {
+          "attack_id": "ghost_persists_across_eras",
+          "blocked": true,
+          "detail": "jun=True dec=False",
+          "evidence": {
+            "attack": {
+              "as_of_ms": 1733020800000,
+              "attack_blocked": true,
+              "claimed_eligible": true,
+              "delisting_ms": 1725000000000,
+              "ok": false,
+              "status": "IGNORE_DELISTINGS",
+              "symbol": "GHOSTUSDT"
+            },
+            "claimed": [
+              "BTCUSDT",
+              "ETHUSDT",
+              "GHOSTUSDT",
+              "PEPEUSDT",
+              "SOLUSDT"
+            ]
+          },
+          "survivor": false
+        },
+        {
+          "attack_id": "base_v17e_quartet_still_clean",
+          "base_attack_count": 4,
+          "base_survivors": [],
+          "blocked": true,
+          "detail": "base_survivors=[]",
+          "survivor": false
+        }
+      ],
+      "blocked_count": 7,
+      "pass": true,
+      "schema": "v17_deep_listing_delisting_v1",
+      "survivor_count": 0,
+      "survivors": []
+    },
+    "mutation_as_known_at": {
+      "attack_count": 48,
+      "blocked_count": 48,
+      "findings_sample": [
+        {
+          "attack_id": "mutation_0_float_aka",
+          "blocked": true,
+          "detail": "revision=OBS_BTC_CLOSE_R2",
+          "mutation": "float_aka",
+          "status": "AVAILABLE",
+          "survivor": false
+        },
+        {
+          "attack_id": "mutation_1_aka_minus_one",
+          "blocked": true,
+          "detail": "revision=OBS_BTC_CLOSE_R2",
+          "mutation": "aka_minus_one",
+          "status": "AVAILABLE",
+          "survivor": false
+        },
+        {
+          "attack_id": "mutation_2_zero_aka",
+          "blocked": true,
+          "detail": "rejected_nonpositive",
+          "mutation": "zero_aka",
+          "status": "REJECTED",
+          "survivor": false
+        },
+        {
+          "attack_id": "mutation_3_zero_aka",
+          "blocked": true,
+          "detail": "rejected_nonpositive",
+          "mutation": "zero_aka",
+          "status": "REJECTED",
+          "survivor": false
+        },
+        {
+          "attack_id": "mutation_4_null_aka",
+          "blocked": true,
+          "detail": "missing_aka_rejected",
+          "mutation": "null_aka",
+          "status": "REJECTED",
+          "survivor": false
+        },
+        {
+          "attack_id": "mutation_5_allow_latest",
+          "blocked": true,
+          "detail": "today_banned",
+          "mutation": "allow_latest",
+          "status": "REJECTED",
+          "survivor": false
+        },
+        {
+          "attack_id": "mutation_6_aka_minus_one",
+          "blocked": true,
+          "detail": "revision=OBS_BTC_CLOSE_R2",
+          "mutation": "aka_minus_one",
+          "status": "AVAILABLE",
+          "survivor": false
+        },
+        {
+          "attack_id": "mutation_7_aka_plus_one",
+          "blocked": true,
+          "detail": "revision=OBS_BTC_CLOSE_R2",
+          "mutation": "aka_plus_one",
+          "status": "AVAILABLE",
+          "survivor": false
+        },
+        {
+          "attack_id": "mutation_8_allow_latest",
+          "blocked": true,
+          "detail": "today_banned",
+          "mutation": "allow_latest",
+          "status": "REJECTED",
+          "survivor": false
+        },
+        {
+          "attack_id": "mutation_9_wrong_series",
+          "blocked": true,
+          "detail": "status=UNAVAILABLE_AT_TIME",
+          "mutation": "wrong_series",
+          "status": "UNAVAILABLE_AT_TIME",
+          "survivor": false
+        }
+      ],
+      "pass": true,
+      "schema": "v17_deep_mutation_as_known_at_v1",
+      "seed": 17170008,
+      "survivor_count": 0,
+      "survivors": []
+    },
+    "property_as_known_at": {
+      "case_count": 316,
+      "cases_sample": [
+        {
+          "case_id": "boundary:SYNTH.BTCUSDT.CLOSE:1700086399999",
+          "detail": "property_holds",
+          "ok": true,
+          "proof": {
+            "as_known_at": 1700086399999,
+            "future_count": 3,
+            "input_count": 3,
+            "leaked_revision_ids": [],
+            "pit_holds": true,
+            "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+            "schema": "v17_d_pit_visibility_proof",
+            "series_id": "SYNTH.BTCUSDT.CLOSE",
+            "visible_count": 0
+          },
+          "selected": null,
+          "survivor": false,
+          "visible_count": 0
+        },
+        {
+          "case_id": "boundary:SYNTH.BTCUSDT.REGIME_LABEL:1700086399999",
+          "detail": "property_holds",
+          "ok": true,
+          "proof": {
+            "as_known_at": 1700086399999,
+            "future_count": 2,
+            "input_count": 2,
+            "leaked_revision_ids": [],
+            "pit_holds": true,
+            "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+            "schema": "v17_d_pit_visibility_proof",
+            "series_id": "SYNTH.BTCUSDT.REGIME_LABEL",
+            "visible_count": 0
+          },
+          "selected": null,
+          "survivor": false,
+          "visible_count": 0
+        },
+        {
+          "case_id": "boundary:SYNTH.ETHUSDT.CLOSE:1700086399999",
+          "detail": "property_holds",
+          "ok": true,
+          "proof": {
+            "as_known_at": 1700086399999,
+            "future_count": 1,
+            "input_count": 1,
+            "leaked_revision_ids": [],
+            "pit_holds": true,
+            "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+            "schema": "v17_d_pit_visibility_proof",
+            "series_id": "SYNTH.ETHUSDT.CLOSE",
+            "visible_count": 0
+          },
+          "selected": null,
+          "survivor": false,
+          "visible_count": 0
+        },
+        {
+          "case_id": "boundary:SYNTH.SOLUSDT.CLOSE:1700086399999",
+          "detail": "property_holds",
+          "ok": true,
+          "proof": {
+            "as_known_at": 1700086399999,
+            "future_count": 1,
+            "input_count": 1,
+            "leaked_revision_ids": [],
+            "pit_holds": true,
+            "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+            "schema": "v17_d_pit_visibility_proof",
+            "series_id": "SYNTH.SOLUSDT.CLOSE",
+            "visible_count": 0
+          },
+          "selected": null,
+          "survivor": false,
+          "visible_count": 0
+        },
+        {
+          "case_id": "boundary:SYNTH.BTCUSDT.CLOSE:1700086400000",
+          "detail": "property_holds",
+          "ok": true,
+          "proof": {
+            "as_known_at": 1700086400000,
+            "future_count": 2,
+            "input_count": 3,
+            "leaked_revision_ids": [],
+            "pit_holds": true,
+            "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+            "schema": "v17_d_pit_visibility_proof",
+            "series_id": "SYNTH.BTCUSDT.CLOSE",
+            "visible_count": 1
+          },
+          "selected": "OBS_BTC_CLOSE_R1",
+          "survivor": false,
+          "visible_count": 1
+        },
+        {
+          "case_id": "boundary:SYNTH.BTCUSDT.REGIME_LABEL:1700086400000",
+          "detail": "property_holds",
+          "ok": true,
+          "proof": {
+            "as_known_at": 1700086400000,
+            "future_count": 2,
+            "input_count": 2,
+            "leaked_revision_ids": [],
+            "pit_holds": true,
+            "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+            "schema": "v17_d_pit_visibility_proof",
+            "series_id": "SYNTH.BTCUSDT.REGIME_LABEL",
+            "visible_count": 0
+          },
+          "selected": null,
+          "survivor": false,
+          "visible_count": 0
+        },
+        {
+          "case_id": "boundary:SYNTH.ETHUSDT.CLOSE:1700086400000",
+          "detail": "property_holds",
+          "ok": true,
+          "proof": {
+            "as_known_at": 1700086400000,
+            "future_count": 1,
+            "input_count": 1,
+            "leaked_revision_ids": [],
+            "pit_holds": true,
+            "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+            "schema": "v17_d_pit_visibility_proof",
+            "series_id": "SYNTH.ETHUSDT.CLOSE",
+            "visible_count": 0
+          },
+          "selected": null,
+          "survivor": false,
+          "visible_count": 0
+        },
+        {
+          "case_id": "boundary:SYNTH.SOLUSDT.CLOSE:1700086400000",
+          "detail": "property_holds",
+          "ok": true,
+          "proof": {
+            "as_known_at": 1700086400000,
+            "future_count": 1,
+            "input_count": 1,
+            "leaked_revision_ids": [],
+            "pit_holds": true,
+            "rule": "available_time <= AS_KNOWN_AT AND revision_time <= AS_KNOWN_AT AND ingest_time <= AS_KNOWN_AT",
+            "schema": "v17_d_pit_visibility_proof",
+            "series_id": "SYNTH.SOLUSDT.CLOSE",
+            "visible_count": 0
+          },
+          "selected": null,
+          "survivor": false,
+          "visible_count": 0
+        }
+      ],
+      "pass": true,
+      "schema": "v17_deep_property_as_known_at_v1",
+      "seed": 17170001,
+      "survivor_count": 0,
+      "survivors": []
+    },
+    "symbol_collision": {
+      "attack_count": 6,
+      "attacks": [
+        {
+          "attack_id": "collapse_cross_exchange_btcusdt",
+          "binance_id": "inst:binance:perp:linear:BTCUSDT:v1:4d67bbaf558cf37aafa09b71",
+          "blocked": true,
+          "bybit_id": "inst:bybit:perp:linear:BTCUSDT:v1:6f86df4ee9360d97b97e5e10",
+          "detail": "share=True same=False",
+          "survivor": false
+        },
+        {
+          "attack_id": "symbol_only_registry_merge",
+          "attack_map_size": 1,
+          "blocked": true,
+          "detail": "honest_count=2 attack_map_size=1",
+          "honest_count": 2,
+          "survivor": false
+        },
+        {
+          "attack_id": "collapse_spot_perp_btcusdt",
+          "blocked": true,
+          "detail": "same=False",
+          "perp_id": "inst:binance:perp:linear:BTCUSDT:v1:4d67bbaf558cf37aafa09b71",
+          "spot_id": "inst:binance:spot:na:BTCUSDT:v1:8b412e0c38ba17071298127d",
+          "survivor": false
+        },
+        {
+          "attack_id": "missing_exchange_component",
+          "blocked": true,
+          "detail": "missing_identity_component",
+          "status": "REJECTED",
+          "survivor": false
+        },
+        {
+          "attack_id": "cross_venue_liquidity_by_symbol",
+          "blocked": true,
+          "detail": "venue_interchange_refused",
+          "status": "VENUE_DISTINCT",
+          "survivor": false
+        },
+        {
+          "attack_id": "hard_ban_collapse_declared",
+          "blocked": true,
+          "detail": "ok",
+          "missing": [],
+          "survivor": false
+        }
+      ],
+      "blocked_count": 6,
+      "pass": true,
+      "schema": "v17_deep_symbol_collision_v1",
+      "survivor_count": 0,
+      "survivors": []
+    },
+    "timestamp_edges": {
+      "attack_count": 5,
+      "attacks": [
+        {
+          "attack_id": "local_tz_as_known_at",
+          "blocked": true,
+          "detail": "no_tz_local_as_known_at:America/New_York",
+          "status": "REJECTED_TZ_LOCAL",
+          "survivor": false
+        },
+        {
+          "attack_id": "leap_second_aware_claim",
+          "blocked": true,
+          "detail": "no_leap_second_aware_claim:policy=UTC_CONTINUOUS_EPOCH_MS_NO_LEAP_SECOND_TABLE",
+          "policy": "UTC_CONTINUOUS_EPOCH_MS_NO_LEAP_SECOND_TABLE",
+          "status": "REJECTED_LEAP_SECOND_CLAIM",
+          "survivor": false
+        },
+        {
+          "attack_id": "dst_wallclock_collision",
+          "blocked": true,
+          "detail": "edt_ms=1730611800000 est_ms=1730615400000",
+          "evidence": {
+            "edges": [
+              {
+                "label": "edt_1_30",
+                "local": "2024-11-03 01:30:00-04:00",
+                "utc_ms": 1730611800000
+              },
+              {
+                "label": "est_1_30",
+                "local": "2024-11-03 01:30:00-05:00",
+                "utc_ms": 1730615400000
+              }
+            ]
+          },
+          "status": "UTC_DISTINCT",
+          "survivor": false
+        },
+        {
+          "attack_id": "utc_midnight_revision_boundary",
+          "blocked": true,
+          "detail": "utc_midnight_boundaries_checked",
+          "findings": [
+            {
+              "aka": 1699919999999,
+              "blocked": true,
+              "status": "UNAVAILABLE_AT_TIME"
+            },
+            {
+              "aka": 1699920000000,
+              "blocked": true,
+              "status": "UNAVAILABLE_AT_TIME"
+            },
+            {
+              "aka": 1699920000001,
+              "blocked": true,
+              "status": "UNAVAILABLE_AT_TIME"
+            },
+            {
+              "aka": 1700006399999,
+              "blocked": true,
+              "status": "UNAVAILABLE_AT_TIME"
+            },
+            {
+              "aka": 1700006400000,
+              "blocked": true,
+              "status": "UNAVAILABLE_AT_TIME"
+            },
+            {
+              "aka": 1700086399999,
+              "blocked": true,
+              "status": "UNAVAILABLE_AT_TIME"
+            },
+            {
+              "aka": 1700086400000,
+              "blocked": true,
+              "revision_id": "OBS_BTC_CLOSE_R1",
+              "status": "AVAILABLE"
+            },
+            {
+              "aka": 1700086400001,
+              "blocked": true,
+              "revision_id": "OBS_BTC_CLOSE_R1",
+              "status": "AVAILABLE"
+            }
+          ],
+          "survivor": false,
+          "survivors": []
+        },
+        {
+          "attack_id": "spring_forward_gap_query",
+          "blocked": true,
+          "detail": "gap_ms=1000 status=AVAILABLE",
+          "evidence": {
+            "gap_ms": 1000,
+            "post": 1710054000000,
+            "pre": 1710053999000,
+            "result_status": "AVAILABLE"
+          },
+          "survivor": false
+        }
+      ],
+      "blocked_count": 5,
+      "leap_second_policy": "UTC_CONTINUOUS_EPOCH_MS_NO_LEAP_SECOND_TABLE",
+      "pass": true,
+      "schema": "v17_deep_timestamp_edges_v1",
+      "survivor_count": 0,
+      "survivors": []
+    }
+  },
+  "status": "PASS",
+  "survivor_count": 0,
+  "survivors": [],
+  "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v17_single_tip_integration"
+}

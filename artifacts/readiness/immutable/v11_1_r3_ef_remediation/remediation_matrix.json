@@ -1,0 +1,12 @@
+{
+  "schema": "v11_1_r3_ef_remediation_matrix",
+  "created_at": "2026-08-05T04:11:33Z",
+  "ids": {
+    "R3-E-CHECKPOINT-COUNTER-DRIFT": "FIXED",
+    "R3-F-NESTED-FUTURE-TIMESTAMP": "FIXED",
+    "R3-F-OOS-SEAL-REGENERATION": "FIXED",
+    "R3-E-CRITIC-BEFORE-REASONER": "FIXED",
+    "R3-F-FOUNDER-AUTH-SPOOF": "FIXED"
+  },
+  "all_fixed": true
+}

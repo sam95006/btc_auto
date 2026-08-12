@@ -1,0 +1,78 @@
+{
+  "allowed_pair_count": 12,
+  "contract_id": "nexus.lifecycle.session_control_plane_adapter_v11_1",
+  "control_module": "backend.nexus_private_control.state_machine",
+  "mappings": [
+    {
+      "control_plane": "IDLE",
+      "relation": "session_implies_control",
+      "session": "CREATED"
+    },
+    {
+      "control_plane": "STARTING",
+      "relation": "session_implies_control",
+      "session": "CREATED"
+    },
+    {
+      "control_plane": "STARTING",
+      "relation": "equivalent",
+      "session": "INITIALIZING"
+    },
+    {
+      "control_plane": "RUNNING",
+      "relation": "equivalent",
+      "session": "RUNNING"
+    },
+    {
+      "control_plane": "RUNNING",
+      "relation": "session_implies_control",
+      "session": "PAUSING"
+    },
+    {
+      "control_plane": "PAUSED",
+      "relation": "equivalent",
+      "session": "PAUSED"
+    },
+    {
+      "control_plane": "RECOVERING",
+      "relation": "equivalent",
+      "session": "RECOVERING"
+    },
+    {
+      "control_plane": "STOPPING",
+      "relation": "equivalent",
+      "session": "FINALIZING"
+    },
+    {
+      "control_plane": "STOPPED",
+      "relation": "equivalent",
+      "session": "COMPLETED"
+    },
+    {
+      "control_plane": "FAILED_SAFE",
+      "relation": "session_implies_control",
+      "session": "BLOCKED"
+    },
+    {
+      "control_plane": "KILLED",
+      "relation": "session_implies_control",
+      "session": "BLOCKED"
+    },
+    {
+      "control_plane": "FAILED_SAFE",
+      "relation": "equivalent",
+      "session": "FAILED_SAFE"
+    },
+    {
+      "control_plane": "KILLED",
+      "relation": "none",
+      "session": "COMPLETED"
+    }
+  ],
+  "policy": {
+    "collapse_scopes": false,
+    "silent_homonym_mapping": false,
+    "unmapped_pair": "REJECT"
+  },
+  "session_module": "backend.nexus_autonomy.session_state_machine"
+}

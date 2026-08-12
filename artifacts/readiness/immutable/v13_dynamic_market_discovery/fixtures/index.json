@@ -1,0 +1,27 @@
+{
+  "note": "Point-in-Time only — never substitute a later snapshot for an earlier as_of",
+  "schema": "nexus_pit_market_fixture_index_v1",
+  "snapshots": [
+    {
+      "availability_ms": 1717200000000,
+      "instrument_count": 7,
+      "path": "era_2024_06_01.json",
+      "snapshot_id": "era_2024_06_01",
+      "source_checksum": "f92fa1d740dcc91aabc95c8b2ea22016f3ae088a49feff76bcc6ac3c49a06840"
+    },
+    {
+      "availability_ms": 1733020800000,
+      "instrument_count": 7,
+      "path": "era_2024_12_01.json",
+      "snapshot_id": "era_2024_12_01",
+      "source_checksum": "40b2467f44b577b58740c540296f866a0148c16413be0dc95cb87c92bb80f117"
+    },
+    {
+      "availability_ms": 1740787200000,
+      "instrument_count": 9,
+      "path": "era_2025_03_01.json",
+      "snapshot_id": "era_2025_03_01",
+      "source_checksum": "122fb70d9c718e891606dd7d1b601a1c6a011c7e4bf9cf0fd086d03dfdce9e42"
+    }
+  ]
+}

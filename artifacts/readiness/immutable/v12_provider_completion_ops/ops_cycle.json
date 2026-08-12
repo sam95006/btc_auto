@@ -1,0 +1,366 @@
+{
+  "schema": "v12_provider_ops_cycle",
+  "created_at": "2026-08-05T07:48:30Z",
+  "lane": "V12-C",
+  "lane_name": "PROVIDER_COMPLETION_OPS",
+  "package": "backend.nexus_provider_ops",
+  "branch": "feature/v12-provider-completion-ops",
+  "base_commit": "e4e96299840da2e5152cf2850135cebc67d66cd0",
+  "hard_bans": [
+    "no_real_provider_resume_ownership_theft",
+    "no_secret_logging",
+    "no_demo_exchange",
+    "no_pr27_merge",
+    "no_v2_3_complete_claim",
+    "no_exchange_writes",
+    "no_mainnet_real_money",
+    "no_public_product_surface"
+  ],
+  "incomplete_sot": {
+    "schema": "v12_provider_completion_ops_incomplete_sot",
+    "created_at": "2026-08-05T07:48:30Z",
+    "V2_3_complete": false,
+    "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+    "case_id_count": 80,
+    "lanes": {
+      "GROQ_REFLECTION_REASONER": {
+        "success_count": 53,
+        "pending_count": 27,
+        "target_count": 80,
+        "completion_ratio": 0.6625
+      },
+      "SAMBANOVA_INDEPENDENT_CRITIC": {
+        "success_count": 16,
+        "pending_count": 10,
+        "target_count": 53,
+        "completion_ratio": 0.3018867924528302
+      }
+    },
+    "note": "Real checkpoint SoT remains incomplete; ops observe and control around this truth and must not claim V2.3 complete."
+  },
+  "queue_health": {
+    "schema": "v12_provider_queue_health",
+    "created_at": "2026-08-05T07:48:30Z",
+    "overall_status": "DEGRADED_INCOMPLETE",
+    "V2_3_complete": false,
+    "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+    "independent_queues": true,
+    "lanes": {
+      "GROQ_REFLECTION_REASONER": {
+        "profile_id": "GROQ_REFLECTION_REASONER",
+        "success_count": 53,
+        "pending_count": 27,
+        "target_count": 80,
+        "pending_ratio": 0.3375,
+        "status": "RATE_LIMITED",
+        "manual_paused": false,
+        "retry_after_s": 900.0,
+        "next_resume_not_before": null,
+        "last_exit_reason": "PROVIDER_RATE_LIMITED"
+      },
+      "SAMBANOVA_INDEPENDENT_CRITIC": {
+        "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "success_count": 16,
+        "pending_count": 10,
+        "target_count": 53,
+        "pending_ratio": 0.384615,
+        "status": "RATE_LIMITED",
+        "manual_paused": false,
+        "retry_after_s": 900.0,
+        "next_resume_not_before": null,
+        "last_exit_reason": "PROVIDER_RATE_LIMITED"
+      }
+    },
+    "sot_aligned": true
+  },
+  "retry_after_obs": {
+    "schema": "v12_provider_retry_after_obs_map",
+    "created_at": "2026-08-05T07:48:30Z",
+    "lanes": {
+      "GROQ_REFLECTION_REASONER": {
+        "schema": "v12_provider_retry_after_obs",
+        "created_at": "2026-08-05T07:48:30Z",
+        "profile_id": "GROQ_REFLECTION_REASONER",
+        "http_status": 429,
+        "retry_after_s": 900.0,
+        "next_resume_not_before": "2026-08-05T08:03:30Z",
+        "rate_limited": true,
+        "headers_observed": {
+          "Retry-After": "900"
+        },
+        "body_parsed": false,
+        "secret_logging": false
+      },
+      "SAMBANOVA_INDEPENDENT_CRITIC": {
+        "schema": "v12_provider_retry_after_obs",
+        "created_at": "2026-08-05T07:48:30Z",
+        "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "http_status": 429,
+        "retry_after_s": 900.0,
+        "next_resume_not_before": "2026-08-05T08:03:30Z",
+        "rate_limited": true,
+        "headers_observed": {
+          "Retry-After": "900"
+        },
+        "body_parsed": false,
+        "secret_logging": false
+      }
+    },
+    "max_retry_after_s": 900.0,
+    "any_rate_limited": true,
+    "secret_logging": false
+  },
+  "capacity_windows": {
+    "schema": "v12_provider_capacity_windows",
+    "created_at": "2026-08-05T07:48:30Z",
+    "V2_3_complete": false,
+    "lanes": {
+      "GROQ_REFLECTION_REASONER": {
+        "profile_id": "GROQ_REFLECTION_REASONER",
+        "burst_capacity": 5.0,
+        "refill_per_s": 0.2,
+        "tokens_available": 5.0,
+        "pending_count": 27,
+        "retry_after_s": 900.0,
+        "window_open_in_s": 900.0,
+        "window_open_at": "2026-08-05T08:03:30Z",
+        "estimated_drain_s": 135.0,
+        "window_close_at": "2026-08-05T08:05:45Z",
+        "window_status": "CLOSED_WAITING",
+        "real_resume_authorized": false
+      },
+      "SAMBANOVA_INDEPENDENT_CRITIC": {
+        "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "burst_capacity": 3.0,
+        "refill_per_s": 0.1,
+        "tokens_available": 3.0,
+        "pending_count": 10,
+        "retry_after_s": 900.0,
+        "window_open_in_s": 900.0,
+        "window_open_at": "2026-08-05T08:03:30Z",
+        "estimated_drain_s": 100.0,
+        "window_close_at": "2026-08-05T08:05:10Z",
+        "window_status": "CLOSED_WAITING",
+        "real_resume_authorized": false
+      }
+    },
+    "any_window_open": false,
+    "ops_may_schedule_observe_only": true,
+    "real_resume_authorized": false,
+    "provider_lanes": [
+      "GROQ_REFLECTION_REASONER",
+      "SAMBANOVA_INDEPENDENT_CRITIC"
+    ],
+    "note": "Capacity windows are ops observability/scheduling hints only; local Coordinator alone may execute real resume inside an open window."
+  },
+  "checkpoint_safety": {
+    "schema": "v12_provider_checkpoint_safety",
+    "created_at": "2026-08-05T07:48:30Z",
+    "source": "synthetic_incomplete_sot",
+    "checkpoint_path": null,
+    "checksum_sha256": "5fba17c4f80d589512dea096ebee5af21731b5077502eb709185542b6c3c8ed9",
+    "integrity_status": "OK",
+    "issues": [],
+    "completed_case_count": 53,
+    "pending_case_count": 27,
+    "critic_pending_count": 10,
+    "groq_success_count": 53,
+    "sambanova_success_count": 16,
+    "V2_3_complete": false,
+    "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+    "safe_to_observe": true,
+    "safe_for_ops_control": true,
+    "real_resume_executed": false,
+    "ops_mutated_checkpoint": false,
+    "sot": {
+      "groq_success": 53,
+      "groq_pending": 27,
+      "sambanova_success": 16,
+      "sambanova_pending": 10
+    }
+  },
+  "completed_case_dedupe": {
+    "schema": "v12_provider_completed_case_dedupe",
+    "created_at": "2026-08-05T07:48:30Z",
+    "case_id_count": 80,
+    "completed_case_count": 53,
+    "pending_before_dedupe": 28,
+    "pending_after_dedupe": 27,
+    "overlap_count": 1,
+    "overlap_case_ids_sample": [
+      "case_000"
+    ],
+    "requeue_blocked_count": 1,
+    "dedupe_effective": true,
+    "deduped_pending_case_ids": [
+      "case_053",
+      "case_054",
+      "case_055",
+      "case_056",
+      "case_057",
+      "case_058",
+      "case_059",
+      "case_060",
+      "case_061",
+      "case_062",
+      "case_063",
+      "case_064",
+      "case_065",
+      "case_066",
+      "case_067",
+      "case_068",
+      "case_069",
+      "case_070",
+      "case_071",
+      "case_072",
+      "case_073",
+      "case_074",
+      "case_075",
+      "case_076",
+      "case_077",
+      "case_078",
+      "case_079"
+    ],
+    "V2_3_complete": false
+  },
+  "manual_control": {
+    "schema": "v12_provider_manual_control",
+    "created_at": "2026-08-05T07:48:30Z",
+    "lanes": {
+      "GROQ_REFLECTION_REASONER": {
+        "paused": false
+      },
+      "SAMBANOVA_INDEPENDENT_CRITIC": {
+        "paused": false
+      }
+    },
+    "any_paused": false,
+    "history": [
+      {
+        "action": "pause",
+        "profile_id": "GROQ_REFLECTION_REASONER",
+        "reason": "ops_cycle_demo_pause",
+        "at": "2026-08-05T07:48:30Z",
+        "affects_real_resume_ownership": false
+      },
+      {
+        "action": "resume_ops_scheduling",
+        "profile_id": "GROQ_REFLECTION_REASONER",
+        "reason": "ops_cycle_demo_resume",
+        "at": "2026-08-05T07:48:30Z",
+        "affects_real_resume_ownership": false,
+        "real_resume_executed": false,
+        "note": "Manual resume clears ops pause only; local Coordinator owns real resume."
+      },
+      {
+        "action": "pause",
+        "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "reason": "ops_cycle_demo_pause",
+        "at": "2026-08-05T07:48:30Z",
+        "affects_real_resume_ownership": false
+      },
+      {
+        "action": "resume_ops_scheduling",
+        "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "reason": "ops_cycle_demo_resume",
+        "at": "2026-08-05T07:48:30Z",
+        "affects_real_resume_ownership": false,
+        "real_resume_executed": false,
+        "note": "Manual resume clears ops pause only; local Coordinator owns real resume."
+      }
+    ],
+    "real_resume_executed": false,
+    "ops_owns_real_resume": false
+  },
+  "manual_events": [
+    {
+      "action": "pause",
+      "profile_id": "GROQ_REFLECTION_REASONER",
+      "reason": "ops_cycle_demo_pause",
+      "at": "2026-08-05T07:48:30Z",
+      "affects_real_resume_ownership": false
+    },
+    {
+      "action": "resume_ops_scheduling",
+      "profile_id": "GROQ_REFLECTION_REASONER",
+      "reason": "ops_cycle_demo_resume",
+      "at": "2026-08-05T07:48:30Z",
+      "affects_real_resume_ownership": false,
+      "real_resume_executed": false,
+      "note": "Manual resume clears ops pause only; local Coordinator owns real resume."
+    },
+    {
+      "action": "pause",
+      "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+      "reason": "ops_cycle_demo_pause",
+      "at": "2026-08-05T07:48:30Z",
+      "affects_real_resume_ownership": false
+    },
+    {
+      "action": "resume_ops_scheduling",
+      "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+      "reason": "ops_cycle_demo_resume",
+      "at": "2026-08-05T07:48:30Z",
+      "affects_real_resume_ownership": false,
+      "real_resume_executed": false,
+      "note": "Manual resume clears ops pause only; local Coordinator owns real resume."
+    }
+  ],
+  "resume_boundary": {
+    "schema": "v12_provider_resume_boundary",
+    "created_at": "2026-08-05T07:48:30Z",
+    "real_resume_owner": "local_Coordinator",
+    "ops_role": "observability_and_manual_control_only",
+    "ops_owns_real_resume": false,
+    "real_resume_executed_by_ops": false,
+    "attempted_real_resume": true,
+    "blocked_attempt_count": 2,
+    "blocked_attempts": [
+      {
+        "action": "request_real_resume",
+        "allowed": false,
+        "blocked_reason": "OPS_NOT_REAL_RESUME_OWNER",
+        "owner": "local_Coordinator",
+        "ops_role": "observability_and_manual_control_only",
+        "reason": "ops_cycle_probe",
+        "at": "2026-08-05T07:48:30Z"
+      },
+      {
+        "action": "execute_real_resume",
+        "allowed": false,
+        "blocked_reason": "REAL_RESUME_OWNERSHIP_THEFT_BANNED",
+        "owner": "local_Coordinator",
+        "callable_invoked": false,
+        "fn_name": null,
+        "at": "2026-08-05T07:48:30Z"
+      }
+    ],
+    "forbidden_real_resume_calls": [
+      "allow_real_resume=True",
+      "real_provider_resume",
+      "resume_v23",
+      "run_quota_aware_calibration"
+    ]
+  },
+  "ownership_request_blocked": {
+    "action": "request_real_resume",
+    "allowed": false,
+    "blocked_reason": "OPS_NOT_REAL_RESUME_OWNER",
+    "owner": "local_Coordinator",
+    "ops_role": "observability_and_manual_control_only",
+    "reason": "ops_cycle_probe",
+    "at": "2026-08-05T07:48:30Z"
+  },
+  "ownership_theft_blocked": true,
+  "real_resume_owner": "local_Coordinator",
+  "real_resume_executed_by_ops": false,
+  "ops_owns_real_resume": false,
+  "V2_3_complete": false,
+  "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "mainnet": false,
+  "real_money": false,
+  "secret_logging": false,
+  "pr27_merged": false
+}

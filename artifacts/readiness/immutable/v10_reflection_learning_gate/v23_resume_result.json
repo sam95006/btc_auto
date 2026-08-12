@@ -1,0 +1,783 @@
+{
+  "schema": "v10_v23_resume_v1",
+  "created_at": "2026-08-05T03:07:11Z",
+  "ensure_checkpoint": {
+    "checkpoint_present": true,
+    "checkpoint_copied": false,
+    "checkpoint_path": "D:\\NEXUS_RUNTIME\\worktrees\\v10-reflection-learning-gate\\.nexus_runtime\\blind_reflection_v23_checkpoint.json",
+    "source_path": null,
+    "checkpoint_source_checksum": "bb367ee7d2b5106bc15be8d7b303a84b51ef2679a4cc9b08bbee67a489378bd7"
+  },
+  "manifest_checksum": "ce5509a279ad1223749d9634f7e067272024b0393186062b031cdaecd4219a12",
+  "checkpoint_integrity_status": "OK",
+  "checkpoint_migration_status": "MIGRATED",
+  "manifest_checksum_status": "OK",
+  "real_resume_executed": true,
+  "real_resume_status": "TOKEN_BUCKET_WAIT",
+  "max_batches_this_invocation": 4,
+  "pre_resume": {
+    "groq_success_count": 53,
+    "groq_pending_count": 27,
+    "sambanova_success_count": 16,
+    "sambanova_pending_count": 10,
+    "completed_case_count": 53,
+    "case_id_count": 80,
+    "groq_retry_after": 900,
+    "groq_next_resume_not_before": "2026-08-04T16:49:33Z",
+    "groq_last_exit_reason": "PROVIDER_RATE_LIMITED",
+    "sambanova_retry_after": 900,
+    "sambanova_next_resume_not_before": "2026-08-04T16:49:58Z",
+    "sambanova_last_exit_reason": "PROVIDER_RATE_LIMITED",
+    "stage": "PROVIDER_CAPACITY_BLOCKED",
+    "exit_reason": "PROVIDER_RATE_LIMITED"
+  },
+  "pre_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+  "groq_success_count": 58,
+  "groq_pending_count": 22,
+  "sambanova_success_count": 16,
+  "sambanova_pending_count": 10,
+  "completed_case_count": 58,
+  "case_id_count": 80,
+  "groq_retry_after": 900,
+  "groq_next_resume_not_before": "2026-08-04T16:49:33Z",
+  "groq_last_exit_reason": "TOKEN_BUCKET_WAIT",
+  "sambanova_retry_after": 900.0,
+  "sambanova_next_resume_not_before": "2026-08-05T03:22:11Z",
+  "sambanova_last_exit_reason": "PROVIDER_RATE_LIMITED",
+  "stage": "PROVIDER_CAPACITY_BLOCKED",
+  "exit_reason": "TOKEN_BUCKET_WAIT",
+  "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+  "quality_gates_evaluated": false,
+  "quality_gates_passed": false,
+  "quality": {
+    "schema": "final_v2_3_quality_result_v3",
+    "V2_3_quality_status": "INCOMPLETE_PROVIDER_CAPACITY",
+    "V2_3_RESULT_INTERPRETATION": "CALIBRATION_INCOMPLETE_PROVIDER_CAPACITY",
+    "V2_3_TERMINAL_STATUS": "INCOMPLETE_PROVIDER_CAPACITY",
+    "quality_gates_evaluated": false,
+    "quality_gates_passed": false,
+    "evidence_packet_constructible_count": 80,
+    "evidence_packet_constructible_ratio": {
+      "numerator": 80.0,
+      "denominator": 80.0,
+      "value": 1.0,
+      "status": "VALID"
+    },
+    "reflection_prompt_attempt_count": 79,
+    "reflection_prompt_with_packet_count": 78,
+    "reflection_prompt_delivery_ratio_on_attempts": {
+      "numerator": 78.0,
+      "denominator": 79.0,
+      "value": 0.9873417721518988,
+      "status": "VALID"
+    },
+    "reflection_successful_case_count": 58,
+    "frozen_calibration_case_count": 80,
+    "full_calibration_completion_ratio": {
+      "numerator": 58.0,
+      "denominator": 80.0,
+      "value": 0.725,
+      "status": "INCOMPLETE_SAMPLE"
+    },
+    "critic_prompt_attempt_count": 34,
+    "critic_prompt_with_packet_count": 17,
+    "critic_prompt_delivery_ratio_on_attempts": {
+      "numerator": 17.0,
+      "denominator": 34.0,
+      "value": 0.5,
+      "status": "VALID"
+    },
+    "provider_successful_response_count": 58,
+    "input_evidence_packet_count": 80,
+    "input_evidence_eligible_count": 80,
+    "AI_evidence_sufficiency_assessed_count": 58,
+    "AI_evidence_sufficient_count": 58,
+    "AI_evidence_insufficient_count": 0,
+    "informative_classification_count": 58,
+    "undetermined_count": 0,
+    "agreement_count": 29,
+    "disagreement_count": 29,
+    "disagreement_case_count": 29,
+    "unadjudicated_disagreement_count": 29,
+    "provider_blocked_disagreement_count": 29,
+    "blind_valid_schema_ratio": {
+      "numerator": 58.0,
+      "denominator": 58.0,
+      "value": 1.0,
+      "status": "VALID"
+    },
+    "informative_classification_ratio_overall": {
+      "numerator": 58.0,
+      "denominator": 58.0,
+      "value": 1.0,
+      "status": "VALID"
+    },
+    "informative_classification_ratio_on_sufficient_cases": {
+      "numerator": 58.0,
+      "denominator": 58.0,
+      "value": 1.0,
+      "status": "VALID"
+    },
+    "blind_agreement_ratio_on_sufficient_cases": {
+      "numerator": 29.0,
+      "denominator": 58.0,
+      "value": 0.5,
+      "status": "VALID"
+    },
+    "critic_resolution_ratio": {
+      "numerator": 16.0,
+      "denominator": 29.0,
+      "value": 0.5517241379310345,
+      "status": "VALID"
+    },
+    "critic_resolution_status": "VALID",
+    "critic_resolution_denominator": 29,
+    "missing_evidence_invention_count": 0,
+    "deterministic_answer_leak_count": 0,
+    "secret_leak_count": 0,
+    "disagreement_analysis": [
+      {
+        "trade_id": "CAL_V21_MKT_1",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": "INDEPENDENT_DISAGREEMENT",
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_3",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": "INDEPENDENT_DISAGREEMENT",
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_5",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": "INDEPENDENT_DISAGREEMENT",
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_7",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": "INDEPENDENT_DISAGREEMENT",
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_9",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": "INDEPENDENT_DISAGREEMENT",
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_11",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": "INDEPENDENT_DISAGREEMENT",
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_13",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": "INDEPENDENT_DISAGREEMENT",
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_15",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": "INDEPENDENT_DISAGREEMENT",
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_17",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": "INDEPENDENT_DISAGREEMENT",
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_19",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": "INDEPENDENT_DISAGREEMENT",
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_21",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": "INDEPENDENT_DISAGREEMENT",
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_23",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": "INDEPENDENT_DISAGREEMENT",
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_25",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": "INDEPENDENT_DISAGREEMENT",
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_27",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": "INDEPENDENT_DISAGREEMENT",
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_29",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": "INDEPENDENT_DISAGREEMENT",
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_31",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": "INDEPENDENT_DISAGREEMENT",
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_33",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": null,
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_35",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": null,
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_37",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": null,
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_39",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": null,
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_41",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": null,
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_43",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": null,
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_45",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": null,
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_47",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": null,
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_49",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": null,
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_51",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": null,
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_53",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": null,
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_55",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": null,
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      },
+      {
+        "trade_id": "CAL_V21_MKT_57",
+        "groq_classification": "BAD_PROCESS_LOSS",
+        "groq_evidence_citations": [],
+        "deterministic_classification": "GOOD_PROCESS_LOSS",
+        "deterministic_rule_citations": [
+          "PROCESS_COMPLIANT"
+        ],
+        "sambanova_verdict": null,
+        "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+        "conflict_type": "PROVIDER_BLOCKED",
+        "adjudication_status": "PROVIDER_BLOCKED"
+      }
+    ],
+    "AI_misclassification_count": {
+      "status": "NOT_YET_ADJUDICATED",
+      "value": null,
+      "reason": "critic_adjudication_incomplete"
+    },
+    "deterministic_baseline_too_coarse_count": {
+      "status": "NOT_YET_ADJUDICATED",
+      "value": null,
+      "reason": "critic_adjudication_incomplete"
+    },
+    "evidence_packet_ambiguous_count": {
+      "status": "NOT_YET_ADJUDICATED",
+      "value": null,
+      "reason": "critic_adjudication_incomplete"
+    },
+    "taxonomy_ambiguous_count": {
+      "status": "NOT_YET_ADJUDICATED",
+      "value": null,
+      "reason": "critic_adjudication_incomplete"
+    },
+    "outcome_process_mapping_error_count": {
+      "status": "NOT_YET_ADJUDICATED",
+      "value": null,
+      "reason": "critic_adjudication_incomplete"
+    },
+    "critic_unresolved_count": 29,
+    "canonical_classes": [
+      "GOOD_PROCESS_WIN",
+      "GOOD_PROCESS_LOSS",
+      "BAD_PROCESS_WIN",
+      "BAD_PROCESS_LOSS",
+      "UNDETERMINED"
+    ],
+    "transport": {
+      "GROQ_REFLECTION_REASONER": {
+        "profile_id": "GROQ_REFLECTION_REASONER",
+        "model_id": "llama-3.3-70b-versatile",
+        "attempt_count": 79,
+        "success_count": 58,
+        "HTTP_429_count": 20,
+        "timeout_count": 0,
+        "invalid_schema_count": 0,
+        "other_failure_count": 1,
+        "last_attempt_at": "2026-08-05T03:06:37Z",
+        "retry_after": 900,
+        "next_resume_not_before": "2026-08-04T16:49:33Z",
+        "last_exit_reason": "TOKEN_BUCKET_WAIT",
+        "circuit": {
+          "profile_id": "GROQ_REFLECTION_REASONER",
+          "state": "CLOSED",
+          "consecutive_failures": 0,
+          "last_failure_status": null,
+          "failure_threshold": 3,
+          "cooldown_s": 60.0
+        },
+        "token_bucket": {
+          "profile_id": "GROQ_REFLECTION_REASONER",
+          "capacity": 5.0,
+          "refill_per_s": 0.2,
+          "tokens": 0.6803
+        }
+      },
+      "SAMBANOVA_INDEPENDENT_CRITIC": {
+        "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "model_id": "Meta-Llama-3.3-70B-Instruct",
+        "attempt_count": 34,
+        "success_count": 16,
+        "HTTP_429_count": 18,
+        "timeout_count": 0,
+        "invalid_schema_count": 0,
+        "other_failure_count": 0,
+        "last_attempt_at": "2026-08-05T03:07:11Z",
+        "retry_after": 900.0,
+        "next_resume_not_before": "2026-08-05T03:22:11Z",
+        "last_exit_reason": "PROVIDER_RATE_LIMITED",
+        "quota_reset_at": null,
+        "circuit": {
+          "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+          "state": "OPEN",
+          "consecutive_failures": 3,
+          "last_failure_status": "RATE_LIMITED",
+          "failure_threshold": 3,
+          "cooldown_s": 60.0
+        },
+        "token_bucket": {
+          "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+          "capacity": 5.0,
+          "refill_per_s": 0.2,
+          "tokens": 5.0
+        }
+      },
+      "CEREBRAS_RESEARCH_NORMALIZER": {
+        "profile_id": "CEREBRAS_RESEARCH_NORMALIZER",
+        "model_id": "",
+        "attempt_count": 0,
+        "success_count": 0,
+        "HTTP_429_count": 0,
+        "timeout_count": 0,
+        "invalid_schema_count": 0,
+        "other_failure_count": 0,
+        "last_attempt_at": null,
+        "retry_after": null,
+        "next_resume_not_before": null,
+        "last_exit_reason": null
+      },
+      "GROQ_MAIN_REASONER": {
+        "profile_id": "GROQ_MAIN_REASONER",
+        "model_id": "",
+        "attempt_count": 0,
+        "success_count": 0,
+        "HTTP_429_count": 0,
+        "timeout_count": 0,
+        "invalid_schema_count": 0,
+        "other_failure_count": 0,
+        "last_attempt_at": null,
+        "retry_after": null,
+        "next_resume_not_before": null,
+        "last_exit_reason": null
+      }
+    },
+    "groq_stage": "GROQ_CAPACITY_BLOCKED",
+    "sambanova_stage": "SAMBANOVA_CAPACITY_BLOCKED",
+    "exit_reason": "TOKEN_BUCKET_WAIT",
+    "http_429_never_ai_quality_failure": true,
+    "terminal_denominator_validation": {
+      "terminal_denominator_validation": "PASS",
+      "issues": []
+    },
+    "allowed_conflict_types": [
+      "AI_MISCLASSIFICATION",
+      "DETERMINISTIC_BASELINE_TOO_COARSE",
+      "EVIDENCE_PACKET_AMBIGUOUS",
+      "TAXONOMY_AMBIGUOUS",
+      "OUTCOME_PROCESS_MAPPING_ERROR",
+      "BOTH_SUPPORTED",
+      "BOTH_UNSUPPORTED",
+      "CRITIC_UNRESOLVED",
+      "PROVIDER_BLOCKED"
+    ],
+    "groq_success_count": 58,
+    "critic_required_count": 29,
+    "critic_resolved_count": 16,
+    "frozen_quality_gates_unchanged": true
+  },
+  "provider_429_lanes": {
+    "GROQ_REFLECTION_REASONER": {
+      "provider_lane_stopped_on_429": false,
+      "HTTP_429_count": 20,
+      "retry_after": 900,
+      "next_resume_not_before": "2026-08-04T16:49:33Z",
+      "last_exit_reason": "TOKEN_BUCKET_WAIT"
+    },
+    "SAMBANOVA_INDEPENDENT_CRITIC": {
+      "provider_lane_stopped_on_429": true,
+      "HTTP_429_count": 18,
+      "retry_after": 900.0,
+      "next_resume_not_before": "2026-08-05T03:22:11Z",
+      "last_exit_reason": "PROVIDER_RATE_LIMITED"
+    }
+  },
+  "completed_case_loss_count": 0,
+  "rebuilt_from_summary_metrics": false,
+  "packets_built_from_frozen_builder": true,
+  "exchange_write_attempt_count": 0,
+  "deployment_started": false,
+  "mainnet": false,
+  "real_money": false,
+  "quota_aware_exit_reason": "TOKEN_BUCKET_WAIT",
+  "quota_aware_checkpoint_status": "TOKEN_BUCKET_WAIT",
+  "quota_aware_state_summary": {
+    "groq_stage": "GROQ_CAPACITY_BLOCKED",
+    "sambanova_stage": "SAMBANOVA_CAPACITY_BLOCKED",
+    "exit_reason": "TOKEN_BUCKET_WAIT",
+    "reflection_successful_case_count": 58,
+    "reflection_pending_case_count": 22,
+    "calibration_pending_case_count": 22,
+    "critic_pending_count": 13,
+    "critic_resolved_count": 16,
+    "transport": {
+      "GROQ_REFLECTION_REASONER": {
+        "profile_id": "GROQ_REFLECTION_REASONER",
+        "model_id": "llama-3.3-70b-versatile",
+        "attempt_count": 79,
+        "success_count": 58,
+        "HTTP_429_count": 20,
+        "timeout_count": 0,
+        "invalid_schema_count": 0,
+        "other_failure_count": 1,
+        "last_attempt_at": "2026-08-05T03:06:37Z",
+        "retry_after": 900,
+        "next_resume_not_before": "2026-08-04T16:49:33Z",
+        "last_exit_reason": "TOKEN_BUCKET_WAIT",
+        "circuit": {
+          "profile_id": "GROQ_REFLECTION_REASONER",
+          "state": "CLOSED",
+          "consecutive_failures": 0,
+          "last_failure_status": null,
+          "failure_threshold": 3,
+          "cooldown_s": 60.0
+        },
+        "token_bucket": {
+          "profile_id": "GROQ_REFLECTION_REASONER",
+          "capacity": 5.0,
+          "refill_per_s": 0.2,
+          "tokens": 0.6803
+        }
+      },
+      "SAMBANOVA_INDEPENDENT_CRITIC": {
+        "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "model_id": "Meta-Llama-3.3-70B-Instruct",
+        "attempt_count": 34,
+        "success_count": 16,
+        "HTTP_429_count": 18,
+        "timeout_count": 0,
+        "invalid_schema_count": 0,
+        "other_failure_count": 0,
+        "last_attempt_at": "2026-08-05T03:07:11Z",
+        "retry_after": 900.0,
+        "next_resume_not_before": "2026-08-05T03:22:11Z",
+        "last_exit_reason": "PROVIDER_RATE_LIMITED",
+        "quota_reset_at": null,
+        "circuit": {
+          "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+          "state": "OPEN",
+          "consecutive_failures": 3,
+          "last_failure_status": "RATE_LIMITED",
+          "failure_threshold": 3,
+          "cooldown_s": 60.0
+        },
+        "token_bucket": {
+          "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+          "capacity": 5.0,
+          "refill_per_s": 0.2,
+          "tokens": 5.0
+        }
+      },
+      "CEREBRAS_RESEARCH_NORMALIZER": {
+        "profile_id": "CEREBRAS_RESEARCH_NORMALIZER",
+        "model_id": "",
+        "attempt_count": 0,
+        "success_count": 0,
+        "HTTP_429_count": 0,
+        "timeout_count": 0,
+        "invalid_schema_count": 0,
+        "other_failure_count": 0,
+        "last_attempt_at": null,
+        "retry_after": null,
+        "next_resume_not_before": null,
+        "last_exit_reason": null
+      },
+      "GROQ_MAIN_REASONER": {
+        "profile_id": "GROQ_MAIN_REASONER",
+        "model_id": "",
+        "attempt_count": 0,
+        "success_count": 0,
+        "HTTP_429_count": 0,
+        "timeout_count": 0,
+        "invalid_schema_count": 0,
+        "other_failure_count": 0,
+        "last_attempt_at": null,
+        "retry_after": null,
+        "next_resume_not_before": null,
+        "last_exit_reason": null
+      }
+    }
+  }
+}

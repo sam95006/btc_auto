@@ -1,0 +1,107 @@
+{
+  "hard_bans": [
+    "no_real_money",
+    "no_mainnet",
+    "no_exchange_write",
+    "no_oos",
+    "no_walkforward",
+    "no_fabricated_ai_learning",
+    "no_pr26_merge",
+    "no_pr27_merge",
+    "no_ai_override_of_deterministic_class",
+    "no_pnl_alone_decides_process",
+    "no_loss_as_automatic_bad_process",
+    "no_win_as_automatic_good_process",
+    "no_status_json_lane_artifact",
+    "no_acceleration_report_edit",
+    "no_auto_integrate"
+  ],
+  "lane": "V16-A",
+  "overall_status": "PASS",
+  "owned_paths": [
+    "backend/nexus_trade_error_ontology_v1/",
+    "tests/trade_error_ontology_v1/",
+    "artifacts/readiness/immutable/v16_trade_error_ontology_v1/"
+  ],
+  "passes": [
+    {
+      "all_dimensions_declared": true,
+      "checks": {
+        "classes_present": true,
+        "profitable_bad_process_win": true,
+        "records_valid": true
+      },
+      "classification_match": true,
+      "dimension_count": 13,
+      "fixture_count": 9,
+      "gene_bank_path": "artifacts/readiness/immutable/v16_trade_error_ontology_v1/gene_bank_v1.json",
+      "gene_count": 14,
+      "gene_dimensions_present": [
+        "AI_REASONING",
+        "COST",
+        "DATA",
+        "ENTRY",
+        "EXECUTION",
+        "EXIT",
+        "EXTERNAL_SHOCK",
+        "INFRASTRUCTURE",
+        "LIQUIDITY",
+        "PORTFOLIO",
+        "REGIME",
+        "RISK",
+        "STRATEGY"
+      ],
+      "name": "implementation",
+      "ontology_schema": "v16_a_trade_error_ontology_v1",
+      "pass": 1,
+      "process_class_count": 6,
+      "schema_path": "artifacts/readiness/immutable/v16_trade_error_ontology_v1/trade_error_ontology_v1.schema.json",
+      "schema_required_fields": [
+        "schema",
+        "ontology_version",
+        "process_classification",
+        "deterministic_class",
+        "dimensions",
+        "evidence_refs",
+        "severity",
+        "avoidability",
+        "recurrence_signature",
+        "causal_confidence",
+        "classifier_authority",
+        "versioning"
+      ],
+      "status": "PASS"
+    },
+    {
+      "ai_disagreement_preserved": true,
+      "final_class_locked": true,
+      "findings": [],
+      "hard_ban_count": 15,
+      "name": "adversarial",
+      "pass": 2,
+      "status": "PASS"
+    },
+    {
+      "findings": [],
+      "gene_dimensions_covered": [
+        "AI_REASONING",
+        "COST",
+        "DATA",
+        "ENTRY",
+        "EXECUTION",
+        "EXIT",
+        "EXTERNAL_SHOCK",
+        "INFRASTRUCTURE",
+        "LIQUIDITY",
+        "PORTFOLIO",
+        "REGIME",
+        "RISK",
+        "STRATEGY"
+      ],
+      "name": "independent_break",
+      "pass": 3,
+      "status": "PASS"
+    }
+  ],
+  "schema": "v16_a_trade_error_ontology_v1"
+}

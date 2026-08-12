@@ -1,0 +1,9 @@
+{
+  "claims_15y_history_downloaded": false,
+  "data_classification": "FIXTURE_AND_BOUNDED_OFFICIAL_SAMPLE_ONLY",
+  "findings": [],
+  "name": "independent_break",
+  "pass": 3,
+  "real_or_fixture": "FIXTURE",
+  "status": "PASS"
+}

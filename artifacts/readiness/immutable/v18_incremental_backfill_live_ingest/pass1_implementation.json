@@ -1,0 +1,85 @@
+{
+  "backfill": {
+    "processed": 8,
+    "window_days": 7
+  },
+  "capabilities_proven": {
+    "bronze_silver_pit_wire": true,
+    "checkpoint": true,
+    "checksum": true,
+    "corrupt_quarantine": true,
+    "date_partitioned_manifest": true,
+    "dedupe": true,
+    "disk_quota": true,
+    "incremental_backfill": true,
+    "license_binding": true,
+    "live_append": true,
+    "partial_failure_recovery": true,
+    "rate_limit_pause": true,
+    "resume": true,
+    "retention": true
+  },
+  "checks": {
+    "acceptance_zeros_ok": true,
+    "class_ok": true,
+    "ingested_ok": true,
+    "live_ok": true,
+    "resume_contract": true,
+    "symbols_ok": true
+  },
+  "inventory": {
+    "allowed_backfill_windows_days": [
+      7,
+      30,
+      90
+    ],
+    "claims_15y_complete": false,
+    "claims_all_exchange_history": false,
+    "claims_full_training_set": false,
+    "claims_strategy_validation_pass": false,
+    "dynamic_universe_later": true,
+    "fixture_count": 4,
+    "generated_at": "2026-08-06T03:06:27Z",
+    "hard_max_symbols": false,
+    "official_historical_sample_count": 4,
+    "priority_symbol_count": 4,
+    "priority_symbols": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "SOLUSDT",
+      "PEPEUSDT"
+    ]
+  },
+  "live_append": {
+    "processed": 4
+  },
+  "name": "implementation",
+  "pass": 1,
+  "resume_noop_processed": 0,
+  "retention": {
+    "pruned_partition_count": 2,
+    "raw_rewritten": false
+  },
+  "schema": "v18_b_incremental_backfill_live_ingest_v1",
+  "snapshot": {
+    "acceptance_zeros": {
+      "duplicate_unresolved_count": 0,
+      "future_timestamp_accept_count": 0,
+      "raw_rewrite_count": 0,
+      "silent_gap_fill_count": 0,
+      "unlicensed_ingest_count": 0
+    },
+    "classification_counts": {
+      "DEGRADED": 1,
+      "FIXTURE": 4,
+      "LIVE_READ_ONLY": 4,
+      "OFFICIAL_HISTORICAL_SAMPLE": 4,
+      "STALE": 1,
+      "UNAVAILABLE": 1
+    },
+    "ingested_count": 12,
+    "live_append_count": 4,
+    "manifest_digest": "656fb3e620bd4de323a981d6322162b007ae764b983dd4bf12254e70699c0053"
+  },
+  "status": "PASS"
+}

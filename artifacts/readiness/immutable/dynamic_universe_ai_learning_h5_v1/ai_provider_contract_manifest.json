@@ -1,0 +1,29 @@
+{
+  "schema": "ai_provider_contract_v1",
+  "ai_gateway_status": "IMPLEMENTED",
+  "configured_provider_count": 5,
+  "providers": [
+    "CLOUDFLARE_WORKERS_AI",
+    "GEMINI",
+    "GROQ",
+    "OLLAMA",
+    "OPENROUTER"
+  ],
+  "role_map": {
+    "lesson_normalizer": "OLLAMA",
+    "bulk_research_summarizer": "OLLAMA",
+    "main_market_reasoner": "GROQ",
+    "reflection_reasoner": "GEMINI",
+    "independent_reflection_critic": "GROQ",
+    "embedding_provider": "OLLAMA"
+  },
+  "ollama_status": "MOCK_OK",
+  "groq_status": "MOCK_OK",
+  "gemini_status": "MOCK_OK",
+  "cloudflare_status": "MOCK_OK",
+  "external_secret_redaction_status": "IMPLEMENTED",
+  "provider_fail_closed_status": "IMPLEMENTED",
+  "openrouter_may_not_approve_orders": true,
+  "ci_uses_mocked_providers": true,
+  "hardcoded_free_tier_quotas": false
+}

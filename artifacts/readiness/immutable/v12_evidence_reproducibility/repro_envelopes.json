@@ -1,0 +1,647 @@
+{
+  "count": 5,
+  "created_at": "2026-08-05T07:49:12Z",
+  "envelopes": [
+    {
+      "ai_provider_model_identifiers": [
+        {
+          "model": "deterministic-reasoner-v1",
+          "provider": "sim-reasoner",
+          "role": "reasoner"
+        },
+        {
+          "model": "deterministic-critic-v1",
+          "provider": "sim-critic",
+          "role": "critic"
+        }
+      ],
+      "candidate_id": "cand_v12e_f4d0df9a425978da",
+      "checkpoint_version": {
+        "authority_id": "private_core.checkpoint.envelope_v1",
+        "schema": "nexus_checkpoint_envelope_v1",
+        "schema_version": 1
+      },
+      "checkpoint_version_id": "nexus_checkpoint_envelope_v1:1",
+      "classification_provenance": {
+        "ai_provider_model_identifiers": [
+          {
+            "model": "deterministic-reasoner-v1",
+            "provider": "sim-reasoner",
+            "role": "reasoner"
+          },
+          {
+            "model": "deterministic-critic-v1",
+            "provider": "sim-critic",
+            "role": "critic"
+          }
+        ],
+        "blocked_reason": null,
+        "classification_label": "lifecycle_closed_simulated",
+        "fabricated_learning_proof": false,
+        "intent_id_present": true,
+        "learning_proven": false,
+        "lesson_ids": [
+          "lesson_struct_f4d0df9a425978da"
+        ],
+        "linkage_authority": "backend.nexus_decision.execution_bridge",
+        "position_id_present": true,
+        "rejection_reasons": [],
+        "risk_allowed": true,
+        "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
+        "risk_reason": "PASS",
+        "stage_path": [
+          "understand",
+          "challenge",
+          "decide",
+          "decide",
+          "record",
+          "monitor",
+          "review",
+          "calibrate",
+          "improve"
+        ],
+        "state_path": [
+          "UNDERSTANDING",
+          "CHALLENGED",
+          "RISK_REVIEWED",
+          "APPROVED_SIMULATED",
+          "MONITORING",
+          "EXITED",
+          "UNDER_REVIEW",
+          "CALIBRATED",
+          "CLOSED"
+        ],
+        "terminal_status": "CLOSED"
+      },
+      "code_version": "318371ce027c48dd633a57a32c9ebd0f1fe40018",
+      "cost_version": "founder-conservative-v1-1-2026-08-05",
+      "decision_id": "dec_v12e_f4d0df9a425978da",
+      "decision_schema_version": "nexus_decision_object_v11",
+      "demo_order": false,
+      "deterministic_replay_result": {
+        "fingerprint": "e9e61e3f43d2866dd51e4565d1dd8ecb1632b5be9fbe8d6d5d175d9a5daca24b",
+        "match": true,
+        "peer_fingerprint": "e9e61e3f43d2866dd51e4565d1dd8ecb1632b5be9fbe8d6d5d175d9a5daca24b"
+      },
+      "evidence_binding_hash": "f3408a33024fff2bb401817fc12e794c50e3d96fcf12b42ce37645f251c9ed09",
+      "exchange_write": false,
+      "formal_walk_forward_executed": false,
+      "input_evidence_hashes": {
+        "evidence_hashes": [
+          "9268b18ad9bbbbd2b05f5e1f7522c033036dda49b4325f63d6386e7e8111c826",
+          "41af65ddaa7e00a60dee9eda06761305ce0b5725f063141768e0f4c8d942910d"
+        ],
+        "evidence_ids": [
+          "ev_v12e-case-000_0",
+          "ev_v12e-case-000_1"
+        ],
+        "pairs": [
+          {
+            "evidence_id": "ev_v12e-case-000_0",
+            "sha256": "9268b18ad9bbbbd2b05f5e1f7522c033036dda49b4325f63d6386e7e8111c826"
+          },
+          {
+            "evidence_id": "ev_v12e-case-000_1",
+            "sha256": "41af65ddaa7e00a60dee9eda06761305ce0b5725f063141768e0f4c8d942910d"
+          }
+        ]
+      },
+      "learning_claim": false,
+      "mainnet": false,
+      "oos_executed": false,
+      "profitability_claim": false,
+      "proof_dimensions": [
+        "input_evidence_hashes",
+        "code_version",
+        "cost_version",
+        "risk_version",
+        "checkpoint_version",
+        "ai_provider_model_identifiers",
+        "deterministic_replay_result",
+        "classification_provenance"
+      ],
+      "real_money": false,
+      "replay_fingerprint": "e9e61e3f43d2866dd51e4565d1dd8ecb1632b5be9fbe8d6d5d175d9a5daca24b",
+      "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
+      "risk_gates_fingerprint": "d76e401ec9dc88d09cba9369f6e1b265eed1d6e275a2d5825223d8a87a8b18cd",
+      "risk_version": "private_core.risk.gates_v1_1",
+      "schema": "nexus_evidence_reproducibility_v12",
+      "schema_version": 1,
+      "simulated_only": true,
+      "terminal_status": "CLOSED"
+    },
+    {
+      "ai_provider_model_identifiers": [
+        {
+          "model": "deterministic-reasoner-v1",
+          "provider": "sim-reasoner",
+          "role": "reasoner"
+        },
+        {
+          "model": "deterministic-critic-v1",
+          "provider": "sim-critic",
+          "role": "critic"
+        }
+      ],
+      "candidate_id": "cand_v12e_3e54e835da918537",
+      "checkpoint_version": {
+        "authority_id": "private_core.checkpoint.envelope_v1",
+        "schema": "nexus_checkpoint_envelope_v1",
+        "schema_version": 1
+      },
+      "checkpoint_version_id": "nexus_checkpoint_envelope_v1:1",
+      "classification_provenance": {
+        "ai_provider_model_identifiers": [
+          {
+            "model": "deterministic-reasoner-v1",
+            "provider": "sim-reasoner",
+            "role": "reasoner"
+          },
+          {
+            "model": "deterministic-critic-v1",
+            "provider": "sim-critic",
+            "role": "critic"
+          }
+        ],
+        "blocked_reason": null,
+        "classification_label": "lifecycle_closed_simulated",
+        "fabricated_learning_proof": false,
+        "intent_id_present": true,
+        "learning_proven": false,
+        "lesson_ids": [
+          "lesson_struct_3e54e835da918537"
+        ],
+        "linkage_authority": "backend.nexus_decision.execution_bridge",
+        "position_id_present": true,
+        "rejection_reasons": [],
+        "risk_allowed": true,
+        "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
+        "risk_reason": "PASS",
+        "stage_path": [
+          "understand",
+          "challenge",
+          "decide",
+          "decide",
+          "record",
+          "monitor",
+          "review",
+          "calibrate",
+          "improve"
+        ],
+        "state_path": [
+          "UNDERSTANDING",
+          "CHALLENGED",
+          "RISK_REVIEWED",
+          "APPROVED_SIMULATED",
+          "MONITORING",
+          "EXITED",
+          "UNDER_REVIEW",
+          "CALIBRATED",
+          "CLOSED"
+        ],
+        "terminal_status": "CLOSED"
+      },
+      "code_version": "318371ce027c48dd633a57a32c9ebd0f1fe40018",
+      "cost_version": "founder-conservative-v1-1-2026-08-05",
+      "decision_id": "dec_v12e_3e54e835da918537",
+      "decision_schema_version": "nexus_decision_object_v11",
+      "demo_order": false,
+      "deterministic_replay_result": {
+        "fingerprint": "e878039ceab089869963448817a7b62a5124dd675fef82a3bd56f4aab7d00b51",
+        "match": true,
+        "peer_fingerprint": "e878039ceab089869963448817a7b62a5124dd675fef82a3bd56f4aab7d00b51"
+      },
+      "evidence_binding_hash": "799f6d480389a816ab3e234cc73fd08e0151029e5b8bba6d3a059f520573308a",
+      "exchange_write": false,
+      "formal_walk_forward_executed": false,
+      "input_evidence_hashes": {
+        "evidence_hashes": [
+          "087bd0f52ded7c46c811e1243f39a9346e9c4519b947ec8d1d7a06584de69431",
+          "93714f673cddff25a85d5eba6044b12e31e53d7d789fb5736353c2a7001a4d6f"
+        ],
+        "evidence_ids": [
+          "ev_v12e-case-001_0",
+          "ev_v12e-case-001_1"
+        ],
+        "pairs": [
+          {
+            "evidence_id": "ev_v12e-case-001_0",
+            "sha256": "087bd0f52ded7c46c811e1243f39a9346e9c4519b947ec8d1d7a06584de69431"
+          },
+          {
+            "evidence_id": "ev_v12e-case-001_1",
+            "sha256": "93714f673cddff25a85d5eba6044b12e31e53d7d789fb5736353c2a7001a4d6f"
+          }
+        ]
+      },
+      "learning_claim": false,
+      "mainnet": false,
+      "oos_executed": false,
+      "profitability_claim": false,
+      "proof_dimensions": [
+        "input_evidence_hashes",
+        "code_version",
+        "cost_version",
+        "risk_version",
+        "checkpoint_version",
+        "ai_provider_model_identifiers",
+        "deterministic_replay_result",
+        "classification_provenance"
+      ],
+      "real_money": false,
+      "replay_fingerprint": "e878039ceab089869963448817a7b62a5124dd675fef82a3bd56f4aab7d00b51",
+      "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
+      "risk_gates_fingerprint": "d76e401ec9dc88d09cba9369f6e1b265eed1d6e275a2d5825223d8a87a8b18cd",
+      "risk_version": "private_core.risk.gates_v1_1",
+      "schema": "nexus_evidence_reproducibility_v12",
+      "schema_version": 1,
+      "simulated_only": true,
+      "terminal_status": "CLOSED"
+    },
+    {
+      "ai_provider_model_identifiers": [
+        {
+          "model": "deterministic-reasoner-v1",
+          "provider": "sim-reasoner",
+          "role": "reasoner"
+        },
+        {
+          "model": "deterministic-critic-v1",
+          "provider": "sim-critic",
+          "role": "critic"
+        }
+      ],
+      "candidate_id": "cand_v12e_f0b9cd18f5ab2f95",
+      "checkpoint_version": {
+        "authority_id": "private_core.checkpoint.envelope_v1",
+        "schema": "nexus_checkpoint_envelope_v1",
+        "schema_version": 1
+      },
+      "checkpoint_version_id": "nexus_checkpoint_envelope_v1:1",
+      "classification_provenance": {
+        "ai_provider_model_identifiers": [
+          {
+            "model": "deterministic-reasoner-v1",
+            "provider": "sim-reasoner",
+            "role": "reasoner"
+          },
+          {
+            "model": "deterministic-critic-v1",
+            "provider": "sim-critic",
+            "role": "critic"
+          }
+        ],
+        "blocked_reason": null,
+        "classification_label": "lifecycle_closed_simulated",
+        "fabricated_learning_proof": false,
+        "intent_id_present": true,
+        "learning_proven": false,
+        "lesson_ids": [
+          "lesson_struct_f0b9cd18f5ab2f95"
+        ],
+        "linkage_authority": "backend.nexus_decision.execution_bridge",
+        "position_id_present": true,
+        "rejection_reasons": [],
+        "risk_allowed": true,
+        "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
+        "risk_reason": "PASS",
+        "stage_path": [
+          "understand",
+          "challenge",
+          "decide",
+          "decide",
+          "record",
+          "monitor",
+          "review",
+          "calibrate",
+          "improve"
+        ],
+        "state_path": [
+          "UNDERSTANDING",
+          "CHALLENGED",
+          "RISK_REVIEWED",
+          "APPROVED_SIMULATED",
+          "MONITORING",
+          "EXITED",
+          "UNDER_REVIEW",
+          "CALIBRATED",
+          "CLOSED"
+        ],
+        "terminal_status": "CLOSED"
+      },
+      "code_version": "318371ce027c48dd633a57a32c9ebd0f1fe40018",
+      "cost_version": "founder-conservative-v1-1-2026-08-05",
+      "decision_id": "dec_v12e_f0b9cd18f5ab2f95",
+      "decision_schema_version": "nexus_decision_object_v11",
+      "demo_order": false,
+      "deterministic_replay_result": {
+        "fingerprint": "53c76fee76abf49f3e86a0c4192e147928afaea7baf28db8f7cb0d1662d706a6",
+        "match": true,
+        "peer_fingerprint": "53c76fee76abf49f3e86a0c4192e147928afaea7baf28db8f7cb0d1662d706a6"
+      },
+      "evidence_binding_hash": "2f21d53bff07fe3c8314d361733be86153bb87ebe63dcb4a06405de00daec50b",
+      "exchange_write": false,
+      "formal_walk_forward_executed": false,
+      "input_evidence_hashes": {
+        "evidence_hashes": [
+          "d8cd4a0176327650820374f9e060686b6bf54e24077af696f4eaeeee532daad8",
+          "56fab023460960bb3f2547a479104d6354cb63f50be0ec7b11acdc76ecd82aae"
+        ],
+        "evidence_ids": [
+          "ev_v12e-case-002_0",
+          "ev_v12e-case-002_1"
+        ],
+        "pairs": [
+          {
+            "evidence_id": "ev_v12e-case-002_0",
+            "sha256": "d8cd4a0176327650820374f9e060686b6bf54e24077af696f4eaeeee532daad8"
+          },
+          {
+            "evidence_id": "ev_v12e-case-002_1",
+            "sha256": "56fab023460960bb3f2547a479104d6354cb63f50be0ec7b11acdc76ecd82aae"
+          }
+        ]
+      },
+      "learning_claim": false,
+      "mainnet": false,
+      "oos_executed": false,
+      "profitability_claim": false,
+      "proof_dimensions": [
+        "input_evidence_hashes",
+        "code_version",
+        "cost_version",
+        "risk_version",
+        "checkpoint_version",
+        "ai_provider_model_identifiers",
+        "deterministic_replay_result",
+        "classification_provenance"
+      ],
+      "real_money": false,
+      "replay_fingerprint": "53c76fee76abf49f3e86a0c4192e147928afaea7baf28db8f7cb0d1662d706a6",
+      "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
+      "risk_gates_fingerprint": "d76e401ec9dc88d09cba9369f6e1b265eed1d6e275a2d5825223d8a87a8b18cd",
+      "risk_version": "private_core.risk.gates_v1_1",
+      "schema": "nexus_evidence_reproducibility_v12",
+      "schema_version": 1,
+      "simulated_only": true,
+      "terminal_status": "CLOSED"
+    },
+    {
+      "ai_provider_model_identifiers": [
+        {
+          "model": "deterministic-reasoner-v1",
+          "provider": "sim-reasoner",
+          "role": "reasoner"
+        },
+        {
+          "model": "deterministic-critic-v1",
+          "provider": "sim-critic",
+          "role": "critic"
+        }
+      ],
+      "candidate_id": "cand_v12e_1fcd00ea734ac092",
+      "checkpoint_version": {
+        "authority_id": "private_core.checkpoint.envelope_v1",
+        "schema": "nexus_checkpoint_envelope_v1",
+        "schema_version": 1
+      },
+      "checkpoint_version_id": "nexus_checkpoint_envelope_v1:1",
+      "classification_provenance": {
+        "ai_provider_model_identifiers": [
+          {
+            "model": "deterministic-reasoner-v1",
+            "provider": "sim-reasoner",
+            "role": "reasoner"
+          },
+          {
+            "model": "deterministic-critic-v1",
+            "provider": "sim-critic",
+            "role": "critic"
+          }
+        ],
+        "blocked_reason": null,
+        "classification_label": "lifecycle_closed_simulated",
+        "fabricated_learning_proof": false,
+        "intent_id_present": true,
+        "learning_proven": false,
+        "lesson_ids": [
+          "lesson_struct_1fcd00ea734ac092"
+        ],
+        "linkage_authority": "backend.nexus_decision.execution_bridge",
+        "position_id_present": true,
+        "rejection_reasons": [],
+        "risk_allowed": true,
+        "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
+        "risk_reason": "PASS",
+        "stage_path": [
+          "understand",
+          "challenge",
+          "decide",
+          "decide",
+          "record",
+          "monitor",
+          "review",
+          "calibrate",
+          "improve"
+        ],
+        "state_path": [
+          "UNDERSTANDING",
+          "CHALLENGED",
+          "RISK_REVIEWED",
+          "APPROVED_SIMULATED",
+          "MONITORING",
+          "EXITED",
+          "UNDER_REVIEW",
+          "CALIBRATED",
+          "CLOSED"
+        ],
+        "terminal_status": "CLOSED"
+      },
+      "code_version": "318371ce027c48dd633a57a32c9ebd0f1fe40018",
+      "cost_version": "founder-conservative-v1-1-2026-08-05",
+      "decision_id": "dec_v12e_1fcd00ea734ac092",
+      "decision_schema_version": "nexus_decision_object_v11",
+      "demo_order": false,
+      "deterministic_replay_result": {
+        "fingerprint": "efe30bb988a6609b032a610c932bba46826b7db472eaa48ca5830e4e65a9a091",
+        "match": true,
+        "peer_fingerprint": "efe30bb988a6609b032a610c932bba46826b7db472eaa48ca5830e4e65a9a091"
+      },
+      "evidence_binding_hash": "1a1326a13b2183cd7e97668ba72de3731fcc1b9b6e7377e42f0e89230b2de9c3",
+      "exchange_write": false,
+      "formal_walk_forward_executed": false,
+      "input_evidence_hashes": {
+        "evidence_hashes": [
+          "e93eaa11a31308003cb6dd18723720007138702751b4bca9cfb5729a9e22e423",
+          "c4866d8b9d2526dd22894606e6c3dd4c1a6f96874336a6ab1595d3132a74067b"
+        ],
+        "evidence_ids": [
+          "ev_v12e-case-003_0",
+          "ev_v12e-case-003_1"
+        ],
+        "pairs": [
+          {
+            "evidence_id": "ev_v12e-case-003_0",
+            "sha256": "e93eaa11a31308003cb6dd18723720007138702751b4bca9cfb5729a9e22e423"
+          },
+          {
+            "evidence_id": "ev_v12e-case-003_1",
+            "sha256": "c4866d8b9d2526dd22894606e6c3dd4c1a6f96874336a6ab1595d3132a74067b"
+          }
+        ]
+      },
+      "learning_claim": false,
+      "mainnet": false,
+      "oos_executed": false,
+      "profitability_claim": false,
+      "proof_dimensions": [
+        "input_evidence_hashes",
+        "code_version",
+        "cost_version",
+        "risk_version",
+        "checkpoint_version",
+        "ai_provider_model_identifiers",
+        "deterministic_replay_result",
+        "classification_provenance"
+      ],
+      "real_money": false,
+      "replay_fingerprint": "efe30bb988a6609b032a610c932bba46826b7db472eaa48ca5830e4e65a9a091",
+      "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
+      "risk_gates_fingerprint": "d76e401ec9dc88d09cba9369f6e1b265eed1d6e275a2d5825223d8a87a8b18cd",
+      "risk_version": "private_core.risk.gates_v1_1",
+      "schema": "nexus_evidence_reproducibility_v12",
+      "schema_version": 1,
+      "simulated_only": true,
+      "terminal_status": "CLOSED"
+    },
+    {
+      "ai_provider_model_identifiers": [
+        {
+          "model": "deterministic-reasoner-v1",
+          "provider": "sim-reasoner",
+          "role": "reasoner"
+        },
+        {
+          "model": "deterministic-critic-v1",
+          "provider": "sim-critic",
+          "role": "critic"
+        }
+      ],
+      "candidate_id": "cand_v12e_1fd720376c3167e1",
+      "checkpoint_version": {
+        "authority_id": "private_core.checkpoint.envelope_v1",
+        "schema": "nexus_checkpoint_envelope_v1",
+        "schema_version": 1
+      },
+      "checkpoint_version_id": "nexus_checkpoint_envelope_v1:1",
+      "classification_provenance": {
+        "ai_provider_model_identifiers": [
+          {
+            "model": "deterministic-reasoner-v1",
+            "provider": "sim-reasoner",
+            "role": "reasoner"
+          },
+          {
+            "model": "deterministic-critic-v1",
+            "provider": "sim-critic",
+            "role": "critic"
+          }
+        ],
+        "blocked_reason": null,
+        "classification_label": "lifecycle_closed_simulated",
+        "fabricated_learning_proof": false,
+        "intent_id_present": true,
+        "learning_proven": false,
+        "lesson_ids": [
+          "lesson_struct_1fd720376c3167e1"
+        ],
+        "linkage_authority": "backend.nexus_decision.execution_bridge",
+        "position_id_present": true,
+        "rejection_reasons": [],
+        "risk_allowed": true,
+        "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
+        "risk_reason": "PASS",
+        "stage_path": [
+          "understand",
+          "challenge",
+          "decide",
+          "decide",
+          "record",
+          "monitor",
+          "review",
+          "calibrate",
+          "improve"
+        ],
+        "state_path": [
+          "UNDERSTANDING",
+          "CHALLENGED",
+          "RISK_REVIEWED",
+          "APPROVED_SIMULATED",
+          "MONITORING",
+          "EXITED",
+          "UNDER_REVIEW",
+          "CALIBRATED",
+          "CLOSED"
+        ],
+        "terminal_status": "CLOSED"
+      },
+      "code_version": "318371ce027c48dd633a57a32c9ebd0f1fe40018",
+      "cost_version": "founder-conservative-v1-1-2026-08-05",
+      "decision_id": "dec_v12e_1fd720376c3167e1",
+      "decision_schema_version": "nexus_decision_object_v11",
+      "demo_order": false,
+      "deterministic_replay_result": {
+        "fingerprint": "2a05127c4d3df1da5c32112d2ec3febc9aee707f487ddb4fe4f25bf886ad17e7",
+        "match": true,
+        "peer_fingerprint": "2a05127c4d3df1da5c32112d2ec3febc9aee707f487ddb4fe4f25bf886ad17e7"
+      },
+      "evidence_binding_hash": "fd1ec41fd519b7a4b8fb1596ba3c47bf378b2d4c4596154c64c31a054def90bf",
+      "exchange_write": false,
+      "formal_walk_forward_executed": false,
+      "input_evidence_hashes": {
+        "evidence_hashes": [
+          "2cb66de3fd113f213888f9954fed574982ce4acb8b66fd4cda062cefbc532893",
+          "cb7d6be876a7ca2a7d5612807586a66da57bc520eafd5295261e06f5ff4b11f7"
+        ],
+        "evidence_ids": [
+          "ev_v12e-case-004_0",
+          "ev_v12e-case-004_1"
+        ],
+        "pairs": [
+          {
+            "evidence_id": "ev_v12e-case-004_0",
+            "sha256": "2cb66de3fd113f213888f9954fed574982ce4acb8b66fd4cda062cefbc532893"
+          },
+          {
+            "evidence_id": "ev_v12e-case-004_1",
+            "sha256": "cb7d6be876a7ca2a7d5612807586a66da57bc520eafd5295261e06f5ff4b11f7"
+          }
+        ]
+      },
+      "learning_claim": false,
+      "mainnet": false,
+      "oos_executed": false,
+      "profitability_claim": false,
+      "proof_dimensions": [
+        "input_evidence_hashes",
+        "code_version",
+        "cost_version",
+        "risk_version",
+        "checkpoint_version",
+        "ai_provider_model_identifiers",
+        "deterministic_replay_result",
+        "classification_provenance"
+      ],
+      "real_money": false,
+      "replay_fingerprint": "2a05127c4d3df1da5c32112d2ec3febc9aee707f487ddb4fe4f25bf886ad17e7",
+      "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
+      "risk_gates_fingerprint": "d76e401ec9dc88d09cba9369f6e1b265eed1d6e275a2d5825223d8a87a8b18cd",
+      "risk_version": "private_core.risk.gates_v1_1",
+      "schema": "nexus_evidence_reproducibility_v12",
+      "schema_version": 1,
+      "simulated_only": true,
+      "terminal_status": "CLOSED"
+    }
+  ],
+  "schema": "v12_evidence_repro_envelopes"
+}

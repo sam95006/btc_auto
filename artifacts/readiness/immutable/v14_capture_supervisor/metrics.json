@@ -1,0 +1,18 @@
+{
+  "partition_count": 66,
+  "sealed_count": 28,
+  "open_tail_count": 38,
+  "symbol_count": 25,
+  "missing_hours": [
+    "20260805_10"
+  ],
+  "campaign_bytes": 13207188,
+  "free_gib": 214.67,
+  "bytes_per_second": 5010.015375634134,
+  "trade_count": 161614,
+  "liq_count": 53,
+  "process_status": "DEGRADED",
+  "ws_status": "HEALTHY",
+  "integrity_status": "DEGRADED",
+  "safe_stop_required": false
+}

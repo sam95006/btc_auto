@@ -1,0 +1,19 @@
+{
+  "all_dimensions_present": true,
+  "dimensions": [
+    "training_windows",
+    "validation_windows",
+    "embargo",
+    "purge_intervals",
+    "parameter_freeze_rules",
+    "candidate_freeze_rules",
+    "cost_version_freeze",
+    "code_version_freeze",
+    "dataset_freeze",
+    "failure_thresholds",
+    "minimum_sample_sizes",
+    "regime_requirements",
+    "symbol_requirements"
+  ],
+  "schema": "FOUNDER_V15_F_FORMAL_WALK_FORWARD_PLAN_COMPILER"
+}

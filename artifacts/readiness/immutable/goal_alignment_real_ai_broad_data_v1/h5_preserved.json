@@ -1,0 +1,12 @@
+{
+  "H5A_status": "INSUFFICIENT_SAMPLE",
+  "H5A_founder_label": "PROMISING_RESEARCH_CANDIDATE_INSUFFICIENT_SAMPLE",
+  "H5A_completed_trade_count": 125,
+  "H5B_status": "INSUFFICIENT_SAMPLE",
+  "H5C_status": "INSUFFICIENT_SAMPLE",
+  "selected_h5_primary_policy": null,
+  "h5_oos_reservation_id": null,
+  "h5_not_rerun": true,
+  "h5_trade_gate_not_lowered": true,
+  "preregistration_checksums_unchanged": true
+}

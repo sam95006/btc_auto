@@ -1,0 +1,11 @@
+{
+  "auth_proof": "605dea65c215d20dedb6c2d1ad1af67f12c5119fd40b9959fda7ef94db2a2c1d",
+  "authorized": false,
+  "oos_consumed": false,
+  "oos_downloaded": false,
+  "oos_executed": false,
+  "oos_reserved": false,
+  "real_oos_reservation_permitted": false,
+  "reason": "FOUNDER_AUTHORIZATION_MISSING",
+  "required_scope": "founder_v15_g_oos_reservation_seal"
+}

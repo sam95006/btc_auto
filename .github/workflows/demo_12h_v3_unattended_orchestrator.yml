@@ -1,0 +1,212 @@
+name: demo-12h-v3-unattended-orchestrator
+
+# Remote GET-only watchdog for 12H V3 extended observation + deadline finalize.
+# No redeploy. No env mutation. No 24H. No local Cursor dependency.
+# Split into Phase A (≤6h GHA limit) and Phase B (continuation to deadline).
+
+on:
+  workflow_dispatch:
+    inputs:
+      arm_phrase:
+        description: "Must equal ARM_UNATTENDED_12H_V3"
+        required: true
+        type: string
+      expected_session_id:
+        required: true
+        default: "NEXUS-DEMO-12H-V3-20260801T181517Z-12hv3c01"
+        type: string
+      watchdog_phase:
+        description: "A = through T+6H; B = T+8H/T+10H + T+12H finalize"
+        required: true
+        default: "A"
+        type: choice
+        options:
+          - "A"
+          - "B"
+      continue_from:
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: demo-12h-v3-unattended-${{ github.event.inputs.watchdog_phase }}
+  cancel-in-progress: false
+
+env:
+  MAINNET: "false"
+  REAL_MONEY: "false"
+  EXCHANGE_WRITE: "false"
+  DEMO_AUTONOMOUS_ENABLED: "false"
+  DEMO_VAL_URL: https://nexus-bybit-demo-val.zeabur.app
+  EXPECTED_12H_SESSION_ID: ${{ github.event.inputs.expected_session_id }}
+  EXPECTED_12H_STARTED_AT: "2026-08-01T18:15:17Z"
+  EXPECTED_12H_DEADLINE: "2026-08-02T06:15:17Z"
+  EXPECTED_DEPLOYMENT_COMMIT: "63a4c17d80e988756493bc035beb594157342aa5"
+  WATCHDOG_PHASE: ${{ github.event.inputs.watchdog_phase }}
+  CONTINUE_FROM: ${{ github.event.inputs.continue_from }}
+  ARTIFACT_DIR: artifacts/demo_validation_12h_v3
+  PYTHONPATH: ${{ github.workspace }}
+
+jobs:
+  unattended:
+    runs-on: ubuntu-latest
+    # Phase B spans up to ~6h of waits; keep headroom so GHA does not cancel a clean PHASE_B_COMPLETE.
+    timeout-minutes: 420
+    steps:
+      - name: Confirm arm phrase + announce
+        run: |
+          if [ "${{ github.event.inputs.arm_phrase }}" != "ARM_UNATTENDED_12H_V3" ]; then
+            echo "arm phrase mismatch"
+            exit 1
+          fi
+          echo "remote_watchdog_armed=true"
+          echo "remote_watchdog_run_id=${{ github.run_id }}"
+          echo "local_computer_dependency=false"
+          echo "phase=${{ github.event.inputs.watchdog_phase }}"
+          echo "session_id=${{ github.event.inputs.expected_session_id }}"
+          echo "t15_scheduled=2026-08-01T18:30:17Z"
+          echo "t30_scheduled=2026-08-01T18:45:17Z"
+          echo "t1h_scheduled=2026-08-01T19:15:17Z"
+          echo "t2h_scheduled=2026-08-01T20:15:17Z"
+          echo "t4h_scheduled=2026-08-01T22:15:17Z"
+          echo "t6h_scheduled=2026-08-02T00:15:17Z"
+          echo "t8h_scheduled=2026-08-02T02:15:17Z"
+          echo "t10h_scheduled=2026-08-02T04:15:17Z"
+          echo "t12h_finalizer_scheduled=2026-08-02T06:15:17Z"
+          echo "redeploy=false"
+          echo "24H_GATE_APPROVED=false"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/demo-autonomous-6h-v2-readiness
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install minimal deps
+        run: pip install flask
+
+      - name: Prove SoT session (GET-only)
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request, sys
+          base=os.environ["DEMO_VAL_URL"]
+          exp=os.environ["EXPECTED_12H_SESSION_ID"]
+          with urllib.request.urlopen(base+"/api/nexus/demo-execution/bounded-12h/status", timeout=45) as r:
+              d=json.loads(r.read().decode())
+          bb=d.get("bounded_12h") or d
+          if isinstance(bb.get("bounded_12h"), dict):
+              bb=bb["bounded_12h"]
+          print(json.dumps({k: bb.get(k) for k in ("session_id","status","thread_alive","entries_total","deadline_ts","controller_type")}, indent=2))
+          if bb.get("session_id") != exp:
+              print("SESSION_MISMATCH"); sys.exit(2)
+          if bb.get("status") not in {"RUNNING","STARTING","COMPLETED","FAILED","KILLED","FINALIZING"}:
+              print("unexpected status"); sys.exit(2)
+          print("sot_ok")
+          PY
+
+      - name: Run remote 12H watchdog
+        id: watchdog
+        run: |
+          set -euo pipefail
+          set +e
+          python tools/ci/demo_12h_v3_unattended_orchestrator.py
+          code=$?
+          set -e
+          echo "watchdog_exit_code=$code" >> "$GITHUB_OUTPUT"
+          if [ -f artifacts/demo_validation_12h_v3/WATCHDOG_PHASE_B_RESULT.json ]; then
+            python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p = Path("artifacts/demo_validation_12h_v3/WATCHDOG_PHASE_B_RESULT.json")
+          d = json.loads(p.read_text(encoding="utf-8"))
+          print(f"runtime_result={d.get('runtime_result')}")
+          print(f"watchdog_result={d.get('watchdog_result')}")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write(f"runtime_result={d.get('runtime_result')}\n")
+              fh.write(f"watchdog_result={d.get('watchdog_result')}\n")
+          PY
+          else
+            echo "runtime_result=UNKNOWN" >> "$GITHUB_OUTPUT"
+            echo "watchdog_result=UNKNOWN" >> "$GITHUB_OUTPUT"
+          fi
+          # PHASE_B_COMPLETE / Phase A complete → exit 0 even if runtime classified FAILED/INCONCLUSIVE.
+          if [ "$code" = "0" ]; then
+            exit 0
+          fi
+          exit "$code"
+
+      - name: Upload artifacts
+        id: upload
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-12h-v3-unattended-${{ github.event.inputs.watchdog_phase }}-${{ github.run_id }}
+          path: |
+            artifacts/demo_validation_12h_v3/
+            docs/04_readiness/NEXUS_12H_V3_*.md
+            docs/04_readiness/NEXUS_12H_V3_*.json
+          if-no-files-found: warn
+
+      - name: Record upload result
+        if: always()
+        run: |
+          mkdir -p artifacts/demo_validation_12h_v3
+          echo '{"artifact_upload_result":"${{ steps.upload.outcome }}","runtime_result":"${{ steps.watchdog.outputs.runtime_result }}","watchdog_result":"${{ steps.watchdog.outputs.watchdog_result }}"}' \
+            > artifacts/demo_validation_12h_v3/WATCHDOG_STEP_RESULTS.json
+
+      - name: Commit evidence to feature branch
+        id: evidence_commit
+        if: always()
+        run: |
+          set -euo pipefail
+          git config user.name "nexus-unattended-bot"
+          git config user.email "nexus-unattended-bot@users.noreply.github.com"
+          git fetch origin feature/demo-autonomous-6h-v2-readiness
+          git checkout feature/demo-autonomous-6h-v2-readiness || git checkout -B feature/demo-autonomous-6h-v2-readiness
+          git pull --rebase origin feature/demo-autonomous-6h-v2-readiness || true
+          git add artifacts/demo_validation_12h_v3 docs/04_readiness/NEXUS_12H_V3_*.md docs/04_readiness/NEXUS_12H_V3_*.json || true
+          if git diff --cached --quiet; then
+            echo "evidence_commit_result=NO_CHANGES" >> "$GITHUB_OUTPUT"
+            echo "no evidence commit"
+            exit 0
+          fi
+          git commit -m "chore(evidence): 12H V3 unattended phase ${{ github.event.inputs.watchdog_phase }} run ${{ github.run_id }}"
+          git push origin HEAD:feature/demo-autonomous-6h-v2-readiness
+          echo "evidence_commit_result=COMMITTED" >> "$GITHUB_OUTPUT"
+
+      - name: Arm Phase B continuation (no redeploy)
+        if: ${{ github.event.inputs.watchdog_phase == 'A' && success() }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ ! -f artifacts/demo_validation_12h_v3/PHASE_B_CONTINUATION_REQUEST.json ]; then
+            echo "no continuation marker — skip"
+            exit 0
+          fi
+          # Prefer existing dispatchable 6h unattended workflow shim if new workflow not on default yet.
+          set +e
+          gh workflow run ".github/workflows/demo_12h_v3_unattended_orchestrator.yml" \
+            --ref feature/demo-autonomous-6h-v2-readiness \
+            -f arm_phrase=ARM_UNATTENDED_12H_V3 \
+            -f expected_session_id="${{ github.event.inputs.expected_session_id }}" \
+            -f watchdog_phase=B \
+            -f continue_from=Tplus8H
+          code=$?
+          set -e
+          if [ "$code" != "0" ]; then
+            echo "direct 12h workflow dispatch failed (likely not on default) — using 6h orchestrator shim"
+            gh workflow run "demo-6h-v2-unattended-orchestrator" \
+              --ref feature/demo-autonomous-6h-v2-readiness \
+              -f arm_phrase=ARM_UNATTENDED_12H_V3_PHASE_B \
+              -f expected_session_id="${{ github.event.inputs.expected_session_id }}" \
+              -f founder_approve_demo_autonomous_12h_v3=false
+          fi
+          echo "phase_b_continuation_armed=true"

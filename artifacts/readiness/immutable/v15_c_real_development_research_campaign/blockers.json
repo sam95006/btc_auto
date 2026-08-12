@@ -1,0 +1,23 @@
+{
+  "blockers": [
+    {
+      "blocker_id": "QUALIFICATION_NOT_AUTHORIZED",
+      "detail": "qualification_ready_count forced 0; no QUALIFIED/profitability claims"
+    },
+    {
+      "blocker_id": "OOS_AND_FORMAL_WF_BANNED",
+      "detail": "development-classified interval only; untouched OOS sealed"
+    },
+    {
+      "blocker_id": "NO_STATUS_JSON",
+      "detail": "V15-C emits campaign artifacts only; no *_status.json"
+    },
+    {
+      "blocker_id": "NO_AUTO_INTEGRATE",
+      "detail": "lane artifacts only; coordinator must not auto-integrate"
+    }
+  ],
+  "created_at": "2026-08-05T15:24:04Z",
+  "qualification_ready_count": 0,
+  "schema": "v15_c_blockers"
+}

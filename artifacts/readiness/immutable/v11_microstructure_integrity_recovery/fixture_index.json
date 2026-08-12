@@ -1,0 +1,30 @@
+{
+  "EXPECTED_OPEN_TAIL": {
+    "class": "EXPECTED_OPEN_TAIL",
+    "path": "D:\\NEXUS_RUNTIME\\worktrees\\v11_micro_integrity\\tests\\fixtures\\microstructure_integrity_v11\\open_tail\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\BTCUSDT\\ms12_FIX_OPEN_1_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20240703_09_0.jsonl.gz",
+    "open_marker": "D:\\NEXUS_RUNTIME\\worktrees\\v11_micro_integrity\\tests\\fixtures\\microstructure_integrity_v11\\open_tail\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\BTCUSDT\\ms12_FIX_OPEN_1_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20240703_09_0.jsonl.gz.open"
+  },
+  "MANIFEST_BUG": {
+    "class": "MANIFEST_BUG",
+    "path": "D:\\NEXUS_RUNTIME\\worktrees\\v11_micro_integrity\\tests\\fixtures\\microstructure_integrity_v11\\manifest_bug\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\ETHUSDT\\ms12_FIX_MAN_1_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20240703_09_0.jsonl.gz",
+    "manifest_removed": true
+  },
+  "LINKAGE_SEMANTICS_BUG": {
+    "class": "LINKAGE_SEMANTICS_BUG",
+    "partitions_root": "D:\\NEXUS_RUNTIME\\worktrees\\v11_micro_integrity\\tests\\fixtures\\microstructure_integrity_v11\\linkage\\partitions"
+  },
+  "ACTUAL_DATA_CORRUPTION": {
+    "class": "ACTUAL_DATA_CORRUPTION",
+    "manifest_path": "D:\\NEXUS_RUNTIME\\worktrees\\v11_micro_integrity\\tests\\fixtures\\microstructure_integrity_v11\\checksum_mismatch\\BYBIT\\LIQUIDATION_EVENTS\\SOLUSDT\\ms12_FIX_CSUM_1_LIQUIDATION_EVENTS_SOLUSDT_20240703_09_0.manifest.json"
+  },
+  "SYNTHETIC_24H": {
+    "hours": 24,
+    "symbols": [
+      "BTCUSDT",
+      "ETHUSDT"
+    ],
+    "partition_count": 48,
+    "checksum_replay_verified": true,
+    "graceful_stop": true
+  }
+}

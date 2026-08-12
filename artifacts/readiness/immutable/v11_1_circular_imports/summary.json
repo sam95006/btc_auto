@@ -1,0 +1,25 @@
+{
+  "schema": "FOUNDER_C6_CIRCULAR_IMPORT_REMEDIATION",
+  "lane": "FOUNDER_C6",
+  "generated_at": "2026-08-05T07:37:20Z",
+  "branch": "feature/v11_1-single-tip-integration",
+  "base_HEAD": "5b1d47543523f7e5be88da63256904171ce45165",
+  "status": "PASS",
+  "circular_SCC_count": 0,
+  "import_smoke_status": "PASS",
+  "runtime_startup_status": "PASS",
+  "typecheck_status": "PASS",
+  "two_pass": {
+    "pass1": "PASS",
+    "pass2": "PASS"
+  },
+  "blockers": [],
+  "hard_bans_observed": [
+    "NO_RUNTIME_IMPORT_TRICKS_TO_HIDE_CYCLES",
+    "NO_LAZY_NESTED_IMPORT_AS_SOLE_REMEDIATION",
+    "NO_MASS_DELETE_COMPAT_MODULES",
+    "NO_MERGE_OR_DEPLOY_FROM_THIS_LANE",
+    "WORKTREE_ONLY_v11_1_circular_imports",
+    "CURSOR_NATIVE_ONLY"
+  ]
+}

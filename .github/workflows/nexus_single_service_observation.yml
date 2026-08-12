@@ -1,0 +1,93 @@
+name: nexus-single-service-observation
+
+# GET-only operational observation. Never redeploys Validation.
+# Does not change env, fee, geometry, or exchange_write.
+
+on:
+  workflow_dispatch:
+    inputs:
+      checkpoint_label:
+        description: "T+1H | T+3H | T+6H | T+12H | T+18H | T+24H | MANUAL"
+        required: true
+        default: MANUAL
+        type: string
+  schedule:
+    # Hourly during observation window (UTC). Script is read-only.
+    - cron: "20 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nexus-single-service-observation
+  cancel-in-progress: false
+
+env:
+  BYBIT_DEMO: "true"
+  MAINNET: "false"
+  REAL_MONEY: "false"
+  EXCHANGE_WRITE: "false"
+  DEMO_VAL_URL: https://nexus-bybit-demo-val.zeabur.app
+  STAGE3_URL: https://nexus-stage3-bybit-demo-learning.zeabur.app
+  OLD_CONTROL_PLANE_URL: https://nexus-unified-control-plane.zeabur.app
+
+jobs:
+  get-only-checkpoint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Window + label
+        id: meta
+        run: |
+          set -euo pipefail
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          START=2026-07-31T05:11:30Z
+          END=2026-08-01T05:11:30Z
+          echo "now=$NOW"
+          if [[ "$NOW" < "$START" || "$NOW" > "$END" ]]; then
+            if [ "${{ github.event_name }}" = "schedule" ]; then
+              echo "outside_observation_window=true" >> "$GITHUB_OUTPUT"
+              echo "Outside observation window; schedule no-op."
+              exit 0
+            fi
+          fi
+          echo "outside_observation_window=false" >> "$GITHUB_OUTPUT"
+          INPUT_LABEL="${{ github.event.inputs.checkpoint_label }}"
+          if [ -n "${INPUT_LABEL}" ] && [ "${INPUT_LABEL}" != "MANUAL" ]; then
+            echo "label=${INPUT_LABEL}" >> "$GITHUB_OUTPUT"
+          else
+            LABEL=$(python - <<'PY'
+          from datetime import datetime, timezone
+          start = datetime(2026, 7, 31, 5, 11, 30, tzinfo=timezone.utc)
+          now = datetime.now(timezone.utc)
+          hours = (now - start).total_seconds() / 3600.0
+          targets = [(1, "T+1H"), (3, "T+3H"), (6, "T+6H"), (12, "T+12H"), (18, "T+18H"), (24, "T+24H")]
+          for t, name in targets:
+              if abs(hours - t) <= 0.55:
+                  print(name)
+                  break
+          else:
+              print(f"T+{hours:.1f}H")
+          PY
+          )
+            echo "label=${LABEL}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: GET-only checkpoint
+        if: steps.meta.outputs.outside_observation_window != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/single_service_observation
+          python tools/ci/single_service_operational_monitor.py --label "${{ steps.meta.outputs.label }}"
+          echo "DEPLOYMENT_COMMIT_SOT=598a5e11985f613007c8d65e61fa1dd9c7cbdf67" >> "$GITHUB_STEP_SUMMARY"
+          echo "DOCS_TIP_NOT_RUNTIME=38eb6b3d7e23bb32ab9945b79a4b97dabe5e6d9f" >> "$GITHUB_STEP_SUMMARY"
+          echo "NO_REDEPLOY_NO_DELETE_NO_6H_V2" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: steps.meta.outputs.outside_observation_window != 'true'
+        with:
+          name: single-service-obs-${{ steps.meta.outputs.label }}-${{ github.run_id }}
+          path: artifacts/single_service_observation/
+          if-no-files-found: error

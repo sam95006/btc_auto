@@ -1,0 +1,17 @@
+{
+  "critical_count": 0,
+  "digest": "f523760095f312a02bb9c168e87f8d54a77025f0b5be50a3857599f5d23a16e0",
+  "digests_match": true,
+  "findings": [],
+  "findings_fixed": [],
+  "note": "residuals_list_is_critical_only",
+  "pass": 2,
+  "pass1_digest": "f523760095f312a02bb9c168e87f8d54a77025f0b5be50a3857599f5d23a16e0",
+  "pass_ok": true,
+  "refuse_api_probes": {
+    "all_raised": true,
+    "probe_count": 6,
+    "raised_count": 6
+  },
+  "remaining_residuals": []
+}

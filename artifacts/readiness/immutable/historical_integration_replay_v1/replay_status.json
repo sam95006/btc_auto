@@ -1,0 +1,45 @@
+{
+  "schema": "historical_integration_replay_v1",
+  "historical_replay_status": "NEXUS_HISTORICAL_INTEGRATION_REPLAY_V1_PASS",
+  "provider_label": "PROVIDER_FIXTURE_NOT_REAL_AI_EVALUATION",
+  "real_learning_claimed": false,
+  "sources": [
+    {
+      "source_artifact_id": "artifacts/readiness/immutable/strategy_engine_semantic_repair_v1_1/candidate_funnel_summary.json",
+      "source_checksum": "b603a03dff79a186d757baa784b6b9150cc1b2895c7b637f958c138093e7605c"
+    },
+    {
+      "source_artifact_id": "artifacts/readiness/immutable/general_multi_strategy_engine_v1/development_research_summary.json",
+      "source_checksum": "ec4260510aa2818d744db9f8576a82e6ab4b3d0af10497becc135e290f478e2d"
+    },
+    {
+      "source_artifact_id": "artifacts/readiness/immutable/strategy_engine_broad_coverage_v1_2/v1_2_candidate_funnels.json",
+      "source_checksum": "77d8aba4a7da92984e51c05804d301714fd7fd29170a0079371031694024056a"
+    }
+  ],
+  "historical_candidate_count": 500,
+  "historical_completed_trade_count": 220,
+  "historical_replayable_count": 500,
+  "schema_invalid_count": 0,
+  "missing_evidence_count": 0,
+  "risk_blocked_count": 0,
+  "cost_blocked_count": 266,
+  "stale_blocked_count": 14,
+  "provider_blocked_count": 0,
+  "simulated_intent_count": 220,
+  "simulated_open_count": 220,
+  "simulated_exit_count": 220,
+  "classification_count": 220,
+  "ledger_append_count": 941,
+  "ledger_hash_chain_status": "PASS",
+  "exchange_write_attempt_count": 0,
+  "oos_consumed": false,
+  "created_at": "2026-08-04T13:54:32Z",
+  "candidate_rejected_count": 280,
+  "candidate_replayable_count": 500,
+  "candidate_schema_invalid_count": 0,
+  "candidate_missing_evidence_count": 0,
+  "intent_created_count": 220,
+  "stale_data_blocked_count": 14,
+  "snapshot_count": 1
+}

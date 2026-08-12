@@ -1,0 +1,230 @@
+{
+  "schema": "lesson_delivery_proof_v1",
+  "status": "PASS",
+  "cases": [
+    {
+      "candidate_id": "H5A_EVIDENCE_2_27",
+      "candidate_symbol": "XRPUSDT",
+      "retrieved_lesson_ids": [
+        "fe63c62e-021d-4d4b-a9b6-aaf045522f56"
+      ],
+      "applied_lesson_ids": [],
+      "ignored_lesson_ids": [
+        "fe63c62e-021d-4d4b-a9b6-aaf045522f56"
+      ],
+      "lesson_application_reason": "No applicable lessons found for the given context",
+      "decision_effect": "CONFIDENCE_REDUCED",
+      "order_permission_from_provider": "ALLOW",
+      "proof_chain": [
+        "Lesson created",
+        "Lesson stored",
+        "Lesson retrieved",
+        "Lesson supplied to Main AI",
+        "Main AI explicitly referenced or rejected the Lesson",
+        "decision effect recorded"
+      ]
+    },
+    {
+      "candidate_id": "H5A_EVIDENCE_3_2",
+      "candidate_symbol": "DOGEUSDT",
+      "retrieved_lesson_ids": [
+        "476954f7-db8d-4dbd-aa9a-002d033aecb5"
+      ],
+      "applied_lesson_ids": [],
+      "ignored_lesson_ids": [
+        "476954f7-db8d-4dbd-aa9a-002d033aecb5"
+      ],
+      "lesson_application_reason": "No applicable lessons found for the given context",
+      "decision_effect": "CONFIDENCE_REDUCED",
+      "order_permission_from_provider": "ALLOW",
+      "proof_chain": [
+        "Lesson created",
+        "Lesson stored",
+        "Lesson retrieved",
+        "Lesson supplied to Main AI",
+        "Main AI explicitly referenced or rejected the Lesson",
+        "decision effect recorded"
+      ]
+    },
+    {
+      "candidate_id": "H5A_EVIDENCE_3_8",
+      "candidate_symbol": "ADAUSDT",
+      "retrieved_lesson_ids": [
+        "cd1d54c8-7a1a-4a54-beb5-f9ab104a91c7"
+      ],
+      "applied_lesson_ids": [
+        "cd1d54c8-7a1a-4a54-beb5-f9ab104a91c7"
+      ],
+      "ignored_lesson_ids": [],
+      "lesson_application_reason": "The lesson cd1d54c8-7a1a-4a54-beb5-f9ab104a91c7 is of class UNDETERMINED_PROCESS and does not provide specific actions to apply, thus it warrants caution due to lack of clear guidance.",
+      "decision_effect": "CONFIDENCE_REDUCED",
+      "order_permission_from_provider": "ALLOW",
+      "proof_chain": [
+        "Lesson created",
+        "Lesson stored",
+        "Lesson retrieved",
+        "Lesson supplied to Main AI",
+        "Main AI explicitly referenced or rejected the Lesson",
+        "decision effect recorded"
+      ]
+    },
+    {
+      "candidate_id": "H5A_EVIDENCE_3_14",
+      "candidate_symbol": "ZECUSDT",
+      "retrieved_lesson_ids": [
+        "968c1b06-4b84-465c-a476-fa7431a01ac2"
+      ],
+      "applied_lesson_ids": [],
+      "ignored_lesson_ids": [
+        "968c1b06-4b84-465c-a476-fa7431a01ac2"
+      ],
+      "lesson_application_reason": "No applicable lessons found for the given context",
+      "decision_effect": "CONFIDENCE_REDUCED",
+      "order_permission_from_provider": "ALLOW",
+      "proof_chain": [
+        "Lesson created",
+        "Lesson stored",
+        "Lesson retrieved",
+        "Lesson supplied to Main AI",
+        "Main AI explicitly referenced or rejected the Lesson",
+        "decision effect recorded"
+      ]
+    },
+    {
+      "candidate_id": "H5A_EVIDENCE_3_20",
+      "candidate_symbol": "XRPUSDT",
+      "retrieved_lesson_ids": [
+        "fe63c62e-021d-4d4b-a9b6-aaf045522f56"
+      ],
+      "applied_lesson_ids": [],
+      "ignored_lesson_ids": [
+        "fe63c62e-021d-4d4b-a9b6-aaf045522f56"
+      ],
+      "lesson_application_reason": "No applicable lessons found for the given context",
+      "decision_effect": "CONFIDENCE_REDUCED",
+      "order_permission_from_provider": "ALLOW",
+      "proof_chain": [
+        "Lesson created",
+        "Lesson stored",
+        "Lesson retrieved",
+        "Lesson supplied to Main AI",
+        "Main AI explicitly referenced or rejected the Lesson",
+        "decision effect recorded"
+      ]
+    },
+    {
+      "candidate_id": "H5A_EVIDENCE_3_26",
+      "candidate_symbol": "SOLUSDT",
+      "retrieved_lesson_ids": [
+        "f04fad2e-27d1-4e63-98f2-ba95040459f3"
+      ],
+      "applied_lesson_ids": [
+        "f04fad2e-27d1-4e63-98f2-ba95040459f3"
+      ],
+      "ignored_lesson_ids": [],
+      "lesson_application_reason": "The lesson with id f04fad2e-27d1-4e63-98f2-ba95040459f3 is of class UNDETERMINED_PROCESS and does not provide any specific actions to apply. Therefore, it does not directly influence the decision but warrants caution due to its undetermined nature.",
+      "decision_effect": "CONFIDENCE_REDUCED",
+      "order_permission_from_provider": "ALLOW",
+      "proof_chain": [
+        "Lesson created",
+        "Lesson stored",
+        "Lesson retrieved",
+        "Lesson supplied to Main AI",
+        "Main AI explicitly referenced or rejected the Lesson",
+        "decision effect recorded"
+      ]
+    },
+    {
+      "candidate_id": "H5A_EVIDENCE_4_6",
+      "candidate_symbol": "XRPUSDT",
+      "retrieved_lesson_ids": [
+        "fe63c62e-021d-4d4b-a9b6-aaf045522f56"
+      ],
+      "applied_lesson_ids": [],
+      "ignored_lesson_ids": [
+        "fe63c62e-021d-4d4b-a9b6-aaf045522f56"
+      ],
+      "lesson_application_reason": "No applicable lessons found for the given context",
+      "decision_effect": "CONFIDENCE_REDUCED",
+      "order_permission_from_provider": "ALLOW",
+      "proof_chain": [
+        "Lesson created",
+        "Lesson stored",
+        "Lesson retrieved",
+        "Lesson supplied to Main AI",
+        "Main AI explicitly referenced or rejected the Lesson",
+        "decision effect recorded"
+      ]
+    },
+    {
+      "candidate_id": "H5A_EVIDENCE_4_18",
+      "candidate_symbol": "HYPEUSDT",
+      "retrieved_lesson_ids": [
+        "92b5c118-89c0-46f7-85c6-87b725aacc0d",
+        "3c6bafa1-bc79-419c-ab43-fb65a8b3a94f"
+      ],
+      "applied_lesson_ids": [],
+      "ignored_lesson_ids": [
+        "92b5c118-89c0-46f7-85c6-87b725aacc0d",
+        "3c6bafa1-bc79-419c-ab43-fb65a8b3a94f"
+      ],
+      "lesson_application_reason": "No applicable lessons found for the given context",
+      "decision_effect": "CONFIDENCE_REDUCED",
+      "order_permission_from_provider": "ALLOW",
+      "proof_chain": [
+        "Lesson created",
+        "Lesson stored",
+        "Lesson retrieved",
+        "Lesson supplied to Main AI",
+        "Main AI explicitly referenced or rejected the Lesson",
+        "decision effect recorded"
+      ]
+    },
+    {
+      "candidate_id": "H5A_EVIDENCE_5_2",
+      "candidate_symbol": "DOGEUSDT",
+      "retrieved_lesson_ids": [
+        "476954f7-db8d-4dbd-aa9a-002d033aecb5"
+      ],
+      "applied_lesson_ids": [],
+      "ignored_lesson_ids": [
+        "476954f7-db8d-4dbd-aa9a-002d033aecb5"
+      ],
+      "lesson_application_reason": "No applicable lessons found for the given context",
+      "decision_effect": "CONFIDENCE_REDUCED",
+      "order_permission_from_provider": "ALLOW",
+      "proof_chain": [
+        "Lesson created",
+        "Lesson stored",
+        "Lesson retrieved",
+        "Lesson supplied to Main AI",
+        "Main AI explicitly referenced or rejected the Lesson",
+        "decision effect recorded"
+      ]
+    },
+    {
+      "candidate_id": "H5A_EVIDENCE_5_8",
+      "candidate_symbol": "ADAUSDT",
+      "retrieved_lesson_ids": [
+        "cd1d54c8-7a1a-4a54-beb5-f9ab104a91c7"
+      ],
+      "applied_lesson_ids": [
+        "cd1d54c8-7a1a-4a54-beb5-f9ab104a91c7"
+      ],
+      "ignored_lesson_ids": [],
+      "lesson_application_reason": "The lesson cd1d54c8-7a1a-4a54-beb5-f9ab104a91c7 of class UNDETERMINED_PROCESS does not provide specific actions to apply, thus it does not directly influence the decision but is considered for awareness of potential uncertainties.",
+      "decision_effect": "CONFIDENCE_REDUCED",
+      "order_permission_from_provider": "ALLOW",
+      "proof_chain": [
+        "Lesson created",
+        "Lesson stored",
+        "Lesson retrieved",
+        "Lesson supplied to Main AI",
+        "Main AI explicitly referenced or rejected the Lesson",
+        "decision effect recorded"
+      ]
+    }
+  ],
+  "main_reasoner_lesson_reference_count": 11,
+  "main_reasoner_lesson_application_count": 3
+}

@@ -1,0 +1,8 @@
+{
+  "schema": "v17_b_bronze_quarantine_pointer_v1",
+  "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "status": "QUARANTINED",
+  "reason": "verify_fail:content_hash_mismatch",
+  "quarantine_path": "quarantine/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+  "pointer_at": "2026-08-06T01:33:46Z"
+}

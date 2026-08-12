@@ -1,0 +1,270 @@
+{
+  "created_at": "2026-08-05T04:06:23Z",
+  "invariants": {
+    "checkpoint_loss_count": 0,
+    "cost_bridge_failure_count": 0,
+    "duplicate_position_count": 0,
+    "evidence_binding_failure_count": 0,
+    "exchange_write_attempt_count": 0,
+    "orphan_lifecycle_count": 0,
+    "risk_limit_bypass_count": 0,
+    "unclosed_intent_count": 0,
+    "untracked_fill_count": 0
+  },
+  "probe_pass": true,
+  "probes": {
+    "cancel_replace_probe": {
+      "cancel_replace_count": 1,
+      "cost_bridge_ok": true,
+      "fill_status": "FILLED",
+      "invariants": {
+        "checkpoint_loss_count": 0,
+        "cost_bridge_failure_count": 0,
+        "duplicate_position_count": 0,
+        "evidence_binding_failure_count": 0,
+        "exchange_write_attempt_count": 0,
+        "orphan_lifecycle_count": 0,
+        "risk_limit_bypass_count": 0,
+        "unclosed_intent_count": 0,
+        "untracked_fill_count": 0
+      },
+      "probe": "cancel_replace_probe",
+      "probe_pass": true
+    },
+    "ledger_corruption_probe": {
+      "checkpoint_loss_count": 0,
+      "corrupted_bytes": 32,
+      "path_exists": true,
+      "probe_pass": true,
+      "recovery_reason": "lkg_and_ledger_consistent",
+      "recovery_status": "RECOVERED"
+    },
+    "liquidity_collapse_probe": {
+      "invariants": {
+        "checkpoint_loss_count": 0,
+        "cost_bridge_failure_count": 0,
+        "duplicate_position_count": 0,
+        "evidence_binding_failure_count": 0,
+        "exchange_write_attempt_count": 0,
+        "orphan_lifecycle_count": 0,
+        "risk_limit_bypass_count": 0,
+        "unclosed_intent_count": 0,
+        "untracked_fill_count": 0
+      },
+      "liquidity_status": "COLLAPSED",
+      "new_entry_allowed": false,
+      "probe": "liquidity_collapse_probe",
+      "probe_pass": true
+    },
+    "qualification_blocks_probe": {
+      "all_stages_blocked": true,
+      "attempt_count": 6,
+      "controller": {
+        "all_stages_blocked": true,
+        "attempt_count": 6,
+        "attempts": [
+          {
+            "allowed": false,
+            "demo_order_count": 0,
+            "executed": false,
+            "formal_walk_forward_executed": false,
+            "founder_authorization_present": false,
+            "label": "Candidate Freeze",
+            "oos_executed": false,
+            "oos_reservation_created": false,
+            "reason": "STAGE_DEFAULT_BLOCKED_V10_CONTROL_PLANE_ONLY",
+            "stage": "CANDIDATE_FREEZE",
+            "status": "BLOCKED",
+            "strategy_promoted": false,
+            "strategy_selected": false
+          },
+          {
+            "allowed": false,
+            "demo_order_count": 0,
+            "executed": false,
+            "formal_walk_forward_executed": false,
+            "founder_authorization_present": false,
+            "label": "Replay",
+            "oos_executed": false,
+            "oos_reservation_created": false,
+            "reason": "STAGE_DEFAULT_BLOCKED_V10_CONTROL_PLANE_ONLY",
+            "stage": "REPLAY",
+            "status": "BLOCKED",
+            "strategy_promoted": false,
+            "strategy_selected": false
+          },
+          {
+            "allowed": false,
+            "demo_order_count": 0,
+            "executed": false,
+            "formal_walk_forward_executed": false,
+            "founder_authorization_present": false,
+            "label": "Walk-forward",
+            "oos_executed": false,
+            "oos_reservation_created": false,
+            "reason": "STAGE_DEFAULT_BLOCKED_V10_CONTROL_PLANE_ONLY",
+            "stage": "WALK_FORWARD",
+            "status": "BLOCKED",
+            "strategy_promoted": false,
+            "strategy_selected": false
+          },
+          {
+            "allowed": false,
+            "demo_order_count": 0,
+            "executed": false,
+            "formal_walk_forward_executed": false,
+            "founder_authorization_present": false,
+            "label": "Risk Review",
+            "oos_executed": false,
+            "oos_reservation_created": false,
+            "reason": "STAGE_DEFAULT_BLOCKED_V10_CONTROL_PLANE_ONLY",
+            "stage": "RISK_REVIEW",
+            "status": "BLOCKED",
+            "strategy_promoted": false,
+            "strategy_selected": false
+          },
+          {
+            "allowed": false,
+            "demo_order_count": 0,
+            "executed": false,
+            "formal_walk_forward_executed": false,
+            "founder_authorization_present": false,
+            "label": "OOS reservation",
+            "oos_executed": false,
+            "oos_reservation_created": false,
+            "reason": "STAGE_DEFAULT_BLOCKED_V10_CONTROL_PLANE_ONLY",
+            "stage": "OOS_RESERVATION",
+            "status": "BLOCKED",
+            "strategy_promoted": false,
+            "strategy_selected": false
+          },
+          {
+            "allowed": false,
+            "demo_order_count": 0,
+            "executed": false,
+            "formal_walk_forward_executed": false,
+            "founder_authorization_present": false,
+            "label": "Demo eligibility",
+            "oos_executed": false,
+            "oos_reservation_created": false,
+            "reason": "STAGE_DEFAULT_BLOCKED_V10_CONTROL_PLANE_ONLY",
+            "stage": "DEMO_ELIGIBILITY",
+            "status": "BLOCKED",
+            "strategy_promoted": false,
+            "strategy_selected": false
+          }
+        ],
+        "block_reason": "STAGE_DEFAULT_BLOCKED_V10_CONTROL_PLANE_ONLY",
+        "hard_bans": [
+          "no_candidate_freeze_execution",
+          "no_replay_execution",
+          "no_walk_forward_execution",
+          "no_risk_review_execution",
+          "no_oos_reservation",
+          "no_oos_execution",
+          "no_september_reserved_oos_consumption",
+          "no_demo_eligibility_grant",
+          "no_demo_shadow_exchange_writes",
+          "no_strategy_selection",
+          "no_strategy_promotion",
+          "no_merge_deploy"
+        ],
+        "stage_labels": {
+          "CANDIDATE_FREEZE": "Candidate Freeze",
+          "DEMO_ELIGIBILITY": "Demo eligibility",
+          "OOS_RESERVATION": "OOS reservation",
+          "REPLAY": "Replay",
+          "RISK_REVIEW": "Risk Review",
+          "WALK_FORWARD": "Walk-forward"
+        },
+        "stage_order": [
+          "CANDIDATE_FREEZE",
+          "REPLAY",
+          "WALK_FORWARD",
+          "RISK_REVIEW",
+          "OOS_RESERVATION",
+          "DEMO_ELIGIBILITY"
+        ],
+        "stages": {
+          "CANDIDATE_FREEZE": "BLOCKED",
+          "DEMO_ELIGIBILITY": "BLOCKED",
+          "OOS_RESERVATION": "BLOCKED",
+          "REPLAY": "BLOCKED",
+          "RISK_REVIEW": "BLOCKED",
+          "WALK_FORWARD": "BLOCKED"
+        }
+      },
+      "formal_walk_forward_executed": false,
+      "oos_consumed": false,
+      "probe": "qualification_blocks_probe",
+      "probe_pass": true,
+      "stages_blocked": [
+        "CANDIDATE_FREEZE",
+        "REPLAY",
+        "WALK_FORWARD",
+        "RISK_REVIEW",
+        "OOS_RESERVATION",
+        "DEMO_ELIGIBILITY"
+      ],
+      "strategy_selected": false
+    },
+    "restart_recovery_probe": {
+      "exchange_write_attempt_count": 0,
+      "final_state": "COMPLETED",
+      "invariants_counts": {
+        "duplicate_position_count": 0,
+        "exchange_write_attempt_count": 0,
+        "open_ambiguous_position_count": 0,
+        "orphan_lifecycle_count": 0,
+        "risk_limit_bypass_count": 0,
+        "unclosed_intent_count": 0,
+        "untracked_fill_count": 0
+      },
+      "invariants_status": "PASS",
+      "probe": "restart_recovery_probe",
+      "probe_pass": true,
+      "recovery_count": 1,
+      "restart_count": 1
+    },
+    "snapshot_corruption_probe": {
+      "checkpoint_loss_count": 0,
+      "path_exists": true,
+      "probe_pass": true,
+      "recovery_reason": "snapshot_corruption",
+      "recovery_status": "BLOCKED_AMBIGUOUS"
+    },
+    "terminal_clock_jump_backward": {
+      "exchange_write_attempt_count": 0,
+      "final_state": "COMPLETED",
+      "invariants_status": "PASS",
+      "kill_switch_status": "READY",
+      "probe_pass": true,
+      "session_pass": true
+    },
+    "terminal_clock_jump_forward": {
+      "exchange_write_attempt_count": 0,
+      "final_state": "COMPLETED",
+      "invariants_status": "PASS",
+      "kill_switch_status": "READY",
+      "probe_pass": true,
+      "session_pass": true
+    },
+    "terminal_disk_hard_limit": {
+      "exchange_write_attempt_count": 0,
+      "final_state": "BLOCKED",
+      "invariants_status": "PASS",
+      "kill_switch_status": "READY",
+      "probe_pass": true,
+      "session_pass": true
+    },
+    "terminal_kill_switch_during_open_position": {
+      "exchange_write_attempt_count": 0,
+      "final_state": "BLOCKED",
+      "invariants_status": "PASS",
+      "kill_switch_status": "TRIGGERED",
+      "probe_pass": true,
+      "session_pass": true
+    }
+  },
+  "schema": "v11_1_system_365d_focused_probes"
+}

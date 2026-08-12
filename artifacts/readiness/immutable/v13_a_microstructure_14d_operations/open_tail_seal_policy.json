@@ -1,0 +1,44 @@
+{
+  "schema": "microstructure_collector_cutover_v2_open_tail_seal_policy",
+  "created_at": "2026-08-05T08:32:59Z",
+  "prior_campaign_raw_modified": false,
+  "prior_expected_open_tail_count": 113,
+  "retained_classification_counts": {
+    "ACTUAL_DATA_CORRUPTION": 0,
+    "EXPECTED_OPEN_TAIL": 113,
+    "MIGRATION_ARTIFACT": 113,
+    "MANIFEST_BUG": 43,
+    "FINALIZER_FALSE_POSITIVE": 113,
+    "LINKAGE_SEMANTICS_BUG": 113,
+    "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+  },
+  "dispositions": [
+    "LEAVE_UNSEALED_FORENSIC",
+    "SEAL_ON_GRACEFUL_STOP",
+    "RESUME_BOUNDARY",
+    "REQUIRES_FOUNDER_AUTH_TO_REBUILD_MANIFEST"
+  ],
+  "policy": {
+    "prior_campaign_open_tails": "LEAVE_UNSEALED_FORENSIC",
+    "new_capture_graceful_stop": "SEAL_ON_GRACEFUL_STOP",
+    "new_capture_kill_mid_write": "EXPECTED_OPEN_TAIL_or_INTERRUPTED_FINALIZE",
+    "resume_after_open_tail": "RESUME_BOUNDARY",
+    "manifest_rebuild": "REQUIRES_FOUNDER_AUTH_TO_REBUILD_MANIFEST"
+  },
+  "seal_protocol_v2": [
+    "flush_buffers",
+    "close_gzip_footer",
+    "write_seal_state_FINALIZING",
+    "atomic_manifest_replace",
+    "write_seal_state_SEALED",
+    "unlink_open_marker"
+  ],
+  "forbidden": [
+    "silent_repair_of_prior_open_tails",
+    "overwrite_prior_partition_bytes",
+    "event_study_start_from_unsealed_prior",
+    "claim_integrity_PASS_while_open_tails_unpolicyed"
+  ],
+  "integrity_status_with_prior_open_tails": "NOT_PASS_UNTIL_CUTOVER_AND_HOLD_GATES",
+  "event_study": "NOT_READY"
+}

@@ -1,0 +1,8 @@
+{
+  "schema": "good_process_loss_non_suppression_test",
+  "source_trade_id": "CAL_V21_MKT_0",
+  "good_process_loss_count": 25,
+  "auto_block_all_similar_valid_trades": false,
+  "block_created": false,
+  "good_process_loss_non_suppression_status": "PASS"
+}

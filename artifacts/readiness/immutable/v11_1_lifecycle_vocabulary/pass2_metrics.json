@@ -1,0 +1,12 @@
+{
+  "adapter_allowed_pairs": 12,
+  "adversarial_critical": 0,
+  "adversarial_high": 0,
+  "compatibility_rows": 33,
+  "invariant_count": 8,
+  "negative_fixture_count": 5,
+  "positive_fixture_count": 2,
+  "scope_count": 7,
+  "trading_loop_scope_count": 6,
+  "transition_edges": 9
+}

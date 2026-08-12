@@ -1,0 +1,89 @@
+{
+  "created_at": "2026-08-05T04:08:22Z",
+  "passed": true,
+  "row_count": 7,
+  "rows": [
+    {
+      "critical_count": 1,
+      "expected_codes": [
+        "INV_DECISION_CLOSED_POSITION_OPEN"
+      ],
+      "id": "neg_decision_closed_position_open",
+      "kind": "negative",
+      "observed_codes": [
+        "INV_DECISION_CLOSED_POSITION_OPEN"
+      ],
+      "ok": true,
+      "valid": false
+    },
+    {
+      "critical_count": 1,
+      "expected_codes": [
+        "INV_SESSION_COMPLETED_UNRESOLVED_INTENT"
+      ],
+      "id": "neg_session_completed_unresolved_intent",
+      "kind": "negative",
+      "observed_codes": [
+        "INV_SESSION_COMPLETED_UNRESOLVED_INTENT"
+      ],
+      "ok": true,
+      "valid": false
+    },
+    {
+      "critical_count": 1,
+      "expected_codes": [
+        "INV_REFLECTION_COMPLETE_BEFORE_EXIT"
+      ],
+      "id": "neg_reflection_complete_before_exit",
+      "kind": "negative",
+      "observed_codes": [
+        "INV_REFLECTION_COMPLETE_BEFORE_EXIT"
+      ],
+      "ok": true,
+      "valid": false
+    },
+    {
+      "critical_count": 1,
+      "expected_codes": [
+        "INV_POSITION_CLOSED_RESIDUAL_QTY"
+      ],
+      "id": "neg_position_closed_residual_qty",
+      "kind": "negative",
+      "observed_codes": [
+        "INV_POSITION_CLOSED_RESIDUAL_QTY"
+      ],
+      "ok": true,
+      "valid": false
+    },
+    {
+      "critical_count": 1,
+      "expected_codes": [
+        "INV_SESSION_CONTROL_ADAPTER"
+      ],
+      "id": "neg_session_control_silent_homonym",
+      "kind": "negative",
+      "observed_codes": [
+        "INV_SESSION_CONTROL_ADAPTER"
+      ],
+      "ok": true,
+      "valid": false
+    },
+    {
+      "critical_count": 0,
+      "id": "pos_happy_flat_close",
+      "kind": "positive",
+      "ok": true,
+      "valid": true,
+      "violations": []
+    },
+    {
+      "critical_count": 0,
+      "id": "pos_running_open",
+      "kind": "positive",
+      "ok": true,
+      "valid": true,
+      "violations": []
+    }
+  ],
+  "schema": "v11_1_lifecycle_vocabulary_validation_matrix"
+}

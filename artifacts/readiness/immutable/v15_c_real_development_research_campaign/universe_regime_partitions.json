@@ -1,0 +1,30 @@
+{
+  "created_at": "2026-08-05T15:24:04Z",
+  "dynamic_universe": {
+    "interval": "60",
+    "symbol_partition": {
+      "BTCUSDT": {
+        "mechanism_count": 5,
+        "net_sum": -0.26871745499254673
+      },
+      "ETHUSDT": {
+        "mechanism_count": 5,
+        "net_sum": -0.8423906493835873
+      },
+      "SOLUSDT": {
+        "mechanism_count": 5,
+        "net_sum": -1.6108238650951068
+      }
+    },
+    "symbols": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "SOLUSDT"
+    ]
+  },
+  "regime_partition": {
+    "RANGE": 551,
+    "TREND": 288
+  },
+  "schema": "v15_c_universe_regime"
+}

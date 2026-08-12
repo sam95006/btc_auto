@@ -17,28 +17,65 @@ def _env_evidence_root() -> Path | None:
     return Path(root) if root else None
 
 
+def _is_zeabur_runtime() -> bool:
+    if str(os.environ.get("NEXUS_RUNTIME_LOCATION", "") or "").strip().upper() == "ZEABUR":
+        return True
+    if str(os.environ.get("NEXUS_ZEABUR_AUTONOMY_DEPLOYED", "") or "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+    }:
+        return True
+    return any(
+        bool(str(os.environ.get(k, "") or "").strip())
+        for k in (
+            "ZEABUR",
+            "ZEABUR_SERVICE_ID",
+            "ZEABUR_PROJECT_ID",
+            "ZEABUR_ENVIRONMENT_ID",
+            "KUBERNETES_SERVICE_HOST",
+        )
+    )
+
+
 def _runtime_live_candidates() -> tuple[str, ...]:
-    """Agent B campaign live feeds — preferred over bundled snapshots."""
+    """Cloud /data first. No D:\\ fallback when ZEABUR."""
     out: list[str] = []
+    # Shared volume paths (unified runtime)
+    data_root = str(os.environ.get("NEXUS_DATA_ROOT", "") or "").strip() or (
+        "/data" if _is_zeabur_runtime() else ""
+    )
     env_root = _env_evidence_root()
     if env_root is not None:
         out.extend(
             [
                 str(env_root / "founder_demo_monitor_live.json"),
-                str(env_root / "v18_2_28_core.json"),
-                str(env_root / "v18_2_27_core.json"),
-                str(env_root / "v18_2_26_core.json"),
+                str(env_root / "unified_runtime_health.json"),
             ]
         )
-    out.extend(
-        [
-            r"D:\NEXUS_RUNTIME\evidence_coordinator\founder_demo_monitor_live.json",
-            r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_28_core.json",
-            r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_27_core.json",
-            r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_26_core.json",
-        ]
-    )
-    return tuple(out)
+    if data_root:
+        out.extend(
+            [
+                str(Path(data_root) / "evidence_coordinator" / "founder_demo_monitor_live.json"),
+                str(Path(data_root) / "evidence_coordinator" / "unified_runtime_health.json"),
+                str(
+                    Path(data_root)
+                    / "campaigns"
+                    / "research_v18_2_30"
+                    / "autonomy"
+                    / "founder_demo_monitor_live.json"
+                ),
+            ]
+        )
+    if not _is_zeabur_runtime():
+        # Local developer fallback only
+        out.extend(
+            [
+                r"D:\NEXUS_RUNTIME\evidence_coordinator\founder_demo_monitor_live.json",
+                r"D:\NEXUS_RUNTIME\evidence_coordinator\v18_2_28_core.json",
+            ]
+        )
+    return tuple(dict.fromkeys(out))
 
 
 def _repo_live_candidates() -> tuple[str, ...]:

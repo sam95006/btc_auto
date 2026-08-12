@@ -1,0 +1,103 @@
+{
+  "active_lesson_count": 0,
+  "campaign_digest": "3480e212fb79f5f288ef246555df41d67d820fdc56e24761356878b787efbc00",
+  "critical_remaining": 0,
+  "finding_count": 11,
+  "findings": [
+    {
+      "detail": "lesson_count=8 expected=8",
+      "finding_id": "ADV_LESSON_COUNT",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "unique lesson ids and compile digests",
+      "finding_id": "ADV_DISTINCT_LESSONS",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "conditions/scope/expert/regimes/expiry/evidence/confidence/contradictory/author",
+      "finding_id": "ADV_REQUIRED_SCHEMA_FIELDS",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "all lessons CANDIDATE; active_lesson_count=0",
+      "finding_id": "ADV_CANDIDATE_ONLY",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "no production risk/leverage mutation flags",
+      "finding_id": "ADV_NO_PRODUCTION_RISK_LEVERAGE",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "qualification_ready_count=0",
+      "finding_id": "ADV_QUALIFICATION_READY_ZERO",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "no edge/profitability/qualification claims",
+      "finding_id": "ADV_NO_EDGE_OR_QUALIFICATION_CLAIMS",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "oos/wf/demo/shadow/exchange/mainnet/pr26/pr27/auto-integrate/deploy bans held",
+      "finding_id": "ADV_HARD_BAN_COMPLIANCE",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "campaign_digest=3480e212fb79f5f2",
+      "finding_id": "ADV_DETERMINISTIC_DIGEST",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "banned profitability/ACTIVE vocabulary absent",
+      "finding_id": "ADV_BANNED_VOCAB",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "lane must not write *_status.json report files",
+      "finding_id": "ADV_NO_STATUS_JSON",
+      "severity": "HIGH",
+      "status": "PASS"
+    }
+  ],
+  "hard_bans_checked": [
+    "no_active_real_lessons",
+    "no_auto_integrate",
+    "no_demo_orders",
+    "no_edge_claims",
+    "no_exchange_write",
+    "no_formal_walk_forward",
+    "no_lesson_promotion_to_active",
+    "no_mainnet",
+    "no_oos_consumption",
+    "no_pr26_merge",
+    "no_pr27_merge",
+    "no_private_core_deploy",
+    "no_production_leverage_mutation",
+    "no_production_risk_mutation",
+    "no_profitability_claims",
+    "no_qualified_claims",
+    "no_real_money",
+    "no_shadow_orders",
+    "no_status_json",
+    "no_strategy_promotion"
+  ],
+  "high_remaining": 0,
+  "lesson_count": 8,
+  "pass": "pass_2",
+  "pass_ok": true,
+  "qualification_ready_count": 0,
+  "remaining_count": 0,
+  "schema": "v16_e_lesson_compiler_adversarial_v1"
+}

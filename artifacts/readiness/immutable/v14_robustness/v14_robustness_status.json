@@ -1,0 +1,84 @@
+{
+  "adversarial_ok": true,
+  "artifacts_dir": "artifacts/readiness/immutable/v14_robustness",
+  "auto_integrate": false,
+  "base_commit": "15ecb7b9524d253ec4f2fb04dc73aa1673ec906a",
+  "branch": "feature/v14-robustness-multiple-testing",
+  "candidate_count": 10,
+  "cluster_count": 9,
+  "commits": [
+    {
+      "role": "implementation",
+      "sha": "5f55dc72f6d728c770f16950b5c35d28f1b60cad"
+    },
+    {
+      "role": "proof_stamp",
+      "sha": "fde0aca7f5f649af0bde4de44e236103e7a2d95a"
+    },
+    {
+      "role": "lane_tip",
+      "sha": "fde0aca7f5f649af0bde4de44e236103e7a2d95a"
+    }
+  ],
+  "cost_destroyed_count": 1,
+  "created_at": "2026-08-05T11:20:21Z",
+  "critical_findings": 0,
+  "data_blocked_count": 1,
+  "demo_order_count": 0,
+  "deterministic_fixture_replay": true,
+  "development_fragile_count": 1,
+  "development_robust_count": 2,
+  "exchange_write_attempt_count": 0,
+  "fixture_source": "synthetic_sanitized",
+  "formal_walk_forward_executed": false,
+  "hard_bans_honored": true,
+  "head_commit_at_run": "fde0aca7f5f649af0bde4de44e236103e7a2d95a",
+  "high_findings": 0,
+  "implementation_commit": "5f55dc72f6d728c770f16950b5c35d28f1b60cad",
+  "insufficient_sample_count": 3,
+  "label_histogram": {
+    "COST_DESTROYED": 1,
+    "DATA_QUALITY_BLOCKED": 1,
+    "DEVELOPMENT_FRAGILE": 1,
+    "DEVELOPMENT_ROBUST": 2,
+    "INSUFFICIENT_SAMPLE": 3,
+    "MULTIPLE_TESTING_REJECTED": 2
+  },
+  "lane": "V14-D",
+  "lane_head_commit": "fde0aca7f5f649af0bde4de44e236103e7a2d95a",
+  "lane_name": "ROBUSTNESS_AND_MULTIPLE_TESTING_LAB",
+  "mainnet": false,
+  "multiple_testing_rejected_count": 2,
+  "oos_consumed": false,
+  "oos_executed": false,
+  "owned_paths": [
+    "backend/nexus_research_validation/",
+    "tools/research/robustness/",
+    "tests/research_validation/",
+    "artifacts/readiness/immutable/v14_robustness/"
+  ],
+  "pass1": "PASS",
+  "pass2": "PASS",
+  "passes_completed": [
+    "PASS_1",
+    "PASS_2"
+  ],
+  "pr27_merged": false,
+  "proof_stamp_commit": "fde0aca7f5f649af0bde4de44e236103e7a2d95a",
+  "pushed": true,
+  "pytest_passed": true,
+  "qualification_ready_count": 0,
+  "real_money": false,
+  "redundant_pair_count": 1,
+  "remaining_blockers": [],
+  "remote_branch": "origin/feature/v14-robustness-multiple-testing",
+  "runtime_status_path": "D:\\NEXUS_RUNTIME\\v14_d_status.json",
+  "schema": "FOUNDER_V14_D_ROBUSTNESS_MULTIPLE_TESTING_LAB",
+  "secret_leak_count": 0,
+  "shadow_order_count": 0,
+  "status": "PASS",
+  "total_bh_discoveries": 6,
+  "total_family_tests": 10,
+  "updated_at": "2026-08-05T11:21:22Z",
+  "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v14_d_robustness"
+}

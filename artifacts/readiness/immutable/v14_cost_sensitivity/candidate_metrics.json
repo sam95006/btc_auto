@@ -1,0 +1,358 @@
+[
+  {
+    "break_even_cost": "48.0000",
+    "candidate_id": "C01",
+    "capacity_estimate": {
+      "capacity_limited": true,
+      "capacity_notional_usdt": "300.0000",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": {
+        "impact_bps": "1.414213562373095048801688724",
+        "net_pnl": "0.7029437251522859414379735312",
+        "size_scale": "0.5"
+      },
+      "maximum_viable_size_scale": "0.5"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "13.200000000",
+      "exit_fee": "13.200000000",
+      "funding_cost": "2.40000000",
+      "market_impact_approximation": "4.8000000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "9.600000",
+      "spread_cost": "4.800000"
+    },
+    "fragility_score": "0.9615384615384615384615384615",
+    "gross_expectancy": "1.2000",
+    "label": "COST_DESTROYED",
+    "maximum_viable_slippage": "1",
+    "maximum_viable_spread": "0.5",
+    "mechanism_family": "ORDER_FLOW_IMBALANCE",
+    "net_expectancy": "0.000000000"
+  },
+  {
+    "break_even_cost": "57.6000",
+    "candidate_id": "C02",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "0.000",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": null,
+      "maximum_viable_size_scale": "0"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "23.760000000",
+      "exit_fee": "23.760000000",
+      "funding_cost": "4.32000000",
+      "market_impact_approximation": "8.6400000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "17.280000",
+      "spread_cost": "8.640000"
+    },
+    "fragility_score": "1",
+    "gross_expectancy": "1.6000",
+    "label": "COST_DESTROYED",
+    "maximum_viable_slippage": "0",
+    "maximum_viable_spread": "0",
+    "mechanism_family": "ABSORPTION",
+    "net_expectancy": "-0.800000000"
+  },
+  {
+    "break_even_cost": "168.000",
+    "candidate_id": "C03",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "32000.00",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": {
+        "impact_bps": "8.944271909999158785636694674",
+        "net_pnl": "945.7932368640753728069521571",
+        "size_scale": "20"
+      },
+      "maximum_viable_size_scale": "20"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "24.64000000",
+      "exit_fee": "24.64000000",
+      "funding_cost": "4.4800000",
+      "market_impact_approximation": "8.960000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "17.92000",
+      "spread_cost": "8.96000"
+    },
+    "fragility_score": "0.3076923076923076923076923077",
+    "gross_expectancy": "6.000",
+    "label": "COST_SENSITIVITY_OBSERVED",
+    "maximum_viable_slippage": "8",
+    "maximum_viable_spread": "8",
+    "mechanism_family": "LIQUIDATION_CASCADE",
+    "net_expectancy": "2.80000000"
+  },
+  {
+    "break_even_cost": "48.000",
+    "candidate_id": "C04",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "0.00",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": null,
+      "maximum_viable_size_scale": "0"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "16.89600000",
+      "exit_fee": "16.89600000",
+      "funding_cost": "3.0720000",
+      "market_impact_approximation": "6.144000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "12.28800",
+      "spread_cost": "6.14400"
+    },
+    "fragility_score": "0.9615384615384615384615384615",
+    "gross_expectancy": "2.000",
+    "label": "COST_DESTROYED",
+    "maximum_viable_slippage": "0",
+    "maximum_viable_spread": "0",
+    "mechanism_family": "SPREAD_SHOCK",
+    "net_expectancy": "-0.56000000"
+  },
+  {
+    "break_even_cost": "19.2000",
+    "candidate_id": "C05",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "0.000",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": null,
+      "maximum_viable_size_scale": "0"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "15.840000000",
+      "exit_fee": "15.840000000",
+      "funding_cost": "2.88000000",
+      "market_impact_approximation": "5.7600000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "11.520000",
+      "spread_cost": "5.760000"
+    },
+    "fragility_score": "1",
+    "gross_expectancy": "0.6000",
+    "label": "COST_DESTROYED",
+    "maximum_viable_slippage": "0",
+    "maximum_viable_spread": "0",
+    "mechanism_family": "FUNDING_BASIS",
+    "net_expectancy": "-1.200000000"
+  },
+  {
+    "break_even_cost": "240.00",
+    "candidate_id": "C06",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "56000",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": {
+        "impact_bps": "8.944271909999158785636694674",
+        "net_pnl": "1782.241546080094216008690197",
+        "size_scale": "20"
+      },
+      "maximum_viable_size_scale": "20"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "30.800000",
+      "exit_fee": "30.800000",
+      "funding_cost": "5.60000",
+      "market_impact_approximation": "11.2000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "22.400",
+      "spread_cost": "11.200"
+    },
+    "fragility_score": "0.1923076923076923076923076923",
+    "gross_expectancy": "12.00",
+    "label": "COST_SENSITIVITY_OBSERVED",
+    "maximum_viable_slippage": "12",
+    "maximum_viable_spread": "12",
+    "mechanism_family": "FLOW_REVERSAL",
+    "net_expectancy": "6.400000"
+  },
+  {
+    "break_even_cost": "54.00",
+    "candidate_id": "C07",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "0",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": null,
+      "maximum_viable_size_scale": "0"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "20.790000",
+      "exit_fee": "20.790000",
+      "funding_cost": "3.78000",
+      "market_impact_approximation": "7.5600",
+      "partial_fill_cost": "0",
+      "slippage_cost": "15.120",
+      "spread_cost": "7.560"
+    },
+    "fragility_score": "1",
+    "gross_expectancy": "3.00",
+    "label": "COST_DESTROYED",
+    "maximum_viable_slippage": "0",
+    "maximum_viable_spread": "0",
+    "mechanism_family": "LIQUIDITY_WITHDRAWAL",
+    "net_expectancy": "-1.200000"
+  },
+  {
+    "break_even_cost": "88.0000",
+    "candidate_id": "C08",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "22000.00",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": {
+        "impact_bps": "8.944271909999158785636694674",
+        "net_pnl": "455.8972395560407147751839778",
+        "size_scale": "20"
+      },
+      "maximum_viable_size_scale": "20"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "13.31000000",
+      "exit_fee": "13.31000000",
+      "funding_cost": "2.4200000",
+      "market_impact_approximation": "4.840000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "9.68000",
+      "spread_cost": "4.84000"
+    },
+    "fragility_score": "0.3076923076923076923076923077",
+    "gross_expectancy": "4.0000",
+    "label": "DATA_QUALITY_BLOCKED",
+    "maximum_viable_slippage": "8",
+    "maximum_viable_spread": "8",
+    "mechanism_family": "VOL_EXPANSION",
+    "net_expectancy": "1.80000000"
+  },
+  {
+    "break_even_cost": "21.6000",
+    "candidate_id": "C09",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "0.000",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": null,
+      "maximum_viable_size_scale": "0"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "7.920000000",
+      "exit_fee": "7.920000000",
+      "funding_cost": "1.44000000",
+      "market_impact_approximation": "2.8800000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "5.760000",
+      "spread_cost": "2.880000"
+    },
+    "fragility_score": "0.9615384615384615384615384615",
+    "gross_expectancy": "0.7200",
+    "label": "COST_DESTROYED",
+    "maximum_viable_slippage": "0",
+    "maximum_viable_spread": "0",
+    "mechanism_family": "QUEUE_SENSITIVE_MAKER",
+    "net_expectancy": "-0.240000000"
+  },
+  {
+    "break_even_cost": "256.00",
+    "candidate_id": "C10",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "64000.0",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": {
+        "impact_bps": "6.324555320336758663997787088",
+        "net_pnl": "69.16553519751591280662660224",
+        "size_scale": "10"
+      },
+      "maximum_viable_size_scale": "10"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "56.3200000",
+      "exit_fee": "56.3200000",
+      "funding_cost": "10.240000",
+      "market_impact_approximation": "20.48000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "40.9600",
+      "spread_cost": "20.4800"
+    },
+    "fragility_score": "0.5",
+    "gross_expectancy": "16.00",
+    "label": "FRAGILE_TO_EXECUTION",
+    "maximum_viable_slippage": "3",
+    "maximum_viable_spread": "3",
+    "mechanism_family": "SIZE_SCALING_FRAGILE",
+    "net_expectancy": "3.2000000"
+  },
+  {
+    "break_even_cost": "18.7200",
+    "candidate_id": "C11",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "0.000",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": null,
+      "maximum_viable_size_scale": "0"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "10.296000000",
+      "exit_fee": "10.296000000",
+      "funding_cost": "1.87200000",
+      "market_impact_approximation": "3.7440000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "7.488000",
+      "spread_cost": "3.744000"
+    },
+    "fragility_score": "1",
+    "gross_expectancy": "0.7200",
+    "label": "COST_DESTROYED",
+    "maximum_viable_slippage": "0",
+    "maximum_viable_spread": "0",
+    "mechanism_family": "LATENCY_FRAGILE",
+    "net_expectancy": "-0.720000000"
+  },
+  {
+    "break_even_cost": "1.4000",
+    "candidate_id": "C12",
+    "capacity_estimate": {
+      "capacity_limited": false,
+      "capacity_notional_usdt": "0.000",
+      "impact_bps_cap": "50.0",
+      "last_viable_detail": null,
+      "maximum_viable_size_scale": "0"
+    },
+    "cost_components": {
+      "cancel_replace_cost": "0",
+      "entry_fee": "4.620000000",
+      "exit_fee": "4.620000000",
+      "funding_cost": "0.84000000",
+      "market_impact_approximation": "1.6800000",
+      "partial_fill_cost": "0",
+      "slippage_cost": "3.360000",
+      "spread_cost": "1.680000"
+    },
+    "fragility_score": "1",
+    "gross_expectancy": "0.1000",
+    "label": "INSUFFICIENT_SAMPLE",
+    "maximum_viable_slippage": "0",
+    "maximum_viable_spread": "0",
+    "mechanism_family": "LOW_EDGE_COST_DESTROY",
+    "net_expectancy": "-1.100000000"
+  }
+]

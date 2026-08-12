@@ -1,0 +1,83 @@
+{
+  "finding_count": 10,
+  "findings": [
+    {
+      "detail": "all mechanism families present with unique semantic IDs",
+      "finding_id": "ADV_FAMILY_DISTINCT",
+      "severity": "HIGH",
+      "status": "PASS"
+    },
+    {
+      "detail": "entry/exit fee, spread, slippage, funding, partial fill, cancel-replace, market impact",
+      "finding_id": "ADV_FULL_COST_COMPONENTS",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "all labels allowed",
+      "finding_id": "ADV_LABEL_ALLOWLIST",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "qualification_ready_count=0",
+      "finding_id": "ADV_QUALIFICATION_READY_ZERO",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "oos/wf/demo/exchange/profitability/qualified/pr27 bans held",
+      "finding_id": "ADV_HARD_BAN_COMPLIANCE",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "candidate_configuration_count=10",
+      "finding_id": "ADV_NO_COSMETIC_FLOOD",
+      "severity": "HIGH",
+      "status": "PASS"
+    },
+    {
+      "detail": "lookahead forbidden and future-bar refs zero",
+      "finding_id": "ADV_PIT_PROOF",
+      "severity": "HIGH",
+      "status": "PASS"
+    },
+    {
+      "detail": "DEVELOPMENT_PROMISING_NOT_QUALIFIED never sets qualified flags",
+      "finding_id": "ADV_PROMISING_NOT_QUALIFIED",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "cost_destroyed exercised and all histogram keys allowlisted; histogram={'DATA_QUALITY_BLOCKED': 1, 'DEVELOPMENT_PROMISING_NOT_QUALIFIED': 2, 'INSUFFICIENT_SAMPLE': 1, 'RAW_EDGE_PRESENT_BUT_COST_DESTROYED': 2, 'REGIME_FRAGILE': 1, 'REJECTED': 1, 'RESEARCH_SIGNAL_ONLY': 2}",
+      "finding_id": "ADV_LABEL_COVERAGE_PASS2",
+      "severity": "HIGH",
+      "status": "PASS"
+    },
+    {
+      "detail": "no profitability/qualified claim labels on candidates",
+      "finding_id": "ADV_NO_PROFITABILITY_CLAIM",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    }
+  ],
+  "hard_bans_checked": [
+    "no_demo_orders",
+    "no_exchange_write",
+    "no_formal_walk_forward",
+    "no_mainnet",
+    "no_oos_consumption",
+    "no_pr27_merge",
+    "no_profitability_claims",
+    "no_qualified_claims",
+    "no_real_money",
+    "no_shadow_orders",
+    "no_strategy_promotion"
+  ],
+  "pass": "pass_2",
+  "pass_ok": true,
+  "qualification_ready_count": 0,
+  "remaining_count": 0,
+  "schema": "v13_c_strategy_discovery_adversarial_v1"
+}

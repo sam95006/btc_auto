@@ -1,0 +1,13 @@
+{
+  "HEAD": "b3806ce70b6a7dffbc1d04e3a6134288874e2ddc",
+  "coverage": {
+    "api_rate_limit_and_provider_outage_failover": true,
+    "bounded_memory_disk_profiling_smoke": true,
+    "corrupt_archive_recovery": true,
+    "dataset_split_contamination_attacks": true,
+    "duplicate_dataset_ingestion": true,
+    "revision_conflict_testing": true
+  },
+  "status": "PASS",
+  "survivor_count": 0
+}

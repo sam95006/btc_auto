@@ -1,0 +1,18 @@
+{
+  "Founder_authorization_present": false,
+  "demo_eligibility": false,
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "formal_walk_forward_executed": false,
+  "founder_authorization_present": false,
+  "mainnet": false,
+  "oos_consumed": false,
+  "oos_executed": false,
+  "oos_reservation_created": false,
+  "pr27_merged": false,
+  "qualification_ready_count": 0,
+  "real_money": false,
+  "schema": "FOUNDER_V13_F_QUALIFICATION_DRY_RUN_CONTROL",
+  "strategy_promoted": false,
+  "strategy_selected": false
+}

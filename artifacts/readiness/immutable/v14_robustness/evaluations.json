@@ -1,0 +1,2456 @@
+{
+  "candidate_count": 10,
+  "created_at": "2026-08-05T11:20:20Z",
+  "evaluations": [
+    {
+      "bh_adjusted_p": 0.006,
+      "bootstrap": {
+        "block_bootstrap": {
+          "hi": 0.013421538616618125,
+          "lo": 0.01178954998047905,
+          "mean": 0.012603310696230541,
+          "sign_agreement": 1.0
+        },
+        "block_size": 8,
+        "bootstrap_stable": true,
+        "ci_level": 0.9,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "iid_bootstrap": {
+          "hi": 0.013431417358326364,
+          "lo": 0.01172141891875131,
+          "mean": 0.012602213355140455,
+          "sign_agreement": 1.0
+        },
+        "n_observations": 80,
+        "not_oos_claim": true,
+        "observed_mean": 0.01261383601061448,
+        "replicates": 200
+      },
+      "candidate_id": "CAND_ROBUST_001",
+      "cost_turnover": {
+        "cost_components": {
+          "cancel_replace_cost": 0.004,
+          "entry_fee": 0.02,
+          "exit_fee": 0.02,
+          "funding_cost": 0.01,
+          "market_impact_approximation": 0.015,
+          "partial_fill_cost": 0.005,
+          "slippage_cost": 0.0217798183126312,
+          "spread_cost": 0.03,
+          "turnover_cost": 0.02
+        },
+        "cost_destroyed": false,
+        "destroyed": false,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "gross_pnl": 1.2,
+        "missing_cost_components": [],
+        "net_pnl": 1.0542201816873686,
+        "not_oos_claim": true,
+        "required_cost_components": [
+          "entry_fee",
+          "exit_fee",
+          "spread_cost",
+          "slippage_cost",
+          "funding_cost",
+          "partial_fill_cost",
+          "cancel_replace_cost",
+          "market_impact_approximation",
+          "turnover_cost"
+        ],
+        "total_cost": 0.1457798183126312,
+        "turnover_cost": 0.02,
+        "turnover_cost_to_gross_ratio": 0.016666666666666666,
+        "turnover_destroyed": false,
+        "turnover_notional": 50.0
+      },
+      "family_test_count": 2,
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "intended_pathway": "DEVELOPMENT_ROBUST",
+      "label": "DEVELOPMENT_ROBUST",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_QUALITY_BLOCKED",
+          "DEVELOPMENT_FRAGILE",
+          "DEVELOPMENT_ROBUST",
+          "INSUFFICIENT_SAMPLE",
+          "MULTIPLE_TESTING_REJECTED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DEVELOPMENT_ROBUST",
+        "oos_consumed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "all_development_robustness_gates_passed"
+        ]
+      },
+      "lineage": {
+        "campaign_id": "v14_d_robustness_multiple_testing",
+        "candidate_id": "CAND_ROBUST_001",
+        "cost_version": "COST_MODEL_CONTRACT_CONSUMER_V14D_SYNTHETIC",
+        "data_fixture_id": "SYNTH_ROBUSTNESS_20260805",
+        "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V14D_2026_08_05",
+        "development_only": true,
+        "feature_version": "FIXTURE_FEATURE_V14D_1",
+        "formal_walk_forward": false,
+        "lineage_digest": "aacf2486d13207f9c0707c6fc020478cc4505623c93f43069a86e417abdb9dfe",
+        "mechanism_semantic_id": "MECH_OFI_DEV_001",
+        "oos_consumed": false,
+        "parameter_checksum": "61279139d8d7d24d",
+        "parent_experiment_id": null,
+        "qualification_claim": false,
+        "random_seed": 20260805,
+        "research_family": "ORDER_FLOW_IMBALANCE",
+        "schema": "v14_d_research_family_lineage",
+        "universe_checksum": "4b5abb57f965dd51908833b1"
+      },
+      "oos_consumed": false,
+      "p_value": 0.004,
+      "qualification_claim": false,
+      "research_family": "ORDER_FLOW_IMBALANCE",
+      "result_label": "DEVELOPMENT_ROBUST",
+      "sample_size": {
+        "blockers": [],
+        "development_only": true,
+        "min_n_eff": 24,
+        "min_observations": 48,
+        "min_trades": 16,
+        "n_eff": 67.32010169052111,
+        "n_eff_ok": true,
+        "n_observations": 80,
+        "n_trades": 40,
+        "not_qualification_claim": true,
+        "observations_ok": true,
+        "sufficient": true,
+        "trades_ok": true
+      },
+      "stability": {
+        "all_stability_axes_ok": true,
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood": {
+          "base_metric": 0.01261383601061448,
+          "development_only": true,
+          "neighbor_count": 5,
+          "neighbor_metrics": [
+            0.012573623286963726,
+            0.01198797890471349,
+            0.012551017995815176,
+            0.012045459566816604,
+            0.012815012445353532
+          ],
+          "radius": 0.15,
+          "relative_dispersion": 0.017379135934342448,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime": {
+          "concentration": 0.3333333333333333,
+          "development_only": true,
+          "dominant_regime": "VOL_HIGH",
+          "max_concentration_allowed": 0.4,
+          "positive_regime_share": 1.0,
+          "regime_count": 4,
+          "regime_net": {
+            "LIQ_NORMAL": 0.2,
+            "STRESS": 0.15,
+            "VOL_HIGH": 0.3,
+            "VOL_LOW": 0.25
+          },
+          "stable": true
+        },
+        "symbol": {
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 1.0,
+          "stable": true,
+          "symbol_count": 4,
+          "symbol_net": {
+            "BNBUSDT": 0.18,
+            "BTCUSDT": 0.35,
+            "ETHUSDT": 0.28,
+            "SOLUSDT": 0.22
+          }
+        }
+      },
+      "ts_dependence": {
+        "acf_profile": {
+          "acf": [
+            {
+              "acf": 0.09417616722988592,
+              "lag": 1
+            },
+            {
+              "acf": -0.019318187755933962,
+              "lag": 2
+            },
+            {
+              "acf": 0.10738327787947337,
+              "lag": 3
+            },
+            {
+              "acf": -0.10194385064085795,
+              "lag": 4
+            },
+            {
+              "acf": -0.02355205150807922,
+              "lag": 5
+            },
+            {
+              "acf": -0.010294686114499817,
+              "lag": 6
+            },
+            {
+              "acf": -0.03232474509432806,
+              "lag": 7
+            },
+            {
+              "acf": -0.05152012989619828,
+              "lag": 8
+            },
+            {
+              "acf": 0.009354639754477811,
+              "lag": 9
+            },
+            {
+              "acf": -0.0387226753623212,
+              "lag": 10
+            },
+            {
+              "acf": -0.08285947400980889,
+              "lag": 11
+            },
+            {
+              "acf": 0.007283837510111964,
+              "lag": 12
+            }
+          ],
+          "decay_lag": 1,
+          "dependence_flagged": false,
+          "max_abs_acf": 0.10738327787947337,
+          "max_lag": 12,
+          "threshold": 0.35
+        },
+        "dependence_blocks_robust_claim": false,
+        "effective_sample_size": {
+          "min_required": 24,
+          "n": 80,
+          "n_eff": 67.32010169052111,
+          "sufficient": true,
+          "sum_rho": 0.09417616722988592
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true
+      }
+    },
+    {
+      "bh_adjusted_p": 0.006,
+      "bootstrap": {
+        "block_bootstrap": {
+          "hi": 0.01334676716946735,
+          "lo": 0.011740782628765625,
+          "mean": 0.012570791454024885,
+          "sign_agreement": 1.0
+        },
+        "block_size": 8,
+        "bootstrap_stable": true,
+        "ci_level": 0.9,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "iid_bootstrap": {
+          "hi": 0.013363904144690898,
+          "lo": 0.01177240189088951,
+          "mean": 0.012572996178487688,
+          "sign_agreement": 1.0
+        },
+        "n_observations": 80,
+        "not_oos_claim": true,
+        "observed_mean": 0.012577642757662318,
+        "replicates": 200
+      },
+      "candidate_id": "CAND_ROBUST_002",
+      "cost_turnover": {
+        "cost_components": {
+          "cancel_replace_cost": 0.004,
+          "entry_fee": 0.02,
+          "exit_fee": 0.02,
+          "funding_cost": 0.01,
+          "market_impact_approximation": 0.015,
+          "partial_fill_cost": 0.005,
+          "slippage_cost": 0.021832765988501267,
+          "spread_cost": 0.03,
+          "turnover_cost": 0.02
+        },
+        "cost_destroyed": false,
+        "destroyed": false,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "gross_pnl": 1.15,
+        "missing_cost_components": [],
+        "net_pnl": 1.0041672340114987,
+        "not_oos_claim": true,
+        "required_cost_components": [
+          "entry_fee",
+          "exit_fee",
+          "spread_cost",
+          "slippage_cost",
+          "funding_cost",
+          "partial_fill_cost",
+          "cancel_replace_cost",
+          "market_impact_approximation",
+          "turnover_cost"
+        ],
+        "total_cost": 0.14583276598850126,
+        "turnover_cost": 0.02,
+        "turnover_cost_to_gross_ratio": 0.017391304347826087,
+        "turnover_destroyed": false,
+        "turnover_notional": 48.0
+      },
+      "family_test_count": 2,
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "intended_pathway": "DEVELOPMENT_ROBUST",
+      "label": "DEVELOPMENT_ROBUST",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_QUALITY_BLOCKED",
+          "DEVELOPMENT_FRAGILE",
+          "DEVELOPMENT_ROBUST",
+          "INSUFFICIENT_SAMPLE",
+          "MULTIPLE_TESTING_REJECTED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DEVELOPMENT_ROBUST",
+        "oos_consumed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "all_development_robustness_gates_passed"
+        ]
+      },
+      "lineage": {
+        "campaign_id": "v14_d_robustness_multiple_testing",
+        "candidate_id": "CAND_ROBUST_002",
+        "cost_version": "COST_MODEL_CONTRACT_CONSUMER_V14D_SYNTHETIC",
+        "data_fixture_id": "SYNTH_ROBUSTNESS_20260805",
+        "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V14D_2026_08_05",
+        "development_only": true,
+        "feature_version": "FIXTURE_FEATURE_V14D_1",
+        "formal_walk_forward": false,
+        "lineage_digest": "6de61fda371c963e2a1aa97bf7f350d9ae8d3e26870bb2d249d39d979edb6239",
+        "mechanism_semantic_id": "MECH_OFI_DEV_002",
+        "oos_consumed": false,
+        "parameter_checksum": "2b21cca606bafab6",
+        "parent_experiment_id": "CAND_ROBUST_001",
+        "qualification_claim": false,
+        "random_seed": 20260805,
+        "research_family": "ORDER_FLOW_IMBALANCE",
+        "schema": "v14_d_research_family_lineage",
+        "universe_checksum": "4b5abb57f965dd51908833b1"
+      },
+      "oos_consumed": false,
+      "p_value": 0.006,
+      "qualification_claim": false,
+      "research_family": "ORDER_FLOW_IMBALANCE",
+      "result_label": "DEVELOPMENT_ROBUST",
+      "sample_size": {
+        "blockers": [],
+        "development_only": true,
+        "min_n_eff": 24,
+        "min_observations": 48,
+        "min_trades": 16,
+        "n_eff": 68.07420262370023,
+        "n_eff_ok": true,
+        "n_observations": 80,
+        "n_trades": 38,
+        "not_qualification_claim": true,
+        "observations_ok": true,
+        "sufficient": true,
+        "trades_ok": true
+      },
+      "stability": {
+        "all_stability_axes_ok": true,
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood": {
+          "base_metric": 0.012577642757662318,
+          "development_only": true,
+          "neighbor_count": 5,
+          "neighbor_metrics": [
+            0.012223847275187166,
+            0.012944410669033835,
+            0.012638039223542667,
+            0.012593757959793662,
+            0.012340371870198333
+          ],
+          "radius": 0.15,
+          "relative_dispersion": 0.002349991861009063,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime": {
+          "concentration": 0.32183908045977017,
+          "development_only": true,
+          "dominant_regime": "VOL_HIGH",
+          "max_concentration_allowed": 0.4,
+          "positive_regime_share": 1.0,
+          "regime_count": 4,
+          "regime_net": {
+            "LIQ_NORMAL": 0.21,
+            "STRESS": 0.16,
+            "VOL_HIGH": 0.28,
+            "VOL_LOW": 0.22
+          },
+          "stable": true
+        },
+        "symbol": {
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 1.0,
+          "stable": true,
+          "symbol_count": 4,
+          "symbol_net": {
+            "BNBUSDT": 0.17,
+            "BTCUSDT": 0.32,
+            "ETHUSDT": 0.27,
+            "SOLUSDT": 0.24
+          }
+        }
+      },
+      "ts_dependence": {
+        "acf_profile": {
+          "acf": [
+            {
+              "acf": 0.08759410258701854,
+              "lag": 1
+            },
+            {
+              "acf": -0.00947301210127874,
+              "lag": 2
+            },
+            {
+              "acf": 0.10847232606201154,
+              "lag": 3
+            },
+            {
+              "acf": -0.07528228554420358,
+              "lag": 4
+            },
+            {
+              "acf": -0.027910730624738332,
+              "lag": 5
+            },
+            {
+              "acf": 0.00043959401917592286,
+              "lag": 6
+            },
+            {
+              "acf": -0.031895057165494484,
+              "lag": 7
+            },
+            {
+              "acf": -0.0892670778351302,
+              "lag": 8
+            },
+            {
+              "acf": 0.0011473161102622908,
+              "lag": 9
+            },
+            {
+              "acf": -0.01863337818886909,
+              "lag": 10
+            },
+            {
+              "acf": -0.09313253437305938,
+              "lag": 11
+            },
+            {
+              "acf": -0.012226707058950771,
+              "lag": 12
+            }
+          ],
+          "decay_lag": 1,
+          "dependence_flagged": false,
+          "max_abs_acf": 0.10847232606201154,
+          "max_lag": 12,
+          "threshold": 0.35
+        },
+        "dependence_blocks_robust_claim": false,
+        "effective_sample_size": {
+          "min_required": 24,
+          "n": 80,
+          "n_eff": 68.07420262370023,
+          "sufficient": true,
+          "sum_rho": 0.08759410258701854
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true
+      }
+    },
+    {
+      "bh_adjusted_p": 0.02,
+      "bootstrap": {
+        "block_bootstrap": {
+          "hi": 0.028808830891335065,
+          "lo": 0.022141404554349424,
+          "mean": 0.025855230314220753,
+          "sign_agreement": 1.0
+        },
+        "block_size": 8,
+        "bootstrap_stable": true,
+        "ci_level": 0.9,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "iid_bootstrap": {
+          "hi": 0.02757103614620957,
+          "lo": 0.020486222538155463,
+          "mean": 0.02412508388724892,
+          "sign_agreement": 1.0
+        },
+        "n_observations": 20,
+        "not_oos_claim": true,
+        "observed_mean": 0.024322466539433586,
+        "replicates": 200
+      },
+      "candidate_id": "CAND_SAMPLE_001",
+      "cost_turnover": {
+        "cost_components": {
+          "cancel_replace_cost": 0.004,
+          "entry_fee": 0.02,
+          "exit_fee": 0.02,
+          "funding_cost": 0.01,
+          "market_impact_approximation": 0.015,
+          "partial_fill_cost": 0.005,
+          "slippage_cost": 0.020784717057230243,
+          "spread_cost": 0.03,
+          "turnover_cost": 0.02
+        },
+        "cost_destroyed": false,
+        "destroyed": false,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "gross_pnl": 0.5,
+        "missing_cost_components": [],
+        "net_pnl": 0.3552152829427697,
+        "not_oos_claim": true,
+        "required_cost_components": [
+          "entry_fee",
+          "exit_fee",
+          "spread_cost",
+          "slippage_cost",
+          "funding_cost",
+          "partial_fill_cost",
+          "cancel_replace_cost",
+          "market_impact_approximation",
+          "turnover_cost"
+        ],
+        "total_cost": 0.14478471705723026,
+        "turnover_cost": 0.02,
+        "turnover_cost_to_gross_ratio": 0.04,
+        "turnover_destroyed": false,
+        "turnover_notional": 10.0
+      },
+      "family_test_count": 1,
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "intended_pathway": "INSUFFICIENT_SAMPLE",
+      "label": "INSUFFICIENT_SAMPLE",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_QUALITY_BLOCKED",
+          "DEVELOPMENT_FRAGILE",
+          "DEVELOPMENT_ROBUST",
+          "INSUFFICIENT_SAMPLE",
+          "MULTIPLE_TESTING_REJECTED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "INSUFFICIENT_SAMPLE",
+        "oos_consumed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "sample_size_or_n_eff_below_min"
+        ]
+      },
+      "lineage": {
+        "campaign_id": "v14_d_robustness_multiple_testing",
+        "candidate_id": "CAND_SAMPLE_001",
+        "cost_version": "COST_MODEL_CONTRACT_CONSUMER_V14D_SYNTHETIC",
+        "data_fixture_id": "SYNTH_ROBUSTNESS_20260805",
+        "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V14D_2026_08_05",
+        "development_only": true,
+        "feature_version": "FIXTURE_FEATURE_V14D_1",
+        "formal_walk_forward": false,
+        "lineage_digest": "799b3f1e3821b5c19907eb704a2258a5af1d658f3342a0b59d70ec2041a6b4d5",
+        "mechanism_semantic_id": "MECH_LIQ_DEV_001",
+        "oos_consumed": false,
+        "parameter_checksum": "1efb6d5339718139",
+        "parent_experiment_id": null,
+        "qualification_claim": false,
+        "random_seed": 20260805,
+        "research_family": "LIQUIDATION_CASCADE",
+        "schema": "v14_d_research_family_lineage",
+        "universe_checksum": "4b5abb57f965dd51908833b1"
+      },
+      "oos_consumed": false,
+      "p_value": 0.02,
+      "qualification_claim": false,
+      "research_family": "LIQUIDATION_CASCADE",
+      "result_label": "INSUFFICIENT_SAMPLE",
+      "sample_size": {
+        "blockers": [
+          "OBSERVATIONS_BELOW_MIN",
+          "TRADES_BELOW_MIN",
+          "EFFECTIVE_SAMPLE_BELOW_MIN"
+        ],
+        "development_only": true,
+        "min_n_eff": 24,
+        "min_observations": 48,
+        "min_trades": 16,
+        "n_eff": 20.0,
+        "n_eff_ok": false,
+        "n_observations": 20,
+        "n_trades": 8,
+        "not_qualification_claim": true,
+        "observations_ok": false,
+        "sufficient": false,
+        "trades_ok": false
+      },
+      "stability": {
+        "all_stability_axes_ok": false,
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood": {
+          "base_metric": 0.024322466539433586,
+          "development_only": true,
+          "neighbor_count": 5,
+          "neighbor_metrics": [
+            0.02438586752083367,
+            0.02419257685926404,
+            0.025500345156102923,
+            0.023989599587587764,
+            0.025224281916321974
+          ],
+          "radius": 0.15,
+          "relative_dispersion": 0.013817170558899874,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime": {
+          "concentration": 0.8,
+          "development_only": true,
+          "dominant_regime": "VOL_LOW",
+          "max_concentration_allowed": 0.4,
+          "positive_regime_share": 1.0,
+          "regime_count": 2,
+          "regime_net": {
+            "VOL_HIGH": 0.1,
+            "VOL_LOW": 0.4
+          },
+          "stable": false
+        },
+        "symbol": {
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 0.5,
+          "stable": false,
+          "symbol_count": 2,
+          "symbol_net": {
+            "BTCUSDT": 0.4,
+            "ETHUSDT": -0.1
+          }
+        }
+      },
+      "ts_dependence": {
+        "acf_profile": {
+          "acf": [
+            {
+              "acf": -0.2511772706589932,
+              "lag": 1
+            },
+            {
+              "acf": 0.09390048596803584,
+              "lag": 2
+            },
+            {
+              "acf": 0.02580381758178676,
+              "lag": 3
+            },
+            {
+              "acf": 0.3321410842967911,
+              "lag": 4
+            },
+            {
+              "acf": -0.27323203898582005,
+              "lag": 5
+            },
+            {
+              "acf": 0.15800944424203356,
+              "lag": 6
+            },
+            {
+              "acf": -0.29015470923214154,
+              "lag": 7
+            },
+            {
+              "acf": 0.04007969140863595,
+              "lag": 8
+            },
+            {
+              "acf": -0.23841417796858436,
+              "lag": 9
+            },
+            {
+              "acf": -0.020879678176627017,
+              "lag": 10
+            },
+            {
+              "acf": -0.058684789227010245,
+              "lag": 11
+            },
+            {
+              "acf": 0.04659447426659184,
+              "lag": 12
+            }
+          ],
+          "decay_lag": 1,
+          "dependence_flagged": false,
+          "max_abs_acf": 0.3321410842967911,
+          "max_lag": 12,
+          "threshold": 0.35
+        },
+        "dependence_blocks_robust_claim": false,
+        "effective_sample_size": {
+          "min_required": 24,
+          "n": 20,
+          "n_eff": 20.0,
+          "sufficient": false,
+          "sum_rho": 0.0
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true
+      }
+    },
+    {
+      "bh_adjusted_p": 0.42,
+      "bootstrap": {
+        "block_bootstrap": {
+          "hi": 0.0062666425288442065,
+          "lo": 0.0019234826064779861,
+          "mean": 0.004169988631783937,
+          "sign_agreement": 1.0
+        },
+        "block_size": 8,
+        "bootstrap_stable": true,
+        "ci_level": 0.9,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "iid_bootstrap": {
+          "hi": 0.0064202335655321454,
+          "lo": 0.0023718472549475104,
+          "mean": 0.0043183029395807235,
+          "sign_agreement": 1.0
+        },
+        "n_observations": 60,
+        "not_oos_claim": true,
+        "observed_mean": 0.004179787883524268,
+        "replicates": 200
+      },
+      "candidate_id": "CAND_MT_REJECT_001",
+      "cost_turnover": {
+        "cost_components": {
+          "cancel_replace_cost": 0.004,
+          "entry_fee": 0.02,
+          "exit_fee": 0.02,
+          "funding_cost": 0.01,
+          "market_impact_approximation": 0.015,
+          "partial_fill_cost": 0.005,
+          "slippage_cost": 0.021785352821763394,
+          "spread_cost": 0.03,
+          "turnover_cost": 0.02
+        },
+        "cost_destroyed": false,
+        "destroyed": false,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "gross_pnl": 0.3,
+        "missing_cost_components": [],
+        "net_pnl": 0.1542146471782366,
+        "not_oos_claim": true,
+        "required_cost_components": [
+          "entry_fee",
+          "exit_fee",
+          "spread_cost",
+          "slippage_cost",
+          "funding_cost",
+          "partial_fill_cost",
+          "cancel_replace_cost",
+          "market_impact_approximation",
+          "turnover_cost"
+        ],
+        "total_cost": 0.1457853528217634,
+        "turnover_cost": 0.02,
+        "turnover_cost_to_gross_ratio": 0.06666666666666667,
+        "turnover_destroyed": false,
+        "turnover_notional": 20.0
+      },
+      "family_test_count": 2,
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "intended_pathway": "MULTIPLE_TESTING_REJECTED",
+      "label": "MULTIPLE_TESTING_REJECTED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_QUALITY_BLOCKED",
+          "DEVELOPMENT_FRAGILE",
+          "DEVELOPMENT_ROBUST",
+          "INSUFFICIENT_SAMPLE",
+          "MULTIPLE_TESTING_REJECTED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "MULTIPLE_TESTING_REJECTED",
+        "oos_consumed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "bh_or_raw_p_fails_fdr_gate"
+        ]
+      },
+      "lineage": {
+        "campaign_id": "v14_d_robustness_multiple_testing",
+        "candidate_id": "CAND_MT_REJECT_001",
+        "cost_version": "COST_MODEL_CONTRACT_CONSUMER_V14D_SYNTHETIC",
+        "data_fixture_id": "SYNTH_ROBUSTNESS_20260805",
+        "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V14D_2026_08_05",
+        "development_only": true,
+        "feature_version": "FIXTURE_FEATURE_V14D_1",
+        "formal_walk_forward": false,
+        "lineage_digest": "617c37347ba1d9c5b51ab8b23a0c793a3e0c8bb1901315f396c28a66bcd9450d",
+        "mechanism_semantic_id": "MECH_ABS_DEV_001",
+        "oos_consumed": false,
+        "parameter_checksum": "ad616cd545fa312b",
+        "parent_experiment_id": null,
+        "qualification_claim": false,
+        "random_seed": 20260805,
+        "research_family": "ABSORPTION",
+        "schema": "v14_d_research_family_lineage",
+        "universe_checksum": "4b5abb57f965dd51908833b1"
+      },
+      "oos_consumed": false,
+      "p_value": 0.42,
+      "qualification_claim": false,
+      "research_family": "ABSORPTION",
+      "result_label": "MULTIPLE_TESTING_REJECTED",
+      "sample_size": {
+        "blockers": [],
+        "development_only": true,
+        "min_n_eff": 24,
+        "min_observations": 48,
+        "min_trades": 16,
+        "n_eff": 60.0,
+        "n_eff_ok": true,
+        "n_observations": 60,
+        "n_trades": 25,
+        "not_qualification_claim": true,
+        "observations_ok": true,
+        "sufficient": true,
+        "trades_ok": true
+      },
+      "stability": {
+        "all_stability_axes_ok": true,
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood": {
+          "base_metric": 0.004179787883524268,
+          "development_only": true,
+          "neighbor_count": 5,
+          "neighbor_metrics": [
+            0.004143712248051285,
+            0.004349781839354888,
+            0.004265648992277413,
+            0.004086686654189577,
+            0.0043626043148259465
+          ],
+          "radius": 0.15,
+          "relative_dispersion": 0.014809107050514273,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime": {
+          "concentration": 0.2857142857142857,
+          "development_only": true,
+          "dominant_regime": "VOL_LOW",
+          "max_concentration_allowed": 0.4,
+          "positive_regime_share": 1.0,
+          "regime_count": 4,
+          "regime_net": {
+            "LIQ_NORMAL": 0.1,
+            "STRESS": 0.05,
+            "VOL_HIGH": 0.1,
+            "VOL_LOW": 0.1
+          },
+          "stable": true
+        },
+        "symbol": {
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 1.0,
+          "stable": true,
+          "symbol_count": 3,
+          "symbol_net": {
+            "BTCUSDT": 0.1,
+            "ETHUSDT": 0.05,
+            "SOLUSDT": 0.02
+          }
+        }
+      },
+      "ts_dependence": {
+        "acf_profile": {
+          "acf": [
+            {
+              "acf": -0.016063457027195725,
+              "lag": 1
+            },
+            {
+              "acf": -0.058957706890373524,
+              "lag": 2
+            },
+            {
+              "acf": 0.049873618913780136,
+              "lag": 3
+            },
+            {
+              "acf": 0.03724487690277654,
+              "lag": 4
+            },
+            {
+              "acf": 0.013055014396073625,
+              "lag": 5
+            },
+            {
+              "acf": 0.01789177743962004,
+              "lag": 6
+            },
+            {
+              "acf": 0.026148920713574872,
+              "lag": 7
+            },
+            {
+              "acf": -0.05773560400906599,
+              "lag": 8
+            },
+            {
+              "acf": 0.027945506284056267,
+              "lag": 9
+            },
+            {
+              "acf": -0.023259759297329263,
+              "lag": 10
+            },
+            {
+              "acf": -0.0010770104149049626,
+              "lag": 11
+            },
+            {
+              "acf": 0.003840463978200074,
+              "lag": 12
+            }
+          ],
+          "decay_lag": 1,
+          "dependence_flagged": false,
+          "max_abs_acf": 0.058957706890373524,
+          "max_lag": 12,
+          "threshold": 0.35
+        },
+        "dependence_blocks_robust_claim": false,
+        "effective_sample_size": {
+          "min_required": 24,
+          "n": 60,
+          "n_eff": 60.0,
+          "sufficient": true,
+          "sum_rho": 0.0
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true
+      }
+    },
+    {
+      "bh_adjusted_p": 0.01,
+      "bootstrap": {
+        "block_bootstrap": {
+          "hi": 0.011105018699462947,
+          "lo": 0.009406246240712306,
+          "mean": 0.010254785071758617,
+          "sign_agreement": 1.0
+        },
+        "block_size": 8,
+        "bootstrap_stable": true,
+        "ci_level": 0.9,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "iid_bootstrap": {
+          "hi": 0.011526010690125908,
+          "lo": 0.0095097639097459,
+          "mean": 0.010581937259399616,
+          "sign_agreement": 1.0
+        },
+        "n_observations": 70,
+        "not_oos_claim": true,
+        "observed_mean": 0.010551366193370108,
+        "replicates": 200
+      },
+      "candidate_id": "CAND_COST_001",
+      "cost_turnover": {
+        "cost_components": {
+          "cancel_replace_cost": 0.04,
+          "entry_fee": 0.12,
+          "exit_fee": 0.12,
+          "funding_cost": 0.08,
+          "market_impact_approximation": 0.1,
+          "partial_fill_cost": 0.05,
+          "slippage_cost": 0.15877908104116376,
+          "spread_cost": 0.18,
+          "turnover_cost": 0.25
+        },
+        "cost_destroyed": true,
+        "destroyed": true,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "gross_pnl": 0.8,
+        "missing_cost_components": [],
+        "net_pnl": -0.2987790810411637,
+        "not_oos_claim": true,
+        "required_cost_components": [
+          "entry_fee",
+          "exit_fee",
+          "spread_cost",
+          "slippage_cost",
+          "funding_cost",
+          "partial_fill_cost",
+          "cancel_replace_cost",
+          "market_impact_approximation",
+          "turnover_cost"
+        ],
+        "total_cost": 1.0987790810411637,
+        "turnover_cost": 0.25,
+        "turnover_cost_to_gross_ratio": 0.3125,
+        "turnover_destroyed": false,
+        "turnover_notional": 200.0
+      },
+      "family_test_count": 1,
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "intended_pathway": "COST_DESTROYED",
+      "label": "COST_DESTROYED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_QUALITY_BLOCKED",
+          "DEVELOPMENT_FRAGILE",
+          "DEVELOPMENT_ROBUST",
+          "INSUFFICIENT_SAMPLE",
+          "MULTIPLE_TESTING_REJECTED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "COST_DESTROYED",
+        "oos_consumed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "gross_positive_net_nonpositive_or_turnover_destroy"
+        ]
+      },
+      "lineage": {
+        "campaign_id": "v14_d_robustness_multiple_testing",
+        "candidate_id": "CAND_COST_001",
+        "cost_version": "COST_MODEL_CONTRACT_CONSUMER_V14D_SYNTHETIC",
+        "data_fixture_id": "SYNTH_ROBUSTNESS_20260805",
+        "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V14D_2026_08_05",
+        "development_only": true,
+        "feature_version": "FIXTURE_FEATURE_V14D_1",
+        "formal_walk_forward": false,
+        "lineage_digest": "40a0469cec425382e80807b6e8ee434adf72f38a615301d791c3a3016da79821",
+        "mechanism_semantic_id": "MECH_AGG_DEV_001",
+        "oos_consumed": false,
+        "parameter_checksum": "49ead605bea21736",
+        "parent_experiment_id": null,
+        "qualification_claim": false,
+        "random_seed": 20260805,
+        "research_family": "AGGRESSION_PERSISTENCE",
+        "schema": "v14_d_research_family_lineage",
+        "universe_checksum": "4b5abb57f965dd51908833b1"
+      },
+      "oos_consumed": false,
+      "p_value": 0.01,
+      "qualification_claim": false,
+      "research_family": "AGGRESSION_PERSISTENCE",
+      "result_label": "COST_DESTROYED",
+      "sample_size": {
+        "blockers": [],
+        "development_only": true,
+        "min_n_eff": 24,
+        "min_observations": 48,
+        "min_trades": 16,
+        "n_eff": 51.9426394675419,
+        "n_eff_ok": true,
+        "n_observations": 70,
+        "n_trades": 30,
+        "not_qualification_claim": true,
+        "observations_ok": true,
+        "sufficient": true,
+        "trades_ok": true
+      },
+      "stability": {
+        "all_stability_axes_ok": true,
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood": {
+          "base_metric": 0.010551366193370108,
+          "development_only": true,
+          "neighbor_count": 5,
+          "neighbor_metrics": [
+            0.010513965039991037,
+            0.01008435501836281,
+            0.010924346076887862,
+            0.010074182814681814,
+            0.010635540827629415
+          ],
+          "radius": 0.15,
+          "relative_dispersion": 0.00994072577306881,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime": {
+          "concentration": 0.2857142857142857,
+          "development_only": true,
+          "dominant_regime": "VOL_LOW",
+          "max_concentration_allowed": 0.4,
+          "positive_regime_share": 1.0,
+          "regime_count": 4,
+          "regime_net": {
+            "LIQ_NORMAL": 0.2,
+            "STRESS": 0.1,
+            "VOL_HIGH": 0.2,
+            "VOL_LOW": 0.2
+          },
+          "stable": true
+        },
+        "symbol": {
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 1.0,
+          "stable": true,
+          "symbol_count": 3,
+          "symbol_net": {
+            "BTCUSDT": 0.2,
+            "ETHUSDT": 0.15,
+            "SOLUSDT": 0.1
+          }
+        }
+      },
+      "ts_dependence": {
+        "acf_profile": {
+          "acf": [
+            {
+              "acf": 0.0793120825252124,
+              "lag": 1
+            },
+            {
+              "acf": 0.01923455691636946,
+              "lag": 2
+            },
+            {
+              "acf": 0.03152680153427903,
+              "lag": 3
+            },
+            {
+              "acf": 0.043746764519682325,
+              "lag": 4
+            },
+            {
+              "acf": -0.14657368855217348,
+              "lag": 5
+            },
+            {
+              "acf": -0.14541682776088646,
+              "lag": 6
+            },
+            {
+              "acf": -0.050579112343663545,
+              "lag": 7
+            },
+            {
+              "acf": -0.12183548075463793,
+              "lag": 8
+            },
+            {
+              "acf": 0.1587347182666318,
+              "lag": 9
+            },
+            {
+              "acf": -0.0881502795047765,
+              "lag": 10
+            },
+            {
+              "acf": 0.00503763814664596,
+              "lag": 11
+            },
+            {
+              "acf": 0.06320590863999334,
+              "lag": 12
+            }
+          ],
+          "decay_lag": 1,
+          "dependence_flagged": false,
+          "max_abs_acf": 0.1587347182666318,
+          "max_lag": 12,
+          "threshold": 0.35
+        },
+        "dependence_blocks_robust_claim": false,
+        "effective_sample_size": {
+          "min_required": 24,
+          "n": 70,
+          "n_eff": 51.9426394675419,
+          "sufficient": true,
+          "sum_rho": 0.1738202054955432
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true
+      }
+    },
+    {
+      "bh_adjusted_p": 0.005,
+      "bootstrap": {
+        "block_bootstrap": {
+          "hi": 0.008778680772618104,
+          "lo": 0.007073506844114439,
+          "mean": 0.007943859873429085,
+          "sign_agreement": 1.0
+        },
+        "block_size": 8,
+        "bootstrap_stable": true,
+        "ci_level": 0.9,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "iid_bootstrap": {
+          "hi": 0.008792621692845365,
+          "lo": 0.007541186300575475,
+          "mean": 0.008146732016556395,
+          "sign_agreement": 1.0
+        },
+        "n_observations": 90,
+        "not_oos_claim": true,
+        "observed_mean": 0.008174082836481734,
+        "replicates": 200
+      },
+      "candidate_id": "CAND_FRAGILE_001",
+      "cost_turnover": {
+        "cost_components": {
+          "cancel_replace_cost": 0.004,
+          "entry_fee": 0.02,
+          "exit_fee": 0.02,
+          "funding_cost": 0.01,
+          "market_impact_approximation": 0.015,
+          "partial_fill_cost": 0.005,
+          "slippage_cost": 0.02045978355389673,
+          "spread_cost": 0.03,
+          "turnover_cost": 0.02
+        },
+        "cost_destroyed": false,
+        "destroyed": false,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "gross_pnl": 0.9,
+        "missing_cost_components": [],
+        "net_pnl": 0.7555402164461033,
+        "not_oos_claim": true,
+        "required_cost_components": [
+          "entry_fee",
+          "exit_fee",
+          "spread_cost",
+          "slippage_cost",
+          "funding_cost",
+          "partial_fill_cost",
+          "cancel_replace_cost",
+          "market_impact_approximation",
+          "turnover_cost"
+        ],
+        "total_cost": 0.14445978355389674,
+        "turnover_cost": 0.02,
+        "turnover_cost_to_gross_ratio": 0.022222222222222223,
+        "turnover_destroyed": false,
+        "turnover_notional": 40.0
+      },
+      "family_test_count": 1,
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "intended_pathway": "DEVELOPMENT_FRAGILE",
+      "label": "DEVELOPMENT_FRAGILE",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_QUALITY_BLOCKED",
+          "DEVELOPMENT_FRAGILE",
+          "DEVELOPMENT_ROBUST",
+          "INSUFFICIENT_SAMPLE",
+          "MULTIPLE_TESTING_REJECTED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DEVELOPMENT_FRAGILE",
+        "oos_consumed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "param_regime_or_symbol_unstable"
+        ]
+      },
+      "lineage": {
+        "campaign_id": "v14_d_robustness_multiple_testing",
+        "candidate_id": "CAND_FRAGILE_001",
+        "cost_version": "COST_MODEL_CONTRACT_CONSUMER_V14D_SYNTHETIC",
+        "data_fixture_id": "SYNTH_ROBUSTNESS_20260805",
+        "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V14D_2026_08_05",
+        "development_only": true,
+        "feature_version": "FIXTURE_FEATURE_V14D_1",
+        "formal_walk_forward": false,
+        "lineage_digest": "a1fa1ae26239b703e75abb41ff26874fcb36a2df1e6e9e169e1ab56c7c055c8b",
+        "mechanism_semantic_id": "MECH_FUND_DEV_001",
+        "oos_consumed": false,
+        "parameter_checksum": "9663e5f2bf92e2ca",
+        "parent_experiment_id": null,
+        "qualification_claim": false,
+        "random_seed": 20260805,
+        "research_family": "FUNDING_BASIS_DISLOCATION",
+        "schema": "v14_d_research_family_lineage",
+        "universe_checksum": "4b5abb57f965dd51908833b1"
+      },
+      "oos_consumed": false,
+      "p_value": 0.005,
+      "qualification_claim": false,
+      "research_family": "FUNDING_BASIS_DISLOCATION",
+      "result_label": "DEVELOPMENT_FRAGILE",
+      "sample_size": {
+        "blockers": [],
+        "development_only": true,
+        "min_n_eff": 24,
+        "min_observations": 48,
+        "min_trades": 16,
+        "n_eff": 46.498994950964104,
+        "n_eff_ok": true,
+        "n_observations": 90,
+        "n_trades": 32,
+        "not_qualification_claim": true,
+        "observations_ok": true,
+        "sufficient": true,
+        "trades_ok": true
+      },
+      "stability": {
+        "all_stability_axes_ok": false,
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood": {
+          "base_metric": 0.008174082836481734,
+          "development_only": true,
+          "neighbor_count": 5,
+          "neighbor_metrics": [
+            -0.008174082836481734,
+            -0.008174082836481734,
+            -0.008174082836481734,
+            -0.008174082836481734,
+            -0.008174082836481734
+          ],
+          "radius": 0.15,
+          "relative_dispersion": 2.0,
+          "sign_agreement": 0.0,
+          "stable": false
+        },
+        "regime": {
+          "concentration": 0.9183673469387755,
+          "development_only": true,
+          "dominant_regime": "VOL_LOW",
+          "max_concentration_allowed": 0.4,
+          "positive_regime_share": 0.75,
+          "regime_count": 4,
+          "regime_net": {
+            "LIQ_NORMAL": 0.01,
+            "STRESS": -0.05,
+            "VOL_HIGH": 0.02,
+            "VOL_LOW": 0.9
+          },
+          "stable": false
+        },
+        "symbol": {
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 0.25,
+          "stable": false,
+          "symbol_count": 4,
+          "symbol_net": {
+            "BNBUSDT": -0.05,
+            "BTCUSDT": 0.8,
+            "ETHUSDT": -0.2,
+            "SOLUSDT": -0.1
+          }
+        }
+      },
+      "ts_dependence": {
+        "acf_profile": {
+          "acf": [
+            {
+              "acf": 0.06329466389240096,
+              "lag": 1
+            },
+            {
+              "acf": 0.16232643822318896,
+              "lag": 2
+            },
+            {
+              "acf": 0.053882413270640694,
+              "lag": 3
+            },
+            {
+              "acf": 0.051721625488104085,
+              "lag": 4
+            },
+            {
+              "acf": 0.13653771179495672,
+              "lag": 5
+            },
+            {
+              "acf": -0.0986912031150969,
+              "lag": 6
+            },
+            {
+              "acf": 0.09658483354910531,
+              "lag": 7
+            },
+            {
+              "acf": -0.02928506987032599,
+              "lag": 8
+            },
+            {
+              "acf": -0.05577700236270052,
+              "lag": 9
+            },
+            {
+              "acf": -0.11345488263009969,
+              "lag": 10
+            },
+            {
+              "acf": -0.0043397649865108065,
+              "lag": 11
+            },
+            {
+              "acf": -0.26871307512024006,
+              "lag": 12
+            }
+          ],
+          "decay_lag": 1,
+          "dependence_flagged": false,
+          "max_abs_acf": 0.26871307512024006,
+          "max_lag": 12,
+          "threshold": 0.35
+        },
+        "dependence_blocks_robust_claim": false,
+        "effective_sample_size": {
+          "min_required": 24,
+          "n": 90,
+          "n_eff": 46.498994950964104,
+          "sufficient": true,
+          "sum_rho": 0.46776285266929146
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true
+      }
+    },
+    {
+      "bh_adjusted_p": 0.03,
+      "bootstrap": {
+        "block_bootstrap": {
+          "hi": 0.012298945460465163,
+          "lo": 0.010194866301661188,
+          "mean": 0.01131432743406426,
+          "sign_agreement": 1.0
+        },
+        "block_size": 8,
+        "bootstrap_stable": true,
+        "ci_level": 0.9,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "iid_bootstrap": {
+          "hi": 0.012100363318263602,
+          "lo": 0.01007275394559226,
+          "mean": 0.011093156220368326,
+          "sign_agreement": 1.0
+        },
+        "n_observations": 55,
+        "not_oos_claim": true,
+        "observed_mean": 0.011113446468946176,
+        "replicates": 200
+      },
+      "candidate_id": "CAND_DATA_BLOCK_001",
+      "cost_turnover": {
+        "cost_components": {
+          "cancel_replace_cost": 0.004,
+          "entry_fee": 0.02,
+          "exit_fee": 0.02,
+          "funding_cost": 0.01,
+          "market_impact_approximation": 0.015,
+          "partial_fill_cost": 0.005,
+          "slippage_cost": 0.020284928416977304,
+          "spread_cost": 0.03,
+          "turnover_cost": 0.02
+        },
+        "cost_destroyed": false,
+        "destroyed": false,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "gross_pnl": 0.6,
+        "missing_cost_components": [],
+        "net_pnl": 0.4557150715830227,
+        "not_oos_claim": true,
+        "required_cost_components": [
+          "entry_fee",
+          "exit_fee",
+          "spread_cost",
+          "slippage_cost",
+          "funding_cost",
+          "partial_fill_cost",
+          "cancel_replace_cost",
+          "market_impact_approximation",
+          "turnover_cost"
+        ],
+        "total_cost": 0.1442849284169773,
+        "turnover_cost": 0.02,
+        "turnover_cost_to_gross_ratio": 0.03333333333333333,
+        "turnover_destroyed": false,
+        "turnover_notional": 30.0
+      },
+      "family_test_count": 1,
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "intended_pathway": "DATA_QUALITY_BLOCKED",
+      "label": "DATA_QUALITY_BLOCKED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_QUALITY_BLOCKED",
+          "DEVELOPMENT_FRAGILE",
+          "DEVELOPMENT_ROBUST",
+          "INSUFFICIENT_SAMPLE",
+          "MULTIPLE_TESTING_REJECTED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "DATA_QUALITY_BLOCKED",
+        "oos_consumed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "data_quality_gate_failed"
+        ]
+      },
+      "lineage": {
+        "campaign_id": "v14_d_robustness_multiple_testing",
+        "candidate_id": "CAND_DATA_BLOCK_001",
+        "cost_version": "COST_MODEL_CONTRACT_CONSUMER_V14D_SYNTHETIC",
+        "data_fixture_id": "SYNTH_ROBUSTNESS_20260805",
+        "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V14D_2026_08_05",
+        "development_only": true,
+        "feature_version": "FIXTURE_FEATURE_V14D_1",
+        "formal_walk_forward": false,
+        "lineage_digest": "5b57ef9e55055d176333562c278d1ae69d165826504e2882462c0b3a350c3a45",
+        "mechanism_semantic_id": "MECH_VOL_DEV_001",
+        "oos_consumed": false,
+        "parameter_checksum": "8a4ec5c91c870f0f",
+        "parent_experiment_id": null,
+        "qualification_claim": false,
+        "random_seed": 20260805,
+        "research_family": "VOL_EXPANSION_COMPRESSION",
+        "schema": "v14_d_research_family_lineage",
+        "universe_checksum": "4b5abb57f965dd51908833b1"
+      },
+      "oos_consumed": false,
+      "p_value": 0.03,
+      "qualification_claim": false,
+      "research_family": "VOL_EXPANSION_COMPRESSION",
+      "result_label": "DATA_QUALITY_BLOCKED",
+      "sample_size": {
+        "blockers": [],
+        "development_only": true,
+        "min_n_eff": 24,
+        "min_observations": 48,
+        "min_trades": 16,
+        "n_eff": 55.0,
+        "n_eff_ok": true,
+        "n_observations": 55,
+        "n_trades": 22,
+        "not_qualification_claim": true,
+        "observations_ok": true,
+        "sufficient": true,
+        "trades_ok": true
+      },
+      "stability": {
+        "all_stability_axes_ok": false,
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood": {
+          "base_metric": 0.011113446468946176,
+          "development_only": true,
+          "neighbor_count": 5,
+          "neighbor_metrics": [
+            0.011384682807373663,
+            0.0111866825217505,
+            0.010763442577998251,
+            0.010779825837177025,
+            0.011582980596544756
+          ],
+          "radius": 0.15,
+          "relative_dispersion": 0.002346382762136472,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime": {
+          "concentration": 0.5,
+          "development_only": true,
+          "dominant_regime": "VOL_LOW",
+          "max_concentration_allowed": 0.4,
+          "positive_regime_share": 1.0,
+          "regime_count": 2,
+          "regime_net": {
+            "VOL_HIGH": 0.2,
+            "VOL_LOW": 0.2
+          },
+          "stable": false
+        },
+        "symbol": {
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 1.0,
+          "stable": true,
+          "symbol_count": 2,
+          "symbol_net": {
+            "BTCUSDT": 0.2,
+            "ETHUSDT": 0.15
+          }
+        }
+      },
+      "ts_dependence": {
+        "acf_profile": {
+          "acf": [
+            {
+              "acf": -0.05198670672222058,
+              "lag": 1
+            },
+            {
+              "acf": -0.09803757811324068,
+              "lag": 2
+            },
+            {
+              "acf": 0.1190711649512776,
+              "lag": 3
+            },
+            {
+              "acf": 0.17665137768917108,
+              "lag": 4
+            },
+            {
+              "acf": -0.08749531092091044,
+              "lag": 5
+            },
+            {
+              "acf": 0.05416244122487229,
+              "lag": 6
+            },
+            {
+              "acf": -0.04582616832291284,
+              "lag": 7
+            },
+            {
+              "acf": -0.19667877697690395,
+              "lag": 8
+            },
+            {
+              "acf": 0.053490828900329586,
+              "lag": 9
+            },
+            {
+              "acf": -0.09412096066235064,
+              "lag": 10
+            },
+            {
+              "acf": -0.25882195780458817,
+              "lag": 11
+            },
+            {
+              "acf": -0.19372138352634252,
+              "lag": 12
+            }
+          ],
+          "decay_lag": 1,
+          "dependence_flagged": false,
+          "max_abs_acf": 0.25882195780458817,
+          "max_lag": 12,
+          "threshold": 0.35
+        },
+        "dependence_blocks_robust_claim": false,
+        "effective_sample_size": {
+          "min_required": 24,
+          "n": 55,
+          "n_eff": 55.0,
+          "sufficient": true,
+          "sum_rho": 0.0
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true
+      }
+    },
+    {
+      "bh_adjusted_p": 0.18,
+      "bootstrap": {
+        "block_bootstrap": {
+          "hi": 0.0047879708373520045,
+          "lo": 0.00030063439398929733,
+          "mean": 0.002522959878481906,
+          "sign_agreement": 0.965
+        },
+        "block_size": 8,
+        "bootstrap_stable": true,
+        "ci_level": 0.9,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "iid_bootstrap": {
+          "hi": 0.004908157467767499,
+          "lo": 0.0010586953042328558,
+          "mean": 0.0029479559851571034,
+          "sign_agreement": 0.99
+        },
+        "n_observations": 50,
+        "not_oos_claim": true,
+        "observed_mean": 0.0028466201102014042,
+        "replicates": 200
+      },
+      "candidate_id": "CAND_MT_BORDER_001",
+      "cost_turnover": {
+        "cost_components": {
+          "cancel_replace_cost": 0.004,
+          "entry_fee": 0.02,
+          "exit_fee": 0.02,
+          "funding_cost": 0.01,
+          "market_impact_approximation": 0.015,
+          "partial_fill_cost": 0.005,
+          "slippage_cost": 0.022000844883549267,
+          "spread_cost": 0.03,
+          "turnover_cost": 0.02
+        },
+        "cost_destroyed": false,
+        "destroyed": false,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "gross_pnl": 0.4,
+        "missing_cost_components": [],
+        "net_pnl": 0.25399915511645077,
+        "not_oos_claim": true,
+        "required_cost_components": [
+          "entry_fee",
+          "exit_fee",
+          "spread_cost",
+          "slippage_cost",
+          "funding_cost",
+          "partial_fill_cost",
+          "cancel_replace_cost",
+          "market_impact_approximation",
+          "turnover_cost"
+        ],
+        "total_cost": 0.14600084488354928,
+        "turnover_cost": 0.02,
+        "turnover_cost_to_gross_ratio": 0.049999999999999996,
+        "turnover_destroyed": false,
+        "turnover_notional": 25.0
+      },
+      "family_test_count": 2,
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "intended_pathway": "MULTIPLE_TESTING_REJECTED",
+      "label": "MULTIPLE_TESTING_REJECTED",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_QUALITY_BLOCKED",
+          "DEVELOPMENT_FRAGILE",
+          "DEVELOPMENT_ROBUST",
+          "INSUFFICIENT_SAMPLE",
+          "MULTIPLE_TESTING_REJECTED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "MULTIPLE_TESTING_REJECTED",
+        "oos_consumed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "bh_or_raw_p_fails_fdr_gate"
+        ]
+      },
+      "lineage": {
+        "campaign_id": "v14_d_robustness_multiple_testing",
+        "candidate_id": "CAND_MT_BORDER_001",
+        "cost_version": "COST_MODEL_CONTRACT_CONSUMER_V14D_SYNTHETIC",
+        "data_fixture_id": "SYNTH_ROBUSTNESS_20260805",
+        "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V14D_2026_08_05",
+        "development_only": true,
+        "feature_version": "FIXTURE_FEATURE_V14D_1",
+        "formal_walk_forward": false,
+        "lineage_digest": "a167cd0d0c84a15008ef568cec05f89f33483a0bbf00cc6b87bcf35f1e91da4e",
+        "mechanism_semantic_id": "MECH_ABS_DEV_002",
+        "oos_consumed": false,
+        "parameter_checksum": "3e2dde37c9e21750",
+        "parent_experiment_id": "CAND_MT_REJECT_001",
+        "qualification_claim": false,
+        "random_seed": 20260805,
+        "research_family": "ABSORPTION",
+        "schema": "v14_d_research_family_lineage",
+        "universe_checksum": "4b5abb57f965dd51908833b1"
+      },
+      "oos_consumed": false,
+      "p_value": 0.09,
+      "qualification_claim": false,
+      "research_family": "ABSORPTION",
+      "result_label": "MULTIPLE_TESTING_REJECTED",
+      "sample_size": {
+        "blockers": [],
+        "development_only": true,
+        "min_n_eff": 24,
+        "min_observations": 48,
+        "min_trades": 16,
+        "n_eff": 30.778043531540714,
+        "n_eff_ok": true,
+        "n_observations": 50,
+        "n_trades": 20,
+        "not_qualification_claim": true,
+        "observations_ok": true,
+        "sufficient": true,
+        "trades_ok": true
+      },
+      "stability": {
+        "all_stability_axes_ok": false,
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood": {
+          "base_metric": 0.0028466201102014042,
+          "development_only": true,
+          "neighbor_count": 5,
+          "neighbor_metrics": [
+            0.00275826704301519,
+            0.002721563727745351,
+            0.0029262299662785344,
+            0.002808511490304968,
+            0.0027077185009321022
+          ],
+          "radius": 0.15,
+          "relative_dispersion": 0.02183711283546608,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime": {
+          "concentration": 0.4054054054054054,
+          "development_only": true,
+          "dominant_regime": "VOL_LOW",
+          "max_concentration_allowed": 0.4,
+          "positive_regime_share": 1.0,
+          "regime_count": 3,
+          "regime_net": {
+            "LIQ_NORMAL": 0.1,
+            "VOL_HIGH": 0.12,
+            "VOL_LOW": 0.15
+          },
+          "stable": false
+        },
+        "symbol": {
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 1.0,
+          "stable": true,
+          "symbol_count": 3,
+          "symbol_net": {
+            "BTCUSDT": 0.12,
+            "ETHUSDT": 0.08,
+            "SOLUSDT": 0.05
+          }
+        }
+      },
+      "ts_dependence": {
+        "acf_profile": {
+          "acf": [
+            {
+              "acf": 0.23949570705207954,
+              "lag": 1
+            },
+            {
+              "acf": 0.0727716475762453,
+              "lag": 2
+            },
+            {
+              "acf": -0.13731331213397516,
+              "lag": 3
+            },
+            {
+              "acf": -0.06488875941895408,
+              "lag": 4
+            },
+            {
+              "acf": -0.03959680379998336,
+              "lag": 5
+            },
+            {
+              "acf": -0.06753364929805322,
+              "lag": 6
+            },
+            {
+              "acf": -0.16240337286235898,
+              "lag": 7
+            },
+            {
+              "acf": -0.2960707643524458,
+              "lag": 8
+            },
+            {
+              "acf": -0.18881529141823392,
+              "lag": 9
+            },
+            {
+              "acf": -0.011831315709932259,
+              "lag": 10
+            },
+            {
+              "acf": 0.08753939852039239,
+              "lag": 11
+            },
+            {
+              "acf": -0.05459035647749896,
+              "lag": 12
+            }
+          ],
+          "decay_lag": 1,
+          "dependence_flagged": false,
+          "max_abs_acf": 0.2960707643524458,
+          "max_lag": 12,
+          "threshold": 0.35
+        },
+        "dependence_blocks_robust_claim": false,
+        "effective_sample_size": {
+          "min_required": 24,
+          "n": 50,
+          "n_eff": 30.778043531540714,
+          "sufficient": true,
+          "sum_rho": 0.31226735462832483
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true
+      }
+    },
+    {
+      "bh_adjusted_p": 0.15,
+      "bootstrap": {
+        "block_bootstrap": {
+          "hi": 0.007647526936563617,
+          "lo": 0.0012066953707070276,
+          "mean": 0.004472347179826766,
+          "sign_agreement": 0.99
+        },
+        "block_size": 8,
+        "bootstrap_stable": true,
+        "ci_level": 0.9,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "iid_bootstrap": {
+          "hi": 0.008278135664327732,
+          "lo": 0.0027484188023174606,
+          "mean": 0.005482491813668896,
+          "sign_agreement": 1.0
+        },
+        "n_observations": 40,
+        "not_oos_claim": true,
+        "observed_mean": 0.005375276052480218,
+        "replicates": 200
+      },
+      "candidate_id": "CAND_EXTRA_001",
+      "cost_turnover": {
+        "cost_components": {
+          "cancel_replace_cost": 0.004,
+          "entry_fee": 0.02,
+          "exit_fee": 0.02,
+          "funding_cost": 0.01,
+          "market_impact_approximation": 0.015,
+          "partial_fill_cost": 0.005,
+          "slippage_cost": 0.020868210358235703,
+          "spread_cost": 0.03,
+          "turnover_cost": 0.02
+        },
+        "cost_destroyed": false,
+        "destroyed": false,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "gross_pnl": 0.35,
+        "missing_cost_components": [],
+        "net_pnl": 0.20513178964176426,
+        "not_oos_claim": true,
+        "required_cost_components": [
+          "entry_fee",
+          "exit_fee",
+          "spread_cost",
+          "slippage_cost",
+          "funding_cost",
+          "partial_fill_cost",
+          "cancel_replace_cost",
+          "market_impact_approximation",
+          "turnover_cost"
+        ],
+        "total_cost": 0.14486821035823572,
+        "turnover_cost": 0.02,
+        "turnover_cost_to_gross_ratio": 0.05714285714285715,
+        "turnover_destroyed": false,
+        "turnover_notional": 15.0
+      },
+      "family_test_count": 1,
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "intended_pathway": "INSUFFICIENT_SAMPLE",
+      "label": "INSUFFICIENT_SAMPLE",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_QUALITY_BLOCKED",
+          "DEVELOPMENT_FRAGILE",
+          "DEVELOPMENT_ROBUST",
+          "INSUFFICIENT_SAMPLE",
+          "MULTIPLE_TESTING_REJECTED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "INSUFFICIENT_SAMPLE",
+        "oos_consumed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "sample_size_or_n_eff_below_min"
+        ]
+      },
+      "lineage": {
+        "campaign_id": "v14_d_robustness_multiple_testing",
+        "candidate_id": "CAND_EXTRA_001",
+        "cost_version": "COST_MODEL_CONTRACT_CONSUMER_V14D_SYNTHETIC",
+        "data_fixture_id": "SYNTH_ROBUSTNESS_20260805",
+        "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V14D_2026_08_05",
+        "development_only": true,
+        "feature_version": "FIXTURE_FEATURE_V14D_1",
+        "formal_walk_forward": false,
+        "lineage_digest": "0a2a7e847a456b7d75bee8b4a21977ba7e3281f451f5a82bf92430efd5bd63f7",
+        "mechanism_semantic_id": "MECH_EXTRA_001",
+        "oos_consumed": false,
+        "parameter_checksum": "8beb975872328ce4",
+        "parent_experiment_id": null,
+        "qualification_claim": false,
+        "random_seed": 20260805,
+        "research_family": "LIQUIDITY_WITHDRAWAL",
+        "schema": "v14_d_research_family_lineage",
+        "universe_checksum": "4b5abb57f965dd51908833b1"
+      },
+      "oos_consumed": false,
+      "p_value": 0.15,
+      "qualification_claim": false,
+      "research_family": "LIQUIDITY_WITHDRAWAL",
+      "result_label": "INSUFFICIENT_SAMPLE",
+      "sample_size": {
+        "blockers": [
+          "OBSERVATIONS_BELOW_MIN",
+          "TRADES_BELOW_MIN",
+          "EFFECTIVE_SAMPLE_BELOW_MIN"
+        ],
+        "development_only": true,
+        "min_n_eff": 24,
+        "min_observations": 48,
+        "min_trades": 16,
+        "n_eff": 20.613459299373044,
+        "n_eff_ok": false,
+        "n_observations": 40,
+        "n_trades": 12,
+        "not_qualification_claim": true,
+        "observations_ok": false,
+        "sufficient": false,
+        "trades_ok": false
+      },
+      "stability": {
+        "all_stability_axes_ok": false,
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood": {
+          "base_metric": 0.005375276052480218,
+          "development_only": true,
+          "neighbor_count": 5,
+          "neighbor_metrics": [
+            0.005364845870060356,
+            0.005623305181961481,
+            0.0052077964639806055,
+            0.0051246262323386815,
+            0.005155228871822584
+          ],
+          "radius": 0.15,
+          "relative_dispersion": 0.014904449123224098,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime": {
+          "concentration": 0.9803921568627451,
+          "development_only": true,
+          "dominant_regime": "VOL_LOW",
+          "max_concentration_allowed": 0.4,
+          "positive_regime_share": 1.0,
+          "regime_count": 2,
+          "regime_net": {
+            "STRESS": 0.01,
+            "VOL_LOW": 0.5
+          },
+          "stable": false
+        },
+        "symbol": {
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 0.5,
+          "stable": false,
+          "symbol_count": 2,
+          "symbol_net": {
+            "BTCUSDT": 0.3,
+            "ETHUSDT": -0.1
+          }
+        }
+      },
+      "ts_dependence": {
+        "acf_profile": {
+          "acf": [
+            {
+              "acf": 0.40308233203675,
+              "lag": 1
+            },
+            {
+              "acf": 0.06715753452501137,
+              "lag": 2
+            },
+            {
+              "acf": -0.16297123463379146,
+              "lag": 3
+            },
+            {
+              "acf": -0.06474415356583023,
+              "lag": 4
+            },
+            {
+              "acf": -0.04207178703073353,
+              "lag": 5
+            },
+            {
+              "acf": 0.05997260764458402,
+              "lag": 6
+            },
+            {
+              "acf": 0.13141599208764732,
+              "lag": 7
+            },
+            {
+              "acf": 0.0700465506235201,
+              "lag": 8
+            },
+            {
+              "acf": -0.09167695288826243,
+              "lag": 9
+            },
+            {
+              "acf": -0.15243380697298062,
+              "lag": 10
+            },
+            {
+              "acf": -0.08528157422275637,
+              "lag": 11
+            },
+            {
+              "acf": 0.0534295124868192,
+              "lag": 12
+            }
+          ],
+          "decay_lag": 2,
+          "dependence_flagged": true,
+          "max_abs_acf": 0.40308233203675,
+          "max_lag": 12,
+          "threshold": 0.35
+        },
+        "dependence_blocks_robust_claim": true,
+        "effective_sample_size": {
+          "min_required": 24,
+          "n": 40,
+          "n_eff": 20.613459299373044,
+          "sufficient": false,
+          "sum_rho": 0.47023986656176137
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true
+      }
+    },
+    {
+      "bh_adjusted_p": 0.2,
+      "bootstrap": {
+        "block_bootstrap": {
+          "hi": 0.003977296319744355,
+          "lo": 0.0005041140090616447,
+          "mean": 0.002275268768853226,
+          "sign_agreement": 0.995
+        },
+        "block_size": 8,
+        "bootstrap_stable": false,
+        "ci_level": 0.9,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "iid_bootstrap": {
+          "hi": 0.004028190733118036,
+          "lo": -7.096734084475514e-05,
+          "mean": 0.002043029789810765,
+          "sign_agreement": 0.945
+        },
+        "n_observations": 45,
+        "not_oos_claim": true,
+        "observed_mean": 0.0021069700193632936,
+        "replicates": 200
+      },
+      "candidate_id": "CAND_EXTRA_002",
+      "cost_turnover": {
+        "cost_components": {
+          "cancel_replace_cost": 0.004,
+          "entry_fee": 0.02,
+          "exit_fee": 0.02,
+          "funding_cost": 0.01,
+          "market_impact_approximation": 0.015,
+          "partial_fill_cost": 0.005,
+          "slippage_cost": 0.02081300390959664,
+          "spread_cost": 0.03,
+          "turnover_cost": 0.02
+        },
+        "cost_destroyed": false,
+        "destroyed": false,
+        "development_only": true,
+        "formal_walk_forward": false,
+        "gross_pnl": 0.35,
+        "missing_cost_components": [],
+        "net_pnl": 0.20518699609040333,
+        "not_oos_claim": true,
+        "required_cost_components": [
+          "entry_fee",
+          "exit_fee",
+          "spread_cost",
+          "slippage_cost",
+          "funding_cost",
+          "partial_fill_cost",
+          "cancel_replace_cost",
+          "market_impact_approximation",
+          "turnover_cost"
+        ],
+        "total_cost": 0.14481300390959664,
+        "turnover_cost": 0.02,
+        "turnover_cost_to_gross_ratio": 0.05714285714285715,
+        "turnover_destroyed": false,
+        "turnover_notional": 15.0
+      },
+      "family_test_count": 1,
+      "fixture_synthetic": true,
+      "formal_walk_forward": false,
+      "intended_pathway": "INSUFFICIENT_SAMPLE",
+      "label": "INSUFFICIENT_SAMPLE",
+      "label_info": {
+        "allowed_labels": [
+          "COST_DESTROYED",
+          "DATA_QUALITY_BLOCKED",
+          "DEVELOPMENT_FRAGILE",
+          "DEVELOPMENT_ROBUST",
+          "INSUFFICIENT_SAMPLE",
+          "MULTIPLE_TESTING_REJECTED"
+        ],
+        "development_only": true,
+        "formal_walk_forward": false,
+        "label": "INSUFFICIENT_SAMPLE",
+        "oos_consumed": false,
+        "qualification_claim": false,
+        "reasons": [
+          "sample_size_or_n_eff_below_min"
+        ]
+      },
+      "lineage": {
+        "campaign_id": "v14_d_robustness_multiple_testing",
+        "candidate_id": "CAND_EXTRA_002",
+        "cost_version": "COST_MODEL_CONTRACT_CONSUMER_V14D_SYNTHETIC",
+        "data_fixture_id": "SYNTH_ROBUSTNESS_20260805",
+        "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V14D_2026_08_05",
+        "development_only": true,
+        "feature_version": "FIXTURE_FEATURE_V14D_1",
+        "formal_walk_forward": false,
+        "lineage_digest": "73d2d85ca78c5824b211272dfd8c0e594e9ee4bf187227f074f79686434148e6",
+        "mechanism_semantic_id": "MECH_EXTRA_002",
+        "oos_consumed": false,
+        "parameter_checksum": "8df1a9aded8bb105",
+        "parent_experiment_id": null,
+        "qualification_claim": false,
+        "random_seed": 20260805,
+        "research_family": "SPREAD_SHOCK",
+        "schema": "v14_d_research_family_lineage",
+        "universe_checksum": "4b5abb57f965dd51908833b1"
+      },
+      "oos_consumed": false,
+      "p_value": 0.2,
+      "qualification_claim": false,
+      "research_family": "SPREAD_SHOCK",
+      "result_label": "INSUFFICIENT_SAMPLE",
+      "sample_size": {
+        "blockers": [
+          "OBSERVATIONS_BELOW_MIN",
+          "TRADES_BELOW_MIN"
+        ],
+        "development_only": true,
+        "min_n_eff": 24,
+        "min_observations": 48,
+        "min_trades": 16,
+        "n_eff": 41.14977720349413,
+        "n_eff_ok": true,
+        "n_observations": 45,
+        "n_trades": 13,
+        "not_qualification_claim": true,
+        "observations_ok": false,
+        "sufficient": false,
+        "trades_ok": false
+      },
+      "stability": {
+        "all_stability_axes_ok": false,
+        "formal_walk_forward": false,
+        "not_oos_claim": true,
+        "parameter_neighborhood": {
+          "base_metric": 0.0021069700193632936,
+          "development_only": true,
+          "neighbor_count": 5,
+          "neighbor_metrics": [
+            0.002175126050078263,
+            0.002096144450492648,
+            0.0020562904402233106,
+            0.0020316845630979903,
+            0.0020667446141551652
+          ],
+          "radius": 0.15,
+          "relative_dispersion": 0.010333320148711715,
+          "sign_agreement": 1.0,
+          "stable": true
+        },
+        "regime": {
+          "concentration": 0.9803921568627451,
+          "development_only": true,
+          "dominant_regime": "VOL_LOW",
+          "max_concentration_allowed": 0.4,
+          "positive_regime_share": 1.0,
+          "regime_count": 2,
+          "regime_net": {
+            "STRESS": 0.01,
+            "VOL_LOW": 0.5
+          },
+          "stable": false
+        },
+        "symbol": {
+          "development_only": true,
+          "min_positive_share": 0.55,
+          "positive_share": 0.5,
+          "stable": false,
+          "symbol_count": 2,
+          "symbol_net": {
+            "BTCUSDT": 0.3,
+            "ETHUSDT": -0.1
+          }
+        }
+      },
+      "ts_dependence": {
+        "acf_profile": {
+          "acf": [
+            {
+              "acf": 0.04678303332562071,
+              "lag": 1
+            },
+            {
+              "acf": -0.07557293370548061,
+              "lag": 2
+            },
+            {
+              "acf": 0.020540485695151996,
+              "lag": 3
+            },
+            {
+              "acf": -0.01116467566181246,
+              "lag": 4
+            },
+            {
+              "acf": -0.022451845278737725,
+              "lag": 5
+            },
+            {
+              "acf": -0.2850707651747918,
+              "lag": 6
+            },
+            {
+              "acf": -0.2047631020416909,
+              "lag": 7
+            },
+            {
+              "acf": -0.08490751262426341,
+              "lag": 8
+            },
+            {
+              "acf": -0.08480130601263568,
+              "lag": 9
+            },
+            {
+              "acf": 0.0691681892049074,
+              "lag": 10
+            },
+            {
+              "acf": -0.10034242956483976,
+              "lag": 11
+            },
+            {
+              "acf": -0.06518805159460545,
+              "lag": 12
+            }
+          ],
+          "decay_lag": 1,
+          "dependence_flagged": false,
+          "max_abs_acf": 0.2850707651747918,
+          "max_lag": 12,
+          "threshold": 0.35
+        },
+        "dependence_blocks_robust_claim": false,
+        "effective_sample_size": {
+          "min_required": 24,
+          "n": 45,
+          "n_eff": 41.14977720349413,
+          "sufficient": true,
+          "sum_rho": 0.04678303332562071
+        },
+        "formal_walk_forward": false,
+        "not_oos_claim": true
+      }
+    }
+  ],
+  "label_histogram": {
+    "COST_DESTROYED": 1,
+    "DATA_QUALITY_BLOCKED": 1,
+    "DEVELOPMENT_FRAGILE": 1,
+    "DEVELOPMENT_ROBUST": 2,
+    "INSUFFICIENT_SAMPLE": 3,
+    "MULTIPLE_TESTING_REJECTED": 2
+  },
+  "schema": "v14_d_evaluations"
+}

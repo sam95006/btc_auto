@@ -1,0 +1,43 @@
+{
+  "banned_claim_count": 6,
+  "hits": [
+    {
+      "path": "backend/nexus_formal_wf_plan/adversarial.py",
+      "pattern": "(?i)WALK[_\\s-]?FORWARD[_\\s-]?EXECUTED",
+      "snippet": "walk_forward_executed\") is False\n        and "
+    },
+    {
+      "path": "backend/nexus_formal_wf_plan/adversarial.py",
+      "pattern": "(?i)WALK[_\\s-]?FORWARD[_\\s-]?EXECUTED",
+      "snippet": "walk_forward_executed\": pass2_rerun[\"formal_w"
+    },
+    {
+      "path": "backend/nexus_formal_wf_plan/adversarial.py",
+      "pattern": "(?i)\\bPROMOTED\\b",
+      "snippet": "promoted candidate refusal.\n    "
+    },
+    {
+      "path": "backend/nexus_formal_wf_plan/fixtures.py",
+      "pattern": "(?i)\\bPROMOTED\\b",
+      "snippet": "promoted\": False,\n        \"param"
+    },
+    {
+      "path": "backend/nexus_formal_wf_plan/windows.py",
+      "pattern": "(?i)WALK[_\\s-]?FORWARD[_\\s-]?EXECUTED",
+      "snippet": "walk_forward_executed\"] is False for f in fol"
+    },
+    {
+      "path": "tests/test_formal_wf_plan_compiler_v15f.py",
+      "pattern": "(?i)WALK[_\\s-]?FORWARD[_\\s-]?EXECUTED",
+      "snippet": "walk_forward_executed\"] is False\n"
+    }
+  ],
+  "ok": false,
+  "scanned_code_roots": [
+    "backend/nexus_formal_wf_plan",
+    "tools/research/formal_wf_plan",
+    "tools/research/run_formal_wf_plan_compiler_v15f.py",
+    "tests/test_formal_wf_plan_compiler_v15f.py"
+  ],
+  "schema": "v15_f_banned_claim_scan"
+}

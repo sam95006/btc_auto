@@ -1,0 +1,244 @@
+{
+  "adapter_id": "NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1",
+  "canonical_execution_engine": "backend.nexus_execution.execution_simulator_v1_1.AutonomousExecutionSimulatorV11",
+  "canonical_execution_engine_count": 1,
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "finished_at": "2026-08-05T03:07:06Z",
+  "generated_execution_scenario_count": 100000,
+  "invariants": {
+    "scenarios_ok": 100000,
+    "scenarios_with_violations": 0,
+    "total_violations": 0
+  },
+  "mainnet": false,
+  "mode": "FULL",
+  "pass": true,
+  "real_money": false,
+  "recommendation": "NEXUS_V10_EXECUTION_SESSION_SCALE_PASS",
+  "scenario_breakdown": {
+    "cancel_after_partial": {
+      "count": 3225,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CANCELLED": 3225
+      }
+    },
+    "cancel_before_fill": {
+      "count": 3225,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CANCELLED": 3225
+      }
+    },
+    "cross_margin_attempt": {
+      "count": 3226,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 3226
+      }
+    },
+    "duplicate_intent": {
+      "count": 3226,
+      "invariant_violations": 0,
+      "outcomes": {
+        "DUPLICATE_IGNORED": 3226
+      }
+    },
+    "expired_limit_gtc_short": {
+      "count": 3226,
+      "invariant_violations": 0,
+      "outcomes": {
+        "EXPIRED": 3226
+      }
+    },
+    "fok_partial_reject": {
+      "count": 3226,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 2339,
+        "UNFILLED": 887
+      }
+    },
+    "full_close": {
+      "count": 3226,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CLOSED": 3226
+      }
+    },
+    "funding_credit": {
+      "count": 3227,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 3227
+      }
+    },
+    "funding_debit": {
+      "count": 3225,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CLOSED": 3225
+      }
+    },
+    "instrument_halted": {
+      "count": 3227,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 3227
+      }
+    },
+    "ioc_no_fill": {
+      "count": 3226,
+      "invariant_violations": 0,
+      "outcomes": {
+        "EXPIRED": 3226
+      }
+    },
+    "leverage_100_attempt": {
+      "count": 3226,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 3226
+      }
+    },
+    "liquidation_distance_reject": {
+      "count": 3226,
+      "invariant_violations": 0,
+      "outcomes": {
+        "LIQUIDATED_SIMULATED": 3226
+      }
+    },
+    "market_buy": {
+      "count": 3225,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CLOSED": 3225
+      }
+    },
+    "market_sell": {
+      "count": 3225,
+      "invariant_violations": 0,
+      "outcomes": {
+        "CLOSED": 3225
+      }
+    },
+    "marketable_limit_buy": {
+      "count": 3226,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 3226
+      }
+    },
+    "marketable_limit_sell": {
+      "count": 3225,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 3225
+      }
+    },
+    "min_notional_violation": {
+      "count": 3225,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 3225
+      }
+    },
+    "missing_index_price": {
+      "count": 3225,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 3225
+      }
+    },
+    "non_marketable_limit_buy": {
+      "count": 3226,
+      "invariant_violations": 0,
+      "outcomes": {
+        "UNFILLED": 3226
+      }
+    },
+    "non_marketable_limit_sell": {
+      "count": 3227,
+      "invariant_violations": 0,
+      "outcomes": {
+        "UNFILLED": 3227
+      }
+    },
+    "partial_fill_market": {
+      "count": 3225,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 3225
+      }
+    },
+    "position_reduction": {
+      "count": 3226,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 3226
+      }
+    },
+    "quantity_step_violation": {
+      "count": 3226,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 3226
+      }
+    },
+    "reduce_only_violation": {
+      "count": 3226,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 3226
+      }
+    },
+    "risk_override_attempt": {
+      "count": 3227,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 3227
+      }
+    },
+    "same_bar_stop_target": {
+      "count": 3225,
+      "invariant_violations": 0,
+      "outcomes": {
+        "BLOCKED_AMBIGUOUS": 3225
+      }
+    },
+    "stale_mark_price": {
+      "count": 3225,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 3225
+      }
+    },
+    "stop_market_arm": {
+      "count": 3227,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 3227
+      }
+    },
+    "take_profit_market_arm": {
+      "count": 3227,
+      "invariant_violations": 0,
+      "outcomes": {
+        "FILLED": 3227
+      }
+    },
+    "tick_size_violation": {
+      "count": 3225,
+      "invariant_violations": 0,
+      "outcomes": {
+        "REJECTED": 3225
+      }
+    }
+  },
+  "scenario_kind_count": 31,
+  "schema": "v10_execution_session_scale_fuzz",
+  "seed": 20260805,
+  "started_at": "2026-08-05T03:06:56Z",
+  "target_scenarios": 100000
+}

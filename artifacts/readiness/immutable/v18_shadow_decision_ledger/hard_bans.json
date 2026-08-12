@@ -1,0 +1,19 @@
+{
+  "hard_bans": [
+    "no_shadow_orders",
+    "no_demo_orders",
+    "no_exchange_write",
+    "no_mainnet",
+    "no_real_money",
+    "no_actual_ordered",
+    "no_actual_filled",
+    "no_exchange_order_id",
+    "no_active_lessons",
+    "no_lesson_promotion_to_active",
+    "no_pr26_merge",
+    "no_pr27_merge",
+    "no_acceleration_report_edit",
+    "no_archive_rebuild",
+    "no_rewrite_sealed_record"
+  ]
+}

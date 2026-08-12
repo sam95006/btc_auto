@@ -1,0 +1,218 @@
+{
+  "catalog_version": "v14_f_regime_catalog_1",
+  "common_semantics": {
+    "availability_semantics": {
+      "AVAILABLE": "lookback has >= min_bars and required fields parseable",
+      "MISSING": "no eligible bars in lookback at as_of_ms",
+      "NOT_YET_AVAILABLE": "bars exist in event-time but receive_timestamp > as_of_ms",
+      "PARTIAL": "lookback has bars but below min_bars or degenerate metrics"
+    },
+    "lead_lag_semantics": {
+      "max_lag_bars_default": 5,
+      "non_claim": "Lead-lag statistics are descriptive research only; not a trading edge.",
+      "rule": "For lag k>=0, correlate leader[t-k] with follower[t] using only bars eligible at as_of_ms. Negative lag (follower leads) uses follower[t-k] vs leader[t]. No bar with exchange or receive > as_of_ms is used."
+    },
+    "missing_data_behavior": {
+      "availability": "MISSING",
+      "does_not_forward_fill": true,
+      "does_not_impute": true,
+      "does_not_use_future_bars": true,
+      "label": null,
+      "metrics": null
+    },
+    "non_claims": [
+      "No predictive edge",
+      "No profitability",
+      "No strategy signal",
+      "No lead-lag trading claim",
+      "Descriptive Point-in-Time regime measurement and lead-lag research only"
+    ],
+    "staleness_semantics": {
+      "stale_after_ms": 180000,
+      "stale_does_not_change_label": true,
+      "stale_flag": "True when staleness_ms > stale_after_ms",
+      "staleness_ms": "as_of_ms - available_at_ms when available_at_ms is known"
+    },
+    "timestamp_semantics": {
+      "as_of_ms": "Point-in-Time cutoff: only bars with exchange_timestamp <= as_of_ms AND receive_timestamp <= as_of_ms are eligible",
+      "available_at_ms": "max(receive_timestamp) among included bars; regime is not available before all included bars have been received",
+      "bar_alignment": "floor(exchange_timestamp / bar_ms) * bar_ms",
+      "event_time_field": "exchange_timestamp",
+      "event_time_unit": "ms_epoch_utc",
+      "receive_time_field": "receive_timestamp",
+      "receive_time_unit": "ms_epoch_utc"
+    }
+  },
+  "contemporaneous_only": true,
+  "created_at": "2026-08-05T11:18:14Z",
+  "predictive_edge_claimed": false,
+  "regime_count": 8,
+  "regime_schema_version": "regime_lab_v14_f_1",
+  "regimes": {
+    "correlation_regime": {
+      "bar_ms_default": 60000,
+      "definition": "Mean pairwise Pearson correlation of PIT-aligned close returns across the universe in the lookback: DECOUPLED | MIXED | COUPLED using fixed thresholds (0.2 / 0.6). Peers missing at as_of are excluded.",
+      "inputs": [
+        "close",
+        "symbol",
+        "exchange_timestamp",
+        "receive_timestamp"
+      ],
+      "labels": [
+        "DECOUPLED",
+        "MIXED",
+        "COUPLED"
+      ],
+      "lookback_bars_default": 20,
+      "min_bars": 5,
+      "regime_id": "correlation_regime",
+      "semantics_ref": "common_semantics",
+      "units": "categorical_label",
+      "value_type": "string"
+    },
+    "funding_regime": {
+      "bar_ms_default": 60000,
+      "definition": "Mean funding rate over PIT-eligible bars: NEGATIVE | NEUTRAL | POSITIVE using fixed thresholds (±1e-5). Funding observed only when received.",
+      "inputs": [
+        "funding_rate",
+        "exchange_timestamp",
+        "receive_timestamp"
+      ],
+      "labels": [
+        "NEGATIVE",
+        "NEUTRAL",
+        "POSITIVE"
+      ],
+      "lookback_bars_default": 20,
+      "min_bars": 3,
+      "regime_id": "funding_regime",
+      "semantics_ref": "common_semantics",
+      "units": "categorical_label",
+      "value_type": "string"
+    },
+    "liquidation_regime": {
+      "bar_ms_default": 60000,
+      "definition": "Mean liquidation notional intensity over lookback: QUIET | ELEVATED | STRESSED using sample terciles of contemporaneous liquidation_notional.",
+      "inputs": [
+        "liquidation_notional",
+        "exchange_timestamp",
+        "receive_timestamp"
+      ],
+      "labels": [
+        "QUIET",
+        "ELEVATED",
+        "STRESSED"
+      ],
+      "lookback_bars_default": 20,
+      "min_bars": 5,
+      "regime_id": "liquidation_regime",
+      "semantics_ref": "common_semantics",
+      "units": "categorical_label",
+      "value_type": "string"
+    },
+    "liquidity_regime": {
+      "bar_ms_default": 60000,
+      "definition": "Classify average quote notional volume over the PIT lookback into THIN | NORMAL | DEEP using sample terciles of contemporaneous volume.",
+      "inputs": [
+        "volume_notional",
+        "exchange_timestamp",
+        "receive_timestamp"
+      ],
+      "labels": [
+        "THIN",
+        "NORMAL",
+        "DEEP"
+      ],
+      "lookback_bars_default": 20,
+      "min_bars": 5,
+      "regime_id": "liquidity_regime",
+      "semantics_ref": "common_semantics",
+      "units": "categorical_label",
+      "value_type": "string"
+    },
+    "market_stress_regime": {
+      "bar_ms_default": 60000,
+      "definition": "Composite stress score from contemporaneous volatility z, liquidation intensity z, and abs(funding) z (equal weight). Labels CALM | WATCH | STRESS using score terciles on the eligible sample only.",
+      "inputs": [
+        "close",
+        "liquidation_notional",
+        "funding_rate",
+        "exchange_timestamp",
+        "receive_timestamp"
+      ],
+      "labels": [
+        "CALM",
+        "WATCH",
+        "STRESS"
+      ],
+      "lookback_bars_default": 20,
+      "min_bars": 5,
+      "regime_id": "market_stress_regime",
+      "semantics_ref": "common_semantics",
+      "units": "categorical_label",
+      "value_type": "string"
+    },
+    "open_interest_regime": {
+      "bar_ms_default": 60000,
+      "definition": "Fractional change in open interest over lookback: (last_oi - first_oi) / first_oi → CONTRACTING | STABLE | EXPANDING at ±0.01 thresholds. Uses only PIT-eligible OI bars.",
+      "inputs": [
+        "open_interest",
+        "exchange_timestamp",
+        "receive_timestamp"
+      ],
+      "labels": [
+        "CONTRACTING",
+        "STABLE",
+        "EXPANDING"
+      ],
+      "lookback_bars_default": 20,
+      "min_bars": 3,
+      "regime_id": "open_interest_regime",
+      "semantics_ref": "common_semantics",
+      "units": "categorical_label",
+      "value_type": "string"
+    },
+    "trend_regime": {
+      "bar_ms_default": 60000,
+      "definition": "Signed drift of close over lookback: (last_close - first_close) / first_close. Labels UP | FLAT | DOWN using fixed contemporaneous thresholds (±0.001), never future prices.",
+      "inputs": [
+        "close",
+        "exchange_timestamp",
+        "receive_timestamp"
+      ],
+      "labels": [
+        "UP",
+        "FLAT",
+        "DOWN"
+      ],
+      "lookback_bars_default": 20,
+      "min_bars": 3,
+      "regime_id": "trend_regime",
+      "semantics_ref": "common_semantics",
+      "units": "categorical_label",
+      "value_type": "string"
+    },
+    "volatility_regime": {
+      "bar_ms_default": 60000,
+      "definition": "Classify realized log-return volatility over the PIT lookback into LOW | MEDIUM | HIGH using tercile thresholds computed only on the eligible contemporaneous sample (no future bars).",
+      "inputs": [
+        "close",
+        "exchange_timestamp",
+        "receive_timestamp"
+      ],
+      "labels": [
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ],
+      "lookback_bars_default": 20,
+      "min_bars": 5,
+      "regime_id": "volatility_regime",
+      "semantics_ref": "common_semantics",
+      "units": "categorical_label",
+      "value_type": "string"
+    }
+  },
+  "schema": "v14_f_regime_catalog",
+  "strategy_signal": false
+}

@@ -1,0 +1,14 @@
+{
+  "adversarial_all_pass": true,
+  "adversarial_failed": 0,
+  "adversarial_passed": 9,
+  "created_at": "2026-08-05T08:32:36Z",
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "hard_bans_honored": true,
+  "pass": 2,
+  "pr27_merged": false,
+  "pytest_passed": true,
+  "schema": "v13_d_pass2_adversarial_summary",
+  "secret_leak_count": 0
+}

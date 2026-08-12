@@ -1,0 +1,15 @@
+{
+  "oos_consumed": false,
+  "oos_downloaded": false,
+  "oos_executed": false,
+  "oos_reserved": false,
+  "plan_checksum": "1bcc13da2ee65ebc41d752836ab3a463ba9cb7c95e7e0a0d20ac74351e05949a",
+  "proven": true,
+  "registry_checksums": {
+    "consumed_failed_holdout": "5c75884c796efbfcc5315889753bec3e4bc769d8fae4e81e9cce62ec496d48a5",
+    "development": "7405411f603db4a4d48c2f85984f34faba9e575093ce23f9a0f9b83bba5ee894",
+    "planned_oos": "5b0741da3e4ec2bf0fe644985505b469d40a185fbf82dc4a74fdc2eb5314606c"
+  },
+  "status": "OOS_NON_CONSUMPTION_PROVEN",
+  "violations": []
+}

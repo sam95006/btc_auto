@@ -1,0 +1,84 @@
+{
+  "entries": [
+    {
+      "report_type": "research_stage3_bybit_demo_learning_readiness",
+      "source_path": "data/external_alpha/reports/research_stage3_bybit_demo_learning_readiness.json",
+      "source_commit": "c6ddcafdecc10f166f6043e5baf08c98912561ca",
+      "source_period": "stage3_legacy",
+      "checksum": "1995a15293a906304200996076c81f61727f64a99d2bbabc61f4888d85424e49",
+      "current_status": "SUPERSEDED_SNAPSHOT",
+      "retention_reason": "historical_stage3_readiness_fact_only",
+      "replacement_path": "artifacts/readiness/immutable/external_alpha_baseline/external_alpha_manifest.json"
+    },
+    {
+      "report_type": "stage3_24h_runner_preflight",
+      "source_path": "data/external_alpha/reports/stage3_24h_runner_preflight.json",
+      "source_commit": "c6ddcafdecc10f166f6043e5baf08c98912561ca",
+      "source_period": "stage3_legacy",
+      "checksum": "2d2e4a2721ec6d374fdb8d51a11df071c6aaa0aa7df5203f080dfed4ba595948",
+      "current_status": "SUPERSEDED_SNAPSHOT",
+      "retention_reason": "historical_stage3_readiness_fact_only",
+      "replacement_path": "artifacts/readiness/immutable/external_alpha_baseline/external_alpha_manifest.json"
+    },
+    {
+      "report_type": "stage3_24h_runner_readiness",
+      "source_path": "data/external_alpha/reports/stage3_24h_runner_readiness.json",
+      "source_commit": "c6ddcafdecc10f166f6043e5baf08c98912561ca",
+      "source_period": "stage3_legacy",
+      "checksum": "8beff79105f7918d12f8e5aede5475ddfd508842d1f37bc85a522c0f1bcf4838",
+      "current_status": "SUPERSEDED_SNAPSHOT",
+      "retention_reason": "historical_stage3_readiness_fact_only",
+      "replacement_path": "artifacts/readiness/immutable/external_alpha_baseline/external_alpha_manifest.json"
+    },
+    {
+      "report_type": "stage3_c3_background_supervisor_readiness",
+      "source_path": "data/external_alpha/reports/stage3_c3_background_supervisor_readiness.json",
+      "source_commit": "c6ddcafdecc10f166f6043e5baf08c98912561ca",
+      "source_period": "stage3_legacy",
+      "checksum": "be93bd5a49b6228c58ba5ac6feb086cbb8bc7ed0ccf47ef1256fa0602a7745cc",
+      "current_status": "SUPERSEDED_SNAPSHOT",
+      "retention_reason": "historical_stage3_readiness_fact_only",
+      "replacement_path": "artifacts/readiness/immutable/external_alpha_baseline/external_alpha_manifest.json"
+    },
+    {
+      "report_type": "stage3_demo_learning_runner_readiness",
+      "source_path": "data/external_alpha/reports/stage3_demo_learning_runner_readiness.json",
+      "source_commit": "c6ddcafdecc10f166f6043e5baf08c98912561ca",
+      "source_period": "stage3_legacy",
+      "checksum": "8b5c2d4fd3b70f8aca07ff07d892333fda2824fc6f682b23b8eaa1384f7644cb",
+      "current_status": "SUPERSEDED_SNAPSHOT",
+      "retention_reason": "historical_stage3_readiness_fact_only",
+      "replacement_path": "artifacts/readiness/immutable/external_alpha_baseline/external_alpha_manifest.json"
+    },
+    {
+      "report_type": "stage3_demo_order_preflight",
+      "source_path": "data/external_alpha/reports/stage3_demo_order_preflight.json",
+      "source_commit": "c6ddcafdecc10f166f6043e5baf08c98912561ca",
+      "source_period": "stage3_legacy",
+      "checksum": "501645edea0588baa97572ef8e9474df42dc02cd6d6c210a6fbaeac3c7bedd1a",
+      "current_status": "SUPERSEDED_SNAPSHOT",
+      "retention_reason": "historical_stage3_readiness_fact_only",
+      "replacement_path": "artifacts/readiness/immutable/external_alpha_baseline/external_alpha_manifest.json"
+    },
+    {
+      "report_type": "stage3_github_auto_24h_startup_safety_report",
+      "source_path": "data/external_alpha/reports/stage3_github_auto_24h_startup_safety_report.json",
+      "source_commit": "c6ddcafdecc10f166f6043e5baf08c98912561ca",
+      "source_period": "stage3_legacy",
+      "checksum": "f2ac93ccd0e739c39cdf5aef71033bf7ac3995a02e943d49af7273935a6bb28e",
+      "current_status": "SUPERSEDED_SNAPSHOT",
+      "retention_reason": "historical_stage3_readiness_fact_only",
+      "replacement_path": "artifacts/readiness/immutable/external_alpha_baseline/external_alpha_manifest.json"
+    },
+    {
+      "report_type": "stage3_github_deploy_readiness",
+      "source_path": "data/external_alpha/reports/stage3_github_deploy_readiness.json",
+      "source_commit": "c6ddcafdecc10f166f6043e5baf08c98912561ca",
+      "source_period": "stage3_legacy",
+      "checksum": "a781cca2400c4c6d4627afaebcd14f6e974874b7c3ccfb5669c06becbef6dd09",
+      "current_status": "SUPERSEDED_SNAPSHOT",
+      "retention_reason": "historical_stage3_readiness_fact_only",
+      "replacement_path": "artifacts/readiness/immutable/external_alpha_baseline/external_alpha_manifest.json"
+    }
+  ]
+}

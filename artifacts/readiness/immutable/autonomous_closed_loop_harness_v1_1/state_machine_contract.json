@@ -1,0 +1,13 @@
+{
+  "canonical_classes": [
+    "GOOD_PROCESS_WIN",
+    "GOOD_PROCESS_LOSS",
+    "BAD_PROCESS_WIN",
+    "BAD_PROCESS_LOSS",
+    "UNDETERMINED"
+  ],
+  "state_machine_status": "PASS",
+  "orphan_lifecycle_count": 0,
+  "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+  "created_at": "2026-08-04T13:06:30Z"
+}

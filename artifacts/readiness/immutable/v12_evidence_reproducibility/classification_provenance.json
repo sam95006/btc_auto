@@ -1,0 +1,276 @@
+{
+  "created_at": "2026-08-05T07:49:12Z",
+  "items": [
+    {
+      "classification_provenance": {
+        "ai_provider_model_identifiers": [
+          {
+            "model": "deterministic-reasoner-v1",
+            "provider": "sim-reasoner",
+            "role": "reasoner"
+          },
+          {
+            "model": "deterministic-critic-v1",
+            "provider": "sim-critic",
+            "role": "critic"
+          }
+        ],
+        "blocked_reason": null,
+        "classification_label": "lifecycle_closed_simulated",
+        "fabricated_learning_proof": false,
+        "intent_id_present": true,
+        "learning_proven": false,
+        "lesson_ids": [
+          "lesson_struct_f4d0df9a425978da"
+        ],
+        "linkage_authority": "backend.nexus_decision.execution_bridge",
+        "position_id_present": true,
+        "rejection_reasons": [],
+        "risk_allowed": true,
+        "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
+        "risk_reason": "PASS",
+        "stage_path": [
+          "understand",
+          "challenge",
+          "decide",
+          "decide",
+          "record",
+          "monitor",
+          "review",
+          "calibrate",
+          "improve"
+        ],
+        "state_path": [
+          "UNDERSTANDING",
+          "CHALLENGED",
+          "RISK_REVIEWED",
+          "APPROVED_SIMULATED",
+          "MONITORING",
+          "EXITED",
+          "UNDER_REVIEW",
+          "CALIBRATED",
+          "CLOSED"
+        ],
+        "terminal_status": "CLOSED"
+      },
+      "decision_id": "dec_v12e_f4d0df9a425978da"
+    },
+    {
+      "classification_provenance": {
+        "ai_provider_model_identifiers": [
+          {
+            "model": "deterministic-reasoner-v1",
+            "provider": "sim-reasoner",
+            "role": "reasoner"
+          },
+          {
+            "model": "deterministic-critic-v1",
+            "provider": "sim-critic",
+            "role": "critic"
+          }
+        ],
+        "blocked_reason": null,
+        "classification_label": "lifecycle_closed_simulated",
+        "fabricated_learning_proof": false,
+        "intent_id_present": true,
+        "learning_proven": false,
+        "lesson_ids": [
+          "lesson_struct_3e54e835da918537"
+        ],
+        "linkage_authority": "backend.nexus_decision.execution_bridge",
+        "position_id_present": true,
+        "rejection_reasons": [],
+        "risk_allowed": true,
+        "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
+        "risk_reason": "PASS",
+        "stage_path": [
+          "understand",
+          "challenge",
+          "decide",
+          "decide",
+          "record",
+          "monitor",
+          "review",
+          "calibrate",
+          "improve"
+        ],
+        "state_path": [
+          "UNDERSTANDING",
+          "CHALLENGED",
+          "RISK_REVIEWED",
+          "APPROVED_SIMULATED",
+          "MONITORING",
+          "EXITED",
+          "UNDER_REVIEW",
+          "CALIBRATED",
+          "CLOSED"
+        ],
+        "terminal_status": "CLOSED"
+      },
+      "decision_id": "dec_v12e_3e54e835da918537"
+    },
+    {
+      "classification_provenance": {
+        "ai_provider_model_identifiers": [
+          {
+            "model": "deterministic-reasoner-v1",
+            "provider": "sim-reasoner",
+            "role": "reasoner"
+          },
+          {
+            "model": "deterministic-critic-v1",
+            "provider": "sim-critic",
+            "role": "critic"
+          }
+        ],
+        "blocked_reason": null,
+        "classification_label": "lifecycle_closed_simulated",
+        "fabricated_learning_proof": false,
+        "intent_id_present": true,
+        "learning_proven": false,
+        "lesson_ids": [
+          "lesson_struct_f0b9cd18f5ab2f95"
+        ],
+        "linkage_authority": "backend.nexus_decision.execution_bridge",
+        "position_id_present": true,
+        "rejection_reasons": [],
+        "risk_allowed": true,
+        "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
+        "risk_reason": "PASS",
+        "stage_path": [
+          "understand",
+          "challenge",
+          "decide",
+          "decide",
+          "record",
+          "monitor",
+          "review",
+          "calibrate",
+          "improve"
+        ],
+        "state_path": [
+          "UNDERSTANDING",
+          "CHALLENGED",
+          "RISK_REVIEWED",
+          "APPROVED_SIMULATED",
+          "MONITORING",
+          "EXITED",
+          "UNDER_REVIEW",
+          "CALIBRATED",
+          "CLOSED"
+        ],
+        "terminal_status": "CLOSED"
+      },
+      "decision_id": "dec_v12e_f0b9cd18f5ab2f95"
+    },
+    {
+      "classification_provenance": {
+        "ai_provider_model_identifiers": [
+          {
+            "model": "deterministic-reasoner-v1",
+            "provider": "sim-reasoner",
+            "role": "reasoner"
+          },
+          {
+            "model": "deterministic-critic-v1",
+            "provider": "sim-critic",
+            "role": "critic"
+          }
+        ],
+        "blocked_reason": null,
+        "classification_label": "lifecycle_closed_simulated",
+        "fabricated_learning_proof": false,
+        "intent_id_present": true,
+        "learning_proven": false,
+        "lesson_ids": [
+          "lesson_struct_1fcd00ea734ac092"
+        ],
+        "linkage_authority": "backend.nexus_decision.execution_bridge",
+        "position_id_present": true,
+        "rejection_reasons": [],
+        "risk_allowed": true,
+        "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
+        "risk_reason": "PASS",
+        "stage_path": [
+          "understand",
+          "challenge",
+          "decide",
+          "decide",
+          "record",
+          "monitor",
+          "review",
+          "calibrate",
+          "improve"
+        ],
+        "state_path": [
+          "UNDERSTANDING",
+          "CHALLENGED",
+          "RISK_REVIEWED",
+          "APPROVED_SIMULATED",
+          "MONITORING",
+          "EXITED",
+          "UNDER_REVIEW",
+          "CALIBRATED",
+          "CLOSED"
+        ],
+        "terminal_status": "CLOSED"
+      },
+      "decision_id": "dec_v12e_1fcd00ea734ac092"
+    },
+    {
+      "classification_provenance": {
+        "ai_provider_model_identifiers": [
+          {
+            "model": "deterministic-reasoner-v1",
+            "provider": "sim-reasoner",
+            "role": "reasoner"
+          },
+          {
+            "model": "deterministic-critic-v1",
+            "provider": "sim-critic",
+            "role": "critic"
+          }
+        ],
+        "blocked_reason": null,
+        "classification_label": "lifecycle_closed_simulated",
+        "fabricated_learning_proof": false,
+        "intent_id_present": true,
+        "learning_proven": false,
+        "lesson_ids": [
+          "lesson_struct_1fd720376c3167e1"
+        ],
+        "linkage_authority": "backend.nexus_decision.execution_bridge",
+        "position_id_present": true,
+        "rejection_reasons": [],
+        "risk_allowed": true,
+        "risk_authority": "backend.nexus_execution.risk_gates.evaluate_intent",
+        "risk_reason": "PASS",
+        "stage_path": [
+          "understand",
+          "challenge",
+          "decide",
+          "decide",
+          "record",
+          "monitor",
+          "review",
+          "calibrate",
+          "improve"
+        ],
+        "state_path": [
+          "UNDERSTANDING",
+          "CHALLENGED",
+          "RISK_REVIEWED",
+          "APPROVED_SIMULATED",
+          "MONITORING",
+          "EXITED",
+          "UNDER_REVIEW",
+          "CALIBRATED",
+          "CLOSED"
+        ],
+        "terminal_status": "CLOSED"
+      },
+      "decision_id": "dec_v12e_1fd720376c3167e1"
+    }
+  ],
+  "schema": "v12_evidence_repro_classification_provenance"
+}

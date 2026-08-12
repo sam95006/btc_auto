@@ -1,0 +1,14 @@
+{
+  "retCode": 0,
+  "retMsg": "OK",
+  "result": {
+    "category": "linear",
+    "list": [
+      {"openInterest": "12500000", "timestamp": "1700000000000", "symbol": "LINKUSDT"},
+      {"openInterest": "8200000", "timestamp": "1700000000000", "symbol": "AVAXUSDT"},
+      {"openInterest": "45000000", "timestamp": "1700000000000", "symbol": "ARBUSDT"},
+      {"openInterest": "980000000", "timestamp": "1700000000000", "symbol": "DOGEUSDT"}
+    ]
+  },
+  "time": 1700000000000
+}

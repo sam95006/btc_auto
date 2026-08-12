@@ -1,0 +1,11 @@
+{
+  "all_pass": true,
+  "created_at": "2026-08-05T18:14:01Z",
+  "digests": [
+    "e84315aa85b5bfcd7d1d37f88002a717753387b61e9affa175a713bbc077c075",
+    "e84315aa85b5bfcd7d1d37f88002a717753387b61e9affa175a713bbc077c075"
+  ],
+  "pass_count": 2,
+  "passes_match": true,
+  "schema": "v15_k_e2e_autonomy_campaign_v4_two_pass"
+}

@@ -1,0 +1,37 @@
+{
+  "schema": "reflection_v2_1_calibration",
+  "reflection_calibration_trade_count": 60,
+  "evidence_completeness_ratio": 0.9957264957264957,
+  "deterministic_classifiable_ratio": 1.0,
+  "AI_valid_schema_ratio": 1.0,
+  "deterministic_AI_agreement_ratio": 1.0,
+  "critic_resolution_ratio": 1.0,
+  "deterministic_AI_agreement_count": 60,
+  "deterministic_AI_disagreement_count": 0,
+  "undetermined_count": 0,
+  "invalid_schema_count": 0,
+  "deterministic_counts": {
+    "PROCESS_COMPLIANT": 55,
+    "PROCESS_NONCOMPLIANT": 5
+  },
+  "ai_process_counts": {
+    "GOOD_PROCESS_LOSS": 39,
+    "GOOD_PROCESS_WIN": 16,
+    "BAD_PROCESS_LOSS": 5
+  },
+  "quality_targets_met": true,
+  "new_lesson_record_count": 0,
+  "new_policy_effect_lesson_count": 0,
+  "policy_lessons_blocked_reason": null,
+  "control_fixtures_labeled": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+  "reserved_oos_used": false,
+  "AI_may_not_invent": [
+    "spread",
+    "slippage",
+    "Funding",
+    "OI",
+    "regime",
+    "rule_violation",
+    "entry_rationale"
+  ]
+}

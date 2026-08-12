@@ -1,0 +1,143 @@
+{
+  "schema": "microstructure_campaign_data_quality_audit_v1",
+  "valid_capture_seconds": 4200,
+  "valid_capture_hours": 1.1666666666666667,
+  "wall_elapsed_seconds": 4500,
+  "connection_gap_seconds": 120,
+  "connection_gap_accounting": {
+    "connection_gap_seconds": 120,
+    "gap_events": [
+      {
+        "at": "2026-08-01T10:30:00Z",
+        "gap_seconds": 120,
+        "reason": "ws_reconnect"
+      }
+    ],
+    "note": "valid_capture_seconds excludes connection gaps; wall clock is not used as capture depth"
+  },
+  "complete_UTC_hours": 1,
+  "partial_UTC_hours": 1,
+  "UTC_hour_count": 2,
+  "hours": [
+    {
+      "UTC_hour": "20260801_10",
+      "status": "COMPLETE",
+      "span_ms": 3570000,
+      "partition_count": 3
+    },
+    {
+      "UTC_hour": "20260801_11",
+      "status": "PARTIAL",
+      "span_ms": 1200000,
+      "partition_count": 1
+    }
+  ],
+  "symbol_coverage": [
+    "BTCUSDT",
+    "ETHUSDT"
+  ],
+  "symbol_count": 2,
+  "trade_event_count": 90,
+  "liquidation_event_count": 8,
+  "clock_quality": "GOOD",
+  "server_clock_sample_count": 12,
+  "local_minus_server_clock_offset_ms_p95": 18.5,
+  "heartbeat_quality": "GOOD",
+  "heartbeat_status": "HEARTBEAT_VERIFIED",
+  "heartbeat_send_count": 40,
+  "heartbeat_ack_count": 40,
+  "heartbeat_timeout_count": null,
+  "memory_quality": "GOOD",
+  "memory_growth_status": "STABLE",
+  "process_RSS_peak_bytes": 120000000,
+  "RSS_growth_per_million_events": 0.0,
+  "checksum_replay": {
+    "checksum_replay_verified": true,
+    "partitions_replayed": 4,
+    "failures": []
+  },
+  "partition_completeness": {
+    "partition_count": 4,
+    "intact_partition_count": 4,
+    "truncated_or_incomplete_partition_count": 0,
+    "checksum_mismatch_count": 0,
+    "missing_manifest_count": 0,
+    "partition_completeness_status": "COMPLETE"
+  },
+  "truncated_tail_detection": {
+    "truncated_tail_detected": false,
+    "truncated_partition_count": 0,
+    "partition_ids": []
+  },
+  "cross_partition_linkage": {
+    "cross_partition_linkage_status": "PASS",
+    "chains_checked": 3,
+    "partitions_checked": 4,
+    "linkage_breaks": 0,
+    "issues": []
+  },
+  "storage_cap": {
+    "storage_cap_outcome": "WITHIN_CAPS",
+    "compressed_bytes": 3333,
+    "soft_storage_cap_bytes": 805306368,
+    "hard_storage_cap_bytes": 1073741824,
+    "storage_cap_respected": true,
+    "budget_status": "NORMAL"
+  },
+  "campaign_resume_metadata": {
+    "resumable": true,
+    "last_checkpoint_at": "2026-08-01T11:05:00Z",
+    "last_partition_id": "syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260801_11_1",
+    "checkpoint_path": "synthetic://checkpoint.json",
+    "accumulation_run_id": "accum_syn_clean",
+    "capture_session_ids": [
+      "syn_sess_clean_001"
+    ],
+    "resume_token": "syn-resume-clean",
+    "clean_shutdown": true
+  },
+  "integrity_status": "PASS",
+  "partitions": [
+    {
+      "partition_id": "syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260801_10_0",
+      "symbol": "BTCUSDT",
+      "family": "AGGRESSIVE_TRADE_FLOW",
+      "UTC_hour": "20260801_10",
+      "integrity_status": "OK",
+      "checksum_match": true,
+      "truncated_tail": false,
+      "previous_partition_id": null
+    },
+    {
+      "partition_id": "syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260801_11_1",
+      "symbol": "BTCUSDT",
+      "family": "AGGRESSIVE_TRADE_FLOW",
+      "UTC_hour": "20260801_11",
+      "integrity_status": "OK",
+      "checksum_match": true,
+      "truncated_tail": false,
+      "previous_partition_id": "syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260801_10_0"
+    },
+    {
+      "partition_id": "syn_sess_clean_001_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260801_10_0",
+      "symbol": "ETHUSDT",
+      "family": "AGGRESSIVE_TRADE_FLOW",
+      "UTC_hour": "20260801_10",
+      "integrity_status": "OK",
+      "checksum_match": true,
+      "truncated_tail": false,
+      "previous_partition_id": null
+    },
+    {
+      "partition_id": "syn_sess_clean_001_LIQUIDATION_EVENTS_BTCUSDT_20260801_10_0",
+      "symbol": "BTCUSDT",
+      "family": "LIQUIDATION_EVENTS",
+      "UTC_hour": "20260801_10",
+      "integrity_status": "OK",
+      "checksum_match": true,
+      "truncated_tail": false,
+      "previous_partition_id": null
+    }
+  ],
+  "created_at": "2026-08-04T16:16:39Z"
+}

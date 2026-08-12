@@ -1,0 +1,156 @@
+{
+  "authority_conflict_count": 7,
+  "created_at": "2026-08-05T04:02:06Z",
+  "critical_findings": [
+    "AUTH_DECISION_MINTS_INTENT_ID",
+    "AUTH_DECISION_MINTS_POSITION_ID",
+    "AUTH_DECISION_RISK_BYPASS",
+    "AUTH_COST_MODEL_VERSION_MISMATCH",
+    "AUTH_NO_DECISION_EXECUTION_BRIDGE",
+    "VOCAB_MONITORING_SKIP_EXIT",
+    "ADV_DECISION_APPROVED_TWICE",
+    "ADV_INTENT_REPLAY_AFTER_RESTART",
+    "ADV_PARTIAL_FILL_DURING_DECISION_TRANSITION",
+    "ADV_COST_MODEL_VERSION_MISMATCH",
+    "ADV_POSITION_CLOSED_DECISION_MONITORING",
+    "ADV_DECISION_CLOSED_POSITION_OPEN"
+  ],
+  "critical_findings_detail": [
+    {
+      "detail": "DecisionLifecycleOrchestrator assigns intent_id locally on APPROVED_SIMULATED without creating backend.nexus_execution OrderIntent via the canonical adapter.",
+      "domain": "intent",
+      "id": "AUTH_DECISION_MINTS_INTENT_ID",
+      "severity": "critical",
+      "source": "authority_scan"
+    },
+    {
+      "detail": "DecisionLifecycleOrchestrator assigns position_id on record\u2192MONITORING without PositionRecord authority from AutonomousExecutionSimulatorV11.",
+      "domain": "position",
+      "id": "AUTH_DECISION_MINTS_POSITION_ID",
+      "severity": "critical",
+      "source": "authority_scan"
+    },
+    {
+      "detail": "Decision decide() accepts an opaque deterministic_risk_result dict and never invokes backend.nexus_execution.risk_gates. Dual risk authority.",
+      "domain": "risk",
+      "id": "AUTH_DECISION_RISK_BYPASS",
+      "severity": "critical",
+      "source": "authority_scan"
+    },
+    {
+      "detail": "Multiple cost model version strings observed: {'nexus_execution': 'founder-conservative-v1-1-2026-08-05', 'backend\\\\nexus_strategy_engine\\\\cost_semantics.py': 'NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1', 'backend\\\\nexus_strategy_engine\\\\cost_semantics.py:COST_MODEL_VERSION': 'NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1', 'base:backend\\\\nexus_strategy_engine\\\\cost_semantics.py:COST_MODEL_VERSION': 'NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1', 'base:backend\\\\nexus_strategy_engine\\\\cost_semantics.py:proxy': 'NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1'}",
+      "domain": "cost",
+      "id": "AUTH_COST_MODEL_VERSION_MISMATCH",
+      "severity": "critical",
+      "source": "authority_scan"
+    },
+    {
+      "detail": "No Decision\u2194Intent\u2194Position bridge module exists. Lanes A and B are authority-isolated; mapping invariants are unenforceable at runtime.",
+      "domain": "mapping",
+      "id": "AUTH_NO_DECISION_EXECUTION_BRIDGE",
+      "severity": "critical",
+      "source": "authority_scan"
+    },
+    {
+      "detail": "Decision MONITORING may transition to UNDER_REVIEW (then CLOSED) without EXITED, enabling Decision CLOSED while a synthetic position_id remains conceptually open.",
+      "id": "VOCAB_MONITORING_SKIP_EXIT",
+      "severity": "critical",
+      "source": "vocabulary"
+    },
+    {
+      "detail": "Per-decision idempotency blocks re-approve with a new key, but nothing prevents two Decision Objects approving the same candidate_id with distinct intent_ids.",
+      "false_pass": true,
+      "id": "ADV_DECISION_APPROVED_TWICE",
+      "missing_negative_test": true,
+      "severity": "critical",
+      "source": "adversarial"
+    },
+    {
+      "detail": "Decision intent_id survives restart and decide replay is idempotent, but the Intent is a string token unbound to OrderIntent.idempotency_key \u2014 execution has zero knowledge of it.",
+      "false_pass": true,
+      "id": "ADV_INTENT_REPLAY_AFTER_RESTART",
+      "missing_negative_test": true,
+      "severity": "critical",
+      "source": "adversarial"
+    },
+    {
+      "detail": "Lane B can partially fill while Decision sits in APPROVED_SIMULATED; Decision freely advances to MONITORING and mints an unrelated position_id. No joint lock.",
+      "false_pass": true,
+      "id": "ADV_PARTIAL_FILL_DURING_DECISION_TRANSITION",
+      "missing_negative_test": true,
+      "severity": "critical",
+      "source": "adversarial"
+    },
+    {
+      "detail": "Canonical COST_MODEL_VERSION=founder-conservative-v1-1-2026-08-05; divergent versions=['NEXUS_CONSERVATIVE_EXECUTION_PROXY_V1_1']. Decision approval does not bind or reject on cost version.",
+      "false_pass": true,
+      "id": "ADV_COST_MODEL_VERSION_MISMATCH",
+      "missing_negative_test": true,
+      "severity": "critical",
+      "source": "adversarial"
+    },
+    {
+      "detail": "Forbidden combination Position CLOSED + Decision MONITORING is constructible because Decision position_id is a decorative string, not a PositionRecord reference.",
+      "false_pass": true,
+      "id": "ADV_POSITION_CLOSED_DECISION_MONITORING",
+      "missing_negative_test": true,
+      "severity": "critical",
+      "source": "adversarial"
+    },
+    {
+      "detail": "Decision MONITORING\u2192UNDER_REVIEW\u2192CLOSED skips EXITED; synthetic position_id can remain OPEN with qty>0. Critical cross-lifecycle invariant absent.",
+      "false_pass": true,
+      "id": "ADV_DECISION_CLOSED_POSITION_OPEN",
+      "missing_negative_test": true,
+      "severity": "critical",
+      "source": "adversarial"
+    }
+  ],
+  "false_PASS_count": 7,
+  "high_findings": [
+    "AUTH_DECISION_NO_COST_VERSION_BIND",
+    "AUTH_DECISION_CHECKPOINT_PARALLEL",
+    "VOCAB_SHARED_CLOSED",
+    "VOCAB_SHARED_BLOCKED_AMBIGUOUS",
+    "ADV_SAME_BAR_STOP_TARGET"
+  ],
+  "high_findings_detail": [
+    {
+      "detail": "Decision APPROVED_SIMULATED does not bind or validate COST_MODEL_VERSION; approval evidence cannot prove which cost authority would price the Intent.",
+      "domain": "cost",
+      "id": "AUTH_DECISION_NO_COST_VERSION_BIND",
+      "severity": "high",
+      "source": "authority_scan"
+    },
+    {
+      "detail": "DecisionCheckpointStore is a parallel checkpoint authority vs Session/recovery envelopes (Lane H MULTI_SCOPE_AUTHORITY_CHECKPOINT).",
+      "domain": "checkpoint",
+      "id": "AUTH_DECISION_CHECKPOINT_PARALLEL",
+      "severity": "high",
+      "source": "authority_scan"
+    },
+    {
+      "detail": "CLOSED exists in both Decision and Position vocabularies with different semantics; no cross-lifecycle invariant enforces Decision CLOSED \u21d2 Position terminal.",
+      "id": "VOCAB_SHARED_CLOSED",
+      "severity": "high",
+      "source": "vocabulary"
+    },
+    {
+      "detail": "BLOCKED_AMBIGUOUS is shared by Decision and Position state machines without a joint recovery contract.",
+      "id": "VOCAB_SHARED_BLOCKED_AMBIGUOUS",
+      "severity": "high",
+      "source": "vocabulary"
+    },
+    {
+      "detail": "Fill engine blocks same-bar stop/target (adverse-first), but Decision MONITORING heartbeat proceeds with no linkage to the blocked order.",
+      "false_pass": true,
+      "id": "ADV_SAME_BAR_STOP_TARGET",
+      "missing_negative_test": true,
+      "severity": "high",
+      "source": "adversarial"
+    }
+  ],
+  "integration_recommendation": "BLOCK_INTEGRATION_CRITICAL_CROSS_LANE_GAPS",
+  "missing_negative_test_count": 8,
+  "schema": "v11_review_decision_execution_return_matrix"
+}

@@ -1,0 +1,132 @@
+[
+  {
+    "economic_prior": "Top-of-book / near-touch imbalance proxies short-horizon supply-demand pressure; edge is microstructure-local and cost-sensitive.",
+    "family_id": "ORDER_FLOW_IMBALANCE",
+    "holding_bars": 8,
+    "profile": "promising",
+    "required_features": [
+      "order_flow_imbalance",
+      "mid_return",
+      "spread_bps"
+    ],
+    "semantic_mechanism_id": "MECH_OFI_TOPBOOK_PRESSURE_V1",
+    "signal_horizon_bars": 4
+  },
+  {
+    "economic_prior": "Forced liquidation bursts create liquidity voids and short-horizon continuation or snapback; requires event timing integrity.",
+    "family_id": "LIQUIDATION_CASCADE",
+    "holding_bars": 6,
+    "profile": "cost_destroyed",
+    "required_features": [
+      "liquidation_intensity",
+      "aggression_ratio",
+      "depth_gap"
+    ],
+    "semantic_mechanism_id": "MECH_LIQ_CASCADE_RESPONSE_V1",
+    "signal_horizon_bars": 2
+  },
+  {
+    "economic_prior": "Large passive liquidity absorbs aggressive flow without price progress; subsequent reversal is the hypothesized response.",
+    "family_id": "ABSORPTION",
+    "holding_bars": 12,
+    "profile": "signal_only",
+    "required_features": [
+      "absorption_score",
+      "aggression_ratio",
+      "mid_return"
+    ],
+    "semantic_mechanism_id": "MECH_ABSORPTION_PASSIVE_DEFENSE_V1",
+    "signal_horizon_bars": 6
+  },
+  {
+    "economic_prior": "Sustained aggressor dominance across consecutive windows implies initiative continuation until liquidity replenishes.",
+    "family_id": "AGGRESSION_PERSISTENCE",
+    "holding_bars": 10,
+    "profile": "promising",
+    "required_features": [
+      "aggression_persistence",
+      "aggression_ratio",
+      "vol_z"
+    ],
+    "semantic_mechanism_id": "MECH_AGGRESSION_PERSISTENCE_V1",
+    "signal_horizon_bars": 8
+  },
+  {
+    "economic_prior": "Funding and basis dislocations encode crowding / carry stress; mean-reversion of dislocation is hypothesized after extremes.",
+    "family_id": "FUNDING_BASIS_DISLOCATION",
+    "holding_bars": 16,
+    "profile": "cost_destroyed",
+    "required_features": [
+      "funding_z",
+      "basis_bps",
+      "oi_change"
+    ],
+    "semantic_mechanism_id": "MECH_FUNDING_BASIS_DISLOCATION_V1",
+    "signal_horizon_bars": 8
+  },
+  {
+    "economic_prior": "Volatility regime transitions (expansion vs compression) alter expected range; breakout/mean-revert conditioned on vol state.",
+    "family_id": "VOL_EXPANSION_COMPRESSION",
+    "holding_bars": 16,
+    "profile": "regime_fragile",
+    "required_features": [
+      "vol_z",
+      "range_compression",
+      "mid_return"
+    ],
+    "semantic_mechanism_id": "MECH_VOL_EXPAND_COMPRESS_V1",
+    "signal_horizon_bars": 12
+  },
+  {
+    "economic_prior": "Sudden visible-depth withdrawal raises impact and gap risk; short-horizon adverse selection dominates unless carefully gated.",
+    "family_id": "LIQUIDITY_WITHDRAWAL",
+    "holding_bars": 5,
+    "profile": "dq_block",
+    "required_features": [
+      "depth_withdrawal",
+      "spread_bps",
+      "impact_bps"
+    ],
+    "semantic_mechanism_id": "MECH_LIQUIDITY_WITHDRAWAL_V1",
+    "signal_horizon_bars": 3
+  },
+  {
+    "economic_prior": "Transient spread shocks mark liquidity stress; fade after normalization is hypothesized but often cost-dominated.",
+    "family_id": "SPREAD_SHOCK",
+    "holding_bars": 8,
+    "profile": "thin_sample",
+    "required_features": [
+      "spread_shock",
+      "spread_bps",
+      "mid_return"
+    ],
+    "semantic_mechanism_id": "MECH_SPREAD_SHOCK_V1",
+    "signal_horizon_bars": 4
+  },
+  {
+    "economic_prior": "Lead-lag between related instruments (e.g. BTC\u2192alt) may transfer short-horizon information; PIT alignment is mandatory.",
+    "family_id": "CROSS_ASSET_LEAD_LAG",
+    "holding_bars": 10,
+    "profile": "signal_only",
+    "required_features": [
+      "lead_lag_score",
+      "cross_corr",
+      "mid_return"
+    ],
+    "semantic_mechanism_id": "MECH_CROSS_ASSET_LEAD_LAG_V1",
+    "signal_horizon_bars": 5
+  },
+  {
+    "economic_prior": "Range regimes favor mean reversion; trend regimes destroy it. Regime-conditioned evaluation is required to avoid false discovery.",
+    "family_id": "REGIME_MEAN_REVERSION",
+    "holding_bars": 14,
+    "profile": "reject",
+    "required_features": [
+      "regime_label",
+      "zscore_return",
+      "vol_z"
+    ],
+    "semantic_mechanism_id": "MECH_REGIME_COND_MEAN_REVERSION_V1",
+    "signal_horizon_bars": 10
+  }
+]

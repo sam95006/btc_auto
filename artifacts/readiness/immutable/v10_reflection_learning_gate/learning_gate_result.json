@@ -1,0 +1,38 @@
+{
+  "schema": "v10_reflection_learning_gate_v1",
+  "learning_prevention_status": "BLOCKED_V2_3_INCOMPLETE",
+  "policy_effect_lesson_allowed": false,
+  "new_policy_effect_lesson_count": 0,
+  "false_learning_claim": false,
+  "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+  "quality_gates_passed": false,
+  "risk_limits_changed": false,
+  "leverage_changed": false,
+  "position_size_changed": false,
+  "stops_changed": false,
+  "strategy_parameters_changed": false,
+  "promotion_state_changed": false,
+  "profitability_claimed": false,
+  "exchange_write_attempt_count": 0,
+  "mainnet": false,
+  "real_money": false,
+  "lesson_gate": {
+    "lesson_prevention_executed": false,
+    "lesson_prevention_blocked_reason": "V2_3_TERMINAL_NOT_VERIFIED",
+    "V2_3_TERMINAL_STATUS": "INCOMPLETE_PROVIDER_CAPACITY",
+    "new_policy_effect_lesson_count": 0,
+    "risk_limits_changed": false,
+    "leverage_changed": false,
+    "position_size_changed": false,
+    "stops_changed": false,
+    "strategy_parameters_changed": false,
+    "promotion_state_changed": false
+  },
+  "proof_scaffold": {
+    "proof_level": "REAL_HISTORICAL_CHAIN_PROOF",
+    "status": "NOT_EXECUTED",
+    "reason": "BLOCKED_V2_3_INCOMPLETE",
+    "profitability_claimed": false,
+    "label": "BLOCKED_UNTIL_V2_3_VERIFIED"
+  }
+}

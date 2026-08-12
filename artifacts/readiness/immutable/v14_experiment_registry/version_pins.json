@@ -1,0 +1,8 @@
+{
+  "code_checksum": "b80635b0c3628e07ea42c5b2424abe83be5c46db",
+  "cost_version": "founder-conservative-v1-1-2026-08-05",
+  "execution_version": "autonomous_execution_simulator_v1_1",
+  "feature_version": "v14_j_feature_surface_1",
+  "risk_gates_fingerprint": "d76e401ec9dc88d09cba9369f6e1b265eed1d6e275a2d5825223d8a87a8b18cd",
+  "risk_version": "private_core.risk.gates_v1_1"
+}

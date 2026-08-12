@@ -1,0 +1,113 @@
+{
+  "decision_states": [
+    "OBSERVED",
+    "UNDERSTANDING",
+    "CHALLENGED",
+    "RISK_REVIEWED",
+    "APPROVED_SIMULATED",
+    "REJECTED",
+    "MONITORING",
+    "EXITED",
+    "UNDER_REVIEW",
+    "CALIBRATED",
+    "CLOSED",
+    "BLOCKED_AMBIGUOUS"
+  ],
+  "forbidden_combinations": [
+    {
+      "left_scope": "decision",
+      "left_state": "CLOSED",
+      "right_scope": "position",
+      "right_state": "OPEN"
+    },
+    {
+      "left_scope": "decision",
+      "left_state": "CLOSED",
+      "right_scope": "position",
+      "right_state": "OPENING"
+    },
+    {
+      "left_scope": "decision",
+      "left_state": "CLOSED",
+      "right_scope": "position",
+      "right_state": "REDUCING"
+    },
+    {
+      "left_scope": "decision",
+      "left_state": "MONITORING",
+      "right_scope": "position",
+      "right_state": "CLOSED"
+    },
+    {
+      "left_scope": "decision",
+      "left_state": "MONITORING",
+      "right_scope": "position",
+      "right_state": "NONE"
+    },
+    {
+      "left_scope": "decision",
+      "left_state": "APPROVED_SIMULATED",
+      "right_scope": "position",
+      "right_state": "OPEN"
+    },
+    {
+      "left_scope": "decision",
+      "left_state": "OBSERVED",
+      "right_scope": "position",
+      "right_state": "OPEN"
+    },
+    {
+      "left_scope": "decision",
+      "left_state": "EXITED",
+      "right_scope": "position",
+      "right_state": "OPEN"
+    },
+    {
+      "left_scope": "decision",
+      "left_state": "EXITED",
+      "right_scope": "position",
+      "right_state": "OPENING"
+    }
+  ],
+  "mismatch_count": 3,
+  "mismatches": [
+    {
+      "detail": "CLOSED exists in both Decision and Position vocabularies with different semantics; no cross-lifecycle invariant enforces Decision CLOSED \u21d2 Position terminal.",
+      "id": "VOCAB_SHARED_CLOSED",
+      "severity": "high"
+    },
+    {
+      "detail": "BLOCKED_AMBIGUOUS is shared by Decision and Position state machines without a joint recovery contract.",
+      "id": "VOCAB_SHARED_BLOCKED_AMBIGUOUS",
+      "severity": "high"
+    },
+    {
+      "detail": "Decision MONITORING may transition to UNDER_REVIEW (then CLOSED) without EXITED, enabling Decision CLOSED while a synthetic position_id remains conceptually open.",
+      "id": "VOCAB_MONITORING_SKIP_EXIT",
+      "severity": "critical"
+    }
+  ],
+  "order_states": [
+    "ACCEPTED",
+    "CANCELLED",
+    "CANCEL_PENDING",
+    "CREATED",
+    "EXPIRED",
+    "FILLED",
+    "PARTIALLY_FILLED",
+    "REJECTED"
+  ],
+  "position_states": [
+    "BLOCKED_AMBIGUOUS",
+    "CLOSED",
+    "LIQUIDATED_SIMULATED",
+    "NONE",
+    "OPEN",
+    "OPENING",
+    "REDUCING"
+  ],
+  "shared_state_names": [
+    "BLOCKED_AMBIGUOUS",
+    "CLOSED"
+  ]
+}

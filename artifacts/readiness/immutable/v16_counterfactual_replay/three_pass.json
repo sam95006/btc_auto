@@ -1,0 +1,60 @@
+{
+  "all_passed": true,
+  "counterfactual_profit_is_not_real_performance": true,
+  "digest": "07394d89a20bd3c6675e2648cb4a0d3748ab120aa422124b23137bbdeae32f8b",
+  "lane_result": "PASS",
+  "passes": [
+    {
+      "critical_count": 0,
+      "digest": "552228167da5c066eab81b81526a04c267108e5224c73453656076ceb205d1a8",
+      "findings": [],
+      "name": "core_integrity",
+      "pass": 1,
+      "passed": true
+    },
+    {
+      "claim_scan": {
+        "clean": true,
+        "hit_count": 0,
+        "hits": [],
+        "schema": "v16_b_claim_scan"
+      },
+      "critical_count": 0,
+      "digest": "fb6f521bf01dc88f66d807bbc136354878157d38f0e9373004abcc14a324e3ea",
+      "findings": [],
+      "name": "adversarial_leakage",
+      "pass": 2,
+      "passed": true,
+      "refuse_probes": {
+        "all_raised": true,
+        "probe_count": 11,
+        "raised_count": 11
+      }
+    },
+    {
+      "critical_count": 0,
+      "deterministic_proof": {
+        "deterministic": true,
+        "fingerprint": "08b45e7755df5ef10a5247312148f55fb3e0c4e16d4e2723ebe4fa6849d06ac4",
+        "fingerprints": [
+          "08b45e7755df5ef10a5247312148f55fb3e0c4e16d4e2723ebe4fa6849d06ac4",
+          "08b45e7755df5ef10a5247312148f55fb3e0c4e16d4e2723ebe4fa6849d06ac4",
+          "08b45e7755df5ef10a5247312148f55fb3e0c4e16d4e2723ebe4fa6849d06ac4"
+        ],
+        "runs": 3,
+        "schema": "v16_b_counterfactual_deterministic_replay",
+        "seed": "v16b-counterfactual-default"
+      },
+      "digest": "c7669335dcd09e70f741c520dc8b57ef258da6e74c1eb7c91fa0ebfbd3298954",
+      "findings": [],
+      "name": "determinism_and_seal",
+      "pass": 3,
+      "passed": true
+    }
+  ],
+  "replay_fingerprint": "08b45e7755df5ef10a5247312148f55fb3e0c4e16d4e2723ebe4fa6849d06ac4",
+  "schema": "v16_b_counterfactual_three_pass",
+  "seed": "v16b-counterfactual-default",
+  "wrote_status_json": false,
+  "wrote_status_report": false
+}

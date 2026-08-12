@@ -1,0 +1,64 @@
+{
+  "schema": "microstructure_integrity_recovery_v11_status",
+  "Microstructure_Integrity_Recovery_V11_status": "PASS",
+  "campaign_id": "ms_accum_v7_bounded_24h",
+  "created_at": "2026-08-05T03:37:46Z",
+  "event_study_readiness_status": "NOT_READY",
+  "event_study_real_execution": false,
+  "raw_bytes_modified": false,
+  "silent_repair_executed": false,
+  "new_strategy_generated_count": 0,
+  "profitability_claim_count": 0,
+  "classification_counts": {
+    "ACTUAL_DATA_CORRUPTION": 0,
+    "EXPECTED_OPEN_TAIL": 113,
+    "MIGRATION_ARTIFACT": 113,
+    "MANIFEST_BUG": 43,
+    "FINALIZER_FALSE_POSITIVE": 113,
+    "LINKAGE_SEMANTICS_BUG": 113,
+    "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+  },
+  "primary_classification_counts": {
+    "ACTUAL_DATA_CORRUPTION": 0,
+    "EXPECTED_OPEN_TAIL": 113,
+    "MIGRATION_ARTIFACT": 0,
+    "MANIFEST_BUG": 43,
+    "FINALIZER_FALSE_POSITIVE": 0,
+    "LINKAGE_SEMANTICS_BUG": 0,
+    "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+  },
+  "reported_v1": {
+    "checksum_failure_count": 50,
+    "truncated_tail_count": 113,
+    "cross_partition_link_failure_count": 167
+  },
+  "v11_measured": {
+    "open_tail_count": 113,
+    "true_checksum_mismatch_count": 0,
+    "manifest_bug_count": 43,
+    "intact_closed_count": 507,
+    "linkage_breaks_v1_reproduced": 167,
+    "linkage_breaks_v11": 0
+  },
+  "fixes_verified": {
+    "path_inferred_identity": true,
+    "open_tail_exempt_from_checksum_failure": true,
+    "open_tail_exempt_from_linkage_break": true,
+    "durable_writer_open_marker": true,
+    "atomic_manifest_finalize": true,
+    "v11_linkage_breaks": 0,
+    "true_checksum_mismatch_count": 0
+  },
+  "recovery_map_sha256": "f2596e807d0437b257c23b9e75ab8ffd427717736d32855b93d56f7361623ef9",
+  "original_hashes_preserved": true,
+  "remaining_blockers": [
+    "event_study_hold_gates_unmet",
+    "Founder_authorization_false",
+    "open_tail_partitions_require_seal_policy",
+    "manifest_bug_partitions_require_rebuild_authorization",
+    "integrity_status_not_pass_until_collector_cutover"
+  ],
+  "owned_paths_only": true,
+  "pass": 2,
+  "secret_leak_count": 0
+}

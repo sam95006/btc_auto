@@ -1,0 +1,171 @@
+{
+  "entries": [
+    {
+      "candidate_id": "SYN_V15E_REVIEW_001",
+      "capacity_assumptions": {
+        "fixture_only": true,
+        "liquidity_floor_usd": 500000,
+        "max_notional_usd": 10000,
+        "max_participation_rate": 0.02,
+        "thin_market_block": true
+      },
+      "cost_breakdown": {
+        "canonical_cost_authority_consumed": true,
+        "cost_destroyed": false,
+        "fees": 0.0004,
+        "fixture_only": true,
+        "funding": 5e-05,
+        "gross_expectancy": 0.35,
+        "impact": 0.0001,
+        "net_expectancy": 0.05,
+        "slippage": 0.0003,
+        "spread": 0.0002
+      },
+      "development_intervals": [
+        {
+          "category": "development_only",
+          "end_ms": 1694816000000,
+          "label": "dev_window_a",
+          "start_ms": 1692224000000
+        },
+        {
+          "category": "development_only",
+          "end_ms": 1697408000000,
+          "label": "dev_window_b",
+          "start_ms": 1694816000000
+        }
+      ],
+      "known_failure_conditions": [
+        "future_data_leak",
+        "cost_destruction",
+        "regime_flip",
+        "universe_checksum_mismatch",
+        "sibling_cost_collapse"
+      ],
+      "multiple_testing_status": "PENDING_DEVELOPMENT_CORRECTION",
+      "regime_breakdown": {
+        "fixture_only": true,
+        "fragile": true,
+        "funding_stress": {
+          "net_expectancy": 0.05500000000000001,
+          "sample_n": 108
+        },
+        "liq_thin": {
+          "net_expectancy": 0.020000000000000004,
+          "sample_n": 106
+        },
+        "vol_high": {
+          "net_expectancy": 0.04000000000000001,
+          "sample_n": 106
+        }
+      },
+      "remaining_blockers": [
+        "formal_walk_forward_blocked",
+        "oos_reservation_blocked",
+        "multiple_testing_correction_incomplete",
+        "capacity_stress_incomplete"
+      ],
+      "symbol_breakdown": {
+        "FIXTUREBTCUSDT": {
+          "gross_expectancy": 0.35,
+          "net_expectancy": 0.05,
+          "sample_n": 106
+        },
+        "FIXTUREETHUSDT": {
+          "gross_expectancy": 0.35,
+          "net_expectancy": 0.05,
+          "sample_n": 106
+        },
+        "SYNTHUSDT": {
+          "gross_expectancy": 0.35,
+          "net_expectancy": 0.05,
+          "sample_n": 106
+        }
+      }
+    },
+    {
+      "candidate_id": "SYN_V15E_PROMISING_002",
+      "capacity_assumptions": {
+        "fixture_only": true,
+        "liquidity_floor_usd": 500000,
+        "max_notional_usd": 25000,
+        "max_participation_rate": 0.02,
+        "thin_market_block": true
+      },
+      "cost_breakdown": {
+        "canonical_cost_authority_consumed": true,
+        "cost_destroyed": false,
+        "fees": 0.0004,
+        "fixture_only": true,
+        "funding": 5e-05,
+        "gross_expectancy": 0.7,
+        "impact": 0.0001,
+        "net_expectancy": 0.25,
+        "slippage": 0.0003,
+        "spread": 0.0002
+      },
+      "development_intervals": [
+        {
+          "category": "development_only",
+          "end_ms": 1694816000000,
+          "label": "dev_window_a",
+          "start_ms": 1692224000000
+        },
+        {
+          "category": "development_only",
+          "end_ms": 1697408000000,
+          "label": "dev_window_b",
+          "start_ms": 1694816000000
+        }
+      ],
+      "known_failure_conditions": [
+        "future_data_leak",
+        "cost_destruction",
+        "regime_flip",
+        "universe_checksum_mismatch",
+        "sibling_cost_collapse"
+      ],
+      "multiple_testing_status": "DEVELOPMENT_SURVIVED_FAMILYWISE_SCREEN",
+      "regime_breakdown": {
+        "fixture_only": true,
+        "fragile": false,
+        "funding_stress": {
+          "net_expectancy": 0.275,
+          "sample_n": 214
+        },
+        "liq_thin": {
+          "net_expectancy": 0.1,
+          "sample_n": 213
+        },
+        "vol_high": {
+          "net_expectancy": 0.2,
+          "sample_n": 213
+        }
+      },
+      "remaining_blockers": [
+        "formal_walk_forward_blocked",
+        "oos_reservation_blocked",
+        "qualification_ready_forbidden",
+        "strategy_promotion_banned"
+      ],
+      "symbol_breakdown": {
+        "FIXTUREBTCUSDT": {
+          "gross_expectancy": 0.7,
+          "net_expectancy": 0.25,
+          "sample_n": 213
+        },
+        "FIXTUREETHUSDT": {
+          "gross_expectancy": 0.7,
+          "net_expectancy": 0.25,
+          "sample_n": 213
+        },
+        "SYNTHUSDT": {
+          "gross_expectancy": 0.7,
+          "net_expectancy": 0.25,
+          "sample_n": 213
+        }
+      }
+    }
+  ],
+  "schema": "FOUNDER_V15_E_CANDIDATE_DOSSIER_BUILDER"
+}

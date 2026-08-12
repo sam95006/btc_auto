@@ -1,0 +1,353 @@
+{
+  "schema": "r2_durability_microstructure_adversarial_matrix_v1",
+  "pass_id": "PASS_2",
+  "generated_at": "2026-08-05T04:01:49Z",
+  "total_scenarios": 14,
+  "hazard_confirmed_count": 10,
+  "control_ok_count": 7,
+  "hazards_by_severity": {
+    "CRITICAL": 3,
+    "HIGH": 6,
+    "MEDIUM": 1,
+    "LOW": 0
+  },
+  "results": [
+    {
+      "scenario_id": "power_loss_during_gzip_close",
+      "title": "Power loss during gzip close",
+      "lane": "D",
+      "severity_if_confirmed": "HIGH",
+      "hazard_confirmed": true,
+      "control_ok": true,
+      "summary": "Classic kill-before-footer correctly yields EXPECTED_OPEN_TAIL; gzip-closed-then-crash-before-manifest is only MANIFEST_BUG and does not treat retained .open marker as an interrupted-finalize authority signal.",
+      "evidence": {
+        "kill_before_footer": {
+          "open_marker": true,
+          "is_open_tail": true,
+          "classifications": {
+            "ACTUAL_DATA_CORRUPTION": 0,
+            "EXPECTED_OPEN_TAIL": 1,
+            "MIGRATION_ARTIFACT": 0,
+            "MANIFEST_BUG": 0,
+            "FINALIZER_FALSE_POSITIVE": 0,
+            "LINKAGE_SEMANTICS_BUG": 0,
+            "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+          }
+        },
+        "after_gzip_before_manifest": {
+          "open_marker": true,
+          "replay": "OK",
+          "is_open_tail": false,
+          "open_marker_present": true,
+          "classifications": {
+            "ACTUAL_DATA_CORRUPTION": 0,
+            "EXPECTED_OPEN_TAIL": 0,
+            "MIGRATION_ARTIFACT": 0,
+            "MANIFEST_BUG": 1,
+            "FINALIZER_FALSE_POSITIVE": 0,
+            "LINKAGE_SEMANTICS_BUG": 0,
+            "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+          }
+        }
+      },
+      "pass_id": "PASS_2"
+    },
+    {
+      "scenario_id": "checkpoint_before_ledger_fsync",
+      "title": "Checkpoint written before ledger fsync / snapshot binding",
+      "lane": "C",
+      "severity_if_confirmed": "HIGH",
+      "hazard_confirmed": true,
+      "control_ok": true,
+      "summary": "checkpoint_v2.json is a plain file with no seal tying it to an fsynced ledger position or LKG generation; a premature checkpoint can exist without LKG.",
+      "evidence": {
+        "premature_checkpoint_without_lkg": true,
+        "snapshot_status": "SNAPSHOT_OK",
+        "checkpoint_after_snapshot": {
+          "checkpoint_id": "ckpt-000001",
+          "lkg_generation": 1,
+          "created_at": "2026-08-05T04:01:46Z",
+          "ledger_position": 1
+        },
+        "fsync_enabled_during_append": false
+      },
+      "pass_id": "PASS_2"
+    },
+    {
+      "scenario_id": "snapshot_from_stale_ledger_tail",
+      "title": "Snapshot written from stale / racy ledger tail",
+      "lane": "C",
+      "severity_if_confirmed": "CRITICAL",
+      "hazard_confirmed": true,
+      "control_ok": false,
+      "summary": "create_snapshot records live event_count after copying the main DB; a concurrent append can make source_ledger_position exceed checksummed main-file rows. Restore copies only the main snapshot file (not companion -wal).",
+      "evidence": {
+        "snapshot_status": "SNAPSHOT_OK",
+        "claimed_source_ledger_position": 6,
+        "checksummed_main_file_event_count": 5,
+        "mismatch": true,
+        "snapshot_wal_exists": false,
+        "restore_status": "RECOVERY_FAILED",
+        "restore_detail_event_count": null
+      },
+      "pass_id": "PASS_2"
+    },
+    {
+      "scenario_id": "manifest_before_file_close",
+      "title": "Manifest committed before file close",
+      "lane": "D",
+      "severity_if_confirmed": "CRITICAL",
+      "hazard_confirmed": false,
+      "control_ok": true,
+      "summary": "DurablePartitionWriterV11 closes gzip and verifies replay checksum before atomic manifest replace \u2014 manifest-before-close hazard not present on V11 writer.",
+      "evidence": {
+        "observed_order": [
+          "before_gzip_close",
+          "after_gzip_close",
+          "before_manifest",
+          "after_manifest"
+        ]
+      },
+      "pass_id": "PASS_2"
+    },
+    {
+      "scenario_id": "partition_migrated_while_open",
+      "title": "Partition migrated while open",
+      "lane": "D",
+      "severity_if_confirmed": "MEDIUM",
+      "hazard_confirmed": true,
+      "control_ok": true,
+      "summary": "Open partitions can be byte-copied while .open is present; classifier correctly labels EXPECTED_OPEN_TAIL + MIGRATION_ARTIFACT when sizes match, but there is no storage-safety gate refusing migration of in-flight partitions.",
+      "evidence": {
+        "bytes_unchanged": true,
+        "classifications": {
+          "ACTUAL_DATA_CORRUPTION": 0,
+          "EXPECTED_OPEN_TAIL": 1,
+          "MIGRATION_ARTIFACT": 1,
+          "MANIFEST_BUG": 0,
+          "FINALIZER_FALSE_POSITIVE": 0,
+          "LINKAGE_SEMANTICS_BUG": 0,
+          "UNKNOWN_REQUIRES_MORE_EVIDENCE": 0
+        },
+        "open_marker_on_source": true,
+        "storage_gate_blocks_open_migration": false
+      },
+      "pass_id": "PASS_2"
+    },
+    {
+      "scenario_id": "duplicate_partition_identity",
+      "title": "Duplicate partition identity",
+      "lane": "D",
+      "severity_if_confirmed": "CRITICAL",
+      "hazard_confirmed": true,
+      "control_ok": false,
+      "summary": "partition_id is deterministic from session+family+symbol+hour+local_seq with no exclusive create; concurrent writers silently overwrite the same .jsonl.gz path.",
+      "evidence": {
+        "gz_file_count": 1,
+        "discovered_count": 1,
+        "partition_ids": [
+          "r2_dup_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20250804_00_0"
+        ]
+      },
+      "pass_id": "PASS_2"
+    },
+    {
+      "scenario_id": "missing_previous_link",
+      "title": "Missing previous-link identity",
+      "lane": "D",
+      "severity_if_confirmed": "HIGH",
+      "hazard_confirmed": false,
+      "control_ok": true,
+      "summary": "audit_linkage_v11 correctly flags mid-chain null previous_partition_id as linkage_break.",
+      "evidence": {
+        "cross_partition_linkage_status": "FAIL",
+        "chains_checked": 1,
+        "partitions_checked": 2,
+        "linkage_breaks": 1,
+        "open_tail_linkage_exempt_count": 0,
+        "issues": [
+          {
+            "partition_id": "p1",
+            "issue": "linkage_break",
+            "expected_previous": "p0",
+            "claimed_previous": null,
+            "chain": [
+              "r2_link",
+              "AGGRESSIVE_TRADE_FLOW",
+              "BTCUSDT"
+            ]
+          }
+        ],
+        "semantics": "v11_closed_chain_with_open_tail_boundaries"
+      },
+      "pass_id": "PASS_2"
+    },
+    {
+      "scenario_id": "clock_rollback_across_partition_rotation",
+      "title": "Clock rollback across partition rotation",
+      "lane": "D",
+      "severity_if_confirmed": "HIGH",
+      "hazard_confirmed": true,
+      "control_ok": false,
+      "summary": "Writer accepts exchange_timestamp moving into a prior UTC hour, creating a partition whose previous_link points forward in wall order; hour-sorted linkage then reports FAIL.",
+      "evidence": {
+        "partition_count": 2,
+        "partitions": [
+          {
+            "UTC_hour": "20250803_23",
+            "partition_id": "r2_clk_rot_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20250803_23_1",
+            "previous_partition_id": "r2_clk_rot_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20250804_00_0"
+          },
+          {
+            "UTC_hour": "20250804_00",
+            "partition_id": "r2_clk_rot_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20250804_00_0",
+            "previous_partition_id": null
+          }
+        ],
+        "linkage": {
+          "status": "FAIL",
+          "breaks": 1,
+          "issues": [
+            {
+              "partition_id": "r2_clk_rot_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20250804_00_0",
+              "issue": "linkage_break",
+              "expected_previous": "r2_clk_rot_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20250803_23_1",
+              "claimed_previous": null,
+              "chain": [
+                "r2_clk_rot",
+                "AGGRESSIVE_TRADE_FLOW",
+                "BTCUSDT"
+              ]
+            }
+          ]
+        }
+      },
+      "pass_id": "PASS_2"
+    },
+    {
+      "scenario_id": "restore_from_corrupted_lkg",
+      "title": "Restore from corrupted LKG",
+      "lane": "C",
+      "severity_if_confirmed": "CRITICAL",
+      "hazard_confirmed": false,
+      "control_ok": true,
+      "summary": "Corrupted LKG checksum fails closed with CORRUPTION_DETECTED (no silent restore).",
+      "evidence": {
+        "restore_status": "CORRUPTION_DETECTED",
+        "detail": {
+          "reason": "snapshot_checksum_mismatch",
+          "expected": "0000000000000000000000000000000000000000000000000000000000000000",
+          "actual": "97b1fea944baff4ad51109e01f56039146b0d056519a53b094c25f0e5943040e"
+        }
+      },
+      "pass_id": "PASS_2"
+    },
+    {
+      "scenario_id": "snapshot_skips_payload_corruption",
+      "title": "Snapshot authority skips payload-hash verification",
+      "lane": "C",
+      "severity_if_confirmed": "CRITICAL",
+      "hazard_confirmed": true,
+      "control_ok": false,
+      "summary": "detect_corruption finds payload_hash mismatch, but create_snapshot only runs verify_hash_chain + PRAGMA integrity_check and still emits SNAPSHOT_OK / LKG.",
+      "evidence": {
+        "detect_corruption": "CORRUPTION_DETECTED",
+        "snapshot_status": "SNAPSHOT_OK",
+        "lkg_exists": true
+      },
+      "pass_id": "PASS_2"
+    },
+    {
+      "scenario_id": "clock_rollback_lost_on_reopen",
+      "title": "Clock rollback protection is process-local",
+      "lane": "C",
+      "severity_if_confirmed": "HIGH",
+      "hazard_confirmed": true,
+      "control_ok": false,
+      "summary": "_last_accepted_wall is memory-only; reopening the ledger accepts a wall clock earlier than the last persisted event.",
+      "evidence": {
+        "first": "APPENDED",
+        "second_after_reopen": "APPENDED",
+        "second_reason": null
+      },
+      "pass_id": "PASS_2"
+    },
+    {
+      "scenario_id": "fsync_interrupt_commits_anyway",
+      "title": "Fsync interruption after commit leaves durable event",
+      "lane": "C",
+      "severity_if_confirmed": "HIGH",
+      "hazard_confirmed": true,
+      "control_ok": true,
+      "summary": "fsync_interrupt raises after SQLite commit; the injection matrix treats the exception as PASS, but the event remains durable \u2014 not a true power-loss model.",
+      "evidence": {
+        "interrupted": true,
+        "event_count_after": 2
+      },
+      "pass_id": "PASS_2"
+    },
+    {
+      "scenario_id": "orphan_open_marker_after_finalize",
+      "title": "Orphan .open marker after successful finalize",
+      "lane": "D",
+      "severity_if_confirmed": "HIGH",
+      "hazard_confirmed": true,
+      "control_ok": false,
+      "summary": "Crash between atomic manifest replace and .open unlink leaves a finalized partition with open_marker_present=True; classifier emits no finding.",
+      "evidence": {
+        "part": {
+          "is_open_tail": false,
+          "open_marker_present": true,
+          "manifest_present": true,
+          "integrity_status": "OK"
+        },
+        "finding_count": 0
+      },
+      "pass_id": "PASS_2"
+    },
+    {
+      "scenario_id": "concurrent_snapshot_wal_lock",
+      "title": "Concurrent snapshot vs append WAL lock race",
+      "lane": "C",
+      "severity_if_confirmed": "HIGH",
+      "hazard_confirmed": false,
+      "control_ok": false,
+      "summary": "create_snapshot copies -wal while the live connection may still hold locks; under concurrent append this raises PermissionError (Windows) or races silently.",
+      "evidence": {
+        "error": null,
+        "snap": {
+          "status": "SNAPSHOT_OK",
+          "generation": 1,
+          "created_at": "2026-08-05T04:01:49Z",
+          "source_ledger_position": 23,
+          "max_sequence": 23,
+          "snapshot_checksum": "4b757c78de409a93831a2a22f173f7b4e550df02a8e1dfbb5083ae0f60735e54",
+          "snapshot_path": "C:\\Users\\user\\AppData\\Local\\Temp\\r2_review_work_diy2vila\\pass2\\concurrent_snapshot_wal_lock\\snapshots\\snapshot_000001\\event_ledger_v2.sqlite3",
+          "ledger_hash_chain_status": "PASS",
+          "schema": "durability_v2",
+          "latency_s": 0.022663800000373158
+        },
+        "append_errors": [
+          "database table is locked"
+        ]
+      },
+      "pass_id": "PASS_2"
+    }
+  ],
+  "raw_campaign_evidence_modified": false,
+  "self_review": {
+    "checked_for_false_pass": true,
+    "checked_for_fixture_only_proof": true,
+    "checked_for_race_conditions": true,
+    "checked_for_silent_fallback": true,
+    "checked_for_schema_drift": true,
+    "checked_for_secret_leakage": true,
+    "notes": [
+      "Lane C matrix fsync_interruption PASS is a false durability proof (post-commit exception).",
+      "create_snapshot SNAPSHOT_OK is reachable with known payload corruption.",
+      "Adversarial tests exercise live modules (not fixture-only) under tmp roots.",
+      "No secrets introduced; payloads scanned by ledger banned-field check remain in force.",
+      "Raw .nexus_runtime/microstructure campaign evidence was not modified."
+    ]
+  }
+}

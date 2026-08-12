@@ -1,0 +1,1000 @@
+{
+  "as_of_ms": 1717200000000,
+  "availability_ms": 1717200000000,
+  "availability_timestamp": "2024-06-01T00:00:00Z",
+  "demo": false,
+  "eligible_count": 5,
+  "eligible_details": [
+    {
+      "contract_specification": {
+        "contract_type": "LinearPerpetual",
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "qty_step": 0.001,
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "tick_size": 0.1
+      },
+      "delisting_ms": null,
+      "dimension_results": {
+        "availability": {
+          "detail": null,
+          "ok": true,
+          "value": "Trading"
+        },
+        "contract_specification": {
+          "detail": null,
+          "ok": true,
+          "value": {
+            "contract_type": "LinearPerpetual",
+            "minimum_notional": 5.0,
+            "minimum_order_qty": 0.001,
+            "qty_step": 0.001,
+            "quote_coin": "USDT",
+            "settle_coin": "USDT",
+            "tick_size": 0.1
+          }
+        },
+        "data_completeness": {
+          "detail": null,
+          "ok": true,
+          "value": 0.99
+        },
+        "delisting_state": {
+          "detail": null,
+          "ok": true,
+          "value": null
+        },
+        "depth": {
+          "detail": null,
+          "ok": true,
+          "value": 8000000.0
+        },
+        "funding_availability": {
+          "detail": null,
+          "ok": true,
+          "value": true
+        },
+        "liquidity": {
+          "detail": null,
+          "ok": true,
+          "value": 0.99
+        },
+        "listing_timestamp": {
+          "detail": null,
+          "ok": true,
+          "value": 1577836800000
+        },
+        "minimum_notional": {
+          "detail": null,
+          "ok": true,
+          "value": 5.0
+        },
+        "open_interest": {
+          "detail": null,
+          "ok": true,
+          "value": 2500000000.0
+        },
+        "quantity_step": {
+          "detail": null,
+          "ok": true,
+          "value": 0.001
+        },
+        "spread": {
+          "detail": null,
+          "ok": true,
+          "value": 0.5
+        },
+        "staleness": {
+          "detail": null,
+          "ok": true,
+          "value": 5000
+        },
+        "symbol_mapping": {
+          "detail": null,
+          "ok": true,
+          "value": "bybit:linear:BTCUSDT"
+        },
+        "tick_size": {
+          "detail": null,
+          "ok": true,
+          "value": 0.1
+        },
+        "volume": {
+          "detail": null,
+          "ok": true,
+          "value": {
+            "turnover_usdt": 5000000000.0,
+            "volume_usdt": 2000000000.0
+          }
+        }
+      },
+      "eligible": true,
+      "listing_ms": 1577836800000,
+      "metrics": {
+        "data_completeness": 0.99,
+        "depth_usdt": 8000000,
+        "funding_available": true,
+        "liquidity_score": 0.99,
+        "minimum_notional": 5.0,
+        "open_interest_usdt": 2500000000,
+        "qty_step": 0.001,
+        "spread_bps": 0.5,
+        "staleness_ms": 5000,
+        "symbol_mapping": "bybit:linear:BTCUSDT",
+        "tick_size": 0.1,
+        "turnover_usdt": 5000000000,
+        "volume_usdt": 2000000000
+      },
+      "observation_ms": 1717200000000,
+      "rejection_reasons": [],
+      "symbol": "BTCUSDT"
+    },
+    {
+      "contract_specification": {
+        "contract_type": "LinearPerpetual",
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "qty_step": 0.01,
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "tick_size": 0.01
+      },
+      "delisting_ms": null,
+      "dimension_results": {
+        "availability": {
+          "detail": null,
+          "ok": true,
+          "value": "Trading"
+        },
+        "contract_specification": {
+          "detail": null,
+          "ok": true,
+          "value": {
+            "contract_type": "LinearPerpetual",
+            "minimum_notional": 5.0,
+            "minimum_order_qty": 0.001,
+            "qty_step": 0.01,
+            "quote_coin": "USDT",
+            "settle_coin": "USDT",
+            "tick_size": 0.01
+          }
+        },
+        "data_completeness": {
+          "detail": null,
+          "ok": true,
+          "value": 0.98
+        },
+        "delisting_state": {
+          "detail": null,
+          "ok": true,
+          "value": null
+        },
+        "depth": {
+          "detail": null,
+          "ok": true,
+          "value": 3500000.0
+        },
+        "funding_availability": {
+          "detail": null,
+          "ok": true,
+          "value": true
+        },
+        "liquidity": {
+          "detail": null,
+          "ok": true,
+          "value": 0.95
+        },
+        "listing_timestamp": {
+          "detail": null,
+          "ok": true,
+          "value": 1577836800000
+        },
+        "minimum_notional": {
+          "detail": null,
+          "ok": true,
+          "value": 5.0
+        },
+        "open_interest": {
+          "detail": null,
+          "ok": true,
+          "value": 900000000.0
+        },
+        "quantity_step": {
+          "detail": null,
+          "ok": true,
+          "value": 0.01
+        },
+        "spread": {
+          "detail": null,
+          "ok": true,
+          "value": 0.8
+        },
+        "staleness": {
+          "detail": null,
+          "ok": true,
+          "value": 8000
+        },
+        "symbol_mapping": {
+          "detail": null,
+          "ok": true,
+          "value": "bybit:linear:ETHUSDT"
+        },
+        "tick_size": {
+          "detail": null,
+          "ok": true,
+          "value": 0.01
+        },
+        "volume": {
+          "detail": null,
+          "ok": true,
+          "value": {
+            "turnover_usdt": 1800000000.0,
+            "volume_usdt": 900000000.0
+          }
+        }
+      },
+      "eligible": true,
+      "listing_ms": 1577836800000,
+      "metrics": {
+        "data_completeness": 0.98,
+        "depth_usdt": 3500000,
+        "funding_available": true,
+        "liquidity_score": 0.95,
+        "minimum_notional": 5.0,
+        "open_interest_usdt": 900000000,
+        "qty_step": 0.01,
+        "spread_bps": 0.8,
+        "staleness_ms": 8000,
+        "symbol_mapping": "bybit:linear:ETHUSDT",
+        "tick_size": 0.01,
+        "turnover_usdt": 1800000000,
+        "volume_usdt": 900000000
+      },
+      "observation_ms": 1717200000000,
+      "rejection_reasons": [],
+      "symbol": "ETHUSDT"
+    },
+    {
+      "contract_specification": {
+        "contract_type": "LinearPerpetual",
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "qty_step": 0.1,
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "tick_size": 0.001
+      },
+      "delisting_ms": null,
+      "dimension_results": {
+        "availability": {
+          "detail": null,
+          "ok": true,
+          "value": "Trading"
+        },
+        "contract_specification": {
+          "detail": null,
+          "ok": true,
+          "value": {
+            "contract_type": "LinearPerpetual",
+            "minimum_notional": 5.0,
+            "minimum_order_qty": 0.001,
+            "qty_step": 0.1,
+            "quote_coin": "USDT",
+            "settle_coin": "USDT",
+            "tick_size": 0.001
+          }
+        },
+        "data_completeness": {
+          "detail": null,
+          "ok": true,
+          "value": 0.96
+        },
+        "delisting_state": {
+          "detail": null,
+          "ok": true,
+          "value": null
+        },
+        "depth": {
+          "detail": null,
+          "ok": true,
+          "value": 900000.0
+        },
+        "funding_availability": {
+          "detail": null,
+          "ok": true,
+          "value": true
+        },
+        "liquidity": {
+          "detail": null,
+          "ok": true,
+          "value": 0.82
+        },
+        "listing_timestamp": {
+          "detail": null,
+          "ok": true,
+          "value": 1640995200000
+        },
+        "minimum_notional": {
+          "detail": null,
+          "ok": true,
+          "value": 5.0
+        },
+        "open_interest": {
+          "detail": null,
+          "ok": true,
+          "value": 180000000.0
+        },
+        "quantity_step": {
+          "detail": null,
+          "ok": true,
+          "value": 0.1
+        },
+        "spread": {
+          "detail": null,
+          "ok": true,
+          "value": 1.5
+        },
+        "staleness": {
+          "detail": null,
+          "ok": true,
+          "value": 12000
+        },
+        "symbol_mapping": {
+          "detail": null,
+          "ok": true,
+          "value": "bybit:linear:SOLUSDT"
+        },
+        "tick_size": {
+          "detail": null,
+          "ok": true,
+          "value": 0.001
+        },
+        "volume": {
+          "detail": null,
+          "ok": true,
+          "value": {
+            "turnover_usdt": 420000000.0,
+            "volume_usdt": 210000000.0
+          }
+        }
+      },
+      "eligible": true,
+      "listing_ms": 1640995200000,
+      "metrics": {
+        "data_completeness": 0.96,
+        "depth_usdt": 900000,
+        "funding_available": true,
+        "liquidity_score": 0.82,
+        "minimum_notional": 5.0,
+        "open_interest_usdt": 180000000,
+        "qty_step": 0.1,
+        "spread_bps": 1.5,
+        "staleness_ms": 12000,
+        "symbol_mapping": "bybit:linear:SOLUSDT",
+        "tick_size": 0.001,
+        "turnover_usdt": 420000000,
+        "volume_usdt": 210000000
+      },
+      "observation_ms": 1717200000000,
+      "rejection_reasons": [],
+      "symbol": "SOLUSDT"
+    },
+    {
+      "contract_specification": {
+        "contract_type": "LinearPerpetual",
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "qty_step": 100.0,
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "tick_size": 1e-07
+      },
+      "delisting_ms": null,
+      "dimension_results": {
+        "availability": {
+          "detail": null,
+          "ok": true,
+          "value": "Trading"
+        },
+        "contract_specification": {
+          "detail": null,
+          "ok": true,
+          "value": {
+            "contract_type": "LinearPerpetual",
+            "minimum_notional": 5.0,
+            "minimum_order_qty": 0.001,
+            "qty_step": 100.0,
+            "quote_coin": "USDT",
+            "settle_coin": "USDT",
+            "tick_size": 1e-07
+          }
+        },
+        "data_completeness": {
+          "detail": null,
+          "ok": true,
+          "value": 0.9
+        },
+        "delisting_state": {
+          "detail": null,
+          "ok": true,
+          "value": null
+        },
+        "depth": {
+          "detail": null,
+          "ok": true,
+          "value": 120000.0
+        },
+        "funding_availability": {
+          "detail": null,
+          "ok": true,
+          "value": true
+        },
+        "liquidity": {
+          "detail": null,
+          "ok": true,
+          "value": 0.55
+        },
+        "listing_timestamp": {
+          "detail": null,
+          "ok": true,
+          "value": 1704067200000
+        },
+        "minimum_notional": {
+          "detail": null,
+          "ok": true,
+          "value": 5.0
+        },
+        "open_interest": {
+          "detail": null,
+          "ok": true,
+          "value": 4500000.0
+        },
+        "quantity_step": {
+          "detail": null,
+          "ok": true,
+          "value": 100.0
+        },
+        "spread": {
+          "detail": null,
+          "ok": true,
+          "value": 8.0
+        },
+        "staleness": {
+          "detail": null,
+          "ok": true,
+          "value": 40000
+        },
+        "symbol_mapping": {
+          "detail": null,
+          "ok": true,
+          "value": "bybit:linear:1000PEPEUSDT"
+        },
+        "tick_size": {
+          "detail": null,
+          "ok": true,
+          "value": 1e-07
+        },
+        "volume": {
+          "detail": null,
+          "ok": true,
+          "value": {
+            "turnover_usdt": 12000000.0,
+            "volume_usdt": 6000000.0
+          }
+        }
+      },
+      "eligible": true,
+      "listing_ms": 1704067200000,
+      "metrics": {
+        "data_completeness": 0.9,
+        "depth_usdt": 120000,
+        "funding_available": true,
+        "liquidity_score": 0.55,
+        "minimum_notional": 5.0,
+        "open_interest_usdt": 4500000,
+        "qty_step": 100.0,
+        "spread_bps": 8.0,
+        "staleness_ms": 40000,
+        "symbol_mapping": "bybit:linear:1000PEPEUSDT",
+        "tick_size": 1e-07,
+        "turnover_usdt": 12000000,
+        "volume_usdt": 6000000
+      },
+      "observation_ms": 1717200000000,
+      "rejection_reasons": [],
+      "symbol": "PEPEUSDT"
+    },
+    {
+      "contract_specification": {
+        "contract_type": "LinearPerpetual",
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "qty_step": 1.0,
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "tick_size": 0.001
+      },
+      "delisting_ms": 1725000000000,
+      "dimension_results": {
+        "availability": {
+          "detail": null,
+          "ok": true,
+          "value": "Trading"
+        },
+        "contract_specification": {
+          "detail": null,
+          "ok": true,
+          "value": {
+            "contract_type": "LinearPerpetual",
+            "minimum_notional": 5.0,
+            "minimum_order_qty": 0.001,
+            "qty_step": 1.0,
+            "quote_coin": "USDT",
+            "settle_coin": "USDT",
+            "tick_size": 0.001
+          }
+        },
+        "data_completeness": {
+          "detail": null,
+          "ok": true,
+          "value": 0.88
+        },
+        "delisting_state": {
+          "detail": null,
+          "ok": true,
+          "value": 1725000000000
+        },
+        "depth": {
+          "detail": null,
+          "ok": true,
+          "value": 30000.0
+        },
+        "funding_availability": {
+          "detail": null,
+          "ok": true,
+          "value": true
+        },
+        "liquidity": {
+          "detail": null,
+          "ok": true,
+          "value": 0.4
+        },
+        "listing_timestamp": {
+          "detail": null,
+          "ok": true,
+          "value": 1609459200000
+        },
+        "minimum_notional": {
+          "detail": null,
+          "ok": true,
+          "value": 5.0
+        },
+        "open_interest": {
+          "detail": null,
+          "ok": true,
+          "value": 120000.0
+        },
+        "quantity_step": {
+          "detail": null,
+          "ok": true,
+          "value": 1.0
+        },
+        "spread": {
+          "detail": null,
+          "ok": true,
+          "value": 12.0
+        },
+        "staleness": {
+          "detail": null,
+          "ok": true,
+          "value": 30000
+        },
+        "symbol_mapping": {
+          "detail": null,
+          "ok": true,
+          "value": "bybit:linear:GHOSTUSDT"
+        },
+        "tick_size": {
+          "detail": null,
+          "ok": true,
+          "value": 0.001
+        },
+        "volume": {
+          "detail": null,
+          "ok": true,
+          "value": {
+            "turnover_usdt": 600000.0,
+            "volume_usdt": 300000.0
+          }
+        }
+      },
+      "eligible": true,
+      "listing_ms": 1609459200000,
+      "metrics": {
+        "data_completeness": 0.88,
+        "depth_usdt": 30000,
+        "funding_available": true,
+        "liquidity_score": 0.4,
+        "minimum_notional": 5.0,
+        "open_interest_usdt": 120000,
+        "qty_step": 1.0,
+        "spread_bps": 12.0,
+        "staleness_ms": 30000,
+        "symbol_mapping": "bybit:linear:GHOSTUSDT",
+        "tick_size": 0.001,
+        "turnover_usdt": 600000,
+        "volume_usdt": 300000
+      },
+      "observation_ms": 1717200000000,
+      "rejection_reasons": [],
+      "symbol": "GHOSTUSDT"
+    }
+  ],
+  "eligible_universe": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "GHOSTUSDT",
+    "PEPEUSDT",
+    "SOLUSDT"
+  ],
+  "evaluation_dimensions": [
+    "availability",
+    "listing_timestamp",
+    "delisting_state",
+    "liquidity",
+    "volume",
+    "spread",
+    "depth",
+    "open_interest",
+    "funding_availability",
+    "data_completeness",
+    "staleness",
+    "symbol_mapping",
+    "contract_specification",
+    "minimum_notional",
+    "tick_size",
+    "quantity_step"
+  ],
+  "exchange_write": false,
+  "hard_bans": [
+    "no_exchange_writes",
+    "no_demo",
+    "no_pr27_merge",
+    "no_today_universe_for_past_as_of",
+    "no_future_observation_leak"
+  ],
+  "lineage": {
+    "as_of_ms": 1717200000000,
+    "as_of_timestamp": "2024-06-01T00:00:00Z",
+    "availability_ms": 1717200000000,
+    "availability_timestamp": "2024-06-01T00:00:00Z",
+    "code_version": "5b73d4360dacd81350a54c9b6abaed53570f28ee",
+    "demo": false,
+    "exchange_write": false,
+    "lineage_id": "eb28fcc7df25373d01fdaf38cff18f53",
+    "parent_lineage_id": null,
+    "pit_guarantees": {
+      "future_observation_rejected": true,
+      "never_uses_today_for_past": true,
+      "uses_historical_snapshot_only": true
+    },
+    "pr27_merged": false,
+    "retrieval_timestamp": "2026-08-05T08:32:34Z",
+    "schema": "nexus_pit_market_discovery_lineage_v1",
+    "snapshot_id": "era_2024_06_01",
+    "source_checksum": "f92fa1d740dcc91aabc95c8b2ea22016f3ae088a49feff76bcc6ac3c49a06840",
+    "source_kind": "sanitized_fixture",
+    "source_path": "fixtures/era_2024_06_01.json",
+    "thresholds_checksum": "91eb3598fdf58555951798f1bd641b3b5f0566f579eb1a8641a3c25c295f5869",
+    "universe_checksum": "b1a11b09567354946fcdf0872c7273ab618e8c306015bd195d3a11fb978ff551"
+  },
+  "mainnet_trading": false,
+  "point_in_time": true,
+  "pr27_merged": false,
+  "real_money": false,
+  "rejected_count": 2,
+  "rejected_details": [
+    {
+      "contract_specification": {
+        "contract_type": "LinearPerpetual",
+        "minimum_notional": 5.0,
+        "minimum_order_qty": 0.001,
+        "qty_step": 1.0,
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "tick_size": 0.01
+      },
+      "delisting_ms": null,
+      "dimension_results": {
+        "availability": {
+          "detail": null,
+          "ok": true,
+          "value": "Trading"
+        },
+        "contract_specification": {
+          "detail": null,
+          "ok": true,
+          "value": {
+            "contract_type": "LinearPerpetual",
+            "minimum_notional": 5.0,
+            "minimum_order_qty": 0.001,
+            "qty_step": 1.0,
+            "quote_coin": "USDT",
+            "settle_coin": "USDT",
+            "tick_size": 0.01
+          }
+        },
+        "data_completeness": {
+          "detail": null,
+          "ok": false,
+          "value": 0.6
+        },
+        "delisting_state": {
+          "detail": null,
+          "ok": true,
+          "value": null
+        },
+        "depth": {
+          "detail": null,
+          "ok": false,
+          "value": 4000.0
+        },
+        "funding_availability": {
+          "detail": null,
+          "ok": false,
+          "value": false
+        },
+        "liquidity": {
+          "detail": null,
+          "ok": false,
+          "value": 0.12
+        },
+        "listing_timestamp": {
+          "detail": null,
+          "ok": true,
+          "value": 1672531200000
+        },
+        "minimum_notional": {
+          "detail": null,
+          "ok": true,
+          "value": 5.0
+        },
+        "open_interest": {
+          "detail": null,
+          "ok": false,
+          "value": 15000.0
+        },
+        "quantity_step": {
+          "detail": null,
+          "ok": true,
+          "value": 1.0
+        },
+        "spread": {
+          "detail": null,
+          "ok": false,
+          "value": 55.0
+        },
+        "staleness": {
+          "detail": null,
+          "ok": true,
+          "value": 2000000
+        },
+        "symbol_mapping": {
+          "detail": null,
+          "ok": false,
+          "value": null
+        },
+        "tick_size": {
+          "detail": null,
+          "ok": true,
+          "value": 0.01
+        },
+        "volume": {
+          "detail": null,
+          "ok": false,
+          "value": {
+            "turnover_usdt": 80000.0,
+            "volume_usdt": 40000.0
+          }
+        }
+      },
+      "eligible": false,
+      "listing_ms": 1672531200000,
+      "metrics": {
+        "data_completeness": 0.6,
+        "depth_usdt": 4000,
+        "funding_available": false,
+        "liquidity_score": 0.12,
+        "minimum_notional": 5.0,
+        "open_interest_usdt": 15000,
+        "qty_step": 1.0,
+        "spread_bps": 55.0,
+        "staleness_ms": 2000000,
+        "symbol_mapping": null,
+        "tick_size": 0.01,
+        "turnover_usdt": 80000,
+        "volume_usdt": 40000
+      },
+      "observation_ms": 1717200000000,
+      "rejection_reasons": [
+        "INSUFFICIENT_LIQUIDITY",
+        "INSUFFICIENT_VOLUME",
+        "SPREAD_TOO_WIDE",
+        "INSUFFICIENT_DEPTH",
+        "OPEN_INTEREST_MISSING_OR_LOW",
+        "FUNDING_UNAVAILABLE",
+        "INCOMPLETE_DATA",
+        "MAPPING_MISSING"
+      ],
+      "symbol": "THINUSDT"
+    },
+    {
+      "contract_specification": {
+        "contract_type": "LinearPerpetual",
+        "minimum_notional": null,
+        "minimum_order_qty": 0.001,
+        "qty_step": -1.0,
+        "quote_coin": "USDT",
+        "settle_coin": "USDT",
+        "tick_size": 0.0
+      },
+      "delisting_ms": null,
+      "dimension_results": {
+        "availability": {
+          "detail": null,
+          "ok": true,
+          "value": "Trading"
+        },
+        "contract_specification": {
+          "detail": null,
+          "ok": true,
+          "value": {
+            "contract_type": "LinearPerpetual",
+            "minimum_notional": null,
+            "minimum_order_qty": 0.001,
+            "qty_step": -1.0,
+            "quote_coin": "USDT",
+            "settle_coin": "USDT",
+            "tick_size": 0.0
+          }
+        },
+        "data_completeness": {
+          "detail": null,
+          "ok": true,
+          "value": 0.92
+        },
+        "delisting_state": {
+          "detail": null,
+          "ok": true,
+          "value": null
+        },
+        "depth": {
+          "detail": null,
+          "ok": true,
+          "value": 80000.0
+        },
+        "funding_availability": {
+          "detail": null,
+          "ok": true,
+          "value": true
+        },
+        "liquidity": {
+          "detail": null,
+          "ok": true,
+          "value": 0.7
+        },
+        "listing_timestamp": {
+          "detail": null,
+          "ok": true,
+          "value": 1672531200000
+        },
+        "minimum_notional": {
+          "detail": null,
+          "ok": false,
+          "value": null
+        },
+        "open_interest": {
+          "detail": null,
+          "ok": true,
+          "value": 500000.0
+        },
+        "quantity_step": {
+          "detail": null,
+          "ok": false,
+          "value": -1.0
+        },
+        "spread": {
+          "detail": null,
+          "ok": true,
+          "value": 5.0
+        },
+        "staleness": {
+          "detail": null,
+          "ok": true,
+          "value": 20000
+        },
+        "symbol_mapping": {
+          "detail": null,
+          "ok": true,
+          "value": "bybit:linear:BROKENUSDT"
+        },
+        "tick_size": {
+          "detail": null,
+          "ok": false,
+          "value": 0.0
+        },
+        "volume": {
+          "detail": null,
+          "ok": true,
+          "value": {
+            "turnover_usdt": 2000000.0,
+            "volume_usdt": 1000000.0
+          }
+        }
+      },
+      "eligible": false,
+      "listing_ms": 1672531200000,
+      "metrics": {
+        "data_completeness": 0.92,
+        "depth_usdt": 80000,
+        "funding_available": true,
+        "liquidity_score": 0.7,
+        "minimum_notional": null,
+        "open_interest_usdt": 500000,
+        "qty_step": -1.0,
+        "spread_bps": 5.0,
+        "staleness_ms": 20000,
+        "symbol_mapping": "bybit:linear:BROKENUSDT",
+        "tick_size": 0.0,
+        "turnover_usdt": 2000000,
+        "volume_usdt": 1000000
+      },
+      "observation_ms": 1717200000000,
+      "rejection_reasons": [
+        "INVALID_MIN_NOTIONAL",
+        "INVALID_TICK_SIZE",
+        "INVALID_QTY_STEP"
+      ],
+      "symbol": "BROKENUSDT"
+    }
+  ],
+  "rejected_universe": [
+    "BROKENUSDT",
+    "THINUSDT"
+  ],
+  "rejection_reason_counts": {
+    "FUNDING_UNAVAILABLE": 1,
+    "INCOMPLETE_DATA": 1,
+    "INSUFFICIENT_DEPTH": 1,
+    "INSUFFICIENT_LIQUIDITY": 1,
+    "INSUFFICIENT_VOLUME": 1,
+    "INVALID_MIN_NOTIONAL": 1,
+    "INVALID_QTY_STEP": 1,
+    "INVALID_TICK_SIZE": 1,
+    "MAPPING_MISSING": 1,
+    "OPEN_INTEREST_MISSING_OR_LOW": 1,
+    "SPREAD_TOO_WIDE": 1
+  },
+  "result_checksum": "a55e3fe78aae916ccea8f5d6c98ac6751a7ea871ec797b768d04982c6c521944",
+  "retrieval_timestamp": "2026-08-05T08:32:34Z",
+  "schema": "nexus_pit_market_discovery_v1",
+  "snapshot_id": "era_2024_06_01",
+  "source_checksum": "f92fa1d740dcc91aabc95c8b2ea22016f3ae088a49feff76bcc6ac3c49a06840",
+  "thresholds": {
+    "max_spread_bps": 25.0,
+    "max_staleness_ms": 3600000,
+    "min_completeness": 0.85,
+    "min_depth_usdt": 25000.0,
+    "min_liquidity_score": 0.35,
+    "min_open_interest_usdt": 100000.0,
+    "min_turnover_usdt": 500000.0,
+    "min_volume_usdt": 250000.0,
+    "require_funding": true,
+    "require_oi": true
+  },
+  "thresholds_checksum": "91eb3598fdf58555951798f1bd641b3b5f0566f579eb1a8641a3c25c295f5869",
+  "universe_checksum": "b1a11b09567354946fcdf0872c7273ab618e8c306015bd195d3a11fb978ff551",
+  "universe_id": "NEXUS_PIT_DYNAMIC_LINEAR_USDT_UNIVERSE",
+  "used_today_for_past": false
+}

@@ -1,0 +1,171 @@
+{
+  "class_counts": {
+    "BAD_PROCESS_LOSS": 6,
+    "BAD_PROCESS_WIN": 2,
+    "GOOD_PROCESS_LOSS": 2,
+    "GOOD_PROCESS_WIN": 3,
+    "UNDETERMINED": 2
+  },
+  "loss_is_not_automatic_bad_process": true,
+  "matrix": {
+    "combined": {
+      "class_counts": {
+        "BAD_PROCESS_LOSS": 6,
+        "BAD_PROCESS_WIN": 2,
+        "GOOD_PROCESS_LOSS": 2,
+        "GOOD_PROCESS_WIN": 3,
+        "UNDETERMINED": 2
+      },
+      "loss_is_not_automatic_bad_process": true,
+      "required_classes_present": {
+        "BAD_PROCESS_LOSS": true,
+        "BAD_PROCESS_WIN": true,
+        "GOOD_PROCESS_LOSS": true,
+        "GOOD_PROCESS_WIN": true,
+        "UNDETERMINED": true
+      }
+    },
+    "historical_simulated": {
+      "class_counts": {
+        "BAD_PROCESS_LOSS": 3,
+        "BAD_PROCESS_WIN": 1,
+        "GOOD_PROCESS_LOSS": 1,
+        "GOOD_PROCESS_WIN": 2,
+        "UNDETERMINED": 1
+      },
+      "required_classes_present": {
+        "BAD_PROCESS_LOSS": true,
+        "BAD_PROCESS_WIN": true,
+        "GOOD_PROCESS_LOSS": true,
+        "GOOD_PROCESS_WIN": true,
+        "UNDETERMINED": true
+      },
+      "rows": [
+        {
+          "is_fixture": false,
+          "pnl": 18.25,
+          "process_classification": "GOOD_PROCESS_WIN",
+          "source_kind": "HISTORICAL_SIMULATED_COMPLETED_TRADE",
+          "trade_id": "V15I_SIM_hist_good_win_001"
+        },
+        {
+          "is_fixture": false,
+          "pnl": -6.4,
+          "process_classification": "GOOD_PROCESS_LOSS",
+          "source_kind": "HISTORICAL_SIMULATED_COMPLETED_TRADE",
+          "trade_id": "V15I_SIM_hist_good_loss_002"
+        },
+        {
+          "is_fixture": false,
+          "pnl": -11.0,
+          "process_classification": "BAD_PROCESS_LOSS",
+          "source_kind": "HISTORICAL_SIMULATED_COMPLETED_TRADE",
+          "trade_id": "V15I_SIM_hist_bad_stale_loss_003"
+        },
+        {
+          "is_fixture": false,
+          "pnl": -4.2,
+          "process_classification": "BAD_PROCESS_LOSS",
+          "source_kind": "HISTORICAL_SIMULATED_COMPLETED_TRADE",
+          "trade_id": "V15I_SIM_hist_bad_stale_later_004"
+        },
+        {
+          "is_fixture": false,
+          "pnl": 3.1,
+          "process_classification": "BAD_PROCESS_WIN",
+          "source_kind": "HISTORICAL_SIMULATED_COMPLETED_TRADE",
+          "trade_id": "V15I_SIM_hist_bad_cost_win_005"
+        },
+        {
+          "is_fixture": false,
+          "pnl": -0.5,
+          "process_classification": "UNDETERMINED",
+          "source_kind": "HISTORICAL_SIMULATED_COMPLETED_TRADE",
+          "trade_id": "V15I_SIM_hist_undetermined_006"
+        },
+        {
+          "is_fixture": false,
+          "pnl": -9.75,
+          "process_classification": "BAD_PROCESS_LOSS",
+          "source_kind": "HISTORICAL_SIMULATED_COMPLETED_TRADE",
+          "trade_id": "V15I_SIM_hist_missing_stop_007"
+        },
+        {
+          "is_fixture": false,
+          "pnl": 7.8,
+          "process_classification": "GOOD_PROCESS_WIN",
+          "source_kind": "HISTORICAL_SIMULATED_COMPLETED_TRADE",
+          "trade_id": "V15I_SIM_hist_good_win_008"
+        }
+      ]
+    },
+    "labeled_fixtures": {
+      "class_counts": {
+        "BAD_PROCESS_LOSS": 3,
+        "BAD_PROCESS_WIN": 1,
+        "GOOD_PROCESS_LOSS": 1,
+        "GOOD_PROCESS_WIN": 1,
+        "UNDETERMINED": 1
+      },
+      "clearly_labelled": true,
+      "required_classes_present": {
+        "BAD_PROCESS_LOSS": true,
+        "BAD_PROCESS_WIN": true,
+        "GOOD_PROCESS_LOSS": true,
+        "GOOD_PROCESS_WIN": true,
+        "UNDETERMINED": true
+      },
+      "rows": [
+        {
+          "is_fixture": true,
+          "pnl": 12.5,
+          "process_classification": "GOOD_PROCESS_WIN",
+          "source_kind": "LABELED_FIXTURE_CONTROL",
+          "trade_id": "V15I_FIX_good_win"
+        },
+        {
+          "is_fixture": true,
+          "pnl": -8.0,
+          "process_classification": "GOOD_PROCESS_LOSS",
+          "source_kind": "LABELED_FIXTURE_CONTROL",
+          "trade_id": "V15I_FIX_good_loss"
+        },
+        {
+          "is_fixture": true,
+          "pnl": -15.0,
+          "process_classification": "BAD_PROCESS_LOSS",
+          "source_kind": "LABELED_FIXTURE_CONTROL",
+          "trade_id": "V15I_FIX_bad_stale_loss"
+        },
+        {
+          "is_fixture": true,
+          "pnl": -3.0,
+          "process_classification": "BAD_PROCESS_LOSS",
+          "source_kind": "LABELED_FIXTURE_CONTROL",
+          "trade_id": "V15I_FIX_bad_stale_later"
+        },
+        {
+          "is_fixture": true,
+          "pnl": 4.0,
+          "process_classification": "BAD_PROCESS_WIN",
+          "source_kind": "LABELED_FIXTURE_CONTROL",
+          "trade_id": "V15I_FIX_bad_cost_win"
+        },
+        {
+          "is_fixture": true,
+          "pnl": -1.0,
+          "process_classification": "UNDETERMINED",
+          "source_kind": "LABELED_FIXTURE_CONTROL",
+          "trade_id": "V15I_FIX_undetermined"
+        },
+        {
+          "is_fixture": true,
+          "pnl": -2.0,
+          "process_classification": "BAD_PROCESS_LOSS",
+          "source_kind": "LABELED_FIXTURE_CONTROL",
+          "trade_id": "V15I_FIX_missing_stop"
+        }
+      ]
+    }
+  }
+}

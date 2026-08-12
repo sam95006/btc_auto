@@ -1,0 +1,6159 @@
+{
+  "ai_override_applied_count": 0,
+  "ai_override_attempted_count": 14,
+  "artifact_dirname": "v15_risk_capacity",
+  "auto_integrate_attempted": false,
+  "base_sha": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
+  "blockers": [
+    {
+      "blocker_id": "QUALIFICATION_NOT_AUTHORIZED",
+      "detail": "qualification_ready_count forced 0; research labels only"
+    },
+    {
+      "blocker_id": "STRATEGY_PROMOTION_BANNED",
+      "detail": "AI and deterministic engine cannot promote strategies"
+    },
+    {
+      "blocker_id": "AI_CANNOT_OVERRIDE",
+      "detail": "protected review fields refuse AI mutation"
+    },
+    {
+      "blocker_id": "OOS_AND_FORMAL_WF_BANNED",
+      "detail": "engine uses synthetic development fixtures only"
+    },
+    {
+      "blocker_id": "NO_STATUS_JSON",
+      "detail": "V15-H does not emit *_status.json artifacts"
+    },
+    {
+      "blocker_id": "NO_AUTO_INTEGRATE",
+      "detail": "lane does not merge into PR #27 or parent tip"
+    }
+  ],
+  "branch": "feature/v15-risk-capacity-review",
+  "campaign_id": "v15_h_risk_capacity_review",
+  "candidate_count": 14,
+  "candidates": [
+    {
+      "ai_override_applied": false,
+      "ai_override_attempted": true,
+      "ai_override_refusal": {
+        "action": "AI_OVERRIDE",
+        "ai_override_applied": false,
+        "ai_override_attempted": true,
+        "allowed": false,
+        "applied": false,
+        "attempted_fields": [
+          "label",
+          "net_expectancy",
+          "strategy_promoted"
+        ],
+        "candidate_id": "RC01",
+        "reason": "AI_CANNOT_OVERRIDE_DETERMINISTIC_RISK_CAPACITY_REVIEW"
+      },
+      "assumed_max_drawdown": "0.08",
+      "baseline": {
+        "cost_authority": "backend.nexus_execution.cost_model",
+        "cost_bridge_verified": true,
+        "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+        "gross_pnl": "48.0000",
+        "market_impact_outside_cost_bridge": true,
+        "net_pnl": "0.000000000",
+        "total_cost": "48.000000000"
+      },
+      "break_even_cost": "48.000000000",
+      "candidate_id": "RC01",
+      "canonical_cost_formula_mutated": false,
+      "capacity_estimate": {
+        "capacity_limited": true,
+        "capacity_notional_usdt": "300.0000",
+        "impact_bps_cap": "50.0",
+        "last_viable_detail": {
+          "impact_bps": "1.414213562373095048801688724",
+          "net_pnl": "0.7029437251522859414379735312",
+          "size_scale": "0.5"
+        },
+        "maximum_viable_size_scale": "0.5"
+      },
+      "concentration_review": {
+        "concentration_blocked": false,
+        "instrument_concentration": "0.22",
+        "instrument_limit": "0.4",
+        "position_concentration": "0.18",
+        "position_limit": "0.35",
+        "regime_concentration": "0.30",
+        "regime_limit": "0.55"
+      },
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "13.200000000",
+        "exit_fee": "13.200000000",
+        "funding_cost": "2.40000000",
+        "market_impact_approximation": "4.8000000",
+        "partial_fill_cost": "0",
+        "slippage_cost": "9.600000",
+        "spread_cost": "4.800000"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_age_sec": "30",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_review": {
+        "age_stale": false,
+        "data_age_sec": "30",
+        "data_quality_blocked": false,
+        "max_age_sec": "120.0",
+        "missing_data": false,
+        "stale_data": false
+      },
+      "deterministic_fingerprint": "7f6efb4e11cf5ad3a0dfcb08705975c68ec79f252263124084c22291cdcdd1bf",
+      "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V15H_2026_08_05",
+      "dimension_summaries": {
+        "cancel_replace": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "fees": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 2,
+          "points": 3
+        },
+        "funding": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "instrument_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "latency": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "liquidation_distance": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "liquidity_collapse": {
+          "adverse_fail": 3,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "market_impact": {
+          "adverse_fail": 3,
+          "fail": 4,
+          "pass": 1,
+          "points": 5
+        },
+        "max_drawdown_assumptions": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "missing_data": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 1,
+          "points": 2
+        },
+        "partial_fills": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "position_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "queue_position": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 3,
+          "points": 3
+        },
+        "regime_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "slippage": {
+          "adverse_fail": 3,
+          "fail": 4,
+          "pass": 1,
+          "points": 5
+        },
+        "spread": {
+          "adverse_fail": 3,
+          "fail": 4,
+          "pass": 1,
+          "points": 5
+        },
+        "stale_data": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "trade_size_capacity": {
+          "adverse_fail": 3,
+          "fail": 4,
+          "pass": 1,
+          "points": 5
+        }
+      },
+      "drawdown_review": {
+        "assumed_max_drawdown": "0.08",
+        "drawdown_assumption_unsafe": false,
+        "limit": "0.2"
+      },
+      "entry_price": "60000",
+      "evidence_class": "FIXTURE_SYNTHETIC_DEVELOPMENT_ONLY",
+      "exit_price": "60120",
+      "formal_walk_forward_executed": false,
+      "fragility_detail": {
+        "adverse_count": 39,
+        "destroyed_count": 38
+      },
+      "fragility_score": "0.9743589743589743589743589744",
+      "gross_expectancy": "48.0000",
+      "instrument_concentration": "0.22",
+      "label": "COST_DESTROYED",
+      "liquidation_distance_pct": "12.0",
+      "liquidation_distance_review": {
+        "liquidation_distance_pct": "12.0",
+        "liquidation_distance_unsafe": false,
+        "min_distance_pct": "5.0"
+      },
+      "maximum_viable_slippage": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "1",
+        "param": "slippage_bps",
+        "viable": true
+      },
+      "maximum_viable_spread": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0.5",
+        "param": "spread_bps",
+        "viable": true
+      },
+      "mechanism_family": "ORDER_FLOW_IMBALANCE",
+      "missing_data": false,
+      "net_expectancy": "0.000000000",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "position_concentration": "0.18",
+      "profitability_claimed": false,
+      "qty": "0.010",
+      "qualification_ready": false,
+      "qualified": false,
+      "qualified_claimed": false,
+      "regime_concentration": "0.30",
+      "required_outputs_present": true,
+      "sample_trade_count": 40,
+      "scenario_count": 70,
+      "side": "LONG",
+      "slippage_probe": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "1",
+        "param": "slippage_bps",
+        "viable": true
+      },
+      "spread_probe": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0.5",
+        "param": "spread_bps",
+        "viable": true
+      },
+      "stale_data": false,
+      "status": "DEVELOPMENT_REVIEW_ONLY",
+      "strategy_promoted": false,
+      "strategy_selected": false,
+      "symbol": "BTCUSDT"
+    },
+    {
+      "ai_override_applied": false,
+      "ai_override_attempted": true,
+      "ai_override_refusal": {
+        "action": "AI_OVERRIDE",
+        "ai_override_applied": false,
+        "ai_override_attempted": true,
+        "allowed": false,
+        "applied": false,
+        "attempted_fields": [
+          "label",
+          "net_expectancy",
+          "strategy_promoted"
+        ],
+        "candidate_id": "RC02",
+        "reason": "AI_CANNOT_OVERRIDE_DETERMINISTIC_RISK_CAPACITY_REVIEW"
+      },
+      "assumed_max_drawdown": "0.10",
+      "baseline": {
+        "cost_authority": "backend.nexus_execution.cost_model",
+        "cost_bridge_verified": true,
+        "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+        "gross_pnl": "57.6000",
+        "market_impact_outside_cost_bridge": true,
+        "net_pnl": "-28.800000000",
+        "total_cost": "86.400000000"
+      },
+      "break_even_cost": "86.400000000",
+      "candidate_id": "RC02",
+      "canonical_cost_formula_mutated": false,
+      "capacity_estimate": {
+        "capacity_limited": false,
+        "capacity_notional_usdt": "0.000",
+        "impact_bps_cap": "50.0",
+        "last_viable_detail": null,
+        "maximum_viable_size_scale": "0"
+      },
+      "concentration_review": {
+        "concentration_blocked": false,
+        "instrument_concentration": "0.25",
+        "instrument_limit": "0.4",
+        "position_concentration": "0.20",
+        "position_limit": "0.35",
+        "regime_concentration": "0.35",
+        "regime_limit": "0.55"
+      },
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "23.760000000",
+        "exit_fee": "23.760000000",
+        "funding_cost": "4.32000000",
+        "market_impact_approximation": "8.6400000",
+        "partial_fill_cost": "0",
+        "slippage_cost": "17.280000",
+        "spread_cost": "8.640000"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_age_sec": "45",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_review": {
+        "age_stale": false,
+        "data_age_sec": "45",
+        "data_quality_blocked": false,
+        "max_age_sec": "120.0",
+        "missing_data": false,
+        "stale_data": false
+      },
+      "deterministic_fingerprint": "9bd932fa85dda92eb1c9059a25bda01afa5cf115b0a609cb7abc6e07d144c579",
+      "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V15H_2026_08_05",
+      "dimension_summaries": {
+        "cancel_replace": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "fees": {
+          "adverse_fail": 1,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "funding": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "instrument_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "latency": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "liquidation_distance": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "liquidity_collapse": {
+          "adverse_fail": 3,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "market_impact": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "max_drawdown_assumptions": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "missing_data": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 1,
+          "points": 2
+        },
+        "partial_fills": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "position_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "queue_position": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 2,
+          "points": 3
+        },
+        "regime_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "slippage": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "spread": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "stale_data": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "trade_size_capacity": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        }
+      },
+      "drawdown_review": {
+        "assumed_max_drawdown": "0.10",
+        "drawdown_assumption_unsafe": false,
+        "limit": "0.2"
+      },
+      "entry_price": "60000",
+      "evidence_class": "FIXTURE_SYNTHETIC_DEVELOPMENT_ONLY",
+      "exit_price": "60080",
+      "formal_walk_forward_executed": false,
+      "fragility_detail": {
+        "adverse_count": 39,
+        "destroyed_count": 39
+      },
+      "fragility_score": "1",
+      "gross_expectancy": "57.6000",
+      "instrument_concentration": "0.25",
+      "label": "COST_DESTROYED",
+      "liquidation_distance_pct": "9.0",
+      "liquidation_distance_review": {
+        "liquidation_distance_pct": "9.0",
+        "liquidation_distance_unsafe": false,
+        "min_distance_pct": "5.0"
+      },
+      "maximum_viable_slippage": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "0",
+        "param": "slippage_bps",
+        "viable": false
+      },
+      "maximum_viable_spread": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "mechanism_family": "ABSORPTION",
+      "missing_data": false,
+      "net_expectancy": "-28.800000000",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "position_concentration": "0.20",
+      "profitability_claimed": false,
+      "qty": "0.020",
+      "qualification_ready": false,
+      "qualified": false,
+      "qualified_claimed": false,
+      "regime_concentration": "0.35",
+      "required_outputs_present": true,
+      "sample_trade_count": 36,
+      "scenario_count": 70,
+      "side": "LONG",
+      "slippage_probe": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "0",
+        "param": "slippage_bps",
+        "viable": false
+      },
+      "spread_probe": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "stale_data": false,
+      "status": "DEVELOPMENT_REVIEW_ONLY",
+      "strategy_promoted": false,
+      "strategy_selected": false,
+      "symbol": "BTCUSDT"
+    },
+    {
+      "ai_override_applied": false,
+      "ai_override_attempted": true,
+      "ai_override_refusal": {
+        "action": "AI_OVERRIDE",
+        "ai_override_applied": false,
+        "ai_override_attempted": true,
+        "allowed": false,
+        "applied": false,
+        "attempted_fields": [
+          "label",
+          "net_expectancy",
+          "strategy_promoted"
+        ],
+        "candidate_id": "RC03",
+        "reason": "AI_CANNOT_OVERRIDE_DETERMINISTIC_RISK_CAPACITY_REVIEW"
+      },
+      "assumed_max_drawdown": "0.12",
+      "baseline": {
+        "cost_authority": "backend.nexus_execution.cost_model",
+        "cost_bridge_verified": true,
+        "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+        "gross_pnl": "168.000",
+        "market_impact_outside_cost_bridge": true,
+        "net_pnl": "78.40000000",
+        "total_cost": "89.60000000"
+      },
+      "break_even_cost": "89.60000000",
+      "candidate_id": "RC03",
+      "canonical_cost_formula_mutated": false,
+      "capacity_estimate": {
+        "capacity_limited": false,
+        "capacity_notional_usdt": "32000.00",
+        "impact_bps_cap": "50.0",
+        "last_viable_detail": {
+          "impact_bps": "8.944271909999158785636694674",
+          "net_pnl": "945.7932368640753728069521571",
+          "size_scale": "20"
+        },
+        "maximum_viable_size_scale": "20"
+      },
+      "concentration_review": {
+        "concentration_blocked": false,
+        "instrument_concentration": "0.30",
+        "instrument_limit": "0.4",
+        "position_concentration": "0.28",
+        "position_limit": "0.35",
+        "regime_concentration": "0.40",
+        "regime_limit": "0.55"
+      },
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "24.64000000",
+        "exit_fee": "24.64000000",
+        "funding_cost": "4.4800000",
+        "market_impact_approximation": "8.960000",
+        "partial_fill_cost": "0",
+        "slippage_cost": "17.92000",
+        "spread_cost": "8.96000"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_age_sec": "20",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_review": {
+        "age_stale": false,
+        "data_age_sec": "20",
+        "data_quality_blocked": false,
+        "max_age_sec": "120.0",
+        "missing_data": false,
+        "stale_data": false
+      },
+      "deterministic_fingerprint": "a7e9a7a5fa00188ea63e2e78469fa2ac194d530fefb1ecc72e5cf8538b72a800",
+      "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V15H_2026_08_05",
+      "dimension_summaries": {
+        "cancel_replace": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 4,
+          "points": 4
+        },
+        "fees": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 3,
+          "points": 3
+        },
+        "funding": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 3,
+          "points": 4
+        },
+        "instrument_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "latency": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 4,
+          "points": 5
+        },
+        "liquidation_distance": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "liquidity_collapse": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 3,
+          "points": 4
+        },
+        "market_impact": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 3,
+          "points": 5
+        },
+        "max_drawdown_assumptions": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "missing_data": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 1,
+          "points": 2
+        },
+        "partial_fills": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 4,
+          "points": 4
+        },
+        "position_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "queue_position": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 3,
+          "points": 3
+        },
+        "regime_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "slippage": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 3,
+          "points": 5
+        },
+        "spread": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 4,
+          "points": 5
+        },
+        "stale_data": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "trade_size_capacity": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 5,
+          "points": 5
+        }
+      },
+      "drawdown_review": {
+        "assumed_max_drawdown": "0.12",
+        "drawdown_assumption_unsafe": false,
+        "limit": "0.2"
+      },
+      "entry_price": "3200",
+      "evidence_class": "FIXTURE_SYNTHETIC_DEVELOPMENT_ONLY",
+      "exit_price": "3188",
+      "formal_walk_forward_executed": false,
+      "fragility_detail": {
+        "adverse_count": 39,
+        "destroyed_count": 21
+      },
+      "fragility_score": "0.5384615384615384615384615385",
+      "gross_expectancy": "168.000",
+      "instrument_concentration": "0.30",
+      "label": "FRAGILE_TO_EXECUTION",
+      "liquidation_distance_pct": "6.5",
+      "liquidation_distance_review": {
+        "liquidation_distance_pct": "6.5",
+        "liquidation_distance_unsafe": false,
+        "min_distance_pct": "5.0"
+      },
+      "maximum_viable_slippage": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "8",
+        "param": "slippage_bps",
+        "viable": true
+      },
+      "maximum_viable_spread": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "8",
+        "param": "spread_bps",
+        "viable": true
+      },
+      "mechanism_family": "LIQUIDATION_CASCADE",
+      "missing_data": false,
+      "net_expectancy": "78.40000000",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "position_concentration": "0.28",
+      "profitability_claimed": false,
+      "qty": "0.50",
+      "qualification_ready": false,
+      "qualified": false,
+      "qualified_claimed": false,
+      "regime_concentration": "0.40",
+      "required_outputs_present": true,
+      "sample_trade_count": 28,
+      "scenario_count": 70,
+      "side": "SHORT",
+      "slippage_probe": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "8",
+        "param": "slippage_bps",
+        "viable": true
+      },
+      "spread_probe": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "8",
+        "param": "spread_bps",
+        "viable": true
+      },
+      "stale_data": false,
+      "status": "DEVELOPMENT_REVIEW_ONLY",
+      "strategy_promoted": false,
+      "strategy_selected": false,
+      "symbol": "ETHUSDT"
+    },
+    {
+      "ai_override_applied": false,
+      "ai_override_attempted": true,
+      "ai_override_refusal": {
+        "action": "AI_OVERRIDE",
+        "ai_override_applied": false,
+        "ai_override_attempted": true,
+        "allowed": false,
+        "applied": false,
+        "attempted_fields": [
+          "label",
+          "net_expectancy",
+          "strategy_promoted"
+        ],
+        "candidate_id": "RC04",
+        "reason": "AI_CANNOT_OVERRIDE_DETERMINISTIC_RISK_CAPACITY_REVIEW"
+      },
+      "assumed_max_drawdown": "0.15",
+      "baseline": {
+        "cost_authority": "backend.nexus_execution.cost_model",
+        "cost_bridge_verified": true,
+        "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+        "gross_pnl": "48.000",
+        "market_impact_outside_cost_bridge": true,
+        "net_pnl": "-13.44000000",
+        "total_cost": "61.44000000"
+      },
+      "break_even_cost": "61.44000000",
+      "candidate_id": "RC04",
+      "canonical_cost_formula_mutated": false,
+      "capacity_estimate": {
+        "capacity_limited": false,
+        "capacity_notional_usdt": "0.00",
+        "impact_bps_cap": "50.0",
+        "last_viable_detail": null,
+        "maximum_viable_size_scale": "0"
+      },
+      "concentration_review": {
+        "concentration_blocked": false,
+        "instrument_concentration": "0.28",
+        "instrument_limit": "0.4",
+        "position_concentration": "0.22",
+        "position_limit": "0.35",
+        "regime_concentration": "0.45",
+        "regime_limit": "0.55"
+      },
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "16.89600000",
+        "exit_fee": "16.89600000",
+        "funding_cost": "3.0720000",
+        "market_impact_approximation": "6.144000",
+        "partial_fill_cost": "0",
+        "slippage_cost": "12.28800",
+        "spread_cost": "6.14400"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_age_sec": "55",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_review": {
+        "age_stale": false,
+        "data_age_sec": "55",
+        "data_quality_blocked": false,
+        "max_age_sec": "120.0",
+        "missing_data": false,
+        "stale_data": false
+      },
+      "deterministic_fingerprint": "d1bc7daf15b8a5f45b90d66713608abb0e3b97f9b60c875b36f8054836384b3e",
+      "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V15H_2026_08_05",
+      "dimension_summaries": {
+        "cancel_replace": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "fees": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 2,
+          "points": 3
+        },
+        "funding": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "instrument_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "latency": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "liquidation_distance": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "liquidity_collapse": {
+          "adverse_fail": 3,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "market_impact": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "max_drawdown_assumptions": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "missing_data": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 1,
+          "points": 2
+        },
+        "partial_fills": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "position_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "queue_position": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 3,
+          "points": 3
+        },
+        "regime_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "slippage": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "spread": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "stale_data": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "trade_size_capacity": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        }
+      },
+      "drawdown_review": {
+        "assumed_max_drawdown": "0.15",
+        "drawdown_assumption_unsafe": false,
+        "limit": "0.2"
+      },
+      "entry_price": "3200",
+      "evidence_class": "FIXTURE_SYNTHETIC_DEVELOPMENT_ONLY",
+      "exit_price": "3205",
+      "formal_walk_forward_executed": false,
+      "fragility_detail": {
+        "adverse_count": 39,
+        "destroyed_count": 38
+      },
+      "fragility_score": "0.9743589743589743589743589744",
+      "gross_expectancy": "48.000",
+      "instrument_concentration": "0.28",
+      "label": "COST_DESTROYED",
+      "liquidation_distance_pct": "8.0",
+      "liquidation_distance_review": {
+        "liquidation_distance_pct": "8.0",
+        "liquidation_distance_unsafe": false,
+        "min_distance_pct": "5.0"
+      },
+      "maximum_viable_slippage": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "0",
+        "param": "slippage_bps",
+        "viable": false
+      },
+      "maximum_viable_spread": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "mechanism_family": "SPREAD_SHOCK",
+      "missing_data": false,
+      "net_expectancy": "-13.44000000",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "position_concentration": "0.22",
+      "profitability_claimed": false,
+      "qty": "0.40",
+      "qualification_ready": false,
+      "qualified": false,
+      "qualified_claimed": false,
+      "regime_concentration": "0.45",
+      "required_outputs_present": true,
+      "sample_trade_count": 24,
+      "scenario_count": 70,
+      "side": "LONG",
+      "slippage_probe": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "0",
+        "param": "slippage_bps",
+        "viable": false
+      },
+      "spread_probe": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "stale_data": false,
+      "status": "DEVELOPMENT_REVIEW_ONLY",
+      "strategy_promoted": false,
+      "strategy_selected": false,
+      "symbol": "ETHUSDT"
+    },
+    {
+      "ai_override_applied": false,
+      "ai_override_attempted": true,
+      "ai_override_refusal": {
+        "action": "AI_OVERRIDE",
+        "ai_override_applied": false,
+        "ai_override_attempted": true,
+        "allowed": false,
+        "applied": false,
+        "attempted_fields": [
+          "label",
+          "net_expectancy",
+          "strategy_promoted"
+        ],
+        "candidate_id": "RC05",
+        "reason": "AI_CANNOT_OVERRIDE_DETERMINISTIC_RISK_CAPACITY_REVIEW"
+      },
+      "assumed_max_drawdown": "0.09",
+      "baseline": {
+        "cost_authority": "backend.nexus_execution.cost_model",
+        "cost_bridge_verified": true,
+        "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+        "gross_pnl": "19.2000",
+        "market_impact_outside_cost_bridge": true,
+        "net_pnl": "-38.400000000",
+        "total_cost": "57.600000000"
+      },
+      "break_even_cost": "57.600000000",
+      "candidate_id": "RC05",
+      "canonical_cost_formula_mutated": false,
+      "capacity_estimate": {
+        "capacity_limited": false,
+        "capacity_notional_usdt": "0.000",
+        "impact_bps_cap": "50.0",
+        "last_viable_detail": null,
+        "maximum_viable_size_scale": "0"
+      },
+      "concentration_review": {
+        "concentration_blocked": false,
+        "instrument_concentration": "0.32",
+        "instrument_limit": "0.4",
+        "position_concentration": "0.25",
+        "position_limit": "0.35",
+        "regime_concentration": "0.38",
+        "regime_limit": "0.55"
+      },
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "15.840000000",
+        "exit_fee": "15.840000000",
+        "funding_cost": "2.88000000",
+        "market_impact_approximation": "5.7600000",
+        "partial_fill_cost": "0",
+        "slippage_cost": "11.520000",
+        "spread_cost": "5.760000"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_age_sec": "40",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_review": {
+        "age_stale": false,
+        "data_age_sec": "40",
+        "data_quality_blocked": false,
+        "max_age_sec": "120.0",
+        "missing_data": false,
+        "stale_data": false
+      },
+      "deterministic_fingerprint": "4c468497725cd48491576e424a88883a1cdaa5a0bda5edf1949ced5a6d7f188a",
+      "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V15H_2026_08_05",
+      "dimension_summaries": {
+        "cancel_replace": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "fees": {
+          "adverse_fail": 1,
+          "fail": 3,
+          "pass": 0,
+          "points": 3
+        },
+        "funding": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "instrument_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "latency": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "liquidation_distance": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "liquidity_collapse": {
+          "adverse_fail": 3,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "market_impact": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "max_drawdown_assumptions": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "missing_data": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 1,
+          "points": 2
+        },
+        "partial_fills": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "position_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "queue_position": {
+          "adverse_fail": 1,
+          "fail": 3,
+          "pass": 0,
+          "points": 3
+        },
+        "regime_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "slippage": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "spread": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "stale_data": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "trade_size_capacity": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        }
+      },
+      "drawdown_review": {
+        "assumed_max_drawdown": "0.09",
+        "drawdown_assumption_unsafe": false,
+        "limit": "0.2"
+      },
+      "entry_price": "60000",
+      "evidence_class": "FIXTURE_SYNTHETIC_DEVELOPMENT_ONLY",
+      "exit_price": "60040",
+      "formal_walk_forward_executed": false,
+      "fragility_detail": {
+        "adverse_count": 39,
+        "destroyed_count": 39
+      },
+      "fragility_score": "1",
+      "gross_expectancy": "19.2000",
+      "instrument_concentration": "0.32",
+      "label": "COST_DESTROYED",
+      "liquidation_distance_pct": "11.0",
+      "liquidation_distance_review": {
+        "liquidation_distance_pct": "11.0",
+        "liquidation_distance_unsafe": false,
+        "min_distance_pct": "5.0"
+      },
+      "maximum_viable_slippage": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "0",
+        "param": "slippage_bps",
+        "viable": false
+      },
+      "maximum_viable_spread": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "mechanism_family": "FUNDING_BASIS",
+      "missing_data": false,
+      "net_expectancy": "-38.400000000",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "position_concentration": "0.25",
+      "profitability_claimed": false,
+      "qty": "0.015",
+      "qualification_ready": false,
+      "qualified": false,
+      "qualified_claimed": false,
+      "regime_concentration": "0.38",
+      "required_outputs_present": true,
+      "sample_trade_count": 32,
+      "scenario_count": 70,
+      "side": "LONG",
+      "slippage_probe": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "0",
+        "param": "slippage_bps",
+        "viable": false
+      },
+      "spread_probe": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "stale_data": false,
+      "status": "DEVELOPMENT_REVIEW_ONLY",
+      "strategy_promoted": false,
+      "strategy_selected": false,
+      "symbol": "BTCUSDT"
+    },
+    {
+      "ai_override_applied": false,
+      "ai_override_attempted": true,
+      "ai_override_refusal": {
+        "action": "AI_OVERRIDE",
+        "ai_override_applied": false,
+        "ai_override_attempted": true,
+        "allowed": false,
+        "applied": false,
+        "attempted_fields": [
+          "label",
+          "net_expectancy",
+          "strategy_promoted"
+        ],
+        "candidate_id": "RC06",
+        "reason": "AI_CANNOT_OVERRIDE_DETERMINISTIC_RISK_CAPACITY_REVIEW"
+      },
+      "assumed_max_drawdown": "0.14",
+      "baseline": {
+        "cost_authority": "backend.nexus_execution.cost_model",
+        "cost_bridge_verified": true,
+        "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+        "gross_pnl": "264.00",
+        "market_impact_outside_cost_bridge": true,
+        "net_pnl": "140.800000",
+        "total_cost": "123.200000"
+      },
+      "break_even_cost": "123.200000",
+      "candidate_id": "RC06",
+      "canonical_cost_formula_mutated": false,
+      "capacity_estimate": {
+        "capacity_limited": false,
+        "capacity_notional_usdt": "56000",
+        "impact_bps_cap": "50.0",
+        "last_viable_detail": {
+          "impact_bps": "8.944271909999158785636694674",
+          "net_pnl": "1960.465700688103637609559216",
+          "size_scale": "20"
+        },
+        "maximum_viable_size_scale": "20"
+      },
+      "concentration_review": {
+        "concentration_blocked": true,
+        "instrument_concentration": "0.55",
+        "instrument_limit": "0.4",
+        "position_concentration": "0.48",
+        "position_limit": "0.35",
+        "regime_concentration": "0.70",
+        "regime_limit": "0.55"
+      },
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "33.880000",
+        "exit_fee": "33.880000",
+        "funding_cost": "6.16000",
+        "market_impact_approximation": "12.3200",
+        "partial_fill_cost": "0",
+        "slippage_cost": "24.640",
+        "spread_cost": "12.320"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_age_sec": "35",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_review": {
+        "age_stale": false,
+        "data_age_sec": "35",
+        "data_quality_blocked": false,
+        "max_age_sec": "120.0",
+        "missing_data": false,
+        "stale_data": false
+      },
+      "deterministic_fingerprint": "e8df4b1715da19806b74b954a2282a7ceea4ffe61911f8661dbdf50e3577ee81",
+      "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V15H_2026_08_05",
+      "dimension_summaries": {
+        "cancel_replace": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 4,
+          "points": 4
+        },
+        "fees": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 3,
+          "points": 3
+        },
+        "funding": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 4,
+          "points": 4
+        },
+        "instrument_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "latency": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 4,
+          "points": 5
+        },
+        "liquidation_distance": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "liquidity_collapse": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 3,
+          "points": 4
+        },
+        "market_impact": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 4,
+          "points": 5
+        },
+        "max_drawdown_assumptions": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "missing_data": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 1,
+          "points": 2
+        },
+        "partial_fills": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 4,
+          "points": 4
+        },
+        "position_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "queue_position": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 3,
+          "points": 3
+        },
+        "regime_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "slippage": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 4,
+          "points": 5
+        },
+        "spread": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 4,
+          "points": 5
+        },
+        "stale_data": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "trade_size_capacity": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 5,
+          "points": 5
+        }
+      },
+      "drawdown_review": {
+        "assumed_max_drawdown": "0.14",
+        "drawdown_assumption_unsafe": false,
+        "limit": "0.2"
+      },
+      "entry_price": "140",
+      "evidence_class": "FIXTURE_SYNTHETIC_DEVELOPMENT_ONLY",
+      "exit_price": "139.4",
+      "formal_walk_forward_executed": false,
+      "fragility_detail": {
+        "adverse_count": 39,
+        "destroyed_count": 18
+      },
+      "fragility_score": "0.4615384615384615384615384615",
+      "gross_expectancy": "264.00",
+      "instrument_concentration": "0.55",
+      "label": "CONCENTRATION_BLOCKED",
+      "liquidation_distance_pct": "7.0",
+      "liquidation_distance_review": {
+        "liquidation_distance_pct": "7.0",
+        "liquidation_distance_unsafe": false,
+        "min_distance_pct": "5.0"
+      },
+      "maximum_viable_slippage": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "12",
+        "param": "slippage_bps",
+        "viable": true
+      },
+      "maximum_viable_spread": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "12",
+        "param": "spread_bps",
+        "viable": true
+      },
+      "mechanism_family": "CONCENTRATION_HOT",
+      "missing_data": false,
+      "net_expectancy": "140.800000",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "position_concentration": "0.48",
+      "profitability_claimed": false,
+      "qty": "20",
+      "qualification_ready": false,
+      "qualified": false,
+      "qualified_claimed": false,
+      "regime_concentration": "0.70",
+      "required_outputs_present": true,
+      "sample_trade_count": 22,
+      "scenario_count": 70,
+      "side": "SHORT",
+      "slippage_probe": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "12",
+        "param": "slippage_bps",
+        "viable": true
+      },
+      "spread_probe": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "12",
+        "param": "spread_bps",
+        "viable": true
+      },
+      "stale_data": false,
+      "status": "DEVELOPMENT_REVIEW_ONLY",
+      "strategy_promoted": false,
+      "strategy_selected": false,
+      "symbol": "SOLUSDT"
+    },
+    {
+      "ai_override_applied": false,
+      "ai_override_attempted": true,
+      "ai_override_refusal": {
+        "action": "AI_OVERRIDE",
+        "ai_override_applied": false,
+        "ai_override_attempted": true,
+        "allowed": false,
+        "applied": false,
+        "attempted_fields": [
+          "label",
+          "net_expectancy",
+          "strategy_promoted"
+        ],
+        "candidate_id": "RC07",
+        "reason": "AI_CANNOT_OVERRIDE_DETERMINISTIC_RISK_CAPACITY_REVIEW"
+      },
+      "assumed_max_drawdown": "0.35",
+      "baseline": {
+        "cost_authority": "backend.nexus_execution.cost_model",
+        "cost_bridge_verified": true,
+        "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+        "gross_pnl": "60.00",
+        "market_impact_outside_cost_bridge": true,
+        "net_pnl": "-24.000000",
+        "total_cost": "84.000000"
+      },
+      "break_even_cost": "84.000000",
+      "candidate_id": "RC07",
+      "canonical_cost_formula_mutated": false,
+      "capacity_estimate": {
+        "capacity_limited": false,
+        "capacity_notional_usdt": "0",
+        "impact_bps_cap": "50.0",
+        "last_viable_detail": null,
+        "maximum_viable_size_scale": "0"
+      },
+      "concentration_review": {
+        "concentration_blocked": false,
+        "instrument_concentration": "0.25",
+        "instrument_limit": "0.4",
+        "position_concentration": "0.20",
+        "position_limit": "0.35",
+        "regime_concentration": "0.40",
+        "regime_limit": "0.55"
+      },
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "23.100000",
+        "exit_fee": "23.100000",
+        "funding_cost": "4.20000",
+        "market_impact_approximation": "8.4000",
+        "partial_fill_cost": "0",
+        "slippage_cost": "16.800",
+        "spread_cost": "8.400"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_age_sec": "50",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_review": {
+        "age_stale": false,
+        "data_age_sec": "50",
+        "data_quality_blocked": false,
+        "max_age_sec": "120.0",
+        "missing_data": false,
+        "stale_data": false
+      },
+      "deterministic_fingerprint": "4f99eff8c0811f38d7a3d0d6c0eb800d48ed92b332c20cf1b7c5a4a99894c83f",
+      "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V15H_2026_08_05",
+      "dimension_summaries": {
+        "cancel_replace": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "fees": {
+          "adverse_fail": 1,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "funding": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "instrument_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "latency": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "liquidation_distance": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "liquidity_collapse": {
+          "adverse_fail": 3,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "market_impact": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "max_drawdown_assumptions": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "missing_data": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 1,
+          "points": 2
+        },
+        "partial_fills": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "position_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "queue_position": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 2,
+          "points": 3
+        },
+        "regime_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "slippage": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "spread": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "stale_data": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "trade_size_capacity": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        }
+      },
+      "drawdown_review": {
+        "assumed_max_drawdown": "0.35",
+        "drawdown_assumption_unsafe": true,
+        "limit": "0.2"
+      },
+      "entry_price": "140",
+      "evidence_class": "FIXTURE_SYNTHETIC_DEVELOPMENT_ONLY",
+      "exit_price": "140.2",
+      "formal_walk_forward_executed": false,
+      "fragility_detail": {
+        "adverse_count": 39,
+        "destroyed_count": 39
+      },
+      "fragility_score": "1",
+      "gross_expectancy": "60.00",
+      "instrument_concentration": "0.25",
+      "label": "DRAWDOWN_ASSUMPTION_UNSAFE",
+      "liquidation_distance_pct": "10.0",
+      "liquidation_distance_review": {
+        "liquidation_distance_pct": "10.0",
+        "liquidation_distance_unsafe": false,
+        "min_distance_pct": "5.0"
+      },
+      "maximum_viable_slippage": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "0",
+        "param": "slippage_bps",
+        "viable": false
+      },
+      "maximum_viable_spread": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "mechanism_family": "DRAWDOWN_UNSAFE",
+      "missing_data": false,
+      "net_expectancy": "-24.000000",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "position_concentration": "0.20",
+      "profitability_claimed": false,
+      "qty": "15",
+      "qualification_ready": false,
+      "qualified": false,
+      "qualified_claimed": false,
+      "regime_concentration": "0.40",
+      "required_outputs_present": true,
+      "sample_trade_count": 20,
+      "scenario_count": 70,
+      "side": "LONG",
+      "slippage_probe": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "0",
+        "param": "slippage_bps",
+        "viable": false
+      },
+      "spread_probe": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "stale_data": false,
+      "status": "DEVELOPMENT_REVIEW_ONLY",
+      "strategy_promoted": false,
+      "strategy_selected": false,
+      "symbol": "SOLUSDT"
+    },
+    {
+      "ai_override_applied": false,
+      "ai_override_attempted": true,
+      "ai_override_refusal": {
+        "action": "AI_OVERRIDE",
+        "ai_override_applied": false,
+        "ai_override_attempted": true,
+        "allowed": false,
+        "applied": false,
+        "attempted_fields": [
+          "label",
+          "net_expectancy",
+          "strategy_promoted"
+        ],
+        "candidate_id": "RC08",
+        "reason": "AI_CANNOT_OVERRIDE_DETERMINISTIC_RISK_CAPACITY_REVIEW"
+      },
+      "assumed_max_drawdown": "0.10",
+      "baseline": {
+        "cost_authority": "backend.nexus_execution.cost_model",
+        "cost_bridge_verified": true,
+        "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+        "gross_pnl": "104.0000",
+        "market_impact_outside_cost_bridge": true,
+        "net_pnl": "46.80000000",
+        "total_cost": "57.20000000"
+      },
+      "break_even_cost": "57.20000000",
+      "candidate_id": "RC08",
+      "canonical_cost_formula_mutated": false,
+      "capacity_estimate": {
+        "capacity_limited": false,
+        "capacity_notional_usdt": "22000.00",
+        "impact_bps_cap": "50.0",
+        "last_viable_detail": {
+          "impact_bps": "8.944271909999158785636694674",
+          "net_pnl": "538.7876467480481174615810647",
+          "size_scale": "20"
+        },
+        "maximum_viable_size_scale": "20"
+      },
+      "concentration_review": {
+        "concentration_blocked": false,
+        "instrument_concentration": "0.22",
+        "instrument_limit": "0.4",
+        "position_concentration": "0.18",
+        "position_limit": "0.35",
+        "regime_concentration": "0.33",
+        "regime_limit": "0.55"
+      },
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "15.73000000",
+        "exit_fee": "15.73000000",
+        "funding_cost": "2.8600000",
+        "market_impact_approximation": "5.720000",
+        "partial_fill_cost": "0",
+        "slippage_cost": "11.44000",
+        "spread_cost": "5.72000"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_age_sec": "25",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_review": {
+        "age_stale": false,
+        "data_age_sec": "25",
+        "data_quality_blocked": false,
+        "max_age_sec": "120.0",
+        "missing_data": false,
+        "stale_data": false
+      },
+      "deterministic_fingerprint": "303dc924690124a0c972005c96b67d2cbab803d99b42098fedd139f4401b7afb",
+      "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V15H_2026_08_05",
+      "dimension_summaries": {
+        "cancel_replace": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 4,
+          "points": 4
+        },
+        "fees": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 3,
+          "points": 3
+        },
+        "funding": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 3,
+          "points": 4
+        },
+        "instrument_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "latency": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 4,
+          "points": 5
+        },
+        "liquidation_distance": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "liquidity_collapse": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 3,
+          "points": 4
+        },
+        "market_impact": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 3,
+          "points": 5
+        },
+        "max_drawdown_assumptions": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "missing_data": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 1,
+          "points": 2
+        },
+        "partial_fills": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 4,
+          "points": 4
+        },
+        "position_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "queue_position": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 3,
+          "points": 3
+        },
+        "regime_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "slippage": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 3,
+          "points": 5
+        },
+        "spread": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 4,
+          "points": 5
+        },
+        "stale_data": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "trade_size_capacity": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 5,
+          "points": 5
+        }
+      },
+      "drawdown_review": {
+        "assumed_max_drawdown": "0.10",
+        "drawdown_assumption_unsafe": false,
+        "limit": "0.2"
+      },
+      "entry_price": "0.55",
+      "evidence_class": "FIXTURE_SYNTHETIC_DEVELOPMENT_ONLY",
+      "exit_price": "0.552",
+      "formal_walk_forward_executed": false,
+      "fragility_detail": {
+        "adverse_count": 39,
+        "destroyed_count": 21
+      },
+      "fragility_score": "0.5384615384615384615384615385",
+      "gross_expectancy": "104.0000",
+      "instrument_concentration": "0.22",
+      "label": "LIQUIDATION_DISTANCE_UNSAFE",
+      "liquidation_distance_pct": "2.5",
+      "liquidation_distance_review": {
+        "liquidation_distance_pct": "2.5",
+        "liquidation_distance_unsafe": true,
+        "min_distance_pct": "5.0"
+      },
+      "maximum_viable_slippage": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "8",
+        "param": "slippage_bps",
+        "viable": true
+      },
+      "maximum_viable_spread": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "8",
+        "param": "spread_bps",
+        "viable": true
+      },
+      "mechanism_family": "LIQUIDATION_NEAR",
+      "missing_data": false,
+      "net_expectancy": "46.80000000",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "position_concentration": "0.18",
+      "profitability_claimed": false,
+      "qty": "2000",
+      "qualification_ready": false,
+      "qualified": false,
+      "qualified_claimed": false,
+      "regime_concentration": "0.33",
+      "required_outputs_present": true,
+      "sample_trade_count": 26,
+      "scenario_count": 70,
+      "side": "LONG",
+      "slippage_probe": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "8",
+        "param": "slippage_bps",
+        "viable": true
+      },
+      "spread_probe": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "8",
+        "param": "spread_bps",
+        "viable": true
+      },
+      "stale_data": false,
+      "status": "DEVELOPMENT_REVIEW_ONLY",
+      "strategy_promoted": false,
+      "strategy_selected": false,
+      "symbol": "XRPUSDT"
+    },
+    {
+      "ai_override_applied": false,
+      "ai_override_attempted": true,
+      "ai_override_refusal": {
+        "action": "AI_OVERRIDE",
+        "ai_override_applied": false,
+        "ai_override_attempted": true,
+        "allowed": false,
+        "applied": false,
+        "attempted_fields": [
+          "label",
+          "net_expectancy",
+          "strategy_promoted"
+        ],
+        "candidate_id": "RC09",
+        "reason": "AI_CANNOT_OVERRIDE_DETERMINISTIC_RISK_CAPACITY_REVIEW"
+      },
+      "assumed_max_drawdown": "0.08",
+      "baseline": {
+        "cost_authority": "backend.nexus_execution.cost_model",
+        "cost_bridge_verified": true,
+        "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+        "gross_pnl": "21.6000",
+        "market_impact_outside_cost_bridge": true,
+        "net_pnl": "-7.200000000",
+        "total_cost": "28.800000000"
+      },
+      "break_even_cost": "28.800000000",
+      "candidate_id": "RC09",
+      "canonical_cost_formula_mutated": false,
+      "capacity_estimate": {
+        "capacity_limited": false,
+        "capacity_notional_usdt": "0.000",
+        "impact_bps_cap": "50.0",
+        "last_viable_detail": null,
+        "maximum_viable_size_scale": "0"
+      },
+      "concentration_review": {
+        "concentration_blocked": false,
+        "instrument_concentration": "0.20",
+        "instrument_limit": "0.4",
+        "position_concentration": "0.15",
+        "position_limit": "0.35",
+        "regime_concentration": "0.30",
+        "regime_limit": "0.55"
+      },
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "7.920000000",
+        "exit_fee": "7.920000000",
+        "funding_cost": "1.44000000",
+        "market_impact_approximation": "2.8800000",
+        "partial_fill_cost": "0",
+        "slippage_cost": "5.760000",
+        "spread_cost": "2.880000"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_age_sec": "10",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_review": {
+        "age_stale": false,
+        "data_age_sec": "10",
+        "data_quality_blocked": true,
+        "max_age_sec": "120.0",
+        "missing_data": true,
+        "stale_data": false
+      },
+      "deterministic_fingerprint": "99f3cf40845e0eab284840c2d69be0b7a8fa909e3557f47d3e9345933d067e89",
+      "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V15H_2026_08_05",
+      "dimension_summaries": {
+        "cancel_replace": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "fees": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 2,
+          "points": 3
+        },
+        "funding": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "instrument_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "latency": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "liquidation_distance": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "liquidity_collapse": {
+          "adverse_fail": 3,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "market_impact": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "max_drawdown_assumptions": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "missing_data": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 1,
+          "points": 2
+        },
+        "partial_fills": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "position_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "queue_position": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 3,
+          "points": 3
+        },
+        "regime_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "slippage": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "spread": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "stale_data": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "trade_size_capacity": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        }
+      },
+      "drawdown_review": {
+        "assumed_max_drawdown": "0.08",
+        "drawdown_assumption_unsafe": false,
+        "limit": "0.2"
+      },
+      "entry_price": "60000",
+      "evidence_class": "FIXTURE_SYNTHETIC_DEVELOPMENT_ONLY",
+      "exit_price": "60090",
+      "formal_walk_forward_executed": false,
+      "fragility_detail": {
+        "adverse_count": 39,
+        "destroyed_count": 38
+      },
+      "fragility_score": "0.9743589743589743589743589744",
+      "gross_expectancy": "21.6000",
+      "instrument_concentration": "0.20",
+      "label": "DATA_QUALITY_BLOCKED",
+      "liquidation_distance_pct": "14.0",
+      "liquidation_distance_review": {
+        "liquidation_distance_pct": "14.0",
+        "liquidation_distance_unsafe": false,
+        "min_distance_pct": "5.0"
+      },
+      "maximum_viable_slippage": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "0",
+        "param": "slippage_bps",
+        "viable": false
+      },
+      "maximum_viable_spread": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "mechanism_family": "MISSING_DATA_BLOCK",
+      "missing_data": true,
+      "net_expectancy": "-7.200000000",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "position_concentration": "0.15",
+      "profitability_claimed": false,
+      "qty": "0.008",
+      "qualification_ready": false,
+      "qualified": false,
+      "qualified_claimed": false,
+      "regime_concentration": "0.30",
+      "required_outputs_present": true,
+      "sample_trade_count": 30,
+      "scenario_count": 70,
+      "side": "LONG",
+      "slippage_probe": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "0",
+        "param": "slippage_bps",
+        "viable": false
+      },
+      "spread_probe": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "stale_data": false,
+      "status": "DEVELOPMENT_REVIEW_ONLY",
+      "strategy_promoted": false,
+      "strategy_selected": false,
+      "symbol": "BTCUSDT"
+    },
+    {
+      "ai_override_applied": false,
+      "ai_override_attempted": true,
+      "ai_override_refusal": {
+        "action": "AI_OVERRIDE",
+        "ai_override_applied": false,
+        "ai_override_attempted": true,
+        "allowed": false,
+        "applied": false,
+        "attempted_fields": [
+          "label",
+          "net_expectancy",
+          "strategy_promoted"
+        ],
+        "candidate_id": "RC10",
+        "reason": "AI_CANNOT_OVERRIDE_DETERMINISTIC_RISK_CAPACITY_REVIEW"
+      },
+      "assumed_max_drawdown": "0.09",
+      "baseline": {
+        "cost_authority": "backend.nexus_execution.cost_model",
+        "cost_bridge_verified": true,
+        "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+        "gross_pnl": "288.00",
+        "market_impact_outside_cost_bridge": true,
+        "net_pnl": "57.6000000",
+        "total_cost": "230.4000000"
+      },
+      "break_even_cost": "230.4000000",
+      "candidate_id": "RC10",
+      "canonical_cost_formula_mutated": false,
+      "capacity_estimate": {
+        "capacity_limited": false,
+        "capacity_notional_usdt": "64000.0",
+        "impact_bps_cap": "50.0",
+        "last_viable_detail": {
+          "impact_bps": "6.324555320336758663997787088",
+          "net_pnl": "77.81122709720540190745492752",
+          "size_scale": "10"
+        },
+        "maximum_viable_size_scale": "10"
+      },
+      "concentration_review": {
+        "concentration_blocked": false,
+        "instrument_concentration": "0.21",
+        "instrument_limit": "0.4",
+        "position_concentration": "0.16",
+        "position_limit": "0.35",
+        "regime_concentration": "0.32",
+        "regime_limit": "0.55"
+      },
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "63.3600000",
+        "exit_fee": "63.3600000",
+        "funding_cost": "11.520000",
+        "market_impact_approximation": "23.04000",
+        "partial_fill_cost": "0",
+        "slippage_cost": "46.0800",
+        "spread_cost": "23.0400"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_age_sec": "600",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_review": {
+        "age_stale": true,
+        "data_age_sec": "600",
+        "data_quality_blocked": true,
+        "max_age_sec": "120.0",
+        "missing_data": false,
+        "stale_data": true
+      },
+      "deterministic_fingerprint": "1da084a5c0c15479374df6209ef0bc6ab7a9ef7c1ba3fd361fb3b82c4ae3ab44",
+      "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V15H_2026_08_05",
+      "dimension_summaries": {
+        "cancel_replace": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 4,
+          "points": 4
+        },
+        "fees": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 3,
+          "points": 3
+        },
+        "funding": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 3,
+          "points": 4
+        },
+        "instrument_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "latency": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 3,
+          "points": 5
+        },
+        "liquidation_distance": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "liquidity_collapse": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "market_impact": {
+          "adverse_fail": 3,
+          "fail": 3,
+          "pass": 2,
+          "points": 5
+        },
+        "max_drawdown_assumptions": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "missing_data": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 1,
+          "points": 2
+        },
+        "partial_fills": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 4,
+          "points": 4
+        },
+        "position_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "queue_position": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 3,
+          "points": 3
+        },
+        "regime_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "slippage": {
+          "adverse_fail": 3,
+          "fail": 3,
+          "pass": 2,
+          "points": 5
+        },
+        "spread": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 3,
+          "points": 5
+        },
+        "stale_data": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "trade_size_capacity": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 5,
+          "points": 5
+        }
+      },
+      "drawdown_review": {
+        "assumed_max_drawdown": "0.09",
+        "drawdown_assumption_unsafe": false,
+        "limit": "0.2"
+      },
+      "entry_price": "3200",
+      "evidence_class": "FIXTURE_SYNTHETIC_DEVELOPMENT_ONLY",
+      "exit_price": "3208",
+      "formal_walk_forward_executed": false,
+      "fragility_detail": {
+        "adverse_count": 39,
+        "destroyed_count": 26
+      },
+      "fragility_score": "0.6666666666666666666666666667",
+      "gross_expectancy": "288.00",
+      "instrument_concentration": "0.21",
+      "label": "DATA_QUALITY_BLOCKED",
+      "liquidation_distance_pct": "13.0",
+      "liquidation_distance_review": {
+        "liquidation_distance_pct": "13.0",
+        "liquidation_distance_unsafe": false,
+        "min_distance_pct": "5.0"
+      },
+      "maximum_viable_slippage": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "3",
+        "param": "slippage_bps",
+        "viable": true
+      },
+      "maximum_viable_spread": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "3",
+        "param": "spread_bps",
+        "viable": true
+      },
+      "mechanism_family": "STALE_DATA_BLOCK",
+      "missing_data": false,
+      "net_expectancy": "57.6000000",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "position_concentration": "0.16",
+      "profitability_claimed": false,
+      "qty": "2.0",
+      "qualification_ready": false,
+      "qualified": false,
+      "qualified_claimed": false,
+      "regime_concentration": "0.32",
+      "required_outputs_present": true,
+      "sample_trade_count": 18,
+      "scenario_count": 70,
+      "side": "LONG",
+      "slippage_probe": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "3",
+        "param": "slippage_bps",
+        "viable": true
+      },
+      "spread_probe": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "3",
+        "param": "spread_bps",
+        "viable": true
+      },
+      "stale_data": true,
+      "status": "DEVELOPMENT_REVIEW_ONLY",
+      "strategy_promoted": false,
+      "strategy_selected": false,
+      "symbol": "ETHUSDT"
+    },
+    {
+      "ai_override_applied": false,
+      "ai_override_attempted": true,
+      "ai_override_refusal": {
+        "action": "AI_OVERRIDE",
+        "ai_override_applied": false,
+        "ai_override_attempted": true,
+        "allowed": false,
+        "applied": false,
+        "attempted_fields": [
+          "label",
+          "net_expectancy",
+          "strategy_promoted"
+        ],
+        "candidate_id": "RC11",
+        "reason": "AI_CANNOT_OVERRIDE_DETERMINISTIC_RISK_CAPACITY_REVIEW"
+      },
+      "assumed_max_drawdown": "0.11",
+      "baseline": {
+        "cost_authority": "backend.nexus_execution.cost_model",
+        "cost_bridge_verified": true,
+        "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+        "gross_pnl": "18.7200",
+        "market_impact_outside_cost_bridge": true,
+        "net_pnl": "-18.720000000",
+        "total_cost": "37.440000000"
+      },
+      "break_even_cost": "37.440000000",
+      "candidate_id": "RC11",
+      "canonical_cost_formula_mutated": false,
+      "capacity_estimate": {
+        "capacity_limited": false,
+        "capacity_notional_usdt": "0.000",
+        "impact_bps_cap": "50.0",
+        "last_viable_detail": null,
+        "maximum_viable_size_scale": "0"
+      },
+      "concentration_review": {
+        "concentration_blocked": false,
+        "instrument_concentration": "0.24",
+        "instrument_limit": "0.4",
+        "position_concentration": "0.19",
+        "position_limit": "0.35",
+        "regime_concentration": "0.36",
+        "regime_limit": "0.55"
+      },
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "10.296000000",
+        "exit_fee": "10.296000000",
+        "funding_cost": "1.87200000",
+        "market_impact_approximation": "3.7440000",
+        "partial_fill_cost": "0",
+        "slippage_cost": "7.488000",
+        "spread_cost": "3.744000"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_age_sec": "60",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_review": {
+        "age_stale": false,
+        "data_age_sec": "60",
+        "data_quality_blocked": false,
+        "max_age_sec": "120.0",
+        "missing_data": false,
+        "stale_data": false
+      },
+      "deterministic_fingerprint": "cf177398317686bcd55db45c61a400042e80babcfab62df94b08d11d8f1e0b46",
+      "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V15H_2026_08_05",
+      "dimension_summaries": {
+        "cancel_replace": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "fees": {
+          "adverse_fail": 1,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "funding": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "instrument_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "latency": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "liquidation_distance": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "liquidity_collapse": {
+          "adverse_fail": 3,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "market_impact": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "max_drawdown_assumptions": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "missing_data": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 1,
+          "points": 2
+        },
+        "partial_fills": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "position_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "queue_position": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 2,
+          "points": 3
+        },
+        "regime_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "slippage": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "spread": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "stale_data": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "trade_size_capacity": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        }
+      },
+      "drawdown_review": {
+        "assumed_max_drawdown": "0.11",
+        "drawdown_assumption_unsafe": false,
+        "limit": "0.2"
+      },
+      "entry_price": "60000",
+      "evidence_class": "FIXTURE_SYNTHETIC_DEVELOPMENT_ONLY",
+      "exit_price": "59940",
+      "formal_walk_forward_executed": false,
+      "fragility_detail": {
+        "adverse_count": 39,
+        "destroyed_count": 39
+      },
+      "fragility_score": "1",
+      "gross_expectancy": "18.7200",
+      "instrument_concentration": "0.24",
+      "label": "COST_DESTROYED",
+      "liquidation_distance_pct": "8.5",
+      "liquidation_distance_review": {
+        "liquidation_distance_pct": "8.5",
+        "liquidation_distance_unsafe": false,
+        "min_distance_pct": "5.0"
+      },
+      "maximum_viable_slippage": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "0",
+        "param": "slippage_bps",
+        "viable": false
+      },
+      "maximum_viable_spread": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "mechanism_family": "LATENCY_FRAGILE",
+      "missing_data": false,
+      "net_expectancy": "-18.720000000",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "position_concentration": "0.19",
+      "profitability_claimed": false,
+      "qty": "0.012",
+      "qualification_ready": false,
+      "qualified": false,
+      "qualified_claimed": false,
+      "regime_concentration": "0.36",
+      "required_outputs_present": true,
+      "sample_trade_count": 26,
+      "scenario_count": 70,
+      "side": "SHORT",
+      "slippage_probe": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "0",
+        "param": "slippage_bps",
+        "viable": false
+      },
+      "spread_probe": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "stale_data": false,
+      "status": "DEVELOPMENT_REVIEW_ONLY",
+      "strategy_promoted": false,
+      "strategy_selected": false,
+      "symbol": "BTCUSDT"
+    },
+    {
+      "ai_override_applied": false,
+      "ai_override_attempted": true,
+      "ai_override_refusal": {
+        "action": "AI_OVERRIDE",
+        "ai_override_applied": false,
+        "ai_override_attempted": true,
+        "allowed": false,
+        "applied": false,
+        "attempted_fields": [
+          "label",
+          "net_expectancy",
+          "strategy_promoted"
+        ],
+        "candidate_id": "RC12",
+        "reason": "AI_CANNOT_OVERRIDE_DETERMINISTIC_RISK_CAPACITY_REVIEW"
+      },
+      "assumed_max_drawdown": "0.10",
+      "baseline": {
+        "cost_authority": "backend.nexus_execution.cost_model",
+        "cost_bridge_verified": true,
+        "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+        "gross_pnl": "1.4000",
+        "market_impact_outside_cost_bridge": true,
+        "net_pnl": "-15.400000000",
+        "total_cost": "16.800000000"
+      },
+      "break_even_cost": "16.800000000",
+      "candidate_id": "RC12",
+      "canonical_cost_formula_mutated": false,
+      "capacity_estimate": {
+        "capacity_limited": false,
+        "capacity_notional_usdt": "0.000",
+        "impact_bps_cap": "50.0",
+        "last_viable_detail": null,
+        "maximum_viable_size_scale": "0"
+      },
+      "concentration_review": {
+        "concentration_blocked": false,
+        "instrument_concentration": "0.23",
+        "instrument_limit": "0.4",
+        "position_concentration": "0.17",
+        "position_limit": "0.35",
+        "regime_concentration": "0.34",
+        "regime_limit": "0.55"
+      },
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "4.620000000",
+        "exit_fee": "4.620000000",
+        "funding_cost": "0.84000000",
+        "market_impact_approximation": "1.6800000",
+        "partial_fill_cost": "0",
+        "slippage_cost": "3.360000",
+        "spread_cost": "1.680000"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_age_sec": "70",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_review": {
+        "age_stale": false,
+        "data_age_sec": "70",
+        "data_quality_blocked": false,
+        "max_age_sec": "120.0",
+        "missing_data": false,
+        "stale_data": false
+      },
+      "deterministic_fingerprint": "3777ac995cc57fd7dd252b4ed7f95d8ab4a1782c87a534d3fff9a1549f99f84f",
+      "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V15H_2026_08_05",
+      "dimension_summaries": {
+        "cancel_replace": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "fees": {
+          "adverse_fail": 1,
+          "fail": 3,
+          "pass": 0,
+          "points": 3
+        },
+        "funding": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "instrument_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "latency": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "liquidation_distance": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "liquidity_collapse": {
+          "adverse_fail": 3,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "market_impact": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "max_drawdown_assumptions": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "missing_data": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 1,
+          "points": 2
+        },
+        "partial_fills": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "position_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "queue_position": {
+          "adverse_fail": 1,
+          "fail": 3,
+          "pass": 0,
+          "points": 3
+        },
+        "regime_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "slippage": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "spread": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "stale_data": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "trade_size_capacity": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        }
+      },
+      "drawdown_review": {
+        "assumed_max_drawdown": "0.10",
+        "drawdown_assumption_unsafe": false,
+        "limit": "0.2"
+      },
+      "entry_price": "60000",
+      "evidence_class": "FIXTURE_SYNTHETIC_DEVELOPMENT_ONLY",
+      "exit_price": "60010",
+      "formal_walk_forward_executed": false,
+      "fragility_detail": {
+        "adverse_count": 39,
+        "destroyed_count": 39
+      },
+      "fragility_score": "1",
+      "gross_expectancy": "1.4000",
+      "instrument_concentration": "0.23",
+      "label": "INSUFFICIENT_SAMPLE",
+      "liquidation_distance_pct": "9.5",
+      "liquidation_distance_review": {
+        "liquidation_distance_pct": "9.5",
+        "liquidation_distance_unsafe": false,
+        "min_distance_pct": "5.0"
+      },
+      "maximum_viable_slippage": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "0",
+        "param": "slippage_bps",
+        "viable": false
+      },
+      "maximum_viable_spread": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "mechanism_family": "LOW_EDGE_COST_DESTROY",
+      "missing_data": false,
+      "net_expectancy": "-15.400000000",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "position_concentration": "0.17",
+      "profitability_claimed": false,
+      "qty": "0.010",
+      "qualification_ready": false,
+      "qualified": false,
+      "qualified_claimed": false,
+      "regime_concentration": "0.34",
+      "required_outputs_present": true,
+      "sample_trade_count": 14,
+      "scenario_count": 70,
+      "side": "LONG",
+      "slippage_probe": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "0",
+        "param": "slippage_bps",
+        "viable": false
+      },
+      "spread_probe": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "stale_data": false,
+      "status": "DEVELOPMENT_REVIEW_ONLY",
+      "strategy_promoted": false,
+      "strategy_selected": false,
+      "symbol": "BTCUSDT"
+    },
+    {
+      "ai_override_applied": false,
+      "ai_override_attempted": true,
+      "ai_override_refusal": {
+        "action": "AI_OVERRIDE",
+        "ai_override_applied": false,
+        "ai_override_attempted": true,
+        "allowed": false,
+        "applied": false,
+        "attempted_fields": [
+          "label",
+          "net_expectancy",
+          "strategy_promoted"
+        ],
+        "candidate_id": "RC13",
+        "reason": "AI_CANNOT_OVERRIDE_DETERMINISTIC_RISK_CAPACITY_REVIEW"
+      },
+      "assumed_max_drawdown": "0.13",
+      "baseline": {
+        "cost_authority": "backend.nexus_execution.cost_model",
+        "cost_bridge_verified": true,
+        "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+        "gross_pnl": "420.00",
+        "market_impact_outside_cost_bridge": true,
+        "net_pnl": "-28.0000000",
+        "total_cost": "448.0000000"
+      },
+      "break_even_cost": "448.0000000",
+      "candidate_id": "RC13",
+      "canonical_cost_formula_mutated": false,
+      "capacity_estimate": {
+        "capacity_limited": false,
+        "capacity_notional_usdt": "0.0",
+        "impact_bps_cap": "50.0",
+        "last_viable_detail": null,
+        "maximum_viable_size_scale": "0"
+      },
+      "concentration_review": {
+        "concentration_blocked": false,
+        "instrument_concentration": "0.27",
+        "instrument_limit": "0.4",
+        "position_concentration": "0.21",
+        "position_limit": "0.35",
+        "regime_concentration": "0.42",
+        "regime_limit": "0.55"
+      },
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "123.2000000",
+        "exit_fee": "123.2000000",
+        "funding_cost": "22.400000",
+        "market_impact_approximation": "44.80000",
+        "partial_fill_cost": "0",
+        "slippage_cost": "89.6000",
+        "spread_cost": "44.8000"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_age_sec": "48",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_review": {
+        "age_stale": false,
+        "data_age_sec": "48",
+        "data_quality_blocked": false,
+        "max_age_sec": "120.0",
+        "missing_data": false,
+        "stale_data": false
+      },
+      "deterministic_fingerprint": "c550903e355ab769b47bc18b7a716bda581f8d82f0601515071944be8cae06e9",
+      "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V15H_2026_08_05",
+      "dimension_summaries": {
+        "cancel_replace": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "fees": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 2,
+          "points": 3
+        },
+        "funding": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "instrument_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "latency": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "liquidation_distance": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "liquidity_collapse": {
+          "adverse_fail": 3,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "market_impact": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "max_drawdown_assumptions": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "missing_data": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 1,
+          "points": 2
+        },
+        "partial_fills": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "position_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "queue_position": {
+          "adverse_fail": 0,
+          "fail": 0,
+          "pass": 3,
+          "points": 3
+        },
+        "regime_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "slippage": {
+          "adverse_fail": 3,
+          "fail": 4,
+          "pass": 1,
+          "points": 5
+        },
+        "spread": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "stale_data": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "trade_size_capacity": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        }
+      },
+      "drawdown_review": {
+        "assumed_max_drawdown": "0.13",
+        "drawdown_assumption_unsafe": false,
+        "limit": "0.2"
+      },
+      "entry_price": "3200",
+      "evidence_class": "FIXTURE_SYNTHETIC_DEVELOPMENT_ONLY",
+      "exit_price": "3206",
+      "formal_walk_forward_executed": false,
+      "fragility_detail": {
+        "adverse_count": 39,
+        "destroyed_count": 38
+      },
+      "fragility_score": "0.9743589743589743589743589744",
+      "gross_expectancy": "420.00",
+      "instrument_concentration": "0.27",
+      "label": "COST_DESTROYED",
+      "liquidation_distance_pct": "7.5",
+      "liquidation_distance_review": {
+        "liquidation_distance_pct": "7.5",
+        "liquidation_distance_unsafe": false,
+        "min_distance_pct": "5.0"
+      },
+      "maximum_viable_slippage": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "1",
+        "param": "slippage_bps",
+        "viable": true
+      },
+      "maximum_viable_spread": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "mechanism_family": "CAPACITY_SIZE_FRAGILE",
+      "missing_data": false,
+      "net_expectancy": "-28.0000000",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "position_concentration": "0.21",
+      "profitability_claimed": false,
+      "qty": "3.5",
+      "qualification_ready": false,
+      "qualified": false,
+      "qualified_claimed": false,
+      "regime_concentration": "0.42",
+      "required_outputs_present": true,
+      "sample_trade_count": 20,
+      "scenario_count": 70,
+      "side": "LONG",
+      "slippage_probe": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "1",
+        "param": "slippage_bps",
+        "viable": true
+      },
+      "spread_probe": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "stale_data": false,
+      "status": "DEVELOPMENT_REVIEW_ONLY",
+      "strategy_promoted": false,
+      "strategy_selected": false,
+      "symbol": "ETHUSDT"
+    },
+    {
+      "ai_override_applied": false,
+      "ai_override_attempted": true,
+      "ai_override_refusal": {
+        "action": "AI_OVERRIDE",
+        "ai_override_applied": false,
+        "ai_override_attempted": true,
+        "allowed": false,
+        "applied": false,
+        "attempted_fields": [
+          "label",
+          "net_expectancy",
+          "strategy_promoted"
+        ],
+        "candidate_id": "RC14",
+        "reason": "AI_CANNOT_OVERRIDE_DETERMINISTIC_RISK_CAPACITY_REVIEW"
+      },
+      "assumed_max_drawdown": "0.07",
+      "baseline": {
+        "cost_authority": "backend.nexus_execution.cost_model",
+        "cost_bridge_verified": true,
+        "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+        "gross_pnl": "17.6400",
+        "market_impact_outside_cost_bridge": true,
+        "net_pnl": "-12.600000000",
+        "total_cost": "30.240000000"
+      },
+      "break_even_cost": "30.240000000",
+      "candidate_id": "RC14",
+      "canonical_cost_formula_mutated": false,
+      "capacity_estimate": {
+        "capacity_limited": false,
+        "capacity_notional_usdt": "0.000",
+        "impact_bps_cap": "50.0",
+        "last_viable_detail": null,
+        "maximum_viable_size_scale": "0"
+      },
+      "concentration_review": {
+        "concentration_blocked": false,
+        "instrument_concentration": "0.19",
+        "instrument_limit": "0.4",
+        "position_concentration": "0.14",
+        "position_limit": "0.35",
+        "regime_concentration": "0.28",
+        "regime_limit": "0.55"
+      },
+      "cost_authority": "backend.nexus_execution.cost_model",
+      "cost_components": {
+        "cancel_replace_cost": "0",
+        "entry_fee": "8.316000000",
+        "exit_fee": "8.316000000",
+        "funding_cost": "1.51200000",
+        "market_impact_approximation": "3.0240000",
+        "partial_fill_cost": "0",
+        "slippage_cost": "6.048000",
+        "spread_cost": "3.024000"
+      },
+      "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+      "data_age_sec": "22",
+      "data_lineage": "SYNTHETIC_DEVELOPMENT_FIXTURE",
+      "data_quality_review": {
+        "age_stale": false,
+        "data_age_sec": "22",
+        "data_quality_blocked": false,
+        "max_age_sec": "120.0",
+        "missing_data": false,
+        "stale_data": false
+      },
+      "deterministic_fingerprint": "135df4d937525e15710d950f3e6133e5ff3507a5dba394e863d534b53dd96efa",
+      "development_interval_id": "DEV_SYNTHETIC_NON_OOS_V15H_2026_08_05",
+      "dimension_summaries": {
+        "cancel_replace": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "fees": {
+          "adverse_fail": 1,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "funding": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "instrument_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "latency": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "liquidation_distance": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "liquidity_collapse": {
+          "adverse_fail": 3,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "market_impact": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "max_drawdown_assumptions": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "missing_data": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 1,
+          "points": 2
+        },
+        "partial_fills": {
+          "adverse_fail": 2,
+          "fail": 4,
+          "pass": 0,
+          "points": 4
+        },
+        "position_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "queue_position": {
+          "adverse_fail": 1,
+          "fail": 1,
+          "pass": 2,
+          "points": 3
+        },
+        "regime_concentration": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 1,
+          "points": 3
+        },
+        "slippage": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "spread": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        },
+        "stale_data": {
+          "adverse_fail": 2,
+          "fail": 2,
+          "pass": 2,
+          "points": 4
+        },
+        "trade_size_capacity": {
+          "adverse_fail": 3,
+          "fail": 5,
+          "pass": 0,
+          "points": 5
+        }
+      },
+      "drawdown_review": {
+        "assumed_max_drawdown": "0.07",
+        "drawdown_assumption_unsafe": false,
+        "limit": "0.2"
+      },
+      "entry_price": "60000",
+      "evidence_class": "FIXTURE_SYNTHETIC_DEVELOPMENT_ONLY",
+      "exit_price": "60070",
+      "formal_walk_forward_executed": false,
+      "fragility_detail": {
+        "adverse_count": 39,
+        "destroyed_count": 39
+      },
+      "fragility_score": "1",
+      "gross_expectancy": "17.6400",
+      "instrument_concentration": "0.19",
+      "label": "COST_DESTROYED",
+      "liquidation_distance_pct": "15.0",
+      "liquidation_distance_review": {
+        "liquidation_distance_pct": "15.0",
+        "liquidation_distance_unsafe": false,
+        "min_distance_pct": "5.0"
+      },
+      "maximum_viable_slippage": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "0",
+        "param": "slippage_bps",
+        "viable": false
+      },
+      "maximum_viable_spread": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "mechanism_family": "QUEUE_SENSITIVE_MAKER",
+      "missing_data": false,
+      "net_expectancy": "-12.600000000",
+      "oos_consumed": false,
+      "oos_executed": false,
+      "position_concentration": "0.14",
+      "profitability_claimed": false,
+      "qty": "0.009",
+      "qualification_ready": false,
+      "qualified": false,
+      "qualified_claimed": false,
+      "regime_concentration": "0.28",
+      "required_outputs_present": true,
+      "sample_trade_count": 28,
+      "scenario_count": 70,
+      "side": "LONG",
+      "slippage_probe": {
+        "grid": [
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "30"
+        ],
+        "maximum_viable": "0",
+        "param": "slippage_bps",
+        "viable": false
+      },
+      "spread_probe": {
+        "grid": [
+          "0.5",
+          "1",
+          "2",
+          "3",
+          "5",
+          "8",
+          "12",
+          "20",
+          "40"
+        ],
+        "maximum_viable": "0",
+        "param": "spread_bps",
+        "viable": false
+      },
+      "stale_data": false,
+      "status": "DEVELOPMENT_REVIEW_ONLY",
+      "strategy_promoted": false,
+      "strategy_selected": false,
+      "symbol": "BTCUSDT"
+    }
+  ],
+  "canonical_cost_authority": "backend.nexus_execution.cost_model",
+  "canonical_cost_authority_count": 1,
+  "canonical_cost_formula_mutated": false,
+  "capacity_limited_count": 0,
+  "code_checksum": "8ba937d910608eb08a5000e98a7590d115bfdbcaef2e5a0996488381d9a07abc",
+  "concentration_blocked_count": 1,
+  "control_flags": {
+    "ai_override_applied": false,
+    "auto_integrate_attempted": false,
+    "canonical_cost_formula_mutated": false,
+    "demo_order_count": 0,
+    "exchange_write_attempt_count": 0,
+    "formal_walk_forward_executed": false,
+    "mainnet_client_created_count": 0,
+    "oos_consumed": false,
+    "oos_executed": false,
+    "pr27_merge_attempted": false,
+    "profitability_claimed": false,
+    "qualification_ready_count": 0,
+    "qualified_claimed": false,
+    "shadow_order_count": 0,
+    "status_json_written": false,
+    "strategy_promoted": false,
+    "strategy_selected": false
+  },
+  "cost_destroyed_count": 7,
+  "cost_model_schema": "nexus_cost_model_contract_v1",
+  "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+  "data_quality_blocked_count": 2,
+  "demo_order_count": 0,
+  "development_review_only_count": 0,
+  "drawdown_unsafe_count": 1,
+  "exchange_write_attempt_count": 0,
+  "formal_walk_forward_executed": false,
+  "fragile_to_execution_count": 1,
+  "hard_ban_probes": {
+    "all_refused": true,
+    "flags": {
+      "ai_override_applied": false,
+      "auto_integrate_attempted": false,
+      "canonical_cost_formula_mutated": false,
+      "demo_order_count": 0,
+      "exchange_write_attempt_count": 0,
+      "formal_walk_forward_executed": false,
+      "mainnet_client_created_count": 0,
+      "oos_consumed": false,
+      "oos_executed": false,
+      "pr27_merge_attempted": false,
+      "profitability_claimed": false,
+      "qualification_ready_count": 0,
+      "qualified_claimed": false,
+      "shadow_order_count": 0,
+      "status_json_written": false,
+      "strategy_promoted": false,
+      "strategy_selected": false
+    },
+    "hard_bans": [
+      "no_ai_override",
+      "no_auto_integrate_pr27",
+      "no_canonical_cost_formula_mutation",
+      "no_demo_orders",
+      "no_exchange_write",
+      "no_fabricated_edge_claims",
+      "no_formal_walk_forward",
+      "no_mainnet",
+      "no_oos_consumption",
+      "no_pr27_merge",
+      "no_profitability_claims",
+      "no_qualified_claims",
+      "no_real_money",
+      "no_shadow_orders",
+      "no_status_json_artifact",
+      "no_strategy_promotion",
+      "no_strategy_selection"
+    ],
+    "probes": {
+      "force_ai_override": {
+        "action": "AI_OVERRIDE",
+        "ai_override_applied": false,
+        "ai_override_attempted": true,
+        "allowed": false,
+        "applied": false,
+        "attempted_fields": [
+          "label",
+          "net_expectancy"
+        ],
+        "candidate_id": "SYN_V15H_PROBE",
+        "reason": "AI_CANNOT_OVERRIDE_DETERMINISTIC_RISK_CAPACITY_REVIEW"
+      },
+      "force_auto_integrate": {
+        "action": "AUTO_INTEGRATE",
+        "allowed": false,
+        "auto_integrate_attempted": false,
+        "executed": false,
+        "reason": "AUTO_INTEGRATE_BANNED_V15_H"
+      },
+      "force_demo": {
+        "action": "DEMO_ORDER",
+        "allowed": false,
+        "candidate_id": "SYN_V15H_PROBE",
+        "demo_order_count": 0,
+        "executed": false,
+        "reason": "DEMO_ORDERS_BANNED_V15_H"
+      },
+      "force_exchange_write": {
+        "action": "EXCHANGE_WRITE",
+        "allowed": false,
+        "exchange_write_attempt_count": 0,
+        "executed": false,
+        "reason": "EXCHANGE_WRITES_BANNED_V15_H"
+      },
+      "force_oos_consume": {
+        "action": "OOS_CONSUMPTION",
+        "allowed": false,
+        "candidate_id": "SYN_V15H_PROBE",
+        "executed": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "reason": "OOS_BANNED_V15_H"
+      },
+      "force_promote": {
+        "action": "STRATEGY_PROMOTION",
+        "allowed": false,
+        "candidate_id": "SYN_V15H_PROBE",
+        "promoted": false,
+        "reason": "STRATEGY_PROMOTION_BANNED_V15_H"
+      },
+      "force_qualify": {
+        "action": "QUALIFY",
+        "allowed": false,
+        "candidate_id": "SYN_V15H_PROBE",
+        "qualified": false,
+        "reason": "QUALIFIED_OUTPUT_BANNED_V15_H"
+      },
+      "force_select": {
+        "action": "STRATEGY_SELECTION",
+        "allowed": false,
+        "candidate_id": "SYN_V15H_PROBE",
+        "reason": "STRATEGY_SELECTION_BANNED_V15_H",
+        "selected": false
+      },
+      "force_status_json": {
+        "action": "WRITE_STATUS_JSON",
+        "allowed": false,
+        "reason": "STATUS_JSON_ARTIFACT_BANNED_V15_H",
+        "status_json_written": false,
+        "written": false
+      },
+      "force_walk_forward": {
+        "action": "FORMAL_WALK_FORWARD",
+        "allowed": false,
+        "candidate_id": "SYN_V15H_PROBE",
+        "executed": false,
+        "reason": "FORMAL_WALK_FORWARD_BANNED_V15_H"
+      }
+    }
+  },
+  "hard_bans": [
+    "no_ai_override",
+    "no_auto_integrate_pr27",
+    "no_canonical_cost_formula_mutation",
+    "no_demo_orders",
+    "no_exchange_write",
+    "no_fabricated_edge_claims",
+    "no_formal_walk_forward",
+    "no_mainnet",
+    "no_oos_consumption",
+    "no_pr27_merge",
+    "no_profitability_claims",
+    "no_qualified_claims",
+    "no_real_money",
+    "no_shadow_orders",
+    "no_status_json_artifact",
+    "no_strategy_promotion",
+    "no_strategy_selection"
+  ],
+  "insufficient_sample_count": 1,
+  "label_histogram": {
+    "CAPACITY_LIMITED": 0,
+    "CONCENTRATION_BLOCKED": 1,
+    "COST_DESTROYED": 7,
+    "DATA_QUALITY_BLOCKED": 2,
+    "DEVELOPMENT_REVIEW_ONLY": 0,
+    "DRAWDOWN_ASSUMPTION_UNSAFE": 1,
+    "FRAGILE_TO_EXECUTION": 1,
+    "INSUFFICIENT_SAMPLE": 1,
+    "LIQUIDATION_DISTANCE_UNSAFE": 1,
+    "RISK_CAPACITY_OBSERVED": 0
+  },
+  "lane": "V15-H",
+  "liquidation_unsafe_count": 1,
+  "mainnet_client_created_count": 0,
+  "oos_consumed": false,
+  "oos_executed": false,
+  "owned_paths": [
+    "backend/nexus_risk_capacity",
+    "tools/research/risk_capacity",
+    "tests/risk_capacity",
+    "artifacts/readiness/immutable/v15_risk_capacity"
+  ],
+  "pass_id": 2,
+  "pr27_merge_attempted": false,
+  "profitability_claimed": false,
+  "qualification_ready_count": 0,
+  "qualified_claimed": false,
+  "random_seed": 20260805,
+  "required_cost_components": [
+    "entry_fee",
+    "exit_fee",
+    "spread_cost",
+    "slippage_cost",
+    "funding_cost",
+    "partial_fill_cost",
+    "cancel_replace_cost",
+    "market_impact_approximation"
+  ],
+  "required_output_keys": [
+    "gross_expectancy",
+    "cost_components",
+    "net_expectancy",
+    "break_even_cost",
+    "maximum_viable_spread",
+    "maximum_viable_slippage",
+    "capacity_estimate",
+    "fragility_score",
+    "concentration_review",
+    "drawdown_review",
+    "liquidation_distance_review",
+    "data_quality_review",
+    "deterministic_fingerprint",
+    "ai_override_attempted",
+    "ai_override_applied"
+  ],
+  "review_dimensions": [
+    "fees",
+    "spread",
+    "slippage",
+    "market_impact",
+    "partial_fills",
+    "cancel_replace",
+    "funding",
+    "latency",
+    "queue_position",
+    "liquidity_collapse",
+    "position_concentration",
+    "instrument_concentration",
+    "regime_concentration",
+    "trade_size_capacity",
+    "max_drawdown_assumptions",
+    "liquidation_distance",
+    "missing_data",
+    "stale_data"
+  ],
+  "risk_capacity_observed_count": 0,
+  "scenario_catalog": [
+    {
+      "adverse": false,
+      "dimension": "fees",
+      "label": "fees_maker_maker",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "fees",
+      "label": "fees_maker_exit_taker",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "fees",
+      "label": "fees_taker_taker",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "spread",
+      "label": "spread_0p5bps",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "spread",
+      "label": "spread_1bps",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "spread",
+      "label": "spread_3bps",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "spread",
+      "label": "spread_8bps",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "spread",
+      "label": "spread_20bps",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "slippage",
+      "label": "slip_1bps",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "slippage",
+      "label": "slip_2bps",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "slippage",
+      "label": "slip_5bps",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "slippage",
+      "label": "slip_12bps",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "slippage",
+      "label": "slip_25bps",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "market_impact",
+      "label": "impact_1bps",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "market_impact",
+      "label": "impact_2bps",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "market_impact",
+      "label": "impact_8bps",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "market_impact",
+      "label": "impact_20bps",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "market_impact",
+      "label": "impact_40bps",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "partial_fills",
+      "label": "fills_0",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "partial_fills",
+      "label": "fills_1",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "partial_fills",
+      "label": "fills_3",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "partial_fills",
+      "label": "fills_8",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "cancel_replace",
+      "label": "cr_0",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "cancel_replace",
+      "label": "cr_1",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "cancel_replace",
+      "label": "cr_4",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "cancel_replace",
+      "label": "cr_10",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "funding",
+      "label": "funding_buffer",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "funding",
+      "label": "funding_1bp",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "funding",
+      "label": "funding_5bp",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "funding",
+      "label": "funding_20bp",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "latency",
+      "label": "lat_0ms",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "latency",
+      "label": "lat_50ms",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "latency",
+      "label": "lat_200ms",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "latency",
+      "label": "lat_500ms",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "latency",
+      "label": "lat_1500ms",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "queue_position",
+      "label": "queue_front",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "queue_position",
+      "label": "queue_mid",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "queue_position",
+      "label": "queue_back",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "liquidity_collapse",
+      "label": "liq_1x",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "liquidity_collapse",
+      "label": "liq_1p5x",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "liquidity_collapse",
+      "label": "liq_3x",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "liquidity_collapse",
+      "label": "liq_6x",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "position_concentration",
+      "label": "pos_c_ok",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "position_concentration",
+      "label": "pos_c_warn",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "position_concentration",
+      "label": "pos_c_hot",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "instrument_concentration",
+      "label": "inst_c_ok",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "instrument_concentration",
+      "label": "inst_c_warn",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "instrument_concentration",
+      "label": "inst_c_hot",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "regime_concentration",
+      "label": "regime_c_ok",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "regime_concentration",
+      "label": "regime_c_warn",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "regime_concentration",
+      "label": "regime_c_hot",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "trade_size_capacity",
+      "label": "size_0p5x",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "trade_size_capacity",
+      "label": "size_1x",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "trade_size_capacity",
+      "label": "size_2x",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "trade_size_capacity",
+      "label": "size_5x",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "trade_size_capacity",
+      "label": "size_10x",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "max_drawdown_assumptions",
+      "label": "mdd_5pct",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "max_drawdown_assumptions",
+      "label": "mdd_15pct",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "max_drawdown_assumptions",
+      "label": "mdd_25pct",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "max_drawdown_assumptions",
+      "label": "mdd_40pct",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "liquidation_distance",
+      "label": "liq_dist_20pct",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "liquidation_distance",
+      "label": "liq_dist_8pct",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "liquidation_distance",
+      "label": "liq_dist_4pct",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "liquidation_distance",
+      "label": "liq_dist_1pct",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "missing_data",
+      "label": "missing_false",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "missing_data",
+      "label": "missing_true",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "stale_data",
+      "label": "stale_fresh",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": false,
+      "dimension": "stale_data",
+      "label": "stale_borderline",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "stale_data",
+      "label": "stale_true",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    },
+    {
+      "adverse": true,
+      "dimension": "stale_data",
+      "label": "stale_by_age",
+      "param_keys": [
+        "assumed_max_drawdown_probe",
+        "cancel_replace_cycles",
+        "data_age_sec_probe",
+        "extra_fills",
+        "funding_rate",
+        "impact_bps",
+        "instrument_concentration_probe",
+        "latency_ms",
+        "liquidation_distance_probe",
+        "liquidity_collapse",
+        "maker_taker_mix",
+        "missing_data_probe",
+        "position_concentration_probe",
+        "queue_position",
+        "regime_concentration_probe",
+        "size_scale",
+        "slippage_bps",
+        "spread_bps",
+        "stale_data_probe"
+      ]
+    }
+  ],
+  "scenario_evaluations_omitted": true,
+  "scenario_point_count": 70,
+  "schema": "FOUNDER_V15_H_RISK_AND_CAPACITY_REVIEW_ENGINE",
+  "shadow_order_count": 0,
+  "status_json_written": false,
+  "strategy_promoted_count": 0,
+  "strategy_selected_count": 0
+}

@@ -1,0 +1,559 @@
+{
+  "base_commit": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
+  "branch": "feature/v15-real-development-data-foundation",
+  "commit": "a4be25b504597be30f57a84d764191e43f5391ee",
+  "created_at": "2026-08-05T15:19:09Z",
+  "critical_finding_count": 0,
+  "critical_findings": [],
+  "edge_claim_scan": {
+    "created_at": "2026-08-05T15:19:06Z",
+    "hit_count": 0,
+    "hits": [],
+    "schema": "v15_a_edge_claim_scan"
+  },
+  "evidence_class": "PIT_SOURCE_INVENTORY_NOT_STRATEGY_EDGE",
+  "execution_mode": "READ_ONLY_NO_EXCHANGE_WRITE_NO_OOS",
+  "forbidden_status_scan": {
+    "banned_files": [],
+    "ok": true
+  },
+  "hard_bans": {
+    "auto_integration": false,
+    "demo_orders": false,
+    "deploy": false,
+    "exchange_write": false,
+    "fabricated_edge": false,
+    "formal_walk_forward": false,
+    "human_facing_v15_status_json": false,
+    "invented_history": false,
+    "mainnet": false,
+    "oos_consumption": false,
+    "oos_execution": false,
+    "pr26_merge": false,
+    "pr27_merge": false,
+    "real_money": false
+  },
+  "high_finding_count": 0,
+  "high_findings": [],
+  "human_facing_status_json_emitted": false,
+  "inventory_checksum": "ebb34654960a4f230e258447725ad5ad075db936e8429dc29905723ce53cc7c5",
+  "label": "DEVELOPMENT_DATA_FOUNDATION_NOT_QUALIFICATION",
+  "lane": "V15-A",
+  "lane_head": "a4be25b504597be30f57a84d764191e43f5391ee",
+  "lane_name": "REAL_HISTORICAL_DEVELOPMENT_DATA_FOUNDATION",
+  "metrics": {
+    "adversarial_check_pass_count": 14,
+    "adversarial_check_total_count": 14,
+    "availability_state_histogram": {
+      "AVAILABLE": 10,
+      "CONSUMED_FORBIDDEN": 1,
+      "METADATA_ONLY": 1,
+      "RESERVED_UNTOUCHED": 2,
+      "UNSUPPORTED": 2
+    },
+    "demo_order_count": 0,
+    "exchange_write_attempt_count": 0,
+    "in_repo_source_count": 10,
+    "invented_history_count": 0,
+    "missing_path_count": 0,
+    "oos_consumed": false,
+    "oos_excluded": true,
+    "oos_executed": false,
+    "partition_category_histogram": {
+      "CONSUMED_FORBIDDEN": 1,
+      "DEVELOPMENT": 12,
+      "OOS_RESERVED": 1,
+      "OOS_UNTOUCHED": 1,
+      "VALIDATION_PLANNING": 1
+    },
+    "partition_count": 4,
+    "pass1_passed": true,
+    "pass2_passed": true,
+    "pit_holds": true,
+    "qualification_ready_count": 0,
+    "record_count": 16,
+    "secret_leak_count": 0,
+    "tests_failed": 0,
+    "tests_passed": 17
+  },
+  "note": "Coordinator merges structured results into NEXUS_FINAL_ACCELERATION_REPORT.json only",
+  "owned_paths": [
+    "backend/nexus_dev_data_foundation/",
+    "tools/research/dev_data_foundation/",
+    "tests/dev_data_foundation/",
+    "artifacts/readiness/immutable/v15_dev_data_foundation/"
+  ],
+  "partition_checksum": "521504c73845f5adba2fc8afbe2267ab31c1bc6bf1b3a5b1c48750befffe37be",
+  "pass1": {
+    "availability_state_histogram": {
+      "AVAILABLE": 10,
+      "CONSUMED_FORBIDDEN": 1,
+      "METADATA_ONLY": 1,
+      "RESERVED_UNTOUCHED": 2,
+      "UNSUPPORTED": 2
+    },
+    "created_at": "2026-08-05T15:19:06Z",
+    "invented_history": false,
+    "inventory_checksum": "ebb34654960a4f230e258447725ad5ad075db936e8429dc29905723ce53cc7c5",
+    "missing_path_count": 0,
+    "oos_consumed": false,
+    "oos_exclusion_proof": {
+      "development_loadable_count": 9,
+      "oos_consumed": false,
+      "oos_excluded": true,
+      "oos_leaked_ids": [],
+      "schema": "v15_a_oos_exclusion_proof"
+    },
+    "overlap_check": {
+      "ok": true,
+      "oos_consumed": false,
+      "violations": []
+    },
+    "partition_category_histogram": {
+      "CONSUMED_FORBIDDEN": 1,
+      "DEVELOPMENT": 12,
+      "OOS_RESERVED": 1,
+      "OOS_UNTOUCHED": 1,
+      "VALIDATION_PLANNING": 1
+    },
+    "pass_number": 1,
+    "passed": true,
+    "pit_proof": {
+      "as_of_ms": 1767000599999,
+      "eligible_count": 10,
+      "eligible_ids": [
+        "72733bfbbd8517818c7aa02a387d3784",
+        "323bb6e56e369873f0a56822e6724866",
+        "9f366638d34dd7fcae15a8850a718e66",
+        "eb1a32b66ae82f4537a6ed6714295cee",
+        "da3c77b799c59883b2119b1726251a9b",
+        "b7761ace1ea37951c6dff2af5eacf3d7",
+        "d7cc5c4aebd5966efe5962cdfcef36c3",
+        "92e308375b80613bb310662b282ac83d",
+        "2154f3a07f6292043cb90b2e119c8d70",
+        "6e57947e402e37620b97b47f9b9ac762"
+      ],
+      "future_leak_count": 0,
+      "future_rejected_count": 3,
+      "leaked_ids": [],
+      "pit_holds": true,
+      "rejected": [
+        {
+          "reason": "NO_AVAILABILITY_MS",
+          "record_id": "4e0dd829eeeafdeb2d76eff2afc34c03"
+        },
+        {
+          "reason": "NO_AVAILABILITY_MS",
+          "record_id": "3cff0f6f22b46d486803570a18ca455a"
+        },
+        {
+          "reason": "NO_AVAILABILITY_MS",
+          "record_id": "81e0ce275e249d417bed036d64325c13"
+        },
+        {
+          "reason": "FUTURE_OBSERVATION_REJECTED",
+          "record_id": "c3eb628bfbcc982aa5daa9833174fb99"
+        },
+        {
+          "reason": "FUTURE_OBSERVATION_REJECTED",
+          "record_id": "8abc69bd3c4c53d14b2cd8f6fbfe8653"
+        },
+        {
+          "reason": "FUTURE_OBSERVATION_REJECTED",
+          "record_id": "e04d3253e86fec61c73002b707d5df8c"
+        }
+      ],
+      "rejected_count": 6,
+      "schema": "v15_a_pit_proof"
+    },
+    "record_count": 16,
+    "schema": "v15_a_pass1_summary",
+    "verify_failure_count": 0,
+    "verify_failures": []
+  },
+  "pass2": {
+    "checks": [
+      {
+        "check": "oos_reserved_load_blocked",
+        "evidence": {
+          "blocked": true,
+          "ok": false,
+          "partition_category": "OOS_RESERVED",
+          "status": "OOS_OR_CONSUMED_LOAD_BLOCKED"
+        },
+        "ok": true
+      },
+      {
+        "check": "oos_untouched_load_blocked",
+        "evidence": {
+          "blocked": true,
+          "ok": false,
+          "partition_category": "OOS_UNTOUCHED",
+          "status": "OOS_OR_CONSUMED_LOAD_BLOCKED"
+        },
+        "ok": true
+      },
+      {
+        "check": "invented_history_blocked",
+        "evidence": {
+          "claimed_available": true,
+          "ok": false,
+          "source_present": false,
+          "status": "INVENTED_HISTORY_BLOCKED"
+        },
+        "ok": true
+      },
+      {
+        "check": "invented_history_status",
+        "evidence": {
+          "claimed_available": true,
+          "ok": false,
+          "source_present": false,
+          "status": "INVENTED_HISTORY_BLOCKED"
+        },
+        "ok": true
+      },
+      {
+        "check": "today_for_past_blocked",
+        "evidence": {
+          "as_of_ms": 1717200000000,
+          "ok": false,
+          "snapshot_availability_ms": 1740787200000,
+          "status": "TODAY_OR_FUTURE_SNAPSHOT_FOR_PAST"
+        },
+        "ok": true
+      },
+      {
+        "check": "no_dev_oos_overlap",
+        "evidence": {
+          "ok": true,
+          "oos_consumed": false,
+          "violations": []
+        },
+        "ok": true
+      },
+      {
+        "check": "oos_excluded_from_dev_load",
+        "evidence": {
+          "development_loadable_count": 9,
+          "oos_consumed": false,
+          "oos_excluded": true,
+          "oos_leaked_ids": [],
+          "schema": "v15_a_oos_exclusion_proof"
+        },
+        "ok": true
+      },
+      {
+        "check": "record_hash_integrity",
+        "evidence": {
+          "failure_count": 0,
+          "failures": []
+        },
+        "ok": true
+      },
+      {
+        "check": "checksum_tamper_detection",
+        "evidence": {
+          "original": "a52ecdcfc58cc5b4ab8252fa66061766a3774642ba0db5b979d5e5614a31bcac",
+          "tampered": "7066e9c6c62cc378555e0df559e7352e905c18061f196688a57ae74d3e8d34be"
+        },
+        "ok": true
+      },
+      {
+        "check": "no_human_facing_v15_status_json",
+        "evidence": {
+          "banned_files": []
+        },
+        "ok": true
+      },
+      {
+        "check": "consumed_holdout_excluded",
+        "evidence": {
+          "consumed_catalog_count": 1,
+          "leaked": []
+        },
+        "ok": true
+      },
+      {
+        "check": "hard_ban_flags_clean",
+        "evidence": {
+          "violations": []
+        },
+        "ok": true
+      },
+      {
+        "check": "no_fabricated_edge_claim",
+        "evidence": {
+          "hits": []
+        },
+        "ok": true
+      },
+      {
+        "check": "oos_record_build_requires_catalog_flag",
+        "evidence": {},
+        "ok": true
+      }
+    ],
+    "critical_finding_count": 0,
+    "critical_findings": [],
+    "deterministic_replay": true,
+    "high_finding_count": 0,
+    "high_findings": [],
+    "pass_number": 2,
+    "passed": true,
+    "schema": "v15_a_pass2_adversarial",
+    "sweep_a": {
+      "check_pass_count": 14,
+      "check_total_count": 14,
+      "checks": [
+        {
+          "check": "oos_reserved_load_blocked",
+          "evidence": {
+            "blocked": true,
+            "ok": false,
+            "partition_category": "OOS_RESERVED",
+            "status": "OOS_OR_CONSUMED_LOAD_BLOCKED"
+          },
+          "ok": true
+        },
+        {
+          "check": "oos_untouched_load_blocked",
+          "evidence": {
+            "blocked": true,
+            "ok": false,
+            "partition_category": "OOS_UNTOUCHED",
+            "status": "OOS_OR_CONSUMED_LOAD_BLOCKED"
+          },
+          "ok": true
+        },
+        {
+          "check": "invented_history_blocked",
+          "evidence": {
+            "claimed_available": true,
+            "ok": false,
+            "source_present": false,
+            "status": "INVENTED_HISTORY_BLOCKED"
+          },
+          "ok": true
+        },
+        {
+          "check": "invented_history_status",
+          "evidence": {
+            "claimed_available": true,
+            "ok": false,
+            "source_present": false,
+            "status": "INVENTED_HISTORY_BLOCKED"
+          },
+          "ok": true
+        },
+        {
+          "check": "today_for_past_blocked",
+          "evidence": {
+            "as_of_ms": 1717200000000,
+            "ok": false,
+            "snapshot_availability_ms": 1740787200000,
+            "status": "TODAY_OR_FUTURE_SNAPSHOT_FOR_PAST"
+          },
+          "ok": true
+        },
+        {
+          "check": "no_dev_oos_overlap",
+          "evidence": {
+            "ok": true,
+            "oos_consumed": false,
+            "violations": []
+          },
+          "ok": true
+        },
+        {
+          "check": "oos_excluded_from_dev_load",
+          "evidence": {
+            "development_loadable_count": 9,
+            "oos_consumed": false,
+            "oos_excluded": true,
+            "oos_leaked_ids": [],
+            "schema": "v15_a_oos_exclusion_proof"
+          },
+          "ok": true
+        },
+        {
+          "check": "record_hash_integrity",
+          "evidence": {
+            "failure_count": 0,
+            "failures": []
+          },
+          "ok": true
+        },
+        {
+          "check": "checksum_tamper_detection",
+          "evidence": {
+            "original": "a52ecdcfc58cc5b4ab8252fa66061766a3774642ba0db5b979d5e5614a31bcac",
+            "tampered": "7066e9c6c62cc378555e0df559e7352e905c18061f196688a57ae74d3e8d34be"
+          },
+          "ok": true
+        },
+        {
+          "check": "no_human_facing_v15_status_json",
+          "evidence": {
+            "banned_files": []
+          },
+          "ok": true
+        },
+        {
+          "check": "consumed_holdout_excluded",
+          "evidence": {
+            "consumed_catalog_count": 1,
+            "leaked": []
+          },
+          "ok": true
+        },
+        {
+          "check": "hard_ban_flags_clean",
+          "evidence": {
+            "violations": []
+          },
+          "ok": true
+        },
+        {
+          "check": "no_fabricated_edge_claim",
+          "evidence": {
+            "hits": []
+          },
+          "ok": true
+        },
+        {
+          "check": "oos_record_build_requires_catalog_flag",
+          "evidence": {},
+          "ok": true
+        }
+      ],
+      "critical_finding_count": 0,
+      "critical_findings": [],
+      "findings": [],
+      "high_finding_count": 0,
+      "high_findings": [],
+      "partitions": {
+        "categories": [
+          "DEVELOPMENT",
+          "VALIDATION_PLANNING",
+          "OOS_RESERVED",
+          "OOS_UNTOUCHED"
+        ],
+        "forbidden_consumed_intervals": [
+          {
+            "category": "CONSUMED_FORBIDDEN",
+            "consumable_for_development": false,
+            "end_ms": 1736415000000,
+            "end_utc": "2025-01-09T09:30:00Z",
+            "interval_id": "H3_CONSUMED_FAILED_HOLDOUT",
+            "notes": "Prior consumed failed holdout - immutable, never reuse as qualification",
+            "oos_consumable": false,
+            "start_ms": 1720863000000,
+            "start_utc": "2024-07-13T09:30:00Z"
+          }
+        ],
+        "formal_walk_forward": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "overlap_policy": "DEVELOPMENT_and_VALIDATION_PLANNING_are_adjacent_non_overlapping;OOS_RESERVED_and_OOS_UNTOUCHED_never_loadable_for_development",
+        "partition_checksum": "521504c73845f5adba2fc8afbe2267ab31c1bc6bf1b3a5b1c48750befffe37be",
+        "partitions": [
+          {
+            "category": "DEVELOPMENT",
+            "consumable_for_development": true,
+            "consumable_for_validation_planning": false,
+            "end_ms": 1767000599999,
+            "end_utc": "2025-12-29T09:29:59Z",
+            "notes": "Primary development exploration window (first 60% of research V2/V3 span)",
+            "oos_consumable": false,
+            "partition_id": "DEV_EXPLORATION_PRIMARY",
+            "start_ms": 1739007000000,
+            "start_utc": "2025-02-08T09:30:00Z"
+          },
+          {
+            "category": "VALIDATION_PLANNING",
+            "consumable_for_development": false,
+            "consumable_for_validation_planning": true,
+            "end_ms": 1785663000000,
+            "end_utc": "2026-08-02T09:30:00Z",
+            "notes": "Validation planning only - not formal walk-forward, not OOS",
+            "oos_consumable": false,
+            "partition_id": "VALIDATION_PLANNING_PRIMARY",
+            "start_ms": 1767000600000,
+            "start_utc": "2025-12-29T09:30:00Z"
+          },
+          {
+            "category": "OOS_RESERVED",
+            "consumable_for_development": false,
+            "consumable_for_validation_planning": false,
+            "end_ms": 1789551000000,
+            "end_utc": "2026-09-16T09:30:00Z",
+            "notes": "Reserved September OOS - sealed, never consumed by V15-A",
+            "oos_consumable": false,
+            "partition_id": "SEPTEMBER_H3_OOS_RESERVED",
+            "start_ms": 1785663000001,
+            "start_utc": "2026-08-02T09:30:00Z"
+          },
+          {
+            "category": "OOS_UNTOUCHED",
+            "consumable_for_development": false,
+            "consumable_for_validation_planning": false,
+            "end_ms": 1821087000000,
+            "end_utc": "2027-09-16T09:30:00Z",
+            "notes": "Future untouched OOS reservation - do not open",
+            "oos_consumable": false,
+            "partition_id": "POST_SEPTEMBER_OOS_UNTOUCHED",
+            "start_ms": 1789551000001,
+            "start_utc": "2026-09-16T09:30:00Z"
+          }
+        ],
+        "schema": "nexus_pit_time_partition_v15_a"
+      },
+      "pass_number": 2,
+      "passed": true,
+      "schema": "v15_a_adversarial_pass"
+    },
+    "sweep_b": {
+      "check_pass_count": 14,
+      "check_total_count": 14,
+      "critical_finding_count": 0,
+      "high_finding_count": 0,
+      "passed": true
+    }
+  },
+  "passed": true,
+  "program_id": "NEXUS_V15_A_REAL_DEVELOPMENT_DATA_FOUNDATION",
+  "pytest_report": {
+    "elapsed_s": 2.681,
+    "exit_code": 0,
+    "failed_count": 0,
+    "passed": true,
+    "passed_count": 17,
+    "tail": ".................                                                        [100%]\n17 passed in 0.32s"
+  },
+  "recommendation": "NEXUS_V15_A_DEV_DATA_FOUNDATION_PASS",
+  "remaining_blockers": [
+    "raw_historical_bars_gitignored_or_absent",
+    "qualification_ready_count_must_remain_0",
+    "oos_executed_must_remain_false",
+    "formal_walk_forward_must_remain_false",
+    "PR26_unmerged",
+    "PR27_unmerged",
+    "auto_integration_forbidden",
+    "no_fabricated_strategy_edge"
+  ],
+  "schema": "FOUNDER_V15_A_DEV_DATA_FOUNDATION",
+  "schema_version": 1,
+  "secret_scan": {
+    "created_at": "2026-08-05T15:19:06Z",
+    "hits": [],
+    "scanned_owned_paths": [
+      "backend/nexus_dev_data_foundation/",
+      "tools/research/dev_data_foundation/",
+      "tests/dev_data_foundation/",
+      "artifacts/readiness/immutable/v15_dev_data_foundation/"
+    ],
+    "schema": "v15_a_secret_scan",
+    "secret_leak_count": 0
+  }
+}

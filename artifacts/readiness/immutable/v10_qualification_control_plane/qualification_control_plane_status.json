@@ -1,0 +1,33 @@
+{
+  "schema": "NEXUS_QUALIFICATION_CONTROL_PLANE_V10",
+  "qualification_status": "BLOCKED",
+  "control_plane_status": "BLOCKED_READY",
+  "all_stages_blocked": true,
+  "Founder_authorization_present": false,
+  "founder_authorization_present": false,
+  "formal_walk_forward_executed": false,
+  "oos_reservation_created": false,
+  "oos_executed": false,
+  "strategy_selected": false,
+  "strategy_promoted": false,
+  "demo_order_count": 0,
+  "demo_eligibility": false,
+  "exchange_write_attempt_count": 0,
+  "september_reserved_oos_consumed": false,
+  "prohibitions": {
+    "candidate_freeze": "BLOCKED_NOT_EXECUTED",
+    "replay": "BLOCKED_NOT_EXECUTED",
+    "walk_forward": "BLOCKED_NOT_EXECUTED",
+    "risk_review": "BLOCKED_NOT_EXECUTED",
+    "oos_reservation": "BLOCKED_NOT_CREATED",
+    "oos_execution": "NOT_EXECUTED",
+    "september_reserved_oos": "NOT_CONSUMED",
+    "demo_eligibility": "BLOCKED_NOT_GRANTED",
+    "demo_shadow_exchange_writes": "NOT_ATTEMPTED",
+    "strategy_selection": "NOT_PERFORMED",
+    "strategy_promotion": "BLOCKED",
+    "merge_deploy": "NOT_PERFORMED"
+  },
+  "created_at": "2026-08-05T03:03:55Z",
+  "updated_at": "2026-08-05T03:03:55Z"
+}

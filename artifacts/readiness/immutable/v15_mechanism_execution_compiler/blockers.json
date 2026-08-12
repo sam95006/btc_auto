@@ -1,0 +1,18 @@
+[
+  {
+    "blocker_id": "QUALIFICATION_NOT_AUTHORIZED",
+    "detail": "qualification_ready_count forced 0; executors are development-only"
+  },
+  {
+    "blocker_id": "OOS_AND_FORMAL_WF_BANNED",
+    "detail": "synthetic development fixtures only; no OOS consumption"
+  },
+  {
+    "blocker_id": "NO_AUTO_INTEGRATE",
+    "detail": "lane artifacts only; coordinator must not auto-integrate"
+  },
+  {
+    "blocker_id": "NO_LIVE_ORDERS",
+    "detail": "executors never emit demo/shadow/exchange writes"
+  }
+]

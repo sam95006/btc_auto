@@ -1,0 +1,113 @@
+{
+  "MULTI_SCOPE_AUTHORITY_CHECKPOINT_resolved": true,
+  "authority": {
+    "authority_id": "private_core.checkpoint.envelope_v1",
+    "canonical_module": "backend.nexus_checkpoint.store",
+    "canonical_symbol": "CanonicalCheckpointStore",
+    "competitors": [
+      {
+        "delete_now": false,
+        "module": "backend.nexus_recovery.crash_recovery",
+        "notes": "Session crash recovery consumes durability LKG; must restore via envelope/LKG contracts — does not own envelope schema.",
+        "recommended_action": "migrate_callers",
+        "role": "parallel_lane",
+        "severity": "medium",
+        "symbol": "recover_from_checkpoint"
+      },
+      {
+        "delete_now": false,
+        "module": "backend.nexus_private_control.checkpoint",
+        "notes": "Control-plane payload owner; wrap via adapters.wrap_control_plane_payload before cross-domain resume.",
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "medium",
+        "symbol": "CheckpointStore"
+      },
+      {
+        "delete_now": false,
+        "module": "backend.nexus_reflection.checkpoint",
+        "notes": "Blind Reflection V2.3 payload schema v4 owner; wrap via adapters.wrap_reflection_payload (dry-run before live migrate).",
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "medium",
+        "symbol": "checkpoint_path"
+      },
+      {
+        "delete_now": false,
+        "module": "backend.nexus_decision.checkpoint",
+        "notes": "Decision lifecycle payload owner; wrap via adapters.wrap_decision_payload.",
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "medium",
+        "symbol": "DecisionCheckpointStore"
+      },
+      {
+        "delete_now": false,
+        "module": "backend.nexus_edge_discovery.quota_aware_v23",
+        "notes": "Edge-discovery checkpoint helpers; overlaps reflection payload path.",
+        "recommended_action": "migrate_callers",
+        "role": "compatibility_shim",
+        "severity": "low",
+        "symbol": "checkpoint_path"
+      },
+      {
+        "delete_now": false,
+        "module": "backend.nexus_reflection.v23_resume_v10",
+        "notes": "V10 resume destination helper; payload-scoped.",
+        "recommended_action": "retain_compat",
+        "role": "parallel_lane",
+        "severity": "low",
+        "symbol": "checkpoint_dest"
+      },
+      {
+        "delete_now": false,
+        "module": "backend.nexus_autonomy.session_orchestrator_v1",
+        "notes": "V1 orchestrator checkpoint method; prefer envelope store + V1.1 recovery.",
+        "recommended_action": "future_remove",
+        "role": "obsolete_entry",
+        "severity": "low",
+        "symbol": "checkpoint"
+      }
+    ],
+    "contract_keys": [
+      "build_envelope",
+      "validate_envelope",
+      "detect_corruption",
+      "CanonicalCheckpointStore",
+      "REQUIRED_ENVELOPE_FIELDS"
+    ],
+    "contract_module": "backend.nexus_checkpoint.envelope",
+    "domain": "checkpoint",
+    "invariants": [
+      "ambiguous_state_routes_to_BLOCKED_AMBIGUOUS",
+      "no_silent_resume",
+      "atomic_temp_fsync_rename",
+      "checksum_verify_on_read_write",
+      "lkg_pointer_required_for_restore",
+      "no_destructive_live_v23_migration",
+      "CANONICAL_CHECKPOINT_ENVELOPE_COUNT==1"
+    ],
+    "notes": "V11.1 C4: one canonical envelope (nexus_checkpoint_envelope_v1). Subsystems retain payload schema ownership; cross-domain resume requires explicit adapters. Live V2.3 migration is dry-run only.",
+    "scope": "private_core_canonical_envelope",
+    "status": "active_compat_present"
+  },
+  "canonical_checkpoint_envelope_count": 1,
+  "demo_order_count": 0,
+  "destructive_live_v23_migration": false,
+  "envelope_schema": "nexus_checkpoint_envelope_v1",
+  "exchange_write_attempt_count": 0,
+  "generated_at": "2026-08-05T04:08:03Z",
+  "lane": "C4_CHECKPOINT_AUTHORITY_CONSOLIDATION",
+  "pass1_tests_passed": true,
+  "pass2_tests_passed": true,
+  "payload_adapters": [
+    "control_plane",
+    "decision",
+    "microstructure",
+    "qualification",
+    "reflection",
+    "session"
+  ],
+  "schema": "FOUNDER_V11_1_CHECKPOINT_AUTHORITY",
+  "status": "PASS"
+}

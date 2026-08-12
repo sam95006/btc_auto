@@ -1,0 +1,406 @@
+{
+  "schema": "historical_depth_manifest_v1",
+  "price_history_target_days": 365,
+  "derivatives_history_target_days": 365,
+  "rare_derivatives_target_days": 540,
+  "price_symbols_with_depth_ge_300d": 40,
+  "derivatives_symbols_ready": 30,
+  "rare_derivatives_symbols_ge_500d": 25,
+  "price_depth_gate_ok": true,
+  "derivatives_depth_gate_ok": true,
+  "provider_limits": {
+    "funding_history_limits": [
+      {
+        "symbol": "0GUSDT",
+        "depth_days": 318.1666666666667,
+        "points": 4800
+      },
+      {
+        "symbol": "10000SATSUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 3054
+      },
+      {
+        "symbol": "1000PEPEUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "1000RATSUSDT",
+        "depth_days": 539.8333333333334,
+        "points": 3240
+      },
+      {
+        "symbol": "1000XECUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "ACEUSDT",
+        "depth_days": 539.8333333333334,
+        "points": 4644
+      },
+      {
+        "symbol": "ADAUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "BTCUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "DOGEUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "ETHUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "HYPEUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "SOLUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "SOXLUSDT",
+        "depth_days": 75.0,
+        "points": 226
+      },
+      {
+        "symbol": "XAUUSDT",
+        "depth_days": 146.33333333333334,
+        "points": 879
+      },
+      {
+        "symbol": "XRPUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "ZECUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "BCHUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "LINKUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "LTCUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "DOTUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "AAVEUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "FILUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "BNBUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "TRXUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "AVAXUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "ATOMUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "NEARUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "UNIUSDT",
+        "depth_days": 539.6666666666666,
+        "points": 1620
+      },
+      {
+        "symbol": "OPUSDT",
+        "depth_days": 364.6666666666667,
+        "points": 1095
+      },
+      {
+        "symbol": "LDOUSDT",
+        "depth_days": 364.6666666666667,
+        "points": 1095
+      }
+    ],
+    "oi_history_limits": [
+      {
+        "symbol": "0GUSDT",
+        "depth_days": 318.0416666666667,
+        "points": 7634
+      },
+      {
+        "symbol": "10000SATSUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "1000PEPEUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "1000RATSUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "1000XECUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "ACEUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "ADAUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "BTCUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "DOGEUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "ETHUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "HYPEUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "SOLUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "SOXLUSDT",
+        "depth_days": 74.95833333333333,
+        "points": 1800
+      },
+      {
+        "symbol": "XAUUSDT",
+        "depth_days": 146.20833333333334,
+        "points": 3510
+      },
+      {
+        "symbol": "XRPUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "ZECUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "BCHUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "LINKUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "LTCUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "DOTUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "AAVEUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "FILUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "BNBUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "TRXUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "AVAXUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "ATOMUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "NEARUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "UNIUSDT",
+        "depth_days": 416.625,
+        "points": 10000
+      },
+      {
+        "symbol": "OPUSDT",
+        "depth_days": 364.9583333333333,
+        "points": 8760
+      },
+      {
+        "symbol": "LDOUSDT",
+        "depth_days": 364.9583333333333,
+        "points": 8760
+      }
+    ],
+    "mark_history_limits": [],
+    "index_history_limits": [],
+    "listing_age_limits": [
+      {
+        "symbol": "SOXLUSDT",
+        "achieved_price_depth_days": 75.0
+      },
+      {
+        "symbol": "XAUUSDT",
+        "achieved_price_depth_days": 146.28125
+      }
+    ]
+  },
+  "blockers_sample": {},
+  "symbols_price_ready": [
+    "0GUSDT",
+    "10000SATSUSDT",
+    "1000PEPEUSDT",
+    "1000RATSUSDT",
+    "1000XECUSDT",
+    "ACEUSDT",
+    "ADAUSDT",
+    "BTCUSDT",
+    "DOGEUSDT",
+    "ETHUSDT",
+    "HYPEUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+    "ZECUSDT",
+    "BCHUSDT",
+    "LINKUSDT",
+    "LTCUSDT",
+    "DOTUSDT",
+    "AAVEUSDT",
+    "FILUSDT",
+    "BNBUSDT",
+    "TRXUSDT",
+    "AVAXUSDT",
+    "ATOMUSDT",
+    "NEARUSDT",
+    "UNIUSDT",
+    "OPUSDT",
+    "LDOUSDT",
+    "INJUSDT",
+    "APTUSDT",
+    "ARBUSDT",
+    "SUIUSDT",
+    "RENDERUSDT",
+    "POLUSDT",
+    "AXSUSDT",
+    "CRVUSDT",
+    "SANDUSDT",
+    "MANAUSDT",
+    "GALAUSDT",
+    "ENSUSDT"
+  ],
+  "symbols_deriv_ready": [
+    "0GUSDT",
+    "10000SATSUSDT",
+    "1000PEPEUSDT",
+    "1000RATSUSDT",
+    "1000XECUSDT",
+    "ACEUSDT",
+    "ADAUSDT",
+    "BTCUSDT",
+    "DOGEUSDT",
+    "ETHUSDT",
+    "HYPEUSDT",
+    "SOLUSDT",
+    "SOXLUSDT",
+    "XAUUSDT",
+    "XRPUSDT",
+    "ZECUSDT",
+    "BCHUSDT",
+    "LINKUSDT",
+    "LTCUSDT",
+    "DOTUSDT",
+    "AAVEUSDT",
+    "FILUSDT",
+    "BNBUSDT",
+    "TRXUSDT",
+    "AVAXUSDT"
+  ],
+  "v12_coverage_preserved": true,
+  "fabricated_history": false,
+  "end_ms": 1785663000000,
+  "price_start_ms": 1754127000000,
+  "deriv_start_ms": 1754127000000,
+  "rare_start_ms": 1739007000000,
+  "also_used_v12_cache_dir": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\research\\strategy_engine_v1_2\\market_cache"
+}

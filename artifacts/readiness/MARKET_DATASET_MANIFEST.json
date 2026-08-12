@@ -1,0 +1,20 @@
+{
+  "schema_version": "nexus_market_dataset_manifest_v1",
+  "note": "Raw caches are gitignored and reproducible from endpoints; Git keeps provenance only.",
+  "coverage_days": 540,
+  "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT"],
+  "intervals": ["15", "60", "240"],
+  "expanded_record_count": 340205,
+  "source_endpoints": {
+    "klines": "/v5/market/kline",
+    "funding": "/v5/market/funding/history",
+    "open_interest": "/v5/market/open-interest"
+  },
+  "cache_policy": {
+    "git_committed": false,
+    "gitignore": ["**/market_cache/", "**/micro_cache/"],
+    "storage": "external_or_ci_artifact"
+  },
+  "edge_research_v3_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+  "raw_outcome_data_in_git": false
+}

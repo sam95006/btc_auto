@@ -1,0 +1,14 @@
+{
+  "schema": "NEXUS_QUALIFICATION_CONTROL_PLANE_V10",
+  "Founder_authorization_present": false,
+  "founder_authorization_present": false,
+  "formal_walk_forward_executed": false,
+  "oos_reservation_created": false,
+  "oos_executed": false,
+  "strategy_selected": false,
+  "strategy_promoted": false,
+  "demo_order_count": 0,
+  "demo_eligibility": false,
+  "exchange_write_attempt_count": 0,
+  "september_reserved_oos_consumed": false
+}

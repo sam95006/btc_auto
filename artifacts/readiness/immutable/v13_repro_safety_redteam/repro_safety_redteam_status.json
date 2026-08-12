@@ -1,0 +1,512 @@
+{
+  "schema": "v13_repro_safety_redteam",
+  "program_id": "NEXUS_V13_REPRO_SAFETY_REDTEAM",
+  "created_at": "2026-08-05T08:35:55Z",
+  "lane": "V13-H",
+  "branch": "feature/v13-reproducibility-safety-redteam",
+  "base_head": "abd2195ef6d79f609dd261b5e9c5402599625a64",
+  "pass_number": 2,
+  "execution_mode": "SIMULATED_FAIL_CLOSED_NO_EXCHANGE_WRITE",
+  "owned_paths": [
+    "backend/nexus_autonomy/repro_safety_redteam_v13/",
+    "tools/research/run_repro_safety_redteam_v13.py",
+    "tests/test_repro_safety_redteam_v13.py",
+    "artifacts/readiness/immutable/v13_repro_safety_redteam/"
+  ],
+  "prohibited_paths": [
+    "frontend/",
+    "backend/nexus_demo_execution/",
+    "G:/",
+    "PR27",
+    "deploy/"
+  ],
+  "hard_bans": [
+    "no_auto_integration_into_PR27",
+    "no_demo_orders",
+    "no_exchange_write",
+    "no_mainnet_client",
+    "no_merge",
+    "no_deploy",
+    "no_platform_blocked_mutation_as_pass"
+  ],
+  "scenario_ids": [
+    "pit_lineage_tamper",
+    "decision_evidence_hash_mismatch",
+    "cost_version_divergence",
+    "risk_version_divergence",
+    "checkpoint_version_tamper",
+    "provider_model_provenance_spoof",
+    "dynamic_universe_reconstruction_drift",
+    "future_data_exclusion_bypass",
+    "oos_non_consumption_violation",
+    "founder_auth_spoof",
+    "exchange_write_trap",
+    "mainnet_profile_separation",
+    "secret_redaction_leak"
+  ],
+  "fixture_ids": [
+    "property_fuzz_evidence_hashes",
+    "schema_mutation_envelope",
+    "checkpoint_mutation",
+    "ledger_fork"
+  ],
+  "scenarios": [
+    {
+      "scenario_id": "pit_lineage_tamper",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "pit_lineage_drift_detected",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "fp_clean": "fc76892739bb6da268eecfd4cfb6086322718e5c7d4fb6b32ed46e37af7f365d",
+        "fp_tampered": "43c2877ab5a5f0d78e4664dfd6cf905cde589b50e5a17f203783d09c3fcdcc4d",
+        "seal_broken": true
+      }
+    },
+    {
+      "scenario_id": "decision_evidence_hash_mismatch",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "evidence_hash_mismatch_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "blob_mismatch_blocked": true,
+        "swap_blocked": true
+      }
+    },
+    {
+      "scenario_id": "cost_version_divergence",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "cost_version_mismatch_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "blocked": true
+      }
+    },
+    {
+      "scenario_id": "risk_version_divergence",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "risk_authority_mismatch_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "blocked": true
+      }
+    },
+    {
+      "scenario_id": "checkpoint_version_tamper",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "checkpoint_version_guarded",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "verify_ok": true,
+        "pin_mismatch": true,
+        "drop_blocked": true,
+        "checkpoint_version_id": "nexus_checkpoint_envelope_v1:1"
+      }
+    },
+    {
+      "scenario_id": "provider_model_provenance_spoof",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "provider_model_provenance_blocked",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "missing_blocked": true,
+        "empty_provider_blocked": true,
+        "empty_model_blocked": true
+      }
+    },
+    {
+      "scenario_id": "dynamic_universe_reconstruction_drift",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "universe_pit_reconstruction_ok",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "members": [
+          "AAAUSDT"
+        ],
+        "expected": [
+          "AAAUSDT"
+        ],
+        "attacker_claim": [
+          "AAAUSDT",
+          "FUTUREUSDT"
+        ]
+      }
+    },
+    {
+      "scenario_id": "future_data_exclusion_bypass",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "future_data_exclusion_enforced",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "clean": {
+          "status": "FUTURE_DATA_EXCLUDED",
+          "allowed": true,
+          "future_data_excluded": true,
+          "as_of_ms": 1700000000000,
+          "violation_count": 0,
+          "violations": [],
+          "nested_scan": true
+        },
+        "dirty": {
+          "status": "FUTURE_DATA_VIOLATION",
+          "allowed": false,
+          "future_data_excluded": false,
+          "as_of_ms": 1700000000000,
+          "violation_count": 1,
+          "violations": [
+            {
+              "record_id": "r2",
+              "kind": "nested_or_top",
+              "path": "r2.payload.nested.decision_ts_ms",
+              "key": "decision_ts_ms",
+              "value_ms": 1700000000999,
+              "as_of_ms": 1700000000000
+            }
+          ],
+          "nested_scan": true
+        }
+      }
+    },
+    {
+      "scenario_id": "oos_non_consumption_violation",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "oos_non_consumption_enforced",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "clean": {
+          "status": "OOS_NON_CONSUMPTION_PROVEN",
+          "proven": true,
+          "oos_consumed": false,
+          "oos_executed": false,
+          "formal_walk_forward_executed": false,
+          "violations": [],
+          "registry_checksums": {
+            "reserved": "f3015fd0f09b0613fd50072793611165390c7c3ad95e4ef89dc0bdaf2ee2363e",
+            "consumed": "e88be54aaeaa1f7d721a76072a36a36ca38d8ec153b37b04fd54a4df1cd523e5"
+          }
+        },
+        "dirty": {
+          "status": "OOS_NON_CONSUMPTION_FAILED",
+          "proven": false,
+          "oos_consumed": false,
+          "oos_executed": false,
+          "formal_walk_forward_executed": false,
+          "violations": [
+            {
+              "reserved": {
+                "interval_id": "oos_1",
+                "label": "oos_holdout",
+                "start_ms": 1000,
+                "end_ms": 2000,
+                "category": "oos"
+              },
+              "consumed": {
+                "interval_id": "sneak_1",
+                "label": "sneak_consume",
+                "start_ms": 1500,
+                "end_ms": 1800,
+                "category": "consumed"
+              }
+            }
+          ],
+          "registry_checksums": {
+            "reserved": "f3015fd0f09b0613fd50072793611165390c7c3ad95e4ef89dc0bdaf2ee2363e",
+            "consumed": "67227710ace325f54413300dcbc7fff785a2a03e52a2aca956b976a78f857b86"
+          }
+        }
+      }
+    },
+    {
+      "scenario_id": "founder_auth_spoof",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "founder_auth_spoof_rejected",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "spoof": {
+          "valid": false,
+          "authorized": false,
+          "reason": "FOUNDER_AUTH_PROOF_INVALID_OR_SPOOFED",
+          "spoof_rejected": true,
+          "expected_auth_proof": "ee155674e77c0b4972e16ea809259fcc13929a03a5bf15a1d69910fd040f7c18",
+          "provided_auth_proof": "deadbeef"
+        },
+        "bound": {
+          "valid": true,
+          "authorized": false,
+          "reason": "FAKE",
+          "spoof_rejected": false,
+          "bound_authorized_claim": true
+        },
+        "missing": {
+          "authorized": false,
+          "reason": "FOUNDER_AUTHORIZATION_MISSING",
+          "required_scope": "founder_v11_pit_qualification",
+          "auth_proof": "f77779a35c6ade1f4cf0d2c897764dbdd881c34354105c463a17bea520a65ff1",
+          "auth_binding": "f77779a35c6ade1f4cf0d2c897764dbdd881c34354105c463a17bea520a65ff1"
+        }
+      }
+    },
+    {
+      "scenario_id": "exchange_write_trap",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "exchange_write_trapped",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "orch_blocked": true,
+        "order_blocked": true,
+        "trap_raised": true,
+        "trap_attempts": 1
+      }
+    },
+    {
+      "scenario_id": "mainnet_profile_separation",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "mainnet_profile_separated",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "demo_on_mainnet": {
+          "profile": "demo",
+          "ok": false,
+          "fail_closed": true,
+          "reasons": [
+            "demo_mainnet_profile_confused",
+            "writes_require_explicit_founder_flag",
+            "demo_host_rejected:api.bybit.com"
+          ],
+          "mainnet_fallback_used": false,
+          "demo_mainnet_confused": true,
+          "writes_enabled": false,
+          "secret_echoed": false
+        },
+        "mainnet_requested": {
+          "profile": "mainnet",
+          "ok": false,
+          "fail_closed": true,
+          "reasons": [
+            "mainnet_profile_blocked_by_security_boundary"
+          ],
+          "mainnet_fallback_used": false,
+          "demo_mainnet_confused": false,
+          "writes_enabled": false,
+          "secret_echoed": false
+        },
+        "fallback": {
+          "profile": "demo",
+          "ok": false,
+          "fail_closed": true,
+          "reasons": [
+            "mainnet_fallback_rejected",
+            "demo_credentials_missing"
+          ],
+          "mainnet_fallback_used": true,
+          "demo_mainnet_confused": false,
+          "writes_enabled": false,
+          "secret_echoed": false
+        }
+      }
+    },
+    {
+      "scenario_id": "secret_redaction_leak",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "secret_redaction_ok",
+      "critical": false,
+      "attack_blocked": true,
+      "platform_blocked": false,
+      "evidence": {
+        "findings": [
+          "pattern:api_key",
+          "credential_assignment"
+        ],
+        "detected": true,
+        "not_echoed": true,
+        "redacted_changed": true,
+        "public_keys": [
+          "api_key",
+          "strategy_param_alpha",
+          "ok_field"
+        ]
+      }
+    }
+  ],
+  "fixtures": [
+    {
+      "fixture_id": "property_fuzz_evidence_hashes",
+      "passed": true,
+      "rounds": 64,
+      "clean_ok": 64,
+      "mutant_blocked": 64,
+      "failures": []
+    },
+    {
+      "fixture_id": "schema_mutation_envelope",
+      "passed": true,
+      "mutations": [
+        {
+          "key": "cost_version",
+          "blocked": true,
+          "detail": "envelope_missing_keys:['cost_version']"
+        },
+        {
+          "key": "risk_version",
+          "blocked": true,
+          "detail": "envelope_missing_keys:['risk_version']"
+        },
+        {
+          "key": "checkpoint_version",
+          "blocked": true,
+          "detail": "envelope_missing_keys:['checkpoint_version']"
+        },
+        {
+          "key": "code_version",
+          "blocked": true,
+          "detail": "envelope_missing_keys:['code_version']"
+        },
+        {
+          "key": "schema",
+          "blocked": true,
+          "detail": "schema_mismatch:attacker_schema_v999"
+        },
+        {
+          "key": "exchange_write",
+          "blocked": true,
+          "detail": "ban_flip"
+        },
+        {
+          "key": "demo_order",
+          "blocked": true,
+          "detail": "ban_flip"
+        },
+        {
+          "key": "learning_claim",
+          "blocked": true,
+          "detail": "ban_flip"
+        },
+        {
+          "key": "profitability_claim",
+          "blocked": true,
+          "detail": "ban_flip"
+        }
+      ]
+    },
+    {
+      "fixture_id": "checkpoint_mutation",
+      "passed": true,
+      "pin_match": true,
+      "diverged": true,
+      "digest_detects": true,
+      "checkpoint_version_id": "nexus_checkpoint_envelope_v1:1"
+    },
+    {
+      "fixture_id": "ledger_fork",
+      "passed": true,
+      "clean_ok": true,
+      "detected": true,
+      "clean": {
+        "ledger_hash_chain_status": "PASS",
+        "event_count": 4
+      },
+      "broken": {
+        "ledger_hash_chain_status": "CORRUPTION_DETECTED",
+        "broken_at_sequence": 2
+      }
+    }
+  ],
+  "production_ast": {
+    "passed": true,
+    "killed": 5,
+    "survivors": 0,
+    "equivalent": 3,
+    "errors": 0,
+    "platform_blocked_count": 0,
+    "platform_blocked_pass_count": 0,
+    "required_kill_status": {
+      "persist_scan_secrets_noop": "killed",
+      "persist_json_accept_scalars": "killed",
+      "public_assert_schema_noop": "killed",
+      "public_redact_identity": "killed",
+      "write_trap_install_noop": "killed"
+    },
+    "unresolved_blockers": []
+  },
+  "scenario_pass_count": 13,
+  "scenario_total_count": 13,
+  "fixture_pass_count": 4,
+  "fixture_total_count": 4,
+  "attack_blocked_count": 13,
+  "attack_total_count": 13,
+  "platform_blocked_count": 0,
+  "platform_blocked_pass_count": 0,
+  "findings": {
+    "critical_finding_count": 0,
+    "unresolved_critical_count": 0,
+    "high_finding_count": 0,
+    "items": []
+  },
+  "exchange_write_attempt_count": 0,
+  "secret_leak_count": 0,
+  "mainnet_client_created_count": 0,
+  "demo_order_count": 0,
+  "real_money": false,
+  "mainnet": false,
+  "auto_integration": false,
+  "PR27_draft_unmerged": true,
+  "remaining_blockers": [
+    "V2.3_incomplete",
+    "microstructure_14d_data",
+    "no_qualified_strategy_edge",
+    "event_study_NOT_READY",
+    "PR27_draft_unmerged",
+    "auto_integration_forbidden",
+    "qualification_ready_count_must_remain_0"
+  ],
+  "label": "REPRO_SAFETY_REDTEAM_CONTROL_NOT_REAL_TRADING",
+  "secret_scan": {
+    "raw_hit_count": 2,
+    "real_leak_count": 0,
+    "real_leaks": []
+  },
+  "recommendation": "NEXUS_V13_REPRO_SAFETY_REDTEAM_PASS",
+  "Repro_Safety_Redteam_status": "NEXUS_V13_REPRO_SAFETY_REDTEAM_PASS",
+  "passed": true,
+  "critical_findings": [],
+  "high_findings": [],
+  "worktree": "D:\\NEXUS_RUNTIME\\worktrees\\v13_repro_safety",
+  "commit": "06ff800de4995113b4baa1d440d6a0ccb80dd27a",
+  "head": "06ff800de4995113b4baa1d440d6a0ccb80dd27a"
+}

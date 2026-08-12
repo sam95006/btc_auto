@@ -1,0 +1,128 @@
+{
+  "schema": "v11_reflection_v23_adjudication_fixture_result",
+  "created_at": "2026-08-05T03:29:21Z",
+  "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+  "fixture_only": true,
+  "real_ai_quality_claimed": false,
+  "quality_gates_evaluated": false,
+  "quality_gates_passed": false,
+  "V2_3_TERMINAL_STATUS": "INCOMPLETE_PROVIDER_CAPACITY",
+  "provider_transport": {
+    "GROQ_REFLECTION_REASONER": {
+      "profile_id": "GROQ_REFLECTION_REASONER",
+      "model_id": "",
+      "attempt_count": 4,
+      "success_count": 4,
+      "HTTP_429_count": 0,
+      "timeout_count": 0,
+      "invalid_schema_count": 0,
+      "other_failure_count": 0,
+      "last_attempt_at": null,
+      "retry_after": null,
+      "next_resume_not_before": null,
+      "last_exit_reason": null
+    },
+    "SAMBANOVA_INDEPENDENT_CRITIC": {
+      "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+      "model_id": "",
+      "attempt_count": 2,
+      "success_count": 2,
+      "HTTP_429_count": 0,
+      "timeout_count": 0,
+      "invalid_schema_count": 0,
+      "other_failure_count": 0,
+      "last_attempt_at": null,
+      "retry_after": null,
+      "next_resume_not_before": null,
+      "last_exit_reason": null
+    },
+    "CEREBRAS_RESEARCH_NORMALIZER": {
+      "profile_id": "CEREBRAS_RESEARCH_NORMALIZER",
+      "model_id": "",
+      "attempt_count": 0,
+      "success_count": 0,
+      "HTTP_429_count": 0,
+      "timeout_count": 0,
+      "invalid_schema_count": 0,
+      "other_failure_count": 0,
+      "last_attempt_at": null,
+      "retry_after": null,
+      "next_resume_not_before": null,
+      "last_exit_reason": null
+    },
+    "GROQ_MAIN_REASONER": {
+      "profile_id": "GROQ_MAIN_REASONER",
+      "model_id": "",
+      "attempt_count": 0,
+      "success_count": 0,
+      "HTTP_429_count": 0,
+      "timeout_count": 0,
+      "invalid_schema_count": 0,
+      "other_failure_count": 0,
+      "last_attempt_at": null,
+      "retry_after": null,
+      "next_resume_not_before": null,
+      "last_exit_reason": null
+    }
+  },
+  "critic_order": [],
+  "disagreement_taxonomy": [
+    {
+      "trade_id": "V11_FIX_01",
+      "groq_classification": "GOOD_PROCESS_LOSS",
+      "groq_evidence_ids": [
+        "ev_V11_FIX_01_process"
+      ],
+      "deterministic_classification": "BAD_PROCESS_LOSS",
+      "deterministic_rule_ids": [
+        "FIXTURE_RULE"
+      ],
+      "sambanova_result": "AGREE_WITH_GROQ",
+      "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+      "conflict_type": "DETERMINISTIC_BASELINE_TOO_COARSE",
+      "preferred_side": "NONE",
+      "auto_prefer_deterministic": false,
+      "auto_prefer_groq": false
+    },
+    {
+      "trade_id": "V11_FIX_02",
+      "groq_classification": "BAD_PROCESS_WIN",
+      "groq_evidence_ids": [
+        "ev_V11_FIX_02_process"
+      ],
+      "deterministic_classification": "GOOD_PROCESS_WIN",
+      "deterministic_rule_ids": [
+        "FIXTURE_RULE"
+      ],
+      "sambanova_result": "AGREE_WITH_DETERMINISTIC",
+      "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+      "conflict_type": "AI_MISCLASSIFICATION",
+      "preferred_side": "NONE",
+      "auto_prefer_deterministic": false,
+      "auto_prefer_groq": false
+    }
+  ],
+  "terminal_denominator_validation": {
+    "terminal_denominator_validation": "PASS",
+    "issues": [],
+    "checked_ratio_keys": [
+      "evidence_packet_constructible_ratio",
+      "reflection_prompt_delivery_ratio_on_attempts",
+      "full_calibration_completion_ratio",
+      "blind_valid_schema_ratio",
+      "informative_classification_ratio_overall",
+      "informative_classification_ratio_on_sufficient_cases",
+      "blind_agreement_ratio_on_sufficient_cases",
+      "critic_resolution_ratio"
+    ]
+  },
+  "UNDETERMINED_PROCESS_migrated_to_UNDETERMINED": true,
+  "new_policy_effect_lesson_count": 0,
+  "formal_walk_forward_executed": false,
+  "oos_executed": false,
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "deployment_started": false,
+  "mainnet": false,
+  "real_money": false
+}

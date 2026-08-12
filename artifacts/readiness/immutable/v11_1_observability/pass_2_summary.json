@@ -1,0 +1,38 @@
+{
+  "schema": "v11_1_private_observability_pass_2_summary",
+  "created_at": "2026-08-05T04:07:51Z",
+  "pass_number": 2,
+  "pass": true,
+  "status": "PASS",
+  "slo_score": 100.0,
+  "slo_status": "healthy",
+  "slos_passed": 13,
+  "slos_total": 13,
+  "active_alert_count": 13,
+  "active_alert_classes": [
+    "ambiguous_state",
+    "data_quality",
+    "failure_state",
+    "provider_capacity",
+    "staleness",
+    "storage_floor"
+  ],
+  "alert_classes_required": [
+    "failure_state",
+    "staleness",
+    "data_quality",
+    "ambiguous_state",
+    "storage_floor",
+    "provider_capacity"
+  ],
+  "secret_leak_count": 0,
+  "hard_ban_count": 16,
+  "public_routes": false,
+  "execution_mutation_endpoint": false,
+  "findings": [
+    "pass2_all_alert_classes_exercised",
+    "pass2_adversarial_overrides_applied",
+    "pass2_no_execution_mutation",
+    "pass2_no_public_routes"
+  ]
+}

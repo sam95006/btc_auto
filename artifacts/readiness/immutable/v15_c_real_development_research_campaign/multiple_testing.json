@@ -1,0 +1,18 @@
+{
+  "bh": {
+    "bh_adjusted_p": [
+      0.5182691577779772,
+      0.5182691577779772,
+      0.5182691577779772,
+      0.6279976871881426
+    ],
+    "discoveries": 0,
+    "n_tests": 4,
+    "q": 0.1,
+    "rejected_indices": []
+  },
+  "created_at": "2026-08-05T15:24:04Z",
+  "mt_rejected_count": 3,
+  "q": 0.1,
+  "testable_count": 4
+}

@@ -1,0 +1,244 @@
+{
+  "pass": 2,
+  "stability": {
+    "stable_count": 7,
+    "unstable_count": 0,
+    "rows": [
+      {
+        "finding_id": "R3-E-CHECKPOINT-COUNTER-DRIFT",
+        "pass1_status": "PASS",
+        "pass2_status": "PASS",
+        "severity": "CRITICAL",
+        "stable": true
+      },
+      {
+        "finding_id": "R3-E-CRITIC-BEFORE-REASONER",
+        "pass1_status": "PASS",
+        "pass2_status": "PASS",
+        "severity": "HIGH",
+        "stable": true
+      },
+      {
+        "finding_id": "R3-F-NESTED-FUTURE-TIMESTAMP",
+        "pass1_status": "PASS",
+        "pass2_status": "PASS",
+        "severity": "CRITICAL",
+        "stable": true
+      },
+      {
+        "finding_id": "R3-F-OOS-SEAL-REGENERATION",
+        "pass1_status": "PASS",
+        "pass2_status": "PASS",
+        "severity": "CRITICAL",
+        "stable": true
+      },
+      {
+        "finding_id": "R3-F-FOUNDER-AUTH-SPOOF",
+        "pass1_status": "PASS",
+        "pass2_status": "PASS",
+        "severity": "HIGH",
+        "stable": true
+      },
+      {
+        "finding_id": "R3-E-LESSON-GATE-HARDENED",
+        "pass1_status": "PASS",
+        "pass2_status": "PASS",
+        "severity": "PASS",
+        "stable": true
+      },
+      {
+        "finding_id": "R3-F-PROMOTION-BLOCKING",
+        "pass1_status": "PASS",
+        "pass2_status": "PASS",
+        "severity": "PASS",
+        "stable": true
+      }
+    ]
+  },
+  "findings": [
+    {
+      "finding_id": "R3-E-CHECKPOINT-COUNTER-DRIFT",
+      "severity": "CRITICAL",
+      "lane": "E",
+      "title": "Checkpoint integrity ignores success_count vs completed-case drift",
+      "status": "PASS",
+      "detail": "Remediation: detect_corruption fails closed on counter drift; evaluate_terminal refuses inflated success_count for ≥80 gate.",
+      "evidence": {
+        "checksum_ok_despite_drift": false,
+        "integrity_status": "COUNTER_DRIFT",
+        "completed_case_count": 1,
+        "groq_success_count_used": 1,
+        "terminal_status": "CHECKPOINT_COUNTER_DRIFT",
+        "quality_gates_passed": false,
+        "fixed": true
+      },
+      "remediation": "Semantic counter invariants + refuse inflated terminal gate."
+    },
+    {
+      "finding_id": "R3-E-CRITIC-BEFORE-REASONER",
+      "severity": "HIGH",
+      "lane": "E",
+      "title": "Critic can complete before Reasoner success",
+      "status": "PASS",
+      "detail": "Remediation: Critic dispatch gated on Reasoner SUCCESS for same case_id.",
+      "evidence": {
+        "critic_dispatch_allowed": false,
+        "critic_transport_status": "CRITIC_BEFORE_REASONER_BLOCKED",
+        "critic_reason": "REASONER_SUCCESS_REQUIRED",
+        "critic_order_without_reasoner": [],
+        "fixed": true
+      },
+      "remediation": "Gate Critic begin_attempt on Reasoner SUCCESS."
+    },
+    {
+      "finding_id": "R3-F-NESTED-FUTURE-TIMESTAMP",
+      "severity": "CRITICAL",
+      "lane": "F",
+      "title": "Future timestamp hidden in nested evidence bypasses PIT exclusion",
+      "status": "PASS",
+      "detail": "Remediation: recursive nested evidence timestamp scan vs as_of.",
+      "evidence": {
+        "status": "FUTURE_DATA_VIOLATION",
+        "allowed": false,
+        "violation_count": 3,
+        "nested_keys": [
+          "bar_close_ts_ms",
+          "child",
+          "nested_available_as_of_ms"
+        ],
+        "fixed": true
+      },
+      "remediation": "Recursively scan nested *_timestamp_ms / available_as_of_ms fields."
+    },
+    {
+      "finding_id": "R3-F-OOS-SEAL-REGENERATION",
+      "severity": "CRITICAL",
+      "lane": "F",
+      "title": "OOS cryptographic seal can be regenerated after reserved-interval mutation",
+      "status": "PASS",
+      "detail": "Remediation: write-once OOS seal lineage; mutation after seal fails closed.",
+      "evidence": {
+        "seal1": "9e0dea64a352db8fa5a2b2d746bf5e111918ccb6b04fac5545f631d892fa5d3c",
+        "seal2": null,
+        "seal1_status": "SEALED_NOT_CONSUMED",
+        "seal2_status": "SEAL_REGENERATION_REJECTED_RESERVED_MUTATION",
+        "seal_changed": true,
+        "fixed": true
+      },
+      "remediation": "Persist first seal write-once; reject reserved-registry mutation regenerations."
+    },
+    {
+      "finding_id": "R3-F-FOUNDER-AUTH-SPOOF",
+      "severity": "HIGH",
+      "lane": "F",
+      "title": "Founder auth result is spoofable and decoupled from promotion gate",
+      "status": "PASS",
+      "detail": "Remediation: auth_proof binding; attempt_promote consults and rejects spoof.",
+      "evidence": {
+        "evaluate_authorized": false,
+        "evaluate_reason": "FOUNDER_AUTHORIZATION_DENIED_BLOCKED_ONLY_V11",
+        "spoofed_authorized": true,
+        "spoof_rejected": true,
+        "promote_allowed": false,
+        "promote_reason": "FOUNDER_AUTH_SPOOF_REJECTED_PROMOTION_BLOCKED",
+        "promote_consults_founder_gate": true,
+        "founder_auth_verified": false,
+        "fixed": true
+      },
+      "remediation": "Bind founder gate output; require proof inside attempt_promote."
+    },
+    {
+      "finding_id": "R3-E-LESSON-GATE-HARDENED",
+      "severity": "PASS",
+      "lane": "E",
+      "title": "Lesson gate remains hard (not weakened)",
+      "status": "PASS",
+      "detail": "Lesson gate still blocks policy-effect lessons for incomplete/fixture terminals.",
+      "evidence": {
+        "incomplete": {
+          "lesson_gate_schema": "v11_lesson_gate",
+          "policy_effect_lesson_allowed": false,
+          "lesson_prevention_executed": false,
+          "lesson_prevention_blocked_reason": "V2_3_TERMINAL_NOT_VERIFIED",
+          "V2_3_TERMINAL_STATUS": "INCOMPLETE_PROVIDER_CAPACITY",
+          "quality_gates_passed": false,
+          "fixture_label": null,
+          "new_policy_effect_lesson_count": 0,
+          "risk_limits_changed": false,
+          "leverage_changed": false,
+          "position_size_changed": false,
+          "stops_changed": false,
+          "strategy_parameters_changed": false,
+          "promotion_state_changed": false,
+          "false_learning_claim": false
+        },
+        "fixture_verified_still_blocked": {
+          "lesson_gate_schema": "v11_lesson_gate",
+          "policy_effect_lesson_allowed": false,
+          "lesson_prevention_executed": false,
+          "lesson_prevention_blocked_reason": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+          "V2_3_TERMINAL_STATUS": "VERIFIED",
+          "quality_gates_passed": true,
+          "fixture_label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+          "new_policy_effect_lesson_count": 0,
+          "risk_limits_changed": false,
+          "leverage_changed": false,
+          "position_size_changed": false,
+          "stops_changed": false,
+          "strategy_parameters_changed": false,
+          "promotion_state_changed": false,
+          "false_learning_claim": false
+        }
+      },
+      "remediation": "Do not weaken Lesson gate."
+    },
+    {
+      "finding_id": "R3-F-PROMOTION-BLOCKING",
+      "severity": "PASS",
+      "lane": "F",
+      "title": "Promotion state machine remains BLOCKED_READY",
+      "status": "PASS",
+      "detail": "attempt_promote always denies; all qualification stages stay BLOCKED_READY.",
+      "evidence": {
+        "attempt": {
+          "allowed": false,
+          "reason": "PROMOTION_BLOCKED_READY_V11_INFRASTRUCTURE_ONLY",
+          "state": "PROMOTION_BLOCKED_READY",
+          "selected_strategy": null,
+          "formal_walk_forward_executed": false,
+          "oos_executed": false,
+          "demo_order_count": 0,
+          "founder_authorization_gate": {
+            "authorized": false,
+            "reason": "FOUNDER_AUTHORIZATION_MISSING",
+            "required_scope": "founder_v11_pit_qualification",
+            "auth_proof": "f77779a35c6ade1f4cf0d2c897764dbdd881c34354105c463a17bea520a65ff1",
+            "auth_binding": "f77779a35c6ade1f4cf0d2c897764dbdd881c34354105c463a17bea520a65ff1"
+          },
+          "founder_auth_verified": true,
+          "founder_auth_proof": {
+            "valid": true,
+            "authorized": false,
+            "reason": "FOUNDER_AUTHORIZATION_MISSING",
+            "spoof_rejected": false,
+            "bound_authorized_claim": false
+          },
+          "founder_authorized": false
+        },
+        "status": "BLOCKED_READY"
+      },
+      "remediation": "Retain hard block."
+    }
+  ],
+  "critical_open": [],
+  "high_open": [],
+  "remediation_status": {
+    "R3-E-CHECKPOINT-COUNTER-DRIFT": "FIXED",
+    "R3-F-NESTED-FUTURE-TIMESTAMP": "FIXED",
+    "R3-F-OOS-SEAL-REGENERATION": "FIXED",
+    "R3-E-CRITIC-BEFORE-REASONER": "FIXED",
+    "R3-F-FOUNDER-AUTH-SPOOF": "FIXED"
+  },
+  "recommendation": "PASS_WITH_NOTES",
+  "rationale": "R3 E/F critical+high remediations cleared; Lesson gate and PROMOTION_BLOCKED_READY remain hard."
+}

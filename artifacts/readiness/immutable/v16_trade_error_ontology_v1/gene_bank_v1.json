@@ -1,0 +1,360 @@
+{
+  "avoidability_levels": [
+    "AVOIDABLE",
+    "PARTIALLY_AVOIDABLE",
+    "UNAVOIDABLE",
+    "UNKNOWN"
+  ],
+  "checksum_sha256": "0f6649991b97d534850dfb7e73db037263194684cb17d207c3f1f5430c713d40",
+  "error_dimensions": [
+    "DATA",
+    "REGIME",
+    "STRATEGY",
+    "ENTRY",
+    "EXIT",
+    "EXECUTION",
+    "LIQUIDITY",
+    "COST",
+    "AI_REASONING",
+    "RISK",
+    "PORTFOLIO",
+    "INFRASTRUCTURE",
+    "EXTERNAL_SHOCK"
+  ],
+  "gene_count": 14,
+  "gene_ids": [
+    "TEG.DATA.STALE_FEED",
+    "TEG.REGIME.MISMATCH",
+    "TEG.STRATEGY.RULE_VIOLATION",
+    "TEG.ENTRY.MISSING_STOP",
+    "TEG.EXIT.NONCOMPLIANT",
+    "TEG.EXECUTION.PROHIBITED",
+    "TEG.LIQUIDITY.STRESS",
+    "TEG.COST.GATE_FAIL",
+    "TEG.AI.UNGROUNDED",
+    "TEG.RISK.GATE_EXCEEDED",
+    "TEG.PORTFOLIO.EXPOSURE",
+    "TEG.INFRA.PIPELINE_FAULT",
+    "TEG.EXTERNAL.UNAVOIDABLE_SHOCK",
+    "TEG.META.INSUFFICIENT_EVIDENCE"
+  ],
+  "genes": [
+    {
+      "avoidability": "AVOIDABLE",
+      "causal_confidence_floor": 0.75,
+      "dimension": "DATA",
+      "evidence_ref_keys": [
+        "data_quality_status",
+        "data_freshness",
+        "supporting_evidence_ids"
+      ],
+      "gene_id": "TEG.DATA.STALE_FEED",
+      "label": "stale_or_invalid_market_data",
+      "maps_to_process_hint": "BAD_PROCESS",
+      "recurrence_signature_template": "DIM=DATA|SIG=stale_or_invalid_data",
+      "schema": "v16_a_trade_error_gene_v1",
+      "severity": "HIGH",
+      "trigger_signals": [
+        "stale_or_invalid_data",
+        "data_quality:STALE",
+        "data_quality:INVALID"
+      ],
+      "version": "1.0.0"
+    },
+    {
+      "avoidability": "PARTIALLY_AVOIDABLE",
+      "causal_confidence_floor": 0.55,
+      "dimension": "REGIME",
+      "evidence_ref_keys": [
+        "market_regime",
+        "regime_confidence",
+        "strategy_family"
+      ],
+      "gene_id": "TEG.REGIME.MISMATCH",
+      "label": "regime_mismatch_vs_strategy",
+      "maps_to_process_hint": "BAD_PROCESS",
+      "recurrence_signature_template": "DIM=REGIME|SIG=regime_mismatch",
+      "schema": "v16_a_trade_error_gene_v1",
+      "severity": "MEDIUM",
+      "trigger_signals": [
+        "regime_mismatch",
+        "regime_confidence_low"
+      ],
+      "version": "1.0.0"
+    },
+    {
+      "avoidability": "AVOIDABLE",
+      "causal_confidence_floor": 0.8,
+      "dimension": "STRATEGY",
+      "evidence_ref_keys": [
+        "rule_violation_count",
+        "hard_block_reasons"
+      ],
+      "gene_id": "TEG.STRATEGY.RULE_VIOLATION",
+      "label": "strategy_rule_violation",
+      "maps_to_process_hint": "BAD_PROCESS",
+      "recurrence_signature_template": "DIM=STRATEGY|SIG=rule_violation",
+      "schema": "v16_a_trade_error_gene_v1",
+      "severity": "HIGH",
+      "trigger_signals": [
+        "rule_violation",
+        "hard_gate_present"
+      ],
+      "version": "1.0.0"
+    },
+    {
+      "avoidability": "AVOIDABLE",
+      "causal_confidence_floor": 0.9,
+      "dimension": "ENTRY",
+      "evidence_ref_keys": [
+        "stop_price",
+        "entry_price",
+        "entry_rule_compliance"
+      ],
+      "gene_id": "TEG.ENTRY.MISSING_STOP",
+      "label": "invalid_or_absent_stop_at_entry",
+      "maps_to_process_hint": "BAD_PROCESS",
+      "recurrence_signature_template": "DIM=ENTRY|SIG=invalid_or_absent_stop",
+      "schema": "v16_a_trade_error_gene_v1",
+      "severity": "CRITICAL",
+      "trigger_signals": [
+        "invalid_or_absent_stop"
+      ],
+      "version": "1.0.0"
+    },
+    {
+      "avoidability": "AVOIDABLE",
+      "causal_confidence_floor": 0.7,
+      "dimension": "EXIT",
+      "evidence_ref_keys": [
+        "exit_reason",
+        "exit_rule_compliance",
+        "actual_exit_price"
+      ],
+      "gene_id": "TEG.EXIT.NONCOMPLIANT",
+      "label": "exit_rule_noncompliance",
+      "maps_to_process_hint": "BAD_PROCESS",
+      "recurrence_signature_template": "DIM=EXIT|SIG=exit_noncompliant",
+      "schema": "v16_a_trade_error_gene_v1",
+      "severity": "HIGH",
+      "trigger_signals": [
+        "exit_noncompliant",
+        "exit_rule:FAIL"
+      ],
+      "version": "1.0.0"
+    },
+    {
+      "avoidability": "AVOIDABLE",
+      "causal_confidence_floor": 0.95,
+      "dimension": "EXECUTION",
+      "evidence_ref_keys": [
+        "prohibited_action_count",
+        "hard_block_reasons"
+      ],
+      "gene_id": "TEG.EXECUTION.PROHIBITED",
+      "label": "prohibited_execution_action",
+      "maps_to_process_hint": "BAD_PROCESS",
+      "recurrence_signature_template": "DIM=EXECUTION|SIG=prohibited_action",
+      "schema": "v16_a_trade_error_gene_v1",
+      "severity": "CRITICAL",
+      "trigger_signals": [
+        "prohibited_action"
+      ],
+      "version": "1.0.0"
+    },
+    {
+      "avoidability": "PARTIALLY_AVOIDABLE",
+      "causal_confidence_floor": 0.6,
+      "dimension": "LIQUIDITY",
+      "evidence_ref_keys": [
+        "spread_bps",
+        "estimated_slippage_bps",
+        "liquidation_distance_valid"
+      ],
+      "gene_id": "TEG.LIQUIDITY.STRESS",
+      "label": "liquidity_stress_at_fill",
+      "maps_to_process_hint": "BAD_PROCESS",
+      "recurrence_signature_template": "DIM=LIQUIDITY|SIG=liquidity_stress",
+      "schema": "v16_a_trade_error_gene_v1",
+      "severity": "MEDIUM",
+      "trigger_signals": [
+        "liquidity_stress",
+        "liquidation_distance_invalid"
+      ],
+      "version": "1.0.0"
+    },
+    {
+      "avoidability": "AVOIDABLE",
+      "causal_confidence_floor": 0.85,
+      "dimension": "COST",
+      "evidence_ref_keys": [
+        "cost_gate_status",
+        "expected_total_cost",
+        "fees",
+        "slippage"
+      ],
+      "gene_id": "TEG.COST.GATE_FAIL",
+      "label": "cost_gate_failed",
+      "maps_to_process_hint": "BAD_PROCESS",
+      "recurrence_signature_template": "DIM=COST|SIG=cost_gate_failed",
+      "schema": "v16_a_trade_error_gene_v1",
+      "severity": "HIGH",
+      "trigger_signals": [
+        "cost_gate_failed"
+      ],
+      "version": "1.0.0"
+    },
+    {
+      "avoidability": "AVOIDABLE",
+      "causal_confidence_floor": 0.5,
+      "dimension": "AI_REASONING",
+      "evidence_ref_keys": [
+        "supporting_evidence_ids",
+        "contradicting_evidence_ids",
+        "missing_evidence"
+      ],
+      "gene_id": "TEG.AI.UNGROUNDED",
+      "label": "ai_reasoning_without_evidence",
+      "maps_to_process_hint": "BAD_PROCESS",
+      "recurrence_signature_template": "DIM=AI_REASONING|SIG=ai_ungrounded",
+      "schema": "v16_a_trade_error_gene_v1",
+      "severity": "MEDIUM",
+      "trigger_signals": [
+        "ai_ungrounded",
+        "missing_evidence_for_ai_claim"
+      ],
+      "version": "1.0.0"
+    },
+    {
+      "avoidability": "AVOIDABLE",
+      "causal_confidence_floor": 0.9,
+      "dimension": "RISK",
+      "evidence_ref_keys": [
+        "risk_gate_status",
+        "position_size_valid",
+        "leverage_valid"
+      ],
+      "gene_id": "TEG.RISK.GATE_EXCEEDED",
+      "label": "risk_gate_exceeded",
+      "maps_to_process_hint": "BAD_PROCESS",
+      "recurrence_signature_template": "DIM=RISK|SIG=risk_exceeded",
+      "schema": "v16_a_trade_error_gene_v1",
+      "severity": "CRITICAL",
+      "trigger_signals": [
+        "risk_exceeded",
+        "invalid_position_size"
+      ],
+      "version": "1.0.0"
+    },
+    {
+      "avoidability": "AVOIDABLE",
+      "causal_confidence_floor": 0.7,
+      "dimension": "PORTFOLIO",
+      "evidence_ref_keys": [
+        "hard_block_reasons",
+        "position_size_valid"
+      ],
+      "gene_id": "TEG.PORTFOLIO.EXPOSURE",
+      "label": "portfolio_exposure_breach",
+      "maps_to_process_hint": "BAD_PROCESS",
+      "recurrence_signature_template": "DIM=PORTFOLIO|SIG=portfolio_exposure_breach",
+      "schema": "v16_a_trade_error_gene_v1",
+      "severity": "HIGH",
+      "trigger_signals": [
+        "portfolio_exposure_breach",
+        "correlated_overexposure"
+      ],
+      "version": "1.0.0"
+    },
+    {
+      "avoidability": "PARTIALLY_AVOIDABLE",
+      "causal_confidence_floor": 0.65,
+      "dimension": "INFRASTRUCTURE",
+      "evidence_ref_keys": [
+        "data_quality_status",
+        "hard_block_reasons"
+      ],
+      "gene_id": "TEG.INFRA.PIPELINE_FAULT",
+      "label": "infrastructure_pipeline_fault",
+      "maps_to_process_hint": "INSUFFICIENT_EVIDENCE",
+      "recurrence_signature_template": "DIM=INFRASTRUCTURE|SIG=infra_fault",
+      "schema": "v16_a_trade_error_gene_v1",
+      "severity": "HIGH",
+      "trigger_signals": [
+        "infra_fault",
+        "pipeline_timeout"
+      ],
+      "version": "1.0.0"
+    },
+    {
+      "avoidability": "UNAVOIDABLE",
+      "causal_confidence_floor": 0.7,
+      "dimension": "EXTERNAL_SHOCK",
+      "evidence_ref_keys": [
+        "external_shock_flag",
+        "external_shock_type",
+        "supporting_evidence_ids"
+      ],
+      "gene_id": "TEG.EXTERNAL.UNAVOIDABLE_SHOCK",
+      "label": "unavoidable_external_shock",
+      "maps_to_process_hint": "UNAVOIDABLE_SHOCK",
+      "recurrence_signature_template": "DIM=EXTERNAL_SHOCK|SIG=unavoidable_external_shock",
+      "schema": "v16_a_trade_error_gene_v1",
+      "severity": "HIGH",
+      "trigger_signals": [
+        "external_shock",
+        "flash_crash",
+        "exchange_halt",
+        "oracle_dislocation"
+      ],
+      "version": "1.0.0"
+    },
+    {
+      "avoidability": "UNKNOWN",
+      "causal_confidence_floor": 0.3,
+      "dimension": "DATA",
+      "evidence_ref_keys": [
+        "missing_evidence",
+        "entry_price",
+        "stop_price",
+        "cost_gate_status"
+      ],
+      "gene_id": "TEG.META.INSUFFICIENT_EVIDENCE",
+      "label": "insufficient_process_evidence",
+      "maps_to_process_hint": "INSUFFICIENT_EVIDENCE",
+      "recurrence_signature_template": "DIM=DATA|SIG=evidence_insufficient",
+      "schema": "v16_a_trade_error_gene_v1",
+      "severity": "LOW",
+      "trigger_signals": [
+        "evidence_insufficient"
+      ],
+      "version": "1.0.0"
+    }
+  ],
+  "ontology_version": "v1.0.0",
+  "policy": {
+    "ai_cannot_override_deterministic": true,
+    "ai_proposes_only": true,
+    "exchange_write": false,
+    "mainnet": false,
+    "pnl_does_not_decide_process": true,
+    "real_money": false,
+    "supports_profitable_bad_process_win": true
+  },
+  "process_classes": [
+    "GOOD_PROCESS_WIN",
+    "GOOD_PROCESS_LOSS",
+    "BAD_PROCESS_WIN",
+    "BAD_PROCESS_LOSS",
+    "UNAVOIDABLE_SHOCK",
+    "INSUFFICIENT_EVIDENCE"
+  ],
+  "schema": "v16_a_trade_error_ontology_v1",
+  "severity_levels": [
+    "NONE",
+    "LOW",
+    "MEDIUM",
+    "HIGH",
+    "CRITICAL"
+  ]
+}

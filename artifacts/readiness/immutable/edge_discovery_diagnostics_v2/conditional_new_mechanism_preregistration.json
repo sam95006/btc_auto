@@ -1,0 +1,19 @@
+{
+  "schema": "conditional_new_mechanism_preregistration",
+  "confirmation_intervals_sealed_before_proposals": true,
+  "confirmation_registry_checksum": "e6756315aa48a14acd406d58308c00b5b89c6473644e8651816eb8a23e144cdf",
+  "generated_new_mechanism_count": 1,
+  "preregistered_new_mechanism_count": 1,
+  "proposals": [
+    {
+      "proposal_id": "EDGE_PROP_VWAP_MEAN_REVERSION",
+      "source_event_study_id": "72ba6d8f8c5daae0b2c07ecc2d9e18e0f7663b5d997418e2dc62afc8b8940e9d",
+      "economic_rationale": "FDR-supported raw forward return for VWAP_MEAN_REVERSION at ret_8",
+      "effect_size": 0.001011803751965078,
+      "component_id": "VWAP_MEAN_REVERSION",
+      "not_threshold_variant_spam": true
+    }
+  ],
+  "max_proposals": 6,
+  "auto_twelve_strategies_forbidden": true
+}

@@ -1,0 +1,53 @@
+{
+  "schema": "v13_d_pass2_adversarial_review",
+  "lane": "V13-D",
+  "pass": 2,
+  "created_at": "2026-08-05T08:30:00Z",
+  "review_focus": [
+    "today_for_past_universe_ban",
+    "future_observation_leak",
+    "delisting_and_late_listing_dynamics",
+    "live_public_metadata_gate",
+    "checksum_determinism",
+    "snapshot_tamper_detection"
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "MEDIUM",
+      "title": "Live public metadata must never backfill historical as_of",
+      "status": "FIXED",
+      "remediation": "public_metadata.assert_live_read_allowed fail-closed for historical as_of; adversarial probe added"
+    },
+    {
+      "id": "F2",
+      "severity": "HIGH",
+      "title": "Later-era snapshot must not answer earlier as_of",
+      "status": "FIXED",
+      "remediation": "select_snapshot_for_as_of chooses max availability_ms <= as_of; assert_not_today_for_past rejects future/live eras"
+    },
+    {
+      "id": "F3",
+      "severity": "HIGH",
+      "title": "Observation timestamps after as_of are future leaks",
+      "status": "FIXED",
+      "remediation": "evaluate_instrument rejects FUTURE_OBSERVATION_LEAK fail-closed before scoring"
+    },
+    {
+      "id": "F4",
+      "severity": "LOW",
+      "title": "Fixture checksum must detect instrument injection",
+      "status": "FIXED",
+      "remediation": "source_checksum covers symbol set + per-instrument hashes; tamper probe asserts mismatch"
+    }
+  ],
+  "remaining_open": [],
+  "hard_bans_honored": {
+    "no_exchange_writes": true,
+    "no_demo": true,
+    "no_pr27_merge": true,
+    "no_today_universe_for_past_as_of": true,
+    "no_future_observation_leak": true
+  },
+  "verdict": "PASS"
+}

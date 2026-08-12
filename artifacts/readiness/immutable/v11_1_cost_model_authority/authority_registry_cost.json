@@ -1,0 +1,70 @@
+{
+  "authority_id": "private_core.cost.model_v1_1",
+  "canonical_module": "backend.nexus_execution.cost_model",
+  "canonical_symbol": "CostModelContract",
+  "competitors": [
+    {
+      "delete_now": false,
+      "module": "backend.nexus_strategy_engine.cost_semantics",
+      "notes": "Re-exports COST_MODEL_VERSION from nexus_execution.cost_model; annotates observed-vs-proxy sources only \u2014 no independent formulas.",
+      "recommended_action": "retain_compat",
+      "role": "compatibility_shim",
+      "severity": "low",
+      "symbol": "COST_MODEL_VERSION"
+    },
+    {
+      "delete_now": false,
+      "module": "backend.nexus_demo_execution.trade_geometry",
+      "notes": "Delegates to estimate_round_trip_costs_float (canonical).",
+      "recommended_action": "retain_compat",
+      "role": "compatibility_shim",
+      "severity": "medium",
+      "symbol": "estimate_costs"
+    },
+    {
+      "delete_now": false,
+      "module": "backend.nexus_demo_execution.fee_rate",
+      "notes": "Demo fee-rate fetch/cache; rates feed canonical cost_model, must not override bridge.",
+      "recommended_action": "retain_compat",
+      "role": "compatibility_shim",
+      "severity": "medium",
+      "symbol": null
+    },
+    {
+      "delete_now": false,
+      "module": "backend.nexus_autonomy.execution_simulator_v1_1",
+      "notes": "TAKER_FEE/MAKER_FEE/_apply_costs/net_pnl re-exported or delegated from cost_model.",
+      "recommended_action": "migrate_callers",
+      "role": "compatibility_shim",
+      "severity": "medium",
+      "symbol": "TAKER_FEE"
+    },
+    {
+      "delete_now": false,
+      "module": "backend.nexus_edge_discovery.taxonomy_audit",
+      "notes": "Taxonomy audit references a cost model version for evidence labeling only.",
+      "recommended_action": "retain_compat",
+      "role": "fixture_tool",
+      "severity": "low",
+      "symbol": "COST_MODEL_VERSION"
+    }
+  ],
+  "contract_keys": [
+    "CostModelContract",
+    "CostBridge",
+    "COST_MODEL_VERSION",
+    "compose_cost_bridge"
+  ],
+  "contract_module": "backend.nexus_execution.cost_model",
+  "domain": "cost",
+  "invariants": [
+    "exact_decimal_cost_bridge",
+    "gross_minus_components_equals_net",
+    "canonical_cost_authority_count==1",
+    "cost_formula_divergence_count==0",
+    "cost_version_divergence_count==0"
+  ],
+  "notes": "Canonical CostModelContract version: founder-conservative-v1-1-2026-08-05. Legacy labels migrate via migrate_cost_model_version().",
+  "scope": "private_core_simulated_session",
+  "status": "active_compat_present"
+}

@@ -1,0 +1,61 @@
+{
+  "snapshot": {
+    "status": "SNAPSHOT_OK",
+    "generation": 1,
+    "created_at": "2026-08-04T13:06:33Z",
+    "source_ledger_position": 5,
+    "snapshot_checksum": "6686967e8317cb36cde899b896a997dd86ce87dc894888d708271e4dedb0c74c",
+    "snapshot_path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\tmp\\dur_pkg_b64c0wia\\backups\\snapshot_000001\\private_event_ledger.sqlite3",
+    "ledger_hash_chain_status": "PASS"
+  },
+  "hash_chain": {
+    "ledger_hash_chain_status": "PASS",
+    "event_count": 5
+  },
+  "idempotency": {
+    "status": "PASS",
+    "result": "DUPLICATE_IGNORED"
+  },
+  "corrupted_snapshot_restore": {
+    "status": "PASS",
+    "restore_status": "CORRUPTION_DETECTED"
+  },
+  "restore_after_live_corruption": {
+    "status": "PASS",
+    "restore_status": "RECOVERED_EXACT",
+    "detail": {
+      "generation": 1,
+      "event_count": 5
+    }
+  },
+  "post_restore_chain": {
+    "ledger_hash_chain_status": "PASS",
+    "event_count": 5
+  },
+  "integrity": "ok",
+  "ambiguous_fail_closed": {
+    "status": "PASS",
+    "detail": {
+      "status": "BLOCKED_AMBIGUOUS_STATE",
+      "reason": "stale_checkpoint_vs_ledger",
+      "exchange_write_attempt_count": 0,
+      "demo_order_count": 0,
+      "policy_mutation": false,
+      "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+      "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+      "old_trading_db_recovered": false,
+      "wallet_delta_attribution_changed": false
+    }
+  },
+  "preserved_facts": {
+    "TRADING_DB_PRIOR_LOCAL_STATE_NOT_RECOVERED": true,
+    "WALLET_DELTA_UNATTRIBUTED_EVIDENCE_LOST": true,
+    "old_trading_db_recovered": false,
+    "wallet_delta_attribution_changed": false
+  },
+  "backup_root": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\tmp\\dur_pkg_b64c0wia\\backups",
+  "exchange_write_attempt_count": 0,
+  "demo_order_count": 0,
+  "durability_status": "NEXUS_RUNTIME_DURABILITY_V1_PASS",
+  "created_at": "2026-08-04T13:06:35Z"
+}

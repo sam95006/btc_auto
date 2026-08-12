@@ -1,0 +1,58 @@
+{
+  "development": {
+    "all_excluded": true,
+    "results": [
+      {
+        "allowed": true,
+        "as_of_ms": 1700000000000,
+        "candidate_id": "SYN_V13F_DISC_001",
+        "future_data_excluded": true,
+        "proposed_end_ms": 1697408000000,
+        "proposed_start_ms": 1694816000000,
+        "status": "FUTURE_DATA_EXCLUDED"
+      },
+      {
+        "allowed": true,
+        "as_of_ms": 1700000000000,
+        "candidate_id": "SYN_V13F_DISC_002",
+        "future_data_excluded": true,
+        "proposed_end_ms": 1697840000000,
+        "proposed_start_ms": 1695248000000,
+        "status": "FUTURE_DATA_EXCLUDED"
+      },
+      {
+        "allowed": true,
+        "as_of_ms": 1700000000000,
+        "candidate_id": "SYN_V13F_DISC_003",
+        "future_data_excluded": true,
+        "proposed_end_ms": 1698272000000,
+        "proposed_start_ms": 1696544000000,
+        "status": "FUTURE_DATA_EXCLUDED"
+      }
+    ],
+    "status": "ALL_DEVELOPMENT_INTERVALS_EXCLUDE_FUTURE"
+  },
+  "universe_pit": {
+    "as_of_ms": 1700000000000,
+    "ok": true,
+    "status": "UNIVERSE_PIT_OK",
+    "universe_checksum": "3cdd354a4ea69c2fa3162dcc2928668337f8ef833952eee8f5951e300964edd6",
+    "violations": []
+  },
+  "valid_case": {
+    "allowed": true,
+    "as_of_ms": 1700000000000,
+    "future_data_excluded": true,
+    "proposed_end_ms": 1699568000000,
+    "proposed_start_ms": 1699136000000,
+    "status": "FUTURE_DATA_EXCLUDED"
+  },
+  "violation_case": {
+    "allowed": false,
+    "as_of_ms": 1700000000000,
+    "future_data_excluded": false,
+    "proposed_end_ms": 1700086400000,
+    "proposed_start_ms": 1699999999000,
+    "status": "FUTURE_DATA_VIOLATION"
+  }
+}

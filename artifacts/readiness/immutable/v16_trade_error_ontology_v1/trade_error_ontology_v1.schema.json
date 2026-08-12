@@ -1,0 +1,263 @@
+{
+  "$id": "nexus://v16_a/trade_error_ontology_v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "definitions": {
+    "avoidability_levels": [
+      "AVOIDABLE",
+      "PARTIALLY_AVOIDABLE",
+      "UNAVOIDABLE",
+      "UNKNOWN"
+    ],
+    "error_dimensions": [
+      "DATA",
+      "REGIME",
+      "STRATEGY",
+      "ENTRY",
+      "EXIT",
+      "EXECUTION",
+      "LIQUIDITY",
+      "COST",
+      "AI_REASONING",
+      "RISK",
+      "PORTFOLIO",
+      "INFRASTRUCTURE",
+      "EXTERNAL_SHOCK"
+    ],
+    "process_classes": [
+      "GOOD_PROCESS_WIN",
+      "GOOD_PROCESS_LOSS",
+      "BAD_PROCESS_WIN",
+      "BAD_PROCESS_LOSS",
+      "UNAVOIDABLE_SHOCK",
+      "INSUFFICIENT_EVIDENCE"
+    ],
+    "severity_levels": [
+      "NONE",
+      "LOW",
+      "MEDIUM",
+      "HIGH",
+      "CRITICAL"
+    ]
+  },
+  "description": "Machine-readable trade error gene bank and classification record. AI may propose; deterministic classifier is authoritative.",
+  "ontology_version": "v1.0.0",
+  "policy": {
+    "ai_cannot_override_deterministic": true,
+    "ai_proposes_only": true,
+    "deterministic_classifier_fallback": true,
+    "pnl_does_not_decide_process": true,
+    "supports_profitable_bad_process_win": true
+  },
+  "properties": {
+    "ai_proposed_class": {
+      "anyOf": [
+        {
+          "enum": [
+            "GOOD_PROCESS_WIN",
+            "GOOD_PROCESS_LOSS",
+            "BAD_PROCESS_WIN",
+            "BAD_PROCESS_LOSS",
+            "UNAVOIDABLE_SHOCK",
+            "INSUFFICIENT_EVIDENCE"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "avoidability": {
+      "enum": [
+        "AVOIDABLE",
+        "PARTIALLY_AVOIDABLE",
+        "UNAVOIDABLE",
+        "UNKNOWN"
+      ]
+    },
+    "causal_confidence": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "type": "number"
+    },
+    "classifier_authority": {
+      "additionalProperties": false,
+      "properties": {
+        "ai_can_override": {
+          "const": false
+        },
+        "ai_disagreement": {
+          "type": "boolean"
+        },
+        "deterministic_is_final": {
+          "const": true
+        },
+        "fallback": {
+          "const": "deterministic_classifier"
+        }
+      },
+      "required": [
+        "deterministic_is_final",
+        "ai_can_override",
+        "fallback"
+      ],
+      "type": "object"
+    },
+    "deterministic_class": {
+      "enum": [
+        "GOOD_PROCESS_WIN",
+        "GOOD_PROCESS_LOSS",
+        "BAD_PROCESS_WIN",
+        "BAD_PROCESS_LOSS",
+        "UNAVOIDABLE_SHOCK",
+        "INSUFFICIENT_EVIDENCE"
+      ]
+    },
+    "dimensions": {
+      "items": {
+        "enum": [
+          "DATA",
+          "REGIME",
+          "STRATEGY",
+          "ENTRY",
+          "EXIT",
+          "EXECUTION",
+          "LIQUIDITY",
+          "COST",
+          "AI_REASONING",
+          "RISK",
+          "PORTFOLIO",
+          "INFRASTRUCTURE",
+          "EXTERNAL_SHOCK"
+        ]
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "evidence_refs": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "ref_key": {
+            "type": "string"
+          },
+          "ref_value": {},
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ref_key",
+          "ref_value"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "is_bad_process": {
+      "type": "boolean"
+    },
+    "is_good_process": {
+      "type": "boolean"
+    },
+    "is_loss": {
+      "type": "boolean"
+    },
+    "is_win": {
+      "type": "boolean"
+    },
+    "matched_gene_ids": {
+      "items": {
+        "pattern": "^TEG\\.[A-Z0-9_.]+$",
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "noncompliant_reasons": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "ontology_version": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "pnl": {
+      "type": "number"
+    },
+    "process_classification": {
+      "enum": [
+        "GOOD_PROCESS_WIN",
+        "GOOD_PROCESS_LOSS",
+        "BAD_PROCESS_WIN",
+        "BAD_PROCESS_LOSS",
+        "UNAVOIDABLE_SHOCK",
+        "INSUFFICIENT_EVIDENCE"
+      ]
+    },
+    "recurrence_signature": {
+      "minLength": 1,
+      "pattern": "^RS\\|.+",
+      "type": "string"
+    },
+    "schema": {
+      "const": "v16_a_trade_error_ontology_v1"
+    },
+    "severity": {
+      "enum": [
+        "NONE",
+        "LOW",
+        "MEDIUM",
+        "HIGH",
+        "CRITICAL"
+      ]
+    },
+    "supports_profitable_bad_process_win": {
+      "const": true
+    },
+    "trade_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "versioning": {
+      "additionalProperties": false,
+      "properties": {
+        "classifier_version": {
+          "type": "string"
+        },
+        "gene_bank_checksum": {
+          "minLength": 16,
+          "type": "string"
+        },
+        "ontology_version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ontology_version",
+        "gene_bank_checksum"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema",
+    "ontology_version",
+    "process_classification",
+    "deterministic_class",
+    "dimensions",
+    "evidence_refs",
+    "severity",
+    "avoidability",
+    "recurrence_signature",
+    "causal_confidence",
+    "classifier_authority",
+    "versioning"
+  ],
+  "schema_name": "v16_a_trade_error_ontology_v1",
+  "title": "NEXUS Trade Error Ontology V1",
+  "type": "object"
+}

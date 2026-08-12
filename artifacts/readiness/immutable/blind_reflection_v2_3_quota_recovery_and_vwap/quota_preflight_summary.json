@@ -1,0 +1,14 @@
+{
+  "schema": "quota_preflight_summary",
+  "provider_profile": "GROQ_REFLECTION_REASONER",
+  "model_id": "llama-3.3-70b-versatile",
+  "provider_preflight_status": "PASS",
+  "http_status": null,
+  "result_status": "SUCCESS",
+  "retry_after": null,
+  "next_resume_not_before": null,
+  "timestamp": "2026-08-04T02:28:35Z",
+  "api_key_env_name": "GROQ_API_KEY_SECONDARY",
+  "api_key_value_recorded": false,
+  "mass_calibration_blocked": false
+}

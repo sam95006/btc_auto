@@ -1,0 +1,6 @@
+{
+  "schema": "event_study_readiness_v1",
+  "event_study_readiness_status": "NOT_READY",
+  "event_study_real_execution": false,
+  "created_at": "2026-08-05T07:49:44Z"
+}

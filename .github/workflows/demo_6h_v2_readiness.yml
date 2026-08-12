@@ -1,0 +1,249 @@
+name: demo-6h-v2-readiness
+
+# Draft readiness only — never deploys Validation, never enables exchange write.
+
+on:
+  push:
+    branches:
+      - feature/demo-autonomous-6h-v2-readiness
+      - feature/nexus-private-core-integration-spine-v1
+  pull_request:
+    branches:
+      - feature/nexus-single-service-consolidation
+      - feature/demo-autonomous-6h-v2-readiness
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-6h-v2-readiness-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BYBIT_DEMO: "true"
+  MAINNET: "false"
+  REAL_MONEY: "false"
+  EXCHANGE_WRITE: "false"
+  DEMO_AUTONOMOUS_ENABLED: "false"
+  DEMO_6H_V2_DRY_RUN_ONLY: "true"
+  NEXUS_FEE_RATE_CONSERVATIVE_ENABLED: "true"
+  NEXUS_FEE_RATE_CONSERVATIVE_FOUNDER_APPROVED: "true"
+  NEXUS_FEE_RATE_CONSERVATIVE_TAKER: "0.00055"
+  NEXUS_FEE_RATE_CONSERVATIVE_MAKER: "0.00020"
+  NEXUS_FEE_RATE_VERSION: "founder-conservative-v1-2026-07-31"
+  NEXUS_FEE_RATE_REVIEW_BY: "2026-08-31"
+  PYTHONPATH: ${{ github.workspace }}
+
+jobs:
+  fee-policy-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt flask pytest
+      - run: python -m pytest tests/test_fee_rate_honesty.py tests/test_founder_fee_and_geometry_policy.py tests/test_demo_6h_v2_readiness.py::test_fee_conservative_env -q --tb=line
+
+  geometry-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt flask pytest
+      - run: python -m pytest tests/test_fee_geometry_single_service.py tests/test_demo_6h_v2_readiness.py::test_geometry_missing_blocks tests/test_demo_6h_v2_readiness.py::test_structure_geometry_long_short tests/test_demo_6h_v2_readiness.py::test_net_rr_unchanged -q --tb=line
+
+  cost-gate-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt flask pytest
+      - run: python -m pytest tests/test_fee_churn_guard.py tests/test_fee_rate_honesty.py -q --tb=line
+
+  risk-policy-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt flask pytest
+      - run: python -m pytest tests/test_demo_6h_v2_readiness.py::test_six_role_and_risk_veto tests/test_demo_6h_v2_readiness.py::test_session_blocks_stale_and_duplicate -q --tb=line
+
+  decision-delta-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt flask pytest
+      - run: python -m pytest tests/test_demo_6h_v2_readiness.py::test_decision_delta_not_cost_block -q --tb=line
+
+  session-controller-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt flask pytest
+      - run: python -m pytest tests/test_demo_6h_v2_readiness.py::test_session_controller_dry_run_no_write tests/test_demo_6h_12h_session_engine.py -q --tb=line
+
+  founder-override-gate-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt flask pytest
+      - run: python -m pytest tests/test_founder_operational_override.py -q --tb=line
+
+  deadline-kill-recovery-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt flask pytest
+      - run: python -m pytest tests/test_demo_6h_12h_session_engine.py::test_engine_deadline_and_no_extend tests/test_demo_6h_12h_session_engine.py::test_kill_switch_and_finalize tests/test_demo_6h_12h_session_engine.py::test_recovery_preserves_counters tests/test_demo_6h_12h_session_engine.py::test_12h_gate_blocks_failed_6h tests/test_demo_6h_12h_session_engine.py::test_12h_gate_blocks_security_findings -q --tb=line
+
+  persistence-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt flask pytest
+      - run: python -m pytest tests/test_demo_6h_v2_readiness.py::test_evidence_schema_no_secrets -q --tb=line
+
+  security-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt flask pytest
+      - run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          bad=[]
+          for p in Path('.').rglob('*'):
+            if p.suffix.lower() not in {'.py','.md','.json','.yml','.ts','.tsx'} or 'node_modules' in p.parts:
+              continue
+            try:
+              t=p.read_text(encoding='utf-8', errors='ignore')
+            except Exception:
+              continue
+            if re.search(r'BEGIN (RSA |OPENSSH )?PRIVATE KEY', t):
+              bad.append(str(p))
+          assert not bad, bad
+          print('secret_leak_scan_ok')
+          print('mainnet_forbidden_env', '${{ env.MAINNET }}')
+          print('real_money_forbidden_env', '${{ env.REAL_MONEY }}')
+          assert '${{ env.MAINNET }}' == 'false'
+          assert '${{ env.REAL_MONEY }}' == 'false'
+          PY
+
+  dry-run-no-write-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt flask pytest
+      - run: python tools/ci/demo_6h_v2_dry_run.py
+      - name: Legacy delete dry-run
+        run: |
+          mkdir -p artifacts
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          Path('artifacts/obs_fail.json').write_text(json.dumps({
+            "operational_observation_pass": False,
+            "hidden_dependency_count": 0,
+            "active_running_service_count": 1,
+            "exchange_write_call_count": 0,
+          })+'\n', encoding='utf-8')
+          Path('artifacts/obs_pass.json').write_text(json.dumps({
+            "operational_observation_pass": True,
+            "hidden_dependency_count": 0,
+            "active_running_service_count": 1,
+            "exchange_write_call_count": 0,
+            "mainnet": False,
+            "real_money": False,
+          })+'\n', encoding='utf-8')
+          PY
+          python tools/ops/delete_legacy_services_after_observation.py --observation-report artifacts/obs_fail.json --strict --out artifacts/legacy_delete_blocked.json
+          python tools/ops/delete_legacy_services_after_observation.py --observation-report artifacts/obs_pass.json --strict --out artifacts/legacy_delete_ready_dry_run.json
+
+  frontend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - name: Frontend typecheck
+        working-directory: frontend
+        run: npx tsc -b --pretty false
+      - name: Frontend production build
+        working-directory: frontend
+        run: npm run build
+      - name: Record CI frontend truth
+        run: |
+          echo "CI_frontend_typecheck_executed=true"
+          echo "CI_frontend_build_executed=true"
+
+  python-full-suite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt flask pytest
+      - name: Full Python suite
+        run: |
+          set +e
+          python -m pytest tests -q --tb=line
+          code=$?
+          if [ "$code" -eq 0 ]; then
+            echo "CI_python_full_suite_status=PASS"
+          else
+            echo "CI_python_full_suite_status=FAIL"
+          fi
+          echo "CI_python_full_suite_executed=true"
+          exit $code
+      - name: Record CI python truth
+        if: always()
+        run: |
+          echo "CI_python_full_suite_executed=true"
+
+  browser-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Placeholder browser readiness (no live deploy)
+        run: |
+          echo "browser_tests=skipped_no_frozen_runtime_deploy"
+          echo "live_effect=false"
+          echo "exchange_write=false"

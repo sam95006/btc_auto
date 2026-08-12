@@ -1,0 +1,160 @@
+{
+  "checks": [
+    {
+      "blocked_count": 4,
+      "case_count": 4,
+      "check": "path_traversal",
+      "details": [
+        {
+          "blocked": true,
+          "path": "../etc/passwd",
+          "reason": "path_traversal"
+        },
+        {
+          "blocked": true,
+          "path": "..\\windows\\system32",
+          "reason": "path_traversal"
+        },
+        {
+          "blocked": true,
+          "path": "foo/../../escape",
+          "reason": "path_traversal"
+        },
+        {
+          "blocked": true,
+          "path": "/abs/path",
+          "reason": "path_escape"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "blocked": true,
+      "check": "symlink_escape",
+      "detail": "symlink_unavailable:OSError",
+      "passed": true,
+      "platform_skip": true,
+      "severity_note": "platform_dependent_on_windows",
+      "symlink_created": false
+    },
+    {
+      "check": "unsafe_deserialization",
+      "json_corrupt_blocked": true,
+      "passed": true,
+      "pickle_as_json_blocked": true,
+      "raw_pickle_yaml_loads_hits": [],
+      "raw_unsafe_loads_count": 0,
+      "scalar_blocked": true
+    },
+    {
+      "cases": [
+        {
+          "expect_hit": true,
+          "findings": [
+            "pattern:api_key"
+          ],
+          "hit": true,
+          "label": "json_key"
+        },
+        {
+          "expect_hit": true,
+          "findings": [
+            "pattern:api_key",
+            "credential_assignment"
+          ],
+          "hit": true,
+          "label": "assignment"
+        },
+        {
+          "expect_hit": false,
+          "findings": [],
+          "hit": false,
+          "label": "clean"
+        }
+      ],
+      "check": "secret_detection",
+      "credential_assignment_json_blind_spot": true,
+      "passed": true,
+      "secret_leak_count": 0
+    },
+    {
+      "check": "demo_mainnet_boundary",
+      "mainnet_client_created_count": 0,
+      "passed": true,
+      "scenarios": [
+        {
+          "demo_mainnet_confused": false,
+          "fail_closed": true,
+          "id": "demo_missing_creds_mainnet_present",
+          "mainnet_fallback_used": true,
+          "ok": true,
+          "reasons": [
+            "mainnet_fallback_rejected",
+            "demo_credentials_missing"
+          ],
+          "writes_enabled": false
+        },
+        {
+          "demo_mainnet_confused": true,
+          "fail_closed": true,
+          "id": "demo_profile_mainnet_host",
+          "mainnet_fallback_used": false,
+          "ok": true,
+          "reasons": [
+            "demo_mainnet_profile_confused",
+            "writes_require_explicit_founder_flag",
+            "demo_host_rejected:api.bybit.com"
+          ],
+          "writes_enabled": false
+        },
+        {
+          "demo_mainnet_confused": false,
+          "fail_closed": true,
+          "id": "public_readonly",
+          "mainnet_fallback_used": false,
+          "ok": true,
+          "reasons": [
+            "public_readonly_no_secrets_required"
+          ],
+          "writes_enabled": false
+        }
+      ]
+    },
+    {
+      "check": "import_graph",
+      "cycle_count": 3,
+      "cycles": [
+        [
+          "backend.nexus_research.features.feature_seed",
+          "backend.nexus_research.features.registry"
+        ],
+        [
+          "backend.coordination.station_dialogue_service",
+          "backend.services.nexus_runtime"
+        ],
+        [
+          "backend.nexus_demo_execution.geometry_event_sim",
+          "backend.nexus_demo_execution.structural_geometry_qualify"
+        ]
+      ],
+      "graph_keys": [
+        "import_graph_edge_count",
+        "import_graph_node_count",
+        "passed",
+        "scanned_files",
+        "violation_count",
+        "violations"
+      ],
+      "passed": true,
+      "raw_summary": {
+        "passed": true,
+        "violation_count": 0
+      }
+    }
+  ],
+  "exchange_write_attempt_count": 0,
+  "mainnet_client_created_count": 0,
+  "passed": true,
+  "schema": "v11_r4_security_static_v1",
+  "secret_leak_count": 0
+}

@@ -1,0 +1,15 @@
+{
+  "covers_all_allowed": true,
+  "forbidden_output_count": 0,
+  "qualification_ready_count": 0,
+  "schema": "FOUNDER_V14_H_CANDIDATE_TRIAGE_CONTROL",
+  "status_histogram": {
+    "COST_DESTROYED": 1,
+    "DATA_BLOCKED": 1,
+    "DEVELOPMENT_PROMISING_NOT_QUALIFIED": 1,
+    "DEVELOPMENT_REVIEW": 1,
+    "REGIME_FRAGILE": 1,
+    "REJECTED": 1,
+    "SAMPLE_BLOCKED": 1
+  }
+}

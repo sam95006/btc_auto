@@ -1,0 +1,69 @@
+{
+  "schema": "real_reflection_v2_1_calibration",
+  "reflection_calibration_trade_count": 60,
+  "evidence_completeness_ratio": 0.9863247863247864,
+  "deterministic_classifiable_ratio": 1.0,
+  "AI_valid_schema_ratio": 1.0,
+  "deterministic_AI_agreement_ratio": 1.0,
+  "critic_resolution_ratio": 1.0,
+  "deterministic_AI_agreement_count": 5,
+  "deterministic_AI_disagreement_count": 0,
+  "undetermined_count": 55,
+  "invalid_schema_count": 0,
+  "deterministic_counts": {
+    "PROCESS_COMPLIANT": 55,
+    "PROCESS_NONCOMPLIANT": 5
+  },
+  "ai_process_counts": {
+    "UNDETERMINED_PROCESS": 55,
+    "BAD_PROCESS_LOSS": 5
+  },
+  "quality_targets_met": true,
+  "new_lesson_record_count": 0,
+  "new_policy_effect_lesson_count": 0,
+  "policy_lessons_blocked_reason": null,
+  "control_fixtures_labeled": "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE",
+  "reserved_oos_used": false,
+  "AI_may_not_invent": [
+    "spread",
+    "slippage",
+    "Funding",
+    "OI",
+    "regime",
+    "rule_violation",
+    "entry_rationale"
+  ],
+  "NEXUS_AI_MOCK": "0",
+  "mock_calibration_cannot_be_labeled_real": true,
+  "providers_exercised": {
+    "GROQ_REFLECTION_REASONER": true,
+    "CEREBRAS_RESEARCH_NORMALIZER": true,
+    "SAMBANOVA_INDEPENDENT_CRITIC": true,
+    "GROQ_MAIN_REASONER": true
+  },
+  "cerebras_normalizer_ok_count": 3,
+  "cerebras_normalizer_fail_count": 0,
+  "lesson_retrieval_channel_ok": true,
+  "real_reflection_calibration_count": 60,
+  "real_market_trade_count": 50,
+  "control_fixture_count": 10,
+  "real_evidence_completeness_ratio": 0.9863247863247864,
+  "real_AI_valid_schema_ratio": 1.0,
+  "real_deterministic_AI_agreement_ratio": 1.0,
+  "real_critic_resolution_ratio": 1.0,
+  "groups_separated": {
+    "REAL_MARKET_DEVELOPMENT_TRADES": 50,
+    "CONTROL_FIXTURE_NOT_MARKET_PERFORMANCE": 10,
+    "performance_stats_not_combined": true
+  },
+  "good_process_win_count": 0,
+  "good_process_loss_count": 0,
+  "bad_process_win_count": 0,
+  "bad_process_loss_count": 5,
+  "provider_failure_count": 0,
+  "provider_rate_limited_count": 0,
+  "lesson_note": "quality_met_but_permanent_policy_lessons_still_forbidden_without_WF_OOS_risk_review",
+  "sanitized_inputs_only": true,
+  "api_keys_exposed": false,
+  "unredacted_model_responses_persisted": false
+}

@@ -1,0 +1,72 @@
+{
+  "case_count": 5,
+  "cases": [
+    {
+      "completeness_kept_count": 12,
+      "engine_status": "ENGINE_READY",
+      "fingerprint": "770466f7ea02ca0d06a1eecd8f81506ff7015c7b6de5c2a26d10ef105fbc7806",
+      "fixture_checksum": "6107d445a856074866b991268c9fad470803d90885b252e756f159c148e61856",
+      "input_event_count": 16,
+      "pit_holds": true,
+      "profitability_claimed": false,
+      "real_event_study_execution": false,
+      "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+      "replay_match": true,
+      "seed": "v14b-case-000"
+    },
+    {
+      "completeness_kept_count": 12,
+      "engine_status": "ENGINE_READY",
+      "fingerprint": "0aa428f5be246f079388cf719821a2ec107704bdfee3f0819202f45977af13f4",
+      "fixture_checksum": "9421a0fb1ded736fb327707849341f9dcab469f56033ee9ecc1907e3ca0efcca",
+      "input_event_count": 16,
+      "pit_holds": true,
+      "profitability_claimed": false,
+      "real_event_study_execution": false,
+      "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+      "replay_match": true,
+      "seed": "v14b-case-001"
+    },
+    {
+      "completeness_kept_count": 12,
+      "engine_status": "ENGINE_READY",
+      "fingerprint": "a3ca9d41d4e4e568f106738a58579300dce4a64c58f823c4f78c283cbe125a1d",
+      "fixture_checksum": "e2339cc7efe581bbc1bb68c5c1e7a67e1059a4ef871aefbb2f96fff097e86045",
+      "input_event_count": 16,
+      "pit_holds": true,
+      "profitability_claimed": false,
+      "real_event_study_execution": false,
+      "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+      "replay_match": true,
+      "seed": "v14b-case-002"
+    },
+    {
+      "completeness_kept_count": 12,
+      "engine_status": "ENGINE_READY",
+      "fingerprint": "41ebd2c54338d42c44c39d18f2ad78966a6fbf59b788af0c59c479e71366e149",
+      "fixture_checksum": "14d8ef75accb33f7a44fc2f829a6b3c1f5af6ac26058363e4019dbc9bff2862b",
+      "input_event_count": 16,
+      "pit_holds": true,
+      "profitability_claimed": false,
+      "real_event_study_execution": false,
+      "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+      "replay_match": true,
+      "seed": "v14b-case-003"
+    },
+    {
+      "completeness_kept_count": 12,
+      "engine_status": "ENGINE_READY",
+      "fingerprint": "4619eab100a1d3a1cd54a36ce44e98956a8d27d60826b4be91184c4b9f6ee037",
+      "fixture_checksum": "b51c86d4b208706d3659bd6c05790c6da4c61dd9e6e36067937ea8d2d5289136",
+      "input_event_count": 16,
+      "pit_holds": true,
+      "profitability_claimed": false,
+      "real_event_study_execution": false,
+      "real_event_study_status": "REAL_EVENT_STUDY_BLOCKED",
+      "replay_match": true,
+      "seed": "v14b-case-004"
+    }
+  ],
+  "created_at": "2026-08-05T11:16:24Z",
+  "schema": "v14_b_fixture_cases"
+}

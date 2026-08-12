@@ -60,6 +60,16 @@ def _cloud_runtime():
 
 
 if __name__ == "__main__":
+    # V30.1 unified runtime: legacy Procfile worker must not trade alongside ResearchAutonomyService.
+    if str(os.getenv("NEXUS_LEGACY_WORKER_DISABLED", "") or "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }:
+        raise SystemExit(
+            "legacy_worker_disabled: use ResearchAutonomyService via deploy/zeabur_unified/start.sh"
+        )
     if not _cloud_runtime():
         try:
             _single_instance = SingleInstanceGuard("nexus_worker").acquire()

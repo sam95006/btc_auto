@@ -1,0 +1,13 @@
+{
+  "status": "OOS_NON_CONSUMPTION_PROVEN",
+  "proven": true,
+  "oos_consumed": false,
+  "oos_executed": false,
+  "formal_walk_forward_executed": false,
+  "violations": [],
+  "registry_checksums": {
+    "consumed": "8c4a1ad19593cf7831601215e7f81b94ed4f5f66c5e6eb434424e271eceae13c",
+    "reserved": "560055f9d37839cd58e73c9dbb43e909a371dc298e33b8df06ea726ababd54e4",
+    "availability": "f25db477d47f96630b43288a6c8e3e8cd81a1bdcd6df0ad9efd86fadaabf2656"
+  }
+}

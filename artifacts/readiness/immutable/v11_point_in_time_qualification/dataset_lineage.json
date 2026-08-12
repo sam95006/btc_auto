@@ -1,0 +1,25 @@
+{
+  "dataset_id": "SYNTHETIC_PIT_DATASET_V11",
+  "dataset_version": "v11.synthetic.1",
+  "source": "synthetic_fixture_generator",
+  "source_timestamp_ms": 1698790400000,
+  "retrieval_timestamp_ms": 1699395200000,
+  "availability_timestamp_ms": 1699481600000,
+  "as_of_ms": 1700000000000,
+  "records": [
+    {
+      "record_id": "SYN_PIT_BAR_001",
+      "symbol": "SYNTHUSDT",
+      "source_timestamp_ms": 1698790400000,
+      "retrieval_timestamp_ms": 1699395200000,
+      "availability_timestamp_ms": 1699481600000,
+      "available_as_of_ms": 1699481600000,
+      "value_kind": "synthetic_ohlcv_bar",
+      "fixture_only": true
+    }
+  ],
+  "real_market_data": false,
+  "fixture_only": true,
+  "dataset_checksum": "88c3580df905ce6ec4daef6707954a4995633a1829010a11374bddbb9db53ca7",
+  "dataset_semantic_checksum": "63222b8dbbd5b73b459983415c56398c381d29f15a9a25022b2012034a038a74"
+}

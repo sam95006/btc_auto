@@ -1,0 +1,58 @@
+{
+  "schema": "historical_capability_coverage_v1",
+  "universe_id": "NEXUS_DYNAMIC_LINEAR_USDT_UNIVERSE",
+  "fleet_architecture": false,
+  "price_history_eligible_count": 99,
+  "derivatives_history_eligible_count": 99,
+  "live_monitor_only_count": 547,
+  "ineligible_count": 30,
+  "mainstream_price_eligible_count": 94,
+  "mid_size_price_eligible_count": 5,
+  "small_price_eligible_count": 0,
+  "meme_price_eligible_count": 5,
+  "targets": {
+    "PRICE_HISTORY_ELIGIBLE": 60,
+    "DERIVATIVES_HISTORY_ELIGIBLE": 20,
+    "mainstream": 15,
+    "mid_size": 20,
+    "small": 15,
+    "meme": 8
+  },
+  "note": "Price-structure strategies must not require OI; OI/Funding strategies require DERIVATIVES_HISTORY_ELIGIBLE",
+  "class_coverage_profiles": {
+    "schema": "dynamic_universe_coverage_v1",
+    "note": "Coverage only — not fleets",
+    "total_profiles": 676,
+    "MAINSTREAM": 187,
+    "MID_SIZE": 257,
+    "SMALL": 232,
+    "MEME": 12,
+    "NON_MEME": 664,
+    "UNKNOWN": 0
+  },
+  "historical_symbols_attempted": 80,
+  "download": {
+    "partitions_written": 54,
+    "historical_record_count": 935989,
+    "historical_dataset_checksum": "4e0115e9a61c95d14af7fd7b8e381dae813b464897adb1a4d883f87b8d4f8b93",
+    "pending_remaining": 666,
+    "completed_count": 54,
+    "prior_h5_cache_symbols": [
+      "ADAUSDT",
+      "BTCUSDT",
+      "DOGEUSDT",
+      "ETHUSDT",
+      "HYPEUSDT",
+      "SOLUSDT",
+      "SOXLUSDT",
+      "XAUUSDT",
+      "XRPUSDT",
+      "ZECUSDT"
+    ],
+    "prior_h5_record_count": 572216
+  },
+  "historical_storage_size": 99976542,
+  "download_resume_test_status": "PASS",
+  "reserved_interval_exclusion_status": "ENFORCED",
+  "blockers_if_targets_missed": []
+}

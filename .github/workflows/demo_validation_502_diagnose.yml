@@ -1,0 +1,67 @@
+name: demo-validation-502-diagnose
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SERVICE_ID: 6a69ad539949111176cefe63
+  FORBIDDEN_SERVICE_ID: 6a3b81652fdef84a45a2a553
+  ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+  SERVICE_NAME: nexus-bybit-demo-learning-validation
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/bybit-demo-execution-validation
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i -g zeabur@latest
+      - name: Collect Zeabur evidence (redacted)
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/demo_validation_502
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          set +e
+          zeabur service get --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > artifacts/demo_validation_502/zeabur_service_info.txt 2>&1
+          zeabur deployment get --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > artifacts/demo_validation_502/zeabur_deployment_info.txt 2>&1
+          zeabur deployment list --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > artifacts/demo_validation_502/zeabur_deployment_list.txt 2>&1
+          zeabur deployment log -t=build --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false > artifacts/demo_validation_502/zeabur_build_logs.txt 2>&1
+          zeabur deployment log -t=runtime --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false > artifacts/demo_validation_502/zeabur_runtime_logs.txt 2>&1
+          zeabur service restart --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false > artifacts/demo_validation_502/zeabur_restart.txt 2>&1
+          sleep 20
+          zeabur deployment log -t=runtime --service-id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -i=false > artifacts/demo_validation_502/zeabur_runtime_logs_after_restart.txt 2>&1
+          zeabur variable list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > artifacts/demo_validation_502/zeabur_variables_raw.txt 2>&1
+          set -e
+          python - <<'PY'
+          import json,re
+          from pathlib import Path
+          root=Path('artifacts/demo_validation_502')
+          for name in ['zeabur_runtime_logs.txt','zeabur_runtime_logs_after_restart.txt','zeabur_build_logs.txt','zeabur_service_info.txt','zeabur_deployment_info.txt','zeabur_restart.txt']:
+            p=root/name
+            t=p.read_text(encoding='utf-8',errors='replace') if p.exists() else ''
+            print('====', name, 'bytes', len(t))
+            print('\n'.join(t.splitlines()[-60:]))
+          raw=(root/'zeabur_variables_raw.txt').read_text(encoding='utf-8',errors='replace')
+          try:
+            data=json.loads(raw)
+            rows=data if isinstance(data,list) else []
+            keys=[(r.get('key') or r.get('name'), (r.get('value') or '')[:40]) for r in rows if isinstance(r,dict)]
+            print('vars', [(k, ('***' if k and any(x in str(k).upper() for x in ['KEY','SECRET','PASSWORD','TOKEN']) else v)) for k,v in keys])
+          except Exception as e:
+            print('var_parse', type(e).__name__)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-validation-502-evidence-r2
+          path: artifacts/demo_validation_502/

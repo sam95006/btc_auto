@@ -1,0 +1,40 @@
+{
+  "findings": [],
+  "hard_ban_inventory": {
+    "count": 16,
+    "enforced": true,
+    "hard_bans": [
+      "no_real_money",
+      "no_mainnet",
+      "no_exchange_write",
+      "no_historical_rewrite",
+      "no_ai_mutate_raw_payload",
+      "no_non_utc_timestamps",
+      "no_claim_15y_history_downloaded",
+      "no_full_history_ingest_this_round",
+      "no_oos",
+      "no_walkforward",
+      "no_fabricated_ai_learning",
+      "no_pr26_merge",
+      "no_pr27_merge",
+      "no_status_json_lane_artifact",
+      "no_acceleration_report_edit",
+      "no_auto_integrate"
+    ]
+  },
+  "name": "adversarial",
+  "pass": 2,
+  "quarantine_probe": {
+    "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "pointer": {
+      "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "pointer_at": "2026-08-06T01:33:46Z",
+      "quarantine_path": "quarantine/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+      "reason": "verify_fail:content_hash_mismatch",
+      "schema": "v17_b_bronze_quarantine_pointer_v1",
+      "status": "QUARANTINED"
+    },
+    "status": "QUARANTINED"
+  },
+  "status": "PASS"
+}

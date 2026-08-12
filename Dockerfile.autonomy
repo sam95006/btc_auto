@@ -1,0 +1,51 @@
+# DEPRECATED — NOT the canonical Zeabur path.
+# Use root Dockerfile + deploy/zeabur_unified/start.sh for nexus-member-preview-v18-2-1.
+# Kept for git history only; do not select this Dockerfile in Zeabur.
+#
+# V18.2.30.1 — nexus-autonomy-worker (Zeabur)
+# Separate from Web Dockerfile (Gunicorn). One process responsibility.
+FROM python:3.11-slim-bookworm
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    NEXUS_RUNTIME_LOCATION=ZEABUR \
+    NEXUS_DATA_ROOT=/data \
+    NEXUS_CAMPAIGN_ROOT=/data/campaigns/research_v18_2_30 \
+    NEXUS_CAMPAIGN_NAME=research_v18_2_30 \
+    EXCHANGE_WRITE=true \
+    MAINNET=false \
+    REAL_MONEY=false \
+    NEXUS_RESEARCH_AUTONOMY=1 \
+    NEXUS_WEB_ONLY=false \
+    NEXUS_EMBEDDED_WORKER=false
+
+WORKDIR /app
+
+RUN set -eux; \
+    if [ -f /etc/dpkg/dpkg.cfg.d/docker ]; then \
+      sed -i '/^path-exclude/s!^path-exclude /usr/share/man!path-include /usr/share/man!' /etc/dpkg/dpkg.cfg.d/docker; \
+    fi; \
+    mkdir -p /usr/share/man/man1; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates curl; \
+    rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+# Persistent volume is mounted at /data by Zeabur. Ensure mount points exist in image.
+RUN mkdir -p /data/campaigns/research_v18_2_30/autonomy \
+             /data/campaigns/research_v18_2_30/checkpoints \
+             /data/autonomy/locks \
+             /data/evidence_coordinator
+
+# Do NOT start Gunicorn here.
+CMD ["python", "-m", "backend.nexus_research_ai_autonomy.research_autonomy_service", \
+     "--run", \
+     "--campaign-root", "/data/campaigns/research_v18_2_30", \
+     "--cycle-sleep-sec", "120"]

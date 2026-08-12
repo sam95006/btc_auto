@@ -1,0 +1,62 @@
+{
+  "schema": "v11_reflection_v23_adjudication_summary",
+  "created_at": "2026-08-05T03:29:21Z",
+  "git_head_at_run": "e4f30f9b8abaaade6151a75ef5ac6face53d5135",
+  "branch": "feature/v11-reflection-v23-adjudication",
+  "fixture_result_label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+  "fixture_only": true,
+  "real_ai_quality_claimed": false,
+  "real_checkpoint_progress": {
+    "checkpoint_available": true,
+    "checkpoint_path": "D:\\NEXUS\\btc_bot\\.nexus_runtime\\blind_reflection_v23_checkpoint.json",
+    "progress_source": "CHECKPOINT_FILE",
+    "checkpoint_read_status": "OK",
+    "rebuilt_from_summary_metrics": false,
+    "schema": "blind_reflection_v23_checkpoint_v4",
+    "schema_version": 4,
+    "case_id_count": 80,
+    "completed_case_count": 53,
+    "pending_case_count": 27,
+    "critic_case_count": 26,
+    "critic_pending_count": 10,
+    "critic_resolved_count": 16,
+    "groq_success_count": 53,
+    "groq_429_count": 20,
+    "groq_next_resume_not_before": "2026-08-04T16:49:33Z",
+    "sambanova_success_count": 16,
+    "sambanova_429_count": 17,
+    "sambanova_next_resume_not_before": "2026-08-04T16:49:58Z"
+  },
+  "checkpoint_copy": {
+    "copy_executed": false,
+    "reason": "READ_ONLY_REFERENCE_MODE",
+    "worktree_checkpoint_path": "D:\\NEXUS_RUNTIME\\worktrees\\v11_reflection\\.nexus_runtime\\blind_reflection_v23_checkpoint.json"
+  },
+  "fixture_quality_gates_evaluated": false,
+  "fixture_quality_gates_passed": false,
+  "fixture_terminal_denominator_validation": {
+    "terminal_denominator_validation": "PASS",
+    "issues": [],
+    "checked_ratio_keys": [
+      "evidence_packet_constructible_ratio",
+      "reflection_prompt_delivery_ratio_on_attempts",
+      "full_calibration_completion_ratio",
+      "blind_valid_schema_ratio",
+      "informative_classification_ratio_overall",
+      "informative_classification_ratio_on_sufficient_cases",
+      "blind_agreement_ratio_on_sufficient_cases",
+      "critic_resolution_ratio"
+    ]
+  },
+  "fixture_disagreement_count": 2,
+  "new_policy_effect_lesson_count": 0,
+  "policy_effect_lesson_allowed": false,
+  "rebuilt_from_summary_metrics": false,
+  "formal_walk_forward_executed": false,
+  "oos_executed": false,
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "deployment_started": false,
+  "mainnet": false,
+  "real_money": false
+}

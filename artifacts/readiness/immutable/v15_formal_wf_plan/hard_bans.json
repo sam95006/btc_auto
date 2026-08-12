@@ -1,0 +1,38 @@
+{
+  "flags": {
+    "Founder_authorization_present": false,
+    "demo_order_count": 0,
+    "exchange_write_attempt_count": 0,
+    "formal_walk_forward_executed": false,
+    "mainnet": false,
+    "oos_consumed": false,
+    "oos_executed": false,
+    "oos_reservation_created": false,
+    "profitability_claim": false,
+    "qualification_ready_count": 0,
+    "real_money": false,
+    "shadow_order_count": 0,
+    "strategy_promoted": false,
+    "strategy_selected": false
+  },
+  "hard_bans": [
+    "no_formal_walk_forward_execution",
+    "no_oos_execution",
+    "no_oos_reservation",
+    "no_oos_consumption",
+    "no_demo_orders",
+    "no_shadow_orders",
+    "no_exchange_writes",
+    "no_mainnet",
+    "no_real_money",
+    "no_strategy_selection",
+    "no_strategy_promotion",
+    "no_profitability_claims",
+    "no_fabricated_edge",
+    "no_fabricated_ai_learning",
+    "no_pr_merge",
+    "no_deployment",
+    "no_public_product_changes"
+  ],
+  "schema": "FOUNDER_V15_F_FORMAL_WALK_FORWARD_PLAN_COMPILER"
+}

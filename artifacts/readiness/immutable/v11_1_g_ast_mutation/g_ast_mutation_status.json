@@ -1,0 +1,110 @@
+{
+  "schema": "nexus_v11_1_g_ast_mutation_remediation_v1",
+  "created_at": "2026-08-05T04:16:40Z",
+  "branch": "feature/v11_1-g-ast-mutation-depth",
+  "lane": "G",
+  "recommendation": "NEXUS_V11_SECURITY_MUTATION_REDTEAM_PASS",
+  "passed": true,
+  "metrics": {
+    "production_ast_survivor_count": 0,
+    "production_ast_killed_count": 5,
+    "production_ast_equivalent_count": 3,
+    "wrapper_only_pass_forbidden": true,
+    "h_gate_pass_is_not_authority_remediation": true,
+    "exchange_write_attempt_count": 0,
+    "secret_leak_count": 0,
+    "mainnet_client_created_count": 0,
+    "demo_order_count": 0
+  },
+  "findings": {
+    "G_MUTATION_DEPTH_WRAPPER_ONLY": "FIXED",
+    "PRODUCTION_AST_MUTANT_SURVIVED": "FIXED",
+    "secret_scan_json_assignment_blind_spot": "FIXED",
+    "DUPLICATE_GATE_BASELINE_FALSE_CONFIDENCE": "FIXED"
+  },
+  "mutant_kill_table": [
+    {
+      "mutant_id": "persist_drop_dotdot_token_check",
+      "target_rel": "backend/nexus_autonomy/security_persistence_v1.py",
+      "status": "equivalent",
+      "operator": "drop_dotdot_token_check",
+      "detail": "dotdot_still_blocked",
+      "r4_listed_survivor": false
+    },
+    {
+      "mutant_id": "persist_scan_secrets_noop",
+      "target_rel": "backend/nexus_autonomy/security_persistence_v1.py",
+      "status": "killed",
+      "operator": "return_empty_list",
+      "detail": "secrets_missed_HOLE",
+      "r4_listed_survivor": true
+    },
+    {
+      "mutant_id": "persist_json_accept_scalars",
+      "target_rel": "backend/nexus_autonomy/security_persistence_v1.py",
+      "status": "killed",
+      "operator": "drop_scalar_root_check",
+      "detail": "scalar_accepted_HOLE",
+      "r4_listed_survivor": true
+    },
+    {
+      "mutant_id": "cred_ignore_mainnet_fallback",
+      "target_rel": "backend/nexus_autonomy/security_credential_boundary_v1.py",
+      "status": "equivalent",
+      "operator": "force_mainnet_fallback_false",
+      "detail": "fallback_or_confusion_still_fail_closed",
+      "r4_listed_survivor": false
+    },
+    {
+      "mutant_id": "cred_force_writes_enabled",
+      "target_rel": "backend/nexus_autonomy/security_credential_boundary_v1.py",
+      "status": "equivalent",
+      "operator": "force_writes_enabled",
+      "detail": "writes_still_disabled",
+      "r4_listed_survivor": false
+    },
+    {
+      "mutant_id": "public_assert_schema_noop",
+      "target_rel": "backend/nexus_autonomy/security_public_private_v1.py",
+      "status": "killed",
+      "operator": "noop_assert_public_schema",
+      "detail": "public_schema_noop_HOLE",
+      "r4_listed_survivor": true
+    },
+    {
+      "mutant_id": "public_redact_identity",
+      "target_rel": "backend/nexus_autonomy/security_public_private_v1.py",
+      "status": "killed",
+      "operator": "redact_identity",
+      "detail": "redaction_identity_HOLE",
+      "r4_listed_survivor": true
+    },
+    {
+      "mutant_id": "write_trap_install_noop",
+      "target_rel": "backend/nexus_autonomy/security_write_traps_v1.py",
+      "status": "killed",
+      "operator": "write_trap_noop",
+      "detail": "install_noop_HOLE",
+      "r4_listed_survivor": true
+    }
+  ],
+  "h_gate_honesty_note": "Lane H CI duplicate-authority gate PASS baselining known competitors does NOT clear critical multi-authority blockers. Treat H as audit/registry/gate only -- not runtime authority remediation. C1-C6 own cost/lifecycle/retry/checkpoint/shim/SCC remediation.",
+  "hard_bans": [
+    "no_exchange_write",
+    "no_demo_orders",
+    "no_mainnet_client",
+    "no_mass_dependency_upgrades",
+    "no_mutmut_cosmic_ray_required",
+    "no_wrapper_only_pass",
+    "no_treat_h_gate_as_authority_remediation",
+    "no_reimplement_c1_c6"
+  ],
+  "blockers": [],
+  "two_pass": {
+    "pass1_recommendation": "NEXUS_V11_SECURITY_MUTATION_REDTEAM_PASS",
+    "pass2_recommendation": "NEXUS_V11_SECURITY_MUTATION_REDTEAM_PASS",
+    "pass1_production_ast_survivor_count": 0,
+    "pass2_production_ast_survivor_count": 0,
+    "deterministic": true
+  }
+}

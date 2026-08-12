@@ -1,0 +1,15 @@
+{
+  "allowed_dossier_statuses": [
+    "DEVELOPMENT_REVIEW",
+    "DEVELOPMENT_PROMISING_NOT_QUALIFIED"
+  ],
+  "covers_all_allowed": true,
+  "forbidden_output_count": 0,
+  "qualification_ready_count": 0,
+  "schema": "FOUNDER_V15_E_CANDIDATE_DOSSIER_BUILDER",
+  "status_ceiling_ok": true,
+  "status_histogram": {
+    "DEVELOPMENT_PROMISING_NOT_QUALIFIED": 1,
+    "DEVELOPMENT_REVIEW": 1
+  }
+}

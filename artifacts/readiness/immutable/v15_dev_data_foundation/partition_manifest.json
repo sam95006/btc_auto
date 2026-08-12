@@ -1,0 +1,77 @@
+{
+  "categories": [
+    "DEVELOPMENT",
+    "VALIDATION_PLANNING",
+    "OOS_RESERVED",
+    "OOS_UNTOUCHED"
+  ],
+  "forbidden_consumed_intervals": [
+    {
+      "category": "CONSUMED_FORBIDDEN",
+      "consumable_for_development": false,
+      "end_ms": 1736415000000,
+      "end_utc": "2025-01-09T09:30:00Z",
+      "interval_id": "H3_CONSUMED_FAILED_HOLDOUT",
+      "notes": "Prior consumed failed holdout - immutable, never reuse as qualification",
+      "oos_consumable": false,
+      "start_ms": 1720863000000,
+      "start_utc": "2024-07-13T09:30:00Z"
+    }
+  ],
+  "formal_walk_forward": false,
+  "oos_consumed": false,
+  "oos_executed": false,
+  "overlap_policy": "DEVELOPMENT_and_VALIDATION_PLANNING_are_adjacent_non_overlapping;OOS_RESERVED_and_OOS_UNTOUCHED_never_loadable_for_development",
+  "partition_checksum": "521504c73845f5adba2fc8afbe2267ab31c1bc6bf1b3a5b1c48750befffe37be",
+  "partitions": [
+    {
+      "category": "DEVELOPMENT",
+      "consumable_for_development": true,
+      "consumable_for_validation_planning": false,
+      "end_ms": 1767000599999,
+      "end_utc": "2025-12-29T09:29:59Z",
+      "notes": "Primary development exploration window (first 60% of research V2/V3 span)",
+      "oos_consumable": false,
+      "partition_id": "DEV_EXPLORATION_PRIMARY",
+      "start_ms": 1739007000000,
+      "start_utc": "2025-02-08T09:30:00Z"
+    },
+    {
+      "category": "VALIDATION_PLANNING",
+      "consumable_for_development": false,
+      "consumable_for_validation_planning": true,
+      "end_ms": 1785663000000,
+      "end_utc": "2026-08-02T09:30:00Z",
+      "notes": "Validation planning only - not formal walk-forward, not OOS",
+      "oos_consumable": false,
+      "partition_id": "VALIDATION_PLANNING_PRIMARY",
+      "start_ms": 1767000600000,
+      "start_utc": "2025-12-29T09:30:00Z"
+    },
+    {
+      "category": "OOS_RESERVED",
+      "consumable_for_development": false,
+      "consumable_for_validation_planning": false,
+      "end_ms": 1789551000000,
+      "end_utc": "2026-09-16T09:30:00Z",
+      "notes": "Reserved September OOS - sealed, never consumed by V15-A",
+      "oos_consumable": false,
+      "partition_id": "SEPTEMBER_H3_OOS_RESERVED",
+      "start_ms": 1785663000001,
+      "start_utc": "2026-08-02T09:30:00Z"
+    },
+    {
+      "category": "OOS_UNTOUCHED",
+      "consumable_for_development": false,
+      "consumable_for_validation_planning": false,
+      "end_ms": 1821087000000,
+      "end_utc": "2027-09-16T09:30:00Z",
+      "notes": "Future untouched OOS reservation - do not open",
+      "oos_consumable": false,
+      "partition_id": "POST_SEPTEMBER_OOS_UNTOUCHED",
+      "start_ms": 1789551000001,
+      "start_utc": "2026-09-16T09:30:00Z"
+    }
+  ],
+  "schema": "nexus_pit_time_partition_v15_a"
+}

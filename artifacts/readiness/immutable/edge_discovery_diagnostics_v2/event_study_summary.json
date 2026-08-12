@@ -1,0 +1,1674 @@
+{
+  "schema": "event_study_summary_v1",
+  "engine": "NEXUS_EVENT_STUDY_ENGINE_V1",
+  "event_study_component_count": 12,
+  "event_study_observation_count": 103161,
+  "random_seed": 20260803,
+  "forward_horizons_bars": [
+    1,
+    2,
+    4,
+    8,
+    16,
+    32
+  ],
+  "registry": [
+    {
+      "component_id": "TREND_CONTINUATION",
+      "event_study_id": "6588f9f5e46c02cd2996723a198e463be5c4048b08baac5db038698e6cc415af",
+      "event_count": 2812,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "STRUCTURAL_RETEST",
+      "event_study_id": "b0c4248091da2053922422125491f5e96a199d704568286d1361a17e838cf12c",
+      "event_count": 10722,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "BREAKOUT",
+      "event_study_id": "e16989eaa0fb0c8834d7065245485f1a2a33e8d130ecb344f1622dd954e2fc8f",
+      "event_count": 6548,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "FAILED_BREAKOUT",
+      "event_study_id": "1dd51086fb3330c68a00e6b13795efe7dac9d7ac5e06f6e115ea8f00684cb649",
+      "event_count": 21756,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "MOMENTUM_ACCELERATION",
+      "event_study_id": "86fe1d7194988e0b94fc99bf4de4c026cd8f27b76eac812e8861dd1e878927a7",
+      "event_count": 2460,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "VOLATILITY_EXPANSION",
+      "event_study_id": "21e180a07bbe1cd1c1cb598e4a99dddc342f6b305794825843a7ca24bdf1aab2",
+      "event_count": 16531,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "VWAP_MEAN_REVERSION",
+      "event_study_id": "72ba6d8f8c5daae0b2c07ecc2d9e18e0f7663b5d997418e2dc62afc8b8940e9d",
+      "event_count": 18692,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "STRUCTURAL_MEAN_REVERSION",
+      "event_study_id": "4c8565254ed4169c825a4cf822501630c0fd44c437a5e548b8b314eb0e2a4f55",
+      "event_count": 9038,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH",
+      "event_study_id": "9609c62a9074691244cbf532fd87c7490f028f6a43a768bb37f9edf077641e9f",
+      "event_count": 26,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "CROSS_SECTIONAL_MOMENTUM",
+      "event_study_id": "4dda3fb5efa66532752726ebd8ef7ab213ad43f48a008fdbf44847357e3dadcc",
+      "event_count": 26,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "FUNDING_OI_CONTINUATION",
+      "event_study_id": "3f3a08af54bb0a5fdf8e7545094b8631c5ca1b33d4025aee2e6fa8365ced0d66",
+      "event_count": 1616,
+      "observations_are_trades": false
+    },
+    {
+      "component_id": "LIQUIDITY_SWEEP_REVERSAL",
+      "event_study_id": "7839ea01ddd93e3bc0e94723b90753fc90ef28894020145ceedc3db49d935f9d",
+      "event_count": 12934,
+      "observations_are_trades": false
+    }
+  ],
+  "components": [
+    {
+      "component_id": "TREND_CONTINUATION",
+      "event_count": 2812,
+      "summary_ret_8": {
+        "event_count": 2812,
+        "observation_is_trade": false,
+        "horizon": "ret_8",
+        "mean_forward_return": 0.000306091946841349,
+        "median_forward_return": -0.0003645345305284305,
+        "directional_hit_rate": 0.4797297297297297,
+        "downside_tail_return": -0.021248791806425086,
+        "upside_tail_return": 0.024659864834813777,
+        "mean_mfe": 0.02259132992398471,
+        "mean_mae": 0.02084163208388668
+      },
+      "horizons": {
+        "ret_1": {
+          "event_count": 2812,
+          "observation_is_trade": false,
+          "horizon": "ret_1",
+          "mean_forward_return": 0.0007625895759091993,
+          "median_forward_return": 0.0006758418551652539,
+          "directional_hit_rate": 0.5721906116642959,
+          "downside_tail_return": -0.005465017928685308,
+          "upside_tail_return": 0.007314322830228731,
+          "mean_mfe": 0.02259132992398471,
+          "mean_mae": 0.02084163208388668
+        },
+        "ret_2": {
+          "event_count": 2812,
+          "observation_is_trade": false,
+          "horizon": "ret_2",
+          "mean_forward_return": 0.0005122494584029607,
+          "median_forward_return": 0.0004715927893563024,
+          "directional_hit_rate": 0.5302275960170697,
+          "downside_tail_return": -0.008968912359180816,
+          "upside_tail_return": 0.011128522207364102,
+          "mean_mfe": 0.02259132992398471,
+          "mean_mae": 0.02084163208388668
+        },
+        "ret_4": {
+          "event_count": 2812,
+          "observation_is_trade": false,
+          "horizon": "ret_4",
+          "mean_forward_return": 3.205275621394849e-05,
+          "median_forward_return": -0.0,
+          "directional_hit_rate": 0.4992887624466572,
+          "downside_tail_return": -0.015113994515165135,
+          "upside_tail_return": 0.01521743774178825,
+          "mean_mfe": 0.02259132992398471,
+          "mean_mae": 0.02084163208388668
+        },
+        "ret_8": {
+          "event_count": 2812,
+          "observation_is_trade": false,
+          "horizon": "ret_8",
+          "mean_forward_return": 0.000306091946841349,
+          "median_forward_return": -0.0003645345305284305,
+          "directional_hit_rate": 0.4797297297297297,
+          "downside_tail_return": -0.021248791806425086,
+          "upside_tail_return": 0.024659864834813777,
+          "mean_mfe": 0.02259132992398471,
+          "mean_mae": 0.02084163208388668
+        },
+        "ret_16": {
+          "event_count": 2812,
+          "observation_is_trade": false,
+          "horizon": "ret_16",
+          "mean_forward_return": -8.369493346626982e-05,
+          "median_forward_return": -0.0006251865900989365,
+          "directional_hit_rate": 0.4690611664295875,
+          "downside_tail_return": -0.03137046622266377,
+          "upside_tail_return": 0.031173805558170082,
+          "mean_mfe": 0.02259132992398471,
+          "mean_mae": 0.02084163208388668
+        },
+        "ret_32": {
+          "event_count": 2812,
+          "observation_is_trade": false,
+          "horizon": "ret_32",
+          "mean_forward_return": 0.0007983336730559937,
+          "median_forward_return": -0.0006055712555509751,
+          "directional_hit_rate": 0.4855820576717693,
+          "downside_tail_return": -0.042557058632349945,
+          "upside_tail_return": 0.04590788850512304,
+          "mean_mfe": 0.02259132992398471,
+          "mean_mae": 0.02084163208388668
+        }
+      },
+      "fold_count": 5,
+      "positive_fold_count": 2,
+      "fold_means_ret_8": [
+        0.0004316383176063528,
+        0.0019486045615208698,
+        -0.0001513265463736429,
+        -7.4014346591177025e-06,
+        -0.0006875191812255574
+      ],
+      "bootstrap": {
+        "mean": 0.000306091946841349,
+        "ci_low": -0.00027041585615854063,
+        "ci_high": 0.0007838783901089304,
+        "bootstrap_method": "chronological_block_bootstrap",
+        "bootstrap_block_size": 32,
+        "replicates": 200,
+        "random_seed": 20264973,
+        "insufficient": false
+      },
+      "p_value_mean_gt_0": 0.15422885572139303,
+      "largest_symbol_contribution": 0.06016062108730417,
+      "largest_regime_contribution": 0.5052186642029277,
+      "effect_size": 0.000306091946841349,
+      "supported_raw_signal_candidate": false
+    },
+    {
+      "component_id": "STRUCTURAL_RETEST",
+      "event_count": 10722,
+      "summary_ret_8": {
+        "event_count": 10722,
+        "observation_is_trade": false,
+        "horizon": "ret_8",
+        "mean_forward_return": -0.0005107470028931615,
+        "median_forward_return": -0.0006985590076827944,
+        "directional_hit_rate": 0.45905614624137286,
+        "downside_tail_return": -0.02068321901279291,
+        "upside_tail_return": 0.02103659369102815,
+        "mean_mfe": 0.020860368446048327,
+        "mean_mae": 0.0193028794629211
+      },
+      "horizons": {
+        "ret_1": {
+          "event_count": 10722,
+          "observation_is_trade": false,
+          "horizon": "ret_1",
+          "mean_forward_return": -0.00011609528666470297,
+          "median_forward_return": -0.00018546542222574558,
+          "directional_hit_rate": 0.4579369520611826,
+          "downside_tail_return": -0.007063001723195945,
+          "upside_tail_return": 0.007138929324931459,
+          "mean_mfe": 0.020860368446048327,
+          "mean_mae": 0.0193028794629211
+        },
+        "ret_2": {
+          "event_count": 10722,
+          "observation_is_trade": false,
+          "horizon": "ret_2",
+          "mean_forward_return": -8.305522857597875e-05,
+          "median_forward_return": -0.0002730413352333962,
+          "directional_hit_rate": 0.4665174407759746,
+          "downside_tail_return": -0.009909899583230401,
+          "upside_tail_return": 0.01060876583571609,
+          "mean_mfe": 0.020860368446048327,
+          "mean_mae": 0.0193028794629211
+        },
+        "ret_4": {
+          "event_count": 10722,
+          "observation_is_trade": false,
+          "horizon": "ret_4",
+          "mean_forward_return": -0.00017208921715050195,
+          "median_forward_return": -0.0004266496367692781,
+          "directional_hit_rate": 0.4612945346017534,
+          "downside_tail_return": -0.01433108675032831,
+          "upside_tail_return": 0.014868255470573657,
+          "mean_mfe": 0.020860368446048327,
+          "mean_mae": 0.0193028794629211
+        },
+        "ret_8": {
+          "event_count": 10722,
+          "observation_is_trade": false,
+          "horizon": "ret_8",
+          "mean_forward_return": -0.0005107470028931615,
+          "median_forward_return": -0.0006985590076827944,
+          "directional_hit_rate": 0.45905614624137286,
+          "downside_tail_return": -0.02068321901279291,
+          "upside_tail_return": 0.02103659369102815,
+          "mean_mfe": 0.020860368446048327,
+          "mean_mae": 0.0193028794629211
+        },
+        "ret_16": {
+          "event_count": 10722,
+          "observation_is_trade": false,
+          "horizon": "ret_16",
+          "mean_forward_return": 0.00011404541984505768,
+          "median_forward_return": -0.0006547619047618591,
+          "directional_hit_rate": 0.4717685487634158,
+          "downside_tail_return": -0.028373007513517387,
+          "upside_tail_return": 0.029792644874018403,
+          "mean_mfe": 0.020860368446048327,
+          "mean_mae": 0.0193028794629211
+        },
+        "ret_32": {
+          "event_count": 10722,
+          "observation_is_trade": false,
+          "horizon": "ret_32",
+          "mean_forward_return": -0.00031709566801531075,
+          "median_forward_return": -0.0010167768174885621,
+          "directional_hit_rate": 0.4737186070394921,
+          "downside_tail_return": -0.03938231270845786,
+          "upside_tail_return": 0.04045002040684942,
+          "mean_mfe": 0.020860368446048327,
+          "mean_mae": 0.0193028794629211
+        }
+      },
+      "fold_count": 5,
+      "positive_fold_count": 1,
+      "fold_means_ret_8": [
+        -0.00028262789000103536,
+        -0.0012442840455508773,
+        0.001054179316953028,
+        -0.000454763566658442,
+        -0.0016251992282519895
+      ],
+      "bootstrap": {
+        "mean": -0.0005107470028931615,
+        "ci_low": -0.0007859507261739121,
+        "ci_high": -0.0002733864013323303,
+        "bootstrap_method": "chronological_block_bootstrap",
+        "bootstrap_block_size": 32,
+        "replicates": 200,
+        "random_seed": 20264763,
+        "insufficient": false
+      },
+      "p_value_mean_gt_0": 1.0,
+      "largest_symbol_contribution": 0.04343827448517513,
+      "largest_regime_contribution": 0.5052425199978231,
+      "effect_size": -0.0005107470028931615,
+      "supported_raw_signal_candidate": false
+    },
+    {
+      "component_id": "BREAKOUT",
+      "event_count": 6548,
+      "summary_ret_8": {
+        "event_count": 6548,
+        "observation_is_trade": false,
+        "horizon": "ret_8",
+        "mean_forward_return": -0.0007421545206348584,
+        "median_forward_return": -0.0011805304387174044,
+        "directional_hit_rate": 0.44059254734270004,
+        "downside_tail_return": -0.021818006158790076,
+        "upside_tail_return": 0.022488428095386807,
+        "mean_mfe": 0.020382855906245608,
+        "mean_mae": 0.02117408361337434
+      },
+      "horizons": {
+        "ret_1": {
+          "event_count": 6548,
+          "observation_is_trade": false,
+          "horizon": "ret_1",
+          "mean_forward_return": -0.0003037206045497153,
+          "median_forward_return": -0.0004806654741809727,
+          "directional_hit_rate": 0.42837507635919364,
+          "downside_tail_return": -0.008174776503911461,
+          "upside_tail_return": 0.008904929996210738,
+          "mean_mfe": 0.020382855906245608,
+          "mean_mae": 0.02117408361337434
+        },
+        "ret_2": {
+          "event_count": 6548,
+          "observation_is_trade": false,
+          "horizon": "ret_2",
+          "mean_forward_return": -0.00027639117782643193,
+          "median_forward_return": -0.0005857915164458201,
+          "directional_hit_rate": 0.444257788637752,
+          "downside_tail_return": -0.01236566959384457,
+          "upside_tail_return": 0.013517943611516679,
+          "mean_mfe": 0.020382855906245608,
+          "mean_mae": 0.02117408361337434
+        },
+        "ret_4": {
+          "event_count": 6548,
+          "observation_is_trade": false,
+          "horizon": "ret_4",
+          "mean_forward_return": -0.0002994883310209787,
+          "median_forward_return": -0.0005529710561456487,
+          "directional_hit_rate": 0.46182040317654244,
+          "downside_tail_return": -0.016938809135582492,
+          "upside_tail_return": 0.018228165071977165,
+          "mean_mfe": 0.020382855906245608,
+          "mean_mae": 0.02117408361337434
+        },
+        "ret_8": {
+          "event_count": 6548,
+          "observation_is_trade": false,
+          "horizon": "ret_8",
+          "mean_forward_return": -0.0007421545206348584,
+          "median_forward_return": -0.0011805304387174044,
+          "directional_hit_rate": 0.44059254734270004,
+          "downside_tail_return": -0.021818006158790076,
+          "upside_tail_return": 0.022488428095386807,
+          "mean_mfe": 0.020382855906245608,
+          "mean_mae": 0.02117408361337434
+        },
+        "ret_16": {
+          "event_count": 6548,
+          "observation_is_trade": false,
+          "horizon": "ret_16",
+          "mean_forward_return": -0.0013259089050869594,
+          "median_forward_return": -0.0015027908973808256,
+          "directional_hit_rate": 0.44172903619978615,
+          "downside_tail_return": -0.03264715995048818,
+          "upside_tail_return": 0.030122843519376226,
+          "mean_mfe": 0.020382855906245608,
+          "mean_mae": 0.02117408361337434
+        },
+        "ret_32": {
+          "event_count": 6548,
+          "observation_is_trade": false,
+          "horizon": "ret_32",
+          "mean_forward_return": -0.0022070470362656937,
+          "median_forward_return": -0.0018835046572728852,
+          "directional_hit_rate": 0.45369804400978,
+          "downside_tail_return": -0.04489612874866917,
+          "upside_tail_return": 0.03813452014169947,
+          "mean_mfe": 0.020382855906245608,
+          "mean_mae": 0.02117408361337434
+        }
+      },
+      "fold_count": 5,
+      "positive_fold_count": 2,
+      "fold_means_ret_8": [
+        -0.0009406571628896003,
+        0.0007256510930962803,
+        -0.0010641730777989156,
+        0.0010809266044764525,
+        -0.003506185382757998
+      ],
+      "bootstrap": {
+        "mean": -0.0007421545206348584,
+        "ci_low": -0.00109310190048556,
+        "ci_high": -0.00031200174593007347,
+        "bootstrap_method": "chronological_block_bootstrap",
+        "bootstrap_block_size": 32,
+        "replicates": 200,
+        "random_seed": 20264584,
+        "insufficient": false
+      },
+      "p_value_mean_gt_0": 1.0,
+      "largest_symbol_contribution": 0.04132584854422877,
+      "largest_regime_contribution": 1.0,
+      "effect_size": -0.0007421545206348584,
+      "supported_raw_signal_candidate": false
+    },
+    {
+      "component_id": "FAILED_BREAKOUT",
+      "event_count": 21756,
+      "summary_ret_8": {
+        "event_count": 21756,
+        "observation_is_trade": false,
+        "horizon": "ret_8",
+        "mean_forward_return": -9.710628133084483e-05,
+        "median_forward_return": 0.00012032664681446494,
+        "directional_hit_rate": 0.503493289207575,
+        "downside_tail_return": -0.020299130872955942,
+        "upside_tail_return": 0.019753433518125942,
+        "mean_mfe": 0.01906626080037766,
+        "mean_mae": 0.019658784578756
+      },
+      "horizons": {
+        "ret_1": {
+          "event_count": 21756,
+          "observation_is_trade": false,
+          "horizon": "ret_1",
+          "mean_forward_return": -2.8772558132284274e-05,
+          "median_forward_return": 0.0,
+          "directional_hit_rate": 0.48216583930869644,
+          "downside_tail_return": -0.006671445355627128,
+          "upside_tail_return": 0.006824414023540119,
+          "mean_mfe": 0.01906626080037766,
+          "mean_mae": 0.019658784578756
+        },
+        "ret_2": {
+          "event_count": 21756,
+          "observation_is_trade": false,
+          "horizon": "ret_2",
+          "mean_forward_return": -0.00013514908050179568,
+          "median_forward_return": 0.0,
+          "directional_hit_rate": 0.49751792608935463,
+          "downside_tail_return": -0.01002048548725996,
+          "upside_tail_return": 0.009374311774098795,
+          "mean_mfe": 0.01906626080037766,
+          "mean_mae": 0.019658784578756
+        },
+        "ret_4": {
+          "event_count": 21756,
+          "observation_is_trade": false,
+          "horizon": "ret_4",
+          "mean_forward_return": 0.00010224208364327804,
+          "median_forward_return": 0.0001639213468538567,
+          "directional_hit_rate": 0.5070325427468284,
+          "downside_tail_return": -0.013451461008585965,
+          "upside_tail_return": 0.013838705565070166,
+          "mean_mfe": 0.01906626080037766,
+          "mean_mae": 0.019658784578756
+        },
+        "ret_8": {
+          "event_count": 21756,
+          "observation_is_trade": false,
+          "horizon": "ret_8",
+          "mean_forward_return": -9.710628133084483e-05,
+          "median_forward_return": 0.00012032664681446494,
+          "directional_hit_rate": 0.503493289207575,
+          "downside_tail_return": -0.020299130872955942,
+          "upside_tail_return": 0.019753433518125942,
+          "mean_mfe": 0.01906626080037766,
+          "mean_mae": 0.019658784578756
+        },
+        "ret_16": {
+          "event_count": 21756,
+          "observation_is_trade": false,
+          "horizon": "ret_16",
+          "mean_forward_return": 0.00048052401092775476,
+          "median_forward_return": 0.000541034272883607,
+          "directional_hit_rate": 0.5178850574712643,
+          "downside_tail_return": -0.027514795963558693,
+          "upside_tail_return": 0.028218299034629454,
+          "mean_mfe": 0.01906626080037766,
+          "mean_mae": 0.019658784578756
+        },
+        "ret_32": {
+          "event_count": 21756,
+          "observation_is_trade": false,
+          "horizon": "ret_32",
+          "mean_forward_return": 7.254390002406462e-05,
+          "median_forward_return": 0.00039063835682406043,
+          "directional_hit_rate": 0.5075430043234294,
+          "downside_tail_return": -0.039232459206739435,
+          "upside_tail_return": 0.03838749637736661,
+          "mean_mfe": 0.01906626080037766,
+          "mean_mae": 0.019658784578756
+        }
+      },
+      "fold_count": 5,
+      "positive_fold_count": 2,
+      "fold_means_ret_8": [
+        -0.00023613561398570134,
+        -0.00018327975089699595,
+        -0.0006183639609365038,
+        0.000430848618062453,
+        0.00012134909301832513
+      ],
+      "bootstrap": {
+        "mean": -9.710628133084483e-05,
+        "ci_low": -0.00028088440728982997,
+        "ci_high": 7.648690416342937e-05,
+        "bootstrap_method": "chronological_block_bootstrap",
+        "bootstrap_block_size": 32,
+        "replicates": 200,
+        "random_seed": 20261970,
+        "insufficient": false
+      },
+      "p_value_mean_gt_0": 1.0,
+      "largest_symbol_contribution": 0.04836587278803712,
+      "largest_regime_contribution": 1.0,
+      "effect_size": -9.710628133084483e-05,
+      "supported_raw_signal_candidate": false
+    },
+    {
+      "component_id": "MOMENTUM_ACCELERATION",
+      "event_count": 2460,
+      "summary_ret_8": {
+        "event_count": 2460,
+        "observation_is_trade": false,
+        "horizon": "ret_8",
+        "mean_forward_return": 0.0006173618858583451,
+        "median_forward_return": 0.0005676467443325291,
+        "directional_hit_rate": 0.5146341463414634,
+        "downside_tail_return": -0.033708052684478094,
+        "upside_tail_return": 0.03409368876961252,
+        "mean_mfe": 0.02977007926202698,
+        "mean_mae": 0.027221375619309058
+      },
+      "horizons": {
+        "ret_1": {
+          "event_count": 2460,
+          "observation_is_trade": false,
+          "horizon": "ret_1",
+          "mean_forward_return": 0.0009342371752047433,
+          "median_forward_return": 0.0,
+          "directional_hit_rate": 0.4951219512195122,
+          "downside_tail_return": -0.01302675039638498,
+          "upside_tail_return": 0.0183949362732103,
+          "mean_mfe": 0.02977007926202698,
+          "mean_mae": 0.027221375619309058
+        },
+        "ret_2": {
+          "event_count": 2460,
+          "observation_is_trade": false,
+          "horizon": "ret_2",
+          "mean_forward_return": 0.001035589247003632,
+          "median_forward_return": 0.0005351267806916128,
+          "directional_hit_rate": 0.5223577235772358,
+          "downside_tail_return": -0.018672377180143335,
+          "upside_tail_return": 0.0208809206424985,
+          "mean_mfe": 0.02977007926202698,
+          "mean_mae": 0.027221375619309058
+        },
+        "ret_4": {
+          "event_count": 2460,
+          "observation_is_trade": false,
+          "horizon": "ret_4",
+          "mean_forward_return": 0.0002435345098003023,
+          "median_forward_return": 0.00047121626499962147,
+          "directional_hit_rate": 0.5134146341463415,
+          "downside_tail_return": -0.027345845507464724,
+          "upside_tail_return": 0.02484245932577429,
+          "mean_mfe": 0.02977007926202698,
+          "mean_mae": 0.027221375619309058
+        },
+        "ret_8": {
+          "event_count": 2460,
+          "observation_is_trade": false,
+          "horizon": "ret_8",
+          "mean_forward_return": 0.0006173618858583451,
+          "median_forward_return": 0.0005676467443325291,
+          "directional_hit_rate": 0.5146341463414634,
+          "downside_tail_return": -0.033708052684478094,
+          "upside_tail_return": 0.03409368876961252,
+          "mean_mfe": 0.02977007926202698,
+          "mean_mae": 0.027221375619309058
+        },
+        "ret_16": {
+          "event_count": 2460,
+          "observation_is_trade": false,
+          "horizon": "ret_16",
+          "mean_forward_return": -0.0008962664213945855,
+          "median_forward_return": -0.0018997582945947497,
+          "directional_hit_rate": 0.44634146341463415,
+          "downside_tail_return": -0.04463259165800013,
+          "upside_tail_return": 0.047769738911607386,
+          "mean_mfe": 0.02977007926202698,
+          "mean_mae": 0.027221375619309058
+        },
+        "ret_32": {
+          "event_count": 2460,
+          "observation_is_trade": false,
+          "horizon": "ret_32",
+          "mean_forward_return": -0.0007532150537509711,
+          "median_forward_return": -0.0014025359589014607,
+          "directional_hit_rate": 0.4678861788617886,
+          "downside_tail_return": -0.05508878649284013,
+          "upside_tail_return": 0.05589168008865464,
+          "mean_mfe": 0.02977007926202698,
+          "mean_mae": 0.027221375619309058
+        }
+      },
+      "fold_count": 5,
+      "positive_fold_count": 3,
+      "fold_means_ret_8": [
+        0.003045991627702306,
+        0.0025887685698219023,
+        -0.003283744606630836,
+        -0.00214320908449819,
+        0.0028790029228965438
+      ],
+      "bootstrap": {
+        "mean": 0.0006173618858583451,
+        "ci_low": -0.0002673406163063769,
+        "ci_high": 0.0018513302310296303,
+        "bootstrap_method": "chronological_block_bootstrap",
+        "bootstrap_block_size": 32,
+        "replicates": 200,
+        "random_seed": 20264137,
+        "insufficient": false
+      },
+      "p_value_mean_gt_0": 0.11442786069651742,
+      "largest_symbol_contribution": 0.05209170671881223,
+      "largest_regime_contribution": 1.0,
+      "effect_size": 0.0006173618858583451,
+      "supported_raw_signal_candidate": false
+    },
+    {
+      "component_id": "VOLATILITY_EXPANSION",
+      "event_count": 16531,
+      "summary_ret_8": {
+        "event_count": 16531,
+        "observation_is_trade": false,
+        "horizon": "ret_8",
+        "mean_forward_return": 0.00012558536051346223,
+        "median_forward_return": -0.0001913143294433339,
+        "directional_hit_rate": 0.4882342266045611,
+        "downside_tail_return": -0.021969509095192574,
+        "upside_tail_return": 0.022944827932724766,
+        "mean_mfe": 0.021813579510013347,
+        "mean_mae": 0.02074071051225386
+      },
+      "horizons": {
+        "ret_1": {
+          "event_count": 16531,
+          "observation_is_trade": false,
+          "horizon": "ret_1",
+          "mean_forward_return": -0.000156168912034654,
+          "median_forward_return": -0.00010415087742461931,
+          "directional_hit_rate": 0.4709938902667715,
+          "downside_tail_return": -0.00826091310160187,
+          "upside_tail_return": 0.008026187043867225,
+          "mean_mfe": 0.021813579510013347,
+          "mean_mae": 0.02074071051225386
+        },
+        "ret_2": {
+          "event_count": 16531,
+          "observation_is_trade": false,
+          "horizon": "ret_2",
+          "mean_forward_return": 0.00015973339987643837,
+          "median_forward_return": -0.00011386495616203215,
+          "directional_hit_rate": 0.48000725908898434,
+          "downside_tail_return": -0.01112087776566906,
+          "upside_tail_return": 0.011394589199271294,
+          "mean_mfe": 0.021813579510013347,
+          "mean_mae": 0.02074071051225386
+        },
+        "ret_4": {
+          "event_count": 16531,
+          "observation_is_trade": false,
+          "horizon": "ret_4",
+          "mean_forward_return": 0.00022430164897405794,
+          "median_forward_return": -6.759954032306431e-05,
+          "directional_hit_rate": 0.4880527493799528,
+          "downside_tail_return": -0.0160290089438401,
+          "upside_tail_return": 0.01776164994528647,
+          "mean_mfe": 0.021813579510013347,
+          "mean_mae": 0.02074071051225386
+        },
+        "ret_8": {
+          "event_count": 16531,
+          "observation_is_trade": false,
+          "horizon": "ret_8",
+          "mean_forward_return": 0.00012558536051346223,
+          "median_forward_return": -0.0001913143294433339,
+          "directional_hit_rate": 0.4882342266045611,
+          "downside_tail_return": -0.021969509095192574,
+          "upside_tail_return": 0.022944827932724766,
+          "mean_mfe": 0.021813579510013347,
+          "mean_mae": 0.02074071051225386
+        },
+        "ret_16": {
+          "event_count": 16531,
+          "observation_is_trade": false,
+          "horizon": "ret_16",
+          "mean_forward_return": 0.0003659956698893934,
+          "median_forward_return": -0.00034698126301188756,
+          "directional_hit_rate": 0.48557256064363924,
+          "downside_tail_return": -0.030806613754314226,
+          "upside_tail_return": 0.03331062670299724,
+          "mean_mfe": 0.021813579510013347,
+          "mean_mae": 0.02074071051225386
+        },
+        "ret_32": {
+          "event_count": 16531,
+          "observation_is_trade": false,
+          "horizon": "ret_32",
+          "mean_forward_return": 0.00048382523152400614,
+          "median_forward_return": -0.0,
+          "directional_hit_rate": 0.49927395934172314,
+          "downside_tail_return": -0.040668308731836356,
+          "upside_tail_return": 0.04339241884515945,
+          "mean_mfe": 0.021813579510013347,
+          "mean_mae": 0.02074071051225386
+        }
+      },
+      "fold_count": 5,
+      "positive_fold_count": 2,
+      "fold_means_ret_8": [
+        -0.0013170584562578983,
+        0.0015726408306437059,
+        0.0005633282722197815,
+        -4.972224664590037e-06,
+        -0.0001859173959143933
+      ],
+      "bootstrap": {
+        "mean": 0.00012558536051346223,
+        "ci_low": -0.00010485142594935493,
+        "ci_high": 0.00041727172080881166,
+        "bootstrap_method": "chronological_block_bootstrap",
+        "bootstrap_block_size": 32,
+        "replicates": 200,
+        "random_seed": 20262109,
+        "insufficient": false
+      },
+      "p_value_mean_gt_0": 0.14925373134328357,
+      "largest_symbol_contribution": 0.03622157086771008,
+      "largest_regime_contribution": 1.0,
+      "effect_size": 0.00012558536051346223,
+      "supported_raw_signal_candidate": false
+    },
+    {
+      "component_id": "VWAP_MEAN_REVERSION",
+      "event_count": 18692,
+      "summary_ret_8": {
+        "event_count": 18692,
+        "observation_is_trade": false,
+        "horizon": "ret_8",
+        "mean_forward_return": 0.001011803751965078,
+        "median_forward_return": 0.0007466139516391194,
+        "directional_hit_rate": 0.5440295313503103,
+        "downside_tail_return": -0.01496245928658219,
+        "upside_tail_return": 0.01774576006126098,
+        "mean_mfe": 0.016491327646241158,
+        "mean_mae": 0.015284093540193628
+      },
+      "horizons": {
+        "ret_1": {
+          "event_count": 18692,
+          "observation_is_trade": false,
+          "horizon": "ret_1",
+          "mean_forward_return": 0.0008299298798328015,
+          "median_forward_return": 0.0004775549188157809,
+          "directional_hit_rate": 0.5775197945645196,
+          "downside_tail_return": -0.003827370587526876,
+          "upside_tail_return": 0.006141926086785142,
+          "mean_mfe": 0.016491327646241158,
+          "mean_mae": 0.015284093540193628
+        },
+        "ret_2": {
+          "event_count": 18692,
+          "observation_is_trade": false,
+          "horizon": "ret_2",
+          "mean_forward_return": 0.0008058086945475682,
+          "median_forward_return": 0.0005783135107357918,
+          "directional_hit_rate": 0.565750053498823,
+          "downside_tail_return": -0.006732557321788551,
+          "upside_tail_return": 0.008819783701832444,
+          "mean_mfe": 0.016491327646241158,
+          "mean_mae": 0.015284093540193628
+        },
+        "ret_4": {
+          "event_count": 18692,
+          "observation_is_trade": false,
+          "horizon": "ret_4",
+          "mean_forward_return": 0.0008024619758792383,
+          "median_forward_return": 0.0006823610483821907,
+          "directional_hit_rate": 0.5554782794778514,
+          "downside_tail_return": -0.010072704869807363,
+          "upside_tail_return": 0.012059996601468878,
+          "mean_mfe": 0.016491327646241158,
+          "mean_mae": 0.015284093540193628
+        },
+        "ret_8": {
+          "event_count": 18692,
+          "observation_is_trade": false,
+          "horizon": "ret_8",
+          "mean_forward_return": 0.001011803751965078,
+          "median_forward_return": 0.0007466139516391194,
+          "directional_hit_rate": 0.5440295313503103,
+          "downside_tail_return": -0.01496245928658219,
+          "upside_tail_return": 0.01774576006126098,
+          "mean_mfe": 0.016491327646241158,
+          "mean_mae": 0.015284093540193628
+        },
+        "ret_16": {
+          "event_count": 18692,
+          "observation_is_trade": false,
+          "horizon": "ret_16",
+          "mean_forward_return": 0.0009333332943913912,
+          "median_forward_return": 0.0008499448253969811,
+          "directional_hit_rate": 0.5345824411134904,
+          "downside_tail_return": -0.022047226985621216,
+          "upside_tail_return": 0.024977741493143968,
+          "mean_mfe": 0.016491327646241158,
+          "mean_mae": 0.015284093540193628
+        },
+        "ret_32": {
+          "event_count": 18692,
+          "observation_is_trade": false,
+          "horizon": "ret_32",
+          "mean_forward_return": 0.0008277992030499383,
+          "median_forward_return": 0.0006111104623509897,
+          "directional_hit_rate": 0.5167666595243197,
+          "downside_tail_return": -0.03211392382492497,
+          "upside_tail_return": 0.03460231560180766,
+          "mean_mfe": 0.016491327646241158,
+          "mean_mae": 0.015284093540193628
+        }
+      },
+      "fold_count": 5,
+      "positive_fold_count": 5,
+      "fold_means_ret_8": [
+        0.0009348150176055879,
+        0.001311201122785189,
+        8.129952795243228e-05,
+        0.001909837781140843,
+        0.0008219668817004953
+      ],
+      "bootstrap": {
+        "mean": 0.001011803751965078,
+        "ci_low": 0.0008537528827785667,
+        "ci_high": 0.0011318816401697511,
+        "bootstrap_method": "chronological_block_bootstrap",
+        "bootstrap_block_size": 32,
+        "replicates": 200,
+        "random_seed": 20263338,
+        "insufficient": false
+      },
+      "p_value_mean_gt_0": 0.004975124378109453,
+      "largest_symbol_contribution": 0.02955225361758491,
+      "largest_regime_contribution": 1.0,
+      "effect_size": 0.001011803751965078,
+      "supported_raw_signal_candidate": true
+    },
+    {
+      "component_id": "STRUCTURAL_MEAN_REVERSION",
+      "event_count": 9038,
+      "summary_ret_8": {
+        "event_count": 9038,
+        "observation_is_trade": false,
+        "horizon": "ret_8",
+        "mean_forward_return": -0.0006577601035728054,
+        "median_forward_return": 0.00045341194803695875,
+        "directional_hit_rate": 0.5162646603230804,
+        "downside_tail_return": -0.022985406700276212,
+        "upside_tail_return": 0.020709043954983325,
+        "mean_mfe": 0.020260386081597206,
+        "mean_mae": 0.02203713116153361
+      },
+      "horizons": {
+        "ret_1": {
+          "event_count": 9038,
+          "observation_is_trade": false,
+          "horizon": "ret_1",
+          "mean_forward_return": -0.0002623084841922526,
+          "median_forward_return": 0.0,
+          "directional_hit_rate": 0.47742863465368446,
+          "downside_tail_return": -0.0076693146794823185,
+          "upside_tail_return": 0.006894831885802735,
+          "mean_mfe": 0.020260386081597206,
+          "mean_mae": 0.02203713116153361
+        },
+        "ret_2": {
+          "event_count": 9038,
+          "observation_is_trade": false,
+          "horizon": "ret_2",
+          "mean_forward_return": -0.00015379367887779707,
+          "median_forward_return": 0.00011210795018488061,
+          "directional_hit_rate": 0.5056428413365789,
+          "downside_tail_return": -0.0110317517203817,
+          "upside_tail_return": 0.010426353609845881,
+          "mean_mfe": 0.020260386081597206,
+          "mean_mae": 0.02203713116153361
+        },
+        "ret_4": {
+          "event_count": 9038,
+          "observation_is_trade": false,
+          "horizon": "ret_4",
+          "mean_forward_return": -7.154008740608627e-05,
+          "median_forward_return": 0.0003180831278375043,
+          "directional_hit_rate": 0.5152688647930959,
+          "downside_tail_return": -0.0158538657017374,
+          "upside_tail_return": 0.014808400236540852,
+          "mean_mfe": 0.020260386081597206,
+          "mean_mae": 0.02203713116153361
+        },
+        "ret_8": {
+          "event_count": 9038,
+          "observation_is_trade": false,
+          "horizon": "ret_8",
+          "mean_forward_return": -0.0006577601035728054,
+          "median_forward_return": 0.00045341194803695875,
+          "directional_hit_rate": 0.5162646603230804,
+          "downside_tail_return": -0.022985406700276212,
+          "upside_tail_return": 0.020709043954983325,
+          "mean_mfe": 0.020260386081597206,
+          "mean_mae": 0.02203713116153361
+        },
+        "ret_16": {
+          "event_count": 9038,
+          "observation_is_trade": false,
+          "horizon": "ret_16",
+          "mean_forward_return": -0.0005477111639196918,
+          "median_forward_return": 0.00047520988436571833,
+          "directional_hit_rate": 0.5141149119893723,
+          "downside_tail_return": -0.03291208740257107,
+          "upside_tail_return": 0.029112193429065125,
+          "mean_mfe": 0.020260386081597206,
+          "mean_mae": 0.02203713116153361
+        },
+        "ret_32": {
+          "event_count": 9038,
+          "observation_is_trade": false,
+          "horizon": "ret_32",
+          "mean_forward_return": 7.156525489278561e-05,
+          "median_forward_return": 0.0008884947040623754,
+          "directional_hit_rate": 0.5191668513184134,
+          "downside_tail_return": -0.043581321823044354,
+          "upside_tail_return": 0.04089991643148118,
+          "mean_mfe": 0.020260386081597206,
+          "mean_mae": 0.02203713116153361
+        }
+      },
+      "fold_count": 5,
+      "positive_fold_count": 3,
+      "fold_means_ret_8": [
+        -0.0032888882382567717,
+        -0.0011048937426365467,
+        0.000423601786331601,
+        0.0006487643542818214,
+        3.147105375400964e-05
+      ],
+      "bootstrap": {
+        "mean": -0.0006577601035728054,
+        "ci_low": -0.001113846745195688,
+        "ci_high": -0.0002410053669719537,
+        "bootstrap_method": "chronological_block_bootstrap",
+        "bootstrap_block_size": 32,
+        "replicates": 200,
+        "random_seed": 20270446,
+        "insufficient": false
+      },
+      "p_value_mean_gt_0": 1.0,
+      "largest_symbol_contribution": 0.04236831340630962,
+      "largest_regime_contribution": 1.0,
+      "effect_size": -0.0006577601035728054,
+      "supported_raw_signal_candidate": false
+    },
+    {
+      "component_id": "RELATIVE_STRENGTH",
+      "event_count": 26,
+      "summary_ret_8": {
+        "event_count": 26,
+        "observation_is_trade": false,
+        "horizon": "ret_8",
+        "mean_forward_return": -0.0067218324723539126,
+        "median_forward_return": -0.0007641679934163607,
+        "directional_hit_rate": 0.46153846153846156,
+        "downside_tail_return": -0.045067012025568946,
+        "upside_tail_return": 0.010248532705538431,
+        "mean_mfe": 0.007150955058653924,
+        "mean_mae": 0.015166406218659093
+      },
+      "horizons": {
+        "ret_1": {
+          "event_count": 26,
+          "observation_is_trade": false,
+          "horizon": "ret_1",
+          "mean_forward_return": -0.00016737142838430064,
+          "median_forward_return": 0.0,
+          "directional_hit_rate": 0.46153846153846156,
+          "downside_tail_return": -0.007842417422903026,
+          "upside_tail_return": 0.004852095894386027,
+          "mean_mfe": 0.007150955058653924,
+          "mean_mae": 0.015166406218659093
+        },
+        "ret_2": {
+          "event_count": 26,
+          "observation_is_trade": false,
+          "horizon": "ret_2",
+          "mean_forward_return": 0.0004887440875005062,
+          "median_forward_return": 0.0006510130039541544,
+          "directional_hit_rate": 0.6153846153846154,
+          "downside_tail_return": -0.008809510849400425,
+          "upside_tail_return": 0.007632900956906799,
+          "mean_mfe": 0.007150955058653924,
+          "mean_mae": 0.015166406218659093
+        },
+        "ret_4": {
+          "event_count": 26,
+          "observation_is_trade": false,
+          "horizon": "ret_4",
+          "mean_forward_return": -0.0014756026689379841,
+          "median_forward_return": -0.0008994404685829515,
+          "directional_hit_rate": 0.46153846153846156,
+          "downside_tail_return": -0.01563657251743902,
+          "upside_tail_return": 0.007635604315473734,
+          "mean_mfe": 0.007150955058653924,
+          "mean_mae": 0.015166406218659093
+        },
+        "ret_8": {
+          "event_count": 26,
+          "observation_is_trade": false,
+          "horizon": "ret_8",
+          "mean_forward_return": -0.0067218324723539126,
+          "median_forward_return": -0.0007641679934163607,
+          "directional_hit_rate": 0.46153846153846156,
+          "downside_tail_return": -0.045067012025568946,
+          "upside_tail_return": 0.010248532705538431,
+          "mean_mfe": 0.007150955058653924,
+          "mean_mae": 0.015166406218659093
+        },
+        "ret_16": {
+          "event_count": 26,
+          "observation_is_trade": false,
+          "horizon": "ret_16",
+          "mean_forward_return": null,
+          "median_forward_return": null,
+          "directional_hit_rate": null,
+          "downside_tail_return": null,
+          "upside_tail_return": null,
+          "mean_mfe": 0.007150955058653924,
+          "mean_mae": 0.015166406218659093
+        },
+        "ret_32": {
+          "event_count": 26,
+          "observation_is_trade": false,
+          "horizon": "ret_32",
+          "mean_forward_return": null,
+          "median_forward_return": null,
+          "directional_hit_rate": null,
+          "downside_tail_return": null,
+          "upside_tail_return": null,
+          "mean_mfe": 0.007150955058653924,
+          "mean_mae": 0.015166406218659093
+        }
+      },
+      "fold_count": 5,
+      "positive_fold_count": 2,
+      "fold_means_ret_8": [
+        -0.03497638028134742,
+        -0.00047975149345954785,
+        0.000145252966429619,
+        0.0067231358096928266,
+        -0.005304821547963186
+      ],
+      "bootstrap": {
+        "mean": -0.0067218324723539126,
+        "ci_low": -0.0067218324723539126,
+        "ci_high": -0.0067218324723539126,
+        "bootstrap_method": "chronological_block_bootstrap",
+        "bootstrap_block_size": 32,
+        "replicates": 0,
+        "random_seed": 20266637,
+        "insufficient": true
+      },
+      "p_value_mean_gt_0": 1.0,
+      "largest_symbol_contribution": 0.19015295065706567,
+      "largest_regime_contribution": 0.9407850676894481,
+      "effect_size": -0.0067218324723539126,
+      "supported_raw_signal_candidate": false
+    },
+    {
+      "component_id": "CROSS_SECTIONAL_MOMENTUM",
+      "event_count": 26,
+      "summary_ret_8": {
+        "event_count": 26,
+        "observation_is_trade": false,
+        "horizon": "ret_8",
+        "mean_forward_return": -0.0067218324723539126,
+        "median_forward_return": -0.0007641679934163607,
+        "directional_hit_rate": 0.46153846153846156,
+        "downside_tail_return": -0.045067012025568946,
+        "upside_tail_return": 0.010248532705538431,
+        "mean_mfe": 0.007150955058653924,
+        "mean_mae": 0.015166406218659093
+      },
+      "horizons": {
+        "ret_1": {
+          "event_count": 26,
+          "observation_is_trade": false,
+          "horizon": "ret_1",
+          "mean_forward_return": -0.00016737142838430064,
+          "median_forward_return": 0.0,
+          "directional_hit_rate": 0.46153846153846156,
+          "downside_tail_return": -0.007842417422903026,
+          "upside_tail_return": 0.004852095894386027,
+          "mean_mfe": 0.007150955058653924,
+          "mean_mae": 0.015166406218659093
+        },
+        "ret_2": {
+          "event_count": 26,
+          "observation_is_trade": false,
+          "horizon": "ret_2",
+          "mean_forward_return": 0.0004887440875005062,
+          "median_forward_return": 0.0006510130039541544,
+          "directional_hit_rate": 0.6153846153846154,
+          "downside_tail_return": -0.008809510849400425,
+          "upside_tail_return": 0.007632900956906799,
+          "mean_mfe": 0.007150955058653924,
+          "mean_mae": 0.015166406218659093
+        },
+        "ret_4": {
+          "event_count": 26,
+          "observation_is_trade": false,
+          "horizon": "ret_4",
+          "mean_forward_return": -0.0014756026689379841,
+          "median_forward_return": -0.0008994404685829515,
+          "directional_hit_rate": 0.46153846153846156,
+          "downside_tail_return": -0.01563657251743902,
+          "upside_tail_return": 0.007635604315473734,
+          "mean_mfe": 0.007150955058653924,
+          "mean_mae": 0.015166406218659093
+        },
+        "ret_8": {
+          "event_count": 26,
+          "observation_is_trade": false,
+          "horizon": "ret_8",
+          "mean_forward_return": -0.0067218324723539126,
+          "median_forward_return": -0.0007641679934163607,
+          "directional_hit_rate": 0.46153846153846156,
+          "downside_tail_return": -0.045067012025568946,
+          "upside_tail_return": 0.010248532705538431,
+          "mean_mfe": 0.007150955058653924,
+          "mean_mae": 0.015166406218659093
+        },
+        "ret_16": {
+          "event_count": 26,
+          "observation_is_trade": false,
+          "horizon": "ret_16",
+          "mean_forward_return": null,
+          "median_forward_return": null,
+          "directional_hit_rate": null,
+          "downside_tail_return": null,
+          "upside_tail_return": null,
+          "mean_mfe": 0.007150955058653924,
+          "mean_mae": 0.015166406218659093
+        },
+        "ret_32": {
+          "event_count": 26,
+          "observation_is_trade": false,
+          "horizon": "ret_32",
+          "mean_forward_return": null,
+          "median_forward_return": null,
+          "directional_hit_rate": null,
+          "downside_tail_return": null,
+          "upside_tail_return": null,
+          "mean_mfe": 0.007150955058653924,
+          "mean_mae": 0.015166406218659093
+        }
+      },
+      "fold_count": 5,
+      "positive_fold_count": 2,
+      "fold_means_ret_8": [
+        -0.03497638028134742,
+        -0.00047975149345954785,
+        0.000145252966429619,
+        0.0067231358096928266,
+        -0.005304821547963186
+      ],
+      "bootstrap": {
+        "mean": -0.0067218324723539126,
+        "ci_low": -0.0067218324723539126,
+        "ci_high": -0.0067218324723539126,
+        "bootstrap_method": "chronological_block_bootstrap",
+        "bootstrap_block_size": 32,
+        "replicates": 0,
+        "random_seed": 20263597,
+        "insufficient": true
+      },
+      "p_value_mean_gt_0": 1.0,
+      "largest_symbol_contribution": 0.19015295065706567,
+      "largest_regime_contribution": 0.9407850676894481,
+      "effect_size": -0.0067218324723539126,
+      "supported_raw_signal_candidate": false
+    },
+    {
+      "component_id": "FUNDING_OI_CONTINUATION",
+      "event_count": 1616,
+      "summary_ret_8": {
+        "event_count": 1616,
+        "observation_is_trade": false,
+        "horizon": "ret_8",
+        "mean_forward_return": -0.0006383848853113479,
+        "median_forward_return": -0.0011139504913765686,
+        "directional_hit_rate": 0.4622524752475248,
+        "downside_tail_return": -0.028671717312059714,
+        "upside_tail_return": 0.031984684523991766,
+        "mean_mfe": 0.028029590389778657,
+        "mean_mae": 0.028341536407423512
+      },
+      "horizons": {
+        "ret_1": {
+          "event_count": 1616,
+          "observation_is_trade": false,
+          "horizon": "ret_1",
+          "mean_forward_return": -6.720226171206104e-05,
+          "median_forward_return": -0.00021141259277576648,
+          "directional_hit_rate": 0.4665841584158416,
+          "downside_tail_return": -0.010454772534821653,
+          "upside_tail_return": 0.010059627523077815,
+          "mean_mfe": 0.028029590389778657,
+          "mean_mae": 0.028341536407423512
+        },
+        "ret_2": {
+          "event_count": 1616,
+          "observation_is_trade": false,
+          "horizon": "ret_2",
+          "mean_forward_return": -0.00046080691538714084,
+          "median_forward_return": -0.0003292521214282062,
+          "directional_hit_rate": 0.46905940594059403,
+          "downside_tail_return": -0.015464639767152899,
+          "upside_tail_return": 0.015193249231358124,
+          "mean_mfe": 0.028029590389778657,
+          "mean_mae": 0.028341536407423512
+        },
+        "ret_4": {
+          "event_count": 1616,
+          "observation_is_trade": false,
+          "horizon": "ret_4",
+          "mean_forward_return": -0.0006175634174465137,
+          "median_forward_return": -0.0007460277034907503,
+          "directional_hit_rate": 0.46534653465346537,
+          "downside_tail_return": -0.02243808682190712,
+          "upside_tail_return": 0.021389309544822394,
+          "mean_mfe": 0.028029590389778657,
+          "mean_mae": 0.028341536407423512
+        },
+        "ret_8": {
+          "event_count": 1616,
+          "observation_is_trade": false,
+          "horizon": "ret_8",
+          "mean_forward_return": -0.0006383848853113479,
+          "median_forward_return": -0.0011139504913765686,
+          "directional_hit_rate": 0.4622524752475248,
+          "downside_tail_return": -0.028671717312059714,
+          "upside_tail_return": 0.031984684523991766,
+          "mean_mfe": 0.028029590389778657,
+          "mean_mae": 0.028341536407423512
+        },
+        "ret_16": {
+          "event_count": 1616,
+          "observation_is_trade": false,
+          "horizon": "ret_16",
+          "mean_forward_return": -0.000311572166420952,
+          "median_forward_return": -0.0010996932267094896,
+          "directional_hit_rate": 0.46782178217821785,
+          "downside_tail_return": -0.037053691937874694,
+          "upside_tail_return": 0.04471627560184826,
+          "mean_mfe": 0.028029590389778657,
+          "mean_mae": 0.028341536407423512
+        },
+        "ret_32": {
+          "event_count": 1616,
+          "observation_is_trade": false,
+          "horizon": "ret_32",
+          "mean_forward_return": -0.0006719934065021542,
+          "median_forward_return": -0.0012967102418754632,
+          "directional_hit_rate": 0.4708798017348203,
+          "downside_tail_return": -0.05428482869844843,
+          "upside_tail_return": 0.06413943019959308,
+          "mean_mfe": 0.028029590389778657,
+          "mean_mae": 0.028341536407423512
+        }
+      },
+      "fold_count": 5,
+      "positive_fold_count": 2,
+      "fold_means_ret_8": [
+        0.0008042712323467549,
+        -0.002475850243397057,
+        0.000891490012397257,
+        -0.0005296215644963144,
+        -0.0018783748850799225
+      ],
+      "bootstrap": {
+        "mean": -0.0006383848853113479,
+        "ci_low": -0.0014410067134198851,
+        "ci_high": 0.00015333719258531916,
+        "bootstrap_method": "chronological_block_bootstrap",
+        "bootstrap_block_size": 32,
+        "replicates": 200,
+        "random_seed": 20263712,
+        "insufficient": false
+      },
+      "p_value_mean_gt_0": 1.0,
+      "largest_symbol_contribution": 0.17292699829787272,
+      "largest_regime_contribution": 0.6502237424144767,
+      "effect_size": -0.0006383848853113479,
+      "supported_raw_signal_candidate": false
+    },
+    {
+      "component_id": "LIQUIDITY_SWEEP_REVERSAL",
+      "event_count": 12934,
+      "summary_ret_8": {
+        "event_count": 12934,
+        "observation_is_trade": false,
+        "horizon": "ret_8",
+        "mean_forward_return": -0.00022342332964046398,
+        "median_forward_return": 0.00023368310057424695,
+        "directional_hit_rate": 0.5069584042059687,
+        "downside_tail_return": -0.021262604904155324,
+        "upside_tail_return": 0.020784270373538128,
+        "mean_mfe": 0.020150279865705015,
+        "mean_mae": 0.020662143061713757
+      },
+      "horizons": {
+        "ret_1": {
+          "event_count": 12934,
+          "observation_is_trade": false,
+          "horizon": "ret_1",
+          "mean_forward_return": 2.0988657472402594e-05,
+          "median_forward_return": 0.0,
+          "directional_hit_rate": 0.49342817380547394,
+          "downside_tail_return": -0.007195323340333774,
+          "upside_tail_return": 0.007103932014437165,
+          "mean_mfe": 0.020150279865705015,
+          "mean_mae": 0.020662143061713757
+        },
+        "ret_2": {
+          "event_count": 12934,
+          "observation_is_trade": false,
+          "horizon": "ret_2",
+          "mean_forward_return": 0.00017607731502571633,
+          "median_forward_return": 0.00010490709549349663,
+          "directional_hit_rate": 0.5061079325807948,
+          "downside_tail_return": -0.009758396876512115,
+          "upside_tail_return": 0.010383449401733014,
+          "mean_mfe": 0.020150279865705015,
+          "mean_mae": 0.020662143061713757
+        },
+        "ret_4": {
+          "event_count": 12934,
+          "observation_is_trade": false,
+          "horizon": "ret_4",
+          "mean_forward_return": 0.0002098213762304419,
+          "median_forward_return": 0.0002575440269065608,
+          "directional_hit_rate": 0.5136075460027834,
+          "downside_tail_return": -0.014782650663288875,
+          "upside_tail_return": 0.014752227151076857,
+          "mean_mfe": 0.020150279865705015,
+          "mean_mae": 0.020662143061713757
+        },
+        "ret_8": {
+          "event_count": 12934,
+          "observation_is_trade": false,
+          "horizon": "ret_8",
+          "mean_forward_return": -0.00022342332964046398,
+          "median_forward_return": 0.00023368310057424695,
+          "directional_hit_rate": 0.5069584042059687,
+          "downside_tail_return": -0.021262604904155324,
+          "upside_tail_return": 0.020784270373538128,
+          "mean_mfe": 0.020150279865705015,
+          "mean_mae": 0.020662143061713757
+        },
+        "ret_16": {
+          "event_count": 12934,
+          "observation_is_trade": false,
+          "horizon": "ret_16",
+          "mean_forward_return": -0.00020432530872202225,
+          "median_forward_return": 0.0003052726495210116,
+          "directional_hit_rate": 0.508121905940594,
+          "downside_tail_return": -0.029671095335751557,
+          "upside_tail_return": 0.029122059948408482,
+          "mean_mfe": 0.020150279865705015,
+          "mean_mae": 0.020662143061713757
+        },
+        "ret_32": {
+          "event_count": 12934,
+          "observation_is_trade": false,
+          "horizon": "ret_32",
+          "mean_forward_return": 0.00021276938005178585,
+          "median_forward_return": 0.00032594524119952944,
+          "directional_hit_rate": 0.5068503754160538,
+          "downside_tail_return": -0.04215654939308252,
+          "upside_tail_return": 0.04146229911426927,
+          "mean_mfe": 0.020150279865705015,
+          "mean_mae": 0.020662143061713757
+        }
+      },
+      "fold_count": 5,
+      "positive_fold_count": 2,
+      "fold_means_ret_8": [
+        -0.0013984888556418489,
+        -0.0008452831250247407,
+        -0.0006930850948324352,
+        0.0010970696391836973,
+        0.0007212096388964
+      ],
+      "bootstrap": {
+        "mean": -0.00022342332964046398,
+        "ci_low": -0.0005114841365472497,
+        "ci_high": 9.184364952365638e-05,
+        "bootstrap_method": "chronological_block_bootstrap",
+        "bootstrap_block_size": 32,
+        "replicates": 200,
+        "random_seed": 20265194,
+        "insufficient": false
+      },
+      "p_value_mean_gt_0": 1.0,
+      "largest_symbol_contribution": 0.04513513501710287,
+      "largest_regime_contribution": 1.0,
+      "effect_size": -0.00022342332964046398,
+      "supported_raw_signal_candidate": false
+    }
+  ],
+  "statistical_controls": {
+    "hypothesis_test_count": 12,
+    "raw_significant_count": 1,
+    "FDR_adjusted_significant_count": 1,
+    "false_discovery_rate": 0.1,
+    "tests": [
+      {
+        "test_id": "TREND_CONTINUATION::ret_8",
+        "p_value": 0.15422885572139303,
+        "bh_threshold": 0.03333333333333333,
+        "raw_significant": false,
+        "fdr_significant": false
+      },
+      {
+        "test_id": "STRUCTURAL_RETEST::ret_8",
+        "p_value": 1.0,
+        "bh_threshold": 0.04166666666666667,
+        "raw_significant": false,
+        "fdr_significant": false
+      },
+      {
+        "test_id": "BREAKOUT::ret_8",
+        "p_value": 1.0,
+        "bh_threshold": 0.05,
+        "raw_significant": false,
+        "fdr_significant": false
+      },
+      {
+        "test_id": "FAILED_BREAKOUT::ret_8",
+        "p_value": 1.0,
+        "bh_threshold": 0.05833333333333334,
+        "raw_significant": false,
+        "fdr_significant": false
+      },
+      {
+        "test_id": "MOMENTUM_ACCELERATION::ret_8",
+        "p_value": 0.11442786069651742,
+        "bh_threshold": 0.016666666666666666,
+        "raw_significant": false,
+        "fdr_significant": false
+      },
+      {
+        "test_id": "VOLATILITY_EXPANSION::ret_8",
+        "p_value": 0.14925373134328357,
+        "bh_threshold": 0.025,
+        "raw_significant": false,
+        "fdr_significant": false
+      },
+      {
+        "test_id": "VWAP_MEAN_REVERSION::ret_8",
+        "p_value": 0.004975124378109453,
+        "bh_threshold": 0.008333333333333333,
+        "raw_significant": true,
+        "fdr_significant": true
+      },
+      {
+        "test_id": "STRUCTURAL_MEAN_REVERSION::ret_8",
+        "p_value": 1.0,
+        "bh_threshold": 0.06666666666666667,
+        "raw_significant": false,
+        "fdr_significant": false
+      },
+      {
+        "test_id": "RELATIVE_STRENGTH::ret_8",
+        "p_value": 1.0,
+        "bh_threshold": 0.07500000000000001,
+        "raw_significant": false,
+        "fdr_significant": false
+      },
+      {
+        "test_id": "CROSS_SECTIONAL_MOMENTUM::ret_8",
+        "p_value": 1.0,
+        "bh_threshold": 0.08333333333333334,
+        "raw_significant": false,
+        "fdr_significant": false
+      },
+      {
+        "test_id": "FUNDING_OI_CONTINUATION::ret_8",
+        "p_value": 1.0,
+        "bh_threshold": 0.09166666666666667,
+        "raw_significant": false,
+        "fdr_significant": false
+      },
+      {
+        "test_id": "LIQUIDITY_SWEEP_REVERSAL::ret_8",
+        "p_value": 1.0,
+        "bh_threshold": 0.1,
+        "raw_significant": false,
+        "fdr_significant": false
+      }
+    ],
+    "bootstrap_method": "chronological_block_bootstrap",
+    "bootstrap_block_size": 32,
+    "bootstrap_replicates": 200,
+    "random_seed": 20260803,
+    "seeds_frozen_before_execution": true
+  },
+  "raw_supported_signal_count": 1,
+  "supported_signals": [
+    {
+      "component_id": "VWAP_MEAN_REVERSION",
+      "event_count": 18692,
+      "summary_ret_8": {
+        "event_count": 18692,
+        "observation_is_trade": false,
+        "horizon": "ret_8",
+        "mean_forward_return": 0.001011803751965078,
+        "median_forward_return": 0.0007466139516391194,
+        "directional_hit_rate": 0.5440295313503103,
+        "downside_tail_return": -0.01496245928658219,
+        "upside_tail_return": 0.01774576006126098,
+        "mean_mfe": 0.016491327646241158,
+        "mean_mae": 0.015284093540193628
+      },
+      "horizons": {
+        "ret_1": {
+          "event_count": 18692,
+          "observation_is_trade": false,
+          "horizon": "ret_1",
+          "mean_forward_return": 0.0008299298798328015,
+          "median_forward_return": 0.0004775549188157809,
+          "directional_hit_rate": 0.5775197945645196,
+          "downside_tail_return": -0.003827370587526876,
+          "upside_tail_return": 0.006141926086785142,
+          "mean_mfe": 0.016491327646241158,
+          "mean_mae": 0.015284093540193628
+        },
+        "ret_2": {
+          "event_count": 18692,
+          "observation_is_trade": false,
+          "horizon": "ret_2",
+          "mean_forward_return": 0.0008058086945475682,
+          "median_forward_return": 0.0005783135107357918,
+          "directional_hit_rate": 0.565750053498823,
+          "downside_tail_return": -0.006732557321788551,
+          "upside_tail_return": 0.008819783701832444,
+          "mean_mfe": 0.016491327646241158,
+          "mean_mae": 0.015284093540193628
+        },
+        "ret_4": {
+          "event_count": 18692,
+          "observation_is_trade": false,
+          "horizon": "ret_4",
+          "mean_forward_return": 0.0008024619758792383,
+          "median_forward_return": 0.0006823610483821907,
+          "directional_hit_rate": 0.5554782794778514,
+          "downside_tail_return": -0.010072704869807363,
+          "upside_tail_return": 0.012059996601468878,
+          "mean_mfe": 0.016491327646241158,
+          "mean_mae": 0.015284093540193628
+        },
+        "ret_8": {
+          "event_count": 18692,
+          "observation_is_trade": false,
+          "horizon": "ret_8",
+          "mean_forward_return": 0.001011803751965078,
+          "median_forward_return": 0.0007466139516391194,
+          "directional_hit_rate": 0.5440295313503103,
+          "downside_tail_return": -0.01496245928658219,
+          "upside_tail_return": 0.01774576006126098,
+          "mean_mfe": 0.016491327646241158,
+          "mean_mae": 0.015284093540193628
+        },
+        "ret_16": {
+          "event_count": 18692,
+          "observation_is_trade": false,
+          "horizon": "ret_16",
+          "mean_forward_return": 0.0009333332943913912,
+          "median_forward_return": 0.0008499448253969811,
+          "directional_hit_rate": 0.5345824411134904,
+          "downside_tail_return": -0.022047226985621216,
+          "upside_tail_return": 0.024977741493143968,
+          "mean_mfe": 0.016491327646241158,
+          "mean_mae": 0.015284093540193628
+        },
+        "ret_32": {
+          "event_count": 18692,
+          "observation_is_trade": false,
+          "horizon": "ret_32",
+          "mean_forward_return": 0.0008277992030499383,
+          "median_forward_return": 0.0006111104623509897,
+          "directional_hit_rate": 0.5167666595243197,
+          "downside_tail_return": -0.03211392382492497,
+          "upside_tail_return": 0.03460231560180766,
+          "mean_mfe": 0.016491327646241158,
+          "mean_mae": 0.015284093540193628
+        }
+      },
+      "fold_count": 5,
+      "positive_fold_count": 5,
+      "fold_means_ret_8": [
+        0.0009348150176055879,
+        0.001311201122785189,
+        8.129952795243228e-05,
+        0.001909837781140843,
+        0.0008219668817004953
+      ],
+      "bootstrap": {
+        "mean": 0.001011803751965078,
+        "ci_low": 0.0008537528827785667,
+        "ci_high": 0.0011318816401697511,
+        "bootstrap_method": "chronological_block_bootstrap",
+        "bootstrap_block_size": 32,
+        "replicates": 200,
+        "random_seed": 20263338,
+        "insufficient": false
+      },
+      "p_value_mean_gt_0": 0.004975124378109453,
+      "largest_symbol_contribution": 0.02955225361758491,
+      "largest_regime_contribution": 1.0,
+      "effect_size": 0.001011803751965078,
+      "supported_raw_signal_candidate": true
+    }
+  ],
+  "multiple_testing_note": "Horizons pre-registered; primary test horizon=ret_8; FDR applied across components"
+}

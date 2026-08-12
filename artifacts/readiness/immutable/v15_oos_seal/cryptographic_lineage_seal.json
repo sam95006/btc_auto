@@ -1,0 +1,22 @@
+{
+  "allowed": true,
+  "anti_regeneration": true,
+  "bindings_checksum": "a177c2dd0419fc963f0e7fae953b98726fb668dede427d6aaa4e5601ee67ae39",
+  "candidate_checksum": "cc1954b09f85f57c08c02eeb8369d5f30b2cf0cb55701a7bbc3cd0319dad3e93",
+  "code_checksum": "07a48282480245c215555e1ce486fb0247ec36fb0333884c4df75b497799d766",
+  "dataset_semantic_checksum": "fc8073802bc25a8f7ea4b7d501cd89605a42dcbae3a88bd366d9c2aa939107bd",
+  "fail_closed": false,
+  "fixture_only": true,
+  "lineage_key": "default",
+  "lineage_verified": true,
+  "oos_consumed": false,
+  "oos_downloaded": false,
+  "oos_executed": false,
+  "oos_reserved": false,
+  "parameter_checksum": "a0457b4b0c9766dddeb4c8e3dd5368ca14f32515c419abea7fffc54ceefb8a84",
+  "plan_checksum": "1bcc13da2ee65ebc41d752836ab3a463ba9cb7c95e7e0a0d20ac74351e05949a",
+  "seal": "ef1b63ed662fdc102367ee789e02c370d41311ec575b0cbb6ee8c80120725b43",
+  "seal_algorithm": "sha256_json_canonical",
+  "status": "PLAN_SEALED_NOT_RESERVED",
+  "write_once": true
+}

@@ -1,0 +1,110 @@
+{
+  "attack_count": 5,
+  "attacks": [
+    {
+      "attack_id": "local_tz_as_known_at",
+      "blocked": true,
+      "detail": "no_tz_local_as_known_at:America/New_York",
+      "status": "REJECTED_TZ_LOCAL",
+      "survivor": false
+    },
+    {
+      "attack_id": "leap_second_aware_claim",
+      "blocked": true,
+      "detail": "no_leap_second_aware_claim:policy=UTC_CONTINUOUS_EPOCH_MS_NO_LEAP_SECOND_TABLE",
+      "policy": "UTC_CONTINUOUS_EPOCH_MS_NO_LEAP_SECOND_TABLE",
+      "status": "REJECTED_LEAP_SECOND_CLAIM",
+      "survivor": false
+    },
+    {
+      "attack_id": "dst_wallclock_collision",
+      "blocked": true,
+      "detail": "edt_ms=1730611800000 est_ms=1730615400000",
+      "evidence": {
+        "edges": [
+          {
+            "label": "edt_1_30",
+            "local": "2024-11-03 01:30:00-04:00",
+            "utc_ms": 1730611800000
+          },
+          {
+            "label": "est_1_30",
+            "local": "2024-11-03 01:30:00-05:00",
+            "utc_ms": 1730615400000
+          }
+        ]
+      },
+      "status": "UTC_DISTINCT",
+      "survivor": false
+    },
+    {
+      "attack_id": "utc_midnight_revision_boundary",
+      "blocked": true,
+      "detail": "utc_midnight_boundaries_checked",
+      "findings": [
+        {
+          "aka": 1699919999999,
+          "blocked": true,
+          "status": "UNAVAILABLE_AT_TIME"
+        },
+        {
+          "aka": 1699920000000,
+          "blocked": true,
+          "status": "UNAVAILABLE_AT_TIME"
+        },
+        {
+          "aka": 1699920000001,
+          "blocked": true,
+          "status": "UNAVAILABLE_AT_TIME"
+        },
+        {
+          "aka": 1700006399999,
+          "blocked": true,
+          "status": "UNAVAILABLE_AT_TIME"
+        },
+        {
+          "aka": 1700006400000,
+          "blocked": true,
+          "status": "UNAVAILABLE_AT_TIME"
+        },
+        {
+          "aka": 1700086399999,
+          "blocked": true,
+          "status": "UNAVAILABLE_AT_TIME"
+        },
+        {
+          "aka": 1700086400000,
+          "blocked": true,
+          "revision_id": "OBS_BTC_CLOSE_R1",
+          "status": "AVAILABLE"
+        },
+        {
+          "aka": 1700086400001,
+          "blocked": true,
+          "revision_id": "OBS_BTC_CLOSE_R1",
+          "status": "AVAILABLE"
+        }
+      ],
+      "survivor": false,
+      "survivors": []
+    },
+    {
+      "attack_id": "spring_forward_gap_query",
+      "blocked": true,
+      "detail": "gap_ms=1000 status=AVAILABLE",
+      "evidence": {
+        "gap_ms": 1000,
+        "post": 1710054000000,
+        "pre": 1710053999000,
+        "result_status": "AVAILABLE"
+      },
+      "survivor": false
+    }
+  ],
+  "blocked_count": 5,
+  "leap_second_policy": "UTC_CONTINUOUS_EPOCH_MS_NO_LEAP_SECOND_TABLE",
+  "pass": true,
+  "schema": "v17_deep_timestamp_edges_v1",
+  "survivor_count": 0,
+  "survivors": []
+}

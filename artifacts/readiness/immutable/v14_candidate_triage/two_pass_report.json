@@ -1,0 +1,225 @@
+{
+  "both_passes_ok": true,
+  "pass2_adversarial": {
+    "force_auto_integrate": {
+      "action": "AUTO_INTEGRATE",
+      "allowed": false,
+      "auto_integrated": false,
+      "executed": false,
+      "reason": "AUTO_INTEGRATE_BANNED_V14_H"
+    },
+    "force_demo_order": {
+      "action": "DEMO_ORDER",
+      "allowed": false,
+      "candidate_id": "SYN_V14H_DATA_001",
+      "demo_eligibility": false,
+      "demo_order_count": 0,
+      "executed": false,
+      "reason": "DEMO_ORDERS_BANNED_V14_H"
+    },
+    "force_demo_ready": {
+      "allowed": false,
+      "candidate_id": "SYN_V14H_DATA_001",
+      "demo_ready": false,
+      "forbidden_status": "DEMO_READY",
+      "reason": "DEMO_READY_OUTPUT_BANNED_V14_H"
+    },
+    "force_exchange_write": {
+      "action": "EXCHANGE_WRITE",
+      "allowed": false,
+      "exchange_write_attempt_count": 0,
+      "executed": false,
+      "reason": "EXCHANGE_WRITES_BANNED_V14_H"
+    },
+    "force_oos": {
+      "action": "OOS_RESERVATION",
+      "allowed": false,
+      "candidate_id": "SYN_V14H_DATA_001",
+      "executed": false,
+      "oos_consumed": false,
+      "oos_executed": false,
+      "oos_reservation_created": false,
+      "oos_touched": false,
+      "reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY"
+    },
+    "force_promote": {
+      "allowed": false,
+      "candidate_id": "SYN_V14H_DATA_001",
+      "promoted": false,
+      "reason": "STRATEGY_PROMOTION_BANNED_V14_H"
+    },
+    "force_qualify": {
+      "allowed": false,
+      "candidate_id": "SYN_V14H_DATA_001",
+      "forbidden_status": "QUALIFIED",
+      "qualified": false,
+      "reason": "QUALIFIED_OUTPUT_BANNED_V14_H"
+    },
+    "force_select": {
+      "allowed": false,
+      "candidate_id": "SYN_V14H_DATA_001",
+      "reason": "STRATEGY_SELECTION_BANNED_V14_H",
+      "selected": false
+    },
+    "force_walk_forward": {
+      "action": "FORMAL_WALK_FORWARD",
+      "allowed": false,
+      "candidate_id": "SYN_V14H_DATA_001",
+      "executed": false,
+      "formal_walk_forward_executed": false,
+      "reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+      "status": "PLANNED_NOT_EXECUTED"
+    },
+    "hard_ban_probe": {
+      "all_refused": true,
+      "flags": {
+        "Founder_authorization_present": false,
+        "auto_integrated": false,
+        "demo_eligibility": false,
+        "demo_order_count": 0,
+        "demo_ready_output_count": 0,
+        "exchange_write_attempt_count": 0,
+        "formal_walk_forward_executed": false,
+        "founder_authorization_present": false,
+        "mainnet": false,
+        "oos_consumed": false,
+        "oos_executed": false,
+        "oos_reservation_created": false,
+        "oos_touched": false,
+        "pr27_merged": false,
+        "promoted_output_count": 0,
+        "qualification_ready_count": 0,
+        "qualified_output_count": 0,
+        "real_money": false,
+        "strategy_promoted": false,
+        "strategy_selected": false
+      },
+      "hard_bans": [
+        "no_formal_walk_forward",
+        "no_real_oos_reservation",
+        "no_real_oos_consumption",
+        "no_strategy_selection",
+        "no_strategy_promotion",
+        "no_demo_orders",
+        "no_shadow_orders",
+        "no_exchange_writes",
+        "no_pr27_merge",
+        "no_mainnet",
+        "no_real_money",
+        "no_profitability_claims",
+        "no_qualified_output",
+        "no_promoted_output",
+        "no_demo_ready_output",
+        "no_auto_integrate"
+      ],
+      "probes": {
+        "force_auto_integrate": {
+          "action": "AUTO_INTEGRATE",
+          "allowed": false,
+          "auto_integrated": false,
+          "executed": false,
+          "reason": "AUTO_INTEGRATE_BANNED_V14_H"
+        },
+        "force_demo": {
+          "action": "DEMO_ORDER",
+          "allowed": false,
+          "candidate_id": "SYN_V14H_DATA_001",
+          "demo_eligibility": false,
+          "demo_order_count": 0,
+          "executed": false,
+          "reason": "DEMO_ORDERS_BANNED_V14_H"
+        },
+        "force_demo_ready": {
+          "allowed": false,
+          "candidate_id": "SYN_V14H_DATA_001",
+          "demo_ready": false,
+          "forbidden_status": "DEMO_READY",
+          "reason": "DEMO_READY_OUTPUT_BANNED_V14_H"
+        },
+        "force_exchange_write": {
+          "action": "EXCHANGE_WRITE",
+          "allowed": false,
+          "exchange_write_attempt_count": 0,
+          "executed": false,
+          "reason": "EXCHANGE_WRITES_BANNED_V14_H"
+        },
+        "force_oos_consume": {
+          "action": "OOS_CONSUMPTION",
+          "allowed": false,
+          "candidate_id": "SYN_V14H_DATA_001",
+          "executed": false,
+          "oos_consumed": false,
+          "oos_executed": false,
+          "oos_reservation_created": false,
+          "oos_touched": false,
+          "reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY"
+        },
+        "force_oos_reservation": {
+          "action": "OOS_RESERVATION",
+          "allowed": false,
+          "candidate_id": "SYN_V14H_DATA_001",
+          "executed": false,
+          "oos_consumed": false,
+          "oos_executed": false,
+          "oos_reservation_created": false,
+          "oos_touched": false,
+          "reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY"
+        },
+        "force_promote": {
+          "allowed": false,
+          "candidate_id": "SYN_V14H_DATA_001",
+          "promoted": false,
+          "reason": "STRATEGY_PROMOTION_BANNED_V14_H"
+        },
+        "force_qualify": {
+          "allowed": false,
+          "candidate_id": "SYN_V14H_DATA_001",
+          "forbidden_status": "QUALIFIED",
+          "qualified": false,
+          "reason": "QUALIFIED_OUTPUT_BANNED_V14_H"
+        },
+        "force_select": {
+          "allowed": false,
+          "candidate_id": "SYN_V14H_DATA_001",
+          "reason": "STRATEGY_SELECTION_BANNED_V14_H",
+          "selected": false
+        },
+        "force_walk_forward": {
+          "action": "FORMAL_WALK_FORWARD",
+          "allowed": false,
+          "candidate_id": "SYN_V14H_DATA_001",
+          "executed": false,
+          "formal_walk_forward_executed": false,
+          "reason": "FORMAL_QUALIFICATION_BLOCKED_V14_H_TRIAGE_ONLY",
+          "status": "PLANNED_NOT_EXECUTED"
+        }
+      }
+    },
+    "inject_demo_ready": {
+      "attempted_status": "DEMO_READY",
+      "emitted_status": "DATA_BLOCKED",
+      "forbidden_accepted": false
+    },
+    "inject_promoted": {
+      "attempted_status": "PROMOTED",
+      "emitted_status": "DATA_BLOCKED",
+      "forbidden_accepted": false
+    },
+    "inject_qualified": {
+      "attempted_status": "QUALIFIED",
+      "emitted_status": "DATA_BLOCKED",
+      "forbidden_accepted": false
+    }
+  },
+  "pass2_adversarial_ok": true,
+  "pass2_stability": {
+    "bundle_checksum_stable": true,
+    "candidate_count_stable": true,
+    "histogram_stable": true,
+    "infrastructure_status_stable": true,
+    "qualification_status_stable": true,
+    "ready_count_stable_zero": true
+  },
+  "qualification_ready_count": 0,
+  "schema": "FOUNDER_V14_H_CANDIDATE_TRIAGE_CONTROL"
+}

@@ -1,0 +1,27 @@
+{
+  "consumer_roles": [
+    "NUMERIC_STAT_MODEL",
+    "LLM_REASONER"
+  ],
+  "llm_sole_tick_consumer": false,
+  "schema": "v17_h_training_dataset_compiler",
+  "splits": [
+    "DEVELOPMENT",
+    "VALIDATION",
+    "WALK_FORWARD_RESERVED",
+    "OOS_RESERVED",
+    "SHADOW",
+    "DEMO",
+    "REAL_PRIVATE"
+  ],
+  "target_labels": [
+    "REGIME",
+    "VOL_FORECAST",
+    "LIQUIDITY_STRESS",
+    "CANDIDATE_RANKING",
+    "STRATEGY_ROUTING",
+    "ABSTENTION",
+    "ERROR_CLASSIFICATION",
+    "COUNTERFACTUAL"
+  ]
+}

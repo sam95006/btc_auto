@@ -1,0 +1,30 @@
+{
+  "digests": [
+    "649f583bca2199481c3bfda389b3b7f5200b855082a8c077572061d1c104ef67",
+    "649f583bca2199481c3bfda389b3b7f5200b855082a8c077572061d1c104ef67"
+  ],
+  "pass1": {
+    "critical_count": 0,
+    "digest": "649f583bca2199481c3bfda389b3b7f5200b855082a8c077572061d1c104ef67",
+    "findings": [],
+    "pass": 1,
+    "pass_ok": true
+  },
+  "pass2": {
+    "critical_count": 0,
+    "digest": "649f583bca2199481c3bfda389b3b7f5200b855082a8c077572061d1c104ef67",
+    "digests_match": true,
+    "findings": [],
+    "findings_fixed": [],
+    "note": "residuals_list_is_critical_only",
+    "pass": 2,
+    "pass1_digest": "649f583bca2199481c3bfda389b3b7f5200b855082a8c077572061d1c104ef67",
+    "pass1_noncritical_echo": [],
+    "pass_ok": true,
+    "remaining_residuals": []
+  },
+  "pass_count": 2,
+  "passes_match": true,
+  "schema": "v14_g_lesson_prevention_two_pass",
+  "two_pass_ok": true
+}

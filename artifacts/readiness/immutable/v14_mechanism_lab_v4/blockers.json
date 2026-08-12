@@ -1,0 +1,14 @@
+[
+  {
+    "blocker_id": "QUALIFICATION_NOT_AUTHORIZED",
+    "detail": "qualification_ready_count forced 0; no edge/profitability claims"
+  },
+  {
+    "blocker_id": "OOS_AND_FORMAL_WF_BANNED",
+    "detail": "synthetic development fixtures only"
+  },
+  {
+    "blocker_id": "NO_AUTO_INTEGRATE",
+    "detail": "lane artifacts only; coordinator must not auto-integrate"
+  }
+]

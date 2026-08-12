@@ -48,6 +48,17 @@ def empty_trading_intel() -> dict[str, Any]:
         "ai_thesis": None,
         "last_ai_position_review": None,
         "last_exit_reason": None,
+        # V29 — direction + stop/entry + adaptive profit capture telemetry (null when missing).
+        "direction_score_delta": None,
+        "direction_ambiguity_supported": None,
+        "last_entry_class": None,
+        "stop_distance_pct": None,
+        "fee_to_stop_loss_ratio": None,
+        "profit_lock_state": None,
+        "profit_lock_level": None,
+        "protected_pnl_floor": None,
+        "profit_lock_started_at": None,
+        "adaptive_action": None,
     }
 
 
@@ -58,6 +69,15 @@ def empty_performance() -> dict[str, Any]:
         "win_rate_aggregate": None,
         "net_pnl": None,
         "profit_factor": None,
+        "expectancy": None,
+        "average_win": None,
+        "average_loss": None,
+        "max_drawdown": None,
+        "sample_status": None,
+        "accounting_complete_trades": None,
+        "average_MFE_capture": None,
+        "last_10": None,
+        "last_30": None,
     }
 
 
@@ -65,7 +85,123 @@ def empty_learning() -> dict[str, Any]:
     return {
         "mistake_signatures": [],
         "pending_candidate_lessons": [],
+        "lesson_pipeline": None,
+        "repeat_after_validated_lesson": None,
     }
+
+
+def empty_autonomy() -> dict[str, Any]:
+    return {
+        "service_status": None,
+        "last_cycle": None,
+        "next_cycle": None,
+        "cycles_24h": None,
+        "errors_24h": None,
+        "open_position": None,
+        "exchange_connectivity": None,
+        "market_data_health": None,
+        "runtime_location": None,
+        "worker_instance_id": None,
+        "waiting_market_valid": None,
+        "top_rejection_reasons": None,
+    }
+
+
+def empty_ai_health() -> dict[str, Any]:
+    return {
+        "provider": None,
+        "model": None,
+        "configured": None,
+        "credential_present": None,
+        "ai_state": None,
+        "last_request": None,
+        "last_success": None,
+        "requests_24h": None,
+        "successes_24h": None,
+        "rate_limits_24h": None,
+        "quota_errors_24h": None,
+        "auth_errors_24h": None,
+        "timeouts_24h": None,
+        "last_error": None,
+        "quota_exhausted": None,
+        "rate_limited": None,
+        "ai_calls_working": None,
+        "ai_required_for_v30_entry": None,
+        "fallback_used": None,
+    }
+
+
+def map_autonomy(raw: dict[str, Any]) -> dict[str, Any]:
+    out = empty_autonomy()
+    block = raw.get("autonomy") if isinstance(raw.get("autonomy"), dict) else {}
+    nested = raw.get("AUTONOMY SERVICE") if isinstance(raw.get("AUTONOMY SERVICE"), dict) else {}
+    src = block or nested
+    health = src.get("health") if isinstance(src.get("health"), dict) else {}
+    out["service_status"] = _str_or_none(src.get("service_status") or health.get("service_status"))
+    out["last_cycle"] = _str_or_none(src.get("last_cycle") or health.get("last_cycle_completed_at"))
+    out["next_cycle"] = _str_or_none(src.get("next_cycle") or health.get("next_cycle_due_at"))
+    out["cycles_24h"] = _num(src.get("cycles_24h") if src.get("cycles_24h") is not None else health.get("cycles_24h"))
+    out["errors_24h"] = _num(src.get("errors_24h") if src.get("errors_24h") is not None else health.get("errors_24h"))
+    op = src.get("open_position") if src.get("open_position") is not None else health.get("open_position")
+    out["open_position"] = bool(op) if op is not None else None
+    out["exchange_connectivity"] = _str_or_none(
+        src.get("exchange_connectivity") or health.get("exchange_connectivity")
+    )
+    out["market_data_health"] = _str_or_none(src.get("market_data_health") or health.get("market_data_health"))
+    out["runtime_location"] = _str_or_none(
+        src.get("runtime_location") or health.get("runtime_location") or raw.get("runtime_location")
+    )
+    out["worker_instance_id"] = _str_or_none(src.get("worker_instance_id") or health.get("worker_instance_id"))
+    wmv = src.get("waiting_market_valid")
+    if wmv is None:
+        wmv = health.get("waiting_market_valid")
+    out["waiting_market_valid"] = bool(wmv) if wmv is not None else None
+    reasons = src.get("top_rejection_reasons") or health.get("top_rejection_reasons")
+    out["top_rejection_reasons"] = list(reasons) if isinstance(reasons, list) else None
+    return out
+
+
+def map_ai_health(raw: dict[str, Any]) -> dict[str, Any]:
+    out = empty_ai_health()
+    block = raw.get("ai_health") if isinstance(raw.get("ai_health"), dict) else {}
+    nested = raw.get("AI HEALTH") if isinstance(raw.get("AI HEALTH"), dict) else {}
+    src = block or nested
+    if not src and isinstance(raw.get("autonomy"), dict):
+        src = raw["autonomy"].get("ai") if isinstance(raw["autonomy"].get("ai"), dict) else {}
+    out["provider"] = _str_or_none(src.get("provider"))
+    out["model"] = _str_or_none(src.get("model"))
+    out["configured"] = src.get("configured") if src.get("configured") is not None else None
+    out["credential_present"] = (
+        src.get("credential_present") if src.get("credential_present") is not None else None
+    )
+    out["ai_state"] = _str_or_none(src.get("ai_state"))
+    out["last_request"] = _str_or_none(src.get("last_request") or src.get("last_request_at"))
+    out["last_success"] = _str_or_none(
+        src.get("last_success") or src.get("last_success_at") or src.get("last_successful_ai_call")
+    )
+    for k in (
+        "requests_24h",
+        "successes_24h",
+        "rate_limits_24h",
+        "quota_errors_24h",
+        "auth_errors_24h",
+        "timeouts_24h",
+    ):
+        out[k] = _num(src.get(k))
+    out["last_error"] = _str_or_none(src.get("last_error") or src.get("last_error_code"))
+    qe = src.get("quota_exhausted")
+    out["quota_exhausted"] = qe if qe in (True, False, "UNKNOWN") else (bool(qe) if qe is not None else None)
+    out["rate_limited"] = bool(src.get("rate_limited")) if src.get("rate_limited") is not None else None
+    out["ai_calls_working"] = (
+        bool(src.get("ai_calls_working")) if src.get("ai_calls_working") is not None else None
+    )
+    out["ai_required_for_v30_entry"] = (
+        bool(src.get("ai_required_for_v30_entry"))
+        if src.get("ai_required_for_v30_entry") is not None
+        else None
+    )
+    out["fallback_used"] = bool(src.get("fallback_used")) if src.get("fallback_used") is not None else None
+    return out
 
 
 def _win_rate(wins: Any, total: Any) -> float | None:
@@ -225,6 +361,21 @@ def map_trading_intel(
         or nested.get("last_exit_reason")
         or accounting.get("last_exit_reason")
     )
+
+    # V29 best-effort fields (may be absent on older feeds).
+    out["direction_score_delta"] = _num(nested.get("direction_score_delta") or block.get("direction_score_delta"))
+    out["direction_ambiguity_supported"] = nested.get("direction_ambiguity_supported") or block.get(
+        "direction_ambiguity_supported"
+    )
+    out["last_entry_class"] = _str_or_none(nested.get("last_entry_class") or block.get("last_entry_class"))
+    out["stop_distance_pct"] = _num(nested.get("stop_distance_pct") or block.get("stop_distance_pct"))
+    out["fee_to_stop_loss_ratio"] = _num(nested.get("fee_to_stop_loss_ratio") or block.get("fee_to_stop_loss_ratio"))
+
+    out["profit_lock_state"] = nested.get("profit_lock_state") or block.get("profit_lock_state")
+    out["profit_lock_level"] = _num(nested.get("profit_lock_level") or block.get("profit_lock_level"))
+    out["protected_pnl_floor"] = _num(nested.get("protected_pnl_floor") or block.get("protected_pnl_floor"))
+    out["profit_lock_started_at"] = _num(nested.get("profit_lock_started_at") or block.get("profit_lock_started_at"))
+    out["adaptive_action"] = _str_or_none(nested.get("adaptive_action") or block.get("adaptive_action"))
     return out
 
 
@@ -249,6 +400,22 @@ def map_performance(raw: dict[str, Any]) -> dict[str, Any]:
     out["profit_factor"] = _num(
         block.get("profit_factor") or cumulative.get("profit_factor")
     )
+
+    if isinstance(block.get("last_10"), dict):
+        out["last_10"] = block.get("last_10")
+    if isinstance(block.get("last_30"), dict):
+        out["last_30"] = block.get("last_30")
+    out["expectancy"] = _num(block.get("expectancy"))
+    out["average_win"] = _num(block.get("average_win"))
+    out["average_loss"] = _num(block.get("average_loss"))
+    out["max_drawdown"] = _num(block.get("max_drawdown") or block.get("max_drawdown_usdt"))
+    out["sample_status"] = _str_or_none(block.get("sample_status") or block.get("win_rate_claim_status"))
+    out["accounting_complete_trades"] = _num(
+        block.get("accounting_complete_trades") or block.get("n")
+    )
+    out["average_MFE_capture"] = _num(block.get("average_MFE_capture"))
+    if out["average_MFE_capture"] is None and isinstance(block.get("last_10"), dict):
+        out["average_MFE_capture"] = _num(block["last_10"].get("avg_mfe_capture_ratio"))
     return out
 
 
@@ -265,4 +432,8 @@ def map_learning(raw: dict[str, Any]) -> dict[str, Any]:
     if lessons is None:
         lessons = block.get("candidate_lessons") or raw.get("pending_candidate_lessons")
     out["pending_candidate_lessons"] = _list_or_empty(lessons)
+    pipeline = block.get("lesson_pipeline")
+    if isinstance(pipeline, dict):
+        out["lesson_pipeline"] = pipeline
+    out["repeat_after_validated_lesson"] = _num(block.get("repeat_after_validated_lesson"))
     return out

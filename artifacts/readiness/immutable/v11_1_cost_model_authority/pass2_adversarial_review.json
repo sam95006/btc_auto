@@ -1,0 +1,24 @@
+{
+  "checks": [
+    "false_PASS_guard",
+    "fixture_only_divergence",
+    "silent_fallback_rejected",
+    "schema_drift_rejected",
+    "secrets_scan_module",
+    "negative_tests",
+    "pytest_rerun"
+  ],
+  "false_pass_guards": [
+    "broken CostBridge refuses serialize",
+    "unknown version raises CostModelVersionError",
+    "authority/schema mismatch fails validate()",
+    "fixture foreign version fails authority_metrics.passed"
+  ],
+  "generated_at": "2026-08-05T04:07:45Z",
+  "pytest_rerun_passed": true,
+  "secrets_scan": {
+    "clean": true,
+    "module": "backend.nexus_execution.cost_model"
+  },
+  "silent_fallback": "disabled \u2014 missing/blank versions raise"
+}

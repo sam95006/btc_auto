@@ -1,0 +1,25 @@
+{
+  "schema": "microstructure_operations_v10_integrity_score",
+  "integrity_score": 0,
+  "integrity_band": "LOW",
+  "integrity_overall": "FAIL",
+  "integrity_status": "FAIL",
+  "deductions": [
+    "checksum_replay_not_verified",
+    "truncated_tail_detected",
+    "cross_partition_linkage_not_pass",
+    "partition_set_incomplete",
+    "integrity_status_not_pass"
+  ],
+  "inputs": {
+    "checksum_replay_verified": false,
+    "truncated_tail_detected": true,
+    "cross_partition_linkage_status": "FAIL",
+    "partition_completeness_status": "PARTIAL",
+    "storage_cap_outcome": "WITHIN_CAPS",
+    "integrity_status": "FAIL"
+  },
+  "event_study_readiness_status": "NOT_READY",
+  "event_study_real_execution": false,
+  "new_strategy_generated_count": 0
+}

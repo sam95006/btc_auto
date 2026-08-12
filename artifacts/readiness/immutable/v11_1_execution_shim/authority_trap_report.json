@@ -1,0 +1,42 @@
+{
+  "canonical_execution_authority_count": 1,
+  "canonical_execution_engine": "backend.nexus_execution.execution_simulator_v1_1.AutonomousExecutionSimulatorV11",
+  "canonical_fill_authority_count": 1,
+  "canonical_fill_engine": "backend.nexus_execution.fill_engine.try_fill",
+  "forbidden_assign_names": [
+    "COST_MODEL_VERSION",
+    "DEFAULT_SLIP_BPS",
+    "DEFAULT_SPREAD_BPS",
+    "FORBIDDEN_ACTIONS",
+    "FORBIDDEN_LEVERAGE",
+    "FORBIDDEN_LEVERAGE_VALUES",
+    "MAKER_FEE",
+    "MAX_LEVERAGE_CEILING",
+    "TAKER_FEE"
+  ],
+  "forbidden_func_defs": [
+    "_apply_costs",
+    "_apply_fill",
+    "_apply_reduce",
+    "_close_position_via",
+    "_commit_fill",
+    "_liquidation_distance",
+    "_liquidation_price",
+    "_materialise_position",
+    "_maybe_liquidate",
+    "_open_position_via",
+    "annotate_trade_costs",
+    "apply_funding",
+    "check_maintenance_margin",
+    "compose_cost_bridge",
+    "estimate_costs"
+  ],
+  "generated_at": "2026-08-05T04:06:10Z",
+  "lane": "V11_1_C5_EXECUTION_SHIM",
+  "passed": true,
+  "schema": "nexus_execution_shim_authority_trap_v1",
+  "shim_embedded_fill_authority_count": 0,
+  "shim_path": "backend/nexus_autonomy/execution_simulator_v1_1.py",
+  "violation_count": 0,
+  "violations": []
+}

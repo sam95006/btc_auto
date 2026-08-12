@@ -1,0 +1,18 @@
+{
+  "schema": "new_data_family_gap_proposal",
+  "status": "PARTIAL_RAW_SUPPORT_PRESENT",
+  "do_not_implement_in_this_task": true,
+  "do_not_purchase_paid_data": true,
+  "do_not_scrape_prohibited_sources": true,
+  "candidate_families": [
+    "public_liquidation_events",
+    "aggressive_buy_sell_trade_flow",
+    "order_book_imbalance",
+    "depth_and_liquidity_changes",
+    "cross_exchange_perpetual_basis",
+    "options_implied_volatility_and_skew",
+    "news_event_data",
+    "on_chain_exchange_flows"
+  ],
+  "trigger": false
+}

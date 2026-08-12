@@ -1,0 +1,51 @@
+{
+  "entries": [
+    {
+      "candidate_id": "SYN_V15E_REVIEW_001",
+      "failed_sibling_experiments": [
+        {
+          "experiment_id": "SYN_V15E_REVIEW_001_SIB_FAIL_COST",
+          "fixture_only": true,
+          "outcome": "COST_DESTROYED",
+          "reason": "net_expectancy_negative_under_canonical_cost"
+        },
+        {
+          "experiment_id": "SYN_V15E_REVIEW_001_SIB_FAIL_REGIME",
+          "fixture_only": true,
+          "outcome": "REGIME_FRAGILE",
+          "reason": "signal_collapsed_in_liq_thin_regime"
+        },
+        {
+          "experiment_id": "SYN_V15E_REVIEW_001_SIB_FAIL_SAMPLE",
+          "fixture_only": true,
+          "outcome": "INSUFFICIENT_SAMPLE",
+          "reason": "bootstrap_ci_unstable_below_min_n"
+        }
+      ]
+    },
+    {
+      "candidate_id": "SYN_V15E_PROMISING_002",
+      "failed_sibling_experiments": [
+        {
+          "experiment_id": "SYN_V15E_PROMISING_002_SIB_FAIL_COST",
+          "fixture_only": true,
+          "outcome": "COST_DESTROYED",
+          "reason": "net_expectancy_negative_under_canonical_cost"
+        },
+        {
+          "experiment_id": "SYN_V15E_PROMISING_002_SIB_FAIL_REGIME",
+          "fixture_only": true,
+          "outcome": "REGIME_FRAGILE",
+          "reason": "signal_collapsed_in_liq_thin_regime"
+        },
+        {
+          "experiment_id": "SYN_V15E_PROMISING_002_SIB_FAIL_SAMPLE",
+          "fixture_only": true,
+          "outcome": "INSUFFICIENT_SAMPLE",
+          "reason": "bootstrap_ci_unstable_below_min_n"
+        }
+      ]
+    }
+  ],
+  "schema": "FOUNDER_V15_E_CANDIDATE_DOSSIER_BUILDER"
+}

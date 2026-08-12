@@ -1,0 +1,9 @@
+{
+  "cost_blockers": [],
+  "cost_findings": [],
+  "full_severity_counts": {
+    "critical": 2,
+    "high": 2
+  },
+  "generated_at": "2026-08-05T04:07:45Z"
+}

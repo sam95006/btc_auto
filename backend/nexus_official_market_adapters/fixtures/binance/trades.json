@@ -1,0 +1,4 @@
+[
+  {"id": 1, "price": "40200.00", "qty": "0.010", "quoteQty": "402.00", "time": 1700000001000, "isBuyerMaker": false},
+  {"id": 2, "price": "40199.50", "qty": "0.020", "quoteQty": "803.99", "time": 1700000000500, "isBuyerMaker": true}
+]

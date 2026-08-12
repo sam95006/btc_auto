@@ -1,0 +1,36 @@
+{
+  "schema": "h4_sealed_classifications_v1",
+  "do_not_overwrite_or_soften": true,
+  "selected_h4_primary_policy": null,
+  "h4_oos_reservation_id": null,
+  "demo_forward_status": "BLOCKED_NO_VALIDATED_POLICY",
+  "H4A_EVENT_RETEST_CONTINUATION": {
+    "status": "REJECTED_CONCENTRATED_EDGE",
+    "founder_classification": "PROMISING_MECHANISM_NOT_PORTABLE",
+    "completed_trade_count": 201,
+    "net_expectancy": 0.2783494284079602,
+    "profit_factor": 1.194766,
+    "adverse_profit_factor": 1.1004,
+    "fold_concentration": 0.8037124431609612,
+    "may_inform_h5": true,
+    "may_promote": false
+  },
+  "H4B_VOLATILITY_NORMALIZED_CONTINUATION": {
+    "status": "INSUFFICIENT_SAMPLE",
+    "completed_trade_count": 15
+  },
+  "H4C_OI_FUNDING_CONFIRMED_CONTINUATION": {
+    "status": "REJECTED_COST_DOMINATED",
+    "founder_classification": "POSITIVE_BASE_RESULT_NOT_COST_OR_FOLD_STABLE",
+    "completed_trade_count": 85,
+    "net_expectancy": 0.13327247223529412,
+    "profit_factor": 1.097856,
+    "adverse_profit_factor": 0.983488,
+    "fold_concentration": 0.9764067895560486,
+    "may_inform_h5": true,
+    "may_promote": false
+  },
+  "fold_concentration_gate_not_lowered": true,
+  "modified_h4_rerun_as_qualification_forbidden": true,
+  "h4_research_commit": "f7ade4a379c268d7c08517b8a8a79e4838a5476f"
+}

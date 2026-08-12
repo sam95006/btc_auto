@@ -1,0 +1,244 @@
+{
+  "schema": "storage_metric_audit",
+  "created_at": "2026-08-04T11:44:54Z",
+  "v11_package_mutated": false,
+  "filesystem_audit": {
+    "schema": "storage_metric_audit",
+    "partition_count": 49,
+    "intact_partition_count": 49,
+    "truncated_or_incomplete_partition_count": 0,
+    "name_filter": null,
+    "session_total_compressed_bytes": 16706158,
+    "session_intact_compressed_bytes": 16706158,
+    "session_total_uncompressed_bytes": 202709677,
+    "manifest_bytes": 54161,
+    "filesystem_bytes_on_disk": 16760319,
+    "event_count": 248001,
+    "actual_compressed_bytes_per_event": 67.36326869649719,
+    "actual_uncompressed_bytes_per_event": 817.3744339740565,
+    "actual_compression_ratio": 0.08241421054605104,
+    "partitions_sample": [
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\LIQUIDATION_EVENTS\\BTCUSDT\\ms11_SOAK5_1785821820_LIQUIDATION_EVENTS_BTCUSDT_20260804_06_0.jsonl.gz",
+        "partition_compressed_bytes": 640,
+        "partition_uncompressed_bytes": 1496,
+        "manifest_bytes": 1080,
+        "event_count": 2,
+        "compression_ratio": 0.42780748663101603,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\LIQUIDATION_EVENTS\\BTCUSDT\\ms11_CAP25_1785825428_LIQUIDATION_EVENTS_BTCUSDT_20260804_06_0.jsonl.gz",
+        "partition_compressed_bytes": 741,
+        "partition_uncompressed_bytes": 2246,
+        "manifest_bytes": 1078,
+        "event_count": 3,
+        "compression_ratio": 0.329919857524488,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\LIQUIDATION_EVENTS\\ETHUSDT\\ms11_SOAK5_1785821820_LIQUIDATION_EVENTS_ETHUSDT_20260804_06_0.jsonl.gz",
+        "partition_compressed_bytes": 537,
+        "partition_uncompressed_bytes": 746,
+        "manifest_bytes": 1078,
+        "event_count": 1,
+        "compression_ratio": 0.7198391420911529,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\LIQUIDATION_EVENTS\\ETHUSDT\\ms11_CAP25_1785825428_LIQUIDATION_EVENTS_ETHUSDT_20260804_06_0.jsonl.gz",
+        "partition_compressed_bytes": 1550,
+        "partition_uncompressed_bytes": 9722,
+        "manifest_bytes": 1081,
+        "event_count": 13,
+        "compression_ratio": 0.1594322155934993,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\LIQUIDATION_EVENTS\\SOLUSDT\\ms11_CAP25_1785825428_LIQUIDATION_EVENTS_SOLUSDT_20260804_06_0.jsonl.gz",
+        "partition_compressed_bytes": 709,
+        "partition_uncompressed_bytes": 2227,
+        "manifest_bytes": 1080,
+        "event_count": 3,
+        "compression_ratio": 0.31836551414458913,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\LIQUIDATION_EVENTS\\SOXLUSDT\\ms11_SOAK5_1785821820_LIQUIDATION_EVENTS_SOXLUSDT_20260804_06_0.jsonl.gz",
+        "partition_compressed_bytes": 741,
+        "partition_uncompressed_bytes": 2243,
+        "manifest_bytes": 1084,
+        "event_count": 3,
+        "compression_ratio": 0.33036112349531876,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\LIQUIDATION_EVENTS\\SOXLUSDT\\ms11_CAP25_1785825428_LIQUIDATION_EVENTS_SOXLUSDT_20260804_06_0.jsonl.gz",
+        "partition_compressed_bytes": 624,
+        "partition_uncompressed_bytes": 1505,
+        "manifest_bytes": 1084,
+        "event_count": 2,
+        "compression_ratio": 0.41461794019933557,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\LIQUIDATION_EVENTS\\HYPEUSDT\\ms11_SOAK5_1785821820_LIQUIDATION_EVENTS_HYPEUSDT_20260804_06_0.jsonl.gz",
+        "partition_compressed_bytes": 537,
+        "partition_uncompressed_bytes": 750,
+        "manifest_bytes": 1069,
+        "event_count": 1,
+        "compression_ratio": 0.716,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\LIQUIDATION_EVENTS\\HYPEUSDT\\ms11_CAP25_1785825428_LIQUIDATION_EVENTS_HYPEUSDT_20260804_06_0.jsonl.gz",
+        "partition_compressed_bytes": 695,
+        "partition_uncompressed_bytes": 2258,
+        "manifest_bytes": 1083,
+        "event_count": 3,
+        "compression_ratio": 0.3077945084145261,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\LIQUIDATION_EVENTS\\ADAUSDT\\ms11_CAP25_1785825428_LIQUIDATION_EVENTS_ADAUSDT_20260804_06_0.jsonl.gz",
+        "partition_compressed_bytes": 634,
+        "partition_uncompressed_bytes": 1508,
+        "manifest_bytes": 1079,
+        "event_count": 2,
+        "compression_ratio": 0.4204244031830239,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\LIQUIDATION_EVENTS\\XRPUSDT\\ms11_CAP25_1785825428_LIQUIDATION_EVENTS_XRPUSDT_20260804_06_0.jsonl.gz",
+        "partition_compressed_bytes": 537,
+        "partition_uncompressed_bytes": 758,
+        "manifest_bytes": 1078,
+        "event_count": 1,
+        "compression_ratio": 0.7084432717678101,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\LIQUIDATION_EVENTS\\1000RATSUSDT\\ms11_CAP25_1785825428_LIQUIDATION_EVENTS_1000RATSUSDT_20260804_06_0.jsonl.gz",
+        "partition_compressed_bytes": 1119,
+        "partition_uncompressed_bytes": 6120,
+        "manifest_bytes": 1101,
+        "event_count": 8,
+        "compression_ratio": 0.18284313725490195,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\LIQUIDATION_EVENTS\\BEATUSDT\\ms11_CAP25_1785825428_LIQUIDATION_EVENTS_BEATUSDT_20260804_06_0.jsonl.gz",
+        "partition_compressed_bytes": 532,
+        "partition_uncompressed_bytes": 745,
+        "manifest_bytes": 1082,
+        "event_count": 1,
+        "compression_ratio": 0.7140939597315437,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\LIQUIDATION_EVENTS\\PUMPFUNUSDT\\ms11_CAP25_1785825428_LIQUIDATION_EVENTS_PUMPFUNUSDT_20260804_06_0.jsonl.gz",
+        "partition_compressed_bytes": 647,
+        "partition_uncompressed_bytes": 1548,
+        "manifest_bytes": 1096,
+        "event_count": 2,
+        "compression_ratio": 0.41795865633074936,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\BTCUSDT\\ms11_SOAK5_1785821820_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_05_0.jsonl.gz",
+        "partition_compressed_bytes": 770093,
+        "partition_uncompressed_bytes": 9594194,
+        "manifest_bytes": 1102,
+        "event_count": 11747,
+        "compression_ratio": 0.08026656538318905,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\BTCUSDT\\ms11_SOAK5_1785821820_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_06_1.jsonl.gz",
+        "partition_compressed_bytes": 1216203,
+        "partition_uncompressed_bytes": 15162012,
+        "manifest_bytes": 1173,
+        "event_count": 18558,
+        "compression_ratio": 0.08021382650270953,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\BTCUSDT\\ms11_CAP25_1785825428_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_06_0.jsonl.gz",
+        "partition_compressed_bytes": 764443,
+        "partition_uncompressed_bytes": 9601049,
+        "manifest_bytes": 1102,
+        "event_count": 11756,
+        "compression_ratio": 0.07962077893780148,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\ETHUSDT\\ms11_SOAK5_1785821820_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260804_05_0.jsonl.gz",
+        "partition_compressed_bytes": 529475,
+        "partition_uncompressed_bytes": 6691329,
+        "manifest_bytes": 1101,
+        "event_count": 8210,
+        "compression_ratio": 0.07912852588775712,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\ETHUSDT\\ms11_SOAK5_1785821820_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260804_06_1.jsonl.gz",
+        "partition_compressed_bytes": 1585796,
+        "partition_uncompressed_bytes": 20316327,
+        "manifest_bytes": 1173,
+        "event_count": 24928,
+        "compression_ratio": 0.07805525083347989,
+        "integrity_status": "OK",
+        "integrity_error": null
+      },
+      {
+        "path": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_1\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\ETHUSDT\\ms11_CAP25_1785825428_AGGRESSIVE_TRADE_FLOW_ETHUSDT_20260804_06_0.jsonl.gz",
+        "partition_compressed_bytes": 1296045,
+        "partition_uncompressed_bytes": 16749899,
+        "manifest_bytes": 1103,
+        "event_count": 20553,
+        "compression_ratio": 0.0773762874629871,
+        "integrity_status": "OK",
+        "integrity_error": null
+      }
+    ]
+  },
+  "correction_vs_v11_5_symbols": {
+    "storage_metric_status": "STORAGE_ESTIMATE_OVERSTATED",
+    "claimed_daily_estimate": 1919832239.9999998,
+    "actual_daily_compressed_storage_estimate": 158486909.52762285,
+    "actual_30_day_compressed_storage_estimate": 4754607285.828686,
+    "actual_365_day_compressed_storage_estimate": 57847721977.58234,
+    "symbol_count_basis": 5,
+    "events_per_second_basis": 27.230555555555554,
+    "actual_compressed_bytes_per_event": 67.36326869649719
+  },
+  "correction_vs_v11_25_symbols": {
+    "storage_metric_status": "STORAGE_ESTIMATE_OVERSTATED",
+    "claimed_daily_estimate": 9599161199.999998,
+    "actual_daily_compressed_storage_estimate": 969843529.8895084,
+    "actual_30_day_compressed_storage_estimate": 29095305896.68525,
+    "actual_365_day_compressed_storage_estimate": 353992888409.67053,
+    "symbol_count_basis": 25,
+    "events_per_second_basis": 166.63444444444445,
+    "actual_compressed_bytes_per_event": 67.36326869649719
+  },
+  "note": "V1.1 session_bytes_written tracked serialized uncompressed; compressed must come from filesystem"
+}

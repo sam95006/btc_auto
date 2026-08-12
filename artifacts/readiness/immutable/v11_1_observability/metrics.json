@@ -1,0 +1,15 @@
+{
+  "schema": "v11_1_private_observability_metrics",
+  "created_at": "2026-08-05T04:07:51Z",
+  "slo_score_pass_1": 100.0,
+  "slo_score_pass_2": 100.0,
+  "active_alerts_pass_1": 0,
+  "active_alerts_pass_2": 13,
+  "domain_count": 12,
+  "slo_definition_count": 13,
+  "hard_ban_count": 16,
+  "secret_leak_count": 0,
+  "exchange_write_attempt_count": 0,
+  "execution_mutation_endpoint": false,
+  "public_routes": false
+}

@@ -1,0 +1,100 @@
+{
+  "schema": "autonomous_execution_simulator_v1_1",
+  "Execution_V1_1_status": "PASS",
+  "execution_status": "NEXUS_AUTONOMOUS_EXECUTION_SIMULATOR_V1_1_PASS",
+  "fill_policy": "TRADE_THROUGH_ONE_TICK_REQUIRED; TOUCH_ALONE_INSUFFICIENT; QUEUE_AWARE_CONSERVATIVE_LIMIT; CANDLE_TOUCH_NEVER_EQUALS_FILL; SAME_BAR_STOP_TARGET=BLOCKED_AMBIGUOUS_ADVERSE_FIRST; MARK_PRICE_TRIGGER_FOR_STOPS; INDEX_PRICE_REQUIRED_FOR_MARK_DERIVATION",
+  "immutable_risk": {
+    "max_positions_default": 2,
+    "max_intents_default": 2,
+    "bounded": {
+      "max_positions": 1,
+      "max_intents": 1,
+      "margin_usdt": 20
+    },
+    "leverage": 25,
+    "margin_mode": "ISOLATED",
+    "ceiling": 50,
+    "forbidden": [
+      "100x",
+      "cross",
+      "martingale",
+      "averaging_down",
+      "stop_widening"
+    ]
+  },
+  "smoke": {
+    "create": {
+      "status": "ACCEPTED",
+      "order_id": "14c5926300f7e790419de829",
+      "state": "ACCEPTED",
+      "qty": 0.1
+    },
+    "fill": {
+      "status": "FILLED",
+      "order_id": "14c5926300f7e790419de829",
+      "position_id": "769339a5bd5f4e29832c351f",
+      "fill_price": 100.1,
+      "fill_qty": 0.1,
+      "filled_qty": 0.1,
+      "remaining_qty": 0.0,
+      "costs": {
+        "entry_fee": 0.0055055,
+        "fee": 0.0055055,
+        "spread_cost": 0.001001,
+        "slippage_cost": 0.002002,
+        "fee_rate": 0.00055
+      },
+      "liquidation_distance": 3.4000000000000057,
+      "liquidation_price": 96.6,
+      "liquidation": null,
+      "reconcile_ok": true
+    },
+    "dup": {
+      "status": "DUPLICATE_IGNORED",
+      "order_id": "14c5926300f7e790419de829",
+      "canonical_owner": "14c5926300f7e790419de829"
+    },
+    "ambiguous": {
+      "status": "BLOCKED_AMBIGUOUS",
+      "reason": "SAME_BAR_STOP_TARGET_ADVERSE_FIRST"
+    },
+    "touch_alone": {
+      "status": "UNFILLED",
+      "order_id": "a17cfc1f4fbceb79dfced68f",
+      "state": "ACCEPTED"
+    }
+  },
+  "report": {
+    "order_created_count": 1,
+    "partially_filled_count": 0,
+    "filled_count": 1,
+    "cancelled_count": 0,
+    "rejected_count": 0,
+    "expired_count": 0,
+    "replaced_count": 0,
+    "unfilled_count": 0,
+    "simulated_position_open_count": 1,
+    "simulated_position_closed_count": 0,
+    "simulated_liquidation_count": 0,
+    "funding_events_count": 0,
+    "open_ambiguous_position_count": 0,
+    "unclosed_intent_count": 0,
+    "exchange_write_attempt_count": 0,
+    "demo_order_count": 0,
+    "max_positions": 1,
+    "max_intents": 1,
+    "leverage": 25,
+    "margin_mode": "ISOLATED",
+    "margin_usdt": 20.0,
+    "fill_policy": "TRADE_THROUGH_ONE_TICK_REQUIRED; TOUCH_ALONE_INSUFFICIENT; QUEUE_AWARE_CONSERVATIVE_LIMIT; CANDLE_TOUCH_NEVER_EQUALS_FILL; SAME_BAR_STOP_TARGET=BLOCKED_AMBIGUOUS_ADVERSE_FIRST; MARK_PRICE_TRIGGER_FOR_STOPS; INDEX_PRICE_REQUIRED_FOR_MARK_DERIVATION",
+    "fee_policy": {
+      "taker": 0.00055,
+      "maker": 0.0002
+    },
+    "spread_bps": 1.0,
+    "slippage_bps": 2.0,
+    "version": "NEXUS_AUTONOMOUS_EXECUTION_SIMULATOR_V1_1",
+    "trade_count": 1
+  },
+  "created_at": "2026-08-04T16:18:15Z"
+}

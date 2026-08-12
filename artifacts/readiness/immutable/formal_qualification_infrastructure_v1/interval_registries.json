@@ -1,0 +1,44 @@
+{
+  "data": {
+    "kind": "data",
+    "interval_count": 1,
+    "checksum": "21e54dda3111bf186f4081abe05fec260ac789445a81a8a577b46e07f2be0f24",
+    "intervals": [
+      {
+        "interval_id": "SYN_DATA_DEV_001",
+        "label": "synthetic_development",
+        "start_ms": 1692224000000,
+        "end_ms": 1696544000000,
+        "category": "data"
+      }
+    ]
+  },
+  "consumed": {
+    "kind": "consumed",
+    "interval_count": 1,
+    "checksum": "a07d72165ee73d059e44f4114becbdf6b22f197283195208fc199cfae5986448",
+    "intervals": [
+      {
+        "interval_id": "SYN_CONSUMED_001",
+        "label": "synthetic_consumed_research",
+        "start_ms": 1692224000000,
+        "end_ms": 1696544000000,
+        "category": "consumed"
+      }
+    ]
+  },
+  "reserved": {
+    "kind": "reserved",
+    "interval_count": 1,
+    "checksum": "78bb7ff322b439543a75c56ba88a838cb03ee55fb72f7cfe21c2f18cb1921b03",
+    "intervals": [
+      {
+        "interval_id": "SYN_OOS_RESERVED_001",
+        "label": "synthetic_untouched_oos",
+        "start_ms": 1697408000000,
+        "end_ms": 1699913600000,
+        "category": "reserved"
+      }
+    ]
+  }
+}

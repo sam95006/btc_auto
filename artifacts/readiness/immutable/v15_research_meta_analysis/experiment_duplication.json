@@ -1,0 +1,22 @@
+{
+  "axis": "experiment_duplication",
+  "corr_floor": 0.95,
+  "development_only": true,
+  "duplicate_experiment_ids": [
+    "EXP_DUP_001",
+    "EXP_DUP_002"
+  ],
+  "duplicate_pair_count": 1,
+  "duplicate_pairs": [
+    {
+      "a": "EXP_DUP_001",
+      "b": "EXP_DUP_002",
+      "correlation": 0.9999487577798282,
+      "duplicate": true,
+      "mechanism_semantic_id": "MECH_LIQ_CASCADE_V1",
+      "param_distance": 0.0051188871304925386
+    }
+  ],
+  "not_oos_claim": true,
+  "param_distance_max": 0.05
+}

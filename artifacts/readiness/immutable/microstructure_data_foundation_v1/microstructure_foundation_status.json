@@ -1,0 +1,25 @@
+{
+  "schema": "microstructure_foundation_status",
+  "created_at": "2026-08-04T04:23:12Z",
+  "recommendation": "NEXUS_MICROSTRUCTURE_FOUNDATION_READY_FOR_DATA_ACCUMULATION",
+  "selected_data_families": [
+    "AGGRESSIVE_TRADE_FLOW",
+    "LIQUIDATION_EVENTS"
+  ],
+  "exchange": "BYBIT",
+  "capture_mode": "PUBLIC_READONLY_WEBSOCKET",
+  "smoke_duration_minutes": 15.0,
+  "smoke_symbol_count": 5,
+  "aggressive_trade_event_count": 19871,
+  "liquidation_event_count": 2,
+  "new_strategy_generated_count": 0,
+  "backtest_executed": false,
+  "formal_walk_forward_executed": false,
+  "oos_executed": false,
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "deployment_started": false,
+  "mainnet": false,
+  "real_money": false,
+  "MICROSTRUCTURE_EVENT_STUDY_V1_executed": false
+}

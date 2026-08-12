@@ -1,0 +1,47 @@
+{
+  "schema": "h11_rare_event_investigation",
+  "H11_diagnostic_status": "H11_RAW_SIGNAL_NOT_CONFIRMED",
+  "semantics_unchanged": true,
+  "parameter_values_fingerprint": [
+    "stop_definition",
+    "target_definition"
+  ],
+  "sample_gate_not_lowered": true,
+  "H11_history_depth_days": 540.0,
+  "H11_derivatives_symbol_count": 28,
+  "H11_raw_event_count": 1616,
+  "cost_gate_pass_count": 52,
+  "H11_completed_trade_count": 31,
+  "symbol_count": 28,
+  "regime_count": 2,
+  "gross_expectancy": -0.08960633806451611,
+  "net_expectancy": -0.4766656677419354,
+  "gross_profit_factor": null,
+  "net_profit_factor": 0.781879,
+  "H11_positive_fold_count": 3,
+  "fold_count": 5,
+  "H11_largest_symbol_contribution": 0.24370531846042146,
+  "H11_largest_regime_contribution": 0.6152218403306597,
+  "zero_trade_root_cause": null,
+  "funnel": {
+    "bars_scanned": 955648,
+    "context_pass_count": 955,
+    "event_detected_count": 955,
+    "confirmation_pass_count": 955,
+    "regime_block_count": 0,
+    "data_capability_block_count": 37,
+    "late_entry_block_count": 0,
+    "cost_gate_block_count": 903,
+    "geometry_block_count": 0,
+    "risk_block_count": 0,
+    "candidate_count": 52,
+    "entry_count": 0,
+    "completed_trade_count": 0
+  },
+  "sealed_v12_reference": {
+    "completed_trade_count": 7,
+    "net_expectancy": 1.3572815785714287,
+    "preserved": true
+  },
+  "formal_qualification": false
+}

@@ -1,0 +1,215 @@
+{
+  "schema": "v10_security_dr_redteam",
+  "program_id": "NEXUS_V10_SECURITY_DR_REDTEAM",
+  "created_at": "2026-08-05T03:07:01Z",
+  "lane": "E",
+  "branch": "feature/v10-security-dr-redteam",
+  "execution_mode": "SIMULATED_FAIL_CLOSED_NO_EXCHANGE_WRITE",
+  "owned_paths": [
+    "backend/nexus_autonomy/security_dr_redteam_v10.py",
+    "backend/nexus_autonomy/security_dr_scenarios_v10.py",
+    "tools/research/run_security_dr_redteam_v10.py",
+    "tools/ci/scan_security_dr_redteam_v10.py",
+    "tests/test_security_dr_redteam_v10.py",
+    "artifacts/readiness/immutable/v10_security_dr_redteam/"
+  ],
+  "prohibited_paths": [
+    "frontend/",
+    "backend/nexus_demo_execution/",
+    "G:/",
+    "PR26"
+  ],
+  "scenario_ids": [
+    "power_loss",
+    "filesystem_corruption",
+    "checkpoint_corruption",
+    "concurrent_lifecycle",
+    "path_traversal",
+    "unsafe_deserialization",
+    "credential_boundary",
+    "network_egress",
+    "demo_mainnet_confusion",
+    "symlink_escape",
+    "stale_restore",
+    "duplicate_intent_recovery"
+  ],
+  "scenarios": [
+    {
+      "scenario_id": "power_loss",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "incomplete_partial_rejected",
+      "critical": false,
+      "evidence": {
+        "partial_blocked": true,
+        "recovered_generation": 1
+      }
+    },
+    {
+      "scenario_id": "filesystem_corruption",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "corrupt_json_rejected",
+      "critical": false,
+      "evidence": {
+        "blocked": true
+      }
+    },
+    {
+      "scenario_id": "checkpoint_corruption",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "digest_mismatch_rejected",
+      "critical": false,
+      "evidence": {
+        "blocked": true
+      }
+    },
+    {
+      "scenario_id": "concurrent_lifecycle",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "exclusive_lock_enforced",
+      "critical": false,
+      "evidence": {
+        "reject_count": 1,
+        "errors": [
+          "concurrent_lifecycle_rejected:start"
+        ]
+      }
+    },
+    {
+      "scenario_id": "path_traversal",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "path_traversal_blocked",
+      "critical": false,
+      "evidence": {
+        "traversal_blocked": true,
+        "absolute_escape_blocked": true
+      }
+    },
+    {
+      "scenario_id": "unsafe_deserialization",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "unsafe_formats_rejected",
+      "critical": false,
+      "evidence": {
+        "pickle_blocked": true,
+        "scalar_blocked": true,
+        "cases_blocked": 3,
+        "total": 5
+      }
+    },
+    {
+      "scenario_id": "credential_boundary",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "credential_attacks_fail_closed",
+      "critical": false,
+      "evidence": {
+        "missing_fail_closed": true,
+        "mainnet_fallback_used": true,
+        "mainnet_blocked": true,
+        "any_writes": false
+      }
+    },
+    {
+      "scenario_id": "network_egress",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "egress_violations_blocked",
+      "critical": false,
+      "evidence": {
+        "write_blocked": true,
+        "unexpected_blocked": true,
+        "mainnet_blocked": true,
+        "counters": {
+          "request_count": 3,
+          "blocked_count": 3,
+          "write_blocked_count": 2,
+          "unexpected_domain_count": 1,
+          "allowed_urls": [],
+          "blocked_urls": [
+            "https://api-demo.bybit.com/v5/order/create",
+            "https://evil.example/exfil",
+            "https://api.bybit.com/v5/order/create"
+          ]
+        }
+      }
+    },
+    {
+      "scenario_id": "demo_mainnet_confusion",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "demo_mainnet_confusion_rejected",
+      "critical": false,
+      "evidence": {
+        "confused": true,
+        "reverse_fail_closed": true,
+        "trap_fired": true,
+        "intentional_trap_probe_count": 1
+      }
+    },
+    {
+      "scenario_id": "symlink_escape",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "symlink_unavailable_fail_closed:OSError",
+      "critical": false,
+      "evidence": {
+        "symlink_created": false,
+        "os_error": "OSError"
+      }
+    },
+    {
+      "scenario_id": "stale_restore",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "stale_restore_rejected",
+      "critical": false,
+      "evidence": {
+        "stale_blocked": true,
+        "current_generation": 5
+      }
+    },
+    {
+      "scenario_id": "duplicate_intent_recovery",
+      "passed": true,
+      "fail_closed": true,
+      "detail": "duplicate_intent_ignored",
+      "critical": false,
+      "evidence": {
+        "first_status": "ACCEPTED",
+        "same_process_status": "DUPLICATE_IGNORED",
+        "post_restore_status": "DUPLICATE_IGNORED",
+        "workdir": "C:\\Users\\user\\AppData\\Local\\Temp\\nexus_v10_dr_v1ioyvjv",
+        "secret_findings": []
+      }
+    }
+  ],
+  "scenario_pass_count": 12,
+  "scenario_total_count": 12,
+  "findings": {
+    "critical_finding_count": 0,
+    "unresolved_critical_count": 0,
+    "items": []
+  },
+  "exchange_write_attempt_count": 0,
+  "secret_leak_count": 0,
+  "mainnet_client_created_count": 0,
+  "demo_order_count": 0,
+  "real_money": false,
+  "mainnet": false,
+  "label": "SECURITY_DR_REDTEAM_CONTROL_NOT_REAL_TRADING",
+  "secret_scan": {
+    "raw_hit_count": 0,
+    "real_leak_count": 0,
+    "real_leaks": []
+  },
+  "recommendation": "NEXUS_V10_SECURITY_DR_REDTEAM_PASS",
+  "Security_DR_Redteam_status": "NEXUS_V10_SECURITY_DR_REDTEAM_PASS",
+  "passed": true,
+  "critical_findings": []
+}

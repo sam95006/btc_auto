@@ -1,0 +1,129 @@
+"""Fault / injection catalog for the 365-day system lifecycle campaign."""
+from __future__ import annotations
+
+# Founder-required coverage classes for S1.
+LIFECYCLE_FAULT_CLASSES: tuple[str, ...] = (
+    "multi_symbol",
+    "multi_vol_regimes",
+    "liquidity_collapse",
+    "provider_outage",
+    "clock_jump",
+    "disk_pressure",
+    "partial_fills",
+    "cancel_replace",
+    "ledger_interruption",
+    "snapshot_corruption",
+    "reflection_interruption",
+    "lesson_interruption",
+    "kill_switch",
+    "restart_recovery",
+    "qualification_blocks",
+)
+
+# Recoverable / absorbable injections for the long 365d accelerated session.
+LIFECYCLE_LONG_SESSION_INJECTIONS: tuple[str, ...] = (
+    "groq_429",
+    "sambanova_429",
+    "provider_timeout",
+    "provider_invalid_schema",
+    "stale_market_data",
+    "missing_market_data",
+    "duplicate_candidate",
+    "duplicate_order_intent",
+    "ledger_lock_contention",
+    "interrupted_ledger_append",
+    "snapshot_corruption",
+    "missing_latest_snapshot",
+    "disk_soft_limit",
+    "network_loss",
+    "partial_fill_before_crash",
+    "filled_order_before_snapshot",
+    "exit_event_before_position_snapshot",
+    "reflection_interruption",
+    "lesson_storage_interruption",
+    "pause_during_pending_intent",
+    "process_termination",
+)
+
+# Terminal / fail-closed focused session injections.
+LIFECYCLE_TERMINAL_INJECTIONS: tuple[str, ...] = (
+    "clock_jump_forward",
+    "clock_jump_backward",
+    "disk_hard_limit",
+    "kill_switch_during_open_position",
+)
+
+# Campaign-local probes (not Session catalog flags).
+LIFECYCLE_LOCAL_PROBES: tuple[str, ...] = (
+    "cancel_replace_probe",
+    "liquidity_collapse_probe",
+    "ledger_corruption_probe",
+    "snapshot_corruption_probe",
+    "qualification_blocks_probe",
+    "restart_recovery_probe",
+)
+
+LIFECYCLE_INJECTION_CATALOG: tuple[str, ...] = tuple(
+    dict.fromkeys(
+        (
+            *LIFECYCLE_LONG_SESSION_INJECTIONS,
+            *LIFECYCLE_TERMINAL_INJECTIONS,
+            *LIFECYCLE_LOCAL_PROBES,
+        )
+    )
+)
+
+FAULT_CLASS_TO_COVERAGE: dict[str, tuple[str, ...]] = {
+    "multi_symbol": ("universe_symbols",),
+    "multi_vol_regimes": ("universe_vol_regimes",),
+    "liquidity_collapse": ("liquidity_collapse_probe", "universe_liquidity_collapse"),
+    "provider_outage": (
+        "groq_429",
+        "sambanova_429",
+        "provider_timeout",
+        "provider_invalid_schema",
+        "network_loss",
+    ),
+    "clock_jump": ("clock_jump_forward", "clock_jump_backward"),
+    "disk_pressure": ("disk_soft_limit", "disk_hard_limit"),
+    "partial_fills": ("partial_fill_before_crash",),
+    "cancel_replace": ("cancel_replace_probe",),
+    "ledger_interruption": (
+        "interrupted_ledger_append",
+        "ledger_lock_contention",
+        "ledger_corruption_probe",
+    ),
+    "snapshot_corruption": (
+        "snapshot_corruption",
+        "missing_latest_snapshot",
+        "snapshot_corruption_probe",
+    ),
+    "reflection_interruption": ("reflection_interruption",),
+    "lesson_interruption": ("lesson_storage_interruption",),
+    "kill_switch": ("kill_switch_during_open_position",),
+    "restart_recovery": ("process_termination", "restart_recovery_probe"),
+    "qualification_blocks": ("qualification_blocks_probe",),
+}
+
+
+def injection_matrix() -> dict[str, object]:
+    return {
+        "schema": "v11_1_system_365d_injection_matrix",
+        "fault_classes": list(LIFECYCLE_FAULT_CLASSES),
+        "fault_class_to_coverage": {k: list(v) for k, v in FAULT_CLASS_TO_COVERAGE.items()},
+        "long_session_injections": list(LIFECYCLE_LONG_SESSION_INJECTIONS),
+        "terminal_injections": list(LIFECYCLE_TERMINAL_INJECTIONS),
+        "local_probes": list(LIFECYCLE_LOCAL_PROBES),
+        "catalog": list(LIFECYCLE_INJECTION_CATALOG),
+    }
+
+
+__all__ = [
+    "FAULT_CLASS_TO_COVERAGE",
+    "LIFECYCLE_FAULT_CLASSES",
+    "LIFECYCLE_INJECTION_CATALOG",
+    "LIFECYCLE_LOCAL_PROBES",
+    "LIFECYCLE_LONG_SESSION_INJECTIONS",
+    "LIFECYCLE_TERMINAL_INJECTIONS",
+    "injection_matrix",
+]

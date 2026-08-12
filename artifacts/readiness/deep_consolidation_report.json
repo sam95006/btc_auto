@@ -1,0 +1,1023 @@
+{
+  "generated_at": "2026-08-02T16:12:45Z",
+  "files_before": 2155,
+  "files_after": 1999,
+  "files_removed": 161,
+  "bytes_removed": 1358224,
+  "bytes_before": 97146394,
+  "bytes_after": 95794889,
+  "tools_kept": [
+    "__init__.py",
+    "_build_frozen_closure.py",
+    "_build_oos_preflight_cleanup.py",
+    "_cleanup_unknown_pass2.py",
+    "_deep_consolidate.py",
+    "_scan_broken_readiness_refs.py",
+    "bybit_demo_client.py",
+    "bybit_demo_learning_common.py",
+    "check_groq_auth_minimal.py",
+    "check_stage3_context_seed.py",
+    "check_stage4_llm_provider.py",
+    "check_stage4_runtime_version.py",
+    "export_stage4_ai_decision_bundle.py",
+    "performance_report.py",
+    "run_cohort_edge_research.py",
+    "run_edge_research_v2.py",
+    "run_edge_research_v3.py",
+    "run_market_geometry_qualification.py",
+    "run_oos_risk_audit.py",
+    "run_stage4_ai_decision_dry_run.py",
+    "stage3_learning_loop.py",
+    "stage4_ai_decision_agent.py",
+    "stage4_btc_dual_provider_shadow.py",
+    "stage4_btc_shadow_diagnostics.py",
+    "stage4_btc_shadow_pair_compare.py",
+    "stage4_btc_watchlist_followup_diagnostics.py",
+    "stage4_cerebras_payload.py",
+    "stage4_context_skip.py",
+    "stage4_context_summary.py",
+    "stage4_decision_schema.py",
+    "stage4_eth_btc_graduation_alignment_diagnostics.py",
+    "stage4_eth_followup_confirmation_prompt_review.py",
+    "stage4_eth_followup_market_context_review.py",
+    "stage4_eth_no_watch_diagnostics.py",
+    "stage4_eth_watchlist_confirmation_diagnostics.py",
+    "stage4_fleet_symbols.py",
+    "stage4_groq_key_registry.py",
+    "stage4_groq_payload.py",
+    "stage4_llm_client.py",
+    "stage4_mae_calibration_analysis.py",
+    "stage4_market_context.py",
+    "stage4_p2d_r1_analysis.py",
+    "stage4_paper_entry_failure_analyzer.py",
+    "stage4_paper_event_logger.py",
+    "stage4_paper_guard_inputs.py",
+    "stage4_paper_readiness.py",
+    "stage4_parse_error_metrics.py",
+    "stage4_per_symbol_summary.py",
+    "stage4_prompt_builder.py",
+    "stage4_provider_chain.py",
+    "stage4_provider_metrics.py",
+    "stage4_provider_quota_governor.py",
+    "stage4_provider_routing_config.py",
+    "stage4_provider_routing_p2_design.py",
+    "stage4_rate_limit_gate.py",
+    "stage4_response_parser.py",
+    "stage4_risk_supervisor.py",
+    "stage4_schema_repair.py",
+    "stage4_system_events.py",
+    "stage4_tick_scheduler.py",
+    "triage_full_suite_baseline.py",
+    "validate_stage4_ai_decision_outputs.py",
+    "wait_stage4_cloud_dry_run.py"
+  ],
+  "tools_dead_removed": [
+    "tools/research/activate_autonomous_demo_session.py",
+    "tools/research/analyze_stage4_prompt_budget.py",
+    "tools/research/analyze_stage4_provider_yield.py",
+    "tools/research/analyze_stage4_rate_limit_events.py",
+    "tools/research/backtest_runner.py",
+    "tools/research/build_zeabur_env_patch.py",
+    "tools/research/build_zeabur_stage3_demo_learning_deploy_package.py",
+    "tools/research/check_bybit_demo_learning_env.py",
+    "tools/research/check_cerebras_auth_minimal.py",
+    "tools/research/check_cerebras_stage4_decision_probe.py",
+    "tools/research/check_nexus_ui_mvp0_safety.py",
+    "tools/research/check_nexus_ui_mvp10_safety.py",
+    "tools/research/check_nexus_ui_mvp11_safety.py",
+    "tools/research/check_nexus_ui_mvp12_safety.py",
+    "tools/research/check_nexus_ui_mvp13_safety.py",
+    "tools/research/check_nexus_ui_mvp14_safety.py",
+    "tools/research/check_nexus_ui_mvp15_safety.py",
+    "tools/research/check_nexus_ui_mvp16_safety.py",
+    "tools/research/check_nexus_ui_mvp17_safety.py",
+    "tools/research/check_nexus_ui_mvp18_safety.py",
+    "tools/research/check_nexus_ui_mvp19_safety.py",
+    "tools/research/check_nexus_ui_mvp1_safety.py",
+    "tools/research/check_nexus_ui_mvp20_safety.py",
+    "tools/research/check_nexus_ui_mvp21_safety.py",
+    "tools/research/check_nexus_ui_mvp22_safety.py",
+    "tools/research/check_nexus_ui_mvp22a_safety.py",
+    "tools/research/check_nexus_ui_mvp22b_safety.py",
+    "tools/research/check_nexus_ui_mvp22c_safety.py",
+    "tools/research/check_nexus_ui_mvp22d_safety.py",
+    "tools/research/check_nexus_ui_mvp2_safety.py",
+    "tools/research/check_nexus_ui_mvp3_safety.py",
+    "tools/research/check_nexus_ui_mvp4_safety.py",
+    "tools/research/check_nexus_ui_mvp5_safety.py",
+    "tools/research/check_nexus_ui_mvp6_safety.py",
+    "tools/research/check_nexus_ui_mvp7_safety.py",
+    "tools/research/check_nexus_ui_mvp8_safety.py",
+    "tools/research/check_nexus_ui_mvp9_safety.py",
+    "tools/research/check_stage3_github_deploy_readiness.py",
+    "tools/research/check_stage4_provider_capacity.py",
+    "tools/research/close_bybit_demo_open_position.py",
+    "tools/research/export_stage3_24h_learning_bundle.py",
+    "tools/research/export_stage3_demo_learning_bundle.py",
+    "tools/research/extract_stage4_decision_review_data.py",
+    "tools/research/extract_stage4_shadow_review.py",
+    "tools/research/import_stage3_context_seed.py",
+    "tools/research/migrate_stage3_bybit_credentials.py",
+    "tools/research/phase62_shadow_soak.py",
+    "tools/research/phase63_paper_soak.py",
+    "tools/research/phase63_replay_validation.py",
+    "tools/research/phase64_replay_full_closure.py",
+    "tools/research/preflight_stage3_24h_runner.py",
+    "tools/research/preflight_stage3_demo_order.py",
+    "tools/research/read_stage3_24h_status.py",
+    "tools/research/read_stage3_background_status.py",
+    "tools/research/run_autonomous_6h_live_ops.py",
+    "tools/research/run_autonomous_pre_activation_soak.py",
+    "tools/research/run_bybit_demo_learning_runner.py",
+    "tools/research/setup_zeabur_stage3_service.py",
+    "tools/research/stage3_demo_order_session.py",
+    "tools/research/stage3_operator_go.py",
+    "tools/research/stage3_readonly_web_app.py",
+    "tools/research/stage4_btc_specific_diagnostics.py",
+    "tools/research/stage4_controlled_provider_probe.py",
+    "tools/research/stage4_decision_quality_review.py",
+    "tools/research/stage4_eth_future_regression_gate_checker.py",
+    "tools/research/stage4_eth_watch_reappearance_gate.py",
+    "tools/research/stage4_fleet_summary.py",
+    "tools/research/stage4_mae_regression_compare.py",
+    "tools/research/stage4_multi_session_review.py",
+    "tools/research/stage4_p2_operator_readiness_pack.py",
+    "tools/research/stage4_p2_r1_analysis.py",
+    "tools/research/stage4_p2h_release_health_check.py",
+    "tools/research/stage4_provider_field_compliance_review.py",
+    "tools/research/stage4_provider_routing_design.py",
+    "tools/research/stage4_provider_routing_diagnostics.py",
+    "tools/research/stage4_provider_stability_review.py",
+    "tools/research/stage4_shadow_compare.py",
+    "tools/research/stage4_shadow_quality_summary.py",
+    "tools/research/stage4_watchlist_followup_simulator.py",
+    "tools/research/sync_418f_runtime_to_zeabur.py",
+    "tools/research/sync_418p1_runtime_to_zeabur.py",
+    "tools/research/validate_stage3_demo_learning_outputs.py",
+    "tools/research/verify_console_assets_packaging.py",
+    "tools/research/verify_market_universe_scanner.py",
+    "tools/research/verify_mvp22a_live_market_truth.py",
+    "tools/research/verify_mvp22b_derivatives_context.py",
+    "tools/research/verify_mvp22c_anomaly_radar.py",
+    "tools/research/verify_mvp22d_outcome_research.py",
+    "tools/research/verify_phase2_event_watchlist.py",
+    "tools/research/verify_phase3_equities_provider_boundary.py",
+    "tools/research/verify_phase3_live_playwright.py",
+    "tools/research/verify_phase3_no_tradingview_scraping.py",
+    "tools/research/verify_phase3_sector_taxonomy.py",
+    "tools/research/verify_phase3_watchlist_schema.py",
+    "tools/research/verify_phase4_intelligence_backend.py",
+    "tools/research/verify_phase4_live_playwright.py",
+    "tools/research/verify_phase4_visual_reduction.py",
+    "tools/research/verify_phase4_websocket_fast_lane.py",
+    "tools/research/verify_phase5_gate_b.py",
+    "tools/research/verify_phase5_gate_c.py",
+    "tools/research/verify_phase61_durable_storage.py",
+    "tools/research/verify_phase6_gate_b_persistence.py",
+    "tools/research/verify_phase6_gate_c_paper.py",
+    "tools/research/verify_phase6_gate_d_ai_review.py",
+    "tools/research/verify_phase6_gate_d_performance.py",
+    "tools/research/verify_product_trans_phase1_ui.py",
+    "tools/research/verify_product_trans_phase2_ui.py",
+    "tools/research/verify_product_trans_phase3.py",
+    "tools/research/verify_spa_cache_resilience.py",
+    "tools/research/verify_zeabur_stage3_container.py"
+  ],
+  "policy_before": {
+    "H3E_OOS_POLICY_V1_FROZEN": {
+      "stored": "bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33",
+      "recalc": "bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33",
+      "expected": "bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33",
+      "unchanged": true
+    },
+    "H3D_OOS_POLICY_V1_FROZEN": {
+      "stored": "d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7",
+      "recalc": "d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7",
+      "expected": "d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7",
+      "unchanged": true
+    }
+  },
+  "policy_after": {
+    "H3E_OOS_POLICY_V1_FROZEN": {
+      "stored": "bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33",
+      "recalc": "bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33",
+      "expected": "bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33",
+      "unchanged": true
+    },
+    "H3D_OOS_POLICY_V1_FROZEN": {
+      "stored": "d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7",
+      "recalc": "d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7",
+      "expected": "d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7",
+      "unchanged": true
+    }
+  },
+  "h3e_policy_unchanged": true,
+  "h3d_policy_unchanged": true,
+  "deleted": [
+    {
+      "path": "docs/NEXUS_CURRENT_STATE.md",
+      "size": 1652,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/NEXUS_GUIDE.zh-TW.md",
+      "size": 21869,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/NEXUS_PHASE63_CONTROLLED_PAPER_ACTIVATION.md",
+      "size": 10349,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/research_stage3_bybit_demo_learning_runner_plan.md",
+      "size": 6123,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/research_stage3_phase_c_controlled_demo_order_plan.md",
+      "size": 4796,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/stage4_ai_decision_layer_plan.md",
+      "size": 25275,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/runbooks/STAGE_4_18_P2H_OPERATOR_HOLD_RUNBOOK.md",
+      "size": 6298,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_PHASE3_SECTOR_CHART_EQUITIES_ARCHITECTURE.md",
+      "size": 1533,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_PHASE4_VISUAL_AND_INTELLIGENCE_ARCHITECTURE.md",
+      "size": 985,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_PHASE5_ALL_MARKET_AUTONOMOUS_RESEARCH_ARCHITECTURE.md",
+      "size": 23704,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_PRIVATE_VS_PUBLIC_PRODUCT_BOUNDARY.md",
+      "size": 3288,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_DATA_SOURCE_MAPPING_V1.md",
+      "size": 2179,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_DEPLOY_1_ZEABUR_FRONTEND_REALITY_CHECK_REPORT.md",
+      "size": 9337,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_DEPLOY_2_ZEABUR_LIVE_RUNTIME_VERIFICATION_REPORT.md",
+      "size": 4062,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_DEPLOY_3_LIVE_MVP20_POLISH_VERIFICATION_REPORT.md",
+      "size": 4319,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_LIVE_SIGNOFF_1_OPERATOR_VISUAL_CHECKLIST.md",
+      "size": 5954,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP0_FRONTEND_SHELL_REPORT.md",
+      "size": 4437,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP10_PRIVATE_OPERATOR_HARDENING_REPORT.md",
+      "size": 3279,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP11_REPORT_RUNBOOK_VIEWER_REPORT.md",
+      "size": 2275,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP12_RELEASE_HEALTH_BADGE_REPORT.md",
+      "size": 1673,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP13_PRIVATE_OPERATOR_UX_POLISH_REPORT.md",
+      "size": 2272,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP14_PRIVATE_OPERATOR_DEEP_LINKS_REPORT.md",
+      "size": 2182,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP15_STATIC_DOC_SUMMARY_VIEWER_REPORT.md",
+      "size": 3670,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP16_STATIC_EXCERPT_SEARCH_FILTER_REPORT.md",
+      "size": 2892,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP17_DATAHUNTERX_INSPIRED_MARKET_INTELLIGENCE_LAYOUT_REPORT.md",
+      "size": 3725,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP18_EVIDENCE_FILTER_AND_PROVIDER_CHARTS_REPORT.md",
+      "size": 2687,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP19_EVIDENCE_PRESETS_AND_WORKSPACE_PINS_REPORT.md",
+      "size": 2210,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP1_PRIVATE_OPERATOR_DASHBOARD_REPORT.md",
+      "size": 5097,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP20_LIVE_MARKET_INTELLIGENCE_POLISH_REPORT.md",
+      "size": 4133,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP21_PRODUCT_UX_SIMPLIFICATION_REPORT.md",
+      "size": 3146,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP22_SIMPLIFIED_MARKET_DASHBOARD_REPORT.md",
+      "size": 28171,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP2_PRIVATE_OPERATOR_DATA_SNAPSHOT_REPORT.md",
+      "size": 7098,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP3_ETH_CONFIRMATION_TIMELINE_REPORT.md",
+      "size": 5272,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP4_P2C_CONFIRMATION_PROMPT_ISSUE_REPORT.md",
+      "size": 3760,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP5_P2D_PROMPT_REPAIR_STATUS_REPORT.md",
+      "size": 3943,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP6_P2D_R1_PARTIAL_SNAPSHOT_REPORT.md",
+      "size": 3470,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP7_P2E_REGRESSION_READINESS_REPORT.md",
+      "size": 2479,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP8_P2F_GATE_AND_REPORT_INDEX_REPORT.md",
+      "size": 2205,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP9_BACKEND_HOLD_STATE_REPORT.md",
+      "size": 1887,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_MVP_ROADMAP_30_90_DAYS.md",
+      "size": 1997,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_PERMISSION_MATRIX_V1.md",
+      "size": 1845,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_PRODUCT_SPEC_V1.md",
+      "size": 6117,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "docs/ui/NEXUS_UI_SITEMAP_V1.md",
+      "size": 1913,
+      "classification": "DOCUMENTATION_SUPERSEDED"
+    },
+    {
+      "path": "data/external_alpha/reports/research_stage3_bybit_demo_learning_readiness.json",
+      "size": 2675,
+      "classification": "GENERATED_OUTPUT"
+    },
+    {
+      "path": "data/external_alpha/reports/stage3_24h_runner_preflight.json",
+      "size": 1812,
+      "classification": "GENERATED_OUTPUT"
+    },
+    {
+      "path": "data/external_alpha/reports/stage3_24h_runner_readiness.json",
+      "size": 1087,
+      "classification": "GENERATED_OUTPUT"
+    },
+    {
+      "path": "data/external_alpha/reports/stage3_c3_background_supervisor_readiness.json",
+      "size": 1294,
+      "classification": "GENERATED_OUTPUT"
+    },
+    {
+      "path": "data/external_alpha/reports/stage3_demo_learning_runner_readiness.json",
+      "size": 1494,
+      "classification": "GENERATED_OUTPUT"
+    },
+    {
+      "path": "data/external_alpha/reports/stage3_demo_order_preflight.json",
+      "size": 2727,
+      "classification": "GENERATED_OUTPUT"
+    },
+    {
+      "path": "data/external_alpha/reports/stage3_github_auto_24h_startup_safety_report.json",
+      "size": 2839,
+      "classification": "GENERATED_OUTPUT"
+    },
+    {
+      "path": "data/external_alpha/reports/stage3_github_deploy_readiness.json",
+      "size": 6580,
+      "classification": "GENERATED_OUTPUT"
+    },
+    {
+      "path": "tools/research/activate_autonomous_demo_session.py",
+      "size": 3858,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/analyze_stage4_prompt_budget.py",
+      "size": 6936,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/analyze_stage4_provider_yield.py",
+      "size": 11470,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/analyze_stage4_rate_limit_events.py",
+      "size": 6503,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/backtest_runner.py",
+      "size": 1977,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/build_zeabur_env_patch.py",
+      "size": 1815,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/build_zeabur_stage3_demo_learning_deploy_package.py",
+      "size": 20315,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_bybit_demo_learning_env.py",
+      "size": 12936,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_cerebras_auth_minimal.py",
+      "size": 10946,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_cerebras_stage4_decision_probe.py",
+      "size": 7593,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp0_safety.py",
+      "size": 6750,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp10_safety.py",
+      "size": 9087,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp11_safety.py",
+      "size": 7367,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp12_safety.py",
+      "size": 6877,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp13_safety.py",
+      "size": 7726,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp14_safety.py",
+      "size": 7512,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp15_safety.py",
+      "size": 9212,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp16_safety.py",
+      "size": 7990,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp17_safety.py",
+      "size": 7740,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp18_safety.py",
+      "size": 7435,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp19_safety.py",
+      "size": 7529,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp1_safety.py",
+      "size": 11637,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp20_safety.py",
+      "size": 7687,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp21_safety.py",
+      "size": 7415,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp22_safety.py",
+      "size": 7088,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp22a_safety.py",
+      "size": 2890,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp22b_safety.py",
+      "size": 2477,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp22c_safety.py",
+      "size": 3504,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp22d_safety.py",
+      "size": 3793,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp2_safety.py",
+      "size": 16968,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp3_safety.py",
+      "size": 19310,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp4_safety.py",
+      "size": 19929,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp5_safety.py",
+      "size": 21364,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp6_safety.py",
+      "size": 18387,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp7_safety.py",
+      "size": 16773,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp8_safety.py",
+      "size": 11460,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_nexus_ui_mvp9_safety.py",
+      "size": 8018,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_stage3_github_deploy_readiness.py",
+      "size": 16504,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/check_stage4_provider_capacity.py",
+      "size": 12915,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/close_bybit_demo_open_position.py",
+      "size": 879,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/export_stage3_24h_learning_bundle.py",
+      "size": 2469,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/export_stage3_demo_learning_bundle.py",
+      "size": 2445,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/extract_stage4_decision_review_data.py",
+      "size": 6276,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/extract_stage4_shadow_review.py",
+      "size": 2754,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/import_stage3_context_seed.py",
+      "size": 1188,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/migrate_stage3_bybit_credentials.py",
+      "size": 2193,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/phase62_shadow_soak.py",
+      "size": 7048,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/phase63_paper_soak.py",
+      "size": 6856,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/phase63_replay_validation.py",
+      "size": 7685,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/phase64_replay_full_closure.py",
+      "size": 21563,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/preflight_stage3_24h_runner.py",
+      "size": 9729,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/preflight_stage3_demo_order.py",
+      "size": 10525,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/read_stage3_24h_status.py",
+      "size": 8638,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/read_stage3_background_status.py",
+      "size": 8281,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/run_autonomous_6h_live_ops.py",
+      "size": 9781,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/run_autonomous_pre_activation_soak.py",
+      "size": 7651,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/run_bybit_demo_learning_runner.py",
+      "size": 26910,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/setup_zeabur_stage3_service.py",
+      "size": 12041,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage3_demo_order_session.py",
+      "size": 13677,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage3_operator_go.py",
+      "size": 1848,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage3_readonly_web_app.py",
+      "size": 11712,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_btc_specific_diagnostics.py",
+      "size": 20374,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_controlled_provider_probe.py",
+      "size": 23971,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_decision_quality_review.py",
+      "size": 36062,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_eth_future_regression_gate_checker.py",
+      "size": 7374,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_eth_watch_reappearance_gate.py",
+      "size": 18067,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_fleet_summary.py",
+      "size": 5139,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_mae_regression_compare.py",
+      "size": 29059,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_multi_session_review.py",
+      "size": 8412,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_p2_operator_readiness_pack.py",
+      "size": 9922,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_p2_r1_analysis.py",
+      "size": 9444,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_p2h_release_health_check.py",
+      "size": 11724,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_provider_field_compliance_review.py",
+      "size": 8530,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_provider_routing_design.py",
+      "size": 12902,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_provider_routing_diagnostics.py",
+      "size": 15410,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_provider_stability_review.py",
+      "size": 4696,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_shadow_compare.py",
+      "size": 21134,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_shadow_quality_summary.py",
+      "size": 7104,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/stage4_watchlist_followup_simulator.py",
+      "size": 64295,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/sync_418f_runtime_to_zeabur.py",
+      "size": 4457,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/sync_418p1_runtime_to_zeabur.py",
+      "size": 3980,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/validate_stage3_demo_learning_outputs.py",
+      "size": 15052,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_console_assets_packaging.py",
+      "size": 1620,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_market_universe_scanner.py",
+      "size": 3520,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_mvp22a_live_market_truth.py",
+      "size": 4167,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_mvp22b_derivatives_context.py",
+      "size": 3538,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_mvp22c_anomaly_radar.py",
+      "size": 2516,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_mvp22d_outcome_research.py",
+      "size": 2143,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase2_event_watchlist.py",
+      "size": 1573,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase3_equities_provider_boundary.py",
+      "size": 1458,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase3_live_playwright.py",
+      "size": 6157,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase3_no_tradingview_scraping.py",
+      "size": 1311,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase3_sector_taxonomy.py",
+      "size": 1453,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase3_watchlist_schema.py",
+      "size": 989,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase4_intelligence_backend.py",
+      "size": 7404,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase4_live_playwright.py",
+      "size": 5999,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase4_visual_reduction.py",
+      "size": 2109,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase4_websocket_fast_lane.py",
+      "size": 4452,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase5_gate_b.py",
+      "size": 16509,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase5_gate_c.py",
+      "size": 27913,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase61_durable_storage.py",
+      "size": 1791,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase6_gate_b_persistence.py",
+      "size": 15706,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase6_gate_c_paper.py",
+      "size": 20802,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase6_gate_d_ai_review.py",
+      "size": 20539,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_phase6_gate_d_performance.py",
+      "size": 16605,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_product_trans_phase1_ui.py",
+      "size": 2554,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_product_trans_phase2_ui.py",
+      "size": 4690,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_product_trans_phase3.py",
+      "size": 6678,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_spa_cache_resilience.py",
+      "size": 3773,
+      "classification": "DEAD_CODE_CONFIRMED"
+    },
+    {
+      "path": "tools/research/verify_zeabur_stage3_container.py",
+      "size": 7239,
+      "classification": "DEAD_CODE_CONFIRMED"
+    }
+  ]
+}

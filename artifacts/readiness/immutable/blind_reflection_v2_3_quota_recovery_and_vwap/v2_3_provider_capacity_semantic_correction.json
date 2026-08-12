@@ -1,0 +1,47 @@
+{
+  "schema": "v2_3_provider_capacity_semantic_correction",
+  "V2_3_RESULT_INTERPRETATION": "CALIBRATION_INCOMPLETE_PROVIDER_CAPACITY",
+  "prior_package": "artifacts/readiness/immutable/blind_reflection_v2_3_and_learning_prevention",
+  "prior_recommendation_was": "NEXUS_PRIVATE_REFLECTION_V23_QUALITY_FAILED",
+  "corrected_recommendation_class": "NEXUS_PRIVATE_REFLECTION_V23_CALIBRATION_INCOMPLETE_PROVIDER_CAPACITY",
+  "not_model_quality_failure": true,
+  "reason": "provider_successful_response_count=0 with provider_429_count=80; quality cannot be assessed",
+  "preserved_raw_counts": {
+    "blind_reflection_v2_3_calibration_count": 80,
+    "provider_rate_limited_count": 80,
+    "blind_valid_schema_ratio": 0.0,
+    "evidence_packet_delivery_ratio": 1.0
+  },
+  "corrected_metrics": {
+    "input_evidence_packet_count": 80,
+    "input_evidence_eligible_count": 80,
+    "input_evidence_ineligible_count": 0,
+    "provider_successful_response_count": 0,
+    "provider_429_count": 80,
+    "AI_evidence_sufficiency_assessed_count": 0,
+    "AI_evidence_sufficient_count": 0,
+    "AI_evidence_insufficient_count": 0,
+    "critic_resolution_ratio": {
+      "numerator": 0.0,
+      "denominator": 0,
+      "value": null,
+      "status": "NOT_APPLICABLE"
+    },
+    "critic_resolution_status": "NOT_APPLICABLE",
+    "critic_resolution_denominator": 0
+  },
+  "canary_evidence_only": {
+    "n": 5,
+    "evidence_packet_delivery_ratio": 1.0,
+    "blind_valid_schema_ratio": 1.0,
+    "evidence_sufficient_case_count": 5,
+    "informative_classification_ratio_overall": 1.0,
+    "informative_classification_ratio_on_sufficient_cases": 1.0,
+    "blind_agreement_ratio_on_sufficient_cases": 0.8,
+    "critic_resolution_ratio": 0.0,
+    "note": "Earlier same-day smoke proved full evidence delivery works when Groq responds; full 80-case run hit provider 429 on both Groq keys."
+  },
+  "canary_label": "CANARY_EVIDENCE_ONLY",
+  "prior_immutable_not_overwritten": true,
+  "created_at": "2026-08-04T02:28:35Z"
+}

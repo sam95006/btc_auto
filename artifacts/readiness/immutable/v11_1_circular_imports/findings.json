@@ -1,0 +1,71 @@
+{
+  "schema": "FOUNDER_C6_FINDINGS",
+  "generated_at": "2026-08-05T04:08:48Z",
+  "baseline_circular_SCC_count": 3,
+  "baseline_sccs": [
+    [
+      "backend.nexus_execution",
+      "backend.nexus_execution.execution_simulator_v1_1",
+      "backend.nexus_execution.orchestrator_adapter_v1"
+    ],
+    [
+      "backend.nexus_demo_execution.geometry_event_sim",
+      "backend.nexus_demo_execution.structural_geometry_qualify"
+    ],
+    [
+      "backend.nexus_research.features.feature_seed",
+      "backend.nexus_research.features.registry"
+    ]
+  ],
+  "remediations": [
+    {
+      "scc": [
+        "backend.nexus_execution",
+        "backend.nexus_execution.execution_simulator_v1_1",
+        "backend.nexus_execution.orchestrator_adapter_v1"
+      ],
+      "technique": "leaf_submodule_import",
+      "detail": "execution_simulator and peers import backend.nexus_execution.security_boundary as a leaf module instead of the package __init__ (which pulled orchestrator_adapter).",
+      "files": [
+        "backend/nexus_execution/execution_simulator_v1_1.py",
+        "backend/nexus_execution/fuzz_harness.py",
+        "backend/nexus_execution/scale_v10.py",
+        "backend/nexus_execution/microstructure_realism_v11/harness.py",
+        "backend/nexus_execution/microstructure_realism_v11/__init__.py"
+      ]
+    },
+    {
+      "scc": [
+        "backend.nexus_demo_execution.geometry_event_sim",
+        "backend.nexus_demo_execution.structural_geometry_qualify"
+      ],
+      "technique": "shared_contracts_plus_composition_root",
+      "detail": "CandidateEvidence extracted to geometry_contracts; run_qualification_pipeline moved to geometry_qualification_pipeline; geometry_event_sim depends one-way on structural qualify.",
+      "files": [
+        "backend/nexus_demo_execution/geometry_contracts.py",
+        "backend/nexus_demo_execution/geometry_qualification_pipeline.py",
+        "backend/nexus_demo_execution/geometry_event_sim.py",
+        "backend/nexus_demo_execution/structural_geometry_qualify.py"
+      ]
+    },
+    {
+      "scc": [
+        "backend.nexus_research.features.feature_seed",
+        "backend.nexus_research.features.registry"
+      ],
+      "technique": "shared_contracts_plus_DI_protocol",
+      "detail": "Namespace/FeatureDefinition/FeatureRegistryProtocol in feature_contracts; registry no longer imports feature_seed; seed accepts injected registry; bootstrap wires DI.",
+      "files": [
+        "backend/nexus_research/features/feature_contracts.py",
+        "backend/nexus_research/features/feature_seed.py",
+        "backend/nexus_research/features/registry.py",
+        "backend/nexus_research/bootstrap.py"
+      ]
+    }
+  ],
+  "tooling": {
+    "TYPE_CHECKING_edges_excluded_from_SCC_graph": true,
+    "file": "tools/architecture/build_authority_graph.py"
+  },
+  "blockers": []
+}

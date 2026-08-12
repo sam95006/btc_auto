@@ -1,0 +1,275 @@
+{
+  "row_count": 33,
+  "rows": [
+    {
+      "note": "flat book after decision close",
+      "scope_a": "decision",
+      "scope_b": "position",
+      "state_a": "CLOSED",
+      "state_b": "CLOSED",
+      "status": "compatible"
+    },
+    {
+      "note": "no position opened",
+      "scope_a": "decision",
+      "scope_b": "position",
+      "state_a": "CLOSED",
+      "state_b": "NONE",
+      "status": "compatible"
+    },
+    {
+      "note": "simulated liquidation closed",
+      "scope_a": "decision",
+      "scope_b": "position",
+      "state_a": "CLOSED",
+      "state_b": "LIQUIDATED_SIMULATED",
+      "status": "compatible"
+    },
+    {
+      "note": "INV_DECISION_CLOSED_POSITION_OPEN",
+      "scope_a": "decision",
+      "scope_b": "position",
+      "state_a": "CLOSED",
+      "state_b": "OPEN",
+      "status": "incompatible"
+    },
+    {
+      "note": "INV_DECISION_CLOSED_POSITION_OPEN",
+      "scope_a": "decision",
+      "scope_b": "position",
+      "state_a": "CLOSED",
+      "state_b": "OPENING",
+      "status": "incompatible"
+    },
+    {
+      "note": "INV_DECISION_CLOSED_POSITION_OPEN",
+      "scope_a": "decision",
+      "scope_b": "position",
+      "state_a": "CLOSED",
+      "state_b": "REDUCING",
+      "status": "incompatible"
+    },
+    {
+      "note": "must adjudicate before CLOSED",
+      "scope_a": "decision",
+      "scope_b": "position",
+      "state_a": "CLOSED",
+      "state_b": "BLOCKED_AMBIGUOUS",
+      "status": "ambiguous"
+    },
+    {
+      "note": "intent resolved",
+      "scope_a": "session",
+      "scope_b": "intent",
+      "state_a": "COMPLETED",
+      "state_b": "FILLED",
+      "status": "compatible"
+    },
+    {
+      "note": "intent cancelled",
+      "scope_a": "session",
+      "scope_b": "intent",
+      "state_a": "COMPLETED",
+      "state_b": "CANCELLED",
+      "status": "compatible"
+    },
+    {
+      "note": "intent rejected",
+      "scope_a": "session",
+      "scope_b": "intent",
+      "state_a": "COMPLETED",
+      "state_b": "REJECTED",
+      "status": "compatible"
+    },
+    {
+      "note": "intent expired",
+      "scope_a": "session",
+      "scope_b": "intent",
+      "state_a": "COMPLETED",
+      "state_b": "EXPIRED",
+      "status": "compatible"
+    },
+    {
+      "note": "intent superseded",
+      "scope_a": "session",
+      "scope_b": "intent",
+      "state_a": "COMPLETED",
+      "state_b": "SUPERSEDED",
+      "status": "compatible"
+    },
+    {
+      "note": "INV_SESSION_COMPLETED_UNRESOLVED_INTENT",
+      "scope_a": "session",
+      "scope_b": "intent",
+      "state_a": "COMPLETED",
+      "state_b": "WORKING",
+      "status": "incompatible"
+    },
+    {
+      "note": "INV_SESSION_COMPLETED_UNRESOLVED_INTENT",
+      "scope_a": "session",
+      "scope_b": "intent",
+      "state_a": "COMPLETED",
+      "state_b": "DRAFT",
+      "status": "incompatible"
+    },
+    {
+      "note": "INV_SESSION_COMPLETED_UNRESOLVED_INTENT",
+      "scope_a": "session",
+      "scope_b": "intent",
+      "state_a": "COMPLETED",
+      "state_b": "SUBMITTED",
+      "status": "incompatible"
+    },
+    {
+      "note": "INV_SESSION_COMPLETED_UNRESOLVED_INTENT",
+      "scope_a": "session",
+      "scope_b": "intent",
+      "state_a": "COMPLETED",
+      "state_b": "ACCEPTED",
+      "status": "incompatible"
+    },
+    {
+      "note": "INV_SESSION_COMPLETED_UNRESOLVED_INTENT",
+      "scope_a": "session",
+      "scope_b": "intent",
+      "state_a": "COMPLETED",
+      "state_b": "PARTIAL",
+      "status": "incompatible"
+    },
+    {
+      "note": "INV_SESSION_COMPLETED_UNRESOLVED_INTENT",
+      "scope_a": "session",
+      "scope_b": "intent",
+      "state_a": "COMPLETED",
+      "state_b": "BLOCKED_AMBIGUOUS",
+      "status": "incompatible"
+    },
+    {
+      "note": "flat",
+      "scope_a": "session",
+      "scope_b": "position",
+      "state_a": "COMPLETED",
+      "state_b": "CLOSED",
+      "status": "compatible"
+    },
+    {
+      "note": "never opened",
+      "scope_a": "session",
+      "scope_b": "position",
+      "state_a": "COMPLETED",
+      "state_b": "NONE",
+      "status": "compatible"
+    },
+    {
+      "note": "INV_SESSION_COMPLETED_OPEN_POSITION",
+      "scope_a": "session",
+      "scope_b": "position",
+      "state_a": "COMPLETED",
+      "state_b": "OPEN",
+      "status": "incompatible"
+    },
+    {
+      "note": "exit evidence present",
+      "scope_a": "reflection",
+      "scope_b": "decision",
+      "state_a": "COMPLETE",
+      "state_b": "EXITED",
+      "status": "compatible"
+    },
+    {
+      "note": "exit evidence present",
+      "scope_a": "reflection",
+      "scope_b": "decision",
+      "state_a": "COMPLETE",
+      "state_b": "CLOSED",
+      "status": "compatible"
+    },
+    {
+      "note": "INV_REFLECTION_COMPLETE_BEFORE_EXIT",
+      "scope_a": "reflection",
+      "scope_b": "decision",
+      "state_a": "COMPLETE",
+      "state_b": "MONITORING",
+      "status": "incompatible"
+    },
+    {
+      "note": "INV_REFLECTION_COMPLETE_BEFORE_EXIT",
+      "scope_a": "reflection",
+      "scope_b": "decision",
+      "state_a": "COMPLETE",
+      "state_b": "APPROVED_SIMULATED",
+      "status": "incompatible"
+    },
+    {
+      "note": "INV_REFLECTION_COMPLETE_BEFORE_EXIT",
+      "scope_a": "reflection",
+      "scope_b": "decision",
+      "state_a": "COMPLETE",
+      "state_b": "OBSERVED",
+      "status": "incompatible"
+    },
+    {
+      "note": "qty must be 0 separately",
+      "scope_a": "position",
+      "scope_b": "session",
+      "state_a": "CLOSED",
+      "state_b": "COMPLETED",
+      "status": "compatible"
+    },
+    {
+      "note": "other positions may remain",
+      "scope_a": "position",
+      "scope_b": "session",
+      "state_a": "CLOSED",
+      "state_b": "RUNNING",
+      "status": "compatible"
+    },
+    {
+      "note": "adapter equivalent",
+      "scope_a": "session",
+      "scope_b": "control_plane",
+      "state_a": "COMPLETED",
+      "state_b": "STOPPED",
+      "status": "compatible"
+    },
+    {
+      "note": "adapter relation=none",
+      "scope_a": "session",
+      "scope_b": "control_plane",
+      "state_a": "COMPLETED",
+      "state_b": "KILLED",
+      "status": "incompatible"
+    },
+    {
+      "note": "adapter equivalent",
+      "scope_a": "session",
+      "scope_b": "control_plane",
+      "state_a": "FAILED_SAFE",
+      "state_b": "FAILED_SAFE",
+      "status": "compatible"
+    },
+    {
+      "note": "adapter session_implies_control",
+      "scope_a": "session",
+      "scope_b": "control_plane",
+      "state_a": "BLOCKED",
+      "state_b": "FAILED_SAFE",
+      "status": "compatible"
+    },
+    {
+      "note": "unmapped",
+      "scope_a": "session",
+      "scope_b": "control_plane",
+      "state_a": "BLOCKED",
+      "state_b": "STOPPED",
+      "status": "incompatible"
+    }
+  ],
+  "schema": "nexus_lifecycle_terminal_compatibility_v11_1",
+  "status_counts": {
+    "ambiguous": 1,
+    "compatible": 17,
+    "incompatible": 15
+  }
+}

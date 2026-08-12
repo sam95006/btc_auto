@@ -1,0 +1,49 @@
+{
+  "schema": "v10_private_control_plane_observability",
+  "created_at": "2026-08-05T03:07:09Z",
+  "read_only": true,
+  "founder_private": true,
+  "public_product_exposure": false,
+  "state": "STOPPED",
+  "mode": "HISTORICAL_REPLAY_SIMULATED",
+  "run_id": "pcp_v10_readiness",
+  "allowed_modes": [
+    "HISTORICAL_REPLAY_SIMULATED",
+    "MICROSTRUCTURE_CAPTURE",
+    "PROVIDER_CALIBRATION"
+  ],
+  "kill_switch_engaged": false,
+  "kill_switch_reason": null,
+  "exchange_write_attempt_count": 0,
+  "checkpoint_count": 3,
+  "transition_count": 8,
+  "commands_invoked": [
+    "start",
+    "checkpoint",
+    "status",
+    "pause",
+    "resume",
+    "checkpoint",
+    "recover",
+    "health",
+    "observability",
+    "stop",
+    "checkpoint",
+    "status",
+    "observability"
+  ],
+  "formal_trading_state": {
+    "formal_walk_forward_executed": false,
+    "oos_executed": false,
+    "demo_order_count": 0,
+    "shadow_order_count": 0,
+    "exchange_write_attempt_count": 0,
+    "deployment_started": false,
+    "mainnet": false,
+    "real_money": false
+  },
+  "secrets_present": false,
+  "account_information_present": false,
+  "strategy_parameters_present": false,
+  "profitability_claim": null
+}

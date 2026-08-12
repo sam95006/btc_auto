@@ -1,0 +1,112 @@
+{
+  "all_match": true,
+  "created_at": "2026-08-05T07:49:12Z",
+  "results": [
+    {
+      "checks": {
+        "ai_ids": true,
+        "checkpoint_version_id": true,
+        "classification_label": true,
+        "code_version": true,
+        "cost_model_version": true,
+        "cost_version": true,
+        "decision_status": true,
+        "evidence_binding_hash": true,
+        "evidence_hashes": true,
+        "fingerprint": true,
+        "intent_id": true,
+        "position_id_present": true,
+        "risk_version": true,
+        "state_path": true
+      },
+      "fingerprint": "e9e61e3f43d2866dd51e4565d1dd8ecb1632b5be9fbe8d6d5d175d9a5daca24b",
+      "match": true,
+      "seed": "v12e-case-000"
+    },
+    {
+      "checks": {
+        "ai_ids": true,
+        "checkpoint_version_id": true,
+        "classification_label": true,
+        "code_version": true,
+        "cost_model_version": true,
+        "cost_version": true,
+        "decision_status": true,
+        "evidence_binding_hash": true,
+        "evidence_hashes": true,
+        "fingerprint": true,
+        "intent_id": true,
+        "position_id_present": true,
+        "risk_version": true,
+        "state_path": true
+      },
+      "fingerprint": "e878039ceab089869963448817a7b62a5124dd675fef82a3bd56f4aab7d00b51",
+      "match": true,
+      "seed": "v12e-case-001"
+    },
+    {
+      "checks": {
+        "ai_ids": true,
+        "checkpoint_version_id": true,
+        "classification_label": true,
+        "code_version": true,
+        "cost_model_version": true,
+        "cost_version": true,
+        "decision_status": true,
+        "evidence_binding_hash": true,
+        "evidence_hashes": true,
+        "fingerprint": true,
+        "intent_id": true,
+        "position_id_present": true,
+        "risk_version": true,
+        "state_path": true
+      },
+      "fingerprint": "53c76fee76abf49f3e86a0c4192e147928afaea7baf28db8f7cb0d1662d706a6",
+      "match": true,
+      "seed": "v12e-case-002"
+    },
+    {
+      "checks": {
+        "ai_ids": true,
+        "checkpoint_version_id": true,
+        "classification_label": true,
+        "code_version": true,
+        "cost_model_version": true,
+        "cost_version": true,
+        "decision_status": true,
+        "evidence_binding_hash": true,
+        "evidence_hashes": true,
+        "fingerprint": true,
+        "intent_id": true,
+        "position_id_present": true,
+        "risk_version": true,
+        "state_path": true
+      },
+      "fingerprint": "efe30bb988a6609b032a610c932bba46826b7db472eaa48ca5830e4e65a9a091",
+      "match": true,
+      "seed": "v12e-case-003"
+    },
+    {
+      "checks": {
+        "ai_ids": true,
+        "checkpoint_version_id": true,
+        "classification_label": true,
+        "code_version": true,
+        "cost_model_version": true,
+        "cost_version": true,
+        "decision_status": true,
+        "evidence_binding_hash": true,
+        "evidence_hashes": true,
+        "fingerprint": true,
+        "intent_id": true,
+        "position_id_present": true,
+        "risk_version": true,
+        "state_path": true
+      },
+      "fingerprint": "2a05127c4d3df1da5c32112d2ec3febc9aee707f487ddb4fe4f25bf886ad17e7",
+      "match": true,
+      "seed": "v12e-case-004"
+    }
+  ],
+  "schema": "v12_evidence_repro_deterministic_replay"
+}

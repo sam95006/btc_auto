@@ -1,2 +1,3 @@
-web: gunicorn -w 1 -b 0.0.0.0:$PORT --timeout 120 app:app
-worker: python -m backend.worker.runner
+web: sh deploy/zeabur_unified/start.sh
+# Legacy Procfile worker DISABLED for V30.1 unified runtime (do not start).
+# worker: python -m backend.worker.runner

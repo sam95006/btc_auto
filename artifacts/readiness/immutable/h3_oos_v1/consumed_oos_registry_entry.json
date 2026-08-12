@@ -1,0 +1,21 @@
+{
+  "reservation_id": "OOS_H3_UNTOUCHED_V1_RESERVED",
+  "status": "NOT_CONSUMED",
+  "classification": "NOT_CONSUMED_EXECUTION_NOT_STARTED",
+  "dataset_checksum": "9cc83d2997fc98a0d43f43324acbc7a73266b4c38a32379e640301dedc85e3d2",
+  "policy_checksums": {
+    "H3E_OOS_POLICY_V1_FROZEN": "bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33",
+    "H3D_OOS_POLICY_V1_FROZEN": "d415675df562e2ddad6cbfbbf77f6207ac2c1c48eebec27d153dc2aff31bb8a7"
+  },
+  "execution_started": false,
+  "execution_start_time": null,
+  "execution_end_time": null,
+  "source_commit": "c2668ac81be1e2eea882ee0ea59bb0a519a507d7",
+  "runner_version": "h3_oos_v1_download_gate",
+  "result_checksums": {
+    "oos_summary": "ac7432eb72a8af3ec7e09ede6261204c31c1ebb325f23e8b8000eb609bf39b3a"
+  },
+  "primary_verdict": "NOT_EXECUTED_WINDOW_NOT_MATURE",
+  "note": "Execution never started; premature window stop reclassified from DATA_INVALID to OOS_WINDOW_NOT_MATURE",
+  "updated_at": "2026-08-03T05:21:13Z"
+}

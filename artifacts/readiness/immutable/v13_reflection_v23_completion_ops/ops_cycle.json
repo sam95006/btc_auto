@@ -1,0 +1,643 @@
+{
+  "schema": "v13_v23_completion_ops_cycle",
+  "created_at": "2026-08-05T08:35:17Z",
+  "lane": "V13-B",
+  "lane_name": "REFLECTION_V23_COMPLETION_OPS",
+  "package": "backend.nexus_v23_completion_ops",
+  "branch": "feature/v13-reflection-v23-completion-ops",
+  "base_commit": "abd2195ef6d79f609dd261b5e9c5402599625a64",
+  "hard_bans": [
+    "no_real_provider_resume_ownership_theft",
+    "no_secret_logging",
+    "no_policy_effect_lessons_while_incomplete",
+    "no_quality_eval_before_complete_denominators",
+    "no_demo_exchange",
+    "no_pr27_merge",
+    "no_v2_3_complete_claim",
+    "no_exchange_writes",
+    "no_mainnet_real_money",
+    "background_agent_sanitized_fixtures_only"
+  ],
+  "incomplete_sot": {
+    "schema": "v13_reflection_v23_completion_ops_incomplete_sot",
+    "created_at": "2026-08-05T08:35:17Z",
+    "V2_3_complete": false,
+    "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+    "case_id_count": 80,
+    "groq_target_count": 80,
+    "lanes": {
+      "GROQ_REFLECTION_REASONER": {
+        "success_count": 53,
+        "pending_count": 27,
+        "target_count": 80,
+        "completion_ratio": 0.6625
+      },
+      "SAMBANOVA_INDEPENDENT_CRITIC": {
+        "success_count": 16,
+        "pending_count": 10,
+        "target_count": 53,
+        "completion_ratio": 0.3018867924528302
+      }
+    },
+    "verification": {
+      "verified": true,
+      "source": "canonical_checkpoint_counters",
+      "checkpoint_path": "D:\\NEXUS\\btc_bot\\.nexus_runtime\\blind_reflection_v23_checkpoint.json",
+      "matches_approx_constants": true
+    },
+    "note": "Real checkpoint SoT remains incomplete; ops observe and control around this truth and must not claim V2.3 complete."
+  },
+  "provider_preflight": {
+    "schema": "v13_v23_provider_preflight_map",
+    "created_at": "2026-08-05T08:35:17Z",
+    "lanes": {
+      "GROQ_REFLECTION_REASONER": {
+        "schema": "v13_v23_provider_preflight",
+        "created_at": "2026-08-05T08:35:17Z",
+        "profile_id": "GROQ_REFLECTION_REASONER",
+        "mode": "SANITIZED_FIXTURE",
+        "provider_preflight_status": "RATE_LIMITED",
+        "result_status": "RATE_LIMITED",
+        "http_status": 429,
+        "retry_after_s": 900.0,
+        "quota_reset_s": 900.0,
+        "quota_reset_at": "2026-08-05T08:50:17Z",
+        "next_resume_not_before": "2026-08-05T08:50:17Z",
+        "mass_batch_blocked": true,
+        "real_provider_call_executed": false,
+        "real_resume_owner": "local_Coordinator",
+        "ops_owns_real_resume": false,
+        "api_key_recorded": false,
+        "secret_logging": false,
+        "fixture_label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
+      },
+      "SAMBANOVA_INDEPENDENT_CRITIC": {
+        "schema": "v13_v23_provider_preflight",
+        "created_at": "2026-08-05T08:35:17Z",
+        "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "mode": "SANITIZED_FIXTURE",
+        "provider_preflight_status": "RATE_LIMITED",
+        "result_status": "RATE_LIMITED",
+        "http_status": 429,
+        "retry_after_s": 900.0,
+        "quota_reset_s": 1200.0,
+        "quota_reset_at": "2026-08-05T08:55:17Z",
+        "next_resume_not_before": "2026-08-05T08:50:17Z",
+        "mass_batch_blocked": true,
+        "real_provider_call_executed": false,
+        "real_resume_owner": "local_Coordinator",
+        "ops_owns_real_resume": false,
+        "api_key_recorded": false,
+        "secret_logging": false,
+        "fixture_label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
+      }
+    },
+    "any_mass_batch_blocked": true,
+    "real_provider_call_executed": false,
+    "background_agent_mode": "sanitized_fixtures_only",
+    "V2_3_complete": false
+  },
+  "queue_health": {
+    "schema": "v13_v23_queue_health",
+    "created_at": "2026-08-05T08:35:17Z",
+    "overall_status": "DEGRADED_INCOMPLETE",
+    "V2_3_complete": false,
+    "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+    "independent_queues": true,
+    "lanes": {
+      "GROQ_REFLECTION_REASONER": {
+        "profile_id": "GROQ_REFLECTION_REASONER",
+        "success_count": 53,
+        "pending_count": 27,
+        "target_count": 80,
+        "pending_ratio": 0.3375,
+        "status": "RATE_LIMITED",
+        "manual_paused": false,
+        "retry_after_s": 900.0,
+        "quota_reset_s": 900.0,
+        "next_resume_not_before": "2026-08-04T16:49:33Z",
+        "independent_queue": true
+      },
+      "SAMBANOVA_INDEPENDENT_CRITIC": {
+        "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "success_count": 16,
+        "pending_count": 10,
+        "target_count": 53,
+        "pending_ratio": 0.384615,
+        "status": "RATE_LIMITED",
+        "manual_paused": false,
+        "retry_after_s": 900.0,
+        "quota_reset_s": 1200.0,
+        "next_resume_not_before": "2026-08-04T16:49:58Z",
+        "independent_queue": true
+      }
+    },
+    "sot_verification": {
+      "verified": true,
+      "source": "canonical_checkpoint_counters",
+      "checkpoint_path": "D:\\NEXUS\\btc_bot\\.nexus_runtime\\blind_reflection_v23_checkpoint.json",
+      "matches_approx_constants": true
+    }
+  },
+  "retry_quota_obs": {
+    "schema": "v13_v23_retry_quota_obs_map",
+    "created_at": "2026-08-05T08:35:17Z",
+    "lanes": {
+      "GROQ_REFLECTION_REASONER": {
+        "schema": "v13_v23_retry_quota_obs",
+        "created_at": "2026-08-05T08:35:17Z",
+        "profile_id": "GROQ_REFLECTION_REASONER",
+        "http_status": 429,
+        "retry_after_s": 900.0,
+        "quota_reset_s": 900.0,
+        "quota_reset_at": "2026-08-05T08:50:17Z",
+        "quota_reset_visible": true,
+        "next_resume_not_before": "2026-08-05T08:50:17Z",
+        "rate_limited": true,
+        "headers_observed": {
+          "Retry-After": "900",
+          "x-ratelimit-reset": "900"
+        },
+        "secret_logging": false
+      },
+      "SAMBANOVA_INDEPENDENT_CRITIC": {
+        "schema": "v13_v23_retry_quota_obs",
+        "created_at": "2026-08-05T08:35:17Z",
+        "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "http_status": 429,
+        "retry_after_s": 900.0,
+        "quota_reset_s": 1200.0,
+        "quota_reset_at": "2026-08-05T08:55:17Z",
+        "quota_reset_visible": true,
+        "next_resume_not_before": "2026-08-05T08:50:17Z",
+        "rate_limited": true,
+        "headers_observed": {
+          "Retry-After": "900",
+          "x-ratelimit-reset": "1200"
+        },
+        "secret_logging": false
+      }
+    },
+    "max_retry_after_s": 900.0,
+    "max_quota_reset_s": 1200.0,
+    "any_rate_limited": true,
+    "any_quota_reset_visible": true,
+    "secret_logging": false
+  },
+  "provider_windows": {
+    "schema": "v13_v23_provider_windows",
+    "created_at": "2026-08-05T08:35:17Z",
+    "lanes": {
+      "GROQ_REFLECTION_REASONER": {
+        "profile_id": "GROQ_REFLECTION_REASONER",
+        "independent_window": true,
+        "burst_capacity": 5.0,
+        "refill_per_s": 0.2,
+        "tokens_available": 5.0,
+        "pending_count": 27,
+        "retry_after_s": 900.0,
+        "quota_reset_s": 900.0,
+        "capacity_wait_s": 900.0,
+        "window_open_in_s": 900.0,
+        "window_open_at": "2026-08-05T08:50:17Z",
+        "estimated_drain_s": 135.0,
+        "window_close_at": "2026-08-05T08:52:32Z",
+        "window_status": "CLOSED_WAITING",
+        "real_resume_authorized": false
+      },
+      "SAMBANOVA_INDEPENDENT_CRITIC": {
+        "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "independent_window": true,
+        "burst_capacity": 3.0,
+        "refill_per_s": 0.1,
+        "tokens_available": 3.0,
+        "pending_count": 10,
+        "retry_after_s": 900.0,
+        "quota_reset_s": 1200.0,
+        "capacity_wait_s": 1200.0,
+        "window_open_in_s": 1200.0,
+        "window_open_at": "2026-08-05T08:55:17Z",
+        "estimated_drain_s": 100.0,
+        "window_close_at": "2026-08-05T08:56:57Z",
+        "window_status": "CLOSED_WAITING",
+        "real_resume_authorized": false
+      }
+    },
+    "independent_provider_windows": true,
+    "independence_proof": {
+      "separate_lane_records": true,
+      "waits_track_inputs": true,
+      "waits_differ_when_inputs_differ": true,
+      "inputs_differ": true,
+      "groq_capacity_wait_s": 900.0,
+      "sambanova_capacity_wait_s": 1200.0,
+      "groq_window_open_in_s": 900.0,
+      "sambanova_window_open_in_s": 1200.0
+    },
+    "any_window_open": false,
+    "real_resume_authorized": false,
+    "provider_lanes": [
+      "GROQ_REFLECTION_REASONER",
+      "SAMBANOVA_INDEPENDENT_CRITIC"
+    ],
+    "V2_3_complete": false
+  },
+  "capacity_status": {
+    "schema": "v13_v23_capacity_status",
+    "created_at": "2026-08-05T08:35:17Z",
+    "overall_capacity_status": "INCOMPLETE_PROVIDER_CAPACITY",
+    "lanes": {
+      "GROQ_REFLECTION_REASONER": {
+        "capacity_status": "BLOCKED_WAITING",
+        "pending_count": 27,
+        "window_open_in_s": 900.0,
+        "real_resume_authorized": false
+      },
+      "SAMBANOVA_INDEPENDENT_CRITIC": {
+        "capacity_status": "BLOCKED_WAITING",
+        "pending_count": 10,
+        "window_open_in_s": 1200.0,
+        "real_resume_authorized": false
+      }
+    },
+    "V2_3_complete": false,
+    "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+    "real_resume_authorized": false,
+    "ops_may_schedule_observe_only": true
+  },
+  "atomic_checkpoint": {
+    "schema": "v13_v23_atomic_checkpoint",
+    "created_at": "2026-08-05T08:35:17Z",
+    "path": "D:\\NEXUS_RUNTIME\\worktrees\\v13_reflection_completion\\.nexus_runtime\\v13_b_fixtures\\blind_reflection_v23_checkpoint_fixture.json",
+    "atomic_replace": true,
+    "bytes_written": 4840,
+    "checksum_sha256": "c2ef10f771e555dbaaafe0a40cabeaecdc261d28954a965ead4eb1c5de63a63f",
+    "integrity_checksum": "41f6b6958d312ea1242b0ea24225e5e0c25285a5c3606a216c41b224601698cb",
+    "tmp_cleaned": true,
+    "secrets_stripped": true,
+    "real_resume_executed": false,
+    "V2_3_complete": false,
+    "reload_ok": true,
+    "semantic_counters_ok": true,
+    "completed_case_count": 53,
+    "pending_case_count": 27,
+    "groq_success_count": 53,
+    "sambanova_success_count": 16
+  },
+  "semantic_counters": {
+    "schema": "v13_v23_semantic_counters",
+    "created_at": "2026-08-05T08:35:17Z",
+    "ok": true,
+    "issues": [],
+    "groq_success_count": 53,
+    "completed_case_count": 53,
+    "pending_case_count": 27,
+    "critic_success_count": 16,
+    "critic_resolved_count": 16,
+    "critic_pending_count": 10,
+    "fixture_sot_aligned": true,
+    "refused_inflated_counter": false,
+    "V2_3_complete": false
+  },
+  "completed_case_dedupe": {
+    "schema": "v13_v23_completed_case_dedupe",
+    "created_at": "2026-08-05T08:35:17Z",
+    "case_id_count": 80,
+    "completed_case_count": 53,
+    "pending_before_dedupe": 28,
+    "pending_after_dedupe": 27,
+    "overlap_count": 1,
+    "overlap_case_ids_sample": [
+      "case_000"
+    ],
+    "requeue_blocked_count": 1,
+    "dedupe_effective": true,
+    "deduped_pending_case_ids": [
+      "case_053",
+      "case_054",
+      "case_055",
+      "case_056",
+      "case_057",
+      "case_058",
+      "case_059",
+      "case_060",
+      "case_061",
+      "case_062",
+      "case_063",
+      "case_064",
+      "case_065",
+      "case_066",
+      "case_067",
+      "case_068",
+      "case_069",
+      "case_070",
+      "case_071",
+      "case_072",
+      "case_073",
+      "case_074",
+      "case_075",
+      "case_076",
+      "case_077",
+      "case_078",
+      "case_079"
+    ],
+    "expected_pending": 27,
+    "V2_3_complete": false
+  },
+  "critic_ordering": {
+    "schema": "v13_v23_critic_ordering",
+    "created_at": "2026-08-05T08:35:17Z",
+    "critic_order": [
+      "case_016",
+      "case_017",
+      "case_018",
+      "case_019",
+      "case_020",
+      "case_021",
+      "case_022",
+      "case_023",
+      "case_024",
+      "case_025",
+      "case_026",
+      "case_027",
+      "case_028",
+      "case_029",
+      "case_030",
+      "case_031",
+      "case_032",
+      "case_033",
+      "case_034",
+      "case_035",
+      "case_036",
+      "case_037",
+      "case_038",
+      "case_039",
+      "case_040",
+      "case_041",
+      "case_042",
+      "case_043",
+      "case_044",
+      "case_045",
+      "case_046",
+      "case_047",
+      "case_048",
+      "case_049",
+      "case_050",
+      "case_051",
+      "case_052"
+    ],
+    "critic_order_count": 37,
+    "order_only_after_reasoner_success": true,
+    "expected_pending_critics_present": true,
+    "premature_critic_blocked": [
+      {
+        "case_id": "case_053",
+        "critic_dispatch_allowed": false,
+        "reason": "REASONER_SUCCESS_REQUIRED",
+        "transport_status": "CRITIC_BEFORE_REASONER_BLOCKED"
+      },
+      {
+        "case_id": "case_054",
+        "critic_dispatch_allowed": false,
+        "reason": "REASONER_SUCCESS_REQUIRED",
+        "transport_status": "CRITIC_BEFORE_REASONER_BLOCKED"
+      },
+      {
+        "case_id": "case_055",
+        "critic_dispatch_allowed": false,
+        "reason": "REASONER_SUCCESS_REQUIRED",
+        "transport_status": "CRITIC_BEFORE_REASONER_BLOCKED"
+      }
+    ],
+    "premature_blocked_count": 3,
+    "reasoner_profile": "GROQ_REFLECTION_REASONER",
+    "critic_profile": "SAMBANOVA_INDEPENDENT_CRITIC",
+    "groq_success_required": 53,
+    "V2_3_complete": false
+  },
+  "terminal_denominator_validation": {
+    "schema": "v13_v23_terminal_denominator",
+    "created_at": "2026-08-05T08:35:17Z",
+    "terminal_eval": {
+      "V2_3_TERMINAL_STATUS": "INCOMPLETE_PROVIDER_CAPACITY",
+      "quality_gates_evaluated": false,
+      "quality_gates_passed": false
+    },
+    "denominator_validation": {
+      "terminal_denominator_validation": "PASS",
+      "issues": []
+    },
+    "zero_denominator_probe": {
+      "terminal_denominator_validation": "PASS",
+      "issues": []
+    },
+    "fake_complete_ratios_ignored": true,
+    "fake_complete_ratio_probe": {
+      "full_calibration_completion_ratio": {
+        "numerator": 80.0,
+        "denominator": 80.0,
+        "value": 1.0,
+        "status": "VALID"
+      },
+      "critic_resolution_ratio": {
+        "numerator": 80.0,
+        "denominator": 80.0,
+        "value": 1.0,
+        "status": "VALID"
+      }
+    },
+    "quality_eval_blocked_while_incomplete": true,
+    "V2_3_complete": false,
+    "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY"
+  },
+  "lesson_quality_gates": {
+    "schema": "v13_v23_lesson_quality_gates",
+    "created_at": "2026-08-05T08:35:17Z",
+    "fixture_lesson_gate": {
+      "lesson_gate_schema": "v11_lesson_gate",
+      "policy_effect_lesson_allowed": false,
+      "lesson_prevention_executed": false,
+      "lesson_prevention_blocked_reason": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+      "V2_3_TERMINAL_STATUS": "INCOMPLETE_PROVIDER_CAPACITY",
+      "quality_gates_passed": false,
+      "fixture_label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+      "new_policy_effect_lesson_count": 0,
+      "risk_limits_changed": false,
+      "leverage_changed": false,
+      "position_size_changed": false,
+      "stops_changed": false,
+      "strategy_parameters_changed": false,
+      "promotion_state_changed": false,
+      "false_learning_claim": false
+    },
+    "incomplete_lesson_gate": {
+      "lesson_gate_schema": "v11_lesson_gate",
+      "policy_effect_lesson_allowed": false,
+      "lesson_prevention_executed": false,
+      "lesson_prevention_blocked_reason": "V2_3_TERMINAL_NOT_VERIFIED",
+      "V2_3_TERMINAL_STATUS": "INCOMPLETE_PROVIDER_CAPACITY",
+      "quality_gates_passed": false,
+      "fixture_label": null,
+      "new_policy_effect_lesson_count": 0,
+      "risk_limits_changed": false,
+      "leverage_changed": false,
+      "position_size_changed": false,
+      "stops_changed": false,
+      "strategy_parameters_changed": false,
+      "promotion_state_changed": false,
+      "false_learning_claim": false
+    },
+    "policy_effect_lesson_allowed": false,
+    "policy_effect_blocked": true,
+    "new_policy_effect_lesson_count": 0,
+    "quality_eval_allowed": false,
+    "V2_3_complete": false,
+    "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY"
+  },
+  "safe_pause_resume": {
+    "schema": "v13_v23_safe_pause_resume",
+    "created_at": "2026-08-05T08:35:17Z",
+    "lanes": {
+      "GROQ_REFLECTION_REASONER": {
+        "paused": false
+      },
+      "SAMBANOVA_INDEPENDENT_CRITIC": {
+        "paused": false
+      }
+    },
+    "any_paused": false,
+    "history": [
+      {
+        "action": "pause",
+        "profile_id": "GROQ_REFLECTION_REASONER",
+        "reason": "ops_cycle_demo_pause",
+        "at": "2026-08-05T08:35:17Z",
+        "affects_real_resume_ownership": false,
+        "real_resume_executed": false
+      },
+      {
+        "action": "resume_ops_scheduling",
+        "profile_id": "GROQ_REFLECTION_REASONER",
+        "reason": "ops_cycle_demo_resume",
+        "at": "2026-08-05T08:35:17Z",
+        "affects_real_resume_ownership": false,
+        "real_resume_executed": false,
+        "note": "Safe resume clears ops pause only; local Coordinator owns real resume."
+      },
+      {
+        "action": "pause",
+        "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "reason": "ops_cycle_demo_pause",
+        "at": "2026-08-05T08:35:17Z",
+        "affects_real_resume_ownership": false,
+        "real_resume_executed": false
+      },
+      {
+        "action": "resume_ops_scheduling",
+        "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+        "reason": "ops_cycle_demo_resume",
+        "at": "2026-08-05T08:35:17Z",
+        "affects_real_resume_ownership": false,
+        "real_resume_executed": false,
+        "note": "Safe resume clears ops pause only; local Coordinator owns real resume."
+      }
+    ],
+    "real_resume_executed": false,
+    "ops_owns_real_resume": false
+  },
+  "manual_events": [
+    {
+      "action": "pause",
+      "profile_id": "GROQ_REFLECTION_REASONER",
+      "reason": "ops_cycle_demo_pause",
+      "at": "2026-08-05T08:35:17Z",
+      "affects_real_resume_ownership": false,
+      "real_resume_executed": false
+    },
+    {
+      "action": "resume_ops_scheduling",
+      "profile_id": "GROQ_REFLECTION_REASONER",
+      "reason": "ops_cycle_demo_resume",
+      "at": "2026-08-05T08:35:17Z",
+      "affects_real_resume_ownership": false,
+      "real_resume_executed": false,
+      "note": "Safe resume clears ops pause only; local Coordinator owns real resume."
+    },
+    {
+      "action": "pause",
+      "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+      "reason": "ops_cycle_demo_pause",
+      "at": "2026-08-05T08:35:17Z",
+      "affects_real_resume_ownership": false,
+      "real_resume_executed": false
+    },
+    {
+      "action": "resume_ops_scheduling",
+      "profile_id": "SAMBANOVA_INDEPENDENT_CRITIC",
+      "reason": "ops_cycle_demo_resume",
+      "at": "2026-08-05T08:35:17Z",
+      "affects_real_resume_ownership": false,
+      "real_resume_executed": false,
+      "note": "Safe resume clears ops pause only; local Coordinator owns real resume."
+    }
+  ],
+  "resume_boundary": {
+    "schema": "v13_v23_resume_boundary",
+    "created_at": "2026-08-05T08:35:17Z",
+    "real_resume_owner": "local_Coordinator",
+    "ops_role": "observability_and_manual_control_only_sanitized_fixtures",
+    "ops_owns_real_resume": false,
+    "real_resume_executed_by_ops": false,
+    "attempted_real_resume": true,
+    "blocked_attempt_count": 2,
+    "blocked_attempts": [
+      {
+        "action": "request_real_resume",
+        "allowed": false,
+        "blocked_reason": "OPS_NOT_REAL_RESUME_OWNER",
+        "owner": "local_Coordinator",
+        "ops_role": "observability_and_manual_control_only_sanitized_fixtures",
+        "reason": "ops_cycle_probe",
+        "at": "2026-08-05T08:35:17Z"
+      },
+      {
+        "action": "execute_real_resume",
+        "allowed": false,
+        "blocked_reason": "REAL_RESUME_OWNERSHIP_THEFT_BANNED",
+        "owner": "local_Coordinator",
+        "callable_invoked": false,
+        "fn_name": null,
+        "at": "2026-08-05T08:35:17Z"
+      }
+    ],
+    "forbidden_real_resume_calls": [
+      "allow_real_resume=True",
+      "provider_preflight_live",
+      "real_provider_resume",
+      "resume_v23",
+      "run_quota_aware_calibration"
+    ]
+  },
+  "ownership_request_blocked": {
+    "action": "request_real_resume",
+    "allowed": false,
+    "blocked_reason": "OPS_NOT_REAL_RESUME_OWNER",
+    "owner": "local_Coordinator",
+    "ops_role": "observability_and_manual_control_only_sanitized_fixtures",
+    "reason": "ops_cycle_probe",
+    "at": "2026-08-05T08:35:17Z"
+  },
+  "ownership_theft_blocked": true,
+  "real_resume_owner": "local_Coordinator",
+  "real_resume_executed_by_ops": false,
+  "ops_owns_real_resume": false,
+  "V2_3_complete": false,
+  "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+  "demo_order_count": 0,
+  "exchange_write_attempt_count": 0,
+  "mainnet": false,
+  "real_money": false,
+  "secret_logging": false,
+  "pr27_merged": false,
+  "background_agent_sanitized_fixtures_only": true
+}

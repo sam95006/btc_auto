@@ -1,0 +1,30 @@
+{
+  "schema": "v11_1_private_observability_pass_1_summary",
+  "created_at": "2026-08-05T04:07:51Z",
+  "pass_number": 1,
+  "pass": true,
+  "status": "PASS",
+  "slo_score": 100.0,
+  "slo_status": "healthy",
+  "slos_passed": 13,
+  "slos_total": 13,
+  "active_alert_count": 0,
+  "active_alert_classes": [],
+  "alert_classes_required": [
+    "failure_state",
+    "staleness",
+    "data_quality",
+    "ambiguous_state",
+    "storage_floor",
+    "provider_capacity"
+  ],
+  "secret_leak_count": 0,
+  "hard_ban_count": 16,
+  "public_routes": false,
+  "execution_mutation_endpoint": false,
+  "findings": [
+    "baseline_domain_health_collected",
+    "slo_definitions_emitted",
+    "alert_pipeline_wired"
+  ]
+}

@@ -1,0 +1,153 @@
+{
+  "schema": "h5_portability_research_v1_preregistration",
+  "hypotheses": [
+    {
+      "hypothesis_id": "H5A_CROSS_SECTIONAL_RETEST_STABILITY",
+      "family": "H5",
+      "variant": "A",
+      "mechanism": "rank eligible symbols point in time; normalize relative strength vs broad market; 240m context; 60m structural event; 15m retest; reject late entry; cost and liquidity gates before candidate creation",
+      "entry_logic": "cross_sectional_rs_normalized_15m_retest",
+      "confirmation_logic": "PIT universe membership; relative strength vs BTC/ETH basket; 240m regime context; 60m displacement; 15m retest reject late chase",
+      "exit_logic": "vol_normalized_structural_geometry",
+      "churn_logic": "cooldown=30; one_per_event",
+      "parameter_values": {
+        "min_move_to_cost": 2.9,
+        "cooldown_15m_bars": 30,
+        "min_disp_atr": 1.15,
+        "max_chase_atr": 0.3,
+        "stop_atr": 0.9,
+        "target_atr": 1.85,
+        "retest_lookback_15m": 10,
+        "rs_lookback_bars": 16,
+        "min_holding_expectation_bars": 10
+      },
+      "threshold_rationale": "Cross-sectional stability research informed by H4A PROMISING_MECHANISM_NOT_PORTABLE fold concentration; thresholds from V3/H4 preregistered cost floors only — not consumed holdout or September OOS.",
+      "expected_failure_mode": "REJECTED_FOLD_CONCENTRATED or INSUFFICIENT_SAMPLE",
+      "created_before_evaluation": true,
+      "requires_microstructure": false,
+      "informed_by_sealed": [
+        "H4A_PROMISING_MECHANISM_NOT_PORTABLE"
+      ],
+      "forbidden_sources_for_thresholds": [
+        "H3_CLOSED_HISTORICAL_HOLDOUT_V1_RESERVED",
+        "OOS_H3_UNTOUCHED_V1_RESERVED",
+        "september_h3_partial_oos"
+      ]
+    },
+    {
+      "hypothesis_id": "H5B_REGIME_TRANSITION_VETO_RETEST",
+      "family": "H5",
+      "variant": "B",
+      "mechanism": "retain economically plausible H4A retest concept; veto unstable regime transitions; reject false continuation; reject entries after most displacement occurred; require structure valid after retest",
+      "entry_logic": "retest_with_regime_transition_veto",
+      "confirmation_logic": "240m TRENDING_DOWN stable across last N bars; reject regime flip within veto window; 60m displacement; 15m retest; structure remains valid post-retest",
+      "exit_logic": "vol_normalized_structural_geometry",
+      "churn_logic": "cooldown=32",
+      "parameter_values": {
+        "min_move_to_cost": 2.9,
+        "cooldown_15m_bars": 32,
+        "min_disp_atr": 1.2,
+        "max_chase_atr": 0.28,
+        "stop_atr": 0.9,
+        "target_atr": 1.8,
+        "regime_stability_bars_240m": 6,
+        "max_displacement_consumed_pct": 0.65,
+        "min_holding_expectation_bars": 10
+      },
+      "threshold_rationale": "Addresses H4A fold concentration via explicit regime-transition veto; not tuned on holdout/OOS.",
+      "expected_failure_mode": "REJECTED_REGIME_NOT_PORTABLE or INSUFFICIENT_SAMPLE",
+      "created_before_evaluation": true,
+      "requires_microstructure": false,
+      "informed_by_sealed": [
+        "H4A_PROMISING_MECHANISM_NOT_PORTABLE"
+      ],
+      "forbidden_sources_for_thresholds": [
+        "H3_CLOSED_HISTORICAL_HOLDOUT_V1_RESERVED",
+        "OOS_H3_UNTOUCHED_V1_RESERVED"
+      ]
+    },
+    {
+      "hypothesis_id": "H5C_OI_FUNDING_COST_BUFFERED_CONTINUATION",
+      "family": "H5",
+      "variant": "C",
+      "mechanism": "use real OI and funding only; require non-contradictory OI/funding; preregistered gross-movement-to-total-cost buffer; reject extreme crowding; missing required data blocks candidate",
+      "entry_logic": "oi_funding_cost_buffered_continuation",
+      "confirmation_logic": "structure + real OI not collapsing vs short; funding not extreme crowd; gross_move / total_cost >= buffer; MISSING blocks",
+      "exit_logic": "vol_normalized_structural_geometry",
+      "churn_logic": "cooldown=30",
+      "parameter_values": {
+        "min_move_to_cost": 3.2,
+        "cooldown_15m_bars": 30,
+        "min_disp_atr": 1.0,
+        "stop_atr": 0.9,
+        "target_atr": 1.9,
+        "oi_collapse_max_pct": -0.02,
+        "funding_abs_max": 0.0007,
+        "gross_to_cost_buffer": 3.2,
+        "min_holding_expectation_bars": 10
+      },
+      "threshold_rationale": "Informed by H4C POSITIVE_BASE_RESULT_NOT_COST_OR_FOLD_STABLE — raises cost buffer; never invent OI/funding zeros.",
+      "expected_failure_mode": "REJECTED_COST_DOMINATED or INSUFFICIENT_SAMPLE",
+      "created_before_evaluation": true,
+      "requires_microstructure": true,
+      "enrichment": [
+        "open_interest",
+        "funding"
+      ],
+      "informed_by_sealed": [
+        "H4C_POSITIVE_BASE_RESULT_NOT_COST_OR_FOLD_STABLE"
+      ],
+      "forbidden_sources_for_thresholds": [
+        "H3_CLOSED_HISTORICAL_HOLDOUT_V1_RESERVED",
+        "OOS_H3_UNTOUCHED_V1_RESERVED"
+      ]
+    }
+  ],
+  "gates": {
+    "min_completed_trades": 150,
+    "min_walk_forward_folds": 5,
+    "min_completed_trades_per_active_fold": 20,
+    "min_net_expectancy": 0.0,
+    "min_overall_profit_factor": 1.15,
+    "min_adverse_profit_factor": 1.0,
+    "min_positive_net_expectancy_folds": 3,
+    "max_largest_profitable_fold_contribution": 0.6,
+    "max_single_symbol_positive_net_profit_share": 0.3,
+    "lookahead_violation_count_max": 0,
+    "risk_limit_breach_count_max": 0,
+    "liquidation_policy_breach_count_max": 0,
+    "invalid_position_size_count_max": 0,
+    "fold_concentration_gate_not_lowered": true,
+    "post_result_subgroup_promotion_forbidden": true
+  },
+  "created_before_evaluation": true,
+  "max_hypotheses": 3,
+  "walk_forward_folds": 5,
+  "post_result_subgroup_promotion_forbidden": true,
+  "consumed_holdout_threshold_tuning_forbidden": true,
+  "september_oos_may_not_validate_h5": true,
+  "h4_may_inform_not_promote": true,
+  "demo_cannot_start_from_wf_alone": true,
+  "point_in_time_universe_required": true,
+  "survivorship_shortcut_forbidden": true,
+  "preregistration_checksum": "fdb52d0881f034063287fcfa43424fb13d2306573000365aced5a4ade9470f8f",
+  "hypothesis_checksums": {
+    "H5A_CROSS_SECTIONAL_RETEST_STABILITY": "4317f06dec0f7f89532632f89431f2032f9e5dd3ef6d82b95a593f2069b54f35",
+    "H5B_REGIME_TRANSITION_VETO_RETEST": "8f55fbb4af60a53b60cd140c4772559a0bb04cf76cf7b70934ddcd1ab5312d19",
+    "H5C_OI_FUNDING_COST_BUFFERED_CONTINUATION": "bf65bcd14b4ebafab2737f850acd77312025e27063fe519de97c1f2c67f463ab"
+  },
+  "sealed_at": "2026-08-03T07:00:12Z",
+  "source_commit": "57dd77b9490bef5ba6ad8f4ceac8180b019cbc6f",
+  "research_symbols_preselected_before_performance": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+    "DOGEUSDT",
+    "HYPEUSDT",
+    "ADAUSDT",
+    "ZECUSDT",
+    "XAUUSDT",
+    "SOXLUSDT"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "critic_independence_result",
+  "critic_evidence_packet_delivered": true,
+  "critic_resolution_count": 0,
+  "critic_unresolved_count": 0,
+  "critic_schema_invalid_count": 0,
+  "critic_resolution_ratio": 1.0,
+  "critic_runs_only_after_groq": true,
+  "prefer_deterministic_instruction": false,
+  "prefer_groq_instruction": false,
+  "agreement_target_instruction": false
+}

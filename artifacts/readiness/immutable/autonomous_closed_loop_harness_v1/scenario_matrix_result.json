@@ -1,0 +1,140 @@
+{
+  "schema": "scenario_matrix_result",
+  "recommendation": "NEXUS_AUTONOMOUS_HARNESS_V1_PASS",
+  "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+  "real_learning_claimed": false,
+  "scenario_count": 8,
+  "scenario_pass_count": 8,
+  "scenario_failure_count": 0,
+  "scenarios": {
+    "VALID_PROCESS_LOSS": {
+      "status": "PASS",
+      "detail": {
+        "first": {
+          "status": "COMPLETE",
+          "classification": "GOOD_PROCESS_LOSS",
+          "state": "CLOSED",
+          "lifecycle_id": "A1",
+          "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
+        },
+        "later_not_suppressed": true
+      }
+    },
+    "STALE_DATA_BLOCK": {
+      "status": "PASS",
+      "detail": {
+        "status": "BLOCKED",
+        "risk": {
+          "allowed": false,
+          "reason": "STALE_DATA_BLOCK"
+        },
+        "state": "CLOSED",
+        "lifecycle_id": "B1"
+      }
+    },
+    "COST_DESTROYED_BLOCK": {
+      "status": "PASS",
+      "detail": {
+        "status": "BLOCKED",
+        "risk": {
+          "allowed": false,
+          "reason": "COST_DESTROYED_BLOCK"
+        },
+        "state": "CLOSED",
+        "lifecycle_id": "C1"
+      }
+    },
+    "DUPLICATE_INTENT_IDEMPOTENCY": {
+      "status": "PASS",
+      "detail": {
+        "first": {
+          "status": "COMPLETE",
+          "classification": "GOOD_PROCESS_WIN",
+          "state": "CLOSED",
+          "lifecycle_id": "D1",
+          "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
+        },
+        "second": {
+          "status": "DUPLICATE_IGNORED",
+          "lifecycle_id": "D1",
+          "state": "CLOSED"
+        }
+      }
+    },
+    "PROVIDER_UNAVAILABLE_FAIL_CLOSED": {
+      "status": "PASS",
+      "detail": {
+        "status": "BLOCKED",
+        "risk": {
+          "allowed": false,
+          "reason": "PROVIDER_UNAVAILABLE_FAIL_CLOSED"
+        },
+        "state": "CLOSED",
+        "lifecycle_id": "E1"
+      }
+    },
+    "REPEATED_BAD_PROCESS_SIGNATURE": {
+      "status": "PASS",
+      "detail": {
+        "source": {
+          "status": "COMPLETE",
+          "classification": "BAD_PROCESS_LOSS",
+          "state": "CLOSED",
+          "lifecycle_id": "F1",
+          "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
+        },
+        "later": {
+          "status": "BLOCKED",
+          "risk": {
+            "allowed": false,
+            "reason": "REPEATED_BAD_PROCESS_SIGNATURE_BLOCK"
+          },
+          "state": "CLOSED",
+          "lifecycle_id": "F2"
+        },
+        "lessons": [
+          "LES_F1"
+        ]
+      },
+      "label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING"
+    },
+    "HARD_RISK_OVERRIDE": {
+      "status": "PASS",
+      "detail": {
+        "status": "BLOCKED",
+        "risk": {
+          "allowed": false,
+          "reason": "HARD_RISK_OVERRIDE_REJECTED",
+          "rejected_actions": [
+            "leverage_increase",
+            "stop_widening"
+          ],
+          "order_or_policy_mutation": false
+        },
+        "state": "CLOSED",
+        "lifecycle_id": "G1"
+      }
+    },
+    "RESTART_RECOVERY": {
+      "status": "PASS",
+      "detail": {
+        "status": "DUPLICATE_IGNORED",
+        "lifecycle_id": "H_PENDING",
+        "state": "ORDER_INTENT_CREATED"
+      },
+      "restored_lifecycle_count": 10
+    }
+  },
+  "exchange_write_attempt_count": 0,
+  "demo_order_count": 0,
+  "state_machine_status": "PASS",
+  "valid_process_loss_status": "PASS",
+  "stale_data_block_status": "PASS",
+  "cost_destroyed_block_status": "PASS",
+  "duplicate_intent_idempotency_status": "PASS",
+  "provider_unavailable_fail_closed_status": "PASS",
+  "repeated_bad_process_fixture_status": "PASS",
+  "hard_risk_override_status": "PASS",
+  "restart_recovery_status": "PASS",
+  "created_at": "2026-08-04T11:22:22Z"
+}

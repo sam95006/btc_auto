@@ -1,0 +1,35 @@
+{
+  "schema": "v11_decision_lifecycle_status",
+  "created_at": "2026-08-05T03:32:45Z",
+  "lane": "A",
+  "lane_name": "DECISION_LIFECYCLE_ORCHESTRATOR",
+  "branch": "feature/v11-decision-lifecycle-orchestrator",
+  "package": "backend.nexus_decision",
+  "status": "PASS",
+  "all_stages_ok": true,
+  "secret_leak_count": 0,
+  "order_attempt_count_formal": 0,
+  "order_trap_blocked": true,
+  "strategy_mutation_trap_blocked": true,
+  "exchange_write_attempt_count": 0,
+  "demo_order_count": 0,
+  "shadow_order_count": 0,
+  "mainnet": false,
+  "real_money": false,
+  "public_api_exposed": false,
+  "formal_walk_forward_executed": false,
+  "oos_executed": false,
+  "owned_paths": [
+    "backend/nexus_decision",
+    "tools/research/run_decision_lifecycle_v11.py",
+    "tests/test_decision_lifecycle_v11.py",
+    "artifacts/readiness/immutable/v11_decision_lifecycle"
+  ],
+  "prohibited_paths_untouched": [
+    "frontend",
+    "backend/nexus_demo_execution",
+    "other_v11_lane_owned_paths",
+    "pr26_public_surfaces"
+  ],
+  "base_commit": "e4f30f9b8abaaade6151a75ef5ac6face53d5135"
+}

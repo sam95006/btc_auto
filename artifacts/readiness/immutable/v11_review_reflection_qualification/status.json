@@ -1,0 +1,37 @@
+{
+  "schema": "v11_review_reflection_qualification_status",
+  "created_at": "2026-08-05T04:01:04Z",
+  "review": "FOUNDER_R3_REFLECTION_QUALIFICATION",
+  "branch": "feature/v11-review-reflection-qualification",
+  "git_head": "37abbef594381b1bf3f52127ea811cc6663302c0",
+  "base": "e4f30f9b8abaaade6151a75ef5ac6face53d5135",
+  "passes_completed": 2,
+  "recommendation": "BLOCK_INTEGRATION",
+  "critical_fail_count": 3,
+  "high_fail_count": 2,
+  "pass_count": 5,
+  "stability_unstable_count": 0,
+  "inspect_surface": [
+    "provider_retry_authority",
+    "checkpoint_schema_authority",
+    "completed_case_dedupe",
+    "critic_ordering",
+    "classification_taxonomy",
+    "lesson_gate",
+    "point_in_time_provenance",
+    "future_data_exclusion",
+    "oos_seal",
+    "promotion_blocking"
+  ],
+  "adversarial_scenarios": [
+    "429_as_quality_failure",
+    "critic_before_reasoner",
+    "completed_case_replay",
+    "checkpoint_counter_drift",
+    "undetermined_process_lost",
+    "future_timestamp_nested",
+    "oos_seal_regenerated",
+    "founder_authorization_spoofed",
+    "lesson_while_v23_incomplete"
+  ]
+}

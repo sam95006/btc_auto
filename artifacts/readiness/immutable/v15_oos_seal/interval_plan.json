@@ -1,0 +1,83 @@
+{
+  "checks": {
+    "chronologically_later_than_development": true,
+    "no_overlap_with_consumed_failed": true,
+    "no_overlap_with_development": true,
+    "overlap_violations": []
+  },
+  "fixture_only": true,
+  "oos_consumed": false,
+  "oos_downloaded": false,
+  "oos_executed": false,
+  "oos_reserved": false,
+  "plan_checksum": "1bcc13da2ee65ebc41d752836ab3a463ba9cb7c95e7e0a0d20ac74351e05949a",
+  "plan_id": "V15G_OOS_PLAN_SYNTHETIC_001",
+  "plan_status": "PLANNED_NOT_RESERVED",
+  "real_oos_reservation_executed": false,
+  "registries": {
+    "consumed_failed_holdout": {
+      "checksum": "5c75884c796efbfcc5315889753bec3e4bc769d8fae4e81e9cce62ec496d48a5",
+      "interval_count": 1,
+      "intervals": [
+        {
+          "category": "consumed_failed_holdout",
+          "end_ms": 1691360000000,
+          "interval_id": "SYN_V15G_CONSUMED_FAILED",
+          "intervals": [
+            "60"
+          ],
+          "label": "synthetic_prior_failed_holdout",
+          "start_ms": 1689632000000,
+          "symbols": [
+            "SYNTHUSDT"
+          ]
+        }
+      ],
+      "kind": "consumed_failed_holdout"
+    },
+    "development": {
+      "checksum": "7405411f603db4a4d48c2f85984f34faba9e575093ce23f9a0f9b83bba5ee894",
+      "interval_count": 1,
+      "intervals": [
+        {
+          "category": "development",
+          "end_ms": 1697408000000,
+          "interval_id": "SYN_V15G_DEV_WINDOW",
+          "intervals": [
+            "15",
+            "60"
+          ],
+          "label": "synthetic_development_window",
+          "start_ms": 1692224000000,
+          "symbols": [
+            "SYNTHUSDT"
+          ]
+        }
+      ],
+      "kind": "development"
+    },
+    "planned_oos": {
+      "checksum": "5b0741da3e4ec2bf0fe644985505b469d40a185fbf82dc4a74fdc2eb5314606c",
+      "interval_count": 1,
+      "intervals": [
+        {
+          "category": "planned_oos",
+          "end_ms": 1699568000000,
+          "interval_id": "SYN_V15G_PLANNED_OOS",
+          "intervals": [
+            "15",
+            "60",
+            "240"
+          ],
+          "label": "synthetic_planned_oos_not_reserved",
+          "start_ms": 1698272000000,
+          "symbols": [
+            "SYNTHUSDT",
+            "SYNETHUSDT"
+          ]
+        }
+      ],
+      "kind": "planned_oos"
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "schema": "FOUNDER_C6_TYPECHECK",
+  "generated_at": "2026-08-05T04:08:48Z",
+  "typecheck_status": "PASS",
+  "python_py_compile": "PASS",
+  "frontend_tsc": "PASS",
+  "notes": "Python py_compile on remediated modules; frontend npx tsc -b"
+}

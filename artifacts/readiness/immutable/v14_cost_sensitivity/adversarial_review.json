@@ -1,0 +1,70 @@
+{
+  "critical_remaining_count": 0,
+  "findings": [
+    {
+      "detail": "dimensions=['cancel_replace', 'funding', 'latency', 'liquidity_collapse', 'maker_taker_mix', 'market_impact', 'partial_fills', 'queue_position', 'slippage', 'spread', 'trade_size_scaling']",
+      "finding_id": "ADV_DIMENSION_COVERAGE",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "all required cost components present on every candidate",
+      "finding_id": "ADV_FULL_COST_COMPONENTS",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "gross/net expectancy, break-even, max spread/slip, capacity, fragility",
+      "finding_id": "ADV_REQUIRED_OUTPUTS",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "authority=backend.nexus_execution.cost_model; formula_mutated=false",
+      "finding_id": "ADV_CANONICAL_COST_AUTHORITY",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "all labels allowed",
+      "finding_id": "ADV_LABEL_ALLOWLIST",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "qualification_ready_count=0",
+      "finding_id": "ADV_QUALIFICATION_READY_ZERO",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "oos/wf/demo/shadow/exchange/profitability/qualified/pr27/auto-integrate bans held",
+      "finding_id": "ADV_HARD_BAN_COMPLIANCE",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "label_histogram={'CAPACITY_LIMITED': 0, 'COST_DESTROYED': 7, 'COST_SENSITIVITY_OBSERVED': 2, 'DATA_QUALITY_BLOCKED': 1, 'DEVELOPMENT_REVIEW_ONLY': 0, 'FRAGILE_TO_EXECUTION': 1, 'INSUFFICIENT_SAMPLE': 1}",
+      "finding_id": "ADV_NEGATIVE_PATH_COVERAGE",
+      "severity": "HIGH",
+      "status": "PASS"
+    },
+    {
+      "detail": "all candidates declare synthetic development evidence class",
+      "finding_id": "ADV_NO_FIXTURE_AS_LIVE_EDGE",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "CostBridge verified; market impact explicitly outside bridge",
+      "finding_id": "ADV_NO_SILENT_COST_FALLBACK",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    }
+  ],
+  "hard_ban_count": 15,
+  "pass_ok": true,
+  "qualification_ready_count": 0,
+  "remaining_count": 0,
+  "schema": "FOUNDER_V14_E_ADVERSARIAL_REVIEW"
+}

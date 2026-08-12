@@ -1,0 +1,178 @@
+{
+  "pass_number": 2,
+  "scenarios": [
+    {
+      "detail": "record_sealed",
+      "evidence": {
+        "identity_fingerprint": "6ba37272bed3460b619bcbe4c32055cb3d7c3d4df55231b9b13241adfc33863e",
+        "record_hash": "fe651c82e9f5e677da80cdbb0b2874f0df4e9eb6dc62935153d09729dd085248",
+        "verify": {
+          "development_only": true,
+          "experiment_id": "exp_seal_1",
+          "identity_fingerprint": "6ba37272bed3460b619bcbe4c32055cb3d7c3d4df55231b9b13241adfc33863e",
+          "ok": true,
+          "oos_consumed": false,
+          "record_hash": "fe651c82e9f5e677da80cdbb0b2874f0df4e9eb6dc62935153d09729dd085248"
+        }
+      },
+      "fail_closed": true,
+      "passed": true,
+      "scenario_id": "seal_and_verify"
+    },
+    {
+      "detail": "experiment_id_duplicate:exp_seal_1",
+      "evidence": {
+        "blocked": true
+      },
+      "fail_closed": true,
+      "passed": true,
+      "scenario_id": "duplicate_id_blocked"
+    },
+    {
+      "detail": "exact_duplicate_identity:exp_seal_1",
+      "evidence": {
+        "blocked": true
+      },
+      "fail_closed": true,
+      "passed": true,
+      "scenario_id": "exact_duplicate_identity_blocked"
+    },
+    {
+      "detail": "identity_result_conflict:exp_nd_a->exp_nd_b:silent_cherry_pick_or_nondeterminism",
+      "evidence": {
+        "blocked": true,
+        "pass_number": 2
+      },
+      "fail_closed": true,
+      "passed": true,
+      "scenario_id": "divergent_result_identity_conflict"
+    },
+    {
+      "detail": "parent_experiment_missing:does_not_exist",
+      "evidence": {
+        "blocked": true
+      },
+      "fail_closed": true,
+      "passed": true,
+      "scenario_id": "parent_missing_blocked"
+    },
+    {
+      "detail": "lineage_ok",
+      "evidence": {
+        "chain": [
+          "exp_child",
+          "exp_parent"
+        ]
+      },
+      "fail_closed": true,
+      "passed": true,
+      "scenario_id": "parent_lineage_chain"
+    },
+    {
+      "detail": "oos_consumed_forbidden_by_hard_ban",
+      "evidence": {
+        "blocked": true
+      },
+      "fail_closed": true,
+      "passed": true,
+      "scenario_id": "oos_consumed_forbidden"
+    },
+    {
+      "detail": "immutable",
+      "evidence": {
+        "deletion_blocked": true,
+        "mutation_blocked": true
+      },
+      "fail_closed": true,
+      "passed": true,
+      "scenario_id": "immutability_enforced"
+    },
+    {
+      "detail": "disclosure_enforced",
+      "evidence": {
+        "omit_blocked": true,
+        "selection": {
+          "auto_integration": false,
+          "candidacy_id": "cand_set_1",
+          "demo_order": false,
+          "disclosed_member_ids": [
+            "cand_a",
+            "cand_b",
+            "cand_c"
+          ],
+          "exchange_write": false,
+          "formal_walk_forward_executed": false,
+          "learning_claim": false,
+          "mainnet": false,
+          "oos_executed": false,
+          "profitability_claim": false,
+          "real_money": false,
+          "selected_experiment_id": "cand_c",
+          "selection_criterion": "disclosed_full_set_max_primary_hash_lex",
+          "shadow_order": false,
+          "silent_cherry_picking": false,
+          "simulated_only": true
+        }
+      },
+      "fail_closed": true,
+      "passed": true,
+      "scenario_id": "candidacy_full_disclosure_required"
+    },
+    {
+      "detail": "banned",
+      "evidence": {
+        "blocked": true
+      },
+      "fail_closed": true,
+      "passed": true,
+      "scenario_id": "favorable_criterion_banned"
+    },
+    {
+      "detail": "banned",
+      "evidence": {
+        "blocked": true
+      },
+      "fail_closed": true,
+      "passed": true,
+      "scenario_id": "silent_cherry_pick_probe"
+    },
+    {
+      "detail": "fail_closed",
+      "evidence": {
+        "ban_blocked": true,
+        "hash_blocked": true
+      },
+      "fail_closed": true,
+      "passed": true,
+      "scenario_id": "hard_ban_and_hash_tamper"
+    },
+    {
+      "detail": "reload_ok",
+      "evidence": {
+        "count": 7,
+        "registry_hash": "8de0df69caa042a7e7ec17d13109cf2217850f4ddc01e8701cdcbb0556d746e7"
+      },
+      "fail_closed": true,
+      "passed": true,
+      "scenario_id": "persist_reload_integrity"
+    },
+    {
+      "detail": "tamper_blocked",
+      "evidence": {
+        "blocked": true
+      },
+      "fail_closed": true,
+      "passed": true,
+      "scenario_id": "pass2_registry_hash_tamper"
+    },
+    {
+      "detail": "self_parent_guard",
+      "evidence": {
+        "blocked": true
+      },
+      "fail_closed": true,
+      "passed": true,
+      "scenario_id": "pass2_self_parent_blocked"
+    }
+  ]
+}

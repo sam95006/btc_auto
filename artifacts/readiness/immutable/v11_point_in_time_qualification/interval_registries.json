@@ -1,0 +1,44 @@
+{
+  "consumed": {
+    "kind": "consumed",
+    "interval_count": 1,
+    "checksum": "8c4a1ad19593cf7831601215e7f81b94ed4f5f66c5e6eb434424e271eceae13c",
+    "intervals": [
+      {
+        "interval_id": "SYN_V11_CONSUMED_DEV",
+        "label": "synthetic_consumed_development",
+        "start_ms": 1694816000000,
+        "end_ms": 1697408000000,
+        "category": "consumed"
+      }
+    ]
+  },
+  "reserved": {
+    "kind": "reserved",
+    "interval_count": 1,
+    "checksum": "560055f9d37839cd58e73c9dbb43e909a371dc298e33b8df06ea726ababd54e4",
+    "intervals": [
+      {
+        "interval_id": "SYN_V11_RESERVED_OOS",
+        "label": "synthetic_reserved_untouched_oos",
+        "start_ms": 1698272000000,
+        "end_ms": 1699136000000,
+        "category": "reserved"
+      }
+    ]
+  },
+  "availability": {
+    "kind": "availability",
+    "interval_count": 1,
+    "checksum": "f25db477d47f96630b43288a6c8e3e8cd81a1bdcd6df0ad9efd86fadaabf2656",
+    "intervals": [
+      {
+        "interval_id": "SYN_V11_AVAILABLE_PIT",
+        "label": "synthetic_available_before_as_of",
+        "start_ms": 1698790400000,
+        "end_ms": 1699481600000,
+        "category": "availability"
+      }
+    ]
+  }
+}

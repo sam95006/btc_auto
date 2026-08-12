@@ -1,0 +1,16 @@
+{
+  "schema": "FOUNDER_C6_METRICS",
+  "generated_at": "2026-08-05T07:37:20Z",
+  "base_HEAD": "5b1d47543523f7e5be88da63256904171ce45165",
+  "branch": "feature/v11_1-single-tip-integration",
+  "working_tree_HEAD_at_artifact_write": "ef2e243e8749264cbb63f930c063bd87becc4a9f",
+  "circular_SCC_count": 0,
+  "import_smoke_status": "PASS",
+  "runtime_startup_status": "PASS",
+  "typecheck_status": "PASS",
+  "pass1_circular_SCC_count": 0,
+  "pass2_circular_SCC_count": 0,
+  "tests_targeted_passed": 40,
+  "edge_count": 4300,
+  "gate": "PASS"
+}

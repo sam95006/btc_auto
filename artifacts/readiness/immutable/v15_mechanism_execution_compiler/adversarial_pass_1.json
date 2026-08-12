@@ -1,0 +1,108 @@
+{
+  "campaign_digest": "90067a21fcace8ea6df6831c28792cc919761be75ef855be2bdb5347c8857504",
+  "critical_remaining": 0,
+  "finding_count": 13,
+  "findings": [
+    {
+      "detail": "mechanism_executor_count=42 expected=42",
+      "finding_id": "ADV_EXECUTOR_COUNT_42",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "unique executor ids, mechanism ids, signal contracts, rationales",
+      "finding_id": "ADV_NO_PARAM_COLLAPSE",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "input/feature/signal/entry/exit/failure/cost/risk/replay/negative/rationale",
+      "finding_id": "ADV_REQUIRED_CONTRACT_FIELDS",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "all labels allowed",
+      "finding_id": "ADV_LABEL_ALLOWLIST",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "qualification_ready_count=0",
+      "finding_id": "ADV_QUALIFICATION_READY_ZERO",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "no edge/profitability/qualification claims",
+      "finding_id": "ADV_NO_EDGE_OR_QUALIFICATION_CLAIMS",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "oos/wf/demo/shadow/exchange/mainnet/pr27/auto-integrate bans held",
+      "finding_id": "ADV_HARD_BAN_COMPLIANCE",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "campaign_digest=90067a21fcace8ea",
+      "finding_id": "ADV_DETERMINISTIC_REPLAY",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "lookahead forbidden; future-bar refs disallowed",
+      "finding_id": "ADV_PIT_SIGNAL_CONTRACT",
+      "severity": "HIGH",
+      "status": "PASS"
+    },
+    {
+      "detail": "all executors link to canonical cost authority",
+      "finding_id": "ADV_COST_DEPENDENCY",
+      "severity": "HIGH",
+      "status": "PASS"
+    },
+    {
+      "detail": "each executor carries negative_test contract + coverage flag",
+      "finding_id": "ADV_NEGATIVE_TEST_COVERAGE",
+      "severity": "HIGH",
+      "status": "PASS"
+    },
+    {
+      "detail": "banned profitability/qualification vocabulary absent from labels",
+      "finding_id": "ADV_BANNED_VOCAB",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "lane must not write *_status.json report files",
+      "finding_id": "ADV_NO_STATUS_JSON",
+      "severity": "HIGH",
+      "status": "PASS"
+    }
+  ],
+  "hard_bans_checked": [
+    "no_auto_integrate",
+    "no_demo_orders",
+    "no_edge_claims",
+    "no_exchange_write",
+    "no_formal_walk_forward",
+    "no_mainnet",
+    "no_oos_consumption",
+    "no_param_only_mechanism_collapse",
+    "no_pr27_merge",
+    "no_profitability_claims",
+    "no_qualified_claims",
+    "no_real_money",
+    "no_shadow_orders",
+    "no_strategy_promotion"
+  ],
+  "high_remaining": 0,
+  "mechanism_executor_count": 42,
+  "pass": "pass_1",
+  "pass_ok": true,
+  "qualification_ready_count": 0,
+  "remaining_count": 0,
+  "schema": "v15_b_mechanism_execution_compiler_adversarial_v1"
+}

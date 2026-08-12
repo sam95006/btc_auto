@@ -1,0 +1,98 @@
+{
+  "finding_count": 12,
+  "findings": [
+    {
+      "detail": "mechanism_count=42 min=40",
+      "finding_id": "ADV_MIN_MECHANISM_COUNT",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "unique ids, signal contracts, and rationales",
+      "finding_id": "ADV_SEMANTIC_DISTINCTNESS",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "families_present=20",
+      "finding_id": "ADV_FAMILY_COVERAGE",
+      "severity": "HIGH",
+      "status": "PASS"
+    },
+    {
+      "detail": "all required mechanism schema fields present",
+      "finding_id": "ADV_REQUIRED_FIELDS",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "all labels allowed",
+      "finding_id": "ADV_LABEL_ALLOWLIST",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "qualification_ready_count=0",
+      "finding_id": "ADV_QUALIFICATION_READY_ZERO",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "no edge/profitability/qualification claims",
+      "finding_id": "ADV_NO_EDGE_OR_QUALIFICATION_CLAIMS",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "oos/wf/demo/shadow/exchange/mainnet/pr27/auto-integrate bans held",
+      "finding_id": "ADV_HARD_BAN_COMPLIANCE",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "lookahead forbidden; future-bar refs zero",
+      "finding_id": "ADV_PIT_PROOF",
+      "severity": "HIGH",
+      "status": "PASS"
+    },
+    {
+      "detail": "all mechanisms synthetic development lineage",
+      "finding_id": "ADV_SYNTHETIC_ONLY",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "banned profitability/qualification vocabulary absent",
+      "finding_id": "ADV_BANNED_VOCAB_PASS2",
+      "severity": "CRITICAL",
+      "status": "PASS"
+    },
+    {
+      "detail": "code_checksum=1d01db112d428305",
+      "finding_id": "ADV_DETERMINISTIC_CHECKSUM",
+      "severity": "HIGH",
+      "status": "PASS"
+    }
+  ],
+  "hard_bans_checked": [
+    "no_auto_integrate",
+    "no_demo_orders",
+    "no_edge_claims",
+    "no_exchange_write",
+    "no_formal_walk_forward",
+    "no_mainnet",
+    "no_oos_consumption",
+    "no_pr27_merge",
+    "no_profitability_claims",
+    "no_qualified_claims",
+    "no_real_money",
+    "no_shadow_orders",
+    "no_strategy_promotion"
+  ],
+  "mechanism_count": 42,
+  "pass": "pass_1",
+  "pass_ok": true,
+  "qualification_ready_count": 0,
+  "remaining_count": 0,
+  "schema": "v14_c_mechanism_lab_adversarial_v1"
+}

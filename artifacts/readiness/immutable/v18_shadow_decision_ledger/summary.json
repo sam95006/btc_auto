@@ -1,0 +1,73 @@
+{
+  "schema": "v18_f_shadow_decision_ledger_v1",
+  "lane": "V18-F",
+  "tip_sha": "6877774f345c24ea54e1879e04f1ab426f920810",
+  "lifecycle_states": [
+    "OBSERVED",
+    "CANDIDATE",
+    "REVIEWED",
+    "SHADOW_READY",
+    "SHADOW_OPENED",
+    "SHADOW_MANAGING",
+    "SHADOW_CLOSED",
+    "OUTCOME_PENDING",
+    "OUTCOME_RECORDED",
+    "REFLECTION_PENDING",
+    "REFLECTED"
+  ],
+  "hard_bans": [
+    "no_shadow_orders",
+    "no_demo_orders",
+    "no_exchange_write",
+    "no_mainnet",
+    "no_real_money",
+    "no_actual_ordered",
+    "no_actual_filled",
+    "no_exchange_order_id",
+    "no_active_lessons",
+    "no_lesson_promotion_to_active",
+    "no_pr26_merge",
+    "no_pr27_merge",
+    "no_acceleration_report_edit",
+    "no_archive_rebuild",
+    "no_rewrite_sealed_record"
+  ],
+  "non_claims": [
+    "Shadow Decision is not an exchange order",
+    "SHADOW_OPENED is an internal virtual research position only",
+    "actual_ordered/actual_filled remain false; exchange_order_id remains null",
+    "Learning bridge emits Lesson CANDIDATE only; never ACTIVE",
+    "No Demo / mainnet / real-money path"
+  ],
+  "owned_paths": [
+    "backend/nexus_shadow_decision_ledger",
+    "tests/shadow_decision_ledger",
+    "artifacts/readiness/immutable/v18_shadow_decision_ledger"
+  ],
+  "counts": {
+    "shadow_decision_count": 1,
+    "sealed_count": 0,
+    "virtual_research_position_count": 0,
+    "actual_ordered_count": 0,
+    "actual_filled_count": 0,
+    "exchange_write_attempt_count": 0,
+    "active_lesson_count": 0,
+    "lesson_candidate_ref_count": 0
+  },
+  "tests": {
+    "collected": 7,
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0
+  },
+  "active_lesson_count": 0,
+  "actual_ordered_count": 0,
+  "actual_filled_count": 0,
+  "exchange_write_attempt_count": 0,
+  "shadow_opened_means": "internal_virtual_research_position_only",
+  "public_invariants": {
+    "actual_ordered": false,
+    "actual_filled": false,
+    "exchange_order_id": null
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "catalog": [
+    "groq_429",
+    "sambanova_429",
+    "provider_timeout",
+    "provider_invalid_schema",
+    "stale_market_data",
+    "missing_market_data",
+    "clock_jump_forward",
+    "clock_jump_backward",
+    "duplicate_candidate",
+    "duplicate_order_intent",
+    "ledger_lock_contention",
+    "interrupted_ledger_append",
+    "snapshot_corruption",
+    "missing_latest_snapshot",
+    "disk_soft_limit",
+    "disk_hard_limit",
+    "process_termination",
+    "network_loss",
+    "partial_fill_before_crash",
+    "filled_order_before_snapshot",
+    "exit_event_before_position_snapshot",
+    "reflection_interruption",
+    "lesson_storage_interruption",
+    "kill_switch_during_open_position",
+    "pause_during_pending_intent"
+  ],
+  "seed": 911001,
+  "created_at": "2026-08-04T16:38:55Z"
+}

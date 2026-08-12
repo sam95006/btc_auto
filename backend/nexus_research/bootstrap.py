@@ -100,8 +100,9 @@ def bootstrap_research_runtime() -> dict:
         try:
             from backend.nexus_research.features.feature_seed import seed_default_feature_definitions
             from backend.nexus_research.features.feature_observation_feed import refresh_feature_observations_from_scanner
+            from backend.nexus_research.features.registry import get_feature_registry
 
-            seed_result = seed_default_feature_definitions()
+            seed_result = seed_default_feature_definitions(registry=get_feature_registry())
             feed_result = refresh_feature_observations_from_scanner()
             summary["featureRegistry"] = {
                 "definitions": seed_result.get("count"),

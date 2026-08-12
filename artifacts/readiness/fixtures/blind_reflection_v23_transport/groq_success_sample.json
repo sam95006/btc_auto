@@ -1,0 +1,19 @@
+{
+  "fixture_key": "GROQ_REFLECTION_REASONER:SUCCESS_SAMPLE",
+  "result_status": "SUCCESS",
+  "smoke_map": "REAL_API_PASS",
+  "body": {
+    "trade_id": "SUCCESS_SAMPLE",
+    "evidence_sufficiency": "EVIDENCE_SUFFICIENT",
+    "process_classification": "GOOD_PROCESS_WIN",
+    "root_causes": [
+      "fixture"
+    ],
+    "confidence": 0.8,
+    "missing_evidence": [],
+    "supporting_evidence_ids": [
+      "e1"
+    ]
+  },
+  "latency_ms": 15
+}

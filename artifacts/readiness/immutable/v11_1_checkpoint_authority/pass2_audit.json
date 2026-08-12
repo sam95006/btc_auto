@@ -1,0 +1,21 @@
+{
+  "adversarial_focus": [
+    "false_PASS",
+    "fixture_only_proof",
+    "silent_fallback",
+    "schema_drift",
+    "secret_leakage",
+    "live_v23_mutation",
+    "ambiguous_restore"
+  ],
+  "generated_at": "2026-08-05T04:08:03Z",
+  "negative_tests_present": true,
+  "pass_id": "pass2",
+  "tests": {
+    "elapsed_s": 25.43,
+    "exit_code": 0,
+    "pass_id": "pass2",
+    "passed": true,
+    "tail": ".............................                                            [100%]\n29 passed in 24.60s"
+  }
+}

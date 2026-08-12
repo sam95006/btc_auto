@@ -1,0 +1,53 @@
+{
+  "adversarial_rewrite_tripped": true,
+  "findings": [],
+  "hard_ban_inventory": {
+    "banned_claims": [
+      "15y_complete",
+      "all_exchange_history",
+      "full_training_set",
+      "strategy_validation_PASS"
+    ],
+    "count": 17,
+    "enforced": true,
+    "hard_bans": [
+      "no_real_money",
+      "no_mainnet",
+      "no_exchange_write",
+      "no_demo",
+      "no_historical_rewrite",
+      "no_silent_gap_fill",
+      "no_unlicensed_ingest",
+      "no_future_timestamp_accept",
+      "no_claim_15y_complete",
+      "no_claim_all_exchange_history",
+      "no_claim_full_training_set",
+      "no_claim_strategy_validation_pass",
+      "no_pr26_merge",
+      "no_pr27_merge",
+      "no_acceleration_report_edit",
+      "no_auto_integrate",
+      "no_report_archive_rebuild"
+    ]
+  },
+  "name": "adversarial",
+  "pass": 2,
+  "quarantine_probe": {
+    "bronze": null,
+    "meta": {
+      "bytes": 16,
+      "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "quarantined_at": "2026-08-06T03:06:27Z",
+      "reason": "adversarial_corrupt"
+    },
+    "status": "QUARANTINED"
+  },
+  "rate_limit_probe": {
+    "max_weight": 1200,
+    "pause_event_count": 1,
+    "pause_reason": "http_429",
+    "paused": true,
+    "used_weight": 0
+  },
+  "status": "PASS"
+}

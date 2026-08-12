@@ -1,0 +1,120 @@
+{
+  "results": [
+    {
+      "injection": "kill_switch_during_open_position",
+      "final_state": "BLOCKED",
+      "session_pass": true,
+      "invariants_status": "PASS",
+      "invariants_counts": {
+        "open_ambiguous_position_count": 0,
+        "orphan_lifecycle_count": 0,
+        "duplicate_position_count": 0,
+        "unclosed_intent_count": 0,
+        "untracked_fill_count": 0,
+        "risk_limit_bypass_count": 0,
+        "exchange_write_attempt_count": 0
+      },
+      "exchange_write_attempt_count": 0,
+      "kill_switch_status": "TRIGGERED",
+      "recovery_count": 0,
+      "restart_count": 0,
+      "candidate_count": 60,
+      "reflection_queue_len": 2,
+      "lesson_queue_len": 2,
+      "contract_requirements": []
+    },
+    {
+      "injection": "clock_jump_forward",
+      "final_state": "COMPLETED",
+      "session_pass": true,
+      "invariants_status": "PASS",
+      "invariants_counts": {
+        "open_ambiguous_position_count": 0,
+        "orphan_lifecycle_count": 0,
+        "duplicate_position_count": 0,
+        "unclosed_intent_count": 0,
+        "untracked_fill_count": 0,
+        "risk_limit_bypass_count": 0,
+        "exchange_write_attempt_count": 0
+      },
+      "exchange_write_attempt_count": 0,
+      "kill_switch_status": "READY",
+      "recovery_count": 0,
+      "restart_count": 0,
+      "candidate_count": 60,
+      "reflection_queue_len": 2,
+      "lesson_queue_len": 2,
+      "contract_requirements": []
+    },
+    {
+      "injection": "clock_jump_backward",
+      "final_state": "COMPLETED",
+      "session_pass": true,
+      "invariants_status": "PASS",
+      "invariants_counts": {
+        "open_ambiguous_position_count": 0,
+        "orphan_lifecycle_count": 0,
+        "duplicate_position_count": 0,
+        "unclosed_intent_count": 0,
+        "untracked_fill_count": 0,
+        "risk_limit_bypass_count": 0,
+        "exchange_write_attempt_count": 0
+      },
+      "exchange_write_attempt_count": 0,
+      "kill_switch_status": "READY",
+      "recovery_count": 2,
+      "restart_count": 0,
+      "candidate_count": 60,
+      "reflection_queue_len": 2,
+      "lesson_queue_len": 2,
+      "contract_requirements": []
+    },
+    {
+      "injection": "process_termination",
+      "final_state": "COMPLETED",
+      "session_pass": true,
+      "invariants_status": "PASS",
+      "invariants_counts": {
+        "open_ambiguous_position_count": 0,
+        "orphan_lifecycle_count": 0,
+        "duplicate_position_count": 0,
+        "unclosed_intent_count": 0,
+        "untracked_fill_count": 0,
+        "risk_limit_bypass_count": 0,
+        "exchange_write_attempt_count": 0
+      },
+      "exchange_write_attempt_count": 0,
+      "kill_switch_status": "READY",
+      "recovery_count": 1,
+      "restart_count": 1,
+      "candidate_count": 60,
+      "reflection_queue_len": 2,
+      "lesson_queue_len": 2,
+      "contract_requirements": []
+    },
+    {
+      "injection": "disk_hard_limit",
+      "final_state": "BLOCKED",
+      "session_pass": true,
+      "invariants_status": "PASS",
+      "invariants_counts": {
+        "open_ambiguous_position_count": 0,
+        "orphan_lifecycle_count": 0,
+        "duplicate_position_count": 0,
+        "unclosed_intent_count": 0,
+        "untracked_fill_count": 0,
+        "risk_limit_bypass_count": 0,
+        "exchange_write_attempt_count": 0
+      },
+      "exchange_write_attempt_count": 0,
+      "kill_switch_status": "READY",
+      "recovery_count": 0,
+      "restart_count": 0,
+      "candidate_count": 46,
+      "reflection_queue_len": 1,
+      "lesson_queue_len": 1,
+      "contract_requirements": []
+    }
+  ],
+  "created_at": "2026-08-05T02:54:12Z"
+}

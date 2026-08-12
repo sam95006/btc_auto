@@ -18,9 +18,13 @@ from backend.nexus_founder_demo_monitor.provenance import (
 )
 from backend.nexus_founder_demo_monitor.sanitize import strip_forbidden_keys
 from backend.nexus_founder_demo_monitor.trading_intel import (
+    empty_ai_health,
+    empty_autonomy,
     empty_learning,
     empty_performance,
     empty_trading_intel,
+    map_ai_health,
+    map_autonomy,
     map_learning,
     map_performance,
     map_trading_intel,
@@ -334,6 +338,8 @@ def _fail_closed_empty(*, status: str, note: str) -> dict[str, Any]:
         "trading_intel": empty_trading_intel(),
         "performance": empty_performance(),
         "learning": empty_learning(),
+        "autonomy": empty_autonomy(),
+        "ai_health": empty_ai_health(),
         "field_provenance": {},
         "display": {
             "live_position": False,
@@ -343,6 +349,8 @@ def _fail_closed_empty(*, status: str, note: str) -> dict[str, Any]:
             "trading_intel_visible": False,
             "performance_visible": False,
             "learning_visible": False,
+            "autonomy_visible": False,
+            "ai_health_visible": False,
         },
         "note": note,
     }
@@ -442,6 +450,8 @@ def build_founder_demo_monitor_snapshot(
     )
     performance = map_performance(raw)
     learning = map_learning(raw)
+    autonomy = map_autonomy(raw)
+    ai_health = map_ai_health(raw)
 
     display = {
         "live_position": bool(position.get("open")),
@@ -476,6 +486,17 @@ def build_founder_demo_monitor_snapshot(
                 "ai_thesis",
                 "last_ai_position_review",
                 "last_exit_reason",
+                # V29 additions: direction + entry/stop quality + adaptive capture.
+                "direction_score_delta",
+                "direction_ambiguity_supported",
+                "last_entry_class",
+                "stop_distance_pct",
+                "fee_to_stop_loss_ratio",
+                "profit_lock_state",
+                "profit_lock_level",
+                "protected_pnl_floor",
+                "profit_lock_started_at",
+                "adaptive_action",
             )
         )
         or mfe is not None
@@ -488,10 +509,31 @@ def build_founder_demo_monitor_snapshot(
                 "win_rate_aggregate",
                 "net_pnl",
                 "profit_factor",
+                "last_10",
+                "last_30",
+                "expectancy",
+                "sample_status",
+                "accounting_complete_trades",
             )
         ),
         "learning_visible": bool(learning.get("mistake_signatures"))
         or bool(learning.get("pending_candidate_lessons")),
+        "autonomy_visible": any(
+            autonomy.get(k) is not None
+            for k in (
+                "service_status",
+                "last_cycle",
+                "next_cycle",
+                "cycles_24h",
+                "errors_24h",
+                "open_position",
+                "runtime_location",
+            )
+        ),
+        "ai_health_visible": any(
+            ai_health.get(k) is not None
+            for k in ("ai_state", "provider", "last_success", "quota_exhausted", "ai_calls_working")
+        ),
     }
 
     feed_ready = status in ("FEED_READY", "FEED_FIXTURE_FALLBACK")
@@ -535,6 +577,13 @@ def build_founder_demo_monitor_snapshot(
         "performance.profit_factor": performance.get("profit_factor"),
         "learning.mistake_signatures": learning.get("mistake_signatures"),
         "learning.pending_candidate_lessons": learning.get("pending_candidate_lessons"),
+        "autonomy.service_status": autonomy.get("service_status"),
+        "autonomy.last_cycle": autonomy.get("last_cycle"),
+        "autonomy.next_cycle": autonomy.get("next_cycle"),
+        "autonomy.cycles_24h": autonomy.get("cycles_24h"),
+        "autonomy.runtime_location": autonomy.get("runtime_location"),
+        "ai_health.ai_state": ai_health.get("ai_state"),
+        "ai_health.last_success": ai_health.get("last_success"),
     }
 
     payload: dict[str, Any] = {
@@ -569,6 +618,8 @@ def build_founder_demo_monitor_snapshot(
         "trading_intel": trading_intel,
         "performance": performance,
         "learning": learning,
+        "autonomy": autonomy,
+        "ai_health": ai_health,
         "field_provenance": build_field_provenance_map(
             source_timestamp=source_timestamp,
             lane=lane_label,

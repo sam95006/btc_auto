@@ -1,0 +1,60 @@
+{
+  "schema": "historical_exclusion_analysis_v1",
+  "dynamic_universe_symbol_count": 676,
+  "assessed_count": 676,
+  "exclusion_reason_counts": {
+    "INSUFFICIENT_LISTING_AGE": 78,
+    "INSUFFICIENT_15M_HISTORY": 0,
+    "INSUFFICIENT_60M_HISTORY": 0,
+    "INSUFFICIENT_240M_HISTORY": 0,
+    "MARK_PRICE_HISTORY_MISSING": 0,
+    "INDEX_PRICE_HISTORY_MISSING": 0,
+    "FUNDING_HISTORY_MISSING": 0,
+    "OI_HISTORY_MISSING": 0,
+    "INSTRUMENT_METADATA_INVALID": 0,
+    "TURNOVER_TOO_LOW": 387,
+    "OPEN_INTEREST_TOO_LOW": 0,
+    "SPREAD_TOO_HIGH": 30,
+    "SLIPPAGE_TOO_HIGH": 12,
+    "DATA_GAPS": 0,
+    "ABNORMAL_PRICE_DISCONTINUITY": 0,
+    "RESERVED_INTERVAL_OVERLAP": 0,
+    "PROVIDER_UNAVAILABLE": 0,
+    "OTHER_EXPLICIT_REASON": 174,
+    "PRIOR_RESEARCH_SYMBOL_CAP_NOT_DATA_GATE": 666
+  },
+  "top_exclusion_reasons": [
+    {
+      "exclusion_reason": "PRIOR_RESEARCH_SYMBOL_CAP_NOT_DATA_GATE",
+      "affected_symbol_count": 666
+    },
+    {
+      "exclusion_reason": "TURNOVER_TOO_LOW",
+      "affected_symbol_count": 387
+    },
+    {
+      "exclusion_reason": "OTHER_EXPLICIT_REASON",
+      "affected_symbol_count": 174
+    },
+    {
+      "exclusion_reason": "INSUFFICIENT_LISTING_AGE",
+      "affected_symbol_count": 78
+    },
+    {
+      "exclusion_reason": "SPREAD_TOO_HIGH",
+      "affected_symbol_count": 30
+    },
+    {
+      "exclusion_reason": "SLIPPAGE_TOO_HIGH",
+      "affected_symbol_count": 12
+    }
+  ],
+  "diagnosis": {
+    "prior_h5_eligible_historical_symbol_count": 10,
+    "prior_limit_cause": "MAX_RESEARCH_SYMBOLS=10 hard cap in H5 runner — not full-universe data gate",
+    "price_strategies_must_not_require_oi": true,
+    "missing_oi_never_replaced_with_zero": true
+  },
+  "point_in_time_membership_status": "IMPLEMENTED",
+  "pit_count_dev_mid": 448
+}

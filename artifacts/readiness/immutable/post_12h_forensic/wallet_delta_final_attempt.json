@@ -1,0 +1,18 @@
+{
+  "account_classification": "ACCOUNT_CONFIRMED_FLAT",
+  "position_count": 0,
+  "open_order_count": 0,
+  "reconciliation_status": "MATCH",
+  "list_counts": {
+    "closed_pnl": 1,
+    "executions": 2,
+    "transaction_log": 2
+  },
+  "wallet_delta_classification": "UNKNOWN",
+  "wallet_delta_total": -0.97052039,
+  "wallet_delta_attributed": 0.0,
+  "wallet_delta_unattributed": -0.97052039,
+  "evidence_record_count": 5,
+  "wallet_balance": null,
+  "available_balance": null
+}

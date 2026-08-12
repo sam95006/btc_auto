@@ -1,0 +1,177 @@
+{
+  "state": "PROMOTION_BLOCKED",
+  "stages": {
+    "CANDIDATE_FREEZE": "BLOCKED",
+    "REPLAY": "BLOCKED",
+    "CHRONOLOGICAL_WALK_FORWARD": "BLOCKED",
+    "CONCENTRATION_REVIEW": "BLOCKED",
+    "COST_STRESS": "BLOCKED",
+    "RISK_REVIEW": "BLOCKED",
+    "UNTOUCHED_OOS_RESERVATION": "BLOCKED",
+    "OOS_EXECUTION_AUTHORIZATION": "BLOCKED",
+    "DEMO_ELIGIBILITY": "BLOCKED"
+  },
+  "stage_order": [
+    "CANDIDATE_FREEZE",
+    "REPLAY",
+    "CHRONOLOGICAL_WALK_FORWARD",
+    "CONCENTRATION_REVIEW",
+    "COST_STRESS",
+    "RISK_REVIEW",
+    "UNTOUCHED_OOS_RESERVATION",
+    "OOS_EXECUTION_AUTHORIZATION",
+    "DEMO_ELIGIBILITY"
+  ],
+  "founder_gate": {
+    "required_scope": "formal_qualification_v1",
+    "authorized": false,
+    "actor": null,
+    "token_fingerprint": null,
+    "reason": "FOUNDER_AUTHORIZATION_MISSING",
+    "metadata": {}
+  },
+  "selected_strategy": null,
+  "formal_walk_forward_executed": false,
+  "oos_executed": false,
+  "demo_eligibility": false,
+  "history_count": 13,
+  "history": [
+    {
+      "event": "mark_infrastructure_ready",
+      "detail": {
+        "state": "INFRASTRUCTURE_READY"
+      }
+    },
+    {
+      "event": "register_synthetic_candidate",
+      "detail": {
+        "candidate_id": "SYNTHETIC_QUAL_CANDIDATE_V1",
+        "selected_strategy": null,
+        "fixture_only": true
+      }
+    },
+    {
+      "event": "founder_authorization",
+      "detail": {
+        "required_scope": "formal_qualification_v1",
+        "authorized": false,
+        "actor": null,
+        "token_fingerprint": null,
+        "reason": "FOUNDER_AUTHORIZATION_MISSING",
+        "metadata": {}
+      }
+    },
+    {
+      "event": "advance_stage_blocked",
+      "detail": {
+        "allowed": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+        "stage": "CANDIDATE_FREEZE",
+        "current_status": "BLOCKED",
+        "formal_walk_forward_executed": false,
+        "oos_executed": false
+      }
+    },
+    {
+      "event": "advance_stage_blocked",
+      "detail": {
+        "allowed": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+        "stage": "REPLAY",
+        "current_status": "BLOCKED",
+        "formal_walk_forward_executed": false,
+        "oos_executed": false
+      }
+    },
+    {
+      "event": "advance_stage_blocked",
+      "detail": {
+        "allowed": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+        "stage": "CHRONOLOGICAL_WALK_FORWARD",
+        "current_status": "BLOCKED",
+        "formal_walk_forward_executed": false,
+        "oos_executed": false
+      }
+    },
+    {
+      "event": "advance_stage_blocked",
+      "detail": {
+        "allowed": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+        "stage": "CONCENTRATION_REVIEW",
+        "current_status": "BLOCKED",
+        "formal_walk_forward_executed": false,
+        "oos_executed": false
+      }
+    },
+    {
+      "event": "advance_stage_blocked",
+      "detail": {
+        "allowed": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+        "stage": "COST_STRESS",
+        "current_status": "BLOCKED",
+        "formal_walk_forward_executed": false,
+        "oos_executed": false
+      }
+    },
+    {
+      "event": "advance_stage_blocked",
+      "detail": {
+        "allowed": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+        "stage": "RISK_REVIEW",
+        "current_status": "BLOCKED",
+        "formal_walk_forward_executed": false,
+        "oos_executed": false
+      }
+    },
+    {
+      "event": "advance_stage_blocked",
+      "detail": {
+        "allowed": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+        "stage": "UNTOUCHED_OOS_RESERVATION",
+        "current_status": "BLOCKED",
+        "formal_walk_forward_executed": false,
+        "oos_executed": false
+      }
+    },
+    {
+      "event": "advance_stage_blocked",
+      "detail": {
+        "allowed": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+        "stage": "OOS_EXECUTION_AUTHORIZATION",
+        "current_status": "BLOCKED",
+        "formal_walk_forward_executed": false,
+        "oos_executed": false
+      }
+    },
+    {
+      "event": "advance_stage_blocked",
+      "detail": {
+        "allowed": false,
+        "reason": "STAGE_DEFAULT_BLOCKED_V1_INFRASTRUCTURE_ONLY",
+        "stage": "DEMO_ELIGIBILITY",
+        "current_status": "BLOCKED",
+        "formal_walk_forward_executed": false,
+        "oos_executed": false
+      }
+    },
+    {
+      "event": "attempt_promote_blocked",
+      "detail": {
+        "allowed": false,
+        "reason": "PROMOTION_BLOCKED_V1",
+        "all_stages_passed": false,
+        "founder_authorized": false,
+        "selected_strategy": null,
+        "formal_walk_forward_executed": false,
+        "oos_executed": false,
+        "demo_eligibility": false
+      }
+    }
+  ]
+}

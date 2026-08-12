@@ -1,0 +1,11 @@
+{
+  "reserved_registry_checksum": "560055f9d37839cd58e73c9dbb43e909a371dc298e33b8df06ea726ababd54e4",
+  "candidate_checksum": "fcd75e922a002bc6fc4238a5288f5e997354674d80c7acf03a6c92079be62dd4",
+  "dataset_semantic_checksum": "63222b8dbbd5b73b459983415c56398c381d29f15a9a25022b2012034a038a74",
+  "status": "SEALED_NOT_CONSUMED",
+  "fixture_only": true,
+  "seal_algorithm": "sha256_json_canonical",
+  "seal": "9e0dea64a352db8fa5a2b2d746bf5e111918ccb6b04fac5545f631d892fa5d3c",
+  "oos_revealed_to_candidate": false,
+  "oos_consumed": false
+}

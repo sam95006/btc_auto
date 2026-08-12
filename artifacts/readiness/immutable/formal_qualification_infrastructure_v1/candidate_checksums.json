@@ -1,0 +1,9 @@
+{
+  "schema": "NEXUS_FORMAL_QUALIFICATION_INFRASTRUCTURE_V1",
+  "candidate_id": "SYNTHETIC_QUAL_CANDIDATE_V1",
+  "fixture_only": true,
+  "selected": false,
+  "candidate_checksum": "b2437b5194774966541bbb51346c9b9e02c8471afb787d4cd24062f583ae309a",
+  "semantic_checksum": "7417675d102df3ce762ec984160c50f38dbd2af3a00a49f3aa64a3b0a957a1e2",
+  "parameter_checksum": "ea8bf8eb5dad3b204d6aef7b25064fc0556e0e1f5c1a2e44d4d9e3fa2b090ec0"
+}

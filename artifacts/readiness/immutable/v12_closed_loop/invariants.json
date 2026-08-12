@@ -1,0 +1,16 @@
+{
+  "adapter_id": "NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1",
+  "bridge_module": "backend.nexus_decision.execution_bridge",
+  "bridge_schema": "nexus_decision_execution_bridge_v11_1",
+  "canonical_engine": "backend.nexus_execution.execution_simulator_v1_1.AutonomousExecutionSimulatorV11",
+  "canonical_path_complete_on_completed": true,
+  "cost_model_version": "founder-conservative-v1-1-2026-08-05",
+  "decorative_id_violations": 0,
+  "exchange_write_attempt_count": 0,
+  "false_learning_claim_count": 0,
+  "lesson_gate_blocks_policy_effect": true,
+  "linkage_authority_bridge": true,
+  "ontology_complete_on_completed": true,
+  "order_attempt_count_via_decision": 0,
+  "strategy_mutation_attempt_count": 0
+}

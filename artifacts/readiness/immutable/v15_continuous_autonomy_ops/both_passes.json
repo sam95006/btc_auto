@@ -1,0 +1,60 @@
+{
+  "schema": "v15_continuous_autonomy_ops",
+  "program_id": "NEXUS_V15_CONTINUOUS_AUTONOMY_OPS",
+  "lane": "V15-J",
+  "branch": "feature/v15-continuous-autonomy-operations",
+  "base": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
+  "lane_head": "8d64a60b53446bd43029116b96fe0f66a895c837",
+  "created_at": "2026-08-05T15:19:33Z",
+  "pass1": {
+    "overall_status": "PASS",
+    "proofs_passed": 9,
+    "proofs_total": 9,
+    "failed": []
+  },
+  "pass2": {
+    "overall_status": "PASS",
+    "proofs_passed": 8,
+    "proofs_total": 8,
+    "failed": []
+  },
+  "both_passes": true,
+  "pytest_rc": 0,
+  "exchange_write_attempt_count": 0,
+  "demo_order_count": 0,
+  "shadow_order_count": 0,
+  "mainnet_attempt_count": 0,
+  "real_money_attempt_count": 0,
+  "formal_walk_forward_executed": false,
+  "oos_reservation_created": false,
+  "oos_executed": false,
+  "oos_consumed": false,
+  "strategy_promoted": false,
+  "PR27_merged": false,
+  "qualification_advanced": false,
+  "hard_bans": {
+    "demo": true,
+    "shadow": true,
+    "exchange_write": true,
+    "mainnet": true,
+    "real_money": true,
+    "PR27_merge": true,
+    "formal_walk_forward_execution": true,
+    "real_oos_reservation": true,
+    "real_oos_execution": true,
+    "real_oos_consumption": true,
+    "strategy_promotion": true,
+    "fabricated_edge": true,
+    "G_source_deletion": true
+  },
+  "owned_paths": [
+    "backend/nexus_autonomy/continuous_ops_control_v15/",
+    "tools/research/run_continuous_autonomy_ops_v15.py",
+    "tests/test_continuous_autonomy_ops_v15.py",
+    "artifacts/readiness/immutable/v15_continuous_autonomy_ops/"
+  ],
+  "status_json_emitted": false,
+  "exchange_write": false,
+  "PR27_draft_unmerged": true,
+  "auto_integration": false
+}

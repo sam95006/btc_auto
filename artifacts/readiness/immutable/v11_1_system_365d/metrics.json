@@ -1,0 +1,64 @@
+{
+  "campaign_digest": "8425d3b84bef2f94066d72d0eb030c0aa6d2171381dcfee30e1a7a224bd0bb41",
+  "candidate_count": 730,
+  "created_at": "2026-08-05T04:06:23Z",
+  "exchange_write_attempt_count": 0,
+  "focused_probes_pass": true,
+  "invariants": {
+    "checkpoint_loss_count": 0,
+    "cost_bridge_failure_count": 0,
+    "duplicate_position_count": 0,
+    "evidence_binding_failure_count": 0,
+    "exchange_write_attempt_count": 0,
+    "orphan_lifecycle_count": 0,
+    "risk_limit_bypass_count": 0,
+    "unclosed_intent_count": 0,
+    "untracked_fill_count": 0
+  },
+  "logical_days": 365,
+  "logical_hours": 8760.0,
+  "mode": "FULL",
+  "schema": "v11_1_system_365d_metrics",
+  "seed": 911365,
+  "session_metrics": {
+    "accelerated_wall_time_seconds": 0.578567,
+    "candidate_count": 730,
+    "checkpoint_count": 20,
+    "cpu_time_seconds": 0.4375,
+    "events_processed": 159,
+    "exit_count": 4,
+    "intent_count": 4,
+    "ledger_size_bytes": 126976,
+    "lesson_queue_len": 4,
+    "logical_hours": 8760.0,
+    "memory_peak_bytes": 31838208,
+    "position_count": 4,
+    "provider_failure_count": 130,
+    "recovery_count": 1,
+    "reflection_queue_len": 4,
+    "restart_count": 1
+  },
+  "universe": {
+    "liquidity_collapse_events": 12,
+    "logical_day_span": {
+      "distinct_days": 365,
+      "max": 364,
+      "min": 0
+    },
+    "symbol_count": 5,
+    "symbols": [
+      "BNBUSDT",
+      "BTCUSDT",
+      "ETHUSDT",
+      "SOLUSDT",
+      "XRPUSDT"
+    ],
+    "vol_regime_count": 4,
+    "vol_regimes": [
+      "CRISIS",
+      "HIGH",
+      "LOW",
+      "MEDIUM"
+    ]
+  }
+}

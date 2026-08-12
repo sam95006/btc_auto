@@ -1,0 +1,23 @@
+{
+  "schema": "v15_private_core_redteam",
+  "program_id": "NEXUS_V15_PRIVATE_CORE_FINAL_FALSE_PASS_REDTEAM",
+  "lane": "V15-L",
+  "branch": "feature/v15-private-core-final-redteam",
+  "base_head": "a7c14d9e9004e0e3a6399424fa3375fdea17e367",
+  "pass_number": 2,
+  "passed": true,
+  "recommendation": "NEXUS_V15_PRIVATE_CORE_FINAL_REDTEAM_PASS",
+  "scenario_pass_count": 17,
+  "scenario_total_count": 17,
+  "fixture_pass_count": 6,
+  "fixture_total_count": 6,
+  "attack_blocked_count": 17,
+  "platform_blocked_pass_count": 0,
+  "production_ast_survivors": 0,
+  "critical_finding_count": 0,
+  "exchange_write_attempt_count": 0,
+  "secret_leak_count": 0,
+  "mainnet_client_created_count": 0,
+  "v15_readiness_blocked_by_survivors": false,
+  "created_at": "2026-08-05T15:21:52Z"
+}

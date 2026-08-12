@@ -1,0 +1,31 @@
+{
+  "exchange": "BYBIT",
+  "ws": "wss://stream.bybit.com/v5/public/linear",
+  "duration_minutes": 15.0,
+  "smoke_symbol_count": 5,
+  "storage_root": ".nexus_runtime/microstructure/",
+  "storage_cap_bytes": 5368709120,
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "SOXLUSDT",
+    "HYPEUSDT"
+  ],
+  "universe_snapshot": {
+    "universe_snapshot_id": "aa0121c85edb3c68",
+    "smoke_cohort_label": "CAPTURE_SMOKE_COHORT_NOT_PRODUCTION_UNIVERSE",
+    "smoke_symbol_count": 5,
+    "production_ready_subscription_plan_min_symbols": 25,
+    "symbols": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "SOLUSDT",
+      "SOXLUSDT",
+      "HYPEUSDT"
+    ],
+    "selection_basis": "deterministic_top_turnover24h_linear_usdt",
+    "future_strategy_performance_not_used": true,
+    "fetched_at": "2026-08-04T04:08:11Z"
+  }
+}

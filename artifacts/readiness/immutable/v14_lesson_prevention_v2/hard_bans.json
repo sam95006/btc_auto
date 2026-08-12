@@ -1,0 +1,18 @@
+{
+  "enforced": true,
+  "hard_bans": [
+    "no_policy_effect_lessons_while_v23_incomplete",
+    "no_fixture_as_real_policy_effect_proof",
+    "no_loss_as_automatic_bad_process",
+    "no_risk_leverage_size_stop_promotion_mutation",
+    "no_profitability_claim",
+    "no_fabricated_ai_learning",
+    "no_demo_shadow_exchange_write",
+    "no_mainnet_real_money",
+    "no_oos_walkforward",
+    "no_pr27_merge",
+    "no_auto_integrate",
+    "no_v23_complete_claim",
+    "no_secret_logging"
+  ]
+}

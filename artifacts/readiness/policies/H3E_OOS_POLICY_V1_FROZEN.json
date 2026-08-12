@@ -1,0 +1,63 @@
+{
+  "policy_id": "H3E_OOS_POLICY_V1_FROZEN",
+  "qualification_role": "PRIMARY_QUALIFICATION_COHORT",
+  "hypothesis_id": "H3E_60m_pullback_reject_240m_down",
+  "strategy": "trend_following",
+  "regime": "TRENDING_DOWN",
+  "side": "Sell",
+  "entry_rules": {
+    "entry_logic": "60m_pullback_rejection_in_240m_downtrend",
+    "parameter_values": {
+      "min_move_to_cost": 2.5,
+      "cooldown_15m_bars": 24
+    },
+    "churn_logic": "one_per_pullback"
+  },
+  "confirmation_rules": {
+    "confirmation_logic": "240m down; 60m pullback to SMA/resistance reject; 15m sell trigger",
+    "htf": "240m",
+    "structure_tf": "60m",
+    "entry_tf": "15m"
+  },
+  "cost_gate_rules": {
+    "MIN_NET_REWARD_RISK_RATIO": 1.2,
+    "MIN_NET_REWARD_TO_COST": 1.5,
+    "floors_immutable": true,
+    "maker_assumption_forbidden": true
+  },
+  "geometry_rules": {
+    "structural_stop_and_target_required": true,
+    "exit_logic": "structural_geometry",
+    "no_look_ahead": true
+  },
+  "risk_sizing_rules": {
+    "margin_usdt": 20,
+    "leverage": 25,
+    "margin_mode": "ISOLATED",
+    "maximum_notional": 500,
+    "maximum_single_trade_loss": 3
+  },
+  "position_lifecycle": {
+    "max_concurrent_positions": 1,
+    "one_signal_per_event": true,
+    "cooldown_15m_bars": 24
+  },
+  "exit_rules": {
+    "structural_tp_or_stop": true,
+    "exit_logic": "structural_geometry"
+  },
+  "cost_assumptions": {
+    "fee_model": "conservative_taker_round_trip",
+    "taker_fee_rate_default": 0.00055,
+    "spread_model": "bps_proxy_in_slippage",
+    "slippage_model": "conservative_bps_proxy",
+    "funding_model": "conservative_buffer_when_unavailable_else_asof",
+    "maker_sensitivity": "NON_QUALIFYING_DIAGNOSTIC_ONLY"
+  },
+  "source_commit": "8dec1ac5646e08b5a8bd05b2ccc230a70f65b83b",
+  "created_at": "2026-08-02T15:57:33Z",
+  "frozen_before_oos_download": true,
+  "mutation_forbidden_until_oos_terminal": true,
+  "approval_phrase_required_for_oos": "APPROVE_NEXUS_H3_UNTOUCHED_OOS_V1",
+  "policy_checksum": "bca97fa35cc8c49642901de409cc67cb7760c2ac83dd42a82cbab20999e2ba33"
+}

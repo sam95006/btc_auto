@@ -1,0 +1,172 @@
+{
+  "all_match": true,
+  "created_at": "2026-08-05T08:34:03Z",
+  "results": [
+    {
+      "as_of_ms": 1720000105000,
+      "feature_count": 12,
+      "fingerprint": "0797af0654e44050af9384b190f5c0d3008428bf4625acf287723eb65ead3e26",
+      "fingerprint_b": "0797af0654e44050af9384b190f5c0d3008428bf4625acf287723eb65ead3e26",
+      "fixture_checksum": "6e5d80e49dae5d67293e3d1d98054e392af94ec390d9e005b75d59e1689696eb",
+      "match": true,
+      "schema": "v13_e_deterministic_replay",
+      "seed": "v13e-case-000",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "as_of_ms": 1720000105000,
+      "feature_count": 12,
+      "fingerprint": "90fb4b0e30a4a914f710bb3645fb38ea59a552099de1ed9187317eab6caaa73d",
+      "fingerprint_b": "90fb4b0e30a4a914f710bb3645fb38ea59a552099de1ed9187317eab6caaa73d",
+      "fixture_checksum": "6e5d80e49dae5d67293e3d1d98054e392af94ec390d9e005b75d59e1689696eb",
+      "match": true,
+      "schema": "v13_e_deterministic_replay",
+      "seed": "v13e-case-000",
+      "symbol": "ETHUSDT"
+    },
+    {
+      "as_of_ms": 1720000105000,
+      "feature_count": 12,
+      "fingerprint": "226cb29fbccbaed42039b58bbb1ca5c2adcbb3e47280db886d1fab0611df89b9",
+      "fingerprint_b": "226cb29fbccbaed42039b58bbb1ca5c2adcbb3e47280db886d1fab0611df89b9",
+      "fixture_checksum": "6e5d80e49dae5d67293e3d1d98054e392af94ec390d9e005b75d59e1689696eb",
+      "match": true,
+      "schema": "v13_e_deterministic_replay",
+      "seed": "v13e-case-000",
+      "symbol": "SOLUSDT"
+    },
+    {
+      "as_of_ms": 1720000105000,
+      "feature_count": 12,
+      "fingerprint": "eb566a9ce38e7232deb612f5ab5cc62e78ba52c63e8fb4cc651a7dda39d754ef",
+      "fingerprint_b": "eb566a9ce38e7232deb612f5ab5cc62e78ba52c63e8fb4cc651a7dda39d754ef",
+      "fixture_checksum": "898765056e36de973e3df2877ec792b463ec924eb1a16a4da22dcea1de74ad19",
+      "match": true,
+      "schema": "v13_e_deterministic_replay",
+      "seed": "v13e-case-001",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "as_of_ms": 1720000105000,
+      "feature_count": 12,
+      "fingerprint": "9d12e4d102f1890dec82eb4e52bcb80ace50f7a6674ec1ae195fb6ec679e7908",
+      "fingerprint_b": "9d12e4d102f1890dec82eb4e52bcb80ace50f7a6674ec1ae195fb6ec679e7908",
+      "fixture_checksum": "898765056e36de973e3df2877ec792b463ec924eb1a16a4da22dcea1de74ad19",
+      "match": true,
+      "schema": "v13_e_deterministic_replay",
+      "seed": "v13e-case-001",
+      "symbol": "ETHUSDT"
+    },
+    {
+      "as_of_ms": 1720000105000,
+      "feature_count": 12,
+      "fingerprint": "dfa9c6e5c500558678428bc737f43c64881ac4190f975522c2bc9e484bfa1935",
+      "fingerprint_b": "dfa9c6e5c500558678428bc737f43c64881ac4190f975522c2bc9e484bfa1935",
+      "fixture_checksum": "898765056e36de973e3df2877ec792b463ec924eb1a16a4da22dcea1de74ad19",
+      "match": true,
+      "schema": "v13_e_deterministic_replay",
+      "seed": "v13e-case-001",
+      "symbol": "SOLUSDT"
+    },
+    {
+      "as_of_ms": 1720000105000,
+      "feature_count": 12,
+      "fingerprint": "afba44bcc4505e869e6a3c2ddbecf6a9f30292b4e10221b9bea8fb0d0951d96d",
+      "fingerprint_b": "afba44bcc4505e869e6a3c2ddbecf6a9f30292b4e10221b9bea8fb0d0951d96d",
+      "fixture_checksum": "bf9c4eadc4ee7e2b0d67b03f87861ce778ee2b3b243ae7248ab3e6a25e78f545",
+      "match": true,
+      "schema": "v13_e_deterministic_replay",
+      "seed": "v13e-case-002",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "as_of_ms": 1720000105000,
+      "feature_count": 12,
+      "fingerprint": "bfdf427385958bca585fc3229db93706e06e57d6da2e2673a320b79832247566",
+      "fingerprint_b": "bfdf427385958bca585fc3229db93706e06e57d6da2e2673a320b79832247566",
+      "fixture_checksum": "bf9c4eadc4ee7e2b0d67b03f87861ce778ee2b3b243ae7248ab3e6a25e78f545",
+      "match": true,
+      "schema": "v13_e_deterministic_replay",
+      "seed": "v13e-case-002",
+      "symbol": "ETHUSDT"
+    },
+    {
+      "as_of_ms": 1720000105000,
+      "feature_count": 12,
+      "fingerprint": "3bbef62595b840bf28be710ed13cc909082866ec043f531f62d5350021bd9890",
+      "fingerprint_b": "3bbef62595b840bf28be710ed13cc909082866ec043f531f62d5350021bd9890",
+      "fixture_checksum": "bf9c4eadc4ee7e2b0d67b03f87861ce778ee2b3b243ae7248ab3e6a25e78f545",
+      "match": true,
+      "schema": "v13_e_deterministic_replay",
+      "seed": "v13e-case-002",
+      "symbol": "SOLUSDT"
+    },
+    {
+      "as_of_ms": 1720000105000,
+      "feature_count": 12,
+      "fingerprint": "b4f63dc2d1e20680f1c4c3f050a9f2ae699d0ed6a77069480b880e27745ebe29",
+      "fingerprint_b": "b4f63dc2d1e20680f1c4c3f050a9f2ae699d0ed6a77069480b880e27745ebe29",
+      "fixture_checksum": "d3a097a2ed6ac758fb0aae44e140595c1ac381fbb896054d464b79064506fedd",
+      "match": true,
+      "schema": "v13_e_deterministic_replay",
+      "seed": "v13e-case-003",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "as_of_ms": 1720000105000,
+      "feature_count": 12,
+      "fingerprint": "3ebf67f89a9f2dcf6e877ef7bd7ec2297572af472f6ac9132a03ec4273642042",
+      "fingerprint_b": "3ebf67f89a9f2dcf6e877ef7bd7ec2297572af472f6ac9132a03ec4273642042",
+      "fixture_checksum": "d3a097a2ed6ac758fb0aae44e140595c1ac381fbb896054d464b79064506fedd",
+      "match": true,
+      "schema": "v13_e_deterministic_replay",
+      "seed": "v13e-case-003",
+      "symbol": "ETHUSDT"
+    },
+    {
+      "as_of_ms": 1720000105000,
+      "feature_count": 12,
+      "fingerprint": "cf2550e9ba3c1a4acd46d35887c5b057dc45ca4b3939c1a9db898d8892ed34a5",
+      "fingerprint_b": "cf2550e9ba3c1a4acd46d35887c5b057dc45ca4b3939c1a9db898d8892ed34a5",
+      "fixture_checksum": "d3a097a2ed6ac758fb0aae44e140595c1ac381fbb896054d464b79064506fedd",
+      "match": true,
+      "schema": "v13_e_deterministic_replay",
+      "seed": "v13e-case-003",
+      "symbol": "SOLUSDT"
+    },
+    {
+      "as_of_ms": 1720000105000,
+      "feature_count": 12,
+      "fingerprint": "4a270d94f57dde840b1ec1fcb1c95815b7d13ce2acc68d4443d3bdfe7c0f80ed",
+      "fingerprint_b": "4a270d94f57dde840b1ec1fcb1c95815b7d13ce2acc68d4443d3bdfe7c0f80ed",
+      "fixture_checksum": "9a62ffd76e4477fa835bca31860243d1efcf296a9b756322297086f9dcd8356e",
+      "match": true,
+      "schema": "v13_e_deterministic_replay",
+      "seed": "v13e-case-004",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "as_of_ms": 1720000105000,
+      "feature_count": 12,
+      "fingerprint": "8620e554125c125ab87df497b733432320b494a4cefd0d8ff3bdf75679f69bc6",
+      "fingerprint_b": "8620e554125c125ab87df497b733432320b494a4cefd0d8ff3bdf75679f69bc6",
+      "fixture_checksum": "9a62ffd76e4477fa835bca31860243d1efcf296a9b756322297086f9dcd8356e",
+      "match": true,
+      "schema": "v13_e_deterministic_replay",
+      "seed": "v13e-case-004",
+      "symbol": "ETHUSDT"
+    },
+    {
+      "as_of_ms": 1720000105000,
+      "feature_count": 12,
+      "fingerprint": "4f23b3d8aa20da372a054a51aa79085171d1d6a8438db16be3b1604f59054c14",
+      "fingerprint_b": "4f23b3d8aa20da372a054a51aa79085171d1d6a8438db16be3b1604f59054c14",
+      "fixture_checksum": "9a62ffd76e4477fa835bca31860243d1efcf296a9b756322297086f9dcd8356e",
+      "match": true,
+      "schema": "v13_e_deterministic_replay",
+      "seed": "v13e-case-004",
+      "symbol": "SOLUSDT"
+    }
+  ],
+  "schema": "v13_e_deterministic_replay_artifact"
+}

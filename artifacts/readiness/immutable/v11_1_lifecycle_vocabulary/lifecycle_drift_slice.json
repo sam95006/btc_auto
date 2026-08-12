@@ -1,0 +1,34 @@
+[
+  {
+    "adapter_contract_present": true,
+    "adapter_module": "backend.nexus_contracts.lifecycle.adapters",
+    "code": "DUAL_LIFECYCLE_VOCABULARY_SCOPED",
+    "control_plane_states": [
+      "IDLE",
+      "STARTING",
+      "RUNNING",
+      "PAUSED",
+      "RECOVERING",
+      "STOPPING",
+      "STOPPED",
+      "KILLED",
+      "FAILED_SAFE"
+    ],
+    "domain": "lifecycle",
+    "recommendation": "Scoped dual vocabulary retained. Homonymous tokens must use ControlPlaneSessionAdapter; silent name identity remains banned.",
+    "resolved_code": "DUAL_LIFECYCLE_VOCABULARY",
+    "session_states": [
+      "CREATED",
+      "INITIALIZING",
+      "RUNNING",
+      "PAUSING",
+      "PAUSED",
+      "RECOVERING",
+      "FINALIZING",
+      "COMPLETED",
+      "BLOCKED",
+      "FAILED_SAFE"
+    ],
+    "severity": "informational"
+  }
+]

@@ -1,0 +1,424 @@
+{
+  "Session_Scale_status": "NEXUS_V10_SESSION_SCALE_PASS",
+  "adapter_id": "NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1",
+  "candidate_counts": {
+    "SESSION_30D": 798,
+    "SESSION_90D": 2238
+  },
+  "canonical_execution_engine": "backend.nexus_execution.execution_simulator_v1_1.AutonomousExecutionSimulatorV11",
+  "canonical_execution_engine_count": 1,
+  "created_at": "2026-08-05T03:07:08Z",
+  "exchange_write_attempt_count": 0,
+  "focused_probes": {
+    "created_at": "2026-08-05T03:07:08Z",
+    "fault_classes_covered": [
+      "process_crashes",
+      "partial_fills",
+      "duplicate_intents",
+      "clock_jumps",
+      "provider_outages",
+      "storage_limits",
+      "ledger_corruption",
+      "snapshot_corruption"
+    ],
+    "probe_pass": true,
+    "probes": {
+      "clock_jump_backward": {
+        "exchange_write_attempt_count": 0,
+        "final_state": "COMPLETED",
+        "invariants_status": "PASS",
+        "probe_pass": true,
+        "session_pass": true
+      },
+      "clock_jump_forward": {
+        "exchange_write_attempt_count": 0,
+        "final_state": "COMPLETED",
+        "invariants_status": "PASS",
+        "probe_pass": true,
+        "session_pass": true
+      },
+      "disk_hard_limit": {
+        "exchange_write_attempt_count": 0,
+        "final_state": "BLOCKED",
+        "invariants_status": "PASS",
+        "probe_pass": true,
+        "session_pass": true
+      },
+      "ledger_corruption_probe": {
+        "corrupted_bytes": 32,
+        "path_exists": true,
+        "probe_pass": true,
+        "recovery_reason": "lkg_and_ledger_consistent",
+        "recovery_status": "RECOVERED"
+      },
+      "snapshot_corruption_probe": {
+        "path_exists": true,
+        "probe_pass": true,
+        "recovery_reason": "snapshot_corruption",
+        "recovery_status": "BLOCKED_AMBIGUOUS"
+      }
+    },
+    "schema": "v10_session_scale_focused_probes"
+  },
+  "injection_matrix": {
+    "catalog": [
+      "groq_429",
+      "sambanova_429",
+      "provider_timeout",
+      "provider_invalid_schema",
+      "stale_market_data",
+      "missing_market_data",
+      "duplicate_candidate",
+      "duplicate_order_intent",
+      "ledger_lock_contention",
+      "interrupted_ledger_append",
+      "snapshot_corruption",
+      "missing_latest_snapshot",
+      "disk_soft_limit",
+      "network_loss",
+      "partial_fill_before_crash",
+      "filled_order_before_snapshot",
+      "exit_event_before_position_snapshot",
+      "reflection_interruption",
+      "lesson_storage_interruption",
+      "pause_during_pending_intent",
+      "process_termination",
+      "clock_jump_forward",
+      "clock_jump_backward",
+      "disk_hard_limit",
+      "ledger_corruption_probe",
+      "snapshot_corruption_probe"
+    ],
+    "fault_class_to_injections": {
+      "clock_jumps": [
+        "clock_jump_forward",
+        "clock_jump_backward"
+      ],
+      "duplicate_intents": [
+        "duplicate_order_intent",
+        "duplicate_candidate"
+      ],
+      "ledger_corruption": [
+        "interrupted_ledger_append",
+        "ledger_lock_contention",
+        "ledger_corruption_probe"
+      ],
+      "partial_fills": [
+        "partial_fill_before_crash"
+      ],
+      "process_crashes": [
+        "process_termination",
+        "partial_fill_before_crash"
+      ],
+      "provider_outages": [
+        "groq_429",
+        "sambanova_429",
+        "provider_timeout",
+        "provider_invalid_schema",
+        "network_loss"
+      ],
+      "snapshot_corruption": [
+        "snapshot_corruption",
+        "missing_latest_snapshot",
+        "snapshot_corruption_probe"
+      ],
+      "storage_limits": [
+        "disk_soft_limit",
+        "disk_hard_limit"
+      ]
+    },
+    "fault_classes": [
+      "process_crashes",
+      "partial_fills",
+      "duplicate_intents",
+      "clock_jumps",
+      "provider_outages",
+      "storage_limits",
+      "ledger_corruption",
+      "snapshot_corruption"
+    ],
+    "focused_terminal_injections": [
+      "clock_jump_forward",
+      "clock_jump_backward",
+      "disk_hard_limit"
+    ],
+    "long_session_injections": [
+      "groq_429",
+      "sambanova_429",
+      "provider_timeout",
+      "provider_invalid_schema",
+      "stale_market_data",
+      "missing_market_data",
+      "duplicate_candidate",
+      "duplicate_order_intent",
+      "ledger_lock_contention",
+      "interrupted_ledger_append",
+      "snapshot_corruption",
+      "missing_latest_snapshot",
+      "disk_soft_limit",
+      "network_loss",
+      "partial_fill_before_crash",
+      "filled_order_before_snapshot",
+      "exit_event_before_position_snapshot",
+      "reflection_interruption",
+      "lesson_storage_interruption",
+      "pause_during_pending_intent",
+      "process_termination"
+    ],
+    "schema": "v10_execution_session_scale_injection_matrix"
+  },
+  "invariants": {
+    "duplicate_position_count": 0,
+    "exchange_write_attempt_count": 0,
+    "open_ambiguous_position_count": 0,
+    "orphan_lifecycle_count": 0,
+    "risk_limit_bypass_count": 0,
+    "unclosed_intent_count": 0,
+    "untracked_fill_count": 0
+  },
+  "logical_sessions_hours": [
+    720.0,
+    2160.0
+  ],
+  "long_session_injections": [
+    "groq_429",
+    "sambanova_429",
+    "provider_timeout",
+    "provider_invalid_schema",
+    "stale_market_data",
+    "missing_market_data",
+    "duplicate_candidate",
+    "duplicate_order_intent",
+    "ledger_lock_contention",
+    "interrupted_ledger_append",
+    "snapshot_corruption",
+    "missing_latest_snapshot",
+    "disk_soft_limit",
+    "network_loss",
+    "partial_fill_before_crash",
+    "filled_order_before_snapshot",
+    "exit_event_before_position_snapshot",
+    "reflection_interruption",
+    "lesson_storage_interruption",
+    "pause_during_pending_intent",
+    "process_termination"
+  ],
+  "mode": "FULL",
+  "package": "NEXUS_V10_SESSION_SCALE",
+  "runtime_mode": "ACCELERATED_HISTORICAL_REPLAY_SIMULATED_NO_EXCHANGE_WRITE",
+  "schema": "v10_session_scale",
+  "seed": 911100,
+  "session_scale_pass": true,
+  "sessions": {
+    "SESSION_30D": {
+      "Session_Scale_status": "NEXUS_V10_SESSION_SCALE_PASS",
+      "accelerated_wall_time_seconds": 0.7084298999998282,
+      "adapter_id": "NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1",
+      "candidate_count": 797,
+      "canonical_execution_engine": "backend.nexus_execution.execution_simulator_v1_1.AutonomousExecutionSimulatorV11",
+      "checkpoint_count": 24,
+      "cpu_time_seconds": 0.5625,
+      "exchange_write_attempt_count": 0,
+      "exit_count": 8,
+      "final_state": "COMPLETED",
+      "injection_flags": [
+        "groq_429",
+        "sambanova_429",
+        "provider_timeout",
+        "provider_invalid_schema",
+        "stale_market_data",
+        "missing_market_data",
+        "duplicate_candidate",
+        "duplicate_order_intent",
+        "ledger_lock_contention",
+        "interrupted_ledger_append",
+        "snapshot_corruption",
+        "missing_latest_snapshot",
+        "disk_soft_limit",
+        "network_loss",
+        "partial_fill_before_crash",
+        "filled_order_before_snapshot",
+        "exit_event_before_position_snapshot",
+        "reflection_interruption",
+        "lesson_storage_interruption",
+        "pause_during_pending_intent",
+        "process_termination",
+        "duplicate_candidate_absorbed"
+      ],
+      "intent_count": 8,
+      "invalid_transition_attempts": 0,
+      "invariants_counts": {
+        "duplicate_position_count": 0,
+        "exchange_write_attempt_count": 0,
+        "open_ambiguous_position_count": 0,
+        "orphan_lifecycle_count": 0,
+        "risk_limit_bypass_count": 0,
+        "unclosed_intent_count": 0,
+        "untracked_fill_count": 0
+      },
+      "invariants_status": "PASS",
+      "kill_switch_status": "READY",
+      "ledger_event_count": 183,
+      "lesson_queue_len": 8,
+      "logical_duration_hours": 720.0,
+      "memory_end_bytes": 38756352,
+      "memory_peak_bytes": 38756352,
+      "memory_start_bytes": 36524032,
+      "metrics": {
+        "accelerated_wall_time_seconds": 0.70843,
+        "candidate_count": 797,
+        "checkpoint_count": 24,
+        "cpu_time_seconds": 0.5625,
+        "events_processed": 183,
+        "exit_count": 8,
+        "intent_count": 8,
+        "ledger_size_bytes": 139264,
+        "logical_hours": 720.0,
+        "memory_peak_bytes": 38756352,
+        "position_count": 8,
+        "recovery_count": 1,
+        "restart_count": 5
+      },
+      "position_count": 8,
+      "provider_failure_count": 141,
+      "recovery_count": 1,
+      "reflection_queue_len": 5,
+      "restart_count": 5,
+      "schema": "v10_session_scale",
+      "seed": 911820,
+      "session_id": "SESSION_30D",
+      "session_pass": true,
+      "snapshot_count": 23,
+      "state_history_summary": {
+        "final_state": "COMPLETED",
+        "invalid_attempt_count": 0,
+        "session_id": "SESSION_30D",
+        "terminal": true,
+        "transition_count": 12,
+        "transitions_by_next_state": {
+          "COMPLETED": 1,
+          "FINALIZING": 1,
+          "INITIALIZING": 1,
+          "PAUSED": 2,
+          "PAUSING": 2,
+          "RECOVERING": 1,
+          "RUNNING": 4
+        },
+        "transitions_by_reason": {
+          "initialization_complete": 1,
+          "logical_deadline_reached": 2,
+          "pause_during_pending_intent": 4,
+          "recovery_ok": 1,
+          "resume_after_pause_during_pending_intent": 2,
+          "session_start_requested": 1,
+          "simulated_process_termination": 1
+        }
+      }
+    },
+    "SESSION_90D": {
+      "Session_Scale_status": "NEXUS_V10_SESSION_SCALE_PASS",
+      "accelerated_wall_time_seconds": 1.239106300000003,
+      "adapter_id": "NEXUS_EXECUTION_ORCHESTRATOR_ADAPTER_V1",
+      "candidate_count": 2237,
+      "canonical_execution_engine": "backend.nexus_execution.execution_simulator_v1_1.AutonomousExecutionSimulatorV11",
+      "checkpoint_count": 21,
+      "cpu_time_seconds": 0.75,
+      "exchange_write_attempt_count": 0,
+      "exit_count": 23,
+      "final_state": "COMPLETED",
+      "injection_flags": [
+        "groq_429",
+        "sambanova_429",
+        "provider_timeout",
+        "provider_invalid_schema",
+        "stale_market_data",
+        "missing_market_data",
+        "duplicate_candidate",
+        "duplicate_order_intent",
+        "ledger_lock_contention",
+        "interrupted_ledger_append",
+        "snapshot_corruption",
+        "missing_latest_snapshot",
+        "disk_soft_limit",
+        "network_loss",
+        "partial_fill_before_crash",
+        "filled_order_before_snapshot",
+        "exit_event_before_position_snapshot",
+        "reflection_interruption",
+        "lesson_storage_interruption",
+        "pause_during_pending_intent",
+        "process_termination",
+        "duplicate_candidate_absorbed"
+      ],
+      "intent_count": 23,
+      "invalid_transition_attempts": 0,
+      "invariants_counts": {
+        "duplicate_position_count": 0,
+        "exchange_write_attempt_count": 0,
+        "open_ambiguous_position_count": 0,
+        "orphan_lifecycle_count": 0,
+        "risk_limit_bypass_count": 0,
+        "unclosed_intent_count": 0,
+        "untracked_fill_count": 0
+      },
+      "invariants_status": "PASS",
+      "kill_switch_status": "READY",
+      "ledger_event_count": 467,
+      "lesson_queue_len": 21,
+      "logical_duration_hours": 2160.0,
+      "memory_end_bytes": 40411136,
+      "memory_peak_bytes": 40411136,
+      "memory_start_bytes": 36483072,
+      "metrics": {
+        "accelerated_wall_time_seconds": 1.239106,
+        "candidate_count": 2237,
+        "checkpoint_count": 21,
+        "cpu_time_seconds": 0.75,
+        "events_processed": 467,
+        "exit_count": 23,
+        "intent_count": 23,
+        "ledger_size_bytes": 307200,
+        "logical_hours": 2160.0,
+        "memory_peak_bytes": 40411136,
+        "position_count": 23,
+        "recovery_count": 1,
+        "restart_count": 1
+      },
+      "position_count": 23,
+      "provider_failure_count": 396,
+      "recovery_count": 1,
+      "reflection_queue_len": 19,
+      "restart_count": 1,
+      "schema": "v10_session_scale",
+      "seed": 913260,
+      "session_id": "SESSION_90D",
+      "session_pass": true,
+      "snapshot_count": 20,
+      "state_history_summary": {
+        "final_state": "COMPLETED",
+        "invalid_attempt_count": 0,
+        "session_id": "SESSION_90D",
+        "terminal": true,
+        "transition_count": 18,
+        "transitions_by_next_state": {
+          "COMPLETED": 1,
+          "FINALIZING": 1,
+          "INITIALIZING": 1,
+          "PAUSED": 4,
+          "PAUSING": 4,
+          "RECOVERING": 1,
+          "RUNNING": 6
+        },
+        "transitions_by_reason": {
+          "initialization_complete": 1,
+          "logical_deadline_reached": 2,
+          "pause_during_pending_intent": 8,
+          "recovery_ok": 1,
+          "resume_after_pause_during_pending_intent": 4,
+          "session_start_requested": 1,
+          "simulated_process_termination": 1
+        }
+      }
+    }
+  }
+}

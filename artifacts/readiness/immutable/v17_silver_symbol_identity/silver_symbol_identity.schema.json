@@ -1,0 +1,132 @@
+{
+  "schema": "v17_silver_symbol_identity_v1",
+  "title": "NEXUS Silver Symbol Identity",
+  "type": "object",
+  "required": [
+    "canonical_asset_id",
+    "canonical_instrument_id",
+    "exchange",
+    "exchange_symbol",
+    "market_type",
+    "quote_asset",
+    "base_asset",
+    "contract_multiplier",
+    "margin_kind",
+    "tick_size",
+    "lot_size",
+    "min_notional",
+    "listing_time",
+    "delisting_time",
+    "contract_rule_version"
+  ],
+  "properties": {
+    "canonical_asset_id": {
+      "type": "string",
+      "pattern": "^asset:[a-z0-9_\\-]+$"
+    },
+    "canonical_instrument_id": {
+      "type": "string",
+      "pattern": "^inst:"
+    },
+    "exchange": {
+      "type": "string",
+      "minLength": 1
+    },
+    "exchange_symbol": {
+      "type": "string",
+      "minLength": 1
+    },
+    "market_type": {
+      "enum": [
+        "spot",
+        "perp",
+        "future",
+        "options"
+      ]
+    },
+    "quote_asset": {
+      "type": "string",
+      "minLength": 1
+    },
+    "base_asset": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contract_multiplier": {
+      "type": "number"
+    },
+    "margin_kind": {
+      "enum": [
+        "linear",
+        "inverse",
+        "na"
+      ]
+    },
+    "tick_size": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "lot_size": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "min_notional": {
+      "type": "number",
+      "minimum": 0
+    },
+    "listing_time": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "delisting_time": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "contract_rule_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rename_lineage_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "predecessor_instrument_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "successor_instrument_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "enum": [
+        "active",
+        "delisted",
+        "renamed"
+      ]
+    },
+    "depeg_periods": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "asset",
+          "start_time",
+          "end_time",
+          "peg_asset"
+        ]
+      }
+    }
+  },
+  "additionalProperties": true
+}

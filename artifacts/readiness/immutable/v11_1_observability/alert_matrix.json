@@ -1,0 +1,441 @@
+{
+  "schema": "v11_1_private_observability_alert_matrix",
+  "created_at": "2026-08-05T04:07:51Z",
+  "alert_classes": [
+    "failure_state",
+    "staleness",
+    "data_quality",
+    "ambiguous_state",
+    "storage_floor",
+    "provider_capacity"
+  ],
+  "active_count": 13,
+  "alerts": [
+    {
+      "schema": "v11_1_private_observability_alert",
+      "alert_class": "failure_state",
+      "code": "DECISION_FAILURE_OR_BLOCKED",
+      "severity": "critical",
+      "message": "Decision lifecycle reports failure trap or blocked-ambiguous entries.",
+      "domain": "decision_lifecycle",
+      "active": true,
+      "evidence": {
+        "blocked_ambiguous_count": 2,
+        "failure_trap": true
+      },
+      "read_only": true,
+      "founder_private": true,
+      "mutation_attempted": false
+    },
+    {
+      "schema": "v11_1_private_observability_alert",
+      "alert_class": "failure_state",
+      "code": "SESSION_FAILED_SAFE_OR_BLOCKED",
+      "severity": "critical",
+      "message": "Session lifecycle in FAILED_SAFE or BLOCKED.",
+      "domain": "session_lifecycle",
+      "active": true,
+      "evidence": {
+        "states": [
+          "FAILED_SAFE"
+        ]
+      },
+      "read_only": true,
+      "founder_private": true,
+      "mutation_attempted": false
+    },
+    {
+      "schema": "v11_1_private_observability_alert",
+      "alert_class": "failure_state",
+      "code": "RISK_GATES_COMPROMISED",
+      "severity": "critical",
+      "message": "Risk gate hard bans no longer intact.",
+      "domain": "risk_gates",
+      "active": true,
+      "evidence": {
+        "detail": "adversarial_forbidden_action_bypass_attempt"
+      },
+      "read_only": true,
+      "founder_private": true,
+      "mutation_attempted": false
+    },
+    {
+      "schema": "v11_1_private_observability_alert",
+      "alert_class": "staleness",
+      "code": "DECISION_EVIDENCE_STALE",
+      "severity": "high",
+      "message": "Decision evidence older than 300s.",
+      "domain": "decision_lifecycle",
+      "active": true,
+      "evidence": {
+        "max_evidence_age_seconds": 420.0
+      },
+      "read_only": true,
+      "founder_private": true,
+      "mutation_attempted": false
+    },
+    {
+      "schema": "v11_1_private_observability_alert",
+      "alert_class": "staleness",
+      "code": "REFLECTION_QUEUE_STALE",
+      "severity": "high",
+      "message": "Reflection queue reports stalled/stale progress.",
+      "domain": "reflection_queue",
+      "active": true,
+      "evidence": {
+        "pending_count": 70,
+        "success_count": 10
+      },
+      "read_only": true,
+      "founder_private": true,
+      "mutation_attempted": false
+    },
+    {
+      "schema": "v11_1_private_observability_alert",
+      "alert_class": "data_quality",
+      "code": "DECISION_EVIDENCE_DQ_FAIL",
+      "severity": "high",
+      "message": "Decision evidence completeness/quality failed.",
+      "domain": "decision_lifecycle",
+      "active": true,
+      "evidence": {
+        "dq_detail": "incomplete_evidence"
+      },
+      "read_only": true,
+      "founder_private": true,
+      "mutation_attempted": false
+    },
+    {
+      "schema": "v11_1_private_observability_alert",
+      "alert_class": "data_quality",
+      "code": "LESSON_GATE_UNAUTHORIZED",
+      "severity": "critical",
+      "message": "Unauthorized policy-effect lessons detected.",
+      "domain": "lesson_gate",
+      "active": true,
+      "evidence": {
+        "unauthorized_lesson_count": 1
+      },
+      "read_only": true,
+      "founder_private": true,
+      "mutation_attempted": false
+    },
+    {
+      "schema": "v11_1_private_observability_alert",
+      "alert_class": "data_quality",
+      "code": "MICROSTRUCTURE_INTEGRITY_FAIL",
+      "severity": "high",
+      "message": "Microstructure integrity health degraded.",
+      "domain": "microstructure_health",
+      "active": true,
+      "evidence": {
+        "detail": "adversarial_integrity_degraded"
+      },
+      "read_only": true,
+      "founder_private": true,
+      "mutation_attempted": false
+    },
+    {
+      "schema": "v11_1_private_observability_alert",
+      "alert_class": "data_quality",
+      "code": "LEDGER_CHECKPOINT_DQ_FAIL",
+      "severity": "high",
+      "message": "Ledger/snapshot/checkpoint data quality failed.",
+      "domain": "ledger_snapshot_checkpoint",
+      "active": true,
+      "evidence": {},
+      "read_only": true,
+      "founder_private": true,
+      "mutation_attempted": false
+    },
+    {
+      "schema": "v11_1_private_observability_alert",
+      "alert_class": "ambiguous_state",
+      "code": "DECISION_BLOCKED_AMBIGUOUS",
+      "severity": "critical",
+      "message": "Decision objects in BLOCKED_AMBIGUOUS — no silent continue.",
+      "domain": "decision_lifecycle",
+      "active": true,
+      "evidence": {
+        "count": 2
+      },
+      "read_only": true,
+      "founder_private": true,
+      "mutation_attempted": false
+    },
+    {
+      "schema": "v11_1_private_observability_alert",
+      "alert_class": "ambiguous_state",
+      "code": "DURABILITY_BLOCKED_AMBIGUOUS_STATE",
+      "severity": "critical",
+      "message": "Durability reports BLOCKED_AMBIGUOUS_STATE.",
+      "domain": "ledger_snapshot_checkpoint",
+      "active": true,
+      "evidence": {
+        "ambiguous_count": 1
+      },
+      "read_only": true,
+      "founder_private": true,
+      "mutation_attempted": false
+    },
+    {
+      "schema": "v11_1_private_observability_alert",
+      "alert_class": "storage_floor",
+      "code": "STORAGE_FLOOR_OR_HARD_CAP",
+      "severity": "critical",
+      "message": "Storage floor failed or budget hard-cap blocked.",
+      "domain": "storage_budget",
+      "active": true,
+      "evidence": {
+        "mode": "STORAGE_BUDGET_BLOCKED",
+        "free_bytes": 1,
+        "minimum_free_disk_bytes": 32212254720,
+        "stop_reason": "minimum_free_disk_fail"
+      },
+      "read_only": true,
+      "founder_private": true,
+      "mutation_attempted": false
+    },
+    {
+      "schema": "v11_1_private_observability_alert",
+      "alert_class": "provider_capacity",
+      "code": "PROVIDER_CAPACITY_BLOCKED",
+      "severity": "high",
+      "message": "Provider capacity blocked (rate-limit/circuit/bucket/incomplete).",
+      "domain": "provider_health",
+      "active": true,
+      "evidence": {
+        "transport_status": "RATE_LIMITED",
+        "terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+        "success_count": 10,
+        "pending_count": 70,
+        "pending_ratio": 0.875
+      },
+      "read_only": true,
+      "founder_private": true,
+      "mutation_attempted": false
+    }
+  ],
+  "by_class": {
+    "failure_state": [
+      {
+        "schema": "v11_1_private_observability_alert",
+        "alert_class": "failure_state",
+        "code": "DECISION_FAILURE_OR_BLOCKED",
+        "severity": "critical",
+        "message": "Decision lifecycle reports failure trap or blocked-ambiguous entries.",
+        "domain": "decision_lifecycle",
+        "active": true,
+        "evidence": {
+          "blocked_ambiguous_count": 2,
+          "failure_trap": true
+        },
+        "read_only": true,
+        "founder_private": true,
+        "mutation_attempted": false
+      },
+      {
+        "schema": "v11_1_private_observability_alert",
+        "alert_class": "failure_state",
+        "code": "SESSION_FAILED_SAFE_OR_BLOCKED",
+        "severity": "critical",
+        "message": "Session lifecycle in FAILED_SAFE or BLOCKED.",
+        "domain": "session_lifecycle",
+        "active": true,
+        "evidence": {
+          "states": [
+            "FAILED_SAFE"
+          ]
+        },
+        "read_only": true,
+        "founder_private": true,
+        "mutation_attempted": false
+      },
+      {
+        "schema": "v11_1_private_observability_alert",
+        "alert_class": "failure_state",
+        "code": "RISK_GATES_COMPROMISED",
+        "severity": "critical",
+        "message": "Risk gate hard bans no longer intact.",
+        "domain": "risk_gates",
+        "active": true,
+        "evidence": {
+          "detail": "adversarial_forbidden_action_bypass_attempt"
+        },
+        "read_only": true,
+        "founder_private": true,
+        "mutation_attempted": false
+      }
+    ],
+    "staleness": [
+      {
+        "schema": "v11_1_private_observability_alert",
+        "alert_class": "staleness",
+        "code": "DECISION_EVIDENCE_STALE",
+        "severity": "high",
+        "message": "Decision evidence older than 300s.",
+        "domain": "decision_lifecycle",
+        "active": true,
+        "evidence": {
+          "max_evidence_age_seconds": 420.0
+        },
+        "read_only": true,
+        "founder_private": true,
+        "mutation_attempted": false
+      },
+      {
+        "schema": "v11_1_private_observability_alert",
+        "alert_class": "staleness",
+        "code": "REFLECTION_QUEUE_STALE",
+        "severity": "high",
+        "message": "Reflection queue reports stalled/stale progress.",
+        "domain": "reflection_queue",
+        "active": true,
+        "evidence": {
+          "pending_count": 70,
+          "success_count": 10
+        },
+        "read_only": true,
+        "founder_private": true,
+        "mutation_attempted": false
+      }
+    ],
+    "data_quality": [
+      {
+        "schema": "v11_1_private_observability_alert",
+        "alert_class": "data_quality",
+        "code": "DECISION_EVIDENCE_DQ_FAIL",
+        "severity": "high",
+        "message": "Decision evidence completeness/quality failed.",
+        "domain": "decision_lifecycle",
+        "active": true,
+        "evidence": {
+          "dq_detail": "incomplete_evidence"
+        },
+        "read_only": true,
+        "founder_private": true,
+        "mutation_attempted": false
+      },
+      {
+        "schema": "v11_1_private_observability_alert",
+        "alert_class": "data_quality",
+        "code": "LESSON_GATE_UNAUTHORIZED",
+        "severity": "critical",
+        "message": "Unauthorized policy-effect lessons detected.",
+        "domain": "lesson_gate",
+        "active": true,
+        "evidence": {
+          "unauthorized_lesson_count": 1
+        },
+        "read_only": true,
+        "founder_private": true,
+        "mutation_attempted": false
+      },
+      {
+        "schema": "v11_1_private_observability_alert",
+        "alert_class": "data_quality",
+        "code": "MICROSTRUCTURE_INTEGRITY_FAIL",
+        "severity": "high",
+        "message": "Microstructure integrity health degraded.",
+        "domain": "microstructure_health",
+        "active": true,
+        "evidence": {
+          "detail": "adversarial_integrity_degraded"
+        },
+        "read_only": true,
+        "founder_private": true,
+        "mutation_attempted": false
+      },
+      {
+        "schema": "v11_1_private_observability_alert",
+        "alert_class": "data_quality",
+        "code": "LEDGER_CHECKPOINT_DQ_FAIL",
+        "severity": "high",
+        "message": "Ledger/snapshot/checkpoint data quality failed.",
+        "domain": "ledger_snapshot_checkpoint",
+        "active": true,
+        "evidence": {},
+        "read_only": true,
+        "founder_private": true,
+        "mutation_attempted": false
+      }
+    ],
+    "ambiguous_state": [
+      {
+        "schema": "v11_1_private_observability_alert",
+        "alert_class": "ambiguous_state",
+        "code": "DECISION_BLOCKED_AMBIGUOUS",
+        "severity": "critical",
+        "message": "Decision objects in BLOCKED_AMBIGUOUS — no silent continue.",
+        "domain": "decision_lifecycle",
+        "active": true,
+        "evidence": {
+          "count": 2
+        },
+        "read_only": true,
+        "founder_private": true,
+        "mutation_attempted": false
+      },
+      {
+        "schema": "v11_1_private_observability_alert",
+        "alert_class": "ambiguous_state",
+        "code": "DURABILITY_BLOCKED_AMBIGUOUS_STATE",
+        "severity": "critical",
+        "message": "Durability reports BLOCKED_AMBIGUOUS_STATE.",
+        "domain": "ledger_snapshot_checkpoint",
+        "active": true,
+        "evidence": {
+          "ambiguous_count": 1
+        },
+        "read_only": true,
+        "founder_private": true,
+        "mutation_attempted": false
+      }
+    ],
+    "storage_floor": [
+      {
+        "schema": "v11_1_private_observability_alert",
+        "alert_class": "storage_floor",
+        "code": "STORAGE_FLOOR_OR_HARD_CAP",
+        "severity": "critical",
+        "message": "Storage floor failed or budget hard-cap blocked.",
+        "domain": "storage_budget",
+        "active": true,
+        "evidence": {
+          "mode": "STORAGE_BUDGET_BLOCKED",
+          "free_bytes": 1,
+          "minimum_free_disk_bytes": 32212254720,
+          "stop_reason": "minimum_free_disk_fail"
+        },
+        "read_only": true,
+        "founder_private": true,
+        "mutation_attempted": false
+      }
+    ],
+    "provider_capacity": [
+      {
+        "schema": "v11_1_private_observability_alert",
+        "alert_class": "provider_capacity",
+        "code": "PROVIDER_CAPACITY_BLOCKED",
+        "severity": "high",
+        "message": "Provider capacity blocked (rate-limit/circuit/bucket/incomplete).",
+        "domain": "provider_health",
+        "active": true,
+        "evidence": {
+          "transport_status": "RATE_LIMITED",
+          "terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+          "success_count": 10,
+          "pending_count": 70,
+          "pending_ratio": 0.875
+        },
+        "read_only": true,
+        "founder_private": true,
+        "mutation_attempted": false
+      }
+    ]
+  },
+  "founder_private": true,
+  "read_only": true,
+  "public_routes": false,
+  "execution_mutation_endpoint": false
+}

@@ -40,7 +40,18 @@ def _llm_gateway_instance():
 def _dialogue_service():
     global _dialogue
     if _dialogue is None:
-        _dialogue = StationDialogueService(StationChatLog(runtime_store), llm_gateway=_llm_gateway_instance())
+        from backend.services.nexus_runtime import nexus_runtime
+
+        _dialogue = StationDialogueService(
+            StationChatLog(runtime_store),
+            llm_gateway=_llm_gateway_instance(),
+            runtime_ops={
+                "refresh_live_exchange_state": nexus_runtime.refresh_live_exchange_state,
+                "flatten_all_positions": nexus_runtime.flatten_all_positions,
+                "resume_trading": nexus_runtime.resume_trading,
+                "reset_testnet_sandbox": nexus_runtime.reset_testnet_sandbox,
+            },
+        )
     return _dialogue
 
 
@@ -456,6 +467,50 @@ def register_nexus_routes(app):
             "adaptive_policy_routes_unavailable: %s", type(_adaptive_reg_exc).__name__
         )
 
+    try:
+        from backend.nexus_real_shadow.api_routes import register_real_shadow_routes
+
+        register_real_shadow_routes(app)
+    except Exception as _wave5_reg_exc:  # noqa: BLE001 — keep server boot if optional module missing
+        import logging as _logging
+
+        _logging.getLogger(__name__).warning(
+            "real_shadow_routes_unavailable: %s", type(_wave5_reg_exc).__name__
+        )
+
+    try:
+        from backend.nexus_demo_execution.api_routes import register_demo_execution_routes
+
+        register_demo_execution_routes(app)
+    except Exception as _demo_exec_reg_exc:  # noqa: BLE001 — keep server boot if optional module missing
+        import logging as _logging
+
+        _logging.getLogger(__name__).warning(
+            "demo_execution_routes_unavailable: %s", type(_demo_exec_reg_exc).__name__
+        )
+
+    try:
+        from backend.nexus_demo_execution.internal_market_routes import register_internal_market_routes
+
+        register_internal_market_routes(app)
+    except Exception as _mkt_reg_exc:  # noqa: BLE001
+        import logging as _logging
+
+        _logging.getLogger(__name__).warning(
+            "internal_market_routes_unavailable: %s", type(_mkt_reg_exc).__name__
+        )
+
+    try:
+        from backend.nexus_control_plane.api_routes import register_control_plane_routes
+
+        register_control_plane_routes(app)
+    except Exception as _cp_reg_exc:  # noqa: BLE001 — keep server boot if optional module missing
+        import logging as _logging
+
+        _logging.getLogger(__name__).warning(
+            "control_plane_routes_unavailable: %s", type(_cp_reg_exc).__name__
+        )
+
     @app.route("/api/nexus/stage3/summary")
     def nexus_stage3_summary():
         try:
@@ -530,6 +585,71 @@ def register_nexus_routes(app):
     def nexus_governance_status():
         snap = runtime_store.load_snapshot()
         return jsonify(snap.get("upgrade_pipeline") or {})
+
+    @app.route("/api/nexus/research/observability")
+    def nexus_research_observability():
+        """Read-only functional research observability — no secrets."""
+        try:
+            from pathlib import Path
+            import json
+
+            root = Path(__file__).resolve().parents[2]
+            path_edge = (
+                root
+                / "artifacts"
+                / "readiness"
+                / "immutable"
+                / "edge_discovery_diagnostics_v2"
+                / "functional_observability_status.json"
+            )
+            path_v12 = (
+                root
+                / "artifacts"
+                / "readiness"
+                / "immutable"
+                / "strategy_engine_broad_coverage_v1_2"
+                / "functional_observability_status.json"
+            )
+            path_v11 = (
+                root
+                / "artifacts"
+                / "readiness"
+                / "immutable"
+                / "strategy_engine_semantic_repair_v1_1"
+                / "functional_observability_status.json"
+            )
+            path = (
+                root
+                / "artifacts"
+                / "readiness"
+                / "immutable"
+                / "general_multi_strategy_engine_v1"
+                / "functional_observability_status.json"
+            )
+            if path_edge.is_file():
+                payload = json.loads(path_edge.read_text(encoding="utf-8"))
+            elif path_v12.is_file():
+                payload = json.loads(path_v12.read_text(encoding="utf-8"))
+            elif path_v11.is_file():
+                payload = json.loads(path_v11.read_text(encoding="utf-8"))
+            elif path.is_file():
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            else:
+                from backend.nexus_strategy_engine.observability import observability_contract
+
+                payload = {
+                    "schema": "functional_research_observability_status_v1",
+                    "status": "NOT_GENERATED_YET",
+                    "contract": observability_contract(),
+                    "secrets_present_in_payload": False,
+                    "read_only": True,
+                }
+            blob = json.dumps(payload)
+            if any(x in blob for x in ("gsk_", "csk-", "Bearer ")):
+                return jsonify({"error": "secret_leak_blocked"}), 500
+            return jsonify(payload)
+        except Exception as exc:
+            return jsonify({"error": "observability_unavailable", "detail": str(exc)[:120]}), 500
 
     @app.route("/api/nexus/performance-report")
     def nexus_performance_report():

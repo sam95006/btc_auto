@@ -1,0 +1,59 @@
+{
+  "schema": "research_universe_coverage_v1",
+  "fleet_architecture": false,
+  "dynamic_universe_symbol_count": 676,
+  "price_history_eligible_count": 99,
+  "derivatives_history_eligible_count": 99,
+  "historical_research_eligible_count": 99,
+  "mainstream_research_eligible_count": 94,
+  "mid_size_research_eligible_count": 5,
+  "small_research_eligible_count": 0,
+  "meme_research_eligible_count": 5,
+  "development_loaded_symbol_count": 16,
+  "development_loaded_symbols": [
+    "0GUSDT",
+    "10000SATSUSDT",
+    "1000PEPEUSDT",
+    "1000RATSUSDT",
+    "1000XECUSDT",
+    "ACEUSDT",
+    "ADAUSDT",
+    "BTCUSDT",
+    "DOGEUSDT",
+    "ETHUSDT",
+    "HYPEUSDT",
+    "SOLUSDT",
+    "SOXLUSDT",
+    "XAUUSDT",
+    "XRPUSDT",
+    "ZECUSDT"
+  ],
+  "development_meme_loaded": [
+    "10000SATSUSDT",
+    "1000PEPEUSDT",
+    "DOGEUSDT"
+  ],
+  "development_mid_loaded": [
+    "0GUSDT",
+    "ADAUSDT",
+    "HYPEUSDT",
+    "SOXLUSDT",
+    "ZECUSDT"
+  ],
+  "historical_record_count": 935989,
+  "historical_dataset_checksum": "4e0115e9a61c95d14af7fd7b8e381dae813b464897adb1a4d883f87b8d4f8b93",
+  "loaded_record_count_for_dev": 483973,
+  "enrichment_targets": {
+    "historical_research_eligible_count": 150,
+    "mid_size_research_eligible_count": 25,
+    "small_research_eligible_count": 15,
+    "meme_research_eligible_count": 8
+  },
+  "enrichment_status": "PARTIAL_PRIOR_CAPABILITY_SEALED_PLUS_LOCAL_CACHE",
+  "blockers_to_150": [
+    "download_queue_pending_remaining_high",
+    "listing_age_or_turnover_gates",
+    "this_task_uses_sealed_99_plus_local_cache_for_dev_execution"
+  ],
+  "demo_gates_not_weakened": true
+}

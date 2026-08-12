@@ -482,8 +482,12 @@ class LearningFeedbackLoop:
         guidance["blocked_symbols"] = sorted(blocked_symbols)
         bold_testnet = str(os.getenv("NEXUS_BOLD_TESTNET", "") or "").strip().lower() in {"1", "true", "yes", "on"}
         if (bold_testnet or REVENUE_GROWTH_MODE) and guidance.get("pause_new_entries"):
+            # Soft mode may reopen generic pauses, but must not erase regime
+            # blocks or liquidation-derived symbol lessons/cooldowns.
             guidance["pause_new_entries"] = False
-            guidance["regime_blocked"] = False
+            guidance["regime_blocked"] = bool(
+                market_regime and market_regime in (guidance.get("blocked_regimes") or [])
+            )
             cap = guidance.get("leverage_cap")
             if cap is None or float(cap or 0) <= 0:
                 guidance["leverage_cap"] = 10
@@ -493,15 +497,17 @@ class LearningFeedbackLoop:
 
         if sandbox_active() and not pure_ai_respect_learning():
             guidance["pause_new_entries"] = False
-            guidance["regime_blocked"] = False
-            guidance["symbol_cooldown"] = {}
-            guidance["blocked_symbols"] = []
-            guidance["failure_focus_flags"] = []
-            guidance["symbol_lessons"] = {}
+            guidance["regime_blocked"] = bool(
+                market_regime and market_regime in (guidance.get("blocked_regimes") or [])
+            )
+            # Preserve liquidation / loss-derived symbol safety state.
+            guidance["failure_focus_flags"] = list(guidance.get("failure_focus_flags") or [])
             guidance["learning_guard_mode"] = "testnet_sandbox"
         elif sandbox_active() and pure_ai_respect_learning():
             guidance["pause_new_entries"] = False
-            guidance["regime_blocked"] = False
+            guidance["regime_blocked"] = bool(
+                market_regime and market_regime in (guidance.get("blocked_regimes") or [])
+            )
             guidance["learning_guard_mode"] = "pure_ai_learning_active"
         return guidance
 

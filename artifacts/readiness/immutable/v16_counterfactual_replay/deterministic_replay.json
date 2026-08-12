@@ -1,0 +1,12 @@
+{
+  "deterministic": true,
+  "fingerprint": "08b45e7755df5ef10a5247312148f55fb3e0c4e16d4e2723ebe4fa6849d06ac4",
+  "fingerprints": [
+    "08b45e7755df5ef10a5247312148f55fb3e0c4e16d4e2723ebe4fa6849d06ac4",
+    "08b45e7755df5ef10a5247312148f55fb3e0c4e16d4e2723ebe4fa6849d06ac4",
+    "08b45e7755df5ef10a5247312148f55fb3e0c4e16d4e2723ebe4fa6849d06ac4"
+  ],
+  "runs": 3,
+  "schema": "v16_b_counterfactual_deterministic_replay",
+  "seed": "v16b-counterfactual-default"
+}

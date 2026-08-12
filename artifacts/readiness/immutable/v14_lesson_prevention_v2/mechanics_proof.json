@@ -1,0 +1,68 @@
+{
+  "REAL_LESSON_PREVENTION_STATUS": "NOT_THIS_PROOF",
+  "bad_process_source_count": 4,
+  "classification_matrix": {
+    "class_counts": {
+      "BAD_PROCESS_LOSS": 3,
+      "BAD_PROCESS_WIN": 1,
+      "GOOD_PROCESS_LOSS": 1,
+      "GOOD_PROCESS_WIN": 1,
+      "UNDETERMINED": 1
+    },
+    "loss_is_not_automatic_bad_process": true,
+    "required_classes_present": {
+      "BAD_PROCESS_LOSS": true,
+      "BAD_PROCESS_WIN": true,
+      "GOOD_PROCESS_LOSS": true,
+      "GOOD_PROCESS_WIN": true,
+      "UNDETERMINED": true
+    }
+  },
+  "control_fixture_label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+  "decision_effect": "ADDITIONAL_CONFIRMATION_REQUIRED",
+  "fixture_as_real_policy_effect_proof": false,
+  "forbidden_effect_attempted": false,
+  "good_process_loss_non_suppression": {
+    "auto_block_all_similar_valid_trades": false,
+    "block_created": false,
+    "good_process_loss_count": 1,
+    "good_process_loss_non_suppression_status": "PASS",
+    "source_trade_id": "V14G_FIX_good_loss"
+  },
+  "hard_risk_override_attempt": {
+    "ai_cannot_approve_order": true,
+    "ai_or_lesson_requested_prohibited_action": true,
+    "allowed_to_proceed": false,
+    "deterministic_rejected": true,
+    "deterministic_risk_final": true,
+    "deterministic_risk_rejected": true,
+    "fixture_label": "CONTROL_FIXTURE_NOT_REAL_TRADING_LEARNING",
+    "forbidden": true,
+    "mutation_applied": false,
+    "order_or_policy_mutation": false,
+    "requested_effect": "increase_leverage"
+  },
+  "hard_risk_override_path_test_status": "PASS",
+  "hard_risk_static_ban_status": "PASS",
+  "label": "FIXTURE_MECHANICS_ONLY_NOT_REAL_POLICY_EFFECT",
+  "later_candidate_id": "cand_V14G_FIX_bad_stale_later",
+  "lesson_cited_by_main_reasoner": true,
+  "lesson_created_count": 1,
+  "lesson_id": "a37dbb58-1274-431e-8053-ad91474e5a48",
+  "lesson_retrieved": true,
+  "lesson_retrieved_count": 1,
+  "lesson_stored_count": 1,
+  "main_reasoner_lesson_citation_count": 1,
+  "measurable_change": true,
+  "mechanics_proof_status": "PASS",
+  "misrepresented_as_real_learning": false,
+  "new_policy_effect_lesson_count": 0,
+  "permanent_policy_mutation": false,
+  "proof_digest": "5fbbc8d79f75e91e0b28f8a9c6c189e3a43ddc514be50773bc4b2cdcaa6d58ac",
+  "proof_level": "CONTROL_CHAIN_PROOF",
+  "repeatable_error_signature": "ERR|stale_or_invalid_data",
+  "repeated_error_source_trade_id": "V14G_FIX_bad_stale_loss",
+  "same_error_repeated": false,
+  "same_process_error_repeated_count": 0,
+  "schema": "v14_g_lesson_prevention_mechanics_proof"
+}

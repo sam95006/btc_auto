@@ -1,0 +1,43 @@
+{
+  "checkpoint_findings": [
+    {
+      "adapter_module": "backend.nexus_checkpoint.adapters",
+      "code": "MULTI_PAYLOAD_SCHEMAS_ADAPTED",
+      "domain": "checkpoint",
+      "modules": [
+        {
+          "CHECKPOINT_SCHEMA_V4": "blind_reflection_v23_checkpoint_v4",
+          "exists": true,
+          "module": "backend.nexus_reflection.checkpoint",
+          "role": "payload_owner"
+        },
+        {
+          "exists": true,
+          "module": "backend.nexus_private_control.checkpoint",
+          "role": "payload_owner"
+        },
+        {
+          "exists": true,
+          "module": "backend.nexus_decision.checkpoint",
+          "role": "payload_owner"
+        },
+        {
+          "exists": true,
+          "module": "backend.nexus_recovery.crash_recovery",
+          "role": "payload_owner"
+        }
+      ],
+      "recommendation": "Payload schemas remain subsystem-owned; cross-domain resume must go through nexus_checkpoint adapters into the canonical envelope.",
+      "severity": "informational"
+    }
+  ],
+  "critical_findings": [],
+  "generated_at": "2026-08-05T04:08:03Z",
+  "high_findings": [],
+  "notes": [
+    "Subsystems retain payload schema ownership.",
+    "Live V2.3 migration is dry-run only; no destructive rewrite.",
+    "Lifecycle MULTI_SCOPE_AUTHORITY remains out of scope for C4."
+  ],
+  "remaining_blockers": []
+}

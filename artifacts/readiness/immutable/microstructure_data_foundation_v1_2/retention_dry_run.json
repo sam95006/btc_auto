@@ -1,0 +1,74 @@
+{
+  "schema": "retention_dry_run",
+  "dry_run": true,
+  "deletion_executed": false,
+  "retention_candidate_partition_count": 190,
+  "retention_candidate_bytes": 50420129,
+  "compaction_candidate_count": 5,
+  "compaction_output_checksum_status": "NOT_EXECUTED_DRY_RUN",
+  "tiers_supported": [
+    "RAW_HOT",
+    "AGGREGATED_WARM",
+    "LONG_TERM_RESEARCH"
+  ],
+  "independent_retention_dimensions": [
+    "exchange",
+    "data_family",
+    "symbol_class",
+    "partition_age",
+    "integrity_status"
+  ],
+  "compaction_plan_sample": [
+    {
+      "source_partition": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\BTCUSDT\\ms12_RESTART_A1_1785828326_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_07_0.jsonl.gz",
+      "targets": [
+        "1s",
+        "5s",
+        "1m"
+      ],
+      "status": "DRY_RUN_ONLY",
+      "compaction_code_checksum": "e8595e854a68e452beaf4da792d06db8e7b08184f24d206cb904c202685b3b3c"
+    },
+    {
+      "source_partition": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\BTCUSDT\\ms12_RESTART_A1_1785828434_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_07_0.jsonl.gz",
+      "targets": [
+        "1s",
+        "5s",
+        "1m"
+      ],
+      "status": "DRY_RUN_ONLY",
+      "compaction_code_checksum": "e8595e854a68e452beaf4da792d06db8e7b08184f24d206cb904c202685b3b3c"
+    },
+    {
+      "source_partition": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\BTCUSDT\\ms12_RESTART_A2_1785830244_resume_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_07_0.jsonl.gz",
+      "targets": [
+        "1s",
+        "5s",
+        "1m"
+      ],
+      "status": "DRY_RUN_ONLY",
+      "compaction_code_checksum": "e8595e854a68e452beaf4da792d06db8e7b08184f24d206cb904c202685b3b3c"
+    },
+    {
+      "source_partition": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\BTCUSDT\\ms12_RESTART_A2_1785830244_resume_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_08_1.jsonl.gz",
+      "targets": [
+        "1s",
+        "5s",
+        "1m"
+      ],
+      "status": "DRY_RUN_ONLY",
+      "compaction_code_checksum": "e8595e854a68e452beaf4da792d06db8e7b08184f24d206cb904c202685b3b3c"
+    },
+    {
+      "source_partition": "G:\\我的雲端硬碟\\btc_bot\\.nexus_runtime\\microstructure\\v1_2\\BYBIT\\AGGRESSIVE_TRADE_FLOW\\BTCUSDT\\ms12_RESTART_A1_1785832375_AGGRESSIVE_TRADE_FLOW_BTCUSDT_20260804_08_0.jsonl.gz",
+      "targets": [
+        "1s",
+        "5s",
+        "1m"
+      ],
+      "status": "DRY_RUN_ONLY",
+      "compaction_code_checksum": "e8595e854a68e452beaf4da792d06db8e7b08184f24d206cb904c202685b3b3c"
+    }
+  ],
+  "created_at": "2026-08-04T12:00:20Z"
+}

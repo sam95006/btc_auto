@@ -4,7 +4,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from backend.nexus_research.features.registry import FeatureDefinition, Namespace, get_feature_registry
+from backend.nexus_research.features.feature_contracts import (
+    FeatureDefinition,
+    FeatureRegistryProtocol,
+    Namespace,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +16,7 @@ FORMULA_VERSION = "1.0.0"
 _SEEDED = False
 
 # Phase 6.5 Gate C — initial catalog (stable feature_id = namespace:name)
-_PRICE_TECH: list[dict[str, Any]] = [
+_PRICE_TECH: list[tuple[str, str, str, str]] = [
     ("open", "price", "raw", "1m"),
     ("high", "price", "raw", "1m"),
     ("low", "price", "raw", "1m"),
@@ -79,14 +83,28 @@ _DERIVATIVES: list[tuple[str, str]] = [
 ]
 
 
-def seed_default_feature_definitions(*, force: bool = False) -> dict[str, Any]:
-    """Register Phase 6.5 catalog. Idempotent — same IDs on every boot."""
+def seed_default_feature_definitions(
+    *,
+    force: bool = False,
+    registry: FeatureRegistryProtocol | None = None,
+) -> dict[str, Any]:
+    """Register Phase 6.5 catalog. Idempotent — same IDs on every boot.
+
+    ``registry`` is injected (DI). When omitted, resolves the singleton via the
+    registry module — composition root direction only (seed → registry), never
+    the reverse.
+    """
     global _SEEDED
+    if registry is None:
+        from backend.nexus_research.features.registry import get_feature_registry
+
+        reg: FeatureRegistryProtocol = get_feature_registry()
+    else:
+        reg = registry
+
     if _SEEDED and not force:
-        reg = get_feature_registry()
         return {"ok": True, "alreadySeeded": True, "count": len(reg.list_definitions())}
 
-    reg = get_feature_registry()
     count_before = len(reg.list_definitions())
 
     for name, category, raw_or_derived, timeframe in _PRICE_TECH:
@@ -152,3 +170,12 @@ def seed_default_feature_definitions(*, force: bool = False) -> dict[str, Any]:
         "formulaVersion": FORMULA_VERSION,
         "researchOnly": True,
     }
+
+
+# Re-export for callers that typed against seed module historically.
+__all__ = [
+    "FeatureDefinition",
+    "FORMULA_VERSION",
+    "Namespace",
+    "seed_default_feature_definitions",
+]

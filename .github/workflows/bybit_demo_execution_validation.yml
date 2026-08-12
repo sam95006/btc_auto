@@ -1,0 +1,89 @@
+name: bybit-demo-execution-validation
+
+# Bybit Demo Execution Validation — DEMO-only, no mainnet, no deploy.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "feature/bybit-demo-execution-validation"
+  pull_request:
+    branches:
+      - "feature/wave5-real-public-shadow-runtime"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bybit-demo-execution-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BYBIT_DEMO: "true"
+  MAINNET: "false"
+  REAL_MONEY: "false"
+  EXCHANGE_WRITE: "false"
+  DEMO_AUTONOMOUS: "false"
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: No mainnet security scan
+        run: |
+          python -c "from backend.nexus_demo_execution.security_scan import assert_no_mainnet; r=assert_no_mainnet(); print('violations=', r.violation_count)"
+
+  python-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+      - name: Bybit demo execution validation pytest
+        run: |
+          python -m pytest tests/test_bybit_demo_execution_validation.py -q --tb=line
+      - name: Post-12H forensic + geometry qualification pytest
+        run: |
+          python -m pytest \
+            tests/test_12h_post_forensic_repair.py \
+            tests/test_structural_geometry_qualify.py \
+            tests/test_identity_and_geometry_qualification.py \
+            tests/test_market_geometry_qualification.py \
+            tests/test_oos_risk_audit.py \
+            tests/test_cohort_edge_research.py \
+            tests/test_edge_research_v2.py \
+            tests/test_edge_research_v3.py \
+            tests/test_oos_preflight_cleanup.py \
+            tests/test_deep_consolidation_oos_preflight.py \
+            tests/test_12h_full_autonomous_engine.py \
+            tests/test_demo_6h_12h_session_engine.py \
+            -q --tb=line
+      - name: Offline demo validation gate runner
+        run: python tools/ci/demo_validation_gate_runner.py
+      - name: Compile nexus_demo_execution
+        run: python -m compileall -q backend/nexus_demo_execution
+
+  typecheck-optional:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Optional compileall type sanity
+        run: python -m compileall -q backend/nexus_demo_execution backend/api/server.py

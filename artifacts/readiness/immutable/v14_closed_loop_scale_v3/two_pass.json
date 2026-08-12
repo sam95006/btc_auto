@@ -1,0 +1,11 @@
+{
+  "all_pass": true,
+  "created_at": "2026-08-05T12:58:32Z",
+  "digests": [
+    "87f071e83cdd355f2284afccea6c0a431cceb235b2f32779ed920259b87f4587",
+    "87f071e83cdd355f2284afccea6c0a431cceb235b2f32779ed920259b87f4587"
+  ],
+  "pass_count": 2,
+  "passes_match": true,
+  "schema": "v14_k_closed_loop_scale_v3_two_pass"
+}

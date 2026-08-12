@@ -1,0 +1,334 @@
+name: founder-approved-demo-validation-deploy
+
+# Founder-approved deploy for independent Bybit Demo validation service.
+# Does NOT overwrite Stage3 live service (6a3b81652fdef84a45a2a553).
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type DEPLOY_DEMO_VALIDATION to confirm"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: founder-demo-validation-deploy
+  cancel-in-progress: false
+
+env:
+  SERVICE_NAME: nexus-bybit-demo-learning-validation
+  FORBIDDEN_SERVICE_ID: 6a3b81652fdef84a45a2a553
+
+jobs:
+  validate-input:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm deploy intent
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "DEPLOY_DEMO_VALIDATION" ]; then
+            echo "Confirmation mismatch. Expected DEPLOY_DEMO_VALIDATION"
+            exit 1
+          fi
+
+  test-gate-runner:
+    needs: validate-input
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/bybit-demo-execution-validation
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt pytest
+      - name: Offline gate runner
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: python tools/ci/demo_validation_gate_runner.py
+      - name: Pytest
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: python -m pytest tests/test_bybit_demo_execution_validation.py -q --tb=line
+      - name: Upload offline evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-validation-offline-evidence
+          path: artifacts/demo_validation/
+          if-no-files-found: warn
+
+  deploy:
+    needs: [validate-input, test-gate-runner]
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout validation branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/bybit-demo-execution-validation
+
+      - name: Record deploy meta
+        id: meta
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git rev-parse HEAD
+          git log -1 --oneline
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Zeabur CLI
+        run: npm i -g zeabur@latest
+
+      - name: Resolve or create validation service
+        id: resolve
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          PRESET_SERVICE_ID: ${{ secrets.ZEABUR_DEMO_VALIDATION_SERVICE_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ZEABUR_TOKEN:-}" ] || [ -z "${ZEABUR_PROJECT_ID:-}" ]; then
+            echo "Missing ZEABUR_TOKEN or ZEABUR_PROJECT_ID"
+            exit 1
+          fi
+          SID=$(python tools/ci/ensure_demo_validation_zeabur_service.py)
+          if [ -z "$SID" ] || [ "$SID" = "$FORBIDDEN_SERVICE_ID" ]; then
+            echo "BLOCKER: could not resolve independent service id"
+            exit 1
+          fi
+          echo "service_id=$SID" >> "$GITHUB_OUTPUT"
+          echo "resolved_service_id=$SID"
+          echo "resolved_service_id_prefix=${SID:0:6}"
+
+      - name: Apply env vars and deploy code
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+          BYBIT_DEMO_API_KEY: ${{ secrets.BYBIT_DEMO_API_KEY }}
+          BYBIT_DEMO_API_SECRET: ${{ secrets.BYBIT_DEMO_API_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ "$SERVICE_ID" = "$FORBIDDEN_SERVICE_ID" ]; then
+            echo "BLOCKED Stage3 id"
+            exit 1
+          fi
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur context set project --id "$ZEABUR_PROJECT_ID" -y -i=false || true
+          zeabur context set service --id "$SERVICE_ID" -y -i=false || true
+
+          set_var() {
+            local k="$1" v="$2"
+            set +e
+            zeabur variable create --id "$SERVICE_ID" -k "${k}=${v}" -y -i=false >/tmp/var_out.txt 2>&1
+            code=$?
+            if [ "$code" != "0" ]; then
+              zeabur variable update --id "$SERVICE_ID" -k "${k}=${v}" -y -i=false >/tmp/var_out.txt 2>&1
+              code=$?
+            fi
+            set -e
+            echo "var_${k}_exit=$code"
+          }
+
+          set_var BYBIT_DEMO true
+          set_var MAINNET false
+          set_var REAL_MONEY false
+          set_var LIVE_PRODUCTION false
+          set_var DEMO_AUTONOMOUS_ENABLED false
+          set_var AUTONOMOUS_SEND false
+          set_var NEXUS_AUTONOMOUS_DEMO_AUTO_SEND false
+          set_var EXCHANGE_WRITE false
+          set_var EXCHANGE_WRITE_ALLOWED false
+          set_var NEXUS_EXCHANGE_WRITE_ALLOWED false
+          set_var NEXUS_ZEABUR_CLEAN_OBSERVER false
+          set_var ARM false
+          set_var FIXED_LEVERAGE 25
+          set_var AI_CAN_CHANGE_LEVERAGE false
+          set_var BYBIT_DEMO_LEARNING_MODE true
+          # Prefer writable ephemeral path until independent volume is attached.
+          set_var NEXUS_DATA_DIR /tmp/nexus_demo_validation
+          set_var NEXUS_WEB_ONLY true
+          set_var NEXUS_EMBEDDED_WORKER false
+          set_var AUTO_SEND false
+          set_var OBSERVER false
+          set_var CLEAN24H false
+          set_var FORCE_PUSH false
+          # Founder 6H bounded autonomous validation window (NOT 24H, NOT mainnet).
+          set_var FOUNDER_GATE DEMO_AUTONOMOUS_6H_BOUNDED_VALIDATION
+          set_var FOUNDER_6H_APPROVED true
+          set_var FOUNDER_SMOKE_ORDER_APPROVED false
+          set_var FOUNDER_SMOKE_ALREADY_EXECUTED true
+          set_var DEMO_AUTONOMOUS_ENABLED false
+          set_var NEXUS_DEPLOYMENT_ID "${GITHUB_SHA:-unknown}"
+          set_var NEXUS_DEPLOY_RUN_ID "${GITHUB_RUN_ID:-unknown}"
+          set_var GITHUB_SHA "${GITHUB_SHA:-unknown}"
+          set_var GITHUB_RUN_ID "${GITHUB_RUN_ID:-unknown}"
+
+          if [ -n "${BYBIT_DEMO_API_KEY:-}" ]; then
+            set_var BYBIT_DEMO_API_KEY "$BYBIT_DEMO_API_KEY"
+            echo "demo_key_present=true"
+          else
+            echo "demo_key_present=false"
+          fi
+          if [ -n "${BYBIT_DEMO_API_SECRET:-}" ]; then
+            set_var BYBIT_DEMO_API_SECRET "$BYBIT_DEMO_API_SECRET"
+            echo "demo_secret_present=true"
+          else
+            echo "demo_secret_present=false"
+          fi
+
+          # Assemble a Stage3-style self-contained context from repo root.
+          # Zeabur CLI PackZip uses CWD; monorepo-root zip was PREBUILT_V2 with
+          # Status=UNKNOWN and empty runtime logs. Keep the SAME service id.
+          CTX=/tmp/demo_validation_ctx
+          rm -rf "$CTX"
+          mkdir -p "$CTX"
+          cp -a app.py run.py gunicorn.conf.py requirements.txt zbpack.json "$CTX/"
+          cp -a Dockerfile "$CTX/Dockerfile"
+          cp -a backend "$CTX/backend"
+          cp -a config "$CTX/config"
+          cp -a static "$CTX/static"
+          cp -a templates "$CTX/templates"
+          mkdir -p "$CTX/tools"
+          cp -a tools/ci "$CTX/tools/ci"
+          cp -a deploy/zeabur_bybit_demo_validation/entrypoint.sh "$CTX/entrypoint.sh"
+          chmod +x "$CTX/entrypoint.sh"
+          # Bake Founder 6H gate file as env fallback if Zeabur runtime env lags.
+          printf '%s\n' \
+            'FOUNDER_GATE=DEMO_AUTONOMOUS_6H_BOUNDED_VALIDATION' \
+            'FOUNDER_6H_APPROVED=true' \
+            'FOUNDER_SMOKE_ORDER_APPROVED=false' \
+            'DEMO_AUTONOMOUS_ENABLED=false' \
+            > "$CTX/demo_founder_gate.env"
+          # Prefer explicit gunicorn CMD; keep entrypoint available.
+          cat > "$CTX/Dockerfile" <<'DOCKER'
+          FROM python:3.11-slim-bookworm
+          ENV PYTHONDONTWRITEBYTECODE=1 \
+              PYTHONUNBUFFERED=1 \
+              BYBIT_DEMO=true \
+              MAINNET=false \
+              REAL_MONEY=false \
+              DEMO_AUTONOMOUS_ENABLED=false \
+              AUTONOMOUS_SEND=false \
+              EXCHANGE_WRITE=false \
+              NEXUS_WEB_ONLY=true \
+              NEXUS_EMBEDDED_WORKER=false \
+              NEXUS_DATA_DIR=/tmp/nexus_demo_validation \
+              PORT=8080
+          WORKDIR /app
+          RUN mkdir -p /tmp/nexus_demo_validation
+          COPY requirements.txt .
+          RUN pip install --no-cache-dir -r requirements.txt
+          COPY . .
+          RUN chmod +x entrypoint.sh || true
+          EXPOSE 8080
+          CMD ["/bin/sh", "./entrypoint.sh"]
+          DOCKER
+          # Fix heredoc leading spaces from YAML indentation
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/demo_validation_ctx/Dockerfile')
+          lines=p.read_text(encoding='utf-8').splitlines()
+          # strip common leading indent introduced by workflow YAML
+          cleaned=[]
+          for ln in lines:
+            cleaned.append(ln[10:] if ln.startswith('          ') else ln)
+          p.write_text('\n'.join(cleaned)+'\n', encoding='utf-8')
+          print('dockerfile_bytes', p.stat().st_size)
+          print(p.read_text(encoding='utf-8')[:400])
+          PY
+
+          set +e
+          (
+            cd "$CTX"
+            zeabur deploy --project-id "$ZEABUR_PROJECT_ID" --service-id "$SERVICE_ID" -i=false --json
+          ) > /tmp/deploy_out.txt 2>&1
+          DEPLOY_CODE=$?
+          set -e
+          echo "deploy_exit=$DEPLOY_CODE"
+          echo "deploy_out_bytes=$(wc -c </tmp/deploy_out.txt)"
+          sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/deploy_out.txt | tail -n 80
+          test "$DEPLOY_CODE" = "0"
+
+          set +e
+          zeabur service restart --id "$SERVICE_ID" --env-id 69d559b6474db8a99d6dd6bf -i=false >/tmp/restart_out.txt 2>&1
+          echo "restart_exit=$?"
+          sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/restart_out.txt | tail -n 20
+          set -e
+          # Give Zeabur time to pull/restart before smoke
+          sleep 45
+
+      - name: Create temporary domain if missing
+        id: domain
+        env:
+          ZEABUR_TOKEN: ${{ secrets.ZEABUR_TOKEN }}
+          ZEABUR_PROJECT_ID: ${{ secrets.ZEABUR_PROJECT_ID }}
+          SERVICE_ID: ${{ steps.resolve.outputs.service_id }}
+          # BTC project production env (same as Stage3; new service shares project env)
+          ZEABUR_ENV_ID: 69d559b6474db8a99d6dd6bf
+        run: |
+          set -euo pipefail
+          zeabur auth login --token "$ZEABUR_TOKEN" -i=false
+          zeabur context set project --id "$ZEABUR_PROJECT_ID" -y -i=false || true
+          zeabur context set service --id "$SERVICE_ID" -y -i=false || true
+          set +e
+          zeabur domain list --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" --json -i=false > /tmp/dom_out.txt 2>&1
+          set -e
+          sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/dom_out.txt | tail -n 20
+          URL=$(python tools/ci/extract_zeabur_app_url.py < /tmp/dom_out.txt || true)
+          if [ -z "$URL" ]; then
+            set +e
+            # Generated temp domain requires --domain (subdomain of zeabur.app)
+            zeabur domain create --id "$SERVICE_ID" --env-id "$ZEABUR_ENV_ID" -g --domain nexus-bybit-demo-val -y -i=false --json > /tmp/dom_create.txt 2>&1
+            CREATE_CODE=$?
+            set -e
+            echo "domain_create_exit=$CREATE_CODE"
+            sed -E 's/[A-Za-z0-9_+\/-]{40,}/***REDACTED***/g' /tmp/dom_create.txt | tail -n 40
+            URL=$(python tools/ci/extract_zeabur_app_url.py < /tmp/dom_create.txt || true)
+          fi
+          if [ -z "$URL" ]; then
+            # Fallback probe for known generated hostname
+            if curl -fsS "https://nexus-bybit-demo-val.zeabur.app/health" >/dev/null 2>&1; then
+              URL="https://nexus-bybit-demo-val.zeabur.app"
+            fi
+          fi
+          if [ -n "$URL" ]; then
+            echo "url=$URL" >> "$GITHUB_OUTPUT"
+            echo "bound_url=$URL"
+          else
+            echo "domain_unresolved=true"
+          fi
+
+      - name: Post-deploy HTTP smoke
+        env:
+          SECRET_URL: ${{ secrets.ZEABUR_DEMO_VALIDATION_URL }}
+          FALLBACK_URL: ${{ steps.domain.outputs.url }}
+        run: |
+          URL="${SECRET_URL:-${FALLBACK_URL:-}}"
+          if [ -z "$URL" ]; then
+            echo "No validation URL yet; set ZEABUR_DEMO_VALIDATION_URL after domain bind"
+            exit 0
+          fi
+          echo "smoke_url=$URL"
+          ok=0
+          for i in $(seq 1 36); do
+            if curl -fsS "$URL/health" >/tmp/health.json; then
+              ok=1
+              break
+            fi
+            sleep 10
+          done
+          test "$ok" = "1"
+          curl -fsS "$URL/api/nexus/demo-execution/status" >/tmp/demo_status.json || true
+          python tools/ci/print_demo_status_smoke.py

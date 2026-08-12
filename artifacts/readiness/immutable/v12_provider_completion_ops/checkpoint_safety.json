@@ -1,0 +1,26 @@
+{
+  "schema": "v12_provider_checkpoint_safety",
+  "created_at": "2026-08-05T07:48:30Z",
+  "source": "synthetic_incomplete_sot",
+  "checkpoint_path": null,
+  "checksum_sha256": "5fba17c4f80d589512dea096ebee5af21731b5077502eb709185542b6c3c8ed9",
+  "integrity_status": "OK",
+  "issues": [],
+  "completed_case_count": 53,
+  "pending_case_count": 27,
+  "critic_pending_count": 10,
+  "groq_success_count": 53,
+  "sambanova_success_count": 16,
+  "V2_3_complete": false,
+  "V2_3_terminal_status": "INCOMPLETE_PROVIDER_CAPACITY",
+  "safe_to_observe": true,
+  "safe_for_ops_control": true,
+  "real_resume_executed": false,
+  "ops_mutated_checkpoint": false,
+  "sot": {
+    "groq_success": 53,
+    "groq_pending": 27,
+    "sambanova_success": 16,
+    "sambanova_pending": 10
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "append_p50_s": 0.0001494999996793922,
+  "append_p95_s": 0.00031690000014350517,
+  "append_p99_s": 0.0004382099997383177,
+  "append_p50_ms": 0.1494999996793922,
+  "append_p95_ms": 0.31690000014350517,
+  "append_p99_ms": 0.4382099997383177,
+  "append_eps": 5827.643254835145,
+  "replay_eps": 98675.13065435814,
+  "snapshot_latency": {
+    "name": "snapshot",
+    "count": 250,
+    "p50_s": 0.07088395000027958,
+    "p95_s": 0.11093422499993706,
+    "p99_s": 1.5916221669996664,
+    "min_s": 0.05323450000014418,
+    "max_s": 1.752144799999769,
+    "mean_s": 0.13129086440001264
+  },
+  "snapshot_p50_ms": 70.88395000027958,
+  "snapshot_p95_ms": 110.93422499993706,
+  "restore_latency_s": 6.027280099999189,
+  "restore_latency_ms": 6027.280099999189,
+  "memory_growth_bytes": 133230592,
+  "disk_growth_bytes": 9740633312,
+  "disk_growth_note": "O(snapshots * ledger_size); full independent snapshot copies for DR integrity"
+}

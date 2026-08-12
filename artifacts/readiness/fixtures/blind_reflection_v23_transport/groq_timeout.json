@@ -1,0 +1,7 @@
+{
+  "fixture_key": "GROQ_REFLECTION_REASONER:TIMEOUT",
+  "result_status": "TIMEOUT",
+  "smoke_map": "TIMEOUT",
+  "body": null,
+  "latency_ms": 45000
+}

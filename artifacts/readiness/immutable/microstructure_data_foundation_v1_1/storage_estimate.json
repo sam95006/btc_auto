@@ -1,0 +1,52 @@
+{
+  "schema": "storage_estimates_v1_1",
+  "estimated_daily_storage_5_symbols": 1919832239.9999998,
+  "estimated_365_day_storage_5_symbols": 700738767599.9999,
+  "estimated_daily_storage_25_symbols": 9599161199.999998,
+  "estimated_365_day_storage_25_symbols": 3503693837999.9995,
+  "p50": {
+    "5": {
+      "estimated_daily_storage": 1919832239.9999998,
+      "estimated_365_day_storage": 700738767599.9999,
+      "events_per_second_basis": 5.446111111111111,
+      "bytes_per_event_basis": 816.0054065082118,
+      "symbol_scale": 5
+    },
+    "25": {
+      "estimated_daily_storage": 9599161199.999998,
+      "estimated_365_day_storage": 3503693837999.9995,
+      "events_per_second_basis": 5.446111111111111,
+      "bytes_per_event_basis": 816.0054065082118,
+      "symbol_scale": 25
+    }
+  },
+  "p95": {
+    "5": {
+      "estimated_daily_storage": 2349641218.9333067,
+      "estimated_365_day_storage": 857619044910.657,
+      "events_per_second_basis": 6.6653777777777785,
+      "bytes_per_event_basis": 816.0054065082118,
+      "symbol_scale": 5
+    },
+    "25": {
+      "estimated_daily_storage": 11748206094.66653,
+      "estimated_365_day_storage": 4288095224553.2837,
+      "events_per_second_basis": 6.6653777777777785,
+      "bytes_per_event_basis": 816.0054065082118,
+      "symbol_scale": 25
+    }
+  },
+  "two_times_stress": {
+    "25": {
+      "estimated_daily_storage": 23496412189.33306,
+      "estimated_365_day_storage": 8576190449106.567,
+      "events_per_second_basis": 13.330755555555557,
+      "bytes_per_event_basis": 816.0054065082118,
+      "symbol_scale": 25
+    }
+  },
+  "storage_retention_proposal": "rolling_30d_compressed_partitions_local_only",
+  "compression_proposal": "gzip_jsonl_hourly_partitions",
+  "maximum_local_budget": 5368709120,
+  "smoke_15m_not_stable_annual_forecast": true
+}
