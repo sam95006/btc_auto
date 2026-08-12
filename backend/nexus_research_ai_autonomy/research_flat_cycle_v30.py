@@ -122,6 +122,7 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
         shadow_outcomes = None
         counterfactual = None
         shadow_quality = None
+        observation = None
         try:
             from backend.nexus_research_ai_autonomy.cloud_paths_v301 import campaign_root
             from backend.nexus_research_ai_autonomy.counterfactual_strategy_v1 import (
@@ -157,8 +158,19 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
                 campaign_root=croot,
                 counterfactual=counterfactual,
             )
+            # Read-only observation aggregate — no scoring/risk/write changes
+            from backend.nexus_research_ai_autonomy.shadow_observation_v1 import (
+                build_observation_report,
+            )
+
+            observation = build_observation_report(
+                campaign_root=croot,
+                runtime_commit=os.environ.get("NEXUS_RUNTIME_COMMIT")
+                or os.environ.get("GIT_COMMIT"),
+            )
         except Exception as sq_exc:  # noqa: BLE001
             signal_quality = {"ok": False, "error": type(sq_exc).__name__, "detail": str(sq_exc)[:200]}
+            observation = None
 
         pnl = prod.run_research_demo_loop(account=account, market_pack=market_pack)
 
@@ -199,6 +211,7 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
             "shadow_outcomes": shadow_outcomes,
             "counterfactual_research": counterfactual,
             "shadow_quality": shadow_quality,
+            "shadow_observation": observation,
             "raw": {
                 k: pnl.get(k)
                 for k in (
