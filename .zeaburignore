@@ -23,6 +23,9 @@ docs/archive/
 archives/
 scratch/
 tools/research/
+# V30.1 autonomy worker needs these runners inside the image (Dockerfile.autonomy).
+!tools/research/activity_metric_v2/
+!tools/research/activity_metric_v2/**
 tests/
 .pytest_cache/
 .cache/

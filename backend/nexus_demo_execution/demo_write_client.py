@@ -24,6 +24,8 @@ ALLOWED_WRITE_PATHS = frozenset(
 ALLOWED_PRIVATE_READ = frozenset(
     {
         "/v5/account/wallet-balance",
+        "/v5/account/info",
+        "/v5/user/query-api",
         "/v5/position/list",
         "/v5/order/realtime",
         "/v5/order/history",
@@ -395,6 +397,107 @@ class DemoWriteClient:
     def fetch_fee_rate(self, symbol: str) -> float | None:
         """Backward-compatible taker rate or None (must not invent)."""
         return self.fetch_fee_rate_quote(symbol).usable_taker
+
+    def api_key_fingerprint(self) -> str:
+        """SHA256 prefix of API key — never return raw key."""
+        raw = (self.api_key or "").strip()
+        if not raw:
+            return ""
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+
+    def fetch_wallet_snapshot(self, *, coin: str = "USDT", account_type: str = "UNIFIED") -> dict[str, Any]:
+        """Official Demo wallet/account snapshot for settle coin — full precision strings."""
+        data = self._get(
+            "/v5/account/wallet-balance",
+            {"accountType": account_type, "coin": coin.upper()},
+        )
+        rows = (data.get("result") or {}).get("list") or []
+        if not rows:
+            raise DemoWriteError("empty_wallet_balance_response")
+        account = rows[0]
+        coins = account.get("coin") or []
+        usdt = next((c for c in coins if str(c.get("coin", "")).upper() == coin.upper()), None) or {}
+        ts = int(time.time() * 1000)
+        return {
+            "ts_ms": ts,
+            "exchange_domain": "api-demo.bybit.com",
+            "account_type": str(account.get("accountType") or account_type),
+            "wallet_type": "UNIFIED" if str(account.get("accountType") or account_type).upper() == "UNIFIED" else str(account.get("accountType") or account_type),
+            "settle_coin": coin.upper(),
+            "category": "linear",
+            "wallet_balance": str(usdt.get("walletBalance") if usdt.get("walletBalance") not in (None, "") else account.get("totalWalletBalance") or "0"),
+            "equity": str(account.get("totalEquity") or usdt.get("equity") or "0"),
+            "available_balance": str(
+                usdt.get("availableToWithdraw")
+                or usdt.get("availableBalance")
+                or usdt.get("walletBalance")
+                or "0"
+            ),
+            "coin_balance": str(usdt.get("walletBalance") or "0"),
+            "total_wallet_balance": str(account.get("totalWalletBalance") or "0"),
+            "total_equity": str(account.get("totalEquity") or "0"),
+            "unrealized_pnl": str(account.get("totalPerpUPL") or usdt.get("unrealisedPnl") or "0"),
+            "api_key_fingerprint": self.api_key_fingerprint(),
+            "source_endpoint": "/v5/account/wallet-balance",
+        }
+
+    def fetch_account_identity(self) -> dict[str, Any]:
+        """Demo account type / UID where API exposes safely — hash key only."""
+        out: dict[str, Any] = {
+            "exchange_domain": "api-demo.bybit.com",
+            "api_key_fingerprint": self.api_key_fingerprint(),
+            "account_uid": None,
+            "account_type": None,
+            "unifiedMarginStatus": None,
+            "dcpStatus": None,
+            "isMasterTrader": None,
+            "wallet_context": "UNKNOWN",
+            "source_endpoints": [],
+        }
+        try:
+            info = self._get("/v5/account/info", {})
+            res = info.get("result") or {}
+            out["account_type"] = res.get("accountType") or res.get("unifiedMarginStatus")
+            out["unifiedMarginStatus"] = res.get("unifiedMarginStatus")
+            out["dcpStatus"] = res.get("dcpStatus")
+            out["isMasterTrader"] = res.get("isMasterTrader")
+            out["source_endpoints"].append("/v5/account/info")
+            ums = str(res.get("unifiedMarginStatus") or "")
+            if ums in {"1", "3", "4", "5", "6"} or str(res.get("accountType") or "").upper() == "UNIFIED":
+                out["wallet_context"] = "UNIFIED"
+            elif ums:
+                out["wallet_context"] = f"UNIFIED_STATUS_{ums}"
+        except DemoWriteError as exc:
+            out["account_info_error"] = exc.code
+        try:
+            api = self._get("/v5/user/query-api", {})
+            res = api.get("result") or {}
+            # Prefer numeric uid fields; never store secrets
+            uid = res.get("userID") or res.get("uid") or res.get("parentUid") or res.get("memberId")
+            if uid is not None:
+                out["account_uid"] = str(uid)
+            out["read_only"] = res.get("readOnly")
+            out["vip_level"] = res.get("vipLevel")
+            out["source_endpoints"].append("/v5/user/query-api")
+            if res.get("uta") or res.get("utaAccount"):
+                out["wallet_context"] = "UNIFIED"
+        except DemoWriteError as exc:
+            out["query_api_error"] = exc.code
+        # Wallet type cross-check
+        try:
+            snap = self.fetch_wallet_snapshot()
+            out["account_type"] = out["account_type"] or snap.get("account_type")
+            out["wallet_type"] = snap.get("wallet_type")
+            out["settle_coin"] = snap.get("settle_coin")
+            if snap.get("wallet_type") == "UNIFIED":
+                out["wallet_context"] = "UNIFIED"
+            out["wallet_balance"] = snap.get("wallet_balance")
+            out["equity"] = snap.get("equity")
+            out["available_balance"] = snap.get("available_balance")
+            out["source_endpoints"].append("/v5/account/wallet-balance")
+        except DemoWriteError as exc:
+            out["wallet_error"] = exc.code
+        return out
 
     def list_closed_pnl(self, *, symbol: str | None = None, limit: int = 50) -> list[dict[str, Any]]:
         params: dict[str, Any] = {"category": "linear", "limit": str(max(1, min(100, int(limit))))}
