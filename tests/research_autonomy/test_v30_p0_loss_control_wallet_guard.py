@@ -351,5 +351,119 @@ def test_pending_accounting_retry_enables_entry(tmp_path: Path, monkeypatch: pyt
     updated = json.loads(closure_path.read_text(encoding="utf-8"))
     assert updated.get("ACCOUNTING_COMPLETE") is True
     assert updated.get("Reflection_created") is True or updated.get("reflection_created") is True
+    assert updated.get("mistake_signature") or (updated.get("reflection") or {}).get("mistake_signature")
+
+
+def test_manage_stdout_fields_populated(capsys: Any) -> None:
+    from backend.nexus_research_ai_autonomy.autonomy_stdout_v301 import observe_completed_tick
+    from backend.nexus_research_ai_autonomy.research_autonomy_scheduler import SchedulerHealth
+
+    health = SchedulerHealth(
+        service_status="MANAGING_POSITION",
+        open_position=True,
+        last_flat_scan_candidate_count=48,
+        last_flat_scan_at="2026-08-12T10:00:00Z",
+    )
+    last = {
+        "service_status": "MANAGING_POSITION",
+        "reconcile": {"symbol": "VELVETUSDT", "side": "LONG"},
+        "result": {
+            "tick_detail": [
+                {
+                    "adaptive_action": "HOLD",
+                    "open_position_telemetry": {
+                        "symbol": "VELVETUSDT",
+                        "side": "LONG",
+                        "mfe_usdt": 0.12,
+                        "mae_usdt": -0.34,
+                        "entry_price": 1.01,
+                        "current_price": 1.005,
+                        "hold_sec": 45.0,
+                        "stop_price": 0.99,
+                        "take_profit_price": 1.06,
+                        "trail_state": "NO_TRAIL",
+                    },
+                }
+            ],
+        },
+    }
+    observe_completed_tick(cycle_n=2, last=last, health=health)
+    out = capsys.readouterr().out
+    assert "symbol=VELVETUSDT" in out
+    assert "side=LONG" in out
+    assert "MFE=0.12" in out
+    assert "MAE=-0.34" in out
+    assert "last_flat_scan_candidate_count=48" in out
+    assert "market_scan_complete=null" in out
+
+
+def test_same_setup_repeat_blocked_after_unchanged_loss(tmp_path: Path) -> None:
+    from backend.nexus_research_ai_autonomy.same_setup_reentry_guard import (
+        closure_path,
+        evaluate_same_setup_reentry,
+    )
+
+    setup = "VELVETUSDT|LONG|TREND|TREND_UP|t0.55|s0.40"
+    cp = closure_path(tmp_path)
+    cp.parent.mkdir(parents=True, exist_ok=True)
+    cp.write_text(
+        json.dumps(
+            {
+                "setup_signature": setup,
+                "exit_reason": "STOP_LOSS",
+                "net_realized": -1.0,
+                "ACCOUNTING_COMPLETE": True,
+                "Reflection_created": True,
+                "reflection_required": True,
+                "exit_price": 1.0,
+                "entry_price": 1.01,
+                "regime": "TREND_UP",
+            }
+        ),
+        encoding="utf-8",
+    )
+    out = evaluate_same_setup_reentry(
+        symbol="VELVETUSDT",
+        side="LONG",
+        setup_signature=setup,
+        closure_path=cp,
+        current_price=1.001,
+        current_regime="TREND_UP",
+    )
+    assert out.get("pass") is False
+    assert out.get("reason") == "SAME_SETUP_REPEAT_BLOCKED"
+
+
+def test_secrets_redacted_safe_enums_visible(capsys: Any) -> None:
+    from backend.nexus_research_ai_autonomy.autonomy_stdout_v301 import log_cycle
+
+    log_cycle(
+        cycle_n=1,
+        started=None,
+        completed=None,
+        status="WAITING_MARKET",
+        duration=1.0,
+        position="FLAT",
+        market_scan_complete=True,
+        candidate_count=48,
+        wait_reason="GLOBAL_PENDING_ACCOUNTING",
+        next_cycle=None,
+    )
+    out = capsys.readouterr().out
+    assert "wait_reason=GLOBAL_PENDING_ACCOUNTING" in out
+    log_cycle(
+        cycle_n=2,
+        started=None,
+        completed=None,
+        status="WAITING_MARKET",
+        duration=1.0,
+        position="FLAT",
+        market_scan_complete=True,
+        candidate_count=48,
+        wait_reason="abcdefghijklmnopqrstuvwxyz1234567890ABCDEF",
+        next_cycle=None,
+    )
+    out2 = capsys.readouterr().out
+    assert "<redacted>" in out2
 
 

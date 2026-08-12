@@ -39,7 +39,7 @@ def main() -> int:
     assert "NEXUS_MEMBER_EXECUTION=false" in start
     df = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     assert "deploy/zeabur_unified/start.sh" in df
-    assert "NEXUS_AUTONOMY_EXCHANGE_WRITE=true" in df
+    assert "NEXUS_AUTONOMY_EXCHANGE_WRITE=false" in df
     # Dockerfile must not bake global EXCHANGE_WRITE=true (Web hard-ban)
     assert "EXCHANGE_WRITE=false" in df
     assert "gunicorn" not in df.split("CMD", 1)[-1].lower() or "start.sh" in df

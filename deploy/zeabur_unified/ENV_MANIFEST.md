@@ -4,7 +4,7 @@
 
 | Name | Value | Scope |
 |---|---|---|
-| NEXUS_AUTONOMY_EXCHANGE_WRITE | true | Supervisor → autonomy child only |
+| NEXUS_AUTONOMY_EXCHANGE_WRITE | **false** (P0 pause — Founder验收前) | Supervisor → autonomy child only |
 | EXCHANGE_WRITE | false (or unset) | Web-safe global default |
 | MAINNET | false | both |
 | REAL_MONEY | false | both |
@@ -26,7 +26,7 @@
 
 ## Process isolation (`deploy/zeabur_unified/start.sh`)
 
-- **ResearchAutonomyService** child: `EXCHANGE_WRITE=true` (from `NEXUS_AUTONOMY_EXCHANGE_WRITE`), `MAINNET=false`, `REAL_MONEY=false`
+- **ResearchAutonomyService** child: `EXCHANGE_WRITE=false` when `NEXUS_AUTONOMY_EXCHANGE_WRITE=false` (P0 default); set `true` only after Founder验收
 - **Gunicorn Web** child: `EXCHANGE_WRITE=false`, `MAINNET=false`, `REAL_MONEY=false`, member/billing false
 - Do **not** set global Zeabur `EXCHANGE_WRITE=true` — that caused public auth HARD BAN on Web.
 

@@ -44,7 +44,7 @@ export REAL_MONEY=false
 _RAW_AUTO_WRITE="${NEXUS_AUTONOMY_EXCHANGE_WRITE:-}"
 if [ -z "${_RAW_AUTO_WRITE}" ]; then
   # Backward-compat: if Founder still set global EXCHANGE_WRITE=true in Zeabur, use it for autonomy only
-  _RAW_AUTO_WRITE="${EXCHANGE_WRITE:-true}"
+  _RAW_AUTO_WRITE="${EXCHANGE_WRITE:-false}"
 fi
 case "$(printf '%s' "${_RAW_AUTO_WRITE}" | tr '[:upper:]' '[:lower:]')" in
   1|true|yes|on) AUTO_EXCHANGE_WRITE=true ;;

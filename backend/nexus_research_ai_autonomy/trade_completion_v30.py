@@ -162,6 +162,37 @@ def build_trade_complete_contract(
     }
 
 
+def _mistake_signature_registry_path(campaign_root: Path | None = None) -> Path:
+    from backend.nexus_research_ai_autonomy.cloud_paths_v301 import campaign_root as cr
+
+    root = campaign_root or cr()
+    return root / "autonomy" / "mistake_signature_registry.json"
+
+
+def _increment_mistake_signature_repeat(mistake_signature: str | None) -> int:
+    """Track repeat_count for a mistake_signature (CandidateLesson stays CANDIDATE)."""
+    if not mistake_signature:
+        return 0
+    path = _mistake_signature_registry_path()
+    registry: dict[str, Any] = {}
+    if path.exists():
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(raw, dict):
+                registry = raw
+        except Exception:  # noqa: BLE001
+            registry = {}
+    entry = registry.get(mistake_signature) or {"repeat_count": 0, "first_seen_ms": int(time.time() * 1000)}
+    entry["repeat_count"] = int(entry.get("repeat_count") or 0) + 1
+    entry["last_seen_ms"] = int(time.time() * 1000)
+    registry[mistake_signature] = entry
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(registry, indent=2, default=str) + "\n", encoding="utf-8")
+    tmp.replace(path)
+    return int(entry["repeat_count"])
+
+
 def run_production_reflection(lifecycle: dict[str, Any]) -> dict[str, Any]:
     """Reflection for ACCOUNTING_COMPLETE losses and BAD_PROCESS_WIN."""
     out: dict[str, Any] = {
@@ -205,6 +236,7 @@ def run_production_reflection(lifecycle: dict[str, Any]) -> dict[str, Any]:
             "exit_quality": fail_refl.exit_quality,
         }
         out["mistake_signature"] = fail_refl.mistake_signature
+        out["repeat_count"] = _increment_mistake_signature_repeat(fail_refl.mistake_signature)
         out["candidate_lesson_created"] = fail_refl.candidate_lesson is not None
         if fail_refl.candidate_lesson:
             out["candidate_lesson"] = fail_refl.candidate_lesson.to_dict()
