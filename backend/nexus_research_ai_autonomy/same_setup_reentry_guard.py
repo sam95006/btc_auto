@@ -151,6 +151,8 @@ def closure_record_from_finalize(
     return {
         "schema": CLOSURE_SCHEMA,
         "closed_at_ms": int(time.time() * 1000),
+        "closed": True,
+        "position_closed": True,
         "setup_signature": setup_signature,
         "symbol": life.get("symbol"),
         "side": life.get("side"),
@@ -160,6 +162,10 @@ def closure_record_from_finalize(
         "hold_sec": life.get("hold_sec"),
         "net_realized": ea.get("calculated_net_pnl"),
         "ACCOUNTING_COMPLETE": life.get("ACCOUNTING_COMPLETE"),
+        "settlement_state": life.get("settlement_state"),
+        "bybit_orderId": life.get("bybit_orderId"),
+        "wallet_before": life.get("wallet_before"),
+        "wallet_after": life.get("wallet_after"),
         "wallet_reconciliation": life.get("wallet_reconciliation"),
         "regime": life.get("regime"),
         "regime_at_entry": life.get("regime_at_entry"),
@@ -172,4 +178,6 @@ def closure_record_from_finalize(
         "CandidateLesson_created": refl.get("candidate_lesson_created"),
         "MFE": (life.get("path_excursion") or {}).get("mfe_usdt"),
         "MAE": (life.get("path_excursion") or {}).get("mae_usdt"),
+        # Persist full lifecycle for pending accounting retry + reflection.
+        "lifecycle": life,
     }

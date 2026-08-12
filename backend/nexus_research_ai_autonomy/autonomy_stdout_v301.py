@@ -15,6 +15,16 @@ _SECRET_KEY_RE = re.compile(
 )
 _SECRET_VALUE_RE = re.compile(r"^[A-Za-z0-9_\-]{20,}$")
 
+_SAFE_ENUM_ALLOWLIST = {
+    "GLOBAL_PENDING_ACCOUNTING",
+    "PRIOR_ACCOUNTING_INCOMPLETE",
+    "PRIOR_REFLECTION_INCOMPLETE",
+    "SAME_SETUP_REPEAT_BLOCKED",
+    "SAME_SETUP_REENTRY_BLOCKED",
+    "PENDING_WALLET_RECONCILIATION",
+    "NO_DIRECTIONAL_CANDIDATE",
+}
+
 
 def _safe(value: Any) -> str:
     if value is None:
@@ -25,6 +35,10 @@ def _safe(value: Any) -> str:
     lowered = text.lower()
     if _SECRET_KEY_RE.search(lowered):
         return "<redacted>"
+    if text in _SAFE_ENUM_ALLOWLIST:
+        # These are intentionally human-readable status enums.
+        # They must bypass the secret-value regex used for other redactions.
+        return text
     if len(text) >= 24 and _SECRET_VALUE_RE.match(text) and not text.isdigit():
         return "<redacted>"
     if "api_key" in lowered or "api_secret" in lowered:
@@ -68,6 +82,8 @@ def log_cycle(
     candidate_count: int | None,
     wait_reason: str | None,
     next_cycle: str | None,
+    last_flat_scan_candidate_count: int | None = None,
+    last_flat_scan_at: str | None = None,
 ) -> None:
     _emit(
         "CYCLE",
@@ -80,6 +96,8 @@ def log_cycle(
             "position": position,
             "market_scan_complete": market_scan_complete,
             "candidate_count": candidate_count,
+            "last_flat_scan_candidate_count": last_flat_scan_candidate_count,
+            "last_flat_scan_at": last_flat_scan_at,
             "wait_reason": wait_reason,
             "next_cycle": next_cycle,
         },
@@ -93,7 +111,14 @@ def log_manage(
     status: str,
     mfe: Any = None,
     mae: Any = None,
+    entry_price: Any = None,
+    current_price: Any = None,
+    hold_sec: Any = None,
+    stop_price: Any = None,
+    take_profit_price: Any = None,
+    trail_state: Any = None,
     adaptive_action: str | None,
+    exit_reason: str | None = None,
     next_poll: str | None,
 ) -> None:
     _emit(
@@ -104,7 +129,14 @@ def log_manage(
             "status": status,
             "MFE": mfe,
             "MAE": mae,
+            "entry_price": entry_price,
+            "current_price": current_price,
+            "hold_sec": hold_sec,
+            "stop_price": stop_price,
+            "take_profit_price": take_profit_price,
+            "trail_state": trail_state,
             "adaptive_action": adaptive_action,
+            "exit_reason": exit_reason,
             "next_poll": next_poll,
         },
     )
@@ -230,6 +262,9 @@ def _extract_manage_fields(
         side = side or pos.get("side")
 
     mfe = mae = None
+    entry_price = current_price = hold_sec = None
+    stop_price = take_profit_price = trail_state = None
+    exit_reason = None
     adaptive_action = (result or {}).get("action")
     tick_detail = (result or {}).get("tick_detail")
     if isinstance(tick_detail, list) and tick_detail:
@@ -237,12 +272,22 @@ def _extract_manage_fields(
             if not isinstance(tick, dict):
                 continue
             adaptive_action = tick.get("adaptive_action") or tick.get("action") or adaptive_action
+            if exit_reason is None:
+                exit_reason = tick.get("exit_reason") or tick.get("close_error")
             tel = tick.get("open_position_telemetry")
             if isinstance(tel, dict):
                 mfe = tel.get("mfe_usdt")
                 mae = tel.get("mae_usdt")
                 symbol = symbol or tel.get("symbol")
                 side = side or tel.get("side")
+                entry_price = tel.get("entry_price") if entry_price is None else entry_price
+                current_price = tel.get("current_price") if current_price is None else current_price
+                hold_sec = tel.get("hold_sec") if hold_sec is None else hold_sec
+                stop_price = tel.get("stop_price") if stop_price is None else stop_price
+                take_profit_price = (
+                    tel.get("take_profit_price") if take_profit_price is None else take_profit_price
+                )
+                trail_state = tel.get("trail_state") if trail_state is None else trail_state
                 break
 
     return {
@@ -250,7 +295,14 @@ def _extract_manage_fields(
         "side": side,
         "mfe": mfe,
         "mae": mae,
+        "entry_price": entry_price,
+        "current_price": current_price,
+        "hold_sec": hold_sec,
+        "stop_price": stop_price,
+        "take_profit_price": take_profit_price,
+        "trail_state": trail_state,
         "adaptive_action": adaptive_action,
+        "exit_reason": exit_reason,
         "next_poll": next_cycle,
     }
 
@@ -316,6 +368,8 @@ def observe_completed_tick(
     position = "OPEN" if getattr(health, "open_position", False) else "FLAT"
     market_scan_complete = getattr(health, "market_scan_complete", None)
     candidate_count = getattr(health, "candidate_count", None)
+    last_flat_scan_candidate_count = getattr(health, "last_flat_scan_candidate_count", None)
+    last_flat_scan_at = getattr(health, "last_flat_scan_at", None)
     wait_reason = result.get("reason") if isinstance(result, dict) else None
     if not wait_reason and status == "WAITING_MARKET":
         reasons = getattr(health, "top_rejection_reasons", None)
@@ -329,8 +383,12 @@ def observe_completed_tick(
         status=status,
         duration=float(duration) if duration is not None else None,
         position=position,
-        market_scan_complete=market_scan_complete,
-        candidate_count=candidate_count,
+        market_scan_complete=None if status == "MANAGING_POSITION" else market_scan_complete,
+        candidate_count=None if status == "MANAGING_POSITION" else candidate_count,
+        last_flat_scan_candidate_count=(
+            last_flat_scan_candidate_count if status == "MANAGING_POSITION" else None
+        ),
+        last_flat_scan_at=(last_flat_scan_at if status == "MANAGING_POSITION" else None),
         wait_reason=wait_reason,
         next_cycle=next_cycle,
     )
@@ -347,7 +405,14 @@ def observe_completed_tick(
             status="MANAGING_POSITION",
             mfe=manage_fields["mfe"],
             mae=manage_fields["mae"],
+            entry_price=manage_fields["entry_price"],
+            current_price=manage_fields["current_price"],
+            hold_sec=manage_fields["hold_sec"],
+            stop_price=manage_fields["stop_price"],
+            take_profit_price=manage_fields["take_profit_price"],
+            trail_state=manage_fields["trail_state"],
             adaptive_action=manage_fields["adaptive_action"],
+            exit_reason=manage_fields.get("exit_reason"),
             next_poll=manage_fields["next_poll"],
         )
 

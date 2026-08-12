@@ -256,6 +256,173 @@ def run_research_demo_loop(*, account: dict[str, Any], market_pack: dict[str, An
             "EXCHANGE_WRITE": False,
         }
 
+    sym = selection.get("selected_symbol")
+    side = selection.get("selected_side") or "LONG"
+    preflight = selection.get("preflight") or {}
+
+    # GLOBAL_PENDING_ACCOUNTING: if previous closed trade is not yet accounting-complete,
+    # pause any new Research demo entry (but keep scanning/evidence generation outside).
+    try:
+        from backend.nexus_research_ai_autonomy.cloud_paths_v301 import campaign_root
+        from backend.nexus_research_ai_autonomy.same_setup_reentry_guard import (
+            closure_path,
+            closure_record_from_finalize,
+        )
+        from backend.nexus_research_ai_autonomy.trade_completion_v30 import (
+            _settle_accounting,
+            build_trade_complete_contract,
+            build_setup_signature,
+            load_last_trade_closure,
+            persist_trade_closure,
+            run_production_reflection,
+        )
+        from backend.nexus_demo_execution.wallet_lifecycle_accounting import (
+            build_lifecycle_accounting_record,
+            reconcile_wallet_before_after,
+        )
+
+        load_demo_env(resolve_demo_env_path())
+        gate_client = DemoWriteClient()
+
+        croot = campaign_root()
+        last = load_last_trade_closure(closure_path(croot))
+        if isinstance(last, dict) and last.get("closed") and not bool(last.get("ACCOUNTING_COMPLETE")):
+            # Retry pending accounting once, bounded and read-only.
+            life = last.get("lifecycle") or {}
+            symbol0 = life.get("symbol") or last.get("symbol")
+            oid0 = life.get("bybit_orderId") or last.get("bybit_orderId")
+            entry_ts_ms0 = life.get("entry_ts_ms")
+            wallet_before0 = life.get("wallet_before") or last.get("wallet_before")
+
+            if symbol0 and oid0 and entry_ts_ms0 and isinstance(wallet_before0, dict):
+                max_wait = float(os.environ.get("NEXUS_WALLET_RECONCILIATION_MAX_WAIT_SEC", "30"))
+                max_wait = max(10.0, min(60.0, max_wait))
+                poll_sec = 1.0
+                stable_count = 0
+                prev_wallet_after = None
+                start = time.time()
+                setup_signature0 = last.get("setup_signature") or build_setup_signature(
+                    symbol=str(symbol0), side=str(side)
+                )
+
+                while time.time() - start < max_wait:
+                    fill, close = _settle_accounting(
+                        client=gate_client,
+                        symbol=str(symbol0),
+                        oid=str(oid0),
+                        entry_ts=int(entry_ts_ms0),
+                    )
+                    if fill is None and close is None:
+                        time.sleep(poll_sec)
+                        continue
+
+                    wa = gate_client.fetch_wallet_snapshot()
+                    wallet_before_val = wallet_before0.get("wallet_balance") or wallet_before0.get("coin_balance")
+                    wallet_after_val = wa.get("wallet_balance") or wa.get("coin_balance")
+
+                    if (
+                        prev_wallet_after
+                        and (wa.get("wallet_balance") == prev_wallet_after.get("wallet_balance"))
+                        and (wa.get("coin_balance") == prev_wallet_after.get("coin_balance"))
+                    ):
+                        stable_count += 1
+                    else:
+                        stable_count = 0
+                    prev_wallet_after = wa
+                    if stable_count < 2:
+                        time.sleep(poll_sec)
+                        continue
+
+                    closed_pnl = None
+                    fees_total = 0.0
+                    funding = None
+                    if close is not None:
+                        closed_pnl = close.get("closedPnl")
+                        fees_total = abs(float(close.get("openFee") or 0)) + abs(float(close.get("closeFee") or 0))
+                        funding = close.get("fundingFee")
+
+                    recon = reconcile_wallet_before_after(
+                        wallet_before=wallet_before_val,
+                        wallet_after=wallet_after_val,
+                        exchange_realized_pnl=closed_pnl if closed_pnl is not None else "0",
+                        fees=fees_total,
+                        funding=funding,
+                        tolerance="0.00000001",
+                    )
+                    if recon.get("WALLET_RECONCILIATION_PASS"):
+                        accounted = build_lifecycle_accounting_record(
+                            lifecycle=life,
+                            account_identity=wallet_before0,
+                            wallet_before=wallet_before0,
+                            wallet_after=wa,
+                            exchange_fill=fill,
+                            exchange_close=close,
+                            historical=False,
+                        )
+                        if accounted.get("accounting_status") == "ACCOUNTING_COMPLETE":
+                            accounted["settlement_state"] = "ACCOUNTING_COMPLETE"
+
+                        reflection_bundle = None
+                        if accounted.get("ACCOUNTING_COMPLETE"):
+                            reflection_bundle = run_production_reflection(accounted)
+                            accounted["reflection"] = reflection_bundle
+
+                        contract = build_trade_complete_contract(
+                            lifecycle=accounted,
+                            accounted=accounted,
+                            reflection_bundle=reflection_bundle,
+                        )
+
+                        finalized = {
+                            "lifecycle": accounted,
+                            "contract": contract,
+                            "reflection": reflection_bundle,
+                            "closed": True,
+                            "position_closed": True,
+                            **contract,
+                        }
+                        record = closure_record_from_finalize(
+                            finalized,
+                            setup_signature=str(setup_signature0),
+                            momentum_at_entry=last.get("momentum_at_entry"),
+                        )
+                        persist_trade_closure(closure_path(croot), record)
+                        # If it passed, we can continue entry guards.
+                        break
+
+                    time.sleep(poll_sec)
+
+                # Reload closure; only proceed if ACCOUNTING_COMPLETE is now true.
+                last2 = load_last_trade_closure(closure_path(croot))
+                if isinstance(last2, dict) and last2.get("closed") and not bool(last2.get("ACCOUNTING_COMPLETE")):
+                    return {
+                        "executed": False,
+                        "WAIT": True,
+                        "reason": "GLOBAL_PENDING_ACCOUNTING",
+                        "market_opportunity": market_pack,
+                        "global_pending_accounting_guard": True,
+                        "EXCHANGE_WRITE": False,
+                    }
+            else:
+                return {
+                    "executed": False,
+                    "WAIT": True,
+                    "reason": "GLOBAL_PENDING_ACCOUNTING",
+                    "market_opportunity": market_pack,
+                    "global_pending_accounting_guard": True,
+                    "EXCHANGE_WRITE": False,
+                }
+    except Exception:  # noqa: BLE001
+        # Fail closed: if the guard/retry crashes, don't manufacture new entries.
+        return {
+            "executed": False,
+            "WAIT": True,
+            "reason": "PRIOR_ACCOUNTING_INCOMPLETE",
+            "market_opportunity": market_pack,
+            "global_pending_accounting_guard": True,
+            "EXCHANGE_WRITE": False,
+        }
+
     if selection.get("action") != "SELECT":
         return {
             "executed": False,
@@ -263,10 +430,6 @@ def run_research_demo_loop(*, account: dict[str, Any], market_pack: dict[str, An
             "reason": selection.get("block_code") or "NO_DIRECTIONAL_CANDIDATE",
             "market_opportunity": market_pack,
         }
-
-    sym = selection.get("selected_symbol")
-    side = selection.get("selected_side") or "LONG"
-    preflight = selection.get("preflight") or {}
 
     # Same-setup re-entry guard (production integrity only — does not lower any gates).
     try:

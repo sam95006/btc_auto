@@ -38,10 +38,15 @@ class OpenPositionTelemetry:
     qty: float
     entry_price: float
     mark_price: float
+    current_price: float
     unrealized_usdt: float
     unrealized_pct: float
     estimated_exit_fee_usdt: float
     estimated_net_if_closed_now: float
+    stop_price: float | None
+    take_profit_price: float | None
+    trail_pct: float | None
+    trail_state: str
     mfe_usdt: float = 0.0
     mae_usdt: float = 0.0
     hold_sec: float = 0.0
@@ -281,16 +286,22 @@ class PersistentPositionLifecycleManager(PositionManager):
         exit_fee = notional * self.fee_rate_roundtrip * 0.5
         net_if_closed = usdt - exit_fee
         snap = pos.path_tracker.to_dict() if pos.path_tracker else {}
+        trail_state = "TRAILING_ACTIVE" if pos.trail_pct is not None else "NO_TRAIL"
         return OpenPositionTelemetry(
             symbol=pos.symbol,
             side=pos.side,
             qty=pos.qty,
             entry_price=pos.entry_price,
             mark_price=mark_price,
+            current_price=mark_price,
             unrealized_usdt=usdt,
             unrealized_pct=pct,
             estimated_exit_fee_usdt=exit_fee,
             estimated_net_if_closed_now=net_if_closed,
+            stop_price=pos.stop_price,
+            take_profit_price=pos.take_profit_price,
+            trail_pct=pos.trail_pct,
+            trail_state=trail_state,
             mfe_usdt=float(snap.get("mfe_usdt") or 0.0),
             mae_usdt=float(snap.get("mae_usdt") or 0.0),
             hold_sec=held,

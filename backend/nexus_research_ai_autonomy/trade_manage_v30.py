@@ -144,6 +144,7 @@ def manage_tick_once(mgr: PersistentPositionLifecycleManager, tick_i: int) -> di
             return {
                 "tick": tick_i,
                 "adaptive_action": "EXIT",
+                    "exit_reason": exit_reason,
                 "close_error": type(exc).__name__,
                 "POSITION_STILL_OPEN_MANAGED": True,
                 "open_position_telemetry": telemetry.to_dict(),

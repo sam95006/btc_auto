@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 from pathlib import Path
 from typing import Any
@@ -10,6 +11,7 @@ from backend.nexus_autonomy.process_classification import classify_completed_tra
 from backend.nexus_demo_execution.demo_write_client import DemoWriteClient, DemoWriteError
 from backend.nexus_demo_execution.wallet_lifecycle_accounting import (
     build_lifecycle_accounting_record,
+    reconcile_wallet_before_after,
     match_exchange_rows_for_order,
 )
 from backend.nexus_research_ai_autonomy.economic_entry_filter import annotate_actual_fees
@@ -261,21 +263,94 @@ def finalize_closed_trade(
     """Settle accounting + reflection for a closed position."""
     fill, close = None, None
     position_zero = False
-    for _ in range(10):
-        time.sleep(1.0)
+    wallet_after: dict[str, Any] | None = None
+    settlement_state = "POSITION_ZERO"
+
+    max_wait_sec = float(os.environ.get("NEXUS_WALLET_RECONCILIATION_MAX_WAIT_SEC", "45"))
+    max_wait_sec = max(10.0, min(60.0, max_wait_sec))
+    poll_sec = 1.0
+
+    wallet_stable_count = 0
+    last_wallet_snapshot: dict[str, Any] | None = None
+    start_ts = time.time()
+
+    while time.time() - start_ts < max_wait_sec:
+        # POSITION_ZERO
         try:
-            if not client.list_positions(symbol):
-                position_zero = True
+            positions = client.list_positions(symbol)
+            position_zero = not bool(positions)
         except Exception:  # noqa: BLE001
-            pass
+            position_zero = False
+
+        if not position_zero:
+            settlement_state = "POSITION_ZERO"
+            time.sleep(poll_sec)
+            continue
+
+        # CLOSED_PNL_VISIBLE
+        settlement_state = "CLOSED_PNL_VISIBLE"
         fill, close = _settle_accounting(
             client=client, symbol=symbol, oid=str(oid), entry_ts=int(entry_ts)
         )
-        wallet_after = client.fetch_wallet_snapshot()
-        if position_zero and (fill is not None or close is not None):
+        if fill is None and close is None:
+            time.sleep(poll_sec)
+            continue
+
+        # WALLET_AFTER_STABLE
+        settlement_state = "WALLET_AFTER_STABLE"
+        wallet_after_candidate = client.fetch_wallet_snapshot()
+
+        if (
+            last_wallet_snapshot
+            and (wallet_after_candidate.get("wallet_balance") == last_wallet_snapshot.get("wallet_balance"))
+            and (wallet_after_candidate.get("coin_balance") == last_wallet_snapshot.get("coin_balance"))
+        ):
+            wallet_stable_count += 1
+        else:
+            wallet_stable_count = 0
+        last_wallet_snapshot = wallet_after_candidate
+        wallet_after = wallet_after_candidate
+
+        if wallet_stable_count < 2:
+            time.sleep(poll_sec)
+            continue
+
+        # WALLET_RECONCILIATION_PASS
+        closed_pnl = None
+        fees_total = 0.0
+        funding = None
+        if close is not None:
+            closed_pnl = close.get("closedPnl")
+            fees_total = abs(float(close.get("openFee") or 0)) + abs(float(close.get("closeFee") or 0))
+            funding = close.get("fundingFee")
+        elif fill is not None:
+            closed_pnl = fill.get("closedPnl")
+            fees_total = abs(float(fill.get("execFee") or 0))
+            funding = None
+
+        wallet_before_val = (wallet_before or {}).get("wallet_balance") or (wallet_before or {}).get("coin_balance")
+        wallet_after_val = (wallet_after_candidate.get("wallet_balance") or wallet_after_candidate.get("coin_balance"))
+
+        recon = reconcile_wallet_before_after(
+            wallet_before=wallet_before_val,
+            wallet_after=wallet_after_val,
+            exchange_realized_pnl=closed_pnl if closed_pnl is not None else "0",
+            fees=fees_total,
+            funding=funding,
+            tolerance="0.00000001",
+        )
+
+        if recon.get("WALLET_RECONCILIATION_PASS"):
+            settlement_state = "WALLET_RECONCILIATION_PASS"
             break
-    else:
+
+        # keep waiting (wallet snapshot may still be settling)
+        time.sleep(poll_sec)
+
+    if wallet_after is None:
         wallet_after = client.fetch_wallet_snapshot()
+    if settlement_state != "WALLET_RECONCILIATION_PASS":
+        settlement_state = "PENDING_WALLET_RECONCILIATION"
 
     if fill and fill.get("execPrice"):
         entry_px = float(fill["execPrice"])
@@ -371,6 +446,7 @@ def finalize_closed_trade(
         "qty": str(order.get("qty") or sizing.qty_str),
         "notional_usdt": float(order.get("qty") or sizing.qty) * entry_px,
         "hold_sec": hold_sec,
+        "entry_ts_ms": int(entry_ts),
         "lifecycle_purpose": LIFECYCLE_PURPOSE_RESEARCH_PNL_TRADE,
         "execution_purpose": "REAL",
         "transport_mode": order.get("transport_mode"),
@@ -401,6 +477,7 @@ def finalize_closed_trade(
         "leverage": 1,
         "vol_pct_per_hour": vol_h,
         "opened_mono": opened_mono,
+        "settlement_state": settlement_state,
     }
     accounted = build_lifecycle_accounting_record(
         lifecycle=life,
@@ -411,6 +488,8 @@ def finalize_closed_trade(
         exchange_close=close,
         historical=False,
     )
+    if accounted.get("accounting_status") == "ACCOUNTING_COMPLETE":
+        accounted["settlement_state"] = "ACCOUNTING_COMPLETE"
     wr = accounted.get("wallet_reconciliation") or {}
     if accounted.get("accounting_status") == "ACCOUNTING_COMPLETE" and not wr.get(
         "WALLET_RECONCILIATION_PASS"

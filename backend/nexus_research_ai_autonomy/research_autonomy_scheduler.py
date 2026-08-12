@@ -95,6 +95,9 @@ class SchedulerHealth:
     cycle_ai_ready: bool | None = None
     market_scan_complete: bool | None = None
     candidate_count: int | None = None
+    # For MANAGING_POSITION stdout: avoid showing stale scan provenance.
+    last_flat_scan_candidate_count: int | None = None
+    last_flat_scan_at: str | None = None
     top_rejection_reasons: list | None = None
     waiting_market_valid: bool | None = None
     ai_state: str | None = None
@@ -290,6 +293,9 @@ class ResearchAutonomyScheduler:
                     self.health.cycle_ai_ready = result.get("cycle_ai_ready")
                     self.health.market_scan_complete = result.get("market_scan_complete")
                     self.health.candidate_count = result.get("candidate_count")
+                    # Record scan provenance for MANAGING_POSITION stdout.
+                    self.health.last_flat_scan_candidate_count = self.health.candidate_count
+                    self.health.last_flat_scan_at = _utc()
                     reasons = result.get("top_rejection_reasons")
                     self.health.top_rejection_reasons = list(reasons) if isinstance(reasons, list) else reasons
 
