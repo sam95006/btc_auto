@@ -51,9 +51,13 @@ def build_public_opportunity_dto(snapshot: dict[str, Any], *, signal: dict[str, 
         "data_freshness_ms": snapshot.get("data_freshness_ms"),
         "signal_id": (signal or {}).get("signal_id"),
         "signal_lifecycle_state": (signal or {}).get("lifecycle_state"),
-        "historical_similar_setup_stats": None,
+        "historical_similar_setup_stats": None,  # stay null until meaningful clean sample
         "activity_source": snapshot.get("activity_source"),
         "activity_fallback": snapshot.get("activity_fallback"),
+        # Outcome fields only when signal already matured — never invent
+        "MFE": ((signal or {}).get("outcome") or {}).get("MFE"),
+        "MAE": ((signal or {}).get("outcome") or {}).get("MAE"),
+        "post_cost_outcome": ((signal or {}).get("outcome") or {}).get("post_cost_hypothetical"),
     }
     return sanitize_public_dto(dto)
 

@@ -244,17 +244,19 @@ def test_shadow_target_before_stop_detectable() -> None:
 def test_counterfactual_does_not_auto_promote(tmp_path: Path) -> None:
     from backend.nexus_research_ai_autonomy.counterfactual_strategy_v1 import run_counterfactual_research
 
-    path = [(1, 100.0), (2, 100.3), (3, 99.7), (4, 100.8)]
+    bars = [
+        {"ts_ms": 60_000, "open": 100.0, "high": 100.3, "low": 99.7, "close": 100.1, "entry_candle_partial": False},
+        {"ts_ms": 120_000, "open": 100.1, "high": 100.8, "low": 100.0, "close": 100.5, "entry_candle_partial": False},
+    ]
     records = [
-        {"entry_price": 100.0, "direction": "LONG", "path": path, "notional": 350.0},
-        {"entry_price": 100.0, "direction": "LONG", "path": path, "notional": 350.0},
+        {"entry_price": 100.0, "direction": "LONG", "bars": bars, "notional": 350.0},
+        {"entry_price": 100.0, "direction": "LONG", "bars": bars, "notional": 350.0},
     ]
     report = run_counterfactual_research(campaign_root=tmp_path, path_records=records)
     assert report["auto_promotion"] is False
     assert report["live_stop_pct_unchanged"] is True
     assert report["ready_for_demo_reenable"] is False
     assert all(c.get("auto_promoted") is False for c in report["research_configs"])
-    # All configs evaluated on same paths
     assert len(report["research_configs"]) >= 3
     for c in report["research_configs"]:
         assert c["stats"]["sample_count"] == 2

@@ -121,13 +121,18 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
         signal_quality = None
         shadow_outcomes = None
         counterfactual = None
+        shadow_quality = None
         try:
             from backend.nexus_research_ai_autonomy.cloud_paths_v301 import campaign_root
             from backend.nexus_research_ai_autonomy.counterfactual_strategy_v1 import (
                 run_counterfactual_research,
             )
             from backend.nexus_research_ai_autonomy.shadow_path_outcomes_v1 import (
+                path_records_for_counterfactual,
                 refresh_mature_shadow_outcomes,
+            )
+            from backend.nexus_research_ai_autonomy.shadow_quality_report_v1 import (
+                build_shadow_quality_report,
             )
             from backend.nexus_research_ai_autonomy.signal_quality_cycle_v1 import (
                 run_signal_quality_shadow_cycle,
@@ -142,7 +147,16 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
             )
             # Evaluate mature horizons only (no future peek before horizon elapses)
             shadow_outcomes = refresh_mature_shadow_outcomes(client, campaign_root=croot)
-            counterfactual = run_counterfactual_research(campaign_root=croot)
+            # Feed real OHLC path_records into counterfactual (no AWAITING when mature)
+            path_recs = path_records_for_counterfactual(croot)
+            counterfactual = run_counterfactual_research(
+                campaign_root=croot,
+                path_records=path_recs,
+            )
+            shadow_quality = build_shadow_quality_report(
+                campaign_root=croot,
+                counterfactual=counterfactual,
+            )
         except Exception as sq_exc:  # noqa: BLE001
             signal_quality = {"ok": False, "error": type(sq_exc).__name__, "detail": str(sq_exc)[:200]}
 
@@ -184,6 +198,7 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
             "signal_quality_shadow": signal_quality,
             "shadow_outcomes": shadow_outcomes,
             "counterfactual_research": counterfactual,
+            "shadow_quality": shadow_quality,
             "raw": {
                 k: pnl.get(k)
                 for k in (
