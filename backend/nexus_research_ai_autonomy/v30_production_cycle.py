@@ -16,6 +16,7 @@ from backend.nexus_research_ai_autonomy.bybit_demo_real_transport import load_de
 from backend.nexus_research_ai_autonomy.cloud_paths_v301 import evidence_dir, resolve_demo_env_path
 from backend.nexus_research_ai_autonomy.exchange_preflight import run_exchange_preflight
 from backend.nexus_research_ai_autonomy.lifecycle_purpose import LIFECYCLE_PURPOSE_RESEARCH_PNL_TRADE
+from backend.nexus_research_ai_autonomy.signal_enrichment_v1 import _activity_from_turnover
 from backend.nexus_research_ai_autonomy.two_sided_hypothesis import (
     TwoSidedHypothesis,
     evaluate_two_sided_hypothesis,
@@ -175,13 +176,17 @@ def scan_full_market_directional(
         except Exception:  # noqa: BLE001
             step, min_q, min_n = 0.001, 0.001, 5.0
 
+        act_score, act_source = _activity_from_turnover(float(t["turnover_24h"]))
+        t["activity_score"] = act_score
+        t["activity_source"] = act_source
+
         h = evaluate_two_sided_hypothesis(
             symbol=sym,
             entry_price=entry_px,
             equity=equity,
             vol_pct_per_hour=vol_h,
             turnover24h=float(t["turnover_24h"]),
-            activity_score=0.75,
+            activity_score=act_score,
             qty_step=step,
             min_qty=min_q,
             min_notional=min_n,
@@ -230,6 +235,7 @@ def scan_full_market_directional(
         "schema": "v30_production_directional_market_v1",
         "universe_size": len(symbols),
         "scanned": len(tickers),
+        "tickers": tickers,
         "candidate_count": len(hypotheses),
         "eligible_candidate_sides": eligible_candidate_sides,
         "long_hypotheses": eligible_candidate_sides["LONG"],

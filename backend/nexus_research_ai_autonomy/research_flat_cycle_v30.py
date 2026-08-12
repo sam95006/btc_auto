@@ -117,6 +117,23 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
         client = DemoWriteClient()
         equity = float(account.get("equity") or account.get("wallet_balance") or 5000.0)
         market_pack = prod.scan_full_market_directional(client=client, symbols=symbols, equity=equity)
+
+        signal_quality = None
+        try:
+            from backend.nexus_research_ai_autonomy.cloud_paths_v301 import campaign_root
+            from backend.nexus_research_ai_autonomy.signal_quality_cycle_v1 import (
+                run_signal_quality_shadow_cycle,
+            )
+
+            signal_quality = run_signal_quality_shadow_cycle(
+                client=client,
+                market_pack=market_pack,
+                equity=equity,
+                campaign_root_path=campaign_root(),
+            )
+        except Exception as sq_exc:  # noqa: BLE001
+            signal_quality = {"ok": False, "error": type(sq_exc).__name__, "detail": str(sq_exc)[:200]}
+
         pnl = prod.run_research_demo_loop(account=account, market_pack=market_pack)
 
         wait = bool(pnl.get("WAIT") or not pnl.get("executed"))
@@ -152,6 +169,7 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
             in {"1", "true", "yes"},
             "no_gate_lowering": True,
             "no_manufactured_trades": True,
+            "signal_quality_shadow": signal_quality,
             "raw": {
                 k: pnl.get(k)
                 for k in (

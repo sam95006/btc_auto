@@ -83,65 +83,94 @@ def _pair_round_trips(closed_rows: list[dict[str, Any]]) -> list[dict[str, Any]]
     return trades
 
 
-def _classify_loss_root_causes(row: dict[str, Any], *, net: float | None) -> list[str]:
+EXCHANGE_ONLY_CAUSES = frozenset(
+    {
+        "COST_DOMINATED",
+        "VERY_SHORT_HOLD",
+        "REPEATED_SYMBOL_CHURN",
+        "ACCOUNTING_INCOMPLETE",
+        "GROSS_POSITIVE_NET_NEGATIVE",
+    }
+)
+
+
+def _median(vals: list[float]) -> float | None:
+    if not vals:
+        return None
+    s = sorted(vals)
+    m = len(s) // 2
+    return s[m] if len(s) % 2 else (s[m - 1] + s[m]) / 2.0
+
+
+def _percentile(vals: list[float], p: float) -> float | None:
+    if not vals:
+        return None
+    s = sorted(vals)
+    idx = int(max(0, min(len(s) - 1, round(p * (len(s) - 1)))))
+    return s[idx]
+
+
+def _classify_loss_root_causes(row: dict[str, Any], *, net: float | None, hold_sec: float | None) -> list[dict[str, str]]:
+    """Exchange-only classifications with evidence level — no fabricated direction diagnosis."""
     if net is None or net >= 0:
         return []
-    tags: list[str] = []
+    tags: list[dict[str, str]] = []
     open_fee = abs(_f(row.get("openFee")) or 0.0)
     close_fee = abs(_f(row.get("closeFee")) or 0.0)
     fees = open_fee + close_fee
     closed_pnl = _f(row.get("closedPnl"))
-    gross = None
-    avg_entry = _f(row.get("avgEntryPrice"))
-    avg_exit = _f(row.get("avgExitPrice"))
-    side = str(row.get("side") or "").upper()
-    qty = _f(row.get("qty") or row.get("closedSize"))
-    if avg_entry and avg_exit and qty:
-        if side in {"SELL", "SHORT"} or (side == "SELL" and True):
-            gross = (avg_entry - avg_exit) * qty
-        else:
-            gross = (avg_exit - avg_entry) * qty
+    gross = _f(row.get("_gross_price_pnl"))
+    acct = row.get("_accounting_complete")
+
+    if acct is False:
+        tags.append({"cause": "ACCOUNTING_INCOMPLETE", "evidence_level": "CONFIRMED"})
     if net < 0 and fees > 0 and (closed_pnl is not None and abs(closed_pnl) <= fees * 1.05):
-        tags.append("COST_DOMINATED")
+        tags.append({"cause": "COST_DOMINATED", "evidence_level": "CONFIRMED"})
     elif net < 0 and gross is not None and abs(gross) < fees:
-        tags.append("COST_DOMINATED")
-    if gross is not None and gross < 0:
-        tags.append("DIRECTION_WRONG")
-    if gross is not None and abs(gross) < fees * 0.25:
-        tags.append("NOISE_ENTRY")
-    exit_reason = str(row.get("_exit_reason") or "").upper()
-    if "STOP" in exit_reason:
-        tags.append("STOP_TOO_TIGHT")
-    hold = _f(row.get("_hold_sec"))
-    if hold is not None and hold < 180:
-        tags.append("HORIZON_MISMATCH")
+        tags.append({"cause": "COST_DOMINATED", "evidence_level": "SUPPORTED"})
+    if gross is not None and gross > 0 and net < 0:
+        tags.append({"cause": "GROSS_POSITIVE_NET_NEGATIVE", "evidence_level": "CONFIRMED"})
+    if hold_sec is not None and hold_sec < 60:
+        tags.append({"cause": "VERY_SHORT_HOLD", "evidence_level": "CONFIRMED"})
+    if row.get("_same_symbol_consecutive"):
+        tags.append({"cause": "REPEATED_SYMBOL_CHURN", "evidence_level": "SUPPORTED"})
     if not tags:
-        tags.append("UNDETERMINED")
+        tags.append({"cause": "UNDETERMINED", "evidence_level": "UNDETERMINED"})
     return tags
 
 
-def _map_aggregate_ab(tags: list[str]) -> dict[str, int]:
-    mapping = {
-        "A": {"LOW_ACTIVITY", "LIQUIDITY_WEAK", "NOISE_ENTRY"},
-        "B": {"DIRECTION_WRONG", "AMBIGUOUS_DIRECTION"},
-        "C": {"ENTRY_TOO_EARLY", "ENTRY_TOO_LATE", "FALSE_BREAKOUT"},
-        "D": {"STOP_TOO_TIGHT"},
-        "E": {"COST_DOMINATED"},
-        "F": {"REGIME_MISMATCH"},
-        "G": set(),
-        "H": {"EXIT_GIVEBACK", "HORIZON_MISMATCH"},
-        "I": {"EXCHANGE_ACCOUNTING_INCOMPLETE"},
-        "J": {"UNDETERMINED"},
+def _churn_risk_distribution(
+    *,
+    trades: list[dict[str, Any]],
+    symbol_concentration: dict[str, int],
+    median_hold: float | None,
+    under_30s: int,
+    fee_drag_median: float | None,
+) -> dict[str, Any]:
+    """Report churn distribution — no automatic production threshold."""
+    total = len(trades)
+    top_sym = max(symbol_concentration.items(), key=lambda kv: kv[1]) if symbol_concentration else (None, 0)
+    conc_ratio = (top_sym[1] / total) if total and top_sym[1] else 0.0
+    risk = "LOW"
+    if total >= 5:
+        if conc_ratio >= 0.5 or (median_hold is not None and median_hold < 45) or under_30s >= max(3, total // 3):
+            risk = "HIGH"
+        elif conc_ratio >= 0.35 or (median_hold is not None and median_hold < 90):
+            risk = "MEDIUM"
+    return {
+        "CHURN_RISK": risk,
+        "distribution": {
+            "top_symbol": top_sym[0],
+            "top_symbol_share": round(conc_ratio, 4),
+            "median_hold_sec": median_hold,
+            "under_30s_share": round(under_30s / total, 4) if total else None,
+            "median_fee_drag_per_round_trip": fee_drag_median,
+        },
+        "note": "distribution_only_no_auto_production_change",
     }
-    out: dict[str, int] = {k: 0 for k in mapping}
-    for t in tags:
-        for k, vals in mapping.items():
-            if t in vals:
-                out[k] += 1
-    return out
 
 
-def audit_trades(*, limit: int = 20, client: DemoWriteClient | None = None) -> dict[str, Any]:
+def audit_trades(*, limit: int = 50, client: DemoWriteClient | None = None) -> dict[str, Any]:
     load_demo_env(resolve_demo_env_path())
     cli = client or DemoWriteClient()
     if not cli.api_key:
@@ -174,6 +203,19 @@ def audit_trades(*, limit: int = 20, client: DemoWriteClient | None = None) -> d
     root_loss: dict[str, float] = defaultdict(float)
     same_setup_repeats = 0
     prev_setup: str | None = None
+    prev_symbol: str | None = None
+    hold_secs: list[float] = []
+    under_10 = under_30 = under_60 = 0
+    gross_pos_net_neg = 0
+    fee_drags: list[float] = []
+    symbol_counts: Counter[str] = Counter()
+    symbol_entry_times: dict[str, list[int]] = defaultdict(list)
+    consecutive_symbol_runs = 0
+    funding_total = 0.0
+    confirmed: Counter[str] = Counter()
+    supported: Counter[str] = Counter()
+    hypothesized: Counter[str] = Counter()
+    undetermined_count = 0
 
     for row in trips:
         sym = row.get("symbol")
@@ -231,6 +273,31 @@ def audit_trades(*, limit: int = 20, client: DemoWriteClient | None = None) -> d
 
         row["_exit_reason"] = exit_reason
         row["_hold_sec"] = hold_sec
+        row["_gross_price_pnl"] = gross_price
+        row["_accounting_complete"] = acct_complete
+        row["_same_symbol_consecutive"] = prev_symbol == sym
+        if prev_symbol == sym:
+            consecutive_symbol_runs += 1
+        prev_symbol = str(sym) if sym else prev_symbol
+        if hold_sec is not None:
+            hold_secs.append(hold_sec)
+            if hold_sec < 10:
+                under_10 += 1
+            if hold_sec < 30:
+                under_30 += 1
+            if hold_sec < 60:
+                under_60 += 1
+        if sym:
+            symbol_counts[str(sym)] += 1
+            if entry_ts:
+                symbol_entry_times[str(sym)].append(entry_ts)
+        if gross_price is not None and gross_price > 0 and net is not None and net < 0:
+            gross_pos_net_neg += 1
+        ft = abs(open_fee or 0) + abs(close_fee or 0)
+        if ft > 0:
+            fee_drags.append(ft)
+        if funding is not None:
+            funding_total += abs(funding)
         if net is not None:
             net_pnl += net
             if net >= 0:
@@ -259,10 +326,20 @@ def audit_trades(*, limit: int = 20, client: DemoWriteClient | None = None) -> d
         if exit_reason:
             exit_reasons[str(exit_reason)] += 1
 
-        for tag in _classify_loss_root_causes(row, net=net):
-            root_agg[tag] += 1
+        for tag in _classify_loss_root_causes(row, net=net, hold_sec=hold_sec):
+            cause = tag["cause"]
+            lvl = tag["evidence_level"]
+            root_agg[cause] += 1
             if net is not None and net < 0:
-                root_loss[tag] += net
+                root_loss[cause] += net
+            if lvl == "CONFIRMED":
+                confirmed[cause] += 1
+            elif lvl == "SUPPORTED":
+                supported[cause] += 1
+            elif lvl == "HYPOTHESIS":
+                hypothesized[cause] += 1
+            elif cause == "UNDETERMINED":
+                undetermined_count += 1
 
         trades_out.append(
             {
@@ -292,7 +369,7 @@ def audit_trades(*, limit: int = 20, client: DemoWriteClient | None = None) -> d
                 "wallet_reconciliation": wallet_recon,
                 "Reflection_created": reflection_created,
                 "mistake_signature": mistake_sig,
-                "root_causes": _classify_loss_root_causes(row, net=net),
+                "root_causes": _classify_loss_root_causes(row, net=net, hold_sec=hold_sec),
             }
         )
 
@@ -300,11 +377,37 @@ def audit_trades(*, limit: int = 20, client: DemoWriteClient | None = None) -> d
     win_rate = (wins / total) if total else None
     avg_win = (sum(win_vals) / len(win_vals)) if win_vals else None
     avg_loss = (sum(loss_vals) / len(loss_vals)) if loss_vals else None
+    med_win = _median(win_vals)
+    med_loss = _median([abs(x) for x in loss_vals])
     gross_wins = sum(x for x in win_vals if x > 0)
     gross_losses = abs(sum(x for x in loss_vals if x < 0))
     profit_factor = (gross_wins / gross_losses) if gross_losses > 0 else None
     expectancy = (net_pnl / total) if total else None
     loss_total = abs(sum(loss_vals)) if loss_vals else 0.0
+    med_hold = _median(hold_secs)
+    p25_hold = _percentile(hold_secs, 0.25)
+    p75_hold = _percentile(hold_secs, 0.75)
+    gross_abs = abs(gross_pnl) if gross_pnl else 0.0
+    fees_pct_gross = (fees_total / gross_abs * 100.0) if gross_abs > 0 else None
+    edge_cost_ratios = []
+    for t in trades_out:
+        g = _f(t.get("gross_price_pnl"))
+        n = _f(t.get("net_realized"))
+        f = abs(_f(t.get("open_fee")) or 0) + abs(_f(t.get("close_fee")) or 0)
+        if g and f:
+            edge_cost_ratios.append(abs(g) / f)
+    churn = _churn_risk_distribution(
+        trades=trades_out,
+        symbol_concentration=dict(symbol_counts),
+        median_hold=med_hold,
+        under_30s=under_30,
+        fee_drag_median=_median(fee_drags),
+    )
+    reentry_gaps: list[float] = []
+    for sym, times in symbol_entry_times.items():
+        times_sorted = sorted(times)
+        for i in range(1, len(times_sorted)):
+            reentry_gaps.append((times_sorted[i] - times_sorted[i - 1]) / 1000.0)
     root_summary = []
     for tag, cnt in root_agg.most_common():
         nl = abs(root_loss.get(tag, 0.0))
@@ -323,34 +426,54 @@ def audit_trades(*, limit: int = 20, client: DemoWriteClient | None = None) -> d
         "limit": limit,
         "trades": trades_out,
         "summary": {
-            "total_trades": total,
+            "trade_count": total,
             "wins": wins,
             "losses": losses,
             "win_rate": win_rate,
             "gross_pnl": gross_pnl,
             "fees_total": fees_total,
+            "funding_total": funding_total,
             "net_pnl": net_pnl,
             "avg_win": avg_win,
             "avg_loss": avg_loss,
+            "median_win": med_win,
+            "median_loss": med_loss,
             "profit_factor": profit_factor,
-            "expectancy": expectancy,
-            "fee_dominated_losses": fee_dom,
-            "stop_loss_count": stop_loss,
-            "same_symbol_repeat_count": sum(1 for c in symbols.values() if c < -1),
+            "expectancy_per_trade": expectancy,
+            "median_hold_sec": med_hold,
+            "p25_hold_sec": p25_hold,
+            "p75_hold_sec": p75_hold,
+            "round_trips_under_10_sec": under_10,
+            "round_trips_under_30_sec": under_30,
+            "round_trips_under_60_sec": under_60,
+            "fees_as_pct_of_gross_abs_pnl": fees_pct_gross,
+            "symbol_concentration": dict(symbol_counts.most_common(10)),
+            "top_symbols_by_trade_count": symbol_counts.most_common(10),
+            "same_symbol_consecutive_runs": consecutive_symbol_runs,
             "same_setup_repeat_count": same_setup_repeats,
             "LONG": {"count": long_n, "net_pnl": long_net},
             "SHORT": {"count": short_n, "net_pnl": short_net},
-            "top_losing_symbols": symbols.most_common(5),
-            "top_losing_setup_signatures": setups.most_common(5),
-            "top_exit_reasons": exit_reasons.most_common(),
+            "gross_positive_net_negative_count": gross_pos_net_neg,
+            "edge_to_cost_ratio_median": _median(edge_cost_ratios),
+            "fee_drag_per_round_trip_median": _median(fee_drags),
+            "trades_per_symbol_per_hour": {
+                sym: round(cnt / max(0.01, (max(times) - min(times)) / 3_600_000), 4)
+                for sym, times in symbol_entry_times.items()
+                if len(times) >= 2 and max(times) > min(times)
+            },
+            "median_time_between_same_symbol_entries_sec": _median(reentry_gaps),
+            "CHURN_RISK": churn,
             "root_causes": root_summary,
-            "aggregate_ab": _map_aggregate_ab(list(root_agg.keys())),
+            "confirmed_loss_causes": dict(confirmed),
+            "supported_loss_causes": dict(supported),
+            "hypothesized_loss_causes": dict(hypothesized),
+            "undetermined_loss_count": undetermined_count,
         },
     }
 
 
 def main() -> int:
-    limit = int(os.environ.get("NEXUS_AUDIT_TRADE_LIMIT", "20"))
+    limit = int(os.environ.get("NEXUS_AUDIT_TRADE_LIMIT", "50"))
     out = audit_trades(limit=limit)
     print(json.dumps(out, indent=2, default=str))
     return 0 if out.get("ok") else 1
