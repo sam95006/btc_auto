@@ -4,7 +4,8 @@
  * Forbidden routes: /trade, /orders, /arm, /routing-edit
  *
  * PUB-E: Founder private operator mounts in a separate shell (never inside member SidebarNav).
- * V18.2.11 Preview: Member Product V2 is default. No silent fallback to Legacy / ActualPanel.
+ * Member Platform UI V1 (mock, local review) is the default member-facing surface.
+ * Product V2 remains mounted for generation checks / legacy preview.
  */
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { FounderDiagnosticsPage } from "./founder/FounderDiagnosticsPage";
@@ -14,6 +15,7 @@ import { FounderOperatorPage } from "./founder/FounderOperatorPage";
 import { FounderRuntimePage } from "./pages/FounderRuntimePage";
 import { NexusMemberProductV2 } from "./app/NexusMemberProductV2";
 import { MemberPlatformApp } from "./app/MemberPlatformApp";
+import { MemberPlatformV1App } from "./member_platform_v1";
 import { MEMBER_SURFACE_V18_2_1_FLAG } from "./member/memberSurfaceV1821Flag";
 
 function ActualPanelPreviewRedirect() {
@@ -33,7 +35,7 @@ function ActualPanelPreviewRedirect() {
 /**
  * Member Platform (PUB-D) + Founder Private Operator (PUB-E).
  * Founder operator never mounts inside member nav.
- * Default Preview surface = Product V2 only.
+ * Default member surface = Member Platform UI V1 (mock data).
  */
 export default function App() {
   return (
@@ -50,7 +52,8 @@ export default function App() {
       <Route path="/founder/runtime" element={<FounderRuntimePage />} />
       <Route path="/preview/v18_2_1/*" element={<ActualPanelPreviewRedirect />} />
       <Route path="/member-platform/*" element={<MemberPlatformApp />} />
-      <Route path="/*" element={<NexusMemberProductV2 />} />
+      <Route path="/product-v2/*" element={<NexusMemberProductV2 />} />
+      <Route path="/*" element={<MemberPlatformV1App />} />
     </Routes>
   );
 }
