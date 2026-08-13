@@ -406,6 +406,10 @@ def path_outcome_audit(campaign_root: Path) -> dict[str, Any]:
     }
 
 
+V2_PRIORITY_FRACTION = 0.75
+V2_PRIORITY_PROGRESS_FILE = "shadow_v2_priority_progress.json"
+
+
 def _backfill_budgets() -> tuple[float, int]:
     import os
 
@@ -418,6 +422,102 @@ def _backfill_budgets() -> tuple[float, int]:
     except (TypeError, ValueError):
         max_horizons = 40
     return max(1.0, max_sec), max(1, max_horizons)
+
+
+def v2_priority_horizon_budget(max_horizons: int, *, v2_pending: int) -> tuple[int, int]:
+    """Return (v2_cap, legacy_floor). Unused V2 cap rolls to legacy during the cycle."""
+    mh = max(1, int(max_horizons))
+    if v2_pending <= 0:
+        return 0, mh
+    v2_cap = max(1, int(mh * V2_PRIORITY_FRACTION))
+    if mh > 1:
+        v2_cap = min(v2_cap, mh - 1)
+    else:
+        v2_cap = mh
+    return v2_cap, mh - v2_cap
+
+
+def v2_priority_progress_path(campaign_root: Path) -> Path:
+    return shadow_dir(campaign_root) / V2_PRIORITY_PROGRESS_FILE
+
+
+def load_v2_priority_progress(campaign_root: Path) -> dict[str, Any]:
+    path = v2_priority_progress_path(campaign_root)
+    if not path.exists():
+        return {"schema": "v30_shadow_v2_priority_progress_v1", "cursor_index": 0}
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        return raw if isinstance(raw, dict) else {"cursor_index": 0}
+    except Exception:  # noqa: BLE001
+        return {"cursor_index": 0}
+
+
+def save_v2_priority_progress(campaign_root: Path, progress: dict[str, Any]) -> None:
+    d = shadow_dir(campaign_root)
+    d.mkdir(parents=True, exist_ok=True)
+    path = v2_priority_progress_path(campaign_root)
+    payload = {
+        "schema": "v30_shadow_v2_priority_progress_v1",
+        "updated_at_ms": int(time.time() * 1000),
+        "cursor_index": int(progress.get("cursor_index") or 0),
+        "last_processed_signal_id": progress.get("last_processed_signal_id"),
+        "v2_priority_pending_before": progress.get("v2_priority_pending_before"),
+        "v2_priority_processed_this_cycle": progress.get("v2_priority_processed_this_cycle"),
+        "v2_priority_valid_written": progress.get("v2_priority_valid_written"),
+        "v2_priority_unavailable_written": progress.get("v2_priority_unavailable_written"),
+        "v2_priority_pending_after": progress.get("v2_priority_pending_after"),
+        "legacy_processed_this_cycle": progress.get("legacy_processed_this_cycle"),
+        "priority_starvation_prevented": progress.get("priority_starvation_prevented"),
+    }
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(payload, indent=2, default=str) + "\n", encoding="utf-8")
+    tmp.replace(path)
+
+
+def _mature_pending_horizons(
+    signal: dict[str, Any],
+    entry: dict[str, Any],
+    *,
+    now_ms: int,
+    keys: set[tuple[str, int]],
+) -> list[int]:
+    from backend.nexus_research_ai_autonomy.shadow_signal_v1 import HORIZON_LABELS
+
+    sid = str(signal.get("signal_id") or "")
+    if not sid:
+        return []
+    if entry.get("lifecycle_state") in {"INVALIDATED", "EXPIRED"}:
+        return []
+    if entry.get("fully_resolved_all_horizons"):
+        return []
+    entry_ts = int(signal.get("detected_at_ms") or 0)
+    want: list[int] = []
+    for h in SHADOW_HORIZONS_SEC:
+        label = HORIZON_LABELS.get(h, str(h))
+        if (
+            entry_ts > 0
+            and now_ms >= entry_ts + h * 1000
+            and (sid, h) not in keys
+            and str((entry.get("horizon_status") or {}).get(label) or "PENDING") == "PENDING"
+        ):
+            want.append(int(h))
+    return want
+
+
+def _count_pending_horizons(
+    signals: list[dict[str, Any]],
+    state: dict[str, Any],
+    *,
+    now_ms: int,
+    keys: set[tuple[str, int]],
+) -> int:
+    n = 0
+    st_map = state.get("signals") or {}
+    for sig in signals:
+        sid = str(sig.get("signal_id") or "")
+        entry = st_map.get(sid) or {}
+        n += len(_mature_pending_horizons(sig, entry, now_ms=now_ms, keys=keys))
+    return n
 
 
 def evaluate_signal_horizons(
@@ -680,14 +780,25 @@ def refresh_mature_shadow_outcomes(
     led = _ledger_stats(campaign_root)
     from backend.nexus_research_ai_autonomy.shadow_v2_challenger_v1 import (
         evidence_to_shadow_signal,
+        load_selected_top1_long,
         load_v2_c1_shadow_signals,
     )
 
-    signals = load_active_shadow_signals(campaign_root) + [
-        evidence_to_shadow_signal(e) for e in load_v2_c1_shadow_signals(campaign_root)
-    ]
+    v1_signals = load_active_shadow_signals(campaign_root)
+    v2_all = [evidence_to_shadow_signal(e) for e in load_v2_c1_shadow_signals(campaign_root)]
+    v2_selected = [evidence_to_shadow_signal(e) for e in load_selected_top1_long(campaign_root)]
+    v2_priority_ids = {str(s.get("signal_id") or "") for s in v2_selected if s.get("signal_id")}
+    v1_sorted = sorted(
+        v1_signals,
+        key=lambda s: (int(s.get("detected_at_ms") or 0), str(s.get("signal_id") or "")),
+    )
+    v2_priority_sorted = sorted(
+        v2_selected,
+        key=lambda s: (int(s.get("detected_at_ms") or 0), str(s.get("signal_id") or "")),
+    )
+    # Combined for state sync / pending totals only — legacy cursor walks V1-only.
     signals_sorted = sorted(
-        signals,
+        v1_signals + v2_all,
         key=lambda s: (int(s.get("detected_at_ms") or 0), str(s.get("signal_id") or "")),
     )
     state = load_signal_state(campaign_root)
@@ -695,9 +806,14 @@ def refresh_mature_shadow_outcomes(
     keys = set(key_status.keys())
     progress = load_backfill_progress(campaign_root)
     cursor = int(progress.get("cursor_index") or 0)
-    n = len(signals_sorted)
+    n = len(v1_sorted)
     if n and (cursor < 0 or cursor >= n):
         cursor = 0
+    v2_prog = load_v2_priority_progress(campaign_root)
+    v2_cursor = int(v2_prog.get("cursor_index") or 0)
+    n_v2 = len(v2_priority_sorted)
+    if n_v2 and (v2_cursor < 0 or v2_cursor >= n_v2):
+        v2_cursor = 0
 
     horizons_processed = 0
     state_synced = 0
@@ -763,102 +879,127 @@ def refresh_mature_shadow_outcomes(
         _checkpoint(status if status == "PARTIAL" else "IDLE")
 
         # Count pending fetch work
-        pending_before = 0
         now_ms = int(time.time() * 1000)
-        for sig in signals_sorted:
-            sid = str(sig.get("signal_id") or "")
-            if not sid:
-                continue
-            entry = ensure_signal_state_entry(state, sig)
-            if entry.get("fully_resolved_all_horizons"):
-                continue
-            entry_ts = int(sig.get("detected_at_ms") or 0)
-            for h in SHADOW_HORIZONS_SEC:
-                label = HORIZON_LABELS.get(h, str(h))
-                if (
-                    entry_ts > 0
-                    and now_ms >= entry_ts + h * 1000
-                    and (sid, h) not in keys
-                    and str((entry.get("horizon_status") or {}).get(label) or "PENDING") == "PENDING"
-                ):
-                    pending_before += 1
+        pending_before = _count_pending_horizons(signals_sorted, state, now_ms=now_ms, keys=keys)
+        v2_priority_pending_before = _count_pending_horizons(
+            v2_priority_sorted, state, now_ms=now_ms, keys=keys
+        )
+        v2_cap, _legacy_floor = v2_priority_horizon_budget(
+            max_horizons, v2_pending=v2_priority_pending_before
+        )
+        v2_priority_processed = 0
+        v2_priority_valid = 0
+        v2_priority_unavailable = 0
+        legacy_processed = 0
 
-        if n == 0:
+        def _ingest_rows(sid: str, rows: list[dict[str, Any]], *, v2_priority: bool) -> None:
+            nonlocal horizons_processed, evaluated, dirty, new_paths, unavailable_writes
+            nonlocal v2_priority_processed, v2_priority_valid, v2_priority_unavailable, legacy_processed
+            if not rows:
+                return
+            evaluated += 1
+            outcomes.extend(rows)
+            for r in rows:
+                horizons_processed += 1
+                dirty = True
+                h = int(r.get("horizon_sec") or 0)
+                keys.add((sid, h))
+                if r.get("unavailable_reason") == "HISTORICAL_PATH_UNAVAILABLE":
+                    unavailable_writes += 1
+                    key_status[(sid, h)] = "UNAVAILABLE"
+                    if v2_priority:
+                        v2_priority_unavailable += 1
+                else:
+                    new_paths += 1
+                    key_status[(sid, h)] = "VALID"
+                    if v2_priority:
+                        v2_priority_valid += 1
+                if v2_priority:
+                    v2_priority_processed += 1
+                else:
+                    legacy_processed += 1
+
+        def _process_one(sig: dict[str, Any], *, v2_priority: bool, cap: int) -> bool:
+            """Process pending horizons for one signal. Return True if any work done."""
+            sid = str(sig.get("signal_id") or "")
+            if not sid or _budget_hit() or horizons_processed >= cap:
+                return False
+            entry = ensure_signal_state_entry(state, sig)
+            now_local = int(time.time() * 1000)
+            want = _mature_pending_horizons(sig, entry, now_ms=now_local, keys=keys)
+            remaining = cap - horizons_processed
+            want = want[: max(0, remaining)]
+            if not want:
+                return False
+            rows = evaluate_signal_horizons(
+                client,
+                signal=sig,
+                campaign_root=campaign_root,
+                horizons=want,
+                existing_keys=keys,
+                state_entry=entry,
+            )
+            _ingest_rows(sid, rows, v2_priority=v2_priority)
+            return bool(rows)
+
+        if n == 0 and n_v2 == 0:
             status = "CAUGHT_UP"
         else:
             status = "PARTIAL"
-            visited = 0
-            idx = cursor % n
-            while visited < n and not _budget_hit():
-                sig = signals_sorted[idx]
-                sid = str(sig.get("signal_id") or "")
-                progress["last_processed_signal_id"] = sid
-                cursor = (idx + 1) % n
-                visited += 1
-                idx = cursor
-                if not sid:
-                    continue
-                entry = ensure_signal_state_entry(state, sig)
-                if entry.get("lifecycle_state") in {"INVALIDATED", "EXPIRED"}:
-                    continue
-                if entry.get("fully_resolved_all_horizons"):
-                    continue
-                entry_ts = int(sig.get("detected_at_ms") or 0)
-                now_ms = int(time.time() * 1000)
-                want = [
-                    h
-                    for h in SHADOW_HORIZONS_SEC
-                    if entry_ts > 0
-                    and now_ms >= entry_ts + h * 1000
-                    and (sid, h) not in keys
-                    and str(
-                        (entry.get("horizon_status") or {}).get(HORIZON_LABELS.get(h, str(h)), "PENDING")
-                    )
-                    == "PENDING"
-                ]
-                remaining = max_horizons - horizons_processed
-                want = want[: max(0, remaining)]
-                if not want:
-                    continue
-                rows = evaluate_signal_horizons(
-                    client,
-                    signal=sig,
-                    campaign_root=campaign_root,
-                    horizons=want,
-                    existing_keys=keys,
-                    state_entry=entry,
-                )
-                if not rows:
-                    continue
-                evaluated += 1
-                outcomes.extend(rows)
-                for r in rows:
-                    horizons_processed += 1
-                    dirty = True
-                    h = int(r.get("horizon_sec") or 0)
-                    keys.add((sid, h))
-                    if r.get("unavailable_reason") == "HISTORICAL_PATH_UNAVAILABLE":
-                        unavailable_writes += 1
-                        key_status[(sid, h)] = "UNAVAILABLE"
-                    else:
-                        new_paths += 1
-                        key_status[(sid, h)] = "VALID"
-                if horizons_processed % checkpoint_every == 0:
-                    _checkpoint("PARTIAL")
-            # Determine caught-up vs partial
+            # Phase B: V2 selected Top1 priority (bounded). Never consumes the full budget
+            # when legacy work remains — unused V2 cap rolls to the V1 cursor walk.
+            if v2_priority_pending_before > 0 and n_v2 > 0 and not _budget_hit():
+                v2_visited = 0
+                idx = v2_cursor % n_v2
+                while v2_visited < n_v2 and not _budget_hit() and horizons_processed < v2_cap:
+                    sig = v2_priority_sorted[idx]
+                    sid = str(sig.get("signal_id") or "")
+                    v2_prog["last_processed_signal_id"] = sid
+                    v2_cursor = (idx + 1) % n_v2
+                    v2_visited += 1
+                    idx = v2_cursor
+                    if not sid or sid not in v2_priority_ids:
+                        continue
+                    _process_one(sig, v2_priority=True, cap=v2_cap)
+                    if horizons_processed % checkpoint_every == 0:
+                        _checkpoint("PARTIAL")
+
+            # Phase C: remaining budget → legacy V1 cursor (V1-only list; cursor preserved).
+            if n > 0 and not _budget_hit() and horizons_processed < max_horizons:
+                visited = 0
+                idx = cursor % n
+                while visited < n and not _budget_hit() and horizons_processed < max_horizons:
+                    sig = v1_sorted[idx]
+                    sid = str(sig.get("signal_id") or "")
+                    progress["last_processed_signal_id"] = sid
+                    cursor = (idx + 1) % n
+                    visited += 1
+                    idx = cursor
+                    if not sid:
+                        continue
+                    if sid in v2_priority_ids:
+                        continue
+                    _process_one(sig, v2_priority=False, cap=max_horizons)
+                    if horizons_processed % checkpoint_every == 0:
+                        _checkpoint("PARTIAL")
+
+            # Leftover only: non-selected V2 (SHORT research) — never V2 priority, never V1 cursor.
+            if not _budget_hit() and horizons_processed < max_horizons:
+                for sig in v2_all:
+                    if _budget_hit() or horizons_processed >= max_horizons:
+                        break
+                    sid = str(sig.get("signal_id") or "")
+                    if not sid or sid in v2_priority_ids:
+                        continue
+                    _process_one(sig, v2_priority=False, cap=max_horizons)
+
             still_pending = False
             now_ms = int(time.time() * 1000)
             for sig in signals_sorted:
                 sid = str(sig.get("signal_id") or "")
                 entry = (state.get("signals") or {}).get(sid) or {}
-                if entry.get("fully_resolved_all_horizons"):
-                    continue
-                entry_ts = int(sig.get("detected_at_ms") or 0)
-                for h in SHADOW_HORIZONS_SEC:
-                    if entry_ts > 0 and now_ms >= entry_ts + h * 1000 and (sid, h) not in keys:
-                        still_pending = True
-                        break
-                if still_pending:
+                if _mature_pending_horizons(sig, entry, now_ms=now_ms, keys=keys):
+                    still_pending = True
                     break
             if _budget_hit() or still_pending:
                 status = "PARTIAL"
@@ -872,17 +1013,23 @@ def refresh_mature_shadow_outcomes(
         save_signal_state(campaign_root, state)
         save_backfill_progress(campaign_root, progress)
 
-        pending_after = 0
         now_ms = int(time.time() * 1000)
-        for sig in signals_sorted:
-            sid = str(sig.get("signal_id") or "")
-            entry = (state.get("signals") or {}).get(sid) or {}
-            if entry.get("fully_resolved_all_horizons"):
-                continue
-            entry_ts = int(sig.get("detected_at_ms") or 0)
-            for h in SHADOW_HORIZONS_SEC:
-                if entry_ts > 0 and now_ms >= entry_ts + h * 1000 and (sid, h) not in keys:
-                    pending_after += 1
+        pending_after = _count_pending_horizons(signals_sorted, state, now_ms=now_ms, keys=keys)
+        v2_priority_pending_after = _count_pending_horizons(
+            v2_priority_sorted, state, now_ms=now_ms, keys=keys
+        )
+        priority_starvation_prevented = bool(
+            v2_priority_pending_before <= 0 or v2_priority_processed > 0
+        )
+        v2_prog["cursor_index"] = v2_cursor
+        v2_prog["v2_priority_pending_before"] = v2_priority_pending_before
+        v2_prog["v2_priority_processed_this_cycle"] = v2_priority_processed
+        v2_prog["v2_priority_valid_written"] = v2_priority_valid
+        v2_prog["v2_priority_unavailable_written"] = v2_priority_unavailable
+        v2_prog["v2_priority_pending_after"] = v2_priority_pending_after
+        v2_prog["legacy_processed_this_cycle"] = legacy_processed
+        v2_prog["priority_starvation_prevented"] = priority_starvation_prevented
+        save_v2_priority_progress(campaign_root, v2_prog)
 
         fully_resolved = sum(
             1 for e in (state.get("signals") or {}).values() if e.get("fully_resolved_all_horizons")
@@ -915,6 +1062,14 @@ def refresh_mature_shadow_outcomes(
             "backfill_work_budget": max_horizons,
             "backfill_time_budget": max_sec,
             "cursor_index": cursor,
+            "v2_priority_pending_before": v2_priority_pending_before,
+            "v2_priority_processed_this_cycle": v2_priority_processed,
+            "v2_priority_valid_written": v2_priority_valid,
+            "v2_priority_unavailable_written": v2_priority_unavailable,
+            "v2_priority_pending_after": v2_priority_pending_after,
+            "legacy_processed_this_cycle": legacy_processed,
+            "priority_starvation_prevented": priority_starvation_prevented,
+            "v2_priority_horizon_budget": v2_cap,
             "fully_resolved_all_horizons": fully_resolved,
             "fully_matured_valid_all_horizons": fully_valid,
             "fully_matured_all_horizons": fully_valid,

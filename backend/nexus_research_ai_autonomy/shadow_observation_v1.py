@@ -274,6 +274,26 @@ def _pearson(xs: list[float], ys: list[float]) -> float | None:
     return round(num / (denx * deny), 4)
 
 
+def _backfill_progress_fields(bf: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "horizons_processed_this_cycle": bf.get("horizons_processed_this_cycle"),
+        "pending_signals_before": bf.get("pending_signals_before"),
+        "pending_signals_after": bf.get("pending_signals_after"),
+        "state_synced_from_existing_paths": bf.get("state_synced_from_existing_paths"),
+        "wall_time_sec": bf.get("wall_time_sec"),
+        "cursor_index": bf.get("cursor_index"),
+        "backfill_work_budget": bf.get("backfill_work_budget"),
+        "backfill_time_budget": bf.get("backfill_time_budget"),
+        "v2_priority_pending_before": bf.get("v2_priority_pending_before"),
+        "v2_priority_processed_this_cycle": bf.get("v2_priority_processed_this_cycle"),
+        "v2_priority_valid_written": bf.get("v2_priority_valid_written"),
+        "v2_priority_unavailable_written": bf.get("v2_priority_unavailable_written"),
+        "v2_priority_pending_after": bf.get("v2_priority_pending_after"),
+        "legacy_processed_this_cycle": bf.get("legacy_processed_this_cycle"),
+        "priority_starvation_prevented": bf.get("priority_starvation_prevented"),
+    }
+
+
 def build_observation_report_lightweight(
     *,
     campaign_root: Path,
@@ -325,16 +345,7 @@ def build_observation_report_lightweight(
         "signals_matured_15m": counters.get("signals_matured_valid_15m"),
         "signals_matured_30m": counters.get("signals_matured_valid_30m"),
         "backfill_status": backfill_status or bf.get("backfill_status"),
-        "backfill_progress": {
-            "horizons_processed_this_cycle": bf.get("horizons_processed_this_cycle"),
-            "pending_signals_before": bf.get("pending_signals_before"),
-            "pending_signals_after": bf.get("pending_signals_after"),
-            "state_synced_from_existing_paths": bf.get("state_synced_from_existing_paths"),
-            "wall_time_sec": bf.get("wall_time_sec"),
-            "cursor_index": bf.get("cursor_index"),
-            "backfill_work_budget": bf.get("backfill_work_budget"),
-            "backfill_time_budget": bf.get("backfill_time_budget"),
-        },
+        "backfill_progress": _backfill_progress_fields(bf),
         "observation_stage": stage,
         "next_checkpoint": next_ck,
         "review_thresholds": {name: thr for name, thr in STAGE_THRESHOLDS},
@@ -778,16 +789,7 @@ def build_observation_report(
         "pending_signal_count": pending,
         "historical_path_unavailable_count": unavailable_count,
         "backfill_status": backfill_status or bf.get("backfill_status"),
-        "backfill_progress": {
-            "horizons_processed_this_cycle": bf.get("horizons_processed_this_cycle"),
-            "pending_signals_before": bf.get("pending_signals_before"),
-            "pending_signals_after": bf.get("pending_signals_after"),
-            "state_synced_from_existing_paths": bf.get("state_synced_from_existing_paths"),
-            "wall_time_sec": bf.get("wall_time_sec"),
-            "cursor_index": bf.get("cursor_index"),
-            "backfill_work_budget": bf.get("backfill_work_budget"),
-            "backfill_time_budget": bf.get("backfill_time_budget"),
-        },
+        "backfill_progress": _backfill_progress_fields(bf),
         "outcomes_rows": len(outcomes),
         "snapshots_latest_count": len(snapshots),
         "matured_by_horizon": matured_by_horizon,

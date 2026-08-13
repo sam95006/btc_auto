@@ -244,7 +244,11 @@ def _fully_valid_count(evidence_rows: list[dict[str, Any]], state: dict[str, Any
 
 
 def build_shadow_v2_challenger_report(campaign_root: Path) -> dict[str, Any]:
-    from backend.nexus_research_ai_autonomy.shadow_signal_v1 import load_active_shadow_signals
+    from backend.nexus_research_ai_autonomy.shadow_path_outcomes_v1 import load_v2_priority_progress
+    from backend.nexus_research_ai_autonomy.shadow_signal_v1 import (
+        load_active_shadow_signals,
+        load_backfill_progress,
+    )
 
     cycles = _read_jsonl(cycle_ledger_path(campaign_root))
     v2_evidence = load_v2_c1_shadow_signals(campaign_root)
@@ -293,6 +297,8 @@ def build_shadow_v2_challenger_report(campaign_root: Path) -> dict[str, Any]:
 
     abstentions = sum(1 for e in selected_top1 if str(e.get("action")) != "READY")
     abstention_rate = round(abstentions / max(1, len(selected_top1)), 4)
+    v2p = load_v2_priority_progress(campaign_root)
+    legacy_bf = load_backfill_progress(campaign_root)
 
     return {
         "schema": REPORT_SCHEMA,
@@ -383,6 +389,16 @@ def build_shadow_v2_challenger_report(campaign_root: Path) -> dict[str, Any]:
         },
         "promotion_auto_enable": False,
         "ready_for_demo_reenable": False,
+        "outcome_backfill": {
+            "v2_priority_pending_before": v2p.get("v2_priority_pending_before"),
+            "v2_priority_processed_this_cycle": v2p.get("v2_priority_processed_this_cycle"),
+            "v2_priority_valid_written": v2p.get("v2_priority_valid_written"),
+            "v2_priority_unavailable_written": v2p.get("v2_priority_unavailable_written"),
+            "v2_priority_pending_after": v2p.get("v2_priority_pending_after"),
+            "legacy_processed_this_cycle": v2p.get("legacy_processed_this_cycle"),
+            "priority_starvation_prevented": v2p.get("priority_starvation_prevented"),
+            "legacy_cursor_index": legacy_bf.get("cursor_index"),
+        },
     }
 
 
