@@ -6,14 +6,20 @@ export function BiasChip({ bias, label }: { bias: MarketBias; label: string }) {
   return <span className={`mpv1-chip ${cls}`}>{label}</span>;
 }
 
-export function AdviceChip({ label }: { advice?: ActionAdvice; label: string }) {
-  return <span className="mpv1-chip mpv1-chip-advice">{label}</span>;
+export function AdviceChip({ advice, label }: { advice?: ActionAdvice; label: string }) {
+  const cls =
+    advice === "watch_closely"
+      ? "mpv1-chip-advice-watch"
+      : advice === "wait"
+        ? "mpv1-chip-advice-wait"
+        : "mpv1-chip-advice";
+  return <span className={`mpv1-chip ${cls}`}>{label}</span>;
 }
 
 export function RiskChip({ risk, label }: { risk: RiskLevel; label: string }) {
   const cls =
     risk === "low" ? "mpv1-chip-risk-low" : risk === "high" ? "mpv1-chip-risk-high" : "mpv1-chip-risk-medium";
-  return <span className={`mpv1-chip ${cls}`}>{label}</span>;
+  return <span className={`mpv1-chip ${cls}`}>風險{label}</span>;
 }
 
 export function ScorePill({ score }: { score: number | null }) {

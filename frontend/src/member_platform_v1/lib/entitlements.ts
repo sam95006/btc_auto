@@ -48,7 +48,7 @@ export const ADVICE_LABELS = {
 } as const;
 
 export const RISK_LABELS = {
-  low: "風險低",
-  medium: "風險中",
-  high: "風險高",
+  low: "低",
+  medium: "中",
+  high: "高",
 } as const;

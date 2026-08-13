@@ -1,7 +1,7 @@
 /**
- * Member Platform V1 — public DTOs for UI.
- * Designed for Mock Adapter → future Zeabur Public Read-only API.
- * Never includes private wallet, keys, positions, or execution controls.
+ * Member Platform — public DTOs for UI.
+ * Mock Adapter → future Zeabur Public Read-only API.
+ * Never includes wallet, keys, positions, or execution controls.
  */
 export type MembershipTier = "starter" | "advanced" | "professional" | "enterprise";
 
@@ -26,6 +26,10 @@ export interface MarketOverviewDto {
   riskLabel: string;
   summary: string;
   updatedAt: string;
+  /** Plain-language one-liners for dashboard */
+  biasDetail?: string;
+  actionDetail?: string;
+  riskDetail?: string;
 }
 
 export interface MarketHighlightDto {
@@ -46,7 +50,19 @@ export interface MarketRankingRowDto {
   adviceLabel: string;
   score: number | null;
   beginnerReason: string;
+  risk: RiskLevel;
+  riskLabel: string;
   riskNote?: string;
+  sparkline?: number[];
+  lastChangeLabel?: string;
+}
+
+export interface SignalChangeDto {
+  id: string;
+  symbol: string;
+  fromLabel: string;
+  toLabel: string;
+  timeLabel: string;
 }
 
 export interface AssetDetailDto {
@@ -59,11 +75,13 @@ export interface AssetDetailDto {
   advice: ActionAdvice;
   adviceLabel: string;
   score: number | null;
+  risk: RiskLevel;
+  riskLabel: string;
   whyInteresting: string[];
   risks: string[];
   invalidation: string[];
   sparkline: number[];
-  /** Advanced — gated by tier */
+  candles?: Array<{ o: number; h: number; l: number; c: number }>;
   evidence?: {
     supporting: string[];
     contradicting: string[];
@@ -91,6 +109,7 @@ export interface AlertDto {
   title: string;
   body: string;
   severity: "info" | "caution" | "high";
+  category: "priority" | "market" | "risk" | "watchlist";
   timeLabel: string;
   read: boolean;
 }
@@ -100,6 +119,8 @@ export interface PlanDto {
   name: string;
   tagline: string;
   priceLabel: string;
+  audience: string;
+  dailyValue: string;
   features: string[];
   highlighted?: boolean;
 }
@@ -118,6 +139,20 @@ export interface DashboardDto {
   riskAlerts: AlertDto[];
   watchlistPreview: MarketRankingRowDto[];
   membership: MembershipStatusDto;
+  signalChanges: SignalChangeDto[];
+  plainLanguage: {
+    happening: string;
+    whyStrong: string;
+    avoid: string;
+    topRisk: string;
+  };
+  pulse: {
+    marketCapLabel: string;
+    breadthBullPct: number;
+    breadthBearPct: number;
+    tickers: Array<{ symbol: string; price: number; change24hPct: number }>;
+    trend: number[];
+  };
 }
 
 export type FeatureKey =

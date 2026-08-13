@@ -20,11 +20,11 @@ const Ctx = createContext<WatchCtx | null>(null);
 function load(): string[] {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return ["ETHUSDT", "BTCUSDT"];
+    if (!raw) return ["BTCUSDT", "ETHUSDT", "SOLUSDT"];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map(String) : ["ETHUSDT", "BTCUSDT"];
+    return Array.isArray(parsed) ? parsed.map(String) : ["BTCUSDT", "ETHUSDT", "SOLUSDT"];
   } catch {
-    return ["ETHUSDT", "BTCUSDT"];
+    return ["BTCUSDT", "ETHUSDT", "SOLUSDT"];
   }
 }
 
