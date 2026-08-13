@@ -22,7 +22,6 @@ from backend.nexus_research_ai_autonomy.shadow_signal_v1 import (
     load_active_shadow_signals,
     load_signal_state,
     mark_horizon_complete,
-    pending_horizons_for_signal,
     save_signal_state,
     shadow_dir,
 )
@@ -370,16 +369,94 @@ def _record_outcome_row(campaign_root: Path, row: dict[str, Any]) -> None:
 
 
 def existing_path_keys(campaign_root: Path) -> set[tuple[str, int]]:
-    keys: set[tuple[str, int]] = set()
+    return set(existing_path_key_status(campaign_root).keys())
+
+
+def existing_path_key_status(campaign_root: Path) -> dict[tuple[str, int], str]:
+    """Map (signal_id, horizon_sec) → VALID|UNAVAILABLE from persisted path rows (first wins)."""
+    out: dict[tuple[str, int], str] = {}
     for rec in load_path_records(campaign_root):
         sid = str(rec.get("signal_id") or "")
         try:
             h = int(rec.get("horizon_sec") or 0)
         except (TypeError, ValueError):
             continue
+        if not sid or h <= 0:
+            continue
+        key = (sid, h)
+        if key in out:
+            continue
+        unavail = (
+            rec.get("unavailable_reason") == "HISTORICAL_PATH_UNAVAILABLE"
+            or rec.get("measurement_quality") == "HISTORICAL_PATH_UNAVAILABLE"
+            or (
+                not rec.get("bars")
+                and rec.get("post_cost_hypothetical") is None
+                and rec.get("MFE") is None
+            )
+        )
+        out[key] = "UNAVAILABLE" if unavail else "VALID"
+    return out
+
+
+def path_outcome_audit(campaign_root: Path) -> dict[str, Any]:
+    path_rows = load_path_records(campaign_root)
+    path_keys: list[tuple[str, int]] = []
+    for rec in path_rows:
+        sid = str(rec.get("signal_id") or "")
+        try:
+            h = int(rec.get("horizon_sec") or 0)
+        except (TypeError, ValueError):
+            continue
         if sid and h > 0:
-            keys.add((sid, h))
-    return keys
+            path_keys.append((sid, h))
+    unique_path = set(path_keys)
+
+    out_path = shadow_dir(campaign_root) / "shadow_outcomes.jsonl"
+    outcome_rows: list[dict[str, Any]] = []
+    if out_path.exists():
+        for line in out_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(row, dict):
+                outcome_rows.append(row)
+    out_keys: list[tuple[str, int]] = []
+    for rec in outcome_rows:
+        sid = str(rec.get("signal_id") or "")
+        try:
+            h = int(rec.get("horizon_sec") or 0)
+        except (TypeError, ValueError):
+            continue
+        if sid and h > 0:
+            out_keys.append((sid, h))
+    unique_out = set(out_keys)
+    return {
+        "path_record_rows": len(path_rows),
+        "unique_path_keys": len(unique_path),
+        "duplicate_path_record_rows": max(0, len(path_keys) - len(unique_path)),
+        "outcome_rows": len(outcome_rows),
+        "unique_outcome_keys": len(unique_out),
+        "duplicate_outcome_rows": max(0, len(out_keys) - len(unique_out)),
+    }
+
+
+def _backfill_budgets() -> tuple[float, int]:
+    import os
+
+    try:
+        max_sec = float(os.environ.get("NEXUS_SHADOW_BACKFILL_MAX_SEC") or 20)
+    except (TypeError, ValueError):
+        max_sec = 20.0
+    try:
+        max_horizons = int(os.environ.get("NEXUS_SHADOW_BACKFILL_MAX_HORIZONS_PER_CYCLE") or 40)
+    except (TypeError, ValueError):
+        max_horizons = 40
+    return max(1.0, max_sec), max(1, max_horizons)
 
 
 def evaluate_signal_horizons(
@@ -558,71 +635,277 @@ def refresh_mature_shadow_outcomes(
     *,
     campaign_root: Path,
 ) -> dict[str, Any]:
-    """Evaluate pending horizons for ALL unique ledger signals; never overwrite lifecycle via latest batch."""
+    """Bounded, resumable backfill. Checkpoints state; never unbounded 8k-pass in one cycle."""
+    from backend.nexus_research_ai_autonomy.shadow_signal_v1 import (
+        HORIZON_LABELS,
+        ledger_stats as _ledger_stats,
+        load_backfill_progress,
+        save_backfill_progress,
+    )
+
+    t0 = time.time()
+    max_sec, max_horizons = _backfill_budgets()
+    led = _ledger_stats(campaign_root)
     signals = load_active_shadow_signals(campaign_root)
+    signals_sorted = sorted(
+        signals,
+        key=lambda s: (int(s.get("detected_at_ms") or 0), str(s.get("signal_id") or "")),
+    )
     state = load_signal_state(campaign_root)
-    keys = existing_path_keys(campaign_root)
+    key_status = existing_path_key_status(campaign_root)
+    keys = set(key_status.keys())
+    progress = load_backfill_progress(campaign_root)
+    cursor = int(progress.get("cursor_index") or 0)
+    n = len(signals_sorted)
+    if n and (cursor < 0 or cursor >= n):
+        cursor = 0
+
+    horizons_processed = 0
+    state_synced = 0
+    new_paths = 0
+    unavailable_writes = 0
     evaluated = 0
     outcomes: list[dict[str, Any]] = []
-    unavailable = 0
+    checkpoint_every = 10
+    dirty = False
+    status = "IDLE"
 
-    for sig in signals:
-        sid = str(sig.get("signal_id") or "")
-        if not sid:
-            continue
-        entry = ensure_signal_state_entry(state, sig)
-        if entry.get("fully_matured"):
-            continue
-        if entry.get("lifecycle_state") in {"INVALIDATED", "EXPIRED"}:
-            continue
-        # Original origin state stays in ledger; registry tracks PARTIAL_OUTCOME / OUTCOME
-        pending = pending_horizons_for_signal(
-            entry, existing_keys=keys, signal_id=sid, horizons=SHADOW_HORIZONS_SEC
+    def _budget_hit() -> bool:
+        return (time.time() - t0) >= max_sec or horizons_processed >= max_horizons
+
+    def _checkpoint(cur_status: str) -> None:
+        nonlocal dirty
+        if not dirty:
+            return
+        save_signal_state(campaign_root, state)
+        save_backfill_progress(
+            campaign_root,
+            {
+                "cursor_index": cursor,
+                "last_processed_signal_id": progress.get("last_processed_signal_id"),
+                "backfill_status": cur_status,
+            },
         )
-        # Also include horizons already due even if pending list empty but state lagging
-        now_ms = int(time.time() * 1000)
-        entry_ts = int(sig.get("detected_at_ms") or 0)
-        due = [
-            h
-            for h in SHADOW_HORIZONS_SEC
-            if entry_ts > 0 and now_ms >= entry_ts + h * 1000 and (sid, h) not in keys
-        ]
-        want = sorted(set(pending) | set(due))
-        if not want:
-            # Sync completed flags from existing path keys
+        dirty = False
+
+    try:
+        # Phase A: sync state from already-persisted path keys (no API)
+        sync_budget = max(200, max_horizons * 5)
+        synced_this = 0
+        for sig in signals_sorted:
+            if synced_this >= sync_budget or (time.time() - t0) >= max_sec:
+                status = "PARTIAL"
+                break
+            sid = str(sig.get("signal_id") or "")
+            if not sid:
+                continue
+            entry = ensure_signal_state_entry(state, sig)
+            now_ms = int(time.time() * 1000)
             for h in SHADOW_HORIZONS_SEC:
-                if (sid, h) in keys:
-                    mark_horizon_complete(entry, horizon_sec=h, now_ms=now_ms)
-            continue
+                st = key_status.get((sid, h))
+                if not st:
+                    continue
+                label = HORIZON_LABELS.get(h, str(h))
+                cur = str((entry.get("horizon_status") or {}).get(label) or "PENDING")
+                if cur == st:
+                    continue
+                mark_horizon_complete(
+                    entry,
+                    horizon_sec=h,
+                    now_ms=now_ms,
+                    unavailable_reason="HISTORICAL_PATH_UNAVAILABLE" if st == "UNAVAILABLE" else None,
+                    status=st,
+                )
+                state_synced += 1
+                synced_this += 1
+                dirty = True
+            if dirty and state_synced % 50 == 0:
+                _checkpoint("PARTIAL")
+        _checkpoint(status if status == "PARTIAL" else "IDLE")
 
-        rows = evaluate_signal_horizons(
-            client,
-            signal=sig,
-            campaign_root=campaign_root,
-            horizons=want,
-            existing_keys=keys,
-            state_entry=entry,
+        # Count pending fetch work
+        pending_before = 0
+        now_ms = int(time.time() * 1000)
+        for sig in signals_sorted:
+            sid = str(sig.get("signal_id") or "")
+            if not sid:
+                continue
+            entry = ensure_signal_state_entry(state, sig)
+            if entry.get("fully_resolved_all_horizons"):
+                continue
+            entry_ts = int(sig.get("detected_at_ms") or 0)
+            for h in SHADOW_HORIZONS_SEC:
+                label = HORIZON_LABELS.get(h, str(h))
+                if (
+                    entry_ts > 0
+                    and now_ms >= entry_ts + h * 1000
+                    and (sid, h) not in keys
+                    and str((entry.get("horizon_status") or {}).get(label) or "PENDING") == "PENDING"
+                ):
+                    pending_before += 1
+
+        if n == 0:
+            status = "CAUGHT_UP"
+        else:
+            status = "PARTIAL"
+            visited = 0
+            idx = cursor % n
+            while visited < n and not _budget_hit():
+                sig = signals_sorted[idx]
+                sid = str(sig.get("signal_id") or "")
+                progress["last_processed_signal_id"] = sid
+                cursor = (idx + 1) % n
+                visited += 1
+                idx = cursor
+                if not sid:
+                    continue
+                entry = ensure_signal_state_entry(state, sig)
+                if entry.get("lifecycle_state") in {"INVALIDATED", "EXPIRED"}:
+                    continue
+                if entry.get("fully_resolved_all_horizons"):
+                    continue
+                entry_ts = int(sig.get("detected_at_ms") or 0)
+                now_ms = int(time.time() * 1000)
+                want = [
+                    h
+                    for h in SHADOW_HORIZONS_SEC
+                    if entry_ts > 0
+                    and now_ms >= entry_ts + h * 1000
+                    and (sid, h) not in keys
+                    and str(
+                        (entry.get("horizon_status") or {}).get(HORIZON_LABELS.get(h, str(h)), "PENDING")
+                    )
+                    == "PENDING"
+                ]
+                remaining = max_horizons - horizons_processed
+                want = want[: max(0, remaining)]
+                if not want:
+                    continue
+                rows = evaluate_signal_horizons(
+                    client,
+                    signal=sig,
+                    campaign_root=campaign_root,
+                    horizons=want,
+                    existing_keys=keys,
+                    state_entry=entry,
+                )
+                if not rows:
+                    continue
+                evaluated += 1
+                outcomes.extend(rows)
+                for r in rows:
+                    horizons_processed += 1
+                    dirty = True
+                    h = int(r.get("horizon_sec") or 0)
+                    keys.add((sid, h))
+                    if r.get("unavailable_reason") == "HISTORICAL_PATH_UNAVAILABLE":
+                        unavailable_writes += 1
+                        key_status[(sid, h)] = "UNAVAILABLE"
+                    else:
+                        new_paths += 1
+                        key_status[(sid, h)] = "VALID"
+                if horizons_processed % checkpoint_every == 0:
+                    _checkpoint("PARTIAL")
+            # Determine caught-up vs partial
+            still_pending = False
+            now_ms = int(time.time() * 1000)
+            for sig in signals_sorted:
+                sid = str(sig.get("signal_id") or "")
+                entry = (state.get("signals") or {}).get(sid) or {}
+                if entry.get("fully_resolved_all_horizons"):
+                    continue
+                entry_ts = int(sig.get("detected_at_ms") or 0)
+                for h in SHADOW_HORIZONS_SEC:
+                    if entry_ts > 0 and now_ms >= entry_ts + h * 1000 and (sid, h) not in keys:
+                        still_pending = True
+                        break
+                if still_pending:
+                    break
+            if _budget_hit() or still_pending:
+                status = "PARTIAL"
+            else:
+                status = "CAUGHT_UP"
+
+        progress["cursor_index"] = cursor
+        progress["backfill_status"] = status
+        dirty = True
+        _checkpoint(status)
+        save_signal_state(campaign_root, state)
+        save_backfill_progress(campaign_root, progress)
+
+        pending_after = 0
+        now_ms = int(time.time() * 1000)
+        for sig in signals_sorted:
+            sid = str(sig.get("signal_id") or "")
+            entry = (state.get("signals") or {}).get(sid) or {}
+            if entry.get("fully_resolved_all_horizons"):
+                continue
+            entry_ts = int(sig.get("detected_at_ms") or 0)
+            for h in SHADOW_HORIZONS_SEC:
+                if entry_ts > 0 and now_ms >= entry_ts + h * 1000 and (sid, h) not in keys:
+                    pending_after += 1
+
+        fully_resolved = sum(
+            1 for e in (state.get("signals") or {}).values() if e.get("fully_resolved_all_horizons")
         )
-        if rows:
-            evaluated += 1
-            outcomes.extend(rows)
-            unavailable += sum(1 for r in rows if r.get("unavailable_reason") == "HISTORICAL_PATH_UNAVAILABLE")
-
-    save_signal_state(campaign_root, state)
-    # Intentionally do NOT re-append signals to origin JSONL (immutable ledger).
-    fully = sum(1 for e in (state.get("signals") or {}).values() if e.get("fully_matured"))
-    return {
-        "signals_checked": len(signals),
-        "signals_evaluated": evaluated,
-        "outcomes_written": len(outcomes),
-        "path_records_persisted": len(outcomes),
-        "horizons": list(SHADOW_HORIZONS_SEC),
-        "close_only_MFE_removed": True,
-        "ledger_unique_signals": len(signals),
-        "fully_matured_all_horizons": fully,
-        "historical_path_unavailable_writes": unavailable,
-        "lifecycle_source": "active_shadow_signals.jsonl",
-        "premature_outcome_blocked": True,
-        "per_horizon_exactly_once": True,
-        "historical_kline_start_end": True,
-    }
+        fully_valid = sum(
+            1 for e in (state.get("signals") or {}).values() if e.get("fully_matured_valid_all_horizons")
+        )
+        with_unavail = sum(
+            1 for e in (state.get("signals") or {}).values() if e.get("has_unavailable_horizon")
+        )
+        audit = path_outcome_audit(campaign_root)
+        return {
+            "signals_checked": len(signals_sorted),
+            "signals_evaluated": evaluated,
+            "outcomes_written": len(outcomes),
+            "path_records_persisted": len(outcomes),
+            "horizons": list(SHADOW_HORIZONS_SEC),
+            "close_only_MFE_removed": True,
+            "ledger_rows": led["ledger_rows"],
+            "ledger_unique": led["unique_signal_ids"],
+            "duplicate_signal_rows": led["duplicate_signal_rows"],
+            "pending_signals_before": pending_before,
+            "pending_signals_after": pending_after,
+            "horizons_processed_this_cycle": horizons_processed,
+            "state_synced_from_existing_paths": state_synced,
+            "new_paths_written": new_paths,
+            "unavailable_paths_written": unavailable_writes,
+            "wall_time_sec": round(time.time() - t0, 3),
+            "backfill_status": status,
+            "backfill_work_budget": max_horizons,
+            "backfill_time_budget": max_sec,
+            "cursor_index": cursor,
+            "fully_resolved_all_horizons": fully_resolved,
+            "fully_matured_valid_all_horizons": fully_valid,
+            "fully_matured_all_horizons": fully_valid,
+            "signals_with_unavailable_horizon": with_unavail,
+            "lifecycle_source": "active_shadow_signals.jsonl",
+            "premature_outcome_blocked": True,
+            "per_horizon_exactly_once": True,
+            "historical_kline_start_end": True,
+            "bounded_backfill": True,
+            "periodic_state_checkpoint": True,
+            "restart_resume_safe": True,
+            "existing_path_state_sync": True,
+            **audit,
+        }
+    except Exception as exc:  # noqa: BLE001
+        try:
+            save_signal_state(campaign_root, state)
+            progress["cursor_index"] = cursor
+            progress["backfill_status"] = "ERROR"
+            save_backfill_progress(campaign_root, progress)
+        except Exception:  # noqa: BLE001
+            pass
+        return {
+            "backfill_status": "ERROR",
+            "error": f"{type(exc).__name__}:{exc}"[:300],
+            "horizons_processed_this_cycle": horizons_processed,
+            "state_synced_from_existing_paths": state_synced,
+            "wall_time_sec": round(time.time() - t0, 3),
+            "bounded_backfill": True,
+            "backfill_work_budget": max_horizons,
+            "backfill_time_budget": max_sec,
+            "periodic_state_checkpoint": True,
+        }

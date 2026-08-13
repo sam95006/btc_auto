@@ -155,6 +155,16 @@ def ensure_signal_state_entry(
         return {}
     existing = signals.get(sid)
     if isinstance(existing, dict) and existing:
+        # Migrate older state shapes in place
+        if "horizon_status" not in existing:
+            existing["horizon_status"] = {
+                HORIZON_LABELS[h]: ("VALID" if (existing.get("completed_horizons") or {}).get(HORIZON_LABELS[h])
+                                    and HORIZON_LABELS[h] not in (existing.get("horizon_unavailable") or {})
+                                    else ("UNAVAILABLE" if HORIZON_LABELS[h] in (existing.get("horizon_unavailable") or {})
+                                          else "PENDING"))
+                for h in REQUIRED_HORIZONS_SEC
+            }
+            recompute_maturity_flags(existing)
         return existing
     original = str(signal.get("lifecycle_state") or "DETECTED")
     entry = {
@@ -164,14 +174,47 @@ def ensure_signal_state_entry(
         "original_lifecycle_state": original,
         "lifecycle_state": original,
         "completed_horizons": {HORIZON_LABELS[h]: False for h in REQUIRED_HORIZONS_SEC},
+        "horizon_status": {HORIZON_LABELS[h]: "PENDING" for h in REQUIRED_HORIZONS_SEC},
         "completed_horizon_secs": [],
         "horizon_unavailable": {},
         "first_outcome_at_ms": None,
         "last_outcome_at_ms": None,
-        "fully_matured": False,
+        "fully_resolved_all_horizons": False,
+        "fully_matured_valid_all_horizons": False,
+        "fully_matured": False,  # alias → valid-full (promotion gate)
+        "has_unavailable_horizon": False,
+        "invalid_for_promotion": False,
     }
     signals[sid] = entry
     return entry
+
+
+def recompute_maturity_flags(entry: dict[str, Any]) -> None:
+    required = [HORIZON_LABELS[h] for h in REQUIRED_HORIZONS_SEC]
+    status = dict(entry.get("horizon_status") or {})
+    completed = dict(entry.get("completed_horizons") or {})
+    for lbl in required:
+        st = str(status.get(lbl) or "PENDING")
+        completed[lbl] = st in {"VALID", "UNAVAILABLE", "ERROR"}
+    entry["completed_horizons"] = completed
+    entry["horizon_status"] = status
+    resolved = all(str(status.get(lbl) or "PENDING") in {"VALID", "UNAVAILABLE", "ERROR"} for lbl in required)
+    valid_full = all(str(status.get(lbl) or "PENDING") == "VALID" for lbl in required)
+    has_unavail = any(str(status.get(lbl) or "") == "UNAVAILABLE" for lbl in required)
+    entry["fully_resolved_all_horizons"] = resolved
+    entry["fully_matured_valid_all_horizons"] = valid_full
+    entry["fully_matured"] = valid_full  # canonical promotion alias
+    entry["has_unavailable_horizon"] = has_unavail
+    entry["invalid_for_promotion"] = resolved and not valid_full
+    if valid_full:
+        entry["lifecycle_state"] = "OUTCOME"
+    elif any(str(status.get(lbl) or "PENDING") != "PENDING" for lbl in required):
+        if entry.get("lifecycle_state") not in {"INVALIDATED", "EXPIRED", "OUTCOME"}:
+            entry["lifecycle_state"] = "PARTIAL_OUTCOME"
+    if resolved and not valid_full:
+        # Fully resolved but not promotion-valid — keep OUTCOME-like closed without claiming valid maturity
+        if entry.get("lifecycle_state") not in {"INVALIDATED", "EXPIRED"}:
+            entry["lifecycle_state"] = "OUTCOME"
 
 
 def mark_horizon_complete(
@@ -180,34 +223,33 @@ def mark_horizon_complete(
     horizon_sec: int,
     now_ms: int,
     unavailable_reason: str | None = None,
+    status: str | None = None,
 ) -> None:
+    """Mark one horizon resolved. UNAVAILABLE ⇒ resolved but NOT valid for promotion."""
     label = HORIZON_LABELS.get(int(horizon_sec), str(horizon_sec))
-    completed = dict(entry.get("completed_horizons") or {})
     secs = list(entry.get("completed_horizon_secs") or [])
-    if unavailable_reason:
+    st_map = dict(entry.get("horizon_status") or {})
+    if status:
+        st = str(status).upper()
+    elif unavailable_reason:
+        st = "UNAVAILABLE"
+    else:
+        st = "VALID"
+    if st not in {"PENDING", "VALID", "UNAVAILABLE", "ERROR"}:
+        st = "ERROR"
+    st_map[label] = st
+    if st == "UNAVAILABLE" and unavailable_reason:
         unavail = dict(entry.get("horizon_unavailable") or {})
         unavail[label] = unavailable_reason
         entry["horizon_unavailable"] = unavail
-        completed[label] = True  # resolved (unavailable still counts as resolved for maturity gate)
-    else:
-        completed[label] = True
     if int(horizon_sec) not in secs:
         secs.append(int(horizon_sec))
-    entry["completed_horizons"] = completed
+    entry["horizon_status"] = st_map
     entry["completed_horizon_secs"] = secs
-    if entry.get("first_outcome_at_ms") is None and unavailable_reason is None:
+    if entry.get("first_outcome_at_ms") is None and st == "VALID":
         entry["first_outcome_at_ms"] = now_ms
     entry["last_outcome_at_ms"] = now_ms
-
-    required_labels = [HORIZON_LABELS[h] for h in REQUIRED_HORIZONS_SEC]
-    fully = all(bool(completed.get(lbl)) for lbl in required_labels)
-    entry["fully_matured"] = fully
-    if fully:
-        entry["lifecycle_state"] = "OUTCOME"
-    elif any(bool(completed.get(lbl)) for lbl in required_labels):
-        # Keep evaluable; do not freeze at first horizon
-        if entry.get("lifecycle_state") not in {"INVALIDATED", "EXPIRED", "OUTCOME"}:
-            entry["lifecycle_state"] = "PARTIAL_OUTCOME"
+    recompute_maturity_flags(entry)
 
 
 def pending_horizons_for_signal(
@@ -217,16 +259,48 @@ def pending_horizons_for_signal(
     signal_id: str,
     horizons: tuple[int, ...] = REQUIRED_HORIZONS_SEC,
 ) -> list[int]:
-    completed = entry.get("completed_horizons") or {}
+    status = entry.get("horizon_status") or {}
     out: list[int] = []
     for h in horizons:
         label = HORIZON_LABELS.get(h, str(h))
-        if completed.get(label):
+        st = str(status.get(label) or "PENDING")
+        if st in {"VALID", "UNAVAILABLE", "ERROR"}:
             continue
         if (signal_id, int(h)) in existing_keys:
             continue
         out.append(int(h))
     return out
+
+
+def backfill_progress_path(campaign_root: Path) -> Path:
+    return shadow_dir(campaign_root) / "shadow_backfill_progress.json"
+
+
+def load_backfill_progress(campaign_root: Path) -> dict[str, Any]:
+    path = backfill_progress_path(campaign_root)
+    if not path.exists():
+        return {"schema": "v30_shadow_backfill_progress_v1", "cursor_index": 0, "last_processed_signal_id": None}
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        return raw if isinstance(raw, dict) else {"cursor_index": 0}
+    except Exception:  # noqa: BLE001
+        return {"cursor_index": 0}
+
+
+def save_backfill_progress(campaign_root: Path, progress: dict[str, Any]) -> None:
+    d = shadow_dir(campaign_root)
+    d.mkdir(parents=True, exist_ok=True)
+    path = backfill_progress_path(campaign_root)
+    payload = {
+        "schema": "v30_shadow_backfill_progress_v1",
+        "updated_at_ms": int(time.time() * 1000),
+        "cursor_index": int(progress.get("cursor_index") or 0),
+        "last_processed_signal_id": progress.get("last_processed_signal_id"),
+        "backfill_status": progress.get("backfill_status"),
+    }
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(payload, indent=2, default=str) + "\n", encoding="utf-8")
+    tmp.replace(path)
 
 
 def persist_shadow_signals(campaign_root: Path, signals: list[dict[str, Any]]) -> Path:

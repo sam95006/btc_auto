@@ -195,7 +195,7 @@ def test_observation_uses_cumulative_ledger_not_latest_batch(tmp_path: Path) -> 
     report = build_observation_report(campaign_root=tmp_path)
     assert report["unique_signals_created_total"] == 3
     assert report["signals_created"] == 3
-    assert report["canonical_promotion_maturity_metric"] == "signals_fully_matured_all_horizons"
+    assert report["canonical_promotion_maturity_metric"] == "signals_fully_matured_valid_all_horizons"
     assert report["path_record_rows"] == 0
     assert report["signals_created"] != 1  # not latest batch
 
