@@ -20,7 +20,7 @@ def test_observation_empty_campaign_ready_false(tmp_path: Path) -> None:
     assert report["gate_lowered"] is False
     assert report["signals_created"] == 0
     assert report["signals_matured"] == 0
-    assert report["next_checkpoint"] == "EARLY_DIAGNOSTIC_AT_50_MATURED"
+    assert report["next_checkpoint"] == "EARLY_DIAGNOSTIC_AT_50_FULLY_MATURED"
     assert set(report["per_horizon"].keys()) == {"1m", "3m", "5m", "15m", "30m"}
     out = observation_dir(tmp_path) / "observation_latest.json"
     assert out.exists()
@@ -62,8 +62,11 @@ def test_observation_does_not_merge_horizons(tmp_path: Path) -> None:
     (sh / "path_records.jsonl").write_text(
         "\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8"
     )
-    (sh / "active_shadow_signals_latest.json").write_text(
-        json.dumps({"signals": [{"signal_id": "s1"}, {"signal_id": "s2"}]}),
+    (sh / "active_shadow_signals.jsonl").write_text(
+        "\n".join(json.dumps({"signal_id": "s1"}) for _ in range(1))
+        + "\n"
+        + json.dumps({"signal_id": "s2"})
+        + "\n",
         encoding="utf-8",
     )
     report = build_observation_report(campaign_root=tmp_path)

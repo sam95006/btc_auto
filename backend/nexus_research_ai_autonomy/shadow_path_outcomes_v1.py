@@ -16,9 +16,18 @@ from pathlib import Path
 from typing import Any
 
 from backend.nexus_demo_execution.demo_write_client import DemoWriteClient, _float
-from backend.nexus_research_ai_autonomy.shadow_signal_v1 import shadow_dir
+from backend.nexus_research_ai_autonomy.shadow_signal_v1 import (
+    REQUIRED_HORIZONS_SEC,
+    ensure_signal_state_entry,
+    load_active_shadow_signals,
+    load_signal_state,
+    mark_horizon_complete,
+    pending_horizons_for_signal,
+    save_signal_state,
+    shadow_dir,
+)
 
-SHADOW_HORIZONS_SEC = (60, 180, 300, 900, 1800)
+SHADOW_HORIZONS_SEC = REQUIRED_HORIZONS_SEC
 
 RESEARCH_CONFIGS = (
     {"name": "champion_v30", "stop_pct": 0.40, "target_pct": 0.55, "trail_pct": 0.30},
@@ -67,24 +76,32 @@ def fetch_ohlc_path(
     entry_ts_ms: int,
     horizon_sec: int,
 ) -> dict[str, Any]:
-    """Fetch 1m OHLC path after entry with measurement quality metadata."""
+    """Fetch 1m OHLC path for [entry, entry+horizon] via bounded start/end (not latest-200-only)."""
     end_ms = int(entry_ts_ms) + int(horizon_sec) * 1000
+    entry_candle_start = (int(entry_ts_ms) // CANDLE_MS) * CANDLE_MS
     bars: list[dict[str, Any]] = []
-    path_source = "bybit_public_1m_ohlc"
+    path_source = "bybit_public_1m_ohlc_start_end"
     resolution_label = "1m_ohlc"
     resolution_ms = CANDLE_MS
-    warnings: list[str] = ["REDUCED_TEMPORAL_RESOLUTION"]
+    warnings: list[str] = ["REDUCED_TEMPORAL_RESOLUTION", "OHLC_1M_LIMITED"]
 
+    # Need enough 1m bars to cover horizon (30m=30); pad for entry candle + clock skew.
+    need = max(5, int(horizon_sec) // 60 + 5)
+    limit = str(min(1000, max(need, 50)))
+    params = {
+        "category": "linear",
+        "symbol": symbol,
+        "interval": "1",
+        "start": str(entry_candle_start),
+        "end": str(end_ms + CANDLE_MS),
+        "limit": limit,
+    }
     try:
-        raw = client.public_get(
-            "/v5/market/kline",
-            {"category": "linear", "symbol": symbol, "interval": "1", "limit": "200"},
-        )
+        raw = client.public_get("/v5/market/kline", params)
         rows = (raw.get("result") or {}).get("list") or []
     except Exception:  # noqa: BLE001
         rows = []
 
-    entry_candle_start = (int(entry_ts_ms) // CANDLE_MS) * CANDLE_MS
     for r in rows:
         parsed = _parse_kline_row(r)
         if not parsed:
@@ -119,6 +136,7 @@ def fetch_ohlc_path(
     quality = "OHLC_1M_LIMITED"
     if not bars:
         quality = "NO_PATH_DATA"
+        warnings = ["NO_PATH_DATA", "HISTORICAL_PATH_UNAVAILABLE"]
     elif "ENTRY_CANDLE_PARTIAL" in warnings:
         quality = "OHLC_1M_ENTRY_PARTIAL"
 
@@ -131,8 +149,10 @@ def fetch_ohlc_path(
         "point_count": len(bars),
         "data_complete": data_complete,
         "measurement_quality": quality,
-        "data_quality_warnings": sorted(set(warnings)) if bars else ["NO_PATH_DATA"],
+        "data_quality_warnings": sorted(set(warnings)),
         "bars": bars,
+        "query_start_ms": entry_candle_start,
+        "query_end_ms": end_ms + CANDLE_MS,
     }
 
 
@@ -349,6 +369,19 @@ def _record_outcome_row(campaign_root: Path, row: dict[str, Any]) -> None:
         fh.write(json.dumps(row, default=str) + "\n")
 
 
+def existing_path_keys(campaign_root: Path) -> set[tuple[str, int]]:
+    keys: set[tuple[str, int]] = set()
+    for rec in load_path_records(campaign_root):
+        sid = str(rec.get("signal_id") or "")
+        try:
+            h = int(rec.get("horizon_sec") or 0)
+        except (TypeError, ValueError):
+            continue
+        if sid and h > 0:
+            keys.add((sid, h))
+    return keys
+
+
 def evaluate_signal_horizons(
     client: DemoWriteClient,
     *,
@@ -357,28 +390,87 @@ def evaluate_signal_horizons(
     stop_pct: float = 0.40,
     target_pct: float = 0.55,
     notional: float = 350.0,
-    horizons: tuple[int, ...] = SHADOW_HORIZONS_SEC,
+    horizons: tuple[int, ...] | list[int] | None = None,
+    existing_keys: set[tuple[str, int]] | None = None,
+    state_entry: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    """Evaluate mature horizons; persist path records + outcomes (separate from snapshot)."""
+    """Evaluate mature pending horizons once each; persist path/outcome; update state (no early OUTCOME)."""
     symbol = str(signal.get("symbol") or "")
     entry = float(signal.get("entry_price") or 0)
     direction = str(signal.get("direction") or "LONG")
-    entry_ts = int(signal.get("detected_at_ms") or 0)
+    entry_ts = int(signal.get("detected_at_ms") or signal.get("entry_timestamp") or 0)
     signal_id = str(signal.get("signal_id") or "")
-    decision_id = signal.get("snapshot_decision_id")
+    decision_id = signal.get("snapshot_decision_id") or signal.get("decision_id")
     if not symbol or entry <= 0 or entry_ts <= 0 or not signal_id:
         return []
 
     now_ms = int(time.time() * 1000)
+    keys = existing_keys if existing_keys is not None else existing_path_keys(campaign_root)
+    want = list(horizons) if horizons is not None else list(SHADOW_HORIZONS_SEC)
     results: list[dict[str, Any]] = []
-    for h in horizons:
+
+    for h in want:
+        h = int(h)
         if now_ms < entry_ts + h * 1000:
             continue
+        if (signal_id, h) in keys:
+            # Already persisted — sync state only
+            if state_entry is not None:
+                mark_horizon_complete(state_entry, horizon_sec=h, now_ms=now_ms)
+            continue
+
         path_meta = fetch_ohlc_path(client, symbol=symbol, entry_ts_ms=entry_ts, horizon_sec=h)
+        bars = list(path_meta.get("bars") or [])
+        if not bars:
+            # Persist explicit unavailable reason; do not invent outcome metrics
+            unavail = {
+                "schema": PATH_SCHEMA,
+                "signal_id": signal_id,
+                "decision_id": decision_id,
+                "symbol": symbol,
+                "direction": direction,
+                "entry_timestamp": entry_ts,
+                "entry_price": entry,
+                "horizon_sec": h,
+                "path_source": path_meta.get("path_source"),
+                "measurement_quality": "HISTORICAL_PATH_UNAVAILABLE",
+                "data_quality_warnings": path_meta.get("data_quality_warnings")
+                or ["HISTORICAL_PATH_UNAVAILABLE"],
+                "bars": [],
+                "MFE": None,
+                "MAE": None,
+                "post_cost_hypothetical": None,
+                "ambiguous_first_touch": False,
+                "recorded_at_ms": now_ms,
+                "unavailable_reason": "HISTORICAL_PATH_UNAVAILABLE",
+            }
+            persist_path_record(campaign_root, unavail)
+            keys.add((signal_id, h))
+            _record_outcome_row(
+                campaign_root,
+                {
+                    "signal_id": signal_id,
+                    "decision_id": decision_id,
+                    "horizon_sec": h,
+                    "recorded_at_ms": now_ms,
+                    "unavailable_reason": "HISTORICAL_PATH_UNAVAILABLE",
+                    "measurement_quality": "HISTORICAL_PATH_UNAVAILABLE",
+                },
+            )
+            if state_entry is not None:
+                mark_horizon_complete(
+                    state_entry,
+                    horizon_sec=h,
+                    now_ms=now_ms,
+                    unavailable_reason="HISTORICAL_PATH_UNAVAILABLE",
+                )
+            results.append(unavail)
+            continue
+
         metrics = evaluate_ohlc_path(
             entry_price=entry,
             direction=direction,
-            bars=list(path_meta.get("bars") or []),
+            bars=bars,
             stop_pct=stop_pct,
             target_pct=target_pct,
             notional=notional,
@@ -403,11 +495,14 @@ def evaluate_signal_horizons(
             "data_complete": path_meta.get("data_complete"),
             "measurement_quality": path_meta.get("measurement_quality"),
             "data_quality_warnings": path_meta.get("data_quality_warnings"),
+            "query_start_ms": path_meta.get("query_start_ms"),
+            "query_end_ms": path_meta.get("query_end_ms"),
             "bars": path_meta.get("bars"),
             **metrics,
             "recorded_at_ms": now_ms,
         }
         persist_path_record(campaign_root, record)
+        keys.add((signal_id, h))
         _record_outcome_row(
             campaign_root,
             {
@@ -428,19 +523,10 @@ def evaluate_signal_horizons(
                 "measurement_quality": path_meta.get("measurement_quality"),
             },
         )
+        if state_entry is not None:
+            mark_horizon_complete(state_entry, horizon_sec=h, now_ms=now_ms)
         results.append(record)
     return results
-
-
-def load_active_shadow_signals(campaign_root: Path) -> list[dict[str, Any]]:
-    path = shadow_dir(campaign_root) / "active_shadow_signals_latest.json"
-    if not path.exists():
-        return []
-    try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-        return list(raw.get("signals") or [])
-    except Exception:  # noqa: BLE001
-        return []
 
 
 def path_records_for_counterfactual(campaign_root: Path) -> list[dict[str, Any]]:
@@ -472,33 +558,59 @@ def refresh_mature_shadow_outcomes(
     *,
     campaign_root: Path,
 ) -> dict[str, Any]:
+    """Evaluate pending horizons for ALL unique ledger signals; never overwrite lifecycle via latest batch."""
     signals = load_active_shadow_signals(campaign_root)
+    state = load_signal_state(campaign_root)
+    keys = existing_path_keys(campaign_root)
     evaluated = 0
     outcomes: list[dict[str, Any]] = []
+    unavailable = 0
+
     for sig in signals:
-        if sig.get("lifecycle_state") not in {"READY", "WATCH", "DETECTED"}:
+        sid = str(sig.get("signal_id") or "")
+        if not sid:
             continue
-        rows = evaluate_signal_horizons(client, signal=sig, campaign_root=campaign_root)
+        entry = ensure_signal_state_entry(state, sig)
+        if entry.get("fully_matured"):
+            continue
+        if entry.get("lifecycle_state") in {"INVALIDATED", "EXPIRED"}:
+            continue
+        # Original origin state stays in ledger; registry tracks PARTIAL_OUTCOME / OUTCOME
+        pending = pending_horizons_for_signal(
+            entry, existing_keys=keys, signal_id=sid, horizons=SHADOW_HORIZONS_SEC
+        )
+        # Also include horizons already due even if pending list empty but state lagging
+        now_ms = int(time.time() * 1000)
+        entry_ts = int(sig.get("detected_at_ms") or 0)
+        due = [
+            h
+            for h in SHADOW_HORIZONS_SEC
+            if entry_ts > 0 and now_ms >= entry_ts + h * 1000 and (sid, h) not in keys
+        ]
+        want = sorted(set(pending) | set(due))
+        if not want:
+            # Sync completed flags from existing path keys
+            for h in SHADOW_HORIZONS_SEC:
+                if (sid, h) in keys:
+                    mark_horizon_complete(entry, horizon_sec=h, now_ms=now_ms)
+            continue
+
+        rows = evaluate_signal_horizons(
+            client,
+            signal=sig,
+            campaign_root=campaign_root,
+            horizons=want,
+            existing_keys=keys,
+            state_entry=entry,
+        )
         if rows:
             evaluated += 1
             outcomes.extend(rows)
-            sig["lifecycle_state"] = "OUTCOME"
-            sig["outcome"] = {
-                k: rows[-1].get(k)
-                for k in (
-                    "horizon_sec",
-                    "MFE",
-                    "MAE",
-                    "first_touch",
-                    "ambiguous_first_touch",
-                    "post_cost_hypothetical",
-                    "measurement_quality",
-                )
-            }
-    if signals:
-        from backend.nexus_research_ai_autonomy.shadow_signal_v1 import persist_shadow_signals
+            unavailable += sum(1 for r in rows if r.get("unavailable_reason") == "HISTORICAL_PATH_UNAVAILABLE")
 
-        persist_shadow_signals(campaign_root, signals)
+    save_signal_state(campaign_root, state)
+    # Intentionally do NOT re-append signals to origin JSONL (immutable ledger).
+    fully = sum(1 for e in (state.get("signals") or {}).values() if e.get("fully_matured"))
     return {
         "signals_checked": len(signals),
         "signals_evaluated": evaluated,
@@ -506,4 +618,11 @@ def refresh_mature_shadow_outcomes(
         "path_records_persisted": len(outcomes),
         "horizons": list(SHADOW_HORIZONS_SEC),
         "close_only_MFE_removed": True,
+        "ledger_unique_signals": len(signals),
+        "fully_matured_all_horizons": fully,
+        "historical_path_unavailable_writes": unavailable,
+        "lifecycle_source": "active_shadow_signals.jsonl",
+        "premature_outcome_blocked": True,
+        "per_horizon_exactly_once": True,
+        "historical_kline_start_end": True,
     }

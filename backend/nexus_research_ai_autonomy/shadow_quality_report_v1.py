@@ -14,7 +14,11 @@ from backend.nexus_research_ai_autonomy.counterfactual_strategy_v1 import (
     run_counterfactual_research,
 )
 from backend.nexus_research_ai_autonomy.shadow_path_outcomes_v1 import load_path_records
-from backend.nexus_research_ai_autonomy.shadow_signal_v1 import shadow_dir
+from backend.nexus_research_ai_autonomy.shadow_signal_v1 import (
+    load_shadow_signal_ledger,
+    load_signal_state,
+    shadow_dir,
+)
 
 
 def _git_commit() -> str | None:
@@ -38,16 +42,14 @@ def build_shadow_quality_report(
     campaign_root: Path,
     counterfactual: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    signals_path = shadow_dir(campaign_root) / "active_shadow_signals_latest.json"
-    signals: list[dict[str, Any]] = []
-    if signals_path.exists():
-        try:
-            signals = list((json.loads(signals_path.read_text(encoding="utf-8")).get("signals") or []))
-        except Exception:  # noqa: BLE001
-            signals = []
-
+    signals = load_shadow_signal_ledger(campaign_root)
+    state = load_signal_state(campaign_root)
     records = load_path_records(campaign_root)
-    matured = [s for s in signals if s.get("lifecycle_state") == "OUTCOME"]
+    matured = [
+        s
+        for s in signals
+        if (state.get("signals") or {}).get(str(s.get("signal_id") or ""), {}).get("fully_matured")
+    ]
     horizon_pack = build_per_horizon_stats(campaign_root)
     cf = counterfactual or run_counterfactual_research(campaign_root=campaign_root)
 

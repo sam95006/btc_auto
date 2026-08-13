@@ -21,7 +21,12 @@ from backend.nexus_research_ai_autonomy.shadow_path_outcomes_v1 import (
     load_path_records,
     path_records_for_counterfactual,
 )
-from backend.nexus_research_ai_autonomy.shadow_signal_v1 import shadow_dir
+from backend.nexus_research_ai_autonomy.shadow_signal_v1 import (
+    ledger_stats,
+    load_shadow_signal_ledger,
+    load_signal_state,
+    shadow_dir,
+)
 
 OBSERVATION_SCHEMA = "v30_shadow_observation_v1"
 HORIZONS = (60, 180, 300, 900, 1800)
@@ -97,13 +102,8 @@ def _bucket_stats(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def _load_signals(campaign_root: Path) -> list[dict[str, Any]]:
-    path = shadow_dir(campaign_root) / "active_shadow_signals_latest.json"
-    if not path.exists():
-        return []
-    try:
-        return list((json.loads(path.read_text(encoding="utf-8")).get("signals") or []))
-    except Exception:  # noqa: BLE001
-        return []
+    """Cumulative unique origin signals from immutable ledger (not latest-cycle overwrite)."""
+    return load_shadow_signal_ledger(campaign_root)
 
 
 def _load_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -288,27 +288,57 @@ def build_observation_report(
     snapshots = load_latest_snapshots(campaign_root)
     outcomes = _load_jsonl(shadow_dir(campaign_root) / "shadow_outcomes.jsonl")
     thesis_path = campaign_root / "autonomy" / "thesis_state.json"
+    led_stats = ledger_stats(campaign_root)
+    state = load_signal_state(campaign_root)
+    state_signals = dict(state.get("signals") or {})
 
-    matured_signals = [s for s in signals if s.get("lifecycle_state") == "OUTCOME"]
-    matured_count = len({str(r.get("signal_id")) for r in records if r.get("signal_id")})
-    if matured_count == 0:
-        matured_count = len(matured_signals)
+    # Canonical maturity metrics — never use path_record_rows as unique signal count
+    unique_created = int(led_stats["unique_signal_ids"])
+    matured_by_h_unique: dict[str, set[str]] = {HORIZON_LABELS[h]: set() for h in HORIZONS}
+    unavailable_count = 0
+    for r in records:
+        sid = str(r.get("signal_id") or "")
+        if not sid:
+            continue
+        try:
+            h = int(r.get("horizon_sec") or 0)
+        except (TypeError, ValueError):
+            continue
+        label = HORIZON_LABELS.get(h)
+        if label:
+            matured_by_h_unique[label].add(sid)
+        if r.get("unavailable_reason") == "HISTORICAL_PATH_UNAVAILABLE" or r.get(
+            "measurement_quality"
+        ) == "HISTORICAL_PATH_UNAVAILABLE":
+            unavailable_count += 1
+    matured_any = len({sid for s in matured_by_h_unique.values() for sid in s})
+    fully_matured = sum(1 for e in state_signals.values() if e.get("fully_matured"))
+    if fully_matured == 0 and matured_any:
+        # Derive fully matured from path keys if state file empty (pre-repair backfill)
+        for sid in {str(s.get("signal_id") or "") for s in signals}:
+            if sid and all(sid in matured_by_h_unique[HORIZON_LABELS[h]] for h in HORIZONS):
+                fully_matured += 1
+    pending = max(0, unique_created - fully_matured)
+    # Backward-compat alias: prefer fully matured; fall back to any-horizon for staged gates
+    matured_count = fully_matured if fully_matured > 0 else matured_any
 
     # File update probes
     files = {
         "decision_snapshots": _file_freshness(snapshot_dir(campaign_root) / "latest_cycle_snapshots.json"),
-        "shadow_signals": _file_freshness(shadow_dir(campaign_root) / "active_shadow_signals_latest.json"),
+        "shadow_signals": _file_freshness(shadow_dir(campaign_root) / "active_shadow_signals.jsonl"),
+        "shadow_signals_latest_convenience": _file_freshness(
+            shadow_dir(campaign_root) / "active_shadow_signals_latest.json"
+        ),
         "path_records": _file_freshness(shadow_dir(campaign_root) / "path_records.jsonl"),
         "shadow_outcomes": _file_freshness(shadow_dir(campaign_root) / "shadow_outcomes.jsonl"),
         "shadow_quality": _file_freshness(shadow_dir(campaign_root) / "shadow_quality_latest.json"),
         "counterfactual": _file_freshness(shadow_dir(campaign_root) / "counterfactual_research_latest.json"),
+        "shadow_signal_state": _file_freshness(shadow_dir(campaign_root) / "shadow_signal_state.json"),
     }
 
     # O3 per-horizon (never merge into one headline win-rate)
     per_horizon = {HORIZON_LABELS[h]: _horizon_block(records, horizon_sec=h) for h in HORIZONS}
-    matured_by_horizon = {
-        HORIZON_LABELS[h]: sum(1 for r in records if int(r.get("horizon_sec") or 0) == h) for h in HORIZONS
-    }
+    matured_by_horizon = {k: len(v) for k, v in matured_by_h_unique.items()}
 
     # Action counts from latest snapshots
     action_counts = Counter(str(s.get("final_action") or "WAIT") for s in snapshots)
@@ -590,17 +620,27 @@ def build_observation_report(
             "auto_promoted": False,
         }
 
-    # Staged checkpoint
-    next_stage = "EARLY_DIAGNOSTIC_AT_50_MATURED"
+    # Staged checkpoint — canonical gate uses fully matured all horizons
+    gate_matured = fully_matured
+    next_stage = "EARLY_DIAGNOSTIC_AT_50_FULLY_MATURED"
     reached: list[str] = []
     for name, thr in STAGE_THRESHOLDS:
-        if matured_count >= thr:
+        if gate_matured >= thr:
             reached.append(name)
         else:
-            next_stage = f"{name}_AT_{thr}_MATURED"
+            next_stage = f"{name}_AT_{thr}_FULLY_MATURED"
             break
     else:
         next_stage = "PROMOTION_REVIEW_CANDIDATE_REACHED"
+
+    if gate_matured < 50:
+        observation_stage = "COLLECTING"
+    elif gate_matured < 100:
+        observation_stage = "EARLY_DIAGNOSTIC_READY"
+    elif gate_matured < 200:
+        observation_stage = "INTERMEDIATE_REVIEW_READY"
+    else:
+        observation_stage = "PROMOTION_REVIEW_CANDIDATE"
 
     report = {
         "schema": OBSERVATION_SCHEMA,
@@ -616,12 +656,29 @@ def build_observation_report(
         "real_money": False,
         "files": files,
         "cycles_observed": cycles_observed,
-        "signals_created": len(signals),
-        "signals_matured": matured_count,
+        # Canonical counters (P0 accumulation repair)
+        "signal_ledger_rows": led_stats["ledger_rows"],
+        "unique_signals_created_total": unique_created,
+        "signals_created": unique_created,  # alias: cumulative unique, NOT latest batch
+        "duplicate_signal_rows": led_stats["duplicate_signal_rows"],
+        "signals_matured_any_horizon": matured_any,
+        "signals_matured_1m": matured_by_horizon.get("1m", 0),
+        "signals_matured_3m": matured_by_horizon.get("3m", 0),
+        "signals_matured_5m": matured_by_horizon.get("5m", 0),
+        "signals_matured_15m": matured_by_horizon.get("15m", 0),
+        "signals_matured_30m": matured_by_horizon.get("30m", 0),
+        "signals_fully_matured_all_horizons": fully_matured,
+        "canonical_promotion_maturity_metric": "signals_fully_matured_all_horizons",
+        "signals_matured": fully_matured,  # alias → fully matured (not path_record_rows)
+        "pending_signal_count": pending,
+        "historical_path_unavailable_count": unavailable_count,
+        "path_record_rows": len(records),
         "path_records": len(records),
+        "path_record_rows_note": "NOT_a_unique_signal_count_may_be_upto_5x_horizons",
         "outcomes_rows": len(outcomes),
         "snapshots_latest_count": len(snapshots),
         "matured_by_horizon": matured_by_horizon,
+        "observation_stage": observation_stage,
         "per_horizon": per_horizon,
         "state_counts": dict(state_counts),
         "score_buckets": score_buckets,
@@ -672,7 +729,7 @@ def build_observation_report(
     tmp.replace(latest)
 
     for name, thr in STAGE_THRESHOLDS:
-        if matured_count >= thr:
+        if gate_matured >= thr:
             staged = d / f"checkpoint_{name.lower()}.json"
             if not staged.exists():
                 staged.write_text(json.dumps(report, indent=2, default=str) + "\n", encoding="utf-8")

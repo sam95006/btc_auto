@@ -17,18 +17,11 @@ from backend.nexus_research_ai_autonomy.shadow_path_outcomes_v1 import (
     load_path_records,
     path_records_for_counterfactual,
 )
-from backend.nexus_research_ai_autonomy.shadow_signal_v1 import shadow_dir
+from backend.nexus_research_ai_autonomy.shadow_signal_v1 import load_shadow_signal_ledger, shadow_dir
 
 
 def _load_signals(campaign_root: Path) -> list[dict[str, Any]]:
-    path = shadow_dir(campaign_root) / "active_shadow_signals_latest.json"
-    if not path.exists():
-        return []
-    try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-        return list(raw.get("signals") or [])
-    except Exception:  # noqa: BLE001
-        return []
+    return load_shadow_signal_ledger(campaign_root)
 
 
 def _aggregate_config_stats(results: list[dict[str, Any]]) -> dict[str, Any]:
