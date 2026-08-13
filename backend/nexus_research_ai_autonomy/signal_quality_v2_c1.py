@@ -26,6 +26,38 @@ COST_RESEARCH_MULTIPLIERS = (1.0, 1.25, 1.5, 2.0)
 EVIDENCE_GENERATION = "POST_V2_FREEZE"
 HISTORICAL_FIT_NOTE = "202-sample LONG top1 used to SELECT C1; not promotion evidence"
 
+# Frozen C1 selection hypothesis = LONG + SCORE rank Top1 per 120s episode (no action filter).
+SELECTED_COHORT_NAME = "V2_C1_SELECTED_TOP1_LONG"
+ACTION_COHORT_READY = "V2_C1_READY"
+SELECTED_LANE = "LONG_TOP1"
+
+# Action thresholds copied from V1 _action_from_scores — inherited gates, NOT selection criteria.
+READY_ENTRY_QUALITY = 0.65
+WATCH_ENTRY_QUALITY = 0.50
+READY_EDGE_RATIO = 1.2
+THRESHOLD_PROVENANCE = {
+    "entry_quality_065": {
+        "provenance": "INHERITED_EXISTING_GATE",
+        "source": "signal_quality_cycle_v1._action_from_scores (V1 SELECT/READY)",
+        "part_of_frozen_c1_selection": False,
+    },
+    "watch_050": {
+        "provenance": "INHERITED_EXISTING_GATE",
+        "source": "signal_quality_cycle_v1._action_from_scores (V1 WATCH)",
+        "part_of_frozen_c1_selection": False,
+    },
+    "edge_ratio_120": {
+        "provenance": "INHERITED_EXISTING_GATE",
+        "source": "signal_quality_cycle_v1._action_from_scores (V1 SELECT/READY edge_to_cost_ratio)",
+        "part_of_frozen_c1_selection": False,
+    },
+}
+
+
+def audit_ready_threshold_provenance() -> dict[str, Any]:
+    """R1 — document threshold lineage; inherited V1 gates are not C1 selection criteria."""
+    return dict(THRESHOLD_PROVENANCE)
+
 
 def episode_id_from_ms(ts_ms: int, *, window_sec: int = EPISODE_WINDOW_SEC) -> int:
     return int(ts_ms) // (int(window_sec) * 1000)
@@ -64,11 +96,38 @@ def _v2_abstention_action(
     crit = _critical_contradiction(contradict, {"expected_net_edge": expected_net_edge})
     if crit:
         return "WAIT", crit
-    if entry_quality >= 0.65 and expected_net_edge > 0 and (edge_ratio or 0) >= 1.2:
+    if (
+        entry_quality >= READY_ENTRY_QUALITY
+        and expected_net_edge > 0
+        and (edge_ratio or 0) >= READY_EDGE_RATIO
+    ):
         return "READY", "V2_C1_LONG_TOP1_READY"
-    if entry_quality >= 0.5 and expected_net_edge > 0:
+    if entry_quality >= WATCH_ENTRY_QUALITY and expected_net_edge > 0:
         return "WATCH", "V2_C1_LONG_TOP1_WATCH"
     return "WAIT", "INSUFFICIENT_ENTRY_QUALITY"
+
+
+def classify_abstention_diagnostic(candidate: dict[str, Any]) -> str:
+    """R6 — compact abstention reason bucket for Founder telemetry."""
+    action = str(candidate.get("v2_action") or candidate.get("action") or "")
+    reason = str(candidate.get("v2_reason") or candidate.get("reason") or "")
+    if action == "READY":
+        return "ready"
+    if not candidate.get("thesis_ok") or "REPEATED_THESIS" in reason:
+        return "repeated_thesis"
+    if not candidate.get("gate_pass") or reason == "GATES_NOT_PASSED":
+        return "gate_not_passed"
+    if reason == "POST_COST_EDGE_NEGATIVE" or float(candidate.get("expected_net_edge") or 0) <= 0:
+        return "post_cost_edge_negative"
+    if candidate.get("critical_contradiction"):
+        return "critical_contradiction"
+    eq = float(candidate.get("entry_quality_score") or candidate.get("score") or 0)
+    ratio = float(candidate.get("edge_to_cost_ratio") or 0)
+    if action == "WATCH" and eq >= READY_ENTRY_QUALITY and ratio < READY_EDGE_RATIO:
+        return "edge_ratio_threshold"
+    if reason == "INSUFFICIENT_ENTRY_QUALITY" or eq < WATCH_ENTRY_QUALITY:
+        return "entry_quality_threshold"
+    return "other"
 
 
 def _cost_hurdle_research(edge: dict[str, Any]) -> dict[str, float | None]:
@@ -164,6 +223,19 @@ def build_long_candidate_row(
         "detected_at_ms": int(enrichment.get("timestamp_ms") or row.get("timestamp_ms") or 0),
         "gate_pass": gate_pass,
         "thesis_ok": bool(thesis.get("pass")),
+        "edge_to_cost_ratio": edge.get("edge_to_cost_ratio"),
+        "abstention_diagnostic": classify_abstention_diagnostic(
+            {
+                "v2_action": action,
+                "v2_reason": reason if thesis.get("pass") else str(thesis.get("reason")),
+                "gate_pass": gate_pass,
+                "thesis_ok": bool(thesis.get("pass")),
+                "expected_net_edge": edge.get("expected_net_edge"),
+                "critical_contradiction": _critical_contradiction(contradict, edge),
+                "entry_quality_score": eq,
+                "edge_to_cost_ratio": edge.get("edge_to_cost_ratio"),
+            }
+        ),
     }
 
 
@@ -296,6 +368,8 @@ def materialize_v2_evidence(
         if lane == "SHORT_SHADOW_RESEARCH" and action == "READY":
             action = "WATCH"
             c = {**c, "v2_action": action, "v2_reason": "SHORT_READY_FORBIDDEN_C1"}
+        selected_cohort = SELECTED_COHORT_NAME if lane == SELECTED_LANE else None
+        action_cohort = ACTION_COHORT_READY if (lane == SELECTED_LANE and action == "READY") else None
         out.append(
             {
                 "schema": "v30_v2_c1_challenger_evidence_v1",
@@ -321,6 +395,13 @@ def materialize_v2_evidence(
                 "action": action,
                 "reason": c.get("v2_reason"),
                 "lane": lane,
+                "selected_cohort": selected_cohort,
+                "action_cohort": action_cohort,
+                "outcome_eligible": lane == SELECTED_LANE,
+                "abstention_diagnostic": c.get("abstention_diagnostic"),
+                "gate_pass": c.get("gate_pass"),
+                "thesis_ok": c.get("thesis_ok"),
+                "edge_to_cost_ratio": c.get("edge_to_cost_ratio"),
                 "expected_net_edge": c.get("expected_net_edge"),
                 "expected_edge_percentile": c.get("expected_edge_percentile"),
                 "estimated_fee": c.get("estimated_fee") or estimate_round_trip_fee(NOTIONAL, fee_rate=FEE_RT),
@@ -341,6 +422,13 @@ def materialize_v2_evidence(
             }
         )
 
-    _pack(selection.get("long_top1"), lane="LONG_TOP1")
+    _pack(selection.get("long_top1"), lane=SELECTED_LANE)
     _pack(selection.get("short_research_top1"), lane="SHORT_SHADOW_RESEARCH")
     return out
+
+
+def is_selected_top1_long(evidence: dict[str, Any]) -> bool:
+    return (
+        evidence.get("selected_cohort") == SELECTED_COHORT_NAME
+        or evidence.get("lane") == SELECTED_LANE
+    )
