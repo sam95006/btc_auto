@@ -28,7 +28,9 @@ scratch/
 docs/
 docs/archive/
 docs/evidence/
-tools/research/
+# Exclude research tools generally; allow-list promotion analyzer only (P0.3)
+tools/research/*
+!tools/research/run_promotion_review_candidate.py
 
 # EATI research bulk (regeneratable; use eati_status_snapshot.json for UI later)
 data/external_alpha/raw/

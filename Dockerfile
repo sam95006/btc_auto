@@ -50,6 +50,10 @@ RUN test -f deploy/zeabur_unified/start.sh \
  && test -f backend/nexus_research_ai_autonomy/research_autonomy_service.py \
  || (echo "MISSING unified autonomy runtime"; exit 1)
 
+# Offline promotion review analyzer (packaging only — not imported by runtime)
+RUN test -f /app/tools/research/run_promotion_review_candidate.py \
+ || (echo "MISSING promotion review analyzer"; exit 1)
+
 RUN chmod +x deploy/zeabur_unified/start.sh \
  && mkdir -p \
       /data/campaigns/research_v18_2_30/autonomy \

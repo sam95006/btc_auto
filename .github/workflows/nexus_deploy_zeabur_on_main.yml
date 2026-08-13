@@ -9,6 +9,10 @@ on:
       - "config/**"
       - "static/**"
       - "templates/**"
+      - "Dockerfile"
+      - ".dockerignore"
+      - "tools/research/run_promotion_review_candidate.py"
+      - "deploy/zeabur_unified/**"
       - ".env.example"
       - ".github/workflows/**"
 
