@@ -678,7 +678,14 @@ def refresh_mature_shadow_outcomes(
     t0 = time.time()
     max_sec, max_horizons = _backfill_budgets()
     led = _ledger_stats(campaign_root)
-    signals = load_active_shadow_signals(campaign_root)
+    from backend.nexus_research_ai_autonomy.shadow_v2_challenger_v1 import (
+        evidence_to_shadow_signal,
+        load_v2_c1_shadow_signals,
+    )
+
+    signals = load_active_shadow_signals(campaign_root) + [
+        evidence_to_shadow_signal(e) for e in load_v2_c1_shadow_signals(campaign_root)
+    ]
     signals_sorted = sorted(
         signals,
         key=lambda s: (int(s.get("detected_at_ms") or 0), str(s.get("signal_id") or "")),

@@ -14,6 +14,7 @@ from backend.nexus_research_ai_autonomy.decision_snapshot_v30 import (
 )
 from backend.nexus_research_ai_autonomy.public_opportunity_dto_v1 import build_public_opportunity_dto
 from backend.nexus_research_ai_autonomy.shadow_signal_v1 import create_shadow_signal, persist_shadow_signals
+from backend.nexus_research_ai_autonomy.shadow_v2_challenger_v1 import run_v2_c1_shadow_challenger
 from backend.nexus_research_ai_autonomy.signal_enrichment_v1 import enrich_symbol
 from backend.nexus_research_ai_autonomy.signal_quality_v1 import (
     build_evidence_lists,
@@ -135,6 +136,11 @@ def run_signal_quality_shadow_cycle(
                 "short_score": direction_scores["SHORT"],
                 "final_action": action,
                 "snapshot": snap,
+                # V2-C1 PIT inputs — not written to V1 snapshots.
+                "enrichment": enrichment,
+                "regime_info": regime_info,
+                "gate_pass": gate_pass,
+                "timestamp_ms": now_ms,
             }
         )
 
@@ -159,6 +165,13 @@ def run_signal_quality_shadow_cycle(
         persist_cycle_snapshots(croot, cycle_id, snapshots)
     if shadow_signals:
         persist_shadow_signals(croot, shadow_signals)
+
+    v2_challenger = run_v2_c1_shadow_challenger(
+        campaign_root=croot,
+        cycle_id=cycle_id,
+        now_ms=now_ms,
+        ranked_rows=ranked_rows,
+    )
 
     top = ranked_rows[0] if ranked_rows else None
     return {
@@ -190,4 +203,5 @@ def run_signal_quality_shadow_cycle(
         ],
         "public_opportunities": public_dtos[:5],
         "write_paused": True,
+        "v2_challenger": v2_challenger,
     }
