@@ -2,78 +2,133 @@
 
 Does NOT change live STOP_PCT / TARGET_PCT / TRAIL_PCT.
 Does NOT auto-promote any configuration.
+Hot path: incremental/bounded batches only — never full history each cycle.
 """
 from __future__ import annotations
 
 import json
 import statistics
+import time
 from collections import Counter
 from pathlib import Path
 from typing import Any
 
 from backend.nexus_research_ai_autonomy.shadow_path_outcomes_v1 import (
     RESEARCH_CONFIGS,
+    commit_counterfactual_progress,
     evaluate_ohlc_path,
-    load_path_records,
     path_records_for_counterfactual,
 )
-from backend.nexus_research_ai_autonomy.shadow_signal_v1 import load_shadow_signal_ledger, shadow_dir
+from backend.nexus_research_ai_autonomy.shadow_signal_v1 import ledger_stats, shadow_dir
 
 
-def _load_signals(campaign_root: Path) -> list[dict[str, Any]]:
-    return load_shadow_signal_ledger(campaign_root)
+def _empty_acc() -> dict[str, Any]:
+    return {
+        "sample_count": 0,
+        "wins": 0,
+        "losses": 0,
+        "sum_net": 0.0,
+        "sum_gross": 0.0,
+        "sum_cost": 0.0,
+        "gw": 0.0,
+        "gl": 0.0,
+        "tbs": 0,
+        "sbt": 0,
+        "amb": 0,
+        "unambiguous": 0,
+    }
 
 
-def _aggregate_config_stats(results: list[dict[str, Any]]) -> dict[str, Any]:
-    if not results:
+def _acc_path(campaign_root: Path) -> Path:
+    return shadow_dir(campaign_root) / "counterfactual_accumulator.json"
+
+
+def _load_acc(campaign_root: Path) -> dict[str, Any]:
+    path = _acc_path(campaign_root)
+    if not path.exists():
+        return {"schema": "v30_cf_accumulator_v1", "by_config": {}}
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        return raw if isinstance(raw, dict) else {"by_config": {}}
+    except Exception:  # noqa: BLE001
+        return {"by_config": {}}
+
+
+def _save_acc(campaign_root: Path, acc: dict[str, Any]) -> None:
+    path = _acc_path(campaign_root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    acc["updated_at_ms"] = int(time.time() * 1000)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(acc, indent=2, default=str) + "\n", encoding="utf-8")
+    tmp.replace(path)
+
+
+def _update_acc(acc_row: dict[str, Any], m: dict[str, Any]) -> None:
+    net = float(m.get("post_cost_hypothetical") or 0)
+    gross = float(m.get("gross_hypothetical") or 0)
+    cost = float(m.get("total_estimated_cost") or m.get("estimated_cost") or 0)
+    acc_row["sample_count"] = int(acc_row.get("sample_count") or 0) + 1
+    acc_row["sum_net"] = float(acc_row.get("sum_net") or 0) + net
+    acc_row["sum_gross"] = float(acc_row.get("sum_gross") or 0) + gross
+    acc_row["sum_cost"] = float(acc_row.get("sum_cost") or 0) + cost
+    if net > 0:
+        acc_row["wins"] = int(acc_row.get("wins") or 0) + 1
+        acc_row["gw"] = float(acc_row.get("gw") or 0) + net
+    elif net < 0:
+        acc_row["losses"] = int(acc_row.get("losses") or 0) + 1
+        acc_row["gl"] = float(acc_row.get("gl") or 0) + abs(net)
+    if m.get("ambiguous_first_touch"):
+        acc_row["amb"] = int(acc_row.get("amb") or 0) + 1
+    else:
+        acc_row["unambiguous"] = int(acc_row.get("unambiguous") or 0) + 1
+        if m.get("target_before_stop") is True:
+            acc_row["tbs"] = int(acc_row.get("tbs") or 0) + 1
+        if m.get("stop_before_target") is True:
+            acc_row["sbt"] = int(acc_row.get("sbt") or 0) + 1
+
+
+def _stats_from_acc(a: dict[str, Any]) -> dict[str, Any]:
+    n = int(a.get("sample_count") or 0)
+    if n <= 0:
         return {
             "sample_count": 0,
             "wins": 0,
             "losses": 0,
             "win_rate": None,
+            "post_cost_expectancy": None,
+            "profit_factor": None,
             "gross_pnl": None,
             "estimated_cost": None,
             "net_pnl": None,
-            "post_cost_expectancy": None,
-            "profit_factor": None,
-            "median_MFE": None,
-            "median_MAE": None,
             "target_before_stop": 0,
             "stop_before_target": 0,
             "ambiguous_first_touch_count": 0,
         }
-    nets = [float(r.get("post_cost_hypothetical") or 0) for r in results]
-    grosses = [float(r.get("gross_hypothetical") or 0) for r in results]
-    costs = [float(r.get("total_estimated_cost") or r.get("estimated_cost") or 0) for r in results]
-    mfes = [float(r["MFE"]) for r in results if r.get("MFE") is not None]
-    maes = [float(r["MAE"]) for r in results if r.get("MAE") is not None]
-    wins = sum(1 for n in nets if n > 0)
-    losses = sum(1 for n in nets if n < 0)
-    gw = sum(n for n in nets if n > 0)
-    gl = abs(sum(n for n in nets if n < 0))
-    # Exclude ambiguous from first-touch rates
-    unambiguous = [r for r in results if not r.get("ambiguous_first_touch")]
-    tbs = sum(1 for r in unambiguous if r.get("target_before_stop") is True)
-    sbt = sum(1 for r in unambiguous if r.get("stop_before_target") is True)
-    amb = sum(1 for r in results if r.get("ambiguous_first_touch"))
+    wins = int(a.get("wins") or 0)
+    gl = float(a.get("gl") or 0)
+    unamb = int(a.get("unambiguous") or 0)
+    tbs = int(a.get("tbs") or 0)
+    sbt = int(a.get("sbt") or 0)
+    amb = int(a.get("amb") or 0)
     return {
-        "sample_count": len(results),
+        "sample_count": n,
         "wins": wins,
-        "losses": losses,
-        "win_rate": round(wins / len(results), 4) if results else None,
-        "gross_pnl": round(sum(grosses), 6),
-        "estimated_cost": round(sum(costs), 6),
-        "net_pnl": round(sum(nets), 6),
-        "post_cost_expectancy": round(sum(nets) / len(nets), 6),
-        "profit_factor": round(gw / gl, 4) if gl > 0 else None,
-        "median_MFE": round(statistics.median(mfes), 6) if mfes else None,
-        "median_MAE": round(statistics.median(maes), 6) if maes else None,
+        "losses": int(a.get("losses") or 0),
+        "win_rate": round(wins / n, 4),
+        "gross_pnl": round(float(a.get("sum_gross") or 0), 6),
+        "estimated_cost": round(float(a.get("sum_cost") or 0), 6),
+        "net_pnl": round(float(a.get("sum_net") or 0), 6),
+        "post_cost_expectancy": round(float(a.get("sum_net") or 0) / n, 6),
+        "profit_factor": round(float(a.get("gw") or 0) / gl, 4) if gl > 0 else None,
+        "median_MFE": None,
+        "median_MAE": None,
         "target_before_stop": tbs,
         "stop_before_target": sbt,
         "ambiguous_first_touch_count": amb,
-        "target_before_stop_rate": round(tbs / len(unambiguous), 4) if unambiguous else None,
-        "stop_before_target_rate": round(sbt / len(unambiguous), 4) if unambiguous else None,
-        "ambiguous_rate": round(amb / len(results), 4) if results else None,
+        "target_before_stop_rate": round(tbs / unamb, 4) if unamb else None,
+        "stop_before_target_rate": round(sbt / unamb, 4) if unamb else None,
+        "ambiguous_rate": round(amb / n, 4),
+        "incremental": True,
     }
 
 
@@ -82,14 +137,16 @@ def run_counterfactual_research(
     campaign_root: Path,
     path_records: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Compare champion vs alternative STOP/TARGET configs on OHLC path records."""
-    signals = _load_signals(campaign_root)
+    """Incremental counterfactual on a bounded batch of new path records."""
     if path_records is None:
         path_records = path_records_for_counterfactual(campaign_root)
 
-    config_results: list[dict[str, Any]] = []
+    acc = _load_acc(campaign_root)
+    by_config = dict(acc.get("by_config") or {})
+    batch_n = 0
     for cfg in RESEARCH_CONFIGS:
-        rows: list[dict[str, Any]] = []
+        name = cfg["name"]
+        row = dict(by_config.get(name) or _empty_acc())
         for rec in path_records:
             bars = list(rec.get("bars") or [])
             if not bars:
@@ -102,9 +159,17 @@ def run_counterfactual_research(
                 target_pct=float(cfg["target_pct"]),
                 notional=float(rec.get("notional") or 350.0),
             )
-            rows.append(m)
-        stats = _aggregate_config_stats(rows)
-        if not path_records:
+            _update_acc(row, m)
+            batch_n += 1
+        by_config[name] = row
+    acc["by_config"] = by_config
+    _save_acc(campaign_root, acc)
+    commit_counterfactual_progress(campaign_root)
+
+    config_results = []
+    for cfg in RESEARCH_CONFIGS:
+        stats = _stats_from_acc(by_config.get(cfg["name"]) or _empty_acc())
+        if stats["sample_count"] == 0:
             stats["status"] = "AWAITING_PATH_RECORDS"
         config_results.append(
             {
@@ -114,24 +179,28 @@ def run_counterfactual_research(
                 "auto_promoted": False,
             }
         )
-
     by_name = {c["name"]: c["stats"] for c in config_results}
+    led = ledger_stats(campaign_root)
+    from backend.nexus_research_ai_autonomy.shadow_path_index_v1 import ensure_path_index
+
+    idx = ensure_path_index(campaign_root)
     report = {
         "schema": "v30_counterfactual_strategy_research_v1",
         "live_stop_pct_unchanged": True,
         "live_target_pct_unchanged": True,
         "live_trail_pct_unchanged": True,
         "auto_promotion": False,
-        "active_shadow_signals": len(signals),
+        "mode": "incremental_bounded",
+        "active_shadow_signals": led.get("unique_signal_ids"),
         "path_records_used": len(path_records),
-        "recorded_path_records_on_disk": len(load_path_records(campaign_root)),
+        "batch_evaluations": batch_n,
+        "recorded_path_records_on_disk": idx.get("path_record_rows"),
         "champion_v30": by_name.get("champion_v30"),
         "research_configs": config_results,
         "sample_counts": {c["name"]: c["stats"].get("sample_count", 0) for c in config_results},
         "recommendation": "NO_AUTO_PROMOTION",
         "ready_for_demo_reenable": False,
     }
-
     out = shadow_dir(campaign_root) / "counterfactual_research_latest.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     tmp = out.with_suffix(".tmp")
@@ -141,52 +210,64 @@ def run_counterfactual_research(
 
 
 def build_per_horizon_stats(campaign_root: Path) -> dict[str, Any]:
-    """Independent stats per horizon — never mix into one win-rate."""
-    records = load_path_records(campaign_root)
-    signals = _load_signals(campaign_root)
-    action_counts = Counter(str(s.get("lifecycle_state") or "UNKNOWN") for s in signals)
-    # Also count from latest snapshots if available
-    from backend.nexus_research_ai_autonomy.decision_snapshot_v30 import load_latest_snapshots
+    """Per-horizon counts + MFE/MAE medians via streaming (bars discarded immediately)."""
+    from backend.nexus_research_ai_autonomy.shadow_path_index_v1 import (
+        ensure_path_index,
+        iter_jsonl_dicts,
+        path_records_path,
+    )
 
-    snaps = load_latest_snapshots(campaign_root)
-    action_from_snap = Counter(str(s.get("final_action") or "WAIT") for s in snaps)
+    idx = ensure_path_index(campaign_root)
+    by_h: dict[str, dict[str, list[float]]] = {
+        str(h): {"mfes": [], "maes": []} for h in (60, 180, 300, 900, 1800)
+    }
+    for rec in iter_jsonl_dicts(path_records_path(campaign_root)):
+        try:
+            h = int(rec.get("horizon_sec") or 0)
+        except (TypeError, ValueError):
+            continue
+        key = str(h)
+        if key not in by_h:
+            continue
+        # Never retain bars
+        mfe = rec.get("MFE")
+        mae = rec.get("MAE")
+        if mfe is not None:
+            try:
+                by_h[key]["mfes"].append(float(mfe))
+            except (TypeError, ValueError):
+                pass
+        if mae is not None:
+            try:
+                by_h[key]["maes"].append(float(mae))
+            except (TypeError, ValueError):
+                pass
 
-    by_h: dict[str, list[dict[str, Any]]] = {}
-    for r in records:
-        h = str(r.get("horizon_sec") or "unknown")
-        by_h.setdefault(h, []).append(r)
+    def _med(xs: list[float]) -> float | None:
+        if not xs:
+            return None
+        s = sorted(xs)
+        mid = len(s) // 2
+        if len(s) % 2:
+            return round(s[mid], 6)
+        return round((s[mid - 1] + s[mid]) / 2.0, 6)
 
-    per_horizon: dict[str, Any] = {}
-    for h, rows in sorted(by_h.items(), key=lambda kv: int(kv[0]) if kv[0].isdigit() else 0):
-        stats = _aggregate_config_stats(rows)
-        symbols = Counter(str(r.get("symbol") or "") for r in rows)
-        top_sym = symbols.most_common(1)
-        conc = (top_sym[0][1] / len(rows)) if rows and top_sym else None
-        costs = [float(r.get("total_estimated_cost") or r.get("estimated_cost") or 0) for r in rows]
-        grosses = [float(r.get("gross_hypothetical") or 0) for r in rows]
-        edge_ratios = []
-        for g, c in zip(grosses, costs):
-            if c > 0:
-                edge_ratios.append(abs(g) / c)
-        per_horizon[h] = {
-            "mature_sample_count": len(rows),
-            **stats,
-            "gross_expectancy": round(sum(grosses) / len(grosses), 6) if grosses else None,
-            "cost": round(sum(costs), 6),
-            "edge_to_cost_ratio_median": (
-                round(statistics.median(edge_ratios), 4) if edge_ratios else None
-            ),
-            "symbol_concentration": dict(symbols.most_common(5)),
-            "top_symbol_share": round(conc, 4) if conc is not None else None,
+    vb = idx.get("valid_by_horizon") or {}
+    label = {60: "1m", 180: "3m", 300: "5m", 900: "15m", 1800: "30m"}
+    per_horizon = {}
+    for h in (60, 180, 300, 900, 1800):
+        hs = str(h)
+        mfes = by_h[hs]["mfes"]
+        maes = by_h[hs]["maes"]
+        per_horizon[hs] = {
+            "mature_sample_count": int(vb.get(label[h], 0)) or len(mfes),
+            "median_MFE": _med(mfes),
+            "median_MAE": _med(maes),
+            "note": "streamed_scalars_bars_discarded",
         }
-
     return {
         "per_horizon": per_horizon,
-        "lifecycle_counts": dict(action_counts),
-        "decision_action_counts": {
-            "READY": action_from_snap.get("SELECT", 0),
-            "WATCH": action_from_snap.get("WATCH", 0),
-            "WAIT": action_from_snap.get("WAIT", 0),
-            "BLOCK": action_from_snap.get("BLOCK", 0),
-        },
+        "lifecycle_counts": {},
+        "decision_action_counts": {},
+        "source": "shadow_path_index_plus_scalar_stream",
     }

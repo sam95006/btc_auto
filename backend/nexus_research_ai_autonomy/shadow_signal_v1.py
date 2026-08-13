@@ -71,28 +71,45 @@ def create_shadow_signal(
 
 
 def _read_jsonl_rows(path: Path) -> list[dict[str, Any]]:
+    """Load all dict rows (signals are small). Prefer streaming for huge path files."""
     if not path.exists():
         return []
     rows: list[dict[str, Any]] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            row = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(row, dict):
-            rows.append(row)
+    with path.open("r", encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(row, dict):
+                rows.append(row)
     return rows
 
 
 def ledger_stats(campaign_root: Path) -> dict[str, Any]:
-    rows = _read_jsonl_rows(signal_ledger_path(campaign_root))
-    ids = [str(r.get("signal_id") or "") for r in rows if r.get("signal_id")]
+    """Stream ledger counts without holding full rows."""
+    path = signal_ledger_path(campaign_root)
+    rows = 0
+    ids: list[str] = []
+    if path.exists():
+        with path.open("r", encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                rows += 1
+                try:
+                    row = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(row, dict) and row.get("signal_id"):
+                    ids.append(str(row["signal_id"]))
     unique = set(ids)
     return {
-        "ledger_rows": len(rows),
+        "ledger_rows": rows,
         "unique_signal_ids": len(unique),
         "duplicate_signal_rows": max(0, len(ids) - len(unique)),
     }
@@ -100,13 +117,25 @@ def ledger_stats(campaign_root: Path) -> dict[str, Any]:
 
 def load_shadow_signal_ledger(campaign_root: Path) -> list[dict[str, Any]]:
     """Load unique origin signals from append-only JSONL (first row wins per signal_id)."""
-    rows = _read_jsonl_rows(signal_ledger_path(campaign_root))
+    path = signal_ledger_path(campaign_root)
     by_id: dict[str, dict[str, Any]] = {}
-    for row in rows:
-        sid = str(row.get("signal_id") or "")
-        if not sid or sid in by_id:
-            continue
-        by_id[sid] = row
+    if not path.exists():
+        return []
+    with path.open("r", encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(row, dict):
+                continue
+            sid = str(row.get("signal_id") or "")
+            if not sid or sid in by_id:
+                continue
+            by_id[sid] = row
     return list(by_id.values())
 
 

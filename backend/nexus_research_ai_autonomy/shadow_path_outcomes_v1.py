@@ -340,23 +340,32 @@ def persist_path_record(campaign_root: Path, record: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(record, default=str) + "\n")
+    # Incremental compact index update (strip bars for ingest)
+    try:
+        from backend.nexus_research_ai_autonomy.shadow_path_index_v1 import append_scan_path_index
+
+        append_scan_path_index(campaign_root)
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def load_path_records(campaign_root: Path) -> list[dict[str, Any]]:
+    """Full materialization — OFF hot path. Prefer streaming index / iter_jsonl_dicts."""
     path = path_records_path(campaign_root)
     if not path.exists():
         return []
     rows: list[dict[str, Any]] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            row = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(row, dict):
-            rows.append(row)
+    with path.open("r", encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(row, dict):
+                rows.append(row)
     return rows
 
 
@@ -373,75 +382,27 @@ def existing_path_keys(campaign_root: Path) -> set[tuple[str, int]]:
 
 
 def existing_path_key_status(campaign_root: Path) -> dict[tuple[str, int], str]:
-    """Map (signal_id, horizon_sec) → VALID|UNAVAILABLE from persisted path rows (first wins)."""
-    out: dict[tuple[str, int], str] = {}
-    for rec in load_path_records(campaign_root):
-        sid = str(rec.get("signal_id") or "")
-        try:
-            h = int(rec.get("horizon_sec") or 0)
-        except (TypeError, ValueError):
-            continue
-        if not sid or h <= 0:
-            continue
-        key = (sid, h)
-        if key in out:
-            continue
-        unavail = (
-            rec.get("unavailable_reason") == "HISTORICAL_PATH_UNAVAILABLE"
-            or rec.get("measurement_quality") == "HISTORICAL_PATH_UNAVAILABLE"
-            or (
-                not rec.get("bars")
-                and rec.get("post_cost_hypothetical") is None
-                and rec.get("MFE") is None
-            )
-        )
-        out[key] = "UNAVAILABLE" if unavail else "VALID"
-    return out
+    """Prefer compact index; never load OHLC bars for key status."""
+    from backend.nexus_research_ai_autonomy.shadow_path_index_v1 import (
+        ensure_path_index,
+        index_key_status,
+    )
+
+    index = ensure_path_index(campaign_root)
+    return index_key_status(index)
 
 
 def path_outcome_audit(campaign_root: Path) -> dict[str, Any]:
-    path_rows = load_path_records(campaign_root)
-    path_keys: list[tuple[str, int]] = []
-    for rec in path_rows:
-        sid = str(rec.get("signal_id") or "")
-        try:
-            h = int(rec.get("horizon_sec") or 0)
-        except (TypeError, ValueError):
-            continue
-        if sid and h > 0:
-            path_keys.append((sid, h))
-    unique_path = set(path_keys)
+    from backend.nexus_research_ai_autonomy.shadow_path_index_v1 import ensure_path_index
 
-    out_path = shadow_dir(campaign_root) / "shadow_outcomes.jsonl"
-    outcome_rows: list[dict[str, Any]] = []
-    if out_path.exists():
-        for line in out_path.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                row = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if isinstance(row, dict):
-                outcome_rows.append(row)
-    out_keys: list[tuple[str, int]] = []
-    for rec in outcome_rows:
-        sid = str(rec.get("signal_id") or "")
-        try:
-            h = int(rec.get("horizon_sec") or 0)
-        except (TypeError, ValueError):
-            continue
-        if sid and h > 0:
-            out_keys.append((sid, h))
-    unique_out = set(out_keys)
+    index = ensure_path_index(campaign_root)
     return {
-        "path_record_rows": len(path_rows),
-        "unique_path_keys": len(unique_path),
-        "duplicate_path_record_rows": max(0, len(path_keys) - len(unique_path)),
-        "outcome_rows": len(outcome_rows),
-        "unique_outcome_keys": len(unique_out),
-        "duplicate_outcome_rows": max(0, len(out_keys) - len(unique_out)),
+        "path_record_rows": int(index.get("path_record_rows") or 0),
+        "unique_path_keys": int(index.get("unique_path_keys") or 0),
+        "duplicate_path_record_rows": int(index.get("duplicate_path_record_rows") or 0),
+        "outcome_rows": int(index.get("outcome_rows") or 0),
+        "unique_outcome_keys": int(index.get("unique_outcome_keys") or 0),
+        "duplicate_outcome_rows": int(index.get("duplicate_outcome_rows") or 0),
     }
 
 
@@ -606,28 +567,99 @@ def evaluate_signal_horizons(
     return results
 
 
-def path_records_for_counterfactual(campaign_root: Path) -> list[dict[str, Any]]:
-    """Mature path records with OHLC bars for config comparison."""
+def path_records_for_counterfactual(
+    campaign_root: Path,
+    *,
+    max_records: int | None = None,
+    only_new_since_offset: bool = True,
+) -> list[dict[str, Any]]:
+    """Bounded path records WITH bars for counterfactual — not full history each cycle."""
+    import os
+
+    from backend.nexus_research_ai_autonomy.shadow_path_index_v1 import path_records_path
+
+    try:
+        default_max = int(os.environ.get("NEXUS_SHADOW_CF_MAX_RECORDS_PER_CYCLE") or 25)
+    except (TypeError, ValueError):
+        default_max = 25
+    limit = max_records if max_records is not None else default_max
+    limit = max(1, limit)
+
+    progress_path = shadow_dir(campaign_root) / "counterfactual_progress.json"
+    offset = 0
+    if only_new_since_offset and progress_path.exists():
+        try:
+            offset = int(json.loads(progress_path.read_text(encoding="utf-8")).get("byte_offset") or 0)
+        except Exception:  # noqa: BLE001
+            offset = 0
+
+    path = path_records_path(campaign_root)
     out: list[dict[str, Any]] = []
-    for rec in load_path_records(campaign_root):
-        bars = rec.get("bars")
-        if not bars:
-            continue
-        out.append(
-            {
-                "signal_id": rec.get("signal_id"),
-                "decision_id": rec.get("decision_id"),
-                "symbol": rec.get("symbol"),
-                "entry_price": rec.get("entry_price"),
-                "direction": rec.get("direction"),
-                "horizon_sec": rec.get("horizon_sec"),
-                "bars": bars,
-                "notional": 350.0,
-                "path_source": rec.get("path_source"),
-                "measurement_quality": rec.get("measurement_quality"),
-            }
-        )
+    if not path.exists():
+        return out
+    size = path.stat().st_size
+    if offset > size:
+        offset = 0
+    new_offset = offset
+    with path.open("r", encoding="utf-8") as fh:
+        fh.seek(offset)
+        while len(out) < limit:
+            line = fh.readline()
+            if not line:
+                break
+            new_offset = fh.tell()
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(rec, dict):
+                continue
+            bars = rec.get("bars")
+            if not bars:
+                continue
+            out.append(
+                {
+                    "signal_id": rec.get("signal_id"),
+                    "decision_id": rec.get("decision_id"),
+                    "symbol": rec.get("symbol"),
+                    "entry_price": rec.get("entry_price"),
+                    "direction": rec.get("direction"),
+                    "horizon_sec": rec.get("horizon_sec"),
+                    "bars": bars,
+                    "notional": 350.0,
+                    "path_source": rec.get("path_source"),
+                    "measurement_quality": rec.get("measurement_quality"),
+                }
+            )
+        # If we didn't fill limit but EOF, keep offset at EOF
+        if not out and offset == size:
+            new_offset = size
+        elif fh.tell():
+            new_offset = fh.tell()
+    # Persist progress only when caller asks via side file write after successful CF
+    campaign_root_ref = campaign_root
+    meta = {"byte_offset": new_offset, "last_batch": len(out), "updated_at_ms": int(time.time() * 1000)}
+    # stash for run_counterfactual to commit
+    path_records_for_counterfactual._last_progress = (campaign_root_ref, meta)  # type: ignore[attr-defined]
     return out
+
+
+def commit_counterfactual_progress(campaign_root: Path) -> None:
+    meta_pair = getattr(path_records_for_counterfactual, "_last_progress", None)
+    if not meta_pair:
+        return
+    root, meta = meta_pair
+    if root != campaign_root:
+        return
+    d = shadow_dir(campaign_root)
+    d.mkdir(parents=True, exist_ok=True)
+    path = d / "counterfactual_progress.json"
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(path)
 
 
 def refresh_mature_shadow_outcomes(

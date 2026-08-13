@@ -143,12 +143,25 @@ log "supervisor watching web_pid=${WEB_PID} auto_pid=${AUTO_PID}"
 # Supervise: if either dies unexpectedly, tear down and exit non-zero for Zeabur restart
 while true; do
   if ! kill -0 "$WEB_PID" 2>/dev/null; then
-    log "CRITICAL: web process died"
+    WEB_EC=0
+    wait "$WEB_PID" 2>/dev/null || WEB_EC=$?
+    log "CRITICAL: web process died exit_code=${WEB_EC} child=web"
+    printf '%s\n' "{\"schema\":\"v18_2_30_1_child_exit_v1\",\"child\":\"web\",\"exit_code\":${WEB_EC},\"at\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" \
+      > "${CAMPAIGN_ROOT}/autonomy/last_child_exit.json" 2>/dev/null || true
     cleanup
     exit 1
   fi
   if ! kill -0 "$AUTO_PID" 2>/dev/null; then
-    log "CRITICAL: autonomy process died"
+    AUTO_EC=0
+    wait "$AUTO_PID" 2>/dev/null || AUTO_EC=$?
+    log "CRITICAL: autonomy process died exit_code=${AUTO_EC} child=autonomy"
+    STAGE=""
+    if [ -f "${CAMPAIGN_ROOT}/autonomy/shadow_runtime_stage.json" ]; then
+      STAGE=$(python -c "import json;print(json.load(open('${CAMPAIGN_ROOT}/autonomy/shadow_runtime_stage.json')).get('stage',''))" 2>/dev/null || true)
+    fi
+    log "last_shadow_stage=${STAGE}"
+    printf '%s\n' "{\"schema\":\"v18_2_30_1_child_exit_v1\",\"child\":\"autonomy\",\"exit_code\":${AUTO_EC},\"last_shadow_stage\":\"${STAGE}\",\"at\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" \
+      > "${CAMPAIGN_ROOT}/autonomy/last_child_exit.json" 2>/dev/null || true
     cleanup
     exit 1
   fi
@@ -166,6 +179,13 @@ if p.is_file():
         hb = json.loads(p.read_text(encoding="utf-8"))
     except Exception:
         hb = {}
+stage = {}
+sp = camp / "autonomy" / "shadow_runtime_stage.json"
+if sp.is_file():
+    try:
+        stage = json.loads(sp.read_text(encoding="utf-8"))
+    except Exception:
+        stage = {}
 payload = {
   "schema": "v18_2_30_1_unified_runtime_health_v1",
   "at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -183,6 +203,9 @@ payload = {
   "service_status": hb.get("service_status"),
   "open_position": (hb.get("health") or {}).get("open_position") if isinstance(hb.get("health"), dict) else None,
   "ai": hb.get("ai"),
+  "last_shadow_stage": stage.get("stage"),
+  "last_shadow_stage_status": stage.get("status"),
+  "last_shadow_rss_mb": stage.get("rss_mb"),
 }
 root.mkdir(parents=True, exist_ok=True)
 (root / "unified_runtime_health.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")

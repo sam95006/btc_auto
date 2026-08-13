@@ -127,52 +127,95 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
         counterfactual_error = None
         shadow_quality_error = None
         observation_error = None
+        shadow_maintenance = None
         croot = None
+        mem: dict = {}
         try:
             from backend.nexus_research_ai_autonomy.cloud_paths_v301 import campaign_root
             from backend.nexus_research_ai_autonomy.signal_quality_cycle_v1 import (
                 run_signal_quality_shadow_cycle,
             )
+            from backend.nexus_research_ai_autonomy.shadow_path_index_v1 import (
+                dataset_file_sizes,
+                rss_mb,
+                write_runtime_stage,
+            )
 
             croot = campaign_root()
+            mem = {"rss_mb_before_shadow": rss_mb(), **dataset_file_sizes(croot)}
+            write_runtime_stage(croot, stage="SIGNAL_QUALITY", status="RUNNING")
             signal_quality = run_signal_quality_shadow_cycle(
                 client=client,
                 market_pack=market_pack,
                 equity=equity,
                 campaign_root_path=croot,
             )
+            write_runtime_stage(croot, stage="SIGNAL_QUALITY", status="DONE")
         except Exception as sq_exc:  # noqa: BLE001
             signal_quality = {"ok": False, "error": type(sq_exc).__name__, "detail": str(sq_exc)[:200]}
 
         if croot is not None:
+            from backend.nexus_research_ai_autonomy.shadow_path_index_v1 import (
+                rss_mb,
+                write_runtime_stage,
+            )
+
+            maintenance_status = "OK"
             try:
+                write_runtime_stage(croot, stage="BACKFILL", status="RUNNING")
                 from backend.nexus_research_ai_autonomy.shadow_path_outcomes_v1 import (
                     refresh_mature_shadow_outcomes,
                 )
 
                 shadow_outcomes = refresh_mature_shadow_outcomes(client, campaign_root=croot)
+                mem["rss_mb_after_backfill"] = rss_mb()
+                write_runtime_stage(
+                    croot,
+                    stage="BACKFILL",
+                    status="DONE",
+                    extra={"backfill_status": (shadow_outcomes or {}).get("backfill_status")},
+                )
+                if (shadow_outcomes or {}).get("backfill_status") == "PARTIAL":
+                    maintenance_status = "SHADOW_MAINTENANCE_PARTIAL"
             except Exception as bf_exc:  # noqa: BLE001
                 shadow_backfill_error = f"{type(bf_exc).__name__}:{bf_exc}"[:300]
                 shadow_outcomes = {"backfill_status": "ERROR", "error": shadow_backfill_error}
+                maintenance_status = "SHADOW_MAINTENANCE_PARTIAL"
+                write_runtime_stage(croot, stage="BACKFILL", status="ERROR", error=shadow_backfill_error)
 
             try:
-                from backend.nexus_research_ai_autonomy.counterfactual_strategy_v1 import (
-                    run_counterfactual_research,
-                )
-                from backend.nexus_research_ai_autonomy.shadow_path_outcomes_v1 import (
-                    path_records_for_counterfactual,
-                )
+                bf_wall = float((shadow_outcomes or {}).get("wall_time_sec") or 0)
+                bf_status = (shadow_outcomes or {}).get("backfill_status")
+                defer_cf = bf_status == "PARTIAL" and bf_wall >= 15
+                if defer_cf:
+                    counterfactual = {"deferred": True, "reason": "BACKFILL_BUDGET"}
+                    write_runtime_stage(croot, stage="COUNTERFACTUAL", status="DEFERRED")
+                    maintenance_status = "SHADOW_MAINTENANCE_PARTIAL"
+                else:
+                    write_runtime_stage(croot, stage="COUNTERFACTUAL", status="RUNNING")
+                    from backend.nexus_research_ai_autonomy.counterfactual_strategy_v1 import (
+                        run_counterfactual_research,
+                    )
+                    from backend.nexus_research_ai_autonomy.shadow_path_outcomes_v1 import (
+                        path_records_for_counterfactual,
+                    )
 
-                path_recs = path_records_for_counterfactual(croot)
-                counterfactual = run_counterfactual_research(
-                    campaign_root=croot,
-                    path_records=path_recs,
-                )
+                    path_recs = path_records_for_counterfactual(croot)
+                    counterfactual = run_counterfactual_research(
+                        campaign_root=croot,
+                        path_records=path_recs,
+                    )
+                    mem["rss_mb_after_counterfactual"] = rss_mb()
+                    write_runtime_stage(croot, stage="COUNTERFACTUAL", status="DONE")
             except Exception as cf_exc:  # noqa: BLE001
                 counterfactual_error = f"{type(cf_exc).__name__}:{cf_exc}"[:300]
                 counterfactual = {"ok": False, "error": counterfactual_error}
+                write_runtime_stage(
+                    croot, stage="COUNTERFACTUAL", status="ERROR", error=counterfactual_error
+                )
 
             try:
+                write_runtime_stage(croot, stage="SHADOW_QUALITY", status="RUNNING")
                 from backend.nexus_research_ai_autonomy.shadow_quality_report_v1 import (
                     build_shadow_quality_report,
                 )
@@ -181,29 +224,42 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
                     campaign_root=croot,
                     counterfactual=counterfactual if isinstance(counterfactual, dict) else None,
                 )
+                write_runtime_stage(croot, stage="SHADOW_QUALITY", status="DONE")
             except Exception as q_exc:  # noqa: BLE001
                 shadow_quality_error = f"{type(q_exc).__name__}:{q_exc}"[:300]
                 shadow_quality = {"ok": False, "error": shadow_quality_error}
+                write_runtime_stage(
+                    croot, stage="SHADOW_QUALITY", status="ERROR", error=shadow_quality_error
+                )
 
-            # Observation MUST refresh even when counterfactual/quality fail or backfill is PARTIAL
             try:
+                write_runtime_stage(croot, stage="OBSERVATION", status="RUNNING")
                 from backend.nexus_research_ai_autonomy.shadow_observation_v1 import (
-                    build_observation_report,
+                    build_observation_report_lightweight,
                 )
 
                 bf_status = None
                 if isinstance(shadow_outcomes, dict):
                     bf_status = shadow_outcomes.get("backfill_status")
-                observation = build_observation_report(
+                observation = build_observation_report_lightweight(
                     campaign_root=croot,
                     runtime_commit=os.environ.get("NEXUS_RUNTIME_COMMIT")
                     or os.environ.get("GIT_COMMIT"),
                     backfill_status=bf_status,
                     backfill_progress=shadow_outcomes if isinstance(shadow_outcomes, dict) else None,
                 )
+                mem["rss_mb_after_observation"] = rss_mb()
+                write_runtime_stage(croot, stage="OBSERVATION", status="DONE", extra=mem)
             except Exception as ob_exc:  # noqa: BLE001
                 observation_error = f"{type(ob_exc).__name__}:{ob_exc}"[:300]
                 observation = None
+                write_runtime_stage(croot, stage="OBSERVATION", status="ERROR", error=observation_error)
+
+            shadow_maintenance = {
+                "status": maintenance_status,
+                "memory": mem,
+                "full_history_hot_loop": False,
+            }
 
         pnl = prod.run_research_demo_loop(account=account, market_pack=market_pack)
 
@@ -245,6 +301,7 @@ def run_v29_opportunity_cycle(ctx: dict[str, Any] | None = None) -> dict[str, An
             "counterfactual_research": counterfactual,
             "shadow_quality": shadow_quality,
             "shadow_observation": observation,
+            "shadow_maintenance": shadow_maintenance,
             "shadow_backfill_error": shadow_backfill_error,
             "counterfactual_error": counterfactual_error,
             "shadow_quality_error": shadow_quality_error,

@@ -274,6 +274,80 @@ def _pearson(xs: list[float], ys: list[float]) -> float | None:
     return round(num / (denx * deny), 4)
 
 
+def build_observation_report_lightweight(
+    *,
+    campaign_root: Path,
+    runtime_commit: str | None = None,
+    backfill_status: str | None = None,
+    backfill_progress: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Hot-cycle observation from compact index/state — NO full path_records OHLC load."""
+    from backend.nexus_research_ai_autonomy.shadow_path_index_v1 import compact_observation_counters
+
+    d = observation_dir(campaign_root)
+    d.mkdir(parents=True, exist_ok=True)
+    led = ledger_stats(campaign_root)
+    state = load_signal_state(campaign_root)
+    counters = compact_observation_counters(campaign_root, ledger_stats=led, state=state)
+    gate = int(counters.get("signals_fully_matured_valid_all_horizons") or 0)
+    if gate < 50:
+        stage = "COLLECTING"
+        next_ck = "EARLY_DIAGNOSTIC_AT_50_VALID_FULLY_MATURED"
+    elif gate < 100:
+        stage = "EARLY_DIAGNOSTIC_READY"
+        next_ck = "INTERMEDIATE_REVIEW_AT_100_VALID_FULLY_MATURED"
+    elif gate < 200:
+        stage = "INTERMEDIATE_REVIEW_READY"
+        next_ck = "PROMOTION_REVIEW_CANDIDATE_AT_200_VALID_FULLY_MATURED"
+    else:
+        stage = "PROMOTION_REVIEW_CANDIDATE"
+        next_ck = "PROMOTION_REVIEW_CANDIDATE_REACHED"
+    bf = backfill_progress or {}
+    report = {
+        "schema": OBSERVATION_SCHEMA,
+        "mode": "lightweight_hot_cycle",
+        "generated_at": _utc(),
+        "runtime_commit": runtime_commit,
+        "write_enabled": False,
+        "demo_write_reenabled": False,
+        "ready_for_demo_reenable": False,
+        "strategy_changed": False,
+        "risk_changed": False,
+        "gate_lowered": False,
+        "mainnet": False,
+        "real_money": False,
+        **counters,
+        "signals_created": counters.get("unique_signals_created_total"),
+        "signals_matured": gate,
+        "signals_matured_1m": counters.get("signals_matured_valid_1m"),
+        "signals_matured_3m": counters.get("signals_matured_valid_3m"),
+        "signals_matured_5m": counters.get("signals_matured_valid_5m"),
+        "signals_matured_15m": counters.get("signals_matured_valid_15m"),
+        "signals_matured_30m": counters.get("signals_matured_valid_30m"),
+        "backfill_status": backfill_status or bf.get("backfill_status"),
+        "backfill_progress": {
+            "horizons_processed_this_cycle": bf.get("horizons_processed_this_cycle"),
+            "pending_signals_before": bf.get("pending_signals_before"),
+            "pending_signals_after": bf.get("pending_signals_after"),
+            "state_synced_from_existing_paths": bf.get("state_synced_from_existing_paths"),
+            "wall_time_sec": bf.get("wall_time_sec"),
+            "cursor_index": bf.get("cursor_index"),
+            "backfill_work_budget": bf.get("backfill_work_budget"),
+            "backfill_time_budget": bf.get("backfill_time_budget"),
+        },
+        "observation_stage": stage,
+        "next_checkpoint": next_ck,
+        "review_thresholds": {name: thr for name, thr in STAGE_THRESHOLDS},
+        "heavy_analysis_deferred": True,
+        "path_record_rows_note": "NOT_a_unique_signal_count",
+    }
+    latest = d / "observation_latest.json"
+    tmp = latest.with_suffix(".tmp")
+    tmp.write_text(json.dumps(report, indent=2, default=str) + "\n", encoding="utf-8")
+    tmp.replace(latest)
+    return report
+
+
 def build_observation_report(
     *,
     campaign_root: Path,
