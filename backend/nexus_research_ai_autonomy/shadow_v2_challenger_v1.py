@@ -25,12 +25,21 @@ from backend.nexus_research_ai_autonomy.signal_quality_v2_c1 import (
     materialize_v2_evidence,
     select_v2_c1_for_episode,
 )
+from backend.nexus_research_ai_autonomy.v2_c1_thesis_v1 import (
+    ACTION_EVIDENCE_POST_ISOLATION,
+    ACTION_EVIDENCE_PRE_ISOLATION,
+    V1_THESIS_NAMESPACE,
+    V2_THESIS_NAMESPACE,
+    action_evidence_epoch,
+    record_v2_c1_thesis,
+    resolve_abstention_diagnostic,
+)
 
 V2_LEDGER = "v2_c1_shadow_signals.jsonl"
 CYCLE_LEDGER = "shadow_champion_challenger_cycles.jsonl"
 REPORT_PATH = "shadow_v2_challenger_latest.json"
 VALIDATION_CHECKPOINTS = (25, 50, 100, 200)
-REPORT_SCHEMA = "v30_shadow_v2_challenger_report_v2"
+REPORT_SCHEMA = "v30_shadow_v2_challenger_report_v3"
 
 
 def v2_ledger_path(campaign_root: Path) -> Path:
@@ -242,8 +251,14 @@ def build_shadow_v2_challenger_report(campaign_root: Path) -> dict[str, Any]:
     selected_top1 = load_selected_top1_long(campaign_root)
     v1_signals = load_active_shadow_signals(campaign_root)
     selected_shadow = [evidence_to_shadow_signal(e) for e in selected_top1]
+    post_isolation = [e for e in selected_top1 if action_evidence_epoch(e) == ACTION_EVIDENCE_POST_ISOLATION]
+    pre_isolation = [e for e in selected_top1 if action_evidence_epoch(e) == ACTION_EVIDENCE_PRE_ISOLATION]
     ready_evidence = [e for e in selected_top1 if str(e.get("action")) == "READY"]
-    ready_shadow = [evidence_to_shadow_signal(e) for e in ready_evidence]
+    post_ready_evidence = [
+        e for e in ready_evidence if action_evidence_epoch(e) == ACTION_EVIDENCE_POST_ISOLATION
+    ]
+    ready_shadow = [evidence_to_shadow_signal(e) for e in post_ready_evidence]
+    post_ready_shadow = ready_shadow
     v2_short = [e for e in v2_evidence if e.get("lane") == "SHORT_SHADOW_RESEARCH"]
     v1_ready = [s for s in v1_signals if str(s.get("lifecycle_state")) == "READY"]
     state = load_signal_state(campaign_root).get("signals") or {}
@@ -251,7 +266,11 @@ def build_shadow_v2_challenger_report(campaign_root: Path) -> dict[str, Any]:
     episodes = {c.get("episode_id") for c in cycles if c.get("episode_id") is not None}
     action_dist = Counter(str(e.get("action") or "UNKNOWN") for e in selected_top1)
     reason_dist = Counter(str(e.get("reason") or "UNKNOWN") for e in selected_top1)
-    abstention_diag = Counter(str(e.get("abstention_diagnostic") or "other") for e in selected_top1)
+    abstention_diag = Counter(resolve_abstention_diagnostic(e) for e in selected_top1)
+    post_action_dist = Counter(str(e.get("action") or "UNKNOWN") for e in post_isolation)
+    post_reason_dist = Counter(str(e.get("reason") or "UNKNOWN") for e in post_isolation)
+    post_abstention_diag = Counter(resolve_abstention_diagnostic(e) for e in post_isolation)
+    legacy_missing_count = sum(1 for e in selected_top1 if resolve_abstention_diagnostic(e) == "legacy_missing")
 
     def _horizon(horizon_sec: int, signals: list[dict[str, Any]], *, action_filter: str | None) -> dict[str, Any]:
         rows = _path_rows_for_signals(
@@ -260,7 +279,7 @@ def build_shadow_v2_challenger_report(campaign_root: Path) -> dict[str, Any]:
         return summarize_outcomes(rows)
 
     selected_fully_valid = _fully_valid_count(selected_top1, state)
-    ready_fully_valid = _fully_valid_count(ready_evidence, state)
+    ready_fully_valid = _fully_valid_count(post_ready_evidence, state)
 
     sym_counter: Counter[str] = Counter(str(e.get("symbol") or "") for e in selected_top1)
     regime_counter: Counter[str] = Counter()
@@ -281,6 +300,16 @@ def build_shadow_v2_challenger_report(campaign_root: Path) -> dict[str, Any]:
         "champion_version": CHAMPION_VERSION,
         "challenger_version": CHALLENGER_VERSION,
         "evidence_generation": EVIDENCE_GENERATION,
+        "v1_thesis_namespace": V1_THESIS_NAMESPACE,
+        "v2_thesis_namespace": V2_THESIS_NAMESPACE,
+        "champion_challenger_thesis_isolated": True,
+        "action_evidence_generation": ACTION_EVIDENCE_POST_ISOLATION,
+        "pre_isolation_action_count": len(pre_isolation),
+        "post_isolation_action_count": len(post_isolation),
+        "legacy_missing_diagnostic_count": legacy_missing_count,
+        "post_isolation_action_distribution": dict(post_action_dist),
+        "post_isolation_reason_distribution": dict(post_reason_dist),
+        "post_isolation_abstention_diagnostic": dict(post_abstention_diag),
         "ready_threshold_provenance": audit_ready_threshold_provenance(),
         "selected_cohort_name": SELECTED_COHORT_NAME,
         "action_cohort_ready_name": ACTION_COHORT_READY,
@@ -297,7 +326,7 @@ def build_shadow_v2_challenger_report(campaign_root: Path) -> dict[str, Any]:
         "selected_top1_action_distribution": dict(action_dist),
         "selected_top1_reason_distribution": dict(reason_dist),
         "selected_abstention_diagnostic": dict(abstention_diag),
-        "v2_ready": len(ready_evidence),
+        "v2_ready": len(post_ready_evidence),
         "v2_ready_fully_valid_count": ready_fully_valid,
         "v2_abstention_rate": abstention_rate,
         "v2_short_research_count": len(v2_short),
@@ -308,20 +337,21 @@ def build_shadow_v2_challenger_report(campaign_root: Path) -> dict[str, Any]:
         },
         "selected_top1_symbol_concentration": dict(sym_counter.most_common(10)),
         "ready_horizons": {
-            "5m": _horizon(300, ready_shadow, action_filter="READY"),
-            "15m": _horizon(900, ready_shadow, action_filter="READY"),
-            "30m": _horizon(1800, ready_shadow, action_filter="READY"),
+            "5m": _horizon(300, post_ready_shadow, action_filter="READY"),
+            "15m": _horizon(900, post_ready_shadow, action_filter="READY"),
+            "30m": _horizon(1800, post_ready_shadow, action_filter="READY"),
+            "note": "POST_V2_THESIS_ISOLATION action cohort only",
         },
         "horizons": {
             "15m": {
                 "v1_ready": _horizon(900, v1_ready, action_filter=None),
                 "selected_top1": _horizon(900, selected_shadow, action_filter=None),
-                "v2_ready": _horizon(900, ready_shadow, action_filter="READY"),
+                "v2_ready": _horizon(900, post_ready_shadow, action_filter="READY"),
             },
             "30m": {
                 "v1_ready": _horizon(1800, v1_ready, action_filter=None),
                 "selected_top1": _horizon(1800, selected_shadow, action_filter=None),
-                "v2_ready": _horizon(1800, ready_shadow, action_filter="READY"),
+                "v2_ready": _horizon(1800, post_ready_shadow, action_filter="READY"),
             },
         },
         "regime_distribution": dict(regime_counter),
@@ -332,6 +362,7 @@ def build_shadow_v2_challenger_report(campaign_root: Path) -> dict[str, Any]:
         "validation_gates": {
             "selected_top1_long": _checkpoint_block("selected_checkpoint", selected_fully_valid),
             "v2_ready": _checkpoint_block("ready_checkpoint", ready_fully_valid),
+            "v2_ready_note": "POST_V2_THESIS_ISOLATION action cohort only",
             "early_challenger_diagnostic": {
                 "at_n": 50,
                 "counter": "SELECTED_TOP1_LONG",
@@ -379,6 +410,11 @@ def run_v2_c1_shadow_challenger(
     persisted = persist_v2_evidence(campaign_root, evidence)
 
     long_top1 = selection.get("long_top1") or {}
+    if str(long_top1.get("v2_action")) == "READY":
+        thesis_snap = long_top1.get("thesis_snapshot")
+        if isinstance(thesis_snap, dict):
+            record_v2_c1_thesis(campaign_root, thesis_snap)
+
     v1c = long_top1.get("v1_champion") or {}
     top_v1 = ranked_rows[0] if ranked_rows else {}
     ep_id = selection.get("episode_id")
@@ -393,6 +429,8 @@ def run_v2_c1_shadow_challenger(
         "champion_version": CHAMPION_VERSION,
         "challenger_version": CHALLENGER_VERSION,
         "evidence_generation": EVIDENCE_GENERATION,
+        "thesis_namespace": V2_THESIS_NAMESPACE,
+        "action_evidence_generation": ACTION_EVIDENCE_POST_ISOLATION,
         "cycle_id": cycle_id,
         "timestamp_ms": now_ms,
         "episode_id": ep_id,

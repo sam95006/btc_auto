@@ -8,7 +8,11 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from backend.nexus_research_ai_autonomy.anti_churn_thesis_v1 import evaluate_thesis_novelty
+from backend.nexus_research_ai_autonomy.v2_c1_thesis_v1 import (
+    ACTION_EVIDENCE_POST_ISOLATION,
+    V2_THESIS_NAMESPACE,
+    evaluate_v2_c1_thesis_novelty,
+)
 from backend.nexus_research_ai_autonomy.regime_provenance_v1 import attach_regime_provenance
 from backend.nexus_research_ai_autonomy.signal_quality_v1 import (
     build_evidence_lists,
@@ -162,7 +166,7 @@ def build_long_candidate_row(
         enrichment, side="LONG", structure=str(structure), regime=str(regime), edge=edge
     )
     gate_pass = bool(row.get("gate_pass", True))
-    thesis = evaluate_thesis_novelty(
+    thesis = evaluate_v2_c1_thesis_novelty(
         campaign_root=campaign_root,
         symbol=str(row.get("symbol") or enrichment.get("symbol") or ""),
         side="LONG",
@@ -224,6 +228,19 @@ def build_long_candidate_row(
         "gate_pass": gate_pass,
         "thesis_ok": bool(thesis.get("pass")),
         "edge_to_cost_ratio": edge.get("edge_to_cost_ratio"),
+        "thesis_namespace": V2_THESIS_NAMESPACE,
+        "thesis_snapshot": {
+            "timestamp_ms": int(enrichment.get("timestamp_ms") or row.get("timestamp_ms") or 0),
+            "symbol": row.get("symbol") or enrichment.get("symbol"),
+            "side": "LONG",
+            "regime": regime,
+            "market_structure": structure,
+            "momentum_5m": enrichment.get("momentum_5m"),
+            "oi_delta_short": enrichment.get("oi_delta_short"),
+            "funding_rate": enrichment.get("funding_rate"),
+            "price": enrichment.get("price"),
+            "expected_net_edge": edge.get("expected_net_edge"),
+        },
         "abstention_diagnostic": classify_abstention_diagnostic(
             {
                 "v2_action": action,
@@ -376,6 +393,8 @@ def materialize_v2_evidence(
                 "champion_version": CHAMPION_VERSION,
                 "challenger_version": CHALLENGER_VERSION,
                 "evidence_generation": EVIDENCE_GENERATION,
+                "action_evidence_generation": ACTION_EVIDENCE_POST_ISOLATION,
+                "thesis_namespace": V2_THESIS_NAMESPACE,
                 "historical_fit_note": HISTORICAL_FIT_NOTE,
                 "cycle_id": cycle_id,
                 "episode_id": ep_id,
