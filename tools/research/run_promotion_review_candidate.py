@@ -319,12 +319,7 @@ def run_review(
     canon_rows: list[dict[str, Any]] = []  # joined feature+outcome for primary horizons analysis
 
     ts_clusters: Counter[int] = Counter()
-    sym_counts: Counter[str] = Counter()
-    regime_counts: Counter[str] = Counter()
-    dir_counts: Counter[str] = Counter()
-    cycle_proxy: Counter[int] = Counter()  # bucket detected_at to ~2min cycles
-
-    # score / action / edge calibration on primary horizon (900 preferred, else 300)
+    # score / action / edge calibration on primary horizon (900 preferred)
     primary_h = 900
     score_buckets: dict[str, dict[str, Any]] = defaultdict(_horizon_pack)
     action_buckets: dict[str, dict[str, Any]] = defaultdict(_horizon_pack)
@@ -336,9 +331,6 @@ def run_review(
     short_pack = _horizon_pack()
     regime_packs: dict[str, dict[str, Any]] = defaultdict(_horizon_pack)
     structure_packs: dict[str, dict[str, Any]] = defaultdict(_horizon_pack)
-
-    # anti-churn
-    by_sym_ts: dict[str, list[tuple[int, str]]] = defaultdict(list)
 
     # CF sample (bounded)
     cf_acc: dict[str, dict[str, Any]] = {c["name"]: _horizon_pack() for c in RESEARCH_CONFIGS}
@@ -412,17 +404,7 @@ def run_review(
             }
             canon_rows.append(joined)
 
-            ts = int(joined["detected_at_ms"] or 0)
-            if ts:
-                ts_clusters[ts] += 1
-                cycle_proxy[ts // 120_000] += 1
-            sym = str(joined.get("symbol") or "")
-            if sym:
-                sym_counts[sym] += 1
-                by_sym_ts[sym].append((ts, str(joined.get("direction") or "")))
-            regime_counts[str(joined.get("regime") or "UNDETERMINED")] += 1
-            dir_counts[str(joined.get("direction") or "")] += 1
-
+            # Calibration packs use primary horizon only (no multi-horizon inflation)
             if h == primary_h:
                 sb = _score_bucket(eq)
                 _update_h(score_buckets[sb], joined)
@@ -430,8 +412,7 @@ def run_review(
                 _update_h(action_buckets[ab], joined)
                 if edge is not None and _f(joined.get("post_cost_hypothetical")) is not None:
                     edge_pairs.append((edge, float(joined["post_cost_hypothetical"])))
-                eb = _score_bucket(eq)  # same cut for entry quality
-                _update_h(entry_buckets[eb], joined)
+                _update_h(entry_buckets[sb], joined)
                 for tag in joined["supporting_evidence"]:
                     _update_h(evidence_pos[str(tag)], joined)
                 for tag in joined["contradicting_evidence"]:
@@ -464,29 +445,51 @@ def run_review(
                 cf_n += 1
         del bars
 
-    # Independence
-    spc = list(cycle_proxy.values()) if cycle_proxy else []
-    unique_ts = len(ts_clusters)
-    max_same_ts = max(ts_clusters.values()) if ts_clusters else 0
-    top_syms = sym_counts.most_common(10)
-    n_canon_signals = len(index_valid_full_ids)
-    mean_spc = (sum(spc) / len(spc)) if spc else None
+    # --- Unique-signal view (P0.4 A1/A2) ---
+    from backend.nexus_research_ai_autonomy.promotion_selectivity_research_v1 import (
+        anti_churn_unique,
+        build_unique_signals,
+        cf_wider_stop_validity,
+        cost_stress_on_selection,
+        direction_policy_conclusion,
+        direction_selectivity,
+        direction_unique_vs_horizon,
+        episode_stats,
+        expected_edge_tail_research,
+        outcomes_by_signal_horizon,
+        ready_watch_after_selection,
+        score_tail_research,
+        select_topk_sids,
+        selective_verdict_from_topk,
+        topk_research,
+        _episodes,
+        regime_provenance,
+    )
+
+    unique = build_unique_signals(canon_rows, primary_h=primary_h)
+    by_sh = outcomes_by_signal_horizon(canon_rows)
+    dir_sem = direction_unique_vs_horizon(unique, canon_rows)
+    anti = anti_churn_unique(unique)
+    horizon_record_distribution = Counter(
+        f"{r.get('horizon_sec')}" for r in canon_rows
+    )
+
+    ep60 = episode_stats(unique, 60)
+    ep120 = episode_stats(unique, 120)
+    ep300 = episode_stats(unique, 300)
+    # Primary proxy: 120s justified when median signals/episode is high and aligns with cycle sleep
+    primary_episode = ep120
+    spc = []
+    for sids in _episodes(unique, 120).values():
+        spc.append(float(len(sids)))
+    n_canon_signals = len(unique)
     independence = "UNDETERMINED"
-    effective_episodes: int | None = None
-    if cycles_run_hint and cycles_run_hint > 0:
-        effective_episodes = int(cycles_run_hint)
-        mean_est = n_canon_signals / max(1, cycles_run_hint)
-        if mean_est >= 50 or (mean_spc and mean_spc >= 50):
+    effective_episodes = int(ep120.get("episode_count") or 0)
+    med_spc = ep120.get("median_unique_signals_per_episode")
+    if med_spc is not None:
+        if med_spc >= 50:
             independence = "HIGHLY_CLUSTERED"
-        elif mean_est >= 10 or (mean_spc and mean_spc >= 10):
-            independence = "MODERATELY_CLUSTERED"
-        else:
-            independence = "GOOD"
-    elif spc:
-        effective_episodes = len(spc)
-        if (_pctile(spc, 50) or 0) >= 50:
-            independence = "HIGHLY_CLUSTERED"
-        elif (_pctile(spc, 50) or 0) >= 10:
+        elif med_spc >= 10:
             independence = "MODERATELY_CLUSTERED"
         else:
             independence = "GOOD"
@@ -535,7 +538,6 @@ def run_review(
 
     pred = [p[0] for p in edge_pairs]
     real = [p[1] for p in edge_pairs]
-    # deciles
     deciles = []
     if len(edge_pairs) >= 20:
         ordered = sorted(edge_pairs, key=lambda t: t[0])
@@ -556,31 +558,14 @@ def run_review(
     pred_pos_real_neg = sum(1 for a, b in edge_pairs if a > 0 and b < 0)
     pred_neg_real_pos = sum(1 for a, b in edge_pairs if a < 0 and b > 0)
 
-    # anti-churn
-    same_sym_consec = 0
-    same_side_consec = 0
-    gaps: list[float] = []
-    for sym, events in by_sym_ts.items():
-        events = sorted(events, key=lambda x: x[0])
-        for i in range(1, len(events)):
-            same_sym_consec += 1
-            if events[i][1] and events[i][1] == events[i - 1][1]:
-                same_side_consec += 1
-            if events[i][0] and events[i - 1][0]:
-                gaps.append((events[i][0] - events[i - 1][0]) / 1000.0)
-
-    # temporal split on primary horizon rows
-    primary_rows = [r for r in canon_rows if int(r.get("horizon_sec") or 0) == primary_h]
-    primary_rows.sort(key=lambda r: int(r.get("detected_at_ms") or 0))
+    # temporal split on unique primary rows (chronological)
+    primary_rows = sorted(unique.values(), key=lambda r: int(r.get("detected_at_ms") or 0))
     mid = len(primary_rows) // 2
     window_a = primary_rows[:mid]
     window_b = primary_rows[mid:]
 
     def _window_stats(rows: list[dict[str, Any]]) -> dict[str, Any]:
         packs = {lab: _horizon_pack() for lab in primary_labels}
-        hmap = {"5m": 300, "15m": 900, "30m": 1800}
-        # rebuild from canon for those signals' other horizons is heavy; use same-horizon only for 15m window,
-        # and pull matching from by_h is aggregate — instead filter canon_rows
         sids = {str(r.get("signal_id")) for r in rows}
         for r in canon_rows:
             if str(r.get("signal_id")) not in sids:
@@ -602,7 +587,6 @@ def run_review(
             "READY": _summarize_h(ready),
         }
 
-    # evidence associations
     def _top_ev(store: dict[str, dict[str, Any]], n: int = 8) -> list[dict[str, Any]]:
         rows = []
         for tag, pack in store.items():
@@ -610,17 +594,17 @@ def run_review(
             if s.get("valid_sample_count", 0) < 30:
                 continue
             rows.append({"tag": tag, **s})
-        rows.sort(key=lambda r: (r.get("post_cost_expectancy") is not None, r.get("post_cost_expectancy") or -999), reverse=True)
+        rows.sort(
+            key=lambda r: (r.get("post_cost_expectancy") is not None, r.get("post_cost_expectancy") or -999),
+            reverse=True,
+        )
         return rows[:n]
 
-    pos_ev = _top_ev(evidence_pos)
-    neg_ev_sorted = _top_ev(evidence_neg)
-    # negative associations = worst expectancy among frequent tags (supporting store)
     all_ev = _top_ev(evidence_pos, n=50)
     strong_pos = [e for e in all_ev if (e.get("post_cost_expectancy") or 0) > 0][:5]
     strong_neg = sorted(all_ev, key=lambda e: e.get("post_cost_expectancy") or 0)[:5]
+    neg_ev_sorted = _top_ev(evidence_neg)
 
-    # cost status from primary
     prim = per_horizon.get("15m") or {}
     cost_status = "INSUFFICIENT"
     if prim.get("valid_sample_count", 0) >= 50:
@@ -646,7 +630,6 @@ def run_review(
                 cf_best = s["post_cost_expectancy"]
                 cf_leader = name
 
-    # selection vs management
     med_mfe = prim.get("median_MFE")
     med_mae = prim.get("median_MAE")
     ge = prim.get("gross_expectancy")
@@ -664,7 +647,6 @@ def run_review(
         else:
             svm = "MIXED"
 
-    # integrity
     unavailable_in_index = sum(1 for st in (idx.get("keys") or {}).values() if st == "UNAVAILABLE")
     integrity = "PASS"
     if dup_keys > 0 or unavailable_in_index > 0:
@@ -672,7 +654,6 @@ def run_review(
     if index_valid_full_count <= 0 or path_rows <= 0:
         integrity = "FAIL"
 
-    # temporal stability
     wa = _window_stats(window_a)
     wb = _window_stats(window_b)
     temporal = "INSUFFICIENT"
@@ -682,24 +663,22 @@ def run_review(
         if a15 is not None and b15 is not None:
             if (a15 > 0 and b15 > 0) or (a15 < 0 and b15 < 0):
                 temporal = "MODERATE" if abs(a15 - b15) < abs(a15) * 0.75 + 0.05 else "MIXED"
-                if abs(a15 - b15) < 0.05 and ((a15 > 0 and b15 > 0) or (a15 < 0 and b15 < 0)):
+                if abs(a15 - b15) < 0.05:
                     temporal = "STRONG"
             else:
                 temporal = "UNSTABLE"
     except Exception:  # noqa: BLE001
         temporal = "INSUFFICIENT"
 
-    # cluster-robust: one row per cycle proxy for primary
     episode_nets: list[float] = []
-    by_ep: dict[int, list[float]] = defaultdict(list)
-    for r in primary_rows:
-        ts = int(r.get("detected_at_ms") or 0)
-        net = _f(r.get("post_cost_hypothetical"))
-        if net is None:
-            continue
-        by_ep[ts // 120_000].append(net)
-    for nets in by_ep.values():
-        episode_nets.append(sum(nets) / len(nets))
+    for sids in _episodes(unique, 120).values():
+        nets = []
+        for sid in sids:
+            net = _f((unique.get(sid) or {}).get("post_cost_hypothetical"))
+            if net is not None:
+                nets.append(net)
+        if nets:
+            episode_nets.append(sum(nets) / len(nets))
     signal_exp = prim.get("post_cost_expectancy")
     episode_exp = round(sum(episode_nets) / len(episode_nets), 6) if episode_nets else None
     cluster_sens = "UNDETERMINED"
@@ -711,7 +690,6 @@ def run_review(
         else:
             cluster_sens = "LOW"
 
-    # edge calibration label
     pear = _pearson(pred, real)
     spear = _spearman(pred, real)
     edge_cal = "INSUFFICIENT"
@@ -731,100 +709,170 @@ def run_review(
         {k: action_buckets.get(k) or _horizon_pack() for k in ("WAIT", "WATCH", "READY")},
         ["WAIT", "WATCH", "READY"],
     )
-    # BLOCK separate
     score_mono = _mono(score_buckets, score_order)
 
-    # promotion verdict
-    verdict = "EVIDENCE_INVALID"
+    # RAW V1 verdict (all signals)
+    raw_verdict = "EVIDENCE_INVALID"
     if prim.get("valid_sample_count", 0) >= 200:
-        ne = prim.get("post_cost_expectancy")
-        pf = prim.get("profit_factor")
-        if independence == "HIGHLY_CLUSTERED" and ne is not None and ne > 0:
-            verdict = "EDGE_MIXED"
-        elif ne is not None and ne > 0 and (pf or 0) >= 1.1 and score_mono in {"STRONG", "MODERATE"}:
-            verdict = "EDGE_PROMISING"
+        if ne is not None and ne < 0:
+            raw_verdict = "EDGE_NEGATIVE"
         elif ne is not None and ne > 0:
-            verdict = "EDGE_MIXED"
-        elif ne is not None and ne < 0:
-            verdict = "EDGE_NEGATIVE"
+            raw_verdict = "EDGE_MIXED" if independence == "HIGHLY_CLUSTERED" else "EDGE_PROMISING"
         else:
-            verdict = "EDGE_WEAK"
+            raw_verdict = "EDGE_WEAK"
 
-    # product metrics honesty
-    validated = []
-    partial = ["Signal History (ledger exists)", "Outcome Evidence (path records exist)"]
-    not_val = []
-    if score_mono in {"STRONG", "MODERATE"}:
-        partial.append("NEXUS Score")
-    else:
-        not_val.append("NEXUS Score")
-    if edge_cal in {"STRONG", "MODERATE"}:
-        partial.append("Why Now / expected_net_edge")
-    else:
-        not_val.append("Why Now / expected_net_edge")
-    if state_sep in {"STRONG", "MODERATE"}:
-        partial.append("READY/WATCH/WAIT separation")
-    else:
-        not_val.extend(["Top LONG/SHORT ranking honesty", "Why Not / Risk Invalidation"])
-    if "Top LONG/SHORT ranking honesty" not in not_val:
-        not_val.append("Top LONG/SHORT ranking honesty")
-    if "Why Not / Risk Invalidation" not in not_val:
-        not_val.append("Why Not / Risk Invalidation")
+    # --- Selectivity research (A4–A12) ---
+    topk = topk_research(unique, by_sh, bucket_sec=120)
+    score_tail = score_tail_research(unique, by_sh, bucket_sec=120)
+    edge_tail = expected_edge_tail_research(unique, by_sh, bucket_sec=120)
+    dir_sel = direction_selectivity(unique, by_sh, bucket_sec=120)
+    regime_prov = regime_provenance(ledger_rows, by_decision, unique)
+    # Top-5 by score for cost stress + READY/WATCH after selection
+    all_eps = _episodes(unique, 120)
+    top5_sids: list[str] = []
+    for sids in all_eps.values():
+        top5_sids.extend(select_topk_sids(sids, unique, k=5, rank_by="score"))
+    cost_stress = cost_stress_on_selection(top5_sids, unique, by_sh)
+    ready_watch_sel = ready_watch_after_selection(top5_sids, unique, by_sh)
+    selective_verdict = selective_verdict_from_topk(topk)
+    dir_policy = direction_policy_conclusion(dir_sel)
+    cf_ws = cf_wider_stop_validity(cf_report)
+
+    wait_n = int((action_cal.get("WAIT") or {}).get("valid_sample_count") or 0)
+    block_n = int((action_cal.get("BLOCK") or {}).get("valid_sample_count") or 0)
+
+    candidate_v2: list[dict[str, Any]] = []
+    if selective_verdict in {"SELECTIVITY_PROMISING", "SELECTIVITY_POSITIVE_BUT_UNVALIDATED", "SELECTIVITY_WEAK"}:
+        candidate_v2.append(
+            {
+                "problem": "Raw V1 floods episodes with mediocre signals; costs destroy gross edge",
+                "evidence": f"raw={raw_verdict} selective={selective_verdict} cost_status={cost_status}",
+                "proposed_change": "Design Signal Quality V2 around top-K-per-episode + cost hurdle (design only)",
+                "expected_effect": "Fewer signals; possible post-cost survival in selective subset",
+                "overfit_risk": "HIGH",
+                "validation_plan": "Fit selection rule on Window A only; freeze and evaluate Window B + episode-normalized",
+            }
+        )
+    if dir_policy == "LONG_STRONGER":
+        candidate_v2.append(
+            {
+                "problem": "Direction asymmetry",
+                "evidence": dir_policy,
+                "proposed_change": "Direction-specific thresholds (LONG vs SHORT) — design only",
+                "expected_effect": "Avoid SHORT zero-gross drag",
+                "overfit_risk": "MEDIUM",
+                "validation_plan": "Separate A/B for LONG and SHORT",
+            }
+        )
+    if (edge_tail.get("top10pct") or {}).get("n", 0) > 0:
+        candidate_v2.append(
+            {
+                "problem": "Weak continuous edge calibration but possible top-tail filter",
+                "evidence": f"pearson={pear} spearman={spear}",
+                "proposed_change": "Research expected_net_edge as top-tail filter only (not linear score)",
+                "expected_effect": "Drop bottom mass that is fee-negative",
+                "overfit_risk": "HIGH",
+                "validation_plan": "Top-tail cut chosen on A; locked for B",
+            }
+        )
+    if regime_prov.get("diagnosis") in {
+        "REGIME_ENGINE_ACTUALLY_OUTPUT_RANGE",
+        "REGIME_FIELD_MAPPING_BUG",
+        "HISTORICAL_DEFAULT_CONTAMINATION",
+    }:
+        candidate_v2.append(
+            {
+                "problem": "Regime nearly collapsed to RANGE",
+                "evidence": regime_prov.get("diagnosis"),
+                "proposed_change": "Regime provenance repair design (no logic change in this task)",
+                "expected_effect": "Usable regime conditioning later",
+                "overfit_risk": "LOW",
+                "validation_plan": "Compare ledger vs snapshot vs joined distributions after fix",
+            }
+        )
+
+    ready_for_v2_design = selective_verdict in {
+        "SELECTIVITY_PROMISING",
+        "SELECTIVITY_POSITIVE_BUT_UNVALIDATED",
+        "SELECTIVITY_WEAK",
+    } or cost_status == "EDGE_DESTROYED_BY_COST"
 
     missing_feature_rate = None
-    if n_canon_signals > 0:
-        # approximate from primary rows
-        missing_feature_rate = round(
-            (missing_eq + missing_edge) / max(1, 2 * len(primary_rows)), 4
-        ) if primary_rows else None
+    if n_canon_signals > 0 and primary_rows:
+        missing_feature_rate = round((missing_eq + missing_edge) / max(1, 2 * len(primary_rows)), 4)
+
+    top_syms_unique = anti.get("unique_signal_top_symbols") or []
 
     report = {
-        "schema": "v30_promotion_review_candidate_v1",
-        "source_of_truth": "e4b51d593e63ed796e1fe5fc95f0676dcca4dd7a",
+        "schema": "v30_promotion_review_candidate_v1_p04",
+        "source_of_truth": "07e3f3edefc5ef454b377e0400c1aa7a1cea2471",
+        "runtime_strategy_baseline": "e4b51d593e63ed796e1fe5fc95f0676dcca4dd7a",
         "generated_at_ms": int(time.time() * 1000),
         "wall_time_sec": round(time.time() - t0, 3),
         "analysis_only": True,
         "NO_AUTO_PROMOTION": True,
-        "runtime_stability": "PASS",
-        "oom_status": "NOT_OBSERVED",
+        "raw_v1_verdict": raw_verdict,
+        "promotion_verdict": raw_verdict,
+        "selective_v1_research_verdict": selective_verdict,
+        "canonical_unique_signals": n_canon_signals,
         "index_valid_full_count": index_valid_full_count,
         "state_valid_full_count": state_valid_full_count,
         "state_resolved_count": state_resolved_count,
         "counter_semantics_status": counter_semantics,
         "dataset_integrity": integrity,
+        "effective_independence": independence,
+        "effective_episode_60s": ep60,
+        "effective_episode_120s": ep120,
+        "effective_episode_300s": ep300,
+        "effective_episode_count": effective_episodes,
+        "primary_episode_proxy": "120s",
+        "anti_churn": {
+            **anti,
+            "horizon_record_distribution": dict(horizon_record_distribution),
+            "status": "FIXED_UNIT_UNIQUE_SIGNAL",
+        },
+        "anti_churn_analyzer_fixed": True,
+        "direction_semantics": dir_sem,
+        "unique_signal_LONG": dir_sem["unique_signal_LONG_count"],
+        "unique_signal_SHORT": dir_sem["unique_signal_SHORT_count"],
+        "regime_provenance": regime_prov,
+        "TOP_K_RESULTS": topk,
+        "SCORE_TAIL": score_tail,
+        "EXPECTED_EDGE_TAIL": edge_tail,
+        "LONG_SELECTIVITY": dir_sel.get("LONG"),
+        "SHORT_SELECTIVITY": dir_sel.get("SHORT"),
+        "direction_policy_conclusion": dir_policy,
+        "cost_stress_result": cost_stress,
+        "counterfactual_wider_stop_validity": cf_ws,
+        "ready_watch_after_topk": ready_watch_sel,
+        "WAIT_BLOCK_VALIDATION_UNAVAILABLE": True,
+        "wait_block_outcome_n": {"WAIT": wait_n, "BLOCK": block_n},
         "integrity_detail": {
             "path_record_rows": path_rows,
             "unique_path_keys": len(path_keys),
             "duplicate_path_keys": dup_keys,
-            "index_unique_path_keys": idx.get("unique_path_keys"),
-            "unavailable_keys": unavailable_in_index,
             "decision_id_linkage_rate": round(decision_linked / max(1, path_rows), 4),
             "signal_id_linkage_rate": round(signal_linked / max(1, path_rows), 4),
             "missing_feature_rate_approx": missing_feature_rate,
             "ledger_unique": led.get("unique_signal_ids"),
         },
-        "raw_valid_signal_count": index_valid_full_count,
-        "effective_independence": independence,
-        "effective_episode_count": effective_episodes,
         "independence_detail": {
             "unique_signal_count": n_canon_signals,
-            "unique_timestamps": unique_ts,
-            "max_same_timestamp_cluster": max_same_ts,
-            "signals_per_cycle_median": _pctile([float(x) for x in spc], 50) if spc else None,
-            "signals_per_cycle_p75": _pctile([float(x) for x in spc], 75) if spc else None,
-            "signals_per_cycle_p95": _pctile([float(x) for x in spc], 95) if spc else None,
-            "signals_per_cycle_max": max(spc) if spc else None,
-            "cycles_run_hint": cycles_run_hint,
-            "top_10_symbols": top_syms,
-            "direction_counts": dict(dir_counts),
-            "regime_counts": dict(regime_counts.most_common(12)),
+            "unique_signal_top_symbols": top_syms_unique,
+            "median_signals_per_120s_episode": med_spc,
+            "cycles_run_hint_ignored_for_episodes": cycles_run_hint,
+            "note": "Episodes derived from detected_at_ms, not pod cycles_run",
         },
         "per_horizon": per_horizon,
         "best_horizon": best_h,
         "best_horizon_post_cost_expectancy": best_exp,
         "best_horizon_profit_factor": best_pf,
         "nexus_score_calibration": {"monotonicity": score_mono, "buckets": score_cal},
-        "state_separation": {"separation": state_sep, "buckets": action_cal},
+        "state_separation": {
+            "separation": state_sep,
+            "buckets": action_cal,
+            "WAIT_BLOCK_VALIDATION_UNAVAILABLE": True,
+        },
         "expected_net_edge_calibration": {
             "status": edge_cal,
             "pearson": pear,
@@ -834,37 +882,25 @@ def run_review(
             "pred_neg_real_pos": pred_neg_real_pos,
             "n_pairs": len(edge_pairs),
         },
-        "entry_quality_calibration": {
-            "monotonicity": score_mono,
-            "buckets": score_cal,
-            "note": "NEXUS score = round(entry_quality_score*100); same buckets",
-        },
+        "entry_quality_calibration": {"monotonicity": score_mono, "buckets": score_cal},
         "evidence_associations": {
             "strong_positive_associations": strong_pos,
             "strong_negative_associations": strong_neg,
-            "noisy_associations": [e for e in all_ev if abs(e.get("post_cost_expectancy") or 0) < 0.05][:5],
             "contradicting_tag_sample": neg_ev_sorted[:5],
         },
         "LONG_vs_SHORT": {
             "LONG": _summarize_h(long_pack),
             "SHORT": _summarize_h(short_pack),
-            "direction_concentration": dict(dir_counts),
+            "unique_signal_LONG": dir_sem["unique_signal_LONG_count"],
+            "unique_signal_SHORT": dir_sem["unique_signal_SHORT_count"],
+            "horizon_record_LONG": dir_sem["horizon_record_LONG_count"],
+            "horizon_record_SHORT": dir_sem["horizon_record_SHORT_count"],
         },
         "regimes": {k: _summarize_h(v) for k, v in regime_packs.items()},
-        "structures": {k: _summarize_h(v) for k, v in structure_packs.items()},
-        "anti_churn": {
-            "status": "INSUFFICIENT",
-            "same_symbol_consecutive_pairs": same_sym_consec,
-            "same_side_consecutive_pairs": same_side_consec,
-            "median_same_symbol_gap_sec": _median(gaps),
-            "top_symbols": top_syms,
-            "note": "No exact historical Demo APRUSDT baseline attached; relative clustering only",
-        },
         "cost_status": cost_status,
         "counterfactual": cf_report,
         "counterfactual_leader": cf_leader,
         "counterfactual_records_used": cf_n,
-        "NO_AUTO_PROMOTION_flag": True,
         "selection_vs_management": svm,
         "window_A": wa,
         "window_B": wb,
@@ -875,35 +911,20 @@ def run_review(
             "episode_level_mean_net": episode_exp,
             "episode_count": len(episode_nets),
         },
-        "validated_product_metrics": validated,
-        "partially_validated_product_metrics": partial,
-        "not_validated_product_metrics": not_val,
-        "promotion_verdict": verdict,
-        "candidate_changes": [],
+        "candidate_v2_changes": candidate_v2,
+        "candidate_changes": candidate_v2,
         "strategy_changed": False,
         "risk_changed": False,
         "gate_lowered": False,
         "demo_write_reenabled": False,
         "mainnet": False,
         "real_money": False,
-        "ready_for_signal_quality_v2": bool(
-            verdict in {"EDGE_PROMISING", "EDGE_MIXED"} and independence != "UNDETERMINED"
-        ),
+        "ready_for_signal_quality_v2_design": ready_for_v2_design,
+        "ready_for_signal_quality_v2": False,
         "ready_for_demo_reenable": False,
     }
 
-    # anti-churn label refinement
-    if top_syms and top_syms[0][1] > max(50, 0.15 * max(1, sum(sym_counts.values()) // 5)):
-        report["anti_churn"]["status"] = "NOT_IMPROVED"
-        report["anti_churn"]["flag"] = "HIGH_SYMBOL_CONCENTRATION"
-    elif same_side_consec > same_sym_consec * 0.7 and same_sym_consec > 100:
-        report["anti_churn"]["status"] = "MIXED"
-    elif gaps and (_median(gaps) or 0) > 600:
-        report["anti_churn"]["status"] = "IMPROVEMENT"
-    else:
-        report["anti_churn"]["status"] = "INSUFFICIENT"
-
-    # best/weakest regimes
+    # best/weakest regimes from unique primary packs
     reg_rows = [
         {"regime": k, **_summarize_h(v)}
         for k, v in regime_packs.items()
@@ -912,43 +933,6 @@ def run_review(
     reg_rows.sort(key=lambda r: r.get("post_cost_expectancy") or -999, reverse=True)
     report["best_regimes"] = reg_rows[:3]
     report["weakest_regimes"] = list(reversed(reg_rows[-3:])) if reg_rows else []
-
-    # candidate changes (analysis only suggestions)
-    cands = []
-    if independence == "HIGHLY_CLUSTERED":
-        cands.append(
-            {
-                "problem": "Signal inflation within scan cycles",
-                "evidence": f"effective_episodes≈{effective_episodes}; canon_valid_full={index_valid_full_count}",
-                "proposed_change": "Evaluate/promote on episode- or top-K-per-cycle aggregates, not raw signal count",
-                "expected_effect": "Reduce false confidence from correlated samples",
-                "overfit_risk": "LOW",
-                "validation_plan": "Recompute P3–P7 on episode-level aggregates; require temporal Window A/B agreement",
-            }
-        )
-    if edge_cal in {"WEAK", "NONE", "INVERSE", "INSUFFICIENT"}:
-        cands.append(
-            {
-                "problem": "expected_net_edge poorly calibrated to realized post-cost",
-                "evidence": f"pearson={pear}, status={edge_cal}",
-                "proposed_change": "Recalibrate edge model offline; do not raise Demo gates",
-                "expected_effect": "Better READY vs WAIT separation",
-                "overfit_risk": "HIGH",
-                "validation_plan": "Fit on Window A only; score Window B untouched",
-            }
-        )
-    if cost_status in {"MATERIAL_DRAG", "EDGE_DESTROYED_BY_COST"}:
-        cands.append(
-            {
-                "problem": "Fee/cost drag dominates gross path edge",
-                "evidence": f"15m cost_status={cost_status}, gross_pos_net_neg={prim.get('gross_positive_net_negative_count')}",
-                "proposed_change": "Raise economic hurdle / prefer higher-edge setups (analysis candidate only)",
-                "expected_effect": "Fewer gross+/net− outcomes",
-                "overfit_risk": "MEDIUM",
-                "validation_plan": "Counterfactual + chronological split before any live STOP/TARGET change",
-            }
-        )
-    report["candidate_changes"] = cands
     return report
 
 
@@ -977,34 +961,29 @@ def main() -> int:
         k: report.get(k)
         for k in (
             "schema",
-            "index_valid_full_count",
-            "state_valid_full_count",
-            "state_resolved_count",
-            "counter_semantics_status",
-            "dataset_integrity",
-            "raw_valid_signal_count",
-            "effective_independence",
-            "effective_episode_count",
-            "per_horizon",
-            "best_horizon",
-            "best_horizon_post_cost_expectancy",
-            "best_horizon_profit_factor",
-            "nexus_score_calibration",
-            "state_separation",
-            "expected_net_edge_calibration",
-            "LONG_vs_SHORT",
-            "best_regimes",
-            "weakest_regimes",
-            "anti_churn",
-            "cost_status",
-            "counterfactual_leader",
-            "selection_vs_management",
-            "temporal_stability",
-            "cluster_sensitivity",
-            "promotion_verdict",
-            "ready_for_signal_quality_v2",
+            "raw_v1_verdict",
+            "selective_v1_research_verdict",
+            "canonical_unique_signals",
+            "effective_episode_60s",
+            "effective_episode_120s",
+            "effective_episode_300s",
+            "anti_churn_analyzer_fixed",
+            "unique_signal_LONG",
+            "unique_signal_SHORT",
+            "regime_provenance",
+            "TOP_K_RESULTS",
+            "SCORE_TAIL",
+            "EXPECTED_EDGE_TAIL",
+            "direction_policy_conclusion",
+            "cost_stress_result",
+            "counterfactual_wider_stop_validity",
+            "window_A",
+            "window_B",
+            "candidate_v2_changes",
+            "ready_for_signal_quality_v2_design",
             "ready_for_demo_reenable",
-            "candidate_changes",
+            "cost_status",
+            "WAIT_BLOCK_VALIDATION_UNAVAILABLE",
         )
     }
     print(json.dumps(summary, indent=2, default=str))
