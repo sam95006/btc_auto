@@ -1,9 +1,19 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { AdviceChip, BiasChip } from "../components/Chips";
 import { IconAlert, IconBell, IconCrown, IconLock, IconShield, IconStar, IconTrend } from "../components/Icons";
 import { LockedPanel } from "../components/LockedPanel";
 import { CandleChart, ChartToolbar, SparkChart } from "../components/SparkChart";
+import {
+  IconBack,
+  IconShare,
+  MobileAccount,
+  MobileAlerts,
+  MobileDashboard,
+  MobileMarketsList,
+  MobileMembership,
+  MobileWatchlist,
+} from "../components/MobileLayouts";
 import { BiasGauge, DonutChart, ScoreRing, ToggleSwitch } from "../components/Viz";
 import { useAuth } from "../context/AuthContext";
 import { useWatchlist } from "../context/WatchlistContext";
@@ -88,6 +98,10 @@ export function DashboardPage() {
 
   return (
     <RequireSession>
+      <div className="mpv1-m-only">
+        <MobileDashboard data={data} />
+      </div>
+      <div className="mpv1-d-only">
       <div className="mpv1-dash-fold">
       <div className="mpv1-grid mpv1-grid-4 mpv1-dash-intel">
         <article className="mpv1-card mpv1-intel mpv1-intel-primary">
@@ -382,6 +396,7 @@ export function DashboardPage() {
           ))}
         </div>
       </article>
+      </div>
     </RequireSession>
   );
 }
@@ -438,6 +453,10 @@ export function MarketsPage() {
 
   return (
     <RequireSession>
+      <div className="mpv1-m-only">
+        <MobileMarketsList rows={filtered} filter={filter} onFilter={(id) => setFilter(id as MarketFilter)} />
+      </div>
+      <div className="mpv1-d-only">
       <div className="mpv1-page-head">
         <div>
           <h1 className="mpv1-page-title">市場排行</h1>
@@ -604,6 +623,7 @@ export function MarketsPage() {
           </article>
         </aside>
       </div>
+      </div>
     </RequireSession>
   );
 }
@@ -633,6 +653,113 @@ export function MarketDetailPage() {
 
   return (
     <RequireSession>
+      <div className="mpv1-m-only mpv1-m-asset">
+        <div className="mpv1-m-asset-bar">
+          <Link to="/app/markets" className="mpv1-m-iconbtn" aria-label="返回">
+            <IconBack />
+          </Link>
+          <strong>
+            {base} / USDT
+          </strong>
+          <div className="mpv1-m-asset-bar-actions">
+            <button
+              type="button"
+              className="mpv1-m-iconbtn"
+              onClick={() => toggle(asset.symbol)}
+              disabled={!canAccess(tier, "watchlist")}
+              aria-label="觀察清單"
+            >
+              <IconStar size={18} />
+            </button>
+            <button type="button" className="mpv1-m-iconbtn" aria-label="分享">
+              <IconShare />
+            </button>
+          </div>
+        </div>
+        <div className="mpv1-m-asset-price">
+          <div className="px">${fmtPrice(asset.price)}</div>
+          <div className={asset.change24hPct >= 0 ? "up" : "down"}>
+            {asset.change24hPct >= 0 ? "+" : ""}
+            {asset.change24hPct.toFixed(2)}%
+          </div>
+          <div className="badges">
+            <AdviceChip advice={asset.advice} label={asset.adviceLabel} />
+            <ScoreRing score={asset.score} size={40} />
+          </div>
+        </div>
+        <article className="mpv1-m-card">
+          <div className="mpv1-m-kicker">最簡單結論</div>
+          <p className="mpv1-m-conclusion">偏多，但需留意短線回檔與事件風險</p>
+        </article>
+        <article className="mpv1-m-card mpv1-m-chart">
+          <div className="mpv1-chart-title-row">
+            <span className="mpv1-demo-badge">模擬資料</span>
+          </div>
+          {asset.candles?.length ? (
+            <div className="mpv1-ohlc">
+              <span>
+                <em>O</em> {fmtPrice(asset.candles[asset.candles.length - 1].o)}
+              </span>
+              <span>
+                <em>H</em> {fmtPrice(asset.candles[asset.candles.length - 1].h)}
+              </span>
+              <span>
+                <em>L</em> {fmtPrice(asset.candles[asset.candles.length - 1].l)}
+              </span>
+              <span>
+                <em>C</em> {fmtPrice(asset.candles[asset.candles.length - 1].c)}
+              </span>
+              <span>
+                <em>Vol</em>{" "}
+                {(
+                  (asset.candles[asset.candles.length - 1].v ??
+                    Math.abs(asset.candles[asset.candles.length - 1].c - asset.candles[asset.candles.length - 1].o) *
+                      1200) / 1000
+                ).toFixed(1)}
+                K
+              </span>
+            </div>
+          ) : null}
+          <div className="mpv1-m-iv-scroll">
+            <ChartToolbar interval={interval} onInterval={setInterval} />
+          </div>
+          <div className="mpv1-candle-wrap mpv1-m-candle">
+            <CandleChart candles={asset.candles || []} />
+          </div>
+        </article>
+        <div className="mpv1-m-decision-grid">
+          <article className="mpv1-m-card">
+            <h4>現在怎麼看</h4>
+            <AdviceChip advice={asset.advice} label={asset.adviceLabel} />
+          </article>
+          <article className="mpv1-m-card">
+            <h4>為什麼</h4>
+            <p>{asset.whyInteresting[0]}</p>
+          </article>
+          <article className="mpv1-m-card">
+            <h4>主要風險</h4>
+            <p>{asset.risks[0]}</p>
+          </article>
+          <article className="mpv1-m-card">
+            <h4>失效條件</h4>
+            <p>{asset.invalidation[0]}</p>
+          </article>
+        </div>
+        <div className="mpv1-m-chips">
+          {tabs.map((t) => (
+            <button key={t} type="button" className={tab === t ? "is-on" : undefined} onClick={() => setTab(t)}>
+              {t}
+            </button>
+          ))}
+        </div>
+        <article className="mpv1-m-card">
+          <p className="mpv1-m-one-line">
+            白話解讀：目前{asset.adviceLabel}，結構{asset.bias === "bullish" ? "偏多" : asset.bias === "bearish" ? "偏空" : "不明"}。
+          </p>
+        </article>
+      </div>
+
+      <div className="mpv1-d-only">
       <p className="mpv1-muted" style={{ marginBottom: "0.5rem", fontSize: "0.78rem" }}>
         市場 / {base} / USDT
       </p>
@@ -945,6 +1072,7 @@ export function MarketDetailPage() {
           </article>
         </aside>
       </div>
+      </div>
     </RequireSession>
   );
 }
@@ -990,6 +1118,22 @@ export function WatchlistPage() {
 
   return (
     <RequireSession>
+      <div className="mpv1-m-only">
+        {!canAccess(tier, "watchlist") ? (
+          <LockedPanel featureLabel="觀察清單" requiredTier={minTierFor("watchlist")} />
+        ) : (
+          <MobileWatchlist
+            rows={filtered}
+            counts={counts}
+            filter={filter}
+            onFilter={(id) => {
+              setFilter(id as typeof filter);
+              setPageSize(8);
+            }}
+          />
+        )}
+      </div>
+      <div className="mpv1-d-only">
       <div className="mpv1-page-head">
         <div>
           <h1 className="mpv1-page-title">
@@ -1201,6 +1345,7 @@ export function WatchlistPage() {
           </aside>
         </div>
       )}
+      </div>
     </RequireSession>
   );
 }
@@ -1242,6 +1387,18 @@ export function AlertsPage() {
 
   return (
     <RequireSession>
+      <div className="mpv1-m-only">
+        {!canAccess(tier, "risk_alerts") ? (
+          <LockedPanel featureLabel="風險提醒" requiredTier={minTierFor("risk_alerts")} />
+        ) : (
+          <MobileAlerts
+            alerts={visible}
+            filter={filter}
+            onFilter={(id) => setFilter(id as typeof filter)}
+          />
+        )}
+      </div>
+      <div className="mpv1-d-only">
       <div className="mpv1-page-head">
         <div>
           <h1 className="mpv1-page-title">
@@ -1388,6 +1545,7 @@ export function AlertsPage() {
           </aside>
         </div>
       )}
+      </div>
     </RequireSession>
   );
 }
@@ -1401,6 +1559,10 @@ export function MembershipPage() {
 
   return (
     <RequireSession>
+      <div className="mpv1-m-only">
+        <MobileMembership plans={plans} />
+      </div>
+      <div className="mpv1-d-only">
       <div className="mpv1-page-head">
         <div>
           <h1 className="mpv1-page-title">會員方案</h1>
@@ -1481,15 +1643,29 @@ export function MembershipPage() {
       <p className="mpv1-muted" style={{ marginTop: "0.85rem", textAlign: "center" }}>
         可隨時升級或降級；正式金流尚未接入，此頁為產品預覽。
       </p>
+      </div>
     </RequireSession>
   );
 }
 
 export function AccountPage() {
   const { session, logout, tier } = useAuth();
+  const nav = useNavigate();
 
   return (
     <RequireSession>
+      <div className="mpv1-m-only">
+        <MobileAccount
+          name={session?.displayName || "Nexus 用戶"}
+          email={session?.email || ""}
+          tier={tier}
+          onLogout={() => {
+            logout();
+            nav("/login");
+          }}
+        />
+      </div>
+      <div className="mpv1-d-only">
       <div className="mpv1-page-head">
         <div>
           <h1 className="mpv1-page-title">帳號設定</h1>
@@ -1640,6 +1816,7 @@ export function AccountPage() {
             </button>
           </article>
         </aside>
+      </div>
       </div>
     </RequireSession>
   );

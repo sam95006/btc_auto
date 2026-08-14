@@ -1,7 +1,8 @@
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { TIER_LABELS } from "../lib/entitlements";
 import { TierSwitcher } from "../components/TierSwitcher";
+import { IconHome } from "../components/MobileLayouts";
 import {
   IconBell,
   IconChart,
@@ -120,16 +121,28 @@ const SIDE = [
 ];
 
 const MOBILE = [
-  { to: "/app", label: "首頁", end: true },
-  { to: "/app/markets", label: "市場" },
-  { to: "/app/watchlist", label: "觀察" },
-  { to: "/app/alerts", label: "提醒" },
-  { to: "/app/account", label: "我的" },
+  { to: "/app", label: "首頁", Icon: IconHome, end: true },
+  { to: "/app/markets", label: "市場", Icon: IconChart },
+  { to: "/app/watchlist", label: "觀察", Icon: IconStar },
+  { to: "/app/alerts", label: "提醒", Icon: IconBell },
+  { to: "/app/account", label: "我的", Icon: IconUser },
 ];
+
+function mobileTitle(pathname: string) {
+  if (pathname.startsWith("/app/markets")) return "市場排行";
+  if (pathname.startsWith("/app/watchlist")) return "我的觀察";
+  if (pathname.startsWith("/app/alerts")) return "風險提醒";
+  if (pathname.startsWith("/app/membership")) return "會員方案";
+  if (pathname.startsWith("/app/account")) return "我的";
+  if (pathname.startsWith("/app/market/")) return "資產詳情";
+  return "NEXUS";
+}
 
 export function AppShell() {
   const { session, tier } = useAuth();
   const name = session?.displayName || "Nexus 用戶";
+  const loc = useLocation();
+  const hideMobileChrome = loc.pathname.startsWith("/app/market/");
 
   return (
     <div className="mpv1 mpv1-app-shell">
@@ -163,7 +176,7 @@ export function AppShell() {
       </aside>
 
       <div className="mpv1-app-main">
-        <div className="mpv1-topbar">
+        <div className="mpv1-topbar mpv1-d-only">
           <label className="mpv1-search mpv1-search-wide">
             <IconSearch size={15} />
             <input placeholder="搜尋幣種、主題或關鍵字" aria-label="搜尋" />
@@ -184,6 +197,22 @@ export function AppShell() {
             </Link>
           </div>
         </div>
+
+        {!hideMobileChrome ? (
+          <div className="mpv1-m-topbar mpv1-m-only">
+            <div className="mpv1-m-topbar-title">{mobileTitle(loc.pathname)}</div>
+            <div className="mpv1-m-topbar-actions">
+              <Link className="mpv1-m-iconbtn" to="/app/alerts" aria-label="提醒">
+                <IconBell size={18} />
+                <span className="mpv1-badge-count">3</span>
+              </Link>
+              <Link to="/app/account" className="mpv1-m-avatar" aria-label="帳號">
+                {name.slice(0, 1).toUpperCase()}
+              </Link>
+            </div>
+          </div>
+        ) : null}
+
         <Outlet />
       </div>
 
@@ -195,7 +224,8 @@ export function AppShell() {
             end={item.end}
             className={({ isActive }) => (isActive ? "is-active" : undefined)}
           >
-            {item.label}
+            <item.Icon size={20} className="mpv1-m-nav-ico" />
+            <span>{item.label}</span>
           </NavLink>
         ))}
       </nav>

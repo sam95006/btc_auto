@@ -19,6 +19,7 @@ import {
   RegisterPage,
 } from "./pages/PublicPages";
 import "./styles/memberPlatformV1.css";
+import "./styles/memberPlatformMobile.css";
 
 export function MemberPlatformV1App() {
   return (

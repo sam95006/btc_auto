@@ -432,15 +432,28 @@ export function LoginPage() {
   const nav = useNavigate();
   const [email, setEmail] = useState("founder@nexus.local");
   const [password, setPassword] = useState("demo");
+  const [phone, setPhone] = useState("");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useState<"email" | "phone">("email");
+  const [step, setStep] = useState<"id" | "password">("id");
   if (session) return <Navigate to="/app" replace />;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
     try {
-      await login(email, password);
+      await login(email || "founder@nexus.local", password || "demo");
+      nav("/app");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function mockPasskey() {
+    setBusy(true);
+    try {
+      await login("founder@nexus.local", "demo");
       nav("/app");
     } finally {
       setBusy(false);
@@ -449,80 +462,206 @@ export function LoginPage() {
 
   return (
     <div className="mpv1-auth-shell">
-      <MarketingHeader active="login" />
-      <div className="mpv1-auth-body">
-        <AuthLeftBrand
-          title="看懂市場，才好做決定"
-          lead="加密市場情報與交易洞察平台"
-          features={[
-            { Icon: IconTrend, title: "快速掌握市場方向", body: "即時洞察市場趨勢，掌握關鍵機會。" },
-            { Icon: IconChart, title: "把複雜數據變簡單", body: "圖表與指標清晰呈現，輕鬆理解不費力。" },
-            { Icon: IconCrown, title: "依會員等級開通不同功能", body: "彈性方案滿足不同需求，解鎖更多專業工具。" },
-          ]}
-        />
-        <section className="mpv1-auth-right">
-          <div className="mpv1-auth-card">
-            <h2>會員登入</h2>
-            <p className="mpv1-sub">歡迎回來！請登入您的帳號以繼續使用 NEXUS</p>
-            <form onSubmit={onSubmit}>
-              <div className="mpv1-field">
-                <label htmlFor="email">電子郵件</label>
-                <div className="mpv1-input">
-                  <span className="mpv1-input-ico">
-                    <IconMail size={15} />
-                  </span>
-                  <input
-                    id="email"
-                    type="email"
-                    placeholder="請輸入電子郵件"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
+      <div className="mpv1-d-only">
+        <MarketingHeader active="login" />
+        <div className="mpv1-auth-body">
+          <AuthLeftBrand
+            title="看懂市場，才好做決定"
+            lead="加密市場情報與交易洞察平台"
+            features={[
+              { Icon: IconTrend, title: "快速掌握市場方向", body: "即時洞察市場趨勢，掌握關鍵機會。" },
+              { Icon: IconChart, title: "把複雜數據變簡單", body: "圖表與指標清晰呈現，輕鬆理解不費力。" },
+              { Icon: IconCrown, title: "依會員等級開通不同功能", body: "彈性方案滿足不同需求，解鎖更多專業工具。" },
+            ]}
+          />
+          <section className="mpv1-auth-right">
+            <div className="mpv1-auth-card">
+              <h2>會員登入</h2>
+              <p className="mpv1-sub">歡迎回來！請登入您的帳號以繼續使用 NEXUS</p>
+              <form onSubmit={onSubmit}>
+                <div className="mpv1-field">
+                  <label htmlFor="email">電子郵件</label>
+                  <div className="mpv1-input">
+                    <span className="mpv1-input-ico">
+                      <IconMail size={15} />
+                    </span>
+                    <input
+                      id="email"
+                      type="email"
+                      placeholder="請輸入電子郵件"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
+                <div className="mpv1-field">
+                  <label htmlFor="password">密碼</label>
+                  <div className="mpv1-input">
+                    <span className="mpv1-input-ico">
+                      <IconLock size={15} />
+                    </span>
+                    <input
+                      id="password"
+                      type={show ? "text" : "password"}
+                      placeholder="請輸入密碼"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button type="button" className="mpv1-link" onClick={() => setShow((v) => !v)}>
+                      {show ? "隱藏" : "顯示"}
+                    </button>
+                  </div>
+                </div>
+                <div className="mpv1-row-between">
+                  <label className="mpv1-check">
+                    <input type="checkbox" defaultChecked /> 記住我
+                  </label>
+                  <Link className="mpv1-link" to="/forgot-password">
+                    忘記密碼？
+                  </Link>
+                </div>
+                <button className="mpv1-btn mpv1-btn-primary mpv1-btn-block" disabled={busy} type="submit">
+                  {busy ? "登入中…" : "登入 NEXUS"}
+                </button>
+              </form>
+              <div className="mpv1-divider">或</div>
+              <Link className="mpv1-btn mpv1-btn-outline mpv1-btn-block" to="/register">
+                建立新帳號
+              </Link>
+              <button type="button" className="mpv1-btn mpv1-btn-ghost mpv1-btn-block" style={{ marginTop: "0.65rem" }}>
+                使用 Google 帳號登入
+              </button>
+            </div>
+          </section>
+        </div>
+        <AuthFooter />
+      </div>
+
+      <div className="mpv1-m-login mpv1-m-only">
+        <div className="mpv1-m-login-bg" aria-hidden />
+        <header className="mpv1-m-login-top">
+          <div className="mpv1-logo">NEXUS</div>
+          <button type="button" className="mpv1-m-iconbtn" aria-label="說明">
+            ?
+          </button>
+        </header>
+        <div className="mpv1-m-login-hero">
+          <h1>歡迎回來</h1>
+          <p>查看今天市場重點與你的觀察清單</p>
+        </div>
+
+        <button type="button" className="mpv1-btn mpv1-btn-primary mpv1-btn-block mpv1-m-passkey" disabled={busy} onClick={() => void mockPasskey()}>
+          使用 Passkey / Face ID 登入
+        </button>
+        <p className="mpv1-m-passkey-hint">快速、安全，不需要輸入密碼</p>
+
+        <div className="mpv1-divider">或使用帳號</div>
+
+        <div className="mpv1-m-seg">
+          <button type="button" className={mode === "email" ? "is-on" : undefined} onClick={() => setMode("email")}>
+            電子郵件
+          </button>
+          <button type="button" className={mode === "phone" ? "is-on" : undefined} onClick={() => setMode("phone")}>
+            手機
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit} className="mpv1-m-login-form">
+          {step === "id" ? (
+            <>
+              {mode === "email" ? (
+                <div className="mpv1-field">
+                  <label htmlFor="m-email">電子郵件</label>
+                  <div className="mpv1-input">
+                    <span className="mpv1-input-ico">
+                      <IconMail size={15} />
+                    </span>
+                    <input
+                      id="m-email"
+                      type="email"
+                      placeholder="name@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="mpv1-field">
+                  <label htmlFor="m-phone">手機號碼</label>
+                  <div className="mpv1-input mpv1-m-phone">
+                    <span className="cc">+886</span>
+                    <input
+                      id="m-phone"
+                      type="tel"
+                      placeholder="912345678"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+              <button
+                type="button"
+                className="mpv1-btn mpv1-btn-primary mpv1-btn-block"
+                onClick={() => setStep("password")}
+              >
+                繼續
+              </button>
+            </>
+          ) : (
+            <>
               <div className="mpv1-field">
-                <label htmlFor="password">密碼</label>
+                <label htmlFor="m-password">密碼</label>
                 <div className="mpv1-input">
                   <span className="mpv1-input-ico">
                     <IconLock size={15} />
                   </span>
                   <input
-                    id="password"
+                    id="m-password"
                     type={show ? "text" : "password"}
                     placeholder="請輸入密碼"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    required
                   />
                   <button type="button" className="mpv1-link" onClick={() => setShow((v) => !v)}>
                     {show ? "隱藏" : "顯示"}
                   </button>
                 </div>
               </div>
-              <div className="mpv1-row-between">
-                <label className="mpv1-check">
-                  <input type="checkbox" defaultChecked /> 記住我
-                </label>
-                <Link className="mpv1-link" to="/forgot-password">
-                  忘記密碼？
-                </Link>
-              </div>
               <button className="mpv1-btn mpv1-btn-primary mpv1-btn-block" disabled={busy} type="submit">
                 {busy ? "登入中…" : "登入 NEXUS"}
               </button>
-            </form>
-            <div className="mpv1-divider">或</div>
-            <Link className="mpv1-btn mpv1-btn-outline mpv1-btn-block" to="/register">
-              建立新帳號
-            </Link>
-            <button type="button" className="mpv1-btn mpv1-btn-ghost mpv1-btn-block" style={{ marginTop: "0.65rem" }}>
-              使用 Google 帳號登入
-            </button>
-          </div>
-        </section>
+              <button type="button" className="mpv1-link" style={{ marginTop: 8 }} onClick={() => setStep("id")}>
+                ← 返回
+              </button>
+            </>
+          )}
+        </form>
+
+        <div className="mpv1-m-social">
+          <button type="button" className="mpv1-btn mpv1-btn-outline mpv1-btn-block">
+            Google
+          </button>
+          <button type="button" className="mpv1-btn mpv1-btn-outline mpv1-btn-block">
+            Apple
+          </button>
+        </div>
+
+        <p className="mpv1-m-recover">
+          登入遇到問題？ <Link to="/forgot-password">找回帳號 / 忘記密碼</Link>
+        </p>
+        <p className="mpv1-m-register">
+          還沒有帳號？ <Link to="/register">建立免費帳號</Link>
+        </p>
+
+        <footer className="mpv1-m-trust">
+          <div>安全登入 · 支援 Passkey / 2FA</div>
+          <div>資料加密傳輸</div>
+          <div>NEXUS 不透過登入要求交易所 API Key</div>
+        </footer>
       </div>
-      <AuthFooter />
     </div>
   );
 }
